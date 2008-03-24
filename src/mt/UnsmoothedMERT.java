@@ -1,0 +1,825 @@
+package mt;
+
+import java.io.*;
+import java.util.*;
+
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counters;
+
+
+/**
+ * Minimum Error Rate Training (MERT) 
+ * 
+ * Optimization for non smooth error surfaces
+ * 
+ * @author danielcer
+ */
+public class UnsmoothedMERT {
+	public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
+	public static final Set<String> generativeFeatures = SSVMScorer.readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
+	
+	static public final boolean DEBUG = false;
+	
+	static public final double MIN_PLATEAU_DIFF = 1e-6;
+	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
+	static public final double MIN_UPDATE_DIFF = 1e-6;
+	static class InterceptIDs {
+		final int list;
+		final int trans;
+		InterceptIDs (int list, int trans) {
+			this.list = list;
+			this.trans = trans;
+		}
+	}
+	
+	static public ClassicCounter<String> lineSearch(MosesNBestList nbest, ClassicCounter<String> initialWts, ClassicCounter<String> direction, EvaluationMetric<IString,String> emetric) {
+		Scorer<String> currentScorer = new StaticScorer(initialWts);
+		Scorer<String> slopScorer = new StaticScorer(direction);
+		ArrayList<Double> intercepts = new ArrayList<Double>();
+		Map<Double, Set<InterceptIDs>> interceptToIDs = new HashMap<Double, Set<InterceptIDs>>();
+		
+		{ int lI = -1;
+		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) { lI++;
+			// calculate slops/intercepts
+			double[] m = new double[nbestlist.size()]; double b[] = new double[nbestlist.size()];
+			{int tI = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) { tI++;
+				m[tI] = slopScorer.getIncrementalScore(trans.features);
+				b[tI] = currentScorer.getIncrementalScore(trans.features);
+			} } 
+			
+			
+			// find -inf*dir canidate
+			int firstBest = 0;
+			for (int i = 1; i < m.length; i++) {
+				if (m[i] < m[firstBest] || (m[i] == m[firstBest] && b[i] > b[firstBest])) {
+					firstBest = i;
+				}
+			} 
+			
+			Set<InterceptIDs> niS = interceptToIDs.get(Double.NEGATIVE_INFINITY);
+			if (niS == null) {
+				niS = new HashSet<InterceptIDs>();
+				interceptToIDs.put(Double.NEGATIVE_INFINITY, niS);
+			}
+			
+			niS.add(new InterceptIDs(lI, firstBest));
+			
+			// find & save all intercepts
+			double interceptLimit = Double.NEGATIVE_INFINITY;
+			for (int currentBest = firstBest; currentBest != -1; ) {
+				// find next intersection
+				double nearestIntercept = Double.POSITIVE_INFINITY;
+				int nextBest = -1;
+				for (int i = 0; i < m.length; i++) {
+					double intercept = (b[currentBest] - b[i])/(m[i]-m[currentBest]); // wow just like middle school
+					if (intercept <= interceptLimit+MIN_PLATEAU_DIFF) continue;
+					if (intercept < nearestIntercept) { nextBest = i; nearestIntercept = intercept; }
+				}
+				if (nearestIntercept == Double.POSITIVE_INFINITY) break;
+				if (DEBUG) {
+					System.out.printf("Nearest intercept: %e Limit: %e\n", nearestIntercept, interceptLimit);
+				}
+				intercepts.add(nearestIntercept);
+				interceptLimit = nearestIntercept;
+				Set<InterceptIDs> s = interceptToIDs.get(nearestIntercept);
+				if (s == null) {
+					s = new HashSet<InterceptIDs>();
+					interceptToIDs.put(nearestIntercept, s);
+				}
+				s.add(new InterceptIDs(lI, nextBest));
+				currentBest = nextBest;
+			}			
+		} }
+		
+		
+		// check eval score at each intercept;
+		double bestEval = Double.NEGATIVE_INFINITY;
+		ClassicCounter<String> bestWts = initialWts;
+		if (intercepts.size() == 0) return initialWts;
+		intercepts.add(Double.NEGATIVE_INFINITY);
+		Collections.sort(intercepts);
+		resetQuickEval(emetric, nbest);
+		System.out.printf("Checking %d points\n", intercepts.size()-1);
+	
+		double[] evals  = new double[intercepts.size()];
+		double[] chkpts = new double[intercepts.size()];
+	
+		for (int i = 0; i < intercepts.size(); i++) {
+			double chkpt;
+			if (i == 0) {
+				chkpt = intercepts.get(i+1) - 1.0;			
+			} else if (i + 1 == intercepts.size()){
+				chkpt = intercepts.get(i) + 1.0;
+			} else {
+				if (intercepts.get(i) < 0 && intercepts.get(i+1) > 0) {
+					chkpt = 0;
+				} else {
+					chkpt = (intercepts.get(i) + intercepts.get(i+1))/2.0;
+				}
+			}
+			if (DEBUG) System.out.printf("intercept: %f, chkpt: %f\n", intercepts.get(i), chkpt);
+			double eval = quickEvalAtPoint(nbest, interceptToIDs.get(intercepts.get(i)));
+		
+			chkpts[i] = chkpt;
+			evals [i] = eval; 
+	
+			if (DEBUG) {
+				System.out.printf("pt(%d): %e eval: %e best: %e\n", i, chkpt, eval, bestEval);
+			}
+	/*		if (bestEval < eval) {
+				Counter<String> newWts = new Counter<String>(initialWts);
+				
+				newWts.addMultiple(direction, chkpt);
+				bestEval = eval;
+				bestWts = newWts;
+			} */
+		}
+		
+		int bestPt = -1;
+		for (int i = 0; i < evals.length; i++) {
+			double eval = windowSmooth(evals, i, SEARCH_WINDOW);
+			if (bestEval < eval) {
+        bestPt = i;
+        bestEval = eval;
+			}		
+		}
+		
+		ClassicCounter<String> newWts = new ClassicCounter<String>(initialWts);				
+		newWts.addMultiple(direction, chkpts[bestPt]);
+		bestWts = newWts;
+		
+		evilGlobalBestEval = evalAtPoint(nbest, bestWts, emetric);
+		return bestWts;
+	}
+
+	enum SmoothingType {avg, min};
+	static final int SEARCH_WINDOW = Integer.parseInt(System.getProperty("SEARCH_WINDOW", "1"));
+	static public int MIN_NBEST_OCCURANCES = Integer.parseInt(System.getProperty("MIN_NBEST_OCCURENCES", "5"));
+	static final int STARTING_POINTS = Integer.parseInt(System.getProperty("STARTING_POINTS", "5"));
+	static final SmoothingType smoothingType = SmoothingType.valueOf(System.getProperty("SMOOTHING_TYPE", "min"));
+	static final boolean filterUnreachable = Boolean.parseBoolean(System.getProperty("FILTER_UNREACHABLE", "false"));
+	
+	static {
+		System.err.println();
+		System.err.printf("Search Window Size: %d\n", SEARCH_WINDOW);
+		System.err.printf("Min nbest occurences: %d\n", MIN_NBEST_OCCURANCES);
+		System.err.printf("Starting points: %d\n", STARTING_POINTS);
+		System.err.printf("Smoothing Type: %s\n", smoothingType);
+		System.err.printf("Min plateau diff: %f\n", MIN_PLATEAU_DIFF);  
+		System.err.printf("Min objective diff: %f\n", MIN_OBJECTIVE_DIFF);
+		System.err.printf("FilterUnreachable?: %b\n", filterUnreachable);
+	}
+	
+	static double windowSmooth(double[] a, int pos, int window) {
+		int strt = Math.max(0, pos-window);
+		int nd = Math.min(a.length, pos+window+1);
+		
+		if (smoothingType == SmoothingType.min) {
+  		int minLoc = strt;
+  		for (int i = strt+1; i < nd; i++) if (a[i] < a[minLoc]) minLoc = i;
+  		return a[minLoc];
+		} else if (smoothingType == SmoothingType.avg) {
+			double avgSum = 0;
+			for (int i = strt; i < nd; i++) avgSum += a[i];
+			
+			return avgSum/(nd-strt);
+		} else {
+			throw new RuntimeException();
+		}
+	}
+	
+	static double evilGlobalBestEval;
+	
+	/**
+	 * Powell's method, but without heuristics for replacement of search directions.
+	 * See Press et al Numerical Recipes (1992) pg 415
+	 * 
+	 * Unlike the heuristic version, see powell() below, this variant has quadratic convergence guarantees.
+	 * However, note that the heuristic version should do better in long and narrow valleys.
+	 * 
+	 * @param nbest
+	 * @param initialWts
+	 * @param emetric
+	 * @return
+	 */
+  @SuppressWarnings("unchecked")
+	static public ClassicCounter<String> basicPowell(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+  	ClassicCounter<String> wts = initialWts;
+		
+		// initialize search directions
+		List<ClassicCounter<String>> axisDirs = new ArrayList<ClassicCounter<String>>(initialWts.size());
+		List<String> featureNames = new ArrayList<String>(wts.keySet()); 
+		Collections.sort(featureNames);
+		for (String featureName : featureNames) {
+			ClassicCounter<String> dir = new ClassicCounter<String>();
+			dir.incrementCount(featureName);
+			axisDirs.add(dir);
+		}
+		
+		
+		
+		// main optimization loop
+		ClassicCounter p[] = new ClassicCounter[axisDirs.size()];
+		double objValue = evalAtPoint(nbest, wts, emetric); // obj value w/o smoothing
+		List<ClassicCounter<String>> dirs = null;
+		for (int iter = 0; ; iter++) {
+			if (iter % p.length == 0) {
+			  // reset after N iterations to avoid linearly dependent search directions
+				System.err.printf("%d: Search direction reset\n", iter);
+				dirs = new ArrayList<ClassicCounter<String>>(axisDirs);  
+			}
+			// search along each direction
+			p[0] = lineSearch(nbest, wts, dirs.get(0), emetric);
+			for (int i = 1; i < p.length; i++) {
+				p[i] = lineSearch(nbest, (ClassicCounter<String>)p[i-1], dirs.get(i), emetric);
+				dirs.set(i-1, dirs.get(i)); // shift search directions
+			}
+			
+			double totalWin = evilGlobalBestEval - objValue;
+			System.err.printf("%d: totalWin: %e Objective: %e\n", iter, totalWin, objValue);
+			if (Math.abs(totalWin) < MIN_OBJECTIVE_DIFF) break;
+			
+		  // construct combined direction
+			ClassicCounter<String> combinedDir = new ClassicCounter<String>(wts);
+			combinedDir.multiplyBy(-1.0);
+			combinedDir.addAll(p[p.length-1]);
+			
+			dirs.set(p.length-1, combinedDir);
+			
+			// search along combined direction
+			wts = lineSearch(nbest, (ClassicCounter<String>)p[p.length-1], dirs.get(p.length-1), emetric);			
+			objValue = evilGlobalBestEval;
+			System.err.printf("%d: Objective after combined search %e\n", iter, objValue);
+		}
+		
+		return wts;		
+  }
+  
+	/**
+	 * Powell's Method
+	 * 
+	 * A typical implementation - with details originally based on 
+	 * David Chiang's CMERT 0.5 (as distributed with Moses 1.5.8)
+	 * 
+	 * This implementation appears to be based on that given in 
+	 * Press et al's Numerical Recipes (1992) pg. 417.
+	 * 
+	 */
+	@SuppressWarnings("unchecked")
+	static public ClassicCounter<String> powell(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+		ClassicCounter<String> wts = initialWts;
+				
+		// initialize search directions
+		List<ClassicCounter<String>> dirs = new ArrayList<ClassicCounter<String>>(initialWts.size());
+		List<String> featureNames = new ArrayList<String>(wts.keySet()); 
+		Collections.sort(featureNames);
+		for (String featureName : featureNames) {
+			ClassicCounter<String> dir = new ClassicCounter<String>();
+			dir.incrementCount(featureName);
+			dirs.add(dir);
+		}
+		
+		// main optimization loop
+		ClassicCounter p[] = new ClassicCounter[dirs.size()];
+		double objValue = evalAtPoint(nbest, wts, emetric); // obj value w/o smoothing
+		for (int iter = 0; ; iter++) {
+			// search along each direction
+			p[0] = lineSearch(nbest, wts, dirs.get(0), emetric);			
+			double biggestWin = Math.max(0, evilGlobalBestEval - objValue);
+      System.err.printf("initial totalWin: %e (%e-%e)\n", biggestWin, evilGlobalBestEval, objValue);
+      System.err.printf("eval @ wts: %e\n", evalAtPoint(nbest, wts, emetric));
+      System.err.printf("eval @ p[0]: %e\n", evalAtPoint(nbest, p[0], emetric));
+			objValue = evilGlobalBestEval;
+			int biggestWinId = 0;
+			double totalWin = biggestWin;
+      double initObjValue = objValue;
+			for (int i = 1; i < p.length; i++) {
+				p[i] = lineSearch(nbest, (ClassicCounter<String>)p[i-1], dirs.get(i), emetric);
+				if (Math.max(0, evilGlobalBestEval - objValue) > biggestWin) {
+					biggestWin = evilGlobalBestEval - objValue;
+					biggestWinId = i;
+				}
+				totalWin += Math.max(0, evilGlobalBestEval - objValue);
+        System.err.printf("\t%d totalWin: %e(%e-%e)\n", i, totalWin, evilGlobalBestEval, objValue);
+				objValue = evilGlobalBestEval;
+			}
+ 
+			System.err.printf("%d: totalWin %e biggestWin: %e objValue: %e\n", iter, totalWin, biggestWin, objValue);
+			
+			// construct combined direction
+			ClassicCounter<String> combinedDir = new ClassicCounter<String>(wts);
+			combinedDir.multiplyBy(-1.0);
+			combinedDir.addAll(p[p.length-1]);
+			
+			// check to see if we should replace the dominant 'win' direction
+			// during the last iteration of search with the combined search direction
+			ClassicCounter<String> testPoint = new ClassicCounter<String>(p[p.length-1]);
+			testPoint.addAll(combinedDir);
+			double testPointEval = evalAtPoint(nbest, testPoint, emetric);
+			double extrapolatedWin = testPointEval - objValue;
+      System.err.printf("Test Point Eval: %e, extrapolated win: %e\n",
+           testPointEval, extrapolatedWin);
+			if (extrapolatedWin > 0 && 2*(2*totalWin - extrapolatedWin)*Math.pow(totalWin -biggestWin, 2.0) < 
+					Math.pow(extrapolatedWin, 2.0)*biggestWin) {
+          System.err.printf(
+             "%d: updating direction %d with combined search dir\n", 
+             iter, biggestWinId);
+				  normalize(combinedDir);
+				  dirs.set(biggestWinId, combinedDir);
+			}
+			
+			// Search along combined dir even if replacement didn't happen			
+			wts = lineSearch(nbest, p[p.length-1], combinedDir, emetric);
+      System.err.printf(
+        "%d: Objective after combined search %e (gain: %e prior:%e)\n", 
+         iter, evilGlobalBestEval, evilGlobalBestEval - objValue, objValue);
+			objValue = evilGlobalBestEval;
+
+      double finalObjValue = objValue;
+      System.err.printf("Actual win: %e (%e-%e)\n", 
+        finalObjValue-initObjValue,
+        finalObjValue, initObjValue);
+			if (Math.abs(initObjValue - finalObjValue) < MIN_OBJECTIVE_DIFF) break; // changed to prevent infinite loops
+		}
+		
+		return wts;
+	}
+	
+	/**
+	 * Optimization algorithm used by cmert included in Moses. 
+	 * 
+	 * @author danielcer
+	 */
+	static public ClassicCounter<String> koehnStyleOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric){
+		ClassicCounter<String> wts = initialWts;
+		
+		for (double oldEval = Double.NEGATIVE_INFINITY; ;) {
+			ClassicCounter<String> wtsFromBestDir = null;
+			double fromBestDirScore = Double.NEGATIVE_INFINITY;
+			String bestDirName = null;
+			for (String feature : wts.keySet()) {
+				if (DEBUG) System.out.printf("Searching %s\n", feature);
+				ClassicCounter<String> dir = new ClassicCounter<String>(); 
+				dir.incrementCount(feature, 1.0);
+				ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+				double eval = evalAtPoint(nbest, newWts, emetric);
+				if (DEBUG) System.out.printf("\t%e\n", eval);
+				if (eval > fromBestDirScore) {
+					fromBestDirScore = eval;
+					wtsFromBestDir = newWts;
+					bestDirName = feature;
+				}
+			}
+			
+			System.out.printf("Best dir: %s Global max along dir: %f\n", bestDirName, fromBestDirScore);
+			wts = wtsFromBestDir;
+			
+			double eval = evalAtPoint(nbest, wts, emetric);
+			if (Math.abs(eval - oldEval) < MIN_OBJECTIVE_DIFF) break;
+			oldEval = eval;
+		}
+		
+		return wts;
+	}
+	
+	static public ClassicCounter<String> cerStyleOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric){
+		ClassicCounter<String> wts = initialWts;
+	  double finalEval = 0;
+		int iter = 0;
+		double initialEval = evalAtPoint(nbest, wts, emetric);
+		System.out.printf("Initial (Pre-optimization) Score: %f\n", initialEval); 
+		for (; ; iter++) {
+			ClassicCounter<String> dEl = new ClassicCounter<String>();
+			IncrementalEvaluationMetric<IString, String> incEvalMetric = emetric.getIncrementalMetric();
+			ClassicCounter<String> scaledWts = new ClassicCounter<String>(wts);
+			scaledWts.normalize();
+			scaledWts.multiplyBy(0.01);
+			for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+				if (incEvalMetric.size() > 0) incEvalMetric.replace(incEvalMetric.size()-1, null);
+				incEvalMetric.add(null);
+				List<? extends ScoredFeaturizedTranslation<IString, String>> sfTrans = nbestlist;
+  			List<List<FeatureValue<String>>> featureVectors = new ArrayList<List<FeatureValue<String>>>(sfTrans.size());
+   		  double[] us = new double[sfTrans.size()];
+   		  int pos = incEvalMetric.size()-1;
+  		  for (ScoredFeaturizedTranslation<IString, String> sfTran : sfTrans) {  		  	
+  		  	incEvalMetric.replace(pos, sfTran);
+  		  	us[featureVectors.size()] = incEvalMetric.score();
+  		  	featureVectors.add(sfTran.features);
+  		  }
+  			
+  		  dEl.addAll(EValueLearningScorer.dEl(new StaticScorer(scaledWts), featureVectors, us));
+			}
+			
+			dEl.normalize();
+						
+			//System.out.printf("Searching %s\n", dEl);
+			ClassicCounter<String> wtsdEl = lineSearch(nbest, wts, dEl, emetric);
+			double evaldEl = evalAtPoint(nbest, wtsdEl, emetric);
+			
+			double eval;
+			ClassicCounter<String> oldWts = wts;
+			eval = evaldEl;
+			wts = wtsdEl;
+		
+			double ssd = 0;
+			for (String k : wts.keySet()) {
+				double diff = oldWts.getCount(k) - wts.getCount(k);
+				ssd += diff*diff;
+			}
+			
+			System.out.printf("Global max along dEl dir(%d): %f wts ssd: %f\n", iter, eval, ssd);
+			
+			if (ssd < 1e-6) {
+				finalEval = eval;
+				break; 
+			}
+		}
+		
+		System.out.printf("Final iters: %d %f->%f\n", iter, initialEval, finalEval);
+		return wts;
+	}
+	
+	static public void normalize(ClassicCounter<String> wts) {
+			wts.multiplyBy(1.0/l1norm(wts));
+	}
+	
+	static public double l1norm(ClassicCounter<String> wts) {
+		double sum = 0;
+		for (String f : wts) {
+			sum += Math.abs(wts.getCount(f));
+		}
+		
+		return sum;
+	}
+	
+	
+	static ClassicCounter<String> featureMeans;
+	static ClassicCounter<String> featureVars;
+	static ClassicCounter<String> featureOccurances;
+	static ClassicCounter<String> featureNbestOccurances;
+	
+	static public ClassicCounter<String> cerStyleOptimize2(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric){
+		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
+		double oldEval = Double.NEGATIVE_INFINITY;
+		double finalEval = 0;
+		int iter = 0;
+		
+		
+		double initialEval = evalAtPoint(nbest, wts, emetric);		
+		System.out.printf("Initial (Pre-optimization) Score: %f\n", initialEval);
+	
+		if (featureMeans == null) { 
+			featureMeans           = new ClassicCounter<String>();
+			featureVars            = new ClassicCounter<String>();
+			featureOccurances      = new ClassicCounter<String>();
+			featureNbestOccurances = new ClassicCounter<String>();
+  	  		
+  		int totalVecs = 0;
+  		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+  			Set<String> featureSetNBestList = new HashSet<String>();
+  			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {				
+  				for (FeatureValue<String> fv : EValueLearningScorer.summarizedFeatureVector(trans.features)) {
+  					featureMeans.incrementCount(fv.name, fv.value);
+  					
+  					if (fv.value != 0) {
+  						featureOccurances.incrementCount(fv.name);
+  						featureSetNBestList.add(fv.name);
+  					}
+  				}
+  				totalVecs++;
+  			}
+  			for (String f : featureSetNBestList) {
+  				featureNbestOccurances.incrementCount(f);
+  			}
+  		}
+  		
+  		featureMeans.divideBy(totalVecs);
+  		
+  		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+  			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+  				for (FeatureValue<String> fv : EValueLearningScorer.summarizedFeatureVector(trans.features)) {
+  					double diff = featureMeans.getCount(fv.name) -  fv.value;
+  					featureVars.incrementCount(fv.name, diff*diff);
+  				}
+  			}
+  		}
+  	
+  		featureVars.divideBy(totalVecs-1);
+  		System.out.printf("Feature N-best Occurences: (Cut off: %d)\n", MIN_NBEST_OCCURANCES);
+  		for (String w : featureNbestOccurances.asPriorityQueue()) {
+  			System.out.printf("%f: %s \n", featureNbestOccurances.getCount(w), w);
+  		}
+  		
+  		System.out.printf("Feature Occurances\n");
+  		for (String w : featureOccurances.asPriorityQueue()) {
+  			System.out.printf("%f (p %f): %s\n", featureOccurances.getCount(w), featureOccurances.getCount(w)/totalVecs, w);
+  		}
+  		
+  		System.out.printf("Feature Stats (samples: %d):\n", totalVecs);
+  		List<String> features = new ArrayList<String>(featureMeans.keySet());
+  		Collections.sort(features);
+  		for (String fn : featureVars.asPriorityQueue()) {
+  			System.out.printf("%s - mean: %.6f var: %.6f sd: %.6f\n", fn, featureMeans.getCount(fn), featureVars.getCount(fn), Math.sqrt(featureVars.getCount(fn)));
+  		} 
+		} 
+		
+		for (String w : wts) {
+			if (featureNbestOccurances.getCount(w) < MIN_NBEST_OCCURANCES) {
+				wts.setCount(w, 0);
+			}
+		}
+		normalize(wts);
+		
+		for (; ; iter++) {
+			ClassicCounter<String> dEl = new ClassicCounter<String>();
+			double bestEval = Double.NEGATIVE_INFINITY;
+			ClassicCounter<String> nextWts = wts;
+			List<ClassicCounter<String>> priorSearchDirs = new ArrayList<ClassicCounter<String>>();			
+			// priorSearchDirs.add(wts);
+			for (int i = 0, noProgressCnt = 0; noProgressCnt < 15 ; i++) {
+				boolean atLeastOneParameter = false;
+  			for (String w : initialWts.keySet()) {  				
+  				if (featureNbestOccurances.getCount(w) >= MIN_NBEST_OCCURANCES) {
+  					dEl.setCount(w, r.nextGaussian()*Math.sqrt(featureVars.getCount(w)));
+  					atLeastOneParameter = true;
+  				}
+  			}
+  			if (!atLeastOneParameter) {
+  				System.err.printf("Error: no feature occurs on %d or more n-best lists - can't optimization.\n", MIN_NBEST_OCCURANCES);
+  				System.err.printf("(This probably means your n-best lists are too small)\n");
+  				System.exit(-1);
+  			}
+  			normalize(dEl);
+  			ClassicCounter<String> searchDir = new ClassicCounter<String>(dEl);
+  			for (ClassicCounter<String> priorDir : priorSearchDirs) {
+  				ClassicCounter<String> projOnPrior = new ClassicCounter<String>(priorDir);
+    			projOnPrior.multiplyBy(Counters.dotProduct(priorDir, dEl)/Counters.dotProduct(priorDir, priorDir));
+    			searchDir.subtractAll(projOnPrior);
+  			}
+  			if (Counters.dotProduct(searchDir, searchDir) < 1e-6) {
+  				noProgressCnt++;
+  				continue;
+  			}
+  			priorSearchDirs.add(searchDir);
+  			if (DEBUG) System.out.printf("Searching %s\n", searchDir);
+  			nextWts = lineSearch(nbest, nextWts, searchDir, emetric);
+  			if (Math.abs(evilGlobalBestEval - bestEval) < 1e-9) {
+  				noProgressCnt++; 
+  			} else {
+  				noProgressCnt = 0;
+  			}
+  			
+  			bestEval = evilGlobalBestEval;
+			}
+			
+			normalize(nextWts);
+			double eval;
+			ClassicCounter<String> oldWts = wts;
+			eval = bestEval;
+			wts = nextWts;
+		
+			double ssd = 0;
+			for (String k : wts.keySet()) {
+				double diff = oldWts.getCount(k) - wts.getCount(k);
+				ssd += diff*diff;
+			}
+			
+
+			System.out.printf("Global max along dEl dir(%d): %f obj diff: %f (*-1+%f=%f) Total Cnt: %f l1norm: %f\n", iter, eval, Math.abs(oldEval - eval),MIN_OBJECTIVE_DIFF, 
+					MIN_OBJECTIVE_DIFF - Math.abs(oldEval - eval), wts.totalCount(), l1norm(wts));
+			
+			if (Math.abs(oldEval - eval) < MIN_OBJECTIVE_DIFF) {
+				finalEval = eval;
+				break; 
+			}
+			
+			oldEval = eval;
+		}
+		
+		System.out.printf("Final iters: %d %f->%f\n", iter, initialEval, finalEval);
+		return wts;
+	}
+	
+	
+	/* not exactly thread safe */
+	static IncrementalEvaluationMetric<IString, String> quickIncEval;
+	
+	static private void resetQuickEval(EvaluationMetric<IString,String> emetric, MosesNBestList nbest) {
+		quickIncEval = emetric.getIncrementalMetric();
+		int sz = nbest.nbestLists().size();
+		for (int i = 0; i < sz; i++) {
+			quickIncEval.add(null);
+		}
+	}
+	
+	/**
+	 * Specialized evalAt point just for line search
+	 * 
+	 * Previously, profiling revealed that this was a serious hotspot
+	 * 
+	 * @param nbest
+	 * @param emetric
+	 * @param mbMap
+	 * @param pt
+	 * @return
+	 */
+	
+	static private double quickEvalAtPoint(MosesNBestList nbest, Set<InterceptIDs> s) {
+		if (DEBUG) System.out.printf("replacing %d points\n", s.size());
+		for (InterceptIDs iId : s) {
+			ScoredFeaturizedTranslation<IString, String> trans = nbest.nbestLists().get(iId.list).get(iId.trans);
+			quickIncEval.replace(iId.list, trans);
+		}
+		return quickIncEval.score();
+	}
+	
+	static public double evalAtPoint(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
+		Scorer<String> scorer = new StaticScorer(wts);
+		IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();
+		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+			ScoredFeaturizedTranslation<IString, String> highestScoreTrans = null;
+			double highestScore = Double.NEGATIVE_INFINITY;
+			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+				double score = scorer.getIncrementalScore(trans.features);
+				if (score > highestScore) {
+					highestScore = score;
+					highestScoreTrans = trans;
+				}
+			}
+			incEval.add(highestScoreTrans);
+		}
+		return incEval.score();
+	}
+	
+	static ClassicCounter<String> readWeights(String filename) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		ClassicCounter<String> wts = new ClassicCounter<String>();
+		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+			String[] fields = line.split("\\s+");
+			wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
+		}
+		reader.close();
+		return wts;
+	}
+	
+	static void writeWeights(String filename, ClassicCounter<String> wts) throws IOException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+		
+	 ClassicCounter<String> wtsMag = new ClassicCounter<String>();
+	 for (String w : wts.keySet()) {
+		 wtsMag.setCount(w, Math.abs(wts.getCount(w)));
+	 }
+
+		for (String f : wtsMag.asPriorityQueue().toSortedList()) {
+			writer.append(f).append(" ").append(Double.toString(wts.getCount(f))).append("\n");
+		}
+		writer.close();
+	}
+	
+	static void displayWeights(ClassicCounter<String> wts) {
+		for (String f : wts.keySet()) { System.out.printf("%s %f\n", f, wts.getCount(f)); }
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	public static void main(String[] args) throws Exception{
+		if (args.length != 6) {
+			System.err.printf("Usage:\n\tjava mt.UnsmoothedMERT (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
+			System.exit(-1);
+		}
+	
+		String evalMetric = args[0];
+		String nbestListFile = args[1];
+		String localNbestListFile = args[2];
+		String initialWtsFile = args[3];
+		String referenceList = args[4];
+		String finalWtsFile = args[5];
+	
+		EvaluationMetric<IString,String> emetric = null;
+		List<List<Sequence<IString>>> references = Metrics.readReferences(referenceList.split(","));
+		if (evalMetric.equals("ter")) {
+			emetric = new TERMetric<IString, String>(references);
+		} else if (evalMetric.endsWith("bleu")) {
+			emetric = new BLEUMetric<IString, String>(references);
+		} else {
+			System.err.printf("Unrecognized metric: %s\n", evalMetric);
+			System.exit(-1);
+		}
+		
+		
+		ClassicCounter<String> initialWts = readWeights(initialWtsFile);
+		MosesNBestList nbest = new MosesNBestList(nbestListFile);
+		MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap);
+		Scorer<String> scorer = new StaticScorer(initialWts);
+		
+		System.err.printf("Rescoring entries\n");
+		// rescore all entries by weights
+		System.err.printf("n-best list sizes %d, %d\n", localNbest.nbestLists().size(), nbest.nbestLists().size());
+		if (localNbest.nbestLists().size() != nbest.nbestLists().size()) {
+			System.err.printf("Error incompatible local and cummulative n-best lists, sizes %d != %d\n", localNbest.nbestLists().size(), nbest.nbestLists().size());
+			System.exit(-1);
+		}
+		{ int lI = -1;
+		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) { lI++;
+		  List<? extends ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest.nbestLists().get(lI);
+		  // If we wanted, we could get the value of minReachableScore by just checking the bottom of the n-best list.
+		  // However, lets make things robust to the order of the entries in the n-best list being mangled as well as 
+		  // score rounding. 
+		  double minReachableScore = Double.POSITIVE_INFINITY;
+		  for (ScoredFeaturizedTranslation<IString,String> trans : lNbestList) {
+		  	double score = scorer.getIncrementalScore(trans.features);
+		  	if (score < minReachableScore) minReachableScore = score;
+		  }
+		  System.err.printf("l %d - min reachable score: %f (orig size: %d)\n", lI, minReachableScore, nbestlist.size());
+			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+				trans.score =  scorer.getIncrementalScore(trans.features);
+				if (filterUnreachable && trans.score > minReachableScore) { // mark as potentially unreachable
+					trans.score = Double.NaN;
+				}
+			}
+		} }
+		
+		
+		System.err.printf("removing anything that might not be reachable\n");
+		// remove everything that might not be reachable
+		for (int lI = 0; lI < nbest.nbestLists().size(); lI++) {
+			List<ScoredFeaturizedTranslation<IString, String>> newList = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(nbest.nbestLists().get(lI).size());
+			List<? extends ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest.nbestLists().get(lI);
+			
+			for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(lI)) {
+				if (trans.score == trans.score) newList.add(trans);
+			}
+			if (filterUnreachable) newList.addAll((Collection) lNbestList); // otherwise entries are already on the n-best list
+			nbest.nbestLists().set(lI, newList);
+			System.err.printf("l %d - final (filtered) combined n-best list size: %d\n", lI, newList.size());
+		}
+		
+		// add entries for all wts in n-best list
+		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+				for (FeatureValue<String> f : trans.features) {
+					initialWts.incrementCount(f.name, 0);
+				}
+			}
+		}
+		
+		double initialEval = evalAtPoint(nbest, initialWts, emetric);
+		System.out.printf("Initial Eval Score: %e\n", initialEval);
+		System.out.printf("Initial Weights:\n==================\n");
+		displayWeights(initialWts);
+		ClassicCounter<String> bestWts = null;
+		double bestEval = Double.NEGATIVE_INFINITY;
+		long startTime = System.currentTimeMillis();
+		for (int ptI = 0; ptI < STARTING_POINTS; ptI++) {
+			ClassicCounter<String> wts;
+			if (ptI == 0) wts = initialWts;
+			else wts = randomWts(initialWts.keySet());
+			ClassicCounter<String> newWts;
+			if (System.getProperty("useKoehn") != null) {
+				System.out.printf("Using koehn\n");
+				newWts = koehnStyleOptimize(nbest, wts, emetric);
+			} else if (System.getProperty("useBasicPowell") != null) {
+				System.out.printf("Using *basic* powell (och)\n");
+				newWts = basicPowell(nbest, wts, emetric);
+			} else if (System.getProperty("usePowell") != null) {
+				System.out.printf("Using powell (och)\n");
+				newWts = powell(nbest, wts, emetric);
+			}else {
+				System.out.printf("Using cer\n");
+				newWts = cerStyleOptimize2(nbest, wts, emetric);
+			}
+
+			normalize(newWts);
+			double eval = evalAtPoint(nbest, newWts, emetric);
+			if (bestEval < eval) {
+				bestWts = newWts;
+				bestEval = eval;
+			}
+			System.err.printf("point %d - eval: %e best eval: %e (l1: %f)\n", ptI, eval, bestEval, l1norm(newWts));
+		}
+		long endTime = System.currentTimeMillis();
+		System.out.printf("Optimization Time: %.3f s\n", (endTime-startTime)/1000.0);
+		System.out.printf("Final Eval Score: %e->%e\n", initialEval, bestEval);
+		System.out.printf("Final Weights:\n==================\n");
+		if (bestEval <= initialEval + MIN_UPDATE_DIFF) {
+			bestWts = initialWts;			
+		}
+		displayWeights(bestWts);
+		
+		writeWeights(finalWtsFile, bestWts);
+	}
+
+	static Random r = new Random(8682522807148012L);
+	
+	private static ClassicCounter<String> randomWts(Set<String> keySet) {
+		ClassicCounter<String> randpt = new ClassicCounter<String>();
+		for (String f : keySet) {
+			if (generativeFeatures.contains(f)) {
+				randpt.setCount(f, r.nextDouble());
+			} else {
+				randpt.setCount(f, r.nextDouble()*2-1.0);
+			}
+		}
+		return randpt;
+	}
+}

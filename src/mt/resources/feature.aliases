@@ -1,0 +1,14 @@
+# Classical Machine Translation Features
+########################################
+
+lineardistortion mt.LinearDistortionFeaturizer
+wordpenalty mt.WordPenaltyFeaturizer
+unknownword mt.UnknownWordFeaturizer
+ngramlm mt.NGramLanguageModelFeaturizer
+phrasetablescores mt.PhraseTableScoresFeaturizer
+
+# Experimental Features
+########################################
+
+phrasehistogram mt.ExperimentalFeaturizers.PhraseLengthHistogramFeaturizer
+biaswt mt.ExperimentalFeaturizers.BiasWtFeaturizer

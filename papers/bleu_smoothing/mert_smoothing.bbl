@@ -1,0 +1,69 @@
+\begin{thebibliography}{}
+
+\bibitem[Koehn et~al.\/, 2007][Koehn et~al.\/][2007]{koehn2007}
+Koehn, P., Hoang, H., Birch, A., Callison-Burch, C., Federico, M., Bertoldi,
+  N., Cowan, B., Shen, W., Moran, C., Zens, R., Dyer, C., Bojar, O.,
+  Constantin, A., \& Herbst, E. (2007).
+\newblock Moses: Open source toolkit for statistical machine translation.
+\newblock {\em In ACL}.
+
+\bibitem[Koehn et~al.\/, 2003][Koehn et~al.\/][2003]{koehn2003}
+Koehn, P., Och, F.~J., \& Marcu, D. (2003).
+\newblock Statistical phrase-based translation.
+\newblock {\em In HLT-NAACL}.
+
+\bibitem[Och, 2002][Och][2002]{och2002b}
+Och, F.-J. (2002).
+\newblock Minimum error rate training in statistical machine translation.
+\newblock {\em In ACL}.
+
+\bibitem[Och \& Ney, 2002][Och and Ney][2002]{och2002}
+Och, F.~J., \& Ney, H. (2002).
+\newblock Discriminative training and maximum entropy models for statistical
+  machine translation.
+\newblock {\em In ACL}.
+
+\bibitem[Och \& Ney, 2003][Och and Ney][2003]{och03}
+Och, F.~J., \& Ney, H. (2003).
+\newblock A systematic comparison of various statistical alignment models.
+\newblock {\em Computational Linguistics}, {\em 29}, 19--51.
+
+\bibitem[Papineni et~al.\/, 2002][Papineni et~al.\/][2002]{kishore2002}
+Papineni, K., Roukos, S., Ward, T., \& Zhu, W.-J. (2002).
+\newblock Bleu: a method for automatic evaluation of machine translation.
+\newblock {\em In ACL}.
+
+\bibitem[Press et~al.\/, 2007][Press et~al.\/][2007]{press2007}
+Press, W.~H., Teukolsky, S.~A., Vetterling, W.~T., \& Flannery, B.~P. (2007).
+\newblock {\em Numerical recipes 3rd edition: The art of scientific computing}.
+\newblock Cambridge University Press.
+
+\bibitem[Riezler \& Maxwell, 2005][Riezler and Maxwell][2005]{fk2005}
+Riezler, S., \& Maxwell, J.~T. (2005).
+\newblock On some pitfalls in automatic evaluation and significance testing for
+  mt.
+\newblock {\em In ACL}.
+
+\bibitem[Stolcke, 2002][Stolcke][2002]{stolcke02srilm}
+Stolcke, A. (2002).
+\newblock Srilm -- an extensible language modeling toolkit.
+\newblock {\em In ICSLP}.
+
+\bibitem[Tillmann, 2004][Tillmann][2004]{tillmann04}
+Tillmann, C. (2004).
+\newblock A unigram orientation model for statistical machine translation.
+\newblock {\em In ACL}.
+
+\bibitem[Tseng et~al.\/, 2005][Tseng et~al.\/][2005]{tseng05}
+Tseng, H., Chang, P., Andrew, G., Jurafsky, D., \& Manning, C. (2005).
+\newblock A conditional random field word segmenter for sighan bakeoff 2005.
+\newblock {\em Proceedings of the Fourth SIGHAN Workshop on Chinese Language
+  Processing}.
+
+\bibitem[Zens et~al.\/, 2007][Zens et~al.\/][2007]{zens07}
+Zens, R., Hasan, S., \& Ney, H. (2007).
+\newblock A systematic comparison of training criteria for statistical machine
+  translation.
+\newblock {\em In EMNLP}.
+
+\end{thebibliography}

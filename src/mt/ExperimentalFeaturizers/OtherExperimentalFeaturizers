@@ -1,0 +1,3 @@
+Discriminative NGram - mt.NGramLanguageModelFeaturizer
+Discriminative Phrase Pairs - mt.PhraseTableScoresFeaturizer
+Discriminative Lexical reordering - mt.LexicalReorderingFeaturizer

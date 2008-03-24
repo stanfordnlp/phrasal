@@ -1,0 +1,19 @@
+# List of generative features
+#
+# Currently, SSVMScorer constrains the weights associated with each
+# of these to be >= 0
+#
+##################################################################### 
+TM:lex(f|t)
+TM:lex(t|f)
+TM:phi(f|t)
+TM:phi(t|f)
+LM
+LinearDistortion
+LexR::discontinousWithNext
+LexR::discontinousWithPrevious
+LexR::monotoneWithNext
+LexR::monotoneWithPrevious
+LexR::swapWithNext
+LexR::swapWithPrevious
+UnknownWord

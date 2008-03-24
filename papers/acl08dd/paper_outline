@@ -1,0 +1,12 @@
+Potential Results
+ - Max margin vs. mert on classical features + lexical reordering
+    - Max Margin 1-class (all features) vs MERT all features
+    - Max Margin 1-class (w.o. word penalty other pos mag features) vs 
+      MERT just (w.o. same features 
+    - Max Margin pair all feature vs MERT all features
+
+ - if MERT BLEU > Max Margin 
+      - MERT locked feature weights for classical features
+        & Max Margin with discriminative features 
+ - All Features vs. all classical features
+ - If time, feature groups ???

@@ -1,0 +1,589 @@
+<!-- build.xml file for ant for MT project - contact Daniel Cer (Daniel.Cer@gmail.com) -->
+
+<!-- A "project" describes a set of targets that may be requested
+     when Ant is executed.  The "default" attribute defines the
+     target which is executed if no specific target is requested,
+     and the "basedir" attribute defines the current working directory
+     from which Ant executes the requested task.  This is normally
+     set to the current working directory.
+-->
+
+<project name="JavaNLP" default="compile" basedir=".">
+
+  <property name="build.home"    value="${basedir}/classes"/>
+  <property name="build.tests"    value="${basedir}/classes"/>
+  <property name="docs.home"     value="${basedir}/docs"/>
+  <property name="src.home"      value="${basedir}/src"/>
+  <property name="nlpsrc.home"   value="${basedir}/src/edu/stanford/nlp"/>
+  <property name="parsersrc.home" value="${basedir}/src/edu/stanford/nlp/parser"/>
+  <property name="pubcrawlsrc.home" value="${basedir}/src/edu/stanford/pubcrawl"/>
+  <property name="iesrc.home"    value="${basedir}/src/edu/stanford/nlp/ie"/>
+  <property name="nersrc.home"    value="${basedir}/src/edu/stanford/nlp/ie/ner"/>
+  <property name="crfsrc.home"    value="${basedir}/src/edu/stanford/nlp/ie/crf"/>
+  <property name="utilsrc.home"    value="${basedir}/src/edu/stanford/nlp/util/"/>
+  <property name="classifysrc.home"    value="${basedir}/src/edu/stanford/nlp/classify"/>
+  <property name="javadoc.home"  value="${basedir}/javadoc"/>
+  <property name="src.tests"  value="${basedir}/test/src"/>
+
+  <property name="rmic.includes"  value="**/Distributed*.class"/>
+  <property name="rmic.verify"  value="true"/>
+  <property name="distributedjar.home" value="${basedir}/distributedjars"/>
+  <property name="gendependencies.cmd" value="${basedir}/bin/gen-dependencies.pl"/>
+  <property name="gendependencies.reuse" value=""/>
+
+
+<!--  ==================== Compilation Control Options ==================== -->
+
+<!--
+
+  These properties control option settings on the Javac compiler when it
+  is invoked using the <javac> task.
+
+  compile.debug        Should compilation include the debug option?
+
+  compile.deprecation  Should compilation include the deprecation option?
+
+  compile.optimize     Should compilation include the optimize option?
+
+  compile.source       Source version compatibility
+
+  compile.target       Target class version compatibility
+
+-->
+
+  <property name="compile.debug"       value="true"/>
+  <property name="compile.deprecation" value="false"/>
+  <property name="compile.optimize"    value="true"/>
+  <property name="compile.source"      value="1.6" />
+  <property name="compile.target"      value="1.6" />
+
+<!-- ==================== All Target ====================================== -->
+
+<!--
+
+  The "all" target is a shortcut for running the "clean" target followed
+  by the "compile" target, to force a complete recompile.
+
+-->
+
+  <target name="all" depends="clean,compile,compile-test"
+   description="Clean build and dist directories, then compile"/>
+
+
+
+<!-- ==================== Clean Target ==================================== -->
+
+<!--
+
+  The "clean" target deletes any previous "build" and "dist" directory,
+  so that you can be ensured the application can be built from scratch.
+
+-->
+
+  <target name="clean" description="Delete old classes">
+    <delete dir="${build.home}/mt"/>
+  </target>
+
+<!-- ==================== Classpath Targets ==================================== -->
+
+<!--
+
+  Sets the classpath for this project properly, conditioning on whether or not 
+  the machine has access to the ir.stanford.edu or nlp.stanford.edu 
+
+-->
+
+  <target name="classpath" description="Sets the classpath">
+      <path id="compile.classpath">
+        <fileset dir="${basedir}/lib">
+          <include name="*.jar"/>
+          <exclude name="javanlp*"/>
+        </fileset>
+      </path>
+  </target>
+
+
+
+
+<!-- ==================== Compile Target ================================== -->
+
+<!--
+
+  The "compile" target transforms source files (from your "src" directory)
+  into object files in the appropriate location in the build directory.
+  This example assumes that you will be including your classes in an
+  unpacked directory hierarchy under "/WEB-INF/classes".
+
+-->
+
+  <target name="compile" depends="prepare,classpath"
+   description="Compile Java sources">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${src.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+      <compilerarg value="-Xmaxerrs"/>
+      <compilerarg value="20"/>
+      <compilerarg value="-Xlint:unchecked"/>
+      <!-- <compilerarg value="-Xlint:deprecation"/> -->
+    </javac>
+
+    <!-- Copy application resources -->
+    <copy  todir="${build.home}">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+
+  </target>
+
+<!-- ==================== Compile NLP Target ================================== -->
+
+<!--
+
+  The "compile" target transforms source files (from your "src" directory)
+  into object files in the appropriate location in the build directory.
+  This example assumes that you will be including your classes in an
+  unpacked directory hierarchy under "/WEB-INF/classes".
+
+-->
+
+  <target name="nlp" depends="prepare,classpath"
+   description="Compile JavaNLP sources">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${nlpsrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+<!-- ==================== Compile PubCrawl Target ================================== -->
+
+<!--
+
+  The "compile" target transforms source files (from your "src" directory)
+  into object files in the appropriate location in the build directory.
+  This example assumes that you will be including your classes in an
+  unpacked directory hierarchy under "/WEB-INF/classes".
+
+-->
+
+  <target name="pubcrawl" depends="prepare,classpath"
+   description="Compile Java PubCrawl sources">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${pubcrawlsrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+
+  <target name="ie" depends="prepare,classpath"
+   description="Compile Java sources in ie packages">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${iesrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+  <target name="classify" depends="prepare,classpath"
+   description="Compile Java sources in classify packages">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${classifysrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+
+  <target name="ner" depends="prepare,classpath"
+   description="Compile Java sources in ner packages">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${nersrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+
+  <target name="crf" depends="prepare,classpath"
+   description="Compile Java sources in crf packages">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${crfsrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+  <target name="util" depends="prepare,classpath"
+   description="Compile Java sources in util packages">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${utilsrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+  <target name="protege-jar" depends="ie"
+      description="Compiles Protege related classes and deploys .jar">
+    <jar basedir="${build.home}" destfile="${basedir}/lib/javanlp.jar" manifest="${iesrc.home}/protege/protege-manifest" />
+  </target>
+
+  <target name="parser" depends="prepare,classpath"
+   description="Compile Java sources in parser packages">
+
+    <!-- Compile Java classes as necessary -->
+    <mkdir    dir="${build.home}"/>
+    <javac srcdir="${parsersrc.home}"
+          destdir="${build.home}"
+            debug="${compile.debug}"
+      deprecation="${compile.deprecation}"
+         optimize="${compile.optimize}"
+>
+        <classpath refid="compile.classpath"/>
+    </javac>
+
+    <!-- Copy application resources -->
+<!--
+    <copy  todir="${build.home}/WEB-INF/classes">
+      <fileset dir="${src.home}" excludes="**/*.java"/>
+    </copy>
+-->
+
+  </target>
+
+
+
+<!-- ==================== Compile DistributedJar Target ================================== -->
+
+  <target name="distributedall" depends="clean,distributedjar" />
+
+<!-- ==================== Compile DistributedJar Target ================================== -->
+
+  <target name="distributedjar" depends="compile"
+   description="Compile a single jar of all distributed code.">
+
+    <!-- Compile stubs for remote method invocation -->
+    <rmic base="${build.home}"
+          includes="${rmic.includes}"
+          verify="${rmic.verify}"
+          classpathref="compile.classpath"/>
+
+    <mkdir    dir="${distributedjar.home}"/>
+
+    <jar destfile="${distributedjar.home}/all.jar"
+         basedir="${build.home}"
+         whenempty="fail"
+         index="true"/>
+<!--
+    <exec dir="${basedir}"
+          failonerror="true"
+          output="${distributedjar.home}/findoutput"
+          executable="find" >
+             <arg value="classes" />
+             <arg value="-name" />
+             <arg value="Distributed*" />
+    </exec>
+    <exec dir="${basedir}"
+          failonerror="true"
+          output="${distributedjar.home}/classlist"
+          executable="sed" >
+             <arg value="-e" />
+             <arg value="s/classes\///g" />
+             <arg value="-e" />
+             <arg value="s/.class//g" />
+             <arg value="-e" />
+             <arg value="s/\//./g" />
+             <arg file="${distributedjar.home}/findoutput" />
+    </exec>
+    <available file="${distributedjar.home}/depdump" property="gendependencies.reuse" value="reuse" />
+    <exec dir="${basedir}"
+          failonerror="true"
+          executable="perl" >
+             <arg value="${gendependencies.cmd}" /> 
+             <arg value="-srcdir" />
+             <arg path="src/" /> 
+             <arg value="-classdir" />
+             <arg path="classes/" />
+             <arg value="-classjar" />
+             <arg file="${distributedjar.home}/all.jar" />
+             <arg value="-classlistfile" />
+             <arg file="${distributedjar.home}/classlist" />
+             <arg value="-${gendependencies.reuse}depdump" />
+             <arg file="${distributedjar.home}/depdump" />
+    </exec>
+-->
+  </target>
+
+<!-- ==================== Javadoc Target ================================== -->
+
+<!--
+
+  The "javadoc" target creates Javadoc API documentation for the Java
+  classes included in your application.  Normally, this is only required
+  when preparing a distribution release, but is available as a separate
+  target in case the developer wants to create Javadocs independently.
+
+-->
+
+  <target name="javadoc" depends="compile"
+   description="Create Javadoc API documentation">
+
+    <mkdir          dir="${javadoc.home}"/>
+    <javadoc sourcepath="${src.home}"
+                destdir="${javadoc.home}"
+              maxmemory="768m"
+                 author="true"      
+                Overview="${src.home}/edu/stanford/nlp/overview.html"
+                Doctitle="Stanford JavaNLP API Documentation" 
+             Windowtitle="Stanford JavaNLP API"
+           packagenames="*">
+      <classpath refid="compile.classpath"/>
+      <bottom><![CDATA[<FONT SIZE=2><A HREF=\"http://nlp.stanford.edu\">Stanford NLP Group</A></FONT>]]></bottom>
+      <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
+    </javadoc>
+
+  </target>
+
+
+<!-- ==================== Prepare Target ================================== -->
+
+<!--
+
+  The "prepare" target is used to create the "build" destination directory,
+  and copy the static contents of your web application to it.  If you need
+  to copy static files from external dependencies, you can customize the
+  contents of this task.
+
+  Normally, this task is executed indirectly when needed.
+
+-->
+
+  <target name="prepare">
+
+    <!-- Create build directories as needed -->
+    <mkdir  dir="${build.home}"/>
+
+  </target>
+
+
+
+<!-- ======================-= complete target =-=========================== -->
+<target name="complete" description="update bash tab-completion list">
+  <echo message="updating ${build.home}/.index.txt"/>
+  <exec executable="/bin/sh">
+    <arg value="-c"/> <!-- holy CRAP ant sux -wtm -->
+    <arg value="ruby /u/wtm/bin/gen-java-class-completions &gt; ${build.home}/.index.txt"/>
+  </exec>
+  <echo message='to enable bash tab-completion, say: complete -o default -C "~wtm/bin/java-class-completions" java'/>
+</target>
+
+<!-- ========================= junit testing ============================== -->
+
+  <target name="compile-test">
+    <javac srcdir="${src.tests}"
+           destdir="${build.home}"
+           debug="${compile.debug}"
+           deprecation="${compile.deprecation}"
+           optimize="${compile.optimize}"
+>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile,compile-test">
+    <echo message="running tests..."/>
+    <junit printsummary="off" outputtoformatters="false" forkmode="perBatch">
+      <classpath>
+        <pathelement location="${build.tests}"/>
+        <pathelement path="${java.class.path}"/>
+      </classpath>
+
+      <formatter type="brief" usefile="false"/>
+
+      <batchtest fork="yes">
+        <fileset dir="${src.tests}">
+          <include name="**/*Test.java"/>
+          <exclude name="**/*ITest.java"/>
+          <exclude name="**/AllTests.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="itest" depends="compile,compile-test">
+    <echo message="running integration tests..."/>
+    <junit printsummary="off" outputtoformatters="false" forkmode="perBatch">
+      <classpath>
+        <pathelement location="${build.tests}"/>
+        <pathelement path="${java.class.path}"/>
+      </classpath>
+
+      <formatter type="brief" usefile="false"/>
+
+      <batchtest fork="yes">
+        <fileset dir="${src.tests}">
+          <include name="**/*ITest.java"/>
+          <exclude name="**/AllTests.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="testrtelex" depends="compile,compile-test">
+    <echo message="running rte lex tests..."/>
+    <junit printsummary="off" outputtoformatters="false" forkmode="perBatch">
+      <classpath>
+        <pathelement location="${build.tests}"/>
+        <pathelement path="${java.class.path}"/>
+      </classpath>
+      <formatter type="brief" usefile="false"/>
+      <batchtest fork="yes">
+        <fileset dir="${src.tests}">
+          <include name="edu/stanford/nlp/rte/lex/**/*Test*.java"/>
+          <exclude name="**/AllTests.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="testprocess" depends="compile,compile-test">
+    <echo message="running process tests..."/>
+    <junit printsummary="off" outputtoformatters="false" forkmode="perBatch">
+      <classpath>
+        <pathelement location="${build.tests}"/>
+        <pathelement path="${java.class.path}"/>
+      </classpath>
+      <formatter type="brief" usefile="false"/>
+      <batchtest fork="yes">
+        <fileset dir="${src.tests}">
+          <include name="edu/stanford/nlp/process/**/*Test*.java"/>
+          <exclude name="**/AllTests.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <!-- stolen from http://today.java.net/pub/a/today/2003/09/12/individual-test-cases.html -->
+  <target name="ensure-test-name" unless="test">
+    <fail message="You must run this target with -Dtest=TestName"/>
+  </target>
+
+  <target name="runtest" description="Runs the test you specify on the command line with -Dtest=" depends="compile, compile-test, ensure-test-name">
+    <junit printsummary="no">
+      <classpath>
+        <pathelement location="${build.tests}"/>
+        <pathelement path="${java.class.path}"/>
+      </classpath>
+      <formatter type="plain" usefile="false"/>
+      <batchtest>
+        <fileset dir="${src.tests}">
+          <include name="${test}.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+</project>

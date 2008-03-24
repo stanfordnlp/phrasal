@@ -1,0 +1,155 @@
+This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2006.5.25)  7 MAR 2008 19:13
+entering extended mode
+**acl08
+(./acl08.tex
+LaTeX2e <2003/12/01>
+Babel <v3.8d> and hyphenation patterns for american, french, german, ngerman, b
+ahasa, basque, bulgarian, catalan, croatian, czech, danish, dutch, esperanto, e
+stonian, finnish, greek, icelandic, irish, italian, latin, magyar, norsk, polis
+h, portuges, romanian, russian, serbian, slovak, slovene, spanish, swedish, tur
+kish, ukrainian, nohyphenation, loaded.
+(/usr/share/texmf/tex/latex/base/article.cls
+Document Class: article 2004/02/16 v1.4f Standard LaTeX document class
+(/usr/share/texmf/tex/latex/base/size11.clo
+File: size11.clo 2004/02/16 v1.4f Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+) (./acl08.sty
+Conference Style for ACL 2005 -- released Octobe 11, 2004
+\titlebox=\skip43
+) (/usr/share/texmf/tex/latex/psnfss/times.sty
+Package: times 2004/09/15 PSNFSS-v9.2 (SPQR) 
+)
+(/usr/share/texmf/tex/latex/base/latexsym.sty
+Package: latexsym 1998/08/17 v2.2e Standard LaTeX package (lasy symbols)
+\symlasy=\mathgroup4
+LaTeX Font Info:    Overwriting symbol font `lasy' in version `bold'
+(Font)                  U/lasy/m/n --> U/lasy/b/n on input line 47.
+) (./acl08.aux)
+\openout1 = `acl08.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 35.
+LaTeX Font Info:    ... okay on input line 35.
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 35.
+
+(/usr/share/texmf/tex/latex/psnfss/ot1ptm.fd
+File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
+)
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14.4> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 36.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <14.4> on input line 36.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 36.
+LaTeX Font Info:    Try loading font information for U+lasy on input line 36.
+
+(/usr/share/texmf/tex/latex/base/ulasy.fd
+File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
+)
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 36.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 36.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 36.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 36.
+LaTeX Font Info:    Try loading font information for OT1+pcr on input line 36.
+
+(/usr/share/texmf/tex/latex/psnfss/ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <9> on input line 36.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 36.
+
+Underfull \hbox (badness 2326) in paragraph at lines 47--55
+\OT1/ptm/m/n/10.95 here to these spec-i-fi-ca-tions. Au-thors are re-
+ []
+
+
+Underfull \hbox (badness 1270) in paragraph at lines 47--55
+\OT1/ptm/m/n/10.95 quired to pro-vide a Portable Doc-u-ment For-mat
+ []
+
+
+Underfull \hbox (badness 1931) in paragraph at lines 47--55
+\OT1/ptm/m/n/10.95 (PDF) ver-sion of their pa-pers. The pro-ceed-
+ []
+
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10.95> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 81.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 83.
+
+Underfull \hbox (badness 10000) in paragraph at lines 83--91
+\OT1/ptm/m/n/10.95 ACL pro-vides this de-scrip-tion in L[]T[]X2e
+ []
+
+
+Underfull \hbox (badness 1448) in paragraph at lines 83--91
+\OT1/ptm/m/n/10.95 (\OT1/pcr/m/n/10.95 acl08.tex\OT1/ptm/m/n/10.95 ) and PDF fo
+r-mat (\OT1/pcr/m/n/10.95 acl08.pdf\OT1/ptm/m/n/10.95 ),
+ []
+
+
+Underfull \hbox (badness 1694) in paragraph at lines 83--91
+\OT1/ptm/m/n/10.95 along with the L[]T[]X2e style file used to for-
+ []
+
+[1
+
+
+
+
+]
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 146.
+
+ (/usr/share/texmf/tex/latex/psnfss/omsptm.fd
+File: omsptm.fd 
+)
+LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10.95> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 146.
+ [2]
+Underfull \hbox (badness 3058) in paragraph at lines 229--232
+[]\OT1/ptm/m/n/10.95 The L[]T[]X and BibT[]X style files pro-vided
+ []
+
+
+Underfull \vbox (badness 1968) has occurred while \output is active []
+
+ [3]
+[4
+
+] (./acl08.aux) ) 
+Here is how much of TeX's memory you used:
+ 412 strings out of 94501
+ 5061 string characters out of 1170921
+ 54348 words of memory out of 1000000
+ 3624 multiletter control sequences out of 10000+50000
+ 17253 words of font info for 56 fonts, out of 500000 for 2000
+ 580 hyphenation exceptions out of 1000
+ 25i,10n,19p,156b,256s stack positions out of 1500i,500n,5000p,200000b,5000s
+
+Output written on acl08.dvi (4 pages, 18372 bytes).

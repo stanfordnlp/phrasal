@@ -1,0 +1,45 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.4)
+The top-level auxiliary file: mert_smoothing.aux
+The style file: mlapa.bst
+Database file #1: mert_smoothing.bib
+You've used 12 entries,
+            2472 wiz_defined-function locations,
+            606 strings with 6090 characters,
+and the built_in function-call counts, 4756 in all, are:
+= -- 452
+> -- 255
+< -- 12
++ -- 92
+- -- 84
+* -- 378
+:= -- 862
+add.period$ -- 36
+call.type$ -- 12
+change.case$ -- 102
+chr.to.int$ -- 12
+cite$ -- 12
+duplicate$ -- 171
+empty$ -- 283
+format.name$ -- 120
+if$ -- 905
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 13
+newline$ -- 63
+num.names$ -- 48
+pop$ -- 103
+preamble$ -- 1
+purify$ -- 102
+quote$ -- 0
+skip$ -- 117
+stack$ -- 0
+substring$ -- 159
+swap$ -- 13
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 105
+warning$ -- 0
+while$ -- 26
+width$ -- 0
+write$ -- 217

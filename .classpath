@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/JavaNLP - mt branch"/>
+	<classpathentry kind="lib" path="lib/fastutil-5.0.9.jar"/>
+	<classpathentry kind="lib" path="lib/tercom.jar" sourcepath="C:/Users/danielcer/tercom-0.7/src"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>
