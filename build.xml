@@ -34,7 +34,9 @@
   
   <target name="clean" description="Delete old classes">
     <echo message="${ant.project.name}" />
-    <delete dir="${build.path}/*"/>
+    <delete includeemptydirs="true">
+       <fileset dir="${build.path}/" includes="**/*"/>
+     </delete>
   </target>
 
   <target name="compile" depends="classpath"
