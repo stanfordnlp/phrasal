@@ -4,16 +4,16 @@ import java.io.*;
 import java.util.*;
 
 /**
- * 
+ *
  * @author danielcer
  *
  */
 public class Metrics {
 	private Metrics() { }
-	
+
 	/**
 	 * note: future plans for javanlp Count will make this method irrelevant.
-	 *  
+	 *
 	 * @param <TK>
 	 * @param counts
 	 * @param sequence
@@ -26,9 +26,9 @@ public class Metrics {
 			counts.put(sequence, cnt+1);
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param <TK>
 	 * @param sequence
 	 * @param maxOrder
@@ -36,7 +36,7 @@ public class Metrics {
 	 */
 	static public <TK> Map<Sequence<TK>, Integer> getNGramCounts(Sequence<TK> sequence, int maxOrder) {
 		Map<Sequence<TK>, Integer> counts = new HashMap<Sequence<TK>, Integer>();
-		
+
 		int sz = sequence.size();
 		for (int i = 0; i < sz; i++) {
 			int jMax = Math.min(sz, i + maxOrder);
@@ -47,17 +47,17 @@ public class Metrics {
 		}
 		return counts;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param <TK>
-	 * @param sequence
+	 * @param sequences
 	 * @param maxOrder
 	 * @return
 	 */
 	static public <TK> Map<Sequence<TK>, Integer> getMaxNGramCounts(List<Sequence<TK>> sequences, int maxOrder) {
 		Map<Sequence<TK>, Integer> maxCounts = new HashMap<Sequence<TK>, Integer>();
-		
+
 		for (Sequence<TK> sequence : sequences) {
 			Map<Sequence<TK>, Integer> counts = getNGramCounts(sequence, maxOrder);
 			for (Sequence<TK> key : counts.keySet()) {
@@ -70,7 +70,7 @@ public class Metrics {
 		}
 		return maxCounts;
 	}
-	
+
 	static <TK> void clipCounts(Map<Sequence<TK>, Integer> counts, Map<Sequence<TK>, Integer> maxRefCount) {
 		for (Sequence<TK> ngram : new HashSet<Sequence<TK>>(counts.keySet())) {
 			Integer cnt = maxRefCount.get(ngram);
