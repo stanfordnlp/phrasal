@@ -20,7 +20,7 @@ public class AlignmentGrid {
   private static final boolean DEBUG = false;
   private int fsize, esize;
 
-  enum RelativePos { N, NW, W, SW, S, SE, E, NE, I };
+  public enum RelativePos { N, NW, W, SW, S, SE, E, NE, I };
 
   private static final String SYM_C = "+"; 
   private static final String SYM_V = "|"; 

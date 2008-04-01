@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>mt - branch</name>
+	<name>javanlp.mt</name>
 	<comment></comment>
 	<projects>
-		<project>JavaNLP - mt branch</project>
+		<project>javanlp.core</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

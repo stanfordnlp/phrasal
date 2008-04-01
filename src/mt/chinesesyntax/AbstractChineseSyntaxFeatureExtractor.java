@@ -19,7 +19,7 @@ public abstract class AbstractChineseSyntaxFeatureExtractor<E> extends AbstractF
   /**
    * Set the number of passes over training data that have been completed so far.
    */
-  int getCurrentPass() { return this.currentPass; }
+  protected int getCurrentPass() { return this.currentPass; }
 
   /**
    * Returns the number of passes over training data that have been completed so far.

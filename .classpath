@@ -2,8 +2,74 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/JavaNLP - mt branch"/>
-	<classpathentry kind="lib" path="lib/fastutil-5.0.9.jar"/>
-	<classpathentry kind="lib" path="lib/tercom.jar" sourcepath="C:/Users/danielcer/tercom-0.7/src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/javanlp.core"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/AppleJavaExtensions.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/colt.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/commons-logging.jar" sourcepath="/javanlp.core/libsrc/commons-logging-1.0.4-src.zip!/commons-logging-1.0.4-src/src/java"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/counters-0.2.jar" sourcepath="/javanlp.core/libsrc/counters-0.2-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/dbparser.jar" sourcepath="/javanlp.core/libsrc/dbparser0.9.9c-src.zip!/dbparser/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/fastutil-5.0.10.jar" sourcepath="/javanlp.core/libsrc/fastutil-5.0.10-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/googleapi.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/groovy.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/html-parser.jar" sourcepath="/javanlp.core/libsrc/htmlparser-1.2-src.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jakarta-oro.jar" sourcepath="/javanlp.core/libsrc/jakarta-oro-2.0.8-src.zip!/jakarta-oro-2.0.8/src/java"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/Jama.jar" sourcepath="/javanlp.core/libsrc/Jama-1.0.2-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jasper-compiler.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jasper-runtime.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/javax.servlet.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jdbm.jar" sourcepath="/javanlp.core/libsrc/jdbm-1.0-src.zip!/jdbm-1.0/src/tests"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jdom.jar" sourcepath="/javanlp.core/libsrc/jdom-1.0-src.zip!/jdom-1.0/src/java"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/je.jar" sourcepath="/javanlp.core/libsrc/je-3.2.68-src.zip!/je-3.2.68/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jetty-util-6.1.5.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jgraph.jar" sourcepath="/javanlp.core/libsrc/jgraph-latest-lgpl-src.jar.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jgrapht.jar" sourcepath="/javanlp.core/libsrc/jgrapht-0.6.0-src.zip!/jgrapht-0.6.0/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jsvm.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/junit.jar" sourcepath="/javanlp.core/libsrc/junit-4.1-src.zip!/junit4.1"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/jwnlx.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/lbfgs.jar" sourcepath="/javanlp.core/libsrc/lbfgs-src.zip!/lbfgs-src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/libsvm.jar" sourcepath="/javanlp.core/libsrc/libsvm-2.84-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/lucene.jar" sourcepath="/javanlp.core/libsrc/lucene-2.2.0.zip!/lucene-2.2.0/contrib/queries/src/test"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/mtj.jar" sourcepath="/javanlp.core/libsrc/mtjsrc.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/mysql.jar" sourcepath="/javanlp.core/libsrc/mysql-connector-java-3.1.14-src.zip!/mysql-connector-java-3.1.14-bin/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/org.mortbay.jetty.jar" sourcepath="/javanlp.core/libsrc/jetty-5.1.11-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/propbank.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/protege.jar" sourcepath="/javanlp.core/libsrc/protege-3.3.1-src.zip!/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/ra-0.1.9-full.jar" sourcepath="/javanlp.core/libsrc/ra-0.1.9-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/serializer.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/uima_core.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/Verbnet.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/weka.jar" sourcepath="/javanlp.core/libsrc/weka-3.4.6-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/wn.jar" sourcepath="/javanlp.core/libsrc/wn-src.zip!/wn-src/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/xalan.jar" sourcepath="/javanlp.core/libsrc/xalan-j-2.7.0-src.zip!/xalan-j-2.7.0-src/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/xml-apis.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/xsltc.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/yahoo_search.jar" sourcepath="/javanlp.core/libsrc/yws-2.12-src.zip!/yws-2.12-src/src"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/commons-logging-1.0.4-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/counters-0.2-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/dbparser0.9.9c-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/fastutil-5.0.10-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/htmlparser-1.2-src.jar"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/jakarta-oro-2.0.8-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/Jama-1.0.2-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/jdbm-1.0-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/jdom-1.0-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/je-3.2.68-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/jetty-5.1.11-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/jgraph-latest-lgpl-src.jar.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/jgrapht-0.6.0-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/junit-4.1-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/lbfgs-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/libsvm-2.84-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/lucene-2.2.0.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/mtjsrc.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/mysql-connector-java-3.1.14-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/protege-3.3.1-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/ra-0.1.9-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/weka-3.4.6-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/wn-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/xalan-j-2.7.0-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/libsrc/yws-2.12-src.zip"/>
+	<classpathentry kind="lib" path="lib/bsh.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

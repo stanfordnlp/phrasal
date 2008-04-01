@@ -1,10 +1,11 @@
-package mt;
+package mt.chinesesyntax;
 
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Arrays;
 
 import edu.stanford.nlp.util.Index;
+import mt.*;
 import mt.AlignmentGrid.RelativePos;
 
 /**

@@ -38,7 +38,7 @@ public abstract class AbstractFeatureExtractor<E> implements FeatureExtractor<E>
   /**
    * Set the number of passes over training data that have been completed so far.
    */
-  int getCurrentPass() { return this.currentPass; }
+  protected int getCurrentPass() { return this.currentPass; }
 
   /**
    * Returns the number of passes over training data that have been completed so far.
