@@ -6,6 +6,9 @@ import java.io.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 
 import mt.*;
+import mt.base.IString;
+import mt.base.MosesNBestList;
+import mt.base.ScoredFeaturizedTranslation;
 
 
 public class NBestSourceHistogram {

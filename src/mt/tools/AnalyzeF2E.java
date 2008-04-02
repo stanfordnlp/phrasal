@@ -2,9 +2,10 @@ package mt.tools;
 
 import edu.stanford.nlp.util.StringUtils;
 
-import mt.GIZAWordAlignment;
-import mt.IString;
-import mt.Sequence;
+import mt.base.IString;
+import mt.base.Sequence;
+import mt.train.GIZAWordAlignment;
+
 import java.util.*;
 import java.io.*;
 import java.util.zip.GZIPInputStream;

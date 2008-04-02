@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.*;
 
 import mt.*;
+import mt.base.*;
+import mt.metrics.*;
 
 /**
  * Approximate Randomization Test for Statistical Significance Testing 

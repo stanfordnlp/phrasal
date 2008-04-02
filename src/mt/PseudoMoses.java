@@ -4,6 +4,18 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
+
+import mt.base.*;
+import mt.decoder.feat.*;
+import mt.decoder.h.*;
+import mt.decoder.inferer.*;
+import mt.decoder.inferer.impl.MultiBeamDecoder;
+import mt.decoder.inferer.impl.MultiBeamDecoder.MultiBeamDecoderBuilder;
+import mt.decoder.recomb.*;
+import mt.decoder.util.*;
+import mt.metrics.*;
+import mt.tune.*;
+
 /**
  * 
  * @author danielcer

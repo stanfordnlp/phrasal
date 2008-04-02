@@ -2,6 +2,13 @@ package mt.tools;
 
 import static java.lang.System.*;
 import mt.*;
+import mt.base.IString;
+import mt.base.IStrings;
+import mt.base.PharaohPhraseTable;
+import mt.base.PhraseTable;
+import mt.base.Sequence;
+import mt.base.SimpleSequence;
+import mt.base.TranslationOption;
 
 import java.io.*;
 import java.util.*;
