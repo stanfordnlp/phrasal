@@ -44,7 +44,6 @@ public class VPRotationalFeaturizer implements IncrementalFeaturizer<IString, St
       IString fBFinalWord = f.foreignSentence.get(end_foreignSwapPos);
       
       IString fAFinalWord = f.foreignSentence.get(beg_foreignSwapPos-1);
-      //IString fAInitialWord = f.foreignSentence.get(Featurizables.firstUntranslatedForeignWord(f));
       IString fAInitialWord = f.foreignSentence.get(f.foreignPosition);
       
       if (DEBUG) {

@@ -26,8 +26,4 @@ public class Featurizables {
           
           return f.hyp.foreignCoverage.nextClearBit(startloc)-1;
 	}
-
-	public static <TK, FV> int firstUntranslatedForeignWord(Featurizable<TK,FV> f) {
-          return f.hyp.foreignCoverage.nextClearBit(0);
-	}
 }
