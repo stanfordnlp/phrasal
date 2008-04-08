@@ -324,9 +324,9 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    
    #$trans_bleu = `$EXTERNAL_SCRIPTS_DIR/multi-bleu.perl $references < $iter_trans 2>&1`;
    if ($opt_type eq 'ter') {
-     $trans_eval = `java $java_flags mt.TERMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; 
    } else { # bleu or cmert path, the latter implies bleu 
-     $trans_eval = `java $java_flags mt.BLEUMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; 
    }
 
    chomp $trans_eval;
@@ -408,8 +408,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	    $jmert_log = "$work_dir/jmert.$iter.log";
    	  if ($iter >= $first_active_iter) {
 	      unlink($next_iter_weights);
-	      print "java $java_flags mt.UnsmoothedMERT $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1\n";
-	      `java $java_flags mt.UnsmoothedMERT $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1`;
+	      print "java $java_flags mt.tune.UnsmoothedMERT $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1\n";
+	      `java $java_flags mt.tune.UnsmoothedMERT $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1`;
 	      if (not -e $next_iter_weights) {
 	        print stderr "Exiting, error running $opt_type MERT\n";
 	        exit -1;
