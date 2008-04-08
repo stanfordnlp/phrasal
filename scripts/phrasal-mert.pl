@@ -302,7 +302,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    "------------------------------------------------------------------------\n\n";
    if (!$ENV{"SDI$iter"} && $iter >= $first_active_iter) { 
       print "Cmd:\njava $java_flags mt.PseudoMoses $iter_decoder_ini < $input_text > $iter_trans 2>$iter_dlog\n\n";
+      my $now = localtime time;
+      print "Start time: ",$now,"\n";
      `java $java_flags mt.PseudoMoses $iter_decoder_ini < $input_text > $iter_trans 2>$iter_dlog`;
+      $now = localtime time;
+      print "End time: ",$now,"\n";
    
      if ($? != 0) {
         print stderr "Decoder Failure!\n";
