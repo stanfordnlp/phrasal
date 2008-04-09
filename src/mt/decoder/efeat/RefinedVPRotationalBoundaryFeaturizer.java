@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class RefinedVPRotationalBoundaryFeaturizer implements IncrementalFeaturizer<IString, String>{
   static final String FEATURE_PREFIX = "RefinedVPRotB:";
 	
-  static final boolean DEBUG = true;
+  static final boolean DEBUG = false;
 	
 
   List<Map<Integer,Pair<Integer,String>>> rotBs = null;
@@ -262,7 +262,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements IncrementalFeaturi
     String featureString = FEATURE_PREFIX+type+label;
 
     if (!toAdd) {
-      System.err.printf("Drop Feature string: %s\n", featureString);
+      if (DEBUG) System.err.printf("Drop Feature string: %s\n", featureString);
       return null;
     }
 
