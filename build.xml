@@ -1,6 +1,7 @@
 <!-- JavaNLP MT build file -->
 
 <project name="mt" default="compile" basedir=".">
+
   <property name="project.core"   value="${basedir}/../core" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
