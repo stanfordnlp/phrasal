@@ -23,8 +23,10 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY };
 	public static final String[] CANONICAL_ONESCORE_SCORE_TYPES = {ONESCORE_P_t_f};
 	public static final boolean DEFAULT_EQUIVALENCE_CUTTOFFS = true;
-	
-	
+
+  public static final String TRIE_INDEX_PROPERTY = "TriePhraseTable";
+  public static final boolean TRIE_INDEX = Boolean.parseBoolean(System.getProperty(TRIE_INDEX_PROPERTY, "false"));
+
 	final String[] scoreNames;
 	final String name;
 	
@@ -51,7 +53,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	// java 6 64-bit  254 MiB
 	/////////////////////////////////////////////////////////////////
 	
-	final DynamicIntegerArrayIndex foreignIndex;
+	final IntegerArrayIndex foreignIndex;
 	
 	int longestForeignPhrase;
 	
@@ -116,7 +118,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		super(phraseFeaturizer, scorer);
 		File f = new File(filename);
 		name = String.format("Pharaoh(%s)", f.getName());
-		foreignIndex = new DynamicIntegerArrayIndex();
+		foreignIndex = TRIE_INDEX ? new TrieIntegerArrayIndex() : new DynamicIntegerArrayIndex();
 		translations = new ArrayList<List<IntArrayTranslationOption>>();
 		int countScores = init(f);
 		scoreNames = getScoreNames(countScores);
@@ -278,7 +280,15 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		}
 		
 		String model = args[0]; String phrase = args[1];
+    long startTimeMillis = System.currentTimeMillis();
+		System.out.printf("Loading phrase table: %s\n", model);
 		PharaohPhraseTable<String> ppt = new PharaohPhraseTable<String>(null, null, model);
+    long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
+    long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
+    double totalSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
+    System.err.printf("size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n", 
+      ppt.foreignIndex.size(), totalSecs, totalMemory, freeMemory);
+
 		List<TranslationOption<IString>> translationOptions = 
 			ppt.getTranslationOptions(new SimpleSequence<IString>(IStrings.toIStringArray(phrase.split("\\s+"))));
 		

@@ -2,7 +2,7 @@ package mt.base;
 
 import java.util.*;
 
-public class DynamicIntegerArrayIndex implements Iterable {
+public class DynamicIntegerArrayIndex implements Iterable, IntegerArrayIndex {
 	  public static final long serialVersionUID = 127L;
 	    
 	  static final int INIT_SZ = 1<<10;
