@@ -12,7 +12,7 @@ Koehn, P., Och, F.~J., \& Marcu, D. (2003).
 \newblock Statistical phrase-based translation.
 \newblock {\em In HLT-NAACL}.
 
-\bibitem[Och, 2002][Och][2002]{och2002b}
+\bibitem[Och, 2002][Och][2002]{och2003MERT}
 Och, F.-J. (2002).
 \newblock Minimum error rate training in statistical machine translation.
 \newblock {\em In ACL}.

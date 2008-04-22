@@ -20,7 +20,34 @@
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
-     id="defs4402" />
+     id="defs4402">
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path22760"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path22757"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+         transform="scale(0.8) translate(12.5,0)" />
+    </marker>
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -31,15 +58,15 @@
      objecttolerance="10"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.235704"
-     inkscape:cx="383.71132"
-     inkscape:cy="277.71685"
+     inkscape:zoom="1.7475494"
+     inkscape:cx="166.97696"
+     inkscape:cy="399.0055"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     inkscape:window-width="1920"
+     inkscape:window-width="1916"
      inkscape:window-height="1150"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8" />
+     inkscape:window-x="0"
+     inkscape:window-y="14" />
   <metadata
      id="metadata4405">
     <rdf:RDF>
@@ -56,21 +83,21 @@
      inkscape:groupmode="layer"
      id="layer1">
     <rect
-       style="fill:#aae7a9;fill-opacity:1;stroke:#aae7a9;stroke-width:3.77869225;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="fill:#78df78;fill-opacity:1;stroke:#7fdc7d;stroke-width:3.77869225;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect18975"
        width="234.58557"
        height="598.5238"
        x="353.0802"
        y="453.25183" />
     <rect
-       style="fill:#ff988e;fill-opacity:1;stroke:#ff988e;stroke-width:2.96099019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="fill:#ff6555;fill-opacity:1;stroke:#ff6555;stroke-width:2.96099019;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect18004"
        width="143.84648"
        height="599.34149"
        x="235.93645"
        y="451.69852" />
     <rect
-       style="fill:#91b5ff;fill-opacity:1;stroke:#91b5ff;stroke-width:3.78226328;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="fill:#3779ff;fill-opacity:1;stroke:#3779ff;stroke-width:3.78226328;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect16064"
        width="234.582"
        height="599.66467"
@@ -87,7 +114,7 @@
        id="path3266"
        sodipodi:nodetypes="cc" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#0039b6;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0"
+       style="fill:none;fill-rule:evenodd;stroke:#002c8e;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0"
        d="M 0.20354948,464.88562 C 486.19186,1053.303 486.19186,1053.303 486.19186,1053.303"
        id="path4428" />
     <path
@@ -95,11 +122,11 @@
        d="M 2.7846559,545.57614 C 568.30079,1053.2969 568.30079,1053.2969 568.30079,1053.2969"
        id="path4430" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#f3c518;stroke-width:3.78794861;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;fill-rule:evenodd;stroke:#665100;stroke-width:3.78794861;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M -2.086888,694.06223 C 401.50337,1054.735 401.50337,1054.735 401.50337,1054.735"
        id="path4432" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#30a72f;stroke-width:3.57796431;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;fill-rule:evenodd;stroke:#155115;stroke-width:3.57796431;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="M -0.38740687,847.40269 C 588.63975,902.53916 588.63975,902.53916 588.63975,902.53916"
        id="path4434" />
     <rect
@@ -205,7 +232,7 @@
          style="font-size:30px">Classifier Score</tspan></text>
     <path
        sodipodi:type="star"
-       style="fill:#aae7a9;fill-opacity:1;stroke:#000000;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="fill:#8ce08b;fill-opacity:1;stroke:#000000;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="path32645"
        sodipodi:sides="3"
        sodipodi:cx="448.62823"
@@ -480,5 +507,44 @@
        sodipodi:ry="6.4740424"
        d="M 126.24383 725.42303 A 5.6647868 6.4740424 0 1 1  114.91425,725.42303 A 5.6647868 6.4740424 0 1 1  126.24383 725.42303 z"
        transform="matrix(1.307851,0,0,1.1443696,224.26908,53.885014)" />
+    <text
+       xml:space="preserve"
+       style="font-size:30px"
+       x="323.88214"
+       y="635.77881"
+       id="text21777"><tspan
+         sodipodi:role="line"
+         id="tspan21779"
+         x="323.88214"
+         y="635.77881">New argmax at</tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.14096963px;stroke-linecap:butt;stroke-linejoin:miter;marker-start:none;marker-end:url(#Arrow1Lend);stroke-opacity:1"
+       d="M 361.57882,705.08911 L 257.00171,741.57086"
+       id="path21781" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.17744005px;stroke-linecap:butt;stroke-linejoin:miter;marker-end:url(#Arrow1Lend);stroke-opacity:1"
+       d="M 360.59356,705.10735 L 376.44413,871.44881"
+       id="path21783" />
+    <text
+       xml:space="preserve"
+       style="font-size:30px"
+       x="323.88211"
+       y="662.67358"
+       id="text22954"><tspan
+         sodipodi:role="line"
+         id="tspan22956"
+         x="323.88211"
+         y="662.67358">top most</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       x="314.15421"
+       y="690.71283"
+       id="text22958"><tspan
+         sodipodi:role="line"
+         id="tspan22960"
+         x="314.15421"
+         y="690.71283"
+         style="font-size:30px"> intersections</tspan></text>
   </g>
 </svg>
