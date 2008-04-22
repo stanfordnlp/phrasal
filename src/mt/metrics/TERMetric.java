@@ -14,7 +14,7 @@ import mt.base.Sequence;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
 
-import edu.stanford.nlp.mt.reranker.ter.TERcalc;
+import mt.reranker.ter.TERcalc;
 
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
