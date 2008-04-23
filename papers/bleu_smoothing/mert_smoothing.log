@@ -1,4 +1,4 @@
-This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  22 APR 2008 17:00
+This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  22 APR 2008 18:00
 entering extended mode
  file:line:error style messages enabled.
  %&-line parsing enabled.
@@ -267,28 +267,30 @@ Overfull \hbox (8.06473pt too wide) in paragraph at lines 234--236
  []
 
 
-Underfull \hbox (badness 1163) in paragraph at lines 254--255
-\OT1/ptm/m/n/10.95 Let's as-sume we are ex-am-in-ing two com-pet-ing
+Underfull \hbox (badness 2293) in paragraph at lines 254--255
+[]\OT1/ptm/m/n/10.95 The in-sight be-hind the al-go-rithm is as fol-
  []
 
 
-Underfull \hbox (badness 1436) in paragraph at lines 254--255
-\OT1/ptm/m/n/10.95 trans-la-tion/derivation pairs, $\OT1/cmr/m/n/10.95 (\OT1/cm
-r/bx/n/10.95 e[]\OML/cmm/m/it/10.95 ; \OT1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95
- )$ \OT1/ptm/m/n/10.95 & $\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m
-/it/10.95 ; \OT1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95 )$\OT1/ptm/m/n/10.95 .
+Underfull \hbox (badness 3942) in paragraph at lines 254--255
+\OT1/ptm/m/n/10.95 lows. Let's as-sume we are ex-am-in-ing two
  []
 
 
-Underfull \hbox (badness 1509) in paragraph at lines 254--255
-\OT1/ptm/m/n/10.95 to $\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m/it
-/10.95 ; \OT1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95 )$ \OT1/ptm/m/n/10.95 is gre
-ater than $\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m/it/10.95 ; \OT
-1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95 )$\OT1/ptm/m/n/10.95 , i.e. $\OT1/cmr/bx
-/n/10.95 w \OMS/cmsy/m/n/10.95 ^^A
+Underfull \hbox (badness 1147) in paragraph at lines 254--255
+\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m/it/10.95 ; \OT1/cmr/bx/n/
+10.95 h[]\OT1/cmr/m/n/10.95 )$\OT1/ptm/m/n/10.95 . Fur-ther, let's say the scor
+e as-signed
  []
 
-[3] [4] [5] [6]
+[3]
+Underfull \vbox (badness 2547) has occurred while \output is active []
+
+ [4]
+[5]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [6]
 Overfull \hbox (10.5926pt too wide) in paragraph at lines 436--453
  [] 
  []
@@ -318,6 +320,6 @@ Here is how much of TeX's memory you used:
  5291 multiletter control sequences out of 10000+50000
  22496 words of font info for 80 fonts, out of 500000 for 2000
  580 hyphenation exceptions out of 1000
- 27i,9n,24p,1614b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
+ 27i,9n,24p,1621b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
 
-Output written on mert_smoothing.dvi (9 pages, 53020 bytes).
+Output written on mert_smoothing.dvi (9 pages, 53032 bytes).
