@@ -53,6 +53,10 @@
            <compilerarg value="20"/> -->
       <!-- <compilerarg value="-Xlint"/> -->
     </javac>
+    <!-- Copy application resources -->
+    <copy  todir="${build.path}">
+      <fileset dir="${source.path}" excludes="**/*.java,**/*.html"/>
+    </copy>
   </target>
  
   <target name="test" depends="classpath"

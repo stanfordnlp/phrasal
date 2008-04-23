@@ -111,7 +111,7 @@ public class CombinedFeatureExtractor {
     boolean storeAlignmentCounts = false;
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
-      exsString = "mt.PharaohFeatureExtractor:mt.LexicalReorderingFeatureExtractor";
+      exsString = "mt.train.PharaohFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
     alTemps = new AlignmentTemplates(prop, filterFromDev);
     alTemp = new AlignmentTemplateInstance();
     extractors = new ArrayList<AbstractFeatureExtractor>();

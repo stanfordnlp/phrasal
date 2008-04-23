@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+################################################
+# Replaces <old_id> with <new_id> within
+# ttable-file, distortion-file, and lmodel-file
+# Author: Michel Galley
+################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+
+die "Usage: $0 <old_id> <new_id>\n" unless $#ARGV == 1;
+my $oldid = $ARGV[0];
+my $newid = $ARGV[1];
+
+my $field = '';
+while(<STDIN>) {
+	if(/^\[(\S+)\]/) {
+		$field = $1;
+ 	}
+	if($field eq 'ttable-file' ||
+	   $field eq 'distortion-file' ||
+	   $field eq 'lmodel-file') {
+		if(s/XXXX/$newid/g || s/$oldid/$newid/g) {
+			/(\S+)$/;
+			die "File does not exist: $1\n" if(! -f $1);
+		}
+	}
+	print;
+}
