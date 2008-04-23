@@ -279,7 +279,7 @@ Pseudocode for the line search is given in algorithm (\ref{mertlinesearchalg}). 
     
 \subsection{Search Strategies}
 
-In this section, we review two search strategies that, in conjunction with the line search just described, can be used to drive MERT. The first, Powell's method, was advocated by \emcite{och2003MERT} when MERT was first introduced for statistical machine translation. The second, which we call Koehn-coordinate descent (KCD)\footnote{Within the C++ source code, mert.c, the function that implements this search strategy is known as optimize\_koehn.}, is used by the MERT utility packaged with the popular Moses statistical machine translation system \cite{koehn2007}. 
+In this section, we review two search strategies that, in conjunction with the line search just described, can be used to drive MERT. The first, Powell's method, was advocated by \emcite{och2003MERT} when MERT was first introduced for statistical machine translation. The second, which we call Koehn-coordinate descent (KCD)\footnote{Moses uses David Chiang's CMERT package. Within the source file mert.c the function that implements the overall search strategy, optimize\_koehn(), is based on Philipp Koehn's Perl script for MERT optimization that was distributed with Pharaoh. }, is used by the MERT utility packaged with the popular Moses statistical machine translation system \cite{koehn2007}. 
 
 \subsubsection{Powell's Method}
 
