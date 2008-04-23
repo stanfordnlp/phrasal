@@ -2,6 +2,12 @@ package mt.train;
 
 import edu.stanford.nlp.util.*;
 
+/**
+ * Same as IntQuadruple, but with method names that
+ * reflect a two-coordinate system.
+ *
+ * @author Michel Galley
+ */
 public class Block extends IntQuadruple {
   public Block() { super(); }
   public Block(int f1, int f2, int e1, int e2) { super(f1,f2,e1,e2); }

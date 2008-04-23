@@ -45,8 +45,12 @@ public class CombinedFeatureExtractor {
   static public final String IBM_LEX_MODEL_OPT = "ibmLexModel";
   static public final String PTABLE_PHI_FILTER_OPT = "phiFilter"; // p_phi(e|f) filtering
   static public final String PTABLE_LEX_FILTER_OPT = "lexFilter"; // p_lex(e|f) filtering
-  // re-ordering probs:
-  static public final String PHARAOH_LEX_MODEL_OPT = "pharaohLexicalizedModel";
+
+  // lexicalized re-ordering models:
+  static public final String LEX_REORDERING_TYPE_OPT = "pharaohLexicalizedModel";
+  static public final String LEX_REORDERING_PHRASAL_OPT = "phrasalLexicalizedModel";
+  static public final String LEX_REORDERING_START_CLASS_OPT = "lexicalizedModelHasStart";
+  static public final String LEX_REORDERING_2DISC_CLASS_OPT = "lexicalizedModelHas2Disc";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -70,7 +74,8 @@ public class CombinedFeatureExtractor {
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT,
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
-       PHARAOH_LEX_MODEL_OPT 
+       LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
+       LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT
      }));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
