@@ -24,6 +24,8 @@ public class BshInterpreter extends bsh.Interpreter
         "import java.util.regex.*;"+
         "import java.io.*;"+
         "import mt.*;"+
+        "import mt.base.*;"+
+        "import mt.train.*;"+
         "import mt.tools.*;"+
         "import mt.ExperimentalFeaturizers.*;");
     } catch (bsh.EvalError e) {

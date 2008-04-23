@@ -60,7 +60,7 @@ public class FeaturizerFactory {
 		Map<String,List<String>> aliases = new HashMap<String,List<String>>();
 		
 		try {
-			LineNumberReader reader = new LineNumberReader(new InputStreamReader(ClassLoader.getSystemClassLoader().getResource(aliasResource).openStream()));	
+			LineNumberReader reader = new LineNumberReader(new InputStreamReader(ClassLoader.getSystemClassLoader().getResource(aliasResource).openStream()));
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 				String lineOrig = line;
 				line = line.replaceAll("#.*", "").replaceAll("\\s+$", "");
@@ -112,9 +112,6 @@ public class FeaturizerFactory {
 	}
 	
 	/**
-	 * @param <TK>
-	 * @param <FL>
-	 * @param t
 	 * @param featurizerSpecs
 	 * @return
 	 */

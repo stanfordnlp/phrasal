@@ -346,12 +346,12 @@ public class CombinedFeatureExtractor {
         Object scores = e.score(alTemp);
         if(scores == null)
           continue;
-        if(scores instanceof double[]) { // as dense vector
+        if(scores.getClass().isArray()) { // as dense vector
           double[] scoreArray = (double[]) scores;
           for(int i=0; i<scoreArray.length; ++i) {
             str.append(scoreArray[i]).append(" ");
           }
-        } else if(scores instanceof Int2IntLinkedOpenHashMap) { // as sparse vector
+        } else if(scores.getClass().equals(Int2IntLinkedOpenHashMap.class)) { // as sparse vector
           Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;
           for(int fIdx : counter.keySet()) {
             int cnt = counter.get(fIdx);

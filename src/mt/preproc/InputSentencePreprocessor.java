@@ -1,4 +1,4 @@
-package mt.orphan;
+package mt.preproc;
 
 import mt.train.SymmetricalWordAlignment;
 

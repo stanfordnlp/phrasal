@@ -40,10 +40,10 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
 
   /**
    * Preferred constructor. 
-   * @param fCCWords Source-language closed class words.
-   * @param eCCWords Target-language closed class words.
-   * @param fCCWords Source-language open class words.
-   * @param fCCWords Target-language open class words.
+   * @param fCCVocab Source-language closed class words.
+   * @param eCCVocab Target-language closed class words.
+   * @param fCCVocab Source-language open class words.
+   * @param fCCVocab Target-language open class words.
    */
   public ShallowSyntacticContextFeatureExtractor(String fCCVocab, String eCCVocab, String fOCVocab, String eOCVocab, int winSize) {
     this.winSize = winSize;

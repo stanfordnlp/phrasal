@@ -65,9 +65,9 @@ public interface FeatureExtractor<E> {
   public Object scoreNames();
 
   /**
-   * Called at the end of {@link CombinedNonphraseFeatureExtractor} to report the status of 
-   * each FeatureExtrator, but only if a specific output is provided with the FeatureExtractor.
-   * Note: do not output to STDOUT since that will mess up the combined behavior of the 
+   * Called to report the status of  each FeatureExtrator, but only if a
+   * specific output is provided with the FeatureExtractor. Note: do not
+   * output to STDOUT since that will mess up the combined behavior of the
    * CombinedFeatureExtractor.
    */
   public void report();
