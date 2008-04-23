@@ -1,4 +1,4 @@
-This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  22 APR 2008 18:09
+This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  22 APR 2008 22:54
 entering extended mode
  file:line:error style messages enabled.
  %&-line parsing enabled.
@@ -245,70 +245,152 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10.95> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 127.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 140.
- [1
+
+Underfull \hbox (badness 1565) in paragraph at lines 145--146
+\OT1/ptm/m/n/10.95 est scor-ing pair [] for each [], or rather
+ []
+
+[1
 
 
 
 
-] [2]
+]
+Underfull \hbox (badness 1590) in paragraph at lines 164--165
+\OT1/ptm/m/n/10.95 change the score as-signed by [] to
+ []
+
+
+Underfull \hbox (badness 1107) in paragraph at lines 164--165
+[]\OT1/ptm/m/n/10.95 , and any given
+ []
+
+
+Underfull \hbox (badness 3189) in paragraph at lines 175--175
+[]\OT1/ptm/m/n/10 Figure 1: MERT er-ror sur-face for the can-di-date
+ []
+
+
+Underfull \hbox (badness 1472) in paragraph at lines 175--175
+\OT1/ptm/m/n/10 trans-la-tions given in ta-ble 1[]. The re-gions are la-
+ []
+
+
+Underfull \hbox (badness 1264) in paragraph at lines 175--175
+\OT1/ptm/m/n/10 well as the re-gions' cor-re-spond-ing ob-jec-tive val-ues,
+ []
+
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 226.
+[2]
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 228.
 
-(/usr/share/texmf/tex/latex/psnfss/omsptm.fd
+ (/usr/share/texmf/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10.95> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 226.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 228.
 
-Overfull \hbox (8.06473pt too wide) in paragraph at lines 234--236
-[] []\OT1/ptm/m/n/10.95 best$[]$ = $[][] [] []$ 
+Overfull \hbox (8.06473pt too wide) in paragraph at lines 236--238
+[] []\OT1/ptm/m/n/10.95 best[] = $[][] [] []$ 
  []
 
 
-Underfull \hbox (badness 2293) in paragraph at lines 254--255
-[]\OT1/ptm/m/n/10.95 The in-sight be-hind the al-go-rithm is as fol-
+Underfull \hbox (badness 1163) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 Let's as-sume we are ex-am-in-ing two com-pet-ing
  []
 
 
-Underfull \hbox (badness 3942) in paragraph at lines 254--255
-\OT1/ptm/m/n/10.95 lows. Let's as-sume we are ex-am-in-ing two
+Underfull \hbox (badness 1436) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 trans-la-tion/derivation pairs, [] & [].
  []
 
 
-Underfull \hbox (badness 1147) in paragraph at lines 254--255
-\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m/it/10.95 ; \OT1/cmr/bx/n/
-10.95 h[]\OT1/cmr/m/n/10.95 )$\OT1/ptm/m/n/10.95 . Fur-ther, let's say the scor
-e as-signed
+Underfull \hbox (badness 4556) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 Fur-ther, let's say the score as-signed by the
  []
 
-[3] [4] [5]
-Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [6]
-Overfull \hbox (10.5926pt too wide) in paragraph at lines 436--453
+Underfull \hbox (badness 1383) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 model to [] is greater than [], i.e.
+ []
+
+
+Underfull \hbox (badness 4846) in paragraph at lines 256--257
+[]\OT1/ptm/m/n/10.95 . Since the
+ []
+
+
+Underfull \hbox (badness 4084) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 model's rel-a-tive pref-er-ence for the com-pet-ing
+ []
+
+
+Underfull \hbox (badness 5741) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 pairs switches as [].
+ []
+
+
+Underfull \hbox (badness 2080) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 At this par-tic-u-lar point, we have the equal-ity
+ []
+
+
+Overfull \hbox (1.00333pt too wide) in paragraph at lines 256--257
+[]\OT1/ptm/m/n/10.95 ,
+ []
+
+
+Underfull \hbox (badness 1325) in paragraph at lines 256--257
+\OT1/ptm/m/n/10.95 by the model to the can-di-dates in-ter-sect along
+ []
+
+[3]
+Underfull \hbox (badness 3930) in paragraph at lines 260--261
+\OT1/ptm/m/n/10.95 and search-ing along the [] co-or-di-nate, i.e.
+ []
+
+
+Underfull \hbox (badness 2689) in paragraph at lines 260--261
+[]\OT1/ptm/m/n/10.95 , ta-ble 2[] gives the line-
+ []
+
+
+Underfull \vbox (badness 3148) has occurred while \output is active []
+
+ [4]
+[5]
+Underfull \hbox (badness 2809) in paragraph at lines 341--342
+\OT1/ptm/m/n/10.95 rec-tions at ran-dom such that each com-po-nent
+ []
+
+
+Underfull \hbox (badness 1735) in paragraph at lines 341--342
+\OT1/ptm/m/n/10.95 is dis-tributed ac-cord-ing to a Gaus-sian[], [] s.t.
+ []
+
+[6] [7]
+Overfull \hbox (10.5926pt too wide) in paragraph at lines 441--458
  [] 
  []
 
-[7]
-Overfull \hbox (10.5926pt too wide) in paragraph at lines 481--498
+
+Overfull \hbox (10.5926pt too wide) in paragraph at lines 486--503
  [] 
  []
 
 
-Underfull \hbox (badness 5022) in paragraph at lines 503--503
+Underfull \hbox (badness 5022) in paragraph at lines 508--508
 \OT1/ptm/m/n/10 smooth-ing based upon the max-i-mum of ad-ja-cent
  []
 
-
-Underfull \hbox (badness 1331) in paragraph at lines 523--524
+[8]
+Underfull \hbox (badness 1331) in paragraph at lines 528--529
 \OT1/ptm/m/n/10.95 cur-rently look-ing at other sim-i-lar reg-u-lar-iza-tion
  []
 
-(./mert_smoothing.bbl [8]) [9
-
-] (./mert_smoothing.aux) ) 
+(./mert_smoothing.bbl) [9] (./mert_smoothing.aux) ) 
 Here is how much of TeX's memory you used:
  2186 strings out of 94501
  25546 string characters out of 1176789
@@ -316,6 +398,6 @@ Here is how much of TeX's memory you used:
  5291 multiletter control sequences out of 10000+50000
  22496 words of font info for 80 fonts, out of 500000 for 2000
  580 hyphenation exceptions out of 1000
- 27i,9n,24p,1621b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
+ 27i,10n,24p,1738b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
 
-Output written on mert_smoothing.dvi (9 pages, 53212 bytes).
+Output written on mert_smoothing.dvi (9 pages, 55508 bytes).
