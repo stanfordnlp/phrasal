@@ -50,6 +50,12 @@ public class FeaturizerFactory {
 	}
 	
 	static private Map<String,List<String>> readFeatureAliases(String aliasResource) {
+	  if(ClassLoader.getSystemClassLoader().getResource(aliasResource) == null) {
+      // MG: temporary fix; TODO: figure out why mt/resources/feature.aliases 
+      // can't be loaded anymore (after the reorganization of mt.*)
+      System.err.println("Warning: could not load alias file: "+aliasResource);
+      return null;
+    }
 		
 		Map<String,List<String>> aliases = new HashMap<String,List<String>>();
 		
