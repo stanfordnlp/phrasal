@@ -20,9 +20,20 @@
 \DeclareMathOperator*{\argmin}{argmin}
 \DeclareMathOperator*{\eval}{eval}
 
+\abovedisplayskip 2.0pt plus2pt minus2pt%
+\belowdisplayskip \abovedisplayskip
+\renewcommand{\baselinestretch}{0.99}
+\newcommand{\captionfonts}{\footnotesize}
+
+
 \title{Regularization and Search for Minimum Error Rate Training}
 
-\author{}
+\author{
+Daniel Cer\textnormal{,} Daniel Jurafsky\textnormal{, and} Christopher D. Manning\\
+Stanford University\\
+Stanford, CA 94305\\
+{\tt {cerd,jurafsky,manning}@cs.stanford.edu}
+}
 
 \date{}
 
@@ -41,7 +52,7 @@ Minimum error rate training (MERT) is a widely used learning procedure for stati
 %\begin{enumerate}
 %  \item State original stat mt formulation \cite{brown1993}, $p(e|f) = p(f|e)p(e)$
 %  \item Use of log linear formulation to allow more features \cite{och2002}
-%  \item MERT introduced as improvement over log linear \cite{och2002b}
+%  \item MERT introduced as improvement over log linear \cite{och2003MERT}
 %  \begin{enumerate}
 %     \item advantages: (i) fits actual error surface, even when
 %      such a surface is defined at the corpus level. (ii) finds global maximum along any given search direction (but critical to choose right search directions to find a good point in the large multi-dimensional space.
@@ -74,7 +85,7 @@ Minimum error rate training (MERT) is a widely used learning procedure for stati
 
 %\emcite{och2002} demonstrated that translation quality can be improved by introducing additional knowledge sources, such an alternative class based language model and a dictionary co-occurrence count feature. Given that the noisy channel model does not readily accept arbitrary novel knowledge sources, the problem was reformulated in terms of a log-linear model. Not only does such a formulation admit arbitrary knowledge sources as features, but also allows all knowledge sources to be weighted discriminatively.
 
-\emcite{och2002b} introduced minimum error rate training (MERT) as an alternative training regime to the conditional likelihood objective previously used with log-linear translation models \cite{och2002}. This approach attempts to improve translation quality by optimizing an automatic translation evaluation metric, such as the BLEU score \cite{kishore2002}. This is accomplished by either directly walking the true error surface provided by an evaluation metric w.r.t. the model weights for a given data set or by using gradient-based techniques on a continuous approximation of such a surface. While the true error surface is piece-wise constant and thus cannot be optimized using gradient techniques, \emcite{och2002b} provides an approach that performs such training efficiently as long as the number of model weights remains relatively small. 
+\emcite{och2003MERT} introduced minimum error rate training (MERT) as an alternative training regime to the conditional likelihood objective previously used with log-linear translation models \cite{och2002}. This approach attempts to improve translation quality by optimizing an automatic translation evaluation metric, such as the BLEU score \cite{kishore2002}. This is accomplished by either directly walking the true error surface provided by an evaluation metric w.r.t. the model weights for a given data set or by using gradient-based techniques on a continuous approximation of such a surface. While the true error surface is piece-wise constant and thus cannot be optimized using gradient techniques, \emcite{och2003MERT} provides an approach that performs such training efficiently as long as the number of model weights remains relatively small. 
 
 In this paper we explore a number of variations on MERT. First, it is shown that performance gains can be had by making use of a stochastic search strategy as compare to that obtained by Powell's method and coordinate ascent. Subsequently, results are presented for two regularization strategies. Both strategies allow coordinate ascent and Powell's method to acheive performance that is competitive with stochastic search. 
 
@@ -173,7 +184,7 @@ Since the objective is piecewise constant, it cannot be minimized using gradient
 
 \subsection{Global minimum along a line}
 
-Even without gradient information, numerous methods can be used to find, or approximately find, local minima along a line. However, by exploiting the fact that the underlying model-scores assigned to competing hypotheses,  ${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$, vary linearly w.r.t. changes in the weight vector, ${\bf w}$, \emcite{och2002b} proposed a strategy for finding the global minimum along any given search direction. 
+Even without gradient information, numerous methods can be used to find, or approximately find, local minima along a line. However, by exploiting the fact that the underlying model-scores assigned to competing hypotheses,  ${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$, vary linearly w.r.t. changes in the weight vector, ${\bf w}$, \emcite{och2003MERT} proposed a strategy for finding the global minimum along any given search direction. 
 
 \begin{figure}[h]
 \vskip 0.2in
@@ -234,7 +245,7 @@ $e_4$     & -0.9 & -0.55  & [$-\infty$,-0.83] \\
    \STATE $i_{best} = \argmin_{i \in {\cal I}} \eval({\cal L},{\bf w}+(i-\epsilon) \cdot {\bf d})$
    \STATE {\bf return} ${\bf w}+(i_{best}-\epsilon) \cdot {\bf d}$
 \caption{
-\emcite{och2002b}'s line search method to find the global minimum in the loss, ${\ell}$, when starting at the point ${\bf w}$ and searching along the direction ${\bf d}$ using the candidate translations given in the collection of n-best lists ${\cal L}$.
+\emcite{och2003MERT}'s line search method to find the global minimum in the loss, ${\ell}$, when starting at the point ${\bf w}$ and searching along the direction ${\bf d}$ using the candidate translations given in the collection of n-best lists ${\cal L}$.
 \label{mertlinesearchalg}
 }
 \end{algorithmic}
@@ -250,7 +261,7 @@ Pseudocode for the line search is given algorithm (\ref{mertlinesearchalg}). Let
 
 %\begin{enumerate}
 %  \item mention alternative of a grid search (others?)
-%  \item describe method given in \cite{och2002b}, and 
+%  \item describe method given in \cite{och2003MERT}, and 
 %        illustrated in \ref{mertlinesearchalg} pseudo code
 %  \begin{enumerate}
 %    \item find all intersections along a search direction
@@ -268,7 +279,7 @@ Pseudocode for the line search is given algorithm (\ref{mertlinesearchalg}). Let
     
 \subsection{Search Strategies}
 
-In this section, we review two search strategies that, in conjunction with the line search just described, can be used to drive MERT. The first, Powell's method, was advocated by \emcite{och2002b} when MERT was first introduced for statistical machine translation. The second, which we call Koehn-coordinate descent (KCD)\footnote{Within the C++ source code, mert.c, the function that implements this search strategy is known as optimize\_koehn.}, is used by the MERT utility packaged with the popular Moses statistical machine translation system \cite{koehn2007}. 
+In this section, we review two search strategies that, in conjunction with the line search just described, can be used to drive MERT. The first, Powell's method, was advocated by \emcite{och2003MERT} when MERT was first introduced for statistical machine translation. The second, which we call Koehn-coordinate descent (KCD)\footnote{Within the C++ source code, mert.c, the function that implements this search strategy is known as optimize\_koehn.}, is used by the MERT utility packaged with the popular Moses statistical machine translation system \cite{koehn2007}. 
 
 \subsubsection{Powell's Method}
 
@@ -282,7 +293,7 @@ KCD is a variant of coordinate descent that, at each iteration, moves along the 
 %\begin{enumerate}
 %  \item Powell's algorithm  \cite{press2007} (will update to 2007 ref) % to do update reference to 2007 edition
 %     \begin{enumerate}
-%        \item original strategy suggested by \cite{och2002b}
+%        \item original strategy suggested by \cite{och2003MERT}
 %        \item Basic form: (i) search along coordinates, (ii) construct novel search direction based on progress made during coordinate search (iii) throw away one of the coordinate search directions and replace it with the combined direction (iv) repeat 
 %        \item Convergence guarantees
 %        \item Basic implementation has problems with search directions becoming linearly dependant. So, typical implementations include additional heuristics that limit when the combined search direction is used to replace one of the existing search directions or to periodically reset all the search directions back to the coordinates. 
@@ -346,7 +357,7 @@ Specifically, the search procedure chooses directions at random such that each c
 
 One potential drawback of MERT, as it is typically implemented, is that it attempts to find the best possible set of parameters for a training set without making any explicit efforts to find a set of parameters that can be expected to generalize well. For example, let's say that for some objective there is a very deep but narrow minima that is surrounded on all sides by very bad objective values. That is, the BLEU score at the minima might be $39.1$ while all surrounding plateaus have a BLEU score that is $< 10$. Intuitively, such a minima would be a very bad solution, as the resulting parameters would likely exhibit very poor generalization to other data sets. This could be avoided by regularizing the surface in order to eliminate such spurious minima. 
 
-One candidate for performing such regularization is the continuous approximation of the MERT objective, ${\cal O} = \mathbb{E}_{p_{\bf w}}({\ell})$. \emcite{och2002b} claimed that this approximation achieved essentially equivalent performance to that obtained when using the true loss, ${\cal O} = \ell$. However, \emcite{zens07} found that ${\cal O} = \mathbb{E}_{p_{\bf w}}({\ell})$ achieved substantially better test set performance than ${\cal O} = \ell$, even though it performs slightly worse on the data used to train the parameters. Unfortunately, a straightforward implementation of the continuous approximation requires a loss that can be applied at the sentence level. If the evaluation metric of interest does not have this property (e.g. BLEU), a sentence level surrogate must be developed, with successful learning then being tied to how well the surrogate captures the critical properties of the true loss.  
+One candidate for performing such regularization is the continuous approximation of the MERT objective, ${\cal O} = \mathbb{E}_{p_{\bf w}}({\ell})$. \emcite{och2003MERT} claimed that this approximation achieved essentially equivalent performance to that obtained when using the true loss, ${\cal O} = \ell$. However, \emcite{zens07} found that ${\cal O} = \mathbb{E}_{p_{\bf w}}({\ell})$ achieved substantially better test set performance than ${\cal O} = \ell$, even though it performs slightly worse on the data used to train the parameters. Unfortunately, a straightforward implementation of the continuous approximation requires a loss that can be applied at the sentence level. If the evaluation metric of interest does not have this property (e.g. BLEU), a sentence level surrogate must be developed, with successful learning then being tied to how well the surrogate captures the critical properties of the true loss.  
 
 We propose an alternative regularization scheme that operates over the true piecewise constant objective but that mitigates the problem of spurious local minima by smoothing over adjacent plateaus during the line search. That is, when assessing the desirability of any given plateau, we examine, within a fixed window $w$, adjacent plateaus along the direction being searched and combine their evaluation scores. We explore two combination methods, $max$ and $average$. The former, $max$, assigns each plateau an objective value that is equal to the maximum objective value in its surrounding window, while $average$ assigns a plateau an objective value that is equal to its window's average. Figure (\ref{smoothinglinesearch}) illustrates both methods for regularizing the plateaus and contrasts them with the case where no regularization is used. Notice that, while both methods discount spurious pits in the objective, $average$ still does place some value on isolated deep plateaus, and $max$ discounts them completely.
 
@@ -510,6 +521,10 @@ The none entry for each search strategy represents the baseline where no regular
 We have presented two methods for improving the performance of MERT. The first is a novel stochastic search strategy that appears to make better use of MERT's algorithm for finding the global minimum along any given search direction than either coordinate descent or Powell's method. The second is a simple regularization scheme that leads to performance gains for both coordinate descent and Powell's method. However, no further gains are obtained by combining the stochastic search with regularization of the objective.   
 
 One quirk of the regularization scheme presented here is that the regularization applied to any given point in the objective varies depending upon what direction the point is approached from. We are currently looking at other similar regularization schemes that maintain consistent objective values regardless of the search direction.  
+
+\section{Acknowledgments}
+
+We would like to extend our thanks to our three anonymous reviewers, particularly for the depth of analysis provided. This paper is based on work funded in part by the Defense Advanced Research Projects Agency through IBM. 
 
 % \begin{enumerate}
 %   \item Powell vs. Coordinate - equivalent

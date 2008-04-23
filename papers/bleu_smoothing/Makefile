@@ -1,6 +1,3 @@
-/u/apache/htdocs/local/acl08dd/mert_smoothing.pdf: mert_smoothing.pdf
-	cp mert_smoothing.pdf /u/apache/htdocs/local/acl08dd
-
 mert_smoothing.pdf: mert_smoothing.dvi
 	dvipdfm mert_smoothing
 

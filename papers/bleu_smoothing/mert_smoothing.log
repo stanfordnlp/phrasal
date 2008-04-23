@@ -1,5 +1,7 @@
-This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2006.6.19)  21 APR 2008 14:19
+This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  22 APR 2008 17:00
 entering extended mode
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
 **mert_smoothing
 (./mert_smoothing.tex
 LaTeX2e <2003/12/01>
@@ -198,131 +200,124 @@ LaTeX Info: Redefining \addtolength on input line 60.
 ) (./mert_smoothing.aux)
 \openout1 = `mert_smoothing.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Try loading font information for OT1+ptm on input line 29.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 40.
 
 (/usr/share/texmf/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14.4> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 30.
-LaTeX Font Info:    Try loading font information for U+lasy on input line 30.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 41.
+LaTeX Font Info:    Try loading font information for U+lasy on input line 41.
 
 (/usr/share/texmf/tex/latex/base/ulasy.fd
 File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
 )
-LaTeX Font Info:    Try loading font information for U+msa on input line 30.
+LaTeX Font Info:    Try loading font information for U+msa on input line 41.
 
 (/usr/share/texmf/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2002/01/19 v2.2g AMS font definitions
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 30.
+LaTeX Font Info:    Try loading font information for U+msb on input line 41.
 
 (/usr/share/texmf/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2002/01/19 v2.2g AMS font definitions
 )
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 30.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 41.
+LaTeX Font Info:    Try loading font information for OT1+pcr on input line 41.
+
+(/usr/share/texmf/tex/latex/psnfss/ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10.95> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 80.
-
-
-LaTeX Warning: Citation `och2002b' on page 1 undefined on input line 80.
-
-
-LaTeX Warning: Citation `och2002b' on page 1 undefined on input line 80.
-
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 127.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 132.
-[1
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 140.
+ [1
 
 
 
 
 ] [2]
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 218.
 
- (/usr/share/texmf/tex/latex/psnfss/omsptm.fd
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 226.
+
+(/usr/share/texmf/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10.95> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 218.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 226.
 
-Overfull \hbox (8.06473pt too wide) in paragraph at lines 226--228
+Overfull \hbox (8.06473pt too wide) in paragraph at lines 234--236
 [] []\OT1/ptm/m/n/10.95 best$[]$ = $[][] [] []$ 
  []
 
 
-Underfull \hbox (badness 2293) in paragraph at lines 246--247
-[]\OT1/ptm/m/n/10.95 The in-sight be-hind the al-go-rithm is as fol-
+Underfull \hbox (badness 1163) in paragraph at lines 254--255
+\OT1/ptm/m/n/10.95 Let's as-sume we are ex-am-in-ing two com-pet-ing
  []
 
 
-Underfull \hbox (badness 3942) in paragraph at lines 246--247
-\OT1/ptm/m/n/10.95 lows. Let's as-sume we are ex-am-in-ing two
+Underfull \hbox (badness 1436) in paragraph at lines 254--255
+\OT1/ptm/m/n/10.95 trans-la-tion/derivation pairs, $\OT1/cmr/m/n/10.95 (\OT1/cm
+r/bx/n/10.95 e[]\OML/cmm/m/it/10.95 ; \OT1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95
+ )$ \OT1/ptm/m/n/10.95 & $\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m
+/it/10.95 ; \OT1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95 )$\OT1/ptm/m/n/10.95 .
  []
 
 
-Underfull \hbox (badness 1147) in paragraph at lines 246--247
-\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m/it/10.95 ; \OT1/cmr/bx/n/
-10.95 h[]\OT1/cmr/m/n/10.95 )$\OT1/ptm/m/n/10.95 . Fur-ther, let's say the scor
-e as-signed
+Underfull \hbox (badness 1509) in paragraph at lines 254--255
+\OT1/ptm/m/n/10.95 to $\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m/it
+/10.95 ; \OT1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95 )$ \OT1/ptm/m/n/10.95 is gre
+ater than $\OT1/cmr/m/n/10.95 (\OT1/cmr/bx/n/10.95 e[]\OML/cmm/m/it/10.95 ; \OT
+1/cmr/bx/n/10.95 h[]\OT1/cmr/m/n/10.95 )$\OT1/ptm/m/n/10.95 , i.e. $\OT1/cmr/bx
+/n/10.95 w \OMS/cmsy/m/n/10.95 ^^A
  []
 
+[3] [4] [5] [6]
+Overfull \hbox (10.5926pt too wide) in paragraph at lines 436--453
+ [] 
+ []
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [3]
-Underfull \vbox (badness 2376) has occurred while \output is active []
-
- [4]
-[5]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [6]
 [7]
-Overfull \hbox (10.5926pt too wide) in paragraph at lines 428--445
+Overfull \hbox (10.5926pt too wide) in paragraph at lines 481--498
  [] 
  []
 
 
-Overfull \hbox (10.5926pt too wide) in paragraph at lines 473--490
- [] 
- []
-
-
-Underfull \hbox (badness 5022) in paragraph at lines 495--495
+Underfull \hbox (badness 5022) in paragraph at lines 503--503
 \OT1/ptm/m/n/10 smooth-ing based upon the max-i-mum of ad-ja-cent
  []
 
 
-Underfull \hbox (badness 1331) in paragraph at lines 515--516
+Underfull \hbox (badness 1331) in paragraph at lines 523--524
 \OT1/ptm/m/n/10.95 cur-rently look-ing at other sim-i-lar reg-u-lar-iza-tion
  []
 
+(./mert_smoothing.bbl [8]) [9
 
-Underfull \vbox (badness 1975) has occurred while \output is active []
-
- [8]
-(./mert_smoothing.bbl) [9] (./mert_smoothing.aux) ) 
+] (./mert_smoothing.aux) ) 
 Here is how much of TeX's memory you used:
- 2153 strings out of 94501
- 25091 string characters out of 1176789
+ 2186 strings out of 94501
+ 25546 string characters out of 1176789
  85930 words of memory out of 1000000
- 5262 multiletter control sequences out of 10000+50000
- 22280 words of font info for 79 fonts, out of 500000 for 2000
+ 5291 multiletter control sequences out of 10000+50000
+ 22496 words of font info for 80 fonts, out of 500000 for 2000
  580 hyphenation exceptions out of 1000
- 27i,9n,24p,1621b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
+ 27i,9n,24p,1614b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
 
-Output written on mert_smoothing.dvi (9 pages, 53408 bytes).
+Output written on mert_smoothing.dvi (9 pages, 53020 bytes).

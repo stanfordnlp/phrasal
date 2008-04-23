@@ -2,10 +2,9 @@ This is BibTeX, Version 0.99c (Web2C 7.5.4)
 The top-level auxiliary file: mert_smoothing.aux
 The style file: mlapa.bst
 Database file #1: mert_smoothing.bib
-Warning--I didn't find a database entry for "och2002b"
 You've used 12 entries,
             2472 wiz_defined-function locations,
-            608 strings with 6112 characters,
+            607 strings with 6104 characters,
 and the built_in function-call counts, 4756 in all, are:
 = -- 452
 > -- 255
@@ -44,4 +43,3 @@ warning$ -- 0
 while$ -- 26
 width$ -- 0
 write$ -- 217
-(There was 1 warning)
