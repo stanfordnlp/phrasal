@@ -28,6 +28,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   enum LanguageTypes { fe, f, e };
 
   int modelSize = 0;
+  int numModels = 0;
   private boolean[] enabledTypes = new boolean[ReorderingTypes.values().length];
   private int[] typeToIdx = new int[ReorderingTypes.values().length];
 
@@ -49,7 +50,8 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     String[] tokens = type.split("-");
     assert(2 <= tokens.length && tokens.length <= 3);
     // Type of extraction: word-phrase (Moses) vs. phrase-phrase (Tillmann, etc):
-    phrasalReordering = Boolean.getBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_PHRASAL_OPT, "false"));
+    phrasalReordering = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_PHRASAL_OPT, "false"));
+    System.err.println("phrase-phrase reordering: "+phrasalReordering);
     // Get categories:
     if("msd".equals(tokens[0]) || "orientation".equals(tokens[0])) {
       enabledTypes[ReorderingTypes.swap.ordinal()] = true;
@@ -58,22 +60,25 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     else
       fail= true;
     if(phrasalReordering) {
-      enabledTypes[ReorderingTypes.swap.ordinal()] =
-        Boolean.getBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_START_CLASS_OPT, "false"));
-      enabledTypes[ReorderingTypes.swap.ordinal()] =
-      Boolean.getBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
+      enabledTypes[ReorderingTypes.start.ordinal()] =
+        Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_START_CLASS_OPT, "false"));
+      enabledTypes[ReorderingTypes.discont2.ordinal()] =
+      Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
     }
     modelSize = initTypeToIdx();
     // Determine whether model is forward, backward, both, or joint:
     switch(tokens.length) {
     case 2:
       directionType = DirectionTypes.forward;
+      numModels = 1;
       break;
     case 3:
       if("bidirectional".equals(tokens[1])) {
         directionType = DirectionTypes.bidirectional;
+        numModels = 2;
       } else if("joint".equals(tokens[1])) {
         directionType = DirectionTypes.joint;
+        numModels = 1;
       } else
         fail = true;
       break;
@@ -116,31 +121,52 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
 
   public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
-  private ReorderingTypes getLeftToRightOrder(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  private ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, boolean forward) {
     WordAlignment sent = alTemp.getSentencePair();
-    int f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos(), e1 = alTemp.eStartPos();
-    boolean connectedMonotone = isAligned(sent,e1-1,f1-1,RelativePos.NW,alGrid);
-    boolean connectedSwap = isAligned(sent,e1-1,f2+1,RelativePos.NE,alGrid);
+    int f1 = alTemp.fStartPos()-1, f2 = alTemp.fEndPos()+1, e1 = alTemp.eStartPos()-1, e2 = alTemp.eEndPos()+1;
+    boolean connectedMonotone = forward ? 
+      isAligned(sent,e1,f1,RelativePos.NW,alGrid) : isAligned(sent,e2,f2,RelativePos.SE,alGrid);
+    boolean connectedSwap = forward ? 
+      isAligned(sent,e1,f2,RelativePos.NE,alGrid) : isAligned(sent,e2,f1,RelativePos.SW,alGrid);
+    // Determine if Monotone, Swap, or Discontinous:
     if(connectedMonotone && !connectedSwap) return ReorderingTypes.monotone;
-    else if(!connectedMonotone && connectedSwap) return ReorderingTypes.swap;
-    return ReorderingTypes.discont1;
-  }
-
-  private ReorderingTypes getRightToLeftOrder(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
-    WordAlignment sent = alTemp.getSentencePair();
-    int f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos(), e2 = alTemp.eEndPos();
-    boolean connectedMonotone = isAligned(sent,e2+1,f1-1,RelativePos.SW,alGrid);
-    boolean connectedSwap = isAligned(sent,e2+1,f2+1,RelativePos.SE,alGrid);
-    if(connectedMonotone && !connectedSwap) return ReorderingTypes.monotone;
-    else if(!connectedMonotone && connectedSwap) return ReorderingTypes.swap;
+    if(!connectedMonotone && connectedSwap) return ReorderingTypes.swap;
+    if(!enabledTypes[ReorderingTypes.discont2.ordinal()]) return ReorderingTypes.discont1;
+    // If needed, distinguish between forward and backward discontinuous:
+    int fPos = forward ? f1 : f2;
+    int fStep = forward ? -1 : 1;
+    while(sent.f2e(fPos).isEmpty()) {
+      if(fPos == 0 || fPos == sent.f().size()-1) {
+        if(DEBUG) System.err.println("warning: falling back to default (1)");
+        return ReorderingTypes.discont1;
+      }
+      fPos += fStep;
+    }
+    boolean allLeft = true, allRight = true;
+    for(int ei : sent.f2e(fPos)) {
+      if(e1 < ei && ei < e2) {
+        if(DEBUG) System.err.println("warning: falling back to default (2)");
+        return ReorderingTypes.discont1;
+      }
+      if(ei <= e1) allRight = false;
+      if(e2 <= ei) allLeft = false;
+    }
+    if(forward) {
+      if(allLeft) return ReorderingTypes.discont1;
+      if(allRight) return ReorderingTypes.discont2;
+    } else {
+      if(allLeft) return ReorderingTypes.discont2;
+      if(allRight) return ReorderingTypes.discont1;
+    }
+    if(DEBUG) System.err.println("warning: falling back to default (3)");
     return ReorderingTypes.discont1;
   }
 
   public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     if(getCurrentPass()+1 != getRequiredPassNumber())
       return;
-    ReorderingTypes type1 = getLeftToRightOrder(alTemp, alGrid);
-    ReorderingTypes type2 = getRightToLeftOrder(alTemp, alGrid);
+    ReorderingTypes type1 = getReorderingType(alTemp, alGrid, true);
+    ReorderingTypes type2 = getReorderingType(alTemp, alGrid, false);
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       // Analyze reordering (forward):
       if(DEBUG) debugOrientation("forward_global="+ phrasalReordering, alTemp, alGrid, type1);
@@ -164,7 +190,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     else if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
     else if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     assert(idx >= 0);
-    double[] scores = new double[modelSize];
+    double[] scores = new double[modelSize*numModels];
     if(directionType == DirectionTypes.joint) {
       fillProbDist((double[])jointCounts.get(idx), scores, 0);
     } else {
@@ -254,7 +280,6 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     while(idx >= list.size()) {
       double[] arr = new double[modelSize];
       Arrays.fill(arr, LAPLACE_SMOOTHING);
-      //arr[size-1] += (maxSize-size)*LAPLACE_SMOOTHING; // TODO: figure this out
       list.add(arr);
     }
     counts = (double[]) list.get(idx);

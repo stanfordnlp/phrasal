@@ -19,6 +19,5 @@ public interface PhraseExtractor {
    * Extract all admissible phrase pairs from a given word-aligned sentence pair.
    */
   public void extractPhrases(WordAlignment sent);
-  //public void extractPhrases(SymmetricalWordAlignment sent);
 
 }
