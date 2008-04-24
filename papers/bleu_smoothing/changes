@@ -1,0 +1,178 @@
+changes:
+----------
+
+- Made it so that the diagrams are more readable on a black and white print out
+- Added arrows that Chris requested for the line search graphs
+
+- Mirror space saving formatting changes
+- Added author names
+- Added achknowledgements
+- Corrected Och minimum error rate training citation from 2002 to 2003
+
+- Added mini-cooridate arrows for classifier Score & delta w LM
+- Made line search & error surface graph slighly larger
+- Fixed equation on page 3, section 2.1, that was split over two lines
+- Dropped F sub-scripts from the loss
+- Added missing w subscript to E on page 2.
+- Fixed typos found by DanJ 
+- Fixed big O on page 3 that wasn't in Cal typeface
+- Made achknowledgements use 'small' typeface.
+
+---- Reviewer 1 comments -------
+Detailed comments:
+
+Fixed - Sec. 2: "the hidden STATE" (btw why not call it alignment?)
+   - "the hidden stated" --> "the hidden state", (previously)
+   - added footnote mentioning that hiddent state is typically referred 
+     to as the alignment - later removed due to space concerns
+  
+Fixed - - Sec. 2: "maps the collection of translations E produced by our system onto"
+   - moved E from after "our system" to after "collection of translations"
+   - added subscript - odd I thought I did this already
+
+Fixed - Sec. 2: "will exceed that assigned to the prior VECTOR"
+   - no, no, I actually really did mean *victor* not vector
+   - I changed the word victor to winner just to make it clear
+     that there isn't a typo here.
+
+Fixed - Sec. 2: "which plots the MERT objective FUNCTION for a simple model"
+   - I'm okay with just saying MERT objection, but if the reviewer
+     really wants "MERT objective function" they can have
+     "MERT objection function"
+
+Fixed - Sec. 2: "Here, the loss l is defined" (eliminate 3 commas)
+   - Extra two commas were eliminated
+
+Fixed - Anticipate that optimization is carried over N-best lists and not over the full search space 
+   - Added an extra paragraph to address this
+
+Fixed - Try to avoid splitting long formulas over two lines
+   - mbox'ed all equations using a Perl script 
+
+Somewhat fixed - Lighten math notation: what about removing ranges of variables
+   - Removed a few unnecessary subscripts & ranges 
+     (might be able to do more if there's time)
+
+Fixed - Specify number of N-best you are using in the MERT experiments
+   - Added material regarding n-best list size & exact convergence criteria 
+
+
+---- Reviewer 2 comments -----
+
+Fixed Pag. 2 l+7: E has not been introduced in a clear way.
+   - Added missing subscript to E (this was done during 
+     prior rounds of editing)
+
+Fixed Pag. 4 l+5: The supra-index of the equation are ok?
+   - Super-scripts corrected (moved from f to h for both sides
+     of the equation) 
+
+Fixed Section 2.1: Is convex the optimization problem?
+   - Made it clear that this is *not* a convex optimization problem
+     even though the surface defined by the classifier score is convex.
+
+Skipped Section 4: A table with a summary of the characteristics of the
+corpora should be introduced.
+   - There's no way we can fit this in with rewritting sizable 
+     amounts of the paper to make things shorter.
+     (may fix this if there's time)
+  
+
+Fixed Table 3: I suppose that the figures reported in the table are bleu
+scores.
+   - Fixed for tables 3,4, & 5 - we now explicitly mention BLEU scores 
+     for each.
+
+Section 5, end of paragraph 2: I'm amazing that the differences are
+statistical significant.
+   - yeah, well they are, and very significant at that.
+
+
+--- Review 3 minor comments ----
+
+Minor comments:
+
+Fixed - Och's paper on Minimum Error Rate Training appeared in 2003, not 2002.
+   - one of the first things that was fixed
+
+Fixed -The colors in Figs. 1 & 2 simply do not convey in my black & white printed
+copy.  Many people will read the paper this way, so please make sure that the
+figures are understandable in this medium.
+    - again, one of the first things that was fixed
+
+Fixed - I am not sure whether it is necessary to go into the implementation details of the source code, but in any case I think it would be fair to credit David
+Chiang, the  author of the optimization code included with Moses.  The KCD
+method is based on Philipp Koehn's older perl training script for the Pharoah
+toolkit; it is basically the algorithm described in Och's 2003 paper.
+      - fixed earlier. Foot note now includes mention of David Chiang
+
+
+--- Reviwer 2 big comments
+
+Fixed -The first paragraph states that Och's algorithm works by "walking the true
+error surface".  This is not really true.  Och's algorithm samples a single
+point in the parameter space and constructs an *approximation* to the true
+error surface using n-best lists.  It is this approximate surface that is
+walked.  However, as the the distance from the sampled point increases, the
+correctness of this approximation dwindles, and thus the optimum on the surface
+might be very far from the true optimum due to errors in the approximation
+(this is why early iterations of the algorithm often return very poor results).
+ Although the approximation improves over time as more points are sampled, it
+is important to keep in mind that the optimization always occurs on this
+approximate surface.
+
+    - Removed offending language from the introduction
+    - Section 2 now includes details regarding how MERT training is
+      performed iteratively, using cumulative n-best lists to 
+      approximate the hypothesis space.
+      
+
+-What is called here "regularization" is really a form of smoothing.  The use
+of the term "regularization" is probably fine, as I understand it encompasses
+methods like this.  However, in most of the recent literature at *CL
+conferences it seems to refer specifically to methods used to control or
+minimize the number of parameters, which is not done here.  I was initially a
+bit confused by the usage.
+   
+    - Added footnote to address this
+
+-The regularization method aims to solve the same problem as the annealing
+method presented by Smith & Eisner (ACL-COLING 2006).  I wonder how the two
+methods compare?  Even if an experimental comparison is not possible, some
+discussion the similarity should be included in the paper.  The Smith & Eisner
+paper should be cited.
+  
+   - Added cite, added discussiong
+
+-The algorithm implemented in the Moses toolkit follows Och (2003) by using
+random starting points for the optimization (this an ad hoc method used for
+much the same reasons as annealing or this paper's regularization method).  The
+dirty little secret of this algorithm is that the randomization can result in
+some quite different results for test set BLEU just by re-running it on the
+exact same development set.  Unfortunately, the statistical significance test
+doesn't address this.  Since this paper studies the optimization method
+directly, it might be more convincing if the results in Tables 3, 4 & 5 were
+generated using some kind of average over multiple runs.  Otherwise, there's no
+way to know whether the results are simply the result of a bit of luck during
+the generation of random points in the optimization process.
+ 
+   - added some comments on this
+
+
+
+Miscellenous Fixes:
+--------------------
+- Changed subscripts on table 2 to superscripts in order to be consistent with other tables.
+- 
+
+Notable things that weren't changed
+-----------------------------------
+- while the F sub-script was dropped from the loss, the w sub-script on
+  E & H were kept since they are actually used in the exposition.
+
+
+
+questions for dan and chris
+---------------------------
+  - does danj want to be listed as "Dan Jurafsky" or "Daniel Jurafsky"
+  - 
