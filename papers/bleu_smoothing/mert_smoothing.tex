@@ -3,7 +3,7 @@
 %
 % Contact: nasmith@cs.cmu.edu
 
-\documentclass[11pt]{article}
+\documentclass[11pt,tightenlines,kern-1pt]{article}
 \usepackage{acl08}
 \usepackage{times}
 \usepackage{latexsym}
@@ -85,11 +85,12 @@ Minimum error rate training (MERT) is a widely used learning procedure for stati
 
 %\emcite{och2002} demonstrated that translation quality can be improved by introducing additional knowledge sources, such an alternative class based language model and a dictionary co-occurrence count feature. Given that the noisy channel model does not readily accept arbitrary novel knowledge sources, the problem was reformulated in terms of a log-linear model. Not only does such a formulation admit arbitrary knowledge sources as features, but also allows all knowledge sources to be weighted discriminatively.
 
-\emcite{och2003MERT} introduced minimum error rate training (MERT) as an alternative training regime to the conditional likelihood objective previously used with log-linear translation models \cite{och2002}. This approach attempts to improve translation quality by optimizing an automatic translation evaluation metric, such as the BLEU score \cite{kishore2002}. This is accomplished by either directly walking the error surface provided by an evaluation metric w.r.t\@. the model weights or by using gradient-based techniques on a continuous approximation of such a surface. While the former is piece-wise constant and thus cannot be optimized using gradient techniques, \emcite{och2003MERT} provides an approach that performs such training efficiently as long as the number of model weights remains relatively small. 
+\emcite{och2003MERT} introduced minimum error rate training (MERT) as an alternative training regime to the conditional likelihood objective previously used with log-linear translation models \cite{och2002}. This approach attempts to improve translation quality by optimizing an automatic translation evaluation metric, such as the BLEU score \cite{kishore2002}. This is accomplished by either directly walking the error surface provided by an evaluation metric w.r.t\@. the model weights or by using gradient-based techniques on a continuous approximation of such a surface. While the former is piecewise constant and thus cannot be optimized using gradient techniques, \emcite{och2003MERT} provides an approach that performs such training efficiently.
+% as long as the number of model weights remains relatively small. 
 
-In this paper we explore a number of variations on MERT. First, it is shown that performance gains can be had by making use of a stochastic search strategy as compare to that obtained by Powell's method and coordinate ascent. Subsequently, results are presented for two regularization strategies\footnote{While we prefer the term regularization, the strategies presented here could also be refered to as smoothing methods.} . Both strategies allow coordinate ascent and Powell's method to acheive performance that is competitive with stochastic search. 
+In this paper we explore a number of variations on MERT. First, it is shown that performance gains can be had by making use of a stochastic search strategy as compare to that obtained by Powell's method and coordinate ascent. Subsequently, results are presented for two regularization strategies\footnote{While we prefer the term regularization, the strategies presented here could also be refered to as smoothing methods.}. Both allow coordinate ascent and Powell's method to acheive performance that is on par with stochastic search. 
 
-In what follows we briefly review minimum error rate training, introduce our stochastic search and regularization strategies, and then present experimental results. 
+In what follows, we briefly review minimum error rate training, introduce our stochastic search and regularization strategies, and then present experimental results. 
 
 % The remainder of this paper is organized as follows. We begin with a review of minimum error rate training in section 2, and then proceed to present our smoothing and stochastic search strategies in section 3. Section 4  then outlines our experiments, with results being presented and discussed in section 5. Closing remarks and directions for future research are found in section 6.
 
@@ -142,35 +143,47 @@ Four hypothetical translations and their corresponding \mbox{$\log$} model score
 
 \section{Minimum Error Rate Training}
 
-Let \mbox{${\bf F}$} be a collection of foreign sentences to be translated, with individual sentences \mbox{${\bf f}_0$}, \mbox{${\bf f}_1$}, \ldots, \mbox{${\bf f}_n$}. For any given \mbox{${\bf f}_i$}, the surface form of an individual candidate translation is given by \mbox{${\bf e}_i$}, with the hidden state associated with the derivation of \mbox{${\bf e}_i$} from \mbox{${\bf f}_i$} given by \mbox{${\bf h}_i$}\footnote{This is typically referred to as the alignment.}. Each \mbox{${\bf e}_i$} is drawn from \mbox{${\cal E}$}, which represents all possible strings our translation system can produce. The \mbox{$({\bf e}_i, {\bf h}_i, {\bf f}_i)$} triples are converted into vectors of \mbox{$m$} feature functions by \mbox{${\Psi }:{\cal E}\times{\cal H}\times{\cal F} \rightarrow \mathbb{R}^m$}. The dot product of the representations produced by \mbox{${\Psi}$} and the weight vector \mbox{${\bf w}$} assigns a score to the triples. The idealized translation process then is to find the highest scoring pair \mbox{$({\bf e}_i, {\bf h}_i)$} for each \mbox{${\bf f}_i$}, or rather \mbox{$({\bf e}_i, {\bf h}_i) = \argmax_{({\bf e} \in {\cal E}, {\bf h} \in {\cal H})} {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}. 
+Let \mbox{${\bf F}$} be a collection of foreign sentences to be translated, with individual sentences \mbox{${\bf f}_0$}, \mbox{${\bf f}_1$}, \ldots, \mbox{${\bf f}_n$}. For each \mbox{${\bf f}_i$}, the surface form of an individual candidate translation is given by \mbox{${\bf e}_i$} with hidden state \mbox{${\bf h}_i$} associated with the derivation of \mbox{${\bf e}_i$} from \mbox{${\bf f}_i$}. Each \mbox{${\bf e}_i$} is drawn from \mbox{${\cal E}$}, which represents all possible strings our translation system can produce. The \mbox{$({\bf e}_i, {\bf h}_i, {\bf f}_i)$} triples are converted into vectors of \mbox{$m$} feature functions by \mbox{${\Psi }:{\cal E}\times{\cal H}\times{\cal F} \rightarrow \mathbb{R}^m$} whose dot product with the weight vector \mbox{${\bf w}$} assigns a score to each triple. The idealized translation process then is to find the highest scoring pair \mbox{$({\bf e}_i, {\bf h}_i)$} for each \mbox{${\bf f}_i$}, or rather \mbox{$({\bf e}_i, {\bf h}_i) = \argmax_{({\bf e} \in {\cal E}, {\bf h} \in {\cal H})} {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}. 
 
 
-The aggregate \mbox{$\argmax$} for the entire data set \mbox{${\bf F}$} is given by equation (\ref{argmaxeh})\footnote{Here, translation of the entire data set is treated as a single structured prediction problem using the feature vector  \mbox{$\Psi({\bf E}, {\bf H}, {\bf F}) = \sum_i^n \Psi({\bf e}_i, {\bf h}_i, {\bf f}_i)$}}. This gives us \mbox{${\bf E}_{\bf w}$} which represents the set of translations selected by the model for data set \mbox{${\bf F}$} when parameterized by the weight vector \mbox{${\bf w}$}. For dataset \mbox{${\bf F}$}, let's assume we have some automated measure of translation quality \mbox{$\ell$} that maps the collection of translations \mbox{${\bf E}_{\bf w}$} produced by our system onto some real valued loss, \mbox{$\ell:{\cal E}^n\rightarrow \mathbb{R}$}. For instance, for the experiments that follow, the loss corresponds to 1 minus the BLEU score assigned to \mbox{${\bf E}_{\bf w}$} using a collection of reference translations for the sentences in \mbox{${\bf F}$}. 
+The aggregate \mbox{$\argmax$} for the entire data set \mbox{${\bf F}$} is given by equation (\ref{argmaxeh})\footnote{Here, translation of the entire data set is treated as a single structured prediction problem using the feature vector  \mbox{$\Psi({\bf E}, {\bf H}, {\bf F}) = \sum_i^n \Psi({\bf e}_i, {\bf h}_i, {\bf f}_i)$}}. This gives \mbox{${\bf E}_{\bf w}$} which represents the set of translations selected by the model for data set \mbox{${\bf F}$} when parameterized by the weight vector \mbox{${\bf w}$}. For dataset \mbox{${\bf F}$}, let's assume we have an automated measure of translation quality \mbox{$\ell$} that maps the collection of translations \mbox{${\bf E}_{\bf w}$} 
+%produced by our system 
+onto some real valued loss, \mbox{$\ell:{\cal E}^n\rightarrow \mathbb{R}$}. For instance, in the experiments that follow, the loss corresponds to 1 minus the BLEU score assigned to \mbox{${\bf E}_{\bf w}$} for a given collection of reference translations.
+% for the sentences in \mbox{${\bf F}$}. 
 
 \begin{equation}
 ({\bf E}_{\bf w}, {\bf H}_{\bf w}) = \argmax_{({\bf E} \in {\cal E}^n, {\bf H} \in {\cal H}^n)} {\bf w} \cdot \Psi({\bf E}, {\bf H}, {\bf F})
 \label{argmaxeh}
 \end{equation}
 
-Using n-best lists produced by a decoder to approximate \mbox{${\cal E}^n$} and \mbox{${\cal H}^n$}, MERT searches for the weight vector \mbox{${\bf w}^*$} that minimizes the loss \mbox{$\ell$}. Letting \mbox{$\tilde{\bf E}_{\bf w}$} denote the result of the \mbox{$\argmax$} w.r.t\@. the n-best approximation of the hypothesis space, this search is expressed by equation (\ref{unsmoothmert}). That is, the objective function being optimized during learning is equivalent to the loss assigned by the automatic measure of translation quality, i.e. \mbox{${\cal O}({\bf w}) = \ell (\tilde {\bf E}_{\bf w})$}.
+Using n-best lists produced by a decoder to approximate \mbox{${\cal E}^n$} and \mbox{${\cal H}^n$}, MERT searches for the weight vector \mbox{${\bf w}^*$} that minimizes the loss \mbox{$\ell$}. Letting \mbox{$\tilde{\bf E}_{\bf w}$} denote the result of the translation \mbox{$\argmax$} w.r.t\@. 
+%the n-best approximation of the hypothesis space, 
+the approximate hypothesis space, 
+the MERT search is expressed by equation (\ref{unsmoothmert}). Notice the objective function being optimized is equivalent to the loss assigned by the automatic measure of translation quality, i.e. \mbox{${\cal O}({\bf w}) = \ell (\tilde {\bf E}_{\bf w})$}.
 
 \begin{equation}
 {\bf w}^* = \argmin_{\bf w} \ell (\tilde {\bf E}_{\bf w}) 
 \label{unsmoothmert}
 \end{equation}
 
-After performing the parameter search, the decoder is then re-run using the weights \mbox{${\bf w}^*$} to produce a new set of n-best lists, which are then concatenated with the prior n-best lists in order to obtain a better approximation of \mbox{${\cal E}^n$} and \mbox{${\cal H}^n$}. The parameter search given in equation (\ref{unsmoothmert}) can then be performed over the improved approximation. This process repeats until either the decoder produces no novel entries for the combined n-best list or the weights change by less than some \mbox{$\epsilon$} across iterations.  
+After performing the parameter search, the decoder is then re-run using the weights \mbox{${\bf w}^*$} to produce a new set of n-best lists, which are then concatenated with the prior n-best lists in order to obtain a better approximation of \mbox{${\cal E}^n$} and \mbox{${\cal H}^n$}. The parameter search given in (\ref{unsmoothmert}) can then be performed over the improved approximation. This process repeats until either no novel entries are produced for the combined n-best lists or the weights change by less than some \mbox{$\epsilon$} across iterations.  
 
-Unlike the objective functions associated with other popular learning algorithms such as the conditional likelihood objective used with log-linear models or the regularized hinge loss used with support vector machines, the objective \mbox{${\cal O}$} is piecewise constant over its entire domain. That is, while small perturbations in the weights, {\bf w}, will change the score assigned by \mbox{${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$} to each triple, \mbox{$({\bf e}, {\bf h}, {\bf f})$}, such perturbations will generally not change the ranking between the candidate translation/derivation pair selected by the argmax,  \mbox{$({\bf e}^*, {\bf h}^*) = \argmax {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, and any given competing pair \mbox{$({\bf e}^\prime, {\bf h}^\prime)$}. However, at certain critical points in weight space, the score assigned to some competing pair \mbox{$({\bf e}^\prime, {\bf h}^\prime)$} will exceed that assigned to the prior winner  \mbox{$({\bf e}^*_{w_{old}}, {\bf h}^*_{w_{old}})$}. At this point, the pair returned by \mbox{$\argmax {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$} will change. The newly selected \mbox{${\bf e}$}  can in turn change the score assigned by the loss, \mbox{$\ell$}, to the translations produced by the model.
+Unlike the objective functions associated with other popular learning algorithms, 
+%such as the conditional likelihood objective used with log-linear models or the regularized hinge loss used with support vector machines, 
+the objective \mbox{${\cal O}$} is piecewise constant over its entire domain. That is, while small perturbations in the weights, {\bf w}, will change the score assigned by \mbox{${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$} to each triple, \mbox{$({\bf e}, {\bf h}, {\bf f})$}, such perturbations will generally not change the ranking between the 
+%candidate translation/derivation 
+pair selected by the argmax,  \mbox{$({\bf e}^*, {\bf h}^*) = \argmax {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, and any given competing pair \mbox{$({\bf e}^\prime, {\bf h}^\prime)$}. However, at certain critical points, 
+%in weight space,
+the score assigned to some competing pair \mbox{$({\bf e}^\prime, {\bf h}^\prime)$} will exceed that assigned to the prior winner  \mbox{$({\bf e}^*_{w_{old}}, {\bf h}^*_{w_{old}})$}. At this point, the pair returned by \mbox{$\argmax {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$} will change and loss \mbox{$\ell$} will be evaluated using the newly selected \mbox{${\bf e}$}.
+%  can in turn change the score assigned by the loss, \mbox{$\ell$}, to the translations produced by the model.
 
 
 \begin{figure}[h]
-\vskip 0.2in
 \begin{center}
 \setlength{\epsfxsize}{3.0in}
 \centerline{\epsfbox{mertsurface.eps}}
 \vskip -0.15in
-\caption{MERT error surface for the candidate translations given in table \ref{hscores}. The regions are labeled with the candidate translations that dominate for that portion of weight space, \mbox{$\argmax {\bf w} \cdot \Psi({\bf e}, {\bf f})$}, as well as the regions' corresponding objective values, \mbox{$1-\ell(\argmax {\bf w} \cdot \Psi({\bf e}, {\bf f}))$}. 
+\caption{MERT objective for the translations given in table \ref{hscores}. Regions are labeled with the translation that dominates within it, i.e\@. \mbox{$\argmax {\bf w} \cdot \Psi({\bf e}, {\bf f})$}, and with their corresponding objective values, \mbox{$1-\ell(\argmax {\bf w} \cdot \Psi({\bf e}, {\bf f}))$}. 
 \label{mertsurface}
 }
 \end{center}
@@ -178,23 +191,30 @@ Unlike the objective functions associated with other popular learning algorithms
 \end{figure}
 
 
-This is illustrated in figure (\ref{mertsurface}), which plots the MERT objective function for a simple model with two parameters, \mbox{$w_{tm}$} \& \mbox{$w_{lm}$}, and for which the space of possible translations, \mbox{${\cal E}$}, consists of the four sentences given in table \ref{hscores}\footnote{For this example, we ignore the latent variables, \mbox{${\bf h}$}, associated with the derivation of each \mbox{${\bf e}$} from the foreign sentence \mbox{${\bf f}$}. If included, such variables would only change the graph in that  multiple different derivations would be possible for each \mbox{${\bf e}^j$}. If present, the graph could then include disjoint regions that all map to the same \mbox{${\bf e}^j$} and thus the same objective value.}. Here, the loss \mbox{$\ell$} is defined as \mbox{$1.0 - $}BLEU-2\mbox{$({\bf e})$}. That is, \mbox{$\ell$} is the difference between a perfect BLEU score and the BLEU score calculated for each translation using unigram and bi-gram counts\footnote{This can be contrasted with the typically used BLEU-4, which would include up to 4-gram counts}, for the reference translation ``This is a small house". 
+This is illustrated in figure (\ref{mertsurface}), which plots the MERT objective function for a simple model with two parameters, \mbox{$w_{tm}$} \& \mbox{$w_{lm}$}, and for which the space of possible translations, \mbox{${\cal E}$}, consists of the four sentences given in table \ref{hscores}\footnote{For this example, we ignore the latent variables, \mbox{${\bf h}$}, associated with the derivation of each \mbox{${\bf e}$} from the foreign sentence \mbox{${\bf f}$}. If included, such variables would only change the graph in that  multiple different derivations would be possible for each \mbox{${\bf e}^j$}. If present, the graph could then include disjoint regions that all map to the same \mbox{${\bf e}^j$} and thus the same objective value.}. Here, the loss \mbox{$\ell$} is defined as \mbox{$1.0 - $}BLEU-2\mbox{$({\bf e})$}. That is, \mbox{$\ell$} is the difference between a perfect BLEU score and the BLEU score calculated for each translation using unigram and bi-gram counts.
+%\footnote{This can be contrasted with the typically used BLEU-4, which would include up to 4-gram counts}.
+%, for the reference translation ``This is a small house". 
 
-The surface can be visualized as a collection of plateaus that all meet at the origin and then extend off into infinity. The latter property illustrates that the objective is scale invariant w.r.t. the weight vector \mbox{${\bf w}$}. That is, since any vector \mbox{${\bf w}^\prime = \lambda {\bf w}$} \mbox{$\forall_{\lambda > 0}$} will still result in the same relative rankings of all possible translations according to \mbox{${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, such scaling will not change the translation selected by the \mbox{$\argmax$}. At the boundaries between regions, the objective is undefined, as, at these points, 2 or more candidates are assigned an identical score by the model. Thus, it is unclear what should be returned by the \mbox{$\argmax$} for subsequent scoring by \mbox{$\ell$}.
+The surface can be visualized as a collection of plateaus that all meet at the origin and then extend off into infinity. The latter property illustrates that the objective is scale invariant w.r.t\@. the weight vector \mbox{${\bf w}$}. That is, since any vector \mbox{${\bf w}^\prime = \lambda {\bf w}$} \mbox{$\forall_{\lambda > 0}$} will still result in the same relative rankings of all possible translations according to \mbox{${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, such scaling will not change the translation selected by the \mbox{$\argmax$}. At the boundaries between regions, the objective is undefined, as
+%, at these points, 
+2 or more candidates are assigned identical scores by the model. Thus, it is unclear what should be returned by the \mbox{$\argmax$} for subsequent scoring by \mbox{$\ell$}.
 
-Since the objective is piecewise constant, it cannot be minimized using gradient descent or even the sub-gradient method. Two applicable methods include downhill simplex and Powell's method \cite{press2007}. The former attempts to find a local minimum in an \mbox{$n$} dimensional space by iteratively shrinking or growing an \mbox{$n+1$} vertex simplex\footnote{A simplex can be thought of as a generalization of a triangle to arbitrary dimensional spaces.} based on the objective values of the points that make up the simplex and select nearby points.	In contrast, Powell's method operates by starting with a single point in weight space, and then performing a series of line minimizations until no more progress can be made. In this paper, we focus on line minimization based techniques, such as Powell's method.  
+Since the objective is piecewise constant, it cannot be minimized using gradient descent or even the sub-gradient method. Two applicable methods include downhill simplex and Powell's method \cite{press2007}. The former attempts to find a local minimum in an \mbox{$n$} dimensional space by iteratively shrinking or growing an \mbox{$n+1$} vertex simplex\footnote{A simplex can be thought of as a generalization of a triangle to arbitrary dimensional spaces.} based on the objective values of the current simplex points 
+%of the points that make up the simplex 
+and select nearby points. In contrast, Powell's method operates by starting with a single point in weight space, and then performing a series of line minimizations until no more progress can be made. In this paper, we focus on line minimization based techniques, such as Powell's method.  
 
 \subsection{Global minimum along a line}
 
-Even without gradient information, numerous methods can be used to find, or approximately find, local minima along a line. However, by exploiting the fact that the underlying model-scores assigned to competing hypotheses,  \mbox{${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, vary linearly w.r.t. changes in the weight vector, \mbox{${\bf w}$}, \emcite{och2003MERT} proposed a strategy for finding the global minimum along any given search direction. 
+Even without gradient information, numerous methods can be used to find, or approximately find, local minima along a line. However, by exploiting the fact that the underlying scores assigned to competing hypotheses,  \mbox{${\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, vary linearly w.r.t\@. changes in the weight vector, \mbox{${\bf w}$}, \emcite{och2003MERT} proposed a strategy for finding the global minimum along any given search direction. 
 
 \begin{figure}[h]
-\vskip 0.2in
 \begin{center}
 \setlength{\epsfxsize}{3.0in}
 \centerline{\epsfbox{mert_line_search.eps}}
 \vskip -0.15in
-\caption{Illustration of how the model score assigned to each candidate translation varies during a line search along the coordinate direction \mbox{$w_{lm}$} with a starting point of \mbox{$(w_{tm}, w_{lm}) = (1.0, 0.5)$}. Each line in the plot corresponds to the model score assigned to a candidate translation as the weight \mbox{$w_{lm}$} is varied over the range \mbox{$(-3,3)$}.  The lines are labeled with the translation candidate they correspond to. Each vertical band in the graph represents a region where one of the hypotheses is dominate. The transitions between bands are the result of the dotted intersections between the 1-best lines.
+\caption{Illustration of how the model score assigned to each candidate translation varies during a line search along the coordinate direction \mbox{$w_{lm}$} with a starting point of \mbox{$(w_{tm}, w_{lm}) = (1.0, 0.5)$}. 
+%Each line in the plot corresponds to the model score assigned to a candidate translation as the weight \mbox{$w_{lm}$} is varied over the range \mbox{$(-3,3)$}. 
+Each plotted line correponds to the model score for one of the translation candidates. The vertical bands are labeled with the hypothesis that dominates in that region. The transitions between bands result from the dotted intersections between 1-best lines.
 \label{mertlinesearch}
 }
 \end{center}
@@ -220,7 +240,7 @@ Even without gradient information, numerous methods can be used to find, or appr
 
 \begin{algorithm}[tb]
 \begin{algorithmic}
-   \STATE {\bfseries Input:} \mbox{${\cal L}$}, \mbox{${\bf w}$}, \mbox{${\bf d}$}, eval
+   \STATE {\bfseries Input:} \mbox{${\cal L}$}, \mbox{${\bf w}$}, \mbox{${\bf d}$}, $\ell$ 
    \STATE \mbox{${\cal I}$} \mbox{$\Leftarrow$} \mbox{$\{\}$}
    \FOR {\mbox{$l \in {\cal L}$}}
      %\STATE find slop and intercepts along search dir
@@ -244,7 +264,7 @@ Even without gradient information, numerous methods can be used to find, or appr
      \ENDLOOP
    \ENDFOR
    \STATE add(\mbox{${\cal I}$}, \mbox{$\max({\cal I})+2\epsilon)$}
-   \STATE \mbox{$i_{best} = \argmin_{i \in {\cal I}} \eval({\cal L},{\bf w}+(i-\epsilon) \cdot {\bf d})$}
+   \STATE \mbox{$i_{best} = \argmin_{i \in {\cal I}} \eval_\ell({\cal L},{\bf w}+(i-\epsilon) \cdot {\bf d})$}
    \STATE {\bf return} \mbox{${\bf w}+(i_{best}-\epsilon) \cdot {\bf d}$}
 \caption{
 \emcite{och2003MERT}'s line search method to find the global minimum in the loss, \mbox{${\ell}$}, when starting at the point \mbox{${\bf w}$} and searching along the direction \mbox{${\bf d}$} using the candidate translations given in the collection of n-best lists \mbox{${\cal L}$}.
@@ -253,13 +273,17 @@ Even without gradient information, numerous methods can be used to find, or appr
 \end{algorithmic}
 \end{algorithm}
 
-The insight behind the algorithm is as follows. Let's assume we are examining two competing translation/derivation pairs, \mbox{$({\bf e}^1, {\bf h}^1)$} \& \mbox{$({\bf e}^2, {\bf h}^2)$}. Further, let's say the score assigned by the model to \mbox{$({\bf e}^1, {\bf h}^1)$} is greater than  \mbox{$({\bf e}^2, {\bf h}^2)$}, i.e. \mbox{\mbox{${\bf w} \cdot \Psi({\bf e}^1, {\bf h}^1, {\bf f}) > {\bf w} \cdot \Psi({\bf e}^2, {\bf h}^2, {\bf f})$}}. Since the scores of the two vary linearly along any search direction, \mbox{${\bf d}$}, we can find the point at which the model's relative preference for the competing pairs switches as \mbox{$p = \frac{{\bf w} \cdot \Psi({\bf e}^1, {\bf h^1}, {\bf f}) - {\bf w} \cdot \Psi({\bf e}^2, {\bf h^2}, {\bf f})}{{\bf d} \cdot \Psi({\bf e}^2, {\bf h^2}, {\bf f}) - {\bf d} \cdot \Psi({\bf e}^1, {\bf h^1}, {\bf f})}$}. At this particular point, we have the equality \mbox{$(p{\bf d} + {\bf w}) \cdot \Psi({\bf e}^1, {\bf h}^1, {\bf f}) = (p{\bf d} + {\bf w}) \cdot \Psi({\bf e}^2, {\bf h}^2, {\bf f})$}, or rather the point at which the scores assigned by the model to the candidates intersect along search direction \mbox{${\bf d}$}\footnote{Notice that, this point only exists if the slopes of the candidates' model scores along \mbox{${\bf d}$} are not equivalent, i.e. if \mbox{${\bf d} \cdot \Psi({\bf e}^2, {\bf h^2}, {\bf f}) \neq {\bf d} \cdot \Psi({\bf e}^1, {\bf h^1}, {\bf f})$}.}. Such points correspond to the boundaries between adjacent plateaus in the MERT objective, as prior to the boundary the loss function \mbox{$\ell$} is computed using the translation, \mbox{${\bf e}^1$}, and after the boundary it is computed using \mbox{${\bf e}^2$}. 
+The insight behind the algorithm is as follows. Let's assume we are examining two competing translation/derivation pairs, \mbox{$({\bf e}^1, {\bf h}^1)$} \& \mbox{$({\bf e}^2, {\bf h}^2)$}. Further, let's say the score assigned by the model to \mbox{$({\bf e}^1, {\bf h}^1)$} is greater than  \mbox{$({\bf e}^2, {\bf h}^2)$}, i.e. \mbox{\mbox{${\bf w} \cdot \Psi({\bf e}^1, {\bf h}^1, {\bf f}) > {\bf w} \cdot \Psi({\bf e}^2, {\bf h}^2, {\bf f})$}}. Since the scores of the two vary linearly along any search direction, \mbox{${\bf d}$}, we can find the point at which the model's relative preference for the competing pairs switches as \mbox{$p = \frac{{\bf w} \cdot \Psi({\bf e}^1, {\bf h^1}, {\bf f}) - {\bf w} \cdot \Psi({\bf e}^2, {\bf h^2}, {\bf f})}{{\bf d} \cdot \Psi({\bf e}^2, {\bf h^2}, {\bf f}) - {\bf d} \cdot \Psi({\bf e}^1, {\bf h^1}, {\bf f})}$}. At this particular point, we have the equality \mbox{$(p{\bf d} + {\bf w}) \cdot \Psi({\bf e}^1, {\bf h}^1, {\bf f}) = (p{\bf d} + {\bf w}) \cdot \Psi({\bf e}^2, {\bf h}^2, {\bf f})$}, or rather the point at which the scores assigned by the model to the candidates intersect along search direction \mbox{${\bf d}$}\footnote{Notice that, this point only exists if the slopes of the candidates' model scores along \mbox{${\bf d}$} are not equivalent, i.e. if \mbox{${\bf d} \cdot \Psi({\bf e}^2, {\bf h^2}, {\bf f}) \neq {\bf d} \cdot \Psi({\bf e}^1, {\bf h^1}, {\bf f})$}.}. Such points correspond to the boundaries between adjacent plateaus in the objective, as prior to the boundary the loss function \mbox{$\ell$} is computed using the translation, \mbox{${\bf e}^1$}, and after the boundary it is computed using \mbox{${\bf e}^2$}. 
 
-To find the global minimum for a search direction, \mbox{${\bf d}$}, all that must be done is to move along \mbox{${\bf d}$}, and for each plateau identify all the points at which the score assigned by the model to the current 1-best translation intersects the score assigned to competing translations. At the closest such intersection, we have a new 1-best translation. Moving to the plateau associated with this new 1-best, we then repeat the search for the nearest subsequent intersection. This continues until we know what the 1-best translations are for all points along \mbox{${\bf d}$}. The global minimum can then be found by examining \mbox{$\ell$} once for each of these.
+To find the global minimum for a search direction \mbox{${\bf d}$}, 
+%all that must be done is to 
+we move along \mbox{${\bf d}$} and for each plateau identify all the points at which the score assigned by the model to the current 1-best translation intersects the score assigned to competing translations. At the closest such intersection, we have a new 1-best translation. Moving to the plateau associated with this new 1-best, we then repeat the search for the nearest subsequent intersection. This continues until we know what the 1-best translations are for all points along \mbox{${\bf d}$}. The global minimum can then be found by examining \mbox{$\ell$} once for each of these.
 
-Let's return briefly to our earlier example given in table \ref{hscores}. Starting at position \mbox{$(w_{tm}, w_{lm}) = (1.0, 0.5)$} and searching along the \mbox{$w_{lm}$} coordinate, i.e. \mbox{$(d_{tm}, d_{lm}) = (0.0, 1.0)$}, table \ref{hlinesearch} gives the linesearch slopes, \mbox{$m = {\bf d} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, and intercepts, \mbox{$b = {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, for each of the four candidate translations. Using the procedure just described, we can then find what range of values along \mbox{${\bf d}$} each candidate translation is assigned the highest relative model score.  Figure (\ref{mertlinesearch}) illustrates how the score assigned by the model to each of the translations changes as we move along \mbox{${\bf d}$}. Each of the banded regions corresponds to a plateau in the objective, and each of the top most line intersections represents the transition from one plateau to the next. Note that, while the surface defined by the line segments with the highest classifier score for each region, i.e\@. the top most line segments, is convex, this is not a convex optimization problem as we are optimizing over the loss $\ell$ rather than classifier score. 
+Let's return briefly to our earlier example given in table \ref{hscores}. Starting at position \mbox{$(w_{tm}, w_{lm}) = (1.0, 0.5)$} and searching along the \mbox{$w_{lm}$} coordinate, i.e. \mbox{$(d_{tm}, d_{lm}) = (0.0, 1.0)$}, table \ref{hlinesearch} gives the linesearch slopes, \mbox{$m = {\bf d} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, and intercepts, \mbox{$b = {\bf w} \cdot \Psi({\bf e}, {\bf h}, {\bf f})$}, for each of the four candidate translations. Using the procedure just described, we can then find what range of values along \mbox{${\bf d}$} each candidate translation is assigned the highest relative model score.  Figure \ref{mertlinesearch} illustrates how the score assigned by the model to each of the translations changes as we move along \mbox{${\bf d}$}. Each of the banded regions corresponds to a plateau in the objective, and each of the top most line intersections represents the transition from one plateau to the next. Note that, while the surface that is defined by the line segments with the highest classifier score for each region
+%, i.e\@. the top most line segments, 
+is convex, this is not a convex optimization problem as we are optimizing over the loss $\ell$ rather than classifier score. 
 
-Pseudocode for the line search is given in algorithm (\ref{mertlinesearchalg}). Letting \mbox{$n$} denote the number of foreign sentences, \mbox{${\bf f}$}, in a dataset, and having \mbox{$m$} denote the size of the individual n-best lists, \mbox{$|l|$}, the time complexity of the algorithm is given by \mbox{${\cal O}(n m^2)$}. This is seen in that each time we check for the nearest intersection to the current 1-best for some n-best list \mbox{$l$}, we must calculate its intersection with all other candidate translations that have yet to be selected as the 1-best. And, for each of the \mbox{$n$} n-best lists, this may have to be done up to \mbox{$m-1$} times. 
+Pseudocode for the line search is given in algorithm \ref{mertlinesearchalg}. Letting \mbox{$n$} denote the number of foreign sentences, \mbox{${\bf f}$}, in a dataset, and having \mbox{$m$} denote the size of the individual n-best lists, \mbox{$|l|$}, the time complexity of the algorithm is given by \mbox{${\cal O}(n m^2)$}. This is seen in that each time we check for the nearest intersection to the current 1-best for some n-best list \mbox{$l$}, we must calculate its intersection with all other candidate translations that have yet to be selected as the 1-best. And, for each of the \mbox{$n$} n-best lists, this may have to be done up to \mbox{$m-1$} times. 
 
 %\begin{enumerate}
 %  \item mention alternative of a grid search (others?)
@@ -312,20 +336,19 @@ KCD is a variant of coordinate descent that, at each iteration, moves along the 
 \section{Extensions}
 
 \begin{figure*}[t]
-\vskip 0.2in
 \begin{center}
 \setlength{\epsfxsize}{6.25in}
 \centerline{\epsfbox{smoothing_graphs.eps}}
 \vskip -0.15in
-\caption{Regularization during line search - from left the right: 
-(i) regularization by taking the maximum loss associated with adjacent plateauts,
-(ii) regularization by averaging the loss of adjacent plateaus,   
+\caption{Regularization during line search - using, from left to right: 
+(i) the maximum loss of adjacent plateauts,
+(ii) the average the loss of adjacent plateaus,   
 (iii) no regularization. 
-Here, each set of bars represents adacent plateaus along the line being searched, with the height of the bars representing their associated loss. The vertical lines indicate the surgate loss values used for the center region under each of the schemes (i-iii). 
+Each set of bars represents adjacent plateaus along the line being searched, with the height of the bars representing their associated loss. The vertical lines indicate the surgate loss values used for the center region under each of the schemes (i-iii). 
 \label{smoothinglinesearch}
 }
 \end{center}
-\vskip -0.2in
+\vskip -0.3in
 \end{figure*}
 
 In this section we present and motivate two novel extensions to MERT. The first is a stochastic alternative to the Powell and KCD search strategies, while the second is an efficient method for regularizing the objective.
@@ -425,9 +448,7 @@ Random     & 31.681 & 31.754 & 30.191 \\
 BLEU scores obtained by models trained using the three different parameter search strategies: Powell's method, KCD, and stochastic search.}
 \end{table}
 
-As illustrated in table \ref{searchstrat}, Powell's method and KCD achieve a very similar level of performance, with KCD modestly outperforming Powell on the MT03 test set while Powell modestly outperforms coordinate descent on the MT05 test set. Moreover, the fact that Powell's algorithm did not perform better than KCD on the training data\footnote{This indicates that Powell failed to find a deeper minima in the objective, since recall that the unregularized objective is equivalent to the model's dev set performance.}, and in fact actually performed modestly worse, suggests that Powell's additional search machinery does not provide much benefit for MERT objectives. 
 
-Similarly, the fact that the stochastic search obtains a much higher dev set score than either Powell or KCD indicates that it is doing a better job of optimizing the objective than either of the two alternatives. These gains suggest that stochastic search does make better use of MERT's global minimum line search than the alternative methods. Or, alternatively, it strengthens the claim that the method succeeds at combining one of the critical strengths of Powell's method, diagonal search, with coordinate descent's robustness to the sudden jumps between regions that result from global line minimization. Using an approximate randomization test for statistical significance \cite{fk2005}, and with KCD as a baseline, the gains obtained by stochastic search on MT03 are statistically significant (\mbox{$p = 0.002$}), as are the gains on MT05 (\mbox{$p=0.005$}). 
 
 %   \begin{enumerate}
 %$     \item Coordinate vs. Powell vs. Random - Table (\ref{searchstrat})
@@ -436,11 +457,10 @@ Similarly, the fact that the stochastic search obtains a much higher dev set sco
 %$   \end{enumerate}
  
 
-\begin{table}
-\begin{center}
+\begin{table*}[htb!]
 \begin{tabular}{|l|rrrr|}
 \hline \bf Method  & \bf Window & \bf Dev & \bf Test & \bf Test \\
-                   &            & \bf MT02 & \bf MT03 & \bf MT05 \\ \hline
+                   & \bf Avg    & \bf MT02 & \bf MT03 & \bf MT05 \\ \hline
 Coordinate & none &  30.967 & 30.778 & 29.580 \\
            & 3  & 31.665  & {\bf 31.675}  & {\bf 30.266} \\
            & 5  & 31.317  & 31.229  & {\bf 30.182}  \\
@@ -455,15 +475,34 @@ Random     & none & 31.681 & 31.754 & 30.191 \\
            & 7  & 30.501  & 29.336  & 28.372 \\
 \hline
 \end{tabular}
-\end{center}
+\begin{tabular}{|l|rrrr|}
+\hline \bf Method  & \bf Window & \bf Dev & \bf Test & \bf Test \\
+                   & \bf Max    & \bf MT02 & \bf MT03 & \bf MT05 \\ \hline
+Coordinate & none &  30.967 & 30.778 & 29.580 \\
+           & 3  & 31.536  & {\bf 31.927} & {\bf 30.334} \\
+           & 5  & 31.484   & {\bf 31.702}  &  29.687  \\
+           & 7  & 31.627 &  31.294 & {\bf 30.199} \\ \hline
+Powell     & none & 30.638 & 30.692 & 29.780 \\
+           & 3  & 31.428  & 30.944  & 29.598 \\
+           & 5  & 31.407  & {\bf 31.596} & 30.090  \\
+           & 7  & 30.870  & 30.911 & 29.620  \\ \hline
+Random     & none & 31.681 & 31.754 & 30.191 \\
+           & 3  & 31.179 & 30.898 & 29.529 \\
+           & 5  & 30.903 & 31.666 & 29.963 \\
+           & 7  & 31.920 & 31.906 & 30.674 \\
+\hline
+\end{tabular}
 \caption{
-\label{avgsmoothing}
-BLEU scores obtained when regularizing using the average of adjacent plateaus. 
-The none entry for each search strategy represents the baseline where no regularization is used. Statistically significant test set gains, p \mbox{$<$} 0.01, over the respective baselines are in bold face. 
+\label{avgminsmoothing}
+BLEU scores obtained when regularizing using the average loss of adjacent plateaus, left, and the maximum loss of adjacent plateaus, right. The none entry for each search strategy represents the baseline where no regularization is used. Statistically significant test set gains, p \mbox{$<$} 0.01, over the respective baselines are in bold face. 
 }
-\end{table}
+\end{table*}
 
-Tables \ref{avgsmoothing} and \ref{minsmoothing} indicate that performing regularization by either averaging or taking the maximum of adjacent plateaus during the line search leads to gains for both Powell's method and KCD across all the window sizes. However, no reliable additional gains appear to be had when stochastic search is combined with regularization.
+As illustrated in table \ref{searchstrat}, Powell's method and KCD achieve a very similar level of performance, with KCD modestly outperforming Powell on the MT03 test set while Powell modestly outperforms coordinate descent on the MT05 test set. Moreover, the fact that Powell's algorithm did not perform better than KCD on the training data\footnote{This indicates that Powell failed to find a deeper minima in the objective, since recall that the unregularized objective is equivalent to the model's dev set performance.}, and in fact actually performed modestly worse, suggests that Powell's additional search machinery does not provide much benefit for MERT objectives. 
+
+Similarly, the fact that the stochastic search obtains a much higher dev set score than either Powell or KCD indicates that it is doing a better job of optimizing the objective than either of the two alternatives. These gains suggest that stochastic search does make better use of MERT's global minimum line search than the alternative methods. Or, alternatively, it strengthens the claim that the method succeeds at combining one of the critical strengths of Powell's method, diagonal search, with coordinate descent's robustness to the sudden jumps between regions that result from global line minimization. Using an approximate randomization test for statistical significance \cite{fk2005}, and with KCD as a baseline, the gains obtained by stochastic search on MT03 are statistically significant (\mbox{$p = 0.002$}), as are the gains on MT05 (\mbox{$p=0.005$}). 
+
+Table \ref{avgminsmoothing} indicates that performing regularization by either averaging or taking the maximum of adjacent plateaus during the line search leads to gains for both Powell's method and KCD across all the window sizes. However, no reliable additional gains appear to be had when stochastic search is combined with regularization.
 
 It may seem surprising that the regularization gains for Powell \& KCD are seen not only in the test sets but on the dev set as well. That is, in typical applications, regularization slightly decreases performance on the data used to train the model. However, this trend can in part be accounted for by the fact that during training, MERT is using n-best lists for objective evaluations rather than the more expensive process of running the decoder for each point that needs to be checked. As such, during each iteration of training, the decoding performance of the model actually represents its generalization performance relative to what was learned from the n-best lists created during prior iterations. Moreover, better generalization from the prior n-best lists can also help drive subsequent learning as there will then be more high quality translations on the n-best lists used for future iterations of learning. Additionally, regularization can reduce search errors by reducing the risk of getting stuck in spurious low loss pits that are in otherwise bad regions of the space.
 
@@ -481,32 +520,32 @@ It may seem surprising that the regularization gains for Powell \& KCD are seen 
 %     \end{enumerate}
 %\end{enumerate}
 
-\begin{table}
-\begin{center}
-\begin{tabular}{|l|rrrr|}
-\hline \bf Method  & \bf Window & \bf Dev & \bf Test & \bf Test \\
-                   &            & \bf MT02 & \bf MT03 & \bf MT05 \\ \hline
-Coordinate & none &  30.967 & 30.778 & 29.580 \\
-           & 3  & 31.536  & {\bf 31.927} & {\bf 30.334} \\
-           & 5  & 31.484   & {\bf 31.702}  &  29.687  \\
-           & 7  & 31.627 &  31.294 & {\bf 30.199} \\ \hline
-Powell     & none & 30.638 & 30.692 & 29.780 \\
-           & 3  & 31.428  & 30.944  & 29.598 \\
-           & 5  & 31.407  & {\bf 31.596} & 30.090  \\
-           & 7  & 30.870  & 30.911 & 29.620  \\ \hline
-Random     & none & 31.681 & 31.754 & 30.191 \\
-           & 3  & 31.179 & 30.898 & 29.529 \\
-           & 5  & 30.903 & 31.666 & 29.963 \\
-           & 7  & 31.920 & 31.906 & 30.674 \\
-\hline
-\end{tabular}
-\end{center}
-\caption{
-\label{minsmoothing}
-BLEU scores obtained for different window sizes for smoothing based upon the maximum of adjacent plateaus. 
-The none entry for each search strategy represents the baseline where no regularization is used. Statistically significant test set gains, p \mbox{$<$} 0.01, over the respective baselines are in bold face. 
-}
-\end{table}
+%\begin{table}
+%\begin{center}
+%\begin{tabular}{|l|rrrr|}
+%\hline \bf Method  & \bf Window & \bf Dev & \bf Test & \bf Test \\
+%                   &            & \bf MT02 & \bf MT03 & \bf MT05 \\ \hline
+%Coordinate & none &  30.967 & 30.778 & 29.580 \\
+%           & 3  & 31.536  & {\bf 31.927} & {\bf 30.334} \\
+%           & 5  & 31.484   & {\bf 31.702}  &  29.687  \\
+%           & 7  & 31.627 &  31.294 & {\bf 30.199} \\ \hline
+%Powell     & none & 30.638 & 30.692 & 29.780 \\
+%           & 3  & 31.428  & 30.944  & 29.598 \\
+%           & 5  & 31.407  & {\bf 31.596} & 30.090  \\
+%           & 7  & 30.870  & 30.911 & 29.620  \\ \hline
+%Random     & none & 31.681 & 31.754 & 30.191 \\
+%           & 3  & 31.179 & 30.898 & 29.529 \\
+%           & 5  & 30.903 & 31.666 & 29.963 \\
+%           & 7  & 31.920 & 31.906 & 30.674 \\
+%\hline
+%\end{tabular}
+%\end{center}
+%\caption{
+%\label{minsmoothing}
+%BLEU scores obtained for different window sizes for smoothing based upon the maximum of adjacent plateaus. 
+%The none entry for each search strategy represents the baseline where no regularization is used. Statistically significant test set gains, p \mbox{$<$} 0.01, over the respective baselines are in bold face. 
+%}
+%\end{table}
 
 
 % Min Smoothing Table(\ref{minsmoothing})
