@@ -2,44 +2,44 @@ This is BibTeX, Version 0.99c (Web2C 7.5.4)
 The top-level auxiliary file: mert_smoothing.aux
 The style file: mlapa.bst
 Database file #1: mert_smoothing.bib
-You've used 12 entries,
+You've used 13 entries,
             2472 wiz_defined-function locations,
-            607 strings with 6104 characters,
-and the built_in function-call counts, 4756 in all, are:
-= -- 452
-> -- 255
-< -- 12
-+ -- 92
-- -- 84
-* -- 378
-:= -- 862
-add.period$ -- 36
-call.type$ -- 12
-change.case$ -- 102
-chr.to.int$ -- 12
-cite$ -- 12
-duplicate$ -- 171
-empty$ -- 283
-format.name$ -- 120
-if$ -- 905
+            611 strings with 6202 characters,
+and the built_in function-call counts, 5108 in all, are:
+= -- 488
+> -- 269
+< -- 14
++ -- 96
+- -- 88
+* -- 405
+:= -- 924
+add.period$ -- 39
+call.type$ -- 13
+change.case$ -- 109
+chr.to.int$ -- 13
+cite$ -- 13
+duplicate$ -- 185
+empty$ -- 306
+format.name$ -- 130
+if$ -- 975
 int.to.chr$ -- 1
 int.to.str$ -- 0
-missing$ -- 13
-newline$ -- 63
-num.names$ -- 48
-pop$ -- 103
+missing$ -- 14
+newline$ -- 68
+num.names$ -- 52
+pop$ -- 109
 preamble$ -- 1
-purify$ -- 102
+purify$ -- 109
 quote$ -- 0
-skip$ -- 117
+skip$ -- 126
 stack$ -- 0
-substring$ -- 159
-swap$ -- 13
+substring$ -- 170
+swap$ -- 14
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 105
+type$ -- 114
 warning$ -- 0
-while$ -- 26
+while$ -- 28
 width$ -- 0
-write$ -- 217
+write$ -- 235

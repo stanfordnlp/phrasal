@@ -1,4 +1,4 @@
-This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  23 APR 2008 18:01
+This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  23 APR 2008 22:51
 entering extended mode
  file:line:error style messages enabled.
  %&-line parsing enabled.
@@ -360,35 +360,29 @@ Underfull \hbox (badness 1735) in paragraph at lines 364--365
  []
 
 
-Underfull \vbox (badness 4543) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [6]
-Overfull \hbox (8.81194pt too wide) in paragraph at lines 461--498
+Overfull \hbox (8.81194pt too wide) in paragraph at lines 462--499
 [][] [] 
  []
 
 [7]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 2762) has occurred while \output is active []
 
-
-Underfull \hbox (badness 1331) in paragraph at lines 567--568
+ [8]
+Underfull \hbox (badness 1331) in paragraph at lines 568--569
 \OT1/ptm/m/n/10.95 cur-rently look-ing at other sim-i-lar reg-u-lar-iza-tion
  []
 
-(./mert_smoothing.bbl
-Underfull \vbox (badness 5064) has occurred while \output is active []
-
- [8])
-[9
-
-] (./mert_smoothing.aux) ) 
+(./mert_smoothing.bbl) [9] (./mert_smoothing.aux) ) 
 Here is how much of TeX's memory you used:
- 2187 strings out of 94501
- 25561 string characters out of 1176789
- 86995 words of memory out of 1000000
- 5292 multiletter control sequences out of 10000+50000
+ 2190 strings out of 94501
+ 25601 string characters out of 1176789
+ 87995 words of memory out of 1000000
+ 5295 multiletter control sequences out of 10000+50000
  22496 words of font info for 80 fonts, out of 500000 for 2000
  580 hyphenation exceptions out of 1000
  27i,10n,24p,1733b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
 
-Output written on mert_smoothing.dvi (9 pages, 54348 bytes).
+Output written on mert_smoothing.dvi (9 pages, 55884 bytes).

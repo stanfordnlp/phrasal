@@ -44,6 +44,11 @@ Riezler, S., \& Maxwell, J.~T. (2005).
   mt.
 \newblock {\em In ACL}.
 
+\bibitem[Smith \& Eisner, 2006][Smith and Eisner][2006]{dsmith2006}
+Smith, D.~A., \& Eisner, J. (2006).
+\newblock Minimum risk annealing for training log-linear models.
+\newblock {\em In ACL}.
+
 \bibitem[Stolcke, 2002][Stolcke][2002]{stolcke02srilm}
 Stolcke, A. (2002).
 \newblock Srilm -- an extensible language modeling toolkit.
