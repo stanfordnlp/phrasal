@@ -1,7 +1,5 @@
-This is pdfeTeXk, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2008.4.22)  24 APR 2008 02:37
+This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=latex 2006.6.19)  24 APR 2008 04:04
 entering extended mode
- file:line:error style messages enabled.
- %&-line parsing enabled.
 **mert_smoothing
 (./mert_smoothing.tex
 LaTeX2e <2003/12/01>
@@ -379,4 +377,4 @@ Here is how much of TeX's memory you used:
  580 hyphenation exceptions out of 1000
  27i,10n,24p,1733b,532s stack positions out of 1500i,500n,5000p,200000b,5000s
 
-Output written on mert_smoothing.dvi (9 pages, 55656 bytes).
+Output written on mert_smoothing.dvi (9 pages, 55648 bytes).
