@@ -142,7 +142,7 @@ methods compare?  Even if an experimental comparison is not possible, some
 discussion the similarity should be included in the paper.  The Smith & Eisner
 paper should be cited.
   
-   - TODO
+   - Added cite, added discussiong
 
 -The algorithm implemented in the Moses toolkit follows Och (2003) by using
 random starting points for the optimization (this an ad hoc method used for
@@ -155,6 +155,8 @@ directly, it might be more convincing if the results in Tables 3, 4 & 5 were
 generated using some kind of average over multiple runs.  Otherwise, there's no
 way to know whether the results are simply the result of a bit of luck during
 the generation of random points in the optimization process.
+ 
+   - added some comments on this
 
 
 
