@@ -62,8 +62,7 @@ Tillmann, C. (2004).
 \bibitem[Tseng et~al.\/, 2005][Tseng et~al.\/][2005]{tseng05}
 Tseng, H., Chang, P., Andrew, G., Jurafsky, D., \& Manning, C. (2005).
 \newblock A conditional random field word segmenter for sighan bakeoff 2005.
-\newblock {\em Proceedings of the Fourth SIGHAN Workshop on Chinese Language
-  Processing}.
+\newblock {\em In SIGHAN Workshop on Chinese Language Processing}.
 
 \bibitem[Zens et~al.\/, 2007][Zens et~al.\/][2007]{zens07}
 Zens, R., Hasan, S., \& Ney, H. (2007).
