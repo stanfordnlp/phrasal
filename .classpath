@@ -6,9 +6,9 @@
 	<classpathentry kind="lib" path="/javanlp.core/lib/AppleJavaExtensions.jar"/>
 	<classpathentry kind="lib" path="/javanlp.core/lib/colt.jar"/>
 	<classpathentry kind="lib" path="/javanlp.core/lib/commons-logging.jar" sourcepath="/javanlp.core/libsrc/commons-logging-1.0.4-src.zip!/commons-logging-1.0.4-src/src/java"/>
-	<classpathentry kind="lib" path="/javanlp.core/lib/counters-0.2.jar" sourcepath="/javanlp.core/libsrc/counters-0.2-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/counters.jar" sourcepath="/javanlp.core/libsrc/counters-0.3-src.zip"/>
 	<classpathentry kind="lib" path="/javanlp.core/lib/dbparser.jar" sourcepath="/javanlp.core/libsrc/dbparser0.9.9c-src.zip!/dbparser/src"/>
-	<classpathentry kind="lib" path="/javanlp.core/lib/fastutil-5.0.10.jar" sourcepath="/javanlp.core/libsrc/fastutil-5.0.10-src.zip"/>
+	<classpathentry kind="lib" path="/javanlp.core/lib/fastutil.jar" sourcepath="/javanlp.core/libsrc/fastutil-5.1.4-src.zip"/>
 	<classpathentry kind="lib" path="/javanlp.core/lib/googleapi.jar"/>
 	<classpathentry kind="lib" path="/javanlp.core/lib/groovy.jar"/>
 	<classpathentry kind="lib" path="/javanlp.core/lib/html-parser.jar" sourcepath="/javanlp.core/libsrc/htmlparser-1.2-src.jar"/>
