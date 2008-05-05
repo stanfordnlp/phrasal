@@ -30,6 +30,15 @@ public class AbstractWordAlignment implements WordAlignment {
   Set<Integer>[] f2e;
   Set<Integer>[] e2f;
 
+  AbstractWordAlignment() {}
+
+  AbstractWordAlignment(Sequence<IString> f, Sequence<IString> e,
+                        Set<Integer>[] f2e, Set<Integer>[] e2f) {
+    id = 0;
+    this.f = f; this.e = e;
+    this.f2e = f2e; this.e2f = e2f;
+  }
+
   public Integer getId() { return id; }
 
   public Sequence<IString> f() { return f; }
@@ -42,10 +51,15 @@ public class AbstractWordAlignment implements WordAlignment {
   public Set<Integer> e2f(int i) { return e2f[i]; }
 
   String toString(Set<Integer>[] align) {
+    return toString(align,true);
+  }
+  
+  String toString(Set<Integer>[] align, boolean zeroIndexed) {
+    int o = zeroIndexed ? 0 : 1;
     StringBuffer str = new StringBuffer();
     for(int i=0; i<align.length; ++i)
       for(int j : align[i])
-        str.append(i).append("-").append(j).append(" ");
+        str.append(i+o).append("-").append(j+o).append(" ");
     return str.toString();
   }
 

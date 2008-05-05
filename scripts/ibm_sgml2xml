@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#####################################################
+# Convert IBM word alignment file (read from stdin)
+# into a parseble XML file. Note that some input/output
+# strings are converted from comments (e.g., "//EN: test") 
+# to properly marked sentences (<tstr> test </tstr>).
+#
+# Usage: $0 <src_id> <tgt_id> 
+# 
+# Author: Michel Galley
+#####################################################
+
+SRC=$1
+TGT=$2
+
+echo "<?xml version=\"1.0\"?>" ; \
+	echo "<corpus>"; cat | \
+  sed 's/ \/\/.*//g; s/\([^ ][^ ]*\)=\([^ <>][^ <>]*\)/\1="\2"/g' | \
+	sed "s/^\/\/$SRC: \(.*\)/<sstr> \1 <\/sstr>/g; s/^\/\/$TGT: \(.*\)/<tstr> \1 <\/tstr>/g" ; \
+  echo '</bead></corpus>'

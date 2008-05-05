@@ -3,18 +3,12 @@ package mt.train;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.Properties;
 
 import mt.base.DynamicIntegerArrayIndex;
 import mt.base.IString;
 import mt.base.Sequence;
 import mt.base.Sequences;
-
-import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.util.Index;
 
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;

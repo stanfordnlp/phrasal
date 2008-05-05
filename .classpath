@@ -68,6 +68,7 @@
     <classpathentry kind="lib" path="/Core/libsrc/xalan-j-2.7.0-src.zip" />
     <classpathentry kind="lib" path="/Core/libsrc/yws-2.12-src.zip" />
     <classpathentry kind="lib" path="lib/bsh.jar" />
+    <classpathentry kind="lib" path="lib/commons-lang-2.4.jar" />
     <classpathentry kind="output" path="classes" />
 </classpath>
 

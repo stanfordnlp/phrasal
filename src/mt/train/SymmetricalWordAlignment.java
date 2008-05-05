@@ -3,7 +3,7 @@ package mt.train;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
-import java.io.IOException;
+import java.io.*;
 
 import mt.base.IString;
 import mt.base.IStrings;
@@ -29,9 +29,15 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     System.err.println("SymmetricalWordAlignment: new instance.");
   }
 
+  SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
+                        Set<Integer>[] f2e, Set<Integer>[] e2f) {
+    super(f,e,f2e,e2f);
+  }
+
   public SymmetricalWordAlignment(Integer id, String fStr, String eStr, String aStr) throws IOException {
     init(id,fStr,eStr,aStr);
   }
+  
   public SymmetricalWordAlignment(String fStr, String eStr, String aStr) throws IOException {
     init(fStr,eStr,aStr);
   }
@@ -47,13 +53,17 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public void init(String fStr, String eStr, String aStr) throws IOException {
+    init(fStr, eStr, aStr, false);
+  }
+
+  public void init(String fStr, String eStr, String aStr, boolean reverse) throws IOException {
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
     e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
     initAlignment();
     for(String al : aStr.split("\\s+")) {
       String[] els = al.split("-");
-      int fpos = Integer.parseInt(els[0]);
-      int epos = Integer.parseInt(els[1]);
+      int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);
+      int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
       if(0 > fpos || fpos >= f.size())
         throw new IOException("index out of bounds ("+f.size()+") : "+fpos);
       if(0 > epos || epos >= e.size())
@@ -83,7 +93,30 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     e2f[e].add(f);
   }
 
-  public String toString() {
-    return toString(f2e);
+  public String toString() { return toString(f2e); }
+  public String toString1() { return toString(f2e,false); }
+
+  public String toReverseString() { return toString(e2f); }
+  public String toReverseString1() { return toString(e2f,false); }
+
+  static public SymmetricalWordAlignment[] readFromIBMWordAlignment(String xmlFile) {
+    InputStream in=null;
+    IBMWordAlignmentHandler h=null;
+    try {
+			h = new IBMWordAlignmentHandler();
+			in = new BufferedInputStream(new FileInputStream(new File(xmlFile)));
+			h.readXML(in);
+		} catch (Throwable t) {
+			t.printStackTrace();
+		} finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException ioe) {
+					ioe.printStackTrace();
+				}
+			}
+		}
+    return h.getIBMWordAlignment();
   }
 }

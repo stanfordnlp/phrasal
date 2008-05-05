@@ -54,7 +54,9 @@ public class CombinedStatisticsCollector {
    *
    * @param fCorpus
    * @param eCorpus
-   * @param aCorpus
+   * @param a1Corpus
+   * @param a2Corpus
+   * @param numLines
    */
   public void collectFromTrainingCorpus(String fCorpus, String eCorpus, String a1Corpus, String a2Corpus, int numLines) {
     
