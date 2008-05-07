@@ -93,6 +93,32 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     e2f[e].add(f);
   }
 
+  /**
+	 * Compute alignment error rate. Since there is (currently) no S vs. P distinction
+   * alignment in this class, 
+	 * AER is 1 minus F-measure.
+	 */
+	static double computeAER(SymmetricalWordAlignment[] ref, SymmetricalWordAlignment[] hyp) {
+		int tpC = 0, refC = 0, hypC = 0;
+    if(ref.length != hyp.length)
+     throw new RuntimeException("Not same number of aligned sentences!");
+    for(int i=0; i<ref.length; ++i) {
+      SymmetricalWordAlignment r = ref[i], h = hyp[i];
+      assert(r.f().equals(h.f()));
+      assert(r.e().equals(h.e()));
+      for(int j=0; j<r.fSize(); ++j) {
+        for(int k=0; k<r.f2e(j).size(); ++k) {
+          if(h.f2e(j).contains(k))
+            ++tpC;
+        }
+        refC += r.f2e(j).size();
+        hypC += h.f2e(j).size();
+      }
+    }
+    double prec = tpC*1.0/hypC, recall = tpC*1.0/refC;
+    return 2*prec*recall/(prec+recall);
+  }
+
   public String toString() { return toString(f2e); }
   public String toString1() { return toString(f2e,false); }
 
