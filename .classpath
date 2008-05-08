@@ -33,7 +33,7 @@
 	<classpathentry kind="lib" path="/Core/lib/org.mortbay.jetty.jar" sourcepath="/Core/libsrc/jetty-5.1.11-src.zip"/>
 	<classpathentry kind="lib" path="/Core/lib/propbank.jar"/>
 	<classpathentry kind="lib" path="/Core/lib/protege.jar" sourcepath="/Core/libsrc/protege-3.3.1-src.zip!/src"/>
-	<classpathentry kind="lib" path="/Core/lib/ra-0.1.9-full.jar" sourcepath="/Core/libsrc/ra-0.1.9-src.zip"/>
+	<classpathentry kind="lib" path="/Core/lib/ra.jar" sourcepath="/Core/libsrc/ra-0.1.9-src.zip"/>
 	<classpathentry kind="lib" path="/Core/lib/serializer.jar"/>
 	<classpathentry kind="lib" path="/Core/lib/uima_core.jar"/>
 	<classpathentry kind="lib" path="/Core/lib/Verbnet.jar"/>
