@@ -38,6 +38,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(id,fStr,eStr,aStr);
   }
   
+  public SymmetricalWordAlignment(String fStr, String eStr, String aStr, boolean s2t, boolean zeroBased) throws IOException {
+    init(fStr,eStr,aStr,s2t,zeroBased);
+  }
+
   public SymmetricalWordAlignment(String fStr, String eStr, String aStr) throws IOException {
     init(fStr,eStr,aStr);
   }
@@ -57,6 +61,12 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse) throws IOException {
+    init(fStr, eStr, aStr, reverse, true);
+  }
+
+  public void init(String fStr, String eStr, String aStr, boolean reverse, boolean zeroBased) throws IOException {
+    if(DEBUG)
+      System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
     e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
     initAlignment();
@@ -64,10 +74,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       String[] els = al.split("-");
       int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);
       int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
+      if(!zeroBased) { --fpos; --epos; }
       if(0 > fpos || fpos >= f.size())
-        throw new IOException("index out of bounds ("+f.size()+") : "+fpos);
+        throw new IOException("f has index out of bounds ("+f.size()+") : "+fpos);
       if(0 > epos || epos >= e.size())
-        throw new IOException("index out of bounds ("+e.size()+") : "+epos);
+        throw new IOException("e has index out of bounds ("+e.size()+") : "+epos);
       f2e[fpos].add(epos);
       e2f[epos].add(fpos);
       if(DEBUG)
@@ -107,7 +118,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       assert(r.f().equals(h.f()));
       assert(r.e().equals(h.e()));
       for(int j=0; j<r.fSize(); ++j) {
-        for(int k=0; k<r.f2e(j).size(); ++k) {
+        for(int k : r.f2e(j)) {
           if(h.f2e(j).contains(k))
             ++tpC;
         }
@@ -116,7 +127,9 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       }
     }
     double prec = tpC*1.0/hypC, recall = tpC*1.0/refC;
-    return 2*prec*recall/(prec+recall);
+    if(DEBUG)
+      System.err.printf("tp: %d ref: %d hyp: %d prec: %.3g recall: %.3g\n", tpC, hypC, refC, prec, recall);
+    return 1-2*prec*recall/(prec+recall);
   }
 
   public String toString() { return toString(f2e); }

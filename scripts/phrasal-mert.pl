@@ -47,6 +47,7 @@ $EXTERNAL_SCRIPTS_DIR="$SCRIPTS_DIR/../external_scripts";
 print "Scripts dir: $SCRIPTS_DIR\n";
 print "SVN info:\n";
 print `(cd $SCRIPTS_DIR; svn info)`;
+print "Host: ".`hostname`;
 
 $work_dir=$DEFAULT_WORK_DIR;
 $nbest_size=$DEFAULT_NBEST_SIZE;
@@ -267,6 +268,7 @@ $lastTotalNbestListSize = "N/A";
 
 for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr "Iter: $iter\n"; 
+	 print stderr "Date: ".`date`;
    print stderr 
    "========================================================================".
    "\n\n";
