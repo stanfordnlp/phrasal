@@ -76,9 +76,9 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
       if(!zeroBased) { --fpos; --epos; }
       if(0 > fpos || fpos >= f.size())
-        throw new IOException("f has index out of bounds ("+f.size()+") : "+fpos);
+        throw new IOException("f has index out of bounds (fsize="+f.size()+",esize="+e.size()+") : "+fpos);
       if(0 > epos || epos >= e.size())
-        throw new IOException("e has index out of bounds ("+e.size()+") : "+epos);
+        throw new IOException("e has index out of bounds (esize="+e.size()+",fsize="+f.size()+") : "+epos);
       f2e[fpos].add(epos);
       e2f[epos].add(fpos);
       if(DEBUG)

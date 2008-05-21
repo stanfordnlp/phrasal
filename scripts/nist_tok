@@ -1,4 +1,4 @@
-#!/usr/bin/perl -p
+#!/usr/bin/perl -n
 
 ################################################################
 # Applies NIST tokenization. Run this script if your evaluation 
@@ -6,7 +6,8 @@
 # Author: Michel Galley
 ################################################################
 
-NormalizeText($_);
+chomp;
+print NormalizeText($_)."\n";
 
 sub NormalizeText {
     my ($norm_text) = @_;

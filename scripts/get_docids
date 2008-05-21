@@ -1,0 +1,6 @@
+#!/usr/bin/perl -n
+
+while(/docid="(\S+)"/g) {
+	print $1,"\n";
+}
+	

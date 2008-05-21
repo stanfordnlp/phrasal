@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+#####################################################
+#  Filter NIST sgml file based on list of document IDs
+# provided as first argument.
+#
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Sat 17 May 2008 07:01:24 PM PDT
+# $Id$
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+my %docs;
+open(F,$ARGV[0]);
+map {chomp; tr/A-Z/a-z/; s/-S2/-S1/; $docs{$_}=1; s/-S1/-S2/; $docs{$_}=1; } <F>;
+close(F);
+
+my $curDoc = '';
+while(<STDIN>) {
+	$curDoc = $1 if(/docid="(\S+)"/i);
+	$curDoc =~ tr/A-Z/a-z/;
+	next if $docs{$curDoc};
+	print
+}

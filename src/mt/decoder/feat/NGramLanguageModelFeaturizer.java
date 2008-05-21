@@ -1,5 +1,6 @@
 package mt.decoder.feat;
 
+import java.io.IOException;
 import java.util.*;
 
 import mt.base.*;
@@ -24,7 +25,17 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	final int lmOrder;
 	
 	static public final double MOSES_LM_UNKNOWN_WORD_SCORE = -100; // in sri lm -99 is -infinity
-	
+
+  public NGramLanguageModelFeaturizer(String... args) throws IOException {
+    if(args.length != 2)
+      throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
+    this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
+    featureName = args[1];
+    featureNameWithColen = featureName + ":";
+    this.ngramReweighting = false;
+    this.lmOrder = lm.order();
+  }
+
 	public NGramLanguageModelFeaturizer(LanguageModel<TK> lm) {
 		this.lm = lm;
 		featureName = FEATURE_NAME;
