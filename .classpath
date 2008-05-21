@@ -3,71 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Core"/>
-	<classpathentry kind="lib" path="/Core/lib/AppleJavaExtensions.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/colt.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/commons-logging.jar" sourcepath="/Core/libsrc/commons-logging-1.0.4-src.zip!/commons-logging-1.0.4-src/src/java"/>
-	<classpathentry kind="lib" path="/Core/lib/counters.jar" sourcepath="/Core/libsrc/counters-0.3-src.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/dbparser.jar" sourcepath="/Core/libsrc/dbparser0.9.9c-src.zip!/dbparser/src"/>
-	<classpathentry kind="lib" path="/Core/lib/fastutil.jar" sourcepath="/Core/libsrc/fastutil-5.1.4-src.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/googleapi.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/groovy.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/html-parser.jar" sourcepath="/Core/libsrc/htmlparser-1.2-src.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/jakarta-oro.jar" sourcepath="/Core/libsrc/jakarta-oro-2.0.8-src.zip!/jakarta-oro-2.0.8/src/java"/>
-	<classpathentry kind="lib" path="/Core/lib/Jama.jar" sourcepath="/Core/libsrc/Jama-1.0.2-src.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/jasper-compiler.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/jasper-runtime.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/javax.servlet.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/jdbm.jar" sourcepath="/Core/libsrc/jdbm-1.0-src.zip!/jdbm-1.0/src/tests"/>
-	<classpathentry kind="lib" path="/Core/lib/jdom.jar" sourcepath="/Core/libsrc/jdom-1.0-src.zip!/jdom-1.0/src/java"/>
-	<classpathentry kind="lib" path="/Core/lib/je.jar" sourcepath="/Core/libsrc/je-3.2.68-src.zip!/je-3.2.68/src"/>
-	<classpathentry kind="lib" path="/Core/lib/jetty-util-6.1.5.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/jgraph.jar" sourcepath="/Core/libsrc/jgraph-latest-lgpl-src.jar.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/jgrapht.jar" sourcepath="/Core/libsrc/jgrapht-0.6.0-src.zip!/jgrapht-0.6.0/src"/>
-	<classpathentry kind="lib" path="/Core/lib/jsvm.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/junit.jar" sourcepath="/Core/libsrc/junit-4.1-src.zip!/junit4.1"/>
-	<classpathentry kind="lib" path="/Core/lib/lbfgs.jar" sourcepath="/Core/libsrc/lbfgs-src.zip!/lbfgs-src"/>
-	<classpathentry kind="lib" path="/Core/lib/libsvm.jar" sourcepath="/Core/libsrc/libsvm-2.84-src.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/lucene.jar" sourcepath="/Core/libsrc/lucene-2.2.0.zip!/lucene-2.2.0/contrib/queries/src/test"/>
-	<classpathentry kind="lib" path="/Core/lib/mtj.jar" sourcepath="/Core/libsrc/mtjsrc.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/mysql.jar" sourcepath="/Core/libsrc/mysql-connector-java-3.1.14-src.zip!/mysql-connector-java-3.1.14-bin/src"/>
-	<classpathentry kind="lib" path="/Core/lib/org.mortbay.jetty.jar" sourcepath="/Core/libsrc/jetty-5.1.11-src.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/propbank.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/protege.jar" sourcepath="/Core/libsrc/protege-3.3.1-src.zip!/src"/>
-	<classpathentry kind="lib" path="/Core/lib/ra.jar" sourcepath="/Core/libsrc/ra-0.1.9-src.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/serializer.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/uima_core.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/Verbnet.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/weka.jar" sourcepath="/Core/libsrc/weka-3.4.6-src.zip"/>
-	<classpathentry kind="lib" path="/Core/lib/wn.jar" sourcepath="/Core/libsrc/wn-src.zip!/wn-src/src"/>
-	<classpathentry kind="lib" path="/Core/lib/xalan.jar" sourcepath="/Core/libsrc/xalan-j-2.7.0-src.zip!/xalan-j-2.7.0-src/src"/>
-	<classpathentry kind="lib" path="/Core/lib/xercesImpl.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/xml-apis.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/xsltc.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/yahoo_search.jar" sourcepath="/Core/libsrc/yws-2.12-src.zip!/yws-2.12-src/src"/>
-	<classpathentry kind="lib" path="/Core/libsrc/commons-logging-1.0.4-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/dbparser0.9.9c-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/htmlparser-1.2-src.jar"/>
-	<classpathentry kind="lib" path="/Core/libsrc/Jama-1.0.2-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/jdbm-1.0-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/jdom-1.0-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/je-3.2.68-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/jetty-5.1.11-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/jgraph-latest-lgpl-src.jar.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/jgrapht-0.6.0-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/junit-4.1-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/lbfgs-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/libsvm-2.84-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/lucene-2.2.0.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/mtjsrc.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/mysql-connector-java-3.1.14-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/protege-3.3.1-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/ra-0.1.9-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/weka-3.4.6-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/wn-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/xalan-j-2.7.0-src.zip"/>
-	<classpathentry kind="lib" path="/Core/libsrc/yws-2.12-src.zip"/>
 	<classpathentry kind="lib" path="lib/bsh.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.4.jar"/>
-	<classpathentry kind="lib" path="/Core/lib/jwnl.jar" sourcepath="/Core/libsrc/jwnl-1.4-src.zip!/jwnl-1.4-src/src"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
