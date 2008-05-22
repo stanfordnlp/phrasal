@@ -493,7 +493,7 @@ public class UnsmoothedMERT {
 			ClassicCounter<String> dir; List<ScoredFeaturizedTranslation<IString, String>> rTrans;
       dir = summarizedAllFeaturesVector(rTrans = (better ? randomBetterTranslations(nbest, wts, emetric) : randomTranslations(nbest)));
      
-			System.err.printf("Random n-best point score: %.5f %.5f\n", emetric.score(rTrans));
+			System.err.printf("Random n-best point score: %.5f\n", emetric.score(rTrans));
 			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
 			double eval = evalAtPoint(nbest, newWts, emetric);
       double ssd = wtSsd(wts, newWts);
