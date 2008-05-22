@@ -259,6 +259,48 @@ public class UnsmoothedMERT {
 		return wts;		
   }
   
+	
+	@SuppressWarnings({ "deprecation", "unchecked" })
+	static public ClassicCounter<String> betterWorseCentroids(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+	  ClassicCounter<String> wts = initialWts;
+	  
+		while (true) {
+  		List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, wts);
+  	  IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();  
+  	  for (ScoredFeaturizedTranslation<IString, String> tran : current) {
+  	     incEval.add(tran);
+  	  }
+  	  ClassicCounter<String> betterVec = new ClassicCounter<String>(); int betterCnt = 0;
+  	  ClassicCounter<String> worseVec = new ClassicCounter<String>();  int worseCnt = 0;
+  	  double baseScore = incEval.score();
+  	  int lI = -1;
+  	  for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
+  	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
+  	        incEval.replace(lI, tran);
+  	        if (incEval.score() >= baseScore) {
+  	        	betterVec.addAll(summarizedAllFeaturesVector(Arrays.asList(tran)));
+  	        } else {
+  	        	worseVec.addAll(summarizedAllFeaturesVector(Arrays.asList(tran)));
+  	        }
+  	     } 
+  	     incEval.replace(lI, current.get(lI));  
+  	  }
+  	  betterVec.multiplyBy(1.0/betterCnt);  	  
+  	  worseVec.multiplyBy(1.0/worseCnt);
+  	  
+  	  ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
+  	  dir.subtractAll(worseVec);
+  	  
+  		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+  		double ssd = wtSsd(wts, newWts);
+  		wts = newWts;
+  		if (ssd < 1e-6) break;  		  		
+  	}
+		
+		return wts;
+	}
+  
 	/**
 	 * Powell's Method
 	 * 
@@ -986,6 +1028,8 @@ public class UnsmoothedMERT {
 			} else if (System.getProperty("useRandomBetterNBestPoint") != null) {
 				System.out.printf("use random better n-best point\n");
 				newWts = useRandomNBestPoint(nbest, wts, emetric, true);
+      } else if (System.getProperty("betterWorseCentroids") != null) {
+        newWts = betterWorseCentroids(nbest, wts, emetric);
       } else {			
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
