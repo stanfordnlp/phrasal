@@ -5,8 +5,6 @@ import java.util.*;
 
 import mt.base.*;
 import mt.decoder.util.*;
-import mt.metrics.BLEUMetric;
-import mt.metrics.EvaluationMetric;
 import mt.metrics.*;
 
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -388,6 +386,183 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
+	public static ClassicCounter<String> summarizedAllFeaturesVector(List<ScoredFeaturizedTranslation<IString, String>> trans) {
+		ClassicCounter<String> sumValues = new ClassicCounter<String>();
+		
+		for (ScoredFeaturizedTranslation<IString,String> tran : trans) {			
+			for (FeatureValue<String> fValue : tran.features) {
+				sumValues.incrementCount(fValue.name, fValue.value);
+			}
+		}
+		
+		return sumValues;
+	}
+	
+	static public ClassicCounter<String> perceptronOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+		List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(emetric)).maximize(nbest);
+		ClassicCounter<String> targetFeatures = summarizedAllFeaturesVector(target);
+		ClassicCounter<String> wts = initialWts;
+		
+		while (true) {
+			Scorer<String> scorer = new StaticScorer(wts);
+			MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
+			List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch.maximize(nbest);
+			ClassicCounter<String> dir = summarizedAllFeaturesVector(oneBest);
+			dir.multiplyBy(-1.0);
+			dir.addAll(targetFeatures);
+			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+			double ssd = 0;
+			for (String k : newWts.keySet()) {
+				double diff = wts.getCount(k) - newWts.getCount(k);
+				ssd += diff*diff;
+			}
+			wts = newWts;
+			if (ssd < 1e-6) break;
+		}
+		return wts;
+	}
+	
+	static final int NO_PROGRESS_LIMIT = 20;
+	static final double NO_PROGRESS_SSD = 1e-6;
+	
+
+  static public List<ScoredFeaturizedTranslation<IString, String>> randomBetterTranslations(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
+     return randomBetterTranslations(nbest, transArgmax(nbest, wts), emetric);
+  }
+
+  static public List<ScoredFeaturizedTranslation<IString, String>> randomBetterTranslations(MosesNBestList nbest, 
+      List<ScoredFeaturizedTranslation<IString, String>> current, EvaluationMetric<IString,String> emetric) {
+		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+		List<ScoredFeaturizedTranslation<IString,String>> trans = new ArrayList<ScoredFeaturizedTranslation<IString,String>>(nbestLists.size());
+    IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();  
+    for (ScoredFeaturizedTranslation<IString, String> tran : current) {
+       incEval.add(tran);
+    }
+    double baseScore = incEval.score();
+    List<List<ScoredFeaturizedTranslation<IString, String>>> betterTrans = 
+       new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(nbestLists.size());
+    int lI = -1;
+    for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
+       betterTrans.add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>());
+       for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
+          incEval.replace(lI, tran);
+          if (incEval.score() >= baseScore) betterTrans.get(lI).add(tran); 
+       } 
+       incEval.replace(lI, current.get(lI));  
+    }
+
+		for (List<? extends ScoredFeaturizedTranslation<IString, String>> list : betterTrans) {
+			trans.add(list.get(r.nextInt(list.size())));
+		}	
+
+    return trans;
+  }
+
+  static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(MosesNBestList nbest, ClassicCounter<String> wts) {
+			Scorer<String> scorer = new StaticScorer(wts);
+			MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
+			return oneBestSearch.maximize(nbest);
+   }
+
+   
+	static public List<ScoredFeaturizedTranslation<IString, String>> randomTranslations(MosesNBestList nbest) {
+		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+		List<ScoredFeaturizedTranslation<IString,String>> trans = new ArrayList<ScoredFeaturizedTranslation<IString,String>>(nbestLists.size());
+		
+		for (List<? extends ScoredFeaturizedTranslation<IString, String>> list : nbest.nbestLists()) {
+			trans.add(list.get(r.nextInt(list.size())));
+		}	
+		
+		return trans;
+	}
+
+  static public double wtSsd(ClassicCounter<String> oldWts, ClassicCounter<String> newWts) {
+		double ssd = 0;
+		for (String k : newWts.keySet()) {
+			double diff = oldWts.getCount(k) - newWts.getCount(k);
+			ssd += diff*diff;
+		}
+    return ssd;
+  }
+
+  static public ClassicCounter<String> useRandomNBestPoint(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric,
+     boolean better) {
+		ClassicCounter<String> wts = initialWts;
+
+		for (int noProgress = 0; noProgress < NO_PROGRESS_LIMIT; ) {
+			ClassicCounter<String> dir; List<ScoredFeaturizedTranslation<IString, String>> rTrans;
+      dir = summarizedAllFeaturesVector(rTrans = (better ? randomBetterTranslations(nbest, wts, emetric) : randomTranslations(nbest)));
+     
+			System.err.printf("Random n-best point score: %.5f %.5f\n", emetric.score(rTrans));
+			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+			double eval = evalAtPoint(nbest, newWts, emetric);
+      double ssd = wtSsd(wts, newWts);
+      if (ssd < 1e-6) noProgress++; else noProgress = 0;
+			System.err.printf("Eval: %.5f SSD: %e (no progress: %d)\n", eval, ssd, noProgress);
+      wts = newWts; 
+    }   
+    return wts;
+  }	
+
+	@SuppressWarnings("deprecation")
+	static public ClassicCounter<String> useRandomPairs(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+		ClassicCounter<String> wts = initialWts;
+		
+		for (int noProgress = 0; noProgress < NO_PROGRESS_LIMIT; ) {
+			ClassicCounter<String> dir; List<ScoredFeaturizedTranslation<IString, String>> rTrans1, rTrans2;
+			
+			(dir = summarizedAllFeaturesVector(rTrans1 = randomTranslations(nbest))).subtractAll(summarizedAllFeaturesVector(rTrans2 = randomTranslations(nbest)));
+			
+			System.err.printf("Pair scores: %.5f %.5f\n", emetric.score(rTrans1), emetric.score(rTrans2));
+			
+			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+			double eval = evalAtPoint(nbest, newWts, emetric);
+			
+			double ssd = 0;
+			for (String k : newWts.keySet()) {
+				double diff = wts.getCount(k) - newWts.getCount(k);
+				ssd += diff*diff;
+			}
+			System.err.printf("Eval: %.5f SSD: %e (no progress: %d)\n", eval, ssd, noProgress);
+			wts = newWts;
+			if (ssd < 1e-6) noProgress++; else noProgress = 0;
+		}
+		return wts;
+	}
+	
+	@SuppressWarnings("deprecation")
+	static public ClassicCounter<String> useRandomAltPair(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean forceBetter) {
+		ClassicCounter<String> wts = initialWts;
+		
+		for (int noProgress = 0; noProgress < NO_PROGRESS_LIMIT; ) {
+			ClassicCounter<String> dir; List<ScoredFeaturizedTranslation<IString, String>> rTrans; Scorer<String> scorer = new StaticScorer(wts);
+			
+			double currentEval = evalAtPoint(nbest, wts, emetric);
+			double rEval;
+      dir = summarizedAllFeaturesVector(rTrans = (forceBetter ? randomBetterTranslations(nbest, wts, emetric) : randomTranslations(nbest)));
+			rEval = emetric.score(rTrans);
+			MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
+			List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch.maximize(nbest);
+			dir.subtractAll(summarizedAllFeaturesVector(oneBest));
+			
+			System.err.printf("Random alternate score: %.5f \n", emetric.score(rTrans));
+			
+			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+			double eval = evalAtPoint(nbest, newWts, emetric);
+			
+			double ssd = 0;
+			for (String k : newWts.keySet()) {
+				double diff = wts.getCount(k) - newWts.getCount(k);
+				ssd += diff*diff;
+			}
+			System.err.printf("Eval: %.5f SSD: %e (no progress: %d)\n", eval, ssd, noProgress);
+			wts = newWts;
+			if (ssd < 1e-6) noProgress++; else noProgress = 0;
+		}
+		return wts;
+	}
+	
+	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> cerStyleOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric){
 		ClassicCounter<String> wts = initialWts;
 	  double finalEval = 0;
@@ -445,6 +620,7 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
+	@SuppressWarnings("deprecation")
 	static public void normalize(ClassicCounter<String> wts) {
 			wts.multiplyBy(1.0/l1norm(wts));
 	}
@@ -464,6 +640,7 @@ public class UnsmoothedMERT {
 	static ClassicCounter<String> featureOccurances;
 	static ClassicCounter<String> featureNbestOccurances;
 	
+	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> cerStyleOptimize2(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric){
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
 		double oldEval = Double.NEGATIVE_INFINITY;
@@ -668,6 +845,7 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
+	@SuppressWarnings("deprecation")
 	static void writeWeights(String filename, ClassicCounter<String> wts) throws IOException {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 		
@@ -790,7 +968,25 @@ public class UnsmoothedMERT {
 			} else if (System.getProperty("usePowell") != null) {
 				System.out.printf("Using powell (och)\n");
 				newWts = powell(nbest, wts, emetric);
-			}else {
+			} else if (System.getProperty("usePerceptron") != null) {
+				System.out.printf("use perceptron\n");
+				newWts = perceptronOptimize(nbest, wts, emetric);
+			} else if (System.getProperty("useRandomPairs") != null) {
+				System.out.printf("using random pairs\n");
+				newWts = useRandomPairs(nbest, wts, emetric);
+			} else if (System.getProperty("useRandomBetter") != null) {
+				System.out.printf("use random better\n");
+				newWts = useRandomAltPair(nbest, wts, emetric, true);
+			}	else if (System.getProperty("useRandomAltPair") != null) {
+				System.out.printf("use random alt pair\n");
+				newWts = useRandomAltPair(nbest, wts, emetric, false);
+			} else if (System.getProperty("useRandomNBestPoint") != null) {
+				System.out.printf("use random n-best point\n");
+				newWts = useRandomNBestPoint(nbest, wts, emetric, false);
+			} else if (System.getProperty("useRandomBetterNBestPoint") != null) {
+				System.out.printf("use random better n-best point\n");
+				newWts = useRandomNBestPoint(nbest, wts, emetric, true);
+      } else {			
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
 			}
