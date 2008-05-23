@@ -153,7 +153,7 @@ public class UnsmoothedMERT {
 		bestWts = newWts;
 		
 		evilGlobalBestEval = evalAtPoint(nbest, bestWts, emetric);
-		return bestWts;
+		return normalize(bestWts);
 	}
 
 	enum SmoothingType {avg, min};
@@ -265,7 +265,7 @@ public class UnsmoothedMERT {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 	  ClassicCounter<String> wts = initialWts;
 	  
-		while (true) {
+		for (int iter = 0; ; iter++) {
   		List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, wts);
   	  IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();  
   	  for (ScoredFeaturizedTranslation<IString, String> tran : current) {
@@ -294,12 +294,14 @@ public class UnsmoothedMERT {
   	  ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
   	  dir.subtractAll(worseVec);
   	  normalize(dir);
+  	  System.err.printf("iter: %d\n", iter);
   	  System.err.printf("Better cnt: %d\n", betterCnt);
   	  System.err.printf("Worse cnt: %d\n", worseCnt);
   	  System.err.printf("Better Vec:\n%s\n\n", betterVec);
   	  System.err.printf("Worse Vec:\n%s\n\n", worseVec);  	  
   	  System.err.printf("Dir:\n%s\n\n", dir);
   		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+  		System.err.printf("new wts:\n%s\n\n", wts);
   		double ssd = wtSsd(wts, newWts);
   		wts = newWts;
   		System.err.printf("ssd: %f\n",ssd);
