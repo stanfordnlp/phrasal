@@ -274,6 +274,7 @@ public class UnsmoothedMERT {
   	  ClassicCounter<String> betterVec = new ClassicCounter<String>(); int betterCnt = 0;
   	  ClassicCounter<String> worseVec = new ClassicCounter<String>();  int worseCnt = 0;
   	  double baseScore = incEval.score();
+  	  System.err.printf("baseScore: %f\n", baseScore);
   	  int lI = -1;
   	  for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
   	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
@@ -286,7 +287,7 @@ public class UnsmoothedMERT {
   	     } 
   	     incEval.replace(lI, current.get(lI));  
   	  }
-  	  betterVec.multiplyBy(1.0/betterCnt);  	  
+  	  betterVec.multiplyBy(1.0/betterCnt);
   	  worseVec.multiplyBy(1.0/worseCnt);
   	  
   	  ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
@@ -295,6 +296,7 @@ public class UnsmoothedMERT {
   		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
   		double ssd = wtSsd(wts, newWts);
   		wts = newWts;
+  		System.err.printf("ssd: %f\n",ssd);
   		if (ssd < 1e-6) break;  		  		
   	}
 		
@@ -1029,6 +1031,7 @@ public class UnsmoothedMERT {
 				System.out.printf("use random better n-best point\n");
 				newWts = useRandomNBestPoint(nbest, wts, emetric, true);
       } else if (System.getProperty("betterWorseCentroids") != null) {
+      	System.out.printf("using better worse centroids\n");
         newWts = betterWorseCentroids(nbest, wts, emetric);
       } else {			
 				System.out.printf("Using cer\n");
