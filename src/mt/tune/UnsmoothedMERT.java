@@ -280,8 +280,10 @@ public class UnsmoothedMERT {
   	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
   	        incEval.replace(lI, tran);
   	        if (incEval.score() >= baseScore) {
+  	        	betterCnt++;
   	        	betterVec.addAll(normalize(summarizedAllFeaturesVector(Arrays.asList(tran))));
   	        } else {
+  	        	worseCnt++;
   	        	worseVec.addAll(normalize(summarizedAllFeaturesVector(Arrays.asList(tran))));
   	        }
   	     } 
