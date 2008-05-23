@@ -289,13 +289,15 @@ public class UnsmoothedMERT {
   	     } 
   	     incEval.replace(lI, current.get(lI));  
   	  }
-  	  betterVec.multiplyBy(1.0/betterCnt);
-  	  worseVec.multiplyBy(1.0/worseCnt);
-  	  
+  	  normalize(betterVec);
+  	  normalize(worseVec);
   	  ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
   	  dir.subtractAll(worseVec);
+  	  normalize(dir);
+  	  System.err.printf("Better cnt: %d\n", betterCnt);
+  	  System.err.printf("Worse cnt: %d\n", worseCnt);
   	  System.err.printf("Better Vec:\n%s\n\n", betterVec);
-  	  System.err.printf("Worse Vec:\n%s\n\n", betterVec);  	  
+  	  System.err.printf("Worse Vec:\n%s\n\n", worseVec);  	  
   	  System.err.printf("Dir:\n%s\n\n", dir);
   		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
   		double ssd = wtSsd(wts, newWts);
