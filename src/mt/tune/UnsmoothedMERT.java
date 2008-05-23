@@ -280,9 +280,9 @@ public class UnsmoothedMERT {
   	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
   	        incEval.replace(lI, tran);
   	        if (incEval.score() >= baseScore) {
-  	        	betterVec.addAll(summarizedAllFeaturesVector(Arrays.asList(tran)));
+  	        	betterVec.addAll(normalize(summarizedAllFeaturesVector(Arrays.asList(tran))));
   	        } else {
-  	        	worseVec.addAll(summarizedAllFeaturesVector(Arrays.asList(tran)));
+  	        	worseVec.addAll(normalize(summarizedAllFeaturesVector(Arrays.asList(tran))));
   	        }
   	     } 
   	     incEval.replace(lI, current.get(lI));  
@@ -667,8 +667,9 @@ public class UnsmoothedMERT {
 	}
 	
 	@SuppressWarnings("deprecation")
-	static public void normalize(ClassicCounter<String> wts) {
+	static public ClassicCounter<String> normalize(ClassicCounter<String> wts) {
 			wts.multiplyBy(1.0/l1norm(wts));
+			return wts;
 	}
 	
 	static public double l1norm(ClassicCounter<String> wts) {
