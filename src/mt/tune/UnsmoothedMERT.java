@@ -292,7 +292,9 @@ public class UnsmoothedMERT {
   	  
   	  ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
   	  dir.subtractAll(worseVec);
-  	  
+  	  System.err.printf("Better Vec:\n%s\n\n", betterVec);
+  	  System.err.printf("Worse Vec:\n%s\n\n", betterVec);  	  
+  	  System.err.printf("Dir:\n%s\n\n", dir);
   		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
   		double ssd = wtSsd(wts, newWts);
   		wts = newWts;
