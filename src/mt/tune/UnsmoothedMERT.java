@@ -405,7 +405,7 @@ public class UnsmoothedMERT {
   	  
   	  ClassicCounter<String> dir = new ClassicCounter<String>();
   	  if (betterClusterCnt != 0) dir.addAll(betterVec);
-  	  if (worseClusterCnt != 0) dir.addAll(worseVec);
+  	  if (worseClusterCnt != 0) dir.subtractAll(worseVec);
   	  normalize(dir);
   	  System.err.printf("iter: %d\n", iter);
   	  System.err.printf("Better cnt: %d\n", betterClusterCnt);
