@@ -1044,9 +1044,10 @@ public class UnsmoothedMERT {
       	System.out.printf("using better worse centroids\n");
         newWts = betterWorseCentroids(nbest, wts, emetric, false, false);
       } else if (System.getProperty("betterCentroidPerceptron") != null) {
-      	System.out.printf("using better centroid perceptron");
+      	System.out.printf("using better centroid perceptron\n");
       	newWts = betterWorseCentroids(nbest, wts, emetric, true, false);
       } else if (System.getProperty("betterCentroid") != null) {
+      	System.out.printf("using better centroid\n");
       	newWts = betterWorseCentroids(nbest, wts, emetric, false, true);
       } else {			
 				System.out.printf("Using cer\n");
