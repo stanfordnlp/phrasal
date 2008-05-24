@@ -350,8 +350,8 @@ public class UnsmoothedMERT {
   	  System.err.printf("Better cnt: %d\n", betterClusterCnt);
   	  System.err.printf("Worse cnt: %d\n", worseClusterCnt);
   	  
-  	  betterVec.divideBy(1.0/betterClusterCnt);
-  	  worseVec.divideBy(1.0/worseClusterCnt);
+  	  betterVec.multiplyBy(1.0/betterClusterCnt);
+  	  worseVec.multiplyBy(1.0/worseClusterCnt);
   	  
   	  System.err.printf("Initial Better Vec:\n%s\n", betterVec);
 	  	System.err.printf("Initial Worse Vec:\n%s\n", worseVec);
