@@ -261,7 +261,7 @@ public class UnsmoothedMERT {
   
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })
-	static public ClassicCounter<String> betterWorseCentroids(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean useCurrentAsWorse) {
+	static public ClassicCounter<String> betterWorseCentroids(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean useCurrentAsWorse, boolean useOnlyBetter) {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 	  ClassicCounter<String> wts = initialWts;
 	  
@@ -293,7 +293,7 @@ public class UnsmoothedMERT {
   	  if (useCurrentAsWorse) worseVec = summarizedAllFeaturesVector(current);
   	  normalize(worseVec);
   	  ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
-  	  dir.subtractAll(worseVec);
+  	  if (!useOnlyBetter) dir.subtractAll(worseVec);
   	  normalize(dir);
   	  System.err.printf("iter: %d\n", iter);
   	  System.err.printf("Better cnt: %d\n", betterCnt);
@@ -1042,10 +1042,12 @@ public class UnsmoothedMERT {
 				newWts = useRandomNBestPoint(nbest, wts, emetric, true);
       } else if (System.getProperty("betterWorseCentroids") != null) {
       	System.out.printf("using better worse centroids\n");
-        newWts = betterWorseCentroids(nbest, wts, emetric, false);
+        newWts = betterWorseCentroids(nbest, wts, emetric, false, false);
       } else if (System.getProperty("betterCentroidPerceptron") != null) {
       	System.out.printf("using better centroid perceptron");
-      	newWts = betterWorseCentroids(nbest, wts, emetric, true);
+      	newWts = betterWorseCentroids(nbest, wts, emetric, true, false);
+      } else if (System.getProperty("betterCentroid") != null) {
+      	newWts = betterWorseCentroids(nbest, wts, emetric, false, true);
       } else {			
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
