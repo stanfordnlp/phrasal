@@ -353,6 +353,9 @@ public class UnsmoothedMERT {
   	  betterVec.divideBy(1.0/betterClusterCnt);
   	  worseVec.divideBy(1.0/worseClusterCnt);
   	  
+  	  System.err.printf("Initial Better Vec:\n%s\n", betterVec);
+	  	System.err.printf("Initial Worse Vec:\n%s\n", worseVec);
+  	  
   	  // k-means loop
   	  Set<String> keys = new HashSet<String>();
   	  keys.addAll(betterVec.keySet());
@@ -390,7 +393,7 @@ public class UnsmoothedMERT {
   	  			}
   	  		}
   	  	}
-  	  	System.err.printf("Cluster Iter: %d Changes: %d BetterClust: %d WorseClust: %d", clustIter, changes, betterClusterCnt, worseClusterCnt);
+  	  	System.err.printf("Cluster Iter: %d Changes: %d BetterClust: %d WorseClust: %d\n", clustIter, changes, betterClusterCnt, worseClusterCnt);
   	  	newBetterVec.multiplyBy(1.0/betterClusterCnt);
   	  	newWorseVec.multiplyBy(1.0/worseClusterCnt);
   	  	betterVec = newBetterVec;
