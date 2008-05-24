@@ -261,7 +261,7 @@ public class UnsmoothedMERT {
   
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })
-	static public ClassicCounter<String> betterWorseCentroids(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+	static public ClassicCounter<String> betterWorseCentroids(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean useCurrentAsWorse) {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 	  ClassicCounter<String> wts = initialWts;
 	  
@@ -290,6 +290,7 @@ public class UnsmoothedMERT {
   	     incEval.replace(lI, current.get(lI));  
   	  }
   	  normalize(betterVec);
+  	  if (useCurrentAsWorse) worseVec = summarizedAllFeaturesVector(current);
   	  normalize(worseVec);
   	  ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
   	  dir.subtractAll(worseVec);
@@ -512,7 +513,7 @@ public class UnsmoothedMERT {
 
   static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(MosesNBestList nbest, ClassicCounter<String> wts) {
 			Scorer<String> scorer = new StaticScorer(wts);
-			MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
+			MultiTranslationMetricMax<IString, String> oneBestSearch = new GreedyMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
 			return oneBestSearch.maximize(nbest);
    }
 
@@ -1041,7 +1042,10 @@ public class UnsmoothedMERT {
 				newWts = useRandomNBestPoint(nbest, wts, emetric, true);
       } else if (System.getProperty("betterWorseCentroids") != null) {
       	System.out.printf("using better worse centroids\n");
-        newWts = betterWorseCentroids(nbest, wts, emetric);
+        newWts = betterWorseCentroids(nbest, wts, emetric, false);
+      } else if (System.getProperty("betterCentroidPerceptron") != null) {
+      	System.out.printf("using better centroid perceptron");
+      	newWts = betterWorseCentroids(nbest, wts, emetric, true);
       } else {			
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
