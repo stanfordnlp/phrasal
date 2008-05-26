@@ -407,8 +407,10 @@ public class UnsmoothedMERT {
   	  if (betterClusterCnt != 0) dir.addAll(betterVec);
   	  if (perceptron) {
   	  	if (useWts) { 
-  	  		System.err.printf("Subing wts:\n%s\n", wts);
-  	  		dir.subtractAll(l2normalize(wts)); 
+  	  		ClassicCounter<String> normWts = new ClassicCounter<String>(wts);
+  	  		l2normalize(normWts);
+  	  		System.err.printf("Subing wts:\n%s\n", normWts);
+  	  		dir.subtractAll(normWts); 
   	  	} else {
   	  		System.err.printf("Subing current:\n%s\n", l2normalize(summarizedAllFeaturesVector(current)));
   	  		dir.subtractAll(l2normalize(summarizedAllFeaturesVector(current)));
