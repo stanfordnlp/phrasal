@@ -1183,11 +1183,14 @@ public class UnsmoothedMERT {
       	newWts = betterWorseCentroids(nbest, wts, emetric, false, true);
       } else if (System.getProperty("betterWorseKMeans") != null) {
       	System.out.printf("using better worse k-means\n");
-      	newWts = betterWorse2KMeans(nbest, wts, emetric, false);
+      	newWts = betterWorse2KMeans(nbest, wts, emetric, false, false);
       }  else if (System.getProperty("betterWorseKMeansPerceptron") != null) {
       	System.out.printf("using better worse k-means perceptron\n");
-      	newWts = betterWorse2KMeans(nbest, wts, emetric, true);
-      }else {
+      	newWts = betterWorse2KMeans(nbest, wts, emetric, true, false);
+      }  else if (System.getProperty("betterWorseKMeansPerceptronWts") != null) {
+      	System.out.printf("using better worse k-means wts perceptron\n");
+      	newWts = betterWorse2KMeans(nbest, wts, emetric, true, true);
+      } else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
 			}
