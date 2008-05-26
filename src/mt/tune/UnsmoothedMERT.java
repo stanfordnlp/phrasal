@@ -314,7 +314,7 @@ public class UnsmoothedMERT {
 	
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })
-	static public ClassicCounter<String> betterWorse2KMeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean perceptron) {
+	static public ClassicCounter<String> betterWorse2KMeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean perceptron, boolean useWts) {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 	  ClassicCounter<String> wts = initialWts;
 	  
@@ -406,7 +406,8 @@ public class UnsmoothedMERT {
   	  ClassicCounter<String> dir = new ClassicCounter<String>();
   	  if (betterClusterCnt != 0) dir.addAll(betterVec);
   	  if (perceptron) {
-  	  	dir.subtractAll(l2normalize(summarizedAllFeaturesVector(current)));
+  	  	if (useWts) dir.subtractAll(l2normalize(wts)); 
+  	  	else dir.subtractAll(l2normalize(summarizedAllFeaturesVector(current)));
   	  } else {
   	  	if (worseClusterCnt != 0) dir.subtractAll(worseVec);
   	  }
