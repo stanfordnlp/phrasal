@@ -410,7 +410,8 @@ public class UnsmoothedMERT {
   	  		ClassicCounter<String> normWts = new ClassicCounter<String>(wts);
   	  		l2normalize(normWts);
   	  		System.err.printf("Subing wts:\n%s\n", normWts);
-  	  		dir.subtractAll(normWts); 
+  	  		dir.subtractAll(normWts);
+  	  		System.err.printf("l2: %f\n", eSize(normWts));
   	  	} else {
   	  		System.err.printf("Subing current:\n%s\n", l2normalize(summarizedAllFeaturesVector(current)));
   	  		dir.subtractAll(l2normalize(summarizedAllFeaturesVector(current)));
@@ -423,6 +424,7 @@ public class UnsmoothedMERT {
   	  System.err.printf("Better cnt: %d\n", betterClusterCnt);
   	  System.err.printf("Worse cnt: %d\n", worseClusterCnt);
   	  System.err.printf("Better Vec:\n%s\n\n", betterVec);
+  	  System.err.printf("l2: %f\n", eSize(betterVec));
   	  System.err.printf("Worse Vec:\n%s\n\n", worseVec);  	  
   	  System.err.printf("Dir:\n%s\n\n", dir);
   		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
@@ -810,6 +812,15 @@ public class UnsmoothedMERT {
 		}
 		
 		return sum;
+	}
+	
+	static public double eSize(ClassicCounter<String> wts) {
+		double len = 0;
+		for (String k : wts.keySet()) {
+			double d = wts.getCount(k);
+			len += d*d;
+		}
+		return Math.sqrt(len);
 	}
 	
 	static public ClassicCounter<String> l2normalize(ClassicCounter<String> wts) {
