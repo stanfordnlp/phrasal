@@ -415,6 +415,7 @@ public class UnsmoothedMERT {
   	  	} else {
   	  		System.err.printf("Subing current:\n%s\n", l2normalize(summarizedAllFeaturesVector(current)));
   	  		dir.subtractAll(l2normalize(summarizedAllFeaturesVector(current)));
+  	  		System.err.printf("l2: %f\n", eSize(l2normalize(summarizedAllFeaturesVector(current))));
   	  	}
   	  } else {
   	  	if (worseClusterCnt != 0) dir.subtractAll(worseVec);
