@@ -835,7 +835,7 @@ public class UnsmoothedMERT {
 			sum += d*d;
 		}
 		
-		return sum;
+		return Math.sqrt(sum);
 	}
 	
 	
