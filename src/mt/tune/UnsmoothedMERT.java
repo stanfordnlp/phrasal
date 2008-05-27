@@ -314,7 +314,7 @@ public class UnsmoothedMERT {
 	
 	
 	static enum Cluster3 {better, worse, same};
-	static enum Cluster3LearnType {betterWorse, betterSame, betterPerceptron};
+	static enum Cluster3LearnType {betterWorse, betterSame, betterPerceptron, allDirs};
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	static public ClassicCounter<String> betterWorse3KMeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, Cluster3LearnType lType) {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
@@ -459,7 +459,47 @@ public class UnsmoothedMERT {
   	  System.err.printf("Worse Vec:\n%s\n\n", worseVec);
   	  System.err.printf("Same Vec:\n%s\n\n", sameVec);  	  
   	  System.err.printf("Dir:\n%s\n\n", dir);
-  		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+  	  
+  		ClassicCounter<String> newWts;
+  		if (lType != Cluster3LearnType.allDirs) {
+  			newWts = lineSearch(nbest, wts, dir, emetric);
+  		} else {
+  			ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
+	  		c.multiplyBy(eSize(betterVec));
+	  		
+	  		newWts = wts;
+	  		
+	  		// Better Same
+	  		dir = new ClassicCounter<String>(betterVec);
+  			dir.subtractAll(sameVec);
+  			newWts = lineSearch(nbest, newWts, dir, emetric);
+  			
+	  		// Better Perceptron
+  			dir = new ClassicCounter<String>(betterVec);
+  			dir.subtractAll(c);
+  			newWts = lineSearch(nbest, newWts, dir, emetric);
+  			
+  			// Better Worse
+  			dir = new ClassicCounter<String>(betterVec);
+  			dir.subtractAll(worseVec);
+  			newWts = lineSearch(nbest, newWts, dir, emetric);
+  			
+  			
+  			// Same Worse
+  			dir = new ClassicCounter<String>(sameVec);
+  			dir.subtractAll(worseVec);
+  			newWts = lineSearch(nbest, newWts, dir, emetric);
+  			
+  		  // Same Perceptron
+  			dir = new ClassicCounter<String>(sameVec);
+  			dir.subtractAll(c);
+  			newWts = lineSearch(nbest, newWts, dir, emetric);
+  			
+  			// Perceptron Worse
+  			dir = new ClassicCounter<String>(c);
+  			dir.subtractAll(worseVec);
+  			newWts = lineSearch(nbest, newWts, dir, emetric);  			  			
+  		}
   		System.err.printf("new wts:\n%s\n\n", wts);
   		double ssd = wtSsd(wts, newWts);
   		wts = newWts;
