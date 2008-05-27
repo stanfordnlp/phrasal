@@ -312,6 +312,105 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
+	@SuppressWarnings({ "unchecked", "deprecation" })
+	static public ClassicCounter<String> fullKmeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, int K) {
+		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();		
+		
+		int vecCnt = 0; for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) for (@SuppressWarnings("unused") ScoredFeaturizedTranslation<IString, String> tran : nbestlist) vecCnt++;
+		
+		List<ClassicCounter<String>> allVecs = new ArrayList<ClassicCounter<String>>(vecCnt);
+		int[] clusterIds = new int[vecCnt];
+		int[] clusterCnts = new int[K];
+		List<ClassicCounter<String>> kMeans = new ArrayList<ClassicCounter<String>>(K);
+		for (int i = 0; i < K; i++) kMeans.add(new ClassicCounter<String>());
+		
+		// Extract all feature vectors & use them to seed the clusters;
+		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { 
+			for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) { 
+        ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays.asList(tran)));
+        int clusterId = r.nextInt(K);
+        clusterIds[kMeans.size()] = clusterId;
+        allVecs.add(feats);
+        kMeans.get(clusterId).addAll(feats);
+        clusterCnts[clusterId]++;
+			}
+		}
+		
+		// normalize cluster vectors
+		for (int i = 0; i < K; i++) kMeans.get(i).divideBy(clusterCnts[i]);
+		
+		// K-means main loop
+		for (int changes = vecCnt; changes != 0; ) { changes = 0;
+			int[] newClusterCnts = new int[K];
+			List<ClassicCounter<String>> newKMeans = new ArrayList<ClassicCounter<String>>(K);
+			for (int i = 0; i < K; i++) newKMeans.add(new ClassicCounter<String>());
+		
+			for (int i = 0; i < vecCnt; i++) {
+				ClassicCounter<String> feats = allVecs.get(i);
+				double minDist = Double.POSITIVE_INFINITY;
+				int bestCluster = -1;
+				for (int j = 0; j < K; j++) {
+					double dist = 0;
+					Set<String> keys = new HashSet<String>(feats.keySet());
+					keys.addAll(kMeans.get(j).keySet());
+					for (String key : keys) {
+						double d = feats.getCount(key) - kMeans.get(j).getCount(key);
+						dist += d*d;
+					}
+					if (dist < minDist) {
+						bestCluster = j;
+						minDist = dist;
+					}
+				}
+				newKMeans.get(bestCluster).addAll(feats);
+				newClusterCnts[bestCluster]++;
+				if (bestCluster != clusterIds[i]) changes++;
+				clusterIds[i] = bestCluster;
+			}
+
+		  // normalize new cluster vectors
+			for (int i = 0; i < K; i++) newKMeans.get(i).divideBy(newClusterCnts[i]);
+			
+			// some output for the user
+			System.err.printf("Cluster Vectors:\n");
+			for (int i = 0; i < K; i++) {
+				System.err.printf("%d:\nCurrent (l2: %f):\n%s\nPrior(l2: %f):\n%s\n\t", i, 
+						l2norm(newKMeans.get(i)), newKMeans.get(i), l2norm(kMeans.get(i)), kMeans.get(i));
+			}
+			System.err.printf("Cluster sizes:\n");
+			for (int i = 0; i < K; i++) {
+				System.err.printf("\t%d: %d (prior: %d)\t", i, newClusterCnts[i], clusterCnts[i]);
+			}
+			
+			System.err.printf("Changes: %d\n", changes);
+			
+			// swap in new clusters
+			kMeans = newKMeans;
+			clusterCnts = newClusterCnts;
+		}
+		
+		// main optimization loop
+		System.err.printf("Begining optimization\n");
+		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
+		for (int iter = 0; ; iter++) {
+			ClassicCounter<String> newWts = new ClassicCounter<String>(wts);
+			for (int i = 0; i < K; i++) {
+				for (int j = i; j < K; j++) {
+					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
+					if (j != i) {
+						dir.subtractAll(kMeans.get(j));
+					}					
+	  			newWts = lineSearch(nbest, newWts, dir, emetric);	  				
+				}
+			}
+			System.err.printf("new wts:\n%s\n\n", newWts);
+  		double ssd = wtSsd(wts, newWts);
+  		wts = newWts;
+  		System.err.printf("ssd: %f\n",ssd);
+  		if (ssd < 1e-6) break;
+		}
+		return wts;
+  }
 	
 	static enum Cluster3 {better, worse, same};
 	static enum Cluster3LearnType {betterWorse, betterSame, betterPerceptron, allDirs};
@@ -500,7 +599,7 @@ public class UnsmoothedMERT {
   			dir.subtractAll(worseVec);
   			newWts = lineSearch(nbest, newWts, dir, emetric);  			  			
   		}
-  		System.err.printf("new wts:\n%s\n\n", wts);
+  		System.err.printf("new wts:\n%s\n\n", newWts);
   		double ssd = wtSsd(wts, newWts);
   		wts = newWts;
   		System.err.printf("ssd: %f\n",ssd);
@@ -1422,7 +1521,10 @@ public class UnsmoothedMERT {
       } else if (System.getProperty("3KMeansAllDirs") != null) {
       	System.out.printf("Using 3k means All Dirs\n");
       	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.allDirs);
-      } else {
+      } else if (System.getProperty("fullKMeans") != null) {
+      	System.out.printf("Using \"full\" k-means k=%d\n", System.getProperty("fullKMeans"));
+      	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeans")));
+      }else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
 			}
