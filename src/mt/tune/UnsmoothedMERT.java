@@ -313,6 +313,164 @@ public class UnsmoothedMERT {
 	}
 	
 	
+	static enum Cluster3 {better, worse, same};
+	static enum Cluster3LearnType {betterWorse, betterSame, betterPerceptron};
+	@SuppressWarnings({ "deprecation", "unchecked" })
+	static public ClassicCounter<String> betterWorse3KMeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, Cluster3LearnType lType) {
+		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+	  ClassicCounter<String> wts = initialWts;
+	  
+	  
+		for (int iter = 0; ; iter++) {
+  		List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, wts);
+  	  IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();  
+  	  for (ScoredFeaturizedTranslation<IString, String> tran : current) {
+  	     incEval.add(tran);
+  	  }
+  	  ClassicCounter<String> betterVec = new ClassicCounter<String>(); int betterClusterCnt = 0;
+  	  ClassicCounter<String> worseVec = new ClassicCounter<String>(); int worseClusterCnt = 0;
+  	  ClassicCounter<String> sameVec = new ClassicCounter<String>(l2normalize(summarizedAllFeaturesVector(current))); int sameClusterCnt = 0;
+  	  
+  	  double baseScore = incEval.score();
+  	  System.err.printf("baseScore: %f\n", baseScore);
+  	  int lI = -1;
+  	  List<ClassicCounter<String>> allPoints = new ArrayList<ClassicCounter<String>>();
+  	  List<Cluster3> inBetterCluster = new ArrayList<Cluster3>();
+  	  for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
+  	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
+  	        incEval.replace(lI, tran);
+  	        ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays.asList(tran))); 
+  	        if (incEval.score() >= baseScore) {
+  	        	betterVec.addAll(feats); betterClusterCnt++;
+  	        	inBetterCluster.add(Cluster3.better);
+  	        } else {
+  	        	worseVec.addAll(feats); worseClusterCnt++;
+  	        	inBetterCluster.add(Cluster3.worse);
+  	        }
+  	        allPoints.add(feats);
+  	     } 
+  	     incEval.replace(lI, current.get(lI));  
+  	  }
+  	  
+  	  System.err.printf("Better cnt: %d\n", betterClusterCnt);
+  	  System.err.printf("Worse cnt: %d\n", worseClusterCnt);
+  	  
+  	  betterVec.multiplyBy(1.0/betterClusterCnt);
+  	  worseVec.multiplyBy(1.0/worseClusterCnt);
+  	  
+  	  System.err.printf("Initial Better Vec:\n%s\n", betterVec);
+	  	System.err.printf("Initial Worse Vec:\n%s\n", worseVec);
+	  	System.err.printf("Initial Same Vec:\n%s\n", sameVec);
+  	  
+  	  // k-means loop
+  	  Set<String> keys = new HashSet<String>();
+  	  keys.addAll(betterVec.keySet());
+  	  keys.addAll(worseVec.keySet());
+  	  int changes = keys.size();
+  	  for (int clustIter = 0; changes != 0; clustIter++) {
+  	  	changes = 0;
+  	  	ClassicCounter<String> newBetterVec = new ClassicCounter<String>();
+  	  	ClassicCounter<String> newSameVec = new ClassicCounter<String>();
+  	  	ClassicCounter<String> newWorseVec = new ClassicCounter<String>();
+  	  	betterClusterCnt = 0;
+  	  	worseClusterCnt = 0;
+  	  	sameClusterCnt = 0;
+  	  	for (int i = 0; i < allPoints.size(); i++) {
+  	  		ClassicCounter<String> pt = allPoints.get(i);
+  	  		double pDist = 0;
+  	  		double nDist = 0;
+  	  		double sDist = 0;
+  	  		for (String k : keys) {
+  	  			double pd = betterVec.getCount(k) - pt.getCount(k);
+  	  			pDist += pd*pd;
+  	  			double nd = worseVec.getCount(k) - pt.getCount(k);
+  	  			nDist += nd*nd;
+  	  			double sd = sameVec.getCount(k) - pt.getCount(k);
+  	  			sDist += sd*sd;
+  	  		}
+  	  		
+  	  		if (pDist < nDist && pDist < sDist) {
+  	  			newBetterVec.addAll(pt);
+  	  			betterClusterCnt++;
+  	  			if (inBetterCluster.get(i) != Cluster3.better) {
+  	  				inBetterCluster.set(i, Cluster3.better);
+  	  				changes++;
+  	  			}
+  	  		} else if (sDist < nDist) {
+  	  			newSameVec.addAll(pt);
+  	  			sameClusterCnt++;
+  	  			if (inBetterCluster.get(i) != Cluster3.same) {
+  	  				inBetterCluster.set(i, Cluster3.same);
+  	  				changes++;
+  	  			}
+  	  		} else {
+  	  			newWorseVec.addAll(pt);
+  	  			worseClusterCnt++;
+  	  			if (inBetterCluster.get(i) != Cluster3.worse) {
+  	  				inBetterCluster.set(i, Cluster3.worse);
+  	  				changes++;
+  	  			}
+  	  		}
+  	  	}
+  	  	System.err.printf("Cluster Iter: %d Changes: %d BetterClust: %d WorseClust: %d SameClust: %d\n", clustIter, changes, betterClusterCnt, worseClusterCnt, sameClusterCnt);
+  	  	newBetterVec.multiplyBy(1.0/betterClusterCnt);
+  	  	newWorseVec.multiplyBy(1.0/worseClusterCnt);
+  	  	newSameVec.multiplyBy(1.0/sameClusterCnt);
+  	  	betterVec = newBetterVec;
+  	  	worseVec = newWorseVec;
+  	  	sameVec = newSameVec;
+  	  	System.err.printf("Better Vec:\n%s\n", betterVec);
+  	  	System.err.printf("Worse Vec:\n%s\n", worseVec);
+  	  	System.err.printf("Same Vec:\n%s\n", sameVec);
+  	  }
+  	  
+  	  
+  	  ClassicCounter<String> dir = new ClassicCounter<String>();
+  	  if (betterClusterCnt != 0) dir.addAll(betterVec);
+  	  
+  	  switch (lType) {
+  	  case betterPerceptron:
+  	  	ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
+	  		c.multiplyBy(eSize(betterVec));
+	  		dir.subtractAll(c);
+	  		System.out.printf("betterPerceptron");
+	  		System.out.printf("current:\n%s\n\n", c);
+  	  	break;  	  	
+  	  case betterSame: 
+  	  	System.out.printf("betterSame");
+  	  	System.out.printf("sameVec:\n%s\n\n", sameVec);
+  	  	if (sameClusterCnt != 0) dir.subtractAll(sameVec);
+  	  	break;
+  	  	
+  	  case betterWorse: 
+  	  	System.out.printf("betterWorse");
+  	  	System.out.printf("worseVec:\n%s\n\n", worseVec);
+  	  	if (worseClusterCnt != 0) dir.subtractAll(worseVec);
+  	  	break;
+  	  }
+  	  	
+  	  normalize(dir);
+  	  System.err.printf("iter: %d\n", iter);
+  	  System.err.printf("Better cnt: %d\n", betterClusterCnt);
+ 	  	System.err.printf("SameClust: %d\n", sameClusterCnt);
+  	  System.err.printf("Worse cnt: %d\n", worseClusterCnt);
+  	  System.err.printf("Better Vec:\n%s\n\n", betterVec);
+  	  System.err.printf("l2: %f\n", eSize(betterVec));
+  	  System.err.printf("Worse Vec:\n%s\n\n", worseVec);
+  	  System.err.printf("Same Vec:\n%s\n\n", sameVec);  	  
+  	  System.err.printf("Dir:\n%s\n\n", dir);
+  		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+  		System.err.printf("new wts:\n%s\n\n", wts);
+  		double ssd = wtSsd(wts, newWts);
+  		wts = newWts;
+  		System.err.printf("ssd: %f\n",ssd);
+  		if (ssd < 1e-6) break;  		  		
+  	}
+		
+		return wts;
+	}
+	
+	
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	static public ClassicCounter<String> betterWorse2KMeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean perceptron, boolean useWts) {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
@@ -1209,9 +1367,18 @@ public class UnsmoothedMERT {
       }  else if (System.getProperty("betterWorseKMeansPerceptron") != null) {
       	System.out.printf("using better worse k-means perceptron\n");
       	newWts = betterWorse2KMeans(nbest, wts, emetric, true, false);
-      }  else if (System.getProperty("betterWorseKMeansPerceptronWts") != null) {
+      } else if (System.getProperty("betterWorseKMeansPerceptronWts") != null) {
       	System.out.printf("using better worse k-means wts perceptron\n");
       	newWts = betterWorse2KMeans(nbest, wts, emetric, true, true);
+      } else if (System.getProperty("3KMeansBetterPerceptron") != null) {
+      	System.out.printf("Using 3k means better perceptron\n");
+      	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.betterPerceptron);
+      } else if (System.getProperty("3KMeansBetterSame") != null) {
+      	System.out.printf("Using 3k means better same\n");
+      	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.betterSame);
+      } else if (System.getProperty("3KMeansBetterWorse") != null) {
+      	System.out.printf("Using 3k means better worse\n");
+      	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.betterWorse);
       } else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
