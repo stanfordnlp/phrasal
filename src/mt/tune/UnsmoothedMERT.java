@@ -1419,11 +1419,14 @@ public class UnsmoothedMERT {
       } else if (System.getProperty("3KMeansBetterWorse") != null) {
       	System.out.printf("Using 3k means better worse\n");
       	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.betterWorse);
+      } else if (System.getProperty("3KMeansAllDirs") != null) {
+      	System.out.printf("Using 3k means All Dirs\n");
+      	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.allDirs);
       } else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
 			}
-
+			
 			normalize(newWts);
 			double eval = evalAtPoint(nbest, newWts, emetric);
 			if (bestEval < eval) {
