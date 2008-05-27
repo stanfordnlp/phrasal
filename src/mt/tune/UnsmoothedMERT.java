@@ -1522,7 +1522,7 @@ public class UnsmoothedMERT {
       	System.out.printf("Using 3k means All Dirs\n");
       	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.allDirs);
       } else if (System.getProperty("fullKMeans") != null) {
-      	System.out.printf("Using \"full\" k-means k=%d\n", System.getProperty("fullKMeans"));
+      	System.out.printf("Using \"full\" k-means k=%s\n", System.getProperty("fullKMeans"));
       	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeans")));
       }else {
 				System.out.printf("Using cer\n");
