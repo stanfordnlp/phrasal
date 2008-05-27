@@ -7,6 +7,7 @@ import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
 
+import edu.stanford.nlp.cluster.KMeans;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 
@@ -312,83 +313,93 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
+	
+	
+	static MosesNBestList lastNbest;
+	static List<ClassicCounter<String>> lastKMeans;
+	
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	static public ClassicCounter<String> fullKmeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, int K) {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();		
-		
-		int vecCnt = 0; for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) for (@SuppressWarnings("unused") ScoredFeaturizedTranslation<IString, String> tran : nbestlist) vecCnt++;
-		
-		List<ClassicCounter<String>> allVecs = new ArrayList<ClassicCounter<String>>(vecCnt);
-		int[] clusterIds = new int[vecCnt];
-		int[] clusterCnts = new int[K];
+	
 		List<ClassicCounter<String>> kMeans = new ArrayList<ClassicCounter<String>>(K);
-		for (int i = 0; i < K; i++) kMeans.add(new ClassicCounter<String>());
 		
-		// Extract all feature vectors & use them to seed the clusters;
-		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { 
-			for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) { 
-        ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays.asList(tran)));
-        int clusterId = r.nextInt(K);
-        clusterIds[kMeans.size()] = clusterId;
-        allVecs.add(feats);
-        kMeans.get(clusterId).addAll(feats);
-        clusterCnts[clusterId]++;
-			}
+		if (nbest == lastNbest) {
+			kMeans = lastKMeans; 
+		} else {
+  		int vecCnt = 0; for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) for (@SuppressWarnings("unused") ScoredFeaturizedTranslation<IString, String> tran : nbestlist) vecCnt++;
+  		
+  		List<ClassicCounter<String>> allVecs = new ArrayList<ClassicCounter<String>>(vecCnt);
+  		int[] clusterIds = new int[vecCnt];
+  		int[] clusterCnts = new int[K];
+  		
+  		for (int i = 0; i < K; i++) kMeans.add(new ClassicCounter<String>());
+  		
+  		// Extract all feature vectors & use them to seed the clusters;
+  		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { 
+  			for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) { 
+          ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays.asList(tran)));
+          int clusterId = r.nextInt(K);
+          clusterIds[kMeans.size()] = clusterId;
+          allVecs.add(feats);
+          kMeans.get(clusterId).addAll(feats);
+          clusterCnts[clusterId]++;
+  			}
+  		}
+  		
+  		// normalize cluster vectors
+  		for (int i = 0; i < K; i++) kMeans.get(i).divideBy(clusterCnts[i]);
+  		
+  		// K-means main loop
+  		for (int changes = vecCnt; changes != 0; ) { changes = 0;
+  			int[] newClusterCnts = new int[K];
+  			List<ClassicCounter<String>> newKMeans = new ArrayList<ClassicCounter<String>>(K);
+  			for (int i = 0; i < K; i++) newKMeans.add(new ClassicCounter<String>());
+  		
+  			for (int i = 0; i < vecCnt; i++) {
+  				ClassicCounter<String> feats = allVecs.get(i);
+  				double minDist = Double.POSITIVE_INFINITY;
+  				int bestCluster = -1;
+  				for (int j = 0; j < K; j++) {
+  					double dist = 0;
+  					Set<String> keys = new HashSet<String>(feats.keySet());
+  					keys.addAll(kMeans.get(j).keySet());
+  					for (String key : keys) {
+  						double d = feats.getCount(key) - kMeans.get(j).getCount(key);
+  						dist += d*d;
+  					}
+  					if (dist < minDist) {
+  						bestCluster = j;
+  						minDist = dist;
+  					}
+  				}
+  				newKMeans.get(bestCluster).addAll(feats);
+  				newClusterCnts[bestCluster]++;
+  				if (bestCluster != clusterIds[i]) changes++;
+  				clusterIds[i] = bestCluster;
+  			}
+  
+  		  // normalize new cluster vectors
+  			for (int i = 0; i < K; i++) newKMeans.get(i).divideBy(newClusterCnts[i]);
+  			
+  			// some output for the user
+  			System.err.printf("Cluster Vectors:\n");
+  			for (int i = 0; i < K; i++) {
+  				System.err.printf("%d:\nCurrent (l2: %f):\n%s\nPrior(l2: %f):\n%s\n\n", i, 
+  						l2norm(newKMeans.get(i)), newKMeans.get(i), l2norm(kMeans.get(i)), kMeans.get(i));
+  			}
+  			System.err.printf("\nCluster sizes:\n");
+  			for (int i = 0; i < K; i++) {
+  				System.err.printf("\t%d: %d (prior: %d)\n", i, newClusterCnts[i], clusterCnts[i]);
+  			}
+  			
+  			System.err.printf("Changes: %d\n", changes);
+  			
+  			// swap in new clusters
+  			kMeans = newKMeans;
+  			clusterCnts = newClusterCnts;
+  		}
 		}
-		
-		// normalize cluster vectors
-		for (int i = 0; i < K; i++) kMeans.get(i).divideBy(clusterCnts[i]);
-		
-		// K-means main loop
-		for (int changes = vecCnt; changes != 0; ) { changes = 0;
-			int[] newClusterCnts = new int[K];
-			List<ClassicCounter<String>> newKMeans = new ArrayList<ClassicCounter<String>>(K);
-			for (int i = 0; i < K; i++) newKMeans.add(new ClassicCounter<String>());
-		
-			for (int i = 0; i < vecCnt; i++) {
-				ClassicCounter<String> feats = allVecs.get(i);
-				double minDist = Double.POSITIVE_INFINITY;
-				int bestCluster = -1;
-				for (int j = 0; j < K; j++) {
-					double dist = 0;
-					Set<String> keys = new HashSet<String>(feats.keySet());
-					keys.addAll(kMeans.get(j).keySet());
-					for (String key : keys) {
-						double d = feats.getCount(key) - kMeans.get(j).getCount(key);
-						dist += d*d;
-					}
-					if (dist < minDist) {
-						bestCluster = j;
-						minDist = dist;
-					}
-				}
-				newKMeans.get(bestCluster).addAll(feats);
-				newClusterCnts[bestCluster]++;
-				if (bestCluster != clusterIds[i]) changes++;
-				clusterIds[i] = bestCluster;
-			}
-
-		  // normalize new cluster vectors
-			for (int i = 0; i < K; i++) newKMeans.get(i).divideBy(newClusterCnts[i]);
-			
-			// some output for the user
-			System.err.printf("Cluster Vectors:\n");
-			for (int i = 0; i < K; i++) {
-				System.err.printf("%d:\nCurrent (l2: %f):\n%s\nPrior(l2: %f):\n%s\n\t", i, 
-						l2norm(newKMeans.get(i)), newKMeans.get(i), l2norm(kMeans.get(i)), kMeans.get(i));
-			}
-			System.err.printf("Cluster sizes:\n");
-			for (int i = 0; i < K; i++) {
-				System.err.printf("\t%d: %d (prior: %d)\t", i, newClusterCnts[i], clusterCnts[i]);
-			}
-			
-			System.err.printf("Changes: %d\n", changes);
-			
-			// swap in new clusters
-			kMeans = newKMeans;
-			clusterCnts = newClusterCnts;
-		}
-		
 		// main optimization loop
 		System.err.printf("Begining optimization\n");
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
@@ -398,9 +409,14 @@ public class UnsmoothedMERT {
 				for (int j = i; j < K; j++) {
 					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
 					if (j != i) {
+						System.err.printf("seach pair: %d<->%d\n", j, i);
 						dir.subtractAll(kMeans.get(j));
-					}					
-	  			newWts = lineSearch(nbest, newWts, dir, emetric);	  				
+					} else {
+						System.err.printf("seach singleton: %d\n", i);
+					}
+					
+	  			newWts = lineSearch(nbest, newWts, dir, emetric);
+	  			System.err.printf("new eval: %f\n", evalAtPoint(nbest, newWts, emetric));
 				}
 			}
 			System.err.printf("new wts:\n%s\n\n", newWts);
