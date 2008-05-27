@@ -409,13 +409,16 @@ public class UnsmoothedMERT {
   	  	if (useWts) { 
   	  		ClassicCounter<String> normWts = new ClassicCounter<String>(wts);
   	  		l2normalize(normWts);
+  	  		normWts.multiplyBy(eSize(betterVec));
   	  		System.err.printf("Subing wts:\n%s\n", normWts);
   	  		dir.subtractAll(normWts);
   	  		System.err.printf("l2: %f\n", eSize(normWts));
   	  	} else {
-  	  		System.err.printf("Subing current:\n%s\n", l2normalize(summarizedAllFeaturesVector(current)));
-  	  		dir.subtractAll(l2normalize(summarizedAllFeaturesVector(current)));
-  	  		System.err.printf("l2: %f\n", eSize(l2normalize(summarizedAllFeaturesVector(current))));
+  	  		ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
+  	  		c.multiplyBy(eSize(betterVec));
+  	  		System.err.printf("Subing current:\n%s\n", c);
+  	  		dir.subtractAll(c);
+  	  		System.err.printf("l2: %f\n", eSize(c));
   	  	}
   	  } else {
   	  	if (worseClusterCnt != 0) dir.subtractAll(worseVec);
