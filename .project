@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>javanlp.mt</name>
-	<comment></comment>
-	<projects>
-		<project>javanlp.core</project>
-	</projects>
-	<buildSpec>
-		<buildCommand>
-			<name>net.sourceforge.texlipse.builder.TexlipseBuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.jdt.core.javabuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
-	</buildSpec>
-	<natures>
-		<nature>net.sourceforge.texlipse.builder.TexlipseNature</nature>
-		<nature>org.eclipse.jdt.core.javanature</nature>
-	</natures>
+    <name>JavaNLP-mt</name>
+    <comment />
+    <projects>
+        <project>javanlp.core</project>
+    </projects>
+    <buildSpec>
+        <buildCommand>
+            <name>net.sourceforge.texlipse.builder.TexlipseBuilder</name>
+            <arguments />
+        </buildCommand>
+        <buildCommand>
+            <name>org.eclipse.jdt.core.javabuilder</name>
+            <arguments />
+        </buildCommand>
+    </buildSpec>
+    <natures>
+        <nature>net.sourceforge.texlipse.builder.TexlipseNature</nature>
+        <nature>org.eclipse.jdt.core.javanature</nature>
+    </natures>
 </projectDescription>
+

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/classes" />
+    <exclude-output />
+    <output-test url="file://$MODULE_DIR$/classes" />
+    <testFolder url="file://$MODULE_DIR$/test/src" />
+</component>
+
