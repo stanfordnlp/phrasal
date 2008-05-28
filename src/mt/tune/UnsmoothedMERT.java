@@ -410,8 +410,8 @@ public class UnsmoothedMERT {
 		System.err.printf("Begining optimization\n");
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
 		if (clusterToCluster) {
-  			ClassicCounter<String> bestWts = new ClassicCounter<String>(wts);
-  			double bestEval = evalAtPoint(nbest, bestWts, emetric);
+  			ClassicCounter<String> bestWts = null;
+  			double bestEval = Double.NEGATIVE_INFINITY;
   			for (int i = 0; i < K; i++) {
   				if (clusterCnts[i] == 0) continue;
   				for (int j = 0; j < K; j++) {
@@ -420,12 +420,12 @@ public class UnsmoothedMERT {
   					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));  				
   					dir.subtractAll(kMeans.get(j));  					
   	  			ClassicCounter<String> eWts = lineSearch(nbest, kMeans.get(j), dir, emetric);
-  	  			double eval = evalAtPoint(nbest, eWts, emetric);
-  	  			System.err.printf("new eval: %f\n", eval);
+  	  			double eval = evalAtPoint(nbest, eWts, emetric);  	  			
   	  			if (eval > bestEval) {
   	  				bestEval = eval;
   	  				bestWts = eWts;
   	  			}
+  	  			System.err.printf("new eval: %f best eval: %f\n", eval, bestEval);
   				}
   			}
   			System.err.printf("new wts:\n%s\n\n", bestWts);
