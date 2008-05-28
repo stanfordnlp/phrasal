@@ -415,6 +415,7 @@ public class UnsmoothedMERT {
   			for (int i = 0; i < K; i++) {
   				if (clusterCnts[i] == 0) continue;
   				for (int j = 0; j < K; j++) {
+  					if (i == j) continue;
   					if (clusterCnts[j] == 0) continue;
   					System.err.printf("seach pair: %d->%d\n", j, i);
   					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));  				
