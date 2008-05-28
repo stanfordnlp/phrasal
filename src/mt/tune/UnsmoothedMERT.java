@@ -400,14 +400,26 @@ public class UnsmoothedMERT {
   			clusterCnts = newClusterCnts;
   		}
 		}
+		
+		lastKMeans = kMeans;
+		lastNbest = nbest;
+		
 		// main optimization loop
 		System.err.printf("Begining optimization\n");
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
 		for (int iter = 0; ; iter++) {
 			ClassicCounter<String> newWts = new ClassicCounter<String>(wts);
 			for (int i = 0; i < K; i++) {
+				List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, newWts);
+				ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
+				ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
+				dir.subtractAll(c);
+				
+				System.err.printf("seach perceptron to cluster: %d\n", i);
+				newWts = lineSearch(nbest, newWts, dir, emetric);
+  			System.err.printf("new eval: %f\n", evalAtPoint(nbest, newWts, emetric));
 				for (int j = i; j < K; j++) {
-					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
+					dir = new ClassicCounter<String>(kMeans.get(i));
 					if (j != i) {
 						System.err.printf("seach pair: %d<->%d\n", j, i);
 						dir.subtractAll(kMeans.get(j));
