@@ -324,6 +324,7 @@ public class UnsmoothedMERT {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();		
 	
 		List<ClassicCounter<String>> kMeans = new ArrayList<ClassicCounter<String>>(K);
+		int[] clusterCnts = new int[K];
 		
 		if (nbest == lastNbest) {
 			kMeans = lastKMeans;
@@ -333,7 +334,6 @@ public class UnsmoothedMERT {
   		
   		List<ClassicCounter<String>> allVecs = new ArrayList<ClassicCounter<String>>(vecCnt);
   		int[] clusterIds = new int[vecCnt];
-  		int[] clusterCnts = new int[K];
   		
   		for (int i = 0; i < K; i++) kMeans.add(new ClassicCounter<String>());
   		
@@ -413,7 +413,9 @@ public class UnsmoothedMERT {
   			ClassicCounter<String> bestWts = new ClassicCounter<String>(wts);
   			double bestEval = evalAtPoint(nbest, bestWts, emetric);
   			for (int i = 0; i < K; i++) {
+  				if (clusterCnts[i] == 0) continue;
   				for (int j = 0; j < K; j++) {
+  					if (clusterCnts[j] == 0) continue;
   					System.err.printf("seach pair: %d->%d\n", j, i);
   					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));  				
   					dir.subtractAll(kMeans.get(j));  					
