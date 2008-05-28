@@ -317,15 +317,17 @@ public class UnsmoothedMERT {
 	
 	static MosesNBestList lastNbest;
 	static List<ClassicCounter<String>> lastKMeans;
-	
+  static ClassicCounter<String> lastWts;
+  
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	static public ClassicCounter<String> fullKmeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, int K) {
+	static public ClassicCounter<String> fullKmeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, int K, boolean clusterToCluster) {
 		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();		
 	
 		List<ClassicCounter<String>> kMeans = new ArrayList<ClassicCounter<String>>(K);
 		
 		if (nbest == lastNbest) {
-			kMeans = lastKMeans; 
+			kMeans = lastKMeans;
+			if (clusterToCluster) return lastWts;
 		} else {
   		int vecCnt = 0; for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) for (@SuppressWarnings("unused") ScoredFeaturizedTranslation<IString, String> tran : nbestlist) vecCnt++;
   		
@@ -407,36 +409,59 @@ public class UnsmoothedMERT {
 		// main optimization loop
 		System.err.printf("Begining optimization\n");
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
-		for (int iter = 0; ; iter++) {
-			ClassicCounter<String> newWts = new ClassicCounter<String>(wts);
-			for (int i = 0; i < K; i++) {
-				List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, newWts);
-				ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
-				ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
-				dir.subtractAll(c);
-				
-				System.err.printf("seach perceptron to cluster: %d\n", i);
-				newWts = lineSearch(nbest, newWts, dir, emetric);
-  			System.err.printf("new eval: %f\n", evalAtPoint(nbest, newWts, emetric));
-				for (int j = i; j < K; j++) {
-					dir = new ClassicCounter<String>(kMeans.get(i));
-					if (j != i) {
-						System.err.printf("seach pair: %d<->%d\n", j, i);
-						dir.subtractAll(kMeans.get(j));
-					} else {
-						System.err.printf("seach singleton: %d\n", i);
-					}
-					
-	  			newWts = lineSearch(nbest, newWts, dir, emetric);
-	  			System.err.printf("new eval: %f\n", evalAtPoint(nbest, newWts, emetric));
-				}
-			}
-			System.err.printf("new wts:\n%s\n\n", newWts);
-  		double ssd = wtSsd(wts, newWts);
-  		wts = newWts;
-  		System.err.printf("ssd: %f\n",ssd);
-  		if (ssd < 1e-6) break;
+		if (clusterToCluster) {
+  			ClassicCounter<String> bestWts = new ClassicCounter<String>(wts);
+  			double bestEval = evalAtPoint(nbest, bestWts, emetric);
+  			for (int i = 0; i < K; i++) {
+  				for (int j = 0; j < K; j++) {
+  					System.err.printf("seach pair: %d->%d\n", j, i);
+  					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));  				
+  					dir.subtractAll(kMeans.get(j));  					
+  	  			ClassicCounter<String> eWts = lineSearch(nbest, kMeans.get(j), dir, emetric);
+  	  			double eval = evalAtPoint(nbest, eWts, emetric);
+  	  			System.err.printf("new eval: %f\n", eval);
+  	  			if (eval > bestEval) {
+  	  				bestEval = eval;
+  	  				bestWts = eWts;
+  	  			}
+  				}
+  			}
+  			System.err.printf("new wts:\n%s\n\n", bestWts);
+    	  wts = bestWts;
+		} else {
+  		for (int iter = 0; ; iter++) {
+  			ClassicCounter<String> newWts = new ClassicCounter<String>(wts);
+  			for (int i = 0; i < K; i++) {
+  				List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, newWts);
+  				ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
+  				ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
+  				dir.subtractAll(c);
+  				
+  				System.err.printf("seach perceptron to cluster: %d\n", i);
+  				newWts = lineSearch(nbest, newWts, dir, emetric);
+    			System.err.printf("new eval: %f\n", evalAtPoint(nbest, newWts, emetric));
+  				for (int j = i; j < K; j++) {
+  					dir = new ClassicCounter<String>(kMeans.get(i));
+  					if (j != i) {
+  						System.err.printf("seach pair: %d<->%d\n", j, i);
+  						dir.subtractAll(kMeans.get(j));
+  					} else {
+  						System.err.printf("seach singleton: %d\n", i);
+  					}
+  					
+  	  			newWts = lineSearch(nbest, newWts, dir, emetric);
+  	  			System.err.printf("new eval: %f\n", evalAtPoint(nbest, newWts, emetric));
+  				}
+  			}
+  			System.err.printf("new wts:\n%s\n\n", newWts);
+    		double ssd = wtSsd(wts, newWts);
+    		wts = newWts;
+    		System.err.printf("ssd: %f\n",ssd);
+    		if (ssd < 1e-6) break;
+  		}
 		}
+		
+		lastWts = wts;
 		return wts;
   }
 	
@@ -1551,8 +1576,11 @@ public class UnsmoothedMERT {
       	newWts = betterWorse3KMeans(nbest, wts, emetric, Cluster3LearnType.allDirs);
       } else if (System.getProperty("fullKMeans") != null) {
       	System.out.printf("Using \"full\" k-means k=%s\n", System.getProperty("fullKMeans"));
-      	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeans")));
-      }else {
+      	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeans")), false);
+      } else if (System.getProperty("fullKMeansClusterToCluster") != null) {
+      	System.out.printf("Using \"full\" k-means k=%s\n", System.getProperty("fullKMeansClusterToCluster"));
+      	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeansClusterToCluster")), true);
+      } else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
 			}
