@@ -44,7 +44,7 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 			NBestListContainer<TK, FV> nbest) {
 		
 		List<ScoredFeaturizedTranslation<TK,FV>> selected = greedyMetrixMax.maximize(nbest);
-		List<List<? extends ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
 		
 		IncrementalEvaluationMetric<TK,FV> incrementalMetric = metric.getIncrementalMetric();
 		IncrementalEvaluationMetric<TK,FV> incrementalSubMetric = (subMetric != null ? subMetric.getIncrementalMetric() : null);
@@ -58,7 +58,7 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 		for (int changes = nbestListsSize; changes != 0 && iter < 25; iter++) { // XXX
 			changes = 0;
 			for (int i = 0; i < nbestListsSize; i++) {
-				List<? extends ScoredFeaturizedTranslation<TK,FV>> nbestList = nbestLists.get(i);
+				List<ScoredFeaturizedTranslation<TK,FV>> nbestList = nbestLists.get(i);
 				ScoredFeaturizedTranslation<TK,FV> bestFTrans = null;
 				double bestScore = Double.NaN;
 				double bestScoreSub = Double.NaN;

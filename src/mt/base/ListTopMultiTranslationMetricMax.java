@@ -16,9 +16,9 @@ public class ListTopMultiTranslationMetricMax<TK, FV> implements MultiTranslatio
 	public List<ScoredFeaturizedTranslation<TK, FV>> maximize(
 			NBestListContainer<TK, FV> nbest) {
 		List<ScoredFeaturizedTranslation<TK,FV>> selected = new LinkedList<ScoredFeaturizedTranslation<TK,FV>>();
-		List<List<? extends ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
 		
-		for (List<? extends ScoredFeaturizedTranslation<TK,FV>> nbestList : nbestLists) {
+		for (List<ScoredFeaturizedTranslation<TK,FV>> nbestList : nbestLists) {
 			selected.add(nbestList.get(0));
 		}	
 		return selected;

@@ -28,10 +28,10 @@ public class GreedyMultiTranslationMetricMax<TK, FV> implements MultiTranslation
 	public List<ScoredFeaturizedTranslation<TK, FV>> maximize(
 			NBestListContainer<TK, FV> nbest) {
 		List<ScoredFeaturizedTranslation<TK,FV>> selected = new LinkedList<ScoredFeaturizedTranslation<TK,FV>>();
-		List<List<? extends ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
 		IncrementalEvaluationMetric<TK,FV> incrementalMetric = metric.getIncrementalMetric();
 		
-		for (List<? extends ScoredFeaturizedTranslation<TK,FV>> nbestList : nbestLists) {
+		for (List<ScoredFeaturizedTranslation<TK,FV>> nbestList : nbestLists) {
 			ScoredFeaturizedTranslation<TK,FV> localBest = null;
 			double bestScore = Double.NaN;
 			if (nbestList.size() != 0) incrementalMetric.add(nbestList.get(0));

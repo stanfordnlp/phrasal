@@ -15,5 +15,5 @@ public interface NBestListContainer<TK,FV> {
 	 * 
 	 * @return
 	 */
-	List<List<? extends ScoredFeaturizedTranslation<TK,FV>>> nbestLists();
+	List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists();
 }

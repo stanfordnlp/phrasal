@@ -22,7 +22,7 @@ public class NBestSourceHistogram {
 		
 		String nbestFilename = args[0];
 		MosesNBestList nbestListContainer = new MosesNBestList(nbestFilename);
-		List<List<? extends ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbestListContainer.nbestLists();
+		List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbestListContainer.nbestLists();
 		
 		ClassicCounter<Integer> rankCount = new ClassicCounter<Integer>();
 		

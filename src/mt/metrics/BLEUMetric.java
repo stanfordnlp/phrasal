@@ -169,7 +169,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		BLEUIncrementalMetric(NBestListContainer<TK, FV> nbest) {
 			r = 0;
 			c = 0;
-			List<List<? extends ScoredFeaturizedTranslation<TK,FV>>>  nbestLists = nbest.nbestLists();
+			List<List<ScoredFeaturizedTranslation<TK,FV>>>  nbestLists = nbest.nbestLists();
 			
 			futureMatchCounts = new int[nbestLists.size()][];
 			futurePossibleCounts = new int[nbestLists.size()][];
@@ -179,7 +179,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				for (int j = 0; j < order; j++) {
 					futurePossibleCounts[i][j] = Integer.MAX_VALUE;
 				}
-				List<? extends ScoredFeaturizedTranslation<TK,FV>> nbestList = nbestLists.get(i);
+				List<ScoredFeaturizedTranslation<TK,FV>> nbestList = nbestLists.get(i);
 				for (ScoredFeaturizedTranslation<TK,FV> tran : nbestList) {
 					int seqSz = tran.translation.size();
 					if (futurePossibleCounts[i][0] > seqSz) {

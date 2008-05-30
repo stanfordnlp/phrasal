@@ -44,7 +44,7 @@ public class UnsmoothedMERT {
 		Map<Double, Set<InterceptIDs>> interceptToIDs = new HashMap<Double, Set<InterceptIDs>>();
 		
 		{ int lI = -1;
-		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) { lI++;
+		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) { lI++;
 			// calculate slops/intercepts
 			double[] m = new double[nbestlist.size()]; double b[] = new double[nbestlist.size()];
 			{int tI = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) { tI++;
@@ -263,7 +263,7 @@ public class UnsmoothedMERT {
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	static public ClassicCounter<String> betterWorseCentroids(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean useCurrentAsWorse, boolean useOnlyBetter) {
-		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 	  ClassicCounter<String> wts = initialWts;
 	  
 		for (int iter = 0; ; iter++) {
@@ -277,7 +277,7 @@ public class UnsmoothedMERT {
   	  double baseScore = incEval.score();
   	  System.err.printf("baseScore: %f\n", baseScore);
   	  int lI = -1;
-  	  for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
+  	  for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
   	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
   	        incEval.replace(lI, tran);
   	        if (incEval.score() >= baseScore) {
@@ -321,7 +321,7 @@ public class UnsmoothedMERT {
   
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	static public ClassicCounter<String> fullKmeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, int K, boolean clusterToCluster) {
-		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();		
+		List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();		
 	
 		List<ClassicCounter<String>> kMeans = new ArrayList<ClassicCounter<String>>(K);
 		int[] clusterCnts = new int[K];
@@ -330,7 +330,7 @@ public class UnsmoothedMERT {
 			kMeans = lastKMeans;
 			if (clusterToCluster) return lastWts;
 		} else {
-  		int vecCnt = 0; for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) for (@SuppressWarnings("unused") ScoredFeaturizedTranslation<IString, String> tran : nbestlist) vecCnt++;
+  		int vecCnt = 0; for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) for (@SuppressWarnings("unused") ScoredFeaturizedTranslation<IString, String> tran : nbestlist) vecCnt++;
   		
   		List<ClassicCounter<String>> allVecs = new ArrayList<ClassicCounter<String>>(vecCnt);
   		int[] clusterIds = new int[vecCnt];
@@ -338,7 +338,7 @@ public class UnsmoothedMERT {
   		for (int i = 0; i < K; i++) kMeans.add(new ClassicCounter<String>());
   		
   		// Extract all feature vectors & use them to seed the clusters;
-  		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { 
+  		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { 
   			for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) { 
           ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays.asList(tran)));
           int clusterId = r.nextInt(K);
@@ -471,7 +471,7 @@ public class UnsmoothedMERT {
 	static enum Cluster3LearnType {betterWorse, betterSame, betterPerceptron, allDirs};
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	static public ClassicCounter<String> betterWorse3KMeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, Cluster3LearnType lType) {
-		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 	  ClassicCounter<String> wts = initialWts;
 	  
 	  
@@ -490,7 +490,7 @@ public class UnsmoothedMERT {
   	  int lI = -1;
   	  List<ClassicCounter<String>> allPoints = new ArrayList<ClassicCounter<String>>();
   	  List<Cluster3> inBetterCluster = new ArrayList<Cluster3>();
-  	  for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
+  	  for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
   	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
   	        incEval.replace(lI, tran);
   	        ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays.asList(tran))); 
@@ -667,7 +667,7 @@ public class UnsmoothedMERT {
 	
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	static public ClassicCounter<String> betterWorse2KMeans(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric, boolean perceptron, boolean useWts) {
-		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 	  ClassicCounter<String> wts = initialWts;
 	  
 		for (int iter = 0; ; iter++) {
@@ -683,7 +683,7 @@ public class UnsmoothedMERT {
   	  int lI = -1;
   	  List<ClassicCounter<String>> allPoints = new ArrayList<ClassicCounter<String>>();
   	  List<Boolean> inBetterCluster = new ArrayList<Boolean>();
-  	  for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
+  	  for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
   	     for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
   	        incEval.replace(lI, tran);
   	        ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays.asList(tran))); 
@@ -958,6 +958,7 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
+	
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
 	
@@ -968,7 +969,7 @@ public class UnsmoothedMERT {
 
   static public List<ScoredFeaturizedTranslation<IString, String>> randomBetterTranslations(MosesNBestList nbest, 
       List<ScoredFeaturizedTranslation<IString, String>> current, EvaluationMetric<IString,String> emetric) {
-		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 		List<ScoredFeaturizedTranslation<IString,String>> trans = new ArrayList<ScoredFeaturizedTranslation<IString,String>>(nbestLists.size());
     IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();  
     for (ScoredFeaturizedTranslation<IString, String> tran : current) {
@@ -978,7 +979,7 @@ public class UnsmoothedMERT {
     List<List<ScoredFeaturizedTranslation<IString, String>>> betterTrans = 
        new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(nbestLists.size());
     int lI = -1;
-    for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
+    for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) { lI++;
        betterTrans.add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>());
        for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
           incEval.replace(lI, tran);
@@ -987,7 +988,7 @@ public class UnsmoothedMERT {
        incEval.replace(lI, current.get(lI));  
     }
 
-		for (List<? extends ScoredFeaturizedTranslation<IString, String>> list : betterTrans) {
+		for (List<ScoredFeaturizedTranslation<IString, String>> list : betterTrans) {
 			trans.add(list.get(r.nextInt(list.size())));
 		}	
 
@@ -1002,10 +1003,10 @@ public class UnsmoothedMERT {
 
    
 	static public List<ScoredFeaturizedTranslation<IString, String>> randomTranslations(MosesNBestList nbest) {
-		List<List<? extends ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
 		List<ScoredFeaturizedTranslation<IString,String>> trans = new ArrayList<ScoredFeaturizedTranslation<IString,String>>(nbestLists.size());
 		
-		for (List<? extends ScoredFeaturizedTranslation<IString, String>> list : nbest.nbestLists()) {
+		for (List<ScoredFeaturizedTranslation<IString, String>> list : nbest.nbestLists()) {
 			trans.add(list.get(r.nextInt(list.size())));
 		}	
 		
@@ -1110,10 +1111,10 @@ public class UnsmoothedMERT {
 			ClassicCounter<String> scaledWts = new ClassicCounter<String>(wts);
 			scaledWts.normalize();
 			scaledWts.multiplyBy(0.01);
-			for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+			for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
 				if (incEvalMetric.size() > 0) incEvalMetric.replace(incEvalMetric.size()-1, null);
 				incEvalMetric.add(null);
-				List<? extends ScoredFeaturizedTranslation<IString, String>> sfTrans = nbestlist;
+				List<ScoredFeaturizedTranslation<IString, String>> sfTrans = nbestlist;
   			List<List<FeatureValue<String>>> featureVectors = new ArrayList<List<FeatureValue<String>>>(sfTrans.size());
    		  double[] us = new double[sfTrans.size()];
    		  int pos = incEvalMetric.size()-1;
@@ -1211,7 +1212,7 @@ public class UnsmoothedMERT {
 			featureNbestOccurances = new ClassicCounter<String>();
   	  		
   		int totalVecs = 0;
-  		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+  		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
   			Set<String> featureSetNBestList = new HashSet<String>();
   			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {				
   				for (FeatureValue<String> fv : EValueLearningScorer.summarizedFeatureVector(trans.features)) {
@@ -1231,7 +1232,7 @@ public class UnsmoothedMERT {
   		
   		featureMeans.divideBy(totalVecs);
   		
-  		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+  		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
   			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
   				for (FeatureValue<String> fv : EValueLearningScorer.summarizedFeatureVector(trans.features)) {
   					double diff = featureMeans.getCount(fv.name) -  fv.value;
@@ -1372,7 +1373,7 @@ public class UnsmoothedMERT {
 	static public double evalAtPoint(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
 		Scorer<String> scorer = new StaticScorer(wts);
 		IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();
-		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
 			ScoredFeaturizedTranslation<IString, String> highestScoreTrans = null;
 			double highestScore = Double.NEGATIVE_INFINITY;
 			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
@@ -1457,8 +1458,8 @@ public class UnsmoothedMERT {
 			System.exit(-1);
 		}
 		{ int lI = -1;
-		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) { lI++;
-		  List<? extends ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest.nbestLists().get(lI);
+		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) { lI++;
+		  List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest.nbestLists().get(lI);
 		  // If we wanted, we could get the value of minReachableScore by just checking the bottom of the n-best list.
 		  // However, lets make things robust to the order of the entries in the n-best list being mangled as well as 
 		  // score rounding. 
@@ -1481,7 +1482,7 @@ public class UnsmoothedMERT {
 		// remove everything that might not be reachable
 		for (int lI = 0; lI < nbest.nbestLists().size(); lI++) {
 			List<ScoredFeaturizedTranslation<IString, String>> newList = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(nbest.nbestLists().get(lI).size());
-			List<? extends ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest.nbestLists().get(lI);
+			List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest.nbestLists().get(lI);
 			
 			for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(lI)) {
 				if (trans.score == trans.score) newList.add(trans);
@@ -1492,7 +1493,7 @@ public class UnsmoothedMERT {
 		}
 		
 		// add entries for all wts in n-best list
-		for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
 			for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
 				for (FeatureValue<String> f : trans.features) {
 					initialWts.incrementCount(f.name, 0);

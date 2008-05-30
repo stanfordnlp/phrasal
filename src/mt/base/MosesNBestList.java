@@ -15,7 +15,7 @@ import mt.decoder.util.Scorer;
  *
  */
 public class MosesNBestList implements NBestListContainer<IString, String> {
-	private final List<List<? extends ScoredFeaturizedTranslation<IString,String>>> nbestLists;
+	private final List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists;
 //	private final AbstractIndex<String> featureIndex = new OAIndex<String>();
 	public static final String DEBUG_PROPERTY = "MosesNBestListDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -23,9 +23,9 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	@SuppressWarnings("unchecked")
 	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer scorer) {
 		sequenceSelfMap = null;
-		nbestLists = new ArrayList<List<? extends ScoredFeaturizedTranslation<IString,String>>>(list1.nbestLists());
+		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>(list1.nbestLists());
 		
-		List<List<? extends ScoredFeaturizedTranslation<IString,String>>> nbestLists2 = list2.nbestLists();
+		List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists2 = list2.nbestLists();
 		for (int i = 0; i < nbestLists2.size(); i++) {
 			((List)nbestLists.get(i)).addAll((Collection)nbestLists2.get(i));
 			// rescore
@@ -37,7 +37,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	
 	public MosesNBestList(List<List<ScoredFeaturizedTranslation<IString,String>>> rawList) {
 		sequenceSelfMap = null;
-		nbestLists = new ArrayList<List<? extends ScoredFeaturizedTranslation<IString,String>>>(rawList);
+		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>(rawList);
 	}
 	
 	public final Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap;
@@ -55,7 +55,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		
 		Map<String, String> featureNameSelfMap = new HashMap<String, String>();
 		
-		nbestLists = new ArrayList<List<? extends ScoredFeaturizedTranslation<IString,String>>>();
+		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>();
 		
 		List<ScoredFeaturizedTranslation<IString,String>> currentNbest = new LinkedList<ScoredFeaturizedTranslation<IString,String>>();
 		
@@ -200,7 +200,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	}
 	
 	@Override
-	public List<List<? extends ScoredFeaturizedTranslation<IString,String>>> nbestLists() {
+	public List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists() {
 		return nbestLists;
 	}
 	

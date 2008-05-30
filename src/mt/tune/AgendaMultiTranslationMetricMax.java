@@ -37,7 +37,7 @@ public class AgendaMultiTranslationMetricMax<TK, FV> implements MultiTranslation
 		
 		RecombinationHash<MultiTranslationState<TK,FV>> recombinationHash = new RecombinationHash<MultiTranslationState<TK,FV>>(new MetricBasedRecombinationFilter<TK, FV>(metric));
 		
-		List<List<? extends ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
 		
 		PriorityQueue<MultiTranslationState<TK, FV>> agenda = new PriorityQueue<MultiTranslationState<TK,FV>>(1000, new Comparator<MultiTranslationState<TK,FV>>() {
 			@Override
@@ -74,7 +74,7 @@ public class AgendaMultiTranslationMetricMax<TK, FV> implements MultiTranslation
 				}
 				return mts.selected();
 			}
-			List<? extends ScoredFeaturizedTranslation<TK,FV>> nbestList = nbestLists.get(mts.depth+1);
+			List<ScoredFeaturizedTranslation<TK,FV>> nbestList = nbestLists.get(mts.depth+1);
 			for (ScoredFeaturizedTranslation<TK,FV> tran : nbestList) {
 				MultiTranslationState<TK,FV> newMts = mts.append(tran);
 				RecombinationHash.Status status = recombinationHash.queryStatus(newMts, true);

@@ -49,7 +49,7 @@ public class BeamMultiTranslationMetricMax<TK, FV> implements MultiTranslationMe
 			System.err.printf("...maximize()\n");
 		}
 		
-		List<List<? extends ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
+		List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();
 		
 		List<MultiTranslationState<TK, FV>> stateList = new ArrayList<MultiTranslationState<TK, FV>>();
 		stateList.add(new MultiTranslationState<TK, FV>(nbest,metric));
