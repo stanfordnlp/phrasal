@@ -7,7 +7,6 @@ import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
 
-import edu.stanford.nlp.cluster.KMeans;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 
@@ -37,6 +36,7 @@ public class UnsmoothedMERT {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> lineSearch(MosesNBestList nbest, ClassicCounter<String> initialWts, ClassicCounter<String> direction, EvaluationMetric<IString,String> emetric) {
 		Scorer<String> currentScorer = new StaticScorer(initialWts);
 		Scorer<String> slopScorer = new StaticScorer(direction);
@@ -207,7 +207,7 @@ public class UnsmoothedMERT {
 	 * @param emetric
 	 * @return
 	 */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "deprecation" })
 	static public ClassicCounter<String> basicPowell(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
   	ClassicCounter<String> wts = initialWts;
 		
@@ -585,7 +585,7 @@ public class UnsmoothedMERT {
   	  switch (lType) {
   	  case betterPerceptron:
   	  	ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
-	  		c.multiplyBy(eSize(betterVec));
+	  		c.multiplyBy(l2norm(betterVec));
 	  		dir.subtractAll(c);
 	  		System.out.printf("betterPerceptron");
 	  		System.out.printf("current:\n%s\n\n", c);
@@ -609,7 +609,7 @@ public class UnsmoothedMERT {
  	  	System.err.printf("SameClust: %d\n", sameClusterCnt);
   	  System.err.printf("Worse cnt: %d\n", worseClusterCnt);
   	  System.err.printf("Better Vec:\n%s\n\n", betterVec);
-  	  System.err.printf("l2: %f\n", eSize(betterVec));
+  	  System.err.printf("l2: %f\n", l2norm(betterVec));
   	  System.err.printf("Worse Vec:\n%s\n\n", worseVec);
   	  System.err.printf("Same Vec:\n%s\n\n", sameVec);  	  
   	  System.err.printf("Dir:\n%s\n\n", dir);
@@ -619,7 +619,7 @@ public class UnsmoothedMERT {
   			newWts = lineSearch(nbest, wts, dir, emetric);
   		} else {
   			ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
-	  		c.multiplyBy(eSize(betterVec));
+	  		c.multiplyBy(l2norm(betterVec));
 	  		
 	  		newWts = wts;
 	  		
@@ -761,16 +761,16 @@ public class UnsmoothedMERT {
   	  	if (useWts) { 
   	  		ClassicCounter<String> normWts = new ClassicCounter<String>(wts);
   	  		l2normalize(normWts);
-  	  		normWts.multiplyBy(eSize(betterVec));
+  	  		normWts.multiplyBy(l2norm(betterVec));
   	  		System.err.printf("Subing wts:\n%s\n", normWts);
   	  		dir.subtractAll(normWts);
-  	  		System.err.printf("l2: %f\n", eSize(normWts));
+  	  		System.err.printf("l2: %f\n", l2norm(normWts));
   	  	} else {
   	  		ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
-  	  		c.multiplyBy(eSize(betterVec));
+  	  		c.multiplyBy(l2norm(betterVec));
   	  		System.err.printf("Subing current:\n%s\n", c);
   	  		dir.subtractAll(c);
-  	  		System.err.printf("l2: %f\n", eSize(c));
+  	  		System.err.printf("l2: %f\n", l2norm(c));
   	  	}
   	  } else {
   	  	if (worseClusterCnt != 0) dir.subtractAll(worseVec);
@@ -780,7 +780,7 @@ public class UnsmoothedMERT {
   	  System.err.printf("Better cnt: %d\n", betterClusterCnt);
   	  System.err.printf("Worse cnt: %d\n", worseClusterCnt);
   	  System.err.printf("Better Vec:\n%s\n\n", betterVec);
-  	  System.err.printf("l2: %f\n", eSize(betterVec));
+  	  System.err.printf("l2: %f\n", l2norm(betterVec));
   	  System.err.printf("Worse Vec:\n%s\n\n", worseVec);  	  
   	  System.err.printf("Dir:\n%s\n\n", dir);
   		ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
@@ -804,7 +804,7 @@ public class UnsmoothedMERT {
 	 * Press et al's Numerical Recipes (1992) pg. 417.
 	 * 
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	static public ClassicCounter<String> powell(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
 		ClassicCounter<String> wts = initialWts;
 				
@@ -933,6 +933,7 @@ public class UnsmoothedMERT {
 		return sumValues;
 	}
 	
+	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> perceptronOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
 		List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(emetric)).maximize(nbest);
 		ClassicCounter<String> targetFeatures = summarizedAllFeaturesVector(target);
@@ -1072,10 +1073,9 @@ public class UnsmoothedMERT {
 		for (int noProgress = 0; noProgress < NO_PROGRESS_LIMIT; ) {
 			ClassicCounter<String> dir; List<ScoredFeaturizedTranslation<IString, String>> rTrans; Scorer<String> scorer = new StaticScorer(wts);
 			
-			double currentEval = evalAtPoint(nbest, wts, emetric);
-			double rEval;
+
+			
       dir = summarizedAllFeaturesVector(rTrans = (forceBetter ? randomBetterTranslations(nbest, wts, emetric) : randomTranslations(nbest)));
-			rEval = emetric.score(rTrans);
 			MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
 			List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch.maximize(nbest);
 			dir.subtractAll(summarizedAllFeaturesVector(oneBest));
@@ -1170,15 +1170,8 @@ public class UnsmoothedMERT {
 		return sum;
 	}
 	
-	static public double eSize(ClassicCounter<String> wts) {
-		double len = 0;
-		for (String k : wts.keySet()) {
-			double d = wts.getCount(k);
-			len += d*d;
-		}
-		return Math.sqrt(len);
-	}
 	
+	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> l2normalize(ClassicCounter<String> wts) {
 		wts.multiplyBy(1.0/l2norm(wts));
 		return wts;
