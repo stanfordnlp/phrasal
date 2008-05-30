@@ -963,8 +963,8 @@ public class UnsmoothedMERT {
 		List<ScoredFeaturizedTranslation<IString, String>> targets = (new HillClimbingMultiTranslationMetricMax<IString, String>(emetric)).maximize(nbest);
 		
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
-	  int changes = 0;
-	  int iter = 0;
+		
+	  int changes = 0, totalChanges = 0, iter = 0;
 	  
 		do {
 		  for (int i = 0; i < targets.size(); i++) {
@@ -978,9 +978,9 @@ public class UnsmoothedMERT {
 		  	dir.subtractAll(summarizedAllFeaturesVector(current));
 		  	ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
 		  	double ssd = wtSsd(wts, newWts);
-		  	System.err.printf("%d.%d - ssd: %e eval: %f\n", iter, i, ssd, evalAtPoint(nbest, newWts, emetric));
+		  	System.err.printf("%d.%d - ssd: %e changes(total: %d iter: %d) eval: %f\n", iter, i, ssd, totalChanges, changes, evalAtPoint(nbest, newWts, emetric));
 		  	wts = newWts;
-		  	if (ssd >= 1e-6) changes++;
+		  	if (ssd >= 1e-6) { changes++; totalChanges++; }
 		  }
 		  iter++;
 		} while(changes != 0);
@@ -1603,7 +1603,7 @@ public class UnsmoothedMERT {
       	System.out.printf("Using \"full\" k-means k=%s\n", System.getProperty("fullKMeans"));
       	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeans")), false);
       } else if (System.getProperty("fullKMeansClusterToCluster") != null) {
-      	System.out.printf("Using \"full\" k-means k=%s\n", System.getProperty("fullKMeansClusterToCluster"));
+      	System.out.printf("Using \"full\" k-means (cluster to cluster) k=%s\n", System.getProperty("fullKMeansClusterToCluster"));
       	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeansClusterToCluster")), true);
       } else if (System.getProperty("pointwisePerceptron") != null) { 
       	System.out.printf("Using pointwise Perceptron\n");
