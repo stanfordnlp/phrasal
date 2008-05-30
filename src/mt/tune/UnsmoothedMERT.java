@@ -957,7 +957,36 @@ public class UnsmoothedMERT {
 		}
 		return wts;
 	}
-	
+
+	@SuppressWarnings({ "deprecation", "unchecked" })
+	static public ClassicCounter<String> pointwisePerceptron(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+		List<ScoredFeaturizedTranslation<IString, String>> targets = (new HillClimbingMultiTranslationMetricMax<IString, String>(emetric)).maximize(nbest);
+		
+		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
+	  int changes = 0;
+	  int iter = 0;
+	  
+		do {
+		  for (int i = 0; i < targets.size(); i++) {
+		  	// get current classifier argmax
+		  	Scorer<String> scorer = new StaticScorer(wts);		  	
+		  	GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = 
+		  		new GreedyMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));		  	
+		  	List<List<ScoredFeaturizedTranslation<IString,String>>> nbestSlice = Arrays.asList(nbest.nbestLists().get(i));
+		  	List<ScoredFeaturizedTranslation<IString, String>> current = argmaxByScore.maximize(new MosesNBestList(nbestSlice));
+		  	ClassicCounter<String> dir = summarizedAllFeaturesVector(Arrays.asList(targets.get(i)));
+		  	dir.subtractAll(summarizedAllFeaturesVector(current));
+		  	ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+		  	double ssd = wtSsd(wts, newWts);
+		  	System.err.printf("%d.%d - ssd: %e eval: %f\n", iter, i, ssd, evalAtPoint(nbest, newWts, emetric));
+		  	wts = newWts;
+		  	if (ssd >= 1e-6) changes++;
+		  }
+		  iter++;
+		} while(changes != 0);
+		
+		return wts;
+	}
 	
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
@@ -1576,7 +1605,10 @@ public class UnsmoothedMERT {
       } else if (System.getProperty("fullKMeansClusterToCluster") != null) {
       	System.out.printf("Using \"full\" k-means k=%s\n", System.getProperty("fullKMeansClusterToCluster"));
       	newWts = fullKmeans(nbest, wts, emetric, Integer.parseInt(System.getProperty("fullKMeansClusterToCluster")), true);
-      } else {
+      } else if (System.getProperty("pointwisePerceptron") != null) { 
+      	System.out.printf("Using pointwise Perceptron\n");
+      	newWts = (ptI == 0 ? pointwisePerceptron(nbest, wts, emetric) : wts); // only run pointwise for the first iteration      	
+		  } else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
 			}
