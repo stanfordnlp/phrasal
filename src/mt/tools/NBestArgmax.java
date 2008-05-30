@@ -26,9 +26,11 @@ public class NBestArgmax {
 	}
 	
 	static public void main(String[] args) throws Exception {
+		
 		if (args.length != 2 && args.length != 3) {
-			usage();
+			usage(); System.exit(-1);
 		}
+		
 		String nbestFilename = args[0]; String wtsFilename = args[1];
 		String evalArg = args.length == 3 ? args[2] : null;
 		

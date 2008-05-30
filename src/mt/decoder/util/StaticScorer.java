@@ -21,26 +21,24 @@ public class StaticScorer implements Scorer<String> {
 	 */
 	public StaticScorer(String filename) throws IOException {
 		
-		Properties properties = new Properties();
-		
-		FileReader reader = new FileReader(filename);
-		properties.load(reader);
-		reader.close();
-		
 		featureIndex = new OAIndex<String>();
 		
-		for (Object propObj : properties.keySet()) {
-			String prop = (String)propObj;
-			featureIndex.indexOf(prop, true);
+		
+		
+		Map<Integer,Double> wts = new HashMap<Integer,Double>();
+		
+				
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		for (String line; (line = reader.readLine()) != null;) {
+			String[] fields = line.split("\\s+");
+			wts.put(featureIndex.indexOf(fields[0], true), Double.valueOf(fields[1]));
 		}
 		
 		weights = new double[featureIndex.boundOnMaxIndex()];
-		
-		for (Object propObj : properties.keySet()) {
-			String prop = (String)propObj;
-			weights[featureIndex.indexOf(prop)] = Double.parseDouble(properties.getProperty(prop));
+		for (Map.Entry<Integer,Double> e: wts.entrySet()) {
+			weights[e.getKey()] = e.getValue();
 		}
-				
+		reader.close();
 	}
 	
 	/**
