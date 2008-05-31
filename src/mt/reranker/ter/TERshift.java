@@ -43,6 +43,7 @@ Matthew Snover (snover@cs.umd.edu)
 import java.util.List;
 
 /* This is just a useful class for containing shift information */
+@SuppressWarnings( {"unused", "unchecked"} )
 public class TERshift {
     TERshift () {
 	start = 0;

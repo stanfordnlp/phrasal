@@ -15,7 +15,7 @@ public class StayGoTable {
   private ProbCountHolder[] table;
 
   public StayGoTable(SentenceHandler sH) {
-    this.table = new ProbCountHolder[2 * sH.sTableE.getNumAllIds()];
+    this.table = new ProbCountHolder[2 * SentenceHandler.sTableE.getNumAllIds()];
   }
 
 
@@ -113,7 +113,6 @@ public class StayGoTable {
 
     try {
       PrintStream p = new PrintStream(new FileOutputStream(filename, true));
-      ProbCountHolder pcH;
 
       int bound = table.length / 2;
       for (int index = 0; index < bound; index++) {

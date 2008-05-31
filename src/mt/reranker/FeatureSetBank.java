@@ -191,7 +191,7 @@ public class FeatureSetBank {
   }
 
   public SortedSet<Integer> getDataPointIndices() {
-    return new TreeSet(indexSetMap.keySet());
+    return new TreeSet<Integer>(indexSetMap.keySet());
   }
 
   public SortedSet<Integer> getHypothesisIndices(int dataPtIdx) {

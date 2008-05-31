@@ -1,5 +1,5 @@
 package mt.train.zh;
-import mt.*;
+
 import mt.train.AbstractFeatureExtractor;
 import mt.train.AlignmentGrid;
 import mt.train.AlignmentTemplateInstance;
@@ -14,12 +14,12 @@ import edu.stanford.nlp.util.Index;
  *
  * @author Michel Galley
  */
-public abstract class AbstractChineseSyntaxFeatureExtractor<E> extends AbstractFeatureExtractor<E> {
+public abstract class AbstractChineseSyntaxFeatureExtractor<E> extends AbstractFeatureExtractor {
 
   private int currentPass = 0;
   AlignmentTemplates alTemps;
   Properties prop;
-  Index featureIndex;
+  Index<E> featureIndex;
 
   /**
    * Set the number of passes over training data that have been completed so far.
@@ -29,7 +29,7 @@ public abstract class AbstractChineseSyntaxFeatureExtractor<E> extends AbstractF
   /**
    * Returns the number of passes over training data that have been completed so far.
    */
-  void setCurrentPass(int currentPass) { this.currentPass = currentPass; }
+  public void setCurrentPass(int currentPass) { this.currentPass = currentPass; }
 
   public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, AlignmentGrid fullAlGrid, String infoLine) {}
 

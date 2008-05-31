@@ -1,6 +1,7 @@
 package mt.reranker;
 
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
+import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.math.ArrayMath;
@@ -185,7 +186,7 @@ public class MCLPairLearner extends AbstractOneOfManyClassifier {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    Minimizer minim = new QNMinimizer(objF);
+    Minimizer<DiffFunction> minim = new QNMinimizer(objF);
     //DiffFunctionTester.test(objF);
     wts = minim.minimize(objF, 1e-4, wts);
   }

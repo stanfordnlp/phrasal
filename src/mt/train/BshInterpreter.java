@@ -1,7 +1,5 @@
 package mt.train;
 
-import java.io.*;
-import java.util.*;
 import bsh.Interpreter;
 
 
@@ -14,7 +12,9 @@ import bsh.Interpreter;
  */
 public class BshInterpreter extends bsh.Interpreter
 {
-  Interpreter interpreter;
+  private static final long serialVersionUID = 1L;
+	
+	Interpreter interpreter;
 
   public BshInterpreter()
   {

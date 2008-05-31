@@ -3,12 +3,9 @@ package mt.train;
 import java.util.*;
 import java.io.*;
 
-import java.util.Properties;
-
 import mt.base.IOTools;
 import mt.base.IString;
 import mt.base.Sequence;
-import edu.stanford.nlp.util.Index;
 
 /**
  * Feature extractor collecting function words appearing right next to a given alignment template.

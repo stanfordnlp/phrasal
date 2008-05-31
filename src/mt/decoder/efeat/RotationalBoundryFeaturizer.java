@@ -1,7 +1,6 @@
 package mt.decoder.efeat;
 
 import java.util.*;
-import mt.*;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;

@@ -1,16 +1,13 @@
 package mt.train.zh;
 
-import mt.*;
 import mt.train.AlGridCell;
 import mt.train.AlignmentGrid;
 import mt.train.AlignmentTemplate;
 import mt.train.AlignmentTemplateInstance;
 import mt.train.AlignmentTemplates;
 import mt.train.SymmetricalWordAlignment;
-import mt.train.WordAlignment;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Properties;
@@ -31,12 +28,11 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
   enum ReorderingTypes { monotone, discontinuous, swap };
 
   private DirectionTypes directionType;
-  private ReorderingTypes reorderingType;
 
   //private static double LAPLACE_SMOOTHING = 0.0;
   private static int LAPLACE_SMOOTHING = 0;
 
-  public void init(Properties prop, Index featureIndex, AlignmentTemplates alTemps) {
+  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
     directionType = DirectionTypes.bidirectional;
   }
@@ -47,7 +43,6 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
 
   public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, AlignmentGrid fullAlGrid, String infoLine) {
     int f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos(), e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos();
-    WordAlignment sent = alTemp.getSentencePair();
     ReorderingTypes type1 = ReorderingTypes.discontinuous, type2 = ReorderingTypes.discontinuous;
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       // Analyze reordering (forward):
@@ -155,7 +150,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     int celle = ei-1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize()) 
       return false;
-    AlGridCell cell = fullAlGrid.cellAt(cellf,celle);
+    AlGridCell<AlignmentTemplateInstance> cell = fullAlGrid.cellAt(cellf,celle);
     if (cell == null) return false;
     return cell.hasBottomRight();
   }
@@ -165,7 +160,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     int celle = ei-1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
       return false;
-    AlGridCell cell = fullAlGrid.cellAt(cellf,celle);
+    AlGridCell<AlignmentTemplateInstance> cell = fullAlGrid.cellAt(cellf,celle);
     if (cell == null) return false;
     //return cell.hasTopRight();
     //System.err.println("DEBUG: isConnectedTopRight : cell.hasBottomLeft()="+cell.hasBottomLeft());
@@ -178,7 +173,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     int celle = ei+1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
       return false;
-    AlGridCell cell = fullAlGrid.cellAt(cellf,celle);
+    AlGridCell<AlignmentTemplateInstance> cell = fullAlGrid.cellAt(cellf,celle);
     if (cell == null) return false;
     return cell.hasTopRight();
     //return cell.hasBottomLeft();
@@ -189,22 +184,10 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     int celle = ei+1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
       return false;
-    AlGridCell cell = fullAlGrid.cellAt(cellf,celle);
+    AlGridCell<AlignmentTemplateInstance> cell = fullAlGrid.cellAt(cellf,celle);
     if (cell == null) return false;
     return cell.hasTopLeft();
 
-  }
-
-  private boolean isAligned(SymmetricalWordAlignment sent, int fi, int ei) {
-    assert(fi >= -1 && ei >= -1);
-    assert(fi <= sent.f().size() && ei <= sent.e().size());
-    if(fi == -1 && ei == -1) return true;
-    if(fi == -1 || ei == -1) return false;
-    if(fi == sent.f().size() && ei == sent.e().size()) return true;
-    if(fi == sent.f().size() || ei == sent.e().size()) return false;
-    if(true) // don't call this method..
-      assert(false);
-    return sent.f2e(fi).contains(ei);
   }
 
   private void addCountToArray(ArrayList<Object> list, ReorderingTypes type, AlignmentTemplate alTemp) {

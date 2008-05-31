@@ -1,7 +1,6 @@
 package mt.train;
 
 import java.util.*;
-import java.io.IOException;
 
 
 /**

@@ -63,7 +63,6 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 				double bestScore = Double.NaN;
 				double bestScoreSub = Double.NaN;
 				int tI = -1;
-				int bestI = -1;
 				for (ScoredFeaturizedTranslation<TK,FV> ftrans : nbestList) { tI++;
 					incrementalMetric.replace(i, ftrans);
 					if (subMetric != null) {
@@ -72,7 +71,6 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 					double score = incrementalMetric.score();
 				//	System.err.printf("bestScore(%d): %f score: %f \n", bestI, bestScore,  score);
 					if (bestScore != bestScore || bestScore < score) {
-						bestI = tI;
 						bestFTrans = ftrans;
 						bestScore = score;
 						if (subMetric != null) {

@@ -1,7 +1,6 @@
 package mt.decoder.efeat;
 
 import java.util.*;
-import mt.*;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
@@ -73,10 +72,8 @@ public class VPRotationalBoundaryFeaturizer implements IncrementalFeaturizer<ISt
       } else {
         System.err.println("processing "+phrase);
         try {
-          int p1idx1 = Integer.parseInt(matcher.group(1));
           int p1idx2 = Integer.parseInt(matcher.group(2));
           int p2idx1 = Integer.parseInt(matcher.group(3));
-          int p2idx2 = Integer.parseInt(matcher.group(4));
           String phCat = matcher.group(5);
           if (!"PP".equals(phCat) && !"LCP".equals(phCat)) {
             System.err.println("Only looking at PP and LCP now: dropping "+phrase);

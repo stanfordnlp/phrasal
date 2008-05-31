@@ -74,9 +74,7 @@ public class GlobalParams {
 
 
   public static void main(String[] args) {
-    GlobalParams g = new GlobalParams();
-
-
+    new GlobalParams();
   }
 
 

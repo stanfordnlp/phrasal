@@ -104,7 +104,7 @@ public class DataSet implements Serializable  {
     } else {
       throw new RuntimeException("");
     }
-    return new MyList(lchl, range);
+    return new MyList<CompactHypothesisList>(lchl, range);
   }
 
   public int[] getTrainRange() { 
@@ -401,6 +401,6 @@ public class DataSet implements Serializable  {
          (new DataSet()).getClass().getName());
       System.exit(-1);   
     }
-    DataSet dataset = DataSet.load(args[0]);
+    DataSet.load(args[0]);
   } 
 }

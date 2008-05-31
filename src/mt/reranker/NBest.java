@@ -5,7 +5,6 @@ import mt.reranker.ter.TERcalc;
 import edu.stanford.nlp.math.ArrayMath;
 
 import java.io.*;
-import java.util.List;
 
 
 /**
@@ -56,8 +55,6 @@ public class NBest {
 
   public static final String PREDICTED_FILENAME_PROP = "predicted";
   public static final String DEFAULT_PREDICTED_FILENAME = null;
-
-  private static final boolean DEBUG = false;
 
   static public void outputPredictedIndices(AbstractOneOfManyClassifier classifier, MyList<CompactHypothesisList> lchl, int range[], PrintWriter pr) throws Exception {
     // makes the mapping
@@ -279,11 +276,10 @@ public class NBest {
 
     double loglikelihood = 0;
 
-    double[][] probs = classifier.getProbs(examples);
     int[] bestChoices_tieLast = classifier.getBestPrediction(examples, true);
     int[] bestChoices_tieFirst = classifier.getBestPrediction(examples, false);
     int[] oracleChoices = getOraclePrediction(examples);
-    int[] randomChoices = classifier.getRandPrediction(examples);
+    int[] randomChoices = AbstractOneOfManyClassifier.getRandPrediction(examples);
     int[] systemChoices = new int[examples.size()];
     int[] worstChoices = getWorstPrediction(examples);
 
@@ -360,11 +356,10 @@ public class NBest {
 
     double loglikelihood = 0;
 
-    double[][] probs = classifier.getProbs(examples);
     int[] bestChoices_tieLast = classifier.getBestPrediction(examples, true);
     int[] bestChoices_tieFirst = classifier.getBestPrediction(examples, false);
     int[] oracleChoices = getOraclePrediction(examples);
-    int[] randomChoices = classifier.getRandPrediction(examples);
+    int[] randomChoices = AbstractOneOfManyClassifier.getRandPrediction(examples);
     int[] systemChoices = new int[examples.size()];
     int[] worstChoices = getWorstPrediction(examples);
 

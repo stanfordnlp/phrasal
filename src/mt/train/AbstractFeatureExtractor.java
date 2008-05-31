@@ -10,12 +10,12 @@ import edu.stanford.nlp.util.Index;
  *
  * @author Michel Galley
  */
-public abstract class AbstractFeatureExtractor<E> implements FeatureExtractor<E> {
+public abstract class AbstractFeatureExtractor implements FeatureExtractor {
 
   private int currentPass = 0;
   AlignmentTemplates alTemps;
   Properties prop;
-  Index featureIndex;
+  Index<String> featureIndex;
 
   /**
    * Initialize variables possibly needed by feature extractors.
@@ -24,7 +24,7 @@ public abstract class AbstractFeatureExtractor<E> implements FeatureExtractor<E>
    * @param featureIndex Index for feature names.
    * @param alTemps Set of all alignment templates seen so far in training data.
    */
-  public void init(Properties prop, Index featureIndex, AlignmentTemplates alTemps) {
+  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     this.prop = prop;
     this.featureIndex = featureIndex;
     this.alTemps = alTemps;
@@ -44,7 +44,7 @@ public abstract class AbstractFeatureExtractor<E> implements FeatureExtractor<E>
   /**
    * Returns the number of passes over training data that have been completed so far.
    */
-  void setCurrentPass(int currentPass) { this.currentPass = currentPass; }
+  public void setCurrentPass(int currentPass) { this.currentPass = currentPass; }
 
   /** 
    * By default, this class does not require an alignment grid for feature extraction.

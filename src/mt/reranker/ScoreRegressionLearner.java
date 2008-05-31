@@ -3,6 +3,7 @@ package mt.reranker;
 import java.util.List;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
+import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.CGMinimizer;
 
@@ -125,7 +126,7 @@ public class ScoreRegressionLearner extends AbstractOneOfManyClassifier {
     ObjF objF = new ObjF();
     wts = new double[featureIndex.size()+1]; // we need room for the bias wt
     biasWtIdx = featureIndex.size();
-    Minimizer minim = new CGMinimizer(false);
+    Minimizer<DiffFunction> minim = new CGMinimizer(false);
     wts = minim.minimize(objF, 1e-4, wts);
     System.out.printf("Final SSE: %.3f\n", getSSE());
   }

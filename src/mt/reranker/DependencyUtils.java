@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class DependencyUtils {
   
-  private static ClassicCounter<String> extractEnZhPathFeatures(Tree enT, Tree chT, Alignment align, boolean EnZh) {
+  public static ClassicCounter<String> extractEnZhPathFeatures(Tree enT, Tree chT, Alignment align, boolean EnZh) {
     //GrammaticalStructure gs = new ChineseGrammaticalStructure(chT);
     Filter<String> puncWordFilter = Filters.acceptFilter();
     TreebankLanguagePack tlp = new ChineseTreebankLanguagePack();
@@ -254,7 +254,6 @@ public class DependencyUtils {
       System.err.println("DEBUG: chT: " + d);
     }
     Alignment al = Alignment.readOneAlignmentFromLine(args[2]);
-    boolean EnZh = Boolean.parseBoolean(args[3]);
     //extractEnZhPathFeatures(enT, chG, al, EnZh);
     extractPathFeatures(enT, chG, al, Integer.MAX_VALUE);
   }

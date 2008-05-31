@@ -51,7 +51,7 @@ public class NBestLists {
   }
 
   public static void main(String[] args) throws IOException{
-    NBestLists nbests = NBestLists.load("nbests");
+    NBestLists.load("nbests");
     System.err.println("blah");
   }
 }

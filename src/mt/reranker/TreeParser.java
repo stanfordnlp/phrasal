@@ -3,9 +3,9 @@ package mt.reranker;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.*;
 
-public class TreeParser implements Function {
+public class TreeParser implements Function<String,Tree> {
 
-  public Object apply (Object o) {
+  public Tree apply (String o) {
     String s = (String) o;
     Tree t = null;
     try {

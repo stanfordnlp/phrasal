@@ -2,6 +2,7 @@ package mt.reranker;
 
 import java.util.List;
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
+import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.QNMinimizer;
 
@@ -64,7 +65,7 @@ public class LogLinearProbabilisticWrapper extends
     featureIndex = new FeatureIndex();
     featureIndex.add(cl.getClass().getName()+"_score");
     ObjF objF = new ObjF();
-    Minimizer minim = new QNMinimizer(objF);
+    Minimizer<DiffFunction> minim = new QNMinimizer(objF);
     wts = minim.minimize(objF, 1e-4, wts);
   }
 }

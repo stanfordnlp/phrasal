@@ -550,7 +550,6 @@ public class ATableHMM extends ATable {
    */
 
   public void save(String filename) {
-    int ii;
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
       //MAX_LENGTH
@@ -594,7 +593,6 @@ public class ATableHMM extends ATable {
    */
 
   public void read(String filename) {
-    int ii;
     String line, token;
     try {
       InFile in = new InFile(filename);

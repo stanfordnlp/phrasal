@@ -70,7 +70,6 @@ public class NegTERtestMultipleRef {
         }
         String[] sIdPair = fields[0].split(",");
         int dataPt = Integer.parseInt(sIdPair[0]);
-        int hypId = Integer.parseInt(sIdPair[1]);
 
         List<String> refl = refs.get(dataPt);
         double ter = computeTER(fields[1], refl);

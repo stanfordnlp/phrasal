@@ -1,11 +1,7 @@
 package mt.train;
 
-import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
-
-
-import edu.stanford.nlp.util.Index;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 

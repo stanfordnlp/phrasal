@@ -20,7 +20,6 @@ public class SentenceHandler {
   private boolean eTags; // are there tags in the source string, by default no
   private boolean useETags = false;
   private boolean useFTags = false;
-  private boolean useFTagsM1 = false;
   static char UNDRSCR = '_';
   static SymbolTable sTableE;
   static SymbolTable sTableF;
@@ -318,10 +317,9 @@ public class SentenceHandler {
     int startArgs = 0;
     int mask = 0;
     boolean useFTags = false, useETags = false;
-    boolean readParameters = false;
     String ttFile = null;
     String atFile = null;
-    HMM modelHMM, modelHMM_tags;
+    HMM modelHMM;
     TTable startTTable;
     ATable startATable = null;
     Model1 model1;
@@ -397,14 +395,9 @@ public class SentenceHandler {
 
     }
 
-    if ((ttFile != null) || (atFile != null)) {
-      readParameters = true;
-    }
 
-    GlobalParams par = new GlobalParams();
     SentenceHandler sH = new SentenceHandler(train, test, eTags, fTags, useETags, useFTags);
     sH.mask = mask;
-    Perplexity p = new Perplexity(); // make sure the table p(m|l) is there for model1
     startTTable = new TTable(true);
     if (ttFile != null) {
       startTTable.read(ttFile);
@@ -443,7 +436,7 @@ public class SentenceHandler {
     }
 
 
-    Model1 model12 = new Model1(sH, model1.getTTable(), 1);
+    new Model1(sH, model1.getTTable(), 1);
 
 
     String transprobsFile = GlobalParams.resultPath + "tt.final";

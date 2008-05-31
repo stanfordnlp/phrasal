@@ -8,7 +8,6 @@ import mt.base.IString;
 import mt.base.IdentityPhraseGenerator;
 import mt.base.PharaohPhraseTable;
 import mt.base.SymbolFilter;
-import mt.base.CombinedPhraseGenerator.Type;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.feat.UnknownWordFeaturizer;
 import mt.tools.NumericFilter;

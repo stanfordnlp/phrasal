@@ -9,7 +9,6 @@ import mt.base.Featurizable;
 import mt.base.IString;
 import mt.base.InsertedStartEndToken;
 import mt.base.Sequence;
-import mt.base.TranslationOption;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 

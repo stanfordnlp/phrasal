@@ -11,11 +11,10 @@ import java.util.ArrayList;
 import java.util.regex.*;
 
 
-public class AlignmentIterator extends AbstractIterator {
+public class AlignmentIterator extends AbstractIterator<LegacyAlignment> {
 
   private BufferedReader in;
-  private Object nextToken;
-  private boolean inTree = false;
+  private LegacyAlignment nextToken;
 
   public AlignmentIterator(Reader in) {
     this.in = new BufferedReader(in);
@@ -32,8 +31,8 @@ public class AlignmentIterator extends AbstractIterator {
     nextToken = getNext();
   }
 
-  public Object next() {
-    Object token = nextToken;
+  public LegacyAlignment next() {
+  	LegacyAlignment token = nextToken;
     setNext();
     return token;
   }
@@ -42,7 +41,7 @@ public class AlignmentIterator extends AbstractIterator {
     return nextToken;
   }
 
-  private Object getNext() {
+  private LegacyAlignment getNext() {
     String line = null;
     Pattern p = Pattern.compile("([^\\s+]) \\(\\{\\s*(.*?)\\s*\\}\\)");
     try {
@@ -50,7 +49,6 @@ public class AlignmentIterator extends AbstractIterator {
         if (line.matches("^#.*")) {
           line = in.readLine();
         }
-        String[] chWords = line.split(" ");
         line = in.readLine();
         Matcher m = p.matcher(line);
         LegacyAlignment sentA = new LegacyAlignment();
@@ -74,19 +72,19 @@ public class AlignmentIterator extends AbstractIterator {
     return null;
   }
 
-  public static IteratorFromReaderFactory getFactory() {
+  public static IteratorFromReaderFactory<LegacyAlignment> getFactory() {
     //return new AlignmentIterator.AlignmentIteratorFactory(new AlignmentParser());
     return new AlignmentIterator.AlignmentIteratorFactory();
   }
 
 
   
-  static class AlignmentIteratorFactory implements IteratorFromReaderFactory {
+  static class AlignmentIteratorFactory implements IteratorFromReaderFactory<LegacyAlignment> {
 
     public AlignmentIteratorFactory() {
     }
 
-    public Iterator getIterator(Reader r) {
+    public Iterator<LegacyAlignment> getIterator(Reader r) {
       return new AlignmentIterator(r);
     }
   }

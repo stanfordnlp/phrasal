@@ -13,7 +13,7 @@ import edu.stanford.nlp.util.Index;
  *
  * @author Michel Galley
  */
-public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatureExtractor<String> {
+public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugLexicalReorderingFeatureExtractor";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -39,7 +39,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
 
   private static double LAPLACE_SMOOTHING = .5;
 
-  public void init(Properties prop, Index featureIndex, AlignmentTemplates alTemps) {
+  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
     boolean fail = false;
     // Categories enabled by default:
@@ -234,7 +234,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     if(fi == sent.f().size() || ei == sent.e().size()) return false;
     if(phrasalReordering) {
       // Phrase-phrase reordering as in Tillman:
-      AlGridCell cell = alGrid.cellAt(fi,ei);
+      AlGridCell<AlignmentTemplateInstance> cell = alGrid.cellAt(fi,ei);
       if(DEBUG) {
         System.err.printf("relative position: %s\n",pos.toString());
         System.err.printf("orientation at: f=%d e=%d\n",fi,ei);

@@ -19,12 +19,12 @@ public class MappingSpan {
     BufferedReader spanBR = new BufferedReader(new FileReader(args[3]));
     BufferedReader prepBR = new BufferedReader(new FileReader(args[4]));
     
-    String unkLine, treeLine, idxLine, spanLine, prepLine;
+    String unkLine, treeLine, idxLine, spanLine;
     while((unkLine = unkBR.readLine()) != null) {
       treeLine = treeBR.readLine();
       idxLine = idxBR.readLine();
       spanLine = spanBR.readLine();
-      prepLine = prepBR.readLine();
+      prepBR.readLine();
       
       Tree tree = null;
       try {

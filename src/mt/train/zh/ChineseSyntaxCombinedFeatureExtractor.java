@@ -1,6 +1,5 @@
 package mt.train.zh;
 
-import mt.*;
 import mt.base.IOTools;
 import mt.base.IString;
 import mt.base.IStrings;
@@ -104,7 +103,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   public static final boolean SHOW_PHRASE_RESTRICTION = 
     Boolean.parseBoolean(System.getProperty(SHOW_PHRASE_RESTRICTION_PROPERTY, "false"));
 
-  private List<AbstractChineseSyntaxFeatureExtractor> extractors;
+  private List<AbstractChineseSyntaxFeatureExtractor<String>> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
   private List<String> infoFileForExtractors;
   private List<String> infoLinesForExtractors;
@@ -131,12 +130,12 @@ public class ChineseSyntaxCombinedFeatureExtractor {
 
   @SuppressWarnings("unchecked")
     public ChineseSyntaxCombinedFeatureExtractor(Properties prop) {
-    boolean storeAlignmentCounts = false;
+  	
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
       exsString = "mt.PharaohFeatureExtractor:mt.LexicalReorderingFeatureExtractor";
     alTemps = new AlignmentTemplates(prop,filterFromDev);
-    extractors = new ArrayList<AbstractChineseSyntaxFeatureExtractor>();
+    extractors = new ArrayList<AbstractChineseSyntaxFeatureExtractor<String>>();
     infoFileForExtractors = new ArrayList<String>();
 
     for(String exStr : exsString.split(":")) {
@@ -174,8 +173,8 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         usage();
       }
     }
-    this.extractors = extractors;
-    this.alTemps = alTemps;
+    
+    
     this.alTemp = new AlignmentTemplateInstance();
 
     setTotalPassNumber();
@@ -191,7 +190,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   @SuppressWarnings("unchecked")
   public static Sequence<IString>[] getPhrasesFromDevCorpus(String fFilterCorpus) {
     AlignmentTemplates tmpSet = new AlignmentTemplates();
-    ArrayList<Sequence<IString>> list = new ArrayList<Sequence<IString>>();
+    
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     filterFromDev = true;  
     try {
@@ -273,8 +272,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     if(!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     System.gc();
-    Runtime rt = Runtime.getRuntime();
-    long prePhraseTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
@@ -283,7 +280,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     try {
       for(passNumber=0; passNumber<totalPassNumber; ++passNumber) {
         // Set current pass:
-        for(AbstractChineseSyntaxFeatureExtractor e : extractors)
+        for(AbstractChineseSyntaxFeatureExtractor<String> e : extractors)
           e.setCurrentPass(passNumber);
         // Read data and process data:
         System.err.printf("Pass %d on training data (max phrase len: %d,%d)...\n",passNumber+1,maxPhraseLenF, maxPhraseLenE);
@@ -376,7 +373,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
       }
 
       // just let each extractor output some stuff to the STDERR
-      for(AbstractChineseSyntaxFeatureExtractor e : extractors)
+      for(AbstractChineseSyntaxFeatureExtractor<String> e : extractors)
         e.report(alTemps);
 
     } catch(IOException e) {
@@ -450,7 +447,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
       // Features are extracted only once all phrases for a given
       // sentece pair are in memory
       for(int i = 0; i < extractors.size(); i++) {
-        AbstractChineseSyntaxFeatureExtractor e = extractors.get(i);
+        AbstractChineseSyntaxFeatureExtractor<String> e = extractors.get(i);
         String infoLine = infoLinesForExtractors.get(i);
         
         for(AlignmentTemplateInstance alTemp : alGrid.getAlTemps()) {
@@ -464,7 +461,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
 
   private void extractSentenceFeatures(SymmetricalWordAlignment sent) {
     for(int i = 0; i < extractors.size(); i++) {
-      AbstractChineseSyntaxFeatureExtractor e = extractors.get(i);
+      AbstractChineseSyntaxFeatureExtractor<String> e = extractors.get(i);
       String infoLine = infoLinesForExtractors.get(i);
       e.extract(sent,infoLine,alGrid);
     }
@@ -494,7 +491,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     
     // Run each feature extractor for each altemp:
     if(!needAlGrid)
-      for(AbstractChineseSyntaxFeatureExtractor e : extractors) {
+      for(AbstractChineseSyntaxFeatureExtractor<String> e : extractors) {
         e.extract(alTemp, null);
       }
   }
@@ -533,8 +530,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         oStream = (PrintStream) output;
     }
 
-    Runtime rt = Runtime.getRuntime();
-    long prePhraseTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
@@ -551,7 +546,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
       alTemps.reconstructAlignmentTemplate(alTemp, idx);
       str.append(alTemp.toString(noAlign));
       str.append(AlignmentTemplate.DELIM);
-      for(AbstractChineseSyntaxFeatureExtractor e : extractors) {
+      for(AbstractChineseSyntaxFeatureExtractor<String> e : extractors) {
         Object scores = e.score(alTemp);
         if(scores == null)
           continue;
@@ -586,12 +581,12 @@ public class ChineseSyntaxCombinedFeatureExtractor {
 
   public int getMaxPhraseLenE() { return maxPhraseLenE; }
   public int getMaxPhraseLenF() { return maxPhraseLenF; }
-  public void setMaxPhraseLenE(int maxPhraseLenE) { this.maxPhraseLenE = maxPhraseLenE; }
-  public void setMaxPhraseLenF(int maxPhraseLenF) { this.maxPhraseLenF = maxPhraseLenF; }
+  public void setMaxPhraseLenE(int newMaxPhraseLenE) { maxPhraseLenE = newMaxPhraseLenE; }
+  public void setMaxPhraseLenF(int newMaxPhraseLenF) { maxPhraseLenF = newMaxPhraseLenF; }
 
   private void setTotalPassNumber() {
     totalPassNumber = 0;
-    for(AbstractChineseSyntaxFeatureExtractor ex : extractors) {
+    for(AbstractChineseSyntaxFeatureExtractor<String> ex : extractors) {
       int p = ex.getRequiredPassNumber();
       if(p > totalPassNumber)
         totalPassNumber = p;
@@ -603,7 +598,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     if(PRINT_GRID_MAX_LEN > 0)
       needAlGrid = true;
     else {
-      for(AbstractChineseSyntaxFeatureExtractor ex : extractors)
+      for(AbstractChineseSyntaxFeatureExtractor<String> ex : extractors)
         if(ex.needAlGrid()) {
           needAlGrid = true;
           break;
@@ -622,7 +617,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     String fCorpus = prop.getProperty(F_CORPUS_OPT);
     String eCorpus = prop.getProperty(E_CORPUS_OPT);
     String align = prop.getProperty(A_CORPUS_OPT);
-    String exsString = prop.getProperty(EXTRACTORS_OPT);
+
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
     String fFilterList = prop.getProperty(FILTER_LIST_OPT);

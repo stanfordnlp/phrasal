@@ -50,14 +50,8 @@ public class SSVMScorer implements Scorer<String> {
 	Set<String> nonZeroFeatures = null;
 	Set<String> zeroFeatures = null;
 	
-	private void setNonZeroFeatures(Set<String> nonZeroFeatures) {
-		this.nonZeroFeatures = nonZeroFeatures;
-	}
-	
-	private void setZeroFetures(Set<String> zeroFeatures) {
-		this.zeroFeatures = zeroFeatures;
-	}
-	
+
+		
 	public void allFeatures() {
 		this.zeroFeatures = null;
 		this.nonZeroFeatures = null;
@@ -151,7 +145,6 @@ public class SSVMScorer implements Scorer<String> {
 	SparseVector biasVector = null;
 	private void addBiasPt() {
 		
-		double l2norm = l2normDense(manualWeights);
 		int cPt = 1;
 		SparseVector emptyVector = new SparseVector(new HashMap<Integer,Double>());
 		if (constrainManualWeights) {

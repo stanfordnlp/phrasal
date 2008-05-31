@@ -106,9 +106,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       StateLatticeDecoder<Hypothesis<TK,FV>> latticeDecoder =
               new StateLatticeDecoder<Hypothesis<TK,FV>>(goalStates, recombinationHistory, cnt, i == 1); // XXX-
 
-      //int c = -1;
-      //double mod = 1;
-      long basetime = System.currentTimeMillis();
+
       for (List<Hypothesis<TK,FV>> hypList : latticeDecoder) {
         Hypothesis<TK,FV> hyp = null;
         for (Hypothesis<TK,FV> nextHyp : hypList) {

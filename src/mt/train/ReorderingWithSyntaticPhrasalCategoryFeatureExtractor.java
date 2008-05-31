@@ -1,7 +1,6 @@
 package mt.train;
 
 import java.util.ArrayList;
-import java.util.Properties;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -25,7 +24,7 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
  * @author Pi-Chuan Chang
  */
 
-public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends AbstractFeatureExtractor<String> {
+public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends AbstractFeatureExtractor {
 
   Map<AlignmentTemplateInstance, Set<Integer>> labelsForAlTemp = new HashMap<AlignmentTemplateInstance, Set<Integer>>();
   Index<Pair<String, Integer>> phraseNamesIndex = new Index<Pair<String, Integer>>();
@@ -43,7 +42,6 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
 
     int template_f1 = template.fStartPos();
     int template_f2 = template.fEndPos();
-    int template_e1 = template.eStartPos();
     int template_e2 = template.eEndPos();
 
     if (template_e2 == alGrid.esize()-1) { // this template is already at the end on the English side
@@ -57,9 +55,6 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
         for (AlignmentTemplateInstance t : topLefts) {
           int f1 = t.fStartPos();
           int f2 = t.fEndPos();
-          int e1 = t.eStartPos();
-          int e2 = t.eEndPos();
-          
 
           // check if this template unfortunately overlaps with the "template" that we'll looking at
           if ((template_f2-f1)*(f2-template_f1) >= 0) {
@@ -103,9 +98,6 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
     
     
     List<AlignmentTemplateInstance> allAlTemps = alGrid.getAlTemps();
-    Sequence<IString> e = sent.e();
-
-
 
     for (AlignmentTemplateInstance t : allAlTemps) {
       int f1 = t.fStartPos();
@@ -227,9 +219,9 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
       Set<Integer> labels = labelsForAlTemp.get(t);
       if (labels == null) labels = new TreeSet<Integer>();
 
-      for(Map.Entry e : boundaries.entrySet()) {
-        IntQuadruple ranges = (IntQuadruple)e.getKey();
-        String str = (String)e.getValue();
+      for(Map.Entry<IntQuadruple, String> e : boundaries.entrySet()) {
+        IntQuadruple ranges = e.getKey();
+        String str = e.getValue();
 
         StringBuilder sb = new StringBuilder();
         sb.append(str).append("(")

@@ -116,7 +116,6 @@ public class LegacyAlignment {
 
       // first line is chinese words
       line = in.readLine();
-      String[] chWords = line.split(" ");
       while((line = in.readLine()) != null) {
         Matcher m = p.matcher(line);
         LegacyAlignment sentA = new LegacyAlignment();

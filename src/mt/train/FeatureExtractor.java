@@ -1,17 +1,12 @@
 package mt.train;
 
-import edu.stanford.nlp.stats.ClassicCounter;
-
-import java.util.List;
-import java.util.Set;
-
 
 /**
  * Interface for extracting sentence-level and phrase-level features from training data.
  * 
  * @author Michel Galley
  */
-public interface FeatureExtractor<E> {
+public interface FeatureExtractor {
 
   // TODO: add fuction to score only source or target language phrases
   // (used in some lex re-ordering models).

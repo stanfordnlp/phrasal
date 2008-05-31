@@ -5,7 +5,6 @@ import java.util.*;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.recomb.RecombinationHash;
 import mt.decoder.recomb.RecombinationHistory;
-import mt.decoder.recomb.RecombinationHash.Status;
 
 /**
  * 

@@ -186,7 +186,7 @@ public class LegacyFeatureExtractor implements Serializable {
     }
   }
 
-  static private LegacyFeatureExtractor loadSerialized(String filename) throws IOException, ClassNotFoundException {
+  static LegacyFeatureExtractor loadSerialized(String filename) throws IOException, ClassNotFoundException {
 
     long loadTime = -System.nanoTime();
 
@@ -347,7 +347,7 @@ public class LegacyFeatureExtractor implements Serializable {
     }
 
     if (depsPW!=null) {
-      depsPW.println("Source Sent: "+StringUtils.join(chT.taggedYield(new ArrayList()), " "));
+      depsPW.println("Source Sent: "+StringUtils.join(chT.taggedYield(new ArrayList<TaggedWord>()), " "));
       Filter<String> puncWordFilter = Filters.acceptFilter();
       TreebankLanguagePack tlp = new ChineseTreebankLanguagePack();
       GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory(puncWordFilter);
@@ -431,7 +431,7 @@ public class LegacyFeatureExtractor implements Serializable {
         GrammaticalStructure enGs = gsf.newGrammaticalStructure(enT);
 
         if (depsPW!=null) {
-          depsPW.println("Target Sent["+hypId+"]: "+StringUtils.join(enT.taggedYield(new ArrayList()), " "));
+          depsPW.println("Target Sent["+hypId+"]: "+StringUtils.join(enT.taggedYield(new ArrayList<TaggedWord>()), " "));
           deps = enGs.typedDependencies();
           for (TypedDependency d : deps) {
             depsPW.println(d);
@@ -464,8 +464,8 @@ public class LegacyFeatureExtractor implements Serializable {
   private static ClassicCounter<String> extractAlignedWordPairFeatures(Tree enT, Tree chT, Alignment align) {
     ClassicCounter<String> features = new ClassicCounter<String>();
 
-    List enWords = enT.yield(new ArrayList());
-    List chWords = chT.yield(new ArrayList());
+    List<TaggedWord> enWords = enT.yield(new ArrayList<TaggedWord>());
+    List<TaggedWord> chWords = chT.yield(new ArrayList<TaggedWord>());
 
     //for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
     for(int enIdx : align.get(true).keySet()) {
@@ -497,7 +497,7 @@ public class LegacyFeatureExtractor implements Serializable {
 
     //for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
     for(int enIdx : align.get(true).keySet()) {
-      String enWord = ((TaggedWord) enWords.get(enIdx)).tag().toString();
+      String enWord = enWords.get(enIdx).tag().toString();
       List<Integer> al = align.get(enIdx, true);
       for (int chIdx : al) {
         StringBuilder sb = new StringBuilder();
@@ -774,9 +774,8 @@ public class LegacyFeatureExtractor implements Serializable {
     pstrm.printf("# feature set specified:\n");
 
 
-    Enumeration names = p.propertyNames();
-    while(names.hasMoreElements()) {
-      String name = (String) names.nextElement();
+    Set<String> names = p.stringPropertyNames();
+    for (String name : names) {
       if (!name.equals("")) {
         pstrm.printf("#                      : %s\n", name);
       }
@@ -786,7 +785,7 @@ public class LegacyFeatureExtractor implements Serializable {
 
     //PrintStream spstrm = new PrintStream(new FileOutputStream(scoresFn));
 
-    LegacyFeatureExtractor lfe = LegacyFeatureExtractor.load(dataDescrFn, pstrm, p);
+    LegacyFeatureExtractor.load(dataDescrFn, pstrm, p);
     System.out.println("Done.\nWriting out feature set...");
     //System.out.println("Done.\nWriting out scores");
     pstrm.close();

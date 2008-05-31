@@ -8,11 +8,11 @@ import java.util.*;
 import mt.base.IString;
 import mt.base.Sequence;
 
-public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureExtractor<String> {
+public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   private int[][] min_E_for_F_range, max_E_for_F_range;
   private AlignmentTemplateInstance[][] alTemp_min_E_for_F_range, alTemp_max_E_for_F_range;
-  private int fsize, esize;
+  private int fsize;
 
   private static final boolean DEBUG = true;
 
@@ -45,7 +45,6 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
 
   private void collectStatsFromGrid(AlignmentGrid alGrid) {
     fsize = alGrid.fsize();
-    esize = alGrid.esize();
     List<AlignmentTemplateInstance> allAlTemps = alGrid.getAlTemps();
 
     min_E_for_F_range = new int[fsize][fsize];
@@ -136,7 +135,6 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
     
     // start checking
     fsize = alGrid.fsize();
-    esize = alGrid.esize();
 
     IntPair[][] ips = new IntPair[fsize][fsize];
 
@@ -178,9 +176,9 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
 
     Map<IntQuadruple,String> boundaries = pb.getBoundaries();
 
-    for(Map.Entry e : boundaries.entrySet()) {
-      IntQuadruple ranges = (IntQuadruple)e.getKey();
-      String str = (String)e.getValue();
+    for(Map.Entry<IntQuadruple,String> e : boundaries.entrySet()) {
+      IntQuadruple ranges = e.getKey();
+      String str = e.getValue();
       int begin_firstPhrase = ranges.getSource();
       int end_firstPhrase = ranges.getMiddle();
       int begin_secondPhrase = ranges.getTarget();

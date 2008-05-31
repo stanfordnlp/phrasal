@@ -1,15 +1,12 @@
 package mt.tools;
 
 import edu.stanford.nlp.trees.tregex.*;
-import edu.stanford.nlp.objectbank.LineIterator;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.tsurgeon.*;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.ling.HasWord;
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collection;
 
 public class ReorderTreeWithPatterns {
 
@@ -71,7 +68,6 @@ public class ReorderTreeWithPatterns {
 
     lTrees = surgeriesOnTrees(changes, lTrees);
 
-    TreePrint tp = new TreePrint("words");
     int numDiff = 0;
     
     for(int idx = 0 ; idx < lTrees.size(); idx++) {

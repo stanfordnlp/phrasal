@@ -28,7 +28,7 @@ public class FastFeaturizableHash<V> {
 	 * @param hyp
 	 * @param value
 	 */
-	public void put(Featurizable f, V value) {
+	public void put(Featurizable<IString,String> f, V value) {
 		int idx = (int)(f.hyp.id-offset);
 		values.ensureCapacity(idx+1);
 		while (values.size() <= idx) values.add(null);
@@ -40,7 +40,7 @@ public class FastFeaturizableHash<V> {
 	 * @param hyp
 	 * @return
 	 */
-	public V get(Featurizable f) {
+	public V get(Featurizable<IString,String> f) {
 		if (f == null) return null;
 		int idx = (int)(f.hyp.id-offset);
 		if (idx >= values.size()) return null;

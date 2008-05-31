@@ -223,7 +223,6 @@ public class ATableHMMFull extends ATable {
   public void initializeUniform() {
     // first the initial probabilities
 
-    float inc_init, inc;
     for (int l = 1; l <= MAX_LENGTH; l++) {
       for (int i = 0; i <= MAX_LENGTH; i++) {
         count_arr.set(1, i, 0, l);

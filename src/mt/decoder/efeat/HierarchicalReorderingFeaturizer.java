@@ -1,10 +1,8 @@
 package mt.decoder.efeat;
 
-import mt.*;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.util.IntPair;
 import mt.base.ARPALanguageModel;
 import mt.base.ConcreteTranslationOption;
 import mt.base.CoverageSet;
@@ -331,7 +329,6 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
     // If any of these blocks lies after f in foreign side, we know it's not monotone:
     Featurizable<IString, String> tmp_f = f.prior;
     int indexLeftmostForeign = indexPreviousForeign;
-    int step = 0;
     while(fEnd(tmp_f) != indexPreviousForeign) {
       int fStart = fStart(tmp_f);
       if(fStart > indexPreviousForeign) {
@@ -365,7 +362,6 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
     // If any of these blocks lies before f in foreign side, we know it's not monotone:
     Featurizable<IString, String> tmp_f = f.prior;
     int indexRightmostForeign = indexNextForeign;
-    int step = 0;
     while(fStart(tmp_f) != indexNextForeign) {
       int fEnd = fEnd(tmp_f);
       if(fEnd < indexNextForeign) {
@@ -390,14 +386,11 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
    * Note that, if this condition is true, we can immediately infer that the current phrase
    * is globally monotone with what comes next.
    */
-  private static boolean isStronglyMonotone(Featurizable<IString, String> f) {
+  static boolean isStronglyMonotone(Featurizable<IString, String> f) {
     CoverageSet fCoverage = f.hyp.foreignCoverage;
     return (fCoverage.length()-fCoverage.cardinality() == 0);
   }
 
   private static int fStart(Featurizable<IString, String> f) { return f.foreignPosition; }
   private static int fEnd(Featurizable<IString, String> f) { return f.foreignPosition+f.foreignPhrase.size()-1; }
-  private static int eStart(Featurizable<IString, String> f) { return f.translationPosition; }
-  private static int eEnd(Featurizable<IString, String> f) { return f.translationPosition+f.foreignPhrase.size()-1; }
-
 }

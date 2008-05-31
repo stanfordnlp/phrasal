@@ -24,7 +24,7 @@ public class FeatureSet {
   String featureSetName = "Unnamed Feature Set\n";
   public FeatureSet() { ; }
 
-  public static void pruneFeaturesByCount(FeatureSet featSet, int threshold, ClassicCounter cnt) {
+  public static void pruneFeaturesByCount(FeatureSet featSet, int threshold, ClassicCounter<String> cnt) {
     /*
     Counter cnt = new Counter();
     for (Map.Entry<Integer,Map<Integer, Map<String, Double>>> e : dataSetMap.entrySet()) {
@@ -60,7 +60,7 @@ public class FeatureSet {
 
   }
   public static FeatureSet load(String filename) throws IOException {
-    ClassicCounter cnt = new ClassicCounter();
+    ClassicCounter<String> cnt = new ClassicCounter<String>();
     BufferedReader breader = null;
     // we support both gzipped and non-gzipped feature sets
     String n = System.getProperty(N_THRESH_PROP, DEFAULT_N_THRESH);
@@ -150,11 +150,11 @@ public class FeatureSet {
   }
  
   public SortedSet<Integer> getDataPointIndices() {
-    return new TreeSet(dataSetMap.keySet()); 
+    return new TreeSet<Integer>(dataSetMap.keySet()); 
   }
 
   public SortedSet<Integer> getHypothesisIndices(int dataPtIdx) {
-    return new TreeSet(dataSetMap.get(dataPtIdx).keySet());
+    return new TreeSet<Integer>(dataSetMap.get(dataPtIdx).keySet());
   }
 
   static public void main(String[] args) throws Exception {

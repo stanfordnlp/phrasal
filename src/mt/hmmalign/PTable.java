@@ -16,7 +16,7 @@ public class PTable {
   private ProbCountHolder[] table;
 
   public PTable(SentenceHandler sH) {
-    this.table = new ProbCountHolder[sH.sTableE.getNumAllIds()];
+    this.table = new ProbCountHolder[SentenceHandler.sTableE.getNumAllIds()];
   }
 
 
@@ -78,7 +78,6 @@ public class PTable {
 
     try {
       PrintStream p = new PrintStream(new FileOutputStream(filename, true));
-      ProbCountHolder pcH;
 
       int bound = table.length;
       for (int index = 0; index < bound; index++) {

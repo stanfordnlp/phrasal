@@ -155,8 +155,6 @@ public class VerbLinkageFeaturizerCorpus implements IncrementalFeaturizer<IStrin
 		double sumNumt = 0;
 		
 		int fPhrSz = f.foreignPhrase.size(); 
-		String fConP = "";
-		String fConS = "";
 		String fConLexP = "";
 		String fConLexS = "";
 		String fWord = "";

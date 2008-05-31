@@ -2,7 +2,6 @@ package mt.decoder.efeat;
 
 import edu.stanford.nlp.util.Pair;
 import java.util.*;
-import mt.*;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
@@ -78,7 +77,6 @@ public class RefinedVPRotationalBoundaryFeaturizer implements IncrementalFeaturi
           int p1idx1 = Integer.parseInt(matcher.group(1));
           int p1idx2 = Integer.parseInt(matcher.group(2));
           int p2idx1 = Integer.parseInt(matcher.group(3));
-          int p2idx2 = Integer.parseInt(matcher.group(4));
           String phCat = matcher.group(5);
           if (!"PP".equals(phCat) && !"LCP".equals(phCat)) {
             System.err.println("Only looking at PP and LCP now: dropping "+phrase);
@@ -146,7 +144,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements IncrementalFeaturi
 
         if (firstInP1) { // if this phrase starts at or after the boundary of p1
           // check if p1 has always been covered at all
-          Hypothesis prevhyp = f.hyp.preceedingHyp;
+          Hypothesis<IString,String> prevhyp = f.hyp.preceedingHyp;
           if(prevhyp != null) {
             for(int checkI = startp1; checkI <= foreignSwapPos-1; checkI++) {
               if (prevhyp.foreignCoverage.get(checkI)) {

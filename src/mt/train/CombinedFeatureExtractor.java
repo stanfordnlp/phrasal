@@ -113,7 +113,6 @@ public class CombinedFeatureExtractor {
 
   @SuppressWarnings("unchecked")
   public CombinedFeatureExtractor(Properties prop) {
-    boolean storeAlignmentCounts = false;
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
       exsString = "mt.train.PharaohFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
@@ -199,9 +198,6 @@ public class CombinedFeatureExtractor {
   public void extractFromAlignedData(String fCorpus, String eCorpus, String aCorpus) {
     if(!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
-    System.gc();
-    Runtime rt = Runtime.getRuntime();
-    long prePhraseTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
@@ -329,8 +325,6 @@ public class CombinedFeatureExtractor {
         oStream = (PrintStream) output;
     }
 
-    Runtime rt = Runtime.getRuntime();
-    long prePhraseTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
@@ -395,7 +389,7 @@ public class CombinedFeatureExtractor {
     String fCorpus = prop.getProperty(F_CORPUS_OPT);
     String eCorpus = prop.getProperty(E_CORPUS_OPT);
     String align = prop.getProperty(A_CORPUS_OPT);
-    String exsString = prop.getProperty(EXTRACTORS_OPT);
+    
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
     String fFilterList = prop.getProperty(FILTER_LIST_OPT);

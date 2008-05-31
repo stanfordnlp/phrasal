@@ -60,6 +60,7 @@ those functions.
 
 */
 
+@SuppressWarnings( {"unused", "unchecked"} )
 public class TERcost {
     /* For all of these functions, the score should be between 0 and 1
      * (inclusive).  If it isn't, then it will break TERcalc! */

@@ -4,9 +4,7 @@ import edu.stanford.nlp.trees.*;
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collection;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.trees.*;
 
 public class TreeToSpans {
 

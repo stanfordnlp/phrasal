@@ -10,7 +10,6 @@ import mt.base.Featurizable;
 import mt.base.IBMModel1;
 import mt.base.IString;
 import mt.base.Sequence;
-import mt.base.IBMModel1.PartialSourceFeatureState;
 import mt.decoder.feat.IncrementalFeaturizer;
 
 /**

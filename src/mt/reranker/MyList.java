@@ -1,9 +1,14 @@
 package mt.reranker;
-import java.io.*;
 import java.util.*;
 
+/*
+ * 
+ * this class is so very very wrong. the original author has been notified of this fact, but they apparently haven't had time to fix it yet. -dan
+ */
 public class MyList<E> extends ArrayList<E> {
-  int size;
+  
+	private static final long serialVersionUID = 1L;
+	int size;
   E[] array;
   int[] mapping;
   /*

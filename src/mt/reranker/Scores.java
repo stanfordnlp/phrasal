@@ -32,7 +32,6 @@ public class Scores {
       nThresh = Integer.parseInt(n);
     System.err.println("Max N = "+nThresh);
     BufferedReader breader = new BufferedReader(new FileReader(filename));
-    FeatureSet featureSet = new FeatureSet();
     int lineNum = 1;
     Scores scores = new Scores();
     for (String line; (line = breader.readLine()) != null; lineNum++) {
@@ -64,10 +63,10 @@ public class Scores {
   }
   
   public SortedSet<Integer> getDataPointIndices() {
-    return new TreeSet(scoreMap.keySet());
+    return new TreeSet<Integer>(scoreMap.keySet());
   } 
 
   public SortedSet<Integer> getHypothesisIndices(int dataPt) {
-    return new TreeSet(scoreMap.get(dataPt).keySet());
+    return new TreeSet<Integer>(scoreMap.get(dataPt).keySet());
   }
 }

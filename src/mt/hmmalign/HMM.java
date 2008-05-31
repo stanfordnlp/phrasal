@@ -99,7 +99,6 @@ public class HMM {
     this.tTable = tTable;
     this.fTable = fTable;
     init_translation = false;
-    this.fTags = fTags;
     init();
     train_test_loop(startiter, numIterations);
 
@@ -136,7 +135,7 @@ public class HMM {
 
   public void init() {
 
-    if (this.useStayGoProbs) {
+    if (HMM.useStayGoProbs) {
       if (!trigram) {
         sgTable = new StayGoTable(corpus);
         sgTable.initialize(.08);
@@ -180,7 +179,6 @@ public class HMM {
     this.aTablesHolder = new ATableHMMHolder(mask);
     TupleCounter TC = new TupleCounter();
     int numTables = 0;
-    AlHandlerHMM1Tags aH = new AlHandlerHMM1Tags(aTablesHolder, mask);
 
     //add the tables while testining on the training corpus
     //with the viterbi alignments of HMM simple or em_loop_2_eq
@@ -201,11 +199,11 @@ public class HMM {
     MutableInteger iH;
     IntTuple iT;
     ATable a;
-    for (Iterator i = TC.getIterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
-      iT = (IntTuple) eN.getKey();
-      iH = (MutableInteger) eN.getValue();
-      if (iH.intValue() > aTable.countCutoff) {
+    for (Iterator<Map.Entry<IntTuple, MutableInteger>> i = TC.getIterator(); i.hasNext();) {
+    	Map.Entry<IntTuple, MutableInteger> eN = i.next();
+      iT = eN.getKey();
+      iH = eN.getValue();
+      if (iH.intValue() > ATable.countCutoff) {
         //add an ATable for that one
         //if(iT.getSource()!=6){continue;}
         //if((iT.getMiddle()!=2)&&(iT.getMiddle()!=7)&&(iT.getMiddle()!=8)){continue;}
@@ -396,7 +394,7 @@ public class HMM {
       aTable.save(GlobalParams.resultPath + "at.final");
     }
 
-    if (this.useStayGoProbs) {
+    if (HMM.useStayGoProbs) {
       if (!trigram) {
         sgTable.save(GlobalParams.resultPath + "sg.final");
       } else {
@@ -461,7 +459,6 @@ public class HMM {
     int[][] argmax; //maximizing previous state
     double[][] backward;//backward probabilities
     int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
 
     if (useFNull) {
 
@@ -775,13 +772,11 @@ public class HMM {
     }
 
     int numWords = 0, index, sent_no = 0;
-    ProbCountHolder[][] cache;
     double[][] sum; // forward probabilities
     double[][] max; //maximum probability
     IntPair[][] argmax; //maximizing previous state
     double[][] backward;//backward probabilities
     int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
 
 
     if (useFNull) {
@@ -808,7 +803,6 @@ public class HMM {
       int m = sentPair.f.getLength() - 1;
       double cross_entropy_sent = 0;
       double viterbi_cross_entropy_sent = 0;
-      int start = 0, inc = 1, bound;
       tpHandler.setPair(sentPair);
       alHandler.setPair(sentPair);
       alignment = new int[m + 1];
@@ -818,7 +812,6 @@ public class HMM {
       max = new double[m + 1][2 * l + 1];   //max{aj-1}max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
       argmax = new IntPair[m + 1][2 * l + 1]; //argmax {aj-1} max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
       backward = new double[m + 1][2 * l + 1]; // backward(j,i)=p(fj+1,..fm|aj=i) j=0..m
-      bound = 2 * l;
 
       sum[0][0] = 1; // the rest are 0, starting in state 0
       max[0][0] = 1; // the rest are 0, starting in state 0
@@ -1090,13 +1083,11 @@ public class HMM {
       alHandler = new AlHandlerHMM2(aTable);
     }
     int numWords = 0, index, sent_no = 0;
-    ProbCountHolder[][] cache;
     double[][][] sum; // forward probabilities
     double[][][] max; //maximum probability
     int[][][] argmax; //maximizing previous state
     double[][][] backward;//backward probabilities
     int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
     tpHandler = new TPHandler(tTable);
 
 
@@ -1398,15 +1389,11 @@ public class HMM {
       }
     }
     int numWords = 0, index, sent_no = 0;
-    WordEx eWord, fWord, eWordBare, eTag;
-    IntPair tmpPair = new IntPair();
-    ProbCountHolder[][] cache;
     double[][][] sum; // forward probabilities
     double[][][] max; //maximum probability
     IntPair[][][] argmax; //maximizing previous state
     double[][][] backward;//backward probabilities
     int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
 
     if (useFNull) {
       tpHandler = new TPHandlerNULL(tTable, fTable, 0);
@@ -1414,7 +1401,7 @@ public class HMM {
       tpHandler = new TPHandler(tTable);
     }
 
-    int MAX_FLDS = aTable.MAX_FLDS; // should make that better
+    int MAX_FLDS = ATableHMM2EQ.MAX_FLDS; // should make that better
 
 
     while ((sentPair = corpus.getNextPair(inTrain)) != null) {
@@ -1770,14 +1757,12 @@ public class HMM {
       alHandler = new AlHandlerHMM2(aTable);
     }
     int numWords = 0, index, sent_no = 0;
-    ProbCountHolder[][] cache;
     double[][][] sum; // forward probabilities
     double[][][] max; //maximum probability
     double[][][] max_backward; //maximum backward probability
     int[][][] argmax; //maximizing previous state
     double[][][] backward;//backward probabilities
     int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
     if (useFNull) {
       tpHandler = new TPHandlerNULL(tTable, fTable, 0);
     } else {
@@ -2198,14 +2183,12 @@ public class HMM {
     }
 
     int numWords = 0, index, sent_no = 0;
-    ProbCountHolder[][] cache;
     double[][] forward; // forward probabilities
     double[][] max; //maximum probability
     IntPair[][] argmax; //maximizing previous state
     double[][] backward;//backward probabilities
     double[][][][] sigma; // these are sigma probabilities
     int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
 
 
     if (useFNull) {
@@ -2523,7 +2506,7 @@ public class HMM {
     double perplexity = 0, viterbi_perplexity = 0;
     SentencePair sentPair;
     int numWords = 0, index;
-    WordEx eWord, fWord, eWordBare, eTag;
+    WordEx eWord, fWord;
     IntPair tmpPair = new IntPair();
     ProbCountHolder[][] cache;
     double[][] sum; // forward probabilities
@@ -2807,7 +2790,7 @@ public class HMM {
     double perplexity = 0, viterbi_perplexity = 0;
     SentencePair sentPair;
     int numWords = 0, index;
-    WordEx eWord, fWord, eWordBare, eTag;
+    WordEx eWord, fWord;
     IntPair tmpPair = new IntPair();
     ProbCountHolder[][] cache;
     double[][] sum; // forward probabilities
@@ -2816,7 +2799,7 @@ public class HMM {
     double[][] backward;//backward probabilities
     ATable[] tables;
     ATable tmpATable = null;
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
+    double unifunknown = 1 / (double) (SentenceHandler.sTableF.getMaxSimpleIds());
 
     while ((sentPair = corpus.getNextPair(inTrain)) != null) {
       int count = sentPair.getCount();
@@ -3124,7 +3107,7 @@ public class HMM {
     int[][] argmax; //maximizing previous state
     double[][] backward;//backward probabilities
     int[] viterbi_alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
-    double unifunknown = 1 / (double) (corpus.sTableF.getMaxSimpleIds());
+    double unifunknown = 1 / (double) (SentenceHandler.sTableF.getMaxSimpleIds());
 
     cacheG = new ProbCountHolder[corpus.getMaxLength() + 1];
     cacheS = new ProbCountHolder[corpus.getMaxLength() + 1];

@@ -13,19 +13,19 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class ATableHMMHolder {
-  private HashMap tables;
+  private HashMap<IntTuple, ATable> tables;
   private ATable uniform;
   private ATable smoothTable; // this table is optionally used for smoothing all other tables
   boolean smooth = true;
   int mask;
 
   public ATableHMMHolder() {
-    tables = new HashMap();
+    tables = new HashMap<IntTuple, ATable>();
   }
 
 
   public ATableHMMHolder(int mask) {
-    tables = new HashMap();
+    tables = new HashMap<IntTuple, ATable>();
     this.mask = mask;
   }
 
@@ -89,11 +89,11 @@ public class ATableHMMHolder {
       smoothTable.printProbs();
     }
 
-    for (Iterator i = tables.entrySet().iterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
-      wP = (IntTuple) eN.getKey();
+    for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
+    	Map.Entry<IntTuple, ATable> eN = i.next();
+      wP = eN.getKey();
       wP.print();
-      aT = (ATable) eN.getValue();
+      aT = eN.getValue();
       aT.printProbs();
     }
 
@@ -106,8 +106,8 @@ public class ATableHMMHolder {
     ATable aT;
 
 
-    for (Iterator i = tables.entrySet().iterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
+    for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
+    	Map.Entry<IntTuple, ATable> eN = i.next();
       aT = (ATable) eN.getValue();
       if (!aT.isPopulated()) {
         //remove aT
@@ -125,7 +125,6 @@ public class ATableHMMHolder {
    */
   public void save(String filename) {
 
-    ATable aT;
     IntTuple wP;
 
     try {
@@ -142,13 +141,12 @@ public class ATableHMMHolder {
 
       }
 
-      for (Iterator i = tables.entrySet().iterator(); i.hasNext();) {
-        Map.Entry eN = (Map.Entry) i.next();
+      for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
+      	Map.Entry<IntTuple, ATable> eN = i.next();
         wP = (IntTuple) eN.getKey();
         p.println(wP.toString());
         p.flush();
-        aT = (ATable) eN.getValue();
-        //aT.save(filename);
+        //eN.getValue().save(filename);
       }
 
 
@@ -164,7 +162,6 @@ public class ATableHMMHolder {
    */
   public void saveNames(String filename) {
 
-    ATable aT;
     IntTuple wP;
 
     try {
@@ -181,13 +178,12 @@ public class ATableHMMHolder {
 
       }
 
-      for (Iterator i = tables.entrySet().iterator(); i.hasNext();) {
-        Map.Entry eN = (Map.Entry) i.next();
-        wP = (IntTuple) eN.getKey();
+      for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
+      	Map.Entry<IntTuple, ATable> eN = i.next();
+        wP = eN.getKey();
         p.println(wP.toNameStringE());
         p.flush();
-        aT = (ATable) eN.getValue();
-        aT.save(filename);
+        eN.getValue().save(filename);
       }
 
 
@@ -203,7 +199,6 @@ public class ATableHMMHolder {
    */
   public void saveNames(int mask, String filename) {
 
-    ATable aT;
     IntTuple wP;
 
     try {
@@ -220,13 +215,12 @@ public class ATableHMMHolder {
 
       }
 
-      for (Iterator i = tables.entrySet().iterator(); i.hasNext();) {
-        Map.Entry eN = (Map.Entry) i.next();
-        wP = (IntTuple) eN.getKey();
+      for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
+      	Map.Entry<IntTuple, ATable> eN = i.next();
+        wP = eN.getKey();
         p.println(wP.toNameString(mask));
         p.flush();
-        aT = (ATable) eN.getValue();
-        aT.save(filename);
+        eN.getValue().save(filename);
       }
 
 
@@ -256,9 +250,9 @@ public class ATableHMMHolder {
       smoothTable.checkOK();
     }
 
-    for (Iterator i = tables.entrySet().iterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
-      aT = (ATable) eN.getValue();
+    for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
+      Map.Entry<IntTuple, ATable> eN = i.next();
+      aT = eN.getValue();
       if (GlobalParams.verbose || true) {
         System.out.println(((IntTuple) eN.getKey()).toNameString(mask));
       }

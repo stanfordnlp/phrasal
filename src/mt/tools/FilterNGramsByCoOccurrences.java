@@ -1,6 +1,5 @@
 package mt.tools;
 
-import mt.*;
 import mt.base.IString;
 
 import java.io.*;

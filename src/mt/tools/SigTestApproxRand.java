@@ -1,9 +1,7 @@
 package mt.tools;
 
-import java.io.IOException;
 import java.util.*;
 
-import mt.*;
 import mt.base.*;
 import mt.metrics.*;
 

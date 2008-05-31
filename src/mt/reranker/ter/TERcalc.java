@@ -49,11 +49,13 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+@SuppressWarnings( {"unused", "unchecked"} )
 public class TERcalc {
     /* Turn on if you want a lot of debugging info. */
     static final private boolean DEBUG = false;
 
-    public static TERalignment TER(Comparable[] hyp, Comparable[] ref) {
+
+		public static TERalignment TER(Comparable[] hyp, Comparable[] ref) {
 	return TER(hyp, ref, new TERcost());
     }
 

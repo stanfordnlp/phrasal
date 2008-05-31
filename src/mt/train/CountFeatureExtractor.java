@@ -1,11 +1,5 @@
 package mt.train;
 
-import edu.stanford.nlp.util.Index;
-
-import java.util.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -14,7 +8,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * 
  * @author Michel Galley
  */
-public class CountFeatureExtractor extends AbstractFeatureExtractor<String> {
+public class CountFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugPharaohFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));

@@ -2,30 +2,21 @@ package mt.textcat;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.objectbank.IteratorFromReaderFactory;
-import edu.stanford.nlp.objectbank.XMLBeginEndIterator;
-import edu.stanford.nlp.objectbank.DelimitRegExIterator;
 import edu.stanford.nlp.objectbank.ReaderIteratorFactory;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.io.EncodingPrintWriter;
-import edu.stanford.nlp.io.RegExFileFilter;
 import edu.stanford.nlp.io.FileSequentialCollection;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.classify.GeneralDataset;
 import edu.stanford.nlp.classify.RVFDataset;
 import edu.stanford.nlp.classify.LogPrior;
-import edu.stanford.nlp.classify.LogisticClassifier;
 import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.ling.RVFDatum;
-import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.process.ChineseDocumentToSentenceProcessor;
 
-import java.util.regex.*;
 import java.util.*;
 import java.io.*;
 
@@ -46,7 +37,7 @@ public class TextCat {
       ObjectBank<List<String>> wl = getWebData(Collections.singleton(trainDir+"/wl"+suffix+"/c/"));
       ObjectBank<List<String>> ng = getWebData(Collections.singleton(trainDir+"/ng"+suffix+"/c/"));
       
-      Map<String,ObjectBank<List<String>>> data = new HashMap();
+      Map<String,ObjectBank<List<String>>> data = new HashMap<String,ObjectBank<List<String>>>();
       data.put("nw", nw);
       data.put("wl", wl);
       data.put("ng", ng);
@@ -84,7 +75,7 @@ public class TextCat {
       String suffix = prop.getProperty("suffix", "");
       ObjectBank<List<String>> nwTest = getWebData(Collections.singleton(testDir+"/mt06/nw"+suffix+"/"));
       ObjectBank<List<String>> webTest = getWebData(Collections.singleton(testDir+"/mt06/ng"+suffix+"/"));
-      Map<String,ObjectBank<List<String>>> data = new HashMap();
+      Map<String,ObjectBank<List<String>>> data = new HashMap<String,ObjectBank<List<String>>>();
       data.put("nw", nwTest);
       data.put("web", webTest);
       
@@ -110,24 +101,25 @@ public class TextCat {
       for (File file : files) {
         List<String> doc = Arrays.asList(StringUtils.slurpFile(file.getAbsolutePath(), "utf-8").split("\\s+"));
 //        EncodingPrintWriter.err.println(doc);
-        Pair<String,ClassicCounter> probs = label(doc, classifier);
+        Pair<String,ClassicCounter<String>> probs = label(doc, classifier);
         System.out.println(file+"\t"+probs.first()+"\t"+probs.second());
       }
     }
   }
 
-  private static Pair<String,ClassicCounter> label(List<String> doc, LinearClassifier classifier) {
-    ClassicCounter features = getFeatures(doc);
+  @SuppressWarnings("unchecked")
+	private static Pair<String,ClassicCounter<String>> label(List<String> doc, LinearClassifier classifier) {
+    ClassicCounter<String> features = getFeatures(doc);
     RVFDatum datum = new RVFDatum(features);
-    ClassicCounter probs = classifier.probabilityOf(datum);
-    Object guess = Counters.argmax(probs);
+    ClassicCounter<String> probs = classifier.probabilityOf(datum);
+    String guess = Counters.argmax(probs);
     if (!guess.equals("nw")) { guess = "web"; }
-    return new Pair(guess, probs);
+    return new Pair<String,ClassicCounter<String>>(guess, probs);
   }
   
   private static ObjectBank<List<String>> getWebData(Collection<String> dirPath) {
     
-    IteratorFromReaderFactory<List<String>> ifrf = new IteratorFromReaderFactory() {
+    IteratorFromReaderFactory<List<String>> ifrf = new IteratorFromReaderFactory<List<String>>() {
 
       public Iterator<List<String>> getIterator(Reader r) {
         String doc = StringUtils.slurpReader(r);
@@ -137,14 +129,14 @@ public class TextCat {
     };
     
     FileSequentialCollection files = new FileSequentialCollection(dirPath, ".norm", true);
-    List<File> files1 = new ArrayList(files);
+    List<File> files1 = new ArrayList<File>(files);
     if (files1.size() > 600) {
       Random random = new Random(42);
       Collections.shuffle(files1, random);
       files1 = files1.subList(0,600);
     }
     ReaderIteratorFactory rif = new ReaderIteratorFactory(files1, "UTF-8");
-    ObjectBank<List<String>> ob = new ObjectBank(rif, ifrf);
+    ObjectBank<List<String>> ob = new ObjectBank<List<String>>(rif, ifrf);
     
     return ob;
   }
@@ -158,7 +150,7 @@ public class TextCat {
       System.err.println(label);
       ObjectBank<List<String>> docs = data.get(label);
       for (List<String> doc : docs) {
-        ClassicCounter features = getFeatures(doc);
+        ClassicCounter<String> features = getFeatures(doc);
         RVFDatum datum = new RVFDatum(features, label);        
         dataset.add(datum);        
         if (!label.equals("nw")) {
@@ -174,13 +166,13 @@ public class TextCat {
       dataWeightsArray[i] = dataWeights.get(i);
     }
     
-    return new Pair(dataset, dataWeightsArray);
+    return new Pair<GeneralDataset,float[]>(dataset, dataWeightsArray);
   }
 
   private static ChineseDocumentToSentenceProcessor cdtsp = new ChineseDocumentToSentenceProcessor();
   
-  private static ClassicCounter getFeatures(List<String> doc) {
-    ClassicCounter features = new ClassicCounter();
+  private static ClassicCounter<String> getFeatures(List<String> doc) {
+    ClassicCounter<String> features = new ClassicCounter<String>();
 
     for (String word : doc) {
       features.setCount(word, 1.0);

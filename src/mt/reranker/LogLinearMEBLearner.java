@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Arrays;
 
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
+import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.CGMinimizer;
 
@@ -75,7 +76,7 @@ public class LogLinearMEBLearner extends AbstractOneOfManyClassifier {
   public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl);
     ObjF objF = new ObjF();
-    Minimizer minim = new CGMinimizer(false);
+    Minimizer<DiffFunction> minim = new CGMinimizer(false);
     wts = minim.minimize(objF, 1e-4, wts);
   }
 }

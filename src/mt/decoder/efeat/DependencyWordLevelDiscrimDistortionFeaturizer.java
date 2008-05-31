@@ -3,7 +3,6 @@ package mt.decoder.efeat;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.HashMap;
 import java.io.LineNumberReader;
 import java.io.FileReader;
@@ -15,11 +14,8 @@ import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.IBMModel1;
-import mt.base.IString;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
-
-import edu.stanford.nlp.ling.WordTag;
 
 /**
  * 
@@ -29,10 +25,6 @@ import edu.stanford.nlp.ling.WordTag;
  */
 public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK, String> {
 
-  private static boolean PAIR_OF_SOURCE_WORDS = true; // always true
-  private static boolean FIRST_OF_SOURCE_WORDS = true;
-  private static boolean SECOND_OF_SOURCE_WORDS = true;
-  private static boolean USE_COARSE_DISTORATION_TYPES = true;
   private static boolean TESTING = false;
 
   private int lineCount = 0;
@@ -51,19 +43,15 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
     for (String arg : args) {
       if ("PAIR_OF_SOURCE_WORDS".equals(arg)) {
         System.err.println("PAIR_OF_SOURCE_WORDS=true");
-        PAIR_OF_SOURCE_WORDS=true;
       }
       if ("FIRST_OF_SOURCE_WORDS".equals(arg)) {
         System.err.println("FIRST_OF_SOURCE_WORDS=true");
-        FIRST_OF_SOURCE_WORDS=true;
       }
       if ("SECOND_OF_SOURCE_WORDS".equals(arg)) {
         System.err.println("SECOND_OF_SOURCE_WORDS=true");
-        SECOND_OF_SOURCE_WORDS=true;
       }
       if ("USE_COARSE_DISTORATION_TYPES".equals(arg)) {
         System.err.println("USE_COARSE_DISTORATION_TYPES=true");
-        USE_COARSE_DISTORATION_TYPES=true;
       }
       if ("TESTING".equals(arg)) {
         System.err.println("TESTING=true");

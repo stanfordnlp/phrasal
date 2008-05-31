@@ -178,7 +178,8 @@ public class LegacyHypothesisList {
     }
   }
   
-  public CompactHypothesisList extractFeatures(int dataPointIdx) 
+  @SuppressWarnings("deprecation")
+	public CompactHypothesisList extractFeatures(int dataPointIdx) 
     throws IOException {
 
     if (alignments != null) {
@@ -209,7 +210,7 @@ public class LegacyHypothesisList {
         appendFeaturesFromFile(featBr, candFeats);
       }
 
-      Set<Integer> featureIndices = new TreeSet(candFeats.keySet());
+      Set<Integer> featureIndices = new TreeSet<Integer>(candFeats.keySet());
       
       int[] fIndex = new int[featureIndices.size()];
       float[] fValue = new float[featureIndices.size()];

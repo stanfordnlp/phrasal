@@ -26,15 +26,13 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	
 	static public final double MOSES_LM_UNKNOWN_WORD_SCORE = -100; // in sri lm -99 is -infinity
 
-  public NGramLanguageModelFeaturizer(String... args) throws IOException {
-    if(args.length != 2)
+	public NGramLanguageModelFeaturizer<IString> fromFile(String... args) throws IOException {
+		if(args.length != 2)
       throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
-    this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
-    featureName = args[1];
-    featureNameWithColen = featureName + ":";
-    this.ngramReweighting = false;
-    this.lmOrder = lm.order();
-  }
+		LanguageModel<IString> lm = ARPALanguageModel.load(args[0]);
+		
+		return new NGramLanguageModelFeaturizer<IString>(lm, args[1], false);
+	}
 
 	public NGramLanguageModelFeaturizer(LanguageModel<TK> lm) {
 		this.lm = lm;

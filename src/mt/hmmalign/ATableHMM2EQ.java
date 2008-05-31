@@ -65,7 +65,6 @@ public class ATableHMM2EQ extends ATable {
    * Get the probability p(i|i_prev,i_prev2,l) i is from 1 to 2L+1 and i_prev,i_prev2 are in the same set as well without 2L+1
    */
   public float getProbHMM(int i, int i_prev, int j_prev2, int l) {
-    boolean empty = false;
 
     if ((i_prev == 0) && (j_prev2 == MAX_FLDS)) {
       if (i == 2 * l + 1) {
@@ -368,9 +367,9 @@ public class ATableHMM2EQ extends ATable {
     //first make the params sum to 1, put params[0] into pEmpty
     //then put normalzied params in prob_arr
 
-    float total, prob_mass;
-    float p, prob;
-    int diff, jump, jump_1;
+    float total;
+    float prob;
+    int jump;
     float uniform = 1 / (float) (2 * MAX_LENGTH + 1);
 
     total = 0;
@@ -524,7 +523,6 @@ public class ATableHMM2EQ extends ATable {
   public void initialize(ATable a1) {
 
     ATableHMM2EQ a = (ATableHMM2EQ) a1; //a little dirty here
-    this.MAX_FLDS = a.MAX_FLDS;
     this.MAX_LENGTH = a.MAX_LENGTH;
     params = new float[2 * MAX_LENGTH + 1][2 * MAX_FLDS];
     counts = new float[2 * MAX_LENGTH + 1][2 * MAX_FLDS];
@@ -745,7 +743,6 @@ public class ATableHMM2EQ extends ATable {
    */
 
   public void save(String filename) {
-    int ii;
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
       //MAX_LENGTH
@@ -786,13 +783,7 @@ public class ATableHMM2EQ extends ATable {
    * jump probabilities
    */
   public double DKL(ATableHMM a) {
-
-    double p, q;
-    double d = 0;
-
     return 0;
-
-
   }
 
 
@@ -802,7 +793,7 @@ public class ATableHMM2EQ extends ATable {
 
 
   public void read(String filename) {
-    int ii, current;
+    int current;
     String line, token;
     StringTokenizer st;
     try {
@@ -867,7 +858,6 @@ public class ATableHMM2EQ extends ATable {
    */
 
   public void readHMM1(String filename) {
-    int ii;
     String line, token;
     try {
       InFile in = new InFile(filename);

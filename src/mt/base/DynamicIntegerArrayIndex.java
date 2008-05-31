@@ -2,7 +2,7 @@ package mt.base;
 
 import java.util.*;
 
-public class DynamicIntegerArrayIndex implements Iterable, IntegerArrayIndex {
+public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIndex {
 	  public static final long serialVersionUID = 127L;
 	    
 	  static final int INIT_SZ = 1<<10;
@@ -132,11 +132,11 @@ public class DynamicIntegerArrayIndex implements Iterable, IntegerArrayIndex {
 	    return load;
 	  }
 
-    public Iterator iterator() {
+    public Iterator<int[]> iterator() {
       return new Itr();
     }
 
-    private class Itr implements Iterator {
+    private class Itr implements Iterator<int[]> {
 
       int cursor = 0;
 
@@ -144,7 +144,7 @@ public class DynamicIntegerArrayIndex implements Iterable, IntegerArrayIndex {
         return cursor < size();
       }
 
-      public Object next() {
+      public int[] next() {
          return get(cursor++);
       }
 

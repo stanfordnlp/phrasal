@@ -18,7 +18,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * 
  * @author Michel Galley
  */
-public class PharaohFeatureExtractor extends AbstractFeatureExtractor<String> {
+public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugPharaohFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
@@ -37,7 +37,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor<String> {
   int numPasses = 1; 
 
   final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
-  final Index fLexIndex = new Index(), eLexIndex = new Index();
+  final Index<Integer> fLexIndex = new Index<Integer>(), eLexIndex = new Index<Integer>();
 
   IntArrayList feCounts = new IntArrayList();
   IntArrayList fCounts = new IntArrayList();
@@ -49,7 +49,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor<String> {
 
   public static final IString NULL_STR = new IString("NULL");
 
-  public void init(Properties prop, Index featureIndex, AlignmentTemplates alTemps) {
+  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop, featureIndex, alTemps);
     // Set counts of "NULL":
     fLexCounts.add(0);
@@ -65,9 +65,9 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor<String> {
     if(!ibmLexModel)
       alTemps.enableAlignmentCounts(true);
     // Filtering:
-    double phiFilter = Double.parseDouble
+    phiFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
-    double lexFilter = Double.parseDouble
+    lexFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_LEX_FILTER_OPT,"-1e30"));
   }
 
@@ -209,13 +209,6 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor<String> {
   @SuppressWarnings("unchecked")
   private int indexOfELex(IString e, boolean add)
   { return eLexIndex.indexOf(e.getId(), add); }
-
-  /**
-   * Return the target-language phrase indexed by idx.
-   */
-  private int[] getLex(int idx) {
-    return (int[]) lexIndex.get(idx);
-  }
 
   private static void addCountToArray(IntArrayList list, int idx) {
     if(idx < 0)

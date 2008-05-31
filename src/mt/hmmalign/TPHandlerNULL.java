@@ -50,7 +50,7 @@ public class TPHandlerNULL extends TPHandler {
    */
 
   public void init() {
-    WordEx fWord, eWord;
+    WordEx fWord;
 
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;

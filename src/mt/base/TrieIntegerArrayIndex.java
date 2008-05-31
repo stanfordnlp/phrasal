@@ -3,7 +3,6 @@ package mt.base;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
-import java.io.Serializable;
 
 /**
  * Implementation of IntegerArrayIndex as a trie. This trie implementation 

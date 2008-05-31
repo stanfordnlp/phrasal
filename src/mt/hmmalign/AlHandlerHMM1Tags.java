@@ -597,10 +597,6 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
 
   public boolean wantadd(IntTuple iT) {
-
-    int tag;
-    String nameTag;
-    boolean containsNN = false, containsJJ = false;
     return true;
     /*
      for(int i=0;i<iT.numElements;i++){

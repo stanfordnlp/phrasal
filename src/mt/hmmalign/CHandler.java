@@ -40,7 +40,6 @@ public class CHandler extends AlHandler {
 
 
   public void init() {
-    WordEx fWord, eWord;
     int id;
     total = 0;
     l = sentPair.e.getLength() - 1;
@@ -53,7 +52,6 @@ public class CHandler extends AlHandler {
     total = 0;
 
     for (int i = 0; i <= l; i++) {
-      eWord = sentPair.e.getWord(i);
       if (eTags) {
         id = sentPair.e.getWord(i).getIndex();
       } else {

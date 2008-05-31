@@ -11,8 +11,6 @@ import mt.base.Featurizable;
 import mt.base.IBMModel1;
 import mt.base.IString;
 import mt.base.Sequence;
-import mt.base.IBMModel1.PartialTargetFeatureState;
-import mt.base.IBMModel1.PhrasePrecomputePTarget;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 

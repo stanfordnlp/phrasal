@@ -9,7 +9,6 @@ import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.Scorer;
 import mt.decoder.util.State;
 import mt.metrics.*;
-import mt.metrics.BLEUMetric.BLEUIncrementalMetric;
 
 /**
  * 
@@ -139,14 +138,10 @@ public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, 
 		public double score() {
 			double score;
 			if (maxScore) { 
-				double mul= ((BLEUIncrementalMetric)lossIncMetric).getMultiplier();
 				double evalScore = lossIncMetric.score();
-				double pSlack = Math.min(evalScore, Math.max(evalScore - classifierScore,0));
 				lossIncMetric.size();
 				score = (lossIncMetric != null ? 10*evalScore + classifierScore : classifierScore);
-				// score = (lossIncMetric != null ? Math.max(Math.min(classifierScore, mul), 0) + 3*lossIncMetric.score() : classifierScore);
-			} else {
-				
+			} else {				
 				double eScore = (lossIncMetric != null ? lossIncMetric.score() : 0);
 				if (eScore >= evalScoreCap) return Double.NEGATIVE_INFINITY;
 				score = (lossIncMetric != null ? classifierScore - eScore : classifierScore);

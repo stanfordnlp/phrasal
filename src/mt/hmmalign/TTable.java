@@ -15,7 +15,7 @@ import java.util.StringTokenizer;
 
 
 public class TTable {
-  private HashMap tMap;
+  private HashMap<IntPair, ProbCountHolder> tMap;
   private DoubleIntHolder[] totals;
 
   static double PROB_CUTOFF = 1e-7;
@@ -25,7 +25,7 @@ public class TTable {
   boolean english;
 
   public TTable(boolean english) {
-    tMap = new HashMap();
+    tMap = new HashMap<IntPair, ProbCountHolder>();
     this.english = english;
     //maybe change that later
     if (english) {
@@ -54,7 +54,7 @@ public class TTable {
    */
 
   public ProbCountHolder get(IntPair wP) {
-    return (ProbCountHolder) (tMap.get(wP));
+    return tMap.get(wP);
   }
 
 
@@ -63,7 +63,7 @@ public class TTable {
   }
 
 
-  public Iterator getIterator() {
+  public Iterator<Map.Entry<IntPair, ProbCountHolder>> getIterator() {
     return tMap.entrySet().iterator();
   }
 
@@ -114,11 +114,11 @@ public class TTable {
     IntPair wP;
     ProbCountHolder pcH;
     DoubleIntHolder diH;
-    int e, f;
+    int e;
 
 
-    for (Iterator i = tMap.entrySet().iterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
+    for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
+    	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
       wP = (IntPair) eN.getKey();
       pcH = (ProbCountHolder) eN.getValue();
       e = wP.getSource();
@@ -147,8 +147,8 @@ public class TTable {
     }
 
     boolean erased = false;
-    for (Iterator i = tMap.entrySet().iterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
+    for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
+    	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
       wP = (IntPair) eN.getKey();
       pcH = (ProbCountHolder) eN.getValue();
       e = wP.getSource();
@@ -187,10 +187,10 @@ public class TTable {
 
       //System.out.println("Collectiong counts again\n");
       totals = new DoubleIntHolder[totals.length];
-      for (Iterator i = tMap.entrySet().iterator(); i.hasNext();) {
-        Map.Entry eN = (Map.Entry) i.next();
-        wP = (IntPair) eN.getKey();
-        pcH = (ProbCountHolder) eN.getValue();
+      for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
+      	Map.Entry<IntPair, ProbCountHolder> eN =  i.next();
+        wP = eN.getKey();
+        pcH = eN.getValue();
         e = wP.getSource();
         diH = totals[e];
         if (diH == null) {
@@ -236,12 +236,12 @@ public class TTable {
     IntPair wP;
     ProbCountHolder pcH;
     DoubleIntHolder diH;
-    int e, f, cnt;
+    int e, cnt;
     int zeroW = 0;
 
 
-    for (Iterator i = tMap.entrySet().iterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
+    for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
+    	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
       wP = (IntPair) eN.getKey();
       pcH = (ProbCountHolder) eN.getValue();
       e = wP.getSource();
@@ -290,8 +290,8 @@ public class TTable {
 
     ProbCountHolder pcH;
 
-    for (Iterator i = tMap.entrySet().iterator(); i.hasNext();) {
-      Map.Entry eN = (Map.Entry) i.next();
+    for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
+    	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
       pcH = (ProbCountHolder) eN.getValue();
       pcH.swap();
 
@@ -313,13 +313,11 @@ public class TTable {
       IntPair iP;
       ProbCountHolder pcH;
 
-      for (Iterator i = tMap.entrySet().iterator(); i.hasNext();) {
-        Map.Entry eN = (Map.Entry) i.next();
+      for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
+      	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
         pcH = (ProbCountHolder) eN.getValue();
         iP = (IntPair) eN.getKey();
         p.println(iP.getTarget() + " " + iP.getSource() + " " + pcH.getProb());
-
-
       }
 
       p.close();

@@ -12,7 +12,7 @@ import mt.train.AlignmentGrid.RelativePos;
  * 
  * @author Michel Galley
  */
-public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor<String> {
+public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugLexicalReorderingFeatureExtractor";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -35,14 +35,13 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor<
   private int modelNum, modelSize, modelOrder=1;
 
   private DirectionTypes directionType;
-  private ReorderingTypes reorderingType;
   private LanguageTypes languageType;
   private boolean hasSwap = true;
   private boolean phrasalContext = false;
 
   private static double LAPLACE_SMOOTHING = .5;
 
-  public void init(Properties prop, Index featureIndex, AlignmentTemplates alTemps) {
+  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
     boolean fail = false;
     String type = prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
@@ -188,7 +187,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor<
     if(fi == sent.f().size() && ei == sent.e().size()) return true;
     if(fi == sent.f().size() || ei == sent.e().size()) return false;
     if(phrasalContext) {
-      AlGridCell cell = alGrid.cellAt(fi,ei);
+      AlGridCell<AlignmentTemplateInstance> cell = alGrid.cellAt(fi,ei);
       if(DEBUG) {
         System.err.printf("relative position: %s\n",pos.toString());
         System.err.printf("orientation at: f=%d e=%d\n",fi,ei);

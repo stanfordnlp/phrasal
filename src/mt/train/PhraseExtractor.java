@@ -1,8 +1,5 @@
 package mt.train;
 
-import java.util.*;
-
-
 /**
  * Interface for phrase extraction (or, more specifically, extraction of {@link AlignmentTemplateInstance} 
  * objects). The main member of this interface -- extractPhrases -- does not explicitely return a list 

@@ -39,7 +39,7 @@ public class AlHandlerHMM2EQ extends AlHandler {
   public double getProb(int i, int j, int[] alignment) {
 
     if (j == 1) {
-      return a.getProb(i, 0, a.MAX_FLDS, l);
+      return a.getProb(i, 0, ATableHMM2EQ.MAX_FLDS, l);
     }
     return a.getProb(i, alignment[j - 1], alignment[j - 2], l);
 
@@ -60,7 +60,7 @@ public class AlHandlerHMM2EQ extends AlHandler {
 
     if (j == 1) {
       i_p = 0;
-      i_pp = a.MAX_FLDS;
+      i_pp = ATableHMM2EQ.MAX_FLDS;
     } else {
       i_p = alignment[j - 1];
       i_pp = alignment[j - 2];

@@ -27,7 +27,7 @@ public class GreedyDeltaOracleCorpusScoreFinder {
   public static final int NUM_ITERS = 10;
   public static final double EPSILON = 0.0001;
   public StatsFactory sf = new SegStatsFactory();
-  public Class scorerClass = Bleu.class;
+  public Class<? extends Scorer> scorerClass = Bleu.class;
 
   public GreedyDeltaOracleCorpusScoreFinder() {
     this("bleu");
@@ -139,7 +139,6 @@ public class GreedyDeltaOracleCorpusScoreFinder {
 
       for(int i = 0; i < hypotheses.length; i++) {
         double best = b.score();
-        double oldScore = best;
         int bestHyp = hyps[i];
 
         b.sub(hypotheses[i][hyps[i]]);

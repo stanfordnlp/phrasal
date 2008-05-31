@@ -140,7 +140,6 @@ public class ATableHMM2 extends ATable {
 
     float val = (float) val1;
     int jump, jump_1;
-    boolean emptyjump, emptyjump_1;
 
     if ((i_prev == 0) && (i_prev2 == 0)) {
       incCountInitPos(i, val);
@@ -150,14 +149,11 @@ public class ATableHMM2 extends ATable {
         i_prev2 -= l;
       }
       if (i_prev > l) {
-        emptyjump_1 = true;
         jump_1 = -MAX_LENGTH;
       } else {
-        emptyjump_1 = false;
         jump_1 = i_prev - i_prev2;
       }
       if ((i > l) && (i <= 2 * l)) {
-        emptyjump = true;
         jump = -MAX_LENGTH;
         if ((i - l != i_prev) && (i != i_prev)) {
           return;
@@ -267,9 +263,9 @@ public class ATableHMM2 extends ATable {
     //first make the params sum to 1, put params[0] into pEmpty
     //then put normalzied params in prob_arr
 
-    float total, prob_mass;
-    float p, prob;
-    int diff, jump, jump_1;
+    float total;
+    float prob;
+    int jump, jump_1;
 
     total = 0;
 
@@ -610,7 +606,6 @@ public class ATableHMM2 extends ATable {
    */
 
   public void save(String filename) {
-    int ii;
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
       //MAX_LENGTH
@@ -652,7 +647,7 @@ public class ATableHMM2 extends ATable {
 
 
   public void read(String filename) {
-    int ii, current;
+    int current;
     String line, token;
     StringTokenizer st;
     try {
@@ -717,7 +712,6 @@ public class ATableHMM2 extends ATable {
    */
 
   public void readHMM1(String filename) {
-    int ii;
     String line, token;
     try {
       InFile in = new InFile(filename);
@@ -792,13 +786,7 @@ public class ATableHMM2 extends ATable {
    * jump probabilities
    */
   public double DKL(ATableHMM a) {
-
-    double p, q;
-    double d = 0;
-
     return 0;
-
-
   }
 
 

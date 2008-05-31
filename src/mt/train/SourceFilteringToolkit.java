@@ -31,7 +31,6 @@ public class SourceFilteringToolkit {
   @SuppressWarnings("unchecked")
   public static Sequence<IString>[] getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF) {
     AlignmentTemplates tmpSet = new AlignmentTemplates();
-    ArrayList<Sequence<IString>> list = new ArrayList<Sequence<IString>>();
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     //filterFromDev = true;  
     try {

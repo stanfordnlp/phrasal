@@ -42,6 +42,7 @@ Matthew Snover (snover@cs.umd.edu)
 
 
 /* Storage Class for TER alignments */
+@SuppressWarnings( {"unused", "unchecked"} )
 public class TERalignment {
     public String toString() {
 	String s = "Ref: " + join(" ", ref) + 

@@ -169,9 +169,6 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeat
     // instead, take the startPos and EndPos of current foreign translation?
     int start = f.foreignPosition;
     int end = f.foreignPosition+f.foreignPhrase.size()-1;
-    int e_start = f.translationPosition;
-    int e_end = f.translationPosition+f.translatedPhrase.size()-1;
-    Sequence englishPhrase = f.translatedPhrase;
 
     for (int curr = start; curr < end; curr++) {
       int next = curr+1;
@@ -426,7 +423,6 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeat
 
   private List<FeatureValue<String>> extractConnectionFeaturesWithNextPhrase(
     Featurizable<TK,String> f) {
-    List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>();
     int curr = f.foreignPosition+f.foreignPhrase.size()-1;
     int firstWordPositionOfNextPhrase = f.foreignPosition+f.foreignPhrase.size();
 

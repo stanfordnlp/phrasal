@@ -26,7 +26,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
  *
  * @author Michel Galley
  */
-public class AlignmentTemplates extends AbstractCollection {
+public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
 
   public static final String DEBUG_PROPERTY = "DebugAlignmentTemplate";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -133,8 +133,11 @@ public class AlignmentTemplates extends AbstractCollection {
     alTemp.setAKey(aIdx);
   }
 
-  public Iterator iterator()
-  { return index.iterator(); }
+  public Iterator<AlignmentTemplate> iterator()
+  { 
+  	throw new UnsupportedOperationException();
+  }
+  	
 
   public int size()
   { return index.size(); }
@@ -167,14 +170,6 @@ public class AlignmentTemplates extends AbstractCollection {
   @SuppressWarnings("unchecked")
   private int indexOf(AlignmentTemplate alTemp, boolean add)
   { return index.indexOf(new int[] {indexOfF(alTemp, add), indexOfE(alTemp, add)}, add); }
-
-  /**
-   * Get source-language and target-language indices for
-   * alignment template indexed by idx.
-   */
-  private int[] get(int idx) {
-    return (int[]) index.get(idx);
-  }
 
   /**
    * Return index for source-language phrase in alTemp.

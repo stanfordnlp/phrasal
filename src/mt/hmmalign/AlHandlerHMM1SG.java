@@ -58,7 +58,6 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
    * get the probability p choose i for j
    */
   public double getProb(int i, int j, int[] alignment) {
-    int ireal = i;
     double prob = 0;
     //System.out.println(" getting prob "+i+" "+j);
 

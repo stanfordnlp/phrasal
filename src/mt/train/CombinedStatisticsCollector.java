@@ -3,12 +3,10 @@ package mt.train;
 //it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap<K>
 
 
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.StringUtils;
 
 import java.util.*;
 import java.io.*;
-import java.lang.reflect.Constructor;
 import java.util.zip.GZIPInputStream;
 
 
@@ -60,8 +58,6 @@ public class CombinedStatisticsCollector {
    */
   public void collectFromTrainingCorpus(String fCorpus, String eCorpus, String a1Corpus, String a2Corpus, int numLines) {
     
-    Runtime rt = Runtime.getRuntime();
-    long prePhraseTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
@@ -160,12 +156,9 @@ public class CombinedStatisticsCollector {
     public static void main(String[] args) {
     Properties prop = StringUtils.argsToProperties(args);
     String fCorpus = prop.getProperty("fCorpus");
-    String fDevCorpus = prop.getProperty("fDevCorpus");
     String eCorpus = prop.getProperty("eCorpus");
     String align1 = prop.getProperty("align1");
     String align2 = prop.getProperty("align2");
-    String refFile = prop.getProperty("refFile");
-    boolean noWrite = (prop.getProperty("noWrite") != null);
     int numLines = Integer.parseInt(prop.getProperty("numLines","-1"));
     String clsString = prop.getProperty("collectors");
     if(fCorpus == null || eCorpus == null || align1 == null || align2 == null || clsString == null)

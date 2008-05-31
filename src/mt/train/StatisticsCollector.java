@@ -1,9 +1,5 @@
 package mt.train;
 
-import edu.stanford.nlp.stats.ClassicCounter;
-
-import java.util.List;
-
 
 /**
  * Interface for collecting global statistics from training data.

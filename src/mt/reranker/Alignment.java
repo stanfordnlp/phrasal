@@ -179,8 +179,7 @@ public class Alignment {
       }
       sb.append("\n");
     */
-    for (Object o : en_zh.entrySet()) {
-      Map.Entry<Integer, List<Integer>> entry = (Map.Entry<Integer, List<Integer>>) o;
+    for (Map.Entry<Integer, List<Integer>> entry : en_zh.entrySet()) {
       int e = entry.getKey();
       List<Integer> l = entry.getValue();
       sb.append(e);

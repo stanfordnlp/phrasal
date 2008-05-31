@@ -106,7 +106,7 @@ public class Model1Aligner {
       }
 
       //System.out.println("aligning " + source[i] + " to " + (best == -1 ? "NULL" : target[best]));
-      ArrayList l = new ArrayList();
+      ArrayList<Integer> l = new ArrayList<Integer>();
       l.add(best);
       ret.add(l);
       ret.score += bestProb;

@@ -10,7 +10,6 @@ import mt.decoder.feat.*;
 import mt.decoder.h.*;
 import mt.decoder.inferer.*;
 import mt.decoder.inferer.impl.MultiBeamDecoder;
-import mt.decoder.inferer.impl.MultiBeamDecoder.MultiBeamDecoderBuilder;
 import mt.decoder.recomb.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
@@ -1158,8 +1157,6 @@ public class PseudoMoses {
 				  List<? extends ScoredFeaturizedTranslation<IString, String>> sfTrans = nbestLists.nbestLists().get(transIdx);
 				  List<List<FeatureValue<String>>> featureVectors = new ArrayList<List<FeatureValue<String>>>(sfTrans.size());
 				  
-				  double trueOracle = Double.NEGATIVE_INFINITY;
-				  int loc = 0;
 				 /*  { int tI = -1;
 				  for (ScoredFeaturizedTranslation<IString, String> sfTran : sfTrans) { tI++;
 				  	double score = -((TERMetric)learningMetric).calcTER(sfTran, transIdx);

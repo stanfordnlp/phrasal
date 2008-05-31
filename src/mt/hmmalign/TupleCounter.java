@@ -4,6 +4,7 @@ package mt.hmmalign;
 import edu.stanford.nlp.util.MutableInteger;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 
 /**
@@ -14,7 +15,7 @@ import java.util.Iterator;
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 public class TupleCounter {
-  private HashMap map = new HashMap();
+  private HashMap<IntTuple, MutableInteger> map = new HashMap<IntTuple, MutableInteger>();
 
   public void add(IntTuple iT, int count) {
 
@@ -43,7 +44,7 @@ public class TupleCounter {
   }
 
 
-  public Iterator getIterator() {
+  public Iterator<Map.Entry<IntTuple, MutableInteger>> getIterator() {
 
     return map.entrySet().iterator();
 

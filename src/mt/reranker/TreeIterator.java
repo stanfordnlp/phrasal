@@ -7,20 +7,20 @@ import edu.stanford.nlp.objectbank.IteratorFromReaderFactory;
 import java.io.BufferedReader;
 import java.io.Reader;
 import java.util.Iterator;
+import edu.stanford.nlp.trees.Tree;
 
-
-public class TreeIterator extends AbstractIterator {
+public class TreeIterator extends AbstractIterator<Tree> {
 
   private BufferedReader in;
-  private Object nextToken;
-  private Function op;
+  private Tree nextToken;
+  private Function<String,Tree> op;
   private boolean inTree = false;
 
   public TreeIterator(Reader in) {
     this(in, new TreeParser());
   }
 
-  public TreeIterator(Reader in, Function op) {
+  public TreeIterator(Reader in, Function<String,Tree> op) {
     this.in = new BufferedReader(in);
     this.op = op;
     setNext();
@@ -30,7 +30,7 @@ public class TreeIterator extends AbstractIterator {
     return nextToken != null;
   }
 
-  public Object parseString(String s) {
+  public Tree parseString(String s) {
     return op.apply(s);
   }
 
@@ -39,8 +39,8 @@ public class TreeIterator extends AbstractIterator {
     nextToken = parseString(s);
   }
 
-  public Object next() {
-    Object token = nextToken;
+  public Tree next() {
+    Tree token = nextToken;
     setNext();
     return token;
   }
@@ -71,25 +71,25 @@ public class TreeIterator extends AbstractIterator {
     return null;
   }
 
-  public static IteratorFromReaderFactory getFactory(Function op) {
+  public static IteratorFromReaderFactory<Tree> getFactory(Function<String,Tree> op) {
     return new TreeIterator.TreeIteratorFactory(op);
   }
 
-  public static IteratorFromReaderFactory getFactory() {
+  public static IteratorFromReaderFactory<Tree> getFactory() {
     return new TreeIterator.TreeIteratorFactory(new TreeParser());
   }
 
 
   
-  static class TreeIteratorFactory implements IteratorFromReaderFactory {
-    private Function op;
+  static class TreeIteratorFactory implements IteratorFromReaderFactory<Tree> {
+    private Function<String,Tree> op;
 
 
-    public TreeIteratorFactory(Function op) {
+    public TreeIteratorFactory(Function<String,Tree> op) {
       this.op = op;
     }
 
-    public Iterator getIterator(Reader r) {
+    public Iterator<Tree> getIterator(Reader r) {
       return new TreeIterator(r, op);
     }
   }

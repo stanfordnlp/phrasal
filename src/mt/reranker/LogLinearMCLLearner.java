@@ -3,6 +3,7 @@ package mt.reranker;
 import java.util.List;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
+import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.QNMinimizer;
 
@@ -62,7 +63,7 @@ public class LogLinearMCLLearner extends AbstractOneOfManyClassifier {
   public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl);
     ObjF objF = new ObjF();
-    Minimizer minim = new QNMinimizer(objF);
+    Minimizer<DiffFunction> minim = new QNMinimizer(objF);
     //DiffFunctionTester.test(objF);
     wts = minim.minimize(objF, 1e-4, wts);
   }

@@ -3,7 +3,6 @@ package mt.train;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
-import java.lang.Math;
 
 import mt.base.IBMModel1;
 import mt.base.IString;
@@ -83,8 +82,7 @@ public class ShortestDistanceWordAligner implements WordAligner {
       return -1;
     }
 
-    Set<Integer> intersect = sp.f2e(foreignIdx);
-    Set<Integer> align2 = sp.e2f(foreignIdx);
+
     if (REPORT) {
       System.out.println("---------------------------------------------------------------");
       System.out.println("For Sentence Pair:");
@@ -103,8 +101,6 @@ public class ShortestDistanceWordAligner implements WordAligner {
     }
 
     //int maxStep = Math.max(Math.abs(sp.f().size()-foreignIdx-1), Math.abs(foreign));
-    boolean found = false;
-
     for(int step=1; step <= MAXSTEP; step++) {
       int intersectNeighorCounts = 0;
       int intersectIndiceSum = 0;

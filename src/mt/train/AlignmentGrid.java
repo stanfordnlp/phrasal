@@ -2,15 +2,11 @@ package mt.train;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 import java.io.PrintStream;
 
 import mt.base.Featurizable;
 import mt.base.IString;
 import mt.base.Sequence;
-import edu.stanford.nlp.util.IntPair;
-import edu.stanford.nlp.util.IntQuadruple;
 
 /**
  * A representation of an AlignmentTemplate collection as a matrix.
@@ -21,7 +17,7 @@ import edu.stanford.nlp.util.IntQuadruple;
 public class AlignmentGrid {
 
   public static final int MAX_SENT_LEN = 256;
-  private static final boolean DEBUG = false;
+
   private int fsize, esize;
 
   public enum RelativePos { N, NW, W, SW, S, SE, E, NE, I };
@@ -36,12 +32,13 @@ public class AlignmentGrid {
   private List<AlignmentTemplateInstance> 
     alTempList = new ArrayList<AlignmentTemplateInstance>();
 
-  private AlGridCell[][] alGridCells = null;
+  private AlGridCell<AlignmentTemplateInstance>[][] alGridCells = null;
 
   /**
    * Create an alignment grid of size esize x fsize.
    */
-  public AlignmentGrid(int esize, int fsize) {
+  @SuppressWarnings("unchecked")
+	public AlignmentGrid(int esize, int fsize) {
     alGridCells = new AlGridCell[MAX_SENT_LEN][MAX_SENT_LEN];
     System.err.printf("AlignmentGrid: constructor (%d x %d).\n",MAX_SENT_LEN,MAX_SENT_LEN);
     this.fsize = fsize;
@@ -113,7 +110,7 @@ public class AlignmentGrid {
 
   public RelativePos relativePos(AlignmentTemplateInstance alTemp, int f, int e) {
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
-    RelativePos pos = RelativePos.I;
+
     if(f < f1) {
       if(e < e1) return RelativePos.NW;
       if(e > e2) return RelativePos.SW;

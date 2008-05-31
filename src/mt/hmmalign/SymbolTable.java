@@ -18,7 +18,7 @@ import java.util.StringTokenizer;
 
 public class SymbolTable {
 
-  private HashMap initialMap = new HashMap();
+  private HashMap<WordEx,WordEx> initialMap = new HashMap<WordEx,WordEx>();
   private int numBaseIds;
   private int numComplexIds;
   private int numAllIds;

@@ -1,12 +1,6 @@
 package mt.train;
 
-import java.util.Set;
-import java.util.Map;
-import java.io.BufferedInputStream;
 import java.io.ObjectInputStream;
-import java.util.zip.GZIPInputStream;
-import java.io.FileInputStream;
-import java.io.File;
 import java.io.ObjectOutputStream;
 
 import mt.base.IString;
@@ -16,7 +10,6 @@ import mt.decoder.efeat.WordLevelDiscrimDistortionFeaturizer;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.stats.Distribution;
 
 /**
  * @author Pi-Chuan Chang
@@ -87,8 +80,6 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     int[] ftoE = new int[f.size()];
     
     for(int fidx = 0; fidx < f.size(); fidx++) {
-      Set<Integer> es = sent.f2e(fidx);
-
       // eidx is the one best English word for the Foreing word fidx
       // (according to whatever WordAligner you use) 
       if (waligner == null) initWordAligner();

@@ -2,14 +2,12 @@ package mt.train;
 
 import java.io.*;
 import java.util.*;
-import javax.xml.parsers.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 import mt.base.IString;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 import mt.base.IStrings;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  *  @author Michel Galley
@@ -59,6 +57,7 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
 			//System.err.println("Ending Document.");
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void startElement (String namespaceURI,
 														String localName,
 														String qName, 

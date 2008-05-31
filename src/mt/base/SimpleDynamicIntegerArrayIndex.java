@@ -2,7 +2,7 @@ package mt.base;
 
 import java.util.*;
 
-public class SimpleDynamicIntegerArrayIndex implements Iterable {
+public class SimpleDynamicIntegerArrayIndex implements Iterable<int[]> {
 
   static int INIT_SZ = 1<<10;
   static final float MAX_LOAD = 0.2f;
@@ -57,7 +57,7 @@ public class SimpleDynamicIntegerArrayIndex implements Iterable {
     return objects.size();
   }
 
-  public Iterator iterator() {
+  public Iterator<int[]> iterator() {
     return new Itr();
   }
 
@@ -91,7 +91,7 @@ public class SimpleDynamicIntegerArrayIndex implements Iterable {
     }
   }
 
-  private class Itr implements Iterator {
+  private class Itr implements Iterator<int[]> {
 
     int cursor = 0;
 
@@ -99,7 +99,7 @@ public class SimpleDynamicIntegerArrayIndex implements Iterable {
       return cursor < size();
     }
 
-    public Object next() {
+    public int[] next() {
        return get(cursor++);
     }
 
