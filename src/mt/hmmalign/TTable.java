@@ -2,6 +2,7 @@ package mt.hmmalign;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -302,32 +303,33 @@ public class TTable {
 
 
   /**
-   * read from a file
+   * Read state from a file.
+   *
+   * @param filename Filename to read from
    */
-
   public void read(String filename) {
     try {
       InFile in = new InFile(filename);
-      StringTokenizer st;
-      String line;
 
-      while ((line = in.readLine()) != null) {
-        st = new StringTokenizer(line);
-        int f = (new Integer(st.nextToken())).intValue();
-        int e = (new Integer(st.nextToken())).intValue();
-        double p = (new Double(st.nextToken())).doubleValue();
+      for (String line ; (line = in.readLine()) != null; ) {
+        StringTokenizer st = new StringTokenizer(line);
+        int f = Integer.parseInt(st.nextToken());
+        int e = Integer.parseInt(st.nextToken());
+        double p = Double.parseDouble(st.nextToken());
         this.insert(e, f, p, 0);
       }
 
       in.close();
-    } catch (Exception e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
 
   /**
-   * save to a file with the words rather than ids
+   * Save to a file with the words rather than ids.
+   *
+   * @param filename Filename to write to
    */
 
   public void saveNames(String filename) {
@@ -351,7 +353,7 @@ public class TTable {
       }
 
       p.close();
-    } catch (Exception e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
