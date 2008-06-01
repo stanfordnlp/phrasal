@@ -1,11 +1,5 @@
 package mt.hmmalign;
 
-/* This class holds the translation table p(f_word|e_word)
- * It is implemented as a hashMap. The keys are pairs of integer ids of words and the values
- * are objects that hold 2 doubles - probability and count
- *@author Kristina Toutanova (kristina@cs.stanford.edu)
- */
-
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -14,15 +8,24 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 
+/** This class holds the translation table p(f_word|e_word).
+ *  It is implemented as a HashMap. The keys are pairs of integer ids of words and the values
+ *  are objects that hold 2 doubles - probability and count.
+ *
+ *  @author Kristina Toutanova (kristina@cs.stanford.edu)
+ */
 public class TTable {
-  private HashMap<IntPair, ProbCountHolder> tMap;
+
+  private HashMap<IntPair,ProbCountHolder> tMap;
   private DoubleIntHolder[] totals;
 
-  static double PROB_CUTOFF = 1e-7;
-  static double PROB_SMOOTH = 1e-7;
+  private static final double PROB_CUTOFF = 1e-7;
+  static final double PROB_SMOOTH = 1e-7;
+
   private SymbolTable sTableE;
   static int vSize;// this is for French vocabulary size
   boolean english;
+
 
   public TTable(boolean english) {
     tMap = new HashMap<IntPair, ProbCountHolder>();
@@ -116,11 +119,9 @@ public class TTable {
     DoubleIntHolder diH;
     int e;
 
-
-    for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
-    	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
-      wP = (IntPair) eN.getKey();
-      pcH = (ProbCountHolder) eN.getValue();
+    for (Map.Entry<IntPair,ProbCountHolder> eN : tMap.entrySet()) {
+      wP = eN.getKey();
+      pcH = eN.getValue();
       e = wP.getSource();
       diH = totals[e];
       if (diH == null) {
@@ -133,8 +134,7 @@ public class TTable {
 
 
     //now the normalization, iterate again
-    boolean okProbs = true;
-    double total, prob, probMass;
+    double total, probMass;
 
     //rescale the totals
 
@@ -149,12 +149,12 @@ public class TTable {
     boolean erased = false;
     for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
     	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
-      wP = (IntPair) eN.getKey();
-      pcH = (ProbCountHolder) eN.getValue();
+      wP = eN.getKey();
+      pcH = eN.getValue();
       e = wP.getSource();
       diH = totals[e];
       total = diH.getValue();
-      prob = pcH.getCount() / total;
+      double prob = pcH.getCount() / total;
       if (prob > PROB_CUTOFF) {
 
         if (iteration > 0) {
@@ -187,8 +187,7 @@ public class TTable {
 
       //System.out.println("Collectiong counts again\n");
       totals = new DoubleIntHolder[totals.length];
-      for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
-      	Map.Entry<IntPair, ProbCountHolder> eN =  i.next();
+      for (Map.Entry<IntPair,ProbCountHolder> eN : tMap.entrySet()) {
         wP = eN.getKey();
         pcH = eN.getValue();
         e = wP.getSource();
@@ -200,8 +199,8 @@ public class TTable {
         diH.incVal(pcH.getProb());
       }
 
-
       //check OK
+      boolean okProbs = true;
       for (int i = 0; i < totals.length; i++) {
         diH = totals[i];
         if (diH != null) {
@@ -215,7 +214,6 @@ public class TTable {
             okProbs = false;
             //System.out.println("Total "+total+" mass "+probMass);
             //System.out.println("Not Ok Difference "+Math.abs(total+probMass-1));
-
           }
         }
       }
@@ -225,34 +223,25 @@ public class TTable {
       }
 
     }//else iter is 0
-
   }
 
 
   public double getCondEntropy() {
     //just avg with equal prior on the Fs entropy
-    double entropies[] = new double[sTableE.getNumAllIds()];
+    double[] entropies = new double[sTableE.getNumAllIds()];
     totals = new DoubleIntHolder[sTableE.getNumAllIds()];
-    IntPair wP;
-    ProbCountHolder pcH;
-    DoubleIntHolder diH;
-    int e, cnt;
     int zeroW = 0;
 
-
-    for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
-    	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
-      wP = (IntPair) eN.getKey();
-      pcH = (ProbCountHolder) eN.getValue();
-      e = wP.getSource();
-      diH = totals[e];
+    for (Map.Entry<IntPair,ProbCountHolder> eN : tMap.entrySet()) {
+      IntPair wP = eN.getKey();
+      ProbCountHolder pcH = eN.getValue();
+      int e = wP.getSource();
+      DoubleIntHolder diH = totals[e];
       if (diH == null) {
         diH = (totals[e] = new DoubleIntHolder());
       }
       diH.incCnt(1);
       entropies[e] += pcH.getProb() * Math.log(pcH.getProb());
-
-
     }
 
     double unif = 1 / (double) vSize;
@@ -260,14 +249,13 @@ public class TTable {
     double unitLow = -PROB_SMOOTH * Math.log(PROB_SMOOTH);
     System.out.println("Fixed low is " + fixedLow);
     double total = 0;
-    int cnt1 = 0;
-    for (e = 0; e < entropies.length; e++) {
+    for (int e = 0; e < entropies.length; e++) {
       if (entropies[e] == 0) {
         entropies[e] = fixedLow;
         zeroW++;
       } else {
-        cnt1 = (int) (totals[e].getCount());
-        cnt = vSize - cnt1;
+        int cnt1 = totals[e].getCount();
+        int cnt = vSize - cnt1;
         entropies[e] = -entropies[e] + unitLow * cnt;
       }
 
@@ -275,29 +263,19 @@ public class TTable {
       if (e == 0) {
         System.out.println("Entropy of empty " + entropies[e] / Math.log(2));
       }
-      ;
     }
 
     System.out.println("Number of words without correspondences " + zeroW);
     total = total / vSize * Math.log(2);
     return total;
-
-
   }
 
 
   void swapProbCountTable() {
-
-    ProbCountHolder pcH;
-
-    for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
-    	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
-      pcH = (ProbCountHolder) eN.getValue();
+    for (Map.Entry<IntPair,ProbCountHolder> eN : tMap.entrySet()) {
+      ProbCountHolder pcH = eN.getValue();
       pcH.swap();
-
     }
-
-
   }
 
 
@@ -310,13 +288,9 @@ public class TTable {
     try {
       PrintStream p = new PrintStream(new FileOutputStream(filename, true));
 
-      IntPair iP;
-      ProbCountHolder pcH;
-
-      for (Iterator<Map.Entry<IntPair, ProbCountHolder>> i = tMap.entrySet().iterator(); i.hasNext();) {
-      	Map.Entry<IntPair, ProbCountHolder> eN = i.next();
-        pcH = (ProbCountHolder) eN.getValue();
-        iP = (IntPair) eN.getKey();
+      for (Map.Entry<IntPair,ProbCountHolder> eN : tMap.entrySet()) {
+        ProbCountHolder pcH = eN.getValue();
+        IntPair iP = eN.getKey();
         p.println(iP.getTarget() + " " + iP.getSource() + " " + pcH.getProb());
       }
 
@@ -324,7 +298,6 @@ public class TTable {
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
 
 
@@ -333,30 +306,23 @@ public class TTable {
    */
 
   public void read(String filename) {
-
-    StringTokenizer st;
     try {
       InFile in = new InFile(filename);
-
-      int e, f;
-      double p;
+      StringTokenizer st;
       String line;
 
       while ((line = in.readLine()) != null) {
         st = new StringTokenizer(line);
-        f = (new Integer(st.nextToken())).intValue();
-        e = (new Integer(st.nextToken())).intValue();
-        p = (new Double(st.nextToken())).doubleValue();
+        int f = (new Integer(st.nextToken())).intValue();
+        int e = (new Integer(st.nextToken())).intValue();
+        double p = (new Double(st.nextToken())).doubleValue();
         this.insert(e, f, p, 0);
-
       }
-
 
       in.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
 
 
@@ -370,29 +336,24 @@ public class TTable {
       PrintStream p = new PrintStream(new FileOutputStream(filename, true));
 
       IntPair iP = new IntPair();
-      ProbCountHolder pcH;
       int max = SentenceHandler.sTableE.getNumAllIds();
       for (int index = 0; index < max; index++) {
 
         iP.setSource(index);
         for (int fr = 0; fr < vSize; fr++) {
           iP.setTarget(fr);
-          pcH = get(iP);
+          ProbCountHolder pcH = get(iP);
           if (pcH == null) {
             continue;
           }
           p.println(SentenceHandler.sTableF.getName(iP.getTarget()) + " " + sTableE.getName(iP.getSource()) + " " + pcH.getProb());
         }
-
-
       }
-
 
       p.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
 
 
@@ -405,15 +366,6 @@ public class TTable {
       System.out.println(h.getCount() + " " + h.getProb());
       System.out.println();
     }
-
-
   }
-
-
-  public static void main(String[] args) {
-
-
-  }
-
 
 }
