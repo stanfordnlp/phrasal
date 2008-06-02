@@ -3,12 +3,9 @@ package mt.train;
 import edu.stanford.nlp.util.Index;
 
 import java.util.*;
-import java.io.BufferedReader;
-import java.io.IOException;
 
 import mt.base.DynamicIntegerArrayIndex;
 import mt.base.IString;
-import mt.base.Sequence;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -24,7 +21,7 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
 
   double phiFilter = 0.0;
   final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
-  final Index fLexIndex = new Index(), eLexIndex = new Index();
+  final Index<Integer> fLexIndex = new Index<Integer>(), eLexIndex = new Index<Integer>();
 
   IntArrayList feCounts = new IntArrayList();
   IntArrayList fCounts = new IntArrayList();
@@ -71,11 +68,11 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
   }
 
   @SuppressWarnings("unchecked")
-  private int indexOfLex(IString f, IString e, boolean add)
+  int indexOfLex(IString f, IString e, boolean add)
   { return lexIndex.indexOf(new int[] {f.getId(), e.getId()}, add); }
 
   @SuppressWarnings("unchecked")
-  private int indexOfFLex(IString f, boolean add)
+  int indexOfFLex(IString f, boolean add)
   { return fLexIndex.indexOf(f.getId(), add); }
 
   private static void addCountToArray(IntArrayList list, int idx) {
