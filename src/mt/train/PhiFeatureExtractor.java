@@ -17,7 +17,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * 
  * @author Michel Galley
  */
-public class PhiFeatureExtractor extends AbstractFeatureExtractor<String> {
+public class PhiFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugPhiFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
@@ -29,7 +29,7 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor<String> {
   IntArrayList feCounts = new IntArrayList();
   IntArrayList fCounts = new IntArrayList();
 
-  public void init(Properties prop, Index featureIndex, AlignmentTemplates alTemps) {
+  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop, featureIndex, alTemps);
     phiFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
