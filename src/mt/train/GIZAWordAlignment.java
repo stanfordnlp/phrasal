@@ -1,7 +1,5 @@
 package mt.train;
 
-import edu.stanford.nlp.util.StringUtils;
-
 import java.util.*;
 import java.io.*;
 import java.util.zip.GZIPInputStream;
