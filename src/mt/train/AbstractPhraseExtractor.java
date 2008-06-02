@@ -59,7 +59,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
     needAlGrid = false;
-    if(PRINT_GRID_MAX_LEN > 0)
+    if(PRINT_GRID_MAX_LEN >= 0)
       needAlGrid = true;
     else {
       for(AbstractFeatureExtractor ex : extractors)

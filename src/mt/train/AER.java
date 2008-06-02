@@ -15,9 +15,20 @@ import java.util.List;
  * @author Michel Galley
  */
 public class AER {
+
+  public static final String DEBUG_PROPERTY = "DebugWordAlignment";
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
   public static void main(String[] args) {
     if(args.length != 6) {
-      System.err.println("Usage: AER <fCorpus> <eCorpus> <refAlignment> <refGiza> <hypAlignment> <hypGiza>");
+      System.err.println("Usage: AER <fCorpus> <eCorpus> <refAlignment> <refUCB> <hypAlignment> <hypUCB>");
+      System.err.println("where:");
+      System.err.println("  fCorpus: source-language text");
+      System.err.println("  eCorpus: target-language text");
+      System.err.println("  refAlignment: reference word alignment");
+      System.err.println("  refUCB: set to true if refAlignment in UCB alignment format (default: Moses format)");
+      System.err.println("  hypAlignment: system word alignment");
+      System.err.println("  hypUCB: set to true if hypAlignment in UCB alignment format (default: Moses format)");
       System.err.println("Wrong number of args: "+args.length);
       System.exit(1);
     }

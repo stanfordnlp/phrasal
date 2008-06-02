@@ -21,8 +21,11 @@ import mt.base.SimpleSequence;
 
 public class SymmetricalWordAlignment extends AbstractWordAlignment {
 
-  public static final String DEBUG_PROPERTY = "DebugSymmetricalWordAlignment";
+  public static final String DEBUG_PROPERTY = "DebugWordAlignment";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
+  public static final String VDEBUG_PROPERTY = "VerboseDebugWordAlignment";
+  public static final boolean VERBOSE_DEBUG = Boolean.parseBoolean(System.getProperty(VDEBUG_PROPERTY, "false"));
 
   public SymmetricalWordAlignment() {
     System.err.println("SymmetricalWordAlignment: new instance.");
@@ -64,7 +67,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse, boolean zeroBased) throws IOException {
-    if(DEBUG)
+    if(VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
     e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
@@ -80,12 +83,15 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
         throw new IOException("e has index out of bounds (esize="+e.size()+",fsize="+f.size()+") : "+epos);
       f2e[fpos].add(epos);
       e2f[epos].add(fpos);
-      if(DEBUG)
+      if(VERBOSE_DEBUG) {
         System.err.println
-         ("New alignment: ("+fpos+")["+f.get(fpos)+"] -> ("+epos+")["+e.get(epos)+"]");
+         ("word alignment: ["+f.get(fpos)+"] -> ["+e.get(epos)+"]");
+        System.err.println
+         ("with indices: ("+fpos+")["+f.get(fpos)+"] -> ("+epos+")["+e.get(epos)+"]");
+      }
     }
-    if(DEBUG)
-      System.err.println("Word alignment: "+toString());
+    if(VERBOSE_DEBUG)
+      System.err.println("sentence alignment: "+toString());
   }
 
   @SuppressWarnings("unchecked")

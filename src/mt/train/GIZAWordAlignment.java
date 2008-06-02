@@ -58,6 +58,57 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   }
 
   @SuppressWarnings("unchecked")
+  public void init(String f2e_line1, String f2e_line2, String f2e_line3)
+      throws IOException {
+    // Read GIZA prob from comments:
+    String[] comment_f2e = f2e_line1.split("\\s+");
+    assert(comment_f2e[0].equals("#"));
+    p_f2e = Double.parseDouble(comment_f2e[comment_f2e.length-1]);
+    // Read target strings:
+    f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(f2e_line2.split("\\s+"))));
+    e = new SimpleSequence<IString>(true, IStrings.toIStringArray(extractWordsFromAlignment(f2e_line3)));
+    // Read alignments:
+    f2e = new TreeSet[f.size()];
+    e2f = new TreeSet[e.size()];
+    initAlign(f2e_line3, f2e, e);
+    reverseAlignment(f2e,e2f);
+  }
+
+  private static void reverseAlignment(Set<Integer>[] direct, Set<Integer>[] reverse) {
+    for(int i=0; i<reverse.length; ++i) {
+      reverse[i] = new TreeSet<Integer>(); 
+    }
+    for(int i=0; i<direct.length; ++i) {
+      for(int di : (Collection<Integer>) direct[i]) {
+        assert(di < reverse.length);
+        reverse[di].add(i);
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<String> extractWordsFromAlignment(String alignStr) throws IOException {
+    String[] tokens = alignStr.split("\\s+");
+    List<String> words = new ArrayList<String>();
+    assert(tokens[0].equals("NULL"));
+    // Read alignmen from string:
+    int pos = -1;
+    int wpos = -1;
+    while(pos+1 < tokens.length) {
+      String w = new String(tokens[++pos]);
+      if(pos > 1)
+        words.add(w);
+      //System.err.println("adding: "+w);
+      if(!tokens[++pos].equals("({"))
+        throw new IOException("Bad GIZA file format at position "+pos+": "+tokens[pos]);
+      while(!tokens[++pos].equals("})"))
+        ;
+      ++wpos;
+    }
+    return words;
+  }
+
+  @SuppressWarnings("unchecked")
   private static void initAlign(String alignStr, Set<Integer>[] align, Sequence<IString> target) throws IOException {
     // Init alignment:
     for(int i=0; i<align.length; ++i)
@@ -70,11 +121,14 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     while(pos+1 < tokens.length) {
       IString w = new IString(tokens[++pos]);
       if(wpos >= 0 && !target.get(wpos).equals(w))
-        throw new IOException("Words not matching: "+target.get(wpos)+ " != "+w);
+        throw new IOException("Words not matching at word position "+wpos+", token position "+pos+": "+target.get(wpos)+ " != "+w);
       if(!tokens[++pos].equals("({"))
         throw new IOException("Bad GIZA file format at position "+pos+": "+tokens[pos]);
       while(!tokens[++pos].equals("})")) {
-        int wpos2 = Integer.parseInt(tokens[pos])-1;
+        String curTok = tokens[pos];
+        if(curTok.equals("/") || curTok.startsWith("p"))
+          continue;
+        int wpos2 = Integer.parseInt(curTok)-1;
         if(wpos >= 0) {
           //System.err.println("align: "+wpos2+" -> "+wpos+" "+align.length);
           assert(align[wpos2].size() == 0);
@@ -94,11 +148,37 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     return toString(inverse ? e2f : f2e);
   }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
-    Properties prop = StringUtils.argsToProperties(args);
-    String feAlign = prop.getProperty("feAlign");
-    String efAlign = prop.getProperty("efAlign");
+    if(args.length == 1)
+      readUnidirecionalAlignment(args[0]);
+    else if(args.length == 2)
+      readBidirecionalAlignment(args[0],args[1]);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void readUnidirecionalAlignment(String feAlign) { 
+    LineNumberReader feReader = null;
+    GIZAWordAlignment sent = new GIZAWordAlignment();
+    try {
+      feReader = new LineNumberReader
+            (new InputStreamReader(new GZIPInputStream(new FileInputStream(feAlign))));
+      String feLine1, feLine2, feLine3;
+      while((feLine1 = feReader.readLine()) != null) {
+        feLine2 = feReader.readLine();
+        feLine3 = feReader.readLine();
+        sent.init(feLine1, feLine2, feLine3);
+        System.out.println(sent.f());
+        System.out.println(sent.e());
+        System.out.println(sent.toString(false));
+      }
+      feReader.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
+  }
+
+  public static void readBidirecionalAlignment(String feAlign, String efAlign) { 
     LineNumberReader feReader = null, efReader = null;
     GIZAWordAlignment sent = new GIZAWordAlignment();
     try {

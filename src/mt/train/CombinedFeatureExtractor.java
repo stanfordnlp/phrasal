@@ -329,6 +329,7 @@ public class CombinedFeatureExtractor {
     long startStepTimeMillis = startTimeMillis;
 
     for(int idx=0; idx<alTemps.size(); ++idx) {
+      boolean skip=false;
       StringBuilder str = new StringBuilder();
       if(idx % 10000 == 0 || idx+1==alTemps.size()) {
         long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
@@ -343,8 +344,10 @@ public class CombinedFeatureExtractor {
       str.append(AlignmentTemplate.DELIM);
       for(AbstractFeatureExtractor e : extractors) {
         Object scores = e.score(alTemp);
-        if(scores == null)
-          continue;
+        if(scores == null) {
+          skip=true;
+          break;
+        }
         if(scores.getClass().isArray()) { // as dense vector
           double[] scoreArray = (double[]) scores;
           for(int i=0; i<scoreArray.length; ++i) {
@@ -364,7 +367,8 @@ public class CombinedFeatureExtractor {
             ("AbstractFeatureExtractor should return double[] or Counter, not "+scores.getClass());
         }
       }
-      oStream.println(str.toString());
+      if(!skip)
+        oStream.println(str.toString());
     }
     if(needToClose)
       oStream.close();
