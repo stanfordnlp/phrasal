@@ -1163,6 +1163,27 @@ public class UnsmoothedMERT {
 		return sumValues;
 	}
 	
+	static double lrate = 0.01;
+	
+	@SuppressWarnings("deprecation")
+	static public ClassicCounter<String> mcmcELossObjectiveSGD(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
+		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
+		double eval;
+		for (int iter = 0; ; iter++) {
+			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric);
+			dE.multiplyBy(lrate);
+			wts.addAll(dE);
+			
+			double ssd = l2norm(dE);
+			
+			eval = evalAtPoint(nbest, wts, emetric);
+			System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
+			if (ssd < NO_PROGRESS_SSD) break;
+		}
+		System.err.printf("Last eval: %e\n", eval);
+		return wts;
+	}
+	
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> mcmcELossDirOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
 		ClassicCounter<String> wts = initialWts;
@@ -1991,6 +2012,9 @@ public class UnsmoothedMERT {
 			} else if (System.getProperty("mcmcELossDirExact") != null) {
 				System.out.printf("using mcmcELossDirExact\n");
 				newWts = mcmcELossDirOptimize(nbest, wts, emetric);
+			} else if (System.getProperty("mcmcELossSGD") != null) {
+				System.out.printf("using mcmcELossSGD");
+				newWts = mcmcELossObjectiveSGD(nbest, wts, emetric);
 			} else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
