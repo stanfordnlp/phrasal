@@ -90,13 +90,15 @@ public class UnsmoothedMERT {
 				cnt++;
 				
 				ScoredFeaturizedTranslation<IString, String> cTrans = nbest.nbestLists().get(sentId).get(candIds[sentId]);
-				incEval.replace(sentId, cTrans);
+			  
+				if (candIds[sentId] == posSampleCandId) { // if necessary, adjust currentF & eval
+					currentF.subtractAll(FeatureValues.toCounter(current.get(sentId).features));
+					currentF.addAll(FeatureValues.toCounter(cTrans.features));
+					incEval.replace(sentId, cTrans);
+				}
 				double eval = incEval.score();
 				sumExpL += eval;
-				if (candIds[sentId] == posSampleCandId) { // if necessary, adjust currentF
-					currentF.subtractAll(FeatureValues.toCounter(current.get(sentId).features));
-					currentF.addAll(FeatureValues.toCounter(cTrans.features)); 
-				}
+				
 				current.set(sentId, cTrans);
 				
 				ClassicCounter<String> Fcp = new ClassicCounter<String>(currentF);				
