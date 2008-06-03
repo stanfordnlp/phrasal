@@ -1147,16 +1147,19 @@ public class UnsmoothedMERT {
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> mcmcELossDirOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
 		ClassicCounter<String> wts = initialWts;
+		double eval;
 		for (int iter = 0; ; iter++) {
 			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric);
 			ClassicCounter<String> newWts = lineSearch(nbest, wts, dE, emetric);
 			double ssd = wtSsd(wts, newWts);
 			
 			
-			double eval = evalAtPoint(nbest, newWts, emetric);
+			eval = evalAtPoint(nbest, newWts, emetric);
 			System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
 			if (ssd < NO_PROGRESS_LIMIT) break;
+			wts = newWts;
 		}
+		System.err.printf("Last eval: %e\n", eval);
 		return wts;
 	}
 	
