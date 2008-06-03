@@ -25,9 +25,9 @@ public class UnsmoothedMERT {
 	static public final boolean DEBUG = false;
 
 	static final int NO_PROGRESS_LIMIT = 20;
-	static final double NO_PROGRESS_SSD = 1e-6;
+	static final double NO_PROGRESS_SSD = 1e-3;
   static final double NO_PROGRESS_MCMC_DIFF = 1e-20;
-  static final double MCMC_BATCH_SAMPLES = 10000;
+  static final double MCMC_BATCH_SAMPLES = 30000;
   
 	static public final double MIN_PLATEAU_DIFF = 1e-6;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
