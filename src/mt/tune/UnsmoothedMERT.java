@@ -1156,7 +1156,7 @@ public class UnsmoothedMERT {
 			
 			eval = evalAtPoint(nbest, newWts, emetric);
 			System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
-			if (ssd < NO_PROGRESS_LIMIT) break;
+			if (ssd < NO_PROGRESS_SSD) break;
 			wts = newWts;
 		}
 		System.err.printf("Last eval: %e\n", eval);
