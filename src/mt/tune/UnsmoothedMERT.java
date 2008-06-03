@@ -1151,10 +1151,11 @@ public class UnsmoothedMERT {
 			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric);
 			ClassicCounter<String> newWts = lineSearch(nbest, wts, dE, emetric);
 			double ssd = wtSsd(wts, newWts);
-			if (ssd < NO_PROGRESS_LIMIT) break;
+			
 			
 			double eval = evalAtPoint(nbest, newWts, emetric);
 			System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
+			if (ssd < NO_PROGRESS_LIMIT) break;
 		}
 		return wts;
 	}
