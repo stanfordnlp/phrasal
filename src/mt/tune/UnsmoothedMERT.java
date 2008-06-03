@@ -37,17 +37,15 @@ public class UnsmoothedMERT {
 	@SuppressWarnings({ "deprecation" })
 	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
 		// for quick mixing, get current classifier argmax
-		List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, wts);
+		List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
 		
-		// set up an incremental evaluation object for the selected candidates
-		IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();
-		for (ScoredFeaturizedTranslation<IString, String> tran : current) incEval.add(tran);
+
 		
 		// recover which candidates were selected
-		int candIds[] = new int[current.size()]; Arrays.fill(candIds, -1);
+		int argmaxCandIds[] = new int[current.size()]; Arrays.fill(argmaxCandIds, -1);
 		for (int i = 0; i < nbest.nbestLists().size(); i++) {
 			for (int j = 0; j < nbest.nbestLists().get(i).size(); j++) { 
-				if (current.get(i) == nbest.nbestLists().get(i).get(j)) candIds[i] = j;
+				if (current.get(i) == nbest.nbestLists().get(i).get(j)) argmaxCandIds[i] = j;
 			}			
 		}
 		
@@ -62,12 +60,20 @@ public class UnsmoothedMERT {
 		double dEDiff = Double.POSITIVE_INFINITY;
 		for (int batch = 0; dEDiff > NO_PROGRESS_MCMC_DIFF; batch++) {
 			ClassicCounter<String> oldDe = new ClassicCounter<String>(dE);
+
+			// reset current to argmax
+			current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
+			int[] candIds = argmaxCandIds.clone();
+			
+			// reset incremental evaluation object for the argmax candidates
+			IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();			
+			for (ScoredFeaturizedTranslation<IString, String> tran : current) incEval.add(tran);
 			
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// mcmc sample
 				int sentId = r.nextInt(nbest.nbestLists().size());
-				int posSampleCandId = r.nextInt(nbest.nbestLists().get(sentId).size());
-				double currentScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
+				int posSampleCandId   = r.nextInt(nbest.nbestLists().get(sentId).size());
+				double currentScore   = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
 				double posSampleScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(posSampleCandId).features);
 				double a = Math.exp(posSampleScore - currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
 				if (a >= 1.0) {
