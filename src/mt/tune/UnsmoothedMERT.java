@@ -26,7 +26,9 @@ public class UnsmoothedMERT {
 
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
-
+  static final double NO_PROGRESS_MCMC_DIFF = 1e-20;
+  static final double MCMC_BATCH_SAMPLES = 10000;
+  
 	static public final double MIN_PLATEAU_DIFF = 1e-6;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 	static public final double MIN_UPDATE_DIFF = 1e-6;
@@ -41,8 +43,8 @@ public class UnsmoothedMERT {
 		IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();
 		for (ScoredFeaturizedTranslation<IString, String> tran : current) incEval.add(tran);
 		
-		// recover which candidates where selected
-		int candIds[] = new int[current.size()];
+		// recover which candidates were selected
+		int candIds[] = new int[current.size()]; Arrays.fill(candIds, -1);
 		for (int i = 0; i < nbest.nbestLists().size(); i++) {
 			for (int j = 0; j < nbest.nbestLists().get(i).size(); j++) { 
 				if (current.get(i) == nbest.nbestLists().get(i).get(j)) candIds[i] = j;
@@ -58,16 +60,16 @@ public class UnsmoothedMERT {
 		ClassicCounter<String> sumExpF = new ClassicCounter<String>();
 		int cnt = 0;
 		double dEDiff = Double.POSITIVE_INFINITY;
-		for (int batch = 0; dEDiff > NO_PROGRESS_SSD; batch++) {
+		for (int batch = 0; dEDiff > NO_PROGRESS_MCMC_DIFF; batch++) {
 			ClassicCounter<String> oldDe = new ClassicCounter<String>(dE);
 			
-			for (int bi = 0; bi < 1000; bi++) { cnt++;
+			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// mcmc sample
 				int sentId = r.nextInt(nbest.nbestLists().size());
 				int posSampleCandId = r.nextInt(nbest.nbestLists().get(sentId).size());
 				double currentScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
 				double posSampleScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(posSampleCandId).features);
-				double a = Math.exp(posSampleScore - currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., we use metropolis)
+				double a = Math.exp(posSampleScore - currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
 				if (a >= 1.0) {
 					candIds[sentId] = posSampleCandId;
 				} else {
@@ -77,6 +79,7 @@ public class UnsmoothedMERT {
 				}
 				
 				// collect derivative relevant statistics using sample
+				cnt++;
 				ScoredFeaturizedTranslation<IString, String> cTrans = nbest.nbestLists().get(sentId).get(candIds[sentId]);
 				incEval.replace(sentId, cTrans);
 				double eval = incEval.score();
@@ -88,7 +91,7 @@ public class UnsmoothedMERT {
 				sumExpLF.addAll(F);
 			}
 			
-			dE = new ClassicCounter<String>(sumExpLF);
+			dE = new ClassicCounter<String>(sumExpF);
 			dE.multiplyBy(sumExpL/cnt);
 			dE.subtractAll(sumExpLF);
 			l2normalize(dE);
