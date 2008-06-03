@@ -92,9 +92,9 @@ public class UnsmoothedMERT {
 			dE.multiplyBy(sumExpL/cnt);
 			dE.subtractAll(sumExpLF);
 			l2normalize(dE);
-			dEDiff = wtSsd(dE, oldDe);
+			dEDiff = wtSsd(oldDe, dE);
 			
-			System.err.printf("Batch: %e dEDiff: %e\n", dEDiff, dEDiff);
+			System.err.printf("Batch: %d dEDiff: %e\n", batch, dEDiff);
 			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 			System.err.printf("E(loss*f):\n%s\n\n", new ClassicCounter<String>(sumExpLF).divideBy(cnt));
 			System.err.printf("E(f):\n%s\n\n", new ClassicCounter<String>(sumExpF).divideBy(cnt));
