@@ -110,7 +110,7 @@ public class UnsmoothedMERT {
 			dE = new ClassicCounter<String>(sumExpF);
 			dE.multiplyBy(sumExpL/cnt);
 			dE.subtractAll(sumExpLF);
-			dE.divideBy(cnt);
+			dE.divideBy(-1*cnt);
 			dEDiff = wtSsd(oldDe, dE);
 			
 			System.err.printf("Batch: %d dEDiff: %e\n", batch, dEDiff);
