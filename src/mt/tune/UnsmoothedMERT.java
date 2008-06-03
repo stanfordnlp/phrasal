@@ -31,6 +31,79 @@ public class UnsmoothedMERT {
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 	static public final double MIN_UPDATE_DIFF = 1e-6;
 
+	
+	@SuppressWarnings({ "deprecation" })
+	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
+		// for quick mixing, get current classifier argmax
+		List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(nbest, wts);
+		
+		// set up an incremental evaluation object for the selected candidates
+		IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();
+		for (ScoredFeaturizedTranslation<IString, String> tran : current) incEval.add(tran);
+		
+		// recover which candidates where selected
+		int candIds[] = new int[current.size()];
+		for (int i = 0; i < nbest.nbestLists().size(); i++) {
+			for (int j = 0; j < nbest.nbestLists().get(i).size(); j++) { 
+				if (current.get(i) == nbest.nbestLists().get(i).get(j)) candIds[i] = j;
+			}			
+		}
+		
+		ClassicCounter<String> dE = new ClassicCounter<String>();
+		Scorer<String> scorer = new StaticScorer(wts);
+		
+		// expected value sums
+		ClassicCounter<String> sumExpLF = new ClassicCounter<String>();
+		double sumExpL = 0.0;
+		ClassicCounter<String> sumExpF = new ClassicCounter<String>();
+		int cnt = 0;
+		double dEDiff = Double.POSITIVE_INFINITY;
+		for (int batch = 0; dEDiff > NO_PROGRESS_SSD; batch++) {
+			ClassicCounter<String> oldDe = new ClassicCounter<String>(dE);
+			
+			for (int bi = 0; bi < 1000; bi++) { cnt++;
+				// mcmc sample
+				int sentId = r.nextInt(nbest.nbestLists().size());
+				int posSampleCandId = r.nextInt(nbest.nbestLists().get(sentId).size());
+				double currentScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
+				double posSampleScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(posSampleCandId).features);
+				double a = Math.exp(posSampleScore - currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., we use metropolis)
+				if (a >= 1.0) {
+					candIds[sentId] = posSampleCandId;
+				} else {
+					if (r.nextDouble() <= a) { // x^(t+1) = x' with probability a
+						candIds[sentId] = posSampleCandId;
+					} // x^(t+1) = x^t with probability 1-a
+				}
+				
+				// collect derivative relevant statistics using sample
+				ScoredFeaturizedTranslation<IString, String> cTrans = nbest.nbestLists().get(sentId).get(candIds[sentId]);
+				incEval.replace(sentId, cTrans);
+				double eval = incEval.score();
+				sumExpL += eval;
+				current.set(sentId, cTrans);
+				ClassicCounter<String> F = summarizedAllFeaturesVector(current);
+				sumExpF.addAll(F);
+				F.multiplyBy(eval);
+				sumExpLF.addAll(F);
+			}
+			
+			dE = new ClassicCounter<String>(sumExpLF);
+			dE.multiplyBy(sumExpL/cnt);
+			dE.subtractAll(sumExpLF);
+			l2normalize(dE);
+			dEDiff = wtSsd(dE, oldDe);
+			
+			System.err.printf("Batch: %d SSD: %e\n", dEDiff);
+			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
+			System.err.printf("E(loss*f):\n%s\n\n", new ClassicCounter<String>(sumExpLF).divideBy(cnt));
+			System.err.printf("E(f):\n%s\n\n", new ClassicCounter<String>(sumExpF).divideBy(cnt));
+			System.err.printf("dE:\n%s\n\n", dE);
+		}
+		
+		return dE;		
+	}
+	
 	static class InterceptIDs {
 		final int list;
 		final int trans;
@@ -1070,7 +1143,22 @@ public class UnsmoothedMERT {
 
 		return sumValues;
 	}
-
+	
+	@SuppressWarnings("deprecation")
+	static public ClassicCounter<String> mcmcELossDirOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
+		ClassicCounter<String> wts = initialWts;
+		for (int iter = 0; ; iter++) {
+			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric);
+			ClassicCounter<String> newWts = lineSearch(nbest, wts, dE, emetric);
+			double ssd = wtSsd(wts, newWts);
+			if (ssd < NO_PROGRESS_LIMIT) break;
+			
+			double eval = evalAtPoint(nbest, newWts, emetric);
+			System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
+		}
+		return wts;
+	}
+	
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> perceptronOptimize(MosesNBestList nbest,
 			ClassicCounter<String> initialWts,
@@ -1875,13 +1963,11 @@ public class UnsmoothedMERT {
 						.getProperty("fullKMeansClusterToCluster")), true);
 			} else if (System.getProperty("pointwisePerceptron") != null) {
 				System.out.printf("Using pointwise Perceptron\n");
-				newWts = (ptI == 0 ? pointwisePerceptron(nbest, wts, emetric) : wts); // only
-				// run
-				// pointwise
-				// for
-				// the
-				// first
-				// iteration
+			// only run pointwise for the first iteration, as it is very expensive
+				newWts = (ptI == 0 ? pointwisePerceptron(nbest, wts, emetric) : wts); 
+			} else if (System.getProperty("mcmcELossDirExact") != null) {
+				System.out.printf("using mcmcELossDirExact\n");
+				newWts = mcmcELossDirOptimize(nbest, wts, emetric);
 			} else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
