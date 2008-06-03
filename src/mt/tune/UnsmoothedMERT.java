@@ -69,6 +69,8 @@ public class UnsmoothedMERT {
 			IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();			
 			for (ScoredFeaturizedTranslation<IString, String> tran : current) incEval.add(tran);
 			
+			ClassicCounter<String> currentF = summarizedAllFeaturesVector(current);
+			
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// mcmc sample
 				int sentId = r.nextInt(nbest.nbestLists().size());
@@ -86,21 +88,27 @@ public class UnsmoothedMERT {
 				
 				// collect derivative relevant statistics using sample
 				cnt++;
+				
 				ScoredFeaturizedTranslation<IString, String> cTrans = nbest.nbestLists().get(sentId).get(candIds[sentId]);
 				incEval.replace(sentId, cTrans);
 				double eval = incEval.score();
 				sumExpL += eval;
+				if (candIds[sentId] == posSampleCandId) { // if necessary, adjust currentF
+					currentF.subtractAll(FeatureValues.toCounter(current.get(sentId).features));
+					currentF.addAll(FeatureValues.toCounter(cTrans.features)); 
+				}
 				current.set(sentId, cTrans);
-				ClassicCounter<String> F = summarizedAllFeaturesVector(current);
-				sumExpF.addAll(F);
-				F.multiplyBy(eval);
-				sumExpLF.addAll(F);
+				
+				ClassicCounter<String> Fcp = new ClassicCounter<String>(currentF);				
+				sumExpF.addAll(Fcp);
+				Fcp.multiplyBy(eval);
+				sumExpLF.addAll(Fcp);
 			}
 			
 			dE = new ClassicCounter<String>(sumExpF);
 			dE.multiplyBy(sumExpL/cnt);
 			dE.subtractAll(sumExpLF);
-			dE.multiplyBy(cnt);
+			dE.divideBy(cnt);
 			dEDiff = wtSsd(oldDe, dE);
 			
 			System.err.printf("Batch: %d dEDiff: %e\n", batch, dEDiff);
