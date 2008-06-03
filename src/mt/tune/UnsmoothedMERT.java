@@ -1163,7 +1163,7 @@ public class UnsmoothedMERT {
 		return sumValues;
 	}
 	
-	static double lrate = 0.01;
+	static double lrate = 0.1;
 	
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> mcmcELossObjectiveSGD(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
@@ -1177,7 +1177,7 @@ public class UnsmoothedMERT {
 			double ssd = l2norm(dE);
 			
 			eval = evalAtPoint(nbest, wts, emetric);
-			System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
+			System.err.printf("sgd step %d: eval: %e ssd: %e\n", iter, eval, ssd);
 			if (ssd < NO_PROGRESS_SSD) break;
 		}
 		System.err.printf("Last eval: %e\n", eval);
