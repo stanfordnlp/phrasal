@@ -1272,7 +1272,7 @@ public class UnsmoothedMERT {
 			lastExpectedEval = expectedEval.doubleValue();
 			eval = evalAtPoint(nbest, wts, emetric);
 			System.err.printf("sgd step %d: eval: %e wts ssd: %e E(Eval): %e delta E(Eval): %e\n", iter, eval, ssd, expectedEval.doubleValue(), expectedEvalDiff);
-			if (ssd < Math.abs(expectedEvalDiff)) break;
+			if (MIN_OBJECTIVE_CHANGE_SGD > Math.abs(expectedEvalDiff)) break;
 		}
 		System.err.printf("Last eval: %e\n", eval);
 		return wts;
