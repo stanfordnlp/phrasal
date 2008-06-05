@@ -28,9 +28,13 @@ public class UnsmoothedMERT {
 
 	static public final boolean DEBUG = false;
 
+	static final double L_RATE = 1.0;
+	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-6; 
+	static final double MAX_ITER_SGD = 1000;
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
-  static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
+
+	static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
   static final double MCMC_BATCH_SAMPLES = 30000;
   
 	static public final double MIN_PLATEAU_DIFF = 1e-6;
@@ -55,6 +59,7 @@ public class UnsmoothedMERT {
   		Set<String> featureSet = new HashSet<String>();
   		featureIdsToString = new ArrayList<String>();
   		List<Double> initialFeaturesVector = new ArrayList<Double>();
+  		
   		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
   			for (ScoredFeaturizedTranslation<IString,String> trans : nbestlist) {
   				for (FeatureValue<String> featureValue : trans.features) {
@@ -66,6 +71,7 @@ public class UnsmoothedMERT {
   				}
   			}
   		}
+  		
   		initial = new double[initialFeaturesVector.size()];
   		for (int i = 0; i < initial.length; i++) {
   			initial[i] = initialFeaturesVector.get(i);
@@ -97,7 +103,7 @@ public class UnsmoothedMERT {
       	derivative[i] = dE.getCount(featureIdsToString.get(i));
       }
       
-      value = expectedEval.doubleValue();
+      value = -expectedEval.doubleValue();
     }
   }
   
@@ -1249,16 +1255,14 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
-	static final double L_RATE = 1.0;
-	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-6; 
 	
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> mcmcELossObjectiveSGD(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
-		double eval;
+		double eval = 0;
 		double lastExpectedEval = Double.NEGATIVE_INFINITY;
 		
-		for (int iter = 0; ; iter++) {
+		for (int iter = 0; iter < MAX_ITER_SGD; iter++) {
 			MutableDouble expectedEval = new MutableDouble();
 			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric, expectedEval);
 			dE.multiplyBy(L_RATE);
