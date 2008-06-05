@@ -1250,7 +1250,7 @@ public class UnsmoothedMERT {
 	}
 	
 	static final double L_RATE = 0.1;
-	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-3;
+	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-5; 
 	
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> mcmcELossObjectiveSGD(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
