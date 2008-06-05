@@ -6,9 +6,6 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
-import mt.reranker.CompactHypothesisList;
-
-import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
