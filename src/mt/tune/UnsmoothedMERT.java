@@ -185,10 +185,12 @@ public class UnsmoothedMERT {
 		
 		// objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
 		double l2wts = l2norm(wts);
-		return C*sumExpL/cnt-0.5*l2wts*l2wts;
+		double obj = C*sumExpL/cnt-0.5*l2wts*l2wts;
+		System.err.printf("Regularized objective: %e\n", obj);
+		return obj;
   }
   
-  public static final double C = 0.1;
+  public static final double C = 10;
   
   static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
   	return mcmcDerivative(nbest, wts, emetric, null);
@@ -1345,6 +1347,12 @@ public class UnsmoothedMERT {
 			wts.incrementCount(obj.featureIdsToString.get(i), wtsDense[i]);
 		}
 		double eval = evalAtPoint(nbest, wts, emetric);
+		double regE = mcmcTightExpectedEval(nbest, wts, emetric);
+		System.err.printf("0.5||w||_2^2 - C*E(Eval): %e\n", -regE);
+		double l2wtsSqred = l2norm(wts); l2wtsSqred *= l2wtsSqred;
+		System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
+		System.err.printf("E(Eval): %e\n", (regE + 0.5*l2wtsSqred)/C);
+		System.err.printf("C: %e\n", C);
 		System.err.printf("Last eval: %e\n", eval);
 		return wts;
 	}
