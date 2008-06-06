@@ -112,7 +112,11 @@ public class UnsmoothedMERT {
 			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
 			
   		for (int i = 0; i < wtsDense.length; i++) {
-  			if (wtsDense[i] != wtsDense[i]) throw new RuntimeException("Weights contain NaN");
+  			if (wtsDense[i] != wtsDense[i]){
+  				System.err.printf("Warning: weights contain NaN!");
+  				System.err.printf("Returning valueAt of +inf\n");
+  				return Double.POSITIVE_INFINITY;
+  			}
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
 			  		
