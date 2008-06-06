@@ -183,9 +183,12 @@ public class UnsmoothedMERT {
 			System.err.printf("E(loss) = %e (sum: %e)\n", sumExpL/cnt, sumExpL);
 		}
 		
-		return sumExpL/cnt;
+		// objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
+		double l2wts = l2norm(wts);
+		return C*sumExpL/cnt-0.5*l2wts*l2wts;
   }
   
+  public static final double C = 0.1;
   
   static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
   	return mcmcDerivative(nbest, wts, emetric, null);
@@ -282,6 +285,11 @@ public class UnsmoothedMERT {
 		
 		if (expectedEval != null) expectedEval.set(sumExpL/cnt);
 		
+		// add in regularization terms
+		dE.multiplyBy(C);
+		for (String key : wts.keySet()) {
+			dE.incrementCount(key, -wts.getCount(key));
+		}
 		return dE;		
 	}
 	
@@ -1330,7 +1338,6 @@ public class UnsmoothedMERT {
 		ObjELossDiffFunction obj = new ObjELossDiffFunction(nbest, initialWts, emetric);
 		QNMinimizer minim = new QNMinimizer(obj);
 		minim.setRobustOptions();
-		minim.useBacktracking();
 		
 		double[] wtsDense = minim.minimize(obj, 1e-4, obj.initial);
 		ClassicCounter<String> wts = new ClassicCounter<String>();
