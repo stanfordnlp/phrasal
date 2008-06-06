@@ -6,8 +6,8 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
-import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
 import edu.stanford.nlp.optimization.DiffFunction;
+import edu.stanford.nlp.optimization.HasInitial;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -33,7 +33,7 @@ public class UnsmoothedMERT {
 	static final double MAX_ITER_SGD = 1000;
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
-
+	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-9;
 	static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
   static final double MCMC_BATCH_SAMPLES = 30000;
   
@@ -42,7 +42,7 @@ public class UnsmoothedMERT {
 	static public final double MIN_UPDATE_DIFF = 1e-6;
 
   
-  static class ObjELossDiffFunction extends AbstractCachingDiffFunction {
+  static class ObjELossDiffFunction implements DiffFunction, HasInitial {
   	
   	final MosesNBestList nbest; 
   	final ClassicCounter<String> initialWts; 
@@ -51,6 +51,7 @@ public class UnsmoothedMERT {
   	
   	final List<String> featureIdsToString;
   	final double[] initial;
+  	final double[] derivative;
   	
   	public ObjELossDiffFunction(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
   		this.nbest = nbest;
@@ -73,6 +74,7 @@ public class UnsmoothedMERT {
   		}
   		
   		initial = new double[initialFeaturesVector.size()];
+  		derivative = new double[initialFeaturesVector.size()];
   		for (int i = 0; i < initial.length; i++) {
   			initial[i] = initialFeaturesVector.get(i);
   		}
@@ -89,8 +91,9 @@ public class UnsmoothedMERT {
     
   	@SuppressWarnings("deprecation")
 		@Override
-    public void calculate(double[] wtsDense) {
-  		ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
+		public double[] derivativeAt(double[] wtsDense) {
+  		
+			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
   		for (int i = 0; i < wtsDense.length; i++) {
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
@@ -102,14 +105,87 @@ public class UnsmoothedMERT {
       for (int i = 0; i < derivative.length; i++) {
       	derivative[i] = dE.getCount(featureIdsToString.get(i));
       }
-      
-      value = -expectedEval.doubleValue();
-    }
+			return derivative;
+		}
+
+		@Override
+		public double valueAt(double[] wtsDense) {
+			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
+  		for (int i = 0; i < wtsDense.length; i++) {
+  			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
+  		}
+			
+  		
+			return mcmcTightExpectedEval(nbest, wtsCounter, emetric);
+		}
   }
+  
+  static public double mcmcTightExpectedEval(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
+  	// for quick mixing, get current classifier argmax
+		List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
+				
+		// recover which candidates were selected
+		int argmaxCandIds[] = new int[current.size()]; Arrays.fill(argmaxCandIds, -1);
+		for (int i = 0; i < nbest.nbestLists().size(); i++) {
+			for (int j = 0; j < nbest.nbestLists().get(i).size(); j++) { 
+				if (current.get(i) == nbest.nbestLists().get(i).get(j)) argmaxCandIds[i] = j;
+			}			
+		}
+		
+		Scorer<String> scorer = new StaticScorer(wts);
+		
+		int cnt = 0;
+		double dEEval = Double.POSITIVE_INFINITY;
+		
+   	// expected value sum
+		double sumExpL = 0.0;
+		for (int batch = 0; Math.abs(dEEval) > NO_PROGRESS_MCMC_TIGHT_DIFF; batch++) {
+			// reset current to argmax
+			int[] candIds = argmaxCandIds.clone();
+			
+			// reset incremental evaluation object for the argmax candidates
+			IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();			
+			for (ScoredFeaturizedTranslation<IString, String> tran : argmax) incEval.add(tran);
+			double eval = incEval.score();
+			
+			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
+				// mcmc sample
+				int sentId = r.nextInt(nbest.nbestLists().size());
+				int posSampleCandId   = r.nextInt(nbest.nbestLists().get(sentId).size());
+				double currentScore   = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
+				double posSampleScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(posSampleCandId).features);
+				double a = Math.exp(posSampleScore - currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
+				if (a >= 1.0) {
+					candIds[sentId] = posSampleCandId;
+				} else {
+					if (r.nextDouble() <= a) { // x^(t+1) = x' with probability a
+						candIds[sentId] = posSampleCandId;
+					} // x^(t+1) = x^t with probability 1-a
+				}
+				
+				// collect derivative relevant statistics using sample
+				cnt++;
+				ScoredFeaturizedTranslation<IString, String> cTrans = nbest.nbestLists().get(sentId).get(candIds[sentId]);
+			  
+				if (candIds[sentId] == posSampleCandId) { // if necessary, adjust currentF & eval
+					incEval.replace(sentId, cTrans);
+					eval = incEval.score();
+				}
+			
+				dEEval = (cnt > 1 ? sumExpL/(cnt-1) - (sumExpL+eval)/cnt : Double.POSITIVE_INFINITY);
+				
+				sumExpL += eval;								
+			}			
+		}
+		
+		return sumExpL/cnt;
+  }
+  
   
   static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
   	return mcmcDerivative(nbest, wts, emetric, null);
   }
+  
   
 	@SuppressWarnings({ "deprecation" })
 	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, MutableDouble expectedEval) {
@@ -1252,6 +1328,8 @@ public class UnsmoothedMERT {
 		for (int i = 0; i < wtsDense.length; i++) {
 			wts.incrementCount(obj.featureIdsToString.get(i), wtsDense[i]);
 		}
+		double eval = evalAtPoint(nbest, wts, emetric);
+		System.err.printf("Last eval: %e\n", eval);
 		return wts;
 	}
 	
