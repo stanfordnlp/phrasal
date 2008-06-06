@@ -115,7 +115,7 @@ public class UnsmoothedMERT {
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
 			  		
-			return mcmcTightExpectedEval(nbest, wtsCounter, emetric);
+			return -mcmcTightExpectedEval(nbest, wtsCounter, emetric);
 		}
   }
   
