@@ -121,6 +121,8 @@ public class UnsmoothedMERT {
   }
   
   static public double mcmcTightExpectedEval(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
+  	System.err.printf("TMCMC weights:\n%s\n\n", wts);
+  	
   	// for quick mixing, get current classifier argmax
 		List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
 				
@@ -192,6 +194,8 @@ public class UnsmoothedMERT {
   
 	@SuppressWarnings({ "deprecation" })
 	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, MutableDouble expectedEval) {
+		System.err.printf("MCMC weights:\n%s\n\n", wts);
+		
 		// for quick mixing, get current classifier argmax
 		List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
 		
