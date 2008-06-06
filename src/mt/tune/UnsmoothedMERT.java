@@ -189,7 +189,7 @@ public class UnsmoothedMERT {
 		System.err.printf("Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", -obj);
 		System.err.printf("C: %e\n", C);
 		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
-		System.err.printf("E(loss) = %e (sum: %e)\n", sumExpL/cnt);
+		System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 		return obj;
   }
   
