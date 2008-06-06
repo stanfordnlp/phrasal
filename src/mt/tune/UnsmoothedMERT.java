@@ -114,8 +114,7 @@ public class UnsmoothedMERT {
   		for (int i = 0; i < wtsDense.length; i++) {
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
-			
-  		
+			  		
 			return mcmcTightExpectedEval(nbest, wtsCounter, emetric);
 		}
   }
@@ -175,7 +174,10 @@ public class UnsmoothedMERT {
 				dEEval = (cnt > 1 ? sumExpL/(cnt-1) - (sumExpL+eval)/cnt : Double.POSITIVE_INFINITY);
 				
 				sumExpL += eval;								
-			}			
+			}
+			
+			System.err.printf("TBatch: %d dEEval: %e\n", batch, dEEval);
+			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 		}
 		
 		return sumExpL/cnt;
