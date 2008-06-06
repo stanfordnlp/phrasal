@@ -186,7 +186,10 @@ public class UnsmoothedMERT {
 		// objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
 		double l2wts = l2norm(wts);
 		double obj = C*sumExpL/cnt-0.5*l2wts*l2wts;
-		System.err.printf("Regularized objective: %e\n", obj);
+		System.err.printf("Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", -obj);
+		System.err.printf("C: %e\n", C);
+		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
+		System.err.printf("E(loss) = %e (sum: %e)\n", sumExpL/cnt);
 		return obj;
   }
   
