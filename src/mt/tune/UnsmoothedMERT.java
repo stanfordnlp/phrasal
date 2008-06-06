@@ -8,7 +8,6 @@ import mt.decoder.util.*;
 import mt.metrics.*;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.HasInitial;
-import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -1331,6 +1330,7 @@ public class UnsmoothedMERT {
 		ObjELossDiffFunction obj = new ObjELossDiffFunction(nbest, initialWts, emetric);
 		QNMinimizer minim = new QNMinimizer(obj);
 		minim.setRobustOptions();
+		minim.useBacktracking();
 		
 		double[] wtsDense = minim.minimize(obj, 1e-4, obj.initial);
 		ClassicCounter<String> wts = new ClassicCounter<String>();
