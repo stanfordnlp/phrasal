@@ -112,6 +112,7 @@ public class UnsmoothedMERT {
 		public double valueAt(double[] wtsDense) {
 			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
   		for (int i = 0; i < wtsDense.length; i++) {
+  			if (wtsDense[i] != wtsDense[i]) throw new RuntimeException("Weights contain NaN");
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
 			  		
@@ -176,8 +177,8 @@ public class UnsmoothedMERT {
 				sumExpL += eval;								
 			}
 			
-			System.err.printf("TBatch: %d dEEval: %e\n", batch, dEEval);
-			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
+			System.err.printf("TBatch: %d dEEval: %e cnt: %d\n", batch, dEEval, cnt);
+			System.err.printf("E(loss) = %e (sum: %e)\n", sumExpL/cnt, sumExpL);
 		}
 		
 		return sumExpL/cnt;
