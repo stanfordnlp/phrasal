@@ -111,6 +111,7 @@ public class UnsmoothedMERT {
 		@Override
 		public double valueAt(double[] wtsDense) {
 			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
+			
   		for (int i = 0; i < wtsDense.length; i++) {
   			if (wtsDense[i] != wtsDense[i]) throw new RuntimeException("Weights contain NaN");
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
@@ -1328,7 +1329,8 @@ public class UnsmoothedMERT {
 	
 	static public ClassicCounter<String> mcmcELossObjectiveBFGS(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
 		ObjELossDiffFunction obj = new ObjELossDiffFunction(nbest, initialWts, emetric);
-		Minimizer<DiffFunction> minim = new QNMinimizer(obj);
+		QNMinimizer minim = new QNMinimizer(obj);
+		minim.setRobustOptions();
 		
 		double[] wtsDense = minim.minimize(obj, 1e-4, obj.initial);
 		ClassicCounter<String> wts = new ClassicCounter<String>();
