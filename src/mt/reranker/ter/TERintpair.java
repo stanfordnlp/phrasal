@@ -1,3 +1,5 @@
+package mt.reranker.ter;
+
 public class TERintpair {
   public int car;
   public int cdr;

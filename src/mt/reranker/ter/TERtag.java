@@ -1,3 +1,5 @@
+package mt.reranker.ter;
+
 import java.util.HashMap;
 
 public class TERtag {
