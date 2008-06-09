@@ -6,9 +6,9 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
+import edu.stanford.nlp.optimization.CGMinimizer;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.HasInitial;
-import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.MutableDouble;
@@ -1339,10 +1339,9 @@ public class UnsmoothedMERT {
 	}
 	
 	
-	static public ClassicCounter<String> mcmcELossObjectiveBFGS(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
+	static public ClassicCounter<String> mcmcELossObjectiveCG(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
 		ObjELossDiffFunction obj = new ObjELossDiffFunction(nbest, initialWts, emetric);
-		QNMinimizer minim = new QNMinimizer(obj);
-		minim.setRobustOptions();
+		CGMinimizer minim = new CGMinimizer(obj);
 		
 		double[] wtsDense = minim.minimize(obj, 1e-4, obj.initial);
 		ClassicCounter<String> wts = new ClassicCounter<String>();
@@ -2215,9 +2214,9 @@ public class UnsmoothedMERT {
 			} else if (System.getProperty("mcmcELossSGD") != null) {
 				System.out.printf("using mcmcELossSGD");
 				newWts = mcmcELossObjectiveSGD(nbest, wts, emetric);
-			} else if (System.getProperty("mcmcELossBFGS") != null) {
-				System.out.printf("using mcmcELossBFGS\n");
-				newWts = mcmcELossObjectiveBFGS(nbest, wts, emetric);
+			} else if (System.getProperty("mcmcELossCG") != null) {
+				System.out.printf("using mcmcELossCG\n");
+				newWts = mcmcELossObjectiveCG(nbest, wts, emetric);
 			} else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
