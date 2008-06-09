@@ -6,9 +6,8 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
-import edu.stanford.nlp.optimization.CGMinimizer;
-import edu.stanford.nlp.optimization.DiffFunction;
-import edu.stanford.nlp.optimization.HasInitial;
+import mt.reranker.ter.*;
+import edu.stanford.nlp.optimization.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.MutableDouble;
@@ -29,7 +28,7 @@ public class UnsmoothedMERT {
 
 	static final double L_RATE = 1.0;
 	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-6; 
-	static final double MAX_ITER_SGD = 1000;
+	static final int DEFAULT_MAX_ITER_SGD = 1000;
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
 	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-9;
@@ -1340,18 +1339,34 @@ public class UnsmoothedMERT {
 	
 	
 	static public ClassicCounter<String> mcmcELossObjectiveCG(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
-		ObjELossDiffFunction obj = new ObjELossDiffFunction(nbest, initialWts, emetric);
+    ClassicCounter<String> sgdWts;
+    System.err.println("Begin SGD optimization\n");
+    sgdWts = mcmcELossObjectiveSGD(nbest, initialWts, emetric, 15);
+		double eval = evalAtPoint(nbest, sgdWts, emetric);
+		double regE = mcmcTightExpectedEval(nbest, sgdWts, emetric);
+		double l2wtsSqred = l2norm(sgdWts); l2wtsSqred *= l2wtsSqred;
+		System.err.printf("SGD final reg objective 0.5||w||_2^2 - C*E(Eval): %e\n",
+       -regE);
+		System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
+		System.err.printf("E(Eval): %e\n", (regE + 0.5*l2wtsSqred)/C);
+		System.err.printf("C: %e\n", C);
+		System.err.printf("Last eval: %e\n", eval);
+   
+    System.err.println("Begin CG optimization\n");
+		ObjELossDiffFunction obj = new ObjELossDiffFunction(nbest, sgdWts, emetric);
 		CGMinimizer minim = new CGMinimizer(obj);
+		//QNMinimizer minim = new QNMinimizer(obj, 10, true);
 		
-		double[] wtsDense = minim.minimize(obj, 1e-4, obj.initial);
+		double[] wtsDense = minim.minimize(obj, 1e-3, obj.initial);
 		ClassicCounter<String> wts = new ClassicCounter<String>();
 		for (int i = 0; i < wtsDense.length; i++) {
 			wts.incrementCount(obj.featureIdsToString.get(i), wtsDense[i]);
 		}
-		double eval = evalAtPoint(nbest, wts, emetric);
-		double regE = mcmcTightExpectedEval(nbest, wts, emetric);
+
+		eval = evalAtPoint(nbest, wts, emetric);
+		regE = mcmcTightExpectedEval(nbest, wts, emetric);
 		System.err.printf("0.5||w||_2^2 - C*E(Eval): %e\n", -regE);
-		double l2wtsSqred = l2norm(wts); l2wtsSqred *= l2wtsSqred;
+		l2wtsSqred = l2norm(wts); l2wtsSqred *= l2wtsSqred;
 		System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
 		System.err.printf("E(Eval): %e\n", (regE + 0.5*l2wtsSqred)/C);
 		System.err.printf("C: %e\n", C);
@@ -1359,14 +1374,20 @@ public class UnsmoothedMERT {
 		return wts;
 	}
 	
-	
+	static public ClassicCounter<String> mcmcELossObjectiveSGD(
+   MosesNBestList nbest, ClassicCounter<String> initialWts, 
+   EvaluationMetric<IString, String> emetric) {
+    return mcmcELossObjectiveSGD(nbest, initialWts, emetric, 
+      DEFAULT_MAX_ITER_SGD);
+  }	
+
 	@SuppressWarnings("deprecation")
-	static public ClassicCounter<String> mcmcELossObjectiveSGD(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
+	static public ClassicCounter<String> mcmcELossObjectiveSGD(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric, int max_iter) {
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
 		double eval = 0;
 		double lastExpectedEval = Double.NEGATIVE_INFINITY;
 		
-		for (int iter = 0; iter < MAX_ITER_SGD; iter++) {
+		for (int iter = 0; iter < max_iter; iter++) {
 			MutableDouble expectedEval = new MutableDouble();
 			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric, expectedEval);
 			dE.multiplyBy(L_RATE);
@@ -2030,7 +2051,11 @@ public class UnsmoothedMERT {
 		EvaluationMetric<IString, String> emetric = null;
 		List<List<Sequence<IString>>> references = Metrics
 				.readReferences(referenceList.split(","));
-		if (evalMetric.equals("ter")) {
+		if (evalMetric.startsWith("ter")) {
+      String[] fields = evalMetric.split(":");
+      if (fields.length > 1) {
+        TERcalc.setBeamWidth(Integer.parseInt(fields[1]));
+      }
 			emetric = new TERMetric<IString, String>(references);
 		} else if (evalMetric.endsWith("bleu")) {
 			emetric = new BLEUMetric<IString, String>(references);
