@@ -2,6 +2,7 @@ package mt.reranker.ter;
 
 import java.util.HashMap;
 
+@SuppressWarnings( {"unchecked", "unused"} )
 public class TERtag {
   public String name;
   public HashMap content;

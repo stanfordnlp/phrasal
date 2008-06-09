@@ -21,6 +21,7 @@ import org.xml.sax.SAXException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 
+@SuppressWarnings( {"unchecked", "unused"} )
 public class TERsgml {
   public static enum TAGNAME {
 	TSTSET, REFSET, DOC, AUDIOFILE, SEG, HYP, WORD, HL, P, UNKNOWN;

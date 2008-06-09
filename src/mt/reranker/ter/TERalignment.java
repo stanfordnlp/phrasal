@@ -45,6 +45,7 @@ import java.util.ArrayList;
 
 
 /* Storage Class for TER alignments */
+@SuppressWarnings( {"unchecked", "unused"} )
 public class TERalignment {
   public String toString() {
 	String s = "Original Ref: " + join(" ", ref) + 
@@ -86,7 +87,7 @@ public class TERalignment {
       return (double) numEdits / numWords;
   }    
 
-  public static String join(String delim, Comparable[] arr) {
+	public static String join(String delim, Comparable[] arr) {
 	if (arr == null) return "";
 	if (delim == null) delim = new String("");
 	String s = new String("");

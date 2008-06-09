@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.regex.*;
 
+@SuppressWarnings( {"unchecked", "unused"} )
 public class TERpara {
   private static String reffn;
   private static String hypfn;

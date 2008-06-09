@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.*;
 
+@SuppressWarnings( {"unchecked", "unused"} )
 public class TERcalc {
   /* Turn on if you want a lot of debugging info. */
   static final private boolean DEBUG = false;

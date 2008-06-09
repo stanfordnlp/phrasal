@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Iterator;
 import org.w3c.dom.Document;
 
+@SuppressWarnings( {"unchecked", "unused"} )
 public class TERtest {
     public static void main(String[] args) {
 	// 1. process arguments
