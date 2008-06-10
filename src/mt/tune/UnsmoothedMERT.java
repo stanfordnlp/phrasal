@@ -25,8 +25,8 @@ public class UnsmoothedMERT {
 			.readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 
 	static public final boolean DEBUG = false;
-
-	static final double L_RATE = 1.0;
+  public static final double C = 100;
+	static final double L_RATE = 1.0/C;
 	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-6; 
 	static final int DEFAULT_MAX_ITER_SGD = 1000;
 	static final int NO_PROGRESS_LIMIT = 20;
@@ -192,15 +192,17 @@ public class UnsmoothedMERT {
 		return obj;
   }
   
-  public static final double C = 10;
   
   static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
   	return mcmcDerivative(nbest, wts, emetric, null);
   }
-  
+
+	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, MutableDouble expectedEval) {
+  	return mcmcDerivative(nbest, wts, emetric, expectedEval, null);
+  }
   
 	@SuppressWarnings({ "deprecation" })
-	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, MutableDouble expectedEval) {
+	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, MutableDouble expectedEval, MutableDouble objValue) {
 		System.err.printf("MCMC weights:\n%s\n\n", wts);
 		
 		// for quick mixing, get current classifier argmax
@@ -286,8 +288,16 @@ public class UnsmoothedMERT {
 			System.err.printf("E(f):\n%s\n\n", new ClassicCounter<String>(sumExpF).divideBy(cnt));
 			System.err.printf("dE:\n%s\n\n", dE);
 		}
+
+		double l2wts = l2norm(wts);
+		double obj = C*sumExpL/cnt-0.5*l2wts*l2wts;
+		System.err.printf("DRegularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", -obj);
+		System.err.printf("C: %e\n", C);
+		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
+		System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 		
 		if (expectedEval != null) expectedEval.set(sumExpL/cnt);
+    if (objValue != null) objValue.set(-obj);
 		
 		// add in regularization terms
 		dE.multiplyBy(C);
@@ -1341,7 +1351,7 @@ public class UnsmoothedMERT {
 	static public ClassicCounter<String> mcmcELossObjectiveCG(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
     ClassicCounter<String> sgdWts;
     System.err.println("Begin SGD optimization\n");
-    sgdWts = mcmcELossObjectiveSGD(nbest, initialWts, emetric, 15);
+    sgdWts = mcmcELossObjectiveSGD(nbest, initialWts, emetric, 500);
 		double eval = evalAtPoint(nbest, sgdWts, emetric);
 		double regE = mcmcTightExpectedEval(nbest, sgdWts, emetric);
 		double l2wtsSqred = l2norm(sgdWts); l2wtsSqred *= l2wtsSqred;
@@ -1365,7 +1375,7 @@ public class UnsmoothedMERT {
 
 		eval = evalAtPoint(nbest, wts, emetric);
 		regE = mcmcTightExpectedEval(nbest, wts, emetric);
-		System.err.printf("0.5||w||_2^2 - C*E(Eval): %e\n", -regE);
+		System.err.printf("CG final reg 0.5||w||_2^2 - C*E(Eval): %e\n", -regE);
 		l2wtsSqred = l2norm(wts); l2wtsSqred *= l2wtsSqred;
 		System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
 		System.err.printf("E(Eval): %e\n", (regE + 0.5*l2wtsSqred)/C);
@@ -1386,19 +1396,24 @@ public class UnsmoothedMERT {
 		ClassicCounter<String> wts = new ClassicCounter<String>(initialWts);
 		double eval = 0;
 		double lastExpectedEval = Double.NEGATIVE_INFINITY;
-		
+	  double lastObj = Double.NEGATIVE_INFINITY;
+	
 		for (int iter = 0; iter < max_iter; iter++) {
 			MutableDouble expectedEval = new MutableDouble();
-			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric, expectedEval);
+			MutableDouble objValue = new MutableDouble();
+
+			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric, expectedEval, objValue);
 			dE.multiplyBy(L_RATE);
 			wts.addAll(dE);
 			
 			double ssd = l2norm(dE);
 			double expectedEvalDiff = expectedEval.doubleValue() - lastExpectedEval;
+      double objDiff = objValue.doubleValue() - lastObj;
+      lastObj = objValue.doubleValue();
 			lastExpectedEval = expectedEval.doubleValue();
 			eval = evalAtPoint(nbest, wts, emetric);
-			System.err.printf("sgd step %d: eval: %e wts ssd: %e E(Eval): %e delta E(Eval): %e\n", iter, eval, ssd, expectedEval.doubleValue(), expectedEvalDiff);
-			if (MIN_OBJECTIVE_CHANGE_SGD > Math.abs(expectedEvalDiff)) break;
+			System.err.printf("sgd step %d: eval: %e wts ssd: %e E(Eval): %e delta E(Eval): %e obj: %e (delta: %e)\n", iter, eval, ssd, expectedEval.doubleValue(), expectedEvalDiff, objValue.doubleValue(), objDiff);
+			if (MIN_OBJECTIVE_CHANGE_SGD > Math.abs(objDiff)) break;
 		}
 		System.err.printf("Last eval: %e\n", eval);
 		return wts;
