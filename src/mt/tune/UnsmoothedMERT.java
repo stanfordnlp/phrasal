@@ -183,7 +183,7 @@ public class UnsmoothedMERT {
 		}
 		
 		// objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
-		double l2wts = l2norm(wts);
+		double l2wts = Counters.L2Norm(wts);
 		double obj = C*sumExpL/cnt-0.5*l2wts*l2wts;
 		System.err.printf("Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", -obj);
 		System.err.printf("C: %e\n", C);
@@ -289,7 +289,7 @@ public class UnsmoothedMERT {
 			System.err.printf("dE:\n%s\n\n", dE);
 		}
 
-		double l2wts = l2norm(wts);
+		double l2wts = Counters.L2Norm(wts);
 		double obj = C*sumExpL/cnt-0.5*l2wts*l2wts;
 		System.err.printf("DRegularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", -obj);
 		System.err.printf("C: %e\n", C);
@@ -675,7 +675,7 @@ public class UnsmoothedMERT {
 			// Extract all feature vectors & use them to seed the clusters;
 			for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) {
 				for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
-					ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays
+					ClassicCounter<String> feats = Counters.L2Normalize(summarizedAllFeaturesVector(Arrays
 							.asList(tran)));
 					int clusterId = r.nextInt(K);
 					clusterIds[kMeans.size()] = clusterId;
@@ -731,8 +731,8 @@ public class UnsmoothedMERT {
 				for (int i = 0; i < K; i++) {
 					System.err.printf(
 							"%d:\nCurrent (l2: %f):\n%s\nPrior(l2: %f):\n%s\n\n", i,
-							l2norm(newKMeans.get(i)), newKMeans.get(i),
-							l2norm(kMeans.get(i)), kMeans.get(i));
+							Counters.L2Norm(newKMeans.get(i)), newKMeans.get(i),
+							Counters.L2Norm(kMeans.get(i)), kMeans.get(i));
 				}
 				System.err.printf("\nCluster sizes:\n");
 				for (int i = 0; i < K; i++) {
@@ -784,7 +784,7 @@ public class UnsmoothedMERT {
 				for (int i = 0; i < K; i++) {
 					List<ScoredFeaturizedTranslation<IString, String>> current = transArgmax(
 							nbest, newWts);
-					ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
+					ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
 					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
 					dir.subtractAll(c);
 
@@ -848,7 +848,7 @@ public class UnsmoothedMERT {
 			ClassicCounter<String> worseVec = new ClassicCounter<String>();
 			int worseClusterCnt = 0;
 			ClassicCounter<String> sameVec = new ClassicCounter<String>(
-					l2normalize(summarizedAllFeaturesVector(current)));
+					Counters.L2Normalize(summarizedAllFeaturesVector(current)));
 			int sameClusterCnt = 0;
 
 			double baseScore = incEval.score();
@@ -860,7 +860,7 @@ public class UnsmoothedMERT {
 				lI++;
 				for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
 					incEval.replace(lI, tran);
-					ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays
+					ClassicCounter<String> feats = Counters.L2Normalize(summarizedAllFeaturesVector(Arrays
 							.asList(tran)));
 					if (incEval.score() >= baseScore) {
 						betterVec.addAll(feats);
@@ -958,8 +958,8 @@ public class UnsmoothedMERT {
 
 			switch (lType) {
 			case betterPerceptron:
-				ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
-				c.multiplyBy(l2norm(betterVec));
+				ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
+				c.multiplyBy(Counters.L2Norm(betterVec));
 				dir.subtractAll(c);
 				System.out.printf("betterPerceptron");
 				System.out.printf("current:\n%s\n\n", c);
@@ -985,7 +985,7 @@ public class UnsmoothedMERT {
 			System.err.printf("SameClust: %d\n", sameClusterCnt);
 			System.err.printf("Worse cnt: %d\n", worseClusterCnt);
 			System.err.printf("Better Vec:\n%s\n\n", betterVec);
-			System.err.printf("l2: %f\n", l2norm(betterVec));
+			System.err.printf("l2: %f\n", Counters.L2Norm(betterVec));
 			System.err.printf("Worse Vec:\n%s\n\n", worseVec);
 			System.err.printf("Same Vec:\n%s\n\n", sameVec);
 			System.err.printf("Dir:\n%s\n\n", dir);
@@ -994,8 +994,8 @@ public class UnsmoothedMERT {
 			if (lType != Cluster3LearnType.allDirs) {
 				newWts = lineSearch(nbest, wts, dir, emetric);
 			} else {
-				ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
-				c.multiplyBy(l2norm(betterVec));
+				ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
+				c.multiplyBy(Counters.L2Norm(betterVec));
 
 				newWts = wts;
 
@@ -1070,7 +1070,7 @@ public class UnsmoothedMERT {
 				lI++;
 				for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
 					incEval.replace(lI, tran);
-					ClassicCounter<String> feats = l2normalize(summarizedAllFeaturesVector(Arrays
+					ClassicCounter<String> feats = Counters.L2Normalize(summarizedAllFeaturesVector(Arrays
 							.asList(tran)));
 					if (incEval.score() >= baseScore) {
 						betterVec.addAll(feats);
@@ -1149,17 +1149,17 @@ public class UnsmoothedMERT {
 			if (perceptron) {
 				if (useWts) {
 					ClassicCounter<String> normWts = new ClassicCounter<String>(wts);
-					l2normalize(normWts);
-					normWts.multiplyBy(l2norm(betterVec));
+					Counters.L2Normalize(normWts);
+					normWts.multiplyBy(Counters.L2Norm(betterVec));
 					System.err.printf("Subing wts:\n%s\n", normWts);
 					dir.subtractAll(normWts);
-					System.err.printf("l2: %f\n", l2norm(normWts));
+					System.err.printf("l2: %f\n", Counters.L2Norm(normWts));
 				} else {
-					ClassicCounter<String> c = l2normalize(summarizedAllFeaturesVector(current));
-					c.multiplyBy(l2norm(betterVec));
+					ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
+					c.multiplyBy(Counters.L2Norm(betterVec));
 					System.err.printf("Subing current:\n%s\n", c);
 					dir.subtractAll(c);
-					System.err.printf("l2: %f\n", l2norm(c));
+					System.err.printf("l2: %f\n", Counters.L2Norm(c));
 				}
 			} else {
 				if (worseClusterCnt != 0)
@@ -1170,7 +1170,7 @@ public class UnsmoothedMERT {
 			System.err.printf("Better cnt: %d\n", betterClusterCnt);
 			System.err.printf("Worse cnt: %d\n", worseClusterCnt);
 			System.err.printf("Better Vec:\n%s\n\n", betterVec);
-			System.err.printf("l2: %f\n", l2norm(betterVec));
+			System.err.printf("l2: %f\n", Counters.L2Norm(betterVec));
 			System.err.printf("Worse Vec:\n%s\n\n", worseVec);
 			System.err.printf("Dir:\n%s\n\n", dir);
 			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
@@ -1354,7 +1354,7 @@ public class UnsmoothedMERT {
     sgdWts = mcmcELossObjectiveSGD(nbest, initialWts, emetric, 500);
 		double eval = evalAtPoint(nbest, sgdWts, emetric);
 		double regE = mcmcTightExpectedEval(nbest, sgdWts, emetric);
-		double l2wtsSqred = l2norm(sgdWts); l2wtsSqred *= l2wtsSqred;
+		double l2wtsSqred = Counters.L2Norm(sgdWts); l2wtsSqred *= l2wtsSqred;
 		System.err.printf("SGD final reg objective 0.5||w||_2^2 - C*E(Eval): %e\n",
        -regE);
 		System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
@@ -1376,7 +1376,7 @@ public class UnsmoothedMERT {
 		eval = evalAtPoint(nbest, wts, emetric);
 		regE = mcmcTightExpectedEval(nbest, wts, emetric);
 		System.err.printf("CG final reg 0.5||w||_2^2 - C*E(Eval): %e\n", -regE);
-		l2wtsSqred = l2norm(wts); l2wtsSqred *= l2wtsSqred;
+		l2wtsSqred = Counters.L2Norm(wts); l2wtsSqred *= l2wtsSqred;
 		System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
 		System.err.printf("E(Eval): %e\n", (regE + 0.5*l2wtsSqred)/C);
 		System.err.printf("C: %e\n", C);
@@ -1406,7 +1406,7 @@ public class UnsmoothedMERT {
 			dE.multiplyBy(L_RATE);
 			wts.addAll(dE);
 			
-			double ssd = l2norm(dE);
+			double ssd = Counters.L2Norm(dE);
 			double expectedEvalDiff = expectedEval.doubleValue() - lastExpectedEval;
       double objDiff = objValue.doubleValue() - lastObj;
       lastObj = objValue.doubleValue();
@@ -1769,22 +1769,6 @@ public class UnsmoothedMERT {
 		}
 
 		return sum;
-	}
-
-	@SuppressWarnings("deprecation")
-	static public ClassicCounter<String> l2normalize(ClassicCounter<String> wts) {
-		wts.multiplyBy(1.0 / l2norm(wts));
-		return wts;
-	}
-
-	static public double l2norm(ClassicCounter<String> wts) {
-		double sum = 0;
-		for (String f : wts) {
-			double d = wts.getCount(f);
-			sum += d * d;
-		}
-
-		return Math.sqrt(sum);
 	}
 
 	static ClassicCounter<String> featureMeans;
