@@ -3,6 +3,12 @@ package mt.tune;
 import java.io.*;
 import java.util.*;
 
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrix;
+import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.sparse.CompRowMatrix;
+
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
@@ -10,7 +16,9 @@ import mt.reranker.ter.*;
 import edu.stanford.nlp.optimization.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.svd.ReducedSVD;
 import edu.stanford.nlp.util.MutableDouble;
+import edu.stanford.nlp.util.Ptr;
 
 /**
  * Minimum Error Rate Training (MERT)
@@ -118,6 +126,119 @@ public class UnsmoothedMERT {
 			  		
 			return -mcmcTightExpectedEval(nbest, wtsCounter, emetric);
 		}
+  }
+  
+  
+  
+  static public ClassicCounter<String> reducedWeightsToWeights(ClassicCounter<String> reducedWts, Matrix reducedRepU, Map<String,Integer> featureIdMap) {
+  	int col = reducedRepU.numColumns();
+  	Vector vecReducedWts = new DenseVector(col);
+  	for (int i = 0; i < col; i++) {
+  		vecReducedWts.set(i, reducedWts.getCount((new Integer(i)).toString()));
+  	}
+  	
+  	Vector vecWts = new DenseVector(reducedRepU.numRows());
+  	reducedRepU.mult(vecReducedWts, vecWts);
+  	
+  	ClassicCounter<String> wts = new ClassicCounter<String>();
+  	for (Map.Entry<String,Integer> entry : featureIdMap.entrySet()) {
+  		wts.setCount(entry.getKey(), vecWts.get(entry.getValue()));
+  	}
+  	
+  	return wts;
+  }
+  
+  static public ClassicCounter<String> weightsToReducedWeights(ClassicCounter<String> wts, Matrix reducedRepU, Map<String,Integer> featureIdMap) {
+  	Matrix vecWtsOrig = new DenseMatrix(featureIdMap.size(), 1);
+  	for (Map.Entry<String,Integer> entry : featureIdMap.entrySet()) {
+  		vecWtsOrig.set(entry.getValue(), 0, wts.getCount(entry.getKey()));
+  	}
+  	
+  	Matrix vecWtsReduced = new DenseMatrix(reducedRepU.numColumns(), 1);
+  	reducedRepU.transAmult(vecWtsOrig, vecWtsReduced);
+  	
+  	ClassicCounter<String> reducedWts = new ClassicCounter<String>();
+  	for (Map.Entry<String,Integer> entry : featureIdMap.entrySet()) {
+  		reducedWts.setCount(entry.getKey(), vecWtsReduced.get(entry.getValue(), 0));
+  	}
+  	
+  	return reducedWts;
+  }
+  
+  static public MosesNBestList nbestListToDimReducedNbestList(MosesNBestList nbest, Matrix reducedRepV) {
+  	List<List<ScoredFeaturizedTranslation<IString,String>>> oldNbestLists = nbest.nbestLists();
+  	List<List<ScoredFeaturizedTranslation<IString,String>>> newNbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(oldNbestLists.size());
+  	
+  	int nbestId = -1;
+  	int numNewFeat = reducedRepV.numColumns();
+  	for (int listId = 0; listId < oldNbestLists.size(); listId++) {
+  		 List<ScoredFeaturizedTranslation<IString, String>> oldNbestlist = oldNbestLists.get(listId);
+  		 List<ScoredFeaturizedTranslation<IString, String>> newNbestlist = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(oldNbestlist.size());
+  		 newNbestLists.add(newNbestlist);
+  		 for (int transId = 0; transId < oldNbestlist.size(); transId++) {
+  		   nbestId++; 
+  			 ScoredFeaturizedTranslation<IString,String> oldTrans = oldNbestlist.get(transId);
+  		   List<FeatureValue<String>> reducedFeatures = new ArrayList<FeatureValue<String>>(numNewFeat);
+  		   for (int featId = 0; featId < numNewFeat; featId++) {
+  		  	 reducedFeatures.add(new FeatureValue<String>((new Integer(featId)).toString(), reducedRepV.get(featId, nbestId)));  		  	 
+  		   }
+  		   ScoredFeaturizedTranslation<IString,String> newTrans = new ScoredFeaturizedTranslation<IString, String>(oldTrans.translation, reducedFeatures, 0);
+  		   newNbestlist.add(newTrans);
+  		 }  		 	 
+  	}
+  		
+  	return new MosesNBestList(newNbestLists);
+  }
+  
+  static public void nbestListToFeatureDocumentMatrix(MosesNBestList nbest, Ptr<Matrix> pFeatDocMat, Ptr<Map<String,Integer>> pFeatureIdMap) {
+    
+  	// build map from feature names to consecutive unique integer ids
+  	Map<String,Integer> featureIdMap = new HashMap<String,Integer>();
+  	for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+  		for (ScoredFeaturizedTranslation<IString,String> trans : nbestlist) {
+  			for (FeatureValue<String> fv : trans.features) {
+  				if (!featureIdMap.containsKey(fv.name)) {
+  					featureIdMap.put(fv.name, featureIdMap.size()); } } } }
+  	
+  	// build list representation of feature document matrix
+  	List<List<Integer>> listFeatDocMapId = new ArrayList<List<Integer>>(featureIdMap.size());
+  	List<List<Double>> listFeatDocMapVal = new ArrayList<List<Double>>(featureIdMap.size());
+  	for (int i = 0; i < featureIdMap.size(); i++) {
+  		listFeatDocMapId.add(new ArrayList<Integer>());
+  		listFeatDocMapVal.add(new ArrayList<Double>());
+  	}
+  	
+  	int nbestId = -1;
+  	for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
+  		for (ScoredFeaturizedTranslation<IString,String> trans : nbestlist) {
+  			nbestId++;
+  			for (FeatureValue<String> fv : trans.features) {
+  				int featureId = featureIdMap.get(fv.name);
+  				listFeatDocMapId.get(featureId).add(nbestId);
+  				listFeatDocMapVal.get(featureId).add(fv.value);
+  			}
+  		}
+  	}
+  	
+  	// prepare to create compressed row matrix
+  	int[][] nonZeros = new int[listFeatDocMapId.size()][];
+  	for (int i = 0; i < nonZeros.length; i++) {
+  		int[] row = new int[listFeatDocMapId.get(i).size()];
+  		for (int j = 0; j < row.length; j++) {
+  			row[j] = listFeatDocMapId.get(i).get(j);
+  		}
+  		nonZeros[i] = row;
+  	}
+  	
+  	Matrix featDocMat = new CompRowMatrix(nonZeros.length, nbestId+1, nonZeros);
+  	for (int i = 0; i < nonZeros.length; i++) {
+  		for (int j = 0; j < nonZeros[i].length; j++) {
+  			featDocMat.set(i, nonZeros[i][j], listFeatDocMapVal.get(i).get(j));
+  		}
+  	}
+  	
+  	pFeatDocMat.set(featDocMat);
+  	pFeatureIdMap.set(featureIdMap);
   }
   
   static public double mcmcTightExpectedEval(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
@@ -1348,6 +1469,59 @@ public class UnsmoothedMERT {
 		return sumValues;
 	}
 	
+	enum SVDOptChoices { exact, evalue };
+	
+	static public ClassicCounter<String> svdReducedObj(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric,
+			int rank, SVDOptChoices opt) {
+		
+		
+		Ptr<Matrix> pFeatDocMat = new Ptr<Matrix>();
+		Ptr<Map<String,Integer>> pFeatureIdMap = new Ptr<Map<String,Integer>>();
+		System.err.println("Creating feature document matrix");
+		nbestListToFeatureDocumentMatrix(nbest, pFeatDocMat, pFeatureIdMap);
+		
+		Ptr<DenseMatrix> pU = new Ptr<DenseMatrix>();
+		Ptr<DenseMatrix> pV = new Ptr<DenseMatrix>();
+		System.err.printf("Doing SVD rank: %d\n", rank);
+		ReducedSVD.svd(pFeatDocMat.deref(), pU, pV, rank);
+		System.err.println("SVD done.");
+		
+		ClassicCounter<String> reducedInitialWts = weightsToReducedWeights(initialWts, pU.deref(), pFeatureIdMap.deref());
+		
+		System.err.println("Initial Wts:");
+		System.err.println("====================");
+		System.err.println(initialWts);
+		
+		System.err.println("Reduced Initial Wts:");
+		System.err.println("====================");
+		System.err.println(reducedInitialWts);
+		
+		
+		MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest, pV.deref());
+		ClassicCounter<String> reducedWts;
+		switch (opt) {
+		case exact:
+			System.err.println("Using exact MERT");
+			reducedWts = koehnStyleOptimize(reducedRepNbest, reducedInitialWts, emetric);
+			break;
+		case evalue:
+			System.err.println("Using E(Eval) MERT");
+			reducedWts = mcmcELossObjectiveCG(reducedRepNbest, reducedInitialWts, emetric);
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		System.err.println("Reduced Learned Wts:");
+		System.err.println("====================");
+		System.err.println(reducedWts);
+		
+		
+		ClassicCounter<String> recoveredWts = reducedWeightsToWeights(reducedWts, pU.deref(), pFeatureIdMap.deref());
+		System.err.println("Recovered Learned Wts:");
+		System.err.println("======================");
+		System.err.println(recoveredWts);
+		return recoveredWts;
+	}
 	
 	static public ClassicCounter<String> mcmcELossObjectiveCG(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
     ClassicCounter<String> sgdWts;
@@ -2249,6 +2423,14 @@ public class UnsmoothedMERT {
 			} else if (System.getProperty("mcmcELossCG") != null) {
 				System.out.printf("using mcmcELossCG\n");
 				newWts = mcmcELossObjectiveCG(nbest, wts, emetric);
+			} else if (System.getProperty("svdExact") != null) {
+				int rank = Integer.parseInt(System.getProperty("svdExact"));
+				System.out.printf("Using SVD exact, rank: %d", rank);				
+				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.exact);				
+			} else if (System.getProperty("svdELoss") != null) {
+				int rank = Integer.parseInt(System.getProperty("svdELoss"));
+				System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d", rank);				
+				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.evalue);				
 			} else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
