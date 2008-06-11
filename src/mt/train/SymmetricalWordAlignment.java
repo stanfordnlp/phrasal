@@ -28,7 +28,8 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   public static final boolean VERBOSE_DEBUG = Boolean.parseBoolean(System.getProperty(VDEBUG_PROPERTY, "false"));
 
   public SymmetricalWordAlignment() {
-    System.err.println("SymmetricalWordAlignment: new instance.");
+    if(DEBUG)
+      System.err.println("SymmetricalWordAlignment: new instance.");
   }
 
   SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
