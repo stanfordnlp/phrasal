@@ -25,7 +25,8 @@ public class UnsmoothedMERT {
 			.readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 
 	static public final boolean DEBUG = false;
-  public static final double C = 100;
+  public final static double DEFAULT_C = 100;
+  public static double C = DEFAULT_C;
 	static final double L_RATE = 1.0/C;
 	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-6; 
 	static final int DEFAULT_MAX_ITER_SGD = 1000;
@@ -2150,6 +2151,13 @@ public class UnsmoothedMERT {
 		ClassicCounter<String> bestWts = null;
 		double bestEval = Double.NEGATIVE_INFINITY;
 		long startTime = System.currentTimeMillis();
+
+	  if (System.getProperty("C") != null) {
+       C = Double.parseDouble(System.getProperty("C"));
+       System.err.printf("Using C %f rather than default of %f\n",
+          C, DEFAULT_C);
+    }
+
 		for (int ptI = 0; ptI < STARTING_POINTS; ptI++) {
 			ClassicCounter<String> wts;
 			if (ptI == 0)
