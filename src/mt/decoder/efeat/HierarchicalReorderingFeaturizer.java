@@ -9,10 +9,10 @@ import mt.base.CoverageSet;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.IString;
-import mt.base.MosesLexicalReorderingTable;
+import mt.base.ExtendedLexicalReorderingTable;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
-import mt.base.MosesLexicalReorderingTable.ReorderingTypes;
+import mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.LexicalReorderingFeaturizer;
 import mt.train.AlignmentGrid;
@@ -37,7 +37,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 
   class HierBlock {
     int fStart, fEnd;
-    // featurizable objects identifying start and end of the HierBlock object:
+    // featurizable objects identifying start location:
     Featurizable<IString, String> start; 
     HierBlock(int fStart, int fEnd, Featurizable<IString, String> start)
     { this.fStart = fStart; this.fEnd = fEnd; this.start = start; }
@@ -65,25 +65,32 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 
 	public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(ARPALanguageModel.START_TOKEN);
 
-	static final String FEATURE_PREFIX = "HLexR:";
+	String FEATURE_PREFIX = "HLexR:";
 
+  final boolean has2Disc;
 	final String[] featureTags;
-	final MosesLexicalReorderingTable mlrt;
+	final ExtendedLexicalReorderingTable mlrt;
   final Map<Featurizable<IString, String>,HierBlock> hBlocks = new HashMap<Featurizable<IString, String>,HierBlock>();
 
 	public HierarchicalReorderingFeaturizer(String... args) throws IOException {  
-    if(args.length < 2 || args.length > 4)
-      throw new RuntimeException("HierarchicalReorderingFeaturizer: args.length != 2");
+    if(args.length < 2 || args.length > 5)
+      throw new RuntimeException
+        ("Usage: HierarchicalReorderingFeaturizer(ordering_table_file,model_type,forward_model_type?,backward_model_type?,feature_prefix?)");
     String modelFilename=args[0];
     String modelType=args[1];
+    has2Disc = modelType.indexOf("msd2") >= 0;
+    System.err.println("Distinguishes between left and right discontinuous: "+has2Disc);
     if(args.length >= 3) {
       forwardOrientationComputation = ForwardOrientationComputation.valueOf(args[2]);
-      if(args.length == 4)
+      if(args.length >= 4) {
         backwardOrientationComputation = BackwardOrientationComputation.valueOf(args[3]);
+        if(args.length == 5)
+          FEATURE_PREFIX = args[4];
+      }
     }
     System.err.printf("HierarchicalReorderingFeaturizer: forward orientation computation: %s.\n", forwardOrientationComputation);
     System.err.printf("HierarchicalReorderingFeaturizer: backward orientation computation: %s.\n", backwardOrientationComputation);
-    mlrt = new MosesLexicalReorderingTable(modelFilename, modelType);
+    mlrt = new ExtendedLexicalReorderingTable(modelFilename, modelType);
 		featureTags = new String[mlrt.positionalMapping.length];
 		for (int i = 0; i < mlrt.positionalMapping.length; i++) 
       featureTags[i] = String.format("%s:%s", FEATURE_PREFIX, mlrt.positionalMapping[i]);
@@ -96,6 +103,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 
 	public void reset() { 
     System.err.println("HierarchicalReorderingFeaturizer: reset.");
+    for(HierBlock h : hBlocks.values()) { h.start = null; }
     hBlocks.clear();
   }
 
@@ -108,6 +116,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 
     boolean locallyMonotone = f.linearDistortion == 0; 
     boolean locallySwapping = (f.prior == null ? false : f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
+    boolean discont2 = (f.prior == null ? false : fEnd(f) <= fStart(f.prior));
 
     double[] scores = mlrt.getReorderingScores(f.foreignPhrase, f.translatedPhrase);
     double[] priorScores = (f.prior == null ? null : mlrt.getReorderingScores(f.prior.foreignPhrase, f.prior.translatedPhrase));
@@ -173,6 +182,14 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
       if(swap) backwardOrientation = ReorderingTypes.swapWithNext;
     }
 
+    // Distinguish between forward and backward discontinuous:
+    if(has2Disc && discont2) {
+      if(forwardOrientation == ReorderingTypes.discontinousWithPrevious) 
+         forwardOrientation = ReorderingTypes.discontinous2WithPrevious;
+      if(backwardOrientation == ReorderingTypes.discontinousWithNext) 
+         backwardOrientation = ReorderingTypes.discontinous2WithNext;
+    }
+
     // Create feature functions:
     for (int i = 0; i < mlrt.positionalMapping.length; i++) {
       ReorderingTypes type = mlrt.positionalMapping[i];
@@ -197,8 +214,16 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 		return values;
 	}
 	
-	private boolean usePrior(MosesLexicalReorderingTable.ReorderingTypes type) {
-		switch(type) { case monotoneWithNext: case swapWithNext: case discontinousWithNext: case nonMonotoneWithNext: return true; }
+  private boolean usePrior(ExtendedLexicalReorderingTable.ReorderingTypes type) {
+    switch(type) {  // returns true if dealing with backward model:
+      case monotoneWithNext: 
+      case swapWithNext: 
+      case discontinousWithNext: 
+      case discontinous2WithNext: 
+      case nonMonotoneWithNext:
+      case fromEnd:
+      case toEnd:
+      return true; }
 		return false;
 	}
 
@@ -281,6 +306,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
     for(int i = fEnd(currentF)+1; i<fStart(nextF); ++i)
       if(fCoverage.get(i))
         return false;
+    //AlignmentGrid.printDecoderGrid(nextF,System.err);
     return true;
   }
 

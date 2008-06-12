@@ -25,15 +25,11 @@ use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
 
 my %opts = get_opts
   (['v',0,'program will be more verbose'],
-   ['s=s',"$ENV{HOME}/javanlp/projects/mt/external_scripts/tercom_v6b.pl",'TER script'],
 	 ['sgm=s','','template sgm file with IDs'],
-	 ['n=s',-1,'stop after n sentences'],
-	 ['f=s',2,'use more speed optimization']);
+	 ['n=s',-1,'stop after n sentences']);
 my $tmp=$ENV{TMPDIR} || '/tmp';
 my %args = get_args('ref','hyp','target');
 my $ref = $args{ref};
-my $speed = $opts{f};
-print STDERR "speed: $speed\n";
 my $target = $args{target};
 my $N = $opts{n};
 
@@ -92,11 +88,11 @@ close(RO);
 close(HO);
 
 # Compute TER:
-sys("time $opts{s} -f $speed -h $hyptmp -r $reftmp", noprint => !$opts{v});
-#java -jar tercom.jar -r <ref_file> -h <hyp_file> -n <output_prefix>
+print STDERR "hyp: $hyptmp ref: $reftmp\n";
+sys("time java mt.reranker.ter.TERtest -h $hyptmp -r $reftmp -o sum -n $target", noprint => !$opts{v});
 
 # Create target file:
-sys("cp -p $hyptmp.sys.sum_doc $target", noprint => !$opts{v});
+sys("mv $target.sum $target", noprint => !$opts{v});
 
 # Cleanup:
-unlink $reftmp;
+#unlink $reftmp;

@@ -2249,7 +2249,14 @@ public class UnsmoothedMERT {
 		if (evalMetric.startsWith("ter")) {
       String[] fields = evalMetric.split(":");
       if (fields.length > 1) {
-        TERcalc.setBeamWidth(Integer.parseInt(fields[1]));
+        int beamWidth = Integer.parseInt(fields[1]);
+        TERcalc.setBeamWidth(beamWidth);
+        System.err.printf("TER beam width set to %d (default: 20)\n",beamWidth); 
+        if (fields.length > 2) {
+          int maxShiftDist = Integer.parseInt(fields[2]);
+          TERcalc.setShiftDist(maxShiftDist);
+          System.err.printf("TER maximum shift distance set to %d (default: 50)\n",maxShiftDist); 
+        }
       }
 			emetric = new TERMetric<IString, String>(references);
 		} else if (evalMetric.endsWith("bleu")) {

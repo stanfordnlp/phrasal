@@ -37,7 +37,8 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
 
   private boolean phrasalReordering = false;
 
-  private static double LAPLACE_SMOOTHING = .5;
+  public static final String LAPLACE_PROPERTY = "LaplaceSmoothing";
+  private static double LAPLACE_SMOOTHING = Double.parseDouble(System.getProperty(LAPLACE_PROPERTY, "0.5"));
 
   public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
@@ -52,19 +53,24 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     // Type of extraction: word-phrase (Moses) vs. phrase-phrase (Tillmann, etc):
     phrasalReordering = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_PHRASAL_OPT, "false"));
     System.err.println("phrase-phrase reordering: "+phrasalReordering);
-    // Get categories:
-    if("msd".equals(tokens[0]) || "orientation".equals(tokens[0])) {
-      enabledTypes[ReorderingTypes.swap.ordinal()] = true;
-    } else if("monotonicity".equals(tokens[0])) {
-    }
-    else
-      fail= true;
     if(phrasalReordering) {
       enabledTypes[ReorderingTypes.start.ordinal()] =
         Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_START_CLASS_OPT, "false"));
       enabledTypes[ReorderingTypes.discont2.ordinal()] =
       Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
     }
+    // Get categories:
+    if("msd".equals(tokens[0]) || "msd2".equals(tokens[0]) || "orientation".equals(tokens[0])) {
+      enabledTypes[ReorderingTypes.swap.ordinal()] = true;
+      if("msd2".equals(tokens[0])) {
+        enabledTypes[ReorderingTypes.discont2.ordinal()] = true;
+        System.err.println("msd2: yes");
+      }
+    } else if("monotonicity".equals(tokens[0])) {
+      // No swap category.
+    }
+    else
+      fail= true;
     modelSize = initTypeToIdx();
     // Determine whether model is forward, backward, both, or joint:
     switch(tokens.length) {
@@ -131,32 +137,26 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     // Determine if Monotone, Swap, or Discontinous:
     if(connectedMonotone && !connectedSwap) return ReorderingTypes.monotone;
     if(!connectedMonotone && connectedSwap) return ReorderingTypes.swap;
-    if(!enabledTypes[ReorderingTypes.discont2.ordinal()]) return ReorderingTypes.discont1;
+    // If distinction between discont1 and discont2 is impossible, return discont1:
+    if(!enabledTypes[ReorderingTypes.discont2.ordinal()] || !phrasalReordering) 
+      return ReorderingTypes.discont1;
     // If needed, distinguish between forward and backward discontinuous:
-    int fPos = forward ? f1 : f2;
-    int fStep = forward ? -1 : 1;
-    while(sent.f2e(fPos).isEmpty()) {
-      if(fPos == 0 || fPos == sent.f().size()-1) {
-        if(DEBUG) System.err.println("warning: falling back to default (1)");
-        return ReorderingTypes.discont1;
-      }
-      fPos += fStep;
-    }
-    boolean allLeft = true, allRight = true;
-    for(int ei : sent.f2e(fPos)) {
-      if(e1 < ei && ei < e2) {
-        if(DEBUG) System.err.println("warning: falling back to default (2)");
-        return ReorderingTypes.discont1;
-      }
-      if(ei <= e1) allRight = false;
-      if(e2 <= ei) allLeft = false;
-    }
     if(forward) {
-      if(allLeft) return ReorderingTypes.discont1;
-      if(allRight) return ReorderingTypes.discont2;
+      if(e1 >= 0)
+        for(int fPos = f2; fPos<sent.f().size(); ++fPos)
+          if(alGrid.cellAt(fPos,e1).hasBottomLeft())
+            return ReorderingTypes.discont2;
     } else {
-      if(allLeft) return ReorderingTypes.discont2;
-      if(allRight) return ReorderingTypes.discont1;
+      if(e2 < sent.e().size())
+        for(int fPos = f1; fPos>=0; --fPos) {
+          if(alGrid.cellAt(fPos,e2) == null) {
+            System.err.printf("ERROR: no grid cell at [%d,%d] in sentence pair of length [%d,%d]\n",
+              fPos,e2,sent.f().size(), sent.e().size());
+            throw new RuntimeException("Out of bounds.");
+          }
+          if(alGrid.cellAt(fPos,e2).hasTopRight())
+            return ReorderingTypes.discont2;
+        }
     }
     if(DEBUG) System.err.println("warning: falling back to default (3)");
     return ReorderingTypes.discont1;
@@ -213,7 +213,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
       ++curOrd;
       if(!enabledTypes[i]) continue;
       typeToIdx[curOrd] = ++curIdx;
-      System.err.println("reordering type enabled: "+ReorderingTypes.values()[i]);
+      System.err.printf("reordering type enabled: %s, idx=%d\n",ReorderingTypes.values()[i],curIdx);
     }
     return curIdx+1;
   }

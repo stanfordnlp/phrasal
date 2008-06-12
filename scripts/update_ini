@@ -21,10 +21,18 @@ while(<STDIN>) {
  	}
 	if($field eq 'ttable-file' ||
 	   $field eq 'distortion-file' ||
-	   $field eq 'lmodel-file') {
+	   $field eq 'lmodel-file' ||
+		 $field eq 'additional-featurizers') {
 		if(s/XXXX/$newid/g || s/$oldid/$newid/g) {
-			/(\S+)$/;
-			die "File does not exist: $1\n" if(! -f $1);
+			if($field eq 'additional-featurizers') {
+				/\((.*)\)/;
+				foreach my $el (split(/,/,$1)) {
+					warn "WARNING: not a file name or missing file: $el\n" if(! -f $el);
+				}
+			} else {
+				/(\S+)$/;
+				warn "WARNING: missing file: $1\n" if(! -f $1);
+			}
 		}
 	}
 	print;

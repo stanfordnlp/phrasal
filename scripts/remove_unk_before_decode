@@ -18,7 +18,7 @@ use utils::opt  qw(&get_args &get_opts);
 use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
 
 my %opts = get_opts(['v',0,'program will be more verbose']);
-my %args = get_args('pt','len');
+my %args = get_args('len','pt','in','out');
 
 # Phrase table:
 my $pt = $args{pt};
@@ -44,7 +44,11 @@ close(T);
 print STDERR "phrases in table: ",scalar keys %f,"\n";
 
 # Find all words that cannot be translated:
-while(<STDIN>) {
+open(IN,$args{in});
+open(OUT,">$args{out}");
+binmode(IN,":utf8");
+binmode(OUT,":utf8");
+while(<IN>) {
 	chomp;
 	tr/A-Z/a-z/;
 	s/^\s+//;
@@ -75,8 +79,10 @@ while(<STDIN>) {
 			print STDERR $w[$i],"\n";
 		}
 	}
-	print join(' ',@good)."\n";
+	print OUT join(' ',@good)."\n";
 }
+close(IN);
+close(OUT);
 
 sub keep {
 	my $w = shift;

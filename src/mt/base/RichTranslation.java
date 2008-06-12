@@ -12,6 +12,7 @@ import java.util.*;
  * @param <FV>
  */
 public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
+
 	public final Sequence<TK> foreign;
 	public final CoverageSet foreignCoverage;
 	public final int[][] t2fAlignmentIndex;
@@ -103,6 +104,38 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 			sbuf.append(" ").append(NBEST_SEP).append(" ");
 			sbuf.append(latticeSourceId);
 		}
+		return sbuf.toString();
+	}
+
+	public String nbestToMosesString(int id) {
+   /* 
+   Sample output: 
+     0 ||| lebanese president emile lahoud to a violent campaign in the chamber of deputies , which was held yesterday in the regular legislative session turned into a " trial " of the president of the republic for its position on the international court and " observations " made here on this subject .  ||| d: -12 -2.00517 -1.14958 -5.62344 -1.51436 -0.408961 -3.67606 lm: -206.805 tm: -44.5496 -81.3977 -35.8545 -77.5407 19.9979 w: -52 ||| -10.2091 ||| 2=0 0-1=1 3=2 4-5=3-4 6-7=5-7 8-10=8-13 11-14=14-19 17=20 15-16=21-22 18-19=23-25 20-21=26-27 22-23=28-30 24-25=31-34 26-29=35-39 30-33=40-43 34-35=44-45 36-38=46 39=47 40-42=48-50 43=51
+    */
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(id);
+		sbuf.append(" ").append(NBEST_SEP).append(" ");
+		sbuf.append(this.translation);
+		sbuf.append(" ").append(NBEST_SEP);
+		DecimalFormat df = new DecimalFormat("0.####E0"); 
+		for (FeatureValue<FV> fv : FeatureValues.combine(this.features)) {
+			sbuf.append(" ").append(fv.name).append(": ").append((fv.value == (int)fv.value ? (int)fv.value : df.format(fv.value)));
+		}
+		sbuf.append(" ").append(NBEST_SEP).append(" ");
+		sbuf.append(df.format(this.score));
+    // Alignment:
+    for(int lastRangeEnd=-1, i=0; i<f2tAlignmentIndex.length; ++i) {
+      int[] range = f2tAlignmentIndex[i];
+      if(i+1<f2tAlignmentIndex.length && f2tAlignmentIndex[i][0] == f2tAlignmentIndex[i+1][0])
+        continue;
+      sbuf.append(" ").append(lastRangeEnd+1);
+      if(i != lastRangeEnd+1)
+        sbuf.append("-").append(i);
+      sbuf.append("=").append(range[0]);
+      if(range[0]+1 != range[1])
+        sbuf.append("-").append(range[1]-1);
+      lastRangeEnd=i;
+    }
 		return sbuf.toString();
 	}
 }

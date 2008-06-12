@@ -65,12 +65,17 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		} else {
 			reader = new LineNumberReader(new FileReader(filename));
 		}
-		Pattern tripplePipes = Pattern.compile("\\s+\\|\\|\\|\\s+");
+		Pattern tripplePipes = Pattern.compile("\\s\\|\\|\\|\\s");
 		Pattern space = Pattern.compile("\\s+");
 		Pattern label = Pattern.compile(".*:");
 		String lastId = null;
 		for (String inline; (inline = reader.readLine()) != null; ) {
 				String[] fields = tripplePipes.split(inline);
+        if(fields.length < 3) {
+          System.err.printf("Warning: bad nbest-list format: %s\n",inline);
+          System.err.printf("Warning: expected at least 3 fields, but found only %d\n",fields.length);
+          continue;
+        }
 				String id = fields[0];
 				String translation = fields[1];
 				String featuresStr = fields[2];
