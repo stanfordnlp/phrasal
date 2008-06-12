@@ -2193,7 +2193,7 @@ public class UnsmoothedMERT {
 		return incEval.score();
 	}
 
-	static ClassicCounter<String> readWeights(String filename) throws IOException {
+	public static ClassicCounter<String> readWeights(String filename) throws IOException {
 		BufferedReader reader = new BufferedReader(new FileReader(filename));
 		ClassicCounter<String> wts = new ClassicCounter<String>();
 		for (String line = reader.readLine(); line != null; line = reader
