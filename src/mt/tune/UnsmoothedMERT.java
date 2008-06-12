@@ -130,7 +130,10 @@ public class UnsmoothedMERT {
   
   
   
-  static public ClassicCounter<String> reducedWeightsToWeights(ClassicCounter<String> reducedWts, Matrix reducedRepU, Map<String,Integer> featureIdMap) {
+  static public ClassicCounter<String> reducedWeightsToWeights(
+     ClassicCounter<String> reducedWts, 
+     Matrix reducedRepU, Map<String,Integer> featureIdMap) {
+
   	int col = reducedRepU.numColumns();
   	Vector vecReducedWts = new DenseVector(col);
   	for (int i = 0; i < col; i++) {
@@ -148,7 +151,10 @@ public class UnsmoothedMERT {
   	return wts;
   }
   
-  static public ClassicCounter<String> weightsToReducedWeights(ClassicCounter<String> wts, Matrix reducedRepU, Map<String,Integer> featureIdMap) {
+  static public ClassicCounter<String> weightsToReducedWeights(
+    ClassicCounter<String> wts, Matrix reducedRepU, 
+    Map<String,Integer> featureIdMap) {
+
   	Matrix vecWtsOrig = new DenseMatrix(featureIdMap.size(), 1);
   	for (Map.Entry<String,Integer> entry : featureIdMap.entrySet()) {
   		vecWtsOrig.set(entry.getValue(), 0, wts.getCount(entry.getKey()));
@@ -158,31 +164,45 @@ public class UnsmoothedMERT {
   	reducedRepU.transAmult(vecWtsOrig, vecWtsReduced);
   	
   	ClassicCounter<String> reducedWts = new ClassicCounter<String>();
-  	for (Map.Entry<String,Integer> entry : featureIdMap.entrySet()) {
-  		reducedWts.setCount(entry.getKey(), vecWtsReduced.get(entry.getValue(), 0));
+    for (int i = 0; i < vecWtsReduced.numRows(); i++) {
+  		reducedWts.setCount((new Integer(i)).toString(), vecWtsReduced.get(i,0));
   	}
   	
   	return reducedWts;
   }
   
-  static public MosesNBestList nbestListToDimReducedNbestList(MosesNBestList nbest, Matrix reducedRepV) {
+  static public MosesNBestList nbestListToDimReducedNbestList(
+    MosesNBestList nbest, Matrix reducedRepV) {
+
   	List<List<ScoredFeaturizedTranslation<IString,String>>> oldNbestLists = nbest.nbestLists();
   	List<List<ScoredFeaturizedTranslation<IString,String>>> newNbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(oldNbestLists.size());
   	
   	int nbestId = -1;
   	int numNewFeat = reducedRepV.numColumns();
+    //System.err.printf("V rows: %d cols: %d\n", reducedRepV.numRows(),
+    //    reducedRepV.numColumns());
   	for (int listId = 0; listId < oldNbestLists.size(); listId++) {
-  		 List<ScoredFeaturizedTranslation<IString, String>> oldNbestlist = oldNbestLists.get(listId);
-  		 List<ScoredFeaturizedTranslation<IString, String>> newNbestlist = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(oldNbestlist.size());
+  		 List<ScoredFeaturizedTranslation<IString, String>> oldNbestlist = 
+         oldNbestLists.get(listId);
+  		 List<ScoredFeaturizedTranslation<IString, String>> newNbestlist = 
+         new ArrayList<ScoredFeaturizedTranslation<IString, String>>
+         (oldNbestlist.size());
   		 newNbestLists.add(newNbestlist);
   		 for (int transId = 0; transId < oldNbestlist.size(); transId++) {
   		   nbestId++; 
-  			 ScoredFeaturizedTranslation<IString,String> oldTrans = oldNbestlist.get(transId);
-  		   List<FeatureValue<String>> reducedFeatures = new ArrayList<FeatureValue<String>>(numNewFeat);
+  			 ScoredFeaturizedTranslation<IString,String> oldTrans = 
+           oldNbestlist.get(transId);
+  		   List<FeatureValue<String>> reducedFeatures = 
+           new ArrayList<FeatureValue<String>>(numNewFeat);
   		   for (int featId = 0; featId < numNewFeat; featId++) {
-  		  	 reducedFeatures.add(new FeatureValue<String>((new Integer(featId)).toString(), reducedRepV.get(featId, nbestId)));  		  	 
+     //      System.err.printf("%d:%d\n", featId, nbestId);
+  		  	 reducedFeatures.add(new FeatureValue<String>(
+                  (new Integer(featId)).toString(), 
+                  reducedRepV.get(nbestId, featId)));  		  	 
   		   }
-  		   ScoredFeaturizedTranslation<IString,String> newTrans = new ScoredFeaturizedTranslation<IString, String>(oldTrans.translation, reducedFeatures, 0);
+  		   ScoredFeaturizedTranslation<IString,String> newTrans = 
+           new ScoredFeaturizedTranslation<IString, String>
+           (oldTrans.translation, reducedFeatures, 0);
   		   newNbestlist.add(newTrans);
   		 }  		 	 
   	}
@@ -583,7 +603,7 @@ public class UnsmoothedMERT {
 	static public int MIN_NBEST_OCCURANCES = Integer.parseInt(System.getProperty(
 			"MIN_NBEST_OCCURENCES", "5"));
 	static final int STARTING_POINTS = Integer.parseInt(System.getProperty(
-			"STARTING_POINTS", "5"));
+			"STARTING_POINTS", "1")); //XXX
 	static final SmoothingType smoothingType = SmoothingType.valueOf(System
 			.getProperty("SMOOTHING_TYPE", "min"));
 	static final boolean filterUnreachable = Boolean.parseBoolean(System
@@ -1497,7 +1517,8 @@ public class UnsmoothedMERT {
 		System.err.println(reducedInitialWts);
 		
 		
-		MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest, pV.deref());
+		MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest, 
+      pV.deref());
 		ClassicCounter<String> reducedWts;
 		switch (opt) {
 		case exact:
