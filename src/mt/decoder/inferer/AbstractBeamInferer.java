@@ -20,7 +20,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   static public final boolean UNIQ_NBEST = Boolean.parseBoolean(System.getProperty(UNIQ_NBEST_OPT, "false"));
   public final int beamCapacity;
   public final HypothesisBeamFactory.BeamType beamType;
-  public Set<AbstractSequence> uniqNBestSeq = null;
+  public Set<AbstractSequence<TK>> uniqNBestSeq = null;
 
   int duplicates, maxDuplicates;
   public static final int MAX_DUPLICATE_FACTOR = 20;
@@ -30,7 +30,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
     if(UNIQ_NBEST)
-      uniqNBestSeq = new HashSet<AbstractSequence>();
+      uniqNBestSeq = new HashSet<AbstractSequence<TK>>();
   }
 
   @Override
