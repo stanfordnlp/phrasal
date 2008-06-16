@@ -14,7 +14,7 @@ import java.io.*;
  *
  */
 public class ExtendedLexicalReorderingTable {
-	final DynamicIntegerArrayIndex index = new DynamicIntegerArrayIndex();
+	public static final DynamicIntegerArrayIndex index = new DynamicIntegerArrayIndex();
 
   // MG: 
   // Fairly confident could just rename ExtendedLexicalReorderingTable to 

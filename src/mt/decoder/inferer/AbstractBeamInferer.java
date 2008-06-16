@@ -16,13 +16,21 @@ import mt.decoder.util.*;
 abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV>  {
   static public final String DEBUG_OPT = "AbstractBeamInfererDebug";
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
+  static public final String UNIQ_NBEST_OPT = "UniqNBest";
+  static public final boolean UNIQ_NBEST = Boolean.parseBoolean(System.getProperty(UNIQ_NBEST_OPT, "false"));
   public final int beamCapacity;
   public final HypothesisBeamFactory.BeamType beamType;
+  public Set<AbstractSequence> uniqNBestSeq = null;
+
+  int duplicates, maxDuplicates;
+  public static final int MAX_DUPLICATE_FACTOR = 20;
 
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
+    if(UNIQ_NBEST)
+      uniqNBestSeq = new HashSet<AbstractSequence>();
   }
 
   @Override
@@ -95,6 +103,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     long nbestStartTime = System.currentTimeMillis();
     List<List<RichTranslation<TK, FV>>> nbestNWorst = new ArrayList<List<RichTranslation<TK, FV>>>();
 
+    if(uniqNBestSeq != null) {
+      duplicates = 0;
+      maxDuplicates = nbestSize*MAX_DUPLICATE_FACTOR;
+      uniqNBestSeq.clear();
+    }
     for (int i = 0; i < 2; i++) {
       List<RichTranslation<TK,FV>> translations = new LinkedList<RichTranslation<TK,FV>>();
 
@@ -117,6 +130,20 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
           hyp = new Hypothesis<TK, FV>(translationId,
                   nextHyp.translationOpt, hyp.length, hyp, featurizer,
                   scorer, heuristic);
+        }
+        if(uniqNBestSeq != null) {
+          AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
+          //AbstractSequence<TK> seq = hyp.translationOpt.abstractOption.translation;
+          if(uniqNBestSeq.contains(seq)) {
+            if(++duplicates >= maxDuplicates) {
+              System.err.printf("Too many duplicates in n-best list (%d); giving up.\n", maxDuplicates);
+              break;
+            }
+            continue;
+          }
+          if(DEBUG)
+            System.err.println("Found new uniq translation: "+seq.toString());
+          uniqNBestSeq.add(seq);
         }
         /*
                                  if (mod != 0 && c % (int)mod != 0) {

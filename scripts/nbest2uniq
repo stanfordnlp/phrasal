@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+#####################################################
+# Removes duplicates from Moses n-best lists.
+#
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Sun 15 Jun 2008 01:13:43 PM PDT
+# $Id$
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+my $maxUniq = $ARGV[0] || 500;
+
+my %seen;
+my $oldid = -1;
+while(my $line = <STDIN>) {
+	if($line =~ /^(\d+) \|\|\| (.*?) \|\|\| /) {
+		my ($id,$txt) = ($1,$2);
+		if($id != $oldid) {
+			print STDERR "sentence $oldid: ".(scalar keys %seen)." uniq.\n" if $oldid >= 0;
+			warn "WARNING: transition from sentence number $oldid to sentence number $id. Missing something?\n"
+				if($oldid + 1 != $id);
+			%seen = ();
+			$oldid = $id;
+		}
+		next if($seen{$txt} || scalar keys %seen >= $maxUniq);
+		print STDERR "best: $txt\n" if(scalar keys %seen == 0);
+		$seen{$txt} = 1;
+		print $line;
+	} else {
+		die "Unexpected format: $line";
+	}
+}

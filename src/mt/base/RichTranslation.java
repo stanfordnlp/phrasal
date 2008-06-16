@@ -122,7 +122,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 			sbuf.append(" ").append(fv.name).append(": ").append((fv.value == (int)fv.value ? (int)fv.value : df.format(fv.value)));
 		}
 		sbuf.append(" ").append(NBEST_SEP).append(" ");
-		sbuf.append(df.format(this.score));
+		sbuf.append(df.format(this.score)).append(" ").append(NBEST_SEP);
     // Alignment:
     for(int lastRangeEnd=-1, i=0; i<f2tAlignmentIndex.length; ++i) {
       int[] range = f2tAlignmentIndex[i];

@@ -68,7 +68,10 @@ public class PseudoMoses {
 
 	static public double DEFAULT_LEARNING_RATE = 0.01;
 	static public double DEFAULT_MOMENTUM_TERM = 0.9;
-	
+
+  public static final String MOSES_NBEST_PROPERTY = "OutputMosesNBestList";
+  public static final boolean MOSES_NBEST = Boolean.parseBoolean(System.getProperty(MOSES_NBEST_PROPERTY, "false"));
+
 	static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 	String x = "兆";
 
@@ -789,8 +792,9 @@ public class PseudoMoses {
 					translation = translations.get(0);
 
 					for (RichTranslation<IString, String> tran : translations) {
-						nbestListWriter.append(tran.nbestToString(translationId)).append(
-						"\n");
+						nbestListWriter.append(MOSES_NBEST ? 
+            tran.nbestToMosesString(translationId) :
+            tran.nbestToString(translationId)).append("\n");
 					}
 				} else {
 					translation = null;
