@@ -34,8 +34,9 @@ public class UnsmoothedMERT {
 
 	static public final boolean DEBUG = false;
   public final static double DEFAULT_C = 100;
-  public static double C = DEFAULT_C;
-	static final double L_RATE = 1.0/C;
+  public static double C = DEFAULT_C;	
+	public static final double DEFAULT_UNSCALED_L_RATE = 0.1;
+	public static double lrate = DEFAULT_UNSCALED_L_RATE;
 	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-6; 
 	static final int DEFAULT_MAX_ITER_SGD = 1000;
 	static final int NO_PROGRESS_LIMIT = 20;
@@ -1616,7 +1617,7 @@ public class UnsmoothedMERT {
 			MutableDouble objValue = new MutableDouble();
 
 			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric, expectedEval, objValue);
-			dE.multiplyBy(-1.0*L_RATE);
+			dE.multiplyBy(-1.0*lrate);
 			wts.addAll(dE);
 			
 			double ssd = Counters.L2Norm(dE);
@@ -2372,11 +2373,14 @@ public class UnsmoothedMERT {
 		long startTime = System.currentTimeMillis();
 
 	  if (System.getProperty("C") != null) {
-       C = Double.parseDouble(System.getProperty("C"));
+       C = Double.parseDouble(System.getProperty("C"));       
        System.err.printf("Using C %f rather than default of %f\n",
           C, DEFAULT_C);
     }
-
+	  
+	  lrate = DEFAULT_UNSCALED_L_RATE/C; 
+	  System.out.printf("sgd lrate: %e\n", lrate);
+	  
 		for (int ptI = 0; ptI < STARTING_POINTS; ptI++) {
 			ClassicCounter<String> wts;
 			if (ptI == 0)
