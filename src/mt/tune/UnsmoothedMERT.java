@@ -44,7 +44,7 @@ public class UnsmoothedMERT {
 	static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
   static final double MCMC_BATCH_SAMPLES = 30000;
   
-	static public final double MIN_PLATEAU_DIFF = 1e-6;
+	static public final double MIN_PLATEAU_DIFF = 0.0;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 	static public final double MIN_UPDATE_DIFF = 1e-6;
 
@@ -603,7 +603,7 @@ public class UnsmoothedMERT {
 	static public int MIN_NBEST_OCCURANCES = Integer.parseInt(System.getProperty(
 			"MIN_NBEST_OCCURENCES", "5"));
 	static final int STARTING_POINTS = Integer.parseInt(System.getProperty(
-			"STARTING_POINTS", "1")); //XXX
+			"STARTING_POINTS", "5")); //XXX
 	static final SmoothingType smoothingType = SmoothingType.valueOf(System
 			.getProperty("SMOOTHING_TYPE", "min"));
 	static final boolean filterUnreachable = Boolean.parseBoolean(System
@@ -1491,6 +1491,9 @@ public class UnsmoothedMERT {
 	
 	enum SVDOptChoices { exact, evalue };
 	
+  static Ptr<DenseMatrix> pU = null;
+  static Ptr<DenseMatrix> pV = null;
+
 	static public ClassicCounter<String> svdReducedObj(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric,
 			int rank, SVDOptChoices opt) {
 		
@@ -1499,12 +1502,14 @@ public class UnsmoothedMERT {
 		Ptr<Map<String,Integer>> pFeatureIdMap = new Ptr<Map<String,Integer>>();
 		System.err.println("Creating feature document matrix");
 		nbestListToFeatureDocumentMatrix(nbest, pFeatDocMat, pFeatureIdMap);
-		
-		Ptr<DenseMatrix> pU = new Ptr<DenseMatrix>();
-		Ptr<DenseMatrix> pV = new Ptr<DenseMatrix>();
-		System.err.printf("Doing SVD rank: %d\n", rank);
-		ReducedSVD.svd(pFeatDocMat.deref(), pU, pV, rank);
-		System.err.println("SVD done.");
+	
+    if (pU == null) {	
+		  pU = new Ptr<DenseMatrix>();
+		  pV = new Ptr<DenseMatrix>();
+		  System.err.printf("Doing SVD rank: %d\n", rank);
+		  ReducedSVD.svd(pFeatDocMat.deref(), pU, pV, rank);
+		  System.err.println("SVD done.");
+    }
 		
 		ClassicCounter<String> reducedInitialWts = weightsToReducedWeights(initialWts, pU.deref(), pFeatureIdMap.deref());
 		
@@ -1515,6 +1520,13 @@ public class UnsmoothedMERT {
 		System.err.println("Reduced Initial Wts:");
 		System.err.println("====================");
 		System.err.println(reducedInitialWts);
+
+
+    System.err.println("Recovered Reduced Initial Wts");
+    System.err.println("=============================");
+		ClassicCounter<String> recoveredInitialWts = 
+       reducedWeightsToWeights(reducedInitialWts, pU.deref(), pFeatureIdMap.deref());
+    System.err.println(recoveredInitialWts);
 		
 		
 		MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest, 
@@ -1541,6 +1553,12 @@ public class UnsmoothedMERT {
 		System.err.println("Recovered Learned Wts:");
 		System.err.println("======================");
 		System.err.println(recoveredWts);
+
+    double wtSsd = wtSsd(reducedInitialWts, reducedWts);
+    System.out.printf("reduced wts ssd: %e\n", wtSsd);
+
+    double twtSsd = wtSsd(initialWts, recoveredWts);
+    System.out.printf("recovered wts ssd: %e\n", twtSsd);
 		return recoveredWts;
 	}
 	
@@ -2482,6 +2500,8 @@ public class UnsmoothedMERT {
 			bestWts = initialWts;
 		}
 		displayWeights(bestWts);
+    double wtSsd = wtSsd(initialWts, bestWts);
+    System.out.printf("wts ssd: %e\n", wtSsd);
 
 		writeWeights(finalWtsFile, bestWts);
 	}

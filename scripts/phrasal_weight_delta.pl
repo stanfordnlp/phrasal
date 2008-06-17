@@ -19,15 +19,29 @@ if (@ARGV != 2) {
 }
 
 open fh, $ARGV[0] or die;
-while (<fh>) { chomp; @fields = split /\s+/; $vA{$fields[0]} = $fields[1]; } 
+$abssum1 = 0;
+while (<fh>) { chomp; @fields = split /\s+/; 
+  $abssum1 += abs($fields[1]);
+  $vA{$fields[0]} = $fields[1]; 
+} 
 close fh;
 
 open fh, $ARGV[1] or die;
-while (<fh>) { chomp; @fields = split /\s+/; $vB{$fields[0]} = $fields[1]; } 
+$abssum2 = 0;
+while (<fh>) { chomp; @fields = split /\s+/; 
+  $abssum2 += abs($fields[1]);
+  $vB{$fields[0]} = $fields[1]; 
+} 
 close fh;
 
-foreach $key (keys %vA) { $allKeys{$key} = 1; }
-foreach $key (keys %vB) { $allKeys{$key} = 1; }
+foreach $key (keys %vA) { 
+  $allKeys{$key} = 1; 
+}
+
+foreach $key (keys %vB) { 
+  $allKeys{$key} = 1; 
+}
+
 if (!$max) {
   $v = 0;
   foreach $key (keys %allKeys) {
@@ -44,4 +58,7 @@ if (!$max) {
 	$v = $max_diff;
 }
 
+$v *= ($abssum1 > $abssum2 ? $abssum1 : $abssum2);
+
+# print "$abssum1 $abssum2\n";
 print "$v\n";

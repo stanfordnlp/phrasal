@@ -17,11 +17,14 @@ import mt.tune.UnsmoothedMERT;
  *
  */
 public class NBestErrorSurface {
-	static public final int gridSize = 20;
+	static public final int gridSize = 25;
 	
 	static public void main(String[] args) throws Exception {
 		if (args.length != 7) {
-			System.err.println("Usage:\n\tjava ...NBestErrorSurface (eval metric) (refs) (n-best) (weights) (feature1:min,max) (feature2:min,max) (out prefix)\n");
+			System.err.println(
+         "Usage:\n\tjava ...NBestErrorSurface (eval metric) (refs) "+
+         "(n-best) (weights) (feature1|||min,max) (feature2|||min,max) "+
+         "(out prefix)\n");
 			System.exit(-1);
 		}
 		String evalMetricFn = args[0];
@@ -35,17 +38,23 @@ public class NBestErrorSurface {
 		EvaluationMetric<IString, String> eval = MetricFactory.metric(evalMetricFn, refsFn);
 		MosesNBestList nbest = new MosesNBestList(nbestFn);
 		ClassicCounter<String> wts = UnsmoothedMERT.readWeights(weightsFn);
-		String feature1Name = feature1Field.split(":")[0];
-		String feature2Name = feature2Field.split(":")[0];
-		double feature1Min = Double.parseDouble(feature1Field.split(":")[1].split(",")[0]);
-		double feature1Max = Double.parseDouble(feature1Field.split(":")[1].split(",")[1]);
-		double feature2Min = Double.parseDouble(feature2Field.split(":")[1].split(",")[0]);
-		double feature2Max = Double.parseDouble(feature2Field.split(":")[1].split(",")[1]);
+		String feature1Name = feature1Field.split("\\|\\|\\|")[0];
+		String feature2Name = feature2Field.split("\\|\\|\\|")[0];
+		double feature1Min = Double.parseDouble(
+       feature1Field.split("\\|\\|\\|")[1].split(",")[0]);
+		double feature1Max = Double.parseDouble(
+       feature1Field.split("\\|\\|\\|")[1].split(",")[1]);
+		double feature2Min = Double.parseDouble(
+       feature2Field.split("\\|\\|\\|")[1].split(",")[0]);
+		double feature2Max = Double.parseDouble(
+       feature2Field.split("\\|\\|\\|")[1].split(",")[1]);
 		System.err.println("Weights\n==================");
 		System.err.println(wts);
 		System.err.println();
-		System.err.printf("feature1: %s min: %f max: %f\n", feature1Name, feature1Min, feature1Max);
-		System.err.printf("feature2: %s min: %f max: %f\n", feature2Name, feature2Min, feature2Max);
+		System.err.printf("feature1: %s min: %f max: %f\n", 
+       feature1Name, feature1Min, feature1Max);
+		System.err.printf("feature2: %s min: %f max: %f\n", 
+       feature2Name, feature2Min, feature2Max);
 		System.err.println();
 		System.err.println("Generating Grid\n");
 		
@@ -72,6 +81,7 @@ public class NBestErrorSurface {
 		for (int i = 0; i < gridSize; i++) {
 			double f1Val = feature1Min+i*deltaf1;
 			wts.setCount(feature1Name, f1Val);
+      System.err.print(".");
 			for (int j = 0; j < gridSize; j++) {
 				double f2Val = feature2Min+j*deltaf2;				
 				wts.setCount(feature2Name, f2Val);
