@@ -2460,21 +2460,21 @@ public class UnsmoothedMERT {
 			// only run pointwise for the first iteration, as it is very expensive
 				newWts = (ptI == 0 ? pointwisePerceptron(nbest, wts, emetric) : wts); 
 			} else if (System.getProperty("mcmcELossDirExact") != null) {
-				System.out.printf("using mcmcELossDirExact\n");
+				System.out.println("using mcmcELossDirExact");
 				newWts = mcmcELossDirOptimize(nbest, wts, emetric);
 			} else if (System.getProperty("mcmcELossSGD") != null) {
-				System.out.printf("using mcmcELossSGD");
+				System.out.println("using mcmcELossSGD");
 				newWts = mcmcELossObjectiveSGD(nbest, wts, emetric);
 			} else if (System.getProperty("mcmcELossCG") != null) {
-				System.out.printf("using mcmcELossCG\n");
+				System.out.println("using mcmcELossCG");
 				newWts = mcmcELossObjectiveCG(nbest, wts, emetric);
 			} else if (System.getProperty("svdExact") != null) {
 				int rank = Integer.parseInt(System.getProperty("svdExact"));
-				System.out.printf("Using SVD exact, rank: %d", rank);				
+				System.out.printf("Using SVD exact, rank: %d\n", rank);				
 				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.exact);				
 			} else if (System.getProperty("svdELoss") != null) {
 				int rank = Integer.parseInt(System.getProperty("svdELoss"));
-				System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d", rank);				
+				System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d\n", rank);				
 				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.evalue);				
 			} else {
 				System.out.printf("Using cer\n");
