@@ -107,7 +107,6 @@ public class UnsmoothedMERT {
   		
   		MutableDouble expectedEval = new MutableDouble();
   		ClassicCounter<String> dE = mcmcDerivative(nbest, wtsCounter, emetric, expectedEval);
-  		dE.multiplyBy(-1);
   		
       for (int i = 0; i < derivative.length; i++) {
       	derivative[i] = dE.getCount(featureIdsToString.get(i));
@@ -124,11 +123,9 @@ public class UnsmoothedMERT {
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
 			  		
-			return -mcmcTightExpectedEval(nbest, wtsCounter, emetric);
+			return mcmcTightExpectedEval(nbest, wtsCounter, emetric);
 		}
   }
-  
-  
   
   static public ClassicCounter<String> reducedWeightsToWeights(
      ClassicCounter<String> reducedWts, 
@@ -326,8 +323,8 @@ public class UnsmoothedMERT {
 		
 		// objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
 		double l2wts = Counters.L2Norm(wts);
-		double obj = C*sumExpL/cnt-0.5*l2wts*l2wts;
-		System.err.printf("Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", -obj);
+		double obj = 0.5*l2wts*l2wts - C*sumExpL/cnt;
+		System.err.printf("Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", obj);
 		System.err.printf("C: %e\n", C);
 		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
 		System.err.printf("E(loss) = %e\n", sumExpL/cnt);
@@ -432,21 +429,23 @@ public class UnsmoothedMERT {
 		}
 
 		double l2wts = Counters.L2Norm(wts);
-		double obj = C*sumExpL/cnt-0.5*l2wts*l2wts;
-		System.err.printf("DRegularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", -obj);
+		double obj = 0.5*l2wts*l2wts-C*sumExpL/cnt;
+		System.err.printf("DRegularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", obj);
 		System.err.printf("C: %e\n", C);
 		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
 		System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 		
 		if (expectedEval != null) expectedEval.set(sumExpL/cnt);
-    if (objValue != null) objValue.set(-obj);
+    if (objValue != null) objValue.set(obj);
 		
-		// add in regularization terms
-		dE.multiplyBy(C);
+		// obtain dObj by adding in regularization terms to dE
+    ClassicCounter<String> dObj = new ClassicCounter<String>(dE);
+    dObj.multiplyBy(-C);
+
 		for (String key : wts.keySet()) {
-			dE.incrementCount(key, -wts.getCount(key));
+			dObj.incrementCount(key, wts.getCount(key));
 		}
-		return dE;		
+		return dObj;
 	}
 	
 	static class InterceptIDs {
@@ -1617,7 +1616,7 @@ public class UnsmoothedMERT {
 			MutableDouble objValue = new MutableDouble();
 
 			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric, expectedEval, objValue);
-			dE.multiplyBy(L_RATE);
+			dE.multiplyBy(-1.0*L_RATE);
 			wts.addAll(dE);
 			
 			double ssd = Counters.L2Norm(dE);
