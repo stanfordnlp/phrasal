@@ -2499,9 +2499,6 @@ public class UnsmoothedMERT {
 				(endTime - startTime) / 1000.0);
 		System.out.printf("Final Eval Score: %e->%e\n", initialEval, bestEval);
 		System.out.printf("Final Weights:\n==================\n");
-		if (bestEval <= initialEval + MIN_UPDATE_DIFF) {
-			bestWts = initialWts;
-		}
 		displayWeights(bestWts);
     double wtSsd = wtSsd(initialWts, bestWts);
     System.out.printf("wts ssd: %e\n", wtSsd);
