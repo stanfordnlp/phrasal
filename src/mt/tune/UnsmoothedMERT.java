@@ -1565,7 +1565,7 @@ public class UnsmoothedMERT {
 	static public ClassicCounter<String> mcmcELossObjectiveCG(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
     ClassicCounter<String> sgdWts;
     System.err.println("Begin SGD optimization\n");
-    sgdWts = mcmcELossObjectiveSGD(nbest, initialWts, emetric, 500);
+    sgdWts = mcmcELossObjectiveSGD(nbest, initialWts, emetric, 10);
 		double eval = evalAtPoint(nbest, sgdWts, emetric);
 		double regE = mcmcTightExpectedEval(nbest, sgdWts, emetric);
 		double l2wtsSqred = Counters.L2Norm(sgdWts); l2wtsSqred *= l2wtsSqred;
