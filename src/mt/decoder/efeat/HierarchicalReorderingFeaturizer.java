@@ -27,8 +27,6 @@ import mt.train.AlignmentGrid;
  */
 public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<IString, String> {
 
-  //public static int featurizerCall = 0;
-
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
@@ -97,7 +95,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
     long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
     long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
     long items = ExtendedLexicalReorderingTable.index.size();
-    System.err.printf("HierarchicalReorderingFeaturizer: constructor: totalmem = %dm, freemem = %dm, items = %dm.\n", 
+    System.err.printf("HierarchicalReorderingFeaturizer: constructor: totalmem = %dm, freemem = %dm, items = %d.\n", 
       totalMemory, freeMemory, items);
 	}
 

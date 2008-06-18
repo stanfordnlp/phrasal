@@ -124,16 +124,18 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 		sbuf.append(" ").append(NBEST_SEP).append(" ");
 		sbuf.append(df.format(this.score)).append(" ").append(NBEST_SEP);
     // Alignment:
-    for(int lastRangeEnd=-1, i=0; i<f2tAlignmentIndex.length; ++i) {
-      int[] range = f2tAlignmentIndex[i];
-      if(i+1<f2tAlignmentIndex.length && f2tAlignmentIndex[i][0] == f2tAlignmentIndex[i+1][0])
+    for(int lastRangeEnd=-1, i=0; i<t2fAlignmentIndex.length; ++i) {
+      int[] range = t2fAlignmentIndex[i];
+      if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] == t2fAlignmentIndex[i+1][0])
         continue;
-      sbuf.append(" ").append(lastRangeEnd+1);
-      if(i != lastRangeEnd+1)
-        sbuf.append("-").append(i);
-      sbuf.append("=").append(range[0]);
+      sbuf.append(" ").append(range[0]);
+      // Foreign positions:
       if(range[0]+1 != range[1])
         sbuf.append("-").append(range[1]-1);
+      // Translation positions:
+      sbuf.append("=").append(lastRangeEnd+1);
+      if(i != lastRangeEnd+1)
+        sbuf.append("-").append(i);
       lastRangeEnd=i;
     }
 		return sbuf.toString();

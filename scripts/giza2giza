@@ -1,0 +1,131 @@
+#! /usr/bin/perl
+
+use POSIX;
+
+####################################################################
+# giza2giza: inject different text into GIZA alignment.
+# Useful for running GIZA on words (e.g., $num instead of 3)
+# different from phrase extraction.
+####################################################################
+# Author: Michel Galley (mgalley@stanford.edu)
+# Author: Marcello Federico (original giza2bal.pl implementation)
+####################################################################
+
+($dir,$inv,$dirT,$invT)=();
+$dirT=shift(@ARGV);
+$dir=shift(@ARGV);
+$invT=shift(@ARGV);
+$inv=shift(@ARGV);
+$odir=shift(@ARGV);
+$oinv=shift(@ARGV);
+
+my $lc = 0;
+
+if (!$dir || !$inv || !$dirT || !$invT || !$odir || !$oinv){
+ print  "usage: giza2bal.pl <dir-text-file> <inv-text-file> <dir-align-file> <inv-align-file> <o-dir-align-file> <o-inv-align-file>\n"; 
+ print  "input files can be also commands, e.g. -d \"gunzip -c file.gz\"\n";
+ exit(0);
+}
+
+$|=1;
+
+open(DIR,"<$dir") || open(DIR,"$dir|") || die "cannot open $dir\n";
+open(INV,"<$inv") || open(INV,"$inv|") || die "cannot open $inv\n";
+
+open(DIRT,"<$dirT") || open(DIR,"$dirT|") || die "cannot open $dirT\n";
+open(INVT,"<$invT") || open(INV,"$invT|") || die "cannot open $invT\n";
+
+print "odir: $odir\n";
+open(ODIR,">$odir") || die "cannot open $odir\n";
+open(OINV,">$oinv") || die "cannot open $oinv\n";
+
+sub ReadBiAlign {
+    local($fd1,$fd2,$d1,$d2)=@_;
+    local($dummy,$n);
+
+    chop($D1=<$d1>); ## text 1
+    chop($D2=<$d2>); ## text 2
+
+    $c=1;
+
+    $dummy=<$fd1>; ## header
+		print ODIR $dummy;
+    chop($s1=<$fd1>);
+    chop($t1=<$fd1>);
+
+    $dummy=<$fd2>; ## header
+		print OINV $dummy;
+    chop($s2=<$fd2>);
+    chop($t2=<$fd2>);
+
+		@D1 = split(/\s+/,$D1);
+		@D2 = split(/\s+/,$D2);
+		print ODIR $D2,"\n";
+		print OINV $D1,"\n";
+
+    @a=@b=();
+    $lc++;
+
+    #get target statistics
+    $n=1;
+    $t1=~s/(NULL \(\{(( \d+)*) \s*\}\))//;
+		print ODIR $1;
+    while ($t1=~s/(\S+)( \(\{(( \d+)*) \s*\}\))//){
+				print ODIR " $D1[$n-1]$2";
+        grep($a[$_]=$n,split(/ /,$3));
+        $n++;
+    }
+		print ODIR "\n";
+
+    $m=1;
+    $t2=~s/(NULL \(\{(( \d+)*) \s*\}\))//;
+		print OINV $1;
+    while ($t2=~s/(\S+)( \(\{(( \d+)*) \s*\}\))//){
+				print OINV " $D2[$m-1]$2";
+        grep($b[$_]=$m,split(/ /,$3));
+        $m++;
+    }
+		print OINV "\n";
+
+    $M=split(/\s+/,$s1);
+    $N=split(/\s+/,$s2);
+		#print STDERR "length: $M($s1) ".(scalar @D1)." $N ".(scalar @D2)."($D2)\n";
+		assert($M == scalar @D2);
+		assert($N == scalar @D1);
+
+    if ($m != ($M+1) || $n != ($N+1)) {
+      print STDERR "Sentence mismatch error! Line #$lc\n";
+      $s1 = "ALIGN_ERR";
+      $s2 = "ALIGN_ERR";
+      @a=(); @b=();
+      for ($j=1;$j<2;$j++){ $a[$j]=1; }
+      for ($i=1;$i<2;$i++){ $b[$i]=1; }
+      return 1;
+    }
+
+    for ($j=1;$j<$m;$j++){
+        $a[$j]=0 if !$a[$j];
+    }
+
+    for ($i=1;$i<$n;$i++){
+        $b[$i]=0 if !$b[$i];
+    }
+
+
+    return 1;
+}
+
+$skip=0;
+$count=0;
+while(!eof(DIR)){
+
+    if(ReadBiAlign(DIR,INV,DIRT,INVT))
+    { $count++; }
+    else 
+		{ print STDERR "." if !(++$skip % 1000); }
+};
+print STDERR "skip=<$skip> counts=<$count>\n";
+close(ODIR);
+close(OINV);
+
+

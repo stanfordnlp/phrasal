@@ -1,0 +1,3 @@
+#!/bin/bash
+
+grep '^<hyp r="0"' | perl -pe 's/<sco>.*//; s/<.*?>//g; s/ +/ /g; s/^ //; s/ $//' 

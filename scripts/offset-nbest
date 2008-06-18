@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+################################################
+# Add/substract to/from sentence numbers in
+# Moses n-best list. Useful for concatenating
+# zero-indexed n-best lists.
+# Author: Michel Galley
+################################################
+
+use strict;
+
+my $offset = $ARGV[0] || 0;
+
+while(<STDIN>) {
+	/^(\S+) (\|\|\| .*)/;
+	print "".($1+$offset)." $2\n";
+}

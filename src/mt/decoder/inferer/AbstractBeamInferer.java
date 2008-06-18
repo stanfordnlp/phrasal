@@ -18,12 +18,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
   static public final String UNIQ_NBEST_OPT = "UniqNBest";
   static public final boolean UNIQ_NBEST = Boolean.parseBoolean(System.getProperty(UNIQ_NBEST_OPT, "false"));
+  static public final String MAX_TIME_NBEST_OPT = "MaxTimeNBest";
+  static public final long MAX_TIME_NBEST = Integer.parseInt(System.getProperty(MAX_TIME_NBEST_OPT,"60"))*1000;
   public final int beamCapacity;
   public final HypothesisBeamFactory.BeamType beamType;
   public Set<AbstractSequence<TK>> uniqNBestSeq = null;
 
   int duplicates, maxDuplicates;
-  public static final int MAX_DUPLICATE_FACTOR = 20;
+  public static final int MAX_DUPLICATE_FACTOR = 10;
 
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
@@ -133,10 +135,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         }
         if(uniqNBestSeq != null) {
           AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
-          //AbstractSequence<TK> seq = hyp.translationOpt.abstractOption.translation;
           if(uniqNBestSeq.contains(seq)) {
-            if(++duplicates >= maxDuplicates) {
-              System.err.printf("Too many duplicates in n-best list (%d); giving up.\n", maxDuplicates);
+            long curTime = System.currentTimeMillis();
+            if(++duplicates >= maxDuplicates || curTime-nbestStartTime > MAX_TIME_NBEST) {
+              System.err.printf("\nNbest list construction taking too long (duplicates=%d, time=%fs); giving up.\n", 
+                duplicates, (curTime-nbestStartTime)/1000.0);
               break;
             }
             continue;
