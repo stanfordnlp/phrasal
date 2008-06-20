@@ -1,0 +1,40 @@
+#########################################
+# Language/data specific variables:
+#########################################
+
+E=en
+F=fr
+
+#########################################
+# Training/dev/test files:
+#########################################
+
+SOURCE_ROOT=toy
+
+#########################################
+# Training/testing parameters:
+#########################################
+
+### GIZA options: (Moses default)
+#GIZA=--giza-option m1=5,m2=0,mh=5,m3=3,m4=3,m5=0
+### GIZA options: (ISI default -- skips model3)
+GIZA=--giza-option m1=5,m2=0,mh=5,m3=0,m4=3,m5=0
+
+### Alignment symmetrization heuristic:
+ALIGN=grow-diag
+#ALIGN=srctotgt
+#ALIGN=tgttosrc
+#ALIGN=intersection
+#ALIGN=union
+#ALIGN=grow
+#ALIGN=grow-diag-final
+
+### Training options:
+TRAIN_OPTIONS=$(GIZA) --root-dir . --f $F --e $E --corpus corpus --scripts-root-dir=$(MOSES_SCRIPTS) --factor-delimiter="|||" --parallel --alignment $(ALIGN)
+
+#########################################
+# Targets:
+#########################################
+
+### Main targets:
+all: train

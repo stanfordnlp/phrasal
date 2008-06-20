@@ -1,0 +1,17 @@
+Some assumptions:
+(1) ngram and ngram-count are in your path (if not, add it from e.g.: /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c)
+(2) your javanlp checkout can be found with $JAVANLP_HOME
+(3) $JAVANLP_HOME/projects/mt/scripts and $JAVANLP_HOME/projects/mt/external_scripts are in your path
+
+Steps: 
+(1) Create your own copy of Makefile.local, e.g.:
+    $ cp Makefile.local.ce Makefile.local
+(2) Customize Makefile.local.
+(3) Run 'make', which builds a phrase table, a lexicalized reordering table, and a filtered LM.
+(4) Create/edit an ini file, e.g., ce_sample.ini.
+(5) Assuming mt08 is your test set and ce_sample.ini is your ini file, simply run:
+	  $ make mt08.ce_sample.phrasal.fp1best
+		This command should both run MERT on the dev set (mt06 in the case of ce_sample.ini) and 
+		final decoding on mt08.
+
+Michel Galley (mgalley@stanford.edu)

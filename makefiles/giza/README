@@ -1,0 +1,8 @@
+Steps: 
+(1) Create your own copy of Makefile.local:
+    cp Makefile.local.template Makefile.local
+(2) Customize Makefile.local.
+(3) Run 'make'.
+(4) Find symmetric alignment in model/aligned.*
+
+Michel Galley (mgalley@stanford.edu)

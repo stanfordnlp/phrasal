@@ -30,7 +30,7 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
     super.init(prop, featureIndex, alTemps);
     phiFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
-    System.err.printf("minimum p(e|f) = %.3f\n", phiFilter);
+    System.err.printf("minimum p(e|f) = %.5f\n", phiFilter);
   }
 
   public int getRequiredPassNumber() { return 1; }

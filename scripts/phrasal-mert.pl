@@ -332,6 +332,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    }
 
    chomp $trans_eval;
+	 $trans_eval =~ s/\n/\n# /g; # comment $trans_eval, since printed inside ini file
    
    print stderr "$trans_eval\n";
   

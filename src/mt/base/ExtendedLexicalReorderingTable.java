@@ -324,11 +324,16 @@ public class ExtendedLexicalReorderingTable {
 			}
 			
 			int idx = index.indexOf(indexInts, true);
-			if (idx != reorderingScores.size()) {
+			/* if (idx != reorderingScores.size()) {
+        System.err.println("Current index: "+idx);
+        System.err.println("Reordering score size: "+reorderingScores.size());
 				throw new RuntimeException(String.format("Somehow indicies have outpaced/underpaced the size of the reorderingScore list (%d != %d).\n", idx, reorderingScores.size()));
-			}
-			
-			reorderingScores.add(scores);
+			} */
+      while(idx >= reorderingScores.size())
+        reorderingScores.add(null);
+      assert(reorderingScores.get(idx) == null);
+			reorderingScores.set(idx,scores);
+			//reorderingScores.add(scores);
 		}
 		long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
 		long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;

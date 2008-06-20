@@ -1,0 +1,89 @@
+#########################################
+# Language/data specific variables:
+#########################################
+
+### Language identifiers:
+F=zh
+E=en
+
+#########################################
+# Data:
+#########################################
+
+### How many sentence pairs used for training:
+LINES=90000000
+
+### MT word-aligned training data:
+TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
+
+### Unfiltered Gigaword LM:
+GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/wo2356/mt_giga3_afp_xin.1233.lm.gz
+
+### Dev/test corpus and genre identifiers:
+DEVID=mt06
+TESTID=mt08
+
+### Directory containing reference translations:
+REFS=/scr/nlp/data/gale/NIST-MT-eval-data/
+
+### References:
+DEV_REF=$(REFS)/$(DEVID)$(TYPE)/chinese
+TEST_REF=$(REFS)/$(TESTID)$(TYPE)/chinese
+
+#########################################
+# Phrase extraction heuristics:
+#########################################
+
+### Specify alignment merging heuristic:
+ALIGN=grow-diag
+
+### Lexicalized re-ordering models:
+DIST=msd-bidirectional-fe
+
+#########################################
+# Pruning:
+#########################################
+
+### Maximum phrase length:
+maxPLen=7
+
+### Minimum p(e|f) probability:
+### (Note: filtering based on p(f|e), lex(e|f), lex(f|e)
+### isn't really effective)
+MINP=1e-4
+
+#########################################
+# Memory and extraction duration:
+#########################################
+
+### How much memory for Java and sort:
+MEMSIZE=15500m
+PMEMSIZE=15500m
+
+### Whether to compute exact relative frequencies p(f|e). 
+### If so, requires two passes over training data. 
+### Setting this to false requires only one pass, and 
+### generally causes a .2-.3 BLEU point drop.
+exactPhiCounts=true
+
+### In how many chunks to split phrase extraction. Setting the
+### value to X makes phrase extraction run X times slower,
+### though one needs about X times less memory.
+### Note: "split" means we split the dev/test-set phrases to score
+### into X chunks, and make 1-2 passes over the training data
+### for each one of them.
+### (if you run out of memory, increase the split value)
+SPLIT=-split 2
+
+#########################################
+# Debug levels
+#########################################
+
+DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
+
+#########################################
+# Pre- and post-processing:
+#########################################
+
+PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl
+POST=perl $(SCRIPTS)/remove_unk

@@ -95,4 +95,4 @@ sys("time java mt.reranker.ter.TERtest -h $hyptmp -r $reftmp -o sum -n $target",
 sys("mv $target.sum $target", noprint => !$opts{v});
 
 # Cleanup:
-#unlink $reftmp;
+unlink $reftmp, $hyptmp;
