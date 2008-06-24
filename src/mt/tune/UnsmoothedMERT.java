@@ -2394,7 +2394,6 @@ public class UnsmoothedMERT {
 	  } else {
 	  	initialObjValue = nbestEval;
 	  }
-		System.out.println("using mcmcELossCG");
 	
 		for (int ptI = 0; ptI < STARTING_POINTS; ptI++) {
 			ClassicCounter<String> wts;
