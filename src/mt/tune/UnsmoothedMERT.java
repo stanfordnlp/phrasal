@@ -2375,7 +2375,7 @@ public class UnsmoothedMERT {
 		System.out.printf("Initial Weights:\n==================\n");
 		displayWeights(initialWts);
 		ClassicCounter<String> bestWts = null;
-		double bestObj = Double.NEGATIVE_INFINITY;
+		double bestObj = Double.POSITIVE_INFINITY;
 		long startTime = System.currentTimeMillis();
 
 	  if (System.getProperty("C") != null) {
@@ -2506,8 +2506,8 @@ public class UnsmoothedMERT {
 			}
 
 			normalize(newWts);
-			double obj = (mcmcObj ? mcmcTightExpectedEval(nbest, bestWts, emetric) : evalAtPoint(nbest, newWts, emetric));
-			if (bestObj < obj) {
+			double obj = (mcmcObj ? mcmcTightExpectedEval(nbest, bestWts, emetric) : -evalAtPoint(nbest, newWts, emetric));
+			if (bestObj > obj) {
 				bestWts = newWts;
 				bestObj = obj;
 			}
