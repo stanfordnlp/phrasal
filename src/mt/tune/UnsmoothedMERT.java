@@ -2375,7 +2375,7 @@ public class UnsmoothedMERT {
 		System.out.printf("Initial Weights:\n==================\n");
 		displayWeights(initialWts);
 		ClassicCounter<String> bestWts = null;
-		double bestEval = Double.NEGATIVE_INFINITY;
+		double bestObj = Double.NEGATIVE_INFINITY;
 		long startTime = System.currentTimeMillis();
 
 	  if (System.getProperty("C") != null) {
@@ -2387,9 +2387,11 @@ public class UnsmoothedMERT {
 	  lrate = DEFAULT_UNSCALED_L_RATE/C; 
 	  System.out.printf("sgd lrate: %e\n", lrate);
 	  double initialObjValue = 0;
-	  if (System.getProperty("mcmcELossDirExact") != null ||
+	  boolean mcmcObj = (System.getProperty("mcmcELossDirExact") != null ||
 		    System.getProperty("mcmcELossSGD") != null ||
-		    System.getProperty("mcmcELossCG") != null) {
+		    System.getProperty("mcmcELossCG") != null);
+	  
+	  if (mcmcObj) {
 	  	initialObjValue = mcmcTightExpectedEval(nbest, initialWts, emetric);
 	  } else {
 	  	initialObjValue = nbestEval;
@@ -2504,30 +2506,29 @@ public class UnsmoothedMERT {
 			}
 
 			normalize(newWts);
-			double eval = evalAtPoint(nbest, newWts, emetric);
-			if (bestEval < eval) {
+			double obj = (mcmcObj ? mcmcTightExpectedEval(nbest, bestWts, emetric) : evalAtPoint(nbest, newWts, emetric));
+			if (bestObj < obj) {
 				bestWts = newWts;
-				bestEval = eval;
+				bestObj = obj;
 			}
-			System.err.printf("point %d - eval: %e best eval: %e (l1: %f)\n", ptI,
-					eval, bestEval, l1norm(newWts));
+			System.err.printf("point %d - eval: %e obj: %e best obj: %e (l1: %f)\n", ptI,
+					evalAtPoint(nbest, newWts, emetric),
+					obj, bestObj, l1norm(newWts));
 		}
 		
-		 double finalObjValue = 0;
-		  if (System.getProperty("mcmcELossDirExact") != null ||
-			    System.getProperty("mcmcELossSGD") != null ||
-			    System.getProperty("mcmcELossCG") != null) {
-		  	finalObjValue = mcmcTightExpectedEval(nbest, bestWts, emetric);
-		  } else {
-		  	finalObjValue = evalAtPoint(nbest, bestWts, emetric);;
-		  }
-		  
+		double finalObjValue = (mcmcObj ?
+		  	mcmcTightExpectedEval(nbest, bestWts, emetric) :
+		  	evalAtPoint(nbest, bestWts, emetric));
+		
+		double finalEval = evalAtPoint(nbest, bestWts, emetric);
+		
 		System.out.printf("Obj diff: %e\n", Math.abs(initialObjValue - finalObjValue));
 		
 		long endTime = System.currentTimeMillis();
 		System.out.printf("Optimization Time: %.3f s\n",
 				(endTime - startTime) / 1000.0);
-		System.out.printf("Final Eval Score: %e->%e\n", initialEval, bestEval);
+		System.out.printf("Final Eval Score: %e->%e\n", initialEval, finalEval);
+		System.out.printf("Final Obj: %e->%e\n", initialObjValue, finalObjValue);
 		System.out.printf("Final Weights:\n==================\n");
 		displayWeights(bestWts);
     double wtSsd = wtSsd(initialWts, bestWts);
