@@ -44,6 +44,7 @@ public class UnsmoothedMERT {
 	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-9;
 	static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
   static final double MCMC_BATCH_SAMPLES = 30000;
+  static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.02;
   
 	static public final double MIN_PLATEAU_DIFF = 0.0;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
@@ -2290,6 +2291,11 @@ public class UnsmoothedMERT {
 				nbest.sequenceSelfMap);
 		Scorer<String> scorer = new StaticScorer(initialWts);
 
+		List<ScoredFeaturizedTranslation<IString, String>> localNbestArgmax = transArgmax(localNbest, initialWts);
+		List<ScoredFeaturizedTranslation<IString, String>> nbestArgmax = transArgmax(nbest, initialWts);
+		double localNbestEval = emetric.score(localNbestArgmax);
+		double nbestEval    = emetric.score(nbestArgmax);
+		System.err.printf("Eval: %f Local eval: %f\n", nbestEval, localNbestEval);
 		System.err.printf("Rescoring entries\n");
 		// rescore all entries by weights
 		System.err.printf("n-best list sizes %d, %d\n", localNbest.nbestLists()
@@ -2380,14 +2386,27 @@ public class UnsmoothedMERT {
 	  
 	  lrate = DEFAULT_UNSCALED_L_RATE/C; 
 	  System.out.printf("sgd lrate: %e\n", lrate);
-	  
+	  double initialObjValue = 0;
+	  if (System.getProperty("mcmcELossDirExact") != null ||
+		    System.getProperty("mcmcELossSGD") != null ||
+		    System.getProperty("mcmcELossCG") != null) {
+	  	initialObjValue = mcmcTightExpectedEval(nbest, initialWts, emetric);
+	  } else {
+	  	initialObjValue = nbestEval;
+	  }
+		System.out.println("using mcmcELossCG");
+	
 		for (int ptI = 0; ptI < STARTING_POINTS; ptI++) {
 			ClassicCounter<String> wts;
-			if (ptI == 0)
+			if (ptI == 0 && Math.abs(localNbestEval - nbestEval) < MAX_LOCAL_ALL_GAP_WTS_REUSE) {				
+				System.err.printf("Re-using initial wts, gap: %e", Math.abs(localNbestEval - nbestEval));
 				wts = initialWts;
-			else
+			} else {				
+				if (ptI == 0) System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e", Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
 				wts = randomWts(initialWts.keySet());
+			}
 			ClassicCounter<String> newWts;
+			 
 			if (System.getProperty("useKoehn") != null) {
 				System.out.printf("Using koehn\n");
 				newWts = koehnStyleOptimize(nbest, wts, emetric);
@@ -2494,6 +2513,18 @@ public class UnsmoothedMERT {
 			System.err.printf("point %d - eval: %e best eval: %e (l1: %f)\n", ptI,
 					eval, bestEval, l1norm(newWts));
 		}
+		
+		 double finalObjValue = 0;
+		  if (System.getProperty("mcmcELossDirExact") != null ||
+			    System.getProperty("mcmcELossSGD") != null ||
+			    System.getProperty("mcmcELossCG") != null) {
+		  	finalObjValue = mcmcTightExpectedEval(nbest, bestWts, emetric);
+		  } else {
+		  	finalObjValue = evalAtPoint(nbest, bestWts, emetric);;
+		  }
+		  
+		System.out.printf("Obj diff: %e\n", Math.abs(initialObjValue - finalObjValue));
+		
 		long endTime = System.currentTimeMillis();
 		System.out.printf("Optimization Time: %.3f s\n",
 				(endTime - startTime) / 1000.0);

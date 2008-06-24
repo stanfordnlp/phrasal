@@ -28,6 +28,7 @@ use List::Util qw[max];
 $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
 $DEFAULT_MAX_ITERS = 25;
+$MIN_OBJ_DIFF = 1e-6;
 $DEFAULT_WORK_DIR = "pmert-dir";
 $DEFAULT_NBEST_SIZE = 100;
 $DEFAULT_JAVA_FLAGS = "-Xmx6g";
@@ -431,11 +432,21 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
            $nbest_init_eval =~ s/->.*//g;
            $nbest_init_eval =~ s/.*Score: //;
          }
+         if (/^Obj diff:/) {
+         	$obj_diff = $_;
+         	$obj_diff =~ s/^Obj diff: *//g;
+         }
       }
       close jmlfh;
       $out_nbest_eval = sprintf "%.3f", $nbest_eval;
       $out_nbest_init_eval = sprintf "%.3f", $nbest_init_eval;
       print stderr "Eval($opt_type) score on n-best list: $out_nbest_eval (up from $out_nbest_init_eval)\n\n";
+      
+      print "Objective diff: $obj_diff\n";
+      if ($obj_diff < $MIN_OBJ_DIFF) {
+   	    print stderr "Done as obj diff $obj_diff < $MIN_OBJ_DIFF\n";
+   	    last;
+      }   
    } else {
    
       $iter_cumulative_nbest = "$work_dir/cmert.$iter.combined.nbest";
@@ -511,18 +522,17 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
             "to phrasal weights for next iteration.\n\n";
       `$SCRIPTS_DIR/cmert_weights_phrasal_weights.pl $cmert_produced_wts  $iter_cumulative_nbest 2>&1 > $next_iter_weights`;
       unlink($iter_cumulative_nbest);
+    
+      $max_weight_delta = `$SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1`;
+      print stderr "cmd: $SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1\n";
+      chomp $max_weight_delta; 
+      print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
+      if ($max_weight_delta < $MIN_WEIGHT_DELTA) {
+        print stderr "Done as max weight delta $weight_delta < $MIN_WEIGHT_DELTA\n\n";
+        last; 
+      }
    }
 
-
-   $max_weight_delta = `$SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1`;
-
-   print stderr "cmd: $SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1\n";
-   chomp $max_weight_delta; 
-   print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
-   if ($max_weight_delta < $MIN_WEIGHT_DELTA) {
-      print stderr "Done as max weight delta $weight_delta < $MIN_WEIGHT_DELTA\n\n";
-      last; 
-   }
 }
 
 $phrasal_final_ini = "$work_dir/phrasal.final.ini\n";
