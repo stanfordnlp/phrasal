@@ -2506,7 +2506,7 @@ public class UnsmoothedMERT {
 			}
 
 			normalize(newWts);
-			double obj = (mcmcObj ? mcmcTightExpectedEval(nbest, bestWts, emetric) : -evalAtPoint(nbest, newWts, emetric));
+			double obj = (mcmcObj ? mcmcTightExpectedEval(nbest, newWts, emetric) : -evalAtPoint(nbest, newWts, emetric));
 			if (bestObj > obj) {
 				bestWts = newWts;
 				bestObj = obj;
