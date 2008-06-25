@@ -35,6 +35,8 @@ public class UnsmoothedMERT {
 	static public final boolean DEBUG = false;
   public final static double DEFAULT_C = 100;
   public static double C = DEFAULT_C;	
+  public static final double DEFAULT_T = 1;
+  public static double T = DEFAULT_T;
 	public static final double DEFAULT_UNSCALED_L_RATE = 0.1;
 	public static double lrate = DEFAULT_UNSCALED_L_RATE;
 	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-6; 
@@ -44,7 +46,7 @@ public class UnsmoothedMERT {
 	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-9;
 	static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
   static final double MCMC_BATCH_SAMPLES = 30000;
-  static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.10;
+  static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
   
 	static public final double MIN_PLATEAU_DIFF = 0.0;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
@@ -296,7 +298,7 @@ public class UnsmoothedMERT {
 				int posSampleCandId   = r.nextInt(nbest.nbestLists().get(sentId).size());
 				double currentScore   = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
 				double posSampleScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(posSampleCandId).features);
-				double a = Math.exp(posSampleScore - currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
+				double a = Math.exp(T*posSampleScore - T*currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
 				if (a >= 1.0) {
 					candIds[sentId] = posSampleCandId;
 				} else {
@@ -325,7 +327,7 @@ public class UnsmoothedMERT {
 		
 		// objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
 		double l2wts = Counters.L2Norm(wts);
-		double obj = 0.5*l2wts*l2wts - C*sumExpL/cnt;
+		double obj = (C != 0 ? 0.5*l2wts*l2wts -C*sumExpL/cnt : -sumExpL/cnt);
 		System.err.printf("Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", obj);
 		System.err.printf("C: %e\n", C);
 		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
@@ -387,7 +389,7 @@ public class UnsmoothedMERT {
 				int posSampleCandId   = r.nextInt(nbest.nbestLists().get(sentId).size());
 				double currentScore   = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
 				double posSampleScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(posSampleCandId).features);
-				double a = Math.exp(posSampleScore - currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
+				double a = Math.exp(T*posSampleScore - T*currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
 				if (a >= 1.0) {
 					candIds[sentId] = posSampleCandId;
 				} else {
@@ -431,7 +433,7 @@ public class UnsmoothedMERT {
 		}
 
 		double l2wts = Counters.L2Norm(wts);
-		double obj = 0.5*l2wts*l2wts-C*sumExpL/cnt;
+		double obj = (C != 0 ? 0.5*l2wts*l2wts-C*sumExpL/cnt : -sumExpL/cnt);
 		System.err.printf("DRegularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", obj);
 		System.err.printf("C: %e\n", C);
 		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
@@ -442,11 +444,16 @@ public class UnsmoothedMERT {
 		
 		// obtain dObj by adding in regularization terms to dE
     ClassicCounter<String> dObj = new ClassicCounter<String>(dE);
-    dObj.multiplyBy(-C);
+    
 
-		for (String key : wts.keySet()) {
-			dObj.incrementCount(key, wts.getCount(key));
-		}
+    if (C != 0) {
+    	dObj.multiplyBy(-C);
+    	for (String key : wts.keySet()) {
+    		dObj.incrementCount(key, wts.getCount(key));
+    	}
+    } else {
+    	dObj.multiplyBy(-1.0);
+    }
 		return dObj;
 	}
 	
@@ -2383,6 +2390,11 @@ public class UnsmoothedMERT {
        System.err.printf("Using C %f rather than default of %f\n",
           C, DEFAULT_C);
     }
+	  
+	  if (System.getProperty("T") != null) {
+	  	T = Double.parseDouble(System.getProperty("T"));
+	  	System.err.printf("Using T %f rather than default of %f\n", T, DEFAULT_T);
+	  }
 	  
 	  lrate = DEFAULT_UNSCALED_L_RATE/C; 
 	  System.out.printf("sgd lrate: %e\n", lrate);
