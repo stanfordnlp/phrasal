@@ -45,7 +45,7 @@ public class UnsmoothedMERT {
 	static final double NO_PROGRESS_SSD = 1e-6;
 	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-9;
 	static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
-  static final double MCMC_BATCH_SAMPLES = 30000;
+  static final double MCMC_BATCH_SAMPLES = 50000;
   static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
   
 	static public final double MIN_PLATEAU_DIFF = 0.0;
