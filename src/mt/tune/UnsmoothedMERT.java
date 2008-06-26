@@ -263,7 +263,7 @@ public class UnsmoothedMERT {
   }
   
   static public double mcmcTightExpectedEval(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
-  	System.err.printf("TMCMC weights:\n%s\n\n", wts.toString(100));
+  	System.err.printf("TMCMC weights:\n%s\n\n", wts.toString(35));
   	
   	// for quick mixing, get current classifier argmax
 		List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
@@ -346,7 +346,7 @@ public class UnsmoothedMERT {
   
 	@SuppressWarnings({ "deprecation" })
 	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, MutableDouble expectedEval, MutableDouble objValue) {
-		System.err.printf("MCMC weights:\n%s\n\n", wts.toString(100));
+		System.err.printf("MCMC weights:\n%s\n\n", wts.toString(35));
 		
 		// for quick mixing, get current classifier argmax
 		List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
@@ -427,9 +427,9 @@ public class UnsmoothedMERT {
 			
 			System.err.printf("Batch: %d dEDiff: %e\n", batch, dEDiff);
 			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
-			System.err.printf("E(loss*f):\n%s\n\n", new ClassicCounter<String>(sumExpLF).divideBy(cnt));
-			System.err.printf("E(f):\n%s\n\n", new ClassicCounter<String>(sumExpF).divideBy(cnt));
-			System.err.printf("dE:\n%s\n\n", dE.toString(100));
+			System.err.printf("E(loss*f):\n%s\n\n", ((ClassicCounter<String>)(new ClassicCounter<String>(sumExpLF).divideBy(cnt))).toString(35));
+			System.err.printf("E(f):\n%s\n\n", ((ClassicCounter<String>)new ClassicCounter<String>(sumExpF).divideBy(cnt)).toString(35));
+			System.err.printf("dE:\n%s\n\n", dE.toString(35));
 		}
 
 		double l2wts = Counters.L2Norm(wts);
@@ -1523,18 +1523,18 @@ public class UnsmoothedMERT {
 		
 		System.err.println("Initial Wts:");
 		System.err.println("====================");
-		System.err.println(initialWts.toString(100));
+		System.err.println(initialWts.toString(35));
 		
 		System.err.println("Reduced Initial Wts:");
 		System.err.println("====================");
-		System.err.println(reducedInitialWts.toString(100));
+		System.err.println(reducedInitialWts.toString(35));
 
 
     System.err.println("Recovered Reduced Initial Wts");
     System.err.println("=============================");
 		ClassicCounter<String> recoveredInitialWts = 
        reducedWeightsToWeights(reducedInitialWts, pU.deref(), pFeatureIdMap.deref());
-    System.err.println(recoveredInitialWts.toString(100));
+    System.err.println(recoveredInitialWts.toString(35));
 		
 		
 		MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest, 
@@ -1554,13 +1554,13 @@ public class UnsmoothedMERT {
 		}
 		System.err.println("Reduced Learned Wts:");
 		System.err.println("====================");
-		System.err.println(reducedWts.toString(100));
+		System.err.println(reducedWts.toString(35));
 		
 		
 		ClassicCounter<String> recoveredWts = reducedWeightsToWeights(reducedWts, pU.deref(), pFeatureIdMap.deref());
 		System.err.println("Recovered Learned Wts:");
 		System.err.println("======================");
-		System.err.println(recoveredWts.toString(100));
+		System.err.println(recoveredWts.toString(35));
 
     double wtSsd = wtSsd(reducedInitialWts, reducedWts);
     System.out.printf("reduced wts ssd: %e\n", wtSsd);
