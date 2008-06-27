@@ -16,7 +16,6 @@ import mt.reranker.ter.*;
 import edu.stanford.nlp.optimization.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.svd.ReducedSVD;
 import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.Ptr;
@@ -383,9 +382,9 @@ public class UnsmoothedMERT {
 		Scorer<String> scorer = new StaticScorer(wts);
 		
 		// expected value sums
-		OpenAddressCounter<String> sumExpLF = new OpenAddressCounter<String>();
+		ClassicCounter<String> sumExpLF = new ClassicCounter<String>();
 		double sumExpL = 0.0;
-		OpenAddressCounter<String> sumExpF = new OpenAddressCounter<String>();
+		ClassicCounter<String> sumExpF = new ClassicCounter<String>();
 		int cnt = 0;
 		double dEDiff = Double.POSITIVE_INFINITY;
     double dECosine = 0.0;
@@ -406,7 +405,7 @@ public class UnsmoothedMERT {
 			for (ScoredFeaturizedTranslation<IString, String> tran : current) 
         incEval.add(tran);
 			
-			OpenAddressCounter<String> currentF = new OpenAddressCounter<String>(summarizedAllFeaturesVector(current));
+			ClassicCounter<String> currentF = summarizedAllFeaturesVector(current);
 			
       System.err.println("Sampling");
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
@@ -436,7 +435,7 @@ public class UnsmoothedMERT {
 			  
         // if necessary, adjust currentF & eval
 				if (candIds[sentId] == posSampleCandId) { 
-					Counters.subtractInPlace(currentF, FeatureValues.toCounter(
+					currentF.subtractAll(FeatureValues.toCounter(
             current.get(sentId).features));
 					currentF.addAll(FeatureValues.toCounter(cTrans.features));
 					incEval.replace(sentId, cTrans);
@@ -446,9 +445,9 @@ public class UnsmoothedMERT {
 				
 				current.set(sentId, cTrans);
 				
-				OpenAddressCounter<String> Fcp = new OpenAddressCounter<String>(currentF);				
+				ClassicCounter<String> Fcp = new ClassicCounter<String>(currentF);				
 				sumExpF.addAll(Fcp);
-				Counters.scale(Fcp, eval);
+				Fcp.multiplyBy(eval);
 				sumExpLF.addAll(Fcp);
 			}
 			
