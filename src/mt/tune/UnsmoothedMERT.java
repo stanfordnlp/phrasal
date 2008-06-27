@@ -43,14 +43,13 @@ public class UnsmoothedMERT {
 	static final int DEFAULT_MAX_ITER_SGD = 1000;
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
-	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-9;
-	static final double NO_PROGRESS_MCMC_DIFF = 1e-3;
-  static final double MCMC_BATCH_SAMPLES = 50000;
+	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-6;
+	static final double NO_PROGRESS_MCMC_COSINE = 1.0-1e-6;
+  static final double MCMC_BATCH_SAMPLES = 10000;
   static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
   
 	static public final double MIN_PLATEAU_DIFF = 0.0;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
-	static public final double MIN_UPDATE_DIFF = 1e-6;
 
   
   static class ObjELossDiffFunction implements DiffFunction, HasInitial {
@@ -292,7 +291,8 @@ public class UnsmoothedMERT {
 			IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();			
 			for (ScoredFeaturizedTranslation<IString, String> tran : argmax) incEval.add(tran);
 			double eval = incEval.score();
-			
+		  double oldExpL = sumExpL/cnt;
+	
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// mcmc sample
 				int sentId = r.nextInt(nbest.nbestLists().size());
@@ -310,18 +310,20 @@ public class UnsmoothedMERT {
 				
 				// collect derivative relevant statistics using sample
 				cnt++;
-				ScoredFeaturizedTranslation<IString, String> cTrans = nbest.nbestLists().get(sentId).get(candIds[sentId]);
+				ScoredFeaturizedTranslation<IString, String> cTrans = 
+           nbest.nbestLists().get(sentId).get(candIds[sentId]);
 			  
-				if (candIds[sentId] == posSampleCandId) { // if necessary, adjust currentF & eval
+        // if necessary, adjust eval
+				if (candIds[sentId] == posSampleCandId) { 
 					incEval.replace(sentId, cTrans);
 					eval = incEval.score();
 				}
-			
-				dEEval = (cnt > 1 ? sumExpL/(cnt-1) - (sumExpL+eval)/cnt : Double.POSITIVE_INFINITY);
 				
 				sumExpL += eval;								
 			}
-			
+		  dEEval = (oldExpL != oldExpL ? Double.POSITIVE_INFINITY : 
+        oldExpL - sumExpL/cnt);
+	
 			System.err.printf("TBatch: %d dEEval: %e cnt: %d\n", batch, dEEval, cnt);
 			System.err.printf("E(loss) = %e (sum: %e)\n", sumExpL/cnt, sumExpL);
 		}
@@ -359,6 +361,7 @@ public class UnsmoothedMERT {
 		System.err.printf("MCMC weights:\n%s\n\n", wts.toString(35));
 		
 		// for quick mixing, get current classifier argmax
+    System.err.println("finding argmax");
 		List<ScoredFeaturizedTranslation<IString, String>> argmax = 
       transArgmax(nbest, wts), current = 
         new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
@@ -366,6 +369,7 @@ public class UnsmoothedMERT {
 
 		
 		// recover which candidates were selected
+    System.err.println("recovering cands");
 		int argmaxCandIds[] = new int[current.size()]; Arrays.fill(argmaxCandIds, -1);
 		for (int i = 0; i < nbest.nbestLists().size(); i++) {
 			for (int j = 0; j < nbest.nbestLists().get(i).size(); j++) { 
@@ -383,7 +387,9 @@ public class UnsmoothedMERT {
 		ClassicCounter<String> sumExpF = new ClassicCounter<String>();
 		int cnt = 0;
 		double dEDiff = Double.POSITIVE_INFINITY;
-		for (int batch = 0; dEDiff > NO_PROGRESS_MCMC_DIFF; batch++) {
+    double dECosine = 0.0;
+		for (int batch = 0; 
+         dECosine < NO_PROGRESS_MCMC_COSINE; batch++) {
 			ClassicCounter<String> oldDe = new ClassicCounter<String>(dE);
 
 			// reset current to argmax
@@ -401,10 +407,11 @@ public class UnsmoothedMERT {
 			
 			ClassicCounter<String> currentF = summarizedAllFeaturesVector(current);
 			
+      System.err.println("Sampling");
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// mcmc sample
 				int sentId = r.nextInt(nbest.nbestLists().size());
-				int posSampleCandId   = r.nextInt(nbest.nbestLists().get(sentId).size());
+				int posSampleCandId = r.nextInt(nbest.nbestLists().get(sentId).size());
 				double currentScore   = scorer.getIncrementalScore(
           nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
 				double posSampleScore = scorer.getIncrementalScore(
@@ -449,8 +456,12 @@ public class UnsmoothedMERT {
 			dE.subtractAll(sumExpLF);
 			dE.divideBy(-1*cnt);
 			dEDiff = wtSsd(oldDe, dE);
+      dECosine = Counters.dotProduct(oldDe, dE)/
+                 (Counters.L2Norm(dE)*Counters.L2Norm(oldDe));
+      if (dECosine != dECosine) dECosine = 0;
 			
-			System.err.printf("Batch: %d dEDiff: %e\n", batch, dEDiff);
+			System.err.printf("Batch: %d dEDiff: %e dECosine: %g)\n", 
+        batch, dEDiff, dECosine);
 			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 			System.err.printf("E(loss*f):\n%s\n\n", ((ClassicCounter<String>)(new ClassicCounter<String>(sumExpLF).divideBy(cnt))).toString(35));
 			System.err.printf("E(f):\n%s\n\n", ((ClassicCounter<String>)new ClassicCounter<String>(sumExpF).divideBy(cnt)).toString(35));
@@ -1614,7 +1625,7 @@ public class UnsmoothedMERT {
 		CGMinimizer minim = new CGMinimizer(obj);
 		//QNMinimizer minim = new QNMinimizer(obj, 10, true);
 		
-		double[] wtsDense = minim.minimize(obj, 1e-3, obj.initial);
+		double[] wtsDense = minim.minimize(obj, 1e-5, obj.initial);
 		ClassicCounter<String> wts = new ClassicCounter<String>();
 		for (int i = 0; i < wtsDense.length; i++) {
 			wts.incrementCount(obj.featureIdsToString.get(i), wtsDense[i]);
@@ -1798,6 +1809,15 @@ public class UnsmoothedMERT {
 
 		return trans;
 	}
+
+	static public List<ScoredFeaturizedTranslation<IString,String>> 
+    transEvalArgmax(MosesNBestList nbest, 
+      EvaluationMetric<IString, String> emetric) {
+		  MultiTranslationMetricMax<IString, String> oneBestSearch = 
+        new HillClimbingMultiTranslationMetricMax<IString, String>(emetric);
+		return oneBestSearch.maximize(nbest);
+	}
+
 
 	static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(
 			MosesNBestList nbest, ClassicCounter<String> wts) {

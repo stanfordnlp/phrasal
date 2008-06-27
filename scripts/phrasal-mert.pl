@@ -28,7 +28,7 @@ use List::Util qw[max];
 $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
 $DEFAULT_MAX_ITERS = 25;
-$MIN_OBJ_DIFF = 1e-6;
+$MIN_OBJ_DIFF = 1e-5;
 $DEFAULT_WORK_DIR = "pmert-dir";
 $DEFAULT_NBEST_SIZE = 100;
 $DEFAULT_JAVA_FLAGS = "-Xmx6g";
