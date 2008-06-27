@@ -444,11 +444,9 @@ public class UnsmoothedMERT {
 				sumExpL += eval;
 				
 				current.set(sentId, cTrans);
-				
-				ClassicCounter<String> Fcp = new ClassicCounter<String>(currentF);				
-				sumExpF.addAll(Fcp);
-				Fcp.multiplyBy(eval);
-				sumExpLF.addAll(Fcp);
+								
+				sumExpF.addAll(currentF);
+				Counters.addInPlace(sumExpLF, currentF, eval);
 			}
 			
 			dE = new ClassicCounter<String>(sumExpF);
