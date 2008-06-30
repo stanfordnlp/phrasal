@@ -15,10 +15,12 @@ import mt.metrics.*;
 import mt.reranker.ter.*;
 import edu.stanford.nlp.optimization.*;
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.svd.ReducedSVD;
 import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.Ptr;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 
 /**
  * Minimum Error Rate Training (MERT)
@@ -382,9 +384,9 @@ public class UnsmoothedMERT {
 		Scorer<String> scorer = new StaticScorer(wts);
 		
 		// expected value sums
-		ClassicCounter<String> sumExpLF = new ClassicCounter<String>();
+		OpenAddressCounter<String> sumExpLF = new OpenAddressCounter<String>(0.50f);
 		double sumExpL = 0.0;
-		ClassicCounter<String> sumExpF = new ClassicCounter<String>();
+		OpenAddressCounter<String> sumExpF = new OpenAddressCounter<String>(0.50f);
 		int cnt = 0;
 		double dEDiff = Double.POSITIVE_INFINITY;
     double dECosine = 0.0;
@@ -405,9 +407,11 @@ public class UnsmoothedMERT {
 			for (ScoredFeaturizedTranslation<IString, String> tran : current) 
         incEval.add(tran);
 			
-			ClassicCounter<String> currentF = summarizedAllFeaturesVector(current);
+			OpenAddressCounter<String> currentF = 
+        new OpenAddressCounter(summarizedAllFeaturesVector(current), 0.50f);
 			
       System.err.println("Sampling");
+      long time = -System.currentTimeMillis();
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// mcmc sample
 				int sentId = r.nextInt(nbest.nbestLists().size());
@@ -435,8 +439,10 @@ public class UnsmoothedMERT {
 			  
         // if necessary, adjust currentF & eval
 				if (candIds[sentId] == posSampleCandId) { 
-					currentF.subtractAll(FeatureValues.toCounter(
-            current.get(sentId).features));
+					//currentF.subtractAll(FeatureValues.toCounter(
+          //  current.get(sentId).features));
+          Counters.addInPlace(currentF, 
+             FeatureValues.toCounter(current.get(sentId).features), -1);
 					currentF.addAll(FeatureValues.toCounter(cTrans.features));
 					incEval.replace(sentId, cTrans);
 				}
@@ -445,9 +451,17 @@ public class UnsmoothedMERT {
 				
 				current.set(sentId, cTrans);
 								
-				sumExpF.addAll(currentF);
-				Counters.addInPlace(sumExpLF, currentF, eval);
+        for (Object2DoubleMap.Entry<String> entry : 
+          currentF.object2DoubleEntrySet()) {
+          String k = entry.getKey();
+          double val = entry.getDoubleValue();
+          sumExpF.incrementCount(k, val);
+          sumExpLF.incrementCount(k, val*eval);
+        } 
+				//sumExpF.addAll(currentF);
+				//Counters.addInPlace(sumExpLF, currentF, eval);
 			}
+      time += System.currentTimeMillis();
 			
 			dE = new ClassicCounter<String>(sumExpF);
 			dE.multiplyBy(sumExpL/cnt);
@@ -460,6 +474,7 @@ public class UnsmoothedMERT {
 			
 			System.err.printf("Batch: %d dEDiff: %e dECosine: %g)\n", 
         batch, dEDiff, dECosine);
+      System.err.printf("Sampling time: %.3f s\n", time/1000.0);
 			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 			System.err.printf("E(loss*f):\n%s\n\n", ((ClassicCounter<String>)(new ClassicCounter<String>(sumExpLF).divideBy(cnt))).toString(35));
 			System.err.printf("E(f):\n%s\n\n", ((ClassicCounter<String>)new ClassicCounter<String>(sumExpF).divideBy(cnt)).toString(35));
