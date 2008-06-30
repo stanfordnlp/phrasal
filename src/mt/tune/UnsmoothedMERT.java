@@ -408,7 +408,7 @@ public class UnsmoothedMERT {
         incEval.add(tran);
 			
 			OpenAddressCounter<String> currentF = 
-        new OpenAddressCounter(summarizedAllFeaturesVector(current), 0.50f);
+        new OpenAddressCounter<String>(summarizedAllFeaturesVector(current), 0.50f);
 			
       System.err.println("Sampling");
       long time = -System.currentTimeMillis();
