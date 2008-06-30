@@ -364,11 +364,20 @@ public class UnsmoothedMERT {
 		
 		// for quick mixing, get current classifier argmax
     System.err.println("finding argmax");
-		List<ScoredFeaturizedTranslation<IString, String>> argmax = 
-      transArgmax(nbest, wts), current = 
-        new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
+		List<ScoredFeaturizedTranslation<IString, String>> 
+		  argmax = transArgmax(nbest, wts),
+		  evalArgmin = transEvalArgmin(nbest, emetric),
+		  evalArgmax = transEvalArgmax(nbest, emetric),
+		  current = 
+		  	new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
+		  
+		  
 		
-
+		double currentEval = emetric.score(argmax);
+		double evalArgmaxEval = emetric.score(evalArgmax);
+		double evalArgminEval = emetric.score(evalArgmin);
+		
+		System.out.printf("Eval - Current: %.4f Oracle: %.4f Worst %.4f\n",currentEval,evalArgmaxEval, evalArgminEval);
 		
 		// recover which candidates were selected
     System.err.println("recovering cands");
@@ -393,73 +402,79 @@ public class UnsmoothedMERT {
 		for (int batch = 0; 
          dECosine < NO_PROGRESS_MCMC_COSINE; batch++) {
 			ClassicCounter<String> oldDe = new ClassicCounter<String>(dE);
-
-			// reset current to argmax
-			current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>
-        (argmax);
-
-			int[] candIds = argmaxCandIds.clone();
 			
-			// reset incremental evaluation object for the argmax candidates
-			IncrementalEvaluationMetric<IString, String> incEval = 
-        emetric.getIncrementalMetric();			
-
-			for (ScoredFeaturizedTranslation<IString, String> tran : current) 
-        incEval.add(tran);
-			
-			OpenAddressCounter<String> currentF = 
-        new OpenAddressCounter<String>(summarizedAllFeaturesVector(current), 0.50f);
-			
-      System.err.println("Sampling");
-      long time = -System.currentTimeMillis();
-			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
-				// mcmc sample
-				int sentId = r.nextInt(nbest.nbestLists().size());
-				int posSampleCandId = r.nextInt(nbest.nbestLists().get(sentId).size());
-				double currentScore   = scorer.getIncrementalScore(
-          nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
-				double posSampleScore = scorer.getIncrementalScore(
-          nbest.nbestLists().get(sentId).get(posSampleCandId).features);
-        // a_1 = p(x')/p(x^t) & a_2 = 1.0 
-        // (i.e., our metropolis hastings is really just metropolis)
-				double a = Math.exp(T*posSampleScore - T*currentScore); 
-				if (a >= 1.0) {
-					candIds[sentId] = posSampleCandId;
-				} else {
-					if (r.nextDouble() <= a) { // x^(t+1) = x' with probability a
-						candIds[sentId] = posSampleCandId;
-					} // x^(t+1) = x^t with probability 1-a
-				}
+			long time = -System.currentTimeMillis();
+			for (int i = 0; i < 3; i++) {
+  			switch (i) {
+  			case 0: current = new ArrayList<ScoredFeaturizedTranslation<IString,String>>(evalArgmax); break;
+  			case 1: current = new ArrayList<ScoredFeaturizedTranslation<IString,String>>(evalArgmin); break;
+  			case 2: current = new ArrayList<ScoredFeaturizedTranslation<IString,String>>(argmax); break;
+  			}
 				
-				// collect derivative relevant statistics using sample
-				cnt++;
-				
-				ScoredFeaturizedTranslation<IString, String> cTrans = 
-          nbest.nbestLists().get(sentId).get(candIds[sentId]);
-			  
-        // if necessary, adjust currentF & eval
-				if (candIds[sentId] == posSampleCandId) { 
-					//currentF.subtractAll(FeatureValues.toCounter(
-          //  current.get(sentId).features));
-          Counters.addInPlace(currentF, 
-             FeatureValues.toCounter(current.get(sentId).features), -1);
-					currentF.addAll(FeatureValues.toCounter(cTrans.features));
-					incEval.replace(sentId, cTrans);
-				}
-				double eval = incEval.score();
-				sumExpL += eval;
-				
-				current.set(sentId, cTrans);
-								
-        for (Object2DoubleMap.Entry<String> entry : 
-          currentF.object2DoubleEntrySet()) {
-          String k = entry.getKey();
-          double val = entry.getDoubleValue();
-          sumExpF.incrementCount(k, val);
-          sumExpLF.incrementCount(k, val*eval);
-        } 
-				//sumExpF.addAll(currentF);
-				//Counters.addInPlace(sumExpLF, currentF, eval);
+  			int[] candIds = argmaxCandIds.clone();
+  			
+  			// reset incremental evaluation object for the argmax candidates
+  			IncrementalEvaluationMetric<IString, String> incEval = 
+          emetric.getIncrementalMetric();			
+  
+  			for (ScoredFeaturizedTranslation<IString, String> tran : current) 
+          incEval.add(tran);
+  			
+  			OpenAddressCounter<String> currentF = 
+          new OpenAddressCounter<String>(summarizedAllFeaturesVector(current), 0.50f);
+  			
+        System.err.println("Sampling");
+        
+  			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
+  				// mcmc sample
+  				int sentId = r.nextInt(nbest.nbestLists().size());
+  				int posSampleCandId = r.nextInt(nbest.nbestLists().get(sentId).size());
+  				double currentScore   = scorer.getIncrementalScore(
+            nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
+  				double posSampleScore = scorer.getIncrementalScore(
+            nbest.nbestLists().get(sentId).get(posSampleCandId).features);
+          // a_1 = p(x')/p(x^t) & a_2 = 1.0 
+          // (i.e., our metropolis hastings is really just metropolis)
+  				double a = Math.exp(T*posSampleScore - T*currentScore); 
+  				if (a >= 1.0) {
+  					candIds[sentId] = posSampleCandId;
+  				} else {
+  					if (r.nextDouble() <= a) { // x^(t+1) = x' with probability a
+  						candIds[sentId] = posSampleCandId;
+  					} // x^(t+1) = x^t with probability 1-a
+  				}
+  				
+  				// collect derivative relevant statistics using sample
+  				cnt++;
+  				
+  				ScoredFeaturizedTranslation<IString, String> cTrans = 
+            nbest.nbestLists().get(sentId).get(candIds[sentId]);
+  			  
+          // if necessary, adjust currentF & eval
+  				if (candIds[sentId] == posSampleCandId) { 
+  					//currentF.subtractAll(FeatureValues.toCounter(
+            //  current.get(sentId).features));
+            Counters.addInPlace(currentF, 
+               FeatureValues.toCounter(current.get(sentId).features), -1);
+  					currentF.addAll(FeatureValues.toCounter(cTrans.features));
+  					incEval.replace(sentId, cTrans);
+  				}
+  			
+  				double eval = incEval.score();
+  				sumExpL += eval;
+  				
+  				current.set(sentId, cTrans);
+  								
+          for (Object2DoubleMap.Entry<String> entry : 
+            currentF.object2DoubleEntrySet()) {
+            String k = entry.getKey();
+            double val = entry.getDoubleValue();
+            sumExpF.incrementCount(k, val);
+            sumExpLF.incrementCount(k, val*eval);
+          } 
+  				//sumExpF.addAll(currentF);
+  				//Counters.addInPlace(sumExpLF, currentF, eval);
+  			}
 			}
       time += System.currentTimeMillis();
 			
@@ -1830,6 +1845,16 @@ public class UnsmoothedMERT {
         new HillClimbingMultiTranslationMetricMax<IString, String>(emetric);
 		return oneBestSearch.maximize(nbest);
 	}
+	
+	static public List<ScoredFeaturizedTranslation<IString,String>> 
+  transEvalArgmin(MosesNBestList nbest, 
+    final EvaluationMetric<IString, String> emetric) {
+		EvaluationMetric<IString,String> invEmetric = new InverseMetric<IString, String>(emetric);
+		
+	  MultiTranslationMetricMax<IString, String> oneWorstSearch = 
+      new HillClimbingMultiTranslationMetricMax<IString, String>(invEmetric);
+	return oneWorstSearch.maximize(nbest);
+}
 
 
 	static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(
