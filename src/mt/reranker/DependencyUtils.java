@@ -75,8 +75,8 @@ public class DependencyUtils {
   private static ClassicCounter<String> extractEnZhPathFeatures(GrammaticalStructure enGs, GrammaticalStructure chGs, Alignment align, boolean EnZh, boolean retricted) {
     ClassicCounter<String> features = new ClassicCounter<String>();
 
-    SemanticGraph graph = SemanticGraphFactory.makeFromTree(enGs, false, false, false, null, "doc1", 0);
-    SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(chGs, false, false, false, null, "doc1", 0);
+    SemanticGraph graph = SemanticGraphFactory.makeFromTree(enGs, "doc1", 0);
+    SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(chGs, "doc1", 0);
 
     List<SemanticGraphEdge> edges = graph.edgeList();
     List<IndexedWord> list = chGraph.vertexList();
@@ -160,8 +160,8 @@ public class DependencyUtils {
 
   private static ClassicCounter<String> extractPathFeatures(GrammaticalStructure enGs, GrammaticalStructure chGs, Alignment align, int lengLimit, boolean restrictedAlign) {
     ClassicCounter<String> features = new ClassicCounter<String>();
-    SemanticGraph enGraph = SemanticGraphFactory.makeFromTree(enGs, false, false, false, null, "doc1", 0);
-    SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(chGs, false, false, false, null, "doc1", 0);
+    SemanticGraph enGraph = SemanticGraphFactory.makeFromTree(enGs, "doc1", 0);
+    SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(chGs, "doc1", 0);
 
     List<IndexedWord> enlist = enGraph.vertexList();
     List<IndexedWord> chlist = chGraph.vertexList();
