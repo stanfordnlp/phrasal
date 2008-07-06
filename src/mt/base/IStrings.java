@@ -23,8 +23,8 @@ public class IStrings {
 		}
 		return istrs;
 	}
-	
-	static public int[] toIntArray(IString[] strings) {
+
+  static public int[] toIntArray(IString[] strings) {
 		int[] intArray = new int[strings.length];
 		for (int i = 0; i < strings.length; i++) {
 			intArray[i] = strings[i].id;
@@ -38,5 +38,13 @@ public class IStrings {
 			istrs[i] = new IString(ids[i]);
 		}
 		return istrs;
+	}
+  
+  static public String[] toStringArray(int[] ids) {
+		String[] strs = new String[ids.length];
+		for (int i = 0; i < strs.length; i++) {
+			strs[i] = new String(IString.getString(ids[i]));
+		}
+		return strs;
 	}
 }

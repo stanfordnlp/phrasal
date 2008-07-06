@@ -12,7 +12,6 @@ import mt.decoder.util.State;
 public interface IncrementalEvaluationMetric<TK,FV> extends State<IncrementalEvaluationMetric<TK,FV>>{
 	/**
 	 * 
-	 * @param sequence
 	 * @return
 	 */
 	IncrementalEvaluationMetric<TK,FV> add(ScoredFeaturizedTranslation<TK,FV> trans);
@@ -20,7 +19,6 @@ public interface IncrementalEvaluationMetric<TK,FV> extends State<IncrementalEva
 	/**
 	 * 
 	 * @param index
-	 * @param sequence
 	 * @return
 	 */
 	IncrementalEvaluationMetric<TK,FV> replace(int index, ScoredFeaturizedTranslation<TK,FV> trans);

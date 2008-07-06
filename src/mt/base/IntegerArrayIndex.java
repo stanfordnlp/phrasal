@@ -10,5 +10,4 @@ public interface IntegerArrayIndex {
 	public int indexOf(int[] key);
 
 	public int indexOf(int[] key, boolean add);
-
 }

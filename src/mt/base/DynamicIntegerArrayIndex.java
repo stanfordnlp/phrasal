@@ -8,9 +8,9 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	  static final int INIT_SZ = 1<<10;
 	  static final double MAX_LOAD = 0.60;
 	  
-	  private int[][] keys; private int[] values; private int mask;
-	  private int[] hashCodes;
-	  private int[] reverseIndex;
+	  int[][] keys; int[] values; int mask;
+	  int[] hashCodes;
+	  int[] reverseIndex;
 	  int maxIndex; int load;
 
 	  public static final DynamicIntegerArrayIndex CommonDynamiIntegerArrayIndex = new DynamicIntegerArrayIndex();
@@ -27,7 +27,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    mask = INIT_SZ - 1;
 	  }
 
-	  private int supplementalHash(int h) {
+	  int supplementalHash(int h) {
 	      // use the same supplemental hash function used by HashMap
 	      return ((h << 7) - h + (h >>> 9) + (h >>> 17));
 	  }	  
@@ -52,7 +52,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	      return keys[pos];
 	  }
 	  
-	  private void sizeUp() {      
+	  void sizeUp() {      
 	    int newSize = keys.length<<1;
 	    mask = newSize-1;
 	    //System.err.printf("size up to: %d\n", newSize);
@@ -80,7 +80,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	      return distance;
 	  }
 	  
-	  private int add(int key[], int pos, boolean sharedRep) {
+	  int add(int key[], int pos, boolean sharedRep) {
 	    if ((load++)/(double)keys.length > MAX_LOAD) { 
 	      sizeUp();
 	      pos = -findPos(key, true)-1;

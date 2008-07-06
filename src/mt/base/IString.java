@@ -78,12 +78,14 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity {
     return stringRep;
   }
 
-
-
   public int getId() {
     return id;
   }
 
+  public static String getString(int id) {
+    return index.get(id);
+  }
+  
   static private WrapperIndex wrapperIndex; // = null;
 
   static public IndexInterface<IString> identityIndex() {

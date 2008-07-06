@@ -114,8 +114,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	/**
 	 * 
 	 * @param phraseGenerators
-	 * @param phraseFeaturizer
-	 * @param scorer
 	 */
 	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators) {
 		this.phraseGenerators = phraseGenerators;
@@ -127,8 +125,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	 * 
 	 * @param phraseGenerators
 	 * @param type
-	 * @param phraseFeaturizer
-	 * @param scorer
 	 */
 	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, Type type) {
 		this.phraseGenerators = phraseGenerators;

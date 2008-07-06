@@ -54,7 +54,6 @@ public class CombinedFeatureExtractor {
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
-  static final Set<String> IGNORED_OPTS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
   static {
@@ -79,7 +78,6 @@ public class CombinedFeatureExtractor {
      }));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
-    ALL_RECOGNIZED_OPTS.addAll(IGNORED_OPTS);
   }
   
   static BshInterpreter interpreter = new BshInterpreter();
@@ -467,7 +465,7 @@ public class CombinedFeatureExtractor {
      " -fCorpus <file> : source-language corpus\n"+ 
      " -eCorpus <file> : target-language corpus\n"+
      " -align <file> : alignment file\n"+
-     " -extractors <class1> [<class2> ... <classN>]\n"+
+     " -extractors <class1>[:<class2>:...:<classN>]\n"+
      "Optional arguments:\n"+
      " -outputFile <file>\n"+
      " -fFilterCorpus <file> : filter against a specific dev/test set\n"+

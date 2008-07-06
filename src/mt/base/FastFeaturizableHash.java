@@ -16,7 +16,6 @@ public class FastFeaturizableHash<V> {
 
 	/**
 	 * 
-	 * @param baseHyp
 	 */
 	public FastFeaturizableHash() {
 		offset = Hypothesis.nextId;
@@ -25,7 +24,6 @@ public class FastFeaturizableHash<V> {
 	
 	/**
 	 * 
-	 * @param hyp
 	 * @param value
 	 */
 	public void put(Featurizable<IString,String> f, V value) {
@@ -37,7 +35,6 @@ public class FastFeaturizableHash<V> {
 	
 	/**
 	 * 
-	 * @param hyp
 	 * @return
 	 */
 	public V get(Featurizable<IString,String> f) {

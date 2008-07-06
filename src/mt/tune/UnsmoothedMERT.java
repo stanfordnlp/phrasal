@@ -2308,9 +2308,6 @@ public class UnsmoothedMERT {
 	 * Previously, profiling revealed that this was a serious hotspot
 	 * 
 	 * @param nbest
-	 * @param emetric
-	 * @param mbMap
-	 * @param pt
 	 * @return
 	 */
 
@@ -2415,7 +2412,18 @@ public class UnsmoothedMERT {
 			emetric = new TERMetric<IString, String>(references);
 		} else if (evalMetric.endsWith("bleu")) {
 			emetric = new BLEUMetric<IString, String>(references);
-		} else {
+    } else if (evalMetric.startsWith("bleu-ter")) {
+      String[] fields = evalMetric.split(":");
+      double terW = 1.0;
+      if(fields.length > 1) {
+        assert(fields.length == 2);
+        terW = Double.parseDouble(fields[1]);
+      }
+      emetric = new LinearCombinationMetric<IString, String>
+           (new double[] {1.0, terW},
+            new BLEUMetric<IString, String>(references),
+            new TERMetric<IString, String>(references));
+    } else {
 			System.err.printf("Unrecognized metric: %s\n", evalMetric);
 			System.exit(-1);
 		}
