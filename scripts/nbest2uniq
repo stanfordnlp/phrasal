@@ -5,7 +5,6 @@
 #
 # Created by Michel Galley (mgalley@stanford.edu)
 # on Sun 15 Jun 2008 01:13:43 PM PDT
-# $Id$
 #####################################################
 
 use strict;

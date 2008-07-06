@@ -21,7 +21,8 @@ GIGA=/scr/nlp/data/gale2/ARABIC_LM/releases/with_dev07_period/mt_giga3_afp_xin.1
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-TESTID=dev07-dev
+TESTID=mt05
+#TESTID=dev07-dev
 
 ### Directory containing reference translations:
 REFS=/scr/nlp/data/gale/AE-MT-eval-data/
@@ -56,9 +57,9 @@ MINP=1e-4
 # Memory and extraction duration:
 #########################################
 
-### How much memory for Java and sort:
-MEMSIZE=15500m
-PMEMSIZE=15500m
+### How much memory for Java:
+MEMSIZE=15000m
+PMEMSIZE=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -79,7 +80,9 @@ SPLIT=-split 2
 # Debug levels
 #########################################
 
-DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
+#DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
+DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server -verbose:gc -verbose:gc -Xloggc:logs/pmert-gc.$$$$ -XX:+PrintGCDetails -XX:+PrintGCTimeStamps 
+#DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server -verbose:gc -verbose:gc -Xloggc:logs/pmert-gc.$$$$ -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+AggressiveHeap -DGCFrequency=20 
 
 #########################################
 # Pre- and post-processing:
@@ -87,3 +90,11 @@ DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
 
 PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen)
 POST=perl $(SCRIPTS)/remove_unk 
+
+#########################################
+# Phrasal MERT:
+# (in case you run a customized version)
+#########################################
+
+#PM=phrasal-mert.pl
+PM=phrasal-mert-michel.pl

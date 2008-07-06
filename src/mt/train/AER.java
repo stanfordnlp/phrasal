@@ -49,6 +49,7 @@ public class AER {
     int lineNb = 0;
     while(fCorpus.hasNext()) {
       ++lineNb;
+      System.err.println("line : "+lineNb);
       String fLine = fCorpus.next();
       String eLine = eCorpus.next();
       String rLine = rCorpus.next();

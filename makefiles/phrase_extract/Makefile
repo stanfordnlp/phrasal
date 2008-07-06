@@ -81,6 +81,9 @@ $(DEVID).%.bleu: $(DEVID).%
 #############################################
 
 # Delete unk words and use MERT final paramters:
+$(TESTID).%.phrasal.wp1best: $(DEVID).%.pmert/phrasal.w.ini $(TESTID).prep
+	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
 $(TESTID).%.phrasal.fp1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).prep
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
@@ -88,6 +91,12 @@ $(DEVID).%.phrasal.fp1best: $(DEVID).%.pmert/phrasal.final.ini $(DEVID).prep
 	(java $(PHRASAL_ARGS) mt.PseudoMoses $< < $(DEVID).prep > $@) 2> logs/$@.log
 
 # Delete unk words and use MERT best paramters:
+$(TESTID).%.phrasal500.bp1best: $(DEVID).%.pmert500/phrasal.best.ini $(TESTID).prep
+	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
+$(TESTID).%.phrasal200.bp1best: $(DEVID).%.pmert200/phrasal.best.ini $(TESTID).prep
+	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
 $(TESTID).%.phrasal.bp1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).prep
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
@@ -150,17 +159,29 @@ $(DEVID).%.mert/moses.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep
 # Phrasal MERT:
 #############################################
 
+# Maximize BLEU (500 best):
+$(DEVID).%.pmert500/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).pmert500 --java-flags="$(PHRASAL_ARGS)" \
+	--nbest=500 $(DEVID).prep $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).pmert500.log
+
+# Maximize BLEU (200 best):
+$(DEVID).%.pmert200/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).pmert200 --java-flags="$(PHRASAL_ARGS)" \
+	--nbest=200 $(DEVID).prep $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).pmert200.log
+
 # Maximize BLEU:
 $(DEVID).%.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	phrasal-mert-michel.pl --working-dir=$(DEVID).$(*F).pmert --java-flags="$(PHRASAL_ARGS)" \
-	$(DEVID).prep $(DEV_REF)/ref bleu $(DEVID).$< >& $(DEVID).$(*F).pmert.log
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).pmert --java-flags="$(PHRASAL_ARGS)" \
+	$(DEVID).prep $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).pmert.log
 
 # Minimize TER:
 $(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	phrasal-mert-michel.pl --working-dir=$(DEVID).$(*F).ter_pmert --java-flags="$(PHRASAL_ARGS)" \
-	$(DEVID).prep $(DEV_REF)/ref ter:$(BEAM_WIDTH):$(SHIFT_SIZE) $(DEVID).$< >& $(DEVID).$(*F).ter_pmert.log
+	$(PM) --working-dir=$(DEVID).$(*F).ter_pmert --java-flags="$(PHRASAL_ARGS)" \
+	$(DEVID).prep $(DEV_REF)/ref ter:$(BEAM_WIDTH):$(SHIFT_SIZE) $(DEVID).$< >& logs/$(DEVID).$(*F).ter_pmert.log
 
 #############################################
 # Pre- and post-processing: 

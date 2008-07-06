@@ -19,6 +19,9 @@ import mt.base.Sequence;
 
 public class AbstractWordAlignment implements WordAlignment {
 
+  public static final String DEBUG_PROPERTY = "DebugWordAlignment";
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
   public static final String KEEP_BAD_TOKENS_PROPERTY = "keepBadTokens";
   public static final boolean KEEP_BAD_TOKENS
    = Boolean.parseBoolean(System.getProperty(KEEP_BAD_TOKENS_PROPERTY, "false"));
@@ -80,10 +83,11 @@ public class AbstractWordAlignment implements WordAlignment {
       return words;
     for(int i=0; i<words.length; ++i) {
       if(words[i].indexOf('|') >= 0) {
-        System.err.println
-         ("SymmetricalWordAlignment: WARNING: "+
-          "\"|\" converted to \";\" to avoid problems with phrase tables.");
         words[i] = ",";
+        if(DEBUG)
+          System.err.println
+           ("AbstractWordAlignment: WARNING: "+
+            "\"|\" converted to \";\" to avoid problems with phrase tables.");
       }
     }
     return words;

@@ -6,7 +6,6 @@ BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
 #
 # Created by Michel Galley (mgalley@stanford.edu)
 # on Sun 18 May 2008 06:09:43 PM PDT
-# $Id$
 #####################################################
 
 use strict;

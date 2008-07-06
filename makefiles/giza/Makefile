@@ -34,7 +34,7 @@ giza: giza.$E-$F/$E-$F.A3.final.gz giza.$F-$E/$F-$E.A3.final.gz
 # Training:
 ###########################################################################
 
-### (3) Alignment symmetrization.
+### (3) Alignment symmetrization:
 model/aligned.$(ALIGN): giza.$E-$F/$E-$F.A3.final.gz giza.$F-$E/$F-$E.A3.final.gz
 	mkdir -p model
 	(time $(TRAIN) $(TRAIN_OPTIONS) --first-step 3 --last-step 3 > $@) 2> $@.err

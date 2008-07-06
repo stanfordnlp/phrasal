@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Three post processing steps:
+# 1) remove all tokens containing one or more Chinese or Arabic characters:
+# 2) truecasing
+# 3) detokenization
+
+tmp=`mktempname /tmp/tc_input.XXXXXX`
+cat | perl -pe 's/^\s+$/null\n/'> $tmp.lc
+/scr/nlp/data/gale2/truecaser/bin/truecaser $tmp.lc 2> /dev/null > $tmp.cased 
+java edu.stanford.nlp.process.PTBTokenizer -untok $tmp.cased | sed 's/^null$//i'
+rm -f $tmp.lc $tmp.cased

@@ -21,7 +21,8 @@ GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/wo2356/mt_giga3_afp_xin.1233.lm
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-TESTID=mt08
+TESTID=mt05
+#TESTID=mt08
 
 ### Directory containing reference translations:
 REFS=/scr/nlp/data/gale/NIST-MT-eval-data/
@@ -56,9 +57,9 @@ MINP=1e-4
 # Memory and extraction duration:
 #########################################
 
-### How much memory for Java and sort:
-MEMSIZE=15500m
-PMEMSIZE=15500m
+### How much memory for Java:
+MEMSIZE=15000m
+PMEMSIZE=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -87,3 +88,11 @@ DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
 
 PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl
 POST=perl $(SCRIPTS)/remove_unk
+
+#########################################
+# Phrasal MERT:
+# (in case you run a customized version)
+#########################################
+
+#PM=phrasal-mert.pl
+PM=phrasal-mert-michel.pl
