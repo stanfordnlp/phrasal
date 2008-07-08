@@ -459,14 +459,24 @@ public class UnsmoothedMERT {
 					  // System.err.printf("%d: featureOnly score: %g\n", pos, Math.exp(scorer.getIncrementalScore(trans.features)));
 					}
 					System.out.printf("%d - Z: %e\n", sentId, Z);
-					System.out.printf("num[]: %s\n", Arrays.toString(num));
-					double rv = r.nextDouble()*Z;
+					// System.out.printf("num[]: %s\n", Arrays.toString(num));
+					
+					
 					int selection = -1;
-					for (int i = 0; i < num.length; i++) {
-						if ((rv -= num[i]) <= 0) { selection = i; break; }
+					if (Z != 0) {
+  					double rv = r.nextDouble()*Z;
+  					for (int i = 0; i < num.length; i++) {
+  						if ((rv -= num[i]) <= 0) { selection = i; break; }
+  					}
+					} else {
+						selection = r.nextInt(num.length);
 					}
 					
-					System.out.printf("%d - selection: %d p(%g|f)\n", sentId, selection, num[selection]/Z);
+					if (Z == 0) {
+						Z = 1.0;
+						num[selection] = 1.0/num.length;
+					}
+					System.out.printf("%d - selection: %d p(%g|f) %g/%g\n", sentId, selection, num[selection]/Z, num[selection], Z);
 					
 					// adjust current
 					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
