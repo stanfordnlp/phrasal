@@ -466,7 +466,7 @@ public class UnsmoothedMERT {
 						if ((rv -= num[i]) <= 0) { selection = i; break; }
 					}
 					
-					System.out.printf("%d - selection: %d p(%d|f)\n", sentId, selection, num[selection]/Z);
+					System.out.printf("%d - selection: %d p(%g|f)\n", sentId, selection, num[selection]/Z);
 					
 					// adjust current
 					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
