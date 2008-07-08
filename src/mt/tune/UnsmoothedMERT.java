@@ -43,7 +43,7 @@ public class UnsmoothedMERT {
   public static double C = DEFAULT_C;
   public static final double DEFAULT_T = 1;
   public static double T = DEFAULT_T;
-	public static final double DEFAULT_UNSCALED_L_RATE = 0.01;
+	public static final double DEFAULT_UNSCALED_L_RATE = 0.1;
 	public static double lrate = DEFAULT_UNSCALED_L_RATE;
 	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-5;
 	static final int DEFAULT_MAX_ITER_SGD = 1000;
@@ -546,7 +546,7 @@ public class UnsmoothedMERT {
     		dObj.incrementCount(key, wts.getCount(key));
     	}
     } else {
-    	Counters.multiplyInPlace(dObj, -C);
+    	Counters.multiplyInPlace(dObj, -1.0);
     }
 		return dObj;
 	}
