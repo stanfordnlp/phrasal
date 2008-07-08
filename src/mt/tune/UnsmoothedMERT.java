@@ -51,9 +51,9 @@ public class UnsmoothedMERT {
 	static final double NO_PROGRESS_SSD = 1e-6;
 	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-6;
 	static final double NO_PROGRESS_MCMC_COSINE = 0.95;
-  static final int MCMC_BATCH_SAMPLES = 50;
-  static final int MCMC_MIN_BATCHES = 3; 
-  static final int MCMC_MAX_BATCHES = 10; 
+  static final int MCMC_BATCH_SAMPLES = 10;
+  static final int MCMC_MIN_BATCHES = 0; 
+  static final int MCMC_MAX_BATCHES = 20;
   static final int MCMC_MAX_BATCHES_TIGHT = 50; 
   
   static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
@@ -1718,7 +1718,7 @@ public class UnsmoothedMERT {
 		double eval = 0;
 		double lastExpectedEval = Double.NEGATIVE_INFINITY;
 	  double lastObj = Double.NEGATIVE_INFINITY;
-    double[] objDiffWin = new double[30];
+    double[] objDiffWin = new double[10];
 
 		for (int iter = 0; iter < max_iter; iter++) {
 			MutableDouble expectedEval = new MutableDouble();
