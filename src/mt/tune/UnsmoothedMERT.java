@@ -315,43 +315,47 @@ public class UnsmoothedMERT {
          || batch < MCMC_MIN_BATCHES) &&
          batch < MCMC_MAX_BATCHES_TIGHT; 
          batch++) {
-			// reset current to argmax
-			int[] candIds = argmaxCandIds.clone();
-			
-			// reset incremental evaluation object for the argmax candidates
-			IncrementalEvaluationMetric<IString, String> incEval = emetric.getIncrementalMetric();			
-			for (ScoredFeaturizedTranslation<IString, String> tran : argmax) incEval.add(tran);
-			double eval = incEval.score();
+						
 		  double oldExpL = sumExpL/cnt;
 	
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
-				// mcmc sample
-				int sentId = r.nextInt(nbest.nbestLists().size());
-				int posSampleCandId   = r.nextInt(nbest.nbestLists().get(sentId).size());
-				double currentScore   = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
-				double posSampleScore = scorer.getIncrementalScore(nbest.nbestLists().get(sentId).get(posSampleCandId).features);
-				double a = Math.exp(T*posSampleScore - T*currentScore); // a_1 = p(x')/p(x^t) & a_2 = 1.0 (i.e., our metropolis hastings is really just metropolis)
-				if (a >= 1.0) {
-					candIds[sentId] = posSampleCandId;
-				} else {
-					if (r.nextDouble() <= a) { // x^(t+1) = x' with probability a
-						candIds[sentId] = posSampleCandId;
-					} // x^(t+1) = x^t with probability 1-a
-				}
-    		
-				// collect derivative relevant statistics using sample
-				cnt++;
-				ScoredFeaturizedTranslation<IString, String> cTrans = 
-           nbest.nbestLists().get(sentId).get(candIds[sentId]);
-			  
-        // if necessary, adjust eval
-				if (candIds[sentId] == posSampleCandId) { 
-					incEval.replace(sentId, cTrans);
-					eval = incEval.score();
+				// gibbs mcmc sample
+				if (cnt != 0)  // always sample once from argmax
+        for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
+					double Z = 0;
+					double[] num = new double[nbest.nbestLists().get(sentId).size()];
+					int pos = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(sentId)) { pos++;
+					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features));
+					}
+					
+					int selection = -1;
+					if (Z != 0) {
+  					double rv = r.nextDouble()*Z;
+  					for (int i = 0; i < num.length; i++) {
+  						if ((rv -= num[i]) <= 0) { selection = i; break; }
+  					}
+					} else {
+						selection = r.nextInt(num.length);
+					}
+					
+					if (Z == 0) {
+						Z = 1.0;
+						num[selection] = 1.0/num.length;
+					}
+					
+					// adjust current
+					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
 				}
 				
-				sumExpL += eval;								
+				// collect derivative relevant statistics using sample
+				cnt++;
+				
+				// adjust currentF & eval
+				double  eval = emetric.score(current);
+
+				sumExpL += eval;					
 			}
+			
 		  dEEval = (oldExpL != oldExpL ? Double.POSITIVE_INFINITY : 
         oldExpL - sumExpL/cnt);
 	
