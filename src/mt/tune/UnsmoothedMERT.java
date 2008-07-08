@@ -450,45 +450,38 @@ public class UnsmoothedMERT {
       long time = -System.currentTimeMillis();
       int rejections = 0;
 			for (int bi = 0; bi-rejections < MCMC_BATCH_SAMPLES; bi++) {
-				// mcmc sample
-				int sentId = r.nextInt(nbest.nbestLists().size());
-				int posSampleCandId = r.nextInt(nbest.nbestLists().get(sentId).size());
-				double currentScore   = scorer.getIncrementalScore(
-          nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
-				double posSampleScore = scorer.getIncrementalScore(
-          nbest.nbestLists().get(sentId).get(posSampleCandId).features);
-        // a_1 = p(x')/p(x^t) & a_2 = 1.0 
-        // (i.e., our metropolis hastings is really just metropolis)
-				double a = Math.exp(T*posSampleScore - T*currentScore); 
-				if (a >= 1.0) {
-					candIds[sentId] = posSampleCandId;
-				} else {
-					if (r.nextDouble() <= a) { // x^(t+1) = x' with probability a
-						candIds[sentId] = posSampleCandId;
-					} else {
-            rejections++; // x^(t+1) = x^t with probability 1-a
-          }
+				// gibbs mcmc sample
+				double B = Counters.dotProduct(wts, currentF);
+				
+				for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
+					double b = B - scorer.getIncrementalScore(current.get(sentId).features);
+					double Z = 0;
+					double[] num = new double[nbest.nbestLists().get(sentId).size()];
+					int pos = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(sentId)) { pos++;
+					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features) + b);
+					}
+					System.out.printf("%d - Z: %g\n", sentId, Z);
+					double rv = r.nextDouble()*Z;
+					int selection = -1;
+					for (int i = 0; i < num.length; i++) {
+						if ((rv -= num[i]) <= 0) { selection = i; break; }
+					}
+					
+					// adjust current
+					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
+					
+					// adjust B
+					B = b + scorer.getIncrementalScore(current.get(sentId).features);
 				}
-
+				
 				// collect derivative relevant statistics using sample
 				cnt++;
 				
-				ScoredFeaturizedTranslation<IString, String> cTrans = 
-          nbest.nbestLists().get(sentId).get(candIds[sentId]);
-			  
-        // if necessary, adjust currentF & eval
-				if (candIds[sentId] == posSampleCandId) { 
-					//currentF.subtractAll(FeatureValues.toCounter(
-          //  current.get(sentId).features));
-          Counters.addInPlace(currentF, 
-             FeatureValues.toCounter(current.get(sentId).features), -1);
-					currentF.addAll(FeatureValues.toCounter(cTrans.features));
-					incEval.replace(sentId, cTrans);
-				}
-				double eval = incEval.score();
+				// adjust currentF & eval
+				currentF = 
+	        new OpenAddressCounter<String>(summarizedAllFeaturesVector(current), 0.50f);				
+				double eval = emetric.score(current);
 				sumExpL += eval;
-				
-				current.set(sentId, cTrans);
 								
         for (Object2DoubleMap.Entry<String> entry : 
           currentF.object2DoubleEntrySet()) {
@@ -496,9 +489,7 @@ public class UnsmoothedMERT {
           double val = entry.getDoubleValue();
           sumExpF.incrementCount(k, val);
           sumExpLF.incrementCount(k, val*eval);
-        } 
-				//sumExpF.addAll(currentF);
-				//Counters.addInPlace(sumExpLF, currentF, eval);
+        }
 			}
       time += System.currentTimeMillis();
 			
