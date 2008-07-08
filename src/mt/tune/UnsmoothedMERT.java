@@ -51,8 +51,7 @@ public class UnsmoothedMERT {
 	static final double NO_PROGRESS_SSD = 1e-6;
 	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-6;
 	static final double NO_PROGRESS_MCMC_COSINE = 1.0-1e-3;
-  static final int MCMC_BATCH_SAMPLES = 5000;
-  static final int MCMC_BURN_IN_SAMPLES = 2000;
+  static final int MCMC_BATCH_SAMPLES = 2000;
   static final int MCMC_SAMPLES = 200;
   static final int MCMC_MIN_BATCHES = 10; 
   static final int MCMC_MAX_BATCHES = 15; 
@@ -448,8 +447,7 @@ public class UnsmoothedMERT {
       System.err.println("Sampling");
   
       long time = -System.currentTimeMillis();
-      int rejections = 0;
-			for (int bi = 0; bi-rejections < MCMC_BATCH_SAMPLES; bi++) {
+			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// gibbs mcmc sample
 				for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
 					double Z = 0;
@@ -458,7 +456,7 @@ public class UnsmoothedMERT {
 					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features));
 					  // System.err.printf("%d: featureOnly score: %g\n", pos, Math.exp(scorer.getIncrementalScore(trans.features)));
 					}
-					System.out.printf("%d - Z: %e\n", sentId, Z);
+					System.out.printf("%d:%d - Z: %e\n", bi, sentId, Z);
 					// System.out.printf("num[]: %s\n", Arrays.toString(num));
 					
 					
@@ -476,7 +474,7 @@ public class UnsmoothedMERT {
 						Z = 1.0;
 						num[selection] = 1.0/num.length;
 					}
-					System.out.printf("%d - selection: %d p(%g|f) %g/%g\n", sentId, selection, num[selection]/Z, num[selection], Z);
+					System.out.printf("%d:%d - selection: %d p(%g|f) %g/%g\n", bi, sentId, selection, num[selection]/Z, num[selection], Z);
 					
 					// adjust current
 					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
@@ -513,9 +511,6 @@ public class UnsmoothedMERT {
 			System.err.printf("Batch: %d dEDiff: %e dECosine: %g)\n", 
         batch, dEDiff, dECosine);
       System.err.printf("Sampling time: %.3f s\n", time/1000.0);
-      System.err.printf("Rejections: %.5f %d/%d\n", 
-           1.0*rejections/(MCMC_BATCH_SAMPLES+rejections),
-           rejections, (MCMC_BATCH_SAMPLES+rejections));
 			System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 			System.err.printf("E(loss*f):\n%s\n\n", ((ClassicCounter<String>)Counters.divideInPlace(new ClassicCounter<String>(sumExpLF),(cnt))).toString(35));
 			System.err.printf("E(f):\n%s\n\n", ((ClassicCounter<String>)Counters.divideInPlace(new ClassicCounter<String>(sumExpF), cnt)).toString(35));
