@@ -456,7 +456,7 @@ public class UnsmoothedMERT {
 					double[] num = new double[nbest.nbestLists().get(sentId).size()];
 					int pos = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(sentId)) { pos++;
 					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features));
-					  System.err.printf("%d: featureOnly score: %g\n", pos, Math.exp(scorer.getIncrementalScore(trans.features)));
+					  // System.err.printf("%d: featureOnly score: %g\n", pos, Math.exp(scorer.getIncrementalScore(trans.features)));
 					}
 					System.out.printf("%d - Z: %e\n", sentId, Z);
 					System.out.printf("num[]: %s\n", Arrays.toString(num));
@@ -465,6 +465,8 @@ public class UnsmoothedMERT {
 					for (int i = 0; i < num.length; i++) {
 						if ((rv -= num[i]) <= 0) { selection = i; break; }
 					}
+					
+					System.out.printf("%d - selection: %d p(%d|f)\n", sentId, selection, num[selection]/Z);
 					
 					// adjust current
 					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
