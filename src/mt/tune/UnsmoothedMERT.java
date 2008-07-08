@@ -17,6 +17,7 @@ import edu.stanford.nlp.optimization.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.svd.ReducedSVD;
 import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.Ptr;
@@ -625,8 +626,8 @@ public class UnsmoothedMERT {
 		}
 
 		ClassicCounter<String> newWts = new ClassicCounter<String>(initialWts);
-		newWts.addMultiple(direction, chkpts[bestPt]);
-		bestWts = newWts;
+    Counters.addInPlace(newWts, direction, chkpts[bestPt]);
+    bestWts = newWts;
 
 		return normalize(bestWts);
 	}
@@ -798,7 +799,7 @@ public class UnsmoothedMERT {
 			normalize(worseVec);
 			ClassicCounter<String> dir = new ClassicCounter<String>(betterVec);
 			if (!useOnlyBetter)
-				dir.subtractAll(worseVec);
+        Counters.subtractInPlace(dir, worseVec);
 			normalize(dir);
 			System.err.printf("iter: %d\n", iter);
 			System.err.printf("Better cnt: %d\n", betterCnt);
@@ -944,8 +945,8 @@ public class UnsmoothedMERT {
 						continue;
 					System.err.printf("seach pair: %d->%d\n", j, i);
 					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
-					dir.subtractAll(kMeans.get(j));
-					ClassicCounter<String> eWts = lineSearch(nbest, kMeans.get(j), dir,
+          Counters.subtractInPlace(dir, kMeans.get(j));
+          ClassicCounter<String> eWts = lineSearch(nbest, kMeans.get(j), dir,
 							emetric);
 					double eval = evalAtPoint(nbest, eWts, emetric);
 					if (eval > bestEval) {
@@ -965,9 +966,9 @@ public class UnsmoothedMERT {
 							nbest, newWts);
 					ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
 					ClassicCounter<String> dir = new ClassicCounter<String>(kMeans.get(i));
-					dir.subtractAll(c);
+          Counters.subtractInPlace(dir, c);
 
-					System.err.printf("seach perceptron to cluster: %d\n", i);
+          System.err.printf("seach perceptron to cluster: %d\n", i);
 					newWts = lineSearch(nbest, newWts, dir, emetric);
 					System.err.printf("new eval: %f\n", evalAtPoint(nbest, newWts,
 							emetric));
@@ -975,8 +976,8 @@ public class UnsmoothedMERT {
 						dir = new ClassicCounter<String>(kMeans.get(i));
 						if (j != i) {
 							System.err.printf("seach pair: %d<->%d\n", j, i);
-							dir.subtractAll(kMeans.get(j));
-						} else {
+              Counters.subtractInPlace(dir, kMeans.get(j));
+            } else {
 							System.err.printf("seach singleton: %d\n", i);
 						}
 
@@ -1139,22 +1140,22 @@ public class UnsmoothedMERT {
 			case betterPerceptron:
 				ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
         Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
-        dir.subtractAll(c);
-				System.out.printf("betterPerceptron");
+        Counters.subtractInPlace(dir, c);
+        System.out.printf("betterPerceptron");
 				System.out.printf("current:\n%s\n\n", c);
 				break;
 			case betterSame:
 				System.out.printf("betterSame");
 				System.out.printf("sameVec:\n%s\n\n", sameVec);
 				if (sameClusterCnt != 0)
-					dir.subtractAll(sameVec);
+          Counters.subtractInPlace(dir, sameVec);
 				break;
 
 			case betterWorse:
 				System.out.printf("betterWorse");
 				System.out.printf("worseVec:\n%s\n\n", worseVec);
 				if (worseClusterCnt != 0)
-					dir.subtractAll(worseVec);
+          Counters.subtractInPlace(dir, worseVec);
 				break;
 			}
 
@@ -1180,33 +1181,33 @@ public class UnsmoothedMERT {
 
 				// Better Same
 				dir = new ClassicCounter<String>(betterVec);
-				dir.subtractAll(sameVec);
-				newWts = lineSearch(nbest, newWts, dir, emetric);
+        Counters.subtractInPlace(dir, sameVec);
+        newWts = lineSearch(nbest, newWts, dir, emetric);
 
 				// Better Perceptron
 				dir = new ClassicCounter<String>(betterVec);
-				dir.subtractAll(c);
-				newWts = lineSearch(nbest, newWts, dir, emetric);
+        Counters.subtractInPlace(dir, c);
+        newWts = lineSearch(nbest, newWts, dir, emetric);
 
 				// Better Worse
 				dir = new ClassicCounter<String>(betterVec);
-				dir.subtractAll(worseVec);
-				newWts = lineSearch(nbest, newWts, dir, emetric);
+        Counters.subtractInPlace(dir, worseVec);
+        newWts = lineSearch(nbest, newWts, dir, emetric);
 
 				// Same Worse
 				dir = new ClassicCounter<String>(sameVec);
-				dir.subtractAll(worseVec);
-				newWts = lineSearch(nbest, newWts, dir, emetric);
+        Counters.subtractInPlace(dir, worseVec);
+        newWts = lineSearch(nbest, newWts, dir, emetric);
 
 				// Same Perceptron
 				dir = new ClassicCounter<String>(sameVec);
-				dir.subtractAll(c);
-				newWts = lineSearch(nbest, newWts, dir, emetric);
+        Counters.subtractInPlace(dir, c);
+        newWts = lineSearch(nbest, newWts, dir, emetric);
 
 				// Perceptron Worse
 				dir = new ClassicCounter<String>(c);
-				dir.subtractAll(worseVec);
-				newWts = lineSearch(nbest, newWts, dir, emetric);
+        Counters.subtractInPlace(dir, worseVec);
+        newWts = lineSearch(nbest, newWts, dir, emetric);
 			}
 			System.err.printf("new wts:\n%s\n\n", newWts);
 			double ssd = wtSsd(wts, newWts);
@@ -1331,18 +1332,18 @@ public class UnsmoothedMERT {
 					Counters.L2Normalize(normWts);
           Counters.multiplyInPlace(normWts, Counters.L2Norm(betterVec));
           System.err.printf("Subing wts:\n%s\n", normWts);
-					dir.subtractAll(normWts);
-					System.err.printf("l2: %f\n", Counters.L2Norm(normWts));
+          Counters.subtractInPlace(dir, normWts);
+          System.err.printf("l2: %f\n", Counters.L2Norm(normWts));
 				} else {
 					ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
           Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
           System.err.printf("Subing current:\n%s\n", c);
-					dir.subtractAll(c);
-					System.err.printf("l2: %f\n", Counters.L2Norm(c));
+          Counters.subtractInPlace(dir, c);
+          System.err.printf("l2: %f\n", Counters.L2Norm(c));
 				}
 			} else {
 				if (worseClusterCnt != 0)
-					dir.subtractAll(worseVec);
+          Counters.subtractInPlace(dir, worseVec);
 			}
 			normalize(dir);
 			System.err.printf("iter: %d\n", iter);
@@ -1773,8 +1774,8 @@ public class UnsmoothedMERT {
 						.maximize(new MosesNBestList(nbestSlice));
 				ClassicCounter<String> dir = summarizedAllFeaturesVector(Arrays
 						.asList(targets.get(i)));
-				dir.subtractAll(summarizedAllFeaturesVector(current));
-				ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
+        Counters.subtractInPlace(dir, summarizedAllFeaturesVector(current));
+        ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
 				double ssd = wtSsd(wts, newWts);
 				System.err.printf(
 						"%d.%d - ssd: %e changes(total: %d iter: %d) eval: %f\n", iter, i,
@@ -1913,10 +1914,11 @@ public class UnsmoothedMERT {
 			ClassicCounter<String> dir;
 			List<ScoredFeaturizedTranslation<IString, String>> rTrans1, rTrans2;
 
-			(dir = summarizedAllFeaturesVector(rTrans1 = randomTranslations(nbest)))
-					.subtractAll(summarizedAllFeaturesVector(rTrans2 = randomTranslations(nbest)));
+      dir = summarizedAllFeaturesVector(rTrans1 = randomTranslations(nbest));
+      Counter<String> counter = summarizedAllFeaturesVector(rTrans2 = randomTranslations(nbest));
+      Counters.subtractInPlace(dir, counter);
 
-			System.err.printf("Pair scores: %.5f %.5f\n", emetric.score(rTrans1),
+      System.err.printf("Pair scores: %.5f %.5f\n", emetric.score(rTrans1),
 					emetric.score(rTrans2));
 
 			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
@@ -1956,9 +1958,9 @@ public class UnsmoothedMERT {
 					new ScorerWrapperEvaluationMetric<IString, String>(scorer));
 			List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch
 					.maximize(nbest);
-			dir.subtractAll(summarizedAllFeaturesVector(oneBest));
+      Counters.subtractInPlace(dir, summarizedAllFeaturesVector(oneBest));
 
-			System.err.printf("Random alternate score: %.5f \n", emetric
+      System.err.printf("Random alternate score: %.5f \n", emetric
 					.score(rTrans));
 
 			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
@@ -2179,8 +2181,8 @@ public class UnsmoothedMERT {
 							priorDir);
           Counters.multiplyInPlace(projOnPrior, Counters.dotProduct(priorDir, dEl)
                     / Counters.dotProduct(priorDir, priorDir));
-          searchDir.subtractAll(projOnPrior);
-				}
+          Counters.subtractInPlace(searchDir, projOnPrior);
+        }
 				if (Counters.dotProduct(searchDir, searchDir) < NO_PROGRESS_SSD) {
 					noProgressCnt++;
 					continue;
