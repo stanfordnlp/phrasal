@@ -3,6 +3,7 @@ package mt.tune;
 import java.io.*;
 import java.util.*;
 
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 import no.uib.cipr.matrix.Matrix;
@@ -21,12 +22,11 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.svd.ReducedSVD;
 import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.Ptr;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 
 /**
- * Minimum Error Rate Training (MERT)
+ * Minimum Error Rate Training (MERT).
  *
- * Optimization for non smooth error surfaces
+ * Optimization for non smooth error surfaces.
  *
  * @author danielcer
  */
@@ -867,7 +867,7 @@ public class UnsmoothedMERT {
 
 			// normalize cluster vectors
 			for (int i = 0; i < K; i++)
-				kMeans.get(i).divideBy(clusterCnts[i]);
+        Counters.divideInPlace(kMeans.get(i), clusterCnts[i]);
 
 			// K-means main loop
 			for (int changes = vecCnt; changes != 0;) {
@@ -904,7 +904,7 @@ public class UnsmoothedMERT {
 
 				// normalize new cluster vectors
 				for (int i = 0; i < K; i++)
-					newKMeans.get(i).divideBy(newClusterCnts[i]);
+          Counters.divideInPlace(newKMeans.get(i), newClusterCnts[i]);
 
 				// some output for the user
 				System.err.printf("Cluster Vectors:\n");
@@ -1996,7 +1996,7 @@ public class UnsmoothedMERT {
 			IncrementalEvaluationMetric<IString, String> incEvalMetric = emetric
 					.getIncrementalMetric();
 			ClassicCounter<String> scaledWts = new ClassicCounter<String>(wts);
-			scaledWts.normalize();
+      Counters.normalize(scaledWts);
       Counters.multiplyInPlace(scaledWts, 0.01);
       for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
 					.nbestLists()) {
@@ -2018,9 +2018,9 @@ public class UnsmoothedMERT {
 						featureVectors, us));
 			}
 
-			dEl.normalize();
+      Counters.normalize(dEl);
 
-			// System.out.printf("Searching %s\n", dEl);
+      // System.out.printf("Searching %s\n", dEl);
 			ClassicCounter<String> wtsdEl = lineSearch(nbest, wts, dEl, emetric);
 			double evaldEl = evalAtPoint(nbest, wtsdEl, emetric);
 
@@ -2107,9 +2107,9 @@ public class UnsmoothedMERT {
 				}
 			}
 
-			featureMeans.divideBy(totalVecs);
+      Counters.divideInPlace(featureMeans, totalVecs);
 
-			for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
+      for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
 					.nbestLists()) {
 				for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
 					for (FeatureValue<String> fv : EValueLearningScorer
@@ -2120,15 +2120,15 @@ public class UnsmoothedMERT {
 				}
 			}
 
-			featureVars.divideBy(totalVecs - 1);
-			System.out.printf("Feature N-best Occurences: (Cut off: %d)\n",
+      Counters.divideInPlace(featureVars, totalVecs - 1);
+      System.out.printf("Feature N-best Occurences: (Cut off: %d)\n",
 					MIN_NBEST_OCCURANCES);
-			for (String w : featureNbestOccurances.asPriorityQueue()) {
+      for (String w : Counters.toPriorityQueue(featureNbestOccurances)) {
 				System.out.printf("%f: %s \n", featureNbestOccurances.getCount(w), w);
 			}
 
 			System.out.printf("Feature Occurances\n");
-			for (String w : featureOccurances.asPriorityQueue()) {
+      for (String w : Counters.toPriorityQueue(featureOccurances)) {
 				System.out.printf("%f (p %f): %s\n", featureOccurances.getCount(w),
 						featureOccurances.getCount(w) / totalVecs, w);
 			}
@@ -2136,7 +2136,7 @@ public class UnsmoothedMERT {
 			System.out.printf("Feature Stats (samples: %d):\n", totalVecs);
 			List<String> features = new ArrayList<String>(featureMeans.keySet());
 			Collections.sort(features);
-			for (String fn : featureVars.asPriorityQueue()) {
+      for (String fn : Counters.toPriorityQueue(featureVars)) {
 				System.out.printf("%s - mean: %.6f var: %.6f sd: %.6f\n", fn,
 						featureMeans.getCount(fn), featureVars.getCount(fn), Math
 								.sqrt(featureVars.getCount(fn)));
@@ -2308,7 +2308,7 @@ public class UnsmoothedMERT {
 			wtsMag.setCount(w, Math.abs(wts.getCount(w)));
 		}
 
-		for (String f : wtsMag.asPriorityQueue().toSortedList()) {
+    for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
 			writer.append(f).append(" ").append(Double.toString(wts.getCount(f)))
 					.append("\n");
 		}
