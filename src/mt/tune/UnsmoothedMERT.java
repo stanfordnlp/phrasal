@@ -455,13 +455,15 @@ public class UnsmoothedMERT {
 				
 				for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
 					double b = B - scorer.getIncrementalScore(current.get(sentId).features);
+					System.out.printf("B: %g b: %g\n", B, b);
 					double Z = 0;
 					double[] num = new double[nbest.nbestLists().get(sentId).size()];
 					int pos = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(sentId)) { pos++;
 					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features) + b);
+					  System.err.printf("%d: featureOnly score: %g\n", pos, Math.exp(scorer.getIncrementalScore(trans.features)));
 					}
 					System.out.printf("%d - Z: %g\n", sentId, Z);
-					System.out.printf("num[]: %s", Arrays.toString(num));
+					System.out.printf("num[]: %s\n", Arrays.toString(num));
 					double rv = r.nextDouble()*Z;
 					int selection = -1;
 					for (int i = 0; i < num.length; i++) {
