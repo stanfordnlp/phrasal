@@ -461,6 +461,7 @@ public class UnsmoothedMERT {
 					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features) + b);
 					}
 					System.out.printf("%d - Z: %g\n", sentId, Z);
+					System.out.printf("num[]: %s", Arrays.toString(num));
 					double rv = r.nextDouble()*Z;
 					int selection = -1;
 					for (int i = 0; i < num.length; i++) {
