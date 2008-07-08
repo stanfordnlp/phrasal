@@ -50,11 +50,10 @@ public class UnsmoothedMERT {
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
 	static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-6;
-	static final double NO_PROGRESS_MCMC_COSINE = 1.0-1e-3;
-  static final int MCMC_BATCH_SAMPLES = 2000;
-  static final int MCMC_SAMPLES = 200;
-  static final int MCMC_MIN_BATCHES = 10; 
-  static final int MCMC_MAX_BATCHES = 15; 
+	static final double NO_PROGRESS_MCMC_COSINE = 0.95;
+  static final int MCMC_BATCH_SAMPLES = 50;
+  static final int MCMC_MIN_BATCHES = 3; 
+  static final int MCMC_MAX_BATCHES = 10; 
   static final int MCMC_MAX_BATCHES_TIGHT = 50; 
   
   static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
@@ -449,14 +448,15 @@ public class UnsmoothedMERT {
       long time = -System.currentTimeMillis();
 			for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
 				// gibbs mcmc sample
-				for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
+				if (cnt != 0)  // always sample once from argmax
+        for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
 					double Z = 0;
 					double[] num = new double[nbest.nbestLists().get(sentId).size()];
 					int pos = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(sentId)) { pos++;
 					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features));
 					  // System.err.printf("%d: featureOnly score: %g\n", pos, Math.exp(scorer.getIncrementalScore(trans.features)));
 					}
-					System.out.printf("%d:%d - Z: %e\n", bi, sentId, Z);
+					//System.out.printf("%d:%d - Z: %e\n", bi, sentId, Z);
 					// System.out.printf("num[]: %s\n", Arrays.toString(num));
 					
 					
@@ -474,7 +474,7 @@ public class UnsmoothedMERT {
 						Z = 1.0;
 						num[selection] = 1.0/num.length;
 					}
-					System.out.printf("%d:%d - selection: %d p(%g|f) %g/%g\n", bi, sentId, selection, num[selection]/Z, num[selection], Z);
+					//System.out.printf("%d:%d - selection: %d p(%g|f) %g/%g\n", bi, sentId, selection, num[selection]/Z, num[selection], Z);
 					
 					// adjust current
 					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
@@ -488,6 +488,8 @@ public class UnsmoothedMERT {
 	        new OpenAddressCounter<String>(summarizedAllFeaturesVector(current), 0.50f);				
 				double eval = emetric.score(current);
 				sumExpL += eval;					
+
+        System.out.printf("Sample: %d(%d) Eval: %g E(Loss): %g\n", cnt, bi, eval, sumExpL/cnt);
 				
         for (Object2DoubleMap.Entry<String> entry : 
           currentF.object2DoubleEntrySet()) {
