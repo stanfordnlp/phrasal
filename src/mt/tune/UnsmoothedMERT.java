@@ -451,15 +451,11 @@ public class UnsmoothedMERT {
       int rejections = 0;
 			for (int bi = 0; bi-rejections < MCMC_BATCH_SAMPLES; bi++) {
 				// gibbs mcmc sample
-				double B = Counters.dotProduct(wts, currentF);
-				
 				for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
-					double b = B - scorer.getIncrementalScore(current.get(sentId).features);
-					System.out.printf("B: %g b: %g\n", B, b);
 					double Z = 0;
 					double[] num = new double[nbest.nbestLists().get(sentId).size()];
 					int pos = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(sentId)) { pos++;
-					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features) + b);
+					  Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features));
 					  System.err.printf("%d: featureOnly score: %g\n", pos, Math.exp(scorer.getIncrementalScore(trans.features)));
 					}
 					System.out.printf("%d - Z: %e\n", sentId, Z);
@@ -472,9 +468,6 @@ public class UnsmoothedMERT {
 					
 					// adjust current
 					current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
-					
-					// adjust B
-					B = b + scorer.getIncrementalScore(current.get(sentId).features);
 				}
 				
 				// collect derivative relevant statistics using sample
@@ -484,8 +477,8 @@ public class UnsmoothedMERT {
 				currentF = 
 	        new OpenAddressCounter<String>(summarizedAllFeaturesVector(current), 0.50f);				
 				double eval = emetric.score(current);
-				sumExpL += eval;
-								
+				sumExpL += eval;					
+				
         for (Object2DoubleMap.Entry<String> entry : 
           currentF.object2DoubleEntrySet()) {
           String k = entry.getKey();
