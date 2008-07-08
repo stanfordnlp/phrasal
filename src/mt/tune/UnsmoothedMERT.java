@@ -24,24 +24,27 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 
 /**
  * Minimum Error Rate Training (MERT)
- * 
+ *
  * Optimization for non smooth error surfaces
- * 
+ *
  * @author danielcer
  */
 public class UnsmoothedMERT {
-	public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
+
+  private UnsmoothedMERT() {}
+
+  public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
 	public static final Set<String> generativeFeatures = SSVMScorer
 			.readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 
 	static public final boolean DEBUG = false;
   public final static double DEFAULT_C = 100;
-  public static double C = DEFAULT_C;	
+  public static double C = DEFAULT_C;
   public static final double DEFAULT_T = 1;
   public static double T = DEFAULT_T;
 	public static final double DEFAULT_UNSCALED_L_RATE = 0.01;
 	public static double lrate = DEFAULT_UNSCALED_L_RATE;
-	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-5; 
+	static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-5;
 	static final int DEFAULT_MAX_ITER_SGD = 1000;
 	static final int NO_PROGRESS_LIMIT = 20;
 	static final double NO_PROGRESS_SSD = 1e-6;
@@ -51,22 +54,22 @@ public class UnsmoothedMERT {
   static final int MCMC_BURN_IN_SAMPLES = 2000;
   static final int MCMC_SAMPLES = 200;
   static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
-  
+
 	static public final double MIN_PLATEAU_DIFF = 0.0;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 
-  
+
   static class ObjELossDiffFunction implements DiffFunction, HasInitial {
-  	
-  	final MosesNBestList nbest; 
-  	final ClassicCounter<String> initialWts; 
+
+  	final MosesNBestList nbest;
+  	final ClassicCounter<String> initialWts;
   	final EvaluationMetric<IString,String> emetric;
   	final int domainDimension;
-  	
+
   	final List<String> featureIdsToString;
   	final double[] initial;
   	final double[] derivative;
-  	
+
   	public ObjELossDiffFunction(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
   		this.nbest = nbest;
   		this.initialWts = initialWts;
@@ -74,7 +77,7 @@ public class UnsmoothedMERT {
   		Set<String> featureSet = new HashSet<String>();
   		featureIdsToString = new ArrayList<String>();
   		List<Double> initialFeaturesVector = new ArrayList<Double>();
-  		
+
   		for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
   			for (ScoredFeaturizedTranslation<IString,String> trans : nbestlist) {
   				for (FeatureValue<String> featureValue : trans.features) {
@@ -86,7 +89,7 @@ public class UnsmoothedMERT {
   				}
   			}
   		}
-  		
+
   		initial = new double[initialFeaturesVector.size()];
   		derivative = new double[initialFeaturesVector.size()];
   		for (int i = 0; i < initial.length; i++) {
@@ -102,54 +105,54 @@ public class UnsmoothedMERT {
     public double[] initial() {
   		return initial;
   	}
-    
+
   	@SuppressWarnings("deprecation")
 		@Override
 		public double[] derivativeAt(double[] wtsDense) {
-  		
+
 			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
   		for (int i = 0; i < wtsDense.length; i++) {
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
-  		
+
   		MutableDouble expectedEval = new MutableDouble();
-  		ClassicCounter<String> dE = mcmcDerivative(nbest, wtsCounter, 
+  		ClassicCounter<String> dE = mcmcDerivative(nbest, wtsCounter,
         emetric, expectedEval);
-  		
+
       for (int i = 0; i < derivative.length; i++) {
       	derivative[i] = dE.getCount(featureIdsToString.get(i));
       }
 			return derivative;
 		}
-  
+
     public ClassicCounter<String> getBestWts() {
 			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
   		for (int i = 0; i < bestWts.length; i++) {
   			wtsCounter.incrementCount(featureIdsToString.get(i), bestWts[i]);
   		}
-      return wtsCounter; 
+      return wtsCounter;
     }
 
 		@Override
 		public double valueAt(double[] wtsDense) {
 			ClassicCounter<String> wtsCounter = new ClassicCounter<String>();
-			
+
   		for (int i = 0; i < wtsDense.length; i++) {
   			if (wtsDense[i] != wtsDense[i]) throw new RuntimeException("Weights contain NaN");
   			wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
   		}
 			double eval =	mcmcTightExpectedEval(nbest, wtsCounter, emetric);
       if (eval < bestEval) {
-        bestWts = wtsDense.clone(); 
+        bestWts = wtsDense.clone();
       }
 			return mcmcTightExpectedEval(nbest, wtsCounter, emetric);
 		}
     double bestEval = Double.POSITIVE_INFINITY;
     double[] bestWts;
   }
-  
+
   static public ClassicCounter<String> reducedWeightsToWeights(
-     ClassicCounter<String> reducedWts, 
+     ClassicCounter<String> reducedWts,
      Matrix reducedRepU, Map<String,Integer> featureIdMap) {
 
   	int col = reducedRepU.numColumns();
@@ -157,79 +160,79 @@ public class UnsmoothedMERT {
   	for (int i = 0; i < col; i++) {
   		vecReducedWts.set(i, reducedWts.getCount((new Integer(i)).toString()));
   	}
-  	
+
   	Vector vecWts = new DenseVector(reducedRepU.numRows());
   	reducedRepU.mult(vecReducedWts, vecWts);
-  	
+
   	ClassicCounter<String> wts = new ClassicCounter<String>();
   	for (Map.Entry<String,Integer> entry : featureIdMap.entrySet()) {
   		wts.setCount(entry.getKey(), vecWts.get(entry.getValue()));
   	}
-  	
+
   	return wts;
   }
-  
+
   static public ClassicCounter<String> weightsToReducedWeights(
-    ClassicCounter<String> wts, Matrix reducedRepU, 
+    ClassicCounter<String> wts, Matrix reducedRepU,
     Map<String,Integer> featureIdMap) {
 
   	Matrix vecWtsOrig = new DenseMatrix(featureIdMap.size(), 1);
   	for (Map.Entry<String,Integer> entry : featureIdMap.entrySet()) {
   		vecWtsOrig.set(entry.getValue(), 0, wts.getCount(entry.getKey()));
   	}
-  	
+
   	Matrix vecWtsReduced = new DenseMatrix(reducedRepU.numColumns(), 1);
   	reducedRepU.transAmult(vecWtsOrig, vecWtsReduced);
-  	
+
   	ClassicCounter<String> reducedWts = new ClassicCounter<String>();
     for (int i = 0; i < vecWtsReduced.numRows(); i++) {
   		reducedWts.setCount((new Integer(i)).toString(), vecWtsReduced.get(i,0));
   	}
-  	
+
   	return reducedWts;
   }
-  
+
   static public MosesNBestList nbestListToDimReducedNbestList(
     MosesNBestList nbest, Matrix reducedRepV) {
 
   	List<List<ScoredFeaturizedTranslation<IString,String>>> oldNbestLists = nbest.nbestLists();
   	List<List<ScoredFeaturizedTranslation<IString,String>>> newNbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(oldNbestLists.size());
-  	
+
   	int nbestId = -1;
   	int numNewFeat = reducedRepV.numColumns();
     //System.err.printf("V rows: %d cols: %d\n", reducedRepV.numRows(),
     //    reducedRepV.numColumns());
   	for (int listId = 0; listId < oldNbestLists.size(); listId++) {
-  		 List<ScoredFeaturizedTranslation<IString, String>> oldNbestlist = 
+  		 List<ScoredFeaturizedTranslation<IString, String>> oldNbestlist =
          oldNbestLists.get(listId);
-  		 List<ScoredFeaturizedTranslation<IString, String>> newNbestlist = 
+  		 List<ScoredFeaturizedTranslation<IString, String>> newNbestlist =
          new ArrayList<ScoredFeaturizedTranslation<IString, String>>
          (oldNbestlist.size());
   		 newNbestLists.add(newNbestlist);
   		 for (int transId = 0; transId < oldNbestlist.size(); transId++) {
-  		   nbestId++; 
-  			 ScoredFeaturizedTranslation<IString,String> oldTrans = 
+  		   nbestId++;
+  			 ScoredFeaturizedTranslation<IString,String> oldTrans =
            oldNbestlist.get(transId);
-  		   List<FeatureValue<String>> reducedFeatures = 
+  		   List<FeatureValue<String>> reducedFeatures =
            new ArrayList<FeatureValue<String>>(numNewFeat);
   		   for (int featId = 0; featId < numNewFeat; featId++) {
      //      System.err.printf("%d:%d\n", featId, nbestId);
   		  	 reducedFeatures.add(new FeatureValue<String>(
-                  (new Integer(featId)).toString(), 
-                  reducedRepV.get(nbestId, featId)));  		  	 
+                  (new Integer(featId)).toString(),
+                  reducedRepV.get(nbestId, featId)));
   		   }
-  		   ScoredFeaturizedTranslation<IString,String> newTrans = 
+  		   ScoredFeaturizedTranslation<IString,String> newTrans =
            new ScoredFeaturizedTranslation<IString, String>
            (oldTrans.translation, reducedFeatures, 0);
   		   newNbestlist.add(newTrans);
-  		 }  		 	 
+  		 }
   	}
-  		
+
   	return new MosesNBestList(newNbestLists);
   }
-  
+
   static public void nbestListToFeatureDocumentMatrix(MosesNBestList nbest, Ptr<Matrix> pFeatDocMat, Ptr<Map<String,Integer>> pFeatureIdMap) {
-    
+
   	// build map from feature names to consecutive unique integer ids
   	Map<String,Integer> featureIdMap = new HashMap<String,Integer>();
   	for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
@@ -237,7 +240,7 @@ public class UnsmoothedMERT {
   			for (FeatureValue<String> fv : trans.features) {
   				if (!featureIdMap.containsKey(fv.name)) {
   					featureIdMap.put(fv.name, featureIdMap.size()); } } } }
-  	
+
   	// build list representation of feature document matrix
   	List<List<Integer>> listFeatDocMapId = new ArrayList<List<Integer>>(featureIdMap.size());
   	List<List<Double>> listFeatDocMapVal = new ArrayList<List<Double>>(featureIdMap.size());
@@ -245,7 +248,7 @@ public class UnsmoothedMERT {
   		listFeatDocMapId.add(new ArrayList<Integer>());
   		listFeatDocMapVal.add(new ArrayList<Double>());
   	}
-  	
+
   	int nbestId = -1;
   	for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest.nbestLists()) {
   		for (ScoredFeaturizedTranslation<IString,String> trans : nbestlist) {
@@ -257,7 +260,7 @@ public class UnsmoothedMERT {
   			}
   		}
   	}
-  	
+
   	// prepare to create compressed row matrix
   	int[][] nonZeros = new int[listFeatDocMapId.size()][];
   	for (int i = 0; i < nonZeros.length; i++) {
@@ -267,30 +270,31 @@ public class UnsmoothedMERT {
   		}
   		nonZeros[i] = row;
   	}
-  	
+
   	Matrix featDocMat = new CompRowMatrix(nonZeros.length, nbestId+1, nonZeros);
   	for (int i = 0; i < nonZeros.length; i++) {
   		for (int j = 0; j < nonZeros[i].length; j++) {
   			featDocMat.set(i, nonZeros[i][j], listFeatDocMapVal.get(i).get(j));
   		}
   	}
-  	
+
   	pFeatDocMat.set(featDocMat);
   	pFeatureIdMap.set(featureIdMap);
   }
+
   static public double mcmcTightExpectedEval(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric) {
      return mcmcTightExpectedEval(nbest, wts, emetric, true);
   }
-  
+
   static public double mcmcTightExpectedEval(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, boolean regularize) {
   	System.err.printf("TMCMC weights:\n%s\n\n", wts.toString(35));
-    double sumExpL = 0;	
+    double sumExpL = 0;
    	int cnt = 0;
     Scorer<String> scorer = new StaticScorer(wts);
     for (int sample = 0; sample < MCMC_SAMPLES; sample++) {
        // randomly select a new starting point
        int[] candIds = new int[nbest.nbestLists().size()];
-       ArrayList<ScoredFeaturizedTranslation<IString,String>> 
+       ArrayList<ScoredFeaturizedTranslation<IString,String>>
          current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>
                 (candIds.length);
        for (int i = 0; i < nbest.nbestLists().size(); i++) {
@@ -331,16 +335,16 @@ public class UnsmoothedMERT {
        }
        cnt++;
        sumExpL += incEval.score();
-       System.err.printf("%d: sum: %e avg: %g rejections: %.5f (%d/%d)\n", sample, sumExpL, 
+       System.err.printf("%d: sum: %e avg: %g rejections: %.5f (%d/%d)\n", sample, sumExpL,
          sumExpL/cnt, rejections*1.0/MCMC_BURN_IN_SAMPLES, rejections, MCMC_BURN_IN_SAMPLES);
     }
-	
+
 		// objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
 		double l2wts = Counters.L2Norm(wts);
 		double obj = (C != 0 && regularize ? 0.5*l2wts*l2wts -C*sumExpL/cnt : -sumExpL/cnt);
     if (regularize) {
 		  System.err.printf(
-         "Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", 
+         "Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n",
          obj);
 		  System.err.printf("C: %e\n", C);
 		  System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
@@ -348,40 +352,40 @@ public class UnsmoothedMERT {
 		System.err.printf("E(loss) = %e\n", sumExpL/cnt);
 		return obj;
   }
-  
-  
+
+
   static public ClassicCounter<String> mcmcDerivative(
-    MosesNBestList nbest, ClassicCounter<String> wts, 
+    MosesNBestList nbest, ClassicCounter<String> wts,
     EvaluationMetric<IString,String> emetric) {
 
   	return mcmcDerivative(nbest, wts, emetric, null);
   }
 
 	static public ClassicCounter<String> mcmcDerivative(
-    MosesNBestList nbest, ClassicCounter<String> wts, 
+    MosesNBestList nbest, ClassicCounter<String> wts,
     EvaluationMetric<IString,String> emetric, MutableDouble expectedEval) {
 
   	return mcmcDerivative(nbest, wts, emetric, expectedEval, null);
   }
-  
+
 	@SuppressWarnings({ "deprecation" })
-	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest, 
-    ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, 
+	static public ClassicCounter<String> mcmcDerivative(MosesNBestList nbest,
+    ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric,
     MutableDouble expectedEval, MutableDouble objValue) {
 
 		System.err.printf("MCMC weights:\n%s\n\n", wts.toString(35));
-		
+
 		// for quick mixing, get current classifier argmax
     System.err.println("finding argmax");
-		List<ScoredFeaturizedTranslation<IString, String>> argmax = 
-      transArgmax(nbest, wts), current = 
+		List<ScoredFeaturizedTranslation<IString, String>> argmax =
+      transArgmax(nbest, wts), current =
         new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
-		
+
 		Scorer<String> scorer = new StaticScorer(wts);
 
     double hardEval = emetric.score(argmax);
     System.err.printf("Hard eval: %.5f\n", hardEval);
-		
+
 		// expected value sums
 		OpenAddressCounter<String> sumExpLF = new OpenAddressCounter<String>(0.50f);
 		double sumExpL = 0.0;
@@ -408,7 +412,7 @@ public class UnsmoothedMERT {
           nbest.nbestLists().get(sentId).get(candIds[sentId]).features);
 				double posSampleScore = scorer.getIncrementalScore(
           nbest.nbestLists().get(sentId).get(posSampleCandId).features);
-				double a = Math.exp(T*posSampleScore - T*currentScore); 
+				double a = Math.exp(T*posSampleScore - T*currentScore);
 				if (a >= 1.0) {
 					candIds[sentId] = posSampleCandId;
 				} else {
@@ -418,7 +422,7 @@ public class UnsmoothedMERT {
             rejections++; // x^(t+1) = x^t with probability 1-a
           }
 				}
-        ScoredFeaturizedTranslation<IString,String> cTrans =  
+        ScoredFeaturizedTranslation<IString,String> cTrans =
           nbest.nbestLists().get(sentId).get(candIds[sentId]);
         current.set(sentId, cTrans);
       }
@@ -429,15 +433,15 @@ public class UnsmoothedMERT {
 			for (ScoredFeaturizedTranslation<IString, String> tran : current)
         incEval.add(tran);
 
-      System.err.printf("%d: rejections- %.5f (%d/%d)\n", sample, 
-             rejections*1.0/MCMC_BURN_IN_SAMPLES, 
+      System.err.printf("%d: rejections- %.5f (%d/%d)\n", sample,
+             rejections*1.0/MCMC_BURN_IN_SAMPLES,
              rejections, MCMC_BURN_IN_SAMPLES);
 
       // collect stats from sample
       cnt++;
 
-			OpenAddressCounter<String> currentF = 
-        new OpenAddressCounter<String>(summarizedAllFeaturesVector(current), 
+			OpenAddressCounter<String> currentF =
+        new OpenAddressCounter<String>(summarizedAllFeaturesVector(current),
           0.50f);
 
       double eval = incEval.score();
@@ -451,10 +455,10 @@ public class UnsmoothedMERT {
        sumExpL += eval;
     }
 		ClassicCounter<String> dE = new ClassicCounter<String>(sumExpF);
-    dE.multiplyBy(-sumExpL/cnt);
+    Counters.multiplyInPlace(dE, -sumExpL/cnt);
     dE.addAll(sumExpLF);
- 
-    System.err.printf("Hard eval: %.5f E(Eval): %.5f diff: %e\n", 
+
+    System.err.printf("Hard eval: %.5f E(Eval): %.5f diff: %e\n",
         hardEval, sumExpL/cnt,
         hardEval-sumExpL/cnt);
 
@@ -464,24 +468,24 @@ public class UnsmoothedMERT {
 		System.err.printf("C: %e\n", C);
 		System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
 		System.err.printf("E(loss) = %e\n", sumExpL/cnt);
-		
+
 		if (expectedEval != null) expectedEval.set(sumExpL/cnt);
     if (objValue != null) objValue.set(obj);
-		
+
 		// obtain dObj by adding in regularization terms to dE
     ClassicCounter<String> dObj = new ClassicCounter<String>(dE);
 
     if (C != 0) {
-    	dObj.multiplyBy(-C);
-    	for (String key : wts.keySet()) {
+      Counters.multiplyInPlace(dObj, -C);
+      for (String key : wts.keySet()) {
     		dObj.incrementCount(key, wts.getCount(key));
     	}
     } else {
-    	dObj.multiplyBy(-1.0);
+      Counters.multiplyInPlace(dObj, -1.0);
     }
 		return dObj;
 	}
-	
+
 	static class InterceptIDs {
 		final int list;
 		final int trans;
@@ -508,7 +512,7 @@ public class UnsmoothedMERT {
 				lI++;
 				// calculate slops/intercepts
 				double[] m = new double[nbestlist.size()];
-				double b[] = new double[nbestlist.size()];
+				double[] b = new double[nbestlist.size()];
 				{
 					int tI = -1;
 					for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
@@ -629,7 +633,7 @@ public class UnsmoothedMERT {
 
 	enum SmoothingType {
 		avg, min
-	};
+	}
 
 	static final int SEARCH_WINDOW = Integer.parseInt(System.getProperty(
 			"SEARCH_WINDOW", "1"));
@@ -677,11 +681,11 @@ public class UnsmoothedMERT {
 	/**
 	 * Powell's method, but without heuristics for replacement of search
 	 * directions. See Press et al Numerical Recipes (1992) pg 415
-	 * 
+	 *
 	 * Unlike the heuristic version, see powell() below, this variant has
 	 * quadratic convergence guarantees. However, note that the heuristic version
 	 * should do better in long and narrow valleys.
-	 * 
+	 *
 	 * @param nbest
 	 * @param initialWts
 	 * @param emetric
@@ -705,7 +709,7 @@ public class UnsmoothedMERT {
 		}
 
 		// main optimization loop
-		ClassicCounter p[] = new ClassicCounter[axisDirs.size()];
+		ClassicCounter[] p = new ClassicCounter[axisDirs.size()];
 		double objValue = evalAtPoint(nbest, wts, emetric); // obj value w/o
 		// smoothing
 		List<ClassicCounter<String>> dirs = null;
@@ -732,8 +736,8 @@ public class UnsmoothedMERT {
 
 			// construct combined direction
 			ClassicCounter<String> combinedDir = new ClassicCounter<String>(wts);
-			combinedDir.multiplyBy(-1.0);
-			combinedDir.addAll(p[p.length - 1]);
+      Counters.multiplyInPlace(combinedDir, -1.0);
+      combinedDir.addAll(p[p.length - 1]);
 
 			dirs.set(p.length - 1, combinedDir);
 
@@ -996,11 +1000,11 @@ public class UnsmoothedMERT {
 
 	static enum Cluster3 {
 		better, worse, same
-	};
+	}
 
 	static enum Cluster3LearnType {
 		betterWorse, betterSame, betterPerceptron, allDirs
-	};
+	}
 
 	@SuppressWarnings( { "deprecation", "unchecked" })
 	static public ClassicCounter<String> betterWorse3KMeans(MosesNBestList nbest,
@@ -1054,10 +1058,10 @@ public class UnsmoothedMERT {
 			System.err.printf("Better cnt: %d\n", betterClusterCnt);
 			System.err.printf("Worse cnt: %d\n", worseClusterCnt);
 
-			betterVec.multiplyBy(1.0 / betterClusterCnt);
-			worseVec.multiplyBy(1.0 / worseClusterCnt);
+      Counters.multiplyInPlace(betterVec, 1.0 / betterClusterCnt);
+      Counters.multiplyInPlace(worseVec, 1.0 / worseClusterCnt);
 
-			System.err.printf("Initial Better Vec:\n%s\n", betterVec);
+      System.err.printf("Initial Better Vec:\n%s\n", betterVec);
 			System.err.printf("Initial Worse Vec:\n%s\n", worseVec);
 			System.err.printf("Initial Same Vec:\n%s\n", sameVec);
 
@@ -1116,10 +1120,10 @@ public class UnsmoothedMERT {
 								"Cluster Iter: %d Changes: %d BetterClust: %d WorseClust: %d SameClust: %d\n",
 								clustIter, changes, betterClusterCnt, worseClusterCnt,
 								sameClusterCnt);
-				newBetterVec.multiplyBy(1.0 / betterClusterCnt);
-				newWorseVec.multiplyBy(1.0 / worseClusterCnt);
-				newSameVec.multiplyBy(1.0 / sameClusterCnt);
-				betterVec = newBetterVec;
+        Counters.multiplyInPlace(newBetterVec, 1.0 / betterClusterCnt);
+        Counters.multiplyInPlace(newWorseVec, 1.0 / worseClusterCnt);
+        Counters.multiplyInPlace(newSameVec, 1.0 / sameClusterCnt);
+        betterVec = newBetterVec;
 				worseVec = newWorseVec;
 				sameVec = newSameVec;
 				System.err.printf("Better Vec:\n%s\n", betterVec);
@@ -1134,8 +1138,8 @@ public class UnsmoothedMERT {
 			switch (lType) {
 			case betterPerceptron:
 				ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
-				c.multiplyBy(Counters.L2Norm(betterVec));
-				dir.subtractAll(c);
+        Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
+        dir.subtractAll(c);
 				System.out.printf("betterPerceptron");
 				System.out.printf("current:\n%s\n\n", c);
 				break;
@@ -1170,9 +1174,9 @@ public class UnsmoothedMERT {
 				newWts = lineSearch(nbest, wts, dir, emetric);
 			} else {
 				ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
-				c.multiplyBy(Counters.L2Norm(betterVec));
+        Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
 
-				newWts = wts;
+        newWts = wts;
 
 				// Better Same
 				dir = new ClassicCounter<String>(betterVec);
@@ -1264,10 +1268,10 @@ public class UnsmoothedMERT {
 			System.err.printf("Better cnt: %d\n", betterClusterCnt);
 			System.err.printf("Worse cnt: %d\n", worseClusterCnt);
 
-			betterVec.multiplyBy(1.0 / betterClusterCnt);
-			worseVec.multiplyBy(1.0 / worseClusterCnt);
+      Counters.multiplyInPlace(betterVec, 1.0 / betterClusterCnt);
+      Counters.multiplyInPlace(worseVec, 1.0 / worseClusterCnt);
 
-			System.err.printf("Initial Better Vec:\n%s\n", betterVec);
+      System.err.printf("Initial Better Vec:\n%s\n", betterVec);
 			System.err.printf("Initial Worse Vec:\n%s\n", worseVec);
 
 			// k-means loop
@@ -1310,9 +1314,9 @@ public class UnsmoothedMERT {
 				System.err.printf(
 						"Cluster Iter: %d Changes: %d BetterClust: %d WorseClust: %d\n",
 						clustIter, changes, betterClusterCnt, worseClusterCnt);
-				newBetterVec.multiplyBy(1.0 / betterClusterCnt);
-				newWorseVec.multiplyBy(1.0 / worseClusterCnt);
-				betterVec = newBetterVec;
+        Counters.multiplyInPlace(newBetterVec, 1.0 / betterClusterCnt);
+        Counters.multiplyInPlace(newWorseVec, 1.0 / worseClusterCnt);
+        betterVec = newBetterVec;
 				worseVec = newWorseVec;
 				System.err.printf("Better Vec:\n%s\n", betterVec);
 				System.err.printf("Worse Vec:\n%s\n", worseVec);
@@ -1325,14 +1329,14 @@ public class UnsmoothedMERT {
 				if (useWts) {
 					ClassicCounter<String> normWts = new ClassicCounter<String>(wts);
 					Counters.L2Normalize(normWts);
-					normWts.multiplyBy(Counters.L2Norm(betterVec));
-					System.err.printf("Subing wts:\n%s\n", normWts);
+          Counters.multiplyInPlace(normWts, Counters.L2Norm(betterVec));
+          System.err.printf("Subing wts:\n%s\n", normWts);
 					dir.subtractAll(normWts);
 					System.err.printf("l2: %f\n", Counters.L2Norm(normWts));
 				} else {
 					ClassicCounter<String> c = Counters.L2Normalize(summarizedAllFeaturesVector(current));
-					c.multiplyBy(Counters.L2Norm(betterVec));
-					System.err.printf("Subing current:\n%s\n", c);
+          Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
+          System.err.printf("Subing current:\n%s\n", c);
 					dir.subtractAll(c);
 					System.err.printf("l2: %f\n", Counters.L2Norm(c));
 				}
@@ -1362,13 +1366,13 @@ public class UnsmoothedMERT {
 
 	/**
 	 * Powell's Method
-	 * 
+	 *
 	 * A typical implementation - with details originally based on David Chiang's
 	 * CMERT 0.5 (as distributed with Moses 1.5.8)
-	 * 
+	 *
 	 * This implementation appears to be based on that given in Press et al's
 	 * Numerical Recipes (1992) pg. 417.
-	 * 
+	 *
 	 */
 	@SuppressWarnings( { "unchecked", "deprecation" })
 	static public ClassicCounter<String> powell(MosesNBestList nbest,
@@ -1388,7 +1392,7 @@ public class UnsmoothedMERT {
 		}
 
 		// main optimization loop
-		ClassicCounter p[] = new ClassicCounter[dirs.size()];
+		ClassicCounter[] p = new ClassicCounter[dirs.size()];
 		double objValue = evalAtPoint(nbest, wts, emetric); // obj value w/o
 		// smoothing
 		for (int iter = 0;; iter++) {
@@ -1423,8 +1427,8 @@ public class UnsmoothedMERT {
 
 			// construct combined direction
 			ClassicCounter<String> combinedDir = new ClassicCounter<String>(wts);
-			combinedDir.multiplyBy(-1.0);
-			combinedDir.addAll(p[p.length - 1]);
+      Counters.multiplyInPlace(combinedDir, -1.0);
+      combinedDir.addAll(p[p.length - 1]);
 
 			// check to see if we should replace the dominant 'win' direction
 			// during the last iteration of search with the combined search direction
@@ -1449,11 +1453,11 @@ public class UnsmoothedMERT {
 
 			// Search along combined dir even if replacement didn't happen
 			wts = lineSearch(nbest, p[p.length - 1], combinedDir, emetric);
-			eval = evalAtPoint(nbest, wts, emetric); 
+			eval = evalAtPoint(nbest, wts, emetric);
 			System.err.printf(
 					"%d: Objective after combined search %e (gain: %e prior:%e)\n", iter,
 					eval - objValue, objValue);
-			
+
 			objValue = eval;
 
 			double finalObjValue = objValue;
@@ -1468,7 +1472,7 @@ public class UnsmoothedMERT {
 
 	/**
 	 * Optimization algorithm used by cmert included in Moses.
-	 * 
+	 *
 	 * @author danielcer
 	 */
 	static public ClassicCounter<String> koehnStyleOptimize(MosesNBestList nbest,
@@ -1521,35 +1525,35 @@ public class UnsmoothedMERT {
 
 		return sumValues;
 	}
-	
-	enum SVDOptChoices { exact, evalue };
-	
+
+	enum SVDOptChoices { exact, evalue }
+
   static Ptr<DenseMatrix> pU = null;
   static Ptr<DenseMatrix> pV = null;
 
 	static public ClassicCounter<String> svdReducedObj(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric,
 			int rank, SVDOptChoices opt) {
-		
-		
+
+
 		Ptr<Matrix> pFeatDocMat = new Ptr<Matrix>();
 		Ptr<Map<String,Integer>> pFeatureIdMap = new Ptr<Map<String,Integer>>();
 		System.err.println("Creating feature document matrix");
 		nbestListToFeatureDocumentMatrix(nbest, pFeatDocMat, pFeatureIdMap);
-	
-    if (pU == null) {	
+
+    if (pU == null) {
 		  pU = new Ptr<DenseMatrix>();
 		  pV = new Ptr<DenseMatrix>();
 		  System.err.printf("Doing SVD rank: %d\n", rank);
 		  ReducedSVD.svd(pFeatDocMat.deref(), pU, pV, rank, false);
 		  System.err.println("SVD done.");
     }
-		
+
 		ClassicCounter<String> reducedInitialWts = weightsToReducedWeights(initialWts, pU.deref(), pFeatureIdMap.deref());
-		
+
 		System.err.println("Initial Wts:");
 		System.err.println("====================");
 		System.err.println(initialWts.toString(35));
-		
+
 		System.err.println("Reduced Initial Wts:");
 		System.err.println("====================");
 		System.err.println(reducedInitialWts.toString(35));
@@ -1557,12 +1561,12 @@ public class UnsmoothedMERT {
 
     System.err.println("Recovered Reduced Initial Wts");
     System.err.println("=============================");
-		ClassicCounter<String> recoveredInitialWts = 
+		ClassicCounter<String> recoveredInitialWts =
        reducedWeightsToWeights(reducedInitialWts, pU.deref(), pFeatureIdMap.deref());
     System.err.println(recoveredInitialWts.toString(35));
-		
-		
-		MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest, 
+
+
+		MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest,
       pV.deref());
 		ClassicCounter<String> reducedWts;
 		switch (opt) {
@@ -1580,8 +1584,8 @@ public class UnsmoothedMERT {
 		System.err.println("Reduced Learned Wts:");
 		System.err.println("====================");
 		System.err.println(reducedWts.toString(35));
-		
-		
+
+
 		ClassicCounter<String> recoveredWts = reducedWeightsToWeights(reducedWts, pU.deref(), pFeatureIdMap.deref());
 		System.err.println("Recovered Learned Wts:");
 		System.err.println("======================");
@@ -1594,7 +1598,7 @@ public class UnsmoothedMERT {
     System.out.printf("recovered wts ssd: %e\n", twtSsd);
 		return recoveredWts;
 	}
-	
+
 	static public ClassicCounter<String> mcmcELossObjectiveCG(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString,String> emetric) {
     ClassicCounter<String> sgdWts;
     System.err.println("Begin SGD optimization\n");
@@ -1608,12 +1612,12 @@ public class UnsmoothedMERT {
 		System.err.printf("E(Eval): %e\n", (regE + 0.5*l2wtsSqred)/C);
 		System.err.printf("C: %e\n", C);
 		System.err.printf("Last eval: %e\n", eval);
-   
+
     System.err.println("Begin CG optimization\n");
 		ObjELossDiffFunction obj = new ObjELossDiffFunction(nbest, sgdWts, emetric);
 		//CGMinimizer minim = new CGMinimizer(obj);
 		QNMinimizer minim = new QNMinimizer(obj, 10, true);
-		
+
 		/*double[] wtsDense = minim.minimize(obj, 1e-5, obj.initial);
 		ClassicCounter<String> wts = new ClassicCounter<String>();
 		for (int i = 0; i < wtsDense.length; i++) {
@@ -1625,7 +1629,7 @@ public class UnsmoothedMERT {
         break;
       } catch (Exception e) {
         continue;
-      } 
+      }
     }
     ClassicCounter<String> wts = obj.getBestWts();
 
@@ -1639,13 +1643,13 @@ public class UnsmoothedMERT {
 		System.err.printf("Last eval: %e\n", eval);
 		return wts;
 	}
-	
+
 	static public ClassicCounter<String> mcmcELossObjectiveSGD(
-   MosesNBestList nbest, ClassicCounter<String> initialWts, 
+   MosesNBestList nbest, ClassicCounter<String> initialWts,
    EvaluationMetric<IString, String> emetric) {
-    return mcmcELossObjectiveSGD(nbest, initialWts, emetric, 
+    return mcmcELossObjectiveSGD(nbest, initialWts, emetric,
       DEFAULT_MAX_ITER_SGD);
-  }	
+  }
 
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> mcmcELossObjectiveSGD(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric, int max_iter) {
@@ -1660,9 +1664,9 @@ public class UnsmoothedMERT {
 			MutableDouble objValue = new MutableDouble();
 
 			ClassicCounter<String> dE = mcmcDerivative(nbest, wts, emetric, expectedEval, objValue);
-			dE.multiplyBy(-1.0*lrate);
-			wts.addAll(dE);
-			
+      Counters.multiplyInPlace(dE, -1.0*lrate);
+      wts.addAll(dE);
+
 			double ssd = Counters.L2Norm(dE);
 			double expectedEvalDiff = expectedEval.doubleValue() - lastExpectedEval;
       double objDiff = objValue.doubleValue() - lastObj;
@@ -1679,7 +1683,7 @@ public class UnsmoothedMERT {
 			lastExpectedEval = expectedEval.doubleValue();
 			eval = evalAtPoint(nbest, wts, emetric);
 			System.err.printf("sgd step %d: eval: %e wts ssd: %e E(Eval): %e delta E(Eval): %e obj: %e (delta: %e)\n", iter, eval, ssd, expectedEval.doubleValue(), expectedEvalDiff, objValue.doubleValue(), objDiff);
-      if (iter > objDiffWin.length) { 
+      if (iter > objDiffWin.length) {
          System.err.printf("objDiffWin: %e\n", winObjDiff);
       }
 			if (MIN_OBJECTIVE_CHANGE_SGD > Math.abs(winObjDiff)) break;
@@ -1687,7 +1691,7 @@ public class UnsmoothedMERT {
 		System.err.printf("Last eval: %e\n", eval);
 		return wts;
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> mcmcELossDirOptimize(MosesNBestList nbest, ClassicCounter<String> initialWts, EvaluationMetric<IString, String> emetric) {
 		ClassicCounter<String> wts = initialWts;
@@ -1695,7 +1699,7 @@ public class UnsmoothedMERT {
 		for (int iter = 0; ; iter++) {
       double[] tset = {1e-5, 1e-4, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 1e4, 1e5};
 			ClassicCounter<String> newWts = new ClassicCounter<String>(wts);
-      for (int i = 0; i < tset.length; i++) {   
+      for (int i = 0; i < tset.length; i++) {
         T = tset[i];
         MutableDouble md = new MutableDouble();
 			  ClassicCounter<String> dE = mcmcDerivative(nbest, newWts, emetric,md);
@@ -1704,8 +1708,8 @@ public class UnsmoothedMERT {
         System.err.printf("T:%e Eval: %.5f E(Eval): %.5f\n", tset[i], eval, md.doubleValue());
       }
 			double ssd = wtSsd(wts, newWts);
-			
-			
+
+
 			eval = evalAtPoint(nbest, newWts, emetric);
 			System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
 			if (ssd < NO_PROGRESS_SSD) break;
@@ -1714,7 +1718,7 @@ public class UnsmoothedMERT {
 		System.err.printf("Last eval: %e\n", eval);
 		return wts;
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> perceptronOptimize(MosesNBestList nbest,
 			ClassicCounter<String> initialWts,
@@ -1731,8 +1735,8 @@ public class UnsmoothedMERT {
 			List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch
 					.maximize(nbest);
 			ClassicCounter<String> dir = summarizedAllFeaturesVector(oneBest);
-			dir.multiplyBy(-1.0);
-			dir.addAll(targetFeatures);
+      Counters.multiplyInPlace(dir, -1.0);
+      dir.addAll(targetFeatures);
 			ClassicCounter<String> newWts = lineSearch(nbest, wts, dir, emetric);
 			double ssd = 0;
 			for (String k : newWts.keySet()) {
@@ -1829,10 +1833,10 @@ public class UnsmoothedMERT {
 		return trans;
 	}
 
-	static public List<ScoredFeaturizedTranslation<IString,String>> 
-    transEvalArgmax(MosesNBestList nbest, 
+	static public List<ScoredFeaturizedTranslation<IString,String>>
+    transEvalArgmax(MosesNBestList nbest,
       EvaluationMetric<IString, String> emetric) {
-		  MultiTranslationMetricMax<IString, String> oneBestSearch = 
+		  MultiTranslationMetricMax<IString, String> oneBestSearch =
         new HillClimbingMultiTranslationMetricMax<IString, String>(emetric);
 		return oneBestSearch.maximize(nbest);
 	}
@@ -1991,8 +1995,8 @@ public class UnsmoothedMERT {
 					.getIncrementalMetric();
 			ClassicCounter<String> scaledWts = new ClassicCounter<String>(wts);
 			scaledWts.normalize();
-			scaledWts.multiplyBy(0.01);
-			for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
+      Counters.multiplyInPlace(scaledWts, 0.01);
+      for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
 					.nbestLists()) {
 				if (incEvalMetric.size() > 0)
 					incEvalMetric.replace(incEvalMetric.size() - 1, null);
@@ -2044,8 +2048,8 @@ public class UnsmoothedMERT {
 
 	@SuppressWarnings("deprecation")
 	static public ClassicCounter<String> normalize(ClassicCounter<String> wts) {
-		wts.multiplyBy(1.0 / l1norm(wts));
-		return wts;
+    Counters.multiplyInPlace(wts, 1.0 / l1norm(wts));
+    return wts;
 	}
 
 	static public double l1norm(ClassicCounter<String> wts) {
@@ -2173,9 +2177,9 @@ public class UnsmoothedMERT {
 				for (ClassicCounter<String> priorDir : priorSearchDirs) {
 					ClassicCounter<String> projOnPrior = new ClassicCounter<String>(
 							priorDir);
-					projOnPrior.multiplyBy(Counters.dotProduct(priorDir, dEl)
-							/ Counters.dotProduct(priorDir, priorDir));
-					searchDir.subtractAll(projOnPrior);
+          Counters.multiplyInPlace(projOnPrior, Counters.dotProduct(priorDir, dEl)
+                    / Counters.dotProduct(priorDir, priorDir));
+          searchDir.subtractAll(projOnPrior);
 				}
 				if (Counters.dotProduct(searchDir, searchDir) < NO_PROGRESS_SSD) {
 					noProgressCnt++;
@@ -2240,9 +2244,9 @@ public class UnsmoothedMERT {
 
 	/**
 	 * Specialized evalAt point just for line search
-	 * 
+	 *
 	 * Previously, profiling revealed that this was a serious hotspot
-	 * 
+	 *
 	 * @param nbest
 	 * @return
 	 */
@@ -2338,11 +2342,11 @@ public class UnsmoothedMERT {
       if (fields.length > 1) {
         int beamWidth = Integer.parseInt(fields[1]);
         TERcalc.setBeamWidth(beamWidth);
-        System.err.printf("TER beam width set to %d (default: 20)\n",beamWidth); 
+        System.err.printf("TER beam width set to %d (default: 20)\n",beamWidth);
         if (fields.length > 2) {
           int maxShiftDist = Integer.parseInt(fields[2]);
           TERcalc.setShiftDist(maxShiftDist);
-          System.err.printf("TER maximum shift distance set to %d (default: 50)\n",maxShiftDist); 
+          System.err.printf("TER maximum shift distance set to %d (default: 50)\n",maxShiftDist);
         }
       }
 			emetric = new TERMetric<IString, String>(references);
@@ -2458,40 +2462,40 @@ public class UnsmoothedMERT {
 		long startTime = System.currentTimeMillis();
 
 	  if (System.getProperty("C") != null) {
-       C = Double.parseDouble(System.getProperty("C"));       
+       C = Double.parseDouble(System.getProperty("C"));
        System.err.printf("Using C %f rather than default of %f\n",
           C, DEFAULT_C);
     }
-	  
+
 	  if (System.getProperty("T") != null) {
 	  	T = Double.parseDouble(System.getProperty("T"));
 	  	System.err.printf("Using T %f rather than default of %f\n", T, DEFAULT_T);
 	  }
-	  
-	  lrate = (C != 0 ? DEFAULT_UNSCALED_L_RATE/C : DEFAULT_UNSCALED_L_RATE); 
+
+	  lrate = (C != 0 ? DEFAULT_UNSCALED_L_RATE/C : DEFAULT_UNSCALED_L_RATE);
 	  System.out.printf("sgd lrate: %e\n", lrate);
 	  double initialObjValue = 0;
 	  boolean mcmcObj = (System.getProperty("mcmcELossDirExact") != null ||
 		    System.getProperty("mcmcELossSGD") != null ||
 		    System.getProperty("mcmcELossCG") != null);
-	  
+
 	  if (mcmcObj) {
 	  	initialObjValue = mcmcTightExpectedEval(nbest, initialWts, emetric);
 	  } else {
 	  	initialObjValue = nbestEval;
 	  }
-	
+
 		for (int ptI = 0; ptI < STARTING_POINTS; ptI++) {
 			ClassicCounter<String> wts;
-			if (ptI == 0 && Math.abs(localNbestEval - nbestEval) < MAX_LOCAL_ALL_GAP_WTS_REUSE) {				
+			if (ptI == 0 && Math.abs(localNbestEval - nbestEval) < MAX_LOCAL_ALL_GAP_WTS_REUSE) {
 				System.err.printf("Re-using initial wts, gap: %e", Math.abs(localNbestEval - nbestEval));
 				wts = initialWts;
-			} else {				
+			} else {
 				if (ptI == 0) System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e", Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
 				wts = randomWts(initialWts.keySet());
 			}
 			ClassicCounter<String> newWts;
-			 
+
 			if (System.getProperty("useKoehn") != null) {
 				System.out.printf("Using koehn\n");
 				newWts = koehnStyleOptimize(nbest, wts, emetric);
@@ -2566,7 +2570,7 @@ public class UnsmoothedMERT {
 			} else if (System.getProperty("pointwisePerceptron") != null) {
 				System.out.printf("Using pointwise Perceptron\n");
 			// only run pointwise for the first iteration, as it is very expensive
-				newWts = (ptI == 0 ? pointwisePerceptron(nbest, wts, emetric) : wts); 
+				newWts = (ptI == 0 ? pointwisePerceptron(nbest, wts, emetric) : wts);
 			} else if (System.getProperty("mcmcELossDirExact") != null) {
 				System.out.println("using mcmcELossDirExact");
 				newWts = mcmcELossDirOptimize(nbest, wts, emetric);
@@ -2578,12 +2582,12 @@ public class UnsmoothedMERT {
 				newWts = mcmcELossObjectiveCG(nbest, wts, emetric);
 			} else if (System.getProperty("svdExact") != null) {
 				int rank = Integer.parseInt(System.getProperty("svdExact"));
-				System.out.printf("Using SVD exact, rank: %d\n", rank);				
-				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.exact);				
+				System.out.printf("Using SVD exact, rank: %d\n", rank);
+				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.exact);
 			} else if (System.getProperty("svdELoss") != null) {
 				int rank = Integer.parseInt(System.getProperty("svdELoss"));
-				System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d\n", rank);				
-				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.evalue);				
+				System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d\n", rank);
+				newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.evalue);
 			} else {
 				System.out.printf("Using cer\n");
 				newWts = cerStyleOptimize2(nbest, wts, emetric);
@@ -2600,15 +2604,15 @@ public class UnsmoothedMERT {
 		  	  mcmcTightExpectedEval(nbest, bestWts, emetric, false),
 					obj, bestObj, l1norm(newWts));
 		}
-		
+
 		double finalObjValue = (mcmcObj ?
 		  	mcmcTightExpectedEval(nbest, bestWts, emetric) :
 		  	evalAtPoint(nbest, bestWts, emetric));
-		
+
 		double finalEval = evalAtPoint(nbest, bestWts, emetric);
-		
+
 		System.out.printf("Obj diff: %e\n", Math.abs(initialObjValue - finalObjValue));
-		
+
 		long endTime = System.currentTimeMillis();
 		System.out.printf("Optimization Time: %.3f s\n",
 				(endTime - startTime) / 1000.0);
