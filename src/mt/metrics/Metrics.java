@@ -17,7 +17,9 @@ import mt.base.Sequence;
 public class Metrics {
 	private Metrics() { }
 
-	/**
+  private static final double LOG2 = Math.log(2);
+
+  /**
 	 * note: future plans for javanlp Count will make this method irrelevant.
 	 *
 	 * @param <TK>
@@ -77,7 +79,33 @@ public class Metrics {
 		return maxCounts;
 	}
 
-	static <TK> void clipCounts(Map<Sequence<TK>, Integer> counts, Map<Sequence<TK>, Integer> maxRefCount) {
+  /**
+   * Calculates the "informativeness" of each ngram, which is used by the NIST metric.
+   * In Matlab notation, the informativeness of the ngram w_1:n
+   * is defined as -log2(count(w_1:n)/count(w_1:n-1)).
+   *
+   * @param ngramCounts ngram counts according to references
+   * @param totWords total number of words, which is used to compute the informativeness of unigrams.
+   */
+  static public <TK> Map<Sequence<TK>, Double> getNGramInfo(Map<Sequence<TK>,Integer> ngramCounts, int totWords) {
+		Map<Sequence<TK>, Double> ngramInfo = new HashMap<Sequence<TK>, Double>();
+
+    for (Sequence<TK> ngram : ngramCounts.keySet()) {
+      double num = ngramCounts.get(ngram);
+      double denom = totWords;
+      if(ngram.size() > 1) {
+        Sequence ngramPrefix = ngram.subsequence(0,ngram.size()-1);
+        denom = ngramCounts.get(ngramPrefix);
+      }
+      double inf = -Math.log(num/denom)/LOG2;
+      ngramInfo.put(ngram,inf);
+      //System.err.printf("ngram info: %s %.3f\n", ngram.toString(), inf);
+    }
+		return ngramInfo;
+	}
+
+
+  static <TK> void clipCounts(Map<Sequence<TK>, Integer> counts, Map<Sequence<TK>, Integer> maxRefCount) {
 		for (Sequence<TK> ngram : new HashSet<Sequence<TK>>(counts.keySet())) {
 			Integer cnt = maxRefCount.get(ngram);
 			if (cnt == null) {

@@ -6,8 +6,6 @@ import java.io.*;
 import mt.base.*;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
-import mt.metrics.IncrementalEvaluationMetric;
-
 
 /**
  * 
@@ -16,62 +14,28 @@ import mt.metrics.IncrementalEvaluationMetric;
  * @param <TK>
  */
 public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
-	static public final int DEFAULT_MAX_NGRAM_ORDER = 4;
+	static public final int DEFAULT_MAX_NGRAM_ORDER = 10;
 	
 	final List<Map<Sequence<TK>, Integer>> maxReferenceCounts;
+  Map<Sequence<TK>, Double> ngramInfo;
 	final int[][] refLengths;
 	final int order;
-	final double multiplier;
-	final boolean smooth;
-	
-	/**
-	 * 
-	 * @param referencesList
-	 */
-	public NISTMetric(double multiplier, List<List<Sequence<TK>>> referencesList) {
-		this.order = DEFAULT_MAX_NGRAM_ORDER;
-		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
-		refLengths = new int[referencesList.size()][];
-		init(referencesList);	
-		this.multiplier = multiplier;
-		smooth = false;
-	}
 	
 	public NISTMetric(List<List<Sequence<TK>>> referencesList) {
 		this(referencesList, false);
 	}
 	
-	/**
-	 * 
-	 * @param referencesList
-	 */
 	public NISTMetric(List<List<Sequence<TK>>> referencesList, boolean smooth) {
 		this.order = DEFAULT_MAX_NGRAM_ORDER;
 		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
 		refLengths = new int[referencesList.size()][];
-		multiplier = 1;
-		init(referencesList);
-		this.smooth = smooth;
-	}
-	
-	/**
-	 * 
-	 * @param referencesList
-	 * @param order
-	 */
-	public NISTMetric(List<List<Sequence<TK>>> referencesList, int order) {
-		this.order = order;
-		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
-		refLengths = new int[referencesList.size()][];
-		multiplier = 1;
-		init(referencesList);
-		smooth = false;
-	}
-	
-	private void init(List<List<Sequence<TK>>> referencesList) {
+		initReferences(referencesList);
+    initNgramWeights(referencesList);
+  }
+
+  private void initReferences(List<List<Sequence<TK>>> referencesList) {
 		int listSz = referencesList.size();
-		
-		for (int listI = 0; listI < listSz; listI++) {
+    for (int listI = 0; listI < listSz; listI++) {
 			List<Sequence<TK>> references = referencesList.get(listI);
 			
 			int refsSz = references.size();
@@ -80,7 +44,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			}
 			
 			refLengths[listI] = new int[refsSz];
-			// TODO 
 			Map<Sequence<TK>, Integer> maxReferenceCount = Metrics.getMaxNGramCounts(references, order);
 			/* for (Sequence<TK> ngram :  maxReferenceCount.keySet()) {
 				System.out.printf("%s : %d\n", ngram, maxReferenceCount.get(ngram));
@@ -91,7 +54,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			for (int refI = 1; refI < refsSz; refI++) {
 				refLengths[listI][refI] = references.get(refI).size();
 				Map<Sequence<TK>,Integer> altCounts = Metrics.getNGramCounts(references.get(refI), order);
-				for (Sequence<TK> sequence : new HashSet<Sequence<TK>>(altCounts.keySet())) {
+        for (Sequence<TK> sequence : new HashSet<Sequence<TK>>(altCounts.keySet())) {
 					Integer cnt = maxReferenceCount.get(sequence);
 					Integer altCnt = altCounts.get(sequence);
 					if (cnt == null || cnt.compareTo(altCnt) < 0) {
@@ -100,9 +63,31 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				}
 			}
 		}
-	}
-	
-	@Override
+  }
+
+  private void initNgramWeights(List<List<Sequence<TK>>> referencesList) {
+    int len = 0;
+    Map<Sequence<TK>,Integer> allNgrams = new HashMap<Sequence<TK>,Integer>();
+    for (int listI = 0; listI < referencesList.size(); listI++) {
+      List<Sequence<TK>> references = referencesList.get(listI);
+      for (int refI = 0; refI < references.size(); refI++) {
+        len += references.get(refI).size();
+        Map<Sequence<TK>,Integer> altCounts = Metrics.getNGramCounts(references.get(refI), order);
+        addToCounts(allNgrams,altCounts);
+      }
+    }
+    ngramInfo = Metrics.getNGramInfo(allNgrams,len);
+  }
+
+  static private <TK> void addToCounts(Map<Sequence<TK>, Integer> counter, Map<Sequence<TK>, Integer> otherCounter) {
+    for(Sequence<TK> ngram : otherCounter.keySet()) {
+      Integer icnt = counter.get(ngram);
+      int cnt = (icnt != null) ? icnt : 0;
+      counter.put(ngram,cnt+otherCounter.get(ngram));
+    }
+  }
+
+  @Override
 	public NISTIncrementalMetric getIncrementalMetric() {
 		return new NISTIncrementalMetric();
 	}
@@ -118,19 +103,16 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	 * @param candidateLength
 	 * @return
 	 */
-	private int bestMatchLength(int index, int candidateLength) {
-		int best = refLengths[index][0];
-		for (int i = 1; i < refLengths[index].length; i++) {
-			if (Math.abs(candidateLength - best) > Math.abs(candidateLength - refLengths[index][i])) {
-				best = refLengths[index][i];
-			}
+	private double averageReferenceLength(int index, int candidateLength) {
+		double sum = 0.0;
+		for (int i = 0; i < refLengths[index].length; i++) {
+      sum += refLengths[index][i];
 		}
-		return best;
+		return sum/refLengths[index].length;
 	}
 	
 	@Override
 	public RecombinationFilter<IncrementalEvaluationMetric<TK,FV>>  getIncrementalMetricRecombinationFilter() {
-		//return new NISTIncrementalMetricRecombinationFilter<TK,FV>();
     throw new UnsupportedOperationException();
   }
 	
@@ -139,11 +121,12 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	public class NISTIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
 		private final int id = maxIncrementalId++; 
 		final List<Sequence<TK>> sequences; 
-		final int[] matchCounts = new int[order];
-		final int[] possibleMatchCounts = new int[order];
-		final int[][] futureMatchCounts;
-		final int[][] futurePossibleCounts;
-		int r, c;
+		final double[] matchCounts = new double[order];
+		final double[] possibleMatchCounts = new double[order];
+		final double[][] futureMatchCounts;
+		final double[][] futurePossibleCounts;
+		double r;
+    int c;
 		
 		public NISTIncrementalMetric clone() {
 			return new NISTIncrementalMetric(this);
@@ -172,11 +155,11 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			c = 0;
 			List<List<ScoredFeaturizedTranslation<TK,FV>>>  nbestLists = nbest.nbestLists();
 			
-			futureMatchCounts = new int[nbestLists.size()][];
-			futurePossibleCounts = new int[nbestLists.size()][];
+			futureMatchCounts = new double[nbestLists.size()][];
+			futurePossibleCounts = new double[nbestLists.size()][];
 			for (int i = 0; i < futureMatchCounts.length; i++) {
-				futureMatchCounts[i] = new int[order];
-				futurePossibleCounts[i] = new int[order];
+				futureMatchCounts[i] = new double[order];
+				futurePossibleCounts[i] = new double[order];
 				for (int j = 0; j < order; j++) {
 					futurePossibleCounts[i][j] = Integer.MAX_VALUE;
 				}
@@ -190,7 +173,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 					}
 					Map<Sequence<TK>, Integer> canidateCounts = Metrics.getNGramCounts(tran.translation, order);
 					Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(i));		
-					int[] localCounts = localMatchCounts(canidateCounts);
+					double[] localCounts = localMatchCounts(canidateCounts);
 					for (int j = 0; j < order; j++) {
 						if (futureMatchCounts[i][j] < localCounts[j]) {
 							futureMatchCounts[i][j] = localCounts[j];
@@ -212,10 +195,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			this.sequences = new ArrayList<Sequence<TK>>(maxReferenceCounts.size());
 		}
 	
-		public double getMultiplier() {
-			return multiplier;
-		}
-		
 		/**
 		 * 
 		 * @param m
@@ -235,16 +214,16 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
       throw new UnsupportedOperationException();
 		}
 
-		private int possibleMatchCounts(int order, int length) {
+		private double possibleMatchCounts(int order, int length) {
 			return length - order;
 		}
 
-		private int[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts) {
-			int[] counts = new int[order];
+		private double[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts) {
+			double[] counts = new double[order];
 			for (Map.Entry<Sequence<TK>,Integer> entry : clippedCounts.entrySet()) {
 				int len = entry.getKey().size();
 				int cnt = entry.getValue();
-				counts[len-1] += cnt;
+				counts[len-1] += cnt * ngramInfo.get(entry.getKey());
 			}
 
 			return counts;
@@ -256,7 +235,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				possibleMatchCounts[i] += mul*possibleMatchCounts(i, seqSz); 
 			}
 			
-			int[] localCounts = localMatchCounts(clippedCounts);
+			double[] localCounts = localMatchCounts(clippedCounts);
 			for (int i = 0; i < order; i++) {
 				//System.err.printf("local Counts[%d]: %d\n", i, localCounts[i]);
 				matchCounts[i] += mul*localCounts[i];
@@ -273,7 +252,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		@Override
 		public IncrementalEvaluationMetric<TK,FV> add(ScoredFeaturizedTranslation<TK,FV> tran) {
-			int pos = sequences.size();
+      int pos = sequences.size();
 			if (pos >= maxReferenceCounts.size()) {
 				throw new RuntimeException(String.format("Attempt to add more candidates, %d, than references, %d.", pos+1, maxReferenceCounts.size()));
 			}
@@ -283,17 +262,17 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				sequences.add(tran.translation);
 				incCounts(canidateCounts, tran.translation);
 				c += tran.translation.size();
-				r += bestMatchLength(pos, tran.translation.size());
+				r += averageReferenceLength(pos, tran.translation.size());
 			} else {
 				sequences.add(null);
 			}
 			return this;
-		}
+    }
 
 		@Override
 		public IncrementalEvaluationMetric<TK,FV> replace(int index,
 				ScoredFeaturizedTranslation<TK, FV> trans) {
-			if (index > sequences.size()) {
+      if (index > sequences.size()) {
 				throw new IndexOutOfBoundsException(String.format("Index: %d >= %d", index, sequences.size()));
 			}
 			Map<Sequence<TK>, Integer> canidateCounts = (trans == null ? new HashMap<Sequence<TK>,Integer> () : Metrics.getNGramCounts(trans.translation, order));
@@ -303,82 +282,25 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				Metrics.clipCounts(oldCanidateCounts, maxReferenceCounts.get(index));
 				decCounts(oldCanidateCounts, sequences.get(index));
 				c -= sequences.get(index).size();
-				r -= bestMatchLength(index, sequences.get(index).size());
+				r -= averageReferenceLength(index, sequences.get(index).size());
 			}
 			sequences.set(index, (trans == null ? null : trans.translation));
 			if (trans != null) {
 				incCounts(canidateCounts, trans.translation);
 				c += sequences.get(index).size();
-				r += bestMatchLength(index, sequences.get(index).size());
+				r += averageReferenceLength(index, sequences.get(index).size());
 			}
 		
 			return this;
 		}
 
-		@Override
 		public double score() {
-			/*double B = 0;
-			for (int i = 1; i <= 4; i++) {
-				B += Math.exp(logScore(i))/(2<<(4-i+1));
-			}
-			return multiplier*B; 
-			
-			*/
-			//return trueScore();
-			double s;
-			if (smooth) {
-				s = multiplier*Math.exp(smoothLogScore(matchCounts.length));
-			} else {
-				s = trueScore();
-			}
-			return (s != s ? 0 : s);
-		}
-		
-		public double trueScore() {
-			return multiplier*Math.exp(logScore());
-		}
-		
-		/**
-		 * 
-		 * @return
-		 */
-		public double logScore() {
-			return logScore(matchCounts.length);
-		}
-		
-		private double smoothLogScore(int max) {
 			double ngramPrecisionScore = 0;
-
-			double[] precisions = smoothNgramPrecisions();
-			double wt = 1.0/max;
-			for (int i = 0; i < max; i++) {
-				ngramPrecisionScore += wt*Math.log(precisions[i]); 
-			}
-			return logBrevityPenalty()+ngramPrecisionScore;
-		}
-		
-		private double logScore(int max) {
-			double ngramPrecisionScore = 0;
-
 			double[] precisions = ngramPrecisions();
-			double wt = 1.0/max;
-			for (int i = 0; i < max; i++) {
-				ngramPrecisionScore += wt*Math.log(precisions[i]); 
+			for (int i = 0; i < order; i++) {
+				ngramPrecisionScore += precisions[i]; 
 			}
-			return logBrevityPenalty()+ngramPrecisionScore;
-		}
-		
-		
-		/**
-		 * 
-		 * @return
-		 */
-		private int maxNonZeroPrecision() {
-			double[] precisions = ngramPrecisions();
-			for (int i = precisions.length-1; i >= 0; i--) {
-				if (precisions[i] != 0) return i;
-			}
-			return -1;
+			return brevityPenalty()*ngramPrecisionScore;
 		}
 		
 		/**
@@ -388,10 +310,10 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		public double[] ngramPrecisions() {
 			double[] p = new double[matchCounts.length];
 			for (int i = 0; i < matchCounts.length; i++) {
-				int matchCount = matchCounts[i];
-				int possibleMatchCount = possibleMatchCounts[i];
+				double matchCount = matchCounts[i];
+				double possibleMatchCount = possibleMatchCounts[i];
 				if (futureMatchCounts != null) {
-					int futureMatchCountsLength = futureMatchCounts.length;
+					double futureMatchCountsLength = futureMatchCounts.length;
 					for (int j = sequences.size(); j < futureMatchCountsLength; j++) {
 						matchCount += futureMatchCounts[j][i];
 						possibleMatchCount += futurePossibleCounts[j][i];
@@ -402,56 +324,27 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return p;
 		}
 		
-		public double[] smoothNgramPrecisions() {
-			double[] p = new double[matchCounts.length];
-			double priorEffectiveMatchCount = 1;
-			double priorEffectivePossibleMatchCount = 1;
-			for (int i = 0; i < matchCounts.length; i++) {
-				int matchCount = matchCounts[i];
-				int possibleMatchCount = possibleMatchCounts[i];
-				if (futureMatchCounts != null) {
-					int futureMatchCountsLength = futureMatchCounts.length;
-					for (int j = sequences.size(); j < futureMatchCountsLength; j++) {
-						matchCount += futureMatchCounts[j][i];
-						possibleMatchCount += futurePossibleCounts[j][i];
-					}
-				}
-				
-				double effectiveMatchCount = matchCount + 0.1*priorEffectiveMatchCount;
-				double effectivePossibleMatchCount = possibleMatchCount + 0.2*priorEffectivePossibleMatchCount;
-				p[i] = (1.0*effectiveMatchCount)/(effectivePossibleMatchCount);
-				priorEffectiveMatchCount = effectiveMatchCount;
-				priorEffectivePossibleMatchCount = effectivePossibleMatchCount;
-			}
-			return p;
-		}
 		/**
-		 * 
+		 *
 		 * @return
 		 */
-		public int[][] ngramPrecisionCounts() {
-			int[][] counts = new int[matchCounts.length][];
+		public double[][] ngramPrecisionCounts() {
+			double[][] counts = new double[matchCounts.length][];
 			for (int i = 0; i < matchCounts.length; i++) {
-				counts[i] = new int[2];
+				counts[i] = new double[2];
 				counts[i][0] = matchCounts[i];
 				counts[i][1] = possibleMatchCounts[i];
 			}
 			return counts;
 		}
 		
-		/**
-		 * 
-		 * @return
-		 */
-		public double logBrevityPenalty() {
-			if (c < r) {
-				return 1-r/(1.0*c);
-			}
-			return 0.0;
-		}
-		
 		public double brevityPenalty() {
-			return Math.exp(logBrevityPenalty());
+      double ratio = c/r;
+      if(ratio >= 1.0) return 1.0;
+      if(ratio <= 0.0) return 0.0;
+      double ratio_x = 1.5, score_x = .5;
+      double beta = -Math.log(score_x)/Math.log(ratio_x)/Math.log(ratio_x);
+      return -beta*Math.log(ratio)*Math.log(ratio);
 		}
 		
 		/**
@@ -466,22 +359,21 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		 * 
 		 * @return
 		 */
-		public int effectiveReferenceLength() {
+		public double effectiveReferenceLength() {
 			return r;
 		}
 		
-		@Override 
-		public double maxScore() {
-			return multiplier*1.0;
-		}
-
 		@Override
 		public int size() {
 			return sequences.size();
 		}
 
+    @Override
+    public double maxScore() {
+      return 1.0;
+    }
 
-		@Override
+    @Override
 		public State<IncrementalEvaluationMetric<TK, FV>> parent() {
 			throw new UnsupportedOperationException();
 		}
@@ -522,20 +414,20 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		reader.close();
 		
 		double[] ngramPrecisions = incMetric.ngramPrecisions();
-		System.out.printf("NIST = %.3f, ", 100*incMetric.score());
+		System.out.printf("NIST = %.3f, ", incMetric.score());
 		for (int i = 0; i < ngramPrecisions.length; i++) {
 			if (i != 0) {
 				System.out.print("/");
 			}
-			System.out.printf("%.3f", ngramPrecisions[i]*100);
+			System.out.printf("%.3f", ngramPrecisions[i]);
 		}
 		System.out.printf(" (BP=%.3f, ration=%.3f %d/%d)\n", incMetric.brevityPenalty(), ((1.0*incMetric.candidateLength())/incMetric.effectiveReferenceLength()),
-				 incMetric.candidateLength(), incMetric.effectiveReferenceLength());
+				 incMetric.candidateLength(), (int)incMetric.effectiveReferenceLength());
 		
 		System.out.printf("\nPrecision Details:\n");
-		int[][] precCounts = incMetric.ngramPrecisionCounts();
+		double[][] precCounts = incMetric.ngramPrecisionCounts();
 		for (int i = 0; i < ngramPrecisions.length; i++) {
-			System.out.printf("\t%d:%d/%d\n", i, precCounts[i][0], precCounts[i][1]);
+			System.out.printf("\t%d:%.3f/%d\n", i, precCounts[i][0], (int)precCounts[i][1]);
 		}
 	}
 
