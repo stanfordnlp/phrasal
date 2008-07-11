@@ -2,6 +2,11 @@ package mt.base;
 
 import java.util.*;
 
+/**
+ * 
+ * @author danielcer
+ *
+ */
 public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIndex {
 	  public static final long serialVersionUID = 127L;
 	    
