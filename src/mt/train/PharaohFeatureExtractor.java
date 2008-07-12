@@ -33,7 +33,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   public static final boolean FILL_HASH = Boolean.parseBoolean(System.getProperty(FILL_HASH_PROPERTY, "true"));
 
   double phiFilter = 0.0, lexFilter = 0.0;
-  boolean ibmLexModel = false;
+  boolean ibmLexModel = false, onlyML = false;
   int numPasses = 1; 
 
   final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
@@ -64,6 +64,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       (CombinedFeatureExtractor.IBM_LEX_MODEL_OPT,"false").equals("true");
     if(!ibmLexModel)
       alTemps.enableAlignmentCounts(true);
+    onlyML = prop.getProperty
+      (CombinedFeatureExtractor.ONLY_ML_OPT,"false").equals("true");
     // Filtering:
     phiFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
@@ -140,6 +142,9 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       return new double[] { 
         phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen,
         feCounts.get(idx), eCounts.get(idxE), fCounts.get(idxF) };
+    } else if(onlyML) {
+      // -- only two features: relative freq. in both directions:
+      return new double[] { phi_f_e, phi_e_f };
     } else {
       // -- 5 basic features functions of Moses:
       return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen };

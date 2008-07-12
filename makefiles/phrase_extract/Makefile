@@ -41,11 +41,12 @@ LTABLES= \
 
 # Main targets:
 all: train
-train: $(DEVID).flt_giga.lm.gz
+train: $(DEVID).flt_giga.lm.gz $(TESTID).flt_giga.lm.gz
 ltables: $(LTABLES)
 
 # Java configuration:
 PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE)
+PHRASAL_ARGS_BM=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM)
 
 .SECONDARY:
 
@@ -81,9 +82,6 @@ $(DEVID).%.bleu: $(DEVID).%
 #############################################
 
 # Delete unk words and use MERT final paramters:
-$(TESTID).%.phrasal.wp1best: $(DEVID).%.pmert/phrasal.w.ini $(TESTID).prep
-	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
 $(TESTID).%.phrasal.fp1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).prep
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
@@ -106,9 +104,9 @@ $(DEVID).%.phrasal.bp1best: $(DEVID).%.pmert/phrasal.best.ini $(DEVID).prep
 # Preserve unk words and use MERT final parameters:
 # (preserving unk words is preferable in system combination)
 $(TESTID).%.phrasal.1best: $(TESTID).%.phrasal.ini $(TESTID).unk
-	(java $(PHRASAL_ARGS) -DOutputMosesNBestList=true -DUniqNBest=true mt.PseudoMoses $< < $(TESTID).unk > $@) 2> logs/$@.log
+	(java $(PHRASAL_ARGS_BM) -DOutputMosesNBestList=true -DUniqNBest=true mt.PseudoMoses $< < $(TESTID).unk > $@) 2> logs/$@.log
 $(DEVID).%.phrasal.1best: $(DEVID).%.phrasal.ini $(DEVID).unk
-	(java $(PHRASAL_ARGS) -DOutputMosesNBestList=true -DUniqNBest=true mt.PseudoMoses $< < $(DEVID).unk > $@) 2> logs/$@.log
+	(java $(PHRASAL_ARGS_BM) -DOutputMosesNBestList=true -DUniqNBest=true mt.PseudoMoses $< < $(DEVID).unk > $@) 2> logs/$@.log
 
 #############################################
 # 1-best output with Moses (MBR or Viterbi):
@@ -183,6 +181,12 @@ $(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).p
 	$(PM) --working-dir=$(DEVID).$(*F).ter_pmert --java-flags="$(PHRASAL_ARGS)" \
 	$(DEVID).prep $(DEV_REF)/ref ter:$(BEAM_WIDTH):$(SHIFT_SIZE) $(DEVID).$< >& logs/$(DEVID).$(*F).ter_pmert.log
 
+# Minimize TER-BLEU:
+$(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
+	$(PM) --working-dir=$(DEVID).$(*F).bt_pmert --java-flags="$(PHRASAL_ARGS)" \
+	$(DEVID).prep $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
+
 #############################################
 # Pre- and post-processing: 
 # (remove unk words, etc.)
@@ -217,7 +221,7 @@ $(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).p
 	cat - $(*F).unk.vocab | filter_lm $(*F).init_google.lm.gz | \
 	ngram -lm - -write-lm - -order 3 | gzip) 2> $@.log > $@
 %.init_google.lm.gz: %.e.vocab %.e.aliases
-	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 300 -gt3max 10000 -lm $@) >& $@.log
+	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c/ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 300 -gt3max 10000 -lm $@) >& $@.log
 
 ### Vocab files:
 

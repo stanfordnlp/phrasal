@@ -61,6 +61,8 @@ public class UnsmoothedMERT {
 	static public final double MIN_PLATEAU_DIFF = 0.0;
 	static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 
+  static final int DEF_MERT_BEAM_WIDTH = 5; // almost as good as 20
+  static final int DEF_MERT_SHIFT_DIST = 12; // Yaser suggested 10; I set it to 2*dlimit = 12
 
   static class ObjELossDiffFunction implements DiffFunction, HasInitial {
 
@@ -2419,6 +2421,8 @@ public class UnsmoothedMERT {
 		} else if (evalMetric.endsWith("bleu")) {
 			emetric = new BLEUMetric<IString, String>(references);
     } else if (evalMetric.startsWith("bleu-ter")) {
+      TERcalc.setBeamWidth(DEF_MERT_BEAM_WIDTH);
+      TERcalc.setShiftDist(DEF_MERT_SHIFT_DIST);
       String[] fields = evalMetric.split(":");
       double terW = 1.0;
       if(fields.length > 1) {
@@ -2429,6 +2433,8 @@ public class UnsmoothedMERT {
            (new double[] {1.0, terW},
             new BLEUMetric<IString, String>(references),
             new TERMetric<IString, String>(references));
+			System.err.printf("Maximizing %s: BLEU minus TER (beamWidth=%d shiftDist=%d)\n", 
+         evalMetric, DEF_MERT_BEAM_WIDTH, DEF_MERT_SHIFT_DIST);
     } else {
 			System.err.printf("Unrecognized metric: %s\n", evalMetric);
 			System.exit(-1);

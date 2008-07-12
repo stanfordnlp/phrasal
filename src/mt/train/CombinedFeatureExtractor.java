@@ -43,6 +43,7 @@ public class CombinedFeatureExtractor {
   // phrase translation probs:
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
   static public final String IBM_LEX_MODEL_OPT = "ibmLexModel";
+  static public final String ONLY_ML_OPT = "onlyML";
   static public final String PTABLE_PHI_FILTER_OPT = "phiFilter"; // p_phi(e|f) filtering
   static public final String PTABLE_LEX_FILTER_OPT = "lexFilter"; // p_lex(e|f) filtering
 
@@ -71,7 +72,7 @@ public class CombinedFeatureExtractor {
        AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_F_OPT, 
        NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
-       EXACT_PHI_OPT, IBM_LEX_MODEL_OPT,
+       EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT,
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT
@@ -349,7 +350,7 @@ public class CombinedFeatureExtractor {
         if(scores.getClass().isArray()) { // as dense vector
           double[] scoreArray = (double[]) scores;
           for(int i=0; i<scoreArray.length; ++i) {
-            str.append(scoreArray[i]).append(" ");
+            str.append((float)scoreArray[i]).append(" ");
           }
         } else if(scores.getClass().equals(Int2IntLinkedOpenHashMap.class)) { // as sparse vector
           Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;

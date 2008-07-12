@@ -1,0 +1,323 @@
+#!/usr/bin/perl
+
+###############################################################################
+## Original script: http://www.statmt.org/wmt06/shared-task/multi-bleu.perl
+##
+## NIST tokenization, NIST brevity penalty, NIST score, lowercasing, smoothing,
+## matching against shortest/average reference length
+## (all optional) added by Michel Galley (mgalley@stanford.edu)
+###############################################################################
+
+use strict;
+use Getopt::Std;
+use POSIX;
+
+my %opt = init();
+my $ORDER = $opt{N} ? 10 : 4;
+my @REF = readReferences($ARGV[0]);
+my @HYP = readHypothesis();
+my $ngram_info = getNgramWeights();
+my @prec = getNgramPrecision();
+my $length_translation = getHypLength();
+my $length_reference = $opt{N} ? getAverageRefLength() : ($opt{S} ? getShortestRefLength() : getClosestRefLength());
+if($opt{N}) {
+	computeNIST();
+} else {
+	computeBLEU();
+}
+exit 0;
+
+############# Metrics ##############
+
+sub computeBLEU {
+	my $BP = brevityPenaltyBLEU($length_reference,$length_translation);
+	my $bleu_prec = exp((safeLog($prec[1])+safeLog($prec[2])+safeLog($prec[3])+safeLog($prec[4]) ) / 4);
+	my $bleu = $BP * $bleu_prec;
+	printf "BLEU = %.4f, Precision = %.4f, %.1f/%.1f/%.1f/%.1f (BP=%.3f, ratio=%.5g) sent=%d/%d\n",
+			100*$bleu, 100*$bleu_prec, 100*$prec[1], 100*$prec[2], 100*$prec[3], 100*$prec[4],
+			$BP, $length_translation / $length_reference, scalar @HYP, scalar @REF;
+}
+
+sub computeNIST {
+	my $BP = brevityPenaltyNIST($length_reference,$length_translation);
+	my $nist_prec = 0;
+	for(1..$ORDER) {
+		$nist_prec += $prec[$_];
+	}
+	my $nist = $BP * $nist_prec;
+	printf "NIST = %.4f, Precision = %.4f, %.3f/%.3f/%.3f/%.3f (BP=%.3f, ratio=%.5g) sent=%d/%d\n",
+			$nist, $nist_prec, $prec[1], $prec[2], $prec[3], $prec[4],
+			$BP, $length_translation / $length_reference, scalar @HYP, scalar @REF;
+}
+
+############# N-gram extraction ##############
+
+sub getNgramWeights {
+	return unless $opt{N};
+	my %ngram_info;
+	my %ngram_count;
+	my $tot_wrds = 0;
+	my $s=0;
+	foreach my $hyp (@HYP) {
+		foreach my $ref (@{$REF[$s]}) {
+			 $tot_wrds += scalar @{$ref};
+			 for(my $n=1;$n<=$ORDER;$n++) {
+					 for(my $start=0;$start<=$#${ref}-($n-1);$start++) {
+							my $ngram = $ref->[$start];
+							for(my $w=1;$w<$n;$w++) {
+									$ngram .= " ".$ref->[$start+$w];
+							}
+							$ngram_count{$ngram}++;
+					 }
+			 }
+		}
+		$s++;
+	}
+	foreach my $ngram (keys %ngram_count) {
+		my @wrds = split / /, $ngram;
+		pop @wrds, my $mgram = join " ", @wrds;
+		$ngram_info{$ngram} = - log
+				($mgram ? $ngram_count{$ngram}/$ngram_count{$mgram}
+								: $ngram_count{$ngram}/$tot_wrds) / log 2;
+	}
+	return \%ngram_info;
+}
+
+sub getNgramPrecision {
+	my (@CORRECT,@TOTAL);
+	for my $i (1..$ORDER) {
+		$CORRECT[$i] = $TOTAL[$i] = ($opt{s} && $i>1) ? 1 : 0;
+	}
+	my $s=0;
+	foreach my $hyp (@HYP) {
+			chomp;
+			my %REF_NGRAM = ();
+			foreach my $ref (@{$REF[$s]}) {
+				 for(my $n=1;$n<=$ORDER;$n++) {
+						 my %REF_NGRAM_N = ();
+						 for(my $start=0;$start<=$#${ref}-($n-1);$start++) {
+								my $ngram = "$n";
+								for(my $w=0;$w<$n;$w++) {
+										$ngram .= " ".$ref->[$start+$w];
+								}
+								$REF_NGRAM_N{$ngram}++;
+						 }
+						 foreach my $ngram (keys %REF_NGRAM_N) {
+								if (!defined($REF_NGRAM{$ngram}) || 
+										$REF_NGRAM{$ngram} < $REF_NGRAM_N{$ngram}) {
+										$REF_NGRAM{$ngram} = $REF_NGRAM_N{$ngram};
+								}
+						 }
+				 }
+			}
+			for(my $n=1;$n<=$ORDER;$n++) {
+				 my %T_NGRAM = ();
+				 for(my $start=0;$start<=$#{$hyp}-($n-1);$start++) {
+						 my $ngram = "$n";
+						 for(my $w=0;$w<$n;$w++) {
+								$ngram .= " ".$hyp->[$start+$w];
+						 }
+						 $T_NGRAM{$ngram}++;
+				 }
+				 foreach my $ngram (keys %T_NGRAM) {
+						 $ngram =~ /^(\d+) (.*)/;
+						 my ($n,$txt) = ($1,$2);
+						 my $w = $opt{N} ? $ngram_info->{$txt} : 1;
+						 $TOTAL[$n] += $T_NGRAM{$ngram};
+						 if (defined($REF_NGRAM{$ngram})) {
+								if ($REF_NGRAM{$ngram} >= $T_NGRAM{$ngram}) {
+										$CORRECT[$n] += $w * $T_NGRAM{$ngram};
+								} else {
+										$CORRECT[$n] += $w * $REF_NGRAM{$ngram};
+								}
+						 }
+				 }
+			}
+			$s++;
+	}
+	my @prec;
+	for(1..$ORDER) {
+		$prec[$_] = $CORRECT[$_]/max(1,$TOTAL[$_]);
+	}
+	return @prec;
+}
+
+############# Preprocessing ##############
+
+sub tokenize {
+    my ($norm_text) = @_;
+		$norm_text =~ tr/A-Z/a-z/ if $opt{l};
+		if($opt{n}) {
+			# language-independent part:
+			$norm_text =~ s/<skipped>//g; # strip "skipped" tags
+			$norm_text =~ s/-\n//g; # strip end-of-line hyphenation and join lines
+			$norm_text =~ s/\n/ /g; # join lines
+			$norm_text =~ s/&quot;/"/g;  # convert SGML tag for quote to "
+			$norm_text =~ s/&amp;/&/g;   # convert SGML tag for ampersand to &
+			$norm_text =~ s/&lt;/</g;    # convert SGML tag for less-than to >
+			$norm_text =~ s/&gt;/>/g;    # convert SGML tag for greater-than to <
+			# language-dependent part (assuming Western languages):
+			$norm_text = " $norm_text ";
+			$norm_text =~ s/([\{-\~\[-\` -\&\(-\+\:-\@\/])/ $1 /g;   # tokenize punctuation
+			$norm_text =~ s/([^0-9])([\.,])/$1 $2 /g; # tokenize period and comma unless preceded by a digit
+			$norm_text =~ s/([\.,])([^0-9])/ $1 $2/g; # tokenize period and comma unless followed by a digit
+			$norm_text =~ s/([0-9])(-)/$1 $2 /g; # tokenize dash when preceded by a digit
+			$norm_text =~ s/\s+/ /g; # one space only between words
+			$norm_text =~ s/^\s+//;  # no leading space
+			$norm_text =~ s/\s+$//;  # no trailing space
+		}
+		return [ split(/\s+/,$norm_text) ];
+}
+
+############# Reference and hypothesis length ##############
+
+sub getClosestRefLength {
+	my $s=0;
+	my $length_reference = 0;
+	foreach my $hyp (@HYP) {
+		my $length_translation_this_sentence = scalar(@{$hyp});
+		my ($closest_diff,$closest_length) = (9999,9999);
+		foreach my $ref (@{$REF[$s]}) {
+			my $length = scalar(@{$ref});
+			if (abs($length_translation_this_sentence-$length) < $closest_diff) {
+				$closest_diff = abs($length_translation_this_sentence-$length);
+				$closest_length = $length;
+			}
+		}
+		$length_reference += $closest_length;
+		$s++;
+	}
+	return $length_reference;
+}
+
+sub getShortestRefLength {
+	my $s=0;
+	my $length_reference = 0;
+	foreach my $hyp (@HYP) {
+		my $shortest_length = 9999;
+		foreach my $ref (@{$REF[$s]}) {
+			my $length = scalar(@{$ref});
+			if ($length < $shortest_length) {
+				$shortest_length = $length;
+			}
+		}
+		$length_reference += $shortest_length;
+		$s++;
+	}
+	return $length_reference;
+}
+
+sub getAverageRefLength {
+	my $s=0;
+	my $length_reference = 0;
+	foreach my $hyp (@HYP) {
+		foreach my $ref (@{$REF[$s]}) {
+			my $length = scalar(@{$ref});
+			$length_reference += $length;
+		}
+		$s++;
+	}
+	return $length_reference/(1+$#{$REF[0]});
+}
+
+sub getHypLength {
+	foreach my $hyp (@HYP) {
+		my $length_translation_this_sentence = scalar(@{$hyp});
+		$length_translation += $length_translation_this_sentence;
+	}
+	return ($length_translation);
+}
+
+############# Brevity penalties ##############
+
+sub brevityPenaltyBLEU {
+	my ($len_reference, $len_translation) = @_;	
+	return ($len_translation<$len_reference) ? exp(1-$length_reference/$length_translation) : 1;
+}
+
+sub brevityPenaltyNIST {
+	my ($reference_length,$translation_length) = @_;	
+	my $ratio = $translation_length/$reference_length;
+	return 1 if $ratio >= 1;
+	return 0 if $ratio <= 0;
+	my $ratio_x = 1.5;
+	my $score_x = 0.5;
+	my $beta = -log($score_x)/log($ratio_x)/log($ratio_x);
+	return exp (-$beta*log($ratio)*log($ratio));
+}
+
+############# Other ##############
+
+sub readHypothesis {
+  my @hyp;
+  while(<STDIN>) {  
+    chomp;
+    push @hyp, tokenize($_);
+  }
+  return @hyp;
+}
+
+sub readReferences {
+	my $stem = shift;
+	my @ref;
+	my $ref=0;
+	while(-f "$stem$ref") {
+			addToRef("$stem$ref",\@ref);
+			$ref++;
+	}
+	addToRef($stem,\@ref) if -f $stem;
+	die("did not find any reference translations at $stem") unless scalar @ref;
+	return @ref;
+}
+
+sub addToRef {
+    my ($file,$REF) = @_;
+    my $s=0;
+    open(REF,$file);
+    while(<REF>) {
+       chomp;
+       push @{$$REF[$s++]}, tokenize($_);
+    }
+    close(REF);
+}
+
+sub safeLog {
+  return -9999999999 unless $_[0];
+  return log($_[0]);
+}
+
+sub max {
+    my ($max, $next);
+    return unless defined ($max=pop);
+    while (defined ($next=pop)) {
+        $max = $next if $next > $max;
+    }
+    return $max;
+}
+
+sub init {
+	my %opt;
+	getopts( 'hnlsSN', \%opt ) or usage();
+	usage() if $opt{h};
+	return %opt;
+}
+
+sub usage {
+	print STDERR <<HELP;
+Usage: $0 [options] [ref-stem] < [hypothesis]
+If one reference translation: ref-stem is filename
+If multiple reference translations: ref-stem[0,1,2,...] is filename
+Options:
+-l        : lowercase both reference and hypothesis
+-n        : NIST tokenization
+-N        : NIST score (brevity penalty computed with average reference length)
+-s        : smoothing (for BLEU)
+-S        : brevity penalty computed against the shortest reference
+-h        : help
+Default: cased BLEU score, no tokenization, no smoothing, brevity penalty computed against
+the clostest reference.
+HELP
+	exit(1);
+}
+
+

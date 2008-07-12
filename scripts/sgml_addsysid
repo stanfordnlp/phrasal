@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+while(<STDIN>) {
+	s/^(<DOC docid="\S+")\s*>/$1 sysid="default">/g;
+	s/^(<DOC docid="\S+") sysid="\S+"\s*>/$1 sysid="default">/g;
+	print;
+}
