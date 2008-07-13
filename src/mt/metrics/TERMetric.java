@@ -25,7 +25,8 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
   @Override
-  public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
+  //public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
+  public TERIncrementalMetric getIncrementalMetric() {
     return new TERIncrementalMetric();
   }
 
@@ -56,7 +57,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     return best;
   }
 
-  class TERIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
+  public class TERIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
     double[] scores = new double[referencesList.size()];
     boolean[] nulls = new boolean[referencesList.size()];
     double scoreTotal = 0;

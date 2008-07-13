@@ -298,7 +298,8 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			double ngramPrecisionScore = 0;
 			double[] precisions = ngramPrecisions();
 			for (int i = 0; i < order; i++) {
-				ngramPrecisionScore += precisions[i]; 
+        double p = precisions[i];
+        ngramPrecisionScore += (p==p) ? p : 0;
 			}
 			return brevityPenalty()*ngramPrecisionScore;
 		}
@@ -344,10 +345,29 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
       if(ratio <= 0.0) return 0.0;
       double ratio_x = 1.5, score_x = .5;
       double beta = -Math.log(score_x)/Math.log(ratio_x)/Math.log(ratio_x);
-      return -beta*Math.log(ratio)*Math.log(ratio);
+      return Math.exp(-beta*Math.log(ratio)*Math.log(ratio));
 		}
-		
-		/**
+
+    public void printScores() {
+      double[] ngramPrecisions = ngramPrecisions();
+      System.out.printf("NIST = %.3f, ", score());
+      for (int i = 0; i < ngramPrecisions.length; i++) {
+        if (i != 0) {
+          System.out.print("/");
+        }
+        System.out.printf("%.3f", ngramPrecisions[i]);
+      }
+      System.out.printf(" (BP=%.3f, ration=%.3f %d/%d)\n", brevityPenalty(), ((1.0*candidateLength())/effectiveReferenceLength()),
+           candidateLength(), (int)effectiveReferenceLength());
+
+      System.out.printf("\nPrecision Details:\n");
+      double[][] precCounts = ngramPrecisionCounts();
+      for (int i = 0; i < ngramPrecisions.length; i++) {
+        System.out.printf("\t%d:%.3f/%d\n", i, precCounts[i][0], (int)precCounts[i][1]);
+      }
+    }
+
+    /**
 		 * 
 		 * @return
 		 */
@@ -412,24 +432,8 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		}
 		
 		reader.close();
-		
-		double[] ngramPrecisions = incMetric.ngramPrecisions();
-		System.out.printf("NIST = %.3f, ", incMetric.score());
-		for (int i = 0; i < ngramPrecisions.length; i++) {
-			if (i != 0) {
-				System.out.print("/");
-			}
-			System.out.printf("%.3f", ngramPrecisions[i]);
-		}
-		System.out.printf(" (BP=%.3f, ration=%.3f %d/%d)\n", incMetric.brevityPenalty(), ((1.0*incMetric.candidateLength())/incMetric.effectiveReferenceLength()),
-				 incMetric.candidateLength(), (int)incMetric.effectiveReferenceLength());
-		
-		System.out.printf("\nPrecision Details:\n");
-		double[][] precCounts = incMetric.ngramPrecisionCounts();
-		for (int i = 0; i < ngramPrecisions.length; i++) {
-			System.out.printf("\t%d:%.3f/%d\n", i, precCounts[i][0], (int)precCounts[i][1]);
-		}
-	}
+    incMetric.printScores();
+  }
 
 	@Override
 	public double maxScore() {

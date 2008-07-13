@@ -22,6 +22,7 @@ import java.io.*;
 
 public class TextCat {
 
+	@SuppressWarnings("unchecked") 
   public static void main(String[] args) throws Exception {
     Properties prop = StringUtils.argsToProperties(args);
 
@@ -141,6 +142,7 @@ public class TextCat {
     return ob;
   }
 
+  @SuppressWarnings("unchecked")
   private static Pair<GeneralDataset,float[]> getDataset(Map<String,ObjectBank<List<String>>> data) {
 
     List<Float> dataWeights = new ArrayList<Float>();

@@ -63,6 +63,13 @@ those functions.
 
 @SuppressWarnings( {"unchecked", "unused"} )
 public class TERcost {
+
+	public static double default_shift_cost = 1.0;
+	public static double default_insert_cost = 1.0;
+	public static double default_delete_cost = 1.0;
+	public static double default_substitute_cost = 1.0;
+	public static double default_match_cost = 0.0;
+
   /* For all of these functions, the score should be between 0 and 1
    * (inclusive).  If it isn't, then it will break TERcalc! */
 
@@ -91,10 +98,34 @@ public class TERcost {
       return _shift_cost;
   }
 
-    public double _shift_cost = 1.0;
-    public double _insert_cost = 1.0;
-    public double _delete_cost = 1.0;
-    public double _substitute_cost = 1.0;
-    public double _match_cost = 0.0;
+	public static void set_default_insert_cost(double c) {
+		if(0 > c || c > 1)
+      throw new RuntimeException("Cost must be between 0 and 1.");
+    default_insert_cost = c;
+	}
+
+  public static void set_default_delete_cost(double c) {
+		if(0 > c || c > 1)
+      throw new RuntimeException("Cost must be between 0 and 1.");
+    default_delete_cost = c;
+	}
+
+  public static void set_default_substitute_cost(double c) {
+		if(0 > c || c > 1)
+      throw new RuntimeException("Cost must be between 0 and 1.");
+    default_substitute_cost = c;
+	}
+
+  public static void set_default_shift_cost(double c) {
+		if(0 > c || c > 1)
+      throw new RuntimeException("Cost must be between 0 and 1.");
+    default_shift_cost = c;
+	}
+
+  public double _shift_cost = default_shift_cost;
+	public double _insert_cost = default_insert_cost;
+	public double _delete_cost = default_delete_cost;
+	public double _substitute_cost = default_substitute_cost;
+	public double _match_cost = default_match_cost;
 
 }
