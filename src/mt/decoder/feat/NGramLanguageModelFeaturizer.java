@@ -78,6 +78,20 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	}
 
 	/**
+   * Constructor called by PseudoMoses when NGramLanguageModelFeaturizer appears
+   * in [additional-featurizers].
+	 */
+ public NGramLanguageModelFeaturizer(String... args) throws IOException {
+    if(args.length != 2)
+      throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
+    this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
+    featureName = args[1];
+    featureNameWithColen = featureName + ":";
+    this.ngramReweighting = false;
+    this.lmOrder = lm.order();
+  }
+
+	/**
 	 * 
 	 * 
 	 */
