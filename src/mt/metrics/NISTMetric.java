@@ -215,7 +215,8 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		}
 
 		private double possibleMatchCounts(int order, int length) {
-			return length - order;
+			int d = length - order;
+      return d >= 0 ? d : 0;
 		}
 
 		private double[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts) {
