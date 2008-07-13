@@ -25,12 +25,25 @@ import flanagan.math.MinimisationFunction;
  */
 public class HumanAssessmentCorrelationMaximizer implements Function {
 
-  final String[] metricScoresStr;
+  private static IString
+   TER = new IString("ter"), BLEU = new IString("bleu"),
+   BLEU_BP = new IString("bleu_bp"), BLEU_P = new IString("bleu_prec"),
+   NIST = new IString("nist"), NIST_BP = new IString("nist_bp"),
+   NIST_P = new IString("nist_prec"),
+   BLEU_1 = new IString("bleu_1gram"), BLEU_2 = new IString("bleu_2gram"),
+   BLEU_3 = new IString("bleu_3gram"), BLEU_4 = new IString("bleu_4gram"),
+   NIST_1 = new IString("nist_1gram"), NIST_2 = new IString("nist_2gram"),
+   NIST_3 = new IString("nist_3gram"), NIST_4 = new IString("nist_4gram");
+
+  final IString[] metricScoresStr;
   double[][] metricScores=null;
   double[] humanScores;
   double[] linearScores;
   int sz_x=-1;
-  boolean tune_ter_costs = true;
+  
+  int data_size = Integer.MAX_VALUE;
+  boolean tune_ter_costs = false;
+  double simplex_size = .2;
 
   List<Sequence<IString>> hyps;
   List<List<Sequence<IString>>> refs;
@@ -38,22 +51,43 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   static final boolean DEBUG=false;
 
   static public void main(String[] args) throws Exception {
-    HumanAssessmentCorrelationMaximizer hcm = new HumanAssessmentCorrelationMaximizer(args);
+    Properties prop = StringUtils.argsToProperties(args);
+    System.err.println("properties: "+prop.toString());
+    HumanAssessmentCorrelationMaximizer hcm = new HumanAssessmentCorrelationMaximizer(prop);
     hcm.maximize();
   }
   
-  public HumanAssessmentCorrelationMaximizer(String[] args) throws Exception {
-		if (args.length != 4) {
-			System.err.printf
-       ("Usage:\n\tjava mt.tools.HumanAssessmentCorrelationMaximizer (metric1:...:metricN) (reference.trans) (system.trans) (human.judgments)\n");
+  public HumanAssessmentCorrelationMaximizer(Properties prop) throws Exception {
+
+    String metrics = prop.getProperty("metrics");
+    String refPrefix = prop.getProperty("refs");
+		String hypFile = prop.getProperty("hyp");
+    String humanFile = prop.getProperty("human");
+
+    if(metrics == null || refPrefix == null || hypFile == null || humanFile == null) {
+			System.err.println
+       ("Usage:\n\tjava mt.tools.HumanAssessmentCorrelationMaximizer "+
+        "[OPTIONS] -metrics <metric1:...:metricN> -refs <reference_trans> -hyp <system_trans> -human <human_judgments>\n"+
+        "where OPTIONS are:\n"+
+        "-tuneCosts: whether to tune TER costs (slow, default false)\n"+
+        "-initSimplexSize <f>: size of initial simplex (relative to initial values, default: .2)\n"+
+        "-dataSize <n>: how many instances to read from files (default: maximum)\n"+
+        "-fixedCosts <sub:ins:del:shift>: TER costs (default: 1:1:1:1)\n"
+       );
 			System.exit(-1);
 		}
-    String metrics = args[0];
-    String refPrefix = args[1];
-		String hypFile = args[2];
-    String humanFile = args[3];
 
-    metricScoresStr = metrics.split(":");
+    tune_ter_costs = Boolean.parseBoolean(prop.getProperty("tuneCosts","false"));
+    String[] c = prop.getProperty("fixedCosts","1:1:1:1").split(":");
+    TERcost.set_default_substitute_cost(Double.parseDouble(c[0]));
+    TERcost.set_default_insert_cost(Double.parseDouble(c[1]));
+    TERcost.set_default_delete_cost(Double.parseDouble(c[2]));
+    TERcost.set_default_shift_cost(Double.parseDouble(c[3]));
+    simplex_size = Double.parseDouble(prop.getProperty("initSimplexSize",".2"));
+    if(prop.getProperty("dataSize") != null)
+      data_size = Integer.parseInt(prop.getProperty("dataSize"));
+
+    metricScoresStr = IStrings.toIStringArray(metrics.split(":"));
 
     hyps = IOTools.slurpIStringSequences(hypFile);
     refs = new ArrayList<List<Sequence<IString>>>();
@@ -88,14 +122,14 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   }
 
   public void maximize() {
-    DownhillSimplexMinimizer m = new DownhillSimplexMinimizer();
+    DownhillSimplexMinimizer m = new DownhillSimplexMinimizer(simplex_size);
     double[] init_x = new double[sz_x];
     // Correlation along each axis:
-    for(int i=0; i<init_x.length; ++i){
+    /* for(int i=0; i<init_x.length; ++i){
       if(i>0) init_x[i-1] = 0;
       init_x[i] = 1;
       valueAt(init_x);
-    }
+    } */
     // Set initial conditions:
     Arrays.fill(init_x,1.0);
     System.err.print("Optimizing...\n");
@@ -146,7 +180,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     assert(human.size() == refs.size());
     humanScores = new double[refs.size()/sz];
     int i=0, ii=0;
-    while(i+sz<=refs.size()) {
+    while(i+sz<=refs.size() && i+sz<=data_size) {
       // Merge human machineScores:
       double hs = 0.0;
       double totAvgLen = 0.0;
@@ -173,7 +207,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     metricScores = new double[refs.size()/sz][];
     linearScores = new double[metricScores.length];
     int i=0, ii=0;
-    while(i+sz<=refs.size()) {
+    while(i+sz<=refs.size() && i+sz<=data_size) {
       List<List<Sequence<IString>>> refs1 = new ArrayList<List<Sequence<IString>>>();
       // Create references:
       for(int j=0; j<sz; ++j)
@@ -206,31 +240,37 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
                                   TERMetric.TERIncrementalMetric ter) {
     double[] scores = new double[metricScoresStr.length];
     for(int i=0; i<metricScoresStr.length; ++i) {
-      String s = metricScoresStr[i];
-      if(s.equals("nist")) {
+      IString s = metricScoresStr[i];
+      if(s.equals(NIST)) {
         scores[i] = -nist.score();
-      } else if(s.equals("nist_bp")) {
+      } else if(s.equals(NIST_BP)) {
         scores[i] = -nist.brevityPenalty();
-      } else if(s.equals("nist_prec")) {
+      } else if(s.equals(NIST_P)) {
         scores[i] = -nist.score()/bleu.brevityPenalty();
-      } else if(s.equals("bleu")) {
+      } else if(s.equals(BLEU)) {
         scores[i] = -bleu.score();
-      } else if(s.equals("bleu_bp")) {
+      } else if(s.equals(BLEU_BP)) {
         scores[i] = -bleu.brevityPenalty();
-      } else if(s.equals("bleu_prec")) {
+      } else if(s.equals(BLEU_P)) {
         scores[i] = -bleu.score()/bleu.brevityPenalty();
-      } else if(s.equals("ter")) {
+      } else if(s.equals(TER)) {
         scores[i] = -ter.score();
-      } else if(s.equals("bleu_prec")) {
-        scores[i] = -bleu.score()/bleu.brevityPenalty();
-      } else if(s.equals("bleu_1gram")) {
+      } else if(s.equals(BLEU_1)) {
         scores[i] = -bleu.ngramPrecisions()[0];
-      } else if(s.equals("bleu_2gram")) {
+      } else if(s.equals(BLEU_2)) {
         scores[i] = -bleu.ngramPrecisions()[1];
-      } else if(s.equals("bleu_3gram")) {
+      } else if(s.equals(BLEU_3)) {
         scores[i] = -bleu.ngramPrecisions()[2];
-      } else if(s.equals("bleu_4gram")) {
+      } else if(s.equals(BLEU_4)) {
         scores[i] = -bleu.ngramPrecisions()[3];
+      } else if(s.equals(NIST_1)) {
+        scores[i] = -nist.ngramPrecisions()[0];
+      } else if(s.equals(NIST_2)) {
+        scores[i] = -nist.ngramPrecisions()[1];
+      } else if(s.equals(NIST_3)) {
+        scores[i] = -nist.ngramPrecisions()[2];
+      } else if(s.equals(NIST_4)) {
+        scores[i] = -nist.ngramPrecisions()[3];
       } else {
         throw new UnsupportedOperationException();
       }
@@ -284,10 +324,14 @@ class DownhillSimplexMinimizer implements Minimizer<Function> {
 	// would require an extra jar file.
 
   double[] step;
-  static final double stepRatio = 5.0;
+  double simplexRelativeSize = .2;
 
   public DownhillSimplexMinimizer(double[] step) {
     this.step = step;
+  }
+
+  public DownhillSimplexMinimizer(double s) {
+    simplexRelativeSize = s;
   }
 
   public DownhillSimplexMinimizer() {}
@@ -297,7 +341,7 @@ class DownhillSimplexMinimizer implements Minimizer<Function> {
     if(step == null) {
       step = initial.clone();
       for(int i=0; i<step.length; ++i)
-        step[i] /= stepRatio;    
+        step[i] *= simplexRelativeSize;
     }
     Minimisation min = new Minimisation();
     min.nelderMead(new WrapperFunction(function), initial, step, ftol);

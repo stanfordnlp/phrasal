@@ -27,7 +27,10 @@ public class BshInterpreter extends bsh.Interpreter
         "import mt.base.*;"+
         "import mt.train.*;"+
         "import mt.tools.*;"+
-        "import mt.ExperimentalFeaturizers.*;");
+        "import mt.decoder.*;"+
+        "import mt.decoder.feat.*;"+
+        "import mt.decoder.efeat.*;"
+      );
     } catch (bsh.EvalError e) {
       throw new IllegalArgumentException ("bsh Interpreter error: "+e);
     }
