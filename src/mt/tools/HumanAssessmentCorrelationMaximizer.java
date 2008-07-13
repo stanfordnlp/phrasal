@@ -223,6 +223,14 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         scores[i] = -ter.score();
       } else if(s.equals("bleu_prec")) {
         scores[i] = -bleu.score()/bleu.brevityPenalty();
+      } else if(s.equals("bleu_1gram")) {
+        scores[i] = -bleu.ngramPrecisions()[0];
+      } else if(s.equals("bleu_2gram")) {
+        scores[i] = -bleu.ngramPrecisions()[1];
+      } else if(s.equals("bleu_3gram")) {
+        scores[i] = -bleu.ngramPrecisions()[2];
+      } else if(s.equals("bleu_4gram")) {
+        scores[i] = -bleu.ngramPrecisions()[3];
       } else {
         throw new UnsupportedOperationException();
       }
