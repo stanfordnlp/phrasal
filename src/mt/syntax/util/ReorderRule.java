@@ -1,4 +1,4 @@
-package mt.syntax.decoder.lzfUtility;
+package mt.syntax.util;
 
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -9,6 +9,7 @@ import java.util.Set;
 * Johns Hopkins University
 */
 
+@SuppressWarnings("unchecked")
 public class ReorderRule{
 	public Tree tree = null;//the tree fragment
 	public String name ="";//the lhs
@@ -16,6 +17,7 @@ public class ReorderRule{
 	public int count_applied=0;
 	
 	public ReorderRule(String rule_str){
+		//VP ||| (x0:PP x1:VP) ||| x1 x0 ||| 0 0 0 0 0	
 		String[] fds = rule_str.split("\\s+\\|{3}\\s+");
 		name=fds[0];
 		tree=new Tree(fds[1]);
@@ -32,9 +34,8 @@ public class ReorderRule{
 		for(int i=0; i < tgt_order.length; i++)
 		System.out.print( tgt_order[i] +" ");		
 	}
-
-  @SuppressWarnings("unchecked")
-  public boolean reorder(Tree.Node tree_node){//tree_node: the node of the parsing tree of the source sentence
+	
+	public boolean reorder(Tree.Node tree_node){//tree_node: the node of the parsing tree of the source sentence
 		Hashtable reorder_tbl=new Hashtable();
 		if(tree_node.is_subsume(tree.root,reorder_tbl)==false){						
 			return false;

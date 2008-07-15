@@ -1,4 +1,4 @@
-package mt.syntax.decoder.lzfUtility;
+package mt.syntax.util;
 
 
 /*Zhifei Li, <zhifei.work@gmail.com>
@@ -12,10 +12,10 @@ import java.util.Hashtable;
 import java.util.Stack;
 import java.util.Vector;
 
+@SuppressWarnings("unchecked")
 public class Tree {
 	public Node root =null;
 	
-	@SuppressWarnings("unchecked") 
 	public Tree(String tree_str){
 		Stack t_stack = new Stack();
 		root = new Node("fake_root");
@@ -127,7 +127,6 @@ public class Tree {
 
 	//each span is a vector with size 2: start pos and end pos
 	//return a vector of vector (each of which is a span)
-	@SuppressWarnings("unchecked") 
 	private Vector union_of_spans(Vector v_of_spans, int total_len){
 		if(v_of_spans==null || v_of_spans.size()<=0)
 			return null;
@@ -162,8 +161,7 @@ public class Tree {
 	public void derive_complement_spans(int total_len){		
 		derive_complement_spans(root, total_len);
 	}
-
-	@SuppressWarnings("unchecked") 
+	
 	private void derive_complement_spans(Node root, int total_len){//total_len: len of target string
 		//idea: my complement span is the union of: my parent's complement span + my siblings's span
 		
@@ -212,7 +210,6 @@ public class Tree {
 		derive_span(root, align_tbl,terminal_pos);
 	}
 	
-	@SuppressWarnings("unchecked") 
 	private void derive_span(Node root, Hashtable align_tbl, int[] terminal_pos){
 		//idea: my span is the union of my chilren's spans
 		
@@ -344,7 +341,6 @@ public class Tree {
 			return 0;
 		}
 				
-		@SuppressWarnings("unchecked") 
 		public boolean is_subsume(Node from, Hashtable tag_tbl){//check whether the "from" is subsumed by myself, from may be taged by X
 			//tag_tbl will remember how the node is taged according rule in "from"
 			boolean res=true;			
