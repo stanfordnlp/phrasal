@@ -2,6 +2,7 @@ package mt.tools;
 
 import java.util.*;
 import java.io.File;
+import java.io.IOException;
 
 import mt.base.*;
 import mt.metrics.*;
@@ -10,6 +11,7 @@ import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.math.SloppyMath;
+import edu.stanford.nlp.optimization.*;
 
 import flanagan.math.Minimisation;
 import flanagan.math.MinimisationFunction;
@@ -25,11 +27,20 @@ import flanagan.math.MinimisationFunction;
  */
 public class HumanAssessmentCorrelationMaximizer implements Function {
 
+  public static final String LEARN_RATE_PROPERTY = "LearnRate";
+  public static final double LEARN_RATE = Double.parseDouble(System.getProperty(LEARN_RATE_PROPERTY, "0.3"));
+
+  public static final String PERSEVERENCE_PROPERTY = "Perseverence";
+  public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "10"));
+
+  public static final String UPDATE_SPEED_PROPERTY = "UpdateSpeed";
+  public static final double UPDATE_SPEED = Double.parseDouble(System.getProperty(UPDATE_SPEED_PROPERTY, "1"));
+
   private static IString
    TER = new IString("ter"), BLEU = new IString("bleu"),
    BLEU_BP = new IString("bleu_bp"), BLEU_P = new IString("bleu_prec"),
    NIST = new IString("nist"), NIST_BP = new IString("nist_bp"),
-   NIST_P = new IString("nist_prec"),
+   EXTERNAL = new IString("external"), NIST_P = new IString("nist_prec"),
    BLEU_1 = new IString("bleu_1gram"), BLEU_2 = new IString("bleu_2gram"),
    BLEU_3 = new IString("bleu_3gram"), BLEU_4 = new IString("bleu_4gram"),
    NIST_1 = new IString("nist_1gram"), NIST_2 = new IString("nist_2gram"),
@@ -37,18 +48,21 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
 
   final IString[] metricScoresStr;
   double[][] metricScores=null;
+  double[] combinedScores;
   double[] humanScores;
-  double[] linearScores;
-  int sz_x=-1;
+  double[] externalScores;
+  double[] w;
+  double simplexSize = 0;
+  int numInstances = Integer.MAX_VALUE;
+  int numDimensions=-1;
+  double time; 
+  int windowSize;
+  boolean tuneCosts;
+  boolean tuneMetrics;
+  boolean verbose;
   
-  int data_size = Integer.MAX_VALUE;
-  boolean tune_ter_costs = false;
-  double simplex_size = .2;
-
   List<Sequence<IString>> hyps;
   List<List<Sequence<IString>>> refs;
-
-  static final boolean DEBUG=false;
 
   static public void main(String[] args) throws Exception {
     Properties prop = StringUtils.argsToProperties(args);
@@ -62,34 +76,56 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     String metrics = prop.getProperty("metrics");
     String refPrefix = prop.getProperty("refs");
 		String hypFile = prop.getProperty("hyp");
-    String humanFile = prop.getProperty("human");
+    String humanScoreFile = prop.getProperty("human");
+    String externalScoreFile = prop.getProperty("external");
 
-    if(metrics == null || refPrefix == null || hypFile == null || humanFile == null) {
+    if(metrics == null || refPrefix == null || hypFile == null || humanScoreFile == null) {
 			System.err.println
        ("Usage:\n\tjava mt.tools.HumanAssessmentCorrelationMaximizer "+
         "[OPTIONS] -metrics <metric1:...:metricN> -refs <reference_trans> -hyp <system_trans> -human <human_judgments>\n"+
         "where OPTIONS are:\n"+
         "-tuneCosts: whether to tune TER costs (slow, default false)\n"+
+        "-initCosts <sub:ins:del:shift>: initial TER costs (default: 1:1:1:1)\n"+
         "-initSimplexSize <f>: size of initial simplex (relative to initial values, default: .2)\n"+
         "-dataSize <n>: how many instances to read from files (default: maximum)\n"+
-        "-fixedCosts <sub:ins:del:shift>: TER costs (default: 1:1:1:1)\n"
+        "-initWeights <x1:...:xn>: initial metric weights (default: 1:...:1)\n"
        );
 			System.exit(-1);
 		}
 
-    tune_ter_costs = Boolean.parseBoolean(prop.getProperty("tuneCosts","false"));
-    String[] c = prop.getProperty("fixedCosts","1:1:1:1").split(":");
+    windowSize = Integer.parseInt(prop.getProperty("windowSize","10"));
+    tuneCosts = Boolean.parseBoolean(prop.getProperty("tuneCosts","false"));
+    tuneMetrics = Boolean.parseBoolean(prop.getProperty("tuneCosts","true"));
+    verbose = Boolean.parseBoolean(prop.getProperty("verbose","false"));
+    String[] c = prop.getProperty("initCosts","1:1:1:1").split(":");
+    String init_w = prop.getProperty("initWeights");
     TERcost.set_default_substitute_cost(Double.parseDouble(c[0]));
     TERcost.set_default_insert_cost(Double.parseDouble(c[1]));
     TERcost.set_default_delete_cost(Double.parseDouble(c[2]));
     TERcost.set_default_shift_cost(Double.parseDouble(c[3]));
-    simplex_size = Double.parseDouble(prop.getProperty("initSimplexSize",".2"));
+    if(prop.getProperty("initSimplexSize") != null)
+      simplexSize = Double.parseDouble(prop.getProperty("initSimplexSize"));
     if(prop.getProperty("dataSize") != null)
-      data_size = Integer.parseInt(prop.getProperty("dataSize"));
+      numInstances = Integer.parseInt(prop.getProperty("dataSize"));
 
+    // Metric identifiers:
+    if(externalScoreFile != null && !metrics.contains("external"))
+      metrics += ":external";
     metricScoresStr = IStrings.toIStringArray(metrics.split(":"));
 
+    // Initial metric weights:
+    if(init_w != null) {
+      String[] ws = init_w.split(":");
+      w = new double[ws.length];
+      for(int i=0; i<ws.length; ++i)
+        w[i] = Double.parseDouble(ws[i]);
+    }
+
+    // Load hypothesis translations:
     hyps = IOTools.slurpIStringSequences(hypFile);
+    System.err.printf("Read %d hypotheses from %s\n",hyps.size(),hypFile);
+
+    // Load references:
     refs = new ArrayList<List<Sequence<IString>>>();
     File f = new File(refPrefix);
 		if (f.exists()) {
@@ -114,74 +150,89 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         }
       }
     }
-    List<Double> humanScoreList = new ArrayList<Double>();
-    String[] lines = StringUtils.slurpFile(humanFile).split("[\r\n]+");
-    for (String line : lines) humanScoreList.add(Double.parseDouble(line));
-    humanScores(refs,humanScoreList,5);
-    metricScores(refs,hyps,5);
+    System.err.printf("Read %d references from %s\n",refs.size(),refPrefix);
+
+    // Create scores:
+    assert(refs.size() == hyps.size());
+    if(numInstances > refs.size())
+      numInstances = refs.size();
+    if(externalScoreFile != null)
+      externalScores = getExternalScores(externalScoreFile);
+    humanScores = getExternalScores(humanScoreFile);
+    createMetricScores();
   }
 
+  @SuppressWarnings("unchecked")
   public void maximize() {
-    DownhillSimplexMinimizer m = new DownhillSimplexMinimizer(simplex_size);
-    double[] init_x = new double[sz_x];
-    // Correlation along each axis:
-    /* for(int i=0; i<init_x.length; ++i){
-      if(i>0) init_x[i-1] = 0;
-      init_x[i] = 1;
-      valueAt(init_x);
-    } */
-    // Set initial conditions:
-    Arrays.fill(init_x,1.0);
-    System.err.print("Optimizing...\n");
-    double[] tx = m.minimize(this, 1e-5, init_x);
-    System.out.print("optimal metric: ");
-    for(int i=0; i<metricScoresStr.length; ++i) {
-      if(i>0)
-        System.out.print(" + ");
-      System.out.printf("%.3f*%s",tx[i],metricScoresStr[i]);
+    Minimizer m = (simplexSize > 0.0) ? 
+    new DownhillSimplexMinimizer(simplexSize) :
+    new RandomGreedyLocalSearch(LEARN_RATE,PERSEVERENCE);
+    System.err.println("minimizer: "+m.toString());
+    // Set initial weights:
+    if(w == null) {
+      w = new double[numDimensions];
+      Arrays.fill(w,1.0);
     }
-    System.out.println();
-    if(tune_ter_costs) {
-      int i=tx.length-1;
-      System.out.printf
-        ("cost(sub)=%.3f cost(ins)=%.3f cost(del)=%.3f cost(shift)=%.3f\n",
-        pSigmoid(tx[i-3]),pSigmoid(tx[i-2]),pSigmoid(tx[i-1]),pSigmoid(tx[i]));
+    double[] tx = new double[0];
+    if(w.length > 0 && tuneMetrics) {
+      System.err.print("Optimizing...\n");
+      tx = m.minimize(this, 1e-5, w);
+      System.out.print("optimal metric: "+metricScoresStr[0]);
+      for(int i=0; i<tx.length; ++i) {
+          System.out.print(" + ");
+        System.out.printf("%.3f*%s",tx[i],metricScoresStr[i+1]);
+      }
+      System.out.println();
+      if(tuneCosts) {
+        int i=tx.length-1;
+        System.out.printf
+          ("TER costs: sub=%.3f ins=%.3f del=%.3f shift=%.3f\n",
+          tcost(tx[i-3]),tcost(tx[i-2]),tcost(tx[i-1]),tcost(tx[i]));
+      }
     }
+    time = 0;
+    valueAt(tx);
   }
 
   public int domainDimension() {
-    return metricScores[0].length + (tune_ter_costs?4:0);
+    return numDimensions;
   }
 
   public double valueAt(double[] x) {
-    if(tune_ter_costs) {
+    if(tuneCosts) {
       int i=x.length-1;
-      TERcost.set_default_substitute_cost(pSigmoid(x[i-3]));
-      TERcost.set_default_insert_cost(pSigmoid(x[i-2]));
-      TERcost.set_default_delete_cost(pSigmoid(x[i-1]));
-      TERcost.set_default_shift_cost(pSigmoid(x[i]));
-      metricScores(refs,hyps,5);
+      TERcost.set_default_substitute_cost(tcost(x[i-3]));
+      TERcost.set_default_insert_cost(tcost(x[i-2]));
+      TERcost.set_default_delete_cost(tcost(x[i-1]));
+      TERcost.set_default_shift_cost(tcost(x[i]));
+      createMetricScores();
     }
     for(int i=0; i<metricScores.length; ++i)
         for(int j=0; j<metricScores[0].length; ++j)
-          linearScores[i] += x[j]*metricScores[i][j];
-    double pearson = getPearsonCorrelation(humanScores,linearScores);
-    System.err.printf("pearson=%.3f at [",pearson);
-    for(int i=0; i<x.length; ++i) {
-      if(i>0)
-        System.err.print(",");
-      System.err.print((float)x[i]);
+          combinedScores[i] += (j>0 ? x[j-1] : 1.0)*metricScores[i][j];
+    double pearson = getPearsonCorrelation(humanScores,combinedScores);
+    if((System.currentTimeMillis() - time)/1000.0 > UPDATE_SPEED) {
+      time = System.currentTimeMillis();
+      System.err.printf("pearson=%.3f at [",pearson);
+      for(int i=0; i<x.length; ++i) {
+        if(i>0)
+          System.err.print(",");
+        System.err.print((float)x[i]);
+      }
+      System.err.printf("]\n");
     }
-    System.err.printf("]\n");
     return -pearson;
   }
 
-  public void humanScores(List<List<Sequence<IString>>> refs, List<Double> human, int sz) {
-    assert(human.size() == refs.size());
-    humanScores = new double[refs.size()/sz];
+  public double[] getExternalScores(String filename) throws IOException {
+    int sz = windowSize;
+    List<Double> l = new ArrayList<Double>();
+    String[] lines = StringUtils.slurpFile(filename).split("[\r\n]+");
+    for (String line : lines) 
+      l.add(Double.parseDouble(line));
+    double[] externalScores = new double[numInstances/sz];
     int i=0, ii=0;
-    while(i+sz<=refs.size() && i+sz<=data_size) {
-      // Merge human machineScores:
+    while(i+sz<=numInstances) {
       double hs = 0.0;
       double totAvgLen = 0.0;
       for(int j=0; j<sz; ++j) {
@@ -191,23 +242,23 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         }
         avgLen /= refs.get(i+j).size();
         totAvgLen += avgLen;
-        hs += human.get(i+j)*avgLen;
+        hs += l.get(i+j)*avgLen;
       }
-      humanScores[ii] = hs/totAvgLen;
-      if(DEBUG)
-        System.err.printf("line %d human=%.3f\n",i,humanScores[ii]);
+      externalScores[ii] = hs/totAvgLen;
       ++ii;
       i+=sz;
     }
+    System.err.printf("Read %d scores from %s\n",externalScores.length,filename);
+    return externalScores;
   }
 
   @SuppressWarnings("unchecked")
-  public void metricScores(List<List<Sequence<IString>>> refs, List<Sequence<IString>> hyps, int sz) {
-    assert(hyps.size() == refs.size());
-    metricScores = new double[refs.size()/sz][];
-    linearScores = new double[metricScores.length];
+  public void createMetricScores() {
+    int sz = windowSize;
+    metricScores = new double[numInstances/sz][];
+    combinedScores = new double[numInstances/sz];
     int i=0, ii=0;
-    while(i+sz<=refs.size() && i+sz<=data_size) {
+    while(i+sz<=numInstances) {
       List<List<Sequence<IString>>> refs1 = new ArrayList<List<Sequence<IString>>>();
       // Create references:
       for(int j=0; j<sz; ++j)
@@ -221,13 +272,15 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         nist.add(new ScoredFeaturizedTranslation<IString, String>(hyps.get(i+j), null, 0));
         ter.add(new ScoredFeaturizedTranslation<IString, String>(hyps.get(i+j), null, 0));
       }
-      metricScores[ii] = getMetricScores(bleu, nist, ter);
-      if(sz_x < 0)
-        sz_x = metricScores[0].length + (tune_ter_costs?4:0);
-      if(DEBUG) {
-        System.err.printf("line %d",i);
-        for(int k=0; k<metricScoresStr.length; ++k)
-          System.err.printf(" %s=%.3f", metricScoresStr[k], metricScores[ii][k]);
+      metricScores[ii] = getMetricScores(bleu, nist, ter, ii);
+      if(numDimensions < 0)
+        numDimensions = metricScores[0].length + (tuneCosts?4:0)-1;
+      if(verbose) {
+        System.err.printf("line %d human=%.3f",i,humanScores[ii]);
+        for(int k=0; k<metricScores[ii].length; ++k) {
+          IString n = metricScoresStr[k];
+          System.err.printf(" %s=%.3f", n, metricScores[ii][k]);
+        }
         System.err.println();
       }
       ++ii;
@@ -237,43 +290,48 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
 
   public double[] getMetricScores(BLEUMetric.BLEUIncrementalMetric bleu,
                                   NISTMetric.NISTIncrementalMetric nist,
-                                  TERMetric.TERIncrementalMetric ter) {
-    double[] scores = new double[metricScoresStr.length];
+                                  TERMetric.TERIncrementalMetric ter, int line) {
+    int sz = metricScoresStr.length;
+    double[] scores = new double[sz];
     for(int i=0; i<metricScoresStr.length; ++i) {
       IString s = metricScoresStr[i];
+      double v;
       if(s.equals(NIST)) {
-        scores[i] = -nist.score();
+        v = -nist.score();
       } else if(s.equals(NIST_BP)) {
-        scores[i] = -nist.brevityPenalty();
+        v = -nist.brevityPenalty();
       } else if(s.equals(NIST_P)) {
-        scores[i] = -nist.score()/bleu.brevityPenalty();
+        v = -nist.score()/bleu.brevityPenalty();
       } else if(s.equals(BLEU)) {
-        scores[i] = -bleu.score();
+        v = -bleu.score();
       } else if(s.equals(BLEU_BP)) {
-        scores[i] = -bleu.brevityPenalty();
+        v = -bleu.brevityPenalty();
       } else if(s.equals(BLEU_P)) {
-        scores[i] = -bleu.score()/bleu.brevityPenalty();
+        v = -bleu.score()/bleu.brevityPenalty();
       } else if(s.equals(TER)) {
-        scores[i] = -ter.score();
+        v = -ter.score();
       } else if(s.equals(BLEU_1)) {
-        scores[i] = -bleu.ngramPrecisions()[0];
+        v = -bleu.ngramPrecisions()[0];
       } else if(s.equals(BLEU_2)) {
-        scores[i] = -bleu.ngramPrecisions()[1];
+        v = -bleu.ngramPrecisions()[1];
       } else if(s.equals(BLEU_3)) {
-        scores[i] = -bleu.ngramPrecisions()[2];
+        v = -bleu.ngramPrecisions()[2];
       } else if(s.equals(BLEU_4)) {
-        scores[i] = -bleu.ngramPrecisions()[3];
+        v = -bleu.ngramPrecisions()[3];
       } else if(s.equals(NIST_1)) {
-        scores[i] = -nist.ngramPrecisions()[0];
+        v = -nist.ngramPrecisions()[0];
       } else if(s.equals(NIST_2)) {
-        scores[i] = -nist.ngramPrecisions()[1];
+        v = -nist.ngramPrecisions()[1];
       } else if(s.equals(NIST_3)) {
-        scores[i] = -nist.ngramPrecisions()[2];
+        v = -nist.ngramPrecisions()[2];
       } else if(s.equals(NIST_4)) {
-        scores[i] = -nist.ngramPrecisions()[3];
+        v = -nist.ngramPrecisions()[3];
+      } else if(s.equals(EXTERNAL)) {
+        v = externalScores[line];
       } else {
-        throw new UnsupportedOperationException();
+        throw new RuntimeException("Unknown metric: "+s.toString());
       }
+      scores[i] = (v == v) ? v : 0.0; 
     }
     return scores;
   }
@@ -303,7 +361,11 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
 		return result;
 	}
 
-  private double pSigmoid(double v) {
+  /** 
+   * Transform input cost (any real value) into value that works
+   * reasonably well with TER (between .05 and 1).
+   */
+  private double tcost(double v) {
     return (SloppyMath.sigmoid(v) * .95) + .05;
   }
 }
@@ -324,7 +386,7 @@ class DownhillSimplexMinimizer implements Minimizer<Function> {
 	// would require an extra jar file.
 
   double[] step;
-  double simplexRelativeSize = .2;
+  double simplexRelativeSize = .5;
 
   public DownhillSimplexMinimizer(double[] step) {
     this.step = step;

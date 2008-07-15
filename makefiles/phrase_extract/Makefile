@@ -29,11 +29,13 @@ SHIFT_SIZE=12
 include Makefile.local
 include Makefile.extra
 
-LTABLES= \
+LTABLES_DEV= \
 	$(DEVID).tables/lo-word.msd-bidirectional-fe.gz \
 	$(DEVID).tables/lo-phrase.msd-bidirectional-fe.gz \
 	$(DEVID).tables/lo-hier.msd-bidirectional-fe.gz \
 	$(DEVID).tables/lo-hier.msd2-bidirectional-fe.gz \
+
+LTABLES_TEST= \
 	$(TESTID).tables/lo-word.msd-bidirectional-fe.gz \
 	$(TESTID).tables/lo-phrase.msd-bidirectional-fe.gz \
 	$(TESTID).tables/lo-hier.msd-bidirectional-fe.gz \
@@ -41,12 +43,13 @@ LTABLES= \
 
 # Main targets:
 all: train
-train: $(DEVID).flt_giga.lm.gz $(TESTID).flt_giga.lm.gz
+builddev: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz $(LTABLES_DEV)
+buildtest: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(LTABLES_TEST)
 ltables: $(LTABLES)
 
 # Java configuration:
-PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE)
-PHRASAL_ARGS_BM=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM)
+PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE) -DOutputMosesNBestList=true -DUniqNBest=true
+PHRASAL_ARGS_BM=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM) -DOutputMosesNBestList=true -DUniqNBest=true
 
 .SECONDARY:
 
@@ -81,55 +84,44 @@ $(DEVID).%.bleu: $(DEVID).%
 # 1-best output with Phrasal:
 #############################################
 
-# Delete unk words and use MERT final paramters:
-$(TESTID).%.phrasal.fp1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).prep
+# Use final MERT paramters:
+$(TESTID).%.phrasal.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
-$(DEVID).%.phrasal.fp1best: $(DEVID).%.pmert/phrasal.final.ini $(DEVID).prep
-	(java $(PHRASAL_ARGS) mt.PseudoMoses $< < $(DEVID).prep > $@) 2> logs/$@.log
+	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
+$(DEVID).%.phrasal.f1best: $(DEVID).%.pmert/phrasal.final.ini $(DEVID).$(IE)
+	$(SCRIPTS)/update_ini $(DEVID) $(DEVID) < $< > $<.$(DEVID)
+	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> logs/$@.log
 
-# Delete unk words and use MERT best paramters:
-$(TESTID).%.phrasal500.bp1best: $(DEVID).%.pmert500/phrasal.best.ini $(TESTID).prep
+# Use best MERT paramters:
+$(TESTID).%.phrasal.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
-$(TESTID).%.phrasal200.bp1best: $(DEVID).%.pmert200/phrasal.best.ini $(TESTID).prep
-	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
-$(TESTID).%.phrasal.bp1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).prep
-	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).prep > $@) 2> logs/$@.log
-$(DEVID).%.phrasal.bp1best: $(DEVID).%.pmert/phrasal.best.ini $(DEVID).prep
-	(java $(PHRASAL_ARGS) mt.PseudoMoses $< < $(DEVID).prep > $@) 2> logs/$@.log
-
-# Preserve unk words and use MERT final parameters:
-# (preserving unk words is preferable in system combination)
-$(TESTID).%.phrasal.1best: $(TESTID).%.phrasal.ini $(TESTID).unk
-	(java $(PHRASAL_ARGS_BM) -DOutputMosesNBestList=true -DUniqNBest=true mt.PseudoMoses $< < $(TESTID).unk > $@) 2> logs/$@.log
-$(DEVID).%.phrasal.1best: $(DEVID).%.phrasal.ini $(DEVID).unk
-	(java $(PHRASAL_ARGS_BM) -DOutputMosesNBestList=true -DUniqNBest=true mt.PseudoMoses $< < $(DEVID).unk > $@) 2> logs/$@.log
+	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
+$(DEVID).%.phrasal.b1best: $(DEVID).%.pmert/phrasal.best.ini $(DEVID).$(IE)
+	$(SCRIPTS)/update_ini $(DEVID) $(DEVID) < $< > $<.$(DEVID)
+	(java $(PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> logs/$@.log
 
 #############################################
 # 1-best output with Moses (MBR or Viterbi):
 #############################################
 
-$(TESTID).%.1best: $(TESTID).%.ini $(TESTID).prep
-	$(MOSESDEC) -config $< < $(TESTID).prep > $@ 2> $@.log
+$(TESTID).%.1best: $(TESTID).%.ini $(TESTID).$(IE)
+	$(MOSESDEC) -config $< < $(TESTID).$(IE) > $@ 2> $@.log
 
-$(TESTID).%.mbr: $(TESTID).%.ini $(TESTID).prep $(TESTID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(TESTID).prep > $@ 2> logs/$@.log
+$(TESTID).%.mbr: $(TESTID).%.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(TESTID).$(IE) > $@ 2> logs/$@.log
 
-$(DEVID).%.mbr: $(DEVID).%.ini $(DEVID).prep $(DEVID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(DEVID).prep > $@ 2> logs/$@.log
+$(DEVID).%.mbr: $(DEVID).%.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
+	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(DEVID).$(IE) > $@ 2> logs/$@.log
 
 #############################################
 # N-best output with Moses:
 #############################################
 
-$(DEVID).%.nbest: $(DEVID).%.mert/moses.ini $(DEVID).unk $(DEVID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ 500 distinct < $(DEVID).unk \
+$(DEVID).%.nbest: $(DEVID).%.mert/moses.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
+	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ 500 distinct < $(DEVID).$(IE) \
 	> $@.1best 2> logs/$@.log
-$(TESTID).%.nbest: $(TESTID).%.ini $(TESTID).unk $(TESTID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ 500 distinct < $(TESTID).unk \
+$(TESTID).%.nbest: $(TESTID).%.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ 500 distinct < $(TESTID).$(IE) \
 	> $@.1best 2> logs/$@.log
 
 #############################################
@@ -146,46 +138,46 @@ $(TESTID).%.phrasal.ini: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).flt_giga.l
 # Moses MERT:
 #############################################
 
-$(DEVID).%.mert/moses.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+$(DEVID).%.mert/moses.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE)
 	mkdir $(DEVID).$(*F).mert
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
 	/u/nlp/packages/moses-2008-05-18/trunk/scripts/training/absolutize_moses_model.pl $(DEVID).$< > $(DEVID).$<.abs
 	$(MM) --nofilter-phrase-table --rootdir=$(MOSES)/scripts --working-dir=$(DEVID).$(*F).mert/ --closest \
-	$(DEVID).prep $(DEV_REF)/ref $(MOSESDEC) $(DEVID).$<.abs > $@.log 2> $@.err
+	$(DEVID).$(IE) $(DEV_REF)/ref $(MOSESDEC) $(DEVID).$<.abs > $@.log 2> $@.err
 
 #############################################
 # Phrasal MERT:
 #############################################
 
 # Maximize BLEU (500 best):
-$(DEVID).%.pmert500/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+$(DEVID).%.500.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).pmert500 --java-flags="$(PHRASAL_ARGS)" \
-	--nbest=500 $(DEVID).prep $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).pmert500.log
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).500.pmert --java-flags="$(PHRASAL_ARGS)" \
+	--nbest=500 $(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).500.pmert.log
 
 # Maximize BLEU (200 best):
-$(DEVID).%.pmert200/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+$(DEVID).%.200.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).pmert200 --java-flags="$(PHRASAL_ARGS)" \
-	--nbest=200 $(DEVID).prep $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).pmert200.log
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).200.pmert --java-flags="$(PHRASAL_ARGS)" \
+	--nbest=200 $(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).200.pmert.log
 
 # Maximize BLEU:
-$(DEVID).%.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+$(DEVID).%.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
 	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).pmert --java-flags="$(PHRASAL_ARGS)" \
-	$(DEVID).prep $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).pmert.log
+	$(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).pmert.log
 
 # Minimize TER:
-$(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+$(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
 	$(PM) --working-dir=$(DEVID).$(*F).ter_pmert --java-flags="$(PHRASAL_ARGS)" \
-	$(DEVID).prep $(DEV_REF)/ref ter:$(BEAM_WIDTH):$(SHIFT_SIZE) $(DEVID).$< >& logs/$(DEVID).$(*F).ter_pmert.log
+	$(DEVID).$(IE) $(DEV_REF)/ref ter:$(BEAM_WIDTH):$(SHIFT_SIZE) $(DEVID).$< >& logs/$(DEVID).$(*F).ter_pmert.log
 
 # Minimize TER-BLEU:
-$(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).prep 
+$(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
 	$(PM) --working-dir=$(DEVID).$(*F).bt_pmert --java-flags="$(PHRASAL_ARGS)" \
-	$(DEVID).prep $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
+	$(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
 
 #############################################
 # Pre- and post-processing: 
