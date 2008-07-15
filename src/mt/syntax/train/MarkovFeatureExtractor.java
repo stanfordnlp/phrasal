@@ -6,7 +6,6 @@ import edu.stanford.nlp.trees.HeadFinder;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import mt.base.IString;
 import mt.base.IStrings;
-import mt.base.BackoffMLEstimator;
 
 /**
  * Tree Markovization for GHKM rules.
@@ -35,10 +34,10 @@ public class MarkovFeatureExtractor implements TreeVisitor {
      exitLeft, exitRight, other
   }
 
-  final BackoffMLEstimator
-    hM = new BackoffMLEstimator(10), // head
-    lM = new BackoffMLEstimator(10), // left modifiers
-    rM = new BackoffMLEstimator(10); // right modifiers
+  final IntArrayBackoffEstimator
+    hM = new IntArrayBackoffEstimator(10), // head
+    lM = new IntArrayBackoffEstimator(10), // left modifiers
+    rM = new IntArrayBackoffEstimator(10); // right modifiers
 
   public void visitTree(Tree t) {
     AlignmentTreeNode n = (AlignmentTreeNode) t;
@@ -61,9 +60,9 @@ public class MarkovFeatureExtractor implements TreeVisitor {
           int[] cat = new int[] {type.ordinal()};
           int[] context = getContext(l,h);
           if(doTrain) {
-            lM.addCount(cat,context,1);
+            lM.addTrainingSample(cat,context);
           } else {
-            double p = lM.getProb(cat,context);
+            double p = lM.probabilityOf(cat,context);
             String rStr = (rule != null) ? rule.toString() : "";
             System.err.printf("p=%f type=%s h=%s l=%s\trule=%s\n",
                 p,type.toString(),h.label(),l.label(),rStr);
@@ -82,9 +81,9 @@ public class MarkovFeatureExtractor implements TreeVisitor {
           int[] cat = new int[] {type.ordinal()};
           int[] context = getContext(r,h);
           if(doTrain) {
-            rM.addCount(cat,context,1);
+            rM.addTrainingSample(cat,context);
           } else {
-            double p = rM.getProb(cat,context);
+            double p = rM.probabilityOf(cat,context);
             String rStr = (rule != null) ? rule.toString() : "";
             System.err.printf("p=%f type=%s h=%s r=%s\trule=%s\n",
                 p,type.toString(),h.label(),r.label(),rStr);

@@ -11,7 +11,7 @@ import edu.stanford.nlp.util.*;
  */
 public class IString implements CharSequence, Serializable, HasIntegerIdentity {
   // TODOX make serialization clean
-  static final IndexInterface<String> index = new OAIndex<String>();
+  public static final IndexInterface<String> index = new OAIndex<String>();
 
   private final String stringRep;
   public final int id;

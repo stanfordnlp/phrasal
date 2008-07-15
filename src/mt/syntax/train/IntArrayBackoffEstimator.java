@@ -1,4 +1,4 @@
-package mt.base;
+package mt.syntax.train;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -8,6 +8,9 @@ import edu.stanford.nlp.util.FileLines;
 import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.*;
+import mt.base.DynamicIntegerArrayPrefixIndex;
+import mt.base.IString;
+import mt.base.IStrings;
 
 /**
  * Interpolated backoff ML estimation of multinomials using Witten-Bell discounting.
@@ -16,10 +19,10 @@ import edu.stanford.nlp.optimization.*;
  *
  * @author Michel Galley
  */
-public class BackoffMLEstimator {
+public class IntArrayBackoffEstimator {
 
-  public static final String DEBUG_PROPERTY = "DebugBackoffMLEstimator";
-  public static boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  static final String DEBUG_PROPERTY = "DebugBackoffMLEstimator";
+  static boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
   final static IString separator = new IString("#####");
 
@@ -45,37 +48,31 @@ public class BackoffMLEstimator {
 	// order. C is directly optimized to maxize log-likelihood of a dev set.
   double[] C;
 
-  public BackoffMLEstimator(int backoffOrder) {
+  public IntArrayBackoffEstimator(int backoffOrder) {
     this(createUniformC(backoffOrder,Cdefault));
   }
 
-  public BackoffMLEstimator(int backoffOrder, double c) {
+  public IntArrayBackoffEstimator(int backoffOrder, double c) {
     this(createUniformC(backoffOrder,c));
   }
 
-  public BackoffMLEstimator(double[] C) {
+  public IntArrayBackoffEstimator(double[] C) {
     this.C = C;
-  }
-  
-  private static double[] createUniformC(int sz, double c) {
-    double[] C = new double[sz];
-    Arrays.fill(C,c);
-    return C;
   }
 
   /**
    * Returns the interpolated (backoff) probability of idx given cIdx.
    * Note that backoff goes from right to left, i.e., 0-5, 0-4, 0-3, etc.
    */
-  public double getProb(int[] idx, int[] cIdx) {
-    return Math.exp(getLogProb(idx,cIdx));
+  public double probabilityOf(int[] idx, int[] cIdx) {
+    return Math.exp(logProbabilityOf(idx,cIdx));
   }
 
   /**
    * Returns the interpolated (backoff) log-probability of idx given cIdx.
    * Note that backoff goes from right to left, i.e., 0-5, 0-4, 0-3, etc.
    */
-  public double getLogProb(int[] idx, int[] cIdx) {
+  public double logProbabilityOf(int[] idx, int[] cIdx) {
     int[] jIdx = mergeWithSeparator(idx,cIdx);
     double logp = Math.log(1.0/IString.index.size()); // 1/|V|
     for(int i=0; i<=cIdx.length; ++i) {
@@ -98,6 +95,126 @@ public class BackoffMLEstimator {
     return logp;
   }
 
+  public double getLambda(int[] cIdx) {
+    double c = C[cIdx.length];
+    int ci = nIndex.indexOf(cIdx);
+    if(ci < 0 || ci >= cCounts.size())
+      return 0.0;
+    double nCount = cCounts.get(ci);
+    return nCount/(nCount+c);
+  }
+
+  /**
+   * Provides sample for estimating p(idx | cIdx).
+   * Increase counts of c(idx, cIdx) and c(cIdx)
+   * and all relevant backoff counts.
+   * Note that backoff goes from right to left, i.e., 0-5, 0-4, 0-3, etc.
+   * @param idx event whose probability we need to estimate.
+   * @param cIdx context
+   */
+  public void addTrainingSample(int[] idx, int[] cIdx) {
+    int[] jIdx = mergeWithSeparator(idx,cIdx);
+    for(int i=0; i<=cIdx.length; ++i) {
+      int ji = index.indexOf(jIdx,idx.length+1+i,true);
+      int ci = nIndex.indexOf(cIdx,i,true);
+      addCountToArray(counts,ji,1);
+      addCountToArray(cCounts,ci,1);
+    }
+  }
+
+  /**
+   * Provides sample for tuning backoff parameters.
+   */
+  public void addTuningSample(int[] idx, int[] cIdx) {
+    IntPair p = new IntPair(index.indexOf(idx,true),nIndex.indexOf(cIdx,true));
+    int count = (tune.containsKey(p)) ? tune.get(p) : 0;
+    tune.put(p,count+1);
+  }
+
+  /**
+   * Tune backoff parameters.
+   */
+  public void tune() {
+    TuningSetLogp p = new TuningSetLogp();
+    //Minimizer m = new RandomGreedyLocalSearch(0.5,5);
+    //Minimizer<DiffFunction> m = new QNMinimizer();
+    //Minimizer<DiffFunction> m = new CGMinimizer();
+    Minimizer<DiffFunction> m = new GDMinimizer(p);
+    //DiffFunctionTester.test(p); // derivative slightly off...
+    System.err.println("Tuning backoff interpolation coefficients:");
+    System.err.println("Initial parameters: "+Arrays.toString(C));
+    C = m.minimize(p, 1e-5, C);
+    System.err.println("Tuned parameters: "+Arrays.toString(C));
+  }
+
+  /**
+   * Simple test case: train and test 3gram LM, and optionally tune backoff coefficients
+	 * to maximize log-likelihood of a dev set.
+   */
+  public static void main(String[] args) {
+    String trainStr=null, tuneStr=null, testStr=null, cStr=null;
+    switch(args.length) {
+      case 3:
+        trainStr = args[0];
+        testStr = args[1];
+        cStr = args[2];
+        break;
+      case 4:
+        trainStr = args[0];
+        tuneStr = args[1];
+        testStr = args[2];
+        cStr = args[3];
+        break;
+      default:
+        System.err.println("Usage: BackoffProbabilityDistribution <train_corpus> [<tune_corpus>] <test_corpus> <backoff_constant>");
+        System.exit(1);
+    }
+    double cVal = Double.parseDouble(cStr);
+    IntArrayBackoffEstimator mle = new IntArrayBackoffEstimator(3,cVal);
+    // Train:
+    for(String line : new FileLines(trainStr)) {
+      int[] tokens = toReverseIntArray(line);
+      for(int i=tokens.length-3; i>=0; --i)
+        mle.addTrainingSample(
+          new int[] {tokens[i]},
+          new int[] {tokens[i+1], tokens[i+2]});
+    }
+    // Tuning:
+    if(tuneStr != null) {
+      DEBUG=false;
+      for(String line : new FileLines(tuneStr)) {
+        int[] tokens = toReverseIntArray(line);
+        for(int i=tokens.length-3; i>=0; --i)
+          mle.addTuningSample
+					(new int[] {tokens[i]},
+           new int[] {tokens[i+1], tokens[i+2]});
+      }
+      System.err.printf("Tuning with %d distinct n-grams\n",mle.tune.size());
+      mle.tune();
+    }
+    DEBUG=true;
+    // Test:
+    int s=-1;
+    for(String line : new FileLines(testStr)) {
+      double totalLogp = 0.0;
+      int[] tokens = toReverseIntArray(line);
+      for(int i=tokens.length-3; i>=0; --i) {
+        int[] context = new int[] {tokens[i+1], tokens[i+2]};
+        double logp = mle.logProbabilityOf(new int[] {tokens[i]}, context);
+        System.out.printf("p(%s | %s %s) = ",
+           IString.getString(tokens[i]),
+           IString.getString(tokens[i+2]),
+           IString.getString(tokens[i+1]));
+        System.out.print((float)Math.exp(logp));
+        System.out.println("\tconfidence in bigram prefix: "+(float)mle.getLambda(context));
+        totalLogp += logp;
+      }
+      System.err.printf("logp(sentence %d) = %.4g\n",++s,totalLogp);
+    }
+    System.err.println("index size: "+mle.index.size());
+    System.err.println("cIndex size: "+mle.nIndex.size());
+  }
+
   /**
    * Returns the partial dervatives of the interpolated (backoff) probability 
 	 * of idx given cIdx.
@@ -116,8 +233,8 @@ public class BackoffMLEstimator {
    *
    * dl_i/dC = deriv(nCount/(nCount+C)) = -nCount/(nCount+C)^2
    */
-  public double[] getDiffLogProb(int[] idx, int[] cIdx) {
-    double denom = Math.exp(getLogProb(idx,cIdx));
+  double[] getDiffLogProbabilityOf(int[] idx, int[] cIdx) {
+    double denom = Math.exp(logProbabilityOf(idx,cIdx));
     double[] dlogp = new double[C.length];
     int[] jIdx = mergeWithSeparator(idx,cIdx);
 		// check:
@@ -140,25 +257,6 @@ public class BackoffMLEstimator {
     return dlogp;
   }
 
-  public void addForCTuning(int[] idx, int[] cIdx) {
-    IntPair p = new IntPair(index.indexOf(idx,true),nIndex.indexOf(cIdx,true));
-    int count = (tune.containsKey(p)) ? tune.get(p) : 0;
-    tune.put(p,count+1);
-  }
-
-  public void tuneC() {
-    TuningSetLogp p = new TuningSetLogp();
-    //Minimizer m = new RandomGreedyLocalSearch(0.5,5);
-    //Minimizer<DiffFunction> m = new QNMinimizer();
-    //Minimizer<DiffFunction> m = new CGMinimizer();
-    Minimizer<DiffFunction> m = new GDMinimizer(p);
-    //DiffFunctionTester.test(p); // derivative slightly off...
-    System.err.println("Tuning backoff interpolation coefficients:");
-    System.err.println("Initial parameters: "+Arrays.toString(C));
-    C = m.minimize(p, 1e-5, C);
-    System.err.println("Tuned parameters: "+Arrays.toString(C));
-  }
-
   class TuningSetLogp implements DiffFunction {
     public int domainDimension() {
       return C.length;
@@ -173,7 +271,7 @@ public class BackoffMLEstimator {
         int[] idx = index.get(s);
         int[] cIdx = nIndex.get(t);
         int c = tune.get(p);
-        logp += c*getLogProb(idx,cIdx);
+        logp += c*logProbabilityOf(idx,cIdx);
         len += c;
       }
       double ppl1 = Math.exp(-logp/len);
@@ -191,7 +289,7 @@ public class BackoffMLEstimator {
         int[] idx = index.get(s);
         int[] cIdx = nIndex.get(t);
         int c = tune.get(p);
-        double[] d = getDiffLogProb(idx,cIdx);
+        double[] d = getDiffLogProbabilityOf(idx,cIdx);
         for(int i=0; i<d.length; ++i)
           dlogp[i] += c*d[i];
         len += c;
@@ -205,30 +303,10 @@ public class BackoffMLEstimator {
     }
   }
 
-  /*
-   * Increase counts of c(idx, contextIdx) and c(contextIdx)
-   * and all relevant backoff counts.
-   * Note that backoff goes from right to left, i.e., 0-5, 0-4, 0-3, etc.
-   * @param idx event whose probability we need to estimate.
-   * @param cIdx context
-   */
-  public void addCount(int[] idx, int[] cIdx, int count) {
-    int[] jIdx = mergeWithSeparator(idx,cIdx);
-    for(int i=0; i<=cIdx.length; ++i) {
-      int ji = index.indexOf(jIdx,idx.length+1+i,true);
-      int ci = nIndex.indexOf(cIdx,i,true);
-      addCountToArray(counts,ji,count);
-      addCountToArray(cCounts,ci,count);
-    }
-  }
-
-  public double getLambda(int[] cIdx) {
-    double c = C[cIdx.length];
-    int ci = nIndex.indexOf(cIdx);
-    if(ci < 0 || ci >= cCounts.size())
-      return 0.0;
-    double nCount = cCounts.get(ci);
-    return nCount/(nCount+c);
+  private static double[] createUniformC(int sz, double c) {
+    double[] C = new double[sz];
+    Arrays.fill(C,c);
+    return C;
   }
 
   private static int[] mergeWithSeparator(int[] idx, int[] cIdx) {
@@ -245,87 +323,16 @@ public class BackoffMLEstimator {
     a.set(idx,a.get(idx)+c);
   }
 
-  private static void printArray(String id, int[] a) {
-    String[] strs = IStrings.toStringArray(a);
-    System.err.printf("BackoffMLE array: %s = %s\n",id,Arrays.toString(strs));
-  }
-  
-  /**
-   * Simple test case: train and test 3gram LM, and optionally tune backoff coefficients
-	 * to maximize log-likelihood of a dev set.
-   */
-  public static void main(String[] args) {
-    String trainStr=null, tuneStr=null, testStr=null, cStr=null;
-    switch(args.length) {
-      case 3:
-        trainStr = args[0];
-        testStr = args[1];
-        cStr = args[2];
-        break;
-      case 4:
-        trainStr = args[0];
-        tuneStr = args[1];
-        testStr = args[2];
-        cStr = args[3];
-        break;
-      default:
-        System.err.println("Usage: BackoffMLEstimation <train_corpus> [<tune_corpus>] <test_corpus> <backoff_constant>");
-        System.exit(1);
-    }
-    double cVal = Double.parseDouble(cStr);
-    BackoffMLEstimator mle = new BackoffMLEstimator(3,cVal);
-    // Train:
-    for(String line : new FileLines(trainStr)) {
-      int[] tokens = toReverseIntArray(line);
-      for(int i=tokens.length-3; i>=0; --i)
-        mle.addCount(
-          new int[] {tokens[i]},
-          new int[] {tokens[i+1], tokens[i+2]},
-        1);
-    }
-    // Tuning:
-    if(tuneStr != null) {
-      DEBUG=false;
-      for(String line : new FileLines(tuneStr)) {
-        int[] tokens = toReverseIntArray(line);
-        for(int i=tokens.length-3; i>=0; --i)
-          mle.addForCTuning
-					(new int[] {tokens[i]},
-           new int[] {tokens[i+1], tokens[i+2]});
-      }
-      System.err.printf("Tuning with %d distinct n-grams\n",mle.tune.size());
-      mle.tuneC();
-    }
-    DEBUG=true;
-    // Test:
-    int s=-1;
-    for(String line : new FileLines(testStr)) {
-      double totalLogp = 0.0;
-      int[] tokens = toReverseIntArray(line);
-      for(int i=tokens.length-3; i>=0; --i) {
-        int[] context = new int[] {tokens[i+1], tokens[i+2]};
-        double logp = mle.getLogProb(new int[] {tokens[i]}, context);
-        System.out.printf("p(%s | %s %s) = ",
-           IString.getString(tokens[i]),
-           IString.getString(tokens[i+2]),
-           IString.getString(tokens[i+1]));
-        System.out.print((float)Math.exp(logp));
-        System.out.println("\tconfidence in bigram prefix: "+(float)mle.getLambda(context));
-        totalLogp += logp;
-      }
-      System.err.printf("logp(sentence %d) = %.4g\n",++s,totalLogp);
-    }
-    System.err.println("index size: "+mle.index.size());
-    System.err.println("cIndex size: "+mle.nIndex.size());
-  }
-
-  ////////////// only meant to be used by main:
-
   private static int[] toReverseIntArray(String line) {
     String l = "<s> <s> "+line+" </s>";
     List<IString> a = Arrays.asList(IStrings.toIStringArray(l.split("\\s+")));
     Collections.reverse(a);
     return IStrings.toIntArray((IString[])a.toArray());
+  }
+
+  private static void printArray(String id, int[] a) {
+    String[] strs = IStrings.toStringArray(a);
+    System.err.printf("BackoffMLE array: %s = %s\n",id,Arrays.toString(strs));
   }
 
 }
