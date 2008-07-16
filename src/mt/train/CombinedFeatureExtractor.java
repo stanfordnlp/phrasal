@@ -2,13 +2,13 @@ package mt.train;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.IString;
 
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.Constructor;
 
 import mt.base.IOTools;
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;

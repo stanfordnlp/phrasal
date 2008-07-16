@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.io.PrintStream;
 
 import mt.base.Featurizable;
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
+
+import edu.stanford.nlp.util.IString;
 
 /**
  * A representation of an AlignmentTemplate collection as a matrix.

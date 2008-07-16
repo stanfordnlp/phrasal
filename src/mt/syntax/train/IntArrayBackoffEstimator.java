@@ -8,9 +8,10 @@ import edu.stanford.nlp.util.FileLines;
 import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.*;
-import mt.base.DynamicIntegerArrayPrefixIndex;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+
+import mt.base.DynamicIntegerArrayPrefixIndex;
 
 /**
  * Interpolated backoff ML estimation of multinomials using Witten-Bell discounting.

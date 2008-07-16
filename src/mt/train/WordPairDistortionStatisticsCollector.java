@@ -3,10 +3,10 @@ package mt.train;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.decoder.efeat.WordLevelDiscrimDistortionFeaturizer;
 
+import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.stats.ClassicCounter;

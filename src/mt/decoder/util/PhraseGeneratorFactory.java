@@ -4,13 +4,14 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.CombinedPhraseGenerator;
-import edu.stanford.nlp.util.IString;
 import mt.base.IdentityPhraseGenerator;
 import mt.base.PharaohPhraseTable;
 import mt.base.SymbolFilter;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.feat.UnknownWordFeaturizer;
 import mt.tools.NumericFilter;
+
+import edu.stanford.nlp.util.IString;
 
 /**
  * 

@@ -3,10 +3,11 @@ package mt.orphan;
 import java.util.Set;
 
 import mt.base.IBMModel1;
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.train.WordAligner;
 import mt.train.WordAlignment;
+
+import edu.stanford.nlp.util.IString;
 
 /**
  * This class makes use of the GIZA++ style alignment information in SymmetricalWordAlignment to limit the

@@ -5,9 +5,10 @@ import java.util.*;
 
 import mt.base.ARPALanguageModel;
 import mt.base.FactoryUtil;
-import edu.stanford.nlp.util.IString;
 import mt.base.LanguageModel;
 import mt.base.PharaohPhraseTable;
+
+import edu.stanford.nlp.util.IString;
 
 /**
  * @author danielcer

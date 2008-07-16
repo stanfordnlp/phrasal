@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
 
 ################################################
 # Replaces <old_id> with <new_id> within
@@ -10,14 +11,22 @@ use strict;
 use POSIX;
 use Fatal qw(open close);
 
-die "Usage: $0 <old_id> <new_id>\n" unless $#ARGV == 1;
-my $oldid = $ARGV[0];
-my $newid = $ARGV[1];
+use utils::opt  qw(&get_args &get_opts);
+use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+
+my %opts = get_opts(['v',0,'program will be more verbose'],
+                    ['f=s','','target nbest list'],
+                    ['n=s','','nbest list size']);
+my %args = get_args('old','new');
+my $oldid = $args{old};
+my $newid = $args{new};
 
 my $field = '';
 while(<STDIN>) {
+	my $newfield = 0;
 	if(/^\[(\S+)\]/) {
 		$field = $1;
+		$newfield = 1;
  	}
 	if($field eq 'ttable-file' ||
 	   $field eq 'distortion-file' ||
@@ -34,6 +43,13 @@ while(<STDIN>) {
 				warn "WARNING: missing file: $1\n" if(! -f $1);
 			}
 		}
+	} elsif($field eq 'n-best-list' && $newfield) {
+		my $oldlist = <STDIN>;	
+		my $oldsize = <STDIN>;	
+		if($opts{n} && $opts{f}) {
+			print "[n-best-list]\n$opts{f}\n$opts{n}\n";
+		}
+		next;
 	}
 	print;
 }

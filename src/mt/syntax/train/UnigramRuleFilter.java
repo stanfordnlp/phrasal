@@ -1,11 +1,11 @@
 package mt.syntax.train;
 
 import edu.stanford.nlp.util.FileLines;
+import edu.stanford.nlp.util.IString;
 
 import java.util.Set;
 import java.util.HashSet;
 
-import edu.stanford.nlp.util.IString;
 
 /**
  * Filter rules against words of a given corpus.

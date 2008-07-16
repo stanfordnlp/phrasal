@@ -1,8 +1,8 @@
 package mt.tools;
 
 import edu.stanford.nlp.util.StringUtils;
-
 import edu.stanford.nlp.util.IString;
+
 import mt.base.Sequence;
 import mt.train.GIZAWordAlignment;
 

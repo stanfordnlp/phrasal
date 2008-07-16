@@ -8,7 +8,6 @@ import mt.base.ConcreteTranslationOption;
 import mt.base.CoverageSet;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
-import edu.stanford.nlp.util.IString;
 import mt.base.ExtendedLexicalReorderingTable;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
@@ -16,6 +15,8 @@ import mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.LexicalReorderingFeaturizer;
 import mt.train.AlignmentGrid;
+
+import edu.stanford.nlp.util.IString;
 
 /**
  * Featurizer for a lexicalized re-ordering model that uses hierarchical structure

@@ -5,17 +5,14 @@ import java.util.ArrayList;
 import java.io.LineNumberReader;
 import java.io.FileReader;
 
-/*
-import mt.IString;
-*/
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.IBMModel1;
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 
+import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.ling.WordTag;
 
 /**

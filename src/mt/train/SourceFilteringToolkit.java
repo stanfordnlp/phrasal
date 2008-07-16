@@ -4,10 +4,11 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.IOTools;
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
+
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 
 /**
  * Toolkit for extracting source-language n-grams that must be considered

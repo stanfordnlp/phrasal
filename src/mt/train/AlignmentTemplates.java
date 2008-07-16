@@ -6,9 +6,10 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import mt.base.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.base.Sequences;
+
+import edu.stanford.nlp.util.IString;
 
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;

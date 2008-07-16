@@ -1,16 +1,17 @@
 package mt.decoder.efeat;
 
-import edu.stanford.nlp.util.Pair;
-import java.util.*;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Featurizables;
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.util.Hypothesis;
 
+import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.IString;
+
+import java.util.*;
 import java.io.LineNumberReader;
 import java.io.FileReader;
 import java.util.regex.Matcher;

@@ -6,10 +6,11 @@ import mt.base.ARPALanguageModel;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
-import edu.stanford.nlp.util.IString;
 import mt.base.MosesLexicalReorderingTable;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
+
+import edu.stanford.nlp.util.IString;
 
 /**
  * 

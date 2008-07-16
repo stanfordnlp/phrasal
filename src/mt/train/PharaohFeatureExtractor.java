@@ -1,13 +1,13 @@
 package mt.train;
 
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.IString;
 
 import java.util.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 
 import mt.base.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;

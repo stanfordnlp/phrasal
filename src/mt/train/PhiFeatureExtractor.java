@@ -1,11 +1,11 @@
 package mt.train;
 
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.IString;
 
 import java.util.*;
 
 import mt.base.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.util.IString;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
