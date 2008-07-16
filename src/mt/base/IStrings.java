@@ -3,6 +3,12 @@ package mt.base;
 import java.util.*;
 
 
+/**
+ * 
+ * @author danielcer
+ * @author mgalley
+ * 
+ */
 public class IStrings {
 	
 	private IStrings() { }
