@@ -3,7 +3,7 @@ package mt.train;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.decoder.efeat.WordLevelDiscrimDistortionFeaturizer;
 

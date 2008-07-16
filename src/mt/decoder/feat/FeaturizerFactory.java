@@ -5,7 +5,7 @@ import java.util.*;
 
 import mt.base.ARPALanguageModel;
 import mt.base.FactoryUtil;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.LanguageModel;
 import mt.base.PharaohPhraseTable;
 

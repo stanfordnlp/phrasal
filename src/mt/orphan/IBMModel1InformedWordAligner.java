@@ -3,7 +3,7 @@ package mt.orphan;
 import java.util.Set;
 
 import mt.base.IBMModel1;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.train.WordAligner;
 import mt.train.WordAlignment;

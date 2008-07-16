@@ -4,10 +4,10 @@ import java.io.*;
 import java.util.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
-import mt.base.IStrings;
+import edu.stanford.nlp.util.IStrings;
 
 /**
  *  @author Michel Galley

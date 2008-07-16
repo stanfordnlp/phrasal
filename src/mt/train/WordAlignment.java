@@ -2,7 +2,7 @@ package mt.train;
 
 import java.util.Set;
 
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 /**

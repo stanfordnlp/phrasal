@@ -1,8 +1,8 @@
 package mt.train.zh;
 
 import mt.base.IOTools;
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 import mt.train.AlignmentGrid;

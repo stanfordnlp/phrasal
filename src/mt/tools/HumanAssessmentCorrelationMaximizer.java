@@ -8,6 +8,8 @@ import mt.base.*;
 import mt.metrics.*;
 import mt.reranker.ter.TERcost;
 import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.math.SloppyMath;

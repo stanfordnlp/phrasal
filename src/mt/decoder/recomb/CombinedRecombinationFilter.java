@@ -8,8 +8,7 @@ import java.util.*;
  * 
  * @author danielcer
  *
- * @param <TK>
- * @param <FV>
+ * @param <S>
  */
 public class CombinedRecombinationFilter<S> implements
 		RecombinationFilter<S> {

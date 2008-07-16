@@ -15,6 +15,9 @@ import mt.decoder.util.*;
 import mt.metrics.*;
 import mt.tune.*;
 
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
+
 /**
  * 
  * @author danielcer

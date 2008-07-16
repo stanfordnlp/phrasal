@@ -22,6 +22,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.svd.ReducedSVD;
 import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.Ptr;
+import edu.stanford.nlp.util.IString;
 
 /**
  * Minimum Error Rate Training (MERT).

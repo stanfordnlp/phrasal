@@ -9,6 +9,8 @@ import mt.tune.GreedyMultiTranslationMetricMax;
 
 import java.util.*;
 
+import edu.stanford.nlp.util.IString;
+
 /**
  * NBestArgmax utility - a command line tool for extracting the argmax 
  * translations from a n-best list for a given set of weights. 

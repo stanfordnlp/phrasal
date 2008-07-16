@@ -4,7 +4,7 @@ import java.io.PrintStream;
 import java.util.List;
 
 import edu.stanford.nlp.stats.ClassicCounter;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.MosesNBestList;
 import mt.base.ScoredFeaturizedTranslation;
 import mt.metrics.EvaluationMetric;

@@ -9,8 +9,8 @@ import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.*;
 import mt.base.DynamicIntegerArrayPrefixIndex;
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 
 /**
  * Interpolated backoff ML estimation of multinomials using Witten-Bell discounting.
@@ -233,7 +233,7 @@ public class IntArrayBackoffEstimator {
    *
    * dl_i/dC = deriv(nCount/(nCount+C)) = -nCount/(nCount+C)^2
    */
-  double[] getDiffLogProbabilityOf(int[] idx, int[] cIdx) {
+  double[] diffLogProbabilityOf(int[] idx, int[] cIdx) {
     double denom = Math.exp(logProbabilityOf(idx,cIdx));
     double[] dlogp = new double[C.length];
     int[] jIdx = mergeWithSeparator(idx,cIdx);
@@ -289,7 +289,7 @@ public class IntArrayBackoffEstimator {
         int[] idx = index.get(s);
         int[] cIdx = nIndex.get(t);
         int c = tune.get(p);
-        double[] d = getDiffLogProbabilityOf(idx,cIdx);
+        double[] d = diffLogProbabilityOf(idx,cIdx);
         for(int i=0; i<d.length; ++i)
           dlogp[i] += c*d[i];
         len += c;

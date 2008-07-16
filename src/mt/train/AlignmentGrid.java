@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.io.PrintStream;
 
 import mt.base.Featurizable;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 /**

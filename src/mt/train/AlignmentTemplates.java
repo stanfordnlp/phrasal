@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import mt.base.DynamicIntegerArrayIndex;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.base.Sequences;
 

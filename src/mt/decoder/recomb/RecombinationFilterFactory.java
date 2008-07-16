@@ -3,7 +3,8 @@ package mt.decoder.recomb;
 import java.util.*;
 
 import mt.base.FactoryUtil;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 import mt.base.LanguageModel;
 import mt.decoder.feat.Featurizers;
 import mt.decoder.feat.IncrementalFeaturizer;

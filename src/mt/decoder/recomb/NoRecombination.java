@@ -6,8 +6,7 @@ package mt.decoder.recomb;
  * 
  * @author danielcer
  *
- * @param <TK>
- * @param <FV>
+ * @param <S>
  */
 public class NoRecombination<S> implements RecombinationFilter<S> {
 	@Override

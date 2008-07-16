@@ -1,5 +1,7 @@
 package mt.base;
 
+import edu.stanford.nlp.util.IString;
+
 import java.util.Iterator;
 
 

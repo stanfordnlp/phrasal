@@ -1,5 +1,8 @@
 package mt.base;
 
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
+
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.io.*;
@@ -258,7 +261,7 @@ public class MosesLexicalReorderingTable {
 			int[] indexInts = null;
 			if (conditionType == ConditionTypes.e || conditionType == ConditionTypes.f) {
 				IString[] tokens = IStrings.toIStringArray(phrase1TokenList);
-				indexInts = IStrings.toIntArray(tokens);				
+				indexInts = IStrings.toIntArray(tokens);
 			} else {
 				IString[] fTokens = IStrings.toIStringArray(phrase1TokenList);
 				int[] fIndexInts = IStrings.toIntArray(fTokens);

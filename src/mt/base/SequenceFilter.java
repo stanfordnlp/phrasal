@@ -5,7 +5,7 @@ package mt.base;
  * 
  * @author danielcer
  *
- * @param <T>
+ * @param <TK>
  */
 public interface SequenceFilter<TK> {
 	

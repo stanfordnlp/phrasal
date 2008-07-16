@@ -5,7 +5,7 @@ import edu.stanford.nlp.stats.*;
 
 import java.util.*;
 
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureExtractor {

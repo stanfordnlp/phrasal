@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.CombinedPhraseGenerator;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.IdentityPhraseGenerator;
 import mt.base.PharaohPhraseTable;
 import mt.base.SymbolFilter;

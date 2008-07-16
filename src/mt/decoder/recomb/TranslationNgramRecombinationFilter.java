@@ -4,6 +4,7 @@ import java.util.List;
 
 import mt.base.*;
 import mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.util.IString;
 
 /**
  * 

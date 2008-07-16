@@ -5,6 +5,7 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.inferer.impl.*;
 import mt.decoder.util.*;
+import edu.stanford.nlp.util.IString;
 
 public class InfererBuilderFactory {
 	public static final String GREEDY_DECODER = "greedy";

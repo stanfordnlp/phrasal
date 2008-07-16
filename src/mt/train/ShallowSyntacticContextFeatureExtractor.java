@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.IOTools;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 /**

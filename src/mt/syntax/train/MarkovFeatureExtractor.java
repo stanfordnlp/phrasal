@@ -4,8 +4,8 @@ import edu.stanford.nlp.trees.TreeVisitor;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.HeadFinder;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 
 /**
  * Tree Markovization for GHKM rules.

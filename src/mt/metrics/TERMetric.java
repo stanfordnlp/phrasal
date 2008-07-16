@@ -5,8 +5,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.List;
 
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 import mt.base.NBestListContainer;
 import mt.base.RawSequence;
 import mt.base.ScoredFeaturizedTranslation;

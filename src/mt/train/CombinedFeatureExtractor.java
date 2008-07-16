@@ -8,7 +8,7 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 
 import mt.base.IOTools;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;

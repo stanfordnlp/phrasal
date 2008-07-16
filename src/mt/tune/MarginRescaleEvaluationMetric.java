@@ -2,7 +2,7 @@ package mt.tune;
 
 import java.util.*;
 
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.NBestListContainer;
 import mt.base.ScoredFeaturizedTranslation;
 import mt.decoder.recomb.RecombinationFilter;

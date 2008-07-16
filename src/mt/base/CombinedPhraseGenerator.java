@@ -5,6 +5,8 @@ import java.io.*;
 
 import mt.decoder.util.PhraseGenerator;
 import mt.decoder.util.PhraseGeneratorFactory;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 
 /**
  * 

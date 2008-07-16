@@ -1,6 +1,7 @@
 package mt.base;
 
 import edu.stanford.nlp.util.IndexInterface;
+import edu.stanford.nlp.util.HasIntegerIdentity;
 
 /**
  * 

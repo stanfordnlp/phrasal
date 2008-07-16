@@ -5,7 +5,7 @@ import java.util.List;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;

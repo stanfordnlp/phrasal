@@ -5,7 +5,7 @@ import edu.stanford.nlp.util.Index;
 import java.util.*;
 
 import mt.base.DynamicIntegerArrayIndex;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 

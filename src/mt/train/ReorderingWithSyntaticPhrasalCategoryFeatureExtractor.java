@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeSet;
 
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 import edu.stanford.nlp.util.Index;

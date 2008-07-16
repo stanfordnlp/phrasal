@@ -10,8 +10,7 @@ import mt.decoder.util.State;
  * 
  * @author danielcer
  *
- * @param <TK>
- * @param <FV>
+ * @param <S>
  */
 public class RecombinationHash<S extends State<S>> {
 	public static String DEBUG_OPT = "RecombinationHashDebug";

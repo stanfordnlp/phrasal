@@ -5,7 +5,7 @@ import edu.stanford.nlp.util.FileLines;
 import java.util.Set;
 import java.util.HashSet;
 
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 
 /**
  * Filter rules against words of a given corpus.

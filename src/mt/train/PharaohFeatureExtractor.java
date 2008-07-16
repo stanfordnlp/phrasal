@@ -7,7 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 import mt.base.DynamicIntegerArrayIndex;
-import mt.base.IString;
+import edu.stanford.nlp.util.IString;
 import mt.base.Sequence;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
