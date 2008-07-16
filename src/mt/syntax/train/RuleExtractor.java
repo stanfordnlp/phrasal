@@ -32,6 +32,8 @@ public class RuleExtractor {
   static public final String MAX_RHS_SIZE_OPT = "maxRHS";
   static public final String HIERO_FORMAT_OPT = "hieroFormat";
   static public final String HIERO_FLAT_FORMAT_OPT = "hieroFlatFormat";
+  public static final String ONE_INDEXED_ALIGNMENT_OPT = "oneIndexed";
+  public static final String REVERSED_ALIGNMENT_OPT = "hieroFormat";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -46,9 +48,10 @@ public class RuleExtractor {
          EXTRACTORS_OPT, MAX_COMPOSITIONS_OPT,
          MAX_LHS_SIZE_OPT, MAX_RHS_SIZE_OPT, E_CORPUS_OPT,
          HIERO_FORMAT_OPT, HIERO_FLAT_FORMAT_OPT,
-         Rule.MAX_UNALIGNED_RHS_OPT));
-    ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
-    ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
+         Rule.MAX_UNALIGNED_RHS_OPT,
+         REVERSED_ALIGNMENT_OPT, ONE_INDEXED_ALIGNMENT_OPT));
+     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
+     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
 
   final String fCorpus, eCorpus, aCorpus, eParsedCorpus;
@@ -264,6 +267,10 @@ public class RuleExtractor {
         System.exit(1);
       }
     }
+    AlignmentGraph.reversedAlignment 
+     = Boolean.parseBoolean(prop.getProperty(REVERSED_ALIGNMENT_OPT,"true"));
+    AlignmentGraph.oneIndexedAlignment 
+     = Boolean.parseBoolean(prop.getProperty(ONE_INDEXED_ALIGNMENT_OPT,"false"));
     new RuleExtractor(prop).extractRules();
   }
 }

@@ -33,8 +33,8 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   public static final String PERSEVERENCE_PROPERTY = "Perseverence";
   public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "10"));
 
-  public static final String UPDATE_SPEED_PROPERTY = "UpdateSpeed";
-  public static final double UPDATE_SPEED = Double.parseDouble(System.getProperty(UPDATE_SPEED_PROPERTY, "1"));
+  public static final String MAX_ITERATIONS_PROPERTY = "MaxIterations";
+  public static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROPERTY, "1000000"));
 
   private static IString
    TER = new IString("ter"), BLEU = new IString("bleu"),
@@ -55,11 +55,11 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   double simplexSize = 0;
   int numInstances = Integer.MAX_VALUE;
   int numDimensions=-1;
-  double time; 
   int windowSize;
   boolean tuneCosts;
   boolean tuneMetrics;
   boolean verbose;
+  boolean printValue;
   
   List<Sequence<IString>> hyps;
   List<List<Sequence<IString>>> refs;
@@ -166,7 +166,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   public void maximize() {
     Minimizer m = (simplexSize > 0.0) ? 
     new DownhillSimplexMinimizer(simplexSize) :
-    new RandomGreedyLocalSearch(LEARN_RATE,PERSEVERENCE);
+    new RandomGreedyLocalSearch(LEARN_RATE,PERSEVERENCE,MAX_ITERATIONS);
     System.err.println("minimizer: "+m.toString());
     // Set initial weights:
     if(w == null) {
@@ -190,7 +190,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
           tcost(tx[i-3]),tcost(tx[i-2]),tcost(tx[i-1]),tcost(tx[i]));
       }
     }
-    time = 0;
+    printValue = true;
     valueAt(tx);
   }
 
@@ -211,8 +211,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         for(int j=0; j<metricScores[0].length; ++j)
           combinedScores[i] += (j>0 ? x[j-1] : 1.0)*metricScores[i][j];
     double pearson = getPearsonCorrelation(humanScores,combinedScores);
-    if((System.currentTimeMillis() - time)/1000.0 > UPDATE_SPEED) {
-      time = System.currentTimeMillis();
+    if(printValue) {
       System.err.printf("pearson=%.3f at [",pearson);
       for(int i=0; i<x.length; ++i) {
         if(i>0)

@@ -25,7 +25,10 @@ public class AlignmentGraph {
   public static final String DEBUG_PROPERTY = "DebugGHKM";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  private static final BitSet noCompositions = new BitSet();
+  static boolean reversedAlignment = true;
+  static boolean oneIndexedAlignment = false;
+
+  private static final BitSet NO_COMPOSITIONS = new BitSet();
   private static int maxCompositions = 0;
 
   AlignmentTreeNode eTree;
@@ -46,7 +49,7 @@ public class AlignmentGraph {
       eLeaves.add((AlignmentTreeNode)l);
     if(eString != null)
       checkEStringAgainstLeaves(eString);
-    align.init(fString, eTree.yield().toString(), aString,true);
+    align.init(fString, eTree.yield().toString(), aString, reversedAlignment, oneIndexedAlignment);
     setFrontierNodes();
   }
 
@@ -108,7 +111,7 @@ public class AlignmentGraph {
       while(low > 0 && align.f2e(low-1).isEmpty()) --low;
       while(high+1 < align.f().size() && align.f2e(high+1).isEmpty()) ++high;
       compositionStack.clear();
-      compositionStack.push(noCompositions);
+      compositionStack.push(NO_COMPOSITIONS);
       compositionSet.clear();
       while(compositionStack.size() > 0) {
         BitSet composition = compositionStack.pop();

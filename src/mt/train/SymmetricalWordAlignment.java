@@ -41,8 +41,8 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(id,fStr,eStr,aStr);
   }
   
-  public SymmetricalWordAlignment(String fStr, String eStr, String aStr, boolean s2t, boolean zeroBased) throws IOException {
-    init(fStr,eStr,aStr,s2t,zeroBased);
+  public SymmetricalWordAlignment(String fStr, String eStr, String aStr, boolean s2t, boolean oneIndexed) throws IOException {
+    init(fStr,eStr,aStr,s2t,oneIndexed);
   }
 
   public SymmetricalWordAlignment(String fStr, String eStr, String aStr) throws IOException {
@@ -64,10 +64,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse) throws IOException {
-    init(fStr, eStr, aStr, reverse, true);
+    init(fStr, eStr, aStr, reverse, false);
   }
 
-  public void init(String fStr, String eStr, String aStr, boolean reverse, boolean zeroBased) throws IOException {
+  public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed) throws IOException {
     if(VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
@@ -83,7 +83,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       if(els.length == 2) {
         int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);
         int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
-        if(!zeroBased) { --fpos; --epos; }
+        if(oneIndexed) { --fpos; --epos; }
         if(0 > fpos || fpos >= f.size())
           throw new IOException("f has index out of bounds (fsize="+f.size()+",esize="+e.size()+") : "+fpos);
         if(0 > epos || epos >= e.size())
