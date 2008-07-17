@@ -34,7 +34,7 @@ public class AlignmentGraph {
   AlignmentTreeNode eTree;
   List<AlignmentTreeNode> eLeaves;
   SymmetricalWordAlignment align = new SymmetricalWordAlignment();
-  MarkovFeatureExtractor markovizer = new MarkovFeatureExtractor();
+  List<FeatureExtractor> extractors;
 
   AlignmentGraph() {}
 
@@ -89,14 +89,6 @@ public class AlignmentGraph {
     eTree.setFrontierNodes();
   }
 
-  public void updateTreeVisitor() {
-    markovizer.visitTree(eTree);
-  }
-
-  public void printMarkovStats() {
-    markovizer.printStats();
-  }
-
   public Set<Rule> extractRules() {
     Set<Rule> sentenceRuleSet = new HashSet<Rule>();
 		Stack<AlignmentTreeNode> nodesStack = new Stack<AlignmentTreeNode>();
@@ -116,6 +108,9 @@ public class AlignmentGraph {
       while(compositionStack.size() > 0) {
         BitSet composition = compositionStack.pop();
         RuleInstance rInst = new RuleInstance(n,composition,align,low,high);
+        if(composition.equals(NO_COMPOSITIONS))
+          for(FeatureExtractor extractor : extractors)
+            extractor.extractFeatures(rInst);
         if(n.minimalRule == null)
           n.minimalRule = rInst;
         if(composition.cardinality() < maxCompositions) {
@@ -145,5 +140,9 @@ public class AlignmentGraph {
       }
     }
     return sentenceRuleSet;
+  }
+
+  public void setFeatureExtractors(List<FeatureExtractor> e) {
+    extractors = e;
   }
 }

@@ -1,6 +1,6 @@
 package mt.syntax.train;
 
-import edu.stanford.nlp.trees.TreeVisitor;
+//import edu.stanford.nlp.trees.TreeVisitor;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.HeadFinder;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
@@ -12,8 +12,7 @@ import edu.stanford.nlp.util.IStrings;
  *
  * @author Michel Galley
  */
-public class MarkovFeatureExtractor implements TreeVisitor {
-
+public class MarkovFeatureExtractor extends AbstractFeatureExtractor {
 
   public static boolean headPos = Boolean.parseBoolean(System.getProperty("headPos", "false"));
   public static boolean headWord = Boolean.parseBoolean(System.getProperty("headWord", "false"));
@@ -39,12 +38,11 @@ public class MarkovFeatureExtractor implements TreeVisitor {
     lM = new IntArrayBackoffEstimator(10), // left modifiers
     rM = new IntArrayBackoffEstimator(10); // right modifiers
 
-  public void visitTree(Tree t) {
-    AlignmentTreeNode n = (AlignmentTreeNode) t;
+  public void extractFeatures(RuleInstance rule) {
+    AlignmentTreeNode n = rule.getExtractionNode();
     AlignmentTreeNode[] children = (AlignmentTreeNode[]) n.children();
     if(n.isPreTerminal())
       return;
-    RuleInstance rule = n.minimalRule;
     // Find head:
     AlignmentTreeNode h = (AlignmentTreeNode) hf.determineHead(n);
     if(h != null && !h.emptySpan()) {
@@ -93,15 +91,6 @@ public class MarkovFeatureExtractor implements TreeVisitor {
         }
       }
     }
-    for (AlignmentTreeNode aChildren : children)
-      visitTree(aChildren);
-    // Markovize rule rooted at t:
-    //if(r != null)
-    //  throw new RuntimeException("No minimal rule at node: "+t.label());
-    //if(DEBUG)
-    //  System.err.printf("minimal rule at %s: %s\n",n.label(),r.toString());
-    //assert(r.childrenNodes.size() == r.rule.lhsLabels.length);
-    //for(int i=0; i<r.childrenNodes.size(); ++i)
   }
 
   public int[] getContext(Tree m, Tree h) {
@@ -132,10 +121,6 @@ public class MarkovFeatureExtractor implements TreeVisitor {
     return IStrings.toIntArray(istr);
   }
 
-  public double[] score(RuleInstance r) {
-    // TODO
-    return new double[] { };
+  public void save(String prefixName) {
   }
-
-  //private int[] getL(AlignmentTreeNode n) {
 }

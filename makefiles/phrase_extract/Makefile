@@ -86,7 +86,7 @@ $(DEVID).%.bleu: $(DEVID).%
 
 # Use best MERT paramters to generate 500best list:
 $(TESTID).$(DEVID).%.500best.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
-	$(SCRIPTS)/update_ini -f $(TESTID).$(*F).500best -n 500 $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).500best -n 500 $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(PHRASAL_ARGS_BM) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
 
 # Use final MERT paramters:

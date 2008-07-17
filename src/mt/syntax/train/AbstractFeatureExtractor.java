@@ -31,19 +31,9 @@ public class AbstractFeatureExtractor implements FeatureExtractor {
       System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
   }
 
-  public void extractFeatures(Rule r, int ruleId, int rootId, int lhsId, int rhsId) {
-    throw new RuntimeException("Not implemented.");
-  }
-
-  public double[] score(Rule r, int ruleId, int rootId, int lhsId, int rhsId) {
-    throw new RuntimeException("Not implemented.");
-  }
-
-  //public void extractFeatures(RuleInstance r) {
-  //  throw new RuntimeException("Not implemented.");
-  //}
-
-  //public double[] score(RuleInstance r) {
-  //  throw new RuntimeException("Not implemented.");
-  //}
+  public void extractFeatures(Rule r, int ruleId, int rootId, int lhsId, int rhsId) {}
+  public void extractFeatures(RuleInstance r) {}
+  public double[] score(Rule r, int ruleId, int rootId, int lhsId, int rhsId)  { return null; }
+  public double[] score(RuleInstance r) { return null; }
+  public void save(String prefixName) {}
 }

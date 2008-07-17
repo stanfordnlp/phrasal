@@ -16,24 +16,34 @@ public class RuleExtractor {
   public static final String DEBUG_PROPERTY = "DebugGHKM";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
   
+  // Mandatory arguments:
   static public final String CONFIG_OPT = "config";
   static public final String F_CORPUS_OPT = "fCorpus";
   static public final String E_CORPUS_OPT = "eCorpus";
   static public final String E_PARSED_CORPUS_OPT = "eParsedCorpus";
   static public final String A_CORPUS_OPT = "align";
 
+  // Type of training:
+  public static final String TRAIN_MARKOV_OPT = "model";
+
+  // GHKM rule extraction class:
+  static public final String EXTRACTORS_OPT = "extractors"; // default: mt.syntax.train.RelativeFrequencyFeatureExtractor
+
+  // Rule filtering:
   static public final String MAX_COMPOSITIONS_OPT = "maxCompositions";
-  static public final String EXTRACTORS_OPT = "extractors";
-  static public final String FILTER_CORPUS_OPT = "fFilterCorpus";
+  static public final String MAX_LHS_SIZE_OPT = "maxLHS";
+  static public final String MAX_RHS_SIZE_OPT = "maxRHS";
+  static public final String FILTER_CORPUS_OPT = "fFilterCorpus"; // unigram filtering. TODO: more elaborate filtering
+
+  // I/O:
   static public final String NUM_LINES_OPT = "numLines";
   static public final String START_AT_LINE_OPT = "startAtLine";
   static public final String END_AT_LINE_OPT = "endAtLine";
-  static public final String MAX_LHS_SIZE_OPT = "maxLHS";
-  static public final String MAX_RHS_SIZE_OPT = "maxRHS";
   static public final String HIERO_FORMAT_OPT = "hieroFormat";
   static public final String HIERO_FLAT_FORMAT_OPT = "hieroFlatFormat";
-  public static final String ONE_INDEXED_ALIGNMENT_OPT = "oneIndexed";
-  public static final String REVERSED_ALIGNMENT_OPT = "hieroFormat";
+  public static final String ONE_INDEXED_ALIGNMENT_OPT = "oneIndexedAlignment";
+  public static final String REVERSED_ALIGNMENT_OPT = "reversedAlignment";
+  public static final String SAVE_PREFIX_OPT = "savePrefix";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -48,8 +58,8 @@ public class RuleExtractor {
          EXTRACTORS_OPT, MAX_COMPOSITIONS_OPT,
          MAX_LHS_SIZE_OPT, MAX_RHS_SIZE_OPT, E_CORPUS_OPT,
          HIERO_FORMAT_OPT, HIERO_FLAT_FORMAT_OPT,
-         Rule.MAX_UNALIGNED_RHS_OPT,
-         REVERSED_ALIGNMENT_OPT, ONE_INDEXED_ALIGNMENT_OPT));
+         Rule.MAX_UNALIGNED_RHS_OPT, REVERSED_ALIGNMENT_OPT, 
+         ONE_INDEXED_ALIGNMENT_OPT, SAVE_PREFIX_OPT));
      ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
      ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
@@ -60,6 +70,7 @@ public class RuleExtractor {
   final List<FeatureExtractor> extractors =  new ArrayList<FeatureExtractor>();
   final int maxLHS, maxRHS;
   final boolean hieroFormat, hieroFlatFormat;
+  final String savePrefix;
   int startAtLine, endAtLine;
   UnigramRuleFilter filter = null;
 
@@ -79,6 +90,7 @@ public class RuleExtractor {
     maxRHS = Integer.parseInt(prop.getProperty(MAX_RHS_SIZE_OPT,Integer.toString(Integer.MAX_VALUE)));
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,Integer.toString(0)));
     endAtLine = Integer.parseInt(prop.getProperty(END_AT_LINE_OPT,Integer.toString(Integer.MAX_VALUE)));
+    savePrefix = prop.getProperty(SAVE_PREFIX_OPT,"out");
     int numLines = Integer.parseInt(prop.getProperty(NUM_LINES_OPT,"-1"));
     if(numLines > 0) {
       startAtLine = 0;
@@ -96,6 +108,7 @@ public class RuleExtractor {
       extractors.add(extractor);
       extractor.init(ruleIndex,prop);
     }
+    ag.setFeatureExtractors(extractors);
   }
 
   public void extractRules() {
@@ -108,10 +121,6 @@ public class RuleExtractor {
     long startStepTimeMillis = System.currentTimeMillis();
     boolean fatalError = false;
     for(int line=0; !fatalError && line <= endAtLine; ++line) {
-      // TODO: remove
-      if(line == 2*endAtLine/3)
-        ag.markovizer.doTrain=false;
-      //
       String aLine="", fLine="", eTreeLine, eLine=null;
       try {
         aLine = aReader.readLine();
@@ -160,7 +169,6 @@ public class RuleExtractor {
           for(FeatureExtractor extractor : extractors)
             extractor.extractFeatures(r,ruleId,rootId,lhsId,rhsId);
         }
-        ag.updateTreeVisitor();
       } catch(Exception e) {
         System.err.printf("Exception at line: %d\n",line);
         System.err.printf("RuleExtractor: extractRules: line: %d\n",line);
@@ -194,7 +202,7 @@ public class RuleExtractor {
       } else {
         System.out.printf("%s |||",r.toString());
       }
-      // Print features:
+      // Rule-level features:
       for(FeatureExtractor extractor : extractors)
         for(double s : extractor.score(r,ruleId,rootId,lhsId,rhsId)) {
           System.out.print(" ");
@@ -202,10 +210,10 @@ public class RuleExtractor {
         }
       System.out.println();
     }
+    System.err.println("Done with rule extraction.\nSaving features:");
+    for(FeatureExtractor extractor : extractors)
+      extractor.save(savePrefix);
     System.err.println("Done.");
-    System.err.println("==============================");
-    ag.printMarkovStats();
-    System.err.println("==============================");
   }
 
   public static void usage() {

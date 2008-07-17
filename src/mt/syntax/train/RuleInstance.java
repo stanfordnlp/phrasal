@@ -166,4 +166,8 @@ public class RuleInstance {
   public List<Rule> getAllRHSVariants() {
     return rule.getAllRHSVariants(unalignedRHS);
   }
+
+  public AlignmentTreeNode getExtractionNode() {
+    return extractionNode;
+  }
 }
