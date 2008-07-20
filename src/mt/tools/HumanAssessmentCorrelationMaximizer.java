@@ -14,6 +14,7 @@ import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.math.SloppyMath;
+import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.*;
 
 import flanagan.math.Minimisation;
@@ -28,16 +29,11 @@ import flanagan.math.MinimisationFunction;
  * 
  * @author Michel Galley
  */
-public class HumanAssessmentCorrelationMaximizer implements Function {
+public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
 
-  public static final String LEARN_RATE_PROPERTY = "LearnRate";
-  public static final double LEARN_RATE = Double.parseDouble(System.getProperty(LEARN_RATE_PROPERTY, "0.3"));
-
-  public static final String PERSEVERENCE_PROPERTY = "Perseverence";
-  public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "10"));
-
-  public static final String MAX_ITERATIONS_PROPERTY = "MaxIterations";
-  public static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROPERTY, "1000000"));
+  // TODO: print bad cases
+  // TODO: derivative
+  // TODO: more than 1 external score
 
   private static IString
    TER = new IString("ter"), BLEU = new IString("bleu"),
@@ -50,22 +46,35 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
    NIST_3 = new IString("nist_3gram"), NIST_4 = new IString("nist_4gram");
 
   final IString[] metricScoresStr;
+
+  List<Sequence<IString>> hyps;
+  List<List<Sequence<IString>>> refs;
+  
   double[][] metricScores=null;
-  double[] combinedScores;
-  double[] humanScores;
   double[] externalScores;
+  double[] humanScores;
   double[] w;
-  double simplexSize = 0;
+
   int numInstances = Integer.MAX_VALUE;
   int numDimensions=-1;
   int windowSize;
+  
   boolean tuneCosts;
   boolean tuneMetrics;
   boolean verbose;
   boolean printValue;
-  
-  List<Sequence<IString>> hyps;
-  List<List<Sequence<IString>>> refs;
+
+  static final Random shuffler = new Random(3982733423L);
+
+  double simplexSize = 0; // if 0, disables optimization with downhill simplex
+
+  // For RandomGreedyLocalSearch:
+  public static final String LEARN_RATE_PROPERTY = "LearnRate";
+  public static final double LEARN_RATE = Double.parseDouble(System.getProperty(LEARN_RATE_PROPERTY, "0.3"));
+  public static final String PERSEVERENCE_PROPERTY = "Perseverence";
+  public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "10"));
+  public static final String MAX_ITERATIONS_PROPERTY = "MaxIterations";
+  public static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROPERTY, "1000000"));
 
   static public void main(String[] args) throws Exception {
     Properties prop = StringUtils.argsToProperties(args);
@@ -98,7 +107,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
 
     windowSize = Integer.parseInt(prop.getProperty("windowSize","10"));
     tuneCosts = Boolean.parseBoolean(prop.getProperty("tuneCosts","false"));
-    tuneMetrics = Boolean.parseBoolean(prop.getProperty("tuneCosts","true"));
+    tuneMetrics = Boolean.parseBoolean(prop.getProperty("tuneMetrics","true"));
     verbose = Boolean.parseBoolean(prop.getProperty("verbose","false"));
     String[] c = prop.getProperty("initCosts","1:1:1:1").split(":");
     String init_w = prop.getProperty("initWeights");
@@ -126,6 +135,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
 
     // Load hypothesis translations:
     hyps = IOTools.slurpIStringSequences(hypFile);
+    Collections.shuffle(hyps,shuffler);
     System.err.printf("Read %d hypotheses from %s\n",hyps.size(),hypFile);
 
     // Load references:
@@ -154,6 +164,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
       }
     }
     System.err.printf("Read %d references from %s\n",refs.size(),refPrefix);
+    Collections.shuffle(refs,shuffler);
 
     // Create scores:
     assert(refs.size() == hyps.size());
@@ -210,10 +221,11 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
       TERcost.set_default_shift_cost(tcost(x[i]));
       createMetricScores();
     }
+    double[] combinedScores = new double[metricScores.length];
     for(int i=0; i<metricScores.length; ++i)
         for(int j=0; j<metricScores[0].length; ++j)
           combinedScores[i] += (j>0 ? x[j-1] : 1.0)*metricScores[i][j];
-    double pearson = getPearsonCorrelation(humanScores,combinedScores);
+    double pearson = getPearsonCorrelationStd(humanScores,combinedScores);
     if(printValue) {
       System.err.printf("pearson=%.3f at [",pearson);
       for(int i=0; i<x.length; ++i) {
@@ -226,10 +238,25 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     return -pearson;
   }
 
+  public double[] derivativeAt(double[] x) {
+    if(tuneCosts)
+      throw new RuntimeException("Derivative can't be computed if TER costs are not constant (piecewise constant function).");
+    double[] deriv = new double[x.length];
+    deriv[0] = 0.0;
+    for(int j=1; j<metricScores[0].length; ++j) {
+      double[] combinedScores = new double[metricScores.length];
+      for(int i=0; i<metricScores.length; ++i)
+        combinedScores[i] += metricScores[i][j];
+      deriv[j] = -getPearsonCorrelationStd(humanScores,combinedScores);
+    }
+    return deriv;
+  }
+
   public double[] getExternalScores(String filename) throws IOException {
     int sz = windowSize;
     List<Double> l = new ArrayList<Double>();
     String[] lines = StringUtils.slurpFile(filename).split("[\r\n]+");
+    Collections.shuffle(Arrays.asList(lines),shuffler);
     for (String line : lines) 
       l.add(Double.parseDouble(line));
     double[] externalScores = new double[numInstances/sz];
@@ -250,6 +277,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
       ++ii;
       i+=sz;
     }
+    ArrayMath.standardize(externalScores);
     System.err.printf("Read %d scores from %s\n",externalScores.length,filename);
     return externalScores;
   }
@@ -258,7 +286,6 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   public void createMetricScores() {
     int sz = windowSize;
     metricScores = new double[numInstances/sz][];
-    combinedScores = new double[numInstances/sz];
     int i=0, ii=0;
     while(i+sz<=numInstances) {
       List<List<Sequence<IString>>> refs1 = new ArrayList<List<Sequence<IString>>>();
@@ -275,6 +302,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         ter.add(new ScoredFeaturizedTranslation<IString, String>(hyps.get(i+j), null, 0));
       }
       metricScores[ii] = getMetricScores(bleu, nist, ter, ii);
+      ArrayMath.standardize(metricScores[ii]);
       if(numDimensions < 0)
         numDimensions = metricScores[0].length + (tuneCosts?4:0)-1;
       if(verbose) {
@@ -338,32 +366,14 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     return scores;
   }
 
-	public static double getPearsonCorrelation(double[] scores1, double[] scores2){
-		double result;
-		double sum_sq_x = 0, sum_sq_y = 0;
-		double sum_coproduct = 0;
-		double mean_x = scores1[0], mean_y = scores2[0];
-		for(int i=2;i<scores1.length+1;i+=1){
-			double w = ((double) i - 1) /i;
-			double delta_x = scores1[i-1]-mean_x;
-			double delta_y = scores2[i-1]-mean_y;
-			sum_sq_x += delta_x*delta_x*w;
-			sum_sq_y += delta_y*delta_y*w;
-			sum_coproduct += delta_x*delta_y*w;
-			mean_x += delta_x / i;
-			mean_y += delta_y / i;
-		}
-		double pop_sd_x = Math.sqrt(sum_sq_x/scores1.length);
-		double pop_sd_y = Math.sqrt(sum_sq_y/scores1.length);
-		double cov_x_y = sum_coproduct / scores1.length;
-    double denom = pop_sd_x*pop_sd_y;
-    if(denom == 0.0)
-      return 0.0;
-    result = cov_x_y/denom;
-		return result;
-	}
+  /**
+   * Computes Pearson correlation coefficient between two _standardized_ vectors.
+   */
+  public static double getPearsonCorrelationStd(double[] scores1, double[] scores2) {
+    return ArrayMath.innerProduct(scores1,scores2)/(scores1.length-1);
+  }
 
-  /** 
+  /**
    * Transform input cost (any real value) into value that works
    * reasonably well with TER (between .05 and 1).
    */
