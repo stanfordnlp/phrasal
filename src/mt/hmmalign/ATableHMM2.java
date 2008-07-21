@@ -653,7 +653,7 @@ public class ATableHMM2 extends ATable {
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
-      MAX_LENGTH = (new Integer(in.readLine())).intValue();
+      MAX_LENGTH = (Integer.valueOf(in.readLine())).intValue();
       params = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
       counts = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
       initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH+1 filed 0 is not used
@@ -674,7 +674,7 @@ public class ATableHMM2 extends ATable {
           token = st.nextToken();
           token = st.nextToken();//skip the jump size and the previous size
           token = st.nextToken();
-          counts[current++][current_jump_prev] = (float) (new Double(token)).doubleValue();
+          counts[current++][current_jump_prev] = (float) Double.parseDouble(token);
 
         }
       }
@@ -685,7 +685,7 @@ public class ATableHMM2 extends ATable {
       while (st.hasMoreTokens()) {
         token = st.nextToken();//skip the jump size
         token = st.nextToken();
-        initialCounts[current++] = (float) (new Double(token)).doubleValue();
+        initialCounts[current++] = (float) Double.parseDouble(token);
 
       }
 
@@ -716,7 +716,7 @@ public class ATableHMM2 extends ATable {
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
-      MAX_LENGTH = (new Integer(in.readLine())).intValue();
+      MAX_LENGTH = (Integer.valueOf(in.readLine())).intValue();
       params = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
       counts = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
       initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH filed 0 is not used
@@ -729,7 +729,7 @@ public class ATableHMM2 extends ATable {
       token = st.nextToken();
       token = st.nextToken();
 
-      counts[0][0] = (float) (new Double(token)).doubleValue();
+      counts[0][0] = (float) Double.parseDouble(token);
       for (int jmp = 0; jmp < 2 * MAX_LENGTH; jmp++) {
         counts[0][jmp] = counts[0][0];
       }
@@ -742,7 +742,7 @@ public class ATableHMM2 extends ATable {
       while (st.hasMoreTokens()) {
         token = st.nextToken();//skip the jump size
         token = st.nextToken();
-        counts[current++][0] = (float) (new Double(token)).doubleValue();
+        counts[current++][0] = (float) Double.parseDouble(token);
 
       }
 
@@ -759,7 +759,7 @@ public class ATableHMM2 extends ATable {
       while (st.hasMoreTokens()) {
         token = st.nextToken();//skip the jump size
         token = st.nextToken();
-        initialCounts[current++] = (float) (new Double(token)).doubleValue();
+        initialCounts[current++] = (float) Double.parseDouble(token);
 
       }
 

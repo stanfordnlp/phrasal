@@ -597,7 +597,7 @@ public class ATableHMM extends ATable {
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
-      MAX_LENGTH = (new Integer(in.readLine())).intValue();
+      MAX_LENGTH = (Integer.valueOf(in.readLine())).intValue();
       params = new float[2 * MAX_LENGTH + 1];
       counts = new float[2 * MAX_LENGTH + 1];
       initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH filed 0 is not used
@@ -609,7 +609,7 @@ public class ATableHMM extends ATable {
       st = new StringTokenizer(line, " \t");
       token = st.nextToken();
       token = st.nextToken();
-      counts[0] = (float) (new Double(token)).doubleValue();
+      counts[0] = (float) Double.parseDouble(token);
       int current = 1;
 
 
@@ -618,7 +618,7 @@ public class ATableHMM extends ATable {
       while (st.hasMoreTokens()) {
         token = st.nextToken();//skip the jump size
         token = st.nextToken();
-        counts[current++] = (float) (new Double(token)).doubleValue();
+        counts[current++] = (float) Double.parseDouble(token);
 
       }
 
@@ -629,7 +629,7 @@ public class ATableHMM extends ATable {
       while (st.hasMoreTokens()) {
         token = st.nextToken();//skip the jump size
         token = st.nextToken();
-        initialCounts[current++] = (float) (new Double(token)).doubleValue();
+        initialCounts[current++] = (float) Double.parseDouble(token);
 
       }
 

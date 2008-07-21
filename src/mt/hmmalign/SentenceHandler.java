@@ -123,7 +123,7 @@ public class SentenceHandler {
         //System.out.println(currentPair);
         eLine = in.readLine();
         fLine = in.readLine();
-        count = new Integer(cLine).intValue();
+        count = Integer.parseInt(cLine);
         stE = new StringTokenizer(eLine);
         numWE = stE.countTokens();
         stF = new StringTokenizer(fLine);
@@ -140,15 +140,15 @@ public class SentenceHandler {
           token = stE.nextToken();
           if (eTags) {
             index = token.indexOf(UNDRSCR);
-            wordId = (new Integer(token.substring(0, index))).intValue();
-            tagId = (new Integer(token.substring(index + 1))).intValue();
+            wordId = (Integer.valueOf(token.substring(0, index))).intValue();
+            tagId = (Integer.valueOf(token.substring(index + 1))).intValue();
             if (!useETags) {
               tagId = 0;
             }
             wordTmp = new WordEx(wordId, tagId);
 
           } else {
-            wordId = (new Integer(token)).intValue();
+            wordId = (Integer.valueOf(token)).intValue();
             wordTmp = new WordEx(wordId, 0);
           }
 
@@ -184,14 +184,14 @@ public class SentenceHandler {
           wordId = tagId = 0;
           if (fTags) {
             index = token.indexOf(UNDRSCR);
-            wordId = (new Integer(token.substring(0, index))).intValue();
-            tagId = (new Integer(token.substring(index + 1))).intValue();
+            wordId = (Integer.valueOf(token.substring(0, index))).intValue();
+            tagId = (Integer.valueOf(token.substring(index + 1))).intValue();
             if (!useFTags) {
               tagId = 0;
             }
             wordTmp = new WordEx(wordId, tagId);
           } else {
-            wordId = (new Integer(token)).intValue();
+            wordId = (Integer.valueOf(token)).intValue();
             wordTmp = new WordEx(wordId, 0);
           }
 
@@ -337,12 +337,12 @@ public class SentenceHandler {
         continue;
       }
       if (args[startArgs].equals("-m1")) {
-        MODEL1_ITERS = new Integer(args[++startArgs]).intValue();
+        MODEL1_ITERS = Integer.parseInt(args[++startArgs]);
         startArgs++;
         continue;
       }
       if (args[startArgs].equals("-hmm")) {
-        HMM_ITERS = new Integer(args[++startArgs]).intValue();
+        HMM_ITERS = Integer.parseInt(args[++startArgs]);
         startArgs++;
         continue;
       }
@@ -367,7 +367,7 @@ public class SentenceHandler {
         continue;
       }
       if (args[startArgs].equals("-m")) {
-        mask = (new Integer(args[++startArgs])).intValue();
+        mask = (Integer.valueOf(args[++startArgs])).intValue();
         startArgs++;
         continue;
       }

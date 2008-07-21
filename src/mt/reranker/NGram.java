@@ -22,7 +22,7 @@ public class NGram {
   }
 
   public int hashCode() {
-    return string.hashCode() + new Integer(size).hashCode();
+    return string.hashCode() + Integer.valueOf(size).hashCode();
   }
 
   public String toString() {

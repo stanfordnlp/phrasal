@@ -114,7 +114,7 @@ public class RuleInstance {
             n2 = (AlignmentTreeNode) ((Pair)o2).first();
 			  if(n1.emptySpan()) return -1;
 			  if(n2.emptySpan()) return 1;
-        return (new Integer(n1.getLowFSpan())).compareTo(n2.getLowFSpan());
+        return (Integer.valueOf(n1.getLowFSpan())).compareTo(n2.getLowFSpan());
       }
     });
     List<Integer> rhsLabelsList = new ArrayList<Integer>();

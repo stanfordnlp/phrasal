@@ -18,7 +18,7 @@ import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 
 /**
- * 
+ *
  * @author Pi-Chuan Chang
  *
  * @param <TK>
@@ -81,7 +81,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
     //return new FeatureValue<String>(FEATURE_NAME, -1.0*f.linearDistortion);
     return null;
   }
-  
+
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<TK,String> f) {
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>();
@@ -98,35 +98,35 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
                                    +f.foreignSentence.size()+")");
       }
     }
-    
-    
+
+
     int fStartIdx = f.foreignPosition;
     int fEndIdx   = f.foreignPosition + f.foreignPhrase.size() - 1;
-    
+
     if (DETAILED_DEBUG) {
       System.err.println("in DependencyWordLevelDiscrimDistortionFeaturizer.");
       System.err.printf ("  foreignPhrase = %s [%d-%d]\n",f.foreignPhrase, fStartIdx, fEndIdx);
       System.err.println("  partialTranslation="+f.partialTranslation);
       System.err.println("  foreignSentence="+f.foreignSentence);
     }
-    
+
     for(int fidx = fStartIdx; fidx <= fEndIdx; fidx++) {
 
       // do features that has a dependent in the range of this currently translated phrase
       int dep = fidx;
       int head;
       if (currentDep2Head[dep]==null) head = -1; else head = currentDep2Head[dep];
-      
+
       // if the head is already translated, let's add the feature!!
       if (!WordLevelDiscrimDistortionFeaturizer.wordTranslated(f, dep)) {
         throw new RuntimeException("how can word "+dep+" hasn't been translated yet?");
       }
-    
+
       if (DETAILED_DEBUG) System.err.println("DEPS: dep in the range!");
       features.addAll(WordLevelDiscrimDistortionFeaturizer.extractDistortionFeatureForPairOfSourceWords(head, dep, f, null, model1, "D|"));
       features.addAll(extractDistortionFeatureForDependencyType(head,dep,f,model1));
 
-      // then, 
+      // then,
       // do features that has a head in the range of this currently translated phrase
       head = fidx;
       if (DETAILED_DEBUG) System.err.println("DEPS: head in the range!");
@@ -144,21 +144,21 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
         }
       }
     }
-    
+
     return features;
   }
-  
+
 
   /**
    * there's lots of duplication of this method and
-   * "extractDistortionFeatureForPairOfSourceWords" in 
+   * "extractDistortionFeatureForPairOfSourceWords" in
    * WordLevelDiscrimDistortionFeaturizer.java
    **/
   private List<FeatureValue<String>> extractDistortionFeatureForDependencyType
   (int cidx1, int cidx2, Featurizable<TK,String> f, IBMModel1 model1) {
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>();
 
-    if (!WordLevelDiscrimDistortionFeaturizer.wordTranslated(f, cidx1) 
+    if (!WordLevelDiscrimDistortionFeaturizer.wordTranslated(f, cidx1)
         || !WordLevelDiscrimDistortionFeaturizer.wordTranslated(f, cidx2)) return features; // empty features
 
 
@@ -199,10 +199,10 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
     return features;
   }
 
-  
+
   @Override
   public void initialize(List<ConcreteTranslationOption<TK>> options,
-                         Sequence<TK> foreign) {		
+                         Sequence<TK> foreign) {
     try {
       //System.err.println("Starting to load IBM Model1");
       //model1 = IBMModel1.load("/u/nlp/data/gale/scr/DancMTexperiments/feature_experiments/model1/zh_en.model.actual.t1");
@@ -216,7 +216,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
 
   boolean doReset = true;
   boolean firstIter = true;
-  
+
   @Override
   public void reset() {
     if (firstIter)
@@ -226,7 +226,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
     }
 
     // We skip reset only if it's in the first iteration of training (!TESTING)
-    if (firstIter && !doReset && !TESTING) { 
+    if (firstIter && !doReset && !TESTING) {
       doReset = !doReset;
       return;
     }
@@ -238,7 +238,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
       if (line == null) {
         System.err.printf("DependencyWordLevelDiscrimDistortionFeaturizer: reset lineCount from %d to 1\n",
                           lineCount);
-        System.err.printf("DependencyWordLevelDiscrimDistortionFeaturizer: reread from wordtag file: %s\n", 
+        System.err.printf("DependencyWordLevelDiscrimDistortionFeaturizer: reread from wordtag file: %s\n",
                           parseFilename);
         System.err.printf("DependencyWordLevelDiscrimDistortionFeaturizer: set firstIter to false\n");
         parseReader.close();
@@ -252,7 +252,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
         line = parseReader.readLine();
         firstIter = false;
       }
-      
+
       int readerLineNum = parseReader.getLineNumber();
       if (readerLineNum != lineCount) {
         throw new RuntimeException("DependencyWordLevelDiscrimDistortionFeaturizer: the internal lineCount("
@@ -264,7 +264,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
       e.printStackTrace();
       throw new RuntimeException("loading "+parseFilename+" generated an exception");
     }
-    
+
     System.err.printf("DependencyWordLevelDiscrimDistortionFeaturizer: line %d\n", lineCount);
     if (line!=null) {
       // TODO: check if the largest idx in parse is the same as the length!
@@ -314,10 +314,10 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
         throw new RuntimeException("should be integers");
       }
     }
-    
+
     return head2deps;
   }
-  
+
   private Integer[] parseLineIntoDep2Head(String line) {
     String[] toks = line.split("\t");
     Integer[] deps = new Integer[toks.length+1];
@@ -336,7 +336,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements Incre
         if (deps[depIdx] != null) {
           throw new RuntimeException("dep "+depIdx+" has 2 heads?");
         }
-        deps[depIdx] = new Integer(govIdx);
+        deps[depIdx] = Integer.valueOf(govIdx);
       } catch (Exception e) {
         e.printStackTrace();
         throw new RuntimeException("should be integers");

@@ -171,7 +171,7 @@ public class SymbolTable {
       int id;
       while ((line = in.readLine()) != null) {
         st = new StringTokenizer(line, "\t");
-        id = (new Integer(st.nextToken())).intValue();
+        id = (Integer.valueOf(st.nextToken())).intValue();
         name = st.nextToken();
 
         if (id >= entries.length) {

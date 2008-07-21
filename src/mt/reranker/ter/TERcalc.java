@@ -1,7 +1,7 @@
 package mt.reranker.ter;
 
 /*
-                                                                
+
 Copyright 2006 by BBN Technologies and University of Maryland (UMD)
 
 BBN and UMD grant a nonexclusive, source code, royalty-free right to
@@ -32,10 +32,10 @@ United States complies, relating to the export or re-export of any
 commodities, software, or technical data.  This Software is licensed
 to you on the condition that upon completion you will cease to use
 the Software and, on request of BBN and UMD, will destroy copies of
-the Software in your possession.                                                
+the Software in your possession.
 
 TERcalc.java v1
-Matthew Snover (snover@cs.umd.edu)                           
+Matthew Snover (snover@cs.umd.edu)
 
 */
 
@@ -159,7 +159,7 @@ public class TERcalc {
       if(ref_len >= 0) to_return.numWords = ref_len;
 	}
 	return to_return;
-  }    
+  }
 
   public static TERalignment TERnullstr(String hyp, String ref, TERcost costfunc) {
 	TERalignment to_return = new TERalignment();
@@ -188,8 +188,8 @@ public class TERcalc {
 
 	return to_return;
   }
-				   
-  public static TERalignment TER(Comparable[] hyp, Comparable[] ref, 
+
+  public static TERalignment TER(Comparable[] hyp, Comparable[] ref,
                                  TERcost costfunc) {
 	/* Calculates the TER score for the hyp/ref pair */
 	Map rloc = BuildWordMatches(hyp, ref);
@@ -203,12 +203,12 @@ public class TERcalc {
 	double edits = 0;
 	int numshifts = 0;
 	ArrayList allshifts = new ArrayList(hyp.length+ref.length);
-	
+
 	if (DEBUG)
 	    System.out.println("Initial Alignment:\n" + cur_align + "\n");
-	
+
 	while (true) {
-      Object[] returns = CalcBestShift(cur, hyp, ref, rloc, cur_align, 
+      Object[] returns = CalcBestShift(cur, hyp, ref, rloc, cur_align,
                                        costfunc);
       if (returns == null) {
 		break;
@@ -223,12 +223,12 @@ public class TERcalc {
 
 
       allshifts.add(bestShift);
-      cur = cur_align.aftershift;  
+      cur = cur_align.aftershift;
 	}
 
 	TERalignment to_return = cur_align;
 	to_return.allshifts = (TERshift[]) allshifts.toArray(new TERshift[0]);
-	
+
 	to_return.numEdits += edits;
 
 	NUM_SEGMENTS_SCORED++;
@@ -243,11 +243,11 @@ public class TERcalc {
       s = s.replaceAll("<skipped>", ""); // strip "skipped" tags
       s = s.replaceAll("-\n", ""); // strip end-of-line hyphenation and join lines
       s = s.replaceAll("\n", " "); // join lines
-      s = s.replaceAll("&quot;", "\""); // convert SGML tag for quote to " 
+      s = s.replaceAll("&quot;", "\""); // convert SGML tag for quote to "
       s = s.replaceAll("&amp;", "&"); // convert SGML tag for ampersand to &
       s = s.replaceAll("&lt;", "<"); // convert SGML tag for less-than to >
       s = s.replaceAll("&gt;", ">"); // convert SGML tag for greater-than to <
-	    
+
       // language-dependent part (assuming Western languages):
       s = " " + s + " ";
       s = s.replaceAll("([\\{-\\~\\[-\\` -\\&\\(-\\+\\:-\\@\\/])", " $1 ");   // tokenize punctuation
@@ -261,7 +261,7 @@ public class TERcalc {
 	if(nopunct) s = removePunctuation(s);
 	return s.split("\\s+");
   }
-    
+
   private static String removePunctuation(String str) {
 	String s = str.replaceAll("[\\.,\\?:;!\"\\(\\)]", "");
 	s = s.replaceAll("\\s+", " ");
@@ -269,7 +269,7 @@ public class TERcalc {
   }
 
 
-  private static Map BuildWordMatches(Comparable[] hyp, 
+  private static Map BuildWordMatches(Comparable[] hyp,
                                       Comparable[] ref) {
 	Set hwhash = new HashSet();
 	for (int i = 0; i < hyp.length; i++) {
@@ -295,17 +295,17 @@ public class TERcalc {
           List topush = reflist.subList(start, end+1);
           if (to_return.containsKey(topush)) {
 			Set vals = (Set) to_return.get(topush);
-			vals.add(new Integer(start));
+			vals.add(Integer.valueOf(start));
           } else {
 			Set vals = new TreeSet();
-			vals.add(new Integer(start));
-			to_return.put(topush, vals);			
+			vals.add(Integer.valueOf(start));
+			to_return.put(topush, vals);
           }
 		}
       }
 	}
 	return to_return;
-  }    
+  }
 
   private static void FindAlignErr(TERalignment align, boolean[] herr,
                                    boolean[] rerr,
@@ -316,19 +316,19 @@ public class TERcalc {
       char sym = align.alignment[i];
       if (sym == ' ') {
 		hpos++; rpos++;
-		herr[hpos] = false; 
+		herr[hpos] = false;
 		rerr[rpos] = false;
 		ralign[rpos] = hpos;
       } else if (sym == 'S') {
 		hpos++; rpos++;
-		herr[hpos] = true; 
+		herr[hpos] = true;
 		rerr[rpos] = true;
 		ralign[rpos] = hpos;
       } else if (sym == 'I') {
 		hpos++;
-		herr[hpos] = true; 
+		herr[hpos] = true;
       } else if (sym == 'D') {
-		rpos++; 		
+		rpos++;
 		rerr[rpos] = true;
 		ralign[rpos] = hpos;
       } else {
@@ -339,12 +339,12 @@ public class TERcalc {
   }
 
   private static Object[] CalcBestShift(Comparable[] cur,
-                                        Comparable[] hyp, Comparable[] ref, 
+                                        Comparable[] hyp, Comparable[] ref,
                                         Map rloc, TERalignment med_align,
                                         TERcost costfunc) {
-	/* 
+	/*
 	   return null if no good shift is found
-	   or return Object[ TERshift bestShift, 
+	   or return Object[ TERshift bestShift,
        TERalignment cur_align ]
 	*/
 	Object[] to_return = new Object[2];
@@ -358,11 +358,11 @@ public class TERcalc {
 	int[] ralign = new int[ref.length];
 	FindAlignErr(med_align, herr, rerr, ralign);
 
-	TERshift[][] poss_shifts = GatherAllPossShifts(cur, ref, rloc, med_align, herr, rerr, ralign, costfunc);		
+	TERshift[][] poss_shifts = GatherAllPossShifts(cur, ref, rloc, med_align, herr, rerr, ralign, costfunc);
 	double curerr = med_align.numEdits;
-	
+
 	if (DEBUG) {
-      // CUT HERE        
+      // CUT HERE
       System.out.println("Possible Shifts:");
       for (int i = poss_shifts.length - 1; i >= 0; i--) {
 		for (int j = 0; j < poss_shifts[i].length; j++) {
@@ -375,29 +375,29 @@ public class TERcalc {
 
 	double cur_best_shift_cost = 0.0;
 	TERalignment cur_best_align = med_align;
-	TERshift cur_best_shift = new TERshift();	
+	TERshift cur_best_shift = new TERshift();
 
 	for (int i = poss_shifts.length - 1; i >= 0; i--) {
       if (DEBUG) System.out.println("Considering shift of length " + i + " (" + poss_shifts[i].length  +")");
 
       /* Consider shifts of length i+1 */
-      double curfix = curerr - 
+      double curfix = curerr -
 		(cur_best_shift_cost + cur_best_align.numEdits);
       double maxfix = (2 * (1 + i));
-	    
-      if ((curfix > maxfix) || 
+
+      if ((curfix > maxfix) ||
           ((cur_best_shift_cost != 0) && (curfix == maxfix))) {
 		break;
       }
-	    
-      for (int s = 0; s < poss_shifts[i].length; s++) {		
-		curfix = curerr - 
+
+      for (int s = 0; s < poss_shifts[i].length; s++) {
+		curfix = curerr -
           (cur_best_shift_cost + cur_best_align.numEdits);
-        if ((curfix > maxfix) || 
+        if ((curfix > maxfix) ||
 		    ((cur_best_shift_cost != 0) && (curfix == maxfix))) {
           break;
 		}
-		
+
 		TERshift curshift = poss_shifts[i][s];
 
         Object[] shiftReturns = PerformShift(cur, curshift);
@@ -410,12 +410,12 @@ public class TERcalc {
 		curalign.ref = ref;
 		curalign.aftershift = shiftarr;
 
-		double gain = (cur_best_align.numEdits + cur_best_shift_cost) 
+		double gain = (cur_best_align.numEdits + cur_best_shift_cost)
           - (curalign.numEdits + curshift.cost);
-		
+
 		if (DEBUG) {
           System.out.println("Gain for " + curshift + " is " + gain + ". (result: [" + TERalignment.join(" ", shiftarr) + "]");
-          System.out.println("" + curalign + "\n");		
+          System.out.println("" + curalign + "\n");
 		}
 
 		if ((gain > 0) || ((cur_best_shift_cost == 0) && (gain == 0))) {
@@ -431,7 +431,7 @@ public class TERcalc {
 
 	if (anygain) {
       to_return[0] = cur_best_shift;
-      to_return[1] = cur_best_align;	    
+      to_return[1] = cur_best_align;
       return to_return;
 	} else {
       if (DEBUG) System.out.println("No good shift found.\n");
@@ -442,19 +442,19 @@ public class TERcalc {
   private static TERshift[][] GatherAllPossShifts(Comparable[] hyp, Comparable[] ref, Map rloc,
                                                   TERalignment align,
                                                   boolean[] herr, boolean[] rerr, int[] ralign, TERcost costfunc) {
-      
+
       // Don't even bother to look if shifts can't be done
       if ((MAX_SHIFT_SIZE <= 0) || (MAX_SHIFT_DIST <= 0)) {
 	  TERshift[][] to_return = new TERshift[0][];
 	  return to_return;
       }
-      
+
 
 	ArrayList[] allshifts = new ArrayList[MAX_SHIFT_SIZE+1];
 	for (int i = 0; i < allshifts.length; i++)
       allshifts[i] = new ArrayList();
 
-	List hyplist = Arrays.asList(hyp);	
+	List hyplist = Arrays.asList(hyp);
 	for (int start = 0; start < hyp.length; start++) {
       if (! rloc.containsKey(hyplist.subList(start, start+1))) continue;
 
@@ -464,8 +464,8 @@ public class TERcalc {
 		int moveto = ((Integer) mti.next()).intValue();
 		if ((start != ralign[moveto]) &&
 		    (ralign[moveto] - start <= MAX_SHIFT_DIST) &&
-		    ((start - ralign[moveto] - 1) <= MAX_SHIFT_DIST)) 
-          ok = true;		
+		    ((start - ralign[moveto] - 1) <= MAX_SHIFT_DIST))
+          ok = true;
       }
       if (! ok) continue;
 
@@ -475,7 +475,7 @@ public class TERcalc {
 
 		/* check if cand is good if so, add it */
 		List cand = hyplist.subList(start, end+1);
-		ok = false;		
+		ok = false;
 		if (! (rloc.containsKey(cand))) continue;
 
 		boolean any_herr = false;
@@ -487,7 +487,7 @@ public class TERcalc {
           ok = true;
           continue;
 		}
-				
+
 		Iterator movetoit = ((Set) rloc.get(cand)).iterator();
 		while (movetoit.hasNext()) {
           int moveto = ((Integer) movetoit.next()).intValue();
@@ -501,7 +501,7 @@ public class TERcalc {
           /* check to see if there are any errors in either string
              (only move if this is the case!)
           */
-		    
+
           boolean any_rerr = false;
           for (int i = 0; (i <= end - start) && (! any_rerr); i++) {
 			if (rerr[moveto+i]) any_rerr = true;
@@ -511,17 +511,17 @@ public class TERcalc {
           for (int roff = -1; roff <= (end - start); roff++) {
 	      TERshift topush = null;
 	      if ((roff == -1) && (moveto == 0)) {
-		  if (DEBUG) System.out.println("Consider making " + start + "..." + end + " moveto: " + moveto + " roff: " 
-				     + roff + " ralign[mt+roff]: " + -1); 
+		  if (DEBUG) System.out.println("Consider making " + start + "..." + end + " moveto: " + moveto + " roff: "
+				     + roff + " ralign[mt+roff]: " + -1);
 
 		  topush = new TERshift(start, end, -1, -1);
 	      } else if ((start != ralign[moveto+roff]) &&
-			    ((roff == 0) || 
+			    ((roff == 0) ||
 			     (ralign[moveto+roff] != ralign[moveto]))) {
 		  int newloc = ralign[moveto+roff];
-		  if (DEBUG) System.out.println("Consider making " + start + "..." + end + " moveto: " + moveto + " roff: " 
-				     + roff + " ralign[mt+roff]: " + newloc); 
-		  
+		  if (DEBUG) System.out.println("Consider making " + start + "..." + end + " moveto: " + moveto + " roff: "
+				     + roff + " ralign[mt+roff]: " + newloc);
+
 		  //		  if (newloc != start + 1) {
 		      topush = new TERshift(start, end, moveto+roff, newloc);
 		      // }
@@ -530,8 +530,8 @@ public class TERcalc {
 		  topush.shifted = cand;
 		  topush.cost  = costfunc.shift_cost(topush);
 		  allshifts[end - start].add(topush);
-	      }	      
-          }		
+	      }
+          }
       }
       }
 	}
@@ -547,14 +547,14 @@ public class TERcalc {
 	return PerformShift(words, s.start, s.end, s.newloc);
   }
 
-  private static Object[] PerformShift(Comparable[] words, int start, int end, int newloc) {	
+  private static Object[] PerformShift(Comparable[] words, int start, int end, int newloc) {
       int c = 0;
       Comparable[] nwords = (Comparable[]) words.clone();
       TERintpair[] spans = null;
       Object[] toreturn = new Object[2];
 
     if(hypSpans != null) spans = new TERintpair[hypSpans.length];
-    if(DEBUG) { 
+    if(DEBUG) {
 	if (hypSpans != null) {
 	    System.out.println("word length: " + words.length + " span length: " + hypSpans.length);
 	} else {
@@ -573,9 +573,9 @@ public class TERcalc {
       for (int i = end+1; i<words.length;i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }
 	} else if (newloc > end) {
       for (int i = 0; i<=start-1; i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }
-      for (int i = end+1; i<=newloc;i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }	    
+      for (int i = end+1; i<=newloc;i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }
       for (int i = start; i<=end;i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }
-      for (int i = newloc+1; i<words.length;i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }	    
+      for (int i = newloc+1; i<words.length;i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }
 	} else {
       // we are moving inside of ourselves
       for (int i = 0; i<=start-1; i++) { nwords[c++] = words[i]; if(hypSpans != null) spans[c-1] = hypSpans[i]; }
@@ -590,7 +590,7 @@ public class TERcalc {
 	return toreturn;
   }
 
-  private static TERalignment MinEditDist(Comparable[] hyp, Comparable[] ref, 
+  private static TERalignment MinEditDist(Comparable[] hyp, Comparable[] ref,
                                           TERcost costfunc, TERintpair[] curHypSpans) {
 	double current_best = INF;
 	double last_best = INF;
@@ -606,7 +606,7 @@ public class TERcalc {
 
 	int hwsize = hyp.length-1;
 	int rwsize = ref.length-1;
-	
+
 	NUM_BEAM_SEARCH_CALLS++;
 
 	if ((ref.length+1 > S.length) || (hyp.length+1 > S.length)) {
@@ -624,24 +624,24 @@ public class TERcalc {
       }
 	}
  	S[0][0] = 0.0;
-	
+
 	for (j=0; j <= hyp.length; j++) {
       last_best = current_best;
       current_best = INF;
-	    
+
       first_good = current_first_good;
       current_first_good = -1;
-	    
+
       last_good = cur_last_good;
       cur_last_good = -1;
-	    
+
       last_peak = cur_last_peak;
       cur_last_peak = 0;
-	    
+
       for (i=first_good; i <= ref.length; i++) {
 		if (i > last_good)
           break;
-		if (S[i][j] < 0) 
+		if (S[i][j] < 0)
           continue;
 		score = S[i][j];
 
@@ -650,9 +650,9 @@ public class TERcalc {
 
 		if (current_first_good == -1)
           current_first_good = i ;
-		    
+
 		if ((i < ref.length) && (j < hyp.length)) {
-          if(refSpans == null || hypSpans == null || 
+          if(refSpans == null || hypSpans == null ||
              spanIntersection(refSpans[i], curHypSpans[j])) {
             if (ref[i].equals(hyp[j])) {
               cost = costfunc.match_cost(hyp[j], ref[i]) + score;
@@ -662,7 +662,7 @@ public class TERcalc {
               }
               if (cost < current_best)
                 current_best = cost;
-              
+
               if (current_best == cost)
                 cur_last_peak = i+1;
             } else {
@@ -678,9 +678,9 @@ public class TERcalc {
             }
           }
 		}
-			
+
 		cur_last_good = i+1;
-			
+
 		if  (j < hyp.length) {
           icost = score+costfunc.insert_cost(hyp[j]);
           if ((S[i][j+1] < 0) || (S[i][j+1] > icost)) {
@@ -689,7 +689,7 @@ public class TERcalc {
 			if (( cur_last_peak <  i) && ( current_best ==  icost))
               cur_last_peak = i;
           }
-		}		
+		}
 
 		if  (i < ref.length) {
           dcost =  score + costfunc.delete_cost(ref[i]);
@@ -698,11 +698,11 @@ public class TERcalc {
 			P[i+1][j] = 'D';
 			if (i >= last_good)
               last_good = i + 1 ;
-          }		
+          }
 		}
       }
 	}
-	
+
 	int tracelength = 0;
 	i = ref.length;
 	j = hyp.length;
@@ -750,9 +750,9 @@ public class TERcalc {
     String[] hSpans = hypSpan.split(":");
     String[] rSpans = refSpan.split(":");
 
-    return (Integer.valueOf(rSpans[1]) >= Integer.valueOf(hSpans[0]) && 
+    return (Integer.valueOf(rSpans[1]) >= Integer.valueOf(hSpans[0]) &&
             Integer.valueOf(rSpans[0]) <= Integer.valueOf(hSpans[1]));
-  } 
+  }
 
   private static boolean spanIntersection (TERintpair refSpan,
                                            TERintpair hypSpan) {
@@ -767,7 +767,7 @@ public class TERcalc {
 
   /* We may want to add some function to change the beam width */
   public static int BEAM_WIDTH = 20;
-    
+
   private static final double INF = 999999.0;
 
   private static final int MAX_SHIFT_SIZE = 10;
@@ -782,5 +782,5 @@ public class TERcalc {
   private static double[][] S = new double[350][350];
   private static char[][] P = new char[350][350];
 
-  
+
 }
