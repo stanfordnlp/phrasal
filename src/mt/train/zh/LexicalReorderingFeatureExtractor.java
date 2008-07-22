@@ -32,16 +32,20 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
   //private static double LAPLACE_SMOOTHING = 0.0;
   private static int LAPLACE_SMOOTHING = 0;
 
-  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
+  @Override
+	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
     directionType = DirectionTypes.bidirectional;
   }
 
-  public boolean needAlGrid() { return true; }
+  @Override
+	public boolean needAlGrid() { return true; }
 
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+  @Override
+	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, AlignmentGrid fullAlGrid, String infoLine) {
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, AlignmentGrid fullAlGrid, String infoLine) {
     int f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos(), e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos();
     ReorderingTypes type1 = ReorderingTypes.discontinuous, type2 = ReorderingTypes.discontinuous;
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
@@ -81,7 +85,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     }
   }
 
-  public void report(AlignmentTemplates alTemps) {
+  @Override
+	public void report(AlignmentTemplates alTemps) {
     Set<Integer> isPrinted = new HashSet<Integer>();
     int[] countsP_f = null;
     int[] countsN_f = null;
@@ -102,7 +107,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
       if (sumP_f != sumN_f) { throw new RuntimeException("sumP_f != sumN_f"); };
       System.out.printf("REPORT:\t%s\t%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n",
                         alTemp.f().toString(),
-                        (int)sumP_f,
+                        sumP_f,
                         (double)countsP_f[0]/sumP_f,
                         (double)countsP_f[1]/sumP_f,
                         (double)countsP_f[2]/sumP_f,
@@ -113,7 +118,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     System.out.println("----------------------------------------------");
   }
 
-  public Object score(AlignmentTemplate alTemp) {
+  @Override
+	public Object score(AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
     int[] countsP = null;
     int[] countsN = null;

@@ -63,7 +63,8 @@ public class SSVMLearner extends AbstractOneOfManyClassifier {
   HashMap<CompactHypothesisList, ArrayList<SparseVector>> svCache =
     new HashMap<CompactHypothesisList, ArrayList<SparseVector>>();
 
-  double[] getAllScores(CompactHypothesisList chl) {
+  @Override
+	double[] getAllScores(CompactHypothesisList chl) {
     ArrayList<SparseVector> vecs = svCache.get(chl);
     if (vecs == null) {
       vecs = new ArrayList<SparseVector>();
@@ -98,11 +99,13 @@ public class SSVMLearner extends AbstractOneOfManyClassifier {
     }
   }
 
-  public boolean isLogLinear() { return true; } // for now we fake it
+  @Override
+	public boolean isLogLinear() { return true; } // for now we fake it
 
   static public final double SCORE_REWT = 10;
 
-  public double[] getProbs(CompactHypothesisList chl) {
+  @Override
+	public double[] getProbs(CompactHypothesisList chl) {
     double[] scores = getAllScores(chl);
     for (int i = 0; i < scores.length; i++) scores[i] *= SCORE_REWT;
     double denom = ArrayMath.logSum(scores);
@@ -115,7 +118,8 @@ public class SSVMLearner extends AbstractOneOfManyClassifier {
   public void displayWeights(PrintWriter pw, boolean sortByWeight) {
     pw.printf("Display Weights not implemented yet for SSVM\n"); }
 
-  public void learn(List<CompactHypothesisList> lchl) {
+  @Override
+	public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl); wts = null;
 
 

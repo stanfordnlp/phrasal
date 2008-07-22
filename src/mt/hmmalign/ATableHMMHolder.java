@@ -60,7 +60,7 @@ public class ATableHMMHolder {
   }
 
   public ATable get(IntTuple wP) {
-    ATable u = (ATable) tables.get(wP);
+    ATable u = tables.get(wP);
     if (u == null) {
 
       if (GlobalParams.verbose) {
@@ -108,7 +108,7 @@ public class ATableHMMHolder {
 
     for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
     	Map.Entry<IntTuple, ATable> eN = i.next();
-      aT = (ATable) eN.getValue();
+      aT = eN.getValue();
       if (!aT.isPopulated()) {
         //remove aT
         i.remove();
@@ -143,7 +143,7 @@ public class ATableHMMHolder {
 
       for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
       	Map.Entry<IntTuple, ATable> eN = i.next();
-        wP = (IntTuple) eN.getKey();
+        wP = eN.getKey();
         p.println(wP.toString());
         p.flush();
         //eN.getValue().save(filename);
@@ -254,7 +254,7 @@ public class ATableHMMHolder {
       Map.Entry<IntTuple, ATable> eN = i.next();
       aT = eN.getValue();
       if (GlobalParams.verbose || true) {
-        System.out.println(((IntTuple) eN.getKey()).toNameString(mask));
+        System.out.println((eN.getKey()).toNameString(mask));
       }
       aT.normalize();
       if (!aT.checkOK()) {

@@ -39,7 +39,8 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
     return ip;
   }
 
-  public boolean needAlGrid() {
+  @Override
+	public boolean needAlGrid() {
     return true;
   }
 
@@ -129,7 +130,8 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
   }
 
 
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) { 
+  @Override
+	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) { 
 
     collectStatsFromGrid(alGrid);
     
@@ -274,7 +276,8 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
     goodnessCounter.incrementCount(sb.toString(), isGood);
   }
 
-  public void report() {
+  @Override
+	public void report() {
     System.out.println("-----REPORT from SyntacticPhraseReorderingFeatureExtractor-----");
     System.out.printf("\t\ttrue\tfalse\ttrue\tfalse\n");
     for(String k1 : goodnessCounter.firstKeySet()) {

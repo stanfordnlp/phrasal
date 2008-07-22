@@ -36,7 +36,8 @@ public class Candidate {
     this.words = tws;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append(bleu);
     sb.append("\t");

@@ -55,7 +55,8 @@ public class WordEx extends Word {
   }
 
 
-  public void print() {
+  @Override
+	public void print() {
     System.out.print("Index " + index + " Count " + count + " ");
     super.print();
 

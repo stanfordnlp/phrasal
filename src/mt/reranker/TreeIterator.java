@@ -26,7 +26,8 @@ public class TreeIterator extends AbstractIterator<Tree> {
     setNext();
   }
 
-  public boolean hasNext() {
+  @Override
+	public boolean hasNext() {
     return nextToken != null;
   }
 
@@ -39,7 +40,8 @@ public class TreeIterator extends AbstractIterator<Tree> {
     nextToken = parseString(s);
   }
 
-  public Tree next() {
+  @Override
+	public Tree next() {
     Tree token = nextToken;
     setNext();
     return token;

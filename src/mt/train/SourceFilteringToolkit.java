@@ -80,6 +80,6 @@ public class SourceFilteringToolkit {
     } catch(IOException e) {
       e.printStackTrace();
     }
-    return (Sequence<IString>[]) list.toArray(new Sequence[list.size()]);
+    return list.toArray(new Sequence[list.size()]);
   }
 }

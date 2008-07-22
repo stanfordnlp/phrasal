@@ -33,7 +33,8 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
 
   TwoDimensionalCounter<String, ReorderingTypes> theCounter = new TwoDimensionalCounter<String, ReorderingTypes>();
   
-  public boolean needAlGrid() { return true; }
+  @Override
+	public boolean needAlGrid() { return true; }
 
 
   List<AlignmentTemplateInstance> getAdjacentLabeledEnglishTemplates(AlignmentTemplateInstance template, AlignmentGrid alGrid) {
@@ -91,7 +92,8 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
     return newlist;
   }
 
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
+  @Override
+	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
 
     labelAlTemps(sent, info, alGrid);
     System.err.println("END OF labelAlTemps");
@@ -294,13 +296,17 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
     }
   }
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
 
-  public Object score(AlignmentTemplate alTemp) { return null; }
+  @Override
+	public Object score(AlignmentTemplate alTemp) { return null; }
 
-  public Object scoreNames() { return null; }
+  @Override
+	public Object scoreNames() { return null; }
 
-  public void report() { 
+  @Override
+	public void report() { 
     System.out.println("====================================================================");
     System.out.println(theCounter);
     System.out.println("====================================================================");

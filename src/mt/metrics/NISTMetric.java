@@ -131,6 +131,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		double r;
     int c;
 		
+		@Override
 		public NISTIncrementalMetric clone() {
 			return new NISTIncrementalMetric(this);
 		}
@@ -139,7 +140,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		double[] precisions() {
 			double[] r = new double[order];
 			for (int i = 0; i < r.length; i++) {
-				r[i] = matchCounts[i]/(double)possibleMatchCounts[i];
+				r[i] = matchCounts[i]/possibleMatchCounts[i];
 			}
 			return r;
 		}

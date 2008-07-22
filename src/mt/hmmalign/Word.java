@@ -39,11 +39,13 @@ public class Word {
     hashCode = wordId << 7 + tagId;
   }
 
-  public int hashCode() {
+  @Override
+	public int hashCode() {
     return hashCode;
   }
 
-  public boolean equals(Object o) {
+  @Override
+	public boolean equals(Object o) {
 
     if (o instanceof Word) {
       Word w1 = (Word) o;
@@ -66,7 +68,8 @@ public class Word {
     return tagId;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return wordId + "_" + tagId;
 
   }

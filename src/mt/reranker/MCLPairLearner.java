@@ -56,7 +56,8 @@ public class MCLPairLearner extends AbstractOneOfManyClassifier {
 
     }
 
-    public int domainDimension() { return featureIndex.size(); }
+    @Override
+		public int domainDimension() { return featureIndex.size(); }
 
     public int[] getAccuracy(List<CompactHypothesisList> examples, int offset, DataSet dataSet) {
       int all = 0;
@@ -86,7 +87,8 @@ public class MCLPairLearner extends AbstractOneOfManyClassifier {
       return allStats;
     }
 
-    public void calculate(double[] testWts) {
+    @Override
+		public void calculate(double[] testWts) {
       wts = testWts;
       value = 0.0;
       double[] tV = new double[wts.length];
@@ -161,14 +163,16 @@ public class MCLPairLearner extends AbstractOneOfManyClassifier {
     }
   }
 
-  public boolean isLogLinear() { return true; }
+  @Override
+	public boolean isLogLinear() { return true; }
 
 
   public int[] getAccuracy(List<CompactHypothesisList> examples, int offset, DataSet dataSet) {
     return objF.getAccuracy(examples, offset, dataSet);
   }
 
-  public void learn(DataSet dataSet) {
+  @Override
+	public void learn(DataSet dataSet) {
     int max1 = ArrayMath.max(dataSet.getTrainRange());
     int max2 = ArrayMath.max(dataSet.getDevRange());
     loadPairMax = max1;
@@ -177,7 +181,8 @@ public class MCLPairLearner extends AbstractOneOfManyClassifier {
   }
 
 
-  public void learn(List<CompactHypothesisList> lchl) {
+  @Override
+	public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl);
     String pairDir = System.getProperty(PAIR_FILE_NAME, DEFAULT_PAIR_FILE);
     try {

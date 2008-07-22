@@ -94,7 +94,8 @@ public class Rule {
     return rules;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return toXrsString();
   }
 
@@ -168,7 +169,8 @@ public class Rule {
     }
   }
 
-  public boolean equals(Object object) {
+  @Override
+	public boolean equals(Object object) {
     if(object.getClass() != getClass())
       return false;
     Rule r = (Rule) object;
@@ -180,7 +182,8 @@ public class Rule {
     return isEq;
   }
 
-  public int hashCode() {
+  @Override
+	public int hashCode() {
     return
      Arrays.hashCode(lhsStruct)+
      Arrays.hashCode(lhsLabels)+

@@ -49,6 +49,7 @@ public class LMGrammar_JAVA extends LMGrammar {
 		System.exit(0);*/
 	}
 
+	@Override
 	public void write_vocab_map_srilm(String fname){
 		System.out.println("Error: call write_vocab_map_srilm in java, must exit");
 		System.exit(0);
@@ -56,6 +57,7 @@ public class LMGrammar_JAVA extends LMGrammar {
 
 
 	//note: we never use check_bad_stuff here
+	@Override
 	protected double get_prob_specific(int[] ngram_wrds_in, int order, boolean check_bad_stuff){
 		int[] ngram_wrds=replace_with_unk(ngram_wrds_in);//TODO
 	    if(ngram_wrds[ngram_wrds.length-1]==Symbol.UNK_SYM_ID)//TODO: wrong implementation in hiero
@@ -101,7 +103,8 @@ public class LMGrammar_JAVA extends LMGrammar {
 
 	  //the returned array lenght must be the same the len of original_state
     //the only change to the original_state is: replace with more non-null state words to null state
-	 public int[] get_right_equi_state(int[] original_state_in, int order, boolean check_bad_stuff){
+	 @Override
+	public int[] get_right_equi_state(int[] original_state_in, int order, boolean check_bad_stuff){
 			if(Decoder.use_right_euqivalent_state==false)
 				return original_state_in;
 			int[] original_state=replace_with_unk(original_state_in);
@@ -137,7 +140,8 @@ public class LMGrammar_JAVA extends LMGrammar {
 	 * (2) in general, whenever there is a <bo> or <null> in a given ngram, then it will definitely backoff since it has same/more context
 	*/
 	//return: (1) the equivlant state vector; (2) the finalized cost; (3) the estimated cost
-	 public int[] get_left_equi_state(int[] original_state_wrds_in, int order, double[] cost){
+	 @Override
+	public int[] get_left_equi_state(int[] original_state_wrds_in, int order, double[] cost){
 		    if(Decoder.use_left_euqivalent_state==false){
 				return original_state_wrds_in;
 			}
@@ -267,6 +271,7 @@ public class LMGrammar_JAVA extends LMGrammar {
 		}
 	}
 
+	@Override
 	protected double get_prob_backoff_state_specific(int[] ngram_wrds, int order, int n_additional_bow){
 		int[] backoff_wrds = Support.sub_int_array(ngram_wrds, 0, ngram_wrds.length-1);
 		double[] sum_bow =new double[1];
@@ -311,6 +316,7 @@ public class LMGrammar_JAVA extends LMGrammar {
 
 
 //	######################################## general helper function ###########################################
+	@Override
 	protected int replace_with_unk(int in){
        if(root.containsKey(in)==true ||
     	   in == Symbol.NULL_RIGHT_LM_STATE_SYM_ID || //root must have
@@ -332,6 +338,7 @@ public class LMGrammar_JAVA extends LMGrammar {
      */
 
 	//read grammar locally by the Java implementation
+	@Override
 	public void read_lm_grammar_from_file(String grammar_file){
 		start_loading_time = System.currentTimeMillis();
 		root = new LMHash();

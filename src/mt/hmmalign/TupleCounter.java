@@ -20,7 +20,7 @@ public class TupleCounter {
   public void add(IntTuple iT, int count) {
 
     //System.out.println("adding "+iT.toNameString(30));
-    MutableInteger iH = (MutableInteger) map.get(iT);
+    MutableInteger iH = map.get(iT);
     if (iH == null) {
 
       IntTuple iN = iT.getCopy();

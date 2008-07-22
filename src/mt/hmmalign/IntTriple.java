@@ -24,13 +24,15 @@ public class IntTriple extends IntTuple {
   }
 
 
-  public IntTuple getCopy() {
+  @Override
+	public IntTuple getCopy() {
     IntTriple nT = new IntTriple(source, middle, target);
     return nT;
   }
 
 
-  public void set(int num, int val) {
+  @Override
+	public void set(int num, int val) {
     switch (num) {
       case 0:
         {
@@ -51,7 +53,8 @@ public class IntTriple extends IntTuple {
   }
 
 
-  public int get(int num) {
+  @Override
+	public int get(int num) {
     if (num == 0) {
       return source;
     }
@@ -91,36 +94,42 @@ public class IntTriple extends IntTuple {
     middle = mid;
   }
 
-  public int hashCode() {
+  @Override
+	public int hashCode() {
     return (source << 20) ^ (middle << 10) ^ (target);
   }
 
-  public boolean equals(Object o) {
+  @Override
+	public boolean equals(Object o) {
     IntTriple iP = (IntTriple) o;
     return ((iP.source == source) && (iP.middle == middle) && (iP.target == target));
 
   }
 
-  public void print() {
+  @Override
+	public void print() {
     System.out.println(target + "|" + middle + "|" + source);
   }
 
 
-  public String toString() {
+  @Override
+	public String toString() {
 
     return source + " " + middle + " " + target;
 
   }
 
 
-  public String toNameStringE() {
+  @Override
+	public String toNameStringE() {
 
     return SentenceHandler.sTableE.getName(source) + " " + SentenceHandler.sTableE.getName(middle) + " " + SentenceHandler.sTableE.getName(target);
 
   }
 
 
-  public String toNameStringF() {
+  @Override
+	public String toNameStringF() {
 
     return SentenceHandler.sTableF.getName(source) + " " + SentenceHandler.sTableF.getName(middle) + " " + SentenceHandler.sTableF.getName(target);
 

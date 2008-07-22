@@ -27,6 +27,7 @@ public class RecombinationHash<S extends State<S>> {
 	static {
 		if (DEBUG) {
 			Runtime.getRuntime().addShutdownHook(new Thread() {
+				@Override
 				public void run() {
 					displayStats();
 				}

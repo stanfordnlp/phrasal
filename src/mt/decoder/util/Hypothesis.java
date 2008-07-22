@@ -167,6 +167,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 		return sbuf.toString();
 	}
 	
+	@Override
 	public String toString() {
 		return toString(0);
 	}

@@ -21,7 +21,8 @@ public class AlignmentIterator extends AbstractIterator<LegacyAlignment> {
     setNext();
   }
 
-  public boolean hasNext() {
+  @Override
+	public boolean hasNext() {
     return nextToken != null;
   }
 
@@ -31,7 +32,8 @@ public class AlignmentIterator extends AbstractIterator<LegacyAlignment> {
     nextToken = getNext();
   }
 
-  public LegacyAlignment next() {
+  @Override
+	public LegacyAlignment next() {
   	LegacyAlignment token = nextToken;
     setNext();
     return token;

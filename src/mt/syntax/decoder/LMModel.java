@@ -257,7 +257,8 @@ private double compute_euqiv_state_final_transition(HashMap  state){
 	/*the transition cost for LM: sum of the costs of the new ngrams created
      * depends on the antstates and current rule*/
     //antstates: ArrayList of states of this model in ant items
-    public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){//j1 is not used at all
+    @Override
+		public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){//j1 is not used at all
     	//long start = Support.current_time();
     	HashMap  res = lookup_words1_equv_state(r.english, antstates);
     	//	Chart.g_time_lm += Support.current_time()-start;
@@ -269,12 +270,14 @@ private double compute_euqiv_state_final_transition(HashMap  state){
     
     /*depends on the rule only*/
     /*will consider all the complete ngrams, and all the incomplete-ngrams that will have sth fit into its left side*/
-    public double estimate(Rule r){
+    @Override
+		public double estimate(Rule r){
         return estimate_rule_prob(r.english); 
     }
 
     //only called after a complete hyp for the whole input sentence is obtaned
-    public double finaltransition(HashMap  state){
+    @Override
+		public double finaltransition(HashMap  state){
     	 if (state!=null){
     		return compute_euqiv_state_final_transition(state);
          } else{

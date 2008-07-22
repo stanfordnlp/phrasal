@@ -39,7 +39,7 @@ public class SymbolTable {
   public WordEx getEntry(WordEx key) {
 
     if (initialMap.containsKey(key)) {
-      return (WordEx) (initialMap.get(key));
+      return (initialMap.get(key));
     } else {
       initialMap.put(key, key);
       if ((key.getWordId() == 0) || (key.getTagId() == 0)) {

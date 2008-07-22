@@ -22,7 +22,8 @@ public class TPHandlerEtags extends TPHandler {
    * this init is different since we need to cache the tag probs as well
    */
 
-  public void init() {
+  @Override
+	public void init() {
     WordEx fWord, eWord;
 
     l = sentPair.e.getLength() - 1;
@@ -52,7 +53,8 @@ public class TPHandlerEtags extends TPHandler {
   /*
    * get the probability p(fj|ei)
    */
-  public double getProb(int i, int j) {
+  @Override
+	public double getProb(int i, int j) {
 
     double prob1, prob2, prob;
     if (cache[i][j] == null) {
@@ -89,7 +91,8 @@ public class TPHandlerEtags extends TPHandler {
    * Increment the count for c(fj|ei)
    */
 
-  public void incCount(int i, int j, double val) {
+  @Override
+	public void incCount(int i, int j, double val) {
 
     if (val == 0) {
       return;

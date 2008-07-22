@@ -40,7 +40,8 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   public static final String LAPLACE_PROPERTY = "LaplaceSmoothing";
   private static double LAPLACE_SMOOTHING = Double.parseDouble(System.getProperty(LAPLACE_PROPERTY, "0.5"));
 
-  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
+  @Override
+	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
     boolean fail = false;
     // Categories enabled by default:
@@ -123,9 +124,11 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     }
   }
 
-  public boolean needAlGrid() { return phrasalReordering; }
+  @Override
+	public boolean needAlGrid() { return phrasalReordering; }
 
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+  @Override
+	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   private ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, boolean forward) {
     WordAlignment sent = alTemp.getSentencePair();
@@ -162,7 +165,8 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     return ReorderingTypes.discont1;
   }
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     if(getCurrentPass()+1 != getRequiredPassNumber())
       return;
     ReorderingTypes type1 = getReorderingType(alTemp, alGrid, true);
@@ -184,7 +188,8 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     }
   }
 
-  public Object score(AlignmentTemplate alTemp) {
+  @Override
+	public Object score(AlignmentTemplate alTemp) {
     int idx = -1;
     if(languageType == LanguageTypes.fe) idx = alTemp.getKey();
     else if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
@@ -286,7 +291,8 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     ++counts[type];
   }
 
-  public void report() {
+  @Override
+	public void report() {
     System.err.println("LexicalReorderingFeatureExtractor: done.");
     double[] prob = new double[totalForwardCounts.length];
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {

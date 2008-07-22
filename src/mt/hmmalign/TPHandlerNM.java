@@ -29,12 +29,14 @@ public class TPHandlerNM extends TPHandler {
   }
 
 
-  public void setPair(SentencePair sent) {
+  @Override
+	public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
   }
 
-  public void init() {
+  @Override
+	public void init() {
     Word fWord, eWord;
 
     l = sentPair.e.getLength() - 1;
@@ -61,7 +63,8 @@ public class TPHandlerNM extends TPHandler {
   /*
    * get the probability p(fj|ei)
    */
-  public double getProb(int i, int j) {
+  @Override
+	public double getProb(int i, int j) {
 
     double prob;
 
@@ -90,7 +93,8 @@ public class TPHandlerNM extends TPHandler {
   /*
   * get the probability p(fj|ei)
   */
-  public double getProb(int i, int j, int[] alignment) {
+  @Override
+	public double getProb(int i, int j, int[] alignment) {
 
     double prob;
 
@@ -120,7 +124,8 @@ public class TPHandlerNM extends TPHandler {
    * Increment the count for c(fj|ei)
    */
 
-  public void incCount(int i, int j, double val) {
+  @Override
+	public void incCount(int i, int j, double val) {
 
     if (val == 0) {
       return;

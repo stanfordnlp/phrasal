@@ -146,6 +146,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		final int[][] futurePossibleCounts;
 		int r, c;
 		
+		@Override
 		public BLEUIncrementalMetric clone() {
 			return new BLEUIncrementalMetric(this);
 		}

@@ -22,9 +22,11 @@ public class LogLinearProbabilisticWrapper extends
   }
 
   class ObjF extends AbstractCachingDiffFunction {
-    public int domainDimension() { return 1; }
+    @Override
+		public int domainDimension() { return 1; }
 
-    public void calculate(double[] testWts) {
+    @Override
+		public void calculate(double[] testWts) {
       wts = testWts;
       double sigma2 = 100;
 
@@ -47,17 +49,20 @@ public class LogLinearProbabilisticWrapper extends
     }
   }
 
-  public boolean isLogLinear() { return true; }
+  @Override
+	public boolean isLogLinear() { return true; }
 
   // Here, linear scores are calculated by reweighting
   // the score assigned by the underlying classifier (cl)
-  double[] getAllScores(CompactHypothesisList chl) { 
+  @Override
+	double[] getAllScores(CompactHypothesisList chl) { 
     double[] scores = cl.getAllScores(chl);
     for (int i = 0; i < scores.length; i++) scores[i] *= wts[0];
     return scores;
   }
  
-  public void learn(List<CompactHypothesisList> lchl) {
+  @Override
+	public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl); 
     wts = new double[1]; // we only have one feature: classifier score
     // Create a featureIndex so that various superclass methods

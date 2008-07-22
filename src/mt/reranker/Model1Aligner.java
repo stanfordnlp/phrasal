@@ -79,7 +79,7 @@ public class Model1Aligner {
   }
 
   public double displacementProb(String source, String target, int sourcePos, int sourceLen, int targetPos, int targetLen) {
-    return (double)1 / ((double)targetLen + 1); // null being the extra one
+    return 1 / ((double)targetLen + 1); // null being the extra one
   }
 
   public double lexProb(String source, String target) {

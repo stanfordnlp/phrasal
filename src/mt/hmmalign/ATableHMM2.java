@@ -52,7 +52,8 @@ public class ATableHMM2 extends ATable {
   }
 
 
-  public boolean isPopulated() {
+  @Override
+	public boolean isPopulated() {
     return count > countCutoff;
   }
 
@@ -115,14 +116,15 @@ public class ATableHMM2 extends ATable {
    * Smooth the basic probability if smoothUniform is on
    */
 
-  public float getProb(int i, int i_prev, int i_prev2, int l) {
+  @Override
+	public float getProb(int i, int i_prev, int i_prev2, int l) {
     float prob;
     prob = getProbHMM(i, i_prev, i_prev2, l);
     if (prob == 0) {
       return prob;
     }
     if (this.smoothUniform) {
-      return (1 - lambda) * prob + lambda * 1 / (float) (l + 2);
+      return (1 - lambda) * prob + lambda * 1 / (l + 2);
 
     } else {
       return prob;
@@ -135,7 +137,8 @@ public class ATableHMM2 extends ATable {
   /**
    * Increment the corresponding counts
    */
-  public void incCount(int i, int i_prev, int i_prev2, int l, double val1) {
+  @Override
+	public void incCount(int i, int i_prev, int i_prev2, int l, double val1) {
 
 
     float val = (float) val1;
@@ -367,7 +370,8 @@ public class ATableHMM2 extends ATable {
   /**
    * This does the normalization of the component distributions
    */
-  public void normalize() {
+  @Override
+	public void normalize() {
     normalizeProbArr();
     normalizeInitialProbs();
 
@@ -383,7 +387,8 @@ public class ATableHMM2 extends ATable {
    * Initialize the probabilities in a brain dead manner uniformly
    */
 
-  public void initializeUniform() {
+  @Override
+	public void initializeUniform() {
     // first the initial probabilities
     float inc_init = 1 / (float) (MAX_LENGTH + 2);
     float inc;
@@ -396,7 +401,7 @@ public class ATableHMM2 extends ATable {
     //then the jump + empty probabilities
     for (int dist1 = -MAX_LENGTH; dist1 <= MAX_LENGTH - 1; dist1++) {
       incEmpty(dist1, empty);
-      inc = (1 - empty) / (float) (2 * MAX_LENGTH);
+      inc = (1 - empty) / (2 * MAX_LENGTH);
       for (int dist = -MAX_LENGTH + 1; dist <= MAX_LENGTH; dist++) {
         incCount(dist, dist1, inc);
       }
@@ -410,7 +415,8 @@ public class ATableHMM2 extends ATable {
   * Copy all the values of a
   */
 
-  public void initialize(ATable a1) {
+  @Override
+	public void initialize(ATable a1) {
 
 
     ATableHMM2 a = (ATableHMM2) a1;
@@ -452,12 +458,14 @@ public class ATableHMM2 extends ATable {
   }
 
 
-  public float getEmpty() {
+  @Override
+	public float getEmpty() {
     return pEmpty;
   }
 
 
-  public boolean checkOK() {
+  @Override
+	public boolean checkOK() {
 
     boolean ok = true;
     for (int len = 1; len <= MAX_LENGTH; len++) {
@@ -508,7 +516,8 @@ public class ATableHMM2 extends ATable {
   }
 
 
-  public void printProbs() {
+  @Override
+	public void printProbs() {
 
     //print the initial probabilities
 
@@ -605,7 +614,8 @@ public class ATableHMM2 extends ATable {
    * Saving just the jump probabilities
    */
 
-  public void save(String filename) {
+  @Override
+	public void save(String filename) {
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
       //MAX_LENGTH

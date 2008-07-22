@@ -85,11 +85,13 @@ public class MyList<E> extends ArrayList<E> {
     throw new RuntimeException("not used");
   }
   */
-  public E get(int i) {
+  @Override
+	public E get(int i) {
     return array[mapping[i]];
   }
 
-  public int size() {
+  @Override
+	public int size() {
     return size;
   }
 

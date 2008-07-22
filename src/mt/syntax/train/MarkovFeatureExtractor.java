@@ -38,7 +38,8 @@ public class MarkovFeatureExtractor extends AbstractFeatureExtractor {
     lM = new IntArrayBackoffEstimator(10), // left modifiers
     rM = new IntArrayBackoffEstimator(10); // right modifiers
 
-  public void extractFeatures(RuleInstance rule) {
+  @Override
+	public void extractFeatures(RuleInstance rule) {
     AlignmentTreeNode n = rule.getExtractionNode();
     AlignmentTreeNode[] children = (AlignmentTreeNode[]) n.children();
     if(n.isPreTerminal())
@@ -121,6 +122,7 @@ public class MarkovFeatureExtractor extends AbstractFeatureExtractor {
     return IStrings.toIntArray(istr);
   }
 
-  public void save(String prefixName) {
+  @Override
+	public void save(String prefixName) {
   }
 }

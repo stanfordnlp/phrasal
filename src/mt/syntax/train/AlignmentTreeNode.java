@@ -189,7 +189,8 @@ public class AlignmentTreeNode extends Tree {
    * Returns an array of children for the current node, or null
    * if it is a leaf.
    */
-  public Tree[] children() {
+  @Override
+	public Tree[] children() {
     return children;
   }
 
@@ -220,7 +221,8 @@ public class AlignmentTreeNode extends Tree {
    *
    * @param children An array of child trees
    */
-  public void setChildren(Tree[] children) {
+  @Override
+	public void setChildren(Tree[] children) {
     if (children == null) {
       System.err.println
            ("Warning -- you tried to set the children of a LabeledScoredTreeNode to null.\n"+
@@ -236,7 +238,8 @@ public class AlignmentTreeNode extends Tree {
    * Returns the label associated with the current node, or null
    * if there is no label
    */
-  public Label label() {
+  @Override
+	public Label label() {
     return label;
   }
 
@@ -253,7 +256,8 @@ public class AlignmentTreeNode extends Tree {
    *
    * @return StringBuffer returns the <code>StringBuffer</code>
    */
-  public StringBuffer toStringBuffer(StringBuffer sb) {
+  @Override
+	public StringBuffer toStringBuffer(StringBuffer sb) {
     sb.append("(");
     sb.append(nodeString());
     for (Tree daughterTree : children) {
@@ -279,7 +283,8 @@ public class AlignmentTreeNode extends Tree {
    *
    * @return a factory to produce labeled, scored trees
    */
-  public TreeFactory treeFactory() {
+  @Override
+	public TreeFactory treeFactory() {
     LabelFactory lf;
     if (label() != null) {
       lf = label().labelFactory();
@@ -353,7 +358,8 @@ public class AlignmentTreeNode extends Tree {
 
   static NumberFormat nf = new DecimalFormat("0.000");
 
-  public String nodeString() {
+  @Override
+	public String nodeString() {
     StringBuilder buff = new StringBuilder();
     buff.append(super.nodeString());
     return buff.toString();

@@ -48,14 +48,16 @@ public class UnalignedWordSet {
     return subsetWordIdx;
   }
 
-  public boolean equals(Object object) {
+  @Override
+	public boolean equals(Object object) {
     if(object.getClass() != getClass())
       return false;
     UnalignedWordSet ws = (UnalignedWordSet) object;
     return subsetWordIdx.equals(ws.subsetWordIdx);
   }
 
-  public int hashCode() { return subsetWordIdx.hashCode(); }
+  @Override
+	public int hashCode() { return subsetWordIdx.hashCode(); }
 
   public void debug(PrintStream out) {
     out.printf("UnalignedWordSet: getSizeMinusOneSets: from:");

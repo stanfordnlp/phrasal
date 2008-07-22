@@ -279,7 +279,8 @@ public abstract class AbstractOneOfManyClassifier {
          if (wtdiff == 0) return f1.compareTo(f2);
          if (wtdiff > 0) return 1; else return -1;
        }
-       public boolean equals(Object obj) { return obj == this; }
+       @Override
+			public boolean equals(Object obj) { return obj == this; }
     };
     List<String> featureList = featureIndex.objectsList();
     if (sortByWeight) Collections.sort(featureList, byValueSort);

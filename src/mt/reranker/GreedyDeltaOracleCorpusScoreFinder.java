@@ -119,7 +119,7 @@ public class GreedyDeltaOracleCorpusScoreFinder {
   public ReturnValue findGlobalOptimum(int[] starts, Stats[][] hypotheses){
     Scorer b;
     try {
-      b = (Scorer)(scorerClass.newInstance());
+      b = (scorerClass.newInstance());
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Can't get new instance of "+scorerClass);
@@ -200,7 +200,7 @@ public class GreedyDeltaOracleCorpusScoreFinder {
     }
     Scorer scorer;
     try {
-      scorer = (Scorer)(finder.scorerClass.newInstance());
+      scorer = (finder.scorerClass.newInstance());
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Can't get new instance of "+finder.scorerClass);

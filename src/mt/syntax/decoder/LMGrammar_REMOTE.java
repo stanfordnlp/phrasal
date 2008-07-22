@@ -49,6 +49,7 @@ public class LMGrammar_REMOTE  extends LMGrammar {
 		//read the symbol tbl here (note that the file may already contains the global symbols)
 		Symbol.init_sym_tbl_from_file(remote_symbol_tbl,true);//it will also add the global nonterminal symbol
 	}
+	@Override
 	public void end_lm_grammar(){
 		p_lm_client.close_client();
 	}
@@ -155,43 +156,50 @@ public class LMGrammar_REMOTE  extends LMGrammar {
 	}
 
 //	read grammar locally by the Java implementation
+	@Override
 	public void read_lm_grammar_from_file(String grammar_file){
 	    System.out.println("read remoate lm, do nothing");
 	}
 
 
     //this should be called by decoder only
-   protected double get_prob_specific(int[] ngram_wrds, int order, boolean check_bad_stuff){
+   @Override
+	protected double get_prob_specific(int[] ngram_wrds, int order, boolean check_bad_stuff){
        return p_lm_client.get_prob(ngram_wrds, ngram_wrds.length);
    }
 
-   public void write_vocab_map_srilm(String fname){
+   @Override
+	public void write_vocab_map_srilm(String fname){
 		System.out.println("Error: call write_vocab_map_srilm in remote, must exit");
 		System.exit(0);
 	}
 
-   protected double get_prob_backoff_state_specific(int[] ngram_wrds, int order, int n_additional_bow){
+   @Override
+	protected double get_prob_backoff_state_specific(int[] ngram_wrds, int order, int n_additional_bow){
 	    System.out.println("Error: call get_prob_backoff_state_specific in LMGrammar_REMOTE, must exit");
 		System.exit(0);
 		return -1;
 	   //return p_lm_client.get_prob_backoff_state(ngram_wrds, n_additional_bow);
 	}
 
-   public int[] get_left_equi_state(int[] original_state, int order, double[] cost){
+   @Override
+	public int[] get_left_equi_state(int[] original_state, int order, double[] cost){
 	   return original_state;
 	   /*if(Decoder.use_left_euqivalent_state==false)
 			return original_state;
 	   return p_lm_client.get_left_euqi_state(original_state, order, cost);*/
    }
 
-   public int[] get_right_equi_state(int[] original_state, int order, boolean check_bad_stuff){
+   @Override
+	public int[] get_right_equi_state(int[] original_state, int order, boolean check_bad_stuff){
 	   return original_state;
 	   /*if(Decoder.use_right_euqivalent_state==false)
 			return original_state;
 	   return p_lm_client.get_right_euqi_state(original_state,  order);*/
    }
 
-   public int replace_with_unk(int in){
+   @Override
+	public int replace_with_unk(int in){
 	   System.out.println("Error: call replace_with_unk in LMGrammar_REMOTE, must exit");
 	   System.exit(0);
 	   return 0;

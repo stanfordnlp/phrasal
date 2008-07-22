@@ -49,7 +49,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final IString NULL_STR = new IString("NULL");
 
-  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
+  @Override
+	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop, featureIndex, alTemps);
     // Set counts of "NULL":
     fLexCounts.add(0);
@@ -73,9 +74,11 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_LEX_FILTER_OPT,"-1e30"));
   }
 
-  public int getRequiredPassNumber() { return numPasses; }
+  @Override
+	public int getRequiredPassNumber() { return numPasses; }
 
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
+  @Override
+	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
     // Increment word counts:
     Sequence<IString> f = sent.f();
     Sequence<IString> e = sent.e();
@@ -93,7 +96,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
         addLexCount(NULL_STR,e.get(ei));
   }
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     // Code below will only get executed during the last pass:
     if(getCurrentPass()+1 == getRequiredPassNumber()) {
       if(DEBUG_LEVEL >= 2)
@@ -112,7 +116,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   /**
    * Print the five translation model features that appear in Moses' phrase tables.
    */
-  public Object score(AlignmentTemplate alTemp) {
+  @Override
+	public Object score(AlignmentTemplate alTemp) {
     // print phi(f|e), lex(f|e), phi(e|f), lex(e|f), and phrase penalty:
     int idx = alTemp.getKey();
     int idxF = alTemp.getFKey();
@@ -245,7 +250,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
         for(int ei : alTemp.f2e(fi)) {
           wSum += getLexProb(alTemp.f().get(fi),alTemp.e().get(ei));
         }
-        wSum /= (double) alCount;
+        wSum /= alCount;
       }
       if(DEBUG_LEVEL >= 1)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
@@ -296,7 +301,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       for(int ei=0; ei<alTemp.e().size();++ei) {
         wSum += getLexProb(alTemp.f().get(fi),alTemp.e().get(ei));
       }
-      wSum /= (double) alTemp.e().size();
+      wSum /= alTemp.e().size();
       if(DEBUG_LEVEL >= 1)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
       assert(wSum > 0);
@@ -320,7 +325,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       for(int fi=0; fi<alTemp.f().size();++fi) {
         wSum += getLexProbInv(alTemp.f().get(fi),alTemp.e().get(ei));
       }
-      wSum /= (double) alTemp.f().size();
+      wSum /= alTemp.f().size();
       if(DEBUG_LEVEL >= 1)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei),wSum);
       assert(wSum > 0);

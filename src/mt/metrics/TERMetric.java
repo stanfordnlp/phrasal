@@ -143,7 +143,8 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       throw new UnsupportedOperationException();
     }
 
-    public TERIncrementalMetric clone() {
+    @Override
+		public TERIncrementalMetric clone() {
       return new TERIncrementalMetric(this);
     }
 
@@ -158,7 +159,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
     TERMetric<IString,String> ter = new TERMetric<IString,String>(referencesList);
-    TERMetric<IString,String>.TERIncrementalMetric incMetric = (TERMetric.TERIncrementalMetric) ter.getIncrementalMetric();
+    TERMetric<IString,String>.TERIncrementalMetric incMetric = ter.getIncrementalMetric();
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
 

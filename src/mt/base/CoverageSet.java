@@ -18,6 +18,7 @@ public class CoverageSet extends BitSet {
 		super();
 	}
 	
+	@Override
 	public CoverageSet clone() {
 		CoverageSet c = new CoverageSet(this.size());
 		c.or(this);

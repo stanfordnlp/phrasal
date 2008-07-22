@@ -58,9 +58,11 @@ public class Support {
 		 long fSLEEP_INTERVAL = 100;
 	    try {
 	      System.gc();
-	      Thread.currentThread().sleep(fSLEEP_INTERVAL);
+	      Thread.currentThread();
+				Thread.sleep(fSLEEP_INTERVAL);
 	      System.runFinalization();
-	      Thread.currentThread().sleep(fSLEEP_INTERVAL);
+	      Thread.currentThread();
+				Thread.sleep(fSLEEP_INTERVAL);
 	    }
 	    catch (InterruptedException ex){
 	      ex.printStackTrace();

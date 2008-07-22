@@ -29,7 +29,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		
 		List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists2 = list2.nbestLists();
 		for (int i = 0; i < nbestLists2.size(); i++) {
-			((List)nbestLists.get(i)).addAll((Collection)nbestLists2.get(i));
+			((List)nbestLists.get(i)).addAll(nbestLists2.get(i));
 			// rescore
 			for (ScoredFeaturizedTranslation sft : nbestLists.get(i)) {
 				sft.score = scorer.getIncrementalScore(sft.features);
@@ -211,6 +211,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		return nbestLists;
 	}
 	
+	@Override
 	public String toString() {
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("Moses N-Best List:\n");

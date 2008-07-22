@@ -176,6 +176,7 @@ public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, 
 			throw new UnsupportedOperationException();
 		}
 		
+		@Override
 		public IncrementalEvaluationMetric<IString, String> clone() {
 			throw new UnsupportedOperationException();
 		}

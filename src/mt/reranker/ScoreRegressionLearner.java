@@ -17,7 +17,8 @@ public class ScoreRegressionLearner extends AbstractOneOfManyClassifier {
   static final String RENORMALIZE_PROP = "ScoreRegression.renormalize";
   boolean renormalize = false;
 
-  double[] getAllScores(CompactHypothesisList chl) {
+  @Override
+	double[] getAllScores(CompactHypothesisList chl) {
     double[] scores = super.getAllScores(chl);
     ArrayMath.add(scores, wts[biasWtIdx]);
     return scores;
@@ -53,9 +54,11 @@ public class ScoreRegressionLearner extends AbstractOneOfManyClassifier {
   }
 
   class ObjF extends AbstractCachingDiffFunction {
-    public int domainDimension() { return wts.length; }
+    @Override
+		public int domainDimension() { return wts.length; }
 
-    public void calculate(double[] testWts) {
+    @Override
+		public void calculate(double[] testWts) {
       wts = testWts;
       value = 0.0;
       double C = 5;
@@ -117,9 +120,11 @@ public class ScoreRegressionLearner extends AbstractOneOfManyClassifier {
 
   // we output expected scores between 0 and 1.0
   //(e.g. sentence METEOR scores), not probabilities
-  public boolean isLogLinear() { return false; }
+  @Override
+	public boolean isLogLinear() { return false; }
 
-  public void learn(List<CompactHypothesisList> lchl) {
+  @Override
+	public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl);
     if (System.getProperty(RENORMALIZE_PROP) != null)  renormalize = true;
     System.out.printf("Re-normalize: %s\n", renormalize);

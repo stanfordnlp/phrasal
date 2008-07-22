@@ -169,7 +169,8 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     return 1-fMeasure;
   }
 
-  public String toString() { return toString(f2e); }
+  @Override
+	public String toString() { return toString(f2e); }
   public String toString1() { return toString(f2e,false); }
 
   public String toReverseString() { return toString(e2f); }

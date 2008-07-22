@@ -33,7 +33,7 @@ public class CombinedRecombinationFilter<S> implements
 	 */
 	@SuppressWarnings("unchecked")
 	public CombinedRecombinationFilter(List<RecombinationFilter<S>> filters) {
-		this.filters = (RecombinationFilter<S>[])filters.toArray(new RecombinationFilter[0]);
+		this.filters = filters.toArray(new RecombinationFilter[0]);
 		combinationRule = DEFAULT_COMBINATION_RULE;
 	}
 	

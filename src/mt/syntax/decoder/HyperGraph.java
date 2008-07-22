@@ -119,7 +119,7 @@ public class HyperGraph {
 			if(last.p_edge.l_ant_items==null)
 				return;
 			for(int i=0; i < last.p_edge.l_ant_items.size();i++){//slide the ant item
-				Item it = (Item) last.p_edge.l_ant_items.get(i);
+				Item it = last.p_edge.l_ant_items.get(i);
 				int[] new_ranks = new int[last.ranks.length];
 				for(int c=0; c<new_ranks.length;c++)
 					new_ranks[c]=last.ranks[c];
@@ -154,7 +154,7 @@ public class HyperGraph {
 				for(int i=0; i < hyper_edge.l_ant_items.size();i++){
 					ranks[i]=1;//rank start from one
 					//add the 1best for my children
-					Item child_it = (Item) hyper_edge.l_ant_items.get(i);
+					Item child_it = hyper_edge.l_ant_items.get(i);
 					child_it.lazy_k_best_extract(ranks[i], extract_unique_nbest,extract_nbest_tree);
 				}
 				cost=hyper_edge.best_cost;//TODO???????????????
@@ -332,7 +332,7 @@ public class HyperGraph {
 						break;
 
 			//get individual model cost
-			Item true_item = (Item)cur.p_edge.l_ant_items.get(0);//goal_item only has one ant item
+			Item true_item = cur.p_edge.l_ant_items.get(0);//goal_item only has one ant item
 			double[] model_cost = new double[l_models.size()];
 			FileUtility.write_lzf(out2,sent_id + " ||| ");
 			String str_hyp_numeric = ((DerivationState)true_item.l_nbest.get(cur.ranks[0]-1)).get_hyp(extract_nbest_tree, model_cost,l_models);
@@ -458,7 +458,7 @@ public class HyperGraph {
 				if(tree_format==true)
 					res.append("(ROOT ");
 				for(int id=0; id < p_edge.l_ant_items.size();id++){
-					Item child = (Item)p_edge.l_ant_items.get(id);
+					Item child = p_edge.l_ant_items.get(id);
 					res.append(((DerivationState)child.l_nbest.get(ranks[id]-1)).get_hyp(tree_format, null,null));
 	    			if(id<p_edge.l_ant_items.size()-1)
 		    			res.append(" ");
@@ -478,7 +478,7 @@ public class HyperGraph {
 			for(int c=0; c<rl.english.length; c++){
 	    		if(Symbol.is_nonterminal(rl.english[c])==true){
 	    			int id=Symbol.get_eng_non_terminal_id(rl.english[c]);
-	    			Item child = (Item)p_edge.l_ant_items.get(id);
+	    			Item child = p_edge.l_ant_items.get(id);
 	    			res.append(((DerivationState)child.l_nbest.get(ranks[id]-1)).get_hyp(tree_format, model_cost, l_models));
 	    		}else{
 	    			res.append(rl.english[c]);

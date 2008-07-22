@@ -152,7 +152,7 @@ public class HieroGrammarScorer_Trie  {
 			if(sorted==false){//sort once				
 				l_sorted_rules.clear();
 				while(heap_rules.size()>0){
-					Rule t_r = (Rule) heap_rules.poll();
+					Rule t_r = heap_rules.poll();
 					l_sorted_rules.add(0,t_r);
 				}
 				sorted=true;

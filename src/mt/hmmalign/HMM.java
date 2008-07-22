@@ -1870,7 +1870,7 @@ public class HMM {
 
       }//j
 
-      ratio_kept = (ratio_kept * 2 * sent_no + (kept / (float) total)) / (float) (2 * sent_no + 1);
+      ratio_kept = (ratio_kept * 2 * sent_no + (kept / (float) total)) / (2 * sent_no + 1);
 
       //now add the jump prob for end of sentence
       for (int i = 0; i <= 2 * l; i++) {
@@ -1972,7 +1972,7 @@ public class HMM {
 
         }//j
 
-        ratio_kept = (ratio_kept * (2 * sent_no + 1) + (kept / (float) total)) / (float) (2 * sent_no + 2);
+        ratio_kept = (ratio_kept * (2 * sent_no + 1) + (kept / (float) total)) / (2 * sent_no + 2);
 
       }
 
@@ -2541,7 +2541,7 @@ public class HMM {
           tmpPair.setTarget(fWord.getIndex());
         }
         iP.setTarget(fWord.getTagId());
-        tables[j - 1] = (ATable) this.aTablesHolder.get(iP);
+        tables[j - 1] = this.aTablesHolder.get(iP);
         iP.setSource(fWord.getTagId());
         for (int i = 0; i <= l; i++) {
           eWord = sentPair.e.getWord(i);

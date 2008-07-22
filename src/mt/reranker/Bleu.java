@@ -76,7 +76,7 @@ public class Bleu implements Scorer {
     double[] scores = new double[ngram_max - ngram_min + 1];
     for(int i = ngram_min; i <= ngram_max; i++) {
       if(precNum[i - ngram_min] > 0) {
-	scores[i - ngram_min] = Math.log((double)precNum[i - ngram_min] / (double)precDen[i - ngram_min]);
+	scores[i - ngram_min] = Math.log(precNum[i - ngram_min] / precDen[i - ngram_min]);
 	//System.out.println("scores[" + (i - ngram_min) + "] = Math.log(" + precNum[i - ngram_min] + " / " + precDen[i - ngram_min] + ") = " + scores[i - ngram_min]);
       }
       else
@@ -100,7 +100,7 @@ public class Bleu implements Scorer {
 
   public double BP() {
     if(hypLen < refLen)
-      return Math.exp(1.0 - ((double)refLen / (double)hypLen));
+      return Math.exp(1.0 - (refLen / hypLen));
     else
       return 1.0;
   }

@@ -39,6 +39,7 @@ public class TMGrammar_Memory extends TMGrammar {
 		super(l_models, default_ow, span_limit_in, non_terminal_regexp_in, non_terminal_replace_regexp_in);
 	}
 
+	@Override
 	public void read_tm_grammar_from_file(String grammar_file){
 		root = new TrieNode_Memory(); //root should not have valid ruleBin entries
 		BufferedReader t_reader_tree = FileUtility.getReadFileStream(grammar_file,"utf8");
@@ -51,6 +52,7 @@ public class TMGrammar_Memory extends TMGrammar {
 		ensure_grammar_sorted();
 	}
 
+	@Override
 	public void read_tm_grammar_glue_rules(){
 		root = new TrieNode_Memory(); //root should not have valid ruleBin entries
 		double alpha =Math.log10(Math.E);//cost
@@ -65,6 +67,7 @@ public class TMGrammar_Memory extends TMGrammar {
 		ensure_grammar_sorted();
 	}
 
+	@Override
 	public TrieNode get_root(){
 		return root;
 	}
@@ -138,6 +141,7 @@ public class TMGrammar_Memory extends TMGrammar {
 		private	RuleBin_Memory rule_bin=null;
 		private HashMap  tbl_children=null;
 
+		@Override
 		public TrieNode_Memory match_symbol(int sym_id){//looking for the next layer trinode corresponding to this symbol
 			/*if(sym_id==null)
 				Support.write_log_line("Match_symbol: sym is null", Support.ERROR);*/
@@ -146,10 +150,12 @@ public class TMGrammar_Memory extends TMGrammar {
 			return (TrieNode_Memory) tbl_children.get(sym_id);
 		}
 
+		@Override
 		public RuleBin get_rule_bin(){
 			return rule_bin;
 		}
 
+		@Override
 		public boolean is_no_child_trienodes(){
 			return (tbl_children==null);
 		}
@@ -194,11 +200,12 @@ public class TMGrammar_Memory extends TMGrammar {
 		//this method need to be synchronized as we will call this function only after the decoding begins
 		//to avoid the synchronized method, we should call this once the grammar is finished
 		//public synchronized ArrayList<Rule> get_sorted_rules(){
+		@Override
 		public ArrayList<Rule> get_sorted_rules(){
 			if(sorted==false){//sort once
 				l_sorted_rules.clear();
 				while(heap_rules.size()>0){
-					Rule t_r = (Rule) heap_rules.poll();
+					Rule t_r = heap_rules.poll();
 					l_sorted_rules.add(0,t_r);
 				}
 				sorted=true;
@@ -207,10 +214,12 @@ public class TMGrammar_Memory extends TMGrammar {
 			return l_sorted_rules;
 		}
 
+		@Override
 		public  int[] get_french(){
 			return french;
 		}
 
+		@Override
 		public int get_arity(){
 			return arity;
 		}

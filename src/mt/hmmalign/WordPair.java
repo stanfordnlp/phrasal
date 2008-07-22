@@ -34,7 +34,8 @@ public class WordPair {
     return target;
   }
 
-  public int hashCode() {
+  @Override
+	public int hashCode() {
     return hashcode;
   }
 

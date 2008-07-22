@@ -195,7 +195,7 @@ public class Chart {
 		//Support.write_log_line(String.format("LM lookupwords1, step1: %d; step2: %d; step3: %d",tm_lm.time_step1,tm_lm.time_step2,tm_lm.time_step3),Support.INFO);
 		//debug end
 		
-		return new HyperGraph((Item)goal_bin.get_sorted_items().get(0));
+		return new HyperGraph(goal_bin.get_sorted_items().get(0));
 	}	
 	
 	//agenda based extension: this is necessary in case more than two unary rules can be applied in topological order s->x; ss->s

@@ -224,7 +224,8 @@ public class LMServer {
 	        out = new PrintWriter( new OutputStreamWriter(socket.getOutputStream()));
 	    }
 
-	    public void run() {
+	    @Override
+			public void run() {
 	        String line_in;
 	        String line_out;
 	        try {

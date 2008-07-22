@@ -56,7 +56,8 @@ public class LMClient_MultiServer extends LMClient{
     	}
    }
 
-    public void close_client(){//TODO
+    @Override
+		public void close_client(){//TODO
     	//TODO close socket
 
     	//END all the threads
@@ -68,18 +69,21 @@ public class LMClient_MultiServer extends LMClient{
     }
 
     //cmd: prob order wrd1 wrd2 ...
-    public double get_prob(ArrayList ngram, int order){
+    @Override
+		public double get_prob(ArrayList ngram, int order){
     	return get_prob(Support.sub_int_array(ngram, 0, ngram.size()), order);
     }
 
     //cmd: prob order wrd1 wrd2 ...
-    public double get_prob(int[] ngram, int order){
+    @Override
+		public double get_prob(int[] ngram, int order){
     	String packet= encode_packet("prob", order, ngram);
     	return exe_request(packet);
     }
 
     //cmd: prob order wrd1 wrd2 ...
-    public double get_prob_backoff_state(int[] ngram, int n_additional_bow){
+    @Override
+		public double get_prob_backoff_state(int[] ngram, int n_additional_bow){
     	System.out.println("Error: call get_prob_backoff_state in lmclient, must exit");
  		System.exit(0);
  		return -1;
@@ -91,7 +95,8 @@ public class LMClient_MultiServer extends LMClient{
     }
 
 
-    public int[] get_left_euqi_state(int[] original_state_wrds, int order, double[] cost){
+    @Override
+		public int[] get_left_euqi_state(int[] original_state_wrds, int order, double[] cost){
     	System.out.println("Error: call get_left_euqi_state in lmclient, must exit");
  		System.exit(0);
  		return null;
@@ -104,7 +109,8 @@ public class LMClient_MultiServer extends LMClient{
     }
 
 
-    public int[] get_right_euqi_state(int[] original_state, int order){
+    @Override
+		public int[] get_right_euqi_state(int[] original_state, int order){
     	System.out.println("Error: call get_right_euqi_state in lmclient, must exit");
  		System.exit(0);
  		return null;
@@ -211,7 +217,8 @@ public class LMClient_MultiServer extends LMClient{
 	    	pos = p;
 	    }
 
-	    public void run() {
+	    @Override
+			public void run() {
 	    	while(true){
     			try {
     		        Thread.sleep(g_time_interval);//sleep foroever until get interupted

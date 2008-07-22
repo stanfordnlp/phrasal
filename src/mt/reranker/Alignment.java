@@ -149,7 +149,8 @@ public class Alignment {
     return null;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("Zh-En:\n");
     for (int i = 0; i < zh_en.size(); i++) {

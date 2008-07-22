@@ -45,7 +45,8 @@ public class Model2Aligner extends Model1Aligner {
     return score;
   }
 
-  public double displacementProb(String source, String target, int sourcePos, int sourceLen, int targetPos, int targetLen) {
+  @Override
+	public double displacementProb(String source, String target, int sourcePos, int sourceLen, int targetPos, int targetLen) {
     if(targetPos == -1) return nullDisplacementProb; /* aligning to null */
 
     double bs = bucketScore(targetPos, sourcePos, targetLen, sourceLen);

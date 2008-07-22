@@ -41,7 +41,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
   private static double LAPLACE_SMOOTHING = .5;
 
-  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
+  @Override
+	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
     boolean fail = false;
     String type = prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
@@ -103,11 +104,14 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     totalJointCounts = new double[size];
   }
 
-  public boolean needAlGrid() { return phrasalContext; }
+  @Override
+	public boolean needAlGrid() { return phrasalContext; }
 
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+  @Override
+	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     if(getCurrentPass()+1 != getRequiredPassNumber())
       return;
     int maxSize = 3;
@@ -155,7 +159,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     alGrid.printAlTempInGrid(null,alTemp.getSentencePair(),alTemp,System.err);
   }
 
-  public Object score(AlignmentTemplate alTemp) {
+  @Override
+	public Object score(AlignmentTemplate alTemp) {
     int idx = -1;
     if(languageType == LanguageTypes.fe) idx = alTemp.getKey();
     else if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
@@ -242,7 +247,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     ++counts[type];
   }
 
-  public void report() {
+  @Override
+	public void report() {
     System.err.println("LexicalReorderingFeatureExtractor: done.");
     double[] prob = new double[totalForwardCounts.length];
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {

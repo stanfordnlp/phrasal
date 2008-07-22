@@ -31,20 +31,22 @@ public class TPHandlerFE1 extends TPHandler {
     }
     PROB_SMOOTH = 1e-7;
     unifunknown = 1e-2;
-    correctFactor = 1 / (double) (1 - subHandler.PROB_SMOOTH * SentenceHandler.sTableF.getNumWords());
+    correctFactor = 1 / (1 - subHandler.PROB_SMOOTH * SentenceHandler.sTableF.getNumWords());
     uniftags = 1 / (float) SentenceHandler.sTableF.getNumTags();
 
 
   }
 
 
-  public void setPair(SentencePair sent) {
+  @Override
+	public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
     subHandler.setPair(sent);
   }
 
-  public void init() {
+  @Override
+	public void init() {
     Word fWord, eWord;
 
     l = sentPair.e.getLength() - 1;
@@ -69,7 +71,8 @@ public class TPHandlerFE1 extends TPHandler {
   /*
    * get the probability p(fj|ei)
    */
-  public double getProb(int i, int j) {
+  @Override
+	public double getProb(int i, int j) {
 
     double prob;
 
@@ -118,7 +121,8 @@ public class TPHandlerFE1 extends TPHandler {
    * Increment the count for c(fj|ei)
    */
 
-  public void incCount(int i, int j, double val) {
+  @Override
+	public void incCount(int i, int j, double val) {
 
     if (val == 0) {
       return;

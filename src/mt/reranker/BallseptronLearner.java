@@ -132,11 +132,13 @@ public class BallseptronLearner extends AbstractOneOfManyClassifier {
      return margin;
   }
 
-  public boolean isLogLinear() { return false; }
+  @Override
+	public boolean isLogLinear() { return false; }
 
   double eLrate;
 
-  public void learn(List<CompactHypothesisList> lchl) {
+  @Override
+	public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl);
     displayConfig();
 

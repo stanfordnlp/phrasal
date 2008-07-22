@@ -42,11 +42,13 @@ public class ATableHMMFull extends ATable {
   }
 
 
-  public float getEmpty() {
+  @Override
+	public float getEmpty() {
     return pEmpty;
   }
 
-  public boolean isPopulated() {
+  @Override
+	public boolean isPopulated() {
     return count > countCutoff;
   }
 
@@ -92,14 +94,15 @@ public class ATableHMMFull extends ATable {
   }
 
 
-  public float getProb(int i, int i_prev, int l) {
+  @Override
+	public float getProb(int i, int i_prev, int l) {
     float prob;
     prob = getProbHMM(i, i_prev, l);
     if (prob == 0) {
       return prob;
     }
     if (this.smoothUniform) {
-      return (1 - lambda) * prob + lambda * 1 / (float) l;
+      return (1 - lambda) * prob + lambda * 1 / l;
 
     } else {
       return prob;
@@ -112,7 +115,8 @@ public class ATableHMMFull extends ATable {
   /**
    * Increment the corresponding counts
    */
-  public void incCount(int i, int i_prev, int l, double val1) {
+  @Override
+	public void incCount(int i, int i_prev, int l, double val1) {
 
     float val = (float) val1;
     if (i_prev > l) {
@@ -204,7 +208,8 @@ public class ATableHMMFull extends ATable {
   /**
    * This does the normalization of the component distributions
    */
-  public void normalize() {
+  @Override
+	public void normalize() {
     normalizeProbArr();
     normalizeInitialProbs();
 
@@ -220,7 +225,8 @@ public class ATableHMMFull extends ATable {
    * Initialize the probabilities in a brain dead manner uniformly
    */
 
-  public void initializeUniform() {
+  @Override
+	public void initializeUniform() {
     // first the initial probabilities
 
     for (int l = 1; l <= MAX_LENGTH; l++) {
@@ -253,7 +259,8 @@ public class ATableHMMFull extends ATable {
  * Copy all the values of a
  */
 
-  public void initialize(ATable a) {
+  @Override
+	public void initialize(ATable a) {
 
     for (int l = 1; l <= MAX_LENGTH; l++) {
 
@@ -277,7 +284,8 @@ public class ATableHMMFull extends ATable {
   }
 
 
-  public boolean checkOK() {
+  @Override
+	public boolean checkOK() {
 
     boolean ok = true;
     for (int len = 1; len <= MAX_LENGTH; len++) {
@@ -354,7 +362,8 @@ public class ATableHMMFull extends ATable {
   }
 
 
-  public void printProbs() {
+  @Override
+	public void printProbs() {
 
     //print the initial probabilities
 

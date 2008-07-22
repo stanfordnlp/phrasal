@@ -15,9 +15,11 @@ import edu.stanford.nlp.optimization.QNMinimizer;
 
 public class LogLinearMCLLearner extends AbstractOneOfManyClassifier {
   class ObjF extends AbstractCachingDiffFunction {
-    public int domainDimension() { return featureIndex.size(); }
+    @Override
+		public int domainDimension() { return featureIndex.size(); }
 
-    public void calculate(double[] testWts) {
+    @Override
+		public void calculate(double[] testWts) {
       wts = testWts;
       value = 0.0;
       double[] tV = new double[wts.length];
@@ -58,9 +60,11 @@ public class LogLinearMCLLearner extends AbstractOneOfManyClassifier {
     }
   }
 
-  public boolean isLogLinear() { return true; }
+  @Override
+	public boolean isLogLinear() { return true; }
 
-  public void learn(List<CompactHypothesisList> lchl) {
+  @Override
+	public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl);
     ObjF objF = new ObjF();
     Minimizer<DiffFunction> minim = new QNMinimizer(objF);

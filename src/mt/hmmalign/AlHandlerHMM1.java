@@ -18,13 +18,15 @@ public class AlHandlerHMM1 extends AlHandler {
   }
 
 
-  public void setPair(SentencePair sent) {
+  @Override
+	public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
   }
 
 
-  public void init() {
+  @Override
+	public void init() {
 
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
@@ -34,7 +36,8 @@ public class AlHandlerHMM1 extends AlHandler {
   /*
    * get the probability p choose i for j
    */
-  public double getProb(int i, int j, int[] alignment) {
+  @Override
+	public double getProb(int i, int j, int[] alignment) {
     return a.getProb(i, alignment[j - 1], l);
 
   }
@@ -45,7 +48,8 @@ public class AlHandlerHMM1 extends AlHandler {
    * by 1-val
    */
 
-  public void incCount(int i, int j, int[] alignment, double val) {
+  @Override
+	public void incCount(int i, int j, int[] alignment, double val) {
     if (val == 0) {
       return;
     }

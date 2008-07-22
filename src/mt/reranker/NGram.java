@@ -17,15 +17,18 @@ public class NGram {
     this.size = size;
   }
 
-  public boolean equals(Object o) {
+  @Override
+	public boolean equals(Object o) {
     return (o instanceof NGram) && ((NGram)o).string == string && ((NGram)o).size == size;
   }
 
-  public int hashCode() {
+  @Override
+	public int hashCode() {
     return string.hashCode() + Integer.valueOf(size).hashCode();
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     return "\"" + string + "\" [" + size + "]";
   }
 

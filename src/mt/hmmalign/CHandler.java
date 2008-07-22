@@ -32,14 +32,16 @@ public class CHandler extends AlHandler {
   }
 
 
-  public void setPair(SentencePair sent) {
+  @Override
+	public void setPair(SentencePair sent) {
     this.sentPair = sent;
     init();
     subHandler.setPair(sent);
   }
 
 
-  public void init() {
+  @Override
+	public void init() {
     int id;
     total = 0;
     l = sentPair.e.getLength() - 1;
@@ -76,7 +78,8 @@ public class CHandler extends AlHandler {
   /*
    * get the probability p choose i for j
    */
-  public double getProb(int i, int j) {
+  @Override
+	public double getProb(int i, int j) {
 
     double prob;
     prob = (cache_choose[i].getProb());
@@ -97,7 +100,8 @@ public class CHandler extends AlHandler {
    * by 1-val
    */
 
-  public void incCount(int i, int j, double val) {
+  @Override
+	public void incCount(int i, int j, double val) {
 
 
     cache_choose[i].incCount(val);

@@ -77,6 +77,7 @@ public class ScorerWrapperEvaluationMetric<TK, FV> implements EvaluationMetric<T
 			throw new UnsupportedOperationException();
 		}
 		
+		@Override
 		public IncrementalEvaluationMetric<TK, FV> clone() {
 			throw new UnsupportedOperationException();
 		}

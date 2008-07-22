@@ -32,7 +32,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex {
   }
 
   private long getTransition(int curState, int input) {
-    return ((long)curState << 32) | (long)input;
+    return ((long)curState << 32) | input;
   }
 
   public int size() { return lastAcceptingStateIdx; }

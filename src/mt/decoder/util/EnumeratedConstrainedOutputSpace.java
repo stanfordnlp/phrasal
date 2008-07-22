@@ -22,6 +22,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 	private final List<Sequence<TK>> allowableSequences;
 	
 	
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("Allowable sequences:\n");

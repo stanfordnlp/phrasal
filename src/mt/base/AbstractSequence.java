@@ -201,7 +201,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		if (size != 0 && get(0) instanceof IString) {
 			for (int i = 0; i < size; i++) {
 				System.err.printf("%s: %s vs. %s\n", i, ((IString)get(i)).id, seq.get(i).id);
-				if (((IString) get(i)).id != ((IString)seq.get(i)).id) return false;
+				if (((IString) get(i)).id != (seq.get(i)).id) return false;
 			}
 		} else {
 			for (int i = 0; i < size; i++) {

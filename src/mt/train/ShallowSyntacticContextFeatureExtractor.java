@@ -67,7 +67,8 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
    * Collects word counts around phrases for distributional clustering. Word right before and after
    * each phrase (unless rare words), and functions words within a window of winSize.
    */
-  void addFeatureCountsToSparseVector(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  @Override
+	void addFeatureCountsToSparseVector(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
 
     WordAlignment sent = alTemp.getSentencePair();
     int f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos(), e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos();

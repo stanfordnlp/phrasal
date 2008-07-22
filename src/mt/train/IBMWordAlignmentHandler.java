@@ -52,14 +52,17 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
 		}
 	}
 	
+	@Override
 	public void startDocument() throws SAXException {
 			//System.err.println("Starting Document.");
 	}
 
+	@Override
 	public void endDocument() throws SAXException {
 			//System.err.println("Ending Document.");
 	}
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public void startElement (String namespaceURI,
 														String localName,
@@ -84,6 +87,7 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
     //System.err.printf("start: %s\n",localName);
 	}
 
+	@Override
 	public void endElement(String namespaceURI, 
 												 String localName,
 												 String qName)
@@ -124,6 +128,7 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
     buf = new StringBuffer();
   }
 
+	@Override
 	public void characters (char[] ch, int start, int length)
 			throws SAXException {
     String str = new String(ch,start,length);

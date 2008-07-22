@@ -24,12 +24,14 @@ public abstract class AbstractChineseSyntaxFeatureExtractor<E> extends AbstractF
   /**
    * Set the number of passes over training data that have been completed so far.
    */
-  protected int getCurrentPass() { return this.currentPass; }
+  @Override
+	protected int getCurrentPass() { return this.currentPass; }
 
   /**
    * Returns the number of passes over training data that have been completed so far.
    */
-  public void setCurrentPass(int currentPass) { this.currentPass = currentPass; }
+  @Override
+	public void setCurrentPass(int currentPass) { this.currentPass = currentPass; }
 
   public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, AlignmentGrid fullAlGrid, String infoLine) {}
 

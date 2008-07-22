@@ -125,7 +125,8 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
       return sz;
     }
 
-    public IncrementalEvaluationMetric<TK, FV> clone() {
+    @Override
+		public IncrementalEvaluationMetric<TK, FV> clone() {
       return new LCIncrementalMetric(this);
     }
   }

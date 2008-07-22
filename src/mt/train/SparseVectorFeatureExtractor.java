@@ -24,7 +24,8 @@ public abstract class SparseVectorFeatureExtractor extends AbstractFeatureExtrac
     currentFeatureMap.put(idx, currentFeatureMap.get(idx)+count);
   }
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     int idx = alTemp.getKey();
     if(idx < 0)
       return;
@@ -34,7 +35,8 @@ public abstract class SparseVectorFeatureExtractor extends AbstractFeatureExtrac
     addFeatureCountsToSparseVector(alTemp, alGrid);
   }
 
-  public Object score(AlignmentTemplate alTemp) {
+  @Override
+	public Object score(AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
     assert(idx >= 0);
     assert(idx < featureMaps.size());

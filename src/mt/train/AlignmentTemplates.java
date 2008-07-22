@@ -121,9 +121,9 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * to get the alignment template from the index.
    */
   public void reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
-    int[] idxInts = (int[]) index.get(idx);
-    int[] idxIntsF = (int[]) fIndex.get(idxInts[0]);
-    int[] idxIntsE = (int[]) eIndex.get(idxInts[1]);
+    int[] idxInts = index.get(idx);
+    int[] idxIntsF = fIndex.get(idxInts[0]);
+    int[] idxIntsE = eIndex.get(idxInts[1]);
     int aIdx = getArgmaxAlignment(idx);
     int[] idxIntsA = (aIdx >= 0) ? aIndex.get(aIdx) : new int[] {};
     alTemp.init(idxIntsF,idxIntsE,idxIntsA,false);
@@ -134,13 +134,15 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     alTemp.setAKey(aIdx);
   }
 
-  public Iterator<AlignmentTemplate> iterator()
+  @Override
+	public Iterator<AlignmentTemplate> iterator()
   { 
   	throw new UnsupportedOperationException();
   }
   	
 
-  public int size()
+  @Override
+	public int size()
   { return index.size(); }
 
   public String getSizeInfo() {
@@ -182,7 +184,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return the source-language phrase indexed by idx.
    */
-  public int[] getF(int idx) { return (int[]) fIndex.get(idx); }
+  public int[] getF(int idx) { return fIndex.get(idx); }
   public int sizeF() { return fIndex.size(); }
 
   /**
@@ -195,7 +197,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return the target-language phrase indexed by idx.
    */
-  public int[] getE(int idx) { return (int[]) eIndex.get(idx); }
+  public int[] getE(int idx) { return eIndex.get(idx); }
   public int sizeE() { return eIndex.size(); }
 
   /**
@@ -214,7 +216,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     int maxK = -1;
     int maxV = Integer.MIN_VALUE;
     String maxKLex = null;
-    for(int k : (IntSet) aCounts.keySet()) {
+    for(int k : aCounts.keySet()) {
       int v = aCounts.get(k);
       if(v == maxV) {
         // If there is a tie, take lexicographic order as defined in Moses:

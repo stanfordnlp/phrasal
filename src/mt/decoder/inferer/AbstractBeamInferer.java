@@ -220,7 +220,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   @SuppressWarnings("unchecked")
   protected Beam<Hypothesis<TK,FV>>[] createBeamsForCoverageCounts(int beamCnt, int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter,
                                                                    RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory) {
-    Beam<Hypothesis<TK,FV>>[] beams = (Beam<Hypothesis<TK,FV>>[])new Beam[beamCnt];
+    Beam<Hypothesis<TK,FV>>[] beams = new Beam[beamCnt];
     for (int i = 0; i < beams.length; i++) {
       beams[i] = HypothesisBeamFactory.factory(beamType, filter, capacity, recombinationHistory);
     }
@@ -236,7 +236,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
    */
   @SuppressWarnings("unchecked")
   protected Beam<Hypothesis<TK,FV>>[] createBeamsForCoverageCounts(int beamCnt, int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter) {
-    Beam<Hypothesis<TK,FV>>[] beams = (Beam<Hypothesis<TK,FV>>[])new Beam[beamCnt];
+    Beam<Hypothesis<TK,FV>>[] beams = new Beam[beamCnt];
     for (int i = 0; i < beams.length; i++) {
       beams[i] = HypothesisBeamFactory.factory(beamType, filter, capacity);
     }
@@ -254,7 +254,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
     @SuppressWarnings("unchecked")
     public CoverageBeams(int foreignSize, RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory) {
-      coverageCountToCoverageSets =  (Set<CoverageSet>[])new Set[foreignSize+1];
+      coverageCountToCoverageSets =  new Set[foreignSize+1];
       for (int i = 0; i < foreignSize+1; i++) {
         coverageCountToCoverageSets[i] = new HashSet<CoverageSet>();
       }

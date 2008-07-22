@@ -137,7 +137,7 @@ public class Bin
 		//System.out.println(String.format("Complet_cell is called, n_rules: %d ", l_rules.size()));
 		for(Rule rl : l_rules){		
 			if(rb.get_arity()==1){				
-				SuperItem super_ant1 = (SuperItem)l_super_items.get(0);
+				SuperItem super_ant1 = l_super_items.get(0);
 				//System.out.println(String.format("Complet_cell, size %d ", super_ant1.l_items.size()));
 				//rl.print_info(Support.DEBUG);
 				for(Item it_ant1: super_ant1.l_items){
@@ -147,8 +147,8 @@ public class Bin
 					add_deduction_in_bin(tbl_states, rl, i, j, l_ants);
 				}
 			}else if(rb.get_arity()==2){
-				SuperItem super_ant1 = (SuperItem)l_super_items.get(0);
-				SuperItem super_ant2 = (SuperItem)l_super_items.get(1);
+				SuperItem super_ant1 = l_super_items.get(0);
+				SuperItem super_ant2 = l_super_items.get(1);
 				//System.out.println(String.format("Complet_cell, size %d * %d ", super_ant1.l_items.size(),super_ant2.l_items.size()));
 				//rl.print_info(Support.DEBUG);
 				for(Item it_ant1: super_ant1.l_items){
@@ -181,7 +181,7 @@ public class Bin
 			return;
 			
 		//seed the heap with best item
-		Rule cur_rl = (Rule)l_rules.get(0);
+		Rule cur_rl = l_rules.get(0);
 		ArrayList<Item> l_cur_ants = new ArrayList<Item>();
 		for(SuperItem si : l_super_items)
 			l_cur_ants.add(si.l_items.get(0)); //TODO: si.l_items must be sorted
@@ -234,7 +234,7 @@ public class Bin
 				
 				if(k==0){//slide rule
 					old_rl = cur_rl;
-					cur_rl = (Rule)l_rules.get(new_ranks[k]-1);
+					cur_rl = l_rules.get(new_ranks[k]-1);
 				}else{//slide ant
 					old_item = l_cur_ants.get(k-1);//conside k==0 is rule
 					l_cur_ants.set(k-1, l_super_items.get(k-1).l_items.get(new_ranks[k]-1));
@@ -399,7 +399,7 @@ public class Bin
 		}
 		while(heap_items.size()-dead_items>Decoder.max_n_items //bin limit pruning 
 			  ||  heap_items.peek().est_total_cost>=cut_off_cost){//relative threshold pruning
-			Item worst_item = (Item)heap_items.poll();
+			Item worst_item = heap_items.poll();
 			if(worst_item.is_dead==true)//clear the corrupted item
 				dead_items--;
 			else{

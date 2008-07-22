@@ -65,7 +65,8 @@ public class TERshift {
     shifted = _shifted;
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
 	String s = "[" + start + ", " + end + ", " + moveto + "/" + newloc + "]";
 	if (shifted != null)
       s += " (" + shifted + ")";

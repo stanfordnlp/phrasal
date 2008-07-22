@@ -89,7 +89,8 @@ public class LegacyAlignment {
     return sb.toString();
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < alignments.size(); i++) {
       sb.append(i); // NULL is 0

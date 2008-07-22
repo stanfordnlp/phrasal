@@ -81,7 +81,8 @@ public class DualWordAlignment implements WordAlignment {
       System.err.println("Word alignment: "+toString());
   }
 
-  public String toString() {
+  @Override
+	public String toString() {
     StringBuffer str = new StringBuffer();
     for(int i=0; i<f.size(); ++i)
       for(int j : f2e(i))

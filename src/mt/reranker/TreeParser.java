@@ -6,7 +6,7 @@ import edu.stanford.nlp.util.*;
 public class TreeParser implements Function<String,Tree> {
 
   public Tree apply (String o) {
-    String s = (String) o;
+    String s = o;
     Tree t = null;
     try {
       if (s==null) {

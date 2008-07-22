@@ -36,6 +36,7 @@ public class InverseMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	private class IncrementalMetric implements IncrementalEvaluationMetric<TK, FV> {
 		IncrementalEvaluationMetric<TK, FV> imetric = emetric.getIncrementalMetric();
 		
+		@Override
 		public IncrementalMetric clone() {
 			throw new UnsupportedOperationException();
 		}

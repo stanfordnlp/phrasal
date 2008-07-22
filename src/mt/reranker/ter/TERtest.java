@@ -413,7 +413,7 @@ public class TERtest {
 
 	    totwords += result.numWords;
 	}
-	bestresult.numWords = ((double) totwords) / ((double) refs.size());
+	bestresult.numWords = (totwords) / (refs.size());
 	if(!refids.isEmpty()) bestresult.bestRef = bestref;
 	return bestresult;	
     }

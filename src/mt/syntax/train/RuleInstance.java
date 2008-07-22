@@ -48,7 +48,8 @@ public class RuleInstance {
     return childrenNodes;
   }
 
-  public String toString() { return rule.toString(); }
+  @Override
+	public String toString() { return rule.toString(); }
 
   /**
    * Create LHS of a minimal rule from node of an AlignmentGraph.

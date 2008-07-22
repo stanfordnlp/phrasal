@@ -30,6 +30,7 @@ public class TMGrammar_Disk  extends TMGrammar {
 		super(l_models, default_ow, span_limit_in, non_terminal_regexp_in, non_terminal_replace_regexp_in);
 	}
 	
+	@Override
 	public void read_tm_grammar_from_file(String filenamePrefix) {
 		try{
 			root = new TrieNode_Disk();
@@ -43,11 +44,13 @@ public class TMGrammar_Disk  extends TMGrammar {
 		}
 	}
 	
+	@Override
 	public void read_tm_grammar_glue_rules(){
 		 System.out.println("Error: call read_tm_grammar_glue_rules in TMGrammar_Disk, must exit");
 		 System.exit(0);
 	}
 	
+	@Override
 	public TrieNode get_root(){
 		return root;
 	}
@@ -102,15 +105,18 @@ public class TMGrammar_Disk  extends TMGrammar {
 			fOff = offset;
 		}
 		
+		@Override
 		public boolean is_no_child_trienodes(){
 			return (p_child_trienodes==null);
 		}
 		
+		@Override
 		public RuleBin get_rule_bin(){
 			return rule_bin;
 		}
 		
 		
+		@Override
 		public TrieNode_Disk match_symbol(int sym_id){//looking for the next layer trinode corresponding to this symbol
 			int id_disk_voc;
 			if(Symbol.is_nonterminal(sym_id))
@@ -212,16 +218,19 @@ public class TMGrammar_Disk  extends TMGrammar {
 			this.fOff = offset;
 		}
 		
+		@Override
 		public ArrayList<Rule> get_sorted_rules(){
 			if (!loaded) load();
 			return l_sorted_rules;
 		}
 		
+		@Override
 		public  int[] get_french(){
 			if (!loaded) load();
 			return french;
 		}		
 		
+		@Override
 		public int get_arity(){
 			if (!loaded) load();
 			return arity;

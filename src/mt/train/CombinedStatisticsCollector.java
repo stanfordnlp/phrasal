@@ -96,7 +96,7 @@ public class CombinedStatisticsCollector {
             throw new IOException("Alignment file 2 is too short!");
           if(a1Line.equals("") && a2Line.equals(""))
             continue;
-          ((DualWordAlignment)sent).init(fLine,eLine,a1Line,a2Line);
+          (sent).init(fLine,eLine,a1Line,a2Line);
           statsCollect(sent);
         }
         if(eReader.readLine() != null && numLines < 0)

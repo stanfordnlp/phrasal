@@ -9,7 +9,6 @@ import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.util.Hypothesis;
 
 import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 
 /**
  * 

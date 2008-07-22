@@ -17,6 +17,7 @@ public class LMGrammar_SRILM  extends LMGrammar {
 	}
 	
 //	read grammar locally by the Java implementation
+	@Override
 	public void read_lm_grammar_from_file(String grammar_file){
 		start_loading_time = System.currentTimeMillis();
 		System.out.println("read lm by srilm tool");
@@ -33,7 +34,8 @@ public class LMGrammar_SRILM  extends LMGrammar {
 	//since we have trouble to run the replace_with_unk (because we do not know the vocabulary), we will let srilm return a zero-prob, and then replace with the ceiling cost
 	/*note: the mismatch between srilm and our java implemtation is in: when unk words used as context, in java it will be replaced with "<unk>", but srilm will not, therefore the 
 	*lm cost by srilm may be smaller than by java, this happens only when the LM file have "<unk>" in backoff state*/
-   protected double get_prob_specific(int[] ngram_wrds, int order, boolean check_bad_stuff){
+   @Override
+	protected double get_prob_specific(int[] ngram_wrds, int order, boolean check_bad_stuff){
 	   /*int[] ngram_wrds=replace_with_unk(ngram_wrds_in);
 	   if(ngram_wrds[ngram_wrds.length-1]==Symbol.UNK_SYM_ID)//TODO: wrong implementation in hiero
 			return -Decoder.lm_ceiling_cost;
@@ -81,6 +83,7 @@ public class LMGrammar_SRILM  extends LMGrammar {
        return srilm.get_backoff_weight_sum(p_srilm, hist, backoff_wrds.length, min_len);*/		
 	}
 	
+	@Override
 	public int[] get_left_equi_state(int[] original_state_wrds, int order, double[] cost){
 		//int[] original_state_wrds = replace_with_unk(original_state_wrds_in);//???
 		if(Decoder.use_left_euqivalent_state==false){
@@ -93,10 +96,12 @@ public class LMGrammar_SRILM  extends LMGrammar {
 		return null;
 	}
 	
+	@Override
 	public void write_vocab_map_srilm(String fname){
 		srilm.write_default_vocab_map(fname);
 	}
 	
+	@Override
 	protected double get_prob_backoff_state_specific(int[] ngram_wrds, int order, int n_additional_bow){
 		System.out.println("Error: call get_prob_backoff_state_specific in srilm, must exit");
 		System.exit(0);
@@ -134,7 +139,8 @@ public class LMGrammar_SRILM  extends LMGrammar {
 	
 	 //the returned array lenght must be the same the len of original_state
 	 //the only change to the original_state is: replace with more non-null state words to null state
-	  public int[] get_right_equi_state(int[] original_state, int order, boolean check_bad_stuff){
+	  @Override
+		public int[] get_right_equi_state(int[] original_state, int order, boolean check_bad_stuff){
 		    //int[] original_state=replace_with_unk(original_state_in);
 			if(Decoder.use_right_euqivalent_state==false || original_state.length!=g_order-1)
 				return original_state;
@@ -192,7 +198,8 @@ public class LMGrammar_SRILM  extends LMGrammar {
 	   }
 			      
 		
-	   public int replace_with_unk(int in){ 	
+	   @Override
+		public int replace_with_unk(int in){ 	
 		   System.out.println("Error: call replace_with_unk in srilm, must exit");
 			System.exit(0);
 			return 0;

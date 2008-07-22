@@ -153,6 +153,7 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 			return (int)Math.signum(o.score()-score());
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer sbuf = new StringBuffer();
 			for (State<S> state : states) {

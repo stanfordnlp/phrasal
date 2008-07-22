@@ -5,7 +5,8 @@ import junit.framework.TestCase;
 public class BleuTest extends TestCase {
   private Bleu bleu;
 
-  protected void setUp() {
+  @Override
+	protected void setUp() {
     bleu = new Bleu();
   }
 

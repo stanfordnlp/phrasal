@@ -549,7 +549,7 @@ public class TERcalc {
 
   private static Object[] PerformShift(Comparable[] words, int start, int end, int newloc) {
       int c = 0;
-      Comparable[] nwords = (Comparable[]) words.clone();
+      Comparable[] nwords = words.clone();
       TERintpair[] spans = null;
       Object[] toreturn = new Object[2];
 

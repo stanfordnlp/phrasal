@@ -26,18 +26,22 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
   IntArrayList feCounts = new IntArrayList();
   IntArrayList fCounts = new IntArrayList();
 
-  public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
+  @Override
+	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop, featureIndex, alTemps);
     phiFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
     System.err.printf("minimum p(e|f) = %.5f\n", phiFilter);
   }
 
-  public int getRequiredPassNumber() { return 1; }
+  @Override
+	public int getRequiredPassNumber() { return 1; }
 
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+  @Override
+	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     // Code below will only get executed during the last pass:
     if(getCurrentPass()+1 == getRequiredPassNumber()) {
       if(DEBUG_LEVEL >= 2)
@@ -53,7 +57,8 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
   /**
    * Print the five translation model features that appear in Moses' phrase tables.
    */
-  public Object score(AlignmentTemplate alTemp) {
+  @Override
+	public Object score(AlignmentTemplate alTemp) {
     // print phi(f|e), lex(f|e), phi(e|f), lex(e|f), and phrase penalty:
     int idx = alTemp.getKey();
     int idxF = alTemp.getFKey();

@@ -39,6 +39,7 @@ public class FeatureValue<T> {
 		this.value = value;
 	}
 	
+	@Override
 	public String toString() {
 		return String.format("%s:%f", name, value);
 	}

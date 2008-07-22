@@ -18,11 +18,13 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
 
   IntArrayList feCounts = new IntArrayList();
 
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  @Override
+	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     addCountToArray(feCounts, alTemp.getKey());
   }
 
-  public Object score(AlignmentTemplate alTemp) {
+  @Override
+	public Object score(AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
     return new double[] { feCounts.get(idx) };
   }

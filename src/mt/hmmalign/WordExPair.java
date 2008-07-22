@@ -42,12 +42,14 @@ public class WordExPair {
     this.target = trgt;
   }
 
-  public int hashCode() {
+  @Override
+	public int hashCode() {
     return hashcode;
   }
 
 
-  public boolean equals(Object wP) {
+  @Override
+	public boolean equals(Object wP) {
 
     if (!(wP instanceof WordExPair)) {
       return false;

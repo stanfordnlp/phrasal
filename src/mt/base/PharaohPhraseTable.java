@@ -250,10 +250,12 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		return countScores;
 	}
 	
+	@Override
 	public int longestForeignPhrase() {
 		return longestForeignPhrase;
 	}
 	
+	@Override
 	public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> foreignSequence) {
 		RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
 		int[] foreignInts = Sequences.toIntArray(foreignSequence, IString.identityIndex());		

@@ -54,14 +54,16 @@ public class Model {
 	        stateless = true;
 		}
 		
-	    public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){
+	    @Override
+			public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){
 	    	HashMap  res = new HashMap ();
 	    	double transition_cost=estimate(r);
 	    	res.put(Symbol.TRANSITION_COST_SYM_ID, transition_cost);
 	    	return res;
 	    }
 	    
-	    public double estimate(Rule r){
+	    @Override
+			public double estimate(Rule r){
 	        return omega * (r.english.length-r.arity);
 	    }
 	}
@@ -82,14 +84,16 @@ public class Model {
 	 
 	   
 	   //antstates: states of this model in ant items
-	   public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){
+	   @Override
+		public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){
 	    	HashMap  res = new HashMap ();
 	    	double transition_cost=estimate(r);
 	    	res.put(Symbol.TRANSITION_COST_SYM_ID, transition_cost);
 	    	return res;
 	    }
 	   
-	    public double estimate(Rule r){
+	    @Override
+			public double estimate(Rule r){
 	    	//Support.write_log_line("model owner: " + owner + "; rule owner: "+r.owner, Support.INFO);
 	    	  if (owner==r.owner){
 	    		  if(column<r.feat_scores.length)
@@ -111,6 +115,7 @@ public class Model {
 			stateless=true;
 		}	   
 	    
+		@Override
 		public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){
 	    	HashMap  res = new HashMap ();
 	    	double transition_cost=estimate(r);
@@ -118,7 +123,8 @@ public class Model {
 	    	return res;
 	    }
 	    
-	    public double estimate(Rule r){
+	    @Override
+			public double estimate(Rule r){
 	    	//Support.write_log_line("model owner: " + owner + "; rule owner: "+r.owner, Support.DEBUG);
 	        if (owner==r.owner)
 	            return alpha;
@@ -146,7 +152,8 @@ public class Model {
 	    	
 	    }
 	    
-	    public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){//only depends on rule
+	    @Override
+			public HashMap  transition(Rule r, ArrayList antstates, int i, int j, int j1){//only depends on rule
 	    	HashMap  res = new HashMap ();
 	    	//TODO: merge with estimate()
 	    	//double transition_cost=estimate(r);
@@ -157,7 +164,8 @@ public class Model {
 	    	return res;
 	    }
 	    
-	    public double estimate(Rule r){
+	    @Override
+			public double estimate(Rule r){
 	    	//System.out.println("owner is" + r.owner +" arity " +r.arity);
 	    	//r.print_info(Support.INFO);
 	    	//if(owner.compareTo(r.owner)==0 )//TODO: wrong implementation in hiero, should check the arity

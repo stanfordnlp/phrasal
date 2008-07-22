@@ -78,7 +78,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
       reverse[i] = new TreeSet<Integer>(); 
     }
     for(int i=0; i<direct.length; ++i) {
-      for(int di : (Collection<Integer>) direct[i]) {
+      for(int di : direct[i]) {
         assert(di < reverse.length);
         reverse[di].add(i);
       }

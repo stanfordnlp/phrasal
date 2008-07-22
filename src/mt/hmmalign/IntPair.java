@@ -48,7 +48,8 @@ public class IntPair extends IntTuple {
     source = src;
   }
 
-  public void set(int num, int val) {
+  @Override
+	public void set(int num, int val) {
     if (num > 0) {
       target = val;
     } else {
@@ -56,7 +57,8 @@ public class IntPair extends IntTuple {
     }
   }
 
-  public int get(int num) {
+  @Override
+	public int get(int num) {
     if (num > 0) {
       return target;
     } else {
@@ -64,42 +66,49 @@ public class IntPair extends IntTuple {
     }
   }
 
-  public int hashCode() {
+  @Override
+	public int hashCode() {
     return (65536 * source) ^ target;
   }
 
-  public boolean equals(Object o) {
+  @Override
+	public boolean equals(Object o) {
     IntPair iP = (IntPair) o;
     return ((iP.source == source) && (iP.target == target));
 
   }
 
-  public void print() {
+  @Override
+	public void print() {
     System.out.println(target + "|" + source);
   }
 
 
-  public String toString() {
+  @Override
+	public String toString() {
 
     return source + " " + target;
   }
 
 
-  public String toNameStringE() {
+  @Override
+	public String toNameStringE() {
 
     return SentenceHandler.sTableE.getName(source) + " " + SentenceHandler.sTableE.getName(target);
 
   }
 
 
-  public String toNameStringF() {
+  @Override
+	public String toNameStringF() {
 
     return SentenceHandler.sTableF.getName(source) + " " + SentenceHandler.sTableF.getName(target);
 
   }
 
 
-  public IntTuple getCopy() {
+  @Override
+	public IntTuple getCopy() {
     IntPair nT = new IntPair(source, target);
     return nT;
   }
