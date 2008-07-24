@@ -331,7 +331,7 @@ public class IntArrayBackoffEstimator {
     return IStrings.toIntArray((IString[])a.toArray());
   }
 
-  private static void printArray(String id, int[] a) {
+  static void printArray(String id, int[] a) {
     String[] strs = IStrings.toStringArray(a);
     System.err.printf("BackoffMLE array: %s = %s\n",id,Arrays.toString(strs));
   }

@@ -51,10 +51,12 @@ public class TERsegmentwise {
 		return segmentwise_scores;
 	}
 	
+
 	public static void main(String[] args) throws IOException {
 
 		// 1. process arguments
-		HashMap paras = TERpara.getOpts(args);
+		@SuppressWarnings("unchecked")
+		HashMap<TERpara.OPTIONS, Object> paras = (HashMap<TERpara.OPTIONS, Object>)TERpara.getOpts(args);
 		String ref_fn = (String) paras.get(TERpara.OPTIONS.REF);
 		String hyp_fn = (String) paras.get(TERpara.OPTIONS.HYP);
 		Object val = paras.get(TERpara.OPTIONS.NORMALIZE);

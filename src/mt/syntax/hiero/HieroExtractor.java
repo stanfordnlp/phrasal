@@ -16,7 +16,7 @@ import mt.syntax.util.FileUtility;
 //TODO: (1) may ignore flat phrases in extract_rules; (2) the accummulation of the first feat; 
 //(3) the accumulation of other feats; (4) weight calculation; (5) ignore phrase whose lexical weght is zero 
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class HieroExtractor {
 	
 	

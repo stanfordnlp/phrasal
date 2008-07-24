@@ -13,7 +13,7 @@ import mt.syntax.util.Tree;
 * Johns Hopkins University
 */
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class RuleExtraction {
 	public static void main(String[] args) {
 		if(args.length!=4){

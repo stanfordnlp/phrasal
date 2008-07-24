@@ -19,7 +19,7 @@ import mt.syntax.util.FileUtility;
  * Rule: rule information
  * */
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class TMGrammar_Memory extends TMGrammar {
 	private  int num_rule_read=0;
 	private int num_rule_pruned=0;

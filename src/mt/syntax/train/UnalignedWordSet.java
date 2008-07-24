@@ -44,7 +44,7 @@ public class UnalignedWordSet {
     return s;
   }
 
-  public Set getSubset() {
+  public Set<Character> getSubset() {
     return subsetWordIdx;
   }
 

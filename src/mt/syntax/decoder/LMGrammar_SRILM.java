@@ -5,7 +5,7 @@ import java.util.ArrayList;
 * Johns Hopkins University
 */
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class LMGrammar_SRILM  extends LMGrammar {
 	SWIGTYPE_p_Ngram p_srilm=null;
 	

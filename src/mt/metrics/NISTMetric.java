@@ -119,10 +119,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
     throw new UnsupportedOperationException();
   }
 	
-	private static int maxIncrementalId = 0;
-	
 	public class NISTIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
-		private final int id = maxIncrementalId++; 
 		final List<Sequence<TK>> sequences; 
 		final double[] matchCounts = new double[order];
 		final double[] possibleMatchCounts = new double[order];

@@ -13,7 +13,7 @@ import mt.syntax.util.FileUtility;
 
 //PATH: this => LMClient => network => LMServer => LMGrammar => LMGrammar_JAVA/SRILM; and then reverse the path
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class LMGrammar_REMOTE  extends LMGrammar {
 
 //	if remote method is used

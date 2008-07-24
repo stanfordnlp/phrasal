@@ -9,7 +9,7 @@ import mt.syntax.util.SocketUtility;
 * Johns Hopkins University
 */
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class LMClient_MultiServer extends LMClient{
 	public static SocketUtility.ClientConnection[] l_clients=null;
 	public static double[] probs=null;

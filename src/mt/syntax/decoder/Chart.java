@@ -26,7 +26,7 @@ import mt.syntax.decoder.TMGrammar.TrieNode;
 /* index of sentences: start from zero
  * index of cell: cell (i,j) represent span of words indexed [i,j-1] where i is in [0,n-1] and j is in [1,n]
  * */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class Chart {
 	public TMGrammar[] l_grammars;
 	public DotChart[] l_dotcharts;//each grammar should have a dotchart associated with it
@@ -93,7 +93,7 @@ public class Chart {
 	
 	//construct the hypergraph with the help from DotChart
 	public HyperGraph expand(){
-		//long start = System.currentTimeMillis();
+		//long start = System.currentTimeMillis();		
 		long time_step1=0,time_step2=0,time_step3=0,time_step4=0;		
 		for(int width=1; width<=sent_len; width++){
 			for(int i=0; i<=sent_len-width; i++){

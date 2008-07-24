@@ -11,6 +11,7 @@ import mt.syntax.decoder.HyperGraph.Item;
 
 //extract oracle tree from the hypergraph
 //TODO assumption: we assume the LM order used for generating the hypergraph is >= order of the BLEU
+@SuppressWarnings({"unchecked", "unused"})
 public class OracleExtractor {
 	//int[] ref_sentence;//reference string (not tree)
 	private static int src_sent_len =0;

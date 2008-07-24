@@ -11,7 +11,6 @@ import mt.base.Sequences;
 
 import edu.stanford.nlp.util.IString;
 
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 // Int2IntLinkedOpenHashMap is second choice
 // (overhead caused by this hashmap is relatively small)

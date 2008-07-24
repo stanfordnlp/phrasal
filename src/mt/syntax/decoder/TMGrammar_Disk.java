@@ -18,7 +18,7 @@ import java.util.HashMap;
 * Johns Hopkins University
 */
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class TMGrammar_Disk  extends TMGrammar {
 	RandomAccessFile grammarTrieFile;
 	RandomAccessFile dataFile;

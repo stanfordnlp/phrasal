@@ -95,7 +95,7 @@ public class Metrics {
       double num = ngramCounts.get(ngram);
       double denom = totWords;
       if(ngram.size() > 1) {
-        Sequence ngramPrefix = ngram.subsequence(0,ngram.size()-1);
+        Sequence<TK> ngramPrefix = ngram.subsequence(0,ngram.size()-1);
         denom = ngramCounts.get(ngramPrefix);
       }
       double inf = -Math.log(num/denom)/LOG2;

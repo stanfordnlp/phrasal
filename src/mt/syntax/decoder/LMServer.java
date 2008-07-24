@@ -17,7 +17,7 @@ import mt.syntax.util.FileUtility;
 * Johns Hopkins University
 */
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class LMServer {
     //common options
 	static public int port = 9800;

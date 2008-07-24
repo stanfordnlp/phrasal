@@ -439,8 +439,6 @@ public class UnsmoothedMERT {
       current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>
               (argmax);
 
-      int[] candIds = argmaxCandIds.clone();
-
       // reset incremental evaluation object for the argmax candidates
       IncrementalEvaluationMetric<IString, String> incEval =
               emetric.getIncrementalMetric();

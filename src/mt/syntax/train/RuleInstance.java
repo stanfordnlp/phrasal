@@ -109,7 +109,7 @@ public class RuleInstance {
     for(int idx : idx2lhs.keySet())
       orderingList.add(new Pair(idx2lhs.get(idx),idx));
     Collections.sort(orderingList, new Comparator() {
-      public boolean equals(Object o1, Object o2) { return o1 == o2; }
+      @Override
       public int compare(Object o1, Object o2) {
         AlignmentTreeNode n1 = (AlignmentTreeNode) ((Pair)o1).first(),
             n2 = (AlignmentTreeNode) ((Pair)o2).first();

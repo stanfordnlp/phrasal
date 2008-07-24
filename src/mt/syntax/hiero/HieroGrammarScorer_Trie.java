@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * Rule: rule information
  * */
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class HieroGrammarScorer_Trie  {
 	public static int MAX_N_RULES_SAME_FRENCH=40;
 	

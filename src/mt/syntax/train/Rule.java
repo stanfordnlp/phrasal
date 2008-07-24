@@ -57,7 +57,7 @@ public class Rule {
     List<Rule> rules = new ArrayList<Rule>();
     while(openList.size() > 0) {
       UnalignedWordSet curSet = openList.pop();
-      Set usRHS = curSet.getSubset();
+      Set<Character> usRHS = curSet.getSubset();
       if(closedList.contains(curSet))
         continue;
       if(!closedList.add(curSet))

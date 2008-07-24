@@ -21,7 +21,12 @@ import java.text.DecimalFormat;
  */
 public class AlignmentTreeNode extends Tree {
 
-  public static final String DEBUG_PROPERTY = "DebugGHKM";
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	public static final String DEBUG_PROPERTY = "DebugGHKM";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
   protected static final HeadFinder COLLINS_HEAD_FINDER = new CollinsHeadFinder();

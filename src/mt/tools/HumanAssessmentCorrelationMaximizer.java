@@ -318,9 +318,9 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
     }
   }
 
-  public double[] getMetricScores(BLEUMetric.BLEUIncrementalMetric bleu,
-                                  NISTMetric.NISTIncrementalMetric nist,
-                                  TERMetric.TERIncrementalMetric ter, int line) {
+  public double[] getMetricScores(BLEUMetric<?,?>.BLEUIncrementalMetric bleu,
+                                  NISTMetric<?, ?>.NISTIncrementalMetric nist,
+                                  TERMetric<?,?>.TERIncrementalMetric ter, int line) {
     int sz = metricScoresStr.length;
     double[] scores = new double[sz];
     for(int i=0; i<metricScoresStr.length; ++i) {

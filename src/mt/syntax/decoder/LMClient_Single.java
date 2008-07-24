@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 import mt.syntax.util.SocketUtility;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "unused"})
 public class LMClient_Single extends LMClient {
 	SocketUtility.ClientConnection p_client;
 	HashMap request_cache = new HashMap();
