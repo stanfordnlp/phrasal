@@ -12,6 +12,7 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 import mt.base.*;
 import mt.decoder.util.*;
+import mt.decoder.feat.WordPenaltyFeaturizer;
 import mt.metrics.*;
 import mt.reranker.ter.*;
 
@@ -63,8 +64,8 @@ public class UnsmoothedMERT {
   static public final double MIN_PLATEAU_DIFF = 0.0;
   static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 
-  static final int DEF_MERT_BEAM_WIDTH = 5; // almost as good as 20
-  static final int DEF_MERT_SHIFT_DIST = 12; // Yaser suggested 10; I set it to 2*dlimit = 12
+  static final int DEFAULT_TER_BEAM_WIDTH = 5; // almost as good as 20
+  static final int DEFAULT_TER_SHIFT_DIST = 12; // Yaser suggested 10; I set it to 2*dlimit = 12
 
   static class ObjELossDiffFunction implements DiffFunction, HasInitial {
 
@@ -1522,7 +1523,7 @@ public class UnsmoothedMERT {
       wts = lineSearch(nbest, p[p.length - 1], combinedDir, emetric);
       eval = evalAtPoint(nbest, wts, emetric);
       System.err.printf(
-              "%d: Objective after combined search %e (gain: %e prior:%e)\n", iter,
+              "%d: Objective after combined search (gain: %e prior:%e)\n", iter,
               eval - objValue, objValue);
 
       objValue = eval;
@@ -2420,9 +2421,11 @@ public class UnsmoothedMERT {
       emetric = new TERMetric<IString, String>(references);
     } else if (evalMetric.endsWith("bleu")) {
       emetric = new BLEUMetric<IString, String>(references);
+ 		} else if (evalMetric.equals("nist")) {
+ 			emetric = new NISTMetric<IString, String>(references);
     } else if (evalMetric.startsWith("bleu-ter")) {
-      TERcalc.setBeamWidth(DEF_MERT_BEAM_WIDTH);
-      TERcalc.setShiftDist(DEF_MERT_SHIFT_DIST);
+      TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
+      TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
       String[] fields = evalMetric.split(":");
       double terW = 1.0;
       if(fields.length > 1) {
@@ -2434,7 +2437,7 @@ public class UnsmoothedMERT {
                       new BLEUMetric<IString, String>(references),
                       new TERMetric<IString, String>(references));
       System.err.printf("Maximizing %s: BLEU minus TER (beamWidth=%d shiftDist=%d)\n",
-              evalMetric, DEF_MERT_BEAM_WIDTH, DEF_MERT_SHIFT_DIST);
+              evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST);
     } else {
       System.err.printf("Unrecognized metric: %s\n", evalMetric);
       System.exit(-1);
@@ -2660,6 +2663,11 @@ public class UnsmoothedMERT {
         int rank = Integer.parseInt(System.getProperty("svdELoss"));
         System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d\n", rank);
         newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.evalue);
+ 			} else if (System.getProperty("tuneLength") != null) {
+ 				System.out.println("Optimize translation length with a single line search");
+         ClassicCounter<String> dir = new ClassicCounter<String>();
+         dir.incrementCount(WordPenaltyFeaturizer.FEATURE_NAME, 1.0);
+         newWts = lineSearch(nbest, wts, dir, emetric);
       } else {
         System.out.printf("Using cer\n");
         newWts = cerStyleOptimize2(nbest, wts, emetric);

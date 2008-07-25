@@ -11,6 +11,7 @@ import mt.reranker.ter.TERcost;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.math.SloppyMath;
@@ -29,15 +30,15 @@ import flanagan.math.MinimisationFunction;
  * 
  * @author Michel Galley
  */
-public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
+public class HumanAssessmentCorrelationMaximizer implements Function {
 
-  // TODO: print bad cases
-  // TODO: derivative
-  // TODO: more than 1 external score
+  // TODO: check why both shuffle() and reverse() on ArrayList of RawSequence returns nonsense.
+  // TODO: log versions
 
   private static IString
-   TER = new IString("ter"), BLEU = new IString("bleu"),
-   BLEU_BP = new IString("bleu_bp"), BLEU_P = new IString("bleu_prec"),
+   TER = new IString("ter"), BLEU = new IString("bleu"), LBLEU = new IString("lbleu"),
+   BLEU_BP = new IString("bleu_bp"), LBLEU_BP = new IString("lbleu_bp"), 
+   BLEU_P = new IString("bleu_prec"), LBLEU_P = new IString("lbleu_prec"),
    NIST = new IString("nist"), NIST_BP = new IString("nist_bp"),
    EXTERNAL = new IString("external"), NIST_P = new IString("nist_prec"),
    BLEU_1 = new IString("bleu_1gram"), BLEU_2 = new IString("bleu_2gram"),
@@ -46,6 +47,7 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
    NIST_3 = new IString("nist_3gram"), NIST_4 = new IString("nist_4gram");
 
   final IString[] metricScoresStr;
+  String metrics;
 
   List<Sequence<IString>> hyps;
   List<List<Sequence<IString>>> refs;
@@ -63,18 +65,21 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
   boolean tuneMetrics;
   boolean verbose;
   boolean printValue;
+  boolean checkDerivative=true;
 
-  static final Random shuffler = new Random(3982733423L);
-
-  double simplexSize = 0; // if 0, disables optimization with downhill simplex
+  double simplexSize = 1.0; 
 
   // For RandomGreedyLocalSearch:
   public static final String LEARN_RATE_PROPERTY = "LearnRate";
   public static final double LEARN_RATE = Double.parseDouble(System.getProperty(LEARN_RATE_PROPERTY, "0.3"));
   public static final String PERSEVERENCE_PROPERTY = "Perseverence";
-  public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "10"));
+  public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "5"));
   public static final String MAX_ITERATIONS_PROPERTY = "MaxIterations";
   public static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROPERTY, "1000000"));
+  public static final String STARTING_POINTS_PROPERTY = "StartingPoints";
+  public static final int STARTING_POINTS = Integer.parseInt(System.getProperty(STARTING_POINTS_PROPERTY, "10"));
+  public static final String SIMPLEX_GROWTH_PROPERTY = "SimplexGrows";
+  public static final int SIMPLEX_GROWTH = Integer.parseInt(System.getProperty(SIMPLEX_GROWTH_PROPERTY, "5"));
 
   static public void main(String[] args) throws Exception {
     Properties prop = StringUtils.argsToProperties(args);
@@ -85,7 +90,7 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
   
   public HumanAssessmentCorrelationMaximizer(Properties prop) throws Exception {
 
-    String metrics = prop.getProperty("metrics");
+    metrics = prop.getProperty("metrics");
     String refPrefix = prop.getProperty("refs");
 		String hypFile = prop.getProperty("hyp");
     String humanScoreFile = prop.getProperty("human");
@@ -135,14 +140,16 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
 
     // Load hypothesis translations:
     hyps = IOTools.slurpIStringSequences(hypFile);
-    Collections.shuffle(hyps,shuffler);
+    //Collections.shuffle(hyps,shuffler);
     System.err.printf("Read %d hypotheses from %s\n",hyps.size(),hypFile);
 
     // Load references:
     refs = new ArrayList<List<Sequence<IString>>>();
     File f = new File(refPrefix);
 		if (f.exists()) {
-      for(Sequence<IString> ref : IOTools.slurpIStringSequences(refPrefix)) {
+      List<Sequence<IString>> lines = IOTools.slurpIStringSequences(refPrefix);
+      //Collections.shuffle(lines,shuffler);
+      for(Sequence<IString> ref : lines) {
         List<Sequence<IString>> sref = new ArrayList<Sequence<IString>>();
         sref.add(ref);
         refs.add(sref);
@@ -152,6 +159,7 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
         f = new File(refPrefix+i);
         if(!f.exists()) break;
         List<Sequence<IString>> lines = IOTools.slurpIStringSequences(refPrefix);
+        //Collections.shuffle(lines,shuffler);
         for(int j=0; j<lines.size(); ++j) {
           if(i==0) {
             List<Sequence<IString>> fref = new ArrayList<Sequence<IString>>();
@@ -164,7 +172,6 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
       }
     }
     System.err.printf("Read %d references from %s\n",refs.size(),refPrefix);
-    Collections.shuffle(refs,shuffler);
 
     // Create scores:
     assert(refs.size() == hyps.size());
@@ -178,34 +185,56 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
 
   @SuppressWarnings("unchecked")
   public void maximize() {
-    Minimizer m = (simplexSize > 0.0) ? 
-    new DownhillSimplexMinimizer(simplexSize) :
-    new RandomGreedyLocalSearch(LEARN_RATE,PERSEVERENCE,MAX_ITERATIONS);
+    DownhillSimplexMinimizer m = new DownhillSimplexMinimizer(simplexSize);
     System.err.println("minimizer: "+m.toString());
     // Set initial weights:
     if(w == null) {
       w = new double[numDimensions];
       Arrays.fill(w,1.0);
     }
-    double[] tx = new double[0];
+    double[] bw = new double[0];
+    double bf = Double.MAX_VALUE;
     if(w.length > 0 && tuneMetrics) {
       System.err.print("Optimizing...\n");
-      tx = m.minimize(this, 1e-5, w);
-      System.out.print("optimal metric: "+metricScoresStr[0]);
-      for(int i=0; i<tx.length; ++i) {
+      for(int i=0; i<STARTING_POINTS; ++i) {
+        for(int j=0; j<SIMPLEX_GROWTH; ++j) {
+          m.setSimplexRelativeSize(simplexSize*Math.pow(2,j));
+          System.err.printf("Step %d/%d...\nStart at %s\n",i+1,STARTING_POINTS,Arrays.toString(w));
+          double[] tw = m.minimize(this, 1e-5, w);
+          normalizeW(tw);
+          System.err.printf("Pearson %.6f at %s\n",-valueAt(tw),Arrays.toString(tw));
+          double f = valueAt(tw);
+          if(f < bf) { 
+            if(bf == Double.MAX_VALUE) {
+              System.err.printf("Pearson: -Inf -> %.6f\n",-f);
+            } else {
+              System.err.printf("Pearson: %.6f -> %.6f\n",-bf, -f);
+            }
+            bf = f; bw = tw; 
+          }
+          w = randomDoubleArray(w.length);
+        }
+      }
+      for(int i=0; i<bw.length; ++i) {
+        if(i>0)
           System.out.print(" + ");
-        System.out.printf("%.3f*%s",tx[i],metricScoresStr[i+1]);
+        System.out.printf("%.3f*%s",bw[i],metricScoresStr[i]);
       }
       System.out.println();
       if(tuneCosts) {
-        int i=tx.length-1;
+        int i=bw.length-1;
         System.out.printf
           ("TER costs: sub=%.3f ins=%.3f del=%.3f shift=%.3f\n",
-          tcost(tx[i-3]),tcost(tx[i-2]),tcost(tx[i-1]),tcost(tx[i]));
+          tcost(bw[i-3]),tcost(bw[i-2]),tcost(bw[i-1]),tcost(bw[i]));
       }
     }
     printValue = true;
-    valueAt(tx);
+    valueAt(bw);
+  }
+
+  private void normalizeW(double[] w) {
+    double m1 = Math.abs(ArrayMath.max(w)), m2 = Math.abs(ArrayMath.min(w));
+    ArrayMath.multiplyInPlace(w,1.0/Math.max(m1,m2));
   }
 
   public int domainDimension() {
@@ -221,42 +250,29 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
       TERcost.set_default_shift_cost(tcost(x[i]));
       createMetricScores();
     }
-    double[] combinedScores = new double[metricScores.length];
+    double[] combinedScores = new double[metricScores[0].length];
     for(int i=0; i<metricScores.length; ++i)
         for(int j=0; j<metricScores[0].length; ++j)
-          combinedScores[i] += (j>0 ? x[j-1] : 1.0)*metricScores[i][j];
-    double pearson = getPearsonCorrelationStd(humanScores,combinedScores);
+          combinedScores[j] += x[i]*metricScores[i][j];
+    double pearson = getPearsonCorrelation(humanScores,combinedScores);
     if(printValue) {
-      System.err.printf("pearson=%.3f at [",pearson);
+      printWorseCorrelationCases(combinedScores);
+      System.err.printf("Pearson=%.3f for metric %s at [",pearson, metrics);
       for(int i=0; i<x.length; ++i) {
         if(i>0)
           System.err.print(",");
         System.err.print((float)x[i]);
       }
-      System.err.printf("]\n");
+      System.err.printf("].\n");
     }
     return -pearson;
-  }
-
-  public double[] derivativeAt(double[] x) {
-    if(tuneCosts)
-      throw new RuntimeException("Derivative can't be computed if TER costs are not constant (piecewise constant function).");
-    double[] deriv = new double[x.length];
-    deriv[0] = 0.0;
-    for(int j=1; j<metricScores[0].length; ++j) {
-      double[] combinedScores = new double[metricScores.length];
-      for(int i=0; i<metricScores.length; ++i)
-        combinedScores[i] += metricScores[i][j];
-      deriv[j] = -getPearsonCorrelationStd(humanScores,combinedScores);
-    }
-    return deriv;
   }
 
   public double[] getExternalScores(String filename) throws IOException {
     int sz = windowSize;
     List<Double> l = new ArrayList<Double>();
     String[] lines = StringUtils.slurpFile(filename).split("[\r\n]+");
-    Collections.shuffle(Arrays.asList(lines),shuffler);
+    //Collections.shuffle(Arrays.asList(lines),shuffler);
     for (String line : lines) 
       l.add(Double.parseDouble(line));
     double[] externalScores = new double[numInstances/sz];
@@ -277,7 +293,7 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
       ++ii;
       i+=sz;
     }
-    ArrayMath.standardize(externalScores);
+    //ArrayMath.standardize(externalScores);
     System.err.printf("Read %d scores from %s\n",externalScores.length,filename);
     return externalScores;
   }
@@ -285,7 +301,9 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
   @SuppressWarnings("unchecked")
   public void createMetricScores() {
     int sz = windowSize;
-    metricScores = new double[numInstances/sz][];
+    metricScores = new double[metricScoresStr.length][];
+    for(int j=0; j<metricScores.length; ++j)
+      metricScores[j] = new double[numInstances/sz];
     int i=0, ii=0;
     while(i+sz<=numInstances) {
       List<List<Sequence<IString>>> refs1 = new ArrayList<List<Sequence<IString>>>();
@@ -301,15 +319,14 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
         nist.add(new ScoredFeaturizedTranslation<IString, String>(hyps.get(i+j), null, 0));
         ter.add(new ScoredFeaturizedTranslation<IString, String>(hyps.get(i+j), null, 0));
       }
-      metricScores[ii] = getMetricScores(bleu, nist, ter, ii);
-      ArrayMath.standardize(metricScores[ii]);
+      setMetricScores(bleu, nist, ter, ii);
       if(numDimensions < 0)
-        numDimensions = metricScores[0].length + (tuneCosts?4:0)-1;
+        numDimensions = metricScores.length + (tuneCosts?4:0);
       if(verbose) {
-        System.err.printf("line %d human=%.3f",i,humanScores[ii]);
-        for(int k=0; k<metricScores[ii].length; ++k) {
+        System.err.printf("index %d (line %d) human=%.3f",ii,i,humanScores[ii]);
+        for(int k=0; k<metricScores.length; ++k) {
           IString n = metricScoresStr[k];
-          System.err.printf(" %s=%.3f", n, metricScores[ii][k]);
+          System.err.printf(" %s=%.3f", n, metricScores[k][ii]);
         }
         System.err.println();
       }
@@ -318,59 +335,100 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
     }
   }
 
-  public double[] getMetricScores(BLEUMetric<?,?>.BLEUIncrementalMetric bleu,
-                                  NISTMetric<?, ?>.NISTIncrementalMetric nist,
-                                  TERMetric<?,?>.TERIncrementalMetric ter, int line) {
+  public void setMetricScores(BLEUMetric<?,?>.BLEUIncrementalMetric bleu,
+                              NISTMetric<?, ?>.NISTIncrementalMetric nist,
+                              TERMetric<?,?>.TERIncrementalMetric ter, int line) {
     int sz = metricScoresStr.length;
-    double[] scores = new double[sz];
     for(int i=0; i<metricScoresStr.length; ++i) {
       IString s = metricScoresStr[i];
       double v;
       if(s.equals(NIST)) {
-        v = -nist.score();
+        v = nist.score();
       } else if(s.equals(NIST_BP)) {
-        v = -nist.brevityPenalty();
+        v = nist.brevityPenalty();
       } else if(s.equals(NIST_P)) {
-        v = -nist.score()/bleu.brevityPenalty();
+        v = nist.score()/bleu.brevityPenalty();
       } else if(s.equals(BLEU)) {
-        v = -bleu.score();
+        v = bleu.score();
+      } else if(s.equals(LBLEU)) {
+        v = Math.log(bleu.score());
+        if(v == -Double.NEGATIVE_INFINITY)
+          v = -100;
       } else if(s.equals(BLEU_BP)) {
-        v = -bleu.brevityPenalty();
+        v = bleu.brevityPenalty();
+      } else if(s.equals(LBLEU_BP)) {
+        v = Math.log(bleu.brevityPenalty());
       } else if(s.equals(BLEU_P)) {
-        v = -bleu.score()/bleu.brevityPenalty();
+        v = bleu.score()/bleu.brevityPenalty();
+      } else if(s.equals(LBLEU_P)) {
+        v = Math.log(bleu.score())-Math.log(bleu.brevityPenalty());
       } else if(s.equals(TER)) {
         v = -ter.score();
       } else if(s.equals(BLEU_1)) {
-        v = -bleu.ngramPrecisions()[0];
+        v = bleu.ngramPrecisions()[0];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(BLEU_2)) {
-        v = -bleu.ngramPrecisions()[1];
+        v = bleu.ngramPrecisions()[1];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(BLEU_3)) {
-        v = -bleu.ngramPrecisions()[2];
+        v = bleu.ngramPrecisions()[2];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(BLEU_4)) {
-        v = -bleu.ngramPrecisions()[3];
+        v = bleu.ngramPrecisions()[3];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(NIST_1)) {
-        v = -nist.ngramPrecisions()[0];
+        v = nist.ngramPrecisions()[0];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(NIST_2)) {
-        v = -nist.ngramPrecisions()[1];
+        v = nist.ngramPrecisions()[1];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(NIST_3)) {
-        v = -nist.ngramPrecisions()[2];
+        v = nist.ngramPrecisions()[2];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(NIST_4)) {
-        v = -nist.ngramPrecisions()[3];
+        v = nist.ngramPrecisions()[3];
+        v = (v == v) ? v : 0.0; 
       } else if(s.equals(EXTERNAL)) {
         v = externalScores[line];
       } else {
         throw new RuntimeException("Unknown metric: "+s.toString());
       }
-      scores[i] = (v == v) ? v : 0.0; 
+      metricScores[i][line] = v;
     }
-    return scores;
   }
 
   /**
    * Computes Pearson correlation coefficient between two _standardized_ vectors.
    */
-  public static double getPearsonCorrelationStd(double[] scores1, double[] scores2) {
-    return ArrayMath.innerProduct(scores1,scores2)/(scores1.length-1);
+  public static double getPearsonCorrelation(double[] scores1, double[] scores2) {
+    return ArrayMath.pearsonCorrelation(scores1,scores2);
+    //return ArrayMath.innerProduct(scores1,scores2)/(scores1.length-1);
+  }
+
+  private void printWorseCorrelationCases(double[] combinedScores) {
+    double[] combinedScoresStd = combinedScores.clone(); 
+    double[] humanScoresStd = humanScores.clone();
+    ArrayMath.standardize(combinedScoresStd);
+    ArrayMath.standardize(humanScoresStd);
+    List<Pair<Double,Integer>> l = new ArrayList<Pair<Double,Integer>>();
+    for(int i=0; i<combinedScores.length; ++i)
+      l.add(new Pair<Double,Integer>(humanScoresStd[i]-combinedScoresStd[i],i));
+    Collections.sort(l, new Comparator<Pair<Double,Integer>>() {
+      public int compare(Pair<Double,Integer> p1, Pair<Double,Integer> p2) {
+        return p1.first().compareTo(p2.first());
+      }
+    });
+    for(int i=0; i<l.size();++i) {
+      int ii = l.get(i).second();
+      System.err.printf("===============================================\n");
+      System.err.printf("index=%d human=%.3f metric=%.3f (standardized scores: human=%.3f metric=%.3f diff=%.3f):\n",
+        ii,humanScores[ii],combinedScores[ii],humanScoresStd[ii],combinedScoresStd[ii],humanScoresStd[ii]-combinedScoresStd[ii]);
+      for(int j=0;j<windowSize; ++j) {
+        int line = ii*windowSize+j;
+        System.err.printf("  ref(%d)=%s\n",line,refs.get(line).get(0).toString());
+        System.err.printf("  hyp(%d)=%s\n",line,hyps.get(line).toString());
+      }
+    }
   }
 
   /**
@@ -379,6 +437,14 @@ public class HumanAssessmentCorrelationMaximizer implements DiffFunction {
    */
   private double tcost(double v) {
     return (SloppyMath.sigmoid(v) * .95) + .05;
+  }
+
+  public static double[] randomDoubleArray(int l) {
+    double[] a = new double[l];
+    Random generator = new Random();
+    for(int i = 0; i < a.length; i++)
+      a[i] = generator.nextDouble()*2-1;
+    return a;
   }
 }
 
@@ -410,8 +476,13 @@ class DownhillSimplexMinimizer implements Minimizer<Function> {
 
   public DownhillSimplexMinimizer() {}
 
+  public void setSimplexRelativeSize(double r) {
+    simplexRelativeSize = r;
+  }
+
   public double[] minimize
        (Function function, double ftol, double[] initial, int maxIterations) {
+    System.err.printf("Nelder-Mead optimization with simplex of relative size %.3f\n", simplexRelativeSize);
     if(step == null) {
       step = initial.clone();
       for(int i=0; i<step.length; ++i)
