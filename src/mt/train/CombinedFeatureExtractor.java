@@ -14,7 +14,8 @@ import mt.base.Sequence;
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
 /**
- * Combines multiple feature extractors into one, and prints their outputs to stdout.
+ * Combines multiple phrase-level feature extractors into one,
+ * and prints their outputs to stdout.
  *
  * @author Michel Galley
  */
@@ -89,21 +90,21 @@ public class CombinedFeatureExtractor {
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugCombinedFeatureExtractor";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
-  private List<AbstractFeatureExtractor> extractors;
+  protected List<AbstractFeatureExtractor> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
   private List<String> infoFileForExtractors;
   private List<String> infoLinesForExtractors;
   private AbstractPhraseExtractor phraseExtractor = null;
   private PharaohFeatureExtractor mosesExtractor = null;
 
-  private AlignmentTemplates alTemps;
-  private AlignmentTemplateInstance alTemp;
+  protected AlignmentTemplates alTemps;
+  protected AlignmentTemplateInstance alTemp;
 
-  private Index<String> featureIndex = new Index<String>();
+  protected Index<String> featureIndex = new Index<String>();
 
+  protected static int minCount = 1;
+  protected static boolean printFeatureNames = true;
   private static int startAtLine = -1, endAtLine = -1;
-  private static int minCount = 1;
-  private static boolean printFeatureNames = true;
   private static boolean filterFromDev = false;
 
   // Number of passes over training data needed:
@@ -311,19 +312,9 @@ public class CombinedFeatureExtractor {
   /**
    * Write combined features to a stream.
    */
-  public boolean write(Object output, boolean noAlign) {
-    boolean needToClose = false;
-    PrintStream oStream = System.out;
-    if(output != null) {
-      if(output instanceof String) {
-        String fileName = (String) output;
-        System.err.println("saving features to: "+fileName);
-        oStream = IOTools.getWriterFromFile(fileName);
-        needToClose = true;
-      } else if(oStream instanceof PrintStream)
-        oStream = (PrintStream) output;
-    }
-
+  public boolean write(PrintStream oStream, boolean noAlign) {
+    if(oStream == null)
+        oStream = System.out;
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
@@ -369,9 +360,6 @@ public class CombinedFeatureExtractor {
       if(!skip)
         oStream.println(str.toString());
     }
-    if(needToClose)
-      oStream.close();
-
     double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
     System.err.printf("Done with writing phrase table. Seconds: %.3f.\n", totalTimeSecs);
     return true;
@@ -387,7 +375,7 @@ public class CombinedFeatureExtractor {
   }
 
   @SuppressWarnings("unchecked")
-  public static boolean multiPassFeatureExtract(Properties prop) {
+  static boolean multiPassFeatureExtract(Properties prop) {
     // Check mandatory arguments:
     String fCorpus = prop.getProperty(F_CORPUS_OPT);
     String eCorpus = prop.getProperty(E_CORPUS_OPT);
@@ -454,12 +442,16 @@ public class CombinedFeatureExtractor {
           e.printStackTrace();
         }
       }
-      combined.write(outputFile, noAlign);
+      System.err.println("saving features to: "+outputFile);
+      PrintStream oStream = IOTools.getWriterFromFile(outputFile);
+      combined.write(oStream, noAlign);
+      if(oStream != null)
+        oStream.close();
     }
     return true;
   }
 
-  public static void usage() {
+  static void usage() {
     System.err.print
     ("Usage: java CombinedFeatureExtractor [ARGS]\n"+
      "Mandatory arguments:\n"+
@@ -484,13 +476,12 @@ public class CombinedFeatureExtractor {
   }
 
   @SuppressWarnings("unchecked")
-  public static void main(String[] args) {
-    Properties prop = StringUtils.argsToProperties(args);
-    String configFile = prop.getProperty(CONFIG_OPT);
+  public static void checkProperties(Properties prop) throws IOException {
+     String configFile = prop.getProperty(CONFIG_OPT);
     if(configFile != null) {
-      try { 
+      try {
         IOTools.addConfigFileProperties(prop, configFile);
-      } catch(Exception e) {
+      } catch(IOException e) {
         e.printStackTrace();
         usage();
         System.exit(1);
@@ -500,29 +491,24 @@ public class CombinedFeatureExtractor {
     if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
       Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
-      try { 
-        throw new RuntimeException(String.format
-       ("The following required fields are missing: %s\n", missingFields));
-      } catch(Exception e) {
-        e.printStackTrace();
-        usage();
-        System.exit(1);
-      }
+      System.err.printf
+       ("The following required fields are missing: %s\n", missingFields);
+      usage();
+      System.exit(1);
     }
-
     if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
       Set extraFields = new HashSet(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
-      try { 
-        throw new RuntimeException(String.format
-         ("The following fields are unrecognized: %s\n", extraFields));
-      } catch(Exception e) {
-        e.printStackTrace();
-        usage();
-        System.exit(1);
-      }
+      System.err.printf
+       ("The following fields are unrecognized: %s\n", extraFields);
+      usage();
+      System.exit(1);
     }
+  }
 
+  public static void main(String[] args) throws IOException {
+    Properties prop = StringUtils.argsToProperties(args);
+    checkProperties(prop);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
     printFeatureNames = Boolean.parseBoolean(prop.getProperty(PRINT_FEATURE_NAMES_OPT,"true"));
     if(!multiPassFeatureExtract(prop))
