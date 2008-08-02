@@ -82,13 +82,14 @@ public class CombinedFeatureExtractor {
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
   
-  static BshInterpreter interpreter = new BshInterpreter();
-
   public static final String DEBUG_PROPERTY = "DebugCombinedFeatureExtractor";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugCombinedFeatureExtractor";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
+
+  private static BshInterpreter interpreter = new BshInterpreter();
+  private static int minCount = 1;
 
   protected List<AbstractFeatureExtractor> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
@@ -99,20 +100,89 @@ public class CombinedFeatureExtractor {
 
   protected AlignmentTemplates alTemps;
   protected AlignmentTemplateInstance alTemp;
-
   protected Index<String> featureIndex = new Index<String>();
 
-  protected static int minCount = 1;
-  protected static boolean printFeatureNames = true;
-  private static int startAtLine = -1, endAtLine = -1;
-  private static boolean filterFromDev = false;
+  private Properties prop;
+  private int startAtLine = -1, endAtLine = -1, numSplits = 0;
+  private String fCorpus, eCorpus, align, outputFile;
+  private boolean filterFromDev = false, printFeatureNames = true, noAlign;
+  Sequence<IString>[] fPhrases;
 
   // Number of passes over training data needed:
   private int passNumber = 0;
   private int totalPassNumber = 1;
 
   @SuppressWarnings("unchecked")
-  public CombinedFeatureExtractor(Properties prop) {
+  public CombinedFeatureExtractor(Properties prop) throws IOException {
+    analyzeProperties(prop);
+  }
+
+  @SuppressWarnings("unchecked")
+  public void analyzeProperties(Properties prop) throws IOException {
+    this.prop = prop;
+    // Possibly load properties from config file:
+    String configFile = prop.getProperty(CONFIG_OPT);
+    if(configFile != null) {
+      try {
+        IOTools.addConfigFileProperties(prop, configFile);
+      } catch(IOException e) {
+        e.printStackTrace();
+        usage();
+        System.exit(1);
+      }
+    }
+    // Check required, optional properties:
+    System.err.println("properties: "+prop.toString());
+    if(!prop.keySet().containsAll(REQUIRED_OPTS)) {
+      Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
+      missingFields.removeAll(prop.keySet());
+      System.err.printf
+       ("The following required fields are missing: %s\n", missingFields);
+      usage();
+      System.exit(1);
+    }
+    if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
+      Set extraFields = new HashSet(prop.keySet());
+      extraFields.removeAll(ALL_RECOGNIZED_OPTS);
+      System.err.printf
+       ("The following fields are unrecognized: %s\n", extraFields);
+      usage();
+      System.exit(1);
+    }
+    // Analyze props:
+    // Mandatory arguments:
+    fCorpus = prop.getProperty(F_CORPUS_OPT);
+    eCorpus = prop.getProperty(E_CORPUS_OPT);
+    align = prop.getProperty(A_CORPUS_OPT);
+    // Phrase filtering arguments:
+    String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
+    String fFilterList = prop.getProperty(FILTER_LIST_OPT);
+    boolean emptyFilterList =
+      Boolean.parseBoolean(prop.getProperty(EMPTY_FILTER_LIST_OPT,"false"));
+    numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
+    fPhrases = null;
+    if(emptyFilterList || fFilterList != null || fFilterCorpus != null)
+      filterFromDev = true;
+    if(fFilterList != null)
+      fPhrases = SourceFilteringToolkit.getPhrasesFromList(fFilterList);
+    else if(fFilterCorpus != null)
+      fPhrases = SourceFilteringToolkit.getPhrasesFromFilterCorpus
+        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF);
+    // Other optional arguments:
+    startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));
+    endAtLine = Integer.parseInt(prop.getProperty(END_AT_LINE_OPT,"-2"))+1;
+    printFeatureNames = Boolean.parseBoolean(prop.getProperty(PRINT_FEATURE_NAMES_OPT,"true"));
+    int numLines = Integer.parseInt(prop.getProperty(NUM_LINES_OPT,"-1"));
+    if(numLines > 0) {
+      startAtLine = 0;
+      endAtLine = numLines;
+    }
+    noAlign = Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
+    outputFile = prop.getProperty(OUTPUT_FILE_OPT);
+  }
+
+  @SuppressWarnings("unchecked")
+  public void init() {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
       exsString = "mt.train.PharaohFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
@@ -374,51 +444,19 @@ public class CombinedFeatureExtractor {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  static boolean multiPassFeatureExtract(Properties prop) {
-    // Check mandatory arguments:
-    String fCorpus = prop.getProperty(F_CORPUS_OPT);
-    String eCorpus = prop.getProperty(E_CORPUS_OPT);
-    String align = prop.getProperty(A_CORPUS_OPT);
-    
-    // Phrase filtering arguments:
-    String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
-    String fFilterList = prop.getProperty(FILTER_LIST_OPT);
-    boolean emptyFilterList = 
-      Boolean.parseBoolean(prop.getProperty(EMPTY_FILTER_LIST_OPT,"false"));
-    int numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
-    Sequence<IString>[] fPhrases = null;
-    if(emptyFilterList || fFilterList != null || fFilterCorpus != null)
-      filterFromDev = true;
-    if(fFilterList != null)
-      fPhrases = SourceFilteringToolkit.getPhrasesFromList(fFilterList);
-    else if(fFilterCorpus != null)
-      fPhrases = SourceFilteringToolkit.getPhrasesFromFilterCorpus
-        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF);
-    // Other optional arguments:
-    startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));
-    endAtLine = Integer.parseInt(prop.getProperty(END_AT_LINE_OPT,"-2"))+1;
-    int numLines = Integer.parseInt(prop.getProperty(NUM_LINES_OPT,"-1"));
-    if(numLines > 0) {
-      startAtLine = 0;
-      endAtLine = numLines;
-    }
-    boolean noAlign = Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
-    String outputFile = prop.getProperty(OUTPUT_FILE_OPT);
+  public void extractAll() {
     // Split filter list into N chunks:
     if(numSplits > 1) {
-      if(!filterFromDev) {
-        System.err.println("-"+SPLIT_SIZE_OPT+" argument only possible with -"+FILTER_CORPUS_OPT+", -"+FILTER_LIST_OPT+".");
-        return false;
-      }
+      if(!filterFromDev)
+        throw new RuntimeException("-"+SPLIT_SIZE_OPT+" argument only possible with -"+FILTER_CORPUS_OPT+", -"+FILTER_LIST_OPT+".");
       PrintStream oStream = IOTools.getWriterFromFile(outputFile);
       int size = fPhrases.length/numSplits+1;
       int startLine = 0;
       while(startLine < fPhrases.length) {
-        CombinedFeatureExtractor combined = new CombinedFeatureExtractor(prop);
-        combined.restrictExtractionTo(fPhrases, startLine, startLine+size);
-        combined.extractFromAlignedData(fCorpus, eCorpus, align);
-        combined.write(oStream, noAlign);
+        init();
+        restrictExtractionTo(fPhrases, startLine, startLine+size);
+        extractFromAlignedData(fCorpus, eCorpus, align);
+        write(oStream, noAlign);
         startLine += size;
       }
       if(oStream != null)
@@ -426,17 +464,17 @@ public class CombinedFeatureExtractor {
     } 
     // Only one chunk at a time (more advanced features available here):
     else {
-      CombinedFeatureExtractor combined = new CombinedFeatureExtractor(prop);
+      init();
       // Various filtering options:
       if(fPhrases != null)
-        combined.restrictExtractionTo(fPhrases);
-      combined.extractFromAlignedData(fCorpus, eCorpus, align);
+        restrictExtractionTo(fPhrases);
+      extractFromAlignedData(fCorpus, eCorpus, align);
       // Check phrase table against existing one:
       String refFile = prop.getProperty(REF_PTABLE_OPT);
-      if(refFile != null && combined.mosesExtractor != null) {
+      if(refFile != null && mosesExtractor != null) {
         try {
           BufferedReader refReader = IOTools.getReaderFromFile(refFile);
-          combined.mosesExtractor.checkAgainst(refReader);
+          mosesExtractor.checkAgainst(refReader);
           refReader.close();
         } catch(IOException e) {
           e.printStackTrace();
@@ -444,18 +482,17 @@ public class CombinedFeatureExtractor {
       }
       System.err.println("saving features to: "+outputFile);
       PrintStream oStream = IOTools.getWriterFromFile(outputFile);
-      combined.write(oStream, noAlign);
+      write(oStream, noAlign);
       if(oStream != null)
         oStream.close();
     }
-    return true;
   }
 
   static void usage() {
     System.err.print
     ("Usage: java CombinedFeatureExtractor [ARGS]\n"+
      "Mandatory arguments:\n"+
-     " -fCorpus <file> : source-language corpus\n"+ 
+     " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+
      " -align <file> : alignment file\n"+
      " -extractors <class1>[:<class2>:...:<classN>]\n"+
@@ -475,43 +512,15 @@ public class CombinedFeatureExtractor {
      " -noAlign : do not write alignment to stdout\n");
   }
 
-  @SuppressWarnings("unchecked")
-  public static void checkProperties(Properties prop) throws IOException {
-     String configFile = prop.getProperty(CONFIG_OPT);
-    if(configFile != null) {
-      try {
-        IOTools.addConfigFileProperties(prop, configFile);
-      } catch(IOException e) {
-        e.printStackTrace();
-        usage();
-        System.exit(1);
-      }
-    }
-    System.err.println("properties: "+prop.toString());
-    if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
-      Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
-      missingFields.removeAll(prop.keySet());
-      System.err.printf
-       ("The following required fields are missing: %s\n", missingFields);
-      usage();
-      System.exit(1);
-    }
-    if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet(prop.keySet());
-      extraFields.removeAll(ALL_RECOGNIZED_OPTS);
-      System.err.printf
-       ("The following fields are unrecognized: %s\n", extraFields);
-      usage();
-      System.exit(1);
-    }
-  }
-
   public static void main(String[] args) throws IOException {
     Properties prop = StringUtils.argsToProperties(args);
-    checkProperties(prop);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
-    printFeatureNames = Boolean.parseBoolean(prop.getProperty(PRINT_FEATURE_NAMES_OPT,"true"));
-    if(!multiPassFeatureExtract(prop))
+    try {
+      CombinedFeatureExtractor e = new CombinedFeatureExtractor(prop);
+      e.extractAll();
+    } catch(Exception e) {
+      e.printStackTrace();
       usage();
+    }
   }
 }

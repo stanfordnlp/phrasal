@@ -9,7 +9,6 @@ import java.io.IOException;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Beam;
 import edu.stanford.nlp.util.IStrings;
-//import edu.stanford.nlp.util.Beam;
 
 /**
  * Prints a monolingual (source-language) phrase table instead of bilingual,
@@ -27,7 +26,7 @@ public class ParaphraseExtractor extends CombinedFeatureExtractor {
 
   static Comparator<PhraseHyp> beamCmp;
 
-  public ParaphraseExtractor(Properties prop) {
+  public ParaphraseExtractor(Properties prop) throws IOException {
     super(prop);
     beamCmp = new Comparator<PhraseHyp>() {
       public int compare(PhraseHyp p1, PhraseHyp p2) {
@@ -92,10 +91,13 @@ public class ParaphraseExtractor extends CombinedFeatureExtractor {
     Properties prop = StringUtils.argsToProperties(args);
     prop.put(CombinedFeatureExtractor.EXTRACTORS_OPT,"mt.train.PhiFeatureExtractor");
     prop.put(CombinedFeatureExtractor.SPLIT_SIZE_OPT,"1");
-    checkProperties(prop);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
-    printFeatureNames = Boolean.parseBoolean(prop.getProperty(PRINT_FEATURE_NAMES_OPT,"true"));
-    if(!multiPassFeatureExtract(prop))
+    try {
+      ParaphraseExtractor e = new ParaphraseExtractor(prop);
+      e.extractAll();
+    } catch(Exception e) {
+      e.printStackTrace();
       usage();
+    }
   }
 }
