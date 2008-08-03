@@ -89,6 +89,11 @@ $(TESTID).$(DEVID).%.500best.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).500best -n 500 $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(PHRASAL_ARGS_N) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
 
+# Use best MERT paramters to generate 500best list for specific genre:
+$(TESTID)-$(GENRE).$(DEVID).%.500best.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID)-$(GENRE).$(IE)
+	$(SCRIPTS)/update_ini -f $(TESTID)-$(GENRE).$(DEVID).$(*F).500best -n 500 $(DEVID) $(TESTID) < $< > $<.$(TESTID)-$(GENRE)
+	(java $(PHRASAL_ARGS_N) mt.PseudoMoses $<.$(TESTID)-$(GENRE) < $(TESTID)-$(GENRE).$(IE) > $@) 2> logs/$@.log
+
 # Use final MERT paramters:
 $(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
@@ -179,9 +184,14 @@ $(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$
 	$(DEVID).$(IE) $(DEV_REF)/ref ter:$(BEAM_WIDTH):$(SHIFT_SIZE) $(DEVID).$< >& logs/$(DEVID).$(*F).ter_pmert.log
 
 # Minimize TER-BLEU (tune BP only):
+$(DEVID).%.500.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
+	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
+	$(PM) --working-dir=$(DEVID).$(*F).500.bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=2 -DtuneLength=true" \
+	--nbest=500 $(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).500.bt_pmert.log
+
 $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) --working-dir=$(DEVID).$(*F).bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=1 -DtuneLength=true" \
+	$(PM) --working-dir=$(DEVID).$(*F).bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=2 -DtuneLength=true" \
 	$(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
 
 #############################################

@@ -1,8 +1,7 @@
 package mt.tools;
 
 import java.util.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 import mt.base.*;
 import mt.metrics.*;
@@ -45,6 +44,8 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
    BLEU_3 = new IString("bleu_3gram"), BLEU_4 = new IString("bleu_4gram"),
    NIST_1 = new IString("nist_1gram"), NIST_2 = new IString("nist_2gram"),
    NIST_3 = new IString("nist_3gram"), NIST_4 = new IString("nist_4gram");
+
+  static List<Integer> permutation;
 
   final IString[] metricScoresStr;
   String metrics;
@@ -140,7 +141,8 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
 
     // Load hypothesis translations:
     hyps = IOTools.slurpIStringSequences(hypFile);
-    //Collections.shuffle(hyps,shuffler);
+    createRandomPermutation(hyps.size());
+    hyps = permute(hyps);
     System.err.printf("Read %d hypotheses from %s\n",hyps.size(),hypFile);
 
     // Load references:
@@ -148,7 +150,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     File f = new File(refPrefix);
 		if (f.exists()) {
       List<Sequence<IString>> lines = IOTools.slurpIStringSequences(refPrefix);
-      //Collections.shuffle(lines,shuffler);
+      lines = permute(lines);
       for(Sequence<IString> ref : lines) {
         List<Sequence<IString>> sref = new ArrayList<Sequence<IString>>();
         sref.add(ref);
@@ -159,7 +161,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         f = new File(refPrefix+i);
         if(!f.exists()) break;
         List<Sequence<IString>> lines = IOTools.slurpIStringSequences(refPrefix);
-        //Collections.shuffle(lines,shuffler);
+        lines = permute(lines);
         for(int j=0; j<lines.size(); ++j) {
           if(i==0) {
             List<Sequence<IString>> fref = new ArrayList<Sequence<IString>>();
@@ -268,11 +270,17 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     return -pearson;
   }
 
+  private void dump(String name, List l) {
+    System.err.printf("Dumping list %s\n",name);
+    for(int i=0; i<l.size(); ++i)
+      System.err.printf("%d: %s\n",i,l.get(i).toString());
+  }
+
   public double[] getExternalScores(String filename) throws IOException {
     int sz = windowSize;
     List<Double> l = new ArrayList<Double>();
-    String[] lines = StringUtils.slurpFile(filename).split("[\r\n]+");
-    //Collections.shuffle(Arrays.asList(lines),shuffler);
+    List<String> lines = Arrays.asList(StringUtils.slurpFile(filename).split("[\r\n]+"));
+    lines = permute(lines);
     for (String line : lines) 
       l.add(Double.parseDouble(line));
     double[] externalScores = new double[numInstances/sz];
@@ -336,7 +344,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   }
 
   public void setMetricScores(BLEUMetric<?,?>.BLEUIncrementalMetric bleu,
-                              NISTMetric<?, ?>.NISTIncrementalMetric nist,
+                              NISTMetric<?,?>.NISTIncrementalMetric nist,
                               TERMetric<?,?>.TERIncrementalMetric ter, int line) {
     int sz = metricScoresStr.length;
     for(int i=0; i<metricScoresStr.length; ++i) {
@@ -439,12 +447,26 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     return (SloppyMath.sigmoid(v) * .95) + .05;
   }
 
-  public static double[] randomDoubleArray(int l) {
+  private static double[] randomDoubleArray(int l) {
     double[] a = new double[l];
     Random generator = new Random();
     for(int i = 0; i < a.length; i++)
       a[i] = generator.nextDouble()*2-1;
     return a;
+  }
+
+  private static void createRandomPermutation(int sz) {
+    permutation = new ArrayList<Integer>();
+    for(int i=0; i<sz; ++i)
+      permutation.add(i);
+    Collections.shuffle(permutation);
+  }
+
+  private <T> List<T> permute(List<T> list) {
+    List<T> newList = new ArrayList<T>();
+    for(int i=0; i<list.size(); ++i)
+      newList.add(list.get(permutation.get(i)));
+    return newList;
   }
 }
 

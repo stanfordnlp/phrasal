@@ -144,7 +144,7 @@ sub getNgramPrecision {
 
 ############# Preprocessing ##############
 
-sub tokenize {
+sub tokenizeNIST {
     my ($norm_text) = @_;
 		$norm_text =~ tr/A-Z/a-z/ if $opt{l};
 		if($opt{n}) {
@@ -167,6 +167,26 @@ sub tokenize {
 			$norm_text =~ s/\s+$//;  # no trailing space
 		}
 		return [ split(/\s+/,$norm_text) ];
+}
+
+sub tokenize {
+    my $strPtr = shift;
+		# language-independent part:
+    $strPtr =~ s/^\s+//;
+    $strPtr =~ s/\n/ /g; # join lines
+    $strPtr =~ s/(\d)\s+(\d)/$1$2/g;  #join digits
+		# language-dependent part (assuming Western languages):
+		$strPtr =~ tr/A-Z/a-z/ if $opt{l};
+    $strPtr =~ s/([\{-\~\[-\` -\&\(-\+\:-\@\/])/ $1 /g;   # tokenize punctuation
+    $strPtr =~ s/([^0-9])([\.,])/$1 $2 /g; # tokenize period and comma unless preceded by a digit
+    $strPtr =~ s/([\.,])([^0-9])/ $1 $2/g; # tokenize period and comma unless followed by a digit
+    $strPtr =~ s/([0-9])(-)/$1 $2 /g; # tokenize dash when preceded by a digit
+    $strPtr =~ s/\s+/ /g; # one space only between words
+    $strPtr =~ s/^\s+//;  # no leading space
+    $strPtr =~ s/\s+$//;  # no trailing space
+    my $ascii = "\x20-\x7F";
+    $strPtr =~ s/([^$ascii])\s+([^$ascii])/$1$2/g; # combine sequences of non-ASCII characters into single words
+		return [ split(/\s+/,$strPtr) ];
 }
 
 ############# Reference and hypothesis length ##############

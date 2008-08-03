@@ -6,6 +6,7 @@ import mt.decoder.util.State;
 import mt.metrics.IncrementalEvaluationMetric;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -22,6 +23,8 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
   final AbstractMetric<TK,FV>[] metrics;
 
   public LinearCombinationMetric(double[] weights, AbstractMetric<TK,FV>... metrics) {
+    System.err.printf("LinearCombinationMetric: weights=%s metrics=%s\n", 
+      Arrays.toString(weights), Arrays.toString(metrics));
     if(weights.length != metrics.length)
       throw new IllegalArgumentException();
     this.weights = weights;
@@ -32,6 +35,7 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
     double maxScore = 0.0;
     for(int i=0; i<weights.length; ++i)
       maxScore += weights[i]*metrics[i].maxScore();
+    //System.err.println("max score: "+maxScore);
     return maxScore;
   }
 
@@ -88,8 +92,14 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
     public double score() {
       double score = 0.0;
-      for(int i=0; i<weights.length; ++i)
+      //System.err.print("lc score: ");
+      for(int i=0; i<weights.length; ++i) {
         score += weights[i]*iems.get(i).score();
+        //if(i==0)
+        //  System.err.printf(" + ");
+        //System.err.printf("%.3f %.3f");
+      }
+      //System.err.printf(" = %.3f\n",score);
       return score;
     }
 

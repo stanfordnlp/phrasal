@@ -263,7 +263,7 @@ foreach my $prefixed_id (sort keys %HYPS) {
     if ($rep_id =~ /^(.*)([-_].*)/) {
 	$docID = $1;
     } else {
-	print(STDERR "Warning: Cannot identify document and segment number for $rep_id.\n");
+	#print(STDERR "Warning: Cannot identify document and segment number for $rep_id.\n");
     }
     
     if (! (exists $DOCS{$docID})) {
