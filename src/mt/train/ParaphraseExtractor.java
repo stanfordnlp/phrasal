@@ -29,6 +29,9 @@ public class ParaphraseExtractor extends CombinedFeatureExtractor {
   public static final String SKIP_IDENTICAL_PROPERTY = "SkipIdenticalParaphrase";
   public static final boolean SKIP_IDENTICAL = Boolean.parseBoolean(System.getProperty(SKIP_IDENTICAL_PROPERTY, "false"));
 
+  public static final String INV_MODEL_PROPERTY = "InvModel";
+  public static final boolean INV_MODEL = Boolean.parseBoolean(System.getProperty(INV_MODEL_PROPERTY, "false"));
+
   class PhraseHyp { int i; double d; public PhraseHyp(int i, double d) { this.i=i; this.d=d; } }
 
   static Comparator<PhraseHyp> beamCmp;
@@ -108,7 +111,7 @@ public class ParaphraseExtractor extends CombinedFeatureExtractor {
       double[] scoreArray = (double[]) scores;
       if(scoreArray.length != 2)
         throw new RuntimeException("Score array of unexpected length: "+scoreArray.length+" != 2.");
-      double score = scoreArray[inv ? 0 : 1];
+      double score = scoreArray[(inv ^ INV_MODEL) ? 0 : 1];
       beam.add(new PhraseHyp(eKey,score));
     }
     return m;
