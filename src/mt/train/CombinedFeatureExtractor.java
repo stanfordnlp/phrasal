@@ -229,7 +229,7 @@ public class CombinedFeatureExtractor {
         usage();
       }
     }
-    phraseExtractor = new MosesPhraseExtractor(alTemps,extractors);
+    phraseExtractor = new LinearTimePhraseExtractor(alTemps,extractors);
     setTotalPassNumber();
   }
 

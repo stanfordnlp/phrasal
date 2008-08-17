@@ -89,8 +89,6 @@ public class AlignmentGrid {
     alGridCells[f1][e1].addTopLeft(alTemp);
     alGridCells[f2][e1].addTopRight(alTemp);
     alGridCells[f1][e2].addBottomLeft(alTemp);
-    //alGridCells[f1][e2].addTopRight(alTemp);
-    //alGridCells[f2][e1].addBottomLeft(alTemp);
     alGridCells[f2][e2].addBottomRight(alTemp);
     alTempList.add(alTemp);
   }
@@ -104,8 +102,6 @@ public class AlignmentGrid {
     alGridCells[f1][e1].setTopLeft(true);
     alGridCells[f2][e1].setTopRight(true);
     alGridCells[f1][e2].setBottomLeft(true);
-    //alGridCells[f1][e2].setTopRight(true);
-    //alGridCells[f2][e1].setBottomLeft(true);
     alGridCells[f2][e2].setBottomRight(true);
   }
 

@@ -78,6 +78,15 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
     assert(checkAlignmentConsistency(sent,f1,f2,e1,e2));
 
+    // Check if alTemp meets length requirements:
+    if(f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
+      if(needAlGrid)
+        alGrid.addAlTemp(f1,f2,e1,e2);
+      if(DETAILED_DEBUG)
+        System.err.printf("skipping too long: %d %d\n",f2-f1+1,e2-e1+1);
+      return;
+    }
+
     // Create alTemp:
     AlignmentTemplateInstance alTemp = null;
     if(needAlGrid) {
@@ -86,13 +95,6 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     } else {
       alTemp = this.alTemp;
       alTemp.init(sent,f1,f2,e1,e2,true);
-    }
-
-    // Check if alTemp meets length requirements:
-    if(f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
-      if(DETAILED_DEBUG)
-        System.err.printf("skipping too long: %d %d\n",f2-f1+1,e2-e1+1);
-      return;
     }
 
     // Add it to index:

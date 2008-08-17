@@ -5,6 +5,10 @@ import java.util.*;
 
 /**
  * Phrase extraction as implemented in Moses, which is not particularly efficient.
+ * Time complexity is O(m^2 * s * t), where m is the maximum phrase length, and
+ * s and t are respectively the lengths of the source and target sentence.
+ * LinearTimePhraseExtractor offers an implementation that is linear in the
+ * maximum phrase length, i.e., O(m * s * t).
  *
  * @author Michel Galley
  */
@@ -14,7 +18,6 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
     super(alTemps,extractors);
   }
 
-  //public void extractPhrases(SymmetricalWordAlignment sent) {
   public void extractPhrases(WordAlignment sent) {
 
     int fsize = sent.f().size();
