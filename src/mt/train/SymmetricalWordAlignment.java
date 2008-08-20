@@ -10,6 +10,8 @@ import edu.stanford.nlp.util.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+
 /**
   * Sentence pair with symmetrical word alignment (i.e., if e_i aligns to f_j in one direction, 
   * then f_j aligns to e_i as well in the other direction). If this is not what you want, use
@@ -110,9 +112,9 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     f2e = new TreeSet[f.size()];
     e2f = new TreeSet[e.size()];
     for(int i=0; i<f2e.length; ++i)
-      f2e[i] = new TreeSet();
+      f2e[i] = new TreeSet<Integer>();
     for(int i=0; i<e2f.length; ++i)
-      e2f[i] = new TreeSet();
+      e2f[i] = new TreeSet<Integer>();
   }
   
   public void addAlign(int f, int e) {

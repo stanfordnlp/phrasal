@@ -9,6 +9,9 @@ import edu.stanford.nlp.util.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 
+//import it.unimi.dsi.fastutil.bytes.ByteAVLTreeSet;
+//import it.unimi.dsi.fastutil.shorts.ShortAVLTreeSet;
+
 /**
  * An alignment template: a source-language phrase (f), a target-language phrase (c), and
  * word alignment.
@@ -31,8 +34,8 @@ public class AlignmentTemplate {
 
   // alignments:
   int[] align; // compact representation stored in AlignmentTables
-  Set<Byte>[] f2e; // not used in lazy constructors
-  Set<Byte>[] e2f; // not used in lazy constructors
+  Set<Integer>[] f2e; // not used in lazy constructors
+  Set<Integer>[] e2f; // not used in lazy constructors
   final static Set<Short> alTable = new TreeSet<Short>(); // temporary table
 
   int key=-1;
@@ -75,7 +78,7 @@ public class AlignmentTemplate {
     if(!lazy)
       allocAlignmentArrays();
     for(int fIndex=0; fIndex<aligns.length; ++fIndex) {
-      assert(fIndex >= 0 && fIndex < Byte.MAX_VALUE && fIndex < f.size());
+      assert(fIndex >= 0 && fIndex < f.size());
       String align = aligns[fIndex];
       if(!align.startsWith("(") || !align.endsWith(")"))
         throw new IOException("Wrong alignment format: "+align);
@@ -83,11 +86,11 @@ public class AlignmentTemplate {
         if(eIndexStr.length() == 0)
           continue;
         int eIndex = Integer.parseInt(eIndexStr);
-        assert(eIndex >= 0 && eIndex < Byte.MAX_VALUE && eIndex < e.size());
+        assert(eIndex >= 0 && eIndex < e.size());
         alTable.add(alignmentToNumber((byte)eIndex,(byte)fIndex));
         if(!lazy) {
-          f2e[fIndex].add((byte)eIndex);
-          e2f[eIndex].add((byte)fIndex);
+          f2e[fIndex].add(eIndex);
+          e2f[eIndex].add(fIndex);
         }
       }
     }
@@ -110,9 +113,9 @@ public class AlignmentTemplate {
     f2e = new TreeSet[f.size()];
     e2f = new TreeSet[e.size()];
     for(int i=0; i<f2e.length; ++i)
-      f2e[i] = new TreeSet();
+      f2e[i] = new TreeSet<Integer>();
     for(int i=0; i<e2f.length; ++i)
-      e2f[i] = new TreeSet();
+      e2f[i] = new TreeSet<Integer>();
   }
 
   @SuppressWarnings("unchecked")
@@ -121,8 +124,8 @@ public class AlignmentTemplate {
       return;
     allocAlignmentArrays();
     for(int i=0; i<align.length; ++i) {
-      byte fIndex = numberToAlignmentF(align[i]);
-      byte eIndex = numberToAlignmentE(align[i]);
+      int fIndex = numberToAlignmentF(align[i]);
+      int eIndex = numberToAlignmentE(align[i]);
       assert(fIndex < f.size());
       assert(eIndex < e.size());
       f2e[fIndex].add(eIndex);
@@ -152,12 +155,12 @@ public class AlignmentTemplate {
     return buf.toString();
   }
 
-  static String alignmentToString(Set<Byte> alSet) {
-    Byte[] als = alSet.toArray(new Byte[0]);
+  static String alignmentToString(Set<Integer> alSet) {
     StringBuffer buf = new StringBuffer();
-    for(int i=0; i<als.length; ++i) {
-      if(i>0) buf.append(",");
-      buf.append(als[i]);
+    int i=-1;
+    for(int al : alSet) {
+      if(++i>0) buf.append(",");
+      buf.append(al);
     }
     return buf.toString();
   }
@@ -175,10 +178,10 @@ public class AlignmentTemplate {
 
   public Sequence<IString> f() { return f; }
   public Sequence<IString> e() { return e; }
-  public Set<Byte> f2e(int i) { return f2e[i]; }
-  public Set<Byte> e2f(int i) { return e2f[i]; }
-  public Set<Byte>[] f2e() { return f2e; }
-  public Set<Byte>[] e2f() { return e2f; }
+  public Set<Integer> f2e(int i) { return f2e[i]; }
+  public Set<Integer> e2f(int i) { return e2f[i]; }
+  public Set<Integer>[] f2e() { return f2e; }
+  public Set<Integer>[] e2f() { return e2f; }
   public int[] getCompactAlignment() { return align; }
 
   static short alignmentToNumber(byte fIndex, byte eIndex) {

@@ -7,6 +7,7 @@ import edu.stanford.nlp.util.IString;
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.Constructor;
+import java.text.SimpleDateFormat;
 
 import mt.base.IOTools;
 import mt.base.Sequence;
@@ -515,6 +516,8 @@ public class CombinedFeatureExtractor {
   public static void main(String[] args) throws IOException {
     Properties prop = StringUtils.argsToProperties(args);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MMMMM.dd GGG hh:mm aaa");
+    System.err.println("extraction started at: "+formatter.format(new Date()));
     try {
       CombinedFeatureExtractor e = new CombinedFeatureExtractor(prop);
       e.extractAll();
@@ -522,5 +525,6 @@ public class CombinedFeatureExtractor {
       e.printStackTrace();
       usage();
     }
+    System.err.println("extraction ended at: "+formatter.format(new Date()));
   }
 }

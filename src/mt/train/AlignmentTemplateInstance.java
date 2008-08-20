@@ -50,8 +50,8 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
         assert(eIndex >= 0 && eIndex < Byte.MAX_VALUE && eIndex < e.size());
         alTable.add(alignmentToNumber((byte)eIndex,(byte)fIndex));
         if(!lazy) {
-          f2e[fIndex].add((byte)eIndex);
-          e2f[eIndex].add((byte)fIndex);
+          f2e[fIndex].add(eIndex);
+          e2f[eIndex].add(fIndex);
         }
       }
     }
