@@ -607,7 +607,7 @@ public class ATableHMM extends ATable {
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
-      MAX_LENGTH = (Integer.valueOf(in.readLine())).intValue();
+      MAX_LENGTH = Integer.parseInt(in.readLine());
       params = new float[2 * MAX_LENGTH + 1];
       counts = new float[2 * MAX_LENGTH + 1];
       initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH filed 0 is not used

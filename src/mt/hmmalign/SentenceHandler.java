@@ -140,15 +140,15 @@ public class SentenceHandler {
           token = stE.nextToken();
           if (eTags) {
             index = token.indexOf(UNDRSCR);
-            wordId = (Integer.valueOf(token.substring(0, index))).intValue();
-            tagId = (Integer.valueOf(token.substring(index + 1))).intValue();
+            wordId = Integer.parseInt(token.substring(0, index));
+            tagId = Integer.parseInt(token.substring(index + 1));
             if (!useETags) {
               tagId = 0;
             }
             wordTmp = new WordEx(wordId, tagId);
 
           } else {
-            wordId = (Integer.valueOf(token)).intValue();
+            wordId = Integer.parseInt(token);
             wordTmp = new WordEx(wordId, 0);
           }
 
@@ -184,14 +184,14 @@ public class SentenceHandler {
           wordId = tagId = 0;
           if (fTags) {
             index = token.indexOf(UNDRSCR);
-            wordId = (Integer.valueOf(token.substring(0, index))).intValue();
-            tagId = (Integer.valueOf(token.substring(index + 1))).intValue();
+            wordId = Integer.parseInt(token.substring(0, index));
+            tagId = Integer.parseInt(token.substring(index + 1));
             if (!useFTags) {
               tagId = 0;
             }
             wordTmp = new WordEx(wordId, tagId);
           } else {
-            wordId = (Integer.valueOf(token)).intValue();
+            wordId = Integer.parseInt(token);
             wordTmp = new WordEx(wordId, 0);
           }
 
@@ -367,7 +367,7 @@ public class SentenceHandler {
         continue;
       }
       if (args[startArgs].equals("-m")) {
-        mask = (Integer.valueOf(args[++startArgs])).intValue();
+        mask = Integer.parseInt(args[++startArgs]);
         startArgs++;
         continue;
       }

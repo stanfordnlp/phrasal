@@ -140,7 +140,7 @@ public class LMGrammar_REMOTE  extends LMGrammar {
 			}
 			String lm_file=fds[0];
 			String host = fds[1];
-			int port = (Integer.valueOf(fds[2])).intValue();
+                  int port = Integer.parseInt(fds[2]);
                   double weight = Double.parseDouble(fds[3]);
 			l_lm_server_hosts[count]=host;
 			l_lm_server_ports[count]=port;

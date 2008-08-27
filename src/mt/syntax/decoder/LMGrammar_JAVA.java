@@ -357,7 +357,7 @@ public class LMGrammar_JAVA extends LMGrammar {
 			}
 			if( line.matches("^\\\\\\d-grams:\\s*$")==true){//\1-grams:
 				start=true;
-				order = (Integer.valueOf(line.substring(1, 2))).intValue();
+                          order = Integer.parseInt(line.substring(1, 2));
 				if(order > g_order)
 					break;
 				System.out.println("begin to read ngrams with order " + order);

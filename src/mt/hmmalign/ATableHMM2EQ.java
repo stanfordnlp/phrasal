@@ -809,7 +809,7 @@ public class ATableHMM2EQ extends ATable {
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
-      MAX_LENGTH = (Integer.valueOf(in.readLine())).intValue();
+      MAX_LENGTH = Integer.parseInt(in.readLine());
       params = new float[2 * MAX_LENGTH + 1][2 * MAX_FLDS];
       counts = new float[2 * MAX_LENGTH + 1][2 * MAX_FLDS];
       initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH+1 filed 0 is not used
@@ -872,7 +872,7 @@ public class ATableHMM2EQ extends ATable {
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
-      MAX_LENGTH = (Integer.valueOf(in.readLine())).intValue();
+      MAX_LENGTH = Integer.parseInt(in.readLine());
       params = new float[2 * MAX_LENGTH + 1][2 * MAX_FLDS];
       counts = new float[2 * MAX_LENGTH + 1][2 * MAX_FLDS];
       initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH filed 0 is not used

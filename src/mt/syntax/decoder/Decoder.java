@@ -391,14 +391,14 @@ public class Decoder {
 					System.out.println(String.format("Line: %s\nAdd LM, order: %d; weight: %.3f;", line, g_lm_order, weight));
 				}else if(fds[0].compareTo("phrasemodel")==0 && fds.length == 4){//phrasemodel owner column(0-indexed) weight
 					int owner = Symbol.add_terminal_symbol(fds[1]);
-					int column = (Integer.valueOf(fds[2].trim())).intValue();
+                                  int column = Integer.parseInt(fds[2].trim());
                                   double weight = Double.parseDouble(fds[3].trim());
 					l_models.add(new Model.PhraseModel(owner, column, weight));
 					System.out.println(String.format("Process Line: %s\nAdd PhraseModel, owner: %s; column: %d; weight: %.3f", line, owner, column, weight));
 				}else if(fds[0].compareTo("arityphrasepenalty")==0 && fds.length == 5){//arityphrasepenalty owner start_arity end_arity weight
 					int owner = Symbol.add_terminal_symbol(fds[1]);
-					int start_arity = (Integer.valueOf(fds[2].trim())).intValue();
-					int end_arity = (Integer.valueOf(fds[3].trim())).intValue();
+                                  int start_arity = Integer.parseInt(fds[2].trim());
+                                  int end_arity = Integer.parseInt(fds[3].trim());
                                   double weight = Double.parseDouble(fds[4].trim());
 					l_models.add(new Model.ArityPhrasePenalty(owner, start_arity, end_arity, weight));
 					System.out.println(String.format("Process Line: %s\nAdd ArityPhrasePenalty, owner: %s; start_arity: %d; end_arity: %d; weight: %.3f", line, owner, start_arity, end_arity, weight));
@@ -554,7 +554,7 @@ public class Decoder {
                             char cur = res_sent.charAt(i);
                             if(cur != '"') str_id += cur; else break;
                     }
-                    int res_id= (Integer.valueOf(str_id)).intValue();
+              int res_id = Integer.parseInt(str_id);
                     res_sent = res_sent.replaceFirst(str_id+"\">", "");
                     res_sent = res_sent.replaceAll("</seg>", "");
                     sent_id[0]=res_id;
