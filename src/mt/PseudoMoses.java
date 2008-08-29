@@ -654,7 +654,7 @@ public class PseudoMoses {
 				RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
 
 		// Create Search Heuristic
-		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = (IsolatedPhraseFeaturizer<IString, String>) featurizer;
+		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
 		SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
 				isolatedPhraseFeaturizer, scorer,
 				HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
