@@ -25,9 +25,10 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
   final double[] weights;
   final AbstractMetric<TK,FV>[] metrics;
   final MetricType[] metricTypes;
-  final Map[] metricProperties;
+  final Map<TK,FV>[] metricProperties;
 
-  public LinearCombinationMetric(double[] weights, AbstractMetric<TK,FV>... metrics) {
+  @SuppressWarnings("unchecked")
+	public LinearCombinationMetric(double[] weights, AbstractMetric<TK,FV>... metrics) {
     System.err.printf("LinearCombinationMetric: weights=%s metrics=%s\n", 
       Arrays.toString(weights), Arrays.toString(metrics));
     if(weights.length != metrics.length)

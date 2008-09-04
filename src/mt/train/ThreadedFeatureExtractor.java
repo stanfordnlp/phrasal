@@ -62,7 +62,8 @@ public class ThreadedFeatureExtractor {
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
-  static final Set<Class> THREAD_SAFE_EXTRACTORS = new HashSet<Class>();
+  @SuppressWarnings("unchecked")
+	static final Set<Class> THREAD_SAFE_EXTRACTORS = new HashSet<Class>();
 
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(new String[] { 

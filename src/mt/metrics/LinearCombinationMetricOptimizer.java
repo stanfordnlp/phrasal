@@ -4,7 +4,6 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.*;
-import mt.metrics.*;
 import mt.reranker.ter.TERcost;
 
 import edu.stanford.nlp.util.StringUtils;
@@ -264,7 +263,7 @@ public class LinearCombinationMetricOptimizer implements Function {
     return -pearson;
   }
 
-  private void dump(String name, List l) {
+  void dump(String name, List<?> l) {
     System.err.printf("Dumping list %s\n",name);
     for(int i=0; i<l.size(); ++i)
       System.err.printf("%d: %s\n",i,l.get(i).toString());
@@ -339,7 +338,6 @@ public class LinearCombinationMetricOptimizer implements Function {
   public void setMetricScores(BLEUMetric<?,?>.BLEUIncrementalMetric bleu,
                               NISTMetric<?,?>.NISTIncrementalMetric nist,
                               TERMetric<?,?>.TERIncrementalMetric ter, int line) {
-    int sz = metricScoresStr.length;
     for(int i=0; i<metricScoresStr.length; ++i) {
       IString s = metricScoresStr[i];
       double v;
@@ -406,7 +404,7 @@ public class LinearCombinationMetricOptimizer implements Function {
     //return ArrayMath.innerProduct(scores1,scores2)/(scores1.length-1);
   }
 
-  private void printWorseCorrelationCases(double[] combinedScores) {
+  void printWorseCorrelationCases(double[] combinedScores) {
     double[] combinedScoresStd = combinedScores.clone(); 
     double[] humanScoresStd = humanScores.clone();
     ArrayMath.standardize(combinedScoresStd);

@@ -11,8 +11,6 @@ import edu.stanford.nlp.util.OAIndex;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 
-import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
-
 /**
   * Sentence pair with symmetrical word alignment (i.e., if e_i aligns to f_j in one direction, 
   * then f_j aligns to e_i as well in the other direction). If this is not what you want, use
