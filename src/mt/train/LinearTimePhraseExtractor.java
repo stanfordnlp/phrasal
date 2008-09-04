@@ -12,8 +12,8 @@ import java.util.*;
  */
 public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
 
-  public LinearTimePhraseExtractor(AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
-    super(alTemps,extractors);
+  public LinearTimePhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+    super(prop, alTemps, extractors);
   }
 
   public void extractPhrases(WordAlignment sent) {

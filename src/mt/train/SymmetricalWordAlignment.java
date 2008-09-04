@@ -6,6 +6,7 @@ import java.io.*;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.OAIndex;
 
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
@@ -73,15 +74,16 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed) throws IOException {
     if(VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
-    f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
-    e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
+    synchronized(OAIndex.class) {
+      f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
+      e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
+    }
     initAlignment();
     if(aStr == null) {
       System.err.println("Warning: empty line.");
       return;
     }
     for(String al : aStr.split("\\s+")) {
-      //System.err.printf("xx: <%s>\n",al);
       String[] els = al.split("-");
       if(els.length == 2) {
         int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);

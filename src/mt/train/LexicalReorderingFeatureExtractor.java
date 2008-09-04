@@ -237,14 +237,16 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
     double[] counts = null;
-    while(idx >= list.size()) {
-      double[] arr = new double[size];
-      Arrays.fill(arr, LAPLACE_SMOOTHING);
-      arr[size-1] += (maxSize-size)*LAPLACE_SMOOTHING;
-      list.add(arr);
+    synchronized(list) {
+      while(idx >= list.size()) {
+        double[] arr = new double[size];
+        Arrays.fill(arr, LAPLACE_SMOOTHING);
+        arr[size-1] += (maxSize-size)*LAPLACE_SMOOTHING;
+        list.add(arr);
+      }
+      counts = (double[]) list.get(idx);
+      ++counts[type];
     }
-    counts = (double[]) list.get(idx);
-    ++counts[type];
   }
 
   @Override

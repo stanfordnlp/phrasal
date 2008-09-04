@@ -14,8 +14,8 @@ import java.util.*;
  */
 public class MosesPhraseExtractor extends AbstractPhraseExtractor {
 
-  public MosesPhraseExtractor(AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
-    super(alTemps,extractors);
+  public MosesPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+    super(prop, alTemps, extractors);
   }
 
   public void extractPhrases(WordAlignment sent) {

@@ -34,7 +34,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   public static final String FILL_HASH_PROPERTY = "FillHash";
   public static final boolean FILL_HASH = Boolean.parseBoolean(System.getProperty(FILL_HASH_PROPERTY, "true"));
 
-  final DynamicIntegerArrayIndex
+  private final DynamicIntegerArrayIndex
      index = new DynamicIntegerArrayIndex(), 
      aIndex = new DynamicIntegerArrayIndex(),
      fIndex = new DynamicIntegerArrayIndex(), 
@@ -65,7 +65,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Add alignment template to phrase table. 
    */
-  public void addToIndex(AlignmentTemplate alTemp) {
+  public synchronized void addToIndex(AlignmentTemplate alTemp) {
     if(filterFromDev) {
       int fKey = indexOfF(alTemp,false);
       boolean add = (fKey >= 0);
@@ -78,7 +78,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Add alignment template to phrase table if the source-language phrase is in the dev corpus. 
    */
-  public void addToIndexIfInDev(AlignmentTemplate alTemp) {
+  public synchronized void addToIndexIfInDev(AlignmentTemplate alTemp) {
     int fKey = indexOfF(alTemp,false);
     boolean add = (fKey >= 0);
     addToIndex(alTemp,add);
@@ -87,7 +87,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Add source-language phrase to index.
    */
-  public void addForeignPhraseToIndex(Sequence<IString> f) {
+  public synchronized void addForeignPhraseToIndex(Sequence<IString> f) {
     fIndex.indexOf(Sequences.toIntArray(f), true);
   }
 
@@ -95,7 +95,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * Increment count for a given alignment for a given phrase-pair.
    */
   @SuppressWarnings("unchecked")
-  public void incrementAlignmentCount(AlignmentTemplate alTemp) {
+  public synchronized void incrementAlignmentCount(AlignmentTemplate alTemp) {
     if(FILL_HASH && storeAlignmentCounts) {
       int idx = alTemp.getKey();
       int alIdx = alTemp.getAKey();
@@ -119,7 +119,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * kept in memory, this function is the only way
    * to get the alignment template from the index.
    */
-  public void reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
+  public synchronized void reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
     int[] idxInts = index.get(idx);
     int[] idxIntsF = fIndex.get(idxInts[0]);
     int[] idxIntsE = eIndex.get(idxInts[1]);
@@ -183,7 +183,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return the source-language phrase indexed by idx.
    */
-  public int[] getF(int idx) { return fIndex.get(idx); }
+  public synchronized int[] getF(int idx) { return fIndex.get(idx); }
   public int sizeF() { return fIndex.size(); }
 
   /**
@@ -196,7 +196,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return the target-language phrase indexed by idx.
    */
-  public int[] getE(int idx) { return eIndex.get(idx); }
+  public synchronized int[] getE(int idx) { return eIndex.get(idx); }
   public int sizeE() { return eIndex.size(); }
 
   /**

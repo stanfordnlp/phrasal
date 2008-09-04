@@ -21,6 +21,7 @@ binmode(STDERR,":utf8");
 my $ptable = $ARGV[0];
 my $otable = $ARGV[1];
 my $minp = $ARGV[2] || 0;
+my $sz = $ARGV[3] || 6;
 
 if($ptable =~ /\.gz$/) { open(P,"| gzip > $ptable"); }
 else { open(P,"> $ptable"); }
@@ -33,7 +34,7 @@ while(<STDIN>) {
 	chomp;
 	if(/  /) {
 		print STDERR "BAD PHRASE: $_\n";
-	} elsif(/^([^\|]+ \|\|\| [^\|]+) \|\|\| ([^\|]+ \|\|\| [^\|]+) \|\|\| (\S+ \S+ (\S+) \S+ \S+)((\s+\S+){6})\s*$/) {
+	} elsif(/^([^\|]+ \|\|\| [^\|]+) \|\|\| ([^\|]+ \|\|\| [^\|]+) \|\|\| (\S+ \S+ (\S+) \S+ \S+)((\s+\S+){$sz})\s*$/) {
 		next if $4 < $minp;
 		print P "$1 ||| $2 ||| $3 \n";
 		print O "$1 |||$5 \n";

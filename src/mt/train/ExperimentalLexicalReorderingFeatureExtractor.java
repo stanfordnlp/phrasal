@@ -282,13 +282,15 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
     double[] counts = null;
-    while(idx >= list.size()) {
-      double[] arr = new double[modelSize];
-      Arrays.fill(arr, LAPLACE_SMOOTHING);
-      list.add(arr);
+    synchronized(list) {
+      while(idx >= list.size()) {
+        double[] arr = new double[modelSize];
+        Arrays.fill(arr, LAPLACE_SMOOTHING);
+        list.add(arr);
+      }
+      counts = (double[]) list.get(idx);
+      ++counts[type];
     }
-    counts = (double[]) list.get(idx);
-    ++counts[type];
   }
 
   @Override

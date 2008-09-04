@@ -72,6 +72,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
     lexFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_LEX_FILTER_OPT,"-1e30"));
+    System.err.printf("minimum phi(e|f) = %.5f\n", phiFilter);
+    System.err.printf("minimum lex(e|f) = %.5f\n", lexFilter);
   }
 
   @Override
@@ -127,6 +129,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     // Compute phi features p(f|e) and p(e|f):
     double phi_f_e = feCounts.get(idx)*1.0/eCounts.get(idxE);
     double phi_e_f = feCounts.get(idx)*1.0/fCounts.get(idxF);
+    if(phiFilter > phi_e_f)
+      return null;
     // Compute lexical weighting features:
     double lex_f_e = 0.0;
     double lex_e_f = 0.0;
@@ -140,7 +144,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     // Set phrase penalty:
     double phrasePen = 2.718;
     // Determine if need to filter phrase:
-    if(phiFilter > phi_e_f || lexFilter > lex_e_f)
+    if(lexFilter > lex_e_f)
       return null;
     if(PRINT_COUNTS) {
       // -- Additional info for debugging purposes:
@@ -197,7 +201,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     }
   }
 
-  private void addLexCount(IString f, IString e) {
+  private synchronized void addLexCount(IString f, IString e) {
     if(DEBUG_LEVEL >= 2)
       System.err.println("Adding lexical alignment count: c(f = "+f+"("+f.getId()+"), e="+e+" ("+e.getId()+"))");
     if(FILL_HASH) {
@@ -209,27 +213,29 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   }
 
   @SuppressWarnings("unchecked")
-  private int indexOfLex(IString f, IString e, boolean add)
+  private synchronized int indexOfLex(IString f, IString e, boolean add)
   { return lexIndex.indexOf(new int[] {f.getId(), e.getId()}, add); }
 
   @SuppressWarnings("unchecked")
-  private int indexOfFLex(IString f, boolean add)
+  private synchronized int indexOfFLex(IString f, boolean add)
   { return fLexIndex.indexOf(f.getId(), add); }
 
   @SuppressWarnings("unchecked")
-  private int indexOfELex(IString e, boolean add)
+  private synchronized int indexOfELex(IString e, boolean add)
   { return eLexIndex.indexOf(e.getId(), add); }
 
   private static void addCountToArray(IntArrayList list, int idx) {
     if(idx < 0)
       return;
     if(STORE) {
-      while(idx >= list.size())
-        list.add(0);
-      int newCount = list.get(idx)+1;
-      list.set(idx,newCount);
-      if(DEBUG_LEVEL >= 3)
-        System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
+      synchronized(list) {
+        while(idx >= list.size())
+          list.add(0);
+        int newCount = list.get(idx)+1;
+        list.set(idx,newCount);
+        if(DEBUG_LEVEL >= 3)
+          System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
+      }
     }
   }
 

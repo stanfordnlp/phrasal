@@ -186,7 +186,7 @@ public class CombinedFeatureExtractor {
   public void init() {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
-      exsString = "mt.train.PharaohFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
+      exsString = "mt.train.PharaohFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor";
     alTemps = new AlignmentTemplates(prop, filterFromDev);
     alTemp = new AlignmentTemplateInstance();
     extractors = new ArrayList<AbstractFeatureExtractor>();
@@ -228,9 +228,10 @@ public class CombinedFeatureExtractor {
       } catch (Exception e) {
         e.printStackTrace();
         usage();
+        System.exit(1);
       }
     }
-    phraseExtractor = new LinearTimePhraseExtractor(alTemps,extractors);
+    phraseExtractor = new LinearTimePhraseExtractor(prop,alTemps,extractors);
     setTotalPassNumber();
   }
 
@@ -389,6 +390,7 @@ public class CombinedFeatureExtractor {
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
+    System.err.printf("Alignment templates to write: %d\n",alTemps.size());
     for(int idx=0; idx<alTemps.size(); ++idx) {
       boolean skip=false;
       StringBuilder str = new StringBuilder();
@@ -516,7 +518,7 @@ public class CombinedFeatureExtractor {
   public static void main(String[] args) throws IOException {
     Properties prop = StringUtils.argsToProperties(args);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy.MMMMM.dd GGG hh:mm aaa");
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
     System.err.println("extraction started at: "+formatter.format(new Date()));
     try {
       CombinedFeatureExtractor e = new CombinedFeatureExtractor(prop);

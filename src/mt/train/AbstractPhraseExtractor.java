@@ -48,17 +48,20 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   static int maxExtractedPhraseLenF = 7, maxExtractedPhraseLenE = 7;
 
   AlignmentGrid alGrid = null;
-  boolean needAlGrid = false;
+  boolean needAlGrid = false, isSync = false;
 
   List<AbstractFeatureExtractor> extractors;
   AlignmentTemplates alTemps;
   AlignmentTemplateInstance alTemp;
 
-  public AbstractPhraseExtractor(AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+  public AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
-    needAlGrid = false;
+    isSync = Integer.parseInt
+      (prop.getProperty(ThreadedFeatureExtractor.THREAD_OPT,"0")) > 0;
+    System.err.println("Synchronized phrase extraction: "+isSync);
+    needAlGrid = isSync;
     if(PRINT_GRID_MAX_LEN >= 0)
       needAlGrid = true;
     else {
@@ -88,7 +91,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     }
 
     // Create alTemp:
-    AlignmentTemplateInstance alTemp = null;
+    AlignmentTemplateInstance alTemp;
     if(needAlGrid) {
       alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,true);
       alGrid.addAlTemp(alTemp);
@@ -97,10 +100,15 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       alTemp.init(sent,f1,f2,e1,e2,true);
     }
 
-    // Add it to index:
-    alTemps.addToIndex(alTemp);
-    // Increase count for alTemp's alignment:
-    alTemps.incrementAlignmentCount(alTemp);
+    if(isSync) {
+      synchronized(alTemps) {
+        alTemps.addToIndex(alTemp);
+        alTemps.incrementAlignmentCount(alTemp);
+      }
+    } else {
+      alTemps.addToIndex(alTemp);
+      alTemps.incrementAlignmentCount(alTemp);
+    }
     
     // Run each feature extractor for each altemp:
     if(!needAlGrid)

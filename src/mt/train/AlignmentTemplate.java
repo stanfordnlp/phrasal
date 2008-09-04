@@ -36,7 +36,7 @@ public class AlignmentTemplate {
   int[] align; // compact representation stored in AlignmentTables
   Set<Integer>[] f2e; // not used in lazy constructors
   Set<Integer>[] e2f; // not used in lazy constructors
-  final static Set<Short> alTable = new TreeSet<Short>(); // temporary table
+  final Set<Short> alTable = new TreeSet<Short>(); // temporary table
 
   int key=-1;
   int fKey=-1;

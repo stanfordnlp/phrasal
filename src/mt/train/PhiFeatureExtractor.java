@@ -20,8 +20,6 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 
   double phiFilter = 0.0;
-  final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
-  final Index<Integer> fLexIndex = new Index<Integer>(), eLexIndex = new Index<Integer>();
 
   IntArrayList feCounts = new IntArrayList();
   IntArrayList fCounts = new IntArrayList();
@@ -31,7 +29,7 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
     super.init(prop, featureIndex, alTemps);
     phiFilter = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
-    System.err.printf("minimum p(e|f) = %.5f\n", phiFilter);
+    System.err.printf("minimum phi(e|f) = %.5f\n", phiFilter);
   }
 
   @Override
@@ -59,7 +57,6 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
    */
   @Override
 	public Object score(AlignmentTemplate alTemp) {
-    // print phi(f|e), lex(f|e), phi(e|f), lex(e|f), and phrase penalty:
     int idx = alTemp.getKey();
     int idxF = alTemp.getFKey();
     assert(idx >= 0 && idxF >= 0);
@@ -72,22 +69,16 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
     return new double[] { };
   }
 
-  @SuppressWarnings("unchecked")
-  int indexOfLex(IString f, IString e, boolean add)
-  { return lexIndex.indexOf(new int[] {f.getId(), e.getId()}, add); }
-
-  @SuppressWarnings("unchecked")
-  int indexOfFLex(IString f, boolean add)
-  { return fLexIndex.indexOf(f.getId(), add); }
-
   private static void addCountToArray(IntArrayList list, int idx) {
     if(idx < 0)
       return;
-    while(idx >= list.size())
-      list.add(0);
-    int newCount = list.get(idx)+1;
-    list.set(idx,newCount);
-    if(DEBUG_LEVEL >= 3)
-      System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
+    synchronized(list) {
+      while(idx >= list.size())
+        list.add(0);
+      int newCount = list.get(idx)+1;
+      list.set(idx,newCount);
+      if(DEBUG_LEVEL >= 3)
+        System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
+    }
   }
 }
