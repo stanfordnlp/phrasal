@@ -105,20 +105,22 @@ public class MTScorer implements ExternalMTScorer {
     // Create metrics:
     BLEUMetric.BLEUIncrementalMetric bleuI = new BLEUMetric(ref).getIncrementalMetric();
     BLEUMetric.BLEUIncrementalMetric sbleuI = new BLEUMetric(ref,true).getIncrementalMetric();
+    /*
     NISTMetric nist = new NISTMetric(ref);
     if(ngramInfo != null)
       nist.setNgramInfo(ngramInfo);
     else
       System.err.println("WARNING: readAllReferences apparently wasn't called.");
     NISTMetric.NISTIncrementalMetric nistI = nist.getIncrementalMetric();
+    */
     bleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     sbleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
-    nistI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
+    //nistI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     // Add features:
     Counter<String> c = new ClassicCounter<String>();
     addNgramPrecisionScores(c,bleuI);
     addNgramPrecisionScores(c,sbleuI);
-    addNgramPrecisionScores(c,nistI);
+    //addNgramPrecisionScores(c,nistI);
     for(Quadruple<Double,Double,Double,Double> q : terCosts)
       addTERScores(c,ref,hyp,q.first(),q.second(),q.third(),q.fourth());
     return c;
