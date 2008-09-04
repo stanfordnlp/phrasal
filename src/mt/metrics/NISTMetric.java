@@ -229,9 +229,11 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			for (Map.Entry<Sequence<TK>,Integer> entry : clippedCounts.entrySet()) {
 				int len = entry.getKey().size();
 				int cnt = entry.getValue();
-				counts[len-1] += cnt * ngramInfo.get(entry.getKey());
+        if(ngramInfo.containsKey(entry.getKey()))
+          counts[len-1] += cnt * ngramInfo.get(entry.getKey());
+        else
+          System.err.println("Missing key for "+entry.getKey().toString());
 			}
-
 			return counts;
 		}
 
