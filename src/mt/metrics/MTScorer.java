@@ -21,6 +21,7 @@ public class MTScorer implements ExternalMTScorer {
   List<Quadruple<Double,Double,Double,Double>> terCosts;
   Map<Sequence<IString>,Double> ngramInfo = null;
   boolean tokenize = true, lowercase = true;
+  boolean withNIST = false;
 
   // TODO: tuned linear combinations
 
@@ -67,15 +68,17 @@ public class MTScorer implements ExternalMTScorer {
   }
 
   public void readAllReferences(List<String> refStr) {
-    List<List<Sequence<IString>>> refs = new ArrayList<List<Sequence<IString>>>();
-    for(String ref : refStr) {
-      List<Sequence<IString>> r = new ArrayList<Sequence<IString>>();
-      r.add(str2seq(ref));
-      refs.add(r);
+    if(withNIST) {
+      List<List<Sequence<IString>>> refs = new ArrayList<List<Sequence<IString>>>();
+      for(String ref : refStr) {
+        List<Sequence<IString>> r = new ArrayList<Sequence<IString>>();
+        r.add(str2seq(ref));
+        refs.add(r);
+      }
+      NISTMetric<IString,String> nist = new NISTMetric<IString,String>(refs);
+      ngramInfo = nist.getNgramInfo();
+      assert(ngramInfo != null);
     }
-    NISTMetric<IString,String> nist = new NISTMetric<IString,String>(refs);
-    ngramInfo = nist.getNgramInfo();
-    assert(ngramInfo != null);
   }
 
   public List<Quadruple<Double,Double,Double,Double>> getTERCosts(String str) {
@@ -105,22 +108,26 @@ public class MTScorer implements ExternalMTScorer {
     // Create metrics:
     BLEUMetric.BLEUIncrementalMetric bleuI = new BLEUMetric(ref).getIncrementalMetric();
     BLEUMetric.BLEUIncrementalMetric sbleuI = new BLEUMetric(ref,true).getIncrementalMetric();
-    /*
-    NISTMetric nist = new NISTMetric(ref);
-    if(ngramInfo != null)
-      nist.setNgramInfo(ngramInfo);
-    else
-      System.err.println("WARNING: readAllReferences apparently wasn't called.");
-    NISTMetric.NISTIncrementalMetric nistI = nist.getIncrementalMetric();
-    */
+    NISTMetric nist = null;
+    NISTMetric.NISTIncrementalMetric nistI = null;
+    if(withNIST) {
+        nist = new NISTMetric(ref);
+      if(ngramInfo != null)
+        nist.setNgramInfo(ngramInfo);
+      else
+        System.err.println("WARNING: readAllReferences apparently wasn't called.");
+      nistI = nist.getIncrementalMetric();
+    }
     bleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     sbleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
-    //nistI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
+    if(withNIST)
+      nistI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     // Add features:
     Counter<String> c = new ClassicCounter<String>();
     addNgramPrecisionScores(c,bleuI);
     addNgramPrecisionScores(c,sbleuI);
-    //addNgramPrecisionScores(c,nistI);
+    if(withNIST)
+      addNgramPrecisionScores(c,nistI);
     for(Quadruple<Double,Double,Double,Double> q : terCosts)
       addTERScores(c,ref,hyp,q.first(),q.second(),q.third(),q.fourth());
     return c;
