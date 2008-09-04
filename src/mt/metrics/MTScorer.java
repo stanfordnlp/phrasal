@@ -20,7 +20,7 @@ public class MTScorer implements ExternalMTScorer {
   boolean verbose;
   List<Quadruple<Double,Double,Double,Double>> terCosts;
   Map<Sequence<IString>,Double> ngramInfo = null;
-  boolean tokenize = false, lowercase = false;
+  boolean tokenize = true, lowercase = true;
 
   // TODO: tuned linear combinations
 
@@ -36,6 +36,7 @@ public class MTScorer implements ExternalMTScorer {
     scorer.readAllReferences(Arrays.asList(refs));
     assert(refs.length == hyps.length);
     for(int i=0; i<refs.length; ++i) {
+      System.out.printf("===========\nref=%s\nhyp=%s\n",refs[i],hyps[i]);
       Counter<String> c = scorer.scoreMTOutput(refs[i],hyps[i]);
       List<String> keys = Arrays.asList(c.keySet().toArray(new String[c.size()]));
       Collections.sort(keys);
@@ -62,6 +63,7 @@ public class MTScorer implements ExternalMTScorer {
          "1:1:0.1:1,"+
          "1:0.1:1:1,"+
          "0.1:1:1:1"));
+    TERcalc.setNormalize(true);
   }
 
   public void readAllReferences(List<String> refStr) {
