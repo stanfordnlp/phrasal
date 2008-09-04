@@ -21,7 +21,7 @@ public class MTScorer implements ExternalMTScorer {
   List<Quadruple<Double,Double,Double,Double>> terCosts;
   Map<Sequence<IString>,Double> ngramInfo = null;
   boolean tokenize = true, lowercase = true;
-  boolean withNIST = false;
+  boolean withNIST = true;
 
   // TODO: tuned linear combinations
 
