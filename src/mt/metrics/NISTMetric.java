@@ -27,8 +27,16 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	public NISTMetric(List<List<Sequence<TK>>> referencesList) {
 		this(referencesList, false);
 	}
-	
-	public NISTMetric(List<List<Sequence<TK>>> referencesList, boolean smooth) {
+
+  public void setNgramInfo(Map<Sequence<TK>,Double> i) {
+    ngramInfo = i;
+  }
+
+  public Map<Sequence<TK>,Double> getNgramInfo() {
+    return ngramInfo; 
+  }
+
+  public NISTMetric(List<List<Sequence<TK>>> referencesList, boolean smooth) {
 		this.order = DEFAULT_MAX_NGRAM_ORDER;
 		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
 		refLengths = new int[referencesList.size()][];
@@ -48,9 +56,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			
 			refLengths[listI] = new int[refsSz];
 			Map<Sequence<TK>, Integer> maxReferenceCount = Metrics.getMaxNGramCounts(references, order);
-			/* for (Sequence<TK> ngram :  maxReferenceCount.keySet()) {
-				System.out.printf("%s : %d\n", ngram, maxReferenceCount.get(ngram));
-			} */
 			maxReferenceCounts.add(maxReferenceCount);
 			refLengths[listI][0] = references.get(0).size();
 			

@@ -5,6 +5,7 @@ import java.io.*;
 
 import mt.base.*;
 import mt.reranker.ter.TERcost;
+import mt.reranker.ter.TERcalc;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -18,22 +19,29 @@ public class MTScorer implements ExternalMTScorer {
 
   boolean verbose;
   List<Quadruple<Double,Double,Double,Double>> terCosts;
+  Map<Sequence<IString>,Double> ngramInfo = null;
+  boolean tokenize = false, lowercase = false;
 
   // TODO: tuned linear combinations
-	// TODO: add NIST metrics 
 
   static public void main(String[] args) throws Exception {
-    MTScorer opt = new MTScorer();
+    MTScorer scorer = new MTScorer();
     if(args.length < 2 || args.length > 3) {
-      System.err.println("Usage: MTScorer <reference_string> <MT output> [<configuration_file>]");
+      System.err.println("Usage: MTScorer <reference_file> <hypothesis_file> [<configuration_file>]");
       System.exit(1);
     }
-    opt.init(args.length == 3 ? args[2] : null);
-    Counter<String> c = opt.scoreMTOutput(args[0],args[1]);
-    List<String> keys = Arrays.asList(c.keySet().toArray(new String[c.size()]));
-    Collections.sort(keys);
-    for(String k : keys)
-      System.out.printf("%s\t%.3g\n",k,c.getCount(k));   
+    scorer.init(args.length == 3 ? args[2] : null);
+    String[] refs = StringUtils.slurpFile(args[0]).split("[\r\n]+");
+    String[] hyps = StringUtils.slurpFile(args[1]).split("[\r\n]+");
+    scorer.readAllReferences(Arrays.asList(refs));
+    assert(refs.length == hyps.length);
+    for(int i=0; i<refs.length; ++i) {
+      Counter<String> c = scorer.scoreMTOutput(refs[i],hyps[i]);
+      List<String> keys = Arrays.asList(c.keySet().toArray(new String[c.size()]));
+      Collections.sort(keys);
+      for(String k : keys)
+        System.out.printf("%s\t%.3g\n",k,c.getCount(k));
+    }
   }
 
   public void init(String configFile) {
@@ -54,6 +62,18 @@ public class MTScorer implements ExternalMTScorer {
          "1:1:0.1:1,"+
          "1:0.1:1:1,"+
          "0.1:1:1:1"));
+  }
+
+  public void readAllReferences(List<String> refStr) {
+    List<List<Sequence<IString>>> refs = new ArrayList<List<Sequence<IString>>>();
+    for(String ref : refStr) {
+      List<Sequence<IString>> r = new ArrayList<Sequence<IString>>();
+      r.add(str2seq(ref));
+      refs.add(r);
+    }
+    NISTMetric<IString,String> nist = new NISTMetric<IString,String>(refs);
+    ngramInfo = nist.getNgramInfo();
+    assert(ngramInfo != null);
   }
 
   public List<Quadruple<Double,Double,Double,Double>> getTERCosts(String str) {
@@ -77,21 +97,26 @@ public class MTScorer implements ExternalMTScorer {
     // Create references:
     List<List<Sequence<IString>>> ref = new ArrayList<List<Sequence<IString>>>();
     ref.add(new ArrayList<Sequence<IString>>());
-    ref.get(0).add(new SimpleSequence<IString>(true, IStrings.toIStringArray(reference.split("\\s+"))));
+    ref.get(0).add(str2seq(reference));
     // Create hypotheses:
-    Sequence<IString> hyp = new SimpleSequence<IString>(true, IStrings.toIStringArray(mtoutput.split("\\s+")));
+    Sequence<IString> hyp = str2seq(mtoutput);
     // Create metrics:
-    BLEUMetric.BLEUIncrementalMetric bleu = new BLEUMetric(ref).getIncrementalMetric();
-    BLEUMetric.BLEUIncrementalMetric sbleu = new BLEUMetric(ref,true).getIncrementalMetric();
-    NISTMetric.NISTIncrementalMetric nist = new NISTMetric(ref).getIncrementalMetric();
-    bleu.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
-    sbleu.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
-    //nist.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
+    BLEUMetric.BLEUIncrementalMetric bleuI = new BLEUMetric(ref).getIncrementalMetric();
+    BLEUMetric.BLEUIncrementalMetric sbleuI = new BLEUMetric(ref,true).getIncrementalMetric();
+    NISTMetric nist = new NISTMetric(ref);
+    if(ngramInfo != null)
+      nist.setNgramInfo(ngramInfo);
+    else
+      System.err.println("WARNING: readAllReferences apparently wasn't called.");
+    NISTMetric.NISTIncrementalMetric nistI = nist.getIncrementalMetric();
+    bleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
+    sbleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
+    nistI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     // Add features:
     Counter<String> c = new ClassicCounter<String>();
-    addNgramPrecisionScores(c,bleu);
-    addNgramPrecisionScores(c,sbleu);
-    //addNgramPrecisionScores(c,nist);
+    addNgramPrecisionScores(c,bleuI);
+    addNgramPrecisionScores(c,sbleuI);
+    addNgramPrecisionScores(c,nistI);
     for(Quadruple<Double,Double,Double,Double> q : terCosts)
       addTERScores(c,ref,hyp,q.first(),q.second(),q.third(),q.fourth());
     return c;
@@ -102,6 +127,14 @@ public class MTScorer implements ExternalMTScorer {
     return c.keySet();
   }
 
+  private Sequence<IString> str2seq(String str) {
+    String[] strs;
+    if(lowercase)
+      str = str.toLowerCase();
+    strs = tokenize ? TERcalc.tokenize(str) : str.split("\\s+");
+    return new SimpleSequence<IString>(true, IStrings.toIStringArray(strs));
+  }
+
   @SuppressWarnings("unchecked")
   private void addTERScores(Counter<String> c, List<List<Sequence<IString>>> ref, Sequence<IString> hyp,
                             double subCost, double insCost, double delCost, double shiftCost) {
@@ -109,11 +142,11 @@ public class MTScorer implements ExternalMTScorer {
     TERcost.set_default_insert_cost(insCost);
     TERcost.set_default_delete_cost(delCost);
     TERcost.set_default_shift_cost(shiftCost);
-    TERMetric.TERIncrementalMetric ter = new TERMetric(ref).getIncrementalMetric();
-    ter.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
+    TERMetric.TERIncrementalMetric terI = new TERMetric(ref).getIncrementalMetric();
+    terI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     Formatter f = new Formatter();
     f.format("ter_score_%g_%g_%g_%g",subCost,insCost,delCost,shiftCost);
-    addToCounter(c,f.toString(),1.0+ter.score());
+    addToCounter(c,f.toString(),1.0+terI.score());
   }
   
   private void addNgramPrecisionScores(Counter<String> c, NgramPrecisionIncrementalMetric m) {
