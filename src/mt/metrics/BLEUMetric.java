@@ -137,7 +137,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	private static int maxIncrementalId = 0;
 	
-	public class BLEUIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
+	public class BLEUIncrementalMetric implements NgramPrecisionIncrementalMetric<TK,FV> {
 		private final int id = maxIncrementalId++; 
 		final List<Sequence<TK>> sequences; 
 		final int[] matchCounts = new int[order];
@@ -152,7 +152,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		}
 		
 		
-		double[] precisions() {
+		public double[] precisions() {
 			double[] r = new double[order];
 			for (int i = 0; i < r.length; i++) {
 				r[i] = matchCounts[i]/(double)possibleMatchCounts[i];
@@ -366,7 +366,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			}
 			return (s != s ? 0 : s);
 		}
-		
+	
 		public double trueScore() {
 			return multiplier*Math.exp(logScore());
 		}

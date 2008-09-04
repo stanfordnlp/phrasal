@@ -1,4 +1,4 @@
-package mt.tools;
+package mt.metrics;
 
 import java.util.*;
 import java.io.*;
@@ -15,7 +15,6 @@ import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.math.SloppyMath;
 import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.optimization.*;
 
 import flanagan.math.Minimisation;
 import flanagan.math.MinimisationFunction;
@@ -29,10 +28,7 @@ import flanagan.math.MinimisationFunction;
  * 
  * @author Michel Galley
  */
-public class HumanAssessmentCorrelationMaximizer implements Function {
-
-  // TODO: check why both shuffle() and reverse() on ArrayList of RawSequence returns nonsense.
-  // TODO: log versions
+public class LinearCombinationMetricOptimizer implements Function {
 
   private static IString
    TER = new IString("ter"), BLEU = new IString("bleu"), LBLEU = new IString("lbleu"),
@@ -62,11 +58,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   int numDimensions=-1;
   int windowSize;
   
-  boolean tuneCosts;
-  boolean tuneMetrics;
-  boolean verbose;
-  boolean printValue;
-  boolean checkDerivative=true;
+  boolean verbose, tuneCosts, tuneMetrics, printFuncValues;
 
   double simplexSize = 1.0; 
 
@@ -85,11 +77,11 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
   static public void main(String[] args) throws Exception {
     Properties prop = StringUtils.argsToProperties(args);
     System.err.println("properties: "+prop.toString());
-    HumanAssessmentCorrelationMaximizer hcm = new HumanAssessmentCorrelationMaximizer(prop);
+    LinearCombinationMetricOptimizer hcm = new LinearCombinationMetricOptimizer(prop);
     hcm.maximize();
   }
   
-  public HumanAssessmentCorrelationMaximizer(Properties prop) throws Exception {
+  public LinearCombinationMetricOptimizer(Properties prop) throws Exception {
 
     metrics = prop.getProperty("metrics");
     String refPrefix = prop.getProperty("refs");
@@ -99,7 +91,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
 
     if(metrics == null || refPrefix == null || hypFile == null || humanScoreFile == null) {
 			System.err.println
-       ("Usage:\n\tjava mt.tools.HumanAssessmentCorrelationMaximizer "+
+       ("Usage:\n\tjava mt.tools.MetricLinearCombination "+
         "[OPTIONS] -metrics <metric1:...:metricN> -refs <reference_trans> -hyp <system_trans> -human <human_judgments>\n"+
         "where OPTIONS are:\n"+
         "-tuneCosts: whether to tune TER costs (slow, default false)\n"+
@@ -230,7 +222,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
           tcost(bw[i-3]),tcost(bw[i-2]),tcost(bw[i-1]),tcost(bw[i]));
       }
     }
-    printValue = true;
+    printFuncValues = true;
     valueAt(bw);
   }
 
@@ -257,8 +249,8 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
         for(int j=0; j<metricScores[0].length; ++j)
           combinedScores[j] += x[i]*metricScores[i][j];
     double pearson = getPearsonCorrelation(humanScores,combinedScores);
-    if(printValue) {
-      printWorseCorrelationCases(combinedScores);
+    if(printFuncValues) {
+      //printWorseCorrelationCases(combinedScores);
       System.err.printf("Pearson=%.3f for metric %s at [",pearson, metrics);
       for(int i=0; i<x.length; ++i) {
         if(i>0)
@@ -281,7 +273,7 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
     List<Double> l = new ArrayList<Double>();
     List<String> lines = Arrays.asList(StringUtils.slurpFile(filename).split("[\r\n]+"));
     lines = permute(lines);
-    for (String line : lines) 
+    for (String line : lines)
       l.add(Double.parseDouble(line));
     double[] externalScores = new double[numInstances/sz];
     int i=0, ii=0;
@@ -301,7 +293,6 @@ public class HumanAssessmentCorrelationMaximizer implements Function {
       ++ii;
       i+=sz;
     }
-    //ArrayMath.standardize(externalScores);
     System.err.printf("Read %d scores from %s\n",externalScores.length,filename);
     return externalScores;
   }

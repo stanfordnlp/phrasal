@@ -90,7 +90,7 @@ DESCRIPTION: Michael Thomas Flanagan's Java Scientific Library
 
 URL: http://www.ee.ucl.ac.uk/~mflanaga/java/
 
-USED BY: mt.tools.HumanAssessmentCorrelationMaximizer
+USED BY: mt.metrics.LinearCombinationMetricOptimizer
 
 LAST UPDATE: 2008-07-12
 

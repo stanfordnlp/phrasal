@@ -8,6 +8,7 @@ import mt.metrics.IncrementalEvaluationMetric;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -19,8 +20,12 @@ import java.util.List;
  */
 public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
+  enum MetricType { full, bp, precision };
+
   final double[] weights;
   final AbstractMetric<TK,FV>[] metrics;
+  final MetricType[] metricTypes;
+  final Map[] metricProperties;
 
   public LinearCombinationMetric(double[] weights, AbstractMetric<TK,FV>... metrics) {
     System.err.printf("LinearCombinationMetric: weights=%s metrics=%s\n", 
@@ -29,14 +34,32 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
       throw new IllegalArgumentException();
     this.weights = weights;
     this.metrics = metrics;
+		int sz = metrics.length;
+		this.metricTypes = new MetricType[sz];
+		this.metricProperties = new Map[sz];
+  }
+
+  public void setWeights(double[] w) {
+    assert(w.length == weights.length);
+    System.arraycopy(w,0,weights,0,w.length);
   }
 
   public double maxScore() {
     double maxScore = 0.0;
     for(int i=0; i<weights.length; ++i)
-      maxScore += weights[i]*metrics[i].maxScore();
-    //System.err.println("max score: "+maxScore);
+      maxScore += weights[i]*maxScore(i);
     return maxScore;
+  }
+
+	private double maxScore(int i) {
+    switch(metricTypes[i]) {
+      case full:
+        return metrics[i].maxScore();
+      case bp:
+      case precision:
+      default:
+        return 1.0;
+    }
   }
 
   @Override
@@ -92,15 +115,23 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
     public double score() {
       double score = 0.0;
-      //System.err.print("lc score: ");
       for(int i=0; i<weights.length; ++i) {
-        score += weights[i]*iems.get(i).score();
-        //if(i==0)
-        //  System.err.printf(" + ");
-        //System.err.printf("%.3f %.3f");
+        score += weights[i]*score(i);
+        //score += weights[i]*iems.get(i).score();
       }
-      //System.err.printf(" = %.3f\n",score);
       return score;
+    }
+
+    private double score(int i) {
+      IncrementalEvaluationMetric<TK,FV> m = iems.get(i); 
+      switch(metricTypes[i]) {
+        case full:
+					return m.score();
+        case bp:
+        case precision:
+        default:
+          throw new RuntimeException("Not yet implemented.");
+      }
     }
 
     public double partialScore() {
@@ -118,8 +149,19 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
     public double maxScore() {
       double maxScore = 0.0;
       for(int i=0; i<weights.length; ++i)
-        maxScore += weights[i]*iems.get(i).maxScore();
+      maxScore += weights[i]*maxScore(i);
       return maxScore;
+    }
+
+    private double maxScore(int i) {
+      switch(metricTypes[i]) {
+        case full:
+          return iems.get(i).maxScore();
+        case bp:
+        case precision:
+        default:
+          return 1.0;
+      }
     }
 
     private boolean checkSize(int size) {

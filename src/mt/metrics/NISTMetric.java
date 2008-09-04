@@ -119,7 +119,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
     throw new UnsupportedOperationException();
   }
 	
-	public class NISTIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
+	public class NISTIncrementalMetric implements NgramPrecisionIncrementalMetric<TK,FV> {
 		final List<Sequence<TK>> sequences; 
 		final double[] matchCounts = new double[order];
 		final double[] possibleMatchCounts = new double[order];
@@ -133,8 +133,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return new NISTIncrementalMetric(this);
 		}
 		
-		
-		double[] precisions() {
+		public double[] precisions() {
 			double[] r = new double[order];
 			for (int i = 0; i < r.length; i++) {
 				r[i] = matchCounts[i]/possibleMatchCounts[i];
@@ -297,15 +296,19 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		}
 
 		public double score() {
+			return brevityPenalty()*ngramPrecisionScore();
+		}
+
+		public double ngramPrecisionScore() {
 			double ngramPrecisionScore = 0;
 			double[] precisions = ngramPrecisions();
 			for (int i = 0; i < order; i++) {
         double p = precisions[i];
         ngramPrecisionScore += (p==p) ? p : 0;
 			}
-			return brevityPenalty()*ngramPrecisionScore;
+			return ngramPrecisionScore;
 		}
-		
+	
 		/**
 		 * 
 		 * @return
