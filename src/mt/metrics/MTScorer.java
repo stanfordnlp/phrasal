@@ -62,7 +62,12 @@ public class MTScorer implements ExternalMTScorer {
          "1:1:1:1,"+
          "1:1:1:0.1,"+
          "1:1:0.1:1,"+
+         "1:0.5:1:1,"+
+         "1:0.2:1:1,"+
          "1:0.1:1:1,"+
+         "1:0.05:1:1,"+
+         "1:0.02:1:1,"+
+         "1:0.01:1:1,"+
          "0.1:1:1:1"));
     TERcalc.setNormalize(true);
   }
@@ -184,6 +189,8 @@ public class MTScorer implements ExternalMTScorer {
         System.err.printf("Feature %s has bad value %f.\n", feature, v);
       v = 0.0;
     }
+    if(Math.abs(v) > 100)
+      v = 0.0;
     c.setCount(feature,v);
   }
 }
