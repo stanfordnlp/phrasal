@@ -165,7 +165,7 @@ public class MTScorer implements ExternalMTScorer {
     addToCounter(c,f.toString(),1.0+terI.score());
   }
   
-  private void addNgramPrecisionScores(Counter<String> c, NgramPrecisionIncrementalMetric m) {
+  private void addNgramPrecisionScores(Counter<String> c, NgramPrecisionIncrementalMetric<String, String> m) {
     String name = m.getClass().toString().replace("class ","").replaceFirst("\\$.*","");
     double score = m.score();
     double bp = m.brevityPenalty();
