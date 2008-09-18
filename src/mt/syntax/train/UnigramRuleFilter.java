@@ -1,6 +1,6 @@
 package mt.syntax.train;
 
-import edu.stanford.nlp.util.FileLines;
+import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.IString;
 
 import java.util.Set;
@@ -19,7 +19,7 @@ public class UnigramRuleFilter {
   Set<Integer> filterWords = new HashSet<Integer>();
 
   public UnigramRuleFilter(String fileName) {
-    for(String line : new FileLines(fileName))
+    for(String line : ObjectBank.getLineIteratorObjectBank(fileName))
       for(String word : line.split("\\s+")) {
         IString w = new IString(word);
         filterWords.add(w.getId());

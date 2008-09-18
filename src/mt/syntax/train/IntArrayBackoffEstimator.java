@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 import java.util.*;
 
-import edu.stanford.nlp.util.FileLines;
+import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.*;
@@ -173,7 +173,7 @@ public class IntArrayBackoffEstimator {
     double cVal = Double.parseDouble(cStr);
     IntArrayBackoffEstimator mle = new IntArrayBackoffEstimator(3,cVal);
     // Train:
-    for(String line : new FileLines(trainStr)) {
+    for(String line : ObjectBank.getLineIteratorObjectBank(trainStr)) {
       int[] tokens = toReverseIntArray(line);
       for(int i=tokens.length-3; i>=0; --i)
         mle.addTrainingSample(
@@ -183,7 +183,7 @@ public class IntArrayBackoffEstimator {
     // Tuning:
     if(tuneStr != null) {
       DEBUG=false;
-      for(String line : new FileLines(tuneStr)) {
+      for(String line : ObjectBank.getLineIteratorObjectBank(tuneStr)) {
         int[] tokens = toReverseIntArray(line);
         for(int i=tokens.length-3; i>=0; --i)
           mle.addTuningSample
@@ -196,7 +196,7 @@ public class IntArrayBackoffEstimator {
     DEBUG=true;
     // Test:
     int s=-1;
-    for(String line : new FileLines(testStr)) {
+    for(String line : ObjectBank.getLineIteratorObjectBank(testStr)) {
       double totalLogp = 0.0;
       int[] tokens = toReverseIntArray(line);
       for(int i=tokens.length-3; i>=0; --i) {

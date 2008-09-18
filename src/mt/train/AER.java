@@ -1,6 +1,6 @@
 package mt.train;
 
-import edu.stanford.nlp.util.FileLines;
+import edu.stanford.nlp.objectbank.ObjectBank;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -40,10 +40,10 @@ public class AER {
       h_s2t = false; h_zeroBased = true;
     }
     Iterator<String>
-         fCorpus = new FileLines(args[0]).iterator(),
-         eCorpus = new FileLines(args[1]).iterator(),
-         rCorpus = new FileLines(args[2]).iterator(),
-         hCorpus = new FileLines(args[4]).iterator();
+         fCorpus = ObjectBank.getLineIteratorObjectBank(args[0]).iterator(),
+         eCorpus = ObjectBank.getLineIteratorObjectBank(args[1]).iterator(),
+         rCorpus = ObjectBank.getLineIteratorObjectBank(args[2]).iterator(),
+         hCorpus = ObjectBank.getLineIteratorObjectBank(args[4]).iterator();
     List<SymmetricalWordAlignment> rAlign = new ArrayList<SymmetricalWordAlignment>();
     List<SymmetricalWordAlignment> hAlign = new ArrayList<SymmetricalWordAlignment>();
     int lineNb = 0;
