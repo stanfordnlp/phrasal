@@ -91,8 +91,8 @@ public class ThreadedFeatureExtractor {
     THREAD_SAFE_EXTRACTORS.addAll(Arrays.asList(new Class[] {
          mt.train.LexicalReorderingFeatureExtractor.class,
          mt.train.ExperimentalLexicalReorderingFeatureExtractor.class,
-         mt.train.PhiFeatureExtractor.class
-         // TODO: mt.train.PharaohFeatureExtractor.class
+         mt.train.PhiFeatureExtractor.class,
+         mt.train.PharaohFeatureExtractor.class
     }));
   }
   

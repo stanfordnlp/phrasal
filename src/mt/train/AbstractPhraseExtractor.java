@@ -48,7 +48,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   static int maxExtractedPhraseLenF = 7, maxExtractedPhraseLenE = 7;
 
   AlignmentGrid alGrid = null;
-  boolean needAlGrid = false, isSync = false;
+  boolean needAlGrid = false;
 
   List<AbstractFeatureExtractor> extractors;
   AlignmentTemplates alTemps;
@@ -58,10 +58,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
-    isSync = Integer.parseInt
-      (prop.getProperty(ThreadedFeatureExtractor.THREAD_OPT,"0")) > 0;
-    System.err.println("Synchronized phrase extraction: "+isSync);
-    needAlGrid = isSync;
+    needAlGrid = false;
     if(PRINT_GRID_MAX_LEN >= 0)
       needAlGrid = true;
     else {
@@ -100,12 +97,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       alTemp.init(sent,f1,f2,e1,e2,true);
     }
 
-    if(isSync) {
-      synchronized(alTemps) {
-        alTemps.addToIndex(alTemp);
-        alTemps.incrementAlignmentCount(alTemp);
-      }
-    } else {
+    synchronized(alTemps) {
       alTemps.addToIndex(alTemp);
       alTemps.incrementAlignmentCount(alTemp);
     }
@@ -162,6 +154,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     if(max > 0) {
       System.err.printf("changing default max phrase length: %d -> %d\n", maxPhraseLenF, max);
       maxPhraseLenF = maxPhraseLenE = max;
+      if(max2 < 0)
+        max2 = max;
     }
     if(maxF > 0) {
       System.err.printf("changing default max phrase length (F): %d -> %d\n", maxPhraseLenF, maxF);

@@ -273,7 +273,9 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   private void addCountToArray
       (ArrayList<Object> list, double[] totalCounts, int type, AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
-    ++totalCounts[type];
+    synchronized(totalCounts) {
+      ++totalCounts[type];
+    }
     // Exit if alignment template was filtered out:
     if(idx < 0)
       return;

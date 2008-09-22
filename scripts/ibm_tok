@@ -1,0 +1,35 @@
+#!/usr/bin/perl -n
+
+################################################################
+# Applies IBM scoring tokenization. Run this script if your evaluation 
+# script does not apply this type of tokenziation before scoring.
+# Author: Michel Galley
+################################################################
+
+chomp;
+print NormalizeText(\$_)."\n";
+
+sub NormalizeText {
+    my $strPtr = shift;
+
+# language-independent part:
+    $$strPtr =~ s/^\s+//;
+    $$strPtr =~ s/\n/ /g; # join lines
+    $$strPtr =~ s/(\d)\s+(\d)/$1$2/g;  #join digits
+
+# language-dependent part (assuming Western languages):
+    $$strPtr =~ tr/[A-Z]/[a-z]/;
+    # $$strPtr =~ s/([^A-Za-z0-9\-\'\.,])/ $1 /g; # tokenize punctuation (except for alphanumerics, "-", "'", ".", ",")
+    $$strPtr =~ s/([\{-\~\[-\` -\&\(-\+\:-\@\/])/ $1 /g;   # tokenize punctuation
+    $$strPtr =~ s/([^0-9])([\.,])/$1 $2 /g; # tokenize period and comma unless preceded by a digit
+    $$strPtr =~ s/([\.,])([^0-9])/ $1 $2/g; # tokenize period and comma unless followed by a digit
+    $$strPtr =~ s/([0-9])(-)/$1 $2 /g; # tokenize dash when preceded by a digit
+    $$strPtr =~ s/\s+/ /g; # one space only between words
+    $$strPtr =~ s/^\s+//;  # no leading space
+    $$strPtr =~ s/\s+$//;  # no trailing space
+    my $ascii = "\x20-\x7F";
+    $$strPtr =~ s/([^$ascii])\s+([^$ascii])/$1$2/g; # combine sequences of non-ASCII characters into single words
+    # debug
+    # print $$strPtr, "\n";
+		return $$strPtr;
+}

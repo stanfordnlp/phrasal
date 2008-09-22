@@ -34,6 +34,7 @@ my $curWordIdx=1;
 
 my $line=0;
 print STDERR "Reading phrase table...\n";
+open(N,"| ngram -lm - -write-lm - -order 5");
 while(<STDIN>) {
 	#print STDERR "% ptable entry: $_";
 	my @i = map { w2i($_) } split(/\s+/);
@@ -49,15 +50,16 @@ while(<F>) {
 	if(/^[\-\d\.e]+\t(.*?)(\t[\-\d\.e]+)?$/) {
 		my @i = map { w2i($_) } split(/\s+/,$1);
 		if(matches(\@i,0,$rootStateIdx)) {
-			print $_."\n";
+			print N $_."\n";
 		} else {
 			#print STDERR "% skipped ngram: <$1>\n";
 		}
 	} else {
-		print $_."\n";
+		print N $_."\n";
 	}
 }
 close(F);
+close(N);
 exit(0);
 
 ############# Trie matching #################

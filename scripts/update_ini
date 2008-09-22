@@ -21,6 +21,9 @@ my %args = get_args('old','new');
 my $oldid = $args{old};
 my $newid = $args{new};
 
+$oldid =~ s/\+/\\+/g;
+$newid =~ s/\+/\\+/g;
+
 my $field = '';
 while(<STDIN>) {
 	my $newfield = 0;

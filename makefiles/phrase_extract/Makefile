@@ -42,14 +42,11 @@ LTABLES_TEST= \
 	$(TESTID).tables/lo-hier.msd2-bidirectional-fe.gz
 
 # Main targets:
-all: train
-builddev: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz $(LTABLES_DEV)
-buildtest: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(LTABLES_TEST)
+all: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).500.500best.1best.post
+train: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(DEVID).$(SYSID).500.pmert/phrasal.final.ini
+builddev: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz
+buildtest: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz
 ltables: $(LTABLES)
-
-# Language specific targets:
-abuilddev: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz $(DEVID).tables/lo-hier.msd2-bidirectional-fe.gz
-abuildtest: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).tables/lo-hier.msd2-bidirectional-fe.gz
 
 # Java configuration:
 PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE) 
@@ -85,6 +82,28 @@ $(DEVID).%.bleu: $(DEVID).%
 	cat $< | $(SCRIPTS)/multi-bleu-uncased-nist.perl $(DEV_REF)/ref > $@
 
 #############################################
+# Post-processing:
+#############################################
+
+### Generate XML nbest list:
+$(TESTID).%.xml: $(TESTID).% $(TESTID).unk
+	cat logs/$<.1best.log | grep ^WeightConfig | perl -ne 'while(/:([\d\.E\-]+)/g) { print "$$1 " }' > .tmp.weights
+	mtij.py $+ "`cat .tmp.weights`" stanford > $@
+	rm .tmp.weights
+
+### TODO: check nbest list
+#%.nbest: %.raw_nbest weights.v
+# cat $< | check_nbest_list weights > $@ 2> $@.log
+
+%.release/out.sgm: %.post
+	mkdir $(*F).release || true
+	cat $(*F).post | empty2sgml $(TESTID).sgm stanford > $@ 2> $@.log
+
+### Language specific postprocessing:
+%.post: %
+	(cat $< | $(POST)) 2> $@.err > $@
+
+#############################################
 # 1-best output with Phrasal:
 #############################################
 
@@ -92,11 +111,6 @@ $(DEVID).%.bleu: $(DEVID).%
 $(TESTID).$(DEVID).%.500best.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).500best -n 500 $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(PHRASAL_ARGS_N) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
-
-# Use best MERT paramters to generate 500best list for specific genre:
-$(TESTID)-$(GENRE).$(DEVID).%.500best.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID)-$(GENRE).$(IE)
-	$(SCRIPTS)/update_ini -f $(TESTID)-$(GENRE).$(DEVID).$(*F).500best -n 500 $(DEVID) $(TESTID) < $< > $<.$(TESTID)-$(GENRE)
-	(java $(PHRASAL_ARGS_N) mt.PseudoMoses $<.$(TESTID)-$(GENRE) < $(TESTID)-$(GENRE).$(IE) > $@) 2> logs/$@.log
 
 # Use final MERT paramters:
 $(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
@@ -199,53 +213,38 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 	$(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
 
 #############################################
-# Pre- and post-processing: 
-# (remove unk words, etc.)
-#############################################
-
-%.prep: %.unk %.tables/phrase-table.gz
-	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@ >& $@.err
-
-%.postproc: %.mbr
-	cat $< | $(POST) 2> $@.err | $(SCRIPTS)/nist_tok > $@
-
-#############################################
 # Language models:
 #############################################
 
 ### Gigaword:
 
 # Filter out any ngram that does not match any substring of any concatenation of English phrase table entries:
-%.flt_giga.lm.gz: %.tables/phrase-table.gz %.unk.vocab $(GIGA)
-	(zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
-	remove_bad_english 2> $@.skip | grep -v '^$$' | \
-	cat - $(*F).unk.vocab | filter_lm $(GIGA) | \
-	ngram -lm - -write-lm - -order 5 | gzip) 2> $@.log > $@
+%.flt_giga.lm.gz: %.e.vocab $(GIGA)
+	cat $(*F).e.vocab | $(LM_FILTER_SCRIPT) $(GIGA) 3 2> $@.log | gzip > $@
 
 ### Google LM:
 
 %.rsc_google.lm.gz: %.flt_google.lm.gz
 	(ngram -rescore-ngram $< -lm $(GOOGLE_LM) -write-lm $@ -count-lm -order 3 -vocab-aliases $(*F).e.aliases -limit-vocab -memuse -count-lm -vocab $(*F).e.vocab) >& $@.log
-%.flt_google.lm.gz: %.tables/phrase-table.gz %.unk.vocab %.init_google.lm.gz
-	(zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
-	remove_bad_english 2> $@.skip | grep -v '^$$' | \
-	cat - $(*F).unk.vocab | filter_lm $(*F).init_google.lm.gz | \
-	ngram -lm - -write-lm - -order 3 | gzip) 2> $@.log > $@
+%.flt_google.lm.gz: %.e.vocab %.init_google.lm.gz
+	cat $(*F).e.vocab | $(LM_FILTER_SCRIPT) $(*F).init_google.lm.gz 2> $@.log | gzip > $@
 %.init_google.lm.gz: %.e.vocab %.e.aliases
 	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c/ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 300 -gt3max 10000 -lm $@) >& $@.log
 
-### Vocab files:
+#############################################
+# Vocabulary files:
+#############################################
 
 %.aliases: %.vocab
 	make_alias < $< > $@
 
-%.e.vocab: %.tables/phrase-table.gz %.unk
+%.e.vocab: %.e.phrases
+	cat $< | ngram-count -text - -write-vocab $@ -order 1 -tolower
+
+%.e.phrases: %.tables/phrase-table.gz %.unk
 	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
 	remove_bad_english 2> $@.skip | grep -v '^$$' | \
-	cat - $(*F).unk | ngram-count -text - -write-vocab $@ -order 1
-
-%.unk.vocab: %.unk
-	cat $< | ngram-count -text - -write-vocab $@ -order 1
+	cat - $(*F).unk | sort | uniq > $@
 
 #############################################
 # Phrase tables:
@@ -253,13 +252,14 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 
 ### Split translation features and re-ordering features:
 %.tables/phrase-table.gz: %.tables/merged.gz
-	zcat $< | $(SCRIPTS)/split_po_tables $(*F).tables/phrase-table.gz $(*F).tables/msd-bidirectional-fe.gz $(MINP) $(MERGED_SZ) >& $@.log
+	mkdir logs || true
+	zcat $< | $(SCRIPTS)/split_po_tables $(*F).tables/phrase-table.gz $(*F).tables/$(LO_ID).gz $(MINP) $(LO_SZ) >& $@.log
 
 ### Generate table containing both phrase and lexicalized re-ordering probabilities for a given dev/test set:
 ### (needs to be run on 16G machines)
 %.tables/merged.gz: %.unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	mkdir $(*F).tables || true
-	java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(MERGED_OPT) 2> $@.log | gzip > $@
+	java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################
 # Lexicalized reordering tables:
@@ -282,3 +282,16 @@ $(TESTID).tables/lo-phrase.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpu
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 $(TESTID).tables/lo-hier.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen 500        -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+
+#############################################
+# Pre-processing: 
+# (remove unk words, etc.)
+#############################################
+
+### Handle unknown words:
+%.prep: %.unk %.tables/phrase-table.gz
+	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@ >& $@.err
+
+### Convert SGML file into raw text, and remove IBM classing:
+%.unk: %.sgm
+	cat $< | sgml2txt | $(CLASS) | lc > $@

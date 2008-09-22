@@ -17,13 +17,13 @@ import edu.stanford.nlp.stats.ClassicCounter;
  */
 public class MTScorer implements ExternalMTScorer {
 
+  public static final int MAX_VALUE = 100;
+
   boolean verbose;
   List<Quadruple<Double,Double,Double,Double>> terCosts;
   Map<Sequence<IString>,Double> ngramInfo = null;
   boolean tokenize = true, lowercase = true;
   boolean withNIST = true;
-
-  // TODO: tuned linear combinations
 
   static public void main(String[] args) throws Exception {
     MTScorer scorer = new MTScorer();
@@ -189,7 +189,7 @@ public class MTScorer implements ExternalMTScorer {
         System.err.printf("Feature %s has bad value %f.\n", feature, v);
       v = 0.0;
     }
-    if(Math.abs(v) > 100)
+    if(Math.abs(v) > MAX_VALUE)
       v = 0.0;
     c.setCount(feature,v);
   }
