@@ -1,5 +1,7 @@
 package mt.base;
 
+import edu.stanford.nlp.util.IString;
+
 
 /**
  * 
@@ -14,12 +16,14 @@ public class LanguageModels {
 	 * @param s
 	 * @return
 	 */
+	static private final IString sequenceStart = new IString("<s>");
+	
 	static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s) {
 		double logP = 0;
 		int sz = s.size();
 		for (int i = 0; i < sz; i++) {			
-			if (s.get(i).equals("<s>")) {
-                // don't explicity score <s> as SRI LM
+			if (s.get(i).equals(sequenceStart)) {
+                // don't explicitly score <s> as SRI LM
 				// assigns log p(<s>) to -99 (i.e. p(<s>) /approx 0)
 				continue;
 			}

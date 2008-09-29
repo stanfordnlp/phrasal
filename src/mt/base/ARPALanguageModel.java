@@ -222,7 +222,9 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     System.out.printf("done loading lm.\n");
 
     System.out.printf("Sentence: %s\n", sent);
-    double score = LanguageModels.scoreSequence(lm, new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s"))));
+    Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));
+    System.out.printf("Seq: %s\n", seq);
+    double score = LanguageModels.scoreSequence(lm, seq);
     System.out.printf("Sequence score: %f score_log10: %f\n", score, score/Math.log(10));
   }
 
