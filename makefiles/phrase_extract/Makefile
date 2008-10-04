@@ -13,9 +13,10 @@ MOSESDIR=/u/nlp/packages/moses-2008-05-18
 MM=$(MOSESDIR)/trunk/scripts/training/mert-moses.pl
 MOSESDEC=$(MOSESDIR)/bin/moses 
 
-# TER script:
+# Evaluation scripts:
 METEOR=/u/nlp/packages/meteor-0.6
 JTER=tercom_mult_java.pl
+BLEU=/u/nlp/data/gale/scr/chinese-interlingua/multi-bleu-uncased-nist.perl
 
 # TER default parameters (too slow for MERT):
 #BEAM_WIDTH=20
@@ -75,11 +76,15 @@ $(TESTID).%.meteor: $(TESTID).%.mbr
 	perl $(METEOR)/meteor.pl -s any -t $<.hyp.sgm -r $<.ref.sgm --modules "exact porter_stem wn_synonymy" >& $@
 	rm $<.hyp.sgm $<.ref.sgm
 
+### TER-BLEU:
+$(TESTID).%.tb: $(TESTID).%
+	cat $< | java -Xmx2g -Xms2g mt.metrics.LinearCombinationMetric $(TEST_REF)/ref{0,1,2,3} > $@
+
 ### BLEU:
 $(TESTID).%.bleu: $(TESTID).%
-	cat $< | $(SCRIPTS)/multi-bleu-uncased-nist.perl $(TEST_REF)/ref > $@
+	cat $< | $(BLEU) $(TEST_REF)/ref > $@
 $(DEVID).%.bleu: $(DEVID).%
-	cat $< | $(SCRIPTS)/multi-bleu-uncased-nist.perl $(DEV_REF)/ref > $@
+	cat $< | $(BLEU) $(DEV_REF)/ref > $@
 
 #############################################
 # Post-processing:
@@ -103,8 +108,12 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).unk
 %.post: %
 	(cat $< | $(POST)) 2> $@.err > $@
 
+### Get phrase alignment for 1best:
+%.align: %.500best
+	nbest-to-1best < $< > $@
+
 #############################################
-# 1-best output with Phrasal:
+# 1-best and n-best output with Phrasal:
 #############################################
 
 # Use best MERT paramters to generate 500best list:
@@ -204,12 +213,12 @@ $(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$
 # Minimize TER-BLEU (tune BP only):
 $(DEVID).%.500.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) --working-dir=$(DEVID).$(*F).500.bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=2 -DtuneLength=true" \
+	$(PM) --working-dir=$(DEVID).$(*F).500.bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=5 -DtuneLength=false" \
 	--nbest=500 $(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).500.bt_pmert.log
 
 $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) --working-dir=$(DEVID).$(*F).bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=2 -DtuneLength=true" \
+	$(PM) --working-dir=$(DEVID).$(*F).bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=5 -DtuneLength=false" \
 	$(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
 
 #############################################
@@ -262,6 +271,17 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 	java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################
+# Phrase counts:
+#############################################
+
+COUNT_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen) -extractors mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
+
+$(DEVID).tables/counts.gz: $(DEVID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
+$(TESTID).tables/counts.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
+
+#############################################
 # Lexicalized reordering tables:
 #############################################
 
@@ -288,10 +308,23 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.
 # (remove unk words, etc.)
 #############################################
 
-### Handle unknown words:
+### sgml with unknown words marked in the text:
+%.mprep: %.prep %.unk
+	dwdiff $(*F).unk $(*F).prep > $@ || true
+
+### Handle unknown words (e.g., delete them):
 %.prep: %.unk %.tables/phrase-table.gz
 	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@ >& $@.err
 
 ### Convert SGML file into raw text, and remove IBM classing:
 %.unk: %.sgm
 	cat $< | sgml2txt | $(CLASS) | lc > $@
+%.unk.nc: %.sgm
+	cat $< | sgml2txt | ibm2noclass | lc > $@
+%.unk.c: %.sgm
+	cat $< | sgml2txt | ibm2class | lc > $@
+%.unk.ibm: %.sgm
+	cat $< | sgml2txt | lc > $@
+
+%.counts.html: %.counts
+	cat $< | counts2html $(TESTID) > $@

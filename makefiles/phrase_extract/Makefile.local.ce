@@ -1,4 +1,12 @@
 #########################################
+# Java command (must have MT stuff in class
+# path; and locales must be set correctly)
+#########################################
+
+#SYSID=p2h2-d6-v4
+SYSID=hier2-d6-gale-fouo
+
+#########################################
 # Language/data specific variables:
 #########################################
 
@@ -14,15 +22,21 @@ E=en
 LINES=90000000
 
 ### MT word-aligned training data:
-TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
+#TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
+TRAIN=/scr/nlp/data/gale2/NIST_EVAL08/nist_eval_giza/fixed
 
 ### Unfiltered Gigaword LM:
-GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/wo2356/mt_giga3_afp_xin.1233.lm.gz
+GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/w23wo56/mt_giga3_afp_xin.1233.lm.gz
+#GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/wo2356/mt_giga3_afp_xin.1233.lm.gz
+
+### Count-based Google LM:
+GOOGLE_CT=/scr/nlp/data/gale2/NIST_EVAL08/GoogleNgrams-ibm
+GOOGLE_LM=/scr/nlp/data/gale2/NIST_EVAL08/LM/google/google.countlm.3 
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-TESTID=mt05
-#TESTID=mt08
+#TESTID=mt05
+TESTID=mt08
 
 ### Directory containing reference translations:
 REFS=/scr/nlp/data/gale/NIST-MT-eval-data/
@@ -38,8 +52,14 @@ TEST_REF=$(REFS)/$(TESTID)$(TYPE)/chinese
 ### Specify alignment merging heuristic:
 ALIGN=grow-diag
 
-### Lexicalized re-ordering models:
-DIST=msd-bidirectional-fe
+### Lexicalized re-ordering model identifier:
+LO_ID=lo-hier.msd2-bidirectional-fe
+
+### Parameters for lexicalized reordering model:
+LO_ARGS=-maxLen 500 -phiFilter $(MINP) -pharaohLexicalizedModel msd2-bidirectional-fe -phrasalLexicalizedModel true  
+
+### Number of columns produced by lexicalized re-ordering extractor:
+LO_SZ=8
 
 #########################################
 # Pruning:
@@ -58,8 +78,9 @@ MINP=1e-4
 #########################################
 
 ### How much memory for Java:
-MEMSIZE=15000m
-PMEMSIZE=15000m
+MEMSIZE=22000m
+PMEMSIZE=22000m
+PMEMSIZE_BM=22000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -74,7 +95,7 @@ exactPhiCounts=true
 ### into X chunks, and make 1-2 passes over the training data
 ### for each one of them.
 ### (if you run out of memory, increase the split value)
-SPLIT=-split 2
+SPLIT=-split 1
 
 #########################################
 # Debug levels
@@ -86,8 +107,11 @@ DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
 # Pre- and post-processing:
 #########################################
 
-PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl
-POST=perl $(SCRIPTS)/remove_unk
+PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl -n -t
+#PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl -n -e
+#PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl
+#POST=perl $(SCRIPTS)/remove_unk
+POST=perl $(SCRIPTS)/remove_unk | en_truecaser
 
 #########################################
 # Phrasal MERT:
@@ -96,3 +120,18 @@ POST=perl $(SCRIPTS)/remove_unk
 
 #PM=phrasal-mert.pl
 PM=phrasal-mert-michel.pl
+
+#########################################
+# Extension of input files:
+# unk : with unk words
+# prep : with preprocessing
+#########################################
+
+IE=prep
+
+#########################################
+# LM filtering script:
+#########################################
+
+LM_FILTER_SCRIPT=filter_lm_ngram
+#LM_FILTER_SCRIPT=filter_lm_unigram
