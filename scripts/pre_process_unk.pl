@@ -41,9 +41,9 @@ my %opts = get_opts(['t',0,'Chinese Name Transliteration will be used'],
 my %args = get_args();
 
 if ($opts{t} == 1) {
-    print STDERR "-t is on : using Chinese Name Transliteratoin\n";
+    print STDERR "-t is on : using Chinese Name Transliteration\n";
 } else {
-    print STDERR "-t is off: NOT using Chinese Name Transliteratoin\n";
+    print STDERR "-t is off: NOT using Chinese Name Transliteration\n";
 }
 if ($opts{n} == 1) {
     $CONVERSION_TABLE = "/scr/nlp/data/gale2/NameTransliteration/conversion.list";
@@ -220,7 +220,6 @@ for ($src_i = 0; $src_i <= $#source_txts; $src_i += 2) {
       my @w2;
       my @index;
       my $prevW2idx = 0;
-      #foreach my $w (@w) {
       foreach $widx (0..$#w) {
           $w = $w[$widx];
           $fc = substr $w, 0, 1;
@@ -240,7 +239,7 @@ for ($src_i = 0; $src_i <= $#source_txts; $src_i += 2) {
               @indices=$prevW2idx..($prevW2idx+$size);
               push @index, "$widx:".join(",",@indices);
               $prevW2idx += $size+1;
-          } elsif($w =~/[\$\[\]\/A-Za-z0-9,.()\'\"%&;:+-]/) {
+          } elsif($w =~/^[\$\[\]\/A-Za-z0-9,.()\'\"%&;:+-?=@]*$/) {
               print STDERR "latin: '$w' (keeping)\n";
               push @w2, $w;
               @toks=split(/ /,$w);

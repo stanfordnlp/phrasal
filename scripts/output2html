@@ -1,0 +1,394 @@
+#!/usr/bin/perl
+BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
+
+#####################################################
+# Generate html pages to enables MT error analysis
+# for GALE AE.
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+use utils::opt  qw(&get_args &get_opts);
+use utils::data  qw(&load_file);
+use utils::mt  qw(&load_mt_sgml &load_ibm_doc_scores &load_ptable);
+use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+
+my %opts = get_opts
+  (['v',0,'program will be more verbose'],
+	 ['ref=s','','reference translations (NIST MT sgml)',1],
+	 ['in=s','','source-language text (NIST MT sgml)',1],
+	 ['out=s','','system output (raw text)',1],
+	 ['align=s','','system output with phrase alignment (Moses n-best list format)',1],
+	 ['scores=s','','document-level scores for TER, BLEU, and TER-BLEU (IBM format)',1],
+	 ['summary=s','','corpus-level scores for different systems (IBM format)',1],
+	 ['corpus=s','','corpus name',1],
+	 ['ptable=s','','phrase table',1],
+	 ['counts=s','','phrase counts',1],
+	 ['html=s','','noot name of html files to generate',1],
+	 ['unk=s','','source-language text with unknown words marked with <unk></unk> (raw text)']
+	 );
+my %args = get_args();
+my $root = $opts{html};
+
+open(H1,">${root}_scores.html");
+open(H2,">$root.html");
+mkdir("${root}_grids");
+binmode(H1,":utf8");
+binmode(H2,":utf8");
+
+my ($align,$sz) = load_file($opts{align});
+my ($prep,$sz2);
+if($opts{unk}) {
+	($prep,$sz2) = load_file($opts{unk});
+	assert($sz == $sz2);
+}
+my ($in,$inh,$docs) = load_mt_sgml($opts{in}, verbose => 0);
+my ($out) = load_mt_sgml($opts{out}, verbose => 0);
+my ($ref,$refh) = load_mt_sgml($opts{ref}, verbose => 0, docs => $docs);
+my $scores = load_ibm_doc_scores($opts{scores},%opts);
+my $ptable = load_ptable($opts{ptable},align=>1);
+my $counts = load_ptable($opts{counts});
+my @docs = keys %$docs;
+
+die "Incorrect number of segments (in vs. out): $#$in != $#$out\n" if $#$in != $#$out;
+die "Incorrect number of documents (scores vs. in): $#$scores != $#docs\n" if $#$scores != $#docs;
+
+generate_main_html($opts{corpus},$docs,$scores,$ref,$refh,$in,$out);
+
+close(H1);
+close(H2);
+exit 0;
+
+sub read_summary {
+	my $file = shift;
+	my @s;
+	open(F,$file);
+	while(<F>) {
+		next unless /\S/;
+		push @s, [ split(/\s+/) ];
+	}
+	close(F);
+	return \@s;
+}
+
+sub generate_main_html {
+	my ($title,$docs,$scores,$ref,$refh,$in,$out) = @_;
+	print H1 "<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n";
+	print H1 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">";
+	print H2 "<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n";
+	print H2 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">";
+	print H1 "<html><head><title>Results</title></head><body><h2>$title</h2>";
+	print H2 "<html><head><title>$title translations</title></head><body>";
+
+	## Print corpus-level scores:
+	print H1 "<h3><strong>Corpus-level scores (Rosetta)</strong></h3>";
+	print H1 "<table border=\"1\" cellpadding=\"5\">\n";
+	print H1 "<tr><th>System</th><th>TER</th><th>BLEU</th><th>(TER-BLEU)/2</th>";
+	print H1 "<th>tail TER</th><th>tail BLEU</th><th>tail (TER-BLEU)/2</th></tr>";
+	my $s = read_summary($opts{summary});
+	for my $i (sort {$s->[$a][6] <=> $s->[$b][6]} 0..$#$s) {
+		print H1 "<tr>";
+		for my $j (0..$#{$s->[$i]}) {
+			print H1 "<td>$s->[$i][$j]</td>";
+		}
+		print H1 "</tr>";
+	}
+	print H1 "</table>";
+
+	## Stanford document scores:
+	print H1 "<h3><a name=\"doc_level\">Document-level scores (Stanford):</a></h3>";
+	print H1 "<table border=\"1\" cellpadding=\"5\">";
+	print H1 "<tr><th>Document ID</th><th>TER</th><th>BLEU</th><th>(TER-BLEU)/2</th></tr>";
+	print H1 "<tr><td colspan=4><i><strong>tail:</strong></i></td></tr>\n";
+
+	## Print documents (scores and translations):
+	my $tail = 1;
+	for(my $i=$#$scores; $i>=0; --$i) {
+		print H2 "<hr>" if($i < $#$scores);
+		my $s = $scores->[$i];
+		my $docid = $s->{id};
+		my $docpos = $docs->{$docid};
+		if($tail && !$s->{tail}) {
+			print H1 "<tr><td colspan=4><i><strong>not in tail:</strong></i></td></tr>\n";
+			$tail = 0;
+		}
+		# Update score html page:
+		print H1 "<tr><td><a href=\"${root}.html\#$docid\">$docid</a></td><td>$s->{ter}</td><td>$s->{bleu}</td><td>$s->{score}</td></tr>";
+		# Update translation html page:
+		print H2 "<h3><a name=\"$docid\">$docid</a></h3>";
+		print H2 "<dl><dt><strong>Document-level scores</strong> [<a href=\"${root}_scores.html#doc_level\">full</a>]</dt>";
+		print H2 "<dd>TER = $s->{ter}\%";
+		print H2 "<dd>BLEU = $s->{bleu}\%";
+		print H2 "<dd>(TER-BLEU)/2 = $s->{score}</dl>";
+		print H2 "<dl><dt><strong>Translations</strong></dt></dl>";
+		# Update grid html page:
+		for(my $j=$docpos;$j <= $#$in;++$j) {
+			my $sid = $in->[$j][1];
+			last if ($docid ne $in->[$j][0]);
+			assert($docid eq $in->[$j][0]);
+			assert($docid eq $out->[$j][0]);
+			assert($sid eq $out->[$j][1]);
+			assert($#{$in->[$j][2]} == 0);
+			assert($#{$out->[$j][2]} == 0);
+			if($sid =~ s/^\d+s/s/) { $sid =~ s/000//g }
+			my $id = "${docid}.$sid";
+			my $input = $in->[$j][2][0];
+			my $output = $out->[$j][2][0];
+			my @refs;
+			my $ridx = $refh->{$docid}{$sid};
+				if(defined $ridx) {
+				for my $k (0..$#{$ref->[$ridx][2]}) {
+					my $r = $ref->[$ridx][2][$k];
+					push @refs, $r if $r;
+				}
+			}
+			## Sentence annotation:
+			flag_unmatched_words(\@refs,\$output);
+			my $pr = $prep->[$j]; 
+			my $raw_input = $pr;
+			$pr = mark_clitics($pr);
+			$pr = to_vred($pr);
+			## Print translations without grids:
+			print_translations(*H2,$id,$sid,$input,$pr,$prep,$output,\@refs,1);
+			## Print translations with grids:
+			open(H3,">${root}_grids/$id.html");
+			binmode(H3,":utf8");
+			print H3 "<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n";
+			print H3 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">";
+			print H3 "<html><head><title>Alignment grid</title>";
+			print H3 "<style type=\"text/css\"> table {border-collapse: collapse;} td  { padding: 4px; border: 1px solid black } </style></head><body>";
+			print H3 "<script type=\"text/javascript\" src=\"http://nlp.stanford.edu/~mgalley/js/wz_tooltip.js\"></script><p>";
+			if($j > 0 && $in->[$j-1][0] eq $in->[$j][0]) {
+				my $prev_id = "$in->[$j-1][0].$in->[$j-1][1]";
+				print H3 "&nbsp;&nbsp;<input type=\"button\" value=\"previous segment\" onClick=\"window.location='$prev_id.html'\">";
+			}
+			print H3 "&nbsp;&nbsp;<input type=\"button\" value=\"main page\" onClick=\"window.location='../$root.html#$id'\">";
+			if($j < $#${in} && $in->[$j+1][0] eq $in->[$j][0]) {
+				my $next_id = "$in->[$j+1][0].$in->[$j+1][1]";
+				print H3 "&nbsp;&nbsp;<input type=\"button\" value=\"next segment\" onClick=\"window.location='$next_id.html'\">";
+			}
+			print H3 "<p>";
+			print_translations(*H3,$id,$sid,$input,$pr,$prep,$output,\@refs);
+			print_grid(*H3,$raw_input,$align->[$j]);
+			print H3 "<br><br><br><br><br></body></html>";
+			close(H3);
+		}
+	}
+	print H1 "</table></body></html>";
+	print H2 "</body></html>";
+}
+
+sub print_translations {
+	my ($fh,$id,$sid,$input,$pr,$prep,$output,$refs,$grid_link) = @_;
+	print $fh "<table border=\"1\" bgcolor=\"#dddddd\" cellpadding=\"5\">\n";
+	if($grid_link) {
+		print $fh "<tr><td><strong><a name=\"$id\">id</a></strong></td><td>$sid [<a href=\"${root}_grids/$id.html\">grid</a>]</td></tr>\n";
+	} else {
+		print $fh "<tr><td><strong><a name=\"$id\">id</a></strong></td><td>$sid</td></tr>\n";
+	}
+	print $fh "<tr><td><strong>source</strong></td><td align=\"right\" dir=\"rtl\">$input</td></tr>\n";
+	print $fh "<tr><td><strong>MT input</strong></td><td align=\"right\" dir=\"rtl\">$pr</td></tr>\n" if $prep;
+	print $fh "<tr><td><strong>MT output</strong></td><td>$output</td></tr>\n";
+	for my $r (0..$#$refs) {
+		my $s = ($#$refs > 0) ? "human#$r" : 'human';
+		print $fh "<tr><td><strong>$s</strong></td><td>$refs->[$r]</td></tr>\n";
+	}
+	print $fh "</table><br>\n";
+}
+
+sub print_grid {
+	my ($fh,$in,$info) = @_;
+	$in =~ s/^ +//g;
+	$in =~ s/ +$//g;
+	my %grid;
+	$info =~ /\d+ \|\|\| (.*) \|\|\| .* \|\|\| .* \|\|\| (.*)/;
+	my $out = $1;
+	my $align = $2;
+	my @in = split(/\s+/,$in);
+	my @out = split(/\s+/,$out);
+	my @a = split(/\s+/,$align);
+	my %a;
+	foreach my $i (0..$#a) {
+		my ($s,$t) = split(/=/,$a[$i]);
+		my ($s1,$s2) = split(/\-/,$s);
+		$s2 = $s1 unless defined $s2;
+		my ($t1,$t2) = split(/\-/,$t);
+		$t2 = $t1 unless defined $t2;
+		$grid{$s1} = [$s1,$s2,$t1,$t2,$i];
+		$a{"$s1-$s2"}="$t1-$t2";
+	}
+	print $fh "<table border=\"1\" cellpadding=\"4\"><tr>\n";
+	foreach my $j (sort {$grid{$b}[0] <=> $grid{$a}[0]} keys %grid) {
+		my ($s1,$s2,$t1,$t2,$tgtIdx) = @{$grid{$j}};
+		print $fh "<td align=\"right\" dir=\"rtl\" style=\"vertical-align:top\">";
+		print $fh get_phrase(\@in,$s1,$s2,{vred=>1,no_clitics=>1});
+		print $fh "</td>";
+	}
+	print $fh "</tr>";
+	foreach my $i (sort {$grid{$a}[4] <=> $grid{$b}[4]} keys %grid) {
+		my ($s1,$s2,$t1,$t2,$tgtIdx) = @{$grid{$i}};
+		print $fh "<tr>";
+		foreach my $j (sort {$grid{$b}[0] <=> $grid{$a}[0]} keys %grid) {
+			my ($s1b,$s2b,$t1b,$t2b,$tgtIdxb) = @{$grid{$j}};
+			if ($a{"$s1b-$s2b"} eq "$t1-$t2") {
+				my $aphrase = get_phrase(\@in,$s1b,$s2b,{plain=>1});
+				my $aphrase2 = get_phrase(\@in,$s1b,$s2b,{plain=>1,no_clitics=>1});
+				my $ephrase = get_phrase(\@out,$t1b,$t2b,{plain=>1});
+				my $p = $ptable->{$aphrase}{$ephrase};
+				my $c = $counts->{$aphrase}{$ephrase};
+				my $color = color_for_count($c->[0]);
+				print $fh sprintf("<td onmouseover=\"Tip('ar=%s<br>en=%s<br>".
+				  "count=%d<br>".
+				  "phi(ar|en)=%.4g<br>lex(ar|en)=%.4g<br>".
+					"phi(en|ar)=%.4g<br>lex(en|ar)=%.4g')\" onmouseout=\"UnTip()\" bgcolor=\"$color\">\&nbsp;</td>",
+					escape($aphrase2),escape($ephrase),$c->[0],$p->[0],$p->[1],$p->[2],$p->[3]);
+			} else {
+				print $fh "<td></td>";
+			}
+		}
+		print $fh "<td style=\"white-space: nowrap;\" align=\"left\">";
+		print $fh get_phrase(\@out,$t1,$t2);
+		print $fh "</td>";
+		print $fh "</tr>";
+	}
+	print $fh "</table>";
+}
+
+sub color_for_count {
+	my $count = shift;
+	my $a;
+	if($count == 0) { $a = 'C' }	
+	elsif($count == 1) { $a = 'A' }	
+	elsif(2 <= $count && $count <= 5) { $a = '8' }
+	elsif(6 <= $count && $count <= 20) { $a = '6' }
+	elsif(21 <= $count && $count <= 100) { $a = '4' }
+	elsif(101 <= $count && $count <= 1000) { $a = '2' }
+	elsif(1001 < $count) { $a = '0' }
+	return "\#${a}${a}${a}${a}${a}${a}";
+}
+
+sub flag_unmatched_words {
+	my ($refs,$hyp) = @_;
+	my (%ref,%hyp);
+	foreach my $w (tok($$hyp)) {
+		$hyp{$w} = 1;
+	}
+	for my $i (0..$#$refs) {
+		foreach my $w (tok($refs->[$i])) {
+			$ref{$w} = 1;
+		}
+	}
+	$$hyp =~ s/([A-Za-z\-0-9]+)/mark_unk($1,\%ref,\%hyp)/ge;
+	for my $i (0..$#$refs) {
+		$refs->[$i] =~ s/\b([A-Za-z\-0-9]+)\b/mark_unk($1,\%ref,\%hyp)/ge;
+	}
+}
+
+sub tok {
+	my $l = shift;
+	$l =~ s/[^A-Za-z0-9\-\s]//g;
+	$l =~ tr/A-Z/a-z/;
+	return split(/\s+/,$l);
+}
+
+sub mark_unk {
+	my ($tok,$ref,$hyp) = @_;
+	(my $lctok = $tok) =~ tr/A-Z/a-z/;
+	my $matched = ($ref->{$lctok} && $hyp->{$lctok}) ? 1 : 0;
+	return $matched ? $tok : red($tok);
+}
+
+sub to_vred {
+	my $txt = shift;
+	$txt =~ s/\[\-(.*?)\-\]/vred($1)/ge;
+	return $txt;
+}
+
+sub to_plain {
+	my $txt = shift;
+	$txt =~ s/\[\-(.*?)\-\]/$1/g;
+	return $txt;
+}
+
+sub red {
+	my $t = shift;
+	return $t if $t =~ /<span style/;
+	return '<span style="color: #990000">'.$t.'</span>'
+}
+
+sub vred {
+	my $t = shift;
+	return $t if $t =~ /<span style/;
+	return '<span style="color: #FF0000">'.$t.'</span>'
+}
+
+sub blue {
+	my $t = shift;
+	return $t if $t =~ /<span style/;
+	return '<span style="color: #0000CC">'.$t.'</span>'
+}
+
+sub mark_clitics {
+	my $pr = shift;
+	$pr =~ s/(\+\S+)/blue($1)/ge;
+	$pr =~ s/(\S+\#)/blue($1)/ge;
+	$pr =~ s/\+/&#43;/g;
+	return $pr;
+}
+
+sub mark_remove_clitics {
+	my $pr = shift;
+	$pr =~ s/\+(\S+)/blue($1)/ge;
+	$pr =~ s/(\S+)\#/blue($1)/ge;
+	return $pr;
+}
+
+sub remove_clitics {
+	my $pr = shift;
+	$pr =~ s/\+(\S+)/$1/g;
+	$pr =~ s/(\S+)\#/$1/g;
+	return $pr;
+}
+
+sub get_phrase {
+	my ($array,$s,$e,$attr) = @_;
+	my $str;
+	for($s..$e) { 
+		$str .= ' ' if $_ > $s;
+		my $w = $array->[$_];
+		$w = to_vred($w) if $attr->{vred};
+		$w = to_plain($w) if $attr->{plain};
+		if($attr->{no_clitics}) {
+			if($attr->{plain}) {
+				$w = remove_clitics($w) 
+			} else {
+				$w = mark_clitics($w)
+			}
+		}
+		$str .= $w;
+	}
+	return $str;
+}
+
+sub escape {
+	my $str = shift;
+	$str =~ s/"/\&\#34;/g;
+	$str =~ s/\&/\&\#38;/g;
+	$str =~ s/'/\&\#39;/g;
+	$str =~ s/</\&\#60;/g;
+	$str =~ s/>/\&\#62;/g;
+	return $str;
+}
+
+sub arabic_punc {
+	my $str = shift;
+	## Strip final punctuation from Arabic:
+	$str =~ s/\s*\.\s*$//g;
+	return $str;
+}

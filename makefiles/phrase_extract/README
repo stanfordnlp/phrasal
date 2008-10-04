@@ -5,7 +5,7 @@ Some assumptions:
 
 Steps: 
 (1) Create your own copy of Makefile.local, e.g.:
-    $ cp Makefile.local.ce Makefile.local
+    $ cp Makefile.local.ce-tiny Makefile.local
 (2) Customize Makefile.local.
 (3) Run 'make', which builds a phrase table, a lexicalized reordering table, and a filtered LM.
 (4) Create/edit an ini file, e.g., ce_sample.ini.

@@ -1,0 +1,15 @@
+#!/usr/bin/perl -n
+
+#####################################################
+# Convert Moses nbest list into 1best list
+# (keep lists in same format)
+#####################################################
+
+BEGIN { $id = -1 }
+
+/^(\d+)\s+\|\|\|/;
+if($id != $1) {
+	warn "Missing sentence: $id+1 != $1\n" if $1 != $id+1;
+	$id = $1;
+	print;
+}

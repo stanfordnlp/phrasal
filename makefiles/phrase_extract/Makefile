@@ -28,7 +28,6 @@ SHIFT_SIZE=12
 
 # Corpus/genre/language specific stuff here:
 include Makefile.local
-include Makefile.extra
 
 LTABLES_DEV= \
 	$(DEVID).tables/lo-word.msd-bidirectional-fe.gz \
@@ -43,10 +42,14 @@ LTABLES_TEST= \
 	$(TESTID).tables/lo-hier.msd2-bidirectional-fe.gz
 
 # Main targets:
-all: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).500.500best.1best.post
-train: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(DEVID).$(SYSID).500.pmert/phrasal.final.ini
-builddev: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz
-buildtest: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz
+test: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.f1best
+nbest: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+train: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+
+test_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.f1best
+nbest_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+train_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+
 ltables: $(LTABLES)
 
 # Java configuration:
@@ -109,16 +112,16 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).unk
 	(cat $< | $(POST)) 2> $@.err > $@
 
 ### Get phrase alignment for 1best:
-%.align: %.500best
+%.align: %.$Nbest
 	nbest-to-1best < $< > $@
 
 #############################################
 # 1-best and n-best output with Phrasal:
 #############################################
 
-# Use best MERT paramters to generate 500best list:
-$(TESTID).$(DEVID).%.500best.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
-	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).500best -n 500 $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+# Use best MERT paramters to generate n-best list:
+$(TESTID).$(DEVID).%.$Nbest.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
+	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(PHRASAL_ARGS_N) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
 
 # Use final MERT paramters:
@@ -155,10 +158,10 @@ $(DEVID).%.mbr: $(DEVID).%.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
 #############################################
 
 $(DEVID).%.nbest: $(DEVID).%.mert/moses.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ 500 distinct < $(DEVID).$(IE) \
+	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(DEVID).$(IE) \
 	> $@.1best 2> logs/$@.log
 $(TESTID).%.nbest: $(TESTID).%.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ 500 distinct < $(TESTID).$(IE) \
+	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(TESTID).$(IE) \
 	> $@.1best 2> logs/$@.log
 
 #############################################
@@ -186,17 +189,11 @@ $(DEVID).%.mert/moses.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE)
 # Phrasal MERT:
 #############################################
 
-# Maximize BLEU (500 best):
-$(DEVID).%.500.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
+# Maximize BLEU (n-best):
+$(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).500.pmert --java-flags="$(PHRASAL_ARGS)" \
-	--nbest=500 $(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).500.pmert.log
-
-# Maximize BLEU (200 best):
-$(DEVID).%.200.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
-	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).200.pmert --java-flags="$(PHRASAL_ARGS)" \
-	--nbest=200 $(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).200.pmert.log
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).$N.pmert --java-flags="$(PHRASAL_ARGS)" \
+	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).$N.pmert.log
 
 # Maximize BLEU:
 $(DEVID).%.pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
@@ -211,10 +208,10 @@ $(DEVID).%.ter_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$
 	$(DEVID).$(IE) $(DEV_REF)/ref ter:$(BEAM_WIDTH):$(SHIFT_SIZE) $(DEVID).$< >& logs/$(DEVID).$(*F).ter_pmert.log
 
 # Minimize TER-BLEU (tune BP only):
-$(DEVID).%.500.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
+$(DEVID).%.$N.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	$(PM) --working-dir=$(DEVID).$(*F).500.bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=5 -DtuneLength=false" \
-	--nbest=500 $(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).500.bt_pmert.log
+	$(PM) --working-dir=$(DEVID).$(*F).$N.bt_pmert --java-flags="$(PHRASAL_ARGS) -DSTARTING_POINTS=5 -DtuneLength=false" \
+	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).$N.bt_pmert.log
 
 $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
@@ -276,8 +273,6 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 
 COUNT_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen) -extractors mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
 
-$(DEVID).tables/counts.gz: $(DEVID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
-	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
 $(TESTID).tables/counts.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
 
@@ -314,6 +309,7 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.
 
 ### Handle unknown words (e.g., delete them):
 %.prep: %.unk %.tables/phrase-table.gz
+	rm -f $@
 	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@ >& $@.err
 
 ### Convert SGML file into raw text, and remove IBM classing:
