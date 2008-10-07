@@ -204,11 +204,11 @@ public class MTScorer2 implements ExternalMTScorer {
       v = 0.0;
     c.setCount(feature,v);
     c.setCount(feature+"_log",-safeLog(v));
-    if(range01) {
+    /* if(range01) {
       assert(v >= 0.0 && v <= 1.0);
       c.setCount(feature+"1m",1-v);
       c.setCount(feature+"_log_1m",-safeLog(1-v));
-    }
+    } */
   }
 
   private double safeLog(double x) {
