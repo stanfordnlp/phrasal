@@ -24,7 +24,8 @@ class EnglishTreeReader extends AbstractTreeReader {
     this();
     readMoreTrees(filename);
   }
-
+  
+  /*
   public String normalizeSentence(String sent) {
     List<HasWord> words = new ArrayList<HasWord>();
     words.add(new Word(sent));
@@ -39,9 +40,10 @@ class EnglishTreeReader extends AbstractTreeReader {
     words = ptbe_.apply(words);
     return StringUtils.join(words, " ");
   }
+  */
 
   public String createSignature(String[] sents) {
-    String output = normalizeSentence(sents);
+    String output = StringUtils.join(sents, " ");
     output = output.replaceAll("\\s", "");
     return output;
   }
@@ -52,7 +54,8 @@ class EnglishTreeReader extends AbstractTreeReader {
     for(int i = 0; i < hws.size(); i++) {
       treeSent[i] = hws.get(i).word();
     }
-    return createSignature(treeSent);
+    return StringUtils.join(treeSent, "");
+    //return createSignature(treeSent);
   }
 
   // This one is different from the Chinese one, because
@@ -113,7 +116,10 @@ class EnglishTreeReader extends AbstractTreeReader {
 }
 
 class NMLandPOSTreeTransformer implements TreeTransformer {
+  PTBEscapingProcessor ptbe;
+
   public NMLandPOSTreeTransformer() {
+    ptbe = new PTBEscapingProcessor();
   }
 
   public Tree transformTree(Tree tree) {
@@ -131,6 +137,20 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
         }
       }
     }
+
+    // normalize leaves
+    List<Tree> leaves = tree.getLeaves();
+
+    List<HasWord> words = new ArrayList<HasWord>();
+    for (Tree leaf : leaves) {
+      words.add(new Word(leaf.value()));
+    }
+    words = ptbe.apply(words);
+
+    for (int i = 0; i < leaves.size(); i++) {
+      leaves.get(i).setValue(words.get(i).word());
+    }
+
     return tree;
   }
 }

@@ -16,7 +16,7 @@ class ChineseTreeReader extends AbstractTreeReader {
     trees_ = new ArrayList<Tree>();
     tlpp_ = new ChineseTreebankParserParams();
     treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket,basicDependencies", tlpp_.treebankLanguagePack());
-    tt_ = new DummyTreeTransformer();
+    tt_ = new ChineseTreeTransformer();
     ce_ = new ChineseEscaper();
   }
 
@@ -24,19 +24,8 @@ class ChineseTreeReader extends AbstractTreeReader {
     this();
     readMoreTrees(filename);
   }
-
-  public String normalizeSentence(String sent) {
-    List<HasWord> words = new ArrayList<HasWord>();
-    words.add(new Word(sent));
-    words = ce_.apply(words);
-    String output = words.get(0).word();
-    output = output.replaceAll("―", "—");
-    output = output.replaceAll("・", "·");
-    return output;
-  }
-
+  
   public List<Tree> getTreesWithWords(String sentStr) {
-    String normSent = normalizeSentence(sentStr);
     List<Tree> trees = new ArrayList<Tree>();
     // TODO: can be cached to make it faster
     for(Tree t : trees_) {
@@ -47,8 +36,9 @@ class ChineseTreeReader extends AbstractTreeReader {
         HasWord hw = hws.get(i);
         sb.append(hw.word());
       }
-      String normTreeStr = normalizeSentence(sb.toString());
-      if (normSent.equals(normTreeStr)) {
+      // the tree should already be normalized
+      String treeStr = sb.toString();
+      if (sentStr.equals(treeStr)) {
         trees.add(t);
       }
     }
@@ -69,5 +59,30 @@ class ChineseTreeReader extends AbstractTreeReader {
     }
 
     ctr.printAllTrees();
+  }
+}
+
+class ChineseTreeTransformer implements TreeTransformer {
+  ChineseEscaper ce;
+  public ChineseTreeTransformer() {
+    ce = new ChineseEscaper();
+  }
+
+  public Tree transformTree(Tree tree) {
+    tree = tree.deepCopy();
+    
+    List<Tree> leaves = tree.getLeaves();
+
+    List<HasWord> words = new ArrayList<HasWord>();
+    for (Tree leaf : leaves) {
+      words.add(new Word(leaf.value()));
+    }
+    words = ce.apply(words);
+
+    for (int i = 0; i < leaves.size(); i++) {
+      leaves.get(i).setValue(words.get(i).word());
+    }
+
+    return tree;
   }
 }

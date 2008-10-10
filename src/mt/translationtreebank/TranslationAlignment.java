@@ -21,6 +21,9 @@ class TranslationAlignment {
   int[][] matrix_;
   boolean wellformed_ = true;
 
+  private ChineseEscaper ce_ = new ChineseEscaper();
+  private PTBEscapingProcessor ptbe_ = new PTBEscapingProcessor();
+
   public boolean isWellFormed() {
     return wellformed_;
   }
@@ -72,6 +75,29 @@ class TranslationAlignment {
     System.out.println("<br></body></html>");
   }
 
+
+  public String normalizeSourceSentence(String sent) {
+    List<HasWord> words = new ArrayList<HasWord>();
+    words.add(new Word(sent));
+    words = ce_.apply(words);
+    String output = words.get(0).word();
+    output = output.replaceAll("―", "—");
+    output = output.replaceAll("・", "·");
+    return output;
+  }
+
+  public String[] normalizeTranslationSentence(String[] sents) {
+    List<HasWord> words = new ArrayList<HasWord>();
+    for(String w : sents) words.add(new Word(w));
+    words = ptbe_.apply(words);
+    String[] newSent = new String[words.size()];
+    for(int i = 0; i < newSent.length; i++) {
+      newSent[i] = words.get(i).word();
+    }
+    return newSent;
+  }
+
+
   public static void printAlignmentGrid(TranslationAlignment ta) {
     System.out.println("<table>");
     System.out.println("<tr><td></td>");
@@ -107,10 +133,11 @@ class TranslationAlignment {
     Matcher matcher = pattern.matcher(dataStr);
 
     if (matcher.find()) {
-      source_raw_ = matcher.group(1);
+      source_raw_ = normalizeSourceSentence(matcher.group(1));
 
       String sourceStr = matcher.group(2);
       sourceStr = sourceStr.trim();
+      sourceStr = normalizeSourceSentence(sourceStr);
       if (sourceStr.length()==0) { wellformed_ = false; return; }
       source_ = sourceStr.split("\\s+");
 
@@ -120,6 +147,7 @@ class TranslationAlignment {
       translationStr = translationStr.trim();
       if (translationStr.length()==0) { wellformed_ = false; return; }
       translation_ = translationStr.split("\\s+");
+      translation_ = normalizeTranslationSentence(translation_);
 
       // Read in the 2D matrix
       String matrixStr = matcher.group(5);
@@ -199,7 +227,7 @@ class TranslationAlignment {
   public static void main(String[] args) throws IOException {
     int validAlignments = 0;
     int numtreepairs = 0;
-    for(int fileidx = 1; fileidx <= 2; fileidx++) {
+    for(int fileidx = 1; fileidx <= 325; fileidx++) {
       // (1) Read alignment files
       String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
       File file = new File(aname);
@@ -256,7 +284,7 @@ class TranslationAlignment {
       validAlignments += alignment_list.size();
       numtreepairs += treepairs.size();
       if (alignment_list.size() > 0) {
-        printAlignmentGrids(alignment_list);
+        //printAlignmentGrids(alignment_list);
       }
     }
 

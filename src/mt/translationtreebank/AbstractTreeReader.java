@@ -38,8 +38,6 @@ abstract class AbstractTreeReader {
     return t.yield();
   }
 
-  abstract String normalizeSentence(String s);
-  
   public void printAllTrees() {
     for(Tree t : trees_) {
       treeprint_.printTree(t);
