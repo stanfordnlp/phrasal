@@ -53,6 +53,47 @@ class TranslationAlignment {
     return newM;  
   }
 
+  public String getTranslation(int i) {
+    if (i == 0) return "NULL";
+    return translation_[i-1];
+  }
+
+  public String getSource(int i) {
+    if (i == 0) return "NULL";
+    return source_[i-1];
+  }
+
+  public static void printAlignmentGrids(Collection<TranslationAlignment> tas) {
+    System.out.println("<br></body></html>");
+    System.out.println("<html><head><style type=\"text/css\"> table {border-collapse: collapse;} td { padding: 4px; border: 1px solid black } </style>");
+    for(TranslationAlignment ta : tas) {
+      printAlignmentGrid(ta);
+    }
+    System.out.println("<br></body></html>");
+  }
+
+  public static void printAlignmentGrid(TranslationAlignment ta) {
+    System.out.println("<table>");
+    System.out.println("<tr><td></td>");
+    for(int i = 0; i <= ta.source_.length; i++) {
+      System.out.printf("<td>%s</td>\n", ta.getSource(i));
+    }
+
+    // print out NULL on Chinese
+    for(int tidx = 0; tidx <= ta.translation_.length; tidx++) {
+      System.out.printf("<tr><td>%s</td>\n", ta.getTranslation(tidx));
+      for(int sidx = 0; sidx <= ta.source_.length; sidx++) {
+        if (ta.matrix_[tidx][sidx] == 0)
+          System.out.println("  <td>&nbsp;</td>");
+        else if (ta.matrix_[tidx][sidx] == 1)
+          System.out.printf("    <td bgcolor=\"black\">%d,%d</td>\n", tidx, sidx);
+        else if (ta.matrix_[tidx][sidx] > 2)
+          System.err.println("Bigger than 1?");
+      }
+      System.out.println("</tr>");
+    }
+    System.out.println("</table>");
+  }
 
   public TranslationAlignment(String dataStr) {
     String regex
@@ -149,11 +190,16 @@ class TranslationAlignment {
     return alignment_list;
   }
 
+  public static TranslationAlignment fixAlignmentGridWithChineseTree(
+    TranslationAlignment ta, List<Tree> chTrees) {
+    return null;
+  }
+
   // testing only
   public static void main(String[] args) throws IOException {
     int validAlignments = 0;
     int numtreepairs = 0;
-    for(int fileidx = 1; fileidx <= 325; fileidx++) {
+    for(int fileidx = 1; fileidx <= 2; fileidx++) {
       // (1) Read alignment files
       String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
       File file = new File(aname);
@@ -200,12 +246,20 @@ class TranslationAlignment {
         } else if (enTrees.size() > 1) {
           //System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, ta.translation_raw_);
         }
+
+        // Fix the Translation Alignment before adding to the TreePair
+        ta = fixAlignmentGridWithChineseTree(ta, chTrees);
+        
         TreePair tp = new TreePair(ta, enTrees, chTrees);
         treepairs.add(tp);
       }
       validAlignments += alignment_list.size();
       numtreepairs += treepairs.size();
+      if (alignment_list.size() > 0) {
+        printAlignmentGrids(alignment_list);
+      }
     }
+
     System.err.println("# valid translation alignment = "+validAlignments);
     System.err.println("# Tree Pairs = "+numtreepairs);
   }
