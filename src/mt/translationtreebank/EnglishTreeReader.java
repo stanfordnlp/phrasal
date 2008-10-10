@@ -13,11 +13,16 @@ class EnglishTreeReader extends AbstractTreeReader {
     tlpp_ = new EnglishTreebankParserParams();
     treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket", tlpp_.treebankLanguagePack());
     tt_ = new NMLTreeTransformer();
+    delimiter_ = " ";
   }
 
   public EnglishTreeReader(String filename) throws IOException {
     this();
     readMoreTrees(filename);
+  }
+
+  public String normalizeSentence(String sent) {
+    return sent;
   }
 
   public static void main(String args[]) throws IOException {

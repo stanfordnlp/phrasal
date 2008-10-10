@@ -2,6 +2,7 @@ package mt.translationtreebank;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.trees.*;
+import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.parser.lexparser.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
 import java.io.*;
@@ -9,17 +10,32 @@ import java.util.zip.GZIPInputStream;
 import java.util.*;
 
 class ChineseTreeReader extends AbstractTreeReader {
+  private ChineseEscaper ce_;
+
   public ChineseTreeReader() {
     trees_ = new ArrayList<Tree>();
     tlpp_ = new ChineseTreebankParserParams();
     treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket,basicDependencies", tlpp_.treebankLanguagePack());
     tt_ = new DummyTreeTransformer();
+    delimiter_ = "";
+    ce_ = new ChineseEscaper();
   }
 
   public ChineseTreeReader(String filename) throws IOException {
     this();
     readMoreTrees(filename);
   }
+
+  public String normalizeSentence(String sent) {
+    List<HasWord> words = new ArrayList<HasWord>();
+    words.add(new Word(sent));
+    words = ce_.apply(words);
+    String output = words.get(0).word();
+    output = output.replaceAll("―", "—");
+    output = output.replaceAll("・", "·");
+    return output;
+  }
+
   
   public static void main(String args[]) throws IOException {
     

@@ -6,6 +6,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.*;
 import java.util.*;
+import edu.stanford.nlp.trees.international.pennchinese.*;
+import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.trees.*;
+import edu.stanford.nlp.parser.lexparser.*;
+import edu.stanford.nlp.process.*;
+
 
 class TranslationAlignment {
   String source_raw_;
@@ -36,7 +42,7 @@ class TranslationAlignment {
       String sourceStr = matcher.group(2);
       sourceStr = sourceStr.trim();
       if (sourceStr.length()==0) { wellformed_ = false; return; }
-      String[] source_ = sourceStr.split("\\s+");
+      source_ = sourceStr.split("\\s+");
 
       translation_raw_ = matcher.group(3);
 
@@ -106,5 +112,49 @@ class TranslationAlignment {
       }
     }
     System.err.println("Total " + alignment_list.size() + " sentences load.");
+
+    // Read Chinese Trees
+    ChineseTreeReader ctr = new ChineseTreeReader();
+    for(int i = 1; i <= 325; i++) {
+      String name =
+        String.format("/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/chtb_%04d.fid", i);
+      System.err.println(name);
+      ctr.readMoreTrees(name);
+    }
+
+    System.err.println("done loading Chinese trees");
+
+    Set<String> chineseSents = new HashSet<String>();
+
+
+    for(int i = 0; i < ctr.size(); i++) {
+      Sentence<HasWord> sent = AbstractTreeReader.getWords(ctr.getTree(i));
+      StringBuilder sb = new StringBuilder();
+      for(HasWord hw : sent) {
+        sb.append(hw.word());
+      }
+      String normSent = ctr.normalizeSentence(sb.toString());
+      chineseSents.add(normSent);
+      //System.out.println("chineseSents: "+normSent);
+    }
+
+
+    for (TranslationAlignment ta : alignment_list) {
+      List<Tree> treesWithSameWords = ctr.getTreesWithWords(ta.source_raw_);
+      if (treesWithSameWords.size() == 0) {
+        System.err.println("Can't find one Tree in CTB: "+ta.source_raw_);
+        // skip for now
+      } else if (treesWithSameWords.size() > 1) {
+        // check if every of themm are the same
+        Tree baseTree = treesWithSameWords.get(0);
+        for(Tree t : treesWithSameWords) {
+          if (!t.equals(baseTree)) {
+            System.out.println("Different trees:");
+            baseTree.pennPrint();
+            t.pennPrint();
+          }
+        }
+      }
+    }
   }
 }
