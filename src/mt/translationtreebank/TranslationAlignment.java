@@ -86,72 +86,85 @@ class TranslationAlignment {
     }
   }
 
-  // testing only
-  public static void main(String[] args) throws IOException{
+  public static List<TranslationAlignment> readFromFile(String filename) 
+  throws IOException {
+    File file = new File(filename);
+    return readFromFile(file);
+  }
+
+  public static List<TranslationAlignment> readFromFile(File file) 
+  throws IOException {
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
 
-    for(int i = 1; i <= 325; i++) {
-      String name = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", i);
-      File file = new File(name);
-      if (file.exists()) {
-        String content = StringUtils.slurpFile(file);
-        String[] sents = content.split("</seg>");
-        for (String sent : sents) {
-          sent = sent.trim();;
-          if (sent.length()>0) {
-            TranslationAlignment ta = new TranslationAlignment(sent);
-            if (ta.isWellFormed()) {
-              alignment_list.add(ta);
-            } else {
-              System.err.println("Ill-formed.");
-            }
+    if (file.exists()) {
+      String content = StringUtils.slurpFile(file);
+      String[] sents = content.split("</seg>");
+      for (String sent : sents) {
+        sent = sent.trim();;
+        if (sent.length()>0) {
+          TranslationAlignment ta = new TranslationAlignment(sent);
+          if (ta.isWellFormed()) {
+            alignment_list.add(ta);
+          } else {
+            //System.err.println("Ill-formed.");
           }
         }
+      }
+    }
+    return alignment_list;
+  }
+
+  // testing only
+  public static void main(String[] args) throws IOException {
+
+    for(int fileidx = 1; fileidx <= 325; fileidx++) {
+
+      // (1) Read alignment files
+      String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
+      File file = new File(aname);
+      List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
+      if (file.exists()) {
+        System.err.println("Processing  "+fileidx);
+        alignment_list = TranslationAlignment.readFromFile(file);
       } else {
-        System.err.println(name + " doesn't exist.");
+        System.err.println("Skip "+fileidx);
       }
-    }
-    System.err.println("Total " + alignment_list.size() + " sentences load.");
 
-    // Read Chinese Trees
-    ChineseTreeReader ctr = new ChineseTreeReader();
-    for(int i = 1; i <= 325; i++) {
-      String name =
-        String.format("/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/chtb_%04d.fid", i);
-      System.err.println(name);
-      ctr.readMoreTrees(name);
-    }
+      // (2) Read Chinese Trees
+      ChineseTreeReader ctr = new ChineseTreeReader();
+      String ctbname =
+        String.format("/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/chtb_%04d.fid", fileidx);
+      ctr.readMoreTrees(ctbname);
 
-    System.err.println("done loading Chinese trees");
+      /*
+      Set<String> chineseSents = new HashSet<String>();
 
-    Set<String> chineseSents = new HashSet<String>();
-
-
-    for(int i = 0; i < ctr.size(); i++) {
-      Sentence<HasWord> sent = AbstractTreeReader.getWords(ctr.getTree(i));
-      StringBuilder sb = new StringBuilder();
-      for(HasWord hw : sent) {
-        sb.append(hw.word());
+      for(int i = 0; i < ctr.size(); i++) {
+        Sentence<HasWord> sent = AbstractTreeReader.getWords(ctr.getTree(i));
+        StringBuilder sb = new StringBuilder();
+        for(HasWord hw : sent) {
+          sb.append(hw.word());
+        }
+        String normSent = ctr.normalizeSentence(sb.toString());
+        chineseSents.add(normSent);
+        //System.out.println("chineseSents: "+normSent);
       }
-      String normSent = ctr.normalizeSentence(sb.toString());
-      chineseSents.add(normSent);
-      //System.out.println("chineseSents: "+normSent);
-    }
+      */
 
-
-    for (TranslationAlignment ta : alignment_list) {
-      List<Tree> treesWithSameWords = ctr.getTreesWithWords(ta.source_raw_);
-      if (treesWithSameWords.size() == 0) {
-        System.err.println("Can't find one Tree in CTB: "+ta.source_raw_);
-        // skip for now
-      } else if (treesWithSameWords.size() > 1) {
-        // check if every of themm are the same
-        Tree baseTree = treesWithSameWords.get(0);
-        for(Tree t : treesWithSameWords) {
-          if (!t.equals(baseTree)) {
-            System.out.println("Different trees:");
-            baseTree.pennPrint();
-            t.pennPrint();
+      for (TranslationAlignment ta : alignment_list) {
+        List<Tree> treesWithSameWords = ctr.getTreesWithWords(ta.source_raw_);
+        if (treesWithSameWords.size() == 0) {
+          System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, ta.source_raw_);
+          // skip for now
+        } else if (treesWithSameWords.size() > 1) {
+          // check if every of themm are the same
+          Tree baseTree = treesWithSameWords.get(0);
+          for(Tree t : treesWithSameWords) {
+            if (!t.equals(baseTree)) {
+              System.out.println("Different trees:");
+              baseTree.pennPrint();
+              t.pennPrint();
+            }
           }
         }
       }
