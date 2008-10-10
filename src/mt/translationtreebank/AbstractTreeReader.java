@@ -14,7 +14,6 @@ abstract class AbstractTreeReader {
   TreebankLangParserParams tlpp_;
   TreePrint treeprint_;
   TreeTransformer tt_;
-  String delimiter_;
 
   private PrintWriter pw = new PrintWriter(System.out, true);
 
@@ -51,29 +50,6 @@ abstract class AbstractTreeReader {
     return trees_.get(index);
   }
 
-  public List<Tree> getTreesWithWords(String sentStr) {
-    String normSent = normalizeSentence(sentStr);
-    List<Tree> trees = new ArrayList<Tree>();
-    // TODO: can be cached to make it faster
-    for(Tree t : trees_) {
-      StringBuilder sb = new StringBuilder();
-      Sentence<HasWord> hws = getWords(t);
-      //for (HasWord hw : hws) {
-      for(int i = 0; i < hws.size(); i++) {
-        HasWord hw = hws.get(i);
-        sb.append(hw.word());
-        if (i != hws.size()-1) {
-          sb.append(delimiter_);
-        }
-      }
-      String normTreeStr = normalizeSentence(sb.toString());
-      if (normSent.equals(normTreeStr)) {
-        trees.add(t);
-      }
-    }
-    return trees;
-  }
-    
   public int size() {
     return trees_.size();
   }

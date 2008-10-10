@@ -17,7 +17,6 @@ class ChineseTreeReader extends AbstractTreeReader {
     tlpp_ = new ChineseTreebankParserParams();
     treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket,basicDependencies", tlpp_.treebankLanguagePack());
     tt_ = new DummyTreeTransformer();
-    delimiter_ = "";
     ce_ = new ChineseEscaper();
   }
 
@@ -35,6 +34,27 @@ class ChineseTreeReader extends AbstractTreeReader {
     output = output.replaceAll("・", "·");
     return output;
   }
+
+  public List<Tree> getTreesWithWords(String sentStr) {
+    String normSent = normalizeSentence(sentStr);
+    List<Tree> trees = new ArrayList<Tree>();
+    // TODO: can be cached to make it faster
+    for(Tree t : trees_) {
+      StringBuilder sb = new StringBuilder();
+      Sentence<HasWord> hws = getWords(t);
+      //for (HasWord hw : hws) {
+      for(int i = 0; i < hws.size(); i++) {
+        HasWord hw = hws.get(i);
+        sb.append(hw.word());
+      }
+      String normTreeStr = normalizeSentence(sb.toString());
+      if (normSent.equals(normTreeStr)) {
+        trees.add(t);
+      }
+    }
+    return trees;
+  }
+
 
   
   public static void main(String args[]) throws IOException {

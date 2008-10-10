@@ -25,6 +25,35 @@ class TranslationAlignment {
     return wellformed_;
   }
 
+  private String[] fixTranslation(String[] t) {
+    String[] newT = new String[t.length];
+    // fix 'Ltd.'
+    for(int i = 0; i < newT.length; i++) {
+      if (t[i].equals("Lt."))
+        newT[i] = "Ltd.";
+      //else if (t[i].equals("etc"))
+      //  newT[i] = "etc.";
+      else 
+        newT[i] = t[i];
+    }
+
+    // fix 'etc .' at the end
+    
+    return newT;
+  }
+
+  private int[][] fixMatrix(int[][] m, int newRowLength) {
+    if(newRowLength != m.length-1) throw new RuntimeException("new row length should be just one less");
+    int[][] newM = new int[newRowLength][];
+    for(int i = 0; i < newRowLength; i++) {
+      for(int j = 0; j < m[i].length; j++) {
+        newM[i][j] = m[i][j];
+      }
+    }
+    return newM;  
+  }
+
+
   public TranslationAlignment(String dataStr) {
     String regex
       = "<source_raw>(.*)</source_raw>\\n"+
@@ -49,7 +78,7 @@ class TranslationAlignment {
       String translationStr = matcher.group(4);
       translationStr = translationStr.trim();
       if (translationStr.length()==0) { wellformed_ = false; return; }
-      String[] translation_ = translationStr.split("\\s+");
+      translation_ = translationStr.split("\\s+");
 
       // Read in the 2D matrix
       String matrixStr = matcher.group(5);
@@ -77,6 +106,12 @@ class TranslationAlignment {
           row[e_i] = Integer.parseInt(elements[e_i]);
         }
         matrix_[r_i] = row;
+      }
+
+      /* fix errors in translation_ : all 'Ltd.' become 'Lt.'. */
+      translation_ = fixTranslation(translation_);
+      if (matrix_.length != translation_.length+1) {
+        matrix_ = fixMatrix(matrix_, translation_.length+1);
       }
 
     } else {
@@ -116,9 +151,9 @@ class TranslationAlignment {
 
   // testing only
   public static void main(String[] args) throws IOException {
-
+    int validAlignments = 0;
+    int numtreepairs = 0;
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
-
       // (1) Read alignment files
       String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
       File file = new File(aname);
@@ -136,38 +171,42 @@ class TranslationAlignment {
         String.format("/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/chtb_%04d.fid", fileidx);
       ctr.readMoreTrees(ctbname);
 
-      /*
-      Set<String> chineseSents = new HashSet<String>();
+      // (3) Read English Trees
+      EnglishTreeReader etr = new EnglishTreeReader();
+      String ename =
+        String.format("/u/nlp/scr/data/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/chtb_%03d.mrg.gz", 
+                      fileidx);
+      etr.readMoreTrees(ename);
 
-      for(int i = 0; i < ctr.size(); i++) {
-        Sentence<HasWord> sent = AbstractTreeReader.getWords(ctr.getTree(i));
-        StringBuilder sb = new StringBuilder();
-        for(HasWord hw : sent) {
-          sb.append(hw.word());
-        }
-        String normSent = ctr.normalizeSentence(sb.toString());
-        chineseSents.add(normSent);
-        //System.out.println("chineseSents: "+normSent);
-      }
-      */
+      // (4) Going through entries in (1) and check if they exist in (2)
+      // (5) Going through entries in (1) and check if they exist in (3)
 
+      List<TreePair> treepairs = new ArrayList<TreePair>();
       for (TranslationAlignment ta : alignment_list) {
-        List<Tree> treesWithSameWords = ctr.getTreesWithWords(ta.source_raw_);
-        if (treesWithSameWords.size() == 0) {
+        List<Tree> chTrees = ctr.getTreesWithWords(ta.source_raw_);
+        if (chTrees.size() == 0) {
           System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, ta.source_raw_);
+          continue;
           // skip for now
-        } else if (treesWithSameWords.size() > 1) {
-          // check if every of themm are the same
-          Tree baseTree = treesWithSameWords.get(0);
-          for(Tree t : treesWithSameWords) {
-            if (!t.equals(baseTree)) {
-              System.out.println("Different trees:");
-              baseTree.pennPrint();
-              t.pennPrint();
-            }
-          }
+        } else if (chTrees.size() > 1) {
+          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, ta.source_raw_);
         }
+
+        List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
+        if (enTrees.size() == 0) {
+          System.err.printf("i=%d: Can't find tree in PTB: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
+          continue;
+          // skip for now
+        } else if (enTrees.size() > 1) {
+          //System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, ta.translation_raw_);
+        }
+        TreePair tp = new TreePair(ta, enTrees, chTrees);
+        treepairs.add(tp);
       }
+      validAlignments += alignment_list.size();
+      numtreepairs += treepairs.size();
     }
+    System.err.println("# valid translation alignment = "+validAlignments);
+    System.err.println("# Tree Pairs = "+numtreepairs);
   }
 }
