@@ -227,7 +227,7 @@ class TranslationAlignment {
   public static void main(String[] args) throws IOException {
     int validAlignments = 0;
     int numtreepairs = 0;
-    for(int fileidx = 1; fileidx <= 325; fileidx++) {
+    for(int fileidx = 10; fileidx <= 11; fileidx++) {
       // (1) Read alignment files
       String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
       File file = new File(aname);
@@ -284,7 +284,7 @@ class TranslationAlignment {
       validAlignments += alignment_list.size();
       numtreepairs += treepairs.size();
       if (alignment_list.size() > 0) {
-        //printAlignmentGrids(alignment_list);
+        printAlignmentGrids(alignment_list);
       }
     }
 

@@ -25,23 +25,6 @@ class EnglishTreeReader extends AbstractTreeReader {
     readMoreTrees(filename);
   }
   
-  /*
-  public String normalizeSentence(String sent) {
-    List<HasWord> words = new ArrayList<HasWord>();
-    words.add(new Word(sent));
-    words = ptbe_.apply(words);
-    String output = words.get(0).word();
-    return output;
-  }
-
-  public String normalizeSentence(String[] sents) {
-    List<HasWord> words = new ArrayList<HasWord>();
-    for(String w : sents) words.add(new Word(w));
-    words = ptbe_.apply(words);
-    return StringUtils.join(words, " ");
-  }
-  */
-
   public String createSignature(String[] sents) {
     String output = StringUtils.join(sents, " ");
     output = output.replaceAll("\\s", "");
@@ -55,7 +38,6 @@ class EnglishTreeReader extends AbstractTreeReader {
       treeSent[i] = hws.get(i).word();
     }
     return StringUtils.join(treeSent, "");
-    //return createSignature(treeSent);
   }
 
   // This one is different from the Chinese one, because
