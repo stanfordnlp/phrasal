@@ -5,6 +5,12 @@ import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
 import mt.metrics.IncrementalEvaluationMetric;
 
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +44,8 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		int sz = metrics.length;
 		this.metricTypes = new MetricType[sz];
 		this.metricProperties = new Map[sz];
+    for(int i=0; i<sz; ++i)
+      metricTypes[i] = MetricType.full;
   }
 
   public void setWeights(double[] w) {
@@ -182,5 +190,57 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		public IncrementalEvaluationMetric<TK, FV> clone() {
       return new LCIncrementalMetric(this);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void main(String[] args) throws IOException {
+    if (args.length == 0) {
+      System.err.println("Usage:\n\tjava LinearCombinationMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
+      System.exit(-1);
+    }
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
+
+    TERMetric<IString,String> ter = new TERMetric<IString,String>(referencesList);
+    TERMetric<IString,String>.TERIncrementalMetric terIncMetric = ter.getIncrementalMetric();
+
+		BLEUMetric<IString,String> bleu = new BLEUMetric<IString,String>(referencesList);
+		BLEUMetric<IString,String>.BLEUIncrementalMetric bleuIncMetric = bleu.getIncrementalMetric();
+
+		LinearCombinationMetric<IString,String> lc = new LinearCombinationMetric<IString,String>(new double[] {1.0,1.0}, bleu, ter);
+		LinearCombinationMetric<IString,String>.LCIncrementalMetric lcIncMetric = lc.getIncrementalMetric();
+
+    LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
+
+    for (String line; (line = reader.readLine()) != null; ) {
+      line = line.replaceAll("\\s+$", "");
+      line = line.replaceAll("^\\s+", "");
+      Sequence<IString> translation = new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+")));
+      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(translation, null, 0);
+      terIncMetric.add(tran);
+      bleuIncMetric.add(tran);
+      lcIncMetric.add(tran);
+    }
+    reader.close();
+
+    double d = (lcIncMetric.score()-terIncMetric.score()-bleuIncMetric.score());
+    if(Math.abs(d) > 1e-3)
+      throw new RuntimeException("Error = "+d);
+    System.out.printf("TER-BLEU = %.3f\nTER = %.3f\n", -100*lcIncMetric.score(),-100*terIncMetric.score());
+    double[] ngramPrecisions = bleuIncMetric.ngramPrecisions();
+		System.out.printf("BLEU = %.3f, ", 100*bleuIncMetric.score());
+		for (int i = 0; i < ngramPrecisions.length; i++) {
+			if (i != 0) {
+				System.out.print("/");
+			}
+			System.out.printf("%.3f", ngramPrecisions[i]*100);
+		}
+		System.out.printf(" (BP=%.3f, ration=%.3f %d/%d)\n", bleuIncMetric.brevityPenalty(), ((1.0*bleuIncMetric.candidateLength())/bleuIncMetric.effectiveReferenceLength()),
+				 bleuIncMetric.candidateLength(), bleuIncMetric.effectiveReferenceLength());
+		
+		System.out.printf("\nPrecision Details:\n");
+		int[][] precCounts = bleuIncMetric.ngramPrecisionCounts();
+		for (int i = 0; i < ngramPrecisions.length; i++) {
+			System.out.printf("\t%d:%d/%d\n", i, precCounts[i][0], precCounts[i][1]);
+		}
   }
 }

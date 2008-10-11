@@ -18,6 +18,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 public class MTScorer implements ExternalMTScorer {
 
   public static final int MAX_VALUE = 100;
+  Properties prop;
 
   boolean verbose;
   List<Quadruple<Double,Double,Double,Double>> terCosts;
@@ -47,7 +48,7 @@ public class MTScorer implements ExternalMTScorer {
   }
 
   public void init(String configFile) {
-    Properties prop = new Properties();
+    prop = new Properties();
     if(configFile != null) {
       try {
         IOTools.addConfigFileProperties(prop, configFile);
@@ -111,7 +112,6 @@ public class MTScorer implements ExternalMTScorer {
     // Create hypotheses:
     Sequence<IString> hyp = str2seq(mtoutput);
     // Create metrics:
-    BLEUMetric.BLEUIncrementalMetric bleuI = new BLEUMetric(ref).getIncrementalMetric();
     BLEUMetric.BLEUIncrementalMetric sbleuI = new BLEUMetric(ref,true).getIncrementalMetric();
     NISTMetric nist = null;
     NISTMetric.NISTIncrementalMetric nistI = null;
@@ -123,13 +123,11 @@ public class MTScorer implements ExternalMTScorer {
         System.err.println("WARNING: readAllReferences apparently wasn't called.");
       nistI = nist.getIncrementalMetric();
     }
-    bleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     sbleuI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     if(withNIST)
       nistI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     // Add features:
     Counter<String> c = new ClassicCounter<String>();
-    addNgramPrecisionScores(c,bleuI);
     addNgramPrecisionScores(c,sbleuI);
     if(withNIST)
       addNgramPrecisionScores(c,nistI);
@@ -158,28 +156,56 @@ public class MTScorer implements ExternalMTScorer {
     TERcost.set_default_insert_cost(insCost);
     TERcost.set_default_delete_cost(delCost);
     TERcost.set_default_shift_cost(shiftCost);
-    TERMetric.TERIncrementalMetric terI = new TERMetric(ref).getIncrementalMetric();
+    TERMetric.TERIncrementalMetric terI = new TERMetric(ref,true).getIncrementalMetric();
     terI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     Formatter f = new Formatter();
     f.format("ter_score_%g_%g_%g_%g",subCost,insCost,delCost,shiftCost);
     addToCounter(c,f.toString(),1.0+terI.score());
+    addToCounter(c,f.toString()+"_ins",-safeLog(1.0+terI.insCount()));
+    addToCounter(c,f.toString()+"_del",-safeLog(1.0+terI.delCount()));
+    addToCounter(c,f.toString()+"_sub",-safeLog(1.0+terI.subCount()));
+    addToCounter(c,f.toString()+"_sft",-safeLog(1.0+terI.sftCount()));
   }
   
   private void addNgramPrecisionScores(Counter<String> c, NgramPrecisionIncrementalMetric<String, String> m) {
     String name = m.getClass().toString().replace("class ","").replaceFirst("\\$.*","");
+    boolean isBLEU = name.equals("mt.metrics.BLEUMetric");
+    boolean isNIST = name.equals("mt.metrics.NISTMetric");
     double score = m.score();
     double bp = m.brevityPenalty();
     double[] precisions = m.precisions();
+    if(isNIST)
+      for(int i=0; i<precisions.length; ++i)
+        precisions[i] /= 20.0;
     addToCounter(c,name+"_score",score);
     addToCounter(c,name+"_bp",bp);
     addToCounter(c,name+"_precision",score/bp);
-    addToCounter(c,"log_"+name+"_score",-Math.log(score));
-    addToCounter(c,"log_"+name+"_bp",-Math.log(bp));
-    addToCounter(c,"log_"+name+"_precision",-Math.log(score/bp));
-    addToCounter(c,name+"_1gram_precision",precisions[0]);
-    addToCounter(c,name+"_2gram_precision",precisions[1]);
-    addToCounter(c,name+"_3gram_precision",precisions[2]);
-    addToCounter(c,name+"_4gram_precision",precisions[3]);
+    // Unsmoothed ngram precisions:
+    for(int i=1; i<=4; ++i)
+      addToCounter(c,name+"_"+i+"gram_precision",precisions[i-1]);
+    double sum = 0;
+    // BLEU equation:
+    for(int i=1; i<=4; ++i) {
+      sum += safeLog(precisions[i-1]);
+      addToCounter(c,name+"_bleu"+i,bp*Math.exp(sum/i));
+    }
+    sum = 0;
+    // NIST equation:
+    for(int i=1; i<=precisions.length; ++i) {
+      sum += precisions[i-1];
+      addToCounter(c,name+"_nist"+i,bp*(sum/i));
+    }
+    if(isBLEU) {
+      // Smoothed BLEU:
+      precisions = ((BLEUMetric.BLEUIncrementalMetric)m).smoothNgramPrecisions();
+      for(int i=1; i<=4; ++i)
+        addToCounter(c,name+"_"+i+"gram_smoothed_precision",precisions[i-1]);
+      sum = 0;
+      for(int i=1; i<=4; ++i) {
+        sum += safeLog(precisions[i-1]);
+        addToCounter(c,name+"_sbleu"+i,bp*Math.exp(1.0/i*sum));
+      }
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -192,5 +218,12 @@ public class MTScorer implements ExternalMTScorer {
     if(Math.abs(v) > MAX_VALUE)
       v = 0.0;
     c.setCount(feature,v);
+    c.setCount(feature+"_log",-safeLog(v));
+  }
+
+  private double safeLog(double x) {
+    if(x <= 0)
+      return -100;
+    return Math.log(x);
   }
 }

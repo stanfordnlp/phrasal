@@ -379,7 +379,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return logScore(matchCounts.length);
 		}
 		
-		private double smoothLogScore(int max) {
+		double smoothLogScore(int max) {
 			double ngramPrecisionScore = 0;
 
 			double[] precisions = smoothNgramPrecisions();

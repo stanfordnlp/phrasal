@@ -7,6 +7,8 @@ import java.util.List;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 
 import mt.base.NBestListContainer;
 import mt.base.RawSequence;
@@ -16,17 +18,25 @@ import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
 
 import mt.reranker.ter.TERcalc;
+import mt.reranker.ter.TERalignment;
 
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
+
+  enum EditType { ins, del, sub, sft };
+  boolean countEdits = true;
+
+  public TERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
+    this.referencesList = referencesList;
+    this.countEdits = countEdits;
+  }
 
   public TERMetric(List<List<Sequence<TK>>> referencesList) {
     this.referencesList = referencesList;
   }
 
   @Override
-  //public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
   public TERIncrementalMetric getIncrementalMetric() {
     return new TERIncrementalMetric();
   }
@@ -47,13 +57,25 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     return 1.0;
   }
 
-  public double calcTER(ScoredFeaturizedTranslation<TK, FV> trans, int idx) {
+  public double calcTER(ScoredFeaturizedTranslation<TK, FV> trans, int idx, double[] editCounts) {
     List<Sequence<TK>> refs = referencesList.get(idx);
     double best = Double.POSITIVE_INFINITY;
+    TERalignment bestAl = null;
     String hyp = trans.translation.toString();
     for (Sequence<TK> ref : refs) {
-      double ter = TERcalc.TER(hyp, ref.toString()).score();
-      if (ter < best) best = ter;
+      TERalignment terAl = TERcalc.TER(hyp, ref.toString());
+      double ter = terAl.score();
+      if (ter < best) {
+        best = ter;
+        bestAl = terAl;
+      }
+    }
+    if(editCounts != null) {
+      bestAl.scoreDetails();
+      editCounts[EditType.ins.ordinal()] += bestAl.numIns;
+      editCounts[EditType.del.ordinal()] += bestAl.numDel;
+      editCounts[EditType.sub.ordinal()] += bestAl.numSub;
+      editCounts[EditType.sft.ordinal()] += bestAl.numSft;
     }
     return best;
   }
@@ -61,11 +83,15 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   public class TERIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
     double[] scores = new double[referencesList.size()];
     boolean[] nulls = new boolean[referencesList.size()];
+    double[] editCounts = null;
     double scoreTotal = 0;
     int cnt = 0;
     int nullCnt = 0;
 
-    public TERIncrementalMetric() { }
+    public TERIncrementalMetric() { 
+      if(countEdits)
+        editCounts = new double[EditType.values().length];
+    }
 
     public TERIncrementalMetric(TERIncrementalMetric p) {
       scores = p.scores.clone();
@@ -82,7 +108,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
         nulls[cnt++] = true;
         nullCnt++;
       } else {
-        scoreTotal += scores[cnt] = calcTER(trans, cnt);
+        scoreTotal += scores[cnt] = calcTER(trans, cnt, editCounts);
         cnt++;
       }
       return this;
@@ -96,6 +122,8 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     @Override
     public IncrementalEvaluationMetric<TK, FV> replace(int index,
                                                        ScoredFeaturizedTranslation<TK, FV> trans) {
+      if(countEdits)
+        throw new RuntimeException("TERMetric: can't both use edit counts and replace().");
       scoreTotal -= scores[index];
       if (trans == null) {
         scores[index] = 0;
@@ -108,7 +136,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
           nulls[index] = false;
           nullCnt--;
         }
-        scoreTotal += scores[index] = calcTER(trans, index);
+        scoreTotal += scores[index] = calcTER(trans, index, null);
       }
       return this;
     }
@@ -148,6 +176,10 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       return new TERIncrementalMetric(this);
     }
 
+    public double insCount() { return editCounts[EditType.ins.ordinal()]; }
+    public double delCount() { return editCounts[EditType.del.ordinal()]; }
+    public double subCount() { return editCounts[EditType.sub.ordinal()]; }
+    public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
   }
 
   @SuppressWarnings("unchecked")
