@@ -21,6 +21,8 @@ class TranslationAlignment {
   int[][] matrix_;
   boolean wellformed_ = true;
 
+  private static boolean DEBUG = true;
+
   private ChineseEscaper ce_ = new ChineseEscaper();
   private PTBEscapingProcessor ptbe_ = new PTBEscapingProcessor();
 
@@ -34,8 +36,8 @@ class TranslationAlignment {
     for(int i = 0; i < newT.length; i++) {
       if (t[i].equals("Lt."))
         newT[i] = "Ltd.";
-      //else if (t[i].equals("etc"))
-      //  newT[i] = "etc.";
+      else if (t[i].equals("etc"))
+        newT[i] = "etc.";
       else 
         newT[i] = t[i];
     }
@@ -113,12 +115,34 @@ class TranslationAlignment {
           System.out.println("  <td>&nbsp;</td>");
         else if (ta.matrix_[tidx][sidx] == 1)
           System.out.printf("    <td bgcolor=\"black\">%d,%d</td>\n", tidx, sidx);
-        else if (ta.matrix_[tidx][sidx] > 2)
-          System.err.println("Bigger than 1?");
+        else if (ta.matrix_[tidx][sidx] == 2)
+          System.out.printf("    <td bgcolor=\"red\">%d,%d</td>\n", tidx, sidx);
+        else if (ta.matrix_[tidx][sidx] == 3)
+          System.out.printf("    <td bgcolor=\"green\">%d,%d</td>\n", tidx, sidx);
       }
       System.out.println("</tr>");
     }
     System.out.println("</table>");
+  }
+
+  public TranslationAlignment(String[] source, String[] translation, int[][] matrix) {
+    this.source_ = new String[source.length];
+    this.translation_ = new String[translation.length];
+    this.matrix_ = new int[translation.length+1][];
+
+    for(int i = 0; i < translation.length; i++) {
+      this.translation_[i] = translation[i];
+    }
+    for(int j = 0; j < source.length; j++) {
+      this.source_[j] = source[j];
+    }
+
+    for(int i = 0; i < translation.length+1; i++) {
+      this.matrix_[i] = new int[source.length+1];
+      for(int j = 0; j < source.length+1; j++) {
+        this.matrix_[i][j] = matrix[i][j];
+      }
+    }
   }
 
   public TranslationAlignment(String dataStr) {
@@ -172,7 +196,12 @@ class TranslationAlignment {
         }
 
         for(int e_i = 0; e_i < elements.length; e_i++) {
-          row[e_i] = Integer.parseInt(elements[e_i]);
+          int element = Integer.parseInt(elements[e_i]);
+          row[e_i] = element;
+          // ignore "possible" alignemt
+          if (element == 2) { row[e_i] = 0; }
+          if (element > 2) throw new RuntimeException("In alignment file: Bigger than 2?");
+
         }
         matrix_[r_i] = row;
       }
@@ -218,16 +247,307 @@ class TranslationAlignment {
     return alignment_list;
   }
 
+  public static TranslationAlignment fixAlignmentGridWithEnglishTree(
+    TranslationAlignment ta, List<Tree> enTrees) {
+    int totalEnWords = 0;
+    List<String> leaveslist = new ArrayList<String>();
+    
+    for(Tree eT : enTrees) {
+      Sentence<HasWord> sentence = eT.yield();
+      for (int i = 0; i < sentence.size(); i++) {
+        HasWord hw = sentence.get(i);
+        leaveslist.add(hw.word());
+      }
+    }
+
+    String[] leaves = new String[leaveslist.size()];
+    for(int i = 0; i < leaves.length; i++) leaves[i] = leaveslist.get(i);
+    
+    ta = fixAlignmentGrid_Scores(ta, leaves);
+    String[] translation = ta.translation_;
+
+
+    String str1 = StringUtils.join(leaves, "");
+    String str2 = StringUtils.join(translation, "");
+    if (!str1.equals(str2)) {
+      throw new RuntimeException("\n"+str1+"\n != \n"+str2);
+    }
+
+    List<List<Integer>> indexgroups = getIndexGroups(leaves, translation);
+
+    int[][] newMatrix = new int[ta.matrix_.length][];
+    int translationEnd = ta.matrix_.length;
+    int sourceEnd = ta.matrix_[0].length;
+
+    for (int i = 0; i < translationEnd; i++) {
+      for (int j = 0; j < sourceEnd; j++) {
+        newMatrix[i] = new int[ta.matrix_[i].length];
+      }
+    }
+
+    boolean diff = false;
+    for (int j = 0; j < sourceEnd; j++) {
+      for(List<Integer> idxgroup : indexgroups) {
+        boolean result = false;
+        for(Integer idx : idxgroup) {
+          if (ta.matrix_[idx][j] > 1) {
+            result = true;
+          }
+        }
+        for(Integer idx : idxgroup) {
+          if (result && ta.matrix_[idx][j] == 0) {
+            newMatrix[idx][j] = 3; // make it green
+            diff = true;
+          } else {
+            newMatrix[idx][j] = ta.matrix_[idx][j];
+          }
+        }
+      }
+    }
+    
+    if (diff) {
+      System.out.println("<p>Before<p>\n");
+      printAlignmentGrid(ta);
+      for (int i = 0; i < translationEnd; i++) {
+        for (int j = 0; j < sourceEnd; j++) {
+          ta.matrix_[i][j] = newMatrix[i][j];
+        }
+      }
+      System.out.println("<p>After<p>\n");
+      printAlignmentGrid(ta);
+      for (int i = 0; i < translationEnd; i++) {
+        for (int j = 0; j < sourceEnd; j++) {
+          ta.matrix_[i][j] = newMatrix[i][j];
+        }
+      }
+      System.out.println("<p>After<p>\n");
+      printAlignmentGrid(ta);
+    }
+
+
+    return ta;
+  }
+  
+  // Cases like "6:3". In the alignment file, it's separated
+  public static TranslationAlignment fixAlignmentGrid_Scores(TranslationAlignment ta, String[] leaves) {
+    String regex = "^(\\d+):(\\d+)$";
+    Pattern pattern = Pattern.compile(regex);
+    int needFix = -1;
+    String first = null, second = null;
+    for (int i = 0; i < ta.translation_.length; i++) {
+      String t = ta.translation_[i];
+      Matcher matcher = pattern.matcher(t);
+      if (matcher.find() && !t.equals(leaves[i])) {
+        first = matcher.group(1);
+        second = matcher.group(2);
+        needFix = i+1; // add one because 0 is NULL
+        break;
+      }
+    }
+    boolean fixed = false;
+    while(needFix >= 0) {
+      fixed = true;
+      int[][] newMatrix = new int[ta.matrix_.length+2][];
+      String[] newTranslation = new String[ta.translation_.length+2];
+      for(int i = 0; i < newMatrix.length; i++) {
+        newMatrix[i] = new int[ta.matrix_[0].length];
+        for(int j = 0; j < ta.matrix_[0].length; j++) {
+          if (i <= needFix) {
+            newMatrix[i][j] = ta.matrix_[i][j];
+          } else if (i == needFix+1 || i == needFix+2) {
+            newMatrix[i][j] = ta.matrix_[needFix][j];
+          } else {
+            newMatrix[i][j] = ta.matrix_[i-2][j];
+          }
+        }
+      }
+
+      int needFixInTranslation = needFix - 1; // in translation_, NULL is not there
+      for(int i = 0; i < newTranslation.length; i++) {
+        if (i < needFixInTranslation) {
+          newTranslation[i] = ta.translation_[i];
+        } else if (i==needFixInTranslation) {
+          newTranslation[i] = first;
+        } else if (i==needFixInTranslation+1) {
+          newTranslation[i] = ":";
+        } else if (i==needFixInTranslation+2) {
+          newTranslation[i] = second;
+        } else {
+          newTranslation[i] = ta.translation_[i-2];
+        }
+      }
+      ta = new TranslationAlignment(ta.source_, newTranslation, newMatrix);
+      needFix = -1;
+      first = second = null;
+      for (int i = 0; i < ta.translation_.length; i++) {
+        String t = ta.translation_[i];
+        Matcher matcher = pattern.matcher(t);
+        if (matcher.find() && !t.equals(leaves[i])) {
+          first = matcher.group(1);
+          second = matcher.group(2);
+          needFix = i+1; // add one because 0 is NULL
+          break;
+        }
+      }
+    }
+    if (fixed && DEBUG) { 
+      System.err.println("matrix changed on 'fixAlignmentGrid_Scores'"); 
+      System.err.println(StringUtils.join(ta.translation_, " "));
+    }
+    return ta;
+  }
+
+  public static TranslationAlignment fixAlignmentGridOnTranslation(TranslationAlignment ta) {
+    ta = fixAlignmentGridOnTranslation_Poss_Neg(ta);
+    return ta;
+  }
+
+  public static TranslationAlignment fixAlignmentGridOnTranslation_Poss_Neg(TranslationAlignment ta) {
+    // check if there's "BLAH's" case
+    int needFix = -1;
+    boolean cannot = false;
+
+    for (int i = 0; i < ta.translation_.length; i++) {
+      String t = ta.translation_[i];
+      if (t.endsWith("'s") && !t.equals("'s")) { needFix = i+1 ; break; } // add one because 0 is NULL
+      if (t.equals("cannot")) { needFix = i+1; cannot = true; break; }
+    }
+
+    int[][] newMatrix = new int[ta.matrix_.length+1][];
+    String[] newTranslation = new String[ta.translation_.length+1];
+    boolean fixed = false;
+    while (needFix >= 0) {
+      fixed = true;
+      // insert a row after 'needFix'
+      for(int i = 0; i < newMatrix.length; i++) {
+        newMatrix[i] = new int[ta.matrix_[0].length];
+        for(int j = 0; j < ta.matrix_[0].length; j++) {
+          if (i <= needFix) {
+            newMatrix[i][j] = ta.matrix_[i][j];
+          } else if (i==needFix+1) {
+            newMatrix[i][j] = ta.matrix_[needFix][j];
+          } else {
+            newMatrix[i][j] = ta.matrix_[i-1][j];
+          }
+        }
+      }
+      int needFixInTranslation = needFix - 1; // in translation_, NULL is not there
+      for(int i = 0; i < newTranslation.length; i++) {
+        if (i < needFixInTranslation) {
+          newTranslation[i] = ta.translation_[i];
+        } else if (i==needFixInTranslation) {
+          if (cannot) {
+            newTranslation[i] = "can";
+          } else {
+            newTranslation[i] = ta.translation_[i].substring(0, ta.translation_[i].length()-2);
+          }
+        } else if (i==needFixInTranslation+1) {
+          if (cannot)
+            newTranslation[i] = "not";
+          else
+            newTranslation[i] = "'s";
+        } else {
+          newTranslation[i] = ta.translation_[i-1];
+        }
+      }
+      ta = new TranslationAlignment(ta.source_, newTranslation, newMatrix);
+      needFix = -1;
+      for (int i = 0; i < ta.translation_.length; i++) {
+        String t = ta.translation_[i];
+        if (t.endsWith("'s") && !t.equals("'s")) { needFix = i+1 ; break; } // add one because 0 is NULL 
+      }
+    }
+    if (fixed && DEBUG) { 
+      System.err.println("matrix changed on 'fixAlignmentGridOnTranslation_Poss_Neg'");
+      System.err.println(StringUtils.join(ta.translation_, " "));
+    }
+    return ta;
+  }
+  
   public static TranslationAlignment fixAlignmentGridWithChineseTree(
     TranslationAlignment ta, List<Tree> chTrees) {
-    return null;
+    if (chTrees.size() > 1) {
+      //System.err.println("chTrees > 1");
+    }
+    Sentence<HasWord> sentence = chTrees.get(0).yield();
+    String[] leaves = new String[sentence.size()];
+    for (int i = 0; i < sentence.size(); i++) {
+      HasWord hw = sentence.get(i);
+      leaves[i] = hw.word();
+    }
+    
+    String[] source = ta.source_;
+    List<List<Integer>> indexgroups = getIndexGroups(leaves, source);
+
+    int[][] newMatrix = new int[ta.matrix_.length][];
+    int translationEnd = ta.matrix_.length;
+    int sourceEnd = ta.matrix_[0].length;
+
+    for (int i = 0; i < translationEnd; i++) {
+      for (int j = 0; j < sourceEnd; j++) {
+        newMatrix[i] = new int[ta.matrix_[i].length];
+      }
+    }
+
+    boolean diff = false;
+    for (int i = 0; i < translationEnd; i++) {
+      for(List<Integer> idxgroup : indexgroups) {
+        boolean result = false;
+        for(Integer idx : idxgroup) {
+          if (ta.matrix_[i][idx] > 1) {
+            result = true;
+          }
+        }
+        for(Integer idx : idxgroup) {
+          if (result && ta.matrix_[i][idx] != 1) {
+            newMatrix[i][idx] = 2; // make it red
+            diff = true;
+          } else {
+            newMatrix[i][idx] = ta.matrix_[i][idx];
+          }
+        }
+      }
+    }
+    if (DEBUG) {
+      if (diff) {
+      System.out.println("<p>Before<p>\n");
+      printAlignmentGrid(ta);
+      for (int i = 0; i < translationEnd; i++) {
+        for (int j = 0; j < sourceEnd; j++) {
+          ta.matrix_[i][j] = newMatrix[i][j];
+        }
+      }
+      System.out.println("<p>After<p>\n");
+      printAlignmentGrid(ta);
+      }
+    }
+    
+    return ta;
+  }
+  
+  private static List<List<Integer>> getIndexGroups(String[] leaves, String[] source) {
+    List<List<Integer>> indexgroups = new ArrayList<List<Integer>>();
+
+    int tidx = 0;
+    for(int lidx = 0; lidx < leaves.length; lidx++) {
+      List<Integer> indexgroup = new ArrayList<Integer>();
+      String leaf = leaves[lidx];
+      StringBuilder chunk = new StringBuilder();
+      while(!leaf.equals(chunk.toString())) {
+        chunk.append(source[tidx]);
+        indexgroup.add(tidx+1); // have to offset by 1, because 0 is NULL
+        tidx++;
+      }
+      indexgroups.add(indexgroup);
+    }
+    return indexgroups;
   }
 
   // testing only
   public static void main(String[] args) throws IOException {
     int validAlignments = 0;
     int numtreepairs = 0;
-    for(int fileidx = 10; fileidx <= 11; fileidx++) {
+    for(int fileidx = 1; fileidx <= 325; fileidx++) {
       // (1) Read alignment files
       String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
       File file = new File(aname);
@@ -257,13 +577,13 @@ class TranslationAlignment {
 
       List<TreePair> treepairs = new ArrayList<TreePair>();
       for (TranslationAlignment ta : alignment_list) {
-        List<Tree> chTrees = ctr.getTreesWithWords(ta.source_raw_);
+        List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
         if (chTrees.size() == 0) {
-          System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, ta.source_raw_);
+          System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, StringUtils.join(ta.source_, " "));
           continue;
           // skip for now
         } else if (chTrees.size() > 1) {
-          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, ta.source_raw_);
+          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
         }
 
         List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
@@ -272,20 +592,20 @@ class TranslationAlignment {
           continue;
           // skip for now
         } else if (enTrees.size() > 1) {
-          //System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, ta.translation_raw_);
+          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
         }
 
         // Fix the Translation Alignment before adding to the TreePair
+        if (DEBUG) System.err.println("i="+fileidx);
+        ta = fixAlignmentGridOnTranslation(ta);
+        ta = fixAlignmentGridWithEnglishTree(ta, enTrees);
         ta = fixAlignmentGridWithChineseTree(ta, chTrees);
-        
+        printAlignmentGrid(ta);
         TreePair tp = new TreePair(ta, enTrees, chTrees);
         treepairs.add(tp);
       }
       validAlignments += alignment_list.size();
       numtreepairs += treepairs.size();
-      if (alignment_list.size() > 0) {
-        printAlignmentGrids(alignment_list);
-      }
     }
 
     System.err.println("# valid translation alignment = "+validAlignments);

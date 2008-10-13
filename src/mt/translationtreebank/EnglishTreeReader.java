@@ -56,6 +56,9 @@ class EnglishTreeReader extends AbstractTreeReader {
       } else if (alignEngSignature.startsWith(treeSig)) {
         // try to combine with next signature
         int nextTreeidx = treeidx+1;
+        List<Tree> newTrees = new ArrayList<Tree>();
+        newTrees.add(t);
+
         while(nextTreeidx < trees_.size()) {
           Tree nextT = trees_.get(nextTreeidx);
           String nextTreeSig = createSignature(nextT);
@@ -64,11 +67,12 @@ class EnglishTreeReader extends AbstractTreeReader {
           boolean outloop = false;
 
           if (alignEngSignature.equals(treeSig)) {
-            trees.add(t);
-            trees.add(nextT);
+            newTrees.add(nextT);
+            trees.addAll(newTrees);
             outloop = true;
             break;
           } else if (alignEngSignature.startsWith(treeSig)) {
+            newTrees.add(nextT);
             nextTreeidx++;
           } else if (alignEngSignature.length() < treeSig.length()) {
             outloop = true;
@@ -114,7 +118,7 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
 
       if (subtree.isPreTerminal() && subtree.value().equals("POS")) {
         Tree leaf = subtree.firstChild();
-        if (leaf.value().equals("s")) {
+        if (leaf.value().equals("s") || leaf.value().equals("'")) {
           leaf.setValue("'s");
         }
       }
@@ -133,6 +137,29 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
       leaves.get(i).setValue(words.get(i).word());
     }
 
+    // fix cases like "aren't", "isn't"
+    for (int i = 0; i < leaves.size()-1; i++) {
+      String val = leaves.get(i).value();
+      String nextval = leaves.get(i+1).value();
+      if (nextval.equals("n't") && 
+          (val.equals("are") || val.equals("is") || val.equals("did"))) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(val).append("n");
+        leaves.get(i).setValue(sb.toString());
+        leaves.get(i+1).setValue("'t");
+      }
+    }
+
+    // fix cases like "etc."
+    for (int i = 0; i < leaves.size(); i++) {
+      String val = leaves.get(i).value();
+      if (val.equals("etc")) {
+        leaves.get(i).setValue("etc.");
+      }
+      if (val.equals("Ltd")) {
+        leaves.get(i).setValue("Ltd.");
+      }
+    }
     return tree;
   }
 }
