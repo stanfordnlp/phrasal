@@ -688,6 +688,9 @@ class TranslationAlignment {
     int validAlignments = 0;
     int numtreepairs = 0;
     int FIDX = Integer.parseInt(args[0]);
+    
+    boolean origTAonly =  Boolean.parseBoolean(args[1]);
+
     for(int fileidx = FIDX; fileidx <= FIDX; fileidx++) {
       // (1) Read alignment files
       String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
@@ -718,39 +721,48 @@ class TranslationAlignment {
 
       List<TreePair> treepairs = new ArrayList<TreePair>();
 
+      if (origTAonly) printAlignmentGridHeader();
       for (TranslationAlignment ta : alignment_list) {
-        List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
-        if (chTrees.size() == 0) {
-          System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, StringUtils.join(ta.source_, " "));
-          continue;
-          // skip for now
-        } else if (chTrees.size() > 1) {
-          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+        if (origTAonly) {
+          printAlignmentGrid(ta);
+        } else {
+          List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
+          if (chTrees.size() == 0) {
+            System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+            continue;
+            // skip for now
+          } else if (chTrees.size() > 1) {
+            System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+          }
+          
+          List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
+          if (enTrees.size() == 0) {
+            System.err.printf("i=%d: Can't find tree in PTB: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
+            continue;
+            // skip for now
+          } else if (enTrees.size() > 1) {
+            System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
+          }
+          
+          // Fix the Translation Alignment before adding to the TreePair
+          if (DEBUG) System.err.println("i="+fileidx);
+          ta = fixAlignmentGridWithChineseTree(ta, chTrees);
+          ta = fixAlignmentGridMergingChinese(ta, chTrees);
+          ta = fixAlignmentGridWithEnglishTree(ta, enTrees);
+          ta = fixAlignmentGridMergingEnglish(ta, enTrees);
+          checkTranslationAlignmentAndEnTrees(ta, enTrees);
+          checkTranslationAlignmentAndChTrees(ta, chTrees);
+          TreePair tp = new TreePair(ta, enTrees, chTrees);
+          treepairs.add(tp);
         }
-
-        List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
-        if (enTrees.size() == 0) {
-          System.err.printf("i=%d: Can't find tree in PTB: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
-          continue;
-          // skip for now
-        } else if (enTrees.size() > 1) {
-          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
-        }
-
-        // Fix the Translation Alignment before adding to the TreePair
-        if (DEBUG) System.err.println("i="+fileidx);
-        ta = fixAlignmentGridWithChineseTree(ta, chTrees);
-        ta = fixAlignmentGridMergingChinese(ta, chTrees);
-        ta = fixAlignmentGridWithEnglishTree(ta, enTrees);
-        ta = fixAlignmentGridMergingEnglish(ta, enTrees);
-        checkTranslationAlignmentAndEnTrees(ta, enTrees);
-        checkTranslationAlignmentAndChTrees(ta, chTrees);
-        TreePair tp = new TreePair(ta, enTrees, chTrees);
-        treepairs.add(tp);
       }
-      TreePair.printAll(treepairs);
+      if (origTAonly) printAlignmentGridBottom();
+
+      if (!origTAonly) {
+        TreePair.printAll(treepairs);
+        numtreepairs += treepairs.size();
+      }
       validAlignments += alignment_list.size();
-      numtreepairs += treepairs.size();
     }
 
     System.err.println("# valid translation alignment = "+validAlignments);
