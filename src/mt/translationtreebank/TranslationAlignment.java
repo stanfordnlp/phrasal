@@ -107,6 +107,18 @@ class TranslationAlignment {
     return newSent;
   }
 
+  public TreeSet<Integer> mapChineseToEnglish(IntPair ip) {
+    TreeSet<Integer> english = new TreeSet<Integer>();
+    for (int i = ip.getSource(); i <= ip.getTarget(); i++) {
+      int matrixSource = i+1;
+      for (int tidx = 1; tidx < translation_.length+1; tidx++) {
+        if (matrix_[tidx][matrixSource] > 0) {
+          english.add(tidx-1);
+        }
+      }
+    }
+    return english;
+  }
 
   public static void printAlignmentGrid(TranslationAlignment ta) {
     System.out.println("<table>");
@@ -405,11 +417,13 @@ class TranslationAlignment {
     return ta;
   }
 
+  // TODO: fix corresponding enTrees?
   public static TranslationAlignment fixAlignmentGridOnTranslation(TranslationAlignment ta) {
     ta = fixAlignmentGridOnTranslation_Poss_Neg(ta);
     return ta;
   }
 
+  // TODO: fix corresponding enTrees?
   public static TranslationAlignment fixAlignmentGridOnTranslation_Poss_Neg(TranslationAlignment ta) {
     // check if there's "BLAH's" case
     int needFix = -1;
