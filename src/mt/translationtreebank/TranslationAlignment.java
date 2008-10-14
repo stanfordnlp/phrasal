@@ -21,7 +21,7 @@ class TranslationAlignment {
   int[][] matrix_;
   boolean wellformed_ = true;
 
-  private static boolean DEBUG = true;
+  private static boolean DEBUG = false;
 
   private ChineseEscaper ce_ = new ChineseEscaper();
   private PTBEscapingProcessor ptbe_ = new PTBEscapingProcessor();
@@ -68,13 +68,21 @@ class TranslationAlignment {
     return source_[i-1];
   }
 
-  public static void printAlignmentGrids(Collection<TranslationAlignment> tas) {
+  public static void printAlignmentGridHeader() {
     System.out.println("<br></body></html>");
     System.out.println("<html><head><style type=\"text/css\"> table {border-collapse: collapse;} td { padding: 4px; border: 1px solid black } </style>");
+  }
+
+  public static void printAlignmentGridBottom() {
+    System.out.println("<br></body></html>");
+  }
+
+  public static void printAlignmentGrids(Collection<TranslationAlignment> tas) {
+    printAlignmentGridHeader();
     for(TranslationAlignment ta : tas) {
       printAlignmentGrid(ta);
     }
-    System.out.println("<br></body></html>");
+    printAlignmentGridBottom();
   }
 
 
@@ -463,6 +471,40 @@ class TranslationAlignment {
     }
     return ta;
   }
+
+  public static TranslationAlignment fixAlignmentGridMergingChinese(
+    TranslationAlignment ta, List<Tree> chTrees) {
+    Sentence<HasWord> sentence = chTrees.get(0).yield();
+    String[] leaves = new String[sentence.size()];
+    for (int i = 0; i < sentence.size(); i++) {
+      HasWord hw = sentence.get(i);
+      leaves[i] = hw.word();
+    }
+    String[] source = ta.source_;
+    List<List<Integer>> indexgroups = getIndexGroups(leaves, source);
+
+    int translationEnd = ta.matrix_.length;
+    int sourceEnd = leaves.length+1;
+    //int[][] newMatrix = new int[ta.matrix_.length][];
+    int[][] newMatrix = new int[translationEnd][];
+    for (int i = 0; i < translationEnd; i++) {
+      newMatrix[i] = new int[sourceEnd];
+    }
+    for (int i = 0; i < translationEnd; i++) {
+      for (int j = 0; j < sourceEnd; j++) {
+        if (j==0) {
+          newMatrix[i][0] = ta.matrix_[i][0];
+        } else {
+          // the indexgroup (j-1) should all have the same result
+          // TODO: debug
+          newMatrix[i][j] = ta.matrix_[i][indexgroups.get(j-1).get(0)];
+        }
+      }
+    }
+    ta = new TranslationAlignment(leaves, ta.translation_, newMatrix);
+    return ta;
+  }
+
   
   public static TranslationAlignment fixAlignmentGridWithChineseTree(
     TranslationAlignment ta, List<Tree> chTrees) {
@@ -547,7 +589,8 @@ class TranslationAlignment {
   public static void main(String[] args) throws IOException {
     int validAlignments = 0;
     int numtreepairs = 0;
-    for(int fileidx = 1; fileidx <= 325; fileidx++) {
+    int FIDX = Integer.parseInt(args[0]);
+    for(int fileidx = FIDX; fileidx <= FIDX; fileidx++) {
       // (1) Read alignment files
       String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
       File file = new File(aname);
@@ -576,6 +619,7 @@ class TranslationAlignment {
       // (5) Going through entries in (1) and check if they exist in (3)
 
       List<TreePair> treepairs = new ArrayList<TreePair>();
+
       for (TranslationAlignment ta : alignment_list) {
         List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
         if (chTrees.size() == 0) {
@@ -597,13 +641,15 @@ class TranslationAlignment {
 
         // Fix the Translation Alignment before adding to the TreePair
         if (DEBUG) System.err.println("i="+fileidx);
+        ta = fixAlignmentGridWithChineseTree(ta, chTrees);
+        ta = fixAlignmentGridMergingChinese(ta, chTrees);
         ta = fixAlignmentGridOnTranslation(ta);
         ta = fixAlignmentGridWithEnglishTree(ta, enTrees);
-        ta = fixAlignmentGridWithChineseTree(ta, chTrees);
-        printAlignmentGrid(ta);
+        //printAlignmentGrid(ta);
         TreePair tp = new TreePair(ta, enTrees, chTrees);
         treepairs.add(tp);
       }
+      TreePair.printAll(treepairs);
       validAlignments += alignment_list.size();
       numtreepairs += treepairs.size();
     }
