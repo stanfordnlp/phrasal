@@ -24,21 +24,25 @@ class TreePair {
 
   private static void printMarkedChineseSentence(Sentence<HasWord> yield, Set<IntPair> deSpans) {
     for(int i = 0; i < yield.size(); i++) {
-      boolean markBegin = false;
-      boolean markEnd = false;
+      int markBegin = 0;
+      int markEnd = 0;
       for (IntPair ip : deSpans) {
-        if (ip.getSource() == i) markBegin = true;
-        if (ip.getTarget() == i) markEnd = true;
+        if (ip.getSource() == i) markBegin++;
+        if (ip.getTarget() == i) markEnd++;
       }
-      if (markBegin) System.out.print("<b><u>");
+      while (markBegin>0) {
+        System.out.print("<b><u> [[ ");
+        markBegin--;
+      }
       System.out.print(yield.get(i)+" ");
-      if (markEnd) System.out.print("</u></b>");
+      while (markEnd>0) {
+        System.out.print(" ]] </u></b>");
+        markEnd--;
+      }
     }
     System.out.println("<br />");
   }
 
-  // print from the alignment.translation_ for now.
-  // the trees haven't been fixed for cases like "can not" and "china 's"
   private static void printMarkedEnglishSentence(String[] enSent, TreeSet<Integer> marked) {
     for(int i = 0; i < enSent.length; i++) {
       if (marked.contains(i)) {
@@ -92,19 +96,10 @@ class TreePair {
   }
 
   static IntPair getSpan(Tree subT, Tree allT) {
-    IntPair ip;
-    Sentence<HasWord> subyield = subT.yield();
-    Sentence<HasWord> allyield = allT.yield();
-    for(int i = 0; i < allyield.size(); i++) {
-      if (allyield.get(i).equals(subyield.get(0))) {
-        int length = subyield.size();
-        if (allyield.get(i+length-1).equals(subyield.get(length-1))) {
-          ip = new IntPair(i, i+length-1);
-          return ip;
-        }
-      }
-    }
-    return null;
+    IntPair ip = new IntPair(
+      Trees.leftEdge(subT, allT),
+      Trees.rightEdge(subT, allT)-1);
+    return ip;
   }
 
   public static Set<IntPair> getSpans(Set<Tree> deTrees, Tree mainT) {
@@ -116,29 +111,14 @@ class TreePair {
   }
   
   public static Set<Tree> getNPwithDESubTrees(Tree t) {
-    //List<IntPair> spans = new ArrayList<IntPair>();
-    TreePattern p = TreePattern.compile("NP << (/P$/ < DEG|DEC)");
-    System.err.println("Parsed pattern: " + p.pattern());
+    TreePattern p = TreePattern.compile("NP <, (/P$/ < DEG|DEC )");
+    //System.err.println("Parsed pattern: " + p.pattern());
     TreeMatcher match = p.matcher(t);
     Set<Tree> matchedTrees = new HashSet<Tree>();
     while(match.find()) {
       matchedTrees.add(match.getMatch());
     }
     return matchedTrees;
-    /*
-    int count = 1;
-    for (Tree mt : matchedTrees) {
-      System.out.println("Tree #"+count);
-      IntPair ip = getSpan(mt, t);
-      System.out.println(ip);
-      spans.add(ip);
-      mt.pennPrint();
-      count++;
-    }
-    System.out.println("</pre>");
-    System.out.println("</font>");
-    return spans;
-    */
   }
 
   public static void printTreePair(TreePair tp, Set<Tree> deTrees, Set<IntPair> deSpans) {

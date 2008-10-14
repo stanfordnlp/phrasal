@@ -284,6 +284,7 @@ class TranslationAlignment {
     for(int i = 0; i < leaves.length; i++) leaves[i] = leaveslist.get(i);
     
     ta = fixAlignmentGrid_Scores(ta, leaves);
+    ta = fixAlignmentGridOnTranslation_Poss_Neg(ta, leaves);
     String[] translation = ta.translation_;
 
 
@@ -417,22 +418,28 @@ class TranslationAlignment {
     return ta;
   }
 
+  /*
   // TODO: fix corresponding enTrees?
   public static TranslationAlignment fixAlignmentGridOnTranslation(TranslationAlignment ta) {
     ta = fixAlignmentGridOnTranslation_Poss_Neg(ta);
     return ta;
   }
+  */
 
   // TODO: fix corresponding enTrees?
-  public static TranslationAlignment fixAlignmentGridOnTranslation_Poss_Neg(TranslationAlignment ta) {
+  public static TranslationAlignment fixAlignmentGridOnTranslation_Poss_Neg(TranslationAlignment ta, String[] leaves) {
     // check if there's "BLAH's" case
     int needFix = -1;
     boolean cannot = false;
 
+    //System.err.println("alignment="+StringUtils.join(ta.translation_, " ")+"<br>");
+    //System.err.println("from tree="+StringUtils.join(leaves, " ")+"<br>");
     for (int i = 0; i < ta.translation_.length; i++) {
       String t = ta.translation_[i];
-      if (t.endsWith("'s") && !t.equals("'s")) { needFix = i+1 ; break; } // add one because 0 is NULL
-      if (t.equals("cannot")) { needFix = i+1; cannot = true; break; }
+      if (i < leaves.length && !t.equals(leaves[i])) {
+        if (t.endsWith("'s") && !t.equals("'s")) { needFix = i+1 ; break; } // add one because 0 is NULL
+        if (t.equals("cannot")) { needFix = i+1; cannot = true; break; }
+      }
     }
 
     int[][] newMatrix = new int[ta.matrix_.length+1][];
@@ -509,13 +516,45 @@ class TranslationAlignment {
         if (j==0) {
           newMatrix[i][0] = ta.matrix_[i][0];
         } else {
-          // the indexgroup (j-1) should all have the same result
-          // TODO: debug
           newMatrix[i][j] = ta.matrix_[i][indexgroups.get(j-1).get(0)];
         }
       }
     }
     ta = new TranslationAlignment(leaves, ta.translation_, newMatrix);
+    return ta;
+  }
+
+
+  public static TranslationAlignment fixAlignmentGridMergingEnglish(
+    TranslationAlignment ta, List<Tree> enTrees) {
+    Sentence<HasWord> sentence = new Sentence<HasWord>();
+    for (Tree enT : enTrees) {
+      sentence.addAll(enT.yield());
+    }
+    String[] leaves = new String[sentence.size()];
+    for (int i = 0; i < sentence.size(); i++) {
+      HasWord hw = sentence.get(i);
+      leaves[i] = hw.word();
+    }
+    String[] translation = ta.translation_;
+    List<List<Integer>> indexgroups = getIndexGroups(leaves, translation);
+
+    int translationEnd = leaves.length+1;
+    int sourceEnd = ta.matrix_[0].length;
+    int[][] newMatrix = new int[translationEnd][];
+    for (int i = 0; i < translationEnd; i++) {
+      newMatrix[i] = new int[sourceEnd];
+    }
+    for (int i = 0; i < translationEnd; i++) {
+      for (int j = 0; j < sourceEnd; j++) {
+        if (i==0) {
+          newMatrix[0][j] = ta.matrix_[0][j];
+        } else {
+          newMatrix[i][j] = ta.matrix_[indexgroups.get(i-1).get(0)][j];
+        }
+      }
+    }
+    ta = new TranslationAlignment(ta.source_, leaves, newMatrix);
     return ta;
   }
 
@@ -580,6 +619,49 @@ class TranslationAlignment {
     
     return ta;
   }
+
+  private static void checkTranslationAlignmentAndEnTrees(TranslationAlignment ta, List<Tree> enTrees) {
+    String[] enFromAlignment = ta.translation_;
+    Sentence<HasWord> enFromTrees = new Sentence<HasWord>();
+    for (Tree eT : enTrees) {
+      enFromTrees.addAll(eT.yield());
+    }
+    if (enFromAlignment.length != enFromTrees.size()) {
+      System.out.println("Check failed.<br>");
+      System.out.println("ALGN: "+StringUtils.join(enFromAlignment, " ")+"<br>");
+      System.out.println("TREE: "+StringUtils.join(enFromTrees, " ")+"<br>");
+    } else {
+      for (int i = 0; i < enFromTrees.size(); i++) {
+        if (!enFromTrees.get(i).word().equals(enFromAlignment[i])) {
+          System.out.println("Check failed.<br>");
+          System.out.println("ALGN: "+StringUtils.join(enFromAlignment, " ")+"<br>");
+          System.out.println("TREE: "+StringUtils.join(enFromTrees, " ")+"<br>");
+          break;
+        }
+      }
+    }
+  }
+
+  private static void checkTranslationAlignmentAndChTrees(TranslationAlignment ta, List<Tree> chTrees) {
+    String[] chFromAlignment = ta.source_;
+    Sentence<HasWord> chFromTrees = chTrees.get(0).yield();
+    if (chFromAlignment.length != chFromTrees.size()) {
+      System.out.println("Check failed.<br>");
+      System.out.println("ALGN: "+StringUtils.join(chFromAlignment, " ")+"<br>");
+      System.out.println("TREE: "+StringUtils.join(chFromTrees, " ")+"<br>");
+    } else {
+      for (int i = 0; i < chFromTrees.size(); i++) {
+        if (!chFromTrees.get(i).word().equals(chFromAlignment[i])) {
+          System.out.println("Check failed.<br>");
+          System.out.println("ALGN: "+StringUtils.join(chFromAlignment, " ")+"<br>");
+          System.out.println("TREE: "+StringUtils.join(chFromTrees, " ")+"<br>");
+          break;
+        }
+      }
+    }
+  }
+
+
   
   private static List<List<Integer>> getIndexGroups(String[] leaves, String[] source) {
     List<List<Integer>> indexgroups = new ArrayList<List<Integer>>();
@@ -588,10 +670,12 @@ class TranslationAlignment {
     for(int lidx = 0; lidx < leaves.length; lidx++) {
       List<Integer> indexgroup = new ArrayList<Integer>();
       String leaf = leaves[lidx];
+      //System.err.println("LEAF="+leaf);
       StringBuilder chunk = new StringBuilder();
       while(!leaf.equals(chunk.toString())) {
         chunk.append(source[tidx]);
         indexgroup.add(tidx+1); // have to offset by 1, because 0 is NULL
+        //System.err.println("CHUNK="+chunk.toString());
         tidx++;
       }
       indexgroups.add(indexgroup);
@@ -657,9 +741,10 @@ class TranslationAlignment {
         if (DEBUG) System.err.println("i="+fileidx);
         ta = fixAlignmentGridWithChineseTree(ta, chTrees);
         ta = fixAlignmentGridMergingChinese(ta, chTrees);
-        ta = fixAlignmentGridOnTranslation(ta);
         ta = fixAlignmentGridWithEnglishTree(ta, enTrees);
-        //printAlignmentGrid(ta);
+        ta = fixAlignmentGridMergingEnglish(ta, enTrees);
+        checkTranslationAlignmentAndEnTrees(ta, enTrees);
+        checkTranslationAlignmentAndChTrees(ta, chTrees);
         TreePair tp = new TreePair(ta, enTrees, chTrees);
         treepairs.add(tp);
       }
