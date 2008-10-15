@@ -516,7 +516,11 @@ class TranslationAlignment {
         if (j==0) {
           newMatrix[i][0] = ta.matrix_[i][0];
         } else {
-          newMatrix[i][j] = ta.matrix_[i][indexgroups.get(j-1).get(0)];
+          int result = 0;
+          for(Integer idx : indexgroups.get(j-1)) {
+            if (ta.matrix_[i][idx] > 0) result = 1;
+          }
+          newMatrix[i][j] = result;
         }
       }
     }
@@ -550,7 +554,11 @@ class TranslationAlignment {
         if (i==0) {
           newMatrix[0][j] = ta.matrix_[0][j];
         } else {
-          newMatrix[i][j] = ta.matrix_[indexgroups.get(i-1).get(0)][j];
+          int result = 0;
+          for(Integer idx : indexgroups.get(i-1)) {
+            if (ta.matrix_[idx][j] > 0) result = 1;
+          }
+          newMatrix[i][j] = result;
         }
       }
     }
@@ -687,6 +695,7 @@ class TranslationAlignment {
   public static void main(String[] args) throws IOException {
     int validAlignments = 0;
     int numtreepairs = 0;
+    int numNPwithDE = 0;
     int FIDX = Integer.parseInt(args[0]);
     
     boolean origTAonly =  Boolean.parseBoolean(args[1]);
@@ -759,7 +768,7 @@ class TranslationAlignment {
       if (origTAonly) printAlignmentGridBottom();
 
       if (!origTAonly) {
-        TreePair.printAll(treepairs);
+        numNPwithDE  += TreePair.printAllwithDE(treepairs);
         numtreepairs += treepairs.size();
       }
       validAlignments += alignment_list.size();
@@ -767,5 +776,6 @@ class TranslationAlignment {
 
     System.err.println("# valid translation alignment = "+validAlignments);
     System.err.println("# Tree Pairs = "+numtreepairs);
+    System.err.println("# NPs with DE = "+numNPwithDE);
   }
 }

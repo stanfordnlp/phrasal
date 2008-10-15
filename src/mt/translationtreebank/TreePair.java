@@ -56,7 +56,10 @@ class TreePair {
     System.out.println("<br />");
   }
   
-  public static void printAll(List<TreePair> tps) {
+  // return the number of NP with DEs in this list of TreePair
+  public static int printAllwithDE(List<TreePair> tps) {
+    int numNPwithDE = 0;
+
     TranslationAlignment.printAlignmentGridHeader();
     List<Set<Tree>> deTreesList = new ArrayList<Set<Tree>>();
     List<Set<IntPair>> deSpansList = new ArrayList<Set<IntPair>>();
@@ -67,6 +70,7 @@ class TreePair {
       TreePair tp = tps.get(i);
       Tree chTree = tp.chTrees.get(0);
       Set<Tree> deTrees = getNPwithDESubTrees(chTree);
+      numNPwithDE += deTrees.size();
       Set<IntPair> deSpans = getSpans(deTrees, chTree);
       printMarkedChineseSentence(chTree.yield(), deSpans);
 
@@ -93,6 +97,7 @@ class TreePair {
       counter++;
     }
     TranslationAlignment.printAlignmentGridBottom();
+    return numNPwithDE;
   }
 
   static IntPair getSpan(Tree subT, Tree allT) {
