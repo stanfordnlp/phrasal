@@ -120,6 +120,42 @@ class TranslationAlignment {
     return english;
   }
 
+  public TreeSet<Integer> mapChineseToEnglish_FillGap(IntPair ip, TreeSet<Integer> enRange) {
+    boolean contiguous = true;
+    int prevI = -1;
+    TreeSet<Integer> nullgaps = new TreeSet<Integer>();
+    List<IntPair> gaps = new ArrayList<IntPair>();
+    
+    for (Integer i : enRange) {
+      //System.out.println("eni = "+i+"<br>");
+      if (prevI != -1) {
+        if (i > prevI+1) {
+          IntPair gap = new IntPair(prevI+1, i-1);
+          //System.out.println("Add = "+gap+"<br>");
+          gaps.add(gap);
+        }
+      }
+      prevI = i;
+    }
+    
+    for(IntPair gap : gaps) {
+      for (int eni = gap.getSource() ; eni<=gap.getTarget(); eni++) {
+        // Note: eni is 0-based, so we need to add 1
+        boolean add = true;
+        // It doesn't matter if the word aligns to NULL: matrix_[eni+1][0] can be whatever
+        for (int chi = 1; chi < source_.length+1; chi++) {
+          if (matrix_[eni+1][chi] > 0) {
+            add = false;
+            break;
+          }
+        }
+        if (add) nullgaps.add(eni);
+      }
+    }
+    return nullgaps;
+  }
+
+
   public static void printAlignmentGrid(TranslationAlignment ta) {
     System.out.println("<table>");
     System.out.println("<tr><td></td>");

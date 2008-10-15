@@ -43,13 +43,19 @@ class TreePair {
     System.out.println("<br />");
   }
 
-  private static void printMarkedEnglishSentence(String[] enSent, TreeSet<Integer> marked) {
+  private static void printMarkedEnglishSentence(String[] enSent, TreeSet<Integer> marked, TreeSet<Integer> nullAggregated) {
     for(int i = 0; i < enSent.length; i++) {
-      if (marked.contains(i)) {
+      if (marked.contains(i) || nullAggregated.contains(i)) {
         System.out.print("<b><u>");
       }
+      if (nullAggregated.contains(i)) {
+        System.out.print("<font style=\"BACKGROUND-COLOR: lightgreen\">");
+      }
       System.out.print(enSent[i]+" ");
-      if (marked.contains(i)) {
+      if (nullAggregated.contains(i)) {
+        System.out.print("</font>");
+      }
+      if (marked.contains(i) || nullAggregated.contains(i)) {
         System.out.print("</u></b>");
       }
     }
@@ -75,11 +81,14 @@ class TreePair {
       printMarkedChineseSentence(chTree.yield(), deSpans);
 
       TreeSet<Integer> englishMappedSpans = new TreeSet<Integer>();
+      TreeSet<Integer> nullAggregatedSpan = new TreeSet<Integer>();
       for (IntPair deSpan : deSpans) {
         TreeSet<Integer> enSpan = tp.alignment.mapChineseToEnglish(deSpan);
+        TreeSet<Integer> nullSpan = tp.alignment.mapChineseToEnglish_FillGap(deSpan, enSpan);
         englishMappedSpans.addAll(enSpan);
+        nullAggregatedSpan.addAll(nullSpan);
       }
-      printMarkedEnglishSentence(tp.alignment.translation_, englishMappedSpans);
+      printMarkedEnglishSentence(tp.alignment.translation_, englishMappedSpans, nullAggregatedSpan);
 
       // for later using when printing each TreePair
       deTreesList.add(deTrees);
