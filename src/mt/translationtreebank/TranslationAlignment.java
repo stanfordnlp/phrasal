@@ -732,8 +732,9 @@ class TranslationAlignment {
     int validAlignments = 0;
     int numtreepairs = 0;
     int numNPwithDE = 0;
+    int numNPwithDE_contiguous = 0;
+    int numNPwithDE_fragmented = 0;
     int FIDX = Integer.parseInt(args[0]);
-    
     boolean origTAonly =  Boolean.parseBoolean(args[1]);
 
     for(int fileidx = FIDX; fileidx <= FIDX; fileidx++) {
@@ -798,6 +799,17 @@ class TranslationAlignment {
           checkTranslationAlignmentAndEnTrees(ta, enTrees);
           checkTranslationAlignmentAndChTrees(ta, chTrees);
           TreePair tp = new TreePair(ta, enTrees, chTrees);
+          numNPwithDE += tp.NPwithDEs.size();
+
+          for (IntPair NPwithDE : tp.NPwithDEs.keySet()) {
+            List<IntPair> englishNP = tp.NPwithDEs.get(NPwithDE);
+            if (englishNP.size()==1) {
+              numNPwithDE_contiguous++;
+            } else {
+              numNPwithDE_fragmented++;
+            }
+          }
+
           treepairs.add(tp);
         }
       }
@@ -810,8 +822,14 @@ class TranslationAlignment {
       validAlignments += alignment_list.size();
     }
 
+    // count Countiguous NPs & Fragmented NPs
+    
+
+
     System.err.println("# valid translation alignment = "+validAlignments);
     System.err.println("# Tree Pairs = "+numtreepairs);
     System.err.println("# NPs with DE = "+numNPwithDE);
+    System.err.println("# NPs with DE (contiguous)= "+numNPwithDE_contiguous);
+    System.err.println("# NPs with DE (fragmented)= "+numNPwithDE_fragmented);
   }
 }

@@ -9,11 +9,13 @@ class TreePair {
   TranslationAlignment alignment;
   List<Tree> enTrees;
   List<Tree> chTrees;
+  Map<IntPair, List<IntPair>> NPwithDEs;
 
   public TreePair(TranslationAlignment alignment, List<Tree> enTrees, List<Tree> chTrees) {
     this.alignment = alignment;
     this.enTrees = enTrees;
     this.chTrees = chTrees;
+    computeNPwithDEs();
   }
 
   public static void printTree(Tree t) {
@@ -22,11 +24,12 @@ class TreePair {
     System.out.println("</pre>");
   }
 
-  private static void printMarkedChineseSentence(Sentence<HasWord> yield, Set<IntPair> deSpans) {
-    for(int i = 0; i < yield.size(); i++) {
+  private void printMarkedChineseSentence() {
+    String[] chSent = alignment.source_;
+    for(int i = 0; i < chSent.length; i++) {
       int markBegin = 0;
       int markEnd = 0;
-      for (IntPair ip : deSpans) {
+      for (IntPair ip : NPwithDEs.keySet()) {
         if (ip.getSource() == i) markBegin++;
         if (ip.getTarget() == i) markEnd++;
       }
@@ -34,7 +37,7 @@ class TreePair {
         System.out.print("<b><u> [[ ");
         markBegin--;
       }
-      System.out.print(yield.get(i)+" ");
+      System.out.print(chSent[i]+" ");
       while (markEnd>0) {
         System.out.print(" ]] </u></b>");
         markEnd--;
@@ -43,24 +46,69 @@ class TreePair {
     System.out.println("<br />");
   }
 
-  private static void printMarkedEnglishSentence(String[] enSent, TreeSet<Integer> marked, TreeSet<Integer> nullAggregated) {
+  private void printMarkedEnglishSentence() {
+    String[] enSent = alignment.translation_;
+    Set<Integer> markedwords = new HashSet<Integer>();
+    for (IntPair key : NPwithDEs.keySet()) {
+      List<IntPair> ips = NPwithDEs.get(key);
+      for (IntPair ip : ips) {
+        for (int i = ip.getSource(); i <= ip.getTarget(); i++) {
+          markedwords.add(i);
+        }
+      }
+    }
+
     for(int i = 0; i < enSent.length; i++) {
-      if (marked.contains(i) || nullAggregated.contains(i)) {
+      if (markedwords.contains(i)) {
         System.out.print("<b><u>");
       }
-      if (nullAggregated.contains(i)) {
-        System.out.print("<font style=\"BACKGROUND-COLOR: lightgreen\">");
-      }
       System.out.print(enSent[i]+" ");
-      if (nullAggregated.contains(i)) {
-        System.out.print("</font>");
-      }
-      if (marked.contains(i) || nullAggregated.contains(i)) {
+      if (markedwords.contains(i)) {
         System.out.print("</u></b>");
       }
     }
     System.out.println("<br />");
   }
+
+  public void computeNPwithDEs() {
+    if (NPwithDEs == null) {
+      NPwithDEs = new HashMap<IntPair, List<IntPair>>();
+      Tree chTree = chTrees.get(0);
+      Set<Tree> deTrees = getNPwithDESubTrees(chTree);
+      Set<IntPair> deSpans = getSpans(deTrees, chTree);
+
+      for (IntPair deSpan : deSpans) {
+        TreeSet<Integer> enSpan = alignment.mapChineseToEnglish(deSpan);
+        TreeSet<Integer> nullSpan = alignment.mapChineseToEnglish_FillGap(deSpan, enSpan);
+        // merge these 2
+        enSpan.addAll(nullSpan);
+
+        // compute IntPair
+        int prevI = -1;
+        int start = -1;
+        List<IntPair> enTranslation = new ArrayList<IntPair>();
+        int last = -1;
+        for (int en : enSpan) {
+          if (start == -1) {
+            start = en;
+          }
+          if (prevI != -1 && en > prevI+1) {
+            enTranslation.add(new IntPair(start, prevI));
+            start = en;
+          }
+          prevI = en;
+          last = en;
+        }
+        // add last one
+        if (start != -1) {
+          enTranslation.add(new IntPair(start, last));
+        }
+
+        NPwithDEs.put(deSpan, enTranslation);
+      }
+    }
+  }
+
   
   // return the number of NP with DEs in this list of TreePair
   public static int printAllwithDE(List<TreePair> tps) {
@@ -74,35 +122,22 @@ class TreePair {
       // Print Header of the HTML
       System.out.printf("[ <a href=#%d>%d</a> ]<br />", i+1, i+1);
       TreePair tp = tps.get(i);
-      Tree chTree = tp.chTrees.get(0);
-      Set<Tree> deTrees = getNPwithDESubTrees(chTree);
-      numNPwithDE += deTrees.size();
-      Set<IntPair> deSpans = getSpans(deTrees, chTree);
-      printMarkedChineseSentence(chTree.yield(), deSpans);
 
-      TreeSet<Integer> englishMappedSpans = new TreeSet<Integer>();
-      TreeSet<Integer> nullAggregatedSpan = new TreeSet<Integer>();
-      for (IntPair deSpan : deSpans) {
-        TreeSet<Integer> enSpan = tp.alignment.mapChineseToEnglish(deSpan);
-        TreeSet<Integer> nullSpan = tp.alignment.mapChineseToEnglish_FillGap(deSpan, enSpan);
-        englishMappedSpans.addAll(enSpan);
-        nullAggregatedSpan.addAll(nullSpan);
-      }
-      printMarkedEnglishSentence(tp.alignment.translation_, englishMappedSpans, nullAggregatedSpan);
+      tp.printMarkedChineseSentence();
+      tp.printMarkedEnglishSentence();
 
-      // for later using when printing each TreePair
-      deTreesList.add(deTrees);
-      deSpansList.add(deSpans);
     }
+
+
     int counter = 1;
     for(int i = 0; i < tps.size(); i++) {
       TreePair tp = tps.get(i);
-      Set<Tree> deTrees = deTreesList.get(i);
-      Set<IntPair> deSpans = deSpansList.get(i);
       System.out.println("<hr>");
       System.out.printf("<a name=%d>\n", counter);
       System.out.printf("<h2>Sentence %d</h2>\n", counter);
-      printTreePair(tp, deTrees, deSpans);
+      tp.printTreePair();
+      tp.printNPwithDEs();
+      tp.printAlignmentGrid();
       counter++;
     }
     TranslationAlignment.printAlignmentGridBottom();
@@ -126,7 +161,6 @@ class TreePair {
   
   public static Set<Tree> getNPwithDESubTrees(Tree t) {
     TreePattern p = TreePattern.compile("NP <, (/P$/ < DEG|DEC )");
-    //System.err.println("Parsed pattern: " + p.pattern());
     TreeMatcher match = p.matcher(t);
     Set<Tree> matchedTrees = new HashSet<Tree>();
     while(match.find()) {
@@ -135,11 +169,31 @@ class TreePair {
     return matchedTrees;
   }
 
-  public static void printTreePair(TreePair tp, Set<Tree> deTrees, Set<IntPair> deSpans) {
+  public void printNPwithDEs() {
+    // print out NPs
+    int npcount = 1;
+    for (IntPair NPwithDE : NPwithDEs.keySet()) {
+      List<IntPair> englishNP = NPwithDEs.get(NPwithDE);
+      System.out.printf("NP #%d:\t", npcount++);
+      if (englishNP.size()==1) {
+        System.out.printf("<font color=\"blue\">[Contiguous]</font>\t");
+      } else {
+        System.out.printf("<font color=\"red\">[Fragmented]</font>\t");
+      }
+      for(int chi = NPwithDE.getSource(); chi <= NPwithDE.getTarget(); chi++) {
+        System.out.print(alignment.source_[chi]+" ");
+      }
+      System.out.println("<br />");
+    }
+  }
+
+  public void printTreePair() {
     // (1.1) Chinese Tree
     System.out.println("<h3> Chinese Tree </h3>");
-    printTree(tp.chTrees.get(0));
+    printTree(chTrees.get(0));
     
+    // TODO: this information doesn't exist in TreePair for now
+    /*
     // (1.2) print DE trees
     int count = 1;
     System.out.println("<font color=\"red\">");
@@ -151,16 +205,18 @@ class TreePair {
     }
     System.out.println("</pre>");
     System.out.println("</font>");
+    */
 
     // (2) English Tree
     System.out.println("<h3> English Tree </h3>");
-    for (Tree t : tp.enTrees) {
+    for (Tree t : enTrees) {
       printTree(t);
     }
 
-    // (3) Alignment Grid
-    System.out.println("<h3> Alignment Grid </h3>");
-    TranslationAlignment.printAlignmentGrid(tp.alignment);
+  }
 
+  public void printAlignmentGrid() {
+    System.out.println("<h3> Alignment Grid </h3>");
+    TranslationAlignment.printAlignmentGrid(alignment);
   }
 }
