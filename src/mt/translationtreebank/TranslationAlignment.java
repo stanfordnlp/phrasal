@@ -856,9 +856,29 @@ public class TranslationAlignment {
           boundaryWord.equals("with") ||
           boundaryWord.equals("from")) {
         return "B "+boundaryWord+" A";
-      } else
-        return "flipped";
-        
+      }
+
+      String deMappedWord = null;
+      // check if deIdx aligns to somewhere in between max(rangeB) and min(rangeA)
+      for(int eidx = rangeB.getTarget()+1; eidx <= rangeA.getSource()-1; eidx++) {
+        if (submatrix[eidx][deIdx] > 0) {
+          String deWord = subtranslation[eidx];
+          if (deWord.equals("of") ||
+              deWord.equals("with") ||
+              deWord.equals("from")) {
+            return "B "+deWord+" A";
+          }
+          deMappedWord = deWord;
+          break;
+        }
+      }
+      
+      if (deMappedWord==null)
+        return "flipped - "+boundaryWord;
+      else 
+        return "flipped - (DE)"+boundaryWord;
+      // TODO: DE might also just map directly to the preposition (of)
+      
     }
     return "undecided";
   }

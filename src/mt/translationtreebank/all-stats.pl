@@ -37,7 +37,7 @@ while(<>) {
     # take the counter output
     if (/^{(.*)}/) {
         $dummy = $1;
-        @list = split(/,/,$dummy);
+        @list = split(", ",$dummy);
         foreach $item (@list) {
             $item =~ s/^\s+//;
             $item =~ s/\s+$//;
