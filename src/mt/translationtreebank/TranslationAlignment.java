@@ -850,7 +850,16 @@ public class TranslationAlignment {
     //System.err.println("rangeB = "+ subtranslation[min] + " - " + subtranslation[max]);
     IntPair rangeB = new IntPair(min,max);
     if (rangeA.getTarget() < rangeB.getSource()) return "ordered";
-    if (rangeB.getTarget() < rangeA.getSource()) return "flipped";
+    if (rangeB.getTarget() < rangeA.getSource()) {
+      String boundaryWord = subtranslation[rangeA.getSource()];
+      if (boundaryWord.equals("of") ||
+          boundaryWord.equals("with") ||
+          boundaryWord.equals("from")) {
+        return "B "+boundaryWord+" A";
+      } else
+        return "flipped";
+        
+    }
     return "undecided";
   }
 
