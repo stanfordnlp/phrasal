@@ -801,9 +801,20 @@ public class TranslationAlignment {
     boolean origTAonly =  Boolean.parseBoolean(args[1]);
     Properties props = StringUtils.argsToProperties(args);
 
+    // For this to run on both NLP machine and my computer
+    String dirname = "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
+    File dir = new File(dirname);
+    if (!dir.exists()) {
+      dirname = "C:\\cygwin\\home\\Pichuan Chang\\data\\LDC2006E93\\GALE-Y1Q4\\word_alignment\\data\\chinese\\nw\\";
+      dir = new File(dirname);
+      if (!dir.exists()) {
+        throw new RuntimeException("LDC2006E93 doesn't exist in either of the hard-coded locations.");
+      }
+    }
+
     for(int fileidx = FIDX; fileidx <= FIDX; fileidx++) {
       // (1) Read alignment files
-      String aname = String.format("/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/chtb_%03d.txt", fileidx);
+      String aname = String.format("%schtb_%03d.txt", dirname, fileidx);
       File file = new File(aname);
       List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
       if (file.exists()) {
@@ -815,15 +826,32 @@ public class TranslationAlignment {
 
       // (2) Read Chinese Trees
       ChineseTreeReader ctr = new ChineseTreeReader();
+      String ctbdirname = "/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/";
+      File ctbdir = new File(ctbdirname);
+      if (!ctbdir.exists()) {
+        ctbdirname = "C:\\cygwin\\home\\Pichuan Chang\\data\\CTB6\\data\\utf8\\bracketed\\";
+        ctbdir = new File(ctbdirname);
+        if (!ctbdir.exists())
+          throw new RuntimeException("CTB6.0 doesn't exist in either of the hard-coded locations.");
+      }
       String ctbname =
-        String.format("/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/chtb_%04d.fid", fileidx);
+        String.format("%schtb_%04d.fid", ctbdirname, fileidx);
       ctr.readMoreTrees(ctbname);
 
       // (3) Read English Trees
       EnglishTreeReader etr = new EnglishTreeReader();
+      String ectbdirname = "/u/nlp/scr/data/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/";
+      File ectbdir = new File(ectbdirname);
+      if (!ectbdir.exists()) {
+        ectbdirname = "C:\\cygwin\\home\\Pichuan Chang\\data\\LDC2007T02-EnglishChineseTranslationTreebankV1.0\\data\\pennTB-style-trees\\";
+        ectbdir = new File(ectbdirname);
+        if (!ectbdir.exists()) {
+          throw new RuntimeException("EnglishChineseTranslationTreebankV1.0 doesn't exist in either of the hard-coded locations.");
+        }
+      }
       String ename =
-        String.format("/u/nlp/scr/data/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/chtb_%03d.mrg.gz", 
-                      fileidx);
+        String.format("%schtb_%03d.mrg.gz",
+                      ectbdirname, fileidx);
       etr.readMoreTrees(ename);
 
       // (4) Going through entries in (1) and check if they exist in (2)
