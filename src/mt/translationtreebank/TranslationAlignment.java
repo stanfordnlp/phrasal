@@ -13,7 +13,7 @@ import edu.stanford.nlp.parser.lexparser.*;
 import edu.stanford.nlp.process.*;
 
 
-class TranslationAlignment {
+public class TranslationAlignment {
   String source_raw_;
   String[] source_;
   String translation_raw_;
@@ -727,6 +727,69 @@ class TranslationAlignment {
     return indexgroups;
   }
 
+  private static String analyzeNPwithDE(IntPair np, TreePair tp) {
+    List<IntPair> englishNP = tp.NPwithDEs.get(np);
+    if (englishNP.size() != 1) {
+      return "fragmented";
+    }
+
+    // if there's only one chunk of English, get the submatrix and subsource & subtranslation
+    IntPair ennp = englishNP.get(0);
+    int nplength = np.getTarget()-np.getSource()+1;
+    int ennplength = ennp.getTarget()-ennp.getSource()+1;
+    String[] subsource      = new String[nplength];
+    String[] subtranslation = new String[ennplength];
+    int[][] submatrix = new int[ennplength][nplength];
+
+    for(int tidx = ennp.getSource(); tidx <= ennp.getTarget(); tidx++) {
+      for(int sidx = np.getSource(); sidx <= np.getTarget(); sidx++) {
+        submatrix[tidx-ennp.getSource()][sidx-np.getSource()] = tp.alignment.matrix_[tidx][sidx];
+      }
+    }
+
+    //locate the "的"
+    for(int tidx = ennp.getSource(); tidx <= ennp.getTarget(); tidx++) {
+      subtranslation[tidx-ennp.getSource()] = tp.alignment.translation_[tidx];
+    }
+    List<Integer> deIndices = new ArrayList<Integer>();
+    for(int sidx = np.getSource(); sidx <= np.getTarget(); sidx++) {
+      subsource[sidx-np.getTarget()] = tp.alignment.translation_[sidx];
+      if (tp.alignment.translation_[sidx].equals("的")) {
+        deIndices.add(sidx-np.getTarget());
+      }
+    }
+    
+    if (deIndices.size() != 1) {
+      return "multi-DEs";
+    }
+
+    // Now it's the case with only one DE
+    // TODO: find the mapping to English of the first part, 
+    //       and find the mapping to the 2nd part
+    return null;
+  }
+
+  private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, IntPair np, TreePair tp) {
+    List<IntPair> englishNP = tp.NPwithDEs.get(np);
+    List<String> ch = new ArrayList<String>();
+    for (int i = np.getSource(); i<=np.getTarget(); i++) {
+      ch.add(tp.alignment.source_[i]);
+    }
+    String chStr = StringUtils.join(ch, " ");
+
+    List<String> en = new ArrayList<String>();
+    for (IntPair enNP : englishNP) {
+      StringBuilder ensb = new StringBuilder();
+      for (int i = enNP.getSource(); i<=enNP.getTarget(); i++) {
+        ensb.append(tp.alignment.translation_[i]).append(" ");
+      }
+      en.add(ensb.toString());
+    }
+    String enStr = StringUtils.join(en, "|| ");
+
+    npPW.printf("%d\t%d\t%d\t%s\t%s\n", fileidx, npidx, englishNP.size(), chStr, enStr);
+  }
+
   // testing only
   public static void main(String[] args) throws IOException {
     int validAlignments = 0;
@@ -736,6 +799,7 @@ class TranslationAlignment {
     int numNPwithDE_fragmented = 0;
     int FIDX = Integer.parseInt(args[0]);
     boolean origTAonly =  Boolean.parseBoolean(args[1]);
+    Properties props = StringUtils.argsToProperties(args);
 
     for(int fileidx = FIDX; fileidx <= FIDX; fileidx++) {
       // (1) Read alignment files
@@ -767,6 +831,15 @@ class TranslationAlignment {
 
       List<TreePair> treepairs = new ArrayList<TreePair>();
 
+
+      String npOutputDir = props.getProperty("npOutputDir", null);
+      PrintWriter npPW = null;
+      if (npOutputDir != null) {
+        String filename = npOutputDir+"/"+fileidx+".np";
+        System.err.println("Output to "+filename);
+        npPW= new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+      }
+      int npCount = 1;
       if (origTAonly) printAlignmentGridHeader();
       for (TranslationAlignment ta : alignment_list) {
         if (origTAonly) {
@@ -808,6 +881,11 @@ class TranslationAlignment {
             } else {
               numNPwithDE_fragmented++;
             }
+
+            if (npPW != null) {
+              printNPwithDEtoFile(fileidx, npCount, npPW, NPwithDE, tp);
+              npCount++;
+            }
           }
 
           treepairs.add(tp);
@@ -818,6 +896,10 @@ class TranslationAlignment {
       if (!origTAonly) {
         numNPwithDE  += TreePair.printAllwithDE(treepairs);
         numtreepairs += treepairs.size();
+      }
+      
+      if (npPW != null) {
+        npPW.close();
       }
       validAlignments += alignment_list.size();
     }
