@@ -7,6 +7,8 @@ $de_contiguous = 0;
 $de_fragmented = 0;
 $skipped = 0;
 $processed = 0;
+%counter = ();
+
 while(<>) {
     chomp;
 
@@ -32,6 +34,17 @@ while(<>) {
         $de_fragmented += $1;
     }
 
+    # take the counter output
+    if (/^{(.*)}/) {
+        $dummy = $1;
+        @list = split(/,/,$dummy);
+        foreach $item (@list) {
+            $item =~ s/^\s+//;
+            $item =~ s/\s+$//;
+            $item =~ /^(.*)=(\d+)\.0$/ or die "format error: $item";
+            $counter{$1} += $2;
+        }
+    }
 
 }
 
@@ -42,3 +55,6 @@ print "# Tree Pairs = $tp\n";
 print "# NPs with DE = $de\n";
 print "# NPs with DE (contiguous)= $de_contiguous\n";
 print "# NPs with DE (fragmented)= $de_fragmented\n";
+foreach $k (keys %counter) {
+    print "[type] $k = ".$counter{$k}."\n";
+}

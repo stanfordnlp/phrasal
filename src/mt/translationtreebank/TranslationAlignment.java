@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.parser.lexparser.*;
 import edu.stanford.nlp.process.*;
@@ -69,12 +70,20 @@ public class TranslationAlignment {
   }
 
   public static void printAlignmentGridHeader() {
-    System.out.println("<br></body></html>");
-    System.out.println("<html><head><style type=\"text/css\"> table {border-collapse: collapse;} td { padding: 4px; border: 1px solid black } </style>");
+    printAlignmentGridHeader(new PrintWriter(System.out, true));
+  }
+
+  public static void printAlignmentGridHeader(PrintWriter pw) {
+    pw.println("<br></body></html>");
+    pw.println("<html><head><style type=\"text/css\"> table {border-collapse: collapse;} td { padding: 4px; border: 1px solid black } </style>");
   }
 
   public static void printAlignmentGridBottom() {
-    System.out.println("<br></body></html>");
+    printAlignmentGridBottom(new PrintWriter(System.out, true));
+  }
+
+  public static void printAlignmentGridBottom(PrintWriter pw) {
+    pw.println("<br></body></html>");
   }
 
   public static void printAlignmentGrids(Collection<TranslationAlignment> tas) {
@@ -157,28 +166,61 @@ public class TranslationAlignment {
 
 
   public static void printAlignmentGrid(TranslationAlignment ta) {
-    System.out.println("<table>");
-    System.out.println("<tr><td></td>");
+    printAlignmentGrid(ta, new PrintWriter(System.out, true));
+  }
+
+  public static void printGridNoNull(String[] translation, String[] source, int[][] matrix, PrintWriter pw) {
+    boolean err = false;
+    if (translation.length != matrix.length || translation.length == 0) {
+      err = true;
+    } else if (matrix[0].length != source.length || source.length == 0) {
+      err = true;
+    }
+    if (err) { System.err.println("printGridNoNull FAILED."); return; }
+
+    pw.println("<table>");
+    pw.println("<tr><td></td>");
+    for(int i = 0; i < source.length; i++) {
+      pw.printf("<td>%s</td>\n", source[i]);
+    }
+    
+    for(int tidx = 0; tidx < translation.length; tidx++) {
+      pw.printf("<tr><td>%s</td>\n", translation[tidx]);
+      for(int sidx = 0; sidx < source.length; sidx++) {
+        if (matrix[tidx][sidx] == 0)
+          pw.println("  <td>&nbsp;</td>");
+        else if (matrix[tidx][sidx] > 0)
+          pw.printf("    <td bgcolor=\"black\">%d,%d</td>\n", tidx, sidx);
+        else
+          pw.printf("    <td bgcolor=\"red\">%d</td>\n", matrix[tidx][sidx]);
+      }
+      pw.println("</tr>");
+    }
+    pw.println("</table>");
+  }
+
+  public static void printAlignmentGrid(TranslationAlignment ta, PrintWriter pw) {
+    pw.println("<table>");
+    pw.println("<tr><td></td>");
     for(int i = 0; i <= ta.source_.length; i++) {
-      System.out.printf("<td>%s</td>\n", ta.getSource(i));
+      pw.printf("<td>%s</td>\n", ta.getSource(i));
     }
 
-    // print out NULL on Chinese
     for(int tidx = 0; tidx <= ta.translation_.length; tidx++) {
-      System.out.printf("<tr><td>%s</td>\n", ta.getTranslation(tidx));
+      pw.printf("<tr><td>%s</td>\n", ta.getTranslation(tidx));
       for(int sidx = 0; sidx <= ta.source_.length; sidx++) {
         if (ta.matrix_[tidx][sidx] == 0)
-          System.out.println("  <td>&nbsp;</td>");
+          pw.println("  <td>&nbsp;</td>");
         else if (ta.matrix_[tidx][sidx] == 1)
-          System.out.printf("    <td bgcolor=\"black\">%d,%d</td>\n", tidx, sidx);
+          pw.printf("    <td bgcolor=\"black\">%d,%d</td>\n", tidx, sidx);
         else if (ta.matrix_[tidx][sidx] == 2)
-          System.out.printf("    <td bgcolor=\"red\">%d,%d</td>\n", tidx, sidx);
+          pw.printf("    <td bgcolor=\"red\">%d,%d</td>\n", tidx, sidx);
         else if (ta.matrix_[tidx][sidx] == 3)
-          System.out.printf("    <td bgcolor=\"green\">%d,%d</td>\n", tidx, sidx);
+          pw.printf("    <td bgcolor=\"green\">%d,%d</td>\n", tidx, sidx);
       }
-      System.out.println("</tr>");
+      pw.println("</tr>");
     }
-    System.out.println("</table>");
+    pw.println("</table>");
   }
 
   public TranslationAlignment(String[] source, String[] translation, int[][] matrix) {
@@ -727,7 +769,7 @@ public class TranslationAlignment {
     return indexgroups;
   }
 
-  private static String analyzeNPwithDE(IntPair np, TreePair tp) {
+  private static String analyzeNPwithDE(IntPair np, TreePair tp, PrintWriter pw) throws IOException {
     List<IntPair> englishNP = tp.NPwithDEs.get(np);
     if (englishNP.size() != 1) {
       return "fragmented";
@@ -743,7 +785,8 @@ public class TranslationAlignment {
 
     for(int tidx = ennp.getSource(); tidx <= ennp.getTarget(); tidx++) {
       for(int sidx = np.getSource(); sidx <= np.getTarget(); sidx++) {
-        submatrix[tidx-ennp.getSource()][sidx-np.getSource()] = tp.alignment.matrix_[tidx][sidx];
+        // This really can be improved. Note that in matrix_, 0 --> NULL
+        submatrix[tidx-ennp.getSource()][sidx-np.getSource()] = tp.alignment.matrix_[tidx+1][sidx+1];
       }
     }
 
@@ -753,23 +796,65 @@ public class TranslationAlignment {
     }
     List<Integer> deIndices = new ArrayList<Integer>();
     for(int sidx = np.getSource(); sidx <= np.getTarget(); sidx++) {
-      subsource[sidx-np.getTarget()] = tp.alignment.translation_[sidx];
-      if (tp.alignment.translation_[sidx].equals("的")) {
-        deIndices.add(sidx-np.getTarget());
+      subsource[sidx-np.getSource()] = tp.alignment.source_[sidx];
+      if (tp.alignment.source_[sidx].equals("的") ||
+	      tp.alignment.source_[sidx].equals("之")) {
+        deIndices.add(sidx-np.getSource());
       }
     }
+
+    // Print out the sub-grid to file
+    printGridNoNull(subtranslation, subsource, submatrix, pw);
+
+
     
-    if (deIndices.size() != 1) {
+    if (deIndices.size() > 1) {
       return "multi-DEs";
+    }
+    if (deIndices.size() == 0) {
+      return "no DE?";
     }
 
     // Now it's the case with only one DE
     // TODO: find the mapping to English of the first part, 
     //       and find the mapping to the 2nd part
-    return null;
+    int deIdx = deIndices.get(0);
+
+
+    // for "A de B"
+    // get the translation range of A
+    int min = subtranslation.length;
+    int max = -1;
+    for(int sidx = 0; sidx < deIdx; sidx++) {
+      for(int tidx = 0; tidx < subtranslation.length; tidx++) {
+        if (submatrix[tidx][sidx] > 0) {
+          if (tidx < min) min = tidx;
+          if (tidx > max) max = tidx;
+        }
+      }
+    }
+    System.err.println("rangeA = "+ subtranslation[min] + " - " + subtranslation[max]);
+    IntPair rangeA = new IntPair(min,max);
+
+    min = subtranslation.length;
+    max = -1;
+    for(int sidx = deIdx+1; sidx < subsource.length; sidx++) {
+      for(int tidx = 0; tidx < subtranslation.length; tidx++) {
+        if (submatrix[tidx][sidx] > 0) {
+          if (tidx < min) min = tidx;
+          if (tidx > max) max = tidx;
+        }
+      }
+    }
+
+    //System.err.println("rangeB = "+ subtranslation[min] + " - " + subtranslation[max]);
+    IntPair rangeB = new IntPair(min,max);
+    if (rangeA.getTarget() < rangeB.getSource()) return "ordered";
+    if (rangeB.getTarget() < rangeA.getSource()) return "flipped";
+    return "undecided";
   }
 
-  private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, IntPair np, TreePair tp) {
+  private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, IntPair np, TreePair tp, String type) {
     List<IntPair> englishNP = tp.NPwithDEs.get(np);
     List<String> ch = new ArrayList<String>();
     for (int i = np.getSource(); i<=np.getTarget(); i++) {
@@ -787,7 +872,7 @@ public class TranslationAlignment {
     }
     String enStr = StringUtils.join(en, "|| ");
 
-    npPW.printf("%d\t%d\t%d\t%s\t%s\n", fileidx, npidx, englishNP.size(), chStr, enStr);
+    npPW.printf("%d\t%d\t%s\t%d\t%s\t%s\n", fileidx, npidx, type, englishNP.size(), chStr, enStr);
   }
 
   // testing only
@@ -798,9 +883,9 @@ public class TranslationAlignment {
     int numNPwithDE_contiguous = 0;
     int numNPwithDE_fragmented = 0;
     int FIDX = Integer.parseInt(args[0]);
-    boolean origTAonly =  Boolean.parseBoolean(args[1]);
-    Properties props = StringUtils.argsToProperties(args);
-
+    Properties props =StringUtils.argsToProperties(args);
+    Counter typeCounter = new ClassicCounter<String>();
+    
     // For this to run on both NLP machine and my computer
     String dirname = "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
     File dir = new File(dirname);
@@ -856,90 +941,113 @@ public class TranslationAlignment {
 
       // (4) Going through entries in (1) and check if they exist in (2)
       // (5) Going through entries in (1) and check if they exist in (3)
+      // (6) also, if the tests passed, output various information
 
       List<TreePair> treepairs = new ArrayList<TreePair>();
 
-
+      // open output file for NP list. This format is easy to import to Excel
       String npOutputDir = props.getProperty("npOutputDir", null);
       PrintWriter npPW = null;
+      PrintWriter npgridPW = null;
       if (npOutputDir != null) {
         String filename = npOutputDir+"/"+fileidx+".np";
-        System.err.println("Output to "+filename);
+        System.err.println("Output NPs to "+filename);
         npPW= new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+
+        filename = npOutputDir+"/grids/"+fileidx+".npgrid.html";
+        System.err.println("Output NP Grids to "+filename);
+        npgridPW= new PrintWriter(new BufferedWriter(new FileWriter(filename)));
       }
+      // open output file for orginal Translation Alignment file.
+      // In this format, every token is as defined in the manual word_alignment file.
+      // So, Chinese tokens are characters.
+      // The reason of having this option is mostly for debugging.
+      // If you find any final grid in the tree-aligned version somewhat weird,
+      // you can print out the original grid and see if it makes sense.
+      String origTAdir = props.getProperty("origTAdir", null);
+      PrintWriter origtaPW = null;
+      if (origTAdir != null) {
+        String filename = origTAdir+"/"+fileidx+".origta.html";
+        System.err.println("Output original grids to "+filename);
+        origtaPW = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+      }
+
       int npCount = 1;
-      if (origTAonly) printAlignmentGridHeader();
+      if (origtaPW != null) {printAlignmentGridHeader(origtaPW);}
+      if (npgridPW != null) {printAlignmentGridHeader(npgridPW);}
       for (TranslationAlignment ta : alignment_list) {
-        if (origTAonly) {
-          printAlignmentGrid(ta);
-        } else {
-          List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
-          if (chTrees.size() == 0) {
-            System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, StringUtils.join(ta.source_, " "));
-            continue;
-            // skip for now
-          } else if (chTrees.size() > 1) {
-            System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
-          }
-          
-          List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
-          if (enTrees.size() == 0) {
-            System.err.printf("i=%d: Can't find tree in PTB: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
-            continue;
-            // skip for now
-          } else if (enTrees.size() > 1) {
-            System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
-          }
-          
-          // Fix the Translation Alignment before adding to the TreePair
-          if (DEBUG) System.err.println("i="+fileidx);
-          ta = fixAlignmentGridWithChineseTree(ta, chTrees);
-          ta = fixAlignmentGridMergingChinese(ta, chTrees);
-          ta = fixAlignmentGridWithEnglishTree(ta, enTrees);
-          ta = fixAlignmentGridMergingEnglish(ta, enTrees);
-          checkTranslationAlignmentAndEnTrees(ta, enTrees);
-          checkTranslationAlignmentAndChTrees(ta, chTrees);
-          TreePair tp = new TreePair(ta, enTrees, chTrees);
-          numNPwithDE += tp.NPwithDEs.size();
-
-          for (IntPair NPwithDE : tp.NPwithDEs.keySet()) {
-            List<IntPair> englishNP = tp.NPwithDEs.get(NPwithDE);
-            if (englishNP.size()==1) {
-              numNPwithDE_contiguous++;
-            } else {
-              numNPwithDE_fragmented++;
-            }
-
-            if (npPW != null) {
-              printNPwithDEtoFile(fileidx, npCount, npPW, NPwithDE, tp);
-              npCount++;
-            }
-          }
-
-          treepairs.add(tp);
+        if (origtaPW != null) {
+          printAlignmentGrid(ta, origtaPW);
         }
-      }
-      if (origTAonly) printAlignmentGridBottom();
 
-      if (!origTAonly) {
-        numNPwithDE  += TreePair.printAllwithDE(treepairs);
-        numtreepairs += treepairs.size();
+        List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
+        if (chTrees.size() == 0) {
+          System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+          continue;
+          // skip for now
+        } else if (chTrees.size() > 1) {
+          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+        }
+        
+        List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
+        if (enTrees.size() == 0) {
+          System.err.printf("i=%d: Can't find tree in PTB: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
+          continue;
+          // skip for now
+        } else if (enTrees.size() > 1) {
+          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
+        }
+        
+        // Fix the Translation Alignment before adding to the TreePair
+        if (DEBUG) System.err.println("i="+fileidx);
+        ta = fixAlignmentGridWithChineseTree(ta, chTrees);
+        ta = fixAlignmentGridMergingChinese(ta, chTrees);
+        ta = fixAlignmentGridWithEnglishTree(ta, enTrees);
+        ta = fixAlignmentGridMergingEnglish(ta, enTrees);
+        checkTranslationAlignmentAndEnTrees(ta, enTrees);
+        checkTranslationAlignmentAndChTrees(ta, chTrees);
+        TreePair tp = new TreePair(ta, enTrees, chTrees);
+        numNPwithDE += tp.NPwithDEs.size();
+        
+        for (IntPair NPwithDE : tp.NPwithDEs.keySet()) {
+          List<IntPair> englishNP = tp.NPwithDEs.get(NPwithDE);
+          if (englishNP.size()==1) {
+            numNPwithDE_contiguous++;
+          } else {
+            numNPwithDE_fragmented++;
+          }
+          
+          if (npPW != null) {
+            printAlignmentGridHeader(npgridPW);
+            String type = analyzeNPwithDE(NPwithDE, tp, npgridPW);
+            typeCounter.incrementCount(type);
+            printAlignmentGridBottom(npgridPW);
+            printNPwithDEtoFile(fileidx, npCount, npPW, NPwithDE, tp, type);
+            npCount++;
+          }
+        }
+        
+        treepairs.add(tp);
       }
+      if (npgridPW != null) { printAlignmentGridBottom(npgridPW); npgridPW.close(); }
+      if (origtaPW != null) { printAlignmentGridBottom(origtaPW); origtaPW.close(); }
+      
+      numNPwithDE  += TreePair.printAllwithDE(treepairs);
+      numtreepairs += treepairs.size();
       
       if (npPW != null) {
         npPW.close();
       }
       validAlignments += alignment_list.size();
     }
-
+    
     // count Countiguous NPs & Fragmented NPs
     
-
-
     System.err.println("# valid translation alignment = "+validAlignments);
     System.err.println("# Tree Pairs = "+numtreepairs);
     System.err.println("# NPs with DE = "+numNPwithDE);
     System.err.println("# NPs with DE (contiguous)= "+numNPwithDE_contiguous);
     System.err.println("# NPs with DE (fragmented)= "+numNPwithDE_fragmented);
+    System.err.println(typeCounter);
   }
 }

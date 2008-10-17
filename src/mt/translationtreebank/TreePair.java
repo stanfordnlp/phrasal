@@ -160,7 +160,7 @@ class TreePair {
   }
   
   public static Set<Tree> getNPwithDESubTrees(Tree t) {
-    TreePattern p = TreePattern.compile("NP <, (/P$/ < DEG|DEC )");
+    TreePattern p = TreePattern.compile("NP <, (/P$/ < (DEG|DEC < 的))");
     TreeMatcher match = p.matcher(t);
     Set<Tree> matchedTrees = new HashSet<Tree>();
     while(match.find()) {
