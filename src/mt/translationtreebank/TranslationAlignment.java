@@ -849,13 +849,36 @@ public class TranslationAlignment {
 
     //System.err.println("rangeB = "+ subtranslation[min] + " - " + subtranslation[max]);
     IntPair rangeB = new IntPair(min,max);
-    if (rangeA.getTarget() < rangeB.getSource()) return "ordered";
+
+    if (rangeA.getTarget() < rangeB.getSource()) {
+      for(int eidx = rangeA.getTarget()+1; eidx <= rangeB.getSource()-1; eidx++) {
+        if (submatrix[eidx][deIdx] > 0) {
+          String deWord = subtranslation[eidx];
+          if (deWord.equals("'s")) {
+            return "A 's B";
+          }
+        }
+      }
+
+      return "ordered";
+    }
     if (rangeB.getTarget() < rangeA.getSource()) {
       String boundaryWord = subtranslation[rangeA.getSource()];
       if (boundaryWord.equals("of") ||
-          boundaryWord.equals("with") ||
-          boundaryWord.equals("from")) {
+          boundaryWord.equals("to")) {
         return "B "+boundaryWord+" A";
+      }
+      if (boundaryWord.equals("with") ||
+          boundaryWord.equals("from") ||
+          boundaryWord.equals("in") ||
+          boundaryWord.equals("inside") ||
+          boundaryWord.equals("for") ||
+          boundaryWord.equals("on") ||
+          boundaryWord.equals("between") ||
+          boundaryWord.equals("by") ||
+          boundaryWord.equals("among") ||
+          boundaryWord.equals("under")) {
+        return "B prep A";
       }
 
       String deMappedWord = null;
@@ -864,19 +887,27 @@ public class TranslationAlignment {
         if (submatrix[eidx][deIdx] > 0) {
           String deWord = subtranslation[eidx];
           if (deWord.equals("of") ||
-              deWord.equals("with") ||
-              deWord.equals("from")) {
+              deWord.equals("to")) {
             return "B "+deWord+" A";
+          }
+          if (deWord.equals("with") ||
+              deWord.equals("from") ||
+              deWord.equals("in") ||
+              deWord.equals("inside") ||
+              deWord.equals("for") ||
+              deWord.equals("on") ||
+              deWord.equals("between") ||
+              deWord.equals("by") ||
+              deWord.equals("among") ||
+              deWord.equals("under")) {
+            return "B prep A";
           }
           deMappedWord = deWord;
           break;
         }
       }
       
-      if (deMappedWord==null)
-        return "flipped - "+boundaryWord;
-      else 
-        return "flipped - (DE)"+boundaryWord;
+      return "flipped";
       // TODO: DE might also just map directly to the preposition (of)
       
     }
