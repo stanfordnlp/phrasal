@@ -207,6 +207,15 @@ public class TranslationAlignment {
     return false;
   }
 
+  public static void printNPTree(Tree t, PrintWriter pw) {
+    pw.println("<pre>");
+    if (t != null) {
+      t.pennPrint(pw);
+    } else {
+      pw.println("No Tree");
+    }
+    pw.println("</pre>");
+  }
   public static void printGridNoNull(String[] translation, String[] source, int[][] matrix, PrintWriter pw) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
@@ -931,6 +940,9 @@ public class TranslationAlignment {
 
     // Print out the sub-grid to file
     printGridNoNull(subtranslation, subsource, submatrix, pw);
+    // Print related chNPTree & enNPTree, if exist
+    printNPTree(chNPTree, pw);
+    printNPTree(enNPTree, pw);
 
     if (deIndices.size() > 1) {
       return "multi-DEs";
@@ -1036,12 +1048,26 @@ public class TranslationAlignment {
           break;
         }
       }
-      
+
+      // This is flipped case, but we don't know what it is yet.
+      // If enNPTree exists, 
+      // we can check if range A is a VP and range B is an NP
+      if (checkFlippedRelativeClause(rangeA, rangeB, enNPTree)) return "flipped (relc)";
+
       return "flipped";
       // TODO: DE might also just map directly to the preposition (of)
       
     }
     return "undecided";
+  }
+
+  private static boolean checkFlippedRelativeClause(IntPair rangeA, IntPair rangeB, Tree enTree) {
+    if (enTree == null) return false;
+    Tree relc = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    if (relc != null && relc.value().equals("VP")) {
+      return true;
+    }
+    return false;
   }
 
   private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, IntPair np, TreePair tp, String type) {
