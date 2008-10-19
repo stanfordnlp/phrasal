@@ -769,10 +769,91 @@ public class TranslationAlignment {
     return indexgroups;
   }
 
+  private static Tree getTreeWithEdges(Tree root, int leftEdge, int rightEdge) {
+    Queue<Tree> queue = new LinkedList<Tree>();
+    queue.add(root);
+    while(queue.size() > 0) {
+      Tree t = queue.remove();
+      Tree[] children = t.children();
+      for (Tree c : children) {
+        int left = Trees.leftEdge(c, root);
+        int right = Trees.rightEdge(c, root);
+        if (left==leftEdge && right==rightEdge) {
+          return c;
+        }
+        if (left <= leftEdge || right >= rightEdge) {
+          queue.add(c);
+        }
+      }
+    }
+    return null;
+  }
+
+  private static Tree getTreeWithEdges(List<Tree> ts, int leftEdge, int rightEdge) {
+    int[] startIndices = new int[ts.size()];
+
+    for(int i = 0; i < ts.size(); i++) {
+      if (i==0) startIndices[i] = 0;
+      else {
+        startIndices[i] = startIndices[i-1]+ts.get(i-1).yield().size();
+      }
+    }
+
+    int pickTreeIdx = -1;
+    
+    for(int i = 0; i < startIndices.length; i++) {
+      if (leftEdge >= startIndices[i] && 
+          (i==startIndices.length-1 || rightEdge <= startIndices[i+1])) {
+        pickTreeIdx = i;
+      }
+    }
+    if (pickTreeIdx == -1) {
+      return null;
+    }
+
+    Tree root = ts.get(pickTreeIdx);
+    Queue<Tree> queue = new LinkedList<Tree>();
+    queue.add(root);
+
+    while(queue.size() > 0) {
+      Tree t = queue.remove();
+      Tree[] children = t.children();
+      for (Tree c : children) {
+        int left = Trees.leftEdge(c, root);
+        int right = Trees.rightEdge(c, root);
+
+        if (left==leftEdge-startIndices[pickTreeIdx] && 
+            right==rightEdge-startIndices[pickTreeIdx]) {
+          return c;
+        }
+        if (left <= leftEdge-startIndices[pickTreeIdx] ||
+            right >= rightEdge-startIndices[pickTreeIdx]) {
+          queue.add(c);
+        }
+      }
+    }
+    return null;
+  }
+
+
   private static String analyzeNPwithDE(IntPair np, TreePair tp, PrintWriter pw) throws IOException {
     List<IntPair> englishNP = tp.NPwithDEs.get(np);
     if (englishNP.size() != 1) {
       return "fragmented";
+    }
+
+    Tree chTree = tp.chTrees.get(0);
+    Tree chNPTree = getTreeWithEdges(chTree,np.getSource(), np.getTarget()+1);
+    if (chNPTree == null) {
+      throw new RuntimeException("chNPTree shouldn't be null");
+    }
+
+    Tree enNPTree = getTreeWithEdges(tp.enTrees, englishNP.get(0).getSource(), englishNP.get(0).getTarget()+1);
+    if (enNPTree == null) {
+      System.err.println("enNPTree: NULL");
+    } else {
+      System.err.println("enNPTree: ");
+      enNPTree.pennPrint(System.err);
     }
 
     // if there's only one chunk of English, get the submatrix and subsource & subtranslation
@@ -880,6 +961,9 @@ public class TranslationAlignment {
           boundaryWord.equals("under")) {
         return "B prep A";
       }
+      if (boundaryWord.equals("that")) {
+        return "relative clause";
+      }
 
       String deMappedWord = null;
       // check if deIdx aligns to somewhere in between max(rangeB) and min(rangeA)
@@ -901,6 +985,9 @@ public class TranslationAlignment {
               deWord.equals("among") ||
               deWord.equals("under")) {
             return "B prep A";
+          }
+          if (deWord.equals("that")) {
+            return "relative clause";
           }
           deMappedWord = deWord;
           break;
