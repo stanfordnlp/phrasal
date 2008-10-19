@@ -169,6 +169,44 @@ public class TranslationAlignment {
     printAlignmentGrid(ta, new PrintWriter(System.out, true));
   }
 
+  public static void fixDeterminer(String[] translation, String[] source, int[][] matrix, List<Integer> deIndices) {
+    boolean err = false;
+    if (translation.length != matrix.length || translation.length == 0) {
+      err = true;
+    } else if (matrix[0].length != source.length || source.length == 0) {
+      err = true;
+    }
+    if (err) { throw new RuntimeException("printGridNoNull FAILED."); }
+    
+    if (deIndices.size() > 1) { 
+      // skip this case because it's multi-DEs
+      return;
+    }
+
+    for (int cidx = deIndices.get(0)+1; cidx < source.length; cidx++) {
+      // check if the word align to a determiner as well as something later.
+      // but check backwards
+      boolean isNonDT = false;
+      for (int eidx = translation.length-1; eidx >= 0; eidx--) {
+        if ( !isDeterminer(translation[eidx]) && matrix[eidx][cidx] > 0) { 
+          isNonDT = true; 
+        }
+        else if ( isDeterminer(translation[eidx]) && isNonDT ) {
+          // here it means that source[cidx] has linked to another word later than
+          // the current eidx (which is a determiner).
+          // We can clear the eidx entry in matrix
+          matrix[eidx][cidx] = -1;
+        }
+      }
+    }
+  }
+  
+  private static boolean isDeterminer(String word) {
+    word = word.toLowerCase();
+    if (word.equals("the") || word.equals("a") || word.equals("its")) return true;
+    return false;
+  }
+
   public static void printGridNoNull(String[] translation, String[] source, int[][] matrix, PrintWriter pw) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
@@ -191,6 +229,8 @@ public class TranslationAlignment {
           pw.println("  <td>&nbsp;</td>");
         else if (matrix[tidx][sidx] > 0)
           pw.printf("    <td bgcolor=\"black\">%d,%d</td>\n", tidx, sidx);
+        else if (matrix[tidx][sidx] == -1)
+          pw.printf("    <td bgcolor=\"green\">%d</td>\n", matrix[tidx][sidx]);
         else
           pw.printf("    <td bgcolor=\"red\">%d</td>\n", matrix[tidx][sidx]);
       }
@@ -852,8 +892,8 @@ public class TranslationAlignment {
     if (enNPTree == null) {
       System.err.println("enNPTree: NULL");
     } else {
-      System.err.println("enNPTree: ");
-      enNPTree.pennPrint(System.err);
+      System.err.println("enNPTree: Found");
+      //enNPTree.pennPrint(System.err);
     }
 
     // if there's only one chunk of English, get the submatrix and subsource & subtranslation
@@ -884,11 +924,14 @@ public class TranslationAlignment {
       }
     }
 
+    // The manual alignment like to align the determiners with the noun,
+    // which cause lots of "undecided" type. Try to eliminate this case
+    fixDeterminer(subtranslation, subsource, submatrix, deIndices);
+
+
     // Print out the sub-grid to file
     printGridNoNull(subtranslation, subsource, submatrix, pw);
 
-
-    
     if (deIndices.size() > 1) {
       return "multi-DEs";
     }
