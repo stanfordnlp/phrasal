@@ -996,6 +996,9 @@ public class TranslationAlignment {
         }
       }
 
+      // check if A becomes an adjective
+      if (checkOrderedAdjective(rangeA, rangeB, enNPTree)) return "A B (adj)";
+
       return "ordered";
     }
     if (rangeB.getTarget() < rangeA.getSource()) {
@@ -1059,6 +1062,15 @@ public class TranslationAlignment {
       
     }
     return "undecided";
+  }
+
+  private static boolean checkOrderedAdjective(IntPair rangeA, IntPair rangeB, Tree enTree) {
+    if (enTree == null) return false;
+    Tree adj = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    if (adj != null && (adj.value().equals("ADJP") || adj.value().equals("JJ"))) {
+      return true;
+    }
+    return false;
   }
 
   private static boolean checkFlippedRelativeClause(IntPair rangeA, IntPair rangeB, Tree enTree) {
