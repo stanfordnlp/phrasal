@@ -15,6 +15,7 @@ class EnglishTreeReader extends AbstractTreeReader {
   public EnglishTreeReader() {
     trees_ = new ArrayList<Tree>();
     tlpp_ = new EnglishTreebankParserParams();
+    tlpp_.setOptionFlag(new String[] {"-leaveItAll", "1"}, 0);
     treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket", tlpp_.treebankLanguagePack());
     tt_ = new NMLandPOSTreeTransformer();
     ptbe_ = new PTBEscapingProcessor();
