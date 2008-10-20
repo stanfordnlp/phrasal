@@ -169,7 +169,36 @@ public class TranslationAlignment {
     printAlignmentGrid(ta, new PrintWriter(System.out, true));
   }
 
-  public static void fixDeterminer(String[] translation, String[] source, int[][] matrix, List<Integer> deIndices) {
+  private static void fixWhich(String[] translation, String[] source, int[][] matrix, IntPair rangeA, IntPair rangeB, List<Integer> deIndices) {
+    boolean err = false;
+    if (translation.length != matrix.length || translation.length == 0) {
+      err = true;
+    } else if (matrix[0].length != source.length || source.length == 0) {
+      err = true;
+    }
+    if (err) { throw new RuntimeException("printGridNoNull FAILED."); }
+
+    if (deIndices.size() > 1) {
+      // skip this case because it's multi-DEs
+      return;
+    }
+
+    for (int cidx = deIndices.get(0)+1; cidx < source.length; cidx++) {
+      boolean isNonWhich = false;
+      if (rangeB.getTarget() < translation.length && rangeB.getTarget() > 0) {
+        for (int eidx = 0; eidx < rangeB.getTarget(); eidx++) {
+          if ( !translation[eidx].equals("which") && matrix[eidx][cidx] > 0) {
+            isNonWhich = true;
+          }
+        }
+        if (translation[rangeB.getTarget()].equals("which") && matrix[rangeB.getTarget()][cidx] > 0 && isNonWhich) {
+          matrix[rangeB.getTarget()][cidx] = -1;
+        }
+      }
+    }
+  }
+
+  private static void fixDeterminer(String[] translation, String[] source, int[][] matrix, List<Integer> deIndices) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
       err = true;
@@ -200,6 +229,7 @@ public class TranslationAlignment {
       }
     }
   }
+
   
   private static boolean isDeterminer(String word) {
     word = word.toLowerCase();
@@ -933,17 +963,6 @@ public class TranslationAlignment {
       }
     }
 
-    // The manual alignment like to align the determiners with the noun,
-    // which cause lots of "undecided" type. Try to eliminate this case
-    fixDeterminer(subtranslation, subsource, submatrix, deIndices);
-
-
-    // Print out the sub-grid to file
-    printGridNoNull(subtranslation, subsource, submatrix, pw);
-    // Print related chNPTree & enNPTree, if exist
-    printNPTree(chNPTree, pw);
-    printNPTree(enNPTree, pw);
-
     if (deIndices.size() > 1) {
       return "multi-DEs";
     }
@@ -969,7 +988,7 @@ public class TranslationAlignment {
         }
       }
     }
-    System.err.println("rangeA = "+ subtranslation[min] + " - " + subtranslation[max]);
+
     IntPair rangeA = new IntPair(min,max);
 
     min = subtranslation.length;
@@ -983,8 +1002,24 @@ public class TranslationAlignment {
       }
     }
 
-    //System.err.println("rangeB = "+ subtranslation[min] + " - " + subtranslation[max]);
     IntPair rangeB = new IntPair(min,max);
+
+    // From here, we have 'rangeA' and 'rangeB'
+
+    // The manual alignment like to align the determiners with the noun,
+    // which cause lots of "undecided" type. Try to eliminate this case
+    fixDeterminer(subtranslation, subsource, submatrix, deIndices);
+    fixWhich(subtranslation, subsource, submatrix, rangeA, rangeB, deIndices);
+
+    // Print out the sub-grid to file
+    printGridNoNull(subtranslation, subsource, submatrix, pw);
+    // Print related chNPTree & enNPTree, if exist
+    printNPTree(chNPTree, pw);
+    printNPTree(enNPTree, pw);
+
+
+
+
 
     if (rangeA.getTarget() < rangeB.getSource()) {
       for(int eidx = rangeA.getTarget()+1; eidx <= rangeB.getSource()-1; eidx++) {
@@ -1076,7 +1111,16 @@ public class TranslationAlignment {
   private static boolean checkFlippedRelativeClause(IntPair rangeA, IntPair rangeB, Tree enTree) {
     if (enTree == null) return false;
     Tree relc = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
-    if (relc != null && relc.value().equals("VP")) {
+    if (relc != null && 
+        (relc.value().equals("VP") || 
+         // this second case here is for cases like:
+         //(WHNP (WDT which))
+         // (S
+         // (VP (VBD won)
+         // (NP (DT the) (JJ national)
+         // (NX (JJ important) (NN invention))
+         // (NN award))))))
+         (relc.value().equals("S") && relc.firstChild().value().equals("VP")))) {
       return true;
     }
     return false;
