@@ -200,7 +200,7 @@ public class TranslationAlignment {
     }
   }
 
-  private static void fixDeterminerOrOf(String[] translation, String[] source, int[][] matrix) {
+  private static void fixDeterminerOrOfOrWith(String[] translation, String[] source, int[][] matrix) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
       err = true;
@@ -214,11 +214,11 @@ public class TranslationAlignment {
       // but check backwards
       boolean isNonDT = false;
       for (int eidx = translation.length-1; eidx >= 0; eidx--) {
-        if ( !isDeterminerOrOf(translation[eidx]) && matrix[eidx][cidx] > 0) { 
+        if ( !isDeterminerOrOfOrWith(translation[eidx]) && matrix[eidx][cidx] > 0) { 
           isNonDT = true; 
         }
         else if ( matrix[eidx][cidx] > 0 && 
-                  isDeterminerOrOf(translation[eidx]) && isNonDT) {
+                  isDeterminerOrOfOrWith(translation[eidx]) && isNonDT) {
           // here it means that source[cidx] has linked to another word later than
           // the current eidx (which is a determiner).
           // We can clear the eidx entry in matrix
@@ -229,9 +229,12 @@ public class TranslationAlignment {
   }
 
   
-  private static boolean isDeterminerOrOf(String word) {
+  private static boolean isDeterminerOrOfOrWith(String word) {
     word = word.toLowerCase();
-    if (word.equals("the") || word.equals("a") || word.equals("its") || word.equals("their")) return true;
+    if (word.equals("the") || word.equals("a") || 
+        word.equals("its") || word.equals("their") ||
+        word.equals("an") || word.equals("with"))
+      return true;
     return false;
   }
 
@@ -257,6 +260,39 @@ public class TranslationAlignment {
     if (set && translation[deEidx].equals("of")) return true;
     return false;
   }
+
+  public static boolean checkDeIsPrep(String[] translation, String[] source, int[][] matrix, int deIdx) {
+    boolean set = false;
+    int deEidx = -1;
+    for (int eidx = 0; eidx < translation.length; eidx++) {
+      if (matrix[eidx][deIdx] > 0) {
+        if (set) return false;
+        if (!set) { deEidx = eidx; set = true; }
+      }
+    }
+    if (set && isPrep(translation[deEidx])) return true;
+    return false;
+  }
+
+  private static boolean isPrep(String word) {
+    if (word.equals("with") ||
+        word.equals("within") ||
+        word.equals("from") ||
+        word.equals("in") ||
+        word.equals("inside") ||
+        word.equals("for") ||
+        word.equals("on") ||
+        word.equals("between") ||
+        word.equals("by") ||
+        word.equals("among") ||
+        word.equals("at") ||
+        word.equals("under")) 
+      return true;
+    
+    return false;
+  }
+    
+
 
   public static void printGridNoNull(String[] translation, String[] source, int[][] matrix, PrintWriter pw) {
     boolean err = false;
@@ -929,31 +965,48 @@ public class TranslationAlignment {
   private static IntPair getRangeA(String[] subtranslation, String[] subsource, int[][] submatrix, int deIdx) {
     int min = subtranslation.length;
     int max = -1;
+    boolean setMin = false, setMax = false;
     for(int sidx = 0; sidx < deIdx; sidx++) {
       for(int tidx = 0; tidx < subtranslation.length; tidx++) {
         if (submatrix[tidx][sidx] > 0) {
-          if (tidx < min) min = tidx;
-          if (tidx > max) max = tidx;
+          if (tidx < min) { min = tidx; setMin = true; }
+          if (tidx > max) { max = tidx; setMax = true; }
         }
       }
     }
-
+    if (!setMin || !setMax) { min = max = -1; }
     return new IntPair(min,max);
   }
 
   private static IntPair getRangeB(String[] subtranslation, String[] subsource, int[][] submatrix, int deIdx) {
     int min = subtranslation.length;
     int max = -1;
+    boolean setMin = false, setMax = false;
     for(int sidx = deIdx+1; sidx < subsource.length; sidx++) {
       for(int tidx = 0; tidx < subtranslation.length; tidx++) {
         if (submatrix[tidx][sidx] > 0) {
-          if (tidx < min) { min = tidx; }
-          if (tidx > max) { max = tidx; }
+          if (tidx < min) { min = tidx; setMin = true; }
+          if (tidx > max) { max = tidx; setMax = true; }
         }
       }
     }
-
+    if (!setMin || !setMax) { min = max = -1; }
     return new IntPair(min,max);
+  }
+
+
+
+  private static int getDEeidx(String[] subtranslation, String[] subsource, int[][] submatrix, int deIdx) {
+    boolean set = false;
+    int deEidx = -1;
+    for (int eidx = 0; eidx < subtranslation.length; eidx++) {
+      if (submatrix[eidx][deIdx] > 0) {
+        if (set) return -1;
+        if (!set) { deEidx = eidx; set = true; }
+      }
+    }
+    if (set) return deEidx;
+    return -1;
   }
 
   private static void printRangeAandB(IntPair rangeA, IntPair rangeB, String[] subtranslation, String[] subsource) {
@@ -978,6 +1031,22 @@ public class TranslationAlignment {
       System.err.println("RangeB = NULL");
     }
   }
+
+  private static boolean onRangeEdge(int i, IntPair range) {
+    if (i==-1) return false;
+    if (range.getTarget()==-1) return false;
+    if (range.getSource()==i || range.getTarget()==i) return true;
+    return false;
+  }
+
+  private static boolean inRange(int i, IntPair range) {
+    if (i==-1) return false;
+    if (range.getTarget()==-1) return false;
+    if (range.getSource()<=i && range.getTarget()>=i) return true;
+    return false;
+  }
+
+
 
   private static String analyzeNPwithDE(IntPair np, TreePair tp, PrintWriter pw) throws IOException {
     List<IntPair> englishNP = tp.NPwithDEs.get(np);
@@ -1042,12 +1111,13 @@ public class TranslationAlignment {
 
     // The manual alignment like to align the determiners with the noun,
     // which cause lots of "undecided" type. Try to eliminate this case
-    fixDeterminerOrOf(subtranslation, subsource, submatrix);
+    fixDeterminerOrOfOrWith(subtranslation, subsource, submatrix);
 
     // for "A de B"
     // get the translation range of A
     IntPair rangeA = getRangeA(subtranslation, subsource, submatrix, deIdx);
     IntPair rangeB = getRangeB(subtranslation, subsource, submatrix, deIdx);
+    int deEidx = getDEeidx(subtranslation, subsource, submatrix, deIdx);
     // based one the range, fix 'which' clause, and update rangeA & rangeB
     fixWhichWhere(subtranslation, subsource, submatrix, rangeA, rangeB, deIndices);
     rangeA = getRangeA(subtranslation, subsource, submatrix, deIdx);
@@ -1083,10 +1153,26 @@ public class TranslationAlignment {
       }
 
       // check if A becomes an adjective
-      if (checkOrderedAdjective(rangeA, rangeB, enNPTree)) return "A B (adj)";
-      if (checkOrderedNoun(rangeA, rangeB, enNPTree)) return "A B (np)";
-      if (checkDeIsOf(subtranslation, subsource, submatrix, deIdx)) return "A of B";
+      if (checkSecondVP(rangeA, rangeB, enNPTree)) return "other - VP";
 
+      // For the following cases, we have to first check that
+      // DE does not align to something inside (not on edge) rangeA & rangeB
+      if (deEidx == -1 ||
+          ((onRangeEdge(deEidx, rangeA) || !inRange(deEidx, rangeA)) &&
+           (onRangeEdge(deEidx, rangeB) || !inRange(deEidx, rangeB)))) {
+        if (deEidx != -1 && subtranslation[deEidx].equals("of")) return "A of B";
+        if (deEidx != -1 && isPrep(subtranslation[deEidx])) return "A prep B";
+        // TODO: checkOrderedNoun should be fixed so 11:6 doesn't get confused..
+        //       now i'm just changing the order
+        if (checkOrderedAdjective(rangeA, rangeB, enNPTree)) return "A B (adj)";
+        if (checkOrderedNoun(rangeA, rangeB, enNPTree)) return "A B (np)";
+      } else {
+        return "other - mixed";
+      }
+
+      // if de is inside rangeA or rangeB, this is a "other" case
+          
+      // TODO: check cases like RB JJ
       return "ordered";
     }
     if (rangeB.getTarget() < rangeA.getSource()) {
@@ -1095,18 +1181,7 @@ public class TranslationAlignment {
           boundaryWord.equals("to")) {
         return "B "+boundaryWord+" A";
       }
-      if (boundaryWord.equals("with") ||
-          boundaryWord.equals("within") ||
-          boundaryWord.equals("from") ||
-          boundaryWord.equals("in") ||
-          boundaryWord.equals("inside") ||
-          boundaryWord.equals("for") ||
-          boundaryWord.equals("on") ||
-          boundaryWord.equals("between") ||
-          boundaryWord.equals("by") ||
-          boundaryWord.equals("among") ||
-          boundaryWord.equals("at") ||
-          boundaryWord.equals("under")) {
+      if (isPrep(boundaryWord)) {
         return "B prep A";
       }
       if (boundaryWord.equals("that") || boundaryWord.equals("which")) {
@@ -1122,18 +1197,7 @@ public class TranslationAlignment {
               deWord.equals("to")) {
             return "B "+deWord+" A";
           }
-          if (deWord.equals("with") ||
-              deWord.equals("within") ||
-              deWord.equals("from") ||
-              deWord.equals("in") ||
-              deWord.equals("inside") ||
-              deWord.equals("for") ||
-              deWord.equals("on") ||
-              deWord.equals("between") ||
-              deWord.equals("by") ||
-              deWord.equals("among") ||
-              deWord.equals("at") ||
-              deWord.equals("under")) {
+          if (isPrep(deWord)) {
             return "B prep A";
           }
           if (deWord.equals("that") || deWord.equals("which")) {
@@ -1147,7 +1211,7 @@ public class TranslationAlignment {
       // This is flipped case, but we don't know what it is yet.
       // If enNPTree exists, 
       // we can check if range A is a VP and range B is an NP
-      if (checkFlippedRelativeClause(rangeA, rangeB, enNPTree)) return "flipped (relc)";
+      if (checkFlippedRelativeClause(rangeA, rangeB, enNPTree)) return "relative clause";//"flipped (relc)";
 
       return "flipped";
       // TODO: DE might also just map directly to the preposition (of)
@@ -1167,13 +1231,42 @@ public class TranslationAlignment {
 
   private static boolean checkOrderedNoun(IntPair rangeA, IntPair rangeB, Tree enTree) {
     if (enTree == null) return false;
+
+    boolean firstNP = false;
+    boolean secondNP = false;
+
+
     Tree np = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
     if (np != null && 
         (np.value().startsWith("NP") || np.value().startsWith("NX"))) {
-      return true;
+      firstNP = true;
     }
+
+    Tree bT = getTreeWithEdges(enTree, rangeB.getSource(), rangeB.getTarget()+1);
+    if (bT != null &&
+        (bT.value().startsWith("NP") || bT.value().startsWith("NX"))) {
+      secondNP = true;
+    }
+
+    if (firstNP && secondNP) return true;
+
     return false;
   }
+
+  private static boolean checkSecondVP(IntPair rangeA, IntPair rangeB, Tree enTree) {
+    if (enTree == null) return false;
+
+    Tree bT = getTreeWithEdges(enTree, rangeB.getSource(), rangeB.getTarget()+1);
+    if (bT != null &&
+        (bT.value().startsWith("VP"))) {
+      return true;
+    }
+
+    return false;
+  }
+
+
+
 
   private static boolean checkFlippedRelativeClause(IntPair rangeA, IntPair rangeB, Tree enTree) {
     if (enTree == null) return false;
