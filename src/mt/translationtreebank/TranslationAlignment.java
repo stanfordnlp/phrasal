@@ -1124,7 +1124,7 @@ public class TranslationAlignment {
     rangeB = getRangeB(subtranslation, subsource, submatrix, deIdx);
 
     // From here, we have 'rangeA' and 'rangeB'
-    printRangeAandB(rangeA, rangeB, subtranslation, subsource);
+    //printRangeAandB(rangeA, rangeB, subtranslation, subsource);
 
     // Print out the sub-grid to file
     printGridNoNull(subtranslation, subsource, submatrix, pw);
@@ -1141,9 +1141,18 @@ public class TranslationAlignment {
       if (rangeB.getTarget()==-1) { return "other - B not aligned"; }
     }
 
+    if (deIdx == subsource.length - 1) {
+      if (enNPTree != null && enNPTree.value().equals("VP")) { return "no B - VP"; }
+      return "no B";
+    }
+
+    if (rangeA.getTarget()==-1) { return "other - no en range A"; }
+    if (rangeB.getTarget()==-1) { return "other - no en range B"; }
+
 
     if (rangeA.getTarget() < rangeB.getSource()) {
-      for(int eidx = rangeA.getTarget()+1; eidx <= rangeB.getSource()-1; eidx++) {
+      // starting from the end of rangeA, because 's could be on the edge
+      for(int eidx = rangeA.getTarget(); eidx <= rangeB.getSource()-1; eidx++) {
         if (submatrix[eidx][deIdx] > 0) {
           String deWord = subtranslation[eidx];
           if (deWord.equals("'s")) {
@@ -1154,6 +1163,7 @@ public class TranslationAlignment {
 
       // check if A becomes an adjective
       if (checkSecondVP(rangeA, rangeB, enNPTree)) return "other - VP";
+      // TODO: second -- ADVP VP
 
       // For the following cases, we have to first check that
       // DE does not align to something inside (not on edge) rangeA & rangeB
@@ -1165,14 +1175,16 @@ public class TranslationAlignment {
         // TODO: checkOrderedNoun should be fixed so 11:6 doesn't get confused..
         //       now i'm just changing the order
         if (checkOrderedAdjective(rangeA, rangeB, enNPTree)) return "A B (adj)";
-        if (checkOrderedNoun(rangeA, rangeB, enNPTree)) return "A B (np)";
+        if (checkOrderedAdverb(rangeA, rangeB, enNPTree)) return "A B (adv)";
+        String mod = checkOrderedOtherModifier(rangeA, rangeB, enNPTree);
+        if (mod != null) return "A B ("+mod.toLowerCase()+")";
+        if (checkOrderedNoun(rangeA, rangeB, enNPTree)) return "A B (n)";
       } else {
         return "other - mixed";
       }
 
-      // if de is inside rangeA or rangeB, this is a "other" case
-          
-      // TODO: check cases like RB JJ
+      // if no enNPTRee, give it a "ordered - no enNPtree" category
+      if (enNPTree==null) return "ordered - no enNPtree";
       return "ordered";
     }
     if (rangeB.getTarget() < rangeA.getSource()) {
@@ -1215,18 +1227,59 @@ public class TranslationAlignment {
 
       return "flipped";
       // TODO: DE might also just map directly to the preposition (of)
-      
     }
     return "undecided";
   }
 
+  private static boolean checkOrderedAdverb(IntPair rangeA, IntPair rangeB, Tree enTree) {
+    if (enTree == null) return false;
+
+    // check if the first part is an adjective
+    Tree adj = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    if (adj != null && (adj.value().startsWith("RB"))) {
+      return true;
+    }
+    return false;
+  }
+
   private static boolean checkOrderedAdjective(IntPair rangeA, IntPair rangeB, Tree enTree) {
     if (enTree == null) return false;
+
+    // check if the first part is an adjective
     Tree adj = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
     if (adj != null && (adj.value().startsWith("ADJP") || adj.value().startsWith("JJ"))) {
       return true;
     }
+
+    // check if the first part is 2 subtrees, with forms like:
+    // RB JJ, JJ JJ, NP JJ, RBR JJ, etc
+    for (int sep = rangeA.getSource(); sep <= rangeA.getTarget(); sep++) {
+      Tree adj1 = getTreeWithEdges(enTree, rangeA.getSource(), sep+1);
+      Tree adj2 = getTreeWithEdges(enTree, sep+1, rangeA.getTarget()+1);
+      if (adj1 != null && adj2 != null) {
+        System.err.println("ADJ1=");
+        adj1.pennPrint(System.err);
+        System.err.println("ADJ2=");
+        adj2.pennPrint(System.err);
+        String adj1str = adj1.value();
+        String adj2str = adj2.value();
+        if (adj2str.startsWith("JJ") || adj2str.equals("ADJP")) {
+          if (adj1str.startsWith("RB") || (adj1str.startsWith("JJ") || (adj1str.startsWith("N")))) {
+            return true;
+          }
+        }
+      }
+    }
     return false;
+  }
+
+  private static String checkOrderedOtherModifier(IntPair rangeA, IntPair rangeB, Tree enTree) {
+    if (enTree == null) return null;
+    Tree adj = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    if (adj != null && (adj.value().startsWith("VBN") || adj.value().startsWith("VBG") || adj.value().startsWith("PRP$"))) {
+      return adj.value();
+    }
+    return null;
   }
 
   private static boolean checkOrderedNoun(IntPair rangeA, IntPair rangeB, Tree enTree) {
@@ -1238,16 +1291,50 @@ public class TranslationAlignment {
 
     Tree np = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
     if (np != null && 
-        (np.value().startsWith("NP") || np.value().startsWith("NX"))) {
+        (np.value().startsWith("N"))) {
       firstNP = true;
+    }
+
+    // check if the first part has a modifier and then a noun
+    if (!firstNP) {
+      for (int sep = rangeA.getSource(); sep <= rangeA.getTarget(); sep++) {
+        Tree n1 = getTreeWithEdges(enTree, rangeA.getSource(), sep+1);
+        Tree n2 = getTreeWithEdges(enTree, sep+1, rangeA.getTarget()+1);
+        if (n1 != null && n2 != null) {
+          String n1str = n1.value();
+          String n2str = n2.value();
+        if (n1str.equals("JJ") || n1str.startsWith("N")) {
+          if (n2str.startsWith("N")) {
+            firstNP = true;
+            break;
+          }
+        }
+        }
+      }
     }
 
     Tree bT = getTreeWithEdges(enTree, rangeB.getSource(), rangeB.getTarget()+1);
     if (bT != null &&
-        (bT.value().startsWith("NP") || bT.value().startsWith("NX"))) {
+        (bT.value().startsWith("N"))) {
       secondNP = true;
     }
 
+    // check if the second part is a compound noun
+    if (!secondNP)
+      for (int sep = rangeB.getSource(); sep <= rangeB.getTarget(); sep++) {
+        Tree n1 = getTreeWithEdges(enTree, rangeB.getSource(), sep+1);
+        Tree n2 = getTreeWithEdges(enTree, sep+1, rangeB.getTarget()+1);
+        if (n1 != null && n2 != null) {
+          String n1str = n1.value();
+          String n2str = n2.value();
+          if (n1str.startsWith("N") && n2str.startsWith("N")) {
+            secondNP = true;
+            break;
+          }
+        }
+      }
+    
+    
     if (firstNP && secondNP) return true;
 
     return false;
@@ -1264,8 +1351,6 @@ public class TranslationAlignment {
 
     return false;
   }
-
-
 
 
   private static boolean checkFlippedRelativeClause(IntPair rangeA, IntPair rangeB, Tree enTree) {
