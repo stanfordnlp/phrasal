@@ -1257,10 +1257,6 @@ public class TranslationAlignment {
       Tree adj1 = getTreeWithEdges(enTree, rangeA.getSource(), sep+1);
       Tree adj2 = getTreeWithEdges(enTree, sep+1, rangeA.getTarget()+1);
       if (adj1 != null && adj2 != null) {
-        System.err.println("ADJ1=");
-        adj1.pennPrint(System.err);
-        System.err.println("ADJ2=");
-        adj2.pennPrint(System.err);
         String adj1str = adj1.value();
         String adj2str = adj2.value();
         if (adj2str.startsWith("JJ") || adj2str.equals("ADJP")) {

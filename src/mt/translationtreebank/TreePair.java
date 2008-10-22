@@ -83,6 +83,19 @@ class TreePair {
         // merge these 2
         enSpan.addAll(nullSpan);
 
+        // fill in English gaps where the English word aligns to null in Chinese
+        if (enSpan.size() > 0)
+          for(int eidx = enSpan.first(); eidx <= enSpan.last(); eidx++) {
+            if (!enSpan.contains(eidx)) {
+              // if this index wasn't aligned to any thing (except NULL)
+              boolean notAligned = true;
+              for (int cidx = 1; cidx < alignment.matrix_[eidx].length; cidx++) {
+                if (alignment.matrix_[eidx][cidx] > 0) { notAligned = false; break; }
+              }
+              if (notAligned) { enSpan.add(eidx); }
+            }
+          }
+
         // compute IntPair
         int prevI = -1;
         int start = -1;
