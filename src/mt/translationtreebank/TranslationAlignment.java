@@ -833,7 +833,7 @@ public class TranslationAlignment {
     return ta;
   }
 
-  private static void checkTranslationAlignmentAndEnTrees(TranslationAlignment ta, List<Tree> enTrees) {
+  static void checkTranslationAlignmentAndEnTrees(TranslationAlignment ta, List<Tree> enTrees) {
     String[] enFromAlignment = ta.translation_;
     Sentence<HasWord> enFromTrees = new Sentence<HasWord>();
     for (Tree eT : enTrees) {
@@ -855,7 +855,7 @@ public class TranslationAlignment {
     }
   }
 
-  private static void checkTranslationAlignmentAndChTrees(TranslationAlignment ta, List<Tree> chTrees) {
+  static void checkTranslationAlignmentAndChTrees(TranslationAlignment ta, List<Tree> chTrees) {
     String[] chFromAlignment = ta.source_;
     Sentence<HasWord> chFromTrees = chTrees.get(0).yield();
     if (chFromAlignment.length != chFromTrees.size()) {
@@ -896,7 +896,7 @@ public class TranslationAlignment {
     return indexgroups;
   }
 
-  private static Tree getTreeWithEdges(Tree root, int leftEdge, int rightEdge) {
+  public static Tree getTreeWithEdges(Tree root, int leftEdge, int rightEdge) {
     Queue<Tree> queue = new LinkedList<Tree>();
     queue.add(root);
     while(queue.size() > 0) {
@@ -1501,7 +1501,7 @@ public class TranslationAlignment {
           continue;
           // skip for now
         } else if (chTrees.size() > 1) {
-          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+          System.err.printf("i=%d: Multiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
         }
         
         List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
@@ -1510,7 +1510,7 @@ public class TranslationAlignment {
           continue;
           // skip for now
         } else if (enTrees.size() > 1) {
-          System.err.printf("i=%d: Mulitiple trees: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
+          System.err.printf("i=%d: Multiple trees: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
         }
         
         // Fix the Translation Alignment before adding to the TreePair

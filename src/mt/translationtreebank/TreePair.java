@@ -10,11 +10,14 @@ class TreePair {
   List<Tree> enTrees;
   List<Tree> chTrees;
   Map<IntPair, List<IntPair>> NPwithDEs;
+  Map<IntPair, String> NPwithDEs_categories;
 
   public TreePair(TranslationAlignment alignment, List<Tree> enTrees, List<Tree> chTrees) {
     this.alignment = alignment;
     this.enTrees = enTrees;
     this.chTrees = chTrees;
+    this.NPwithDEs_categories = new HashMap<IntPair, String>();
+
     computeNPwithDEs();
   }
 
@@ -22,6 +25,41 @@ class TreePair {
     System.out.println("<pre>");
     t.pennPrint(System.out);
     System.out.println("</pre>");
+  }
+
+  public static void annotateNPwithDEs(List<Pair<String,String>> categories, List<TreePair> treepairs_inFile) {
+    // check if total number of NPs is correct
+    int totalNPs = 0;
+    for (TreePair tp : treepairs_inFile) {
+      totalNPs += tp.NPwithDEs.size();
+    }
+    if (categories.size() != totalNPs)
+      throw new RuntimeException(categories.size()+" != "+totalNPs);
+
+    int catIdx = 0;
+    for(TreePair tp : treepairs_inFile) {
+      for(Map.Entry<IntPair, List<IntPair>> e : tp.NPwithDEs.entrySet()) {
+        String np = tp.chNPwithDE(e.getKey());
+        np = np.trim();
+        if (!categories.get(catIdx).second().endsWith(np)) {
+          System.err.println("CMP1:\t"+categories.get(catIdx).second());
+          System.err.println("CMP2:\t"+np);
+        }
+        tp.NPwithDEs_categories.put(e.getKey(), categories.get(catIdx).first());
+        catIdx++;
+      }
+    }
+  }
+
+  public String chNPwithDE(IntPair ip) {
+    StringBuilder sb = new StringBuilder();
+    if (NPwithDEs.keySet().contains(ip)) {
+      for(int i = ip.getSource(); i <= ip.getTarget(); i++) 
+        sb.append(alignment.source_[i]).append(" ");
+      return sb.toString();
+    } else {
+      return null;
+    }
   }
 
   private void printMarkedChineseSentence() {
@@ -173,7 +211,7 @@ class TreePair {
   }
   
   public static Set<Tree> getNPwithDESubTrees(Tree t) {
-    TreePattern p = TreePattern.compile("NP <, (/P$/ < (DEG|DEC < 的))");
+    TreePattern p = TreePattern.compile("NP < (/P$/ < (DEG|DEC < 的))");
     TreeMatcher match = p.matcher(t);
     Set<Tree> matchedTrees = new HashSet<Tree>();
     while(match.find()) {
