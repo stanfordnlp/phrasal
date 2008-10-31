@@ -116,9 +116,9 @@ public class TranslationAlignment {
     return newSent;
   }
 
-  public TreeSet<Integer> mapChineseToEnglish(IntPair ip) {
+  public TreeSet<Integer> mapChineseToEnglish(Pair<Integer,Integer> ip) {
     TreeSet<Integer> english = new TreeSet<Integer>();
-    for (int i = ip.getSource(); i <= ip.getTarget(); i++) {
+    for (int i = ip.first; i <= ip.second; i++) {
       int matrixSource = i+1;
       for (int tidx = 1; tidx < translation_.length+1; tidx++) {
         if (matrix_[tidx][matrixSource] > 0) {
@@ -129,17 +129,17 @@ public class TranslationAlignment {
     return english;
   }
 
-  public TreeSet<Integer> mapChineseToEnglish_FillGap(IntPair ip, TreeSet<Integer> enRange) {
+  public TreeSet<Integer> mapChineseToEnglish_FillGap(Pair<Integer,Integer> ip, TreeSet<Integer> enRange) {
     boolean contiguous = true;
     int prevI = -1;
     TreeSet<Integer> nullgaps = new TreeSet<Integer>();
-    List<IntPair> gaps = new ArrayList<IntPair>();
+    List<Pair<Integer,Integer>> gaps = new ArrayList<Pair<Integer,Integer>>();
     
     for (Integer i : enRange) {
       //System.out.println("eni = "+i+"<br>");
       if (prevI != -1) {
         if (i > prevI+1) {
-          IntPair gap = new IntPair(prevI+1, i-1);
+          Pair<Integer,Integer> gap = new Pair<Integer,Integer>(prevI+1, i-1);
           //System.out.println("Add = "+gap+"<br>");
           gaps.add(gap);
         }
@@ -147,8 +147,8 @@ public class TranslationAlignment {
       prevI = i;
     }
     
-    for(IntPair gap : gaps) {
-      for (int eni = gap.getSource() ; eni<=gap.getTarget(); eni++) {
+    for(Pair<Integer,Integer> gap : gaps) {
+      for (int eni = gap.first ; eni<=gap.second; eni++) {
         // Note: eni is 0-based, so we need to add 1
         boolean add = true;
         // It doesn't matter if the word aligns to NULL: matrix_[eni+1][0] can be whatever
@@ -169,7 +169,7 @@ public class TranslationAlignment {
     printAlignmentGrid(ta, new PrintWriter(System.out, true));
   }
 
-  private static void fixWhichWhere(String[] translation, String[] source, int[][] matrix, IntPair rangeA, IntPair rangeB, List<Integer> deIndices) {
+  private static void fixWhichWhere(String[] translation, String[] source, int[][] matrix, Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, List<Integer> deIndices) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
       err = true;
@@ -185,16 +185,16 @@ public class TranslationAlignment {
 
     for (int cidx = deIndices.get(0)+1; cidx < source.length; cidx++) {
       boolean isNonWhichWhere = false;
-      if (rangeB.getTarget() < translation.length && rangeB.getTarget() > 0) {
-        for (int eidx = 0; eidx < rangeB.getTarget(); eidx++) {
+      if (rangeB.second < translation.length && rangeB.second > 0) {
+        for (int eidx = 0; eidx < rangeB.second; eidx++) {
           if ( (!translation[eidx].equals("which") && !translation[eidx].equals("where")) &&
                matrix[eidx][cidx] > 0) {
             isNonWhichWhere = true;
           }
         }
-        if ((translation[rangeB.getTarget()].equals("which") || translation[rangeB.getTarget()].equals("where"))
-            && matrix[rangeB.getTarget()][cidx] > 0 && isNonWhichWhere) {
-          matrix[rangeB.getTarget()][cidx] = -1;
+        if ((translation[rangeB.second].equals("which") || translation[rangeB.second].equals("where"))
+            && matrix[rangeB.second][cidx] > 0 && isNonWhichWhere) {
+          matrix[rangeB.second][cidx] = -1;
         }
       }
     }
@@ -962,7 +962,7 @@ public class TranslationAlignment {
     return null;
   }
 
-  private static IntPair getRangeA(String[] subtranslation, String[] subsource, int[][] submatrix, int deIdx) {
+  private static Pair<Integer,Integer> getRangeA(String[] subtranslation, String[] subsource, int[][] submatrix, int deIdx) {
     int min = subtranslation.length;
     int max = -1;
     boolean setMin = false, setMax = false;
@@ -975,10 +975,10 @@ public class TranslationAlignment {
       }
     }
     if (!setMin || !setMax) { min = max = -1; }
-    return new IntPair(min,max);
+    return new Pair<Integer,Integer>(min,max);
   }
 
-  private static IntPair getRangeB(String[] subtranslation, String[] subsource, int[][] submatrix, int deIdx) {
+  private static Pair<Integer,Integer> getRangeB(String[] subtranslation, String[] subsource, int[][] submatrix, int deIdx) {
     int min = subtranslation.length;
     int max = -1;
     boolean setMin = false, setMax = false;
@@ -991,7 +991,7 @@ public class TranslationAlignment {
       }
     }
     if (!setMin || !setMax) { min = max = -1; }
-    return new IntPair(min,max);
+    return new Pair<Integer,Integer>(min,max);
   }
 
 
@@ -1009,21 +1009,21 @@ public class TranslationAlignment {
     return -1;
   }
 
-  private static void printRangeAandB(IntPair rangeA, IntPair rangeB, String[] subtranslation, String[] subsource) {
-    if (rangeA.getSource() >= 0 && rangeA.getSource() < subtranslation.length &&
-        rangeA.getTarget() >= 0 && rangeA.getTarget() < subtranslation.length) {
+  private static void printRangeAandB(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, String[] subtranslation, String[] subsource) {
+    if (rangeA.first >= 0 && rangeA.first < subtranslation.length &&
+        rangeA.second >= 0 && rangeA.second < subtranslation.length) {
       System.err.print("RangeA = ");
-      for (int i = rangeA.getSource(); i <= rangeA.getTarget(); i++) {
+      for (int i = rangeA.first; i <= rangeA.second; i++) {
         System.err.print(subtranslation[i]+" ");
       }
       System.err.println();
     } else {
       System.err.println("RangeA = NULL");
     }
-    if (rangeB.getSource() >= 0 && rangeB.getSource() < subtranslation.length &&
-        rangeB.getTarget() >= 0 && rangeB.getTarget() < subtranslation.length) {
+    if (rangeB.first >= 0 && rangeB.first < subtranslation.length &&
+        rangeB.second >= 0 && rangeB.second < subtranslation.length) {
       System.err.print("RangeB = ");
-      for (int i = rangeB.getSource(); i <= rangeB.getTarget(); i++) {
+      for (int i = rangeB.first; i <= rangeB.second; i++) {
         System.err.print(subtranslation[i]+" ");
       }
       System.err.println();
@@ -1032,35 +1032,35 @@ public class TranslationAlignment {
     }
   }
 
-  private static boolean onRangeEdge(int i, IntPair range) {
+  private static boolean onRangeEdge(int i, Pair<Integer,Integer> range) {
     if (i==-1) return false;
-    if (range.getTarget()==-1) return false;
-    if (range.getSource()==i || range.getTarget()==i) return true;
+    if (range.second==-1) return false;
+    if (range.first==i || range.second==i) return true;
     return false;
   }
 
-  private static boolean inRange(int i, IntPair range) {
+  private static boolean inRange(int i, Pair<Integer,Integer> range) {
     if (i==-1) return false;
-    if (range.getTarget()==-1) return false;
-    if (range.getSource()<=i && range.getTarget()>=i) return true;
+    if (range.second==-1) return false;
+    if (range.first<=i && range.second>=i) return true;
     return false;
   }
 
 
 
-  private static String analyzeNPwithDE(IntPair np, TreePair tp, PrintWriter pw) throws IOException {
-    List<IntPair> englishNP = tp.NPwithDEs.get(np);
+  private static String analyzeNPwithDE(Pair<Integer,Integer> np, TreePair tp, PrintWriter pw) throws IOException {
+    List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(np);
     if (englishNP.size() != 1) {
       return "fragmented";
     }
 
     Tree chTree = tp.chTrees.get(0);
-    Tree chNPTree = getTreeWithEdges(chTree,np.getSource(), np.getTarget()+1);
+    Tree chNPTree = getTreeWithEdges(chTree,np.first, np.second+1);
     if (chNPTree == null) {
       throw new RuntimeException("chNPTree shouldn't be null");
     }
 
-    Tree enNPTree = getTreeWithEdges(tp.enTrees, englishNP.get(0).getSource(), englishNP.get(0).getTarget()+1);
+    Tree enNPTree = getTreeWithEdges(tp.enTrees, englishNP.get(0).first, englishNP.get(0).second+1);
     if (enNPTree == null) {
       System.err.println("enNPTree: NULL");
     } else {
@@ -1069,30 +1069,30 @@ public class TranslationAlignment {
     }
 
     // if there's only one chunk of English, get the submatrix and subsource & subtranslation
-    IntPair ennp = englishNP.get(0);
-    int nplength = np.getTarget()-np.getSource()+1;
-    int ennplength = ennp.getTarget()-ennp.getSource()+1;
+    Pair<Integer,Integer> ennp = englishNP.get(0);
+    int nplength = np.second-np.first+1;
+    int ennplength = ennp.second-ennp.first+1;
     String[] subsource      = new String[nplength];
     String[] subtranslation = new String[ennplength];
     int[][] submatrix = new int[ennplength][nplength];
 
-    for(int tidx = ennp.getSource(); tidx <= ennp.getTarget(); tidx++) {
-      for(int sidx = np.getSource(); sidx <= np.getTarget(); sidx++) {
+    for(int tidx = ennp.first; tidx <= ennp.second; tidx++) {
+      for(int sidx = np.first; sidx <= np.second; sidx++) {
         // This really can be improved. Note that in matrix_, 0 --> NULL
-        submatrix[tidx-ennp.getSource()][sidx-np.getSource()] = tp.alignment.matrix_[tidx+1][sidx+1];
+        submatrix[tidx-ennp.first][sidx-np.first] = tp.alignment.matrix_[tidx+1][sidx+1];
       }
     }
 
     //locate the "的"
-    for(int tidx = ennp.getSource(); tidx <= ennp.getTarget(); tidx++) {
-      subtranslation[tidx-ennp.getSource()] = tp.alignment.translation_[tidx];
+    for(int tidx = ennp.first; tidx <= ennp.second; tidx++) {
+      subtranslation[tidx-ennp.first] = tp.alignment.translation_[tidx];
     }
     List<Integer> deIndices = new ArrayList<Integer>();
-    for(int sidx = np.getSource(); sidx <= np.getTarget(); sidx++) {
-      subsource[sidx-np.getSource()] = tp.alignment.source_[sidx];
+    for(int sidx = np.first; sidx <= np.second; sidx++) {
+      subsource[sidx-np.first] = tp.alignment.source_[sidx];
       if (tp.alignment.source_[sidx].equals("的") ||
 	      tp.alignment.source_[sidx].equals("之")) {
-        deIndices.add(sidx-np.getSource());
+        deIndices.add(sidx-np.first);
       }
     }
 
@@ -1115,8 +1115,8 @@ public class TranslationAlignment {
 
     // for "A de B"
     // get the translation range of A
-    IntPair rangeA = getRangeA(subtranslation, subsource, submatrix, deIdx);
-    IntPair rangeB = getRangeB(subtranslation, subsource, submatrix, deIdx);
+    Pair<Integer,Integer> rangeA = getRangeA(subtranslation, subsource, submatrix, deIdx);
+    Pair<Integer,Integer> rangeB = getRangeB(subtranslation, subsource, submatrix, deIdx);
     int deEidx = getDEeidx(subtranslation, subsource, submatrix, deIdx);
     // based one the range, fix 'which' clause, and update rangeA & rangeB
     fixWhichWhere(subtranslation, subsource, submatrix, rangeA, rangeB, deIndices);
@@ -1137,8 +1137,8 @@ public class TranslationAlignment {
     // but either no rangeA or rangeB
     // then return "other - A/B not aligned"
     if (deIdx > 0 && deIdx < subsource.length-1) {
-      if (rangeA.getTarget()==-1) { return "other - A not aligned"; }
-      if (rangeB.getTarget()==-1) { return "other - B not aligned"; }
+      if (rangeA.second==-1) { return "other - A not aligned"; }
+      if (rangeB.second==-1) { return "other - B not aligned"; }
     }
 
     if (deIdx == subsource.length - 1) {
@@ -1146,13 +1146,13 @@ public class TranslationAlignment {
       return "no B";
     }
 
-    if (rangeA.getTarget()==-1) { return "other - no en range A"; }
-    if (rangeB.getTarget()==-1) { return "other - no en range B"; }
+    if (rangeA.second==-1) { return "other - no en range A"; }
+    if (rangeB.second==-1) { return "other - no en range B"; }
 
 
-    if (rangeA.getTarget() < rangeB.getSource()) {
+    if (rangeA.second < rangeB.first) {
       // starting from the end of rangeA, because 's could be on the edge
-      for(int eidx = rangeA.getTarget(); eidx <= rangeB.getSource()-1; eidx++) {
+      for(int eidx = rangeA.second; eidx <= rangeB.first-1; eidx++) {
         if (submatrix[eidx][deIdx] > 0) {
           String deWord = subtranslation[eidx];
           if (deWord.equals("'s")) {
@@ -1187,8 +1187,8 @@ public class TranslationAlignment {
       if (enNPTree==null) return "ordered - no enNPtree";
       return "ordered";
     }
-    if (rangeB.getTarget() < rangeA.getSource()) {
-      String boundaryWord = subtranslation[rangeA.getSource()];
+    if (rangeB.second < rangeA.first) {
+      String boundaryWord = subtranslation[rangeA.first];
       if (boundaryWord.equals("of") ||
           boundaryWord.equals("to")) {
         return "B "+boundaryWord+" A";
@@ -1202,7 +1202,7 @@ public class TranslationAlignment {
 
       String deMappedWord = null;
       // check if deIdx aligns to somewhere in between max(rangeB) and min(rangeA)
-      for(int eidx = rangeB.getTarget()+1; eidx <= rangeA.getSource()-1; eidx++) {
+      for(int eidx = rangeB.second+1; eidx <= rangeA.first-1; eidx++) {
         if (submatrix[eidx][deIdx] > 0) {
           String deWord = subtranslation[eidx];
           if (deWord.equals("of") ||
@@ -1231,31 +1231,31 @@ public class TranslationAlignment {
     return "undecided";
   }
 
-  private static boolean checkOrderedAdverb(IntPair rangeA, IntPair rangeB, Tree enTree) {
+  private static boolean checkOrderedAdverb(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, Tree enTree) {
     if (enTree == null) return false;
 
     // check if the first part is an adjective
-    Tree adj = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    Tree adj = getTreeWithEdges(enTree, rangeA.first, rangeA.second+1);
     if (adj != null && (adj.value().startsWith("RB"))) {
       return true;
     }
     return false;
   }
 
-  private static boolean checkOrderedAdjective(IntPair rangeA, IntPair rangeB, Tree enTree) {
+  private static boolean checkOrderedAdjective(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, Tree enTree) {
     if (enTree == null) return false;
 
     // check if the first part is an adjective
-    Tree adj = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    Tree adj = getTreeWithEdges(enTree, rangeA.first, rangeA.second+1);
     if (adj != null && (adj.value().startsWith("ADJP") || adj.value().startsWith("JJ"))) {
       return true;
     }
 
     // check if the first part is 2 subtrees, with forms like:
     // RB JJ, JJ JJ, NP JJ, RBR JJ, etc
-    for (int sep = rangeA.getSource(); sep <= rangeA.getTarget(); sep++) {
-      Tree adj1 = getTreeWithEdges(enTree, rangeA.getSource(), sep+1);
-      Tree adj2 = getTreeWithEdges(enTree, sep+1, rangeA.getTarget()+1);
+    for (int sep = rangeA.first; sep <= rangeA.second; sep++) {
+      Tree adj1 = getTreeWithEdges(enTree, rangeA.first, sep+1);
+      Tree adj2 = getTreeWithEdges(enTree, sep+1, rangeA.second+1);
       if (adj1 != null && adj2 != null) {
         String adj1str = adj1.value();
         String adj2str = adj2.value();
@@ -1269,23 +1269,23 @@ public class TranslationAlignment {
     return false;
   }
 
-  private static String checkOrderedOtherModifier(IntPair rangeA, IntPair rangeB, Tree enTree) {
+  private static String checkOrderedOtherModifier(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, Tree enTree) {
     if (enTree == null) return null;
-    Tree adj = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    Tree adj = getTreeWithEdges(enTree, rangeA.first, rangeA.second+1);
     if (adj != null && (adj.value().startsWith("VBN") || adj.value().startsWith("VBG") || adj.value().startsWith("PRP$"))) {
       return adj.value();
     }
     return null;
   }
 
-  private static boolean checkOrderedNoun(IntPair rangeA, IntPair rangeB, Tree enTree) {
+  private static boolean checkOrderedNoun(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, Tree enTree) {
     if (enTree == null) return false;
 
     boolean firstNP = false;
     boolean secondNP = false;
 
 
-    Tree np = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    Tree np = getTreeWithEdges(enTree, rangeA.first, rangeA.second+1);
     if (np != null && 
         (np.value().startsWith("N"))) {
       firstNP = true;
@@ -1293,9 +1293,9 @@ public class TranslationAlignment {
 
     // check if the first part has a modifier and then a noun
     if (!firstNP) {
-      for (int sep = rangeA.getSource(); sep <= rangeA.getTarget(); sep++) {
-        Tree n1 = getTreeWithEdges(enTree, rangeA.getSource(), sep+1);
-        Tree n2 = getTreeWithEdges(enTree, sep+1, rangeA.getTarget()+1);
+      for (int sep = rangeA.first; sep <= rangeA.second; sep++) {
+        Tree n1 = getTreeWithEdges(enTree, rangeA.first, sep+1);
+        Tree n2 = getTreeWithEdges(enTree, sep+1, rangeA.second+1);
         if (n1 != null && n2 != null) {
           String n1str = n1.value();
           String n2str = n2.value();
@@ -1309,7 +1309,7 @@ public class TranslationAlignment {
       }
     }
 
-    Tree bT = getTreeWithEdges(enTree, rangeB.getSource(), rangeB.getTarget()+1);
+    Tree bT = getTreeWithEdges(enTree, rangeB.first, rangeB.second+1);
     if (bT != null &&
         (bT.value().startsWith("N"))) {
       secondNP = true;
@@ -1317,9 +1317,9 @@ public class TranslationAlignment {
 
     // check if the second part is a compound noun
     if (!secondNP)
-      for (int sep = rangeB.getSource(); sep <= rangeB.getTarget(); sep++) {
-        Tree n1 = getTreeWithEdges(enTree, rangeB.getSource(), sep+1);
-        Tree n2 = getTreeWithEdges(enTree, sep+1, rangeB.getTarget()+1);
+      for (int sep = rangeB.first; sep <= rangeB.second; sep++) {
+        Tree n1 = getTreeWithEdges(enTree, rangeB.first, sep+1);
+        Tree n2 = getTreeWithEdges(enTree, sep+1, rangeB.second+1);
         if (n1 != null && n2 != null) {
           String n1str = n1.value();
           String n2str = n2.value();
@@ -1336,10 +1336,10 @@ public class TranslationAlignment {
     return false;
   }
 
-  private static boolean checkSecondVP(IntPair rangeA, IntPair rangeB, Tree enTree) {
+  private static boolean checkSecondVP(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, Tree enTree) {
     if (enTree == null) return false;
 
-    Tree bT = getTreeWithEdges(enTree, rangeB.getSource(), rangeB.getTarget()+1);
+    Tree bT = getTreeWithEdges(enTree, rangeB.first, rangeB.second+1);
     if (bT != null &&
         (bT.value().startsWith("VP"))) {
       return true;
@@ -1349,9 +1349,9 @@ public class TranslationAlignment {
   }
 
 
-  private static boolean checkFlippedRelativeClause(IntPair rangeA, IntPair rangeB, Tree enTree) {
+  private static boolean checkFlippedRelativeClause(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, Tree enTree) {
     if (enTree == null) return false;
-    Tree relc = getTreeWithEdges(enTree, rangeA.getSource(), rangeA.getTarget()+1);
+    Tree relc = getTreeWithEdges(enTree, rangeA.first, rangeA.second+1);
     if (relc != null && 
         (relc.value().startsWith("VP") || 
          relc.value().startsWith("SBAR") || 
@@ -1369,18 +1369,18 @@ public class TranslationAlignment {
     return false;
   }
 
-  private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, IntPair np, TreePair tp, String type) {
-    List<IntPair> englishNP = tp.NPwithDEs.get(np);
+  private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, Pair<Integer,Integer> np, TreePair tp, String type) {
+    List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(np);
     List<String> ch = new ArrayList<String>();
-    for (int i = np.getSource(); i<=np.getTarget(); i++) {
+    for (int i = np.first; i<=np.second; i++) {
       ch.add(tp.alignment.source_[i]);
     }
     String chStr = StringUtils.join(ch, " ");
 
     List<String> en = new ArrayList<String>();
-    for (IntPair enNP : englishNP) {
+    for (Pair<Integer,Integer> enNP : englishNP) {
       StringBuilder ensb = new StringBuilder();
-      for (int i = enNP.getSource(); i<=enNP.getTarget(); i++) {
+      for (int i = enNP.first; i<=enNP.second; i++) {
         ensb.append(tp.alignment.translation_[i]).append(" ");
       }
       en.add(ensb.toString());
@@ -1524,8 +1524,8 @@ public class TranslationAlignment {
         TreePair tp = new TreePair(ta, enTrees, chTrees);
         numNPwithDE += tp.NPwithDEs.size();
         
-        for (IntPair NPwithDE : tp.NPwithDEs.keySet()) {
-          List<IntPair> englishNP = tp.NPwithDEs.get(NPwithDE);
+        for (Pair<Integer,Integer> NPwithDE : tp.NPwithDEs.keySet()) {
+          List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(NPwithDE);
           if (englishNP.size()==1) {
             numNPwithDE_contiguous++;
           } else {

@@ -9,14 +9,14 @@ class TreePair {
   TranslationAlignment alignment;
   List<Tree> enTrees;
   List<Tree> chTrees;
-  Map<IntPair, List<IntPair>> NPwithDEs;
-  Map<IntPair, String> NPwithDEs_categories;
+  Map<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> NPwithDEs;
+  Map<Pair<Integer,Integer>, String> NPwithDEs_categories;
 
   public TreePair(TranslationAlignment alignment, List<Tree> enTrees, List<Tree> chTrees) {
     this.alignment = alignment;
     this.enTrees = enTrees;
     this.chTrees = chTrees;
-    this.NPwithDEs_categories = new HashMap<IntPair, String>();
+    this.NPwithDEs_categories = new TreeMap<Pair<Integer,Integer>, String>();
 
     computeNPwithDEs();
   }
@@ -38,7 +38,7 @@ class TreePair {
 
     int catIdx = 0;
     for(TreePair tp : treepairs_inFile) {
-      for(Map.Entry<IntPair, List<IntPair>> e : tp.NPwithDEs.entrySet()) {
+      for(Map.Entry<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> e : tp.NPwithDEs.entrySet()) {
         String np = tp.chNPwithDE(e.getKey());
         np = np.trim();
         if (!categories.get(catIdx).second().endsWith(np)) {
@@ -51,10 +51,10 @@ class TreePair {
     }
   }
 
-  public String chNPwithDE(IntPair ip) {
+  public String chNPwithDE(Pair<Integer,Integer> ip) {
     StringBuilder sb = new StringBuilder();
     if (NPwithDEs.keySet().contains(ip)) {
-      for(int i = ip.getSource(); i <= ip.getTarget(); i++) 
+      for(int i = ip.first; i <= ip.second; i++) 
         sb.append(alignment.source_[i]).append(" ");
       return sb.toString();
     } else {
@@ -67,9 +67,9 @@ class TreePair {
     for(int i = 0; i < chSent.length; i++) {
       int markBegin = 0;
       int markEnd = 0;
-      for (IntPair ip : NPwithDEs.keySet()) {
-        if (ip.getSource() == i) markBegin++;
-        if (ip.getTarget() == i) markEnd++;
+      for (Pair<Integer,Integer> ip : NPwithDEs.keySet()) {
+        if (ip.first == i) markBegin++;
+        if (ip.second == i) markEnd++;
       }
       while (markBegin>0) {
         System.out.print("<b><u> [[ ");
@@ -86,11 +86,11 @@ class TreePair {
 
   private void printMarkedEnglishSentence() {
     String[] enSent = alignment.translation_;
-    Set<Integer> markedwords = new HashSet<Integer>();
-    for (IntPair key : NPwithDEs.keySet()) {
-      List<IntPair> ips = NPwithDEs.get(key);
-      for (IntPair ip : ips) {
-        for (int i = ip.getSource(); i <= ip.getTarget(); i++) {
+    Set<Integer> markedwords = new TreeSet<Integer>();
+    for (Pair<Integer,Integer> key : NPwithDEs.keySet()) {
+      List<Pair<Integer,Integer>> ips = NPwithDEs.get(key);
+      for (Pair<Integer,Integer> ip : ips) {
+        for (int i = ip.first; i <= ip.second; i++) {
           markedwords.add(i);
         }
       }
@@ -110,12 +110,12 @@ class TreePair {
 
   public void computeNPwithDEs() {
     if (NPwithDEs == null) {
-      NPwithDEs = new HashMap<IntPair, List<IntPair>>();
+      NPwithDEs = new TreeMap<Pair<Integer,Integer>, List<Pair<Integer,Integer>>>();
       Tree chTree = chTrees.get(0);
       Set<Tree> deTrees = getNPwithDESubTrees(chTree);
-      Set<IntPair> deSpans = getSpans(deTrees, chTree);
+      Set<Pair<Integer,Integer>> deSpans = getSpans(deTrees, chTree);
 
-      for (IntPair deSpan : deSpans) {
+      for (Pair<Integer,Integer> deSpan : deSpans) {
         TreeSet<Integer> enSpan = alignment.mapChineseToEnglish(deSpan);
         TreeSet<Integer> nullSpan = alignment.mapChineseToEnglish_FillGap(deSpan, enSpan);
         // merge these 2
@@ -134,17 +134,17 @@ class TreePair {
             }
           }
 
-        // compute IntPair
+        // compute Pair<Integer,Integer>
         int prevI = -1;
         int start = -1;
-        List<IntPair> enTranslation = new ArrayList<IntPair>();
+        List<Pair<Integer,Integer>> enTranslation = new ArrayList<Pair<Integer,Integer>>();
         int last = -1;
         for (int en : enSpan) {
           if (start == -1) {
             start = en;
           }
           if (prevI != -1 && en > prevI+1) {
-            enTranslation.add(new IntPair(start, prevI));
+            enTranslation.add(new Pair<Integer,Integer>(start, prevI));
             start = en;
           }
           prevI = en;
@@ -152,7 +152,7 @@ class TreePair {
         }
         // add last one
         if (start != -1) {
-          enTranslation.add(new IntPair(start, last));
+          enTranslation.add(new Pair<Integer,Integer>(start, last));
         }
 
         NPwithDEs.put(deSpan, enTranslation);
@@ -167,7 +167,7 @@ class TreePair {
 
     TranslationAlignment.printAlignmentGridHeader();
     List<Set<Tree>> deTreesList = new ArrayList<Set<Tree>>();
-    List<Set<IntPair>> deSpansList = new ArrayList<Set<IntPair>>();
+    List<Set<Pair<Integer,Integer>>> deSpansList = new ArrayList<Set<Pair<Integer,Integer>>>();
 
     for(int i = 0; i < tps.size(); i++) {
       // Print Header of the HTML
@@ -195,15 +195,15 @@ class TreePair {
     return numNPwithDE;
   }
 
-  static IntPair getSpan(Tree subT, Tree allT) {
-    IntPair ip = new IntPair(
+  static Pair<Integer,Integer> getSpan(Tree subT, Tree allT) {
+    Pair<Integer,Integer> ip = new Pair<Integer,Integer>(
       Trees.leftEdge(subT, allT),
       Trees.rightEdge(subT, allT)-1);
     return ip;
   }
 
-  public static Set<IntPair> getSpans(Set<Tree> deTrees, Tree mainT) {
-    Set<IntPair> ips = new HashSet<IntPair>();
+  public static Set<Pair<Integer,Integer>> getSpans(Set<Tree> deTrees, Tree mainT) {
+    Set<Pair<Integer,Integer>> ips = new HashSet<Pair<Integer,Integer>>();
     for (Tree deT : deTrees) {
       ips.add(getSpan(deT, mainT));
     }
@@ -223,15 +223,15 @@ class TreePair {
   public void printNPwithDEs() {
     // print out NPs
     int npcount = 1;
-    for (IntPair NPwithDE : NPwithDEs.keySet()) {
-      List<IntPair> englishNP = NPwithDEs.get(NPwithDE);
+    for (Pair<Integer,Integer> NPwithDE : NPwithDEs.keySet()) {
+      List<Pair<Integer,Integer>> englishNP = NPwithDEs.get(NPwithDE);
       System.out.printf("NP #%d:\t", npcount++);
       if (englishNP.size()==1) {
         System.out.printf("<font color=\"blue\">[Contiguous]</font>\t");
       } else {
         System.out.printf("<font color=\"red\">[Fragmented]</font>\t");
       }
-      for(int chi = NPwithDE.getSource(); chi <= NPwithDE.getTarget(); chi++) {
+      for(int chi = NPwithDE.first; chi <= NPwithDE.second; chi++) {
         System.out.print(alignment.source_[chi]+" ");
       }
       System.out.println("<br />");

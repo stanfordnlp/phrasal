@@ -99,6 +99,38 @@ class FullInformationExperiment {
     return result;
   }
 
+
+  static List<Pair<String, String>>[] readFinalCategories(String allFile) {
+    String content = StringUtils.slurpFileNoExceptions(allFile);
+    String[] lines = content.split("\\n");
+
+    List<Pair<String, String>>[] result = new List[326];
+
+    for(int i = 1; i <= 325; i++) {
+      result[i] = new ArrayList<Pair<String, String>>();
+    }
+
+    for(int i = 0; i < lines.length; i++) {
+      String[] fields = lines[i].split("\\t");
+      if (fields.length != 4) {
+        throw new RuntimeException("finalCategories_all.txt should have 8 fields: "+lines[i]);
+      }
+      String fileidStr = fields[0];
+      String npidStr = fields[1];
+      String categoriesStr = fields[2];
+      String npStr = fields[3];
+      
+      Pair<String, String> pair = new Pair<String, String>(categoriesStr, npStr);
+      fileidStr = fileidStr.replaceAll("[^\\d]","");
+      int fileid = Integer.parseInt(fileidStr);
+      int npid = Integer.parseInt(npidStr);
+      //result[fileid][npid].add(pair);
+      result[fileid].add(pair);
+    }
+    return result;
+  }
+
+
   public static void main(String args[]) throws IOException {
     String wordalignmentDir = wordAlignmentDir();
     String ctbDir = ctbDir();
@@ -112,16 +144,16 @@ class FullInformationExperiment {
     int numNPwithDE = 0;
 
     // Open the hand-annotate file
+    /*
     String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories.txt";
     String finalNPFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_NP.txt";
     String finalFileID = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_fileid.txt";
     String finalNPID = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_npid.txt";
-
     List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile,finalNPFile,finalFileID,finalNPID);
+    */
+    String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_all.txt";
+    List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile);
     
-
-
-
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
       // Everytime, restart them so that when we get trees,
       // we won't match tree & sentences in different files.
@@ -134,10 +166,10 @@ class FullInformationExperiment {
       String aname = String.format("%schtb_%03d.txt", wordalignmentDir, fileidx);
       File file = new File(aname);
       if (file.exists()) {
-        System.err.println("Processing  "+fileidx);
+        //System.err.println("Processing  "+fileidx);
         alignment_list = TranslationAlignment.readFromFile(file);
       } else {
-        System.err.println("Skip "+fileidx);
+        //System.err.println("Skip "+fileidx);
         continue;
       }
 
@@ -160,7 +192,7 @@ class FullInformationExperiment {
       for (TranslationAlignment ta : alignment_list) {
         List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
         if (chTrees.size() == 0) {
-          System.err.printf("i=%d: Can't find tree in CTB.\n", fileidx);
+          //System.err.printf("i=%d: Can't find tree in CTB.\n", fileidx);
           continue;
           // skip for now
         } else if (chTrees.size() > 1) {
@@ -169,11 +201,11 @@ class FullInformationExperiment {
         
         List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
         if (enTrees.size() == 0) {
-          System.err.printf("i=%d: Can't find tree in PTB.\n", fileidx);
+          //System.err.printf("i=%d: Can't find tree in PTB.\n", fileidx);
           continue;
           // skip for now
         } else if (enTrees.size() > 1) {
-          System.err.printf("i=%d: Multiple trees.\n", fileidx);
+          //System.err.printf("i=%d: Multiple trees.\n", fileidx);
         }
         ta = TranslationAlignment.fixAlignmentGridWithChineseTree(ta, chTrees);
         ta = TranslationAlignment.fixAlignmentGridMergingChinese(ta, chTrees);
@@ -199,25 +231,34 @@ class FullInformationExperiment {
     PrintWriter decPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEC.txt")));
     PrintWriter degPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEG.txt")));
 
+    TreePattern de = TreePattern.compile("DEC|DEG < 的");
+    TreePattern dec = TreePattern.compile("DEC < 的");
+    TreePattern deg = TreePattern.compile("DEG < 的");
+
+    TreePattern va1 = TreePattern.compile("CP <, (IP <- (VP <: VA)) <- DEC");
+    TreePattern va2 = TreePattern.compile("CP <, (IP <- (VP <, (ADVP $+ (VP <: VA)))) <- DEC");
+    TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
+    TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
+    TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
+
+    int tpCount = 0;
     for(TreePair validSent : treepairs) {
-      for(Map.Entry<IntPair, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
+      String deType = "";
+      //System.err.println(tpCount);
+      tpCount++;
+      for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
         String np = validSent.chNPwithDE(labeledNPs.getKey());
         np = np.trim();
         String type = labeledNPs.getValue();
         // TODO: Build examples from <features(labeledNPs), labeledNPs.getValue()>
         Tree chTree = validSent.chTrees.get(0);
-        IntPair chNPrange = labeledNPs.getKey();
-        Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.getSource(), chNPrange.getTarget()+1);
+        Pair<Integer,Integer> chNPrange = labeledNPs.getKey();
+        Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
         //chNPTree.pennPrint();
         //System.out.println("------------------------------------------------");
 
-        TreePattern de = TreePattern.compile("DEC|DEG < 的");
         TreeMatcher deM = de.matcher(chNPTree);
-
-        TreePattern dec = TreePattern.compile("DEC < 的");
         TreeMatcher decM = dec.matcher(chNPTree);
-
-        TreePattern deg = TreePattern.compile("DEG < 的");
         TreeMatcher degM = deg.matcher(chNPTree);
 
         int deCount = 0;
@@ -231,18 +272,18 @@ class FullInformationExperiment {
         if (deCount > 1) {
           //chNPTree.pennPrint(bothPW);
           if(!type.equals("multi-DEs")) {
-            chNPTree.pennPrint(bothPW);
-            bothPW.println("type="+type);
-            bothPW.println("---------------------------------");
+            //chNPTree.pennPrint(bothPW);
+            //bothPW.println("type="+type);
+            //bothPW.println("---------------------------------");
           }
-          deTypeCounter.incrementCount(">1DE");
+          deType = ">1DE";
         } else if (deCount == 1) {
           if (isDEC && !isDEG) {
-            chNPTree.pennPrint(decPW);
-            deTypeCounter.incrementCount("DEC");
+            //chNPTree.pennPrint(decPW);
+            deType = "DEC";
           } else if (isDEG && !isDEC) {
-            chNPTree.pennPrint(degPW);
-            deTypeCounter.incrementCount("DEG");
+            //chNPTree.pennPrint(degPW);
+            deType = "DEG";
           } else {
             chNPTree.pennPrint(System.err);
             throw new RuntimeException("both?");
@@ -252,11 +293,42 @@ class FullInformationExperiment {
           chNPTree.pennPrint(System.err);
           throw new RuntimeException("");
         }
+
+        if (deType.equals("DEC")) {
+          TreeMatcher va1M = va1.matcher(chNPTree);
+          TreeMatcher va2M = va2.matcher(chNPTree);
+          if (va1M.find() || va2M.find()) {
+            deType = "DEC-va";
+            chNPTree.pennPrint(decPW);
+            decPW.println("================================================");
+          }
+        }
+
+        if (deType.equals("DEG")) {
+          TreeMatcher adjpdegM = adjpdeg.matcher(chNPTree);
+          TreeMatcher qpdegM = qpdeg.matcher(chNPTree);
+          TreeMatcher nppndegM = nppndeg.matcher(chNPTree);
+          if (adjpdegM.find() || nppndegM.find()) {
+            deType = "DEG-noreorder";
+            chNPTree.pennPrint(degPW);
+            degPW.println("================================================");
+          } else if (qpdegM.find()) {
+            deType = "DEG-noreorder-qp";
+            chNPTree.pennPrint(degPW);
+            degPW.println("================================================");
+          }
+        }
+
+        deTypeCounter.incrementCount(deType);
+        cc.incrementCount(deType, type);
+        String chNP = validSent.chNPwithDE(labeledNPs.getKey());
+        System.out.printf("%s\t%s\t%s\n", deType, type, chNP);
       }
     }
     bothPW.close();
     decPW.close();
     degPW.close();
-    System.out.println(deTypeCounter);
+    System.err.println(deTypeCounter);
+    System.err.println(cc);
   }
 }
