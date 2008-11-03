@@ -17,10 +17,6 @@ class FullInformationTreeReorderingExperiment {
     PrintWriter decPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEC.txt")));
     PrintWriter degPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEG.txt")));
 
-    //TreePattern de = TreePattern.compile("DEC|DEG < 的");
-    //TreePattern dec = TreePattern.compile("DEC < 的");
-    //TreePattern deg = TreePattern.compile("DEG < 的");
-
     TreePattern va1 = TreePattern.compile("CP <, (IP <- (VP <: VA)) <- DEC");
     TreePattern va2 = TreePattern.compile("CP <, (IP <- (VP <, (ADVP $+ (VP <: VA)))) <- DEC");
     TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
@@ -66,9 +62,8 @@ class FullInformationTreeReorderingExperiment {
         }
 
         if (deType.equals("DEC")) {
-          TreeMatcher va1M = va1.matcher(chNPTree);
-          TreeMatcher va2M = va2.matcher(chNPTree);
-          if (va1M.find() || va2M.find()) {
+          boolean hasVApattern = ExperimentUtils.hasVApattern(chNPTree);
+          if (hasVApattern) {
             deType = "DEC-va";
             chNPTree.pennPrint(decPW);
             decPW.println("================================================");

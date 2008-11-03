@@ -42,10 +42,23 @@ class FullInformationClassifyingExperiment {
         List<String> featureList = new ArrayList<String>();
         if (ExperimentUtils.hasDEC(chNPTree)) {
           featureList.add("DEC");
+          if (ExperimentUtils.hasVApattern(chNPTree)) {
+            featureList.add("hasVA");
+          }
         }
         if (ExperimentUtils.hasDEG(chNPTree)) {
           featureList.add("DEG");
+          if (ExperimentUtils.hasADJPpattern(chNPTree)) {
+            featureList.add("hasADJP");
+          }
+          if (ExperimentUtils.hasQPpattern(chNPTree)) {
+            featureList.add("hasQP");
+          }
+          if (ExperimentUtils.hasNPPNpattern(chNPTree)) {
+            featureList.add("hasNPPN");
+          }
         }
+        
         
         // (2) make label
 
@@ -75,9 +88,13 @@ class FullInformationClassifyingExperiment {
     
     System.out.println();
     System.out.println(labelCounter);
+
     
     System.out.println();
     System.out.println(confusionMatrix);
 
+    ExperimentUtils.resultSummary(confusionMatrix);
+    System.out.println();
+    ExperimentUtils.resultCoarseSummary(confusionMatrix);
   }
 }

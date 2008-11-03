@@ -13,6 +13,33 @@ public class ExperimentUtils {
   static TreePattern dec = TreePattern.compile("DEC < 的");
   static TreePattern deg = TreePattern.compile("DEG < 的");
   static TreePattern de = TreePattern.compile("DEG|DEC < 的");
+  static TreePattern va1 = TreePattern.compile("CP <, (IP <- (VP <: VA)) <- DEC");
+  static TreePattern va2 = TreePattern.compile("CP <, (IP <- (VP <, (ADVP $+ (VP <: VA)))) <- DEC");
+  static TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
+  static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
+  static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
+
+
+  static boolean hasVApattern(Tree t) {
+    TreeMatcher va1M = va1.matcher(t);
+    TreeMatcher va2M = va2.matcher(t);
+    return (va1M.find() || va2M.find());
+  }
+
+  static boolean hasADJPpattern(Tree t) {
+    TreeMatcher adjpdegM = adjpdeg.matcher(t);
+    return adjpdegM.find();
+  }
+  
+  static boolean hasQPpattern(Tree t) {
+    TreeMatcher qpdegM = qpdeg.matcher(t);
+    return qpdegM.find();
+  }
+
+  static boolean hasNPPNpattern(Tree t) {
+    TreeMatcher nppndegM = nppndeg.matcher(t);
+    return nppndegM.find();
+  }
 
   static boolean hasDEC(Tree t) {
     TreeMatcher decM = dec.matcher(t);
@@ -242,5 +269,47 @@ public class ExperimentUtils {
     System.err.println("Total Treepairs = "+treepairs.size());
     System.err.println("numNPwithDE = "+numNPwithDE);
     return treepairs;
+  }
+
+  static void resultSummary(TwoDimensionalCounter<String,String> confusionMatrix) {
+    double totalNum = 0;
+    double totalDenom = confusionMatrix.totalCount();
+    for (String k : confusionMatrix.firstKeySet()) {
+      double denom = confusionMatrix.totalCount(k);
+      double num = confusionMatrix.getCount(k, k);
+      totalNum += num;
+      System.out.printf("#[ %s ] = %d |\tAcc:\t%.2f\n", k, (int)denom, 100.0*num/denom);
+    }
+    System.out.printf("#total = %d |\tAcc:\t%f\n", (int)totalDenom, 100.0*totalNum/totalDenom);    
+  }
+
+  private static String coarseCategory(String cat) {
+    String normcat;
+    if (cat.startsWith("B") || cat.equals("relative clause")) {
+      normcat = "swapped";
+    } else if (cat.startsWith("A")) {
+      normcat = "ordered";
+    } else {
+      throw new RuntimeException("Can't find coarse category for " + cat);
+    }
+    return normcat;
+  }
+
+
+  static void resultCoarseSummary(TwoDimensionalCounter<String,String> confusionMatrix) {
+    TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String> ();
+    
+    for (Map.Entry<String,ClassicCounter<String>> k : confusionMatrix.entrySet()) {
+      String k1 = k.getKey();
+      ClassicCounter<String> k2 = k.getValue();
+      String normK1 = coarseCategory(k1);
+      for (String val : k2) {
+        String normval = coarseCategory(val);
+        double count = confusionMatrix.getCount(k1, val);
+        cc.incrementCount(normK1, normval, count);
+      }
+    }
+    
+    resultSummary(cc);
   }
 }
