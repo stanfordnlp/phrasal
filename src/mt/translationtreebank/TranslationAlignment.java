@@ -623,17 +623,8 @@ public class TranslationAlignment {
     return ta;
   }
 
-  /*
-  // TODO: fix corresponding enTrees?
-  public static TranslationAlignment fixAlignmentGridOnTranslation(TranslationAlignment ta) {
-    ta = fixAlignmentGridOnTranslation_Poss_Neg(ta);
-    return ta;
-  }
-  */
-
-  // TODO: fix corresponding enTrees?
   public static TranslationAlignment fixAlignmentGridOnTranslation_Poss_Neg(TranslationAlignment ta, String[] leaves) {
-    // check if there's "BLAH's" case
+    // check if there's "'s" case
     int needFix = -1;
     boolean cannot = false;
 
@@ -1091,7 +1082,8 @@ public class TranslationAlignment {
     for(int sidx = np.first; sidx <= np.second; sidx++) {
       subsource[sidx-np.first] = tp.alignment.source_[sidx];
       if (tp.alignment.source_[sidx].equals("的") ||
-	      tp.alignment.source_[sidx].equals("之")) {
+          tp.alignment.source_[sidx].equals("之")) {
+        // TODO: should get rid of the second condition
         deIndices.add(sidx-np.first);
       }
     }
@@ -1104,8 +1096,8 @@ public class TranslationAlignment {
     }
 
     // Now it's the case with only one DE
-    // TODO: find the mapping to English of the first part, 
-    //       and find the mapping to the 2nd part
+    // find the mapping to English of the first part, 
+    // and find the mapping to the 2nd part
     int deIdx = deIndices.get(0);
 
 
@@ -1163,7 +1155,6 @@ public class TranslationAlignment {
 
       // check if A becomes an adjective
       if (checkSecondVP(rangeA, rangeB, enNPTree)) return "other - VP";
-      // TODO: second -- ADVP VP
 
       // For the following cases, we have to first check that
       // DE does not align to something inside (not on edge) rangeA & rangeB
@@ -1172,8 +1163,6 @@ public class TranslationAlignment {
            (onRangeEdge(deEidx, rangeB) || !inRange(deEidx, rangeB)))) {
         if (deEidx != -1 && subtranslation[deEidx].equals("of")) return "A of B";
         if (deEidx != -1 && isPrep(subtranslation[deEidx])) return "A prep B";
-        // TODO: checkOrderedNoun should be fixed so 11:6 doesn't get confused..
-        //       now i'm just changing the order
         if (checkOrderedAdjective(rangeA, rangeB, enNPTree)) return "A B (adj)";
         if (checkOrderedAdverb(rangeA, rangeB, enNPTree)) return "A B (adv)";
         String mod = checkOrderedOtherModifier(rangeA, rangeB, enNPTree);
@@ -1226,7 +1215,6 @@ public class TranslationAlignment {
       if (checkFlippedRelativeClause(rangeA, rangeB, enNPTree)) return "relative clause";//"flipped (relc)";
 
       return "flipped";
-      // TODO: DE might also just map directly to the preposition (of)
     }
     return "undecided";
   }

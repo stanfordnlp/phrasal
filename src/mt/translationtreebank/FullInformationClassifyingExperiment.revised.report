@@ -1,32 +1,102 @@
-
+Overall label counter:
 {A 's B=89.0, B prep A=569.0, A prep B=49.0, relative clause=606.0, B of A=764.0, A B=675.0}
 
-A 's B	B of A	88.0
+Training set stats:
+numDatums: 1840
+numLabels: 6 [B of A, relative clause, B prep A, A B, A 's B, A prep B]
+numFeatures Phi(X) types): 6
+
+
+Evaluate on Training set:
+
+A 's B	B of A	60.0
 A 's B	A B	1.0
-B prep A	relative clause	177.0
-B prep A	B of A	383.0
-B prep A	A B	9.0
-A prep B	relative clause	7.0
-A prep B	B of A	36.0
-A prep B	A B	6.0
-relative clause	relative clause	564.0
-relative clause	B of A	22.0
-relative clause	A B	20.0
-B of A	relative clause	138.0
-B of A	B of A	618.0
-B of A	A B	8.0
-A B	relative clause	160.0
-A B	B of A	155.0
-A B	A B	360.0
+B prep A	relative clause	118.0
+B prep A	B of A	260.0
+B prep A	A B	3.0
+A prep B	relative clause	4.0
+A prep B	B of A	24.0
+A prep B	A B	5.0
+relative clause	relative clause	373.0
+relative clause	B of A	17.0
+relative clause	A B	14.0
+B of A	relative clause	97.0
+B of A	B of A	410.0
+B of A	A B	3.0
+A B	relative clause	104.0
+A B	B of A	104.0
+A B	A B	243.0
 
-#[ A 's B ] = 89 |	Acc:	0.00
-#[ B prep A ] = 569 |	Acc:	0.00
-#[ A prep B ] = 49 |	Acc:	0.00
-#[ relative clause ] = 606 |	Acc:	93.07
-#[ B of A ] = 764 |	Acc:	80.89
-#[ A B ] = 675 |	Acc:	53.33
-#total = 2752 |	Acc:	56.031977
+#[ A 's B ] = 61 |	Acc:	0.00
+#[ B prep A ] = 381 |	Acc:	0.00
+#[ A prep B ] = 33 |	Acc:	0.00
+#[ relative clause ] = 404 |	Acc:	92.33
+#[ B of A ] = 510 |	Acc:	80.39
+#[ A B ] = 451 |	Acc:	53.88
+#total = 1840 |	Acc:	55.760870
 
-#[ swapped ] = 1939 |	Acc:	98.09
-#[ ordered ] = 813 |	Acc:	45.14
-#total = 2752 |	Acc:	82.449128
+#[ swapped ] = 1295 |	Acc:	98.46
+#[ ordered ] = 545 |	Acc:	45.69
+#total = 1840 |	Acc:	82.826087
+
+Evaluate on Dev set:
+
+A 's B	B of A	14.0
+B prep A	relative clause	29.0
+B prep A	B of A	63.0
+B prep A	A B	2.0
+relative clause	relative clause	94.0
+relative clause	B of A	4.0
+relative clause	A B	3.0
+A prep B	relative clause	2.0
+A prep B	B of A	5.0
+A prep B	A B	1.0
+B of A	relative clause	20.0
+B of A	B of A	105.0
+B of A	A B	2.0
+A B	relative clause	30.0
+A B	B of A	26.0
+A B	A B	56.0
+
+#[ A 's B ] = 14 |	Acc:	0.00
+#[ B prep A ] = 94 |	Acc:	0.00
+#[ relative clause ] = 101 |	Acc:	93.07
+#[ A prep B ] = 8 |	Acc:	0.00
+#[ B of A ] = 127 |	Acc:	82.68
+#[ A B ] = 112 |	Acc:	50.00
+#total = 456 |	Acc:	55.921053
+
+#[ swapped ] = 322 |	Acc:	97.83
+#[ ordered ] = 134 |	Acc:	42.54
+#total = 456 |	Acc:	81.578947
+
+Evaluate on Test set:
+
+A 's B	B of A	14.0
+B prep A	relative clause	30.0
+B prep A	B of A	60.0
+B prep A	A B	4.0
+A prep B	relative clause	1.0
+A prep B	B of A	7.0
+relative clause	relative clause	97.0
+relative clause	B of A	1.0
+relative clause	A B	3.0
+B of A	relative clause	21.0
+B of A	B of A	103.0
+B of A	A B	3.0
+A B	relative clause	26.0
+A B	B of A	25.0
+A B	A B	61.0
+
+#[ A 's B ] = 14 |	Acc:	0.00
+#[ B prep A ] = 94 |	Acc:	0.00
+#[ A prep B ] = 8 |	Acc:	0.00
+#[ relative clause ] = 101 |	Acc:	96.04
+#[ B of A ] = 127 |	Acc:	81.10
+#[ A B ] = 112 |	Acc:	54.46
+#total = 456 |	Acc:	57.236842
+
+#[ swapped ] = 322 |	Acc:	96.89
+#[ ordered ] = 134 |	Acc:	45.52
+#total = 456 |	Acc:	81.798246
+

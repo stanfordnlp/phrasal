@@ -28,7 +28,6 @@ class ChineseTreeReader extends AbstractTreeReader {
   public List<Tree> getTreesWithWords(String[] sent) {
     String sentStr = StringUtils.join(sent, "");
     List<Tree> trees = new ArrayList<Tree>();
-    // TODO: can be cached to make it faster
     for(Tree t : trees_) {
       StringBuilder sb = new StringBuilder();
       Sentence<HasWord> hws = getWords(t);

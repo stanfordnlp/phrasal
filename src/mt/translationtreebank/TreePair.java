@@ -243,21 +243,6 @@ class TreePair {
     System.out.println("<h3> Chinese Tree </h3>");
     printTree(chTrees.get(0));
     
-    // TODO: this information doesn't exist in TreePair for now
-    /*
-    // (1.2) print DE trees
-    int count = 1;
-    System.out.println("<font color=\"red\">");
-    System.out.println("<pre>");
-    for (Tree mt : deTrees) {
-      System.out.println("Tree #"+count);
-      mt.pennPrint();
-      count++;
-    }
-    System.out.println("</pre>");
-    System.out.println("</font>");
-    */
-
     // (2) English Tree
     System.out.println("<h3> English Tree </h3>");
     for (Tree t : enTrees) {
