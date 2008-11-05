@@ -101,6 +101,14 @@ class FullInformationClassifyingExperiment {
 
         featureList.addAll(posNgramFeatures(beforeDE, "beforeDE:"));
         featureList.addAll(posNgramFeatures(beforeDE, "afterDE:"));
+
+        Tree[] children = chNPTree.children();
+        List<String> firstLayer = new ArrayList<String>();
+        for (Tree t : children) {
+          firstLayer.add(t.label().value());
+        }
+        featureList.addAll(ngramFeatures(firstLayer, "1st:"));
+
         // (2) make label
 
         // (3) Make Datum and add
@@ -174,20 +182,28 @@ class FullInformationClassifyingExperiment {
   }
 
   static List<String> posNgramFeatures(List<TaggedWord> words, String prefix) {
+    List<String> pos = new ArrayList<String>();
+    for (TaggedWord tw : words) {
+      pos.add(tw.tag());
+    }
+    return ngramFeatures(pos, prefix);
+  }
+
+  static List<String> ngramFeatures(List<String> grams, String prefix) {
     List<String> features = new ArrayList<String>();
     StringBuilder sb;
-    for (int i = -1; i < words.size(); i++) {
+    for (int i = -1; i < grams.size(); i++) {
       sb = new StringBuilder();
       sb.append(prefix).append(":");
-      if (i == -1) sb.append(""); else sb.append(words.get(i).tag());
+      if (i == -1) sb.append(""); else sb.append(grams.get(i));
       sb.append("-");
-      if (i+1 == words.size()) sb.append(""); else sb.append(words.get(i+1).tag());
+      if (i+1 == grams.size()) sb.append(""); else sb.append(grams.get(i+1));
       features.add(sb.toString());
 
       if (i != -1) {
         sb = new StringBuilder();
         sb.append(prefix).append(":");
-        sb.append(words.get(i).tag());
+        sb.append(grams.get(i));
         features.add(sb.toString());
       }
     }
