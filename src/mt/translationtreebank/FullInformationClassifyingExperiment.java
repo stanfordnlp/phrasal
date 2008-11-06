@@ -22,6 +22,25 @@ class FullInformationClassifyingExperiment {
   }
 
   public static void main(String args[]) throws IOException {
+    Properties props =StringUtils.argsToProperties(args);
+    String twofeatStr = props.getProperty("2feat", "false");
+    String revisedStr = props.getProperty("revised", "false");
+    String ngramStr   = props.getProperty("ngram", "false");
+    String firstStr   = props.getProperty("1st", "false");
+    String cpOrDnpStr   = props.getProperty("deConstituent", "false");
+    Boolean twofeat = Boolean.parseBoolean(twofeatStr);
+    Boolean revised = Boolean.parseBoolean(revisedStr);
+    Boolean ngram = Boolean.parseBoolean(ngramStr);
+    Boolean first = Boolean.parseBoolean(firstStr);
+    Boolean cpOrDnp = Boolean.parseBoolean(cpOrDnpStr);
+
+    // each level
+    twofeat = twofeat || revised || ngram || first || cpOrDnp;
+    revised = revised || ngram || first || cpOrDnp;
+    ngram   = ngram || first || cpOrDnp;
+    first   = first || cpOrDnp;
+    cpOrDnp = cpOrDnp;
+
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
     String[] trainDevTest = readTrainDevTest();
 
@@ -55,21 +74,20 @@ class FullInformationClassifyingExperiment {
         // (1) make feature list
         List<String> featureList = new ArrayList<String>();
         if (ExperimentUtils.hasDEC(chNPTree)) {
-          featureList.add("DEC");
-          if (ExperimentUtils.hasVApattern(chNPTree)) {
-            featureList.add("hasVA");
-          }
+          if (twofeat) featureList.add("DEC");
+          if (revised)
+            if (ExperimentUtils.hasVApattern(chNPTree))
+              featureList.add("hasVA");
         }
         if (ExperimentUtils.hasDEG(chNPTree)) {
-          featureList.add("DEG");
-          if (ExperimentUtils.hasADJPpattern(chNPTree)) {
-            featureList.add("hasADJP");
-          }
-          if (ExperimentUtils.hasQPpattern(chNPTree)) {
-            featureList.add("hasQP");
-          }
-          if (ExperimentUtils.hasNPPNpattern(chNPTree)) {
-            featureList.add("hasNPPN");
+          if (twofeat) featureList.add("DEG");
+          if (revised) {
+            if (ExperimentUtils.hasADJPpattern(chNPTree))
+              featureList.add("hasADJP");
+            if (ExperimentUtils.hasQPpattern(chNPTree))
+              featureList.add("hasQP");
+            if (ExperimentUtils.hasNPPNpattern(chNPTree))
+              featureList.add("hasNPPN");
           }
         }
 
@@ -85,29 +103,55 @@ class FullInformationClassifyingExperiment {
             deIdx = i;
           }
         }
-
+        
         if (deIdx == -1) {
           throw new RuntimeException("no DE");
         }
 
-        List<TaggedWord> beforeDE = new ArrayList<TaggedWord>();
-        List<TaggedWord> afterDE  = new ArrayList<TaggedWord>();
-
-        for (int i = 0; i < sentence.size(); i++) {
-          TaggedWord w = sentence.get(i);
-          if (i < deIdx) beforeDE.add(w);
-          if (i > deIdx) afterDE.add(w);
+        if (ngram) {
+          List<TaggedWord> beforeDE = new ArrayList<TaggedWord>();
+          List<TaggedWord> afterDE  = new ArrayList<TaggedWord>();
+          
+          for (int i = 0; i < sentence.size(); i++) {
+            TaggedWord w = sentence.get(i);
+            if (i < deIdx) beforeDE.add(w);
+            if (i > deIdx) afterDE.add(w);
+          }
+          
+          featureList.addAll(posNgramFeatures(beforeDE, "beforeDE:"));
+          featureList.addAll(posNgramFeatures(beforeDE, "afterDE:"));
+        }
+        
+        // features from first layer
+        if (first) {
+          Tree[] children = chNPTree.children();
+          List<String> firstLayer = new ArrayList<String>();
+          for (Tree t : children) {
+            firstLayer.add(t.label().value());
+          }
+          featureList.addAll(ngramFeatures(firstLayer, "1st:"));
         }
 
-        featureList.addAll(posNgramFeatures(beforeDE, "beforeDE:"));
-        featureList.addAll(posNgramFeatures(beforeDE, "afterDE:"));
-
-        Tree[] children = chNPTree.children();
-        List<String> firstLayer = new ArrayList<String>();
-        for (Tree t : children) {
-          firstLayer.add(t.label().value());
+        if (cpOrDnp) {
+          Tree[] children = chNPTree.children();
+          Tree deTree = null;
+          for (Tree t : children) {
+            int l = Trees.leftEdge(t, chNPTree);
+            int r = Trees.rightEdge(t, chNPTree);
+            if (l <= deIdx && deIdx <= r) {
+              deTree = t;
+              break;
+            }
+          }
+          if (deTree == null) throw new RuntimeException("deTree shouldn't be null");
+          // analyze deTree
+          while((deTree.numChildren() == 1 && !deTree.isLeaf()) ||
+                (deTree.numChildren() == 2 && deTree.lastChild().nodeString().startsWith("DE"))) {
+            deTree = deTree.firstChild();
+          }
+          System.err.println("TREE:");
+          deTree.pennPrint(System.err);
         }
-        featureList.addAll(ngramFeatures(firstLayer, "1st:"));
 
         // (2) make label
 
@@ -172,9 +216,33 @@ class FullInformationClassifyingExperiment {
       String predictedClass = lc.classOf(d);
       confusionMatrix.incrementCount(d.label(), predictedClass);
     }
-
+    System.out.println("==================Confusion Matrix==================");
+    System.out.print("->real");
+    for (String k : confusionMatrix.firstKeySet()) {
+      if (k.equals("relative clause")) k = "relc";
+      else k = k.replaceAll(" ","");
+      System.out.printf("\t"+k);
+    }
     System.out.println();
-    System.out.println(confusionMatrix);
+    for (String k2 : confusionMatrix.secondKeySet()) {
+      String normK2 = k2;
+      if (normK2.equals("relative clause")) normK2 = "relc";
+      else normK2 = normK2.replaceAll(" ","");
+      System.out.print(normK2+"\t");
+      for (String k1 : confusionMatrix.firstKeySet()) {
+        System.out.print((int)confusionMatrix.getCount(k1,k2)+"\t");
+      }
+      System.out.println();
+    }
+    System.out.println("----------------------------------------------------");
+    System.out.print("total\t");
+    for (String k1 : confusionMatrix.firstKeySet()) {
+      System.out.print((int)confusionMatrix.totalCount(k1)+"\t");
+    }
+    System.out.println();
+    System.out.println("====================================================");
+    System.out.println();
+
 
     ExperimentUtils.resultSummary(confusionMatrix);
     System.out.println();

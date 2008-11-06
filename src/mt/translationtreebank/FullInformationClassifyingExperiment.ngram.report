@@ -8,38 +8,17 @@ numFeatures Phi(X) types): 560
 
 
 Evaluate on Training set:
-
-A 's B	A 's B	43.0
-A 's B	B of A	16.0
-A 's B	A B	2.0
-B prep A	A 's B	20.0
-B prep A	B prep A	172.0
-B prep A	relative clause	59.0
-B prep A	B of A	118.0
-B prep A	A B	12.0
-A prep B	A 's B	1.0
-A prep B	B prep A	3.0
-A prep B	relative clause	1.0
-A prep B	A prep B	9.0
-A prep B	B of A	5.0
-A prep B	A B	14.0
-relative clause	B prep A	15.0
-relative clause	A prep B	1.0
-relative clause	relative clause	355.0
-relative clause	B of A	13.0
-relative clause	A B	20.0
-B of A	A 's B	32.0
-B of A	B prep A	35.0
-B of A	A prep B	2.0
-B of A	relative clause	50.0
-B of A	B of A	380.0
-B of A	A B	11.0
-A B	A 's B	23.0
-A B	B prep A	9.0
-A B	A prep B	3.0
-A B	relative clause	24.0
-A B	B of A	53.0
-A B	A B	339.0
+==================Confusion Matrix==================
+->real	A'sB	BprepA	AprepB	relc	BofA	AB
+A'sB	43	20	1	0	32	23	
+BprepA	0	172	3	15	35	9	
+AprepB	0	0	9	1	2	3	
+relc	0	59	1	355	50	24	
+BofA	16	118	5	13	380	53	
+AB	2	12	14	20	11	339	
+----------------------------------------------------
+total	61	381	33	404	510	451	
+====================================================
 
 #[ A 's B ] = 61 |	Acc:	70.49
 #[ B prep A ] = 381 |	Acc:	45.14
@@ -54,36 +33,17 @@ A B	A B	339.0
 #total = 1840 |	Acc:	88.641304
 
 Evaluate on Dev set:
-
-A 's B	A 's B	8.0
-A 's B	B prep A	2.0
-A 's B	B of A	4.0
-B prep A	A 's B	7.0
-B prep A	B prep A	35.0
-B prep A	relative clause	19.0
-B prep A	B of A	32.0
-B prep A	A B	1.0
-relative clause	B prep A	18.0
-relative clause	relative clause	67.0
-relative clause	B of A	9.0
-relative clause	A B	7.0
-A prep B	B prep A	1.0
-A prep B	relative clause	1.0
-A prep B	A prep B	1.0
-A prep B	B of A	1.0
-A prep B	A B	4.0
-B of A	A 's B	6.0
-B of A	B prep A	14.0
-B of A	A prep B	1.0
-B of A	relative clause	13.0
-B of A	B of A	83.0
-B of A	A B	10.0
-A B	A 's B	9.0
-A B	B prep A	5.0
-A B	relative clause	11.0
-A B	A prep B	1.0
-A B	B of A	11.0
-A B	A B	75.0
+==================Confusion Matrix==================
+->real	A'sB	BprepA	relc	AprepB	BofA	AB
+A'sB	8	7	0	0	6	9	
+BprepA	2	35	18	1	14	5	
+AprepB	0	0	0	1	1	1	
+relc	0	19	67	1	13	11	
+BofA	4	32	9	1	83	11	
+AB	0	1	7	4	10	75	
+----------------------------------------------------
+total	14	94	101	8	127	112	
+====================================================
 
 #[ A 's B ] = 14 |	Acc:	57.14
 #[ B prep A ] = 94 |	Acc:	37.23
@@ -98,36 +58,17 @@ A B	A B	75.0
 #total = 456 |	Acc:	85.087719
 
 Evaluate on Test set:
-
-A 's B	A 's B	10.0
-A 's B	B prep A	1.0
-A 's B	B of A	2.0
-A 's B	A B	1.0
-B prep A	A 's B	3.0
-B prep A	B prep A	29.0
-B prep A	relative clause	20.0
-B prep A	B of A	38.0
-B prep A	A B	4.0
-A prep B	B prep A	1.0
-A prep B	A prep B	2.0
-A prep B	B of A	1.0
-A prep B	A B	4.0
-relative clause	B prep A	9.0
-relative clause	relative clause	79.0
-relative clause	B of A	6.0
-relative clause	A B	7.0
-B of A	A 's B	2.0
-B of A	B prep A	19.0
-B of A	A prep B	1.0
-B of A	relative clause	9.0
-B of A	B of A	89.0
-B of A	A B	7.0
-A B	A 's B	4.0
-A B	B prep A	4.0
-A B	A prep B	1.0
-A B	relative clause	7.0
-A B	B of A	16.0
-A B	A B	80.0
+==================Confusion Matrix==================
+->real	A'sB	BprepA	AprepB	relc	BofA	AB
+A'sB	10	3	0	0	2	4	
+BprepA	1	29	1	9	19	4	
+AprepB	0	0	2	0	1	1	
+relc	0	20	0	79	9	7	
+BofA	2	38	1	6	89	16	
+AB	1	4	4	7	7	80	
+----------------------------------------------------
+total	14	94	8	101	127	112	
+====================================================
 
 #[ A 's B ] = 14 |	Acc:	71.43
 #[ B prep A ] = 94 |	Acc:	30.85

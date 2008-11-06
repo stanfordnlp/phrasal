@@ -1,0 +1,4 @@
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -2feat true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.2feat.report
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -revised true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.revised.report
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -ngram true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.ngram.report
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -1st true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.1st.report

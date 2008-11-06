@@ -8,18 +8,13 @@ numFeatures Phi(X) types): 2
 
 
 Evaluate on Training set:
-
-A 's B	B of A	61.0
-B prep A	relative clause	121.0
-B prep A	B of A	260.0
-A prep B	relative clause	6.0
-A prep B	B of A	27.0
-relative clause	relative clause	385.0
-relative clause	B of A	19.0
-B of A	relative clause	99.0
-B of A	B of A	411.0
-A B	relative clause	293.0
-A B	B of A	158.0
+==================Confusion Matrix==================
+->real	A'sB	BprepA	AprepB	relc	BofA	AB
+relc	0	121	6	385	99	293	
+BofA	61	260	27	19	411	158	
+----------------------------------------------------
+total	61	381	33	404	510	451	
+====================================================
 
 #[ A 's B ] = 61 |	Acc:	0.00
 #[ B prep A ] = 381 |	Acc:	0.00
@@ -34,18 +29,13 @@ A B	B of A	158.0
 #total = 1840 |	Acc:	70.380435
 
 Evaluate on Dev set:
-
-A 's B	B of A	14.0
-B prep A	relative clause	31.0
-B prep A	B of A	63.0
-relative clause	relative clause	97.0
-relative clause	B of A	4.0
-A prep B	relative clause	3.0
-A prep B	B of A	5.0
-B of A	relative clause	22.0
-B of A	B of A	105.0
-A B	relative clause	77.0
-A B	B of A	35.0
+==================Confusion Matrix==================
+->real	A'sB	BprepA	relc	AprepB	BofA	AB
+relc	0	31	97	3	22	77	
+BofA	14	63	4	5	105	35	
+----------------------------------------------------
+total	14	94	101	8	127	112	
+====================================================
 
 #[ A 's B ] = 14 |	Acc:	0.00
 #[ B prep A ] = 94 |	Acc:	0.00
@@ -60,18 +50,13 @@ A B	B of A	35.0
 #total = 456 |	Acc:	70.614035
 
 Evaluate on Test set:
-
-A 's B	B of A	14.0
-B prep A	relative clause	32.0
-B prep A	B of A	62.0
-A prep B	relative clause	1.0
-A prep B	B of A	7.0
-relative clause	relative clause	100.0
-relative clause	B of A	1.0
-B of A	relative clause	23.0
-B of A	B of A	104.0
-A B	relative clause	80.0
-A B	B of A	32.0
+==================Confusion Matrix==================
+->real	A'sB	BprepA	AprepB	relc	BofA	AB
+relc	0	32	1	100	23	80	
+BofA	14	62	7	1	104	32	
+----------------------------------------------------
+total	14	94	8	101	127	112	
+====================================================
 
 #[ A 's B ] = 14 |	Acc:	0.00
 #[ B prep A ] = 94 |	Acc:	0.00
