@@ -1,4 +1,7 @@
 time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -2feat true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.2feat.report
 time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -revised true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.revised.report
 time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -ngram true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.ngram.report
-time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -1st true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.1st.report
+# time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -1st true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.1st.report
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -lastcharN true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.lastcharN.report
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -pword true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.pword.report
+perl -w projects/mt/src/mt/translationtreebank/pieceTrainDevTest.pl projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt train dev test > all

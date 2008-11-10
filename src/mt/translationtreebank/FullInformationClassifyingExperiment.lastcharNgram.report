@@ -1,0 +1,84 @@
+Overall label counter:
+{A 's B=89.0, B prep A=563.0, A prep B=49.0, relative clause=610.0, B of A=764.0, A B=675.0}
+
+Training set stats:
+numDatums: 1840
+numLabels: 6 [B of A, B prep A, A B, relative clause, A prep B, A 's B]
+numFeatures Phi(X) types): 9177
+
+
+Evaluate on Training set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+A'sB	61	0	0	0	0	0	
+AB	0	451	1	1	0	0	
+AprepB	0	0	32	0	0	0	
+BofA	0	0	0	509	3	0	
+BprepA	0	0	0	0	374	0	
+relc	0	0	0	0	0	408	
+----------------------------------------------------
+total	61	451	33	510	377	408	
+====================================================
+
+#[ A 's B ] = 61 |	Acc:	100.00
+#[ B prep A ] = 377 |	Acc:	99.20
+#[ A prep B ] = 33 |	Acc:	96.97
+#[ relative clause ] = 408 |	Acc:	100.00
+#[ B of A ] = 510 |	Acc:	99.80
+#[ A B ] = 451 |	Acc:	100.00
+#total = 1840 |	Acc:	99.728261
+
+#[ swapped ] = 1295 |	Acc:	99.92
+#[ ordered ] = 545 |	Acc:	100.00
+#total = 1840 |	Acc:	99.945652
+
+Evaluate on Dev set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+A'sB	5	1	0	3	2	0	
+AB	1	82	2	13	4	9	
+AprepB	0	0	3	0	0	0	
+BofA	6	17	2	85	30	7	
+BprepA	2	6	0	20	47	14	
+relc	0	6	1	6	10	71	
+----------------------------------------------------
+total	14	112	8	127	93	101	
+====================================================
+
+#[ A 's B ] = 14 |	Acc:	35.71
+#[ B prep A ] = 93 |	Acc:	50.54
+#[ A prep B ] = 8 |	Acc:	37.50
+#[ relative clause ] = 101 |	Acc:	70.30
+#[ B of A ] = 127 |	Acc:	66.93
+#[ A B ] = 112 |	Acc:	73.21
+#total = 455 |	Acc:	64.395604
+
+#[ swapped ] = 321 |	Acc:	90.34
+#[ ordered ] = 134 |	Acc:	70.15
+#total = 455 |	Acc:	84.395604
+
+Evaluate on Test set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+A'sB	6	4	0	5	4	1	
+AB	2	83	2	11	3	5	
+AprepB	0	1	1	3	0	0	
+BofA	5	11	4	81	25	9	
+BprepA	1	3	0	19	47	20	
+relc	0	10	1	8	14	66	
+----------------------------------------------------
+total	14	112	8	127	93	101	
+====================================================
+
+#[ A 's B ] = 14 |	Acc:	42.86
+#[ B prep A ] = 93 |	Acc:	50.54
+#[ A prep B ] = 8 |	Acc:	12.50
+#[ relative clause ] = 101 |	Acc:	65.35
+#[ B of A ] = 127 |	Acc:	63.78
+#[ A B ] = 112 |	Acc:	74.11
+#total = 455 |	Acc:	62.417582
+
+#[ swapped ] = 321 |	Acc:	90.03
+#[ ordered ] = 134 |	Acc:	73.88
+#total = 455 |	Acc:	85.274725
+

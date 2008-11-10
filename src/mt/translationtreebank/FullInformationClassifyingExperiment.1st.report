@@ -1,84 +1,84 @@
 Overall label counter:
-{A 's B=89.0, B prep A=569.0, A prep B=49.0, relative clause=606.0, B of A=764.0, A B=675.0}
+{A 's B=89.0, B prep A=563.0, A prep B=49.0, relative clause=610.0, B of A=764.0, A B=675.0}
 
 Training set stats:
 numDatums: 1840
-numLabels: 6 [B of A, relative clause, B prep A, A B, A 's B, A prep B]
-numFeatures Phi(X) types): 645
+numLabels: 6 [B of A, B prep A, A B, relative clause, A prep B, A 's B]
+numFeatures Phi(X) types): 649
 
 
 Evaluate on Training set:
 ==================Confusion Matrix==================
-->real	A'sB	BprepA	AprepB	relc	BofA	AB
-A'sB	41	12	0	0	26	21	
-BprepA	2	197	2	13	38	8	
-relc	0	51	2	356	45	23	
-AprepB	0	1	14	1	5	4	
-BofA	15	112	6	15	387	52	
-AB	3	8	9	19	9	343	
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+A'sB	45	26	0	19	12	0	
+AB	1	344	7	9	6	17	
+AprepB	0	1	17	5	2	1	
+BofA	12	47	5	380	91	9	
+BprepA	3	14	3	55	220	21	
+relc	0	19	1	42	46	360	
 ----------------------------------------------------
-total	61	381	33	404	510	451	
+total	61	451	33	510	377	408	
 ====================================================
 
-#[ A 's B ] = 61 |	Acc:	67.21
-#[ B prep A ] = 381 |	Acc:	51.71
-#[ A prep B ] = 33 |	Acc:	42.42
-#[ relative clause ] = 404 |	Acc:	88.12
-#[ B of A ] = 510 |	Acc:	75.88
-#[ A B ] = 451 |	Acc:	76.05
-#total = 1840 |	Acc:	72.717391
+#[ A 's B ] = 61 |	Acc:	73.77
+#[ B prep A ] = 377 |	Acc:	58.36
+#[ A prep B ] = 33 |	Acc:	51.52
+#[ relative clause ] = 408 |	Acc:	88.24
+#[ B of A ] = 510 |	Acc:	74.51
+#[ A B ] = 451 |	Acc:	76.27
+#total = 1840 |	Acc:	74.239130
 
-#[ swapped ] = 1295 |	Acc:	93.75
-#[ ordered ] = 545 |	Acc:	79.82
-#total = 1840 |	Acc:	89.619565
+#[ swapped ] = 1295 |	Acc:	94.52
+#[ ordered ] = 545 |	Acc:	80.92
+#total = 1840 |	Acc:	90.489130
 
 Evaluate on Dev set:
 ==================Confusion Matrix==================
-->real	A'sB	BprepA	relc	AprepB	BofA	AB
-A'sB	6	6	0	0	5	9	
-BprepA	3	34	16	2	19	5	
-relc	0	20	69	0	11	9	
-AprepB	0	1	0	3	4	3	
-BofA	4	32	10	1	83	11	
-AB	1	1	6	2	5	75	
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+A'sB	8	3	0	7	3	0	
+AB	1	84	2	6	2	7	
+AprepB	0	0	1	0	0	0	
+BofA	4	15	4	77	30	5	
+BprepA	1	7	1	23	43	22	
+relc	0	3	0	14	15	67	
 ----------------------------------------------------
-total	14	94	101	8	127	112	
+total	14	112	8	127	93	101	
 ====================================================
 
-#[ A 's B ] = 14 |	Acc:	42.86
-#[ B prep A ] = 94 |	Acc:	36.17
-#[ relative clause ] = 101 |	Acc:	68.32
-#[ A prep B ] = 8 |	Acc:	37.50
-#[ B of A ] = 127 |	Acc:	65.35
-#[ A B ] = 112 |	Acc:	66.96
-#total = 456 |	Acc:	59.210526
+#[ A 's B ] = 14 |	Acc:	57.14
+#[ B prep A ] = 93 |	Acc:	46.24
+#[ A prep B ] = 8 |	Acc:	12.50
+#[ relative clause ] = 101 |	Acc:	66.34
+#[ B of A ] = 127 |	Acc:	60.63
+#[ A B ] = 112 |	Acc:	75.00
+#total = 455 |	Acc:	61.538462
 
-#[ swapped ] = 322 |	Acc:	91.30
+#[ swapped ] = 321 |	Acc:	92.21
 #[ ordered ] = 134 |	Acc:	73.88
-#total = 456 |	Acc:	86.184211
+#total = 455 |	Acc:	86.813187
 
 Evaluate on Test set:
 ==================Confusion Matrix==================
-->real	A'sB	BprepA	AprepB	relc	BofA	AB
-A'sB	9	3	0	0	2	4	
-BprepA	1	32	1	14	17	4	
-AprepB	0	0	5	0	2	1	
-relc	0	17	0	76	9	6	
-BofA	3	36	1	5	90	16	
-AB	1	6	1	6	7	81	
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+A'sB	7	5	0	6	7	0	
+AB	1	82	1	9	6	9	
+AprepB	1	2	1	2	0	0	
+BofA	4	15	3	78	24	7	
+BprepA	1	1	2	22	38	23	
+relc	0	7	1	10	18	62	
 ----------------------------------------------------
-total	14	94	8	101	127	112	
+total	14	112	8	127	93	101	
 ====================================================
 
-#[ A 's B ] = 14 |	Acc:	64.29
-#[ B prep A ] = 94 |	Acc:	34.04
-#[ A prep B ] = 8 |	Acc:	62.50
-#[ relative clause ] = 101 |	Acc:	75.25
-#[ B of A ] = 127 |	Acc:	70.87
-#[ A B ] = 112 |	Acc:	72.32
-#total = 456 |	Acc:	64.254386
+#[ A 's B ] = 14 |	Acc:	50.00
+#[ B prep A ] = 93 |	Acc:	40.86
+#[ A prep B ] = 8 |	Acc:	12.50
+#[ relative clause ] = 101 |	Acc:	61.39
+#[ B of A ] = 127 |	Acc:	61.42
+#[ A B ] = 112 |	Acc:	73.21
+#total = 455 |	Acc:	58.901099
 
-#[ swapped ] = 322 |	Acc:	91.93
-#[ ordered ] = 134 |	Acc:	76.12
-#total = 456 |	Acc:	87.280702
+#[ swapped ] = 321 |	Acc:	87.85
+#[ ordered ] = 134 |	Acc:	74.63
+#total = 455 |	Acc:	83.956044
 

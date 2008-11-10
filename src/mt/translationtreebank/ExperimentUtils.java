@@ -125,7 +125,7 @@ public class ExperimentUtils {
     for(int i = 0; i < lines.length; i++) {
       String[] fields = lines[i].split("\\t");
       if (fields.length != 4) {
-        throw new RuntimeException("finalCategories_all.txt should have 8 fields: "+lines[i]);
+        throw new RuntimeException("finalCategories_all.txt should have 4 fields: "+lines[i]);
       }
       String fileidStr = fields[0];
       String npidStr = fields[1];

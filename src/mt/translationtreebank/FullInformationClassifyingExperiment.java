@@ -22,24 +22,37 @@ class FullInformationClassifyingExperiment {
   }
 
   public static void main(String args[]) throws IOException {
-    Properties props =StringUtils.argsToProperties(args);
-    String twofeatStr = props.getProperty("2feat", "false");
-    String revisedStr = props.getProperty("revised", "false");
-    String ngramStr   = props.getProperty("ngram", "false");
-    String firstStr   = props.getProperty("1st", "false");
-    String cpOrDnpStr   = props.getProperty("deConstituent", "false");
+    Properties props = StringUtils.argsToProperties(args);
+    String twofeatStr   = props.getProperty("2feat", "false");
+    String revisedStr   = props.getProperty("revised", "false");
+    String ngramStr     = props.getProperty("ngram", "false");
+    //String firstStr   = props.getProperty("1st", "false");
+    String lastcharNStr = props.getProperty("lastcharN", "false");
+    //String lastcharNgramStr = props.getProperty("lastcharNgram", "false");
+    String pwordStr     = props.getProperty("pword", "false");
+    String pathStr      = props.getProperty("path", "false");
+
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
     Boolean ngram = Boolean.parseBoolean(ngramStr);
-    Boolean first = Boolean.parseBoolean(firstStr);
-    Boolean cpOrDnp = Boolean.parseBoolean(cpOrDnpStr);
+    //Boolean first = Boolean.parseBoolean(firstStr);
+    Boolean first = false;
+    Boolean lastcharN = Boolean.parseBoolean(lastcharNStr);
+    Boolean lastcharNgram = false;
+    Boolean pword = Boolean.parseBoolean(pwordStr);
+    Boolean path = Boolean.parseBoolean(pathStr);
 
     // each level
-    twofeat = twofeat || revised || ngram || first || cpOrDnp;
-    revised = revised || ngram || first || cpOrDnp;
-    ngram   = ngram || first || cpOrDnp;
-    first   = first || cpOrDnp;
-    cpOrDnp = cpOrDnp;
+
+    twofeat = twofeat || revised || ngram || first || lastcharN || lastcharNgram || pword || path;
+    revised = revised || ngram || first || lastcharN || lastcharNgram || pword || path;
+    ngram   = ngram || first || lastcharN || lastcharNgram || pword || path;
+    //first   = first || lastcharN || lastcharNgram || pword || path;
+    lastcharN   = lastcharN || lastcharNgram || pword || path;
+    //lastcharNgram = lastcharNgram || pword || path;
+    pword   = pword || path;
+    path = path;
+
 
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
     String[] trainDevTest = readTrainDevTest();
@@ -122,7 +135,7 @@ class FullInformationClassifyingExperiment {
           featureList.addAll(posNgramFeatures(beforeDE, "afterDE:"));
         }
         
-        // features from first layer
+        // (1.X) features from first layer ==> first == false
         if (first) {
           Tree[] children = chNPTree.children();
           List<String> firstLayer = new ArrayList<String>();
@@ -132,25 +145,45 @@ class FullInformationClassifyingExperiment {
           featureList.addAll(ngramFeatures(firstLayer, "1st:"));
         }
 
-        if (cpOrDnp) {
-          Tree[] children = chNPTree.children();
-          Tree deTree = null;
-          for (Tree t : children) {
-            int l = Trees.leftEdge(t, chNPTree);
-            int r = Trees.rightEdge(t, chNPTree);
-            if (l <= deIdx && deIdx <= r) {
-              deTree = t;
-              break;
+        // (1.2) if the word before DE is a Noun, take the last character
+        //       of the noun as a feature
+        if (lastcharN) {
+          if (sentence.get(deIdx-1).tag().startsWith("N")) {
+            String word = sentence.get(deIdx-1).word();
+            char[] chars = word.toCharArray();
+            featureList.add("Nchar-"+chars[chars.length-1]);
+          }
+        }
+
+        // (1.X) features from last char in each word
+        if (lastcharNgram) {
+          List<String> lastChars = new ArrayList<String>();
+          for (int i = 0; i < sentence.size(); i++) {
+            String word = sentence.get(i).word();
+            char[] chars = word.toCharArray();
+            StringBuilder sb = new StringBuilder();
+            sb.append(chars[chars.length-1]);
+            lastChars.add(sb.toString());
+          }
+          featureList.addAll(ngramFeatures(lastChars, "lastcngrams:"));
+        }
+
+        // (1.3) add the word of the PP before DE
+        if (pword) {
+          StringBuilder pwords = new StringBuilder();
+          for (int i = 0; i < deIdx; i++) {
+            String tag = sentence.get(i).tag();
+            String word = sentence.get(i).word();
+            if (tag.equals("P")) {
+              pwords.append(word);
             }
           }
-          if (deTree == null) throw new RuntimeException("deTree shouldn't be null");
-          // analyze deTree
-          while((deTree.numChildren() == 1 && !deTree.isLeaf()) ||
-                (deTree.numChildren() == 2 && deTree.lastChild().nodeString().startsWith("DE"))) {
-            deTree = deTree.firstChild();
-          }
-          System.err.println("TREE:");
-          deTree.pennPrint(System.err);
+          featureList.add("Pchar-"+pwords.toString());
+        }
+
+        // (1.4) path features
+        if (path) {
+          featureList.addAll(extractAllPaths(chNPTree, "path:"));
         }
 
         // (2) make label
@@ -168,7 +201,12 @@ class FullInformationClassifyingExperiment {
         else if ("test".equals(trainDevTest[npid])) {
           testDataset.add(d);
           testData.add(d);
+        } else if ("n/a".equals(trainDevTest[npid])) {
+          // do nothing
+        } else {
+          throw new RuntimeException("trainDevTest error, line: "+trainDevTest[npid]);
         }
+   
 
         // (4) collect other statistics
         labelCounter.incrementCount(label);
@@ -185,7 +223,12 @@ class FullInformationClassifyingExperiment {
     LinearClassifierFactory<String, String> factory = new LinearClassifierFactory<String, String>();
     LinearClassifier<String, String> classifier 
       = (LinearClassifier<String, String>)factory.trainClassifier(trainDataset);
-    
+
+
+    String allWeights = classifier.toAllWeightsString();
+    System.err.println("-------------------------------------------");
+    System.err.println(allWeights);
+    System.err.println("-------------------------------------------");
 
     // output information
     System.out.println("Overall label counter:");
@@ -196,47 +239,83 @@ class FullInformationClassifyingExperiment {
     System.out.println(((Dataset)trainDataset).toSummaryStatistics());
     System.out.println();
 
+    PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter("train")));
     System.out.println("Evaluate on Training set:");
-    evaluateOnSet(trainData, classifier);
+    evaluateOnSet(trainData, classifier, pw);
+    pw.close();
     System.out.println();
 
     System.out.println("Evaluate on Dev set:");
-    evaluateOnSet(devData, classifier);
+    pw = new PrintWriter(new BufferedWriter(new FileWriter("dev")));
+    evaluateOnSet(devData, classifier, pw);
+    pw.close();
     System.out.println();
 
     System.out.println("Evaluate on Test set:");
-    evaluateOnSet(testData, classifier);
+    pw = new PrintWriter(new BufferedWriter(new FileWriter("test")));
+    evaluateOnSet(testData, classifier, pw);
+    pw.close();
     System.out.println();
 
   }
 
+  private static List<String> extractAllPaths(Tree t) {
+    return extractAllPaths(t, "");
+  }
+
+  private static List<String> extractAllPaths(Tree t, String prefix) {
+    List<String> l = new ArrayList<String>();
+    if (t.isPrePreTerminal()) {
+      StringBuilder sb = new StringBuilder();
+      sb.append(prefix).append(t.label().value());
+      l.add(sb.toString());
+      return l;
+    } else {
+      for (Tree c : t.children()) {
+        StringBuilder newPrefix = new StringBuilder();
+        newPrefix.append(prefix).append(t.label().value()).append("-");
+        l.addAll(extractAllPaths(c, newPrefix.toString()));
+      }
+      return l;
+    }
+  }
+
   private static void evaluateOnSet(List<Datum<String,String>> data, LinearClassifier<String, String> lc) {
+    evaluateOnSet(data, lc, null);
+  }
+
+  private static void evaluateOnSet(List<Datum<String,String>> data, LinearClassifier<String, String> lc, PrintWriter pw) {
     TwoDimensionalCounter<String, String> confusionMatrix = new TwoDimensionalCounter<String,String>();
     for (Datum<String,String> d : data) {
       String predictedClass = lc.classOf(d);
       confusionMatrix.incrementCount(d.label(), predictedClass);
+      if (pw!=null) pw.printf("%s\t%s\n", d.label(), predictedClass);
     }
     System.out.println("==================Confusion Matrix==================");
     System.out.print("->real");
-    for (String k : confusionMatrix.firstKeySet()) {
+    TreeSet<String> firstKeySet = new TreeSet<String>();
+    firstKeySet.addAll(confusionMatrix.firstKeySet());
+    TreeSet<String> secondKeySet = new TreeSet<String>();
+    secondKeySet.addAll(confusionMatrix.secondKeySet());
+    for (String k : firstKeySet) {
       if (k.equals("relative clause")) k = "relc";
       else k = k.replaceAll(" ","");
       System.out.printf("\t"+k);
     }
     System.out.println();
-    for (String k2 : confusionMatrix.secondKeySet()) {
+    for (String k2 : secondKeySet) {
       String normK2 = k2;
       if (normK2.equals("relative clause")) normK2 = "relc";
       else normK2 = normK2.replaceAll(" ","");
       System.out.print(normK2+"\t");
-      for (String k1 : confusionMatrix.firstKeySet()) {
+      for (String k1 : firstKeySet) {
         System.out.print((int)confusionMatrix.getCount(k1,k2)+"\t");
       }
       System.out.println();
     }
     System.out.println("----------------------------------------------------");
     System.out.print("total\t");
-    for (String k1 : confusionMatrix.firstKeySet()) {
+    for (String k1 : firstKeySet) {
       System.out.print((int)confusionMatrix.totalCount(k1)+"\t");
     }
     System.out.println();
