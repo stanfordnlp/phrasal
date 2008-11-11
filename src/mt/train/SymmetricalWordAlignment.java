@@ -61,6 +61,13 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(fStr,eStr,aStr);
   }
 
+  public void init(Integer id, String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed, boolean addBoundaryMarkers)
+     throws IOException {
+    this.id = id;
+    init(fStr,eStr,aStr, reverse, oneIndexed, addBoundaryMarkers);
+  }
+
+
   public void init(String fStr, String eStr, String aStr) throws IOException {
     init(fStr, eStr, aStr, false);
   }
@@ -70,8 +77,17 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed) throws IOException {
+    init(fStr, eStr, aStr, reverse, oneIndexed, false); 
+  }
+
+  public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed, boolean addBoundaryTokens)
+       throws IOException {
     if(VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
+    if(addBoundaryTokens) {
+      fStr = new StringBuffer("<s> ").append(fStr).append(" </s>").toString();
+      eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
+    }
     synchronized(OAIndex.class) {
       f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
       e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
@@ -87,6 +103,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
         int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);
         int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
         if(oneIndexed) { --fpos; --epos; }
+        if(addBoundaryTokens) { ++fpos; ++epos; }
         if(0 > fpos || fpos >= f.size())
           throw new IOException("f has index out of bounds (fsize="+f.size()+",esize="+e.size()+") : "+fpos);
         if(0 > epos || epos >= e.size())
@@ -102,6 +119,14 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       } else {
         System.err.println("Warning: bad alignment token: "+al);
       }
+    }
+    if(addBoundaryTokens) {
+      int lastf = f2e.length-1;
+      int laste = e2f.length-1;
+      f2e[0].add(0);
+      e2f[0].add(0);
+      f2e[lastf].add(laste);
+      e2f[laste].add(lastf);
     }
     if(VERBOSE_DEBUG)
       System.err.println("sentence alignment: "+toString());

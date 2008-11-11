@@ -1,0 +1,92 @@
+#!/usr/bin/perl -n
+
+######################################################################
+## Convert IBM classing to Phrasal format.
+## The 7 IBM classes: num, ennum, ordinal, tel, url, email, tgtlang
+######################################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+my $bad;
+while(<STDIN>) {
+	chomp;
+	/(.*) \|\|\| (.*) \|\|\| (.*) \|\|\| (.*) \|\|\| (.*)/;
+	my ($f,$e,$a,$a2,$p) = ($1,$2,$3,$4,$5);
+	my ($alignFE,$alignEF) = read_align($a);
+	my @f = split(/\s+/,$f); my @fi; my $fi=-1;
+	my @e = split(/\s+/,$e);
+	$bad = 0;
+	for my $i (0..$#f) { ($f[$i],$fi[$i]) = convertF(\@f,$i,\$fi,$alignFE); }
+	for my $i (0..$#e) { $e[$i] = convertE(\@e,$i,\@f,\@fi,$alignEF); }
+	my $f_new = join(' ',@f);
+	my $e_new = join(' ',@e);
+	if($bad) {
+		print STDERR "skipping: $f_new ||| $e_new ||| $a ||| $a2 ||| $p\n"
+	} else {
+		print "$f_new ||| $e_new ||| $a ||| $a2 ||| $p\n"
+	}
+}
+
+sub read_align {
+	my $a = shift;
+	my %fe;
+	my %ef;
+	my @a = split(/\s+/,$a);	
+	foreach my $i (0..$#a) {
+		$a[$i] =~ s/[()]//g;
+		foreach my $j (split(/,/,$a[$i])) {
+			$fe{$i} = $j;
+			$ef{$j} = $i;
+		}
+	}
+	return (\%fe,\%ef);
+}
+
+sub convertF {
+	my ($toks,$i,$idx,$align) = @_;
+	my $tok = $toks->[$i];
+	if(
+	$tok =~ s/^\$num$/\\\\n/ ||
+	$tok =~ s/^\$ennum$/\\\\e/ ||
+	$tok =~ s/^\$ordinal$/\\\\o/ ||
+	$tok =~ s/^\$tel$/\\\\t/ ||
+	$tok =~ s/^\$url$/\\\\u/ ||
+	$tok =~ s/^\$email$/\\\\e/ ||
+	$tok =~ s/^\$tgtlang$/\\\\l/) {
+		++$$idx;
+		$bad = 1 unless($align->{$i});
+		return ($tok,$$idx);
+	}
+	return ($tok,-1);
+}
+
+sub convertE {
+	my ($toks,$i,$f,$fi,$align) = @_;
+	my $tok = $toks->[$i];
+	if(
+	$tok =~ s/^\$num$/\\\\n/ ||
+	$tok =~ s/^\$ennum$/\\\\e/ ||
+	$tok =~ s/^\$ordinal$/\\\\o/ ||
+	$tok =~ s/^\$tel$/\\\\t/ ||
+	$tok =~ s/^\$url$/\\\\u/ ||
+	$tok =~ s/^\$email$/\\\\e/ ||
+	$tok =~ s/^\$tgtlang$/\\\\l/) {
+		unless($align->{$i}) { $bad = 1; return }
+		my $j = $align->{$i};
+		my $fi2 = $fi->[$j];
+		if($fi2 == -1) {
+			$bad = 1;
+		} elsif($f->[$j] ne $tok) {
+			$bad = 1;
+			print STDERR "Tag mismatch: $f->[$j] != $tok\n";
+		}
+		return $tok.'#'.$fi2;
+	}
+	return $tok;
+}

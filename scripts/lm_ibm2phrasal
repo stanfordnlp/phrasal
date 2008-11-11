@@ -1,0 +1,27 @@
+#!/usr/bin/perl -n
+
+####################################################################
+## Convert IBM classing to Phrasal format.
+## The 7 IBM classes: num, ennum, ordinal, tel, url, email, tgtlang
+####################################################################
+
+my $verbose = 0;
+
+sub ibm2phrasal {
+	local $_ = shift;
+	print STDERR "in: $_\n" if $verbose;
+	s/\$num/\\\\n/;	
+	s/\$ennum/\\\\e/;	
+	s/\$ordinal/\\\\o/;	
+	s/\$tel/\\\\t/;	
+	s/\$url/\\\\u/;	
+	s/\$email/\\\\e/;	
+	s/\$tgtlang/\\\\l/;	
+	print STDERR "out: $_\n" if $verbose;
+	return $_;
+}
+
+foreach my $i (0..1) {
+	s/((^|\s)\$(num|ennum|ordinal|tel|url|email|tgtlang)($|\s))/ibm2phrasal($1)/ge;
+}
+print;

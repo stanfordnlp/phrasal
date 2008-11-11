@@ -30,13 +30,15 @@ public class SourceFilteringToolkit {
    * @param fFilterCorpus
    */
   @SuppressWarnings("unchecked")
-  public static Sequence<IString>[] getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF) {
+  public static Sequence<IString>[] getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF, boolean addBoundaryMarkers) {
     AlignmentTemplates tmpSet = new AlignmentTemplates();
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     //filterFromDev = true;  
     try {
       LineNumberReader fReader = IOTools.getReaderFromFile(fFilterCorpus);
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
+        if(addBoundaryMarkers)
+          fLine = new StringBuffer("<s> ").append(fLine).append(" </s>").toString();
         Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
         for(int i=0; i<f.size(); ++i) {
           for(int j=i; j<f.size() && j-i<maxPhraseLenF; ++j) {

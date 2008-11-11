@@ -41,6 +41,7 @@ public class CombinedFeatureExtractor {
   static public final String START_AT_LINE_OPT = "startAtLine";
   static public final String END_AT_LINE_OPT = "endAtLine";
   static public final String MAX_FERTILITY_OPT = "maxFertility";
+  static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
 
   // phrase translation probs:
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -77,7 +78,8 @@ public class CombinedFeatureExtractor {
        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT,
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
-       LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT
+       LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
+       ADD_BOUNDARY_MARKERS_OPT
      }));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -120,7 +122,9 @@ public class CombinedFeatureExtractor {
 
   @SuppressWarnings("unchecked")
   public void analyzeProperties(Properties prop) throws IOException {
+
     this.prop = prop;
+
     // Possibly load properties from config file:
     String configFile = prop.getProperty(CONFIG_OPT);
     if(configFile != null) {
@@ -132,6 +136,7 @@ public class CombinedFeatureExtractor {
         System.exit(1);
       }
     }
+
     // Check required, optional properties:
     System.err.println("properties: "+prop.toString());
     if(!prop.keySet().containsAll(REQUIRED_OPTS)) {
@@ -142,6 +147,7 @@ public class CombinedFeatureExtractor {
       usage();
       System.exit(1);
     }
+    
     if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
       Set extraFields = new HashSet(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
@@ -150,14 +156,17 @@ public class CombinedFeatureExtractor {
       usage();
       System.exit(1);
     }
+    
     // Analyze props:
     // Mandatory arguments:
     fCorpus = prop.getProperty(F_CORPUS_OPT);
     eCorpus = prop.getProperty(E_CORPUS_OPT);
     align = prop.getProperty(A_CORPUS_OPT);
+    
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
     String fFilterList = prop.getProperty(FILTER_LIST_OPT);
+    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(ADD_BOUNDARY_MARKERS_OPT,"false"));
     boolean emptyFilterList =
       Boolean.parseBoolean(prop.getProperty(EMPTY_FILTER_LIST_OPT,"false"));
     numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
@@ -168,7 +177,8 @@ public class CombinedFeatureExtractor {
       fPhrases = SourceFilteringToolkit.getPhrasesFromList(fFilterList);
     else if(fFilterCorpus != null)
       fPhrases = SourceFilteringToolkit.getPhrasesFromFilterCorpus
-        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF);
+        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF,addBoundaryMarkers);
+    
     // Other optional arguments:
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));
     endAtLine = Integer.parseInt(prop.getProperty(END_AT_LINE_OPT,"-2"))+1;
@@ -197,6 +207,7 @@ public class CombinedFeatureExtractor {
         AbstractFeatureExtractor fe = null;
         String[] extractorAndInfofile = exStr.split("=");
         String infoFilename = null;
+
         // if the extractor string contains "=", then assume 
         // that A in A=B is the extractor class name, and 
         // B is an "info" file with same number of lines as sentence pairs.
@@ -206,6 +217,7 @@ public class CombinedFeatureExtractor {
         } else if (extractorAndInfofile.length!=1) {
           throw new RuntimeException("extractor argument format error");
         }
+        
         // if exStr contains parentheses, assume it is a call to a constructor 
         // (without the "new"):
         int pos = exStr.indexOf('(');
@@ -221,10 +233,12 @@ public class CombinedFeatureExtractor {
             mosesExtractor = (PharaohFeatureExtractor) fe;
           }
         }
+
         fe.init(prop, featureIndex, alTemps);
         extractors.add(fe);
         infoFileForExtractors.add(infoFilename);
         System.err.println("New class instance: "+fe.getClass());
+
       } catch (Exception e) {
         e.printStackTrace();
         usage();
@@ -242,9 +256,11 @@ public class CombinedFeatureExtractor {
    * @param start End index into list.
    */
   public void restrictExtractionTo(Sequence<IString>[] list, int start, int end) {
-    assert(filterFromDev);  
+    assert(filterFromDev);
+
     if(end < Integer.MAX_VALUE)
       System.err.printf("Filtering against phrases: %d-%d\n", start, end-1);
+
     for(int i=start; i<end && i<list.length; ++i) {
       Sequence<IString> f = list[i];
       alTemps.addForeignPhraseToIndex(f);
@@ -268,6 +284,9 @@ public class CombinedFeatureExtractor {
    * @param aCorpus
    */
   public void extractFromAlignedData(String fCorpus, String eCorpus, String aCorpus) {
+
+    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(ADD_BOUNDARY_MARKERS_OPT,"false"));
+
     if(!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
@@ -278,9 +297,11 @@ public class CombinedFeatureExtractor {
     try {
       for(passNumber=0; passNumber<totalPassNumber; ++passNumber) {
         alTemps.enableAlignmentCounts(passNumber == 0);
+
         // Set current pass:
         for(AbstractFeatureExtractor e : extractors)
           e.setCurrentPass(passNumber);
+
         // Read data and process data:
         System.err.printf("Pass %d on training data (max phrase len: %d,%d)...\n",
           passNumber+1, AbstractPhraseExtractor.maxPhraseLenF, AbstractPhraseExtractor.maxPhraseLenE);
@@ -304,6 +325,7 @@ public class CombinedFeatureExtractor {
         for (String fLine;; ++lineNb) {
           fLine = fReader.readLine();
           boolean done = (fLine == null || lineNb == endAtLine);
+
           if(lineNb % 1000 == 0 || done) {
             long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
             long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
@@ -312,12 +334,14 @@ public class CombinedFeatureExtractor {
             System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
                               lineNb, totalStepSecs, totalMemory, freeMemory, alTemps.getSizeInfo());
           }
+
           if(done) {
             if(startAtLine >= 0 || endAtLine >= 0)
               System.err.printf("Range done: [%d-%d], current line is %d.\n",
                                 startAtLine, endAtLine-1, lineNb);
             break;
           }
+
           String eLine = eReader.readLine();
           if(eLine == null)
             throw new IOException("Target-language corpus is too short!");
@@ -345,17 +369,20 @@ public class CombinedFeatureExtractor {
             System.err.printf("f(%d): %s\n",lineNb,fLine);
             System.err.printf("a(%d): %s\n",lineNb,aLine);
           }
-          sent.init(lineNb,fLine,eLine,aLine);
+          sent.init(lineNb,fLine,eLine,aLine,false,false,addBoundaryMarkers);
           extractPhrasalFeatures(sent);
           extractSententialFeatures(sent);
         }
+
         if(eReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
           throw new IOException("Target-language corpus contains extra lines!");
         if(aReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
           throw new IOException("Alignment file contains extra lines!");
+
         fReader.close();
         eReader.close();
         aReader.close();
+
         double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
         System.err.printf("Done with pass %d. Seconds: %.3f.\n", passNumber+1, totalTimeSecs);
       }
@@ -391,9 +418,11 @@ public class CombinedFeatureExtractor {
     long startStepTimeMillis = startTimeMillis;
 
     System.err.printf("Alignment templates to write: %d\n",alTemps.size());
+
     for(int idx=0; idx<alTemps.size(); ++idx) {
       boolean skip=false;
       StringBuilder str = new StringBuilder();
+
       if(idx % 10000 == 0 || idx+1==alTemps.size()) {
         long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
         long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
@@ -402,15 +431,19 @@ public class CombinedFeatureExtractor {
         System.err.printf("writing phrase %d (secs = %.3f, totalmem = %dm, freemem = %dm)...\n",
                           idx, totalStepSecs, totalMemory, freeMemory);
       }
+
       alTemps.reconstructAlignmentTemplate(alTemp, idx);
       str.append(alTemp.toString(noAlign));
       str.append(AlignmentTemplate.DELIM);
+
       for(AbstractFeatureExtractor e : extractors) {
         Object scores = e.score(alTemp);
+
         if(scores == null) {
           skip=true;
           break;
         }
+
         if(scores.getClass().isArray()) { // as dense vector
           double[] scoreArray = (double[]) scores;
           for(int i=0; i<scoreArray.length; ++i) {
@@ -433,6 +466,7 @@ public class CombinedFeatureExtractor {
       if(!skip)
         oStream.println(str.toString());
     }
+
     double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
     System.err.printf("Done with writing phrase table. Seconds: %.3f.\n", totalTimeSecs);
     return true;
@@ -450,11 +484,14 @@ public class CombinedFeatureExtractor {
   public void extractAll() {
     // Split filter list into N chunks:
     if(numSplits > 1) {
+
       if(!filterFromDev)
         throw new RuntimeException("-"+SPLIT_SIZE_OPT+" argument only possible with -"+FILTER_CORPUS_OPT+", -"+FILTER_LIST_OPT+".");
+
       PrintStream oStream = IOTools.getWriterFromFile(outputFile);
       int size = fPhrases.length/numSplits+1;
       int startLine = 0;
+
       while(startLine < fPhrases.length) {
         init();
         restrictExtractionTo(fPhrases, startLine, startLine+size);
@@ -462,16 +499,20 @@ public class CombinedFeatureExtractor {
         write(oStream, noAlign);
         startLine += size;
       }
+
       if(oStream != null)
         oStream.close();
     } 
     // Only one chunk at a time (more advanced features available here):
     else {
+
       init();
+      
       // Various filtering options:
       if(fPhrases != null)
         restrictExtractionTo(fPhrases);
       extractFromAlignedData(fCorpus, eCorpus, align);
+
       // Check phrase table against existing one:
       String refFile = prop.getProperty(REF_PTABLE_OPT);
       if(refFile != null && mosesExtractor != null) {
@@ -483,6 +524,7 @@ public class CombinedFeatureExtractor {
           e.printStackTrace();
         }
       }
+      
       System.err.println("saving features to: "+outputFile);
       PrintStream oStream = IOTools.getWriterFromFile(outputFile);
       write(oStream, noAlign);
@@ -516,10 +558,12 @@ public class CombinedFeatureExtractor {
   }
 
   public static void main(String[] args) throws IOException {
+
     Properties prop = StringUtils.argsToProperties(args);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
     System.err.println("extraction started at: "+formatter.format(new Date()));
+
     try {
       CombinedFeatureExtractor e = new CombinedFeatureExtractor(prop);
       e.extractAll();
@@ -527,6 +571,7 @@ public class CombinedFeatureExtractor {
       e.printStackTrace();
       usage();
     }
+    
     System.err.println("extraction ended at: "+formatter.format(new Date()));
   }
 }

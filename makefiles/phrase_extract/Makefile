@@ -48,7 +48,8 @@ train: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(DEVID).$(SYSI
 
 test_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.f1best
 nbest_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
-train_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+train_google: extract_google $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+extract_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz 
 
 ltables: $(LTABLES)
 
@@ -219,6 +220,15 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 	$(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
 
 #############################################
+# Prepare class-based models:
+#############################################
+
+%.clm.gz: %.lm.gz
+	zcat $< | lm_ibm2danc | gzip > $@
+%.cunk: %.sgm
+	cat $< | sgml2txt | input_ibm2danc | lc > $@
+
+#############################################
 # Language models:
 #############################################
 
@@ -247,10 +257,10 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 %.e.vocab: %.e.phrases
 	cat $< | ngram-count -text - -write-vocab $@ -order 1 -tolower
 
-%.e.phrases: %.tables/phrase-table.gz %.unk
+%.e.phrases: %.tables/phrase-table.gz %.$(FE)
 	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
 	remove_bad_english 2> $@.skip | grep -v '^$$' | \
-	cat - $(*F).unk | sort | uniq > $@
+	cat - $(*F).$(FE) | sort | uniq > $@
 
 #############################################
 # Phrase tables:
@@ -263,7 +273,7 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 
 ### Generate table containing both phrase and lexicalized re-ordering probabilities for a given dev/test set:
 ### (needs to be run on 16G machines)
-%.tables/merged.gz: %.unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+%.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	mkdir $(*F).tables || true
 	java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
@@ -273,7 +283,7 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 
 COUNT_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen) -extractors mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
 
-$(TESTID).tables/counts.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(TESTID).tables/counts.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
 
 #############################################
@@ -283,19 +293,19 @@ $(TESTID).tables/counts.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E 
 LEX_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -phiFilter $(MINP) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen)
 
 ### for tuning set:
-$(DEVID).tables/lo-word.%.gz: $(DEVID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(DEVID).tables/lo-word.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
-$(DEVID).tables/lo-phrase.%.gz: $(DEVID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(DEVID).tables/lo-phrase.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
-$(DEVID).tables/lo-hier.%.gz: $(DEVID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(DEVID).tables/lo-hier.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen 500        -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 
 ### for test set:
-$(TESTID).tables/lo-word.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(TESTID).tables/lo-word.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
-$(TESTID).tables/lo-phrase.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(TESTID).tables/lo-phrase.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
-$(TESTID).tables/lo-hier.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen 500        -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 
 #############################################
@@ -314,13 +324,7 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).unk $(TRAIN)/corpus.$F $(TRAIN)/corpus.
 
 ### Convert SGML file into raw text, and remove IBM classing:
 %.unk: %.sgm
-	cat $< | sgml2txt | $(CLASS) | lc > $@
-%.unk.nc: %.sgm
 	cat $< | sgml2txt | ibm2noclass | lc > $@
-%.unk.c: %.sgm
-	cat $< | sgml2txt | ibm2class | lc > $@
-%.unk.ibm: %.sgm
-	cat $< | sgml2txt | lc > $@
 
 %.counts.html: %.counts
 	cat $< | counts2html $(TESTID) > $@

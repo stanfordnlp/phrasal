@@ -20,26 +20,32 @@ use utils::mt  qw(&load_mt_sgml &load_ibm_doc_scores &load_ptable);
 use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
 
 my %opts = get_opts
-  (['v',0,'program will be more verbose'],
+  (
 	 ['ref=s','','reference translations (NIST MT sgml)',1],
 	 ['in=s','','source-language text (NIST MT sgml)',1],
 	 ['out=s','','system output (raw text)',1],
 	 ['align=s','','system output with phrase alignment (Moses n-best list format)',1],
-	 ['scores=s','','document-level scores for TER, BLEU, and TER-BLEU (IBM format)',1],
-	 ['summary=s','','corpus-level scores for different systems (IBM format)',1],
+	 ['scores=s','','document-level scores for TER, BLEU, and TER-BLEU (IBM format)'],
+	 ['summary=s','','corpus-level scores for different systems (IBM format)'],
 	 ['corpus=s','','corpus name',1],
-	 ['ptable=s','','phrase table',1],
-	 ['counts=s','','phrase counts',1],
+	 ['ptable=s','','phrase table'],
+	 ['counts=s','','phrase counts'],
 	 ['html=s','','noot name of html files to generate',1],
-	 ['unk=s','','source-language text with unknown words marked with <unk></unk> (raw text)']
+	 ['unk=s','','source-language text with unknown words marked with <unk></unk> (raw text)'],
+	 ['lang=s','ar','source language'],
+ 	 ['v',0,'program will be more verbose'],
 	 );
 my %args = get_args();
+my $lang = $opts{lang};
+my $use_ptable = $opts{ptable};
+my $use_counts = $opts{counts};
+my $use_scores = $opts{scores} && $opts{summary};
 my $root = $opts{html};
 
-open(H1,">${root}_scores.html");
+open(H1,">${root}_scores.html") if $use_scores;
 open(H2,">$root.html");
 mkdir("${root}_grids");
-binmode(H1,":utf8");
+binmode(H1,":utf8") if $use_scores;
 binmode(H2,":utf8");
 
 my ($align,$sz) = load_file($opts{align});
@@ -51,17 +57,20 @@ if($opts{unk}) {
 my ($in,$inh,$docs) = load_mt_sgml($opts{in}, verbose => 0);
 my ($out) = load_mt_sgml($opts{out}, verbose => 0);
 my ($ref,$refh) = load_mt_sgml($opts{ref}, verbose => 0, docs => $docs);
-my $scores = load_ibm_doc_scores($opts{scores},%opts);
-my $ptable = load_ptable($opts{ptable},align=>1);
-my $counts = load_ptable($opts{counts});
+my $scores;
+$scores = load_ibm_doc_scores($opts{scores},%opts) if $use_scores;
+my $ptable;
+$ptable = load_ptable($opts{ptable},align=>1) if $use_ptable;
+my $counts;
+$counts = load_ptable($opts{counts}) if $use_counts;
 my @docs = keys %$docs;
 
 die "Incorrect number of segments (in vs. out): $#$in != $#$out\n" if $#$in != $#$out;
-die "Incorrect number of documents (scores vs. in): $#$scores != $#docs\n" if $#$scores != $#docs;
+die "Incorrect number of documents (scores vs. in): $#$scores != $#docs\n" if $use_scores && $#$scores != $#docs;
 
 generate_main_html($opts{corpus},$docs,$scores,$ref,$refh,$in,$out);
 
-close(H1);
+close(H1) if $use_scores;
 close(H2);
 exit 0;
 
@@ -79,33 +88,45 @@ sub read_summary {
 
 sub generate_main_html {
 	my ($title,$docs,$scores,$ref,$refh,$in,$out) = @_;
-	print H1 "<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n";
-	print H1 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">";
+	# Create dummy %scores if not readig real scores:
+	unless($use_scores) {
+		foreach my $k (sort keys %$docs) {
+		 	my %attr = (id => $k, ter => 0, bleu => 0, score => 0, tail => 0);
+			push @$scores, \%attr;	
+		}
+	}
+	if($use_scores) {
+		print H1 "<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n";
+		print H1 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">";
+	}
 	print H2 "<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\n";
 	print H2 "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">";
-	print H1 "<html><head><title>Results</title></head><body><h2>$title</h2>";
+	print H1 "<html><head><title>Results</title></head><body><h2>$title</h2>" if $use_scores;
 	print H2 "<html><head><title>$title translations</title></head><body>";
 
-	## Print corpus-level scores:
-	print H1 "<h3><strong>Corpus-level scores (Rosetta)</strong></h3>";
-	print H1 "<table border=\"1\" cellpadding=\"5\">\n";
-	print H1 "<tr><th>System</th><th>TER</th><th>BLEU</th><th>(TER-BLEU)/2</th>";
-	print H1 "<th>tail TER</th><th>tail BLEU</th><th>tail (TER-BLEU)/2</th></tr>";
-	my $s = read_summary($opts{summary});
-	for my $i (sort {$s->[$a][6] <=> $s->[$b][6]} 0..$#$s) {
-		print H1 "<tr>";
-		for my $j (0..$#{$s->[$i]}) {
-			print H1 "<td>$s->[$i][$j]</td>";
+	if($use_scores) {
+		## Print corpus-level scores:
+		print H1 "<h3><strong>Corpus-level scores (Rosetta)</strong></h3>";
+		print H1 "<table border=\"1\" cellpadding=\"5\">\n";
+		print H1 "<tr><th>System</th><th>TER</th><th>BLEU</th><th>(TER-BLEU)/2</th>";
+		print H1 "<th>tail TER</th><th>tail BLEU</th><th>tail (TER-BLEU)/2</th></tr>";
+		my $s;
+		$s = read_summary($opts{summary}) if $use_scores;
+		for my $i (sort {$s->[$a][6] <=> $s->[$b][6]} 0..$#$s) {
+			print H1 "<tr>";
+			for my $j (0..$#{$s->[$i]}) {
+				print H1 "<td>$s->[$i][$j]</td>";
+			}
+			print H1 "</tr>";
 		}
-		print H1 "</tr>";
-	}
-	print H1 "</table>";
+		print H1 "</table>";
 
-	## Stanford document scores:
-	print H1 "<h3><a name=\"doc_level\">Document-level scores (Stanford):</a></h3>";
-	print H1 "<table border=\"1\" cellpadding=\"5\">";
-	print H1 "<tr><th>Document ID</th><th>TER</th><th>BLEU</th><th>(TER-BLEU)/2</th></tr>";
-	print H1 "<tr><td colspan=4><i><strong>tail:</strong></i></td></tr>\n";
+		## Stanford document scores:
+		print H1 "<h3><a name=\"doc_level\">Document-level scores (Stanford):</a></h3>";
+		print H1 "<table border=\"1\" cellpadding=\"5\">";
+		print H1 "<tr><th>Document ID</th><th>TER</th><th>BLEU</th><th>(TER-BLEU)/2</th></tr>";
+		print H1 "<tr><td colspan=4><i><strong>tail:</strong></i></td></tr>\n";
+	}
 
 	## Print documents (scores and translations):
 	my $tail = 1;
@@ -114,15 +135,18 @@ sub generate_main_html {
 		my $s = $scores->[$i];
 		my $docid = $s->{id};
 		my $docpos = $docs->{$docid};
-		if($tail && !$s->{tail}) {
+		if($use_scores && $tail && !$s->{tail}) {
 			print H1 "<tr><td colspan=4><i><strong>not in tail:</strong></i></td></tr>\n";
 			$tail = 0;
 		}
 		# Update score html page:
-		print H1 "<tr><td><a href=\"${root}.html\#$docid\">$docid</a></td><td>$s->{ter}</td><td>$s->{bleu}</td><td>$s->{score}</td></tr>";
+		print H1 "<tr><td><a href=\"${root}.html\#$docid\">$docid</a></td><td>$s->{ter}</td><td>$s->{bleu}</td><td>$s->{score}</td></tr>"
+		  if $use_scores;
 		# Update translation html page:
 		print H2 "<h3><a name=\"$docid\">$docid</a></h3>";
-		print H2 "<dl><dt><strong>Document-level scores</strong> [<a href=\"${root}_scores.html#doc_level\">full</a>]</dt>";
+		print H2 "<dl><dt><strong>Document-level scores</strong> ";
+		print H2 "[<a href=\"${root}_scores.html#doc_level\">full</a>]" if $use_scores;
+		print H2 "</dt>";
 		print H2 "<dd>TER = $s->{ter}\%";
 		print H2 "<dd>BLEU = $s->{bleu}\%";
 		print H2 "<dd>(TER-BLEU)/2 = $s->{score}</dl>";
@@ -150,9 +174,9 @@ sub generate_main_html {
 			}
 			## Sentence annotation:
 			flag_unmatched_words(\@refs,\$output);
-			my $pr = $prep->[$j]; 
+			my $pr = $prep->[$j];
 			my $raw_input = $pr;
-			$pr = mark_clitics($pr);
+			$pr = mark_clitics($pr) if $lang eq 'ar';
 			$pr = to_vred($pr);
 			## Print translations without grids:
 			print_translations(*H2,$id,$sid,$input,$pr,$prep,$output,\@refs,1);
@@ -180,7 +204,7 @@ sub generate_main_html {
 			close(H3);
 		}
 	}
-	print H1 "</table></body></html>";
+	print H1 "</table></body></html>" if $use_scores;
 	print H2 "</body></html>";
 }
 
@@ -242,11 +266,11 @@ sub print_grid {
 				my $ephrase = get_phrase(\@out,$t1b,$t2b,{plain=>1});
 				my $p = $ptable->{$aphrase}{$ephrase};
 				my $c = $counts->{$aphrase}{$ephrase};
-				my $color = color_for_count($c->[0]);
-				print $fh sprintf("<td onmouseover=\"Tip('ar=%s<br>en=%s<br>".
-				  "count=%d<br>".
-				  "phi(ar|en)=%.4g<br>lex(ar|en)=%.4g<br>".
-					"phi(en|ar)=%.4g<br>lex(en|ar)=%.4g')\" onmouseout=\"UnTip()\" bgcolor=\"$color\">\&nbsp;</td>",
+				my $color = color_for_count(defined $c ? $c->[0] : 1000);
+				print $fh sprintf("<td onmouseover=\"Tip('ar=%s<br>en=%s".
+					($use_counts ? "<br>count=%d" : "").
+					($use_ptable ? "<br>phi(ar|en)=%.4g<br>lex(ar|en)=%.4g<br>phi(en|ar)=%.4g<br>lex(en|ar)=%.4g'" : "").
+					")\" onmouseout=\"UnTip()\" bgcolor=\"$color\">\&nbsp;</td>",
 					escape($aphrase2),escape($ephrase),$c->[0],$p->[0],$p->[1],$p->[2],$p->[3]);
 			} else {
 				print $fh "<td></td>";
@@ -364,7 +388,7 @@ sub get_phrase {
 		my $w = $array->[$_];
 		$w = to_vred($w) if $attr->{vred};
 		$w = to_plain($w) if $attr->{plain};
-		if($attr->{no_clitics}) {
+		if($lang eq 'ar' && $attr->{no_clitics}) {
 			if($attr->{plain}) {
 				$w = remove_clitics($w) 
 			} else {
