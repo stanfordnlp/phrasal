@@ -4,4 +4,5 @@ time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -ng
 # time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -1st true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.1st.report
 time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -lastcharN true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.lastcharN.report
 time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -pword true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.pword.report
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -path true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.path.report
 perl -w projects/mt/src/mt/translationtreebank/pieceTrainDevTest.pl projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt train dev test > all

@@ -38,7 +38,7 @@ class FullInformationClassifyingExperiment {
     //Boolean first = Boolean.parseBoolean(firstStr);
     Boolean first = false;
     Boolean lastcharN = Boolean.parseBoolean(lastcharNStr);
-    Boolean lastcharNgram = false;
+    Boolean lastcharNgram = true;
     Boolean pword = Boolean.parseBoolean(pwordStr);
     Boolean path = Boolean.parseBoolean(pathStr);
 

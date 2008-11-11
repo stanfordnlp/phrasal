@@ -1,84 +1,78 @@
 Overall label counter:
-{A 's B=89.0, B prep A=563.0, A prep B=49.0, relative clause=610.0, B of A=764.0, A B=675.0}
+{A 's B=89.0, B prep A=1327.0, A prep B=49.0, relative clause=610.0, A B=675.0}
 
 Training set stats:
 numDatums: 1840
-numLabels: 6 [B of A, B prep A, A B, relative clause, A prep B, A 's B]
+numLabels: 5 [B prep A, A B, relative clause, A prep B, A 's B]
 numFeatures Phi(X) types): 902
 
 
 Evaluate on Training set:
 ==================Confusion Matrix==================
-->real	A'sB	AB	AprepB	BofA	BprepA	relc
-A'sB	48	10	1	6	6	0	
-AB	0	363	7	12	10	20	
-AprepB	0	2	16	7	2	1	
-BofA	11	43	5	409	83	10	
-BprepA	2	10	3	40	240	9	
-relc	0	23	1	36	36	368	
+->real	A'sB	AB	AprepB	BprepA	relc
+A'sB	44	9	1	10	0	
+AB	0	352	7	16	19	
+AprepB	0	2	16	9	1	
+BprepA	17	65	8	795	27	
+relc	0	23	1	57	361	
 ----------------------------------------------------
-total	61	451	33	510	377	408	
+total	61	451	33	887	408	
 ====================================================
 
-#[ A 's B ] = 61 |	Acc:	78.69
-#[ B prep A ] = 377 |	Acc:	63.66
+#[ A 's B ] = 61 |	Acc:	72.13
+#[ B prep A ] = 887 |	Acc:	89.63
 #[ A prep B ] = 33 |	Acc:	48.48
-#[ relative clause ] = 408 |	Acc:	90.20
-#[ B of A ] = 510 |	Acc:	80.20
-#[ A B ] = 451 |	Acc:	80.49
-#total = 1840 |	Acc:	78.478261
+#[ relative clause ] = 408 |	Acc:	88.48
+#[ A B ] = 451 |	Acc:	78.05
+#total = 1840 |	Acc:	85.217391
 
-#[ swapped ] = 1295 |	Acc:	95.06
-#[ ordered ] = 545 |	Acc:	82.02
-#total = 1840 |	Acc:	91.195652
+#[ swapped ] = 1295 |	Acc:	95.75
+#[ ordered ] = 545 |	Acc:	79.08
+#total = 1840 |	Acc:	90.815217
 
 Evaluate on Dev set:
 ==================Confusion Matrix==================
-->real	A'sB	AB	AprepB	BofA	BprepA	relc
-A'sB	8	1	0	5	2	0	
-AB	1	86	1	7	2	5	
-AprepB	0	0	0	0	1	0	
-BofA	4	14	6	80	26	6	
-BprepA	1	8	0	23	47	17	
-relc	0	3	1	12	15	73	
+->real	A'sB	AB	AprepB	BprepA	relc
+A'sB	6	1	0	5	0	
+AB	1	83	2	6	5	
+AprepB	0	0	0	1	0	
+BprepA	7	23	6	185	29	
+relc	0	5	0	23	67	
 ----------------------------------------------------
-total	14	112	8	127	93	101	
-====================================================
-
-#[ A 's B ] = 14 |	Acc:	57.14
-#[ B prep A ] = 93 |	Acc:	50.54
-#[ A prep B ] = 8 |	Acc:	0.00
-#[ relative clause ] = 101 |	Acc:	72.28
-#[ B of A ] = 127 |	Acc:	62.99
-#[ A B ] = 112 |	Acc:	76.79
-#total = 455 |	Acc:	64.615385
-
-#[ swapped ] = 321 |	Acc:	93.15
-#[ ordered ] = 134 |	Acc:	72.39
-#total = 455 |	Acc:	87.032967
-
-Evaluate on Test set:
-==================Confusion Matrix==================
-->real	A'sB	AB	AprepB	BofA	BprepA	relc
-A'sB	6	4	0	6	6	0	
-AB	1	82	3	7	5	8	
-AprepB	1	2	1	2	0	0	
-BofA	5	15	3	77	22	8	
-BprepA	1	1	1	23	40	15	
-relc	0	8	0	12	20	70	
-----------------------------------------------------
-total	14	112	8	127	93	101	
+total	14	112	8	220	101	
 ====================================================
 
 #[ A 's B ] = 14 |	Acc:	42.86
-#[ B prep A ] = 93 |	Acc:	43.01
-#[ A prep B ] = 8 |	Acc:	12.50
-#[ relative clause ] = 101 |	Acc:	69.31
-#[ B of A ] = 127 |	Acc:	60.63
-#[ A B ] = 112 |	Acc:	73.21
-#total = 455 |	Acc:	60.659341
+#[ B prep A ] = 220 |	Acc:	84.09
+#[ A prep B ] = 8 |	Acc:	0.00
+#[ relative clause ] = 101 |	Acc:	66.34
+#[ A B ] = 112 |	Acc:	74.11
+#total = 455 |	Acc:	74.945055
 
-#[ swapped ] = 321 |	Acc:	89.41
-#[ ordered ] = 134 |	Acc:	74.63
-#total = 455 |	Acc:	85.054945
+#[ swapped ] = 321 |	Acc:	94.70
+#[ ordered ] = 134 |	Acc:	69.40
+#total = 455 |	Acc:	87.252747
+
+Evaluate on Test set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BprepA	relc
+A'sB	5	3	0	7	0	
+AB	1	82	2	10	9	
+AprepB	0	2	1	2	0	
+BprepA	8	17	5	174	28	
+relc	0	8	0	27	64	
+----------------------------------------------------
+total	14	112	8	220	101	
+====================================================
+
+#[ A 's B ] = 14 |	Acc:	35.71
+#[ B prep A ] = 220 |	Acc:	79.09
+#[ A prep B ] = 8 |	Acc:	12.50
+#[ relative clause ] = 101 |	Acc:	63.37
+#[ A B ] = 112 |	Acc:	73.21
+#total = 455 |	Acc:	71.648352
+
+#[ swapped ] = 321 |	Acc:	91.28
+#[ ordered ] = 134 |	Acc:	71.64
+#total = 455 |	Acc:	85.494505
 

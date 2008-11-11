@@ -131,7 +131,9 @@ public class ExperimentUtils {
       String npidStr = fields[1];
       String categoriesStr = fields[2];
       String npStr = fields[3];
-      
+
+      categoriesStr = normCategory(categoriesStr);
+
       Pair<String, String> pair = new Pair<String, String>(categoriesStr, npStr);
       fileidStr = fileidStr.replaceAll("[^\\d]","");
       int fileid = Integer.parseInt(fileidStr);
@@ -142,7 +144,12 @@ public class ExperimentUtils {
     return result;
   }
 
-
+  static String normCategory(String cat) {
+    if (cat.equals("B of A")) {
+      return "B prep A";
+    }
+    return cat;
+  }
 
   static String etbDir() {
     String ectbdirname = "/u/nlp/scr/data/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/";
