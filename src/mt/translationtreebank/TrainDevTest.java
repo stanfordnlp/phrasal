@@ -6,7 +6,7 @@ import edu.stanford.nlp.util.*;
 
 class TrainDevTest {
   public static void main(String[] args) throws IOException {
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
+    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(false);
     Map<String,List<Integer>> labelIndices = new HashMap<String,List<Integer>>();
     Map<Integer, String> result = new HashMap<Integer, String>();
 

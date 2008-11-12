@@ -41,17 +41,19 @@ class FullInformationClassifyingExperiment {
     Boolean lastcharNgram = false;
     Boolean pword = Boolean.parseBoolean(pwordStr);
     Boolean path = Boolean.parseBoolean(pathStr);
+    Boolean percentage = false;
 
     // each level
 
-    twofeat = twofeat || revised || ngram || first || lastcharN || lastcharNgram || pword || path;
-    revised = revised || ngram || first || lastcharN || lastcharNgram || pword || path;
-    ngram   = ngram || first || lastcharN || lastcharNgram || pword || path;
-    //first   = first || lastcharN || lastcharNgram || pword || path;
-    lastcharN   = lastcharN || lastcharNgram || pword || path;
-    //lastcharNgram = lastcharNgram || pword || path;
-    pword   = pword || path;
-    path = path;
+    twofeat = twofeat || revised || ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
+    revised = revised || ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
+    ngram   = ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
+    //first   = first || lastcharN || lastcharNgram || pword || path || percentage;
+    lastcharN   = lastcharN || lastcharNgram || pword || path || percentage;
+    //lastcharNgram = lastcharNgram || pword || path || percentage;
+    pword   = pword || path || percentage;
+    path = path || percentage;
+    percentage = percentage;
 
 
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
@@ -186,6 +188,19 @@ class FullInformationClassifyingExperiment {
           featureList.addAll(extractAllPaths(chNPTree, "path:"));
         }
 
+        // (1.X) if the QP is a "percentage"
+        if (percentage) {
+          /*
+          if (deIdx == 1 && (sentence.get(0).word().startsWith("百分之") ||
+                             sentence.get(0).word().endsWith("％"))) {
+            featureList.add("PERCENTAGE");
+          }
+          */
+          if (deIdx == 1 && (sentence.get(0).tag().equals("NR"))) {
+            featureList.add("NR");
+          }
+        }
+
         // (2) make label
 
         // (3) Make Datum and add
@@ -228,6 +243,8 @@ class FullInformationClassifyingExperiment {
     String allWeights = classifier.toAllWeightsString();
     System.err.println("-------------------------------------------");
     System.err.println(allWeights);
+    System.err.println("-------------------------------------------");
+    System.err.println(classifier.toHistogramString());
     System.err.println("-------------------------------------------");
 
     // output information

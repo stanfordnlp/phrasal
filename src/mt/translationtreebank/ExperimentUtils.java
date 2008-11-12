@@ -19,7 +19,6 @@ public class ExperimentUtils {
   static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
   static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
 
-
   static boolean hasVApattern(Tree t) {
     TreeMatcher va1M = va1.matcher(t);
     TreeMatcher va2M = va2.matcher(t);
@@ -113,6 +112,10 @@ public class ExperimentUtils {
 
 
   static List<Pair<String, String>>[] readFinalCategories(String allFile) {
+    return readFinalCategories(allFile, true);
+  }
+
+  static List<Pair<String, String>>[] readFinalCategories(String allFile, Boolean useReducedCategories) {
     String content = StringUtils.slurpFileNoExceptions(allFile);
     String[] lines = content.split("\\n");
 
@@ -132,7 +135,10 @@ public class ExperimentUtils {
       String categoriesStr = fields[2];
       String npStr = fields[3];
 
-      categoriesStr = normCategory(categoriesStr);
+      if (useReducedCategories)
+        categoriesStr = normCategory(categoriesStr);
+      else
+        categoriesStr = categoriesStr;
 
       Pair<String, String> pair = new Pair<String, String>(categoriesStr, npStr);
       fileidStr = fileidStr.replaceAll("[^\\d]","");
@@ -190,7 +196,12 @@ public class ExperimentUtils {
     return dirname;
   }
 
+    
   static List<TreePair> readAnnotatedTreePairs() throws IOException {
+    return readAnnotatedTreePairs(true);
+  }
+
+  static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories) throws IOException {
     String wordalignmentDir = wordAlignmentDir();
     String ctbDir = ctbDir();
     String etbDir = etbDir();
@@ -204,7 +215,7 @@ public class ExperimentUtils {
 
     // Open the hand-annotate file
     String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_all.txt";
-    List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile);
+    List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile, useReducedCategories);
     
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
       // Everytime, restart them so that when we get trees,
