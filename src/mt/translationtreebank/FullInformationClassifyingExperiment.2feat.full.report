@@ -1,0 +1,72 @@
+Overall label counter:
+{A 's B=90.0, B prep A=562.0, A prep B=47.0, relative clause=610.0, B of A=765.0, A B=676.0}
+
+Training set stats:
+numDatums: 1840
+numLabels: 6 [B of A, A B, B prep A, relative clause, A 's B, A prep B]
+numFeatures Phi(X) types): 2
+
+
+Evaluate on Training set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+BofA	60	145	26	418	241	18	
+relc	0	307	7	93	135	390	
+----------------------------------------------------
+total	60	452	33	511	376	408	
+====================================================
+
+#[ A 's B ] = 60 |	Acc:	0.00
+#[ B prep A ] = 376 |	Acc:	0.00
+#[ A prep B ] = 33 |	Acc:	0.00
+#[ relative clause ] = 408 |	Acc:	95.59
+#[ B of A ] = 511 |	Acc:	81.80
+#[ A B ] = 452 |	Acc:	0.00
+#total = 1840 |	Acc:	43.913043
+
+#[ swapped ] = 1295 |	Acc:	100.00
+#[ ordered ] = 545 |	Acc:	0.00
+#total = 1840 |	Acc:	70.380435
+
+Evaluate on Dev set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+BofA	15	43	6	96	67	4	
+relc	0	69	1	31	26	97	
+----------------------------------------------------
+total	15	112	7	127	93	101	
+====================================================
+
+#[ A 's B ] = 15 |	Acc:	0.00
+#[ B prep A ] = 93 |	Acc:	0.00
+#[ A prep B ] = 7 |	Acc:	0.00
+#[ relative clause ] = 101 |	Acc:	96.04
+#[ B of A ] = 127 |	Acc:	75.59
+#[ A B ] = 112 |	Acc:	0.00
+#total = 455 |	Acc:	42.417582
+
+#[ swapped ] = 321 |	Acc:	100.00
+#[ ordered ] = 134 |	Acc:	0.00
+#total = 455 |	Acc:	70.549451
+
+Evaluate on Test set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+BofA	15	37	6	107	71	5	
+relc	0	75	1	20	22	96	
+----------------------------------------------------
+total	15	112	7	127	93	101	
+====================================================
+
+#[ A 's B ] = 15 |	Acc:	0.00
+#[ B prep A ] = 93 |	Acc:	0.00
+#[ A prep B ] = 7 |	Acc:	0.00
+#[ relative clause ] = 101 |	Acc:	95.05
+#[ B of A ] = 127 |	Acc:	84.25
+#[ A B ] = 112 |	Acc:	0.00
+#total = 455 |	Acc:	44.615385
+
+#[ swapped ] = 321 |	Acc:	100.00
+#[ ordered ] = 134 |	Acc:	0.00
+#total = 455 |	Acc:	70.549451
+

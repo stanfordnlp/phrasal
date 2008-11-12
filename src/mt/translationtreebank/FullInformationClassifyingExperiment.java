@@ -23,6 +23,7 @@ class FullInformationClassifyingExperiment {
 
   public static void main(String args[]) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
+    String reducedCatStr= props.getProperty("useReducedCategory", "true");
     String twofeatStr   = props.getProperty("2feat", "false");
     String revisedStr   = props.getProperty("revised", "false");
     String ngramStr     = props.getProperty("ngram", "false");
@@ -32,6 +33,7 @@ class FullInformationClassifyingExperiment {
     String pwordStr     = props.getProperty("pword", "false");
     String pathStr      = props.getProperty("path", "false");
 
+    Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
     Boolean ngram = Boolean.parseBoolean(ngramStr);
@@ -41,7 +43,7 @@ class FullInformationClassifyingExperiment {
     Boolean lastcharNgram = false;
     Boolean pword = Boolean.parseBoolean(pwordStr);
     Boolean path = Boolean.parseBoolean(pathStr);
-    Boolean percentage = false;
+    Boolean percentage = true;
 
     // each level
 
@@ -56,7 +58,7 @@ class FullInformationClassifyingExperiment {
     percentage = percentage;
 
 
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
+    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory);
     String[] trainDevTest = readTrainDevTest();
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
@@ -134,7 +136,8 @@ class FullInformationClassifyingExperiment {
           }
           
           featureList.addAll(posNgramFeatures(beforeDE, "beforeDE:"));
-          featureList.addAll(posNgramFeatures(beforeDE, "afterDE:"));
+          featureList.addAll(posNgramFeatures(afterDE, "afterDE:"));
+          featureList.add("crossDE:"+beforeDE.get(beforeDE.size()-1)+"-"+afterDE.get(0));
         }
         
         // (1.X) features from first layer ==> first == false
@@ -190,12 +193,10 @@ class FullInformationClassifyingExperiment {
 
         // (1.X) if the QP is a "percentage"
         if (percentage) {
-          /*
           if (deIdx == 1 && (sentence.get(0).word().startsWith("百分之") ||
                              sentence.get(0).word().endsWith("％"))) {
             featureList.add("PERCENTAGE");
           }
-          */
           if (deIdx == 1 && (sentence.get(0).tag().equals("NR"))) {
             featureList.add("NR");
           }

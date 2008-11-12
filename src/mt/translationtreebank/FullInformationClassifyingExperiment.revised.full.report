@@ -1,0 +1,75 @@
+Overall label counter:
+{A 's B=90.0, B prep A=562.0, A prep B=47.0, relative clause=610.0, B of A=765.0, A B=676.0}
+
+Training set stats:
+numDatums: 1840
+numLabels: 6 [B of A, A B, B prep A, relative clause, A 's B, A prep B]
+numFeatures Phi(X) types): 6
+
+
+Evaluate on Training set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+AB	1	247	3	5	6	15	
+BofA	59	100	24	417	240	17	
+relc	0	105	6	89	130	376	
+----------------------------------------------------
+total	60	452	33	511	376	408	
+====================================================
+
+#[ A 's B ] = 60 |	Acc:	0.00
+#[ B prep A ] = 376 |	Acc:	0.00
+#[ A prep B ] = 33 |	Acc:	0.00
+#[ relative clause ] = 408 |	Acc:	92.16
+#[ B of A ] = 511 |	Acc:	81.60
+#[ A B ] = 452 |	Acc:	54.65
+#total = 1840 |	Acc:	56.521739
+
+#[ swapped ] = 1295 |	Acc:	97.99
+#[ ordered ] = 545 |	Acc:	46.06
+#total = 1840 |	Acc:	82.608696
+
+Evaluate on Dev set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+AB	0	55	2	3	1	1	
+BofA	15	30	5	95	66	3	
+relc	0	27	0	29	26	97	
+----------------------------------------------------
+total	15	112	7	127	93	101	
+====================================================
+
+#[ A 's B ] = 15 |	Acc:	0.00
+#[ B prep A ] = 93 |	Acc:	0.00
+#[ A prep B ] = 7 |	Acc:	0.00
+#[ relative clause ] = 101 |	Acc:	96.04
+#[ B of A ] = 127 |	Acc:	74.80
+#[ A B ] = 112 |	Acc:	49.11
+#total = 455 |	Acc:	54.285714
+
+#[ swapped ] = 321 |	Acc:	98.44
+#[ ordered ] = 134 |	Acc:	42.54
+#total = 455 |	Acc:	81.978022
+
+Evaluate on Test set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BofA	BprepA	relc
+AB	0	59	0	0	2	4	
+BofA	15	25	6	107	71	5	
+relc	0	28	1	20	20	92	
+----------------------------------------------------
+total	15	112	7	127	93	101	
+====================================================
+
+#[ A 's B ] = 15 |	Acc:	0.00
+#[ B prep A ] = 93 |	Acc:	0.00
+#[ A prep B ] = 7 |	Acc:	0.00
+#[ relative clause ] = 101 |	Acc:	91.09
+#[ B of A ] = 127 |	Acc:	84.25
+#[ A B ] = 112 |	Acc:	52.68
+#total = 455 |	Acc:	56.703297
+
+#[ swapped ] = 321 |	Acc:	98.13
+#[ ordered ] = 134 |	Acc:	44.03
+#total = 455 |	Acc:	82.197802
+

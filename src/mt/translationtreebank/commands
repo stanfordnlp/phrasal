@@ -1,8 +1,15 @@
-time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -2feat true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.2feat.report &
-time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -revised true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.revised.report &
-time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -ngram true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.ngram.report &
-# time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -1st true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.1st.report &
-time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -lastcharN true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.lastcharN.report &
-time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -pword true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.pword.report &
-time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -path true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.path.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory true -2feat true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.2feat.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory true -revised true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.revised.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory true -ngram true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.ngram.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory true -lastcharN true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.lastcharN.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory true -pword true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.pword.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory true -path true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.path.report &
+
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -2feat true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.2feat.full.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -revised true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.revised.full.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -ngram true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.ngram.full.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -lastcharN true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.lastcharN.full.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -pword true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.pword.full.report &
+time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -path true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.path.full.report &
+
 perl -w projects/mt/src/mt/translationtreebank/pieceTrainDevTest.pl projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt train dev test > all
