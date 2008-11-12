@@ -43,7 +43,7 @@ class FullInformationClassifyingExperiment {
     Boolean lastcharNgram = false;
     Boolean pword = Boolean.parseBoolean(pwordStr);
     Boolean path = Boolean.parseBoolean(pathStr);
-    Boolean percentage = true;
+    Boolean percentage = false;
 
     // each level
 
