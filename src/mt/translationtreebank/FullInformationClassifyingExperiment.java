@@ -68,9 +68,11 @@ class FullInformationClassifyingExperiment {
     GeneralDataset trainDataset = new Dataset();
     GeneralDataset devDataset = new Dataset();
     GeneralDataset testDataset = new Dataset();
+    GeneralDataset otherDataset = new Dataset();
     List<Datum<String,String>> trainData = new ArrayList<Datum<String,String>>();
     List<Datum<String,String>> devData = new ArrayList<Datum<String,String>>();
     List<Datum<String,String>> testData = new ArrayList<Datum<String,String>>();
+    List<Datum<String,String>> otherData = new ArrayList<Datum<String,String>>();
 
     int npid = 0;
     for(TreePair validSent : treepairs) {
@@ -84,8 +86,8 @@ class FullInformationClassifyingExperiment {
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
-          npid++;
-          continue;
+          //npid++;
+          //continue;
         }
 
         // (1) make feature list
@@ -110,18 +112,10 @@ class FullInformationClassifyingExperiment {
 
         // get deIndices
         Sentence<TaggedWord> sentence = chNPTree.taggedYield();
-        int deIdx = -1;
-        for (int i = 0; i < sentence.size(); i++) {
-          TaggedWord w = sentence.get(i);
-          if (w.value().equals("的")) {
-            if (deIdx != -1) {
-              throw new RuntimeException("multiple DE");
-            }
-            deIdx = i;
-          }
-        }
+        int deIdx = getDEIndex(chNPTree);
         
         if (deIdx == -1) {
+          chNPTree.pennPrint(System.err);
           throw new RuntimeException("no DE");
         }
 
@@ -137,7 +131,8 @@ class FullInformationClassifyingExperiment {
           
           featureList.addAll(posNgramFeatures(beforeDE, "beforeDE:"));
           featureList.addAll(posNgramFeatures(afterDE, "afterDE:"));
-          featureList.add("crossDE:"+beforeDE.get(beforeDE.size()-1)+"-"+afterDE.get(0));
+          if (afterDE.size()>0)
+            featureList.add("crossDE:"+beforeDE.get(beforeDE.size()-1)+"-"+afterDE.get(0));
         }
         
         // (1.X) features from first layer ==> first == false
@@ -218,7 +213,8 @@ class FullInformationClassifyingExperiment {
           testDataset.add(d);
           testData.add(d);
         } else if ("n/a".equals(trainDevTest[npid])) {
-          // do nothing
+          otherDataset.add(d);
+          otherData.add(d);
         } else {
           throw new RuntimeException("trainDevTest error, line: "+trainDevTest[npid]);
         }
@@ -274,7 +270,12 @@ class FullInformationClassifyingExperiment {
     evaluateOnSet(testData, classifier, pw);
     pw.close();
     System.out.println();
-
+    
+    System.out.println("Evaluate on Other set:");
+    pw = new PrintWriter(new BufferedWriter(new FileWriter("other")));
+    evaluateOnSet(otherData, classifier, pw);
+    pw.close();
+    System.out.println();
   }
 
   private static List<String> extractAllPaths(Tree t) {
@@ -344,6 +345,25 @@ class FullInformationClassifyingExperiment {
     ExperimentUtils.resultSummary(confusionMatrix);
     System.out.println();
     ExperimentUtils.resultCoarseSummary(confusionMatrix);
+  }
+
+  static int getDEIndex(Tree t) {
+    Tree[] children = t.children();
+    int deIdx = -1;
+    for (Tree c : children) {
+      Sentence<Word> words = c.yield();
+      String lastW = words.get(words.size()-1).word();
+      if (lastW.equals("的")) {
+        if (deIdx != -1) {
+          System.err.println("multi-DEs: ");
+          t.pennPrint(System.err);
+          //throw new RuntimeException("multiple DE");
+        }
+        deIdx = Trees.rightEdge(c, t)-1;
+      }
+    }
+    //System.err.println("DEIDX="+deIdx+"\t"+t.toString());
+    return deIdx;
   }
 
   static List<String> posNgramFeatures(List<TaggedWord> words, String prefix) {

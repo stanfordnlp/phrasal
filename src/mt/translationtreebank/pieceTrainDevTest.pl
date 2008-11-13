@@ -4,6 +4,7 @@ open(TRAINDEVTEST, $ARGV[0]) or die;
 open(TRAIN, $ARGV[1]) or die;
 open(DEV, $ARGV[2]) or die;
 open(TEST, $ARGV[3]) or die;
+open(OTHER, $ARGV[4]) or die;
 
 while(<TRAINDEVTEST>) {
     chomp;
@@ -33,9 +34,17 @@ while(<TEST>) {
     push @test, $_;
 }
 
+while(<OTHER>) {
+    chomp;
+    s/^\s+//;
+    s/\s+$//;
+    push @other, $_;
+}
+
 $trainIdx = 0;
 $devIdx = 0;
 $testIdx = 0;
+$otherIdx = 0;
 foreach $set (@traindevtest) {
     if ($set eq "train") {
         print $train[$trainIdx],"\n";
@@ -49,7 +58,10 @@ foreach $set (@traindevtest) {
         print $test[$testIdx],"\n";
         $testIdx++;
     }
-    else {
-        print "\n";
+    elsif ($set eq "n/a") {
+        print $other[$otherIdx],"\n";
+        $otherIdx++;
+    } else {
+        die;
     }
 }

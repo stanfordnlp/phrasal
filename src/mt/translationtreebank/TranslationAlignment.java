@@ -896,6 +896,8 @@ public class TranslationAlignment {
       for (Tree c : children) {
         int left = Trees.leftEdge(c, root);
         int right = Trees.rightEdge(c, root);
+        if (c.numChildren()==1) c = c.firstChild();
+
         if (left==leftEdge && right==rightEdge) {
           return c;
         }

@@ -1,5 +1,5 @@
 Overall label counter:
-{A 's B=90.0, B prep A=1327.0, A prep B=47.0, relative clause=610.0, A B=676.0}
+{A 's B=90.0, other=354.0, B prep A=1327.0, A prep B=47.0, relative clause=610.0, no B=135.0, A B=676.0, multi-DEs=173.0}
 
 Training set stats:
 numDatums: 1840
@@ -75,4 +75,24 @@ total	15	112	7	220	101
 #[ swapped ] = 321 |	Acc:	94.70
 #[ ordered ] = 134 |	Acc:	69.40
 #total = 455 |	Acc:	87.252747
+
+Evaluate on Other set:
+==================Confusion Matrix==================
+->real	multi-DEs	noB	other
+A'sB	0	0	14	
+AB	12	34	56	
+AprepB	0	0	3	
+BprepA	90	26	174	
+relc	71	75	107	
+----------------------------------------------------
+total	173	135	354	
+====================================================
+
+#[ other ] = 354 |	Acc:	0.00
+#[ no B ] = 135 |	Acc:	0.00
+#[ multi-DEs ] = 173 |	Acc:	0.00
+#total = 662 |	Acc:	0.000000
+
+#[ other ] = 662 |	Acc:	0.00
+#total = 662 |	Acc:	0.000000
 

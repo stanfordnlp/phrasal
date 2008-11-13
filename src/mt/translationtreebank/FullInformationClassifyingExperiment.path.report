@@ -1,10 +1,10 @@
 Overall label counter:
-{A 's B=90.0, B prep A=1327.0, A prep B=47.0, relative clause=610.0, A B=676.0}
+{A 's B=90.0, other=354.0, B prep A=1327.0, A prep B=47.0, relative clause=610.0, no B=135.0, A B=676.0, multi-DEs=173.0}
 
 Training set stats:
 numDatums: 1840
 numLabels: 5 [B prep A, A B, relative clause, A 's B, A prep B]
-numFeatures Phi(X) types): 2981
+numFeatures Phi(X) types): 2979
 
 
 Evaluate on Training set:
@@ -36,18 +36,18 @@ Evaluate on Dev set:
 A'sB	4	3	0	5	0	
 AB	0	79	2	4	5	
 AprepB	1	0	1	4	1	
-BprepA	10	25	4	179	19	
-relc	0	5	0	28	76	
+BprepA	10	25	4	180	21	
+relc	0	5	0	27	74	
 ----------------------------------------------------
 total	15	112	7	220	101	
 ====================================================
 
 #[ A 's B ] = 15 |	Acc:	26.67
-#[ B prep A ] = 220 |	Acc:	81.36
+#[ B prep A ] = 220 |	Acc:	81.82
 #[ A prep B ] = 7 |	Acc:	14.29
-#[ relative clause ] = 101 |	Acc:	75.25
+#[ relative clause ] = 101 |	Acc:	73.27
 #[ A B ] = 112 |	Acc:	70.54
-#total = 455 |	Acc:	74.505495
+#total = 455 |	Acc:	74.285714
 
 #[ swapped ] = 321 |	Acc:	94.08
 #[ ordered ] = 134 |	Acc:	67.16
@@ -57,22 +57,42 @@ Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
 A'sB	8	2	0	4	0	
-AB	1	84	0	7	4	
+AB	1	84	0	7	5	
 AprepB	0	0	2	3	0	
-BprepA	6	22	5	195	28	
-relc	0	4	0	11	69	
+BprepA	6	23	5	196	28	
+relc	0	3	0	10	68	
 ----------------------------------------------------
 total	15	112	7	220	101	
 ====================================================
 
 #[ A 's B ] = 15 |	Acc:	53.33
-#[ B prep A ] = 220 |	Acc:	88.64
+#[ B prep A ] = 220 |	Acc:	89.09
 #[ A prep B ] = 7 |	Acc:	28.57
-#[ relative clause ] = 101 |	Acc:	68.32
+#[ relative clause ] = 101 |	Acc:	67.33
 #[ A B ] = 112 |	Acc:	75.00
 #total = 455 |	Acc:	78.681319
 
-#[ swapped ] = 321 |	Acc:	94.39
+#[ swapped ] = 321 |	Acc:	94.08
 #[ ordered ] = 134 |	Acc:	72.39
-#total = 455 |	Acc:	87.912088
+#total = 455 |	Acc:	87.692308
+
+Evaluate on Other set:
+==================Confusion Matrix==================
+->real	multi-DEs	noB	other
+A'sB	0	0	14	
+AB	11	33	55	
+AprepB	0	0	4	
+BprepA	88	33	168	
+relc	74	69	113	
+----------------------------------------------------
+total	173	135	354	
+====================================================
+
+#[ other ] = 354 |	Acc:	0.00
+#[ no B ] = 135 |	Acc:	0.00
+#[ multi-DEs ] = 173 |	Acc:	0.00
+#total = 662 |	Acc:	0.000000
+
+#[ other ] = 662 |	Acc:	0.00
+#total = 662 |	Acc:	0.000000
 

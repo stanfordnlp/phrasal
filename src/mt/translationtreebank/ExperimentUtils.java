@@ -308,7 +308,8 @@ public class ExperimentUtils {
     } else if (cat.startsWith("A")) {
       normcat = "ordered";
     } else {
-      throw new RuntimeException("Can't find coarse category for " + cat);
+      normcat = "other";
+      //throw new RuntimeException("Can't find coarse category for " + cat);
     }
     return normcat;
   }
