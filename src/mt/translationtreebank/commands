@@ -12,4 +12,4 @@ time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -us
 time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -pword true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.pword.full.report &
 time java -Xmx1g mt.translationtreebank.FullInformationClassifyingExperiment -useReducedCategory false -path true > projects/mt/src/mt/translationtreebank/FullInformationClassifyingExperiment.path.full.report &
 
-perl -w projects/mt/src/mt/translationtreebank/pieceTrainDevTest.pl projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt train dev test > all
+perl -w projects/mt/src/mt/translationtreebank/pieceTrainDevTest.pl projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt train dev test other > all
