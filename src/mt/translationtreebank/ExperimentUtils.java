@@ -217,12 +217,16 @@ public class ExperimentUtils {
 
     
   static List<TreePair> readAnnotatedTreePairs() throws IOException {
-    return readAnnotatedTreePairs(true);
+    return readAnnotatedTreePairs(true, ctbDir());
   }
 
   static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories) throws IOException {
+    return readAnnotatedTreePairs(useReducedCategories, ctbDir());
+  }
+
+  static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories, String ctbDir) throws IOException {
     String wordalignmentDir = wordAlignmentDir();
-    String ctbDir = ctbDir();
+    //String ctbDir = ctbDir();
     String etbDir = etbDir();
 
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
@@ -233,7 +237,8 @@ public class ExperimentUtils {
     int numNPwithDE = 0;
 
     // Open the hand-annotate file
-    String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_all.txt";
+    //String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_all.txt";
+    String finalCategoriesFile = "projects/mt/src/mt/translationtreebank/data/finalCategories_all.txt";
     List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile, useReducedCategories);
     
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
