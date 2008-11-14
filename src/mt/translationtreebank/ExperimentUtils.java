@@ -1,6 +1,7 @@
 package mt.translationtreebank;
 
 import edu.stanford.nlp.util.*;
+import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
 import edu.stanford.nlp.stats.*;
@@ -18,7 +19,25 @@ public class ExperimentUtils {
   static TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
   static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
   static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
-
+  
+  static int getDEIndex(Tree t) {
+    Tree[] children = t.children();
+    int deIdx = -1;
+    for (Tree c : children) {
+      Sentence<Word> words = c.yield();
+      String lastW = words.get(words.size()-1).word();
+      if (lastW.equals("的")) {
+        if (deIdx != -1) {
+          //System.err.println("multi-DEs: ");
+          //t.pennPrint(System.err);
+        } else 
+          deIdx = Trees.rightEdge(c, t)-1;
+      }
+    }
+    System.err.println("DEIDX="+deIdx+"\t"+t.toString());
+    return deIdx;
+  }
+  
   static boolean hasVApattern(Tree t) {
     TreeMatcher va1M = va1.matcher(t);
     TreeMatcher va2M = va2.matcher(t);

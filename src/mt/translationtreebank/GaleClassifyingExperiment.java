@@ -12,11 +12,12 @@ import java.util.*;
 class GaleClassifyingExperiment {
   public static void main(String[] args) throws IOException {
     ChineseTreeReader ctr = new ChineseTreeReader();
-    String chNPfile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\npList.sent.stp.oneline";
+    String chNPfile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\npList.sent.stp.oneline.DE";
     ctr.readMoreTrees(chNPfile);
     for (int i = 0; i < ctr.size(); i++) {
       Tree t = ctr.getTree(i);
       System.out.println(t);
+      int deIdx = ExperimentUtils.getDEIndex(t);
     }
   }
 }

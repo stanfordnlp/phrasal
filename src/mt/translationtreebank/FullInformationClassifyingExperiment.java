@@ -113,7 +113,7 @@ class FullInformationClassifyingExperiment {
 
         // get deIndices
         Sentence<TaggedWord> sentence = chNPTree.taggedYield();
-        int deIdx = getDEIndex(chNPTree);
+        int deIdx = ExperimentUtils.getDEIndex(chNPTree);
         
         if (deIdx == -1) {
           chNPTree.pennPrint(System.err);
@@ -348,24 +348,6 @@ class FullInformationClassifyingExperiment {
     ExperimentUtils.resultCoarseSummary(confusionMatrix);
   }
 
-  static int getDEIndex(Tree t) {
-    Tree[] children = t.children();
-    int deIdx = -1;
-    for (Tree c : children) {
-      Sentence<Word> words = c.yield();
-      String lastW = words.get(words.size()-1).word();
-      if (lastW.equals("的")) {
-        if (deIdx != -1) {
-          System.err.println("multi-DEs: ");
-          t.pennPrint(System.err);
-          //throw new RuntimeException("multiple DE");
-        }
-        deIdx = Trees.rightEdge(c, t)-1;
-      }
-    }
-    //System.err.println("DEIDX="+deIdx+"\t"+t.toString());
-    return deIdx;
-  }
 
   static List<String> posNgramFeatures(List<TaggedWord> words, String prefix) {
     List<String> pos = new ArrayList<String>();
