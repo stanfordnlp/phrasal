@@ -10,19 +10,24 @@ class TreePair {
   List<Tree> enTrees;
   List<Tree> chTrees;
   List<Tree> chParsedTrees;
-  Map<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> NPwithDEs;
-  Map<Pair<Integer,Integer>, String> NPwithDEs_categories;
+  private Map<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> NPwithDEs;
+  Map<Integer, String> NPwithDEs_categories;
   Map<Integer, Pair<Integer,Integer>> NPwithDEs_deIdx;
-  Set<Integer> NPwithDEs_deIdx_set;
+  TreeSet<Integer> NPwithDEs_deIdx_set;
   Map<Integer, Pair<Integer,Integer>> parsedNPwithDEs_deIdx;
 
+  public List<Pair<Integer,Integer>> getNPEnglishTranslation(int deIdx) {
+    Pair<Integer,Integer> chNPrange = NPwithDEs_deIdx.get(deIdx);
+    return NPwithDEs.get(chNPrange);
+  }
+
   public int numNPwithDE() {
-    if (NPwithDEs.size() != NPwithDEs_deIdx.size() ||
-        NPwithDEs_deIdx.size() != NPwithDEs_deIdx_set.size() ||
-        NPwithDEs_deIdx_set.size() != parsedNPwithDEs_deIdx.size()) {
-      System.err.println("NPwithDEs.size="+NPwithDEs.size());
-      System.err.println("NPwithDEs_categories.size="+NPwithDEs_categories.size());
-      System.err.println("NPwithDEs_deIdx.size="+NPwithDEs_deIdx.size());
+      if (NPwithDEs.size() != NPwithDEs_deIdx.size() ||
+          NPwithDEs_deIdx.size() != NPwithDEs_deIdx_set.size() ||
+          (parsedNPwithDEs_deIdx != null && NPwithDEs_deIdx_set.size() != parsedNPwithDEs_deIdx.size())) {
+        System.err.println("NPwithDEs.size="+NPwithDEs.size());
+        System.err.println("NPwithDEs_categories.size="+NPwithDEs_categories.size());
+        System.err.println("NPwithDEs_deIdx.size="+NPwithDEs_deIdx.size());
       System.err.println("NPwithDEs_deIdx_set.size="+NPwithDEs_deIdx_set.size());
       System.err.println("parsedNPwithDEs_deIdx.size.size="+parsedNPwithDEs_deIdx.size());
       throw new RuntimeException();
@@ -35,7 +40,7 @@ class TreePair {
     this.alignment = alignment;
     this.enTrees = enTrees;
     this.chTrees = chTrees;
-    this.NPwithDEs_categories = new TreeMap<Pair<Integer,Integer>, String>();
+    this.NPwithDEs_categories = new TreeMap<Integer, String>();
 
     computeNPwithDEs();
   }
@@ -45,7 +50,7 @@ class TreePair {
     this.enTrees = enTrees;
     this.chTrees = chTrees;
     this.chParsedTrees = chPT;
-    this.NPwithDEs_categories = new TreeMap<Pair<Integer,Integer>, String>();
+    this.NPwithDEs_categories = new TreeMap<Integer, String>();
 
     computeNPwithDEs();
     computeParsedNPwithDEs();
@@ -87,27 +92,31 @@ class TreePair {
 
     int catIdx = 0;
     for(TreePair tp : treepairs_inFile) {
-      for(Map.Entry<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> e : tp.NPwithDEs.entrySet()) {
-        String np = tp.chNPwithDE(e.getKey());
+      //for(Map.Entry<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> e : tp.NPwithDEs.entrySet()) {
+      for(int deIdxInSent : tp.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> ip = tp.NPwithDEs_deIdx.get(deIdxInSent);
+        String np = tp.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
         if (!categories.get(catIdx).second().endsWith(np)) {
           System.err.println("CMP1:\t"+categories.get(catIdx).second());
           System.err.println("CMP2:\t"+np);
         }
-        tp.NPwithDEs_categories.put(e.getKey(), categories.get(catIdx).first());
+        tp.NPwithDEs_categories.put(deIdxInSent, categories.get(catIdx).first());
         catIdx++;
       }
     }
   }
 
-  public String chNPwithDE(Pair<Integer,Integer> ip) {
+  public String oracleChNPwithDE(int idx) {
+    Pair<Integer,Integer> ip = NPwithDEs_deIdx.get(idx);
     StringBuilder sb = new StringBuilder();
     if (NPwithDEs.keySet().contains(ip)) {
       for(int i = ip.first; i <= ip.second; i++) 
         sb.append(alignment.source_[i]).append(" ");
       return sb.toString();
     } else {
-      return null;
+      throw new RuntimeException();
+      //return null;
     }
   }
 

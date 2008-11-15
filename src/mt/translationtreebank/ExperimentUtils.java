@@ -220,7 +220,8 @@ public class ExperimentUtils {
 
     
   static List<TreePair> readAnnotatedTreePairs() throws IOException {
-    return readAnnotatedTreePairs(true, ctbDir());
+    //return readAnnotatedTreePairs(true, ctbDir());
+    return readAnnotatedTreePairs(true, null);
   }
 
   static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories) throws IOException {
@@ -325,7 +326,7 @@ public class ExperimentUtils {
           tp = new TreePair(ta, enTrees, chTrees, chParsedTrees);
         }
         else 
-          tp = new TreePair(ta, enTrees, chTrees, chTrees);
+          tp = new TreePair(ta, enTrees, chTrees);
         treepairs_inFile.add(tp);
         numNPwithDE += tp.numNPwithDE();
       }

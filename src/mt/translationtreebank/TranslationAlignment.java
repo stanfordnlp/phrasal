@@ -1041,8 +1041,11 @@ public class TranslationAlignment {
 
 
 
-  private static String analyzeNPwithDE(Pair<Integer,Integer> np, TreePair tp, PrintWriter pw) throws IOException {
-    List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(np);
+  private static String analyzeNPwithDE(int deIdxInSent, TreePair tp, PrintWriter pw) throws IOException {
+    List<Pair<Integer,Integer>> englishNP = tp.getNPEnglishTranslation(deIdxInSent);
+    Pair<Integer,Integer> np = tp.NPwithDEs_deIdx.get(deIdxInSent);
+
+    //List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(np);
     if (englishNP.size() != 1) {
       return "fragmented";
     }
@@ -1359,8 +1362,10 @@ public class TranslationAlignment {
     return false;
   }
 
-  private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, Pair<Integer,Integer> np, TreePair tp, String type) {
-    List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(np);
+  private static void printNPwithDEtoFile(int fileidx, int npidx, PrintWriter npPW, int deIdx, TreePair tp, String type) {
+    //List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(np);
+    Pair<Integer, Integer> np = tp.NPwithDEs_deIdx.get(deIdx);
+    List<Pair<Integer,Integer>> englishNP = tp.getNPEnglishTranslation(deIdx);
     List<String> ch = new ArrayList<String>();
     for (int i = np.first; i<=np.second; i++) {
       ch.add(tp.alignment.source_[i]);
@@ -1512,12 +1517,14 @@ public class TranslationAlignment {
         checkTranslationAlignmentAndEnTrees(ta, enTrees);
         checkTranslationAlignmentAndChTrees(ta, chTrees);
         TreePair tp = new TreePair(ta, enTrees, chTrees);
-        numNPwithDE += tp.NPwithDEs.size();
+        //numNPwithDE += tp.NPwithDEs.size();
+        numNPwithDE += tp.numNPwithDE();
         
         //for (Pair<Integer,Integer> NPwithDE : tp.NPwithDEs.keySet()) {
         for(int deIdxInSent : tp.NPwithDEs_deIdx_set) {
           Pair<Integer,Integer> NPwithDE = tp.NPwithDEs_deIdx.get(deIdxInSent);
-          List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(NPwithDE);
+          //List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(NPwithDE);
+          List<Pair<Integer,Integer>> englishNP = tp.getNPEnglishTranslation(deIdxInSent);
           if (englishNP.size()==1) {
             numNPwithDE_contiguous++;
           } else {
@@ -1526,10 +1533,10 @@ public class TranslationAlignment {
           
           if (npPW != null) {
             printAlignmentGridHeader(npgridPW);
-            String type = analyzeNPwithDE(NPwithDE, tp, npgridPW);
+            String type = analyzeNPwithDE(deIdxInSent, tp, npgridPW);
             typeCounter.incrementCount(type);
             printAlignmentGridBottom(npgridPW);
-            printNPwithDEtoFile(fileidx, npCount, npPW, NPwithDE, tp, type);
+            printNPwithDEtoFile(fileidx, npCount, npPW, deIdxInSent, tp, type);
             npCount++;
           }
         }

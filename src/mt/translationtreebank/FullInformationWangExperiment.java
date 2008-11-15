@@ -17,14 +17,14 @@ class FullInformationWangExperiment {
     TwoDimensionalCounter<String, String> confusionMatrix = new TwoDimensionalCounter<String,String>();
 
     for(TreePair validSent : treepairs) {
-      for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
-        String np = validSent.chNPwithDE(labeledNPs.getKey());
+      for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
-        String label = labeledNPs.getValue();
+        String label = validSent.NPwithDEs_categories.get(deIdxInSent);
         String predictedType = "";
 
         Tree chTree = validSent.chTrees.get(0);
-        Pair<Integer,Integer> chNPrange = labeledNPs.getKey();
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {

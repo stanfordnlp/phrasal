@@ -12,10 +12,14 @@ class TrainDevTest {
 
     int npidx = 0;
     for (TreePair validSent : treepairs) {
-      for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
-        String np = validSent.chNPwithDE(labeledNPs.getKey());
+
+      //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
+      for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
-        String label = labeledNPs.getValue();
+        String label = validSent.NPwithDEs_categories.get(deIdxInSent);
+
         System.err.printf("%d\t%s\n", npidx, label);
 
         if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
@@ -46,10 +50,13 @@ class TrainDevTest {
     // output the decision
     npidx = 0;
     for (TreePair validSent : treepairs) {
-      for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
-        String np = validSent.chNPwithDE(labeledNPs.getKey());
+      //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
+      for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
-        String label = labeledNPs.getValue();
+        String label = validSent.NPwithDEs_categories.get(deIdxInSent);
+
         if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
           System.out.println("n/a");
         } else {

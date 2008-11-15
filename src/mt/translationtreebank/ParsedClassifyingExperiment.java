@@ -13,13 +13,16 @@ class ParsedClassifyingExperiment {
   public static void main(String[] args) throws IOException {
     Boolean reducedCategory = true;
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory);
+    List<Map<Pair<Integer,Integer>, Integer>> maps = new ArrayList<Map<Pair<Integer,Integer>, Integer>>();
 
-    for (TreePair tp : treepairs) {
-      for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : tp.NPwithDEs_categories.entrySet()) {
-        System.out.println(labeledNPs.getKey());
-      }
-      for(int i : tp.NPwithDEs_deIdx_set) {
-        System.err.println(tp.NPwithDEs_deIdx.get(i));
+
+    for (TreePair validSent : treepairs) {
+      for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        String np = validSent.oracleChNPwithDE(deIdxInSent);
+        np = np.trim();
+        String label = validSent.NPwithDEs_categories.get(deIdxInSent);
+        String predictedType = "";
       }
     }
   }

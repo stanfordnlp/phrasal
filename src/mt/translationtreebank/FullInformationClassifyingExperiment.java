@@ -77,13 +77,15 @@ class FullInformationClassifyingExperiment {
 
     int npid = 0;
     for(TreePair validSent : treepairs) {
-      for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
-        String np = validSent.chNPwithDE(labeledNPs.getKey());
-        np = np.trim();
-        String label = labeledNPs.getValue();
+      //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
+      for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        //String np = validSent.oracleChNPwithDE(deIdxInSent);
+        //np = np.trim();
+        //System.err.println("NP\t"+np);
+        String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
         Tree chTree = validSent.chTrees.get(0);
-        Pair<Integer,Integer> chNPrange = labeledNPs.getKey();
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
@@ -202,7 +204,8 @@ class FullInformationClassifyingExperiment {
 
         // (3) Make Datum and add
         Datum<String, String> d = new BasicDatum(featureList, label);
-        if ("train".equals(trainDevTest[npid])) {
+        //if ("train".equals(trainDevTest[npid])) {
+        if (trainDevTest[npid].endsWith("train")) {
           trainDataset.add(d);
           trainData.add(d);
         }

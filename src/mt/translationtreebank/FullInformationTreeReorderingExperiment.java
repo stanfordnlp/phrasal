@@ -28,13 +28,13 @@ class FullInformationTreeReorderingExperiment {
       String deType = "";
 
       tpCount++;
-      for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
-        String np = validSent.chNPwithDE(labeledNPs.getKey());
+      for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
-        String type = labeledNPs.getValue();
+        String type = validSent.NPwithDEs_categories.get(deIdxInSent);
 
         Tree chTree = validSent.chTrees.get(0);
-        Pair<Integer,Integer> chNPrange = labeledNPs.getKey();
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         int deCount = ExperimentUtils.countDE(chNPTree);
@@ -87,7 +87,7 @@ class FullInformationTreeReorderingExperiment {
 
         deTypeCounter.incrementCount(deType);
         cc.incrementCount(deType, type);
-        String chNP = validSent.chNPwithDE(labeledNPs.getKey());
+        String chNP = validSent.oracleChNPwithDE(deIdxInSent);
         System.out.printf("%s\t%s\t%s\n", deType, type, chNP);
       }
     }
