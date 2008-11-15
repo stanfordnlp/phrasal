@@ -10,7 +10,6 @@ import java.util.*;
 
 public class ExperimentUtils {
 
-
   static TreePattern dec = TreePattern.compile("DEC < 的");
   static TreePattern deg = TreePattern.compile("DEG < 的");
   static TreePattern de = TreePattern.compile("DEG|DEC < 的");
@@ -34,7 +33,7 @@ public class ExperimentUtils {
           deIdx = Trees.rightEdge(c, t)-1;
       }
     }
-    System.err.println("DEIDX="+deIdx+"\t"+t.toString());
+    //System.err.println("DEIDX="+deIdx+"\t"+t.toString());
     return deIdx;
   }
   
@@ -201,6 +200,10 @@ public class ExperimentUtils {
     return ctbdirname;
   }
 
+  static String chParsedDir() {
+    return "chParsed/";
+  }
+
   static String wordAlignmentDir() {
     // For this to run on both NLP machine and my computer
     String dirname = "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
@@ -221,17 +224,17 @@ public class ExperimentUtils {
   }
 
   static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories) throws IOException {
-    return readAnnotatedTreePairs(useReducedCategories, ctbDir());
+    return readAnnotatedTreePairs(useReducedCategories, null);
   }
-
-  static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories, String ctbDir) throws IOException {
+  static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories, String chParsedDir) throws IOException {
     String wordalignmentDir = wordAlignmentDir();
-    //String ctbDir = ctbDir();
+    String ctbDir = ctbDir();
     String etbDir = etbDir();
 
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
     ChineseTreeReader ctr = new ChineseTreeReader();
     EnglishTreeReader etr = new EnglishTreeReader();
+    ChineseTreeReader chparsedTR = new ChineseTreeReader();
 
     List<TreePair> treepairs = new ArrayList<TreePair>();
     int numNPwithDE = 0;
@@ -247,6 +250,7 @@ public class ExperimentUtils {
       alignment_list = new ArrayList<TranslationAlignment>();
       ctr = new ChineseTreeReader();
       etr = new EnglishTreeReader();
+      chparsedTR = new ChineseTreeReader();
 
 
       // (1) Read alignment files
@@ -270,6 +274,14 @@ public class ExperimentUtils {
         String.format("%schtb_%03d.mrg.gz", etbDir, fileidx);
       etr.readMoreTrees(ename);
 
+      // (4) Read parsed Chinese Trees
+      String chparsedname = null;
+      if (chParsedDir!=null) { 
+        chparsedname = String.format("%schtb_%04d.fid", chParsedDir, fileidx);
+        System.err.println("Reading "+chparsedname);
+        chparsedTR.readMoreTrees(chparsedname);
+        System.err.println("chparsedTR.size="+chparsedTR.size());
+      }
 
       // (4) Going through entries in (1) and check if they exist in (2)
       // (5) Going through entries in (1) and check if they exist in (3)
@@ -278,6 +290,14 @@ public class ExperimentUtils {
       List<TreePair> treepairs_inFile = new ArrayList<TreePair>();
       for (TranslationAlignment ta : alignment_list) {
         List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
+        List<Tree> chParsedTrees = null;
+        if (chParsedDir != null) {
+          chParsedTrees = chparsedTR.getTreesWithWords(ta.source_);
+          //System.err.println("chParsedTrees.size="+chParsedTrees.size());
+        } else {
+          //System.err.println("chParsedTrees.null");
+        }
+
         if (chTrees.size() == 0) {
           //System.err.printf("i=%d: Can't find tree in CTB.\n", fileidx);
           continue;
@@ -300,9 +320,14 @@ public class ExperimentUtils {
         ta = TranslationAlignment.fixAlignmentGridMergingEnglish(ta, enTrees);
         TranslationAlignment.checkTranslationAlignmentAndEnTrees(ta, enTrees);
         TranslationAlignment.checkTranslationAlignmentAndChTrees(ta, chTrees);
-        TreePair tp = new TreePair(ta, enTrees, chTrees);
+        TreePair tp;
+        if (chParsedDir!=null) {
+          tp = new TreePair(ta, enTrees, chTrees, chParsedTrees);
+        }
+        else 
+          tp = new TreePair(ta, enTrees, chTrees, chTrees);
         treepairs_inFile.add(tp);
-        numNPwithDE += tp.NPwithDEs.size();
+        numNPwithDE += tp.numNPwithDE();
       }
       // Important: Read the categories of each NPwithDEs
       TreePair.annotateNPwithDEs(finalCategories[fileidx], treepairs_inFile);

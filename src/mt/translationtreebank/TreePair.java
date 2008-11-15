@@ -9,8 +9,27 @@ class TreePair {
   TranslationAlignment alignment;
   List<Tree> enTrees;
   List<Tree> chTrees;
+  List<Tree> chParsedTrees;
   Map<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> NPwithDEs;
   Map<Pair<Integer,Integer>, String> NPwithDEs_categories;
+  Map<Integer, Pair<Integer,Integer>> NPwithDEs_deIdx;
+  Set<Integer> NPwithDEs_deIdx_set;
+  Map<Integer, Pair<Integer,Integer>> parsedNPwithDEs_deIdx;
+
+  public int numNPwithDE() {
+    if (NPwithDEs.size() != NPwithDEs_deIdx.size() ||
+        NPwithDEs_deIdx.size() != NPwithDEs_deIdx_set.size() ||
+        NPwithDEs_deIdx_set.size() != parsedNPwithDEs_deIdx.size()) {
+      System.err.println("NPwithDEs.size="+NPwithDEs.size());
+      System.err.println("NPwithDEs_categories.size="+NPwithDEs_categories.size());
+      System.err.println("NPwithDEs_deIdx.size="+NPwithDEs_deIdx.size());
+      System.err.println("NPwithDEs_deIdx_set.size="+NPwithDEs_deIdx_set.size());
+      System.err.println("parsedNPwithDEs_deIdx.size.size="+parsedNPwithDEs_deIdx.size());
+      throw new RuntimeException();
+    }
+
+    return NPwithDEs.size();
+  }
 
   public TreePair(TranslationAlignment alignment, List<Tree> enTrees, List<Tree> chTrees) {
     this.alignment = alignment;
@@ -19,6 +38,36 @@ class TreePair {
     this.NPwithDEs_categories = new TreeMap<Pair<Integer,Integer>, String>();
 
     computeNPwithDEs();
+  }
+
+  public TreePair(TranslationAlignment alignment, List<Tree> enTrees, List<Tree> chTrees, List<Tree> chPT) {
+    this.alignment = alignment;
+    this.enTrees = enTrees;
+    this.chTrees = chTrees;
+    this.chParsedTrees = chPT;
+    this.NPwithDEs_categories = new TreeMap<Pair<Integer,Integer>, String>();
+
+    computeNPwithDEs();
+    computeParsedNPwithDEs();
+  }
+
+  private void computeParsedNPwithDEs() {
+    if (parsedNPwithDEs_deIdx==null) {
+      parsedNPwithDEs_deIdx = new TreeMap<Integer, Pair<Integer,Integer>>();
+      //System.err.println("TP:chParsedTrees.size="+chParsedTrees.size());
+      Tree parsedTree = chParsedTrees.get(0);
+      for(int i : NPwithDEs_deIdx_set) {
+        Tree preT = Trees.getPreTerminal(parsedTree, i);
+        Tree DNPorCP = preT.parent(parsedTree);
+        Tree theNP = DNPorCP.parent(parsedTree);
+        //theNP.pennPrint(System.out);
+        //System.out.println();
+        int leftE = Trees.leftEdge(theNP, parsedTree);
+        int rightE = Trees.rightEdge(theNP, parsedTree)-1;
+        Pair<Integer,Integer> range = new Pair<Integer,Integer>();
+        parsedNPwithDEs_deIdx.put(i, range);
+      }
+    }
   }
 
   public static void printTree(Tree t) {
@@ -111,6 +160,8 @@ class TreePair {
   public void computeNPwithDEs() {
     if (NPwithDEs == null) {
       NPwithDEs = new TreeMap<Pair<Integer,Integer>, List<Pair<Integer,Integer>>>();
+      NPwithDEs_deIdx = new TreeMap<Integer, Pair<Integer,Integer>>();
+      NPwithDEs_deIdx_set = new TreeSet<Integer>();
       Tree chTree = chTrees.get(0);
       Set<Tree> deTrees = getNPwithDESubTrees(chTree);
       Set<Pair<Integer,Integer>> deSpans = getSpans(deTrees, chTree);
@@ -156,11 +207,39 @@ class TreePair {
         }
 
         NPwithDEs.put(deSpan, enTranslation);
+      
+        // Also, fill the position of the DE in the NPwithDE
+        Tree sentTree = chTrees.get(0);
+        Tree chNP = TranslationAlignment.getTreeWithEdges(sentTree, deSpan.first, deSpan.second+1);
+        if (chNP==null) {
+          sentTree.pennPrint(System.err);
+          System.err.println("range="+deSpan);
+          throw new RuntimeException();
+        }
+        int startIdx = Trees.leftEdge(chNP, sentTree);
+        int deIdx = startIdx + ExperimentUtils.getDEIndex(chNP);
+        if (NPwithDEs_deIdx_set.contains(deIdx)) {
+          throw new RuntimeException("multi idx on DE");
+        } else {
+          NPwithDEs_deIdx_set.add(deIdx);
+        }
+        NPwithDEs_deIdx.put(deIdx, deSpan);
+
+        /*
+        Sentence<Word> s = sentTree.yield();
+        System.err.print(deIdx+"\t");
+        for(int i = deSpan.first; i < deSpan.second+1; i++) {
+          Word w = s.get(i);
+          System.err.print(w+" ");
+        }
+        System.err.print("\t"+sentTree);
+        System.err.println();
+        */
+
       }
     }
   }
 
-  
   // return the number of NP with DEs in this list of TreePair
   public static int printAllwithDE(List<TreePair> tps) {
     int numNPwithDE = 0;

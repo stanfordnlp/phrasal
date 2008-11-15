@@ -1514,7 +1514,9 @@ public class TranslationAlignment {
         TreePair tp = new TreePair(ta, enTrees, chTrees);
         numNPwithDE += tp.NPwithDEs.size();
         
-        for (Pair<Integer,Integer> NPwithDE : tp.NPwithDEs.keySet()) {
+        //for (Pair<Integer,Integer> NPwithDE : tp.NPwithDEs.keySet()) {
+        for(int deIdxInSent : tp.NPwithDEs_deIdx_set) {
+          Pair<Integer,Integer> NPwithDE = tp.NPwithDEs_deIdx.get(deIdxInSent);
           List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(NPwithDE);
           if (englishNP.size()==1) {
             numNPwithDE_contiguous++;

@@ -26,6 +26,10 @@ class ChineseTreeReader extends AbstractTreeReader {
   }
   
   public List<Tree> getTreesWithWords(String[] sent) {
+    return getTreesWithWords(sent, false);
+  }
+
+  public List<Tree> getTreesWithWords(String[] sent, Boolean DEBUG) {
     String sentStr = StringUtils.join(sent, "");
     List<Tree> trees = new ArrayList<Tree>();
     for(Tree t : trees_) {
@@ -38,6 +42,10 @@ class ChineseTreeReader extends AbstractTreeReader {
       }
       // the tree should already be normalized
       String treeStr = sb.toString();
+      if (DEBUG) {
+        System.err.println("sentStr="+sentStr);
+        System.err.println("treeStr="+treeStr);
+      }
       if (sentStr.equals(treeStr)) {
         trees.add(t);
       }
