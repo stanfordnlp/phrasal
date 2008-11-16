@@ -12,7 +12,7 @@ import java.util.*;
 class ParsedClassifyingExperiment {
   public static void main(String[] args) throws IOException {
     Boolean reducedCategory = true;
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, "projects/mt/src/mt/translationtreebank/data/ctb_parsed/bracketed/");
+    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, true);
     List<Map<Pair<Integer,Integer>, Integer>> maps = new ArrayList<Map<Pair<Integer,Integer>, Integer>>();
 
 
@@ -29,18 +29,16 @@ class ParsedClassifyingExperiment {
           throw new RuntimeException("here");
         }
         Tree t = validSent.chParsedTrees.get(0);
-        System.err.println(parsedChNPrange);
+        //System.err.println(parsedChNPrange);
         int f = parsedChNPrange.first;
         int s = parsedChNPrange.second+1;
         Tree parsedNpTree = 
           TranslationAlignment.getTreeWithEdges(t,f,s);
 
-        /*
         npTree.pennPrint(System.out);
         System.out.println();
         parsedNpTree.pennPrint(System.err);
         System.err.println();
-        */
       }
     }
   }

@@ -9,7 +9,13 @@ import java.util.*;
 
 class FullInformationWangExperiment {
   public static void main(String args[]) throws IOException {
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
+    Properties props = StringUtils.argsToProperties(args);
+    String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
+    Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
+
+    //List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
+    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true, nonOracleTree);
+
 
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
     ClassicCounter<String> deTypeCounter = new ClassicCounter<String>();
@@ -18,23 +24,23 @@ class FullInformationWangExperiment {
 
     for(TreePair validSent : treepairs) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
         String predictedType = "";
 
-        Tree chTree = validSent.chTrees.get(0);
+        Tree chTree = validSent.chParsedTrees.get(0);
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
           continue;
         }
 
-        boolean hasDEC = ExperimentUtils.hasDEC(chNPTree);
-        boolean hasDEG = ExperimentUtils.hasDEG(chNPTree);
+        boolean hasDEC = ExperimentUtils.hasDEC(chNPTree, chTree, deIdxInSent);
+        boolean hasDEG = ExperimentUtils.hasDEG(chNPTree, chTree, deIdxInSent);
         if (hasDEC && hasDEG) {
-          System.err.println("error: both");
+          throw new RuntimeException("error: both");
         } else if (hasDEC && !hasDEG) {
           predictedType = "swapped";
         } else if (hasDEG && !hasDEC) {
@@ -45,7 +51,9 @@ class FullInformationWangExperiment {
           else 
             predictedType = "swapped";
         } else {
-          System.err.println("error: none");
+          System.err.println("no DEC or DEG");
+          chNPTree.pennPrint(System.err);
+          predictedType = "swapped";
         }
       
         if (label.startsWith("B") || label.equals("relative clause")) {

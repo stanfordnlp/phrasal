@@ -57,6 +57,26 @@ public class ExperimentUtils {
     TreeMatcher nppndegM = nppndeg.matcher(t);
     return nppndegM.find();
   }
+  
+  static boolean hasDEC(Tree npT, Tree wholeT, int deIdx) {
+    return hasDE(npT, wholeT, deIdx, "DEC");
+  }
+
+  static boolean hasDEG(Tree npT, Tree wholeT, int deIdx) {
+    return hasDE(npT, wholeT, deIdx, "DEG");
+  }
+
+  private static boolean hasDE(Tree npT, Tree wholeT, int deIdx, String dePat) {
+    Sentence<TaggedWord> tws = wholeT.taggedYield();
+    TaggedWord tw = tws.get(deIdx);
+    if (tw.tag().startsWith("DE")) {
+      if (tw.tag().equals(dePat)) return true;
+      else return false;
+    } else {
+      System.err.println(tw + " (" + deIdx + ") in " + tws + " is not a DE");
+      return false;
+    }
+  }
 
   static boolean hasDEC(Tree t) {
     TreeMatcher decM = dec.matcher(t);
@@ -221,16 +241,23 @@ public class ExperimentUtils {
     
   static List<TreePair> readAnnotatedTreePairs() throws IOException {
     //return readAnnotatedTreePairs(true, ctbDir());
-    return readAnnotatedTreePairs(true, null);
+    //return readAnnotatedTreePairs(true, null);
+    return readAnnotatedTreePairs(true, false);
   }
 
   static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories) throws IOException {
-    return readAnnotatedTreePairs(useReducedCategories, null);
+    return readAnnotatedTreePairs(useReducedCategories, false);
   }
-  static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories, String chParsedDir) throws IOException {
+  //static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories, String chParsedDir) throws IOException {
+  static List<TreePair> readAnnotatedTreePairs(Boolean useReducedCategories, Boolean useNonOracleTrees) throws IOException {
     String wordalignmentDir = wordAlignmentDir();
     String ctbDir = ctbDir();
     String etbDir = etbDir();
+
+    String chParsedDir = null;
+    if (useNonOracleTrees) {
+      chParsedDir = "projects/mt/src/mt/translationtreebank/data/ctb_parsed/bracketed/";
+    }
 
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
     ChineseTreeReader ctr = new ChineseTreeReader();
@@ -278,11 +305,12 @@ public class ExperimentUtils {
 
       // (4) Read parsed Chinese Trees
       String chparsedname = null;
-      if (chParsedDir!=null) { 
+      //if (chParsedDir!=null) { 
+      if (useNonOracleTrees) {
         chparsedname = String.format("%schtb_%04d.fid", chParsedDir, fileidx);
-        System.err.println("Reading "+chparsedname);
+        //System.err.println("Reading "+chparsedname);
         chparsedTR.readMoreTrees(chparsedname);
-        System.err.println("chparsedTR.size="+chparsedTR.size());
+        //System.err.println("chparsedTR.size="+chparsedTR.size());
       }
 
       // (4) Going through entries in (1) and check if they exist in (2)
@@ -293,7 +321,8 @@ public class ExperimentUtils {
       for (TranslationAlignment ta : alignment_list) {
         List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
         List<Tree> chParsedTrees = null;
-        if (chParsedDir != null) {
+        //if (chParsedDir != null) {
+        if (useNonOracleTrees) {
           chParsedTrees = chparsedTR.getTreesWithWords(ta.source_);
           //System.err.println("chParsedTrees.size="+chParsedTrees.size());
         } else {
@@ -323,7 +352,8 @@ public class ExperimentUtils {
         TranslationAlignment.checkTranslationAlignmentAndEnTrees(ta, enTrees);
         TranslationAlignment.checkTranslationAlignmentAndChTrees(ta, chTrees);
         TreePair tp;
-        if (chParsedDir!=null) {
+        //if (chParsedDir!=null) {
+        if (useNonOracleTrees) {
           tp = new TreePair(ta, enTrees, chTrees, chParsedTrees);
         }
         else 

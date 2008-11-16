@@ -9,7 +9,12 @@ import java.util.*;
 
 class FullInformationWangRevisedExperiment {
   public static void main(String args[]) throws IOException {
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
+    Properties props = StringUtils.argsToProperties(args);
+    String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
+    Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
+
+    //List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
+    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true, nonOracleTree);
 
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
     ClassicCounter<String> deTypeCounter = new ClassicCounter<String>();
@@ -19,13 +24,13 @@ class FullInformationWangRevisedExperiment {
     for(TreePair validSent : treepairs) {
       //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
-        String np = validSent.oracleChNPwithDE(deIdxInSent);
-        np = np.trim();
+        Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
+        //String np = validSent.oracleChNPwithDE(deIdxInSent);
+        //np = np.trim();
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
         String predictedType = "";
 
-        Tree chTree = validSent.chTrees.get(0);
+        Tree chTree = validSent.chParsedTrees.get(0);
 
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
@@ -33,8 +38,8 @@ class FullInformationWangRevisedExperiment {
           continue;
         }
 
-        boolean hasDEC = ExperimentUtils.hasDEC(chNPTree);
-        boolean hasDEG = ExperimentUtils.hasDEG(chNPTree);
+        boolean hasDEC = ExperimentUtils.hasDEC(chNPTree, chTree, deIdxInSent);
+        boolean hasDEG = ExperimentUtils.hasDEG(chNPTree, chTree, deIdxInSent);
         if (hasDEC && hasDEG) {
           throw new RuntimeException("error: both");
         } else if (hasDEC && !hasDEG) {
@@ -52,7 +57,9 @@ class FullInformationWangRevisedExperiment {
           } else
             predictedType = "swapped";
         } else {
-          throw new RuntimeException("error: none");
+          System.err.println("no DEC or DEG");
+          chNPTree.pennPrint(System.err);
+          predictedType = "swapped";
         }
       
         if (label.startsWith("B") || label.equals("relative clause")) {

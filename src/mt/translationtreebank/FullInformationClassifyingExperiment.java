@@ -62,10 +62,7 @@ class FullInformationClassifyingExperiment {
     */
 
     List<TreePair> treepairs;
-    if (nonOracleTree) 
-      treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, "projects/mt/src/mt/translationtreebank/data/ctb_parsed/bracketed/");
-    else
-      treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory);
+    treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
     String[] trainDevTest = readTrainDevTest();
 
@@ -124,11 +121,11 @@ class FullInformationClassifyingExperiment {
         // get deIndices
         Sentence<TaggedWord> sentence = chNPTree.taggedYield();
         int deIdx = ExperimentUtils.getDEIndex(chNPTree);
-        
         if (deIdx == -1) {
+          System.err.println("no DE");
           chNPTree.pennPrint(System.err);
-          throw new RuntimeException("no DE");
         }
+        deIdx = deIdxInSent - chNPrange.first;
 
         if (ngram) {
           List<TaggedWord> beforeDE = new ArrayList<TaggedWord>();
@@ -159,11 +156,14 @@ class FullInformationClassifyingExperiment {
         // (1.2) if the word before DE is a Noun, take the last character
         //       of the noun as a feature
         if (lastcharN) {
-          if (sentence.get(deIdx-1).tag().startsWith("N")) {
-            String word = sentence.get(deIdx-1).word();
-            char[] chars = word.toCharArray();
-            featureList.add("Nchar-"+chars[chars.length-1]);
-          }
+          if (deIdx-1 < 0)
+            System.err.println("Nothing before DE: "+chNPTree);
+          else 
+            if (sentence.get(deIdx-1).tag().startsWith("N")) {
+              String word = sentence.get(deIdx-1).word();
+              char[] chars = word.toCharArray();
+              featureList.add("Nchar-"+chars[chars.length-1]);
+            }
         }
 
         // (1.X) features from last char in each word
