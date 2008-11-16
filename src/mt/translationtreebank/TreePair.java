@@ -65,11 +65,12 @@ class TreePair {
         Tree preT = Trees.getPreTerminal(parsedTree, i);
         Tree DNPorCP = preT.parent(parsedTree);
         Tree theNP = DNPorCP.parent(parsedTree);
+        //System.out.println("theNP:");
         //theNP.pennPrint(System.out);
         //System.out.println();
         int leftE = Trees.leftEdge(theNP, parsedTree);
         int rightE = Trees.rightEdge(theNP, parsedTree)-1;
-        Pair<Integer,Integer> range = new Pair<Integer,Integer>();
+        Pair<Integer,Integer> range = new Pair<Integer,Integer>(leftE, rightE);
         parsedNPwithDEs_deIdx.put(i, range);
       }
     }
