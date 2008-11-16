@@ -246,6 +246,7 @@ public class ExperimentUtils {
     List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile, useReducedCategories);
     
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
+    //for(int fileidx = 1; fileidx <= 50; fileidx++) {
       // Everytime, restart them so that when we get trees,
       // we won't match tree & sentences in different files.
       alignment_list = new ArrayList<TranslationAlignment>();
@@ -326,7 +327,7 @@ public class ExperimentUtils {
           tp = new TreePair(ta, enTrees, chTrees, chParsedTrees);
         }
         else 
-          tp = new TreePair(ta, enTrees, chTrees);
+          tp = new TreePair(ta, enTrees, chTrees, chTrees);
         treepairs_inFile.add(tp);
         numNPwithDE += tp.numNPwithDE();
       }

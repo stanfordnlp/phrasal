@@ -24,6 +24,7 @@ class FullInformationClassifyingExperiment {
   public static void main(String args[]) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
     String reducedCatStr= props.getProperty("useReducedCategory", "true");
+    String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
     String twofeatStr   = props.getProperty("2feat", "false");
     String revisedStr   = props.getProperty("revised", "false");
     String ngramStr     = props.getProperty("ngram", "false");
@@ -35,6 +36,7 @@ class FullInformationClassifyingExperiment {
     String percentageStr= props.getProperty("percentage", "false");
 
     Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
+    Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
     Boolean ngram = Boolean.parseBoolean(ngramStr);
@@ -59,7 +61,12 @@ class FullInformationClassifyingExperiment {
     percentage = percentage;
     */
 
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory);
+    List<TreePair> treepairs;
+    if (nonOracleTree) 
+      treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, "projects/mt/src/mt/translationtreebank/data/ctb_parsed/bracketed/");
+    else
+      treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory);
+
     String[] trainDevTest = readTrainDevTest();
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
@@ -79,13 +86,14 @@ class FullInformationClassifyingExperiment {
     for(TreePair validSent : treepairs) {
       //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
         //String np = validSent.oracleChNPwithDE(deIdxInSent);
         //np = np.trim();
         //System.err.println("NP\t"+np);
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
-        Tree chTree = validSent.chTrees.get(0);
+        //Tree chTree = validSent.chTrees.get(0);
+        Tree chTree = validSent.chParsedTrees.get(0);
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
@@ -231,8 +239,10 @@ class FullInformationClassifyingExperiment {
     }
 
     if (npid != trainDevTest.length) {
-      throw new RuntimeException("#np doesn't match trainDevTest");
+      //throw new RuntimeException("#np doesn't match trainDevTest");
+      System.err.println("#np doesn't match trainDevTest. Is this partial test?");
     }
+
 
     // train classifier
 
