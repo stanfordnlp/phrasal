@@ -43,10 +43,12 @@ LTABLES_TEST= \
 
 # Main targets:
 test: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.f1best
+test_best: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.b1best
 nbest: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
 train: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
 
 test_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.f1best
+test_best_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.b1best
 nbest_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
 train_google: extract_google $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
 extract_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz 
@@ -275,13 +277,13 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 ### (needs to be run on 16G machines)
 %.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	mkdir $(*F).tables || true
-	java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
+	java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor -addSentenceBoundaryMarkers true $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################
 # Phrase counts:
 #############################################
 
-COUNT_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen) -extractors mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
+COUNT_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor -addSentenceBoundaryMarkers true $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen) -extractors mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
 
 $(TESTID).tables/counts.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
@@ -290,7 +292,7 @@ $(TESTID).tables/counts.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$
 # Lexicalized reordering tables:
 #############################################
 
-LEX_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -phiFilter $(MINP) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen)
+LEX_EXTRACT=java -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor -addSentenceBoundaryMarkers true $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -phiFilter $(MINP) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxFertility 5 -maxELen $(maxPLen)
 
 ### for tuning set:
 $(DEVID).tables/lo-word.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)

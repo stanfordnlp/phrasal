@@ -229,9 +229,8 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     if (index < 0) return false;
     double bow = bows[prefixInts.length-1][index];
 
-    if (bow == bow) return true;
-    //System.err.println("Warning: prefix of given ngram not included!");
-    return false;
+    if (bow != bow) return false;
+    return true;
   }
 
   static public void main(String[] args) throws Exception {

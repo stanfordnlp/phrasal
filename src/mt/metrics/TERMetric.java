@@ -25,7 +25,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
   enum EditType { ins, del, sub, sft };
-  boolean countEdits = true;
+  boolean countEdits = false;
 
   public TERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;

@@ -204,6 +204,8 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
     int[] prefixInts = Sequences.toIntArray(prefix);
     int index = tables[prefixInts.length-1].getIndex(prefixInts);
     if (index < 0) return false;
+    byte bow = qbows[prefixInts.length-1][index];
+    if(bow == -1) return false;
     return true;
   }
 

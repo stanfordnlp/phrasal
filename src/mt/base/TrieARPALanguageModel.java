@@ -206,11 +206,10 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
     if (prefix.size() > ngramCounts.length-1) return false;
     int[] prefixInts = Sequences.toIntArray(prefix);
     int index = table.getIndex(prefixInts);
-    if (index < 0) return false;
+    if (index < 0 || index >= mbows.length) return false;
     double bow = mbows[index];
-
     if (bow == bow) return true;
-    System.err.println("Warning: prefix of given ngram not included!");
+    //System.err.println("Warning: prefix of given ngram not included!");
     return false;
   }
 

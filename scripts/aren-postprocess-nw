@@ -1,0 +1,6 @@
+#!/usr/bin/perl -p
+
+s/\?\s*\.\s*$/\?\n/;
+s/^and (will|that|added|confirmed)\s+//i;
+s/^and\s+//i;
+s/^that\s+//i;

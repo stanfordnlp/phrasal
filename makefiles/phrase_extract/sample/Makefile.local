@@ -34,7 +34,7 @@ GOOGLE_LM=/scr/nlp/data/gale2/NIST_EVAL08/LM/google/google.countlm.3
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-TESTID=mt06
+TESTID=mt05
 
 ### Directory containing reference translations:
 REFS=/scr/nlp/data/gale/NIST-MT-eval-data/
@@ -123,6 +123,7 @@ PM=phrasal-mert.pl
 #########################################
 
 IE=prep
+FE=unk
 
 #########################################
 # LM filtering script:
