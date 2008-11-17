@@ -8,84 +8,43 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
-
 /**
- *
+ * Loads quantized ARPA language models generated using IRSTLM's quantize-lm.
+ * 
  * @author Daniel Cer
+ * @author Michel Galley (quantization)
  */
-public class ARPALanguageModel implements LanguageModel<IString> {
+public class QuantizedARPALanguageModel extends ARPALanguageModel {
 
-  public static final String QUANTIZED_LM_PROPERTY = "quantizedLM";
-  public static final boolean QUANTIZED_LM = Boolean.parseBoolean(System.getProperty(QUANTIZED_LM_PROPERTY, "false"));
+  private static float log10LogConstant = (float)Math.log(10);
+  private float[][] probClusters, bowClusters;
+  private byte[][] qprobs, qbows;
 
-  public static final String USE_TRIE_PROPERTY = "trieLM";
-  public static final boolean USE_TRIE = Boolean.parseBoolean(System.getProperty(USE_TRIE_PROPERTY, "false"));
-
-  static boolean verbose = false;
-
-  protected final String name;
-  public static final IString START_TOKEN = new IString("<s>");
-  public static final IString END_TOKEN = new IString("</s>");
-
-  public String getName() {
-    return name;
-  }
-
-  public IString getStartToken() {
-    return START_TOKEN;
-  }
-
-  public IString getEndToken() {
-    return END_TOKEN;
-  }
-
-  protected static String readLineNonNull(LineNumberReader reader) throws IOException {
-    String inline = reader.readLine();
-    if (inline == null) {
-      throw new RuntimeException(String.format("premature end of file"));
-    }
-    return inline;
-  }
-
-  protected IntegerArrayRawIndex[] tables;
-  private float[][] probs;
-  private float[][] bows;
-
-  protected static final int MAX_GRAM = 10; // highest order ngram possible
-  protected static final float LOAD_MULTIPLIER = (float)1.7;
-
-  protected static final WeakHashMap<String, ARPALanguageModel> lmStore = new WeakHashMap<String, ARPALanguageModel>();
-
-  public static LanguageModel<IString> load(String filename) throws IOException {
-    File f = new File(filename);
-    String filepath = f.getAbsolutePath();
-    if (lmStore.containsKey(filepath)) return lmStore.get(filepath);
-
-    ARPALanguageModel alm = QUANTIZED_LM ? new QuantizedARPALanguageModel(filename) :
-        (USE_TRIE ? new TrieARPALanguageModel(filename) : new ARPALanguageModel(filename));
-    lmStore.put(filepath, alm);
-
-    return alm;
-  }
-
-  protected ARPALanguageModel(String filename) throws IOException {
-    name = String.format("APRA(%s)",filename);
-    init(filename);
+  protected QuantizedARPALanguageModel(String filename) throws IOException {
+    super(filename);
   }
 
   protected void init(String filename) throws IOException {
     File f = new File(filename);
-
     System.gc();
     Runtime rt = Runtime.getRuntime();
     long preLMLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
 
-
     LineNumberReader reader = (filename.endsWith(".gz") ? new LineNumberReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename)))) :
             new LineNumberReader(new FileReader(f)));
 
-    // skip everything until the line that begins with '\data\'
+    // read header:
+    String line="";
+    while(!line.startsWith("qARPA ")) line = readLineNonNull(reader);
+    String[] header = line.split("\\s+");
+    int hOrder = Integer.parseInt(header[1]);
+    assert(hOrder+2 == header.length);
+    int[] hBins = new int[hOrder];
+    for(int i=0; i<hBins.length; ++i)
+      hBins[i] = Integer.parseInt(header[i+2]); 
+
+    // then skip everything until the line that begins with '\data\'
     while (!readLineNonNull(reader).startsWith("\\data\\"));
 
     // read in ngram counts
@@ -94,7 +53,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     int maxOrder = 0;
     while ((inline = readLineNonNull(reader)).startsWith("ngram")) {
       inline = inline.replaceFirst("ngram\\s+", "");
-      String[] fields = inline.split("=");
+      String[] fields = inline.split("\\s*=\\s*");
       int ngramOrder = Integer.parseInt(fields[0]);
       if (ngramOrder > MAX_GRAM) {
         throw new RuntimeException(String.format("Max n-gram order: %d\n", MAX_GRAM));
@@ -102,46 +61,72 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       ngramCounts[ngramOrder-1] = Integer.parseInt(fields[1].replaceFirst("[^0-9].*$", ""));
       if (maxOrder < ngramOrder) maxOrder = ngramOrder;
     }
+    assert(maxOrder == hOrder);
 
     tables = new FixedLengthIntegerArrayRawIndex[maxOrder];
-    probs = new float[maxOrder][];
-    bows = new float[maxOrder-1][];
+    qprobs = new byte[maxOrder][];
+    qbows = new byte[maxOrder-1][];
+    probClusters = new float[maxOrder][];
+    bowClusters = new float[maxOrder-1][];
+    
     for (int i = 0; i < maxOrder; i++) {
       int tableSz = Integer.highestOneBit((int)(ngramCounts[i]*LOAD_MULTIPLIER))<<1;
       tables[i] = new FixedLengthIntegerArrayRawIndex(i+1, Integer.numberOfTrailingZeros(tableSz));
-      probs[i] = new float[tableSz];
-      if (i+1 < maxOrder) bows[i]  = new float[tableSz];
+      qprobs[i] = new byte[tableSz];
+      if (i+1 < maxOrder) qbows[i]  = new byte[tableSz];
     }
-
-    float log10LogConstant = (float)Math.log(10);
 
     // read in the n-gram tables one by one
     for (int order = 0; order < maxOrder; order++) {
-      System.err.printf("Reading %d %d-grams...\n", probs[order].length, order+1);
       String nextOrderHeader = String.format("\\%d-grams:", order+1);
       IString[] ngram = new IString[order+1];
       int[] ngramInts = new int[order+1];
 
       // skip all material upto the next n-gram table header
       while (!readLineNonNull(reader).startsWith(nextOrderHeader));
+      
+      // Read cluster centers:
+      int bins = Integer.parseInt(readLineNonNull(reader));
+      assert(bins == hBins[order]);
+      System.err.printf("Reading %d cluster centers for %d-grams.\n",bins,order+1);
+      probClusters[order] = new float[bins];
+      if(order+1 < maxOrder)
+        bowClusters[order] = new float[bins];
+      for(int i=0; i<bins; ++i) {
+        String[] s = readLineNonNull(reader).split("\\s+");
+        if(order+1 < maxOrder) {
+          assert(s.length == 2);
+          bowClusters[order][i] = Float.parseFloat(s[1]);
+        } else
+          assert(s.length == 1);
+        probClusters[order][i] = Float.parseFloat(s[0]);
+      }
 
       // read in table
+      System.err.printf("Reading %d %d-grams.\n", qprobs[order].length, order+1);
       while (!(inline = readLineNonNull(reader)).equals("")) {
+        if(inline.startsWith("\\end\\"))
+          break;
         // during profiling, 'split' turned out to be a bottle neck
         // and using StringTokenizer is about twice as fast
         StringTokenizer tok = new StringTokenizer(inline);
-        float prob = Float.parseFloat(tok.nextToken()) * log10LogConstant;
+        int prob = Integer.parseInt(tok.nextToken());
+				if(prob > Character.MAX_VALUE) {
+          throw new RuntimeException(String.format("Token (%d/%d) not a byte at line: \"%s\"", prob, Character.MAX_VALUE, inline));
+        }
 
         for (int i = 0; i <= order; i++) {
           ngram[i] = new IString(tok.nextToken());
           ngramInts[i] = ngram[i].getId();
         }
 
-        float bow = (tok.hasMoreElements() ?
-                Float.parseFloat(tok.nextToken()) * log10LogConstant : Float.NaN);
         int index = tables[order].insertIntoIndex(ngramInts);
-        probs[order][index] = prob;
-        if (order < bows.length) bows[order][index] = bow;
+        qprobs[order][index] = (byte) prob;
+        if(order < qbows.length)  {
+					int bow = Integer.parseInt(tok.nextToken());
+					assert(bow <= Character.MAX_VALUE);
+					qbows[order][index] = (byte) bow;
+			  }
       }
     }
 
@@ -150,14 +135,9 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     // print some status information
     long postLMLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
-    System.err.printf("Done loading arpa lm: %s (order: %d) (mem used: %d MiB time: %.3f s)\n", filename, maxOrder,
+    System.err.printf("Done loading quantized arpa lm: %s (order: %d) (mem used: %d MiB time: %.3f s)\n", filename, maxOrder,
             (postLMLoadMemUsed - preLMLoadMemUsed)/(1024*1024), loadTimeMillis/1000.0);
     reader.close();
-  }
-
-  @Override
-  public String toString() {
-    return getName();
   }
 
   /**
@@ -177,13 +157,14 @@ public class ARPALanguageModel implements LanguageModel<IString> {
    */
   protected double scoreR(Sequence<IString> sequence) {
     int[] ngramInts = Sequences.toIntArray(sequence);
-    int index;
+    int order = ngramInts.length-1;
 
-    index = tables[ngramInts.length-1].getIndex(ngramInts);
+    int index = tables[order].getIndex(ngramInts);
     if (index >= 0) { // found a match
-      double p = probs[ngramInts.length-1][index];
+      // mg2008: the "& 0xFF" is needed because Java doesn't allow "unsigned byte" 
+      double p = probClusters[order][qprobs[order][index] & 0xFF]*log10LogConstant;
       if(verbose)
-        System.err.printf("scoreR: seq: %s logp: %f\n", sequence.toString(), p);
+        System.err.printf("q-scoreR: seq: %s logp: %f (order=%d probCenter=%d)\n", sequence.toString(), p, order, qprobs[order][index]);
       return p;
     }
     if (ngramInts.length == 1) {
@@ -191,70 +172,44 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     }
     Sequence<IString> prefix = sequence.subsequence(0, ngramInts.length-1);
     int[] prefixInts = Sequences.toIntArray(prefix);
-    index = tables[prefixInts.length-1].getIndex(prefixInts);
+    int order2 = prefixInts.length-1;
+    index = tables[order2].getIndex(prefixInts);
     double bow = 0;
-    if (index >= 0) bow = bows[prefixInts.length-1][index];
-    if (bow != bow) bow = 0.0; // treat NaNs as bow that are not found at all
+    // mg2008: the "& 0xFF" is needed because Java doesn't allow "unsigned byte"
+    if (index >= 0) bow = bowClusters[order2][qbows[order2][index] & 0xFF]*log10LogConstant;
     double p = bow + scoreR(sequence.subsequence(1, ngramInts.length));
     if(verbose)
-      System.err.printf("scoreR: seq: %s logp: %f bow: %f\n", sequence.toString(), p, bow);
+      System.err.printf("q-scoreR: seq: %s logp: %f bow: %f\n", sequence.toString(), p, bow);
     return p;
   }
 
-  public double score(Sequence<IString> sequence) {
-    Sequence<IString> ngram;
-    int sequenceSz = sequence.size();
-    int maxOrder   = (probs.length < sequenceSz ? probs.length : sequenceSz);
-
-    if (sequenceSz == maxOrder) {
-      ngram = sequence;
-    } else {
-      ngram = sequence.subsequence(sequenceSz-maxOrder, sequenceSz);
-    }
-
-    double score = scoreR(ngram);
-    if(verbose)
-      System.err.printf("score: seq: %s logp: %f\n", sequence.toString(), score);
-    return score;
-  }
-
-  public int order() {
-    return probs.length;
-  }
-
   public boolean releventPrefix(Sequence<IString> prefix) {
-    if (prefix.size() > probs.length-1) return false;
+    if (prefix.size() > tables.length-1) return false;
     int[] prefixInts = Sequences.toIntArray(prefix);
     int index = tables[prefixInts.length-1].getIndex(prefixInts);
     if (index < 0) return false;
-    double bow = bows[prefixInts.length-1][index];
-
-    if (bow == bow) return true;
-    System.err.println("Warning: prefix of given ngram not included!");
-    return false;
+    return true;
   }
 
   static public void main(String[] args) throws Exception {
-    if (args.length != 2) {
-      System.err.printf("Usage:\n\tjava ...ARPALanguageModel (arpa model) \"sentence or file to score\"\n");
+    if (args.length != 3) {
+      System.err.printf("Usage:\n\tjava ...ARPALanguageModel (arpa model) (file to score) (quantized?)\n");
       System.exit(-1);
     }
 
-    //verbose = true;
-    String model = args[0]; String file = args[1];
+    verbose = true;
+    String model = args[0]; String file = args[1]; boolean quantized = Boolean.parseBoolean(args[2]);
     System.out.printf("Loading lm: %s...\n", model);
-    LanguageModel<IString> lm = ARPALanguageModel.load(model);
+    ARPALanguageModel lm = quantized ? new QuantizedARPALanguageModel(model) : new ARPALanguageModel(model);
     System.out.printf("done loading lm.\n");
 
-    long startTimeMillis = System.currentTimeMillis();
     for(String sent : ObjectBank.getLineIteratorObjectBank(file)) {
       sent = sent.toLowerCase();
       System.out.printf("Sentence: %s\n", sent);
       Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));
+      System.out.printf("Seq: %s\n", seq);
       double score = LanguageModels.scoreSequence(lm, seq);
       System.out.printf("Sequence score: %f score_log10: %f\n", score, score/Math.log(10));
     }
-    double totalSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
-    System.err.printf("secs = %.3f\n", totalSecs);
   }
 }

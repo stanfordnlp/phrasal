@@ -143,6 +143,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	}
 	
 	private int init(File f) throws IOException {
+    System.gc();
 		Runtime rt = Runtime.getRuntime();
 		long prePhraseTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
 		long startTimeMillis = System.currentTimeMillis();
@@ -283,8 +284,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			System.out.println("Usage:\n\tjava ...PharaohPhraseTable (phrasetable file) (entry to look up)");
 			System.exit(-1);
 		}
-		
-		String model = args[0]; String phrase = args[1];
+
+    String model = args[0]; String phrase = args[1];
     long startTimeMillis = System.currentTimeMillis();
 		System.out.printf("Loading phrase table: %s\n", model);
 		PharaohPhraseTable<String> ppt = new PharaohPhraseTable<String>(null, null, model);

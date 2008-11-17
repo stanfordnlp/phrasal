@@ -213,16 +213,17 @@ public class ExtendedLexicalReorderingTable {
 	}
 	
 	public ExtendedLexicalReorderingTable(String filename, String desiredFileType) throws IOException {
-		String filetype = init(filename, desiredFileType);
+    String filetype = init(filename, desiredFileType);
 		if (!desiredFileType.equals(filetype)) {
 			throw new RuntimeException(String.format("Reordering file '%s' of type %s not %s\n", filename, filetype, desiredFileType));
 		}
 		this.filetype = filetype;  
 		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);;
 		this.conditionType = fileTypeToConditionType.get(filetype);
-		
-	}
-	private String init(String filename, String type) throws IOException {
+  }
+
+  private String init(String filename, String type) throws IOException {
+		System.gc();
 		Runtime rt = Runtime.getRuntime();
 		long preTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
 		long startTimeMillis = System.currentTimeMillis();
@@ -338,6 +339,7 @@ public class ExtendedLexicalReorderingTable {
 			reorderingScores.set(idx,scores);
 			//reorderingScores.add(scores);
 		}
+		System.gc();
 		long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
 		long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
 		System.err.printf("Done loading reordering table: %s (mem used: %d MiB time: %.3f s)\n", filename, 

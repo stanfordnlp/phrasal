@@ -2,7 +2,7 @@ package mt.base;
 
 import java.util.*;
 
-public class FixedLengthIntegerArrayRawIndex {
+public class FixedLengthIntegerArrayRawIndex implements IntegerArrayRawIndex {
 	final int[] rawInts;
 	final int arraySize;
 	final int indexSize;
@@ -12,7 +12,7 @@ public class FixedLengthIntegerArrayRawIndex {
 	static int totalWordsAllocated = 0;
 	
 	public FixedLengthIntegerArrayRawIndex(int arraySize, int log2IndexSize) {
-		
+
 		indexSize = 1<<log2IndexSize;		
 		mask = indexSize-1;
 		totalWordsAllocated += arraySize*indexSize;
@@ -20,8 +20,8 @@ public class FixedLengthIntegerArrayRawIndex {
 		used = new BitSet(indexSize);
 		this.arraySize = arraySize;
 	}
-	
-	private int initialSearchIndex(int[] array) {
+
+  private int initialSearchIndex(int[] array) {
 		long index = 0;
 		long mul = 0x5DEECE66DL;
 		for (int el : array) {

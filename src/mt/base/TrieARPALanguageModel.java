@@ -2,7 +2,6 @@ package mt.base;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
-import edu.stanford.nlp.objectbank.ObjectBank;
 
 import java.io.*;
 import java.util.*;
@@ -10,74 +9,50 @@ import java.util.zip.GZIPInputStream;
 
 
 /**
+ * Language model internally repesented as a trie. Takes 2-3 times
+ * longer to load compared to ARPALanguageModel, but saves 30-50% memory.
  *
- * @author Daniel Cer
+ * @author Michel Galley (trie representation)
+ * @author Daniel Cer (code copied from ARPALanguageModel)
  */
-public class ARPALanguageModel implements LanguageModel<IString> {
+public class TrieARPALanguageModel extends ARPALanguageModel {
 
-  public static final String QUANTIZED_LM_PROPERTY = "quantizedLM";
-  public static final boolean QUANTIZED_LM = Boolean.parseBoolean(System.getProperty(QUANTIZED_LM_PROPERTY, "false"));
+  // Performance comparison with ARPALanguageModel:
 
-  public static final String USE_TRIE_PROPERTY = "trieLM";
-  public static final boolean USE_TRIE = Boolean.parseBoolean(System.getProperty(USE_TRIE_PROPERTY, "false"));
+  // ARPA header:
+  // ngram 1=20311
+  // ngram 2=11123350
+  // ngram 3=30111902
+  // ngram 4=34683198
+  // ngram 5=42025894
 
-  static boolean verbose = false;
+  // ARPALanguageModel:
+  //   mem used: 6436 MiB
+  //   loading time: 481.885 s
+  // TrieARPALanguageModel:
+  //   mem used: 3514 MiB
+  //   loading time: 1035.696 s
+  //
+  // If loading is deemed to slow, either switch back to ARPALanguageModel
+  // or increase TrieIntegerArrayIndex.GROWTH_FACTOR.
 
-  protected final String name;
-  public static final IString START_TOKEN = new IString("<s>");
-  public static final IString END_TOKEN = new IString("</s>");
+  // TODO: enable quantization in this class
 
-  public String getName() {
-    return name;
-  }
+  protected TrieIntegerArrayIndex table;
+  float[] mprobs;
+  float[] mbows;
+  int[] ngramCounts;
 
-  public IString getStartToken() {
-    return START_TOKEN;
-  }
-
-  public IString getEndToken() {
-    return END_TOKEN;
-  }
-
-  protected static String readLineNonNull(LineNumberReader reader) throws IOException {
-    String inline = reader.readLine();
-    if (inline == null) {
-      throw new RuntimeException(String.format("premature end of file"));
-    }
-    return inline;
-  }
-
-  protected IntegerArrayRawIndex[] tables;
-  private float[][] probs;
-  private float[][] bows;
-
-  protected static final int MAX_GRAM = 10; // highest order ngram possible
-  protected static final float LOAD_MULTIPLIER = (float)1.7;
-
-  protected static final WeakHashMap<String, ARPALanguageModel> lmStore = new WeakHashMap<String, ARPALanguageModel>();
-
-  public static LanguageModel<IString> load(String filename) throws IOException {
-    File f = new File(filename);
-    String filepath = f.getAbsolutePath();
-    if (lmStore.containsKey(filepath)) return lmStore.get(filepath);
-
-    ARPALanguageModel alm = QUANTIZED_LM ? new QuantizedARPALanguageModel(filename) :
-        (USE_TRIE ? new TrieARPALanguageModel(filename) : new ARPALanguageModel(filename));
-    lmStore.put(filepath, alm);
-
-    return alm;
-  }
-
-  protected ARPALanguageModel(String filename) throws IOException {
-    name = String.format("APRA(%s)",filename);
-    init(filename);
+  protected TrieARPALanguageModel(String filename) throws IOException {
+    super(filename);
+    System.err.println("Using TrieARPALAnguageModel.");
   }
 
   protected void init(String filename) throws IOException {
     File f = new File(filename);
 
-    System.gc();
     Runtime rt = Runtime.getRuntime();
+    System.gc();
     long preLMLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
 
@@ -89,7 +64,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     while (!readLineNonNull(reader).startsWith("\\data\\"));
 
     // read in ngram counts
-    int[] ngramCounts = new int[MAX_GRAM];
+    ngramCounts = new int[MAX_GRAM];
     String inline;
     int maxOrder = 0;
     while ((inline = readLineNonNull(reader)).startsWith("ngram")) {
@@ -103,21 +78,24 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       if (maxOrder < ngramOrder) maxOrder = ngramOrder;
     }
 
-    tables = new FixedLengthIntegerArrayRawIndex[maxOrder];
-    probs = new float[maxOrder][];
-    bows = new float[maxOrder-1][];
+    int probTableSz = 0;
+    int bowTableSz = 0;
     for (int i = 0; i < maxOrder; i++) {
-      int tableSz = Integer.highestOneBit((int)(ngramCounts[i]*LOAD_MULTIPLIER))<<1;
-      tables[i] = new FixedLengthIntegerArrayRawIndex(i+1, Integer.numberOfTrailingZeros(tableSz));
-      probs[i] = new float[tableSz];
-      if (i+1 < maxOrder) bows[i]  = new float[tableSz];
+      probTableSz += ngramCounts[i];
+      if (i+1 < maxOrder)
+        bowTableSz += ngramCounts[i];
     }
+    probTableSz = Integer.highestOneBit((int)(probTableSz*LOAD_MULTIPLIER))<<1;
+    bowTableSz = Integer.highestOneBit((int)(bowTableSz*LOAD_MULTIPLIER))<<1;
+    mprobs = new float[probTableSz];
+    mbows = new float[bowTableSz];
 
     float log10LogConstant = (float)Math.log(10);
 
     // read in the n-gram tables one by one
+    table = new TrieIntegerArrayIndex(ngramCounts[maxOrder-1]/4);
     for (int order = 0; order < maxOrder; order++) {
-      System.err.printf("Reading %d %d-grams...\n", probs[order].length, order+1);
+      System.err.printf("Reading %d %d-grams...\n", ngramCounts[order], order+1);
       String nextOrderHeader = String.format("\\%d-grams:", order+1);
       IString[] ngram = new IString[order+1];
       int[] ngramInts = new int[order+1];
@@ -126,7 +104,10 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       while (!readLineNonNull(reader).startsWith(nextOrderHeader));
 
       // read in table
+      int c=0;
       while (!(inline = readLineNonNull(reader)).equals("")) {
+        if(++c % (ngramCounts[order]/10) == 0)
+           System.err.printf("  read %d entries...\n",c);
         // during profiling, 'split' turned out to be a bottle neck
         // and using StringTokenizer is about twice as fast
         StringTokenizer tok = new StringTokenizer(inline);
@@ -139,15 +120,18 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
         float bow = (tok.hasMoreElements() ?
                 Float.parseFloat(tok.nextToken()) * log10LogConstant : Float.NaN);
-        int index = tables[order].insertIntoIndex(ngramInts);
-        probs[order][index] = prob;
-        if (order < bows.length) bows[order][index] = bow;
+        int index = table.insertIntoIndex(ngramInts);
+        mprobs[index] = prob;
+        if(order+1 < maxOrder) mbows[index] = bow;
       }
     }
-
-    System.gc();
+    System.err.println("Rehashing... ");
+    table.rehash();
+    System.err.println("done.");
+    table.printInfo();
 
     // print some status information
+    System.gc();
     long postLMLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
     System.err.printf("Done loading arpa lm: %s (order: %d) (mem used: %d MiB time: %.3f s)\n", filename, maxOrder,
@@ -179,9 +163,9 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     int[] ngramInts = Sequences.toIntArray(sequence);
     int index;
 
-    index = tables[ngramInts.length-1].getIndex(ngramInts);
+    index = table.getIndex(ngramInts);
     if (index >= 0) { // found a match
-      double p = probs[ngramInts.length-1][index];
+      double p = mprobs[index];
       if(verbose)
         System.err.printf("scoreR: seq: %s logp: %f\n", sequence.toString(), p);
       return p;
@@ -191,9 +175,9 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     }
     Sequence<IString> prefix = sequence.subsequence(0, ngramInts.length-1);
     int[] prefixInts = Sequences.toIntArray(prefix);
-    index = tables[prefixInts.length-1].getIndex(prefixInts);
+    index = table.getIndex(prefixInts);
     double bow = 0;
-    if (index >= 0) bow = bows[prefixInts.length-1][index];
+    if (index >= 0 && index < mbows.length) bow = mbows[index];
     if (bow != bow) bow = 0.0; // treat NaNs as bow that are not found at all
     double p = bow + scoreR(sequence.subsequence(1, ngramInts.length));
     if(verbose)
@@ -204,7 +188,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   public double score(Sequence<IString> sequence) {
     Sequence<IString> ngram;
     int sequenceSz = sequence.size();
-    int maxOrder   = (probs.length < sequenceSz ? probs.length : sequenceSz);
+    int maxOrder   = (ngramCounts.length < sequenceSz ? ngramCounts.length : sequenceSz);
 
     if (sequenceSz == maxOrder) {
       ngram = sequence;
@@ -218,43 +202,38 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     return score;
   }
 
-  public int order() {
-    return probs.length;
-  }
-
   public boolean releventPrefix(Sequence<IString> prefix) {
-    if (prefix.size() > probs.length-1) return false;
+    if (prefix.size() > ngramCounts.length-1) return false;
     int[] prefixInts = Sequences.toIntArray(prefix);
-    int index = tables[prefixInts.length-1].getIndex(prefixInts);
+    int index = table.getIndex(prefixInts);
     if (index < 0) return false;
-    double bow = bows[prefixInts.length-1][index];
+    double bow = mbows[index];
 
     if (bow == bow) return true;
     System.err.println("Warning: prefix of given ngram not included!");
     return false;
   }
 
+  public int order() {
+    return ngramCounts.length;
+  }
+
   static public void main(String[] args) throws Exception {
     if (args.length != 2) {
-      System.err.printf("Usage:\n\tjava ...ARPALanguageModel (arpa model) \"sentence or file to score\"\n");
+      System.err.printf("Usage:\n\tjava ...ARPALanguageModel (arpa model) \"sentence to score\"\n");
       System.exit(-1);
     }
 
-    //verbose = true;
-    String model = args[0]; String file = args[1];
+    verbose = true;
+    String model = args[0]; String sent = args[1];
     System.out.printf("Loading lm: %s...\n", model);
-    LanguageModel<IString> lm = ARPALanguageModel.load(model);
+    ARPALanguageModel lm = new ARPALanguageModel(model);
     System.out.printf("done loading lm.\n");
 
-    long startTimeMillis = System.currentTimeMillis();
-    for(String sent : ObjectBank.getLineIteratorObjectBank(file)) {
-      sent = sent.toLowerCase();
-      System.out.printf("Sentence: %s\n", sent);
-      Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));
-      double score = LanguageModels.scoreSequence(lm, seq);
-      System.out.printf("Sequence score: %f score_log10: %f\n", score, score/Math.log(10));
-    }
-    double totalSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
-    System.err.printf("secs = %.3f\n", totalSecs);
+    System.out.printf("Sentence: %s\n", sent);
+    Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));
+    System.out.printf("Seq: %s\n", seq);
+    double score = LanguageModels.scoreSequence(lm, seq);
+    System.out.printf("Sequence score: %f score_log10: %f\n", score, score/Math.log(10));
   }
 }

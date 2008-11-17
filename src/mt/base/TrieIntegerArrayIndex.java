@@ -1,7 +1,7 @@
 package mt.base;
 
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.*;
+import edu.stanford.nlp.util.IString;
 
 
 /**
@@ -11,65 +11,91 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
  *
  * @author Michel Galley
  */
-public class TrieIntegerArrayIndex implements IntegerArrayIndex {
+public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRawIndex {
 
-  private static final int IDX_NOSUCCESSOR = 0;
-  private static final int IDX_ROOT = Integer.MAX_VALUE;
-  private static final int INPUT_TERMINATOR = Integer.MAX_VALUE;
-  
-  private final Long2IntMap map; 
+  private static final int GROWTH_FACTOR = 4; // slow growth, we want to save space
+
+  private static final int IDX_ROOT = 0;
+  private static final int IDX_NOSUCCESSOR = Integer.MIN_VALUE;
+
+  private final Long2IntOpenHashMap map; 
   // maps transitions to state. Each transition is a long, whose 32 first bits 
-  // identify the current state, and 32 last bits identify an input symbol.
+  // identify an input symbol, and 32 last bits identify the current state.
 
-  private int
-      lastTransitionalStateIdx = IDX_ROOT,
-      lastAcceptingStateIdx = 0;
+  //private int lastTransitionalStateIdx = IDX_ROOT, lastAcceptingStateIdx = 0;
+  private int lastStateIdx = IDX_ROOT;
 
   TrieIntegerArrayIndex() {
-    map = new Long2IntOpenHashMap();
+    this(-1);
+  }
+
+  TrieIntegerArrayIndex(int sz) {
+    if(sz > 0)
+      map = new Long2IntOpenHashMap(sz);
+    else
+      map = new Long2IntOpenHashMap();
+    map.growthFactor(GROWTH_FACTOR); 
     map.defaultReturnValue(IDX_NOSUCCESSOR);
     System.err.println("TrieIntegerArrayIndex: constructor.");
   }
 
-  private long getTransition(int curState, int input) {
-    return ((long)curState << 32) | input;
+  int supplementalHash(int h) {
+    // use the same supplemental hash function used by HashMap
+    return ((h << 7) - h + (h >>> 9) + (h >>> 17));
   }
 
-  public int size() { return lastAcceptingStateIdx; }
+  private long getTransition(int curState, int input) {
+    // Perform some bit manipulations because Long's hashCode is not particularly clever.
+    int input2 = supplementalHash(input); // Integer.rotateLeft(input,13);
+    int curState2 = supplementalHash(curState); // Integer.rotateRight(curState,17);
+    return (((long)input2) << 32) | (((long)curState2) & 0xffffffffL);
+  }
+
+  public int size() { return lastStateIdx+1; }
+
+  public void printInfo() {
+    System.err.printf("Number of states: %d\n", size());
+    System.err.printf("Map size:%d\n", map.size());
+  }
 
   public int indexOf(int[] input) {
     return indexOf(input, false);
   }
 
   public int indexOf(int[] input, boolean add) {
-    if(lastTransitionalStateIdx <= lastAcceptingStateIdx)
-      throw new RuntimeException("Running out of state indices!");
     int curState = IDX_ROOT;
-    // Transitional states:
     for(int i=0; i<input.length; ++i) {
-      assert(input[i] != INPUT_TERMINATOR);
       long transition = getTransition(curState, input[i]);
       int nextState = map.get(transition);
       if(nextState == IDX_NOSUCCESSOR) {
         if(!add) return -1;
-        nextState = --lastTransitionalStateIdx;
+        if(lastStateIdx == Integer.MAX_VALUE)
+          throw new RuntimeException("Running out of state indices!");
+        nextState = ++lastStateIdx;
         map.put(transition, nextState);
       }
       curState = nextState;
     }
-    // Accepting state:
-    long transition = getTransition(curState, INPUT_TERMINATOR);
-    int acceptingState = map.get(transition);
-    if(acceptingState == IDX_NOSUCCESSOR) {
-      if(!add) return -1;
-      acceptingState = ++lastAcceptingStateIdx;
-      map.put(transition, acceptingState);
-    }
-    return acceptingState;
+    return curState;
+  }
+
+  public void rehash() {
+    map.rehash();
+  }
+
+  public int getIndex(int[] array) {
+    return indexOf(array,false);
+  }
+
+  public int insertIntoIndex(int[] array) {
+    return indexOf(array,true);
   }
 
   public static void main(String[] args) {
-    test(new TrieIntegerArrayIndex());
+    TrieIntegerArrayIndex idx = new TrieIntegerArrayIndex();
+    test(idx);
+    idx.printInfo();
+    //test(new TrieIntegerArrayIndex());
     test(new DynamicIntegerArrayIndex());
   }
 
@@ -80,5 +106,4 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex {
     System.out.println("idx(127): " + index.indexOf(new int[] {1, 2, 7}, true));
     System.out.println("idx(12): " + index.indexOf(new int[] {1, 2}, true));
   }
-
 }

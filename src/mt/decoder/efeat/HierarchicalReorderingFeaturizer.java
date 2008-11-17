@@ -93,11 +93,11 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 		featureTags = new String[mlrt.positionalMapping.length];
 		for (int i = 0; i < mlrt.positionalMapping.length; i++) 
       featureTags[i] = String.format("%s:%s", FEATURE_PREFIX, mlrt.positionalMapping[i]);
-    long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
-    long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
-    long items = ExtendedLexicalReorderingTable.index.size();
-    System.err.printf("HierarchicalReorderingFeaturizer: constructor: totalmem = %dm, freemem = %dm, items = %d.\n", 
-      totalMemory, freeMemory, items);
+    //long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
+    //long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
+    //long items = ExtendedLexicalReorderingTable.index.size();
+    //System.err.printf("HierarchicalReorderingFeaturizer: constructor: totalmem = %dm, freemem = %dm, items = %d.\n",
+    //  totalMemory, freeMemory, items);
 	}
 
 	@Override

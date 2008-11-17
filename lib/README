@@ -96,6 +96,40 @@ LAST UPDATE: 2008-07-12
 
 LAST UPDATE BY: Michel Galley
 
+-----------------------------------------------------------------------
+testng.jar
+
+ORIGINAL JAR NAME: testng-5.8-jdk15.jar
+
+VERSION: 5.8
+
+RELEASE DATE: 2008-03-27
+
+SOURCE AVAILABLE: yes
+
+DESCRIPTION: "TestNG is a testing framework inspired from JUnit and NUnit 
+but introducing some new functionalities that make it more powerful 
+and easier to use, such as:
+* JDK 5 Annotations (JDK 1.4 is also supported with JavaDoc annotations).
+* Flexible test configuration.
+* Support for data-driven testing (with @DataProvider).
+* Support for parameters.
+* Allows distribution of tests on slave machines.
+* Powerful execution model (no more TestSuite).
+* Supported by a variety of tools and plug-ins (Eclipse, IDEA, Maven, etc...).
+* Embeds BeanShell for further flexibility.
+* Default JDK functions for runtime and logging (no dependencies).
+* Dependent methods for application server testing.
+
+URL: http://testng.org
+
+USED BY: nothing yet
+
+LAST UPDATE: 2008-11-17
+
+LAST UPDATE BY: Michel Galley
+
+
 
 -----------------------------------------------------------------------
 foo.jar
