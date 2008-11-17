@@ -20,14 +20,14 @@ class AroundDEFeaturizer implements Featurizer {
     Tree chTree = validSent.chParsedTrees.get(0);
     Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
     int deIdxInPhrase = deIdxInSent-chNPrange.first;
-    Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInPhrasex);
+    Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInPhrase);
     Sentence<TaggedWord> npYield = maskedChNPTree.taggedYield();
 
     // make feature list
     List<String> featureList = new ArrayList<String>();
     StringBuilder sb = new StringBuilder();
     if (dePos) {
-      sb.clear();
+      sb = new StringBuilder();
       String deTag = npYield.get(deIdxInPhrase).tag();
       sb.append("dePos:").append(deTag);
       System.err.println("adding\t"+sb.toString());
@@ -47,6 +47,8 @@ class AroundDEFeaturizer implements Featurizer {
         }
       }
     }
+
+    return featureList; 
   }
 }
 
