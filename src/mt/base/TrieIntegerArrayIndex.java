@@ -6,7 +6,7 @@ import edu.stanford.nlp.util.IString;
 
 /**
  * Implementation of IntegerArrayIndex as a trie. This trie implementation 
- * is optimized for space, by instanciating only one object: a hash table. 
+ * is optimized for space, by instanciating only one object: an open-address hash table. 
  * Keys stored into the trie are arrays of int primitive types.
  *
  * @author Michel Galley
@@ -19,10 +19,9 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   private static final int IDX_NOSUCCESSOR = Integer.MIN_VALUE;
 
   private final Long2IntOpenHashMap map; 
-  // maps transitions to state. Each transition is a long, whose 32 first bits 
+  // maps transitions to next state. Each transition is a long, whose 32 first bits 
   // identify an input symbol, and 32 last bits identify the current state.
 
-  //private int lastTransitionalStateIdx = IDX_ROOT, lastAcceptingStateIdx = 0;
   private int lastStateIdx = IDX_ROOT;
 
   TrieIntegerArrayIndex() {
@@ -46,8 +45,8 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
 
   private long getTransition(int curState, int input) {
     // Perform some bit manipulations because Long's hashCode is not particularly clever.
-    int input2 = supplementalHash(input); // Integer.rotateLeft(input,13);
-    int curState2 = supplementalHash(curState); // Integer.rotateRight(curState,17);
+    int input2 = supplementalHash(input);
+    int curState2 = supplementalHash(curState);
     return (((long)input2) << 32) | (((long)curState2) & 0xffffffffL);
   }
 

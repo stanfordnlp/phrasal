@@ -33,7 +33,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
   //   mem used: 3514 MiB
   //   loading time: 1035.696 s
   //
-  // If loading is deemed to slow, either switch back to ARPALanguageModel
+  // If loading is deemed too slow, either switch back to ARPALanguageModel
   // or increase TrieIntegerArrayIndex.GROWTH_FACTOR.
 
   // TODO: enable quantization in this class

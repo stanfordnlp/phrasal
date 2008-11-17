@@ -230,7 +230,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     double bow = bows[prefixInts.length-1][index];
 
     if (bow == bow) return true;
-    System.err.println("Warning: prefix of given ngram not included!");
+    //System.err.println("Warning: prefix of given ngram not included!");
     return false;
   }
 

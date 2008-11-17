@@ -11,10 +11,26 @@ import java.util.zip.GZIPInputStream;
 /**
  * Loads quantized ARPA language models generated using IRSTLM's quantize-lm.
  * 
- * @author Daniel Cer
  * @author Michel Galley (quantization)
+ * @author Daniel Cer (code taken from ARPALanguageModel)
  */
 public class QuantizedARPALanguageModel extends ARPALanguageModel {
+
+  // Performance comparison with ARPALanguageModel:
+
+  // ARPA header:
+  // ngram 1=20311
+  // ngram 2=11123350
+  // ngram 3=30111902
+  // ngram 4=34683198
+  // ngram 5=42025894
+
+  // ARPALanguageModel:
+  //   mem used: 6436 MiB
+  //   loading time: 481.885 s
+  // QuantizedARPALanguageModel:
+  //   mem used: 5092 MiB
+  //   loading time: 369.446 s
 
   private static float log10LogConstant = (float)Math.log(10);
   private float[][] probClusters, bowClusters;
