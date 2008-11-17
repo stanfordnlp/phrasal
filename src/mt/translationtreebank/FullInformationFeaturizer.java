@@ -57,9 +57,9 @@ class FullInformationFeaturizer implements Featurizer {
     // (1) make feature list
 
     Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInSent-chNPrange.first);
-    chNPTree.pennPrint(System.out);
-    maskedChNPTree.pennPrint(System.out);
-    System.out.println("--------------------------");
+    //chNPTree.pennPrint(System.out);
+    //maskedChNPTree.pennPrint(System.out);
+    //System.out.println("--------------------------");
 
     List<String> featureList = new ArrayList<String>();
     if (ExperimentUtils.hasDEC(maskedChNPTree, chTree, deIdxInSent)) {

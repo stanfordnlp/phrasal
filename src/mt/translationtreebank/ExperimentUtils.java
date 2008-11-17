@@ -39,13 +39,16 @@ public class ExperimentUtils {
 
 
   public static Tree maskIrrelevantDEs(Tree tree, int deInTree) {
-    tree = tree.deepCopy();
+    Tree newTree = tree.deeperCopy();
 
-    List<Tree> leaves = tree.getLeaves();
+    List<Tree> leaves = newTree.getLeaves();
 
     List<HasWord> words = new ArrayList<HasWord>();
     //for (Tree leaf : leaves) {
     if (!"的".equals(leaves.get(deInTree).value())) {
+      newTree.pennPrint(System.err);
+      System.err.println("deInTree = "+deInTree);
+      System.err.println("leaves.get(deInTree).value()="+leaves.get(deInTree).value());
       throw new RuntimeException("deInTree should be a DE");
     }
 
@@ -63,7 +66,7 @@ public class ExperimentUtils {
     for (int i = 0; i < leaves.size(); i++) {
       leaves.get(i).setValue(words.get(i).word());
     }
-    return tree;
+    return newTree;
   }
   
   static boolean hasVApattern(Tree t) {
