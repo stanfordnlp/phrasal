@@ -86,10 +86,10 @@ Evaluate on Other set:
 ==================Confusion Matrix==================
 ->real	multi-DEs	noB	other
 A'sB	0	0	17	
-AB	23	39	58	
+AB	22	39	58	
 AprepB	0	0	4	
 BofA	45	8	91	
-BprepA	34	17	56	
+BprepA	35	17	56	
 relc	71	71	130	
 ----------------------------------------------------
 total	173	135	356	
