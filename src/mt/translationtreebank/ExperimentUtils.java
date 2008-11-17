@@ -77,7 +77,7 @@ public class ExperimentUtils {
     return adjpdegM.find();
   }
   
-  static boolean hasQPpattern(Tree t, int deIdxInTree) {
+  static boolean hasQPpattern(Tree t) {
     TreeMatcher qpdegM = qpdeg.matcher(t);
     return qpdegM.find();
   }

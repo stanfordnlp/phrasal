@@ -89,7 +89,7 @@ class FullInformationFeaturizer implements Featurizer {
       chNPTree.pennPrint(System.err);
     }
     */
-    deIdx = deIdxInSent - chNPrange.first;
+    int deIdx = deIdxInSent - chNPrange.first;
     
     if (ngram) {
       List<TaggedWord> beforeDE = new ArrayList<TaggedWord>();
