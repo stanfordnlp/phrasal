@@ -78,12 +78,12 @@ public class ExperimentUtils {
     }
   }
 
-  static boolean hasDEC(Tree t) {
+  private static boolean hasDEC(Tree t) {
     TreeMatcher decM = dec.matcher(t);
     return decM.find();
   }
 
-  static boolean hasDEG(Tree t) {
+  private static boolean hasDEG(Tree t) {
     TreeMatcher degM = deg.matcher(t);
     return degM.find();
   }

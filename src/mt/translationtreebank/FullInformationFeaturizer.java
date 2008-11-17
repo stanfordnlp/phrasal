@@ -11,8 +11,6 @@ import java.io.*;
 
 class FullInformationFeaturizer implements Featurizer {
   public List<String> extractFeatures(int deIdxInSent, TreePair validSent, Properties props) {
-    String reducedCatStr= props.getProperty("useReducedCategory", "true");
-    String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
     String twofeatStr   = props.getProperty("2feat", "false");
     String revisedStr   = props.getProperty("revised", "false");
     String ngramStr     = props.getProperty("ngram", "false");
@@ -23,8 +21,6 @@ class FullInformationFeaturizer implements Featurizer {
     String pathStr      = props.getProperty("path", "false");
     String percentageStr= props.getProperty("percentage", "false");
 
-    Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
-    Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
     Boolean ngram = Boolean.parseBoolean(ngramStr);
@@ -34,6 +30,20 @@ class FullInformationFeaturizer implements Featurizer {
     Boolean pword = Boolean.parseBoolean(pwordStr);
     Boolean path = Boolean.parseBoolean(pathStr);
     Boolean percentage = Boolean.parseBoolean(percentageStr);
+
+    // each level
+
+    /*
+    twofeat = twofeat || revised || ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
+    revised = revised || ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
+    ngram   = ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
+    first   = first || lastcharN || lastcharNgram || pword || path || percentage;
+    lastcharN   = lastcharN || lastcharNgram || pword || path || percentage;
+    lastcharNgram = lastcharNgram || pword || path || percentage;
+    pword   = pword || path || percentage;
+    path = path || percentage;
+    percentage = percentage;
+    */
 
     Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     String label = validSent.NPwithDEs_categories.get(deIdxInSent);
@@ -46,13 +56,13 @@ class FullInformationFeaturizer implements Featurizer {
 
     // (1) make feature list
     List<String> featureList = new ArrayList<String>();
-    if (ExperimentUtils.hasDEC(chNPTree)) {
+    if (ExperimentUtils.hasDEC(chNPTree, chTree, deIdxInSent)) {
       if (twofeat) featureList.add("DEC");
       if (revised)
         if (ExperimentUtils.hasVApattern(chNPTree))
           featureList.add("hasVA");
     }
-    if (ExperimentUtils.hasDEG(chNPTree)) {
+    if (ExperimentUtils.hasDEG(chNPTree, chTree, deIdxInSent)) {
       if (twofeat) featureList.add("DEG");
       if (revised) {
         if (ExperimentUtils.hasADJPpattern(chNPTree))

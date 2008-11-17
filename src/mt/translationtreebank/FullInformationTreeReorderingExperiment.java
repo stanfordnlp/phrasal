@@ -39,8 +39,8 @@ class FullInformationTreeReorderingExperiment {
 
         int deCount = ExperimentUtils.countDE(chNPTree);
         
-        boolean isDEC = ExperimentUtils.hasDEC(chNPTree);
-        boolean isDEG = ExperimentUtils.hasDEG(chNPTree);
+        boolean isDEC = ExperimentUtils.hasDEC(chNPTree, chTree, deIdxInSent);
+        boolean isDEG = ExperimentUtils.hasDEG(chNPTree, chTree, deIdxInSent);
 
         if (deCount > 1) {
           deType = ">1DE";
