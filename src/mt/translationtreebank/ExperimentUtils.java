@@ -13,11 +13,11 @@ public class ExperimentUtils {
   static TreePattern dec = TreePattern.compile("DEC < 的");
   static TreePattern deg = TreePattern.compile("DEG < 的");
   static TreePattern de = TreePattern.compile("DEG|DEC < 的");
-  static TreePattern va1 = TreePattern.compile("CP <, (IP <- (VP <: VA)) <- DEC");
-  static TreePattern va2 = TreePattern.compile("CP <, (IP <- (VP <, (ADVP $+ (VP <: VA)))) <- DEC");
-  static TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
-  static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
-  static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
+  static TreePattern va1 = TreePattern.compile("CP <, (IP <- (VP <: VA)) <- (DEC < 的)");
+  static TreePattern va2 = TreePattern.compile("CP <, (IP <- (VP <, (ADVP $+ (VP <: VA)))) <- (DEC < 的)");
+  static TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- (DEG < 的)");
+  static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- (DEG < 的)");
+  static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- (DEG < 的)");
   
   static int getDEIndex(Tree t) {
     Tree[] children = t.children();
@@ -36,6 +36,35 @@ public class ExperimentUtils {
     //System.err.println("DEIDX="+deIdx+"\t"+t.toString());
     return deIdx;
   }
+
+
+  public static Tree maskIrrelevantDEs(Tree tree, int deInTree) {
+    tree = tree.deepCopy();
+
+    List<Tree> leaves = tree.getLeaves();
+
+    List<HasWord> words = new ArrayList<HasWord>();
+    //for (Tree leaf : leaves) {
+    if (!"的".equals(leaves.get(deInTree).value())) {
+      throw new RuntimeException("deInTree should be a DE");
+    }
+
+    for (int idx = 0; idx < leaves.size(); idx++) {
+      if (idx==deInTree) continue;
+      Tree leaf = leaves.get(idx);
+
+      if ("的".equals(leaf.value())) {
+        words.add(new Word("X"));
+      } else {
+        words.add(new Word(leaf.value()));
+      }
+    }
+    
+    for (int i = 0; i < leaves.size(); i++) {
+      leaves.get(i).setValue(words.get(i).word());
+    }
+    return tree;
+  }
   
   static boolean hasVApattern(Tree t) {
     TreeMatcher va1M = va1.matcher(t);
@@ -48,7 +77,7 @@ public class ExperimentUtils {
     return adjpdegM.find();
   }
   
-  static boolean hasQPpattern(Tree t) {
+  static boolean hasQPpattern(Tree t, int deIdxInTree) {
     TreeMatcher qpdegM = qpdeg.matcher(t);
     return qpdegM.find();
   }
@@ -412,4 +441,7 @@ public class ExperimentUtils {
     
     resultSummary(cc);
   }
+}
+
+class MaskIrrelevantDETreeTransformer {
 }

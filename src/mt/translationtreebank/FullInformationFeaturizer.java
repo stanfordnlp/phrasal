@@ -55,32 +55,40 @@ class FullInformationFeaturizer implements Featurizer {
     }
 
     // (1) make feature list
+
+    Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInSent-chNPrange.first);
+    chNPTree.pennPrint(System.out);
+    maskedChNPTree.pennPrint(System.out);
+    System.out.println("--------------------------");
+
     List<String> featureList = new ArrayList<String>();
-    if (ExperimentUtils.hasDEC(chNPTree, chTree, deIdxInSent)) {
+    if (ExperimentUtils.hasDEC(maskedChNPTree, chTree, deIdxInSent)) {
       if (twofeat) featureList.add("DEC");
       if (revised)
-        if (ExperimentUtils.hasVApattern(chNPTree))
+        if (ExperimentUtils.hasVApattern(maskedChNPTree))
           featureList.add("hasVA");
     }
-    if (ExperimentUtils.hasDEG(chNPTree, chTree, deIdxInSent)) {
+    if (ExperimentUtils.hasDEG(maskedChNPTree, chTree, deIdxInSent)) {
       if (twofeat) featureList.add("DEG");
       if (revised) {
-        if (ExperimentUtils.hasADJPpattern(chNPTree))
+        if (ExperimentUtils.hasADJPpattern(maskedChNPTree))
           featureList.add("hasADJP");
-        if (ExperimentUtils.hasQPpattern(chNPTree))
+        if (ExperimentUtils.hasQPpattern(maskedChNPTree))
           featureList.add("hasQP");
-        if (ExperimentUtils.hasNPPNpattern(chNPTree))
+        if (ExperimentUtils.hasNPPNpattern(maskedChNPTree))
           featureList.add("hasNPPN");
       }
     }
 
     // get deIndices
     Sentence<TaggedWord> sentence = chNPTree.taggedYield();
+    /*
     int deIdx = ExperimentUtils.getDEIndex(chNPTree);
     if (deIdx == -1) {
       System.err.println("no DE");
       chNPTree.pennPrint(System.err);
     }
+    */
     deIdx = deIdxInSent - chNPrange.first;
     
     if (ngram) {
