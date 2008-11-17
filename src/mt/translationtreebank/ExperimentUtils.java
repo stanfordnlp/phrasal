@@ -50,10 +50,10 @@ public class ExperimentUtils {
     }
 
     for (int idx = 0; idx < leaves.size(); idx++) {
-      if (idx==deInTree) continue;
+      //if (idx==deInTree) continue;
       Tree leaf = leaves.get(idx);
 
-      if ("的".equals(leaf.value())) {
+      if (idx!=deInTree && "的".equals(leaf.value())) {
         words.add(new Word("X"));
       } else {
         words.add(new Word(leaf.value()));
