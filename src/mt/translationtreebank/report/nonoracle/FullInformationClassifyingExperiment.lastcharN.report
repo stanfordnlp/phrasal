@@ -13,16 +13,16 @@ Evaluate on Training set:
 A'sB	31	3	0	5	0	
 AB	3	336	6	20	15	
 AprepB	1	1	12	0	1	
-BprepA	25	85	12	803	64	
-relc	0	27	3	49	334	
+BprepA	25	85	12	802	63	
+relc	0	27	3	50	335	
 ----------------------------------------------------
 total	60	452	33	877	414	
 ====================================================
 
 #[ A 's B ] = 60 |	Acc:	51.67
-#[ B prep A ] = 877 |	Acc:	91.56
+#[ B prep A ] = 877 |	Acc:	91.45
 #[ A prep B ] = 33 |	Acc:	36.36
-#[ relative clause ] = 414 |	Acc:	80.68
+#[ relative clause ] = 414 |	Acc:	80.92
 #[ A B ] = 452 |	Acc:	74.34
 #total = 1836 |	Acc:	82.570806
 
@@ -34,56 +34,56 @@ Evaluate on Dev set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
 A'sB	7	1	0	2	0	
-AB	1	81	2	15	7	
+AB	1	82	2	16	7	
 AprepB	0	2	0	0	0	
-BprepA	7	15	5	182	29	
+BprepA	7	14	5	181	29	
 relc	0	13	0	20	67	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
 
 #[ A 's B ] = 15 |	Acc:	46.67
-#[ B prep A ] = 219 |	Acc:	83.11
+#[ B prep A ] = 219 |	Acc:	82.65
 #[ A prep B ] = 7 |	Acc:	0.00
 #[ relative clause ] = 103 |	Acc:	65.05
-#[ A B ] = 112 |	Acc:	72.32
+#[ A B ] = 112 |	Acc:	73.21
 #total = 456 |	Acc:	73.903509
 
-#[ swapped ] = 322 |	Acc:	92.55
-#[ ordered ] = 134 |	Acc:	70.15
+#[ swapped ] = 322 |	Acc:	92.24
+#[ ordered ] = 134 |	Acc:	70.90
 #total = 456 |	Acc:	85.964912
 
 Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
 A'sB	6	0	0	1	0	
-AB	1	79	1	11	3	
+AB	1	79	1	10	3	
 AprepB	0	0	1	0	1	
-BprepA	8	20	5	191	30	
+BprepA	8	20	5	192	30	
 relc	0	13	0	16	69	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
 
 #[ A 's B ] = 15 |	Acc:	40.00
-#[ B prep A ] = 219 |	Acc:	87.21
+#[ B prep A ] = 219 |	Acc:	87.67
 #[ A prep B ] = 7 |	Acc:	14.29
 #[ relative clause ] = 103 |	Acc:	66.99
 #[ A B ] = 112 |	Acc:	70.54
-#total = 456 |	Acc:	75.877193
+#total = 456 |	Acc:	76.096491
 
-#[ swapped ] = 322 |	Acc:	95.03
+#[ swapped ] = 322 |	Acc:	95.34
 #[ ordered ] = 134 |	Acc:	65.67
-#total = 456 |	Acc:	86.403509
+#total = 456 |	Acc:	86.622807
 
 Evaluate on Other set:
 ==================Confusion Matrix==================
 ->real	multi-DEs	noB	other
 A'sB	0	0	17	
-AB	14	51	51	
+AB	15	51	51	
 AprepB	0	0	5	
-BprepA	91	51	184	
-relc	68	33	99	
+BprepA	89	51	184	
+relc	69	33	99	
 ----------------------------------------------------
 total	173	135	356	
 ====================================================
