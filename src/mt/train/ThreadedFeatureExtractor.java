@@ -280,8 +280,6 @@ public class ThreadedFeatureExtractor {
    */
   public void extractFromAlignedData(String fCorpus, String eCorpus, String aCorpus) {
 
-    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(ADD_BOUNDARY_MARKERS_OPT,"false"));
-
     if(!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
@@ -356,7 +354,7 @@ public class ThreadedFeatureExtractor {
             System.err.printf("a(%d): %s\n",lineNb,aLine);
           }
           SymmetricalWordAlignment sent = new SymmetricalWordAlignment();
-          sent.init(lineNb,fLine,eLine,aLine,false,false,addBoundaryMarkers);
+          sent.init(lineNb,fLine,eLine,aLine,false,false);
           try { sentQueue.put(sent); } catch(InterruptedException e) {}
         }
 

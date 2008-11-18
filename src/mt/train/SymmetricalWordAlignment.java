@@ -3,6 +3,7 @@ package mt.train;
 import java.util.Set;
 import java.util.TreeSet;
 import java.io.*;
+import java.util.*;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
@@ -29,9 +30,16 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   public static final String VDEBUG_PROPERTY = "VerboseDebugWordAlignment";
   public static final boolean VERBOSE_DEBUG = Boolean.parseBoolean(System.getProperty(VDEBUG_PROPERTY, "false"));
 
-  public SymmetricalWordAlignment() {
-    if(DEBUG)
-      System.err.println("SymmetricalWordAlignment: new instance.");
+  boolean addBoundaryMarkers = false;
+  boolean unalignedBoundaryMarkers = false;
+
+  public SymmetricalWordAlignment() {}
+
+  public SymmetricalWordAlignment(Properties prop) {
+    addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.ADD_BOUNDARY_MARKERS_OPT,"false"));
+    unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
+    //if(DEBUG)
+    //  System.err.println("SymmetricalWordAlignment: new instance.");
   }
 
   SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
@@ -61,10 +69,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(fStr,eStr,aStr);
   }
 
-  public void init(Integer id, String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed, boolean addBoundaryMarkers)
+  public void init(Integer id, String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed)
      throws IOException {
     this.id = id;
-    init(fStr,eStr,aStr, reverse, oneIndexed, addBoundaryMarkers);
+    init(fStr,eStr,aStr, reverse, oneIndexed);
   }
 
 
@@ -76,15 +84,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(fStr, eStr, aStr, reverse, false);
   }
 
-  public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed) throws IOException {
-    init(fStr, eStr, aStr, reverse, oneIndexed, false); 
-  }
-
-  public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed, boolean addBoundaryTokens)
+  public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed)
        throws IOException {
     if(VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
-    if(addBoundaryTokens) {
+    if(addBoundaryMarkers) {
       fStr = new StringBuffer("<s> ").append(fStr).append(" </s>").toString();
       eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
     }
@@ -103,7 +107,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
         int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);
         int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
         if(oneIndexed) { --fpos; --epos; }
-        if(addBoundaryTokens) { ++fpos; ++epos; }
+        if(addBoundaryMarkers) { ++fpos; ++epos; }
         if(0 > fpos || fpos >= f.size())
           throw new IOException("f has index out of bounds (fsize="+f.size()+",esize="+e.size()+") : "+fpos);
         if(0 > epos || epos >= e.size())
@@ -120,7 +124,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
         System.err.println("Warning: bad alignment token: "+al);
       }
     }
-    if(addBoundaryTokens) {
+    if(addBoundaryMarkers && !unalignedBoundaryMarkers) {
       int lastf = f2e.length-1;
       int laste = e2f.length-1;
       f2e[0].add(0);
