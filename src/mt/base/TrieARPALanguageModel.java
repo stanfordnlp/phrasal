@@ -41,14 +41,15 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
   protected TrieIntegerArrayIndex table;
   float[] mprobs;
   float[] mbows;
-  int[] ngramCounts;
+  int lmOrder;
 
   protected TrieARPALanguageModel(String filename) throws IOException {
     super(filename);
-    System.err.println("Using TrieARPALAnguageModel.");
+    System.err.printf("Using TrieARPALAnguageModel (order %d)\n",this.lmOrder);
   }
 
   protected void init(String filename) throws IOException {
+    System.err.println("Init: "+this.lmOrder);
     File f = new File(filename);
 
     Runtime rt = Runtime.getRuntime();
@@ -64,9 +65,9 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
     while (!readLineNonNull(reader).startsWith("\\data\\"));
 
     // read in ngram counts
-    ngramCounts = new int[MAX_GRAM];
+    int[] ngramCounts = new int[MAX_GRAM];
     String inline;
-    int maxOrder = 0;
+    lmOrder = 0;
     while ((inline = readLineNonNull(reader)).startsWith("ngram")) {
       inline = inline.replaceFirst("ngram\\s+", "");
       String[] fields = inline.split("=");
@@ -75,26 +76,27 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
         throw new RuntimeException(String.format("Max n-gram order: %d\n", MAX_GRAM));
       }
       ngramCounts[ngramOrder-1] = Integer.parseInt(fields[1].replaceFirst("[^0-9].*$", ""));
-      if (maxOrder < ngramOrder) maxOrder = ngramOrder;
+      if (lmOrder < ngramOrder) lmOrder = ngramOrder;
     }
 
     int probTableSz = 0;
     int bowTableSz = 0;
-    for (int i = 0; i < maxOrder; i++) {
-      probTableSz += ngramCounts[i];
-      if (i+1 < maxOrder)
-        bowTableSz += ngramCounts[i];
+    for (int i = 0; i < lmOrder; i++) {
+      int tableSz = Integer.highestOneBit((int)(ngramCounts[i]*LOAD_MULTIPLIER))<<1;
+      probTableSz += tableSz; // ngramCounts[i];
+      if (i+1 < lmOrder)
+        bowTableSz += tableSz; // ngramCounts[i];
     }
-    probTableSz = Integer.highestOneBit((int)(probTableSz*LOAD_MULTIPLIER))<<1;
-    bowTableSz = Integer.highestOneBit((int)(bowTableSz*LOAD_MULTIPLIER))<<1;
+    //probTableSz = Integer.highestOneBit((int)(probTableSz*LOAD_MULTIPLIER))<<1;
+    //bowTableSz = Integer.highestOneBit((int)(bowTableSz*LOAD_MULTIPLIER))<<1;
     mprobs = new float[probTableSz];
     mbows = new float[bowTableSz];
 
     float log10LogConstant = (float)Math.log(10);
 
     // read in the n-gram tables one by one
-    table = new TrieIntegerArrayIndex(ngramCounts[maxOrder-1]/4);
-    for (int order = 0; order < maxOrder; order++) {
+    table = new TrieIntegerArrayIndex(ngramCounts[lmOrder-1]/4);
+    for (int order = 0; order < lmOrder; order++) {
       System.err.printf("Reading %d %d-grams...\n", ngramCounts[order], order+1);
       String nextOrderHeader = String.format("\\%d-grams:", order+1);
       IString[] ngram = new IString[order+1];
@@ -122,7 +124,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
                 Float.parseFloat(tok.nextToken()) * log10LogConstant : Float.NaN);
         int index = table.insertIntoIndex(ngramInts);
         mprobs[index] = prob;
-        if(order+1 < maxOrder) mbows[index] = bow;
+        if(order+1 < lmOrder) mbows[index] = bow;
       }
     }
     System.err.println("Rehashing... ");
@@ -134,7 +136,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
     System.gc();
     long postLMLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
-    System.err.printf("Done loading arpa lm: %s (order: %d) (mem used: %d MiB time: %.3f s)\n", filename, maxOrder,
+    System.err.printf("Done loading arpa lm: %s (order: %d) (mem used: %d MiB time: %.3f s)\n", filename, lmOrder,
             (postLMLoadMemUsed - preLMLoadMemUsed)/(1024*1024), loadTimeMillis/1000.0);
     reader.close();
   }
@@ -177,7 +179,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
     int[] prefixInts = Sequences.toIntArray(prefix);
     index = table.getIndex(prefixInts);
     double bow = 0;
-    if (index >= 0 && index < mbows.length) bow = mbows[index];
+    if (index >= 0) bow = mbows[index];
     if (bow != bow) bow = 0.0; // treat NaNs as bow that are not found at all
     double p = bow + scoreR(sequence.subsequence(1, ngramInts.length));
     if(verbose)
@@ -188,7 +190,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
   public double score(Sequence<IString> sequence) {
     Sequence<IString> ngram;
     int sequenceSz = sequence.size();
-    int maxOrder   = (ngramCounts.length < sequenceSz ? ngramCounts.length : sequenceSz);
+    int maxOrder = (lmOrder < sequenceSz ? lmOrder : sequenceSz);
 
     if (sequenceSz == maxOrder) {
       ngram = sequence;
@@ -203,18 +205,17 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
   }
 
   public boolean releventPrefix(Sequence<IString> prefix) {
-    if (prefix.size() > ngramCounts.length-1) return false;
+    if (prefix.size() > lmOrder-1) return false;
     int[] prefixInts = Sequences.toIntArray(prefix);
     int index = table.getIndex(prefixInts);
     if (index < 0 || index >= mbows.length) return false;
     double bow = mbows[index];
     if (bow == bow) return true;
-    //System.err.println("Warning: prefix of given ngram not included!");
     return false;
   }
 
   public int order() {
-    return ngramCounts.length;
+    return this.lmOrder;
   }
 
   static public void main(String[] args) throws Exception {
