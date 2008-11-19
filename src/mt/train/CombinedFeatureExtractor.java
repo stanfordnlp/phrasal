@@ -43,6 +43,7 @@ public class CombinedFeatureExtractor {
   static public final String MAX_FERTILITY_OPT = "maxFertility";
   static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
   static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
+  static public final String LOWERCASE_OPT = "lowercase";
 
   // phrase translation probs:
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -80,7 +81,7 @@ public class CombinedFeatureExtractor {
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
-       ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT
+       ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT
      }));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -109,7 +110,7 @@ public class CombinedFeatureExtractor {
   private Properties prop;
   private int startAtLine = -1, endAtLine = -1, numSplits = 0;
   private String fCorpus, eCorpus, align, outputFile;
-  private boolean filterFromDev = false, printFeatureNames = true, noAlign;
+  private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
   Sequence<IString>[] fPhrases;
 
   // Number of passes over training data needed:
@@ -190,6 +191,7 @@ public class CombinedFeatureExtractor {
       endAtLine = numLines;
     }
     noAlign = Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
+    lowercase = Boolean.parseBoolean(prop.getProperty(LOWERCASE_OPT,"false"));
     outputFile = prop.getProperty(OUTPUT_FILE_OPT);
   }
 
@@ -367,6 +369,10 @@ public class CombinedFeatureExtractor {
             System.err.printf("e(%d): %s\n",lineNb,eLine);
             System.err.printf("f(%d): %s\n",lineNb,fLine);
             System.err.printf("a(%d): %s\n",lineNb,aLine);
+          }
+          if(lowercase) {
+            fLine = fLine.toLowerCase();
+            eLine = eLine.toLowerCase();
           }
           sent.init(lineNb,fLine,eLine,aLine,false,false);
           extractPhrasalFeatures(sent);
