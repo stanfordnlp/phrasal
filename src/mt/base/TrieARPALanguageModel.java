@@ -29,9 +29,11 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
   // ARPALanguageModel:
   //   mem used: 6436 MiB
   //   loading time: 481.885 s
+  //   running time: 2707 s
   // TrieARPALanguageModel:
   //   mem used: 3514 MiB
   //   loading time: 1035.696 s
+  //   running time: 2904 s
   //
   // If loading is deemed too slow, either switch back to ARPALanguageModel
   // or increase TrieIntegerArrayIndex.GROWTH_FACTOR.
@@ -177,6 +179,9 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
     }
     Sequence<IString> prefix = sequence.subsequence(0, ngramInts.length-1);
     int[] prefixInts = Sequences.toIntArray(prefix);
+    //if(prefixInts[prefixInts.length-1] == getEndToken().id) {
+    //  return Double.NEGATIVE_INFINITY; // end token not in final position
+    //}
     index = table.getIndex(prefixInts);
     double bow = 0;
     if (index >= 0) bow = mbows[index];
@@ -188,6 +193,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
   }
 
   public double score(Sequence<IString> sequence) {
+    if(isBoundaryWord(sequence)) return 0.0;
     Sequence<IString> ngram;
     int sequenceSz = sequence.size();
     int maxOrder = (lmOrder < sequenceSz ? lmOrder : sequenceSz);

@@ -32,6 +32,13 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
         alGrid.printAlTempInGrid("line: "+sent.getId(),sent,null,System.err);
     }
 
+    // Sentence boundaries:
+    if(extractBoundaryPhrases) {
+      // make sure we can always translate <s> as <s> and </s> as </s>:
+      extractPhrase(sent,0,0,0,0);
+      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1);
+    }
+
     // For each English phrase:
     for(int e1=0; e1<esize; ++e1) {
 			int f1=Integer.MAX_VALUE;

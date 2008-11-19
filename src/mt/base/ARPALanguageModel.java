@@ -201,7 +201,27 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     return p;
   }
 
+  /**
+   * Determines whether we are computing p( <s> | <s> ... ) or p( w_n=</s> | w_n-1=</s> ..),
+   * in which case log-probability is zero. This function is only useful if the translation
+   * hypothesis contains explicit <s> and </s>, and always returns false otherwise.
+   */
+  boolean isBoundaryWord(Sequence<IString> sequence) {
+    if(sequence.size() == 2 && sequence.get(0).equals(getStartToken()) && sequence.get(1).equals(getStartToken())) {
+      return true;
+    }
+    if(sequence.size() > 1) {
+      int last = sequence.size()-1;
+      IString endTok = getEndToken();
+      if(sequence.get(last).equals(endTok) && sequence.get(last-1).equals(endTok)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public double score(Sequence<IString> sequence) {
+    if(isBoundaryWord(sequence)) return 0.0;
     Sequence<IString> ngram;
     int sequenceSz = sequence.size();
     int maxOrder   = (probs.length < sequenceSz ? probs.length : sequenceSz);

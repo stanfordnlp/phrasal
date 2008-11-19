@@ -11,7 +11,7 @@ import edu.stanford.nlp.util.IString;
  * 
  * @author danielcer
  *
- * @param <T>
+ * @param <TK>
  */
 public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, IsolatedPhraseFeaturizer<TK, String> {
 	public static final String FEATURE_PREFIX = "LM:";

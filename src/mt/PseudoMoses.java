@@ -12,6 +12,7 @@ import mt.decoder.inferer.*;
 import mt.decoder.inferer.impl.MultiBeamDecoder;
 import mt.decoder.recomb.*;
 import mt.decoder.util.*;
+import mt.decoder.efeat.SentenceBoundaryFeaturizer;
 import mt.metrics.*;
 import mt.tune.*;
 
@@ -113,6 +114,7 @@ public class PseudoMoses {
 	  IDEALIZED_TARGETS.put("LexR::swapWithNext", 0.0);
 	  IDEALIZED_TARGETS.put("LexR::swapWithPrevious", 0.0);
 	  IDEALIZED_TARGETS.put("UnknownWord", 0.0);
+    IDEALIZED_TARGETS.put("SentenceBoundary", 0.0);
 	}
 
 	static public final String EVALUE_LEARNING = "evalue";
@@ -514,6 +516,7 @@ public class PseudoMoses {
 			weightConfig.add(makePair(WordPenaltyFeaturizer.FEATURE_NAME, config.get(
 					WORD_PENALTY_WT_OPT).get(0)));
 			weightConfig.add(makePair(UnknownWordFeaturizer.FEATURE_NAME, "" + 1.0));
+      weightConfig.add(makePair(SentenceBoundaryFeaturizer.FEATURE_NAME, "" + 1.0));
 
 			List<String> tmodelWtsStr = config.get(TRANSLATION_MODEL_WT_OPT);
 			if (tmodelWtsStr.size() == 5) {

@@ -209,6 +209,10 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
     return true;
   }
 
+  public int order() {
+    return qprobs.length;
+  }
+  
   static public void main(String[] args) throws Exception {
     if (args.length != 3) {
       System.err.printf("Usage:\n\tjava ...ARPALanguageModel (arpa model) (file to score) (quantized?)\n");

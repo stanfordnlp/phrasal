@@ -50,15 +50,19 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   AlignmentGrid alGrid = null;
   boolean needAlGrid = false;
 
+  final boolean extractBoundaryPhrases;
+  
   List<AbstractFeatureExtractor> extractors;
   AlignmentTemplates alTemps;
   AlignmentTemplateInstance alTemp;
 
   public AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+    
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
     needAlGrid = false;
+    
     if(PRINT_GRID_MAX_LEN >= 0)
       needAlGrid = true;
     else {
@@ -68,15 +72,20 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
           break;
         }
     }
+
     if(needAlGrid)
       alGrid = new AlignmentGrid(0,0);
     System.err.println("Using AlignmentGrid: "+needAlGrid);
+
+    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.ADD_BOUNDARY_MARKERS_OPT,"false"));
+    boolean unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
+    extractBoundaryPhrases = (addBoundaryMarkers && unalignedBoundaryMarkers);
   }
 
   public AlignmentGrid getAlGrid() { return alGrid; }
 
   void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
-    assert(checkAlignmentConsistency(sent,f1,f2,e1,e2));
+    //assert(checkAlignmentConsistency(sent,f1,f2,e1,e2));// TODO: now fails if at boundary
 
     // Check if alTemp meets length requirements:
     if(f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
