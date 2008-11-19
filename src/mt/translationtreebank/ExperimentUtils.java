@@ -427,6 +427,22 @@ public class ExperimentUtils {
     return normcat;
   }
 
+  public static boolean is5class(String cat) {
+    if ("A 's B".equals(cat) ||
+        "A B".equals(cat) ||
+        "A prep B".equals(cat) ||
+        "B prep A".equals(cat) ||
+        "relative clause".equals(cat)) {
+      return true;
+    }
+    if ("no B".equals(cat) ||
+        "multi-DEs".equals(cat) ||
+        "other".equals(cat)) {
+      return false;
+    }
+    throw new RuntimeException("the category ["+cat+"] is not valid in 'is5class'");
+  }
+
 
   static void resultCoarseSummary(TwoDimensionalCounter<String,String> confusionMatrix) {
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String> ();

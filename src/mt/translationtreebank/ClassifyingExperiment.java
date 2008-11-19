@@ -18,11 +18,6 @@ class ClassifyingExperiment {
     return lines;
   }
 
-  public static List<String> extractFeatures(int deIdxInSent, TreePair validSent, Properties props) {
-    throw new RuntimeException("Not implemented");
-    //return new ArrayList<String>();
-  }
-
   public static void main(String args[]) throws Exception {
     Properties props = StringUtils.argsToProperties(args);
 
