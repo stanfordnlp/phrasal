@@ -1,0 +1,8 @@
+swapped	swapped	1886.0
+swapped	ordered	49.0
+ordered	swapped	618.0
+ordered	ordered	195.0
+
+#[ swapped ] = 1935 |	Acc:	97.47
+#[ ordered ] = 813 |	Acc:	23.99
+#total = 2748 |	Acc:	75.727802
