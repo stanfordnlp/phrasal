@@ -10,14 +10,6 @@ import java.io.*;
 import java.util.*;
 
 class ClassifyingExperiment {
-  private static String[] readTrainDevTest() {
-    //String trainDevTestFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\TrainDevTest.txt";
-    String trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
-    String content = StringUtils.slurpFileNoExceptions(trainDevTestFile);
-    String[] lines = content.split("\\n");
-    return lines;
-  }
-
   public static void main(String args[]) throws Exception {
     Properties props = StringUtils.argsToProperties(args);
 
@@ -26,6 +18,7 @@ class ClassifyingExperiment {
     Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
 
+    String writeClassifier = props.getProperty("writeClassifier", null);
 
     String featurizerStr= props.getProperty("featurizer", "mt.translationtreebank.FullInformationFeaturizer");
     Featurizer featurizer = (Featurizer)Class.forName(featurizerStr).newInstance();
@@ -33,7 +26,7 @@ class ClassifyingExperiment {
     List<TreePair> treepairs;
     treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
-    String[] trainDevTest = readTrainDevTest();
+    String[] trainDevTest = ExperimentUtils.readTrainDevTest();
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
 
@@ -95,6 +88,12 @@ class ClassifyingExperiment {
     LinearClassifierFactory<String, String> factory = new LinearClassifierFactory<String, String>();
     LinearClassifier<String, String> classifier 
       = (LinearClassifier<String, String>)factory.trainClassifier(trainDataset);
+
+    if (writeClassifier != null) {
+      LinearClassifier.writeClassifier(classifier, writeClassifier);
+      classifier = LinearClassifier.readClassifier(writeClassifier);
+      System.err.println("Classifier Written and Read");
+    }
 
 
     String allWeights = classifier.toAllWeightsString();

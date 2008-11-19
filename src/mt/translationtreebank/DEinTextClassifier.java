@@ -10,31 +10,15 @@ public class DEinTextClassifier {
   public static void main(String[] args) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
 
-    boolean reducedCategory = true;
-    boolean nonOracleTree = true;
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
-    int npid = 0;
-
-    Featurizer featurizer = new FullInformationFeaturizer();
-
-    // Build training set
-    GeneralDataset trainDataset = new Dataset();
-
-    for(TreePair validSent : treepairs) {
-      for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        String label = validSent.NPwithDEs_categories.get(deIdxInSent);
-        if (!ExperimentUtils.is5class(label)) {
-          continue;
-        }
-        List<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props);
-        Datum<String, String> d = new BasicDatum(featureList, label);
-        trainDataset.add(d);
-      }
-    }
-
-    LinearClassifierFactory<String, String> factory = new LinearClassifierFactory<String, String>();
+    // (1) read in the trained classifier!
     LinearClassifier<String, String> classifier
-      = (LinearClassifier<String, String>)factory.trainClassifier(trainDataset);
+      = LinearClassifier.readClassifier("projects/mt/src/mt/translationtreebank/report/nonoracle/1st.ser.gz");
 
+    // (2) setting up the tree & sentence files
+    String sentFile = props.getProperty("sentFile", null);
+    String treeFile = props.getProperty("treeFile", null);
+
+    BufferedReader sentBR = new BufferedReader(new FileReader(sentFile));
+    BufferedReader treeBR = new BufferedReader(new FileReader(treeFile));
   }
 }

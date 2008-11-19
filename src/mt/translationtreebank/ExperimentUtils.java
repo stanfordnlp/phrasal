@@ -460,7 +460,12 @@ public class ExperimentUtils {
     
     resultSummary(cc);
   }
-}
-
-class MaskIrrelevantDETreeTransformer {
+  
+  public static String[] readTrainDevTest() {
+    //String trainDevTestFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\TrainDevTest.txt";
+    String trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
+    String content = StringUtils.slurpFileNoExceptions(trainDevTestFile);
+    String[] lines = content.split("\\n");
+    return lines;
+  }
 }
