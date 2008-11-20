@@ -15,16 +15,53 @@ public class DEinTextClassifier {
     LinearClassifier<String, String> classifier
       = LinearClassifier.readClassifier("projects/mt/src/mt/translationtreebank/report/nonoracle/1st.ser.gz");
 
+    // this is the set for "1st"
+    String[] featArgs = {"-2feat", "true",
+                         "-revised", "true",
+                         "-ngram", "true",
+                         "-lastcharN", "true",
+                         "-lastcharNgram", "true",
+                         "-1st", "true",};
+    Properties featProps = StringUtils.argsToProperties(featArgs);
+    Featurizer feat = new FullInformationFeaturizer();
+
     // (2) setting up the tree & sentence files
     String sentFile = props.getProperty("sentFile", null);
     String treeFile = props.getProperty("treeFile", null);
     SentTreeFileReader reader = new SentTreeFileReader(sentFile, treeFile);
-    Tree sent = null;
-    while((sent=reader.next())!=null) {
+    Tree parsedSent = null;
+    while((parsedSent=reader.next())!=null) {
       // Get the index of the DEs
-      List<Integer> deIdxs = ExperimentUtils.getDEIndices(sent.yield());
-      sent.pennPrint(System.out);
-      System.out.println();
+      List<Integer> deIdxs = ExperimentUtils.getDEIndices(parsedSent.yield());
+      List<String>  labels = new ArrayList<String>();
+      Map<Integer, String> deIdxWithPredictedClass = new TreeMap<Integer, String>();
+      for (int deIdx : deIdxs) {
+        Pair<Integer,Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(parsedSent, deIdx);
+        if (range.first == -1) {
+          throw new RuntimeException("Warning: skip for now");
+          //continue;
+        }
+        Tree chNPTree = TranslationAlignment.getTreeWithEdges(parsedSent,range.first, range.second+1);
+        chNPTree.pennPrint(System.err);
+        System.err.println("==================================");
+        List<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps);
+        Datum d = new BasicDatum(features);
+        String predictedClass = classifier.classOf(d);
+        deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
+      }
+      List<String> newSentence = new ArrayList<String>();
+      for (int i = 0; i < parsedSent.yield().size(); i++) {
+        String pClass = deIdxWithPredictedClass.get(i);
+        String currW = parsedSent.yield().get(i).word();
+        if (pClass == null) {
+          newSentence.add(currW);
+        } else {
+          StringBuilder sb = new StringBuilder();
+          sb.append(currW).append("_").append(pClass);
+          newSentence.add(sb.toString());
+        }
+      }
+      System.out.println(StringUtils.join(newSentence, " "));
     }
   }
 }

@@ -83,7 +83,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
       
       featureList.addAll(posNgramFeatures(beforeDE, "beforeDE:"));
       featureList.addAll(posNgramFeatures(afterDE, "afterDE:"));
-      if (afterDE.size()>0)
+      if (beforeDE.size() > 0 && afterDE.size()>0)
         featureList.add("crossDE:"+beforeDE.get(beforeDE.size()-1).tag()+"-"+afterDE.get(0).tag());
     }
     

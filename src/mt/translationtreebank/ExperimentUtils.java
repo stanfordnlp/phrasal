@@ -19,6 +19,16 @@ public class ExperimentUtils {
   static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- (DEG < 的)");
   static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- (DEG < 的)");
   
+  static Pair<Integer, Integer> getNPwithDERangeFromIdx(Tree tree, int deIdx) {
+    Tree preT = Trees.getPreTerminal(tree, deIdx);
+    Tree DNPorCP = preT.parent(tree);
+    Tree theNP = DNPorCP.parent(tree);
+    int leftE = Trees.leftEdge(theNP, tree);
+    int rightE = Trees.rightEdge(theNP, tree)-1;
+    Pair<Integer,Integer> range = new Pair<Integer,Integer>(leftE, rightE);
+    return range;
+  }
+
   static List<Integer> getDEIndices(List<HasWord> sent) {
     List<Integer> des = new ArrayList<Integer>();
     for(int i = 0; i < sent.size(); i++) {
@@ -457,6 +467,16 @@ public class ExperimentUtils {
     throw new RuntimeException("the category ["+cat+"] is not valid in 'is5class'");
   }
 
+  public static String short5class(String cat) {
+    if ("A 's B".equals(cat)) return "AsB";
+    if ("A B".equals(cat)) return "AB";
+    if ("A prep B".equals(cat)) return "AprepB";
+    if ("B prep A".equals(cat)) return "BprepA";
+    if ("relative clause".equals(cat)) return "relc";
+    throw new RuntimeException("the category ["+cat+"] is not valid in 'is5class'");
+  }
+    
+
 
   static void resultCoarseSummary(TwoDimensionalCounter<String,String> confusionMatrix) {
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String> ();
@@ -474,7 +494,7 @@ public class ExperimentUtils {
     
     resultSummary(cc);
   }
-  
+
   public static String[] readTrainDevTest() {
     //String trainDevTestFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\TrainDevTest.txt";
     String trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";

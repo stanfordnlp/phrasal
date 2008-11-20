@@ -62,15 +62,7 @@ class TreePair {
       //System.err.println("TP:chParsedTrees.size="+chParsedTrees.size());
       Tree parsedTree = chParsedTrees.get(0);
       for(int i : NPwithDEs_deIdx_set) {
-        Tree preT = Trees.getPreTerminal(parsedTree, i);
-        Tree DNPorCP = preT.parent(parsedTree);
-        Tree theNP = DNPorCP.parent(parsedTree);
-        //System.out.println("theNP:");
-        //theNP.pennPrint(System.out);
-        //System.out.println();
-        int leftE = Trees.leftEdge(theNP, parsedTree);
-        int rightE = Trees.rightEdge(theNP, parsedTree)-1;
-        Pair<Integer,Integer> range = new Pair<Integer,Integer>(leftE, rightE);
+        Pair<Integer,Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(parsedTree, i);
         parsedNPwithDEs_deIdx.put(i, range);
       }
     }
