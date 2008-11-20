@@ -23,21 +23,24 @@ public class SentenceBoundaryFeaturizer implements IncrementalFeaturizer<IString
 	public FeatureValue<String> featurize(Featurizable<IString,String> f) {
 
     double cost = BAD_SENTENCE_BOUNDARY_PENALTY;
+    double totalCost = 0.0;
 
     for (int i=0; i<f.translatedPhrase.size(); ++i) {
       if(f.translatedPhrase.get(i).id == startToken.id) {
         if(i == 0 && f.translationPosition == 0)
-          cost = -cost;
-        return new FeatureValue<String>(FEATURE_NAME, cost);
+          totalCost -= cost; // reward hypothesis if starts with <s>
+        else
+          totalCost += cost; // bad: <s> in the middle of the sentence
       }
       if(f.translatedPhrase.get(i).id == endToken.id) {
         if(i+1 == f.translatedPhrase.size() && f.done)
-          cost = -cost;
-        return new FeatureValue<String>(FEATURE_NAME, cost);
+          totalCost -= cost; // reward hypothesis if ends with </s>
+        else
+          totalCost += cost; // bad: </s> in the middle of the sentence
       }
     }
 
-		return new FeatureValue<String>(FEATURE_NAME, 0.0);
+		return new FeatureValue<String>(FEATURE_NAME, totalCost);
 	}
 
 	@Override
