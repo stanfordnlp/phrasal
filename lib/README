@@ -76,27 +76,6 @@ LAST UPDATE: 2008/07/12
 LAST UPDATE BY: Michel Galley
 
 -----------------------------------------------------------------------
-flanagan.jar
-
-ORIGINAL JAR NAME: flanagan.jar
-
-VERSION: ? (latest as of 2008-07-12)
-
-RELEASE DATE: 2008-07-05
-
-SOURCE AVAILABLE: yes
-
-DESCRIPTION: Michael Thomas Flanagan's Java Scientific Library
-
-URL: http://www.ee.ucl.ac.uk/~mflanaga/java/
-
-USED BY: mt.metrics.LinearCombinationMetricOptimizer
-
-LAST UPDATE: 2008-07-12
-
-LAST UPDATE BY: Michel Galley
-
------------------------------------------------------------------------
 testng.jar
 
 ORIGINAL JAR NAME: testng-5.8-jdk15.jar
