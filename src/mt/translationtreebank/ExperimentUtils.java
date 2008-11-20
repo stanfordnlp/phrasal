@@ -19,6 +19,20 @@ public class ExperimentUtils {
   static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- (DEG < 的)");
   static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- (DEG < 的)");
   
+  static List<Integer> getDEIndices(List<HasWord> sent) {
+    List<Integer> des = new ArrayList<Integer>();
+    for(int i = 0; i < sent.size(); i++) {
+      if (sent.get(i).word().equals("的")) {
+        des.add(i);
+      }
+    }
+    return des;
+  }
+
+  /**
+   * From a given tree, get the DE position by checking immediate children of the tree.
+   * if there are multiple ones, the last one will be chosen
+   */
   static int getDEIndex(Tree t) {
     Tree[] children = t.children();
     int deIdx = -1;

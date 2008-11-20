@@ -1,0 +1,15 @@
+package mt.translationtreebank;
+
+import java.util.*;
+import java.io.*;
+import edu.stanford.nlp.util.*;
+import edu.stanford.nlp.trees.*;
+
+abstract class AbstractFeaturizer implements Featurizer {
+  public List<String> extractFeatures(int deIdxInSent, TreePair validSent, Properties props) {
+    Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
+    Tree chTree = validSent.chParsedTrees.get(0);
+    return extractFeatures(deIdxInSent, chNPrange, chTree, props);
+  }
+  abstract public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props);
+}

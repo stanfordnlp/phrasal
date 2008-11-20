@@ -9,15 +9,13 @@ import edu.stanford.nlp.ling.*;
 import java.util.*;
 import java.io.*;
 
-class AroundDEFeaturizer implements Featurizer {
-  public List<String> extractFeatures(int deIdxInSent, TreePair validSent, Properties props) {
+class AroundDEFeaturizer extends AbstractFeaturizer {
+  public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props) {
     String dePosStr   = props.getProperty("dePos", "false");
     String revisedStr   = props.getProperty("revised", "false");
     Boolean dePos = Boolean.parseBoolean(dePosStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
 
-    Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
-    Tree chTree = validSent.chParsedTrees.get(0);
     Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
     int deIdxInPhrase = deIdxInSent-chNPrange.first;
     Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInPhrase);

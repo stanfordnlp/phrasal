@@ -9,8 +9,14 @@ import edu.stanford.nlp.ling.*;
 import java.util.*;
 import java.io.*;
 
-class FullInformationFeaturizer implements Featurizer {
+class FullInformationFeaturizer extends AbstractFeaturizer {
   public List<String> extractFeatures(int deIdxInSent, TreePair validSent, Properties props) {
+    Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
+    Tree chTree = validSent.chParsedTrees.get(0);
+    return extractFeatures(deIdxInSent, chNPrange, chTree, props);
+  }
+
+  public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props) {
     String twofeatStr   = props.getProperty("2feat", "false");
     String revisedStr   = props.getProperty("revised", "false");
     String ngramStr     = props.getProperty("ngram", "false");
@@ -31,28 +37,9 @@ class FullInformationFeaturizer implements Featurizer {
     Boolean path = Boolean.parseBoolean(pathStr);
     Boolean percentage = Boolean.parseBoolean(percentageStr);
 
-    // each level
-
-    /*
-    twofeat = twofeat || revised || ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
-    revised = revised || ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
-    ngram   = ngram || first || lastcharN || lastcharNgram || pword || path || percentage;
-    first   = first || lastcharN || lastcharNgram || pword || path || percentage;
-    lastcharN   = lastcharN || lastcharNgram || pword || path || percentage;
-    lastcharNgram = lastcharNgram || pword || path || percentage;
-    pword   = pword || path || percentage;
-    path = path || percentage;
-    percentage = percentage;
-    */
-
-    Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
-    String label = validSent.NPwithDEs_categories.get(deIdxInSent);
-    
-    Tree chTree = validSent.chParsedTrees.get(0);
+    //Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
+    //Tree chTree = validSent.chParsedTrees.get(0);
     Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
-
-    if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
-    }
 
     // (1) make feature list
 
@@ -82,13 +69,6 @@ class FullInformationFeaturizer implements Featurizer {
 
     // get deIndices
     Sentence<TaggedWord> sentence = chNPTree.taggedYield();
-    /*
-    int deIdx = ExperimentUtils.getDEIndex(chNPTree);
-    if (deIdx == -1) {
-      System.err.println("no DE");
-      chNPTree.pennPrint(System.err);
-    }
-    */
     int deIdx = deIdxInSent - chNPrange.first;
     
     if (ngram) {
