@@ -40,24 +40,28 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     //Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     //Tree chTree = validSent.chParsedTrees.get(0);
     Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
+    int deIdxInPhrase = deIdxInSent-chNPrange.first;
+    Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInPhrase);
+    Sentence<TaggedWord> npYield = maskedChNPTree.taggedYield();
 
     // (1) make feature list
 
-    Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInSent-chNPrange.first);
-    //chNPTree.pennPrint(System.out);
-    //maskedChNPTree.pennPrint(System.out);
-    //System.out.println("--------------------------");
-
+    // make feature list
     List<String> featureList = new ArrayList<String>();
-    if (ExperimentUtils.hasDEC(maskedChNPTree, chTree, deIdxInSent)) {
-      if (twofeat) featureList.add("DEC");
-      if (revised)
+    StringBuilder sb = new StringBuilder();
+
+    sb = new StringBuilder();
+    String deTag = npYield.get(deIdxInPhrase).tag();
+    if (twofeat) {
+      sb.append("dePos:").append(deTag);
+      featureList.add(sb.toString());
+    }
+
+    if (revised) {
+      if ("DEC".equals(deTag)) {
         if (ExperimentUtils.hasVApattern(maskedChNPTree))
           featureList.add("hasVA");
-    }
-    if (ExperimentUtils.hasDEG(maskedChNPTree, chTree, deIdxInSent)) {
-      if (twofeat) featureList.add("DEG");
-      if (revised) {
+      } else if ("DEG".equals(deTag)) {
         if (ExperimentUtils.hasADJPpattern(maskedChNPTree))
           featureList.add("hasADJP");
         if (ExperimentUtils.hasQPpattern(maskedChNPTree))
@@ -116,9 +120,9 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
       for (int i = 0; i < sentence.size(); i++) {
         String word = sentence.get(i).word();
         char[] chars = word.toCharArray();
-        StringBuilder sb = new StringBuilder();
-        sb.append(chars[chars.length-1]);
-        lastChars.add(sb.toString());
+        StringBuilder sb2 = new StringBuilder();
+        sb2.append(chars[chars.length-1]);
+        lastChars.add(sb2.toString());
       }
       featureList.addAll(ngramFeatures(lastChars, "lastcngrams:"));
     }

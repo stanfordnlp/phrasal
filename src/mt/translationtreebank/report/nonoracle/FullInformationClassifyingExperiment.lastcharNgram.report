@@ -4,7 +4,7 @@ Overall label counter:
 Training set stats:
 numDatums: 1836
 numLabels: 5 [B prep A, A B, relative clause, A 's B, A prep B]
-numFeatures Phi(X) types): 9303
+numFeatures Phi(X) types): 9305
 
 
 Evaluate on Training set:
@@ -56,25 +56,25 @@ total	15	112	7	219	103
 Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
-A'sB	4	0	0	3	0	
+A'sB	4	0	0	4	0	
 AB	2	78	1	7	6	
 AprepB	0	0	1	0	1	
-BprepA	9	24	5	188	23	
+BprepA	9	24	5	187	23	
 relc	0	10	0	21	73	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
 
 #[ A 's B ] = 15 |	Acc:	26.67
-#[ B prep A ] = 219 |	Acc:	85.84
+#[ B prep A ] = 219 |	Acc:	85.39
 #[ A prep B ] = 7 |	Acc:	14.29
 #[ relative clause ] = 103 |	Acc:	70.87
 #[ A B ] = 112 |	Acc:	69.64
-#total = 456 |	Acc:	75.438596
+#total = 456 |	Acc:	75.219298
 
-#[ swapped ] = 322 |	Acc:	94.72
+#[ swapped ] = 322 |	Acc:	94.41
 #[ ordered ] = 134 |	Acc:	64.18
-#total = 456 |	Acc:	85.745614
+#total = 456 |	Acc:	85.526316
 
 Evaluate on Other set:
 ==================Confusion Matrix==================

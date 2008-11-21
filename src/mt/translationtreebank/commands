@@ -1,1 +1,6 @@
+# this command outputs the Gold standard parse trees & parsed parse trees of
+# the CTB data
 java -Xmx1g mt.translationtreebank.OutputAllTrees > correctNPs.tree 2> parsedNPs.tree
+
+# This commands read in the GALE data and marked them with the predicted DEs
+java mt.translationtreebank.DEinTextClassifier -sentFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent -treeFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.parsed > /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.predicted 2> err

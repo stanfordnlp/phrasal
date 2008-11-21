@@ -4,7 +4,7 @@ Overall label counter:
 Training set stats:
 numDatums: 1836
 numLabels: 5 [B prep A, A B, relative clause, A 's B, A prep B]
-numFeatures Phi(X) types): 547
+numFeatures Phi(X) types): 549
 
 
 Evaluate on Training set:
@@ -13,8 +13,8 @@ Evaluate on Training set:
 A'sB	26	9	0	15	0	
 AB	3	310	6	21	15	
 AprepB	1	1	9	0	1	
-BprepA	28	105	15	785	90	
-relc	2	27	3	56	308	
+BprepA	28	105	15	785	92	
+relc	2	27	3	56	306	
 ----------------------------------------------------
 total	60	452	33	877	414	
 ====================================================
@@ -22,9 +22,9 @@ total	60	452	33	877	414
 #[ A 's B ] = 60 |	Acc:	43.33
 #[ B prep A ] = 877 |	Acc:	89.51
 #[ A prep B ] = 33 |	Acc:	27.27
-#[ relative clause ] = 414 |	Acc:	74.40
+#[ relative clause ] = 414 |	Acc:	73.91
 #[ A B ] = 452 |	Acc:	68.58
-#total = 1836 |	Acc:	78.322440
+#total = 1836 |	Acc:	78.213508
 
 #[ swapped ] = 1291 |	Acc:	95.97
 #[ ordered ] = 545 |	Acc:	66.97
@@ -34,9 +34,9 @@ Evaluate on Dev set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
 A'sB	7	3	0	2	0	
-AB	0	77	2	16	7	
+AB	0	78	2	16	7	
 AprepB	0	1	0	0	1	
-BprepA	8	17	5	184	29	
+BprepA	8	16	5	184	29	
 relc	0	14	0	17	66	
 ----------------------------------------------------
 total	15	112	7	219	103	
@@ -46,12 +46,12 @@ total	15	112	7	219	103
 #[ B prep A ] = 219 |	Acc:	84.02
 #[ A prep B ] = 7 |	Acc:	0.00
 #[ relative clause ] = 103 |	Acc:	64.08
-#[ A B ] = 112 |	Acc:	68.75
-#total = 456 |	Acc:	73.245614
+#[ A B ] = 112 |	Acc:	69.64
+#total = 456 |	Acc:	73.464912
 
 #[ swapped ] = 322 |	Acc:	91.93
-#[ ordered ] = 134 |	Acc:	67.16
-#total = 456 |	Acc:	84.649123
+#[ ordered ] = 134 |	Acc:	67.91
+#total = 456 |	Acc:	84.868421
 
 Evaluate on Test set:
 ==================Confusion Matrix==================
@@ -80,10 +80,10 @@ Evaluate on Other set:
 ==================Confusion Matrix==================
 ->real	multi-DEs	noB	other
 A'sB	0	0	14	
-AB	17	49	50	
+AB	16	49	50	
 AprepB	1	0	5	
 BprepA	84	51	186	
-relc	71	35	101	
+relc	72	35	101	
 ----------------------------------------------------
 total	173	135	356	
 ====================================================

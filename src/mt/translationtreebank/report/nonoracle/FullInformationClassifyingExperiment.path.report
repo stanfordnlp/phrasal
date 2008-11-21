@@ -4,7 +4,7 @@ Overall label counter:
 Training set stats:
 numDatums: 1836
 numLabels: 5 [B prep A, A B, relative clause, A 's B, A prep B]
-numFeatures Phi(X) types): 10047
+numFeatures Phi(X) types): 10049
 
 
 Evaluate on Training set:
@@ -13,8 +13,8 @@ Evaluate on Training set:
 A'sB	59	0	0	2	0	
 AB	0	450	0	0	0	
 AprepB	0	0	33	0	0	
-BprepA	1	2	0	875	2	
-relc	0	0	0	0	412	
+BprepA	1	2	0	875	1	
+relc	0	0	0	0	413	
 ----------------------------------------------------
 total	60	452	33	877	414	
 ====================================================
@@ -22,9 +22,9 @@ total	60	452	33	877	414
 #[ A 's B ] = 60 |	Acc:	98.33
 #[ B prep A ] = 877 |	Acc:	99.77
 #[ A prep B ] = 33 |	Acc:	100.00
-#[ relative clause ] = 414 |	Acc:	99.52
+#[ relative clause ] = 414 |	Acc:	99.76
 #[ A B ] = 452 |	Acc:	99.56
-#total = 1836 |	Acc:	99.618736
+#total = 1836 |	Acc:	99.673203
 
 #[ swapped ] = 1291 |	Acc:	99.85
 #[ ordered ] = 545 |	Acc:	99.45
@@ -82,8 +82,8 @@ Evaluate on Other set:
 A'sB	0	0	18	
 AB	17	40	54	
 AprepB	0	1	4	
-BprepA	100	62	170	
-relc	56	32	110	
+BprepA	101	62	170	
+relc	55	32	110	
 ----------------------------------------------------
 total	173	135	356	
 ====================================================

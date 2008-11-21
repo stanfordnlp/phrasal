@@ -10,10 +10,11 @@ import edu.stanford.nlp.ling.*;
 public class DEinTextClassifier {
   public static void main(String[] args) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
+    String classifierFile = props.getProperty("classifier", "/user/pichuan/javanlp/projects/mt/src/mt/translationtreebank/report/nonoracle/1st.ser.gz");
 
     // (1) read in the trained classifier!
     LinearClassifier<String, String> classifier
-      = LinearClassifier.readClassifier("projects/mt/src/mt/translationtreebank/report/nonoracle/1st.ser.gz");
+      = LinearClassifier.readClassifier(classifierFile);
 
     // this is the set for "1st"
     String[] featArgs = {"-2feat", "true",
@@ -21,7 +22,10 @@ public class DEinTextClassifier {
                          "-ngram", "true",
                          "-lastcharN", "true",
                          "-lastcharNgram", "true",
-                         "-1st", "true",};
+                         "-1st", "true",
+                         "-pword", "true",
+                         "-path", "true",
+                         "-percent", "true"};
     Properties featProps = StringUtils.argsToProperties(featArgs);
     Featurizer feat = new FullInformationFeaturizer();
 
