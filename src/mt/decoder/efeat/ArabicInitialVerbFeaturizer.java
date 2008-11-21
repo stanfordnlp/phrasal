@@ -6,6 +6,8 @@ import mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
+import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 
 import java.util.List;
 import java.util.Arrays;
@@ -23,7 +25,8 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   private static final String[] TAG_VERBS  = new String[] { "PV", "IV", "VERB" };
 
   /** The Arabic tagger (must use IBM tags!). */
-  private static SentenceProcessor<Word, TaggedWord> tagger;
+  private static MaxentTagger tagger;
+  //private static SentenceProcessor<Word, TaggedWord> tagger;
   private static String DEFAULT_TAGGER_FILE = "/scr/nlp/data/gale2/IBM_ATB/ibm-stanfordized/arabic.tagger";
 
   /** Tagged sentence. */
@@ -39,10 +42,11 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   public ArabicInitialVerbFeaturizer(String taggerFile) {
     try {
       System.err.printf("Loading tagger from serialized file %s ...\n", taggerFile);
-      Class[] argsClass = new Class[] { String.class };
-      Object[] arguments = new Object[] { taggerFile };
-      tagger = (SentenceProcessor<Word, TaggedWord>)
-        Class.forName("edu.stanford.nlp.tagger.maxent.MaxentTagger").getConstructor(argsClass).newInstance(arguments);
+      // mg2008: note this doesn't load the serialized config file!!
+      // tagger = new MaxentTagger(taggerFile);
+      tagger = new MaxentTagger();
+      TaggerConfig config = new TaggerConfig(new String[] {"-model",taggerFile});
+      MaxentTagger.init(config.getModel(),config);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -59,7 +63,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
 	@Override
 	public void initialize(List<ConcreteTranslationOption<IString>> options,
 			Sequence<IString> foreign) {
-    
+
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
     sentence = tagger.processSentence(Sentence.toSentence(Arrays.asList(words)));
     TaggedWord[] tags = sentence.toArray(new TaggedWord[sentence.size()]);
@@ -81,13 +85,15 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
       if(!skip)
         break;
     }
-    String curTag = sentence.get(pos).tag();
-    System.err.println("First relevant tag:"+curTag);
-    for(String t : TAG_VERBS) {
-      if(curTag.startsWith(t)) {
-        isVerb = true;
-        System.err.println("Verb: yes.");
-        return;
+    if(pos < sentence.size()) {
+      String curTag = sentence.get(pos).tag();
+      System.err.println("First relevant tag:"+curTag);
+      for(String t : TAG_VERBS) {
+        if(curTag.startsWith(t)) {
+          isVerb = true;
+          System.err.println("Verb: yes.");
+          return;
+        }
       }
     }
     isVerb = false;
