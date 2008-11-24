@@ -25,7 +25,8 @@ public class DEinTextClassifier {
                          "-1st", "true",
                          "-pword", "true",
                          "-path", "true",
-                         "-percent", "true"};
+                         "-percent", "true",
+                         "-ciLin", "true",};
     Properties featProps = StringUtils.argsToProperties(featArgs);
     Featurizer feat = new FullInformationFeaturizer();
 

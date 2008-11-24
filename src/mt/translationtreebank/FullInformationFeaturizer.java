@@ -192,7 +192,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
             cilin_multipleEntry.add(word);
           } else {
             cilin_map.put(word, cilinTag);
-            System.err.println(i+"\tCILIN: "+word+"\t"+cilinTag);
+            //System.err.println(i+"\tCILIN: "+word+"\t"+cilinTag);
           }
         }
       }
