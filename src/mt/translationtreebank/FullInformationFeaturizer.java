@@ -8,8 +8,13 @@ import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.ling.*;
 import java.util.*;
 import java.io.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class FullInformationFeaturizer extends AbstractFeaturizer {
+  Map<String,String> cilin_map;
+  Set<String> cilin_multipleEntry;
+
   public List<String> extractFeatures(int deIdxInSent, TreePair validSent, Properties props) {
     Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     Tree chTree = validSent.chParsedTrees.get(0);
@@ -26,6 +31,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     String pwordStr     = props.getProperty("pword", "false");
     String pathStr      = props.getProperty("path", "false");
     String percentageStr= props.getProperty("percentage", "false");
+    String ciLinStr = props.getProperty("ciLin", "false");
 
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
@@ -36,10 +42,17 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     Boolean pword = Boolean.parseBoolean(pwordStr);
     Boolean path = Boolean.parseBoolean(pathStr);
     Boolean percentage = Boolean.parseBoolean(percentageStr);
+    Boolean ciLin = Boolean.parseBoolean(ciLinStr);
 
     //Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     //Tree chTree = validSent.chParsedTrees.get(0);
     Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
+    if (chNPTree==null) {
+      chTree.pennPrint(System.err);
+      System.err.println("range="+chNPrange);
+      System.err.println("treesize="+chTree.yield().size());
+      throw new RuntimeException();
+    }
     int deIdxInPhrase = deIdxInSent-chNPrange.first;
     Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInPhrase);
     Sentence<TaggedWord> npYield = maskedChNPTree.taggedYield();
@@ -155,6 +168,56 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         featureList.add("NR");
       }
     }
+
+    // features using CiLin
+    if (ciLin) {
+      // Read in CiLin if haven't already done so
+      if (cilin_map==null) {
+        cilin_map = new HashMap<String,String>();
+        cilin_multipleEntry = new HashSet<String>();
+
+        // Read from CiLin file
+        String[] cilinLines = StringUtils.slurpFileNoExceptions("data/CILIN.TXT.utf8").split("\\n");
+        System.err.println(cilinLines.length+" lines in CILIN");
+        //for (String cilinLine : cilinLines) {
+        for (int i = 0; i < cilinLines.length; i++) {
+          String cilinLine = cilinLines[i];
+          String regex = "^(.*),([A-Z])[a-z]\\d+$";
+          Pattern pattern = Pattern.compile(regex);
+          Matcher matcher = pattern.matcher(cilinLine);
+          if (!matcher.find()) throw new RuntimeException("CILIN line error: " + cilinLine);
+          String word = matcher.group(1);
+          String cilinTag = matcher.group(2);
+          if (cilin_map.keySet().contains(word) && !cilin_map.get(word).equals(cilinTag)) {
+            cilin_multipleEntry.add(word);
+          } else {
+            cilin_map.put(word, cilinTag);
+            System.err.println(i+"\tCILIN: "+word+"\t"+cilinTag);
+          }
+        }
+      }
+
+      // map the words into Unigrams
+      for (int i = 0; i < sentence.size(); i++) {
+        if (i == deIdx) continue;
+
+        String w = sentence.get(i).word();
+        if (cilin_multipleEntry.contains(w)) continue;
+        String cTag = cilin_map.get(w);
+        if (cTag != null) {
+          StringBuilder csb = new StringBuilder();
+          if (i < deIdx)
+            csb.append("cT_beforeDE:");
+          else if (i > deIdx)
+            csb.append("cT_afterDE:");
+          else throw new RuntimeException("never should be here");
+
+          csb.append(cTag);
+          featureList.add(csb.toString());
+        }
+      }
+    }
+
     return featureList;
   }
 

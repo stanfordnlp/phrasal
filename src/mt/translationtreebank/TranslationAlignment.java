@@ -890,6 +890,10 @@ public class TranslationAlignment {
   public static Tree getTreeWithEdges(Tree root, int leftEdge, int rightEdge) {
     Queue<Tree> queue = new LinkedList<Tree>();
     queue.add(root);
+    if (leftEdge == 0 && rightEdge == root.yield().size()) {
+      return root;
+    }
+
     while(queue.size() > 0) {
       Tree t = queue.remove();
       Tree[] children = t.children();

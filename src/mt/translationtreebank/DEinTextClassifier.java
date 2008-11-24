@@ -42,12 +42,12 @@ public class DEinTextClassifier {
       for (int deIdx : deIdxs) {
         Pair<Integer,Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(parsedSent, deIdx);
         if (range.first == -1) {
-          throw new RuntimeException("Warning: skip for now");
-          //continue;
+          System.err.println("WARNING: Flat tree. Don't mark");
+          continue;
         }
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(parsedSent,range.first, range.second+1);
-        chNPTree.pennPrint(System.err);
-        System.err.println("==================================");
+        //chNPTree.pennPrint(System.err);
+        //System.err.println("==================================");
         List<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps);
         Datum d = new BasicDatum(features);
         String predictedClass = classifier.classOf(d);
@@ -113,7 +113,7 @@ class SentTreeFileReader {
       System.err.println("sent & tree doesn't even have one match in word");
       System.err.println("SENT="+sent);
       System.err.println("TREE="+tree);
-      throw new RuntimeException();
+      //throw new RuntimeException();
     }
 
     return t;
