@@ -1,4 +1,11 @@
 #########################################
+# Java command (must have MT stuff in class
+# path; and locales must be set correctly)
+#########################################
+
+SYSID=none-d4
+
+#########################################
 # Language/data specific variables:
 #########################################
 
@@ -96,5 +103,25 @@ POST=perl $(SCRIPTS)/remove_unk
 # (in case you run a customized version)
 #########################################
 
-#PM=phrasal-mert.pl
-PM=phrasal-mert-michel.pl
+PM=phrasal-mert.pl
+
+#########################################
+# Extension of input files:
+# unk : with unk words
+# prep : with preprocessing
+#########################################
+
+IE=unk
+FE=unk
+
+#########################################
+# LM filtering script:
+#########################################
+
+LM_FILTER_SCRIPT=filter_lm_ngram
+
+#########################################
+# LM filtering script:
+#########################################
+
+N=10
