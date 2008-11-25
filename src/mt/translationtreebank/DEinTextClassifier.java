@@ -49,7 +49,7 @@ public class DEinTextClassifier {
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(parsedSent,range.first, range.second+1);
         //chNPTree.pennPrint(System.err);
         //System.err.println("==================================");
-        List<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps);
+        List<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, null);
         Datum d = new BasicDatum(features);
         String predictedClass = classifier.classOf(d);
         deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
