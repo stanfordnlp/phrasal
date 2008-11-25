@@ -27,6 +27,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     String pathStr      = props.getProperty("path", "false");
     String percentageStr= props.getProperty("percentage", "false");
     String ciLinStr = props.getProperty("ciLin", "false");
+    String topicalityStr = props.getProperty("topicality", "false");
 
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
@@ -38,6 +39,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     Boolean path = Boolean.parseBoolean(pathStr);
     Boolean percentage = Boolean.parseBoolean(percentageStr);
     Boolean ciLin = Boolean.parseBoolean(ciLinStr);
+    Boolean topicality = Boolean.parseBoolean(topicalityStr);
 
     //Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     //Tree chTree = validSent.chParsedTrees.get(0);
@@ -211,6 +213,39 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           featureList.add(csb.toString());
         }
       }
+    }
+
+    // features with topicality
+    if (topicality) {
+      if (cachedWords == null) throw new RuntimeException("-topicality true, but no cachedWords provided");
+      // TODO
+      Boolean beforeDEInCache = false;
+      Boolean afterDEInCache = false;
+      for (int i = 0; i < sentence.size(); i++) {
+        if (i == deIdx) continue;
+        String w = sentence.get(i).word();
+        String t = sentence.get(i).tag();
+        Boolean inCache = cachedWords.contains(w);
+        Boolean goodTag = t.startsWith("N");
+        if (inCache && goodTag) {
+          String cTag = cilin_map.get(w);
+          if (i < deIdx) {
+            beforeDEInCache = true;
+            //System.err.println("Before-cached: "+w+" in "+sentence);
+            StringBuilder builder = new StringBuilder();
+            builder.append("beforeDECached-cT:").append(cTag);
+            featureList.add(builder.toString());
+          } else if (i > deIdx) {
+            afterDEInCache = true;
+            //System.err.println(" After-cached: "+w+" in "+sentence);
+            StringBuilder builder = new StringBuilder();
+            builder.append("afterDECached-cT:").append(cTag);
+            featureList.add(builder.toString());
+          } else throw new RuntimeException("never should be here");
+        }
+      }
+      if (beforeDEInCache) featureList.add("beforeDEInCache");
+      if (afterDEInCache) featureList.add("afterDEInCache");
     }
 
     return featureList;
