@@ -49,9 +49,9 @@ class ClassifyingExperiment {
       TreePair validSent = treepairs.get(tpidx);
 
       Set<String> cachedWords = new HashSet<String>();
-      int windowSize = 2;
+      //int windowSize = 2;
       int prevTpIdx = tpidx - 1;
-      while(prevTpIdx >= 0 && tpidx-prevTpIdx <= windowSize) {
+      while(prevTpIdx >= 0 && tpidx-prevTpIdx <= ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE) {
         Sentence<Word> prevSent = treepairs.get(prevTpIdx).chParsedTrees.get(0).yield();
         for(Word w : prevSent) {
           cachedWords.add(w.value());

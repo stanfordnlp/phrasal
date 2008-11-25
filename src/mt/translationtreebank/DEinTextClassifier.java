@@ -35,11 +35,22 @@ public class DEinTextClassifier {
     String treeFile = props.getProperty("treeFile", null);
     SentTreeFileReader reader = new SentTreeFileReader(sentFile, treeFile);
     Tree parsedSent = null;
+
+    Queue<Set<String>> cachedWordsBySent = new LinkedList<Set<String>>();
+
     while((parsedSent=reader.next())!=null) {
       // Get the index of the DEs
       List<Integer> deIdxs = ExperimentUtils.getDEIndices(parsedSent.yield());
       List<String>  labels = new ArrayList<String>();
       Map<Integer, String> deIdxWithPredictedClass = new TreeMap<Integer, String>();
+      /*
+      parsedSent.pennPrint(System.err);
+      for(Set<String> s : cachedWordsBySent) {
+        System.err.println("------------------");
+        System.err.println(StringUtils.join(s, " "));
+      }
+      System.err.println("==================================");
+      */
       for (int deIdx : deIdxs) {
         Pair<Integer,Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(parsedSent, deIdx);
         if (range.first == -1) {
@@ -47,9 +58,9 @@ public class DEinTextClassifier {
           continue;
         }
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(parsedSent,range.first, range.second+1);
-        //chNPTree.pennPrint(System.err);
-        //System.err.println("==================================");
-        List<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, null);
+        Set<String> cachedWords = ExperimentUtils.mergeAllSets(cachedWordsBySent);
+        
+        List<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, cachedWords);
         Datum d = new BasicDatum(features);
         String predictedClass = classifier.classOf(d);
         deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
@@ -67,6 +78,18 @@ public class DEinTextClassifier {
         }
       }
       System.out.println(StringUtils.join(newSentence, " "));
+
+      // update cachedWordsBySent
+      if (cachedWordsBySent.size() == ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE) {
+        // pop one push current
+        cachedWordsBySent.remove();
+        cachedWordsBySent.add(ExperimentUtils.treeToSetWords(parsedSent));
+      } else if (cachedWordsBySent.size() < ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE) {
+        // push current
+        cachedWordsBySent.add(ExperimentUtils.treeToSetWords(parsedSent));
+      } else {
+        throw new RuntimeException("Queue can't be bigger than ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE");
+      }
     }
   }
 }

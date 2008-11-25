@@ -9,6 +9,7 @@ import java.io.*;
 import java.util.*;
 
 public class ExperimentUtils {
+  static final int TOPICALITY_SENT_WINDOW_SIZE = 2;
 
   static TreePattern dec = TreePattern.compile("DEC < 的");
   static TreePattern deg = TreePattern.compile("DEG < 的");
@@ -19,6 +20,23 @@ public class ExperimentUtils {
   static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- (DEG < 的)");
   static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- (DEG < 的)");
   
+  static Set<String> treeToSetWords(Tree tree) {
+    Sentence<Word> sent = tree.yield();
+    Set<String> sow = new HashSet<String>();
+    for (Word w : sent) {
+      sow.add(w.value());
+    }
+    return sow;
+  }
+
+  static Set<String> mergeAllSets(Queue<Set<String>> q) {
+    Set<String> sow = new HashSet<String>();
+    for (Set<String> set : q) {
+      sow.addAll(set);
+    }
+    return sow;
+  }
+
   static Pair<Integer, Integer> getNPwithDERangeFromIdx(Tree tree, int deIdx) {
     Tree preT = Trees.getPreTerminal(tree, deIdx);
     Tree DNPorCP = preT.parent(tree);
