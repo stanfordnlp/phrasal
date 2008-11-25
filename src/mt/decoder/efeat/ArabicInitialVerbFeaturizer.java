@@ -26,8 +26,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
 
   /** The Arabic tagger (must use IBM tags!). */
   private static MaxentTagger tagger;
-  //private static SentenceProcessor<Word, TaggedWord> tagger;
-  private static String DEFAULT_TAGGER_FILE = "/scr/nlp/data/gale2/IBM_ATB/ibm-stanfordized/arabic.tagger";
+  private static String DEFAULT_TAGGER_FILE = "/scr/nlp/data/gale2/IBM_ATB/ibm-stanfordized/utf8/arabic.tagger";
 
   /** Tagged sentence. */
   private Sentence<TaggedWord> sentence = null;
