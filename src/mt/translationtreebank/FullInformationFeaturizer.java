@@ -15,13 +15,8 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
   Map<String,String> cilin_map;
   Set<String> cilin_multipleEntry;
 
-  public List<String> extractFeatures(int deIdxInSent, TreePair validSent, Properties props) {
-    Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
-    Tree chTree = validSent.chParsedTrees.get(0);
-    return extractFeatures(deIdxInSent, chNPrange, chTree, props);
-  }
+  public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props, Set<String> cachedWords) {
 
-  public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props) {
     String twofeatStr   = props.getProperty("2feat", "false");
     String revisedStr   = props.getProperty("revised", "false");
     String ngramStr     = props.getProperty("ngram", "false");

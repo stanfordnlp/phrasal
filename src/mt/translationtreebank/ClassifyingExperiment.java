@@ -15,8 +15,10 @@ class ClassifyingExperiment {
 
     String reducedCatStr= props.getProperty("useReducedCategory", "true");
     String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
+    String trainAllStr = props.getProperty("trainAll", "false");
     Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
+    Boolean trainAll = Boolean.parseBoolean(trainAllStr);
 
     String writeClassifier = props.getProperty("writeClassifier", null);
 
@@ -42,25 +44,47 @@ class ClassifyingExperiment {
     List<Datum<String,String>> otherData = new ArrayList<Datum<String,String>>();
 
     int npid = 0;
-    for(TreePair validSent : treepairs) {
+    //for(TreePair validSent : treepairs) {
+    for(int tpidx = 0; tpidx < treepairs.size(); tpidx++) {
+      TreePair validSent = treepairs.get(tpidx);
+
+      Set<String> cachedWords = new HashSet<String>();
+      int windowSize = 2;
+      int prevTpIdx = tpidx - 1;
+      while(prevTpIdx >= 0 && tpidx-prevTpIdx <= windowSize) {
+        Sentence<Word> prevSent = treepairs.get(prevTpIdx).chParsedTrees.get(0).yield();
+        for(Word w : prevSent) {
+          cachedWords.add(w.value());
+        }
+        prevTpIdx--;
+      }
+      
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        List<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props);
+        //List<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props);
+        List<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props, cachedWords);
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
         // (2) make label
 
         // (3) Make Datum and add
         Datum<String, String> d = new BasicDatum(featureList, label);
-        //if ("train".equals(trainDevTest[npid])) {
         if (trainDevTest[npid].endsWith("train")) {
           trainDataset.add(d);
           trainData.add(d);
         }
         else if ("dev".equals(trainDevTest[npid])) {
+          if (trainAll) {
+            trainDataset.add(d);
+            trainData.add(d);
+          }
           devDataset.add(d);
           devData.add(d);
         }
         else if ("test".equals(trainDevTest[npid])) {
+          if (trainAll) {
+            trainDataset.add(d);
+            trainData.add(d);
+          }
           testDataset.add(d);
           testData.add(d);
         } else if ("n/a".equals(trainDevTest[npid])) {
