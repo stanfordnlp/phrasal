@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 class FullInformationFeaturizer extends AbstractFeaturizer {
   Map<String,String> cilin_map;
   Map<String,String> cilin_level2map;
-  Set<String> cilin_multipleEntry;
+  //Set<String> cilin_multipleEntry;
+  Map<String,Set<String>> cilin_multipleEntry;
 
   public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props, Set<String> cachedWords) {
 
@@ -173,7 +174,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
       if (cilin_map==null) {
         cilin_map = new HashMap<String,String>();
         cilin_level2map = new HashMap<String,String>();
-        cilin_multipleEntry = new HashSet<String>();
+        cilin_multipleEntry = new HashMap<String,Set<String>>();
 
         // Read from CiLin file
         String[] cilinLines = StringUtils.slurpFileNoExceptions("data/CILIN.TXT.utf8").split("\\n");
@@ -190,10 +191,19 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           StringBuilder cilinTag = new StringBuilder();
           cilinTag.append(cilinLevel2Tag.charAt(0));
           if (cilin_map.keySet().contains(word) && !cilin_map.get(word).equals(cilinTag.toString())) {
-            cilin_multipleEntry.add(word);
+            //cilin_multipleEntry.add(word);
+            Set<String> set = cilin_multipleEntry.get(word);
+            if (set == null) set = new HashSet<String>();
+            set.add(cilinTag.toString());
+            cilin_multipleEntry.put(word,set);
           } else {
             cilin_map.put(word, cilinTag.toString());
             cilin_level2map.put(word, cilinLevel2Tag);
+
+            Set<String> set = cilin_multipleEntry.get(word);
+            if (set == null) set = new HashSet<String>();
+            set.add(cilinTag.toString());
+            cilin_multipleEntry.put(word,set);
             //System.err.println(i+"\tCILIN: "+word+"\t"+cilinTag);
           }
         }
@@ -204,7 +214,8 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         if (i == deIdx) continue;
 
         String w = sentence.get(i).word();
-        if (cilin_multipleEntry.contains(w)) continue;
+        Set<String> cTags = cilin_multipleEntry.get(w);
+        if (cTags == null || cTags.size() == 0 || cTags.size() > 1) continue;
         String cTag = cilin_map.get(w);
         if (cTag != null) {
           StringBuilder csb = new StringBuilder();
