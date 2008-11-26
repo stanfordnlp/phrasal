@@ -185,8 +185,8 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
     index = table.getIndex(prefixInts);
     double bow = 0;
     if(index >= mbows.length)
-      throw new ArrayIndexOutOfBoundsException(String.format("Error with prefix ints (index=%d >= length=%d): %s\n",
-        index, mbows.length, Arrays.toString(IStrings.toStringArray(prefixInts))));
+      System.err.printf("Error with prefix ints (index=%d >= length=%d): %s\n",
+        index, mbows.length, Arrays.toString(IStrings.toStringArray(prefixInts)));
     if (index >= 0) bow = mbows[index];
     if (bow != bow) bow = 0.0; // treat NaNs as bow that are not found at all
     double p = bow + scoreR(sequence.subsequence(1, ngramInts.length));
