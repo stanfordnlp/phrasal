@@ -190,22 +190,14 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           String cilinLevel2Tag = matcher.group(2);
           StringBuilder cilinTag = new StringBuilder();
           cilinTag.append(cilinLevel2Tag.charAt(0));
-          if (cilin_map.keySet().contains(word) && !cilin_map.get(word).equals(cilinTag.toString())) {
-            //cilin_multipleEntry.add(word);
-            Set<String> set = cilin_multipleEntry.get(word);
-            if (set == null) set = new HashSet<String>();
-            set.add(cilinTag.toString());
-            cilin_multipleEntry.put(word,set);
-          } else {
+          Set<String> cTags = cilin_multipleEntry.get(word);
+          if (cTags == null) cTags = new HashSet<String>();
+          if (cTags.size() < 1) {
             cilin_map.put(word, cilinTag.toString());
             cilin_level2map.put(word, cilinLevel2Tag);
-
-            Set<String> set = cilin_multipleEntry.get(word);
-            if (set == null) set = new HashSet<String>();
-            set.add(cilinTag.toString());
-            cilin_multipleEntry.put(word,set);
-            //System.err.println(i+"\tCILIN: "+word+"\t"+cilinTag);
           }
+          cTags.add(cilinTag.toString());
+          cilin_multipleEntry.put(word,cTags);
         }
       }
 
