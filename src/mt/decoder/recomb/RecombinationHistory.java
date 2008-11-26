@@ -12,8 +12,10 @@ import mt.decoder.util.State;
  * @param <S>
  */
 public class RecombinationHistory<S extends State<S>> {
-	
-	private final HashMap<S,List<S>> historyMap = new HashMap<S,List<S>>();
+
+  public static boolean pruneDiscarded = false;
+
+  private final HashMap<S,List<S>> historyMap = new HashMap<S,List<S>>();
 	
 	/**
 	 * 
@@ -21,7 +23,7 @@ public class RecombinationHistory<S extends State<S>> {
 	 * @param discarded
 	 */
 	public void log(S retained, S discarded) {
-		if (discarded == null) {
+    if (discarded == null || pruneDiscarded) {
 			return;
 		}
 		List<S> discardedList = historyMap.get(discarded);

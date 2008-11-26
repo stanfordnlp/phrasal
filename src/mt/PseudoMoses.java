@@ -18,6 +18,7 @@ import mt.tune.*;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * 
@@ -36,7 +37,9 @@ public class PseudoMoses {
 	static public final String FACTOR_DELIM_OPT = "factor-delimiter";
 	static public final String MAPPING_OPT = "mapping";
 	static public final String NBEST_LIST_OPT = "n-best-list";
-	static public final String CONSTRAIN_TO_REFS = "constrain-to-refs";
+  static public final String UNIQ_NBEST_LIST_OPT = "uniq-n-best-list";
+  static public final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
+  static public final String CONSTRAIN_TO_REFS = "constrain-to-refs";
 	static public final String PREFERED_REF_STRUCTURE = "use-prefered-ref-structure";
 	static public final String LEARN_WEIGHTS_USING_REFS = "learn-weights-using-refs";
 	static public final String PREFERED_REF_INTERNAL_STATE = "prefered-internal-state";
@@ -46,6 +49,7 @@ public class PseudoMoses {
 	static public final String BEAM_SIZE = "stack";
 	static public final String DISTORTION_FILE = "distortion-file";
 	static public final String WEIGHTS_FILE = "weights-file";
+  static public final String CONFIG_FILE = "config-file";
 	static public final String USE_DISCRIMINATIVE_LM = "discriminative-lm";
 	static public final String USE_DISCRIMINATIVE_TM = "discriminative-tm";
 	static public final String MAX_SENTENCE_LENGTH = "max-sentence-length";
@@ -73,9 +77,6 @@ public class PseudoMoses {
 	static public double DEFAULT_LEARNING_RATE = 0.01;
 	static public double DEFAULT_MOMENTUM_TERM = 0.9;
 
-  public static final String MOSES_NBEST_PROPERTY = "OutputMosesNBestList";
-  public static final boolean MOSES_NBEST = Boolean.parseBoolean(System.getProperty(MOSES_NBEST_PROPERTY, "false"));
-
 	static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 	String x = "兆";
 
@@ -86,7 +87,8 @@ public class PseudoMoses {
 		OPTIONAL_FIELDS.addAll(Arrays.asList(new String[] { INLINE_WEIGHTS,ITER_LIMIT,
 				DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
 				USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
-				NBEST_LIST_OPT, CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
+				NBEST_LIST_OPT, UNIQ_NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
+        CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
 				LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
 				PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
 				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
@@ -133,7 +135,8 @@ public class PseudoMoses {
 
 	boolean learnWeights;
 	boolean constrainManualWeights;
-	List<List<Sequence<IString>>> learnFromReferences;
+  boolean generateMosesNBestList;
+  List<List<Sequence<IString>>> learnFromReferences;
 	String learningAlgorithm;
 	List<String> learningAlgorithmConfig;
 	Scorer<String> scorer;
@@ -167,7 +170,7 @@ public class PseudoMoses {
 		configToLearningTarget.put("one-class", LearningTarget.ONE_CLASS);
 	}
 
-	Map<String, List<String>> readConfig(String filename) throws IOException {
+  static Map<String, List<String>> readConfig(String filename) throws IOException {
 		Map<String, List<String>> config = new HashMap<String, List<String>>();
 		LineNumberReader reader = new LineNumberReader(new FileReader(filename));
 		for (String line; (line = reader.readLine()) != null;) {
@@ -212,12 +215,25 @@ public class PseudoMoses {
 		return config;
 	}
 
-	@SuppressWarnings("unchecked")
-	public PseudoMoses(String filename) throws IOException,
+  static Map<String, List<String>> readArgs(String[] args) throws IOException {
+    Map<String, List<String>> config = new HashMap<String, List<String>>();
+    for(Map.Entry<Object,Object> e : StringUtils.argsToProperties(args).entrySet()) {
+      String key = e.getKey().toString();
+      String value = e.getValue().toString();
+      if(CONFIG_FILE.equals(key)) {
+        config.putAll(readConfig(value));
+      } else {
+        config.put(key,Arrays.asList(value));
+      }
+    }
+    return config;
+  }
+
+  @SuppressWarnings("unchecked")
+	public PseudoMoses(Map<String, List<String>> config) throws IOException,
 	InstantiationException, IllegalAccessException, IllegalArgumentException,
 	SecurityException, InvocationTargetException, NoSuchMethodException {
-		Map<String, List<String>> config = readConfig(filename);
-		if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
+    if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
 			Set<String> missingFields = new HashSet<String>(REQUIRED_FIELDS);
 			missingFields.removeAll(config.keySet());
 			throw new RuntimeException(String.format(
@@ -638,7 +654,18 @@ public class PseudoMoses {
 					+ config.get(TRANSLATION_TABLE_OPT));
 		}
 
-		String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
+    if (config.containsKey(MOSES_NBEST_LIST_OPT)) {
+      generateMosesNBestList = Boolean.parseBoolean(config.get(MOSES_NBEST_LIST_OPT).get(0));
+    }
+
+    if (config.containsKey(UNIQ_NBEST_LIST_OPT)) {
+      System.err.println("Generating n-best lists with no duplicates.");
+      boolean uniqNBestList = Boolean.parseBoolean(config.get(UNIQ_NBEST_LIST_OPT).get(0));
+      if(uniqNBestList)
+        RecombinationHistory.pruneDiscarded = true;
+    }
+
+    String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
 		System.err.printf("Phrase table: %s\n", phraseTable);
 		PhraseGenerator<IString> phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
 				.<String> factory(featurizer, scorer,
@@ -652,9 +679,8 @@ public class PseudoMoses {
 				((CombinedPhraseGenerator) phraseGenerator).getPhraseLimit());
 
 		// Create Recombination Filter
-		RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
-		.factory(featurizer.getNestedFeaturizers(),
-				RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
+    RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
+		.factory(featurizer.getNestedFeaturizers(), RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
 
 		// Create Search Heuristic
 		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
@@ -679,8 +705,8 @@ public class PseudoMoses {
 		if (config.containsKey(USE_ITG_CONSTRAINTS)) {
 			infererBuilder.useITGConstraints(Boolean.parseBoolean(config.get(USE_ITG_CONSTRAINTS).get(0)));
 		}
-		
-		if (config.containsKey(BEAM_SIZE)) {
+
+    if (config.containsKey(BEAM_SIZE)) {
 			try {
 				int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
 				infererBuilder.setBeamCapacity(beamSize);
@@ -798,7 +824,7 @@ public class PseudoMoses {
 					translation = translations.get(0);
 
 					for (RichTranslation<IString, String> tran : translations) {
-						nbestListWriter.append(MOSES_NBEST ? 
+						nbestListWriter.append(generateMosesNBestList ? 
             tran.nbestToMosesString(translationId) :
             tran.nbestToString(translationId)).append("\n");
 					}
@@ -1267,13 +1293,14 @@ public class PseudoMoses {
 	}
 
 	static public void main(String[] args) throws Exception {
-		if (args.length != 1) {
-			System.err.println("Usage:\n\tjava ...PseudoMoses (pharaoh.ini)");
-			System.exit(-1);
-		}
 
-		String configFile = args[0];
-		PseudoMoses p = new PseudoMoses(configFile);
+    if(args.length < 1) {
+      System.err.println("Usage:\n\tjava ...PseudoMoses (pharaoh.ini)");
+      System.exit(-1);
+    }
+
+    Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0]) : readArgs(args);
+    PseudoMoses p = new PseudoMoses(config);
 		p.executiveLoop();
 
 	}

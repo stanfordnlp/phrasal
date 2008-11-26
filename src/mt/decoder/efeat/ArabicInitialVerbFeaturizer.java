@@ -5,12 +5,15 @@ import mt.base.Featurizable;
 import mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Michel Galley
@@ -20,9 +23,68 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   static final String FEATURE_NAME = "EnglishVSOPenalty";
   private static final double ENGLISH_VSO_PENALTY = -100;
 
-  private static final String TAG_INT_PART = "INTERROG+PART"; // allow English VSO if a question
-  private static final String[] TAG_SKIPS  = new String[] { "CONJ", "PUNC" };
-  private static final String[] TAG_VERBS  = new String[] { "PV", "IV", "VERB" };
+  private static final boolean verbose = true;
+
+  // Tags currently handled:
+
+  private static final String[] TAGS_ANYWHERE  = new String[] // tokens that can appear anywhere
+   { "FUT", "JUS", "INTERJ", "DET", "ADV", "PART",
+     "NEG+PART", "CONNEC+PART", "RESTRIC+PART", "FOCUS+PART", "INTERROG+PART",
+     "RC+PART", "VOC+PART", "FUT+PART", "EMPHATIC+PART" };
+  private static final String[] TAGS_BEFORE  = new String[] // words before the verb in an VSO
+   { "CONJ", "PUNC" };
+  private static final String[] TAGS_VERB  = new String[] // VSO verbs
+   { "PV", "IV" };
+  private static final String[] TAGS_BETWEEN = new String[] // between verb and subject
+   { };
+  private static final String[] TAGS_SBJ_START  = new String[] // anything that may start an NP-SBJ or SBAR-SBJ:
+   { // common NP starts (> 100 in ATB):
+     "NOUN", "DET+NOUN", "NOUN+PROP", "PRON", "DET+NOUN+PROP", "DEM+PRON", "NUM", 
+     // unusual NP starts:
+     "ABBREV", "INTERROG+PRON", "DET+NUM", "EXCLAM+PRON", "DET+ABBREV", "POSS+PRON",
+     // Often at the start of an SBAR-SBJ:
+     "SUB+CONJ" };
+
+  // Tags currently not handled:
+
+  private static final String[] TAGS_VERB_FAIL  = new String[]
+   { "PSEUDO+VERB", "NOUN.VN", "ADJ.VN", "VERB+PART", "DET+ADJ.VN", "DET+NOUN.VN" };
+  private static final String[] TAGS_SBJ_FAIL  = new String[]
+   { "IVSUFF+DO", "PVSUFF+DO" };
+  private static final String[] TAGS_FAIL  = new String[]
+   { // This usually starts an SBAR or SBARQ:
+     "REL+ADV", "REL+PRON", "INTERROG+ADV",
+     // PREP usually starts a PP, whereas the +PREP typically do not
+     // Since it is fine to leave the PP after the verb, currently don't handle PPs
+     // (though it would be nice to handle the V PP NP-SBJ -> NP-SBJ V PP) 
+     "PREP",
+     // Almost never starts (NP) subjects:
+     "DET+ADJ", "ADJ",
+     // Words unrecognized:
+     "TYPO", "DIALECT", "FOREIGN", "GRAMMAR+PROBLEM", "DET+FOREIGN", "LATIN" };
+  
+  private static Set<String>
+    beforeTags = new HashSet<String>(),
+    verbTags = new HashSet<String>(),
+    betweenTags = new HashSet<String>(),
+    sbjTags = new HashSet<String>(),
+    failTags = new HashSet<String>();
+
+  static {
+    beforeTags.addAll(Arrays.asList(TAGS_BEFORE));
+    beforeTags.addAll(Arrays.asList(TAGS_ANYWHERE));
+    
+    verbTags.addAll(Arrays.asList(TAGS_VERB)); // V
+
+    betweenTags.addAll(Arrays.asList(TAGS_BETWEEN));
+    betweenTags.addAll(Arrays.asList(TAGS_ANYWHERE));
+
+    sbjTags.addAll(Arrays.asList(TAGS_SBJ_START)); // S
+
+    failTags.addAll(Arrays.asList(TAGS_FAIL));
+    failTags.addAll(Arrays.asList(TAGS_VERB_FAIL));
+    failTags.addAll(Arrays.asList(TAGS_SBJ_FAIL));
+  }
 
   /** The Arabic tagger (must use IBM tags!). */
   private static MaxentTagger tagger;
@@ -31,8 +93,11 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   /** Tagged sentence. */
   private Sentence<TaggedWord> sentence = null;
 
-  /** True if first word is a verb. */
-  private boolean isVerb = false;
+  private boolean vso;
+  private int vsoVerbIdx;
+  private int vsoSubjectIdx;
+
+  TaggedWord[] tags;
 
   public ArabicInitialVerbFeaturizer() {
     this(DEFAULT_TAGGER_FILE);
@@ -53,8 +118,46 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
 
   @Override
 	public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    if(f.prior == null && f.linearDistortion == 0 && isVerb) {
-			return new FeatureValue<String>(FEATURE_NAME, ENGLISH_VSO_PENALTY);
+
+    if(!vso)
+      return null;
+
+    int f1 = f.foreignPosition;
+    int f2 = f1+f.foreignPhrase.size();
+
+    Featurizable<IString, String> pf = f.prior;
+    
+    if(f1 <= vsoVerbIdx && vsoVerbIdx < f2) {
+      if(verbose) {
+        System.err.println("Tagged sentence: "+Arrays.toString(tags));
+        System.err.println("Partial translation: "+f.partialTranslation.toString());
+        System.err.printf("Now translating range [%d,%d) containing verb (%d) of VSO.\n",f1,f2,vsoVerbIdx);
+      }
+      if(f2 <= vsoSubjectIdx) {
+        // Currently translating the verb of a VSO construction, but not the subject:
+        while(pf != null) {
+          int pf1 = f.foreignPosition;
+          int pf2 = pf1+f.foreignPhrase.size();
+          if(pf1 <= vsoSubjectIdx && vsoSubjectIdx < pf2) {
+            // Previously translated some part of the NP-SBJ, great!:
+            if(verbose) {
+              System.err.printf("Range [%d,%d) was used to translate subject (%d) of VSO, great!.\n",pf1,pf2,vsoSubjectIdx);
+            }
+          }
+          pf = pf.prior;
+        }
+        if(verbose) {
+          System.err.printf("Remains VSO.");
+        }
+        // VSO apparently remained in VSO order in English, bad:
+        return new FeatureValue<String>(FEATURE_NAME, ENGLISH_VSO_PENALTY);
+      } else {
+        // Currently translating both verb and subject: don't do anything, since
+        // phrase-based MT can/should provide the correct order.
+        if(verbose) {
+          System.err.printf("Range [%d,%d) alreading contains subject (%d) of VSO, skipping.\n",f1,f2,vsoSubjectIdx);
+        }
+      }
 		}
 		return null;
 	}
@@ -65,37 +168,56 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
 
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
     sentence = tagger.processSentence(Sentence.toSentence(Arrays.asList(words)));
-    TaggedWord[] tags = sentence.toArray(new TaggedWord[sentence.size()]);
+    tags = sentence.toArray(new TaggedWord[sentence.size()]);
 
-    System.err.println("Arabic input sentence tagged as:");
-    System.err.println(Arrays.toString(tags));
+    String taggedSent = Arrays.toString(tags);
 
-    // First skip some words such as conjunctions and punctuations:
-    int pos=0;
-    for(; pos < sentence.size(); ++pos) {
+    vso = false;
+    vsoVerbIdx = -1;
+    vsoSubjectIdx = -1;
+    for(int pos=0; pos < sentence.size(); ++pos) {
       String curTag = sentence.get(pos).tag();
-      boolean skip=false;
-      for(String t : TAG_SKIPS) {
-        if(curTag.startsWith(t)) {
-          skip = true;
-          break;
-        }
-      }
-      if(!skip)
+      System.err.println("current tag: "+curTag);
+      
+      // Fail if can't handle tag:
+      if(failTags.contains(curTag))
         break;
-    }
-    if(pos < sentence.size()) {
-      String curTag = sentence.get(pos).tag();
-      System.err.println("First relevant tag:"+curTag);
-      for(String t : TAG_VERBS) {
-        if(curTag.startsWith(t)) {
-          isVerb = true;
-          System.err.println("Verb: yes.");
-          return;
+
+      // Step 1: Skip words such as conjunctions and punctuations, then check if first word is a verb:
+      if(vsoVerbIdx < 0) {
+        if(beforeTags.contains(curTag)) {
+          continue;
+        } else if(verbTags.contains(curTag)) {
+          vsoVerbIdx = pos;
+        } else {
+          break; // first word is not a verb.
         }
+      } else
+
+      // Step 2: Identify first word possibly part of an NP-SBJ:
+      if(vsoVerbIdx >= 0 && vsoSubjectIdx < 0) {
+        if(betweenTags.contains(curTag)) {
+          continue;
+        } else if(sbjTags.contains(curTag)) {
+          vsoSubjectIdx = pos;
+          vso = true;
+          break;
+        } else {
+          break; // some word is unrecognized before the next NP
+        }
+      } else {
+        throw new RuntimeException("Shouldn't be here: pos="+pos);
       }
     }
-    isVerb = false;
+    if(vso) {
+      assert(vsoVerbIdx >= 0);
+      assert(vsoSubjectIdx >= 0);
+      System.err.printf("VSO=yes V=%d S=%d : %s\n",vsoVerbIdx,vsoSubjectIdx, taggedSent);
+    } else {
+      vsoVerbIdx = -1;
+      vsoSubjectIdx = -1;
+      System.err.println("VSO=no : "+taggedSent);
+    }
   }
 
 	@Override
@@ -104,4 +226,81 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
 
 	public void reset() { }
 
+  public static void main(String[] args) {
+    if(args.length != 1) {
+      System.err.println("Usage: java mt.decoder.efeat.ArabicInitialVerbFeaturizer (ar-file)");
+      System.exit(1);
+    }
+    IncrementalFeaturizer<IString,String> f = new ArabicInitialVerbFeaturizer();
+    for(String line : StringUtils.slurpFileNoExceptions(args[0]).split("\\n")) {
+      f.initialize(null, new SimpleSequence<IString>(true,IStrings.toIStringArray(line.split("\\s+"))));
+    }
+  }
 }
+
+//////////////////
+/* Old categorization:
+VERB: (verbs that can appear in VSO)
+  13581 PV
+  12388 IV
+
+VERB-SKIP: (other types of verbs, which are either
+            unlikely to appear in a VSO, or that do not generally translate as a verb -- e.g. PSEUDO-VERB)
+   1181 PSEUDO+VERB
+   1097 NOUN.VN
+    723 ADJ.VN
+    670 VERB+PART
+    661 DET+ADJ.VN
+     40 DET+NOUN.VN
+
+NP:
+  61799 NOUN
+  42949 DET+NOUN
+  20151 NOUN+PROP
+   7373 POSS+PRON
+   6091 PRON
+   5581 NUM
+   4564 REL+PRON
+   3902 DET+NOUN+PROP
+   2919 DEM+PRON
+    820 ABBREV
+     81 INTERROG+PRON
+      5 DET+NUM
+      1 EXCLAM+PRON
+      1 DET+ABBREV
+
+NP-SKIP: (stuff rarely seen in NP-SBJ)
+   1124 IVSUFF+DO
+   1154 PVSUFF+DO
+
+SKIP: (words that are skipped in our analysis)
+  39815 PREP
+  22784 CONJ
+  33612 PUNC
+  18453 DET+ADJ
+   8977 ADJ
+   6530 SUB+CONJ
+   2162 NEG+PART
+    868 FUT
+    831 ADV
+    338 REL+ADV
+    331 CONNEC+PART
+    226 PART
+    188 DET
+    183 RESTRIC+PART
+    165 FOCUS+PART
+    143 INTERROG+PART
+    137 INTERROG+ADV
+    135 RC+PART
+    134 TYPO
+     59 VOC+PART
+     32 JUS
+     32 DIALECT
+     36 FOREIGN
+     27 INTERJ
+     23 FUT+PART
+     11 EMPHATIC+PART
+      4 GRAMMAR+PROBLEM
+      3 DET+FOREIGN
+      1 LATIN
+ */

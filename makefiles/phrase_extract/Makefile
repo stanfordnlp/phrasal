@@ -57,7 +57,7 @@ ltables: $(LTABLES)
 
 # Java configuration:
 PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE) 
-PHRASAL_ARGS_N=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM) -DOutputMosesNBestList=true -DUniqNBest=true
+PHRASAL_ARGS_N=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM)
 
 .SECONDARY:
 
@@ -125,7 +125,7 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).unk
 # Use best MERT paramters to generate n-best list:
 $(TESTID).$(DEVID).%.$Nbest.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(PHRASAL_ARGS_N) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
+	(java $(PHRASAL_ARGS_N) mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true -uniq-n-best-list true < $(TESTID).$(IE) > $@) 2> logs/$@.log
 
 # Use final MERT paramters:
 $(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
