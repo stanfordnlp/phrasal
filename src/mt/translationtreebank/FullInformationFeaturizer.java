@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 class FullInformationFeaturizer extends AbstractFeaturizer {
   Map<String,String> cilin_map;
+  Map<String,String> cilin_level2map;
   Set<String> cilin_multipleEntry;
 
   public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props, Set<String> cachedWords) {
@@ -171,6 +172,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
       // Read in CiLin if haven't already done so
       if (cilin_map==null) {
         cilin_map = new HashMap<String,String>();
+        cilin_level2map = new HashMap<String,String>();
         cilin_multipleEntry = new HashSet<String>();
 
         // Read from CiLin file
@@ -179,16 +181,19 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         //for (String cilinLine : cilinLines) {
         for (int i = 0; i < cilinLines.length; i++) {
           String cilinLine = cilinLines[i];
-          String regex = "^(.*),([A-Z])[a-z]\\d+$";
+          String regex = "^(.*),([A-Z][a-z])\\d+$";
           Pattern pattern = Pattern.compile(regex);
           Matcher matcher = pattern.matcher(cilinLine);
           if (!matcher.find()) throw new RuntimeException("CILIN line error: " + cilinLine);
           String word = matcher.group(1);
-          String cilinTag = matcher.group(2);
-          if (cilin_map.keySet().contains(word) && !cilin_map.get(word).equals(cilinTag)) {
+          String cilinLevel2Tag = matcher.group(2);
+          StringBuilder cilinTag = new StringBuilder();
+          cilinTag.append(cilinLevel2Tag.charAt(0));
+          if (cilin_map.keySet().contains(word) && !cilin_map.get(word).equals(cilinTag.toString())) {
             cilin_multipleEntry.add(word);
           } else {
-            cilin_map.put(word, cilinTag);
+            cilin_map.put(word, cilinTag.toString());
+            cilin_level2map.put(word, cilinLevel2Tag);
             //System.err.println(i+"\tCILIN: "+word+"\t"+cilinTag);
           }
         }
@@ -212,6 +217,20 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           csb.append(cTag);
           featureList.add(csb.toString());
         }
+        /*
+        String c2Tag = cilin_level2map.get(w);
+        if (c2Tag != null) {
+          StringBuilder csb = new StringBuilder();
+          if (i < deIdx)
+            csb.append("c2T_beforeDE:");
+          else if (i > deIdx)
+            csb.append("c2T_afterDE:");
+          else throw new RuntimeException("never should be here");
+
+          csb.append(c2Tag);
+          featureList.add(csb.toString());
+        }
+        */
       }
     }
 
@@ -229,6 +248,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         Boolean goodTag = t.startsWith("N");
         if (inCache && goodTag) {
           String cTag = cilin_map.get(w);
+          //String c2Tag = cilin_level2map.get(w);
           if (i < deIdx) {
             beforeDEInCache = true;
             //System.err.println("Before-cached: "+w+" in "+sentence);

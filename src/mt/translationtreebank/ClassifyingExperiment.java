@@ -51,13 +51,19 @@ class ClassifyingExperiment {
       Set<String> cachedWords = new HashSet<String>();
       //int windowSize = 2;
       int prevTpIdx = tpidx - 1;
+      System.err.println("ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE="+ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE);
       while(prevTpIdx >= 0 && tpidx-prevTpIdx <= ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE) {
         Sentence<Word> prevSent = treepairs.get(prevTpIdx).chParsedTrees.get(0).yield();
+        int diff  = tpidx-prevTpIdx;
+        System.err.print("DEBUG: "+diff+"\t");
         for(Word w : prevSent) {
           cachedWords.add(w.value());
+          System.err.print(w.value()+" ");
         }
+        System.err.println("\n---------------------------------");
         prevTpIdx--;
       }
+      System.err.println("=====================================");
       
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
         //List<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props);
