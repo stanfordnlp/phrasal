@@ -23,7 +23,8 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   static final String FEATURE_NAME = "EnglishVSOPenalty";
   private static final double ENGLISH_VSO_PENALTY = -100;
 
-  private static final boolean verbose = true;
+  private static final boolean verbose = false;
+  private static final boolean strict = false;
 
   // Tags currently handled:
 
@@ -119,6 +120,8 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   @Override
 	public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
+    String name = getClass().toString();
+
     if(!vso)
       return null;
 
@@ -129,25 +132,36 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
     
     if(f1 <= vsoVerbIdx && vsoVerbIdx < f2) {
       if(verbose) {
-        System.err.println("Tagged sentence: "+Arrays.toString(tags));
-        System.err.println("Partial translation: "+f.partialTranslation.toString());
-        System.err.printf("Now translating range [%d,%d) containing verb (%d) of VSO.\n",f1,f2,vsoVerbIdx);
+        System.err.println(name+": tagged sentence: "+Arrays.toString(tags));
+        System.err.println(name+": partial translation: "+f.partialTranslation.toString());
+        System.err.println(name+": current target phrase: "+f.translatedPhrase.toString());
+        System.err.printf("%s: now translating range [%d,%d) containing verb (%d) of VSO.\n",name,f1,f2,vsoVerbIdx);
       }
       if(f2 <= vsoSubjectIdx) {
         // Currently translating the verb of a VSO construction, but not the subject:
         while(pf != null) {
-          int pf1 = f.foreignPosition;
+          int pf1 = pf.foreignPosition;
           int pf2 = pf1+f.foreignPhrase.size();
-          if(pf1 <= vsoSubjectIdx && vsoSubjectIdx < pf2) {
-            // Previously translated some part of the NP-SBJ, great!:
+          if(verbose) {
+            System.err.printf("%s: checking previous phrase of range [%d,%d)....\n",name,pf1,pf2);
+          }
+          if(f2 <= pf1 && !strict) {
+            // [f1 ... verb ... f2] ... [pf1 ... 
             if(verbose) {
-              System.err.printf("Range [%d,%d) was used to translate subject (%d) of VSO, great!.\n",pf1,pf2,vsoSubjectIdx);
+              System.err.printf("%s: previous phrase [%d,%d) swaps with current phrase, good! (subject at %d)\n",name,pf1,pf2,vsoSubjectIdx);
             }
+            return null;
+          } else if(pf1 <= vsoSubjectIdx && vsoSubjectIdx < pf2) {
+            // [f1 ... verb ... f2] ...  [pf1  ...  subject   ...  pf2]
+            if(verbose) {
+              System.err.printf("%s: range [%d,%d) was used to translate subject (%d) of VSO, great!\n",name,pf1,pf2,vsoSubjectIdx);
+            }
+            return null;
           }
           pf = pf.prior;
         }
         if(verbose) {
-          System.err.printf("Remains VSO.");
+          System.err.println(name+": remains VSO.");
         }
         // VSO apparently remained in VSO order in English, bad:
         return new FeatureValue<String>(FEATURE_NAME, ENGLISH_VSO_PENALTY);
@@ -155,7 +169,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
         // Currently translating both verb and subject: don't do anything, since
         // phrase-based MT can/should provide the correct order.
         if(verbose) {
-          System.err.printf("Range [%d,%d) alreading contains subject (%d) of VSO, skipping.\n",f1,f2,vsoSubjectIdx);
+          System.err.printf("%s: range [%d,%d) alreading contains subject (%d) of VSO, skipping.\n",name,f1,f2,vsoSubjectIdx);
         }
       }
 		}
