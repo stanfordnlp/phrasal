@@ -134,8 +134,9 @@ public class PseudoMoses {
 	List<List<Sequence<IString>>> constrainedToRefs = null;
 
 	boolean learnWeights;
-	boolean constrainManualWeights;
+  boolean constrainManualWeights;
   boolean generateMosesNBestList;
+  boolean uniqNBestList;
   List<List<Sequence<IString>>> learnFromReferences;
 	String learningAlgorithm;
 	List<String> learningAlgorithmConfig;
@@ -660,7 +661,7 @@ public class PseudoMoses {
 
     if (config.containsKey(UNIQ_NBEST_LIST_OPT)) {
       System.err.println("Generating n-best lists with no duplicates.");
-      boolean uniqNBestList = Boolean.parseBoolean(config.get(UNIQ_NBEST_LIST_OPT).get(0));
+      uniqNBestList = Boolean.parseBoolean(config.get(UNIQ_NBEST_LIST_OPT).get(0));
       if(uniqNBestList)
         RecombinationHistory.pruneDiscarded = true;
     }
@@ -680,7 +681,9 @@ public class PseudoMoses {
 
 		// Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
-		.factory(featurizer.getNestedFeaturizers(), RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
+    .factory(featurizer.getNestedFeaturizers(), uniqNBestList ?
+         RecombinationFilterFactory.TRANSLATION_IDENTITY :
+         RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
 
 		// Create Search Heuristic
 		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
