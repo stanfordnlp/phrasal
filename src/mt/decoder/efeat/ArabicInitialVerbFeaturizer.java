@@ -21,7 +21,7 @@ import java.util.Set;
 public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IString,String> {
 
   static final String FEATURE_NAME = "EnglishVSOPenalty";
-  private static final double ENGLISH_VSO_PENALTY = -10;
+  private static final double ENGLISH_VSO_PENALTY = -1.0;
 
   private static final boolean verbose = false;
   private static final boolean strict = false;

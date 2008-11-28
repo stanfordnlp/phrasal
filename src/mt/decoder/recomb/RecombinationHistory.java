@@ -4,7 +4,6 @@ import java.util.*;
 
 import mt.decoder.util.State;
 
-
 /**
  * 
  * @author danielcer
@@ -13,20 +12,31 @@ import mt.decoder.util.State;
  */
 public class RecombinationHistory<S extends State<S>> {
 
-  public static boolean pruneDiscarded = false;
-
   private final HashMap<S,List<S>> historyMap = new HashMap<S,List<S>>();
-	
-	/**
+
+  private RecombinationFilter<S> secondaryFilter;
+
+  /**
+   * This filter does not affect beam search, but only which discarded hypotheses
+   * should be logged. Setting here a filter that enables more combinations (e.g.,
+   * TranslationIdentityRecombinationFilter instead of the Moses default)
+   * enables more diverse n-best lists, while not affecting the quality of the search
+   * for the one-best.
+   */
+  public void setSecondaryFilter(RecombinationFilter<S> f) {
+    this.secondaryFilter = f;
+  }
+
+  /**
 	 * 
 	 * @param retained
 	 * @param discarded
 	 */
 	public void log(S retained, S discarded) {
-    if (discarded == null || pruneDiscarded) {
+    if (discarded == null) {
 			return;
 		}
-		List<S> discardedList = historyMap.get(discarded);
+    List<S> discardedList = historyMap.get(discarded);
 		List<S> retainedList  = historyMap.get(retained);
 		if (retainedList == null) {
 			retainedList = new LinkedList<S>();
@@ -36,8 +46,9 @@ public class RecombinationHistory<S extends State<S>> {
 			historyMap.remove(discarded);
 			retainedList.addAll(discardedList);
 		}
-		retainedList.add(discarded);
-	}
+    if(secondaryFilter == null || !secondaryFilter.combinable(retained,discarded))
+      retainedList.add(discarded);
+  }
 	
 	/**
 	 * 

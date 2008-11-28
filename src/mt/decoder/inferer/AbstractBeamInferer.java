@@ -19,10 +19,15 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   public final int beamCapacity;
   public final HypothesisBeamFactory.BeamType beamType;
 
+  static public boolean filterHistoryBySurface;
+  Set<AbstractSequence<TK>> translationSurfaces = null;
+
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
+    if(filterHistoryBySurface)
+      translationSurfaces = new HashSet<AbstractSequence<TK>>();
   }
 
   @Override
@@ -82,6 +87,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
   public List<List<RichTranslation<TK, FV>>> nbestNBad(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int nbestSize, int nBadSize) {
     RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory = new RecombinationHistory<Hypothesis<TK,FV>>();
+    
+    if(filterHistoryBySurface)
+      recombinationHistory.setSecondaryFilter(new TranslationIdentityRecombinationFilter<TK,FV>());
 
     Beam<Hypothesis<TK,FV>> beam = decode(foreign, translationId, recombinationHistory, constrainedOutputSpace, nbestSize);
     if (beam == null) return null;
@@ -94,6 +102,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
     long nbestStartTime = System.currentTimeMillis();
     List<List<RichTranslation<TK, FV>>> nbestNWorst = new ArrayList<List<RichTranslation<TK, FV>>>();
+
+    if(translationSurfaces != null)
+      translationSurfaces.clear();
 
     for (int i = 0; i < 2; i++) {
       List<RichTranslation<TK,FV>> translations = new LinkedList<RichTranslation<TK,FV>>();
@@ -117,6 +128,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
           hyp = new Hypothesis<TK, FV>(translationId,
                   nextHyp.translationOpt, hyp.length, hyp, featurizer,
                   scorer, heuristic);
+        }
+        if(translationSurfaces != null) {
+          AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
+          if(translationSurfaces.contains(seq))
+            continue;
+          translationSurfaces.add(seq);
         }
         /*
                                  if (mod != 0 && c % (int)mod != 0) {

@@ -663,7 +663,7 @@ public class PseudoMoses {
       System.err.println("Generating n-best lists with no duplicates.");
       uniqNBestList = Boolean.parseBoolean(config.get(UNIQ_NBEST_LIST_OPT).get(0));
       if(uniqNBestList)
-        RecombinationHistory.pruneDiscarded = true;
+        AbstractBeamInferer.filterHistoryBySurface = true;
     }
 
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
@@ -681,9 +681,7 @@ public class PseudoMoses {
 
 		// Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
-    .factory(featurizer.getNestedFeaturizers(), uniqNBestList ?
-         RecombinationFilterFactory.TRANSLATION_IDENTITY :
-         RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
+    .factory(featurizer.getNestedFeaturizers(), RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
 
 		// Create Search Heuristic
 		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
