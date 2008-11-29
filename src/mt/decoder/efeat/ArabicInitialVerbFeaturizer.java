@@ -15,8 +15,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * @author Michel Galley
+/** This featurizer attempts to detect Arabic verb-initial sentences.  The aim
+ *  is to penalize verb-initial sentences that are translated monotonically,
+ *  rather than with a word order swap.  The code strongly depends on using
+ *  the IBM (ATBp3v3) POS tag set.
+ *
+ *  @author Michel Galley
  */
 public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IString,String> {
 
@@ -118,7 +122,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   }
 
   @Override
-	public FeatureValue<String> featurize(Featurizable<IString, String> f) {
+  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
     String name = getClass().toString();
 
@@ -172,13 +176,13 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
           System.err.printf("%s: range [%d,%d) alreading contains subject (%d) of VSO, skipping.\n",name,f1,f2,vsoSubjectIdx);
         }
       }
-		}
-		return null;
-	}
+    }
+    return null;
+  }
 
-	@Override
-	public void initialize(List<ConcreteTranslationOption<IString>> options,
-			Sequence<IString> foreign) {
+  @Override
+  public void initialize(List<ConcreteTranslationOption<IString>> options,
+                         Sequence<IString> foreign) {
 
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
     sentence = tagger.processSentence(Sentence.toSentence(Arrays.asList(words)));
