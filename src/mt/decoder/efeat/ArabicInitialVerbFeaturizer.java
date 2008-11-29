@@ -40,7 +40,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
    { };
   private static final String[] TAGS_SBJ_START  = new String[] // anything that may start an NP-SBJ or SBAR-SBJ:
    { // common NP starts (> 100 in ATB):
-     "NOUN", "DET+NOUN", "NOUN+PROP", "PRON", "DET+NOUN+PROP", "DEM+PRON", "NUM", 
+     "NOUN", "DET+NOUN", "NOUN+PROP", "PRON", "DET+NOUN+PROP", "DEM+PRON", "NUM",
      // unusual NP starts:
      "ABBREV", "INTERROG+PRON", "DET+NUM", "EXCLAM+PRON", "DET+ABBREV", "POSS+PRON",
      // Often at the start of an SBAR-SBJ:
@@ -57,14 +57,14 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
      "REL+ADV", "REL+PRON", "INTERROG+ADV",
      // PREP usually starts a PP, whereas the +PREP typically do not
      // Since it is fine to leave the PP after the verb, currently don't handle PPs
-     // (though it would be nice to handle the V PP NP-SBJ -> NP-SBJ V PP) 
+     // (though it would be nice to handle the V PP NP-SBJ -> NP-SBJ V PP)
      "PREP",
      // Almost never starts (NP) subjects:
      "DET+ADJ", "ADJ",
      // Words unrecognized:
      "TYPO", "DIALECT", "FOREIGN", "GRAMMAR+PROBLEM", "DET+FOREIGN", "LATIN" };
-  
-  private static Set<String>
+
+  private static final Set<String>
     beforeTags = new HashSet<String>(),
     verbTags = new HashSet<String>(),
     betweenTags = new HashSet<String>(),
@@ -74,7 +74,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   static {
     beforeTags.addAll(Arrays.asList(TAGS_BEFORE));
     beforeTags.addAll(Arrays.asList(TAGS_ANYWHERE));
-    
+
     verbTags.addAll(Arrays.asList(TAGS_VERB)); // V
 
     betweenTags.addAll(Arrays.asList(TAGS_BETWEEN));
@@ -129,7 +129,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
     int f2 = f1+f.foreignPhrase.size();
 
     Featurizable<IString, String> pf = f.prior;
-    
+
     if(f1 <= vsoVerbIdx && vsoVerbIdx < f2) {
       if(verbose) {
         System.err.println(name+": tagged sentence: "+Arrays.toString(tags));
@@ -146,7 +146,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
             System.err.printf("%s: checking previous phrase of range [%d,%d)....\n",name,pf1,pf2);
           }
           if(f2 <= pf1 && !strict) {
-            // [f1 ... verb ... f2] ... [pf1 ... 
+            // [f1 ... verb ... f2] ... [pf1 ...
             if(verbose) {
               System.err.printf("%s: previous phrase [%d,%d) swaps with current phrase, good! (subject at %d)\n",name,pf1,pf2,vsoSubjectIdx);
             }
@@ -192,7 +192,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
     for(int pos=0; pos < sentence.size(); ++pos) {
       String curTag = sentence.get(pos).tag();
       System.err.println("current tag: "+curTag);
-      
+
       // Fail if can't handle tag:
       if(failTags.contains(curTag))
         break;
@@ -234,11 +234,11 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
     }
   }
 
-	@Override
-	public List<FeatureValue<String>> listFeaturize(
-			Featurizable<IString, String> f) { return null; }
+  @Override
+  public List<FeatureValue<String>> listFeaturize(
+          Featurizable<IString, String> f) { return null; }
 
-	public void reset() { }
+  public void reset() { }
 
   public static void main(String[] args) {
     if(args.length != 1) {
