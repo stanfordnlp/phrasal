@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 class FullInformationFeaturizer extends AbstractFeaturizer {
   Map<String,String> cilin_map;
   Map<String,String> cilin_level2map;
-  //Set<String> cilin_multipleEntry;
   Map<String,Set<String>> cilin_multipleEntry;
 
   public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props, Set<String> cachedWords) {
