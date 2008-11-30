@@ -66,14 +66,13 @@ class ClassifyingExperiment {
       System.err.println("=====================================");
       
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        //List<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props);
-        List<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props, cachedWords);
+        Counter<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props, cachedWords);
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
         // (2) make label
 
         // (3) Make Datum and add
-        Datum<String, String> d = new BasicDatum(featureList, label);
+        Datum<String, String> d = new RVFDatum(featureList, label);
         if (trainDevTest[npid].endsWith("train")) {
           trainDataset.add(d);
           trainData.add(d);

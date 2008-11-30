@@ -11,18 +11,18 @@ Evaluate on Training set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
 A'sB	59	0	0	1	0	
-AB	0	450	0	0	0	
-AprepB	0	0	33	0	0	
-BprepA	1	2	0	876	2	
-relc	0	0	0	0	412	
+AB	0	450	1	0	0	
+AprepB	0	0	32	0	0	
+BprepA	1	2	0	876	1	
+relc	0	0	0	0	413	
 ----------------------------------------------------
 total	60	452	33	877	414	
 ====================================================
 
 #[ A 's B ] = 60 |	Acc:	98.33
 #[ B prep A ] = 877 |	Acc:	99.89
-#[ A prep B ] = 33 |	Acc:	100.00
-#[ relative clause ] = 414 |	Acc:	99.52
+#[ A prep B ] = 33 |	Acc:	96.97
+#[ relative clause ] = 414 |	Acc:	99.76
 #[ A B ] = 452 |	Acc:	99.56
 #total = 1836 |	Acc:	99.673203
 
@@ -33,57 +33,57 @@ total	60	452	33	877	414
 Evaluate on Dev set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
-A'sB	6	1	0	5	0	
-AB	1	89	3	12	10	
-AprepB	0	0	1	0	0	
-BprepA	8	13	2	187	25	
-relc	0	9	1	15	68	
+A'sB	6	1	0	4	0	
+AB	1	90	2	11	10	
+AprepB	0	0	2	0	0	
+BprepA	8	13	2	187	28	
+relc	0	8	1	17	65	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
 
 #[ A 's B ] = 15 |	Acc:	40.00
 #[ B prep A ] = 219 |	Acc:	85.39
-#[ A prep B ] = 7 |	Acc:	14.29
-#[ relative clause ] = 103 |	Acc:	66.02
-#[ A B ] = 112 |	Acc:	79.46
-#total = 456 |	Acc:	76.973684
+#[ A prep B ] = 7 |	Acc:	28.57
+#[ relative clause ] = 103 |	Acc:	63.11
+#[ A B ] = 112 |	Acc:	80.36
+#total = 456 |	Acc:	76.754386
 
-#[ swapped ] = 322 |	Acc:	91.61
-#[ ordered ] = 134 |	Acc:	75.37
-#total = 456 |	Acc:	86.842105
+#[ swapped ] = 322 |	Acc:	92.24
+#[ ordered ] = 134 |	Acc:	76.12
+#total = 456 |	Acc:	87.500000
 
 Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
-A'sB	5	0	0	3	0	
-AB	2	78	1	11	7	
+A'sB	3	0	0	3	0	
+AB	2	78	1	9	6	
 AprepB	0	0	1	0	1	
-BprepA	8	25	5	184	24	
-relc	0	9	0	21	71	
+BprepA	10	25	5	188	23	
+relc	0	9	0	19	73	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
 
-#[ A 's B ] = 15 |	Acc:	33.33
-#[ B prep A ] = 219 |	Acc:	84.02
+#[ A 's B ] = 15 |	Acc:	20.00
+#[ B prep A ] = 219 |	Acc:	85.84
 #[ A prep B ] = 7 |	Acc:	14.29
-#[ relative clause ] = 103 |	Acc:	68.93
+#[ relative clause ] = 103 |	Acc:	70.87
 #[ A B ] = 112 |	Acc:	69.64
-#total = 456 |	Acc:	74.342105
+#total = 456 |	Acc:	75.219298
 
-#[ swapped ] = 322 |	Acc:	93.17
-#[ ordered ] = 134 |	Acc:	64.93
-#total = 456 |	Acc:	84.868421
+#[ swapped ] = 322 |	Acc:	94.10
+#[ ordered ] = 134 |	Acc:	63.43
+#total = 456 |	Acc:	85.087719
 
 Evaluate on Other set:
 ==================Confusion Matrix==================
 ->real	multi-DEs	noB	other
-A'sB	0	0	16	
-AB	17	43	52	
-AprepB	0	1	3	
-BprepA	100	65	178	
-relc	56	26	107	
+A'sB	0	0	17	
+AB	19	44	53	
+AprepB	1	1	4	
+BprepA	95	62	175	
+relc	58	28	107	
 ----------------------------------------------------
 total	173	135	356	
 ====================================================

@@ -33,57 +33,57 @@ total	60	452	33	877	414
 Evaluate on Dev set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
-A'sB	7	1	0	4	1	
-AB	2	88	2	10	10	
+A'sB	8	1	0	4	0	
+AB	1	87	2	11	9	
 AprepB	0	0	2	0	0	
-BprepA	6	14	2	190	22	
-relc	0	9	1	15	70	
+BprepA	6	15	2	191	23	
+relc	0	9	1	13	71	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
 
-#[ A 's B ] = 15 |	Acc:	46.67
-#[ B prep A ] = 219 |	Acc:	86.76
+#[ A 's B ] = 15 |	Acc:	53.33
+#[ B prep A ] = 219 |	Acc:	87.21
 #[ A prep B ] = 7 |	Acc:	28.57
-#[ relative clause ] = 103 |	Acc:	67.96
-#[ A B ] = 112 |	Acc:	78.57
-#total = 456 |	Acc:	78.289474
+#[ relative clause ] = 103 |	Acc:	68.93
+#[ A B ] = 112 |	Acc:	77.68
+#total = 456 |	Acc:	78.728070
 
-#[ swapped ] = 322 |	Acc:	92.24
-#[ ordered ] = 134 |	Acc:	76.12
+#[ swapped ] = 322 |	Acc:	92.55
+#[ ordered ] = 134 |	Acc:	75.37
 #total = 456 |	Acc:	87.500000
 
 Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
 A'sB	3	0	0	3	0	
-AB	2	80	1	11	6	
+AB	2	78	1	7	4	
 AprepB	0	0	1	0	1	
-BprepA	10	22	5	186	23	
-relc	0	10	0	19	73	
+BprepA	10	25	5	190	22	
+relc	0	9	0	19	76	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
 
 #[ A 's B ] = 15 |	Acc:	20.00
-#[ B prep A ] = 219 |	Acc:	84.93
+#[ B prep A ] = 219 |	Acc:	86.76
 #[ A prep B ] = 7 |	Acc:	14.29
-#[ relative clause ] = 103 |	Acc:	70.87
-#[ A B ] = 112 |	Acc:	71.43
-#total = 456 |	Acc:	75.219298
+#[ relative clause ] = 103 |	Acc:	73.79
+#[ A B ] = 112 |	Acc:	69.64
+#total = 456 |	Acc:	76.315789
 
-#[ swapped ] = 322 |	Acc:	93.48
-#[ ordered ] = 134 |	Acc:	64.93
-#total = 456 |	Acc:	85.087719
+#[ swapped ] = 322 |	Acc:	95.34
+#[ ordered ] = 134 |	Acc:	63.43
+#total = 456 |	Acc:	85.964912
 
 Evaluate on Other set:
 ==================Confusion Matrix==================
 ->real	multi-DEs	noB	other
-A'sB	1	0	15	
+A'sB	0	0	14	
 AB	18	43	53	
-AprepB	0	1	2	
-BprepA	101	64	182	
-relc	53	27	104	
+AprepB	1	1	2	
+BprepA	95	62	181	
+relc	59	29	106	
 ----------------------------------------------------
 total	173	135	356	
 ====================================================

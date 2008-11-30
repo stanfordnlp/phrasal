@@ -16,7 +16,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
   Map<String,String> cilin_level2map;
   Map<String,Set<String>> cilin_multipleEntry;
 
-  public List<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props, Set<String> cachedWords) {
+  public Counter<String> extractFeatures(int deIdxInSent, Pair<Integer, Integer> chNPrange , Tree chTree, Properties props, Set<String> cachedWords) {
 
     String twofeatStr   = props.getProperty("2feat", "false");
     String revisedStr   = props.getProperty("revised", "false");
@@ -29,6 +29,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     String percentageStr= props.getProperty("percentage", "false");
     String ciLinStr = props.getProperty("ciLin", "false");
     String topicalityStr = props.getProperty("topicality", "false");
+    String lengthStr = props.getProperty("length", "false");
 
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
@@ -41,6 +42,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     Boolean percentage = Boolean.parseBoolean(percentageStr);
     Boolean ciLin = Boolean.parseBoolean(ciLinStr);
     Boolean topicality = Boolean.parseBoolean(topicalityStr);
+    Boolean length = Boolean.parseBoolean(lengthStr);
 
     //Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     //Tree chTree = validSent.chParsedTrees.get(0);
@@ -58,27 +60,27 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     // (1) make feature list
 
     // make feature list
-    List<String> featureList = new ArrayList<String>();
+    Counter<String> featureList = new ClassicCounter<String>();
     StringBuilder sb = new StringBuilder();
 
     sb = new StringBuilder();
     String deTag = npYield.get(deIdxInPhrase).tag();
     if (twofeat) {
       sb.append("dePos:").append(deTag);
-      featureList.add(sb.toString());
+      featureList.incrementCount(sb.toString());
     }
 
     if (revised) {
       if ("DEC".equals(deTag)) {
         if (ExperimentUtils.hasVApattern(maskedChNPTree))
-          featureList.add("hasVA");
+          featureList.incrementCount("hasVA");
       } else if ("DEG".equals(deTag)) {
         if (ExperimentUtils.hasADJPpattern(maskedChNPTree))
-          featureList.add("hasADJP");
+          featureList.incrementCount("hasADJP");
         if (ExperimentUtils.hasQPpattern(maskedChNPTree))
-          featureList.add("hasQP");
+          featureList.incrementCount("hasQP");
         if (ExperimentUtils.hasNPPNpattern(maskedChNPTree))
-          featureList.add("hasNPPN");
+          featureList.incrementCount("hasNPPN");
       }
     }
 
@@ -99,7 +101,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
       featureList.addAll(posNgramFeatures(beforeDE, "beforeDE:"));
       featureList.addAll(posNgramFeatures(afterDE, "afterDE:"));
       if (beforeDE.size() > 0 && afterDE.size()>0)
-        featureList.add("crossDE:"+beforeDE.get(beforeDE.size()-1).tag()+"-"+afterDE.get(0).tag());
+        featureList.incrementCount("crossDE:"+beforeDE.get(beforeDE.size()-1).tag()+"-"+afterDE.get(0).tag());
     }
     
     // (1.X) features from first layer ==> first == false
@@ -121,7 +123,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         if (sentence.get(deIdx-1).tag().startsWith("N")) {
           String word = sentence.get(deIdx-1).word();
           char[] chars = word.toCharArray();
-          featureList.add("Nchar-"+chars[chars.length-1]);
+          featureList.incrementCount("Nchar-"+chars[chars.length-1]);
         }
     }
 
@@ -148,7 +150,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           pwords.append(word);
         }
       }
-      featureList.add("Pchar-"+pwords.toString());
+      featureList.incrementCount("Pchar-"+pwords.toString());
     }
 
     // (1.4) path features
@@ -160,10 +162,10 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     if (percentage) {
       if (deIdx == 1 && (sentence.get(0).word().startsWith("百分之") ||
                          sentence.get(0).word().endsWith("％"))) {
-        featureList.add("PERCENTAGE");
+        featureList.incrementCount("PERCENTAGE");
       }
       if (deIdx == 1 && (sentence.get(0).tag().equals("NR"))) {
-        featureList.add("NR");
+        featureList.incrementCount("NR");
       }
     }
 
@@ -217,7 +219,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           else throw new RuntimeException("never should be here");
 
           csb.append(cTag);
-          featureList.add(csb.toString());
+          featureList.incrementCount(csb.toString());
         }
         /*
         String c2Tag = cilin_level2map.get(w);
@@ -230,7 +232,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           else throw new RuntimeException("never should be here");
 
           csb.append(c2Tag);
-          featureList.add(csb.toString());
+          featureList.incrementCount(csb.toString());
         }
         */
       }
@@ -256,24 +258,39 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
             //System.err.println("Before-cached: "+w+" in "+sentence);
             StringBuilder builder = new StringBuilder();
             builder.append("beforeDECached-cT:").append(cTag);
-            featureList.add(builder.toString());
+            featureList.incrementCount(builder.toString());
           } else if (i > deIdx) {
             afterDEInCache = true;
             //System.err.println(" After-cached: "+w+" in "+sentence);
             StringBuilder builder = new StringBuilder();
             builder.append("afterDECached-cT:").append(cTag);
-            featureList.add(builder.toString());
+            featureList.incrementCount(builder.toString());
           } else throw new RuntimeException("never should be here");
         }
       }
-      if (beforeDEInCache) featureList.add("beforeDEInCache");
-      if (afterDEInCache) featureList.add("afterDEInCache");
+      if (beforeDEInCache) featureList.incrementCount("beforeDEInCache");
+      if (afterDEInCache) featureList.incrementCount("afterDEInCache");
+    }
+
+    if (length) {
+      int beforeDElength = deIdxInSent - chNPrange.first;
+      int afterDElength = chNPrange.second - deIdxInSent;
+      if (beforeDElength == 0) {
+        featureList.incrementCount("beforeDElength==0");
+      } else {
+        featureList.incrementCount("beforeDElength", Math.log(beforeDElength));
+      }
+      if (afterDElength == 0) {
+        featureList.incrementCount("afterDElength==0");
+      } else {
+        featureList.incrementCount("afterDElength", Math.log(afterDElength));
+      }
     }
 
     return featureList;
   }
 
-  static List<String> posNgramFeatures(List<TaggedWord> words, String prefix) {
+  static Counter<String> posNgramFeatures(List<TaggedWord> words, String prefix) {
     List<String> pos = new ArrayList<String>();
     for (TaggedWord tw : words) {
       pos.add(tw.tag());
@@ -281,8 +298,8 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     return ngramFeatures(pos, prefix);
   }
 
-  static List<String> ngramFeatures(List<String> grams, String prefix) {
-    List<String> features = new ArrayList<String>();
+  static Counter<String> ngramFeatures(List<String> grams, String prefix) {
+    Counter<String> features = new ClassicCounter<String>();
     StringBuilder sb;
     for (int i = -1; i < grams.size(); i++) {
       sb = new StringBuilder();
@@ -290,28 +307,28 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
       if (i == -1) sb.append(""); else sb.append(grams.get(i));
       sb.append("-");
       if (i+1 == grams.size()) sb.append(""); else sb.append(grams.get(i+1));
-      features.add(sb.toString());
+      features.incrementCount(sb.toString());
 
       if (i != -1) {
         sb = new StringBuilder();
         sb.append(prefix).append(":");
         sb.append(grams.get(i));
-        features.add(sb.toString());
+        features.incrementCount(sb.toString());
       }
     }
     return features;
   }
 
-  private static List<String> extractAllPaths(Tree t) {
+  private static Counter<String> extractAllPaths(Tree t) {
     return extractAllPaths(t, "");
   }
 
-  private static List<String> extractAllPaths(Tree t, String prefix) {
-    List<String> l = new ArrayList<String>();
+  private static Counter<String> extractAllPaths(Tree t, String prefix) {
+    Counter<String> l = new ClassicCounter<String>();
     if (t.isPrePreTerminal()) {
       StringBuilder sb = new StringBuilder();
       sb.append(prefix).append(t.label().value());
-      l.add(sb.toString());
+      l.incrementCount(sb.toString());
       return l;
     } else {
       for (Tree c : t.children()) {
