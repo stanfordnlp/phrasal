@@ -20,6 +20,27 @@ public class ExperimentUtils {
   static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- (DEG < 的)");
   static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- (DEG < 的)");
   
+  static void ReverseSublist(List<String> list, int start, int end) {
+    if (start < 0 || start >= list.size() ||
+        end < 0 || end >= list.size() ||
+        start > end) {
+      //System.err.println("Warning: No reverse");
+      return;
+    }
+
+    while(start < end) {
+      Swap(list, start, end);
+      start++;
+      end--;
+    }
+  }
+
+  private static void Swap(List<String> list, int p1, int p2) {
+    String tmp = list.get(p1);
+    list.set(p1, list.get(p2));
+    list.set(p2, tmp);
+  }
+
   static Set<String> treeToSetWords(Tree tree) {
     Sentence<Word> sent = tree.yield();
     Set<String> sow = new HashSet<String>();
@@ -47,10 +68,28 @@ public class ExperimentUtils {
     return range;
   }
 
+  static String getNPwithDE_rootLabel(Tree tree, int deIdx) {
+    Tree preT = Trees.getPreTerminal(tree, deIdx);
+    Tree DNPorCP = preT.parent(tree);
+    Tree theNP = DNPorCP.parent(tree);
+    return theNP.label().value();
+  }
+
+
   static List<Integer> getDEIndices(List<HasWord> sent) {
     List<Integer> des = new ArrayList<Integer>();
     for(int i = 0; i < sent.size(); i++) {
       if (sent.get(i).word().equals("的")) {
+        des.add(i);
+      }
+    }
+    return des;
+  }
+
+  static List<Integer> getMarkedDEIndices(List<HasWord> sent) {
+    List<Integer> des = new ArrayList<Integer>();
+    for(int i = 0; i < sent.size(); i++) {
+      if (sent.get(i).word().startsWith("的_")) {
         des.add(i);
       }
     }
