@@ -28,6 +28,8 @@ public class DEinTextReorderer {
 
       // collect the ones to operate on
       for (int deIdx : markedDEIdxs) {
+        if (!yield.get(deIdx).startsWith("的_"))
+          throw new RuntimeException(yield.get(deIdx)+"("+deIdx+") in "+StringUtils.join(yield, " ")+" is not a valid DE");
         Pair<Integer,Integer> r = ExperimentUtils.getNPwithDERangeFromIdx(parsedSent, deIdx);
         SortByEndPair<Integer,Integer> range = new SortByEndPair<Integer,Integer>(r.first, r.second);
         String rootLabel = ExperimentUtils.getNPwithDE_rootLabel(parsedSent, deIdx);
@@ -39,6 +41,7 @@ public class DEinTextReorderer {
           yield.set(deIdx, "的");
           continue;
         }
+        //System.err.printf("put %s(%d) in deIdx\n", yield.get(deIdx), deIdx);
         toOperate.put(range, deIdx);
       }
 
@@ -48,7 +51,7 @@ public class DEinTextReorderer {
       for(SortByEndPair<Integer, Integer> p1 : toOperate.keySet()) {
         for(SortByEndPair<Integer, Integer> p2 : toOperate.keySet()) {
           if (p1.first > p2.second || p1.second < p2.first) continue;
-          if (p1.first == p2.second || p1.second == p2.first) {
+          if ((p1.first == p2.second || p1.second == p2.first) && p1.first != p1.second) {
             System.err.println("P1="+p1);
             System.err.println("P2="+p2);
             throw new RuntimeException("");
@@ -63,6 +66,8 @@ public class DEinTextReorderer {
         }
       }
 
+      //System.err.println("(0): "+StringUtils.join(yield, " "));
+      int counter = 1;
       for(Map.Entry<SortByEndPair<Integer, Integer>, Integer> e : toOperate.entrySet()) {
         SortByEndPair<Integer, Integer> p = e.getKey();
         int deIdx = e.getValue();
@@ -75,10 +80,19 @@ public class DEinTextReorderer {
           ExperimentUtils.ReverseSublist(yield, p.first, deIdx-1);
           ExperimentUtils.ReverseSublist(yield, deIdx+1, p.second);
           ExperimentUtils.ReverseSublist(yield, p.first, p.second);
+          //System.err.println("("+counter+"): "+StringUtils.join(yield, " "));
+          counter++;
         } else {
-          throw new RuntimeException(deIdx+" in "+StringUtils.join(yield, " ")+" is not a valid DE");
+          System.err.println("(S) Skip this operation:");
+          System.err.println("(S) P="+p);
+          System.err.println("(S) deIdx="+deIdx);
+          parsedSent.pennPrint(System.err);
+          System.err.println("(S) "+de+"("+deIdx+") in "+StringUtils.join(yield, " ")+" is not a valid DE");
+          System.err.println("(S) --------------------");
         }
       }
+
+      System.out.println(StringUtils.join(yield, " "));
     }
   }
 }
@@ -104,7 +118,7 @@ class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
       //System.err.println("Compared: "+comp);
       return comp;
     } else {
-      return ((Comparable) first).compareTo(another.first);
+      return ((Comparable) another.first).compareTo(first);
     }
   }
 
