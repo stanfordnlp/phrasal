@@ -204,7 +204,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           StringBuilder cilinTag = new StringBuilder();
           cilinTag.append(cilinLevel2Tag.charAt(0));
           Set<String> cTags = cilin_multipleEntry.get(word);
-          if (cTags == null) cTags = new HashSet<String>();
+          if (cTags == null) cTags = new TreeSet<String>();
           if (cTags.size() < 1) {
             cilin_map.put(word, cilinTag.toString());
             cilin_level2map.put(word, cilinLevel2Tag);
@@ -220,6 +220,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
 
         String w = sentence.get(i).word();
         Set<String> cTags = cilin_multipleEntry.get(w);
+        /*
         if (cTags == null || cTags.size() == 0 || cTags.size() > 1) continue;
         String cTag = cilin_map.get(w);
         if (cTag != null) {
@@ -233,6 +234,19 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           csb.append(cTag);
           featureList.incrementCount(csb.toString());
         }
+        */
+        if (cTags == null || cTags.size() == 0) continue;
+        StringBuilder csb = new StringBuilder();
+        if (i < deIdx)
+          csb.append("cT_beforeDE:");
+        else if (i > deIdx)
+          csb.append("cT_afterDE:");
+        else throw new RuntimeException("never should be here");
+        for (String cTag : cTags) {
+          csb.append(cTag);
+        }
+        System.err.println("==> "+csb.toString()+" <==");
+        featureList.incrementCount(csb.toString());
       }
     }
 
