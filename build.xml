@@ -1,4 +1,4 @@
-<!-- JavaNLP MT build file -->
+<!-- JavaNLP MT5 build file -->
 
 <project name="mt" default="compile" basedir=".">
   <property name="project.core"   value="${basedir}/../core" />
@@ -29,6 +29,7 @@
         <exclude name="javanlp*"/>
       </fileset>
     </path>
+
   </target>
   
   <target name="clean" description="Delete old classes">
@@ -89,6 +90,43 @@
       </batchtest>
     </junit>
   </target>
+
+
+  <!-- TestNG stuff here  -->
+  <property name="testng.src"     value="${basedir}/testng/src" />
+  <property name="testng.classes"     value="${basedir}/testng/classes" />
+  <property name="testng.reports"     value="${basedir}/testng/reports" />
+  <property name="testng.jar"  value="${basedir}/lib/testng.jar" />
+  <taskdef resource="testngtasks"  classpath="${testng.jar}"/>
+  <mkdir dir="${testng.classes}"/>
+  <mkdir dir="${testng.reports}"/>
+
+  <path id="testng.classpath">
+    <pathelement location="${testng.jar}" />
+    <pathelement location="${build.path}" />
+    <pathelement location="${project.core}/classes" />
+  </path>
+
+  <path id="runtests.classpath">
+    <path refid="testng.classpath"/>
+    <pathelement location="${testng.classes}" />
+  </path>
+
+  <target name="compiletests" depends="compile" description="Compile testng test classes">
+    <javac srcdir="${testng.src}"
+	   destdir="${testng.classes}" 
+           encoding="utf-8"   
+           classpathref="testng.classpath"
+	   includes="**/*.java" />
+  </target>
+
+  <target name="runtests" depends="compiletests" description="Run TestNG unit tests">
+    <testng classpathref="runtests.classpath" outputDir="${testng.reports}" 
+            verbose="2" haltonfailure="true">
+      <classfileset dir="${testng.classes}" includes="**/*.class" />
+    </testng>
+  </target>
+  <!-- End of TestNG stuff -->
 
   <target name="all" depends="clean,compile"
           description="Clean and re-compile." />
