@@ -164,9 +164,21 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
                          sentence.get(0).word().endsWith("％"))) {
         featureList.incrementCount("PERCENTAGE");
       }
+      /*
       if (deIdx == 1 && (sentence.get(0).tag().equals("NR"))) {
         featureList.incrementCount("NR");
       }
+      */
+      boolean allNR = true;
+      for(int i = 0; i < deIdx; i++) {
+        TaggedWord tw = sentence.get(i);
+        if (!tw.tag().equals("NR")) {
+          allNR = false;
+          break;
+        }
+      }
+      if (allNR)
+        featureList.incrementCount("NR");
     }
 
     // features using CiLin
@@ -221,20 +233,6 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
           csb.append(cTag);
           featureList.incrementCount(csb.toString());
         }
-        /*
-        String c2Tag = cilin_level2map.get(w);
-        if (c2Tag != null) {
-          StringBuilder csb = new StringBuilder();
-          if (i < deIdx)
-            csb.append("c2T_beforeDE:");
-          else if (i > deIdx)
-            csb.append("c2T_afterDE:");
-          else throw new RuntimeException("never should be here");
-
-          csb.append(c2Tag);
-          featureList.incrementCount(csb.toString());
-        }
-        */
       }
     }
 
@@ -278,13 +276,14 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
       if (beforeDElength == 0) {
         featureList.incrementCount("beforeDElength==0");
       } else {
-        featureList.incrementCount("beforeDElength", Math.log(beforeDElength));
+        featureList.incrementCount("beforeDElength", -Math.log(beforeDElength));
       }
       if (afterDElength == 0) {
         featureList.incrementCount("afterDElength==0");
       } else {
-        featureList.incrementCount("afterDElength", Math.log(afterDElength));
+        featureList.incrementCount("afterDElength", -Math.log(afterDElength));
       }
+      featureList.incrementCount("wholeLength", -Math.log(chNPrange.second-chNPrange.first+1));
     }
 
     return featureList;

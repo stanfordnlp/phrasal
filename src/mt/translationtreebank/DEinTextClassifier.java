@@ -3,6 +3,7 @@ package mt.translationtreebank;
 import java.util.*;
 import java.io.*;
 import edu.stanford.nlp.util.*;
+import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.ling.*;
@@ -26,7 +27,9 @@ public class DEinTextClassifier {
                          "-pword", "true",
                          "-path", "true",
                          "-percent", "true",
-                         "-ciLin", "true",};
+                         "-ciLin", "true",
+                         "-topicality", "true",
+                         "-length", "true",};
     Properties featProps = StringUtils.argsToProperties(featArgs);
     Featurizer feat = new FullInformationFeaturizer();
 
@@ -60,8 +63,8 @@ public class DEinTextClassifier {
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(parsedSent,range.first, range.second+1);
         Set<String> cachedWords = ExperimentUtils.mergeAllSets(cachedWordsBySent);
         
-        List<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, cachedWords);
-        Datum d = new BasicDatum(features);
+        Counter<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, cachedWords);
+        Datum d = new RVFDatum(features);
         String predictedClass = classifier.classOf(d);
         deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
       }

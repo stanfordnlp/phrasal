@@ -57,10 +57,10 @@ Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
 A'sB	4	0	0	4	0	
-AB	2	79	1	6	4	
+AB	2	79	1	6	5	
 AprepB	0	0	1	0	1	
-BprepA	9	24	5	190	23	
-relc	0	9	0	19	75	
+BprepA	9	24	5	190	24	
+relc	0	9	0	19	73	
 ----------------------------------------------------
 total	15	112	7	219	103	
 ====================================================
@@ -68,13 +68,13 @@ total	15	112	7	219	103
 #[ A 's B ] = 15 |	Acc:	26.67
 #[ B prep A ] = 219 |	Acc:	86.76
 #[ A prep B ] = 7 |	Acc:	14.29
-#[ relative clause ] = 103 |	Acc:	72.82
+#[ relative clause ] = 103 |	Acc:	70.87
 #[ A B ] = 112 |	Acc:	70.54
-#total = 456 |	Acc:	76.535088
+#total = 456 |	Acc:	76.096491
 
-#[ swapped ] = 322 |	Acc:	95.34
+#[ swapped ] = 322 |	Acc:	95.03
 #[ ordered ] = 134 |	Acc:	64.93
-#total = 456 |	Acc:	86.403509
+#total = 456 |	Acc:	86.184211
 
 Evaluate on Other set:
 ==================Confusion Matrix==================
