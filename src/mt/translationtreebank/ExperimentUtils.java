@@ -508,6 +508,11 @@ public class ExperimentUtils {
     return normcat;
   }
 
+  public static boolean is6class(String cat) {
+    if ("no B".equals(cat)) return true;
+    return ExperimentUtils.is5class(cat);
+  }
+
   public static boolean is5class(String cat) {
     if ("A 's B".equals(cat) ||
         "A B".equals(cat) ||
@@ -525,12 +530,19 @@ public class ExperimentUtils {
   }
 
   public static String short5class(String cat) {
+    if ("no B".equals(cat)) 
+      throw new RuntimeException("the category ["+cat+"] is not valid in 'is5class'");
+    return ExperimentUtils.short6class(cat);
+  }
+
+  public static String short6class(String cat) {
     if ("A 's B".equals(cat)) return "AsB";
     if ("A B".equals(cat)) return "AB";
     if ("A prep B".equals(cat)) return "AprepB";
     if ("B prep A".equals(cat)) return "BprepA";
     if ("relative clause".equals(cat)) return "relc";
-    throw new RuntimeException("the category ["+cat+"] is not valid in 'is5class'");
+    if ("no B".equals(cat)) return "noB";
+    throw new RuntimeException("the category ["+cat+"] is not valid in 'is6class'");
   }
     
 
