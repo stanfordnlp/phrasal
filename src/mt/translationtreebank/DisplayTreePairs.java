@@ -18,10 +18,12 @@ class DisplayTreePairs {
 
     for(TreePair validSent : treepairs) {
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        //Pair<Integer,Integer> npRange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+        Pair<Integer,Integer> npRange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
-        System.out.println(np);
+        String cat = validSent.NPwithDEs_categories.get(deIdxInSent);
+        int deIdx = deIdxInSent - npRange.first;
+        System.out.println(np+"\t"+deIdx+"\t"+cat);
       }
     }
   }
