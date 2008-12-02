@@ -4,3 +4,6 @@ java -Xmx1g mt.translationtreebank.OutputAllTrees > correctNPs.tree 2> parsedNPs
 
 # This commands read in the GALE data and marked them with the predicted DEs
 java mt.translationtreebank.DEinTextClassifier -sentFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent -treeFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.parsed > /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.predicted 2> err
+
+# make TrainDevTest.txt
+java -Xmx1g mt.translationtreebank.TrainDevTest > projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt
