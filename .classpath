@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-    <classpathentry kind="src" path="src" />
-    <classpathentry kind="src" path="test/src" />
-    <classpathentry kind="src" path="/JavaNLP-core" combineaccessrules="false" />
-    <classpathentry kind="lib" path="lib/bsh.jar" sourcepath="libsrc/bsh-2.0b4-src.zip" />
-    <classpathentry kind="lib" path="lib/testng.jar" sourcepath="libsrc/testng-5.8-src.zip" />
-    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER" />
-    <classpathentry kind="output" path="classes" />
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test/src"/>
+	<classpathentry kind="src" path="testng/src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
+	<classpathentry kind="lib" path="lib/bsh.jar" sourcepath="libsrc/bsh-2.0b4-src.zip"/>
+	<classpathentry kind="lib" path="lib/testng.jar" sourcepath="libsrc/testng-5.8-src.zip"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="classes"/>
 </classpath>
-
