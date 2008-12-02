@@ -98,8 +98,6 @@
   <property name="testng.reports"     value="${basedir}/testng/reports" />
   <property name="testng.jar"  value="${basedir}/lib/testng.jar" />
   <taskdef resource="testngtasks"  classpath="${testng.jar}"/>
-  <mkdir dir="${testng.classes}"/>
-  <mkdir dir="${testng.reports}"/>
 
   <path id="testng.classpath">
     <pathelement location="${testng.jar}" />
@@ -113,6 +111,7 @@
   </path>
 
   <target name="compiletests" depends="compile" description="Compile testng test classes">
+    <mkdir dir="${testng.classes}"/>
     <javac srcdir="${testng.src}"
 	   destdir="${testng.classes}" 
            encoding="utf-8"   
@@ -121,11 +120,22 @@
   </target>
 
   <target name="runtests" depends="compiletests" description="Run TestNG unit tests">
+    <mkdir dir="${testng.reports}"/>
     <testng classpathref="runtests.classpath" outputDir="${testng.reports}" 
             verbose="2" haltonfailure="true">
       <classfileset dir="${testng.classes}" includes="**/*.class" />
     </testng>
   </target>
+
+
+  <target name="cleantests" description="Delete old testng classes and reports">
+    <echo message="${ant.project.name}" />
+    <delete includeemptydirs="true">
+       <fileset dir="${testng.classes}/" includes="**/*"/>
+       <fileset dir="${testng.reports}/" includes="**/*"/>
+     </delete>
+  </target>
+
   <!-- End of TestNG stuff -->
 
   <target name="all" depends="clean,compile"
