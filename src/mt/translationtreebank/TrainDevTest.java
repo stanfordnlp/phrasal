@@ -6,7 +6,7 @@ import edu.stanford.nlp.util.*;
 
 class TrainDevTest {
   public static void main(String[] args) throws IOException {
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(false);
+    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true);
     Map<String,List<Integer>> labelIndices = new HashMap<String,List<Integer>>();
     Map<Integer, String> result = new HashMap<Integer, String>();
 
@@ -23,6 +23,7 @@ class TrainDevTest {
         System.err.printf("%d\t%s\n", npidx, label);
 
         if (!ExperimentUtils.is5class(label)) {
+          //if (!ExperimentUtils.is6class(label)) {
           //nothing
         } else {
           List<Integer> list = labelIndices.get(label);
@@ -58,6 +59,7 @@ class TrainDevTest {
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
         if (!ExperimentUtils.is5class(label)) {
+        //if (!ExperimentUtils.is6class(label)) {
           System.out.println("n/a");
         } else {
           String set = result.get(npidx);
