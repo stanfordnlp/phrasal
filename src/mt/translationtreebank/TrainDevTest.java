@@ -22,8 +22,8 @@ class TrainDevTest {
 
         System.err.printf("%d\t%s\n", npidx, label);
 
-        if (!ExperimentUtils.is5class(label)) {
-          //if (!ExperimentUtils.is6class(label)) {
+        //if (!ExperimentUtils.is5class(label)) {
+        if (!ExperimentUtils.is6class(label)) {
           //nothing
         } else {
           List<Integer> list = labelIndices.get(label);
@@ -58,8 +58,8 @@ class TrainDevTest {
         np = np.trim();
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
-        if (!ExperimentUtils.is5class(label)) {
-        //if (!ExperimentUtils.is6class(label)) {
+        //if (!ExperimentUtils.is5class(label)) {
+        if (!ExperimentUtils.is6class(label)) {
           System.out.println("n/a");
         } else {
           String set = result.get(npidx);

@@ -12,6 +12,8 @@ public class DEinTextClassifier {
   public static void main(String[] args) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
     String classifierFile = props.getProperty("classifier", "/user/pichuan/javanlp/projects/mt/src/mt/translationtreebank/report/nonoracle/1st.ser.gz");
+    String sixclassStr = props.getProperty("6class", "false");
+    Boolean sixclass = Boolean.parseBoolean(sixclassStr);
 
     // (1) read in the trained classifier!
     LinearClassifier<String, String> classifier
@@ -66,7 +68,11 @@ public class DEinTextClassifier {
         Counter<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, cachedWords);
         Datum d = new RVFDatum(features);
         String predictedClass = classifier.classOf(d);
-        deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
+        //deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
+        if (sixclass)
+          deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short6class(predictedClass));
+        else
+          deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
       }
       List<String> newSentence = new ArrayList<String>();
       for (int i = 0; i < parsedSent.yield().size(); i++) {

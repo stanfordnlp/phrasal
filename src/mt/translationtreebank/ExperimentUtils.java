@@ -495,15 +495,16 @@ public class ExperimentUtils {
     System.out.printf("#total = %d |\tAcc:\t%f\n", (int)totalDenom, 100.0*totalNum/totalDenom);    
   }
 
-  private static String coarseCategory(String cat) {
+  public static String coarseCategory(String cat) {
     String normcat;
     if (cat.startsWith("B") || cat.equals("relative clause")) {
       normcat = "swapped";
-    } else if (cat.startsWith("A")) {
+    } else if (cat.startsWith("A") || cat.equals("no B")) {
       normcat = "ordered";
-    } else {
+    } else if (cat.equals("multi-DEs") || cat.equals("other")) {
       normcat = "other";
-      //throw new RuntimeException("Can't find coarse category for " + cat);
+    } else {
+      throw new RuntimeException("Can't find coarse category for " + cat);
     }
     return normcat;
   }
@@ -564,9 +565,12 @@ public class ExperimentUtils {
     resultSummary(cc);
   }
 
-  public static String[] readTrainDevTest() {
-    //String trainDevTestFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\TrainDevTest.txt";
-    String trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
+  public static String[] readTrainDevTest(boolean sixclass) {
+    String trainDevTestFile;
+    if (sixclass)
+      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest_6class.txt";
+    else
+      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
     String content = StringUtils.slurpFileNoExceptions(trainDevTestFile);
     String[] lines = content.split("\\n");
     return lines;

@@ -11,7 +11,9 @@ class FullInformationWangExperiment {
   public static void main(String args[]) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
     String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
+    String sixclassStr= props.getProperty("6class", "false");
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
+    Boolean sixclass = Boolean.parseBoolean(sixclassStr);
 
     //List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true, nonOracleTree);
@@ -33,7 +35,9 @@ class FullInformationWangExperiment {
         Tree chTree = validSent.chParsedTrees.get(0);
         Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
-        if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
+        //if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
+        if ((sixclass && !ExperimentUtils.is6class(label)) ||
+            (!sixclass && !ExperimentUtils.is5class(label))) {
           continue;
         }
 
@@ -56,12 +60,15 @@ class FullInformationWangExperiment {
           predictedType = "swapped";
         }
       
+        label = ExperimentUtils.coarseCategory(label);
+        /*
         if (label.startsWith("B") || label.equals("relative clause")) {
           label = "swapped";
         } else if (label.startsWith("A")) {
           label = "ordered";
         } else {
         }
+        */
         confusionMatrix.incrementCount(label, predictedType);
       }
     }

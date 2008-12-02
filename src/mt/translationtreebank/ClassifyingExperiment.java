@@ -16,9 +16,11 @@ class ClassifyingExperiment {
     String reducedCatStr= props.getProperty("useReducedCategory", "true");
     String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
     String trainAllStr = props.getProperty("trainAll", "false");
+    String sixclassStr = props.getProperty("6class", "false");
     Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
     Boolean trainAll = Boolean.parseBoolean(trainAllStr);
+    Boolean sixclass = Boolean.parseBoolean(sixclassStr);
 
     String writeClassifier = props.getProperty("writeClassifier", null);
 
@@ -28,7 +30,7 @@ class ClassifyingExperiment {
     List<TreePair> treepairs;
     treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
-    String[] trainDevTest = ExperimentUtils.readTrainDevTest();
+    String[] trainDevTest = ExperimentUtils.readTrainDevTest(sixclass);
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
 

@@ -72,7 +72,8 @@ public class DEinTextReorderer {
         SortByEndPair<Integer, Integer> p = e.getKey();
         int deIdx = e.getValue();
         String de = yield.get(deIdx);
-        if (de.equals("的_AsB") || de.equals("的_AprepB") || de.equals("的_AB") || 
+        if (de.equals("的_AsB") || de.equals("的_AprepB") || 
+            de.equals("的_AB")  || de.equals("的_noB") ||
             de.equals("的_ordered")) {
           continue;
         } else if (de.equals("的_BprepA") || de.equals("的_relc") || 
@@ -82,6 +83,8 @@ public class DEinTextReorderer {
           ExperimentUtils.ReverseSublist(yield, p.first, p.second);
           //System.err.println("("+counter+"): "+StringUtils.join(yield, " "));
           counter++;
+        } else if (de.startsWith("的_")){
+          throw new RuntimeException("error: "+de);
         } else {
           System.err.println("(S) Skip this operation:");
           System.err.println("(S) P="+p);
