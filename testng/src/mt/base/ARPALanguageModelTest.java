@@ -11,20 +11,21 @@ import edu.stanford.nlp.util.IStrings;
  * @author Karthik Raghunathan
  * -Xmx512M
  */
+@Test (groups = "base")
 public class ARPALanguageModelTest{
 	
 		@DataProvider (name = "languageModel")
 			public Object[][] languageModel() throws IOException {
 	    	return new Object[][] {	           
-	        new Object[] { ARPALanguageModel.load("testng/src/mt/base/sampleLM.gz") }
+	        new Object[] { ARPALanguageModel.load("testng/inputs/sampleLM.gz") }
 	    	};    	
 	    }
 		
 		@DataProvider (name = "improperLanguageModels")
     public Object[][] improperLanguageModels() throws IOException {
       return new Object[][] {
-        new Object[] { "testng/src/mt/base/nullLM.test" },
-        new Object[] { "testng/src/mt/base/bigNGramsLM.test" }
+        new Object[] { "testng/inputs/nullLM.test" },
+        new Object[] { "testng/inputs/bigNGramsLM.test" }
       };      
     }
 	
