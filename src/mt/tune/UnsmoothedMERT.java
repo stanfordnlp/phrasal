@@ -347,6 +347,9 @@ public class UnsmoothedMERT {
               Z = 1.0;
               num[selection] = 1.0/num.length;
             }
+            
+            if (selection == -1) 
+              selection = r.nextInt(num.length);
 
             // adjust current
             current.set(sentId, nbest.nbestLists().get(sentId).get(selection));
