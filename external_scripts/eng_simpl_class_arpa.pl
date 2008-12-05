@@ -1,5 +1,7 @@
 #!/usr/bin/env perl 
 
+### made compatible with ngram count format
+
 ### modified by Ahmad Emami 5/17/2006
 
 ### created by Fei on 12/8/04, last major modification: 3/10/05.
@@ -102,14 +104,14 @@ while(<STDIN>){
     s/^\s*//;
     s/\s*\n//;
 
-    
-    my @words = split(/\s+/,$_);
+    my ($ngram,$count) = split(/\t+/,$_);
+    my @words = split(/\s+/,$ngram);
 
     $prev_word_num += scalar @words;
 
     $line_num ++;
     if($line_num % 1000 == 0){
-	print STDERR "eng_simp_class.pl: finish ", $line_num / 1000, "K lines\n";
+	#print STDERR "eng_simp_class.pl: finish ", $line_num / 1000, "K lines\n";
     }
 
     ## step 1: class each word
@@ -138,7 +140,7 @@ while(<STDIN>){
     $new_str =~ s/\s+$//;
 
 
-    print STDOUT "$new_str\n"; 
+    print STDOUT "$new_str\t$count\n"; 
 
     my @new_parts = split(/\s+/, $new_str);
     $new_word_num += scalar @new_parts;
