@@ -1,0 +1,87 @@
+Overall label counter:
+{A 's B=91.0, other=376.0, B prep A=1381.0, A prep B=48.0, relative clause=669.0, no B=154.0, A B=693.0}
+
+Training set stats:
+numDatums: 1924
+numLabels: 5 [B prep A, A B, relative clause, A prep B, A 's B]
+numFeatures Phi(X) types): 4
+
+
+Evaluate on Training set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BprepA	relc
+BprepA	56	218	23	670	71	
+relc	5	245	9	251	376	
+----------------------------------------------------
+total	61	463	32	921	447	
+====================================================
+
+#[ A 's B ] = 61 |	Acc:	0.00
+#[ B prep A ] = 921 |	Acc:	72.75
+#[ A prep B ] = 32 |	Acc:	0.00
+#[ relative clause ] = 447 |	Acc:	84.12
+#[ A B ] = 463 |	Acc:	0.00
+#total = 1924 |	Acc:	54.365904
+
+#[ swapped ] = 1368 |	Acc:	100.00
+#[ ordered ] = 556 |	Acc:	0.00
+#total = 1924 |	Acc:	71.101871
+
+Evaluate on Dev set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BprepA	relc
+BprepA	15	58	5	176	16	
+relc	0	57	3	54	95	
+----------------------------------------------------
+total	15	115	8	230	111	
+====================================================
+
+#[ A 's B ] = 15 |	Acc:	0.00
+#[ B prep A ] = 230 |	Acc:	76.52
+#[ A prep B ] = 8 |	Acc:	0.00
+#[ relative clause ] = 111 |	Acc:	85.59
+#[ A B ] = 115 |	Acc:	0.00
+#total = 479 |	Acc:	56.576200
+
+#[ swapped ] = 341 |	Acc:	100.00
+#[ ordered ] = 138 |	Acc:	0.00
+#total = 479 |	Acc:	71.189979
+
+Evaluate on Test set:
+==================Confusion Matrix==================
+->real	A'sB	AB	AprepB	BprepA	relc
+BprepA	14	55	7	170	15	
+relc	1	60	1	60	96	
+----------------------------------------------------
+total	15	115	8	230	111	
+====================================================
+
+#[ A 's B ] = 15 |	Acc:	0.00
+#[ B prep A ] = 230 |	Acc:	73.91
+#[ A prep B ] = 8 |	Acc:	0.00
+#[ relative clause ] = 111 |	Acc:	86.49
+#[ A B ] = 115 |	Acc:	0.00
+#total = 479 |	Acc:	55.532359
+
+#[ swapped ] = 341 |	Acc:	100.00
+#[ ordered ] = 138 |	Acc:	0.00
+#total = 479 |	Acc:	71.189979
+
+Evaluate on Other set:
+==================Confusion Matrix==================
+->real	noB	other
+A'sB	0	2	
+BprepA	9	177	
+relc	145	197	
+----------------------------------------------------
+total	154	376	
+====================================================
+
+#[ other ] = 376 |	Acc:	0.00
+#[ no B ] = 154 |	Acc:	0.00
+#total = 530 |	Acc:	0.000000
+
+#[ other ] = 376 |	Acc:	0.00
+#[ ordered ] = 154 |	Acc:	0.00
+#total = 530 |	Acc:	0.000000
+
