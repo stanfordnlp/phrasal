@@ -39,9 +39,9 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   private static final String[] TAGS_BEFORE  = new String[] // words before the verb in an VSO
    { "CONJ", "PUNC" };
   private static final String[] TAGS_VERB  = new String[] // VSO verbs
-   { "PV", "IV" };
+   { "PV", "IV", "NOUN.VN", "ADJ.VN", "DET+ADJ.VN", "DET+NOUN.VN" };
   private static final String[] TAGS_BETWEEN = new String[] // between verb and subject
-   { };
+   { "IVSUFF+DO", "PVSUFF+DO" };
   private static final String[] TAGS_SBJ_START  = new String[] // anything that may start an NP-SBJ or SBAR-SBJ:
    { // common NP starts (> 100 in ATB):
      "NOUN", "DET+NOUN", "NOUN+PROP", "PRON", "DET+NOUN+PROP", "DEM+PRON", "NUM",
@@ -53,9 +53,9 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   // Tags currently not handled:
 
   private static final String[] TAGS_VERB_FAIL  = new String[]
-   { "PSEUDO+VERB", "NOUN.VN", "ADJ.VN", "VERB+PART", "DET+ADJ.VN", "DET+NOUN.VN" };
+   { "PSEUDO+VERB", "VERB+PART" };
   private static final String[] TAGS_SBJ_FAIL  = new String[]
-   { "IVSUFF+DO", "PVSUFF+DO" };
+   { };
   private static final String[] TAGS_FAIL  = new String[]
    { // This usually starts an SBAR or SBARQ:
      "REL+ADV", "REL+PRON", "INTERROG+ADV",
