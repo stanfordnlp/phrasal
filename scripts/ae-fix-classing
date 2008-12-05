@@ -1,0 +1,144 @@
+#!/usr/bin/perl -p
+
+##########################################
+# Fix mistakes that the AE MT system makes
+# when run on 
+##########################################
+
+s/^/ /g;
+s/$/ /g;
+s/ /  /g;
+
+sub m12 {
+	my ($d,$m) = @_;
+  $d -= 12 if $d > 12;
+	return " $d:${m}0 ";
+}
+
+## $ -> dollar:
+#s/ \$ / dollars /g;
+
+## Hour format:
+s/ (\d)0,0([1-9]) / $2:0$1 /g;
+s/ (\d)0,(11|12) / $2:0$1 /g;
+s/ (\d)0,([12]\d) /m12($2,$1)/ge;
+
+s/ 0([1-9]),(\d)0 / $1:0$2 /g;
+s/ (11|12),(\d)0 / $1:0$2 /g;
+s/ ([12]\d),(\d)0 /m12($1,$2)/ge;
+
+# [-00,06-] {+0600+}
+# [-00,09-] {+0900+}
+# [-00,12-] {+12:00+}
+# [-00,17-] {+1700+}
+# [-00,19-] {+7:00 pm+}
+# [-00,20-] {+20:00+}
+# [-00,09-] {+0900+}
+
+## Date format:
+#s/ (\d\d|\d)-2 /, feb $1 /g;
+# [-10-2-] {+feb 10+}
+# [-11-2-] {+, feb 11+}
+# [-16-2-] {+, feb 16+}
+# [-17-2-] {+, feb 17+}
+# [-18-2-] {+, feb 18+}
+# [-13-2-] {+, feb 13+}
+# [-14-2-] {+, feb 14+}
+# [-15-2-] {+, feb 15+}
+# [-7-2-] {+, feb 7+}
+# [-8-2-] {+, feb 8+}
+# [-13-2-] {+feb 13+}
+
+s/ (\d),(\d+) / $1.$2 /g;
+s/ ([3-9]\d),(\d+) / $1.$2 /g;
+s/ (\d{3,}),(\d+) / $1.$2 /g;
+# [-1,2-] {+1.2+}
+# [-1,25-] {+1.25+}
+# [-4,4-] {+4.4+}
+# [-7,6-] {+7.6+}
+# [-8,99-] {+8.99+}
+
+#s/ (\d).(\d+) / $1,$2 /g;
+# [-7.203-] {+7,203+}
+
+s/ ([3-9]|\d\d+)(\d\d\d) / $1,$2 /g;
+# [-1600-] {+1,600+}
+# [-4500-] {+4,500+}
+# [-2860-] {+2,860 +}
+
+s/ (\d+) thousand / $1,000 /g;
+#  [-300 thousand-] {+300,000+}
+#  [-8 thousand-] {+8,000+}
+#  [-two thousand-] {+2000+}
+
+s/ twenty / 20 /g;
+s/ thirty / 30 /g;
+s/ fourty / 40 /g;
+s/ fifty / 50 /g;
+s/ sixty / 60 /g;
+s/ seventy / 70 /g;
+s/ ninety / 90 /g;
+#  [-thirty-] {+30+}
+#  [-twenty-] {+20+}
+#  [-fifty-] {+50+}
+#  [-sixty-] {+60+}
+#  [-ninety-] {+90+}
+
+s/ (\d+) hundred / $1,00 /g;
+#  [-two hundred-] {+200+}
+
+#s/ fourth / 4th /g;
+#s/ fifth / 5th /g;
+#s/ sixth / 6th /g;
+s/ seventh / 7th /g;
+s/ eighth / 8th /g;
+s/ ninth / 9th /g;
+s/ tenth / 10th /g;
+s/ eleventh / 11th /g;
+s/ twelfth / 12th /g;
+s/ thirteenth / 13th /g;
+s/ fourteenth / 14th /g;
+s/ fifteenth / 15th /g;
+s/ sixteenth / 16th /g;
+s/ seventeenth / 17th /g;
+s/ eighteenth / 18th /g;
+s/ nineteenth / 19th /g;
+s/ twentieth / 20th /g;
+#  [-tenth-] {+10th+}
+#  [-twentieth-] {+20th+}
+#  [-nineteenth-] {+19th+}
+#  [-ninth-] {+9th+}
+
+# Years:
+s/ 1950s / fifties /g;
+s/ 1960s / sixties /g;
+s/ 1970s / seventies /g;
+s/ 1980s / eighties /g;
+s/ 1990s / nineties /g;
+#  [-1950s-] {+fifties+}
+#  [-1960s-] {+sixties+}
+
+s/ \.((19|20)\d\d) / $1 /g; 
+
+
+s/  +/ /g;
+s/^ +//g;
+s/ +$//g;
+
+## try this?
+
+# [-8,1-] {+1.8+}
+# [-6,15-] {+15.6+}
+# [-9,2-] {+2.9+}
+# [-4-] {+c+}
+#  [-18-] {+18th+}
+#  [-18-] {+the 18th century+}
+#  [-19-] {+19th+}
+#  [-992-] {+299+}
+#  [-19-] {+the 19th century+}
+#  [-1950s-] {+fifties+}
+#  [-1960s-] {+sixties+}
+#  [-2005-2008-] {+2005-08+}
+#  [-feb.-] {+february+}
+#  [-ten-] {+10+}
+#  [-two-] {+2+}

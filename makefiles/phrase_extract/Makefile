@@ -42,16 +42,37 @@ LTABLES_TEST= \
 	$(TESTID).tables/lo-hier.msd2-bidirectional-fe.gz
 
 # Main targets:
-test: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.f1best
-test_best: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.b1best
-nbest: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
-train: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+all: train test
 
-test_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.f1best
-test_best_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.b1best
-nbest_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
-train_google: extract_google $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
-extract_google: $(TESTID).tables/phrase-table.gz $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz 
+# Build LMs (test):
+test_lm: $(TESTID).flt_giga.lm.gz
+test_lm_google: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz
+test_lm_gale: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).flt_bbn1.lm.gz $(TESTID).flt_bbn2.lm.gz
+
+# Build LMs (dev):
+dev_lm: $(DEVID).flt_giga.lm.gz
+dev_lm_google: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz
+dev_lm_gale: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz $(DEVID).flt_bbn1.lm.gz $(DEVID).flt_bbn2.lm.gz
+
+# Build LMs + phrase tables (test):
+test_extract: test_lm $(TESTID).tables/phrase-table.gz
+test_extract_google: test_lm_google $(TESTID).tables/phrase-table.gz
+test_extract_gale: test_lm_gale $(TESTID).tables/phrase-table.gz
+
+# Build LMs + phrase tables (dev):
+dev_extract: dev_lm $(DEVID).tables/phrase-table.gz
+dev_extract_google: dev_lm_google $(DEVID).tables/phrase-table.gz
+dev_extract_gale: dev_lm_gale $(DEVID).tables/phrase-table.gz
+
+# Run MERT:
+train: dev_extract $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+train_google: dev_extract_google $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+train_gale: dev_extract_gale $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+
+# Decode on test data:
+test: test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+test_google: test_extract_google $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+test_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
 
 ltables: $(LTABLES)
 
@@ -98,7 +119,7 @@ $(DEVID).%.bleu: $(DEVID).%
 
 ### Generate XML nbest list:
 $(TESTID).%.xml: $(TESTID).% $(TESTID).unk
-	cat logs/$<.1best.log | grep ^WeightConfig | perl -ne 'while(/:([\d\.E\-]+)/g) { print "$$1 " }' > .tmp.weights
+	cat $<.1best.log | grep ^WeightConfig | perl -ne 'while(/:([\d\.E\-]+)/g) { print "$$1 " }' > .tmp.weights
 	mtij.py $+ "`cat .tmp.weights`" stanford > $@
 	rm .tmp.weights
 
@@ -125,23 +146,23 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).unk
 # Use best MERT paramters to generate n-best list:
 $(TESTID).$(DEVID).%.$Nbest.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(JAVA_PHRASAL_ARGS_N) mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true -uniq-n-best-list true < $(TESTID).$(IE) > $@) 2> logs/$@.log
+	(java $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true -uniq-n-best-list false < $(TESTID).$(IE) > $@) 2> $@.log
 
 # Use final MERT paramters:
 $(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
+	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 $(DEVID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(DEVID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(DEVID) < $< > $<.$(DEVID)
-	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> logs/$@.log
+	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> $@.log
 
 # Use best MERT paramters:
 $(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> logs/$@.log
+	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 $(DEVID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(DEVID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(DEVID) < $< > $<.$(DEVID)
-	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> logs/$@.log
+	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> $@.log
 
 #############################################
 # 1-best output with Moses (MBR or Viterbi):
@@ -151,10 +172,10 @@ $(TESTID).%.1best: $(TESTID).%.ini $(TESTID).$(IE)
 	$(MOSESDEC) -config $< < $(TESTID).$(IE) > $@ 2> $@.log
 
 $(TESTID).%.mbr: $(TESTID).%.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(TESTID).$(IE) > $@ 2> logs/$@.log
+	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(TESTID).$(IE) > $@ 2> $@.log
 
 $(DEVID).%.mbr: $(DEVID).%.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(DEVID).$(IE) > $@ 2> logs/$@.log
+	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(DEVID).$(IE) > $@ 2> $@.log
 
 #############################################
 # N-best output with Moses:
@@ -162,10 +183,10 @@ $(DEVID).%.mbr: $(DEVID).%.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
 
 $(DEVID).%.nbest: $(DEVID).%.mert/moses.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
 	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(DEVID).$(IE) \
-	> $@.1best 2> logs/$@.log
+	> $@.1best 2> $@.log
 $(TESTID).%.nbest: $(TESTID).%.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(TESTID).$(IE) \
-	> $@.1best 2> logs/$@.log
+	> $@.1best 2> $@.log
 
 #############################################
 # Convert dev ini file into test:
@@ -239,20 +260,41 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 # Language models:
 #############################################
 
+### Mixed models:
+
+# Gigaword + Google:
+%.mix1.lm.gz: %.flt_giga.lm.gz %.rsc_google.lm.gz
+	ngram -lm $(*F).flt_giga.lm.gz -mix-lm $(*F).rsc_google.lm.gz -lambda $(LM_MIX1) -write-lm $@ -order 5
+
+# Mix1 + BBN1:
+%.mix2.lm.gz: %.mix1.lm.gz %.flt_bbn1.lm.gz
+	ngram -lm $(*F).mix1.lm.gz -mix-lm $(*F).flt_bbn1.lm.gz -lambda $(LM_MIX2) -write-lm $@ -order 5
+
+### BBN FOUO data:
+
+%.flt_bbn1.lm.gz: %.e.phrases %.e.class.phrases $(BBN1)
+	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(BBN1) 5 2> $@.log | gzip > $@
+%.flt_bbn2.lm.gz: %.e.phrases %.e.class.phrases $(BBN1)
+	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(BBN2) 5 2> $@.log | gzip > $@
+
 ### Gigaword:
 
-# Filter out any ngram that does not match any substring of any concatenation of English phrase table entries:
-%.flt_giga.lm.gz: %.e.vocab $(GIGA)
-	cat $(*F).e.vocab | $(LM_FILTER_SCRIPT) $(GIGA) 3 2> $@.log | gzip > $@
+%.flt_giga.lm.gz: %.e.phrases %.e.class.phrases $(GIGA)
+	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(GIGA) 5 2> $@.log | gzip > $@
 
 ### Google LM:
 
 %.rsc_google.lm.gz: %.flt_google.lm.gz
 	(ngram -rescore-ngram $< -lm $(GOOGLE_LM) -write-lm $@ -count-lm -order 3 -vocab-aliases $(*F).e.aliases -limit-vocab -memuse -count-lm -vocab $(*F).e.vocab) >& $@.log
-%.flt_google.lm.gz: %.e.vocab %.init_google.lm.gz
-	cat $(*F).e.vocab | $(LM_FILTER_SCRIPT) $(*F).init_google.lm.gz 2> $@.log | gzip > $@
-%.init_google.lm.gz: %.e.vocab %.e.aliases
+#%.flt_google.lm.gz: %.e.phrases %.e.class.phrases %.init_google.lm.gz
+#	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(*F).init_google.lm.gz 5 2> $@.log | gzip > $@
+%.flt_google.lm.gz: %.e.vocab %.e.aliases
 	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c/ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 300 -gt3max 10000 -lm $@) >& $@.log
+
+%.rsc_google.100.lm.gz: %.flt_google.100.lm.gz
+	(ngram -rescore-ngram $< -lm $(GOOGLE_LM) -write-lm $@ -count-lm -order 3 -vocab-aliases $(*F).e.aliases -limit-vocab -memuse -count-lm -vocab $(*F).e.vocab) >& $@.log
+%.flt_google.100.lm.gz: %.e.vocab %.e.aliases
+	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c/ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 100 -gt3max 10000 -lm $@) >& $@.log
 
 #############################################
 # Vocabulary files:
@@ -261,8 +303,11 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 %.aliases: %.vocab
 	make_alias < $< > $@
 
-%.e.vocab: %.e.phrases
-	cat $< | ngram-count -text - -write-vocab $@ -order 1 -tolower
+%.e.vocab: %.e.phrases %.e.class.phrases
+	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -tolower
+
+%.e.class.phrases: %.e.phrases
+	cat $< | eng_simpl_class.pl 1 0 | ibm2class > $@
 
 %.e.phrases: %.tables/phrase-table.gz %.$(FE)
 	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
@@ -332,6 +377,8 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpu
 ### Convert SGML file into raw text, and remove IBM classing:
 %.unk: %.sgm
 	cat $< | sgml2txt | ibm2noclass | lc > $@
+%.cunk: %.sgm
+	cat $< | sgml2txt | lc > $@
 
 %.counts.html: %.counts
 	cat $< | counts2html $(TESTID) > $@

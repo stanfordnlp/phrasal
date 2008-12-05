@@ -2667,10 +2667,10 @@ public class UnsmoothedMERT {
         System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d\n", rank);
         newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.evalue);
  			} else if (System.getProperty("tuneLength") != null) {
- 				System.out.println("Optimize translation length with a single line search");
-         ClassicCounter<String> dir = new ClassicCounter<String>();
-         dir.incrementCount(WordPenaltyFeaturizer.FEATURE_NAME, 1.0);
-         newWts = lineSearch(nbest, wts, dir, emetric);
+        System.out.println("Optimize translation length with a single line search");
+        ClassicCounter<String> dir = new ClassicCounter<String>();
+        dir.incrementCount(WordPenaltyFeaturizer.FEATURE_NAME, 1.0);
+        newWts = lineSearch(nbest, wts, dir, emetric);
       } else {
         System.out.printf("Using cer\n");
         newWts = cerStyleOptimize2(nbest, wts, emetric);

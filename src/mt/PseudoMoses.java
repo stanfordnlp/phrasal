@@ -37,7 +37,6 @@ public class PseudoMoses {
 	static public final String FACTOR_DELIM_OPT = "factor-delimiter";
 	static public final String MAPPING_OPT = "mapping";
 	static public final String NBEST_LIST_OPT = "n-best-list";
-  static public final String UNIQ_NBEST_LIST_OPT = "uniq-n-best-list";
   static public final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   static public final String CONSTRAIN_TO_REFS = "constrain-to-refs";
 	static public final String PREFERED_REF_STRUCTURE = "use-prefered-ref-structure";
@@ -87,7 +86,7 @@ public class PseudoMoses {
 		OPTIONAL_FIELDS.addAll(Arrays.asList(new String[] { INLINE_WEIGHTS,ITER_LIMIT,
 				DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
 				USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
-				NBEST_LIST_OPT, UNIQ_NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
+				NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
         CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
 				LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
 				PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
@@ -657,13 +656,6 @@ public class PseudoMoses {
 
     if (config.containsKey(MOSES_NBEST_LIST_OPT)) {
       generateMosesNBestList = Boolean.parseBoolean(config.get(MOSES_NBEST_LIST_OPT).get(0));
-    }
-
-    if (config.containsKey(UNIQ_NBEST_LIST_OPT)) {
-      System.err.println("Generating n-best lists with no duplicates.");
-      uniqNBestList = Boolean.parseBoolean(config.get(UNIQ_NBEST_LIST_OPT).get(0));
-      if(uniqNBestList)
-        AbstractBeamInferer.filterHistoryBySurface = true;
     }
 
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
