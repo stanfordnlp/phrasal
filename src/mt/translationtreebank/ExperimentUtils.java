@@ -570,13 +570,4 @@ public class ExperimentUtils {
     String[] lines = content.split("\\n");
     return lines;
   }
-
-  public static String[] readTrainDevTest(boolean sixclass) {
-    String trainDevTestFile;
-    if (sixclass)
-      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest_6class.txt";
-    else
-      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
-    return readTrainDevTest(trainDevTestFile);
-  }
 }

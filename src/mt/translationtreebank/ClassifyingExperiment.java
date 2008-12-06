@@ -19,14 +19,17 @@ class ClassifyingExperiment {
 
   public static void main(String args[]) throws Exception {
     Properties props = StringUtils.argsToProperties(args);
+    String trainDevTestFile;
+    String sixclassStr = props.getProperty("6class", "false");
+    Boolean sixclass = Boolean.parseBoolean(sixclassStr);
+
+    if (sixclass)
+      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest_6class.txt";
+    else
+      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
 
     ClassifyingExperiment exp = new ClassifyingExperiment();
-    exp.run(props);
-  }
-
-  
-  public void run(Properties props) throws Exception {
-    run(props, null);
+    exp.run(props, trainDevTestFile);
   }
 
   public void run(Properties props, String trainDevTestFile) throws Exception {
@@ -48,12 +51,7 @@ class ClassifyingExperiment {
     treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
     String[] trainDevTest;
-    if (trainDevTestFile == null) 
-      trainDevTest = ExperimentUtils.readTrainDevTest(sixclass);
-    else {
-      if (sixclass) throw new RuntimeException("don't set 6class and give a TrainDevTest file at the same time");
-      trainDevTest = ExperimentUtils.readTrainDevTest(sixclass);
-    }
+    trainDevTest = ExperimentUtils.readTrainDevTest(trainDevTestFile);
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
 
@@ -92,14 +90,24 @@ class ClassifyingExperiment {
         Counter<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props, cachedWords);
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
+        // take this example or not -- depends on the label
+        boolean notAdd = false;
+        if (sixclass && !ExperimentUtils.is6class(label)) notAdd = true;
+        if (!sixclass && !ExperimentUtils.is5class(label)) notAdd = true;
+
         // (2) make label
 
         // (3) Make Datum and add
         Datum<String, String> d = new RVFDatum(featureList, label);
-        if (trainDevTest[npid].endsWith("train")) {
-          trainDataset.add(d);
-          trainData.add(d);
+
+        if (notAdd || "n/a".equals(trainDevTest[npid])) {
+          otherDataset.add(d);
+          otherData.add(d);
         }
+        else if (trainDevTest[npid].endsWith("train")) {
+            trainDataset.add(d);
+            trainData.add(d);
+        } 
         else if ("dev".equals(trainDevTest[npid])) {
           if (trainAll) {
             trainDataset.add(d);
@@ -115,9 +123,6 @@ class ClassifyingExperiment {
           }
           testDataset.add(d);
           testData.add(d);
-        } else if ("n/a".equals(trainDevTest[npid])) {
-          otherDataset.add(d);
-          otherData.add(d);
         } else {
           throw new RuntimeException("trainDevTest error, line: "+trainDevTest[npid]);
         }
