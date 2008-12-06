@@ -12,11 +12,11 @@ import org.testng.annotations.*;
 public class MosesNBestListTest{
 	
 		@DataProvider (name = "improperInputFiles")
-			public Object[][] improperInputFiles() throws IOException {
+		public Object[][] improperInputFiles() throws IOException {
 	    	return new Object[][] {
-		  new Object[] { "testng/inputs/improperIDs.test" },
-	          new Object[] { "testng/inputs/outOfOrderIDs.test" },
-	          new Object[] { "testng/inputs/improperFeatures.test" }
+		  new Object[] { "/u/nlp/data/testng/inputs/improperIDs.test" },
+	          new Object[] { "/u/nlp/data/testng/inputs/outOfOrderIDs.test" },
+	          new Object[] { "/u/nlp/data/testng/inputs/improperFeatures.test" }
 //	    	  new Object[] { "improperIDs.test" },
 //	       	  new Object[] { "outOfOrderIDs.test" },
 //	       	  new Object[] { "improperFeatures.test" }
@@ -25,7 +25,7 @@ public class MosesNBestListTest{
 	
 	 	@Test
 	 	public void testConstructor() throws IOException	{
-	 		MosesNBestList nbestList = new MosesNBestList("testng/inputs/properSample.test");
+	 		MosesNBestList nbestList = new MosesNBestList("/u/nlp/data/testng/inputs/properSample.test");
 //	 		MosesNBestList nbestList = new MosesNBestList("properSample.test");
 	 		
 	 		//  Features[3]: LM
@@ -44,7 +44,7 @@ public class MosesNBestListTest{
 		
 	 	@Test
 	 	public void testToString() throws IOException	{
-	 		MosesNBestList nbestList = new MosesNBestList("testng/inputs/properSample.test");
+	 		MosesNBestList nbestList = new MosesNBestList("/u/nlp/data/testng/inputs/properSample.test");
 //	 		MosesNBestList nbestList = new MosesNBestList("properSample.test");
 	 			 		
 	 		assert(nbestList.toString().length() == 2817412);

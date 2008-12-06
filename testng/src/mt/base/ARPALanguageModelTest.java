@@ -17,15 +17,15 @@ public class ARPALanguageModelTest{
 		@DataProvider (name = "languageModel")
 			public Object[][] languageModel() throws IOException {
 	    	return new Object[][] {	           
-	        new Object[] { ARPALanguageModel.load("testng/inputs/sampleLM.gz") }
+	        new Object[] { ARPALanguageModel.load("/u/nlp/data/testng/inputs/sampleLM.gz") }
 	    	};    	
 	    }
 		
 		@DataProvider (name = "improperLanguageModels")
     public Object[][] improperLanguageModels() throws IOException {
       return new Object[][] {
-        new Object[] { "testng/inputs/nullLM.test" },
-        new Object[] { "testng/inputs/bigNGramsLM.test" }
+        new Object[] { "/u/nlp/data/testng/inputs/nullLM.test" },
+        new Object[] { "/u/nlp/data/testng/inputs/bigNGramsLM.test" }
       };      
     }
 	

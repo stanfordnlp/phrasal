@@ -21,14 +21,14 @@ public class NGramLanguageModelFeaturizerTest {
     @DataProvider (name = "languageModel")
       public Object[][] languageModel() throws IOException {
         return new Object[][] {           
-          new Object[] { mt.base.ARPALanguageModel.load("testng/inputs/sampleLM.gz") }
+          new Object[] { mt.base.ARPALanguageModel.load("/u/nlp/data/testng/inputs/sampleLM.gz") }
        };      
       }
     
     @DataProvider (name = "featurizer")
     public Object[][] featurizer() throws IOException {
       return new Object[][] {           
-        new Object[] { new NGramLanguageModelFeaturizer<IString>(mt.base.ARPALanguageModel.load("testng/inputs/tinyLM.test")) }
+        new Object[] { new NGramLanguageModelFeaturizer<IString>(mt.base.ARPALanguageModel.load("/u/nlp/data/testng/inputs/tinyLM.test")) }
       };      
     }
     
@@ -83,7 +83,7 @@ public class NGramLanguageModelFeaturizerTest {
     
     @Test (dataProvider = "languageModel")
     public void testConstructor4(mt.base.ARPALanguageModel lm) throws IOException{
-      NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>("testng/inputs/sampleLM.gz", "sampleLM");      
+      NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>("/u/nlp/data/testng/inputs/sampleLM.gz", "sampleLM");      
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);
       
@@ -95,7 +95,7 @@ public class NGramLanguageModelFeaturizerTest {
     
     @Test (dataProvider = "featurizer")
     public void testFromFile(NGramLanguageModelFeaturizer<IString> featurizer) throws IOException{
-      featurizer = featurizer.fromFile("testng/inputs/sampleLM.gz", "sampleLM");      
+      featurizer = featurizer.fromFile("/u/nlp/data/testng/inputs/sampleLM.gz", "sampleLM");      
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);
       
@@ -107,11 +107,11 @@ public class NGramLanguageModelFeaturizerTest {
     
     @Test (expectedExceptions = RuntimeException.class)
     public void testExceptionInConstructor4(String lmFile) throws IOException {
-      NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>("testng/inputs/sampleLM.gz");
+      NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>("/u/nlp/data/testng/inputs/sampleLM.gz");
     }
     
     @Test (dataProvider = "featurizer", expectedExceptions = RuntimeException.class)
     public void testExceptionInFromFile(NGramLanguageModelFeaturizer<IString> featurizer) throws IOException{
-      featurizer = featurizer.fromFile("testng/inputs/sampleLM.gz");
+      featurizer = featurizer.fromFile("/u/nlp/data/testng/inputs/sampleLM.gz");
     } 
 }
