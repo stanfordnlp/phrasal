@@ -10,9 +10,26 @@ import java.io.*;
 import java.util.*;
 
 class ClassifyingExperiment {
+  TwoDimensionalCounter<String, String> trainStats;
+  TwoDimensionalCounter<String, String> devStats;
+  TwoDimensionalCounter<String, String> testStats;
+
+  public ClassifyingExperiment() {
+  }
+
   public static void main(String args[]) throws Exception {
     Properties props = StringUtils.argsToProperties(args);
 
+    ClassifyingExperiment exp = new ClassifyingExperiment();
+    exp.run(props);
+  }
+
+  
+  public void run(Properties props) throws Exception {
+    run(props, null);
+  }
+
+  public void run(Properties props, String trainDevTestFile) throws Exception {
     String reducedCatStr= props.getProperty("useReducedCategory", "true");
     String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
     String trainAllStr = props.getProperty("trainAll", "false");
@@ -30,11 +47,15 @@ class ClassifyingExperiment {
     List<TreePair> treepairs;
     treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
-    String[] trainDevTest = ExperimentUtils.readTrainDevTest(sixclass);
+    String[] trainDevTest;
+    if (trainDevTestFile == null) 
+      trainDevTest = ExperimentUtils.readTrainDevTest(sixclass);
+    else {
+      if (sixclass) throw new RuntimeException("don't set 6class and give a TrainDevTest file at the same time");
+      trainDevTest = ExperimentUtils.readTrainDevTest(sixclass);
+    }
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
-
-    TwoDimensionalCounter<String, String> confusionMatrix = new TwoDimensionalCounter<String,String>();
 
     GeneralDataset trainDataset = new Dataset();
     GeneralDataset devDataset = new Dataset();
@@ -101,7 +122,6 @@ class ClassifyingExperiment {
           throw new RuntimeException("trainDevTest error, line: "+trainDevTest[npid]);
         }
    
-
         // (4) collect other statistics
         labelCounter.incrementCount(label);
         npid++;
@@ -134,6 +154,11 @@ class ClassifyingExperiment {
     System.err.println(classifier.toHistogramString());
     System.err.println("-------------------------------------------");
 
+    trainStats = getConfusionMatrix(trainData, classifier);
+    devStats = getConfusionMatrix(devData, classifier);
+    testStats = getConfusionMatrix(testData, classifier);
+
+
     // output information
     System.out.println("Overall label counter:");
     System.out.println(labelCounter);
@@ -143,42 +168,45 @@ class ClassifyingExperiment {
     System.out.println(((Dataset)trainDataset).toSummaryStatistics());
     System.out.println();
 
-    PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter("train")));
+    displayEval();
+
+    System.out.println("Evaluate on Other set:");
+    TwoDimensionalCounter<String,String> confusionMatrix = getConfusionMatrix(otherData, classifier);
+    evaluateOnSet(confusionMatrix);
+    System.out.println();
+
+  }
+  
+  public void displayEval() {
     System.out.println("Evaluate on Training set:");
-    evaluateOnSet(trainData, classifier, pw);
-    pw.close();
+    evaluateOnSet(trainStats);
     System.out.println();
 
     System.out.println("Evaluate on Dev set:");
-    pw = new PrintWriter(new BufferedWriter(new FileWriter("dev")));
-    evaluateOnSet(devData, classifier, pw);
-    pw.close();
+    evaluateOnSet(devStats);
     System.out.println();
 
     System.out.println("Evaluate on Test set:");
-    pw = new PrintWriter(new BufferedWriter(new FileWriter("test")));
-    evaluateOnSet(testData, classifier, pw);
-    pw.close();
+    evaluateOnSet(testStats);
     System.out.println();
     
-    System.out.println("Evaluate on Other set:");
-    pw = new PrintWriter(new BufferedWriter(new FileWriter("other")));
-    evaluateOnSet(otherData, classifier, pw);
-    pw.close();
-    System.out.println();
   }
 
-  private static void evaluateOnSet(List<Datum<String,String>> data, LinearClassifier<String, String> lc) {
-    evaluateOnSet(data, lc, null);
+  public TwoDimensionalCounter<String, String> getConfusionMatrix(List<Datum<String,String>> data, LinearClassifier<String, String> lc) {
+    return getConfusionMatrix(data, lc, null);
   }
 
-  private static void evaluateOnSet(List<Datum<String,String>> data, LinearClassifier<String, String> lc, PrintWriter pw) {
+  public TwoDimensionalCounter<String, String> getConfusionMatrix(List<Datum<String,String>> data, LinearClassifier<String, String> lc, PrintWriter decisionPW) {
     TwoDimensionalCounter<String, String> confusionMatrix = new TwoDimensionalCounter<String,String>();
     for (Datum<String,String> d : data) {
       String predictedClass = lc.classOf(d);
       confusionMatrix.incrementCount(d.label(), predictedClass);
-      if (pw!=null) pw.printf("%s\t%s\n", d.label(), predictedClass);
+      if (decisionPW!=null) decisionPW.printf("%s\t%s\n", d.label(), predictedClass);
     }
+    return confusionMatrix;
+  }
+
+  static void evaluateOnSet(TwoDimensionalCounter<String, String> confusionMatrix) {
     System.out.println("==================Confusion Matrix==================");
     System.out.print("->real");
     TreeSet<String> firstKeySet = new TreeSet<String>();

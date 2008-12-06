@@ -565,14 +565,18 @@ public class ExperimentUtils {
     resultSummary(cc);
   }
 
+  public static String[] readTrainDevTest(String trainDevTestFile) {
+    String content = StringUtils.slurpFileNoExceptions(trainDevTestFile);
+    String[] lines = content.split("\\n");
+    return lines;
+  }
+
   public static String[] readTrainDevTest(boolean sixclass) {
     String trainDevTestFile;
     if (sixclass)
       trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest_6class.txt";
     else
       trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
-    String content = StringUtils.slurpFileNoExceptions(trainDevTestFile);
-    String[] lines = content.split("\\n");
-    return lines;
+    return readTrainDevTest(trainDevTestFile);
   }
 }
