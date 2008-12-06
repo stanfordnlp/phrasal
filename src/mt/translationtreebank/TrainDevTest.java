@@ -6,7 +6,7 @@ import edu.stanford.nlp.util.*;
 
 class TrainDevTest {
   private static final Boolean VERBOSE = false;
-  
+
   public static void main(String[] args) throws IOException {
     List<String> ans = splits();
     for (String a : ans) {
@@ -45,10 +45,10 @@ class TrainDevTest {
     for (String key : labelIndices.keySet()) {
       List<Integer> indices = labelIndices.get(key);
       if (VERBOSE) System.err.printf("%s : %d\n", key, indices.size());
-      String[] split = ThreeWayRandomSplit(indices.size());
-      for (int i = 0; i < split.length; i++) {
+      List<String> split = ThreeWayRandomSplit(indices.size());
+      for (int i = 0; i < split.size(); i++) {
         int index = indices.get(i);
-        String set = split[i];
+        String set = split.get(i);
         if (result.get(index) != null) throw new RuntimeException("multiple assignment for index " + index);
         result.put(index, set);
       }
@@ -81,8 +81,26 @@ class TrainDevTest {
     return finalSplits;
   }
 
-  private static String[] ThreeWayRandomSplit(int size) {
-    String[] split = new String[size];
+  private static List<String> NWayRandomSplit(int size, int n) {
+    return null;
+  }
+
+  private static int[] NWaySplitSize(int size, int n) {
+    int nsize[] = new int[n];
+    int current_size = size;
+    int current_n = n;
+    for(int i = 0; i < n; i++) {
+      nsize[i] = (int)(((double)current_size / current_n)+0.5);
+      current_size -= nsize[i];
+      current_n--;
+    }
+    return nsize;
+  }
+
+
+  private static List<String> ThreeWayRandomSplit(int size) {
+    //String[] split = new String[size];
+    List<String> split = new ArrayList<String>(size);
     int devSize   = size / 6;
     int testSize  = size / 6;
     int trainSize = size - devSize - testSize;
@@ -105,9 +123,9 @@ class TrainDevTest {
     int finalDevSize = 0;
     int finalTrainSize = 0;
     for (int i = 0; i < size; i++) {
-      if (test.contains(i)) { split[i] = "test"; finalTestSize++; }
-      else if (dev.contains(i)) { split[i] = "dev"; finalDevSize++; }
-      else { split[i] = "train"; finalTrainSize++; }
+      if (test.contains(i)) { split.add(i, "test"); finalTestSize++; }
+      else if (dev.contains(i)) { split.add(i, "dev"); finalDevSize++; }
+      else { split.add(i, "train"); finalTrainSize++; }
     }
     if (finalTestSize != testSize) throw new RuntimeException("test size error: "+finalTestSize+" != " +testSize);
     if (finalDevSize != devSize) throw new RuntimeException("dev size error");
