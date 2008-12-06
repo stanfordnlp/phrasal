@@ -5,24 +5,30 @@ import java.io.*;
 import edu.stanford.nlp.util.*;
 
 class TrainDevTest {
+  private static final Boolean VERBOSE = false;
+  
   public static void main(String[] args) throws IOException {
+    List<String> ans = splits();
+    for (String a : ans) {
+      System.out.println(a);
+    }
+  }
+
+  public static List<String> splits() throws IOException {
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true);
     Map<String,List<Integer>> labelIndices = new HashMap<String,List<Integer>>();
     Map<Integer, String> result = new HashMap<Integer, String>();
 
     int npidx = 0;
     for (TreePair validSent : treepairs) {
-
-      //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
         Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
-        System.err.printf("%d\t%s\n", npidx, label);
+        if (VERBOSE) System.err.printf("%d\t%s\n", npidx, label);
 
-        //if (!ExperimentUtils.is5class(label)) {
         if (!ExperimentUtils.is6class(label)) {
           //nothing
         } else {
@@ -38,7 +44,7 @@ class TrainDevTest {
     // randomize the split
     for (String key : labelIndices.keySet()) {
       List<Integer> indices = labelIndices.get(key);
-      System.err.printf("%s : %d\n", key, indices.size());
+      if (VERBOSE) System.err.printf("%s : %d\n", key, indices.size());
       String[] split = ThreeWayRandomSplit(indices.size());
       for (int i = 0; i < split.length; i++) {
         int index = indices.get(i);
@@ -50,6 +56,8 @@ class TrainDevTest {
 
     // output the decision
     npidx = 0;
+    List<String> finalSplits = new ArrayList<String>();
+
     for (TreePair validSent : treepairs) {
       //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
@@ -58,17 +66,19 @@ class TrainDevTest {
         np = np.trim();
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
 
-        //if (!ExperimentUtils.is5class(label)) {
         if (!ExperimentUtils.is6class(label)) {
-          System.out.println("n/a");
+          //System.out.println("n/a");
+          finalSplits.add("n/a");
         } else {
           String set = result.get(npidx);
           if (set==null) throw new RuntimeException("no assignment for index " + npidx);
-          System.out.println(set);
+          //System.out.println(set);
+          finalSplits.add(set);
         }
         npidx++;
       }
     }    
+    return finalSplits;
   }
 
   private static String[] ThreeWayRandomSplit(int size) {

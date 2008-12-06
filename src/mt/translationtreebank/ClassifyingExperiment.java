@@ -20,19 +20,24 @@ class ClassifyingExperiment {
   public static void main(String args[]) throws Exception {
     Properties props = StringUtils.argsToProperties(args);
     String trainDevTestFile;
-    String sixclassStr = props.getProperty("6class", "false");
-    Boolean sixclass = Boolean.parseBoolean(sixclassStr);
-
-    if (sixclass)
-      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest_6class.txt";
-    else
-      trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest.txt";
+    trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest_6class.txt";
 
     ClassifyingExperiment exp = new ClassifyingExperiment();
     exp.run(props, trainDevTestFile);
   }
 
   public void run(Properties props, String trainDevTestFile) throws Exception {
+    List<String> trainDevTest;
+    trainDevTest = ExperimentUtils.readTrainDevTest(trainDevTestFile);
+    run(props, trainDevTest);
+  }
+
+  public void run(Properties props, List<String> trainDevTest) throws Exception {
+    run(props, trainDevTest, true);
+  }
+
+  public void run(Properties props, List<String> trainDevTest, boolean verbose) throws Exception {
+    System.err.println("ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE="+ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE);
     String reducedCatStr= props.getProperty("useReducedCategory", "true");
     String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
     String trainAllStr = props.getProperty("trainAll", "false");
@@ -50,9 +55,6 @@ class ClassifyingExperiment {
     List<TreePair> treepairs;
     treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
-    String[] trainDevTest;
-    trainDevTest = ExperimentUtils.readTrainDevTest(trainDevTestFile);
-
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
 
     GeneralDataset trainDataset = new Dataset();
@@ -65,26 +67,18 @@ class ClassifyingExperiment {
     List<Datum<String,String>> otherData = new ArrayList<Datum<String,String>>();
 
     int npid = 0;
-    //for(TreePair validSent : treepairs) {
     for(int tpidx = 0; tpidx < treepairs.size(); tpidx++) {
       TreePair validSent = treepairs.get(tpidx);
 
       Set<String> cachedWords = new HashSet<String>();
-      //int windowSize = 2;
       int prevTpIdx = tpidx - 1;
-      System.err.println("ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE="+ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE);
       while(prevTpIdx >= 0 && tpidx-prevTpIdx <= ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE) {
         Sentence<Word> prevSent = treepairs.get(prevTpIdx).chParsedTrees.get(0).yield();
-        int diff  = tpidx-prevTpIdx;
-        System.err.print("DEBUG: "+diff+"\t");
         for(Word w : prevSent) {
           cachedWords.add(w.value());
-          System.err.print(w.value()+" ");
         }
-        System.err.println("\n---------------------------------");
         prevTpIdx--;
       }
-      System.err.println("=====================================");
       
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
         Counter<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props, cachedWords);
@@ -100,15 +94,15 @@ class ClassifyingExperiment {
         // (3) Make Datum and add
         Datum<String, String> d = new RVFDatum(featureList, label);
 
-        if (notAdd || "n/a".equals(trainDevTest[npid])) {
+        if (notAdd || "n/a".equals(trainDevTest.get(npid))) {
           otherDataset.add(d);
           otherData.add(d);
         }
-        else if (trainDevTest[npid].endsWith("train")) {
+        else if (trainDevTest.get(npid).endsWith("train")) {
             trainDataset.add(d);
             trainData.add(d);
         } 
-        else if ("dev".equals(trainDevTest[npid])) {
+        else if ("dev".equals(trainDevTest.get(npid))) {
           if (trainAll) {
             trainDataset.add(d);
             trainData.add(d);
@@ -116,7 +110,7 @@ class ClassifyingExperiment {
           devDataset.add(d);
           devData.add(d);
         }
-        else if ("test".equals(trainDevTest[npid])) {
+        else if ("test".equals(trainDevTest.get(npid))) {
           if (trainAll) {
             trainDataset.add(d);
             trainData.add(d);
@@ -124,7 +118,7 @@ class ClassifyingExperiment {
           testDataset.add(d);
           testData.add(d);
         } else {
-          throw new RuntimeException("trainDevTest error, line: "+trainDevTest[npid]);
+          throw new RuntimeException("trainDevTest error, line: "+trainDevTest.get(npid));
         }
    
         // (4) collect other statistics
@@ -133,7 +127,7 @@ class ClassifyingExperiment {
       }
     }
 
-    if (npid != trainDevTest.length) {
+    if (npid != trainDevTest.size()) {
       //throw new RuntimeException("#np doesn't match trainDevTest");
       System.err.println("#np doesn't match trainDevTest. Is this partial test?");
     }
@@ -151,13 +145,14 @@ class ClassifyingExperiment {
       System.err.println("Classifier Written and Read");
     }
 
-
+    /*
     String allWeights = classifier.toAllWeightsString();
     System.err.println("-------------------------------------------");
     System.err.println(allWeights);
     System.err.println("-------------------------------------------");
     System.err.println(classifier.toHistogramString());
     System.err.println("-------------------------------------------");
+    */
 
     trainStats = getConfusionMatrix(trainData, classifier);
     devStats = getConfusionMatrix(devData, classifier);
@@ -165,24 +160,27 @@ class ClassifyingExperiment {
 
 
     // output information
-    System.out.println("Overall label counter:");
-    System.out.println(labelCounter);
-    System.out.println();
-
-    System.out.println("Training set stats:");
-    System.out.println(((Dataset)trainDataset).toSummaryStatistics());
-    System.out.println();
-
-    displayEval();
-
-    System.out.println("Evaluate on Other set:");
-    TwoDimensionalCounter<String,String> confusionMatrix = getConfusionMatrix(otherData, classifier);
-    evaluateOnSet(confusionMatrix);
-    System.out.println();
-
+    if (verbose) {
+      System.out.println("Overall label counter:");
+      System.out.println(labelCounter);
+      System.out.println();
+      
+      System.out.println("Training set stats:");
+      System.out.println(((Dataset)trainDataset).toSummaryStatistics());
+      System.out.println();
+      
+      displayEval(trainStats, devStats, testStats);
+      
+      System.out.println("Evaluate on Other set:");
+      TwoDimensionalCounter<String,String> confusionMatrix = getConfusionMatrix(otherData, classifier);
+      evaluateOnSet(confusionMatrix);
+      System.out.println();
+    }
   }
   
-  public void displayEval() {
+  public static void displayEval(TwoDimensionalCounter<String,String> trainStats,
+                                 TwoDimensionalCounter<String,String> devStats,
+                                 TwoDimensionalCounter<String,String> testStats) {
     System.out.println("Evaluate on Training set:");
     evaluateOnSet(trainStats);
     System.out.println();
@@ -194,7 +192,6 @@ class ClassifyingExperiment {
     System.out.println("Evaluate on Test set:");
     evaluateOnSet(testStats);
     System.out.println();
-    
   }
 
   public TwoDimensionalCounter<String, String> getConfusionMatrix(List<Datum<String,String>> data, LinearClassifier<String, String> lc) {

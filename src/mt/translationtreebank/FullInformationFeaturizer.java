@@ -245,7 +245,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         for (String cTag : cTags) {
           csb.append(cTag);
         }
-        System.err.println("==> "+csb.toString()+" <==");
+        //System.err.println("==> "+csb.toString()+" <==");
         featureList.incrementCount(csb.toString());
       }
     }

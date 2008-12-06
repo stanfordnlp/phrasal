@@ -565,9 +565,13 @@ public class ExperimentUtils {
     resultSummary(cc);
   }
 
-  public static String[] readTrainDevTest(String trainDevTestFile) {
+  public static List<String> readTrainDevTest(String trainDevTestFile) {
     String content = StringUtils.slurpFileNoExceptions(trainDevTestFile);
     String[] lines = content.split("\\n");
-    return lines;
+    List<String> ans = new ArrayList<String>();
+    for (String line : lines)
+      ans.add(line);
+
+    return ans;
   }
 }
