@@ -15,6 +15,10 @@ class TrainDevTest {
     }
   }
 
+  public static List<String> splits(int buckets) throws IOException {
+    return splits(buckets, null);
+  }
+
   public static List<String> splits(int buckets, List<String> splitnames) throws IOException {
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true);
     Map<String,List<Integer>> labelIndices = new HashMap<String,List<Integer>>();
