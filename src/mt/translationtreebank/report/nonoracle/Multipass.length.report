@@ -1,28 +1,28 @@
-#splits=6
+#splits=10
 #passes=5
 ============================ 5class ============================
 Evaluate on Training set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
-A'sB	2227	0	0	57	0	
-AB	3	17180	0	29	25	
-AprepB	0	0	1200	0	0	
-BprepA	45	135	0	34437	63	
-relc	0	10	0	2	16637	
+A'sB	3987	0	0	108	0	
+AB	3	30889	0	68	45	
+AprepB	0	0	2160	0	0	
+BprepA	105	267	0	61968	125	
+relc	0	29	0	1	29935	
 ----------------------------------------------------
-total	2275	17325	1200	34525	16725	
+total	4095	31185	2160	62145	30105	
 ====================================================
 
-#[ A 's B ] = 2275 |	Acc:	97.89
-#[ B prep A ] = 34525 |	Acc:	99.75
-#[ relative clause ] = 16725 |	Acc:	99.47
-#[ A prep B ] = 1200 |	Acc:	100.00
-#[ A B ] = 17325 |	Acc:	99.16
-#total = 72050 |	Acc:	99.487856
+#[ A 's B ] = 4095 |	Acc:	97.36
+#[ B prep A ] = 62145 |	Acc:	99.72
+#[ relative clause ] = 30105 |	Acc:	99.44
+#[ A prep B ] = 2160 |	Acc:	100.00
+#[ A B ] = 31185 |	Acc:	99.05
+#total = 129690 |	Acc:	99.420927
 
-#[ swapped ] = 51250 |	Acc:	99.78
-#[ ordered ] = 20800 |	Acc:	99.09
-#total = 72050 |	Acc:	99.582235
+#[ swapped ] = 92250 |	Acc:	99.76
+#[ ordered ] = 37440 |	Acc:	98.93
+#total = 129690 |	Acc:	99.520395
 
 Evaluate on Dev set:
 ==================Confusion Matrix==================
@@ -38,51 +38,51 @@ total
 Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	relc
-A'sB	160	37	0	106	0	
-AB	50	2481	73	247	210	
-AprepB	0	17	53	27	14	
-BprepA	243	670	88	5885	875	
-relc	2	260	26	640	2246	
+A'sB	153	39	0	119	1	
+AB	45	2477	72	241	216	
+AprepB	0	14	50	27	11	
+BprepA	257	675	91	5886	854	
+relc	0	260	27	632	2263	
 ----------------------------------------------------
 total	455	3465	240	6905	3345	
 ====================================================
 
-#[ A 's B ] = 455 |	Acc:	35.16
-#[ B prep A ] = 6905 |	Acc:	85.23
-#[ relative clause ] = 3345 |	Acc:	67.14
-#[ A prep B ] = 240 |	Acc:	22.08
-#[ A B ] = 3465 |	Acc:	71.60
-#total = 14410 |	Acc:	75.121443
+#[ A 's B ] = 455 |	Acc:	33.63
+#[ B prep A ] = 6905 |	Acc:	85.24
+#[ relative clause ] = 3345 |	Acc:	67.65
+#[ A prep B ] = 240 |	Acc:	20.83
+#[ A B ] = 3465 |	Acc:	71.49
+#total = 14410 |	Acc:	75.149202
 
-#[ swapped ] = 10250 |	Acc:	94.11
-#[ ordered ] = 4160 |	Acc:	69.01
-#total = 14410 |	Acc:	86.863289
+#[ swapped ] = 10250 |	Acc:	94.00
+#[ ordered ] = 4160 |	Acc:	68.51
+#total = 14410 |	Acc:	86.641221
 
 ============================ 6class ============================
 Evaluate on Training set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	noB	relc
-A'sB	2224	0	0	57	0	0	
-AB	3	17180	0	30	6	25	
-AprepB	0	0	1200	0	0	0	
-BprepA	48	134	0	34437	0	63	
-noB	0	1	0	0	3844	0	
-relc	0	10	0	1	0	16637	
+A'sB	3982	0	0	108	0	0	
+AB	3	30890	0	69	14	45	
+AprepB	0	0	2160	0	0	0	
+BprepA	110	267	0	61967	0	123	
+noB	0	2	0	0	6916	0	
+relc	0	26	0	1	0	29937	
 ----------------------------------------------------
-total	2275	17325	1200	34525	3850	16725	
+total	4095	31185	2160	62145	6930	30105	
 ====================================================
 
-#[ A 's B ] = 2275 |	Acc:	97.76
-#[ B prep A ] = 34525 |	Acc:	99.75
-#[ relative clause ] = 16725 |	Acc:	99.47
-#[ A prep B ] = 1200 |	Acc:	100.00
-#[ no B ] = 3850 |	Acc:	99.84
-#[ A B ] = 17325 |	Acc:	99.16
-#total = 75900 |	Acc:	99.501976
+#[ A 's B ] = 4095 |	Acc:	97.24
+#[ B prep A ] = 62145 |	Acc:	99.71
+#[ relative clause ] = 30105 |	Acc:	99.44
+#[ A prep B ] = 2160 |	Acc:	100.00
+#[ A B ] = 31185 |	Acc:	99.05
+#[ no B ] = 6930 |	Acc:	99.80
+#total = 136620 |	Acc:	99.437857
 
-#[ swapped ] = 51250 |	Acc:	99.78
-#[ ordered ] = 24650 |	Acc:	99.22
-#total = 75900 |	Acc:	99.599473
+#[ swapped ] = 92250 |	Acc:	99.76
+#[ ordered ] = 44370 |	Acc:	99.09
+#total = 136620 |	Acc:	99.542527
 
 Evaluate on Dev set:
 ==================Confusion Matrix==================
@@ -98,25 +98,25 @@ total
 Evaluate on Test set:
 ==================Confusion Matrix==================
 ->real	A'sB	AB	AprepB	BprepA	noB	relc
-A'sB	161	35	0	102	0	0	
-AB	49	2466	72	245	25	209	
-AprepB	0	18	51	25	0	13	
-BprepA	238	659	85	5834	35	872	
-noB	5	27	5	56	703	15	
-relc	2	260	27	643	7	2236	
+A'sB	155	38	0	118	0	1	
+AB	45	2462	70	234	26	219	
+AprepB	0	14	49	26	0	11	
+BprepA	250	661	87	5828	33	851	
+noB	5	26	5	55	706	15	
+relc	0	264	29	644	5	2248	
 ----------------------------------------------------
 total	455	3465	240	6905	770	3345	
 ====================================================
 
-#[ A 's B ] = 455 |	Acc:	35.38
-#[ B prep A ] = 6905 |	Acc:	84.49
-#[ relative clause ] = 3345 |	Acc:	66.85
-#[ A prep B ] = 240 |	Acc:	21.25
-#[ A B ] = 3465 |	Acc:	71.17
-#[ no B ] = 770 |	Acc:	91.30
-#total = 15180 |	Acc:	75.434783
+#[ A 's B ] = 455 |	Acc:	34.07
+#[ B prep A ] = 6905 |	Acc:	84.40
+#[ relative clause ] = 3345 |	Acc:	67.20
+#[ A prep B ] = 240 |	Acc:	20.42
+#[ A B ] = 3465 |	Acc:	71.05
+#[ no B ] = 770 |	Acc:	91.69
+#total = 15180 |	Acc:	75.415020
 
-#[ swapped ] = 10250 |	Acc:	93.51
-#[ ordered ] = 4930 |	Acc:	73.37
-#total = 15180 |	Acc:	86.969697
+#[ swapped ] = 10250 |	Acc:	93.38
+#[ ordered ] = 4930 |	Acc:	73.04
+#total = 15180 |	Acc:	86.772069
 
