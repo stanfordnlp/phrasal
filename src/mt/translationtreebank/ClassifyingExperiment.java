@@ -37,15 +37,18 @@ class ClassifyingExperiment {
   }
 
   public void run(Properties props, List<String> trainDevTest, boolean verbose) throws Exception {
-    System.err.println("ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE="+ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE);
     String reducedCatStr= props.getProperty("useReducedCategory", "true");
     String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
     String trainAllStr = props.getProperty("trainAll", "false");
     String sixclassStr = props.getProperty("6class", "false");
+    String windowSizeStr = props.getProperty("windowSize", "2");
     Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
     Boolean trainAll = Boolean.parseBoolean(trainAllStr);
     Boolean sixclass = Boolean.parseBoolean(sixclassStr);
+    System.err.println("Setting window size = "+windowSizeStr);
+    ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE = Integer.parseInt(windowSizeStr);
+    System.err.println("ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE="+ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE);
 
     String writeClassifier = props.getProperty("writeClassifier", null);
 

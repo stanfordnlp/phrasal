@@ -9,7 +9,7 @@ import java.io.*;
 import java.util.*;
 
 public class ExperimentUtils {
-  static final int TOPICALITY_SENT_WINDOW_SIZE = 2;
+  static int TOPICALITY_SENT_WINDOW_SIZE = 2;
 
   static TreePattern dec = TreePattern.compile("DEC < 的");
   static TreePattern deg = TreePattern.compile("DEG < 的");

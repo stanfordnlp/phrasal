@@ -28,6 +28,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     String pathStr      = props.getProperty("path", "false");
     String percentageStr= props.getProperty("percentage", "false");
     String ciLinStr = props.getProperty("ciLin", "false");
+    String ciLinMultipleTagStr = props.getProperty("ciLinMultipleTag", "false");
     String topicalityStr = props.getProperty("topicality", "false");
     String lengthStr = props.getProperty("length", "false");
 
@@ -41,6 +42,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     Boolean path = Boolean.parseBoolean(pathStr);
     Boolean percentage = Boolean.parseBoolean(percentageStr);
     Boolean ciLin = Boolean.parseBoolean(ciLinStr);
+    Boolean ciLinMultipleTag = Boolean.parseBoolean(ciLinMultipleTagStr);
     Boolean topicality = Boolean.parseBoolean(topicalityStr);
     Boolean length = Boolean.parseBoolean(lengthStr);
 
@@ -220,33 +222,34 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
 
         String w = sentence.get(i).word();
         Set<String> cTags = cilin_multipleEntry.get(w);
-        /*
-        if (cTags == null || cTags.size() == 0 || cTags.size() > 1) continue;
-        String cTag = cilin_map.get(w);
-        if (cTag != null) {
+        if (ciLinMultipleTag) {
           StringBuilder csb = new StringBuilder();
           if (i < deIdx)
             csb.append("cT_beforeDE:");
           else if (i > deIdx)
             csb.append("cT_afterDE:");
           else throw new RuntimeException("never should be here");
-
-          csb.append(cTag);
+          for (String cTag : cTags) {
+            csb.append(cTag);
+          }
+          //System.err.println("==> "+csb.toString()+" <==");
           featureList.incrementCount(csb.toString());
+        } else {
+          if (cTags == null || cTags.size() == 0 || cTags.size() > 1) continue;
+          String cTag = cilin_map.get(w);
+          if (cTag != null) {
+            StringBuilder csb = new StringBuilder();
+            if (i < deIdx)
+              csb.append("cT_beforeDE:");
+            else if (i > deIdx)
+              csb.append("cT_afterDE:");
+            else throw new RuntimeException("never should be here");
+            
+            csb.append(cTag);
+            System.err.println("==> "+csb.toString()+" <==");
+            featureList.incrementCount(csb.toString());
+          }
         }
-        */
-        if (cTags == null || cTags.size() == 0) continue;
-        StringBuilder csb = new StringBuilder();
-        if (i < deIdx)
-          csb.append("cT_beforeDE:");
-        else if (i > deIdx)
-          csb.append("cT_afterDE:");
-        else throw new RuntimeException("never should be here");
-        for (String cTag : cTags) {
-          csb.append(cTag);
-        }
-        //System.err.println("==> "+csb.toString()+" <==");
-        featureList.incrementCount(csb.toString());
       }
     }
 
