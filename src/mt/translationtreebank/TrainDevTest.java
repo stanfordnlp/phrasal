@@ -8,13 +8,14 @@ class TrainDevTest {
   private static final Boolean VERBOSE = false;
 
   public static void main(String[] args) throws IOException {
-    List<String> ans = splits();
+    String[] splitnames = {"test", "dev", "train", "train", "train", "train"};
+    List<String> ans = splits(6, Arrays.asList(splitnames));
     for (String a : ans) {
       System.out.println(a);
     }
   }
 
-  public static List<String> splits() throws IOException {
+  public static List<String> splits(int buckets, List<String> splitnames) throws IOException {
     List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true);
     Map<String,List<Integer>> labelIndices = new HashMap<String,List<Integer>>();
     Map<Integer, String> result = new HashMap<Integer, String>();
@@ -45,7 +46,8 @@ class TrainDevTest {
     for (String key : labelIndices.keySet()) {
       List<Integer> indices = labelIndices.get(key);
       if (VERBOSE) System.err.printf("%s : %d\n", key, indices.size());
-      List<String> split = ThreeWayRandomSplit(indices.size());
+      //List<String> split = ThreeWayRandomSplit(indices.size());
+      List<String> split = NWayRandomSplit(indices.size(), buckets, splitnames);
       for (int i = 0; i < split.size(); i++) {
         int index = indices.get(i);
         String set = split.get(i);
@@ -81,8 +83,28 @@ class TrainDevTest {
     return finalSplits;
   }
 
-  private static List<String> NWayRandomSplit(int size, int n) {
-    return null;
+  private static List<String> NWayRandomSplit(int numitems, int n, List<String> splitnames) {
+    int[] nsize = NWaySplitSize(numitems, n);
+    if (splitnames == null) {
+      splitnames = new ArrayList<String>();
+      for(int i = 0; i < n; i++) {
+        splitnames.add(""+i);
+      }
+    }
+
+    if (splitnames.size() != n) throw new RuntimeException("the given splitnames should have size n");
+    
+    List<String> splits = new ArrayList<String>();
+    for(int bucket = 0; bucket < nsize.length; bucket++) {
+      int size = nsize[bucket];
+      String name = splitnames.get(bucket);
+      for(int i = 0; i < size; i++) {
+        splits.add(name);
+      }
+    }
+    Random r = new Random();
+    Collections.shuffle(splits, r);
+    return splits;
   }
 
   private static int[] NWaySplitSize(int size, int n) {
@@ -94,10 +116,12 @@ class TrainDevTest {
       current_size -= nsize[i];
       current_n--;
     }
+    Arrays.sort(nsize);
     return nsize;
   }
-
-
+  
+  // this is replaced by NWayRandomSplit
+  /*
   private static List<String> ThreeWayRandomSplit(int size) {
     //String[] split = new String[size];
     List<String> split = new ArrayList<String>(size);
@@ -133,4 +157,5 @@ class TrainDevTest {
 
     return split;
   }
+  */
 }
