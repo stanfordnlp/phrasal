@@ -47,7 +47,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
 
   protected TrieARPALanguageModel(String filename) throws IOException {
     super(filename);
-    System.err.printf("Using TrieARPALAnguageModel (order %d)\n",this.lmOrder);
+    System.err.printf("Using TrieARPALanguageModel (order %d)\n",this.lmOrder);
   }
 
   protected void init(String filename) throws IOException {
