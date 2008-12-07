@@ -23,14 +23,16 @@ class MultiPassClassifyingExperiment {
     int runtimes = Integer.parseInt(props.getProperty("passes", "5"));
 
     for (int i = 0; i < runtimes; i++) {
+      System.err.println("Pass # "+i);
       // get a general split
       List<String> split = TrainDevTest.splits(numsplits);
       for (int testid = 0; testid < numsplits; testid++) {
+        System.err.printf("  Using split %d/%d as test...\n", testid, numsplits);
         List<String> newsplit = transform(split, testid);
         // 5class
         props.setProperty("6class", "false");
         ClassifyingExperiment exp = new ClassifyingExperiment();
-        exp.run(props, split, false);
+        exp.run(props, newsplit, false);
         trainStats_5class.addAll(exp.trainStats);
         devStats_5class.addAll(exp.devStats);
         testStats_5class.addAll(exp.testStats);
@@ -38,7 +40,7 @@ class MultiPassClassifyingExperiment {
         // 6class
         props.setProperty("6class", "true");
         exp = new ClassifyingExperiment();
-        exp.run(props, split, false);
+        exp.run(props, newsplit, false);
         trainStats_6class.addAll(exp.trainStats);
         devStats_6class.addAll(exp.devStats);
         testStats_6class.addAll(exp.testStats);
