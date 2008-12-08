@@ -10,6 +10,7 @@ import edu.stanford.nlp.ling.*;
 public class DEinTextReorderer {
   public static void main(String[] args) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
+    Boolean noreorder = Boolean.parseBoolean(props.getProperty("noreorder", "false"));
 
     // (2) setting up the tree & sentence files
     String sentFile = props.getProperty("markedFile", null);
@@ -66,7 +67,7 @@ public class DEinTextReorderer {
         }
       }
 
-      System.err.println("(0): "+StringUtils.join(yield, " "));
+      //System.err.println("(0): "+StringUtils.join(yield, " "));
       int counter = 1;
       for(Map.Entry<SortByEndPair<Integer, Integer>, Integer> e : toOperate.entrySet()) {
         SortByEndPair<Integer, Integer> p = e.getKey();
@@ -78,10 +79,12 @@ public class DEinTextReorderer {
           continue;
         } else if (de.equals("的_BprepA") || de.equals("的_relc") || 
                    de.equals("的_swapped")) {
-          ExperimentUtils.ReverseSublist(yield, p.first, deIdx-1);
-          ExperimentUtils.ReverseSublist(yield, deIdx+1, p.second);
-          ExperimentUtils.ReverseSublist(yield, p.first, p.second);
-          System.err.println("("+counter+"): "+StringUtils.join(yield, " "));
+          if (!noreorder) {
+            ExperimentUtils.ReverseSublist(yield, p.first, deIdx-1);
+            ExperimentUtils.ReverseSublist(yield, deIdx+1, p.second);
+            ExperimentUtils.ReverseSublist(yield, p.first, p.second);
+          }
+          //System.err.println("("+counter+"): "+StringUtils.join(yield, " "));
           counter++;
         } else if (de.startsWith("的_")){
           throw new RuntimeException("error: "+de);
