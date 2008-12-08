@@ -1,7 +1,7 @@
 #############
 # train classifier
 #############
-time java -Xmx1g mt.translationtreebank.ClassifyingExperiment -6class true -useReducedCategory true $TWOFEAT -nonOracleTree true -trainAll true -writeClassifier projects/mt/src/mt/translationtreebank/report/nonoracle/2feat_all.ser.gz &
+time java -Xmx1g mt.translationtreebank.ClassifyingExperiment -6class true -useReducedCategory true -2feat true -nonOracleTree true -trainAll true -writeClassifier projects/mt/src/mt/translationtreebank/report/nonoracle/2feat_all.ser.gz &
 time java -Xmx1g mt.translationtreebank.ClassifyingExperiment -6class true -useReducedCategory true -2feat true -revised true -nonOracleTree true -trainAll true -writeClassifier projects/mt/src/mt/translationtreebank/report/nonoracle/revised_all.ser.gz &
 time java -Xmx1g mt.translationtreebank.ClassifyingExperiment -6class true -useReducedCategory true -2feat true -revised true -ngram true -nonOracleTree true -trainAll true -writeClassifier projects/mt/src/mt/translationtreebank/report/nonoracle/ngram_all.ser.gz &
 time java -Xmx1g mt.translationtreebank.ClassifyingExperiment -6class true -useReducedCategory true -2feat true -revised true -ngram true -lastcharN true -nonOracleTree true -trainAll true -writeClassifier projects/mt/src/mt/translationtreebank/report/nonoracle/lastcharN_all.ser.gz &
