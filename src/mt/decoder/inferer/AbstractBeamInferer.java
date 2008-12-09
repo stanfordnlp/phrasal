@@ -16,18 +16,20 @@ import mt.decoder.util.*;
 abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV>  {
   static public final String DEBUG_OPT = "AbstractBeamInfererDebug";
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
+  static public final String DISTINCT_NBEST_OPT = "UniqNBest";
+  static public final boolean DISTINCT_NBEST = Boolean.parseBoolean(System.getProperty(DISTINCT_NBEST_OPT, "false"));
+  static public final String MAX_TIME_NBEST_OPT = "MaxTimeNBest";
+  static public final long MAX_TIME_NBEST = Integer.parseInt(System.getProperty(MAX_TIME_NBEST_OPT,"60"))*1000;
   public final int beamCapacity;
   public final HypothesisBeamFactory.BeamType beamType;
 
-  static public boolean filterHistoryBySurface;
-  Set<AbstractSequence<TK>> translationSurfaces = null;
+  public static final int MAX_DUPLICATE_FACTOR = 10;
+  public static final int SAFE_LIST = 500;
 
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
-    if(filterHistoryBySurface)
-      translationSurfaces = new HashSet<AbstractSequence<TK>>();
   }
 
   @Override
@@ -87,9 +89,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
   public List<List<RichTranslation<TK, FV>>> nbestNBad(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int nbestSize, int nBadSize) {
     RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory = new RecombinationHistory<Hypothesis<TK,FV>>();
-    
-    if(filterHistoryBySurface)
-      recombinationHistory.setSecondaryFilter(new TranslationIdentityRecombinationFilter<TK,FV>());
 
     Beam<Hypothesis<TK,FV>> beam = decode(foreign, translationId, recombinationHistory, constrainedOutputSpace, nbestSize);
     if (beam == null) return null;
@@ -100,11 +99,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       goalStates.add(hyp);
     }
 
-    long nbestStartTime = System.currentTimeMillis();
     List<List<RichTranslation<TK, FV>>> nbestNWorst = new ArrayList<List<RichTranslation<TK, FV>>>();
 
-    if(translationSurfaces != null)
-      translationSurfaces.clear();
+    long nbestStartTime = System.currentTimeMillis();
+    Set<Sequence<TK>> distinctTranslations = DISTINCT_NBEST ? new HashSet<Sequence<TK>>() : null;
+    int maxDuplicates = nbestSize*MAX_DUPLICATE_FACTOR;
+    int duplicates = 0;
 
     for (int i = 0; i < 2; i++) {
       List<RichTranslation<TK,FV>> translations = new LinkedList<RichTranslation<TK,FV>>();
@@ -117,8 +117,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       StateLatticeDecoder<Hypothesis<TK,FV>> latticeDecoder =
               new StateLatticeDecoder<Hypothesis<TK,FV>>(goalStates, recombinationHistory, cnt, i == 1); // XXX-
 
-
+      int nc = -1;
       for (List<Hypothesis<TK,FV>> hypList : latticeDecoder) {
+        ++nc;
         Hypothesis<TK,FV> hyp = null;
         for (Hypothesis<TK,FV> nextHyp : hypList) {
           if (hyp == null) {
@@ -129,31 +130,48 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
                   nextHyp.translationOpt, hyp.length, hyp, featurizer,
                   scorer, heuristic);
         }
-        if(translationSurfaces != null) {
+        if(distinctTranslations != null) {
+          // Avoid spending too much time generating the nbest list:
+          if(nc > SAFE_LIST && (nc % 100 == 0)) {
+            long curTime = System.currentTimeMillis();
+            if(++duplicates >= maxDuplicates || curTime-nbestStartTime > MAX_TIME_NBEST) {
+              System.err.printf("\nNbest list construction taking too long (duplicates=%d, time=%fs); giving up.\n", 
+                duplicates, (curTime-nbestStartTime)/1000.0);
+              break;
+            }
+          }
+          // Get surface string:
           AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
-          if(translationSurfaces.contains(seq))
+          // If seen this string before and not among the top-k, skip it:
+          if(nc > SAFE_LIST && distinctTranslations.contains(seq)) 
             continue;
-          translationSurfaces.add(seq);
-        }
-        /*
-                                 if (mod != 0 && c % (int)mod != 0) {
-                                         c++;
-                                         //System.err.printf("skipping on %d mod %d\n", c, mod);
-                                         continue; // XXX-
-                                 } else {
-                                         System.err.printf("collection on %d mod %f (%d)\n", c, mod, (int)mod);
-                                         c++;
-                                         mod = mod == 0 ? 1 : mod * 1.1;
+          // Add current hypothesis to nbest list and set of uniq strings:
+          Hypothesis<TK,FV> beamGoalHyp = hypList.get(hypList.size()-1);
+          translations.add(new RichTranslation<TK,FV>(hyp.featurizable, hyp.score, collectFeatureValues(hyp), beamGoalHyp.id));
+          distinctTranslations.add(seq);
+          // Leave if we have seen enough uniq strings:
+          if (distinctTranslations.size() >= nbestSize) break;
+        } else {
+          /*
+                                   if (mod != 0 && c % (int)mod != 0) {
+                                           c++;
+                                           //System.err.printf("skipping on %d mod %d\n", c, mod);
+                                           continue; // XXX-
+                                   } else {
+                                           System.err.printf("collection on %d mod %f (%d)\n", c, mod, (int)mod);
+                                           c++;
+                                           mod = mod == 0 ? 1 : mod * 1.1;
 
-                                 } */
-        //System.err.printf("Translations size: %d (/%d)\n", translations.size(), size);
-        Hypothesis<TK,FV> beamGoalHyp = hypList.get(hypList.size()-1);
-        // System.err.printf("Adding to n-best list score: %e  (parent %e)\n", hyp.score, beamGoalHyp.score);
-        // System.err.printf("translation: %s\n", hyp.featurizable.partialTranslation);
-        // System.err.printf("parent: %s\n", beamGoalHyp.featurizable.partialTranslation);
-        translations.add(new RichTranslation<TK,FV>(hyp.featurizable, hyp.score, collectFeatureValues(hyp), beamGoalHyp.id));
-        // System.err.printf("n-best translations: %d %d (%d)\n", translations.size(), (System.currentTimeMillis()-basetime)/1000, latticeDecoder.agenda.size());
-        if (translations.size() >= nbestSize) break;
+                                   } */
+          //System.err.printf("Translations size: %d (/%d)\n", translations.size(), size);
+          Hypothesis<TK,FV> beamGoalHyp = hypList.get(hypList.size()-1);
+          // System.err.printf("Adding to n-best list score: %e  (parent %e)\n", hyp.score, beamGoalHyp.score);
+          // System.err.printf("translation: %s\n", hyp.featurizable.partialTranslation);
+          // System.err.printf("parent: %s\n", beamGoalHyp.featurizable.partialTranslation);
+          translations.add(new RichTranslation<TK,FV>(hyp.featurizable, hyp.score, collectFeatureValues(hyp), beamGoalHyp.id));
+          // System.err.printf("n-best translations: %d %d (%d)\n", translations.size(), (System.currentTimeMillis()-basetime)/1000, latticeDecoder.agenda.size());
+          if (translations.size() >= nbestSize) break;
+        }
       }
 
       // if a non-admissible recombination heuristic was used, the hypothesis scores predicted by the
@@ -167,7 +185,20 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
           return (int)Math.signum(o2.score - o1.score);
         } });
 
-      nbestNWorst.add(translations);
+      if(distinctTranslations != null) {
+        List<RichTranslation<TK,FV>> dtranslations = new LinkedList<RichTranslation<TK,FV>>();
+        distinctTranslations.clear();
+        for(RichTranslation<TK,FV> rt : translations) {
+          if(distinctTranslations.contains(rt.translation)) {
+            continue;
+          }
+          distinctTranslations.add(rt.translation);
+          dtranslations.add(rt);
+        }
+        nbestNWorst.add(dtranslations);
+      } else {
+        nbestNWorst.add(translations);
+      }
     }
 
 

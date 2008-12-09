@@ -35,6 +35,6 @@ lm=$1
 order=$2
 
 # Filter LM against vocab:
-CMD="ngram -vocab - -lm $lm -write-lm - -order $order -limit-vocab"
+CMD="sed 's/ /\n/g' | sort | uniq | tee .voc | ngram -vocab - -lm $lm -write-lm - -order $order -limit-vocab"
 echo "running: $CMD" >&2
 eval $CMD

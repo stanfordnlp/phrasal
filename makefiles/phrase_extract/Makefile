@@ -47,12 +47,12 @@ all: train test
 # Build LMs (test):
 test_lm: $(TESTID).flt_giga.lm.gz
 test_lm_google: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz
-test_lm_gale: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).flt_bbn1.lm.gz $(TESTID).flt_bbn2.lm.gz
+test_lm_gale: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz $(TESTID).flt_bbn.lm.gz
 
 # Build LMs (dev):
 dev_lm: $(DEVID).flt_giga.lm.gz
 dev_lm_google: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz
-dev_lm_gale: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz $(DEVID).flt_bbn1.lm.gz $(DEVID).flt_bbn2.lm.gz
+dev_lm_gale: $(DEVID).flt_giga.lm.gz $(DEVID).rsc_google.lm.gz $(DEVID).flt_bbn.lm.gz
 
 # Build LMs + phrase tables (test):
 test_extract: test_lm $(TESTID).tables/phrase-table.gz
@@ -146,7 +146,7 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).unk
 # Use best MERT paramters to generate n-best list:
 $(TESTID).$(DEVID).%.$Nbest.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true -uniq-n-best-list false < $(TESTID).$(IE) > $@) 2> $@.log
+	(java $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@) 2> $@.log
 
 # Use final MERT paramters:
 $(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
@@ -260,22 +260,15 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 # Language models:
 #############################################
 
-### Mixed models:
+### Mixed model (google + giga):
 
-# Gigaword + Google:
 %.mix1.lm.gz: %.flt_giga.lm.gz %.rsc_google.lm.gz
 	ngram -lm $(*F).flt_giga.lm.gz -mix-lm $(*F).rsc_google.lm.gz -lambda $(LM_MIX1) -write-lm $@ -order 5
 
-# Mix1 + BBN1:
-%.mix2.lm.gz: %.mix1.lm.gz %.flt_bbn1.lm.gz
-	ngram -lm $(*F).mix1.lm.gz -mix-lm $(*F).flt_bbn1.lm.gz -lambda $(LM_MIX2) -write-lm $@ -order 5
-
 ### BBN FOUO data:
 
-%.flt_bbn1.lm.gz: %.e.phrases %.e.class.phrases $(BBN1)
-	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(BBN1) 5 2> $@.log | gzip > $@
-%.flt_bbn2.lm.gz: %.e.phrases %.e.class.phrases $(BBN1)
-	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(BBN2) 5 2> $@.log | gzip > $@
+%.flt_bbn.lm.gz: %.e.phrases %.e.class.phrases $(BBN)
+	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(BBN) 5 2> $@.log | gzip > $@
 
 ### Gigaword:
 
@@ -286,15 +279,8 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 
 %.rsc_google.lm.gz: %.flt_google.lm.gz
 	(ngram -rescore-ngram $< -lm $(GOOGLE_LM) -write-lm $@ -count-lm -order 3 -vocab-aliases $(*F).e.aliases -limit-vocab -memuse -count-lm -vocab $(*F).e.vocab) >& $@.log
-#%.flt_google.lm.gz: %.e.phrases %.e.class.phrases %.init_google.lm.gz
-#	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(*F).init_google.lm.gz 5 2> $@.log | gzip > $@
 %.flt_google.lm.gz: %.e.vocab %.e.aliases
-	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c/ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 300 -gt3max 10000 -lm $@) >& $@.log
-
-%.rsc_google.100.lm.gz: %.flt_google.100.lm.gz
-	(ngram -rescore-ngram $< -lm $(GOOGLE_LM) -write-lm $@ -count-lm -order 3 -vocab-aliases $(*F).e.aliases -limit-vocab -memuse -count-lm -vocab $(*F).e.vocab) >& $@.log
-%.flt_google.100.lm.gz: %.e.vocab %.e.aliases
-	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c/ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 100 -gt3max 10000 -lm $@) >& $@.log
+	(zcat $(GOOGLE_CT)/{2,3}gms/*.gz | cat $(GOOGLE_CT)/1gms/vocab - | time /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c/ngram-count -wbdiscount -interpolate -read - -debug 2 -order 3 -vocab $(*F).e.vocab -vocab-aliases $(*F).e.aliases -limit-vocab -read-with-mincounts -memuse -gt1min 1 -gt2min 3 -gt2max 100 -gt3min 200 -gt3max 10000 -lm $@) >& $@.log
 
 #############################################
 # Vocabulary files:
