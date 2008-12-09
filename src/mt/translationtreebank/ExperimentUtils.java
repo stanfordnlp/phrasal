@@ -497,9 +497,11 @@ public class ExperimentUtils {
 
   public static String coarseCategory(String cat) {
     String normcat;
-    if (cat.startsWith("B") || cat.equals("relative clause")) {
+    if (cat.startsWith("B") || cat.equals("relative clause") ||
+        cat.equals("swapped")) {
       normcat = "swapped";
-    } else if (cat.startsWith("A") || cat.equals("no B")) {
+    } else if (cat.startsWith("A") || cat.equals("no B") ||
+               cat.equals("ordered")) {
       normcat = "ordered";
     } else if (cat.equals("multi-DEs") || cat.equals("other")) {
       normcat = "other";

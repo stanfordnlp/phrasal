@@ -36,16 +36,19 @@ class ClassifyingExperiment {
     run(props, trainDevTest, true);
   }
 
+
   public void run(Properties props, List<String> trainDevTest, boolean verbose) throws Exception {
     String reducedCatStr= props.getProperty("useReducedCategory", "true");
     String nonOracleTreeStr= props.getProperty("nonOracleTree", "false");
     String trainAllStr = props.getProperty("trainAll", "false");
     String sixclassStr = props.getProperty("6class", "false");
+    String toTwoClassStr = props.getProperty("2class", "false");
     String windowSizeStr = props.getProperty("windowSize", "2");
     Boolean reducedCategory = Boolean.parseBoolean(reducedCatStr);
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
     Boolean trainAll = Boolean.parseBoolean(trainAllStr);
     Boolean sixclass = Boolean.parseBoolean(sixclassStr);
+    Boolean toTwoClass = Boolean.parseBoolean(toTwoClassStr);
     System.err.println("Setting window size = "+windowSizeStr);
     ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE = Integer.parseInt(windowSizeStr);
     System.err.println("ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE="+ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE);
@@ -91,6 +94,8 @@ class ClassifyingExperiment {
         boolean notAdd = false;
         if (sixclass && !ExperimentUtils.is6class(label)) notAdd = true;
         if (!sixclass && !ExperimentUtils.is5class(label)) notAdd = true;
+
+        if (toTwoClass) label = ExperimentUtils.coarseCategory(label);
 
         // (2) make label
 
