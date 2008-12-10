@@ -75,6 +75,20 @@ public class ExperimentUtils {
     return theNP.label().value();
   }
 
+  static Tree getNPwithDE_rootTree(Tree tree, int deIdx) {
+    Tree preT = Trees.getPreTerminal(tree, deIdx);
+    Tree DNPorCP = preT.parent(tree);
+    Tree theNP = DNPorCP.parent(tree);
+    return theNP;
+  }
+
+  static Tree getNPwithDE_leftTree(Tree tree, int deIdx) {
+    Tree preT = Trees.getPreTerminal(tree, deIdx);
+    Tree DNPorCP = preT.parent(tree);
+    if (DNPorCP.numChildren() != 2) return null;
+    return DNPorCP.firstChild();
+  }
+
 
   static List<Integer> getDEIndices(List<HasWord> sent) {
     List<Integer> des = new ArrayList<Integer>();
