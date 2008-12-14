@@ -808,7 +808,7 @@ public class PseudoMoses {
     }
 	}
 
-	private RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber) throws IOException {
+	public RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber) throws IOException {
 
 			Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
 				.toIStringArray(tokens));
@@ -1302,6 +1302,7 @@ public class PseudoMoses {
 
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0]) : readArgs(args);
     PseudoMoses p = new PseudoMoses(config);
+    
 		p.executiveLoop();
 
 	}
