@@ -770,7 +770,7 @@ public class PseudoMoses {
 		return Math.sqrt(ssdiff);
 	}
 
-	private void decodeOnly() throws IOException {
+	private void decodeFromConsole() throws IOException {
 
 		System.err.println("Entering main translation loop");
 
@@ -791,10 +791,27 @@ public class PseudoMoses {
 						minSentenceSize);
 				continue;
 			}
+			
+			int lineNumber = reader.getLineNumber();
+			RichTranslation<IString, String> translation = decodeOnly(tokens, translationId, lineNumber);
+			
+			// display results
+			if (translation != null) {
+				// notice we reproduce the lameness of moses in that an extra space is
+				// inserted after each translation
+				System.out.printf("%s \n", translation.translation);
+				System.err.printf("Final Translation: %s\n", translation.translation);
+				System.err.printf("Score: %f\n", translation.score);
+			} else {
+				System.out.println("<<<decoder failure>>>");
+			}
+    }
+	}
+
+	private RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber) throws IOException {
 
 			Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
-					.toIStringArray(tokens));
-
+				.toIStringArray(tokens));
 			// log foreign sentence
 			System.err.printf("Translating: %s\n", foreign);
 
@@ -807,11 +824,11 @@ public class PseudoMoses {
 							constrainedToRefs.get(translationId)));
 
 			if (nbestListSize == -1) {
-				translation = inferer.translate(foreign, reader.getLineNumber() - 1,
+				translation = inferer.translate(foreign, lineNumber - 1,
 						constrainedOutputSpace);
 			} else {
 				List<RichTranslation<IString, String>> translations = inferer.nbest(
-						foreign, reader.getLineNumber() - 1, constrainedOutputSpace,
+						foreign, lineNumber - 1, constrainedOutputSpace,
 						nbestListSize);
 				if (translations != null) {
 					translation = translations.get(0);
@@ -826,18 +843,7 @@ public class PseudoMoses {
 				}
 			}
 			long translationTime = System.currentTimeMillis() - startTime;
-
-			// display results
-			if (translation != null) {
-				// notice we reproduce the lameness of moses in that an extra space is
-				// inserted after each translation
-				System.out.printf("%s \n", translation.translation);
-				System.err.printf("Final Translation: %s\n", translation.translation);
-				System.err.printf("Score: %f\n", translation.score);
-			} else {
-				System.out.println("<<<decoder failure>>>");
-			}
-
+			
 			// log additional information to stderr
 			if (translation != null) {
 				System.err.printf("Best Translation: %s\n", translation.translation);
@@ -851,11 +857,13 @@ public class PseudoMoses {
 			}
 
 			System.err.printf("Time: %f seconds\n", translationTime / (1000.0));
-		}
+		
 		if (nbestListWriter != null) {
 			System.err.printf("Closing n-best writer\n");
 			nbestListWriter.close();
-    }
+		}
+
+		return translation;
 	}
 
 	static public int MAX_LEARN_NBEST_ITER = 100;
@@ -1281,7 +1289,7 @@ public class PseudoMoses {
 			}
 			scorer.saveWeights(saveWeights + ".final.wts");
 		} else {
-			decodeOnly();
+			decodeFromConsole();
 		}
 	}
 
