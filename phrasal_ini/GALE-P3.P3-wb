@@ -1,0 +1,75 @@
+# Automatically generated Phrasal decoder configuration file
+# Configuration template: mt06.v3-2lm-hr2-v13.ini
+# Source Text: mt06.cunk
+# References: /scr/nlp/data/gale/AE-MT-eval-data/mt06/ref
+# Created: Tue Dec  2 14:33:45 PST 2008
+# Training Iteration: 2
+# Prior n-best Eval: 0.476
+###########################################################################
+
+[input-factors]
+0
+
+# mapping steps
+[mapping]
+0 T 0
+
+# translation tables: source-factors, target-factors, number of scores, file 
+[ttable-file]
+0 0 5 P3-wb.tables/phrase-table.gz
+
+# no generation models, no generation-file section
+
+# language models: type(srilm/irstlm), factors, order, file
+[lmodel-file]
+0 0 5 P3-wb.flt_giga.lm.gz
+
+# limit on how many phrase translations e for each phrase f are loaded
+# 0 = all elements loaded
+[ttable-limit]
+20
+0
+
+
+# distortion (reordering) weight
+[weight-d]
+0.037171
+
+# language model weights
+[weight-l]
+0.063071
+
+# translation model weights
+[weight-t]
+0.039691
+0.023897
+0.038498
+0.045739
+0.082644
+
+# no generation models, no weight-generation section
+
+# word penalty
+[weight-w]
+-0.217795
+
+[distortion-limit]
+6
+
+# delimiter between factors in input
+[factor-delimiter]
+|||
+
+[additional-featurizers]
+mt.decoder.efeat.HierarchicalReorderingFeaturizer(P3-wb.tables/lo-hier.msd2-bidirectional-fe.gz,msd2-bidirectional-fe,backtrack,contiuousDefault)
+mt.decoder.feat.NGramLanguageModelFeaturizer(P3-wb.rsc_google.lm.gz,LM2)
+mt.decoder.feat.NGramLanguageModelFeaturizer(P3-wb.flt_bbn1.lm.gz,LM3)
+mt.decoder.efeat.ArabicInitialVerbFeaturizer()
+
+
+[n-best-list]
+P3-wb.mt06.v3-2lm-hr2-v13.500.200best
+200
+
+[weights-file]
+GALE-P3.wts

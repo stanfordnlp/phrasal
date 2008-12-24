@@ -1,0 +1,7 @@
+Once we start using the new CE Y3 data, modify input/Makefile.local:
+-	TMDIR should be set to the new P3.5 CE data set, and not:
+	TMDIR=/scr/nlp/data/gale2/NIST_EVAL08/TM
+- no longer use ../scripts/ibm-tokenizer/eng_tokenizer.pl.
+  Ask Yaser to post new CE English tokenization script.
+
+Ask Yaser to distribute BBN LM data without IBM classing.	

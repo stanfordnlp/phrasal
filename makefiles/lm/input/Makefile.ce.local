@@ -1,0 +1,5 @@
+# Parallel data:
+TMDIR=/scr/nlp/data/gale2/NIST_EVAL08/TM
+
+# English tokenizer:
+ENG_TOK=../scripts/ibm-tokenizer/eng_tokenizer.pl | $(TMDIR)/scripts/preprocess_en 

@@ -1,0 +1,32 @@
+====================================
+MERT:
+====================================
+
+GALE-P3-text.wts
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/mt06/mt06.v3-2lm-hr2-v13.500.pmert
+
+GALE-P3-audio.wts
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/mt06/mt06.v3-2lm-hr2-v17.500.pmert
+
+====================================
+Dev sets:
+====================================
+
+GALE-P3.dev07-nw
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/dev07-nw
+
+GALE-P3.dev07-wb
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/dev07-wb
+
+====================================
+Test sets:
+(beware, inputs/outputs are blind)
+====================================
+
+GALE-P3.P3-nw 
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/P3-nw-1
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/P3-nw-2
+
+GALE-P3.P3-wb
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/P3-wb-1
+/scr/nlp/data/gale/GALE-arabic/translate/grow/v3-class/P3-wb-2

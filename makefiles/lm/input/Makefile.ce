@@ -1,0 +1,55 @@
+all: \
+	LDC2007T07-giga3-xin.tok.gz \
+	LDC2007T07-giga3-afp-0.tok.gz \
+	LDC2003E14-fbis.tok.gz \
+	mt.tok.gz
+
+.SECONDARY:
+
+include Makefile.ce.local
+
+#################################
+## MT data
+#################################
+
+mt.tok.gz: 
+	cat /scr/nlp/data/gale2/NIST_EVAL08/TM/en/*.fixed | tr 'A-Z' 'a-z' | gzip > $@
+
+mt_noFBIS.tok.gz:
+	ls /scr/nlp/data/gale2/NIST_EVAL08/TM/en/*.fixed | grep -v FBIS | grep -v fbis | xargs cat | tr 'A-Z' 'a-z' | gzip > $@
+
+#################################
+## Monolingual data
+#################################
+
+# Split sets that are too big:
+I1=nyt
+S1=6500000 
+LDC2007T07-giga3-$(I1)-0.tok.gz: LDC2007T07-giga3-$(I1).tok.gz 
+	zcat $< | split -l $(S1) -a 1 -d - LDC2007T07-giga3-$(I1)-
+	for file in `ls LDC2007T07-giga3-$(I1)-?`; do mv $$file $$file.tok; gzip $$file.tok; done
+
+I2=apw
+S2=10000000
+LDC2007T07-giga3-$(I2)-0.tok.gz: LDC2007T07-giga3-$(I2).tok.gz 
+	zcat $< | split -l $(S2) -a 1 -d - LDC2007T07-giga3-$(I2)-
+	for file in `ls LDC2007T07-giga3-$(I2)-?`; do mv $$file $$file.tok; gzip $$file.tok; done
+
+I3=afp
+S3=9500000
+LDC2007T07-giga3-$(I3)-0.tok.gz: LDC2007T07-giga3-$(I3).tok.gz 
+	zcat $< | split -l $(S3) -a 1 -d - LDC2007T07-giga3-$(I3)-
+	for file in `ls LDC2007T07-giga3-$(I3)-?`; do mv $$file $$file.tok; gzip $$file.tok; done
+
+# IBM tokenization, plus Stanford postprocessing:
+# 1) Produces tokenization as in IBM format:
+# 2) Remove bad UTF-8 characters, and remove $num and $email fields.
+%.tok.gz: %.gz
+	zcat $< | $(ENG_TOK) 2> $@.log | gzip > $@
+
+# Extract untokenized texts:
+%.gz: ../scripts/%.sh
+	$< 2> logs/$@.log | gzip > $@
+
+%.size: %.gz
+	zcat $< | wc > $@

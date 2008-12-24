@@ -1,0 +1,59 @@
+all: \
+	mt.ctok.gz \
+	fouo.ctok.gz \
+	LDC2007T07-giga3-xin.ctok.gz \
+	LDC2007T07-giga3-afp-0.ctok.gz \
+	LDC2007T07-giga3-afp-1.ctok.gz
+
+.SECONDARY:
+
+CLASS=sed 's/\(\$$[^ ][^ ]*\)_([^ ][^ ]*)/\1/g'
+
+#################################
+## MT data
+#################################
+
+mt.tok.gz: 
+	cat /scr/nlp/data/gale2/GALE-P2.5-arabic-fouo/data-v2/enfiles/atb/* | clean_ibm | $(CLASS) | gzip > $@
+fouo.ctok.gz: 
+	cat /scr/nlp/data/gale2/GALE-P2.5-arabic-fouo/fouo-v2/enfiles/atb/* | clean_ibm | $(CLASS) | gzip > $@
+
+#################################
+## Monolingual data
+#################################
+
+# Split sets that are too big:
+I1=nyt
+S1=6500000 
+LDC2007T07-giga3-$(I1)-0.tok.gz: LDC2007T07-giga3-$(I1).tok.gz 
+	zcat $< | split -l $(S1) -a 1 -d - LDC2007T07-giga3-$(I1)-
+	for file in `ls LDC2007T07-giga3-$(I1)-?`; do mv $$file $$file.tok; gzip $$file.tok; done
+
+I2=apw
+S2=10000000
+LDC2007T07-giga3-$(I2)-0.tok.gz: LDC2007T07-giga3-$(I2).tok.gz 
+	zcat $< | split -l $(S2) -a 1 -d - LDC2007T07-giga3-$(I2)-
+	for file in `ls LDC2007T07-giga3-$(I2)-?`; do mv $$file $$file.tok; gzip $$file.tok; done
+
+I3=afp
+S3=9500000
+LDC2007T07-giga3-$(I3)-0.tok.gz: LDC2007T07-giga3-$(I3).tok.gz 
+	zcat $< | split -l $(S3) -a 1 -d - LDC2007T07-giga3-$(I3)-
+	for file in `ls LDC2007T07-giga3-$(I3)-?`; do mv $$file $$file.tok; gzip $$file.tok; done
+
+# Corrected tokenization:
+%.ctok.gz: %.tok.gz
+	zcat $< | clean_lm_data 2> $@.log | gzip > $@
+
+# IBM tokenization, plus Stanford postprocessing:
+# 1) Produces tokenization as in IBM format:
+# 2) Remove bad UTF-8 characters, and remove $num and $email fields.
+%.tok.gz: %.gz
+	zcat $< | engtok 1 2> logs/$@.log | $(CLASS) | gzip > $@
+
+# Extract untokenized texts:
+%.gz: ../scripts/%.sh
+	$< 2> logs/$@.log | gzip > $@
+
+%.size: %.gz
+	zcat $< | wc > $@

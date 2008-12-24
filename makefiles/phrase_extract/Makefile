@@ -118,7 +118,7 @@ $(DEVID).%.bleu: $(DEVID).%
 #############################################
 
 ### Generate XML nbest list:
-$(TESTID).%.xml: $(TESTID).% $(TESTID).unk
+$(TESTID).%.xml: $(TESTID).% $(TESTID).$(IE)
 	cat $<.1best.log | grep ^WeightConfig | perl -ne 'while(/:([\d\.E\-]+)/g) { print "$$1 " }' > .tmp.weights
 	mtij.py $+ "`cat .tmp.weights`" stanford > $@
 	rm .tmp.weights

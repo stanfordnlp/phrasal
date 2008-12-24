@@ -1,0 +1,76 @@
+------------------------------------------------------------------------
+Directories:
+
+scripts/
+	scripts to extract data from LDC releases and build LMs
+
+input/
+	tokenized and untokenized input
+
+train/
+	sorted n-gram counts
+
+releases/
+	ARPA LMs
+
+------------------------------------------------------------------------
+Steps to build large LMs:
+
+1) Log into a 16gb machine, e.g. jen. Move this checked out directory to its local disk 
+   (e.g., /jen/scr1/ IF you are on jen). Make sure you have enough disk space (>= 30gb).
+2) run scripts/init.sh 
+   (this also deletes all .svn directories, in order to avoid any accidental svn commit).
+3) Modify scripts/LDC*.sh to filter out epoch of tune/test data.
+5) Modify input/Makefile.local to point to the MT parallel data and
+   to the correct LM tokenization script (i.e., make sure that the 
+	 target side of MT data and LM data have same tokenization).
+6) cd train
+7) run "../scripts/mt_g3_afp_xin_1233 -n"; it should produce the same
+   output as in Appendix A (see blow).
+8) run "../scripts/mt_g3_afp_xin_1233"; this may take 1-2 days to 
+   build a LM. Rebuilding may take as little as 3-4 hours (see notes below how to do this).
+
+-------------------------------------------------------------------------
+Important notes:
+- If you need to RE-train a LM, you may need to manually delete some temporary files.
+ * if you changed anything in scripts/LDC*sh (e.g., filtered out Gigaword3 by epoch)
+	 or in input/Makefile*, you need to manually delete all intermediate files: 
+	 input/*.gz, train/*.gz train/counts
+ * if you increased, removed, or altered LM sources, e.g., modified ../scripts/mt_g3_afp_xin_1233 
+   to also include NYT data, you need to delete merged counts (train/counts). Alternatively, 
+	 copy mt_g3_afp_xin_1233 to a new file name and change its setting of LMID.
+ * if you just changed ngram count cutoffs, e.g., set "-gt5min 2" instead of "-gt5min 3"
+   you don't need to delete any file
+   (look at ../scripts/mt_g3_afp_xin_1233 to see how these cutoffs are specified)
+- If you set -gt4min and/or -gt5min to 2, you need a 48gb machine. You only need 
+  that much memory during the very last step of LM construction, so *please* do the following:
+	1) First use a 16gb machine to generate a LM with higher ngram count thresholds, e.g.: 
+	  $ ../scripts/mt_g3_afp_xin_1233
+    This will take 1-2 days, unless you already generated some intermediate files.
+	2) Log into a 48gb machine, and rerun the last command executed by the above script 
+	  (it should be "make-big-lm" followed by some arguments), but this time with lower thresholds, 
+		e.g., change:
+		make-big-lm [...] -gt4min 3 -gt5min 3 -lm ../releases/mt_giga3_afp_xin.1233.unk.lm.gz
+		into
+    make-big-lm [...] -gt4min 2 -gt5min 2 -lm ../releases/mt_giga3_afp_xin.1222.unk.lm.gz
+		Note that the -lm option should also change if you don't want to overwrite the older ARPA file.
+		Step 2 should take 3-6 hours.
+
+-------------------------------------------------------------------------
+
+Appendix A:
+
+Commands executed by ../scripts/mt_g3_afp_xin_1233:
+
+make: Entering directory `/juicy/scr4/nlp4/data/gale2/NIST_EVAL08/LM/train'
+make -C ../input mt.tok.gz
+(time ngram-count -order 5 -kndiscount -interpolate -debug 2 -tolower -text ../input/mt.tok.gz -write mt.counts.gz -sort) 2> logs/mt.counts.gz.log
+make -C ../input LDC2007T07-giga3-xin.tok.gz
+(time ngram-count -order 5 -kndiscount -interpolate -debug 2 -tolower -text ../input/LDC2007T07-giga3-xin.tok.gz -write LDC2007T07-giga3-xin.counts.gz -sort) 2> logs/LDC2007T07-giga3-xin.counts.gz.log
+make -C ../input LDC2007T07-giga3-afp-0.tok.gz
+(time ngram-count -order 5 -kndiscount -interpolate -debug 2 -tolower -text ../input/LDC2007T07-giga3-afp-0.tok.gz -write LDC2007T07-giga3-afp-0.counts.gz -sort) 2> logs/LDC2007T07-giga3-afp-0.counts.gz.log
+make -C ../input LDC2007T07-giga3-afp-1.tok.gz
+(time ngram-count -order 5 -kndiscount -interpolate -debug 2 -tolower -text ../input/LDC2007T07-giga3-afp-1.tok.gz -write LDC2007T07-giga3-afp-1.counts.gz -sort) 2> logs/LDC2007T07-giga3-afp-1.counts.gz.log
+ngram-merge -write counts/mt_giga3_afp_xin.counts.gz mt.counts.gz LDC2007T07-giga3-xin.counts.gz LDC2007T07-giga3-afp-0.counts.gz LDC2007T07-giga3-afp-1.counts.gz > logs/mt_giga3_afp_xin.log
+make-big-lm -read counts/mt_giga3_afp_xin.counts.gz -lm ../releases/mt_giga3_afp_xin.1233.unk.lm.gz -order 5 -kndiscount -interpolate -debug 2 -tolower -gt2min 1 -gt3min 2 -gt4min 3 -gt5min 3 -unk -debug 2 -name counts/mt_giga3_afp_xin 2> logs/mt_giga3_afp_xin.1233.unk.log
+make: Leaving directory `/juicy/scr4/nlp4/data/gale2/NIST_EVAL08/LM/train'

@@ -1,0 +1,73 @@
+#!/usr/bin/perl
+
+#########################################################
+# Resegment LM data using simple heuristics
+# (e.g., merge two lines if second starts with lowercase and
+#  and first ends without punctuation.
+#########################################################
+
+use strict;
+
+my $verbose = 0;
+
+my $previous = '';
+while(my $line = <STDIN>) {
+	chomp $line;
+	if(!isStart($line)) {
+		if(isStart($previous) && !isEnd($previous)) {
+			$line = "$previous $line";
+			$previous = "";
+		} else {
+			print STDERR "Don't know what to do with:\nprevious=$previous\ncurrent=$line (deleted)\n";
+			$line = "";
+		}
+	}
+	printSplitSent($previous);
+	$previous = $line;
+}
+printSplitSent($previous);
+
+sub isStart {
+	my ($line) = @_;
+	if($line eq '' || $line =~ /^[a-z]/
+	   #$line =~ /^by / || 
+	   #$line =~ /^reopens / ||
+	   #$line =~ m=^[a-z]+[0-9]*[a-z]*(\s*[/\-]\s*[a-z]*[0-9]*)* *$=
+		 ) {
+		print STDERR "Bad sentence start: $line\n";
+    return 0;
+  }
+	return 1;
+}
+
+sub isEnd {
+	my ($line) = @_;
+	if($line !~ /[\.\?\!\"]\s*$/m) {
+		print STDERR "Bad sentence ending: $line\n";
+		return 0;
+	} 
+	return 1;
+}
+
+sub printSplitSent {
+	my $line = shift;
+	my $old = $line;
+	$line =~ s/ ([a-z]+) \. ([A-Z][a-z]+) / $1 .\n$2 /g;
+	my @lines = split(/\n/,$line);
+	foreach(0..$#lines) {
+		my $l = $lines[$_];
+		$l =~ s/^\s+//;
+		$l =~ s/\s+$//;
+		$l =~ s/\s{2,}/ /g;
+		print "$l\n";
+		newsent($l,"(".$_.")");
+	}
+}
+
+sub newsent {
+	my ($new,$id) = @_;
+	chomp $new;
+	print STDERR "New sentence$id: {{{$new}}}\n" if $verbose;
+}
+
+#ABTI1 = Mr|Mrs|Ms|Dr|Prof|Sen|Reps?|Lt|Col|Gen|Messrs|Gov|Adm|Rev|Maj|Sgt
