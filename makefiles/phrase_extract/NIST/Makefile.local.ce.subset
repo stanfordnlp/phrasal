@@ -3,7 +3,7 @@
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=ce-tiny
+SYSID=ce-hier2-d6
 
 #########################################
 # Language/data specific variables:
@@ -18,15 +18,13 @@ E=en
 #########################################
 
 ### How many sentence pairs used for training:
-LINES=100000
+LINES=90000000
 
 ### MT word-aligned training data:
 TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
 
 ### Unfiltered Gigaword LM:
-### (not actually taken from Gigaword, but small enough
-### for this tiny example)
-GIGA=/scr/nlp/data/gale/acl_2005_workshop/lm/europarl.en.srilm
+GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/wo2356/mt_giga3_afp_xin.1233.lm.gz
 
 ### Count-based Google LM:
 GOOGLE_CT=/scr/nlp/data/gale2/NIST_EVAL08/GoogleNgrams-ibm
@@ -51,14 +49,13 @@ TEST_REF=$(REFS)/$(TESTID)$(TYPE)/chinese
 ALIGN=grow-diag
 
 ### Lexicalized re-ordering model identifier:
-LO_ID=msd-bidirectional-fe
+LO_ID=lo-hier.msd2-bidirectional-fe
 
 ### Parameters for lexicalized reordering model:
-### (if empty, uses default)
-LO_ARGS=
+LO_ARGS=-maxLen 500 -phiFilter $(MINP) -pharaohLexicalizedModel msd2-bidirectional-fe -phrasalLexicalizedModel true  
 
 ### Number of columns produced by lexicalized re-ordering extractor:
-LO_SZ=6
+LO_SZ=8
 
 ### Other options:
 XOPTS=
@@ -80,9 +77,9 @@ MINP=1e-4
 #########################################
 
 ### How much memory for Java:
-MEMSIZE=3000m
-PMEMSIZE=3000m
-PMEMSIZE_BM=3000m
+MEMSIZE=15000m
+PMEMSIZE=15000m
+PMEMSIZE_BM=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -126,7 +123,7 @@ PM=phrasal-mert.pl
 #########################################
 
 IE=prep
-FE=unk
+FE=prep
 
 #########################################
 # LM filtering script:
@@ -135,7 +132,7 @@ FE=unk
 LM_FILTER_SCRIPT=filter_lm_unigram
 
 #########################################
-# Size of test-time nbest list:
+# Size of nbest list (test time):
 #########################################
 
-N=10
+N=200

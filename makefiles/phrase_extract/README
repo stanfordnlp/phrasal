@@ -1,3 +1,21 @@
+===========================================================
+Directories
+===========================================================
+
+NIST/
+	config files to use for NIST evaluations and research papers
+
+GALE/
+	to be used _only_ for GALE (because of FOUO data)
+
+sample/
+	small example to test makefile (full MERT and test-time deocding
+	shouldn't take more than 2-3 hours)
+
+===========================================================
+NOTES
+===========================================================
+
 Some assumptions:
 (1) ngram and ngram-count are in your path (if not, add it from e.g.: /u/nlp/packages/SRILM-1.5.6/bin/i686-m64_c)
 (2) your javanlp checkout can be found with $JAVANLP_HOME

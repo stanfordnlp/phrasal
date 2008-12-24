@@ -368,3 +368,12 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpu
 
 %.counts.html: %.counts
 	cat $< | counts2html $(TESTID) > $@
+
+#############################################
+# Tests
+#############################################
+
+.PHONY: check
+
+check:
+	cat Makefile.local | $(JAVANLP_HOME)/projects/mt/makefiles/phrase_extract/scripts/check-local-makefile

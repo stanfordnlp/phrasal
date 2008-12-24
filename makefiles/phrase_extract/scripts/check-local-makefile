@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+#######################################################
+# Checks whether a Makefile.local read from stdin
+# is defining all necessary variables.
+# If variable is a file name, make sure it exists.
+#######################################################
+
+use strict;
+use POSIX;
+
+my @required_fields = 
+ qw( N SYSID TRAIN GIGA GOOGLE_CT GOOGLE_LM REFS DEVID TESTID DEV_REF TEST_REF F E LINES maxPLen MINP ALIGN LO_ID LO_ARGS LO_SZ 
+     XOPTS MEMSIZE PMEMSIZE PMEMSIZE_BM exactPhiCounts SPLIT PRE POST DEBUG_PHRASAL PM IE FE LM_FILTER_SCRIPT );
+my @optional_fields = qw( BBN LM_MIX1 GENRE );
+my @file_fields = qw( TRAIN GIGA BBN GOOGLE_CT GOOGLE_LM REFS );
+my @exec_fields = qw( PM LM_FILTER_SCRIPT );
+my %values;
+
+my %required_fields = map { ($_,1) } @required_fields; 
+my %optional_fields = map { ($_,1) } @optional_fields; 
+my %file_fields = map { ($_,1) } @file_fields; 
+my %exec_fields = map { ($_,1) } @exec_fields; 
+
+open(F,"grep -v ^# | grep -v ^include | grep -v '^\$' |");
+while(my $line = <F>) {
+	chomp $line;
+	my ($v,$s) = split(/=/,$line,2);
+	$s =~ s/^ +//;
+	$s =~ s/ +$//;
+	$values{$v} = $s;
+	if($v eq 'TEST') {
+	}
+	if($exec_fields{$v}) {
+		print "Checking executable $s (if no error below, fine): ".`which $s`;
+	}
+	if($file_fields{$v}) {
+		warn "Variable $v: missing file or directory ($s)\n" unless -f $s || -d $s;
+	}
+	my $e = $required_fields{$v};
+	if(defined $e) {
+		warn "Variable $v defined twice\n" if $e <= 0;
+		$required_fields{$v}--;
+	} else {
+		warn "Unknown variable $v\n" unless defined $optional_fields{$v};
+	}
+}
+close(F);
+
+foreach my $f (keys %required_fields) {
+	if($required_fields{$f} == 1) {
+		warn "Required field missing: $f\n";
+	}
+}
+
+my $ini = "$values{SYSID}.ini";
+warn "Missing $ini\n" unless -f $ini;
+my $dev_sgm = "$values{DEVID}.sgm";
+my $dev_fe = "$values{DEVID}.$values{FE}";
+warn "$dev_sgm or $dev_fe must be present\n" unless -f $dev_sgm || -f $dev_fe;
+my $test_sgm = "$values{TESTID}.sgm";
+my $test_fe = "$values{TESTID}.$values{FE}";
+warn "$test_sgm or $test_fe must be present\n" unless -f $test_sgm || -f $test_fe;

@@ -1,9 +1,44 @@
+## Taken from:
+## /scr/nlp/data/gale/GALE-arabic/translate/grow/v3/mt06
+
+#########################################
+# Size of test-time nbest list:
+#########################################
+
+N=500
+
 #########################################
 # Java command (must have MT stuff in class
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=none-d4
+SYSID=v3-2lm-hr2-v12
+#SYSID=v3-2lm-hr2-v9
+
+#########################################
+# Training/test/dev stuff:
+#########################################
+
+### MT word-aligned training data:
+TRAIN=/scr/nlp/data/gale/GALE-arabic/translate/train-ucb-v3
+
+### Unfiltered LMs:
+GIGA=/scr/nlp/data/gale2/ARABIC_LM/releases/mtF_giga3_afp_xin.1233.unk.lm.gz
+
+### Count-based Google LM:
+GOOGLE_CT=/scr/nlp/data/gale2/GoogleNgrams
+GOOGLE_LM=/scr/nlp/data/gale2/ARABIC_LM/google/google.countlm.3 
+
+### Directory containing reference translations:
+REFS=/scr/nlp/data/gale/AE-MT-eval-data
+
+### Dev/test corpus and genre identifiers:
+DEVID=mt06
+TESTID=mt06
+
+### References:
+DEV_REF=$(REFS)/$(DEVID)
+TEST_REF=$(REFS)/$(TESTID)
 
 #########################################
 # Language/data specific variables:
@@ -13,60 +48,47 @@ SYSID=none-d4
 F=ar
 E=en
 
-#########################################
-# Data:
-#########################################
-
-### How many sentence pairs used for training:
+### How much data to use:
 LINES=90000000
 
-### MT word-aligned training data:
-TRAIN=/scr/nlp/data/gale/MichelMTsystem/mt-experiments/ar-en.reorder
+#########################################
+# Pruning:
+#########################################
 
-### Unfiltered Gigaword LM:
-GIGA=/scr/nlp/data/gale2/ARABIC_LM/releases/with_dev07_period/mt_giga3_afp_xin.1233.lm.gz
+maxPLen=10
 
-### Dev/test corpus and genre identifiers:
-DEVID=mt06
-TESTID=mt05
-#TESTID=dev07-dev
-
-### Directory containing reference translations:
-REFS=/scr/nlp/data/gale/AE-MT-eval-data/
-
-### References:
-DEV_REF=$(REFS)/$(DEVID)$(TYPE)
-TEST_REF=$(REFS)/$(TESTID)$(TYPE)
+### Minimum p(e|f) probability:
+### (Note: filtering based on p(f|e), lex(e|f), lex(f|e)
+### isn't really effective)
+MINP=1e-3
 
 #########################################
 # Phrase extraction heuristics:
 #########################################
 
 ### Specify alignment merging heuristic:
-ALIGN=grow-diag
+ALIGN=grow
 
-### Lexicalized re-ordering models:
-DIST=msd-bidirectional-fe
+### Lexicalized re-ordering model identifier:
+LO_ID=lo-hier.msd2-bidirectional-fe
 
-#########################################
-# Pruning:
-#########################################
+### Parameters for lexicalized reordering model:
+LO_ARGS=-maxLen 500 -phiFilter $(MINP) -pharaohLexicalizedModel msd2-bidirectional-fe -phrasalLexicalizedModel true  
 
-### Maximum phrase length:
-maxPLen=7
+### Number of columns produced by lexicalized re-ordering extractor:
+LO_SZ=8
 
-### Minimum p(e|f) probability:
-### (Note: filtering based on p(f|e), lex(e|f), lex(f|e)
-### isn't really effective)
-MINP=1e-4
+### Other options:
+XOPTS=
 
 #########################################
 # Memory and extraction duration:
 #########################################
 
-### How much memory for Java:
-MEMSIZE=15000m
-PMEMSIZE=15000m
+### How much memory for Java and sort:
+MEMSIZE=23500m
+PMEMSIZE=23500m
+PMEMSIZE_BM=23500m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -81,29 +103,31 @@ exactPhiCounts=true
 ### into X chunks, and make 1-2 passes over the training data
 ### for each one of them.
 ### (if you run out of memory, increase the split value)
-SPLIT=-split 2
+SPLIT=-split 3
 
 #########################################
-# Debug levels
-#########################################
-
-#DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
-DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server -verbose:gc -verbose:gc -Xloggc:logs/pmert-gc.$$$$ -XX:+PrintGCDetails -XX:+PrintGCTimeStamps 
-#DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server -verbose:gc -verbose:gc -Xloggc:logs/pmert-gc.$$$$ -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+AggressiveHeap -DGCFrequency=20 
-
-#########################################
-# Pre- and post-processing:
+# Pre/post processing:
 #########################################
 
 PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen)
-POST=perl $(SCRIPTS)/remove_unk 
+POST=perl $(SCRIPTS)/remove_unk | en_truecaser
+
+#########################################
+# Debug flags
+#########################################
+
+### Uncomment this to debug Phrasal decoder:
+DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server -XX:+AggressiveHeap
 
 #########################################
 # Phrasal MERT:
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert.pl
+## generic phrasal mert:
+#PM=phrasal-mert.pl
+## my personal version:
+PM=phrasal-mert-michel.pl
 
 #########################################
 # Extension of input files:
@@ -115,13 +139,14 @@ IE=unk
 FE=unk
 
 #########################################
+# LM:
+#########################################
+
+# Mix between Gigaword LM and Google LM (not used):
+#LM_MIX1=0.3498
+#LM_MIX2=0.3333
+
 # LM filtering script:
-#########################################
+LM_FILTER_SCRIPT=filter_lm_unigram
 
-LM_FILTER_SCRIPT=filter_lm_ngram
-
-#########################################
-# LM filtering script:
-#########################################
-
-N=10
+include Makefile.extra

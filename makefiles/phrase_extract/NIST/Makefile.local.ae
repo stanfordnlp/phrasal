@@ -3,14 +3,17 @@
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=ce-tiny
+# By default, no lexicalized reordering:
+SYSID=ae-none-d4
+# Add Moses-style lexicalized reordering:
+#SYSID=ae-word-d4
 
 #########################################
 # Language/data specific variables:
 #########################################
 
 ### Language identifiers:
-F=zh
+F=ar
 E=en
 
 #########################################
@@ -18,30 +21,28 @@ E=en
 #########################################
 
 ### How many sentence pairs used for training:
-LINES=100000
+LINES=90000000
 
 ### MT word-aligned training data:
-TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
+TRAIN=/scr/nlp/data/gale/MichelMTsystem/mt-experiments/ar-en.reorder
 
-### Unfiltered Gigaword LM:
-### (not actually taken from Gigaword, but small enough
-### for this tiny example)
-GIGA=/scr/nlp/data/gale/acl_2005_workshop/lm/europarl.en.srilm
+### Unfiltered LMs:
+GIGA=/scr/nlp/data/gale2/ARABIC_LM/releases/mt_giga3_afp_xin.1233.unk.lm.gz
 
 ### Count-based Google LM:
-GOOGLE_CT=/scr/nlp/data/gale2/NIST_EVAL08/GoogleNgrams-ibm
-GOOGLE_LM=/scr/nlp/data/gale2/NIST_EVAL08/LM/google/google.countlm.3 
+GOOGLE_CT=/scr/nlp/data/gale2/GoogleNgrams
+GOOGLE_LM=/scr/nlp/data/gale2/ARABIC_LM/google/google.countlm.3 
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
 TESTID=mt05
 
 ### Directory containing reference translations:
-REFS=/scr/nlp/data/gale/NIST-MT-eval-data/
+REFS=/scr/nlp/data/gale/AE-MT-eval-data/
 
 ### References:
-DEV_REF=$(REFS)/$(DEVID)$(TYPE)/chinese
-TEST_REF=$(REFS)/$(TESTID)$(TYPE)/chinese
+DEV_REF=$(REFS)/$(DEVID)$(TYPE)
+TEST_REF=$(REFS)/$(TESTID)$(TYPE)
 
 #########################################
 # Phrase extraction heuristics:
@@ -54,7 +55,6 @@ ALIGN=grow-diag
 LO_ID=msd-bidirectional-fe
 
 ### Parameters for lexicalized reordering model:
-### (if empty, uses default)
 LO_ARGS=
 
 ### Number of columns produced by lexicalized re-ordering extractor:
@@ -80,9 +80,9 @@ MINP=1e-4
 #########################################
 
 ### How much memory for Java:
-MEMSIZE=3000m
-PMEMSIZE=3000m
-PMEMSIZE_BM=3000m
+MEMSIZE=15000m
+PMEMSIZE=15000m
+PMEMSIZE_BM=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -97,20 +97,20 @@ exactPhiCounts=true
 ### into X chunks, and make 1-2 passes over the training data
 ### for each one of them.
 ### (if you run out of memory, increase the split value)
-SPLIT=-split 1
+SPLIT=-split 2
 
 #########################################
 # Debug levels
 #########################################
 
-DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
+DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server
 
 #########################################
 # Pre- and post-processing:
 #########################################
 
-PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl -n -t
-POST=perl $(SCRIPTS)/remove_unk | en_truecaser
+PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen)
+POST=perl $(SCRIPTS)/remove_unk 
 
 #########################################
 # Phrasal MERT:
@@ -125,7 +125,7 @@ PM=phrasal-mert.pl
 # prep : with preprocessing
 #########################################
 
-IE=prep
+IE=unk
 FE=unk
 
 #########################################
@@ -135,7 +135,7 @@ FE=unk
 LM_FILTER_SCRIPT=filter_lm_unigram
 
 #########################################
-# Size of test-time nbest list:
+# Size of nbest list (test time):
 #########################################
 
-N=10
+N=200

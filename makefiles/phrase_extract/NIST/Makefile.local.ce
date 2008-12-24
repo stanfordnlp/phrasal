@@ -3,7 +3,12 @@
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=hier2-d6-gale
+## Baseline (no wts file, so need to run MERT):
+SYSID=ce-hier2-d6
+## More competitive system, though runs significantly slower:
+## Requires two lexicalized reordering table, so ini file
+## currently doesn't work with current Makefile.
+#SYSID=ce-p2h2-d6
 
 #########################################
 # Language/data specific variables:
@@ -21,10 +26,10 @@ E=en
 LINES=90000000
 
 ### MT word-aligned training data:
-TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
+TRAIN=/scr/nlp/data/gale2/NIST_EVAL08/nist_eval_giza/fixed
 
 ### Unfiltered Gigaword LM:
-GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/wo2356/mt_giga3_afp_xin.1233.lm.gz
+GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/w23wo56/mt_giga3_afp_xin.1233.lm.gz
 
 ### Count-based Google LM:
 GOOGLE_CT=/scr/nlp/data/gale2/NIST_EVAL08/GoogleNgrams-ibm
@@ -32,7 +37,8 @@ GOOGLE_LM=/scr/nlp/data/gale2/NIST_EVAL08/LM/google/google.countlm.3
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-TESTID=mt05
+#TESTID=mt05
+TESTID=mt08
 
 ### Directory containing reference translations:
 REFS=/scr/nlp/data/gale/NIST-MT-eval-data/
@@ -57,6 +63,9 @@ LO_ARGS=-maxLen 500 -phiFilter $(MINP) -pharaohLexicalizedModel msd2-bidirection
 ### Number of columns produced by lexicalized re-ordering extractor:
 LO_SZ=8
 
+### Other options:
+XOPTS=
+
 #########################################
 # Pruning:
 #########################################
@@ -74,9 +83,9 @@ MINP=1e-4
 #########################################
 
 ### How much memory for Java:
-MEMSIZE=15000m
-PMEMSIZE=15000m
-PMEMSIZE_BM=15000m
+MEMSIZE=22000m
+PMEMSIZE=22000m
+PMEMSIZE_BM=22000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -111,7 +120,7 @@ POST=perl $(SCRIPTS)/remove_unk | en_truecaser
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert-michel.pl
+PM=phrasal-mert.pl
 
 #########################################
 # Extension of input files:
@@ -120,10 +129,16 @@ PM=phrasal-mert-michel.pl
 #########################################
 
 IE=prep
-FE=prep
+FE=unk
 
 #########################################
 # LM filtering script:
 #########################################
 
-LM_FILTER_SCRIPT=filter_lm_ngram
+LM_FILTER_SCRIPT=filter_lm_unigram
+
+#########################################
+# Size of nbest list (test time):
+#########################################
+
+N=200
