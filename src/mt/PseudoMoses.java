@@ -806,62 +806,62 @@ public class PseudoMoses {
 				System.out.println("<<<decoder failure>>>");
 			}
     }
-	}
 
-	public RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber) throws IOException {
-
-			Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
-				.toIStringArray(tokens));
-			// log foreign sentence
-			System.err.printf("Translating: %s\n", foreign);
-
-			// do translation
-			long startTime = System.currentTimeMillis();
-			RichTranslation<IString, String> translation;
-
-			ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
-					: new EnumeratedConstrainedOutputSpace<IString, String>(
-							constrainedToRefs.get(translationId)));
-
-			if (nbestListSize == -1) {
-				translation = inferer.translate(foreign, lineNumber - 1,
-						constrainedOutputSpace);
-			} else {
-				List<RichTranslation<IString, String>> translations = inferer.nbest(
-						foreign, lineNumber - 1, constrainedOutputSpace,
-						nbestListSize);
-				if (translations != null) {
-					translation = translations.get(0);
-
-					for (RichTranslation<IString, String> tran : translations) {
-						nbestListWriter.append(generateMosesNBestList ? 
-            tran.nbestToMosesString(translationId) :
-            tran.nbestToString(translationId)).append("\n");
-					}
-				} else {
-					translation = null;
-				}
-			}
-			long translationTime = System.currentTimeMillis() - startTime;
-			
-			// log additional information to stderr
-			if (translation != null) {
-				System.err.printf("Best Translation: %s\n", translation.translation);
-				System.err.printf("Final score: %.3f\n", (float) translation.score);
-				System.err.printf("Coverage: %s\n", translation.foreignCoverage);
-				System.err.printf("Foreign words covered: %d (/%d)  - %.3f %%\n",
-						translation.foreignCoverage.cardinality(), foreign.size(),
-						translation.foreignCoverage.cardinality() * 100.0 / foreign.size());
-			} else {
-				System.err.println("No best Translation: <<<decoder failure>>>");
-			}
-
-			System.err.printf("Time: %f seconds\n", translationTime / (1000.0));
-		
-		if (nbestListWriter != null) {
+    if (nbestListWriter != null) {
 			System.err.printf("Closing n-best writer\n");
 			nbestListWriter.close();
 		}
+  }
+
+	public RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber) throws IOException {
+
+    Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
+      .toIStringArray(tokens));
+    // log foreign sentence
+    System.err.printf("Translating: %s\n", foreign);
+
+    // do translation
+    long startTime = System.currentTimeMillis();
+    RichTranslation<IString, String> translation;
+
+    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
+        : new EnumeratedConstrainedOutputSpace<IString, String>(
+            constrainedToRefs.get(translationId)));
+
+    if (nbestListSize == -1) {
+      translation = inferer.translate(foreign, lineNumber - 1,
+          constrainedOutputSpace);
+    } else {
+      List<RichTranslation<IString, String>> translations = inferer.nbest(
+          foreign, lineNumber - 1, constrainedOutputSpace,
+          nbestListSize);
+      if (translations != null) {
+        translation = translations.get(0);
+
+        for (RichTranslation<IString, String> tran : translations) {
+          nbestListWriter.append(generateMosesNBestList ?
+          tran.nbestToMosesString(translationId) :
+          tran.nbestToString(translationId)).append("\n");
+        }
+      } else {
+        translation = null;
+      }
+    }
+    long translationTime = System.currentTimeMillis() - startTime;
+
+    // log additional information to stderr
+    if (translation != null) {
+      System.err.printf("Best Translation: %s\n", translation.translation);
+      System.err.printf("Final score: %.3f\n", (float) translation.score);
+      System.err.printf("Coverage: %s\n", translation.foreignCoverage);
+      System.err.printf("Foreign words covered: %d (/%d)  - %.3f %%\n",
+          translation.foreignCoverage.cardinality(), foreign.size(),
+          translation.foreignCoverage.cardinality() * 100.0 / foreign.size());
+    } else {
+      System.err.println("No best Translation: <<<decoder failure>>>");
+    }
+
+    System.err.printf("Time: %f seconds\n", translationTime / (1000.0));
 
 		return translation;
 	}
