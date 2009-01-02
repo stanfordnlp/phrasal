@@ -10,10 +10,11 @@ use strict;
 use POSIX;
 
 my @required_fields = 
- qw( N SYSID TRAIN GIGA GOOGLE_CT GOOGLE_LM REFS DEVID TESTID DEV_REF TEST_REF F E LINES maxPLen MINP ALIGN LO_ID LO_ARGS LO_SZ 
-     XOPTS MEMSIZE PMEMSIZE PMEMSIZE_BM exactPhiCounts SPLIT PRE POST DEBUG_PHRASAL PM IE FE LM_FILTER_SCRIPT );
-my @optional_fields = qw( BBN LM_MIX1 GENRE );
-my @file_fields = qw( TRAIN GIGA BBN GOOGLE_CT GOOGLE_LM REFS );
+ qw( N SYSID TRAIN GIGA GOOGLE_CT GOOGLE_LM DEVID TESTID DEV_REF TEST_REF F E LINES maxPLen MINP ALIGN LO_ID LO_ARGS LO_SZ 
+     MEMSIZE PMEMSIZE PMEMSIZE_BM exactPhiCounts SPLIT PRE POST PM IE FE LM_FILTER_SCRIPT );
+my @opt_fields = qw();
+my @optional_fields = qw( BBN LM_MIX1 DEBUG_PHRASAL XOPTS LO_ARGS);
+my @file_fields = qw( TRAIN GIGA BBN GOOGLE_CT GOOGLE_LM DEV_REF TEST_REF );
 my @exec_fields = qw( PM LM_FILTER_SCRIPT );
 my %values;
 
@@ -50,6 +51,12 @@ close(F);
 foreach my $f (keys %required_fields) {
 	if($required_fields{$f} == 1) {
 		warn "Required field missing: $f\n";
+	}
+}
+
+foreach my $f (keys %opt_fields) {
+	if($opt_fields{$f} == 1) {
+		print "Optional field missing (fine): $f\n";
 	}
 }
 

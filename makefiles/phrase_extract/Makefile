@@ -42,7 +42,8 @@ LTABLES_TEST= \
 	$(TESTID).tables/lo-hier.msd2-bidirectional-fe.gz
 
 # Main targets:
-all: train test
+all:
+	echo "No default target; please refer to http://nlp.stanford.edu/nlpwiki/MTPipelineJavaNLP for a list of valid targets."
 
 # Build LMs (test):
 test_lm: $(TESTID).flt_giga.lm.gz
@@ -149,18 +150,18 @@ $(TESTID).$(DEVID).%.$Nbest.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$
 	(java $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@) 2> $@.log
 
 # Use final MERT paramters:
-$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
+$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
-$(DEVID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(DEVID).$(IE)
+$(DEVID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini $(DEVID) $(DEVID) < $< > $<.$(DEVID)
 	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> $@.log
 
 # Use best MERT paramters:
-$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
-$(DEVID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(DEVID).$(IE)
+$(DEVID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini $(DEVID) $(DEVID) < $< > $<.$(DEVID)
 	(java $(JAVA_PHRASAL_ARGS) mt.PseudoMoses $<.$(DEVID) < $(DEVID).$(IE) > $@) 2> $@.log
 
@@ -246,15 +247,6 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 	$(PM) --working-dir=$(DEVID).$(*F).bt_pmert \
 	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS) -DSTARTING_POINTS=5 -DtuneLength=false" \
 	$(DEVID).$(IE) $(DEV_REF)/ref bleu-ter $(DEVID).$< >& logs/$(DEVID).$(*F).bt_pmert.log
-
-#############################################
-# Prepare class-based models:
-#############################################
-
-%.clm.gz: %.lm.gz
-	zcat $< | lm_ibm2danc | gzip > $@
-%.cunk: %.sgm
-	cat $< | sgml2txt | input_ibm2danc | lc > $@
 
 #############################################
 # Language models:
