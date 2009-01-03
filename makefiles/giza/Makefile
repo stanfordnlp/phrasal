@@ -58,4 +58,4 @@ logs/step1: corpus.$E
 ###########################################################################
 
 corpus.$E: $(SOURCE_ROOT).$E $(SOURCE_ROOT).$F
-	/user/mgalley/mt/mt-scripts/generic/clean-corpus-n.perl $(SOURCE_ROOT) $E $F corpus 1 99 2> $@.log
+	clean-corpus-n.perl $(SOURCE_ROOT) $E $F corpus 1 99 2> $@.log
