@@ -1,3 +1,5 @@
+.SECONDARY:
+
 ###########################################
 # Makefile for generating phrase tables
 # and LMs filtered against a dev/test set.
@@ -70,18 +72,21 @@ train: dev_extract $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
 train_google: dev_extract_google $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
 train_gale: dev_extract_gale $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
 
-# Decode on test data:
-test: test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
-test_google: test_extract_google $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
-test_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+# Decode test data (with nbest list):
+test: test_extract $(TESTID).$(DEVID).$(SYSID).f1best.post
+test_google: test_extract_google $(TESTID).$(DEVID).$(SYSID).f1best.post
+test_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).f1best.post
+
+# Decode test data (without nbest list):
+nbest: test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+nbest_google: test_extract_google $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+nbest_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
 
 ltables: $(LTABLES)
 
 # Java configuration:
 JAVA_PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE) 
 JAVA_PHRASAL_ARGS_N=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM) 
-
-.SECONDARY:
 
 #############################################
 # Evaluation:

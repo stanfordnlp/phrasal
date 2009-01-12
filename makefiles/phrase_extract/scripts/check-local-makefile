@@ -12,8 +12,7 @@ use POSIX;
 my @required_fields = 
  qw( N SYSID TRAIN GIGA GOOGLE_CT GOOGLE_LM DEVID TESTID DEV_REF TEST_REF F E LINES maxPLen MINP ALIGN LO_ID LO_ARGS LO_SZ 
      MEMSIZE PMEMSIZE PMEMSIZE_BM exactPhiCounts SPLIT PRE POST PM IE FE LM_FILTER_SCRIPT );
-my @opt_fields = qw();
-my @optional_fields = qw( BBN LM_MIX1 DEBUG_PHRASAL XOPTS LO_ARGS);
+my @optional_fields = qw( BBN LM_MIX1 DEBUG_PHRASAL XOPTS LO_ARGS REFS );
 my @file_fields = qw( TRAIN GIGA BBN GOOGLE_CT GOOGLE_LM DEV_REF TEST_REF );
 my @exec_fields = qw( PM LM_FILTER_SCRIPT );
 my %values;
@@ -29,6 +28,7 @@ while(my $line = <F>) {
 	my ($v,$s) = split(/=/,$line,2);
 	$s =~ s/^ +//;
 	$s =~ s/ +$//;
+	$s =~ s/\$\(([^\(\)\$]+)\)/expand($1)/ge;
 	$values{$v} = $s;
 	if($v eq 'TEST') {
 	}
@@ -54,12 +54,18 @@ foreach my $f (keys %required_fields) {
 	}
 }
 
-foreach my $f (keys %opt_fields) {
-	if($opt_fields{$f} == 1) {
-		print "Optional field missing (fine): $f\n";
+foreach my $f (keys %optional_fields) {
+	if($optional_fields{$f} == 1) {
+		#print "Optional field missing (fine): $f\n";
 	}
 }
 
+my $train_e = "$values{TRAIN}/corpus.$values{E}";
+warn "Missing $train_e\n" unless -f $train_e;
+my $train_f = "$values{TRAIN}/corpus.$values{F}";
+warn "Missing $train_f\n" unless -f $train_f;
+my $train_a = "$values{TRAIN}/corpus.$values{ALIGN}";
+warn "Missing $train_a\n" unless -f $train_a;
 my $ini = "$values{SYSID}.ini";
 warn "Missing $ini\n" unless -f $ini;
 my $dev_sgm = "$values{DEVID}.sgm";
@@ -68,3 +74,10 @@ warn "$dev_sgm or $dev_fe must be present\n" unless -f $dev_sgm || -f $dev_fe;
 my $test_sgm = "$values{TESTID}.sgm";
 my $test_fe = "$values{TESTID}.$values{FE}";
 warn "$test_sgm or $test_fe must be present\n" unless -f $test_sgm || -f $test_fe;
+
+exit 0;
+
+sub expand {
+	my $varname = shift;
+	return $values{$varname};
+}
