@@ -31,6 +31,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     String ciLinMultipleTagStr = props.getProperty("ciLinMultipleTag", "false");
     String topicalityStr = props.getProperty("topicality", "false");
     String lengthStr = props.getProperty("length", "false");
+    String wordNgramStr = props.getProperty("wordNgram", "false");
 
     Boolean twofeat = Boolean.parseBoolean(twofeatStr);
     Boolean revised = Boolean.parseBoolean(revisedStr);
@@ -45,6 +46,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     Boolean ciLinMultipleTag = Boolean.parseBoolean(ciLinMultipleTagStr);
     Boolean topicality = Boolean.parseBoolean(topicalityStr);
     Boolean length = Boolean.parseBoolean(lengthStr);
+    Boolean wordNgram = Boolean.parseBoolean(wordNgramStr);
 
     //Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     //Tree chTree = validSent.chParsedTrees.get(0);
@@ -301,6 +303,15 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         featureList.incrementCount("afterDElength", -Math.log(afterDElength));
       }
       featureList.incrementCount("wholeLength", -Math.log(chNPrange.second-chNPrange.first+1));
+    }
+
+    if (wordNgram) {
+      List<String> words = new ArrayList<String>();
+      for (int i = 0; i < sentence.size(); i++) {
+        String word = sentence.get(i).word();
+        words.add(word);
+      }
+      featureList.addAll(ngramFeatures(words, "wordngrams:"));
     }
 
     return featureList;
