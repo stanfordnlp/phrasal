@@ -336,7 +336,8 @@ public class ExperimentUtils {
   }
 
   static String ctbDir() {
-    String ctbdirname = "/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/";
+    String ctbdirname = "/scr/nlp/data/ldc/ctb6.0/data/utf8/bracketed/";
+    //String ctbdirname = "/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/";
     File ctbdir = new File(ctbdirname);
     if (!ctbdir.exists()) {
       ctbdirname = "C:\\cygwin\\home\\Pichuan Chang\\data\\CTB6\\data\\utf8\\bracketed\\";
@@ -383,7 +384,9 @@ public class ExperimentUtils {
 
     String chParsedDir = null;
     if (useNonOracleTrees) {
-      chParsedDir = "projects/mt/src/mt/translationtreebank/data/ctb_parsed/bracketed/";
+      chParsedDir =
+       System.getenv("JAVANLP_HOME")+
+       "/projects/mt/src/mt/translationtreebank/data/ctb_parsed/bracketed/";
     }
 
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
@@ -396,7 +399,9 @@ public class ExperimentUtils {
 
     // Open the hand-annotate file
     //String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_all.txt";
-    String finalCategoriesFile = "projects/mt/src/mt/translationtreebank/data/finalCategories_all.txt";
+    String finalCategoriesFile =
+         System.getenv("JAVANLP_HOME")+
+         "/projects/mt/src/mt/translationtreebank/data/finalCategories_all.txt";
     List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile, useReducedCategories);
     
     for(int fileidx = 1; fileidx <= 325; fileidx++) {

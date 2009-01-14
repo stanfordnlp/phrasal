@@ -1,13 +1,12 @@
 package mt.translationtreebank;
 
-import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.*;
-import edu.stanford.nlp.stats.*;
-import edu.stanford.nlp.classify.*;
-import edu.stanford.nlp.ling.*;
 import java.util.*;
 import java.io.*;
+
+import mt.base.IOTools;
+import mt.train.SymmetricalWordAlignment;
+import mt.train.AbstractWordAlignment;
 
 class DumpTreesAndAlignment {
   static void printTreesAndAlignment(TreePair treepair, 
@@ -16,7 +15,26 @@ class DumpTreesAndAlignment {
     TranslationAlignment.printAlignmentGrid(alignment);
   }
 
+  /**
+   * Dumps aligned trees. If no argument is provided, dump to an HTML page.
+   * If file base name is provided, dump source-language treebank to base_name.f,
+   * target-language treebank to base_name.e, and alignment to base_name.a.
+   * @param args Optional argument
+   * @throws Exception ??
+   */
   public static void main(String args[]) throws Exception {
+
+    boolean genHTML = true;
+    PrintStream fWriter=null, eWriter=null, aWriter=null;
+    
+    if(args.length == 1) {
+      genHTML = false;
+      String out = args[0];
+      fWriter = IOTools.getWriterFromFile(out+".f");
+      eWriter = IOTools.getWriterFromFile(out+".e");
+      aWriter = IOTools.getWriterFromFile(out+".a");
+    }
+
     List<TreePair> treepairs;
     Boolean reducedCategory = true;
     Boolean nonOracleTree = false;
@@ -32,9 +50,8 @@ class DumpTreesAndAlignment {
     treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, 
                                                        nonOracleTree);
 
-    int count = 0;
-
-    TranslationAlignment.printAlignmentGridHeader();
+    if(genHTML)
+      TranslationAlignment.printAlignmentGridHeader();
 
     for(TreePair validSent : treepairs) {
       // In our dataset, every TreePair actually only just have one 
@@ -45,9 +62,41 @@ class DumpTreesAndAlignment {
       List<Tree> enTrees = validSent.enTrees;
       // This is the alignment
       TranslationAlignment alignment = validSent.alignment;
-      printTreesAndAlignment(validSent, alignment);
+      if(genHTML)
+        printTreesAndAlignment(validSent, alignment);
+      else {
+        fWriter.println(skipRoot(chTree.getChild(0)).toString());
+        StringBuffer buf = new StringBuffer();
+        if(enTrees.size() > 1)
+          buf.append("( ");
+        for(int i=0; i<enTrees.size(); ++i) {
+          if(i>0)
+            buf.append(" ");
+          buf.append(skipRoot(enTrees.get(i)).toString());
+        }
+        if(enTrees.size() > 1)
+          buf.append(" )");
+        eWriter.println(buf.toString());
+        AbstractWordAlignment al = new SymmetricalWordAlignment();
+        al.init(alignment.matrix_);
+        aWriter.println(al.toString());
+      }
     }
 
-    TranslationAlignment.printAlignmentGridBottom();
+    if(genHTML)
+      TranslationAlignment.printAlignmentGridBottom();
+    else {
+      fWriter.close();
+      eWriter.close();
+      aWriter.close();
+    }
+  }
+
+    /** Returns child if it is unique and the current label is "ROOT".
+   *
+   * @return
+   */
+  static Tree skipRoot(Tree t) {
+    return (t.isUnaryRewrite() && "ROOT".equals(t.label().value())) ? t.firstChild() : t;
   }
 }
