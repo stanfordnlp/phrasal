@@ -32,14 +32,15 @@ public class TranslationAlignment {
   }
 
   private Pair<String[], int[][]> fixTranslationWithMatrix(String[] t, int[][] m) {
-      t = fixTranslation(t);
+      /* fix errors in translation_ : all 'Ltd.' become 'Lt.'. */
+      t = fixTranslationWords(t);
       if (m.length != t.length+1) {
-        m = fixMatrix(m, t.length+1);
+        m = trimMatrixRow(m, t.length+1);
       }
       return new Pair<String[], int[][]>(t, m);
   }
 
-  private String[] fixTranslation(String[] t) {
+  private String[] fixTranslationWords(String[] t) {
     String[] newT = new String[t.length];
     // fix 'Ltd.'
     for(int i = 0; i < newT.length; i++) {
@@ -56,7 +57,7 @@ public class TranslationAlignment {
     return newT;
   }
 
-  private int[][] fixMatrix(int[][] m, int newRowLength) {
+  private int[][] trimMatrixRow(int[][] m, int newRowLength) {
     if(newRowLength != m.length-1) throw new RuntimeException("new row length should be just one less");
     int[][] newM = new int[newRowLength][];
     for(int i = 0; i < newRowLength; i++) {
@@ -439,7 +440,9 @@ public class TranslationAlignment {
         matrix_[r_i] = row;
       }
 
-      /* fix errors in translation_ : all 'Ltd.' become 'Lt.'. */
+      // this fixes translation_ and matrix_ at the same time,
+      // because sometimes some changes in translation_ might 
+      // need to adjust matrix_ as well
       Pair<String[], int[][]> tm = fixTranslationWithMatrix(translation_, matrix_);
       translation_ = tm.first;
       matrix_ = tm.second;
