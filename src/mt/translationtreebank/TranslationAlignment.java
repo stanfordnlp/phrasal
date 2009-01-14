@@ -31,6 +31,14 @@ public class TranslationAlignment {
     return wellformed_;
   }
 
+  private Pair<String[], int[][]> fixTranslationWithMatrix(String[] t, int[][] m) {
+      t = fixTranslation(t);
+      if (m.length != t.length+1) {
+        m = fixMatrix(m, t.length+1);
+      }
+      return new Pair<String[], int[][]>(t, m);
+  }
+
   private String[] fixTranslation(String[] t) {
     String[] newT = new String[t.length];
     // fix 'Ltd.'
@@ -432,17 +440,17 @@ public class TranslationAlignment {
       }
 
       /* fix errors in translation_ : all 'Ltd.' become 'Lt.'. */
-      translation_ = fixTranslation(translation_);
-      if (matrix_.length != translation_.length+1) {
-        matrix_ = fixMatrix(matrix_, translation_.length+1);
-      }
-
+      Pair<String[], int[][]> tm = fixTranslationWithMatrix(translation_, matrix_);
+      translation_ = tm.first;
+      matrix_ = tm.second;
     } else {
       System.err.println("Ill-formed:");
       System.err.println(dataStr);
       wellformed_ = false; return;
     }
   }
+
+
 
   public static List<TranslationAlignment> readFromFile(String filename) 
   throws IOException {
@@ -766,16 +774,26 @@ public class TranslationAlignment {
   public static TranslationAlignment fixAlignmentGridWithChineseTree(
     TranslationAlignment ta, List<Tree> chTrees) {
     if (chTrees.size() > 1) {
-      //System.err.println("chTrees > 1");
+      throw new RuntimeException("more than one chTree");
     }
     Sentence<HasWord> sentence = chTrees.get(0).yield();
     String[] leaves = new String[sentence.size()];
+    if (DEBUG) System.err.print("leaves=");
     for (int i = 0; i < sentence.size(); i++) {
       HasWord hw = sentence.get(i);
       leaves[i] = hw.word();
+      if (DEBUG) System.err.print(leaves[i]+" ");
     }
+    if (DEBUG) System.err.println();
     
     String[] source = ta.source_;
+    if (DEBUG) {
+      System.err.print("source=");
+      for(String w : source) {
+        System.err.print(w+" ");
+      }
+      System.err.println();
+    }
     List<List<Integer>> indexgroups = getIndexGroups(leaves, source);
 
     int[][] newMatrix = new int[ta.matrix_.length][];
@@ -865,8 +883,6 @@ public class TranslationAlignment {
     }
   }
 
-
-  
   private static List<List<Integer>> getIndexGroups(String[] leaves, String[] source) {
     List<List<Integer>> indexgroups = new ArrayList<List<Integer>>();
 
@@ -874,12 +890,13 @@ public class TranslationAlignment {
     for(int lidx = 0; lidx < leaves.length; lidx++) {
       List<Integer> indexgroup = new ArrayList<Integer>();
       String leaf = leaves[lidx];
-      //System.err.println("LEAF="+leaf);
+      if (DEBUG) System.err.println("LEAF="+leaf);
       StringBuilder chunk = new StringBuilder();
       while(!leaf.equals(chunk.toString())) {
+      //while(!ExperimentUtils.tokenEquals(leaf, chunk.toString())) {
         chunk.append(source[tidx]);
         indexgroup.add(tidx+1); // have to offset by 1, because 0 is NULL
-        //System.err.println("CHUNK="+chunk.toString());
+        if (DEBUG) System.err.println("CHUNK="+chunk.toString());
         tidx++;
       }
       indexgroups.add(indexgroup);
@@ -1399,7 +1416,7 @@ public class TranslationAlignment {
     int FIDX = Integer.parseInt(args[0]);
     Properties props =StringUtils.argsToProperties(args);
     Counter typeCounter = new ClassicCounter<String>();
-    
+
     // For this to run on both NLP machine and my computer
     String dirname = "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
     File dir = new File(dirname);
@@ -1497,15 +1514,19 @@ public class TranslationAlignment {
         List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
         if (chTrees.size() == 0) {
           System.err.printf("i=%d: Can't find tree in CTB: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+          System.err.println(StringUtils.join(ta.source_, " "));
+
           continue;
           // skip for now
         } else if (chTrees.size() > 1) {
-          System.err.printf("i=%d: Multiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+          //System.err.printf("i=%d: Multiple trees: %s\n", fileidx, StringUtils.join(ta.source_, " "));
+          throw new RuntimeException("i="+fileidx+": Multiple trees.");
         }
         
         List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
         if (enTrees.size() == 0) {
           System.err.printf("i=%d: Can't find tree in PTB: %s\n", fileidx, StringUtils.join(ta.translation_, " "));
+          System.err.println(StringUtils.join(ta.translation_, " "));
           continue;
           // skip for now
         } else if (enTrees.size() > 1) {
