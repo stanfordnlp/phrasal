@@ -405,7 +405,6 @@ public class ExperimentUtils {
     List<Pair<String, String>>[] finalCategories = readFinalCategories(finalCategoriesFile, useReducedCategories);
     
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
-    //for(int fileidx = 1; fileidx <= 50; fileidx++) {
       // Everytime, restart them so that when we get trees,
       // we won't match tree & sentences in different files.
       alignment_list = new ArrayList<TranslationAlignment>();
@@ -462,7 +461,8 @@ public class ExperimentUtils {
         }
 
         if (chTrees.size() == 0) {
-          //System.err.printf("i=%d: Can't find tree in CTB.\n", fileidx);
+          System.err.printf("i=%d: Can't find tree in CTB.\n", fileidx);
+          System.err.println(StringUtils.join(ta.source_, " "));
           continue;
           // skip for now
         } else if (chTrees.size() > 1) {
@@ -471,7 +471,8 @@ public class ExperimentUtils {
         
         List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
         if (enTrees.size() == 0) {
-          //System.err.printf("i=%d: Can't find tree in PTB.\n", fileidx);
+          System.err.printf("i=%d: Can't find tree in PTB.\n", fileidx);
+          System.err.println(StringUtils.join(ta.translation_, " "));
           continue;
           // skip for now
         } else if (enTrees.size() > 1) {
@@ -494,7 +495,8 @@ public class ExperimentUtils {
         numNPwithDE += tp.numNPwithDE();
       }
       // Important: Read the categories of each NPwithDEs
-      TreePair.annotateNPwithDEs(finalCategories[fileidx], treepairs_inFile);
+      // TODO: add the following line back!!
+      //TreePair.annotateNPwithDEs(finalCategories[fileidx], treepairs_inFile);
       treepairs.addAll(treepairs_inFile);
     }
     System.err.println("Total Treepairs = "+treepairs.size());

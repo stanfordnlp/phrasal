@@ -896,7 +896,7 @@ public class TranslationAlignment {
       if (DEBUG) System.err.println("LEAF="+leaf);
       StringBuilder chunk = new StringBuilder();
       while(!leaf.equals(chunk.toString())) {
-      //while(!ExperimentUtils.tokenEquals(leaf, chunk.toString())) {
+        //while(!ExperimentUtils.tokenEquals(leaf, chunk.toString())) {
         chunk.append(source[tidx]);
         indexgroup.add(tidx+1); // have to offset by 1, because 0 is NULL
         if (DEBUG) System.err.println("CHUNK="+chunk.toString());
