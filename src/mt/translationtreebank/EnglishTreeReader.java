@@ -126,6 +126,12 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
     }
     // merge (POS ') (* s) --> (POS 's)
     tree = mergeApostropheS(tree);
+
+    // if after mergeApostropheS, there are still (POS s), 
+    // change them into (POS 's)
+    tree = sToApostropheS(tree);
+
+
     
     // normalize leaves
     List<Tree> leaves = tree.getLeaves();
@@ -161,6 +167,18 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
       }
       if (val.equals("Ltd")) {
         leaves.get(i).setValue("Ltd.");
+      }
+    }
+    return tree;
+  }
+
+
+  static Tree sToApostropheS(Tree tree) {
+    List<Tree> leaves = tree.getLeaves();
+    for(Tree leaf : leaves) {
+      if (leaf.value().equals("s") &&
+          leaf.parent(tree).value().equals("POS")) {
+        leaf.setValue("'s");
       }
     }
     return tree;
