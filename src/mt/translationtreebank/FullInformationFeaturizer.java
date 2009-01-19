@@ -1,5 +1,6 @@
 package mt.translationtreebank;
 
+import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
@@ -248,7 +249,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
             else throw new RuntimeException("never should be here");
             
             csb.append(cTag);
-            System.err.println("==> "+csb.toString()+" <==");
+            //System.err.println("==> "+csb.toString()+" <==");
             featureList.incrementCount(csb.toString());
           }
         }

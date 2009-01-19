@@ -1,5 +1,6 @@
 package mt.translationtreebank;
 
+import mt.train.transtb.*;
 import edu.stanford.nlp.trees.*;
 import java.util.*;
 import java.io.*;
@@ -47,7 +48,7 @@ class DumpTreesAndAlignment {
     // but could have more than one English trees.
     // Other than trees, the "alignment" data member is also useful 
     // for general purpose.
-    treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, 
+    treepairs = TransTBUtils.readAnnotatedTreePairs(reducedCategory, 
                                                        nonOracleTree);
 
     if(genHTML)

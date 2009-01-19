@@ -1,20 +1,34 @@
-package mt.translationtreebank;
+package mt.train.transtb;
+
+import mt.translationtreebank.*;
+
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.*;
 import java.util.*;
 
-class TreePair {
-  TranslationAlignment alignment;
-  List<Tree> enTrees;
-  List<Tree> chTrees;
-  List<Tree> chParsedTrees;
+public class TreePair {
+  public TranslationAlignment alignment;
+  public List<Tree> enTrees;
+  public List<Tree> chTrees;
+  public List<Tree> chParsedTrees;
+  public Map<Integer, String> NPwithDEs_categories;
+  public Map<Integer, Pair<Integer,Integer>> NPwithDEs_deIdx;
+  public TreeSet<Integer> NPwithDEs_deIdx_set;
+  public Map<Integer, Pair<Integer,Integer>> parsedNPwithDEs_deIdx;
+
+  private int fileid; // the original file ID in CTB and E-CTB
   private Map<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> NPwithDEs;
-  Map<Integer, String> NPwithDEs_categories;
-  Map<Integer, Pair<Integer,Integer>> NPwithDEs_deIdx;
-  TreeSet<Integer> NPwithDEs_deIdx_set;
-  Map<Integer, Pair<Integer,Integer>> parsedNPwithDEs_deIdx;
+
+
+  public void setFileID(int fileid) {
+    this.fileid = fileid;
+  }
+
+  public int getFileID() {
+    return fileid;
+  }
 
   public List<Pair<Integer,Integer>> getNPEnglishTranslation(int deIdx) {
     Pair<Integer,Integer> chNPrange = NPwithDEs_deIdx.get(deIdx);
@@ -74,28 +88,61 @@ class TreePair {
     System.out.println("</pre>");
   }
 
-  public static void annotateNPwithDEs(List<Pair<String,String>> categories, List<TreePair> treepairs_inFile) {
-    // check if total number of NPs is correct
-    int totalNPs = 0;
-    for (TreePair tp : treepairs_inFile) {
-      totalNPs += tp.NPwithDEs.size();
-    }
-    if (categories.size() != totalNPs)
-      throw new RuntimeException(categories.size()+" != "+totalNPs);
+  public static void annotateNPwithDEs(List<Pair<String,String>> categories, TreePair tp) {
+    Integer[] deIndices = tp.NPwithDEs_deIdx_set.toArray(new Integer[tp.NPwithDEs_deIdx_set.size()]);
+    int offset = -1;
 
-    int catIdx = 0;
-    for(TreePair tp : treepairs_inFile) {
-      //for(Map.Entry<Pair<Integer,Integer>, List<Pair<Integer,Integer>>> e : tp.NPwithDEs.entrySet()) {
-      for(int deIdxInSent : tp.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> ip = tp.NPwithDEs_deIdx.get(deIdxInSent);
-        String np = tp.oracleChNPwithDE(deIdxInSent);
-        np = np.trim();
-        if (!categories.get(catIdx).second().endsWith(np)) {
-          System.err.println("CMP1:\t"+categories.get(catIdx).second());
-          System.err.println("CMP2:\t"+np);
+    if (deIndices.length <= 0) {
+      // no labeling needed
+      return;
+    }
+    
+    // First, find the offset of the first NP in the TreePair
+    // relative to the categories for the whole file
+    String currentNP = tp.oracleChNPwithDE((int)deIndices[0]).trim();
+    // we go through all the categories for the file (which contains this TreePair)
+    for (int i = 0; i < categories.size(); i++) {
+      Pair<String,String> category = categories.get(i);
+      // if the "offset" (means the position of first NP in this TreePair relatively
+      //                  in the categories for categories of this whole file.
+      if (offset < 0) {
+        if (category.second().trim().equals(currentNP)) {
+          // check next NP as sanity check!
+          // (there might be multiple NPs that have the same
+          // Chinese words in one file, if we just match one, 
+          // we might get a wrong offset.
+          // This might still potentiall cause problems,
+          // if there are two subsequent NPs that are duplicates.
+          // But for now the NP data we have don't have the problem.
+          String nextCatNP = "";
+          String nextNP = "";
+          if (deIndices.length > 1) {
+            nextNP = tp.oracleChNPwithDE((int)deIndices[1]).trim();
+          }
+          if (i+1 < categories.size()) {
+            nextCatNP = categories.get(i+1).second().trim();
+          }
+          if (nextCatNP.equals(nextNP) ||
+              nextNP.equals("")) { // if there's no nextNP in TreePair, that's ok too.
+            offset = i;
+            break;
+          }
         }
-        tp.NPwithDEs_categories.put(deIdxInSent, categories.get(catIdx).first());
-        catIdx++;
+      }
+    }
+    if (offset < 0) throw new RuntimeException("couldn't find offset in annotateNPwithDEs");
+    // starting from categories[offset], label all NPs in TreePair
+    for (int idx = 0; idx < deIndices.length; idx++) {
+      if (idx+offset >= categories.size()) {
+        throw new RuntimeException();
+      }
+      int deIdxInSent = deIndices[idx];
+      Pair<String,String> category = categories.get(idx+offset);
+      String np = tp.oracleChNPwithDE(deIdxInSent).trim();
+      if (category.second.trim().equals(np)) {
+        tp.NPwithDEs_categories.put(deIdxInSent, category.first());
+      } else {
+        throw new RuntimeException("error labeling NPs");
       }
     }
   }

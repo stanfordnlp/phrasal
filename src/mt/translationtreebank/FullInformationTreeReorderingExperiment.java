@@ -1,5 +1,6 @@
 package mt.translationtreebank;
 
+import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
@@ -9,7 +10,7 @@ import java.util.*;
 
 class FullInformationTreeReorderingExperiment {
   public static void main(String args[]) throws IOException {
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
+    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs();
 
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
     ClassicCounter<String> deTypeCounter = new ClassicCounter<String>();

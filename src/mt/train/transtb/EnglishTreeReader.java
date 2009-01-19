@@ -1,4 +1,6 @@
-package mt.translationtreebank;
+package mt.train.transtb;
+
+import mt.translationtreebank.*;
 
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
@@ -11,7 +13,7 @@ import java.util.*;
 import edu.stanford.nlp.trees.tregex.tsurgeon.*;
 import edu.stanford.nlp.trees.tregex.*;
 
-class EnglishTreeReader extends AbstractTreeReader {
+public class EnglishTreeReader extends AbstractTreeReader {
   private PTBEscapingProcessor ptbe_;
 
   public EnglishTreeReader() {

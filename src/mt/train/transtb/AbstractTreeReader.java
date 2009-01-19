@@ -1,4 +1,6 @@
-package mt.translationtreebank;
+package mt.train.transtb;
+
+import mt.translationtreebank.*;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.trees.*;
@@ -9,7 +11,7 @@ import java.io.*;
 import java.util.zip.GZIPInputStream;
 import java.util.*;
 
-abstract class AbstractTreeReader {
+public abstract class AbstractTreeReader {
   List<Tree> trees_;
   TreebankLangParserParams tlpp_;
   TreePrint treeprint_;

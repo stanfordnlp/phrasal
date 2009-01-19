@@ -1,5 +1,6 @@
 package mt.translationtreebank;
 
+import mt.train.transtb.*;
 import java.util.*;
 import java.io.*;
 import edu.stanford.nlp.util.*;
@@ -20,7 +21,7 @@ class TrainDevTest {
   }
 
   public static List<String> splits(int buckets, List<String> splitnames) throws IOException {
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true);
+    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(true);
     Map<String,List<Integer>> labelIndices = new HashMap<String,List<Integer>>();
     Map<Integer, String> result = new HashMap<Integer, String>();
 

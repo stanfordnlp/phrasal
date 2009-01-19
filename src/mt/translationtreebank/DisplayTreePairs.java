@@ -1,5 +1,6 @@
 package mt.translationtreebank;
 
+import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
@@ -14,7 +15,7 @@ class DisplayTreePairs {
   public static void main(String args[]) throws Exception {
     boolean reducedCategory = true;
     boolean nonOracleTree = true;
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
+    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
     for(TreePair validSent : treepairs) {
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {

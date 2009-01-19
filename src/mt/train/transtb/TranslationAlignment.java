@@ -1,4 +1,6 @@
-package mt.translationtreebank;
+package mt.train.transtb;
+
+import mt.translationtreebank.*;
 
 import edu.stanford.nlp.util.*;
 
@@ -16,10 +18,10 @@ import edu.stanford.nlp.process.*;
 
 public class TranslationAlignment {
   String source_raw_;
-  String[] source_;
+  public String[] source_;
   String translation_raw_;
   String[] translation_;
-  int[][] matrix_;
+  public int[][] matrix_;
   boolean wellformed_ = true;
 
   private static boolean DEBUG = false;

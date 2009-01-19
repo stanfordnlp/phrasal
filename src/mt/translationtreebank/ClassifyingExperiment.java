@@ -1,5 +1,6 @@
 package mt.translationtreebank;
 
+import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
@@ -59,7 +60,7 @@ class ClassifyingExperiment {
     Featurizer featurizer = (Featurizer)Class.forName(featurizerStr).newInstance();
 
     List<TreePair> treepairs;
-    treepairs = ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
+    treepairs = TransTBUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
 

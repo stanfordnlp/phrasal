@@ -1,5 +1,6 @@
 package mt.translationtreebank;
 
+import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
@@ -15,8 +16,7 @@ class FullInformationWangExperiment {
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
     Boolean sixclass = Boolean.parseBoolean(sixclassStr);
 
-    //List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs();
-    List<TreePair> treepairs = ExperimentUtils.readAnnotatedTreePairs(true, nonOracleTree);
+    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(true, nonOracleTree);
 
 
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
