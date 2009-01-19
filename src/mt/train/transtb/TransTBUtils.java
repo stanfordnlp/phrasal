@@ -150,7 +150,6 @@ public class TransTBUtils {
     for (TreePair tp : treepairs) {
       // Important: Read the categories of each NPwithDEs
       int fileid = tp.getFileID();
-      System.err.println("FILEID = "+fileid);
       TreePair.annotateNPwithDEs(finalCategories[fileid], tp);
     }
 
