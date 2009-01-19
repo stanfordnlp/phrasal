@@ -495,8 +495,7 @@ public class ExperimentUtils {
         numNPwithDE += tp.numNPwithDE();
       }
       // Important: Read the categories of each NPwithDEs
-      // TODO: add the following line back!!
-      //TreePair.annotateNPwithDEs(finalCategories[fileidx], treepairs_inFile);
+      TreePair.annotateNPwithDEs(finalCategories[fileidx], treepairs_inFile);
       treepairs.addAll(treepairs_inFile);
     }
     System.err.println("Total Treepairs = "+treepairs.size());
