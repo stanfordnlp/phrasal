@@ -1,8 +1,9 @@
 package mt.train.transtb;
 
+import mt.classifyde.*;
+
 import java.util.*;
 import java.io.*;
-import mt.translationtreebank.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 
@@ -33,7 +34,7 @@ public class TransTBUtils {
     if (useNonOracleTrees) {
       chParsedDir =
         System.getenv("JAVANLP_HOME")+
-        "/projects/mt/src/mt/translationtreebank/data/ctb_parsed/bracketed/";
+        "/projects/mt/src/mt/classifyde/data/ctb_parsed/bracketed/";
     }
 
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
@@ -45,10 +46,10 @@ public class TransTBUtils {
     int numNPwithDE = 0;
 
     // Open the hand-annotate file
-    //String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\translationtreebank\\data\\finalCategories_all.txt";
+    //String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\classifyde\\data\\finalCategories_all.txt";
     String finalCategoriesFile =
       System.getenv("JAVANLP_HOME")+
-      "/projects/mt/src/mt/translationtreebank/data/finalCategories_all.txt";
+      "/projects/mt/src/mt/classifyde/data/finalCategories_all.txt";
 
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
       // Everytime, restart them so that when we get trees,

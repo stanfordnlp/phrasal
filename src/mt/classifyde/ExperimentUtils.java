@@ -1,4 +1,4 @@
-package mt.translationtreebank;
+package mt.classifyde;
 
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.*;

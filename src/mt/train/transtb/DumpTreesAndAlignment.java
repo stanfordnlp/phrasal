@@ -1,7 +1,5 @@
 package mt.train.transtb;
 
-//package mt.translationtreebank;
-
 import edu.stanford.nlp.trees.*;
 import java.util.*;
 import java.io.*;

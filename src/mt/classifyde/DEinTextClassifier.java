@@ -1,4 +1,4 @@
-package mt.translationtreebank;
+package mt.classifyde;
 
 import mt.train.transtb.*;
 import java.util.*;
@@ -12,7 +12,7 @@ import edu.stanford.nlp.ling.*;
 public class DEinTextClassifier {
   public static void main(String[] args) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
-    String classifierFile = props.getProperty("classifier", "/user/pichuan/javanlp/projects/mt/src/mt/translationtreebank/report/nonoracle/1st.ser.gz");
+    String classifierFile = props.getProperty("classifier", null); //"/user/pichuan/javanlp/projects/mt/src/mt/classifyde/report/nonoracle/1st.ser.gz");
     String sixclassStr = props.getProperty("6class", "false");
     Boolean sixclass = Boolean.parseBoolean(sixclassStr);
 

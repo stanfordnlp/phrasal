@@ -1,4 +1,4 @@
-package mt.translationtreebank;
+package mt.classifyde;
 
 import mt.train.transtb.*;
 import java.util.*;

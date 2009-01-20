@@ -1,4 +1,4 @@
-package mt.translationtreebank;
+package mt.classifyde;
 
 import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
@@ -21,7 +21,7 @@ class ClassifyingExperiment {
   public static void main(String args[]) throws Exception {
     Properties props = StringUtils.argsToProperties(args);
     String trainDevTestFile;
-    trainDevTestFile = "projects/mt/src/mt/translationtreebank/data/TrainDevTest_6class.txt";
+    trainDevTestFile = "projects/mt/src/mt/classifyde/data/TrainDevTest_6class.txt";
 
     ClassifyingExperiment exp = new ClassifyingExperiment();
     exp.run(props, trainDevTestFile);
@@ -56,7 +56,7 @@ class ClassifyingExperiment {
 
     String writeClassifier = props.getProperty("writeClassifier", null);
 
-    String featurizerStr= props.getProperty("featurizer", "mt.translationtreebank.FullInformationFeaturizer");
+    String featurizerStr= props.getProperty("featurizer", "mt.classifyde.FullInformationFeaturizer");
     Featurizer featurizer = (Featurizer)Class.forName(featurizerStr).newInstance();
 
     List<TreePair> treepairs;

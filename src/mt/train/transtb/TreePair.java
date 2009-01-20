@@ -1,6 +1,6 @@
 package mt.train.transtb;
 
-import mt.translationtreebank.*;
+import mt.classifyde.*;
 
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
