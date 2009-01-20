@@ -21,6 +21,9 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   public static final String USE_TRIE_PROPERTY = "trieLM";
   public static final boolean USE_TRIE = Boolean.parseBoolean(System.getProperty(USE_TRIE_PROPERTY, "false"));
 
+  public static final String USE_SRILM_PROPERTY = "SRILM";
+  public static final boolean USE_SRILM = Boolean.parseBoolean(System.getProperty(USE_SRILM_PROPERTY, "false"));
+
   static boolean verbose = false;
 
   protected final String name;
@@ -61,9 +64,11 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     String filepath = f.getAbsolutePath();
     if (lmStore.containsKey(filepath)) return lmStore.get(filepath);
 
-    ARPALanguageModel alm = QUANTIZED_LM ? new QuantizedARPALanguageModel(filename) :
-        (USE_TRIE ? new TrieARPALanguageModel(filename) : new ARPALanguageModel(filename));
-    lmStore.put(filepath, alm);
+    LanguageModel<IString> alm = QUANTIZED_LM ? new QuantizedARPALanguageModel(filename) :
+        (USE_TRIE ? new TrieARPALanguageModel(filename) : 
+        (USE_SRILM ? new SRILanguageModel(filename) : new ARPALanguageModel(filename)));
+    if(alm instanceof ARPALanguageModel)
+      lmStore.put(filepath, (ARPALanguageModel)alm);
 
     return alm;
   }

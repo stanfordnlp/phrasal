@@ -436,6 +436,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
 		
 		for (String line; (line = reader.readLine()) != null; ) {
+      line = NISTTokenizer.tokenize(line);
 			line = line.replaceAll("\\s+$", "");
 			line = line.replaceAll("^\\s+", "");
 			Sequence<IString> translation = new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+")));

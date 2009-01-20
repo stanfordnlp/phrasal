@@ -133,7 +133,7 @@ extern "C" unsigned int getIndexForWord_Vocab(Vocab *,char const *);
 extern "C" {
 #endif
 
-JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_new_1unsigned_1array(JNIEnv *jenv, jclass jcls, jint jarg1) {
+JNIEXPORT jlong JNICALL Java_mt_srilm_srilmJNI_new_1unsigned_1array(JNIEnv *jenv, jclass jcls, jint jarg1) {
     jlong jresult = 0 ;
     int arg1 ;
     unsigned int *result;
@@ -148,7 +148,7 @@ JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_new_1unsigned_1array(JN
 }
 
 
-JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_delete_1unsigned_1array(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+JNIEXPORT void JNICALL Java_mt_srilm_srilmJNI_delete_1unsigned_1array(JNIEnv *jenv, jclass jcls, jlong jarg1) {
     unsigned int *arg1 = (unsigned int *) 0 ;
     
     (void)jenv;
@@ -159,7 +159,7 @@ JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_delete_1unsigned_1array(
 }
 
 
-JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_unsigned_1array_1getitem(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2) {
+JNIEXPORT jlong JNICALL Java_mt_srilm_srilmJNI_unsigned_1array_1getitem(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2) {
     jlong jresult = 0 ;
     unsigned int *arg1 = (unsigned int *) 0 ;
     int arg2 ;
@@ -176,7 +176,7 @@ JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_unsigned_1array_1getite
 }
 
 
-JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_unsigned_1array_1setitem(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jlong jarg3) {
+JNIEXPORT void JNICALL Java_mt_srilm_srilmJNI_unsigned_1array_1setitem(JNIEnv *jenv, jclass jcls, jlong jarg1, jint jarg2, jlong jarg3) {
     unsigned int *arg1 = (unsigned int *) 0 ;
     int arg2 ;
     unsigned int arg3 ;
@@ -191,7 +191,7 @@ JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_unsigned_1array_1setitem
 }
 
 
-JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_initLM(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3) {
+JNIEXPORT jlong JNICALL Java_mt_srilm_srilmJNI_initLM(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2, jint jarg3) {
     jlong jresult = 0 ;
     int arg1 ;
     int arg2 ;
@@ -210,7 +210,7 @@ JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_initLM(JNIEnv *jenv, jc
 }
 
 
-JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_initVocab(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2) {
+JNIEXPORT jlong JNICALL Java_mt_srilm_srilmJNI_initVocab(JNIEnv *jenv, jclass jcls, jint jarg1, jint jarg2) {
     jlong jresult = 0 ;
     int arg1 ;
     int arg2 ;
@@ -227,7 +227,7 @@ JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_initVocab(JNIEnv *jenv,
 }
 
 
-JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getIndexForWord(JNIEnv *jenv, jclass jcls, jstring jarg1) {
+JNIEXPORT jlong JNICALL Java_mt_srilm_srilmJNI_getIndexForWord(JNIEnv *jenv, jclass jcls, jstring jarg1) {
     jlong jresult = 0 ;
     char *arg1 = (char *) 0 ;
     unsigned int result;
@@ -251,7 +251,7 @@ JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getIndexForWord(JNIEnv 
 }
 
 
-JNIEXPORT jstring JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getWordForIndex(JNIEnv *jenv, jclass jcls, jlong jarg1) {
+JNIEXPORT jstring JNICALL Java_mt_srilm_srilmJNI_getWordForIndex(JNIEnv *jenv, jclass jcls, jlong jarg1) {
     jstring jresult = 0 ;
     unsigned int arg1 ;
     char *result;
@@ -268,7 +268,7 @@ JNIEXPORT jstring JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getWordForIndex(JNIEn
 }
 
 
-JNIEXPORT jint JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_readLM(JNIEnv *jenv, jclass jcls, jlong jarg1, jstring jarg2) {
+JNIEXPORT jint JNICALL Java_mt_srilm_srilmJNI_readLM(JNIEnv *jenv, jclass jcls, jlong jarg1, jstring jarg2) {
     jint jresult = 0 ;
     Ngram *arg1 = (Ngram *) 0 ;
     char *arg2 = (char *) 0 ;
@@ -294,7 +294,7 @@ JNIEXPORT jint JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_readLM(JNIEnv *jenv, jcl
 }
 
 
-JNIEXPORT jfloat JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getWordProb(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3) {
+JNIEXPORT jfloat JNICALL Java_mt_srilm_srilmJNI_getWordProb(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3) {
     jfloat jresult = 0 ;
     Ngram *arg1 = (Ngram *) 0 ;
     unsigned int arg2 ;
@@ -313,7 +313,7 @@ JNIEXPORT jfloat JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getWordProb(JNIEnv *je
 }
 
 
-JNIEXPORT jfloat JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getProb_1lzf(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jint jarg3, jlong jarg4) {
+JNIEXPORT jfloat JNICALL Java_mt_srilm_srilmJNI_getProb_1lzf(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jint jarg3, jlong jarg4) {
     jfloat jresult = 0 ;
     Ngram *arg1 = (Ngram *) 0 ;
     unsigned int *arg2 = (unsigned int *) 0 ;
@@ -334,7 +334,7 @@ JNIEXPORT jfloat JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getProb_1lzf(JNIEnv *j
 }
 
 
-JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getBOW_1depth(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jint jarg3) {
+JNIEXPORT jlong JNICALL Java_mt_srilm_srilmJNI_getBOW_1depth(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jint jarg3) {
     jlong jresult = 0 ;
     Ngram *arg1 = (Ngram *) 0 ;
     unsigned int *arg2 = (unsigned int *) 0 ;
@@ -353,7 +353,7 @@ JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getBOW_1depth(JNIEnv *j
 }
 
 
-JNIEXPORT jfloat JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_get_1backoff_1weight_1sum(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jint jarg3, jint jarg4) {
+JNIEXPORT jfloat JNICALL Java_mt_srilm_srilmJNI_get_1backoff_1weight_1sum(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jint jarg3, jint jarg4) {
     jfloat jresult = 0 ;
     Ngram *arg1 = (Ngram *) 0 ;
     unsigned int *arg2 = (unsigned int *) 0 ;
@@ -374,7 +374,7 @@ JNIEXPORT jfloat JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_get_1backoff_1weight_1
 }
 
 
-JNIEXPORT jint JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getVocab_1None(JNIEnv *jenv, jclass jcls) {
+JNIEXPORT jint JNICALL Java_mt_srilm_srilmJNI_getVocab_1None(JNIEnv *jenv, jclass jcls) {
     jint jresult = 0 ;
     int result;
     
@@ -387,7 +387,7 @@ JNIEXPORT jint JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getVocab_1None(JNIEnv *j
 }
 
 
-JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_write_1vocab_1map(JNIEnv *jenv, jclass jcls, jlong jarg1, jstring jarg2) {
+JNIEXPORT void JNICALL Java_mt_srilm_srilmJNI_write_1vocab_1map(JNIEnv *jenv, jclass jcls, jlong jarg1, jstring jarg2) {
     Vocab *arg1 = (Vocab *) 0 ;
     char *arg2 = (char *) 0 ;
     
@@ -409,7 +409,7 @@ JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_write_1vocab_1map(JNIEnv
 }
 
 
-JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_write_1default_1vocab_1map(JNIEnv *jenv, jclass jcls, jstring jarg1) {
+JNIEXPORT void JNICALL Java_mt_srilm_srilmJNI_write_1default_1vocab_1map(JNIEnv *jenv, jclass jcls, jstring jarg1) {
     char *arg1 = (char *) 0 ;
     
     (void)jenv;
@@ -429,7 +429,7 @@ JNIEXPORT void JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_write_1default_1vocab_1m
 }
 
 
-JNIEXPORT jstring JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getWordForIndex_1Vocab(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2) {
+JNIEXPORT jstring JNICALL Java_mt_srilm_srilmJNI_getWordForIndex_1Vocab(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2) {
     jstring jresult = 0 ;
     Vocab *arg1 = (Vocab *) 0 ;
     unsigned int arg2 ;
@@ -448,7 +448,7 @@ JNIEXPORT jstring JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getWordForIndex_1Voca
 }
 
 
-JNIEXPORT jlong JNICALL Java_edu_jhu_ckyDecoder_srilmJNI_getIndexForWord_1Vocab(JNIEnv *jenv, jclass jcls, jlong jarg1, jstring jarg2) {
+JNIEXPORT jlong JNICALL Java_mt_srilm_srilmJNI_getIndexForWord_1Vocab(JNIEnv *jenv, jclass jcls, jlong jarg1, jstring jarg2) {
     jlong jresult = 0 ;
     Vocab *arg1 = (Vocab *) 0 ;
     char *arg2 = (char *) 0 ;

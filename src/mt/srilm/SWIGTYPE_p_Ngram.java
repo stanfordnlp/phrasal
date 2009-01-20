@@ -8,7 +8,6 @@
 
 package mt.srilm;
 
-@SuppressWarnings("unchecked")
 public class SWIGTYPE_p_Ngram {
   private long swigCPtr;
 

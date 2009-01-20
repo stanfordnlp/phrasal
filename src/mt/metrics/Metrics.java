@@ -128,12 +128,13 @@ public class Metrics {
 				int lineNumber = reader.getLineNumber();
 				if (referencesList.size() < lineNumber) {
 					List<Sequence<IString>> list = new ArrayList<Sequence<IString>>(referenceFilenames.length);
+          line = NISTTokenizer.tokenize(line);
 					line = line.replaceAll("\\s+$", "");
 					line = line.replaceAll("^\\s+", "");
 					list.add(new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+"))));
 					referencesList.add(list);
 				} else {
-					referencesList.get(lineNumber-1).add(new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+"))));
+					referencesList.get(lineNumber-1).add(new RawSequence<IString>(IStrings.toIStringArray(NISTTokenizer.tokenize(line).split("\\s+"))));
 				}
 			}
 			reader.close();

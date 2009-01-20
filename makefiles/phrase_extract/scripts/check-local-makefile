@@ -70,10 +70,10 @@ my $ini = "$values{SYSID}.ini";
 warn "Missing $ini\n" unless -f $ini;
 my $dev_sgm = "$values{DEVID}.sgm";
 my $dev_fe = "$values{DEVID}.$values{FE}";
-warn "$dev_sgm or $dev_fe must be present\n" unless -f $dev_sgm || -f $dev_fe;
+warn "$dev_sgm or $dev_fe must be present for MERT.\n" unless -f $dev_sgm || -f $dev_fe;
 my $test_sgm = "$values{TESTID}.sgm";
 my $test_fe = "$values{TESTID}.$values{FE}";
-warn "$test_sgm or $test_fe must be present\n" unless -f $test_sgm || -f $test_fe;
+warn "$test_sgm or $test_fe must be present for testing.\n" unless -f $test_sgm || -f $test_fe;
 
 exit 0;
 

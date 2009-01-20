@@ -1,5 +1,6 @@
 package mt.base;
 
+import mt.metrics.NISTTokenizer;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -87,12 +88,17 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	}
 	
 	static public final String NBEST_SEP = "|||";
-	
+
+  /**
+   * Prints NIST-tokenized n-best list for a given input segment.
+   * @param id Segment id
+   * @return n-best list
+   */
 	public String nbestToString(int id) {
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append(id);
 		sbuf.append(" ").append(NBEST_SEP).append(" ");
-		sbuf.append(this.translation);
+		sbuf.append(NISTTokenizer.tokenize(this.translation.toString()));
 		sbuf.append(" ").append(NBEST_SEP);
 		DecimalFormat df = new DecimalFormat("0.####E0"); 
 		for (FeatureValue<FV> fv : FeatureValues.combine(this.features)) {
@@ -107,7 +113,13 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 		return sbuf.toString();
 	}
 
+  /**
+   * Prints untokenized Moses n-best list for a given input segment.
+   * @param id Segment id
+   * @return n-best list
+   */
 	public String nbestToMosesString(int id) {
+   // The n-best list is currently not tokenized since tokenization would break the alignment.
    /* 
    Sample output: 
      0 ||| lebanese president emile lahoud to a violent campaign in the chamber of deputies , which was held yesterday in the regular legislative session turned into a " trial " of the president of the republic for its position on the international court and " observations " made here on this subject .  ||| d: -12 -2.00517 -1.14958 -5.62344 -1.51436 -0.408961 -3.67606 lm: -206.805 tm: -44.5496 -81.3977 -35.8545 -77.5407 19.9979 w: -52 ||| -10.2091 ||| 2=0 0-1=1 3=2 4-5=3-4 6-7=5-7 8-10=8-13 11-14=14-19 17=20 15-16=21-22 18-19=23-25 20-21=26-27 22-23=28-30 24-25=31-34 26-29=35-39 30-33=40-43 34-35=44-45 36-38=46 39=47 40-42=48-50 43=51

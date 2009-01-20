@@ -84,18 +84,18 @@ while(my $f = <F>) {
   $f =~ s/\s+/ /g;
   $f =~ s/^ //;
   $f =~ s/ $//;
-  next if $f eq '';
-  next if $e eq '';
+  skip() && next if $f eq '';
+  skip() && next if $e eq '';
   my @E = split(/ /,$e);
   my @F = split(/ /,$f);
-	print STDERR scalar(@E)."\t".scalar(@F)."\n";
-  next if scalar(@E) > $max;
-  next if scalar(@F) > $max;
-  next if scalar(@E) < $min;
-  next if scalar(@F) < $min;
-  next if scalar(@E)/scalar(@F) > 9;
-  next if scalar(@F)/scalar(@E) > 9;
-  
+	#print STDERR scalar(@E)."\t".scalar(@F)."\n";
+  skip() && next if scalar(@E) > $max;
+  skip() && next if scalar(@F) > $max;
+  skip() && next if scalar(@E) < $min;
+  skip() && next if scalar(@F) < $min;
+  skip() && next if scalar(@E)/scalar(@F) > 9;
+  skip() && next if scalar(@F)/scalar(@E) > 9;
+
 	$f =~ s/[ \|]\|/ /;
 	$e =~ s/[ \|]\|/ /;
     
@@ -109,3 +109,10 @@ my $e = <E>;
 die "$corpus.$l2 is too long!" if defined $e;
 
 print STDERR "Input sentences: $innr  Output sentences:  $outnr\n";
+
+sub skip {
+	#print "Skipping:\n  $f\n  $e\n";
+	print FO "BADLINE\n";
+	print EO "BADLINE\n";
+	return 1;
+}
