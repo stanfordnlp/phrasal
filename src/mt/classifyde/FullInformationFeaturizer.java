@@ -51,7 +51,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
 
     //Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
     //Tree chTree = validSent.chParsedTrees.get(0);
-    Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
+    Tree chNPTree = AlignmentUtils.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
     if (chNPTree==null) {
       chTree.pennPrint(System.err);
       System.err.println("range="+chNPrange);

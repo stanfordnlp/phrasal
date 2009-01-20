@@ -1,7 +1,5 @@
 package mt.train.transtb;
 
-import mt.classifyde.*;
-
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.parser.lexparser.*;

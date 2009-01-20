@@ -21,12 +21,12 @@ class TrainDevTest {
   }
 
   public static List<String> splits(int buckets, List<String> splitnames) throws IOException {
-    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(true);
+    List<AnnotatedTreePair> atreepairs = ExperimentUtils.readAnnotatedTreePairs(true);
     Map<String,List<Integer>> labelIndices = new HashMap<String,List<Integer>>();
     Map<Integer, String> result = new HashMap<Integer, String>();
 
     int npidx = 0;
-    for (TreePair validSent : treepairs) {
+    for (AnnotatedTreePair validSent : atreepairs) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
         Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
@@ -65,7 +65,7 @@ class TrainDevTest {
     npidx = 0;
     List<String> finalSplits = new ArrayList<String>();
 
-    for (TreePair validSent : treepairs) {
+    for (AnnotatedTreePair validSent : atreepairs) {
       //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
         Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);

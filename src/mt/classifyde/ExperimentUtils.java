@@ -1,5 +1,6 @@
 package mt.classifyde;
 
+import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.trees.*;
@@ -416,4 +417,118 @@ public class ExperimentUtils {
 
     return ans;
   }
+
+
+  /** the default is to use
+   * useReducedCategories=true (means "B of A" is maped to "B prep A"), and
+   * useNonOracleTrees=false (means features are extracted from parsed trees, not gold-standard trees)
+   **/
+  public static List<AnnotatedTreePair> readAnnotatedTreePairs() throws IOException {
+    return readAnnotatedTreePairs(true, false);
+  }
+
+  public static List<AnnotatedTreePair> readAnnotatedTreePairs(
+    Boolean useReducedCategories) throws IOException {
+    return readAnnotatedTreePairs(useReducedCategories, false);
+  }
+
+  public static List<AnnotatedTreePair> readAnnotatedTreePairs(
+    Boolean useReducedCategories,
+    Boolean useNonOracleTrees) throws IOException {
+    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(useReducedCategories, useNonOracleTrees);
+    List<AnnotatedTreePair> atps = new ArrayList<AnnotatedTreePair>();
+
+    // Open the hand-annotate file
+    //String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\classifyde\\data\\finalCategories_all.txt";
+
+    String finalCategoriesFile =
+      System.getenv("JAVANLP_HOME")+
+      "/projects/mt/src/mt/classifyde/data/finalCategories_all.txt";
+
+    List<Pair<String, String>>[] finalCategories = 
+      ExperimentUtils.readFinalCategories(finalCategoriesFile, 
+                                          useReducedCategories);
+
+    for (TreePair tp : treepairs) {
+      // Important: Read the categories of each NPwithDEs
+      int fileid = tp.getFileID();
+      AnnotatedTreePair atp = new AnnotatedTreePair(tp);
+      AnnotatedTreePair.annotateNPwithDEs(finalCategories[fileid], atp);
+      atps.add(atp);
+    }
+    return atps;
+  }
+
+  public static Tree getTreeWithEdges(Tree root, int leftEdge, int rightEdge) {
+    Queue<Tree> queue = new LinkedList<Tree>();
+    queue.add(root);
+    if (leftEdge == 0 && rightEdge == root.yield().size()) {
+      return root;
+    }
+
+    while(queue.size() > 0) {
+      Tree t = queue.remove();
+      Tree[] children = t.children();
+      for (Tree c : children) {
+        int left = Trees.leftEdge(c, root);
+        int right = Trees.rightEdge(c, root);
+        if (c.numChildren()==1) c = c.firstChild();
+
+        if (left==leftEdge && right==rightEdge) {
+          return c;
+        }
+        if (left <= leftEdge || right >= rightEdge) {
+          queue.add(c);
+        }
+      }
+    }
+    return null;
+  }
+
+  static Tree getTreeWithEdges(List<Tree> ts, int leftEdge, int rightEdge) {
+    int[] startIndices = new int[ts.size()];
+
+    for(int i = 0; i < ts.size(); i++) {
+      if (i==0) startIndices[i] = 0;
+      else {
+        startIndices[i] = startIndices[i-1]+ts.get(i-1).yield().size();
+      }
+    }
+
+    int pickTreeIdx = -1;
+    
+    for(int i = 0; i < startIndices.length; i++) {
+      if (leftEdge >= startIndices[i] && 
+          (i==startIndices.length-1 || rightEdge <= startIndices[i+1])) {
+        pickTreeIdx = i;
+      }
+    }
+    if (pickTreeIdx == -1) {
+      return null;
+    }
+
+    Tree root = ts.get(pickTreeIdx);
+    Queue<Tree> queue = new LinkedList<Tree>();
+    queue.add(root);
+
+    while(queue.size() > 0) {
+      Tree t = queue.remove();
+      Tree[] children = t.children();
+      for (Tree c : children) {
+        int left = Trees.leftEdge(c, root);
+        int right = Trees.rightEdge(c, root);
+
+        if (left==leftEdge-startIndices[pickTreeIdx] && 
+            right==rightEdge-startIndices[pickTreeIdx]) {
+          return c;
+        }
+        if (left <= leftEdge-startIndices[pickTreeIdx] ||
+            right >= rightEdge-startIndices[pickTreeIdx]) {
+          queue.add(c);
+        }
+      }
+    }
+    return null;
+  }
+
 }

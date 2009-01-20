@@ -63,7 +63,7 @@ public class DEinTextClassifier {
           System.err.println("WARNING: Flat tree. Don't mark");
           continue;
         }
-        Tree chNPTree = TranslationAlignment.getTreeWithEdges(parsedSent,range.first, range.second+1);
+        Tree chNPTree = AlignmentUtils.getTreeWithEdges(parsedSent,range.first, range.second+1);
         Set<String> cachedWords = ExperimentUtils.mergeAllSets(cachedWordsBySent);
         
         Counter<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, cachedWords);

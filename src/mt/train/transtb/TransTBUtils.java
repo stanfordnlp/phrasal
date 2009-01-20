@@ -1,7 +1,5 @@
 package mt.train.transtb;
 
-import mt.classifyde.*;
-
 import java.util.*;
 import java.io.*;
 import edu.stanford.nlp.util.*;
@@ -43,13 +41,6 @@ public class TransTBUtils {
     ChineseTreeReader chparsedTR = new ChineseTreeReader();
 
     List<TreePair> treepairs = new ArrayList<TreePair>();
-    int numNPwithDE = 0;
-
-    // Open the hand-annotate file
-    //String finalCategoriesFile = "C:\\cygwin\\home\\Pichuan Chang\\javanlp\\projects\\mt\\src\\mt\\classifyde\\data\\finalCategories_all.txt";
-    String finalCategoriesFile =
-      System.getenv("JAVANLP_HOME")+
-      "/projects/mt/src/mt/classifyde/data/finalCategories_all.txt";
 
     for(int fileidx = 1; fileidx <= 325; fileidx++) {
       // Everytime, restart them so that when we get trees,
@@ -64,7 +55,7 @@ public class TransTBUtils {
       File file = new File(aname);
       if (file.exists()) {
         //System.err.println("Processing  "+fileidx);
-        alignment_list = TranslationAlignment.readFromFile(file);
+        alignment_list = AlignmentUtils.readFromFile(file);
       } else {
         //System.err.println("Skip "+fileidx);
         continue;
@@ -124,12 +115,12 @@ public class TransTBUtils {
         } else if (enTrees.size() > 1) {
           //System.err.printf("i=%d: Multiple trees.\n", fileidx);
         }
-        ta = TranslationAlignment.fixAlignmentGridWithChineseTree(ta, chTrees);
-        ta = TranslationAlignment.fixAlignmentGridMergingChinese(ta, chTrees);
-        ta = TranslationAlignment.fixAlignmentGridWithEnglishTree(ta, enTrees);
-        ta = TranslationAlignment.fixAlignmentGridMergingEnglish(ta, enTrees);
-        TranslationAlignment.checkTranslationAlignmentAndEnTrees(ta, enTrees);
-        TranslationAlignment.checkTranslationAlignmentAndChTrees(ta, chTrees);
+        ta = AlignmentUtils.fixAlignmentGridWithChineseTree(ta, chTrees);
+        ta = AlignmentUtils.fixAlignmentGridMergingChinese(ta, chTrees);
+        ta = AlignmentUtils.fixAlignmentGridWithEnglishTree(ta, enTrees);
+        ta = AlignmentUtils.fixAlignmentGridMergingEnglish(ta, enTrees);
+        AlignmentUtils.checkTranslationAlignmentAndEnTrees(ta, enTrees);
+        AlignmentUtils.checkTranslationAlignmentAndChTrees(ta, chTrees);
         TreePair tp;
         //if (chParsedDir!=null) {
         if (useNonOracleTrees) {
@@ -140,22 +131,11 @@ public class TransTBUtils {
 
         tp.setFileID(fileidx);
         treepairs_inFile.add(tp);
-        numNPwithDE += tp.numNPwithDE();
       }
       treepairs.addAll(treepairs_inFile);
     }
 
-    // TODO: this reading in category code should be move to declassify package later.
-    List<Pair<String, String>>[] finalCategories = ExperimentUtils.readFinalCategories(finalCategoriesFile, useReducedCategories);
-
-    for (TreePair tp : treepairs) {
-      // Important: Read the categories of each NPwithDEs
-      int fileid = tp.getFileID();
-      TreePair.annotateNPwithDEs(finalCategories[fileid], tp);
-    }
-
     System.err.println("Total Treepairs = "+treepairs.size());
-    System.err.println("numNPwithDE = "+numNPwithDE);
     return treepairs;
   }
 

@@ -12,7 +12,7 @@ class DumpTreesAndAlignment {
   static void printTreesAndAlignment(TreePair treepair, 
                                      TranslationAlignment alignment) {
     treepair.printTreePair();
-    TranslationAlignment.printAlignmentGrid(alignment);
+    AlignmentUtils.printAlignmentGrid(alignment);
   }
 
   /**
@@ -51,17 +51,17 @@ class DumpTreesAndAlignment {
                                                        nonOracleTree);
 
     if(genHTML)
-      TranslationAlignment.printAlignmentGridHeader();
+      AlignmentUtils.printAlignmentGridHeader();
 
     for(TreePair validSent : treepairs) {
       // In our dataset, every TreePair actually only just have one 
       // Chinese sentence(tree). There were no cases when there are 
       // multiple Chinese trees aligned to English trees
-      Tree chTree = validSent.chTrees.get(0);
+      Tree chTree = validSent.chTrees().get(0);
       // English trees should be one or more
-      List<Tree> enTrees = validSent.enTrees;
+      List<Tree> enTrees = validSent.enTrees();
       // This is the alignment
-      TranslationAlignment alignment = validSent.alignment;
+      TranslationAlignment alignment = validSent.alignment();
       if(genHTML)
         printTreesAndAlignment(validSent, alignment);
       else {
@@ -84,7 +84,7 @@ class DumpTreesAndAlignment {
     }
 
     if(genHTML)
-      TranslationAlignment.printAlignmentGridBottom();
+      AlignmentUtils.printAlignmentGridBottom();
     else {
       fWriter.close();
       eWriter.close();

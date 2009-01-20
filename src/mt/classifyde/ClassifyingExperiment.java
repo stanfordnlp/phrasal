@@ -59,8 +59,8 @@ class ClassifyingExperiment {
     String featurizerStr= props.getProperty("featurizer", "mt.classifyde.FullInformationFeaturizer");
     Featurizer featurizer = (Featurizer)Class.forName(featurizerStr).newInstance();
 
-    List<TreePair> treepairs;
-    treepairs = TransTBUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
+    List<AnnotatedTreePair> atreepairs =
+      ExperimentUtils.readAnnotatedTreePairs(reducedCategory, nonOracleTree);
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
 
@@ -74,13 +74,13 @@ class ClassifyingExperiment {
     List<Datum<String,String>> otherData = new ArrayList<Datum<String,String>>();
 
     int npid = 0;
-    for(int tpidx = 0; tpidx < treepairs.size(); tpidx++) {
-      TreePair validSent = treepairs.get(tpidx);
+    for(int tpidx = 0; tpidx < atreepairs.size(); tpidx++) {
+      AnnotatedTreePair validSent = atreepairs.get(tpidx);
 
       Set<String> cachedWords = new HashSet<String>();
       int prevTpIdx = tpidx - 1;
       while(prevTpIdx >= 0 && tpidx-prevTpIdx <= ExperimentUtils.TOPICALITY_SENT_WINDOW_SIZE) {
-        Sentence<Word> prevSent = treepairs.get(prevTpIdx).chParsedTrees.get(0).yield();
+        Sentence<Word> prevSent = atreepairs.get(prevTpIdx).chParsedTrees().get(0).yield();
         for(Word w : prevSent) {
           cachedWords.add(w.value());
         }

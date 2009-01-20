@@ -16,7 +16,7 @@ class FullInformationWangExperiment {
     Boolean nonOracleTree = Boolean.parseBoolean(nonOracleTreeStr);
     Boolean sixclass = Boolean.parseBoolean(sixclassStr);
 
-    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(true, nonOracleTree);
+    List<AnnotatedTreePair> atreepairs = ExperimentUtils.readAnnotatedTreePairs(true, nonOracleTree);
 
 
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
@@ -24,7 +24,7 @@ class FullInformationWangExperiment {
 
     TwoDimensionalCounter<String, String> confusionMatrix = new TwoDimensionalCounter<String,String>();
 
-    for(TreePair validSent : treepairs) {
+    for(AnnotatedTreePair validSent : atreepairs) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
         Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx.get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
@@ -32,8 +32,8 @@ class FullInformationWangExperiment {
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
         String predictedType = "";
 
-        Tree chTree = validSent.chParsedTrees.get(0);
-        Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
+        Tree chTree = validSent.chParsedTrees().get(0);
+        Tree chNPTree = AlignmentUtils.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         //if (label.equals("no B") || label.equals("other") || label.equals("multi-DEs")) {
         if ((sixclass && !ExperimentUtils.is6class(label)) ||

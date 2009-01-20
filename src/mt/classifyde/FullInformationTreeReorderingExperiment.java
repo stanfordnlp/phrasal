@@ -10,7 +10,7 @@ import java.util.*;
 
 class FullInformationTreeReorderingExperiment {
   public static void main(String args[]) throws IOException {
-    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs();
+    List<AnnotatedTreePair> atreepairs = ExperimentUtils.readAnnotatedTreePairs();
 
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
     ClassicCounter<String> deTypeCounter = new ClassicCounter<String>();
@@ -25,7 +25,7 @@ class FullInformationTreeReorderingExperiment {
     TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
 
     int tpCount = 0;
-    for(TreePair validSent : treepairs) {
+    for(AnnotatedTreePair validSent : atreepairs) {
       String deType = "";
 
       tpCount++;
@@ -35,8 +35,8 @@ class FullInformationTreeReorderingExperiment {
         np = np.trim();
         String type = validSent.NPwithDEs_categories.get(deIdxInSent);
 
-        Tree chTree = validSent.chTrees.get(0);
-        Tree chNPTree = TranslationAlignment.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
+        Tree chTree = validSent.chTrees().get(0);
+        Tree chNPTree = AlignmentUtils.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
 
         int deCount = ExperimentUtils.countDE(chNPTree);
         
