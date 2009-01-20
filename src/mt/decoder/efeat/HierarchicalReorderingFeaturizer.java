@@ -46,7 +46,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
   // hierblock: as described in the ACL short paper submission (runtime: O(1) for each call of listFeaturize())
   // backtrack: backtracks to find max size contiguous block preceding current block 
   //    (runtime: O(n) for each call of listFeaturize(), where n is the len of the input sentence)
-	private enum ForwardOrientationComputation { local, hierblock, backtrack };
+	private enum ForwardOrientationComputation { local, hierblock, backtrack }
   private ForwardOrientationComputation forwardOrientationComputation = ForwardOrientationComputation.hierblock;
 
   // local: should produce the same as the non-hierarchical reordering model in LexicalReorderingFeaturizer
@@ -59,7 +59,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
   //    predict Discontinuous otherwise)
   // reranking: featurizer returns no forward-looking features until done decoding. Once done, compute
   // all feature values exactly.
-	private enum BackwardOrientationComputation { local, contiuousDefault, reranking, continuousDefaultWithReranking };
+	private enum BackwardOrientationComputation { local, contiuousDefault, reranking, continuousDefaultWithReranking }
   private BackwardOrientationComputation backwardOrientationComputation = BackwardOrientationComputation.local;
 
 	public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(ARPALanguageModel.START_TOKEN);
@@ -284,7 +284,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
   /**
    * Returns true if current phrase is swap according to the hierarchical model.
    */
-  private boolean swapWithPrevious(Featurizable<IString, String> f) { 
+  private boolean swapWithPrevious(Featurizable<IString, String> f) {
     if(f.prior == null)
       return false;
     return (hBlocks.get(f.prior).fStart == fEnd(f)+1);

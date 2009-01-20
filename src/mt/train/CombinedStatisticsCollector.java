@@ -23,8 +23,6 @@ public class CombinedStatisticsCollector {
 
   private List<StatisticsCollector> collectors;
 
-  private int passNumber = 0;
-
   public CombinedStatisticsCollector(List<StatisticsCollector> collectors) {
     this.collectors = collectors;
   }
@@ -64,8 +62,8 @@ public class CombinedStatisticsCollector {
     DualWordAlignment sent = new DualWordAlignment();
 
     try {
-      for(passNumber=0; passNumber<getNumPasses(); ++passNumber) {
-        System.err.printf("Pass %d on training data)...\n",passNumber+1);
+      for(int passNumber=0; passNumber<getNumPasses(); ++passNumber) {
+        System.err.printf("Pass %d on training data)...\n", passNumber+1);
         LineNumberReader
           fReader = getReaderFromFileName(fCorpus),
           eReader = getReaderFromFileName(eCorpus),
@@ -152,8 +150,7 @@ public class CombinedStatisticsCollector {
     System.exit(1);
   }
   
-  @SuppressWarnings("unchecked")
-    public static void main(String[] args) {
+  public static void main(String[] args) {
     Properties prop = StringUtils.argsToProperties(args);
     String fCorpus = prop.getProperty("fCorpus");
     String eCorpus = prop.getProperty("eCorpus");

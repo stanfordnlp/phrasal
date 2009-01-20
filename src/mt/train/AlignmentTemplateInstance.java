@@ -30,7 +30,6 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
     this(sent,f1,f2,e1,e2,false);
   }
 
-  @SuppressWarnings("unchecked")
   public void init(WordAlignment sent, int f1, int f2, int e1, int e2, boolean lazy) {
     reset();
     this.sent = sent;

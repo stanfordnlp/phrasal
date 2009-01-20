@@ -18,7 +18,6 @@ public abstract class SparseVectorFeatureExtractor extends AbstractFeatureExtrac
 
   abstract void addFeatureCountsToSparseVector(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid);
 
-  @SuppressWarnings("unchecked")
   void addFeatureCountToSparseVector(String name, int count) {
     int idx = featureIndex.indexOf(name,true);
     currentFeatureMap.put(idx, currentFeatureMap.get(idx)+count);

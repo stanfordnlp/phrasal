@@ -31,24 +31,14 @@ public class SourceFilteringToolkit {
    */
   @SuppressWarnings("unchecked")
   public static Sequence<IString>[] getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF, boolean addBoundaryMarkers) {
-    AlignmentTemplates tmpSet = new AlignmentTemplates();
+    AlignmentTemplates tmpSet;
+    tmpSet = new AlignmentTemplates();
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     //filterFromDev = true;  
     try {
       LineNumberReader fReader = IOTools.getReaderFromFile(fFilterCorpus);
-      for (String fLine; (fLine = fReader.readLine()) != null; ) {
-        if(addBoundaryMarkers)
-          fLine = new StringBuffer("<s> ").append(fLine).append(" </s>").toString();
-        Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
-        for(int i=0; i<f.size(); ++i) {
-          for(int j=i; j<f.size() && j-i<maxPhraseLenF; ++j) {
-            Sequence<IString> fPhrase = f.subsequence(i,j+1);
-            if(SHOW_PHRASE_RESTRICTION)
-              System.err.printf("restrict to phrase (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
-            tmpSet.addForeignPhraseToIndex(fPhrase);
-          }
-        }
-      }
+      for (String fLine; (fLine = fReader.readLine()) != null; )
+        extractPhrasesFromLine(tmpSet, fLine, maxPhraseLenF, addBoundaryMarkers);
       fReader.close();
     } catch(IOException e) {
       e.printStackTrace();
@@ -60,6 +50,20 @@ public class SourceFilteringToolkit {
     }
     Collections.shuffle(Arrays.asList(phrases));
     return phrases;
+  }
+
+  private static void extractPhrasesFromLine(AlignmentTemplates set, String fLine, int maxPhraseLenF, boolean addBoundaryMarkers) {
+    if(addBoundaryMarkers)
+      fLine = new StringBuffer("<s> ").append(fLine).append(" </s>").toString();
+    Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
+    for(int i=0; i<f.size(); ++i) {
+      for(int j=i; j<f.size() && j-i<maxPhraseLenF; ++j) {
+        Sequence<IString> fPhrase = f.subsequence(i,j+1);
+        if(SHOW_PHRASE_RESTRICTION)
+          System.err.printf("restrict to phrase (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
+        set.addForeignPhraseToIndex(fPhrase);
+      }
+    }
   }
 
   /**

@@ -33,16 +33,19 @@ public abstract class AbstractFeatureExtractor implements FeatureExtractor {
   /**
    * Returns the number of passes over the entire training data are required
    * by the feature extractor. Unless this method is overridden, the default is 1.
+   * @return number of required passes over training data
    */
   public int getRequiredPassNumber() { return 1; }
 
   /**
-   * Set the number of passes over training data that have been completed so far.
+   * Returns the number of passes over training data that have been completed so far.
+   * @return current pass over training data
    */
   protected int getCurrentPass() { return this.currentPass; }
 
   /**
-   * Returns the number of passes over training data that have been completed so far.
+   * Set the number of passes over training data that have been completed so far.
+   * @param currentPass current pass over training data
    */
   public void setCurrentPass(int currentPass) { this.currentPass = currentPass; }
 
@@ -74,6 +77,6 @@ public abstract class AbstractFeatureExtractor implements FeatureExtractor {
   /**
    * Let each extractor output some stuff to STDERR.
    */
-  public void report() { return; }
+  public void report() { }
 }
 

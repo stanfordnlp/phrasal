@@ -11,7 +11,6 @@ import mt.base.Sequence;
 public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   private int[][] min_E_for_F_range, max_E_for_F_range;
-  private AlignmentTemplateInstance[][] alTemp_min_E_for_F_range, alTemp_max_E_for_F_range;
   private int fsize;
 
   private static final boolean DEBUG = true;
@@ -35,8 +34,7 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
       }
     }
     
-    IntPair ip = new IntPair(e1,e2);
-    return ip;
+    return new IntPair(e1,e2);
   }
 
   @Override
@@ -47,6 +45,7 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
   private void collectStatsFromGrid(AlignmentGrid alGrid) {
     fsize = alGrid.fsize();
     List<AlignmentTemplateInstance> allAlTemps = alGrid.getAlTemps();
+    AlignmentTemplateInstance[][] alTemp_min_E_for_F_range, alTemp_max_E_for_F_range;
 
     min_E_for_F_range = new int[fsize][fsize];
     max_E_for_F_range = new int[fsize][fsize];
@@ -157,7 +156,8 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
               }
             } else {
               if (ip2.getSource() > ip2.getTarget()) {
-                continue;
+                // redundant:
+                // continue;
               } else {
                 // ip should contains more than ip2
                 if (ip.getSource() > ip2.getSource() || ip.getTarget() < ip2.getTarget()) {

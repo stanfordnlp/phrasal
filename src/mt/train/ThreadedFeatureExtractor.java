@@ -63,14 +63,13 @@ public class ThreadedFeatureExtractor {
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
-  @SuppressWarnings("unchecked")
 	static final Set<Class> THREAD_SAFE_EXTRACTORS = new HashSet<Class>();
 
   static {
-    REQUIRED_OPTS.addAll(Arrays.asList(new String[] { 
+    REQUIRED_OPTS.addAll(Arrays.asList(
        F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT, EXTRACTORS_OPT 
-     }));
-    OPTIONAL_OPTS.addAll(Arrays.asList(new String[] { 
+     ));
+    OPTIONAL_OPTS.addAll(Arrays.asList(
        FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT, 
        SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, 
        AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT, 
@@ -86,15 +85,15 @@ public class ThreadedFeatureExtractor {
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        THREAD_OPT, ADD_BOUNDARY_MARKERS_OPT
-     }));
+     ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
-    THREAD_SAFE_EXTRACTORS.addAll(Arrays.asList(new Class[] {
+    THREAD_SAFE_EXTRACTORS.addAll(Arrays.asList(
          mt.train.LexicalReorderingFeatureExtractor.class,
          mt.train.ExperimentalLexicalReorderingFeatureExtractor.class,
          mt.train.PhiFeatureExtractor.class,
          mt.train.PharaohFeatureExtractor.class
-    }));
+    ));
   }
   
   public static final String DEBUG_PROPERTY = "DebugThreadedFeatureExtractor";
@@ -122,12 +121,10 @@ public class ThreadedFeatureExtractor {
   private int totalPassNumber = 1;
   private boolean passDone = false;
 
-  @SuppressWarnings("unchecked")
   public ThreadedFeatureExtractor(Properties prop) throws IOException {
     analyzeProperties(prop);
   }
 
-  @SuppressWarnings("unchecked")
   public void analyzeProperties(Properties prop) throws IOException {
     this.prop = prop;
 
@@ -155,7 +152,7 @@ public class ThreadedFeatureExtractor {
     }
 
     if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet(prop.keySet());
+      Set extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
        ("The following fields are unrecognized: %s\n", extraFields);
@@ -201,7 +198,6 @@ public class ThreadedFeatureExtractor {
     numThreads = Integer.parseInt(prop.getProperty(THREAD_OPT,"1"));
   }
 
-  @SuppressWarnings("unchecked")
   public void init() {
     BshInterpreter interpreter = new BshInterpreter();
     String exsString = prop.getProperty(EXTRACTORS_OPT);
@@ -212,7 +208,7 @@ public class ThreadedFeatureExtractor {
 
     for(String exStr : exsString.split(":")) {
       try {
-        AbstractFeatureExtractor fe = null;
+        AbstractFeatureExtractor fe;
         // if exStr contains parentheses, assume it is a call to a constructor 
         // (without the "new"):
         int pos = exStr.indexOf('(');
@@ -226,7 +222,7 @@ public class ThreadedFeatureExtractor {
           if(!THREAD_SAFE_EXTRACTORS.contains(cls))
             throw new RuntimeException("Extractor is not thread safe: "+cls);
           Constructor ct = cls.getConstructor(new Class[] {});
-          fe = (AbstractFeatureExtractor) ct.newInstance(new Object[] {});
+          fe = (AbstractFeatureExtractor) ct.newInstance();
         }
 
         fe.init(prop, featureIndex, alTemps);
@@ -286,7 +282,7 @@ public class ThreadedFeatureExtractor {
     long startStepTimeMillis = startTimeMillis;
 
     passDone = false;
-    int passNumber = 0;
+    int passNumber;
 
     System.err.println("Starting new threads: "+numThreads);
     List<Thread> ts = new ArrayList<Thread>();
@@ -355,7 +351,10 @@ public class ThreadedFeatureExtractor {
           }
           SymmetricalWordAlignment sent = new SymmetricalWordAlignment();
           sent.init(lineNb,fLine,eLine,aLine,false,false);
-          try { sentQueue.put(sent); } catch(InterruptedException e) {}
+          try { sentQueue.put(sent); }
+          catch(InterruptedException e) {
+            e.printStackTrace();
+          }
         }
 
         if(eReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
@@ -375,7 +374,10 @@ public class ThreadedFeatureExtractor {
      // Wait until all threads are done:
       for(Thread t : ts) {
         System.err.printf("Waiting for thread %s to terminate...\n",t);
-        try { t.join(); } catch(InterruptedException e) {}
+        try { t.join(); }
+        catch(InterruptedException e) {
+          e.printStackTrace();
+        }
         System.err.printf("Thread %s terminated.\n",t);
       }
 
@@ -394,15 +396,19 @@ public class ThreadedFeatureExtractor {
   public void extractFromNextSentence(AbstractPhraseExtractor phraseExtractor) {
     SymmetricalWordAlignment sent = null;
 
-    try { sent = sentQueue.poll(1L, java.util.concurrent.TimeUnit.SECONDS); } catch(InterruptedException e) {}
+    try { sent = sentQueue.poll(1L, java.util.concurrent.TimeUnit.SECONDS); }
+    catch(InterruptedException e) {
+      e.printStackTrace();
+    }
 
     if(sent != null) {
       phraseExtractor.extractPhrases(sent);
 
-      for(int i = 0; i < extractors.size(); i++) {
-        AbstractFeatureExtractor e = extractors.get(i);
+      for (AbstractFeatureExtractor e : extractors) {
         AlignmentGrid alGrid = phraseExtractor.getAlGrid();
-        synchronized(e) { e.extract(sent,null,alGrid); }
+        synchronized (e) {
+          e.extract(sent, null, alGrid);
+        }
       }
     }
   }
@@ -446,8 +452,8 @@ public class ThreadedFeatureExtractor {
 
         if(scores.getClass().isArray()) { // as dense vector
           double[] scoreArray = (double[]) scores;
-          for(int i=0; i<scoreArray.length; ++i) {
-            str.append((float)scoreArray[i]).append(" ");
+          for (double aScoreArray : scoreArray) {
+            str.append((float) aScoreArray).append(" ");
           }
         } else if(scores.getClass().equals(Int2IntLinkedOpenHashMap.class)) { // as sparse vector
           Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;

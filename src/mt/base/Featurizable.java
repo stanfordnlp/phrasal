@@ -132,7 +132,13 @@ public class Featurizable<TK,FV> {
 	 * Same guarantees as t2fAlignmentIndex
 	 */
 	final public int[][] f2tAlignmentIndex;
-	
+
+  /**
+   * Can be used by any featurizer to store additional properties
+   * belonging to translation hypothesis.
+   */
+  public Object extra;
+
 	/**
 	 * 
 	 * @param hypothesis

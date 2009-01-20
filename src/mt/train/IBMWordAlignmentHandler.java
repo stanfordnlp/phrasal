@@ -18,7 +18,7 @@ import edu.stanford.nlp.util.IStrings;
 
 public class IBMWordAlignmentHandler extends DefaultHandler {
 
-  enum TagType { SSTR, TSTR, AL, OTHER };
+  enum TagType { SSTR, TSTR, AL, OTHER }
 
   private static final double MINP = 0.5;
 

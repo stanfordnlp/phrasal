@@ -28,7 +28,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   private static final double ENGLISH_VSO_PENALTY = -1.0;
 
   private static final boolean verbose = false;
-  private static final boolean strict = false;
+  static boolean strict = false;
 
   // Tags currently handled:
 
@@ -94,9 +94,6 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
   /** The Arabic tagger (must use IBM tags!). */
   private static MaxentTagger tagger;
   private static String DEFAULT_TAGGER_FILE = "/scr/nlp/data/gale2/IBM_ATB/ibm-stanfordized/utf8/arabic.tagger";
-
-  /** Tagged sentence. */
-  private Sentence<TaggedWord> sentence = null;
 
   private boolean vso;
   private int vsoVerbIdx;
@@ -185,7 +182,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
                          Sequence<IString> foreign) {
 
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
-    sentence = tagger.processSentence(Sentence.toSentence(Arrays.asList(words)));
+    Sentence<TaggedWord> sentence = tagger.processSentence(Sentence.toSentence(Arrays.asList(words)));
     tags = sentence.toArray(new TaggedWord[sentence.size()]);
 
     String taggedSent = Arrays.toString(tags);
@@ -204,7 +201,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
       // Step 1: Skip words such as conjunctions and punctuations, then check if first word is a verb:
       if(vsoVerbIdx < 0) {
         if(beforeTags.contains(curTag)) {
-          continue;
+          //continue;
         } else if(verbTags.contains(curTag)) {
           vsoVerbIdx = pos;
         } else {
@@ -215,7 +212,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
       // Step 2: Identify first word possibly part of an NP-SBJ:
       if(vsoVerbIdx >= 0 && vsoSubjectIdx < 0) {
         if(betweenTags.contains(curTag)) {
-          continue;
+          //continue;
         } else if(sbjTags.contains(curTag)) {
           vsoSubjectIdx = pos;
           vso = true;

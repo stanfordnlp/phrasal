@@ -1,0 +1,68 @@
+#!/usr/bin/perl
+BEGIN { push @INC, "/users/mgalley/programming/perl-src/"; }
+
+#####################################################
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Thu 20 Dec 2007 01:48:09 AM PST
+# $Id$
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+use utils::opt  qw(&get_args &get_opts);
+use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+
+my %opts = get_opts(['v',0,'program will be more verbose'],
+                    ['A','','no alignment in phrase table'],
+										['d=s',0.01,'max delta']);
+my %args = get_args('ptable1','ptable2');
+my $noalign = $opts{A};
+my $maxDelta = $opts{d};
+
+sub get_ptable {
+	my $file = shift;
+	my %ptable;
+	open(F,"zcat $file |") if($file =~ /\.gz$/);
+	open(F,$file) if($file !~ /\.gz$/);
+	binmode(F,":utf8");
+	while(<F>) {
+		chomp;
+		if($noalign) {
+			/(.*) \|\|\| (.*) \|\|\| (.*)/;
+			$ptable{$1}{$2} = ['','',[split(/\s+/,$3)]];
+		} else {
+			/(.*) \|\|\| (.*) \|\|\| (.*) \|\|\| (.*) \|\|\| (.*)/;
+			$ptable{$1}{$2} = [$3,$4,[split(/\s+/,$5)]];
+		}
+	}
+	close(F);
+	return \%ptable;
+}
+
+my $table1 = get_ptable($args{ptable1});
+my $table2 = get_ptable($args{ptable2});
+
+my @f = keys %{$table1};
+foreach my $f (keys %{$table1}) {
+	foreach my $e (keys %{$table1->{$f}}) {
+		my $v1 = $table1->{$f}{$e};
+		my $v2 = $table2->{$f}{$e};
+		if(!defined $v1 || !defined $v2) {
+			print "problem with f=[$f] e=[$e]\n";
+		} else {
+			print "unmatched fe align with f=($f) e=($e): $v1->[0] != $v2->[0]\n" if($v1->[0] ne $v2->[0]);
+			print "unmatched ef align with f=($f) e=($e): $v1->[1] != $v2->[1]\n" if($v1->[1] ne $v2->[1]);
+			foreach my $i (0..$#{$v1->[2]}) {
+				my $delta = abs(1-$v2->[2][$i]/$v1->[2][$i]);
+				print "unmatched feature $i ($delta) with f=($f) e=($e) a1=($v1->[0]) a2=($v2->[0]): $v1->[2][$i] != $v2->[2][$i]\n" 
+				  if($delta>$maxDelta);
+			}
+		}
+	}
+}

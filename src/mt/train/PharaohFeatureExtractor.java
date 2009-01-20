@@ -132,8 +132,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     if(phiFilter > phi_e_f)
       return null;
     // Compute lexical weighting features:
-    double lex_f_e = 0.0;
-    double lex_e_f = 0.0;
+    double lex_f_e;
+    double lex_e_f;
     if(ibmLexModel) {
       lex_f_e = getIBMLexScore(alTemp);
       lex_e_f = getIBMLexScoreInv(alTemp);
@@ -163,7 +163,6 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   /**
    * Check features against those read from Moses phrase table.
    */
-  @SuppressWarnings("unchecked")
   public void checkAgainst(BufferedReader ref) {
     try {
       for (String fLine; (fLine = ref.readLine()) != null;) {
@@ -212,15 +211,12 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private synchronized int indexOfLex(IString f, IString e, boolean add)
   { return lexIndex.indexOf(new int[] {f.getId(), e.getId()}, add); }
 
-  @SuppressWarnings("unchecked")
   private synchronized int indexOfFLex(IString f, boolean add)
   { return fLexIndex.indexOf(f.getId(), add); }
 
-  @SuppressWarnings("unchecked")
   private synchronized int indexOfELex(IString e, boolean add)
   { return eLexIndex.indexOf(e.getId(), add); }
 

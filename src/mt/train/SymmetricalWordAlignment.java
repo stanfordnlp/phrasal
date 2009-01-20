@@ -38,8 +38,6 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   public SymmetricalWordAlignment(Properties prop) {
     addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.ADD_BOUNDARY_MARKERS_OPT,"false"));
     unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
-    //if(DEBUG)
-    //  System.err.println("SymmetricalWordAlignment: new instance.");
   }
 
   SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
@@ -222,9 +220,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
 					in.close();
 				} catch (IOException ioe) {
 					ioe.printStackTrace();
-				}
+        }
 			}
 		}
+    if(h==null)
+      throw new RuntimeException("Error in alignment file");
     return h.getIBMWordAlignment();
   }
 }

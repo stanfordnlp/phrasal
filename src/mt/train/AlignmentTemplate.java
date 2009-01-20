@@ -9,9 +9,6 @@ import edu.stanford.nlp.util.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 
-//import it.unimi.dsi.fastutil.bytes.ByteAVLTreeSet;
-//import it.unimi.dsi.fastutil.shorts.ShortAVLTreeSet;
-
 /**
  * An alignment template: a source-language phrase (f), a target-language phrase (c), and
  * word alignment.
@@ -59,7 +56,6 @@ public class AlignmentTemplate {
     init(f, e, align, lazy);
   }
 
-  @SuppressWarnings("unchecked")
   void init(int[] fArray, int[] eArray, int[] align, boolean lazy) {
     reset();
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fArray));
@@ -69,7 +65,6 @@ public class AlignmentTemplate {
       initAlignmentArrays();
   }
 
-  @SuppressWarnings("unchecked")
   void init(String fStr, String eStr, String aStr, boolean lazy) throws IOException {
     reset();
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fStr.split("\\s+")));
@@ -118,16 +113,15 @@ public class AlignmentTemplate {
       e2f[i] = new TreeSet<Integer>();
   }
 
-  @SuppressWarnings("unchecked")
   void initAlignmentArrays() {
     if(align == null)
       return;
     allocAlignmentArrays();
-    for(int i=0; i<align.length; ++i) {
-      int fIndex = numberToAlignmentF(align[i]);
-      int eIndex = numberToAlignmentE(align[i]);
-      assert(fIndex < f.size());
-      assert(eIndex < e.size());
+    for (int anAlign : align) {
+      int fIndex = numberToAlignmentF(anAlign);
+      int eIndex = numberToAlignmentE(anAlign);
+      assert (fIndex < f.size());
+      assert (eIndex < e.size());
       f2e[fIndex].add(eIndex);
       e2f[eIndex].add(fIndex);
     }

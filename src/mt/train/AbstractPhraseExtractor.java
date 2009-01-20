@@ -53,7 +53,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   final boolean extractBoundaryPhrases;
   
   List<AbstractFeatureExtractor> extractors;
-  AlignmentTemplates alTemps;
+  final AlignmentTemplates alTemps;
   AlignmentTemplateInstance alTemp;
 
   public AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
@@ -133,7 +133,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       }
   }
 
-  private boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
+  boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
     boolean aligned = false;
     if(f2-f1 > maxPhraseLenF) return false;
     if(e2-e1 > maxPhraseLenE) return false;

@@ -22,6 +22,10 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
  */
 public class CombinedFeatureExtractor {
 
+  // Note: could make phrase extraction more memory efficient
+  // by storing each block (phrase pair) as mt.base.SimpleSequence pairs
+  // rather than int[] (since SimpleSequence).
+
   static public final String CONFIG_OPT = "config";
   static public final String F_CORPUS_OPT = "fCorpus";
   static public final String E_CORPUS_OPT = "eCorpus";
@@ -63,10 +67,10 @@ public class CombinedFeatureExtractor {
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
   static {
-    REQUIRED_OPTS.addAll(Arrays.asList(new String[] { 
+    REQUIRED_OPTS.addAll(Arrays.asList(
        F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT, EXTRACTORS_OPT 
-     }));
-    OPTIONAL_OPTS.addAll(Arrays.asList(new String[] { 
+     ));
+    OPTIONAL_OPTS.addAll(Arrays.asList(
        FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT, 
        SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, 
        AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT, 
@@ -82,7 +86,7 @@ public class CombinedFeatureExtractor {
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT
-     }));
+     ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
@@ -113,16 +117,12 @@ public class CombinedFeatureExtractor {
   private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
   Sequence<IString>[] fPhrases;
 
-  // Number of passes over training data needed:
-  private int passNumber = 0;
   private int totalPassNumber = 1;
 
-  @SuppressWarnings("unchecked")
   public CombinedFeatureExtractor(Properties prop) throws IOException {
     analyzeProperties(prop);
   }
 
-  @SuppressWarnings("unchecked")
   public void analyzeProperties(Properties prop) throws IOException {
 
     this.prop = prop;
@@ -151,7 +151,7 @@ public class CombinedFeatureExtractor {
     }
     
     if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet(prop.keySet());
+      Set extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
        ("The following fields are unrecognized: %s\n", extraFields);
@@ -195,7 +195,6 @@ public class CombinedFeatureExtractor {
     outputFile = prop.getProperty(OUTPUT_FILE_OPT);
   }
 
-  @SuppressWarnings("unchecked")
   public void init() {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
@@ -207,7 +206,7 @@ public class CombinedFeatureExtractor {
 
     for(String exStr : exsString.split(":")) {
       try {
-        AbstractFeatureExtractor fe = null;
+        AbstractFeatureExtractor fe; // = null;
         String[] extractorAndInfofile = exStr.split("=");
         String infoFilename = null;
 
@@ -231,7 +230,7 @@ public class CombinedFeatureExtractor {
         } else {
           Class cls = Class.forName(exStr);
           Constructor ct = cls.getConstructor(new Class[] {});
-          fe = (AbstractFeatureExtractor) ct.newInstance(new Object[] {});
+          fe = (AbstractFeatureExtractor) ct.newInstance();
           if(fe instanceof PharaohFeatureExtractor) {
             mosesExtractor = (PharaohFeatureExtractor) fe;
           }
@@ -256,7 +255,7 @@ public class CombinedFeatureExtractor {
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    * @param list Extract features only for this phrase list.
    * @param start Start index into list.
-   * @param start End index into list.
+   * @param end End index into list.
    */
   public void restrictExtractionTo(Sequence<IString>[] list, int start, int end) {
     assert(filterFromDev);
@@ -279,14 +278,8 @@ public class CombinedFeatureExtractor {
     restrictExtractionTo(list,0,Integer.MAX_VALUE);
   }
 
-  /**
-   * Make as many passes over training data as needed to extract features. 
-   *
-   * @param fCorpus
-   * @param eCorpus
-   * @param aCorpus
-   */
-  public void extractFromAlignedData(String fCorpus, String eCorpus, String aCorpus) {
+  // Make as many passes over training data as needed to extract features. 
+  void extractFromAlignedData(String fCorpus, String eCorpus, String aCorpus) {
 
     if(!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
@@ -296,7 +289,7 @@ public class CombinedFeatureExtractor {
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
 
     try {
-      for(passNumber=0; passNumber<totalPassNumber; ++passNumber) {
+      for(int passNumber=0; passNumber<totalPassNumber; ++passNumber) {
         alTemps.enableAlignmentCounts(passNumber == 0);
 
         // Set current pass:
@@ -413,10 +406,8 @@ public class CombinedFeatureExtractor {
     }
   }
 
-  /**
-   * Write combined features to a stream.
-   */
-  public boolean write(PrintStream oStream, boolean noAlign) {
+  // Write combined features to a stream.
+  boolean write(PrintStream oStream, boolean noAlign) {
     if(oStream == null)
         oStream = System.out;
     long startTimeMillis = System.currentTimeMillis();
@@ -451,8 +442,8 @@ public class CombinedFeatureExtractor {
 
         if(scores.getClass().isArray()) { // as dense vector
           double[] scoreArray = (double[]) scores;
-          for(int i=0; i<scoreArray.length; ++i) {
-            str.append((float)scoreArray[i]).append(" ");
+          for (double aScoreArray : scoreArray) {
+            str.append((float) aScoreArray).append(" ");
           }
         } else if(scores.getClass().equals(Int2IntLinkedOpenHashMap.class)) { // as sparse vector
           Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;
@@ -540,7 +531,7 @@ public class CombinedFeatureExtractor {
 
   static void usage() {
     System.err.print
-    ("Usage: java CombinedFeatureExtractor [ARGS]\n"+
+    ("Usage: java mt.train.CombinedFeatureExtractor [ARGS]\n"+
      "Mandatory arguments:\n"+
      " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+

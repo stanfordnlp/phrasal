@@ -64,7 +64,7 @@ public class CollapsedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>,
 		if (wt == null) {
 			return 0.0;
 		}
-		return wt.doubleValue();
+		return wt;
 	}
 
 	@Override

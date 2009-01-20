@@ -29,7 +29,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
   Map<AlignmentTemplateInstance, Set<Integer>> labelsForAlTemp = new HashMap<AlignmentTemplateInstance, Set<Integer>>();
   Index<Pair<String, Integer>> phraseNamesIndex = new Index<Pair<String, Integer>>();
 
-  enum ReorderingTypes { ordered, distorted };
+  enum ReorderingTypes { ordered, distorted }
 
   TwoDimensionalCounter<String, ReorderingTypes> theCounter = new TwoDimensionalCounter<String, ReorderingTypes>();
   

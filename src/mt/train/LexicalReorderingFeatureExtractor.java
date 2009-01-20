@@ -27,9 +27,9 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   static int printCounter = 0;
   static boolean modelStart = false;
 
-  enum DirectionTypes { forward, backward, bidirectional, joint };
-  enum ReorderingTypes { monotone, swap, discontinuous, start };
-  enum LanguageTypes { fe, f, e };
+  enum DirectionTypes { forward, backward, bidirectional, joint }
+  enum ReorderingTypes { monotone, swap, discontinuous, start }
+  enum LanguageTypes { fe, f, e }
 
   // Number of re-ordeing models, and size of each model:
   private int modelNum, modelSize, modelOrder=1;
@@ -236,7 +236,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
     if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
-    double[] counts = null;
+    double[] counts;
     synchronized(list) {
       while(idx >= list.size()) {
         double[] arr = new double[size];

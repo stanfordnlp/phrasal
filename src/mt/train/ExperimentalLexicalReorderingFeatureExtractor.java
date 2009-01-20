@@ -23,9 +23,9 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
 
   static int printCounter = 0;
 
-  enum DirectionTypes { forward, backward, bidirectional, joint };
-  enum ReorderingTypes { monotone, swap, discont1, discont2, start, end };
-  enum LanguageTypes { fe, f, e };
+  enum DirectionTypes { forward, backward, bidirectional, joint }
+  enum ReorderingTypes { monotone, swap, discont1, discont2, start, end }
+  enum LanguageTypes { fe, f, e }
 
   int modelSize = 0;
   int numModels = 0;
@@ -283,7 +283,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
     if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
-    double[] counts = null;
+    double[] counts; // = null;
     synchronized(list) {
       while(idx >= list.size()) {
         double[] arr = new double[modelSize];

@@ -33,7 +33,7 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
 
   private int winSize = 1;
   private Set<IString> 
-    fCCWords = new HashSet<IString>(), eCCWords = new HashSet<IString>(), 
+    fCCWords = new HashSet<IString>(), eCCWords = new HashSet<IString>(),
     fOCWords = new HashSet<IString>(), eOCWords = new HashSet<IString>();
 
   /**
@@ -79,7 +79,7 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
     addWordFeatureToSparseVector(Fm1, f, f1-1, fOCWords);  
     addWordFeatureToSparseVector(Fp1, f, f2+1, fOCWords);  
     addWordFeatureToSparseVector(Em1, e, e1-1, eOCWords);  
-    addWordFeatureToSparseVector(Ep1, e, e2+1, eOCWords);  
+    addWordFeatureToSparseVector(Ep1, e, e2+1, eOCWords);
 
     if(false) {
     // Get all function words close to alignment template:
@@ -97,7 +97,7 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
       (IString featureName, Sequence<IString> seq, int pos, Set<IString> limitMap) {
     if(pos < -1 || pos > seq.size())
       return;
-    IString word = null;
+    IString word; // = null;
     if(pos == -1) {
       if(SKIP_SENT_BND) return;
       word = START_SENT;
@@ -117,10 +117,10 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
   /**
    * Extract words with range x to y.
    */
-  private void addBOWFeatureToSparseVector
+  void addBOWFeatureToSparseVector
       (IString featureName, Sequence<IString> seq, int x, int y, Set<IString> limitMap) {
     for(int i=x; i<=y; ++i) {
-      IString word = null;
+      IString word;
       if(i<-1) continue;
       if(i>seq.size()) break;
       if(i == -1) {

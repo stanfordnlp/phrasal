@@ -85,16 +85,14 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private static List<String> extractWordsFromAlignment(String alignStr) throws IOException {
     String[] tokens = alignStr.split("\\s+");
     List<String> words = new ArrayList<String>();
     assert(tokens[0].equals("NULL"));
     // Read alignmen from string:
     int pos = -1;
-    int wpos = -1;
     while(pos+1 < tokens.length) {
-      String w = new String(tokens[++pos]);
+      String w = tokens[++pos];
       if(pos > 1)
         words.add(w);
       //System.err.println("adding: "+w);
@@ -102,16 +100,15 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
         throw new IOException("Bad GIZA file format at position "+pos+": "+tokens[pos]);
       while(!tokens[++pos].equals("})"))
         ;
-      ++wpos;
+      //++wpos;
     }
     return words;
   }
 
-  @SuppressWarnings("unchecked")
   private static void initAlign(String alignStr, Set<Integer>[] align, Sequence<IString> target) throws IOException {
     // Init alignment:
     for(int i=0; i<align.length; ++i)
-      align[i] = new TreeSet(); 
+      align[i] = new TreeSet<Integer>(); 
     String[] tokens = alignStr.split("\\s+");
     assert(tokens[0].equals("NULL"));
     // Read alignmen from string:
@@ -154,9 +151,8 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
       readBidirecionalAlignment(args[0],args[1]);
   }
 
-  @SuppressWarnings("unchecked")
   public static void readUnidirecionalAlignment(String feAlign) { 
-    LineNumberReader feReader = null;
+    LineNumberReader feReader;
     GIZAWordAlignment sent = new GIZAWordAlignment();
     try {
       feReader = new LineNumberReader
@@ -178,7 +174,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   }
 
   public static void readBidirecionalAlignment(String feAlign, String efAlign) { 
-    LineNumberReader feReader = null, efReader = null;
+    LineNumberReader feReader, efReader;
     GIZAWordAlignment sent = new GIZAWordAlignment();
     try {
       feReader = new LineNumberReader

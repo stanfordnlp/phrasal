@@ -94,7 +94,6 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Increment count for a given alignment for a given phrase-pair.
    */
-  @SuppressWarnings("unchecked")
   public synchronized void incrementAlignmentCount(AlignmentTemplate alTemp) {
     if(FILL_HASH && storeAlignmentCounts) {
       int idx = alTemp.getKey();
@@ -146,11 +145,16 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
 
   public String getSizeInfo() {
     StringBuffer buf = new StringBuffer();
-    buf.append("ptable="+index.size());
-    buf.append(", f-ptable="+fIndex.size());
-    buf.append(", e-ptable="+eIndex.size());
-    buf.append(", palignments="+aIndex.size());
-    buf.append(", a-counts="+aCounter.size());
+    buf.append("ptable=");
+    buf.append(index.size());
+    buf.append(", f-ptable=");
+    buf.append(fIndex.size());
+    buf.append(", e-ptable=");
+    buf.append(eIndex.size());
+    buf.append(", palignments=");
+    buf.append(aIndex.size());
+    buf.append(", a-counts=");
+    buf.append(aCounter.size());
     return buf.toString();
   }
 
@@ -169,14 +173,12 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return index for alTemp.
    */
-  @SuppressWarnings("unchecked")
   private int indexOf(AlignmentTemplate alTemp, boolean add)
   { return index.indexOf(new int[] {indexOfF(alTemp, add), indexOfE(alTemp, add)}, add); }
 
   /**
    * Return index for source-language phrase in alTemp.
    */
-  @SuppressWarnings("unchecked")
   private int indexOfF(AlignmentTemplate alTemp, boolean add)
   { return fIndex.indexOf(Sequences.toIntArray(alTemp.f()), add); }
 
@@ -189,7 +191,6 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return index for target-language phrase in alTemp.
    */
-  @SuppressWarnings("unchecked")
   private int indexOfE(AlignmentTemplate alTemp, boolean add)
   { return eIndex.indexOf(Sequences.toIntArray(alTemp.e()), add); }
 
@@ -202,11 +203,9 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return index for phrase alignment in alTemp.
    */
-  @SuppressWarnings("unchecked")
   private int indexOfA(AlignmentTemplate alTemp, boolean add)
   { return aIndex.indexOf(alTemp.getCompactAlignment(), add); }
 
-  @SuppressWarnings("unchecked")
   private int getArgmaxAlignment(int idx) {
     if(idx >= aCounter.size())
       return -1;

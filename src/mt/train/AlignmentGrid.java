@@ -21,7 +21,7 @@ public class AlignmentGrid {
 
   private int fsize, esize;
 
-  public enum RelativePos { N, NW, W, SW, S, SE, E, NE, I };
+  public enum RelativePos { N, NW, W, SW, S, SE, E, NE, I }
 
   private static final String SYM_C = "+"; 
   private static final String SYM_V = "|"; 
@@ -55,8 +55,7 @@ public class AlignmentGrid {
   /**
    * Initialize an alignment grid of size esize x fsize.
    */
-  @SuppressWarnings("unchecked")
-  public void init(int esize, int fsize) { 
+  public void init(int esize, int fsize) {
     if(esize >= MAX_SENT_LEN || fsize >= MAX_SENT_LEN)
       throw new UnsupportedOperationException("Sentence too long: fsize="+fsize+" esize="+esize);
     this.esize = esize;
@@ -66,7 +65,7 @@ public class AlignmentGrid {
       for(int ei = 0; ei < esize; ei++) {
         AlGridCell cell = alGridCells[fi][ei];
         if(cell == null)
-          cell = alGridCells[fi][ei] = new AlGridCell<AlignmentTemplateInstance>();
+          alGridCells[fi][ei] = new AlGridCell<AlignmentTemplateInstance>();
         else
           cell.init();
       }
@@ -77,13 +76,11 @@ public class AlignmentGrid {
 
   public int esize() { return esize; }
 
-  @SuppressWarnings("unchecked")
   public AlGridCell<AlignmentTemplateInstance> cellAt(int fi, int ei) { return alGridCells[fi][ei]; }
 
   /**
    * Add alignment template to the grid.
    */
-  @SuppressWarnings("unchecked")
   public void addAlTemp(AlignmentTemplateInstance alTemp) {
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
     alGridCells[f1][e1].addTopLeft(alTemp);
