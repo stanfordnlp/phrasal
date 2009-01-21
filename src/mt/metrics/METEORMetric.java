@@ -16,6 +16,7 @@ public class METEORMetric {
 
   private static final String rootName = "meteor.tmp.";
   private static final boolean verbose = false;
+  private static final int maxLen = 120; // 150
 
   /**
    * Score a list of hypotheses again a single list of references.
@@ -44,8 +45,9 @@ public class METEORMetric {
         "perl /u/nlp/packages/meteor-0.7/meteor.pl -s machine1 " +
         " -r " + refFile.getAbsolutePath() +
         " -t "+ hypFile.getAbsolutePath() +
-        " -plainOutput -outFile " + outFile.getAbsolutePath() +
-        " -modules " + modules;
+        " -plainOutput -outFile " + outFile.getAbsolutePath();
+      if(modules != null)
+        cmd += " -modules " + modules;
       if(verbose)
         System.err.println("Running command: "+cmd);
       Process p = rt.exec(cmd);
@@ -64,11 +66,19 @@ public class METEORMetric {
       int i=0;
       for(String line : StringUtils.slurpFileNoExceptions(outFile).split("\\n")) {
 
+        line = line.replaceAll("^\\s+", "");  // no leading space
+        line = line.replaceAll("\\s+$", "");  // no trailing space
         if(line.charAt(0) == '#')
           continue;
+        
         String[] toks = line.split("\\s+");
         if(toks.length != 2)
           throw new IOException("Wrong number of tokens on line: "+line);
+        if(!toks[0].startsWith("doc.1::"))
+          throw new IOException("Wrong format at line: "+line);
+        int sid = Integer.parseInt(toks[0].substring(7))-1;
+        if(sid != i)
+          throw new IOException(String.format("segment ids somehow got out of sync. Expected id=%d, but found id=%d.", i, sid));
 
         String pair = refsAndHyps.get(i).toString();
         double score = Double.parseDouble(toks[1]);
@@ -77,9 +87,10 @@ public class METEORMetric {
         scores.put(pair, score);
         ++i;
       }
-      if(scores.size() != refsAndHyps.size())
-        throw new IOException(String.format
-           ("Number of scores (%d) does not match the number of sentences (%d)",scores.size(), refsAndHyps.size()));
+      // may not match because of duplicate (ref,hyp) pairs:
+      //if(scores.size() != refsAndHyps.size())
+      //  throw new IOException(String.format
+      //     ("Number of scores (%d) does not match the number of sentences (%d)",scores.size(), refsAndHyps.size()));
 
       refFile.deleteOnExit();
       hypFile.deleteOnExit();
@@ -95,6 +106,9 @@ public class METEORMetric {
     return scores;
   }
 
+  /**
+   * Create NIST SGML file with dummy values for setid, docid, etc.
+   */
   private static void createSGML(List<Pair<String,String>> refsAndHyps, String outputFile, boolean refset) {
     PrintStream out = IOTools.getWriterFromFile(outputFile);
     out.append("<");
@@ -108,7 +122,7 @@ public class METEORMetric {
       out.append("<seg id=");
       out.append(Integer.toString(++segid));
       out.append("> ");
-      out.append(refset ? sent.first() : sent.second());
+      out.append(truncate(refset ? sent.first() : sent.second()));
       out.append(" </seg>\n");
     }
     out.append("</DOC>\n</");
@@ -116,6 +130,13 @@ public class METEORMetric {
     out.append(">\n");
     //out.flush();
     out.close();
+  }
+
+  private static String truncate(String in) {
+    String[] toks = in.split("\\s+");
+    if(toks.length <= maxLen)
+      return in;
+    return StringUtils.join(Arrays.copyOf(toks, maxLen)," ");
   }
 
   public static void main(String[] args) {
