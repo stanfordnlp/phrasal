@@ -21,10 +21,14 @@ public class MTScorer implements ExternalMTScorer {
   Properties prop;
 
   boolean verbose;
+
   List<Quadruple<Double,Double,Double,Double>> terCosts;
   Map<Sequence<IString>,Double> ngramInfo = null;
+  
   boolean tokenize = true, lowercase = true;
+  
   boolean withNIST = true;
+  boolean withMETEOR = true;
 
   static public void main(String[] args) throws Exception {
     MTScorer scorer = new MTScorer();
@@ -74,16 +78,22 @@ public class MTScorer implements ExternalMTScorer {
   }
 
   public void readAllReferences(List<String> refStr) {
+  }
+
+  public void readAllReferencesAndHypotheses(List<Pair<String,String>> refAndHyp) {
     if(withNIST) {
       List<List<Sequence<IString>>> refs = new ArrayList<List<Sequence<IString>>>();
-      for(String ref : refStr) {
+      for(Pair<String,String> pair : refAndHyp) {
         List<Sequence<IString>> r = new ArrayList<Sequence<IString>>();
-        r.add(str2seq(ref));
+        r.add(str2seq(pair.first()));
         refs.add(r);
       }
       NISTMetric<IString,String> nist = new NISTMetric<IString,String>(refs);
       ngramInfo = nist.getNgramInfo();
       assert(ngramInfo != null);
+    }
+    if(withMETEOR) {
+      
     }
   }
 
