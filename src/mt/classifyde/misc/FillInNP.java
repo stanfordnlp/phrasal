@@ -1,4 +1,4 @@
-package mt.translationtreebank.misc;
+package mt.classifyde.misc;
 
 import java.io.*;
 import java.util.*;
