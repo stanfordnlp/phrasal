@@ -195,7 +195,10 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         cilin_multipleEntry = new HashMap<String,Set<String>>();
 
         // Read from CiLin file
-        String[] cilinLines = StringUtils.slurpFileNoExceptions("data/CILIN.TXT.utf8").split("\\n");
+        String ciLinPath =
+          System.getenv("JAVANLP_HOME")+
+          "/projects/mt/src/mt/classifyde/data/CILIN.TXT.utf8";
+        String[] cilinLines = StringUtils.slurpFileNoExceptions(ciLinPath).split("\\n");
         System.err.println(cilinLines.length+" lines in CILIN");
         //for (String cilinLine : cilinLines) {
         for (int i = 0; i < cilinLines.length; i++) {

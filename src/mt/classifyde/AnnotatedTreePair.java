@@ -121,7 +121,7 @@ public class AnnotatedTreePair {
       Pair<String,String> category = categories.get(idx+offset);
       String np = atp.oracleChNPwithDE(deIdxInSent).trim();
       if (category.second.trim().equals(np)) {
-        System.err.println("Put in to atp.NPwithDEs_categories!");
+        //System.err.println("Put in to atp.NPwithDEs_categories!");
         atp.NPwithDEs_categories.put(deIdxInSent, category.first());
       } else {
         throw new RuntimeException("error labeling NPs");
