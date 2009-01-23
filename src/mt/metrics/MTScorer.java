@@ -151,7 +151,8 @@ public class MTScorer implements ExternalMTScorer {
       Pair<String,String> pair = new Pair<String,String>(ref,hyp);
       Double score = scoresMETEOR.get(pair.toString());
       double dscore = 0.0;
-      if(score != null)
+      // we get an empty pair when we query scoresProvided()...
+      if(score != null && !(pair.first().isEmpty() && pair.second().isEmpty()))
         dscore = score;
       else
         System.err.println("WARNING: unseen (ref,hyp) pair:\n"+pair.toString());
