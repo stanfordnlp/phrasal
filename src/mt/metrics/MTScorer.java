@@ -155,7 +155,7 @@ public class MTScorer implements ExternalMTScorer {
         dscore = score;
       else
         System.err.println("WARNING: unseen (ref,hyp) pair:\n"+pair.toString());
-      addToCounter(c, "METEOR", dscore);
+      addToCounter(c, "mt.metrics.METEOR", dscore);
     }
 
     // Add TER features:
@@ -195,7 +195,7 @@ public class MTScorer implements ExternalMTScorer {
     
     terI.add(new ScoredFeaturizedTranslation<IString, String>(hyp, null, 0));
     Formatter f = new Formatter();
-    f.format("ter_score_%g_%g_%g_%g",subCost,insCost,delCost,shiftCost);
+    f.format("mt.metrics.TER_%g_%g_%g_%g",subCost,insCost,delCost,shiftCost);
 
     addToCounter(c,f.toString(),1.0+terI.score());
     addToCounter(c,f.toString()+"_ins",-safeLog(1.0+terI.insCount()));
@@ -211,6 +211,7 @@ public class MTScorer implements ExternalMTScorer {
 
     boolean isBLEU = name.equals("mt.metrics.BLEUMetric");
     boolean isNIST = name.equals("mt.metrics.NISTMetric");
+    name = name.replace("Metric", "");
 
     double score = m.score();
     double bp = m.brevityPenalty();
@@ -218,8 +219,8 @@ public class MTScorer implements ExternalMTScorer {
 
     if(isNIST)
       for(int i=0; i<precisions.length; ++i)
-        precisions[i] /= 20.0;
-
+        precisions[i] /= 20.0;    
+    
     // Add standard BLEU/NIST features:
     addToCounter(c,name+"_score",score);
     addToCounter(c,name+"_bp",bp);
