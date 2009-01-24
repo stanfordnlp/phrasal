@@ -27,10 +27,13 @@ class SentTreeFileReader {
     
     Tree t = Tree.valueOf(tree);
     List<Tree> leaves = t.getLeaves();
+    sent = sent.replaceAll("\u00a0", " ");
     String[] words = sent.trim().split("\\s+");
 
     if (leaves.size() != words.length) {
       System.err.println("sent size & tree size doesn't match:");
+      System.err.println("sent size = "+words.length);
+      System.err.println("tree size = "+leaves.size());
       System.err.println("SENT="+sent);
       System.err.println("TREE=");
       t.pennPrint(System.err);
