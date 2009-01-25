@@ -10,7 +10,7 @@ import edu.stanford.nlp.ling.*;
 import java.util.*;
 import java.io.*;
 
-class OutputAllTrees {
+class OutputAllNPs {
   public static void main(String args[]) throws Exception {
     Boolean reducedCategory = true;
     Boolean nonOracleTree = true;
