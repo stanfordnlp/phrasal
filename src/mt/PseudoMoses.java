@@ -854,7 +854,8 @@ public class PseudoMoses {
   				System.err.printf("Score: %f\n", translation.score);
   			} else {
   				System.out.println("<<<decoder failure>>>");
-  			}  		
+  			}
+  		}
     } else {
     	
       List<List<String>> lines = new ArrayList<List<String>>();
