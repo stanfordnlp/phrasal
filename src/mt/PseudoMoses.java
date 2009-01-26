@@ -865,11 +865,25 @@ public class PseudoMoses {
       	lines.add(new ArrayList<String>());
       	ids.add(new ArrayList<Integer>());
       }
+      
   		for (String line; (line = reader.readLine()) != null; translationId++) {
   		    	lines.get(translationId % local_procs).add(line);
   		    	ids.get(translationId % local_procs).add(translationId);
   		}
       
+  		List<Thread> threads = new ArrayList<Thread>();
+  		for (int i = 0; i < local_procs; i++) {
+  			threads.add(new Thread(new ProcDecode(i, lines.get(i), ids.get(i))));
+  			threads.get(i).start();
+  		}
+  		
+  		for (int i = 0; i < local_procs; i++) {
+  			try {
+  			 threads.get(i).wait();
+  			} catch (InterruptedException e) {
+  				System.err.printf("Interrupted while waiting for thread %d\n", i);
+  			}
+  		}
     	
     }
 
