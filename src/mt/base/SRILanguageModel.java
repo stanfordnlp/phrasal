@@ -93,10 +93,23 @@ public class SRILanguageModel implements LanguageModel<IString> {
     return order;
   }
 
-  public boolean releventPrefix(Sequence<IString> prefix) {
+  /*public boolean releventPrefix(Sequence<IString> prefix) {
     if (prefix.size() > order-1) return false;
     // TODO
     return true;
+  }*/
+
+  public boolean releventPrefix(Sequence<IString> prefix) {
+    if (prefix.size() > order-1) return false;
+    int hist_size = prefix.size();
+    SWIGTYPE_p_unsigned_int hist;
+    hist = srilm.new_unsigned_array(hist_size);
+    for(int i=0; i< hist_size; i++)
+    srilm.unsigned_array_setitem(hist, i, id(prefix.get(i)));
+    long depth = srilm.getBOW_depth(p_srilm, hist, hist_size);
+    srilm.delete_unsigned_array(hist);
+    //System.err.printf("(3) prefix={{{%s}}} siz=%d depth=%d\n", prefix.toString(), prefix.size(), depth);
+    return (depth == prefix.size());
   }
 
 	private int id(IString str) {
@@ -112,7 +125,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
     hist = srilm.new_unsigned_array(hist_size);
     for(int i=0; i< hist_size; i++)
       srilm.unsigned_array_setitem(hist, i, id(ngram_wrds.get(i)));
-    double res = srilm.getProb_lzf(p_srilm, hist, hist_size, id(ngram_wrds.get(hist_size)));
+    double res = srilm.getProb(p_srilm, hist, hist_size, id(ngram_wrds.get(hist_size)));
     srilm.delete_unsigned_array(hist);
     return res*LOG10;
   }

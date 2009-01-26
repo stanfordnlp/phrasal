@@ -15,9 +15,9 @@ unsigned getIndexForWord(const char* s);
 const char* getWordForIndex(unsigned i);
 int readLM(Ngram* ngram, const char* filename);
 float getWordProb(Ngram* ngram, unsigned word, unsigned* context);
-float getProb_lzf(Ngram* ngram, unsigned *context, int hist_size, unsigned cur_wrd); //add by lzf
-unsigned getBOW_depth(Ngram* ngram, unsigned *context, int hist_size);//add by lzf
-float get_backoff_weight_sum(Ngram* ngram, unsigned *context, int hist_size, int min_len);//add by lzf
+float getProb(Ngram* ngram, unsigned *context, int hist_size, unsigned cur_wrd);
+unsigned getBOW_depth(Ngram* ngram, unsigned *context, int hist_size);
+float get_backoff_weight_sum(Ngram* ngram, unsigned *context, int hist_size, int min_len);
 
 int getVocab_None(); //add by lzf
 void write_vocab_map(Vocab* vo, const char *fname);//by lzf
