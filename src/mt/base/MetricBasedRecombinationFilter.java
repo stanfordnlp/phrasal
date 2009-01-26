@@ -7,6 +7,13 @@ import mt.metrics.*;
 public class MetricBasedRecombinationFilter<TK,FV> implements RecombinationFilter<MultiTranslationState<TK, FV>> {
 	RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> metricFilter;
 	
+	public RecombinationFilter<MultiTranslationState<TK,FV>> clone() {
+		try {
+		return (RecombinationFilter)super.clone();
+		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	}
+	
+	
 	public MetricBasedRecombinationFilter(EvaluationMetric<TK,FV> metric) {
 		metricFilter = metric.getIncrementalMetricRecombinationFilter();
 	}

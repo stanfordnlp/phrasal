@@ -579,7 +579,12 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	}
 }
 
-class BLEUIncrementalMetricRecombinationFilter<TK,FV> implements RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> {			
+class BLEUIncrementalMetricRecombinationFilter<TK,FV> implements RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> {
+	
+	public RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> clone() {
+		 throw new RuntimeException();
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean combinable(IncrementalEvaluationMetric<TK,FV> oA,

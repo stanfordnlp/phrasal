@@ -18,6 +18,12 @@ public class CombinedRecombinationFilter<S> implements
 	final RecombinationFilter<S>[] filters;
 	final CombinationRule combinationRule;
 	
+	
+	public RecombinationFilter<S> clone() {
+		try {
+			return (RecombinationFilter<S>)super.clone();
+		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	}
 	/**
 	 * 
 	 * @param filters
