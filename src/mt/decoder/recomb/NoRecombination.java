@@ -11,9 +11,10 @@ import mt.decoder.util.Hypothesis;
  * @param <S>
  */
 public class NoRecombination<S> implements RecombinationFilter<S> {
-	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
+	
+	public RecombinationFilter<S> clone() {
 		try {
-			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
+			return (RecombinationFilter<S>)super.clone(); 
 		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
 	}
 	
