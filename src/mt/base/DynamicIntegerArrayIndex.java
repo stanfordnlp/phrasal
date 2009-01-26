@@ -57,7 +57,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	      return keys[pos];
 	  }
 	  
-	  void sizeUp() {      
+	  synchronized void sizeUp() {      
 	    int newSize = keys.length<<1;
 	    mask = newSize-1;
 	    //System.err.printf("size up to: %d\n", newSize);
@@ -85,7 +85,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	      return distance;
 	  }
 	  
-	  int add(int key[], int pos, boolean sharedRep) {
+	synchronized int add(int key[], int pos, boolean sharedRep) {
 	    if ((load++)/(double)keys.length > MAX_LOAD) { 
 	      sizeUp();
 	      pos = -findPos(key, true)-1;

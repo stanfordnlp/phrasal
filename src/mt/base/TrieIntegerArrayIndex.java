@@ -43,7 +43,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     return ((h << 7) - h + (h >>> 9) + (h >>> 17));
   }
 
-  private long getTransition(int curState, int input) {
+  private synchronized long getTransition(int curState, int input) {
     // Perform some bit manipulations because Long's hashCode is not particularly clever.
     int input2 = supplementalHash(input);
     int curState2 = supplementalHash(curState);
@@ -61,7 +61,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     return indexOf(input, false);
   }
 
-  public int indexOf(int[] input, boolean add) {
+  public synchronized int indexOf(int[] input, boolean add) {
     int curState = IDX_ROOT;
     for(int i=0; i<input.length; ++i) {
       long transition = getTransition(curState, input[i]);

@@ -66,7 +66,7 @@ public class FixedLengthIntegerArrayRawIndex implements IntegerArrayRawIndex {
 	 * @param array
 	 * @return
 	 */
-	public int insertIntoIndex(int[] array) {
+	public synchronized int insertIntoIndex(int[] array) {
 		int initIndex = initialSearchIndex(array);
 		int index = getIndex(array, initIndex);
 		if (index >= 0) return index;
