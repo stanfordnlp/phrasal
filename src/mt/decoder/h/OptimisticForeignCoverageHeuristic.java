@@ -16,6 +16,13 @@ import mt.decoder.util.Hypothesis;
  */
 public class OptimisticForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
+	public SearchHeuristic<TK,FV> clone() {
+	   try {
+	  	 return (SearchHeuristic<TK,FV>) super.clone();
+	   } catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	}
+	
+	
 	@Override
 	public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,
 			CoverageSet newCoverage) {

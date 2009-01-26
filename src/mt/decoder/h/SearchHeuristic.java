@@ -13,7 +13,9 @@ import mt.decoder.util.Hypothesis;
  *
  * @param <T>
  */
-public interface SearchHeuristic<TK,FV> {
+public interface SearchHeuristic<TK,FV> extends Cloneable {
+
+	public SearchHeuristic<TK,FV> clone();
 	
 	/**
 	 * Note reset semantics

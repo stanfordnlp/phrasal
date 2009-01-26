@@ -687,42 +687,41 @@ public class PseudoMoses {
 		SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
 				isolatedPhraseFeaturizer, scorer,
 				HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
-
-		// Configure InfererBuilder
-		MultiBeamDecoder.MultiBeamDecoderBuilder infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder) InfererBuilderFactory
-		.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
-		infererBuilder.setIncrementalFeaturizer(featurizer);
-		infererBuilder.setPhraseGenerator(phraseGenerator);
-		infererBuilder.setScorer(scorer);
-		infererBuilder.setSearchHeuristic(heuristic);
-		infererBuilder.setRecombinationFilter(filter);
-		infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
-		
-		if (distortionLimit != -1) {
-			infererBuilder.setMaxDistortion(distortionLimit);
-		}
-		
-		if (config.containsKey(USE_ITG_CONSTRAINTS)) {
-			infererBuilder.useITGConstraints(Boolean.parseBoolean(config.get(USE_ITG_CONSTRAINTS).get(0)));
-		}
-
-    if (config.containsKey(BEAM_SIZE)) {
-			try {
-				int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
-				infererBuilder.setBeamCapacity(beamSize);
-			} catch (NumberFormatException e) {
-				throw new RuntimeException(
-						String
-						.format(
-								"Beam size %s, as specified by argument %s, can not be parsed as an integer value\n",
-								config.get(BEAM_SIZE).get(0), BEAM_SIZE));
-			}
-
-		}
-
 		// Create Inferer
     inferers = new ArrayList<Inferer<IString, String>>(local_procs);
     for (int i = 0; i < local_procs; i++) {
+  		// Configure InfererBuilder
+  		MultiBeamDecoder.MultiBeamDecoderBuilder infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder) InfererBuilderFactory
+  		.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
+  		infererBuilder.setIncrementalFeaturizer(featurizer.clone());
+  		infererBuilder.setPhraseGenerator(phraseGenerator.clone());
+  		infererBuilder.setScorer(scorer);
+  		infererBuilder.setSearchHeuristic(heuristic.clone());
+  		infererBuilder.setRecombinationFilter(filter.clone());
+  		infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
+  		
+  		if (distortionLimit != -1) {
+  			infererBuilder.setMaxDistortion(distortionLimit);
+  		}
+  		
+  		if (config.containsKey(USE_ITG_CONSTRAINTS)) {
+  			infererBuilder.useITGConstraints(Boolean.parseBoolean(config.get(USE_ITG_CONSTRAINTS).get(0)));
+  		}
+  
+      if (config.containsKey(BEAM_SIZE)) {
+  			try {
+  				int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
+  				infererBuilder.setBeamCapacity(beamSize);
+  			} catch (NumberFormatException e) {
+  				throw new RuntimeException(
+  						String
+  						.format(
+  								"Beam size %s, as specified by argument %s, can not be parsed as an integer value\n",
+  								config.get(BEAM_SIZE).get(0), BEAM_SIZE));
+  			}
+  
+  		}
+  
 		  inferers.add(infererBuilder.build());
     }
 

@@ -10,7 +10,13 @@ import mt.decoder.util.Hypothesis;
  * @param <FV>
  */
 public class ForeignCoverageRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
-
+ 
+	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
+		try {
+			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
+		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	}
+	
 	@Override
 	public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
 		return hypA.foreignCoverage.equals(hypB.foreignCoverage);

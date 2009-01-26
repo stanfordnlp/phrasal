@@ -11,6 +11,12 @@ import mt.decoder.util.Hypothesis;
  */
 public class LinearDistorionRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 
+	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
+		try {
+			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
+		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	}
+	
 	/**
 	 * 
 	 * @param hyp

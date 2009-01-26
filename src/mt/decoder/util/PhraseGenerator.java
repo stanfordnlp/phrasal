@@ -11,11 +11,13 @@ import mt.base.Sequence;
  *
  * @param <TK>
  */
-public interface PhraseGenerator<TK> {
+public interface PhraseGenerator<TK> extends Cloneable {
 	/**
 	 * 
 	 * @param sequence
 	 * @return
 	 */
 	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, int translationId);
+	
+	public PhraseGenerator<TK> clone();
 }

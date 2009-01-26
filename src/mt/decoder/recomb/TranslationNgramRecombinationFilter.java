@@ -19,6 +19,12 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV> impleme
 	final List<LanguageModel<TK>> lgModels;
 	final boolean DETAILED_DEBUG = false;
 	
+	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
+		try {
+			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
+		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	}
+	
 	public TranslationNgramRecombinationFilter(List<LanguageModel<TK>> lgModels, int maxTokenHistoryExamined) {
 		if (maxTokenHistoryExamined <= 0) {
 			throw new RuntimeException(String.format(

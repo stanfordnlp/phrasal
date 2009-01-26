@@ -1,5 +1,7 @@
 package mt.decoder.recomb;
 
+import mt.decoder.util.Hypothesis;
+
 
 
 /**
@@ -9,6 +11,12 @@ package mt.decoder.recomb;
  * @param <S>
  */
 public class NoRecombination<S> implements RecombinationFilter<S> {
+	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
+		try {
+			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
+		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	}
+	
 	@Override
 	public boolean combinable(S hypA, S hypB) {
 		return false;

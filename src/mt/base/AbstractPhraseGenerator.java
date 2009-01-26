@@ -17,6 +17,12 @@ abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<
 	private final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	private final Scorer<FV> scorer;
 	
+	public AbstractPhraseGenerator<TK,FV> clone() {
+		try {
+			return (AbstractPhraseGenerator<TK,FV>)super.clone();
+		} catch (CloneNotSupportedException e ) { return null; /* will never happen */ } 
+	}
+	
 	@Override
 	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, int translationId) {
 		List<ConcreteTranslationOption<TK>> opts = new LinkedList<ConcreteTranslationOption<TK>>();

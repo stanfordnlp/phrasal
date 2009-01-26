@@ -4,7 +4,7 @@ package mt.decoder.recomb;
  * 
  * @author danielcer
  */
-public interface RecombinationFilter<S> {
+public interface RecombinationFilter<S> extends Cloneable {
 	/**
 	 * 
 	 * @param hypA
@@ -19,4 +19,6 @@ public interface RecombinationFilter<S> {
 	 * @return
 	 */
 	long recombinationHashCode(S hyp);
+	
+	public RecombinationFilter<S> clone();
 }
