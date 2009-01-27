@@ -65,7 +65,7 @@ public class PseudoMoses {
 	static public final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
 	static public final String EVAL_METRIC = "eval-metric";
 	static public final String LEARNING_METRIC = "learning-metric";
-	
+  static public final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
 	static public final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
 	static public final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
 	static final Set<String> REQUIRED_FIELDS = new HashSet<String>();
@@ -77,7 +77,7 @@ public class PseudoMoses {
 	static public double DEFAULT_LEARNING_RATE = 0.01;
 	static public double DEFAULT_MOMENTUM_TERM = 0.9;
 	static final int DEFAULT_LOCAL_PROCS = 1;
-
+  static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
 	static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 	
 
@@ -152,6 +152,7 @@ public class PseudoMoses {
 
 	double cTarget = 0.001;
 	double cRisky =  0.010;
+  String recomb_heuristic = DEFAULT_RECOMBINATION_HEURISTIC;
 	
 	public static enum LearningTarget {
 		NONE, REVERSE_LOSS_INFERENCE, BEST_ON_N_BEST_LIST, ONE_CLASS,
@@ -276,6 +277,10 @@ public class PseudoMoses {
 		if (config.containsKey(LOCAL_PROCS)) {
 			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
 		}
+
+                if (config.containsKey(RECOMBINATION_HEURISTIC)) {
+                  recomb_heuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
+                }
 		
 		
 		System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
@@ -680,7 +685,7 @@ public class PseudoMoses {
 
 		// Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
-    .factory(featurizer.getNestedFeaturizers(), RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL);
+      .factory(featurizer.getNestedFeaturizers(), recomb_heuristic);
 
 		// Create Search Heuristic
 		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
