@@ -884,7 +884,7 @@ public class PseudoMoses {
   		
   		for (int i = 0; i < local_procs; i++) {
   			try {
-  			 threads.get(i).wait();
+  			 threads.get(i).join();
   			} catch (InterruptedException e) {
   				System.err.printf("Interrupted while waiting for thread %d\n", i);
   			}
