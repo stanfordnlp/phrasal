@@ -93,12 +93,6 @@ public class SRILanguageModel implements LanguageModel<IString> {
     return order;
   }
 
-  /*public boolean releventPrefix(Sequence<IString> prefix) {
-    if (prefix.size() > order-1) return false;
-    // TODO
-    return true;
-  }*/
-
   public boolean releventPrefix(Sequence<IString> prefix) {
     if (prefix.size() > order-1) return false;
     int hist_size = prefix.size();
@@ -108,7 +102,6 @@ public class SRILanguageModel implements LanguageModel<IString> {
     srilm.unsigned_array_setitem(hist, i, id(prefix.get(i)));
     long depth = srilm.getBOW_depth(p_srilm, hist, hist_size);
     srilm.delete_unsigned_array(hist);
-    //System.err.printf("(3) prefix={{{%s}}} siz=%d depth=%d\n", prefix.toString(), prefix.size(), depth);
     return (depth == prefix.size());
   }
 

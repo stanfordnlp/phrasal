@@ -61,7 +61,7 @@ public class DumpCoNLL2007 {
       // Analyze Chinese dependency structure:
       List<String> zhH = new ArrayList<String>();
       List<String> zhD = new ArrayList<String>();
-      System.err.println("ZH TREE: "+chTree.toString());
+      //System.err.println("ZH TREE: "+chTree.toString());
       Sentence<TaggedWord> ctagged;
       {
         Tree indexedTree = chTree.deeperCopy(chTree.treeFactory(),
@@ -100,8 +100,8 @@ public class DumpCoNLL2007 {
       // 1  dep=car      head=sold  d=zh(car)   h=zh(sold)
 
       // Print English dependency structure:
-      for(Tree outputTree : enTrees) { // TODO: merge if more than 1
-        System.err.println("EN TREE: "+outputTree.toString());
+      for(Tree outputTree : enTrees) {
+        //System.err.println("EN TREE: "+outputTree.toString());
         Tree indexedTree = outputTree.deeperCopy(outputTree.treeFactory(),
                                                  CyclicCoreLabel.factory());
         //GrammaticalStructure gs = gsf.newGrammaticalStructure(outputTree);

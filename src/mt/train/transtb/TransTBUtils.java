@@ -141,7 +141,8 @@ public class TransTBUtils {
 
   static String wordAlignmentDir() {
     // For this to run on both NLP machine and my computer
-    String dirname = "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
+    String dirname = "/scr/nlp/data/ldc-processed/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
+    //String dirname = "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
     File dir = new File(dirname);
     if (!dir.exists()) {
       dirname = "C:\\cygwin\\home\\Pichuan Chang\\data\\LDC2006E93\\GALE-Y1Q4\\word_alignment\\data\\chinese\\nw\\";

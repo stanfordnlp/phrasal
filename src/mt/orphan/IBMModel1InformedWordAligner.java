@@ -18,7 +18,7 @@ import edu.stanford.nlp.util.IString;
  * @author Pi-Chuan Chang
  */
 
-public class IBMModel1InformedWordAligner implements WordAligner{
+public class IBMModel1InformedWordAligner implements WordAligner {
 
   IBMModel1 model1 = null;
 
