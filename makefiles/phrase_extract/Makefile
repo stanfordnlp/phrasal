@@ -10,10 +10,12 @@ JNLP=$(JAVANLP_HOME)
 SCRIPTS=$(JNLP)/projects/mt/scripts
 ESCRIPTS=$(JNLP)/projects/mt/external_scripts
 
-# Moses MERT:
+# Moses Paths
+# See below for configuration settings
 MOSESDIR=/u/nlp/packages/moses-2008-05-18
-MM=$(MOSESDIR)/trunk/scripts/training/mert-moses.pl
-MOSESDEC=$(MOSESDIR)/bin/moses 
+MOSESDEC=$(MOSESDIR)/bin/moses
+SCRIPTS_ROOTDIR=$(MOSESDIR)/trunk/scripts
+MM=$(SCRIPTS_ROOTDIR)/training/mert-moses.pl
 
 # Evaluation scripts:
 METEOR=/u/nlp/packages/meteor-0.6
@@ -89,6 +91,9 @@ ltables: $(LTABLES)
 # Java configuration:
 JAVA_PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE) 
 JAVA_PHRASAL_ARGS_N=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM) 
+
+# Moses Configuration
+MOSES_ARGS=$(LOCAL_MOSES_ARGS)
 
 #############################################
 # Evaluation:
@@ -173,23 +178,23 @@ $(DEVID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(DEVID).$(IE) $(D
 #############################################
 
 $(TESTID).%.1best: $(TESTID).%.ini $(TESTID).$(IE)
-	$(MOSESDEC) -config $< < $(TESTID).$(IE) > $@ 2> $@.log
+	$(MOSESDEC) $(MOSES_ARGS) -config $< < $(TESTID).$(IE) > $@ 2> $@.log
 
 $(TESTID).%.mbr: $(TESTID).%.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(TESTID).$(IE) > $@ 2> $@.log
+	$(MOSESDEC) $(MOSES_ARGS) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(TESTID).$(IE) > $@ 2> $@.log
 
 $(DEVID).%.mbr: $(DEVID).%.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(DEVID).$(IE) > $@ 2> $@.log
+	$(MOSESDEC) $(MOSES_ARGS) -config $< -mbr -mbr-size 200 -mbr-scale 1 < $(DEVID).$(IE) > $@ 2> $@.log
 
 #############################################
 # N-best output with Moses:
 #############################################
 
 $(DEVID).%.nbest: $(DEVID).%.mert/moses.ini $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(DEVID).$(IE) \
+	$(MOSESDEC) $(MOSES_ARGS) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(DEVID).$(IE) \
 	> $@.1best 2> $@.log
 $(TESTID).%.nbest: $(TESTID).%.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
-	$(MOSESDEC) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(TESTID).$(IE) \
+	$(MOSESDEC) $(MOSES_ARGS) -config $< -include-alignment-in-n-best -n-best-list $@ $N distinct < $(TESTID).$(IE) \
 	> $@.1best 2> $@.log
 
 #############################################
@@ -209,8 +214,8 @@ $(TESTID).%.phrasal.ini: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).flt_giga.l
 $(DEVID).%.mert/moses.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(IE)
 	mkdir $(DEVID).$(*F).mert
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
-	/u/nlp/packages/moses-2008-05-18/trunk/scripts/training/absolutize_moses_model.pl $(DEVID).$< > $(DEVID).$<.abs
-	$(MM) --nofilter-phrase-table --rootdir=$(MOSES)/scripts --working-dir=$(DEVID).$(*F).mert/ --closest \
+	$(SCRIPTS_ROOTDIR)/training/absolutize_moses_model.pl $(DEVID).$< > $(DEVID).$<.abs
+	$(MM) --nofilter-phrase-table --rootdir=$(SCRIPTS_ROOTDIR) --working-dir=$(DEVID).$(*F).mert/ --closest \
 	$(DEVID).$(IE) $(DEV_REF)/ref $(MOSESDEC) $(DEVID).$<.abs > $@.log 2> $@.err
 
 #############################################
