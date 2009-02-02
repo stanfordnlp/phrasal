@@ -312,6 +312,24 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       my $now = localtime time;
       print "Start time: ",$now,"\n";
      `java $java_flags mt.PseudoMoses $phrasal_flags -config-file $iter_decoder_ini < $input_text > $iter_trans 2>$iter_dlog`;
+      open fh, $iter_trans or die;
+      while (<fh>) {
+        chomp;
+        next if (not /^[0-9]+:/);
+        $id = $_; 
+        $sent = $_;
+        $id =~ s/:.*//; 
+        $sent =~ s/^[^:]*://; 
+        $lines[$id] = $sent;
+      }
+      close fh;
+      if (@lines) {
+        open fh, ">$iter_trans" or die;
+        for $line (@lines) {
+          print fh "$line\n";
+        }
+        close fh;
+      }
       $now = localtime time;
       print "End time: ",$now,"\n";
    
@@ -323,6 +341,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
      sleep 30; # nfs weirdness with slow writes?!?!
      unlink("$iter_nbest_list.gz");
      print "gziping $iter_nbest_list\n";
+     `sort -t '|' -n -s $iter_nbest_list > $iter_nbest_list.sort`;
+     `mv $iter_nbest_list.sort $iter_nbest_list`;
      `gzip $iter_nbest_list`;
    } else {
      print "skipping decoding for iter $iter ($first_active_iter)\n";
