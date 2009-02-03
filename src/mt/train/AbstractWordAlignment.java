@@ -77,7 +77,7 @@ public class AbstractWordAlignment implements WordAlignment {
    * @param words input sentence
    * @return output sentence
    */
-  public String[] preproc(String[] words) {
+  static public String[] preproc(String[] words) {
     return removeBadTokens(words);
   }
 
@@ -86,7 +86,7 @@ public class AbstractWordAlignment implements WordAlignment {
    * @param words input sentence
    * @return output sentence
    */
-  public String[] removeBadTokens(String[] words) {
+  static public String[] removeBadTokens(String[] words) {
     if(KEEP_BAD_TOKENS)
       return words;
     for(int i=0; i<words.length; ++i) {
