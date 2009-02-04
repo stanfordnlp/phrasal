@@ -3,34 +3,37 @@ package mt.discrimreorder;
 import java.util.*;
 
 public class TrainingExamples {
-  AlignmentMatrix matrix;
-  List<IndicesAndClass> examples;
+  List<TrainingExample> examples;
 
-  public TrainingExamples(AlignmentMatrix matrix) { 
-    this.matrix = matrix;
-    extractExamples();
+  enum ReorderingTypes { ordered, distorted }
+
+  public TrainingExamples(AlignmentMatrix matrix) {
+    examples = new ArrayList<TrainingExample>();
+    extractExamples(matrix);
   }
 
-  private void extractExamples() {
+  private void extractExamples(AlignmentMatrix matrix) {
     for(int ei = 0; ei < matrix.e.length-1; ei++) {
       int ei_prime = ei+1;
       Set<Integer> ei_fs = new TreeSet<Integer>();
       Set<Integer> eiprime_fs = new TreeSet<Integer>();
-      IndicesAndClass example = null;
+      TrainingExample example = null;
 
       for(int fi = 0; fi < matrix.f.length; fi++) {
         if (matrix.fe[fi][ei]) ei_fs.add(fi);
         if (matrix.fe[fi][ei_prime]) eiprime_fs.add(fi);
       }
+      if (ei_fs.size() == 0 || eiprime_fs.size() == 0) continue;
+
       int minf_ei = Collections.min(ei_fs);
       int maxf_ei = Collections.max(ei_fs);
       int minf_eiprime = Collections.min(eiprime_fs);
       int maxf_eiprime = Collections.max(eiprime_fs);
 
       if (maxf_ei < minf_eiprime) {
-        example = new IndicesAndClass(ei, maxf_ei, minf_eiprime, IndicesAndClass.ReorderingTypes.ordered);
+        example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered);
       } else if (maxf_eiprime < minf_ei) {
-        example = new IndicesAndClass(ei, minf_ei, maxf_eiprime, IndicesAndClass.ReorderingTypes.distorted);
+        example = new TrainingExample(ei, minf_ei, maxf_eiprime, ReorderingTypes.distorted);
       }
       if (example != null) examples.add(example);
     }
@@ -38,14 +41,13 @@ public class TrainingExamples {
   
 };
 
-class IndicesAndClass {
+class TrainingExample {
   int tgt_i = -1;
   int src_j = -1;
   int src_jprime = -1;
-  enum ReorderingTypes { ordered, distorted }
-  ReorderingTypes type = null;
+  TrainingExamples.ReorderingTypes type = null;
 
-  public IndicesAndClass(int tgt_i, int src_j, int src_jprime, ReorderingTypes type) {
+  public TrainingExample(int tgt_i, int src_j, int src_jprime, TrainingExamples.ReorderingTypes type) {
     this.tgt_i = tgt_i;
     this.src_j = src_j;
     this.src_jprime = src_jprime;

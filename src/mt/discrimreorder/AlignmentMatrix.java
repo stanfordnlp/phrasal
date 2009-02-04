@@ -16,6 +16,16 @@ public class AlignmentMatrix {
   String[] e;
   boolean[][] fe;
 
+  public String getSourceWord(int i) {
+    if (i < 0 || i >= f.length) return "";
+    return f[i];
+  }
+
+  public String getTargetWord(int i) {
+    if (i < 0 || i >= e.length) return "";
+    return e[i];
+  }
+
   private static String[] preproc(String[] words) {
     return AbstractWordAlignment.preproc(words);
   }

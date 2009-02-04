@@ -13,6 +13,29 @@ import mt.train.*;
  */
 
 public class DisplayUtils {
+  public static void printExamples(TrainingExamples examples) {
+    printExamples(examples, new PrintWriter(System.out, true));
+  }
+
+  public static void printExamples(TrainingExamples examples, PrintWriter pw) {
+    pw.println("<table>");
+    pw.println("<tr>");
+    pw.println("<td> i </td>");
+    pw.println("<td> j </td>");
+    pw.println("<td> j' </td>");
+    pw.println("<td> class </td>");
+    pw.println("</tr>");
+    for(TrainingExample example : examples.examples) {
+      pw.println("<tr>");
+      pw.printf("<td> %d </td>\n", example.tgt_i);
+      pw.printf("<td> %d </td>\n", example.src_j);
+      pw.printf("<td> %d </td>\n", example.src_jprime);
+      pw.printf("<td> %s </td>\n", example.type);
+      pw.println("</tr>");
+    }
+    pw.println("</table>");
+  }
+
   public static void printAlignmentMatrixHeader() {
     printAlignmentMatrixHeader(new PrintWriter(System.out, true));
   }
