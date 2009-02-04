@@ -33,8 +33,8 @@ public class AlignmentMatrix {
     for(String al : aStr.split("\\s+")) {
       String[] els = al.split("-");
       if(els.length == 2) {
-        int fpos = Integer.parseInt(els[1]);
-        int epos = Integer.parseInt(els[0]);
+        int fpos = Integer.parseInt(els[0]);
+        int epos = Integer.parseInt(els[1]);
         // adding one because of the boundary symbol
         ++fpos; ++epos;
         if(0 > fpos || fpos >= f.length)
@@ -53,6 +53,4 @@ public class AlignmentMatrix {
     fe[0][0] = true;
     fe[lastf][laste] = true;
   }
-
-
 }

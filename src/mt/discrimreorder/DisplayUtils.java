@@ -5,14 +5,14 @@ import java.io.*;
 import mt.train.*;
 
 /**
- * This class collects some utils that can be used on
- * {@link SymmetricalWordAlignment}
+ * This class collects utils that can display information in
+ * {@link AlignmentMatrix}.
  *
  * Some code are the same as in {@link mt.train.transtb.AlignmentUtils}
  * @author Pi-Chuan Chang
  */
 
-public class AlignmentUtils {
+public class DisplayUtils {
   public static void printAlignmentMatrixHeader() {
     printAlignmentMatrixHeader(new PrintWriter(System.out, true));
   }

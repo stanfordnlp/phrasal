@@ -24,9 +24,6 @@ public class ReorderingClassifier {
   static public final String E_CORPUS_OPT = "eCorpus";
   static public final String A_CORPUS_OPT = "align";
 
-  //static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
-
-
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
@@ -38,12 +35,6 @@ public class ReorderingClassifier {
         E_CORPUS_OPT,
         A_CORPUS_OPT
         ));
-    /*
-    OPTIONAL_OPTS.addAll(
-      Arrays.asList(
-      ADD_BOUNDARY_MARKERS_OPT
-        ));
-    */
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
@@ -96,6 +87,9 @@ public class ReorderingClassifier {
         aReader = IOTools.getReaderFromFile(align);
 
       int lineNb=0;
+
+      DisplayUtils.printAlignmentMatrixHeader();
+
       for (String fLine;; ++lineNb) {
         fLine = fReader.readLine();
         boolean done = (fLine == null);
@@ -122,11 +116,15 @@ public class ReorderingClassifier {
           continue;
 
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
+        
+        DisplayUtils.printAlignmentMatrix(sent);
 
-        AlignmentUtils.printAlignmentMatrixHeader();
-        AlignmentUtils.printAlignmentMatrix(sent);
-        AlignmentUtils.printAlignmentMatrixBottom();
+        //TrainingExamples exs = new TrainingExamples(sent);
       }
+
+      DisplayUtils.printAlignmentMatrixBottom();
+      
+
     } catch(IOException e) {
       e.printStackTrace();
     }
