@@ -3,7 +3,9 @@ package mt.discrimreorder;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.IntCounter;
+import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.classify.*;
 
 import java.util.*;
 import java.io.*;
@@ -23,6 +25,8 @@ import mt.train.*;
  */
 
 public class ReorderingClassifier {
+  static final boolean DEBUG = false;
+
   static public final String F_CORPUS_OPT = "fCorpus";
   static public final String E_CORPUS_OPT = "eCorpus";
   static public final String A_CORPUS_OPT = "align";
@@ -82,11 +86,19 @@ public class ReorderingClassifier {
   void extractFromAlignedData() {
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
-    Counter<TrainingExamples.ReorderingTypes> typeCounter = 
-      new IntCounter<TrainingExamples.ReorderingTypes>();
+    TwoDimensionalCounter<String,TrainingExamples.ReorderingTypes> typeCounter =
+      new TwoDimensionalCounter<String,TrainingExamples.ReorderingTypes>();
 
-    List<Datum<String,TrainingExamples.ReorderingTypes>> allData 
+
+    GeneralDataset trainDataset = new Dataset();
+    List<Datum<String,TrainingExamples.ReorderingTypes>> trainData
       = new ArrayList<Datum<String,TrainingExamples.ReorderingTypes>>();
+    List<Datum<String,TrainingExamples.ReorderingTypes>> devData
+      = new ArrayList<Datum<String,TrainingExamples.ReorderingTypes>>();
+    List<Datum<String,TrainingExamples.ReorderingTypes>> testData
+      = new ArrayList<Datum<String,TrainingExamples.ReorderingTypes>>();
+
+
 
     try {
       LineNumberReader
@@ -96,7 +108,7 @@ public class ReorderingClassifier {
 
       int lineNb=0;
 
-      //DisplayUtils.printAlignmentMatrixHeader();
+      if (DEBUG) DisplayUtils.printAlignmentMatrixHeader();
 
       for (String fLine;; ++lineNb) {
         fLine = fReader.readLine();
@@ -125,31 +137,49 @@ public class ReorderingClassifier {
 
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
         
-        //DisplayUtils.printAlignmentMatrix(sent);
+        if (DEBUG) DisplayUtils.printAlignmentMatrix(sent);
 
         TrainingExamples exs = new TrainingExamples(sent);
         FeatureExtractor extractor = new WordFeatureExtractor();
 
         for(TrainingExample ex : exs.examples) {
-          // keep stats on types
-          typeCounter.incrementCount(ex.type);
 
           // extract features, add datum
           List<String> features = extractor.extractFeatures(sent, ex);
           Datum<String,TrainingExamples.ReorderingTypes> d
             = new BasicDatum(features, ex.type);
-          allData.add(d);
+          
+          // split:
+          // train 80%, dev 10%, test 10%
+          if (lineNb % 10 == 0) {
+            devData.add(d);
+            typeCounter.incrementCount("dev", ex.type);
+          } else if (lineNb % 10 == 1) {
+            testData.add(d);
+            typeCounter.incrementCount("test", ex.type);
+          } else {
+            trainDataset.add(d);
+            trainData.add(d);
+            typeCounter.incrementCount("train", ex.type);
+          }
         }
 
-        //DisplayUtils.printExamples(exs);
+        if (DEBUG) DisplayUtils.printExamples(exs);
       }
-      //DisplayUtils.printAlignmentMatrixBottom();
+      if (DEBUG) DisplayUtils.printAlignmentMatrixBottom();
       
 
     } catch(IOException e) {
       e.printStackTrace();
     }
     System.err.println(typeCounter);
+    System.err.println("trainData.size()="+trainData.size());
+    System.err.println("devData.size()="+devData.size());
+    System.err.println("testData.size()="+testData.size());
+
+    // Train the classifier:
+    
+
   }
 
   static void usage() {
