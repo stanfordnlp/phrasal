@@ -1,8 +1,6 @@
 package mt;
 
 import mt.base.RichTranslation;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
 
 import java.io.*;
 import java.util.List;

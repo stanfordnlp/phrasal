@@ -21,65 +21,66 @@ import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class PseudoMoses {
-	static public final String TRANSLATION_TABLE_OPT = "ttable-file";
-	static public final String LANGUAGE_MODEL_OPT = "lmodel-file";
-	static public final String OPTION_LIMIT_OPT = "ttable-limit";
-	static public final String DISTORTION_WT_OPT = "weight-d";
-	static public final String LANGUAGE_MODEL_WT_OPT = "weight-l";
-	static public final String TRANSLATION_MODEL_WT_OPT = "weight-t";
-	static public final String WORD_PENALTY_WT_OPT = "weight-w";
-	static public final String INPUT_FACTORS_OPT = "input-factors";
-	static public final String FACTOR_DELIM_OPT = "factor-delimiter";
-	static public final String MAPPING_OPT = "mapping";
-	static public final String NBEST_LIST_OPT = "n-best-list";
-  static public final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
-  static public final String CONSTRAIN_TO_REFS = "constrain-to-refs";
-	static public final String PREFERED_REF_STRUCTURE = "use-prefered-ref-structure";
-	static public final String LEARN_WEIGHTS_USING_REFS = "learn-weights-using-refs";
-	static public final String PREFERED_REF_INTERNAL_STATE = "prefered-internal-state";
-	static public final String LEARNING_ALGORITHM = "learning-algorithm";
-	static public final String LEARNING_TARGET = "learning-target";
-	static public final String SAVE_WEIGHTS = "save-weights";
-	static public final String BEAM_SIZE = "stack";
-	static public final String DISTORTION_FILE = "distortion-file";
-	static public final String WEIGHTS_FILE = "weights-file";
-  static public final String CONFIG_FILE = "config-file";
-	static public final String USE_DISCRIMINATIVE_LM = "discriminative-lm";
-	static public final String USE_DISCRIMINATIVE_TM = "discriminative-tm";
-	static public final String MAX_SENTENCE_LENGTH = "max-sentence-length";
-	static public final String MIN_SENTENCE_LENGTH = "min-sentence-length";
-	static public final String FORCE_DECODE_ONLY = "force-decode-only";
-	static public final String DISTORTION_LIMIT = "distortion-limit";
-	static public final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
-	static public final String INLINE_WEIGHTS = "inline-weights";
-	static public final String LEARNING_RATE = "lrate";
-	static public final String MOMENTUM = "momentum";
-	static public final String CONSTRAIN_MANUAL_WTS = "constrain-manual-wts";
-	static public final String LOCAL_PROCS = "localprocs";
-	static public final String ITER_LIMIT = "iter-limit";
-	static public final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
-	static public final String EVAL_METRIC = "eval-metric";
-	static public final String LEARNING_METRIC = "learning-metric";
-  static public final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
-	static public final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
-	static public final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
-	static final Set<String> REQUIRED_FIELDS = new HashSet<String>();
-	static final Set<String> OPTIONAL_FIELDS = new HashSet<String>();
-	static final Set<String> IGNORED_FIELDS = new HashSet<String>();
-	static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
+
+  public static final String TRANSLATION_TABLE_OPT = "ttable-file";
+  public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
+  public static final String OPTION_LIMIT_OPT = "ttable-limit";
+  public static final String DISTORTION_WT_OPT = "weight-d";
+  public static final String LANGUAGE_MODEL_WT_OPT = "weight-l";
+  public static final String TRANSLATION_MODEL_WT_OPT = "weight-t";
+  public static final String WORD_PENALTY_WT_OPT = "weight-w";
+  public static final String INPUT_FACTORS_OPT = "input-factors";
+  public static final String FACTOR_DELIM_OPT = "factor-delimiter";
+  public static final String MAPPING_OPT = "mapping";
+  public static final String NBEST_LIST_OPT = "n-best-list";
+  public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
+  public static final String CONSTRAIN_TO_REFS = "constrain-to-refs";
+  public static final String PREFERED_REF_STRUCTURE = "use-prefered-ref-structure";
+  public static final String LEARN_WEIGHTS_USING_REFS = "learn-weights-using-refs";
+  public static final String PREFERED_REF_INTERNAL_STATE = "prefered-internal-state";
+  public static final String LEARNING_ALGORITHM = "learning-algorithm";
+  public static final String LEARNING_TARGET = "learning-target";
+  public static final String SAVE_WEIGHTS = "save-weights";
+  public static final String BEAM_SIZE = "stack";
+  public static final String DISTORTION_FILE = "distortion-file";
+  public static final String WEIGHTS_FILE = "weights-file";
+  public static final String CONFIG_FILE = "config-file";
+  public static final String USE_DISCRIMINATIVE_LM = "discriminative-lm";
+  public static final String USE_DISCRIMINATIVE_TM = "discriminative-tm";
+  public static final String MAX_SENTENCE_LENGTH = "max-sentence-length";
+  public static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
+  public static final String FORCE_DECODE_ONLY = "force-decode-only";
+  public static final String DISTORTION_LIMIT = "distortion-limit";
+  public static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
+  public static final String INLINE_WEIGHTS = "inline-weights";
+  public static final String LEARNING_RATE = "lrate";
+  public static final String MOMENTUM = "momentum";
+  public static final String CONSTRAIN_MANUAL_WTS = "constrain-manual-wts";
+  public static final String LOCAL_PROCS = "localprocs";
+  public static final String ITER_LIMIT = "iter-limit";
+  public static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
+  public static final String EVAL_METRIC = "eval-metric";
+  public static final String LEARNING_METRIC = "learning-metric";
+  public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
+  public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
+  public static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
+  static final Set<String> REQUIRED_FIELDS = new HashSet<String>();
+  static final Set<String> OPTIONAL_FIELDS = new HashSet<String>();
+  static final Set<String> IGNORED_FIELDS = new HashSet<String>();
+  static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
 
 
-	static public double DEFAULT_LEARNING_RATE = 0.01;
-	static public double DEFAULT_MOMENTUM_TERM = 0.9;
-	static final int DEFAULT_LOCAL_PROCS = 1;
+  public static double DEFAULT_LEARNING_RATE = 0.01;
+  public static double DEFAULT_MOMENTUM_TERM = 0.9;
+  static final int DEFAULT_LOCAL_PROCS = 1;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
-	static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
-	
+  static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
+
 
 	static {
 		REQUIRED_FIELDS.addAll(Arrays.asList(new String[] { TRANSLATION_TABLE_OPT,
@@ -102,8 +103,8 @@ public class PseudoMoses {
 		ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
 		ALL_RECOGNIZED_FIELDS.addAll(IGNORED_FIELDS);
 	}
-	
-	static public final Map<String,Double> IDEALIZED_TARGETS = new HashMap<String,Double>();
+
+	public static final Map<String,Double> IDEALIZED_TARGETS = new HashMap<String,Double>();
 	static {
 		IDEALIZED_TARGETS.put("TM:lex(f|t)", 0.0);
 		IDEALIZED_TARGETS.put("TM:lex(t|f)", 0.0);
@@ -121,9 +122,9 @@ public class PseudoMoses {
     IDEALIZED_TARGETS.put("SentenceBoundary", 0.0);
 	}
 
-	static public final String EVALUE_LEARNING = "evalue";
-	static public final String DEFAULT_LEARNING_ALGORITHM = EVALUE_LEARNING;
-	static public final String DEFAULT_SAVE_WEIGHTS = "unname_model_"
+	public static final String EVALUE_LEARNING = "evalue";
+	public static final String DEFAULT_LEARNING_ALGORITHM = EVALUE_LEARNING;
+	public static final String DEFAULT_SAVE_WEIGHTS = "unname_model_"
 		+ System.currentTimeMillis();
 
 	List<Inferer<IString, String>> inferers;
@@ -147,17 +148,17 @@ public class PseudoMoses {
 	NBestListContainer<IString, String> preferedInternalState;
 	int maxSentenceSize = Integer.MAX_VALUE;
 	int minSentenceSize = 0;
-	
+
 	double learningRate = DEFAULT_LEARNING_RATE;
 	double momentumTerm = DEFAULT_MOMENTUM_TERM;
 
 	double cTarget = 0.001;
 	double cRisky =  0.010;
   String recomb_heuristic = DEFAULT_RECOMBINATION_HEURISTIC;
-	
+
 	public static enum LearningTarget {
 		NONE, REVERSE_LOSS_INFERENCE, BEST_ON_N_BEST_LIST, ONE_CLASS,
-	};
+	}
 
 	public static LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.REVERSE_LOSS_INFERENCE;
 	LearningTarget learningTarget = DEFAULT_LEARNING_TARGET;
@@ -165,7 +166,7 @@ public class PseudoMoses {
 	static final int DEBUG_LEVEL = 0;
 	EvaluationMetric<IString,String> learningMetric = null;
 	EvaluationMetric<IString,String> evalMetric = null;
-	
+
 	public static final Map<String, LearningTarget> configToLearningTarget = new HashMap<String, LearningTarget>();
 	static {
 		configToLearningTarget.put("best-on-n-best",
@@ -192,7 +193,7 @@ public class PseudoMoses {
 								reader.getLineNumber(), line));
 			}
 			String nextArgLine = line;
-			
+
 			while (nextArgLine != null) {
   			String key = line.substring(1, nextArgLine.length() - 1);
   			nextArgLine = null;
@@ -212,7 +213,7 @@ public class PseudoMoses {
   					entries.add(field);
   				}
   			}
-  
+
   			if (entries.size() != 0)
   				config.put(key, entries);
   		}
@@ -266,15 +267,15 @@ public class PseudoMoses {
 		if (config.containsKey(CONSTRAIN_MANUAL_WTS)) {
 			constrainManualWeights = Boolean.parseBoolean(config.get(CONSTRAIN_MANUAL_WTS).get(0));
 		}
-		
+
 		if (config.containsKey(LEARNING_RATE)) {
 			learningRate = Double.parseDouble(config.get(LEARNING_RATE).get(0));
 		}
-		
+
 		if (config.containsKey(MOMENTUM)) {
-			momentumTerm = Double.parseDouble(config.get(MOMENTUM).get(0));			
+			momentumTerm = Double.parseDouble(config.get(MOMENTUM).get(0));
 		}
-		
+
 		if (config.containsKey(LOCAL_PROCS)) {
 			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
 		}
@@ -282,10 +283,10 @@ public class PseudoMoses {
                 if (config.containsKey(RECOMBINATION_HEURISTIC)) {
                   recomb_heuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
                 }
-		
-		
+
+
 		System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
-		
+
 		if (config.containsKey(CONSTRAIN_TO_REFS)) {
 			constrainedToRefs = Metrics.readReferences(config.get(CONSTRAIN_TO_REFS)
 					.toArray(new String[0]));
@@ -327,7 +328,7 @@ public class PseudoMoses {
 			if (strDistortionFile.size() == 2) {
 				modelType = strDistortionFile.get(0);
 				modelFilename = strDistortionFile.get(1);
-				
+
 			} else if (strDistortionFile.size() == 4) {
 				modelType = strDistortionFile.get(1);
 				modelFilename = strDistortionFile.get(3);
@@ -639,9 +640,9 @@ public class PseudoMoses {
 					featureName += ":" + fields[fi];
 				weights.put(featureName, Double.valueOf(fields[fields.length - 1]));
 			}
-			
+
 			if (learningAlgorithm.equals(EVALUE_LEARNING)) {
-				scorer = new EValueLearningScorer(weights, learningRate, momentumTerm); 
+				scorer = new EValueLearningScorer(weights, learningRate, momentumTerm);
 			}else {
 				throw new RuntimeException(String.format(
 						"Unrecognized learning algorithm: %s", learningAlgorithm));
@@ -705,15 +706,15 @@ public class PseudoMoses {
   		infererBuilder.setSearchHeuristic(heuristic.clone());
   		infererBuilder.setRecombinationFilter(filter.clone());
   		infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
-  		
+
   		if (distortionLimit != -1) {
   			infererBuilder.setMaxDistortion(distortionLimit);
   		}
-  		
+
   		if (config.containsKey(USE_ITG_CONSTRAINTS)) {
   			infererBuilder.useITGConstraints(Boolean.parseBoolean(config.get(USE_ITG_CONSTRAINTS).get(0)));
   		}
-  
+
       if (config.containsKey(BEAM_SIZE)) {
   			try {
   				int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
@@ -725,9 +726,9 @@ public class PseudoMoses {
   								"Beam size %s, as specified by argument %s, can not be parsed as an integer value\n",
   								config.get(BEAM_SIZE).get(0), BEAM_SIZE));
   			}
-  
+
   		}
-  
+
 		  inferers.add(infererBuilder.build());
     }
 
@@ -764,11 +765,11 @@ public class PseudoMoses {
 		}
 	}
 
-	private String makePair(String label, String value) {
+	private static String makePair(String label, String value) {
 		return String.format("%s:%s", label, value);
 	}
 
-	double computeDelta(double[] oldWeights, double[] newWeights) {
+	private static double computeDelta(double[] oldWeights, double[] newWeights) {
 		double ssdiff = 0;
 		int max = Math.min(oldWeights.length, newWeights.length);
 		for (int i = 0; i < max; i++) {
@@ -786,17 +787,17 @@ public class PseudoMoses {
 	}
 
 	private class ProcDecode implements Runnable {
-		
+
 	  int infererid;
-	  private List<String> lines; 
+	  private List<String> lines;
 	  private List<Integer> ids;
-	  
+
     public ProcDecode(int infererid, List<String> lines, List<Integer> ids) {
        this.infererid = infererid;
        this.lines = lines;
        this.ids = ids;
     }
-    
+
 		@Override
 		public void run()  {
 			int len = ids.size();
@@ -804,26 +805,26 @@ public class PseudoMoses {
   			for (int i = 0; i < len; i++) {
   				String[] tokens = lines.get(i).split("\\s+");
   				RichTranslation<IString, String> translation = decodeOnly(tokens, ids.get(i), ids.get(i) -1, infererid);
-  				
+
   				if (translation != null) {
   	  				// notice we reproduce the lameness of moses in that an extra space is
   	  				// inserted after each translation
   					  synchronized(System.out) { System.out.printf("%d:%s \n", ids.get(i), translation.translation); }
-  					  synchronized(System.err) { 
+  					  synchronized(System.err) {
   	  				System.err.printf("Final Translation: %s\n", translation.translation);
   	  				System.err.printf("Score: %f\n", translation.score);
   					  }
   	  			} else {
   	  				synchronized(System.out) { System.out.printf("<<<decoder failure %d>>>\n", ids.get(i)); }
-  	  			}	
+  	  			}
   				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.exit(-1);
 			}
-		}		
+		}
 	}
-	
+
 	private void decodeFromConsole() throws IOException {
 
 		System.err.println("Entering main translation loop");
@@ -846,10 +847,10 @@ public class PseudoMoses {
   						minSentenceSize);
   				continue;
   			}
-  			
+
   			int lineNumber = reader.getLineNumber();
   			RichTranslation<IString, String> translation = decodeOnly(tokens, translationId, lineNumber, 0);
-  			
+
   			// display results
   			if (translation != null) {
   				// notice we reproduce the lameness of moses in that an extra space is
@@ -862,26 +863,26 @@ public class PseudoMoses {
   			}
   		}
     } else {
-    	
+
       List<List<String>> lines = new ArrayList<List<String>>();
       List<List<Integer>> ids = new ArrayList<List<Integer>>();
-      
+
       for (int i = 0; i < local_procs; i++) {
       	lines.add(new ArrayList<String>());
       	ids.add(new ArrayList<Integer>());
       }
-      
+
   		for (String line; (line = reader.readLine()) != null; translationId++) {
   		    	lines.get(translationId % local_procs).add(line);
   		    	ids.get(translationId % local_procs).add(translationId);
   		}
-      
+
   		List<Thread> threads = new ArrayList<Thread>();
   		for (int i = 0; i < local_procs; i++) {
   			threads.add(new Thread(new ProcDecode(i, lines.get(i), ids.get(i))));
   			threads.get(i).start();
   		}
-  		
+
   		for (int i = 0; i < local_procs; i++) {
   			try {
   			 threads.get(i).join();
@@ -889,7 +890,7 @@ public class PseudoMoses {
   				System.err.printf("Interrupted while waiting for thread %d\n", i);
   			}
   		}
-    	
+
     }
 
     if (nbestListWriter != null) {
@@ -898,7 +899,8 @@ public class PseudoMoses {
 		}
   }
 
-	public RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber, int procid) throws IOException {
+
+  public RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber, int procid) throws IOException {
 
     Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
       .toIStringArray(tokens));
@@ -922,12 +924,18 @@ public class PseudoMoses {
           nbestListSize);
       if (translations != null) {
         translation = translations.get(0);
-        synchronized(nbestListWriter) {
-          for (RichTranslation<IString, String> tran : translations) {
-            nbestListWriter.append(generateMosesNBestList ?
-            tran.nbestToMosesString(translationId) :
-            tran.nbestToString(translationId)).append("\n");
+
+        StringBuilder sb = new StringBuilder(translations.size() * 500); // initialize it as reasonably large
+        for (RichTranslation<IString, String> tran : translations) {
+          if (generateMosesNBestList) {
+            tran.nbestToMosesStringBuilder(translationId, sb);
+          } else {
+            tran.nbestToStringBuilder(translationId, sb);
           }
+          sb.append('\n');
+        }
+        synchronized(nbestListWriter) {
+          nbestListWriter.append(sb.toString());
         }
       } else {
         translation = null;
@@ -947,15 +955,16 @@ public class PseudoMoses {
       } else {
         System.err.println("No best Translation: <<<decoder failure>>>");
       }
-  
+
       System.err.printf("Time: %f seconds\n", translationTime / (1000.0));
     }
-    
-		return translation;
-	}
 
-	static public int MAX_LEARN_NBEST_ITER = 100;
-	static public int LEARNING_NBEST_LIST_SIZE = 1000;
+    return translation;
+  }
+
+
+        public static int MAX_LEARN_NBEST_ITER = 100;
+	public static int LEARNING_NBEST_LIST_SIZE = 1000;
 
 	List<ScoredFeaturizedTranslation<IString, String>> filterLowScoring(
 			List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
@@ -1014,7 +1023,7 @@ public class PseudoMoses {
 		double cutValueBottom = scores[cutPointBottom];
 		double cutValueTop = scores[cutPointTop];
 		int filterCnt = 0;
-		
+
 		for (ScoredFeaturizedTranslation<IString, String> tran : oracleEvalTranslations) {
 			if (tran == null) {
 				filtered.add(null);
@@ -1032,13 +1041,12 @@ public class PseudoMoses {
 				filterCnt);
 		return filtered;
 	}
-	
+
 
 	@SuppressWarnings("unchecked")
 	private void learnWeights(String inputFilename) throws IOException {
-		BufferedWriter nbestListWriter;
 
-		double maxEvalScore = Double.NaN;
+          double maxEvalScore = Double.NaN;
 		NBestListContainer<IString, String> nbestLists = null;
 
 		int chunkSize = (learningAlgorithm.equals(EVALUE_LEARNING)? 1 : 5);
@@ -1048,17 +1056,17 @@ public class PseudoMoses {
 		for (int nbestIter = 0; nbestIter < MAX_LEARN_NBEST_ITER; nbestIter++) {
 			IncrementalEvaluationMetric<IString, String> actualPostIncEval = evalMetric.getIncrementalMetric();
 			IncrementalEvaluationMetric<IString, String> actualPreIncEval  = evalMetric.getIncrementalMetric();
-			
+
 			double initialEvalSum = 0;
 			double postEvalSum = 0;
 			int evalCount = 0;
 			boolean doneStream = false;
 			reader = new LineNumberReader(new InputStreamReader(new FileInputStream(inputFilename), "UTF-8"));
 			translationId = 0;
-			
+
 			double initialCScore = 0;
 			for (int chunk = 0; !doneStream; chunk++) {
-							
+
 				String nbestFilename;
 				if (!learningAlgorithm.equals(EVALUE_LEARNING)) {
 					nbestFilename = String.format("%s.nbest.c%d.%d", saveWeights,
@@ -1074,11 +1082,11 @@ public class PseudoMoses {
 				System.err.printf("Generating n-best list: %s\n", nbestFilename);
 
 				// if (nbestIter < -1) {
-				nbestListWriter = new BufferedWriter(new FileWriter(nbestFilename));
+                          BufferedWriter nbestListWriter = new BufferedWriter(new FileWriter(nbestFilename));
 
-				int skipped = 0;
+                          int skipped = 0;
 				int included = 0;
-			
+
 				long decodingTime = -System.currentTimeMillis();
 				int foreignTokensTranslated = 0;
 				for (String line; included < chunkSize; translationId++, included++) {
@@ -1118,8 +1126,8 @@ public class PseudoMoses {
 
 					List<RichTranslation<IString, String>> translations = new ArrayList(LEARNING_NBEST_LIST_SIZE);
 					List<List<RichTranslation<IString, String>>> nbestNBad = null;
-					
-					
+
+
 					if (nbestIter == 0 && !learningAlgorithm.equals(EVALUE_LEARNING)) {
 						scorer.setWeightMultipliers(1.0, 0.0);
 						System.err.printf("Doing Manual Weight Decode.\n");
@@ -1128,14 +1136,14 @@ public class PseudoMoses {
 						translations.addAll(nbestNBad.get(0));
 						translations.addAll(nbestNBad.get(1));
 						scorer.setWeightMultipliers(0.0, 1.0);
-					} 
+					}
 
 					if (!(nbestIter == 0 && chunk == 0) || learningAlgorithm.equals(EVALUE_LEARNING)) {
 					nbestNBad = ((AbstractBeamInferer) inferers.get(0))
 					.nbestNBad(foreign, reader.getLineNumber() - 1, null,
 							LEARNING_NBEST_LIST_SIZE, 0);
 					}
-			
+
 					translations.addAll(nbestNBad.get(0));
 					translations.addAll(nbestNBad.get(1));
 
@@ -1155,11 +1163,11 @@ public class PseudoMoses {
 					}
 				}
 				decodingTime += System.currentTimeMillis();
-				
+
 				if (included == 0)
 					continue;
 				nbestListWriter.close();
-				
+
 				if (skipped == translationId) {
 					throw new RuntimeException(String
 							.format("Error: all foreign sentences skipped"));
@@ -1212,7 +1220,7 @@ public class PseudoMoses {
 				System.err.printf(
 						"Argmax cScore: %e N-best argmin cScore: %e (diff %f)\n",
 						scoreSum1Best, scoreSum1Worst, scoreSumDiff);
-				
+
 				EvaluationMetric<IString, String> bestScoreMetric = new MarginRescaleEvaluationMetric(
 						null, scorer);
 
@@ -1224,48 +1232,48 @@ public class PseudoMoses {
 				System.err.printf("Finding best scoring translations over cummulative n-best list...\n");
 				List<ScoredFeaturizedTranslation<IString, String>> bestScoreTranslationsInit = bestScoreSearch.maximize(nbestLists);
 				System.err.printf("Done.\n");
-				
+
 				IncrementalEvaluationMetric<IString, String> initialEvalMetric = evalMetric.getIncrementalMetric();
 				{
 					int tI = 0;
 					initialCScore = 0.0;
 					int posT = -1;
-					for (ScoredFeaturizedTranslation<IString, String> trans : bestScoreTranslationsInit) { posT++;						
-						if (actualPreIncEval.size() <= posT) { 
+					for (ScoredFeaturizedTranslation<IString, String> trans : bestScoreTranslationsInit) { posT++;
+						if (actualPreIncEval.size() <= posT) {
 							actualPreIncEval.add(trans);
 						} else {
 							if (trans != null) actualPreIncEval.replace(posT, trans);
 						}
-						
+
 						initialEvalMetric.add(trans);
 						if (trans != null) initialCScore += scorer.getIncrementalScore(trans.features);
 						tI++;
 					}
 				}
-				
+
 				System.err.printf("Finding oracle translations over cummulative n-best list....\n");
 				List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations = oracleEvalSearch.maximize(nbestLists);
 				System.err.printf("Done.\n");
 				IncrementalEvaluationMetric<IString, String> oracleEvalMetric = evalMetric.getIncrementalMetric();
-				
+
 				for (ScoredFeaturizedTranslation<IString, String> trans : oracleEvalTranslations) {
 					//System.err.printf("%s\n", (trans == null ? trans : trans.translation));
 					oracleEvalMetric.add(trans);
 				}
 				double oracleScore = oracleEvalMetric.score();
 
-				
-									
+
+
 				initialEvalSum += initialEvalMetric.score();
 				evalCount++;
 				System.err.printf(
 						"> Init eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n", nbestIter, chunk, 100
 						* initialEvalMetric.score(), initialCScore, 100 * oracleScore, 100*initialEvalSum/evalCount, actualPreIncEval.score()*100);
-				
+
 				scorer.setWeightMultipliers(0.0, 1.0);
 
 				long learningTime = -System.currentTimeMillis();
-				
+
 				if (learningAlgorithm.equals(EVALUE_LEARNING)) {
 					EValueLearningScorer eScorer = (EValueLearningScorer)scorer;
 					int transIdx = -1;
@@ -1277,15 +1285,15 @@ public class PseudoMoses {
 						}
 						incEvalMetric.add(null);
 					}
-					
+
 					//nbestLists.nbestLists();
 				  List<? extends ScoredFeaturizedTranslation<IString, String>> sfTrans = nbestLists.nbestLists().get(transIdx);
 				  List<List<FeatureValue<String>>> featureVectors = new ArrayList<List<FeatureValue<String>>>(sfTrans.size());
-				  
+
 				 /*  { int tI = -1;
 				  for (ScoredFeaturizedTranslation<IString, String> sfTran : sfTrans) { tI++;
 				  	double score = -((TERMetric)learningMetric).calcTER(sfTran, transIdx);
-				  	if (score > trueOracle) { trueOracle = score; loc = tI; } 
+				  	if (score > trueOracle) { trueOracle = score; loc = tI; }
 				  }
 				  }
 				  System.err.printf("true oracle: %f (%d)\n", trueOracle, loc); */
@@ -1297,7 +1305,7 @@ public class PseudoMoses {
 				  	us[featureVectors.size()] = incEvalMetric.score();
 				  	//System.err.printf("%d: %f\n", featureVectors.size(), us[featureVectors.size()]);
 				  	featureVectors.add(sfTran.features);
-				  }	
+				  }
 				  if (DEBUG_LEVEL >= 2) {
 				  	System.err.printf("Old Weights\n");
 				  	eScorer.displayWts();
@@ -1306,26 +1314,26 @@ public class PseudoMoses {
 				  eScorer.wtUpdate(featureVectors, us, nbestIter+1);
 				  double objPost = eScorer.objectiveValue(featureVectors, us);
 				  System.err.printf("Obj Delta: %e (%e-%e)\n", objPost - objInit, objPost, objInit);
-				  
+
 				  if (DEBUG_LEVEL >= 2) {
 				  	System.err.printf("New Weights\n");
 				  	eScorer.displayWts();
 				  }
 				}
-				
+
 				learningTime += System.currentTimeMillis();
-				
+
 				List<ScoredFeaturizedTranslation<IString, String>> bestScoreTranslations = bestScoreSearch
 				.maximize(nbestLists);
 
 				IncrementalEvaluationMetric<IString, String> bestScoringEvalMetric = evalMetric.getIncrementalMetric();
-				
+
 				List<FeatureValue<String>> allSelectedFeatures = new LinkedList<FeatureValue<String>>();
 				double finalCScore = 0;
 				int posBT = -1;
 				for (ScoredFeaturizedTranslation<IString, String> trans : bestScoreTranslations) { posBT++;
-				  
-					if (actualPostIncEval.size() <= posBT) { 
+
+					if (actualPostIncEval.size() <= posBT) {
 						actualPostIncEval.add(trans);
 					} else {
 						if (trans != null) actualPostIncEval.replace(posBT, trans);
@@ -1335,7 +1343,7 @@ public class PseudoMoses {
 						allSelectedFeatures.addAll(trans.features);
 					}
 				}
-				
+
 				postEvalSum += bestScoringEvalMetric.score();
 				System.err.printf(
 						"> Post eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n", nbestIter, chunk, 100
@@ -1348,12 +1356,12 @@ public class PseudoMoses {
 					System.err.printf("Final Weights for nbestitr: %d chunk: %d", nbestIter, chunk);
 					scorer.displayWeights();
 				}
-			
+
 			}
 			scorer.saveWeights(String.format("%s.nbestitr_%d.final.wts", saveWeights, nbestIter));
 		  System.err.printf(">> %d: Avg eS: %.2f~>%.2f  Actl eS: %.2f~>%.2f (diff: %.3f)\n", nbestIter, 100*initialEvalSum/evalCount,
 		  		100*postEvalSum/evalCount, actualPreIncEval.score()*100, actualPostIncEval.score()*100,
-		  		actualPostIncEval.score()*100 - actualPreIncEval.score()*100);	
+		  		actualPostIncEval.score()*100 - actualPreIncEval.score()*100);
 		}
 	}
 
@@ -1381,7 +1389,7 @@ public class PseudoMoses {
 		}
 	}
 
-	static public void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {
 
     if(args.length < 1) {
       System.err.println("Usage:\n\tjava ...PseudoMoses (pharaoh.ini)");
@@ -1390,7 +1398,7 @@ public class PseudoMoses {
 
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0]) : readArgs(args);
     PseudoMoses p = new PseudoMoses(config);
-    
+
 		p.executiveLoop();
 
 	}
