@@ -204,10 +204,13 @@ public class ReorderingClassifier {
     System.out.println(trainDataset.toSummaryStatistics());
     System.out.println("[train]");
     DisplayUtils.printConfusionMatrix(trainStats);
+    DisplayUtils.resultSummary(trainStats);
     System.out.println("\n[dev]");
     DisplayUtils.printConfusionMatrix(devStats);
+    DisplayUtils.resultSummary(trainStats);
     System.out.println("\n[test]");
     DisplayUtils.printConfusionMatrix(testStats);
+    DisplayUtils.resultSummary(trainStats);
 
   }
 
