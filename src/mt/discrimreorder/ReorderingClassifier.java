@@ -45,13 +45,17 @@ public class ReorderingClassifier {
         ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
+    ALL_RECOGNIZED_OPTS.addAll(WordFeatureExtractor.OPTS);
   }
 
   private Properties prop;
   private String fCorpus, eCorpus, align;
+  private List<FeatureExtractor> extractors;
   
-  public ReorderingClassifier(Properties prop) throws IOException {
+  public ReorderingClassifier(Properties prop) throws Exception {
     analyzeProperties(prop);
+    extractors = new ArrayList<FeatureExtractor>();
+    extractors.add(new WordFeatureExtractor(prop));
   }
 
 
@@ -92,7 +96,7 @@ public class ReorderingClassifier {
 
     Counter<String> allTypesCounter = new IntCounter<String>();
 
-    GeneralDataset trainDataset = new Dataset();
+    Dataset trainDataset = new Dataset();
     List<Datum<TrainingExamples.ReorderingTypes,String>> trainData
       = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
     List<Datum<TrainingExamples.ReorderingTypes,String>> devData
@@ -143,12 +147,15 @@ public class ReorderingClassifier {
 
         TrainingExamples exs = new TrainingExamples();
         allTypesCounter.addAll(exs.extractExamples(sent));
-        FeatureExtractor extractor = new WordFeatureExtractor();
 
         for(TrainingExample ex : exs.examples) {
 
           // extract features, add datum
-          List<String> features = extractor.extractFeatures(sent, ex);
+          List<String> features = new ArrayList<String>();
+          for (FeatureExtractor extractor : extractors) {
+            features.addAll(extractor.extractFeatures(sent, ex));
+          }
+
           Datum<TrainingExamples.ReorderingTypes,String> d
             = new BasicDatum(features, ex.type);
           
@@ -172,9 +179,10 @@ public class ReorderingClassifier {
       if (DEBUG) DisplayUtils.printAlignmentMatrixBottom();
       
 
-    } catch(IOException e) {
+    } catch(Exception e) {
       e.printStackTrace();
     }
+
     System.out.println("=========== Overall stats ===========");
     System.out.println("allTypesCounter=\n"+allTypesCounter);
     System.out.println("typeCounter=\n"+typeCounter);
@@ -192,13 +200,15 @@ public class ReorderingClassifier {
     TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> testStats = getConfusionMatrix(testData, classifier);
 
     System.out.println("=========== classifier stats ===========");
+    System.out.println("Train Data set:");
+    System.out.println(trainDataset.toSummaryStatistics());
     System.out.println("[train]");
     System.out.println(trainStats.toCSVString(NumberFormat.getInstance()));
     DisplayUtils.resultSummary(trainStats);
-    System.out.println("[dev]");
+    System.out.println("\n[dev]");
     System.out.println(devStats.toCSVString(NumberFormat.getInstance()));
     DisplayUtils.resultSummary(devStats);
-    System.out.println("[test]");
+    System.out.println("\n[test]");
     System.out.println(testStats.toCSVString(NumberFormat.getInstance()));
     DisplayUtils.resultSummary(testStats);
 

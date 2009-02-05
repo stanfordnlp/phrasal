@@ -25,6 +25,17 @@ public class TrainingExamples {
         if (matrix.fe[fi][ei]) ei_fs.add(fi);
         if (matrix.fe[fi][ei_prime]) eiprime_fs.add(fi);
       }
+
+      // TODO: needs to decide if I want the following code
+      /*
+      while (eiprime_fs.size() == 0 && ei_prime+1 < matrix.e.length) {
+        ei_prime++;
+        for(int fi = 0; fi < matrix.f.length; fi++) {
+          if (matrix.fe[fi][ei_prime]) eiprime_fs.add(fi);
+        }
+      }
+      */
+
       if (ei_fs.size() == 0 || eiprime_fs.size() == 0) {
         classCounter.incrementCount("empty");
         continue;
