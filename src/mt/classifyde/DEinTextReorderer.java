@@ -11,6 +11,8 @@ public class DEinTextReorderer {
   public static void main(String[] args) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
     Boolean noreorder = Boolean.parseBoolean(props.getProperty("noreorder", "false"));
+    Boolean betterRange = Boolean.parseBoolean(props.getProperty("betterRange", "false"));
+    Boolean strictRange = Boolean.parseBoolean(props.getProperty("strictRange", "false"));
 
     // (2) setting up the tree & sentence files
     String sentFile = props.getProperty("markedFile", null);
@@ -31,7 +33,21 @@ public class DEinTextReorderer {
       for (int deIdx : markedDEIdxs) {
         if (!yield.get(deIdx).startsWith("的_"))
           throw new RuntimeException(yield.get(deIdx)+"("+deIdx+") in "+StringUtils.join(yield, " ")+" is not a valid DE");
-        Pair<Integer,Integer> r = ExperimentUtils.getNPwithDERangeFromIdx(parsedSent, deIdx);
+        Pair<Integer,Integer> r;
+        if (betterRange) 
+          r = ExperimentUtils.getNPwithDERangeFromIdx_DNPorCP(parsedSent, deIdx);
+        else if (strictRange) {
+          String dnpcpLabel = ExperimentUtils.getNPwithDE_rootLabel(parsedSent, deIdx);
+          if (!dnpcpLabel.equals("DNP") && !dnpcpLabel.equals("CP")) {
+            if (!yield.get(deIdx).startsWith("的_")) throw new RuntimeException("...");
+            yield.set(deIdx, "的");
+            continue;
+          }
+          r = ExperimentUtils.getNPwithDERangeFromIdx_DNPorCP(parsedSent, deIdx);
+        }
+        else
+          r = ExperimentUtils.getNPwithDERangeFromIdx(parsedSent, deIdx);
+        
         SortByEndPair<Integer,Integer> range = new SortByEndPair<Integer,Integer>(r.first, r.second);
         String rootLabel = ExperimentUtils.getNPwithDE_rootLabel(parsedSent, deIdx);
         if (range.first == -1) {
@@ -54,7 +70,14 @@ public class DEinTextReorderer {
           if (p1.first > p2.second || p1.second < p2.first) continue;
           if ((p1.first == p2.second || p1.second == p2.first) && p1.first != p1.second) {
             System.err.println("P1="+p1);
+            System.err.println("P1 deIdx="+toOperate.get(p1));
+            for(int i = p1.first; i <= p1.second; i++) {
+              System.err.print(yield.get(i)+" ");
+            }
+            System.err.println();
             System.err.println("P2="+p2);
+            System.err.println("P2 deIdx="+toOperate.get(p2));
+            parsedSent.pennPrint(System.err);
             throw new RuntimeException("");
           }
           if((p2.first-p1.first)*(p2.second-p1.second) > 0) {

@@ -69,6 +69,33 @@ public class ExperimentUtils {
     return range;
   }
 
+  /* this is supposed to be a better reordering range.
+     instead of everything before NP, only take DNP or CP
+  */
+  public static Pair<Integer, Integer> getNPwithDERangeFromIdx_DNPorCP(Tree tree, int deIdx) {
+    Tree preT = Trees.getPreTerminal(tree, deIdx);
+    Tree DNPorCP = preT.parent(tree);
+    Tree theNP = DNPorCP.parent(tree);
+    int leftE;
+    int rightE = Trees.rightEdge(theNP, tree)-1;
+    //System.err.println(DNPorCP.label());
+    if (DNPorCP.label().toString().equals("DNP") ||DNPorCP.label().toString().equals("CP")) {
+      //System.err.println("DNP or CP");
+      leftE = Trees.leftEdge(DNPorCP, tree);
+    } else {
+      throw new RuntimeException("NOT");
+      leftE = Trees.leftEdge(theNP, tree);
+    }
+    Pair<Integer,Integer> range = new Pair<Integer,Integer>(leftE, rightE);
+    return range;
+  }
+
+  static String getNPwithDE_DNPorCPLabel(Tree tree, int deIdx) {
+    Tree preT = Trees.getPreTerminal(tree, deIdx);
+    Tree DNPorCP = preT.parent(tree);
+    return DNPorCP.label().value();
+  }
+
   static String getNPwithDE_rootLabel(Tree tree, int deIdx) {
     Tree preT = Trees.getPreTerminal(tree, deIdx);
     Tree DNPorCP = preT.parent(tree);
