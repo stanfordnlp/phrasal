@@ -1,5 +1,7 @@
 package mt.discrimreorder;
 
+import edu.stanford.nlp.stats.*;
+
 import java.io.*;
 
 import mt.train.*;
@@ -9,6 +11,9 @@ import mt.train.*;
  * {@link AlignmentMatrix}.
  *
  * Some code are the same as in {@link mt.train.transtb.AlignmentUtils}
+ * 
+ * This class also collects other displaying utils, such as
+ * outputing the confusion matrix.
  * @author Pi-Chuan Chang
  */
 
@@ -81,5 +86,17 @@ public class DisplayUtils {
     str = str.replaceAll("<", "&lt;");
     str = str.replaceAll(">", "&gt;");
     return str;
+  }
+
+  static void resultSummary(TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> confusionMatrix) {
+    double totalNum = 0;
+    double totalDenom = confusionMatrix.totalCount();
+    for (TrainingExamples.ReorderingTypes k : confusionMatrix.firstKeySet()) {
+      double denom = confusionMatrix.totalCount(k);
+      double num = confusionMatrix.getCount(k, k);
+      totalNum += num;
+      System.out.printf("#[ %s ] = %d |\tAcc:\t%.2f\n", k, (int)denom, 100.0*num/denom);
+    }
+    System.out.printf("#total = %d |\tAcc:\t%f\n", (int)totalDenom, 100.0*totalNum/totalDenom);
   }
 }

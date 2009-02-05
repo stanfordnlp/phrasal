@@ -10,6 +10,7 @@ import edu.stanford.nlp.classify.*;
 import java.util.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.text.NumberFormat;
 
 import mt.base.IOTools;
 import mt.train.*;
@@ -89,14 +90,15 @@ public class ReorderingClassifier {
     TwoDimensionalCounter<String,TrainingExamples.ReorderingTypes> typeCounter =
       new TwoDimensionalCounter<String,TrainingExamples.ReorderingTypes>();
 
+    Counter<String> allTypesCounter = new IntCounter<String>();
 
     GeneralDataset trainDataset = new Dataset();
-    List<Datum<String,TrainingExamples.ReorderingTypes>> trainData
-      = new ArrayList<Datum<String,TrainingExamples.ReorderingTypes>>();
-    List<Datum<String,TrainingExamples.ReorderingTypes>> devData
-      = new ArrayList<Datum<String,TrainingExamples.ReorderingTypes>>();
-    List<Datum<String,TrainingExamples.ReorderingTypes>> testData
-      = new ArrayList<Datum<String,TrainingExamples.ReorderingTypes>>();
+    List<Datum<TrainingExamples.ReorderingTypes,String>> trainData
+      = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
+    List<Datum<TrainingExamples.ReorderingTypes,String>> devData
+      = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
+    List<Datum<TrainingExamples.ReorderingTypes,String>> testData
+      = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
 
 
 
@@ -139,14 +141,15 @@ public class ReorderingClassifier {
         
         if (DEBUG) DisplayUtils.printAlignmentMatrix(sent);
 
-        TrainingExamples exs = new TrainingExamples(sent);
+        TrainingExamples exs = new TrainingExamples();
+        allTypesCounter.addAll(exs.extractExamples(sent));
         FeatureExtractor extractor = new WordFeatureExtractor();
 
         for(TrainingExample ex : exs.examples) {
 
           // extract features, add datum
           List<String> features = extractor.extractFeatures(sent, ex);
-          Datum<String,TrainingExamples.ReorderingTypes> d
+          Datum<TrainingExamples.ReorderingTypes,String> d
             = new BasicDatum(features, ex.type);
           
           // split:
@@ -172,14 +175,45 @@ public class ReorderingClassifier {
     } catch(IOException e) {
       e.printStackTrace();
     }
-    System.err.println(typeCounter);
-    System.err.println("trainData.size()="+trainData.size());
-    System.err.println("devData.size()="+devData.size());
-    System.err.println("testData.size()="+testData.size());
+    System.out.println("=========== Overall stats ===========");
+    System.out.println("allTypesCounter=\n"+allTypesCounter);
+    System.out.println("typeCounter=\n"+typeCounter);
+    System.out.println("trainData.size()="+trainData.size());
+    System.out.println("devData.size()="+devData.size());
+    System.out.println("testData.size()="+testData.size());
 
     // Train the classifier:
-    
+    LinearClassifierFactory<TrainingExamples.ReorderingTypes,String> factory = new LinearClassifierFactory<TrainingExamples.ReorderingTypes,String>();
+    LinearClassifier<TrainingExamples.ReorderingTypes,String> classifier
+      = (LinearClassifier<TrainingExamples.ReorderingTypes,String>)factory.trainClassifier(trainDataset);
+   
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> trainStats = getConfusionMatrix(trainData, classifier);
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> devStats = getConfusionMatrix(devData, classifier);
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> testStats = getConfusionMatrix(testData, classifier);
 
+    System.out.println("=========== classifier stats ===========");
+    System.out.println("[train]");
+    System.out.println(trainStats.toCSVString(NumberFormat.getInstance()));
+    DisplayUtils.resultSummary(trainStats);
+    System.out.println("[dev]");
+    System.out.println(devStats.toCSVString(NumberFormat.getInstance()));
+    DisplayUtils.resultSummary(devStats);
+    System.out.println("[test]");
+    System.out.println(testStats.toCSVString(NumberFormat.getInstance()));
+    DisplayUtils.resultSummary(testStats);
+
+  }
+
+  public TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> 
+    getConfusionMatrix(List<Datum<TrainingExamples.ReorderingTypes,String>> data, 
+                       LinearClassifier<TrainingExamples.ReorderingTypes,String> lc) {
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> confusionMatrix 
+      = new TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes>();
+    for (Datum<TrainingExamples.ReorderingTypes,String> d : data) {
+      TrainingExamples.ReorderingTypes predictedClass = lc.classOf(d);
+      confusionMatrix.incrementCount(d.label(), predictedClass);
+    }
+    return confusionMatrix;
   }
 
   static void usage() {
