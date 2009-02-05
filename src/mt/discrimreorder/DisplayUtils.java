@@ -3,6 +3,7 @@ package mt.discrimreorder;
 import edu.stanford.nlp.stats.*;
 
 import java.io.*;
+import java.util.*;
 
 import mt.train.*;
 
@@ -88,14 +89,41 @@ public class DisplayUtils {
     return str;
   }
 
+  static void printConfusionMatrix(TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> m) {
+    System.out.println("==================Confusion Matrix==================");
+    System.out.print("->real");
+    TreeSet<TrainingExamples.ReorderingTypes> firstKeySet = new TreeSet<TrainingExamples.ReorderingTypes>();
+    firstKeySet.addAll(m.firstKeySet());
+    TreeSet<TrainingExamples.ReorderingTypes> secondKeySet = new TreeSet<TrainingExamples.ReorderingTypes>();
+    secondKeySet.addAll(m.secondKeySet());
+    for (TrainingExamples.ReorderingTypes k : firstKeySet) {
+      System.out.printf("\t"+k);
+    }
+    System.out.println();
+    for (TrainingExamples.ReorderingTypes k2 : secondKeySet) {
+      System.out.print(k2+"\t");
+      for (TrainingExamples.ReorderingTypes k1 : firstKeySet) {
+        System.out.print((int)m.getCount(k1,k2)+"\t");
+      }
+      System.out.println();
+    }
+
+    System.out.println("----------------------------------------------------");
+    System.out.print("total\t");
+    for (TrainingExamples.ReorderingTypes k1 : firstKeySet) {
+      System.out.print((int)m.totalCount(k1)+"\t");
+    }
+    System.out.println();
+    System.out.println("====================================================");
+    System.out.println();
+  }
+
   static void resultSummary(TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> confusionMatrix) {
     double totalNum = 0;
     double totalDenom = confusionMatrix.totalCount();
     for (TrainingExamples.ReorderingTypes k : confusionMatrix.firstKeySet()) {
-      double denom = confusionMatrix.totalCount(k);
       double num = confusionMatrix.getCount(k, k);
       totalNum += num;
-      System.out.printf("#[ %s ] = %d |\tAcc:\t%.2f\n", k, (int)denom, 100.0*num/denom);
     }
     System.out.printf("#total = %d |\tAcc:\t%f\n", (int)totalDenom, 100.0*totalNum/totalDenom);
   }
