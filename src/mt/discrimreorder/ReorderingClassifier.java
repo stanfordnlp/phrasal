@@ -207,10 +207,10 @@ public class ReorderingClassifier {
     DisplayUtils.resultSummary(trainStats);
     System.out.println("\n[dev]");
     DisplayUtils.printConfusionMatrix(devStats);
-    DisplayUtils.resultSummary(trainStats);
+    DisplayUtils.resultSummary(devStats);
     System.out.println("\n[test]");
     DisplayUtils.printConfusionMatrix(testStats);
-    DisplayUtils.resultSummary(trainStats);
+    DisplayUtils.resultSummary(testStats);
 
   }
 

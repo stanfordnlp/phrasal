@@ -121,10 +121,68 @@ public class DisplayUtils {
   static void resultSummary(TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> confusionMatrix) {
     double totalNum = 0;
     double totalDenom = confusionMatrix.totalCount();
-    for (TrainingExamples.ReorderingTypes k : confusionMatrix.firstKeySet()) {
-      double num = confusionMatrix.getCount(k, k);
-      totalNum += num;
+    Map<TrainingExamples.ReorderingTypes,Integer> TP
+      = new HashMap<TrainingExamples.ReorderingTypes,Integer>();
+    Map<TrainingExamples.ReorderingTypes,Integer> FP
+      = new HashMap<TrainingExamples.ReorderingTypes,Integer>();
+    Map<TrainingExamples.ReorderingTypes,Integer> FN
+      = new HashMap<TrainingExamples.ReorderingTypes,Integer>();
+
+    // for every possible labels
+    for (TrainingExamples.ReorderingTypes i : confusionMatrix.firstKeySet()) {
+      //Counter<TrainingExamples.ReorderingTypes> tp = new IntCounter<TrainingExamples.ReorderingTypes>();
+      //Counter<TrainingExamples.ReorderingTypes> fp = new IntCounter<TrainingExamples.ReorderingTypes>();
+      //Counter<TrainingExamples.ReorderingTypes> fn = new IntCounter<TrainingExamples.ReorderingTypes>();
+      int tp = 0, fp = 0, fn = 0;
+      
+      for (TrainingExamples.ReorderingTypes k : confusionMatrix.secondKeySet()) {
+        if (k==i) tp += confusionMatrix.getCount(k, k);
+        else      fn += confusionMatrix.getCount(i, k);
+      }
+      for (TrainingExamples.ReorderingTypes t : confusionMatrix.firstKeySet()) {
+        if (t!=i) fp += confusionMatrix.getCount(t, i);
+      }
+      TP.put(i, tp);
+      FP.put(i, fp);
+      FN.put(i, fn);
     }
-    System.out.printf("#total = %d |\tAcc:\t%f\n", (int)totalDenom, 100.0*totalNum/totalDenom);
+
+    // Now computing Micro-averaged F-measure
+    double nom = 0.0, p_denom = 0.0, r_denom = 0.0;
+    for (TrainingExamples.ReorderingTypes i : TP.keySet()) {
+      nom += TP.get(i);
+      p_denom += TP.get(i);
+      r_denom += TP.get(i);
+      System.err.printf("TP(%s)=%d\n", i, TP.get(i));
+    }
+    for (TrainingExamples.ReorderingTypes i : FP.keySet()) {
+      p_denom += FP.get(i);
+      System.err.printf("FP(%s)=%d\n", i, FP.get(i));
+    }
+    for (TrainingExamples.ReorderingTypes i : FN.keySet()) {
+      r_denom += FN.get(i);
+      System.err.printf("FN(%s)=%d\n", i, FN.get(i));
+    }
+    double micro_precision = nom / p_denom;
+    double micro_recall = nom / r_denom;
+    double micro_F = 2*micro_precision*micro_recall/(micro_precision+micro_recall);
+
+    double total_F = 0.0;
+    int count_F = 0;
+    for (TrainingExamples.ReorderingTypes i : confusionMatrix.firstKeySet()) {
+      double precision = (double)TP.get(i) / (TP.get(i)+FP.get(i));
+      double recall    = (double)TP.get(i) / (TP.get(i)+FN.get(i));
+      double F = 2*precision*recall/(precision+recall);
+      total_F += F;
+      count_F++;
+    }
+    double macro_F = total_F / count_F;
+
+    for (TrainingExamples.ReorderingTypes i : confusionMatrix.firstKeySet()) {
+      totalNum += confusionMatrix.getCount(i, i);
+    }
+
+    System.out.printf("#total = %d |\tAcc = %2.2f ; Macro-F = %2.2f\n", 
+                      (int)totalDenom, 100.0*totalNum/totalDenom, 100*macro_F);
   }
 }
