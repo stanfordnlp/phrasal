@@ -83,7 +83,7 @@ public class ExperimentUtils {
       //System.err.println("DNP or CP");
       leftE = Trees.leftEdge(DNPorCP, tree);
     } else {
-      throw new RuntimeException("NOT");
+      //System.err.println("NOT");
       leftE = Trees.leftEdge(theNP, tree);
     }
     Pair<Integer,Integer> range = new Pair<Integer,Integer>(leftE, rightE);

@@ -37,7 +37,7 @@ public class DEinTextReorderer {
         if (betterRange) 
           r = ExperimentUtils.getNPwithDERangeFromIdx_DNPorCP(parsedSent, deIdx);
         else if (strictRange) {
-          String dnpcpLabel = ExperimentUtils.getNPwithDE_rootLabel(parsedSent, deIdx);
+          String dnpcpLabel = ExperimentUtils.getNPwithDE_DNPorCPLabel(parsedSent, deIdx);
           if (!dnpcpLabel.equals("DNP") && !dnpcpLabel.equals("CP")) {
             if (!yield.get(deIdx).startsWith("的_")) throw new RuntimeException("...");
             yield.set(deIdx, "的");
