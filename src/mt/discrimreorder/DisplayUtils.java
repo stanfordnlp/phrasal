@@ -153,15 +153,15 @@ public class DisplayUtils {
       nom += TP.get(i);
       p_denom += TP.get(i);
       r_denom += TP.get(i);
-      System.err.printf("TP(%s)=%d\n", i, TP.get(i));
+      //System.err.printf("TP(%s)=%d\n", i, TP.get(i));
     }
     for (TrainingExamples.ReorderingTypes i : FP.keySet()) {
       p_denom += FP.get(i);
-      System.err.printf("FP(%s)=%d\n", i, FP.get(i));
+      //System.err.printf("FP(%s)=%d\n", i, FP.get(i));
     }
     for (TrainingExamples.ReorderingTypes i : FN.keySet()) {
       r_denom += FN.get(i);
-      System.err.printf("FN(%s)=%d\n", i, FN.get(i));
+      //System.err.printf("FN(%s)=%d\n", i, FN.get(i));
     }
     double micro_precision = nom / p_denom;
     double micro_recall = nom / r_denom;

@@ -3,6 +3,14 @@ package mt.discrimreorder;
 import java.io.*;
 import mt.train.AbstractWordAlignment;
 
+import edu.stanford.nlp.stats.*;
+import edu.stanford.nlp.util.*;
+import edu.stanford.nlp.trees.*;
+import edu.stanford.nlp.trees.international.pennchinese.*;
+import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
+import java.util.*;
+import java.io.*;
+
 /**
  * This class is to represent the alignment in a 2d matrix form
  * (Note that there's similar class in the mt.train package or mt.train.transtb.
@@ -15,6 +23,30 @@ public class AlignmentMatrix {
   String[] f;
   String[] e;
   boolean[][] fe;
+  int[] d2g; // dependent to governor
+  String[][] tDeps;
+
+  void getParseInfo(Tree t) {
+    d2g = new int[f.length];
+    tDeps = new String[f.length][f.length];
+
+    try {
+      GrammaticalStructure gs = new ChineseGrammaticalStructure(t);
+      Collection<TypedDependency> typedDeps = gs.allTypedDependencies();
+      if (t.yield().size()+2 != f.length) {
+        throw new RuntimeException();
+      }
+      // The index of dep is 1-based (instead of starting at 0).
+      // So it matches well with the AlignmentMatrix, where 0 is <s> anyway.
+      for (TypedDependency dep : typedDeps) {
+        d2g[dep.dep().index()] = dep.gov().index();
+        tDeps[dep.gov().index()][dep.dep().index()] = dep.reln().getShortName();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
 
   public String getSourceWord(int i) {
     if (i < 0 || i >= f.length) return "";

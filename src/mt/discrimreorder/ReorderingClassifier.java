@@ -1,11 +1,14 @@
 package mt.discrimreorder;
 
-import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.classify.*;
+import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.IntCounter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
-import edu.stanford.nlp.ling.*;
-import edu.stanford.nlp.classify.*;
+import edu.stanford.nlp.trees.*;
+import edu.stanford.nlp.trees.international.pennchinese.*;
+import edu.stanford.nlp.util.StringUtils;
 
 import java.util.*;
 import java.io.*;
@@ -28,9 +31,13 @@ import mt.train.*;
 public class ReorderingClassifier {
   static final boolean DEBUG = false;
 
+  static ChineseTreebankParserParams ctpp = new ChineseTreebankParserParams();
+  static TreeReaderFactory trf = ctpp.treeReaderFactory();
+
   static public final String F_CORPUS_OPT = "fCorpus";
   static public final String E_CORPUS_OPT = "eCorpus";
   static public final String A_CORPUS_OPT = "align";
+  static public final String F_PARSE_OPT = "fParse";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -43,19 +50,25 @@ public class ReorderingClassifier {
         E_CORPUS_OPT,
         A_CORPUS_OPT
         ));
+    OPTIONAL_OPTS.addAll(
+      Arrays.asList(
+        F_PARSE_OPT
+        ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(WordFeatureExtractor.OPTS);
+    ALL_RECOGNIZED_OPTS.addAll(TypedDepFeatureExtractor.OPTS);
   }
 
   private Properties prop;
-  private String fCorpus, eCorpus, align;
+  private String fCorpus, eCorpus, align, fParse;
   private List<FeatureExtractor> extractors;
   
   public ReorderingClassifier(Properties prop) throws Exception {
     analyzeProperties(prop);
     extractors = new ArrayList<FeatureExtractor>();
     extractors.add(new WordFeatureExtractor(prop));
+    extractors.add(new TypedDepFeatureExtractor(prop));
   }
 
 
@@ -85,6 +98,7 @@ public class ReorderingClassifier {
     fCorpus = prop.getProperty(F_CORPUS_OPT);
     eCorpus = prop.getProperty(E_CORPUS_OPT);
     align = prop.getProperty(A_CORPUS_OPT);
+    fParse = prop.getProperty(F_PARSE_OPT);
   }
 
 
@@ -110,7 +124,10 @@ public class ReorderingClassifier {
       LineNumberReader
         fReader = IOTools.getReaderFromFile(fCorpus),
         eReader = IOTools.getReaderFromFile(eCorpus),
-        aReader = IOTools.getReaderFromFile(align);
+        aReader = IOTools.getReaderFromFile(align),
+        pReader = null;
+      if (fParse != null)
+        pReader = IOTools.getReaderFromFile(fParse);
 
       int lineNb=0;
 
@@ -120,7 +137,7 @@ public class ReorderingClassifier {
         fLine = fReader.readLine();
         boolean done = (fLine == null);
 
-        if (lineNb % 1000 == 0 || done) {
+        if (lineNb % 100 == 0 || done) {
           long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
           long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
           double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
@@ -138,18 +155,35 @@ public class ReorderingClassifier {
         String aLine = aReader.readLine();
         if(aLine == null)
           throw new IOException("Alignment file is too short!");
-        if(aLine.equals(""))
+
+        if(aLine.equals("")) {
+          // take one more pLine so it remained synced
+          if (pReader != null) {
+            String pLine = pReader.readLine();
+            if(pLine == null)
+              throw new IOException("Target-language parses is too short!");
+          }
           continue;
+        }
 
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
         
         if (DEBUG) DisplayUtils.printAlignmentMatrix(sent);
-
+        
         TrainingExamples exs = new TrainingExamples();
+
         allTypesCounter.addAll(exs.extractExamples(sent));
 
+        // get the parse if the parses file exist
+        if (pReader != null) {
+          String pLine = pReader.readLine();
+          if(pLine == null)
+            throw new IOException("Target-language parses is too short!");
+          Tree t = Tree.valueOf(pLine, trf);
+          sent.getParseInfo(t);
+        }
+        
         for(TrainingExample ex : exs.examples) {
-
           // extract features, add datum
           List<String> features = new ArrayList<String>();
           for (FeatureExtractor extractor : extractors) {
