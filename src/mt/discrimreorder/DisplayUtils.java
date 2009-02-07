@@ -169,11 +169,16 @@ public class DisplayUtils {
 
     double total_F = 0.0;
     int count_F = 0;
+    
+    Map<TrainingExamples.ReorderingTypes,Double> F
+      = new HashMap<TrainingExamples.ReorderingTypes,Double>();
+
     for (TrainingExamples.ReorderingTypes i : confusionMatrix.firstKeySet()) {
       double precision = (double)TP.get(i) / (TP.get(i)+FP.get(i));
       double recall    = (double)TP.get(i) / (TP.get(i)+FN.get(i));
-      double F = 2*precision*recall/(precision+recall);
-      total_F += F;
+      double f = 2*precision*recall/(precision+recall);
+      F.put(i, f);
+      total_F += f;
       count_F++;
     }
     double macro_F = total_F / count_F;
@@ -182,7 +187,10 @@ public class DisplayUtils {
       totalNum += confusionMatrix.getCount(i, i);
     }
 
-    System.out.printf("#total = %d |\tAcc = %2.2f ; Macro-F = %2.2f\n", 
-                      (int)totalDenom, 100.0*totalNum/totalDenom, 100*macro_F);
+    System.out.printf("#total = %d |\tAcc = %2.2f ; F(%s) = %2.2f ; F(%s) = %2.2f ; Macro-F = %2.2f\n", 
+                      (int)totalDenom, 100.0*totalNum/totalDenom, 
+                      TrainingExamples.ReorderingTypes.ordered, 100*F.get(TrainingExamples.ReorderingTypes.ordered),
+                      TrainingExamples.ReorderingTypes.distorted, 100*F.get(TrainingExamples.ReorderingTypes.distorted),
+                      100*macro_F);
   }
 }
