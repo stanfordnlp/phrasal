@@ -24,7 +24,8 @@ public class AlignmentMatrix {
   String[] f;
   String[] e;
   boolean[][] fe;
-  SemanticGraph chGraph;
+  SemanticGraph chGraph = null;
+  TwoDimensionalMap<Integer,Integer,String> pathMap = null;
 
   void getParseInfo(Tree t) {
     try {
@@ -32,7 +33,27 @@ public class AlignmentMatrix {
       GrammaticalStructure gs = new ChineseGrammaticalStructure(t, puncWordFilter);
       chGraph = SemanticGraphFactory.makeFromTree(gs, "doc1", 0);
     } catch (Exception e) {
+      System.err.println("F="+StringUtils.join(f, " "));
+      System.err.println("TREE=");
+      t.pennPrint(System.err);
       e.printStackTrace();
+    }
+  }
+
+  void getPathInfo(String path) throws Exception{
+    pathMap = new TwoDimensionalMap<Integer,Integer,String>();
+
+    path = path.trim();
+    if (path.length() > 0) {
+      String[] paths = path.split(" ");
+      for (String tuple : paths) {
+        String[] pieces = tuple.split(":");
+        if (pieces.length != 3) throw new RuntimeException("wrong format: "+path);
+        int i = Integer.parseInt(pieces[0]);
+        int j = Integer.parseInt(pieces[1]);
+        String pname = pieces[2];
+        pathMap.put(i,j,pname);
+      }
     }
   }
 

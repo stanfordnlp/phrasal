@@ -38,6 +38,7 @@ public class ReorderingClassifier {
   static public final String E_CORPUS_OPT = "eCorpus";
   static public final String A_CORPUS_OPT = "align";
   static public final String F_PARSE_OPT = "fParse";
+  static public final String F_PATH_OPT = "fPath";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -52,7 +53,8 @@ public class ReorderingClassifier {
         ));
     OPTIONAL_OPTS.addAll(
       Arrays.asList(
-        F_PARSE_OPT
+        F_PARSE_OPT,
+        F_PATH_OPT
         ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -61,7 +63,7 @@ public class ReorderingClassifier {
   }
 
   private Properties prop;
-  private String fCorpus, eCorpus, align, fParse;
+  private String fCorpus, eCorpus, align, fParse, fPath;
   private List<FeatureExtractor> extractors;
   
   public ReorderingClassifier(Properties prop) throws Exception {
@@ -99,6 +101,7 @@ public class ReorderingClassifier {
     eCorpus = prop.getProperty(E_CORPUS_OPT);
     align = prop.getProperty(A_CORPUS_OPT);
     fParse = prop.getProperty(F_PARSE_OPT);
+    fPath = prop.getProperty(F_PATH_OPT);
   }
 
 
@@ -125,9 +128,14 @@ public class ReorderingClassifier {
         fReader = IOTools.getReaderFromFile(fCorpus),
         eReader = IOTools.getReaderFromFile(eCorpus),
         aReader = IOTools.getReaderFromFile(align),
-        pReader = null;
+        pReader = null,
+        pathReader = null;
+      if (fParse != null && fPath !=null)
+        throw new RuntimeException("-fParse and -fPath should not both exist");
       if (fParse != null)
         pReader = IOTools.getReaderFromFile(fParse);
+      if (fPath != null)
+        pathReader = IOTools.getReaderFromFile(fPath);
 
       int lineNb=0;
 
@@ -137,7 +145,7 @@ public class ReorderingClassifier {
         fLine = fReader.readLine();
         boolean done = (fLine == null);
 
-        if (lineNb % 1 == 0 || done) {
+        if (lineNb % 100 == 0 || done) {
           long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
           long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
           double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
@@ -163,10 +171,16 @@ public class ReorderingClassifier {
             if(pLine == null)
               throw new IOException("Target-language parses is too short!");
           }
+          // take one more pathLine so it remained synced
+          if (pathReader != null) {
+            String pathLine = pathReader.readLine();
+            if(pathLine == null)
+              throw new IOException("Target-language paths is too short!");
+          }
           continue;
         }
 
-        fLine = fixChars(fLine);
+        //fLine = fixCharsInSent(fLine);
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
         
         if (DEBUG) DisplayUtils.printAlignmentMatrix(sent);
@@ -180,9 +194,17 @@ public class ReorderingClassifier {
           String pLine = pReader.readLine();
           if(pLine == null)
             throw new IOException("Target-language parses is too short!");
-          pLine = fixChars(pLine);
-          Tree t = Tree.valueOf(pLine, trf);
+          pLine = fixCharsInParse(pLine);
+          Tree t = Tree.valueOf("("+pLine+")", trf);
           sent.getParseInfo(t);
+        }
+
+        // get the patsh if the path file exist
+        if (pathReader != null) {
+          String pathLine = pathReader.readLine();
+          if(pathLine == null)
+            throw new IOException("Target-language paths is too short!");
+          sent.getPathInfo(pathLine);
         }
         
         for(TrainingExample ex : exs.examples) {
@@ -291,8 +313,75 @@ public class ReorderingClassifier {
   // there are some characters that can't be corectly read in
   // by Tree.valueOf(t, ctpp.treeReaderFactory())
   // like: \ue002
-  static String fixChars(String str) {
-    str = str.replaceAll("\ue002", "．");
+
+  static String fixChars(String str, String toReplace) {
+    str = str.replaceAll("・", toReplace);
+    str = str.replaceAll("ù", toReplace);
+    str = str.replaceAll("ぜ", toReplace);
+    str = str.replaceAll("\u01ce", toReplace);
+    str = str.replaceAll("\u0424", toReplace);
+    str = str.replaceAll("\u30c1", toReplace);
+    str = str.replaceAll("\u3050", toReplace);
+    str = str.replaceAll("\u3077", toReplace);
+    str = str.replaceAll("\u2476", toReplace);
+    str = str.replaceAll("\u247f", toReplace);
+    str = str.replaceAll("\u248f", toReplace);
+    str = str.replaceAll("\ue002", toReplace);
+    str = str.replaceAll("\ue079", toReplace);
+    str = str.replaceAll("\ue0a4", toReplace);
+    str = str.replaceAll("\ue0a6", toReplace);
+    str = str.replaceAll("\ue0b5", toReplace);
+    str = str.replaceAll("\ue0b9", toReplace);
+    str = str.replaceAll("\ue0ba", toReplace);
+    str = str.replaceAll("\ue0c0", toReplace);
+    str = str.replaceAll("\ue0d0", toReplace);
+    str = str.replaceAll("\ue0d1", toReplace);
+    str = str.replaceAll("\ue0d2", toReplace);
+    str = str.replaceAll("\ue0d7", toReplace);
+    str = str.replaceAll("\ue0d9", toReplace);
+    str = str.replaceAll("\ue11a", toReplace);
+    str = str.replaceAll("\ue12b", toReplace);
+    str = str.replaceAll("\ue12f", toReplace);
+    str = str.replaceAll("\ue137", toReplace);
+    str = str.replaceAll("\ue176", toReplace);
+    str = str.replaceAll("\ue1cf", toReplace);
+    str = str.replaceAll("\ue1f0", toReplace);
+    str = str.replaceAll("\ue21e", toReplace);
+    str = str.replaceAll("\ue22d", toReplace);
+    str = str.replaceAll("\ue239", toReplace);
+    str = str.replaceAll("\ue241", toReplace);
+    str = str.replaceAll("\ue24f", toReplace);
+    str = str.replaceAll("\ue252", toReplace);
+    str = str.replaceAll("\ue27a", toReplace);
+    str = str.replaceAll("\ue27c", toReplace);
+    str = str.replaceAll("\ue29a", toReplace);
+    str = str.replaceAll("\ue2dd", toReplace);
+    str = str.replaceAll("\ue2fe", toReplace);
+    str = str.replaceAll("\ue30f", toReplace);
+    str = str.replaceAll("\ue35d", toReplace);
+    str = str.replaceAll("\ue3aa", toReplace);
+    str = str.replaceAll("\ue3ad", toReplace);
+    str = str.replaceAll("\ue3b0", toReplace);
+    str = str.replaceAll("\ue3b4", toReplace);
+    str = str.replaceAll("\ue3b5", toReplace);
+    str = str.replaceAll("\ue3bc", toReplace);
+    str = str.replaceAll("\ue3c1", toReplace);
+    str = str.replaceAll("\ue3cd", toReplace);
+    str = str.replaceAll("\ue3cf", toReplace);
+    str = str.replaceAll("\ue3f9", toReplace);
+    str = str.replaceAll("\ue520", toReplace);
+    str = str.replaceAll("\ue523", toReplace);
+    str = str.replaceAll("\ue407", toReplace);
+    str = str.replaceAll("\ue477", toReplace);
+    str = str.replaceAll("\ue3b9", toReplace);
+    str = str.replaceAll("\ue528", toReplace);
     return str;
+  }
+  static String fixCharsInParse(String str) {
+    return fixChars(str, "．");
+  }
+
+  static String fixCharsInSent(String str) {
+    return fixChars(str, ".");
   }
 }

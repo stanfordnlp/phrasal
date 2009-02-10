@@ -8,6 +8,7 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
 import java.util.*;
+import java.util.zip.*;
 import java.io.*;
 import mt.base.IOTools;
 
@@ -17,17 +18,29 @@ public class TreesToDeps {
     TreeReaderFactory trf = ctpp.treeReaderFactory();
     LineNumberReader pReader = IOTools.getReaderFromFile(args[0]);
     String pLine;
+    String outFilename = args[1];
+    PrintWriter pw = new PrintWriter(new GZIPOutputStream(new FileOutputStream(outFilename)));
+    int lineno = 1;
     while((pLine = pReader.readLine()) != null) {
-      pLine = ReorderingClassifier.fixChars(pLine);
-      Tree t = Tree.valueOf(pLine, trf);
+      System.err.println("l="+lineno);
+      lineno++;
+      pLine = ReorderingClassifier.fixCharsInParse(pLine);
+      Tree t = Tree.valueOf("("+pLine+")", trf);
       Filter<String> puncWordFilter = Filters.acceptFilter();
       GrammaticalStructure gs = new ChineseGrammaticalStructure(t, puncWordFilter);
-      Collection<TypedDependency> typedDeps = gs.allTypedDependencies();
-      System.err.println("TREE="+t);
-      for (TypedDependency dep : typedDeps) {
-        System.err.println("DEP="+dep);
-        System.err.println("DEP="+dep.gov().index()+"/"+dep.dep().index()+"/"+dep.reln().getShortName());
+      SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(gs, "doc1", 0);
+      List<IndexedWord> list = chGraph.vertexList();
+      for (int i = 0; i < list.size(); i++) {
+        for (int j = 0; j < list.size(); j++) {
+          if (i!=j) {
+            String path = TypedDepFeatureExtractor.getPathName(i, j, list, chGraph);
+            if (path.length() > 0)
+              pw.printf("%d:%d:%s ", i, j, path);
+          }
+        }
       }
+      pw.println();
     }
+    pw.close();
   }
 }
