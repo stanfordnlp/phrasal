@@ -7,6 +7,7 @@ import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
+import edu.stanford.nlp.trees.semgraph.*;
 import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
 import java.util.*;
 import java.io.*;
@@ -23,40 +24,13 @@ public class AlignmentMatrix {
   String[] f;
   String[] e;
   boolean[][] fe;
-  int[] d2g; // dependent to governor
-  String[][] tDeps;
+  SemanticGraph chGraph;
 
   void getParseInfo(Tree t) {
-    d2g = new int[f.length];
-    tDeps = new String[f.length][f.length];
-
     try {
       Filter<String> puncWordFilter = Filters.acceptFilter();
       GrammaticalStructure gs = new ChineseGrammaticalStructure(t, puncWordFilter);
-      Collection<TypedDependency> typedDeps = gs.typedDependencies(false);
-      if (typedDeps.size() != f.length-2-1) {
-        System.err.print("f=");
-        System.err.println(StringUtils.join(f, " "));
-        System.err.println("DEPs=");
-        for(TypedDependency d : typedDeps) {
-          System.err.println(d);
-        }
-        throw new RuntimeException();
-      }
-      if (t.yield().size()+2 != f.length) {
-        throw new RuntimeException();
-      }
-      // The index of dep is 1-based (instead of starting at 0).
-      // So it matches well with the AlignmentMatrix, where 0 is <s> anyway.
-      for (TypedDependency dep : typedDeps) {
-        System.err.println("DEP="+dep);
-      }
-      for (TypedDependency dep : typedDeps) {
-        d2g[dep.dep().index()] = dep.gov().index();
-        System.err.printf("d2g[%d]=%d\n", dep.dep().index(), dep.gov().index());
-        tDeps[dep.gov().index()][dep.dep().index()] = dep.reln().getShortName();
-        System.err.printf("tDeps[%d][%d]=%s\n", dep.gov().index(), dep.dep().index(), dep.reln().getShortName());
-      }
+      chGraph = SemanticGraphFactory.makeFromTree(gs, "doc1", 0);
     } catch (Exception e) {
       e.printStackTrace();
     }

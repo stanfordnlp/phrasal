@@ -137,7 +137,7 @@ public class ReorderingClassifier {
         fLine = fReader.readLine();
         boolean done = (fLine == null);
 
-        if (lineNb % 100 == 0 || done) {
+        if (lineNb % 1 == 0 || done) {
           long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
           long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
           double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
@@ -166,6 +166,7 @@ public class ReorderingClassifier {
           continue;
         }
 
+        fLine = fixChars(fLine);
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
         
         if (DEBUG) DisplayUtils.printAlignmentMatrix(sent);
@@ -179,6 +180,7 @@ public class ReorderingClassifier {
           String pLine = pReader.readLine();
           if(pLine == null)
             throw new IOException("Target-language parses is too short!");
+          pLine = fixChars(pLine);
           Tree t = Tree.valueOf(pLine, trf);
           sent.getParseInfo(t);
         }
@@ -284,5 +286,13 @@ public class ReorderingClassifier {
     }
 
     System.err.println("extraction ended at: "+formatter.format(new Date()));
+  }
+
+  // there are some characters that can't be corectly read in
+  // by Tree.valueOf(t, ctpp.treeReaderFactory())
+  // like: \ue002
+  static String fixChars(String str) {
+    str = str.replaceAll("\ue002", "．");
+    return str;
   }
 }
