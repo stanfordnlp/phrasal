@@ -47,6 +47,8 @@ public class TypedDepFeatureExtractor implements FeatureExtractor {
         } else if (matrix.pathMap != null) {
           path.append(getPathName(example.src_j-1, example.src_jprime-1, matrix.pathMap));
         }
+        //System.err.printf("%d - %d\n", example.src_j-1, example.src_jprime-1);
+        //System.err.println("PATH="+path.toString());
         features.add(path.toString());
       } 
     }

@@ -52,7 +52,9 @@ public class AlignmentMatrix {
         int i = Integer.parseInt(pieces[0]);
         int j = Integer.parseInt(pieces[1]);
         String pname = pieces[2];
-        pathMap.put(i,j,pname);
+        if (pathMap.get(i,j) == null) {
+          pathMap.put(i,j,pname);
+        }
       }
     }
   }
