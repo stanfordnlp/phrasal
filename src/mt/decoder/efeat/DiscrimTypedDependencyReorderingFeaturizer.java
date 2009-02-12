@@ -59,15 +59,28 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
       useBoundaryOnly = Boolean.parseBoolean(args[2]);
     }
 
-    lc = LinearClassifier.readClassifier(args[1]);
+    Runtime rt = Runtime.getRuntime();
+
+    String classifierFile = args[1];
+
+    long startTimeMillis = System.currentTimeMillis();
+    long preTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
+
+    lc = LinearClassifier.readClassifier(classifierFile);
+
+    long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
+    long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
+
+    System.err.printf("\nDone loading discrim reorder classifier: %s (mem used: %d MiB time: %.3f s)\n", classifierFile,
+                      (postTableLoadMemUsed - preTableLoadMemUsed)/(1024*1024), loadTimeMillis/1000.0);
+
     pathReader = IOTools.getReaderFromFile(args[0]);
     pathMaps = new ArrayList<TwoDimensionalMap<Integer,Integer,String>>();
 
     try {
       String pLine;
       while ((pLine = pathReader.readLine()) != null) {
-        System.err.printf("line %d read from path reader\n", pathReader.getLineNumber());
-        //System.err.printf("(%d) %s\n", pathReader.getLineNumber(), pLine);
+        //System.err.printf("line %d read from path reader\n", pathReader.getLineNumber());
         TwoDimensionalMap<Integer,Integer,String> pathMap = new TwoDimensionalMap<Integer,Integer,String>();
         DepUtils.addPathsToMap(pLine, pathMap);
         pathMaps.add(pathMap);
@@ -78,7 +91,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     }
 
     System.err.println("DiscrimTypedDependencyReorderingFeaturizer path file = "+args[0]);
-    System.err.println("DiscrimTypedDependencyReorderingFeaturizer classifier file = "+args[1]);
+    System.err.println("DiscrimTypedDependencyReorderingFeaturizer classifier file = "+classifierFile);
     System.err.println("DiscrimTypedDependencyReorderingFeaturizer useBoundaryOnly? = "+useBoundaryOnly);
     System.err.printf("DiscrimTypedDependencyReorderingFeaturizer path file has %d entries\n", pathMaps.size());
   }
