@@ -43,9 +43,9 @@ public class TypedDepFeatureExtractor implements FeatureExtractor {
         if (matrix.chGraph != null) {
           SemanticGraph chGraph = matrix.chGraph;
           List<IndexedWord> list = chGraph.vertexList();
-          path.append(getPathName(example.src_j-1, example.src_jprime-1, list, chGraph));
+          path.append(DepUtils.getPathName(example.src_j-1, example.src_jprime-1, list, chGraph));
         } else if (matrix.pathMap != null) {
-          path.append(getPathName(example.src_j-1, example.src_jprime-1, matrix.pathMap));
+          path.append(DepUtils.getPathName(example.src_j-1, example.src_jprime-1, matrix.pathMap));
         }
         //System.err.printf("%d - %d\n", example.src_j-1, example.src_jprime-1);
         //System.err.println("PATH="+path.toString());
@@ -55,32 +55,5 @@ public class TypedDepFeatureExtractor implements FeatureExtractor {
     return features;
   }
   
-  static String getPathName(int node1, int node2, TwoDimensionalMap<Integer,Integer,String> pathMap) {
-    return pathMap.get(node1, node2);
-  }
 
-  static String getPathName(int node1, int node2, List<IndexedWord> list, SemanticGraph chGraph) {
-    List<SemanticGraphEdge> paths = chGraph.getShortestPathEdges(list.get(node1), list.get(node2));
-    int startI = node1;
-    StringBuilder sb = new StringBuilder();
-    if (paths==null) {
-    } else {
-      for (SemanticGraphEdge path : paths) {
-        int govid = list.indexOf(path.getGovernor());
-        int depid = list.indexOf(path.getDependent());
-        sb.append(path.getRelation());
-        if (startI == govid) {
-          sb.append("O");
-          startI = depid;
-        } else if (startI == depid) {
-          sb.append("R");
-          startI = govid;
-        } else {
-          throw new RuntimeException("blah");
-        }
-        sb.append("-");
-      }
-    }
-    return sb.toString();
-  }
 }

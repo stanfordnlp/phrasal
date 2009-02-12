@@ -42,21 +42,7 @@ public class AlignmentMatrix {
 
   void getPathInfo(String path) throws Exception{
     pathMap = new TwoDimensionalMap<Integer,Integer,String>();
-
-    path = path.trim();
-    if (path.length() > 0) {
-      String[] paths = path.split(" ");
-      for (String tuple : paths) {
-        String[] pieces = tuple.split(":");
-        if (pieces.length != 3) throw new RuntimeException("wrong format: "+path);
-        int i = Integer.parseInt(pieces[0]);
-        int j = Integer.parseInt(pieces[1]);
-        String pname = pieces[2];
-        if (pathMap.get(i,j) == null) {
-          pathMap.put(i,j,pname);
-        }
-      }
-    }
+    DepUtils.addPathsToMap(path, pathMap);
   }
 
 

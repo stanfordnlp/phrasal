@@ -22,7 +22,8 @@ public class TreesToDeps {
     PrintWriter pw = new PrintWriter(new GZIPOutputStream(new FileOutputStream(outFilename)));
     int lineno = 1;
     while((pLine = pReader.readLine()) != null) {
-      System.err.println("l="+lineno);
+      if (lineno % 100 == 0)
+        System.err.println("l="+lineno);
       lineno++;
       pLine = ReorderingClassifier.fixCharsInParse(pLine);
       Tree t = Tree.valueOf("("+pLine+")", trf);
@@ -33,7 +34,7 @@ public class TreesToDeps {
       for (int i = 0; i < list.size(); i++) {
         for (int j = 0; j < list.size(); j++) {
           if (i!=j) {
-            String path = TypedDepFeatureExtractor.getPathName(i, j, list, chGraph);
+            String path = DepUtils.getPathName(i, j, list, chGraph);
             if (path.length() > 0)
               pw.printf("%d:%d:%s ", i, j, path);
           }
