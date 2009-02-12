@@ -9,7 +9,7 @@ import java.io.*;
 
 public class TrainingExamples {
   List<TrainingExample> examples;
-  enum ReorderingTypes { ordered, distorted }
+  public enum ReorderingTypes { ordered, distorted }
 
   public TrainingExamples() {
     examples = new ArrayList<TrainingExample>();
