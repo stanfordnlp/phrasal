@@ -27,7 +27,7 @@ public class DepUtils {
     }
 
   }
-  static String getPathName(int node1, int node2, TwoDimensionalMap<Integer,Integer,String> pathMap) {
+  public static String getPathName(int node1, int node2, TwoDimensionalMap<Integer,Integer,String> pathMap) {
     return pathMap.get(node1, node2);
   }
   
