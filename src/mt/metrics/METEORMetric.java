@@ -6,6 +6,7 @@ import java.io.*;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.StreamGobbler;
+import edu.stanford.nlp.io.FileUtils;
 import mt.base.IOTools;
 
 /**
@@ -128,7 +129,6 @@ public class METEORMetric {
     out.append("</DOC>\n</");
     out.append(refset ? "refset" : "tstset");
     out.append(">\n");
-    //out.flush();
     out.close();
   }
 
@@ -140,19 +140,22 @@ public class METEORMetric {
   }
 
   public static void main(String[] args) {
+
+    if(args.length != 2) {
+      System.err.println("Usage: java mt.metrics.METEORMetric <ref> <hyp>");
+    }
+
     List<Pair<String,String>> data = new ArrayList<Pair<String,String>>();
+    List<String> ref = FileUtils.linesFromFile(args[0]);
+    List<String> hyp = FileUtils.linesFromFile(args[1]);
 
-    data.add(new Pair<String,String>
-     ("ezzat ibrahim receives responsible economically denied permission to baghdad",
-      "Izzet Ibrahim Meets Saudi Trade Official in Baghdad"));
+    if(ref.size() != hyp.size())
+      throw new RuntimeException
+        (String.format("Different number of lines: %d != %d\n", ref.size(), hyp.size())); 
 
-    data.add(new Pair<String,String>
-     ("baghdad 1-1 ( afp ) - news agency reported the official iraqi vice president of the revolution in iraq ezzat ibrahim met here today wednesday in baghdad board chairman of the saudi center for developing export abdel rahman al-zamil .",
-      "Baghdad 1-1 (AFP) - Iraq's official news agency reported that the Deputy Chairman of the Iraqi Revolutionary Command Council, Izzet Ibrahim, today met with Abdul Rahman al-Zamil, Managing Director of the Saudi Center for Export Development."));
-
-    data.add(new Pair<String,String>
-     ("agency reported that ibrahim welcomed the appropriate level of cooperation and trade relations between iraq and saudi arabia .",
-      "The agency said Ibrahim welcomed this occasion for trade exchange and cooperation between Iraq and Saudi Arabia."));
+    for(int i=0; i<ref.size(); ++i) {
+      data.add(new Pair<String,String>(ref.get(i), hyp.get(i)));
+    }
 
     for(Map.Entry<String,Double> datum : score(data,"exact").entrySet()) {
        System.err.printf("pair: %s\nscore: %f\n\n", datum.getKey(), datum.getValue()); 
