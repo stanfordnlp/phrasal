@@ -6,13 +6,13 @@ import edu.stanford.nlp.process.*;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.parser.lexparser.*;
 import java.io.*;
-import java.util.zip.GZIPInputStream;
 import java.util.*;
 import edu.stanford.nlp.trees.tregex.tsurgeon.*;
 import edu.stanford.nlp.trees.tregex.*;
 
 public class EnglishTreeReader extends AbstractTreeReader {
-  private PTBEscapingProcessor ptbe_;
+
+  //private PTBEscapingProcessor ptbe_;
 
   public EnglishTreeReader() {
     trees_ = new ArrayList<Tree>();
@@ -20,7 +20,7 @@ public class EnglishTreeReader extends AbstractTreeReader {
     tlpp_.setOptionFlag(new String[] {"-leaveItAll", "1"}, 0);
     treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket", tlpp_.treebankLanguagePack());
     tt_ = new NMLandPOSTreeTransformer();
-    ptbe_ = new PTBEscapingProcessor();
+    //ptbe_ = new PTBEscapingProcessor();
   }
 
   public EnglishTreeReader(String filename) throws IOException {
@@ -67,21 +67,21 @@ public class EnglishTreeReader extends AbstractTreeReader {
           String nextTreeSig = createSignature(nextT);
           treeSig = treeSig+nextTreeSig;
           
-          boolean outloop = false;
+          //boolean outloop = false;
 
           if (alignEngSignature.equals(treeSig)) {
             newTrees.add(nextT);
             trees.addAll(newTrees);
-            outloop = true;
+            //outloop = true;
             break;
           } else if (alignEngSignature.startsWith(treeSig)) {
             newTrees.add(nextT);
             nextTreeidx++;
           } else if (alignEngSignature.length() < treeSig.length()) {
-            outloop = true;
+            //outloop = true;
             break;
           }
-          if (outloop) break;
+          //if (outloop) break;
         }
       }
       treeidx++;
@@ -93,9 +93,10 @@ public class EnglishTreeReader extends AbstractTreeReader {
 
   public static void main(String args[]) throws IOException {
     EnglishTreeReader etr = new EnglishTreeReader();
+    String dirName = TransTBUtils.etbDir();
     for(int i = 1; i <= 325; i++) {
       String name =
-        String.format("/u/nlp/scr/data/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/chtb_%03d.mrg.gz", i);
+        String.format(dirName+"/chtb_%03d.mrg.gz", i);
       System.err.println(name);
       etr.readMoreTrees(name);
       System.err.println("number of trees="+etr.size());
@@ -111,7 +112,9 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
     ptbe = new PTBEscapingProcessor();
   }
 
+  @SuppressWarnings("unchecked")
   public Tree transformTree(Tree tree)  {
+    
     try {
       // NML --> NX
       TregexPattern matchPattern = TregexPattern.compile("NML=nml");
@@ -124,16 +127,15 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
       e.printStackTrace();
       throw new RuntimeException("Error in Tsurgeon");
     }
+
     // merge (POS ') (* s) --> (POS 's)
     tree = mergeApostropheS(tree);
 
     // if after mergeApostropheS, there are still (POS s), 
     // change them into (POS 's)
     tree = sToApostropheS(tree);
-
-
     
-    // normalize leaves
+    // fix leaves
     List<Tree> leaves = tree.getLeaves();
 
     List<HasWord> words = new ArrayList<HasWord>();
@@ -160,18 +162,17 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
     }
 
     // fix cases like "etc."
-    for (int i = 0; i < leaves.size(); i++) {
-      String val = leaves.get(i).value();
+    for (Tree leave : leaves) {
+      String val = leave.value();
       if (val.equals("etc")) {
-        leaves.get(i).setValue("etc.");
+        leave.setValue("etc.");
       }
       if (val.equals("Ltd")) {
-        leaves.get(i).setValue("Ltd.");
+        leave.setValue("Ltd.");
       }
     }
     return tree;
   }
-
 
   static Tree sToApostropheS(Tree tree) {
     List<Tree> leaves = tree.getLeaves();

@@ -6,12 +6,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.*;
 import java.util.*;
-import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.ling.*;
-import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.parser.lexparser.*;
-import edu.stanford.nlp.process.*;
 
 
 /**
@@ -255,7 +251,7 @@ public class AlignmentUtils {
       String content = StringUtils.slurpFile(file);
       String[] sents = content.split("</seg>");
       for (String sent : sents) {
-        sent = sent.trim();;
+        sent = sent.trim();
         if (sent.length()>0) {
           TranslationAlignment ta = new TranslationAlignment(sent);
           if (ta.isWellFormed()) {
@@ -265,6 +261,23 @@ public class AlignmentUtils {
           }
         }
       }
+    }
+    return alignment_list;
+  }
+
+  public static List<TranslationAlignment> readFromSentenceAlignedFiles(String cFile, String eFile) 
+  throws IOException {
+    List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
+
+    String[] cLines = StringUtils.slurpFile(cFile).split("\\n");
+    String[] eLines = StringUtils.slurpFile(eFile).split("\\n");
+    if(eLines.length != cLines.length)
+      throw new RuntimeException(String.format("Two files with different number of lines: %s %s\n",cFile,eFile));
+    for(int i=0; i<eLines.length; ++i) {
+      String[] cLine = cLines[i].trim().split("\\s+");
+      String[] eLine = eLines[i].trim().split("\\s+");
+      TranslationAlignment ta = new TranslationAlignment(cLine,eLine);
+      alignment_list.add(ta);
     }
     return alignment_list;
   }

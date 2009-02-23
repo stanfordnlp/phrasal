@@ -1,9 +1,7 @@
 package mt.train.transtb;
 
-import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.parser.lexparser.*;
-import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.ling.*;
 import java.io.*;
 import java.util.zip.GZIPInputStream;
@@ -15,7 +13,7 @@ public abstract class AbstractTreeReader {
   TreePrint treeprint_;
   TreeTransformer tt_;
 
-  private PrintWriter pw = new PrintWriter(System.out, true);
+  //private PrintWriter pw = new PrintWriter(System.out, true);
 
   public int readMoreTrees(String filename) throws IOException {
     Reader reader;
@@ -24,6 +22,7 @@ public abstract class AbstractTreeReader {
     } else {
       reader = new FileReader(filename);
     }
+
     Iterator<Tree> i = tlpp_.treeTokenizerFactory().getTokenizer(new BufferedReader(reader));
 
     while(i.hasNext()) {

@@ -8,6 +8,7 @@ import java.util.*;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.OAIndex;
+import edu.stanford.nlp.io.FileUtils;
 
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
@@ -226,5 +227,35 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     if(h==null)
       throw new RuntimeException("Error in alignment file");
     return h.getIBMWordAlignment();
+  }
+
+  public static void main(String[] args) throws IOException {
+    List<String>
+      fLines = FileUtils.linesFromFile(args[0]),
+      eLines = FileUtils.linesFromFile(args[1]),
+      aLines = FileUtils.linesFromFile(args[2]);
+    for(int i=0; i<eLines.size(); ++i) {
+      System.err.printf("Line %d\n",i);
+      System.out.printf("f-sent: %s\n",fLines.get(i));
+      System.out.printf("e-sent: %s\n",eLines.get(i));
+      System.out.printf("align: %s\n",aLines.get(i));
+      try {
+        AbstractWordAlignment wa = new SymmetricalWordAlignment(fLines.get(i), eLines.get(i), aLines.get(i));
+        for(int j=0; j<wa.eSize(); ++j) {
+          System.out.printf("%s {", wa.e().get(j));
+          boolean first=true;
+          for(int fi : wa.e2f(j)) {
+            if(!first)
+              System.out.print(",");
+            first=false;
+            System.out.printf("%s", wa.f().get(fi));
+          }
+          System.out.print("} ");
+        }
+        System.out.println();
+      } catch(Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 }

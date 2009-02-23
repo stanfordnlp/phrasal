@@ -1,9 +1,6 @@
 package mt.train.transtb;
 
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.*;
-import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.ling.*;
 import java.util.*;
 
 public class TreePair {

@@ -6,22 +6,21 @@ import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.parser.lexparser.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
 import java.io.*;
-import java.util.zip.GZIPInputStream;
 import java.util.*;
 
 public class ChineseTreeReader extends AbstractTreeReader {
-  private ChineseEscaper ce_;
+
+  //private ChineseEscaper ce_;
 
   public ChineseTreeReader() {
     trees_ = new ArrayList<Tree>();
     tlpp_ = new ChineseTreebankParserParams();
     treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket,basicDependencies", tlpp_.treebankLanguagePack());
     tt_ = new ChineseTreeTransformer();
-    ce_ = new ChineseEscaper();
+    //ce_ = new ChineseEscaper();
   }
 
   public ChineseTreeReader(String filename) throws IOException {
-    this();
     readMoreTrees(filename);
   }
   
@@ -36,8 +35,7 @@ public class ChineseTreeReader extends AbstractTreeReader {
       StringBuilder sb = new StringBuilder();
       Sentence<HasWord> hws = getWords(t);
       //for (HasWord hw : hws) {
-      for(int i = 0; i < hws.size(); i++) {
-        HasWord hw = hws.get(i);
+      for (HasWord hw : hws) {
         sb.append(hw.word());
       }
       // the tree should already be normalized
@@ -58,9 +56,9 @@ public class ChineseTreeReader extends AbstractTreeReader {
   public static void main(String args[]) throws IOException {
     
     ChineseTreeReader ctr = new ChineseTreeReader();
+    String dirName = TransTBUtils.ctbDir();
     for(int i = 1; i <= 325; i++) {
-      String name = 
-        String.format("/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/chtb_%04d.fid", i);
+      String name = String.format(dirName+"/chtb_%04d.fid", i);
       System.err.println(name);
       ctr.readMoreTrees(name);
       System.err.println("number of trees="+ctr.size());

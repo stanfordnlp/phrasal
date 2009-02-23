@@ -30,9 +30,9 @@ class DumpTreesAndAlignment {
     if(args.length == 1) {
       genHTML = false;
       String out = args[0];
-      fWriter = IOTools.getWriterFromFile(out+".f");
-      eWriter = IOTools.getWriterFromFile(out+".e");
-      aWriter = IOTools.getWriterFromFile(out+".a");
+      fWriter = IOTools.getWriterFromFile(out+".zh.trees");
+      eWriter = IOTools.getWriterFromFile(out+".en.trees");
+      aWriter = IOTools.getWriterFromFile(out+".align");
     }
 
     List<TreePair> treepairs;
@@ -47,8 +47,8 @@ class DumpTreesAndAlignment {
     // but could have more than one English trees.
     // Other than trees, the "alignment" data member is also useful 
     // for general purpose.
-    treepairs = TransTBUtils.readAnnotatedTreePairs(reducedCategory, 
-                                                       nonOracleTree);
+    treepairs = TransTBUtils.readAnnotatedTreePairs
+         (reducedCategory,  nonOracleTree);
 
     if(genHTML)
       AlignmentUtils.printAlignmentGridHeader();
@@ -65,14 +65,14 @@ class DumpTreesAndAlignment {
       if(genHTML)
         printTreesAndAlignment(validSent, alignment);
       else {
-        fWriter.println(skipRoot(chTree.getChild(0)).toString());
+        fWriter.println("( "+chTree.getChild(0).toString()+" )");
         StringBuffer buf = new StringBuffer();
         if(enTrees.size() > 1)
           buf.append("( ");
         for(int i=0; i<enTrees.size(); ++i) {
           if(i>0)
             buf.append(" ");
-          buf.append(skipRoot(enTrees.get(i)).toString());
+          buf.append(enTrees.get(i).toString());
         }
         if(enTrees.size() > 1)
           buf.append(" )");
@@ -90,13 +90,5 @@ class DumpTreesAndAlignment {
       eWriter.close();
       aWriter.close();
     }
-  }
-
-    /** Returns child if it is unique and the current label is "ROOT".
-   *
-   * @return
-   */
-  static Tree skipRoot(Tree t) {
-    return (t.isUnaryRewrite() && "ROOT".equals(t.label().value())) ? t.firstChild() : t;
   }
 }

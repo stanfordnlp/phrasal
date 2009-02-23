@@ -164,6 +164,11 @@ public class TranslationAlignment {
     return false;
   }
 
+  TranslationAlignment(String[] source, String[] translation) {
+    this.source_ = source.clone();
+    this.translation_ = translation.clone();
+  }
+
   public TranslationAlignment(String[] source, String[] translation, int[][] matrix) {
     this.source_ = new String[source.length];
     this.translation_ = new String[translation.length];
