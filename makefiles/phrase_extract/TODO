@@ -1,1 +1,0 @@
-Makefile: restore ability to generate more than one lexicalized reordering table per run of 'make'.

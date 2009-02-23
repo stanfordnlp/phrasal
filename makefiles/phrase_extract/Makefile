@@ -18,9 +18,8 @@ SCRIPTS_ROOTDIR=$(MOSESDIR)/trunk/scripts
 MM=$(SCRIPTS_ROOTDIR)/training/mert-moses.pl
 
 # Evaluation scripts:
-METEOR=/u/nlp/packages/meteor-0.6
+METEOR=/u/nlp/packages/meteor-0.7
 JTER=tercom_mult_java.pl
-BLEU=/u/nlp/data/gale/scr/chinese-interlingua/multi-bleu-uncased-nist.perl
 
 # TER default parameters (too slow for MERT):
 #BEAM_WIDTH=20
@@ -36,12 +35,14 @@ include Makefile.local
 LTABLES_DEV= \
 	$(DEVID).tables/lo-word.msd-bidirectional-fe.gz \
 	$(DEVID).tables/lo-phrase.msd-bidirectional-fe.gz \
+	$(DEVID).tables/lo-phrase.msd2-bidirectional-fe.gz \
 	$(DEVID).tables/lo-hier.msd-bidirectional-fe.gz \
 	$(DEVID).tables/lo-hier.msd2-bidirectional-fe.gz
 
 LTABLES_TEST= \
 	$(TESTID).tables/lo-word.msd-bidirectional-fe.gz \
 	$(TESTID).tables/lo-phrase.msd-bidirectional-fe.gz \
+	$(TESTID).tables/lo-phrase.msd2-bidirectional-fe.gz \
 	$(TESTID).tables/lo-hier.msd-bidirectional-fe.gz \
 	$(TESTID).tables/lo-hier.msd2-bidirectional-fe.gz
 
@@ -86,7 +87,7 @@ nbest: test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
 nbest_google: test_extract_google $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
 nbest_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
 
-ltables: $(LTABLES)
+ltables: $(LTABLES_DEV) $(LTABLES_TEST)
 
 # Java configuration:
 JAVA_PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE) 
@@ -99,32 +100,30 @@ MOSES_ARGS=$(LOCAL_MOSES_ARGS)
 # Evaluation:
 #############################################
 
-### TER for test/dev data:
-### (the X in .terX refers to the "speed" of the algorithm used for TER computation;
-###  1=DP, generally runs in 4-5 hours for 1000 sentences
-###  2=beam search (beam size=10), generally runs in 10-15 minutes 
-###  In general, expect 0.5% TER difference between DP and beam search. 
+### BLEU:
+$(DEVID).%.bleu: $(DEVID).%
+	cat $< | java mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
+$(TESTID).%.bleu: $(TESTID).%
+	cat $< | java mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
+
+### TER:
 $(DEVID).%.ter: $(DEVID).%
-	$(JTER) --sgm $(DEV_REF)/empty.sgm $(DEV_REF)/ref $< $@ >& logs/$@.log
+	cat $< | java mt.metrics.TERMetric $(DEV_REF)/ref{0,1,2,3} > $@
 $(TESTID).%.ter: $(TESTID).%
-	$(JTER) --sgm $(TEST_REF)/empty.sgm $(TEST_REF)/ref $< $@ >& logs/$@.log
+	cat $< | java mt.metrics.TERMetric $(TEST_REF)/ref{0,1,2,3} > $@
+
+### TER-BLEU:
+$(DEVID).%.tb: $(DEVID).%
+	cat $< | java -Xmx2g -Xms2g mt.metrics.LinearCombinationMetric $(DEV_REF)/ref{0,1,2,3} > $@
+$(TESTID).%.tb: $(TESTID).%
+	cat $< | java -Xmx2g -Xms2g mt.metrics.LinearCombinationMetric $(TEST_REF)/ref{0,1,2,3} > $@
 
 ### Meteor:
-$(TESTID).%.meteor: $(TESTID).%.mbr
+$(TESTID).%.meteor: $(TESTID).%
 	/scr/nlp/data/gale/MT-metric-correlation/scripts/txt2sgml --type hyp < $< > $<.hyp.sgm
 	/scr/nlp/data/gale/MT-metric-correlation/scripts/txt2sgml --type ref < $(TEST_REF)/ref0 > $<.ref.sgm
 	perl $(METEOR)/meteor.pl -s any -t $<.hyp.sgm -r $<.ref.sgm --modules "exact porter_stem wn_synonymy" >& $@
 	rm $<.hyp.sgm $<.ref.sgm
-
-### TER-BLEU:
-$(TESTID).%.tb: $(TESTID).%
-	cat $< | java -Xmx2g -Xms2g mt.metrics.LinearCombinationMetric $(TEST_REF)/ref{0,1,2,3} > $@
-
-### BLEU:
-$(TESTID).%.bleu: $(TESTID).%
-	cat $< | $(BLEU) $(TEST_REF)/ref > $@
-$(DEVID).%.bleu: $(DEVID).%
-	cat $< | $(BLEU) $(DEV_REF)/ref > $@
 
 #############################################
 # Post-processing:
@@ -260,6 +259,10 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 # Language models:
 #############################################
 
+### Binarize LM:
+%.lm.bin: %.lm.gz
+	ngram -order 5 -lm $< -write-bin-lm $@ > $@.log
+
 ### Mixed model (google + giga):
 
 %.mix1.lm.gz: %.flt_giga.lm.gz %.rsc_google.lm.gz
@@ -293,7 +296,7 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -tolower
 
 %.e.class.phrases: %.e.phrases
-	cat $< | eng_simpl_class.pl 1 0 | ibm2class > $@
+	cat $< | eng_simpl_class.pl 1 0 | ibm2class > $@ >& logs/$@.log
 
 %.e.phrases: %.tables/phrase-table.gz %.$(FE)
 	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
@@ -349,6 +352,8 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpu
 # (remove unk words, etc.)
 #############################################
 
+NE=sed 's/^ *$$/null/'
+
 %/.create:
 	mkdir $(*F) && touch $@
 
@@ -359,7 +364,7 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpu
 ### Handle unknown words (e.g., delete them):
 %.prep: %.unk %.tables/phrase-table.gz
 	rm -f $@
-	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@ >& $@.err
+	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@ | $(NE) >& $@.err
 
 ### Convert SGML file into raw text, and remove IBM classing:
 %.unk: %.sgm
