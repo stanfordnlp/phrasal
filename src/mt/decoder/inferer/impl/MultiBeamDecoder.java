@@ -176,7 +176,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 			if (DEBUG) System.err.println();
 			
 			CountDownLatch cdl = new CountDownLatch(numProcs);
-			for (int threadId = 0; threadId < numProcs; threadId++) {				
+			for (int threadId = 0; threadId < numProcs; threadId++) {
 				BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz, optionGrid, constrainedOutputSpace, translationId, threadId, numProcs, cdl);
 				threadPool.execute(beamExpander);
 			}
@@ -299,10 +299,20 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		int optionsApplied = 0;
 		int hypPos = -1;
 		int totalHypothesesGenerated = 0;
-		
-		for (Hypothesis<TK, FV> hyp : beams[beamId]) {
+	
+		Hypothesis<TK, FV>[] hyps;
+		synchronized(beams[beamId]) {
+		  hyps = new Hypothesis[beams[beamId].size()]; 	
+			int i = -1;
+		  for (Hypothesis<TK, FV> hyp : beams[beamId]) { i++;
+				hyps[i] = hyp;
+			}
+		}
+
+		for (Hypothesis<TK, FV> hyp : hyps) {
 		  hypPos++;
 			if (hypPos % threadCount != threadId) continue;
+			if (hyp == null) continue;
 			//System.err.printf("\nExpanding hyp: %s\n", hyp);
 			int localOptionsApplied = 0;
 		    //	System.err.printf("Start position: %d\n", hyp.foreignCoverage.nextClearBit(0));
