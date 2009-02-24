@@ -45,7 +45,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugDiscrimTypedDependencyReorderingFeaturizer";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
-  private Boolean useBoundaryOnly = false;
+  private Boolean useSRCJ2 = false;
   private LineNumberReader pathReader = null;
   private List<TwoDimensionalMap<Integer,Integer,String>> pathMaps = null;
   private LinearClassifier lc = null;
@@ -61,9 +61,9 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
   public DiscrimTypedDependencyReorderingFeaturizer(String... args) throws IOException {
     if(args.length < 1 || args.length > 3)
       throw new RuntimeException
-        ("Usage: DiscrimTypedDependencyReorderingFeaturizer(pathFile,classifierFile,useBoundaryOnly?)");
+        ("Usage: DiscrimTypedDependencyReorderingFeaturizer(pathFile,classifierFile,useSRCJ2?)");
     if (args.length > 2) {
-      useBoundaryOnly = Boolean.parseBoolean(args[2]);
+      useSRCJ2 = Boolean.parseBoolean(args[2]);
     }
 
     Runtime rt = Runtime.getRuntime();
@@ -103,7 +103,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     }
 
     System.err.println("DiscrimTypedDependencyReorderingFeaturizer classifier file = "+classifierFile);
-    System.err.println("DiscrimTypedDependencyReorderingFeaturizer useBoundaryOnly? = "+useBoundaryOnly);
+    System.err.println("DiscrimTypedDependencyReorderingFeaturizer useSRCJ2? = "+useSRCJ2);
     if (usePathFile)
       System.err.println("DiscrimTypedDependencyReorderingFeaturizer path file = "+args[0]);
     else
@@ -237,6 +237,13 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
       features.addAll(extractFeatures_SRCJ(f, J));
     }
 
+    if (useSRCJ2) {
+      // SRCJ2
+      for (int J2 = j2; J2 < j2+lenC2; J2++) {
+        features.addAll(extractFeatures_SRCJ2(f, J2));
+      }
+    }
+
     // TGTI
     for (int I = i; I < i+lenE; I++) {
       features.addAll(extractFeatures_TGTI(e, I));
@@ -260,6 +267,17 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
       }
     }
     
+    return features;
+  }
+  
+  private List<String> extractFeatures_SRCJ2(Sequence<IString> f, int j2) {
+    List<String> features = new ArrayList<String>();
+    // SRCJ2
+    for (int d = -WINDOW; d <= WINDOW; d++) {
+      StringBuilder feature = new StringBuilder("SRCJ2_");
+      feature.append(d).append(":").append(getSourceWord(f, j2+d));
+      features.add(feature.toString());
+    }
     return features;
   }
 
