@@ -34,9 +34,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	
 	public final boolean useITGConstraints;
 	final int maxDistortion;
-	static final int numProcs = (System.getProperty("numProcs") != null ? 
-         Integer.parseInt(System.getProperty("numProcs")) :
-         Runtime.getRuntime().availableProcessors());
+	final int numProcs; 
 	
 	static {
 		if (ALIGNMENT_DUMP != null) {
@@ -45,7 +43,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	}
 	
 	
-	ExecutorService threadPool = Executors.newFixedThreadPool(numProcs); 
+	ExecutorService threadPool;
 
 	static public <TK,FV> MultiBeamDecoderBuilder<TK,FV> builder() {
 		return new MultiBeamDecoderBuilder<TK,FV>();
@@ -55,6 +53,16 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		super(builder);
 		maxDistortion = builder.maxDistortion;
 		useITGConstraints = builder.useITGConstraints;
+
+		if (builder.internalMultiThread) {
+			numProcs = (System.getProperty("numProcs") != null ?
+                  Integer.parseInt(System.getProperty("numProcs")) :
+                  Runtime.getRuntime().availableProcessors());
+		} else {
+			numProcs = 1;
+		}
+ 		threadPool = Executors.newFixedThreadPool(numProcs); 
+
 		if (useITGConstraints) {
 			System.err.printf("Using ITG Constraints\n");
 		} else {
@@ -70,7 +78,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	public static class MultiBeamDecoderBuilder<TK,FV> extends AbstractBeamInfererBuilder<TK,FV> {
 		int maxDistortion = DEFAULT_MAX_DISTORTION;
 		boolean useITGConstraints = DEFAULT_USE_ITG_CONSTRAINTS;
-		
+		boolean internalMultiThread;
+
+		public MultiBeamDecoderBuilder<TK,FV> setInternalMultiThread(boolean internalMultiThread) {
+			this.internalMultiThread = internalMultiThread;
+			return this;
+    }		
 		public MultiBeamDecoderBuilder<TK,FV> setMaxDistortion(int maxDistortion) {
 			this.maxDistortion = maxDistortion;
 			return this;
@@ -309,6 +322,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 			}
 		}
 
+
 		for (Hypothesis<TK, FV> hyp : hyps) {
 		  hypPos++;
 			if (hypPos % threadCount != threadId) continue;
@@ -401,9 +415,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 							continue;
 						}
 						
-						int foreignWordsCovered = newHyp.foreignCoverage
-								.cardinality();
-						synchronized(beams[foreignWordsCovered]) { beams[foreignWordsCovered].put(newHyp); }
+						int foreignWordsCovered = newHyp.foreignCoverage.cardinality();
+						synchronized(beams[foreignWordsCovered]) { 
+      				beams[foreignWordsCovered].put(newHyp); 
+						}
+
 						optionsApplied++;
 						localOptionsApplied++;
 					}
@@ -419,6 +435,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		if (DEBUG) {
 			System.err.printf("Options applied: %d\n", optionsApplied);
 		}
+
 
 		cdl.countDown();
 		return totalHypothesesGenerated;	
@@ -438,3 +455,4 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		alignmentDump.append("\n");
 	}
 }
+

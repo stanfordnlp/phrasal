@@ -695,8 +695,8 @@ public class PseudoMoses {
 				isolatedPhraseFeaturizer, scorer,
 				HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
 		// Create Inferer
-    inferers = new ArrayList<Inferer<IString, String>>(local_procs);
-    for (int i = 0; i < local_procs; i++) {
+    inferers = new ArrayList<Inferer<IString, String>>(local_procs == 0 ? 1 : local_procs);
+    for (int i = 0; i < (local_procs == 0 ? 1 : local_procs); i++) {
   		// Configure InfererBuilder
   		MultiBeamDecoder.MultiBeamDecoderBuilder infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder) InfererBuilderFactory
   		.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
@@ -706,6 +706,9 @@ public class PseudoMoses {
   		infererBuilder.setSearchHeuristic(heuristic.clone());
   		infererBuilder.setRecombinationFilter(filter.clone());
   		infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
+			if (local_procs == 0) {
+				infererBuilder.setInternalMultiThread(true);
+      }
 
   		if (distortionLimit != -1) {
   			infererBuilder.setMaxDistortion(distortionLimit);
@@ -731,6 +734,7 @@ public class PseudoMoses {
 
 		  inferers.add(infererBuilder.build());
     }
+		if (local_procs == 0) local_procs = 1;
 
 		// determine if we need to generate n-best lists
 		List<String> nbestOpt = config.get(NBEST_LIST_OPT);
