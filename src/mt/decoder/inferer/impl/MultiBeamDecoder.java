@@ -34,7 +34,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	
 	public final boolean useITGConstraints;
 	final int maxDistortion;
-	static final int numProcs = Runtime.getRuntime().availableProcessors();
+	static final int numProcs = (System.getProperty("numProcs") != null ? 
+         Integer.parseInt(System.getProperty("numProcs")) :
+         Runtime.getRuntime().availableProcessors());
 	
 	static {
 		if (ALIGNMENT_DUMP != null) {
@@ -300,6 +302,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		
 		for (Hypothesis<TK, FV> hyp : beams[beamId]) {
 		  hypPos++;
+			if (hypPos % threadCount != threadId) continue;
 			//System.err.printf("\nExpanding hyp: %s\n", hyp);
 			int localOptionsApplied = 0;
 		    //	System.err.printf("Start position: %d\n", hyp.foreignCoverage.nextClearBit(0));
