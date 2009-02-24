@@ -11,6 +11,13 @@ public class TrainingExamples {
   List<TrainingExample> examples;
   public enum ReorderingTypes { ordered, distorted }
 
+  private boolean dealWithEmpty=false, dealWithMultiTarget=false;
+
+  public TrainingExamples(boolean dealWithEmpty, boolean dealWithMultiTarget) {
+    this();
+    this.dealWithEmpty = dealWithEmpty;
+    this.dealWithMultiTarget = dealWithMultiTarget;
+  }
   public TrainingExamples() {
     examples = new ArrayList<TrainingExample>();
   }
@@ -28,15 +35,14 @@ public class TrainingExamples {
         if (matrix.fe[fi][ei_prime]) eiprime_fs.add(fi);
       }
 
-      // TODO: needs to decide if I want the following code
-      /*
-      while (eiprime_fs.size() == 0 && ei_prime+1 < matrix.e.length) {
-        ei_prime++;
-        for(int fi = 0; fi < matrix.f.length; fi++) {
-          if (matrix.fe[fi][ei_prime]) eiprime_fs.add(fi);
+      if (dealWithEmpty) {
+        while (eiprime_fs.size() == 0 && ei_prime+1 < matrix.e.length) {
+          ei_prime++;
+          for(int fi = 0; fi < matrix.f.length; fi++) {
+            if (matrix.fe[fi][ei_prime]) eiprime_fs.add(fi);
+          }
         }
       }
-      */
 
       if (ei_fs.size() == 0 || eiprime_fs.size() == 0) {
         classCounter.incrementCount("empty");

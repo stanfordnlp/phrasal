@@ -42,6 +42,8 @@ public class ReorderingClassifier {
   static public final String TRAINALL_OPT = "trainAll";
   static public final String WRITE_CLASSIFIER_OPT = "writeClassifier";
   static public final String WRITE_HTML_OPT = "writeHTML";
+  static public final String DEAL_EMPTY_OPT = "dealWithEmpty";
+  static public final String DEAL_MULTITGT_OPT = "dealWithMultiTarget";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -60,7 +62,9 @@ public class ReorderingClassifier {
         F_PATH_OPT,
         TRAINALL_OPT,
         WRITE_CLASSIFIER_OPT,
-        WRITE_HTML_OPT
+        WRITE_HTML_OPT,
+        DEAL_EMPTY_OPT,
+        DEAL_MULTITGT_OPT
         ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -74,6 +78,7 @@ public class ReorderingClassifier {
   private String writeClassifier, writeHTML;
   private PrintWriter htmlPW = null;
   private List<FeatureExtractor> extractors;
+  private boolean dealWithEmpty, dealWithMultiTarget;
   
   public ReorderingClassifier(Properties prop) throws Exception {
     analyzeProperties(prop);
@@ -114,6 +119,8 @@ public class ReorderingClassifier {
     trainAll = Boolean.parseBoolean(prop.getProperty(TRAINALL_OPT, "false"));
     writeClassifier = prop.getProperty(WRITE_CLASSIFIER_OPT);
     writeHTML = prop.getProperty(WRITE_HTML_OPT, null);
+    dealWithEmpty = Boolean.parseBoolean(prop.getProperty(DEAL_EMPTY_OPT, "false"));
+    dealWithMultiTarget = Boolean.parseBoolean(prop.getProperty(DEAL_MULTITGT_OPT, "false"));
     if (writeHTML != null) { htmlPW = new PrintWriter(new FileWriter(writeHTML)); }
 
     System.out.println("========== General Properties ==========");
@@ -124,8 +131,9 @@ public class ReorderingClassifier {
     System.out.printf("-%s : %s\n", F_PATH_OPT, fPath);
     System.out.printf("-%s : %s\n", TRAINALL_OPT, trainAll);
     System.out.printf("-%s : %s\n", WRITE_CLASSIFIER_OPT, writeClassifier);
-    if (writeHTML!=null)
-      System.out.printf("-%s : %s\n", WRITE_HTML_OPT, writeHTML);
+    System.out.printf("-%s : %s\n", WRITE_HTML_OPT, writeHTML);
+    System.out.printf("-%s : %s\n", DEAL_EMPTY_OPT, dealWithEmpty);
+    System.out.printf("-%s : %s\n", DEAL_MULTITGT_OPT, dealWithMultiTarget);
     System.out.println("========================================");
   }
 
@@ -210,7 +218,7 @@ public class ReorderingClassifier {
         
         if (htmlPW!=null) DisplayUtils.printAlignmentMatrix(sent, htmlPW);
         
-        TrainingExamples exs = new TrainingExamples();
+        TrainingExamples exs = new TrainingExamples(dealWithEmpty, dealWithMultiTarget);
 
         allTypesCounter.addAll(exs.extractExamples(sent));
 
