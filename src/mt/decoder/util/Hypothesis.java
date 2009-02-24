@@ -127,7 +127,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 		linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos : baseHyp.translationOpt.linearDistortion(translationOpt));
 		featurizable = new Featurizable<TK,FV>(this, translationId);
 		localFeatures = featurizer.listFeaturize(featurizable);
-		score = (scorer.randomizeTag() ? r.nextDouble()*100 : baseHyp.score + scorer.getIncrementalScore(localFeatures));
+		score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
 		h = baseHyp.h + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
 		depth = baseHyp.depth + 1;
 	}

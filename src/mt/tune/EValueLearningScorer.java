@@ -224,17 +224,6 @@ public class EValueLearningScorer implements Scorer<String> {
 		return score;
 	}
 
-	@Override
-	public boolean hasNonZeroWeight(String featureName) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean randomizeTag() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	public static List<FeatureValue<String>> summarizedFeatureVector(List<FeatureValue<String>> featureValues) {
 		ClassicCounter<String> sumValues = new ClassicCounter<String>();
@@ -248,7 +237,6 @@ public class EValueLearningScorer implements Scorer<String> {
 		return fVector;
 	}
 	
-	@Override
 	public void saveWeights(String filename) throws IOException {
 		System.err.printf("Saving weights to: %s\n", filename);
 		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
@@ -294,12 +282,7 @@ public class EValueLearningScorer implements Scorer<String> {
 	}
 	
 
-	@Override
-	public void setRandomizeTag(boolean randomizeTag) {
-		// TODO Auto-generated method stub
-		
-	}
-
+	
 	class ComparableWtPair implements Comparable<ComparableWtPair> {
 		String featureName;
 		double value;
@@ -314,11 +297,6 @@ public class EValueLearningScorer implements Scorer<String> {
 			if (signum != 0) return signum;
 			return this.featureName.compareTo(o.featureName);
 		}
-	}
-
-	@Override
-	public void displayWeights() {
-		try { displayWts(); } catch (Exception e) {;} 
 	}
 	
 

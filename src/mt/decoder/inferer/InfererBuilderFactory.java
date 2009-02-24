@@ -58,24 +58,12 @@ public class InfererBuilderFactory {
 			}
 		}
 		
-		if (infererName.equals(GREEDY_DECODER)) {
-			return GreedyDecoder.builder();
-		} if (infererName.equals(UNIBEAM_DECODER)) {
-			UnibeamDecoder.UnibeamDecoderBuilder<IString, String> builder = UnibeamDecoder.builder();
-			if (beamSize != -1) builder.setBeamCapacity(beamSize);
-			if (beamType != null) builder.setBeamType(beamType);
-			return builder;
-		} else if (infererName.equals(MULTIBEAM_DECODER)) {
+		if (infererName.equals(MULTIBEAM_DECODER)) {
 			MultiBeamDecoder.MultiBeamDecoderBuilder<IString,String> builder = MultiBeamDecoder.builder();
 			if (beamSize != -1) builder.setBeamCapacity(beamSize);
 			if (beamType != null) builder.setBeamType(beamType);
 			return builder;
-		} else if (infererName.equals(COVERAGEBEAM_DECODER)) {
-			CoverageBeamDecoder.CoverageBeamDecoderBuilder<IString, String> builder = CoverageBeamDecoder.builder();
-			if (beamSize != -1) builder.setBeamCapacity(beamSize);
-			if (beamType != null) builder.setBeamType(beamType);
-			return builder;
-		}
+		} 
 		
 		throw new RuntimeException(String.format( 
 				"Unrecognized Inferer '%s'", infererName));

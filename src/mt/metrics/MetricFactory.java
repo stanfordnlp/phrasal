@@ -51,6 +51,6 @@ public class MetricFactory {
 	}
 	
 	public static EvaluationMetric<IString,String> metric(List<List<Sequence<IString>>> references) {
-		return new TERMetric<IString, String>(references);
+		return new BLEUMetric<IString, String>(references);
 	}
 }

@@ -39,7 +39,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		smooth = false;
 	}
 	
-	public BLEUMetric(List<List<Sequence<TK>>> referencesList) {
+	public BLEUMetric(List<List<Sequence<TK>>> referencesList) {		
 		this(referencesList, false);
 	}
 	
@@ -137,7 +137,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	private static int maxIncrementalId = 0;
 	
-	public class BLEUIncrementalMetric implements NgramPrecisionIncrementalMetric<TK,FV> {
+	public class BLEUIncrementalMetric implements NgramPrecisionIncrementalMetric<TK,FV>, hasSmoothScore {
 		private final int id = maxIncrementalId++; 
 		final List<Sequence<TK>> sequences; 
 		final int[] matchCounts = new int[order];
@@ -326,8 +326,9 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		@Override
 		public IncrementalEvaluationMetric<TK,FV> replace(int index,
 				ScoredFeaturizedTranslation<TK, FV> trans) {
-			if (index > sequences.size()) {
-				throw new IndexOutOfBoundsException(String.format("Index: %d >= %d", index, sequences.size()));
+			if (index >= sequences.size()) {
+				for (int i = sequences.size(); i < index; i++) add(null);
+				add(trans);
 			}
 			Map<Sequence<TK>, Integer> canidateCounts = (trans == null ? new HashMap<Sequence<TK>,Integer> () : Metrics.getNGramCounts(trans.translation, order));
 			Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(index));
@@ -350,25 +351,13 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
 		@Override
 		public double score() {
-			/*double B = 0;
-			for (int i = 1; i <= 4; i++) {
-				B += Math.exp(logScore(i))/(2<<(4-i+1));
-			}
-			return multiplier*B; 
-			
-			*/
-			//return trueScore();
-			double s;
-			if (smooth) {
-				s = multiplier*Math.exp(smoothLogScore(matchCounts.length));
-			} else {
-				s = trueScore();
-			}
-			return (s != s ? 0 : s);
+			double s = multiplier*Math.exp(logScore());
+			return (s != s ? 0 : s);			
 		}
-	
-		public double trueScore() {
-			return multiplier*Math.exp(logScore());
+		
+		public double smoothScore() {
+			double s = multiplier*Math.exp(smoothLogScore(matchCounts.length));
+			return (s != s ? 0 : s);
 		}
 		
 		/**
@@ -379,16 +368,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return logScore(matchCounts.length);
 		}
 		
-		double smoothLogScore(int max) {
-			double ngramPrecisionScore = 0;
-
-			double[] precisions = smoothNgramPrecisions();
-			double wt = 1.0/max;
-			for (int i = 0; i < max; i++) {
-				ngramPrecisionScore += wt*Math.log(precisions[i]); 
-			}
-			return logBrevityPenalty()+ngramPrecisionScore;
-		}
 		
 		private double logScore(int max) {
 			double ngramPrecisionScore = 0;
@@ -401,6 +380,16 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return logBrevityPenalty()+ngramPrecisionScore;
 		}
 		
+		private double smoothLogScore(int max) {
+			double ngramPrecisionScore = 0;
+
+			double[] precisions = smoothNGramPrecisions();
+			double wt = 1.0/max;
+			for (int i = 0; i < max; i++) {
+				ngramPrecisionScore += wt*Math.log(precisions[i]); 
+			}
+			return logBrevityPenalty()+ngramPrecisionScore;		
+		}
 		
 		/**
 		 * 
@@ -435,10 +424,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return p;
 		}
 		
-		public double[] smoothNgramPrecisions() {
+		public double[] smoothNGramPrecisions() {
 			double[] p = new double[matchCounts.length];
-			double priorEffectiveMatchCount = 1;
-			double priorEffectivePossibleMatchCount = 1;
 			for (int i = 0; i < matchCounts.length; i++) {
 				int matchCount = matchCounts[i];
 				int possibleMatchCount = possibleMatchCounts[i];
@@ -449,15 +436,11 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 						possibleMatchCount += futurePossibleCounts[j][i];
 					}
 				}
-				
-				double effectiveMatchCount = matchCount + 0.1*priorEffectiveMatchCount;
-				double effectivePossibleMatchCount = possibleMatchCount + 0.2*priorEffectivePossibleMatchCount;
-				p[i] = (1.0*effectiveMatchCount)/(effectivePossibleMatchCount);
-				priorEffectiveMatchCount = effectiveMatchCount;
-				priorEffectivePossibleMatchCount = effectivePossibleMatchCount;
+				p[i] = (1.0*matchCount+0.1)/(possibleMatchCount+0.1);
 			}
 			return p;
-		}
+		}		
+		
 		/**
 		 * 
 		 * @return

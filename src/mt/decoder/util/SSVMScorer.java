@@ -253,7 +253,6 @@ public class SSVMScorer implements Scorer<String> {
 		return new SparseVector(vMap);
 	}
 
-	@Override
 	public void saveWeights(String filename) throws IOException {
 		System.err.printf("Saving weights to: %s\n", filename);
 		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
@@ -321,7 +320,7 @@ public class SSVMScorer implements Scorer<String> {
 		}
 	}
 
-	@Override
+
 	public boolean hasNonZeroWeight(String featureName) {
 		int idx = featureIndex.indexOf(featureName);
 		double[] weights = ssvm.getWeights();
@@ -333,14 +332,14 @@ public class SSVMScorer implements Scorer<String> {
 
 
 	boolean randomizeTag = false;
-	@Override
+	
 	public boolean randomizeTag() {
 		// TODO Auto-generated method stub
 		return randomizeTag;
 	}
 
 
-	@Override
+	
 	public void setRandomizeTag(boolean randomizeTag) {
 		this.randomizeTag = randomizeTag;
 	}

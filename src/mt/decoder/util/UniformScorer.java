@@ -39,36 +39,35 @@ public class UniformScorer<T> implements Scorer<T> {
 		
 	}
 
-	@Override
+
 	public void saveWeights(String filename) throws IOException {
 		throw new UnsupportedOperationException();		
 	}
 
-	@Override
+
 	public boolean hasNonZeroWeight(String featureName) {
 		return true;
 	}
 
-	@Override
+
 	public boolean randomizeTag() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+
 	public void setRandomizeTag(boolean randomizeTag) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
+
 	public void setWeightMultipliers(double manualWeightMul,
 			double classifierWeightMul) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public void displayWeights() {
 		// TODO Auto-generated method stub
 		

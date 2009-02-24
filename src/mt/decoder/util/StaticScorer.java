@@ -102,12 +102,12 @@ public class StaticScorer implements Scorer<String> {
 		return score;
 	}
 
-	@Override
+
 	public void saveWeights(String filename) {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
+
 	public boolean hasNonZeroWeight(String featureName) {
 		int idx = featureIndex.indexOf(featureName);
 		if (idx < 0) {
@@ -116,26 +116,25 @@ public class StaticScorer implements Scorer<String> {
 		return weights[idx] == weights[idx] && weights[idx] != 0;
 	}
 
-	@Override
+
 	public boolean randomizeTag() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+
 	public void setRandomizeTag(boolean randomizeTag) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
+
 	public void setWeightMultipliers(double manualWeightMul,
 			double classifierWeightMul) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public void displayWeights() {
 		// TODO Auto-generated method stub
 		
