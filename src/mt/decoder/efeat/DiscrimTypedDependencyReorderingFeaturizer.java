@@ -49,7 +49,9 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
   private LineNumberReader pathReader = null;
   private List<TwoDimensionalMap<Integer,Integer,String>> pathMaps = null;
   private LinearClassifier lc = null;
-  private TwoDimensionalMap<CoverageSet, CoverageSet, Double> featureCache;
+  private ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double> featureCache;
+
+  private Boolean usePathFile = true;
 
   private int WINDOW = 1;
 
@@ -66,6 +68,9 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
 
     Runtime rt = Runtime.getRuntime();
 
+    String pathFile = args[0];
+    if (pathFile.equals("")) usePathFile = false;
+
     String classifierFile = args[1];
 
     long startTimeMillis = System.currentTimeMillis();
@@ -78,62 +83,76 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
 
     System.err.printf("\nDone loading discrim reorder classifier: %s (mem used: %d MiB time: %.3f s)\n", classifierFile,
                       (postTableLoadMemUsed - preTableLoadMemUsed)/(1024*1024), loadTimeMillis/1000.0);
-
-    pathReader = IOTools.getReaderFromFile(args[0]);
+    if (usePathFile)
+      pathReader = IOTools.getReaderFromFile(pathFile);
     pathMaps = new ArrayList<TwoDimensionalMap<Integer,Integer,String>>();
 
     try {
       String pLine;
-      while ((pLine = pathReader.readLine()) != null) {
-        //System.err.printf("line %d read from path reader\n", pathReader.getLineNumber());
-        TwoDimensionalMap<Integer,Integer,String> pathMap = new TwoDimensionalMap<Integer,Integer,String>();
-        DepUtils.addPathsToMap(pLine, pathMap);
-        //System.err.println("pathM size="+pathMap.entrySet().size());
-        pathMaps.add(pathMap);
-      }
+      if (usePathFile)
+        while ((pLine = pathReader.readLine()) != null) {
+          //System.err.printf("line %d read from path reader\n", pathReader.getLineNumber());
+          TwoDimensionalMap<Integer,Integer,String> pathMap = new TwoDimensionalMap<Integer,Integer,String>();
+          DepUtils.addPathsToMap(pLine, pathMap);
+          //System.err.println("pathM size="+pathMap.entrySet().size());
+          pathMaps.add(pathMap);
+        }
     } catch (IOException e) {
       e.printStackTrace();
       throw new RuntimeException();
     }
 
-    System.err.println("DiscrimTypedDependencyReorderingFeaturizer path file = "+args[0]);
     System.err.println("DiscrimTypedDependencyReorderingFeaturizer classifier file = "+classifierFile);
     System.err.println("DiscrimTypedDependencyReorderingFeaturizer useBoundaryOnly? = "+useBoundaryOnly);
-    System.err.printf("DiscrimTypedDependencyReorderingFeaturizer path file has %d entries\n", pathMaps.size());
+    if (usePathFile)
+      System.err.println("DiscrimTypedDependencyReorderingFeaturizer path file = "+args[0]);
+    else
+      System.err.println("DiscrimTypedDependencyReorderingFeaturizer NOT using PATH features");
+    if (usePathFile)
+      System.err.printf("DiscrimTypedDependencyReorderingFeaturizer path file has %d entries\n", pathMaps.size());
+    if (DEBUG)
+      System.err.printf("DEBUG mode is on\n");
   }
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) { 
-    //System.err.println("DiscrimTypedDependencyReorderingFeaturizer: initialize.");
-    featureCache = new TwoDimensionalMap<CoverageSet, CoverageSet, Double>();
+    featureCache = new ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double>();
 
   } 
 
   int sentId = -1;
   public void reset() { 
-    //System.err.println("DiscrimTypedDependencyReorderingFeaturizer: reset.");
     sentId++;
-    featureCache = new TwoDimensionalMap<CoverageSet, CoverageSet, Double>();
-    //System.err.println("sentId="+sentId);
+    featureCache = new ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double>();
   }
 
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) { 
     List<String> features = new ArrayList<String>();
 
-    CoverageSet cur = f.hyp.foreignCoverage;
+    CoverageSet cur = f.hyp.foreignCoverage ;
     CoverageSet pre;
     if (f.prior != null)
       pre = f.prior.hyp.foreignCoverage;
     else
       pre = new CoverageSet();
+    StringBuilder preTranslation = new StringBuilder();
+    for(int i = 0; i < f.translatedPhrase.size(); i++) {
+      preTranslation.append(f.translatedPhrase.get(i));
+      if (i != f.translatedPhrase.size()-1)
+        preTranslation.append(" ");
+    }
+    String preTranslationStr = preTranslation.toString();
 
-    Double featVal = featureCache.get(cur, pre);
+    Double featVal = featureCache.get(cur, pre, preTranslationStr);
     if (featVal != null) {
-      //System.err.println("pichuan: get val from cache");
+      if (DEBUG) { System.err.printf("Use cache: %s %s %s\n", cur, pre, preTranslationStr); }
       return new FeatureValue<String>(FEATURE_NAME, featVal);
     } else {
-      TwoDimensionalMap<Integer,Integer,String> pathMap = pathMaps.get(sentId);
+      if (DEBUG) { System.err.println("No cache"); }
+      TwoDimensionalMap<Integer,Integer,String> pathMap = null;
+      if (usePathFile)
+        pathMap = pathMaps.get(sentId);
 
       CoverageSet fCoverage = f.hyp.foreignCoverage;
       int flen = f.foreignPhrase.size();
@@ -148,7 +167,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
         prevE = f.prior.translationPosition;
         prevelen = f.prior.translatedPhrase.size();
       }
-      /*
+      if (DEBUG) {
         System.err.printf("----\n");
         System.err.printf("Partial translation (pos=%d): %s\n", f.translationPosition, f.partialTranslation);
         System.err.printf("Foreign sentence (pos=%d): %s\n", f.foreignPosition, f.foreignSentence);
@@ -157,36 +176,44 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
         
         if (f.prior == null) System.err.printf("Prior <s> => <s>\n");
         else System.err.printf("Prior %s(%d) => %s(%d)\n",        f.prior.foreignPhrase, f.prior.foreignPosition, f.prior.translatedPhrase, f.prior.translationPosition);
-        //System.err.printf("j = %d, j' = %d, len1 = %d, len2 = %d\n", prevC, currC, prevflen, flen);
-        System.err.printf("i = %d, j = %d, j' = %d, lenE = %d, lenC = %d\n, lenC2 = %d\n", prevE, prevC, currC, prevelen, prevflen, flen);
-      */
-      //System.err.println(pathMap);
+        System.err.printf("i = %d, j = %d, j' = %d, lenE = %d, lenC = %d, lenC2 = %d\n", prevE, prevC, currC, prevelen, prevflen, flen);
+      }
+      
       List<String> feats = extractWordFeatures(f.foreignSentence, prevC, prevflen, currC, flen,
-                                               f.partialTranslation, prevE, prevelen, pathMap);
-      /*
+                                               f.partialTranslation, prevE, prevelen);
+
+      if (usePathFile)
+        feats.addAll(extractPathFeatures(f.foreignSentence, prevC, prevflen, currC, flen,
+                                         f.partialTranslation, prevE, prevelen, pathMap));
+      if (DEBUG) {
         for(String feat : feats) {
         System.err.println(" feat += "+feat);
         }
-      */
+      }
+
       features.addAll(feats);
 
       Datum<TrainingExamples.ReorderingTypes,String> d = new BasicDatum(features);
       ClassicCounter<TrainingExamples.ReorderingTypes> logPs = lc.logProbabilityOf(d);
+      TrainingExamples.ReorderingTypes type;
       double logP;
       if (prevC < currC) {
-        logP = logPs.getCount(TrainingExamples.ReorderingTypes.ordered);
+        type = TrainingExamples.ReorderingTypes.ordered;
       } else if (prevC > currC) {
-        logP = logPs.getCount(TrainingExamples.ReorderingTypes.distorted);
+        type = TrainingExamples.ReorderingTypes.distorted;
       } else {
         throw new RuntimeException();
       }
-      /*
-        System.err.printf("log p(%s|d) = %g\n",
-        TrainingExamples.ReorderingTypes.ordered,
-        logP_ordered);
-      */
-      //System.err.println("pichuan: insert val to cache");
-      featureCache.put(cur, pre, logP);
+      logP = logPs.getCount(type);
+
+      if (DEBUG) {
+        System.err.printf("log p(%s|d) = %g (score = %g)\n",
+                          type,
+                          logP,
+                          lc.scoreOf(d, type));
+      }
+
+      featureCache.put(cur, pre, preTranslationStr, logP);
       return new FeatureValue<String>(FEATURE_NAME, logP);
     }
   }
@@ -203,8 +230,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
   }
 
   private List<String> extractWordFeatures(Sequence<IString> f, int j, int lenC, int j2, int lenC2,
-                                           Sequence<IString> e, int i, int lenE,
-                                           TwoDimensionalMap<Integer,Integer,String> pathMap) {
+                                           Sequence<IString> e, int i, int lenE) {
     List<String> features = new ArrayList<String>();
     // SRCJ
     for (int J = j; J < j+lenC; J++) {
@@ -215,6 +241,13 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     for (int I = i; I < i+lenE; I++) {
       features.addAll(extractFeatures_TGTI(e, I));
     }
+    return features;
+  }
+
+  private List<String> extractPathFeatures(Sequence<IString> f, int j, int lenC, int j2, int lenC2,
+                                           Sequence<IString> e, int i, int lenE,
+                                           TwoDimensionalMap<Integer,Integer,String> pathMap) {
+    List<String> features = new ArrayList<String>();
 
     // path feature
     StringBuilder path = new StringBuilder("PATH:");
