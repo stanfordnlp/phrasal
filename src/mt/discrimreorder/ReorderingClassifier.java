@@ -41,6 +41,7 @@ public class ReorderingClassifier {
   static public final String F_PATH_OPT = "fPath";
   static public final String TRAINALL_OPT = "trainAll";
   static public final String WRITE_CLASSIFIER_OPT = "writeClassifier";
+  static public final String WRITE_HTML_OPT = "writeHTML";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -58,7 +59,8 @@ public class ReorderingClassifier {
         F_PARSE_OPT,
         F_PATH_OPT,
         TRAINALL_OPT,
-        WRITE_CLASSIFIER_OPT
+        WRITE_CLASSIFIER_OPT,
+        WRITE_HTML_OPT
         ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -69,7 +71,8 @@ public class ReorderingClassifier {
   private Properties prop;
   private String fCorpus, eCorpus, align, fParse, fPath;
   private Boolean trainAll;
-  private String writeClassifier;
+  private String writeClassifier, writeHTML;
+  private PrintWriter htmlPW = null;
   private List<FeatureExtractor> extractors;
   
   public ReorderingClassifier(Properties prop) throws Exception {
@@ -110,6 +113,8 @@ public class ReorderingClassifier {
     fPath = prop.getProperty(F_PATH_OPT);
     trainAll = Boolean.parseBoolean(prop.getProperty(TRAINALL_OPT, "false"));
     writeClassifier = prop.getProperty(WRITE_CLASSIFIER_OPT);
+    writeHTML = prop.getProperty(WRITE_HTML_OPT, null);
+    if (writeHTML != null) { htmlPW = new PrintWriter(new FileWriter(writeHTML)); }
 
     System.out.println("========== General Properties ==========");
     System.out.printf("-%s : %s\n", F_CORPUS_OPT, fCorpus);
@@ -119,6 +124,8 @@ public class ReorderingClassifier {
     System.out.printf("-%s : %s\n", F_PATH_OPT, fPath);
     System.out.printf("-%s : %s\n", TRAINALL_OPT, trainAll);
     System.out.printf("-%s : %s\n", WRITE_CLASSIFIER_OPT, writeClassifier);
+    if (writeHTML!=null)
+      System.out.printf("-%s : %s\n", WRITE_HTML_OPT, writeHTML);
     System.out.println("========================================");
   }
 
@@ -157,7 +164,7 @@ public class ReorderingClassifier {
 
       int lineNb=0;
 
-      if (DEBUG) DisplayUtils.printAlignmentMatrixHeader();
+      if (htmlPW!=null) DisplayUtils.printAlignmentMatrixHeader(htmlPW);
 
       for (String fLine;; ++lineNb) {
         fLine = fReader.readLine();
@@ -201,7 +208,7 @@ public class ReorderingClassifier {
         //fLine = fixCharsInSent(fLine);
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
         
-        if (DEBUG) DisplayUtils.printAlignmentMatrix(sent);
+        if (htmlPW!=null) DisplayUtils.printAlignmentMatrix(sent, htmlPW);
         
         TrainingExamples exs = new TrainingExamples();
 
@@ -224,7 +231,8 @@ public class ReorderingClassifier {
             throw new IOException("Target-language paths is too short!");
           sent.getPathInfo(pathLine);
         }
-        
+
+        if (htmlPW!=null) DisplayUtils.printExamplesHeader(htmlPW);
         for(TrainingExample ex : exs.examples) {
           // extract features, add datum
           List<String> features = new ArrayList<String>();
@@ -258,11 +266,13 @@ public class ReorderingClassifier {
             trainData.add(d);
             typeCounter.incrementCount("train", ex.type);
           }
+
+          if (htmlPW!=null) DisplayUtils.printExample(ex, features, htmlPW);
         }
 
-        if (DEBUG) DisplayUtils.printExamples(exs);
+        if (htmlPW!=null) DisplayUtils.printExamplesBottom(htmlPW);
       }
-      if (DEBUG) DisplayUtils.printAlignmentMatrixBottom();
+      if (htmlPW!=null) DisplayUtils.printAlignmentMatrixBottom(htmlPW);
       
 
     } catch(Exception e) {

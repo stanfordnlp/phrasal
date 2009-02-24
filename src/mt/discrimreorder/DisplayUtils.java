@@ -1,6 +1,7 @@
 package mt.discrimreorder;
 
 import edu.stanford.nlp.stats.*;
+import edu.stanford.nlp.util.StringUtils;
 
 import java.io.*;
 import java.util.*;
@@ -23,7 +24,7 @@ public class DisplayUtils {
     printExamples(examples, new PrintWriter(System.out, true));
   }
 
-  public static void printExamples(TrainingExamples examples, PrintWriter pw) {
+  public static void printExamplesHeader(PrintWriter pw) {
     pw.println("<table>");
     pw.println("<tr>");
     pw.println("<td> i </td>");
@@ -31,15 +32,41 @@ public class DisplayUtils {
     pw.println("<td> j' </td>");
     pw.println("<td> class </td>");
     pw.println("</tr>");
-    for(TrainingExample example : examples.examples) {
-      pw.println("<tr>");
-      pw.printf("<td> %d </td>\n", example.tgt_i);
-      pw.printf("<td> %d </td>\n", example.src_j);
-      pw.printf("<td> %d </td>\n", example.src_jprime);
-      pw.printf("<td> %s </td>\n", example.type);
-      pw.println("</tr>");
-    }
+  }
+
+  public static void printExamplesBottom(PrintWriter pw) {
     pw.println("</table>");
+  }
+
+  public static void printExample(TrainingExample example, PrintWriter pw) {
+    pw.println("<tr>");
+    pw.printf("<td> %d </td>\n", example.tgt_i);
+    pw.printf("<td> %d </td>\n", example.src_j);
+    pw.printf("<td> %d </td>\n", example.src_jprime);
+    pw.printf("<td> %s </td>\n", example.type);
+    pw.println("</tr>");
+  }
+
+  public static void printExample(TrainingExample example, List<String> features, PrintWriter pw) {
+    TreeSet<String> fset = new TreeSet();
+    for(String f : features)
+      fset.add(escapeHtml(f));
+
+    pw.println("<tr>");
+    pw.printf("<td> %d </td>\n", example.tgt_i);
+    pw.printf("<td> %d </td>\n", example.src_j);
+    pw.printf("<td> %d </td>\n", example.src_jprime);
+    pw.printf("<td> %s </td>\n", example.type);
+    pw.printf("<td> %s </td>\n", StringUtils.join(fset, "<br>"));
+    pw.println("</tr>");
+  }
+
+  public static void printExamples(TrainingExamples examples, PrintWriter pw) {
+    printExamplesHeader(pw);
+    for(TrainingExample example : examples.examples) {
+      printExample(example, pw);
+    }
+    printExamplesBottom(pw);
   }
 
   public static void printAlignmentMatrixHeader() {
