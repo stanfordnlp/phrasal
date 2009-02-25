@@ -1,0 +1,3 @@
+#!/usr/bin/perl -n
+
+print join(' ', map { /(\d+)-(\d+)/; "$2-$1" } split(/\s+/,$_)),"\n"
