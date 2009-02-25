@@ -31,21 +31,30 @@ public class DepUtils {
     return pathMap.get(node1, node2);
   }
   
+
   static String getPathName(int node1, int node2, List<IndexedWord> list, SemanticGraph chGraph) {
+    return getPathName(node1, node2, list, chGraph, false);
+  }
+
+  static String getPathName(int node1, int node2, List<IndexedWord> list, SemanticGraph chGraph, boolean useSameDirPath) {
     List<SemanticGraphEdge> paths = chGraph.getShortestPathEdges(list.get(node1), list.get(node2));
     int startI = node1;
     StringBuilder sb = new StringBuilder();
+    boolean needReverse = false;
     if (paths==null) {
     } else {
-      for (SemanticGraphEdge path : paths) {
+      //for (SemanticGraphEdge path : paths) {
+      for (int pi = 0; pi < paths.size(); pi++) {
+        SemanticGraphEdge path = paths.get(pi);
         int govid = list.indexOf(path.getGovernor());
         int depid = list.indexOf(path.getDependent());
         sb.append(path.getRelation());
         if (startI == govid) {
-          sb.append("O");
+          if (!needReverse) sb.append("O"); else sb.append("R");
           startI = depid;
         } else if (startI == depid) {
-          sb.append("R");
+          if (useSameDirPath && pi == 0) needReverse = true;
+          if (!needReverse) sb.append("R"); else sb.append("O");
           startI = govid;
         } else {
           throw new RuntimeException("blah");

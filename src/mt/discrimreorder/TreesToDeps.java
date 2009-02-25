@@ -14,6 +14,11 @@ import mt.base.IOTools;
 
 public class TreesToDeps {
   public static void main(String[] args) throws Exception {
+    Properties prop = StringUtils.argsToProperties(args);
+    boolean useSameDirPath  = Boolean.parseBoolean(prop.getProperty("useSameDirPath", "false"));
+
+    System.err.println("useSameDirPath = " + useSameDirPath);
+
     ChineseTreebankParserParams ctpp = new ChineseTreebankParserParams();
     TreeReaderFactory trf = ctpp.treeReaderFactory();
     LineNumberReader pReader = IOTools.getReaderFromFile(args[0]);
@@ -34,7 +39,7 @@ public class TreesToDeps {
       for (int i = 0; i < list.size(); i++) {
         for (int j = 0; j < list.size(); j++) {
           if (i!=j) {
-            String path = DepUtils.getPathName(i, j, list, chGraph);
+            String path = DepUtils.getPathName(i, j, list, chGraph, useSameDirPath);
             if (path.length() > 0)
               pw.printf("%d:%d:%s ", i, j, path);
           }
