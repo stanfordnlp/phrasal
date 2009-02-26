@@ -37,10 +37,17 @@ public class DepUtils {
   }
 
   static String getPathName(int node1, int node2, List<IndexedWord> list, SemanticGraph chGraph, boolean useSameDirPath) {
+    
+    if (useSameDirPath) {
+      if (node1 > node2) {
+        int tmp = node1;
+        node1 = node2;
+        node2 = tmp;
+      }
+    }
     List<SemanticGraphEdge> paths = chGraph.getShortestPathEdges(list.get(node1), list.get(node2));
     int startI = node1;
     StringBuilder sb = new StringBuilder();
-    boolean needReverse = false;
     if (paths==null) {
     } else {
       //for (SemanticGraphEdge path : paths) {
@@ -50,11 +57,10 @@ public class DepUtils {
         int depid = list.indexOf(path.getDependent());
         sb.append(path.getRelation());
         if (startI == govid) {
-          if (!needReverse) sb.append("O"); else sb.append("R");
+          sb.append("O");
           startI = depid;
         } else if (startI == depid) {
-          if (useSameDirPath && pi == 0) needReverse = true;
-          if (!needReverse) sb.append("R"); else sb.append("O");
+          sb.append("R");
           startI = govid;
         } else {
           throw new RuntimeException("blah");
