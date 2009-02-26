@@ -297,7 +297,9 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     // TGTI
     for (int d = -WINDOW; d <= WINDOW; d++) {
       StringBuilder feature = new StringBuilder("TGT_");
-      feature.append(d).append(":").append(getSourceWord(e, i+d));
+      IString srcWord = getSourceWord(e, i+d);
+      if (!srcWord.toString().equals("</s>"))
+        feature.append(d).append(":").append(srcWord);
       features.add(feature.toString());
     }
     return features;
