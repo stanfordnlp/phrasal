@@ -14,10 +14,17 @@ import mt.decoder.recomb.*;
 import mt.decoder.util.*;
 import mt.decoder.efeat.SentenceBoundaryFeaturizer;
 import mt.metrics.*;
-import mt.tune.*;
 
+
+import edu.stanford.nlp.km.StructuredSVM;
+import edu.stanford.nlp.km.kernels.Kernel;
+import edu.stanford.nlp.km.sparselinearalgebra.SparseVector;
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.OAIndex;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -59,6 +66,7 @@ public class PseudoMoses {
   public static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
   public static final String INLINE_WEIGHTS = "inline-weights";
   public static final String LEARNING_RATE = "lrate";
+  public static final String MAX_EPOCHS = "max-epochs";
   public static final String MOMENTUM = "momentum";
   public static final String CONSTRAIN_MANUAL_WTS = "constrain-manual-wts";
   public static final String LOCAL_PROCS = "localprocs";
@@ -78,6 +86,7 @@ public class PseudoMoses {
   public static double DEFAULT_LEARNING_RATE = 0.01;
   public static double DEFAULT_MOMENTUM_TERM = 0.9;
   static final int DEFAULT_LOCAL_PROCS = 1;
+  static final int DEFAULT_MAX_EPOCHS = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
   static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 
@@ -122,8 +131,15 @@ public class PseudoMoses {
     IDEALIZED_TARGETS.put("SentenceBoundary", 0.0);
 	}
 
-	public static final String EVALUE_LEARNING = "evalue";
-	public static final String DEFAULT_LEARNING_ALGORITHM = EVALUE_LEARNING;
+	public static final String PERCEPTRON_LEARNING = "perceptron";
+	public static final String AVG_PERCEPTRON_LEARNING = "avgperceptron";	
+	public static final String MIRA_LEARNING = "mira";
+	public static final String SSVM_LEARNING = "ssvm";
+	public static final String MMSG_LEARNING = "mmsg";
+	public static final String COST_MARGIN_LEARNING = "costmargin";
+	public static final String MAXMARGIN_C = "C";
+	
+	public static final String DEFAULT_LEARNING_ALGORITHM = PERCEPTRON_LEARNING;
 	public static final String DEFAULT_SAVE_WEIGHTS = "unname_model_"
 		+ System.currentTimeMillis();
 
@@ -132,7 +148,7 @@ public class PseudoMoses {
 
 	BufferedWriter nbestListWriter;
 	int nbestListSize;
-	String saveWeights;
+	String saveWeights = "saved.wts";
 
 	List<List<Sequence<IString>>> constrainedToRefs = null;
 
@@ -145,13 +161,15 @@ public class PseudoMoses {
 	String learningAlgorithm;
 	List<String> learningAlgorithmConfig;
 	Scorer<String> scorer;
+	double maxMarginC = 1.0;
 	NBestListContainer<IString, String> preferedInternalState;
 	int maxSentenceSize = Integer.MAX_VALUE;
 	int minSentenceSize = 0;
 
-	double learningRate = DEFAULT_LEARNING_RATE;
+	double[] learningRate = new double[0];
 	double momentumTerm = DEFAULT_MOMENTUM_TERM;
-
+	int maxEpochs = DEFAULT_MAX_EPOCHS;
+	
 	double cTarget = 0.001;
 	double cRisky =  0.010;
   String recomb_heuristic = DEFAULT_RECOMBINATION_HEURISTIC;
@@ -269,7 +287,21 @@ public class PseudoMoses {
 		}
 
 		if (config.containsKey(LEARNING_RATE)) {
-			learningRate = Double.parseDouble(config.get(LEARNING_RATE).get(0));
+			learningRate = new double[config.get(LEARNING_RATE).size()];
+			for (int i = 0; i < learningRate.length; i++) {
+				learningRate[i] = Double.parseDouble(config.get(LEARNING_RATE).get(i)); 
+			}
+		} else {
+			learningRate = new double[1];
+			learningRate[0] = DEFAULT_LEARNING_RATE;
+		}
+		
+		if (config.containsKey(MAXMARGIN_C)) {
+			maxMarginC = Double.parseDouble(config.get(MAXMARGIN_C).get(0));
+		}
+		
+		if (config.containsKey(MAX_EPOCHS)) {
+			maxEpochs = Integer.parseInt(config.get(MAX_EPOCHS).get(0));
 		}
 
 		if (config.containsKey(MOMENTUM)) {
@@ -290,8 +322,8 @@ public class PseudoMoses {
 		if (config.containsKey(CONSTRAIN_TO_REFS)) {
 			constrainedToRefs = Metrics.readReferences(config.get(CONSTRAIN_TO_REFS)
 					.toArray(new String[0]));
-		}
-
+		}		
+		
 		if (config.containsKey(LEARNING_TARGET)) {
 			List<String> strLearningTarget = config.get(LEARNING_TARGET);
 			if (strLearningTarget.size() != 1) {
@@ -627,30 +659,7 @@ public class PseudoMoses {
 		}
 
 		System.err.printf("WeightConfig: '%s'\n", weightConfig);
-
-		if (learnWeights) {
-			Map<String, Double> weights = new HashMap<String, Double>();
-			for (String pair : weightConfig) {
-				if (pair.equals("inline"))
-					continue;
-				System.err.printf("%s\n", pair);
-				String[] fields = pair.split(":");
-				String featureName = fields[0];
-				for (int fi = 1; fi < fields.length - 1; fi++)
-					featureName += ":" + fields[fi];
-				weights.put(featureName, Double.valueOf(fields[fields.length - 1]));
-			}
-
-			if (learningAlgorithm.equals(EVALUE_LEARNING)) {
-				scorer = new EValueLearningScorer(weights, learningRate, momentumTerm);
-			}else {
-				throw new RuntimeException(String.format(
-						"Unrecognized learning algorithm: %s", learningAlgorithm));
-			}
-		} else {
-			scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig
-					.toArray(new String[0]));
-		}
+		scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig.toArray(new String[0]));
 
 		// Create phrase generator
 		String phraseTable;
@@ -1046,8 +1055,690 @@ public class PseudoMoses {
 		return filtered;
 	}
 
+
+	private interface Learner extends Scorer<String> {
+		void weightUpdate(int epoch, int id, RichTranslation<IString,String> target, RichTranslation<IString,String> argmax, double loss);		
+		public void saveWeights(String filename) throws IOException;
+	}
+	
+	private class PerceptronLearner implements Learner {
+		private double[] lrate;
+		OAIndex<String> featureIndex = new OAIndex<String>();
+		double[] weights = new double[0];
+	  final double DEFAULT_WT = 0.1;
+		
+		public PerceptronLearner(double lrate[]) {
+			this.lrate = lrate;
+		}
+		
+		void addMulWeight(String name, double m, double b) {
+			int idx = featureIndex.indexOf(name,true);
+			if (idx >= weights.length) {
+				double[] newWeights = new double[(idx+1)*2];
+				System.arraycopy(weights, 0, newWeights, 0, weights.length);
+				
+				for (int i = weights.length; i < newWeights.length; i++) {
+					newWeights[i] = DEFAULT_WT;
+				}
+				
+				weights = newWeights;
+			}
+			weights[idx] = m*weights[idx] + b;
+		}
+		
+		public void weightUpdate(int epoch, int id, RichTranslation<IString,String> target, RichTranslation<IString,String> argmax, double loss) {
+			for (FeatureValue<String> feature : target.features) {
+				addMulWeight(feature.name, 1.0, lrate[Math.min(epoch, lrate.length-1)]*feature.value);
+//				System.err.printf("%s +%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
+			}
+			
+			for (FeatureValue<String> feature : argmax.features) {
+				addMulWeight(feature.name, 1.0, -lrate[Math.min(epoch, lrate.length-1)]*feature.value);
+//				System.err.printf("%s -%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
+			}
+		}
+		
+		@Override
+		public double getIncrementalScore(List<FeatureValue<String>> features) {
+				double score = 0;
+				
+				for (FeatureValue<String> feature : features) {
+					int index = featureIndex.indexOf(feature.name);
+					if (index >= 0) score += weights[index]*feature.value;
+					else score += DEFAULT_WT*feature.value;
+				}
+				
+				return score;
+			}		
+		
+			public void saveWeights(String filename) throws IOException {
+				System.err.printf("Saving weights to: %s\n", filename);
+				BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+				PriorityQueue<ComparableWtPair> q = new PriorityQueue<ComparableWtPair>();
+			
+				for (String featureName : featureIndex.keySet()) {
+					int idx = featureIndex.indexOf(featureName);
+					double value;
+					if (idx < 0 || idx >= weights.length) {
+						value = 0;
+					} else {
+						value = weights[idx];
+					}
+					if (value == 0) continue;
+					q.add(new ComparableWtPair(featureName, value));
+				}
+				for (ComparableWtPair cwp = q.poll(); cwp != null; cwp = q.poll()) {
+					writer.append(cwp.featureName).append(" ").append("" + String.format("%e",cwp.value)).append("\n");
+				}
+				writer.close();
+			}
+	}
+	
+	private class ComparableWtPair implements Comparable<ComparableWtPair> {
+		String featureName;
+		double value;
+		public ComparableWtPair(String featureName, double value) {
+			this.featureName = featureName;
+			this.value = value;
+		}
+		
+		@Override
+		public int compareTo(ComparableWtPair o) {
+			int signum = (int)Math.signum(Math.abs(o.value) - Math.abs(this.value));
+			if (signum != 0) return signum;
+			return this.featureName.compareTo(o.featureName);
+		}
+	}
+	
+	private class AvgPerceptronLearner implements Learner {
+		double[] lrate;
+		ClassicCounter<String> wts = new ClassicCounter<String>(); 
+		ClassicCounter<String> wtsSum = new ClassicCounter<String>();
+		int updateCount = 0;
+		
+		public AvgPerceptronLearner(double lrate[]) {
+			this.lrate = lrate;
+			wts.setDefaultReturnValue(0.1);
+		}
+		
+		@Override
+		public void saveWeights(String filename) throws IOException {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+			
+			for (Pair<String, Double> p : Counters.toDescendingMagnitudeSortedListWithCounts(wtsSum)) {
+				writer.append(p.first).append(" ").append((new Double(p.second/updateCount)).toString()).append("\n");
+			}			
+			writer.close();
+		}
+
+		@Override
+		public void weightUpdate(int epoch, int id,
+				RichTranslation<IString, String> target,
+				RichTranslation<IString, String> argmax, double loss) {
+			// TODO Auto-generated method stub
+			for (FeatureValue<String> feature : target.features) {
+				if (!wts.containsKey(feature.name)) wts.setCount(feature.name, 0.1);
+				wts.incrementCount(feature.name, lrate[Math.min(epoch, lrate.length-1)]*feature.value);
+			}
+			
+			for (FeatureValue<String> feature : argmax.features) {
+				if (!wts.containsKey(feature.name)) wts.setCount(feature.name, 0.1);
+				wts.incrementCount(feature.name, -lrate[Math.min(epoch, lrate.length-1)]*feature.value);
+			}
+			
+			wtsSum.addAll(wts);
+			updateCount++;
+		}
+
+		@Override
+		public double getIncrementalScore(List<FeatureValue<String>> features) {
+			double sum = 0;
+			
+			for (FeatureValue<String> feature : features) {
+				sum += feature.value*wts.getCount(feature.name);
+			}
+		
+			return sum;
+		}		
+	}
+	
+	private class MiraLearner implements Learner {		
+		ClassicCounter<String> wts = new ClassicCounter<String>();
+		final double C;
+		
+		public MiraLearner(double C) {
+			this.C = C;
+		}
+
+		@Override
+		public void saveWeights(String filename) throws IOException {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+			
+			for (Pair<String, Double> p : Counters.toDescendingMagnitudeSortedListWithCounts(wts)) {
+				writer.append(p.first).append(" ").append(p.second.toString()).append("\n");
+			}			
+			writer.close();
+		}
+
+		@Override
+		public void weightUpdate(int epoch, int id, 
+				RichTranslation<IString, String> target,
+				RichTranslation<IString, String> argmax, double loss) {
+				ClassicCounter<String> diffNorm = new ClassicCounter<String>();
+				for (FeatureValue<String> fv : target.features) {
+					diffNorm.incrementCount(fv.name, fv.value);
+				}
+				
+				for (FeatureValue<String> fv : target.features) {
+					diffNorm.incrementCount(fv.name, -fv.value);
+				}
+				
+				double diffNormL2 = Counters.L2Norm(diffNorm);
+				double scoreDiff = this.getIncrementalScore(target.features) - this.getIncrementalScore(argmax.features);
+				double alpha = Math.max(0, Math.min(C, (loss - scoreDiff)/diffNormL2));
+			
+				for (FeatureValue<String> feature : target.features) {
+					if (!wts.containsKey(feature.name)) wts.setCount(feature.name, 0.1);
+					wts.incrementCount(feature.name, alpha*feature.value);
+				}
+				
+				for (FeatureValue<String> feature : argmax.features) {
+					if (!wts.containsKey(feature.name)) wts.setCount(feature.name, 0.1);
+					wts.incrementCount(feature.name, alpha*feature.value);
+				}				
+		}
+
+		@Override
+		public double getIncrementalScore(List<FeatureValue<String>> features) {
+			double sum = 0;
+			
+			for (FeatureValue<String> feature : features) {
+				sum += feature.value*wts.getCount(feature.name);
+			}
+		
+			return sum;
+		}
+		
+	}
+	
+  private class SSVMLearner implements Learner {
+  	final double C;
+  	final StructuredSVM ssvm;
+  	final OAIndex<String> featureIndex = new OAIndex<String>();
+  	final ClassicCounter<String> wts = new ClassicCounter<String>();
+  	
+		public SSVMLearner(double C, boolean subgradient) {
+			this.C = C;
+			if (subgradient) {
+				ssvm = StructuredSVM.trainableMCSVM(Kernel.factory("linear"), C, StructuredSVM.StructLoss.MarginRescalePrimal, 1000000);
+			} else {
+				ssvm = StructuredSVM.trainableMCSVM(Kernel.factory("linear"), C, StructuredSVM.StructLoss.MarginRescale, 1000000);
+			}
+		}
+		
+		@Override
+		public void saveWeights(String filename) throws IOException {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+			
+			for (Pair<String, Double> p : Counters.toDescendingMagnitudeSortedListWithCounts(wts)) {
+				writer.append(p.first).append(" ").append(p.second.toString()).append("\n");
+			}			
+			writer.close();
+		}
+
+		@Override
+		public void weightUpdate(int epoch, int id,
+				RichTranslation<IString, String> target,
+				RichTranslation<IString, String> argmax, double loss) {
+			Map<Integer,Double> trueMap = new HashMap<Integer,Double>();
+			Map<Integer,Double> riskyMap = new HashMap<Integer,Double>();
+			for (FeatureValue<String> feature : target.features) {
+				trueMap.put(featureIndex.indexOf(feature.name, true), feature.value);
+			}
+			
+			for (FeatureValue<String> feature : argmax.features) {
+				riskyMap.put(featureIndex.indexOf(feature.name, true), feature.value);
+			}
+			
+			SparseVector truePsi = new SparseVector(trueMap);
+			SparseVector riskyPsi = new SparseVector(riskyMap);
+			
+			ssvm.expandSubProblem(epoch, id, truePsi, riskyPsi, loss);
+			
+			double[] ssvmWts = ssvm.getWeights();
+			for (String featureName : featureIndex.keySet()) {
+				wts.setCount(featureName, ssvmWts[featureIndex.indexOf(featureName)]);
+			}
+		}
+
+		@Override
+		public double getIncrementalScore(List<FeatureValue<String>> features) {
+			double sum = 0;
+			
+			for (FeatureValue<String> feature : features) {
+				sum += feature.value*wts.getCount(feature.name);
+			}
+		
+			return sum;
+		}		
+	} 	
+	
+	private void learningLoop(Learner learner, String inputFilename, int maxEpoch, String saveWeights) throws IOException {
+		LineNumberReader reader = null;
+	
+			
+		for (int epoch = 0; epoch < maxEpoch; epoch++) {
+			reader = new LineNumberReader(new InputStreamReader(new FileInputStream(inputFilename), "UTF-8"));
+			int translationId = -1;
+			
+			IncrementalEvaluationMetric<IString,String>  incEval = evalMetric.getIncrementalMetric();
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) { translationId++;
+				String[] tokens = line.split("\\s+");
+				Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
+			  List<RichTranslation<IString,String>> nbest = inferers.get(0).nbest(learner, foreign, translationId, null, 1000);
+		
+			  RichTranslation<IString,String> target = listArgMax(nbest,incEval,translationId);
+			  RichTranslation<IString,String> argmax = nbest.get(0);
+			
+			  incEval.replace(translationId, target);
+			  double evalTarget = optionalSmoothScoring(incEval, translationId, target);
+			  System.err.printf("Target: %s\n", target.translation);					  
+			  System.err.printf("Target Score: %f Smooth Score: %f\n", incEval.score(), evalTarget);
+			  
+			  double evalArgmax = optionalSmoothScoring(incEval, translationId, argmax);
+			  System.err.printf("Argmax: %s\n", argmax.translation);
+			  System.err.printf("Argmax Score: %f Smooth Score: %f\n", incEval.score(), evalArgmax);
+			  
+			  double loss = evalTarget-evalArgmax;
+			  
+			  learner.weightUpdate(epoch, translationId, target, argmax, loss);
+			}
+			learner.saveWeights(saveWeights + ".epoch." + epoch);
+			System.err.printf("--> epoch %d score: %f\n", epoch, incEval.score());
+		}
+		System.err.printf("Saving weights to %s\n", saveWeights);
+		learner.saveWeights(saveWeights);
+	}
+	
+	private double optionalSmoothScoring(IncrementalEvaluationMetric<IString,String>  incEval, int pos, RichTranslation<IString, String> trans) {
+		return (incEval instanceof hasSmoothScore ? ((hasSmoothScore)incEval.replace(pos, trans)).smoothScore()  :  incEval.replace(pos, trans).score());
+	}
+	
+	private RichTranslation<IString, String> listArgMax(List<RichTranslation<IString, String>> list, IncrementalEvaluationMetric<IString,String>  incEval, int pos) {
+		double best = Double.NEGATIVE_INFINITY;
+		RichTranslation<IString,String> bestTrans = null;
+		for (RichTranslation<IString, String> trans : list) {
+			double score = optionalSmoothScoring(incEval, pos, trans);
+			if (score > best) {
+					best = score;
+					bestTrans = trans;
+			}			
+		}
+		return bestTrans;
+	}
+	
+
+	/*
+	@SuppressWarnings("unchecked")
+	private void learnWeights(String inputFilename) throws IOException {
+
+          double maxEvalScore = Double.NaN;
+		NBestListContainer<IString, String> nbestLists = null;
+
+		int chunkSize = (learningAlgorithm.equals(EVALUE_LEARNING)? 1 : 5);
+
+		LineNumberReader reader = null;
+		int translationId = 0;
+		for (int nbestIter = 0; nbestIter < MAX_LEARN_NBEST_ITER; nbestIter++) {
+			IncrementalEvaluationMetric<IString, String> actualPostIncEval = evalMetric.getIncrementalMetric();
+			IncrementalEvaluationMetric<IString, String> actualPreIncEval  = evalMetric.getIncrementalMetric();
+
+			double initialEvalSum = 0;
+			double postEvalSum = 0;
+			int evalCount = 0;
+			boolean doneStream = false;
+			reader = new LineNumberReader(new InputStreamReader(new FileInputStream(inputFilename), "UTF-8"));
+			translationId = 0;
+
+			double initialCScore = 0;
+			for (int chunk = 0; !doneStream; chunk++) {
+
+				String nbestFilename;
+				if (!learningAlgorithm.equals(EVALUE_LEARNING)) {
+					nbestFilename = String.format("%s.nbest.c%d.%d", saveWeights,
+							chunk, nbestIter);
+				} else {
+					nbestFilename = String.format("/tmp/%s.nbest.c%d.%d", saveWeights.replaceAll("[^A-Za-z0-9]","_"),
+							chunk, nbestIter);
+				}
+
+				System.err.printf("Generating n-best list to: %s\n", nbestFilename);
+				// Generate new nbest list
+				System.err.printf("n-best list iter: %d\n", nbestIter);
+				System.err.printf("Generating n-best list: %s\n", nbestFilename);
+
+				// if (nbestIter < -1) {
+                          BufferedWriter nbestListWriter = new BufferedWriter(new FileWriter(nbestFilename));
+
+                          int skipped = 0;
+				int included = 0;
+
+				long decodingTime = -System.currentTimeMillis();
+				int foreignTokensTranslated = 0;
+				for (String line; included < chunkSize; translationId++, included++) {
+					line = reader.readLine();
+					if (line == null) {
+						reader.close();
+						doneStream = true;
+						break;
+					}
+
+					String[] tokens = line.split("\\s+");
+					foreignTokensTranslated += tokens.length;
+					if (tokens.length > maxSentenceSize) {
+						System.err.printf("Skipping: %s\n", line);
+						System.err.printf("Tokens: %d (Max: %d)\n", tokens.length,
+								maxSentenceSize);
+						skipped++;
+						continue;
+					}
+
+					if (tokens.length < minSentenceSize) {
+						System.err.printf("Skipping: %s\n", line);
+						System.err.printf("Tokens: %d (Min: %d)\n", tokens.length,
+								minSentenceSize);
+						skipped++;
+						continue;
+					}
+
+					Sequence<IString> foreign = new SimpleSequence<IString>(true,
+							IStrings.toIStringArray(tokens));
+
+					// log foreign sentence
+					System.err.printf("Translating(%d): %s\n", reader.getLineNumber(),
+							foreign);
+					long translationTime = -System.currentTimeMillis();
+					// scorer.setRandomizeTag(nbestIter == 0);
+
+					List<RichTranslation<IString, String>> translations = new ArrayList(LEARNING_NBEST_LIST_SIZE);
+					List<List<RichTranslation<IString, String>>> nbestNBad = null;
+
+
+					if (nbestIter == 0 && !learningAlgorithm.equals(EVALUE_LEARNING)) {
+						scorer.setWeightMultipliers(1.0, 0.0);
+						System.err.printf("Doing Manual Weight Decode.\n");
+						nbestNBad = ((AbstractBeamInferer) inferers.get(0)).nbestNBad(foreign,
+								reader.getLineNumber() - 1, null, LEARNING_NBEST_LIST_SIZE, 0);
+						translations.addAll(nbestNBad.get(0));
+						translations.addAll(nbestNBad.get(1));
+						scorer.setWeightMultipliers(0.0, 1.0);
+					}
+
+					if (!(nbestIter == 0 && chunk == 0) || learningAlgorithm.equals(EVALUE_LEARNING)) {
+					nbestNBad = ((AbstractBeamInferer) inferers.get(0))
+					.nbestNBad(foreign, reader.getLineNumber() - 1, null,
+							LEARNING_NBEST_LIST_SIZE, 0);
+					}
+
+					translations.addAll(nbestNBad.get(0));
+					translations.addAll(nbestNBad.get(1));
+
+					translationTime += System.currentTimeMillis();
+					System.err.printf(
+							"Foreign length: %d Argmax Translation length: %s Translation time: %.3f s\n",
+							foreign.size(), (translations == null ? "NA" : translations
+									.get(0).translation.size()), translationTime / (1000.0));
+					if (translations != null) {
+						System.err.printf("Arg-max translation:%s\n\n", translations.get(0).translation);
+						for (RichTranslation<IString, String> tran : translations) {
+							nbestListWriter.append(tran.nbestToString(translationId)).append(
+							"\n");
+						}
+					} else {
+						System.err.printf("<<<decoder failure>>>\n");
+					}
+				}
+				decodingTime += System.currentTimeMillis();
+
+				if (included == 0)
+					continue;
+				nbestListWriter.close();
+
+				if (skipped == translationId) {
+					throw new RuntimeException(String
+							.format("Error: all foreign sentences skipped"));
+				}
+				// }
+				// perform loss augmented inference over n-best list until convergence
+				System.err.printf("Loading n-best list\n");
+				nbestLists = new MosesNBestList(nbestFilename);
+
+				int maxNbestListSize = 0;
+				int minNbestListSize = Integer.MAX_VALUE;
+				for (List a : nbestLists.nbestLists()) {
+					if (a.size() == 0) continue;
+					if (a == null)
+						continue;
+					int aSz = a.size();
+					if (aSz > maxNbestListSize) maxNbestListSize = aSz;
+					if (aSz < minNbestListSize) minNbestListSize = aSz;
+				}
+				System.err.printf("Largest  cummalative n-best list size: %d\n", maxNbestListSize);
+				System.err.printf("Smallest cummalative n-best list size: %d\n", minNbestListSize);
+
+				int translations = 0;
+				for (List<? extends ScoredFeaturizedTranslation<IString, String>> transList : nbestLists
+						.nbestLists()) {
+					if (transList.size() > 0)
+						translations++;
+				}
+
+				System.err.printf("Translations in chunk: %d\n", translations);
+
+				double l2Of1Best = 0;
+				double scoreSum1Best = 0;
+				double scoreSum1Worst = 0;
+				int outOf = 0;
+				for (List<? extends ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists
+						.nbestLists()) {
+					if (nbestlist.size() == 0)
+						continue;
+					for (FeatureValue<String> fv : nbestlist.get(0).features) {
+						l2Of1Best += fv.value * fv.value;
+					}
+					outOf++;
+					scoreSum1Best += nbestlist.get(0).score;
+					scoreSum1Worst += nbestlist.get(nbestlist.size() - 1).score;
+				}
+				l2Of1Best = Math.sqrt(l2Of1Best);
+				double scoreSumDiff = scoreSum1Best - scoreSum1Worst;
+
+				System.err.printf(
+						"Argmax cScore: %e N-best argmin cScore: %e (diff %f)\n",
+						scoreSum1Best, scoreSum1Worst, scoreSumDiff);
+
+				EvaluationMetric<IString, String> bestScoreMetric = new MarginRescaleEvaluationMetric(
+						null, scorer);
+
+				MultiTranslationMetricMax<IString, String> bestScoreSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
+						bestScoreMetric);
+				MultiTranslationMetricMax<IString, String> oracleEvalSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
+						evalMetric);
+
+				System.err.printf("Finding best scoring translations over cummulative n-best list...\n");
+				List<ScoredFeaturizedTranslation<IString, String>> bestScoreTranslationsInit = bestScoreSearch.maximize(nbestLists);
+				System.err.printf("Done.\n");
+
+				IncrementalEvaluationMetric<IString, String> initialEvalMetric = evalMetric.getIncrementalMetric();
+				{
+					int tI = 0;
+					initialCScore = 0.0;
+					int posT = -1;
+					for (ScoredFeaturizedTranslation<IString, String> trans : bestScoreTranslationsInit) { posT++;
+						if (actualPreIncEval.size() <= posT) {
+							actualPreIncEval.add(trans);
+						} else {
+							if (trans != null) actualPreIncEval.replace(posT, trans);
+						}
+
+						initialEvalMetric.add(trans);
+						if (trans != null) initialCScore += scorer.getIncrementalScore(trans.features);
+						tI++;
+					}
+				}
+
+				System.err.printf("Finding oracle translations over cummulative n-best list....\n");
+				List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations = oracleEvalSearch.maximize(nbestLists);
+				System.err.printf("Done.\n");
+				IncrementalEvaluationMetric<IString, String> oracleEvalMetric = evalMetric.getIncrementalMetric();
+
+				for (ScoredFeaturizedTranslation<IString, String> trans : oracleEvalTranslations) {
+					//System.err.printf("%s\n", (trans == null ? trans : trans.translation));
+					oracleEvalMetric.add(trans);
+				}
+				double oracleScore = oracleEvalMetric.score();
+
+
+
+				initialEvalSum += initialEvalMetric.score();
+				evalCount++;
+				System.err.printf(
+						"> Init eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n", nbestIter, chunk, 100
+						* initialEvalMetric.score(), initialCScore, 100 * oracleScore, 100*initialEvalSum/evalCount, actualPreIncEval.score()*100);
+
+				scorer.setWeightMultipliers(0.0, 1.0);
+
+				long learningTime = -System.currentTimeMillis();
+
+				if (learningAlgorithm.equals(EVALUE_LEARNING)) {
+					EValueLearningScorer eScorer = (EValueLearningScorer)scorer;
+					int transIdx = -1;
+					IncrementalEvaluationMetric<IString, String> incEvalMetric = learningMetric.getIncrementalMetric();
+					for (int i = 0; i < nbestLists.nbestLists().size(); i++) {
+						if (nbestLists.nbestLists().get(i).size() != 0) {
+							if (transIdx == -1) transIdx = i;
+							else throw new RuntimeException();
+						}
+						incEvalMetric.add(null);
+					}
+
+					//nbestLists.nbestLists();
+				  List<? extends ScoredFeaturizedTranslation<IString, String>> sfTrans = nbestLists.nbestLists().get(transIdx);
+				  List<List<FeatureValue<String>>> featureVectors = new ArrayList<List<FeatureValue<String>>>(sfTrans.size());
+
+				 /*  { int tI = -1;
+				  for (ScoredFeaturizedTranslation<IString, String> sfTran : sfTrans) { tI++;
+				  	double score = -((TERMetric)learningMetric).calcTER(sfTran, transIdx);
+				  	if (score > trueOracle) { trueOracle = score; loc = tI; }
+				  }
+				  }
+				  System.err.printf("true oracle: %f (%d)\n", trueOracle, loc); * /
+				  double[] us = new double[sfTrans.size()];
+				  //System.err.printf("nbest\n");
+				  System.err.printf("eval scores (%d)\n", sfTrans.size());
+				  for (ScoredFeaturizedTranslation<IString, String> sfTran : sfTrans) {
+				  	incEvalMetric.replace(transIdx, sfTran);
+				  	us[featureVectors.size()] = incEvalMetric.score();
+				  	//System.err.printf("%d: %f\n", featureVectors.size(), us[featureVectors.size()]);
+				  	featureVectors.add(sfTran.features);
+				  }
+				  if (DEBUG_LEVEL >= 2) {
+				  	System.err.printf("Old Weights\n");
+				  	eScorer.displayWts();
+				  }
+				  double objInit = eScorer.objectiveValue(featureVectors, us);
+				  eScorer.wtUpdate(featureVectors, us, nbestIter+1);
+				  double objPost = eScorer.objectiveValue(featureVectors, us);
+				  System.err.printf("Obj Delta: %e (%e-%e)\n", objPost - objInit, objPost, objInit);
+
+				  if (DEBUG_LEVEL >= 2) {
+				  	System.err.printf("New Weights\n");
+				  	eScorer.displayWts();
+				  }
+				}
+
+				learningTime += System.currentTimeMillis();
+
+				List<ScoredFeaturizedTranslation<IString, String>> bestScoreTranslations = bestScoreSearch
+				.maximize(nbestLists);
+
+				IncrementalEvaluationMetric<IString, String> bestScoringEvalMetric = evalMetric.getIncrementalMetric();
+
+				List<FeatureValue<String>> allSelectedFeatures = new LinkedList<FeatureValue<String>>();
+				double finalCScore = 0;
+				int posBT = -1;
+				for (ScoredFeaturizedTranslation<IString, String> trans : bestScoreTranslations) { posBT++;
+
+					if (actualPostIncEval.size() <= posBT) {
+						actualPostIncEval.add(trans);
+					} else {
+						if (trans != null) actualPostIncEval.replace(posBT, trans);
+					}
+					bestScoringEvalMetric.add(trans);
+					if (trans != null) {
+						allSelectedFeatures.addAll(trans.features);
+					}
+				}
+
+				postEvalSum += bestScoringEvalMetric.score();
+				System.err.printf(
+						"> Post eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n", nbestIter, chunk, 100
+						* bestScoringEvalMetric.score(), finalCScore, 100
+						* oracleEvalMetric.score(), 100*postEvalSum/evalCount, actualPostIncEval.score()*100);
+				System.err.printf("> Time Summary Decoding: %.3f s Learning (incl loss infer): %.3f s\n", decodingTime/1000.0, learningTime/1000.0);
+				System.err.printf("Max eval score: %f\n", maxEvalScore);
+				if (chunk % 250 == 0) scorer.saveWeights(String.format("%s.nbestitr_%d.chunk_%d.wts", saveWeights, nbestIter, chunk));
+				if (DEBUG_LEVEL >= 2) {
+					System.err.printf("Final Weights for nbestitr: %d chunk: %d", nbestIter, chunk);
+					scorer.displayWeights();
+				}
+
+			}
+			scorer.saveWeights(String.format("%s.nbestitr_%d.final.wts", saveWeights, nbestIter));
+		  System.err.printf(">> %d: Avg eS: %.2f~>%.2f  Actl eS: %.2f~>%.2f (diff: %.3f)\n", nbestIter, 100*initialEvalSum/evalCount,
+		  		100*postEvalSum/evalCount, actualPreIncEval.score()*100, actualPostIncEval.score()*100,
+		  		actualPostIncEval.score()*100 - actualPreIncEval.score()*100);
+		}
+	} */
+
+
 	public void executiveLoop() throws IOException {
-		decodeFromConsole();
+		if (learnWeights) {
+			String inputFilename = saveWeights + ".in";
+			LineNumberReader reader = new LineNumberReader(new InputStreamReader(
+					System.in, "UTF-8"));
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(inputFilename), "UTF-8"));
+			for (String line; (line = reader.readLine()) != null;) {
+				writer.write(line);
+				writer.write("\n");
+			}
+			reader.close();
+			writer.close();
+
+			if (learningAlgorithm.equals(PERCEPTRON_LEARNING)) {
+				Learner learner = new PerceptronLearner(learningRate);
+				learningLoop(learner, inputFilename, maxEpochs, saveWeights);								
+			} else if (learningAlgorithm.equals(AVG_PERCEPTRON_LEARNING)) {
+				Learner learner = new AvgPerceptronLearner(learningRate);
+				learningLoop(learner, inputFilename, maxEpochs, saveWeights);
+			} else if (learningAlgorithm.equals(MIRA_LEARNING)) {
+				Learner learner = new MiraLearner(maxMarginC);
+				learningLoop(learner, inputFilename, maxEpochs, saveWeights);				
+			} else if (learningAlgorithm.equals(SSVM_LEARNING)) {
+				Learner learner = new SSVMLearner(maxMarginC, false);
+				learningLoop(learner, inputFilename, maxEpochs, saveWeights);
+			} else if (learningAlgorithm.equals(MMSG_LEARNING)) {
+				Learner learner = new SSVMLearner(maxMarginC, true);
+				learningLoop(learner, inputFilename, maxEpochs, saveWeights);
+			} else if (learningAlgorithm.equals(COST_MARGIN_LEARNING)) {
+				Learner learner = new PerceptronLearner(learningRate);
+				learningLoop(learner, inputFilename, maxEpochs, saveWeights);
+			} else {
+				throw new RuntimeException("Unrecognized learning algorithm");
+			}
+		} else {
+			decodeFromConsole();
+		}
 	}
 
 	public static void main(String[] args) throws Exception {
