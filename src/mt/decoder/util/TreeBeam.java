@@ -67,7 +67,7 @@ public class TreeBeam<S extends State<S>> implements Beam<S> {
 	}
 	
 	@Override
-	public S put(S hypothesis) { hypothesisInsertions++;
+	synchronized public S put(S hypothesis) { hypothesisInsertions++;
 	    // recombination check	
 		RecombinationHash.Status status = recombinationHash.queryStatus(hypothesis, true);
 		if (recombinationHistory != null) {

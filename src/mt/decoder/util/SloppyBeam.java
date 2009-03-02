@@ -68,7 +68,7 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
 	}
 
 	@Override
-	public S put(S hypothesis) {
+	synchronized public S put(S hypothesis) {
 		
 		//System.out.printf("put score: %.3f (score: %.3f h: %.3f) worst: %.3f\n", hypothesis.finalScoreEstimate(), hypothesis.score, hypothesis.h, worst);
 		// see if we're worse than worst

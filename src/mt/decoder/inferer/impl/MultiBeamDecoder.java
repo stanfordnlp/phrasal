@@ -416,9 +416,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 						}
 						
 						int foreignWordsCovered = newHyp.foreignCoverage.cardinality();
-						synchronized(beams[foreignWordsCovered]) { 
-      				beams[foreignWordsCovered].put(newHyp); 
-						}
+						beams[foreignWordsCovered].put(newHyp);
 
 						optionsApplied++;
 						localOptionsApplied++;
