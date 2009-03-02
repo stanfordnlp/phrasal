@@ -174,20 +174,22 @@ public class SRILanguageModel implements LanguageModel<IString> {
     }
 
     verbose = true;
-    String model = args[0]; String file = args[1];
-    System.out.printf("Loading lm: %s...\n", model);
-    LanguageModel<IString> lm = SRILanguageModel.load(model);
-    System.out.printf("done loading lm.\n");
+    String modelStr = args[0]; String file = args[1];
+    for(String model : modelStr.split(":")) {
+      System.out.printf("Loading lm: %s...\n", model);
+      LanguageModel<IString> lm = SRILanguageModel.load(model);
+      System.out.printf("done loading lm.\n");
 
-    long startTimeMillis = System.currentTimeMillis();
-    for(String sent : ObjectBank.getLineIteratorObjectBank(file)) {
-      sent = sent.toLowerCase();
-      System.out.printf("Sentence: %s\n", sent);
-      Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));
-      double score = LanguageModels.scoreSequence(lm, seq);
-      System.out.printf("Sequence score: %f score_log10: %f\n", score, score/Math.log(10));
+      long startTimeMillis = System.currentTimeMillis();
+      for(String sent : ObjectBank.getLineIteratorObjectBank(file)) {
+        sent = sent.toLowerCase();
+        System.out.printf("Sentence: %s\n", sent);
+        Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));
+        double score = LanguageModels.scoreSequence(lm, seq);
+        System.out.printf("Sequence score: %f score_log10: %f\n", score, score/Math.log(10));
+      }
+      double totalSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
+      System.err.printf("secs = %.3f\n", totalSecs);
     }
-    double totalSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
-    System.err.printf("secs = %.3f\n", totalSecs);
   }
 }
