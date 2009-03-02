@@ -40,7 +40,9 @@ public class RecombinationHistory<S extends State<S>> {
 		List<S> retainedList  = historyMap.get(retained);
 		if (retainedList == null) {
 			retainedList = new LinkedList<S>();
+			synchronized(historyMap) {
 			historyMap.put(retained, retainedList);
+			}
 		}
 		if (discardedList != null) {
 			historyMap.remove(discarded);
