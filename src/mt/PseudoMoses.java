@@ -714,7 +714,7 @@ public class PseudoMoses {
   		infererBuilder.setScorer(scorer);
   		infererBuilder.setSearchHeuristic(heuristic.clone());
   		infererBuilder.setRecombinationFilter(filter.clone());
-  		infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.treebeam);
+  		infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
 			if (local_procs == 0) {
 				infererBuilder.setInternalMultiThread(true);
       }
