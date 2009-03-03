@@ -1752,7 +1752,7 @@ public class PseudoMoses {
     PseudoMoses p = new PseudoMoses(config);
 
 		p.executiveLoop();
-		System.exit(-1);
+		System.exit(0);
 	}
 
 }
