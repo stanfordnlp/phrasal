@@ -62,10 +62,6 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 		return PHRASE_TABLE_NAMES;
 	}
 
-	@Override
-	public String[] getPhrasalScoreNames() {
-		return scoreNames;
-	}
 
 	@Override
 	public List<TranslationOption<TK>>  getTranslationOptions(Sequence<TK> sequence) {
@@ -79,6 +75,12 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 
 	@Override
 	public int longestForeignPhrase() {
-		return Integer.MAX_VALUE;
+		return -Integer.MAX_VALUE;
+	}
+
+	@Override
+	public void setCurrentSequence(Sequence<TK> foreign,
+			List<Sequence<TK>> tranList) {
+		// no op
 	}
 }

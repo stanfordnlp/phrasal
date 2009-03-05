@@ -24,7 +24,7 @@ abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<
 	}
 	
 	@Override
-	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, int translationId) {
+	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId) {
 		List<ConcreteTranslationOption<TK>> opts = new LinkedList<ConcreteTranslationOption<TK>>();
 		int sequenceSz = sequence.size();
 		int longestForeignPhrase = this.longestForeignPhrase();
@@ -52,9 +52,6 @@ abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<
 
 	@Override
 	abstract public String getName();
-
-	@Override
-	abstract public String[] getPhrasalScoreNames();
 
 	@Override
 	abstract public List<TranslationOption<TK>> getTranslationOptions(Sequence<TK> sequence);

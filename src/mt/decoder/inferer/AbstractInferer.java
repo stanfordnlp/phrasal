@@ -22,10 +22,8 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
 	protected final RecombinationFilter<Hypothesis<TK,FV>> filter;
 
 
-	abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int size);
-
-
-	abstract public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace);
+	abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int size);
+	abstract public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets);
 
 	protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
 		featurizer = builder.incrementalFeaturizer;

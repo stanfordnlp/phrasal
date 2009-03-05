@@ -22,7 +22,6 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	final boolean tagByTable;
 	final boolean phraseReweighting;
 	
-	public static final boolean SVMNORM = Boolean.parseBoolean(System.getProperty("SVMNORM", "false"));
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	
 	private String[] getFeatureNames(String[] phraseScoreNames, String phraseTableName) {
@@ -104,11 +103,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 			// construct array of FeatureValue objects 
 			featureValues = new FeatureValue[featureNames.length];
 			for (int i = 0; i < featureValues.length; i++) {
-				if (SVMNORM) {
-					featureValues[i] = new FeatureValue(featureNames[i], featurizable.translationScores[i]/2.0);
-				} else {
-					featureValues[i] = new FeatureValue(featureNames[i], featurizable.translationScores[i]);
-				}
+				featureValues[i] = new FeatureValue(featureNames[i], featurizable.translationScores[i]);
 			}
 			
 			if (DEBUG) {

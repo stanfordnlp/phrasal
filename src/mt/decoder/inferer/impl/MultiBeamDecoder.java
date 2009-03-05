@@ -118,7 +118,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Beam<Hypothesis<TK,FV>> decode(Scorer<FV> scorer, Sequence<TK> foreign, int translationId, RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory,
-			ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int nbest) {
+			ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int nbest) {
 		featurizer.reset();
 		int foreignSz = foreign.size(); 
 		BufferedWriter alignmentDump = null;
@@ -138,7 +138,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		// retrieve translation options
 		if (DEBUG) System.err.println("Generating Translation Options");
 		
-		List<ConcreteTranslationOption<TK>> options = phraseGenerator.translationOptions(foreign, translationId);
+		List<ConcreteTranslationOption<TK>> options =  
+					phraseGenerator.translationOptions(foreign, targets, translationId);	
 		
 		System.err.printf("Translation options: %d\n", options.size());
 		
@@ -372,12 +373,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 				for (int endPos = startPos; endPos < endPosMax; endPos++) {
 					List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid.get(startPos, endPos);
 					if (applicableOptions == null) continue;
-			//		System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
+					// System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
 			
 					for (ConcreteTranslationOption<TK> option : applicableOptions) {
 						assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
 
-						if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option.abstractOption.translation)) {
+						if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option)) {
 							continue;
 						}
 						
@@ -393,6 +394,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 						
 						if (DETAILED_DEBUG) {
 							System.err.printf("creating hypothesis %d from %d\n", newHyp.id, hyp.id);
+							System.err.printf("hyp: %s\n", newHyp.featurizable.partialTranslation);
+							System.err.printf("coverage: %s\n", newHyp.foreignCoverage);
+							if (hyp.featurizable != null) { 
+								System.err.printf("par: %s\n", hyp.featurizable.partialTranslation);
+								System.err.printf("coverage: %s\n", hyp.foreignCoverage);
+							}
 							System.err.printf("\tbase score: %.3f\n", hyp.score);
 							System.err.printf("\tcovering: %s\n", newHyp.translationOpt.foreignCoverage);
 							System.err.printf("\tforeign: %s\n", newHyp.translationOpt.abstractOption.foreign);
@@ -402,9 +409,21 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 						}
 						totalHypothesesGenerated++;
 						
-						if (constrainedOutputSpace != null && !constrainedOutputSpace.allowablePartial(newHyp.featurizable)) {
-							continue;
+						
+						
+						if (newHyp.featurizable.untranslatedTokens != 0) {
+							if (constrainedOutputSpace != null && !constrainedOutputSpace.allowablePartial(newHyp.featurizable)) {
+								continue;
+							}
+						} else {
+							// System.err.printf("checking final %s\n", newHyp.featurizable.partialTranslation);
+							if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableFinal(newHyp.featurizable)) {
+								// System.err.printf("bad final: %s\n", newHyp.featurizable.partialTranslation);
+								continue;
+							}
 						}
+						
+						
 						
 						if (newHyp.score == Double.NEGATIVE_INFINITY || newHyp.score == Double.POSITIVE_INFINITY || 
 								newHyp.score != newHyp.score) {

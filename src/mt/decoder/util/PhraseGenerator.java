@@ -2,6 +2,8 @@ package mt.decoder.util;
 
 import java.util.*;
 
+import edu.stanford.nlp.util.IString;
+
 import mt.base.ConcreteTranslationOption;
 import mt.base.Sequence;
 
@@ -17,7 +19,11 @@ public interface PhraseGenerator<TK> extends Cloneable {
 	 * @param sequence
 	 * @return
 	 */
-	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, int translationId);
+	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId);
 	
 	public PhraseGenerator<TK> clone();
+	
+	public void setCurrentSequence(Sequence<TK> foreign, List<Sequence<TK>> tranList);
+	
+	public int longestForeignPhrase();
 }

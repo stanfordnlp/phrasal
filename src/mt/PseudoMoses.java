@@ -90,6 +90,7 @@ public class PseudoMoses {
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
   static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 
+  static final boolean VERBOSE_LEARNER = true;
 
 	static {
 		REQUIRED_FIELDS.addAll(Arrays.asList(new String[] { TRANSLATION_TABLE_OPT,
@@ -145,7 +146,8 @@ public class PseudoMoses {
 
 	List<Inferer<IString, String>> inferers;
 	Inferer<IString, String> refInferer;
-
+	PhraseGenerator<IString> phraseGenerator;
+	
 	BufferedWriter nbestListWriter;
 	int nbestListSize;
 	String saveWeights = "saved.wts";
@@ -175,10 +177,10 @@ public class PseudoMoses {
   String recomb_heuristic = DEFAULT_RECOMBINATION_HEURISTIC;
 
 	public static enum LearningTarget {
-		NONE, REVERSE_LOSS_INFERENCE, BEST_ON_N_BEST_LIST, ONE_CLASS,
+		REFERENCE, BEST_ON_N_BEST_LIST
 	}
 
-	public static LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.REVERSE_LOSS_INFERENCE;
+	public static LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.BEST_ON_N_BEST_LIST;
 	LearningTarget learningTarget = DEFAULT_LEARNING_TARGET;
 
 	static final int DEBUG_LEVEL = 0;
@@ -189,9 +191,8 @@ public class PseudoMoses {
 	static {
 		configToLearningTarget.put("best-on-n-best",
 				LearningTarget.BEST_ON_N_BEST_LIST);
-		configToLearningTarget.put("rloss-inference",
-				LearningTarget.REVERSE_LOSS_INFERENCE);
-		configToLearningTarget.put("one-class", LearningTarget.ONE_CLASS);
+		configToLearningTarget.put("reference",
+				LearningTarget.REFERENCE);
 	}
 
   static Map<String, List<String>> readConfig(String filename) throws IOException {
@@ -683,12 +684,23 @@ public class PseudoMoses {
 
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
 		System.err.printf("Phrase table: %s\n", phraseTable);
-		PhraseGenerator<IString> phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
+		
+		if (phraseTable.endsWith(".db")) {
+			System.err.println("Dyanamic pt\n========================");
+			phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
+					.<String> factory(featurizer, scorer,
+							PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable)
+							: PhraseGeneratorFactory.<String> factory(featurizer, scorer,
+									PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable,
+									optionLimit));
+		} else {
+		   phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
 				.<String> factory(featurizer, scorer,
 						PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, phraseTable)
 						: PhraseGeneratorFactory.<String> factory(featurizer, scorer,
 								PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, phraseTable,
 								optionLimit));
+		}
 
 
 		System.err.printf("Phrase Limit: %d\n",
@@ -926,14 +938,14 @@ public class PseudoMoses {
 
     ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
         : new EnumeratedConstrainedOutputSpace<IString, String>(
-            constrainedToRefs.get(translationId)));
+            constrainedToRefs.get(translationId), phraseGenerator.longestForeignPhrase()));
 
     if (nbestListSize == -1) {
       translation = inferers.get(procid).translate(foreign, lineNumber - 1,
-          constrainedOutputSpace);
+          constrainedOutputSpace, (constrainedOutputSpace == null ? null : constrainedOutputSpace.getAllowableSequences()));
     } else {
       List<RichTranslation<IString, String>> translations = inferers.get(procid).nbest(
-          foreign, lineNumber - 1, constrainedOutputSpace,
+          foreign, lineNumber - 1, constrainedOutputSpace, (constrainedOutputSpace == null ? null : constrainedOutputSpace.getAllowableSequences()),
           nbestListSize);
       if (translations != null) {
         translation = translations.get(0);
@@ -1087,14 +1099,16 @@ public class PseudoMoses {
 		}
 		
 		public void weightUpdate(int epoch, int id, RichTranslation<IString,String> target, RichTranslation<IString,String> argmax, double loss) {
+			if (VERBOSE_LEARNER) System.err.printf("Target features:\n");
 			for (FeatureValue<String> feature : target.features) {
 				addMulWeight(feature.name, 1.0, lrate[Math.min(epoch, lrate.length-1)]*feature.value);
-//				System.err.printf("%s +%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
+				if (VERBOSE_LEARNER) System.err.printf("\t%s +%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
 			}
 			
+			if (VERBOSE_LEARNER) System.err.printf("Argmax features\n");
 			for (FeatureValue<String> feature : argmax.features) {
 				addMulWeight(feature.name, 1.0, -lrate[Math.min(epoch, lrate.length-1)]*feature.value);
-//				System.err.printf("%s -%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
+				if (VERBOSE_LEARNER) System.err.printf("\t%s -%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
 			}
 		}
 		
@@ -1335,13 +1349,34 @@ public class PseudoMoses {
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) { translationId++;
 				String[] tokens = line.split("\\s+");
 				Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
-			  List<RichTranslation<IString,String>> nbest = inferers.get(0).nbest(learner, foreign, translationId, null, 1000);
-		
-			  RichTranslation<IString,String> target = listArgMax(nbest,incEval,translationId);
+			  List<RichTranslation<IString,String>> nbest;
+			  System.err.printf("Source: %s\n", foreign);
+			  RichTranslation<IString,String> target;
+			  if (learningTarget == LearningTarget.BEST_ON_N_BEST_LIST) {
+			  	nbest = inferers.get(0).nbest(learner, foreign, translationId, null, null, 100);
+			  	target = listArgMax(nbest,incEval,translationId);			  	
+			  } else {
+			  	System.err.println("Attempting to generate target");
+			  	System.err.println("==========================================");
+			    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = new EnumeratedConstrainedOutputSpace<IString, String>(
+			    		learnFromReferences.get(translationId), phraseGenerator.longestForeignPhrase());			   
+			  	target = inferers.get(0).translate(learner, foreign, translationId, constrainedOutputSpace, learnFromReferences.get(translationId));
+			  	if (target == null) {
+			  		System.err.println("Can't generate reference, skipping....");
+			  		continue;
+			  	}
+			  	
+			  	System.err.println("Generating model translation n-best list");
+			  	System.err.println("==========================================");
+			  	nbest = inferers.get(0).nbest(learner, foreign, translationId, null, null, 100);
+			  }
+			  
+			  
 			  RichTranslation<IString,String> argmax = nbest.get(0);
 			
 			  incEval.replace(translationId, target);
 			  double evalTarget = optionalSmoothScoring(incEval, translationId, target);
+
 			  System.err.printf("Target: %s\n", target.translation);					  
 			  System.err.printf("Target Score: %f Smooth Score: %f\n", incEval.score(), evalTarget);
 			  
@@ -1352,6 +1387,9 @@ public class PseudoMoses {
 			  double loss = evalTarget-evalArgmax;
 			  
 			  learner.weightUpdate(epoch, translationId, target, argmax, loss);
+			  if (translationId % 1 == 0) {
+			  	learner.saveWeights(saveWeights + ".epoch." + epoch + ".tran."+translationId+".wts");
+			  }
 			}
 			learner.saveWeights(saveWeights + ".epoch." + epoch);
 			System.err.printf("--> epoch %d score: %f\n", epoch, incEval.score());

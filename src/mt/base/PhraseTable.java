@@ -24,11 +24,6 @@ public interface PhraseTable<T> {
 	 */
 	int longestForeignPhrase();
 	
-	/**
-	 * 
-	 * @return
-	 */
-	String[] getPhrasalScoreNames();
 	
 	/**
 	 * 

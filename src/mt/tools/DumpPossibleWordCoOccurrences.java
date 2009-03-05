@@ -40,6 +40,7 @@ public class DumpPossibleWordCoOccurrences {
 			int tokensSz = tokens.size();
 			Set<IString> possibleTranslationWords = new HashSet<IString>();
 			int longestForeign = ppt.longestForeignPhrase();
+			if (longestForeign < 0) longestForeign = -longestForeign;			
 			for (int i = 0; i < tokensSz; i++) {
 				int jMax = Math.min(tokensSz, i+longestForeign);
 				for (int j = i+1; j <= jMax; j++) {

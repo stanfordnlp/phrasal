@@ -27,7 +27,7 @@ public interface ConstrainedOutputSpace<TK,FV> {
 	 * @param nextPhrase
 	 * @return
 	 */
-	boolean allowableContinuation(Featurizable<TK,FV> featurizable, Sequence<TK> nextPhrase);
+	boolean allowableContinuation(Featurizable<TK,FV> featurizable, ConcreteTranslationOption<TK> option);
 	
 	/**
 	 * 
@@ -43,4 +43,9 @@ public interface ConstrainedOutputSpace<TK,FV> {
 	 */
 	boolean allowableFinal(Featurizable<TK,FV> featurizable);
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public List<Sequence<TK>> getAllowableSequences();	
 }

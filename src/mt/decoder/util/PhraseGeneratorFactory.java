@@ -4,6 +4,7 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.CombinedPhraseGenerator;
+import mt.base.DynamicPhraseTable;
 import mt.base.IdentityPhraseGenerator;
 import mt.base.PharaohPhraseTable;
 import mt.base.SymbolFilter;
@@ -22,6 +23,7 @@ public class PhraseGeneratorFactory {
 	public static final String CONCATENATIVE_LIST_GENERATOR = "tablelist"; 
 	public static final String BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR = "augmentedtablelist";
 	public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
+	public static final String DYNAMIC_GENERATOR = "dpt";
 	public static final String PHAROAH_PHRASE_TABLE = "pharaohphrasetable";
 	public static final String PHAROAH_PHRASE_TABLE_ALT = "ppt";
 	
@@ -109,6 +111,27 @@ public class PhraseGeneratorFactory {
 				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
 				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+			}
+		}  else if (pgName.equals(DYNAMIC_GENERATOR)) {
+			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();
+			int phraseLimit = -1;
+			if (pgSpecs.length == 3) {
+				String phraseLimitStr = pgSpecs[2];
+				try {
+					phraseLimit = Integer.parseInt(phraseLimitStr);
+				} catch (NumberFormatException e) {
+					throw new RuntimeException(String.format("Specified phrase limit, %s, can not be parsed as an integer value\n", phraseLimitStr));
+				}
+			}
+			
+			String filename = pgSpecs[1];
+			ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename));
+			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
+			
+			if (phraseLimit == -1) {
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+			} else {
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		}
 		

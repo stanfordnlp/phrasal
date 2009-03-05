@@ -311,10 +311,6 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		}		
 	}
 
-	@Override
-	public String[] getPhrasalScoreNames() {
-		return scoreNames;
-	}
 
 	@Override
 	public String getName() {
@@ -324,5 +320,11 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	@Override
 	public String toString() {
 		return getName();
+	}
+	
+	@Override
+	public void setCurrentSequence(Sequence<IString> foreign,
+			List<Sequence<IString>> tranList) {
+		// no op
 	}
 }

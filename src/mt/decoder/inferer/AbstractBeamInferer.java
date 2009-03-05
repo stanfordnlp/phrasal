@@ -34,14 +34,15 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign,
-			int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+			int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets,
 			int size) {
-  		return nbest(scorer, foreign, translationId, constrainedOutputSpace, size);  	
+  		return nbest(scorer, foreign, translationId, constrainedOutputSpace, targets, size);  	
   }
+  
   
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> foreign,
-			int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+			int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets,
 			int size) {
 		if (size > beamCapacity) {
 			System.err
@@ -52,7 +53,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 		RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory = new RecombinationHistory<Hypothesis<TK, FV>>();
 
 		Beam<Hypothesis<TK, FV>> beam = decode(scorer, foreign, translationId,
-				recombinationHistory, constrainedOutputSpace, size);
+				recombinationHistory, constrainedOutputSpace, targets, size);
 		if (beam == null)
 			return null;
 		List<RichTranslation<TK, FV>> translations = new LinkedList<RichTranslation<TK, FV>>();
@@ -108,13 +109,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 	}
 
   @Override
-  public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace) {
-  	return translate(scorer, foreign, translationId, constrainedOutputSpace);
+  public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
+  	return translate(scorer, foreign, translationId, constrainedOutputSpace, targets);
   }
   
   @Override
-  public RichTranslation<TK, FV> translate(Scorer<FV> scorer, Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace) {
-    Beam<Hypothesis<TK,FV>> beam = decode(scorer, foreign, translationId, null, constrainedOutputSpace, 1);
+  public RichTranslation<TK, FV> translate(Scorer<FV> scorer, Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
+    Beam<Hypothesis<TK,FV>> beam = decode(scorer, foreign, translationId, null, constrainedOutputSpace, targets, 1);
     if (beam == null) return null;
     Hypothesis<TK,FV> hyp = beam.iterator().next();
     return new RichTranslation<TK,FV>(hyp.featurizable, hyp.score, collectFeatureValues(hyp));
@@ -129,7 +130,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 	 * @return
 	 */
   abstract protected Beam<Hypothesis<TK,FV>> decode(Scorer<FV> scorer, Sequence<TK> foreign, int translationId, RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory,
-                                                    ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int nbest);
+                                                    ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int nbest);
 
   /**
    *

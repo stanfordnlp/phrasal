@@ -17,6 +17,7 @@ public class TranslationOption<T> {
 	public final RawSequence<T> translation;
 	public final RawSequence<T> foreign;
 	public final IString constilation;
+	public final boolean forceAdd;
 	private final int hashCode = super.hashCode();
 	
 	/**
@@ -31,6 +32,16 @@ public class TranslationOption<T> {
 		this.translation = translation;
 		this.foreign = foreign;
 		this.phraseScoreNames = phraseScoreNames;
+		this.forceAdd = false;
+	}
+	
+	public TranslationOption(float[] scores, String[] phraseScoreNames, RawSequence<T> translation, RawSequence<T> foreign, IString constilation, boolean forceAdd) {
+		this.constilation = constilation;
+		this.scores = Arrays.copyOf(scores, scores.length);
+		this.translation = translation;
+		this.foreign = foreign;
+		this.phraseScoreNames = phraseScoreNames;
+		this.forceAdd = forceAdd;
 	}
 	
 	@Override

@@ -18,7 +18,8 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 	public static final int DEBUG = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 	public static final int DEBUG_LEVEL_RESULTS = 1;
 	public static final int DEBUG_LEVEL_COMPUTATION = 2;
-
+	public final int longestPhrase;
+	
 	private final List<Sequence<TK>> allowableSequences;
 	
 	
@@ -32,12 +33,18 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 		return sb.toString();
 	}
 	
+	@Override
+	public List<Sequence<TK>> getAllowableSequences() {
+		return allowableSequences;
+	}
+	
 	/**
 	 * 
 	 * @param allowableSequences
 	 */
-	public EnumeratedConstrainedOutputSpace(Collection<Sequence<TK>> allowableSequences) {
+	public EnumeratedConstrainedOutputSpace(Collection<Sequence<TK>> allowableSequences, int longestPhrase) {
 		this.allowableSequences = new ArrayList<Sequence<TK>>(allowableSequences);
+		this.longestPhrase = longestPhrase;		
 	}
 	
 	@Override
@@ -50,6 +57,8 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 			if (allowableSequence.equals(translation)) {
 				return true;
 			}	
+			System.err.printf("%s\n%s\n", allowableSequence, translation);
+			System.err.printf("left %d\n", allowableSequence.size() - translation.size());
 		} 
 		
 		return false;
@@ -62,7 +71,9 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 
 	@Override
 	public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-			Sequence<TK> nextPhrase) {
+			ConcreteTranslationOption<TK> option) {
+
+		Sequence<TK> nextPhrase = option.abstractOption.translation;
 		
 		if (featurizable == null) {
 			for (Sequence<TK> allowableSequence : allowableSequences) {
@@ -75,7 +86,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 		
 		Sequence<TK> partialTranslation = featurizable.partialTranslation;
 		
-		for (Sequence<TK> allowableSequence : allowableSequences) {
+		asfor: for (Sequence<TK> allowableSequence : allowableSequences) {
 			if (allowableSequence.startsWith(partialTranslation)) {
 				int phraseSz = nextPhrase.size();
 				int refPos = partialTranslation.size();
@@ -84,9 +95,25 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 				}
 				for (int phrasePos = 0; phrasePos < phraseSz; phrasePos++) {
 					if (!allowableSequence.get(refPos+phrasePos).equals(nextPhrase.get(phrasePos))) {
-						return false;
+						continue asfor;
 					}
 				}
+				int tMissing = allowableSequence.size() - (partialTranslation.size()+nextPhrase.size());
+				int fMissing = featurizable.untranslatedTokens - option.abstractOption.foreign.size();
+				if ((fMissing == 0 && tMissing != 0) || (fMissing != 0 && tMissing == 0)) continue;
+				/*
+				int priorTM = allowableSequence.size() - (partialTranslation.size());
+				int priorFM = featurizable.untranslatedTokens;
+				System.err.printf("Prior tMissing: %d Prior fMissing: %d\n", priorTM, priorFM);				
+				System.err.printf("Prior ratio: t/f: %f f/t: %f\n", (priorTM*1.0/priorFM), (priorFM*1.0/priorTM));
+				System.err.printf("Sizes - tp: %d fp: %d\n", option.abstractOption.translation.size(), option.abstractOption.foreign.size());
+				System.err.printf("tMissing: %d fMissing: %d\n", tMissing, fMissing);
+				
+				System.out.printf("ratio: t/f: %f f/t: %f\n", (tMissing*1.0/fMissing), (fMissing*1.0/tMissing));
+				System.out.printf("foreign size: %d\n", featurizable.foreignSentence.size()); */
+				if (fMissing != 0 && tMissing/(double)fMissing > longestPhrase) continue;
+				if (tMissing != 0 && fMissing/(double)tMissing > longestPhrase) continue;
+				
 				return true;
 			}	
 		} 

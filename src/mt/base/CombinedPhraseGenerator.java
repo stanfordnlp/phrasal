@@ -46,16 +46,20 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 		return phraseLimit;
 	}
 	
-	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, int translationId) {
+	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId) {
 		Map<CoverageSet, List<ConcreteTranslationOption<TK>>> optsMap = new HashMap<CoverageSet, List<ConcreteTranslationOption<TK>>>();
 		
 		if (DEBUG) {
 			System.err.printf("CombinedPhraseGenerator#translationOptions type: %s\n", type);
 		}
 		
+		for (PhraseGenerator<TK> phraseGenerator : phraseGenerators) {
+			phraseGenerator.setCurrentSequence(sequence, targets);
+		}
+		
 		if (type.equals(Type.CONCATENATIVE)) {
 			for (PhraseGenerator<TK> phraseGenerator : phraseGenerators) {
-				for (ConcreteTranslationOption<TK> opt : phraseGenerator.translationOptions(sequence, translationId)) {
+				for (ConcreteTranslationOption<TK> opt : phraseGenerator.translationOptions(sequence, targets, translationId)) {
 					addToMap(opt, optsMap);
 				}			
 			}
@@ -65,7 +69,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 				if (DEBUG) {
 					System.err.printf("Generator: %s\n", phraseGenerator.getClass().getName());
 				}
-				List<ConcreteTranslationOption<TK>> potentialOptions = phraseGenerator.translationOptions(sequence, translationId);
+				List<ConcreteTranslationOption<TK>> potentialOptions = phraseGenerator.translationOptions(sequence, targets, translationId);
 				CoverageSet novelCoverage = new CoverageSet(sequence.size());
 				for (ConcreteTranslationOption<TK> option : potentialOptions) {
 					if (coverage.intersects(option.foreignCoverage)) {
@@ -84,17 +88,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 			throw new RuntimeException(String.format("Unsupported combination type: %s", type));
 		}
 		
-		/*
-		if (DEBUG) {
-			System.err.printf("Final concrete translation options(%s): \"%s\"\n", type, sequence);
-			for (ConcreteTranslationOption<TK> option : opts) {
-				System.err.println(option);
-				System.err.println("----");
-				System.err.println();
-			}
-		} */
-		
-		
 		List<ConcreteTranslationOption<TK>> cutoffOpts = new LinkedList<ConcreteTranslationOption<TK>>();
 		for (List<ConcreteTranslationOption<TK>> preCutOpts : optsMap.values()) {
 			int sz = preCutOpts.size();
@@ -112,7 +105,10 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 			for (int i = 0; (i < phraseLimit) || (phraseLimit == 0 && i < preCutOptsArraySz); i++) {
 				cutoffOpts.add(preCutOptsArray.get(i));
 			}
-		
+			
+			if (phraseLimit != 0) for (int i = phraseLimit; i < preCutOptsArraySz; i++) {
+				if (preCutOptsArray.get(i).abstractOption.forceAdd) cutoffOpts.add(preCutOptsArray.get(i)); 
+			}
 		}
 		
 
@@ -179,7 +175,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 		for (String line; (line = reader.readLine()) != null; ) {
 			String[] tokens = line.split("\\s+");
 			SimpleSequence<IString> sequence = new SimpleSequence<IString>(IStrings.toIStringArray(tokens));
-			List<ConcreteTranslationOption<IString>> options = ptGen.translationOptions(sequence, -1);
+			List<ConcreteTranslationOption<IString>> options = ptGen.translationOptions(sequence, null, -1);
 			System.out.printf("Sequence: '%s'\n", sequence);
 			System.out.println("Translation Options:\n");
 			for (ConcreteTranslationOption<IString> option : options) {
@@ -190,5 +186,25 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 						Arrays.toString(option.abstractOption.scores));
 			}
 		}
+	}
+
+	@Override
+	public void setCurrentSequence(Sequence<TK> foreign,
+			List<Sequence<TK>> tranList) {
+		for (PhraseGenerator<TK> pGen : phraseGenerators) {
+			System.err.printf("COMBINED PHRASE GENERATOR SETTING CURRENT SEQ");
+			pGen.setCurrentSequence(foreign, tranList);
+		}
+		
+	}
+
+	@Override
+	public int longestForeignPhrase() {
+		int longest = -1;
+		for (PhraseGenerator<TK> phraseGenerator : phraseGenerators) {
+			if (longest < phraseGenerator.longestForeignPhrase()) 
+				longest = phraseGenerator.longestForeignPhrase();
+		}
+		return longest;
 	}
 }
