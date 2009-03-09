@@ -39,11 +39,27 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	Environment dbEnv;
 	
 	Set<String> currentSequence; 
+	IBMModel1 model1S2T, model1T2S;
+	
+	public DynamicPhraseTable(
+			IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String phraseTableName, String model1S2T, String model1T2S) {
+		super(phraseFeaturizer, scorer);
+		currentSequence = new HashSet<String>();
+		initdb(phraseTableName);
+		try {
+		this.model1S2T = IBMModel1.load(model1S2T);
+		this.model1T2S = IBMModel1.load(model1T2S);
+		} catch (Exception e) { throw new RuntimeException(e); }		
+	}
 	
 	public DynamicPhraseTable(
 			IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String phraseTableName) {
 		super(phraseFeaturizer, scorer);
 		currentSequence = new HashSet<String>();
+		initdb(phraseTableName);
+	}
+
+	private void initdb(String phraseTableName) {
 		try {			
 			EnvironmentConfig envConfig = new EnvironmentConfig();
 			envConfig.setAllowCreate(true);
@@ -63,9 +79,9 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			db = dbEnv.openDatabase(null, "dpt", dbConfig);
 		} catch (Exception e) {
 			throw new RuntimeException(e);			
-		}
+		}	
 	}
-
+	
 	public final int phraseLengthLimit = 3;
 	
 	@Override
@@ -93,8 +109,15 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 				RawSequence<IString> transSeq = new RawSequence<IString>(IStrings.toIStringArray(transS.split("\\s+")));
 				String mappingKey = sequence+"=:=>"+transS;
 				//System.err.printf("Sequences: %s => %s Feature rep: %s\n", sequence, transSeq, featRep);
-				opts.add(new TranslationOption<IString>(new float[]{(float)1.0}, new String[]{"PhrPen"}, 
-						new RawSequence<IString>(transSeq), new RawSequence<IString>(sequence), noConst, currentSequence.contains(mappingKey)));
+				if (model1S2T != null && model1T2S != null) {
+					opts.add(new TranslationOption<IString>(
+							new float[]{(float)-1.0, (float)Math.log(model1S2T.score(sequence, transSeq)), (float)Math.log(model1T2S.score(transSeq, sequence))}, 
+							new String[]{"PhrPen", "lex(f|e)", "lex(e|f)"}, 
+							new RawSequence<IString>(transSeq), new RawSequence<IString>(sequence), noConst, currentSequence.contains(mappingKey)));
+				} else {
+					opts.add(new TranslationOption<IString>(new float[]{(float)-1.0}, new String[]{"PhrPen"}, 
+							new RawSequence<IString>(transSeq), new RawSequence<IString>(sequence), noConst, currentSequence.contains(mappingKey)));
+				}
 				if (currentSequence.contains(mappingKey)) {
 					// System.err.printf("mapping key found '%s'\n", mappingKey);
 					pairsRetrived++; 

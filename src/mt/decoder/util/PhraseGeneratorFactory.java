@@ -125,7 +125,18 @@ public class PhraseGeneratorFactory {
 			}
 			
 			String filename = pgSpecs[1];
-			ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename));
+			
+			if (filename.contains(".db:")) {
+				String model1S2T = null, model1T2S = null;
+				String[] fields = filename.split(":");
+				filename = fields[0];
+				model1S2T = fields[1];
+				model1T2S = fields[2];
+				ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename, model1S2T, model1T2S));
+			} else {
+				ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename));
+			}
+			
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 			
 			if (phraseLimit == -1) {
