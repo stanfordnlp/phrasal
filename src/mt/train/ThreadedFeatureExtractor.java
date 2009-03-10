@@ -3,6 +3,7 @@ package mt.train;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.HashIndex;
 
 import java.util.*;
 import java.io.*;
@@ -112,7 +113,7 @@ public class ThreadedFeatureExtractor {
    = new SynchronousQueue<SymmetricalWordAlignment>();
   private List<AbstractFeatureExtractor> extractors;
   private AlignmentTemplates alTemps;
-  private Index<String> featureIndex = new Index<String>();
+  private Index<String> featureIndex = new HashIndex<String>();
   private Properties prop;
   private int startAtLine = -1, endAtLine = -1, numSplits = 0;
   private String fCorpus, eCorpus, align, outputFile;

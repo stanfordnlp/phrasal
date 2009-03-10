@@ -3,7 +3,7 @@ package mt.base;
 import java.util.*;
 
 
-import edu.stanford.nlp.util.IndexInterface;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -35,7 +35,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
 	 * @param intElements
 	 * @param index
 	 */
-	public SimpleSequence(int[] intElements, IndexInterface<T> index) {
+	public SimpleSequence(int[] intElements, Index<T> index) {
 		elements = new Object[intElements.length];
 		for (int i = 0; i < intElements.length; i++) {
 			elements[i] = index.get(intElements[i]);

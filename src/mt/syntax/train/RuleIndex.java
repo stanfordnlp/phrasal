@@ -1,6 +1,7 @@
 package mt.syntax.train;
 
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.HashIndex;
 import mt.base.DynamicIntegerArrayIndex;
 
 import java.util.Collection;
@@ -16,8 +17,8 @@ public class RuleIndex {
      lhsIndex = new DynamicIntegerArrayIndex(),
      rhsIndex = new DynamicIntegerArrayIndex();
 
-  final Index<Rule> ruleIndex = new Index<Rule>();
-  final Index<Integer> rootIndex = new Index<Integer>();
+  final Index<Rule> ruleIndex = new HashIndex<Rule>();
+  final Index<Integer> rootIndex = new HashIndex<Integer>();
 
   public int getRuleId(Rule r) {
     return ruleIndex.indexOf(r, true);
@@ -37,7 +38,7 @@ public class RuleIndex {
   }
   
   public Collection<Rule> getCollection() {
-    return ruleIndex;
+    return ruleIndex.objectsList();
   }
 
   public String getSizeInfo() {

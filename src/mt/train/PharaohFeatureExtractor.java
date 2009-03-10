@@ -2,6 +2,7 @@ package mt.train;
 
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.HashIndex;
 
 import java.util.*;
 import java.io.BufferedReader;
@@ -37,7 +38,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   int numPasses = 1; 
 
   final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
-  final Index<Integer> fLexIndex = new Index<Integer>(), eLexIndex = new Index<Integer>();
+  final Index<Integer> fLexIndex = new HashIndex<Integer>(), eLexIndex = new HashIndex<Integer>();
 
   IntArrayList feCounts = new IntArrayList();
   IntArrayList fCounts = new IntArrayList();

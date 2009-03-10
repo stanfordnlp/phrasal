@@ -14,6 +14,7 @@ import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.HashIndex;
 
 import java.util.*;
 import java.io.*;
@@ -114,7 +115,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   private AlignmentGrid alGrid = null;
   private AlignmentGrid fullAlGrid = null;
 
-  private Index<String> featureIndex = new Index<String>();
+  private Index<String> featureIndex = new HashIndex<String>();
 
   private static int startAtLine = -1, endAtLine = -1;
   private static int maxPhraseLenF = 7;

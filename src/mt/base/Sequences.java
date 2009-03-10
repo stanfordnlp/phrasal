@@ -1,6 +1,6 @@
 package mt.base;
 
-import edu.stanford.nlp.util.IndexInterface;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HasIntegerIdentity;
 
 /**
@@ -34,7 +34,7 @@ public class Sequences {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> int[] toIntArray(Sequence<T> sequence, IndexInterface<T> index) {
+	public static <T> int[] toIntArray(Sequence<T> sequence, Index<T> index) {
 		int sz = sequence.size();
 		if (sz != 0) {
 			if (sequence.get(0) instanceof HasIntegerIdentity) {

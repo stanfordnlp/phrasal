@@ -3,6 +3,7 @@ package mt.train;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.HashIndex;
 
 import java.util.*;
 import java.io.*;
@@ -109,7 +110,7 @@ public class CombinedFeatureExtractor {
 
   protected AlignmentTemplates alTemps;
   protected AlignmentTemplateInstance alTemp;
-  protected Index<String> featureIndex = new Index<String>();
+  protected Index<String> featureIndex = new HashIndex<String>();
 
   private Properties prop;
   private int startAtLine = -1, endAtLine = -1, numSplits = 0;

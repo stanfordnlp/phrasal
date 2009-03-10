@@ -1,6 +1,8 @@
 package mt.reranker;
 
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.HashIndex;
+
 import java.io.*;
 import java.util.*;
 
@@ -13,7 +15,7 @@ public class FeatureIndex implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  Index<String> featureIndex = new Index<String>();
+  Index<String> featureIndex = new HashIndex<String>();
 
   boolean add(String featName) {
     //return featureIndex.add(featName.intern());

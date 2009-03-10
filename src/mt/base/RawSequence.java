@@ -1,6 +1,6 @@
 package mt.base;
 
-import edu.stanford.nlp.util.IndexInterface;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -22,7 +22,7 @@ public class RawSequence<TK> extends AbstractSequence<TK> {
 		}
 	}
 
-	public RawSequence(int[] intElements, IndexInterface<TK> index) {
+	public RawSequence(int[] intElements, Index<TK> index) {
 		elements = new Object[intElements.length];
 		for (int i = 0; i < intElements.length; i++) {
 			elements[i] = index.get(intElements[i]);

@@ -13,6 +13,7 @@ import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.IntQuadruple;
+import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 
 
@@ -27,7 +28,7 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
 public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends AbstractFeatureExtractor {
 
   Map<AlignmentTemplateInstance, Set<Integer>> labelsForAlTemp = new HashMap<AlignmentTemplateInstance, Set<Integer>>();
-  Index<Pair<String, Integer>> phraseNamesIndex = new Index<Pair<String, Integer>>();
+  Index<Pair<String, Integer>> phraseNamesIndex = new HashIndex<Pair<String, Integer>>();
 
   enum ReorderingTypes { ordered, distorted }
 
