@@ -16,6 +16,7 @@ import edu.stanford.nlp.util.IStrings;
  * @param <TK>
  */
 public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
+	static public final int FORCE_ADD_LIMIT = 200;
 	static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
 	static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
 	
@@ -100,14 +101,30 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 			
 			Collections.sort(preCutOptsArray);
 			
+			if (DEBUG) {
+				System.err.println("Sorted Options");
+				for (ConcreteTranslationOption<TK>  opt : preCutOpts) {
+					System.err.println("--");
+					System.err.printf("%s => %s : %f\n", opt.abstractOption.foreign, opt.abstractOption.translation, opt.isolationScore);
+					System.err.printf("%s\n", Arrays.toString(opt.abstractOption.scores));
+				}
+			}
+			
 			int preCutOptsArraySz = preCutOptsArray.size();
 			
+			int forceAddCnt = 0;
 			for (int i = 0; (i < phraseLimit) || (phraseLimit == 0 && i < preCutOptsArraySz); i++) {
+				if (preCutOptsArray.get(i).abstractOption.forceAdd) {
+					forceAddCnt++; 
+				}
 				cutoffOpts.add(preCutOptsArray.get(i));
 			}
 			
-			if (phraseLimit != 0) for (int i = phraseLimit; i < preCutOptsArraySz; i++) {
-				if (preCutOptsArray.get(i).abstractOption.forceAdd) cutoffOpts.add(preCutOptsArray.get(i)); 
+			if (phraseLimit != 0) for (int i = phraseLimit; i < preCutOptsArraySz && forceAddCnt < FORCE_ADD_LIMIT; i++) {
+				if (preCutOptsArray.get(i).abstractOption.forceAdd) {
+					cutoffOpts.add(preCutOptsArray.get(i));
+					forceAddCnt++;
+				}
 			}
 		}
 		

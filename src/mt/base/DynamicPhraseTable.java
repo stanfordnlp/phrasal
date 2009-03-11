@@ -34,6 +34,7 @@ import com.sleepycat.je.OperationStatus;
  *
  */
 public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> {
+	static final boolean DEBUG = false;
 	
 	Database db;
 	Environment dbEnv;
@@ -74,7 +75,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			// Open the database. Create it if it does not already exist.
 			DatabaseConfig dbConfig = new DatabaseConfig();
 			dbConfig.setAllowCreate(true);
-			// dbConfig.setDeferredWrite(true);
+			dbConfig.setDeferredWrite(true);
 			dbConfig.setSortedDuplicates(true);
 			db = dbEnv.openDatabase(null, "dpt", dbConfig);
 		} catch (Exception e) {
@@ -82,7 +83,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		}	
 	}
 	
-	public final int phraseLengthLimit = 3;
+	public final int phraseLengthLimit = 5;
 	
 	@Override
 	public String getName() {
@@ -111,7 +112,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 				//System.err.printf("Sequences: %s => %s Feature rep: %s\n", sequence, transSeq, featRep);
 				if (model1S2T != null && model1T2S != null) {
 					opts.add(new TranslationOption<IString>(
-							new float[]{(float)-1.0, (float)Math.log(model1S2T.score(sequence, transSeq)), (float)Math.log(model1T2S.score(transSeq, sequence))}, 
+							new float[]{(float)-1.0, (float)model1S2T.scoreTMOnly(sequence, transSeq), (float)model1T2S.scoreTMOnly(transSeq, sequence)}, 
 							new String[]{"PhrPen", "lex(f|e)", "lex(e|f)"}, 
 							new RawSequence<IString>(transSeq), new RawSequence<IString>(sequence), noConst, currentSequence.contains(mappingKey)));
 				} else {

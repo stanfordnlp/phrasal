@@ -247,7 +247,7 @@ public class IBMModel1 {
 		}
 		
 		IBMModel1 model1 = new IBMModel1(args[0]);
-		
+		System.err.println("ready");
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		for (String sourceStr = reader.readLine(); sourceStr != null; sourceStr = reader.readLine()) {
 			String targetStr = reader.readLine();
@@ -261,7 +261,7 @@ public class IBMModel1 {
 				double l = sourceSeq.size();
 				double m = targetSeq.size();
 				double singleAlignmentScore = -m*Math.log(l+1);		
-				out.printf("%e (single alignment factor: %e)\n", model1.score(sourceSeq, targetSeq), singleAlignmentScore);
+				out.printf("%e (TM only: %e single alignment factor: %e)\n", model1.score(sourceSeq, targetSeq), model1.scoreTMOnly(sourceSeq, targetSeq), singleAlignmentScore);
 				out.printf("Incremental Target Scores:\n");
 				PartialTargetFeatureState ptfs = model1.partialTargetFeatureState(sourceSeq);
 				out.printf("\t() => %e\n", ptfs.score());

@@ -1359,9 +1359,13 @@ public class PseudoMoses {
 			  } else {
 			  	System.err.println("Attempting to generate target");
 			  	System.err.println("==========================================");
+			  	
 			    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = new EnumeratedConstrainedOutputSpace<IString, String>(
-			    		learnFromReferences.get(translationId), phraseGenerator.longestForeignPhrase());			   
+			    		learnFromReferences.get(translationId), phraseGenerator.longestForeignPhrase());
+			    long goldTime = -System.currentTimeMillis();
 			  	target = inferers.get(0).translate(learner, foreign, translationId, constrainedOutputSpace, learnFromReferences.get(translationId));
+			  	goldTime += System.currentTimeMillis();
+			  	System.err.printf("Forced decoding time: %f s\n", goldTime/1000.0);
 			  	if (target == null) {
 			  		System.err.println("Can't generate reference, skipping....");
 			  		continue;
@@ -1369,7 +1373,10 @@ public class PseudoMoses {
 			  	
 			  	System.err.println("Generating model translation n-best list");
 			  	System.err.println("==========================================");
+			  	long argmaxTime = -System.currentTimeMillis();
 			  	nbest = inferers.get(0).nbest(learner, foreign, translationId, null, null, 100);
+			  	argmaxTime += System.currentTimeMillis();
+			  	System.err.printf("Argmax decoding time: %f s\n", argmaxTime/1000.0);
 			  }
 			  
 			  

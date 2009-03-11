@@ -173,6 +173,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		// main translation loop
 		System.err.printf("Decoding with %d threads\n", numProcs);
 		
+		long decodeLoopTime = -System.currentTimeMillis();
 		for (int i = 0; i < beams.length; i++) {
 
 			//List<ConcreteTranslationOption<TK>> applicableOptions = ConcreteTranslationOptions.filterOptions(HypothesisBeams.coverageIntersection(beams[i]), foreign.size(), options);			
@@ -201,6 +202,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 				System.err.printf("--------------------------------\n");
 			}												
 		}
+		decodeLoopTime += System.currentTimeMillis();
+		System.err.printf("Decoding loop time: %f s\n", decodeLoopTime/1000.0);
 		
 		if (DEBUG) {
 			int recombined = 0;
