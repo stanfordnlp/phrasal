@@ -223,10 +223,10 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     return null;
   }
 
-  private IString getSourceWord(Sequence<IString> f, int idx) {
+  private IString getWordInSequence(Sequence<IString> seq, int idx) {
     if (idx < 0) return new IString("<s>");
-    if (idx >= f.size()) return new IString("</s>");
-    return f.get(idx);
+    if (idx >= seq.size()) return new IString("</s>");
+    return seq.get(idx);
   }
 
   private List<String> extractWordFeatures(Sequence<IString> f, int j, int lenC, int j2, int lenC2,
@@ -275,7 +275,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     // SRCJ2
     for (int d = -WINDOW; d <= WINDOW; d++) {
       StringBuilder feature = new StringBuilder("SRCJ2_");
-      feature.append(d).append(":").append(getSourceWord(f, j2+d));
+      feature.append(d).append(":").append(getWordInSequence(f, j2+d));
       features.add(feature.toString());
     }
     return features;
@@ -286,7 +286,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     // SRCJ
     for (int d = -WINDOW; d <= WINDOW; d++) {
       StringBuilder feature = new StringBuilder("SRCJ_");
-      feature.append(d).append(":").append(getSourceWord(f, j+d));
+      feature.append(d).append(":").append(getWordInSequence(f, j+d));
       features.add(feature.toString());
     }
     return features;
@@ -297,7 +297,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
     // TGTI
     for (int d = -WINDOW; d <= WINDOW; d++) {
       StringBuilder feature = new StringBuilder("TGT_");
-      IString srcWord = getSourceWord(e, i+d);
+      IString srcWord = getWordInSequence(e, i+d);
       if (!srcWord.toString().equals("</s>"))
         feature.append(d).append(":").append(srcWord);
       features.add(feature.toString());
