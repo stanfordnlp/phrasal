@@ -6,6 +6,7 @@ package mt.base;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +36,7 @@ import com.sleepycat.je.OperationStatus;
  */
 public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> {
 	static final boolean DEBUG = false;
+	static final int MAX_ABSOLUTE_DISTORTION = 12;
 	
 	Database db;
 	Environment dbEnv;
@@ -99,6 +101,8 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		IString noConst = new IString("noConst");
 		
 		try {
+
+			// warning code that dan r. would definitely not like ahead
 			Cursor cursor = db.openCursor(null, null);
 			
 			DatabaseEntry key = new DatabaseEntry(sequence.toString().getBytes("UTF-8"));
@@ -112,7 +116,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 				//System.err.printf("Sequences: %s => %s Feature rep: %s\n", sequence, transSeq, featRep);
 				if (model1S2T != null && model1T2S != null) {
 					opts.add(new TranslationOption<IString>(
-							new float[]{(float)-1.0, (float)model1S2T.scoreTMOnly(sequence, transSeq), (float)model1T2S.scoreTMOnly(transSeq, sequence)}, 
+							new float[]{(float)-1.0, (float)model1S2T.score(sequence, transSeq), (float)model1T2S.score(transSeq, sequence)}, 
 							new String[]{"PhrPen", "lex(f|e)", "lex(e|f)"}, 
 							new RawSequence<IString>(transSeq), new RawSequence<IString>(sequence), noConst, currentSequence.contains(mappingKey)));
 				} else {
@@ -168,9 +172,13 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		for (int fEnd = fStart; fEnd < foreign.size() && fEnd < fStart + phraseLengthLimit; fEnd++) {
 		Sequence<IString> fPhrase = foreign.subsequence(fStart, fEnd+1);
 		int phraseSpecificTranslations = 0;
-		for (int tStart = 0; tStart < trans.size(); tStart++) {
+
+		int tEquivFStart = (int)((fStart/(double)foreign.size())*trans.size());	
+		for (int tStart = Math.max(0, tEquivFStart-MAX_ABSOLUTE_DISTORTION); 
+             tStart < Math.min(trans.size(), tEquivFStart+MAX_ABSOLUTE_DISTORTION); 
+						 tStart++) {
 		for (int tEnd = tStart; tEnd < trans.size() && tEnd < tStart + phraseLengthLimit; tEnd++) {
-			
+				
 			Sequence<IString> tPhrase = trans.subsequence(tStart, tEnd+1);
 			String featRep = fPhrase+"=:=>"+tPhrase;
 			currentSequence.add(featRep);

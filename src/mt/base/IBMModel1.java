@@ -52,7 +52,11 @@ public class IBMModel1 {
 			reader = new LineNumberReader(new FileReader(filename));
 		}
 		List<Double> scores = new ArrayList<Double>();
-		
+	
+		System.gc();
+    Runtime rt = Runtime.getRuntime();	
+		long preMemUsed = rt.totalMemory() - rt.freeMemory();
+	  System.err.printf("IBMModel1: %s\n", filename);
 		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 			String[] fields = line.split("\t");
 			if (fields.length != 3) {
@@ -71,11 +75,17 @@ public class IBMModel1 {
 				throw new RuntimeException(String.format("Index error, likely cause : duplicate entries for %s=>%s\n",sourceWord,targetWord));
 			}
 			scores.add(p);
+			if (idx % 500000 == 0) {
+				long currentMemUsed = rt.totalMemory() - rt.freeMemory();
+    		System.err.printf("model1 > %d pairs mem used: %d MiB)\n",
+     	       idx, (currentMemUsed - preMemUsed)/(1024*1024));
+			}
 		}
 		this.scores = new double[scores.size()];
 		for (int i = 0; i < this.scores.length; i++) {
 			this.scores[i] = scores.get(i);
 		}
+
 		
 		err.printf("Done loading %s\n", filename);
 	}

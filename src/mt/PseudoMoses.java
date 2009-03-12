@@ -1078,7 +1078,7 @@ public class PseudoMoses {
 		private double[] lrate;
 		OAIndex<String> featureIndex = new OAIndex<String>();
 		double[] weights = new double[0];
-	  final double DEFAULT_WT = 0.1;
+	  final double DEFAULT_WT = 0.001;
 		
 		public PerceptronLearner(double lrate[]) {
 			this.lrate = lrate;
@@ -1101,16 +1101,29 @@ public class PseudoMoses {
 		
 		public void weightUpdate(int epoch, int id, RichTranslation<IString,String> target, RichTranslation<IString,String> argmax, double loss) {
 			if (VERBOSE_LEARNER) System.err.printf("Target features:\n");
+		  ClassicCounter<String> tVec = new ClassicCounter<String>();
 			for (FeatureValue<String> feature : target.features) {
-				addMulWeight(feature.name, 1.0, lrate[Math.min(epoch, lrate.length-1)]*feature.value);
-				if (VERBOSE_LEARNER) System.err.printf("\t%s +%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
+				tVec.incrementCount(feature.name, feature.value);
+			}
+		
+			for (Map.Entry<String,Double> e : tVec.entrySet()) {
+				addMulWeight(e.getKey(), 1.0, 
+           lrate[Math.min(epoch, lrate.length-1)]*e.getValue());
+				if (VERBOSE_LEARNER) System.err.printf("\t%s +%f\n", e.getKey(), e.getValue());
 			}
 			
 			if (VERBOSE_LEARNER) System.err.printf("Argmax features\n");
+			ClassicCounter<String> aVec = new ClassicCounter<String>();	
 			for (FeatureValue<String> feature : argmax.features) {
-				addMulWeight(feature.name, 1.0, -lrate[Math.min(epoch, lrate.length-1)]*feature.value);
-				if (VERBOSE_LEARNER) System.err.printf("\t%s -%f\n", feature.name, feature.value*lrate[Math.min(epoch, lrate.length-1)]);
+				aVec.incrementCount(feature.name, feature.value);
 			}
+			for (Map.Entry<String,Double> e : aVec.entrySet()) {
+				addMulWeight(e.getKey(), 1.0, 
+           -lrate[Math.min(epoch, lrate.length-1)]*e.getValue());
+				if (VERBOSE_LEARNER) System.err.printf("\t%s +%f\n", e.getKey(), e.getValue());
+			}
+			int ldIdx = featureIndex.indexOf("LinearDistortion");
+			if (weights[ldIdx] < 0) weights[ldIdx] = 0;
 		}
 		
 		@Override
@@ -1395,7 +1408,7 @@ public class PseudoMoses {
 			  double loss = evalTarget-evalArgmax;
 			  
 			  learner.weightUpdate(epoch, translationId, target, argmax, loss);
-			  if (translationId % 1 == 0) {
+			  if (translationId % 50 == 0) {
 			  	learner.saveWeights(saveWeights + ".epoch." + epoch + ".tran."+translationId+".wts");
 			  }
 			}

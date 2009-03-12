@@ -18,7 +18,7 @@ public class TranslationOption<T> {
 	public final RawSequence<T> foreign;
 	public final IString constilation;
 	public final boolean forceAdd;
-	private final int hashCode = super.hashCode();
+	private int hashCode = -1;
 	
 	/**
 	 * 
@@ -53,6 +53,7 @@ public class TranslationOption<T> {
 	
 	@Override
 	public int hashCode() {
+		if (hashCode == -1) hashCode = super.hashCode();
 		return hashCode;
 	}
 }
