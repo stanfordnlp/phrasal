@@ -10,6 +10,7 @@ import java.util.Arrays;
 import mt.srilm.srilm;
 import mt.srilm.SWIGTYPE_p_Ngram;
 import mt.srilm.SWIGTYPE_p_unsigned_int;
+import mt.srilm.SWIGTYPE_p_Vocab;
 
 /**
  * Language model class using SRILM native code.
@@ -18,7 +19,12 @@ import mt.srilm.SWIGTYPE_p_unsigned_int;
  */
 public class SRILanguageModel implements LanguageModel<IString> {
 
-  static { System.loadLibrary("srilm"); }
+  private static final int lm_start_sym_id = 11; //1-10 reserved for special symbols
+  private static final int lm_end_sym_id = 5000001; //max vocab 16M
+
+  static {
+    System.loadLibrary("srilm");
+  }
 
   static boolean verbose = false;
 
@@ -27,9 +33,8 @@ public class SRILanguageModel implements LanguageModel<IString> {
   private static final IString START_TOKEN = new IString("<s>");
   private static final IString END_TOKEN = new IString("</s>");
   private static final double LOG10 = Math.log(10); 
-  private static final int lm_start_sym_id = 11; //1-10 reserved for special symbols
-	private static final int lm_end_sym_id = 5000001; //max vocab 5M
-  private SWIGTYPE_p_Ngram p_srilm;
+  private final SWIGTYPE_p_Ngram p_srilm;
+  private final SWIGTYPE_p_Vocab p_vocab;
   private int[] ids;
 
   private final int order;
@@ -58,7 +63,8 @@ public class SRILanguageModel implements LanguageModel<IString> {
     long preLMLoadMemUsed = rt.totalMemory()-rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
 
-		p_srilm = srilm.initLM(order, lm_start_sym_id, lm_end_sym_id );
+    p_vocab = srilm.initVocab(lm_start_sym_id, lm_end_sym_id);
+    p_srilm = srilm.initLM(order, p_vocab);
 		srilm.readLM(p_srilm, filename);
 
     ids = new int[lm_end_sym_id];
@@ -100,7 +106,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
     hist = srilm.new_unsigned_array(hist_size);
     for(int i=0; i< hist_size; i++)
     srilm.unsigned_array_setitem(hist, i, id(prefix.get(i)));
-    long depth = srilm.getBOW_depth(p_srilm, hist, hist_size);
+    long depth = srilm.getDepth(p_srilm, hist, hist_size);
     srilm.delete_unsigned_array(hist);
     return (depth == prefix.size());
   }
@@ -109,20 +115,26 @@ public class SRILanguageModel implements LanguageModel<IString> {
     int lm_id, p_id = str.id;
     if((lm_id = ids[p_id]) > 0)
       return lm_id;
-		return ids[p_id] = (int)srilm.getIndexForWord(str.word());
-	}
+		return ids[p_id] = (int) srilm.getIndexForWord(p_vocab, str.word());
+  }
 
-	private double scoreR(Sequence<IString> ngram_wrds) {
+  private double scoreR(Sequence<IString> ngram_wrds) {
     int hist_size = ngram_wrds.size()-1;
     SWIGTYPE_p_unsigned_int hist;
-    hist = srilm.new_unsigned_array(hist_size);
-    for(int i=0; i< hist_size; i++)
-      srilm.unsigned_array_setitem(hist, i, id(ngram_wrds.get(i)));
-    double res = srilm.getProb(p_srilm, hist, hist_size, id(ngram_wrds.get(hist_size)));
+
+    hist = srilm.new_unsigned_array(hist_size+1);
+    srilm.unsigned_array_setitem(hist, hist_size, srilm.getVocab_None());
+
+    for(int i=0; i<hist_size; ++i)
+      srilm.unsigned_array_setitem(hist, hist_size-1-i, id(ngram_wrds.get(i)));
+    
+    double res = srilm.getWordProb(p_srilm, id(ngram_wrds.get(hist_size)), hist);
+
     srilm.delete_unsigned_array(hist);
+
     return res*LOG10;
   }
- 
+
   /**
    * Determines whether we are computing p( <s> | <s> ... ) or p( w_n=</s> | w_n-1=</s> ..),
    * in which case log-probability is zero. This function is only useful if the translation

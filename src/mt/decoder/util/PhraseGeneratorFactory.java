@@ -106,8 +106,9 @@ public class PhraseGeneratorFactory {
 			String filename = pgSpecs[1];
 			pharoahList.add(new PharaohPhraseTable<FV>(phraseFeaturizer, scorer, filename));
 			pharoahList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
-			
-			if (phraseLimit == -1) {
+      // TODO: check here
+
+      if (phraseLimit == -1) {
 				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
 				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);

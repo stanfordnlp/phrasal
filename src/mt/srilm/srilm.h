@@ -3,33 +3,26 @@
 
 #ifdef __cplusplus
   extern "C" {
-#else
-    typedef struct Ngram Ngram; /* dummy type to stand in for class */
-    typedef struct Vocab Vocab; /* dummy type to stand in for class *///add by lzf
 #endif
 
-Ngram* initLM(int order, int start_id, int end_id);
 Vocab* initVocab(int start, int end);
 
-unsigned getIndexForWord(const char* s);
-const char* getWordForIndex(unsigned i);
+Ngram* initLM(int order, Vocab* vocab);
+
 int readLM(Ngram* ngram, const char* filename);
-float getWordProb(Ngram* ngram, unsigned word, unsigned* context);
+
 float getProb(Ngram* ngram, unsigned *context, int hist_size, unsigned cur_wrd);
-unsigned getBOW_depth(Ngram* ngram, unsigned *context, int hist_size);
-float get_backoff_weight_sum(Ngram* ngram, unsigned *context, int hist_size, int min_len);
 
-int getVocab_None(); //add by lzf
-void write_vocab_map(Vocab* vo, const char *fname);//by lzf
-void write_default_vocab_map(const char *fname);//by lzf
+float getWordProb(Ngram* ngram, unsigned w, unsigned* context);
 
-const char* getWordForIndex_Vocab(Vocab* vo, unsigned i);
-unsigned getIndexForWord_Vocab(Vocab* vo, const char *s);
+unsigned getDepth(Ngram* ngram, unsigned *context, int hist_size);
 
+unsigned getIndexForWord(Vocab* vo, const char *s);
+
+int getVocab_None();
 
 #ifdef __cplusplus
   }
 #endif
 
 #endif
-

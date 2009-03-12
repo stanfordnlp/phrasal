@@ -14,12 +14,17 @@ import mt.base.Sequence;
  * @param <FV>
  */
 public class CombinedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>, IsolatedPhraseFeaturizer<TK, FV>, Cloneable {
-	public final List<IncrementalFeaturizer<TK,FV>> featurizers;
-	
-	public CombinedFeaturizer<TK, FV> clone() {
+	public List<IncrementalFeaturizer<TK,FV>> featurizers;
+
+  @SuppressWarnings("unchecked")
+  public CombinedFeaturizer<TK, FV> clone() {
 		try {
-		return (CombinedFeaturizer<TK, FV>)super.clone();
-		} catch (CloneNotSupportedException e) { return null;  /* will never happen */ } 
+      CombinedFeaturizer featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
+      featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
+      for(IncrementalFeaturizer<TK,FV> f : featurizers)
+        featurizer.featurizers.add(f instanceof ClonedFeaturizer ? ((ClonedFeaturizer)f).clone() : f);
+      return featurizer;
+    } catch (CloneNotSupportedException e) { return null;  /* will never happen */ }
 	}
 	
 	/**
