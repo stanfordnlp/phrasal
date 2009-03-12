@@ -44,6 +44,7 @@ public class ReorderingClassifier {
   static public final String WRITE_HTML_OPT = "writeHTML";
   static public final String DEAL_EMPTY_OPT = "dealWithEmpty";
   static public final String DEAL_MULTITGT_OPT = "dealWithMultiTarget";
+  static public final String WRITE_EXAMPLELINES_OPT = "writeExampleLines";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -64,7 +65,8 @@ public class ReorderingClassifier {
         WRITE_CLASSIFIER_OPT,
         WRITE_HTML_OPT,
         DEAL_EMPTY_OPT,
-        DEAL_MULTITGT_OPT
+        DEAL_MULTITGT_OPT,
+        WRITE_EXAMPLELINES_OPT
         ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -76,6 +78,7 @@ public class ReorderingClassifier {
   private String fCorpus, eCorpus, align, fParse, fPath;
   private Boolean trainAll;
   private String writeClassifier, writeHTML;
+  private Set<Integer> writeExampleLines = null;
   private PrintWriter htmlPW = null;
   private List<FeatureExtractor> extractors;
   private boolean dealWithEmpty, dealWithMultiTarget;
@@ -119,6 +122,15 @@ public class ReorderingClassifier {
     trainAll = Boolean.parseBoolean(prop.getProperty(TRAINALL_OPT, "false"));
     writeClassifier = prop.getProperty(WRITE_CLASSIFIER_OPT);
     writeHTML = prop.getProperty(WRITE_HTML_OPT, null);
+    String intsStr = prop.getProperty(WRITE_EXAMPLELINES_OPT, "");
+    writeExampleLines = new TreeSet<Integer>();
+    if (intsStr.length() > 0) {
+      String[] ints = intsStr.split(",");
+      for (String intStr : ints) {
+        writeExampleLines.add(Integer.parseInt(intStr));
+      }
+    }
+
     dealWithEmpty = Boolean.parseBoolean(prop.getProperty(DEAL_EMPTY_OPT, "false"));
     dealWithMultiTarget = Boolean.parseBoolean(prop.getProperty(DEAL_MULTITGT_OPT, "false"));
     if (writeHTML != null) { htmlPW = new PrintWriter(new FileWriter(writeHTML)); }
@@ -132,6 +144,7 @@ public class ReorderingClassifier {
     System.out.printf("-%s : %s\n", TRAINALL_OPT, trainAll);
     System.out.printf("-%s : %s\n", WRITE_CLASSIFIER_OPT, writeClassifier);
     System.out.printf("-%s : %s\n", WRITE_HTML_OPT, writeHTML);
+    System.out.printf("-%s : %s\n", WRITE_EXAMPLELINES_OPT, StringUtils.join(writeExampleLines, ","));
     System.out.printf("-%s : %s\n", DEAL_EMPTY_OPT, dealWithEmpty);
     System.out.printf("-%s : %s\n", DEAL_MULTITGT_OPT, dealWithMultiTarget);
     System.out.println("========================================");
@@ -172,7 +185,9 @@ public class ReorderingClassifier {
 
       int lineNb=0;
 
-      if (htmlPW!=null) DisplayUtils.printAlignmentMatrixHeader(htmlPW);
+      if (htmlPW!=null) {
+        DisplayUtils.printAlignmentMatrixHeader(htmlPW);
+      }
 
       for (String fLine;; ++lineNb) {
         fLine = fReader.readLine();
@@ -216,7 +231,15 @@ public class ReorderingClassifier {
         //fLine = fixCharsInSent(fLine);
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
         
-        if (htmlPW!=null) DisplayUtils.printAlignmentMatrix(sent, htmlPW);
+        if (htmlPW!=null) {
+          if (writeExampleLines.size()==0) {
+            DisplayUtils.printAlignmentMatrix(sent, htmlPW);
+          } else {
+            if (writeExampleLines.contains(lineNb+1)) {
+              DisplayUtils.printAlignmentMatrix(sent, htmlPW);
+            }
+          }
+        }
         
         TrainingExamples exs = new TrainingExamples(dealWithEmpty, dealWithMultiTarget);
 
@@ -240,7 +263,16 @@ public class ReorderingClassifier {
           sent.getPathInfo(pathLine);
         }
 
-        if (htmlPW!=null) DisplayUtils.printExamplesHeader(htmlPW);
+        if (htmlPW!=null) {
+          if (writeExampleLines.size()==0) {
+            DisplayUtils.printExamplesHeader(htmlPW);
+          } else {
+            if (writeExampleLines.contains(lineNb+1)) {
+              DisplayUtils.printExamplesHeader(htmlPW);
+            }
+          }
+        }
+
         for(TrainingExample ex : exs.examples) {
           // extract features, add datum
           List<String> features = new ArrayList<String>();
@@ -275,10 +307,25 @@ public class ReorderingClassifier {
             typeCounter.incrementCount("train", ex.type);
           }
 
-          if (htmlPW!=null) DisplayUtils.printExample(ex, features, htmlPW);
+          if (htmlPW!=null) {
+            if (writeExampleLines.size()==0) {
+              DisplayUtils.printExample(ex, features, htmlPW);
+            } else {
+              if (writeExampleLines.contains(lineNb+1)) {
+                DisplayUtils.printExample(ex, features, htmlPW);
+              }
+            }
+          }
         }
-
-        if (htmlPW!=null) DisplayUtils.printExamplesBottom(htmlPW);
+        if (htmlPW!=null) {
+          if (writeExampleLines.size()==0) {
+            DisplayUtils.printExamplesBottom(htmlPW);
+          } else {
+            if (writeExampleLines.contains(lineNb+1)) {
+              DisplayUtils.printExamplesBottom(htmlPW);
+            }
+          }
+        }
       }
       if (htmlPW!=null) DisplayUtils.printAlignmentMatrixBottom(htmlPW);
       
