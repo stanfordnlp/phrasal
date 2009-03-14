@@ -15,8 +15,8 @@ time java -mx45g mt.discrimreorder.ReorderingClassifier -fCorpus /scr/nlp/data/g
 # cat /scr/nlp/data/gale/MichelMTsystem/mt-experiments/zh-en.dep/bitrees/ctb/ctb-full/*zh.snt > ctb.zh.snt
 # cat /scr/nlp/data/gale/MichelMTsystem/mt-experiments/zh-en.dep/bitrees/ctb/ctb-grow-diag/* > ctb.grow-diag
 # cat /scr/nlp/data/gale/MichelMTsystem/mt-experiments/zh-en.dep/bitrees/ctb/ctb-full/*zh.trees > ctb.zh.trees
-# java mt.discrimreorder.TreesToDeps ctb.zh.trees ctb.zh.path.gz
-# java mt.discrimreorder.TreesToDeps ctb.zh.trees ctb.zh.samedir.path.gz -useSameDirPath true
+# java mt.discrimreorder.TreesToPaths ctb.zh.trees ctb.zh.path.gz
+# java mt.discrimreorder.TreesToPaths ctb.zh.trees ctb.zh.samedir.path.gz -useSameDirPath true
 
 time java -mx15g mt.discrimreorder.ReorderingClassifier -fCorpus ctb.zh.snt -eCorpus ctb.en.snt -align ctb.grow-diag > discrimreorder/baseline.ctb.out
 time java -mx15g mt.discrimreorder.ReorderingClassifier -fCorpus ctb.zh.snt -eCorpus ctb.en.snt -align ctb.grow-diag -src_j -tgt_i -window 0 > discrimreorder/zens_d0.ctb.out
