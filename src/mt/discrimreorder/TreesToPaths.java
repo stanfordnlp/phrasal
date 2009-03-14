@@ -12,7 +12,7 @@ import java.util.zip.*;
 import java.io.*;
 import mt.base.IOTools;
 
-public class TreesToDeps {
+public class TreesToPaths {
   public static void main(String[] args) throws Exception {
     Properties prop = StringUtils.argsToProperties(args);
     boolean useSameDirPath  = Boolean.parseBoolean(prop.getProperty("useSameDirPath", "false"));
