@@ -80,6 +80,19 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		return new RawSequence<T>((T[])newElements);
 	}
 	
+	@Override
+	public int compareTo(Sequence<T> o) {
+		int sz = size();
+		int osz = o.size();
+		int max = Math.min(sz, osz);
+		for (int i = 0; i < max; i++) {
+			int cmp = ((Comparable)get(i)).compareTo((Comparable)o.get(i));
+			if (cmp == 0) continue;
+			return cmp;
+		}
+		return sz-osz;
+	}
+	
 	private class AbstractSequenceWrapper extends AbstractSequence<T> {
 		private final int size, start;
 		
@@ -100,6 +113,8 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		public int size() {
 			return size;
 		}
+
+		
 	}
 	
 	private long hashCode = Long.MAX_VALUE;

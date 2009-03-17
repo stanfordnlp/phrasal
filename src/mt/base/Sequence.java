@@ -17,7 +17,7 @@ package mt.base;
  *
  * @param <T>
  */
-public interface Sequence<T> extends Iterable<T> {
+public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
 	
 	/**
 	 * 
