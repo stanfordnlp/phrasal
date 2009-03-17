@@ -189,9 +189,11 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		BufferedReader fReader = new BufferedReader(new FileReader(fCorpus));
 		BufferedReader eReader = new BufferedReader(new FileReader(eCorpus));
 		BDB tmpF2E = new BDB();
-		String fileTmpF2E = "tmp."+fCorpus+".2."+eCorpus;
-		String fileTmpE2F = "tmp."+eCorpus+".2."+fCorpus;
-		String fileTmpFPhrases = "tmp."+fCorpus+".phrases";
+		String fileTmpF2E = "tmp."+(new File(fCorpus)).getName()+".2."+
+															 (new File(eCorpus)).getName();
+		String fileTmpE2F = "tmp."+(new File(eCorpus)).getName()+".2."+
+															 (new File(fCorpus)).getName();
+		String fileTmpFPhrases = "tmp."+(new File(fCorpus)).getName()+".phrases";
 
 		System.err.printf("tmp f2e: %s\n", fileTmpF2E);
 		System.err.printf("tmp e2f: %s\n", fileTmpE2F);
@@ -238,7 +240,8 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		tmpE2F.open(fileTmpE2F, BDB.OREADER);
 		tmpFPhrases.open(fileTmpFPhrases, BDB.OREADER);			
 		
-		String fileProbE2F = "tmp.prob."+eCorpus+".2."+fCorpus;
+		String fileProbE2F = "tmp.prob."+(new File(eCorpus)).getName()+".2."+
+																		 (new File(fCorpus)).getName();
 		System.err.printf("fileProbE2F: %s\n", fileProbE2F);
 		BDB tmpProbE2F = new BDB();
 		if (!tmpProbE2F.open(fileProbE2F, BDB.OWRITER | BDB.OTRUNC | BDB.OCREAT | BDB.OREADER))
