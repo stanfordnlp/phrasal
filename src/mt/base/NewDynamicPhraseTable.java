@@ -22,7 +22,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 	static final int phraseLengthLimit = 5;
 	static final int MAX_ABSOLUTE_DISTORTION = 12;
 	
-	Set<String> currentSequence = new HashSet<String>();
+	Set<String> currentSequence = null;
 	
 	public NewDynamicPhraseTable(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer, Scorer<String> scorer, BiText bitext, IBMModel1 model1F2E, IBMModel1 model1E2F) {
 		super(phraseFeaturizer, scorer);
@@ -184,23 +184,42 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 			if (model1F2E != null & model1E2F != null) {
 				float pLexF2E = (float)model1F2E.score(rawSequence, transSeq);
 				float pLexE2F = (float)model1E2F.score(transSeq, rawSequence);
-				opts.add(new TranslationOption<IString>(
+				if (currentSequence == null) {
+					opts.add(new TranslationOption<IString>(
 						new float[]{(float)1.0, PcEgF, pLexF2E, pLexE2F},
 					  new String[]{"PhrPen", "PcEgF", "pLexF2E", "pLexE2F"},
 						transSeq,
 						rawSequence,										
 						null,
-						currentSequence.contains(mappingKey)));
+						false));
+				} else if (currentSequence.contains(mappingKey)) {
+					opts.add(new TranslationOption<IString>(
+							new float[]{(float)1.0, PcEgF, pLexF2E, pLexE2F},
+						  new String[]{"PhrPen", "PcEgF", "pLexF2E", "pLexE2F"},
+							transSeq,
+							rawSequence,										
+							null,
+							true));
+				}
 				//System.err.printf("%s=>%s\n", rawSequence, transSeq);
 			} else {
-			opts.add(new TranslationOption<IString>(
-					new float[]{(float)1.0, PcEgF},
-				  new String[]{"PhrPen", "PcEgF"},
-					transSeq,
-					rawSequence,										
-					null,
-					currentSequence.contains(mappingKey)));
-					//System.err.printf("%s=>%s\n", rawSequence, transSeq);
+				if (currentSequence == null) {
+					opts.add(new TranslationOption<IString>(
+							new float[]{(float)1.0, PcEgF},
+							new String[]{"PhrPen", "PcEgF"},
+							transSeq,
+							rawSequence,										
+							null,
+							false));
+				} else if (currentSequence.contains(mappingKey)) {
+					opts.add(new TranslationOption<IString>(
+							new float[]{(float)1.0, PcEgF},
+							new String[]{"PhrPen", "PcEgF"},
+							transSeq,
+							rawSequence,										
+							null,
+							true));
+				}
 			}
 		}
 		
@@ -218,8 +237,12 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 	@Override
 	public void setCurrentSequence(Sequence<IString> foreign,
 			List<Sequence<IString>> tranList) {
+		
+		if (tranList == null) {
+			currentSequence = null;
+			return;
+		}
 		currentSequence = new HashSet<String>();
-		if (tranList == null) return;
 		int pairSpecificPhrases = 0;
 		for (Sequence<IString> trans : tranList) {
 		for (int fStart = 0; fStart < foreign.size(); fStart++) {
