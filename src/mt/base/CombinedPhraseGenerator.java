@@ -3,8 +3,11 @@ package mt.base;
 import java.util.*;
 import java.io.*;
 
+import mt.decoder.feat.CombinedFeaturizer;
+import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.PhraseGenerator;
 import mt.decoder.util.PhraseGeneratorFactory;
+import mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
@@ -19,6 +22,10 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	static public final int FORCE_ADD_LIMIT = Integer.MAX_VALUE; // 200;
 	static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
 	static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
+	static final int PRELIMINARY_FILTER_MULTIPLIER = 3;
+	
+	final CombinedFeaturizer<TK, FV> phraseFeaturizer; 
+	final Scorer<FV> scorer;
 	
 	public PhraseGenerator<TK> clone() {
 		try{
@@ -97,9 +104,17 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 				continue;
 			}
 			
-			List<ConcreteTranslationOption<TK>> preCutOptsArray = new ArrayList<ConcreteTranslationOption<TK>>(preCutOpts);
+			List<ConcreteTranslationOption<TK>> preCutOptsArr = new ArrayList<ConcreteTranslationOption<TK>>(preCutOpts);
 			
-			Collections.sort(preCutOptsArray);
+			Collections.sort(preCutOptsArr);
+			int preliminaryFilterPhraseLimit = phraseLimit*PRELIMINARY_FILTER_MULTIPLIER;
+			List<ConcreteTranslationOption<TK>> pass1CutOpts = preCutOptsArr.subList(0, preliminaryFilterPhraseLimit);
+			
+			for (ConcreteTranslationOption<TK> opt: pass1CutOpts) {
+				opt.refineScore(phraseFeaturizer, scorer, sequence, translationId);
+			}
+			
+			Collections.sort(pass1CutOpts);
 			
 			if (DEBUG) {
 				System.err.println("Sorted Options");
@@ -110,19 +125,18 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 				}
 			}
 			
-			int preCutOptsArraySz = preCutOptsArray.size();
+			int pass1CutOpsArraySz = pass1CutOpts.size();
 			
 			int forceAddCnt = 0;
-			for (int i = 0; (i < phraseLimit) || (phraseLimit == 0 && i < preCutOptsArraySz); i++) {
-				if (preCutOptsArray.get(i).abstractOption.forceAdd) {
-					forceAddCnt++; 
-				}
-				cutoffOpts.add(preCutOptsArray.get(i));
+			for (int i = 0; (i < phraseLimit) || (phraseLimit == 0 && i < pass1CutOpsArraySz); i++) {
+				if (pass1CutOpts.get(i).abstractOption.forceAdd) continue;
+				cutoffOpts.add(pass1CutOpts.get(i));
 			}
 			
-			if (phraseLimit != 0) for (int i = phraseLimit; i < preCutOptsArraySz && forceAddCnt < FORCE_ADD_LIMIT; i++) {
-				if (preCutOptsArray.get(i).abstractOption.forceAdd) {
-					cutoffOpts.add(preCutOptsArray.get(i));
+			if (phraseLimit != 0) for (int i = 0; i < preCutOptsArr.size() && forceAddCnt < FORCE_ADD_LIMIT; i++) {
+				if (preCutOptsArr.get(i).abstractOption.forceAdd) {
+					preCutOptsArr.get(i).refineScore(phraseFeaturizer, scorer, sequence, translationId);
+					cutoffOpts.add(preCutOptsArr.get(i));
 					forceAddCnt++;
 				}
 			}
@@ -137,10 +151,12 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	 * 
 	 * @param phraseGenerators
 	 */
-	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators) {
+	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
 		this.phraseGenerators = phraseGenerators;
 		this.type = DEFAULT_TYPE;
 		this.phraseLimit = DEFAULT_PHRASE_LIMIT;
+		this.phraseFeaturizer = phraseFeaturizer;
+		this.scorer = scorer;
 	}
 	
 	/**
@@ -148,10 +164,12 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	 * @param phraseGenerators
 	 * @param type
 	 */
-	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, Type type) {
+	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, Type type) {
 		this.phraseGenerators = phraseGenerators;
 		this.type = type;
 		this.phraseLimit = DEFAULT_PHRASE_LIMIT;
+		this.phraseFeaturizer = phraseFeaturizer;
+		this.scorer = scorer;
 	}
 	
 	/**
@@ -160,10 +178,12 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	 * @param type
 	 * @param phraseLimit
 	 */
-	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, Type type, int phraseLimit) {
+	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, Type type, int phraseLimit) {
 		this.phraseGenerators = phraseGenerators;
 		this.type = type;
 		this.phraseLimit = phraseLimit;
+		this.phraseFeaturizer = phraseFeaturizer;
+		this.scorer = scorer;
 	}
 	
 	

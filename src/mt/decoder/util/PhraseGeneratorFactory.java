@@ -11,7 +11,7 @@ import mt.base.IdentityPhraseGenerator;
 import mt.base.NewDynamicPhraseTable;
 import mt.base.PharaohPhraseTable;
 import mt.base.SymbolFilter;
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
+import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.feat.UnknownWordFeaturizer;
 import mt.tools.NumericFilter;
 
@@ -39,7 +39,7 @@ public class PhraseGeneratorFactory {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	static public <FV>  PhraseGenerator<IString> factory(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String... pgSpecs) throws IOException {
+	static public <FV>  PhraseGenerator<IString> factory(CombinedFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String... pgSpecs) throws IOException {
 		
 		if (pgSpecs.length == 0) {
 			throw new RuntimeException(
@@ -68,7 +68,7 @@ public class PhraseGeneratorFactory {
 				}
 			}
 			if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)) {
-				return new CombinedPhraseGenerator<IString,FV>(phraseTables, CombinedPhraseGenerator.Type.CONCATENATIVE);
+				return new CombinedPhraseGenerator<IString,FV>(phraseTables, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.CONCATENATIVE);
 			} else if (pgName.equals(BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR)){
 				List<PhraseGenerator<IString>> augmentedList = new LinkedList<PhraseGenerator<IString>>();
 				
@@ -80,13 +80,13 @@ public class PhraseGeneratorFactory {
 				
 				userEquivList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, new SymbolFilter())); // symbol identity phrase generator
 				
-				CombinedPhraseGenerator<IString,FV> equivUserRanking = new CombinedPhraseGenerator<IString,FV>(userEquivList);
+				CombinedPhraseGenerator<IString,FV> equivUserRanking = new CombinedPhraseGenerator<IString,FV>(userEquivList, phraseFeaturizer, scorer);
 				augmentedList.add(equivUserRanking);
 				
 				// catch all foreign phrase identity generator
 				augmentedList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer));
 				
-				return new CombinedPhraseGenerator<IString,FV>(augmentedList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString,FV>(augmentedList, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			}
 		} else if (pgName.equals(PSEUDO_PHARAOH_GENERATOR)) {
 			List<PhraseGenerator<IString>> pharoahList = new LinkedList<PhraseGenerator<IString>>();
@@ -112,9 +112,9 @@ public class PhraseGeneratorFactory {
       // TODO: check here
 
       if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString,FV>(pharoahList, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
-				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString,FV>(pharoahList, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		}  else if (pgName.equals(DYNAMIC_GENERATOR)) {
 			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();
@@ -144,9 +144,9 @@ public class PhraseGeneratorFactory {
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 			
 			if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		} else if (pgName.equals(NEW_DYNAMIC_GENERATOR)) {
 			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();
@@ -179,13 +179,13 @@ public class PhraseGeneratorFactory {
 			
 			BiText bitext = new BiText(fText, eText);
 			                                      
-			ptgList.add(new NewDynamicPhraseTable((IsolatedPhraseFeaturizer)phraseFeaturizer, (Scorer)scorer, bitext, model1S2T, model1T2S));
+			ptgList.add(new NewDynamicPhraseTable((CombinedFeaturizer)phraseFeaturizer, (Scorer)scorer, bitext, model1S2T, model1T2S));
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 		
 			if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, phraseFeaturizer, scorer, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		}
 		

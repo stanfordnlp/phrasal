@@ -106,6 +106,30 @@ public class CombinedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>, 
 
 
 	@SuppressWarnings("unchecked")
+	public List<FeatureValue<FV>> quickPhraseListFeaturize(Featurizable<TK, FV> f) {
+		List<FeatureValue<FV>> featureValues = new LinkedList<FeatureValue<FV>>();
+		for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
+			if (!(featurizer instanceof QuickIsolatedPhraseFeaturizer)) continue;
+			IsolatedPhraseFeaturizer<TK,FV> isoFeaturizer = (QuickIsolatedPhraseFeaturizer<TK,FV>)featurizer;
+			
+			FeatureValue<FV> singleFeatureValue = isoFeaturizer.phraseFeaturize(f);
+			if (singleFeatureValue != null) {
+				featureValues.add(singleFeatureValue);
+			}
+			
+			
+			List<FeatureValue<FV>> listFeatureValues = isoFeaturizer.phraseListFeaturize(f);
+			if (listFeatureValues != null) {
+			  // profiling reveals that addAll is slow due to a buried call to clone()
+				for (FeatureValue<FV> fv : listFeatureValues) {
+					featureValues.add(fv);
+				}
+			}
+		}
+		return featureValues;	
+	}
+	
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK, FV> f) {
 		List<FeatureValue<FV>> featureValues = new LinkedList<FeatureValue<FV>>();

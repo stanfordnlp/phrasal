@@ -9,6 +9,7 @@ import mt.base.Sequence;
 import mt.base.TranslationOption;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
+import mt.decoder.feat.QuickIsolatedPhraseFeaturizer;
 
 import edu.stanford.nlp.util.IString;
 
@@ -17,7 +18,7 @@ import edu.stanford.nlp.util.IString;
  * @author danielcer
  *
  */
-public class PhraseTranslationWordPairs implements IncrementalFeaturizer<IString, String>,  IsolatedPhraseFeaturizer<IString,String> {
+public class PhraseTranslationWordPairs implements IncrementalFeaturizer<IString, String>,  QuickIsolatedPhraseFeaturizer<IString,String> {
 
 	public static String FEATURE_PREFIX = "PTWP";
 	final Map<TranslationOption<IString>, List<FeatureValue<String>>> featureCache = new HashMap<TranslationOption<IString>, List<FeatureValue<String>>>();

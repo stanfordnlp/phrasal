@@ -7,6 +7,7 @@ import mt.metrics.*;
 public class MetricBasedRecombinationFilter<TK,FV> implements RecombinationFilter<MultiTranslationState<TK, FV>> {
 	RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> metricFilter;
 	
+	@SuppressWarnings("unchecked")
 	public RecombinationFilter<MultiTranslationState<TK,FV>> clone() {
 		try {
 		return (RecombinationFilter)super.clone();

@@ -13,7 +13,7 @@ import mt.base.Sequence;
  *
  * @param <TK>
  */
-public class UnknownWordFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, IsolatedPhraseFeaturizer<TK, String>  {
+public class UnknownWordFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, QuickIsolatedPhraseFeaturizer<TK, String>  {
 	static public String FEATURE_NAME = "UnknownWord";
 	static public String UNKNOWN_PHRASE_TAG = "unknownphrase";
 	static public final double MOSES_UNKNOWN_WORD_MUL = -100;

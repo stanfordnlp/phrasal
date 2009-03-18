@@ -13,7 +13,7 @@ import mt.base.Sequence;
  *
  */
 public class WordPenaltyFeaturizer<TK> implements
-		IncrementalFeaturizer<TK, String>, IsolatedPhraseFeaturizer<TK, String>  {
+		IncrementalFeaturizer<TK, String>, QuickIsolatedPhraseFeaturizer<TK, String>  {
 	
 	public static final String DEBUG_PROPERTY = "WordPenaltyFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));

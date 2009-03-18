@@ -10,6 +10,7 @@ import mt.base.InsertedStartEndToken;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
+import mt.decoder.feat.QuickIsolatedPhraseFeaturizer;
 
 import edu.stanford.nlp.util.IString;
 
@@ -18,7 +19,7 @@ import edu.stanford.nlp.util.IString;
  * @author danielcer
  *
  */
-public class SourcePhraseContextBOW implements IncrementalFeaturizer<IString, String>,  IsolatedPhraseFeaturizer<IString,String> {
+public class SourcePhraseContextBOW implements IncrementalFeaturizer<IString, String>,  QuickIsolatedPhraseFeaturizer<IString,String> {
 	public static final String PREFIX = "CBOW";
 	public static final String LEFT_CONTEXT = "l:";
 	public static final String RIGHT_CONTEXT = "r:";

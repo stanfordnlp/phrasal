@@ -8,10 +8,11 @@ import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
+import mt.decoder.feat.QuickIsolatedPhraseFeaturizer;
 
 import edu.stanford.nlp.util.IString;
 
-public class PhrasePairAlignmentConstellation implements IncrementalFeaturizer<IString, String>,  IsolatedPhraseFeaturizer<IString,String>  {
+public class PhrasePairAlignmentConstellation implements IncrementalFeaturizer<IString, String>,  QuickIsolatedPhraseFeaturizer<IString,String>  {
 
 	public final String FEATURE_PREFIX = "ACst:";
 	

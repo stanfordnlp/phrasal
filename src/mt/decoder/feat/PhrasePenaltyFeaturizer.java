@@ -15,7 +15,7 @@ import mt.base.Sequence;
  *
  * @param <TK>
  */
-public class PhrasePenaltyFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, IsolatedPhraseFeaturizer<TK, String>  {
+public class PhrasePenaltyFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, QuickIsolatedPhraseFeaturizer<TK, String>  {
 	static public String FEATURE_NAME = "TM:phrasePenalty";
   // mg2008: please don't change to "= 1" since not exactly the same value:
   static private final double MOSES_PHRASE_PENALTY = Math.log(2.718);

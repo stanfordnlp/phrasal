@@ -15,7 +15,7 @@ import mt.base.Sequence;
  * 
  * @param <T>	
  */
-public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,String>, IsolatedPhraseFeaturizer<T,String> {
+public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,String>, QuickIsolatedPhraseFeaturizer<T,String> {
 	public final static String PREFIX = "TM";
 	public static final String DEBUG_PROPERTY = "ptScoresFeaturizerDEBUG";
 	final HashMap<String, String[]> featureNamesHash;
