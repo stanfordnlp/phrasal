@@ -685,7 +685,13 @@ public class PseudoMoses {
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
 		System.err.printf("Phrase table: %s\n", phraseTable);
 		
-		if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
+		if (phraseTable.startsWith("bitext:")) {			
+			 phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String> factory(featurizer, scorer,
+								PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR, phraseTable)
+								: PhraseGeneratorFactory.<String> factory(featurizer, scorer,
+										PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR, phraseTable.replaceFirst("^bitext:", ""),
+										optionLimit));
+		} else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
 			
 			System.err.println("Dyanamic pt\n========================");
 			phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory

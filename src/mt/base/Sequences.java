@@ -48,4 +48,14 @@ public class Sequences {
 		}
 		return intArray;		
 	}
+	
+	public static <T> boolean startsWith(Sequence<T> seq, Sequence<T> prefix) {
+		int seqSz = seq.size();
+		int prefixSz = prefix.size();
+		if (prefixSz > seqSz) return false;
+		for (int i = 0; i < prefixSz; i++) {
+			if (!seq.get(i).equals(prefix.get(i))) return false; 
+		}
+		return true;
+	}
 }

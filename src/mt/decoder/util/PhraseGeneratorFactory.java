@@ -3,9 +3,12 @@ package mt.decoder.util;
 import java.util.*;
 import java.io.*;
 
+import mt.base.BiText;
 import mt.base.CombinedPhraseGenerator;
 import mt.base.DynamicPhraseTable;
+import mt.base.IBMModel1;
 import mt.base.IdentityPhraseGenerator;
+import mt.base.NewDynamicPhraseTable;
 import mt.base.PharaohPhraseTable;
 import mt.base.SymbolFilter;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
@@ -26,7 +29,7 @@ public class PhraseGeneratorFactory {
 	public static final String DYNAMIC_GENERATOR = "dpt";
 	public static final String PHAROAH_PHRASE_TABLE = "pharaohphrasetable";
 	public static final String PHAROAH_PHRASE_TABLE_ALT = "ppt";
-	
+	public static final String NEW_DYNAMIC_GENERATOR = "newdg";
 	/**
 	 * 
 	 * @param <T>
@@ -140,6 +143,45 @@ public class PhraseGeneratorFactory {
 			
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 			
+			if (phraseLimit == -1) {
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+			} else {
+				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+			}
+		} else if (pgName.equals(NEW_DYNAMIC_GENERATOR)) {
+			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();
+			int phraseLimit = -1;
+			if (pgSpecs.length == 3) {
+				String phraseLimitStr = pgSpecs[2];
+				try {
+					phraseLimit = Integer.parseInt(phraseLimitStr);
+				} catch (NumberFormatException e) {
+					throw new RuntimeException(String.format("Specified phrase limit, %s, can not be parsed as an integer value\n", phraseLimitStr));
+				}
+			}
+			
+			String[] fileList = pgSpecs[1].split(":");
+			
+			IBMModel1 model1S2T = null;
+			IBMModel1 model1T2S = null;
+			
+			String fText = null; 
+			String eText = null;
+			if (fileList.length == 4) {
+				fText = fileList[0];
+				model1S2T = IBMModel1.load(fileList[1]);
+				eText = fileList[2];
+				model1T2S = IBMModel1.load(fileList[3]);
+			} else {
+				fText = fileList[0];
+				eText = fileList[1];
+			}
+			
+			BiText bitext = new BiText(fText, eText);
+			                                      
+			ptgList.add(new NewDynamicPhraseTable((IsolatedPhraseFeaturizer)phraseFeaturizer, (Scorer)scorer, bitext, model1S2T, model1T2S));
+			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
+		
 			if (phraseLimit == -1) {
 				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {

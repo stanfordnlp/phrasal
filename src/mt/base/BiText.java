@@ -1,7 +1,9 @@
 package mt.base;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 
 import edu.stanford.nlp.util.IStrings;
 
@@ -14,7 +16,7 @@ public class BiText {
 		try {
 		int lineCnt = 0;
 		int wordCnt = 0;
-		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
 		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 			lineCnt++;
 			wordCnt += line.split("\\s+").length;			
@@ -26,7 +28,7 @@ public class BiText {
 	
 	private void readCorpus(String filename, int[][] store) {
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(filename));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
 			int pos = -1;
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) { pos++;
 				store[pos] = IStrings.toIntArray(IStrings.toIStringArray(line.split("\\s+")));

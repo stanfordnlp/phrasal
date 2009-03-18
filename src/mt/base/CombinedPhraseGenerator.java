@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.IStrings;
  * @param <TK>
  */
 public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
-	static public final int FORCE_ADD_LIMIT = 200;
+	static public final int FORCE_ADD_LIMIT = Integer.MAX_VALUE; // 200;
 	static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
 	static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
 	
