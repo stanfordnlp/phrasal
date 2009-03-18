@@ -108,7 +108,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 			
 			Collections.sort(preCutOptsArr);
 			int preliminaryFilterPhraseLimit = phraseLimit*PRELIMINARY_FILTER_MULTIPLIER;
-			List<ConcreteTranslationOption<TK>> pass1CutOpts = preCutOptsArr.subList(0, preliminaryFilterPhraseLimit);
+			List<ConcreteTranslationOption<TK>> pass1CutOpts = preCutOptsArr.subList(0, Math.min(preliminaryFilterPhraseLimit, preCutOptsArr.size()));
 			
 			for (ConcreteTranslationOption<TK> opt: pass1CutOpts) {
 				opt.refineScore(phraseFeaturizer, scorer, sequence, translationId);
