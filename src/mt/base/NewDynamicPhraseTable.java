@@ -26,6 +26,17 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 	static final int MAX_RAW_OPTIONS = 100;
 	
 	Set<String> currentSequence = null;
+	class PTCache<K,V> extends LinkedHashMap<K, V> {
+		private static final int MAX_ENTRIES = 100000;
+		public PTCache() {
+			super((MAX_ENTRIES+2)*2,(float)0.5, true);
+		}
+    protected boolean removeEldestEntry(Map.Entry eldest) {
+       return size() > MAX_ENTRIES;
+    }
+	}
+	                                                                                             
+	PTCache<Sequence<IString>,Pair<List<Pair<RawSequence<IString>,Double>>,Double>> ptCache = new PTCache<Sequence<IString>,Pair<List<Pair<RawSequence<IString>,Double>>,Double>>();
 	
 	public NewDynamicPhraseTable(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer, Scorer<String> scorer, BiText bitext, IBMModel1 model1F2E, IBMModel1 model1E2F) {
 		super(phraseFeaturizer, scorer);
@@ -157,38 +168,52 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 
 		RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 		
-
-		Counter<RawSequence<IString>> transSet = new ClassicCounter<RawSequence<IString>>();
+		List<Pair<RawSequence<IString>,Double>> sortedTrans = null;
+		double totalCount;
 		
-		// extract phrases
-		for ( ; idx < sortedindex.length && Sequences.startsWith(indexwrapper.get(idx), sequence); idx++) {
-			int line = sortedindex[idx] >>> 8;
-			int pos = sortedindex[idx] & 0xFF;
-			int tEquivFStart = (int)((pos/(double)bitext.fcorpus[line].length)*bitext.ecorpus[line].length);
-			// System.err.printf("Range %d %d\n",  Math.max(0, tEquivFStart-MAX_ABSOLUTE_DISTORTION), Math.min(bitext.ecorpus[line].length, tEquivFStart+MAX_ABSOLUTE_DISTORTION));
-			for (int tStart = Math.max(0, tEquivFStart-MAX_ABSOLUTE_DISTORTION); 
-      tStart < Math.min(bitext.ecorpus[line].length, tEquivFStart+MAX_ABSOLUTE_DISTORTION); tStart++) {
-				for (int tEnd = tStart; tEnd < bitext.ecorpus[line].length && tEnd < tStart + phraseLengthLimit; tEnd++) {
-					int[] ids = new int[tEnd-tStart+1];
-					for (int i = 0; i < ids.length; i++) {
-						ids[i] = bitext.ecorpus[line][tStart+i];
-					}
-					RawSequence<IString> transSeq = new RawSequence<IString>(IStrings.toIStringArray(ids));
-					//System.err.printf("-->%d:%s\n", tStart, transSeq);
-					transSet.incrementCount(transSeq);					
-				}
-			}
-		}
-		
-		List<Pair<RawSequence<IString>,Double>> sortedTrans = Counters.toDescendingMagnitudeSortedListWithCounts(transSet);
-		
-		if (sortedTrans.size() > MAX_RAW_OPTIONS) {
-			sortedTrans = sortedTrans.subList(0, MAX_RAW_OPTIONS);
+		if (!ptCache.containsKey(rawSequence)) {
+  		Counter<RawSequence<IString>> transSet = new ClassicCounter<RawSequence<IString>>();
+  		
+  		// extract phrases
+  		for ( ; idx < sortedindex.length && Sequences.startsWith(indexwrapper.get(idx), sequence); idx++) {
+  			int line = sortedindex[idx] >>> 8;
+  			int pos = sortedindex[idx] & 0xFF;
+  			int tEquivFStart = (int)((pos/(double)bitext.fcorpus[line].length)*bitext.ecorpus[line].length);
+  			// System.err.printf("Range %d %d\n",  Math.max(0, tEquivFStart-MAX_ABSOLUTE_DISTORTION), Math.min(bitext.ecorpus[line].length, tEquivFStart+MAX_ABSOLUTE_DISTORTION));
+  			for (int tStart = Math.max(0, tEquivFStart-MAX_ABSOLUTE_DISTORTION); 
+        tStart < Math.min(bitext.ecorpus[line].length, tEquivFStart+MAX_ABSOLUTE_DISTORTION); tStart++) {
+  				for (int tEnd = tStart; tEnd < bitext.ecorpus[line].length && tEnd < tStart + phraseLengthLimit; tEnd++) {
+  					int[] ids = new int[tEnd-tStart+1];
+  					for (int i = 0; i < ids.length; i++) {
+  						ids[i] = bitext.ecorpus[line][tStart+i];
+  					}
+  					RawSequence<IString> transSeq = new RawSequence<IString>(IStrings.toIStringArray(ids));
+  					//System.err.printf("-->%d:%s\n", tStart, transSeq);
+  					transSet.incrementCount(transSeq);					
+  				}
+  			}
+  		}
+  		
+  		sortedTrans = Counters.toDescendingMagnitudeSortedListWithCounts(transSet);
+  		
+  		if (sortedTrans.size() > MAX_RAW_OPTIONS) {
+  			sortedTrans = sortedTrans.subList(0, MAX_RAW_OPTIONS);
+  		}
+  		
+  		totalCount = transSet.totalCount();
+  		
+  		Pair<List<Pair<RawSequence<IString>,Double>>,Double> cacheEntry = new Pair<List<Pair<RawSequence<IString>,Double>>,Double>(sortedTrans, totalCount);
+  		ptCache.put(rawSequence, cacheEntry);
+		} else {
+			Pair<List<Pair<RawSequence<IString>,Double>>,Double> cachedEntry = ptCache.get(rawSequence);
+			sortedTrans = cachedEntry.first;
+			totalCount = cachedEntry.second;
+			System.err.printf("Cache hit!");
 		}
 		
 		for (Pair<RawSequence<IString>, Double> entry : sortedTrans) {
 			RawSequence<IString> transSeq = entry.first;
-			float PcEgF = (float)(Math.log(entry.second/transSet.totalCount()));
+			float PcEgF = (float)(Math.log(entry.second/totalCount));
 			String mappingKey = sequence+"=:=>"+transSeq.toString();
 			if (model1F2E != null & model1E2F != null) {
 				float pLexF2E = (float)model1F2E.score(rawSequence, transSeq);
