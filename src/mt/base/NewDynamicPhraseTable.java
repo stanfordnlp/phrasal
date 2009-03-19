@@ -23,7 +23,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 
 	static final int phraseLengthLimit = 5;
 	static final int MAX_ABSOLUTE_DISTORTION = 12;
-	static final int MAX_RAW_OPTIONS = 100;
+	static final int MAX_RAW_OPTIONS = 1000;
 	
 	Set<String> currentSequence = null;
 	class PTCache<K,V> extends LinkedHashMap<K, V> {
@@ -32,6 +32,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 			super((MAX_ENTRIES+2)*2,(float)0.5, true);
 		}
     protected boolean removeEldestEntry(Map.Entry eldest) {
+			 if (size() > MAX_ENTRIES) System.err.printf("Cache full.\n");
        return size() > MAX_ENTRIES;
     }
 	}
@@ -91,7 +92,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		
 	}
 	
-	class IndexWrapper extends AbstractList<FIndexSequence> {
+	class IndexWrapper extends AbstractList<FIndexSequence> implements RandomAccess  {
 
 		@Override
 		public FIndexSequence get(int idx) {
@@ -172,9 +173,11 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		double totalCount;
 		
 		if (!ptCache.containsKey(rawSequence)) {
+			long startTime = System.currentTimeMillis();
   		Counter<RawSequence<IString>> transSet = new ClassicCounter<RawSequence<IString>>();
   		
   		// extract phrases
+			int startIdx = idx;
   		for ( ; idx < sortedindex.length && Sequences.startsWith(indexwrapper.get(idx), sequence); idx++) {
   			int line = sortedindex[idx] >>> 8;
   			int pos = sortedindex[idx] & 0xFF;
@@ -192,6 +195,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
   					transSet.incrementCount(transSeq);					
   				}
   			}
+				//if (idx-startIdx > 10000) break;
   		}
   		
   		sortedTrans = Counters.toDescendingMagnitudeSortedListWithCounts(transSet);
@@ -203,14 +207,22 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
   		totalCount = transSet.totalCount();
   		
   		Pair<List<Pair<RawSequence<IString>,Double>>,Double> cacheEntry = new Pair<List<Pair<RawSequence<IString>,Double>>,Double>(sortedTrans, totalCount);
-  		ptCache.put(rawSequence, cacheEntry);
+			long totalTime = System.currentTimeMillis()-startTime;
+			if (totalCount > 20000) {
+				ptCache.put(rawSequence, cacheEntry);
+				System.err.printf("Cache miss! %.3f sec - ", totalTime/1000.0);
+			} else {
+				System.err.printf("Excluded from Cache! %.3f sec - ", totalTime/1000.0);
+			}
 		} else {
 			Pair<List<Pair<RawSequence<IString>,Double>>,Double> cachedEntry = ptCache.get(rawSequence);
 			sortedTrans = cachedEntry.first;
 			totalCount = cachedEntry.second;
-			System.err.printf("Cache hit!");
+			System.err.printf("Cache hit! ");
 		}
-		
+
+		System.err.printf("%s %f\n", sequence, totalCount);	
+
 		for (Pair<RawSequence<IString>, Double> entry : sortedTrans) {
 			RawSequence<IString> transSeq = entry.first;
 			float PcEgF = (float)(Math.log(entry.second/totalCount));
