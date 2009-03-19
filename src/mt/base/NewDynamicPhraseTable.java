@@ -9,8 +9,10 @@ import mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.Pair;
 
 public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,String> {
 	final BiText bitext;
@@ -21,6 +23,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 
 	static final int phraseLengthLimit = 5;
 	static final int MAX_ABSOLUTE_DISTORTION = 12;
+	static final int MAX_RAW_OPTIONS = 100;
 	
 	Set<String> currentSequence = null;
 	
@@ -177,9 +180,15 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 			}
 		}
 		
-		for (Map.Entry<RawSequence<IString>, Double> entry : transSet.entrySet()) {
-			RawSequence<IString> transSeq = entry.getKey();
-			float PcEgF = (float)(Math.log(entry.getValue()/transSet.totalCount()));
+		List<Pair<RawSequence<IString>,Double>> sortedTrans = Counters.toDescendingMagnitudeSortedListWithCounts(transSet);
+		
+		if (sortedTrans.size() > MAX_RAW_OPTIONS) {
+			sortedTrans = sortedTrans.subList(0, MAX_RAW_OPTIONS);
+		}
+		
+		for (Pair<RawSequence<IString>, Double> entry : sortedTrans) {
+			RawSequence<IString> transSeq = entry.first;
+			float PcEgF = (float)(Math.log(entry.second/transSet.totalCount()));
 			String mappingKey = sequence+"=:=>"+transSeq.toString();
 			if (model1F2E != null & model1E2F != null) {
 				float pLexF2E = (float)model1F2E.score(rawSequence, transSeq);
