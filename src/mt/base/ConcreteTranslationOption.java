@@ -2,7 +2,6 @@ package mt.base;
 
 import java.util.*;
 
-import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
@@ -17,7 +16,7 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 	public final CoverageSet foreignCoverage;
 	public final String phraseTableName;
 	public final int foreignPos;
-	public double isolationScore;
+	public final double isolationScore;
 	
 	/**
 	 * 
@@ -29,21 +28,14 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 	 * @param phraseTableName
 	 */
 	public <FV> ConcreteTranslationOption(TranslationOption<T> abstractOption, CoverageSet foreignCoverage, 
-			CombinedFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, String phraseTableName, int translationId) {
+			IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, String phraseTableName, int translationId) {
 		this.abstractOption = abstractOption;
 		this.foreignCoverage = foreignCoverage;
 		this.phraseTableName = phraseTableName;
 		this.foreignPos = foreignCoverage.nextSetBit(0);
 		Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this, translationId);
-		List<FeatureValue<FV>> features = phraseFeaturizer.quickPhraseListFeaturize(f);
-		this.isolationScore = scorer.getIncrementalScore(features);
-	}
-	
-	public <FV> double refineScore(CombinedFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, int translationId) {
-		Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this, translationId);
 		List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
 		this.isolationScore = scorer.getIncrementalScore(features);
-		return this.isolationScore;
 	}
 	
 	@Override

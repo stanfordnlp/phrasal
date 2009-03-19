@@ -9,7 +9,6 @@ import mt.base.Sequence;
 import mt.base.TranslationOption;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.feat.QuickIsolatedPhraseFeaturizer;
 
 import edu.stanford.nlp.util.IString;
 
@@ -18,7 +17,7 @@ import edu.stanford.nlp.util.IString;
  * @author danielcer
  *
  */
-public class DiscriminativePhraseIdentity implements IncrementalFeaturizer<IString, String>,  QuickIsolatedPhraseFeaturizer<IString,String> {
+public class DiscriminativePhraseIdentity implements IncrementalFeaturizer<IString, String>,  IsolatedPhraseFeaturizer<IString,String> {
 	public static final String FEATURE_PREFIX = "DPI";
 	public static final String SOURCE = ":src";
 	public static final String TARGET = ":trg";

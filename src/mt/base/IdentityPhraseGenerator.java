@@ -2,7 +2,7 @@ package mt.base;
 
 import java.util.*;
 
-import mt.decoder.feat.CombinedFeaturizer;
+import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.util.IString;
@@ -25,7 +25,7 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 	 * 
 	 * @param filter
 	 */
-	public IdentityPhraseGenerator(CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, SequenceFilter<TK> filter ) {
+	public IdentityPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, SequenceFilter<TK> filter ) {
 		super(phraseFeaturizer, scorer);
 		this.filter = filter; 
 		scoreNames = DEFAULT_SCORE_NAMES;
@@ -36,7 +36,7 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 	 * @param filter
 	 * @param scoreName
 	 */
-	public IdentityPhraseGenerator(CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, SequenceFilter<TK> filter, String scoreName) {
+	public IdentityPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, SequenceFilter<TK> filter, String scoreName) {
 		super(phraseFeaturizer, scorer);
 		this.filter = filter;
 		scoreNames = new String[]{scoreName};
@@ -45,13 +45,13 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 	/**
 	 * 
 	 */
-	public IdentityPhraseGenerator(CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
+	public IdentityPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
 		super(phraseFeaturizer, scorer);
 		this.filter = null;
 		scoreNames = DEFAULT_SCORE_NAMES;
 	}
 	
-	public IdentityPhraseGenerator(CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, String scoreName) {
+	public IdentityPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, String scoreName) {
 		super(phraseFeaturizer, scorer);
 		this.filter = null;
 		scoreNames = new String[]{scoreName};

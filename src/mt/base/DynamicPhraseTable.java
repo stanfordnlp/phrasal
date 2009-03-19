@@ -6,7 +6,7 @@ package mt.base;
 import java.io.*;
 import java.util.*;
 
-import mt.decoder.feat.CombinedFeaturizer;
+import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.util.IString;
@@ -33,7 +33,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	//IBMModel1 model1S2T, model1T2S;
 	
 	public DynamicPhraseTable(
-			CombinedFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String phraseTableName, String model1S2T, String model1T2S) {
+			IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String phraseTableName, String model1S2T, String model1T2S) {
 		super(phraseFeaturizer, scorer);
 		currentSequence = new HashSet<String>();
 		initdb(phraseTableName);
@@ -42,7 +42,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	}
 	
 	public DynamicPhraseTable(
-			CombinedFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String phraseTableName) {
+			IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String phraseTableName) {
 		super(phraseFeaturizer, scorer);
 		currentSequence = new HashSet<String>();
 		initdb(phraseTableName);
@@ -81,6 +81,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		try {
 		List<TranslationOption<IString>> opts = new LinkedList<TranslationOption<IString>>();
 	
+		IString noConst = new IString("noConst");
 		RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 	
 		List<byte[]> listByteOpts = (List)bdb.getlist(sequence.toString().getBytes("UTF-8"));
@@ -183,7 +184,6 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		return pairSpecificPhrases;
 	} 
 
-	@SuppressWarnings("unchecked")
 	static public void extractDB(String fCorpus, String eCorpus, String tcFile, IBMModel1 model1F2E, IBMModel1 model1E2F)
 		throws Exception {
 		BufferedReader fReader = new BufferedReader(new FileReader(fCorpus));

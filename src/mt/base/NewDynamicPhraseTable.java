@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.*;
 
-import mt.decoder.feat.CombinedFeaturizer;
+import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -24,7 +24,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 	
 	Set<String> currentSequence = null;
 	
-	public NewDynamicPhraseTable(CombinedFeaturizer<IString, String> phraseFeaturizer, Scorer<String> scorer, BiText bitext, IBMModel1 model1F2E, IBMModel1 model1E2F) {
+	public NewDynamicPhraseTable(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer, Scorer<String> scorer, BiText bitext, IBMModel1 model1F2E, IBMModel1 model1E2F) {
 		super(phraseFeaturizer, scorer);
 		this.bitext = bitext;
 		this.model1F2E = model1F2E;

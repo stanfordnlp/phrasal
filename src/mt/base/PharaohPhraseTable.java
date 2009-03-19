@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.io.*;
 
-import mt.decoder.feat.CombinedFeaturizer;
+import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.util.IString;
@@ -117,7 +117,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	 * @param filename
 	 * @throws IOException
 	 */
-	public PharaohPhraseTable(CombinedFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
+	public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
 		super(phraseFeaturizer, scorer);
 		File f = new File(filename);
 		name = String.format("Pharaoh(%s)", f.getName());

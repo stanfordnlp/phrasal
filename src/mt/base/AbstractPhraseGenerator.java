@@ -3,7 +3,7 @@ package mt.base;
 import java.util.LinkedList;
 import java.util.List;
 
-import mt.decoder.feat.CombinedFeaturizer;
+import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.PhraseGenerator;
 import mt.decoder.util.Scorer;
 
@@ -14,10 +14,9 @@ import mt.decoder.util.Scorer;
  * @param <TK>
  */
 abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<TK>, PhraseTable<TK> {
-	private final CombinedFeaturizer<TK, FV> phraseFeaturizer;
+	private final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	private final Scorer<FV> scorer;
 	
-	@SuppressWarnings("unchecked")
 	public AbstractPhraseGenerator<TK,FV> clone() {
 		try {
 			return (AbstractPhraseGenerator<TK,FV>)super.clone();
@@ -46,7 +45,7 @@ abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<
 		return opts;
 	}
 	
-	public AbstractPhraseGenerator(CombinedFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
+	public AbstractPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
 		this.phraseFeaturizer = phraseFeaturizer;
 		this.scorer = scorer;
 	}

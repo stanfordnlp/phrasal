@@ -5,7 +5,6 @@ import java.util.List;
 import mt.base.*;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.feat.QuickIsolatedPhraseFeaturizer;
 import edu.stanford.nlp.util.IString;
 
 /**
@@ -13,7 +12,7 @@ import edu.stanford.nlp.util.IString;
  * 
  * @author Michel Galley
  */
-public class SentenceBoundaryFeaturizer implements IncrementalFeaturizer<IString,String>, QuickIsolatedPhraseFeaturizer<IString, String> {
+public class SentenceBoundaryFeaturizer implements IncrementalFeaturizer<IString,String>, IsolatedPhraseFeaturizer<IString, String> {
 	static public String FEATURE_NAME = "SentenceBoundary";
 	static public final double BAD_SENTENCE_BOUNDARY_PENALTY = -100.0;
 

@@ -9,7 +9,6 @@ import mt.base.Sequence;
 import mt.base.TranslationOption;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.feat.QuickIsolatedPhraseFeaturizer;
 
 import edu.stanford.nlp.util.IString;
 
@@ -18,7 +17,7 @@ import edu.stanford.nlp.util.IString;
  * @author danielcer
  *
  */
-public class LogSourceLengthToTargetLengthRatio implements IncrementalFeaturizer<IString, String>,  QuickIsolatedPhraseFeaturizer<IString,String> {
+public class LogSourceLengthToTargetLengthRatio implements IncrementalFeaturizer<IString, String>,  IsolatedPhraseFeaturizer<IString,String> {
 	public static final String FEATURE_NAME = "LLR";
 	public static final String SRC_TAG = ":s";
 	public static final String TRG_TAG = ":t";

@@ -8,7 +8,6 @@ import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.feat.QuickIsolatedPhraseFeaturizer;
 
 import edu.stanford.nlp.util.IString;
 
@@ -17,7 +16,7 @@ import edu.stanford.nlp.util.IString;
  * @author danielcer
  *
  */
-public class PhraseLengthHistogramFeaturizer implements IncrementalFeaturizer<IString, String>, QuickIsolatedPhraseFeaturizer<IString,String>{
+public class PhraseLengthHistogramFeaturizer implements IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>{
 	public static final String FEATURE_NAME = "PhrLen";
 	enum FeatureConfig {source, target, sourceAndTarget};
 	public static final FeatureConfig DEFAULT_CONFIG = FeatureConfig.sourceAndTarget;
