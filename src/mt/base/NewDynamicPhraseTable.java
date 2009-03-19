@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.*;
 
+import tokyocabinet.*;
+
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
@@ -14,30 +16,20 @@ import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.Pair;
 
+
 public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,String> {
 	final BiText bitext;
 	final int[] sortedindex;
 	final IndexWrapper indexwrapper; 
 	final IBMModel1 model1F2E;
 	final IBMModel1 model1E2F;
+	final BDB commonDB = new BDB();
 
 	static final int phraseLengthLimit = 5;
 	static final int MAX_ABSOLUTE_DISTORTION = 12;
 	static final int MAX_RAW_OPTIONS = 1000;
 	
 	Set<String> currentSequence = null;
-	class PTCache<K,V> extends LinkedHashMap<K, V> {
-		private static final int MAX_ENTRIES = 100000;
-		public PTCache() {
-			super((MAX_ENTRIES+2)*2,(float)0.5, true);
-		}
-    protected boolean removeEldestEntry(Map.Entry eldest) {
-			 if (size() > MAX_ENTRIES) System.err.printf("Cache full.\n");
-       return size() > MAX_ENTRIES;
-    }
-	}
-	                                                                                             
-	PTCache<Sequence<IString>,Pair<List<Pair<RawSequence<IString>,Double>>,Double>> ptCache = new PTCache<Sequence<IString>,Pair<List<Pair<RawSequence<IString>,Double>>,Double>>();
 	
 	public NewDynamicPhraseTable(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer, Scorer<String> scorer, BiText bitext, IBMModel1 model1F2E, IBMModel1 model1E2F) {
 		super(phraseFeaturizer, scorer);
@@ -48,6 +40,8 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		System.gc();
 		
 		long premem = rt.totalMemory()-rt.freeMemory();
+		
+		commonDB.open(bitext.BiTextName, BDB.OCREAT | BDB.OWRITER | BDB.OREADER);
 		
 		sortedindex = new int[bitext.sourceWordCount];
 		
@@ -68,6 +62,10 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		
 		System.err.printf("Sorting index....\n");
 		Collections.sort(indexwrapper);
+	}
+	
+	public void close() {
+		commonDB.close();
 	}
 	
 	class FIndexSequence extends AbstractSequence<IString> {
@@ -127,18 +125,18 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 			ndpt = new NewDynamicPhraseTable(null, null, btext, null, null);
 		}
 		
-	  int pos = -1;
-		for (FIndexSequence seq : ndpt.indexwrapper) { pos++;
-			System.out.println(pos+"::: "+seq);
-		}
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-			Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+")));
-			System.out.printf("Foreign Phrase: %s\n", phrase);
-			for (TranslationOption<IString> opt : ndpt.getTranslationOptions(phrase)) {
-				System.out.printf("--->%s Scores: %s\n", opt.translation, Arrays.toString(opt.scores));
-			}
-		}
+  	int pos = -1;
+  	for (FIndexSequence seq : ndpt.indexwrapper) { pos++;
+  		System.out.println(pos+"::: "+seq);
+  	}
+  	BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+  	for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+  		Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+")));
+  		System.out.printf("Foreign Phrase: %s\n", phrase);
+  		for (TranslationOption<IString> opt : ndpt.getTranslationOptions(phrase)) {
+  			System.out.printf("--->%s Scores: %s\n", opt.translation, Arrays.toString(opt.scores));
+  		}
+  	}
 	}
 
 	@Override
@@ -170,14 +168,16 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 		
 		List<Pair<RawSequence<IString>,Double>> sortedTrans = null;
-		double totalCount;
+		double cntNormalizer = Double.NaN;
 		
-		if (!ptCache.containsKey(rawSequence)) {
+		@SuppressWarnings("unchecked")
+		List<String> commonTrans = (List<String>)commonDB.getlist(rawSequence.toString());
+		
+		if (commonTrans == null) {
 			long startTime = System.currentTimeMillis();
   		Counter<RawSequence<IString>> transSet = new ClassicCounter<RawSequence<IString>>();
   		
   		// extract phrases
-			int startIdx = idx;
   		for ( ; idx < sortedindex.length && Sequences.startsWith(indexwrapper.get(idx), sequence); idx++) {
   			int line = sortedindex[idx] >>> 8;
   			int pos = sortedindex[idx] & 0xFF;
@@ -204,28 +204,33 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
   			sortedTrans = sortedTrans.subList(0, MAX_RAW_OPTIONS);
   		}
   		
-  		totalCount = transSet.totalCount();
+  		cntNormalizer = transSet.totalCount();
   		
-  		Pair<List<Pair<RawSequence<IString>,Double>>,Double> cacheEntry = new Pair<List<Pair<RawSequence<IString>,Double>>,Double>(sortedTrans, totalCount);
 			long totalTime = System.currentTimeMillis()-startTime;
-			if (totalCount > 20000) {
-				ptCache.put(rawSequence, cacheEntry);
+			if (cntNormalizer > 20000) {
+				//ptCache.put(rawSequence, cacheEntry);
+				for (Pair<RawSequence<IString>, Double> trans : sortedTrans) {
+					commonDB.putdup(rawSequence.toString(), trans.first.toString() + "|||" + trans.second/transSet.totalCount());
+				}
 				System.err.printf("Cache miss! %.3f sec - ", totalTime/1000.0);
 			} else {
 				System.err.printf("Excluded from Cache! %.3f sec - ", totalTime/1000.0);
 			}
-		} else {
-			Pair<List<Pair<RawSequence<IString>,Double>>,Double> cachedEntry = ptCache.get(rawSequence);
-			sortedTrans = cachedEntry.first;
-			totalCount = cachedEntry.second;
+		} else {			
+			sortedTrans = new ArrayList<Pair<RawSequence<IString>,Double>>(commonTrans.size()); 	
+			for (String transStr : commonTrans) {
+				String[] fields = transStr.split("\\|\\|\\|");
+				sortedTrans.add(new Pair<RawSequence<IString>, Double>(new RawSequence<IString>(IStrings.toIStringArray(fields[0].split("\\s+"))), new Double(fields[1])));
+			}
+			cntNormalizer = 1.0;
 			System.err.printf("Cache hit! ");
 		}
 
-		System.err.printf("%s %f\n", sequence, totalCount);	
+		System.err.printf("%s %f\n", sequence, cntNormalizer);	
 
 		for (Pair<RawSequence<IString>, Double> entry : sortedTrans) {
 			RawSequence<IString> transSeq = entry.first;
-			float PcEgF = (float)(Math.log(entry.second/totalCount));
+			float PcEgF = (float)(Math.log(entry.second/cntNormalizer));
 			String mappingKey = sequence+"=:=>"+transSeq.toString();
 			if (model1F2E != null & model1E2F != null) {
 				float pLexF2E = (float)model1F2E.score(rawSequence, transSeq);

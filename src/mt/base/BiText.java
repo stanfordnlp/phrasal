@@ -1,6 +1,7 @@
 package mt.base;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
@@ -11,6 +12,7 @@ public class BiText {
 	final int[][] ecorpus;
 	final int[][] fcorpus;
 	final int sourceWordCount;
+	public final String BiTextName;
 	
 	private int[] wc(String filename) {
 		try {
@@ -59,6 +61,7 @@ public class BiText {
 		postmem = rt.totalMemory()-rt.freeMemory();
 		System.err.printf("Memory used: %d MiB\n", (postmem-premem)/(1024*1024));
 		sourceWordCount = fSizes[1];
+		BiTextName = new File(filenameF).getName() + "_2_" + new File(filenameE).getName();
 	}
 	
 	public static void main(String[] args) {
