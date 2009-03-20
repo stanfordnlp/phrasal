@@ -27,7 +27,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 
 	static final int phraseLengthLimit = 5;
 	static final int MAX_ABSOLUTE_DISTORTION = 12;
-	static final int MAX_RAW_OPTIONS = 1000;
+	static final int MAX_RAW_OPTIONS = 10000;
 	
 	Set<String> currentSequence = null;
 	
@@ -62,11 +62,15 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		
 		System.err.printf("Sorting index....\n");
 		Collections.sort(indexwrapper);
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			 public void run() {
+				System.err.println("Closing DB");
+				commonDB.sync(); commonDB.close(); // avoid locking on close issue	
+			 }
+		});
 	}
-	
-	public void close() {
-		commonDB.close();
-	}
+
 	
 	class FIndexSequence extends AbstractSequence<IString> {
 		int fidx;
@@ -171,7 +175,10 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		double cntNormalizer = Double.NaN;
 		
 		@SuppressWarnings("unchecked")
+		long startCacheCheckTime = System.currentTimeMillis();
 		List<String> commonTrans = (List<String>)commonDB.getlist(rawSequence.toString());
+		long endCacheCheckTime = System.currentTimeMillis();
+		System.err.printf("Cache Check time %.3f\n", (endCacheCheckTime-startCacheCheckTime)/1000.0);
 		
 		if (commonTrans == null) {
 			long startTime = System.currentTimeMillis();
@@ -211,6 +218,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 				//ptCache.put(rawSequence, cacheEntry);
 				for (Pair<RawSequence<IString>, Double> trans : sortedTrans) {
 					commonDB.putdup(rawSequence.toString(), trans.first.toString() + "|||" + trans.second/transSet.totalCount());
+					//System.err.printf("%s=>%s %f\n", rawSequence.toString(), trans.first.toString(), trans.second);
 				}
 				System.err.printf("Cache miss! %.3f sec - ", totalTime/1000.0);
 			} else {
@@ -219,11 +227,21 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		} else {			
 			sortedTrans = new ArrayList<Pair<RawSequence<IString>,Double>>(commonTrans.size()); 	
 			for (String transStr : commonTrans) {
-				String[] fields = transStr.split("\\|\\|\\|");
-				sortedTrans.add(new Pair<RawSequence<IString>, Double>(new RawSequence<IString>(IStrings.toIStringArray(fields[0].split("\\s+"))), new Double(fields[1])));
+			
+				String[] fields = new String[2];
+				int lastbar = transStr.lastIndexOf("|");
+				fields[0] = transStr.substring(0,lastbar-2);
+				fields[1] = transStr.substring(lastbar+1, transStr.length());
+				StringTokenizer strToker = new StringTokenizer(fields[0]);
+				String[] words = new String[strToker.countTokens()];
+				for (int ti = 0; ti < words.length; ti++) {
+					words[ti] = strToker.nextToken();
+				}
+				sortedTrans.add(new Pair<RawSequence<IString>, Double>(new RawSequence<IString>(IStrings.toIStringArray(words)), new Double(fields[1])));
 			}
 			cntNormalizer = 1.0;
-			System.err.printf("Cache hit! ");
+			long endCacheTotalTime = System.currentTimeMillis();
+			System.err.printf("Cache hit! %.3f sec - ", (endCacheTotalTime-startCacheCheckTime)/1000.0);
 		}
 
 		System.err.printf("%s %f\n", sequence, cntNormalizer);	

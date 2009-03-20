@@ -77,7 +77,7 @@ public class IBMModel1 {
 			scores.add(p);
 			if (idx % 500000 == 0) {
 				long currentMemUsed = rt.totalMemory() - rt.freeMemory();
-    		System.err.printf("model1 > %d pairs mem used: %d MiB)\n",
+    		System.err.printf("model1 > %d pairs (mem used: %d MiB)\n",
      	       idx, (currentMemUsed - preMemUsed)/(1024*1024));
 			}
 		}
