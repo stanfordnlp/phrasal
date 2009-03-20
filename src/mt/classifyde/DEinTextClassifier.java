@@ -1,20 +1,39 @@
 package mt.classifyde;
 
-import mt.train.transtb.*;
-import java.util.*;
+// Java imports
 import java.io.*;
-import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.stats.*;
+import java.util.*;
+
+// JavaNLP imports
 import edu.stanford.nlp.classify.*;
-import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.stats.*;
+import edu.stanford.nlp.trees.*;
+import edu.stanford.nlp.util.*;
+
+// RA related imports
+import edu.stanford.cs.ra.arguments.Argument;
+import edu.stanford.cs.ra.arguments.ArgumentPolicy;
+import edu.stanford.cs.ra.arguments.Flag;
+import edu.stanford.cs.ra.RA;
+
+// imports from MT project
+import mt.train.transtb.*;
 
 public class DEinTextClassifier {
+  @Argument("The trained DE classifier file (serialized)")
+  @Argument.Switch("-classifier")
+  @Argument.Policy(ArgumentPolicy.REQUIRED)
+  static String classifierFile;
+
+  @Argument("Use 6 class definition (experimental, not used in the WMT09 paper)")
+  @Argument.Switch("-6class")
+  static Flag sixclass;
+
   public static void main(String[] args) throws IOException {
+    RA.begin(args, DEinTextClassifier.class);
+
     Properties props = StringUtils.argsToProperties(args);
-    String classifierFile = props.getProperty("classifier", null); //"/user/pichuan/javanlp/projects/mt/src/mt/classifyde/report/nonoracle/1st.ser.gz");
-    String sixclassStr = props.getProperty("6class", "false");
-    Boolean sixclass = Boolean.parseBoolean(sixclassStr);
 
     // (1) read in the trained classifier!
     LinearClassifier<String, String> classifier
@@ -70,7 +89,7 @@ public class DEinTextClassifier {
         Datum d = new RVFDatum(features);
         String predictedClass = classifier.classOf(d);
         //deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
-        if (sixclass)
+        if (sixclass.isSet)
           deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short6class(predictedClass));
         else
           deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
