@@ -48,7 +48,7 @@ LDC2007T07-giga3-$(I3)-0.tok.gz: LDC2007T07-giga3-$(I3).tok.gz
 # 1) Produces tokenization as in IBM format:
 # 2) Remove bad UTF-8 characters, and remove $num and $email fields.
 %.utok.gz: %.gz
-	zcat $< | ae-english-tokenizer 2> logs/$@.log | $(NOCLASS) | gzip > $@
+	zcat $< | ibm_ae_en_tokenizer 2> logs/$@.log | $(NOCLASS) | gzip > $@
 
 # Extract untokenized texts:
 %.gz: ../scripts/%.sh
