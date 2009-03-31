@@ -1461,7 +1461,7 @@ public class PseudoMoses {
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) { translationId++;
 				String[] tokens = line.split("\\s+");
 				Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
-			  List<RichTranslation<IString,String>> targetNBest;
+			  List<RichTranslation<IString,String>> targetNBest = null;
 			  List<RichTranslation<IString,String>> argmaxNBest;
 			  
 			  System.err.printf("Source: %s\n", foreign);
@@ -1518,7 +1518,7 @@ public class PseudoMoses {
 			  
 			  double loss = evalTarget-evalArgmax;
 			  if (learner instanceof SGDLogLinearLearner) {
-			  	learner.weightUpdate(epoch, translationId, target, argmax, loss);
+			  	((SGDLogLinearLearner)learner).weightUpdate(epoch, translationId, targetNBest, argmaxNBest, loss);
 			  } else {
 			  	learner.weightUpdate(epoch, translationId, target, argmax, loss);
 			  }
