@@ -1428,9 +1428,9 @@ public class PseudoMoses {
 				// delta w 
 				ClassicCounter<String> dW = new ClassicCounter<String>();
 				for (String featureName : featureNames) {
-					double dw = expectedCountsH_g_E_F.incrementCount(featureName) - expectedCountsE_H_g_F.incrementCount(featureName) - R*wts.getCount(featureName); 
+					double dw = expectedCountsH_g_E_F.getCount(featureName) - expectedCountsE_H_g_F.getCount(featureName) - R*wts.getCount(featureName); 
 					dW.incrementCount(featureName, dw);
-					System.err.printf("%s: E_p(h|e,f):%e - E_p(e,h|f)%e - R*w:%e = %e\n", featureName, expectedCountsH_g_E_F.incrementCount(featureName), expectedCountsE_H_g_F.incrementCount(featureName), R*wts.getCount(featureName), dw);
+					System.err.printf("%s:\n   E_p(h|e,f):%e - E_p(e,h|f)%e - R*w:%e = %e\n", featureName, expectedCountsH_g_E_F.getCount(featureName), expectedCountsE_H_g_F.getCount(featureName), R*wts.getCount(featureName), dw);
 				}
 				
 				for (String featureName : featureNames) {
