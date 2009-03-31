@@ -1388,17 +1388,29 @@ public class PseudoMoses {
 		public void weightUpdate(int epoch, int id, 
 				List<RichTranslation<IString, String>> target,
 				List<RichTranslation<IString, String>> argmax, double loss) {
-				double Z = 0;
+				double tZ = 0;
+				double aZ = 0;
+				int tInfs = 0;
+				int aInfs = 0;
 				
 				for (RichTranslation<IString, String> trans : target) {
-					Z += Math.exp(getIncrementalScore(trans.features));
+					double v;
+					tZ += v = Math.exp(getIncrementalScore(trans.features));
+					if (v == Double.POSITIVE_INFINITY) {
+						tInfs++;
+					}
 				}
 				
 				for (RichTranslation<IString, String> trans : argmax) {
-					Z += Math.exp(getIncrementalScore(trans.features));
+					double v;
+					aZ += v = Math.exp(getIncrementalScore(trans.features));
+					if (v == Double.POSITIVE_INFINITY) {
+						aInfs++;
+					}
 				}
 				
-				System.out.printf("Z is approximated as: %e\n", Z);
+				System.out.printf("tZ is approximated as (infs: %d): %e\n", tZ, tInfs);
+				System.out.printf("aZ is approximated as (infs: %d): %e\n", aZ, aInfs);
 				
 				
 				Set<String> featureNames = new HashSet<String>(wts.keySet());
@@ -1407,7 +1419,13 @@ public class PseudoMoses {
 				ClassicCounter<String> expectedCountsH_g_E_F = new ClassicCounter<String>();				
 				for (RichTranslation<IString, String> trans : target) {
 					double n = Math.exp(getIncrementalScore(trans.features));
-					double p = n/Z;
+					double p;
+					if (tZ == Double.POSITIVE_INFINITY) { 
+						if (n == tZ) p = 1.0/tInfs;
+						else p = 0.0;
+					} else {
+						p = n/tZ;
+					}
 					for (FeatureValue<String> fv : trans.features) {
 						expectedCountsH_g_E_F.incrementCount(fv.name, fv.value*p);
 						featureNames.add(fv.name);
@@ -1418,7 +1436,13 @@ public class PseudoMoses {
 				ClassicCounter<String> expectedCountsE_H_g_F = new ClassicCounter<String>();
 				for (RichTranslation<IString, String> trans : argmax) {
 					double n = Math.exp(getIncrementalScore(trans.features));
-					double p = n/Z;
+					double p;
+					if (aZ == Double.POSITIVE_INFINITY) { 
+						if (n == aZ) p = 1.0/aInfs;
+						else p = 0.0;
+					} else {
+						p = n/aZ;
+					}
 					for (FeatureValue<String> fv : trans.features) {
 						expectedCountsE_H_g_F.incrementCount(fv.name, fv.value*p);						
 						featureNames.add(fv.name);
