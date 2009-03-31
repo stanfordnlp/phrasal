@@ -138,6 +138,7 @@ public class PseudoMoses {
 	public static final String SSVM_LEARNING = "ssvm";
 	public static final String MMSG_LEARNING = "mmsg";
 	public static final String COST_MARGIN_LEARNING = "costmargin";
+	public static final String SGDLL = "sgdll";
 	public static final String MAXMARGIN_C = "C";
 	
 	public static final String DEFAULT_LEARNING_ALGORITHM = PERCEPTRON_LEARNING;
@@ -1356,7 +1357,98 @@ public class PseudoMoses {
 			return sum;
 		}		
 	} 	
-	
+
+  private class SGDLogLinearLearner implements Learner {		
+		ClassicCounter<String> wts = new ClassicCounter<String>();
+		final double R;
+		final double[] lrate;
+		
+		public SGDLogLinearLearner(double r, double lrate[]) {
+			this.R = r;
+			this.lrate = lrate;
+		}
+
+		@Override
+		public void saveWeights(String filename) throws IOException {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+			
+			for (Pair<String, Double> p : Counters.toDescendingMagnitudeSortedListWithCounts(wts)) {
+				writer.append(p.first).append(" ").append(p.second.toString()).append("\n");
+			}			
+			writer.close();
+		}
+
+		@Override
+		public void weightUpdate(int epoch, int id, 
+				RichTranslation<IString, String> target,
+				RichTranslation<IString, String> argmax, double loss) {
+			throw new RuntimeException();
+		}
+		
+		public void weightUpdate(int epoch, int id, 
+				List<RichTranslation<IString, String>> target,
+				List<RichTranslation<IString, String>> argmax, double loss) {
+				double Z = 0;
+				
+				for (RichTranslation<IString, String> trans : target) {
+					Z += Math.exp(getIncrementalScore(trans.features));
+				}
+				
+				for (RichTranslation<IString, String> trans : argmax) {
+					Z += Math.exp(getIncrementalScore(trans.features));
+				}
+				
+				System.out.printf("Z is approximated as: %e\n", Z);
+				
+				
+				Set<String> featureNames = new HashSet<String>(wts.keySet());
+				
+				// E_p(H|F,E) [f]
+				ClassicCounter<String> expectedCountsH_g_E_F = new ClassicCounter<String>();				
+				for (RichTranslation<IString, String> trans : target) {
+					double n = Math.exp(getIncrementalScore(trans.features));
+					double p = n/Z;
+					for (FeatureValue<String> fv : trans.features) {
+						expectedCountsH_g_E_F.incrementCount(fv.name, fv.value*p);
+						featureNames.add(fv.name);
+					}
+				}
+				
+				// E_p(E, H|F) [f]
+				ClassicCounter<String> expectedCountsE_H_g_F = new ClassicCounter<String>();
+				for (RichTranslation<IString, String> trans : argmax) {
+					double n = Math.exp(getIncrementalScore(trans.features));
+					double p = n/Z;
+					for (FeatureValue<String> fv : trans.features) {
+						expectedCountsE_H_g_F.incrementCount(fv.name, fv.value*p);						
+						featureNames.add(fv.name);
+					}
+				}
+				
+				// delta w 
+				ClassicCounter<String> dW = new ClassicCounter<String>();
+				for (String featureName : featureNames) {
+					double dw = expectedCountsH_g_E_F.incrementCount(featureName) - expectedCountsE_H_g_F.incrementCount(featureName) - R*wts.getCount(featureName); 
+					dW.incrementCount(featureName, dw);
+				}
+				
+				for (String featureName : featureNames) {
+					wts.incrementCount(featureName, lrate[Math.min(epoch, lrate.length-1)]*dW.getCount(featureName));
+				}				
+		}
+
+		@Override
+		public double getIncrementalScore(List<FeatureValue<String>> features) {
+			double sum = 0;
+			
+			for (FeatureValue<String> feature : features) {
+				sum += feature.value*wts.getCount(feature.name);
+			}
+		
+			return sum;
+		}		
+	} 	
+
 	private void learningLoop(Learner learner, String inputFilename, int maxEpoch, String saveWeights) throws IOException {
 		LineNumberReader reader = null;
 	
@@ -1369,12 +1461,14 @@ public class PseudoMoses {
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) { translationId++;
 				String[] tokens = line.split("\\s+");
 				Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
-			  List<RichTranslation<IString,String>> nbest;
+			  List<RichTranslation<IString,String>> targetNBest;
+			  List<RichTranslation<IString,String>> argmaxNBest;
+			  
 			  System.err.printf("Source: %s\n", foreign);
 			  RichTranslation<IString,String> target;
 			  if (learningTarget == LearningTarget.BEST_ON_N_BEST_LIST) {
-			  	nbest = inferers.get(0).nbest(learner, foreign, translationId, null, null, 100);
-			  	target = listArgMax(nbest,incEval,translationId);			  	
+			  	argmaxNBest = inferers.get(0).nbest(learner, foreign, translationId, null, null, 1000);
+			  	target = listArgMax(argmaxNBest,incEval,translationId);			  	
 			  } else {
 			  	System.err.println("Attempting to generate target");
 			  	System.err.println("==========================================");
@@ -1382,24 +1476,35 @@ public class PseudoMoses {
 			    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = new EnumeratedConstrainedOutputSpace<IString, String>(
 			    		learnFromReferences.get(translationId), phraseGenerator.longestForeignPhrase());
 			    long goldTime = -System.currentTimeMillis();
-			  	target = inferers.get(0).translate(learner, foreign, translationId, constrainedOutputSpace, learnFromReferences.get(translationId));
+			    
+			    if (learner instanceof SGDLogLinearLearner) {
+			    	targetNBest = inferers.get(0).nbest(learner, foreign, translationId, constrainedOutputSpace, learnFromReferences.get(translationId), 1000);
+			    	if (targetNBest == null) {
+			    		System.err.println("Can't generate reference, skipping....");
+  			  		continue;
+			    	}
+			    	target = targetNBest.get(0);
+			    } else {
+  			  	target = inferers.get(0).translate(learner, foreign, translationId, constrainedOutputSpace, learnFromReferences.get(translationId));
+  			  	
+  			  	if (target == null) {
+  			  		System.err.println("Can't generate reference, skipping....");
+  			  		continue;
+  			  	}
+			    }
 			  	goldTime += System.currentTimeMillis();
 			  	System.err.printf("Forced decoding time: %f s\n", goldTime/1000.0);
-			  	if (target == null) {
-			  		System.err.println("Can't generate reference, skipping....");
-			  		continue;
-			  	}
 			  	
 			  	System.err.println("Generating model translation n-best list");
 			  	System.err.println("==========================================");
 			  	long argmaxTime = -System.currentTimeMillis();
-			  	nbest = inferers.get(0).nbest(learner, foreign, translationId, null, null, 100);
+			  	argmaxNBest = inferers.get(0).nbest(learner, foreign, translationId, null, null, 1000);
 			  	argmaxTime += System.currentTimeMillis();
 			  	System.err.printf("Argmax decoding time: %f s\n", argmaxTime/1000.0);
 			  }
 			  
 			  
-			  RichTranslation<IString,String> argmax = nbest.get(0);
+			  RichTranslation<IString,String> argmax = argmaxNBest.get(0);
 			
 			  incEval.replace(translationId, target);
 			  double evalTarget = optionalSmoothScoring(incEval, translationId, target);
@@ -1412,8 +1517,11 @@ public class PseudoMoses {
 			  System.err.printf("Argmax Score: %f Smooth Score: %f\n", incEval.score(), evalArgmax);
 			  
 			  double loss = evalTarget-evalArgmax;
-			  
-			  learner.weightUpdate(epoch, translationId, target, argmax, loss);
+			  if (learner instanceof SGDLogLinearLearner) {
+			  	learner.weightUpdate(epoch, translationId, target, argmax, loss);
+			  } else {
+			  	learner.weightUpdate(epoch, translationId, target, argmax, loss);
+			  }
 			  if (translationId % 50 == 0) {
 			  	learner.saveWeights(saveWeights + ".epoch." + epoch + ".tran."+translationId+".wts");
 			  }
@@ -1798,7 +1906,10 @@ public class PseudoMoses {
 			} else if (learningAlgorithm.equals(COST_MARGIN_LEARNING)) {
 				Learner learner = new PerceptronLearner(learningRate);
 				learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-			} else {
+			} else if (learningAlgorithm.equals(SGDLL)) {
+				Learner learner = new SGDLogLinearLearner(0.5, learningRate);
+				learningLoop(learner, inputFilename, maxEpochs, saveWeights);
+			}else {
 				throw new RuntimeException("Unrecognized learning algorithm");
 			}
 		} else {
