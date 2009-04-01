@@ -9,9 +9,10 @@ import java.io.*;
 
 public class TrainingExamples {
   List<TrainingExample> examples;
-  public enum ReorderingTypes { ordered, distorted }
+  public enum ReorderingTypes { ordered, distorted, ordered_disc, distorted_disc }
 
   private boolean dealWithEmpty=false, dealWithMultiTarget=false;
+  private boolean useFourClass=false;
 
   public TrainingExamples(boolean dealWithEmpty, boolean dealWithMultiTarget) {
     this();
@@ -83,15 +84,33 @@ public class TrainingExamples {
         int maxf_ei = Collections.max(ei_fs);
         int minf_eiprime = Collections.min(eiprime_fs);
         int maxf_eiprime = Collections.max(eiprime_fs);
-        
-        if (maxf_ei < minf_eiprime) {
-          example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered);
-          classCounter.incrementCount("ordered");
-        } else if (maxf_eiprime < minf_ei) {
-          example = new TrainingExample(ei, minf_ei, maxf_eiprime, ReorderingTypes.distorted);
-          classCounter.incrementCount("distorted");
+
+        if (useFourClass) {
+          if (maxf_ei+1 ==  minf_eiprime) {
+            example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered);
+            classCounter.incrementCount("ordered_cont");
+          } else if (maxf_eiprime+1 == minf_ei) {
+            example = new TrainingExample(ei, minf_ei, maxf_eiprime, ReorderingTypes.distorted);
+            classCounter.incrementCount("distorted_cont");
+          } else if (maxf_ei < minf_eiprime) {
+            example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered_disc);
+            classCounter.incrementCount("ordered_disc");
+          } else if (maxf_eiprime < minf_ei) {
+            example = new TrainingExample(ei, minf_ei, maxf_eiprime, ReorderingTypes.distorted_disc);
+            classCounter.incrementCount("distorted_disc");
+          } else {
+            classCounter.incrementCount("mixed");
+          }
         } else {
-          classCounter.incrementCount("mixed");
+          if (maxf_ei < minf_eiprime) {
+            example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered);
+            classCounter.incrementCount("ordered");
+          } else if (maxf_eiprime < minf_ei) {
+            example = new TrainingExample(ei, minf_ei, maxf_eiprime, ReorderingTypes.distorted);
+            classCounter.incrementCount("distorted");
+          } else {
+            classCounter.incrementCount("mixed");
+          }
         }
       }
 
