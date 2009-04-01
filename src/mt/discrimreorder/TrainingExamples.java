@@ -14,10 +14,11 @@ public class TrainingExamples {
   private boolean dealWithEmpty=false, dealWithMultiTarget=false;
   private boolean useFourClass=false;
 
-  public TrainingExamples(boolean dealWithEmpty, boolean dealWithMultiTarget) {
+  public TrainingExamples(boolean dealWithEmpty, boolean dealWithMultiTarget, boolean useFourClass) {
     this();
     this.dealWithEmpty = dealWithEmpty;
     this.dealWithMultiTarget = dealWithMultiTarget;
+    this.useFourClass = useFourClass;
   }
   public TrainingExamples() {
     examples = new ArrayList<TrainingExample>();

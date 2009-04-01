@@ -45,6 +45,7 @@ public class ReorderingClassifier {
   static public final String DEAL_EMPTY_OPT = "dealWithEmpty";
   static public final String DEAL_MULTITGT_OPT = "dealWithMultiTarget";
   static public final String WRITE_EXAMPLELINES_OPT = "writeExampleLines";
+  static public final String USE_FOUR_CLASS_OPT = "useFourClass";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -66,7 +67,8 @@ public class ReorderingClassifier {
         WRITE_HTML_OPT,
         DEAL_EMPTY_OPT,
         DEAL_MULTITGT_OPT,
-        WRITE_EXAMPLELINES_OPT
+        WRITE_EXAMPLELINES_OPT,
+        USE_FOUR_CLASS_OPT
         ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -82,6 +84,7 @@ public class ReorderingClassifier {
   private PrintWriter htmlPW = null;
   private List<FeatureExtractor> extractors;
   private boolean dealWithEmpty, dealWithMultiTarget;
+  private boolean useFourClass;
   
   public ReorderingClassifier(Properties prop) throws Exception {
     analyzeProperties(prop);
@@ -123,6 +126,7 @@ public class ReorderingClassifier {
     writeClassifier = prop.getProperty(WRITE_CLASSIFIER_OPT);
     writeHTML = prop.getProperty(WRITE_HTML_OPT, null);
     String intsStr = prop.getProperty(WRITE_EXAMPLELINES_OPT, "");
+    
     writeExampleLines = new TreeSet<Integer>();
     if (intsStr.length() > 0) {
       String[] ints = intsStr.split(",");
@@ -133,6 +137,7 @@ public class ReorderingClassifier {
 
     dealWithEmpty = Boolean.parseBoolean(prop.getProperty(DEAL_EMPTY_OPT, "false"));
     dealWithMultiTarget = Boolean.parseBoolean(prop.getProperty(DEAL_MULTITGT_OPT, "false"));
+    useFourClass = Boolean.parseBoolean(prop.getProperty(USE_FOUR_CLASS_OPT, "false"));
     if (writeHTML != null) { htmlPW = new PrintWriter(new FileWriter(writeHTML)); }
 
     System.out.println("========== General Properties ==========");
@@ -241,7 +246,7 @@ public class ReorderingClassifier {
           }
         }
         
-        TrainingExamples exs = new TrainingExamples(dealWithEmpty, dealWithMultiTarget);
+        TrainingExamples exs = new TrainingExamples(dealWithEmpty, dealWithMultiTarget, useFourClass);
 
         allTypesCounter.addAll(exs.extractExamples(sent));
 
