@@ -8,6 +8,7 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CyclicCoreLabel;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;
@@ -65,11 +66,11 @@ public class DependencyAnalyzer {
 
   public void addUntypedPathsDistance2(Tree t, HeadFinder hf) {
 
-    Filter<Dependency> dependencyFilter = Filters.acceptFilter();
+    Filter<Dependency<Label, Label, Object>> dependencyFilter = Filters.acceptFilter();
     Tree indexedTree = t.deeperCopy(t.treeFactory(), CyclicCoreLabel.factory());
     indexedTree.indexLeaves();
-    Set<Dependency> depsSet = indexedTree.mapDependencies(dependencyFilter, hf, "ROOT");
-    List<Dependency> sortedDeps = new ArrayList<Dependency>(depsSet);
+    Set<Dependency<Label, Label, Object>> depsSet = indexedTree.mapDependencies(dependencyFilter, hf, "ROOT");
+    List<Dependency<Label, Label, Object>> sortedDeps = new ArrayList<Dependency<Label, Label, Object>>(depsSet);
     Collections.sort(sortedDeps, Dependencies.dependencyIndexComparator());
 
     yield = t.yield();
@@ -79,7 +80,7 @@ public class DependencyAnalyzer {
 
     // Create length 1 (parent/child) relations:
     for (int ei=0; ei<len; ++ei) {
-      Dependency d = sortedDeps.get(ei);
+      Dependency<Label, Label, Object> d = sortedDeps.get(ei);
       CoreMap cmd = (CoreMap) d.dependent();
       CoreMap cmg = (CoreMap) d.governor();
       int depi = cmd.get(CoreAnnotations.IndexAnnotation.class)-1;

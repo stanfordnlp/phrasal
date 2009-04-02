@@ -8,6 +8,7 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.io.FileSequentialCollection;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.classify.GeneralDataset;
 import edu.stanford.nlp.classify.RVFDataset;
@@ -102,20 +103,20 @@ public class TextCat {
       for (File file : files) {
         List<String> doc = Arrays.asList(StringUtils.slurpFile(file.getAbsolutePath(), "utf-8").split("\\s+"));
 //        EncodingPrintWriter.err.println(doc);
-        Pair<String,ClassicCounter<String>> probs = label(doc, classifier);
+        Pair<String,Counter<String>> probs = label(doc, classifier);
         System.out.println(file+"\t"+probs.first()+"\t"+probs.second());
       }
     }
   }
 
   @SuppressWarnings("unchecked")
-	private static Pair<String,ClassicCounter<String>> label(List<String> doc, LinearClassifier classifier) {
+	private static Pair<String,Counter<String>> label(List<String> doc, LinearClassifier classifier) {
     ClassicCounter<String> features = getFeatures(doc);
     RVFDatum datum = new RVFDatum(features);
-    ClassicCounter<String> probs = classifier.probabilityOf(datum);
+    Counter<String> probs = classifier.probabilityOf(datum);
     String guess = Counters.argmax(probs);
     if (!guess.equals("nw")) { guess = "web"; }
-    return new Pair<String,ClassicCounter<String>>(guess, probs);
+    return new Pair<String,Counter<String>>(guess, probs);
   }
   
   private static ObjectBank<List<String>> getWebData(Collection<String> dirPath) {

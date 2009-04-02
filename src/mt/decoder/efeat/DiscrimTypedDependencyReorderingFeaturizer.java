@@ -25,6 +25,7 @@ import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 
 /**
  * Featurizer for a discriminative reordering model that uses typed dependency
@@ -194,7 +195,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
       features.addAll(feats);
 
       Datum<TrainingExamples.ReorderingTypes,String> d = new BasicDatum(features);
-      ClassicCounter<TrainingExamples.ReorderingTypes> logPs = lc.logProbabilityOf(d);
+      Counter<TrainingExamples.ReorderingTypes> logPs = lc.logProbabilityOf(d);
       TrainingExamples.ReorderingTypes type;
       double logP;
       if (prevC < currC) {
