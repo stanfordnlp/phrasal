@@ -115,7 +115,7 @@ public class PhraseGeneratorFactory {
 			}
 
 			finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList, 
-				CombinedPhraseGenerator.Type.CONCATENATIVE));
+				CombinedPhraseGenerator.Type.STRICT_DOMINANCE));
 
 			finalList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
       // TODO: check here
