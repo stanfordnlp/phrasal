@@ -90,11 +90,12 @@ public class PhraseGeneratorFactory {
 			}
 		} else if (pgName.equals(PSEUDO_PHARAOH_GENERATOR)) {
 			List<PhraseGenerator<IString>> pharoahList = new LinkedList<PhraseGenerator<IString>>();
+			List<PhraseGenerator<IString>> finalList = new LinkedList<PhraseGenerator<IString>>();
 			if (pgSpecs.length < 2) {
 				throw new RuntimeException("A phrase table filename must be specified.");
 			}
 			if (pgSpecs.length > 3) {
-				throw new RuntimeException("One and only one phrase table filename should be specified followed by an optional phrase limit.");
+				throw new RuntimeException("Unrecognized additional material.");
 			}
 			int phraseLimit = -1;
 			if (pgSpecs.length == 3) {
@@ -106,15 +107,23 @@ public class PhraseGeneratorFactory {
 				}
 			}
 			
-			String filename = pgSpecs[1];
-			pharoahList.add(new PharaohPhraseTable<FV>(phraseFeaturizer, scorer, filename));
-			pharoahList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
+			String[] filenames = pgSpecs[1].split(":");
+			for (String filename : filenames) {
+				System.err.printf("loading pt: %s\n", filename);
+				pharoahList.add(new PharaohPhraseTable<FV>(phraseFeaturizer, 
+					scorer, filename));
+			}
+
+			finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList, 
+				CombinedPhraseGenerator.Type.CONCATENATIVE));
+
+			finalList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
       // TODO: check here
 
       if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString,FV>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
-				return new CombinedPhraseGenerator<IString,FV>(pharoahList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString,FV>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		}  else if (pgName.equals(DYNAMIC_GENERATOR)) {
 			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();
