@@ -35,4 +35,7 @@ sorted_source_id_pairs = sorted(zip(sourcelines, range(0, len(sourcelines))))
 for (source_phrase, id) in sorted_source_id_pairs:
 	for trans_opt in trans_opts[id]:
 		if not trans_opt[0]: continue
-		print "%s ||| %s ||| %e" % (source_phrase.strip(), trans_opt[0], math.exp(trans_opt[1]))
+		score = math.exp(trans_opt[1])
+		if score < 1e-08:
+			score = 1e-08
+		print "%s ||| %s ||| %e" % (source_phrase.strip(), trans_opt[0], score)

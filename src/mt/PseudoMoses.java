@@ -981,10 +981,14 @@ public class PseudoMoses {
       if (translation != null) {
         System.err.printf("Best Translation: %s\n", translation.translation);
         System.err.printf("Final score: %.3f\n", (float) translation.score);
-        System.err.printf("Coverage: %s\n", translation.foreignCoverage);
-        System.err.printf("Foreign words covered: %d (/%d)  - %.3f %%\n",
-            translation.foreignCoverage.cardinality(), foreign.size(),
-            translation.foreignCoverage.cardinality() * 100.0 / foreign.size());
+        if(translation.foreignCoverage != null) {
+        	System.err.printf("Coverage: %s\n", translation.foreignCoverage);
+        	System.err.printf("Foreign words covered: %d (/%d)  - %.3f %%\n",
+        			translation.foreignCoverage.cardinality(), foreign.size(),
+        			translation.foreignCoverage.cardinality() * 100.0 / foreign.size());
+        } else {
+        	System.err.println("Coverage: {}");
+        }
       } else {
         System.err.println("No best Translation: <<<decoder failure>>>");
       }
