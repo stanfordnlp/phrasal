@@ -209,7 +209,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	public void setCurrentSequence(Sequence<TK> foreign,
 			List<Sequence<TK>> tranList) {
 		for (PhraseGenerator<TK> pGen : phraseGenerators) {
-			System.err.printf("COMBINED PHRASE GENERATOR SETTING CURRENT SEQ");
 			pGen.setCurrentSequence(foreign, tranList);
 		}
 		

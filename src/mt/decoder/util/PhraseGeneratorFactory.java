@@ -120,6 +120,7 @@ public class PhraseGeneratorFactory {
 			finalList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
       // TODO: check here
 
+
       if (phraseLimit == -1) {
 				return new CombinedPhraseGenerator<IString,FV>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {

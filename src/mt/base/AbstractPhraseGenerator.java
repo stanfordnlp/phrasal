@@ -28,6 +28,7 @@ abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<
 		List<ConcreteTranslationOption<TK>> opts = new LinkedList<ConcreteTranslationOption<TK>>();
 		int sequenceSz = sequence.size();
 		int longestForeignPhrase = this.longestForeignPhrase();
+		if (longestForeignPhrase < 0) longestForeignPhrase = -longestForeignPhrase;
 		for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
 			for (int len = 1; len <= longestForeignPhrase; len++) {
 				int endIdx = startIdx+len;					
