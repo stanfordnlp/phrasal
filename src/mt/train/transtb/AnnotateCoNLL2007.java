@@ -4,13 +4,13 @@ import java.util.*;
 
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
-import edu.stanford.nlp.parser.mst.rmcd.io.DependencyReader;
-import edu.stanford.nlp.parser.mst.rmcd.io.DependencyWriter;
-import edu.stanford.nlp.parser.mst.rmcd.io.CONLLWriter;
-import edu.stanford.nlp.parser.mst.rmcd.DependencyInstance;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.io.FileUtils;
 import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.parser.mst.rmcd.io.DependencyWriter;
+import edu.stanford.nlp.parser.mst.rmcd.io.DependencyReader;
+import edu.stanford.nlp.parser.mst.rmcd.io.CONLLWriter;
+import edu.stanford.nlp.parser.mst.rmcd.DependencyInstance;
 
 import mt.train.SymmetricalWordAlignment;
 
@@ -101,12 +101,12 @@ public class AnnotateCoNLL2007 {
       throw new RuntimeException(String.format("Wrong number of trees: %d != %d\n",totSent,fTrees.size())); 
 
     DependencyReader reader =
-      DependencyReader.createDependencyReader("CONLL", false, false);
+      DependencyReader.createDependencyReader(null, "CONLL", null);
     DependencyWriter writer =
          DependencyWriter.createDependencyWriter("CONLL");
     CONLLWriter.skipRoot(true);
 
-    reader.startReading(conllFile);
+    reader.startReading(conllFile, null, null);
     writer.startWriting(outFile);
 
     DependencyAnalyzer da = new DependencyAnalyzer();
