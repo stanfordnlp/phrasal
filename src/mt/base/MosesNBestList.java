@@ -4,6 +4,7 @@ import java.util.*;
 import java.io.*;
 import java.util.regex.*;
 import java.util.zip.GZIPInputStream;
+import java.text.DecimalFormat;
 
 import mt.decoder.util.Scorer;
 
@@ -17,7 +18,10 @@ import edu.stanford.nlp.util.IStrings;
  *
  */
 public class MosesNBestList implements NBestListContainer<IString, String> {
-	private final List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists;
+
+  static public final String NBEST_SEP = " |||";
+
+  private final List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists;
 //	private final AbstractIndex<String> featureIndex = new OAIndex<String>();
 	public static final String DEBUG_PROPERTY = "MosesNBestListDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -81,8 +85,8 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				String id = fields[0];
 				String translation = fields[1];
 				String featuresStr = fields[2];
-				String scoreStr = (fields.length == 4 ? fields[3] : "0");
-				String latticeIdStr = (fields.length == 5 ? fields[4] : null);
+				String scoreStr = (fields.length >= 4 ? fields[3] : "0");
+				String latticeIdStr = (fields.length >= 5 ? fields[4] : null);
 				// System.err.printf("reading id: %s\n", id);
 				if (lastId == null) {
 					lastId = id;
@@ -177,7 +181,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 					sequenceStored = sequence;
 				}
 				ScoredFeaturizedTranslation<IString,String> sfTrans;
-				if (latticeId != -1) {
+        if (latticeId != -1) {
 					sfTrans = new ScoredFeaturizedTranslation<IString,String>(sequenceStored, featureValues, score, latticeId);
 				} else {
 					sfTrans = new ScoredFeaturizedTranslation<IString,String>(sequenceStored, featureValues, score);
@@ -213,6 +217,10 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	
 	@Override
 	public String toString() {
+    return printVerboseFormat();
+  }
+
+  public String printVerboseFormat() {
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("Moses N-Best List:\n");
 		sbuf.append("----------------------\n");
@@ -230,7 +238,28 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		return sbuf.toString();
 	}
 
-	static public void main(String[] args) throws IOException {
+	public String printMosesFormat() {
+    DecimalFormat df = new DecimalFormat("0.####E0");
+    StringBuffer sbuf = new StringBuffer();
+		for (int i = 0; i < nbestLists.size(); i++) {
+			for (int j = 0; j < nbestLists.get(i).size(); j++) {
+        ScoredFeaturizedTranslation<IString,String> tr = nbestLists.get(i).get(j);
+        sbuf.append(i).append(NBEST_SEP).append(' ').append(tr.translation).append(NBEST_SEP);
+				for (FeatureValue<String> fv : tr.features) {
+          sbuf.append(' ').append(fv.name).append(": ").append((fv.value == (int)fv.value ? (int)fv.value : df.format(fv.value)));
+				}
+        sbuf.append(NBEST_SEP).append(' ').append(df.format(tr.score));
+        if (tr.latticeSourceId != -1) {
+          sbuf.append(NBEST_SEP).append(' ');
+          sbuf.append(tr.latticeSourceId);
+        }
+        sbuf.append("\n");
+			}
+		}
+		return sbuf.toString();
+  }
+
+  static public void main(String[] args) throws IOException {
 		if (args.length != 1) {
 			System.err.printf("Usage:\n\tjava ...(Moses style nbest list)\n");
 			System.exit(-1);
@@ -238,7 +267,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		
 		String nbestListFilename = args[0];
 		MosesNBestList nbestList = new MosesNBestList(nbestListFilename);
-		System.out.print(nbestList);
+		System.out.print(nbestList.printMosesFormat());
 	}
 
 	public static String escape(String featureName) {
