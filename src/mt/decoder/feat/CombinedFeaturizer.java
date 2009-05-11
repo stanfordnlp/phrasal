@@ -13,21 +13,24 @@ import mt.base.Sequence;
  * @param <TK>
  * @param <FV>
  */
-public class CombinedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>, IsolatedPhraseFeaturizer<TK, FV>, Cloneable {
+public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,FV>, IsolatedPhraseFeaturizer<TK, FV>, Cloneable {
 	public List<IncrementalFeaturizer<TK,FV>> featurizers;
 
   @SuppressWarnings("unchecked")
   public CombinedFeaturizer<TK, FV> clone() {
+    //System.err.println("cloned: "+this);
 		try {
       CombinedFeaturizer featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
       featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
-      for(IncrementalFeaturizer<TK,FV> f : featurizers)
+      for(IncrementalFeaturizer<TK,FV> f : featurizers) {
+        //System.err.println("cloned: "+f);
         featurizer.featurizers.add(f instanceof ClonedFeaturizer ? ((ClonedFeaturizer)f).clone() : f);
+      }
       return featurizer;
     } catch (CloneNotSupportedException e) { return null;  /* will never happen */ }
 	}
-	
-	/**
+
+  /**
 	 * 
 	 * @return
 	 */
@@ -148,4 +151,24 @@ public class CombinedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>, 
 			featurizer.reset();
 		}
 	}
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public void debugBest(Featurizable<TK,FV> f) {
+    for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
+      if (featurizer instanceof RichIncrementalFeaturizer) {
+        ((RichIncrementalFeaturizer)featurizer).debugBest(f);
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public void rerankingMode(boolean r) {
+    for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
+      if (featurizer instanceof RichIncrementalFeaturizer) {
+        ((RichIncrementalFeaturizer)featurizer).rerankingMode(r);
+      }
+    }
+  }
 }

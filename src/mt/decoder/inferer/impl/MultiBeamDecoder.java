@@ -10,6 +10,8 @@ import mt.base.*;
 import mt.decoder.inferer.*;
 import mt.decoder.recomb.*;
 import mt.decoder.util.*;
+import mt.decoder.feat.RichIncrementalFeaturizer;
+import mt.decoder.feat.IncrementalFeaturizer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 
@@ -266,8 +268,10 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 				System.err.printf("true score: %.3f h: %.3f\n", bestHyp.score, bestHyp.h);
 				System.err.println();
 				
-				
-				double score = scorer.getIncrementalScore(allfeatures);
+        if(featurizer instanceof RichIncrementalFeaturizer)
+          ((RichIncrementalFeaturizer)featurizer).debugBest(bestHyp.featurizable);
+        
+        double score = scorer.getIncrementalScore(allfeatures);
 				System.err.printf("Recalculated score: %.3f\n", score);
 			} else {
 				System.err.printf("Only null hypothesis was produced.\n");
@@ -280,7 +284,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 					Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
 					try { writeAlignments(alignmentDump, bestHyp); } catch (Exception e) { }
 					try { alignmentDump.close(); } catch (Exception e) { }
-					return beams[i];
+          if(DEBUG) System.err.println("Returning beam of size: "+beams[i].size());
+          return beams[i];
 			}
 		} 
 		

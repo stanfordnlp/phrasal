@@ -18,8 +18,9 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	public final CoverageSet foreignCoverage;
 	public final int[][] t2fAlignmentIndex;
 	public final int[][] f2tAlignmentIndex;
+  public final Featurizable<TK,FV> featurizable;
 
-	/**
+  /**
 	 *
 	 * @param foreign
 	 * @param translation
@@ -30,7 +31,8 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	 */
 	public RichTranslation(Sequence<TK> foreign, Sequence<TK> translation, CoverageSet foreignCoverage, double score, int[][] t2fAlignmentIndex, int[][] f2tAlignmentIndex, List<FeatureValue<FV>> features) {
 		super(translation, features, score);
-		this.foreign = foreign;
+    this.featurizable = null;
+    this.foreign = foreign;
 		this.foreignCoverage = foreignCoverage;
 		this.t2fAlignmentIndex = Arrays.copyOf(t2fAlignmentIndex, t2fAlignmentIndex.length);
 		this.f2tAlignmentIndex = Arrays.copyOf(f2tAlignmentIndex, f2tAlignmentIndex.length);
@@ -44,7 +46,8 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	 */
 	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score);
-		if (f == null) {
+    this.featurizable = f;
+    if (f == null) {
 			this.foreign = new EmptySequence<TK>();
 			this.foreignCoverage = null;
 			this.t2fAlignmentIndex = null;
@@ -66,7 +69,8 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	 */
 	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features, long latticeSourceId) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score, latticeSourceId);
-		if (f == null) {
+    this.featurizable = f;
+    if (f == null) {
 			this.foreign = new EmptySequence<TK>();
 			this.foreignCoverage = null;
 			this.t2fAlignmentIndex = null;

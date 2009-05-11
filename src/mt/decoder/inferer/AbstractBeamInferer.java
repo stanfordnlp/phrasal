@@ -5,6 +5,7 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.recomb.*;
 import mt.decoder.util.*;
+import mt.decoder.feat.RichIncrementalFeaturizer;
 
 /**
  *
@@ -66,7 +67,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
 		long nbestStartTime = System.currentTimeMillis();
 
-		StateLatticeDecoder<Hypothesis<TK, FV>> latticeDecoder = new StateLatticeDecoder<Hypothesis<TK, FV>>(
+    if(featurizer instanceof RichIncrementalFeaturizer)
+      ((RichIncrementalFeaturizer)featurizer).rerankingMode(true);
+
+    StateLatticeDecoder<Hypothesis<TK, FV>> latticeDecoder = new StateLatticeDecoder<Hypothesis<TK, FV>>(
 				goalStates, recombinationHistory, size);
 
 		for (List<Hypothesis<TK, FV>> hypList : latticeDecoder) {
@@ -100,12 +104,23 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 				return (int) Math.signum(o2.score - o1.score);
 			}
 		});
-		if (DEBUG) {
+
+    if(featurizer instanceof RichIncrementalFeaturizer) {
+      RichIncrementalFeaturizer<TK,FV> rf = (RichIncrementalFeaturizer<TK,FV>)featurizer;
+      rf.debugBest(translations.iterator().next().featurizable);
+    }
+
+    if (DEBUG) {
 			long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;
 			System.err.printf("N-best generation time: %.3f seconds\n",
 					nBestConstructionTime / 1000.0);
 		}
-		return translations;
+
+    if(featurizer instanceof RichIncrementalFeaturizer) {
+      ((RichIncrementalFeaturizer)featurizer).rerankingMode(false);
+    }
+
+    return translations;
 	}
 
   @Override
