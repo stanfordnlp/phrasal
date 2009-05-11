@@ -63,12 +63,12 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	private class IntArrayTranslationOption implements Comparable<IntArrayTranslationOption> {
 		final int[] translation;
 		final float[] scores;
-		final IString constilation;
+		final PhraseAlignment alignment;
 		
-		public IntArrayTranslationOption(int[] translation, float[] scores, IString constilation) {
+		public IntArrayTranslationOption(int[] translation, float[] scores, PhraseAlignment alignment) {
 			this.translation = translation;
 			this.scores = scores;
-			this.constilation = constilation;
+			this.alignment = alignment;
 		}
 		
 		@Override
@@ -92,7 +92,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		return fArray;
 	}
 		
-	private void addEntry(Sequence<IString> foreignSequence, Sequence<IString> translationSequence, IString constilation, 
+	private void addEntry(Sequence<IString> foreignSequence, Sequence<IString> translationSequence, PhraseAlignment alignment, 
 			float[] scores) {
 		int[] foreignInts = Sequences.toIntArray(foreignSequence);
 		int[] translationInts = Sequences.toIntArray(translationSequence);
@@ -109,7 +109,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			intTransOpts = new LinkedList<IntArrayTranslationOption>();
 			translations.set(fIndex, intTransOpts);
 		}
-		intTransOpts.add(new IntArrayTranslationOption(translationInts, scores, constilation));
+		intTransOpts.add(new IntArrayTranslationOption(translationInts, scores, alignment));
 	}
 		
 	/**
@@ -156,7 +156,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		}
 		int countScores = -1;
 		for (String line; (line = reader.readLine()) != null; ) {
-			StringTokenizer toker = new StringTokenizer(line);
+      //System.err.println("line: "+line);
+      StringTokenizer toker = new StringTokenizer(line);
 			List<String> foreignTokenList = new LinkedList<String>();
 			do {
 				String token = toker.nextToken();
@@ -185,14 +186,17 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			}
 			List<String> constilationList = new LinkedList<String>();
 			List<String> scoreList = new LinkedList<String>();
-			do {
+      boolean first=true;
+      do {
 				String token = toker.nextToken();
 				if (token.startsWith("|||")) {
 					constilationList.addAll(scoreList);
 					scoreList = new LinkedList<String>();
-					continue;
+          first = false;
+          continue;
 				}
-				scoreList.add(token);
+        if(!first)
+          scoreList.add(token);
 			}  while (toker.hasMoreTokens());
 			
 			
@@ -209,7 +213,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			}
 			Sequence<IString> foreign = new SimpleSequence<IString>(true, foreignTokens);
 			Sequence<IString> translation = new SimpleSequence<IString>(true, translationTokens);
-			float[] scores = null;
+			float[] scores; //= null;
 			try {
 				scores = stringProbListToFloatLogProbArray(scoreList);
 			} catch (NumberFormatException e) {
@@ -224,8 +228,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 				constilationB.append(t);
 			} }
 			
-			addEntry(foreign, translation, new IString(constilationB.toString()), scores);
-			
+      addEntry(foreign, translation, new PhraseAlignment(constilationB.toString()), scores);
+
 			if (foreign.size() > longestForeignPhrase) {
 				longestForeignPhrase = foreign.size();
 			}
@@ -274,8 +278,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			transOpts.add( 
 					new TranslationOption<IString>(intTransOpt.scores, scoreNames,
 							translation,
-							rawForeign, intTransOpt.constilation));
-		}
+							rawForeign, intTransOpt.alignment));
+    }
 		return transOpts;
 	}
 	

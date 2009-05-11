@@ -1,7 +1,5 @@
 package mt.base;
 
-import edu.stanford.nlp.util.IString;
-
 import java.util.*;
 
 
@@ -16,7 +14,7 @@ public class TranslationOption<T> {
 	public final String[] phraseScoreNames;
 	public final RawSequence<T> translation;
 	public final RawSequence<T> foreign;
-	public final IString constilation;
+	public final PhraseAlignment alignment;
 	public final boolean forceAdd;
 	private int hashCode = -1;
 	
@@ -26,8 +24,8 @@ public class TranslationOption<T> {
 	 * @param translation
 	 * @param foreign
 	 */
-	public TranslationOption(float[] scores, String[] phraseScoreNames, RawSequence<T> translation, RawSequence<T> foreign, IString constilation) {
-		this.constilation = constilation;
+	public TranslationOption(float[] scores, String[] phraseScoreNames, RawSequence<T> translation, RawSequence<T> foreign, PhraseAlignment alignment) {
+		this.alignment = alignment;
 		this.scores = Arrays.copyOf(scores, scores.length);
 		this.translation = translation;
 		this.foreign = foreign;
@@ -35,8 +33,8 @@ public class TranslationOption<T> {
 		this.forceAdd = false;
 	}
 	
-	public TranslationOption(float[] scores, String[] phraseScoreNames, RawSequence<T> translation, RawSequence<T> foreign, IString constilation, boolean forceAdd) {
-		this.constilation = constilation;
+	public TranslationOption(float[] scores, String[] phraseScoreNames, RawSequence<T> translation, RawSequence<T> foreign, PhraseAlignment alignment, boolean forceAdd) {
+		this.alignment = alignment;
 		this.scores = Arrays.copyOf(scores, scores.length);
 		this.translation = translation;
 		this.foreign = foreign;

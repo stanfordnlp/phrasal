@@ -5,8 +5,6 @@ import java.util.*;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
-import edu.stanford.nlp.util.IString;
-
 /**
  * 
  * @author danielcer
@@ -17,8 +15,11 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 	static public final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
 	static public final String DEFAULT_SCORE_NAMES[] = {"p_i(t|f)"};
 	static public final float SCORE_VALUES[] = {(float)1.0};
-	
-	private final String[] scoreNames;
+
+  // do we need to account for "(0) (1)", etc?
+  static public final PhraseAlignment DEFAULT_ALIGNMENT = new PhraseAlignment("I-I");
+
+  private final String[] scoreNames;
 	private final SequenceFilter<TK> filter;
 	
 	/**
@@ -68,7 +69,7 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 		List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
 		RawSequence<TK> raw = new RawSequence<TK>(sequence);
 		if (filter == null || filter.accepts(raw)) {
-			list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, raw, raw, new IString("I-I")));
+			list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, raw, raw, DEFAULT_ALIGNMENT));
 		}
 		return list;
 	}

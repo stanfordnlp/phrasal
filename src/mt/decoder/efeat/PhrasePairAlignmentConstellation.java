@@ -17,7 +17,7 @@ public class PhrasePairAlignmentConstellation implements IncrementalFeaturizer<I
 	
 	@Override
 	public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-		return new FeatureValue<String>(FEATURE_PREFIX+f.option.abstractOption.constilation, 1.0);
+		return new FeatureValue<String>(FEATURE_PREFIX+f.option.abstractOption.alignment, 1.0);
 	}
 
 	@Override

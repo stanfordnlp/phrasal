@@ -87,7 +87,7 @@ public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IStrin
 						Sequence<IString> priorTranslatedPhrase = (f.prior != null ? f.prior.translatedPhrase : INITIAL_PHRASE);
 						condRep = priorForeignPhrase.toString("_")+"=>"+priorTranslatedPhrase.toString("_");
 					} else {
-						IString priorAlignConst = (f.prior != null ? f.prior.option.abstractOption.constilation : INITIAL_PHRASE.get(0));
+						IString priorAlignConst = (f.prior != null ? f.prior.option.abstractOption.alignment.toIString() : INITIAL_PHRASE.get(0));
 						condRep = priorAlignConst.toString();
 					}
 					values.add(new FeatureValue<String>(FEATURE_PREFIX+":"+mrt+":"+condRep, 1.0));
@@ -96,7 +96,7 @@ public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IStrin
 					if (!useAlignmentConstellations) {
 						condRep = f.foreignPhrase.toString("_")+"=>"+f.translatedPhrase.toString("_");
 					} else {
-						condRep = f.option.abstractOption.constilation.toString();
+						condRep = f.option.abstractOption.alignment.toString();
 					}
 					values.add(new FeatureValue<String>(FEATURE_PREFIX+":"+mrt+":"+condRep, 1.0));
 				}
