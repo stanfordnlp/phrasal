@@ -82,7 +82,6 @@ public class PseudoMoses {
   static final Set<String> IGNORED_FIELDS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
 
-
   public static double DEFAULT_LEARNING_RATE = 0.01;
   public static double DEFAULT_MOMENTUM_TERM = 0.9;
   static final int DEFAULT_LOCAL_PROCS = 1;
@@ -145,7 +144,9 @@ public class PseudoMoses {
 	public static final String DEFAULT_SAVE_WEIGHTS = "unname_model_"
 		+ System.currentTimeMillis();
 
-	List<Inferer<IString, String>> inferers;
+  public static int local_procs = DEFAULT_LOCAL_PROCS;
+
+  List<Inferer<IString, String>> inferers;
 	Inferer<IString, String> refInferer;
 	PhraseGenerator<IString> phraseGenerator;
 	
@@ -159,7 +160,6 @@ public class PseudoMoses {
   boolean constrainManualWeights;
   boolean generateMosesNBestList;
   boolean uniqNBestList;
-  int local_procs = DEFAULT_LOCAL_PROCS;
   List<List<Sequence<IString>>> learnFromReferences;
 	String learningAlgorithm;
 	List<String> learningAlgorithmConfig;
