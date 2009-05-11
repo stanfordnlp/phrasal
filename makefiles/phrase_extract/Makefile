@@ -102,9 +102,9 @@ MOSES_ARGS=$(LOCAL_MOSES_ARGS)
 
 ### BLEU:
 $(DEVID).%.bleu: $(DEVID).%
-	cat $< | java mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
+	cat $< | phrasal_sort | java mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
 $(TESTID).%.bleu: $(TESTID).%
-	cat $< | java mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
+	cat $< | phrasal_sort | java mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
 
 ### TER:
 $(DEVID).%.ter: $(DEVID).%
@@ -313,7 +313,7 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $(DEVID).flt_giga.lm.gz $(DEVID).$(
 
 ### Generate table containing both phrase and lexicalized re-ordering probabilities for a given dev/test set:
 ### (needs to be run on 16G machines)
-%.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
+%.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	java -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################

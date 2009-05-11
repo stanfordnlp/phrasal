@@ -49,15 +49,15 @@ if($opts{sgm}) {
 		}
 	}
 	close(S);
+	print "segs: ", scalar @ids, "\n";
 }
-print "segs: ", scalar @ids, "\n";
 
 # Find all refs:
 my $i=0;
 my @refs;
 while(<$ref*>) {
-	next unless /$ref\d+$/;
-	print STDERR "opening: $ref$_\n";
+	next unless /$ref(\d+)$/;
+	print STDERR "opening: $ref$1\n";
 	open my $f, $_;
 	push @refs, $f;
 	++$i;
