@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+die "Usage: $0 (weights) (nbest list)\n" unless $#ARGV==1;
+
+# Load weights:
+my $wfile = $ARGV[0];
+open(F,$wfile);
+my %weights;
+while(<F>) {
+	chomp;
+	my ($f,$v) = split(/\s+/);
+	$weights{"$f:"} = $v;
+}
+close(F);
+my @weights = sort keys %weights;
+
+# Write weights to stderr:
+foreach my $f (@weights) {
+	print STDERR $weights{$f}, " ";
+}
+print STDERR "\n";
+
+# Read/write nbest list:
+my $nfile = $ARGV[1];
+open(F,"zcat $nfile 2> /dev/null |");
+while(<F>) {
+	chomp;
+	my @els = split(/\s*\|\|\|\s*/);
+	my $featStr = $els[2];
+	my @feat = split(/\s+/, $featStr);
+	assert(@feat % 2 == 0);
+	my %feat = @feat;
+	$els[2] = "";
+	for my $i (0..$#weights) {
+	  my $v = $feat{$weights[$i]} || 0;
+	  $els[2] .= " " if($i>0);
+		$els[2] .= $v;
+	}
+	print join(' ||| ',@els),"\n";
+}
+close(F);
