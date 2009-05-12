@@ -147,6 +147,21 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).$(IE)
 %.align: %.$Nbest
 	nbest-to-1best < $< > $@
 
+
+#############################################
+# 1-best and n-best output with Phrasal:
+#############################################
+
+MBR_SCALE=1
+
+# MBR:
+$(TESTID).$(DEVID).%.mbr.s$(MBR_SCALE).$Nbest.1best: $(TESTID).$(DEVID).%.mbr.$Nbest
+	mbr -s $(MBR_SCALE) -n 4 -w $<.wts -i $< > $@ 2> $@.log
+
+# Create Moses nbest list:
+$(TESTID).$(DEVID).%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest
+	nbest_sparse2dense `grep -A 1 '^\[weights-file\]' $(DEVID).$(*F).pmert/phrasal.best.ini | tail -1` $< 2> $@.wts | sort -n > $@ 
+
 #############################################
 # 1-best and n-best output with Phrasal:
 #############################################
