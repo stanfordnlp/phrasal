@@ -16,6 +16,7 @@ import mt.base.Sequence;
 public class UnknownWordFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, IsolatedPhraseFeaturizer<TK, String>  {
 	static public String FEATURE_NAME = "UnknownWord";
 	static public String UNKNOWN_PHRASE_TAG = "unknownphrase";
+  static public String UNKNOWN_PHRASE_TABLE_NAME = "IdentityPhraseGenerator(Dyn)";
 	static public final double MOSES_UNKNOWN_WORD_MUL = -100;
 	
 	@Override

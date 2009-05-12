@@ -84,7 +84,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<T,String> featurizable) {
 		FeatureValue<String>[] featureValues;
-		if (featurizable.phraseTableName == UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG) {
+		if (featurizable.phraseTableName == UnknownWordFeaturizer.UNKNOWN_PHRASE_TABLE_NAME) {
 			return null; // TODO implement some other type of flagging, so this isn't necessary (/can be done more cleanly) 
 		}
 		if (phraseReweighting) {
