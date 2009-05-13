@@ -9,16 +9,16 @@ import java.io.*;
 
 public class TrainingExamples {
   List<TrainingExample> examples;
-  public enum ReorderingTypes { ordered, distorted, ordered_disc, distorted_disc }
+  public enum ReorderingTypes { ordered, distorted, ordered_disc, distorted_disc, disc }
 
   private boolean dealWithEmpty=false, dealWithMultiTarget=false;
-  private boolean useFourClass=false;
+  private int useNClass=2;
 
-  public TrainingExamples(boolean dealWithEmpty, boolean dealWithMultiTarget, boolean useFourClass) {
+  public TrainingExamples(boolean dealWithEmpty, boolean dealWithMultiTarget, int useNClass) {
     this();
     this.dealWithEmpty = dealWithEmpty;
     this.dealWithMultiTarget = dealWithMultiTarget;
-    this.useFourClass = useFourClass;
+    this.useNClass = useNClass;
   }
   public TrainingExamples() {
     examples = new ArrayList<TrainingExample>();
@@ -86,7 +86,7 @@ public class TrainingExamples {
         int minf_eiprime = Collections.min(eiprime_fs);
         int maxf_eiprime = Collections.max(eiprime_fs);
 
-        if (useFourClass) {
+        if (useNClass==4) {
           if (maxf_ei+1 ==  minf_eiprime) {
             example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered);
             classCounter.incrementCount("ordered_cont");
@@ -102,7 +102,7 @@ public class TrainingExamples {
           } else {
             classCounter.incrementCount("mixed");
           }
-        } else {
+        } else if (useNClass==2) {
           if (maxf_ei < minf_eiprime) {
             example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered);
             classCounter.incrementCount("ordered");
@@ -112,6 +112,24 @@ public class TrainingExamples {
           } else {
             classCounter.incrementCount("mixed");
           }
+        } else if (useNClass==3) {
+          if (maxf_ei+1 ==  minf_eiprime) {
+            example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.ordered);
+            classCounter.incrementCount("ordered_cont");
+          } else if (maxf_eiprime+1 == minf_ei) {
+            example = new TrainingExample(ei, minf_ei, maxf_eiprime, ReorderingTypes.distorted);
+            classCounter.incrementCount("distorted_cont");
+          } else if (maxf_ei < minf_eiprime) {
+            example = new TrainingExample(ei, maxf_ei, minf_eiprime, ReorderingTypes.disc);
+            classCounter.incrementCount("discontinuous");
+          } else if (maxf_eiprime < minf_ei) {
+            example = new TrainingExample(ei, minf_ei, maxf_eiprime, ReorderingTypes.disc);
+            classCounter.incrementCount("discontinuous");
+          } else {
+            classCounter.incrementCount("mixed");
+          }
+        } else {
+          throw new RuntimeException("invalid useNClass = "+useNClass);
         }
       }
 

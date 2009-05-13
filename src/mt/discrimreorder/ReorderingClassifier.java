@@ -45,7 +45,8 @@ public class ReorderingClassifier {
   static public final String DEAL_EMPTY_OPT = "dealWithEmpty";
   static public final String DEAL_MULTITGT_OPT = "dealWithMultiTarget";
   static public final String WRITE_EXAMPLELINES_OPT = "writeExampleLines";
-  static public final String USE_FOUR_CLASS_OPT = "useFourClass";
+  static public final String USE_N_CLASS_OPT = "useNClass";
+
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -68,7 +69,7 @@ public class ReorderingClassifier {
         DEAL_EMPTY_OPT,
         DEAL_MULTITGT_OPT,
         WRITE_EXAMPLELINES_OPT,
-        USE_FOUR_CLASS_OPT
+        USE_N_CLASS_OPT
         ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -84,7 +85,7 @@ public class ReorderingClassifier {
   private PrintWriter htmlPW = null;
   private List<FeatureExtractor> extractors;
   private boolean dealWithEmpty, dealWithMultiTarget;
-  private boolean useFourClass;
+  private int useNClass;
   
   public ReorderingClassifier(Properties prop) throws Exception {
     analyzeProperties(prop);
@@ -137,7 +138,7 @@ public class ReorderingClassifier {
 
     dealWithEmpty = Boolean.parseBoolean(prop.getProperty(DEAL_EMPTY_OPT, "false"));
     dealWithMultiTarget = Boolean.parseBoolean(prop.getProperty(DEAL_MULTITGT_OPT, "false"));
-    useFourClass = Boolean.parseBoolean(prop.getProperty(USE_FOUR_CLASS_OPT, "false"));
+    useNClass = Integer.parseInt(prop.getProperty(USE_N_CLASS_OPT, "2"));
     if (writeHTML != null) { htmlPW = new PrintWriter(new FileWriter(writeHTML)); }
 
     System.out.println("========== General Properties ==========");
@@ -246,7 +247,7 @@ public class ReorderingClassifier {
           }
         }
         
-        TrainingExamples exs = new TrainingExamples(dealWithEmpty, dealWithMultiTarget, useFourClass);
+        TrainingExamples exs = new TrainingExamples(dealWithEmpty, dealWithMultiTarget, useNClass);
 
         allTypesCounter.addAll(exs.extractExamples(sent));
 
