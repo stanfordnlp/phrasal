@@ -47,6 +47,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
   private Boolean useSRCJ2 = false;
+  private int useNClass = 2;
   private LineNumberReader pathReader = null;
   private List<TwoDimensionalMap<Integer,Integer,String>> pathMaps = null;
   private LinearClassifier lc = null;
@@ -60,12 +61,11 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
 
 
   public DiscrimTypedDependencyReorderingFeaturizer(String... args) throws IOException {
-    if(args.length < 1 || args.length > 3)
+    if(args.length != 4)
       throw new RuntimeException
-        ("Usage: DiscrimTypedDependencyReorderingFeaturizer(pathFile,classifierFile,useSRCJ2?)");
-    if (args.length > 2) {
-      useSRCJ2 = Boolean.parseBoolean(args[2]);
-    }
+        ("Usage: DiscrimTypedDependencyReorderingFeaturizer(pathFile,classifierFile,useSRCJ2?,useNclass)");
+    useSRCJ2 = Boolean.parseBoolean(args[2]);
+    useNClass = Integer.parseInt(args[3]);
 
     Runtime rt = Runtime.getRuntime();
 
@@ -105,6 +105,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
 
     System.err.println("DiscrimTypedDependencyReorderingFeaturizer classifier file = "+classifierFile);
     System.err.println("DiscrimTypedDependencyReorderingFeaturizer useSRCJ2? = "+useSRCJ2);
+    System.err.println("DiscrimTypedDependencyReorderingFeaturizer useNclass N = "+useNClass);
     if (usePathFile)
       System.err.println("DiscrimTypedDependencyReorderingFeaturizer path file = "+args[0]);
     else
@@ -198,10 +199,38 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
       Counter<TrainingExamples.ReorderingTypes> logPs = lc.logProbabilityOf(d);
       TrainingExamples.ReorderingTypes type;
       double logP;
-      if (prevC < currC) {
-        type = TrainingExamples.ReorderingTypes.ordered;
-      } else if (prevC > currC) {
-        type = TrainingExamples.ReorderingTypes.distorted;
+      if (useNClass==4) {
+        if (prevC+1 == currC) {
+          type = TrainingExamples.ReorderingTypes.ordered;
+        } else if (prevC == currC+1) {
+          type = TrainingExamples.ReorderingTypes.distorted;
+        } else if (prevC < currC) {
+          type = TrainingExamples.ReorderingTypes.ordered_disc;
+        } else if (prevC > currC) {
+          type = TrainingExamples.ReorderingTypes.distorted_disc;
+        } else {
+          throw new RuntimeException();
+        }
+      } else if (useNClass==2) {
+        if (prevC < currC) {
+          type = TrainingExamples.ReorderingTypes.ordered;
+        } else if (prevC > currC) {
+          type = TrainingExamples.ReorderingTypes.distorted;
+        } else {
+          throw new RuntimeException();
+        }
+      } else if (useNClass==3) {
+        if (prevC+1 == currC) {
+          type = TrainingExamples.ReorderingTypes.ordered;
+        } else if (prevC == currC+1) {
+          type = TrainingExamples.ReorderingTypes.distorted;
+        } else if (prevC < currC) {
+          type = TrainingExamples.ReorderingTypes.disc;
+        } else if (prevC > currC) {
+          type = TrainingExamples.ReorderingTypes.disc;
+        } else {
+          throw new RuntimeException();
+        }
       } else {
         throw new RuntimeException();
       }
