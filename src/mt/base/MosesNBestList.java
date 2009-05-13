@@ -248,7 +248,8 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				for (FeatureValue<String> fv : tr.features) {
           sbuf.append(' ').append(fv.name).append(": ").append((fv.value == (int)fv.value ? (int)fv.value : df.format(fv.value)));
 				}
-        sbuf.append(NBEST_SEP).append(' ').append(df.format(tr.score));
+        if(tr.score != 0.0)
+          sbuf.append(NBEST_SEP).append(' ').append(df.format(tr.score));
         if (tr.latticeSourceId != -1) {
           sbuf.append(NBEST_SEP).append(' ');
           sbuf.append(tr.latticeSourceId);
