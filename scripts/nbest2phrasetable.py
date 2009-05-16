@@ -37,7 +37,7 @@ sourcelines = source_fh.readlines()
 source_fh.close()
 sorted_source_id_pairs = sorted(zip(sourcelines, range(0, len(sourcelines))))
 
-ar_stripper = re.compile('^\d+$|[\'\",.!?:;\[\]-]',re.U)
+#ar_stripper = re.compile('^\d+$|[\'\",.!?:;\[\]-]',re.U)
 en_stripper = re.compile('^\d+$|^\.|\.$|\s\.\s|\'(?!s)|[\",!?:;\[\]]')
 
 p_any_ar = re.compile(u'[\u0600-\u06FF]+',re.U)
@@ -53,18 +53,21 @@ for (source_phrase, id) in sorted_source_id_pairs:
 		if score < 1e-08:
 			continue
 
-		source_phrase = ar_stripper.sub('',source_phrase.strip())
+#		source_phrase = ar_stripper.sub('',source_phrase.strip())
 		source_phrase = source_phrase.strip()
 		m = p_all_en.match(source_phrase)
 		if m or source_phrase == '' or len(source_phrase.split()) > 5:
 			continue
 
 		m = p_any_ar.search(trans_opt[0])
-		en_trans = en_stripper.sub('',trans_opt[0].strip())
+		en_trans = trans_opt[0].strip()
 		en_trans = en_trans.strip()
+		en_content_words = en_stripper.sub('',en_trans)
+		en_len = float(len(en_content_words.split()))
+#		en_len = float(len(en_trans.split()))
 		if m or en_trans=='':
 			continue
 
-		NEW_PT.write('%s ||| %s ||| %e\n' % (source_phrase, en_trans, score))
+		NEW_PT.write('%s ||| %s ||| %e %e\n' % (source_phrase, en_trans, score,en_len))
 
 NEW_PT.close()
