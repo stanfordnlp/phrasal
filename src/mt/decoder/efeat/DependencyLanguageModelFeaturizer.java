@@ -434,7 +434,7 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     System.err.println("cloned: "+this);
     try {
 		  DependencyLanguageModelFeaturizer featurizer = (DependencyLanguageModelFeaturizer)super.clone();
-      featurizer.pipe = pipe.clone();
+      featurizer.pipe = (DependencyPipe) pipe.clone();
       featurizer.decoder = new DependencyDecoder(featurizer.pipe);
       featurizer.depCache = new HashMap<String,Pair<String,Double>>();
       featurizer.srcInstances = new ArrayList<DependencyInstance>(featurizer.srcInstances);

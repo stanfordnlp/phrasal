@@ -17,12 +17,13 @@ import edu.stanford.nlp.util.IString;
  */
 public class RecombinationFilterFactory {
 	static public final String NO_RECOMBINATION = "norecombination";
-	static public final String TRANSLATION_IDENTITY = "translationidentiy";
+	static public final String TRANSLATION_IDENTITY = "translationidentity";
 	static public final String FOREIGN_COVERAGE = "foreigncoverage";
 	static public final String LINEAR_DISTORTION = "lineardistortion";
 	static public final String TRANSLATION_NGRAM = "translationngram";
 	static public final String CLASSICAL_TRANSLATION_MODEL = "classicaltranslationmodel";
 	static public final String CLASSICAL_TRANSLATION_MODEL_ALT = "ctm";
+  static public final String CLASSICAL_TRANSLATION_MODEL_FINE = "fine";
 	static public final String DEFAULT_RECOMBINATION_FILTER = TRANSLATION_IDENTITY;
 	
 	static public final String TRANSLATION_NGRAM_PARAMETER = "ngramsize";
@@ -87,9 +88,15 @@ public class RecombinationFilterFactory {
 			filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
 			
 			return new CombinedRecombinationFilter<Hypothesis<IString, String>>(filters);
-		}
-		
-		throw new RuntimeException(String.format( 
+
+    } else if (rfName.equals(CLASSICAL_TRANSLATION_MODEL_FINE)) {
+      List<RecombinationFilter<Hypothesis<IString, String>>> filters = new LinkedList<RecombinationFilter<Hypothesis<IString, String>>>();
+      filters.add(new TranslationIdentityRecombinationFilter<IString, String>());
+			filters.add(new LinearDistorionRecombinationFilter<IString, String>());
+			filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
+			return new CombinedRecombinationFilter<Hypothesis<IString, String>>(filters);
+    }
+		throw new RuntimeException(String.format(
 				"Unrecognized recombination filter: %s", rfName));
 	}
 }
