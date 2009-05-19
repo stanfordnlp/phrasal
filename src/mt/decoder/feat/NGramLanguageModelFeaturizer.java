@@ -23,12 +23,12 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	public static final boolean SVMNORM = Boolean.parseBoolean(System.getProperty("SVMNORM", "false"));
 	
-	final LanguageModel<TK> lm;
+	public final LanguageModel<TK> lm;
 	final int lmOrder;
 	
 	static public final double MOSES_LM_UNKNOWN_WORD_SCORE = -100; // in sri lm -99 is -infinity
 
-	public NGramLanguageModelFeaturizer<IString> fromFile(String... args) throws IOException {
+	static public NGramLanguageModelFeaturizer<IString> fromFile(String... args) throws IOException {
 		if(args.length != 2)
       throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
 		LanguageModel<IString> lm = ARPALanguageModel.load(args[0]);
@@ -52,7 +52,7 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 		return lm.order();
 	}
 	
-	
+
 	
 	public NGramLanguageModelFeaturizer(LanguageModel<TK> lm, String featureName, boolean ngramReweighting) {
 		this.lm = lm;

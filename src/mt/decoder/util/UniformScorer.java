@@ -15,7 +15,7 @@ import static java.lang.System.*;
  */
 public class UniformScorer<T> implements Scorer<T> {
 	
-	public UniformScorer() {
+	private static void warn() {
 		err.println("--------------------------------------------------------");
 		err.println("Warning: Creating instance of UniformScorer.");
 		err.println();
@@ -25,6 +25,14 @@ public class UniformScorer<T> implements Scorer<T> {
 		err.println("Otherwise, you'll probably want to use something like");
 		err.println("StaticScorer.");
 		err.println("--------------------------------------------------------");
+	}
+
+	public UniformScorer() {
+		warn();
+	}
+
+	public UniformScorer(boolean warn) {
+		if (warn) warn();
 	}
 
 	public double getIncrementalScore(List<FeatureValue<T>> features) {
