@@ -1,6 +1,7 @@
 COUNT=ngram-count
 
-LMOPTS=-order 5 -kndiscount -interpolate -debug 2 -tolower
+LOWER=-tolower
+LMOPTS=-order 5 -kndiscount -interpolate -debug 2 $(LOWER)
 
 all: ulm
 ulm: ../releases/$(LMID).$(FID).unk.lm.gz
