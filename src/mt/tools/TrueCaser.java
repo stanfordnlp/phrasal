@@ -75,17 +75,18 @@ public class TrueCaser {
 
         // manual fix up(s)
 
-				// capitalize the first letter
+        // capitalize the first letter
 
         String trg = translation.translation.toString();
         String firstLetter = trg.substring(0,1);
         String rest = trg.substring(1,trg.length());
         String capTrg = firstLetter.toUpperCase() + rest;
-				
-				trg = capTrg;
+        
+        trg = capTrg;
 
         System.out.printf("%s \n", trg);
     }
+    System.exit(-1);
   }
 }
 
