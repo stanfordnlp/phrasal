@@ -2441,6 +2441,8 @@ public class UnsmoothedMERT {
                       new TERMetric<IString, String>(references));
       System.err.printf("Maximizing %s: BLEU minus TER (beamWidth=%d, shiftDist=%d, terW=%f)\n",
               evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
+    } else if (evalMetric.equals("wer")) {
+    	emetric = new WERMetric<IString, String>(references);
     } else {
       System.err.printf("Unrecognized metric: %s\n", evalMetric);
       System.exit(-1);
