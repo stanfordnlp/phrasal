@@ -85,7 +85,6 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   public AlignmentGrid getAlGrid() { return alGrid; }
 
   void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
-    //assert(checkAlignmentConsistency(sent,f1,f2,e1,e2));// TODO: now fails if at boundary
 
     // Check if alTemp meets length requirements:
     if(f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {

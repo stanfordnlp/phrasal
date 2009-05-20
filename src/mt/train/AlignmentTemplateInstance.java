@@ -45,8 +45,11 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
       int fIndex = fi-f1;
       assert(fIndex >= 0 && fIndex < Byte.MAX_VALUE && fIndex < f.size());
       for(Integer ei : sent.f2e(fi)) {
+        //System.err.printf("ei=%d e1=%d\n",ei,e1);
         int eIndex = ei-e1;
-        assert(eIndex >= 0 && eIndex < Byte.MAX_VALUE && eIndex < e.size());
+        if(eIndex < 0) continue;
+        if(eIndex >= Byte.MAX_VALUE) continue;
+        if(eIndex >= e.size()) continue;
         alTable.add(alignmentToNumber((byte)eIndex,(byte)fIndex));
         if(!lazy) {
           f2e[fIndex].add(eIndex);

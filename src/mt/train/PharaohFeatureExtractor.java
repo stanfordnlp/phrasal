@@ -21,6 +21,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  */
 public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
 
+  public static final double MIN_WSUM = 1e-4;
+
   public static final String DEBUG_PROPERTY = "DebugPharaohFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 
@@ -241,7 +243,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
    */
   private double getLexScore(AlignmentTemplate alTemp) {
     if(DEBUG_LEVEL >= 1)
-      System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString());
+      System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString(false));
     // Each French word must be explained:
     double lex = 1.0;
     for(int fi=0; fi<alTemp.f().size();++fi) {
@@ -255,9 +257,13 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
         }
         wSum /= alCount;
       }
-      if(DEBUG_LEVEL >= 1)
+      if(DEBUG_LEVEL >= 1) {
         System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
-      assert(wSum > 0);
+        if(wSum == 0)
+          System.err.println("  WARNING: wsum = "+wSum);
+      }
+      if(wSum == 0)
+        wSum = MIN_WSUM;
       lex *= wSum;
     }
     return lex;
