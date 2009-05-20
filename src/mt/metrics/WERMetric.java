@@ -1,9 +1,14 @@
 package mt.metrics;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.util.EditDistance;
+import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.IStrings;
 import mt.base.NBestListContainer;
 import mt.base.RawSequence;
 import mt.base.ScoredFeaturizedTranslation;
@@ -19,7 +24,7 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 	}
 	
 	@Override
-	public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
+	public WERIncrementalMetric getIncrementalMetric() {
 		return new WERIncrementalMetric();
 	}
 
@@ -117,4 +122,31 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       return new WERIncrementalMetric();
     }
 	}
+	
+	 @SuppressWarnings("unchecked")
+	  public static void main(String[] args) throws IOException {
+	    if (args.length == 0) {
+	      System.err.println("Usage:\n\tjava WERMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
+	      System.exit(-1);
+	    }
+	    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
+
+	    WERMetric<IString,String> wer = new WERMetric<IString,String>(referencesList);
+	    WERMetric<IString,String>.WERIncrementalMetric incMetric = wer.getIncrementalMetric();
+
+	    LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
+
+	    for (String line; (line = reader.readLine()) != null; ) {
+	      line = NISTTokenizer.tokenize(line);
+	      line = line.replaceAll("\\s+$", "");
+	      line = line.replaceAll("^\\s+", "");
+	      Sequence<IString> translation = new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+")));
+	      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(translation, null, 0);
+	      incMetric.add(tran);
+	    }
+
+	    reader.close();
+
+	    System.out.printf("WER = %.3f\n", 100*incMetric.score());
+	  }
 }
