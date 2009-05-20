@@ -86,7 +86,7 @@ public class TrueCaser {
 
         System.out.printf("%s \n", trg);
     }
-    System.exit(-1);
+    System.exit(0);
   }
 }
 
