@@ -653,7 +653,7 @@ public class UnsmoothedMERT {
     intercepts.add(Double.NEGATIVE_INFINITY);
     Collections.sort(intercepts);
     resetQuickEval(emetric, nbest);
-    System.out.printf("Checking %d points\n", intercepts.size() - 1);
+    System.out.printf("Checking %d points", intercepts.size() - 1);
 
     double[] evals = new double[intercepts.size()];
     double[] chkpts = new double[intercepts.size()];
@@ -694,6 +694,8 @@ public class UnsmoothedMERT {
         bestEval = eval;
       }
     }
+
+		System.out.printf(" - best eval: %f\n", bestEval);
 
     ClassicCounter<String> newWts = new ClassicCounter<String>(initialWts);
     Counters.addInPlace(newWts, direction, chkpts[bestPt]);

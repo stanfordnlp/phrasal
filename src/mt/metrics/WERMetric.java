@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import edu.stanford.nlp.util.EditDistance;
 import edu.stanford.nlp.util.IString;
@@ -43,21 +45,57 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 	public double maxScore() {		
 		return 1.0;
 	}
+
+	//Map editDistanceCache = new HashMap();	
+	static final Map<IString, IString> collapseMap = new HashMap<IString,IString>();
+
+	static {
+		collapseMap.put(new IString("el"), new IString("l"));
+		collapseMap.put(new IString("en"), new IString("n"));
+		collapseMap.put(new IString("sh"), new IString("zh"));
+		collapseMap.put(new IString("ao"), new IString("aa"));
+		collapseMap.put(new IString("ih"), new IString("ix"));
+		collapseMap.put(new IString("ah"), new IString("ax"));
+		collapseMap.put(new IString("sil"), new IString("epi"));
+		collapseMap.put(new IString("cl"), new IString("epi"));
+		collapseMap.put(new IString("vcl"), new IString("epi"));
+	}
+
 	
 	public class WERIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
 		List<Double> wordEdits = new ArrayList<Double>();  
 		List<Double> refLengths = new ArrayList<Double>();  
-		EditDistance editDistance = new EditDistance();
+		EditDistance editDistance = new EditDistance(false);
 		double editSum = 0;
 		double lengthSum = 0;
+	
 		
+		private void collapseObjects(Object[] arr) {
+			for (int i = 0; i < arr.length; i++) {
+				Object collapseTo = collapseMap.get(arr[i]);
+				if (collapseTo != null) {
+					arr[i] = collapseTo;
+				}
+			}
+		}
+
 		private double[] minimumEditDistance(int id, Sequence<TK> seq) {
+			/*String key = String.format("%d||| %s\n", id, seq);
+
+			double[] cacheVal = (double[])editDistanceCache.get(key);
+			if (cacheVal != null) {
+				System.err.println("Using cached value\n");
+				return cacheVal;
+			} */
+
 			Object[] outArr = (new RawSequence<TK>(seq)).elements;
+			collapseObjects(outArr);
 			double minEd = Double.POSITIVE_INFINITY;
 			double refCount = 0;
 			double minErr = Double.POSITIVE_INFINITY;
 			for (Sequence<TK> ref : referencesList.get(id)) {
 				Object[] refArr =  (new RawSequence<TK>(ref)).elements;
+				collapseObjects(refArr);
 				double ed = editDistance.score(outArr, refArr);
 				double err = ed/refArr.length;
 				//System.err.printf("%s\n%s\n(%f/%d)=%f\n", seq,ref,ed,refArr.length,err);
@@ -67,12 +105,19 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 					refCount = refArr.length;
 				}
 			}
-			return new double[]{minEd,refCount};
+			double[] retVal =  new double[]{minEd,refCount};
+			//editDistanceCache.put(key,retVal);
+			return retVal;
 		}
 		
 		@Override
 		public IncrementalEvaluationMetric<TK, FV> add(
 				ScoredFeaturizedTranslation<TK, FV> trans) {
+			if (trans == null) {
+				wordEdits.add(0.0);
+				refLengths.add(0.0);
+				return this;
+			}
 			int id = wordEdits.size();
 			double[] minEdPair = minimumEditDistance(id,trans.translation);
 			wordEdits.add(-minEdPair[0]);
