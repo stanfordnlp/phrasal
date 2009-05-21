@@ -49,7 +49,7 @@ public class CombinedFeatureExtractor {
   static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
   static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
   static public final String LOWERCASE_OPT = "lowercase";
-  static public final String GALLEY_EXTRACTOR_OPT = "galleyExtractor";
+  static public final String MAX_CONSISTENCY_VIOLATIONS_OPT = "maxConsistencyViolations";
 
   // phrase translation probs:
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -88,7 +88,7 @@ public class CombinedFeatureExtractor {
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
-			 GALLEY_EXTRACTOR_OPT
+			 MAX_CONSISTENCY_VIOLATIONS_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -250,8 +250,9 @@ public class CombinedFeatureExtractor {
         System.exit(1);
       }
     }
-    phraseExtractor = prop.getProperty(GALLEY_EXTRACTOR_OPT) != null ?
-			new GalleyPhraseExtractor(prop,alTemps,extractors,fPhrases) :
+    int maxConsistencyViolations = Integer.parseInt(prop.getProperty(MAX_CONSISTENCY_VIOLATIONS_OPT,"-1"));
+    phraseExtractor = maxConsistencyViolations >= 0 ?
+			new SoftPhraseExtractor(prop,maxConsistencyViolations,alTemps,extractors,fPhrases) :
 			new LinearTimePhraseExtractor(prop,alTemps,extractors);
     setTotalPassNumber();
   }
