@@ -45,29 +45,40 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 	}
 	
 	public class WERIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
-		List<Double> wers = new ArrayList<Double>();  
+		List<Double> wordEdits = new ArrayList<Double>();  
+		List<Double> refLengths = new ArrayList<Double>();  
 		EditDistance editDistance = new EditDistance();
-		double sum = 0;
+		double editSum = 0;
+		double lengthSum = 0;
 		
-		private double minimumEditDistance(int id, Sequence<TK> seq) {
+		private double[] minimumEditDistance(int id, Sequence<TK> seq) {
 			Object[] outArr = (new RawSequence<TK>(seq)).elements;
 			double minEd = Double.POSITIVE_INFINITY;
+			double refCount = 0;
+			double minErr = Double.POSITIVE_INFINITY;
 			for (Sequence<TK> ref : referencesList.get(id)) {
 				Object[] refArr =  (new RawSequence<TK>(ref)).elements;
 				double ed = editDistance.score(outArr, refArr);
-				if (minEd > ed) minEd = ed;
+				double err = ed/refArr.length;
+				//System.err.printf("%s\n%s\n(%f/%d)=%f\n", seq,ref,ed,refArr.length,err);
+				if (minErr > err) {
+					minErr = err;
+					minEd = ed;
+					refCount = refArr.length;
+				}
 			}
-			return minEd;
+			return new double[]{minEd,refCount};
 		}
 		
 		@Override
 		public IncrementalEvaluationMetric<TK, FV> add(
 				ScoredFeaturizedTranslation<TK, FV> trans) {
-			int id = wers.size();
-			double minEd = minimumEditDistance(id,trans.translation);
-			wers.add(-minEd);
-			sum += -minEd;
-			
+			int id = wordEdits.size();
+			double[] minEdPair = minimumEditDistance(id,trans.translation);
+			wordEdits.add(-minEdPair[0]);
+			refLengths.add(minEdPair[1]);
+			editSum += -minEdPair[0];
+			lengthSum += minEdPair[1];
 			return this;
 		}
 
@@ -79,23 +90,26 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 		@Override
 		public IncrementalEvaluationMetric<TK, FV> replace(int id,
 				ScoredFeaturizedTranslation<TK, FV> trans) {
-			double newMinEd = minimumEditDistance(id,trans.translation);
-			sum -= wers.get(id);
-			sum += newMinEd;
-			wers.set(id, newMinEd);
+			double[] minEdPair = minimumEditDistance(id,trans.translation);
+			editSum -= wordEdits.get(id);
+			lengthSum -= refLengths.get(id);
+			editSum += -minEdPair[0];
+			lengthSum += minEdPair[1];
+			wordEdits.set(id, -minEdPair[0]);
+			refLengths.set(id, minEdPair[1]);
 			return this;
 		}
 
 		@Override
 		public double score() {
-			int wersSz = wers.size();
-			if (wersSz == 0) return 0;
-			return (sum/(wersSz+1));
+			if (lengthSum == 0) return 0;
+			System.err.printf("(edits:%f)/(ref length: %f)=%f\n",editSum,lengthSum,(editSum/lengthSum));
+			return (editSum/lengthSum);
 		}
 
 		@Override
 		public int size() {
-			return wers.size();
+			return wordEdits.size();
 		}
 
 		@Override
@@ -147,6 +161,6 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
 	    reader.close();
 
-	    System.out.printf("WER = %.3f\n", 100*incMetric.score());
+	    System.out.printf("WER = %.3f %%\n", 100*incMetric.score());
 	  }
 }
