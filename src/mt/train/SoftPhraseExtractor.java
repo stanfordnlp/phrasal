@@ -12,7 +12,7 @@ import mt.base.Sequence;
  */
 public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
-  public static final int maxConsistencyViolations = 0;
+  private final int maxConsistencyViolations;
 
   Set<IString> filter = new HashSet<IString>();
 
@@ -20,6 +20,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
    (Properties prop, int maxConsistencyViolations, AlignmentTemplates alTemps,
     List<AbstractFeatureExtractor> extractors, Sequence<IString>[] filter) {
     super(prop, alTemps, extractors);
+    this.maxConsistencyViolations = maxConsistencyViolations;
     System.err.println("Using soft phrase extractor instead of Moses's.");
     System.err.println("Maximum number of consistency violations: "+maxConsistencyViolations);
     for(Sequence<IString> seq : filter)
