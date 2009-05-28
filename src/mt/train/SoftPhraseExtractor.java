@@ -14,7 +14,8 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
   private final int maxConsistencyViolations;
 
-  Set<IString> filter = new HashSet<IString>();
+  BitSet filter = new BitSet(IString.index.size());
+  //Set<IString> filter = new HashSet<IString>();
 
   public SoftPhraseExtractor
    (Properties prop, int maxConsistencyViolations, AlignmentTemplates alTemps,
@@ -25,7 +26,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
     System.err.println("Maximum number of consistency violations: "+maxConsistencyViolations);
     for(Sequence<IString> seq : filter)
       for(IString el : seq)
-        this.filter.add(el);
+        this.filter.set(el.id);
   }
 
   public void extractPhrases(WordAlignment sent) {
@@ -53,12 +54,12 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
     // For each English phrase:
     for(int fi=0; fi<fsize; ++fi) {
-      if(filter.contains(sent.f().get(fi))) {
+      if(filter.get(sent.f().get(fi).id)) {
         for(int ei : sent.f2e(fi)) {
           for(int fi1=Math.max(0,fi-maxPhraseLenF); fi1<=fi; ++fi1) {
             boolean goodPhrasePrefix=true;
             for(int f=fi1; f<fi; ++f) {
-              if(!filter.contains(sent.f().get(f))) {
+              if(!filter.get(sent.f().get(f).id)) {
                 goodPhrasePrefix=false;
                 break;
               }
@@ -69,7 +70,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                   break;
                 boolean goodPhraseSuffix=true;
                 for(int f=fi+1; f<=fi2; ++f) {
-                  if(!filter.contains(sent.f().get(f))) {
+                  if(!filter.get(sent.f().get(f).id)) {
                     goodPhraseSuffix=false;
                     break;
                   }

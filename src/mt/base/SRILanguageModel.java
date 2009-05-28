@@ -6,6 +6,7 @@ import edu.stanford.nlp.objectbank.ObjectBank;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.StringTokenizer;
 
 import mt.srilm.srilm;
 import mt.srilm.SWIGTYPE_p_Ngram;
@@ -66,6 +67,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
     p_vocab = srilm.initVocab(lm_start_sym_id, lm_end_sym_id);
     p_srilm = srilm.initLM(order, p_vocab);
 		srilm.readLM(p_srilm, filename);
+    readUnigrams(filename);
 
     ids = new int[lm_end_sym_id];
     Arrays.fill(ids,-1);
@@ -177,6 +179,35 @@ public class SRILanguageModel implements LanguageModel<IString> {
       return 5;
     }
     return maxOrder;
+  }
+
+  private void readUnigrams(String filename) {
+    try {
+      LineNumberReader lmReader = IOTools.getReaderFromFile(filename);
+      String line;
+      boolean uni = false;
+      while((line = lmReader.readLine()) != null) {
+        if(line.matches("^\\\\1-grams:")) {
+          uni = true;
+        } else if(line.matches("^\\\\2-grams:")) {
+          break;
+        } else if(uni) {
+          //System.err.println("line: "+line);
+          StringTokenizer tok = new StringTokenizer(line);
+          if(tok.hasMoreTokens()) {
+            tok.nextToken(); // skip logprob
+            if(tok.hasMoreTokens()) {
+              String n = tok.nextToken();
+              //System.err.println("tok: "+n);
+              new IString(n);
+            }
+          }
+        }
+      }
+      lmReader.close();
+    } catch(IOException e) {
+      e.printStackTrace();
+    }
   }
 
   static public void main(String[] args) throws Exception {
