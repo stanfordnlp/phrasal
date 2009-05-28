@@ -30,7 +30,8 @@ print STDERR "\n";
 
 # Read/write nbest list:
 my $nfile = $ARGV[1];
-open(F,"zcat $nfile 2> /dev/null |");
+my $cat = $nfile =~ /\.gz$/ ? 'zcat' : 'cat';
+open(F,"$cat $nfile 2> /dev/null |");
 while(<F>) {
 	chomp;
 	my @els = split(/\s*\|\|\|\s*/);

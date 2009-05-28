@@ -13,10 +13,10 @@ include Makefile.ce.local
 #################################
 
 mt.tok.gz: 
-	cat /scr/nlp/data/gale2/NIST_EVAL08/TM/en/*.fixed | tr 'A-Z' 'a-z' | gzip > $@
+	cat /scr/nlp/data/gale2/NIST_EVAL08/TM/en/*.fixed | gzip > $@
 
 mt_noFBIS.tok.gz:
-	ls /scr/nlp/data/gale2/NIST_EVAL08/TM/en/*.fixed | grep -v FBIS | grep -v fbis | xargs cat | tr 'A-Z' 'a-z' | gzip > $@
+	ls /scr/nlp/data/gale2/NIST_EVAL08/TM/en/*.fixed | grep -v FBIS | grep -v fbis | xargs cat | gzip > $@
 
 #################################
 ## Monolingual data
