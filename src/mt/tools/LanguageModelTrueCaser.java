@@ -10,6 +10,9 @@ import mt.decoder.h.*;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.util.TrueCaser;
+import edu.stanford.nlp.ling.CoreLabel;
 
 import java.util.*;
 import java.io.*;
@@ -24,20 +27,39 @@ import java.io.*;
  *
  */
 
-public class TrueCaser {
-  static final int BEAM_SIZE = 50;
+public class LanguageModelTrueCaser implements TrueCaser {
+
+  private static final int BEAM_SIZE = 50;
+
+  private Inferer<IString, String> inferer;
 
   public static void main(String args[]) throws Exception {
     if (args.length != 1) {
-      System.err.println("Usage:\n\tjava ...TrueCaser (language model) < uncased_input > cased_output");
+      System.err.println("Usage:\n\tjava ... TrueCaser (language model) < uncased_input > cased_output");
       System.exit(-1);
     }
 
-    String lmFilename = args[0];
- 
+    LanguageModelTrueCaser tc = new LanguageModelTrueCaser();
+    tc.init(args[0]);
+
+    // enter main truecasing loop
+    LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in, "UTF-8"));
+    for (String line; (line = reader.readLine()) != null; ) {
+      String[] tokens = line.split("\\s+");
+      int lineNumber = reader.getLineNumber();
+      String[] trg = tc.trueCase(tokens, lineNumber);
+      System.out.printf("%s \n", StringUtils.join(trg," "));
+    }
+
+    System.exit(0);
+  }
+
+  public void init(String lmFilename) {
+
     MultiBeamDecoder.MultiBeamDecoderBuilder infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder) InfererBuilderFactory.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
     
      // Read in LM & create LM featurizer
+    try {
     NGramLanguageModelFeaturizer<IString> lmFeaturizer = NGramLanguageModelFeaturizer.fromFile(lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
     List<IncrementalFeaturizer<IString,String>> listFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();
     listFeaturizers.add(lmFeaturizer);
@@ -61,32 +83,26 @@ public class TrueCaser {
     infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
 
     // builder decoder 
-    Inferer<IString, String> inferer = infererBuilder.build(); 
-
-    // enter main truecasing loop
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in, "UTF-8"));
-    for (String line; (line = reader.readLine()) != null; ) {
-        String[] tokens = line.split("\\s+"); 
-        int lineNumber = reader.getLineNumber();
-        Sequence<IString> source = new SimpleSequence<IString>(true, IStrings
-      .toIStringArray(tokens));
-        RichTranslation<IString, String> translation = inferer.translate(source, lineNumber - 1, null, null);
-
-        // manual fix up(s)
-
-        // capitalize the first letter
-
-        String trg = translation.translation.toString();
-        String firstLetter = trg.substring(0,1);
-        String rest = trg.substring(1,trg.length());
-        String capTrg = firstLetter.toUpperCase() + rest;
-        
-        trg = capTrg;
-
-        System.out.printf("%s \n", trg);
+    inferer = infererBuilder.build();
+    } catch(IOException e) {
+      e.printStackTrace();
     }
-    System.exit(0);
+  }
+
+  public String[] trueCase(String[] tokens, int id) {
+
+    Sequence<IString> source = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
+    RichTranslation<IString, String> translation = inferer.translate(source, id - 1, null, null);
+
+    // manual fix up(s)
+    // capitalize the first letter
+    String[] trg = translation.translation.toString().split("\\s+");
+    String firstLetter = trg[0].substring(0,1);
+    String rest = trg[0].substring(1,trg[0].length());
+    String capTrg = firstLetter.toUpperCase() + rest;
+    trg[0] = capTrg;
+
+    return trg;
   }
 }
 

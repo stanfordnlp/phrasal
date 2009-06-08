@@ -16,17 +16,21 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
   public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";
   public static final boolean PRINT_COUNTS = Boolean.parseBoolean(System.getProperty(PRINT_COUNTS_PROPERTY, "false"));
 
+  private static final double EXP_M1 = Math.exp(-1);
+
   IntArrayList feCounts = new IntArrayList();
 
   @Override
 	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
-    addCountToArray(feCounts, alTemp.getKey());
+    if(getCurrentPass()+1 == getRequiredPassNumber())
+      addCountToArray(feCounts, alTemp.getKey());
   }
 
   @Override
 	public Object score(AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
-    return new double[] { feCounts.get(idx) };
+    double c = feCounts.get(idx);
+    return new double[] { c, ((c>1)? 1.0 : EXP_M1) };
   }
 
   private static void addCountToArray(IntArrayList list, int idx) {
@@ -39,4 +43,7 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
     if(DEBUG_LEVEL >= 3)
       System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
   }
+
+  @Override
+  public int getRequiredPassNumber() { return 1; }
 }

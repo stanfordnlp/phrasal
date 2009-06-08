@@ -50,6 +50,7 @@ public class CombinedFeatureExtractor {
   static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
   static public final String LOWERCASE_OPT = "lowercase";
   static public final String MAX_CONSISTENCY_VIOLATIONS_OPT = "maxConsistencyViolations";
+  static public final String MEM_USAGE_FREQ_OPT = "memUsageFreq";
 
   // phrase translation probs:
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -88,7 +89,7 @@ public class CombinedFeatureExtractor {
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
-			 MAX_CONSISTENCY_VIOLATIONS_OPT
+			 MAX_CONSISTENCY_VIOLATIONS_OPT, MEM_USAGE_FREQ_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -115,7 +116,7 @@ public class CombinedFeatureExtractor {
   protected Index<String> featureIndex = new HashIndex<String>();
 
   private Properties prop;
-  private int startAtLine = -1, endAtLine = -1, numSplits = 0;
+  private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq;
   private String fCorpus, eCorpus, align, outputFile;
   private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
   Sequence<IString>[] fPhrases;
@@ -187,6 +188,7 @@ public class CombinedFeatureExtractor {
     // Other optional arguments:
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));
     endAtLine = Integer.parseInt(prop.getProperty(END_AT_LINE_OPT,"-2"))+1;
+    memUsageFreq = Integer.parseInt(prop.getProperty(MEM_USAGE_FREQ_OPT,"1000"));
     printFeatureNames = Boolean.parseBoolean(prop.getProperty(PRINT_FEATURE_NAMES_OPT,"true"));
     int numLines = Integer.parseInt(prop.getProperty(NUM_LINES_OPT,"-1"));
     if(numLines > 0) {
@@ -326,7 +328,7 @@ public class CombinedFeatureExtractor {
           fLine = fReader.readLine();
           boolean done = (fLine == null || lineNb == endAtLine);
 
-          if(lineNb % 1000 == 0 || done) {
+          if(lineNb % memUsageFreq == 0 || done) {
             long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
             long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
             double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;

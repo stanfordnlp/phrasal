@@ -22,8 +22,12 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	public static final String FIVESCORE_LEX_f_t = "lex(f|t)";
 	public static final String ONESCORE_P_t_f = "p(t|f)";
 	public static final String FIVESCORE_PHRASE_PENALTY = "phrasePenalty";
+	public static final String COUNT = "count";
+	public static final String UNIQ = "uniq";
 	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES = { 
 		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY };
+	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_COUNT = { 
+		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY, COUNT, UNIQ };
 	public static final String[] CANONICAL_ONESCORE_SCORE_TYPES = {ONESCORE_P_t_f};
 	public static final boolean DEFAULT_EQUIVALENCE_CUTTOFFS = true;
 
@@ -129,7 +133,9 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	
 	private String[] getScoreNames(int countScores) {
 		String[] scoreNames;
-		if (countScores == 5) {
+		if (countScores == 7) {
+			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_COUNT;
+		} else if (countScores == 5) {
 			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES;
 		} else if (countScores == 1) {
 			scoreNames = CANONICAL_ONESCORE_SCORE_TYPES;
