@@ -15,6 +15,8 @@ import mt.base.SimpleSequence;
 import mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.LexicalReorderingFeaturizer;
+import mt.decoder.feat.RichIncrementalFeaturizer;
+import mt.decoder.feat.ClonedFeaturizer;
 import mt.train.AlignmentGrid;
 import mt.discrimreorder.DepUtils;
 import mt.discrimreorder.TrainingExamples;
@@ -38,7 +40,7 @@ import edu.stanford.nlp.stats.Counter;
  *
  * @see mt.discrimreorder.ReorderingClassifier
  */
-public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFeaturizer<IString, String> {
+public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDiscrimTypedDependencyReorderingFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -59,6 +61,16 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements IncrementalFe
 
   public static final String FEATURE_NAME = "DiscrimReorder:Path";
 
+  @Override
+  public DiscrimTypedDependencyReorderingFeaturizer clone() {
+    System.err.println("cloned: "+this);
+    try {
+		  DiscrimTypedDependencyReorderingFeaturizer featurizer = (DiscrimTypedDependencyReorderingFeaturizer)super.clone();
+      featurizer.featureCache = new ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double>();
+      featurizer.pathMaps = new ArrayList<TwoDimensionalMap<Integer,Integer,String>>();
+      return featurizer;
+    } catch (CloneNotSupportedException e) { return null;  /* will never happen */ }
+	}
 
   public DiscrimTypedDependencyReorderingFeaturizer(String... args) throws IOException {
     if(args.length != 4)
