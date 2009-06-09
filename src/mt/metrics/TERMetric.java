@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
@@ -57,19 +59,37 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     return 1.0;
   }
 
-  public double calcTER(ScoredFeaturizedTranslation<TK, FV> trans, int idx, double[] editCounts) {
-    List<Sequence<TK>> refs = referencesList.get(idx);
-    double best = Double.POSITIVE_INFINITY;
-    TERalignment bestAl = null;
-    String hyp = trans.translation.toString();
-    for (Sequence<TK> ref : refs) {
-      TERalignment terAl = TERcalc.TER(hyp, ref.toString());
-      double ter = terAl.score();
-      if (ter < best) {
-        best = ter;
-        bestAl = terAl;
-      }
-    }
+	Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
+
+  public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans, int idx, double[] editCounts) {
+    List<Sequence<TK>> refsSeq = referencesList.get(idx);
+    String[] refs = new String[refsSeq.size()];
+		String key = String.format("%d|||%s", idx, trans.translation.toString());
+    TERalignment bestAl = terCache.get(key);
+
+		if (bestAl == null) {
+    	double best = Double.POSITIVE_INFINITY;
+    	String hyp = trans.translation.toString();
+    	for (int i = 0; i < refs.length; i++) {
+     	 refs[i] = refsSeq.get(i).toString();
+    	} 
+			//System.err.printf("Hyp: %s\n", hyp);
+		
+			int totalWords = 0;
+    	for (Sequence<TK> ref : refsSeq) {
+     	 TERalignment terAl = TERcalc.TER(hyp, ref.toString());
+				totalWords += terAl.numWords;
+			//System.err.printf("ter: %f\n", ter);
+			//System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits, terAl.numWords);
+     	 if (terAl.numEdits < best) {
+     	   best = terAl.numEdits;
+     	   bestAl = terAl;
+     	 }
+    	}
+			bestAl.numWords = totalWords/(double)refs.length;
+			terCache.put(key, bestAl);
+		}
+
     if(editCounts != null) {
       bestAl.scoreDetails();
       editCounts[EditType.ins.ordinal()] += bestAl.numIns;
@@ -77,14 +97,17 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       editCounts[EditType.sub.ordinal()] += bestAl.numSub;
       editCounts[EditType.sft.ordinal()] += bestAl.numSft;
     }
-    return best;
+
+    return bestAl;
   }
 
   public class TERIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
-    double[] scores = new double[referencesList.size()];
+		TERalignment[] aligns = new TERalignment[referencesList.size()];
     boolean[] nulls = new boolean[referencesList.size()];
     double[] editCounts = null;
-    double scoreTotal = 0;
+
+    double editsTotal = 0;
+    double numWordsTotal = 0;
     int cnt = 0;
     int nullCnt = 0;
 
@@ -94,9 +117,10 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     public TERIncrementalMetric(TERIncrementalMetric p) {
-      scores = p.scores.clone();
+      aligns = p.aligns.clone();
       cnt = p.cnt;
-      scoreTotal = p.scoreTotal;
+      editsTotal = p.editsTotal;
+      numWordsTotal = p.numWordsTotal;
       nullCnt = p.nullCnt;
       nulls = p.nulls;
     }
@@ -108,7 +132,9 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
         nulls[cnt++] = true;
         nullCnt++;
       } else {
-        scoreTotal += scores[cnt] = calcTER(trans, cnt, editCounts);
+				aligns[cnt] =  calcTER(trans, cnt, editCounts);
+				editsTotal += aligns[cnt].numEdits;
+				numWordsTotal += aligns[cnt].numWords;
         cnt++;
       }
       return this;
@@ -124,9 +150,12 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
                                                        ScoredFeaturizedTranslation<TK, FV> trans) {
       if(countEdits)
         throw new RuntimeException("TERMetric: can't both use edit counts and replace().");
-      scoreTotal -= scores[index];
+			if (aligns[index] != null) {
+				editsTotal -= aligns[index].numEdits;
+				numWordsTotal -= aligns[index].numWords;
+			}
       if (trans == null) {
-        scores[index] = 0;
+				aligns[index] = null;
         if (!nulls[index]) {
           nulls[index] = true;
           nullCnt++;
@@ -136,14 +165,17 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
           nulls[index] = false;
           nullCnt--;
         }
-        scoreTotal += scores[index] = calcTER(trans, index, null);
+        aligns[index] = calcTER(trans, index, null);
+				editsTotal += aligns[index].numEdits;
+				numWordsTotal += aligns[index].numWords;
       }
       return this;
     }
 
     @Override
     public double score() {
-      return -scoreTotal/(cnt-nullCnt);
+			//System.err.printf("(%s/%s)\n", editsTotal, numWordsTotal);
+      return -editsTotal/(numWordsTotal);
     }
 
     @Override

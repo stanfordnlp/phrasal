@@ -517,12 +517,25 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
 	static public void main(String args[]) throws IOException {
 		if (args.length == 0) {
-			System.err.println("Usage:\n\tjava BLEUMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
+			System.err.println("Usage:\n\tjava BLEUMetric [-order #] (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
 			System.exit(-1);
 		}
+
+		int BLEUOrder = -1;
+		if (args[0].equals("-order")) {
+			BLEUOrder = Integer.parseInt(args[1]);
+			String[] newArgs = new String[args.length-2];
+			for (int i = 2; i < args.length; i++) newArgs[i-2] = args[i];
+			args = newArgs;
+		}
 		List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
-				
-		BLEUMetric<IString,String> bleu = new BLEUMetric<IString,String>(referencesList);
+
+		BLEUMetric<IString,String> bleu;
+		if (BLEUOrder != -1) {
+			bleu = new BLEUMetric<IString,String>(referencesList, BLEUOrder);
+		} else {
+			bleu = new BLEUMetric<IString,String>(referencesList);
+		}
 		BLEUMetric<IString,String>.BLEUIncrementalMetric incMetric = bleu.getIncrementalMetric();
 		
 		LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));

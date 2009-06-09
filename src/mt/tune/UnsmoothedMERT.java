@@ -149,7 +149,7 @@ public class UnsmoothedMERT {
         if (wtsDense[i] != wtsDense[i]) throw new RuntimeException("Weights contain NaN");
         wtsCounter.incrementCount(featureIdsToString.get(i), wtsDense[i]);
       }
-      double eval =	mcmcTightExpectedEval(nbest, wtsCounter, emetric);
+      double eval =  mcmcTightExpectedEval(nbest, wtsCounter, emetric);
       if (eval < bestEval) {
         bestWts = wtsDense.clone();
       }
@@ -294,7 +294,9 @@ public class UnsmoothedMERT {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
   }
 
+  static boolean alwaysSkipMCMC = true; 
   static public double mcmcTightExpectedEval(MosesNBestList nbest, ClassicCounter<String> wts, EvaluationMetric<IString,String> emetric, boolean regularize) {
+		if (alwaysSkipMCMC) return 0;
     System.err.printf("TMCMC weights:\n%s\n\n", Counters.toString(wts, 35));
 
     // for quick mixing, get current classifier argmax
@@ -695,7 +697,7 @@ public class UnsmoothedMERT {
       }
     }
 
-		System.out.printf(" - best eval: %f\n", bestEval);
+    System.out.printf(" - best eval: %f\n", bestEval);
 
     ClassicCounter<String> newWts = new ClassicCounter<String>(initialWts);
     Counters.addInPlace(newWts, direction, chkpts[bestPt]);
@@ -2401,7 +2403,7 @@ public class UnsmoothedMERT {
       System.exit(-1);
     }
 
-    String evalMetric = args[0];
+    String evalMetric = args[0].toLowerCase();
     String nbestListFile = args[1];
     String localNbestListFile = args[2];
     String initialWtsFile = args[3];
@@ -2409,9 +2411,29 @@ public class UnsmoothedMERT {
     String finalWtsFile = args[5];
 
     EvaluationMetric<IString, String> emetric = null;
-    List<List<Sequence<IString>>> references = Metrics
+    if (evalMetric.equals("terp")) {
+    	List<List<Sequence<IString>>> references = Metrics
+            .readReferences(referenceList.split(","), false);
+      emetric = new TERpMetric<IString, String>(references);
+    } else if (evalMetric.equals("terpa")) {
+    	List<List<Sequence<IString>>> references = Metrics
+            .readReferences(referenceList.split(","), false);
+      emetric = new TERpMetric<IString, String>(references, false, true);
+    } else if (evalMetric.equals("meteor") || evalMetric.startsWith("meteor:")) {
+    	List<List<Sequence<IString>>> references = Metrics
+            .readReferences(referenceList.split(","), false);
+      String[] fields = evalMetric.split(":");
+			if (fields.length > 1) {
+				double alpha = Double.parseDouble(fields[1]);
+      	double beta = Double.parseDouble(fields[2]);
+      	double gamma = Double.parseDouble(fields[3]);
+      	emetric = new METEOR2Metric<IString, String>(references, alpha, beta, gamma);
+			} else {
+      	emetric = new METEOR2Metric<IString, String>(references);
+			}
+    } else if (evalMetric.equals("ter") || evalMetric.startsWith("ter:")) {
+    	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
-    if (evalMetric.startsWith("ter")) {
       String[] fields = evalMetric.split(":");
       if (fields.length > 1) {
         int beamWidth = Integer.parseInt(fields[1]);
@@ -2424,11 +2446,40 @@ public class UnsmoothedMERT {
         }
       }
       emetric = new TERMetric<IString, String>(references);
-    } else if (evalMetric.endsWith("bleu")) {
-      emetric = new BLEUMetric<IString, String>(references);
- 		} else if (evalMetric.equals("nist")) {
- 			emetric = new NISTMetric<IString, String>(references);
+    } else if (evalMetric.equals("bleu") || evalMetric.startsWith("bleu:")) {
+    	List<List<Sequence<IString>>> references = Metrics
+            .readReferences(referenceList.split(","));
+      if (evalMetric.contains(":")) {
+				String[] fields = evalMetric.split(":");
+				int BLEUOrder = Integer.parseInt(fields[1]);
+      	emetric = new BLEUMetric<IString, String>(references, BLEUOrder);
+			} else {
+      	emetric = new BLEUMetric<IString, String>(references);
+			}
+    } else if (evalMetric.equals("nist")) {
+    	List<List<Sequence<IString>>> references = Metrics
+            .readReferences(referenceList.split(","));
+       emetric = new NISTMetric<IString, String>(references);
+    } else if (evalMetric.startsWith("bleu-2terpa")) {
+    	List<List<Sequence<IString>>> referencesBleu = Metrics
+            .readReferences(referenceList.split(","));
+    	List<List<Sequence<IString>>> referencesTERpa = Metrics
+            .readReferences(referenceList.split(","), false);
+      String[] fields = evalMetric.split(":");
+      double terW = 2.0;
+      if(fields.length > 1) {
+        assert(fields.length == 2);
+        terW = Double.parseDouble(fields[1]);
+      }
+      emetric = new LinearCombinationMetric<IString, String>
+              (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(referencesBleu),
+                      new TERpMetric<IString, String>(referencesTERpa, false, true));
+      System.err.printf("Maximizing %s: BLEU minus TERpA (beamWidth=%d, shiftDist=%d, terW=%f)\n",
+              evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {
+    	List<List<Sequence<IString>>> references = Metrics
+            .readReferences(referenceList.split(","));
       TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
       TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
       String[] fields = evalMetric.split(":");
@@ -2444,7 +2495,9 @@ public class UnsmoothedMERT {
       System.err.printf("Maximizing %s: BLEU minus TER (beamWidth=%d, shiftDist=%d, terW=%f)\n",
               evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
     } else if (evalMetric.equals("wer")) {
-    	emetric = new WERMetric<IString, String>(references);
+    	List<List<Sequence<IString>>> references = Metrics
+            .readReferences(referenceList.split(","));
+      emetric = new WERMetric<IString, String>(references);
     } else {
       System.err.printf("Unrecognized metric: %s\n", evalMetric);
       System.exit(-1);
@@ -2670,7 +2723,7 @@ public class UnsmoothedMERT {
         int rank = Integer.parseInt(System.getProperty("svdELoss"));
         System.out.printf("Using SVD ELoss - mcmc E(Eval), rank: %d\n", rank);
         newWts = svdReducedObj(nbest, wts, emetric, rank, SVDOptChoices.evalue);
- 			} else if (System.getProperty("tuneLength") != null) {
+      } else if (System.getProperty("tuneLength") != null) {
         System.out.println("Optimize translation length with a single line search");
         ClassicCounter<String> dir = new ClassicCounter<String>();
         dir.incrementCount(WordPenaltyFeaturizer.FEATURE_NAME, 1.0);

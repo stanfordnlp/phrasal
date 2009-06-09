@@ -233,8 +233,13 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 				if (idx > 0) constilationB.append(";");
 				constilationB.append(t);
 			} }
-			
-      addEntry(foreign, translation, new PhraseAlignment(constilationB.toString()), scores);
+		
+			String constilationBStr = constilationB.toString();
+			if (constilationBStr.equals("")) {
+      	addEntry(foreign, translation, null, scores);
+			} else {
+      	addEntry(foreign, translation, new PhraseAlignment(constilationBStr), scores);
+			}
 
 			if (foreign.size() > longestForeignPhrase) {
 				longestForeignPhrase = foreign.size();

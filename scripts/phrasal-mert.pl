@@ -352,7 +352,19 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    #$trans_bleu = `$EXTERNAL_SCRIPTS_DIR/multi-bleu.perl $references < $iter_trans 2>&1`;
    if ($opt_type eq 'ter') {
      $trans_eval = `java $java_flags mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; 
-   } else { # bleu or cmert path, the latter implies bleu 
+   } elsif($opt_type eq 'terp') {
+     $trans_eval = `java $java_flags mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
+   } elsif($opt_type eq 'terpa') {
+     $trans_eval = `java $java_flags -Dterpa mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
+	 } elsif($opt_type eq 'meteor') {
+     $trans_eval = `java $java_flags mt.metrics.METEOR2Metric $referenceList < $iter_trans 2>&1`; 
+   } elsif($opt_type =~ /meteor:/) {
+		 @abg = split /:/, $opt_type;
+     $trans_eval = `java -Dabg=$abg[1]:$abg[2]:$abg[3] $java_flags mt.metrics.METEOR2Metric $referenceList < $iter_trans 2>&1`; 
+   } elsif ($opt_type =~ /^bleu:/) {
+		 @fields = split /:/, $opt_type;
+     $trans_eval = `java $java_flags mt.metrics.BLEUMetric -order $fields[1] $referenceList < $iter_trans 2>&1`; 
+	 } else { # bleu or cmert path, the latter implies bleu 
      $trans_eval = `java $java_flags mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; 
    }
 

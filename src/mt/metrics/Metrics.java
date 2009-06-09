@@ -120,7 +120,12 @@ public class Metrics {
 			// System.err.printf("clipped count: %s Cnt: %d Orig: %d\n", ngram, counts.get(ngram), altCnt);
 		}
 	}
+
 	static public List<List<Sequence<IString>>> readReferences(String[] referenceFilenames) throws IOException {
+		return readReferences(referenceFilenames, true);
+	}
+
+	static public List<List<Sequence<IString>>> readReferences(String[] referenceFilenames, boolean NISTTokenize) throws IOException {
 		List<List<Sequence<IString>>> referencesList = new ArrayList<List<Sequence<IString>>>();
 		for (String referenceFilename : referenceFilenames) {
 			LineNumberReader reader = new LineNumberReader(new FileReader(referenceFilename));
@@ -128,13 +133,17 @@ public class Metrics {
 				int lineNumber = reader.getLineNumber();
 				if (referencesList.size() < lineNumber) {
 					List<Sequence<IString>> list = new ArrayList<Sequence<IString>>(referenceFilenames.length);
-          line = NISTTokenizer.tokenize(line);
+          if (NISTTokenize) line = NISTTokenizer.tokenize(line);
 					line = line.replaceAll("\\s+$", "");
 					line = line.replaceAll("^\\s+", "");
 					list.add(new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+"))));
 					referencesList.add(list);
 				} else {
-					referencesList.get(lineNumber-1).add(new RawSequence<IString>(IStrings.toIStringArray(NISTTokenizer.tokenize(line).split("\\s+"))));
+					if (NISTTokenize) {
+						referencesList.get(lineNumber-1).add(new RawSequence<IString>(IStrings.toIStringArray(NISTTokenizer.tokenize(line).split("\\s+"))));
+					} else { 
+					  referencesList.get(lineNumber-1).add(new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+"))));
+					}
 				}
 			}
 			reader.close();
