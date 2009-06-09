@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+my %sents;
+
+while(<STDIN>) {
+	if(/^(\d+):(.*)/) {
+		$sents{$1} = $2
+	} else {
+		print;
+	}
+}
+
+for(my $i=0;;++$i) {
+	last if(!defined $sents{$i});
+	print "$sents{$i}\n";
+}
