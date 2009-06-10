@@ -30,11 +30,12 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 			System.err.printf("PhraseTableScoresFeaturizer: generating feature names for %s\n", phraseTableName);
 		}
 		for (int i = 0; i < phraseScoreNames.length; i++) {
-			if (!tagByTable) {
-				featureNames[i] = String.format("%s:%s", PREFIX, phraseScoreNames[i]);
-			} else {
-				featureNames[i] = String.format("%s:%s:%s", PREFIX, phraseTableName, phraseScoreNames[i]);
-			}
+      if(phraseScoreNames[i] != null)
+        if (!tagByTable) {
+          featureNames[i] = String.format("%s:%s", PREFIX, phraseScoreNames[i]);
+        } else {
+          featureNames[i] = String.format("%s:%s:%s", PREFIX, phraseTableName, phraseScoreNames[i]);
+        }
 			//System.err.printf("\t%d:%s\n", i, featureNames[i]);
 		}
 		return featureNames;
@@ -103,7 +104,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 			// construct array of FeatureValue objects 
 			featureValues = new FeatureValue[featureNames.length];
 			for (int i = 0; i < featureValues.length; i++) {
-				featureValues[i] = new FeatureValue(featureNames[i], featurizable.translationScores[i]);
+        featureValues[i] = new FeatureValue(featureNames[i], featurizable.translationScores[i]);
 			}
 			
 			if (DEBUG) {

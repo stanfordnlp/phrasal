@@ -34,7 +34,10 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
   public static final String TRIE_INDEX_PROPERTY = "TriePhraseTable";
   public static final boolean TRIE_INDEX = Boolean.parseBoolean(System.getProperty(TRIE_INDEX_PROPERTY, "false"));
 
-	final String[] scoreNames;
+  public static final String DISABLED_SCORES_PROPERTY = "disableScores";
+  public static final String DISABLED_SCORES = System.getProperty(DISABLED_SCORES_PROPERTY);
+
+  final String[] scoreNames;
 	final String name;
 	
 	
@@ -145,7 +148,16 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 				scoreNames[i] = String.format("%d.UnkTScore", i);
 			}
 		}
-		return scoreNames;
+
+    System.err.println("Disabled scores: "+DISABLED_SCORES);
+    if(DISABLED_SCORES != null)
+      for(String istr : DISABLED_SCORES.split(",")) {
+        int i = Integer.parseInt(istr);
+        System.err.printf("Feature %s disabled.\n", scoreNames[i]);
+        scoreNames[i] = null;
+      }
+
+    return scoreNames;
 	}
 	
 	private int init(File f) throws IOException {
@@ -341,5 +353,5 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	public void setCurrentSequence(Sequence<IString> foreign,
 			List<Sequence<IString>> tranList) {
 		// no op
-	}
+  }
 }

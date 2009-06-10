@@ -96,7 +96,8 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 			List<FeatureValue<FV>> listFeatureValues = (List<FeatureValue<FV>>)o;
 			// profiling reveals that addAll is slow due to a buried call to clone() 
 			for (FeatureValue<FV> fv : listFeatureValues) {
-				featureValues.add(fv);
+        if(fv.name != null)
+          featureValues.add(fv);
 			}
 		}
 		return featureValues;
@@ -126,7 +127,8 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 			if (listFeatureValues != null) {
 			  // profiling reveals that addAll is slow due to a buried call to clone()
 				for (FeatureValue<FV> fv : listFeatureValues) {
-					featureValues.add(fv);
+          if(fv.name != null)
+            featureValues.add(fv);
 				}
 			}
 		}
