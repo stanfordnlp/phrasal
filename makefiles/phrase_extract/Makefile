@@ -130,7 +130,7 @@ $(TESTID).%.meteor: $(TESTID).%
 #############################################
 
 ### Generate XML nbest list:
-$(TESTID).%.xml: $(TESTID).% $(TESTID).$(IE)
+$(TESTID).%.gale.xml: $(TESTID).% $(TESTID).$(IE)
 	cat $<.1best.log | grep ^WeightConfig | perl -ne 'while(/:([\d\.E\-]+)/g) { print "$$1 " }' > .tmp.weights
 	mtij.py $+ "`cat .tmp.weights`" stanford > $@
 	rm .tmp.weights
@@ -138,6 +138,14 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).$(IE)
 %.release/out.sgm: %.post
 	mkdir $(*F).release || true
 	cat $(*F).post | empty2sgml $(TESTID).sgm stanford > $@ 2> $@.log
+
+### Truecase and generate xml:
+%.post.xml.scbleu: %.post.xml
+	mteval-v13.pl --brevity-penalty shortest -s $(TESTID)-src.sgm -r $(TESTID)-ref.sgm -t $< -c -b > $@ 
+%.post.xml.cbleu: %.post.xml
+	mteval-v13.pl -s $(TESTID)-src.sgm -r $(TESTID)-ref.sgm -t $< -c -b > $@ 
+%.post.xml: %.post
+	cat $< | $(TC) $(TESTID)-src.sgm > $@ 2> $@.log
 
 ### Language specific postprocessing:
 %.post: %
@@ -155,21 +163,21 @@ $(TESTID).%.xml: $(TESTID).% $(TESTID).$(IE)
 MBR_SCALE=1
 
 # MBR:
-$(TESTID).$(DEVID).%.mbr.s$(MBR_SCALE).$Nbest.1best: $(TESTID).$(DEVID).%.mbr.$Nbest
+$(TESTID).$(DEVID).%.mbr.$Nbest.s$(MBR_SCALE): $(TESTID).$(DEVID).%.mbr.$Nbest
 	mbr -s $(MBR_SCALE) -n 4 -w $<.wts -i $< > $@ 2> $@.log
 
 # Create Moses nbest list:
 $(TESTID).$(DEVID).%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest
-	nbest_sparse2dense `grep -A 1 '^\[weights-file\]' $(DEVID).$(*F).pmert/phrasal.best.ini | tail -1` $< 2> $@.wts | sort -n > $@ 
+	nbest_sparse2dense `grep -A 1 '^\[weights-file\]' $(DEVID).$(*F).pmert/phrasal.best.ini | tail -1` $< uniq 2> $@.wts | sort -n > $@ 
 
 #############################################
 # 1-best and n-best output with Phrasal:
 #############################################
 
 # Use best MERT paramters to generate n-best list:
-$(TESTID).$(DEVID).%.$Nbest.1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)  $(TESTID).flt_giga.lm.gz
+$(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)  $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	(java $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@) 2> $@.log
+	(java $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true mt.PseudoMoses -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 # Use final MERT paramters:
 $(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
@@ -311,7 +319,7 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID)
 	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -tolower
 
 %.e.class.phrases: %.e.phrases
-	cat $< | eng_simpl_class.pl 1 0 | ibm2class > $@ >& logs/$@.log
+	(cat $< | eng_simpl_class.pl 1 0 | ibm2class > $@) 2> logs/$@.log
 
 %.e.phrases: %.tables/phrase-table.gz %.$(FE)
 	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
@@ -329,7 +337,8 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID)
 ### Generate table containing both phrase and lexicalized re-ordering probabilities for a given dev/test set:
 ### (needs to be run on 16G machines)
 %.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
-	java -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors moses -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
+	mkdir $(*F).tables || true
+	java -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors mt.train.PharaohFeatureExtractor:mt.train.CountFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################
 # Soft phrases:
@@ -391,7 +400,9 @@ NE=sed 's/^ *$$/null/'
 ### Handle unknown words (e.g., delete them):
 %.prep: %.unk %.tables/phrase-table.gz
 	rm -f $@
-	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@ | $(NE) >& $@.err
+	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@.tmp >& $@.err 
+	cat $@.tmp | $(NE) > $@
+	rm -f $@.tmp
 
 ### Convert SGML file into raw text, and remove IBM classing:
 %.unk: %.sgm

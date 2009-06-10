@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+# Read nbest list:
+my $nfile = $ARGV[1];
+my $cat = $nfile =~ /\.gz$/ ? 'zcat' : 'cat';
+my @nbest;
+open(F,"$cat $nfile 2> /dev/null |");
+while(<F>) {
+	chomp;
+	my @els = split(/\s*\|\|\|\s*/);
+	my $featStr = $els[2];
+	push @{$nbest[$els[0]]}, [$els[1], $els[2], $els[3], $els[4]];
+}
+close(F);
+
+# Sort and print nbest list:
+for my $i (0..$#nbest) {
+	my %uniq;
+	for my $j (sort {$nbest[$i][$b][2] <=> $nbest[$i][$a][2]} 0..$#{$nbest[$i]}) {
+		my $out = $nbest[$i][$j][0];
+		print $i.' ||| '.join(' ||| ', @{$nbest[$i][$j]}),"\n";
+		$uniq{$out} = 1;
+	}
+}

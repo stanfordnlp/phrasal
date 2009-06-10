@@ -4,6 +4,7 @@ BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
 #####################################################
 # Generate html pages to enables MT error analysis
 # for GALE AE.
+# TODO: sort by doc name; phrase
 #####################################################
 
 use strict;
@@ -23,15 +24,15 @@ my %opts = get_opts
   (
 	 ['ref=s','','reference translations (NIST MT sgml)',1],
 	 ['in=s','','source-language text (NIST MT sgml)',1],
-	 ['out=s','','system output (raw text)',1],
+	 ['out=s','','system output (NIST MT sgml)',1],
 	 ['align=s','','system output with phrase alignment (Moses n-best list format)',1],
+	 ['unk=s','','source-language text with unknown words marked with <unk></unk> (raw text)',1],
 	 ['scores=s','','document-level scores for TER, BLEU, and TER-BLEU (IBM format)'],
 	 ['summary=s','','corpus-level scores for different systems (IBM format)'],
 	 ['corpus=s','','corpus name',1],
 	 ['ptable=s','','phrase table'],
 	 ['counts=s','','phrase counts'],
 	 ['html=s','','noot name of html files to generate',1],
-	 ['unk=s','','source-language text with unknown words marked with <unk></unk> (raw text)'],
 	 ['lang=s','ar','source language'],
  	 ['v',0,'program will be more verbose'],
 	 );
@@ -56,6 +57,7 @@ if($opts{unk}) {
 }
 my ($in,$inh,$docs) = load_mt_sgml($opts{in}, verbose => 0);
 my ($out) = load_mt_sgml($opts{out}, verbose => 0);
+die "Incorrect number of segments (in vs. out): $#$in != $#$out\n" if $#$in != $#$out;
 my ($ref,$refh) = load_mt_sgml($opts{ref}, verbose => 0, docs => $docs);
 my $scores;
 $scores = load_ibm_doc_scores($opts{scores},%opts) if $use_scores;
@@ -65,7 +67,6 @@ my $counts;
 $counts = load_ptable($opts{counts}) if $use_counts;
 my @docs = keys %$docs;
 
-die "Incorrect number of segments (in vs. out): $#$in != $#$out\n" if $#$in != $#$out;
 die "Incorrect number of documents (scores vs. in): $#$scores != $#docs\n" if $use_scores && $#$scores != $#docs;
 
 generate_main_html($opts{corpus},$docs,$scores,$ref,$refh,$in,$out);
@@ -90,7 +91,7 @@ sub generate_main_html {
 	my ($title,$docs,$scores,$ref,$refh,$in,$out) = @_;
 	# Create dummy %scores if not readig real scores:
 	unless($use_scores) {
-		foreach my $k (sort keys %$docs) {
+		foreach my $k (reverse sort keys %$docs) {
 		 	my %attr = (id => $k, ter => 0, bleu => 0, score => 0, tail => 0);
 			push @$scores, \%attr;	
 		}
@@ -144,13 +145,15 @@ sub generate_main_html {
 		  if $use_scores;
 		# Update translation html page:
 		print H2 "<h3><a name=\"$docid\">$docid</a></h3>";
-		print H2 "<dl><dt><strong>Document-level scores</strong> ";
-		print H2 "[<a href=\"${root}_scores.html#doc_level\">full</a>]" if $use_scores;
-		print H2 "</dt>";
-		print H2 "<dd>TER = $s->{ter}\%";
-		print H2 "<dd>BLEU = $s->{bleu}\%";
-		print H2 "<dd>(TER-BLEU)/2 = $s->{score}</dl>";
-		print H2 "<dl><dt><strong>Translations</strong></dt></dl>";
+		if($use_scores) {
+			print H2 "<dl><dt><strong>Document-level scores</strong> ";
+			print H2 "[<a href=\"${root}_scores.html#doc_level\">full</a>]" if $use_scores;
+			print H2 "</dt>";
+			print H2 "<dd>TER = $s->{ter}\%";
+			print H2 "<dd>BLEU = $s->{bleu}\%";
+			print H2 "<dd>(TER-BLEU)/2 = $s->{score}</dl>";
+			print H2 "<dl><dt><strong>Translations</strong></dt></dl>";
+		}
 		# Update grid html page:
 		for(my $j=$docpos;$j <= $#$in;++$j) {
 			my $sid = $in->[$j][1];
@@ -308,22 +311,26 @@ sub flag_unmatched_words {
 			$ref{$w} = 1;
 		}
 	}
-	$$hyp =~ s/([A-Za-z\-0-9]+)/mark_unk($1,\%ref,\%hyp)/ge;
+	$$hyp =~ s/(\S+)/mark_unk($1,\%ref,\%hyp)/ge;
+	#$$hyp =~ s/([A-Za-z\-0-9\-\'\"]+)/mark_unk($1,\%ref,\%hyp)/ge;
 	for my $i (0..$#$refs) {
-		$refs->[$i] =~ s/\b([A-Za-z\-0-9]+)\b/mark_unk($1,\%ref,\%hyp)/ge;
+		$refs->[$i] =~ s/(\S+)/mark_unk($1,\%ref,\%hyp)/ge;
+		#$refs->[$i] =~ s/\b([A-Za-z\-0-9\-\'\"]+)\b/mark_unk($1,\%ref,\%hyp)/ge;
 	}
 }
 
 sub tok {
 	my $l = shift;
-	$l =~ s/[^A-Za-z0-9\-\s]//g;
-	$l =~ tr/A-Z/a-z/;
+	#$l =~ s/[^A-Za-z0-9\-\s]//g;
+	#$l =~ tr/A-Z/a-z/;
 	return split(/\s+/,$l);
 }
 
 sub mark_unk {
 	my ($tok,$ref,$hyp) = @_;
-	(my $lctok = $tok) =~ tr/A-Z/a-z/;
+	(my $lctok = $tok);
+	#print STDERR "tok: <$tok>\n";
+	#(my $lctok = $tok) =~ tr/A-Z/a-z/;
 	my $matched = ($ref->{$lctok} && $hyp->{$lctok}) ? 1 : 0;
 	return $matched ? $tok : red($tok);
 }

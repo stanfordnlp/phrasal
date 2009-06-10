@@ -1,0 +1,6 @@
+#!/bin/bash
+
+D=/scr/mgalley/research/arabic-segmenter
+
+/scr/nlp/data/gale/IBMArabicScripts/ar_normalize_v5.pl | \
+/scr/nlp/data/gale/IBMArabicScripts/ar_tokenize_v2.pl | $D/bin/tokenize 

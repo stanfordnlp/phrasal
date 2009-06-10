@@ -1,12 +1,28 @@
 #!/bin/bash
 
-# Three post processing steps:
-# 1) remove all tokens containing one or more Chinese or Arabic characters:
-# 2) truecasing
-# 3) detokenization
+# English truecaser
+# (good for NIST A-E constrained track)
 
-tmp=`mktempname /tmp/tc_input.XXXXXX`
-cat | perl -pe 's/^\s+$/null\n/'> $tmp.lc
-/scr/nlp/data/gale2/truecaser/bin/truecaser $tmp.lc 2> /dev/null > $tmp.cased 
-java edu.stanford.nlp.process.PTBTokenizer -untok $tmp.cased | sed 's/^null$//i'
-rm -f $tmp.lc $tmp.cased
+mixed=/scr/nlp/data/gale3/NIST09/truecaser/postprocess/fixMixCasing/MixDisambiguation.list 
+
+crf_model=/scr/nlp/data/gale3/NIST09/truecaser/crf/noUN.ser.gz
+lm=/scr/nlp/data/gale3/NIST09/truecaser/lm/releases/mt_giga3_afp_xin.1233.unk.lm.gz
+tmp=`mktemp /tmp/tc_input.XXXXXX`
+
+host=`hostname -s`
+java="java -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$host"
+
+cat | perl -pe 's/^\s+$/null\n/'> $tmp
+
+# CRF truecaser:
+$java -mx5g edu.stanford.nlp.ie.crf.CRFBiasedClassifier -loadClassifier $crf_model -testFile $tmp \
+	-mixedCaseMapFile $mixed -classBias INIT_UPPER:-0.7,UPPER:-0.7,O:0 \
+  -readerAndWriter edu.stanford.nlp.sequences.TrueCasingForNIST09DocumentReaderAndWriter > $tmp.crf
+
+# LM truecaser:
+cat $tmp | $java -Xmx2g mt.tools.LanguageModelTrueCaser $lm > $tmp.lm
+
+# CRF+LM combination:
+/scr/nlp/data/gale3/NIST09/truecaser/postprocess/combine_crf_hmm $tmp.crf $tmp.lm $*
+
+rm -f $tmp $tmp.crf $tmp.lm

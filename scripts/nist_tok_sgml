@@ -1,0 +1,7 @@
+#!/bin/bash
+
+tmp=`mktemp .tmp.XXXXX`
+cat > $tmp
+sgml2plain < $tmp > $tmp.plain
+nist_tok < $tmp.plain | empty2sgml $tmp ''
+rm -f $tmp $tmp.plain

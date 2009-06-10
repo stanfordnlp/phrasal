@@ -34,10 +34,10 @@ while(<STDIN>) {
 	chomp;
 	if(/  /) {
 		print STDERR "BAD PHRASE: $_\n";
-	} elsif(/^([^\|]+ \|\|\| [^\|]+) \|\|\| ([^\|]+ \|\|\| [^\|]+) \|\|\| (\S+ \S+ (\S+) \S+ \S+)((\s+\S+){$sz})\s*$/) {
+	} elsif(/^([^\|]+ \|\|\| [^\|]+) \|\|\| ([^\|]+ \|\|\| [^\|]+) \|\|\| (\S+ \S+ (\S+) \S+ \S+)(.*)((\s+\S+){$sz})\s*$/) {
 		next if $4 < $minp;
-		print P "$1 ||| $2 ||| $3 \n";
-		print O "$1 |||$5 \n";
+		print P "$1 ||| $2 ||| $3$5 \n";
+		print O "$1 |||$6 \n";
 	} else {
 		print STDERR "BAD PHRASE: $_\n";
 	}
