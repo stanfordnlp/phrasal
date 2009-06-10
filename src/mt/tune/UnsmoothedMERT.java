@@ -2411,6 +2411,8 @@ public class UnsmoothedMERT {
     String finalWtsFile = args[5];
 
     EvaluationMetric<IString, String> emetric = null;
+		TERpMetric.BEAM_WIDTH = 5; // XXX - make cleaner/safer
+		TERpMetric.MAX_SHIFT_DIST = 10; // XXX - make cleaner/safer
     if (evalMetric.equals("terp")) {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","), false);
@@ -2460,6 +2462,23 @@ public class UnsmoothedMERT {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
        emetric = new NISTMetric<IString, String>(references);
+    } else if (evalMetric.startsWith("bleu-2terp")) {
+    	List<List<Sequence<IString>>> referencesBleu = Metrics
+            .readReferences(referenceList.split(","));
+    	List<List<Sequence<IString>>> referencesTERp = Metrics
+            .readReferences(referenceList.split(","), false);
+      String[] fields = evalMetric.split(":");
+      double terW = 2.0;
+      if(fields.length > 1) {
+        assert(fields.length == 2);
+        terW = Double.parseDouble(fields[1]);
+      }
+      emetric = new LinearCombinationMetric<IString, String>
+              (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(referencesBleu),
+                      new TERpMetric<IString, String>(referencesTERp));
+      System.err.printf("Maximizing %s: BLEU minus TERpA (beamWidth=%d, shiftDist=%d, terW=%f)\n",
+              evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
     } else if (evalMetric.startsWith("bleu-2terpa")) {
     	List<List<Sequence<IString>>> referencesBleu = Metrics
             .readReferences(referenceList.split(","));

@@ -36,6 +36,9 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   enum EditType { ins, del, sub, sft };
   boolean countEdits = false;
 
+  public static int BEAM_WIDTH = 20;
+  public static int MAX_SHIFT_DIST = 50;
+
   public TERpMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;
     this.countEdits = countEdits;
@@ -90,6 +93,8 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
 	Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
 
+  TERcost costfunc = TERplus.terCostFactory();
+
   public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans, int idx, double[] editCounts) {
     List<Sequence<TK>> refsSeq = referencesList.get(idx);
     String[] refs = new String[refsSeq.size()];
@@ -103,8 +108,10 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
      	 refs[i] = refsSeq.get(i).toString();
     	} 
     	TERinput terinput = new TERinput(hyp, refs);     
-    	TERcost costfunc = TERplus.terCostFactory();
     	TERcalc calc = TERplus.terCalcFactory(phrasedb, terinput, costfunc);
+			calc.BEAM_WIDTH = BEAM_WIDTH;
+			calc.MAX_SHIFT_DIST = MAX_SHIFT_DIST;
+			//System.err.println(calc.get_info());
 			//System.err.printf("Hyp: %s\n", hyp);
 		
 			int totalWords = 0;
