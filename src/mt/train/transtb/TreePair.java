@@ -46,7 +46,7 @@ public class TreePair {
   }
 
 
-  private static void printTree(Tree t) {
+  public static void printTree(Tree t) {
     System.out.println("<pre>");
     t.pennPrint(System.out);
     System.out.println("</pre>");
