@@ -35,11 +35,24 @@ public class ImprovedDEinTextReorderer {
         // first, everything that's not under an NP, remove the label for 的
         String rootLabel = ExperimentUtils.getNPwithDE_rootLabel(parsedSent, deIdx);
         String dnpOrCPLabel = ExperimentUtils.getNPwithDE_DNPorCPLabel(parsedSent, deIdx);
-        if (!rootLabel.equals("NP") || !(dnpOrCPLabel.equals("DNP") || dnpOrCPLabel.equals("CP"))) {
+        // if not under NP, the 的 tag should be ignored
+        if (!rootLabel.equals("NP")) {
           if (!newLeaves.get(deIdx).value().startsWith("的_")) throw new RuntimeException("...");
           newLeaves.get(deIdx).label().setValue("的");
           continue;
         }
+        // if not DNP or CP, they're not going to be reordered.
+        // remove the 的 tags as well
+        if(!dnpOrCPLabel.equals("DNP") && !dnpOrCPLabel.equals("CP")) {
+          String newLeaveVal = newLeaves.get(deIdx).value();
+          if (newLeaveVal.equals("的_BprepA") || newLeaveVal.equals("的_relc") ||
+              newLeaveVal.equals("的_swapped")) {
+            newLeaves.get(deIdx).label().setValue("的");
+            continue;
+          }
+        }
+        
+        
 
         String de = yield.get(deIdx);
         if (!de.startsWith("的_"))

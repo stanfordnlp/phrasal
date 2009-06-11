@@ -95,16 +95,12 @@ public class ExperimentUtils {
     Tree DNPorCP = preT.parent(tree);
     Tree theNP = DNPorCP.parent(tree);
     if (!theNP.label().toString().equals("NP")) {
-      System.err.println("theNP="+theNP);
       return;
     }
     if (!DNPorCP.label().toString().equals("DNP") &&
         !DNPorCP.label().toString().equals("CP")) {
-      System.err.println("DNPorCP="+DNPorCP);
       return;
     }
-    System.err.println("theNP="+theNP);
-    System.err.println("DNPorCP="+DNPorCP);
 
     StringBuilder newLabelV = new StringBuilder();
     newLabelV.append(DNPorCP.label().toString()).append("r");
