@@ -375,7 +375,7 @@ public class AnnotatedTreePair {
 
     // (1.1) Chinese Tree
     System.out.println("<h3> Chinese Tree </h3>");
-    TreePair.printTree(chT);
+    //TreePair.printTree(chT); // TODO: fix compile error
     Filter<String> puncWordFilter = Filters.acceptFilter();
     System.out.println("<h3> Chinese Deps </h3>");
     GrammaticalStructure gs = new ChineseGrammaticalStructure(chT, puncWordFilter);
@@ -393,7 +393,7 @@ public class AnnotatedTreePair {
     for (int ti = 0; ti < enTrees.size(); ti++) {
       Tree enT = enTrees.get(ti);
       System.out.printf("<h3> English Tree(%d) </h3>\n", ti);
-      TreePair.printTree(enT);
+      //TreePair.printTree(enT); // TODO: fix compile error
       System.err.println("=====================");
       enT.pennPrint(System.err);
       System.err.println("=====================");
