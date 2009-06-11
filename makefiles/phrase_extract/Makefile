@@ -251,6 +251,20 @@ $(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID)
 	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" \
 	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).$N.pmert.log
 
+# Maximize METEOR (n-best):
+$(DEVID).%.$N.meteor_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
+	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).$N.meteor_pmert \
+	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" \
+	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref meteor:0.5:2.5:0.4 $(DEVID).$< >& logs/$(DEVID).$(*F).$N.meteor_pmert.log
+
+# Maximize METEOR+BLEU (n-best):
+$(DEVID).%.$N.bm_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
+	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).$N.bm_pmert \
+	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" \
+	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref bleu+2meteor:0.95:0.5:0.5 $(DEVID).$< >& logs/$(DEVID).$(*F).$N.bm_pmert.log
+
 # Maximize BLEU:
 $(DEVID).%.pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<

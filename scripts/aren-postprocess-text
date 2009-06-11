@@ -2,12 +2,11 @@
 
 ############################################################
 # A-E post processing script optimized for MT05 and MT06
-# Commented: performance drop
-# Uncommented: performance drop
 #
 # TODO: British to American English
 ############################################################
 
+############## v1:
 # BLEU = 51.7541, BLEU-prec = 51.8174, 83.1/59.9/44.2/32.8 (BP=0.999, ration=0.999) sent=2853/2853 baseline (no postprocessing)
 # BLEU = 51.7584, BLEU-prec = 51.8229, 83.1/59.9/44.2/32.8 (BP=0.999, ration=0.999) sent=2853/2853 numbers
 # BLEU = 51.8066, BLEU-prec = 51.9431, 83.2/60.1/44.3/32.9 (BP=0.997, ration=0.997) sent=2853/2853 sentence-initial "and", "that", etc.
@@ -110,6 +109,12 @@ s/ km / kilometers /gi;
 if(1) {
 s/(\d) k /${1}K /gi;
 }
+
+################################
+# v2: some minor additions:
+
+s/ percent / % /g;
+s/ b / /gi; # due to bad Arabic segmentation
 
 s=  += =g;
 s=^ +==g;
