@@ -90,6 +90,57 @@ public class ExperimentUtils {
     return range;
   }
 
+  public static void markRotatingDNPorCPinNP(Tree tree, int deIdx) {
+    Tree preT = Trees.getPreTerminal(tree, deIdx);
+    Tree DNPorCP = preT.parent(tree);
+    Tree theNP = DNPorCP.parent(tree);
+    if (!theNP.label().toString().equals("NP")) {
+      System.err.println("theNP="+theNP);
+      return;
+    }
+    if (!DNPorCP.label().toString().equals("DNP") &&
+        !DNPorCP.label().toString().equals("CP")) {
+      System.err.println("DNPorCP="+DNPorCP);
+      return;
+    }
+    System.err.println("theNP="+theNP);
+    System.err.println("DNPorCP="+DNPorCP);
+
+    StringBuilder newLabelV = new StringBuilder();
+    newLabelV.append(DNPorCP.label().toString()).append("r");
+    DNPorCP.label().setValue(newLabelV.toString());
+  }
+
+  static Tree processInternalDNPorCP(Tree t) {
+    // TODO: rotate DE and stuff
+    if (!t.value().equals("DNPr") &&
+        !t.value().equals("CPr")) {
+      throw new RuntimeException("t="+t+", only DNPr and CPr should be processed");
+    } else if (t.value().equals("DNPr")) {
+      t.label().setValue("DNP");
+    } else if (t.value().equals("CPr")) {
+      t.label().setValue("CP");
+    }
+    Tree newT = t.deepCopy();
+    List<Tree> children = t.getChildrenAsList();
+    int moveIdx = -1;
+    for(int i = 0 ; i < children.size(); i++) {
+      if (children.get(i).isPreTerminal()) {
+        children.get(i).firstChild().value().startsWith("的_");
+      }
+      moveIdx = i;
+    }
+    if (moveIdx < 0) throw new RuntimeException("no internal 的_ ?");
+    List<Tree> newChildren = new ArrayList<Tree>();
+    newChildren.add(children.get(moveIdx));
+    for(int i = 0 ; i < children.size(); i++) {
+      if (i==moveIdx) continue;
+      newChildren.add(children.get(i));
+    }
+    newT.setChildren(newChildren);
+    return newT;
+  }
+
   static String getNPwithDE_DNPorCPLabel(Tree tree, int deIdx) {
     Tree preT = Trees.getPreTerminal(tree, deIdx);
     Tree DNPorCP = preT.parent(tree);

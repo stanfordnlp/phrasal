@@ -6,6 +6,7 @@ import java.util.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
+import edu.stanford.nlp.trees.international.pennchinese.*;
 
 
 /**
@@ -297,7 +298,8 @@ public class AnnotatedTreePair {
       System.out.println("<hr>");
       System.out.printf("<a name=%d>\n", counter);
       System.out.printf("<h2>Sentence %d</h2>\n", counter);
-      atp.printTreePair();
+      //atp.printTreePair();
+      atp.printTreePairWithDeps();
       atp.printNPwithDEs();
       atp.printAlignmentGrid();
       counter++;
@@ -366,4 +368,49 @@ public class AnnotatedTreePair {
 
   public void setFileID(int fileid) { treepair_.setFileID(fileid); }
   public int getFileID() { return treepair_.getFileID(); }
+
+  public void printTreePairWithDeps() {
+    Tree chT = treepair_.chTrees().get(0);
+    List<Tree> enTrees = treepair_.enTrees();
+
+    // (1.1) Chinese Tree
+    System.out.println("<h3> Chinese Tree </h3>");
+    TreePair.printTree(chT);
+    Filter<String> puncWordFilter = Filters.acceptFilter();
+    System.out.println("<h3> Chinese Deps </h3>");
+    GrammaticalStructure gs = new ChineseGrammaticalStructure(chT, puncWordFilter);
+    Collection<TypedDependency> deps = gs.allTypedDependencies();
+    System.out.println("<pre>");
+    for (TypedDependency dep : deps) {
+      System.out.println(dep);
+    }
+    System.out.println("</pre>");
+
+    //GrammaticalRelation.clearMap();
+
+    // (2) English Tree
+    //for (Tree t : enTrees) {
+    for (int ti = 0; ti < enTrees.size(); ti++) {
+      Tree enT = enTrees.get(ti);
+      System.out.printf("<h3> English Tree(%d) </h3>\n", ti);
+      TreePair.printTree(enT);
+      System.err.println("=====================");
+      enT.pennPrint(System.err);
+      System.err.println("=====================");
+      System.err.println("enT.size() = "+enT.size());
+      System.err.println("enT.toString() = "+enT.toString());
+      /*
+      GrammaticalStructure gsE = new EnglishGrammaticalStructure(enT,puncWordFilter);
+
+      Collection<TypedDependency> depsE = gsE.allTypedDependencies();
+      System.out.printf("<h3> English Deps(%d) </h3>\n", ti);
+      System.out.println("<pre>");
+      for (TypedDependency dep : depsE) {
+        System.out.println(dep);
+      }
+      System.out.println("</pre>");
+      */
+    }
+
+  }
 }
