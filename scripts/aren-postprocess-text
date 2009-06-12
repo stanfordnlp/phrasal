@@ -27,7 +27,7 @@ s=$= =g;
 # Sentence-final punctuation, such as "? .":
 if(1) {
 s/(\:|\?)\s*\.\s*$/$1 \n/;
-#s/ [\,\;]\s*$/ \. \n/;
+s/ [\,\;]\s*$/ \. \n/;
 }
 
 # Sentence-initial "and", "that", etc.:
@@ -40,19 +40,20 @@ s/^\s*that\s+//i;
 # Bylines:
 if(1) {
 s/ (\d{1,2}) ?([\-\.]) ?(\d{1,2}) \(/date_byline($1,$2,$3)/ge;
-s/ (\d{1,2}) *\- *(\d{1,2}) *\- *(\d{4}) /full_date_byline($1,$2,$3)/ge;
+s/ (\d{1,2}) *(\-|\/) *(\d{1,2}) *(\-|\/) *(\d{4}) /full_date_byline($1,$2,$3,$4,$5)/ge;
+s/ (\d{4}) *(\-|\/) *(\d{1,2}) *(\-|\/) *(\d{1,2}) /full_date_byline($3,$2,$5,$4,$1)/ge;
 }
 
 sub date_byline {
 	my ($el1,$punc,$el2) = @_;
-	return " $el2-$el1 (" if($el1 > 12);
-	return " $el1-$el2 (";
+	return " $el1-$el2 (" if($el2 > 12);
+	return " $el2-$el1 (";
 }
 
 sub full_date_byline {
-	my ($el1,$el2,$year) = @_;
-	return " $el2-$el1-$year " if($el1 > 12);
-	return " $el1-$el2-$year ";
+	my ($el1,$punc1,$el2,$punc2,$year) = @_;
+	return " ${el1}${punc1}${el2}${punc2}${year} " if($el2 > 12);
+	return " ${el2}${punc1}${el1}${punc2}${year} ";
 }
 
 # Dollar signs:
@@ -108,6 +109,12 @@ s/ km / kilometers /gi;
 # Tokenization:
 if(1) {
 s/(\d) k /${1}K /gi;
+}
+
+# Fix some "He said:"
+if(1) {
+s/ (he|she) said " / $1 said : " /gi;
+s/ (he|she) said [\.,] " / $1 said : " /gi;
 }
 
 ################################

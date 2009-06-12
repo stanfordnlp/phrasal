@@ -166,9 +166,13 @@ MBR_SCALE=1
 $(TESTID).$(DEVID).%.mbr.$Nbest.s$(MBR_SCALE): $(TESTID).$(DEVID).%.mbr.$Nbest
 	mbr -s $(MBR_SCALE) -n 4 -w $<.wts -i $< > $@ 2> $@.log
 
-# Create Moses nbest list:
+# Create Moses nbest list (no duplicates):
 $(TESTID).$(DEVID).%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest
 	nbest_sparse2dense `grep -A 1 '^\[weights-file\]' $(DEVID).$(*F).pmert/phrasal.best.ini | tail -1` $< uniq 2> $@.wts | sort -n > $@ 
+
+# Create Moses nbest list (with duplicates):
+$(TESTID).$(DEVID).%.mbrD.$Nbest: $(TESTID).$(DEVID).%.$Nbest
+	nbest_sparse2dense `grep -A 1 '^\[weights-file\]' $(DEVID).$(*F).pmert/phrasal.best.ini | tail -1` $< 2> $@.wts | sort -n > $@ 
 
 #############################################
 # 1-best and n-best output with Phrasal:
