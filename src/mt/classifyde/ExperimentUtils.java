@@ -97,26 +97,29 @@ public class ExperimentUtils {
     if (!theNP.label().toString().equals("NP")) {
       return;
     }
+    /*
     if (!DNPorCP.label().toString().equals("DNP") &&
         !DNPorCP.label().toString().equals("CP")) {
       return;
     }
+    */
 
     StringBuilder newLabelV = new StringBuilder();
     newLabelV.append(DNPorCP.label().toString()).append("r");
     DNPorCP.label().setValue(newLabelV.toString());
   }
 
-  static Tree processInternalDNPorCP(Tree t) {
+  static Tree processInternalDEReordering(Tree t) {
     // TODO: rotate DE and stuff
-    if (!t.value().equals("DNPr") &&
-        !t.value().equals("CPr")) {
-      throw new RuntimeException("t="+t+", only DNPr and CPr should be processed");
-    } else if (t.value().equals("DNPr")) {
-      t.label().setValue("DNP");
-    } else if (t.value().equals("CPr")) {
-      t.label().setValue("CP");
+    //if (!t.value().endsWith("Pr") &&
+    //    !t.value().endsWith("Pr")) {
+    if (t.isLeaf() || !t.value().endsWith("r")) {
+      throw new RuntimeException("t="+t+", only *Pr should be processed");
     }
+    String tag = t.value();
+    tag = tag.replaceAll("r$", "");
+    t.label().setValue(tag);
+
     Tree newT = t.deepCopy();
     List<Tree> children = t.getChildrenAsList();
     int moveIdx = -1;

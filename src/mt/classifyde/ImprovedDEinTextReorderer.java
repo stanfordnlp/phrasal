@@ -10,9 +10,6 @@ import edu.stanford.nlp.ling.*;
 public class ImprovedDEinTextReorderer {
   public static void main(String[] args) throws IOException {
     Properties props = StringUtils.argsToProperties(args);
-    //Boolean noreorder = Boolean.parseBoolean(props.getProperty("noreorder", "false"));
-    //Boolean betterRange = Boolean.parseBoolean(props.getProperty("betterRange", "false"));
-    //Boolean strictRange = Boolean.parseBoolean(props.getProperty("strictRange", "false"));
 
     // (2) setting up the tree & sentence files
     String sentFile = props.getProperty("markedFile", null);
@@ -41,9 +38,11 @@ public class ImprovedDEinTextReorderer {
           newLeaves.get(deIdx).label().setValue("的");
           continue;
         }
-        // if not DNP or CP, they're not going to be reordered.
+        // if DE is not DEC/DEG, they're not going to be reordered.
         // remove the 的 tags as well
-        if(!dnpOrCPLabel.equals("DNP") && !dnpOrCPLabel.equals("CP")) {
+        Tree dePOS = newLeaves.get(deIdx).parent(newTree);
+        if(!dePOS.value().equals("DEG") && 
+           !dePOS.value().equals("DEC")) {
           String newLeaveVal = newLeaves.get(deIdx).value();
           if (newLeaveVal.equals("的_BprepA") || newLeaveVal.equals("的_relc") ||
               newLeaveVal.equals("的_swapped")) {
@@ -52,8 +51,6 @@ public class ImprovedDEinTextReorderer {
           }
         }
         
-        
-
         String de = yield.get(deIdx);
         if (!de.startsWith("的_"))
           throw new RuntimeException(de+"("+deIdx+") in "+StringUtils.join(yield, " ")+" is not a valid DE");
@@ -79,7 +76,8 @@ public class ImprovedDEinTextReorderer {
         // determine if tPtr needs to be reordered
         boolean needReorder = false;
         for(Tree c : tPtr.children()) {
-          if (c.label().toString().endsWith("r")) {
+          if (!c.isLeaf() &&
+              c.label().toString().endsWith("r")) {
             needReorder = true;
             //System.err.println("DEBUG: reorder for "+tPtr);
           }
@@ -90,10 +88,11 @@ public class ImprovedDEinTextReorderer {
         if (needReorder) {
           //System.err.println("DEBUG: need reorder");
           for(Tree c : tPtr.children()) {
-            if (c.label().toString().equals("DNPr") ||
-                c.label().toString().equals("CPr")) {
-              // TODO: process DNPr and CPr before pushing into stack
-              Tree newC = ExperimentUtils.processInternalDNPorCP(c);
+            //if (c.label().toString().equals("DNPr") ||
+            //    c.label().toString().equals("CPr")) {
+            if (!c.isLeaf() &&
+                c.label().toString().endsWith("r")) {
+              Tree newC = ExperimentUtils.processInternalDEReordering(c);
               childrenStack.push(newC);
               //System.err.println("DEBUG: push stack"+c);
             }
@@ -106,7 +105,6 @@ public class ImprovedDEinTextReorderer {
             newChildren.add(childrenStack.pop());
           }
           tPtr.setChildren(newChildren);
-          //tPtr.label().setValue("BLAH");
         }
         // add children now (after it's updated)
         q.addAll(tPtr.getChildrenAsList());
