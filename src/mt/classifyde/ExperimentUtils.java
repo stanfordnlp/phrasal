@@ -61,8 +61,11 @@ public class ExperimentUtils {
 
   public static Pair<Integer, Integer> getNPwithDERangeFromIdx(Tree tree, int deIdx) {
     Tree preT = Trees.getPreTerminal(tree, deIdx);
+    if (preT==null) new Pair<Integer,Integer>(-1, -1);
     Tree DNPorCP = preT.parent(tree);
+    if (DNPorCP==null) new Pair<Integer,Integer>(-1, -1);
     Tree theNP = DNPorCP.parent(tree);
+    if (theNP==null) new Pair<Integer,Integer>(-1, -1);
     int leftE = Trees.leftEdge(theNP, tree);
     int rightE = Trees.rightEdge(theNP, tree)-1;
     Pair<Integer,Integer> range = new Pair<Integer,Integer>(leftE, rightE);
