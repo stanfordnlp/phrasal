@@ -2479,6 +2479,25 @@ public class UnsmoothedMERT {
                       new TERpMetric<IString, String>(referencesTERp));
       System.err.printf("Maximizing %s: BLEU minus TERpA (beamWidth=%d, shiftDist=%d, terW=%f)\n",
               evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
+    } else if (evalMetric.startsWith("bleu+2meteor")) {
+    	List<List<Sequence<IString>>> referencesBleu = Metrics
+            .readReferences(referenceList.split(","));
+    	List<List<Sequence<IString>>> referencesMeteor = Metrics
+            .readReferences(referenceList.split(","), false);
+      String[] fields = evalMetric.split(":");
+			double alpha = 0.95, beta = 0.5, gamma = 0.5;
+      if(fields.length > 1) {
+        assert(fields.length == 4);
+        alpha = Double.parseDouble(fields[1]);
+        beta = Double.parseDouble(fields[2]);
+        gamma = Double.parseDouble(fields[2]);
+      }
+      emetric = new LinearCombinationMetric<IString, String>
+              (new double[] {1.0, 2.0},
+                      new BLEUMetric<IString, String>(referencesBleu),
+                      new METEOR2Metric<IString, String>(referencesMeteor, alpha, beta, gamma));
+      System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n",
+              evalMetric, 2.0);
     } else if (evalMetric.startsWith("bleu-2terpa")) {
     	List<List<Sequence<IString>>> referencesBleu = Metrics
             .readReferences(referenceList.split(","));
