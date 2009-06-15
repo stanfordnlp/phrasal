@@ -37,8 +37,8 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
     // Sentence boundaries:
     if(extractBoundaryPhrases) {
       // make sure we can always translate <s> as <s> and </s> as </s>:
-      extractPhrase(sent,0,0,0,0);
-      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1);
+      extractPhrase(sent,0,0,0,0,true);
+      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1,true);
     }
 
     // For each English phrase:
@@ -79,7 +79,7 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
         for(int i=F1; i<=f1; ++i)
           for(int j=f2; j<=F2; ++j)
             if(j-i < maxPhraseLenF)
-              extractPhrase(sent,i,j,e1,e2);
+              extractPhrase(sent,i,j,e1,e2,true);
       }
     }
     if(needAlGrid)

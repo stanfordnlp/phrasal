@@ -49,7 +49,7 @@ public class CombinedFeatureExtractor {
   static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
   static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
   static public final String LOWERCASE_OPT = "lowercase";
-  static public final String MAX_CONSISTENCY_VIOLATIONS_OPT = "maxConsistencyViolations";
+  static public final String MAX_CROSSINGS_OPT = "maxCrossings";
   static public final String MEM_USAGE_FREQ_OPT = "memUsageFreq";
 
   // phrase translation probs:
@@ -89,7 +89,7 @@ public class CombinedFeatureExtractor {
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
-			 MAX_CONSISTENCY_VIOLATIONS_OPT, MEM_USAGE_FREQ_OPT
+			 MAX_CROSSINGS_OPT, MEM_USAGE_FREQ_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -252,10 +252,10 @@ public class CombinedFeatureExtractor {
         System.exit(1);
       }
     }
-    int maxConsistencyViolations = Integer.parseInt(prop.getProperty(MAX_CONSISTENCY_VIOLATIONS_OPT,"-1"));
-    phraseExtractor = maxConsistencyViolations >= 0 ?
-			new SoftPhraseExtractor(prop,maxConsistencyViolations,alTemps,extractors,fPhrases) :
-			new LinearTimePhraseExtractor(prop,alTemps,extractors);
+    int maxCrossings = Integer.parseInt(prop.getProperty(MAX_CROSSINGS_OPT,"-1"));
+    phraseExtractor = (maxCrossings >= 0) ?
+      new SoftPhraseExtractor(prop,maxCrossings,alTemps,extractors) :
+      new LinearTimePhraseExtractor(prop,alTemps,extractors);
     setTotalPassNumber();
   }
 

@@ -42,7 +42,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
-                        Set<Integer>[] f2e, Set<Integer>[] e2f) {
+                        SortedSet<Integer>[] f2e, SortedSet<Integer>[] e2f) {
     super(f,e,f2e,e2f);
   }
 

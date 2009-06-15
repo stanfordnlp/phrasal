@@ -1,33 +1,31 @@
 package mt.train;
 
-import edu.stanford.nlp.util.IString;
+import edu.stanford.nlp.util.Pair;
 
 import java.util.*;
 
-import mt.base.Sequence;
-
 
 /**
+ * Extracts phrase pairs with up to a given number of crossings.
+ *
  * @author Michel Galley
  */
 public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
-  private final int maxCrosses;
+  private final int maxCrossings;
+  private final Set<Pair<Integer,Integer>> cache = new HashSet<Pair<Integer,Integer>>();
 
-  //private final boolean exact = true;
+  private static final int MAX_SENT_LEN = AlignmentGrid.MAX_SENT_LEN;
 
-  BitSet filter = new BitSet(IString.index.size());
 
-  public SoftPhraseExtractor
-   (Properties prop, int maxConsistencyViolations, AlignmentTemplates alTemps,
-    List<AbstractFeatureExtractor> extractors, Sequence<IString>[] filter) {
+  // Count of number of alignments inside current range [f1,f2]:
+  // (see loops inside extractPhrases to see what range [f1,f2] represents)
+  private static final int[] in = new int[MAX_SENT_LEN];
+
+  public SoftPhraseExtractor(Properties prop, int maxCrossings, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    this.maxCrosses = maxConsistencyViolations;
-    System.err.println("Using soft phrase extractor (v2) instead of Moses's.");
-    System.err.println("Maximum number of consistency violations: "+maxConsistencyViolations);
-    for(Sequence<IString> seq : filter)
-      for(IString el : seq)
-        this.filter.set(el.id);
+    this.maxCrossings = maxCrossings;
+    System.err.println("Using experimental phrase extractor. Max crossings: "+maxCrossings);
   }
 
   public void extractPhrases(WordAlignment sent) {
@@ -46,69 +44,137 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
         alGrid.printAlTempInGrid("line: "+sent.getId(),sent,null,System.err);
     }
 
-    // Sentence boundaries:
-    if(extractBoundaryPhrases) {
-      // make sure we can always translate <s> as <s> and </s> as </s>:
-      extractPhrase(sent,0,0,0,0);
-      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1);
-    }
+    // For each Foreign phrase [f1,f2]:
+    for(int f1=0; f1<fsize; ++f1) {
 
-    for(int fi=0; fi<fsize; ++fi) {
-      for(int ei : sent.f2e(fi)) {
-        for(int ei1=ei; ei1>=Math.max(0,ei-maxPhraseLenE+1); --ei1) {
-          for(int ei2=ei; ei2<=Math.min(esize-1,ei1+maxPhraseLenE-1); ++ei2) {
-            int crosses = 0;
-            for(int e : sent.f2e(fi)) {
-              if(e < ei1 || e > ei2) {
-                if(++crosses >= maxCrosses)
-                  break;
+      int e1=Integer.MAX_VALUE;
+			int e2=Integer.MIN_VALUE;
+      int lastf = Math.min(fsize,f1+maxPhraseLenF)-1;
+
+      for(int f2=f1; f2<=lastf; ++f2) {
+
+        cache.clear();
+
+        // Find range of f aligning to e1...e2:
+        SortedSet<Integer> ess = sent.f2e(f2);
+        if(!ess.isEmpty()) {
+          int emin = ess.first();
+          int emax = ess.last();
+          if(emin<e1) e1 = emin;
+          if(emax>e2) e2 = emax;
+        }
+
+        // No word alignment within that range:
+        if(e1>e2)
+          continue;
+        
+        // Count alignments outside [e1,e2] and inside [f1,f2]:
+        int crossingsInside = 0;
+        for(int ei=e1; ei<=e2; ++ei) {
+          in[ei] = sent.e2fSize(ei,f1,f2);
+          crossingsInside += sent.e2f(ei).size() - in[ei];
+        }
+
+        //System.err.printf("%d-%d %d-%d\n",f1,f2,e1,e2);
+
+        // Grow block downwards:
+        {
+          int crossingsInsideBelowD = crossingsInside;
+          int lastE1 = Math.max(0,e2-maxPhraseLenE+1);
+
+          for(int i=e1; i>=lastE1; --i) {
+
+            if(i<e1)
+              crossingsInsideBelowD += sent.e2f(i).size();
+            if(maxCrossings < crossingsInsideBelowD)
+              continue;
+
+            // Grow block upwards:
+            {
+              int crossingsU = crossingsInsideBelowD;
+              int lastE2 = Math.min(esize-1,i+maxPhraseLenE-1);
+
+              for(int j=e2; j<=lastE2; ++j) {
+                assert(j-i < maxPhraseLenE);
+                if(j>e2)
+                  crossingsU += sent.e2f(j).size();
+                if(maxCrossings >= crossingsU && newPair(i,j)) {
+                  //System.err.printf("G-G %d %d %d\n",crossingsInside,crossingsInsideBelowD,crossingsU);
+                  extractPhrase(sent,f1,f2,i,j,crossingsU==0);
+                }
               }
             }
-            if(crosses <= maxCrosses) {
-              int crosses2 = crosses;
-              for(int fi1=fi; fi1>=Math.max(0,fi-maxPhraseLenF+1); --fi1) {
-                for(int e : sent.f2e(fi1)) {
-                  if(e < ei1 || e > ei2) {
-                    if(++crosses2 >= maxCrosses)
-                      break;
-                  }
+
+            // Shrink block downwards:
+            if(maxCrossings > 0) {
+              int crossingsD = crossingsInsideBelowD;
+              int mini = Math.max(i,e1);
+              for(int j=e2; j>=mini; --j) {
+                if(j<e2)
+                  crossingsD += 2*in[j] - sent.e2f(j).size();
+                if(maxCrossings >= crossingsD && newPair(i,j)) {
+                  //System.err.printf("G-S %d %d %d\n",crossingsInside,crossingsInsideBelowD,crossingsD);
+                  extractPhrase(sent,f1,f2,i,j,false);
                 }
-                if(crosses2 <= maxCrosses) {
-                  int crosses3 = crosses2;
-                  for(int fi2=fi; fi2<=Math.min(fsize-1,fi1+maxPhraseLenF); ++fi2) {
-                    for(int e : sent.f2e(fi2)) {
-                      if(e < ei1 || e > ei2) {
-                        if(++crosses3 >= maxCrosses)
-                          break;
-                      }
-                    }
-                    if(crosses3 <= maxCrosses) {
-                      int crosses4 = crosses3;
-                      for(int e=ei1; e<=ei2; ++e) {
-                        for(int f : sent.e2f(e)) {
-                          if(f < fi1 || f > fi2) {
-                            ++crosses4;
-                          }
-                        }
-                      }
-                      if(crosses4 <= maxCrosses) {
-                        //if(consistencyViolations == 0) {
-                        //  if(!checkAlignmentConsistency(sent, fi1, fi2, ei1, ei2))
-                        //    System.err.printf("consistency violations %d, but should be 0.\n", crosses4);
-                        //}
-                        extractPhrase(sent,fi1,fi2,ei1,ei2);
-                      }
-                    }
-                  }
+              }
+            }
+          }
+        }
+
+        // Shrink block upwards:
+        if(maxCrossings > 0) {
+          int crossingsInsideBelowU = crossingsInside;
+          for(int i=e1; i<=e2; ++i) {
+
+            if(i>e1) {
+              crossingsInsideBelowU += 2*in[i-1] - sent.e2f(i-1).size();
+              //System.err.printf("S-G update at %d: %d\n",i-1,crossingsInsideBelowU);
+            }
+            if(maxCrossings < crossingsInsideBelowU)
+              continue;
+
+            // Grow block upwards:
+            {
+              int crossingsU = crossingsInsideBelowU;
+              int lastE2 = Math.min(esize-1,i+maxPhraseLenE-1);
+
+              for(int j=e2; j<=lastE2; ++j) {
+                assert(j-i < maxPhraseLenE);
+                if(j>e2)
+                  crossingsU += sent.e2f(j).size();
+                if(maxCrossings >= crossingsU && newPair(i,j)) {
+                  //System.err.printf("S-G %d %d %d\n",crossingsInside,crossingsInsideBelowU,crossingsU);
+                  extractPhrase(sent,f1,f2,i,j,false);
+                }
+              }
+            }
+
+            // Shrink block downwards:
+            {
+              int crossingsD = crossingsInsideBelowU;
+              int mini= Math.max(i,e1);
+              for(int j=e2; j>=mini; --j) {
+                if(j<e2) {
+                  crossingsD += 2*in[j+1] - sent.e2f(j+1).size();
+                  //System.err.printf("S-S update at %d: %d\n",j+1,crossingsD);
+                }
+                if(maxCrossings >= crossingsD && newPair(i,j)) {
+                  //System.err.printf("S-S %d %d %d\n",crossingsInside,crossingsInsideBelowU,crossingsD);
+                  extractPhrase(sent,f1,f2,i,j,false);
                 }
               }
             }
           }
         }
       }
+      
     }
-    
     if(needAlGrid)
       extractPhrasesFromAlGrid(sent);
+  }
+
+  private boolean newPair(int i, int j) {
+    Pair<Integer,Integer> p = new Pair<Integer,Integer>(i,j);
+    return cache.add(p); 
   }
 }

@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.TreeSet;
+import java.util.SortedSet;
 
 import edu.stanford.nlp.util.IString;
 
@@ -34,13 +35,13 @@ public class AbstractWordAlignment implements WordAlignment {
 
   Sequence<IString> f;
   Sequence<IString> e;
-  Set<Integer>[] f2e;
-  Set<Integer>[] e2f;
+  SortedSet<Integer>[] f2e;
+  SortedSet<Integer>[] e2f;
 
   AbstractWordAlignment() {}
 
   AbstractWordAlignment(Sequence<IString> f, Sequence<IString> e,
-                        Set<Integer>[] f2e, Set<Integer>[] e2f) {
+                        SortedSet<Integer>[] f2e, SortedSet<Integer>[] e2f) {
     id = 0;
     this.f = f; this.e = e;
     this.f2e = f2e; this.e2f = e2f;
@@ -54,8 +55,20 @@ public class AbstractWordAlignment implements WordAlignment {
   public int fSize() { return f.size(); }
   public int eSize() { return e.size(); }
   
-  public Set<Integer> f2e(int i) { return f2e[i]; }
-  public Set<Integer> e2f(int i) { return e2f[i]; }
+  public SortedSet<Integer> f2e(int i) { return f2e[i]; }
+  public SortedSet<Integer> e2f(int i) { return e2f[i]; }
+
+  public int f2eSize(int i, int min, int max) { return _size(f2e[i],min,max); }
+  public int e2fSize(int i, int min, int max) { return _size(e2f[i],min,max); }
+
+  private int _size(SortedSet<Integer> al, int min, int max) {
+    int count = 0;
+    for(int el : al) {
+      if(el > max) return count;
+      if(el >= min) ++count;
+    }
+    return count;
+  }
 
   String toString(Set<Integer>[] align) {
     return toString(align,true);

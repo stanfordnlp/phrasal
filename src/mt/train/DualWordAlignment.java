@@ -2,6 +2,7 @@ package mt.train;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.SortedSet;
 import java.io.IOException;
 
 import edu.stanford.nlp.util.IString;
@@ -25,8 +26,8 @@ public class DualWordAlignment implements WordAlignment {
 
   private Sequence<IString> f;
   private Sequence<IString> e;
-  private Set<Integer>[] alignment1_f2e;
-  private Set<Integer>[] alignment2_f2e;
+  private SortedSet<Integer>[] alignment1_f2e;
+  private SortedSet<Integer>[] alignment2_f2e;
 
   DualWordAlignment() {}
 
@@ -92,6 +93,9 @@ public class DualWordAlignment implements WordAlignment {
 
   public Sequence<IString> f() { return f; }
   public Sequence<IString> e() { return e; }
-  public Set<Integer> f2e(int i) { return alignment1_f2e[i]; }
-  public Set<Integer> e2f(int i) { return alignment2_f2e[i]; }
+  public SortedSet<Integer> f2e(int i) { return alignment1_f2e[i]; }
+  public SortedSet<Integer> e2f(int i) { return alignment2_f2e[i]; }
+
+  public int f2eSize(int i, int min, int max) { throw new UnsupportedOperationException(); }
+  public int e2fSize(int i, int min, int max) { throw new UnsupportedOperationException(); }
 }

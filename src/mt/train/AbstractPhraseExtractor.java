@@ -84,12 +84,17 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
   public AlignmentGrid getAlGrid() { return alGrid; }
 
-  void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
+  /*void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
+    extractPhrase(sent, f1, f2, e1, e2, true);
+  }*/
+
+  void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent) {
 
     // Check if alTemp meets length requirements:
     if(f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
-      if(needAlGrid)
+      if(needAlGrid && isConsistent) {
         alGrid.addAlTemp(f1,f2,e1,e2);
+      }
       if(DETAILED_DEBUG)
         System.err.printf("skipping too long: %d %d\n",f2-f1+1,e2-e1+1);
       return;
@@ -98,11 +103,11 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     // Create alTemp:
     AlignmentTemplateInstance alTemp;
     if(needAlGrid) {
-      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,true);
-      alGrid.addAlTemp(alTemp);
+      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,isConsistent);
+      alGrid.addAlTemp(alTemp, isConsistent);
     } else {
       alTemp = this.alTemp;
-      alTemp.init(sent,f1,f2,e1,e2,true);
+      alTemp.init(sent,f1,f2,e1,e2,isConsistent);
     }
 
     synchronized(alTemps) {
@@ -133,6 +138,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   }
 
   boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
+    if(true)
+      throw new RuntimeException();
     boolean aligned = false;
     if(f2-f1 > maxPhraseLenF) return false;
     if(e2-e1 > maxPhraseLenE) return false;

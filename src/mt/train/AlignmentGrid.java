@@ -81,12 +81,14 @@ public class AlignmentGrid {
   /**
    * Add alignment template to the grid.
    */
-  public void addAlTemp(AlignmentTemplateInstance alTemp) {
+  public void addAlTemp(AlignmentTemplateInstance alTemp, boolean isConsistent) {
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
-    alGridCells[f1][e1].addTopLeft(alTemp);
-    alGridCells[f2][e1].addTopRight(alTemp);
-    alGridCells[f1][e2].addBottomLeft(alTemp);
-    alGridCells[f2][e2].addBottomRight(alTemp);
+    if(isConsistent) {
+      alGridCells[f1][e1].addTopLeft(alTemp);
+      alGridCells[f2][e1].addTopRight(alTemp);
+      alGridCells[f1][e2].addBottomLeft(alTemp);
+      alGridCells[f2][e2].addBottomRight(alTemp);
+    }
     alTempList.add(alTemp);
   }
 

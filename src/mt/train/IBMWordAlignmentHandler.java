@@ -26,8 +26,8 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
 
   private Sequence<IString> f=null;
   private Sequence<IString> e=null;
-  private Set<Integer>[] f2e;
-  private Set<Integer>[] e2f;
+  private SortedSet<Integer>[] f2e;
+  private SortedSet<Integer>[] e2f;
 
   private TagType tagType;
   private int fLen, eLen;
@@ -79,9 +79,9 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
       tagType = TagType.TSTR;
     } else if("alignment".equals(localName)) {
       tagType = TagType.AL;
-      f2e = new Set[fLen];
+      f2e = new TreeSet[fLen];
       for(int i=0; i<fLen; ++i) f2e[i] = new TreeSet();
-      e2f = new Set[eLen];
+      e2f = new TreeSet[eLen];
       for(int i=0; i<eLen; ++i) e2f[i] = new TreeSet();
     }
     //System.err.printf("start: %s\n",localName);

@@ -14,6 +14,8 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
 
   private WordAlignment sent; // sentence pair from which altemp was extracted
 
+  //private boolean consistent = true;
+
   public AlignmentTemplateInstance() { fStartPos = eStartPos = -1;  }
 
   /**
@@ -21,16 +23,14 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
    * @param lazy If true, some alignment member variables are null, 
    * which cause f2e() and e2f() to raise a NullPointerException.
    */
-  public AlignmentTemplateInstance(WordAlignment sent, int f1, int f2, int e1, int e2, boolean lazy) {
-    init(sent, f1, f2, e1, e2, lazy);
+  public AlignmentTemplateInstance(WordAlignment sent, int f1, int f2, int e1, int e2, boolean consistent) {
     assert this.sent != null;
+    init(sent, f1, f2, e1, e2, consistent);
   }
 
-  public AlignmentTemplateInstance(WordAlignment sent, int f1, int f2, int e1, int e2) {
-    this(sent,f1,f2,e1,e2,false);
-  }
-
-  public void init(WordAlignment sent, int f1, int f2, int e1, int e2, boolean lazy) {
+  public void init(WordAlignment sent, int f1, int f2, int e1, int e2, boolean consistent) {
+    //this.consistent = consistent;
+    final boolean lazy = true;
     reset();
     this.sent = sent;
     this.fStartPos = f1;
@@ -62,7 +62,7 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
     for(Short a : alTable)
       align[++i] = a;
     if(DEBUG) {
-      System.err.println("New alignment template: "+toString());
+      System.err.println("New alignment template: "+toString(true));
       System.err.println("String representation: "+Arrays.toString(align));
     }
     assert(fEndPos() == f2);
@@ -76,4 +76,6 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
 
   public int fEndPos() { return fStartPos+f.size()-1; }
   public int eEndPos() { return eStartPos+e.size()-1; }
+
+  //public boolean isConsistent() { return consistent; }
 }

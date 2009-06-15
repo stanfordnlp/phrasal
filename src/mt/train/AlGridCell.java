@@ -10,7 +10,7 @@ import java.util.ArrayList;
  *
  * @author Michel Galley
  */
-public class AlGridCell<T> {
+public class AlGridCell<T extends AlignmentTemplateInstance> {
 
   private List<T>
    topLeft = new ArrayList<T>(), 

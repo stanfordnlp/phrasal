@@ -36,47 +36,63 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
     // Sentence boundaries:
     if(extractBoundaryPhrases) {
       // make sure we can always translate <s> as <s> and </s> as </s>:
-      extractPhrase(sent,0,0,0,0);
-      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1);
+      extractPhrase(sent,0,0,0,0,true);
+      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1,true);
     }
 
     // For each English phrase:
     for(int e1=0; e1<esize; ++e1) {
-			int f1=Integer.MAX_VALUE;
+
+      int f1=Integer.MAX_VALUE;
 			int f2=Integer.MIN_VALUE;
-      for(int e2=e1; e2<esize && e2-e1<maxPhraseLenE; ++e2) {
+      int laste = Math.min(esize,e1+maxPhraseLenE)-1;
+
+      for(int e2=e1; e2<=laste; ++e2) {
+
         // Find range of f aligning to e1...e2:
-				for(int fi : sent.e2f(e2)) {
-					if(fi<f1) f1 = fi;
-					if(fi>f2) f2 = fi;
-				}
+        SortedSet<Integer> fss = sent.e2f(e2);
+        if(!fss.isEmpty()) {
+          int fmin = fss.first();
+          int fmax = fss.last();
+          if(fmin<f1) f1 = fmin;
+          if(fmax>f2) f2 = fmax;
+        }
+
         // Phrase too long:
         if(f2-f1>=maxPhraseLenF)
-          continue; 
+          continue;
+
         // No word alignment within that range, or phrase too long?
         if(NO_EMPTY_ALIGNMENT && f1>f2)
           continue;
+
         // Check if range [e1-e2] [f1-f2] is admissible:
         boolean admissible = true;
-        for(int fi=f1; fi<=f2 && admissible; ++fi) {
-          for(int ei : sent.f2e(fi)) {
-            if(ei<e1 || ei>e2) {
+        for(int fi=f1; fi<=f2; ++fi) {
+          SortedSet<Integer> ess = sent.f2e(fi);
+          if(!ess.isEmpty())
+            if(ess.first() < e1 || ess.last() > e2) {
               admissible = false;
               break;
             }
-          }
         }
         if(!admissible)
           continue;
+
         // See how much we can expand the phrase to cover unaligned words:
         int F1 = f1, F2 = f2;
-        while(F1-1>=0    && f2-F1<maxPhraseLenF-1 && sent.f2e(F1-1).size()==0) { --F1; }
-        while(F2+1<fsize && F2-f1<maxPhraseLenF-1 && sent.f2e(F2+1).size()==0) { ++F2; }
+        int lastF1 = Math.max(0,f2-maxPhraseLenF+1);
+        while(F1 > lastF1 && sent.f2e(F1-1).size()==0) { --F1; }
+        int lastF2 = Math.min(fsize-1,f1+maxPhraseLenF-1);
+        while(F2 < lastF2 && sent.f2e(F2+1).size()==0) { ++F2; }
 
-        for(int i=F1; i<=f1; ++i)
-          for(int j=f2; j<=F2; ++j)
-            if(j-i < maxPhraseLenF)
-              extractPhrase(sent,i,j,e1,e2);
+        for(int i=F1; i<=f1; ++i) {
+          int lasti = Math.min(F2,i+maxPhraseLenF-1);
+          for(int j=f2; j<=lasti; ++j) {
+            assert(j-i < maxPhraseLenF);
+            extractPhrase(sent,i,j,e1,e2,true);
+          }
+        }
       }
     }
     if(needAlGrid)
