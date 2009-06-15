@@ -103,11 +103,11 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     // Create alTemp:
     AlignmentTemplateInstance alTemp;
     if(needAlGrid) {
-      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,isConsistent);
+      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2);
       alGrid.addAlTemp(alTemp, isConsistent);
     } else {
       alTemp = this.alTemp;
-      alTemp.init(sent,f1,f2,e1,e2,isConsistent);
+      alTemp.init(sent,f1,f2,e1,e2);
     }
 
     synchronized(alTemps) {

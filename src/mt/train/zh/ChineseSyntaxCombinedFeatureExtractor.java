@@ -438,7 +438,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
               if (VERBOSE) System.err.printf("Add to Al Grid: f(%d-%d) e(%d-%d)\n", i, j, e1, e2);
               addAlTemp(sent,i,j,e1,e2);
             }
-            alTemp = new AlignmentTemplateInstance(sent,i,j,e1,e2,true);
+            alTemp = new AlignmentTemplateInstance(sent,i,j,e1,e2);
             if (VERBOSE) System.err.printf("Add to Full Grid: f(%d-%d) e(%d-%d)\n", i, j, e1, e2);
             fullAlGrid.addAlTemp(alTemp,true);
           }
@@ -475,11 +475,11 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     AlignmentTemplateInstance alTemp = null;
 
     if(needAlGrid) {
-      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,true);
+      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2);
       alGrid.addAlTemp(alTemp,true);
     } else {
       alTemp = this.alTemp;
-      alTemp.init(sent,f1,f2,e1,e2,true);
+      alTemp.init(sent,f1,f2,e1,e2);
     }
 
     // Add it to index:

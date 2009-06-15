@@ -23,13 +23,11 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
    * @param lazy If true, some alignment member variables are null, 
    * which cause f2e() and e2f() to raise a NullPointerException.
    */
-  public AlignmentTemplateInstance(WordAlignment sent, int f1, int f2, int e1, int e2, boolean consistent) {
-    assert this.sent != null;
-    init(sent, f1, f2, e1, e2, consistent);
+  public AlignmentTemplateInstance(WordAlignment sent, int f1, int f2, int e1, int e2) {
+    init(sent, f1, f2, e1, e2);
   }
 
-  public void init(WordAlignment sent, int f1, int f2, int e1, int e2, boolean consistent) {
-    //this.consistent = consistent;
+  public void init(WordAlignment sent, int f1, int f2, int e1, int e2) {
     final boolean lazy = true;
     reset();
     this.sent = sent;
