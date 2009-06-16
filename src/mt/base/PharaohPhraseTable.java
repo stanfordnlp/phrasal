@@ -24,8 +24,11 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	public static final String FIVESCORE_PHRASE_PENALTY = "phrasePenalty";
 	public static final String COUNT = "count";
 	public static final String UNIQ = "uniq";
+	public static final String NOISY = "noisy"; // "noisy" phrases, i.e., extracted despite inconsistencies with word alignment
 	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES = { 
 		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY };
+	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_NOISY = { 
+		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY, NOISY };
 	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_COUNT = { 
 		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY, COUNT, UNIQ };
 	public static final String[] CANONICAL_ONESCORE_SCORE_TYPES = {ONESCORE_P_t_f};
@@ -138,6 +141,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		String[] scoreNames;
 		if (countScores == 7) {
 			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_COUNT;
+		} else if(countScores == 6) {
+			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_NOISY;
 		} else if (countScores == 5) {
 			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES;
 		} else if (countScores == 1) {
