@@ -114,7 +114,7 @@ public class MTScorer implements ExternalMTScorer {
     }
     
     if(withMETEOR)
-      scoresMETEOR = METEORMetric.score(data, null); 
+      scoresMETEOR = METEOR0_7Metric.score(data, null); 
   }
 
   public Counter<String> scoreMTOutput(String ref, String hyp) {

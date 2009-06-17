@@ -12,7 +12,7 @@ import mt.base.IOTools;
 /**
  * @author Michel Galley
  */
-public class METEORMetric {
+public class METEOR0_7Metric {
   // TODO: have METEOR extend AbstractMetric<TK,FV>
 
   private static final String rootName = "meteor.tmp.";
