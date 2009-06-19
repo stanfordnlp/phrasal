@@ -1,6 +1,5 @@
 #!/usr/bin/perl
-
-BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
+BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 
 use ChineseNumbersU8;
 
@@ -30,8 +29,7 @@ binmode(STDIN,":utf8");
 binmode(STDOUT,":utf8");
 binmode(STDERR,":utf8");
 
-use utils::opt  qw(&get_args &get_opts);
-use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+use arg_utils qw(&get_args &get_opts);
 
 my %opts = get_opts(['t',0,'Chinese Name Transliteration will be used'],
                     ['n',0,'NIST: using a different conversion table!'],

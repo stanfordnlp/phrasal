@@ -1,47 +1,44 @@
 #!/usr/bin/perl
+BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 
 #####################################################
-# Create a phrase-table and lexical re-ordering tables
+# Creates a phrase-table and a lexical re-ordering table
 # from the output of CombinedFeatureExtractor.
 # The optional third argument is a threshold on p(e|f).
 #
 # Created by Michel Galley (mgalley@stanford.edu)
 # on Wed 23 Jan 2008 01:00:12 PM PST
-# $Id$
 #####################################################
 
 use strict;
-use POSIX;
 use Fatal qw(open close);
 use utf8;
 binmode(STDIN,":utf8");
 binmode(STDOUT,":utf8");
 binmode(STDERR,":utf8");
 
-my $ptable = $ARGV[0];
-my $otable = $ARGV[1];
-my $minp = $ARGV[2] || 0;
-my $sz = $ARGV[3] || 6;
+use mt_utils qw(&load_ptable_fh &filter_ptable &dump_ptable &remove_unreachable_phrases);
 
-if($ptable =~ /\.gz$/) { open(P,"| gzip > $ptable"); }
-else { open(P,"> $ptable"); }
+my $pfile = $ARGV[0];
+my $ofile = $ARGV[1];
+my $minp = $ARGV[2];
+my $sz = $ARGV[3];
+$sz = 6 unless defined $sz;
+
+my %align;
+my ($ptable,$align,$nfeat) = load_ptable_fh(*STDIN, align => 1);
+remove_unreachable_phrases($ptable);
+#filter_ptable($ptable,3,$minp);
+
+if($pfile =~ /\.gz$/) { open(P,"| gzip > $pfile"); }
+else { open(P,"> $pfile"); }
 binmode(P,":utf8");
-if($otable =~ /\.gz$/) { open(O,"| gzip > $otable"); }
-else { open(O,"> $otable"); }
+if($ofile =~ /\.gz$/) { open(O,"| gzip > $ofile"); }
+else { open(O,"> $ofile"); }
 binmode(O,":utf8");
 
-while(<STDIN>) {
-	chomp;
-	if(/  /) {
-		print STDERR "BAD PHRASE: $_\n";
-	} elsif(/^([^\|]+ \|\|\| [^\|]+) \|\|\| ([^\|]+ \|\|\| [^\|]+) \|\|\| (\S+ \S+ (\S+) \S+ \S+)(.*)((\s+\S+){$sz})\s*$/) {
-		next if $4 < $minp;
-		print P "$1 ||| $2 ||| $3$5 \n";
-		print O "$1 |||$6 \n";
-	} else {
-		print STDERR "BAD PHRASE: $_\n";
-	}
-}
+dump_ptable($ptable,$align,  fh => *P, first => 0, size => $nfeat-$sz);
+dump_ptable($ptable,\%align, fh => *O, first => ($nfeat-$sz), size => $sz);
 
 close(P);
 close(O);

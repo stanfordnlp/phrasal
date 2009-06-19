@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
+
+###########################################################
+# Takes two phrase tables as argument (a 'good' and a 'noisy'
+# one). Each phrase pair appearing in the latter but not in 
+# the latter is added to the former. A binary feature is 
+# added discriminate between original phrase pairs and
+# those taken from the 'noisy' phrase table.
+#
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Mon 15 Jun 2009 03:32:13 AM PDT
+###########################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+use mt_utils qw(&load_ptable &add_feature &load_phrases &dump_ptable);
+
+die "Usage: $0 <main_table> <aux_table> <dev_set> <max_phrase_len> <min_count>\n" if $#ARGV != 4;
+
+my ($tmain,$amain) = load_ptable($ARGV[0], align => 1); 
+my ($taux,$aaux) = load_ptable($ARGV[1], align => 1); 
+my $phrases = load_phrases($ARGV[2], maxLen => $ARGV[3]); 
+my $minc = $ARGV[4];
+
+add_feature($tmain,1);
+add_feature($taux,1);
+
+my $i=0;
+foreach my $f (keys %{$phrases}) {
+	print STDERR "phrase: $f\n";
+	my @main = keys %{$tmain->{$f}};
+	my $mainc = scalar @main;
+	if($minc > $mainc) {
+		my @aux = keys %{$taux->{$f}};
+		my $auxc = scalar @aux;
+		print STDERR "below threshold ($minc > $mainc), $auxc: {{{$f}}}\n";
+		print STDERR "".(scalar @main)."\t".(scalar @aux)."\t$f\n" if($auxc > 0);
+		++$i;
+		for my $e (keys %{$taux->{$f}}) {
+			if(!defined $tmain->{$f}{$e}) {
+				$tmain->{$f}{$e} = $taux->{$f}{$e};
+				$amain->{$f}{$e} = $aaux->{$f}{$e};
+				my $t = $tmain->{$f}{$e};
+				$t->[$#$t] = exp(-1);
+			}
+		}
+	}
+}
+print STDERR "foreign phrases: $i\n";
+
+dump_ptable($tmain,$amain);

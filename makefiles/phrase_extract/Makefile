@@ -255,6 +255,13 @@ $(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID)
 	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" \
 	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref bleu $(DEVID).$< >& logs/$(DEVID).$(*F).$N.pmert.log
 
+# Maximize BLEU-3 (n-best):
+$(DEVID).%.$N.bleu3_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
+	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
+	$(PM) $(NBEST_SIZE) --working-dir=$(DEVID).$(*F).$N.bleu3_pmert \
+	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" \
+	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref bleu:3 $(DEVID).$< >& logs/$(DEVID).$(*F).$N.bleu3_pmert.log
+
 # Maximize METEOR (n-best):
 $(DEVID).%.$N.meteor_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID).$(IE) 
 	$(SCRIPTS)/update_ini mt03 $(DEVID) < $< > $(DEVID).$<
@@ -365,10 +372,10 @@ $(DEVID).%.bt_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEVID)
 soft: $(DEVID).tables/soft-phrases.0.gz $(DEVID).tables/soft-phrases.1.gz $(DEVID).tables/soft-phrases.2.gz $(DEVID).tables/soft-phrases.3.gz $(DEVID).tables/soft-phrases.4.gz 
 
 $(DEVID).tables/soft-phrases.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
-	java -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -maxCrosses $(*F) -extractors mt.train.PharaohFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 2> $@.log | gzip > $@
+	java -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -maxCrossings $(*F) -extractors mt.train.PharaohFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 2> $@.log | gzip > $@
 
 $(TESTID).tables/soft-phrases.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
-	java -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -maxCrosses $(*F) -extractors mt.train.PharaohFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 2> $@.log | gzip > $@
+	java -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) mt.train.CombinedFeatureExtractor $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -maxCrossings $(*F) -extractors mt.train.PharaohFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 2> $@.log | gzip > $@
 
 #############################################
 # Phrase counts:

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
+BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 
 #####################################################
 # Filter LM based on phrase table.
@@ -15,8 +15,7 @@ binmode(STDIN,":utf8");
 binmode(STDOUT,":utf8");
 binmode(STDERR,":utf8");
 
-use utils::opt  qw(&get_args &get_opts);
-use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+use arg_utils qw(&get_args &get_opts);
 
 my %opts = get_opts(['v',0,'program will be more verbose'],['d',0,'dump trie']);
 my %args = get_args('lm');

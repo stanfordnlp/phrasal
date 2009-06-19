@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
+BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 
 ################################################
 # Replaces <old_id> with <new_id> within
@@ -11,8 +11,7 @@ use strict;
 use POSIX;
 use Fatal qw(open close);
 
-use utils::opt  qw(&get_args &get_opts);
-use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+use arg_utils qw(&get_args &get_opts);
 
 my %opts = get_opts(['v',0,'program will be more verbose'],
                     ['f=s','','target nbest list'],

@@ -1,18 +1,19 @@
 #!/usr/bin/perl
-BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
+BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
+
+#####################################################
+# Compare two sgml files, and print segments
+# that appear in both if translations are different.
+#####################################################
 
 use strict;
-use POSIX;
 use Fatal qw(open close);
 use utf8;
 binmode(STDIN,":utf8");
 binmode(STDOUT,":utf8");
 binmode(STDERR,":utf8");
 
-use utils::opt  qw(&get_args &get_opts);
-use utils::data  qw(&load_file);
-use utils::mt  qw(&load_mt_sgml &load_ibm_doc_scores &load_ptable);
-use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+use mt_utils qw(&load_mt_sgml &load_ibm_doc_scores &load_ptable);
 
 die "Usage: $0 (test sgml) (dev sgml)\n" unless $#ARGV == 1;
 

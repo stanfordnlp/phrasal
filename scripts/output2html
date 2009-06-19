@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-BEGIN { push @INC, "/u/mgalley/programming/perl-src/"; }
+BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 
 #####################################################
 # Generate html pages to enables MT error analysis
@@ -15,10 +15,9 @@ binmode(STDIN,":utf8");
 binmode(STDOUT,":utf8");
 binmode(STDERR,":utf8");
 
-use utils::opt  qw(&get_args &get_opts);
-use utils::data  qw(&load_file);
-use utils::mt  qw(&load_mt_sgml &load_ibm_doc_scores &load_ptable);
-use utils::exec qw(&print_exec &get_exec &get_files_in_dir &sys &sysout);
+use arg_utils qw(&get_args &get_opts);
+use data_utils qw(&load_file);
+use mt_utils qw(&load_mt_sgml &load_ibm_doc_scores &load_ptable);
 
 my %opts = get_opts
   (
