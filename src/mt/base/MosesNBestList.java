@@ -71,7 +71,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		} else {
 			reader = new LineNumberReader(new FileReader(filename));
 		}
-		Pattern tripplePipes = Pattern.compile("\\s\\|\\|\\|\\s");
+		Pattern tripplePipes = Pattern.compile("\\s*\\|\\|\\|\\s");
 		Pattern space = Pattern.compile("\\s+");
 		Pattern label = Pattern.compile(".*:");
 		String lastId = null;
@@ -132,23 +132,25 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 					}
 				}
 				
-				String[] featureFields = space.split(featuresStr);
 				String featureName = "unlabeled";
 				Map<String, List<Double>> featureMap = new HashMap<String, List<Double>>();
 				featureMap.put(featureName, new ArrayList<Double>());	
 				//featureIndex.indexOf(featureName, true);
-				for (String field : featureFields) {
-					if (label.matcher(field).find()) {
-						featureName = field.substring(0, field.length()-1);
-						featureMap.put(featureName, new ArrayList<Double>());
-						continue;
-					}
-					try { 
-						featureMap.get(featureName).add(new Double(field));
-					} catch (NumberFormatException e) {
-						throw new RuntimeException(String.format("Feature value, '%s', can not be parsed as a double value. (line: %d)", field, reader.getLineNumber()));
-					}
-				}
+        if(featuresStr.length() > 0) {
+          String[] featureFields = space.split(featuresStr);
+          for (String field : featureFields) {
+            if (label.matcher(field).find()) {
+              featureName = field.substring(0, field.length()-1);
+              featureMap.put(featureName, new ArrayList<Double>());
+              continue;
+            }
+            try { 
+              featureMap.get(featureName).add(new Double(field));
+            } catch (NumberFormatException e) {
+              throw new RuntimeException(String.format("Feature value, '%s', can not be parsed as a double value. (line: %d)", field, reader.getLineNumber()));
+            }
+          }
+        }
 				
 				List<FeatureValue<String>> featureValues = new ArrayList<FeatureValue<String>>();
 				
