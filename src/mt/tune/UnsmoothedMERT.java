@@ -17,6 +17,7 @@ import mt.metrics.*;
 import mt.reranker.ter.*;
 
 import edu.stanford.nlp.optimization.*;
+import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -157,6 +158,13 @@ public class UnsmoothedMERT {
     }
     double bestEval = Double.POSITIVE_INFINITY;
     double[] bestWts;
+  }
+
+  public static ClassicCounter<String> arrayToCounter(String[] keys, double[] x) {
+    ClassicCounter<String> c = new ClassicCounter<String>();
+    for(int i=0; i<keys.length; ++i)
+      c.setCount(keys[i], x[i]);
+    return c;
   }
 
   static public ClassicCounter<String> reducedWeightsToWeights(
@@ -751,6 +759,33 @@ public class UnsmoothedMERT {
     } else {
       throw new RuntimeException();
     }
+  }
+
+  /**
+   * Downhill simplex minimization algorithm (Nelder and Mead, 1965).
+   *
+   * @param nbest
+   * @param initialWts
+   * @param emetric
+   * @return
+   */
+  static public ClassicCounter<String> simplexOptimize(final MosesNBestList nbest,
+                                                       final ClassicCounter<String> initialWts,
+                                                       final EvaluationMetric<IString, String> emetric) {
+    final int sz = initialWts.size();
+    final String[] keys = initialWts.keySet().toArray(new String[sz]);
+
+    double[] initx = new double[sz];
+    for(int i=0; i<sz; ++i)
+      initx[i] = initialWts.getCount(keys[i]);
+
+    DownhillSimplexMinimizer opt = new DownhillSimplexMinimizer();
+
+    Function f = new Function() {
+      public double valueAt(double[] x) { return evalAtPoint(nbest, arrayToCounter(keys, x), emetric); }
+      public int domainDimension() { return initialWts.size(); }
+    };
+    return arrayToCounter(keys, opt.minimize(f, 1e-4, initx));
   }
 
   /**
@@ -2788,6 +2823,9 @@ public class UnsmoothedMERT {
         ClassicCounter<String> dir = new ClassicCounter<String>();
         dir.incrementCount(WordPenaltyFeaturizer.FEATURE_NAME, 1.0);
         newWts = lineSearch(nbest, wts, dir, emetric);
+      } else if (System.getProperty("tuneSimplex") != null) {
+        System.out.printf("Using downhill simplex\n");
+        newWts = simplexOptimize(nbest, wts, emetric);
       } else {
         System.out.printf("Using cer\n");
         newWts = cerStyleOptimize2(nbest, wts, emetric);
