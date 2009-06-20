@@ -11,12 +11,9 @@ import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.optimization.Function;
-import edu.stanford.nlp.optimization.Minimizer;
+import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;
 import edu.stanford.nlp.math.SloppyMath;
 import edu.stanford.nlp.math.ArrayMath;
-
-import flanagan.math.Minimisation;
-import flanagan.math.MinimisationFunction;
 
 /**
  * Find a linear combination of automatic metrics that best correlates with human assessments. 
@@ -461,62 +458,3 @@ public class LinearCombinationMetricOptimizer implements Function {
   }
 }
 
-/**
- * Downhill simplex minimization algorithm (Nelder and Mead, 1965).
- * It requires only function evaluations, and it is a method of choice
- * when the derivative is unavailable (e.g., while minimizing 0/1 loss).
- * This class mainly serves as an interface to Michael Thomas Flanagan's
- * implementation.
- *
- * @author Michel Galley
- */
-class DownhillSimplexMinimizer implements Minimizer<Function> {
-
-	// Could move this class to edu.stanford.nlp.optimization; 
-	// the downside is that doing "import edu.stanford.nlp.optimization.*"
-	// would require an extra jar file.
-
-  double[] step;
-  double simplexRelativeSize = .5;
-
-  public DownhillSimplexMinimizer(double[] step) {
-    this.step = step;
-  }
-
-  public DownhillSimplexMinimizer(double s) {
-    simplexRelativeSize = s;
-  }
-
-  public DownhillSimplexMinimizer() {}
-
-  public void setSimplexRelativeSize(double r) {
-    simplexRelativeSize = r;
-  }
-
-  public double[] minimize
-       (Function function, double ftol, double[] initial, int maxIterations) {
-    System.err.printf("Nelder-Mead optimization with simplex of relative size %.3f\n", simplexRelativeSize);
-    if(step == null) {
-      step = initial.clone();
-      for(int i=0; i<step.length; ++i)
-        step[i] *= simplexRelativeSize;
-    }
-    Minimisation min = new Minimisation();
-    min.nelderMead(new WrapperFunction(function), initial, step, ftol);
-    double minimum = min.getMinimum();
-    double[] param = min.getParamValues();
-    System.err.printf("Nelder-Mead converged at: %s value: %.3f\n", Arrays.toString(param),minimum);
-    return param;
-  }
-
-  public double[] minimize
-    (Function function, double functionTolerance, double[] initial) {
-    return minimize(function, functionTolerance,initial,Integer.MAX_VALUE);
-  }
-
-  class WrapperFunction implements MinimisationFunction {
-    Function f;
-    WrapperFunction(Function f) { this.f = f; }
-    public double function(double[] x) { return f.valueAt(x); }
-  }
-}
