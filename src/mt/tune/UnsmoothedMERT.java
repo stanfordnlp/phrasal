@@ -782,10 +782,15 @@ public class UnsmoothedMERT {
     DownhillSimplexMinimizer opt = new DownhillSimplexMinimizer();
 
     Function f = new Function() {
-      public double valueAt(double[] x) { return evalAtPoint(nbest, arrayToCounter(keys, x), emetric); }
+      public double valueAt(double[] x) {  
+        double evalScore = evalAtPoint(nbest, arrayToCounter(keys, x), emetric); 
+        System.err.printf("%.5f ",evalScore);
+        return -evalScore;
+      }
       public int domainDimension() { return initialWts.size(); }
     };
-    return arrayToCounter(keys, opt.minimize(f, 1e-4, initx));
+    double[] wts = opt.minimize(f, 1e-4, initx);
+    return arrayToCounter(keys, wts);
   }
 
   /**
@@ -2823,7 +2828,7 @@ public class UnsmoothedMERT {
         ClassicCounter<String> dir = new ClassicCounter<String>();
         dir.incrementCount(WordPenaltyFeaturizer.FEATURE_NAME, 1.0);
         newWts = lineSearch(nbest, wts, dir, emetric);
-      } else if (System.getProperty("tuneSimplex") != null) {
+      } else if (System.getProperty("useSimplex") != null) {
         System.out.printf("Using downhill simplex\n");
         newWts = simplexOptimize(nbest, wts, emetric);
       } else {
