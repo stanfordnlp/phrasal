@@ -714,7 +714,7 @@ public class UnsmoothedMERT {
           "SEARCH_WINDOW", "1"));
   static public int MIN_NBEST_OCCURANCES = Integer.parseInt(System.getProperty(
           "MIN_NBEST_OCCURENCES", "5"));
-  static final int STARTING_POINTS = Integer.parseInt(System.getProperty(
+  static int STARTING_POINTS = Integer.parseInt(System.getProperty(
           "STARTING_POINTS", "5")); //XXX
   static final SmoothingType smoothingType = SmoothingType.valueOf(System
           .getProperty("SMOOTHING_TYPE", "min"));
@@ -2395,20 +2395,35 @@ public class UnsmoothedMERT {
     }
   }
 
+  static long SEED = 8682522807148012L;
+
   @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {
-    if (args.length != 6) {
-      System.err
-              .printf("Usage:\n\tjava mt.UnsmoothedMERT (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
-      System.exit(-1);
+    int argi = 0;
+    String arg;
+    while((arg = args[argi]).startsWith("-")) {
+      ++argi;
+      if(arg.equals("-s")) { // may use any string to initialize the seed
+        SEED = args[++argi].hashCode();
+      } else if(arg.equals("-p")) {
+        STARTING_POINTS = Integer.parseInt(args[++argi]);
+      } else {
+        // TODO: other parameters (e.g., SEARCH_WINDOW) should perhaps be initialized here
+        throw new UnsupportedOperationException("Unknown flag: "+arg);
+      }
     }
 
-    String evalMetric = args[0].toLowerCase();
-    String nbestListFile = args[1];
-    String localNbestListFile = args[2];
-    String initialWtsFile = args[3];
-    String referenceList = args[4];
-    String finalWtsFile = args[5];
+    if(args.length-argi != 6) {
+      System.err.printf("Usage:\n\tjava mt.UnsmoothedMERT [-s (seed)] [-p (starting points)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
+      System.exit(-1);
+    }
+    
+    String evalMetric = args[argi].toLowerCase();
+    String nbestListFile = args[++argi];
+    String localNbestListFile = args[++argi];
+    String previousWtsFiles = args[++argi];
+    String referenceList = args[++argi];
+    String finalWtsFile = args[++argi];
 
     EvaluationMetric<IString, String> emetric = null;
 		TERpMetric.BEAM_WIDTH = 5; // XXX - make cleaner/safer
@@ -2541,7 +2556,10 @@ public class UnsmoothedMERT {
       System.exit(-1);
     }
 
-    ClassicCounter<String> initialWts = readWeights(initialWtsFile);
+    List<ClassicCounter<String>> previousWts = new ArrayList<ClassicCounter<String>>();
+    for(String previousWtsFile : previousWtsFiles.split(","))
+      previousWts.add(readWeights(previousWtsFile));
+    ClassicCounter<String> initialWts = previousWts.get(0);
     MosesNBestList nbest = new MosesNBestList(nbestListFile);
     MosesNBestList localNbest = new MosesNBestList(localNbestListFile,
             nbest.sequenceSelfMap);
@@ -2665,7 +2683,11 @@ public class UnsmoothedMERT {
         wts = initialWts;
       } else {
         if (ptI == 0) System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e", Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
-        wts = randomWts(initialWts.keySet());
+        if(ptI < previousWts.size()) {
+          wts = previousWts.get(ptI);
+        } else {
+          wts = randomWts(initialWts.keySet());
+        }
       }
       ClassicCounter<String> newWts;
 
@@ -2804,7 +2826,7 @@ public class UnsmoothedMERT {
     writeWeights(finalWtsFile, bestWts);
   }
 
-  static Random r = new Random(8682522807148012L);
+  static Random r = new Random(SEED);
 
   private static ClassicCounter<String> randomWts(Set<String> keySet) {
     ClassicCounter<String> randpt = new ClassicCounter<String>();
