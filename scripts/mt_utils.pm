@@ -32,33 +32,42 @@ sub load_ptable {
 	else { open($fh,$file); }
 	my ($ptable,$align) = load_ptable_fh($fh,%opts);
 	close($fh);
-	return ($ptable,$align);
+	return $ptable;
 }
 
 # Load phrase pairs, alignment, and scores from a phrase table:
 sub load_ptable_fh {
 	my ($fh,%opts) = @_;
 	my $align = $opts{align};
+	#my $index = $opts{index};
+	#my (%rindex,@index);
 	my %ptable;
-	my %align;
+	#my %align;
 	binmode($fh,":utf8");
 	my $sz = -1;
 	while(<$fh>) {
 		chomp;
 		my ($f,$e,@els) = split(/ \|\|\| /);
 		my $feat;
+		my $id;
+		#if($index && 0) {
+		#	if(defined $rindex{$f}) { $id = $rindex{$f} } else { $id = $rindex{$f} = scalar @index; push @index, $f } $f = $id;
+		#	if(defined $rindex{$e}) { $id = $rindex{$e} } else { $id = $rindex{$e} = scalar @index; push @index, $e } $e = $id;
+		#}
+		my ($al1,$al2);
 		if($align) {
 			$feat = $els[2];
-			$align{$f}{$e} = [$els[0],$els[1]];
+			($al1,$al2) = ($els[0],$els[1]);
 		} else {
 			$feat = $els[0];
 		}
 		my @feat = split(/\s+/,$feat);
-		$ptable{$f}{$e} = \@feat;
+		$ptable{$f}{$e} = [\@feat, $al1, $al2];
 		my $lsz = scalar @feat;
 		if($sz == -1) { $sz = $lsz } else { assert($sz == $lsz) }
 	}
-	return (\%ptable,\%align,$sz);
+	return (\%ptable,$sz);
+	#return (\%ptable,\%align,$sz,\@index);
 }
 
 # Add feature to phrase table:
@@ -73,25 +82,29 @@ sub add_feature {
 
 # Print phrase table:
 sub dump_ptable {
-	my ($ptable,$align,%opts) = @_;
+	my ($ptable,%opts) = @_;
+	my $index = $opts{index};
+	my $rindex = $opts{rindex};
 	my $first = $opts{first} || -1;
 	my $size = $opts{size} || -1;
 	my $last = $first+$size-1;
 	my $fh = $opts{fh} || *STDOUT;
-	my $printAlign = (keys %$align > 0);
+	my $align = $opts{align};
 	print STDERR "first: $first last: $last\n";
 	my ($f,$p);
 	while (($f,$p) = each %{$ptable}) {
+		#my $fstr = defined $index ? $index->[$f] : $f;
 		my ($e,$v);
 		while (($e,$v) = each %$p) {
 			my $scores; 
 	    if($first >= 0) {
-				$scores = join(' ',@{$v}[$first..$last]);
+				$scores = join(' ',@{$v}[0][$first..$last]);
 			} else {
-				$scores = join(' ',@$v);
+				$scores = join(' ',@{$v->[0]});
 			}
+			#my $estr = defined $index ? $index->[$e] : $e;
 			if($printAlign) {
-				print $fh "$f ||| $e ||| $align->{$f}{$e}[0] ||| $align->{$f}{$e}[1] ||| $scores\n";
+				print $fh "$f ||| $e ||| $v->[1] ||| $v->[2] ||| $scores\n";
 			} else {
 				print $fh "$f ||| $e ||| $scores\n";
 			}
@@ -145,8 +158,10 @@ sub remove_unreachable_phrases {
 
 		# Take log:
 		my ($e,$v);
+		my (@e,@v);
 		while (($e,$v) = each %$p) {
-			$opts{$e} = [slog($v->[0]), slog($v->[1]), slog($v->[2]), slog($v->[3])];
+			push @e, $e;
+			push @v, [slog($v->[0]), slog($v->[1]), slog($v->[2]), slog($v->[3])];
 		}
 
 		# Find all reachable translations:
@@ -154,14 +169,17 @@ sub remove_unreachable_phrases {
 			for($w[1] = $minw; $w[1] <= $maxw; $w[1] += $maxw-$minw) {
 				for($w[2] = $minw; $w[2] <= $maxw; $w[2] += $maxw-$minw) {
 					for($w[3] = $minw; $w[3] <= $maxw; $w[3] += $maxw-$minw) {
-						my %nbest;
-						while (($e,$v) = each %opts) {
-							$nbest{$e} = $w[0]*$v->[0] + $w[1]*$v->[1] + $w[2]*$v->[2] + $w[3]*$v->[3];
-						}
-						my $k=0;
-						foreach my $good (sort {$nbest{$b} <=> $nbest{$a}} keys %nbest) {
-							$reachable{$good} = 1;
-							last if ++$k == $n;
+						if($w[0] > $minw || $w[1] > $minw || $w[2] > $minw || $w[3] > $minw) {
+							my @nbest;
+							foreach my $v (@v) {
+								push @nbest, $w[0]*$v->[0] + $w[1]*$v->[1] + $w[2]*$v->[2] + $w[3]*$v->[3];
+							}
+							my $k=0;
+							foreach my $goodi (sort {$nbest[$b] <=> $nbest[$a]} 0..$#nbest) {
+								my $good = $e[$goodi];
+								$reachable{$good} = 1;
+								last if ++$k == $n;
+							}
 						}
 					}
 				}

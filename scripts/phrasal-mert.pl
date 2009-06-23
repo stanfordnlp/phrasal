@@ -448,8 +448,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	    $jmert_log = "$work_dir/jmert.$iter.log";
    	  if ($iter >= $first_active_iter) {
 	      unlink($next_iter_weights);
-	      print "java $java_flags mt.tune.UnsmoothedMERT $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1\n";
-	      `java $java_flags mt.tune.UnsmoothedMERT $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1`;
+	      print "java $java_flags mt.tune.UnsmoothedMERT -s $iter_weights $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1\n";
+	      `java $java_flags mt.tune.UnsmoothedMERT -s $iter_weights $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1`;
 	      if (not -e $next_iter_weights) {
 	        print stderr "Exiting, error running $opt_type MERT\n";
 	        exit -1;

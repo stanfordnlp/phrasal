@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+#####################################################
+# Inject decoded output into empty sgml file.
+#
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Wed 21 May 2008 11:18:55 AM PDT
+# $Id$
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+die "Usage: $0 <empty_sgml> <sys_id>\n" unless $#ARGV == 1;
+my $sgml = $ARGV[0];
+my $sys = $ARGV[1];
+
+# Read decoded output:
+my @sent;
+while(<STDIN>) {
+	chomp;
+	push @sent, $_;	
+}
+print STDERR "Sentences read from system output: ".(scalar @sent)."\n";
+
+# Inject decoded output into sgml file:
+my $curSent;
+open(F,$sgml);
+binmode(F,":utf8");
+while(<F>) {
+	if(s/<(DOC docid="\S+" genre="\S+") sysid="\S+">/<$1 sysid="$sys">/gi) {
+		print STDERR "adding sysid: $sys\n";
+	}
+	elsif(s/<(DOC docid="\S+") sysid="\S+">/<$1 sysid="$sys">/gi) {
+		print STDERR "adding sysid: $sys\n";
+	}
+	elsif($sys ne '' && s/<(DOC docid="\S+")>/<$1 sysid="$sys">/gi) {
+		print STDERR "adding sysid: $sys\n";
+	}
+	elsif(s=^<seg(.*?)>.*</seg>=<seg$1>$sent[$curSent]</seg>=i) {
+		print STDERR "injecting output: $sent[$curSent]\n";
+		++$curSent;
+	} elsif(/^(<\/DOC>|<hl>|<\/hl>|<p>|<\/p>)\s*$/i) {
+	} elsif(s/<srcset /<tstset/g) {
+	} elsif(s/<\/srcset>/<\/tstset>/g) {
+	} elsif(/<\/?mteval>/) {
+	} elsif(/<!DOCTYPE MTEVAL SYSTEM /) {
+	} else {
+		print STDERR "Mismatched line: $_";
+	}
+	print;
+}
+close(F);
+
+# Sanity check:
+die "Mismatched number of lines: $curSent != ".(scalar @sent)."\n" 
+  if $curSent != scalar @sent;
+exit 0;

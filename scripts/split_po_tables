@@ -26,9 +26,12 @@ my $sz = $ARGV[3];
 $sz = 6 unless defined $sz;
 
 my %align;
-my ($ptable,$align,$nfeat) = load_ptable_fh(*STDIN, align => 1);
-remove_unreachable_phrases($ptable);
-#filter_ptable($ptable,3,$minp);
+my ($ptable,$align,$nfeat,$index) = load_ptable_fh(*STDIN, align => 1, index => 1);
+if($minp > 0) {
+	filter_ptable($ptable,3,$minp);
+} else {
+	remove_unreachable_phrases($ptable,$index);
+}
 
 if($pfile =~ /\.gz$/) { open(P,"| gzip > $pfile"); }
 else { open(P,"> $pfile"); }
