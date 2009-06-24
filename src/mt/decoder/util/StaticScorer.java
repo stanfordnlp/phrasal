@@ -5,6 +5,7 @@ import java.util.*;
 import mt.base.FeatureValue;
 
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
 
 /**
@@ -59,7 +60,7 @@ public class StaticScorer implements Scorer<String> {
 		}
 	}
 	
-	public StaticScorer(ClassicCounter<String> featureWts) {
+	public StaticScorer(Counter<String> featureWts) {
 		featureIndex = new OAIndex<String>();
 		for (String key : featureWts.keySet()) {
 			featureIndex.indexOf(key, true);

@@ -3,7 +3,7 @@ package mt.tools;
 import java.io.PrintStream;
 import java.util.List;
 
-import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.IString;
 
 import mt.base.MosesNBestList;
@@ -38,7 +38,7 @@ public class NBestErrorSurface {
 		
 		EvaluationMetric<IString, String> eval = MetricFactory.metric(evalMetricFn, refsFn);
 		MosesNBestList nbest = new MosesNBestList(nbestFn);
-		ClassicCounter<String> wts = UnsmoothedMERT.readWeights(weightsFn);
+		Counter<String> wts = UnsmoothedMERT.readWeights(weightsFn);
 		String feature1Name = feature1Field.split("\\|\\|\\|")[0];
 		String feature2Name = feature2Field.split("\\|\\|\\|")[0];
 		double feature1Min = Double.parseDouble(
