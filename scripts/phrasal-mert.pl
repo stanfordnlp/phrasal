@@ -28,10 +28,11 @@ use List::Util qw[max];
 $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
 $DEFAULT_MAX_ITERS = 25;
-$MIN_OBJ_DIFF = 1e-5;
+$MIN_OBJ_DIFF = 1e-7;
 $DEFAULT_WORK_DIR = "pmert-dir";
 $DEFAULT_NBEST_SIZE = 100;
-$DEFAULT_JAVA_FLAGS = "-Xmx6g";
+$DEFAULT_JAVA_FLAGS = "-Xmx7g";
+$DEFAULT_OPT_FLAGS = "-o cer -t 1 -p 5"; # 5 starting points, 1 thread, Cer algorithm
 $MIN_WEIGHT_DELTA = 1e-5;
 $NBEST_HISTORY_WINDOW = 1000000;
 $SCRIPTS_DIR = $0;
@@ -53,6 +54,7 @@ print "Host: ".`hostname`;
 $work_dir=$DEFAULT_WORK_DIR;
 $nbest_size=$DEFAULT_NBEST_SIZE;
 $java_flags=$DEFAULT_JAVA_FLAGS;
+$opt_flags=$DEFAULT_OPT_FLAGS;
 $phrasal_flags="";
 
 if (not ($work_dir =~ /^\//)) {
@@ -89,6 +91,9 @@ sub handle_arg {
   } elsif ($arg =~ /^--phrasal-flags=.*/) {
      $phrasal_flags = $arg;
      $phrasal_flags =~ s/^--phrasal-flags=//g;
+  } elsif ($arg =~ /^--opt-flags=.*/) {
+     $opt_flags = $arg;
+     $opt_flags =~ s/^--opt-flags=//g;
   } else {
      print stderr "Unrecognized flag $arg\n";
      exit -1;
@@ -203,13 +208,19 @@ if (not (-e $work_dir)) {
 
 open difh, $decoder_ini or die "Can't open $decoder_ini";
 
-%strip_fields = ("n-best-list"=>1, "weights-file"=>1);
+%strip_fields = ("n-best-list"=>1);
 $strip_line = 0;
 %init_wts = %DEFAULT_WEIGHTS;
+my $init_weight_file = '';
 while (!eof(difh)) {
   $line = <difh>; chomp $line;
+  if ($line =~ /^\[weights-file\].*/) {
+		$init_weight_file = <difh>; chomp $init_weight_file;
+		next;
+	}
   if ($line =~ /^\s*$/ or $line =~ /^\s*#.*$/ or $line =~ /^\[.*/) { 
      $strip_line = 0;
+		 $wts_line = 0;
   }
   foreach $strip_field (keys %strip_fields) {
      if ($line =~ /\[$strip_field\].*/) {
@@ -244,24 +255,29 @@ close difh;
 
 $ini_weight_file = "$work_dir/phrasal.0.wts\n";
 
-print stderr "Writing initial weights file:\n$ini_weight_file\n";
-open wtfh, ">$ini_weight_file" or die;
-foreach $key (keys %init_wts) {
-   print "$key => $init_wts{$key}\n";
-   print wtfh "$key $init_wts{$key}\n"
+if($init_weight_file) {
+	print stderr "Copying initial weights file: $init_weight_file -> $ini_weight_file\n";
+	`cp -p $init_weight_file $ini_weight_file`;
+} else {
+	print stderr "Writing initial weights file:\n$ini_weight_file\n";
+	open wtfh, ">$ini_weight_file" or die;
+	foreach $key (keys %init_wts) {
+		 print "$key => $init_wts{$key}\n";
+		 print wtfh "$key $init_wts{$key}\n"
+	}
+	close wtfh;
 }
-close wtfh;
 
 $first_active_iter = 0;
 
 if ($ENV{"RECOVER"}) {
 	system stderr "Searching for work in progress....\n";
-	@trans_files = `ls $work_dir/phrasal.*.trans`; # we use a cue that is safe but, risks redoing some work
+	@trans_files = `ls $work_dir/phrasal.*.wts`; # we use a cue that is safe but, risks redoing some work
 	$max_weight_iter = 0;
 	foreach $trans_file (@trans_files) { chomp $trans_file;
 		$iter = $trans_file;
 		$iter =~ s/^.*phrasal\.//;
-		$iter =~ s/\.trans//;
+		$iter =~ s/\.wts//;
 		$max_weight_iter = $iter if ($iter > $max_weight_iter);
 	}
 	$first_active_iter = $max_weight_iter;
@@ -308,63 +324,60 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr
    "------------------------------------------------------------------------\n\n";
    if (!$ENV{"SDI$iter"} && $iter >= $first_active_iter) { 
-      print "Cmd:\njava $java_flags mt.PseudoMoses $phrasal_flags -config-file $iter_decoder_ini < $input_text > $iter_trans 2>$iter_dlog\n\n";
-      my $now = localtime time;
-      print "Start time: ",$now,"\n";
-     `java $java_flags mt.PseudoMoses $phrasal_flags -config-file $iter_decoder_ini < $input_text > $iter_trans 2>$iter_dlog`;
-      open fh, $iter_trans or die;
-      while (<fh>) {
-        chomp;
-        next if (not /^[0-9]+:/);
-        $id = $_; 
-        $sent = $_;
-        $id =~ s/:.*//; 
-        $sent =~ s/^[^:]*://; 
-        $lines[$id] = $sent;
-      }
-      close fh;
-      if (@lines) {
-        open fh, ">$iter_trans" or die;
-        for $line (@lines) {
-          print fh "$line\n";
-        }
-        close fh;
-      }
-      $now = localtime time;
-      print "End time: ",$now,"\n";
-   
+     my $cmd = "java $java_flags mt.PseudoMoses $phrasal_flags -config-file $iter_decoder_ini < $input_text 2>$iter_dlog > $iter_trans";
+		 print "CMD:\n$cmd\n\n";
+     my $now = localtime time;
+     print "Start time: ",$now,"\n";
+    `$cmd`;
+		 # Sort output:
+     open fh, $iter_trans or die;
+     while (<fh>) {
+       chomp;
+       next if (not /^[0-9]+:/);
+       $id = $_; 
+       $sent = $_;
+       $id =~ s/:.*//; 
+       $sent =~ s/^[^:]*://; 
+       $lines[$id] = $sent;
+     }
+     close fh;
+     if (@lines) {
+       open fh, ">$iter_trans" or die;
+       for $line (@lines) {
+         print fh "$line\n";
+       }
+       close fh;
+     }
+     $now = localtime time;
+     print "End time: ",$now,"\n";
      if ($? != 0) {
         print stderr "Decoder Failure!\n";
         exit -1;
      } 
      print stderr "Success.\n";
      sleep 30; # nfs weirdness with slow writes?!?!
-     unlink("$iter_nbest_list.gz");
      print "gziping $iter_nbest_list\n";
-     `sort -t '|' -n -s $iter_nbest_list > $iter_nbest_list.sort`;
-     `mv $iter_nbest_list.sort $iter_nbest_list`;
-     `gzip $iter_nbest_list`;
+		 `sort -t '|' -n -s $iter_nbest_list | gzip > $iter_nbest_list.gz`;
+     unlink("$iter_nbest_list");
    } else {
      print "skipping decoding for iter $iter ($first_active_iter)\n";
    }
 
-   
-   #$trans_bleu = `$EXTERNAL_SCRIPTS_DIR/multi-bleu.perl $references < $iter_trans 2>&1`;
    if ($opt_type eq 'ter') {
      $trans_eval = `java $java_flags mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'terp') {
      $trans_eval = `java $java_flags mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'terpa') {
      $trans_eval = `java $java_flags -Dterpa mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
-	 } elsif($opt_type eq 'meteor') {
+   } elsif($opt_type eq 'meteor') {
      $trans_eval = `java $java_flags mt.metrics.METEOR2Metric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type =~ /meteor:/) {
-		 @abg = split /:/, $opt_type;
+     @abg = split /:/, $opt_type;
      $trans_eval = `java -Dabg=$abg[1]:$abg[2]:$abg[3] $java_flags mt.metrics.METEOR2Metric $referenceList < $iter_trans 2>&1`; 
    } elsif ($opt_type =~ /^bleu:/) {
-		 @fields = split /:/, $opt_type;
+     @fields = split /:/, $opt_type;
      $trans_eval = `java $java_flags mt.metrics.BLEUMetric -order $fields[1] $referenceList < $iter_trans 2>&1`; 
-	 } else { # bleu or cmert path, the latter implies bleu 
+   } else { # bleu or cmert path, the latter implies bleu 
      $trans_eval = `java $java_flags mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; 
    }
 
@@ -394,33 +407,31 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    $iter_cmert_nbest = "$work_dir/cmert.$iter.nbest";
    print stderr "\n";
 
-   $iter_pcumulative_nbest = "$work_dir/phrasal.$iter.combined.nbest";
+   $local_iter_pcumulative_nbest = "/tmp/phrasal.$iter.combined.nbest";
+   $iter_pcumulative_nbest = "$work_dir/phrasal.$iter.combined.nbest.gz";
    
    if ($iter >= $first_active_iter) {
 	   print stderr "Building cummulative nbest list:\n$iter_pcumulative_nbest\n";
 	   
 	   if ($iter == 0) {
-        print "cp $iter_nbest_list.gz $iter_pcumulative_nbest.gz\n";
-	      `cp $iter_nbest_list.gz $iter_pcumulative_nbest.gz`;
+        print "cp $iter_nbest_list.gz $iter_pcumulative_nbest\n";
+	      `cp $iter_nbest_list.gz $iter_pcumulative_nbest`;
 	   } else {
 	     # $prior_pcumulative_nbest = "$work_dir/phrasal.".($iter-1).".combined.nbest";
+	     unlink($local_iter_pcumulative_nbest);
 	     unlink($iter_pcumulative_nbest);
-	     unlink("$iter_pcumulative_nbest.gz");
 	     for ($prior_iter = max(0, $iter-$NBEST_HISTORY_WINDOW);
 	          $prior_iter < $iter; $prior_iter++) {
 	          $prioriter_nbest_list = "$work_dir/phrasal.$prior_iter.nbest";
-	          `zcat $prioriter_nbest_list.gz | sed 's/|||[^|]*|||[^|]*\$//' >> $iter_pcumulative_nbest`;    
+	          `zcat $prioriter_nbest_list.gz | sed 's/|||[^|]*|||[^|]*\$//' >> $local_iter_pcumulative_nbest`;    
 	      }
-	      
-	     # `cp $prior_pcumulative_nbest $iter_pcumulative_nbest`;
-	      `zcat $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $iter_pcumulative_nbest`; 
+	      `zcat $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $local_iter_pcumulative_nbest`; 
    
    
-	     $temp_unsorted = "$work_dir/temp_unsorted";
-	     $temp_unsorted_uniq = "$work_dir/temp_unsorted.uniq";
-	     `cp $iter_pcumulative_nbest $temp_unsorted`;
-	     `sort $temp_unsorted | uniq > $temp_unsorted_uniq`; 
-	     $totalNbestListSize = `wc -l $temp_unsorted_uniq`;
+	     $temp_unsorted_uniq = "$work_dir/temp_unsorted.uniq.gz";
+	     `sort $local_iter_pcumulative_nbest | uniq | gzip > $temp_unsorted_uniq`; 
+			 unlink("$local_iter_pcumulative_nbest");
+	     $totalNbestListSize = `zcat $temp_unsorted_uniq | wc -l`;
 	     chomp $totalNbestListSize;
 	     print stderr "Total unique entries on cumulative nbest list $totalNbestListSize\n";
 	     print stderr "Total unique entries on last cumulative nbest list $lastTotalNbestListSize\n";
@@ -432,12 +443,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	     }
 	     
 	     $lastTotalNbestListSize = $totalNbestListSize;  
-	     `sort -n -k 1 -s $temp_unsorted_uniq > $iter_pcumulative_nbest`;
-	     
-       print "gzip $iter_pcumulative_nbest\n";
-       unlink("$iter_pcumulative_nbest.gz");
-	     `gzip $iter_pcumulative_nbest`;
-	     unlink($temp_unsorted);
+	     `zcat $temp_unsorted_uniq | sort -n -k 1 -s -T /tmp | gzip > $iter_pcumulative_nbest`;
+			 unlink("$temp_unsorted_uniq");
 	   }
    } else {
    	 print stderr "Skipping building cummulative nbest list for iter $iter ($first_active_iter)\n";
@@ -448,8 +455,13 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	    $jmert_log = "$work_dir/jmert.$iter.log";
    	  if ($iter >= $first_active_iter) {
 	      unlink($next_iter_weights);
-	      print "java $java_flags mt.tune.UnsmoothedMERT -s $iter_weights $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1\n";
-	      `java $java_flags mt.tune.UnsmoothedMERT -s $iter_weights $opt_type $iter_pcumulative_nbest.gz $iter_nbest_list.gz $iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1`;
+				my $all_iter_weights = $iter_weights;
+				for(my $i = $iter-1; $i>=0; --$i) {
+					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
+				}
+				my $mertCMD = "java $java_flags mt.tune.UnsmoothedMERT $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+	      print "MERT command: $mertCMD\n";
+	      `$mertCMD`;
 	      if (not -e $next_iter_weights) {
 	        print stderr "Exiting, error running $opt_type MERT\n";
 	        exit -1;
@@ -492,8 +504,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       `zcat $iter_pcumulative_nbest.gz | $SCRIPTS_DIR/phrasal_nbest_to_cmert_nbest.pl 2>&1 > $iter_cumulative_nbest`;
    
       
-      print "cmd: sort -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1\n";
-      $log = `sort -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1`;
+      print "cmd: sort -T /tmp -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1\n";
+      $log = `sort -T /tmp -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1`;
       
       if ($? != 0) {
         print stderr "Failure during the production of: feats.opt & cands.opts\n";
@@ -558,17 +570,17 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
             "to phrasal weights for next iteration.\n\n";
       `$SCRIPTS_DIR/cmert_weights_phrasal_weights.pl $cmert_produced_wts  $iter_cumulative_nbest 2>&1 > $next_iter_weights`;
       unlink($iter_cumulative_nbest);
-    
-      $max_weight_delta = `$SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1`;
-      print stderr "cmd: $SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1\n";
-      chomp $max_weight_delta; 
-      print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
-      if ($max_weight_delta < $MIN_WEIGHT_DELTA) {
-        print stderr "Done as max weight delta $weight_delta < $MIN_WEIGHT_DELTA\n\n";
-        last; 
-      }
    }
 
+
+   $max_weight_delta = `$SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1`;
+   print stderr "cmd: $SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1\n";
+   chomp $max_weight_delta; 
+   print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
+   if ($max_weight_delta < $MIN_WEIGHT_DELTA) {
+      print stderr "Done as max weight delta $weight_delta < $MIN_WEIGHT_DELTA\n\n";
+      last; 
+   }
 }
 
 $phrasal_final_ini = "$work_dir/phrasal.final.ini\n";
