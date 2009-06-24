@@ -85,8 +85,8 @@ sub dump_ptable {
 	my ($ptable,%opts) = @_;
 	my $index = $opts{index};
 	my $rindex = $opts{rindex};
-	my $first = $opts{first} || -1;
-	my $size = $opts{size} || -1;
+	my $first = defined $opts{first} ? $opts{first} : -1;
+	my $size = defined $opts{size} ? $opts{size} : -1;
 	my $last = $first+$size-1;
 	my $fh = $opts{fh} || *STDOUT;
 	my $align = $opts{align};
@@ -97,10 +97,11 @@ sub dump_ptable {
 		my ($e,$v);
 		while (($e,$v) = each %$p) {
 			my $scores; 
+			my $v2 = $v->[0];
 	    if($first >= 0) {
-				$scores = join(' ',@{$v->[0][$first..$last]});
+				$scores = join(' ',@{$v2}[$first..$last]);
 			} else {
-				$scores = join(' ',@{$v->[0]});
+				$scores = join(' ',@$v2);
 			}
 			#my $estr = defined $index ? $index->[$e] : $e;
 			if($align) {
