@@ -538,7 +538,11 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
   Counter<String> randomStep(Set<String> keySet) {
     Counter<String> randpt = new ClassicCounter<String>();
     for (String f : keySet) {
-      randpt.setCount(f, random.nextDouble() * 2 - 1.0);
+      if (UnsmoothedMERT.generativeFeatures.contains(f)) {
+        randpt.setCount(f, random.nextDouble());
+      } else {
+        randpt.setCount(f, random.nextDouble() * 2 - 1.0);
+      }
     }
     return randpt;
   }
@@ -563,7 +567,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
       UnsmoothedMERT.normalize(randomStep);
       double[] randx = new double[sz-1];
       for(int i=0; i<sz-1; ++i)
-        randx[i] = randomStep.getCount(keys[i]);
+        randx[i] = randomStep.getCount(keys[i])*SIMPLEX_RELATIVE_SIZE;
       opt = new DownhillSimplexMinimizer(randx);
     } else {
       opt = new DownhillSimplexMinimizer(SIMPLEX_RELATIVE_SIZE);
