@@ -584,7 +584,9 @@ public class UnsmoothedMERT implements Runnable {
 
   static Counter<String> initialWts;
   static List<Counter<String>> previousWts;
+
   static Counter<String> bestWts;
+  static double bestObj = Double.POSITIVE_INFINITY;
 
   static double initialObjValue;
   static boolean mcmcObj;
@@ -922,7 +924,6 @@ public class UnsmoothedMERT implements Runnable {
       System.out.printf("\npoint %d - initial wts: %s", ptI, wts.toString());
       System.out.printf("\npoint %d - seed: %d\n", ptI, newSeed);
       
-      double bestObj = Double.POSITIVE_INFINITY;
       NBestOptimizer opt = NBestOptimizerFactory.factory(optStr, this);
       System.err.println("using: "+opt.toString());
       Counter<String> newWts = normalize(opt.optimize(wts));

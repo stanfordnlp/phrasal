@@ -7,4 +7,4 @@
 # 3) 20 starting points instead of 5 (using 4 threads instead of 1)
 ###############################################################################
 
-phrasal-mert.pl --opt-flags="-o simplex+cer~ -t 4 -p 20" $*
+phrasal-mert.pl --opt-flags=\"-o simplex+cer~ -t 4 -p 20\" $*

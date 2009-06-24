@@ -101,11 +101,12 @@ sub handle_arg {
 }
 
 foreach $arg (@ARGV) {
+	print STDERR "arg: $arg\n";
   if (not ($arg =~ /^--.*/)) {
      push @POSITIONAL_ARGS, $arg;
      next;
   }  
-   handle_arg($arg);
+  handle_arg($arg);
 }
 
 $work_dir =~ s/\/$//g;
@@ -460,7 +461,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
 				}
 				my $mertCMD = "java $java_flags mt.tune.UnsmoothedMERT $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
-	      print "MERT command: $mertCMD\n";
+	      print stderr "MERT command: $mertCMD\n";
 	      `$mertCMD`;
 	      if (not -e $next_iter_weights) {
 	        print stderr "Exiting, error running $opt_type MERT\n";

@@ -98,12 +98,12 @@ sub dump_ptable {
 		while (($e,$v) = each %$p) {
 			my $scores; 
 	    if($first >= 0) {
-				$scores = join(' ',@{$v}[0][$first..$last]);
+				$scores = join(' ',@{$v->[0][$first..$last]});
 			} else {
 				$scores = join(' ',@{$v->[0]});
 			}
 			#my $estr = defined $index ? $index->[$e] : $e;
-			if($printAlign) {
+			if($align) {
 				print $fh "$f ||| $e ||| $v->[1] ||| $v->[2] ||| $scores\n";
 			} else {
 				print $fh "$f ||| $e ||| $scores\n";
@@ -124,8 +124,8 @@ sub filter_ptable {
 		foreach (($e,$v) = each %$p) {
 			push @del, $e if($v->[$pos] < $minp);
 		}
-		foreach my $e (@del) {
-			delete $p->{$e};
+		foreach my $del (@del) {
+			delete $p->{$del};
 			++$deleted;
 		}
 	}
@@ -147,7 +147,6 @@ sub remove_unreachable_phrases {
 		++$i;
 		my @w;
 		my %reachable;
-		my %opts;
 
 		# If too few translation options, don't prune:
 		my $total = scalar keys %$p;
@@ -157,11 +156,13 @@ sub remove_unreachable_phrases {
 		}
 
 		# Take log:
-		my ($e,$v);
 		my (@e,@v);
-		while (($e,$v) = each %$p) {
-			push @e, $e;
-			push @v, [slog($v->[0]), slog($v->[1]), slog($v->[2]), slog($v->[3])];
+		{
+			my ($e,$v);
+			while (($e,$v) = each %$p) {
+				push @e, $e;
+				push @v, [slog($v->[0][0]), slog($v->[0][1]), slog($v->[0][2]), slog($v->[0][3])];
+			}
 		}
 
 		# Find all reachable translations:

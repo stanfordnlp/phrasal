@@ -25,12 +25,11 @@ my $minp = $ARGV[2];
 my $sz = $ARGV[3];
 $sz = 6 unless defined $sz;
 
-my %align;
-my ($ptable,$align,$nfeat,$index) = load_ptable_fh(*STDIN, align => 1, index => 1);
+my ($ptable,$nfeat) = load_ptable_fh(*STDIN, align => 1, index => 1);
 if($minp > 0) {
 	filter_ptable($ptable,3,$minp);
 } else {
-	remove_unreachable_phrases($ptable,$index);
+	remove_unreachable_phrases($ptable);
 }
 
 if($pfile =~ /\.gz$/) { open(P,"| gzip > $pfile"); }
@@ -40,8 +39,8 @@ if($ofile =~ /\.gz$/) { open(O,"| gzip > $ofile"); }
 else { open(O,"> $ofile"); }
 binmode(O,":utf8");
 
-dump_ptable($ptable,$align,  fh => *P, first => 0, size => $nfeat-$sz);
-dump_ptable($ptable,\%align, fh => *O, first => ($nfeat-$sz), size => $sz);
+dump_ptable($ptable, fh => *P, first => 0, size => $nfeat-$sz);
+dump_ptable($ptable, fh => *O, first => ($nfeat-$sz), size => $sz);
 
 close(P);
 close(O);
