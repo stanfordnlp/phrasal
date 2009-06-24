@@ -1011,7 +1011,7 @@ public class UnsmoothedMERT implements Runnable {
     System.err.printf("Starting points: %d\n", nStartingPoints);
     System.err.printf("Threads: %d\n", nThreads);
 
-    // Initialize static members (nbest list, etc); need MERT instance for filtering the nbest list:
+    // Initialize static members (nbest list, etc); need UnsmoothedMERT instance for filtering the nbest list:
     initStatic(nbestListFile, localNbestListFile, previousWtsFiles, nStartingPoints, mert);
 
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);

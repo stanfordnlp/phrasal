@@ -488,7 +488,9 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
 }
 
 /**
- * Line Search optimizer (currently can only handle the word penalty feature).
+ * Line Search optimizer to tune one single feature.
+ * If no feature name is previded, LineSearchOptimizer tunes the word penalty
+ * (useful when one only needs to make translation a little bit shorter or longer).
  *
  * @author Michel Galley
  */
