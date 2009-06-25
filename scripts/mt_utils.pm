@@ -30,30 +30,27 @@ sub load_ptable {
   die "Can't open: $file\n" unless -f $file;
 	if($file =~ /\.gz$/) { open($fh,"zcat $file |") } 
 	else { open($fh,$file); }
-	my ($ptable,$align) = load_ptable_fh($fh,%opts);
-	close($fh);
-	return $ptable;
+	my ($ptable,$sz) = load_ptable_fh($fh,%opts);
+	#close($fh);
+	return ($ptable,$sz);
 }
 
 # Load phrase pairs, alignment, and scores from a phrase table:
 sub load_ptable_fh {
 	my ($fh,%opts) = @_;
 	my $align = $opts{align};
-	#my $index = $opts{index};
-	#my (%rindex,@index);
+	my $last = $opts{last} || -1;
 	my %ptable;
-	#my %align;
 	binmode($fh,":utf8");
 	my $sz = -1;
+	my $i=0;
 	while(<$fh>) {
 		chomp;
+		print STDERR "$i...\n" if(++$i % 100000 == 0);
+		last if($last == $i);
 		my ($f,$e,@els) = split(/ \|\|\| /);
 		my $feat;
 		my $id;
-		#if($index && 0) {
-		#	if(defined $rindex{$f}) { $id = $rindex{$f} } else { $id = $rindex{$f} = scalar @index; push @index, $f } $f = $id;
-		#	if(defined $rindex{$e}) { $id = $rindex{$e} } else { $id = $rindex{$e} = scalar @index; push @index, $e } $e = $id;
-		#}
 		my ($al1,$al2);
 		if($align) {
 			$feat = $els[2];
@@ -66,16 +63,16 @@ sub load_ptable_fh {
 		my $lsz = scalar @feat;
 		if($sz == -1) { $sz = $lsz } else { assert($sz == $lsz) }
 	}
+	print STDERR "read $i phrase pairs\n";
 	return (\%ptable,$sz);
-	#return (\%ptable,\%align,$sz,\@index);
 }
 
 # Add feature to phrase table:
 sub add_feature {
-	my ($ptable, $val);
+	my ($ptable, $val) = @_;
 	foreach my $p (values %$ptable) {
 		foreach my $v (values %$p) {
-			push @{$v}, $val;
+			push @{$v->[0]}, $val;
 		}
 	}
 }
@@ -93,9 +90,9 @@ sub dump_ptable {
 	print STDERR "first: $first last: $last\n";
 	my ($f,$p);
 	while (($f,$p) = each %{$ptable}) {
-		#my $fstr = defined $index ? $index->[$f] : $f;
 		my ($e,$v);
 		while (($e,$v) = each %$p) {
+			next unless defined $v;
 			my $scores; 
 			my $v2 = $v->[0];
 	    if($first >= 0) {
@@ -103,7 +100,6 @@ sub dump_ptable {
 			} else {
 				$scores = join(' ',@$v2);
 			}
-			#my $estr = defined $index ? $index->[$e] : $e;
 			if($align) {
 				print $fh "$f ||| $e ||| $v->[1] ||| $v->[2] ||| $scores\n";
 			} else {
@@ -115,19 +111,22 @@ sub dump_ptable {
 
 # Remove low-probability phrases:
 sub filter_ptable {
-	my ($ptable,$pos,$minp) = @_;
+	my ($ptable,$pos,$minp,%opts) = @_;
+	my $n = $opts{n} || 20; # value N
+	print STDERR "filtering using feature $pos. minimum score: $minp\n";
 	my ($total,$deleted) = (0,0);
 	my ($f,$p);
 	while (($f,$p) = each %{$ptable}) {
-		$total += scalar keys %$p;
+		my $options = scalar keys %$p;
+		$total += $options;
+		next if($options <= $n);
 		my @del;
 		my ($e,$v);
-		foreach (($e,$v) = each %$p) {
-			push @del, $e if($v->[$pos] < $minp);
-		}
-		foreach my $del (@del) {
-			delete $p->{$del};
-			++$deleted;
+		while (($e,$v) = each %$p) {
+			if($v->[0][$pos] < $minp) {
+				$p->{$e} = undef;
+				++$deleted;
+			}
 		}
 	}
 	print STDERR "deleted $deleted/$total phrase pairs.\n";
@@ -161,6 +160,7 @@ sub remove_unreachable_phrases {
 		{
 			my ($e,$v);
 			while (($e,$v) = each %$p) {
+				next unless defined $v;
 				push @e, $e;
 				push @v, [slog($v->[0][0]), slog($v->[0][1]), slog($v->[0][2]), slog($v->[0][3])];
 			}
@@ -192,7 +192,7 @@ sub remove_unreachable_phrases {
 		my $erased = 0;
 		foreach my $e (keys %{$p}) {
 			if(!$reachable{$e}) {
-				delete $p->{$e};
+				$p->{$e} = undef;
 				++$erased;
 			}
 		}

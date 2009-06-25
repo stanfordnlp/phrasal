@@ -20,12 +20,12 @@ binmode(STDIN,":utf8");
 binmode(STDOUT,":utf8");
 binmode(STDERR,":utf8");
 
-use mt_utils qw(&load_ptable &add_feature &load_phrases &dump_ptable);
+use mt_utils qw(&load_ptable &add_feature &load_phrases &dump_ptable &remove_unreachable_phrases);
 
 die "Usage: $0 <main_table> <aux_table> <dev_set> <max_phrase_len> <min_count>\n" if $#ARGV != 4;
 
-my ($tmain,$amain) = load_ptable($ARGV[0], align => 1); 
-my ($taux,$aaux) = load_ptable($ARGV[1], align => 1); 
+my ($tmain,$foo) = load_ptable($ARGV[0], align => 1); 
+my ($taux,$bar) = load_ptable($ARGV[1], align => 1); 
 my $phrases = load_phrases($ARGV[2], maxLen => $ARGV[3]); 
 my $minc = $ARGV[4];
 
@@ -40,19 +40,18 @@ foreach my $f (keys %{$phrases}) {
 	if($minc > $mainc) {
 		my @aux = keys %{$taux->{$f}};
 		my $auxc = scalar @aux;
-		print STDERR "below threshold ($minc > $mainc), $auxc: {{{$f}}}\n";
-		print STDERR "".(scalar @main)."\t".(scalar @aux)."\t$f\n" if($auxc > 0);
+		#print STDERR "below threshold ($minc > $mainc), $auxc: {{{$f}}}\n";
+		#print STDERR "".(scalar @main)."\t".(scalar @aux)."\t$f\n" if($auxc > 0);
 		++$i;
-		for my $e (keys %{$taux->{$f}}) {
+		for my $e (@aux) {
 			if(!defined $tmain->{$f}{$e}) {
 				$tmain->{$f}{$e} = $taux->{$f}{$e};
-				$amain->{$f}{$e} = $aaux->{$f}{$e};
 				my $t = $tmain->{$f}{$e};
-				$t->[$#$t] = exp(-1);
+				$t->[0][$#{$t->[0]}] = exp(-1);
 			}
 		}
 	}
 }
 print STDERR "foreign phrases: $i\n";
-
-dump_ptable($tmain,$amain);
+remove_unreachable_phrases($tmain);
+dump_ptable($tmain, align => 1);
