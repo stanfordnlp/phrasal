@@ -58,8 +58,7 @@ public class UnsmoothedMERT implements Runnable {
   static final int DEFAULT_TER_SHIFT_DIST = 12; // Yaser suggested 10; I set it to 2*dlimit = 12
 
   private static long SEED = 8682522807148012L;
-  private static Random globalRandom = new Random(SEED);
-  //private static Random globalRandom = new Random();
+  private static Random globalRandom;
 
   public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
@@ -918,11 +917,12 @@ public class UnsmoothedMERT implements Runnable {
       // ensure experiments are reproducible:
       List<Double> v = new ArrayList<Double>(wts.values());
       Collections.sort(v);
-      long newSeed = Arrays.hashCode(v.toArray());
-      this.random = new Random(newSeed);
+      v.add(SEED*1.0); 
+      long threadSeed = Arrays.hashCode(v.toArray());
+      this.random = new Random(threadSeed);
 
       System.out.printf("\npoint %d - initial wts: %s", ptI, wts.toString());
-      System.out.printf("\npoint %d - seed: %d\n", ptI, newSeed);
+      System.out.printf("\npoint %d - seed: %d\n", ptI, threadSeed);
       
       NBestOptimizer opt = NBestOptimizerFactory.factory(optStr, this);
       System.err.println("using: "+opt.toString());
@@ -1000,6 +1000,8 @@ public class UnsmoothedMERT implements Runnable {
     }
 
     SEED = seedStr.hashCode();
+    System.err.println("Seed used to generate random points: "+SEED);
+    globalRandom = new Random(SEED);
 
     String evalMetric = args[argi].toLowerCase();
     String nbestListFile = args[++argi];

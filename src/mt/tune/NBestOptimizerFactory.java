@@ -162,12 +162,14 @@ class SequenceOptimizer extends AbstractNBestOptimizer {
         double oldE = UnsmoothedMERT.evalAtPoint(nbest,wts,emetric);
         double newE = UnsmoothedMERT.evalAtPoint(nbest,newWts,emetric);
 
-        boolean done = Math.abs(oldE-newE) <= MIN_OBJECTIVE_CHANGE || !loop;
+        boolean worse = oldE > newE;
+        boolean done = Math.abs(oldE-newE) <= MIN_OBJECTIVE_CHANGE || !loop || worse;
 
         System.err.printf("seq optimizer: %s -> %s (%s) ssd: %f done: %s opt: %s\n",
           oldE, newE, newE-oldE, wtSsd, done, opt.toString());
-        if(oldE > newE)
+        if(worse) {
           System.err.printf("WARNING: negative objective change!");
+        }
 
         if(done) break;
         wts = newWts;
