@@ -571,6 +571,8 @@ public class UnsmoothedMERT implements Runnable {
         randpt.setCount(f, globalRandom.nextDouble() * 2 - 1.0);
       }
     }
+
+    System.err.printf("random Wts: %s\n", randpt);
     return randpt;
   }
  

@@ -71,12 +71,30 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		} else {
 			reader = new LineNumberReader(new FileReader(filename));
 		}
-		Pattern tripplePipes = Pattern.compile("\\s*\\|\\|\\|\\s");
-		Pattern space = Pattern.compile("\\s+");
+		Pattern tripplePipes = Pattern.compile(" \\|\\|\\| ");
+		Pattern space = Pattern.compile(" ");
 		Pattern label = Pattern.compile(".*:");
 		String lastId = null;
+		String[] emptyStringArray = new String[0];
 		for (String inline; (inline = reader.readLine()) != null; ) {
-				String[] fields = tripplePipes.split(inline);
+				StringTokenizer toker = new StringTokenizer(inline);
+				List<String> listFields = new LinkedList<String>();
+				do {
+					StringBuilder sb = new StringBuilder();
+					boolean first = true;
+				  do {
+						String token = toker.nextToken();
+					  if ("|||".equals(token)) break;
+						if (!first) sb.append(" ");
+						else first = false;
+            sb.append(token);
+				  }  while (toker.hasMoreTokens());
+					listFields.add(sb.toString());
+				}  while (toker.hasMoreTokens());
+				
+				String[] fields = listFields.toArray(emptyStringArray);
+
+				// fields = tripplePipes.split(inline);
         if(fields.length < 3) {
           System.err.printf("Warning: bad nbest-list format: %s\n",inline);
           System.err.printf("Warning: expected at least 3 fields, but found only %d\n",fields.length);
@@ -132,25 +150,23 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 					}
 				}
 				
+				String[] featureFields = space.split(featuresStr);
 				String featureName = "unlabeled";
 				Map<String, List<Double>> featureMap = new HashMap<String, List<Double>>();
 				featureMap.put(featureName, new ArrayList<Double>());	
 				//featureIndex.indexOf(featureName, true);
-        if(featuresStr.length() > 0) {
-          String[] featureFields = space.split(featuresStr);
-          for (String field : featureFields) {
-            if (label.matcher(field).find()) {
-              featureName = field.substring(0, field.length()-1);
-              featureMap.put(featureName, new ArrayList<Double>());
-              continue;
-            }
-            try { 
-              featureMap.get(featureName).add(new Double(field));
-            } catch (NumberFormatException e) {
-              throw new RuntimeException(String.format("Feature value, '%s', can not be parsed as a double value. (line: %d)", field, reader.getLineNumber()));
-            }
-          }
-        }
+				for (String field : featureFields) {
+					if (field.endsWith(":")) {
+						featureName = field.substring(0, field.length()-1);
+						featureMap.put(featureName, new ArrayList<Double>());
+						continue;
+					}
+					try { 
+						featureMap.get(featureName).add(new Double(field));
+					} catch (NumberFormatException e) {
+						throw new RuntimeException(String.format("Feature value, '%s', can not be parsed as a double value. (line: %d)", field, reader.getLineNumber()));
+					}
+				}
 				
 				List<FeatureValue<String>> featureValues = new ArrayList<FeatureValue<String>>();
 				
