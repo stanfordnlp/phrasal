@@ -8,5 +8,10 @@
 	<classpathentry kind="lib" path="lib/testng.jar" sourcepath="libsrc/testng-5.8-src.zip"/>
 	<classpathentry kind="lib" path="lib/tokyocabinet.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/create_phrasedb.jar"/>
+	<classpathentry kind="lib" path="lib/meteor.jar"/>
+	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
+	<classpathentry kind="lib" path="lib/tercom.jar"/>
+	<classpathentry kind="lib" path="lib/terp.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
