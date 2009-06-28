@@ -1,7 +1,6 @@
 package mt.decoder.efeat;
 
-import edu.stanford.nlp.tagger.exptag.*;
-import edu.stanford.nlp.tagger.maxent.TaggerConfig;
+import edu.stanford.nlp.tagger.maxent.*;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;

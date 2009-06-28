@@ -13,7 +13,7 @@ import java.io.OutputStreamWriter;
 import java.io.IOException;
 
 import edu.stanford.nlp.tagger.maxent.TaggerConfig;
-import edu.stanford.nlp.tagger.exptag.MaxentTagger;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.parser.mst.rmcd.ParserOptions;
 import edu.stanford.nlp.parser.mst.rmcd.DependencyPipe;
 import edu.stanford.nlp.parser.mst.rmcd.DependencyParser;
