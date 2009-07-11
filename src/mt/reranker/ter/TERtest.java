@@ -267,11 +267,11 @@ public class TERtest {
 	System.out.println("Total TER: " + (TOTAL_EDITS / TOTAL_WORDS) + " (" +
 			   TOTAL_EDITS + "/" + TOTAL_WORDS + ")");
 	System.out.println("Number of calls to beam search: " + 
-			   TERcalc.numBeamCalls());
+			   ter.numBeamCalls());
 	System.out.println("Number of segments scored: " + 
-			   TERcalc.numSegsScored());
+			   ter.numSegsScored());
 	System.out.println("Number of shifts tried: " + 
-			   TERcalc.numShiftsTried());	
+			   ter.numShiftsTried());	
     }
     
     public static BufferedWriter openFile(ArrayList formats,

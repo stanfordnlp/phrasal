@@ -61,7 +61,7 @@ public class TERcalc {
   private boolean nopunct = false;
   private TERintpair[] refSpans = null;
   private TERintpair[] hypSpans = null;
-  public static double ref_len = -1.;
+  public double ref_len = -1.;
 
   public void setNormalize(boolean b) {
 	normalized = b;
@@ -127,7 +127,7 @@ public class TERcalc {
     ref_len /= reflens.size();
   }
 
-  public static void setRefLen(double d) {
+  public void setRefLen(double d) {
     ref_len = (d >= 0) ? d : -1;
   }
 
@@ -262,14 +262,14 @@ public class TERcalc {
 	return s.split("\\s+");
   }
 
-  private static String removePunctuation(String str) {
+  private String removePunctuation(String str) {
 	String s = str.replaceAll("[\\.,\\?:;!\"\\(\\)]", "");
 	s = s.replaceAll("\\s+", " ");
 	return s;
   }
 
 
-  private static Map BuildWordMatches(Comparable[] hyp,
+  private Map BuildWordMatches(Comparable[] hyp,
                                       Comparable[] ref) {
 	Set hwhash = new HashSet();
 	for (int i = 0; i < hyp.length; i++) {
@@ -307,7 +307,7 @@ public class TERcalc {
 	return to_return;
   }
 
-  private static void FindAlignErr(TERalignment align, boolean[] herr,
+  private void FindAlignErr(TERalignment align, boolean[] herr,
                                    boolean[] rerr,
                                    int[] ralign) {
 	int hpos = -1;
@@ -439,7 +439,7 @@ public class TERcalc {
 	}
   }
 
-  private static TERshift[][] GatherAllPossShifts(Comparable[] hyp, Comparable[] ref, Map rloc,
+  private TERshift[][] GatherAllPossShifts(Comparable[] hyp, Comparable[] ref, Map rloc,
                                                   TERalignment align,
                                                   boolean[] herr, boolean[] rerr, int[] ralign, TERcost costfunc) {
 
@@ -746,7 +746,7 @@ public class TERcalc {
 	return to_return;
   }
 
-  private static boolean spanIntersection (String refSpan,
+  private boolean spanIntersection (String refSpan,
                                            String hypSpan) {
     String[] hSpans = hypSpan.split(":");
     String[] rSpans = refSpan.split(":");
@@ -755,33 +755,33 @@ public class TERcalc {
             Integer.valueOf(rSpans[0]) <= Integer.valueOf(hSpans[1]));
   }
 
-  private static boolean spanIntersection (TERintpair refSpan,
+  private boolean spanIntersection (TERintpair refSpan,
                                            TERintpair hypSpan) {
     return (refSpan.cdr >= hypSpan.car &&
             refSpan.car <= hypSpan.cdr);
   }
 
   /* Accessor functions to some internal counters */
-  public static int numBeamCalls () { return NUM_BEAM_SEARCH_CALLS; }
-  public static int numSegsScored () { return NUM_SEGMENTS_SCORED; }
-  public static int numShiftsTried () { return NUM_SHIFTS_CONSIDERED; }
+  public int numBeamCalls () { return NUM_BEAM_SEARCH_CALLS; }
+  public int numSegsScored () { return NUM_SEGMENTS_SCORED; }
+  public int numShiftsTried () { return NUM_SHIFTS_CONSIDERED; }
 
   /* We may want to add some function to change the beam width */
-  public static int BEAM_WIDTH = 20;
+  public int BEAM_WIDTH = 20;
 
   private static final double INF = 999999.0;
 
-  private static final int MAX_SHIFT_SIZE = 10;
-  private static int MAX_SHIFT_DIST = 50;
+  private final int MAX_SHIFT_SIZE = 10;
+  private int MAX_SHIFT_DIST = 50;
 
   /* Variables for some internal counting.  */
-  private static int NUM_SEGMENTS_SCORED = 0;
-  private static int NUM_SHIFTS_CONSIDERED = 0;
-  private static int NUM_BEAM_SEARCH_CALLS = 0;
+  private int NUM_SEGMENTS_SCORED = 0;
+  private int NUM_SHIFTS_CONSIDERED = 0;
+  private int NUM_BEAM_SEARCH_CALLS = 0;
 
   /* These are resized by the MIN_EDIT_DIST code if they aren't big enough */
-  private static double[][] S = new double[350][350];
-  private static char[][] P = new char[350][350];
+  private double[][] S = new double[350][350];
+  private char[][] P = new char[350][350];
 
 
 }
