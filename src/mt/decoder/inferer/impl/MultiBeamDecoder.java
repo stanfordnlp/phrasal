@@ -27,8 +27,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	// class level constants
 	public static final String DEBUG_PROPERTY = "MultiBeamDecoderDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
-	public static final String  ALIGNMENT_DUMP = System.getProperty("a");
-	public static final boolean DETAILED_DEBUG = false;
+
+  public static final String DETAILED_DEBUG_PROPERTY = "MultiBeamDecoderDetailedDebug";
+  public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
+
+  public static final String  ALIGNMENT_DUMP = System.getProperty("a");
 	public static final int DEFAULT_BEAM_SIZE = 200;
 	public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam; 
 	public static final int DEFAULT_MAX_DISTORTION = -1;
@@ -314,7 +317,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   
   @Override
 	public void run() {
-		expandBeam(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace, translationId, threadId, threadCount, cdl);
+		if(DETAILED_DEBUG) System.err.printf("starting beam expander: %s thread pool: %s\n", this, threadPool);
+    expandBeam(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace, translationId, threadId, threadCount, cdl);
+    if(DETAILED_DEBUG) System.err.printf("ending beam expander: %s thread pool: %s\n", this, threadPool);
 	}
   
 	public int expandBeam(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, OptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {

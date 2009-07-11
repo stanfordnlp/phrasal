@@ -271,7 +271,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     System.out.printf("done loading lm.\n");
 
     long startTimeMillis = System.currentTimeMillis();
-    for(String sent : ObjectBank.getLineIteratorObjectBank(file)) {
+    for(String sent : ObjectBank.getLineIterator(file)) {
       sent = sent.toLowerCase();
       System.out.printf("Sentence: %s\n", sent);
       Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));

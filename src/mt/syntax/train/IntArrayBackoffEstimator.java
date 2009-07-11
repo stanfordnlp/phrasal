@@ -173,7 +173,7 @@ public class IntArrayBackoffEstimator {
     double cVal = Double.parseDouble(cStr);
     IntArrayBackoffEstimator mle = new IntArrayBackoffEstimator(3,cVal);
     // Train:
-    for(String line : ObjectBank.getLineIteratorObjectBank(trainStr)) {
+    for(String line : ObjectBank.getLineIterator(trainStr)) {
       int[] tokens = toReverseIntArray(line);
       for(int i=tokens.length-3; i>=0; --i)
         mle.addTrainingSample(
@@ -183,7 +183,7 @@ public class IntArrayBackoffEstimator {
     // Tuning:
     if(tuneStr != null) {
       DEBUG=false;
-      for(String line : ObjectBank.getLineIteratorObjectBank(tuneStr)) {
+      for(String line : ObjectBank.getLineIterator(tuneStr)) {
         int[] tokens = toReverseIntArray(line);
         for(int i=tokens.length-3; i>=0; --i)
           mle.addTuningSample
@@ -196,7 +196,7 @@ public class IntArrayBackoffEstimator {
     DEBUG=true;
     // Test:
     int s=-1;
-    for(String line : ObjectBank.getLineIteratorObjectBank(testStr)) {
+    for(String line : ObjectBank.getLineIterator(testStr)) {
       double totalLogp = 0.0;
       int[] tokens = toReverseIntArray(line);
       for(int i=tokens.length-3; i>=0; --i) {

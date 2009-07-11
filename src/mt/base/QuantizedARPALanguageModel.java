@@ -225,7 +225,7 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
     ARPALanguageModel lm = quantized ? new QuantizedARPALanguageModel(model) : new ARPALanguageModel(model);
     System.out.printf("done loading lm.\n");
 
-    for(String sent : ObjectBank.getLineIteratorObjectBank(file)) {
+    for(String sent : ObjectBank.getLineIterator(file)) {
       sent = sent.toLowerCase();
       System.out.printf("Sentence: %s\n", sent);
       Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));

@@ -105,7 +105,7 @@ public class CorpusOverlapFinder {
 
     List<Set<String>> matches = new ArrayList<Set<String>>();
     List<String> eLines = new ArrayList<String>();
-    for(String eLine : ObjectBank.getLineIteratorObjectBank(file)) {
+    for(String eLine : ObjectBank.getLineIterator(file)) {
       Set<String> localMatches = new HashSet<String>();
       String nopunc = eLine.replaceAll("[^\\w\\d ]"," ");
       Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(nopunc.toLowerCase().split("\\s+")));

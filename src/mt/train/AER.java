@@ -40,10 +40,10 @@ public class AER {
       h_s2t = false; h_zeroBased = true;
     }
     Iterator<String>
-         fCorpus = ObjectBank.getLineIteratorObjectBank(args[0]).iterator(),
-         eCorpus = ObjectBank.getLineIteratorObjectBank(args[1]).iterator(),
-         rCorpus = ObjectBank.getLineIteratorObjectBank(args[2]).iterator(),
-         hCorpus = ObjectBank.getLineIteratorObjectBank(args[4]).iterator();
+         fCorpus = ObjectBank.getLineIterator(args[0]).iterator(),
+         eCorpus = ObjectBank.getLineIterator(args[1]).iterator(),
+         rCorpus = ObjectBank.getLineIterator(args[2]).iterator(),
+         hCorpus = ObjectBank.getLineIterator(args[4]).iterator();
     List<SymmetricalWordAlignment> rAlign = new ArrayList<SymmetricalWordAlignment>();
     List<SymmetricalWordAlignment> hAlign = new ArrayList<SymmetricalWordAlignment>();
     int lineNb = 0;
