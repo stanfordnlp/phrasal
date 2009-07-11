@@ -21,7 +21,7 @@ import mt.decoder.util.State;
 
 import meteor.*;
 
-public class METEOR2Metric<TK, FV> extends AbstractMetric<TK, FV> {
+public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
   enum EditType { ins, del, sub, sft };
@@ -33,13 +33,13 @@ public class METEOR2Metric<TK, FV> extends AbstractMetric<TK, FV> {
 
 	 MeteorScorer ms;
 
-  public METEOR2Metric(List<List<Sequence<TK>>> referencesList) {
+  public METEORMetric(List<List<Sequence<TK>>> referencesList) {
     this.referencesList = referencesList;
 	  ms = new MeteorScorer("en", (int) MeteorScorer.NORMALIZE_NO_PUNCT, true, "/u/nlp/packages/METEOR/meteor-0.8.1-dmcer.net/wn");
 
   }
 
-  public METEOR2Metric(List<List<Sequence<TK>>> referencesList, double alpha, double beta, double gamma) {
+  public METEORMetric(List<List<Sequence<TK>>> referencesList, double alpha, double beta, double gamma) {
     this.referencesList = referencesList;
 	  ms = new MeteorScorer("en", (int) MeteorScorer.NORMALIZE_NO_PUNCT, true, "/u/nlp/packages/METEOR/meteor-0.8.1-dmcer.net/wn", alpha, beta, gamma);
 	}
@@ -192,23 +192,23 @@ public class METEOR2Metric<TK, FV> extends AbstractMetric<TK, FV> {
   @SuppressWarnings("unchecked")
   public static void main(String[] args) throws IOException {
     if (args.length == 0) {
-      System.err.println("Usage:\n\tjava METEOR2Metric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
+      System.err.println("Usage:\n\tjava METEORMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, false);
 
-    METEOR2Metric<IString,String> meteor = null;
+    METEORMetric<IString,String> meteor = null;
 		if (System.getProperty("abg") != null) {
 			String[] fields = System.getProperty("abg").split(":");
 			double alpha = Double.parseDouble(fields[0]);
 			double beta = Double.parseDouble(fields[1]);
 			double gamma = Double.parseDouble(fields[2]);
 			System.err.printf("Using alpha: %f beta: %f gamma: %f\n", alpha, beta, gamma);
-      meteor = new METEOR2Metric<IString,String>(referencesList, alpha, beta, gamma);
+      meteor = new METEORMetric<IString,String>(referencesList, alpha, beta, gamma);
 		} else {
-      meteor = new METEOR2Metric<IString,String>(referencesList);
+      meteor = new METEORMetric<IString,String>(referencesList);
 		}
-    METEOR2Metric<IString,String>.METEORIncrementalMetric incMetric = meteor.getIncrementalMetric();
+    METEORMetric<IString,String>.METEORIncrementalMetric incMetric = meteor.getIncrementalMetric();
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
 

@@ -54,8 +54,11 @@ import org.w3c.dom.Document;
 
 @SuppressWarnings( {"unchecked", "unused"} )
 public class TERtest {
-    public static void main(String[] args) {
-	// 1. process arguments
+
+  private static final TERcalc ter = new TERcalc();
+
+  public static void main(String[] args) {
+  // 1. process arguments
 	HashMap paras = TERpara.getOpts(args);
 	String ref_fn = (String) paras.get(TERpara.OPTIONS.REF);
 	String hyp_fn = (String) paras.get(TERpara.OPTIONS.HYP);
@@ -164,11 +167,11 @@ public class TERtest {
 	if(!verifyFormats(in_ref_format, in_hyp_format, formats)) System.exit(1);
 
 	// set options to compute TER
-	TERcalc.setNormalize(normalized);
-	TERcalc.setCase(caseon);
-	TERcalc.setPunct(nopunct);
-	TERcalc.setBeamWidth(beam_width);
-	TERcalc.setShiftDist(shift_dist);
+	ter.setNormalize(normalized);
+	ter.setCase(caseon);
+	ter.setPunct(nopunct);
+	ter.setBeamWidth(beam_width);
+	ter.setShiftDist(shift_dist);
 
 	// 5. prepare output streams, xml, pra, and ter
 	BufferedWriter xml_out = openFile(formats, "xml", out_pfx, hyp_fn, ref_fn, reflen_fn, caseon);
@@ -392,7 +395,7 @@ public class TERtest {
 	    System.exit(1);
 	}
 
-	TERcalc.setRefLen(reflens);
+	ter.setRefLen(reflens);
 	/* For each reference, compute the TER */
 	for (int i = 0; i < refs.size(); ++i) {
 	    ref = (String) refs.get(i);
@@ -400,11 +403,11 @@ public class TERtest {
 		refid = (String) refids.get(i);
 
 	    if(has_span) {
-		TERcalc.setRefSpan(refspan);
-		TERcalc.setHypSpan(hypspan);
+		ter.setRefSpan(refspan);
+		ter.setHypSpan(hypspan);
 	    }
 
-	    TERalignment result = TERcalc.TER(hyp, ref, costfunc);
+	    TERalignment result = ter.TER(hyp, ref, costfunc);
 
 	    if ((bestresult == null) || (bestresult.numEdits > result.numEdits)) {
 		bestresult = result;

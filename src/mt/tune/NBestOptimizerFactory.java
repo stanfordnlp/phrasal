@@ -73,10 +73,14 @@ public class NBestOptimizerFactory {
       return new BasicPowellOptimizer(mert);
     } else if (name.equalsIgnoreCase("powell")) {
       return new PowellOptimizer(mert);
-    } else if (name.equalsIgnoreCase("simplex")) {
-      return new DownhillSimplexOptimizer(mert, false);
-    } else if (name.equalsIgnoreCase("randomSimplex")) {
-      return new DownhillSimplexOptimizer(mert, true);
+    } else if (name.startsWith("simplex")) {
+      String[] els = name.split(":");
+      int iter = els.length == 2 ? Integer.parseInt(els[1]) : 1;
+      return new DownhillSimplexOptimizer(mert, iter, false);
+    } else if (name.startsWith("randomSimplex")) {
+      String[] els = name.split(":");
+      int iter = els.length == 2 ? Integer.parseInt(els[1]) : 1;
+      return new DownhillSimplexOptimizer(mert, iter, true);
     } else if (name.equalsIgnoreCase("length")) {
       return new LineSearchOptimizer(mert);
     } else if (name.equalsIgnoreCase("perceptron")) {
@@ -529,9 +533,17 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
   static public final boolean DEBUG = false;
 
   private final boolean doRandomSteps;
+  private final int minIter;
+
+  public DownhillSimplexOptimizer(UnsmoothedMERT mert, int minIter, boolean doRandomSteps) {
+    super(mert);
+    this.minIter = minIter;
+    this.doRandomSteps = doRandomSteps;
+  }
 
   public DownhillSimplexOptimizer(UnsmoothedMERT mert, boolean doRandomSteps) {
     super(mert);
+    this.minIter = 1;
     this.doRandomSteps = doRandomSteps;
   }
 
@@ -550,6 +562,14 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
   }
 
   public Counter<String> optimize(final Counter<String> initialWts) {
+    assert(minIter >= 1);
+    Counter<String> wts = initialWts;
+    for(int i=0; i<minIter; ++i)
+      wts = optimizeOnce(wts);
+    return wts;
+  }
+
+  private Counter<String> optimizeOnce(final Counter<String> initialWts) {
 
     final int sz = initialWts.size();
     final String[] keys = initialWts.keySet().toArray(new String[sz]);

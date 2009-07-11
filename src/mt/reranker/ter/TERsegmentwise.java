@@ -25,7 +25,9 @@ import java.io.FileNotFoundException;
 
 public class TERsegmentwise {
 
-	/**
+  private static final TERcalc ter = new TERcalc();
+
+  /**
 	 * Computes segmentwise TER for a hypothesis/reference plain text filepair.
 	 * @param hypFilename
 	 * @param refFilename
@@ -45,7 +47,7 @@ public class TERsegmentwise {
 
 			// 6. compute TER
 
-			TERalignment result = TERcalc.TER(hyp, ref, costfunc);	
+			TERalignment result = ter.TER(hyp, ref, costfunc);
 			segmentwise_scores.add(result.numEdits/result.numWords);
 		}
 		return segmentwise_scores;
@@ -78,11 +80,11 @@ public class TERsegmentwise {
 		costfunc._substitute_cost = (Double) paras.get(TERpara.OPTIONS.SUBSTITUTE_COST);
 
 		// set options to compute TER
-		TERcalc.setNormalize(normalized);
-		TERcalc.setCase(caseon);
-		TERcalc.setPunct(nopunct);
-		TERcalc.setBeamWidth(beam_width);
-		TERcalc.setShiftDist(shift_dist);
+		ter.setNormalize(normalized);
+		ter.setCase(caseon);
+		ter.setPunct(nopunct);
+		ter.setBeamWidth(beam_width);
+		ter.setShiftDist(shift_dist);
 		
 		List<Double> segmentwiseScores = segmentwiseTER(hyp_fn,ref_fn,costfunc);
 		for (Double result: segmentwiseScores) {

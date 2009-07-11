@@ -10,12 +10,14 @@ import mt.reranker.ter.*;
  */
 public class NegTERtestMultipleRef {
 
+  private static final TERcalc ter = new TERcalc();
+
   static double computeTER(String hyp, List<String> refs) {
     System.err.println("Compute '"+hyp+"' vs.");
     double minEdits = Double.MAX_VALUE;
     double sumlen = 0.0;
     for(int i = 0; i < refs.size(); i++) {
-      TERalignment result = TERcalc.TER(hyp, refs.get(i));
+      TERalignment result = ter.TER(hyp, refs.get(i));
       System.err.println("\t"+refs.get(i));
       minEdits = Math.min(result.numEdits, minEdits);
       sumlen += result.numWords;

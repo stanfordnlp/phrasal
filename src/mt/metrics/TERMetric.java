@@ -21,10 +21,13 @@ import mt.decoder.util.State;
 
 import mt.reranker.ter.TERcalc;
 import mt.reranker.ter.TERalignment;
+import mt.reranker.TER;
 
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
+
+  public final TERcalc calc = new TERcalc();
 
   enum EditType { ins, del, sub, sft };
   boolean countEdits = false;
@@ -77,7 +80,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 		
 			int totalWords = 0;
     	for (Sequence<TK> ref : refsSeq) {
-     	 TERalignment terAl = TERcalc.TER(hyp, ref.toString());
+     	 TERalignment terAl = calc.TER(hyp, ref.toString());
 				totalWords += terAl.numWords;
 			//System.err.printf("ter: %f\n", ter);
 			//System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits, terAl.numWords);

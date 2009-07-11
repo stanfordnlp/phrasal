@@ -46,6 +46,8 @@ import java.io.*;
 
 public class NBest {
 
+  private static final TERcalc ter = new TERcalc();
+
   public static final String FEATURE_INDEX_FILENAME_PROP = "featureIndex";
   // null implies that, by default, no predicted indices file is generated
   public static final String DEFAULT_FEATURE_INDEX_FILENAME = null;
@@ -214,7 +216,7 @@ public class NBest {
       double minEdits = Double.MAX_VALUE;
       double sumlen = 0.0;
       for(int j = 0; j < refS.length; j++) {
-        TERalignment result = TERcalc.TER(sentence, refS[j]);
+        TERalignment result = ter.TER(sentence, refS[j]);
         //System.err.println(j+"\t"+refS[j]);
         minEdits = Math.min(result.numEdits, minEdits);
         sumlen += result.numWords;
@@ -237,7 +239,7 @@ public class NBest {
       double minEdits = Double.MAX_VALUE;
       double sumlen = 0.0;
       for(int j = 0; j < refS.length; j++) {
-        TERalignment result = TERcalc.TER(sentence, refS[j]);
+        TERalignment result = ter.TER(sentence, refS[j]);
         //System.err.println(j+"\t"+refS[j]);
         minEdits = Math.min(result.numEdits, minEdits);
         sumlen += result.numWords;

@@ -17,6 +17,8 @@ import edu.stanford.nlp.stats.ClassicCounter;
  */
 public class MTScorer implements ExternalMTScorer {
 
+  private static final TERcalc ter = new TERcalc();
+
   Properties prop;
 
   public static final int MAX_VALUE = 100;
@@ -89,7 +91,7 @@ public class MTScorer implements ExternalMTScorer {
          "1:1:1:1,"+ "1:1:1:0.1,"+ "1:1:0.1:1,"+ "1:0.5:1:1,"+
          "1:0.2:1:1,"+ "1:0.1:1:1,"+ "1:0.05:1:1,"+ "1:0.02:1:1,"+
          "1:0.01:1:1,"+ "0.1:1:1:1"));
-    TERcalc.setNormalize(true);
+    ter.setNormalize(true);
   }
 
   /**
@@ -180,7 +182,7 @@ public class MTScorer implements ExternalMTScorer {
     String[] strs;
     if(lowercase)
       str = str.toLowerCase();
-    strs = tokenize ? TERcalc.tokenize(str) : str.split("\\s+");
+    strs = tokenize ? ter.tokenize(str) : str.split("\\s+");
     return new SimpleSequence<IString>(true, IStrings.toIStringArray(strs));
   }
 

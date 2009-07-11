@@ -25,7 +25,8 @@ import edu.stanford.nlp.math.ArrayMath;
  *
  * @author danielcer
  */
-public class UnsmoothedMERT implements Runnable {
+public class UnsmoothedMERT extends Thread {
+//public class UnsmoothedMERT implements Runnable {
 
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
   static final Set<String> generativeFeatures = SSVMScorer
@@ -783,25 +784,26 @@ public class UnsmoothedMERT implements Runnable {
 				double alpha = Double.parseDouble(fields[1]);
       	double beta = Double.parseDouble(fields[2]);
       	double gamma = Double.parseDouble(fields[3]);
-      	emetric = new METEOR2Metric<IString, String>(references, alpha, beta, gamma);
+      	emetric = new METEORMetric<IString, String>(references, alpha, beta, gamma);
 			} else {
-      	emetric = new METEOR2Metric<IString, String>(references);
+      	emetric = new METEORMetric<IString, String>(references);
 			}
     } else if (evalMetric.equals("ter") || evalMetric.startsWith("ter:")) {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
       String[] fields = evalMetric.split(":");
+      TERMetric termetric = new TERMetric<IString, String>(references);
       if (fields.length > 1) {
         int beamWidth = Integer.parseInt(fields[1]);
-        TERcalc.setBeamWidth(beamWidth);
+        termetric.calc.setBeamWidth(beamWidth);
         System.err.printf("TER beam width set to %d (default: 20)\n",beamWidth);
         if (fields.length > 2) {
           int maxShiftDist = Integer.parseInt(fields[2]);
-          TERcalc.setShiftDist(maxShiftDist);
+          termetric.calc.setShiftDist(maxShiftDist);
           System.err.printf("TER maximum shift distance set to %d (default: 50)\n",maxShiftDist);
         }
       }
-      emetric = new TERMetric<IString, String>(references);
+      emetric = termetric;
     } else if (evalMetric.equals("bleu") || evalMetric.startsWith("bleu:")) {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
@@ -849,7 +851,7 @@ public class UnsmoothedMERT implements Runnable {
       emetric = new LinearCombinationMetric<IString, String>
               (new double[] {1.0, 2.0},
                       new BLEUMetric<IString, String>(referencesBleu),
-                      new METEOR2Metric<IString, String>(referencesMeteor, alpha, beta, gamma));
+                      new METEORMetric<IString, String>(referencesMeteor, alpha, beta, gamma));
       System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n",
               evalMetric, 2.0);
     } else if (evalMetric.startsWith("bleu-2terpa")) {
@@ -872,18 +874,17 @@ public class UnsmoothedMERT implements Runnable {
     } else if (evalMetric.startsWith("bleu-ter")) {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
-      TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
-      TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
       String[] fields = evalMetric.split(":");
       double terW = 1.0;
       if(fields.length > 1) {
         assert(fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
+      TERMetric termetric = new TERMetric<IString, String>(references);
+      termetric.calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
+      termetric.calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
       emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(references),
-                      new TERMetric<IString, String>(references));
+              (new double[] {1.0, terW}, new BLEUMetric<IString, String>(references), termetric);
       System.err.printf("Maximizing %s: BLEU minus TER (beamWidth=%d, shiftDist=%d, terW=%f)\n",
               evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
     } else if (evalMetric.equals("wer")) {
@@ -1019,14 +1020,20 @@ public class UnsmoothedMERT implements Runnable {
     // Initialize static members (nbest list, etc); need UnsmoothedMERT instance for filtering the nbest list:
     initStatic(nbestListFile, localNbestListFile, previousWtsFiles, nStartingPoints, mert);
 
-    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    //ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
+    List<Thread> threads = new ArrayList<Thread>(nThreads);
     for(int i=0; i<nThreads; ++i) {
       UnsmoothedMERT thread = (i==0) ? mert : new UnsmoothedMERT(evalMetric, referenceList, optStr, seedStr);
-      executor.submit(thread);
+      thread.start();
+      threads.add(thread);
+      //executor.submit(thread);
     }
-    executor.shutdown();
-    executor.awaitTermination(1, TimeUnit.DAYS);
+    //executor.shutdown();
+    //executor.awaitTermination(1, TimeUnit.DAYS);
+    for(int i=0; i<nThreads; ++i)
+      threads.get(i).join();
+    
     mert.save(finalWtsFile);
   }
 }

@@ -56,34 +56,34 @@ import java.util.regex.*;
 public class TERcalc {
   /* Turn on if you want a lot of debugging info. */
   static final private boolean DEBUG = false;
-  private static boolean normalized = false;
-  private static boolean caseon = false;
-  private static boolean nopunct = false;
-  private static TERintpair[] refSpans = null;
-  private static TERintpair[] hypSpans = null;
+  private boolean normalized = false;
+  private boolean caseon = false;
+  private boolean nopunct = false;
+  private TERintpair[] refSpans = null;
+  private TERintpair[] hypSpans = null;
   public static double ref_len = -1.;
 
-  public static void setNormalize(boolean b) {
+  public void setNormalize(boolean b) {
 	normalized = b;
   }
 
-  public static void setCase(boolean b) {
+  public void setCase(boolean b) {
 	caseon = b;
   }
 
-  public static void setPunct(boolean b) {
+  public void setPunct(boolean b) {
 	nopunct = b;
   }
 
-  public static void setBeamWidth(int i) {
+  public void setBeamWidth(int i) {
 	BEAM_WIDTH = i;
   }
 
-  public static void setShiftDist(int i) {
+  public void setShiftDist(int i) {
     MAX_SHIFT_DIST = i;
   }
 
-  public static void setRefSpan(String span) {
+  public void setRefSpan(String span) {
     if(span != null && span.trim() != "") {
       String[] spans = span.split("\\s+");
       refSpans = new TERintpair[spans.length];
@@ -95,7 +95,7 @@ public class TERcalc {
     }
   }
 
-  public static void setHypSpan(String span) {
+  public void setHypSpan(String span) {
     if(span != null && span.trim() != "") {
       //      hypSpans = span.split("\\s+");
       String[] spans = span.split("\\s+");
@@ -108,7 +108,7 @@ public class TERcalc {
     }
   }
 
-  public static void setRefLen(List reflens) {
+  public void setRefLen(List reflens) {
     String reflen = "";
 
     if (reflens == null || reflens.size() == 0) {
@@ -131,15 +131,15 @@ public class TERcalc {
     ref_len = (d >= 0) ? d : -1;
   }
 
-  public static TERalignment TER(Comparable[] hyp, Comparable[] ref) {
+  public TERalignment TER(Comparable[] hyp, Comparable[] ref) {
 	return TER(hyp, ref, new TERcost());
   }
 
-  public static TERalignment TER(String hyp, String ref) {
+  public TERalignment TER(String hyp, String ref) {
 	return TER(hyp, ref, new TERcost());
   }
 
-  public static TERalignment TER(String hyp, String ref, TERcost costfunc) {
+  public TERalignment TER(String hyp, String ref, TERcost costfunc) {
 	/* Tokenize the strings and pass them off to TER */
 	TERalignment to_return;
 
@@ -161,7 +161,7 @@ public class TERcalc {
 	return to_return;
   }
 
-  public static TERalignment TERnullstr(String hyp, String ref, TERcost costfunc) {
+  public TERalignment TERnullstr(String hyp, String ref, TERcost costfunc) {
 	TERalignment to_return = new TERalignment();
 	String [] hyparr = tokenize(hyp);
 	String [] refarr = tokenize(ref);
@@ -189,7 +189,7 @@ public class TERcalc {
 	return to_return;
   }
 
-  public static TERalignment TER(Comparable[] hyp, Comparable[] ref,
+  public TERalignment TER(Comparable[] hyp, Comparable[] ref,
                                  TERcost costfunc) {
 	/* Calculates the TER score for the hyp/ref pair */
 	Map rloc = BuildWordMatches(hyp, ref);
@@ -235,7 +235,7 @@ public class TERcalc {
 	return to_return;
   }
 
-  public static String[] tokenize(String s) {
+  public String[] tokenize(String s) {
 	/* tokenizes according to the mtevalv11 specs */
 
 	if(normalized) {
@@ -338,7 +338,7 @@ public class TERcalc {
 	}
   }
 
-  private static Object[] CalcBestShift(Comparable[] cur,
+  private Object[] CalcBestShift(Comparable[] cur,
                                         Comparable[] hyp, Comparable[] ref,
                                         Map rloc, TERalignment med_align,
                                         TERcost costfunc) {
@@ -543,11 +543,11 @@ public class TERcalc {
 	return to_return;
   }
 
-  public static Object[] PerformShift(Comparable[] words, TERshift s) {
+  public Object[] PerformShift(Comparable[] words, TERshift s) {
 	return PerformShift(words, s.start, s.end, s.newloc);
   }
 
-  private static Object[] PerformShift(Comparable[] words, int start, int end, int newloc) {
+  private Object[] PerformShift(Comparable[] words, int start, int end, int newloc) {
       int c = 0;
       Comparable[] nwords = words.clone();
       TERintpair[] spans = null;
@@ -590,7 +590,7 @@ public class TERcalc {
 	return toreturn;
   }
 
-  private static TERalignment MinEditDist(Comparable[] hyp, Comparable[] ref,
+  private TERalignment MinEditDist(Comparable[] hyp, Comparable[] ref,
                                           TERcost costfunc, TERintpair[] curHypSpans) {
 	double current_best = INF;
 	double last_best = INF;
@@ -718,7 +718,8 @@ public class TERcalc {
 		j--;
       } else {
 		System.out.println("Invalid path: " + P[i][j]);
-		System.exit(-1);
+		//System.exit(-1);
+    throw new RuntimeException();
       }
 	}
 	char[] path = new char[tracelength];
