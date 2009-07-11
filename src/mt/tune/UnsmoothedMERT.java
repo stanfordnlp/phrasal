@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
-import mt.reranker.ter.*;
+import mt.metrics.ter.*;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;

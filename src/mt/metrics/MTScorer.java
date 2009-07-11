@@ -4,8 +4,8 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.*;
-import mt.reranker.ter.TERcost;
-import mt.reranker.ter.TERcalc;
+import mt.metrics.ter.TERcost;
+import mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;

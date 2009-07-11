@@ -1,4 +1,4 @@
-package mt.reranker.ter;
+package mt.metrics.ter;
 
 public class TERintpair {
   public int car;

@@ -9,8 +9,6 @@ import java.util.HashMap;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
-import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.stats.Counter;
 
 import mt.base.NBestListContainer;
 import mt.base.RawSequence;
@@ -19,9 +17,8 @@ import mt.base.Sequence;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
 
-import mt.reranker.ter.TERcalc;
-import mt.reranker.ter.TERalignment;
-import mt.reranker.TER;
+import mt.metrics.ter.TERcalc;
+import mt.metrics.ter.TERalignment;
 
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {

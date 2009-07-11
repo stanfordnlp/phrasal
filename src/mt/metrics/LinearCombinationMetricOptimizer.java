@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.*;
-import mt.reranker.ter.TERcost;
+import mt.metrics.ter.TERcost;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.IString;

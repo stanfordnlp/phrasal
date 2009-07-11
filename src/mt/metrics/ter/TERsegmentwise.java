@@ -1,4 +1,4 @@
-package mt.reranker.ter;
+package mt.metrics.ter;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

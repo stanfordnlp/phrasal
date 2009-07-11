@@ -1,7 +1,7 @@
 package mt.reranker;
 
-import mt.reranker.ter.TERalignment;
-import mt.reranker.ter.TERcalc;
+import mt.metrics.ter.TERalignment;
+import mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.math.ArrayMath;
 
 import java.io.*;

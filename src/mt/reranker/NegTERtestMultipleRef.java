@@ -3,7 +3,7 @@ package mt.reranker;
 import java.io.*;
 import java.util.*;
 
-import mt.reranker.ter.*;
+import mt.metrics.ter.*;
 
 /**
  * @author Pi-Chuan Chang
