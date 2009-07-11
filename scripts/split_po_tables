@@ -21,12 +21,12 @@ use mt_utils qw(&load_ptable_fh &filter_ptable &dump_ptable &remove_unreachable_
 
 my $pfile = $ARGV[0];
 my $ofile = $ARGV[1];
-my $minp = $ARGV[2];
-my $sz = $ARGV[3];
+#my $minp = $ARGV[2];
+my $sz = $ARGV[2];
 $sz = 6 unless defined $sz;
 
 my ($ptable,$nfeat) = load_ptable_fh(*STDIN, align => 1, index => 1);
-filter_ptable($ptable,2,$minp) if($minp > 0);
+#filter_ptable($ptable,2,$minp) if($minp > 0);
 remove_unreachable_phrases($ptable);
 
 if($pfile =~ /\.gz$/) { open(P,"| gzip > $pfile"); }

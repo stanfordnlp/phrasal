@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+#####################################################
+# Create a phrase-table and lexical re-ordering tables
+# from the output of CombinedFeatureExtractor.
+# The optional third argument is a threshold on p(e|f).
+#
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Wed 23 Jan 2008 01:00:12 PM PST
+# $Id$
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+my $ptable = $ARGV[0];
+my $otable = $ARGV[1];
+my $minp = $ARGV[2] || 0;
+my $sz = $ARGV[3];
+$sz = 6 unless defined $sz;
+
+if($ptable =~ /\.gz$/) { open(P,"| gzip > $ptable"); }
+else { open(P,"> $ptable"); }
+binmode(P,":utf8");
+if($otable =~ /\.gz$/) { open(O,"| gzip > $otable"); }
+else { open(O,"> $otable"); }
+binmode(O,":utf8");
+
+while(<STDIN>) {
+	chomp;
+	if(/  /) {
+		print STDERR "BAD PHRASE: $_\n";
+	} elsif(/^([^\|]+ \|\|\| [^\|]+) \|\|\| ([^\|]+ \|\|\| [^\|]+) \|\|\| (\S+ \S+ (\S+) \S+ \S+)(.*)((\s+\S+){$sz})\s*$/) {
+		next if $4 < $minp;
+		print P "$1 ||| $2 ||| $3$5 \n";
+		print O "$1 |||$6 \n";
+	} else {
+		print STDERR "BAD PHRASE: $_\n";
+	}
+}
+
+close(P);
+close(O);

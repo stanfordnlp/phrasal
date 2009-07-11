@@ -46,7 +46,7 @@ sub load_ptable_fh {
 	my $i=0;
 	while(<$fh>) {
 		chomp;
-		print STDERR "$i...\n" if(++$i % 100000 == 0);
+		print STDERR "loading $i...\n" if(++$i % 100000 == 0);
 		last if($last == $i);
 		my ($f,$e,@els) = split(/ \|\|\| /);
 		my $feat;
@@ -116,7 +116,9 @@ sub filter_ptable {
 	print STDERR "filtering using feature $pos. minimum score: $minp\n";
 	my ($total,$deleted) = (0,0);
 	my ($f,$p);
+	my $i=0;
 	while (($f,$p) = each %{$ptable}) {
+		print STDERR "filtering $i...\n" if(++$i % 1000 == 0);
 		my $options = scalar keys %$p;
 		$total += $options;
 		next if($options <= $n);
