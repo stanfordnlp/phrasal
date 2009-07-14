@@ -27,10 +27,10 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	// class level constants
 	public static final String DEBUG_PROPERTY = "MultiBeamDecoderDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
-
+	private static final String OPTIONS_PROPERTY = "PrintTranslationOptions";
+	public static final boolean OPTIONS_DUMP = Boolean.parseBoolean(System.getProperty(OPTIONS_PROPERTY, "false"));
   public static final String DETAILED_DEBUG_PROPERTY = "MultiBeamDecoderDetailedDebug";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
-
   public static final String  ALIGNMENT_DUMP = System.getProperty("a");
 	public static final int DEFAULT_BEAM_SIZE = 200;
 	public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam; 
@@ -148,11 +148,14 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		
 		System.err.printf("Translation options: %d\n", options.size());
 		
-		if (DETAILED_DEBUG) {
-			for (ConcreteTranslationOption<TK> option : options) {
+		if (OPTIONS_DUMP || DETAILED_DEBUG) {
+			System.err.println(">> Translation Options <<");
+		  for (ConcreteTranslationOption<TK> option : options) {
 				System.err.printf("%s=>%s\n", option.abstractOption.foreign, option.abstractOption.translation);
+				System.err.printf("\tScore: %f\n",option.isolationScore);
 				System.err.printf("\tCoverage: %s\n", option.foreignCoverage);
 			}
+		  System.err.println(">> End translation options <<");
 		}
 		
 		if (constrainedOutputSpace != null) {

@@ -13,5 +13,6 @@
 	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="lib" path="lib/tercom.jar"/>
 	<classpathentry kind="lib" path="lib/terp.jar"/>
+	<classpathentry kind="lib" path="lib/jopt-simple.jar" sourcepath="libsrc/jopt-simple-3.1-sources.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

@@ -108,7 +108,26 @@ LAST UPDATE: 2008-11-17
 
 LAST UPDATE BY: Michel Galley
 
+-----------------------------------------------------------------------
+jopt-simple.jar
 
+ORIGINAL JAR NAME: jopt-simple-3.1.jar
+
+VERSION: 3.1
+
+RELEASE DATE: 2009-04-26
+
+SOURCE AVAILABLE: Yes
+
+DESCRIPTION: GNU getopt() style command line parser
+
+URL: http://jopt-simple.sourceforge.net/
+
+USED BY: mt.visualize.phrase.PhraseViewer
+
+LAST UPDATE: 2009-07-13
+
+LAST UPDATE BY: Spence Green
 
 -----------------------------------------------------------------------
 foo.jar
