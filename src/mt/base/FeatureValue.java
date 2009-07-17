@@ -43,4 +43,20 @@ public class FeatureValue<T> {
 	public String toString() {
 		return String.format("%s:%f", name, value);
 	}
+
+  @Override
+  public int hashCode() {
+    return (((name == null) ? 0 : name.hashCode()) << 16) ^ (new Double(value).hashCode());
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public boolean equals(Object o) {
+    if(o == this)
+      return true;
+    if(o == null || o.getClass() != getClass())
+      return false;
+    FeatureValue<T> fv = (FeatureValue<T>) o;
+    return (fv.value == this.value && fv.name.equals(this.name));
+  }
 }

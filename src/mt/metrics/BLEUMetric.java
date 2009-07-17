@@ -6,10 +6,10 @@ import java.io.*;
 import mt.base.*;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
-import mt.metrics.IncrementalEvaluationMetric;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * 
@@ -19,14 +19,17 @@ import edu.stanford.nlp.util.IStrings;
  */
 public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	static public final int DEFAULT_MAX_NGRAM_ORDER = 4;
-	
-	final List<Map<Sequence<TK>, Integer>> maxReferenceCounts;
+
+  final List<Map<Sequence<TK>, Integer>> maxReferenceCounts;
 	final int[][] refLengths;
 	final int order;
 	final double multiplier;
 	final boolean smooth;
-	
-	/**
+
+  private static final boolean enableCache = true;
+  private final Map<Pair<Integer,Integer>,Double> smoothScoreCache = new HashMap<Pair<Integer,Integer>,Double>();
+
+  /**
 	 * 
 	 * @param referencesList
 	 */
@@ -54,7 +57,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		multiplier = 1;
 		init(referencesList);
 		this.smooth = smooth;
-	}
+    System.err.println("smoothed BLEU: "+smooth);
+  }
 	
 	/**
 	 * 
@@ -67,7 +71,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		refLengths = new int[referencesList.size()][];
 		multiplier = 1;
 		init(referencesList);
-		this.smooth = false;
+		this.smooth = smooth;
+    System.err.println("smoothed BLEU: "+smooth);
 	}
 
 	public BLEUMetric(List<List<Sequence<TK>>> referencesList, int order) {
@@ -146,7 +151,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	private static int maxIncrementalId = 0;
 	
-	public class BLEUIncrementalMetric implements NgramPrecisionIncrementalMetric<TK,FV> {
+	public class BLEUIncrementalMetric implements
+       NgramPrecisionIncrementalMetric<TK,FV>, IncrementalNBestEvaluationMetric<TK,FV> {
 		private final int id = maxIncrementalId++; 
 		final List<Sequence<TK>> sequences; 
 		double smoothSum = 0;
@@ -156,13 +162,12 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		final int[][] futureMatchCounts;
 		final int[][] futurePossibleCounts;
 		int r, c;
-		
-		@Override
+
+    @Override
 		public BLEUIncrementalMetric clone() {
-			return new BLEUIncrementalMetric(this);
+      return new BLEUIncrementalMetric(this);
 		}
-		
-		
+
 		public double[] precisions() {
 			double[] r = new double[order];
 			for (int i = 0; i < r.length; i++) {
@@ -313,9 +318,20 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		private void decCounts(Map<Sequence<TK>, Integer> clippedCounts, Sequence<TK> sequence) {
 			incCounts(clippedCounts, sequence, -1);
 		}
-		
-	
-		private double getLocalSmoothScore(Sequence<TK> seq, int pos) {
+
+    private double getLocalSmoothScore(Sequence<TK> seq, int pos, int nbestId) {
+      if(!enableCache || nbestId < 0)
+        return computeLocalSmoothScore(seq, pos);
+      Pair<Integer,Integer> pair = new Pair<Integer,Integer>(pos, nbestId);
+      Double cached = smoothScoreCache.get(pair);
+      if(cached == null) {
+        cached = computeLocalSmoothScore(seq,pos);
+        smoothScoreCache.put(pair, cached);
+      }
+      return cached;
+    }
+
+    private double computeLocalSmoothScore(Sequence<TK> seq, int pos) {
 			Map<Sequence<TK>, Integer> canidateCounts = Metrics.getNGramCounts(seq, order);
 			Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(pos));
 			int seqSz = seq.size();
@@ -350,19 +366,23 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
 			// System.err.printf("BLEUS: %e logbp %e logPrec %e Prec %e\n",  Math.exp(localLogBP + localNgramPrecisionScore), localLogBP, localNgramPrecisionScore, Math.exp(localNgramPrecisionScore));
 			return Math.exp(localLogBP + localNgramPrecisionScore);
-		}	
+		}
 
-		@Override
-		public IncrementalEvaluationMetric<TK,FV> add(ScoredFeaturizedTranslation<TK,FV> tran) {
+    public IncrementalEvaluationMetric<TK,FV> add(ScoredFeaturizedTranslation<TK,FV> tran) {
+      return add(-1, tran);
+    }
+
+    @Override
+		public IncrementalEvaluationMetric<TK,FV> add(int nbestId, ScoredFeaturizedTranslation<TK,FV> tran) {
 			int pos = sequences.size();
 			if (pos >= maxReferenceCounts.size()) {
 				throw new RuntimeException(String.format("Attempt to add more candidates, %d, than references, %d.", pos+1, maxReferenceCounts.size()));
 			}
-			
-			if (smooth) {
+
+      if (smooth) {
 				if (tran != null) {
 					sequences.add(tran.translation);
-					smoothSum += getLocalSmoothScore(tran.translation, pos);	
+					smoothSum += getLocalSmoothScore(tran.translation, pos, nbestId);	
 				  smoothCnt++;	
 				} else {
 					sequences.add(null);
@@ -382,8 +402,14 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return this;
 		}
 
-		@Override
-		public IncrementalEvaluationMetric<TK,FV> replace(int index,
+    @Override
+    public IncrementalEvaluationMetric<TK,FV> replace(int index,
+        ScoredFeaturizedTranslation<TK, FV> trans) {
+      return replace(index, -1, trans);
+    }
+
+    @Override
+		public IncrementalEvaluationMetric<TK,FV> replace(int index, int nbestId,
 				ScoredFeaturizedTranslation<TK, FV> trans) {
 			if (index >= sequences.size()) {
 				for (int i = sequences.size(); i < index; i++) add(null);
@@ -391,7 +417,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			}
 			Map<Sequence<TK>, Integer> canidateCounts = null;
 			if (smooth) {
-				smoothSum -= getLocalSmoothScore(sequences.get(index), index);
+				smoothSum -= getLocalSmoothScore(sequences.get(index), index, nbestId);
 				smoothCnt--;	
 			} else {
 				canidateCounts = (trans == null ? new HashMap<Sequence<TK>,Integer> () : Metrics.getNGramCounts(trans.translation, order));
@@ -409,7 +435,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
 			if (smooth) {
 				if (trans != null) {
-					smoothSum += getLocalSmoothScore(trans.translation, index);
+					smoothSum += getLocalSmoothScore(trans.translation, index, nbestId);
 					smoothCnt++;	
 				}
 			} else {
@@ -555,14 +581,13 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			throw new UnsupportedOperationException();
 		}
 
-
 		@Override
 		public int depth() {
 			return sequences.size();
 		}
-	}
+  }
 
-	static public void main(String args[]) throws IOException {
+  static public void main(String args[]) throws IOException {
 		if (args.length == 0) {
 			System.err.println("Usage:\n\tjava BLEUMetric [-order #] (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
 			System.exit(-1);

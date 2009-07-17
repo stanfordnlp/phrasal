@@ -10,7 +10,7 @@ import mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
-
+import edu.stanford.nlp.util.OAIndex;
 
 /**
  * 
@@ -22,11 +22,12 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
   static public final String NBEST_SEP = " |||";
 
   private final List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists;
-//	private final AbstractIndex<String> featureIndex = new OAIndex<String>();
+	public final OAIndex<String> featureIndex = new OAIndex<String>();
 	public static final String DEBUG_PROPERTY = "MosesNBestListDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
-	
-	@SuppressWarnings("unchecked")
+
+
+  @SuppressWarnings("unchecked")
 	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer scorer) {
 		sequenceSelfMap = null;
 		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>(list1.nbestLists());
@@ -168,9 +169,10 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 					}
 				}
 				
-				List<FeatureValue<String>> featureValues = new ArrayList<FeatureValue<String>>();
-				
-				for (String feature : featureMap.keySet()) {
+				List<FeatureValue<String>> featureValues = new FeatureValueArray<String>();
+
+        for (String feature : featureMap.keySet()) {
+          featureIndex.indexOf(feature, true);
 					List<Double> values = featureMap.get(feature);
 					if (values.size() == 1) {
 						String featureNameStored = featureNameSelfMap.get(feature);
@@ -227,8 +229,32 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		
 		reader.close();
 	}
-	
-	@Override
+
+  public void setArraysFromIndex() {
+
+    Runtime rt = Runtime.getRuntime();
+    rt.gc();
+    long startMemUsed = rt.totalMemory()-rt.freeMemory();
+		long startTimeMillis = System.currentTimeMillis();
+
+    for(List<ScoredFeaturizedTranslation<IString,String>> nbestList : nbestLists) {
+      for(ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
+        List<FeatureValue<String>> fvl = trans.features;
+        if(fvl instanceof FeatureValueArray) {
+          FeatureValueArray<String> fva = (FeatureValueArray<String>) fvl;
+          fva.setArrayFromIndex(featureIndex);
+        }
+      }
+    }
+
+    rt.gc();
+    long endMemUsed = rt.totalMemory() - rt.freeMemory();
+		long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
+		System.err.printf("Done generating feature arrays for n-best lists (mem used: %d MiB time: %.3f s)\n", 
+				(endMemUsed - startMemUsed)/(1024*1024), loadTimeMillis/1000.0);
+  }
+
+  @Override
 	public List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists() {
 		return nbestLists;
 	}

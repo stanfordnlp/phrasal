@@ -2,20 +2,18 @@ package mt.tune;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
-import mt.metrics.ter.*;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.ErasureUtils;
+import edu.stanford.nlp.util.OAIndex;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.math.ArrayMath;
 
 /**
@@ -26,13 +24,16 @@ import edu.stanford.nlp.math.ArrayMath;
  * @author danielcer
  */
 public class UnsmoothedMERT extends Thread {
-//public class UnsmoothedMERT implements Runnable {
+
+  static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
   static final Set<String> generativeFeatures = SSVMScorer
           .readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 
-  static final boolean DEBUG = false;
+	public static final String DEBUG_PROPERTY = "UnsmoothedMERTDebug";
+	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
   static final double DEFAULT_C = 100;
   static double C = DEFAULT_C;
   static final double DEFAULT_T = 1;
@@ -381,8 +382,10 @@ public class UnsmoothedMERT extends Thread {
     Counter<String> c = new ClassicCounter<String>();
     for(int i=0; i<keys.length-1; ++i)
       c.setCount(keys[i], x[i]);
-    double sum = ArrayMath.sum(x);
-    c.setCount(keys[keys.length-1], 1.0-sum);
+    double l1norm = ArrayMath.L1Norm(x);
+    c.setCount(keys[keys.length-1], 1.0-l1norm);
+    //System.err.println("array: "+Arrays.toString(x));
+    //System.err.println("counter: "+c);
     return c;
   }
 
@@ -499,23 +502,41 @@ public class UnsmoothedMERT extends Thread {
     return quickIncEval.score();
   }
 
+  private final static boolean FAST_STATIC_SCORER = System.getProperty("fastStaticScorer") != null;
+  static {
+    System.err.println("fast static scorer: "+FAST_STATIC_SCORER);
+  }
+
   static public double evalAtPoint(MosesNBestList nbest,
                                    Counter<String> wts, EvaluationMetric<IString, String> emetric) {
-    Scorer<String> scorer = new StaticScorer(wts);
+    Scorer<String> scorer = new StaticScorer(wts, nbest.featureIndex);
+    if(DEBUG) System.err.printf("eval at point: %s\n", wts.toString());
     IncrementalEvaluationMetric<IString, String> incEval = emetric
             .getIncrementalMetric();
-    for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
-            .nbestLists()) {
+    IncrementalNBestEvaluationMetric<IString, String> incNBestEval = null;
+    boolean isNBestEval = false;
+    if(incEval instanceof IncrementalNBestEvaluationMetric) {
+      incNBestEval = (IncrementalNBestEvaluationMetric<IString,String>) incEval;
+      isNBestEval = true;
+    }
+    for (int i = 0; i < nbest.nbestLists().size(); i++) {
+      List<ScoredFeaturizedTranslation<IString, String>> nbestlist = nbest.nbestLists().get(i);
       ScoredFeaturizedTranslation<IString, String> highestScoreTrans = null;
       double highestScore = Double.NEGATIVE_INFINITY;
-      for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+      int highestIndex = -1;
+      for (int j = 0; j < nbestlist.size(); j++) {
+        ScoredFeaturizedTranslation<IString, String> trans = nbestlist.get(j);
         double score = scorer.getIncrementalScore(trans.features);
         if (score > highestScore) {
           highestScore = score;
           highestScoreTrans = trans;
+          highestIndex = j;
         }
       }
-      incEval.add(highestScoreTrans);
+      if(isNBestEval)
+        incNBestEval.add(highestIndex, highestScoreTrans);
+      else
+        incEval.add(highestScoreTrans);
     }
     return incEval.score();
   }
@@ -581,7 +602,6 @@ public class UnsmoothedMERT extends Thread {
   final static Queue<Counter<String>> startingPoints = new LinkedList<Counter<String>>();
 
   static MosesNBestList nbest;
-  static MosesNBestList localNbest;
   static long startTime;
 
   static Counter<String> initialWts;
@@ -613,10 +633,13 @@ public class UnsmoothedMERT extends Thread {
 
     // Load nbest list:
     nbest = new MosesNBestList(nbestListFile);
-    localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap);
+    nbest.setArraysFromIndex();
+    MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap);
+    //localNbest.setArraysFromIndex();
     AbstractNBestOptimizer.nbest = nbest;
-    
-		// Load weight files:
+
+
+    // Load weight files:
     previousWts = new ArrayList<Counter<String>>();
     for(String previousWtsFile : previousWtsFiles.split(","))
       previousWts.add(readWeights(previousWtsFile));
@@ -792,7 +815,7 @@ public class UnsmoothedMERT extends Thread {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
       String[] fields = evalMetric.split(":");
-      TERMetric termetric = new TERMetric<IString, String>(references);
+      TERMetric<IString,String> termetric = new TERMetric<IString, String>(references);
       if (fields.length > 1) {
         int beamWidth = Integer.parseInt(fields[1]);
         termetric.calc.setBeamWidth(beamWidth);
@@ -810,9 +833,9 @@ public class UnsmoothedMERT extends Thread {
       if (evalMetric.contains(":")) {
 				String[] fields = evalMetric.split(":");
 				int BLEUOrder = Integer.parseInt(fields[1]);
-      	emetric = new BLEUMetric<IString, String>(references, BLEUOrder);
+      	emetric = new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU);
 			} else {
-      	emetric = new BLEUMetric<IString, String>(references);
+      	emetric = new BLEUMetric<IString, String>(references, smoothBLEU);
 			}
     } else if (evalMetric.equals("nist")) {
     	List<List<Sequence<IString>>> references = Metrics
@@ -831,7 +854,7 @@ public class UnsmoothedMERT extends Thread {
       }
       emetric = new LinearCombinationMetric<IString, String>
               (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(referencesBleu),
+                      new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
                       new TERpMetric<IString, String>(referencesTERp));
       System.err.printf("Maximizing %s: BLEU minus TERpA (beamWidth=%d, shiftDist=%d, terW=%f)\n",
               evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
@@ -850,7 +873,7 @@ public class UnsmoothedMERT extends Thread {
       }
       emetric = new LinearCombinationMetric<IString, String>
               (new double[] {1.0, 2.0},
-                      new BLEUMetric<IString, String>(referencesBleu),
+                      new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
                       new METEORMetric<IString, String>(referencesMeteor, alpha, beta, gamma));
       System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n",
               evalMetric, 2.0);
@@ -867,7 +890,7 @@ public class UnsmoothedMERT extends Thread {
       }
       emetric = new LinearCombinationMetric<IString, String>
               (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(referencesBleu),
+                      new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
                       new TERpMetric<IString, String>(referencesTERpa, false, true));
       System.err.printf("Maximizing %s: BLEU minus TERpA (beamWidth=%d, shiftDist=%d, terW=%f)\n",
               evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
@@ -884,7 +907,7 @@ public class UnsmoothedMERT extends Thread {
       termetric.calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
       termetric.calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
       emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, terW}, new BLEUMetric<IString, String>(references), termetric);
+              (new double[] {1.0, terW}, new BLEUMetric<IString, String>(references, smoothBLEU), termetric);
       System.err.printf("Maximizing %s: BLEU minus TER (beamWidth=%d, shiftDist=%d, terW=%f)\n",
               evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
     } else if (evalMetric.equals("wer")) {
@@ -983,7 +1006,9 @@ public class UnsmoothedMERT extends Thread {
     String arg;
 
     while((arg = args[argi]).startsWith("-")) {
-      if(arg.equals("-s")) {
+      if(arg.equals("-S")) {
+        smoothBLEU = true;
+      } else if(arg.equals("-s")) {
         seedStr = args[++argi];
       } else if(arg.equals("-p")) {
         nStartingPoints = Integer.parseInt(args[++argi]);
@@ -1020,17 +1045,12 @@ public class UnsmoothedMERT extends Thread {
     // Initialize static members (nbest list, etc); need UnsmoothedMERT instance for filtering the nbest list:
     initStatic(nbestListFile, localNbestListFile, previousWtsFiles, nStartingPoints, mert);
 
-    //ExecutorService executor = Executors.newFixedThreadPool(nThreads);
-
     List<Thread> threads = new ArrayList<Thread>(nThreads);
     for(int i=0; i<nThreads; ++i) {
       UnsmoothedMERT thread = (i==0) ? mert : new UnsmoothedMERT(evalMetric, referenceList, optStr, seedStr);
       thread.start();
       threads.add(thread);
-      //executor.submit(thread);
     }
-    //executor.shutdown();
-    //executor.awaitTermination(1, TimeUnit.DAYS);
     for(int i=0; i<nThreads; ++i)
       threads.get(i).join();
     

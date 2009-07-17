@@ -564,12 +564,18 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
   public Counter<String> optimize(final Counter<String> initialWts) {
     assert(minIter >= 1);
     Counter<String> wts = initialWts;
-    for(int i=0; i<minIter; ++i)
+    for(int i=0; i<minIter; ++i) {
+      System.err.printf("iter %d (before): %s\n", i, wts.toString());
       wts = optimizeOnce(wts);
+      System.err.printf("iter %d: (after): %s\n", i, wts.toString());
+    }
     return wts;
   }
 
   private Counter<String> optimizeOnce(final Counter<String> initialWts) {
+
+    System.err.printf("\nDownhill simplex starts at: %s value: %.5f\n",
+       initialWts.toString(), UnsmoothedMERT.evalAtPoint(nbest, initialWts, emetric));
 
     final int sz = initialWts.size();
     final String[] keys = initialWts.keySet().toArray(new String[sz]);
@@ -606,8 +612,13 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
       }
       public int domainDimension() { return initialWts.size()-1; }
     };
-    Counter<String> wts = UnsmoothedMERT.arrayToCounter(keys, opt.minimize(f, 1e-4, initx, 1000));
+
+    //System.err.printf("\nDownhill simplex starts at: %s value: %.5f\n", Arrays.toString(initx), f.valueAt(initx));
+    double[] wtsA = opt.minimize(f, 1e-4, initx, 1000);
+    //System.err.printf("\nDownhill simplex converged at: %s value: %.5f\n", Arrays.toString(wtsA), f.valueAt(wtsA));
+    Counter<String> wts = UnsmoothedMERT.arrayToCounter(keys, wtsA);
     UnsmoothedMERT.normalize(wts);
+    System.err.printf("\nDownhill simplex converged at: %s value: %.5f\n", wts.toString(), UnsmoothedMERT.evalAtPoint(nbest, wts, emetric));
     return wts;
   }
 }

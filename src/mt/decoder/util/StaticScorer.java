@@ -3,17 +3,19 @@ import java.io.*;
 import java.util.*;
 
 import mt.base.FeatureValue;
+import mt.base.FeatureValueArray;
 
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
+import edu.stanford.nlp.math.ArrayMath;
 
 /**
  * @author danielcer
  *
  */
 public class StaticScorer implements Scorer<String> {
-	final OAIndex<String> featureIndex;
+
+  final OAIndex<String> featureIndex;
 	final double[] weights;
 	     	
 	/**
@@ -23,8 +25,6 @@ public class StaticScorer implements Scorer<String> {
 	public StaticScorer(String filename) throws IOException {
 		
 		featureIndex = new OAIndex<String>();
-		
-		
 		
 		Map<Integer,Double> wts = new HashMap<Integer,Double>();
 		
@@ -59,8 +59,25 @@ public class StaticScorer implements Scorer<String> {
 			weights[featureIndex.indexOf(key)] = featureWts.get(key).doubleValue();
 		}
 	}
-	
-	public StaticScorer(Counter<String> featureWts) {
+
+  /**
+	 *
+	 * @param featureWts
+	 */
+	public StaticScorer(Counter<String> featureWts, OAIndex<String> index) {
+		featureIndex = index;
+    weights = new double[featureIndex.size()];
+
+		for (String key : featureWts.keySet()) {
+      int i = featureIndex.indexOf(key);
+      if(i < 0)
+        throw new RuntimeException("ERROR: feature missing in index: "+key);
+      weights[i] = featureWts.getCount(key);
+    }
+
+  }
+
+  public StaticScorer(Counter<String> featureWts) {
 		featureIndex = new OAIndex<String>();
 		for (String key : featureWts.keySet()) {
 			featureIndex.indexOf(key, true);
@@ -73,18 +90,25 @@ public class StaticScorer implements Scorer<String> {
 			weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
 		}
 	}
-	
-	@Override
+
+  @Override
 	public double getIncrementalScore(List<FeatureValue<String>> features) {
-		double score = 0;
-		
-		for (FeatureValue<String> feature : features) {
-			int index = featureIndex.indexOf(feature.name);
-			if (index >= 0) score += weights[index]*feature.value;			
-		}
-		
-		return score;
-	}
+    if(features instanceof FeatureValueArray) {
+      FeatureValueArray<String> fva = (FeatureValueArray<String>) features;
+      double[] arr = fva.toDoubleArray();
+      if(arr != null)
+        return ArrayMath.innerProduct(fva.toDoubleArray(), weights);
+    }
+    // original code:
+    double score = 0;
+
+    for (FeatureValue<String> feature : features) {
+      int index = featureIndex.indexOf(feature.name);
+      if (index >= 0) score += weights[index]*feature.value;
+    }
+
+    return score;
+  }
 	
 	@SuppressWarnings("unchecked")
 	public double getIncrementalScoreNoisy(List features) {
