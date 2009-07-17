@@ -291,10 +291,12 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		private int[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts) {
 			int[] counts = new int[order];
 			for (Map.Entry<Sequence<TK>,Integer> entry : clippedCounts.entrySet()) {
-				int len = entry.getKey().size();
 				int cnt = entry.getValue();
-				counts[len-1] += cnt;
-			}
+        if(cnt > 0) {
+          int len = entry.getKey().size();
+          counts[len-1] += cnt;
+        }
+      }
 			
 			return counts;
 		}

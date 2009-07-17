@@ -227,13 +227,15 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		private double[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts) {
 			double[] counts = new double[order];
 			for (Map.Entry<Sequence<TK>,Integer> entry : clippedCounts.entrySet()) {
-				int len = entry.getKey().size();
 				int cnt = entry.getValue();
-        if(ngramInfo.containsKey(entry.getKey()))
-          counts[len-1] += cnt * ngramInfo.get(entry.getKey());
-        else
-          System.err.println("Missing key for "+entry.getKey().toString());
-			}
+        if(cnt > 0) {
+          int len = entry.getKey().size();
+          if(ngramInfo.containsKey(entry.getKey()))
+            counts[len-1] += cnt * ngramInfo.get(entry.getKey());
+          else
+            System.err.println("Missing key for "+entry.getKey().toString());
+        }
+      }
 			return counts;
 		}
 

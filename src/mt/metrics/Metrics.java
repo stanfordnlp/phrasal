@@ -105,7 +105,22 @@ public class Metrics {
 		return ngramInfo;
 	}
 
+  static <TK> void clipCounts(Map<Sequence<TK>, Integer> counts, Map<Sequence<TK>, Integer> maxRefCount) {
+    for (Map.Entry<Sequence<TK>,Integer> e : counts.entrySet()) {
+      Integer cnt = maxRefCount.get(e.getKey());
+			if (cnt == null) {
+        e.setValue(0);
+        continue;
+			}
+			Integer altCnt = e.getValue();
+			if (cnt.compareTo(altCnt) < 0) {
+				e.setValue(cnt);
+			}
+			// System.err.printf("clipped count: %s Cnt: %d Orig: %d\n", ngram, counts.get(ngram), altCnt);
+		}
+	}
 
+  /*
   static <TK> void clipCounts(Map<Sequence<TK>, Integer> counts, Map<Sequence<TK>, Integer> maxRefCount) {
 		for (Sequence<TK> ngram : new HashSet<Sequence<TK>>(counts.keySet())) {
 			Integer cnt = maxRefCount.get(ngram);
@@ -120,6 +135,7 @@ public class Metrics {
 			// System.err.printf("clipped count: %s Cnt: %d Orig: %d\n", ngram, counts.get(ngram), altCnt);
 		}
 	}
+  */
 
 	static public List<List<Sequence<IString>>> readReferences(String[] referenceFilenames) throws IOException {
 		return readReferences(referenceFilenames, true);
