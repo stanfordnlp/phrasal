@@ -57,7 +57,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		multiplier = 1;
 		init(referencesList);
 		this.smooth = smooth;
-    System.err.println("smoothed BLEU: "+smooth);
+    //System.err.println("smoothed BLEU: "+smooth);
   }
 	
 	/**
@@ -72,7 +72,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		multiplier = 1;
 		init(referencesList);
 		this.smooth = smooth;
-    System.err.println("smoothed BLEU: "+smooth);
+    //System.err.println("smoothed BLEU: "+smooth);
 	}
 
 	public BLEUMetric(List<List<Sequence<TK>>> referencesList, int order) {

@@ -429,16 +429,14 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   }
 
   @Override
-  public DependencyLanguageModelFeaturizer clone() {
+  public DependencyLanguageModelFeaturizer clone() throws CloneNotSupportedException {
     System.err.println("cloned: "+this);
-    try {
-		  DependencyLanguageModelFeaturizer featurizer = (DependencyLanguageModelFeaturizer)super.clone();
-      featurizer.pipe = (DependencyPipe) pipe.clone();
-      featurizer.decoder = new DependencyDecoder(featurizer.pipe);
-      featurizer.depCache = new HashMap<String,Pair<String,Double>>();
-      featurizer.srcInstances = new ArrayList<DependencyInstance>(featurizer.srcInstances);
-      return featurizer;
-    } catch (CloneNotSupportedException e) { return null;  /* will never happen */ }
+    DependencyLanguageModelFeaturizer featurizer = (DependencyLanguageModelFeaturizer)super.clone();
+    featurizer.pipe = (DependencyPipe) pipe.clone();
+    featurizer.decoder = new DependencyDecoder(featurizer.pipe);
+    featurizer.depCache = new HashMap<String,Pair<String,Double>>();
+    featurizer.srcInstances = new ArrayList<DependencyInstance>(featurizer.srcInstances);
+    return featurizer;
 	}
 
   public static void main(String[] args) throws Exception {

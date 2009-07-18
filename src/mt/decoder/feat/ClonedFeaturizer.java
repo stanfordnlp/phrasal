@@ -7,6 +7,6 @@ package mt.decoder.feat;
  */
 public interface ClonedFeaturizer<TK,FV> extends IncrementalFeaturizer<TK,FV>, Cloneable {
 
-  public ClonedFeaturizer<TK,FV> clone();
+  public ClonedFeaturizer<TK,FV> clone() throws CloneNotSupportedException;
 
 }
