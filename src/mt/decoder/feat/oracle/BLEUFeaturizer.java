@@ -11,11 +11,14 @@ import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.ConcreteTranslationOption;
 import mt.base.Sequence;
+import mt.metrics.NISTTokenizer;
+import mt.PseudoMoses;
 
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.io.PrintStream;
 
 /**
  * BLEU score as a feature.
@@ -24,38 +27,52 @@ import java.util.LinkedList;
  */
 public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String> {
 
-  private static final boolean DEBUG = false;
+  private static final int ORDER = 4;
+
+  private static final boolean BP_BEFORE_FINAL = System.getProperty("bpBeforeFinal") != null;
 
   private final String featureName;
 	private final boolean featurizeDuringDecoding;
 
 	// Stores the count for each ngram:
+  private final String[][] lines;
   private final Trie[] refTries;
   private final int[][] refLengths;
+  private final int sentOffset;
 
   private boolean rerankingStage = false;
 
   public static void main(String[] args) throws Exception {
-    BLEUFeaturizer f = new BLEUFeaturizer("bleu", true, args);
+    String[] args2 = new String[args.length+2];
+    args2[0] = "bleu";
+    args2[1] = "true";
+    System.arraycopy(args, 0, args2, 2, args.length);
+    BLEUFeaturizer f = new BLEUFeaturizer(args2);
     for(int i=0; i<f.refTries.length; ++i)
-      f.dumpRefCounts(i);
+      f.dumpRefCounts(System.out, i);
   }
 
-  public void dumpRefCounts(int senti) {
-    Trie t = refTries[senti];
-    t.dump();
+  public void dumpRefCounts(PrintStream out, int senti) {
+    refTries[senti].dump(out);
   }
 
   @SuppressWarnings("unchecked")
-  public BLEUFeaturizer(String featureName, boolean featurizeDuringDecoding, String... refs) throws Exception {
-    
-    this.featureName = featureName;
-		this.featurizeDuringDecoding = featurizeDuringDecoding;
+  public BLEUFeaturizer(String... args) throws Exception {
+
+    if(args.length < 3)
+      throw new RuntimeException("Usage: mt.decoder.feat.oracle.BLEUFeaturizer (feature name) (featurize during decoding) (ref0) ... (refN)");
+
+    this.sentOffset = PseudoMoses.local_procs>1 ? 2:0;
+
+    this.featureName = args[0];
+		this.featurizeDuringDecoding = Boolean.parseBoolean(args[1]);
+    String[] refs = new String[args.length-2];
+    System.arraycopy(args, 2, refs, 0, refs.length);
 
     // Read sentences:
     if(refs.length == 0)
       throw new UnsupportedOperationException("Need at least one reference file.");
-    String[][] lines = new String[refs.length][];
+    lines = new String[refs.length][];
     System.err.printf("Reading %s...\n", refs[0]);
     lines[0] = StringUtils.slurpFile(refs[0]).split("\\n");
     for (int i = 1; i < refs.length; i++) {
@@ -65,8 +82,16 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
         throw new RuntimeException(String.format("References with mismatched number of lines: %d != %d.\n", lines[i].length, lines[0].length));
     }
     int len = lines[0].length;
+    System.err.println("Reference sentences: "+len);
     refTries = new Trie[len];
     refLengths = new int[len][refs.length];
+
+    // NIST tokenization:
+    for(int senti=0; senti<len; ++senti) {
+      for(int refi=0; refi<lines.length; ++refi) {
+        lines[refi][senti] = NISTTokenizer.tokenize(lines[refi][senti].trim());
+      }
+    }
 
     // Create a trie for each reference sentence:
     for(int senti=0; senti<len; ++senti) {
@@ -77,14 +102,14 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
 
         Trie t = Trie.root("ref_"+senti+"_"+refi);
         String line = lines[refi][senti];
-        //System.err.println("line: "+line);
-        IString[] toks = IStrings.toIStringArray(line.trim().split("\\s+"));
+        //System.err.printf("ref line(%d,%d): %s\n", senti, refi, line);
+        IString[] toks = IStrings.toIStringArray(line.split("\\s+"));
         refLengths[senti][refi] = toks.length;
 
         for(int i=0; i<toks.length; ++i) { // Each ngram start position:
           Trie curT = t;
           Trie maxCurT = refTries[senti];
-          for(int j=0; j<4; ++j) { // Each ngram end position:
+          for(int j=0; j<ORDER; ++j) { // Each ngram end position:
             if(i+j >= toks.length)
               break;
             IString newTok = toks[i+j];
@@ -97,15 +122,16 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
               assert(nextT.ngramSz == ngramSz);
               cnt = ++nextT.ngramCount;
             } else {
-              nextT = new Trie(ngramSz, 1);
+              nextT = new Trie(newTok, ngramSz, 1);
               curT.put(newTok, nextT);
               cnt = 1;
             }
             if(maxNextT != null) {
               assert(maxNextT.ngramSz == ngramSz);
-              maxNextT.ngramCount = cnt;
+              if(maxNextT.ngramCount < cnt)
+                maxNextT.ngramCount = cnt;
             } else {
-              maxNextT = new Trie(ngramSz, cnt);
+              maxNextT = new Trie(newTok, ngramSz, cnt);
               maxCurT.put(newTok, maxNextT);
             }
             curT = nextT;
@@ -116,27 +142,35 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     }
   }
 
+  private int getId(Featurizable<IString,String> f) {
+    int sentId = f.translationId + sentOffset;
+    assert(sentId >= 0);
+    assert(sentId < refTries.length);
+    return sentId;
+  }
+
   @Override
 	public FeatureValue<String> featurize(Featurizable<IString,String> f) {
-
-    int sentId = (int) f.hyp.id;
 
     if(!rerankingStage && !featurizeDuringDecoding)
 			return null;
 
-    BLEUIncrementalScorer scorer = (BLEUIncrementalScorer) f.prior.extra;
+    int sentId = getId(f);
+
+    BLEUIncrementalScorer scorer = f.prior != null ? (BLEUIncrementalScorer) f.prior.extra : null;
     double oldBLEU = (scorer != null) ? scorer.score : 0.0;
 
     // Find new ngram localCounts:
     for(int i=0; i<f.translatedPhrase.size(); ++i) {
 
       IString tok = f.translatedPhrase.get(i);
+      //System.err.println("new word: "+tok);
 
       BLEUIncrementalScorer newScorer = scorer != null ? new BLEUIncrementalScorer(scorer) : new BLEUIncrementalScorer();
 
       // Update normalization counts:
       int pos = f.translationPosition+i;
-      for(int j=0; j<=pos; ++j)
+      for(int j=0; j<=Math.min(pos,ORDER-1); ++j)
         ++newScorer.localPossibleMatchCounts[j];
 
       // Add unigram match, if any:
@@ -147,8 +181,10 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
         double newVal = newScorer.fullMatches.incrementCount(unigramT);
         int newCount = (int)newVal;
         assert(newVal == newCount);
-        if(unigramT.ngramCount <= newCount)
+        if(unigramT.ngramCount >= newCount) {
           ++newScorer.localCounts[0];
+          //System.err.printf("new unigram match (%d,%d): %s\n",unigramT.ngramCount, newCount, f.translatedPhrase.get(i));
+        }
       }
 
       // Add n+1-gram match, if n-gram match is present in scorer:
@@ -160,22 +196,13 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
             double newVal = newScorer.fullMatches.incrementCount(np1gramT);
             int newCount = (int)newVal;
             assert(newVal == newCount);
-            if(np1gramT.ngramCount <= newCount)
+            if(np1gramT.ngramCount >= newCount) {
               ++newScorer.localCounts[np1gramT.ngramSz-1];
+              //System.err.printf("new %dgram match: %s\n", np1gramT.ngramSz, f.translatedPhrase.get(i));
+            }
           }
         }
       }
-
-      // Debug:
-			if(DEBUG) {
-				List<Trie> m = newScorer.partialMatches;
-				for(int k=0; k<m.size(); ++k) {
-					assert(m.get(k).ngramSz > 0 && m.get(k).ngramSz <= 4);
-					for(int l=k+1; l<m.size(); ++l) {
-						assert(m.get(k).ngramSz != m.get(l).ngramSz);
-					}
-				}
-			}
 
       scorer = newScorer;
     }
@@ -184,8 +211,9 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     assert(scorer != null);
     
     int hypLength = f.translationPosition+f.translatedPhrase.size();
-    scorer.updateScore(sentId, hypLength);
+    scorer.updateScore(sentId, hypLength, f.done || BP_BEFORE_FINAL, false);
 
+    //System.err.printf("new=%f old=%f\n", scorer.score, oldBLEU);
     return new FeatureValue<String>(featureName, scorer.score - oldBLEU);
   }
 
@@ -198,7 +226,26 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     rerankingStage = r;
   }
 
-  public void debugBest(Featurizable<IString, String> f) { }
+  public void debugBest(Featurizable<IString, String> f) {
+    BLEUIncrementalScorer scorer = (BLEUIncrementalScorer) f.extra;
+    int sentId = getId(f);
+
+    System.err.println("ref counts:");
+    dumpRefCounts(System.err, sentId);
+
+    for(int i=0; i<lines.length; ++i)
+      System.err.printf("ref%d: %s\n", i, lines[i][sentId]);
+    System.err.printf("hyp: %s\n", f.partialTranslation);
+
+    int hypLength = f.translationPosition+f.translatedPhrase.size();
+    scorer.updateScore(sentId, hypLength, true, true);
+    System.err.println("unigram matches:");
+    for(Map.Entry<Trie,Double> e : scorer.fullMatches.entrySet()) {
+      if(e.getKey().ngramSz == 1) {
+        System.err.printf("%s r=%d h=%d\n", e.getKey().tok, e.getKey().ngramCount, e.getValue().intValue());
+      }
+    }
+  }
 
   public void initialize(List<ConcreteTranslationOption<IString>> concreteTranslationOptions, Sequence<IString> foreign) { }
 
@@ -226,8 +273,6 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
 
   class BLEUIncrementalScorer {
 
-    private static final int order = 4;
-
     final int[] localCounts;
     final int[] localPossibleMatchCounts;
     final List<Trie> partialMatches;
@@ -236,8 +281,8 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     double score;
 
     public BLEUIncrementalScorer() {
-      localCounts = new int[order];
-      localPossibleMatchCounts = new int[order];
+      localCounts = new int[ORDER];
+      localPossibleMatchCounts = new int[ORDER];
       partialMatches = new LinkedList<Trie>();
       fullMatches = new ClassicCounter<Trie>();
       backPtr = null;
@@ -253,7 +298,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
       score = old.score;
     }
 
-    public void updateScore(int index, int localC) {
+    public void updateScore(int index, int localC, boolean bp, boolean verbose) {
 
       int localR = bestMatchLength(index, localC);
 
@@ -264,20 +309,27 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
         localLogBP = 0.0;
       }
 
-      double localPrecisions[] = new double[order];
-      for (int i = 0; i < order; i++) {
-          if (i == 0) {
-            localPrecisions[i] = (1.0*localCounts[i])/localPossibleMatchCounts[i];
-          } else {
-            localPrecisions[i] = (localCounts[i]+1.0)/(localPossibleMatchCounts[i]+1.0);
-          }
+      double localPrecisions[] = new double[ORDER];
+      for (int i = 0; i < ORDER; i++) {
+        if (i == 0) {
+          localPrecisions[i] = (1.0*localCounts[i])/localPossibleMatchCounts[i];
+        } else {
+          localPrecisions[i] = (localCounts[i]+1.0)/(localPossibleMatchCounts[i]+1.0);
+        }
+        if(verbose)
+          System.err.printf("prec-%d: %f (%d/%d)\n", i, localPrecisions[i], localCounts[i], localPossibleMatchCounts[i]);
       }
       double localNgramPrecisionScore = 0;
-      for (int i = 0; i < order; i++) {
-        localNgramPrecisionScore += (1.0/order)*Math.log(localPrecisions[i]);
+      for (int i = 0; i < ORDER; i++) {
+        localNgramPrecisionScore += (1.0/ ORDER)*Math.log(localPrecisions[i]);
       }
 
-      score = Math.exp(localLogBP + localNgramPrecisionScore);
+      double bleuPrec = Math.exp(localNgramPrecisionScore);
+      double bleu = Math.exp(localLogBP + localNgramPrecisionScore);
+      if(verbose)
+        System.err.printf("BLEU=%f BLEU-prec=%f BP=%f\n", bleu, bleuPrec, Math.exp(localLogBP));
+
+      score = bp ? bleu : bleuPrec;
     }
   }
 }
@@ -289,20 +341,22 @@ class Trie {
   private static final Map<String,Trie> roots = new HashMap<String,Trie>();
 
   Map<IString,Trie> map;
+  final IString tok;
   final int ngramSz;
   int ngramCount;
 
   static Trie root(String id) {
     Trie t = roots.get(id);
     if(t == null) {
-      t = new Trie(0, 0);
+      t = new Trie(null, 0, 0);
       roots.put(id,t);
     }
     return t;
   }
 
-  Trie(int ngramSz, int ngramCount) {
+  Trie(IString tok, int ngramSz, int ngramCount) {
     map = null;
+    this.tok = tok;
     this.ngramSz = ngramSz;
     this.ngramCount = ngramCount;
   }
@@ -318,20 +372,20 @@ class Trie {
     return map.put(key, trie);
   }
 
-  public void dump() {
-    dump(0);
+  public void dump(PrintStream out) {
+    dump(out, 0);
   }
 
-  private void dump(int depth) {
+  private void dump(PrintStream out, int depth) {
     if(map == null)
       return;
     for(Map.Entry<IString,Trie> e : map.entrySet()) {
       for(int i=0; i<depth; ++i)
-        System.out.print(" ");
+        out.print(" ");
       Trie t = e.getValue();
       assert(t.ngramSz == depth+1);
-      System.out.printf("%s=%d\n", e.getKey().word(), t.ngramCount);
-      t.dump(depth+1);
+      out.printf("%s=%d\n", e.getKey().word(), t.ngramCount);
+      t.dump(out, depth+1);
     }
   }
 }
