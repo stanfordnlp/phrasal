@@ -194,7 +194,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 					}
 				}
 				
-				Sequence<IString> sequence = new RawSequence<IString>(IStrings.toIStringArray(space.split(translation)));
+				Sequence<IString> sequence = new RawIStringSequence(IStrings.toIStringArray(space.split(translation)));
 				Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);
 				if (sequenceStored == null) {
 					sequenceSelfMap.put(sequence, sequence);

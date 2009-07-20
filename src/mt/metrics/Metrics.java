@@ -6,7 +6,7 @@ import java.util.*;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
 
-import mt.base.RawSequence;
+import mt.base.RawIStringSequence;
 import mt.base.Sequence;
 
 
@@ -152,13 +152,13 @@ public class Metrics {
           if (NISTTokenize) line = NISTTokenizer.tokenize(line);
 					line = line.replaceAll("\\s+$", "");
 					line = line.replaceAll("^\\s+", "");
-					list.add(new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+"))));
+					list.add(new RawIStringSequence(IStrings.toIStringArray(line.split("\\s+"))));
 					referencesList.add(list);
 				} else {
 					if (NISTTokenize) {
-						referencesList.get(lineNumber-1).add(new RawSequence<IString>(IStrings.toIStringArray(NISTTokenizer.tokenize(line).split("\\s+"))));
+						referencesList.get(lineNumber-1).add(new RawIStringSequence(IStrings.toIStringArray(NISTTokenizer.tokenize(line).split("\\s+"))));
 					} else { 
-					  referencesList.get(lineNumber-1).add(new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+"))));
+					  referencesList.get(lineNumber-1).add(new RawIStringSequence(IStrings.toIStringArray(line.split("\\s+"))));
 					}
 				}
 			}
