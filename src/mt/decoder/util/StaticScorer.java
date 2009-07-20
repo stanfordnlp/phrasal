@@ -70,9 +70,15 @@ public class StaticScorer implements Scorer<String> {
 
 		for (String key : featureWts.keySet()) {
       int i = featureIndex.indexOf(key);
-      if(i < 0)
-        throw new RuntimeException("ERROR: feature missing in index: "+key);
-      weights[i] = featureWts.getCount(key);
+      double w = featureWts.getCount(key);
+      if(i>=0) {
+        weights[i] = w;
+      //} else {
+        //if(w != 0.0) {
+        //  System.err.printf("warning: ignoring feature with non-zero weight: weight(%s)=%f\n",key,w);
+        //  //throw new RuntimeException("ERROR: feature missing in index: "+key);
+        //}
+      }
     }
 
   }
