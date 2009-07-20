@@ -633,7 +633,7 @@ public class UnsmoothedMERT extends Thread {
 
     // Load nbest list:
     nbest = new MosesNBestList(nbestListFile);
-    nbest.setArraysFromIndex();
+    //nbest.setArraysFromIndex();
     MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap);
     //localNbest.setArraysFromIndex();
     AbstractNBestOptimizer.nbest = nbest;
