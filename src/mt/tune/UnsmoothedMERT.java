@@ -564,8 +564,9 @@ public class UnsmoothedMERT extends Thread {
     }
 
     for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
-      writer.append(f).append(" ").append(Double.toString(wts.getCount(f)))
-              .append("\n");
+      double cnt = wts.getCount(f);
+      if(cnt != 0.0)
+        writer.append(f).append(" ").append(Double.toString(cnt)).append("\n");
     }
     writer.close();
   }

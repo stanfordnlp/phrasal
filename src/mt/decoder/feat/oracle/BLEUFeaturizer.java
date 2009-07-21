@@ -28,8 +28,7 @@ import java.io.PrintStream;
 public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String> {
 
   private static final int ORDER = 4;
-
-  private static final boolean BP_BEFORE_FINAL = System.getProperty("bpBeforeFinal") != null;
+  private static final boolean BP_BEFORE_FINAL = System.getProperty("bpBeforeFinal") != null; // better be false
 
   private final String featureName;
 	private final boolean featurizeDuringDecoding;
@@ -166,7 +165,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
       IString tok = f.translatedPhrase.get(i);
       //System.err.println("new word: "+tok);
 
-      BLEUIncrementalScorer newScorer = scorer != null ? new BLEUIncrementalScorer(scorer) : new BLEUIncrementalScorer();
+      BLEUIncrementalScorer newScorer = scorer != null ? new BLEUIncrementalScorer(scorer, i==0) : new BLEUIncrementalScorer();
 
       // Update normalization counts:
       int pos = f.translationPosition+i;
@@ -209,8 +208,11 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     
     f.extra = scorer;
     assert(scorer != null);
-    
+
+    //double percentDone = (f.foreignSentence.size()-f.untranslatedTokens)*1.0/f.foreignSentence.size();
+
     int hypLength = f.translationPosition+f.translatedPhrase.size();
+    //scorer.updateScore(sentId, hypLength, percentDone, false);
     scorer.updateScore(sentId, hypLength, f.done || BP_BEFORE_FINAL, false);
 
     //System.err.printf("new=%f old=%f\n", scorer.score, oldBLEU);
@@ -227,6 +229,10 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
   }
 
   public void debugBest(Featurizable<IString, String> f) {
+
+    if(!rerankingStage && !featurizeDuringDecoding)
+			return;
+
     BLEUIncrementalScorer scorer = (BLEUIncrementalScorer) f.extra;
     int sentId = getId(f);
 
@@ -238,6 +244,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     System.err.printf("hyp: %s\n", f.partialTranslation);
 
     int hypLength = f.translationPosition+f.translatedPhrase.size();
+    //scorer.updateScore(sentId, hypLength, 1.0, true);
     scorer.updateScore(sentId, hypLength, true, true);
     System.err.println("unigram matches:");
     for(Map.Entry<Trie,Double> e : scorer.fullMatches.entrySet()) {
@@ -277,7 +284,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     final int[] localPossibleMatchCounts;
     final List<Trie> partialMatches;
     final Counter<Trie> fullMatches;
-    final BLEUIncrementalScorer backPtr;
+    //final BLEUIncrementalScorer backPtr;
     double score;
 
     public BLEUIncrementalScorer() {
@@ -285,21 +292,29 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
       localPossibleMatchCounts = new int[ORDER];
       partialMatches = new LinkedList<Trie>();
       fullMatches = new ClassicCounter<Trie>();
-      backPtr = null;
+      //backPtr = null;
       score = 0.0;
     }
 
-    public BLEUIncrementalScorer(BLEUIncrementalScorer old) {
-      localCounts = old.localCounts.clone();
-      localPossibleMatchCounts = old.localPossibleMatchCounts.clone();
+    public BLEUIncrementalScorer(BLEUIncrementalScorer old, boolean deep) {
+      if(deep) {
+        localCounts = old.localCounts.clone();
+        localPossibleMatchCounts = old.localPossibleMatchCounts.clone();
+        fullMatches = new ClassicCounter<Trie>(old.fullMatches);
+      } else {
+        localCounts = old.localCounts;
+        localPossibleMatchCounts = old.localPossibleMatchCounts;
+        fullMatches = old.fullMatches;
+      }
       partialMatches = new LinkedList<Trie>();
-      fullMatches = new ClassicCounter<Trie>(old.fullMatches);
-      backPtr = old;
+      //backPtr = old;
       score = old.score;
     }
 
     public void updateScore(int index, int localC, boolean bp, boolean verbose) {
+    //public void updateScore(int index, int localC, double percentDone, boolean verbose) {
 
+      //int localR = bestMatchLength(index, (int)(localC*1.0/percentDone));
       int localR = bestMatchLength(index, localC);
 
       double localLogBP;
@@ -329,6 +344,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
       if(verbose)
         System.err.printf("BLEU=%f BLEU-prec=%f BP=%f\n", bleu, bleuPrec, Math.exp(localLogBP));
 
+      //score = bleu;
       score = bp ? bleu : bleuPrec;
     }
   }
