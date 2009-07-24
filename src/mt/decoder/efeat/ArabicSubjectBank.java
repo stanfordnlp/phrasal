@@ -36,6 +36,7 @@ public class ArabicSubjectBank {
 			BufferedReader rawReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rawFile))));
 			BufferedReader crfReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(crfFile))));
 			subjectBank = new HashMap<Sequence<IString>,List<Pair<Integer,Integer>>>();
+			int nullSubjects = 0;
 			
 			//Re-factor using Pairs
 			List<Pair<Integer,Integer>> sentenceSubjects = null;
@@ -60,6 +61,8 @@ public class ArabicSubjectBank {
               Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
                   .toIStringArray(tokens));
 							subjectBank.put(foreign, sentenceSubjects);
+							if(sentenceSubjects.size() == 0)
+							  nullSubjects++;
 						} else {
 							throw new RuntimeException("*!arabicsubjectbank: Mismatch between raw file and crf file");
 						}
@@ -95,6 +98,8 @@ public class ArabicSubjectBank {
           Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
               .toIStringArray(tokens));
           subjectBank.put(foreign, sentenceSubjects);
+          if(sentenceSubjects.size() == 0)
+            nullSubjects++;
 				} else {
 					throw new RuntimeException("*!arabicsubjectbank: Mismatch between raw file and crf file");
 				}
@@ -105,6 +110,7 @@ public class ArabicSubjectBank {
 			isLoaded = true;
 			
 			System.err.printf("%s: Loaded subjects for %d sentences\n", this.getClass().getName(), subjectBank.keySet().size());
+			System.err.printf("%s: %d sentences have 0 subjects\n", this.getClass().getName(), nullSubjects);
 			
 		} catch (FileNotFoundException e) {
 			System.err.printf("%s: Could not load %s\n", this.getClass().getName(), crfFile);
@@ -125,10 +131,10 @@ public class ArabicSubjectBank {
 	 */
 	public static void main(String[] args) {
 		ArabicSubjectBank asb = ArabicSubjectBank.getInstance();
-		String rawFile = "/home/rayder441/sandbox/test.raw";
+		String rawFile = "/home/rayder441/sandbox/mt04.unk";
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rawFile))));
-			asb.load(rawFile,"/home/rayder441/sandbox/test.crf");
+			asb.load(rawFile,"/home/rayder441/sandbox/mt04.subj.spans");
 			
 			while(br.ready()) {
 				String sent = br.readLine();
