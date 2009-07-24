@@ -47,7 +47,7 @@ public class ArabicSubjectBank {
 				if(st.countTokens() == 0)
 					continue;
 				else if(st.countTokens() != tokensPerInputLine) {
-					System.err.printf("*!arabicsubjectbank: File format problem at line %d\n",lineId);
+					System.err.printf("%s: File format problem at line %d\n", this.getClass().getName(), lineId);
 					break;
 				}
 				
@@ -103,14 +103,18 @@ public class ArabicSubjectBank {
 			crfReader.close();
 			rawReader.close();
 			isLoaded = true;
+			
+			System.err.printf("%s: Loaded subjects for %d sentences\n", this.getClass().getName(), subjectBank.keySet().size());
+			
 		} catch (FileNotFoundException e) {
-			System.err.printf("*!arabicsubjectbank: Could not load %s\n", crfFile);
+			System.err.printf("%s: Could not load %s\n", this.getClass().getName(), crfFile);
 		} catch (IOException e) {
-			System.err.println("*!arabicsubjectbank: Failed to read file\n");
+			System.err.printf("%s: Failed to read file\n",this.getClass().getName());
 		}
 	}
 	
-	public List<Pair<Integer,Integer>> subjectsForSentence(Sequence<IString> foreign) {
+	@SuppressWarnings("unchecked")
+  public List<Pair<Integer,Integer>> subjectsForSentence(Sequence<IString> foreign) {
 		if(subjectBank == null)
 			throw new RuntimeException("*!arabicsubjectbank: Subject bank not initialized");
 
