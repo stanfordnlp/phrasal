@@ -11,7 +11,7 @@ import edu.stanford.nlp.util.Pair;
 
 public class ArabicSubjectBank {
 	private static ArabicSubjectBank thisInstance = null;
-	private static Map subjectBank = null;
+	private static Map<Sequence<IString>,List<Pair<Integer,Integer>>> subjectBank = null;
 	private static boolean isLoaded = false;
 	private static final String stopSymbol = "O";
 	private static final int tokensPerInputLine = 3;
@@ -113,8 +113,7 @@ public class ArabicSubjectBank {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-  public List<Pair<Integer,Integer>> subjectsForSentence(Sequence<IString> foreign) {
+	public List<Pair<Integer,Integer>> subjectsForSentence(Sequence<IString> foreign) {
 		if(subjectBank == null)
 			throw new RuntimeException("*!arabicsubjectbank: Subject bank not initialized");
 

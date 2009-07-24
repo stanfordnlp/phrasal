@@ -129,8 +129,8 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     Pair<Integer,Boolean> thisAction = new Pair<Integer,Boolean>(0,false);
     if(f.prior != null && f.prior.extra != null) {
       Pair<Integer,Boolean> lastAction = (Pair<Integer,Boolean>) f.prior.extra;
-      lastAction.setFirst(new Integer(lastAction.first()));
-      lastAction.setSecond(new Boolean(lastAction.second()));
+      thisAction.setFirst(new Integer(lastAction.first()));
+      thisAction.setSecond(new Boolean(lastAction.second()));
     } 
     f.extra = thisAction;
 
@@ -145,7 +145,7 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
       thisAction.setSecond(false);
       double penalty = -1.0 * getPastAwardForSubject(subjectInProgress, f);
       if(penalty == 0.0)
-        return null;
+        return new FeatureValue<String>(FEATURE_NAME, -1.0 * (double) f.foreignPhrase.size());
       else
         return new FeatureValue<String>(FEATURE_NAME, penalty);
     
