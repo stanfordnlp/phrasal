@@ -159,16 +159,13 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
       
       //Completes the subject properly
       if(isComplete(subjectInProgress,f) && isContiguous(subjectInProgress,f)) {
-
         if(VERBOSE)
           System.err.printf("%s: (%s) completes %d\n", this.getClass().getName(), f.foreignPhrase.toString(), subjectInProgress);
-
-        
         thisAction.setSecond(true);
         //Last point awarded for completing the subject
         return new FeatureValue<String>(FEATURE_NAME, FEATURE_PENALTY);
+      
       } else if(isComplete(subjectInProgress,f)) {
-        
         if(VERBOSE)
           System.err.printf("%s: (%s) violates %d\n", this.getClass().getName(), f.foreignPhrase.toString(), subjectInProgress);
 
@@ -189,27 +186,26 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
 
       if(subjectInProgress == NOT_IN_SUBJECT) { //Initial condition
         //First point for new subject
-        if(isComplete(thisPhrase,f) && isContiguous(thisPhrase,f)) {
-          if(VERBOSE)
-            System.err.printf("%s: (%s) totally completes %d\n", this.getClass().getName(), f.foreignPhrase.toString(), thisPhrase);
-          
-          return new FeatureValue<String>(FEATURE_NAME, 3.0 * FEATURE_PENALTY);
-        }
+//        if(isComplete(thisPhrase,f) && isContiguous(thisPhrase,f)) {
+//          if(VERBOSE)
+//            System.err.printf("%s: (%s) totally completes %d\n", this.getClass().getName(), f.foreignPhrase.toString(), thisPhrase);
+//          
+//          return new FeatureValue<String>(FEATURE_NAME, 3.0 * FEATURE_PENALTY);
+//        }
         return new FeatureValue<String>(FEATURE_NAME, FEATURE_PENALTY);
       }
-      else if(isComplete(subjectInProgress,f) && isContiguous(subjectInProgress, f) &&
-              isComplete(thisPhrase, f) && isContiguous(thisPhrase, f)) {
-        
-        if(VERBOSE)
-          System.err.printf("%s: (%s) totally completes %d after %d\n", this.getClass().getName(), f.foreignPhrase.toString(), thisPhrase, subjectInProgress);
-        
-        //Completed the new subject with one phrase; 3x reward
-        return new FeatureValue<String>(FEATURE_NAME, 3.0 * FEATURE_PENALTY);
-      }
+//      else if(isComplete(subjectInProgress,f) && isContiguous(subjectInProgress, f) &&
+//              isComplete(thisPhrase, f) && isContiguous(thisPhrase, f)) {
+//        
+//        if(VERBOSE)
+//          System.err.printf("%s: (%s) totally completes %d after %d\n", this.getClass().getName(), f.foreignPhrase.toString(), thisPhrase, subjectInProgress);
+//        
+//        //Completed the new subject with one phrase; 3x reward
+//        return new FeatureValue<String>(FEATURE_NAME, 3.0 * FEATURE_PENALTY);
+//      }
       else if(isComplete(subjectInProgress,f) && isContiguous(subjectInProgress,f)) {
         if(VERBOSE)
           System.err.printf("%s: (%s) transition from %d to %d\n", this.getClass().getName(), f.foreignPhrase.toString(), subjectInProgress, thisPhrase);
-
         //First point for new subject
         return new FeatureValue<String>(FEATURE_NAME, FEATURE_PENALTY);
       }
