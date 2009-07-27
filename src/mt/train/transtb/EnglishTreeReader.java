@@ -27,14 +27,14 @@ public class EnglishTreeReader extends AbstractTreeReader {
     this();
     readMoreTrees(filename);
   }
-  
-  public String createSignature(String[] sents) {
+
+  public static String createSignature(String[] sents) {
     String output = StringUtils.join(sents, " ");
     output = output.replaceAll("\\s", "");
     return output;
   }
 
-  public String createSignature(Tree t) {
+  public static String createSignature(Tree t) {
     Sentence<HasWord> hws = getWords(t);
     String[] treeSent = new String[hws.size()];
     for(int i = 0; i < hws.size(); i++) {
@@ -66,7 +66,7 @@ public class EnglishTreeReader extends AbstractTreeReader {
           Tree nextT = trees_.get(nextTreeidx);
           String nextTreeSig = createSignature(nextT);
           treeSig = treeSig+nextTreeSig;
-          
+
           //boolean outloop = false;
 
           if (alignEngSignature.equals(treeSig)) {
@@ -86,12 +86,12 @@ public class EnglishTreeReader extends AbstractTreeReader {
       }
       treeidx++;
     }
-  
+
     return trees;
   }
 
 
-  public static void main(String args[]) throws IOException {
+  public static void main(String[] args) throws IOException {
     EnglishTreeReader etr = new EnglishTreeReader();
     String dirName = TransTBUtils.etbDir();
     for(int i = 1; i <= 325; i++) {
@@ -114,7 +114,7 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
 
   @SuppressWarnings("unchecked")
   public Tree transformTree(Tree tree)  {
-    
+
     try {
       // NML --> NX
       TregexPattern matchPattern = TregexPattern.compile("NML=nml");
@@ -131,10 +131,10 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
     // merge (POS ') (* s) --> (POS 's)
     tree = mergeApostropheS(tree);
 
-    // if after mergeApostropheS, there are still (POS s), 
+    // if after mergeApostropheS, there are still (POS s),
     // change them into (POS 's)
     tree = sToApostropheS(tree);
-    
+
     // fix leaves
     List<Tree> leaves = tree.getLeaves();
 
@@ -152,7 +152,7 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
     for (int i = 0; i < leaves.size()-1; i++) {
       String val = leaves.get(i).value();
       String nextval = leaves.get(i+1).value();
-      if (nextval.equals("n't") && 
+      if (nextval.equals("n't") &&
           (val.equals("are") || val.equals("is") || val.equals("did"))) {
         StringBuilder sb = new StringBuilder();
         sb.append(val).append("n");
@@ -186,7 +186,7 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
   }
 
   // TODO:
-  // I think this method really should be replaced with 
+  // I think this method really should be replaced with
   // a simple Tsurgeon operation.
   // I just haven't figure out how to relabel with 's
   // Thu Jan 15 23:12:16 2009 -pichuan
@@ -211,7 +211,7 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
       if(apostropheIdx < 0) throw new RuntimeException("Tree="+tree.pennString());
       Tree tag1 = leaves.get(apostropheIdx).parent(tree);
       Tree tag2 = leaves.get(apostropheIdx+1).parent(tree);
-      if (tag1.value().equals("POS") && 
+      if (tag1.value().equals("POS") &&
           tag1.parent(tree) == tag2.parent(tree)) {
         Tree theParent = tag1.parent(tree);
         // get edge, so 'apostropheIdx' can be offset
