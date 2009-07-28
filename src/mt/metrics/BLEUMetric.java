@@ -88,7 +88,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	private void init(List<List<Sequence<TK>>> referencesList) {
 		int listSz = referencesList.size();
-		
+
 		for (int listI = 0; listI < listSz; listI++) {
 			List<Sequence<TK>> references = referencesList.get(listI);
 			
@@ -105,10 +105,10 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			} */
 			maxReferenceCounts.add(maxReferenceCount);
 			refLengths[listI][0] = references.get(0).size();
-			
-			for (int refI = 1; refI < refsSz; refI++) {
-				refLengths[listI][refI] = (int)(references.get(refI).size()*LENGTH_BIAS);
-				Map<Sequence<TK>,Integer> altCounts = Metrics.getNGramCounts(references.get(refI), order);
+
+      for (int refI = 1; refI < refsSz; refI++) {
+				refLengths[listI][refI] = references.get(refI).size();
+        Map<Sequence<TK>,Integer> altCounts = Metrics.getNGramCounts(references.get(refI), order);
 				for (Sequence<TK> sequence : new HashSet<Sequence<TK>>(altCounts.keySet())) {
 					Integer cnt = maxReferenceCount.get(sequence);
 					Integer altCnt = altCounts.get(sequence);
@@ -143,7 +143,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				best = refLengths[index][i];
 			}
 		}
-		return best;
+		return (int)(LENGTH_BIAS*best);
 	}
 	
 	@Override
