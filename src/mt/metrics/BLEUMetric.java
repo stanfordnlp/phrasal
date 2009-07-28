@@ -20,6 +20,8 @@ import edu.stanford.nlp.util.Pair;
 public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	static public final int DEFAULT_MAX_NGRAM_ORDER = 4;
 
+  static public final double LENGTH_BIAS = Double.parseDouble(System.getProperty("bleuLengthBias","1"));
+
   final List<Map<Sequence<TK>, Integer>> maxReferenceCounts;
 	final int[][] refLengths;
 	final int order;
@@ -105,7 +107,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			refLengths[listI][0] = references.get(0).size();
 			
 			for (int refI = 1; refI < refsSz; refI++) {
-				refLengths[listI][refI] = references.get(refI).size();
+				refLengths[listI][refI] = (int)(references.get(refI).size()*LENGTH_BIAS);
 				Map<Sequence<TK>,Integer> altCounts = Metrics.getNGramCounts(references.get(refI), order);
 				for (Sequence<TK> sequence : new HashSet<Sequence<TK>>(altCounts.keySet())) {
 					Integer cnt = maxReferenceCount.get(sequence);
