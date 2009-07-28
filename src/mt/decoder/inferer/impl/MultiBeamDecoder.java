@@ -12,6 +12,7 @@ import mt.decoder.recomb.*;
 import mt.decoder.util.*;
 import mt.decoder.feat.RichIncrementalFeaturizer;
 import mt.decoder.feat.IncrementalFeaturizer;
+import mt.PseudoMoses;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 
@@ -149,14 +150,16 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		System.err.printf("Translation options: %d\n", options.size());
 		
 		if (OPTIONS_DUMP || DETAILED_DEBUG) {
-			System.err.println(">> Translation Options <<");
-		  for (ConcreteTranslationOption<TK> option : options) {
-				System.err.printf("%s=>%s\n", option.abstractOption.foreign, option.abstractOption.translation);
-				System.err.printf("\tScore: %f\n",option.isolationScore);
-				System.err.printf("\tCoverage: %s\n", option.foreignCoverage);
-			}
-		  System.err.println(">> End translation options <<");
-		}
+      int sentId = translationId + ((PseudoMoses.local_procs > 1) ? 2:0);
+      synchronized(System.err) {
+        System.err.print(">> Translation Options <<\n");
+        for (ConcreteTranslationOption<TK> option : options)
+          System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n",
+             sentId, option.abstractOption.foreign, option.abstractOption.translation,
+             option.isolationScore, option.foreignCoverage);
+        System.err.println(">> End translation options <<");
+      }
+    }
 		
 		if (constrainedOutputSpace != null) {
 			options = constrainedOutputSpace.filterOptions(options);
