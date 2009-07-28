@@ -382,7 +382,8 @@ public class UnsmoothedMERT extends Thread {
     Counter<String> c = new ClassicCounter<String>();
     for(int i=0; i<keys.length-1; ++i)
       c.setCount(keys[i], x[i]);
-    double l1norm = ArrayMath.L1Norm(x);
+    double l1norm = ArrayMath.norm_1(x);
+    //double l1norm = ArrayMath.L1Norm(x);
     c.setCount(keys[keys.length-1], 1.0-l1norm);
     //System.err.println("array: "+Arrays.toString(x));
     //System.err.println("counter: "+c);
