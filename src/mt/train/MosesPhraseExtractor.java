@@ -18,6 +18,7 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
     super(prop, alTemps, extractors);
   }
 
+  @Override
   public void extractPhrases(WordAlignment sent) {
 
     int fsize = sent.f().size();

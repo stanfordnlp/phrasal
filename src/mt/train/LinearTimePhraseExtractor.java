@@ -17,6 +17,7 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
     System.err.println("Using Moses phrase extractor.");
   }
 
+  @Override
   public void extractPhrases(WordAlignment sent) {
 
     int fsize = sent.f().size();

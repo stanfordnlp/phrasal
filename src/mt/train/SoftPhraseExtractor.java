@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
-  private final int maxCrossings;
+  private int maxCrossings;
   private final Set<Pair<Integer,Integer>> cache = new HashSet<Pair<Integer,Integer>>();
 
   private static final int MAX_SENT_LEN = AlignmentGrid.MAX_SENT_LEN;
@@ -22,12 +22,16 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
   // (see loops inside extractPhrases to see what range [f1,f2] represents)
   private static final int[] in = new int[MAX_SENT_LEN];
 
-  public SoftPhraseExtractor(Properties prop, int maxCrossings, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+  public SoftPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    this.maxCrossings = maxCrossings;
     System.err.println("Using experimental phrase extractor. Max crossings: "+maxCrossings);
   }
 
+  public void setMaxCrossings(int maxCrossings) {
+    this.maxCrossings = maxCrossings;
+  }
+
+  @Override
   public void extractPhrases(WordAlignment sent) {
 
     int fsize = sent.f().size();

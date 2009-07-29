@@ -60,7 +60,7 @@ public class IOTools {
       }
     } catch (IOException e) {
       e.printStackTrace();
-      System.exit(1);
+      throw new RuntimeException("Error reading: "+fileName);
     }
     return reader;
   }
