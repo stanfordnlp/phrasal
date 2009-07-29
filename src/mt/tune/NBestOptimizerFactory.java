@@ -158,25 +158,28 @@ class SequenceOptimizer extends AbstractNBestOptimizer {
   public Counter<String> optimize(Counter<String> initialWts) {
     Counter<String> wts = initialWts;
     for(NBestOptimizer opt : opts) {
-      for(;;) {
+
+      boolean done = false;
+      
+      while(!done) {
         Counter<String> newWts = opt.optimize(wts);
         
         double wtSsd = UnsmoothedMERT.wtSsd(newWts, wts);
 
         double oldE = UnsmoothedMERT.evalAtPoint(nbest,wts,emetric);
         double newE = UnsmoothedMERT.evalAtPoint(nbest,newWts,emetric);
+        //UnsmoothedMERT.updateBest(newWts, -newE);
 
         boolean worse = oldE > newE;
-        boolean done = Math.abs(oldE-newE) <= MIN_OBJECTIVE_CHANGE || !loop || worse;
+        done = Math.abs(oldE-newE) <= MIN_OBJECTIVE_CHANGE || !loop || worse;
 
         System.err.printf("seq optimizer: %s -> %s (%s) ssd: %f done: %s opt: %s\n",
           oldE, newE, newE-oldE, wtSsd, done, opt.toString());
-        if(worse) {
+        
+        if(worse)
           System.err.printf("WARNING: negative objective change!");
-        }
-
-        if(done) break;
-        wts = newWts;
+        else
+          wts = newWts;
       }
     }
     return wts;
@@ -613,9 +616,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
       public int domainDimension() { return initialWts.size()-1; }
     };
 
-    //System.err.printf("\nDownhill simplex starts at: %s value: %.5f\n", Arrays.toString(initx), f.valueAt(initx));
     double[] wtsA = opt.minimize(f, 1e-4, initx, 1000);
-    //System.err.printf("\nDownhill simplex converged at: %s value: %.5f\n", Arrays.toString(wtsA), f.valueAt(wtsA));
     Counter<String> wts = UnsmoothedMERT.arrayToCounter(keys, wtsA);
     UnsmoothedMERT.normalize(wts);
     System.err.printf("\nDownhill simplex converged at: %s value: %.5f\n", wts.toString(), UnsmoothedMERT.evalAtPoint(nbest, wts, emetric));

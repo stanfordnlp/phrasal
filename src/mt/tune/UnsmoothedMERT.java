@@ -12,8 +12,6 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.util.OAIndex;
-import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.math.ArrayMath;
 
 /**
@@ -539,7 +537,9 @@ public class UnsmoothedMERT extends Thread {
       else
         incEval.add(highestScoreTrans);
     }
-    return incEval.score();
+    double score = incEval.score();
+    updateBest(wts, -score);
+    return score;
   }
 
   public static Counter<String> readWeights(String filename) throws IOException {
@@ -925,6 +925,18 @@ public class UnsmoothedMERT extends Thread {
     }
   }
 
+  static boolean updateBest(Counter<String> newWts, double obj) {
+    synchronized(UnsmoothedMERT.class) {
+      if (bestObj > obj) {
+        System.err.printf("\n<<<IMPROVED BEST: %f -> %f with {{{%s}}}.>>>\n", -bestObj, -obj, newWts);
+        bestWts = newWts;
+        bestObj = obj;
+        return true;
+      }
+      return false;
+    }
+  }
+
   public void run() {
 
     System.out.printf("\nthread started (%d): %s\n", startingPoints.size(), this);
@@ -964,13 +976,7 @@ public class UnsmoothedMERT extends Thread {
 
       double obj = (mcmcObj ? mcmcEval : -evalAt);
 
-      synchronized(UnsmoothedMERT.class) {
-        if (bestObj > obj) {
-          bestWts = newWts;
-          bestObj = obj;
-        }
-      }
-      System.out.printf("\npoint %d - final wts: %s", ptI, newWts.toString()); 
+      System.out.printf("\npoint %d - final wts: %s", ptI, newWts.toString());
       System.out.printf("\npoint %d - eval: %e E(eval): %e obj: %e best obj: %e (l1: %f)\n\n",
                         ptI, evalAt, mcmcEval2, obj, bestObj, l1norm(newWts));
     }
