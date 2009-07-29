@@ -19,13 +19,15 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
 
   public DependencyPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    System.err.println("Using Moses phrase extractor.");
+    System.err.println("Dependency phrase extractor.");
   }
 
   final List<Integer> deps = new IntArrayList(500);
 
   @Override
   public void setSentenceInfo(String infoStr) {
+
+    System.err.println("dependencies: "+infoStr);
 
     deps.clear();
     StringTokenizer tok = new StringTokenizer(infoStr);
@@ -38,7 +40,6 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
         throw new RuntimeException("Bad token: "+t);
       int src = Integer.parseInt(t.substring(0,idx));
       int tgt = Integer.parseInt(t.substring(idx+1));
-      System.err.printf("%s : %d -> %d\n", t, src, tgt);
       
       if(src <= ROOT_ID || tgt < ROOT_ID)
         throw new RuntimeException(String.format("Ill-formed dependency: %d -> %d\n", src, tgt));
@@ -57,8 +58,14 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
 
   @Override
   public boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
+    boolean ignore = ignorePhrase(sent, -1, -1, e1, e2);
+    if(ignore) System.err.printf("ignore: %s\n", sent.e().subsequence(e1, e2+1));
+    return ignore;
+  }
 
-    if(deps.size() == 0) {
+  private boolean ignorePhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
+
+    if(deps.isEmpty()) {
       System.err.println("warning: dependencies missing!");
       return false;
     }
@@ -66,9 +73,10 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
     int headIdx = NO_ID;
     int headAttachCount = 0;
 
-    for(int si=f1; si<=f2; ++si) {
+    for(int si=e1; si<=e2; ++si) {
       int ti = deps.get(si);
-      if(f1 <= ti && ti <= f2)
+      //System.err.printf("%d:%d s=%d(%s) t=%d(%s)\n", e1, e2, si, sent.e().get(si), ti, (ti>=0) ? sent.e().get(ti) : "");
+      if(e1 <= ti && ti <= e2)
         continue;
       if(headIdx == NO_ID) {
         headIdx = ti;
@@ -77,7 +85,7 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
         if(headIdx == ti) {
           ++headAttachCount;
         } else {
-          return false;
+          return true;
         }
       }
     }
@@ -85,7 +93,10 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
     if(headAttachCount <= 0)
       throw new RuntimeException(String.format("Head word %d without dependents\n", headIdx));
 
-    return !(headAttachCount > 1 && !EXTRACT_MODIFIER_PHRASES);
+    if(headAttachCount > 1 && !EXTRACT_MODIFIER_PHRASES) {
+      return true;
+    }
+    return false;
   }
 
 }

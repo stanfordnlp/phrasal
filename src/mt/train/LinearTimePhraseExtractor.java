@@ -14,7 +14,7 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
 
   public LinearTimePhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    System.err.println("Using Moses phrase extractor.");
+    System.err.println("Using Moses phrase extractor (faster version).");
   }
 
   @Override
