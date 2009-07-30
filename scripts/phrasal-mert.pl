@@ -364,17 +364,25 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
      print "skipping decoding for iter $iter ($first_active_iter)\n";
    }
 
-   if ($opt_type eq 'ter') {
+   if ($opt_type eq 'bleu-ter') {
+     my $terStr = `java $java_flags mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; chomp $terStr;
+		 $terStr =~ /TER = -(\S+)/; 
+		 my $terScore = $1;
+		 my $bleuStr = `java $java_flags mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; chomp $bleuStr;
+		 $bleuStr =~ /BLEU = (\S+),/; 
+		 my $bleuScore = $1;
+     $trans_eval = "(TER-BLEU)/2 = ".(($terScore-$bleuScore)/2).", TER = $terScore, $bleuStr\n";
+   } elsif ($opt_type eq 'ter') {
      $trans_eval = `java $java_flags mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'terp') {
      $trans_eval = `java $java_flags mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'terpa') {
      $trans_eval = `java $java_flags -Dterpa mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'meteor') {
-     $trans_eval = `java $java_flags mt.metrics.METEOR2Metric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type =~ /meteor:/) {
      @abg = split /:/, $opt_type;
-     $trans_eval = `java -Dabg=$abg[1]:$abg[2]:$abg[3] $java_flags mt.metrics.METEOR2Metric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java -Dabg=$abg[1]:$abg[2]:$abg[3] $java_flags mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
    } elsif ($opt_type =~ /^bleu:/) {
      @fields = split /:/, $opt_type;
      $trans_eval = `java $java_flags mt.metrics.BLEUMetric -order $fields[1] $referenceList < $iter_trans 2>&1`; 
@@ -473,6 +481,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    	  
       open jmlfh, $jmert_log or die "can't open jmert log file $jmert_log";
 
+			my $obj_diff = 1;
       while (<jmlfh>) { chomp;
          if (/^Final Eval Score:/) {
            $nbest_eval = $_;
