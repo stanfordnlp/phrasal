@@ -89,7 +89,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   }
 
   @Override
-  public void setSentenceInfo(String infoStr) {}
+  public void setSentenceInfo(WordAlignment sent, String infoStr) {}
 
   void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent) {
     if(ignore(sent, f1, f2, e1, e2))

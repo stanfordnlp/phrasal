@@ -23,8 +23,7 @@ public class ConstituentPhraseExtractor extends LinearTimePhraseExtractor {
   final Set<Pair<Integer,Integer>> spans = new HashSet<Pair<Integer,Integer>>();
 
   @Override
-  @SuppressWarnings("unchecked")
-  public void setSentenceInfo(String infoStr) {
+  public void setSentenceInfo(WordAlignment sent, String infoStr) {
 
     spans.clear();
 

@@ -12,6 +12,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  */
 public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
 
+  private static final boolean DEBUG = System.getProperty("debugDependencyPhraseExtractor") != null;
   private static final boolean EXTRACT_MODIFIER_PHRASES = System.getProperty("extractModifierPhrases") != null;
 
   private static final int NO_ID = -2;
@@ -25,9 +26,7 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
   final List<Integer> deps = new IntArrayList(500);
 
   @Override
-  public void setSentenceInfo(String infoStr) {
-
-    System.err.println("dependencies: "+infoStr);
+  public void setSentenceInfo(WordAlignment sent, String infoStr) {
 
     deps.clear();
     StringTokenizer tok = new StringTokenizer(infoStr);
@@ -40,13 +39,23 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
         throw new RuntimeException("Bad token: "+t);
       int src = Integer.parseInt(t.substring(0,idx));
       int tgt = Integer.parseInt(t.substring(idx+1));
-      
+
       if(src <= ROOT_ID || tgt < ROOT_ID)
         throw new RuntimeException(String.format("Ill-formed dependency: %d -> %d\n", src, tgt));
 
       while(deps.size() <= src)
         deps.add(NO_ID);
       deps.set(src, tgt);
+
+    }
+
+    if(DEBUG) {
+      System.err.println("sent: "+sent.e().toString());
+      System.err.println("dependencies: "+infoStr);
+      for (int src = 0; src < deps.size(); src++) {
+        int tgt = deps.get(src);
+        System.err.printf("%d(%s)-%d(%s)\n", src, sent.e().get(src), tgt, (tgt>=0) ? sent.e().get(tgt) : "<root>");
+      }
     }
 
     // Sanity check:
@@ -59,7 +68,7 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
   @Override
   public boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
     boolean ignore = ignorePhrase(sent, -1, -1, e1, e2);
-    if(ignore) System.err.printf("ignore: %s\n", sent.e().subsequence(e1, e2+1));
+    if(DEBUG && ignore) System.err.printf("ignore: %s\n", sent.e().subsequence(e1, e2+1));
     return ignore;
   }
 
@@ -94,6 +103,7 @@ public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
       throw new RuntimeException(String.format("Head word %d without dependents\n", headIdx));
 
     if(headAttachCount > 1 && !EXTRACT_MODIFIER_PHRASES) {
+      if(DEBUG) System.err.printf("ignore modifier phrase: %s\n", sent.e().subsequence(e1, e2+1));
       return true;
     }
     return false;

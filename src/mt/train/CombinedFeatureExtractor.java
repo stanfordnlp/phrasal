@@ -431,7 +431,7 @@ public class CombinedFeatureExtractor {
 
   private void extractPhrasalFeatures(SymmetricalWordAlignment sent, String pLine) {
     if(pLine != null)
-      phraseExtractor.setSentenceInfo(pLine);
+      phraseExtractor.setSentenceInfo(sent, pLine);
     phraseExtractor.extractPhrases(sent);
   }
 

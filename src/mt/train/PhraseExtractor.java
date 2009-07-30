@@ -17,5 +17,5 @@ public interface PhraseExtractor {
    */
   public void extractPhrases(WordAlignment sent);
 
-  public void setSentenceInfo(String infoStr);
+  public void setSentenceInfo(WordAlignment sent, String infoStr);
 }
