@@ -67,14 +67,19 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
 		long nbestStartTime = System.currentTimeMillis();
 
+    Set<Sequence<TK>> distinctTranslations = DISTINCT_NBEST ? new HashSet<Sequence<TK>>() : null;
+
     if(featurizer instanceof RichIncrementalFeaturizer)
       ((RichIncrementalFeaturizer)featurizer).rerankingMode(true);
 
     StateLatticeDecoder<Hypothesis<TK, FV>> latticeDecoder = new StateLatticeDecoder<Hypothesis<TK, FV>>(
 				goalStates, recombinationHistory, size);
 
-		for (List<Hypothesis<TK, FV>> hypList : latticeDecoder) {
-			Hypothesis<TK, FV> hyp = null;
+    int hypCount = 0, duplicateCount = 0, maxDuplicateCount = size*MAX_DUPLICATE_FACTOR;
+
+    for (List<Hypothesis<TK, FV>> hypList : latticeDecoder) {
+      ++hypCount;
+      Hypothesis<TK, FV> hyp = null;
 			for (Hypothesis<TK, FV> nextHyp : hypList) {
 				if (hyp == null) {
 					hyp = nextHyp;
@@ -83,6 +88,33 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 				hyp = new Hypothesis<TK, FV>(translationId, nextHyp.translationOpt,
 						hyp.length, hyp, featurizer, scorer, heuristic);
 			}
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+      // code below is needed for generating nbest lists with no duplicates for GALE -- please do not delete
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      if(distinctTranslations != null) {
+        // Avoid spending too much time generating the nbest list (when can take dozens of minutes for very
+        // long inputs):
+        if(hypCount > SAFE_LIST && (hypCount % 100 == 0)) {
+          long curTime = System.currentTimeMillis();
+          if(++duplicateCount >= maxDuplicateCount || curTime-nbestStartTime > MAX_TIME_NBEST) {
+            System.err.printf("\nNbest list construction taking too long (duplicates=%d, time=%fs); giving up.\n", 
+              duplicateCount, (curTime-nbestStartTime)/1000.0);
+            break;
+          }
+        }
+        // Get surface string:
+        AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
+        // If seen this string before and not among the top-k, skip it:
+        if(hypCount > SAFE_LIST && distinctTranslations.contains(seq)) 
+          continue;
+      }
+
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+      // code above is needed for generating nbest lists with no duplicates for GALE -- please do not delete
+      /////////////////////////////////////////////////////////////////////////////////////////////////////
+
 			// System.err.printf("Translations size: %d (/%d)\n", translations.size(),
 			// size);
 			Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
@@ -120,8 +152,24 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       ((RichIncrementalFeaturizer)featurizer).rerankingMode(false);
     }
 
-    return translations;
-	}
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    // code below is needed for generating nbest lists with no duplicates for GALE -- please do not delete
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    if(distinctTranslations != null) {
+      List<RichTranslation<TK,FV>> dtranslations = new LinkedList<RichTranslation<TK,FV>>();
+      for(RichTranslation<TK,FV> rt : translations) {
+				if(distinctTranslations.contains(rt.translation)) {
+					continue;
+				}
+				distinctTranslations.add(rt.translation);
+				dtranslations.add(rt);
+			}
+			return dtranslations;
+    } else {
+      return translations;
+    }
+  }
 
   @Override
   public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
