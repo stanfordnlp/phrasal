@@ -1,21 +1,19 @@
 package mt.train;
 
 import java.util.*;
+import java.io.IOException;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.Constituent;
 
 
 /**
- * Same as LinearTimePhraseExtractor, but restricts phrases according to consituencies defined by dependencies
- * read from an info file.
+ * Same as LinearTimePhraseExtractor, but restricts phrases according to consituencies read from a parse tree.
  *
  * @author Michel Galley
  */
-public class ConstituentPhraseExtractor extends DependencyPhraseExtractor {
-
-  private static final int NO_ID = -2;
-  private static final int ROOT_ID = -1;
+public class ConstituentPhraseExtractor extends LinearTimePhraseExtractor {
 
   public ConstituentPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
@@ -27,31 +25,16 @@ public class ConstituentPhraseExtractor extends DependencyPhraseExtractor {
   @Override
   @SuppressWarnings("unchecked")
   public void setSentenceInfo(String infoStr) {
-    super.setSentenceInfo(infoStr);
 
-    int[] startP = new int[deps.size()];
-    Arrays.fill(startP, Integer.MAX_VALUE);
-    int[] endP = new int[deps.size()];
-    Arrays.fill(endP, NO_ID);
-
-    // Find all spans:
-    for (int i=0; i<deps.size(); ++i) {
-      int hi = i;
-      while(hi >= 0) {
-        if(startP[hi] > i)
-          startP[hi] = i;
-        if(endP[hi] < i)
-          endP[hi] = i;
-        hi = deps.get(hi);
-      }
-
-      assert(hi == ROOT_ID); // should end with root node
-    }
-
-    // Store them in "spans":
     spans.clear();
-    for(int i=0; i<startP.length; ++i)
-      spans.add(new Pair<Integer,Integer>(startP[i],endP[i]));
+
+    try {
+      Tree t = Tree.valueOf(infoStr);
+      for(Constituent c : t.constituents())
+        spans.add(new Pair<Integer,Integer>(c.start(), c.end()));
+    } catch(IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
@@ -63,8 +46,8 @@ public class ConstituentPhraseExtractor extends DependencyPhraseExtractor {
 
   private boolean ignorePhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
 
-    if(deps.isEmpty() || spans.isEmpty()) {
-      System.err.println("warning: dependencies/constituents missing!");
+    if(spans.isEmpty()) {
+      System.err.println("warning: constituents missing!");
       return false;
     }
 
