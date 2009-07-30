@@ -120,27 +120,32 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 			Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
 			translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
 					collectFeatureValues(hyp), beamGoalHyp.id));
-			if (translations.size() >= size)
-				break;
-		}
-
-		// if a non-admissible recombination heuristic was used, the hypothesis
-		// scores predicted by the
-		// lattice may not actually correspond to their real scores.
-		//
-		// Since the n-best list should be sorted according to the true scores, we
-		// re-sort things here just in case.
-		Collections.sort(translations, new Comparator<RichTranslation<TK, FV>>() {
-			@Override
-			public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
-				return (int) Math.signum(o2.score - o1.score);
-			}
-		});
-
-    if(featurizer instanceof RichIncrementalFeaturizer) {
-      RichIncrementalFeaturizer<TK,FV> rf = (RichIncrementalFeaturizer<TK,FV>)featurizer;
-      rf.debugBest(translations.iterator().next().featurizable);
+      if (distinctTranslations != null) {
+        if (distinctTranslations.size() >= size)
+          break;
+      } else {
+        if (translations.size() >= size)
+          break;
+      }
     }
+
+      // if a non-admissible recombination heuristic was used, the hypothesis
+      // scores predicted by the
+      // lattice may not actually correspond to their real scores.
+      //
+      // Since the n-best list should be sorted according to the true scores, we
+      // re-sort things here just in case.
+      Collections.sort(translations, new Comparator<RichTranslation<TK, FV>>() {
+        @Override
+        public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+          return (int) Math.signum(o2.score - o1.score);
+        }
+      });
+
+      if(featurizer instanceof RichIncrementalFeaturizer) {
+        RichIncrementalFeaturizer<TK,FV> rf = (RichIncrementalFeaturizer<TK,FV>)featurizer;
+        rf.debugBest(translations.iterator().next().featurizable);
+      }
 
     if (DEBUG) {
 			long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;
