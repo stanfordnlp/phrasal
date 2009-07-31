@@ -94,13 +94,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       /////////////////////////////////////////////////////////////////////////////////////////////////////
 
       if(distinctTranslations != null) {
+
         // Avoid spending too much time generating the nbest list (when can take dozens of minutes for very
         // long inputs):
         if(hypCount > SAFE_LIST && (hypCount % 100 == 0)) {
           long curTime = System.currentTimeMillis();
           if(++duplicateCount >= maxDuplicateCount || curTime-nbestStartTime > MAX_TIME_NBEST) {
-            System.err.printf("\nNbest list construction taking too long (duplicates=%d, time=%fs); giving up.\n", 
-              duplicateCount, (curTime-nbestStartTime)/1000.0);
+            System.err.printf("\nNbest list construction taking too long (hyps=%d, uniq-hyps=%d, nbest=%d, time=%fs); giving up.\n", 
+              hypCount, duplicateCount, translations.size(), (curTime-nbestStartTime)/1000.0);
             break;
           }
         }
@@ -109,43 +110,48 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         // If seen this string before and not among the top-k, skip it:
         if(hypCount > SAFE_LIST && distinctTranslations.contains(seq)) 
           continue;
-      }
-
-      /////////////////////////////////////////////////////////////////////////////////////////////////////
-      // code above is needed for generating nbest lists with no duplicates for GALE -- please do not delete
-      /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-			// System.err.printf("Translations size: %d (/%d)\n", translations.size(),
-			// size);
-			Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
-			translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
-					collectFeatureValues(hyp), beamGoalHyp.id));
-      if (distinctTranslations != null) {
-        if (distinctTranslations.size() >= size)
+        // Add current hypothesis to nbest list and set of uniq strings:
+        Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
+        translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
+            collectFeatureValues(hyp), beamGoalHyp.id));
+        distinctTranslations.add(seq);
+        if (distinctTranslations.size() >= size) 
           break;
+
       } else {
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        // code above is needed for generating nbest lists with no duplicates for GALE -- please do not delete
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // System.err.printf("Translations size: %d (/%d)\n", translations.size(),
+        // size);
+        Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
+        translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
+            collectFeatureValues(hyp), beamGoalHyp.id));
         if (translations.size() >= size)
           break;
+
       }
     }
 
-      // if a non-admissible recombination heuristic was used, the hypothesis
-      // scores predicted by the
-      // lattice may not actually correspond to their real scores.
-      //
-      // Since the n-best list should be sorted according to the true scores, we
-      // re-sort things here just in case.
-      Collections.sort(translations, new Comparator<RichTranslation<TK, FV>>() {
-        @Override
-        public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
-          return (int) Math.signum(o2.score - o1.score);
-        }
-      });
-
-      if(featurizer instanceof RichIncrementalFeaturizer) {
-        RichIncrementalFeaturizer<TK,FV> rf = (RichIncrementalFeaturizer<TK,FV>)featurizer;
-        rf.debugBest(translations.iterator().next().featurizable);
+    // if a non-admissible recombination heuristic was used, the hypothesis
+    // scores predicted by the
+    // lattice may not actually correspond to their real scores.
+    //
+    // Since the n-best list should be sorted according to the true scores, we
+    // re-sort things here just in case.
+    Collections.sort(translations, new Comparator<RichTranslation<TK, FV>>() {
+      @Override
+      public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+        return (int) Math.signum(o2.score - o1.score);
       }
+    });
+
+    if(featurizer instanceof RichIncrementalFeaturizer) {
+      RichIncrementalFeaturizer<TK,FV> rf = (RichIncrementalFeaturizer<TK,FV>)featurizer;
+      rf.debugBest(translations.iterator().next().featurizable);
+    }
 
     if (DEBUG) {
 			long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;
@@ -162,7 +168,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     if(distinctTranslations != null) {
-      List<RichTranslation<TK,FV>> dtranslations = new LinkedList<RichTranslation<TK,FV>>();
+      List<RichTranslation<TK, FV>> dtranslations = new LinkedList<RichTranslation<TK, FV>>();
+      distinctTranslations.clear();
       for(RichTranslation<TK,FV> rt : translations) {
 				if(distinctTranslations.contains(rt.translation)) {
 					continue;
