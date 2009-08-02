@@ -5,11 +5,10 @@ import javax.swing.JPanel;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
+import javax.swing.SwingWorker;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
-import java.awt.GridBagLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,9 +32,10 @@ public class AnalysisDialog extends JFrame {
   private static int currentTranslationId = 0;
   private static boolean VERBOSE = false;
   private PhraseController controller = null;
-  private static List<Color> fullPalette = null;
+  private static List<Color> heatMapPalette = null;
+  private static int scoreHalfRange = 0;
 
-  private JSplitPane jSplitPane = null;  //  @jve:decl-index=0:visual-constraint="54,65"
+  private JSplitPane jSplitPane = null; 
 
   private JScrollPane jScrollPane = null;
 
@@ -59,7 +59,7 @@ public class AnalysisDialog extends JFrame {
 
   private JLabel navNumTranslationsLabel = null;
 
-  private JButton runAnimationButton = null;
+  private JButton heatMapButton = null;
 
   private JButton resetAnimationButton = null;
 
@@ -70,30 +70,61 @@ public class AnalysisDialog extends JFrame {
     super();
 
     controller = PhraseController.getInstance();
-    VERBOSE = controller.getVerbose();
-    fullPalette = createFullPalette();
-    initialize();
-  }
+    VERBOSE = controller.getVerbose();    
 
-  /**
-   * This method initializes this
-   * 
-   * @return void
-   */
-  private void initialize() {
+    //Load the model asynchronously
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    modelBuilderThread.execute();
+    guiUpdaterThread.execute();
+
     this.setTitle("Phrase Analysis");
     this.setSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));
     this.setPreferredSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));
-
-    int nTranslations = controller.numTranslations();
-    if(nTranslations != 0) {
-      getNavNumTranslationsLabel().setText(String.format("of %d", nTranslations));
-      setCurrentTranslation(1);
-    }
-
-    //Setup the content *after* the current translation has been set
-    this.setContentPane(getJSplitPane());
   }
+
+  private SwingWorker<Void,Void> modelBuilderThread = 
+    new SwingWorker<Void,Void>() {
+    @Override
+    protected Void doInBackground() throws Exception {
+      controller.buildModel();
+      scoreHalfRange = controller.getScoreHalfRange();
+      heatMapPalette = createPalette((2 * scoreHalfRange) + 1);
+      return null;
+    }
+    @Override
+    protected void done() {
+      getHeatMapButton().setEnabled(true);
+    }
+  };
+
+  private SwingWorker<Void,Integer> guiUpdaterThread = 
+    new SwingWorker<Void,Integer>() {
+
+    private boolean initialized = false;
+
+    @Override
+    protected Void doInBackground() throws Exception {
+      while(!controller.modelIsBuilt()) {
+        publish(controller.getNumTranslations());
+      }
+      publish(controller.getNumTranslations());
+      return null;
+    }
+    @Override
+    protected void process(List<Integer> updates) {
+      int numTranslations = updates.get(updates.size() - 1);
+      if(numTranslations != 0) {
+        getNavNumTranslationsLabel().setText(String.format("of %d", numTranslations));
+        if(!initialized) {
+          setCurrentTranslation(1);
+          setContentPane(getJSplitPane());
+          initialized = true;
+          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        } 
+        validate();
+      }
+    }
+  };
 
   /**
    * This method initializes jSplitPane	
@@ -154,7 +185,7 @@ public class AnalysisDialog extends JFrame {
           )
           .addComponent(this.getNavRightSeparator())
           .addGroup(navLayout.createSequentialGroup()
-              .addComponent(this.getRunAnimationButton())
+              .addComponent(this.getHeatMapButton())
               .addComponent(this.getResetAnimationButton())
           )
       );
@@ -171,7 +202,7 @@ public class AnalysisDialog extends JFrame {
           )
           .addComponent(this.getNavRightSeparator())
           .addGroup(navLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-              .addComponent(this.getRunAnimationButton())
+              .addComponent(this.getHeatMapButton())
               .addComponent(this.getResetAnimationButton())
           )
       );
@@ -212,7 +243,7 @@ public class AnalysisDialog extends JFrame {
       navNextButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           int newValue = currentTranslationId + 1;
-          if(newValue <= controller.numTranslations())
+          if(newValue <= controller.getNumTranslations())
             setCurrentTranslation(newValue);
         }
       });
@@ -238,7 +269,7 @@ public class AnalysisDialog extends JFrame {
           String strNewValue = getNavSentTextField().getText().trim();
           if(strNewValue.matches("\\d+")) {
             int newValue = Integer.parseInt(strNewValue);
-            if(newValue <= controller.numTranslations()) {
+            if(newValue <= controller.getNumTranslations()) {
               setCurrentTranslation(newValue);
               return;
             }
@@ -256,9 +287,6 @@ public class AnalysisDialog extends JFrame {
       navStatusBar.setHorizontalAlignment(JLabel.CENTER);
       navStatusBar.setPreferredSize(new Dimension(200,NAV_HEIGHT));
       navStatusBar.setMaximumSize(new Dimension(200,NAV_HEIGHT));
-
-      //WSGDEBUG
-      navStatusBar.setText("THIS IS THE STATUS BAR");
     }
     return navStatusBar;
   }
@@ -285,12 +313,12 @@ public class AnalysisDialog extends JFrame {
   }
 
   private void setCurrentTranslation(int i) {
-    //Get the translation object
+
     TranslationLayout currentLayout = controller.getTranslation(i);
 
     if(currentLayout == null) {
       if(VERBOSE)
-        System.err.printf("%s: Invalid translation id %d passed from interface\n", i);
+        System.err.printf("%s: Invalid translation id %d passed from interface\n", this.getClass().getName(), i);
     } else {
       //Update text fields
       getNavSentTextField().setText(Integer.toString(i));
@@ -320,35 +348,37 @@ public class AnalysisDialog extends JFrame {
   //TODO Should blank JPanel in the background then render to screen
   private void resetLayout() {
     TranslationLayout currentLayout = controller.getTranslation(currentTranslationId);
-    for(JLabel label : currentLayout.getRanking()) {
+    for(JLabel label : currentLayout.getLabels()) {
       label.setForeground(Color.BLACK);
       label.setBackground(Color.WHITE);
       label.setBorder(new LineBorder(Color.BLACK));
     }
   }
 
-  private JButton getRunAnimationButton() {
-    if(runAnimationButton == null) {
-      runAnimationButton = new JButton("Shade");
-      runAnimationButton.addActionListener(new ActionListener() {
+  private JButton getHeatMapButton() {
+    if(heatMapButton == null) {
+      heatMapButton = new JButton("Heat Map");
+      heatMapButton.setEnabled(false);
+      heatMapButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent arg0) {
           setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-          runAnimation();
+          drawHeatMap();
           setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
       });
     }
-    return runAnimationButton;
+    return heatMapButton;
   }
 
-  private void runAnimation() {
+  private void drawHeatMap() {
     TranslationLayout currentLayout = controller.getTranslation(currentTranslationId);
 
-    List<Color> palette = createPalette(currentLayout.getNumOptionsApplied());
-    int colorIdx = 0;
-    for(JLabel label : currentLayout.getRanking()) {
-      label.setForeground(Color.WHITE);
-      label.setBackground(palette.get(colorIdx++));
+    for(VisualPhrase vPhrase : currentLayout.getLabels()) {
+      vPhrase.setForeground(Color.WHITE);
+
+      int colorScore = controller.getScoreRank(vPhrase.getScore());
+      colorScore = Math.abs(colorScore - scoreHalfRange);
+      vPhrase.setBackground(heatMapPalette.get(colorScore));
     }
   }
 
@@ -363,8 +393,9 @@ public class AnalysisDialog extends JFrame {
   }
 
   private List<Color> createPalette(int numSamples) {
-    double PROP = 0.95;
-    int step = (int) ((double) fullPalette.size() / (PROP * (double) numSamples));
+    List<Color> fullPalette = createFullPalette();
+
+    int step = (int) ((double) fullPalette.size() / (double) numSamples);
     List<Color> palette = new ArrayList<Color>();
     for(int i = 0; i < fullPalette.size(); i += step)
       palette.add(fullPalette.get(i));
@@ -376,4 +407,4 @@ public class AnalysisDialog extends JFrame {
     return palette;
   }
 
-}  //  @jve:decl-index=0:visual-constraint="10,10"
+}

@@ -2,16 +2,18 @@ package mt.visualize.phrase;
 
 import java.io.File;
 
-import javax.swing.JPanel;
-
 public class PhraseController {
 
+  private static boolean VERBOSE = false;
+  private static boolean RIGHT_TO_LEFT = false;
+  private static int SCORE_HALF_RANGE = 300;
+  private static boolean NORM_SCORES = false;
+  private static int NUM_OPTION_ROWS = 10;
+
   private PhraseModel model;
-  private boolean VERBOSE = false;
-  private boolean RIGHT_TO_LEFT = false;
-  private File sourceFilePath;
-  private File optsFilePath;
-  private File modelFilePath;
+  private File sourceFilePath = null;
+  private File optsFilePath = null;
+//  private File modelFilePath;
   
   private static PhraseController thisInstance = null;
   
@@ -28,6 +30,24 @@ public class PhraseController {
     VERBOSE = b;
   }
   
+  public boolean setOptsFile(String path) {
+    optsFilePath = new File(path);
+    return optsFilePath.exists();
+  }
+  
+  public boolean setSourceFile(String path) {
+    sourceFilePath = new File(path);    
+    return sourceFilePath.exists();
+  }
+  
+  public String getSourceFilePath() {
+    return (sourceFilePath != null) ? sourceFilePath.getPath() : null;
+  }
+  
+  public String getOptsFilePath() {
+    return (optsFilePath != null) ? optsFilePath.getPath() : null;
+  }
+  
   public boolean getVerbose() {
     return VERBOSE;
   }
@@ -37,31 +57,40 @@ public class PhraseController {
   }
   
   public boolean buildModel() {
-    model = new PhraseModel(sourceFilePath, optsFilePath, modelFilePath);
+    model = new PhraseModel(sourceFilePath, optsFilePath);
     model.setVerbose(VERBOSE);
-    model.setRightToLeft(RIGHT_TO_LEFT);
+    model.normalizePhraseScores(NORM_SCORES);
+    model.setNumberOfOptionRows(NUM_OPTION_ROWS);
     
-    if(model.load())
-      if(model.build())
+    if(model.load(SCORE_HALF_RANGE))
+      if(model.buildLayouts(RIGHT_TO_LEFT))
         return true;
 
     return false;
   }
-  
-  public void setSourceFilePath(File f) {
-    sourceFilePath = f;
+    
+  public boolean modelIsBuilt() {
+    return (model != null) ? model.isBuilt() : false;
   }
   
-  public void setOptsFilePath(File f) {
-    optsFilePath = f;
-  }
-  
-  public void setModelFilePath(File f) {
-    modelFilePath = f;
-  }
-  
-  public int numTranslations() {
+  public int getNumTranslations() {
     return (model != null) ? model.getNumTranslations() : 0;
+  }
+  
+  public int getScoreHalfRange() {
+    return SCORE_HALF_RANGE;
+  }
+  
+  public boolean setScoreHalfRange(int range) {
+    if(range > 0 && range < 600) {
+      SCORE_HALF_RANGE = range;
+      return true;
+    }
+    return false;
+  }
+
+  public int getScoreRank(double score) {
+    return (model != null) ? model.getScoreRank(score) : 0;
   }
   
   /**
@@ -74,4 +103,21 @@ public class PhraseController {
   public TranslationLayout getTranslation(int i) {
     return (model != null) ? model.getTranslation(i) : null;
   }
+
+  public void normalizePhraseScores(boolean newState) {
+    NORM_SCORES = newState;
+  }
+  
+  public boolean setNumOptionRows(int rows) {
+    if(rows > 0 && rows < 40) {
+    NUM_OPTION_ROWS = rows;
+    return true;
+    }
+    return false;
+  }
+  
+  public int getNumOptionRows() {
+    return NUM_OPTION_ROWS;
+  }
+
 }

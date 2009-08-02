@@ -4,28 +4,26 @@ import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 
-import javax.swing.JPanel;
-
 public class PhraseModel {
 
+  //For validating the input file format
   private static final int OPT_TOKS_PER_LINE = 5;
-  private static boolean RIGHT_TO_LEFT = false;
 
-  //TODO Maybe make this configurable
-  private static final int MAX_OPTS = 20; //How many options to read for each translation
-  private static final int NUM_VISUAL_OPTS = 10;
-  
+  private int NUM_VISUAL_OPTION_ROWS = 10;
+  private boolean NORM_SCORES = false;
   private boolean VERBOSE = false;
+
   private final File sourceFile;
   private final File optsFile;
-//  private final File modelFile;
   private final List<Translation> translations;
   private final List<TranslationLayout> layouts;
+  private ScoreDistribution scoreDist;
 
-  public PhraseModel(File source, File opts, File model) {
+  private boolean isBuilt = false;
+
+  public PhraseModel(File source, File opts) {
     sourceFile = source;
     optsFile = opts;
-//    modelFile = model;
 
     translations = new ArrayList<Translation>();
     layouts = new ArrayList<TranslationLayout>();
@@ -34,17 +32,17 @@ public class PhraseModel {
       throw new RuntimeException(String.format("%s: %s does not exist",this.getClass().getName(),sourceFile.getPath()));
     if(!optsFile.exists())
       throw new RuntimeException(String.format("%s: %s does not exist",this.getClass().getName(),sourceFile.getPath()));
-//WSGDEBUG May add the model later
-//    if(!modelFile.exists())
-//      throw new RuntimeException(String.format("%s: %s does not exist",this.getClass().getName(),sourceFile.getPath()));
   }
 
   public void setVerbose(boolean verbose) {
     VERBOSE = verbose;
   }
 
-  public boolean load() {
+  public boolean load(int scoreHalfRange) {
     try {
+
+      scoreDist = new ScoreDistribution(scoreHalfRange);
+
       LineNumberReader sourceReader = new LineNumberReader(new FileReader(sourceFile));
       LineNumberReader optsReader = new LineNumberReader(new FileReader(optsFile));
 
@@ -54,10 +52,18 @@ public class PhraseModel {
         String source = sourceReader.readLine();
         Translation translation = new Translation(transId,source);
 
-        if(lastOpt != null && Integer.parseInt(lastOpt[0]) == transId)
-          translation.addPhrase(Math.exp(Double.parseDouble(lastOpt[3])), 
-                                lastOpt[2], 
-                                lastOpt[4]);
+        if(lastOpt != null && Integer.parseInt(lastOpt[0]) == transId) {
+          String english = lastOpt[2].intern();
+
+          double score = Double.parseDouble(lastOpt[3]);
+          if(NORM_SCORES) score /= (double) english.split("\\s+").length;
+          score = Math.exp(score);
+
+          scoreDist.add(score);
+          translation.addPhrase(Math.exp(score), 
+              english, 
+              lastOpt[4]);
+        }
         lastOpt = null;
 
         for(int optsRead = 0; optsReader.ready(); optsRead++) {
@@ -71,10 +77,14 @@ public class PhraseModel {
             break;
           }
 
-          double score = Math.exp(Double.parseDouble(optToks[3]));
-          String english = optToks[2];
+          String english = optToks[2].intern();
           String coverage = optToks[4];
 
+          double score = Double.parseDouble(optToks[3]);
+          if(NORM_SCORES) score /= (double) english.split("\\s+").length;
+          score = Math.exp(score);
+
+          scoreDist.add(score);
           translation.addPhrase(score, english, coverage);
         }
         translations.add(translation);
@@ -97,27 +107,41 @@ public class PhraseModel {
     return true;
   }
 
-  public boolean build() {
+  public boolean buildLayouts(boolean rightToLeft) {
     for(Translation translation : translations) {
-      TranslationLayout layout = new TranslationLayout(translation,RIGHT_TO_LEFT);
-      layout.doLayout(NUM_VISUAL_OPTS);
+      TranslationLayout layout = new TranslationLayout(translation,rightToLeft);
+      layout.createLayout(NUM_VISUAL_OPTION_ROWS);
       layouts.add(layout);
     }
+
+    scoreDist.computeDistribution();
+    isBuilt = true;
 
     return true;
   }
 
   public int getNumTranslations() {
-    return (translations != null) ? translations.size() : 0;
+    return (layouts != null) ? layouts.size() : 0;
   }
 
-  //TODO Should return a deep copy, not a reference
+  public boolean isBuilt() {
+    return isBuilt;
+  }
+
   public TranslationLayout getTranslation(int i) {
     return (layouts != null && i > 0 && i <= getNumTranslations()) ? layouts.get(i - 1) : null;
   }
 
-  public void setRightToLeft(boolean b) {
-    RIGHT_TO_LEFT = b;
+  public int getScoreRank(double score) {
+    return scoreDist.getStdDev(score);
+  }
+
+  public void normalizePhraseScores(boolean newState) {
+    NORM_SCORES = newState;
+  }
+  
+  public void setNumberOfOptionRows(int rows) {
+    NUM_VISUAL_OPTION_ROWS = rows;
   }
 
 }

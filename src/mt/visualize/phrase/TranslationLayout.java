@@ -1,7 +1,6 @@
 package mt.visualize.phrase;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.MouseEvent;
@@ -18,7 +17,7 @@ public class TranslationLayout {
   //the panel with a gridbag layout
   private final Translation translation;
   private final int numOptions;
-  private final List<JLabel> ranking;
+  private final List<VisualPhrase> labels;
   private int optionsApplied = 0;
   private JPanel panel = null;
   private List<BitSet> coverages;
@@ -31,10 +30,10 @@ public class TranslationLayout {
     translation = t;
     RIGHT_TO_LEFT = rightToLeft;
     numOptions = t.numPhrases();
-    ranking = new ArrayList<JLabel>();
+    labels = new ArrayList<VisualPhrase>();
   }
 
-  public boolean doLayout(int numOptionRows) {
+  public boolean createLayout(int numOptionRows) {
     final int numColumns = translation.getNumSourceWords();
     final int numRows = numOptionRows + 1;
     final int optionGridSize = numColumns * numRows;
@@ -52,8 +51,8 @@ public class TranslationLayout {
     StringTokenizer st = new StringTokenizer(translation.getSource());
     int curCol = (RIGHT_TO_LEFT) ? numColumns - 1 : 0;
     while(st.hasMoreTokens()) {
-      String token = st.nextToken();
-      JLabel label = new JLabel(token);
+      String token = st.nextToken().intern();
+      VisualPhrase label = new VisualPhrase(token);
       GridBagConstraints c = new GridBagConstraints();
       c.fill = GridBagConstraints.HORIZONTAL;
       c.gridx = curCol;
@@ -75,7 +74,7 @@ public class TranslationLayout {
         int sourceWordsCovered = phrase.getEnd() - phrase.getStart() + 1;
 
         if(testCoverage(phrase,bitSet)) {
-          JLabel label = buildLabel(phrase,optionsApplied + 1);
+          VisualPhrase label = buildLabel(phrase,optionsApplied + 1);
           GridBagConstraints c = buildConstraints(phrase,i,numColumns,sourceWordsCovered);
           
           panel.add(label,c);
@@ -83,7 +82,7 @@ public class TranslationLayout {
           optionsApplied++;
           setCoverage(phrase,bitSet);
           cellsFilled += sourceWordsCovered;
-          ranking.add(label);
+          labels.add(label);
           break;
         }
       }
@@ -94,8 +93,8 @@ public class TranslationLayout {
     return true;
   }
   
-  private JLabel buildLabel(Phrase phrase, int rank) {
-    JLabel label = new JLabel(" " + phrase.getPhrase());
+  private VisualPhrase buildLabel(Phrase phrase, int rank) {
+    VisualPhrase label = new VisualPhrase(" " + phrase.getPhrase(), phrase.getScore(), rank);
     
     label.setOpaque(true);
     label.setBackground(Color.WHITE);
@@ -175,8 +174,8 @@ public class TranslationLayout {
     return optionsApplied;
   }
   
-  public List<JLabel> getRanking() {
-    return Collections.unmodifiableList(ranking);
+  public List<VisualPhrase> getLabels() {
+    return Collections.unmodifiableList(labels);
   }
 
 }

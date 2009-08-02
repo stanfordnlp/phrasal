@@ -1,5 +1,6 @@
 package mt.visualize.phrase;
 
+@SuppressWarnings("unchecked")
 public class Phrase implements Comparable {
   
   private final String phrase;
@@ -10,8 +11,7 @@ public class Phrase implements Comparable {
   
   public Phrase(String phrase) {
     this.phrase = phrase;
-    String[] toks = phrase.split("\\s+");
-    numTokens = toks.length;
+    numTokens = phrase.split("\\s+").length;
   }
   
   public void setSpan(int start, int end) {
@@ -40,7 +40,7 @@ public class Phrase implements Comparable {
   }
   
   public String getPhrase() {
-    return new String(phrase);
+    return phrase;
   }
 
   /**

@@ -1,9 +1,10 @@
 package mt.visualize.phrase;
 
 import java.io.File;
-import java.awt.Cursor;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.WindowEvent;
 import java.awt.BorderLayout;
 import javax.swing.SwingConstants;
@@ -20,6 +21,8 @@ import javax.swing.JButton;
 import javax.swing.GroupLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JSeparator;
+
 import java.awt.Dimension;
 import javax.swing.JTextField;
 import java.awt.event.WindowAdapter;
@@ -43,9 +46,13 @@ public class PhraseGUI {
 
   private JMenuItem aboutMenuItem = null;
 
-  private JCheckBoxMenuItem rightLeftItem = null;
+  private JMenuItem openOptionsDialogMenuItem = null;
+
+  private JCheckBoxMenuItem rightLeftMenuItem = null;
 
   private JCheckBoxMenuItem verboseMenuItem = null;
+
+  private JCheckBoxMenuItem normScoresMenuItem = null;
 
   private JDialog aboutDialog = null;
 
@@ -64,19 +71,27 @@ public class PhraseGUI {
   private JButton optsFileButton = null;
 
   private JButton loadButton = null;
-  
+
   private JLabel sourceLabel = null;
-  
+
   private JLabel optsLabel = null;
+
+  private JSeparator statusBarSeparator = null;
+
+  private JLabel statusBar = null;
 
   private JFileChooser fileChooser = null;
 
   private AnalysisDialog analysisDialog = null;
-  
+
+  private OptionsDialog optionsDialog = null;
+
   //Application members
   private final PhraseController controller;
   private static PhraseGUI thisInstance = null;
   private boolean VERBOSE = false;
+  private static final int GUI_WIDTH = 400;
+  private static final int GUI_HEIGHT = 500;
 
 
   public static PhraseGUI getInstance() {
@@ -100,7 +115,7 @@ public class PhraseGUI {
       mainFrame = new JFrame();
       mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       mainFrame.setJMenuBar(getMainMenuBar());
-      mainFrame.setSize(400, 150);
+      mainFrame.setSize(GUI_WIDTH, GUI_HEIGHT);
       mainFrame.setResizable(false);
       mainFrame.setContentPane(getMainPanel());
       mainFrame.setTitle("Phrase Viewer");
@@ -127,7 +142,8 @@ public class PhraseGUI {
           .addGroup(mainLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
               .addComponent(this.getSourceLabel())
               .addComponent(this.getOptsLabel())
-              .addComponent(this.getLoadButton())
+              .addComponent(this.getStatusBarSeparator())
+              .addComponent(this.getStatusBar())
           )
           .addGroup(mainLayout.createParallelGroup()
               .addComponent(this.getSourceFileTextField())
@@ -136,6 +152,7 @@ public class PhraseGUI {
           .addGroup(mainLayout.createParallelGroup()
               .addComponent(this.getSourceFileButton())
               .addComponent(this.getOptsFileButton())
+              .addComponent(this.getLoadButton())
           )
       );
       mainLayout.setVerticalGroup(mainLayout.createSequentialGroup()
@@ -149,19 +166,23 @@ public class PhraseGUI {
               .addComponent(this.getOptsFileTextField())
               .addComponent(this.getOptsFileButton())
           )
-          .addComponent(this.getLoadButton())
+          .addComponent(this.getStatusBarSeparator())
+          .addGroup(mainLayout.createParallelGroup()
+              .addComponent(this.getStatusBar())
+              .addComponent(this.getLoadButton())
+          )
       );
     }
     return mainPanel;
   }
-  
+
   private JLabel getSourceLabel() {
     if(sourceLabel == null) {
       sourceLabel = new JLabel("Source");
     }
     return sourceLabel;
   }
-  
+
   private JLabel getOptsLabel() {
     if(optsLabel == null) {
       optsLabel = new JLabel("Options");
@@ -209,6 +230,9 @@ public class PhraseGUI {
       optionsMenu.setText("Options");
       optionsMenu.add(getRightLeftMenuItem());
       optionsMenu.add(getVerboseMenuItem());
+      optionsMenu.add(getNormScoresMenuItem());
+      optionsMenu.add(new JSeparator());
+      optionsMenu.add(getOpenOptionsDialogMenuItem());
     }
     return optionsMenu;
   }
@@ -316,10 +340,9 @@ public class PhraseGUI {
    * @return javax.swing.JMenuItem	
    */
   private JCheckBoxMenuItem getRightLeftMenuItem() {
-    if (rightLeftItem == null) {
-      rightLeftItem = new JCheckBoxMenuItem();
-      rightLeftItem.setText("Right-To-Left Source");
-      rightLeftItem.addActionListener(new ActionListener() {
+    if (rightLeftMenuItem == null) {
+      rightLeftMenuItem = new JCheckBoxMenuItem("Right-To-Left Source");
+      rightLeftMenuItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           boolean newState = getRightLeftMenuItem().isSelected();
           controller.setRightToLeft(newState);
@@ -327,7 +350,7 @@ public class PhraseGUI {
         }
       });
     }
-    return rightLeftItem;
+    return rightLeftMenuItem;
   }
 
   /**
@@ -337,8 +360,7 @@ public class PhraseGUI {
    */
   private JCheckBoxMenuItem getVerboseMenuItem() {
     if (verboseMenuItem == null) {
-      verboseMenuItem = new JCheckBoxMenuItem();
-      verboseMenuItem.setText("Verbose Output");
+      verboseMenuItem = new JCheckBoxMenuItem("Verbose Output");
       verboseMenuItem.setSelected(VERBOSE);
       verboseMenuItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -351,11 +373,44 @@ public class PhraseGUI {
     return verboseMenuItem;
   }
 
+  private JCheckBoxMenuItem getNormScoresMenuItem() {
+    if (normScoresMenuItem == null) {
+      normScoresMenuItem = new JCheckBoxMenuItem("Normalize Phrase Scores");
+      normScoresMenuItem.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          boolean newState = getNormScoresMenuItem().isSelected();
+          controller.normalizePhraseScores(newState);
+          toggleLoadButton();
+        }
+      });
+    }
+    return normScoresMenuItem;
+  }
+
+  private JMenuItem getOpenOptionsDialogMenuItem() {
+    if(openOptionsDialogMenuItem == null) {
+      openOptionsDialogMenuItem = new JMenuItem("Other Options");
+      openOptionsDialogMenuItem.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          OptionsDialog dialog = getOptionsDialog();
+          dialog.pack();
+          Point loc = getMainFrame().getLocation();
+          loc.translate(20, 20);
+          dialog.setLocation(loc);
+          dialog.setVisible(true);
+        }
+      });
+    }
+    return openOptionsDialogMenuItem;
+  }
+
 
   public static void show() {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         PhraseGUI application = PhraseGUI.getInstance();
+        application.getMainFrame().pack();
         application.getMainFrame().setVisible(true);
       }
     });
@@ -369,17 +424,37 @@ public class PhraseGUI {
    */
   private JTextField getSourceFileTextField() {
     if (sourceFileTextField == null) {
-      sourceFileTextField = new JTextField();
-      sourceFileTextField.setPreferredSize(new Dimension(15, 350));
-      sourceFileTextField.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          File path = new File(getSourceFileTextField().getText());
-          controller.setSourceFilePath(path);
-          toggleLoadButton();
-        }
-      });
+      sourceFileTextField  = (controller.getSourceFilePath() != null) ? 
+          new JTextField(controller.getSourceFilePath()) : new JTextField();
+          updateSourceFile();
+          sourceFileTextField.setPreferredSize(new Dimension(350, 15));
+          sourceFileTextField.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+              updateSourceFile();
+            }
+          });
+          sourceFileTextField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent arg0) {}
+            @Override
+            public void focusLost(FocusEvent arg0) {
+              updateSourceFile();          
+            }
+          });
     }
     return sourceFileTextField;
+  }
+
+  private void updateSourceFile() {
+    if(getSourceFileTextField().getText() == "")
+      return;
+
+    if(controller.setSourceFile(getSourceFileTextField().getText())) {
+      this.getStatusBar().setText("Loaded source file");
+      toggleLoadButton();
+    }
+    else
+      this.getStatusBar().setText("Source file does not exist!");
   }
 
   /**
@@ -389,18 +464,39 @@ public class PhraseGUI {
    */
   private JTextField getOptsFileTextField() {
     if (optsFileTextField == null) {
-      optsFileTextField = new JTextField();
-      optsFileTextField.setPreferredSize(new Dimension(15, 350));
-      optsFileTextField.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          File path = new File(getSourceFileTextField().getText());
-          controller.setOptsFilePath(path);
-          toggleLoadButton();
-        }
-      });
+      optsFileTextField = (controller.getOptsFilePath() != null) ?
+          new JTextField(controller.getOptsFilePath()) : new JTextField();
+          updateOptsFile();
+          optsFileTextField.setPreferredSize(new Dimension(350, 15));
+          optsFileTextField.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+              updateOptsFile();
+            }
+          });
+          optsFileTextField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {}
+            @Override
+            public void focusLost(FocusEvent e) {
+              updateOptsFile();
+            }
+          });
     }
     return optsFileTextField;
   }
+
+  private void updateOptsFile() {
+    if(getOptsFileTextField().getText() == "")
+      return;
+
+    if(controller.setOptsFile(getOptsFileTextField().getText())) {
+      this.getStatusBar().setText("Loaded options file");
+      toggleLoadButton();
+    }
+    else
+      this.getStatusBar().setText("Options file does not exist!");
+  }
+
 
   /**
    * This method initializes jButton	
@@ -421,9 +517,8 @@ public class PhraseGUI {
           File selection = getFileChooser().getSelectedFile();
           if(selection != null) {
             getSourceFileTextField().setText(selection.getPath());
-            controller.setSourceFilePath(selection);
+            updateSourceFile();
           }
-          toggleLoadButton();
         }
       });
     }
@@ -449,13 +544,27 @@ public class PhraseGUI {
           File selection = getFileChooser().getSelectedFile();
           if(selection != null) {
             getOptsFileTextField().setText(selection.getPath());
-            controller.setOptsFilePath(selection);
+            updateOptsFile();
           }
-          toggleLoadButton();
         }
       });
     }
     return optsFileButton;
+  }
+
+  private JLabel getStatusBar() {
+    if(statusBar == null) {
+      statusBar = new JLabel("Ready");
+      statusBar.setPreferredSize(new Dimension(GUI_WIDTH,20));
+    }
+    return statusBar;
+  }
+
+  private JSeparator getStatusBarSeparator() {
+    if(statusBarSeparator == null) {
+      statusBarSeparator = new JSeparator();
+    }
+    return statusBarSeparator;
   }
 
   /**
@@ -471,14 +580,11 @@ public class PhraseGUI {
       loadButton.setText("Load");
       loadButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          getLoadButton().setEnabled(false);
-          getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-          controller.buildModel();
           Point loc = getMainFrame().getLocation();
           loc.translate(20, 20);
           getAnalysisDialog().setLocation(loc);
           getAnalysisDialog().setVisible(true);
-          getMainFrame().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+          getLoadButton().setEnabled(false);
         }
       });
     }
@@ -499,7 +605,7 @@ public class PhraseGUI {
     }
     return fileChooser;
   }
-  
+
   private AnalysisDialog getAnalysisDialog() {
     if(analysisDialog == null) {
       analysisDialog = new AnalysisDialog();
@@ -512,14 +618,25 @@ public class PhraseGUI {
   private class AnalysisDialogHandler extends WindowAdapter {
     public void windowClosing(WindowEvent e) {
       analysisDialog = null;
+      toggleLoadButton();
     }
   }
 
-  /** For debugging
-   * @param args
-   */
-  public static void main(String[] args) {
-    PhraseGUI.show();
+  private OptionsDialog getOptionsDialog() {
+    if(optionsDialog == null) {
+      optionsDialog = new OptionsDialog();
+      optionsDialog.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+      optionsDialog.addWindowListener(new OptionsDialogHandler());
+      optionsDialog.setResizable(false);
+    }
+    return optionsDialog;
+  }
+
+  private class OptionsDialogHandler extends WindowAdapter {
+    public void windowClosing(WindowEvent e) {
+      getOptionsDialog().setVisible(false);
+      toggleLoadButton();
+    }
   }
 
 }
