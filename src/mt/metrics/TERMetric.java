@@ -19,6 +19,7 @@ import mt.decoder.util.State;
 
 import mt.metrics.ter.TERcalc;
 import mt.metrics.ter.TERalignment;
+import mt.tune.UnsmoothedMERT;
 
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
@@ -216,6 +217,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   @SuppressWarnings("unchecked")
   public static void main(String[] args) throws IOException {
+
     if (args.length == 0) {
       System.err.println("Usage:\n\tjava TERMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
@@ -224,6 +226,13 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     TERMetric<IString,String> ter = new TERMetric<IString,String>(referencesList);
     TERMetric<IString,String>.TERIncrementalMetric incMetric = ter.getIncrementalMetric();
+
+    if (System.getProperty("fastTER") != null) {
+      System.err.println("beam width: "+UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
+      System.err.println("ter shift dist: "+UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
+      ter.calc.setBeamWidth(UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
+      ter.calc.setShiftDist(UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
+    }
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
 

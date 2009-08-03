@@ -6,6 +6,7 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.util.*;
 import mt.metrics.*;
+import mt.metrics.ter.TERcalc;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -54,8 +55,8 @@ public class UnsmoothedMERT extends Thread {
   static public double MIN_PLATEAU_DIFF = 0.0;
   static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 
-  static final int DEFAULT_TER_BEAM_WIDTH = 5; // almost as good as 20
-  static final int DEFAULT_TER_SHIFT_DIST = 12; // Yaser suggested 10; I set it to 2*dlimit = 12
+  public static final int DEFAULT_TER_BEAM_WIDTH = 5; // almost as good as 20
+  public static final int DEFAULT_TER_SHIFT_DIST = 12; // Yaser suggested 10; I set it to 2*dlimit = 12
 
   private static long SEED = 8682522807148012L;
   private static Random globalRandom;
@@ -820,6 +821,7 @@ public class UnsmoothedMERT extends Thread {
             .readReferences(referenceList.split(","));
       String[] fields = evalMetric.split(":");
       TERMetric<IString,String> termetric = new TERMetric<IString, String>(references);
+      setFastTER(termetric.calc);
       if (fields.length > 1) {
         int beamWidth = Integer.parseInt(fields[1]);
         termetric.calc.setBeamWidth(beamWidth);
@@ -860,8 +862,7 @@ public class UnsmoothedMERT extends Thread {
               (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
                       new TERpMetric<IString, String>(referencesTERp));
-      System.err.printf("Maximizing %s: BLEU minus TERpA (beamWidth=%d, shiftDist=%d, terW=%f)\n",
-              evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
+      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu+2meteor")) {
     	List<List<Sequence<IString>>> referencesBleu = Metrics
             .readReferences(referenceList.split(","));
@@ -896,8 +897,7 @@ public class UnsmoothedMERT extends Thread {
               (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
                       new TERpMetric<IString, String>(referencesTERpa, false, true));
-      System.err.printf("Maximizing %s: BLEU minus TERpA (beamWidth=%d, shiftDist=%d, terW=%f)\n",
-              evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
+      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
@@ -908,12 +908,10 @@ public class UnsmoothedMERT extends Thread {
         terW = Double.parseDouble(fields[1]);
       }
       TERMetric termetric = new TERMetric<IString, String>(references);
-      termetric.calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
-      termetric.calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
+      setFastTER(termetric.calc);
       emetric = new LinearCombinationMetric<IString, String>
               (new double[] {1.0, terW}, new BLEUMetric<IString, String>(references, smoothBLEU), termetric);
-      System.err.printf("Maximizing %s: BLEU minus TER (beamWidth=%d, shiftDist=%d, terW=%f)\n",
-              evalMetric, DEFAULT_TER_BEAM_WIDTH, DEFAULT_TER_SHIFT_DIST, terW);
+      System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("wer")) {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","));
@@ -922,6 +920,15 @@ public class UnsmoothedMERT extends Thread {
       emetric = null;
       System.err.printf("Unrecognized metric: %s\n", evalMetric);
       System.exit(-1);
+    }
+  }
+
+  static void setFastTER(TERcalc calc) {
+    if (System.getProperty("fastTER") != null) {
+      System.err.println("beam width: "+UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
+      System.err.println("ter shift dist: "+UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
+      calc.setBeamWidth(UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
+      calc.setShiftDist(UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
     }
   }
 
