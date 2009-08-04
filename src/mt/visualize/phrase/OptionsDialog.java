@@ -15,12 +15,12 @@ import javax.swing.JTextField;
 
 public class OptionsDialog extends JFrame {
 
-  private static final int WIDTH = 300;
-  private static final int HEIGHT = 250;
+  private static final int DEFAULT_WIDTH = 300;
+  private static final int DEFAULT_HEIGHT = 250;
   private static final int H_TEXTBOX = 15;
   private static final int W_TEXTBOX = 40;
 
-  private PhraseController controller = null;
+  private final PhraseController controller;
   private int curHeatOptValue = 0;
   private int curRowsOptValue = 0;
 
@@ -43,7 +43,7 @@ public class OptionsDialog extends JFrame {
 
     controller = PhraseController.getInstance();
 
-    this.setSize(new Dimension(WIDTH, HEIGHT));
+    this.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
     this.setTitle("Options");
     this.setContentPane(getPanel());
   }
@@ -102,9 +102,11 @@ public class OptionsDialog extends JFrame {
   }
 
   private void updateHeatOptTextField() {
-    if(getHeatOptTextField().getText().matches("\\d+")) {
-      int newValue = Integer.parseInt(getHeatOptTextField().getText());
+    String newString = getHeatOptTextField().getText().trim();
+    if(newString.matches("\\d+")) {
+      int newValue = Integer.parseInt(newString);
       if(controller.setScoreHalfRange(newValue)) {
+        getHeatOptTextField().setText(newString);
         curHeatOptValue = newValue;
         return;
       }
@@ -144,9 +146,11 @@ public class OptionsDialog extends JFrame {
   }
 
   private void updateRowsOptTextField() {
-    if(getRowsOptTextField().getText().matches("\\d+")) {
-      int newValue = Integer.parseInt(getRowsOptTextField().getText());
+    String newString = getRowsOptTextField().getText().trim();
+    if(newString.matches("\\d+")) {
+      int newValue = Integer.parseInt(newString);
       if(controller.setNumOptionRows(newValue)) {
+        getRowsOptTextField().setText(newString);
         curRowsOptValue = newValue;
         return;
       }

@@ -107,7 +107,7 @@ public class PhraseModel {
     return true;
   }
 
-  public boolean buildLayouts(boolean rightToLeft) {
+  public boolean buildLayouts(boolean rightToLeft) {    
     for(Translation translation : translations) {
       TranslationLayout layout = new TranslationLayout(translation,rightToLeft);
       layout.createLayout(NUM_VISUAL_OPTION_ROWS);

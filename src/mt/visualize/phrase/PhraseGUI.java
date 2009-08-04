@@ -3,6 +3,8 @@ package mt.visualize.phrase;
 import java.io.File;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.WindowEvent;
@@ -90,8 +92,8 @@ public class PhraseGUI {
   private final PhraseController controller;
   private static PhraseGUI thisInstance = null;
   private boolean VERBOSE = false;
-  private static final int GUI_WIDTH = 400;
-  private static final int GUI_HEIGHT = 500;
+  private static final int DEFAULT_WIDTH = 400;
+  private static final int DEFAULT_HEIGHT = 500;
 
 
   public static PhraseGUI getInstance() {
@@ -115,7 +117,7 @@ public class PhraseGUI {
       mainFrame = new JFrame();
       mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       mainFrame.setJMenuBar(getMainMenuBar());
-      mainFrame.setSize(GUI_WIDTH, GUI_HEIGHT);
+      mainFrame.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
       mainFrame.setResizable(false);
       mainFrame.setContentPane(getMainPanel());
       mainFrame.setTitle("Phrase Viewer");
@@ -450,11 +452,11 @@ public class PhraseGUI {
       return;
 
     if(controller.setSourceFile(getSourceFileTextField().getText())) {
-      this.getStatusBar().setText("Loaded source file");
+      setStatusMessage("Loaded source file");
       toggleLoadButton();
     }
     else
-      this.getStatusBar().setText("Source file does not exist!");
+      setStatusMessage("Source file does not exist!");
   }
 
   /**
@@ -490,11 +492,11 @@ public class PhraseGUI {
       return;
 
     if(controller.setOptsFile(getOptsFileTextField().getText())) {
-      this.getStatusBar().setText("Loaded options file");
+      setStatusMessage("Loaded options file");
       toggleLoadButton();
     }
     else
-      this.getStatusBar().setText("Options file does not exist!");
+      setStatusMessage("Options file does not exist!");
   }
 
 
@@ -555,9 +557,13 @@ public class PhraseGUI {
   private JLabel getStatusBar() {
     if(statusBar == null) {
       statusBar = new JLabel("Ready");
-      statusBar.setPreferredSize(new Dimension(GUI_WIDTH,20));
+      statusBar.setPreferredSize(new Dimension(DEFAULT_WIDTH,20));
     }
     return statusBar;
+  }
+  
+  public void setStatusMessage(String msg) {
+    getStatusBar().setText(msg);
   }
 
   private JSeparator getStatusBarSeparator() {
@@ -580,10 +586,12 @@ public class PhraseGUI {
       loadButton.setText("Load");
       loadButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
+          JFrame dialog = getAnalysisDialog();
           Point loc = getMainFrame().getLocation();
           loc.translate(20, 20);
-          getAnalysisDialog().setLocation(loc);
-          getAnalysisDialog().setVisible(true);
+          dialog.setLocation(loc);
+          dialog.pack();
+          dialog.setVisible(true);
           getLoadButton().setEnabled(false);
         }
       });
@@ -609,17 +617,37 @@ public class PhraseGUI {
   private AnalysisDialog getAnalysisDialog() {
     if(analysisDialog == null) {
       analysisDialog = new AnalysisDialog();
-      analysisDialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+      analysisDialog.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       analysisDialog.addWindowListener(new AnalysisDialogHandler());
+      analysisDialog.addComponentListener(new AnalysisVisibilityListener());
     }
     return analysisDialog;
   }
   
   private class AnalysisDialogHandler extends WindowAdapter {
+    @Override
     public void windowClosing(WindowEvent e) {
+      analysisDialog.closeChildren();
+      analysisDialog.dispose();
       analysisDialog = null;
       toggleLoadButton();
     }
+  }
+  
+  private class AnalysisVisibilityListener implements ComponentListener {
+    @Override
+    public void componentHidden(ComponentEvent e) {
+      analysisDialog.closeChildren();
+      analysisDialog.dispose();
+      analysisDialog = null;
+      toggleLoadButton();
+    }
+    @Override
+    public void componentMoved(ComponentEvent e) {}
+    @Override
+    public void componentResized(ComponentEvent e) {}
+    @Override
+    public void componentShown(ComponentEvent e) {}
   }
 
   private OptionsDialog getOptionsDialog() {
