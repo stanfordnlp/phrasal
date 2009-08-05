@@ -4,8 +4,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.util.Pair;
-
 public class PhraseController {
 
   private static boolean VERBOSE = false;
@@ -81,18 +79,20 @@ public class PhraseController {
       return success;
     }
 
-    success &= phraseModel.buildLayouts(RIGHT_TO_LEFT);
-    if(!success) {
-      if(VERBOSE)
-        System.err.printf("%s: Failed to construct translation layouts\n", this.getClass().getName());
-      return success;
-    }
-
     pathModel = new PathModel(oracleFilePath,oneBestFilePath,savedPathsFilePath);
     success &= pathModel.load();
     if(!success) {
       if(VERBOSE)
         System.err.printf("%s: Unable to load stored path model from oracle and onebest files\n", this.getClass().getName());
+      return success;
+    }
+    
+    phraseModel.setPathModel(pathModel);
+    
+    success &= phraseModel.buildLayouts(RIGHT_TO_LEFT);
+    if(!success) {
+      if(VERBOSE)
+        System.err.printf("%s: Failed to construct translation layouts\n", this.getClass().getName());
       return success;
     }
 
@@ -106,24 +106,46 @@ public class PhraseController {
   //This method should make the oracle and 1 best the earliest in the list
   //(if they exist)
   public List<String> getPathNames(int translationId) {
-    return null;
+    return (isBuilt) ? pathModel.getPathNames(translationId) : null;
   }
   
-  //For AnalysisDialog
-  public Map<String,Pair<Boolean,List<VisualPhrase>>> getPaths(int translationId) {
-    return null;
+  public Map<String,List<VisualPhrase>> getPaths(int translationId) {
+    return (isBuilt) ? pathModel.getPaths(translationId) : null;
   }
   
   public boolean addPath(int translationId, String name) {
-    return true;
+    return (isBuilt) ? pathModel.addPath(translationId,name) : false;
   }
   
   public boolean deletePath(int translationId, String name) {
+    //TODO
+    
     return true;
   }
   
-  public boolean setPathState(boolean isOn, int translationId, String name) {
-    return true;
+  public int getFormatId(int translationId, String name) {
+    return (isBuilt) ? pathModel.getFormatId(translationId, name) : -1;
+  }
+  
+  public void setPathState(boolean isOn, int translationId, String name) {
+    if(isBuilt)
+      pathModel.setPathState(isOn,translationId,name);
+  }
+  
+  public boolean finishPath(int translationId, String name) {
+    return (isBuilt) ? pathModel.finishPath(translationId, name) : false;
+  }
+  
+  public void addClickStreamListener(ClickEventListener e) {
+    pathModel.addClickEventListener(e);
+  }
+  
+  public void removeClickStreamListener(ClickEventListener e) {
+    pathModel.removeClickEventListener(e);
+  }
+  
+  public int getMaxPaths() {
+    return PathModel.MAX_PATHS;
   }
   
   //WSGDEBUG end path building stuff

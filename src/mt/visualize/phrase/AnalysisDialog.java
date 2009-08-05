@@ -15,17 +15,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.JButton;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
-import javax.swing.border.LineBorder;
 
 public class AnalysisDialog extends JFrame {
 
@@ -39,6 +38,7 @@ public class AnalysisDialog extends JFrame {
   private final PhraseController controller;
   private List<Color> heatMapPalette;
   private static int scoreHalfRange = 0;
+  private static int MAX_PATHS = 0;
 
   private JSplitPane mainSplitPane = null; 
 
@@ -72,14 +72,23 @@ public class AnalysisDialog extends JFrame {
 
   private PathDialog pathDialog = null;
 
-  /**
-   * This is the default constructor
-   */
+  //TODO Adjust using color index RGB -> HSV conversion
+  private List<VisualPhrase.Format> currentCell;
+  private List<VisualPhrase.Format> previousCell;
+  private boolean isRecording = false;
+  private Stack<VisualPhrase> recordingPath = null;
+  private String recordingPathName = null;
+
   public AnalysisDialog() {
     super();
 
     controller = PhraseController.getInstance();
-    VERBOSE = controller.getVerbose();    
+    initialSetup();
+  }
+
+  public void initialSetup() {
+    VERBOSE = controller.getVerbose();
+    MAX_PATHS = controller.getMaxPaths();
 
     //Load the model asynchronously
     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -88,21 +97,76 @@ public class AnalysisDialog extends JFrame {
 
     this.setTitle("Phrase Analysis");
     this.setPreferredSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));
-    this.setMinimumSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));
+    this.setMinimumSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));  
 
-    System.err.println("Constructor");
+    setupPathColors();
   }
 
-  public void closeChildren() {
+  public void finalSetup() {
+    getNavNumTranslationsLabel().setText(String.format("of %d", controller.getNumTranslations()));
+    controller.addClickStreamListener(clickStreamListener);
+  }
+
+  public void setupPathColors() {
+    currentCell = new ArrayList<VisualPhrase.Format>(MAX_PATHS);
+    VisualPhrase.Format f = new VisualPhrase.Format();
+    f.bg = Color.CYAN;
+    f.fg = Color.WHITE;
+    currentCell.add(f);
+    f = new VisualPhrase.Format();
+    f.bg = Color.DARK_GRAY;
+    f.fg = Color.WHITE;
+    currentCell.add(f);
+    f = new VisualPhrase.Format();
+    f.bg = Color.RED;
+    f.fg = Color.WHITE;
+    currentCell.add(f);
+    f= new VisualPhrase.Format();
+    f.bg = Color.ORANGE;
+    f.fg = Color.BLACK;
+    currentCell.add(f);
+    f= new VisualPhrase.Format();
+    f.bg = Color.GREEN;
+    f.fg = Color.WHITE;
+    currentCell.add(f);
+
+    previousCell = new ArrayList<VisualPhrase.Format>(MAX_PATHS);
+    f= new VisualPhrase.Format();
+    f.bg = Color.BLUE;
+    f.fg = Color.WHITE;
+    previousCell.add(f);
+    f= new VisualPhrase.Format();
+    f.bg = Color.LIGHT_GRAY;
+    f.fg = Color.WHITE;
+    previousCell.add(f);
+    f= new VisualPhrase.Format();
+    f.bg = Color.PINK;
+    f.fg = Color.BLACK;
+    previousCell.add(f);
+    f= new VisualPhrase.Format();
+    f.bg = Color.MAGENTA;
+    f.fg = Color.WHITE;
+    previousCell.add(f);
+    f= new VisualPhrase.Format();
+    f.bg = Color.YELLOW;
+    f.fg = Color.BLACK;
+    previousCell.add(f);
+  }
+
+  public void freeResources() {
     if(pathDialog != null) {
+      pathDialog.freeResources();
       pathDialog.setVisible(false);
       pathDialog.dispose();
       pathDialog = null;
     }
+
     if(!modelBuilderThread.isDone() && !modelBuilderThread.cancel(true))
       System.err.printf("%s: Could not kill model builder thread\n",this.getClass().getName());
     if(!guiUpdaterThread.isDone() && !guiUpdaterThread.cancel(true))
       System.err.printf("%s: Could not kill gui updater thread\n",this.getClass().getName());        
+
+    controller.removeClickStreamListener(clickStreamListener);
   }
 
   private SwingWorker<Boolean,Void> modelBuilderThread = 
@@ -167,8 +231,7 @@ public class AnalysisDialog extends JFrame {
     }
     @Override
     protected void done() {
-      getNavNumTranslationsLabel().setText(String.format("of %d", controller.getNumTranslations()));
-      validate();
+      finalSetup();
     }
   };
 
@@ -411,20 +474,13 @@ public class AnalysisDialog extends JFrame {
       resetAnimationButton = new JButton("Reset");
       resetAnimationButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          resetLayout();
+          TranslationLayout currentLayout = controller.getTranslation(currentTranslationId);
+          for(VisualPhrase label : currentLayout.getLabels())
+            label.setToDefaultFormat();
         }
       });
     }
     return resetAnimationButton;
-  }
-
-  private void resetLayout() {
-    TranslationLayout currentLayout = controller.getTranslation(currentTranslationId);
-    for(JLabel label : currentLayout.getLabels()) {
-      label.setForeground(Color.BLACK);
-      label.setBackground(Color.WHITE);
-      label.setBorder(new LineBorder(Color.BLACK));
-    }
   }
 
   private JButton getHeatMapButton() {
@@ -446,11 +502,14 @@ public class AnalysisDialog extends JFrame {
     TranslationLayout currentLayout = controller.getTranslation(currentTranslationId);
 
     for(VisualPhrase vPhrase : currentLayout.getLabels()) {
-      vPhrase.setForeground(Color.WHITE);
+      VisualPhrase.Format f = new VisualPhrase.Format();
+      f.fg = Color.WHITE;
 
       int colorScore = controller.getScoreRank(vPhrase.getScore());
       colorScore = Math.abs(colorScore - scoreHalfRange);
-      vPhrase.setBackground(heatMapPalette.get(colorScore));
+      f.bg = heatMapPalette.get(colorScore);
+
+      vPhrase.setFormat(f);
     }
   }
 
@@ -495,6 +554,53 @@ public class AnalysisDialog extends JFrame {
     controller.setPathState(false, currentTranslationId, name);
     return false;
   }
+  
+  public void toggleNavigation(boolean isOn) {
+     getNavPrevButton().setEnabled(isOn);
+     getNavNextButton().setEnabled(isOn);
+     getNavSentTextField().setEditable(isOn);
+  }
 
+  public void toggleRecording(boolean isOn, String name) {
+    toggleNavigation(isOn);
+    recordingPathName = name;
+    if(isOn && !isRecording) {
+      recordingPath = new Stack<VisualPhrase>();
+    } else if(!isOn && isRecording){
+      VisualPhrase last = recordingPath.pop();
+      if(last != null) {
+        int formatId = controller.getFormatId(currentTranslationId, recordingPathName);
+        if(formatId != -1)
+          last.setFormat(currentCell.get(formatId));
+      }
+      recordingPath = null;
+    }
+    isRecording = isOn;
+  }
+  
+  private ClickEventListener clickStreamListener = 
+    new ClickEventListener() {
+    @Override
+    public void handleClickEvent(ClickEvent e) {
+      VisualPhrase clickedPhrase = (VisualPhrase) e.getSource();
+      if(isRecording) {
+        VisualPhrase last = (recordingPath.size() != 0) ? recordingPath.peek() : null;
+        if(clickedPhrase == last) {
+          last.revertToLastFormat();
+          recordingPath.pop();
+          if(recordingPath.size() != 0)
+            recordingPath.peek().revertToLastFormat();
+        } else if(!recordingPath.contains(clickedPhrase)) {
+          int formatId = controller.getFormatId(currentTranslationId, recordingPathName);
+          if(formatId != -1) {
+            if(last != null)
+              last.setFormat(previousCell.get(formatId));
+            clickedPhrase.setFormat(currentCell.get(formatId));
+            recordingPath.push(clickedPhrase);
+          }
+        }
+      }
+    }
+  };
 
 }

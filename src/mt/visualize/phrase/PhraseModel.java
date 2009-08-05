@@ -18,6 +18,8 @@ public class PhraseModel {
   private final List<Translation> translations;
   private final List<TranslationLayout> layouts;
   private ScoreDistribution scoreDist;
+  
+  private PathModel pathModel = null;
 
   private boolean isBuilt = false;
 
@@ -36,6 +38,10 @@ public class PhraseModel {
 
   public void setVerbose(boolean verbose) {
     VERBOSE = verbose;
+  }
+  
+  public void setPathModel(PathModel m) {
+    pathModel = m;
   }
 
   public boolean load(int scoreHalfRange) {
@@ -109,7 +115,7 @@ public class PhraseModel {
 
   public boolean buildLayouts(boolean rightToLeft) {    
     for(Translation translation : translations) {
-      TranslationLayout layout = new TranslationLayout(translation,rightToLeft);
+      TranslationLayout layout = new TranslationLayout(translation,rightToLeft,pathModel);
       layout.createLayout(NUM_VISUAL_OPTION_ROWS);
       layouts.add(layout);
     }

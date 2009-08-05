@@ -3,19 +3,25 @@ package mt.visualize.phrase;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 public class TranslationLayout {
 
   //This should have a Coverage set and some other shit to build
   //the panel with a gridbag layout
   private final Translation translation;
+  private final PathModel pathModel;
   private final int numOptions;
   private final List<VisualPhrase> labels;
   private int optionsApplied = 0;
@@ -26,9 +32,10 @@ public class TranslationLayout {
   //Graphical members
   private static final LineBorder cellBorder = new LineBorder(Color.BLACK);
 
-  public TranslationLayout(Translation t, boolean rightToLeft) {
+  public TranslationLayout(Translation t, boolean rightToLeft, PathModel m) {
     translation = t;
     RIGHT_TO_LEFT = rightToLeft;
+    pathModel = m;
     numOptions = t.numPhrases();
     labels = new ArrayList<VisualPhrase>();
   }
@@ -52,14 +59,11 @@ public class TranslationLayout {
     int curCol = (RIGHT_TO_LEFT) ? numColumns - 1 : 0;
     while(st.hasMoreTokens()) {
       String token = st.nextToken().intern();
-      VisualPhrase label = new VisualPhrase(token);
+      JLabel label = new JLabel(token);
       GridBagConstraints c = new GridBagConstraints();
       c.fill = GridBagConstraints.HORIZONTAL;
       c.gridx = curCol;
       c.gridy = 0;
-      
-      //WSGDEBUG
-      c.ipadx = 30;
       c.ipady = 20;
       
       panel.add(label,c);
@@ -118,32 +122,13 @@ public class TranslationLayout {
     return c;
   }
   
-
-  private class LabelMouseHandler implements MouseListener {
-
-    private boolean isHighlighted = false;
-    
+  private class LabelMouseHandler extends MouseAdapter {
+    @Override
     public void mouseClicked(MouseEvent e) {
-      JLabel label = (JLabel) e.getComponent();
-      if(isHighlighted) {
-        label.setForeground(Color.BLACK);
-        label.setBackground(Color.WHITE);
-        label.setBorder(cellBorder);
-      }
-      else {
-        label.setForeground(Color.WHITE);
-        label.setBackground(Color.GRAY);
-        label.setBorder(new LineBorder(Color.LIGHT_GRAY));
-      }
-      isHighlighted = !isHighlighted;
+      VisualPhrase label = (VisualPhrase) e.getComponent();
+      pathModel.addClickToStream(label);
     }
-
-    public void mouseEntered(MouseEvent e) {}
-    public void mouseExited(MouseEvent e) {}
-    public void mousePressed(MouseEvent e) {}
-    public void mouseReleased(MouseEvent e) {}
   }
-  
   
   private boolean testCoverage(Phrase phrase, BitSet bs) {
     int sourceWordsCovered = phrase.getEnd() - phrase.getStart() + 1;

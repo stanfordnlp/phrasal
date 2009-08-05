@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
@@ -42,14 +43,12 @@ public class PathDialog extends JFrame {
   private static final String ON = "O";
   private static final String OFF = "F";
 
-  //TODO Get these from the path model
-  private static final String ORACLE = "o";
-  private static final String ONE_BEST = "1";
-
+  private final boolean VERBOSE;
   private final AnalysisDialog parent;
   private final PhraseController controller;
   private int currentTranslationId = 0;
   private int lastPathRow = 0;
+  private String recordingPath;
 
   private JSplitPane mainSplitPane = null; 
 
@@ -83,12 +82,12 @@ public class PathDialog extends JFrame {
     killBoxFont = new Font(fontProps);
   }
 
-
   public PathDialog(AnalysisDialog parent, int currentTranslationId) {
     super();
 
     this.parent = parent;
     controller = PhraseController.getInstance();
+    VERBOSE = controller.getVerbose();
 
     pathMap = new HashMap<Integer, Map<String,PathComponents>>();
 
@@ -98,7 +97,24 @@ public class PathDialog extends JFrame {
     this.setContentPane(getMainSplitPane());
 
     this.setCurrentTranslationId(currentTranslationId);
+
+    System.err.println(currentTranslationId);
+
+    //    controller.addClickStreamListener(clickStreamListener);
   }
+
+  public void freeResources() {
+    //    controller.removeClickStreamListener(clickStreamListener);
+  }
+
+  //  private ClickEventListener clickStreamListener = 
+  //    new ClickEventListener() {
+  //      @Override
+  //      public void handleClickEvent(ClickEvent e) {
+  //        VisualPhrase phrase = (VisualPhrase) e.getSource();
+  //        System.err.printf("path dialog: %d\n", phrase.getId());
+  //      }
+  //  };
 
   private class PathComponents {
     public int row = -1;
@@ -121,8 +137,6 @@ public class PathDialog extends JFrame {
     if(pathsScrollPane == null) {
       pathsScrollPane = new JScrollPane(getPathsPanel());
       pathsScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-      //setPreferredSize
-      //setMinimumSize
     }
     return pathsScrollPane;
   }
@@ -130,7 +144,6 @@ public class PathDialog extends JFrame {
   private JPanel getPathsPanel() {
     if(pathsPanel == null) {
       pathsPanel = new JPanel(new GridBagLayout());
-
     }
     return pathsPanel;
   }
@@ -184,7 +197,7 @@ public class PathDialog extends JFrame {
     getRestartPathButton().setEnabled(inputFieldIsVisible);
     getFinishPathButton().setEnabled(inputFieldIsVisible);
     getUserInputTextField().setVisible(!inputFieldIsVisible);
-    
+
     if(inputFieldIsVisible) {
       getUserInputTextField().setText("");
       dividerLoc += 30;
@@ -192,7 +205,9 @@ public class PathDialog extends JFrame {
     } else {
       dividerLoc -= 30;
       getMainSplitPane().setDividerLocation(dividerLoc);
+      userInputTextField.setEditable(true);
       getUserInputTextField().getCaret().setVisible(true);
+      getUserInputTextField().requestFocusInWindow();
     }
 
     inputFieldIsVisible = !inputFieldIsVisible;    
@@ -202,12 +217,12 @@ public class PathDialog extends JFrame {
     if(savePathButton == null) {
       savePathButton = new JButton("Save");
       savePathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, savePathButton.getHeight()));
-//      savePathButton.addActionListener(new ActionListener() {
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//          toggleInputField();
-//        }
-//      });
+      //      savePathButton.addActionListener(new ActionListener() {
+      //        @Override
+      //        public void actionPerformed(ActionEvent e) {
+      //          toggleInputField();
+      //        }
+      //      });
     }
     return savePathButton;
   }
@@ -215,6 +230,7 @@ public class PathDialog extends JFrame {
   private JButton getRestartPathButton() {
     if(restartPathButton == null) {
       restartPathButton = new JButton("Restart");
+      restartPathButton.setEnabled(false);
       restartPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, restartPathButton.getHeight()));
     }
     return restartPathButton;
@@ -223,7 +239,15 @@ public class PathDialog extends JFrame {
   private JButton getFinishPathButton() {
     if(finishPathButton == null) {
       finishPathButton = new JButton("Finish");
+      finishPathButton.setEnabled(false);
       finishPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, finishPathButton.getHeight()));
+      finishPathButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          controller.finishPath(currentTranslationId, recordingPath);
+          toggleRecording(false,null);
+        }
+      });
     }
     return finishPathButton;
   }
@@ -232,7 +256,6 @@ public class PathDialog extends JFrame {
     if(userInputTextField == null) {
       userInputTextField = new JTextField();
       userInputTextField.setVisible(false);
-      userInputTextField.setEditable(true);
       userInputTextField.setMinimumSize(new Dimension(DEFAULT_WIDTH - 50, 30));
       userInputTextField.setMaximumSize(new Dimension(DEFAULT_WIDTH - 50, 30));
       userInputTextField.addKeyListener(new UserEnterKeyListener());
@@ -252,25 +275,55 @@ public class PathDialog extends JFrame {
     }
     public void keyReleased(KeyEvent e) {}
     public void keyTyped(KeyEvent e) {}
-
   }
 
-  private boolean createNewPath(String name) {
-    if(controller.addPath(currentTranslationId, name))
+  private void createNewPath(String name) {
+    if(controller.addPath(currentTranslationId, name)) {
       addPathToPanel(name);
-    else {
-      System.err.printf("%s: Unable to create path (%s). Does the path name already exist?\n", this.getClass().getName(), name);
-      return false;
+      togglePath(name,ON);
+      toggleRecording(true,name);
+      return;
     }
 
-    return true;
+    if(VERBOSE)
+      System.err.printf("%s: Unable to create path (%s). Does the path name already exist?\n", this.getClass().getName(), name);
+  }
+
+  private void toggleRecording(boolean isOn, String name) {
+    recordingPath = name;
+    getNewPathButton().setEnabled(!isOn);
+    getSavePathButton().setEnabled(!isOn);
+    getFinishPathButton().setEnabled(isOn);
+    getRestartPathButton().setEnabled(isOn);
+    parent.toggleRecording(isOn,name);
+
+    PathComponents comps = pathMap.get(currentTranslationId).get(name);
+    if(comps != null) {
+      comps.off.setEnabled(!isOn);
+      comps.on.setEnabled(!isOn);
+    }
+  }
+
+  private void togglePath(String name, String action) {
+    if(pathMap.get(currentTranslationId) != null) {
+      PathComponents comps = pathMap.get(currentTranslationId).get(name);
+      if(comps != null) {
+        boolean isOn = (action == ON);
+        comps.on.setSelected(isOn);
+        comps.off.setSelected(!isOn);
+        parent.togglePath(isOn, name);
+        return;
+      }
+    } 
+    if(VERBOSE)
+      System.err.printf("%s: Unable to toggle path (%s,%s)\n", this.getClass().getName(), name, action);
   }
 
   private boolean addPathToPanel(String name) {
     //Silently return for now
-    if(pathMap.get(currentTranslationId) != null && pathMap.get(this.currentTranslationId).containsKey(name))
+    if(pathMap.get(currentTranslationId) != null && pathMap.get(currentTranslationId).containsKey(name))
       return false;
-    
+
     PathComponents comps = new PathComponents();
     comps.row = lastPathRow;
 
@@ -296,7 +349,7 @@ public class PathDialog extends JFrame {
     comps.kill = new NamedLabel(name);
     comps.kill.setFont(killBoxFont);
     comps.kill.setText("X");
-    comps.kill.setBorder(new LineBorder(Color.DARK_GRAY,1));
+    comps.kill.setBorder(new LineBorder(Color.LIGHT_GRAY,1));
     comps.kill.addMouseListener(new KillButtonListener());
     pathsPanel.add(comps.kill,c);
 
@@ -305,9 +358,14 @@ public class PathDialog extends JFrame {
     comps.label = new JLabel(name);
     pathsPanel.add(comps.label,c);
 
-    Map<String,PathComponents> compsMap = (pathMap.get(currentTranslationId) == null) ?
-        new HashMap<String,PathComponents>() : pathMap.get(currentTranslationId);
-        compsMap.put(name,comps);
+    if(pathMap.get(currentTranslationId) == null) {
+      Map<String,PathComponents> compsMap = new HashMap<String,PathComponents>();
+      compsMap.put(name,comps);
+      pathMap.put(currentTranslationId, compsMap);
+    } else {
+      Map<String,PathComponents> compsMap = pathMap.get(currentTranslationId);
+      compsMap.put(name,comps);
+    }
 
     return true;
   }
@@ -315,26 +373,20 @@ public class PathDialog extends JFrame {
   private class RadioButtonListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
-      System.err.println(e.getActionCommand());
+      String[] toks = e.getActionCommand().split(ACTION_DELIM);
+      if(toks.length != 2 && VERBOSE)
+        System.err.printf("%s: Bad radio button command received %s\n", this.getClass().getName(), e.getActionCommand());
+      String name = toks[0].trim();
+      String cmd = toks[1];
+      togglePath(name,cmd);
     }
   }
 
-  private class KillButtonListener implements MouseListener {
-
+  private class KillButtonListener extends MouseAdapter {
     @Override
     public void mouseClicked(MouseEvent e) {
       System.out.println("Kill button");
     }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-    }
-    public void mousePressed(MouseEvent e) {}
-    public void mouseReleased(MouseEvent e) {}    
   }
 
   private boolean deletePath(String name) {

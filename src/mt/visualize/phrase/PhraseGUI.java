@@ -627,7 +627,7 @@ public class PhraseGUI {
   private class AnalysisDialogHandler extends WindowAdapter {
     @Override
     public void windowClosing(WindowEvent e) {
-      analysisDialog.closeChildren();
+      analysisDialog.freeResources();
       analysisDialog.dispose();
       analysisDialog = null;
       toggleLoadButton();
@@ -637,7 +637,7 @@ public class PhraseGUI {
   private class AnalysisVisibilityListener implements ComponentListener {
     @Override
     public void componentHidden(ComponentEvent e) {
-      analysisDialog.closeChildren();
+      analysisDialog.freeResources();
       analysisDialog.dispose();
       analysisDialog = null;
       toggleLoadButton();
