@@ -18,6 +18,7 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 
@@ -90,7 +91,6 @@ public class AnalysisDialog extends JFrame {
     VERBOSE = controller.getVerbose();
     MAX_PATHS = controller.getMaxPaths();
 
-    //Load the model asynchronously
     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     modelBuilderThread.execute();
     guiUpdaterThread.execute();
@@ -110,46 +110,46 @@ public class AnalysisDialog extends JFrame {
   public void setupPathColors() {
     currentCell = new ArrayList<VisualPhrase.Format>(MAX_PATHS);
     VisualPhrase.Format f = new VisualPhrase.Format();
-    f.bg = Color.CYAN;
+    f.bg = new Color(92,162,216);
     f.fg = Color.WHITE;
     currentCell.add(f);
     f = new VisualPhrase.Format();
-    f.bg = Color.DARK_GRAY;
+    f.bg = new Color(241,175,0);
     f.fg = Color.WHITE;
     currentCell.add(f);
     f = new VisualPhrase.Format();
-    f.bg = Color.RED;
+    f.bg = new Color(44,180,49);
     f.fg = Color.WHITE;
     currentCell.add(f);
     f= new VisualPhrase.Format();
-    f.bg = Color.ORANGE;
-    f.fg = Color.BLACK;
+    f.bg = new Color(233,113,23);
+    f.fg = Color.WHITE;
     currentCell.add(f);
     f= new VisualPhrase.Format();
-    f.bg = Color.GREEN;
+    f.bg = new Color(45,75,155);
     f.fg = Color.WHITE;
     currentCell.add(f);
 
     previousCell = new ArrayList<VisualPhrase.Format>(MAX_PATHS);
     f= new VisualPhrase.Format();
-    f.bg = Color.BLUE;
+    f.bg = new Color(45,75,155);
     f.fg = Color.WHITE;
     previousCell.add(f);
     f= new VisualPhrase.Format();
-    f.bg = Color.LIGHT_GRAY;
+    f.bg = new Color(233,113,23);
     f.fg = Color.WHITE;
     previousCell.add(f);
     f= new VisualPhrase.Format();
-    f.bg = Color.PINK;
-    f.fg = Color.BLACK;
-    previousCell.add(f);
-    f= new VisualPhrase.Format();
-    f.bg = Color.MAGENTA;
+    f.bg = new Color(0,120,73);
     f.fg = Color.WHITE;
     previousCell.add(f);
     f= new VisualPhrase.Format();
-    f.bg = Color.YELLOW;
-    f.fg = Color.BLACK;
+    f.bg = new Color(207,2,38);
+    f.fg = Color.WHITE;
+    previousCell.add(f);
+    f= new VisualPhrase.Format();
+    f.bg = new Color(53,58,144);
+    f.fg = Color.WHITE;
     previousCell.add(f);
   }
 
@@ -448,24 +448,72 @@ public class AnalysisDialog extends JFrame {
     return navNumTranslationsLabel;
   }
 
-  private void setCurrentTranslation(int i) {
+  private void setCurrentTranslation(int newId) {
 
-    TranslationLayout currentLayout = controller.getTranslation(i);
+    TranslationLayout currentLayout = controller.getTranslationLayout(currentTranslationId);
+    TranslationLayout newLayout = controller.getTranslationLayout(newId);
 
-    if(currentLayout == null) {
+    if(newLayout == null) {
       if(VERBOSE)
-        System.err.printf("%s: Invalid translation id %d passed from interface\n", this.getClass().getName(), i);
+        System.err.printf("%s: Invalid translation id %d passed from interface\n", this.getClass().getName(), newId);
     } else {
       //Update text fields
-      getNavSentTextField().setText(Integer.toString(i));
+      getNavSentTextField().setText(Integer.toString(newId));
       String newStatus = String.format("%d of %d options applied",
-          currentLayout.getNumOptionsApplied(),currentLayout.getNumOptions());
+          newLayout.getNumOptionsApplied(),newLayout.getNumOptions());
       getNavStatusBar().setText(newStatus);
 
-      //Re-load the viewport
-      getTranslationScrollPane().setViewportView(currentLayout.getPanel());
+      //Remove translations from current layout
+      if(controller.getPathNames(currentTranslationId) != null)
+        for(String name : controller.getPathNames(currentTranslationId))
+          removeTranslationFromLayout(currentLayout, name);
 
-      currentTranslationId = i;
+      //Add active sentences to new layout
+      if(controller.getPathNames(newId) != null)
+        for(String name : controller.getPathNames(newId))
+          if(controller.isEnabled(newId, name))
+            addTranslationToLayout(newLayout, newId, name);
+
+      //Re-load the viewport
+      getTranslationScrollPane().setViewportView(newLayout.getPanel());
+
+      currentTranslationId = newId;
+
+      getPathDialog().setCurrentTranslationId(currentTranslationId);
+    }
+  }
+
+  private void removeTranslationFromLayout(TranslationLayout layout, String name) {
+    if(layout == null) return;
+    layout.removeTranslationRow(name);
+    layout.getPanel().validate();
+    layout.getPanel().repaint();
+  }
+
+  private void addTranslationToLayout(TranslationLayout layout, int translationId, String name) {
+    if(layout == null) return;
+
+    int formatId = controller.getFormatId(translationId, name);
+    String trans = controller.getTranslation(translationId, name);
+    if(formatId != -1) {
+      VisualPhrase.Format format = previousCell.get(formatId);
+      layout.addTranslationRow(name, trans, format.bg);
+    }
+    layout.getPanel().validate();
+    layout.getPanel().repaint();
+  }
+
+  public void addTranslationToLayout(int translationId, String name) {
+    TranslationLayout currentLayout = controller.getTranslationLayout(currentTranslationId);
+    addTranslationToLayout(currentLayout,translationId, name);
+  }
+
+  public void updateTranslationOnLayout(int translationId, String name, String trans) {
+    TranslationLayout layout = controller.getTranslationLayout(translationId);
+    if(layout != null) {
+      layout.updateTranslationRow(name, trans);
+      layout.getPanel().validate();
+      layout.getPanel().repaint();
     }
   }
 
@@ -474,7 +522,7 @@ public class AnalysisDialog extends JFrame {
       resetAnimationButton = new JButton("Reset");
       resetAnimationButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          TranslationLayout currentLayout = controller.getTranslation(currentTranslationId);
+          TranslationLayout currentLayout = controller.getTranslationLayout(currentTranslationId);
           for(VisualPhrase label : currentLayout.getLabels())
             label.setToDefaultFormat();
         }
@@ -499,7 +547,7 @@ public class AnalysisDialog extends JFrame {
   }
 
   private void drawHeatMap() {
-    TranslationLayout currentLayout = controller.getTranslation(currentTranslationId);
+    TranslationLayout currentLayout = controller.getTranslationLayout(currentTranslationId);
 
     for(VisualPhrase vPhrase : currentLayout.getLabels()) {
       VisualPhrase.Format f = new VisualPhrase.Format();
@@ -549,35 +597,57 @@ public class AnalysisDialog extends JFrame {
     }
   }
 
-  public boolean togglePath(boolean isOn, String name) {
-    //WSGDEBUG
-    controller.setPathState(false, currentTranslationId, name);
+  public boolean togglePath(boolean isOn, String name) {    
+    TranslationLayout currentLayout = controller.getTranslationLayout(currentTranslationId);
+    Map<String,List<VisualPhrase>> paths = controller.getPaths(currentTranslationId);
+    int formatId = controller.getFormatId(currentTranslationId, name);
+
+    if(isOn && paths.containsKey(name) && formatId != -1) {
+      addTranslationToLayout(currentLayout,currentTranslationId,name);
+      for(VisualPhrase vp : paths.get(name))
+        vp.setFormat(previousCell.get(formatId));
+      return true;
+
+    } else if(!isOn && paths.containsKey(name)) {
+      removeTranslationFromLayout(currentLayout,name);
+      for(VisualPhrase vp : paths.get(name))
+        vp.revertToLastFormat();
+      return true;
+    }
+
     return false;
   }
-  
+
   public void toggleNavigation(boolean isOn) {
-     getNavPrevButton().setEnabled(isOn);
-     getNavNextButton().setEnabled(isOn);
-     getNavSentTextField().setEditable(isOn);
+    getNavPrevButton().setEnabled(isOn);
+    getNavNextButton().setEnabled(isOn);
+    getNavSentTextField().setEditable(isOn);
   }
 
   public void toggleRecording(boolean isOn, String name) {
-    toggleNavigation(isOn);
+    toggleNavigation(!isOn);
     recordingPathName = name;
     if(isOn && !isRecording) {
       recordingPath = new Stack<VisualPhrase>();
     } else if(!isOn && isRecording){
-      VisualPhrase last = recordingPath.pop();
-      if(last != null) {
+      if(recordingPath.size() != 0) {
         int formatId = controller.getFormatId(currentTranslationId, recordingPathName);
-        if(formatId != -1)
-          last.setFormat(currentCell.get(formatId));
+        if(formatId != -1) {
+          boolean processedTop = false;
+          while(recordingPath.size() != 0) {
+            VisualPhrase vp = recordingPath.pop();
+            vp.revertToLastFormat();
+            if(processedTop) vp.revertToLastFormat();
+            vp.setFormat(previousCell.get(formatId));
+            processedTop = true;
+          }
+        }
       }
       recordingPath = null;
     }
     isRecording = isOn;
   }
-  
+
   private ClickEventListener clickStreamListener = 
     new ClickEventListener() {
     @Override

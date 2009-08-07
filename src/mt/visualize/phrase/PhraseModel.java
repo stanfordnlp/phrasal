@@ -134,7 +134,7 @@ public class PhraseModel {
     return isBuilt;
   }
 
-  public TranslationLayout getTranslation(int i) {
+  public TranslationLayout getTranslationLayout(int i) {
     return (layouts != null && i > 0 && i <= getNumTranslations()) ? layouts.get(i - 1) : null;
   }
 

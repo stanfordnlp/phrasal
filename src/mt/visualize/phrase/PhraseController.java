@@ -101,10 +101,15 @@ public class PhraseController {
     return isBuilt;
   }
   
-  //WSGDEBUG path building stuff
+  public String getTranslation(int translationId, String name) {
+    return (isBuilt) ? pathModel.getTranslation(translationId, name) : null;
+  }
   
-  //This method should make the oracle and 1 best the earliest in the list
-  //(if they exist)
+  public void setTranslation(int translationId, String name, String translation) {
+    if(isBuilt)
+      pathModel.setTranslation(translationId, name, translation);
+  }
+  
   public List<String> getPathNames(int translationId) {
     return (isBuilt) ? pathModel.getPathNames(translationId) : null;
   }
@@ -113,14 +118,17 @@ public class PhraseController {
     return (isBuilt) ? pathModel.getPaths(translationId) : null;
   }
   
+  public boolean isEnabled(int translationId, String name) {
+    return (isBuilt) ? pathModel.isEnabled(translationId, name) : false;
+  }
+  
   public boolean addPath(int translationId, String name) {
     return (isBuilt) ? pathModel.addPath(translationId,name) : false;
   }
   
-  public boolean deletePath(int translationId, String name) {
-    //TODO
-    
-    return true;
+  public void deletePath(int translationId, String name) {
+    if(isBuilt)
+      pathModel.deletePath(translationId, name);
   }
   
   public int getFormatId(int translationId, String name) {
@@ -178,8 +186,8 @@ public class PhraseController {
     PhraseGUI.show();
   }
 
-  public TranslationLayout getTranslation(int i) {
-    return (isBuilt) ? phraseModel.getTranslation(i) : null;
+  public TranslationLayout getTranslationLayout(int translationId) {
+    return (isBuilt) ? phraseModel.getTranslationLayout(translationId) : null;
   }
 
   public void normalizePhraseScores(boolean newState) {

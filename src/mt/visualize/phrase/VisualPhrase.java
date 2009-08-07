@@ -9,8 +9,10 @@ import javax.swing.border.LineBorder;
 
 public class VisualPhrase extends JLabel {
 
-  private double score = 0.0;
-  private int id = -1;
+  private final double score;
+  private final int id;
+  private final int fStart;
+  private final int fEnd;
 
   private Stack<Format> formats;
   private Format currentFormat = null;
@@ -23,19 +25,19 @@ public class VisualPhrase extends JLabel {
     DEFAULT_FORMAT.border = new LineBorder(Color.BLACK);
   }
 
-  public VisualPhrase(String text) {
-    super(text);
-    setToDefaultFormat();
-  }
-
-  public VisualPhrase(String text, double score) {
-    this(text);
-    this.score = score;
-  }
-
-  public VisualPhrase(String text, double score, int id) {
-    this(text, score);
+  public VisualPhrase(Phrase p, int id) {
+    super(p.getPhrase());
+    
+    score = p.getScore();
     this.id = id;
+    fStart = p.getStart();
+    fEnd = p.getEnd();
+    
+    setToDefaultFormat();
+    setOpaque(true);
+    
+    String toolTip = String.format("<html>rank: %d<br>score: %.4f</html>", id, score);
+    setToolTipText(toolTip);
   }
 
   public double getScore() {
@@ -44,6 +46,14 @@ public class VisualPhrase extends JLabel {
 
   public int getId() {
     return id;
+  }
+  
+  public int getStart() {
+    return fStart;
+  }
+  
+  public int getEnd() {
+    return fEnd;
   }
 
   public void setFormat(Format newFormat) {

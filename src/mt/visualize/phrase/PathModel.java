@@ -37,6 +37,7 @@ public class PathModel {
     public List<VisualPhrase> phrases = null;
     public int formatId = -1;
     public int transId = -1;
+    public String trans = null;
   }
 
   public boolean load() {
@@ -50,7 +51,7 @@ public class PathModel {
       paths.put(translationId, new ArrayList<Path>());
 
     int numPaths = paths.get(translationId).size();
-    
+
     if(numPaths < MAX_PATHS) {
       currentPath = new Path();
       currentPath.transId = translationId;
@@ -65,7 +66,7 @@ public class PathModel {
   }
 
   public int getFormatId(int translationId, String name) {
-    if(currentPath.transId == translationId && currentPath.name.equals(name))
+    if(currentPath != null && currentPath.transId == translationId && currentPath.name.equals(name))
       return currentPath.formatId;
     else if(paths.get(translationId) != null)
       for(Path p : paths.get(translationId))
@@ -74,22 +75,33 @@ public class PathModel {
 
     return -1;
   }
-  
+
+  public String getTranslation(int translationId, String name) {
+    Path p = getPath(translationId, name);
+    return (p == null) ? null : p.trans;
+  }
+
+  public void setTranslation(int translationId, String name, String translation) {
+    Path p = getPath(translationId, name);
+    if(p != null)
+      p.trans = translation;
+  }
+
   public boolean finishPath(int translationId, String name) {
     if(currentPath == null || currentPath.transId != translationId || 
         !currentPath.name.equals(name) || paths.get(translationId).size() >= MAX_PATHS)
       return false;
-    
+
     paths.get(translationId).add(currentPath);
     currentPath = null;
-    
+
     return true;
   }
 
   public Map<String,List<VisualPhrase>> getPaths(int translationId) {
     if(paths.get(translationId) == null)
       return null;
-    
+
     Map<String,List<VisualPhrase>> ret = new HashMap<String,List<VisualPhrase>>();
     for(Path p : paths.get(translationId))
       ret.put(p.name.intern(), Collections.unmodifiableList(p.phrases));
@@ -116,18 +128,33 @@ public class PathModel {
         names.add(p.name.intern());
       return names;
     }
-      return null;
+    return null;
   }
 
   public void setPathState(boolean isOn, int translationId, String name) {
+    Path p = getPath(translationId, name);
+    if(p != null)
+      p.enabled = isOn;
+  }
+
+  public boolean isEnabled(int translationId, String name) {
+    Path p = getPath(translationId, name);
+    return (p == null) ? false : p.enabled;
+  }
+
+  public void deletePath(int translationId, String name) {
+    Path p = getPath(translationId, name);
+    if(p != null)
+      paths.get(translationId).remove(p);
+  }
+
+  private Path getPath(int translationId, String name) {
     if(paths.get(translationId) != null)
       for(Path p : paths.get(translationId))
         if(p.name.equals(name))
-          p.enabled = isOn;
+          return p;
+    return null;
   }
-
-
-
 
 
 
@@ -155,6 +182,5 @@ public class PathModel {
   public void removeClickEventListener(ClickEventListener listener) {
     listenerList.remove(ClickEventListener.class, listener);
   }
-
 
 }

@@ -1,6 +1,7 @@
 package mt.visualize.phrase;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -8,14 +9,14 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -27,19 +28,15 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
 
-//TODO Need to figure out how to remove inline paths
-//and move the other paths up or down in the gridbaglayout
-
 public class PathDialog extends JFrame {
 
   private static final int DEFAULT_WIDTH = 170;
   private static final int DEFAULT_HEIGHT = 300;
   private static final int BUTTON_WIDTH = 80;
   private static final int BUTTON_PANEL_HEIGHT = 60;
-  private static final int MIN_PATH_PANEL_HEIGHT = 200;
 
   //For radio button
-  private static final String ACTION_DELIM = "+";
+  private static final String ACTION_DELIM = "#";
   private static final String ON = "O";
   private static final String OFF = "F";
 
@@ -48,8 +45,12 @@ public class PathDialog extends JFrame {
   private final PhraseController controller;
   private int currentTranslationId = 0;
   private int lastPathRow = 0;
-  private String recordingPath;
-
+  private String recordingPathName;
+  private boolean isRecording = false;
+  private StringBuilder recordingTranslation = null;
+  private Stack<VisualPhrase> recordingPath;
+  private Stack<Integer> translationSplits;
+  
   private JSplitPane mainSplitPane = null; 
 
   private JScrollPane pathsScrollPane = null;
@@ -69,6 +70,7 @@ public class PathDialog extends JFrame {
   private JTextField userInputTextField = null;
 
   private final Map<Integer,Map<String,PathComponents>> pathMap;
+
 
   //Setup the font for the kill button
   private static final Font killBoxFont;
@@ -98,23 +100,43 @@ public class PathDialog extends JFrame {
 
     this.setCurrentTranslationId(currentTranslationId);
 
-    System.err.println(currentTranslationId);
-
-    //    controller.addClickStreamListener(clickStreamListener);
+    controller.addClickStreamListener(clickStreamListener);
   }
 
   public void freeResources() {
-    //    controller.removeClickStreamListener(clickStreamListener);
+    controller.removeClickStreamListener(clickStreamListener);
   }
 
-  //  private ClickEventListener clickStreamListener = 
-  //    new ClickEventListener() {
-  //      @Override
-  //      public void handleClickEvent(ClickEvent e) {
-  //        VisualPhrase phrase = (VisualPhrase) e.getSource();
-  //        System.err.printf("path dialog: %d\n", phrase.getId());
-  //      }
-  //  };
+  private ClickEventListener clickStreamListener = new ClickEventListener() {
+    @Override
+    public void handleClickEvent(ClickEvent e) {
+      VisualPhrase vp = (VisualPhrase) e.getSource();
+
+      if(isRecording && recordingPath.size() == 0) {
+        recordingTranslation.append(vp.getText() + ' ');
+        parent.addTranslationToLayout(currentTranslationId, recordingPathName);
+        parent.updateTranslationOnLayout(currentTranslationId, recordingPathName, recordingTranslation.toString());
+
+        recordingPath.push(vp);
+        translationSplits.push(0);
+
+      } else if(isRecording) {
+        VisualPhrase last = recordingPath.peek();
+
+        if(vp == last) {
+          recordingTranslation.delete(translationSplits.pop(), recordingTranslation.length());
+          recordingPath.pop();
+
+        } else if(!recordingPath.contains(vp)){
+          translationSplits.push(recordingTranslation.length());
+          recordingTranslation.append(vp.getText() + ' ');
+          recordingPath.push(vp);
+        }
+
+        parent.updateTranslationOnLayout(currentTranslationId, recordingPathName, recordingTranslation.toString());
+      }
+    }
+  };
 
   private class PathComponents {
     public int row = -1;
@@ -192,11 +214,14 @@ public class PathDialog extends JFrame {
   private void toggleInputField() {
     int dividerLoc = getMainSplitPane().getDividerLocation();
 
-    getNewPathButton().setEnabled(inputFieldIsVisible);
-    getSavePathButton().setEnabled(inputFieldIsVisible);
-    getRestartPathButton().setEnabled(inputFieldIsVisible);
-    getFinishPathButton().setEnabled(inputFieldIsVisible);
     getUserInputTextField().setVisible(!inputFieldIsVisible);
+
+    if(!isRecording) {
+      getNewPathButton().setEnabled(inputFieldIsVisible);
+      getSavePathButton().setEnabled(inputFieldIsVisible);
+      getRestartPathButton().setEnabled(inputFieldIsVisible);
+      getFinishPathButton().setEnabled(inputFieldIsVisible);
+    }
 
     if(inputFieldIsVisible) {
       getUserInputTextField().setText("");
@@ -217,6 +242,7 @@ public class PathDialog extends JFrame {
     if(savePathButton == null) {
       savePathButton = new JButton("Save");
       savePathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, savePathButton.getHeight()));
+      //TODO Implement save functionality
       //      savePathButton.addActionListener(new ActionListener() {
       //        @Override
       //        public void actionPerformed(ActionEvent e) {
@@ -229,9 +255,10 @@ public class PathDialog extends JFrame {
 
   private JButton getRestartPathButton() {
     if(restartPathButton == null) {
-      restartPathButton = new JButton("Restart");
+      restartPathButton = new JButton("TODO");
       restartPathButton.setEnabled(false);
       restartPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, restartPathButton.getHeight()));
+      //TODO Implement restart functionality
     }
     return restartPathButton;
   }
@@ -244,8 +271,7 @@ public class PathDialog extends JFrame {
       finishPathButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-          controller.finishPath(currentTranslationId, recordingPath);
-          toggleRecording(false,null);
+          toggleRecording(false,recordingPathName);
         }
       });
     }
@@ -263,7 +289,7 @@ public class PathDialog extends JFrame {
     return userInputTextField;
   }
 
-  private class UserEnterKeyListener implements KeyListener {
+  private class UserEnterKeyListener extends KeyAdapter {
     @Override
     public void keyPressed(KeyEvent e) {
       if(e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -273,15 +299,12 @@ public class PathDialog extends JFrame {
         toggleInputField();
       }
     }
-    public void keyReleased(KeyEvent e) {}
-    public void keyTyped(KeyEvent e) {}
   }
 
   private void createNewPath(String name) {
     if(controller.addPath(currentTranslationId, name)) {
-      addPathToPanel(name);
-      togglePath(name,ON);
-      toggleRecording(true,name);
+      addPathToPanel(name,false);
+      toggleRecording(true, name);
       return;
     }
 
@@ -289,29 +312,44 @@ public class PathDialog extends JFrame {
       System.err.printf("%s: Unable to create path (%s). Does the path name already exist?\n", this.getClass().getName(), name);
   }
 
-  private void toggleRecording(boolean isOn, String name) {
-    recordingPath = name;
+  private void toggleRecording(boolean isOn, String name) {    
+    if(isOn) {
+      recordingTranslation = new StringBuilder();
+      recordingPath = new Stack<VisualPhrase>();
+      translationSplits = new Stack<Integer>();
+    } else {
+      controller.finishPath(currentTranslationId, name);
+      controller.setTranslation(currentTranslationId, name, recordingTranslation.toString());
+    }
+
+    parent.toggleRecording(isOn,name);
+
     getNewPathButton().setEnabled(!isOn);
     getSavePathButton().setEnabled(!isOn);
     getFinishPathButton().setEnabled(isOn);
     getRestartPathButton().setEnabled(isOn);
-    parent.toggleRecording(isOn,name);
 
     PathComponents comps = pathMap.get(currentTranslationId).get(name);
     if(comps != null) {
       comps.off.setEnabled(!isOn);
+      comps.off.setSelected(isOn);
       comps.on.setEnabled(!isOn);
+      comps.on.setSelected(!isOn);
     }
+
+    recordingPathName = (isOn) ? name : null;
+    isRecording = isOn;
   }
 
   private void togglePath(String name, String action) {
     if(pathMap.get(currentTranslationId) != null) {
       PathComponents comps = pathMap.get(currentTranslationId).get(name);
       if(comps != null) {
-        boolean isOn = (action == ON);
+        boolean isOn = (action.equals(ON));
         comps.on.setSelected(isOn);
         comps.off.setSelected(!isOn);
         parent.togglePath(isOn, name);
+        controller.setPathState(isOn, currentTranslationId, name);
         return;
       }
     } 
@@ -319,55 +357,55 @@ public class PathDialog extends JFrame {
       System.err.printf("%s: Unable to toggle path (%s,%s)\n", this.getClass().getName(), name, action);
   }
 
-  private boolean addPathToPanel(String name) {
-    //Silently return for now
-    if(pathMap.get(currentTranslationId) != null && pathMap.get(currentTranslationId).containsKey(name))
-      return false;
+  private boolean addPathToPanel(String name, boolean isEnabled) {
+    PathComponents comps = (pathMap.get(currentTranslationId) != null && pathMap.get(currentTranslationId).containsKey(name)) ? 
+        pathMap.get(currentTranslationId).get(name) : new PathComponents();
 
-    PathComponents comps = new PathComponents();
-    comps.row = lastPathRow;
+        comps.row = lastPathRow;
 
-    GridBagConstraints c = new GridBagConstraints();
-    c.insets = new Insets(1,1,1,1);
-    c.gridy = lastPathRow++;
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(1,1,1,1);
+        c.gridy = lastPathRow++;
 
-    name = name.intern();
+        name = name.intern();
 
-    c.gridx = 0;
-    comps.on = new JRadioButton();
-    comps.on.setActionCommand(name + ACTION_DELIM + ON);
-    comps.on.addActionListener(new RadioButtonListener());
-    pathsPanel.add(comps.on,c);
+        c.gridx = 0;
+        comps.on = new JRadioButton();
+        comps.on.setActionCommand(name + ACTION_DELIM + ON);
+        comps.on.setSelected(isEnabled);
+        comps.on.addActionListener(new RadioButtonListener());
+        getPathsPanel().add(comps.on,c);
 
-    (c.gridx)++;
-    comps.off = new JRadioButton();
-    comps.off.setActionCommand(name + ACTION_DELIM + OFF);
-    comps.off.addActionListener(new RadioButtonListener());
-    pathsPanel.add(comps.off,c);
+        (c.gridx)++;
+        comps.off = new JRadioButton();
+        comps.off.setActionCommand(name + ACTION_DELIM + OFF);
+        comps.off.addActionListener(new RadioButtonListener());
+        comps.off.setSelected(!isEnabled);
+        getPathsPanel().add(comps.off,c);
 
-    (c.gridx)++;
-    comps.kill = new NamedLabel(name);
-    comps.kill.setFont(killBoxFont);
-    comps.kill.setText("X");
-    comps.kill.setBorder(new LineBorder(Color.LIGHT_GRAY,1));
-    comps.kill.addMouseListener(new KillButtonListener());
-    pathsPanel.add(comps.kill,c);
+        (c.gridx)++;
+        comps.kill = new NamedLabel(name);
+        comps.kill.setFont(killBoxFont);
+        comps.kill.setText("X");
+        comps.kill.setBorder(new LineBorder(Color.LIGHT_GRAY,1));
+        comps.kill.addMouseListener(new KillButtonListener());
+        getPathsPanel().add(comps.kill,c);
 
-    (c.gridx)++;
-    c.insets = new Insets(1,4,1,1);
-    comps.label = new JLabel(name);
-    pathsPanel.add(comps.label,c);
+        (c.gridx)++;
+        c.insets = new Insets(1,4,1,1);
+        comps.label = new JLabel(name);
+        getPathsPanel().add(comps.label,c);
 
-    if(pathMap.get(currentTranslationId) == null) {
-      Map<String,PathComponents> compsMap = new HashMap<String,PathComponents>();
-      compsMap.put(name,comps);
-      pathMap.put(currentTranslationId, compsMap);
-    } else {
-      Map<String,PathComponents> compsMap = pathMap.get(currentTranslationId);
-      compsMap.put(name,comps);
-    }
+        if(pathMap.get(currentTranslationId) == null) {
+          Map<String,PathComponents> compsMap = new HashMap<String,PathComponents>();
+          compsMap.put(name,comps);
+          pathMap.put(currentTranslationId, compsMap);
+        } else {
+          Map<String,PathComponents> compsMap = pathMap.get(currentTranslationId);
+          compsMap.put(name,comps);
+        }
 
-    return true;
+        return true;
   }
 
   private class RadioButtonListener implements ActionListener {
@@ -377,43 +415,52 @@ public class PathDialog extends JFrame {
       if(toks.length != 2 && VERBOSE)
         System.err.printf("%s: Bad radio button command received %s\n", this.getClass().getName(), e.getActionCommand());
       String name = toks[0].trim();
-      String cmd = toks[1];
-      togglePath(name,cmd);
+      String cmd = toks[1].trim();
+      togglePath(name, cmd);
     }
   }
 
   private class KillButtonListener extends MouseAdapter {
     @Override
     public void mouseClicked(MouseEvent e) {
-      System.out.println("Kill button");
+      NamedLabel l = (NamedLabel) e.getComponent();
+      String pathName = l.getId();
+      deletePath(pathName);
+    }
+    @Override
+    public void mouseEntered(MouseEvent e) {
+      NamedLabel l = (NamedLabel) e.getComponent();
+      l.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
+    @Override 
+    public void mouseExited(MouseEvent e) {
+      NamedLabel l = (NamedLabel) e.getComponent();
+      l.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
   }
 
-  private boolean deletePath(String name) {
-    parent.togglePath(false, name);
+  private void deletePath(String name) {
+    togglePath(name, OFF);
     controller.deletePath(currentTranslationId, name);
-    //REMOVE Path from panel
-    return false;
+    if(pathMap.get(currentTranslationId) != null)
+      pathMap.get(currentTranslationId).remove(name);
+
+    setCurrentTranslationId(currentTranslationId);
   }
 
   public void setCurrentTranslationId(int id) {
     currentTranslationId = id;
 
-    //TODO Need to add functionality for switching from a previous
-    //set of paths
+    pathsPanel = new JPanel(new GridBagLayout());
+    lastPathRow = 0;
 
     if(controller.getPathNames(id) != null)
       for(String name : controller.getPathNames(id))
-        addPathToPanel(name);    
+        addPathToPanel(name, controller.isEnabled(id, name));
+
+    getPathsScrollPane().setViewportView(this.getPathsPanel());
   }
 
 
-
-
-
-
-
   private static final long serialVersionUID = 6906498324826864423L;
-
-
 }
