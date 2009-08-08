@@ -25,21 +25,20 @@ public class Translation {
   }
   
   public void addPhrase(double score, String english, String coverage) {
-    Phrase phrase = new Phrase(english);
-    phrase.setScore(score);
+    int start, end;
     
     coverage = coverage.replaceAll("\\{|\\}", "");
     String[] indices = coverage.split(",");
-    if(indices.length == 1) {
-      int index = Integer.parseInt(indices[0].trim());
-      phrase.setSpan(index, index);
-    } else {
-      int start = Integer.parseInt(indices[0].trim());
-      int end = Integer.parseInt(indices[indices.length - 1].trim());
-      phrase.setSpan(start, end);
+    if(indices.length == 0)
+      return;
+    else if(indices.length == 1)
+      start = end = Integer.parseInt(indices[0].trim());
+    else {
+      start = Integer.parseInt(indices[0].trim());
+      end = Integer.parseInt(indices[indices.length - 1].trim());
     }
     
-    phrases.add(phrase);
+    phrases.add(new Phrase(english,start,end,score));
   }
   
   public String getSource() {

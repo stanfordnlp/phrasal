@@ -3,13 +3,9 @@ package mt.visualize.phrase;
 import java.io.File;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.WindowEvent;
-import java.awt.BorderLayout;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import java.awt.Point;
 import javax.swing.JLabel;
@@ -18,7 +14,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JFrame;
-import javax.swing.JDialog;
 import javax.swing.JButton;
 import javax.swing.GroupLayout;
 import javax.swing.JFileChooser;
@@ -27,12 +22,13 @@ import javax.swing.JSeparator;
 
 import java.awt.Dimension;
 import javax.swing.JTextField;
+
 import java.awt.event.WindowAdapter;
 
-public class PhraseGUI {
+public final class PhraseGUI {
 
   //GUI Members
-  private JFrame mainFrame = null;  //  @jve:decl-index=0:visual-constraint="10,10"
+  private JFrame mainFrame = null;
 
   private JPanel mainPanel = null;
 
@@ -42,25 +38,13 @@ public class PhraseGUI {
 
   private JMenu optionsMenu = null;
 
-  private JMenu helpMenu = null;
-
   private JMenuItem exitMenuItem = null;
-
-  private JMenuItem aboutMenuItem = null;
 
   private JMenuItem openOptionsDialogMenuItem = null;
 
   private JCheckBoxMenuItem rightLeftMenuItem = null;
 
-  private JCheckBoxMenuItem verboseMenuItem = null;
-
   private JCheckBoxMenuItem normScoresMenuItem = null;
-
-  private JDialog aboutDialog = null;
-
-  private JPanel aboutContentPane = null;
-
-  private JLabel aboutVersionLabel = null;
 
   private GroupLayout mainLayout = null;
 
@@ -95,7 +79,6 @@ public class PhraseGUI {
   private static final int DEFAULT_WIDTH = 400;
   private static final int DEFAULT_HEIGHT = 500;
 
-
   public static PhraseGUI getInstance() {
     if(thisInstance == null)
       thisInstance = new PhraseGUI();
@@ -107,11 +90,6 @@ public class PhraseGUI {
     VERBOSE = controller.getVerbose();
   }
 
-  /**
-   * This method initializes jFrame
-   * 
-   * @return javax.swing.JFrame
-   */
   private JFrame getMainFrame() {
     if (mainFrame == null) {
       mainFrame = new JFrame();
@@ -125,11 +103,6 @@ public class PhraseGUI {
     return mainFrame;
   }
 
-  /**
-   * This method initializes jContentPane
-   * 
-   * @return javax.swing.JPanel
-   */
   private JPanel getMainPanel() {
     if (mainPanel == null) {
       mainPanel = new JPanel();
@@ -137,7 +110,6 @@ public class PhraseGUI {
         mainLayout = new GroupLayout(mainPanel);
       mainPanel.setLayout(mainLayout);
 
-      //Setup the layout
       mainLayout.setAutoCreateGaps(true);
       mainLayout.setAutoCreateContainerGaps(true);
       mainLayout.setHorizontalGroup(mainLayout.createSequentialGroup()
@@ -192,26 +164,15 @@ public class PhraseGUI {
     return optsLabel;
   }
 
-  /**
-   * This method initializes jJMenuBar	
-   * 	
-   * @return javax.swing.JMenuBar	
-   */
   private JMenuBar getMainMenuBar() {
     if (mainMenuBar == null) {
       mainMenuBar = new JMenuBar();
       mainMenuBar.add(getFileMenu());
       mainMenuBar.add(getOptionsMenu());
-      mainMenuBar.add(getHelpMenu());
     }
     return mainMenuBar;
   }
 
-  /**
-   * This method initializes jMenu	
-   * 	
-   * @return javax.swing.JMenu	
-   */
   private JMenu getFileMenu() {
     if (fileMenu == null) {
       fileMenu = new JMenu();
@@ -221,17 +182,11 @@ public class PhraseGUI {
     return fileMenu;
   }
 
-  /**
-   * This method initializes jMenu	
-   * 	
-   * @return javax.swing.JMenu	
-   */
   private JMenu getOptionsMenu() {
     if (optionsMenu == null) {
       optionsMenu = new JMenu();
       optionsMenu.setText("Options");
       optionsMenu.add(getRightLeftMenuItem());
-      optionsMenu.add(getVerboseMenuItem());
       optionsMenu.add(getNormScoresMenuItem());
       optionsMenu.add(new JSeparator());
       optionsMenu.add(getOpenOptionsDialogMenuItem());
@@ -239,25 +194,6 @@ public class PhraseGUI {
     return optionsMenu;
   }
 
-  /**
-   * This method initializes jMenu	
-   * 	
-   * @return javax.swing.JMenu	
-   */
-  private JMenu getHelpMenu() {
-    if (helpMenu == null) {
-      helpMenu = new JMenu();
-      helpMenu.setText("Help");
-      helpMenu.add(getAboutMenuItem());
-    }
-    return helpMenu;
-  }
-
-  /**
-   * This method initializes jMenuItem	
-   * 	
-   * @return javax.swing.JMenuItem	
-   */
   private JMenuItem getExitMenuItem() {
     if (exitMenuItem == null) {
       exitMenuItem = new JMenuItem();
@@ -271,76 +207,6 @@ public class PhraseGUI {
     return exitMenuItem;
   }
 
-  /**
-   * This method initializes jMenuItem	
-   * 	
-   * @return javax.swing.JMenuItem	
-   */
-  private JMenuItem getAboutMenuItem() {
-    if (aboutMenuItem == null) {
-      aboutMenuItem = new JMenuItem();
-      aboutMenuItem.setText("About");
-      aboutMenuItem.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          JDialog aboutDialog = getAboutDialog();
-          aboutDialog.pack();
-          Point loc = getMainFrame().getLocation();
-          loc.translate(20, 20);
-          aboutDialog.setLocation(loc);
-          aboutDialog.setVisible(true);
-        }
-      });
-    }
-    return aboutMenuItem;
-  }
-
-  /**
-   * This method initializes aboutDialog	
-   * 	
-   * @return javax.swing.JDialog
-   */
-  private JDialog getAboutDialog() {
-    if (aboutDialog == null) {
-      aboutDialog = new JDialog(getMainFrame(), true);
-      aboutDialog.setTitle("About");
-      aboutDialog.setContentPane(getAboutContentPane());
-    }
-    return aboutDialog;
-  }
-
-  /**
-   * This method initializes aboutContentPane
-   * 
-   * @return javax.swing.JPanel
-   */
-  private JPanel getAboutContentPane() {
-    if (aboutContentPane == null) {
-      aboutContentPane = new JPanel();
-      aboutContentPane.setLayout(new BorderLayout());
-      aboutContentPane.add(getAboutVersionLabel(), BorderLayout.CENTER);
-    }
-    return aboutContentPane;
-  }
-
-  /**
-   * This method initializes aboutVersionLabel	
-   * 	
-   * @return javax.swing.JLabel	
-   */
-  private JLabel getAboutVersionLabel() {
-    if (aboutVersionLabel == null) {
-      aboutVersionLabel = new JLabel();
-      aboutVersionLabel.setText("Version 1.0");
-      aboutVersionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-    }
-    return aboutVersionLabel;
-  }
-
-  /**
-   * This method initializes jMenuItem	
-   * 	
-   * @return javax.swing.JMenuItem	
-   */
   private JCheckBoxMenuItem getRightLeftMenuItem() {
     if (rightLeftMenuItem == null) {
       rightLeftMenuItem = new JCheckBoxMenuItem("Right-To-Left Source");
@@ -353,26 +219,6 @@ public class PhraseGUI {
       });
     }
     return rightLeftMenuItem;
-  }
-
-  /**
-   * This method initializes jMenuItem	
-   * 	
-   * @return javax.swing.JMenuItem	
-   */
-  private JCheckBoxMenuItem getVerboseMenuItem() {
-    if (verboseMenuItem == null) {
-      verboseMenuItem = new JCheckBoxMenuItem("Verbose Output");
-      verboseMenuItem.setSelected(VERBOSE);
-      verboseMenuItem.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          boolean newState = getVerboseMenuItem().isSelected();
-          controller.setVerbose(newState);
-          VERBOSE = newState;
-        }
-      });
-    }
-    return verboseMenuItem;
   }
 
   private JCheckBoxMenuItem getNormScoresMenuItem() {
@@ -419,11 +265,6 @@ public class PhraseGUI {
 
   }
 
-  /**
-   * This method initializes jTextField	
-   * 	
-   * @return javax.swing.JTextField	
-   */
   private JTextField getSourceFileTextField() {
     if (sourceFileTextField == null) {
       sourceFileTextField  = (controller.getSourceFilePath() != null) ? 
@@ -459,11 +300,6 @@ public class PhraseGUI {
       setStatusMessage("Source file does not exist!");
   }
 
-  /**
-   * This method initializes jTextField	
-   * 	
-   * @return javax.swing.JTextField	
-   */
   private JTextField getOptsFileTextField() {
     if (optsFileTextField == null) {
       optsFileTextField = (controller.getOptsFilePath() != null) ?
@@ -500,11 +336,6 @@ public class PhraseGUI {
   }
 
 
-  /**
-   * This method initializes jButton	
-   * 	
-   * @return javax.swing.JButton	
-   */
   private JButton getSourceFileButton() {
     if (sourceFileButton == null) {
       sourceFileButton = new JButton();
@@ -527,11 +358,6 @@ public class PhraseGUI {
     return sourceFileButton;
   }
 
-  /**
-   * This method initializes jButton1	
-   * 	
-   * @return javax.swing.JButton	
-   */
   private JButton getOptsFileButton() {
     if (optsFileButton == null) {
       optsFileButton = new JButton();
@@ -561,7 +387,7 @@ public class PhraseGUI {
     }
     return statusBar;
   }
-  
+
   public void setStatusMessage(String msg) {
     getStatusBar().setText(msg);
   }
@@ -573,11 +399,6 @@ public class PhraseGUI {
     return statusBarSeparator;
   }
 
-  /**
-   * This method initializes jButton	
-   * 	
-   * @return javax.swing.JButton	
-   */
   private JButton getLoadButton() {
     if (loadButton == null) {
       loadButton = new JButton();
@@ -592,7 +413,7 @@ public class PhraseGUI {
           dialog.setLocation(loc);
           dialog.pack();
           dialog.setVisible(true);
-          getLoadButton().setEnabled(false);
+          toggleLoadButton();
         }
       });
     }
@@ -601,16 +422,16 @@ public class PhraseGUI {
 
   public void toggleLoadButton() {
     if(getSourceFileTextField().getText().isEmpty() ||
-        getOptsFileTextField().getText().isEmpty())
+        getOptsFileTextField().getText().isEmpty() || 
+        (analysisDialog != null && analysisDialog.isVisible()))
       getLoadButton().setEnabled(false);
     else
       getLoadButton().setEnabled(true);
   }
 
   private JFileChooser getFileChooser() {
-    if (fileChooser == null) {
+    if (fileChooser == null)
       fileChooser = new JFileChooser();
-    }
     return fileChooser;
   }
 
@@ -619,11 +440,10 @@ public class PhraseGUI {
       analysisDialog = new AnalysisDialog();
       analysisDialog.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       analysisDialog.addWindowListener(new AnalysisDialogHandler());
-      analysisDialog.addComponentListener(new AnalysisVisibilityListener());
     }
     return analysisDialog;
   }
-  
+
   private class AnalysisDialogHandler extends WindowAdapter {
     @Override
     public void windowClosing(WindowEvent e) {
@@ -632,22 +452,6 @@ public class PhraseGUI {
       analysisDialog = null;
       toggleLoadButton();
     }
-  }
-  
-  private class AnalysisVisibilityListener implements ComponentListener {
-    @Override
-    public void componentHidden(ComponentEvent e) {
-      analysisDialog.freeResources();
-      analysisDialog.dispose();
-      analysisDialog = null;
-      toggleLoadButton();
-    }
-    @Override
-    public void componentMoved(ComponentEvent e) {}
-    @Override
-    public void componentResized(ComponentEvent e) {}
-    @Override
-    public void componentShown(ComponentEvent e) {}
   }
 
   private OptionsDialog getOptionsDialog() {

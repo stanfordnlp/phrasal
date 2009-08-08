@@ -1,11 +1,35 @@
 package mt.visualize.phrase;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.xml.XMLConstants;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.swing.event.EventListenerList;
 
@@ -15,20 +39,34 @@ public class PathModel {
   //TODO Make this arbitrary - fixing for now so that arbitrary color schemes need not be defined
   public static final int MAX_PATHS = 5;
 
-  private final File oracleFilePath;
-  private final File oneBestFilePath;
-  private final File savedPathsFilePath;
+  //Element names in the input file
+  private static final String ROOT = "tr";
+  private static final String SYSTEM = "engine";
+  private static final String SENTENCE = "sentence";
+  private static final String SENT_ID = "id";
+  private static final String SOURCE = "source";
+  private static final String PATH = "path";
+  private static final String PATH_NAME = "name";
+  private static final String WORD = "w";
+  private static final String PHRASE = "p";
+  private static final String ALGN_START = "start";
+  private static final String ALGN_END = "end";
+  private static final String SCORE = "sco";
 
-  private final Map<Integer, List<Path>> paths;
+  //Members
+  private final Map<Integer, List<Path>> translationPaths;
   private final EventListenerList listenerList;
   private Path currentPath = null;
+  private boolean isLoaded = false;
+  private final PhraseController controller;
+  private final boolean VERBOSE;
 
-  public PathModel(File oracle, File oneBest, File savedPaths) {
-    oracleFilePath = oracle;
-    oneBestFilePath = oneBest;
-    savedPathsFilePath = savedPaths;
+  public PathModel() {
+    controller = PhraseController.getInstance();
+    VERBOSE = controller.getVerbose();
+
     listenerList = new EventListenerList();
-    paths = new HashMap<Integer, List<Path>>();
+    translationPaths = new HashMap<Integer, List<Path>>();
   }
 
   private class Path {
@@ -40,24 +78,211 @@ public class PathModel {
     public String trans = null;
   }
 
-  public boolean load() {
-    //TODO Path names can be null if the user does not specify them
-    //Populate the oracle and 1-best from files
+  public boolean load(File file, File schema) {
+    DocumentBuilder parser = getXmlParser(schema);
+    if(parser == null) return false;
+
+    try {
+      Document xmlDocument = parser.parse(file);
+
+      Element root = xmlDocument.getDocumentElement();
+      NodeList sentences = root.getElementsByTagName(SENTENCE);
+      for(int i = 0; i < sentences.getLength(); i++) {
+        Element sentence = (Element) sentences.item(i);
+        int translationId = Integer.parseInt(sentence.getAttribute(SENT_ID));       
+
+        if(translationPaths.get(translationId) == null)
+          translationPaths.put(translationId, new ArrayList<Path>());
+
+        NodeList xmlPaths = sentence.getElementsByTagName(PATH);
+        for(int pathIdx = 0; pathIdx < xmlPaths.getLength(); pathIdx++) {
+
+          //Only allow up MAX_PATHS paths
+          if(translationPaths.get(translationId).size() >= MAX_PATHS) break;
+
+          Element path = (Element) xmlPaths.item(pathIdx);
+          String pathName = path.getAttribute(PATH_NAME);
+
+          //Disallow duplicate path names
+          Path p = getPath(translationId,pathName);
+          if(p != null) continue;
+
+          Path newPath = new Path();
+          newPath.name = pathName;
+          newPath.formatId = pathIdx;
+          newPath.transId = translationId;
+          newPath.phrases = new ArrayList<VisualPhrase>();
+          StringBuilder newFullTrans = new StringBuilder();
+
+          NodeList phrases = path.getElementsByTagName(PHRASE);
+          for(int phraseIdx = 0; phraseIdx < phrases.getLength(); phraseIdx++) {
+            Element xmlPhrase = (Element) phrases.item(phraseIdx);
+
+            Phrase phrase = getPhraseFromXml(xmlPhrase);
+            newFullTrans.append(phrase.getPhrase() + ' ');
+
+            VisualPhrase vp = controller.lookupVisualPhrase(translationId, phrase);
+            if(vp != null)
+              newPath.phrases.add(vp);
+            else if(VERBOSE)
+              System.err.printf("%s: While loading [%d / %s], discarded %s\n", this.getClass().getName(),
+                  translationId,
+                  pathName,
+                  phrase);
+          }
+          newPath.trans = newFullTrans.toString();
+          translationPaths.get(translationId).add(newPath);
+        }
+      }
+    } catch (SAXException e) {
+      System.err.printf("%s: XML parsing exception while loading %s\n", this.getClass().getName(), file.getPath());
+      e.printStackTrace();
+      return false;
+
+    } catch (IOException e) {
+      System.err.printf("%s: Error reading from %s\n", this.getClass().getName(), file.getPath());
+      e.printStackTrace();
+      return false;
+    }
+
+    isLoaded = true;
+    return true;
+  }
+
+  private Phrase getPhraseFromXml(Element xmlPhrase) {
+    String english = xmlPhrase.getTextContent();
+    int start = Integer.parseInt(xmlPhrase.getAttribute(ALGN_START));
+    int end = Integer.parseInt(xmlPhrase.getAttribute(ALGN_END));
+    double score = Double.parseDouble(xmlPhrase.getAttribute(SCORE));
+
+    Phrase phrase = new Phrase(english,start,end,score);
+
+    return phrase;
+  }
+
+  private DocumentBuilder getXmlParser(File schemaFile) {
+    DocumentBuilder db = null;
+    try {
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+      SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+      Schema schema = factory.newSchema(schemaFile);
+      dbf.setSchema(schema);
+
+      db = dbf.newDocumentBuilder();
+
+    } catch (ParserConfigurationException e) {
+      System.err.printf("%s: Unable to create XML parser\n", this.getClass().getName());
+      e.printStackTrace();
+
+    } catch (SAXException e) {
+      System.err.printf("%s: SAX exception while loading schema\n", this.getClass().getName());
+      e.printStackTrace();
+
+    } catch(UnsupportedOperationException e) {
+      System.err.printf("%s: API error while setting up XML parser. Check your JAXP version\n", this.getClass().getName());
+      e.printStackTrace();
+    }
+
+    return db;
+  }
+
+  public boolean isLoaded() {
+    return isLoaded;
+  }
+
+  public boolean save(File file, File schema) {
+    DocumentBuilder parser = getXmlParser(schema);
+    if(parser == null) return false;
+
+    try {
+      Document xmlDoc = parser.newDocument();
+
+      Element root = xmlDoc.createElement(ROOT);
+      root.setAttribute(SYSTEM, "phrase-viewer");
+      xmlDoc.appendChild(root);
+      for(int translationId : translationPaths.keySet()) {
+        //Create the sentence child
+        Element xmlSent = xmlDoc.createElement(SENTENCE);
+        xmlSent.setAttribute(SENT_ID, Integer.toString(translationId));
+        root.appendChild(xmlSent);
+
+        //Write the source
+        Element xmlSource = xmlDoc.createElement(SOURCE);
+        xmlSent.appendChild(xmlSource);
+        String source = controller.getTranslationSource(translationId);
+        StringTokenizer st = new StringTokenizer(source);
+        while(st.hasMoreTokens()) {
+          Element xmlWord = xmlDoc.createElement(WORD);
+          xmlWord.setTextContent(st.nextToken());
+          xmlSource.appendChild(xmlWord);
+        }
+
+        //Write out each path
+        for(Path path : translationPaths.get(translationId)) {
+          Element xmlPath = xmlDoc.createElement(PATH);
+          xmlSent.appendChild(xmlPath);
+          xmlPath.setAttribute(PATH_NAME, path.name);
+          for(VisualPhrase vp : path.phrases) {
+            Phrase p = vp.getPhrase();
+            Element alignedPhrase = xmlDoc.createElement(PHRASE);
+            alignedPhrase.setAttribute(ALGN_START, Integer.toString(p.getStart()));
+            alignedPhrase.setAttribute(ALGN_END, Integer.toString(p.getEnd()));
+            alignedPhrase.setAttribute(SCORE, Double.toString(p.getScore()));
+            alignedPhrase.setTextContent(p.getPhrase());
+            xmlPath.appendChild(alignedPhrase); 
+          }
+        }    
+      }
+
+      //Write the xml document to file
+      Transformer transformer = TransformerFactory.newInstance().newTransformer();
+      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+      StreamResult result = new StreamResult(file);
+      DOMSource source = new DOMSource(xmlDoc);
+      transformer.transform(source, result);
+
+    } catch (DOMException e) {
+      System.err.printf("%s: XML DOM while writing path model to %s\n", this.getClass().getName(), file.getPath());
+      e.printStackTrace();
+      return false;
+
+    } catch (TransformerConfigurationException e) {
+      System.err.printf("%s: Error writing XML document to %s\n", this.getClass().getName(), file.getPath());
+      e.printStackTrace();
+      return false;
+
+    } catch (IllegalArgumentException e) {
+      System.err.printf("%s: Unknown exception while writing path model to %s\n", this.getClass().getName(), file.getPath());
+      e.printStackTrace();
+      return false;
+
+    } catch (TransformerFactoryConfigurationError e) {
+      System.err.printf("%s: Unable to create a file writer for XML path model\n", this.getClass().getName());
+      e.printStackTrace();
+      return false;
+
+    } catch (TransformerException e) {
+      System.err.printf("%s: Error while writing XML to %s\n", this.getClass().getName(), file.getPath());
+      e.printStackTrace();
+      return false;
+    }
+
     return true;
   }
 
   public boolean addPath(int translationId, String name) {
-    if(paths.get(translationId) == null)
-      paths.put(translationId, new ArrayList<Path>());
+    if(translationPaths.get(translationId) == null)
+      translationPaths.put(translationId, new ArrayList<Path>());
 
-    int numPaths = paths.get(translationId).size();
+    int numPaths = translationPaths.get(translationId).size();
+    Path p = getPath(translationId, name);
 
-    if(numPaths < MAX_PATHS) {
+    if(p == null && numPaths < MAX_PATHS) {
       currentPath = new Path();
       currentPath.transId = translationId;
       currentPath.enabled = true;
       currentPath.name = name.intern();
-      currentPath.transId = translationId;
       currentPath.formatId = numPaths;
       currentPath.phrases = new ArrayList<VisualPhrase>();
       return true;
@@ -68,15 +293,15 @@ public class PathModel {
   public int getFormatId(int translationId, String name) {
     if(currentPath != null && currentPath.transId == translationId && currentPath.name.equals(name))
       return currentPath.formatId;
-    else if(paths.get(translationId) != null)
-      for(Path p : paths.get(translationId))
-        if(p.name.equals(name))
-          return p.formatId;
+
+    Path p = getPath(translationId,name);
+    if(p != null)
+      return p.formatId;
 
     return -1;
   }
 
-  public String getTranslation(int translationId, String name) {
+  public String getTranslationFromPath(int translationId, String name) {
     Path p = getPath(translationId, name);
     return (p == null) ? null : p.trans;
   }
@@ -89,21 +314,21 @@ public class PathModel {
 
   public boolean finishPath(int translationId, String name) {
     if(currentPath == null || currentPath.transId != translationId || 
-        !currentPath.name.equals(name) || paths.get(translationId).size() >= MAX_PATHS)
+        !currentPath.name.equals(name) || translationPaths.get(translationId).size() >= MAX_PATHS)
       return false;
 
-    paths.get(translationId).add(currentPath);
+    translationPaths.get(translationId).add(currentPath);
     currentPath = null;
 
     return true;
   }
 
   public Map<String,List<VisualPhrase>> getPaths(int translationId) {
-    if(paths.get(translationId) == null)
+    if(translationPaths.get(translationId) == null)
       return null;
 
     Map<String,List<VisualPhrase>> ret = new HashMap<String,List<VisualPhrase>>();
-    for(Path p : paths.get(translationId))
+    for(Path p : translationPaths.get(translationId))
       ret.put(p.name.intern(), Collections.unmodifiableList(p.phrases));
     return ret;
   }
@@ -122,9 +347,9 @@ public class PathModel {
   }
 
   public List<String> getPathNames(int translationId) {
-    if(paths.get(translationId) != null) {
+    if(translationPaths.get(translationId) != null) {
       List<String> names = new ArrayList<String>();
-      for(Path p : paths.get(translationId))
+      for(Path p : translationPaths.get(translationId))
         names.add(p.name.intern());
       return names;
     }
@@ -145,32 +370,25 @@ public class PathModel {
   public void deletePath(int translationId, String name) {
     Path p = getPath(translationId, name);
     if(p != null)
-      paths.get(translationId).remove(p);
+      translationPaths.get(translationId).remove(p);
   }
 
   private Path getPath(int translationId, String name) {
-    if(paths.get(translationId) != null)
-      for(Path p : paths.get(translationId))
+    if(translationPaths.get(translationId) != null)
+      for(Path p : translationPaths.get(translationId))
         if(p.name.equals(name))
           return p;
     return null;
   }
 
-
-
-
-  //WSGDEBUG See http://java.sun.com/j2se/1.4.2/docs/api/javax/swing/event/EventListenerList.html
   public void addClickToStream(VisualPhrase vp) {
-    //Do internal processing
     processClick(vp);
 
     //Notify subscribers
     Object[] listeners = listenerList.getListenerList();
-    for (int i=0; i < listeners.length; i += 2) {
-      if (listeners[i]==ClickEventListener.class) {
+    for (int i=0; i < listeners.length; i += 2)
+      if (listeners[i]==ClickEventListener.class)
         ((ClickEventListener)listeners[i+1]).handleClickEvent(new ClickEvent(vp));
-      }
-    }
   }
 
   //No synchronization needed with EventListenerList class

@@ -19,8 +19,6 @@ public class PhraseModel {
   private final List<TranslationLayout> layouts;
   private ScoreDistribution scoreDist;
   
-  private PathModel pathModel = null;
-
   private boolean isBuilt = false;
 
   public PhraseModel(File source, File opts) {
@@ -40,10 +38,6 @@ public class PhraseModel {
     VERBOSE = verbose;
   }
   
-  public void setPathModel(PathModel m) {
-    pathModel = m;
-  }
-
   public boolean load(int scoreHalfRange) {
     try {
 
@@ -115,7 +109,7 @@ public class PhraseModel {
 
   public boolean buildLayouts(boolean rightToLeft) {    
     for(Translation translation : translations) {
-      TranslationLayout layout = new TranslationLayout(translation,rightToLeft,pathModel);
+      TranslationLayout layout = new TranslationLayout(translation,rightToLeft);
       layout.createLayout(NUM_VISUAL_OPTION_ROWS);
       layouts.add(layout);
     }
@@ -134,8 +128,16 @@ public class PhraseModel {
     return isBuilt;
   }
 
-  public TranslationLayout getTranslationLayout(int i) {
-    return (layouts != null && i > 0 && i <= getNumTranslations()) ? layouts.get(i - 1) : null;
+  public TranslationLayout getTranslationLayout(int translationId) {
+    if(layouts != null && translationId > 0 && translationId <= getNumTranslations()) 
+      return layouts.get(translationId - 1);
+    return null;
+  }
+  
+  public String getTranslationSource(int translationId) {
+    if(translations != null && translationId > 0 && translationId <= translations.size())
+      return translations.get(translationId - 1).getSource();
+    return null;
   }
 
   public int getScoreRank(double score) {

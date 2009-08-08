@@ -48,12 +48,8 @@ public class VisualPhrase extends JLabel {
     return id;
   }
   
-  public int getStart() {
-    return fStart;
-  }
-  
-  public int getEnd() {
-    return fEnd;
+  public Phrase getPhrase() {
+    return new Phrase(this.getText(),fStart,fEnd,score);
   }
 
   public void setFormat(Format newFormat) {

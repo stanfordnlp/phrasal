@@ -14,11 +14,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -27,6 +29,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileFilter;
 
 public class PathDialog extends JFrame {
 
@@ -50,7 +53,7 @@ public class PathDialog extends JFrame {
   private StringBuilder recordingTranslation = null;
   private Stack<VisualPhrase> recordingPath;
   private Stack<Integer> translationSplits;
-  
+
   private JSplitPane mainSplitPane = null; 
 
   private JScrollPane pathsScrollPane = null;
@@ -63,11 +66,13 @@ public class PathDialog extends JFrame {
 
   private JButton savePathButton = null;
 
-  private JButton restartPathButton = null;
+  private JButton loadPathButton = null;
 
   private JButton finishPathButton = null;
 
   private JTextField userInputTextField = null;
+
+  private JFileChooser fileChooser = null;
 
   private final Map<Integer,Map<String,PathComponents>> pathMap;
 
@@ -120,19 +125,21 @@ public class PathDialog extends JFrame {
         recordingPath.push(vp);
         translationSplits.push(0);
 
-      } else if(isRecording) {
-        VisualPhrase last = recordingPath.peek();
-
-        if(vp == last) {
+      } else if(isRecording && vp == recordingPath.peek()) {
+        recordingPath.pop();
+        if(recordingPath.size() == 0) {
+          recordingTranslation = new StringBuilder();
+          translationSplits.clear();
+          parent.removeTranslationFromLayout(recordingPathName);
+          return;
+        } else {
           recordingTranslation.delete(translationSplits.pop(), recordingTranslation.length());
-          recordingPath.pop();
-
-        } else if(!recordingPath.contains(vp)){
-          translationSplits.push(recordingTranslation.length());
-          recordingTranslation.append(vp.getText() + ' ');
-          recordingPath.push(vp);
+          parent.updateTranslationOnLayout(currentTranslationId, recordingPathName, recordingTranslation.toString());
         }
-
+      } else if(isRecording && !recordingPath.contains(vp)){
+        translationSplits.push(recordingTranslation.length());
+        recordingTranslation.append(vp.getText() + ' ');
+        recordingPath.push(vp);
         parent.updateTranslationOnLayout(currentTranslationId, recordingPathName, recordingTranslation.toString());
       }
     }
@@ -144,6 +151,26 @@ public class PathDialog extends JFrame {
     public JRadioButton off = null;
     public NamedLabel kill = null;
     public JLabel label = null;
+  }
+
+  private JFileChooser getFileChooser() {
+    if(fileChooser == null) {
+      fileChooser = new JFileChooser();
+      fileChooser.setFileFilter(new XmlFilter());
+      fileChooser.setAcceptAllFileFilterUsed(false);
+    }
+    return fileChooser;
+  }
+
+  private class XmlFilter extends FileFilter {
+    @Override
+    public boolean accept(File f) {
+      return (f.isDirectory() || f.getName().matches(".*\\.xml$"));
+    }
+    @Override
+    public String getDescription() {
+      return "XML File";
+    }
   }
 
   private JSplitPane getMainSplitPane() {
@@ -185,12 +212,12 @@ public class PathDialog extends JFrame {
       c.gridy = 1;
       buttonPanel.add(getNewPathButton(),c);
       c.gridx = 1;
-      buttonPanel.add(getSavePathButton(),c);
+      buttonPanel.add(getFinishPathButton(),c);
       c.gridx = 0;
       c.gridy = 2;
-      buttonPanel.add(getRestartPathButton(),c);
+      buttonPanel.add(getSavePathButton(),c);
       c.gridx = 1;
-      buttonPanel.add(getFinishPathButton(),c);
+      buttonPanel.add(getLoadPathButton(),c);
     }
     return buttonPanel;
   }
@@ -219,7 +246,7 @@ public class PathDialog extends JFrame {
     if(!isRecording) {
       getNewPathButton().setEnabled(inputFieldIsVisible);
       getSavePathButton().setEnabled(inputFieldIsVisible);
-      getRestartPathButton().setEnabled(inputFieldIsVisible);
+      getLoadPathButton().setEnabled(inputFieldIsVisible);
       getFinishPathButton().setEnabled(inputFieldIsVisible);
     }
 
@@ -241,26 +268,47 @@ public class PathDialog extends JFrame {
   private JButton getSavePathButton() {
     if(savePathButton == null) {
       savePathButton = new JButton("Save");
+      savePathButton.setEnabled(controller.isFileIOEnabled());
       savePathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, savePathButton.getHeight()));
-      //TODO Implement save functionality
-      //      savePathButton.addActionListener(new ActionListener() {
-      //        @Override
-      //        public void actionPerformed(ActionEvent e) {
-      //          toggleInputField();
-      //        }
-      //      });
+      savePathButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          int returned = getFileChooser().showSaveDialog(PathDialog.this);
+          if(returned == JFileChooser.APPROVE_OPTION) {
+            File f = getFileChooser().getSelectedFile();
+            if(!controller.savePaths(f)) {
+              PhraseGUI gui = PhraseGUI.getInstance();
+              gui.setStatusMessage("Failure saving paths to file");
+            }
+          }
+        }
+      });
     }
     return savePathButton;
   }
 
-  private JButton getRestartPathButton() {
-    if(restartPathButton == null) {
-      restartPathButton = new JButton("TODO");
-      restartPathButton.setEnabled(false);
-      restartPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, restartPathButton.getHeight()));
-      //TODO Implement restart functionality
+  private JButton getLoadPathButton() {
+    if(loadPathButton == null) {
+      loadPathButton = new JButton("Load");
+      loadPathButton.setEnabled(controller.isFileIOEnabled());
+      loadPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, loadPathButton.getHeight()));
+      loadPathButton.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          int returned = getFileChooser().showOpenDialog(PathDialog.this);
+          if(returned == JFileChooser.APPROVE_OPTION) {
+            File f = getFileChooser().getSelectedFile();
+            if(controller.loadPaths(f))
+              setCurrentTranslationId(currentTranslationId);
+            else {
+              PhraseGUI gui = PhraseGUI.getInstance();
+              gui.setStatusMessage("Could not load paths from file");
+            }
+          }
+        }
+      });
     }
-    return restartPathButton;
+    return loadPathButton;
   }
 
   private JButton getFinishPathButton() {
@@ -319,15 +367,17 @@ public class PathDialog extends JFrame {
       translationSplits = new Stack<Integer>();
     } else {
       controller.finishPath(currentTranslationId, name);
-      controller.setTranslation(currentTranslationId, name, recordingTranslation.toString());
+      controller.setTranslationForPath(currentTranslationId, name, recordingTranslation.toString());
     }
 
     parent.toggleRecording(isOn,name);
 
     getNewPathButton().setEnabled(!isOn);
-    getSavePathButton().setEnabled(!isOn);
     getFinishPathButton().setEnabled(isOn);
-    getRestartPathButton().setEnabled(isOn);
+    if(controller.isFileIOEnabled()) {
+      getSavePathButton().setEnabled(!isOn);
+      getLoadPathButton().setEnabled(!isOn);
+    }
 
     PathComponents comps = pathMap.get(currentTranslationId).get(name);
     if(comps != null) {
@@ -373,14 +423,16 @@ public class PathDialog extends JFrame {
         comps.on = new JRadioButton();
         comps.on.setActionCommand(name + ACTION_DELIM + ON);
         comps.on.setSelected(isEnabled);
+        comps.on.setToolTipText("<html>Enable " + name + "</html>");
         comps.on.addActionListener(new RadioButtonListener());
         getPathsPanel().add(comps.on,c);
 
         (c.gridx)++;
         comps.off = new JRadioButton();
         comps.off.setActionCommand(name + ACTION_DELIM + OFF);
-        comps.off.addActionListener(new RadioButtonListener());
         comps.off.setSelected(!isEnabled);
+        comps.off.setToolTipText("<html>Disable " + name + "</html>");
+        comps.off.addActionListener(new RadioButtonListener());
         getPathsPanel().add(comps.off,c);
 
         (c.gridx)++;
@@ -388,6 +440,7 @@ public class PathDialog extends JFrame {
         comps.kill.setFont(killBoxFont);
         comps.kill.setText("X");
         comps.kill.setBorder(new LineBorder(Color.LIGHT_GRAY,1));
+        comps.kill.setToolTipText("<html>Delete this path</html>");
         comps.kill.addMouseListener(new KillButtonListener());
         getPathsPanel().add(comps.kill,c);
 
@@ -441,6 +494,7 @@ public class PathDialog extends JFrame {
 
   private void deletePath(String name) {
     togglePath(name, OFF);
+    parent.removeTranslationFromLayout(name);
     controller.deletePath(currentTranslationId, name);
     if(pathMap.get(currentTranslationId) != null)
       pathMap.get(currentTranslationId).remove(name);

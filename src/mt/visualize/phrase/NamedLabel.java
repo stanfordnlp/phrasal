@@ -8,10 +8,10 @@ public class NamedLabel extends JLabel {
     super();
     this.id = id;
   }
-  
+
   public String getId() {
     return id;
   }
-   private static final long serialVersionUID = -5388372308097145326L;
 
+  private static final long serialVersionUID = -5388372308097145326L;
 }

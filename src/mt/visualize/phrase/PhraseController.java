@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-public class PhraseController {
+public final class PhraseController {
 
   private static boolean VERBOSE = false;
   private static boolean RIGHT_TO_LEFT = false;
@@ -15,13 +15,12 @@ public class PhraseController {
   private PhraseModel phraseModel;
   private File sourceFilePath = null;
   private File optsFilePath = null;
+  private File pathSchemaFilePath = null;
 
   private PathModel pathModel = null;
-  private File oracleFilePath = null;
-  private File oneBestFilePath = null;
-  private File savedPathsFilePath = null;
 
-  private boolean isBuilt = false;
+  private boolean pathModelIsBuilt = false;
+  private boolean phraseModelIsBuilt = false;
 
   private static PhraseController thisInstance = null;
 
@@ -48,6 +47,11 @@ public class PhraseController {
     return sourceFilePath.exists();
   }
 
+  public boolean setSchemaFile(String path) {
+    pathSchemaFilePath = new File(path);
+    return pathSchemaFilePath.exists();
+  }
+
   public String getSourceFilePath() {
     return (sourceFilePath != null) ? sourceFilePath.getPath() : null;
   }
@@ -65,13 +69,12 @@ public class PhraseController {
   }
 
   public boolean buildModel() {
-    isBuilt = false;
+    phraseModelIsBuilt = false;
     phraseModel = new PhraseModel(sourceFilePath, optsFilePath);
     phraseModel.setVerbose(VERBOSE);
     phraseModel.normalizePhraseScores(NORM_SCORES);
     phraseModel.setNumberOfOptionRows(NUM_OPTION_ROWS);
 
-    
     boolean success = phraseModel.load(SCORE_HALF_RANGE);
     if(!success) {
       if(VERBOSE)
@@ -79,15 +82,8 @@ public class PhraseController {
       return success;
     }
 
-    pathModel = new PathModel(oracleFilePath,oneBestFilePath,savedPathsFilePath);
-    success &= pathModel.load();
-    if(!success) {
-      if(VERBOSE)
-        System.err.printf("%s: Unable to load stored path model from oracle and onebest files\n", this.getClass().getName());
-      return success;
-    }
-    
-    phraseModel.setPathModel(pathModel);
+    pathModel = new PathModel();
+    pathModelIsBuilt = success;
     
     success &= phraseModel.buildLayouts(RIGHT_TO_LEFT);
     if(!success) {
@@ -95,75 +91,106 @@ public class PhraseController {
         System.err.printf("%s: Failed to construct translation layouts\n", this.getClass().getName());
       return success;
     }
-
-    isBuilt = success;
     
-    return isBuilt;
+    //Set last for thread safety in AnalysisDialog
+    phraseModelIsBuilt = success;
+
+    return phraseModelIsBuilt;
   }
   
-  public String getTranslation(int translationId, String name) {
-    return (isBuilt) ? pathModel.getTranslation(translationId, name) : null;
+  public boolean isFileIOEnabled() {
+    return (pathSchemaFilePath != null);
   }
-  
-  public void setTranslation(int translationId, String name, String translation) {
-    if(isBuilt)
+
+  public String getTranslationFromPath(int translationId, String name) {
+    return (pathModelIsBuilt) ? pathModel.getTranslationFromPath(translationId, name) : null;
+  }
+
+  public void setTranslationForPath(int translationId, String name, String translation) {
+    if(pathModelIsBuilt)
       pathModel.setTranslation(translationId, name, translation);
   }
-  
+
   public List<String> getPathNames(int translationId) {
-    return (isBuilt) ? pathModel.getPathNames(translationId) : null;
+    return (pathModelIsBuilt) ? pathModel.getPathNames(translationId) : null;
   }
-  
+
   public Map<String,List<VisualPhrase>> getPaths(int translationId) {
-    return (isBuilt) ? pathModel.getPaths(translationId) : null;
+    return (pathModelIsBuilt) ? pathModel.getPaths(translationId) : null;
   }
-  
+
   public boolean isEnabled(int translationId, String name) {
-    return (isBuilt) ? pathModel.isEnabled(translationId, name) : false;
+    return (pathModelIsBuilt) ? pathModel.isEnabled(translationId, name) : false;
   }
-  
+
   public boolean addPath(int translationId, String name) {
-    return (isBuilt) ? pathModel.addPath(translationId,name) : false;
+    return (pathModelIsBuilt) ? pathModel.addPath(translationId,name) : false;
   }
-  
+
   public void deletePath(int translationId, String name) {
-    if(isBuilt)
+    if(pathModelIsBuilt)
       pathModel.deletePath(translationId, name);
   }
-  
-  public int getFormatId(int translationId, String name) {
-    return (isBuilt) ? pathModel.getFormatId(translationId, name) : -1;
+
+  public boolean savePaths(File f) {
+    if(pathSchemaFilePath == null)
+      return false;
+    else
+      return (pathModelIsBuilt) ? pathModel.save(f,pathSchemaFilePath) : false;
   }
-  
+
+  public boolean loadPaths(File f) {
+    if(pathSchemaFilePath == null)
+      return false;
+    else
+      return (pathModelIsBuilt) ? pathModel.load(f,pathSchemaFilePath) : false;
+  }
+
+  public boolean pathModelLoaded() {
+    return (pathModelIsBuilt) ? pathModel.isLoaded() : false;
+  }
+
+  public int getFormatId(int translationId, String name) {
+    return (pathModelIsBuilt) ? pathModel.getFormatId(translationId, name) : -1;
+  }
+
   public void setPathState(boolean isOn, int translationId, String name) {
-    if(isBuilt)
+    if(pathModelIsBuilt)
       pathModel.setPathState(isOn,translationId,name);
   }
-  
+
   public boolean finishPath(int translationId, String name) {
-    return (isBuilt) ? pathModel.finishPath(translationId, name) : false;
+    return (pathModelIsBuilt) ? pathModel.finishPath(translationId, name) : false;
+  }
+
+  
+  public void addClickToStream(VisualPhrase vp) {
+    if(pathModelIsBuilt)
+      pathModel.addClickToStream(vp);
   }
   
   public void addClickStreamListener(ClickEventListener e) {
-    pathModel.addClickEventListener(e);
+    if(pathModelIsBuilt)
+      pathModel.addClickEventListener(e);
   }
-  
+
   public void removeClickStreamListener(ClickEventListener e) {
-    pathModel.removeClickEventListener(e);
+    if(pathModelIsBuilt)
+      pathModel.removeClickEventListener(e);
   }
-  
+
   public int getMaxPaths() {
     return PathModel.MAX_PATHS;
   }
-  
-  //WSGDEBUG end path building stuff
 
   public boolean modelIsBuilt() {
-    return isBuilt;
+    return phraseModelIsBuilt;
   }
 
-  public int getNumTranslations() {
-    return (isBuilt) ? phraseModel.getNumTranslations() : 0;
+  public int getNumTranslationLayouts() {
+    //Just check to see if phraseModel is non-null
+    //So that AnalysisDialog can get interim results
+    return (phraseModel != null) ? phraseModel.getNumTranslations() : 0;
   }
 
   public int getScoreHalfRange() {
@@ -179,7 +206,7 @@ public class PhraseController {
   }
 
   public int getScoreRank(double score) {
-    return (isBuilt) ? phraseModel.getScoreRank(score) : 0;
+    return (phraseModel != null) ? phraseModel.getScoreRank(score) : 0;
   }
 
   public void run() {
@@ -187,7 +214,22 @@ public class PhraseController {
   }
 
   public TranslationLayout getTranslationLayout(int translationId) {
-    return (isBuilt) ? phraseModel.getTranslationLayout(translationId) : null;
+    return (phraseModel != null) ? phraseModel.getTranslationLayout(translationId) : null;
+  }
+
+  public String getTranslationSource(int translationId) {
+    return (phraseModelIsBuilt) ? phraseModel.getTranslationSource(translationId) : null;
+  }
+
+  public VisualPhrase lookupVisualPhrase(int translationId, Phrase p) {
+    if(phraseModelIsBuilt) {
+      TranslationLayout layout = phraseModel.getTranslationLayout(translationId);
+      if(layout != null)
+        return layout.lookupVisualPhrase(p);
+      else if(VERBOSE)
+        System.err.printf("%s: Could not get a layout for translation id %d\n", this.getClass().getName(),translationId);
+    }
+    return null;
   }
 
   public void normalizePhraseScores(boolean newState) {

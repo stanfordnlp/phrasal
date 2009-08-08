@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.JButton;
@@ -28,8 +29,6 @@ import javax.swing.JLabel;
 import javax.swing.JSeparator;
 
 public class AnalysisDialog extends JFrame {
-
-  private static final long serialVersionUID = 1L;
 
   private static final int DEFAULT_WIDTH = 800;
   private static final int DEFAULT_HEIGHT = 600;
@@ -73,7 +72,6 @@ public class AnalysisDialog extends JFrame {
 
   private PathDialog pathDialog = null;
 
-  //TODO Adjust using color index RGB -> HSV conversion
   private List<VisualPhrase.Format> currentCell;
   private List<VisualPhrase.Format> previousCell;
   private boolean isRecording = false;
@@ -103,7 +101,7 @@ public class AnalysisDialog extends JFrame {
   }
 
   public void finalSetup() {
-    getNavNumTranslationsLabel().setText(String.format("of %d", controller.getNumTranslations()));
+    getNavNumTranslationsLabel().setText(String.format("of %d", controller.getNumTranslationLayouts()));
     controller.addClickStreamListener(clickStreamListener);
   }
 
@@ -197,6 +195,8 @@ public class AnalysisDialog extends JFrame {
       } catch (ExecutionException e) {
         System.err.println("Model builder thread execution problem");
         e.printStackTrace();
+      } catch (CancellationException e) {
+        System.err.println("Model builder thread cancelled. Final setup incomplete");
       }
     }
   };
@@ -210,7 +210,7 @@ public class AnalysisDialog extends JFrame {
     protected Void doInBackground() throws Exception {
       do {
         Thread.sleep(100);
-        publish(controller.getNumTranslations());
+        publish(controller.getNumTranslationLayouts());
       } while(!controller.modelIsBuilt());
       return null;
     }
@@ -260,11 +260,6 @@ public class AnalysisDialog extends JFrame {
     return palette;
   }
 
-  /**
-   * This method initializes jSplitPane	
-   * 	
-   * @return javax.swing.JSplitPane	
-   */
   private JSplitPane getMainSplitPane() {
     if (mainSplitPane == null) {
       mainSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,getTranslationScrollPane(),getNavPanel());      
@@ -274,11 +269,6 @@ public class AnalysisDialog extends JFrame {
     return mainSplitPane;
   }
 
-  /**
-   * This method initializes jScrollPane	
-   * 	
-   * @return javax.swing.JScrollPane	
-   */
   private JScrollPane getTranslationScrollPane() {
     if (translationScrollPane == null) {
       translationScrollPane = new JScrollPane(currentTranslationPanel);
@@ -288,13 +278,6 @@ public class AnalysisDialog extends JFrame {
     return translationScrollPane;
   }
 
-
-
-  /**
-   * This method initializes jPanel	
-   * 	
-   * @return javax.swing.JPanel	
-   */
   private JPanel getNavPanel() {
     if (navPanel == null) {
       navPanel = new JPanel();
@@ -303,7 +286,6 @@ public class AnalysisDialog extends JFrame {
       navPanel.setLayout(navLayout);
       navPanel.setPreferredSize(new Dimension(DEFAULT_WIDTH,NAV_HEIGHT));
 
-      //Setup the layout
       navLayout.setAutoCreateGaps(true);
       navLayout.setAutoCreateContainerGaps(true);
       navLayout.setHorizontalGroup(navLayout.createSequentialGroup()
@@ -347,11 +329,6 @@ public class AnalysisDialog extends JFrame {
     return navPanel;
   }
 
-  /**
-   * This method initializes jButton	
-   * 	
-   * @return javax.swing.JButton	
-   */
   private JButton getNavPrevButton() {
     if (navPrevButton == null) {
       navPrevButton = new JButton();
@@ -367,11 +344,6 @@ public class AnalysisDialog extends JFrame {
     return navPrevButton;
   }
 
-  /**
-   * This method initializes jButton1	
-   * 	
-   * @return javax.swing.JButton	
-   */
   private JButton getNavNextButton() {
     if (navNextButton == null) {
       navNextButton = new JButton();
@@ -379,7 +351,7 @@ public class AnalysisDialog extends JFrame {
       navNextButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           int newValue = currentTranslationId + 1;
-          if(newValue <= controller.getNumTranslations())
+          if(newValue <= controller.getNumTranslationLayouts())
             setCurrentTranslation(newValue);
         }
       });
@@ -387,15 +359,9 @@ public class AnalysisDialog extends JFrame {
     return navNextButton;
   }
 
-  /**
-   * This method initializes jTextField	
-   * 	
-   * @return javax.swing.JTextField	
-   */
   private JTextField getNavSentTextField() {
     if (navSentTextField == null) {
       navSentTextField = new JTextField();
-      navSentTextField.setText("1");
       navSentTextField.setPreferredSize(new Dimension(40,27));
       navSentTextField.setMaximumSize(new Dimension(40,27));
       navSentTextField.setMinimumSize(new Dimension(40,27));
@@ -405,7 +371,7 @@ public class AnalysisDialog extends JFrame {
           String strNewValue = getNavSentTextField().getText().trim();
           if(strNewValue.matches("\\d+")) {
             int newValue = Integer.parseInt(strNewValue);
-            if(newValue <= controller.getNumTranslations()) {
+            if(newValue <= controller.getNumTranslationLayouts()) {
               setCurrentTranslation(newValue);
               return;
             }
@@ -490,11 +456,16 @@ public class AnalysisDialog extends JFrame {
     layout.getPanel().repaint();
   }
 
+  public void removeTranslationFromLayout(String name) {
+    TranslationLayout currentLayout = controller.getTranslationLayout(currentTranslationId);
+    removeTranslationFromLayout(currentLayout,name);
+  }
+
   private void addTranslationToLayout(TranslationLayout layout, int translationId, String name) {
     if(layout == null) return;
 
     int formatId = controller.getFormatId(translationId, name);
-    String trans = controller.getTranslation(translationId, name);
+    String trans = controller.getTranslationFromPath(translationId, name);
     if(formatId != -1) {
       VisualPhrase.Format format = previousCell.get(formatId);
       layout.addTranslationRow(name, trans, format.bg);
@@ -673,4 +644,5 @@ public class AnalysisDialog extends JFrame {
     }
   };
 
+  private static final long serialVersionUID = 2142404262837351493L;
 }

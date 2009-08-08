@@ -23,31 +23,31 @@ import edu.stanford.nlp.util.Pair;
 public class TranslationLayout {
 
   private final Translation translation;
-  private final PathModel pathModel;
   private final int numOptions;
-  private final List<VisualPhrase> labels;
+  private final List<VisualPhrase> vPhrases;
+  private final Map<Phrase,VisualPhrase> vPhraseLookup;
+  private final boolean RIGHT_TO_LEFT;
   private int optionsApplied = 0;
   private JPanel panel = null;
   private List<BitSet> coverages;
-  private boolean RIGHT_TO_LEFT = false;
 
   private final int numColumns;
   private int numRows;
 
-  private int numTranslationRows;
+  private int numFullTranslationRows;
   private final LinkedList<Integer> unusedRows;
-  private final Map<String,Pair<Integer,JLabel>> translations;
+  private final Map<String,Pair<Integer,JLabel>> fullTranslations;
 
-  public TranslationLayout(Translation t, boolean rightToLeft, PathModel m) {
+  public TranslationLayout(Translation t, boolean rightToLeft) {
     translation = t;
     numColumns = translation.getNumSourceWords();
     RIGHT_TO_LEFT = rightToLeft;
-    pathModel = m;
     numOptions = t.numPhrases();
-    numTranslationRows = 0;
-    labels = new ArrayList<VisualPhrase>();
+    numFullTranslationRows = 0;
+    vPhrases = new ArrayList<VisualPhrase>();
+    vPhraseLookup = new HashMap<Phrase,VisualPhrase>();
     unusedRows = new LinkedList<Integer>();
-    translations = new HashMap<String, Pair<Integer,JLabel>>();
+    fullTranslations = new HashMap<String, Pair<Integer,JLabel>>();
   }
 
   public boolean createLayout(int numOptionRows) {
@@ -88,17 +88,20 @@ public class TranslationLayout {
 
         if(testCoverage(phrase,bitSet)) {
 
-          VisualPhrase label = new VisualPhrase(phrase, optionsApplied + 1);
-          label.addMouseListener(new LabelMouseHandler());
+          VisualPhrase vp = new VisualPhrase(phrase, optionsApplied + 1);
+          vp.addMouseListener(new LabelMouseHandler());
 
           GridBagConstraints c = buildConstraints(phrase,i,numColumns,sourceWordsCovered);
 
-          panel.add(label,c);
+          panel.add(vp,c);
 
           optionsApplied++;
           setCoverage(phrase,bitSet);
           cellsFilled += sourceWordsCovered;
-          labels.add(label);
+          vPhrases.add(vp);
+          
+          //The Phrase hash function is imperfect, but we can't do much about collisions
+          vPhraseLookup.put(phrase, vp);
           break;
         }
       }
@@ -124,7 +127,8 @@ public class TranslationLayout {
     @Override
     public void mouseClicked(MouseEvent e) {
       VisualPhrase label = (VisualPhrase) e.getComponent();
-      pathModel.addClickToStream(label);
+      PhraseController controller = PhraseController.getInstance();
+      controller.addClickToStream(label);
     }
   }
 
@@ -144,7 +148,10 @@ public class TranslationLayout {
       bs.set(phrase.getStart(), phrase.getEnd()+1);
   }
 
-
+  public VisualPhrase lookupVisualPhrase(Phrase p) {
+    return (vPhraseLookup.containsKey(p)) ? vPhraseLookup.get(p) : null;
+  }
+  
   public JPanel getPanel() {
     return panel;
   }
@@ -174,27 +181,27 @@ public class TranslationLayout {
     c.gridwidth = numColumns;
 
     if(unusedRows.isEmpty()) {
-      ++numTranslationRows;
-      c.gridy = numRows + numTranslationRows;
+      ++numFullTranslationRows;
+      c.gridy = numRows + numFullTranslationRows;
     } else {
       c.gridy = unusedRows.removeFirst();
     }
 
     if(panel != null)
       panel.add(label,c);
-    translations.put(name, new Pair<Integer, JLabel>(c.gridy, label));
+    fullTranslations.put(name, new Pair<Integer, JLabel>(c.gridy, label));
 
     return true;
   }
 
   public void updateTranslationRow(String name, String trans) {
-    Pair<Integer,JLabel> labelPair = translations.get(name);
+    Pair<Integer,JLabel> labelPair = fullTranslations.get(name);
     if(labelPair != null)
       labelPair.second().setText(trans);
   }
-  
+
   public boolean removeTranslationRow(String name) {
-    Pair<Integer,JLabel> labelPair = translations.get(name);
+    Pair<Integer,JLabel> labelPair = fullTranslations.get(name);
     if(labelPair != null) {
       unusedRows.addFirst(labelPair.first());
       if(panel != null)
@@ -206,7 +213,7 @@ public class TranslationLayout {
   }
 
   public List<VisualPhrase> getLabels() {
-    return Collections.unmodifiableList(labels);
+    return Collections.unmodifiableList(vPhrases);
   }
 
 }

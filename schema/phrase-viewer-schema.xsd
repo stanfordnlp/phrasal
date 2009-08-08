@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	
+<xsd:element name="source">
+	<xsd:complexType>
+		<xsd:sequence>
+			<xsd:element name="w" type="xsd:string" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:element>
+
+<xsd:element name="p">
+	<xsd:complexType>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="start" type="xsd:integer" use="required"/>
+				<xsd:attribute name="end" type="xsd:integer" use="required"/>
+				<xsd:attribute name="sco" type="xsd:float" use="required"/>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+</xsd:element>
+
+<xsd:element name="path">
+	<xsd:complexType>
+		<xsd:sequence>
+			<xsd:element ref="p" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string" use="required"/>
+	</xsd:complexType>
+</xsd:element>
+
+<xsd:element name="sentence">
+	<xsd:complexType>
+		<xsd:sequence>
+			<xsd:element ref="source" maxOccurs="1"/>
+			<xsd:element ref="path" minOccurs="0" maxOccurs="5"/>
+		</xsd:sequence>
+		<xsd:attribute name="id" type="xsd:integer" use="required"/>
+	</xsd:complexType>
+</xsd:element>
+
+<xsd:element name="tr">
+	<xsd:complexType>
+		<xsd:sequence maxOccurs="unbounded">
+			<xsd:element ref="sentence"/>
+		</xsd:sequence>	
+	<xsd:attribute name="engine" type="xsd:string"/>	
+	</xsd:complexType>
+</xsd:element>
+</xsd:schema>
