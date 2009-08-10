@@ -102,7 +102,7 @@ public class AnalysisDialog extends JFrame {
 
   public void finalSetup() {
     getNavNumTranslationsLabel().setText(String.format("of %d", controller.getNumTranslationLayouts()));
-    controller.addClickStreamListener(clickStreamListener);
+    controller.addClickEventListener(clickStreamListener);
   }
 
   public void setupPathColors() {
@@ -164,7 +164,7 @@ public class AnalysisDialog extends JFrame {
     if(!guiUpdaterThread.isDone() && !guiUpdaterThread.cancel(true))
       System.err.printf("%s: Could not kill gui updater thread\n",this.getClass().getName());        
 
-    controller.removeClickStreamListener(clickStreamListener);
+    controller.removeClickEventListener(clickStreamListener);
   }
 
   private SwingWorker<Boolean,Void> modelBuilderThread = 

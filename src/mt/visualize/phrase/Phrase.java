@@ -94,7 +94,7 @@ public class Phrase implements Comparable {
     
     byte[] bytes = phrase.getBytes();
     for(int i = 0; i < bytes.length; i++) {
-      for(int j = 0; j < 4; j++) {
+      for(int j = 0; j < 8; j++) {
         if((fStart + fEnd + j % 2) == 0)
           S += f(S,bytes[i]);
         else

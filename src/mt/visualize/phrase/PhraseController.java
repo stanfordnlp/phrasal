@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.event.EventListenerList;
+
 public final class PhraseController {
 
   private static boolean VERBOSE = false;
@@ -24,7 +26,11 @@ public final class PhraseController {
 
   private static PhraseController thisInstance = null;
 
-  private PhraseController() {}
+  private final EventListenerList listenerList;
+
+  private PhraseController() {
+    listenerList = new EventListenerList();
+  }
 
   public static PhraseController getInstance() {
     if(thisInstance == null)
@@ -82,24 +88,27 @@ public final class PhraseController {
       return success;
     }
 
+    if(pathModel != null)
+      pathModel.freeResources();
+    
     pathModel = new PathModel();
     pathModelIsBuilt = success;
-    
+
     success &= phraseModel.buildLayouts(RIGHT_TO_LEFT);
     if(!success) {
       if(VERBOSE)
         System.err.printf("%s: Failed to construct translation layouts\n", this.getClass().getName());
       return success;
     }
-    
+
     //Set last for thread safety in AnalysisDialog
     phraseModelIsBuilt = success;
 
     return phraseModelIsBuilt;
   }
-  
+
   public boolean isFileIOEnabled() {
-    return (pathSchemaFilePath != null);
+    return (pathModel != null && pathSchemaFilePath != null);
   }
 
   public String getTranslationFromPath(int translationId, String name) {
@@ -133,17 +142,11 @@ public final class PhraseController {
   }
 
   public boolean savePaths(File f) {
-    if(pathSchemaFilePath == null)
-      return false;
-    else
-      return (pathModelIsBuilt) ? pathModel.save(f,pathSchemaFilePath) : false;
+    return (isFileIOEnabled()) ? pathModel.save(f, pathSchemaFilePath) : false;
   }
 
   public boolean loadPaths(File f) {
-    if(pathSchemaFilePath == null)
-      return false;
-    else
-      return (pathModelIsBuilt) ? pathModel.load(f,pathSchemaFilePath) : false;
+    return (isFileIOEnabled()) ? pathModel.load(f, pathSchemaFilePath) : false;
   }
 
   public boolean pathModelLoaded() {
@@ -161,22 +164,6 @@ public final class PhraseController {
 
   public boolean finishPath(int translationId, String name) {
     return (pathModelIsBuilt) ? pathModel.finishPath(translationId, name) : false;
-  }
-
-  
-  public void addClickToStream(VisualPhrase vp) {
-    if(pathModelIsBuilt)
-      pathModel.addClickToStream(vp);
-  }
-  
-  public void addClickStreamListener(ClickEventListener e) {
-    if(pathModelIsBuilt)
-      pathModel.addClickEventListener(e);
-  }
-
-  public void removeClickStreamListener(ClickEventListener e) {
-    if(pathModelIsBuilt)
-      pathModel.removeClickEventListener(e);
   }
 
   public int getMaxPaths() {
@@ -246,6 +233,27 @@ public final class PhraseController {
 
   public int getNumOptionRows() {
     return NUM_OPTION_ROWS;
+  }
+
+  public void addClickToStream(VisualPhrase vp) {
+    notifyClickListeners(vp);
+  }
+
+  private void notifyClickListeners(VisualPhrase vp) {
+    Object[] listeners = listenerList.getListenerList();
+    for (int i=0; i < listeners.length; i += 2)
+      if (listeners[i]==ClickEventListener.class)
+        ((ClickEventListener)listeners[i+1]).handleClickEvent(new ClickEvent(vp));
+  }
+
+  //No synchronization needed with EventListenerList class
+  public void addClickEventListener(ClickEventListener listener) {
+    listenerList.add(ClickEventListener.class, listener);
+  }
+
+  //No synchronization needed with EventListenerList class
+  public void removeClickEventListener(ClickEventListener listener) {
+    listenerList.remove(ClickEventListener.class, listener);
   }
 
 }

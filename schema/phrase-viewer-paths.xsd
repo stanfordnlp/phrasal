@@ -34,7 +34,7 @@
 	<xsd:complexType>
 		<xsd:sequence>
 			<xsd:element ref="source" maxOccurs="1"/>
-			<xsd:element ref="path" minOccurs="0" maxOccurs="5"/>
+			<xsd:element ref="path" minOccurs="0"/>
 		</xsd:sequence>
 		<xsd:attribute name="id" type="xsd:integer" use="required"/>
 	</xsd:complexType>

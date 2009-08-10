@@ -105,11 +105,11 @@ public class PathDialog extends JFrame {
 
     this.setCurrentTranslationId(currentTranslationId);
 
-    controller.addClickStreamListener(clickStreamListener);
+    controller.addClickEventListener(clickStreamListener);
   }
 
   public void freeResources() {
-    controller.removeClickStreamListener(clickStreamListener);
+    controller.removeClickEventListener(clickStreamListener);
   }
 
   private ClickEventListener clickStreamListener = new ClickEventListener() {
@@ -225,6 +225,7 @@ public class PathDialog extends JFrame {
   private JButton getNewPathButton() {
     if(newPathButton == null) {
       newPathButton = new JButton("New");
+      newPathButton.setToolTipText("<html>Create new path</html>");
       newPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, newPathButton.getHeight()));
       newPathButton.addActionListener(new ActionListener() {
         @Override
@@ -268,6 +269,7 @@ public class PathDialog extends JFrame {
   private JButton getSavePathButton() {
     if(savePathButton == null) {
       savePathButton = new JButton("Save");
+      savePathButton.setToolTipText("<html>Save paths to file</html>");
       savePathButton.setEnabled(controller.isFileIOEnabled());
       savePathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, savePathButton.getHeight()));
       savePathButton.addActionListener(new ActionListener() {
@@ -276,10 +278,12 @@ public class PathDialog extends JFrame {
           int returned = getFileChooser().showSaveDialog(PathDialog.this);
           if(returned == JFileChooser.APPROVE_OPTION) {
             File f = getFileChooser().getSelectedFile();
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             if(!controller.savePaths(f)) {
               PhraseGUI gui = PhraseGUI.getInstance();
               gui.setStatusMessage("Failure saving paths to file");
             }
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
           }
         }
       });
@@ -290,6 +294,7 @@ public class PathDialog extends JFrame {
   private JButton getLoadPathButton() {
     if(loadPathButton == null) {
       loadPathButton = new JButton("Load");
+      loadPathButton.setToolTipText("<html>Load paths from file</html>");
       loadPathButton.setEnabled(controller.isFileIOEnabled());
       loadPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, loadPathButton.getHeight()));
       loadPathButton.addActionListener(new ActionListener() {
@@ -298,12 +303,14 @@ public class PathDialog extends JFrame {
           int returned = getFileChooser().showOpenDialog(PathDialog.this);
           if(returned == JFileChooser.APPROVE_OPTION) {
             File f = getFileChooser().getSelectedFile();
+            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             if(controller.loadPaths(f))
               setCurrentTranslationId(currentTranslationId);
             else {
               PhraseGUI gui = PhraseGUI.getInstance();
               gui.setStatusMessage("Could not load paths from file");
             }
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
           }
         }
       });
@@ -314,6 +321,7 @@ public class PathDialog extends JFrame {
   private JButton getFinishPathButton() {
     if(finishPathButton == null) {
       finishPathButton = new JButton("Finish");
+      finishPathButton.setToolTipText("<html>Finalize translation path</html>");
       finishPathButton.setEnabled(false);
       finishPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, finishPathButton.getHeight()));
       finishPathButton.addActionListener(new ActionListener() {

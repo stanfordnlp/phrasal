@@ -31,9 +31,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.swing.event.EventListenerList;
-
-
 public class PathModel {
 
   //TODO Make this arbitrary - fixing for now so that arbitrary color schemes need not be defined
@@ -55,7 +52,6 @@ public class PathModel {
 
   //Members
   private final Map<Integer, List<Path>> translationPaths;
-  private final EventListenerList listenerList;
   private Path currentPath = null;
   private boolean isLoaded = false;
   private final PhraseController controller;
@@ -65,8 +61,34 @@ public class PathModel {
     controller = PhraseController.getInstance();
     VERBOSE = controller.getVerbose();
 
-    listenerList = new EventListenerList();
     translationPaths = new HashMap<Integer, List<Path>>();
+
+    controller.addClickEventListener(clickStreamListener);
+  }
+
+  public void freeResources() {
+    controller.removeClickEventListener(clickStreamListener);
+  }
+
+  private ClickEventListener clickStreamListener = new ClickEventListener() {
+    @Override
+    public void handleClickEvent(ClickEvent e) {
+      VisualPhrase vp = (VisualPhrase) e.getSource();
+      processClick(vp);
+    }
+  };
+
+  public void processClick(VisualPhrase vp) {
+    if(currentPath == null)
+      return;
+    else if(currentPath.phrases.size() == 0)
+      currentPath.phrases.add(vp);
+    else if(currentPath.phrases.get(currentPath.phrases.size() - 1).getId() == vp.getId())
+      currentPath.phrases.remove(currentPath.phrases.size() - 1);
+    else if(currentPath.phrases.contains(vp))
+      return;
+    else
+      currentPath.phrases.add(vp);
   }
 
   private class Path {
@@ -79,7 +101,7 @@ public class PathModel {
   }
 
   public boolean load(File file, File schema) {
-    DocumentBuilder parser = getXmlParser(schema);
+    DocumentBuilder parser = getValidatingXmlParser(schema);
     if(parser == null) return false;
 
     try {
@@ -135,7 +157,7 @@ public class PathModel {
         }
       }
     } catch (SAXException e) {
-      System.err.printf("%s: XML parsing exception while loading %s\n", this.getClass().getName(), file.getPath());
+      System.err.printf("%s: XML file %s does not conform to schema\n", this.getClass().getName(), file.getPath());
       e.printStackTrace();
       return false;
 
@@ -160,7 +182,7 @@ public class PathModel {
     return phrase;
   }
 
-  private DocumentBuilder getXmlParser(File schemaFile) {
+  private DocumentBuilder getValidatingXmlParser(File schemaFile) {
     DocumentBuilder db = null;
     try {
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -176,7 +198,7 @@ public class PathModel {
       e.printStackTrace();
 
     } catch (SAXException e) {
-      System.err.printf("%s: SAX exception while loading schema\n", this.getClass().getName());
+      System.err.printf("%s: XML parsing exception while loading schema %s\n", this.getClass().getName(),schemaFile.getPath());
       e.printStackTrace();
 
     } catch(UnsupportedOperationException e) {
@@ -192,7 +214,7 @@ public class PathModel {
   }
 
   public boolean save(File file, File schema) {
-    DocumentBuilder parser = getXmlParser(schema);
+    DocumentBuilder parser = getValidatingXmlParser(schema);
     if(parser == null) return false;
 
     try {
@@ -333,19 +355,6 @@ public class PathModel {
     return ret;
   }
 
-  public void processClick(VisualPhrase vp) {
-    if(currentPath == null)
-      return;
-    else if(currentPath.phrases.size() == 0)
-      currentPath.phrases.add(vp);
-    else if(currentPath.phrases.get(currentPath.phrases.size() - 1).getId() == vp.getId())
-      currentPath.phrases.remove(currentPath.phrases.size() - 1);
-    else if(currentPath.phrases.contains(vp))
-      return;
-    else
-      currentPath.phrases.add(vp);
-  }
-
   public List<String> getPathNames(int translationId) {
     if(translationPaths.get(translationId) != null) {
       List<String> names = new ArrayList<String>();
@@ -380,25 +389,11 @@ public class PathModel {
           return p;
     return null;
   }
-
-  public void addClickToStream(VisualPhrase vp) {
-    processClick(vp);
-
-    //Notify subscribers
-    Object[] listeners = listenerList.getListenerList();
-    for (int i=0; i < listeners.length; i += 2)
-      if (listeners[i]==ClickEventListener.class)
-        ((ClickEventListener)listeners[i+1]).handleClickEvent(new ClickEvent(vp));
-  }
-
-  //No synchronization needed with EventListenerList class
-  public void addClickEventListener(ClickEventListener listener) {
-    listenerList.add(ClickEventListener.class, listener);
-  }
-
-  //No synchronization needed with EventListenerList class
-  public void removeClickEventListener(ClickEventListener listener) {
-    listenerList.remove(ClickEventListener.class, listener);
+  
+  public static void main(String[] args) {
+    PathModel p = new PathModel();
+    p.getValidatingXmlParser(new File("/u/spenceg/javanlp/projects/mt/schema/phrase-viewer-paths.xsd"));
+    
   }
 
 }

@@ -18,7 +18,7 @@ public class PhraseModel {
   private final List<Translation> translations;
   private final List<TranslationLayout> layouts;
   private ScoreDistribution scoreDist;
-  
+
   private boolean isBuilt = false;
 
   public PhraseModel(File source, File opts) {
@@ -37,7 +37,7 @@ public class PhraseModel {
   public void setVerbose(boolean verbose) {
     VERBOSE = verbose;
   }
-  
+
   public boolean load(int scoreHalfRange) {
     try {
 
@@ -133,7 +133,7 @@ public class PhraseModel {
       return layouts.get(translationId - 1);
     return null;
   }
-  
+
   public String getTranslationSource(int translationId) {
     if(translations != null && translationId > 0 && translationId <= translations.size())
       return translations.get(translationId - 1).getSource();
@@ -147,7 +147,7 @@ public class PhraseModel {
   public void normalizePhraseScores(boolean newState) {
     NORM_SCORES = newState;
   }
-  
+
   public void setNumberOfOptionRows(int rows) {
     NUM_VISUAL_OPTION_ROWS = rows;
   }
