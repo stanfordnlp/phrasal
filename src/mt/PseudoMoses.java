@@ -150,7 +150,7 @@ public class PseudoMoses {
 	Inferer<IString, String> refInferer;
 	PhraseGenerator<IString> phraseGenerator;
 	
-	BufferedWriter nbestListWriter;
+	final BufferedWriter nbestListWriter;
 	int nbestListSize;
 	String saveWeights = "saved.wts";
 

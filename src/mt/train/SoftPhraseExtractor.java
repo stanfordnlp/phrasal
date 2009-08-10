@@ -15,8 +15,10 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
   private int maxCrossings;
   private final Set<Pair<Integer,Integer>> cache = new HashSet<Pair<Integer,Integer>>();
 
-  private static final int MAX_SENT_LEN = AlignmentGrid.MAX_SENT_LEN;
+  private static final boolean DISABLE_GROW = System.getProperty("disableGrow") != null;
+  private static final boolean DISABLE_SHRINK = System.getProperty("disableShrink") != null;
 
+  private static final int MAX_SENT_LEN = AlignmentGrid.MAX_SENT_LEN;
 
   // Count of number of alignments inside current range [f1,f2]:
   // (see loops inside extractPhrases to see what range [f1,f2] represents)
@@ -29,6 +31,10 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
   public void setMaxCrossings(int maxCrossings) {
     this.maxCrossings = maxCrossings;
+  }
+
+  private float expDecay(float w) {
+    return (float)Math.exp(-w);
   }
 
   @Override
@@ -79,10 +85,10 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
           crossingsInside += sent.e2f(ei).size() - in[ei];
         }
 
-        //System.err.printf("%d-%d %d-%d\n",f1,f2,e1,e2);
+        //System.err.printf("INIT: %d-%d %d-%d\n",f1,f2,e1,e2);
 
         // Grow block downwards:
-        {
+        if(!DISABLE_GROW) {
           int crossingsInsideBelowD = crossingsInside;
           int lastE1 = Math.max(0,e2-maxPhraseLenE+1);
 
@@ -104,7 +110,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                   crossingsU += sent.e2f(j).size();
                 if(maxCrossings >= crossingsU && newPair(i,j)) {
                   //System.err.printf("G-G %d %d %d\n",crossingsInside,crossingsInsideBelowD,crossingsU);
-                  extractPhrase(sent,f1,f2,i,j,crossingsU==0);
+                  extractPhrase(sent,f1,f2,i,j,crossingsU==0,expDecay(crossingsU));
                 }
               }
             }
@@ -118,7 +124,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                   crossingsD += 2*in[j] - sent.e2f(j).size();
                 if(maxCrossings >= crossingsD && newPair(i,j)) {
                   //System.err.printf("G-S %d %d %d\n",crossingsInside,crossingsInsideBelowD,crossingsD);
-                  extractPhrase(sent,f1,f2,i,j,false);
+                  extractPhrase(sent,f1,f2,i,j,false,expDecay(crossingsD));
                 }
               }
             }
@@ -126,7 +132,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
         }
 
         // Shrink block upwards:
-        if(maxCrossings > 0) {
+        if(!DISABLE_SHRINK && maxCrossings > 0) {
           int crossingsInsideBelowU = crossingsInside;
           for(int i=e1; i<=e2; ++i) {
 
@@ -138,7 +144,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
               continue;
 
             // Grow block upwards:
-            {
+            if(!DISABLE_GROW) {
               int crossingsU = crossingsInsideBelowU;
               int lastE2 = Math.min(esize-1,i+maxPhraseLenE-1);
 
@@ -148,13 +154,13 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                   crossingsU += sent.e2f(j).size();
                 if(maxCrossings >= crossingsU && newPair(i,j)) {
                   //System.err.printf("S-G %d %d %d\n",crossingsInside,crossingsInsideBelowU,crossingsU);
-                  extractPhrase(sent,f1,f2,i,j,false);
+                  extractPhrase(sent,f1,f2,i,j,false,expDecay(crossingsU));
                 }
               }
             }
 
             // Shrink block downwards:
-            {
+            if(!DISABLE_SHRINK) {
               int crossingsD = crossingsInsideBelowU;
               int mini= Math.max(i,e1);
               for(int j=e2; j>=mini; --j) {
@@ -164,7 +170,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                 }
                 if(maxCrossings >= crossingsD && newPair(i,j)) {
                   //System.err.printf("S-S %d %d %d\n",crossingsInside,crossingsInsideBelowU,crossingsD);
-                  extractPhrase(sent,f1,f2,i,j,false);
+                  extractPhrase(sent,f1,f2,i,j,false,expDecay(crossingsD));
                 }
               }
             }

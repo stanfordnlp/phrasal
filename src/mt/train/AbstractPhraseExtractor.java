@@ -91,7 +91,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   @Override
   public void setSentenceInfo(WordAlignment sent, String infoStr) {}
 
-  void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent) {
+  void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent, float weight) {
     if(ignore(sent, f1, f2, e1, e2))
       return;
 
@@ -108,11 +108,11 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     // Create alTemp:
     AlignmentTemplateInstance alTemp;
     if(needAlGrid) {
-      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2);
+      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,weight);
       alGrid.addAlTemp(alTemp, isConsistent);
     } else {
       alTemp = this.alTemp;
-      alTemp.init(sent,f1,f2,e1,e2);
+      alTemp.init(sent,f1,f2,e1,e2,weight);
     }
 
     synchronized(alTemps) {

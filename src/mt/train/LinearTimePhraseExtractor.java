@@ -37,8 +37,8 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
     // Sentence boundaries:
     if(extractBoundaryPhrases) {
       // make sure we can always translate <s> as <s> and </s> as </s>:
-      extractPhrase(sent,0,0,0,0,true);
-      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1,true);
+      extractPhrase(sent,0,0,0,0,true,1.0f);
+      extractPhrase(sent,fsize-1,fsize-1,esize-1,esize-1,true,1.0f);
     }
 
     // For each English phrase:
@@ -91,7 +91,7 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
           int lasti = Math.min(F2,i+maxPhraseLenF-1);
           for(int j=f2; j<=lasti; ++j) {
             assert(j-i < maxPhraseLenF);
-            extractPhrase(sent,i,j,e1,e2,true);
+            extractPhrase(sent,i,j,e1,e2,true,1.0f);
           }
         }
       }

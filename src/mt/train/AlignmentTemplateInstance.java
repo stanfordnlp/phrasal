@@ -14,25 +14,28 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
 
   private WordAlignment sent; // sentence pair from which altemp was extracted
 
-  //private boolean consistent = true;
+  private float weight;
 
   public AlignmentTemplateInstance() { fStartPos = eStartPos = -1;  }
+
+  public float getWeight() { return weight; }
 
   /**
    * Construct alignment template from phrase pair spanning f1-f2 and e1-e2.
    * @param lazy If true, some alignment member variables are null, 
    * which cause f2e() and e2f() to raise a NullPointerException.
    */
-  public AlignmentTemplateInstance(WordAlignment sent, int f1, int f2, int e1, int e2) {
-    init(sent, f1, f2, e1, e2);
+  public AlignmentTemplateInstance(WordAlignment sent, int f1, int f2, int e1, int e2, float weight) {
+    init(sent, f1, f2, e1, e2, weight);
   }
 
-  public void init(WordAlignment sent, int f1, int f2, int e1, int e2) {
+  public void init(WordAlignment sent, int f1, int f2, int e1, int e2, float weight) {
     final boolean lazy = true;
     reset();
     this.sent = sent;
     this.fStartPos = f1;
     this.eStartPos = e1;
+    this.weight = weight;
     // Init phrases:
     f = sent.f().subsequence(f1,f2+1);
     e = sent.e().subsequence(e1,e2+1);
@@ -60,7 +63,7 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
     for(Short a : alTable)
       align[++i] = a;
     if(DEBUG) {
-      System.err.println("New alignment template: "+toString(true));
+      System.err.printf("New alignment template [%d-%d] [%d-%d]: %s\n",f1,f2,e1,e2,toString(true));
       System.err.println("String representation: "+Arrays.toString(align));
     }
     assert(fEndPos() == f2);
