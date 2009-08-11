@@ -71,14 +71,8 @@ public class StaticScorer implements Scorer<String> {
 		for (String key : featureWts.keySet()) {
       int i = featureIndex.indexOf(key);
       double w = featureWts.getCount(key);
-      if(i>=0) {
+      if(i>=0)
         weights[i] = w;
-      //} else {
-        //if(w != 0.0) {
-        //  System.err.printf("warning: ignoring feature with non-zero weight: weight(%s)=%f\n",key,w);
-        //  //throw new RuntimeException("ERROR: feature missing in index: "+key);
-        //}
-      }
     }
 
   }
@@ -103,6 +97,7 @@ public class StaticScorer implements Scorer<String> {
       FeatureValueArray<String> fva = (FeatureValueArray<String>) features;
       double[] arr = fva.toDoubleArray();
       if(arr != null)
+        // TODO: currently not functional; make it work:
         return ArrayMath.innerProduct(fva.toDoubleArray(), weights);
     }
     // original code:

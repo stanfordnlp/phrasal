@@ -9,6 +9,7 @@ import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Ptr;
+import edu.stanford.nlp.util.ArrayUtils;
 import edu.stanford.nlp.svd.ReducedSVD;
 
 import edu.stanford.nlp.optimization.Function;
@@ -16,6 +17,7 @@ import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.HasInitial;
 import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;
+import edu.stanford.nlp.math.ArrayMath;
 
 import mt.base.MosesNBestList;
 import mt.base.ScoredFeaturizedTranslation;
@@ -208,8 +210,8 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
       String bestDirName = null;
       assert(wts != null);
       for (String feature : wts.keySet()) {
-        if (DEBUG)
-          System.out.printf("Searching %s\n", feature);
+        //if (DEBUG)
+        System.out.printf("Searching %s\n", feature);
         Counter<String> dir = new ClassicCounter<String>();
         dir.incrementCount(feature, 1.0);
         Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
@@ -535,6 +537,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
 
+  private final boolean szMinusOne;
   private final boolean doRandomSteps;
   private final int minIter;
 
@@ -542,17 +545,19 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     super(mert);
     this.minIter = minIter;
     this.doRandomSteps = doRandomSteps;
+    this.szMinusOne = UnsmoothedMERT.fixedWts == null;
   }
 
   public DownhillSimplexOptimizer(UnsmoothedMERT mert, boolean doRandomSteps) {
     super(mert);
     this.minIter = 1;
     this.doRandomSteps = doRandomSteps;
+    this.szMinusOne = UnsmoothedMERT.fixedWts == null;
   }
 
   private static final double SIMPLEX_RELATIVE_SIZE = 4;
 
-  Counter<String> randomStep(Set<String> keySet) {
+  private Counter<String> randomStep(Set<String> keySet) {
     Counter<String> randpt = new ClassicCounter<String>();
     for (String f : keySet) {
       if (UnsmoothedMERT.generativeFeatures.contains(f)) {
@@ -562,6 +567,28 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
       }
     }
     return randpt;
+  }
+
+  private Counter<String> arrayToCounter(String[] keys, double[] x) {
+    Counter<String> c = new ClassicCounter<String>();
+    if(szMinusOne) {
+      for(int i=0; i<keys.length-1; ++i)
+        c.setCount(keys[i], x[i]);
+      double l1norm = ArrayMath.norm_1(x);
+      c.setCount(keys[keys.length-1], 1.0-l1norm);
+    } else {
+      for(int i=0; i<keys.length; ++i)
+        c.setCount(keys[i], x[i]);
+    }
+    return c;
+  }
+
+  private double[] counterToArray(String[] keys, Counter<String> wts) {
+    int sz = keys.length;
+    double[] x = szMinusOne ? new double[sz-1] : new double[sz];
+    for(int i=0; i<x.length; ++i)
+      x[i] = wts.getCount(keys[i]);
+    return x;
   }
 
   public Counter<String> optimize(final Counter<String> initialWts) {
@@ -586,19 +613,22 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     final MutableInteger it = new MutableInteger(0);
     UnsmoothedMERT.normalize(initialWts);
 
-    double[] initx = new double[sz-1];
-    for(int i=0; i<sz-1; ++i) {
-      initx[i] = initialWts.getCount(keys[i]);
-    }
+    double[] initx = counterToArray(keys, initialWts);
+    //double[] initx = new double[sz-1];
+    //for(int i=0; i<sz-1; ++i) {
+    //  initx[i] = initialWts.getCount(keys[i]);
+    //}
 
     final DownhillSimplexMinimizer opt;
     if(doRandomSteps) {
       Set<String> keySet = new HashSet<String>(Arrays.asList(keys));
       Counter<String> randomStep = randomStep(keySet);
       UnsmoothedMERT.normalize(randomStep);
-      double[] randx = new double[sz-1];
-      for(int i=0; i<sz-1; ++i)
-        randx[i] = randomStep.getCount(keys[i])*SIMPLEX_RELATIVE_SIZE;
+      double[] randx = counterToArray(keys, randomStep);
+      ArrayMath.multiplyInPlace(randx, SIMPLEX_RELATIVE_SIZE);
+      //double[] randx = new double[sz-1];
+      //for(int i=0; i<sz-1; ++i)
+      //  randx[i] = randomStep.getCount(keys[i])*SIMPLEX_RELATIVE_SIZE;
       opt = new DownhillSimplexMinimizer(randx);
     } else {
       opt = new DownhillSimplexMinimizer(SIMPLEX_RELATIVE_SIZE);
@@ -606,7 +636,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
     Function f = new Function() {
       public double valueAt(double[] x) {
-        double curEval = UnsmoothedMERT.evalAtPoint(nbest, UnsmoothedMERT.arrayToCounter(keys, x), emetric);
+        double curEval = UnsmoothedMERT.evalAtPoint(nbest, arrayToCounter(keys, x), emetric);
         if(curEval > bestEval.doubleValue())
           bestEval.set(curEval);
         it.set(it.intValue()+1);
@@ -617,7 +647,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     };
 
     double[] wtsA = opt.minimize(f, 1e-4, initx, 1000);
-    Counter<String> wts = UnsmoothedMERT.arrayToCounter(keys, wtsA);
+    Counter<String> wts = arrayToCounter(keys, wtsA);
     UnsmoothedMERT.normalize(wts);
     System.err.printf("\nDownhill simplex converged at: %s value: %.5f\n", wts.toString(), UnsmoothedMERT.evalAtPoint(nbest, wts, emetric));
     return wts;

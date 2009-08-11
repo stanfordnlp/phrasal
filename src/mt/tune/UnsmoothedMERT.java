@@ -13,7 +13,6 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.math.ArrayMath;
 
 /**
  * Minimum Error Rate Training (MERT).
@@ -217,8 +216,15 @@ public class UnsmoothedMERT extends Thread {
 
   @SuppressWarnings("deprecation")
   public Counter<String> lineSearch(MosesNBestList nbest,
-                                    Counter<String> initialWts, Counter<String> direction,
+                                    Counter<String> optWts, Counter<String> direction,
                                     EvaluationMetric<IString, String> emetric) {
+
+    Counter<String> initialWts = optWts;
+    if(fixedWts != null) {
+      initialWts = new ClassicCounter<String>(optWts);
+      initialWts.addAll(fixedWts);
+    }
+
     Scorer<String> currentScorer = new StaticScorer(initialWts);
     Scorer<String> slopScorer = new StaticScorer(direction);
     ArrayList<Double> intercepts = new ArrayList<Double>();
@@ -347,8 +353,7 @@ public class UnsmoothedMERT extends Thread {
 
     Counter<String> newWts = new ClassicCounter<String>(initialWts);
     Counters.addInPlace(newWts, direction, chkpts[bestPt]);
-    //bestWts = newWts;
-    return normalize(newWts);
+    return removeWts(normalize(newWts), fixedWts);
   }
 
   enum SmoothingType {
@@ -370,24 +375,12 @@ public class UnsmoothedMERT extends Thread {
     System.err.println();
     System.err.printf("Search Window Size: %d\n", SEARCH_WINDOW);
     System.err.printf("Min nbest occurences: %d\n", MIN_NBEST_OCCURANCES);
-    //System.err.printf("Starting points: %d\n", STARTING_POINTS);
     System.err.printf("Smoothing Type: %s\n", smoothingType);
     System.err.printf("Min plateau diff: %f\n", MIN_PLATEAU_DIFF);
     System.err.printf("Min objective diff: %f\n", MIN_OBJECTIVE_DIFF);
     System.err.printf("FilterUnreachable?: %b\n", filterUnreachable);
   }
 
-  static Counter<String> arrayToCounter(String[] keys, double[] x) {
-    Counter<String> c = new ClassicCounter<String>();
-    for(int i=0; i<keys.length-1; ++i)
-      c.setCount(keys[i], x[i]);
-    double l1norm = ArrayMath.norm_1(x);
-    //double l1norm = ArrayMath.L1Norm(x);
-    c.setCount(keys[keys.length-1], 1.0-l1norm);
-    //System.err.println("array: "+Arrays.toString(x));
-    //System.err.println("counter: "+c);
-    return c;
-  }
 
   static double windowSmooth(double[] a, int pos, int window) {
     int strt = Math.max(0, pos - window);
@@ -508,9 +501,16 @@ public class UnsmoothedMERT extends Thread {
   }
 
   static public double evalAtPoint(MosesNBestList nbest,
-                                   Counter<String> wts, EvaluationMetric<IString, String> emetric) {
+                                   Counter<String> optWts, EvaluationMetric<IString, String> emetric) {
+    Counter<String> wts = optWts;
+    if(fixedWts != null) {
+      wts = new ClassicCounter<String>(optWts);
+      removeWts(wts, fixedWts);
+      wts.addAll(fixedWts);
+    }
     Scorer<String> scorer = new StaticScorer(wts, nbest.featureIndex);
-    if(DEBUG) System.err.printf("eval at point: %s\n", wts.toString());
+    if(DEBUG)
+      System.err.printf("eval at point (%d,%d): %s\n", optWts.size(), wts.size(), wts.toString());
     IncrementalEvaluationMetric<IString, String> incEval = emetric
             .getIncrementalMetric();
     IncrementalNBestEvaluationMetric<IString, String> incNBestEval = null;
@@ -610,6 +610,7 @@ public class UnsmoothedMERT extends Thread {
   static Counter<String> initialWts;
   static List<Counter<String>> previousWts;
 
+  static Counter<String> fixedWts = null;
   static Counter<String> bestWts;
   static double bestObj = Double.POSITIVE_INFINITY;
 
@@ -645,7 +646,7 @@ public class UnsmoothedMERT extends Thread {
     // Load weight files:
     previousWts = new ArrayList<Counter<String>>();
     for(String previousWtsFile : previousWtsFiles.split(","))
-      previousWts.add(readWeights(previousWtsFile));
+      previousWts.add(removeWts(readWeights(previousWtsFile), fixedWts));
     initialWts = previousWts.get(0);
 
     for (int i = 0; i < nStartingPoints; i++) {
@@ -777,6 +778,7 @@ public class UnsmoothedMERT extends Thread {
       System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e", Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
     }
 
+    removeWts(initialWts, fixedWts);
     initialEval = evalAtPoint(nbest, initialWts, emetric);
     System.out.printf("Initial Eval Score: %e\n", initialEval);
     System.out.printf("Initial Weights:\n==================\n");
@@ -944,6 +946,13 @@ public class UnsmoothedMERT extends Thread {
     }
   }
 
+  static Counter<String> removeWts(Counter<String> wts, Counter<String> fixedWts) {
+    if(fixedWts != null)
+      for (String s : fixedWts.keySet())
+        wts.remove(s);
+    return wts;
+  }
+
   public void run() {
 
     System.out.printf("\nthread started (%d): %s\n", startingPoints.size(), this);
@@ -975,7 +984,15 @@ public class UnsmoothedMERT extends Thread {
       
       NBestOptimizer opt = NBestOptimizerFactory.factory(optStr, this);
       System.err.println("using: "+opt.toString());
-      Counter<String> newWts = normalize(opt.optimize(wts));
+
+      // Make sure weights that shouldn't be optimized are not in wts:
+      removeWts(wts, fixedWts);
+      Counter<String> optWts = opt.optimize(wts);
+      // Temporarily add them back before normalization:
+      if(fixedWts != null) optWts.addAll(fixedWts);
+      Counter<String> newWts = normalize(optWts);
+      // Remove them again:
+      removeWts(newWts, fixedWts);
 
       double evalAt = evalAtPoint(nbest, newWts, emetric);
       double mcmcEval = mcmcTightExpectedEval(nbest, newWts, emetric);
@@ -990,6 +1007,7 @@ public class UnsmoothedMERT extends Thread {
   }
 
   public void save(String finalWtsFile) throws IOException {
+
     double finalObjValue = (mcmcObj ?
             mcmcTightExpectedEval(nbest, bestWts, emetric) :
             evalAtPoint(nbest, bestWts, emetric));
@@ -1005,8 +1023,15 @@ public class UnsmoothedMERT extends Thread {
     System.out.printf("Final Eval Score: %e->%e\n", initialEval, finalEval);
     System.out.printf("Final Obj: %e->%e\n", initialObjValue, finalObjValue);
     System.out.printf("Final Weights:\n==================\n");
-    displayWeights(bestWts);
+
     double wtSsd = wtSsd(initialWts, bestWts);
+
+    if(fixedWts != null) {
+      removeWts(bestWts, fixedWts);
+      bestWts.addAll(fixedWts);
+    }
+
+    displayWeights(bestWts);
     System.out.printf("wts ssd: %e\n", wtSsd);
     writeWeights(finalWtsFile, bestWts);
   }
@@ -1031,6 +1056,14 @@ public class UnsmoothedMERT extends Thread {
         nStartingPoints = Integer.parseInt(args[++argi]);
       } else if(arg.equals("-o")) {
         optStr = args[++argi];
+      } else if(arg.equals("-f")) {
+        String fixedWtsFile = args[++argi];
+        try {
+          fixedWts = readWeights(fixedWtsFile);
+        } catch(IOException e) {
+          System.err.println("Fixed weight file missing: "+fixedWtsFile);
+          fixedWts = null;
+        }
       } else if(arg.equals("-t")) {
         nThreads = Integer.parseInt(args[++argi]);
       } else {
