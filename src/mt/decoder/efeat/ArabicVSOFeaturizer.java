@@ -26,9 +26,14 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   private static final int NOT_IN_SUBJECT = -1;
 
   public ArabicVSOFeaturizer(String... args) {
-    //TODO Add idiot-proofing on number of arguments
+    
+    assert args.length == 2;
     rFilePath = args[0];
     cFilePath = args[1];
+    
+    //Do the loading here to accommodate multi-threading
+    ArabicSubjectBank sb = ArabicSubjectBank.getInstance();
+    sb.load(rFilePath,cFilePath);
   }
 
   private int getSubjectIdForPhrase(int phraseStart, int len) {
@@ -46,11 +51,11 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
       if(phraseStart >= lowerBound && phraseEnd >= subject.first() && phraseEnd <= subject.second()) {
         return subjectId;
 
-      } else if(phraseStart < lowerBound && phraseEnd >= subject.first() && phraseEnd <= subject.second()) {
-        return CROSSES_BOUNDARY;
-
-      } else if(phraseStart >= subject.first() && phraseStart <= subject.second() && phraseEnd > subject.second()) {
-        return CROSSES_BOUNDARY;
+//      } else if(phraseStart < lowerBound && phraseEnd >= subject.first() && phraseEnd <= subject.second()) {
+//        return CROSSES_BOUNDARY;
+//
+//      } else if(phraseStart >= subject.first() && phraseStart <= subject.second() && phraseEnd > subject.second()) {
+//        return CROSSES_BOUNDARY;
 
       }
       subjectId++;
@@ -135,96 +140,35 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
     if(noSubjects) return null;
 
-    Pair<Integer,Boolean> thisAction = new Pair<Integer,Boolean>(NOT_IN_SUBJECT,false);
-    if(f.prior != null && f.prior.extra != null) {
-      Pair<Integer,Boolean> lastAction = (Pair<Integer,Boolean>) f.prior.extra;
-      thisAction.setFirst(new Integer(lastAction.first()));
-      thisAction.setSecond(new Boolean(lastAction.second()));
-    } 
-    f.extra = thisAction;
+    Set<Integer> scoredSubjects = (f.prior != null && f.prior.extra != null) 
+          ? (Set<Integer>) f.prior.extra : new HashSet<Integer>();
+    
+    f.extra = scoredSubjects;
 
-    int subjectInProgress = thisAction.first();		
-    int thisPhrase = getSubjectIdForPhrase(f.foreignPosition,f.foreignPhrase.size());
+    int thisPhrase = getSubjectIdForPhrase(f.foreignPosition, f.foreignPhrase.size());
 
-    if(thisPhrase == NOT_IN_SUBJECT) {
-      thisAction.setSecond(false);
+    //TODO v6 should advance past leading conjunctions and punctuation
+    
+    if(thisPhrase == NOT_IN_SUBJECT)
       return null;
-
-    } else if(thisPhrase == CROSSES_BOUNDARY) {      
-      thisAction.setSecond(false);
-      double penalty = -1.0 * getPastAwardForSubject(subjectInProgress, f);
-      return new FeatureValue<String>(FEATURE_NAME, penalty - FEATURE_PENALTY);
-
-    } else if(thisPhrase == subjectInProgress) {
-      
-      //Completes the subject properly
-      if(isComplete(subjectInProgress,f) && isContiguous(subjectInProgress,f)) {
-        if(VERBOSE)
-          System.err.printf("%s: (%s) completes %d\n", this.getClass().getName(), f.foreignPhrase.toString(), subjectInProgress);
-        thisAction.setSecond(true);
-        //Last point awarded for completing the subject
-        return new FeatureValue<String>(FEATURE_NAME, FEATURE_PENALTY);
-      
-      } else if(isComplete(subjectInProgress,f)) {
-        if(VERBOSE)
-          System.err.printf("%s: (%s) violates %d\n", this.getClass().getName(), f.foreignPhrase.toString(), subjectInProgress);
-
-        //Did not lay down the last part of the subject properly
-        thisAction.setSecond(false);
-        double penalty = -1.0 * getPastAwardForSubject(subjectInProgress,f);
-        return new FeatureValue<String>(FEATURE_NAME, penalty - FEATURE_PENALTY);
+//    else if(thisPhrase == CROSSES_BOUNDARY) {
+//      return new FeatureValue<String>(FEATURE_NAME, -1.0 * FEATURE_PENALTY);
+//    }
+    else if(!scoredSubjects.contains(thisPhrase)) {
+      if(isComplete(thisPhrase,f) && isContiguous(thisPhrase,f)) {
+        scoredSubjects.add(thisPhrase);
+        return new FeatureValue<String>(FEATURE_NAME,FEATURE_PENALTY);
       }
-      
-      //Not completing the subject
-      thisAction.setSecond(false);
-      return null;
-
-    } else { //it's in another subject
-      
-      thisAction.setFirst(thisPhrase);
-      thisAction.setSecond(true);
-
-      if(subjectInProgress == NOT_IN_SUBJECT) { //Initial condition
-        //First point for new subject
-//        if(isComplete(thisPhrase,f) && isContiguous(thisPhrase,f)) {
-//          if(VERBOSE)
-//            System.err.printf("%s: (%s) totally completes %d\n", this.getClass().getName(), f.foreignPhrase.toString(), thisPhrase);
-//          
-//          return new FeatureValue<String>(FEATURE_NAME, 3.0 * FEATURE_PENALTY);
-//        }
-        return new FeatureValue<String>(FEATURE_NAME, FEATURE_PENALTY);
-      }
-//      else if(isComplete(subjectInProgress,f) && isContiguous(subjectInProgress, f) &&
-//              isComplete(thisPhrase, f) && isContiguous(thisPhrase, f)) {
-//        
-//        if(VERBOSE)
-//          System.err.printf("%s: (%s) totally completes %d after %d\n", this.getClass().getName(), f.foreignPhrase.toString(), thisPhrase, subjectInProgress);
-//        
-//        //Completed the new subject with one phrase; 3x reward
-//        return new FeatureValue<String>(FEATURE_NAME, 3.0 * FEATURE_PENALTY);
-//      }
-      else if(isComplete(subjectInProgress,f) && isContiguous(subjectInProgress,f)) {
-        if(VERBOSE)
-          System.err.printf("%s: (%s) transition from %d to %d\n", this.getClass().getName(), f.foreignPhrase.toString(), subjectInProgress, thisPhrase);
-        //First point for new subject
-        return new FeatureValue<String>(FEATURE_NAME, FEATURE_PENALTY);
-      }
-      
-      if(VERBOSE)
-        System.err.printf("%s: (%s) from %d before %d completes\n", this.getClass().getName(), f.foreignPhrase.toString(), thisPhrase, subjectInProgress);
-
-      double penalty = -1.0 * getPastAwardForSubject(subjectInProgress,f);
-      return new FeatureValue<String>(FEATURE_NAME, penalty - FEATURE_PENALTY);
     }
+
+    return null;
   }
 
   public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {
     ArabicSubjectBank sb = ArabicSubjectBank.getInstance();
-    sb.load(rFilePath,cFilePath);
-
     subjectSpans = sb.subjectsForSentence(foreign);
     if(subjectSpans == null)
-      throw new RuntimeException(String.format("%s: Null subject span for sentence (%s)",this.getClass().getName(), foreign.toString()));
+      throw new RuntimeException(String.format("%s: Unknown sentence in the MT test set that was not processed by the Subject Detector (%s)",this.getClass().getName(), foreign.toString()));
 
     System.err.printf("%s: %d subjects for sentence\n%s\n", this.getClass().getName(), subjectSpans.size(), foreign.toString());
 
