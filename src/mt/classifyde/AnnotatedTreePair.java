@@ -1,12 +1,21 @@
 package mt.classifyde;
 
-import mt.train.transtb.*;
-import java.io.*;
 import java.util.*;
-import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.*;
-import edu.stanford.nlp.trees.international.pennchinese.*;
+
+import edu.stanford.nlp.trees.GrammaticalStructure;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.Trees;
+import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.trees.international.pennchinese.ChineseGrammaticalStructure;
+import edu.stanford.nlp.trees.tregex.TreeMatcher;
+import edu.stanford.nlp.trees.tregex.TreePattern;
+import edu.stanford.nlp.util.Filter;
+import edu.stanford.nlp.util.Filters;
+import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.ArrayUtils;
+import mt.train.transtb.AlignmentUtils;
+import mt.train.transtb.TranslationAlignment;
+import mt.train.transtb.TreePair;
 
 
 /**
@@ -53,8 +62,7 @@ public class AnnotatedTreePair {
   private void computeParsedNPwithDEs() {
     List<Tree> parsedChineseTrees = treepair_.chParsedTrees();
 
-    if (parsedChineseTrees == null ||
-        parsedChineseTrees.size() == 0) {
+    if (parsedChineseTrees == null || parsedChineseTrees.isEmpty()) {
       System.err.println("Warning: NO Chinese parsed trees info present. Use gold trees instead.");
       parsedChineseTrees = treepair_.chTrees();
     }
@@ -71,17 +79,17 @@ public class AnnotatedTreePair {
 
   public static void annotateNPwithDEs(
     List<Pair<String,String>> categories, AnnotatedTreePair atp) {
-    Integer[] deIndices = atp.NPwithDEs_deIdx_set.toArray(new Integer[atp.NPwithDEs_deIdx_set.size()]);
+    int[] deIndices = ArrayUtils.asPrimitiveIntArray(atp.NPwithDEs_deIdx_set);
     int offset = -1;
 
     if (deIndices.length <= 0) {
       // no labeling needed
       return;
     }
-    
+
     // First, find the offset of the first NP in the TreePair
     // relative to the categories for the whole file
-    String currentNP = atp.oracleChNPwithDE((int)deIndices[0]).trim();
+    String currentNP = atp.oracleChNPwithDE(deIndices[0]).trim();
     // we go through all the categories for the file (which contains this TreePair)
     for (int i = 0; i < categories.size(); i++) {
       Pair<String,String> category = categories.get(i);
@@ -91,7 +99,7 @@ public class AnnotatedTreePair {
         if (category.second().trim().equals(currentNP)) {
           // check next NP as sanity check!
           // (there might be multiple NPs that have the same
-          // Chinese words in one file, if we just match one, 
+          // Chinese words in one file, if we just match one,
           // we might get a wrong offset.
           // This might still potentiall cause problems,
           // if there are two subsequent NPs that are duplicates.
@@ -99,7 +107,7 @@ public class AnnotatedTreePair {
           String nextCatNP = "";
           String nextNP = "";
           if (deIndices.length > 1) {
-            nextNP = atp.oracleChNPwithDE((int)deIndices[1]).trim();
+            nextNP = atp.oracleChNPwithDE(deIndices[1]).trim();
           }
           if (i+1 < categories.size()) {
             nextCatNP = categories.get(i+1).second().trim();
@@ -135,7 +143,7 @@ public class AnnotatedTreePair {
     StringBuilder sb = new StringBuilder();
     if (NPwithDEs.keySet().contains(ip)) {
       for(int i = ip.first; i <= ip.second; i++)
-        sb.append(treepair_.alignment().source_[i]).append(" ");
+        sb.append(treepair_.alignment().source_[i]).append(' ');
       return sb.toString();
     } else {
       throw new RuntimeException();
@@ -156,7 +164,8 @@ public class AnnotatedTreePair {
         System.out.print("<b><u> [[ ");
         markBegin--;
       }
-      System.out.print(chSent[i]+" ");
+      System.out.print(chSent[i]);
+      System.out.print(' ');
       while (markEnd>0) {
         System.out.print(" ]] </u></b>");
         markEnd--;
@@ -181,7 +190,8 @@ public class AnnotatedTreePair {
       if (markedwords.contains(i)) {
         System.out.print("<b><u>");
       }
-      System.out.print(enSent[i]+" ");
+      System.out.print(enSent[i]);
+      System.out.print(' ');
       if (markedwords.contains(i)) {
         System.out.print("</u></b>");
       }
@@ -278,8 +288,8 @@ public class AnnotatedTreePair {
     int numNPwithDE = 0;
 
     AlignmentUtils.printAlignmentGridHeader();
-    List<Set<Tree>> deTreesList = new ArrayList<Set<Tree>>();
-    List<Set<Pair<Integer,Integer>>> deSpansList = new ArrayList<Set<Pair<Integer,Integer>>>();
+    // List<Set<Tree>> deTreesList = new ArrayList<Set<Tree>>();
+    // List<Set<Pair<Integer,Integer>>> deSpansList = new ArrayList<Set<Pair<Integer,Integer>>>();
 
     for(int i = 0; i < atps.size(); i++) {
       // Print Header of the HTML
@@ -293,8 +303,7 @@ public class AnnotatedTreePair {
 
 
     int counter = 1;
-    for(int i = 0; i < atps.size(); i++) {
-      AnnotatedTreePair atp = atps.get(i);
+    for (AnnotatedTreePair atp : atps) {
       System.out.println("<hr>");
       System.out.printf("<a name=%d>\n", counter);
       System.out.printf("<h2>Sentence %d</h2>\n", counter);
@@ -330,7 +339,8 @@ public class AnnotatedTreePair {
         System.out.printf("<font color=\"red\">[Fragmented]</font>\t");
       }
       for(int chi = NPwithDE.first; chi <= NPwithDE.second; chi++) {
-        System.out.print(treepair_.alignment().source_[chi]+" ");
+        System.out.print(treepair_.alignment().source_[chi]);
+        System.out.print(' ');
       }
       System.out.println("<br />");
     }
@@ -375,7 +385,7 @@ public class AnnotatedTreePair {
 
     // (1.1) Chinese Tree
     System.out.println("<h3> Chinese Tree </h3>");
-    //TreePair.printTree(chT); // TODO: fix compile error
+    TreePair.printTree(chT);
     Filter<String> puncWordFilter = Filters.acceptFilter();
     System.out.println("<h3> Chinese Deps </h3>");
     GrammaticalStructure gs = new ChineseGrammaticalStructure(chT, puncWordFilter);
@@ -393,7 +403,7 @@ public class AnnotatedTreePair {
     for (int ti = 0; ti < enTrees.size(); ti++) {
       Tree enT = enTrees.get(ti);
       System.out.printf("<h3> English Tree(%d) </h3>\n", ti);
-      //TreePair.printTree(enT); // TODO: fix compile error
+      TreePair.printTree(enT);
       System.err.println("=====================");
       enT.pennPrint(System.err);
       System.err.println("=====================");
