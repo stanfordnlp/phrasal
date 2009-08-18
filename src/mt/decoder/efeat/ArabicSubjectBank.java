@@ -9,159 +9,123 @@ import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.Pair;
 
-public class ArabicSubjectBank {
-	private static ArabicSubjectBank thisInstance = null;
-	private static Map<Sequence<IString>,List<Pair<Integer,Integer>>> subjectBank = null;
-	private static boolean isLoaded = false;
-	private static final String stopSymbol = "O";
-	private static final int tokensPerInputLine = 3;
-	public static final int maxSubjectLength = 5;
-	
-	private static final String SUBJECT_START = "NP_SUBJ_START";
-	private static final String SUBJECT_INSIDE = "NP_SUBJ_IN";
-	private static final String SUBJECT_END = "NP_SUBJ_END";
-	private static final String SINGLETON = "NP_SUBJ_SINGLE";
-	
-	protected ArabicSubjectBank() {}
-	
-	public static ArabicSubjectBank getInstance() {
-		if(thisInstance == null)
-			thisInstance = new ArabicSubjectBank();
-		return thisInstance;
-	}
-	
-	public void load(String rawFile, String crfFile) {
-		if(isLoaded) return;
-		try {
-			BufferedReader rawReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rawFile))));
-			BufferedReader crfReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(crfFile))));
-			subjectBank = new HashMap<Sequence<IString>,List<Pair<Integer,Integer>>>();
-			int nullSubjects = 0;
-			
-			//Re-factor using Pairs
-			List<Pair<Integer,Integer>> sentenceSubjects = null;
-			int sentIdx = 0;
-			int subjStartIdx = -1;
-			for(int lineId = 1; crfReader.ready(); lineId++) {
-				String line = crfReader.readLine();
-				StringTokenizer st = new StringTokenizer(line);
-				if(st.countTokens() == 0)
-					continue;
-				else if(st.countTokens() != tokensPerInputLine) {
-					System.err.printf("%s: File format problem at line %d\n", this.getClass().getName(), lineId);
-					break;
-				}
-				
-				String word = st.nextToken();
-				if(word.equals(stopSymbol)) {
-					if(sentenceSubjects != null) {
-						if(rawReader.ready()) {
-							String key = rawReader.readLine();
-              String[] tokens = key.split("\\s+");
-              Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
-                  .toIStringArray(tokens));
-							subjectBank.put(foreign, sentenceSubjects);
-							if(sentenceSubjects.size() == 0)
-							  nullSubjects++;
-						} else {
-							throw new RuntimeException("*!arabicsubjectbank: Mismatch between raw file and crf file");
-						}
-					}
-					sentenceSubjects = new ArrayList<Pair<Integer,Integer>>();
-					sentIdx = 0;
-					subjStartIdx = -1;
-					continue;
-				}
-				
-				String correctClass = st.nextToken(); //Discard the 'answer' class
+public final class ArabicSubjectBank {
+  private static ArabicSubjectBank thisInstance = null;
+  private final Map<Sequence<IString>,SentenceData> subjectBank;
+  private boolean isLoaded = false;
 
-				String predClass = st.nextToken();
-				if(predClass.equals(SINGLETON)) {
-					sentenceSubjects.add(new Pair<Integer,Integer>(sentIdx,sentIdx));
-				} else if(predClass.equals(SUBJECT_START)) {
-					subjStartIdx = sentIdx;
-				} else if(predClass.equals(SUBJECT_INSIDE)) {
-					//continue
-				} else if(predClass.equals(SUBJECT_END)) {
-					if(subjStartIdx != -1 && (sentIdx - subjStartIdx) < maxSubjectLength) {
-						sentenceSubjects.add(new Pair<Integer,Integer>(subjStartIdx,sentIdx));
-					}
-					subjStartIdx = -1;
-				}
-				sentIdx++;
-			}
-			
-			if(sentenceSubjects != null) {
-				if(rawReader.ready()) {
-          String key = rawReader.readLine();
-          String[] tokens = key.split("\\s+");
-          Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
-              .toIStringArray(tokens));
-          subjectBank.put(foreign, sentenceSubjects);
-          if(sentenceSubjects.size() == 0)
-            nullSubjects++;
-				} else {
-					throw new RuntimeException("*!arabicsubjectbank: Mismatch between raw file and crf file");
-				}
-			}
-			
-			crfReader.close();
-			rawReader.close();
-			isLoaded = true;
-			
-			System.err.printf("%s: Loaded subjects for %d sentences\n", this.getClass().getName(), subjectBank.keySet().size());
-			System.err.printf("%s: %d sentences have 0 subjects\n", this.getClass().getName(), nullSubjects);
-			
-		} catch (FileNotFoundException e) {
-			System.err.printf("%s: Could not load %s\n", this.getClass().getName(), crfFile);
-		} catch (IOException e) {
-			System.err.printf("%s: Failed to read file\n",this.getClass().getName());
-		}
-	}
-	
-	public List<Pair<Integer,Integer>> subjectsForSentence(Sequence<IString> foreign) {
-		if(subjectBank == null)
-			throw new RuntimeException("*!arabicsubjectbank: Subject bank not initialized");
+  public static final int MAX_SUBJ_LENGTH = 5;
+  private static final String DELIM = "|||";
 
-		return (List<Pair<Integer,Integer>>) subjectBank.get(foreign);
-	}
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		ArabicSubjectBank asb = ArabicSubjectBank.getInstance();
-		String rawFile = "/home/rayder441/sandbox/mt04.unk";
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rawFile))));
-			asb.load(rawFile,"/home/rayder441/sandbox/mt04.subj.spans");
-			
-			while(br.ready()) {
-				String sent = br.readLine();
-        String[] tokens = sent.split("\\s+");
-        Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
-            .toIStringArray(tokens));
-				List<Pair<Integer,Integer>> subjs = asb.subjectsForSentence(foreign);
-				
-				System.out.printf("Sentence(%s) -- (%d) subjects\n", sent,subjs.size());
-				Iterator<Pair<Integer,Integer>> itr = subjs.iterator();
-				while(itr.hasNext()) {
-					Pair<Integer,Integer> subj = itr.next();
-					int start = subj.first();
-					int stop = subj.second();
-					
-					System.out.printf(" subj: %d to %d\n",start,stop);
-				}
-			}
-			
-			br.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+  protected ArabicSubjectBank() {
+    subjectBank = new HashMap<Sequence<IString>,SentenceData>();
+  }
 
+  public static ArabicSubjectBank getInstance() {
+    if(thisInstance == null)
+      thisInstance = new ArabicSubjectBank();
+    return thisInstance;
+  }
+
+  private class SentenceData {
+    public SentenceData() {
+      subjSpans = new ArrayList<Pair<Integer,Integer>>();
+      verbs = new HashMap<Integer,Integer>();
+    }
+    public List<Pair<Integer,Integer>> subjSpans;
+    public Map<Integer,Integer> verbs;
+  }
+
+  public void load(final File filename) {
+    if(isLoaded) return;
+    try {
+      final LineNumberReader reader = new LineNumberReader(new InputStreamReader(new FileInputStream(filename),"UTF-8"));
+
+      int nullSubjects = 0;
+      int numSubjects = 0;
+      int numVerbs = 0;
+      while(reader.ready()) {
+        final SentenceData newSent = new SentenceData();
+        Sequence<IString> sentence = null;
+
+        final StringTokenizer st = new StringTokenizer(reader.readLine(),DELIM);
+        for(int i = 0; st.hasMoreTokens(); i++) {
+          final String token = st.nextToken();
+          if(i == 0) {
+            sentence = new SimpleSequence<IString>(true, IStrings.toIStringArray(token.split("\\s+")));
+
+          } else if(token.contains("{")) {
+            final String stripped = token.replaceAll("\\{|\\}", "");
+            final StringTokenizer verbIndices = new StringTokenizer(stripped,",");
+            while(verbIndices.hasMoreTokens()) {
+              int verbIdx = Integer.parseInt(verbIndices.nextToken().trim());
+              newSent.verbs.put(verbIdx,verbIdx);
+            }
+
+          } else {
+            final String[] indices = token.split(",");
+            assert indices.length == 2;
+
+            final int start = Integer.parseInt(indices[0].trim());
+            final int end = Integer.parseInt(indices[1].trim());
+            if(end - start < MAX_SUBJ_LENGTH)
+              newSent.subjSpans.add(new Pair<Integer,Integer>(start,end));
+          }
+        }
+
+        if(sentence == null)
+          throw new RuntimeException(String.format("%s: File format problem at line %d",this.getClass().getName(),reader.getLineNumber()));
+
+        if(newSent.subjSpans.size() == 0) 
+          nullSubjects++;
+        else
+          numSubjects += newSent.subjSpans.size();
+        
+        numVerbs += newSent.verbs.keySet().size();
+        subjectBank.put(sentence, newSent);
+      }
+
+      reader.close();
+      isLoaded = true;
+
+      System.err.printf(">> %s Stats <<\n", this.getClass().getName());
+      System.err.printf("sentences: %d\n", subjectBank.keySet().size());
+      System.err.printf("null: %d\n", nullSubjects);
+      System.err.printf("subjects: %d\n", numSubjects);
+      System.err.printf("verbs: %d\n", numVerbs);
+
+    } catch (FileNotFoundException e) {
+      System.err.printf("%s: Could not load %s\n", this.getClass().getName(), filename);
+    } catch (IOException e) {
+      System.err.printf("%s: Failed to read file %s\n",this.getClass().getName(), filename);
+    }
+  }
+
+  public List<Pair<Integer,Integer>> subjectsForSentence(Sequence<IString> foreign) {
+    if(!isLoaded)
+      throw new RuntimeException(String.format("%s: Subject bank not initialized (subj)", this.getClass().getName()));
+
+    if(subjectBank.get(foreign) == null)
+      throw new RuntimeException(String.format("%s: Could not find subjects for |||%s|||",this.getClass().getName(),foreign.toString()));
+    
+    return Collections.unmodifiableList(subjectBank.get(foreign).subjSpans);
+  }
+
+  public Map<Integer,Integer> verbsForSentence(Sequence<IString> foreign) {
+    if(!isLoaded)
+      throw new RuntimeException(String.format("%s: Subject bank not initialized (verb)", this.getClass().getName()));
+
+    if(subjectBank.get(foreign) == null)
+      throw new RuntimeException(String.format("%s: Could not find verbs for |||%s|||",this.getClass().getName(),foreign.toString()));
+
+    return Collections.unmodifiableMap(subjectBank.get(foreign).verbs);
+  }
+
+  /**
+   * @param args
+   */
+  public static void main(String[] args) {
+    ArabicSubjectBank asb = ArabicSubjectBank.getInstance();
+    asb.load(new File("/home/rayder441/sandbox/SubjDetector/mt04.unk.vso-feat"));
+  }
 }
