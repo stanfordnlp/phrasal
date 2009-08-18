@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#####################################################
+# Extract translation options for Phrasal stderr
+# (this script assumes you ran Phrasal with 
+# -DPrintTranslationOptions=true)
+#####################################################
+
+grep '||| .* ||| .* ||| .* |||' | sort --buffer-size=2g -n
