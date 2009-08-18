@@ -13,6 +13,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.font.TextAttribute;
 import java.io.File;
 import java.util.HashMap;
@@ -102,10 +104,19 @@ public class PathDialog extends JFrame {
     this.setSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));
     this.setMinimumSize(new Dimension(DEFAULT_WIDTH,DEFAULT_HEIGHT));
     this.setContentPane(getMainSplitPane());
-
+    this.addWindowListener(new ClosingListener());
+    
     this.setCurrentTranslationId(currentTranslationId);
-
+    
     controller.addClickEventListener(clickStreamListener);
+  }
+  
+  private class ClosingListener extends WindowAdapter {
+    public void windowClosing(WindowEvent e) {
+      if(isRecording) {
+        toggleRecording(false,recordingPathName);
+      }
+    }
   }
 
   public void freeResources() {
@@ -393,6 +404,7 @@ public class PathDialog extends JFrame {
       comps.off.setSelected(isOn);
       comps.on.setEnabled(!isOn);
       comps.on.setSelected(!isOn);
+      comps.kill.setVisible(!isOn);
     }
 
     recordingPathName = (isOn) ? name : null;
