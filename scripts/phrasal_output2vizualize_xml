@@ -1,0 +1,74 @@
+#!/usr/bin/perl
+
+#####################################################
+# Converts Moses 1-best into xml (mt.visualize format)
+#
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Tue 18 Aug 2009 02:00:03 PM PDT
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+die "Usage: $0 <input> <1best>\n" unless $#ARGV == 1;
+my $input = $ARGV[0];
+my $best = $ARGV[1];
+
+open(F,$input);
+open(B,$best);
+
+binmode(F,":utf8");
+binmode(B,":utf8");
+
+print '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+print '<tr engine="phrase-viewer">'."\n";
+
+my $sent = 0;
+while(my $f = <F>) {
+	my $b = <B>;
+
+	++$sent;
+
+	$f =~ s/\s*$//;
+	$f =~ s/^\s*//;
+	my @f = split(/\s+/, $f);
+
+	$b =~ //;
+	my @b = split(/\s+\|\|\|\s+/, $b);
+	assert($b[0]+1 == $sent);
+
+	my $e = $b[1];
+	my $a = $b[4];
+	my @e = split(/\s+/,$e);
+	my @a = split(/\s+/,$a);
+
+	print "<sentence id=\"$sent\">\n<source>\n";
+	foreach my $fw (@f) { print "<w>$fw</w>\n" }
+	print "</source>\n<path name=\"1best\">\n";
+	for my $aw (@a) {
+		$aw =~ /(\S+)=(\S+)/;
+		my ($af,$ae) = ($1,$2);
+		my ($af1,$af2) = range($af);
+		my ($ae1,$ae2) = range($ae);
+		print "<p end=\"$af2\" sco=\"1\" start=\"$af1\">".(join(' ',@e[$ae1..$ae2]))."</p>\n";
+	}
+	print "</path>\n</sentence>\n"
+}
+
+close(F);
+close(B);
+
+print "</tr>\n";
+exit(0);
+
+sub range {
+	my $tok = shift;
+	return ($tok,$tok) if($tok !~ /\-/);
+	$tok =~ /(\S+)-(\S+)/;
+	return ($1,$2);
+}
