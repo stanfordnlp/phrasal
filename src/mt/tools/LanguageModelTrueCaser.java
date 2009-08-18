@@ -34,6 +34,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
   private Inferer<IString, String> inferer;
 
   public static void main(String args[]) throws Exception {
+    SRILanguageModel.addVocabToIStrings = true;
     if (args.length != 1) {
       System.err.println("Usage:\n\tjava ... TrueCaser (language model) < uncased_input > cased_output");
       System.exit(-1);

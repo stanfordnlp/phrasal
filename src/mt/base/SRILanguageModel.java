@@ -20,6 +20,8 @@ import mt.srilm.SWIGTYPE_p_Vocab;
  */
 public class SRILanguageModel implements LanguageModel<IString> {
 
+  public static boolean addVocabToIStrings = false;
+
   private static final int lm_start_sym_id = 11; //1-10 reserved for special symbols
   private static final int lm_end_sym_id = 5000001; //max vocab 16M
 
@@ -67,7 +69,8 @@ public class SRILanguageModel implements LanguageModel<IString> {
     p_vocab = srilm.initVocab(lm_start_sym_id, lm_end_sym_id);
     p_srilm = srilm.initLM(order, p_vocab);
 		srilm.readLM(p_srilm, filename);
-    readUnigrams(filename);
+    if(addVocabToIStrings)
+      addVocabToIStrings(filename);
 
     ids = new int[lm_end_sym_id];
     Arrays.fill(ids,-1);
@@ -181,7 +184,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
     return maxOrder;
   }
 
-  private void readUnigrams(String filename) {
+  private void addVocabToIStrings(String filename) {
     try {
       LineNumberReader lmReader = IOTools.getReaderFromFile(filename);
       String line;

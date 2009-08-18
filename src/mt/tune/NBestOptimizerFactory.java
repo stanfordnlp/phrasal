@@ -614,10 +614,6 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     UnsmoothedMERT.normalize(initialWts);
 
     double[] initx = counterToArray(keys, initialWts);
-    //double[] initx = new double[sz-1];
-    //for(int i=0; i<sz-1; ++i) {
-    //  initx[i] = initialWts.getCount(keys[i]);
-    //}
 
     final DownhillSimplexMinimizer opt;
     if(doRandomSteps) {
@@ -626,9 +622,6 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
       UnsmoothedMERT.normalize(randomStep);
       double[] randx = counterToArray(keys, randomStep);
       ArrayMath.multiplyInPlace(randx, SIMPLEX_RELATIVE_SIZE);
-      //double[] randx = new double[sz-1];
-      //for(int i=0; i<sz-1; ++i)
-      //  randx[i] = randomStep.getCount(keys[i])*SIMPLEX_RELATIVE_SIZE;
       opt = new DownhillSimplexMinimizer(randx);
     } else {
       opt = new DownhillSimplexMinimizer(SIMPLEX_RELATIVE_SIZE);
