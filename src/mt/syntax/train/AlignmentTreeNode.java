@@ -22,10 +22,10 @@ import java.text.DecimalFormat;
 public class AlignmentTreeNode extends Tree {
 
   /**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	public static final String DEBUG_PROPERTY = "DebugGHKM";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
@@ -64,7 +64,7 @@ public class AlignmentTreeNode extends Tree {
    * Spans of French words reachable from any node of the frontier graph that is
    * neither a ancestor nor a dscendant of the current node. If fSpan and
    * fComplementSpan no not overlap, then there is no syntactic crossing.
-   * 
+   *
    */
   protected Set<Integer> fComplementSpan = new TreeSet<Integer>();
 
@@ -114,7 +114,7 @@ public class AlignmentTreeNode extends Tree {
     this.label = label;
     setChildren(daughterTreesList);
   }
-  
+
   /**
 	 * Check if there is no syntactic crossing at the given constituent,
    * i.e., the node is along any "sensible" frontier of the FrontierGraph,
@@ -150,7 +150,7 @@ public class AlignmentTreeNode extends Tree {
   public void addToFComplementSpan(int idx) {
     fComplementSpan.add(idx);
   }
-  
+
   /**
    * Return indices of all foreign words reachable from current node.
    */
@@ -160,9 +160,9 @@ public class AlignmentTreeNode extends Tree {
 
 
   /**
-   * Return true if foreign span is empty. 
+   * Return true if foreign span is empty.
    */
-  public boolean emptySpan() { return fSpan.isEmpty(); } 
+  public boolean emptySpan() { return fSpan.isEmpty(); }
 
   /*
    * Lowest value of the foreign span.
@@ -259,17 +259,17 @@ public class AlignmentTreeNode extends Tree {
    * Appends the printed form of a parse tree (as a bracketed String)
    * to a <code>StringBuffer</code>.
    *
-   * @return StringBuffer returns the <code>StringBuffer</code>
+   * @return StringBuffer returns the <code>StringBuffer</code> @param sb
    */
   @Override
-	public StringBuffer toStringBuffer(StringBuffer sb) {
-    sb.append("(");
+  public StringBuilder toStringBuilder(StringBuilder sb) {
+    sb.append('(');
     sb.append(nodeString());
     for (Tree daughterTree : children) {
-      sb.append(" ");
-      daughterTree.toStringBuffer(sb);
+      sb.append(' ');
+      daughterTree.toStringBuilder(sb);
     }
-    return sb.append(")");
+    return sb.append(')');
   }
 
   /**
