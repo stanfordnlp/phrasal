@@ -14,12 +14,12 @@ import java.io.IOException;
 
 import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-import edu.stanford.nlp.parser.mst.rmcd.ParserOptions;
-import edu.stanford.nlp.parser.mst.rmcd.DependencyPipe;
-import edu.stanford.nlp.parser.mst.rmcd.DependencyParser;
-import edu.stanford.nlp.parser.mst.rmcd.DependencyInstance;
-import edu.stanford.nlp.parser.mst.rmcd.io.CONLLWriter;
-import edu.stanford.nlp.parser.mst.rmcd.io.DependencyWriter;
+import mt.syntax.mst.rmcd.ParserOptions;
+import mt.syntax.mst.rmcd.DependencyPipe;
+import mt.syntax.mst.rmcd.DependencyParser;
+import mt.syntax.mst.rmcd.DependencyInstance;
+import mt.syntax.mst.rmcd.io.CONLLWriter;
+import mt.syntax.mst.rmcd.io.DependencyWriter;
 import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.MutableInteger;
 

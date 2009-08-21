@@ -24,13 +24,6 @@
       </fileset>
       <pathelement path="${project.core}/classes" />
 
-      <!-- depends on research-->
-      <fileset dir="${project.research}/lib">
-        <include name="*.jar"/>
-        <exclude name="javanlp*"/>
-      </fileset>
-      <pathelement path="${project.research}/classes" />
-
       <!-- depends on local libs -->
       <fileset dir="${basedir}/lib">
         <include name="*.jar"/>

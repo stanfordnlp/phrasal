@@ -7,10 +7,10 @@ import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.io.FileUtils;
 import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.parser.mst.rmcd.io.DependencyWriter;
-import edu.stanford.nlp.parser.mst.rmcd.io.DependencyReader;
-import edu.stanford.nlp.parser.mst.rmcd.io.CONLLWriter;
-import edu.stanford.nlp.parser.mst.rmcd.DependencyInstance;
+import mt.syntax.mst.rmcd.io.DependencyWriter;
+import mt.syntax.mst.rmcd.io.DependencyReader;
+import mt.syntax.mst.rmcd.io.CONLLWriter;
+import mt.syntax.mst.rmcd.DependencyInstance;
 
 import mt.train.SymmetricalWordAlignment;
 
