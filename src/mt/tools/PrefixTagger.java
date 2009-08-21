@@ -1,9 +1,13 @@
-package edu.stanford.nlp.tagger.maxent;
+package mt.tools;
 
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.maxent.iis.LambdaSolve;
+import edu.stanford.nlp.tagger.maxent.TestSentence;
+import edu.stanford.nlp.tagger.maxent.GlobalHolder;
+import edu.stanford.nlp.tagger.maxent.TaggerConfig;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
 import java.util.Map;
 import java.util.ArrayList;

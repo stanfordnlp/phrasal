@@ -25,6 +25,7 @@ import mt.base.Sequence;
 import mt.base.PhraseAlignment;
 import mt.decoder.feat.RichIncrementalFeaturizer;
 import mt.PseudoMoses;
+import mt.tools.PrefixTagger;
 
 import java.util.*;
 import java.io.IOException;
