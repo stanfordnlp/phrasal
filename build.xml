@@ -1,10 +1,11 @@
 <!-- JavaNLP MT5 build file -->
 
 <project name="mt" default="compile" basedir=".">
-  <property name="project.core"   value="${basedir}/../core" />
-  <property name="build.path"     value="${basedir}/classes" />
-  <property name="source.path"    value="${basedir}/src" />
-  <property name="tests.path"     value="${basedir}/test/src" />
+  <property name="project.core"     value="${basedir}/../core" />
+  <property name="project.research" value="${basedir}/../research" />
+  <property name="build.path"       value="${basedir}/classes" />
+  <property name="source.path"      value="${basedir}/src" />
+  <property name="tests.path"       value="${basedir}/test/src" />
   
   <property name="compile.debug"       value="true"/>
   <property name="compile.deprecation" value="false"/>
@@ -22,7 +23,14 @@
         <exclude name="javanlp*"/>
       </fileset>
       <pathelement path="${project.core}/classes" />
-      
+
+      <!-- depends on research-->
+      <fileset dir="${project.research}/lib">
+        <include name="*.jar"/>
+        <exclude name="javanlp*"/>
+      </fileset>
+      <pathelement path="${project.research}/classes" />
+
       <!-- depends on local libs -->
       <fileset dir="${basedir}/lib">
         <include name="*.jar"/>
