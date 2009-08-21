@@ -29,14 +29,16 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
 
   public ArabicVSOFeaturizer(String... args) {
 
-    assert args.length == 1;
+    assert args.length == 2;
     File subjFile = new File(args[0]);
     if(!subjFile.exists())
       throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),subjFile.getPath()));
 
+    int maxSubjLen = Integer.parseInt(args[1].trim());
+    
     //Do the loading here to accommodate multi-threading
     ArabicSubjectBank sb = ArabicSubjectBank.getInstance();
-    sb.load(subjFile);
+    sb.load(subjFile,maxSubjLen);
   }
 
   private int getSubjectIdForPhrase(final int phraseStart, final int len) {
@@ -194,12 +196,17 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
           System.err.printf(" ptrans: %s\n", f.translatedPhrase.toString());
           System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
         }
-        scoredSubjects.add(sId);
-        return new FeatureValue<String>(FEATURE_NAME, 2.0);
+//        scoredSubjects.add(sId);
+//        return new FeatureValue<String>(FEATURE_NAME, 2.0);
+        return null;
       
       } else if(eVerbStart == NO_ALIGNMENT || eSubjEnd == NO_ALIGNMENT) {
         return null;
       
+      //Verb is aligned to the same phrase as the subject
+      } else if(eVerbEnd == eSubjEnd) {
+        return null;
+        
       //Case 2
       } else if(eVerbStart > eSubjEnd && notScored) {
         if(VERBOSE) {
@@ -215,8 +222,9 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
           System.err.printf(" ptrans: %s\n", f.translatedPhrase.toString());
           System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
         }
-        scoredSubjects.add(sId);
-        return new FeatureValue<String>(FEATURE_NAME, 1.0);
+//        scoredSubjects.add(sId);
+//        return new FeatureValue<String>(FEATURE_NAME, 1.0);
+        return null;
 
       //Case 3 & 4
       } else if(eVerbStart < eSubjEnd && notScored) {

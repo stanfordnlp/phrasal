@@ -14,7 +14,6 @@ public final class ArabicSubjectBank {
   private final Map<Sequence<IString>,SentenceData> subjectBank;
   private boolean isLoaded = false;
 
-  public static final int MAX_SUBJ_LENGTH = 5;
   private static final String DELIM = "|||";
 
   protected ArabicSubjectBank() {
@@ -36,7 +35,7 @@ public final class ArabicSubjectBank {
     public Map<Integer,Integer> verbs;
   }
 
-  public void load(final File filename) {
+  public void load(final File filename, final int maxSubjLen) {
     if(isLoaded) return;
     try {
       final LineNumberReader reader = new LineNumberReader(new InputStreamReader(new FileInputStream(filename),"UTF-8"));
@@ -68,7 +67,7 @@ public final class ArabicSubjectBank {
 
             final int start = Integer.parseInt(indices[0].trim());
             final int end = Integer.parseInt(indices[1].trim());
-            if(end - start < MAX_SUBJ_LENGTH)
+            if(end - start < maxSubjLen)
               newSent.subjSpans.add(new Pair<Integer,Integer>(start,end));
           }
         }
@@ -126,6 +125,6 @@ public final class ArabicSubjectBank {
    */
   public static void main(String[] args) {
     ArabicSubjectBank asb = ArabicSubjectBank.getInstance();
-    asb.load(new File("/home/rayder441/sandbox/SubjDetector/mt04.unk.vso-feat"));
+    asb.load(new File("/home/rayder441/sandbox/SubjDetector/mt04.unk.vso-feat"),5);
   }
 }
