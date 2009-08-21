@@ -1,7 +1,8 @@
 package mt.syntax.train;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.util.IString;
+
+import mt.base.IString;
 
 import java.util.Set;
 import java.util.HashSet;

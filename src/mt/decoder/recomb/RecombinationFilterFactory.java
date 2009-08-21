@@ -2,13 +2,13 @@ package mt.decoder.recomb;
 
 import java.util.*;
 
+import mt.base.IString;
 import mt.base.FactoryUtil;
 import mt.base.LanguageModel;
 import mt.decoder.feat.Featurizers;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.util.Hypothesis;
 
-import edu.stanford.nlp.util.IString;
 
 /**
  * 

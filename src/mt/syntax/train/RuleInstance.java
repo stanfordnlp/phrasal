@@ -1,8 +1,7 @@
 package mt.syntax.train;
 
+import mt.base.IString;
 import mt.train.WordAlignment;
-
-import edu.stanford.nlp.util.IString;
 
 import java.util.*;
 

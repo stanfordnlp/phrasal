@@ -1,7 +1,6 @@
 package mt.decoder.feat;
 
-import edu.stanford.nlp.util.IString;
-
+import mt.base.IString;
 import mt.base.LanguageModel;
 import mt.base.Sequence;
 

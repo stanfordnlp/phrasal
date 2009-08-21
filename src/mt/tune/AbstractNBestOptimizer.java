@@ -2,8 +2,7 @@ package mt.tune;
 
 import mt.metrics.EvaluationMetric;
 import mt.base.MosesNBestList;
-
-import edu.stanford.nlp.util.IString;
+import mt.base.IString;
 
 import java.util.Random;
 

@@ -7,8 +7,6 @@ import mt.base.*;
 import mt.metrics.ter.TERcost;
 
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;

@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import edu.stanford.nlp.util.IString;
+import mt.base.IString;
 
 /**
  * Abstract class representing a set of word alignments for one sentence pair.

@@ -3,8 +3,6 @@ package mt.decoder.efeat;
 import mt.base.*;
 import mt.base.Featurizable;
 import mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;

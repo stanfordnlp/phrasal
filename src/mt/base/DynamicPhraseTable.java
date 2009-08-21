@@ -9,8 +9,6 @@ import java.util.*;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 

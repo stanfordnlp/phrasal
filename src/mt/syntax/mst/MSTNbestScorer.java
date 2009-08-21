@@ -3,6 +3,7 @@ package mt.syntax.mst;
 import mt.base.MosesNBestList;
 import mt.base.ScoredFeaturizedTranslation;
 import mt.base.FeatureValue;
+import mt.base.IString;
 
 import java.util.List;
 import java.util.HashMap;
@@ -20,7 +21,6 @@ import mt.syntax.mst.rmcd.DependencyParser;
 import mt.syntax.mst.rmcd.DependencyInstance;
 import mt.syntax.mst.rmcd.io.CONLLWriter;
 import mt.syntax.mst.rmcd.io.DependencyWriter;
-import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.MutableInteger;
 
 public class MSTNbestScorer {

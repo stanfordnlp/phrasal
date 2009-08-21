@@ -8,9 +8,9 @@ import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.*;
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 
+import mt.base.IString;
+import mt.base.IStrings;
 import mt.base.DynamicIntegerArrayPrefixIndex;
 
 /**

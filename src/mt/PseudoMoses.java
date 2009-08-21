@@ -21,8 +21,6 @@ import edu.stanford.nlp.km.kernels.Kernel;
 import edu.stanford.nlp.km.sparselinearalgebra.SparseVector;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;

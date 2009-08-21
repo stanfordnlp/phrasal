@@ -5,11 +5,11 @@ import java.util.TreeSet;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.io.FileUtils;
 
+import mt.base.IString;
+import mt.base.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 

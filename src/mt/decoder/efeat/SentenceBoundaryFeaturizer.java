@@ -5,7 +5,6 @@ import java.util.List;
 import mt.base.*;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.util.IString;
 
 /**
  * Assign large cost to phrase if sentence boundaries are not at the right place.

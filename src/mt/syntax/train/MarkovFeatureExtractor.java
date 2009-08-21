@@ -1,11 +1,11 @@
 package mt.syntax.train;
 
-//import edu.stanford.nlp.trees.TreeVisitor;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.HeadFinder;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
+
+import mt.base.IString;
+import mt.base.IStrings;
 
 /**
  * Tree Markovization for GHKM rules.

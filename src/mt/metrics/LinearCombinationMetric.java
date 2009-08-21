@@ -5,9 +5,6 @@ import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
 import mt.metrics.IncrementalEvaluationMetric;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;

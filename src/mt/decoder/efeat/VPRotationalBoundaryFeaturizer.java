@@ -4,10 +4,9 @@ import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Featurizables;
+import mt.base.IString;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
-
-import edu.stanford.nlp.util.IString;
 
 import java.util.*;
 import java.io.LineNumberReader;

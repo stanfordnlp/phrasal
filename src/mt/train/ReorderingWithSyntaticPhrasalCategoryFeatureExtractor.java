@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.TreeSet;
 
 import mt.base.Sequence;
+import mt.base.IString;
 
-import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.IntQuadruple;

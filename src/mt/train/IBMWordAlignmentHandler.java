@@ -8,9 +8,8 @@ import org.xml.sax.helpers.*;
 
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
-
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
+import mt.base.IString;
+import mt.base.IStrings;
 
 /**
  *  @author Michel Galley

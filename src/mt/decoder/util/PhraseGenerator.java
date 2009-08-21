@@ -2,8 +2,7 @@ package mt.decoder.util;
 
 import java.util.*;
 
-import edu.stanford.nlp.util.IString;
-
+import mt.base.IString;
 import mt.base.ConcreteTranslationOption;
 import mt.base.Sequence;
 

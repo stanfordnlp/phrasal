@@ -5,8 +5,6 @@ import java.util.*;
 import mt.base.*;
 import mt.metrics.*;
 
-import edu.stanford.nlp.util.IString;
-
 /**
  * Approximate Randomization Test for Statistical Significance Testing 
  * 

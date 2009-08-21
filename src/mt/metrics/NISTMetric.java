@@ -7,9 +7,6 @@ import mt.base.*;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
-
 /**
  * 
  * @author Michel Galley

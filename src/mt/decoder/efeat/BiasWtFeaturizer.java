@@ -6,9 +6,9 @@ import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Sequence;
+import mt.base.IString;
 import mt.decoder.feat.IncrementalFeaturizer;
 
-import edu.stanford.nlp.util.IString;
 
 /**
  * This feature does *nothing* w.r.t. decoder inference as it is active for all 

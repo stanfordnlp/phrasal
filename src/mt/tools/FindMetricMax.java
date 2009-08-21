@@ -7,8 +7,6 @@ import mt.base.*;
 import mt.metrics.*;
 import mt.tune.*;
 
-import edu.stanford.nlp.util.IString;
-
 /**
  * 
  * @author danielcer

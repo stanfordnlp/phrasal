@@ -6,8 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 
-import edu.stanford.nlp.util.IStrings;
-
 public class BiText {
 	final int[][] ecorpus;
 	final int[][] fcorpus;

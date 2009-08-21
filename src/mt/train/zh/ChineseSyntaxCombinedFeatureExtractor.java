@@ -3,6 +3,8 @@ package mt.train.zh;
 import mt.base.IOTools;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
+import mt.base.IString;
+import mt.base.IStrings;
 import mt.train.AlignmentGrid;
 import mt.train.AlignmentTemplate;
 import mt.train.AlignmentTemplateInstance;
@@ -10,8 +12,6 @@ import mt.train.AlignmentTemplates;
 import mt.train.BshInterpreter;
 import mt.train.SymmetricalWordAlignment;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;

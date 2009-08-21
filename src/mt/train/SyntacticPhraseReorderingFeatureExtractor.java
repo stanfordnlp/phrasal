@@ -2,11 +2,11 @@ package mt.train;
 
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.stats.*;
-import edu.stanford.nlp.util.IString;
 
 import java.util.*;
 
 import mt.base.Sequence;
+import mt.base.IString;
 
 public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureExtractor {
 

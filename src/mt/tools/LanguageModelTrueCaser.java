@@ -8,8 +8,6 @@ import mt.base.*;
 import mt.decoder.recomb.*;
 import mt.decoder.h.*;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.process.TrueCaser;
 import edu.stanford.nlp.ling.CoreLabel;

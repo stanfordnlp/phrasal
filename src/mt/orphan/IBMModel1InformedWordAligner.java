@@ -4,10 +4,9 @@ import java.util.Set;
 
 import mt.base.IBMModel1;
 import mt.base.Sequence;
+import mt.base.IString;
 import mt.train.WordAligner;
 import mt.train.WordAlignment;
-
-import edu.stanford.nlp.util.IString;
 
 /**
  * This class makes use of the GIZA++ style alignment information in SymmetricalWordAlignment to limit the

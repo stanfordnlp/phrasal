@@ -5,8 +5,9 @@ import java.util.Set;
 import java.util.Arrays;
 import java.io.*;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
+import mt.base.IString;
+import mt.base.IStrings;
+
 import edu.stanford.nlp.util.ArrayUtils;
 
 public class SymmetricalWordAlignment extends AbstractWordAlignment {

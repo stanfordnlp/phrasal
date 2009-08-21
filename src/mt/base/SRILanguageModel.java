@@ -1,7 +1,5 @@
 package mt.base;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.objectbank.ObjectBank;
 
 import java.io.*;

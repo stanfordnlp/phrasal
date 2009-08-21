@@ -8,8 +8,6 @@ import java.text.DecimalFormat;
 
 import mt.decoder.util.Scorer;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.OAIndex;
 
 /**

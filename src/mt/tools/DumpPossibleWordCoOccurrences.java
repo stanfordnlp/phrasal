@@ -1,8 +1,7 @@
 package mt.tools;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
-
+import mt.base.IString;
+import mt.base.IStrings;
 import mt.base.PharaohPhraseTable;
 import mt.base.PhraseTable;
 import mt.base.Sequence;

@@ -1,7 +1,6 @@
 package mt.decoder.efeat;
 
 import edu.stanford.nlp.tagger.maxent.*;
-import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -18,6 +17,7 @@ import mt.syntax.mst.rmcd.io.CONLLWriter;
 import mt.syntax.mst.rmcd.io.DependencyWriter;
 import mt.syntax.mst.rmcd.io.DependencyReader;
 
+import mt.base.IString;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;

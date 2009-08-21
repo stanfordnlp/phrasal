@@ -3,6 +3,7 @@ package mt.decoder.efeat;
 import java.util.*;
 import java.io.*;
 
+import mt.base.IString;
 import mt.base.ARPALanguageModel;
 import mt.base.ConcreteTranslationOption;
 import mt.base.CoverageSet;
@@ -25,7 +26,6 @@ import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.classify.*;
-import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 

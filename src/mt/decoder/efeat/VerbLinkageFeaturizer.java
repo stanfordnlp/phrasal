@@ -8,9 +8,8 @@ import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
+import mt.base.IString;
 import mt.decoder.feat.IncrementalFeaturizer;
-
-import edu.stanford.nlp.util.IString;
 
 /**
  * Feature template

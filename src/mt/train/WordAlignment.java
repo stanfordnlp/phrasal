@@ -3,8 +3,7 @@ package mt.train;
 import java.util.Set;
 import java.util.SortedSet;
 
-import edu.stanford.nlp.util.IString;
-
+import mt.base.IString;
 import mt.base.Sequence;
 
 /**

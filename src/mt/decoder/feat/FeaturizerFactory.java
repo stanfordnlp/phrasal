@@ -7,8 +7,7 @@ import mt.base.ARPALanguageModel;
 import mt.base.FactoryUtil;
 import mt.base.LanguageModel;
 import mt.base.PharaohPhraseTable;
-
-import edu.stanford.nlp.util.IString;
+import mt.base.IString;
 
 /**
  * @author danielcer

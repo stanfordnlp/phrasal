@@ -1,16 +1,17 @@
 package mt.decoder.feat.oracle;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
+
 import mt.decoder.feat.RichIncrementalFeaturizer;
 import mt.decoder.feat.ClonedFeaturizer;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.ConcreteTranslationOption;
 import mt.base.Sequence;
+import mt.base.IString;
+import mt.base.IStrings;
 import mt.metrics.NISTTokenizer;
 import mt.PseudoMoses;
 

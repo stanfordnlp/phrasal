@@ -8,10 +8,10 @@ import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
+import mt.base.IString;
+import mt.base.IStrings;
 import mt.decoder.feat.IncrementalFeaturizer;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.Pair;
 
 public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, String> {

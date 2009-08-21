@@ -1,7 +1,5 @@
 package mt.train;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -13,6 +11,8 @@ import java.io.IOException;
 
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
+import mt.base.IString;
+import mt.base.IStrings;
 
 /**
  * Class for finding long n-gram sequences that appear in both training and test data.

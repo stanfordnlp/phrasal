@@ -9,8 +9,9 @@ import java.util.Map;
 import java.util.HashMap;
 
 import edu.stanford.nlp.util.EditDistance;
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
+
+import mt.base.IString;
+import mt.base.IStrings;
 import mt.base.NBestListContainer;
 import mt.base.RawSequence;
 import mt.base.ScoredFeaturizedTranslation;

@@ -1,12 +1,8 @@
 package mt.base;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
-
 import java.io.*;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
-
 
 /**
  * Language model internally repesented as a trie. Takes 2-3 times

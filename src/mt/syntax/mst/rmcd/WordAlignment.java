@@ -1,7 +1,8 @@
 package mt.syntax.mst.rmcd;
 
 import java.util.Set;
-import edu.stanford.nlp.util.IString;
+
+import mt.base.IString;
 
 /**
  * Interface to word alignments for one sentence pair.

@@ -10,12 +10,11 @@ import mt.base.IBMModel1;
 import mt.base.IdentityPhraseGenerator;
 import mt.base.NewDynamicPhraseTable;
 import mt.base.PharaohPhraseTable;
+import mt.base.IString;
 import mt.base.SymbolFilter;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.feat.UnknownWordFeaturizer;
 import mt.tools.NumericFilter;
-
-import edu.stanford.nlp.util.IString;
 
 /**
  * 

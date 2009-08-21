@@ -1,6 +1,6 @@
 package mt.syntax.mst.rmcd;
 
-import edu.stanford.nlp.util.IString;
+import mt.base.IString;
 
 import java.util.Iterator;
 

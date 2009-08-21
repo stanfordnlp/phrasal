@@ -3,8 +3,7 @@ package mt.metrics;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.util.IString;
-
+import mt.base.IString;
 import mt.base.Sequence;
 
 /**

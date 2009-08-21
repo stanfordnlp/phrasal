@@ -9,8 +9,7 @@ import mt.base.Featurizable;
 import mt.base.MosesLexicalReorderingTable;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
-
-import edu.stanford.nlp.util.IString;
+import mt.base.IString;
 
 /**
  * 

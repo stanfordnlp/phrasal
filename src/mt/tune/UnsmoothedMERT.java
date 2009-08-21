@@ -11,7 +11,6 @@ import mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.ErasureUtils;
 
 /**

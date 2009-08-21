@@ -5,8 +5,7 @@ import java.io.*;
 
 import mt.base.IOTools;
 import mt.base.Sequence;
-
-import edu.stanford.nlp.util.IString;
+import mt.base.IString;
 
 /**
  * Feature extractor collecting function words appearing right next to a given alignment template.

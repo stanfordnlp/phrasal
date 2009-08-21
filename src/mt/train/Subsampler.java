@@ -1,7 +1,6 @@
 package mt.train;
 
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 
@@ -11,6 +10,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 
+import mt.base.IString;
 import mt.base.IOTools;
 import mt.base.Sequence;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;

@@ -2,7 +2,6 @@ package mt.train;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.IString;
 import edu.stanford.nlp.util.HashIndex;
 
 import java.util.*;
@@ -12,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
+import mt.base.IString;
 import mt.base.IOTools;
 import mt.base.Sequence;
 
