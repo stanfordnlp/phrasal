@@ -33,6 +33,10 @@ import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileFilter;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class PathDialog extends JFrame {
 
   private static final int DEFAULT_WIDTH = 170;

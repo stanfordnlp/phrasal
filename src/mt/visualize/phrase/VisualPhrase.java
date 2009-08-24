@@ -7,6 +7,10 @@ import javax.swing.JLabel;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class VisualPhrase extends JLabel {
 
   private final double score;

@@ -2,6 +2,10 @@ package mt.visualize.phrase;
 
 import javax.swing.JLabel;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class NamedLabel extends JLabel {
   private final String id;
   public NamedLabel(String id) {

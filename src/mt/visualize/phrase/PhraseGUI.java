@@ -25,9 +25,12 @@ import javax.swing.JTextField;
 
 import java.awt.event.WindowAdapter;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public final class PhraseGUI {
 
-  //GUI Members
   private JFrame mainFrame = null;
 
   private JPanel mainPanel = null;

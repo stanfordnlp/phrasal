@@ -77,11 +77,9 @@ public class Phrase implements Comparable {
     
     Phrase otherPhrase = (Phrase) other;
     
-    return 
-      (phrase.equals(otherPhrase.getPhrase()) && 
-       fStart == otherPhrase.getStart() &&
-       fEnd == otherPhrase.getEnd() &&
-       score == otherPhrase.getScore()); 
+    return (phrase.equals(otherPhrase.getPhrase()) &&
+            fStart == otherPhrase.getStart() &&
+            fEnd == otherPhrase.getEnd()); 
   }
   
   private static final long P = 6906498324826864423L;
@@ -92,10 +90,12 @@ public class Phrase implements Comparable {
     
     long S = 0;
     
-    byte[] bytes = phrase.getBytes();
+    final String hashString = Integer.toString(fStart) + phrase + Integer.toString(fEnd);
+    
+    byte[] bytes = hashString.getBytes();
     for(int i = 0; i < bytes.length; i++) {
       for(int j = 0; j < 8; j++) {
-        if((fStart + fEnd + j % 2) == 0)
+        if(j % 2 == 0)
           S += f(S,bytes[i]);
         else
           S -= f(S,bytes[i]);

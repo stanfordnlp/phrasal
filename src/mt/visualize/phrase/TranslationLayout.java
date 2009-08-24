@@ -88,19 +88,18 @@ public class TranslationLayout {
 
         if(testCoverage(phrase,bitSet)) {
 
-          VisualPhrase vp = new VisualPhrase(phrase, optionsApplied + 1);
+          VisualPhrase vp = new VisualPhrase(phrase, ++optionsApplied);
           vp.addMouseListener(new LabelMouseHandler());
 
           GridBagConstraints c = buildConstraints(phrase,i,numColumns,sourceWordsCovered);
 
           panel.add(vp,c);
 
-          optionsApplied++;
           setCoverage(phrase,bitSet);
           cellsFilled += sourceWordsCovered;
           vPhrases.add(vp);
           
-          //The Phrase hash function is imperfect, but we can't do much about collisions
+          //The Phrase hash function is not injective, but we can't do much about collisions
           vPhraseLookup.put(phrase, vp);
           break;
         }

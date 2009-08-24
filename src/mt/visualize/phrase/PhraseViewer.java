@@ -15,14 +15,18 @@ public final class PhraseViewer {
     sb.append(" -s    : Source file\n");
     sb.append(" -o    : Options file\n");
     sb.append(" -x    : Path to translation path schema file (required for loading and saving)\n");
+    sb.append(" -f    : First translation id to read\n");
+    sb.append(" -l    : Last translation id to read\n");
 
     return sb.toString();
   }
 
-  private final static OptionParser op = new OptionParser("vs:o:x:p:");
+  private final static OptionParser op = new OptionParser("vs:o:x:p:f:l:");
   private final static int MIN_ARGS = 0;
 
   private static boolean VERBOSE = false;
+  private static int FIRST_ID = Integer.MIN_VALUE;
+  private static int LAST_ID = Integer.MAX_VALUE;
   private static String SRC_FILE = null;
   private static String OPTS_FILE = null;
   private static String XSD_FILE = null;
@@ -51,6 +55,10 @@ public final class PhraseViewer {
       OPTS_FILE = (String) opts.valueOf("o");
     if(opts.has("x"))
       XSD_FILE = (String) opts.valueOf("x");
+    if(opts.has("f"))
+      FIRST_ID = Integer.parseInt(opts.valueOf("f").toString());
+    if(opts.has("l"))
+      LAST_ID = Integer.parseInt(opts.valueOf("l").toString());
 
     return true;
   }
@@ -65,7 +73,11 @@ public final class PhraseViewer {
     PhraseController pc = PhraseController.getInstance();
 
     pc.setVerbose(VERBOSE);
-
+    
+    if(!pc.setRange(FIRST_ID,LAST_ID)) {
+      System.err.printf("ERROR: Invalid range specified {%d,%d}\n", FIRST_ID,LAST_ID);
+      System.exit(-1);
+    }
     if(SRC_FILE != null && !pc.setSourceFile(SRC_FILE)) {
       System.err.printf("ERROR: %s does not exist!\n", SRC_FILE);
       System.exit(-1);

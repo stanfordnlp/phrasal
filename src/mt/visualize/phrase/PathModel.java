@@ -31,6 +31,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class PathModel {
 
   //TODO Make this arbitrary - fixing for now so that arbitrary color schemes need not be defined
@@ -104,6 +108,9 @@ public class PathModel {
     DocumentBuilder parser = getValidatingXmlParser(schema);
     if(parser == null) return false;
 
+    final int minTranslationId = controller.getMinTranslationId();
+    final int maxTranslationId = minTranslationId + controller.getNumTranslationLayouts() - 1;
+    
     try {
       Document xmlDocument = parser.parse(file);
 
@@ -111,12 +118,16 @@ public class PathModel {
       NodeList sentences = root.getElementsByTagName(SENTENCE);
       for(int i = 0; i < sentences.getLength(); i++) {
         Element sentence = (Element) sentences.item(i);
-        int translationId = Integer.parseInt(sentence.getAttribute(SENT_ID));       
+        final int translationId = Integer.parseInt(sentence.getAttribute(SENT_ID));
+        
+        if(translationId < minTranslationId) continue;
+        else if(translationId > maxTranslationId) break;
 
         if(translationPaths.get(translationId) == null)
           translationPaths.put(translationId, new ArrayList<Path>());
 
         NodeList xmlPaths = sentence.getElementsByTagName(PATH);
+        final int formatOffset = translationPaths.get(translationId).size();
         for(int pathIdx = 0; pathIdx < xmlPaths.getLength(); pathIdx++) {
 
           //Only allow up MAX_PATHS paths
@@ -131,7 +142,7 @@ public class PathModel {
 
           Path newPath = new Path();
           newPath.name = pathName;
-          newPath.formatId = pathIdx;
+          newPath.formatId = pathIdx + formatOffset;
           newPath.transId = translationId;
           newPath.phrases = new ArrayList<VisualPhrase>();
           StringBuilder newFullTrans = new StringBuilder();
@@ -158,7 +169,6 @@ public class PathModel {
       }
     } catch (SAXException e) {
       System.err.printf("%s: XML file %s does not conform to schema\n", this.getClass().getName(), file.getPath());
-      e.printStackTrace();
       return false;
 
     } catch (IOException e) {

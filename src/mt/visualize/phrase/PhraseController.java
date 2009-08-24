@@ -6,6 +6,10 @@ import java.util.Map;
 
 import javax.swing.event.EventListenerList;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public final class PhraseController {
 
   private static boolean VERBOSE = false;
@@ -18,6 +22,8 @@ public final class PhraseController {
   private File sourceFilePath = null;
   private File optsFilePath = null;
   private File pathSchemaFilePath = null;
+  private int firstTranslationId = -1;
+  private int lastTranslationId = -1;
 
   private PathModel pathModel = null;
 
@@ -39,13 +45,22 @@ public final class PhraseController {
   }
 
   public void setVerbose(boolean b) {
-    System.err.printf("%s: Setting verbose mode to %s\n", this.getClass().getName(), Boolean.toString(b));
+    if(b) System.err.printf("%s: Setting verbose mode to %s\n", this.getClass().getName(), Boolean.toString(b));
     VERBOSE = b;
   }
 
   public boolean setOptsFile(String path) {
     optsFilePath = new File(path);
     return optsFilePath.exists();
+  }
+  
+  public boolean setRange(int firstId, int lastId) {
+    if(firstId >= 0 && lastId >= 0) {
+      firstTranslationId = firstId;
+      lastTranslationId = lastId;
+      return true;
+    }
+    return false;
   }
 
   public boolean setSourceFile(String path) {
@@ -81,7 +96,7 @@ public final class PhraseController {
     phraseModel.normalizePhraseScores(NORM_SCORES);
     phraseModel.setNumberOfOptionRows(NUM_OPTION_ROWS);
 
-    boolean success = phraseModel.load(SCORE_HALF_RANGE);
+    boolean success = phraseModel.load(firstTranslationId, lastTranslationId, SCORE_HALF_RANGE);
     if(!success) {
       if(VERBOSE)
         System.err.printf("%s: Failed to load model from source and options files\n", this.getClass().getName());
@@ -194,6 +209,10 @@ public final class PhraseController {
 
   public int getScoreRank(double score) {
     return (phraseModel != null) ? phraseModel.getScoreRank(score) : 0;
+  }
+  
+  public int getMinTranslationId() {
+    return (phraseModel != null) ? phraseModel.getMinTranslationId() : 0;
   }
 
   public void run() {

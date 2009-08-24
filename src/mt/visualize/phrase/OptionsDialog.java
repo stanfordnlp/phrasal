@@ -13,6 +13,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class OptionsDialog extends JFrame {
 
   private static final int DEFAULT_WIDTH = 300;

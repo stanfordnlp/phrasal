@@ -4,6 +4,10 @@ import java.util.Random;
 
 import edu.stanford.nlp.stats.*;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class ScoreDistribution {
 
   public final int MAX_DEVIATION;

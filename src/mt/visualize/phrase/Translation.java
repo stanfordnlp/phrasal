@@ -2,6 +2,10 @@ package mt.visualize.phrase;
 
 import java.util.*;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class Translation {
   private final int id;
   private final String source;

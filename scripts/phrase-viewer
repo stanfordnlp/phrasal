@@ -9,6 +9,7 @@ import sys
 from optparse import OptionParser
 import os
 import subprocess
+from time import sleep
 
 JAVANLP_HOME=os.environ.get('JAVANLP_HOME')
 DEF_SCHEMA=JAVANLP_HOME + '/projects/mt/schema/phrase-viewer-paths.xsd'
@@ -25,10 +26,15 @@ def run_phrase_viewer(opts):
         cmd_line = cmd_line + ' ' + opts.pvopts
     
     p = call_command(cmd_line)
-    p.wait()
+    
+    while p.poll() == None:
+        out_str = p.stdout.readline()
+        if out_str != '':
+            print out_str[:-1]
+        sleep(0.01)
 
 def call_command(command):
-    process = subprocess.Popen(command.split(' '))
+    process = subprocess.Popen(command.split(' '), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return process
 
 def main():

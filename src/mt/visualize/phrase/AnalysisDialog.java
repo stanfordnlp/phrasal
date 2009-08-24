@@ -28,12 +28,17 @@ import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
 
+/**
+ * 
+ * @author Spence Green
+ */
 public class AnalysisDialog extends JFrame {
 
   private static final int DEFAULT_WIDTH = 800;
   private static final int DEFAULT_HEIGHT = 600;
   private static final int NAV_HEIGHT = 30;
   private static int currentTranslationId = 0;
+  private static int minTranslationId = Integer.MIN_VALUE;
   private static boolean VERBOSE = false;
   private final PhraseController controller;
   private List<Color> heatMapPalette;
@@ -52,7 +57,7 @@ public class AnalysisDialog extends JFrame {
 
   private JButton navNextButton = null;
 
-  private JTextField navSentTextField = null;
+  private JTextField transIDTextField = null;
 
   private JLabel navStatusBar = null;
 
@@ -221,7 +226,7 @@ public class AnalysisDialog extends JFrame {
       if(numTranslations != 0) {
         getNavNumTranslationsLabel().setText(String.format("of %d", numTranslations));
         if(!initialized) {
-          setCurrentTranslation(1);
+          setCurrentTranslation(controller.getMinTranslationId());
           setContentPane(getMainSplitPane());
           initialized = true;
           setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -295,7 +300,7 @@ public class AnalysisDialog extends JFrame {
           .addComponent(this.getNavLeftSeparator())
           .addGroup(navLayout.createSequentialGroup()
               .addComponent(this.getNavPrevButton())
-              .addComponent(this.getNavSentTextField())
+              .addComponent(this.getTransIDTextField())
               .addComponent(this.getNavNumTranslationsLabel())
               .addComponent(this.getNavNextButton())
           )
@@ -313,7 +318,7 @@ public class AnalysisDialog extends JFrame {
           .addComponent(this.getNavLeftSeparator())
           .addGroup(navLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
               .addComponent(this.getNavPrevButton())
-              .addComponent(this.getNavSentTextField())
+              .addComponent(this.getTransIDTextField())
               .addComponent(this.getNavNumTranslationsLabel())
               .addComponent(this.getNavNextButton())
           )
@@ -336,7 +341,7 @@ public class AnalysisDialog extends JFrame {
       navPrevButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           int newValue = currentTranslationId - 1;
-          if(newValue >= 1)
+          if(newValue >= minTranslationId)
             setCurrentTranslation(newValue);
         }
       });
@@ -351,7 +356,7 @@ public class AnalysisDialog extends JFrame {
       navNextButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           int newValue = currentTranslationId + 1;
-          if(newValue <= controller.getNumTranslationLayouts())
+          if(newValue <= minTranslationId + controller.getNumTranslationLayouts())
             setCurrentTranslation(newValue);
         }
       });
@@ -359,16 +364,16 @@ public class AnalysisDialog extends JFrame {
     return navNextButton;
   }
 
-  private JTextField getNavSentTextField() {
-    if (navSentTextField == null) {
-      navSentTextField = new JTextField();
-      navSentTextField.setPreferredSize(new Dimension(40,27));
-      navSentTextField.setMaximumSize(new Dimension(40,27));
-      navSentTextField.setMinimumSize(new Dimension(40,27));
-      navSentTextField.setHorizontalAlignment(JTextField.CENTER);
-      navSentTextField.addActionListener(new ActionListener() {
+  private JTextField getTransIDTextField() {
+    if (transIDTextField == null) {
+      transIDTextField = new JTextField();
+      transIDTextField.setPreferredSize(new Dimension(40,27));
+      transIDTextField.setMaximumSize(new Dimension(40,27));
+      transIDTextField.setMinimumSize(new Dimension(40,27));
+      transIDTextField.setHorizontalAlignment(JTextField.CENTER);
+      transIDTextField.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          String strNewValue = getNavSentTextField().getText().trim();
+          String strNewValue = getTransIDTextField().getText().trim();
           if(strNewValue.matches("\\d+")) {
             int newValue = Integer.parseInt(strNewValue);
             if(newValue <= controller.getNumTranslationLayouts()) {
@@ -376,11 +381,11 @@ public class AnalysisDialog extends JFrame {
               return;
             }
           }
-          getNavSentTextField().setText(Integer.toString(currentTranslationId));
+          getTransIDTextField().setText(Integer.toString(currentTranslationId));
         }
       });
     }
-    return navSentTextField;
+    return transIDTextField;
   }
 
   private JLabel getNavStatusBar() {
@@ -418,13 +423,17 @@ public class AnalysisDialog extends JFrame {
 
     TranslationLayout currentLayout = controller.getTranslationLayout(currentTranslationId);
     TranslationLayout newLayout = controller.getTranslationLayout(newId);
-
+    
     if(newLayout == null) {
       if(VERBOSE)
         System.err.printf("%s: Invalid translation id %d passed from interface\n", this.getClass().getName(), newId);
     } else {
+      
+      if(minTranslationId < 0)
+        minTranslationId = newId;
+      
       //Update text fields
-      getNavSentTextField().setText(Integer.toString(newId));
+      getTransIDTextField().setText(Integer.toString(newId - minTranslationId + 1));
       String newStatus = String.format("%d of %d options applied",
           newLayout.getNumOptionsApplied(),newLayout.getNumOptions());
       getNavStatusBar().setText(newStatus);
@@ -464,7 +473,7 @@ public class AnalysisDialog extends JFrame {
   private void addTranslationToLayout(TranslationLayout layout, int translationId, String name) {
     if(layout == null) return;
 
-    int formatId = controller.getFormatId(translationId, name);
+    final int formatId = controller.getFormatId(translationId, name);
     String trans = controller.getTranslationFromPath(translationId, name);
     if(formatId != -1) {
       VisualPhrase.Format format = previousCell.get(formatId);
@@ -592,7 +601,7 @@ public class AnalysisDialog extends JFrame {
   public void toggleNavigation(boolean isOn) {
     getNavPrevButton().setEnabled(isOn);
     getNavNextButton().setEnabled(isOn);
-    getNavSentTextField().setEditable(isOn);
+    getTransIDTextField().setEditable(isOn);
   }
 
   public void toggleRecording(boolean isOn, String name) {
