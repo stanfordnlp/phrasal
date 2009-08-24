@@ -3,8 +3,8 @@ package mt.base;
 import java.io.*;
 import org.testng.annotations.*;
 
-import edu.stanford.nlp.util.IString;
-import edu.stanford.nlp.util.IStrings;
+import mt.base.IString;
+import mt.base.IStrings;
 
 /**
  * 

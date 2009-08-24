@@ -1,6 +1,7 @@
 package mt;
 
 import mt.base.RichTranslation;
+import mt.base.IString;
 
 import java.io.*;
 import java.util.List;
@@ -8,9 +9,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.testng.annotations.*;
-
-import edu.stanford.nlp.util.IString;
-
 
 /**
  *
