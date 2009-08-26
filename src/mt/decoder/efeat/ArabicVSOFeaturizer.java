@@ -204,8 +204,10 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
         return null;
       
       //Verb is aligned to the same phrase as the subject
-      } else if(eVerbEnd == eSubjEnd) {
+      } else if(eVerbEnd == eSubjEnd && notScored) {
         return null;
+//        scoredSubjects.add(sId);
+//        return new FeatureValue<String>(FEATURE_NAME, 1.0);
         
       //Case 2
       } else if(eVerbStart > eSubjEnd && notScored) {
@@ -222,7 +224,7 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
           System.err.printf(" ptrans: %s\n", f.translatedPhrase.toString());
           System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
         }
-//        scoredSubjects.add(sId);
+        scoredSubjects.add(sId);
 //        return new FeatureValue<String>(FEATURE_NAME, 1.0);
         return null;
 
@@ -242,7 +244,8 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
           System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
         }
         scoredSubjects.add(sId);
-        return new FeatureValue<String>(FEATURE_NAME, -1.0);
+      return new FeatureValue<String>(FEATURE_NAME, -1.0);
+//        return null;
       }
     }
     //TODO could check here for contiguity if there is no verb
