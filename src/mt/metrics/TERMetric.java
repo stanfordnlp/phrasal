@@ -24,6 +24,8 @@ import mt.tune.UnsmoothedMERT;
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
+  public static boolean VERBOSE = false;
+
   public final TERcalc calc = new TERcalc();
 
   enum EditType { ins, del, sub, sft };
@@ -174,7 +176,8 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     @Override
     public double score() {
-			System.err.printf("(%s/%s)\n", editsTotal, numWordsTotal);
+      if(VERBOSE)
+        System.err.printf("(%s/%s)\n", editsTotal, numWordsTotal);
       return -editsTotal/(numWordsTotal);
     }
 
@@ -221,6 +224,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       System.err.println("Usage:\n\tjava TERMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
+    VERBOSE = true;
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
     TERMetric<IString,String> ter = new TERMetric<IString,String>(referencesList);
