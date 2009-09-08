@@ -797,7 +797,31 @@ public class UnsmoothedMERT extends Thread {
 
     TERpMetric.BEAM_WIDTH = 5; // XXX - make cleaner/safer
 		TERpMetric.MAX_SHIFT_DIST = 10; // XXX - make cleaner/safer
-    if (evalMetric.equals("terp")) {
+		if (evalMetric.equals("bleu:3-2terp")) {
+    	List<List<Sequence<IString>>> referencesBleu = Metrics
+            .readReferences(referenceList.split(","));
+    	List<List<Sequence<IString>>> referencesTERp = Metrics
+            .readReferences(referenceList.split(","), false);
+			int BLEUOrder = 3;
+      double terW = 2.0;
+      emetric = new LinearCombinationMetric<IString, String>
+              (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(referencesBleu, BLEUOrder, smoothBLEU),
+                      new TERpMetric<IString, String>(referencesTERp));
+      System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n", evalMetric, terW);
+    } else if (evalMetric.equals("bleu:3-terp")) {
+      List<List<Sequence<IString>>> referencesBleu = Metrics
+            .readReferences(referenceList.split(","));
+      List<List<Sequence<IString>>> referencesTERp = Metrics
+            .readReferences(referenceList.split(","), false);
+      int BLEUOrder = 3;
+      double terW = 1.0;
+      emetric = new LinearCombinationMetric<IString, String>
+              (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(referencesBleu, BLEUOrder, smoothBLEU),
+                      new TERpMetric<IString, String>(referencesTERp));
+      System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n", evalMetric, terW);
+    } else if (evalMetric.equals("terp")) {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","), false);
       emetric = new TERpMetric<IString, String>(references);

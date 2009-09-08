@@ -416,7 +416,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    $iter_cmert_nbest = "$work_dir/cmert.$iter.nbest";
    print stderr "\n";
 
-   $local_iter_pcumulative_nbest = "/tmp/phrasal.$iter.combined.nbest";
+   $local_iter_pcumulative_nbest = "/tmp/phrasal.$$.$iter.combined.nbest";
    $iter_pcumulative_nbest = "$work_dir/phrasal.$iter.combined.nbest.gz";
    
    if ($iter >= $first_active_iter) {

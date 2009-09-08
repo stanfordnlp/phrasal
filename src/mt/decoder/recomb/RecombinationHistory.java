@@ -1,6 +1,7 @@
 package mt.decoder.recomb;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import mt.decoder.util.State;
 
@@ -12,7 +13,7 @@ import mt.decoder.util.State;
  */
 public class RecombinationHistory<S extends State<S>> {
 
-  private final HashMap<S,List<S>> historyMap = new HashMap<S,List<S>>();
+  private final Map<S,List<S>> historyMap = new ConcurrentHashMap<S,List<S>>();
 
   private RecombinationFilter<S> secondaryFilter;
 
@@ -40,9 +41,7 @@ public class RecombinationHistory<S extends State<S>> {
 		List<S> retainedList  = historyMap.get(retained);
 		if (retainedList == null) {
 			retainedList = new LinkedList<S>();
-			synchronized(historyMap) {
 			historyMap.put(retained, retainedList);
-			}
 		}
 		if (discardedList != null) {
 			historyMap.remove(discarded);

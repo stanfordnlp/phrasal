@@ -41,7 +41,8 @@ public class MixReferences {
     Random r = new Random(1); // make results repeatable
     for (int i = 0; i < refs.get(0).size(); i++) {
       int selectId = r.nextInt(refs.size());
-      out.println(selectId + ": "+refs.get(selectId).get(i));
+      //out.println(selectId + ": "+refs.get(selectId).get(i));
+      out.println(refs.get(selectId).get(i));
     }
   }
 }
