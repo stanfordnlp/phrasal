@@ -18,6 +18,9 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	final String featureName;
 	final String featureNameWithColen;
 	final boolean ngramReweighting;
+	final boolean lengthNorm;
+	final WeakHashMap<Featurizable<TK,String>,Double> rawLMScoreHistory 
+		= new WeakHashMap<Featurizable<TK,String>,Double>();
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	public static final boolean SVMNORM = Boolean.parseBoolean(System.getProperty("SVMNORM", "false"));
 	
@@ -30,7 +33,6 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 		if(args.length != 2)
       throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
 		LanguageModel<IString> lm = ARPALanguageModel.load(args[0]);
-		
 		return new NGramLanguageModelFeaturizer<IString>(lm, args[1], false);
 	}
 
@@ -40,6 +42,7 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 		featureNameWithColen = featureName + ":";
 		this.ngramReweighting = false;
 		this.lmOrder = lm.order();
+		this.lengthNorm = false;	
 	}
 	
 	/**
@@ -58,6 +61,7 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 		featureNameWithColen = featureName + ":";
 		this.ngramReweighting = ngramReweighting;
 		this.lmOrder = lm.order();
+		this.lengthNorm = false;	
 	}
 	
 	
@@ -75,6 +79,7 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 			featureName = FEATURE_NAME;
 		}
 		featureNameWithColen = featureName + ":";
+		this.lengthNorm = false;	
 	}
 
 	/**
@@ -83,13 +88,18 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	 */
  @SuppressWarnings("unchecked")
 public NGramLanguageModelFeaturizer(String... args) throws IOException {
-    if(args.length != 2)
+    if(args.length != 2 && args.length != 3)
       throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
     this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
     featureName = args[1];
     featureNameWithColen = featureName + ":";
     this.ngramReweighting = false;
     this.lmOrder = lm.order();
+		if (args.length == 3) {
+			this.lengthNorm = Boolean.parseBoolean(args[2]);
+		} else {
+			this.lengthNorm = false;
+		}
   }
 
 	/**
@@ -126,7 +136,19 @@ public NGramLanguageModelFeaturizer(String... args) throws IOException {
 		}
 		if (SVMNORM) {
 			return new FeatureValue<String>(featureName, lmScore/2.0);
-		} else {
+		} else if (lengthNorm) {
+			double v;
+		  synchronized(rawLMScoreHistory) { 
+			  Double lastScoreD = rawLMScoreHistory.get(featurizable.prior);
+			  double lastScore = (lastScoreD == null ? 0 : lastScoreD);
+			  double last = (featurizable.prior == null ? 0 : 
+                     lastScore/featurizable.prior.partialTranslation.size());
+			  double current = (lastScore+lmScore)/featurizable.partialTranslation.size();
+			  v = current - last;
+			  rawLMScoreHistory.put(featurizable, current);
+      }
+			return new FeatureValue<String>(featureName, v);
+    } else {
 			return new FeatureValue<String>(featureName, lmScore);	
 		}		
 	}
@@ -216,6 +238,8 @@ public NGramLanguageModelFeaturizer(String... args) throws IOException {
 		double lmScore = getScore(0, f.translatedPhrase.size(), f.translatedPhrase);
 		if (SVMNORM) {
 			return new FeatureValue<String>(featureName, lmScore/2.0);
+		} else if (lengthNorm) {
+			return new FeatureValue<String>(featureName, lmScore/f.translatedPhrase.size());
 		} else {
 			return new FeatureValue<String>(featureName, lmScore);
 		}

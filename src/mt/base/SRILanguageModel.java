@@ -4,6 +4,7 @@ import edu.stanford.nlp.objectbank.ObjectBank;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.WeakHashMap;
 import java.util.StringTokenizer;
 
 import mt.srilm.srilm;
@@ -52,8 +53,18 @@ public class SRILanguageModel implements LanguageModel<IString> {
     return END_TOKEN;
   }
 
+  protected static final WeakHashMap<String, LanguageModel<IString>> lmStore = new WeakHashMap<String, LanguageModel<IString>>();
+
   public static LanguageModel<IString> load(String filename) throws IOException {
-    return new SRILanguageModel(filename);
+		// Check if we've already created and cached lm
+    File f = new File(filename);
+    String filepath = f.getAbsolutePath();
+    if (lmStore.containsKey(filepath)) return lmStore.get(filepath);
+
+		// Otherwise, create a new one and add it to the cache
+    LanguageModel<IString> newLM =  new SRILanguageModel(filename);
+		lmStore.put(filepath, newLM);
+		return newLM;
   }
 
   protected SRILanguageModel(String filename) throws IOException {
