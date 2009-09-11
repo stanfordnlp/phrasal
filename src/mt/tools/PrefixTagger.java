@@ -27,6 +27,13 @@ import mt.base.IStrings;
  */
 public class PrefixTagger extends TestSentence {
 
+  // How many words of left context for POS tagging:
+  public static boolean CACHE_POS = System.getProperty("cachePOS") != null;
+
+  static {
+    System.err.println("cache POS: "+CACHE_POS);
+  }
+
   private final Map<IStringArrayWrapper, Pair<IString,Float>> cache
     = new HashMap<IStringArrayWrapper,Pair<IString,Float>>();
   private final int offset;
@@ -81,32 +88,32 @@ public class PrefixTagger extends TestSentence {
   public Pair<IString,Float> getBestTag(IString[] s, int o) {
     int loc = s.length-1+o;
 
-    IStringArrayWrapper aw = new IStringArrayWrapper(s);
+    IStringArrayWrapper aw=null;
     Pair<IString,Float> tag;
-    
-    tag = cache.get(aw);
-    if(tag != null)
+
+    if(CACHE_POS) {
+      aw = new IStringArrayWrapper(s);
+      tag = cache.get(aw);
+      if(tag != null)
       return tag;
+    }
 
     init(s);
 
     int[] bestTags = new int[len];
-    double[] scores;
-    int[] vals;
-    synchronized(PrefixTagger.class) {
-      vals = getPossibleValues(loc);
-      bestTags[loc] = vals[0];
-      this.initializeScorer(sent);
-      scores = scoresOf(bestTags, loc);
-    }
-    
+    int[] vals = getPossibleValues(loc);
+    bestTags[loc] = vals[0];
+    this.initializeScorer(sent);
+    double[] scores = scoresOf(bestTags, loc);
+
     int am = ArrayMath.argmax(scores);
 
     bestTags[loc] = vals[am];
     cleanUpScorer();
 
     tag = new Pair<IString,Float>(new IString(GlobalHolder.getTags().getTag(bestTags[loc])),(float)scores[am]);
-    cache.put(aw,tag);
+    if(CACHE_POS)
+      cache.put(aw,tag);
     return tag;
   }
 

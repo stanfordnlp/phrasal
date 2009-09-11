@@ -204,7 +204,8 @@ public class IncrementalDependencyInstance implements DependencyInstance, Clonea
   public String getLemma(int i) { return lemmas.get(i); }
   public String getCPOSTag(int i) { return cpostags.get(i); }
   public String getPOSTag(int i) { return postags.get(i); }
-  
+  public String[] getPOSTags() { return postags.toArray(new String[postags.size()]); }
+
   public int getHead(int i) { return heads.get(i); }
   public void setHead(int i, int h) { heads.set(i,h); }
 
