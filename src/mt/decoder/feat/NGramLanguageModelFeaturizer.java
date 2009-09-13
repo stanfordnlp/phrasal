@@ -139,13 +139,14 @@ public NGramLanguageModelFeaturizer(String... args) throws IOException {
 		} else if (lengthNorm) {
 			double v;
 		  synchronized(rawLMScoreHistory) { 
-			  Double lastScoreD = rawLMScoreHistory.get(featurizable.prior);
-			  double lastScore = (lastScoreD == null ? 0 : lastScoreD);
-			  double last = (featurizable.prior == null ? 0 : 
-                     lastScore/featurizable.prior.partialTranslation.size());
-			  double current = (lastScore+lmScore)/featurizable.partialTranslation.size();
-			  v = current - last;
-			  rawLMScoreHistory.put(featurizable, current);
+			  double lastLMSent = (featurizable.prior == null ? 0 :
+					rawLMScoreHistory.get(featurizable.prior));
+			  double lastFv = (featurizable.prior == null ? 0 : 
+                     lastLMSent/featurizable.prior.partialTranslation.size());
+			  double currentLMSent = lastLMSent+lmScore;
+				double currentFv = currentLMSent/featurizable.partialTranslation.size();
+			  v = currentFv - lastFv;
+			  rawLMScoreHistory.put(featurizable, currentLMSent);
       }
 			return new FeatureValue<String>(featureName, v);
     } else {
