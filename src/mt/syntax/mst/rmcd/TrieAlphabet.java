@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 
+import gnu.trove.THashMap;
+
 
 /**
  * Index backed-up with a trie. Should eventually move to edu.stanford.nlp.util.
@@ -348,7 +350,7 @@ class Trie implements Serializable {
   private static final int ROOT_ID = -2;
   private static final int UNK_ID = -1;
 
-  private static final Map<String,Trie> roots = new HashMap<String,Trie>();
+  private static final Map<String,Trie> roots = new THashMap<String,Trie>(10, 0.25f);
 
   Map<String,Trie> map;
   int id;
@@ -385,9 +387,8 @@ class Trie implements Serializable {
   }
 
   public Trie put(String key, Trie trie) {
-    if(map == null) {
-      map = new HashMap<String,Trie>();
-    }
+    if(map == null)
+      map = new THashMap<String,Trie>(10, 0.25f);
     return map.put(key, trie);
   }
 

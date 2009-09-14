@@ -13,7 +13,6 @@ import mt.syntax.mst.rmcd.DependencyDecoder;
 import mt.syntax.mst.rmcd.Parameters;
 import mt.syntax.mst.rmcd.DependencyPipe;
 import mt.syntax.mst.rmcd.DependencyInstance;
-import mt.syntax.mst.rmcd.IncrementalDependencyInstance;
 import mt.syntax.mst.rmcd.DependencyInstanceFeatures;
 import mt.syntax.mst.rmcd.FeatureVector;
 import mt.syntax.mst.rmcd.io.CONLLWriter;
@@ -35,11 +34,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Deque;
 import java.util.LinkedList;
+
+import gnu.trove.THashMap;
 
 /**
  * @author Michel Galley
@@ -50,6 +50,9 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   public static final String ORDER_PROPERTY = "leftWords";
   public static final int ORDER = Integer.parseInt(System.getProperty(ORDER_PROPERTY, "3"));
 
+  public static final String TAG_WITH_RIGHT_CONTEXT_PROPERTY = "tagWithRight";
+  public static final boolean TAG_WITH_RIGHT_CONTEXT = System.getProperty(TAG_WITH_RIGHT_CONTEXT_PROPERTY) != null;
+
   public static final String CACHE_PARTIAL_PROPERTY = "cachePartial";
   public static final boolean CACHE_PARTIAL = System.getProperty(CACHE_PARTIAL_PROPERTY) != null;
 
@@ -58,9 +61,10 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
 
   // Normalization options:
   static public final String NORM_PLUS_UNNORM_OPT = "both";
-  static public final String LOCAL_NORM_OPT = "local";
-  static public final String LOCAL_NORM_INV_OPT = "localInv";
-  static public final String LEN_NORM_OPT = "normalize";
+  static public final String LOCAL_NORM_OPT = "localNorm";
+  static public final String LOCAL_INV_NORM_OPT = "localInvNorm";
+  static public final String LEN_NORM_OPT = "lenNorm";
+  static public final String MST_LEN_NORM_OPT = "mstLenNorm";
 
   // Feature options:
   static public final String MST_SCORE_OPT = "mstScore";
@@ -73,8 +77,8 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
 
   static final Set<String> allOpts = new HashSet<String>
     (Arrays.asList
-      (LOCAL_NORM_OPT, LOCAL_NORM_INV_OPT, LEN_NORM_OPT, NORM_PLUS_UNNORM_OPT,
-       MST_SCORE_OPT, POS_SCORE_OPT,
+      (LOCAL_NORM_OPT, LOCAL_INV_NORM_OPT, LEN_NORM_OPT, MST_LEN_NORM_OPT,
+       NORM_PLUS_UNNORM_OPT, MST_SCORE_OPT, POS_SCORE_OPT,
        DEBUG_OPT, DEBUG_MATRIX_SCORES_OPT));
 
   private String depFeatureName = ":dep";
@@ -95,15 +99,15 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   // Options:
   private final boolean bilingual;
   private final boolean mstScore, posScore; // scores
-  private final boolean localNorm, localNormInv, lenNorm, normAndUnnorm; // normalization
+  private final boolean localNorm, localInvNorm, lenNorm, mstLenNorm, normAndUnnorm; // normalization
   private final boolean debug, verboseDebug, matrix; // debug
 
   private final String[] depFeatures;
 
-  Map<String, DependencyScores> partialParseCache = new HashMap<String, DependencyScores>();
-
-  // Cache for dependency parses of full sentence:
-  Map<String,Pair<String,Double>> fullParseCache = new HashMap<String,Pair<String,Double>>();
+  // Caches:
+  Map<String, DependencyScores> partialParseCache = new THashMap<String, DependencyScores>();
+  Map<String,Pair<String,Double>> fullParseCache = new THashMap<String,Pair<String,Double>>();
+  private Map<String,String> long2short = new THashMap<String,String>();
 
   // Source instances:
   List<DependencyInstance> srcInstances = new ArrayList<DependencyInstance>();
@@ -113,6 +117,8 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   @SuppressWarnings("unchecked")
   public DependencyLanguageModelFeaturizer(String... args) throws Exception {
 
+    DependencyInstance.incremental = true;
+
     if(args.length != 4 && args.length != 5)
       throw new RuntimeException("Wrong number of arguments: "+args.length+"\nUsage: DependencyLanguageModelFeaturizable (id) (type) (serialized tagger) (serialized dparser)");
 
@@ -121,8 +127,6 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     String optionStr = args[1];
     String taggerFile = args[2];
     String dparserFile = args[3];
-
-    System.err.println("cache partial: "+CACHE_PARTIAL);
 
     // Load source-language instances:
     if(args.length == 5) {
@@ -150,23 +154,27 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     }
 
     // Make sure caching is turned off with bilingual features:
+    System.err.println("cache partial: "+CACHE_PARTIAL);
     if(bilingual && CACHE_PARTIAL) {
       throw new RuntimeException("Can't cache target side dependency structure when dependencies also depend on the source!!");
+    } else if(!bilingual && !CACHE_PARTIAL) {
+      System.err.println("WARNING: depLM without caching is going to be inefficient!"); 
     }
 
     // Parsing options:
     System.err.println("options: "+optionStr);
     Set<String> opts = new HashSet<String>();
-    if(!allOpts.containsAll(opts))
-      throw new UnsupportedOperationException("Some unknown option in: "+optionStr);
     if(!optionStr.isEmpty())
       opts.addAll(Arrays.asList(optionStr.split(":")));
+    if(!allOpts.containsAll(opts))
+      throw new UnsupportedOperationException("Some unknown option in: "+optionStr);
     localNorm = opts.contains(LOCAL_NORM_OPT);
-    localNormInv = opts.contains(LOCAL_NORM_INV_OPT);
+    localInvNorm = opts.contains(LOCAL_INV_NORM_OPT);
     normAndUnnorm = opts.contains(NORM_PLUS_UNNORM_OPT);
     mstScore = opts.contains(MST_SCORE_OPT);
     posScore = opts.contains(POS_SCORE_OPT);
     lenNorm = opts.contains(LEN_NORM_OPT);
+    mstLenNorm = opts.contains(MST_LEN_NORM_OPT);
     verboseDebug = opts.contains(VERBOSE_DEBUG_OPT);
     debug = opts.contains(DEBUG_OPT) || verboseDebug;
     matrix = opts.contains(DEBUG_MATRIX_SCORES_OPT);
@@ -204,12 +212,12 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   }
 
   /**
-   * Add MST feature once
+   * Add MST feature once decoding is complete.
    *
    * @param dep
    * @param features
    */
-  private void addMSTFeature(IncrementalDependencyInstance instance, List<FeatureValue<String>> features) {
+  private void addMSTFeature(DependencyInstance instance, List<FeatureValue<String>> features) {
     if(this.reranking && this.mstScore) {
       // Get mstScore dependency score (with loop removal):
       String sentence = StringUtils.join(instance.getForms());
@@ -222,7 +230,7 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
         pipe.fillFeatureVectors(instance, dfeatures, par);
         Object[][] d = decoder.decodeNonProjective(instance, dfeatures, 1, true);
         exactDepScore = par.getScore((FeatureVector) d[0][0]);
-        if(lenNorm)
+        if(mstLenNorm)
           exactDepScore /= instance.length();
         String parse = (String) d[0][1];
         fullParseCache.put(sentence, new Pair<String,Double>(parse, exactDepScore));
@@ -291,11 +299,6 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     return features;
   }
 
-  private boolean lastIsGood(DependencyScores sd) {
-    int lastDep = sd.dep.getHead(sd.dep.length()-1);
-    return lastDep >= 0;
-  }
-
   @SuppressWarnings("unchecked")
   private DependencyScores getDependencies(Featurizable<IString, String> f) {
 
@@ -309,9 +312,13 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
         System.err.println("cache: "+partialTranslation);
       DependencyScores equiv_sd = partialParseCache.get(partialTranslation);
       if(equiv_sd != null) {
-        DependencyScores copy_sd = equiv_sd.clone();
-        copy_sd.updateLocalFromTotal(currentNode);
-        return copy_sd;
+        try {
+          DependencyScores copy_sd = equiv_sd.clone();
+          copy_sd.updateLocalFromTotal(currentNode);
+          return copy_sd;
+        } catch(CloneNotSupportedException e) {
+          throw new RuntimeException(e);
+        }
       }
     }
 
@@ -322,44 +329,45 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     // POS tagging:
     float tagScore = 0.0f;
     Pair<IString,Float>[] tags = new Pair[sz];
-    for(int i=0; i<sz; ++i) {
-      int s = Math.max(0, loc+i-ts.getOrder());
-      int e = loc+Math.min(sz, i+1);
-      Sequence<IString> seq = f.partialTranslation.subsequence(s, e);
+    if(TAG_WITH_RIGHT_CONTEXT) {
+      // faster, better POS accuracy, lower BLEU
+      int sp = Math.max(0, loc-ts.getOrder());
+      int ep = loc+sz;
+      Sequence<IString> seq = f.partialTranslation.subsequence(sp, ep);
       IString[] context = new IString[seq.size()];
       for(int j=0; j<context.length; ++j)
         context[j] = seq.get(j);
-      tags[i] = ts.getBestTag(context, 0);
-      tagScore += tags[i].second;
+      for(int i=0; i<sz; ++i) {
+        tags[i] = ts.getBestTag(context, -sz+i+1);
+        tagScore += tags[i].second;
+      }
+    } else {
+      for(int i=0; i<sz; ++i) {
+        int s = Math.max(0, loc+i-ts.getOrder());
+        int e = loc+Math.min(sz, i+1);
+        Sequence<IString> seq = f.partialTranslation.subsequence(s, e);
+        IString[] context = new IString[seq.size()];
+        for(int j=0; j<context.length; ++j)
+          context[j] = seq.get(j);
+        tags[i] = ts.getBestTag(context, 0);
+        tagScore += tags[i].second;
+      }
     }
-    /*
-    // faster, better POS accuracy, lower BLEU
-    int sp = Math.max(0, loc-ts.getOrder());
-    int ep = loc+sz;
-    Sequence<IString> seq = f.partialTranslation.subsequence(sp, ep);
-    IString[] context = new IString[seq.size()];
-    for(int j=0; j<context.length; ++j)
-      context[j] = seq.get(j);
-    for(int i=0; i<sz; ++i) {
-      tags[i] = ts.getBestTag(context, -sz+i+1);
-      tagScore += tags[i].second;
-    }
-    */
 
     // Create new dependency instance:
-    IncrementalDependencyInstance dep;
+    DependencyInstance dep;
     if(f.prior != null) {
       assert(f.prior.extra != null);
       try {
-        IncrementalDependencyInstance prior_dep =
+        DependencyInstance prior_dep =
              ((DependencyScores) f.prior.extra).dep;
-        dep = (IncrementalDependencyInstance) prior_dep.clone();
+        dep = (DependencyInstance) prior_dep.clone();
       } catch(CloneNotSupportedException e) {
         e.printStackTrace();
         throw new RuntimeException();
       }
     } else {
-      dep = new IncrementalDependencyInstance(pipe);
+      dep = new DependencyInstance(pipe);
       dep.add("<root>","<root-LEMMA>","<root-CPOS>","<root-POS>", new int[0]);
       if(!srcInstances.isEmpty()) {
         int transId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
@@ -403,7 +411,7 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
           }
         }
       }
-      dep.add(f.translatedPhrase.get(i).word(), tags[i].first().word(), pAlign);
+      add(dep, f.translatedPhrase.get(i).word(), tags[i].first().word(), pAlign);
     }
 
     // Dependency parsing:
@@ -461,10 +469,10 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
             argmaxDepScore, rootDepScore);
       }
     }
-    DependencyScores successorNode = new DependencyScores(dep, tagScore, argmaxDepScore, currentNode);
+    DependencyScores successorNode = new DependencyScores(dep, loc, sz, tagScore, argmaxDepScore, currentNode);
 
 		// Cache successor:
-    if(CACHE_PARTIAL)
+    if (CACHE_PARTIAL)
       partialParseCache.put(partialTranslation, successorNode);
     return successorNode;
   }
@@ -521,10 +529,35 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     assert(lastIsGood(sd));
   }
 
+  private boolean lastIsGood(DependencyScores sd) {
+    int lastDep = sd.dep.getHead(sd.dep.length()-1);
+    return lastDep >= 0;
+  }
+
+  private String lookupShort(String l, int len) {
+    if(l.length() > len) {
+      String s = long2short.get(l);
+      if(s != null) {
+        return s;
+      }
+      s = l.substring(0,len).intern();
+      long2short.put(l,s);
+      return s;
+    }
+    return l;
+  }
+
+  private void add(DependencyInstance dep, String form, String pos, int[] pAlign) {
+    String lemma = lookupShort(form, DependencyInstance.LEMMA_LEN);
+    String cpos = lookupShort(pos, DependencyInstance.CPOS_LEN);
+    dep.add(form, lemma, cpos, pos, pAlign);
+  }
+
   @Override
   public void reset() {
     if(ts == null) ts = new PrefixTagger(GlobalHolder.getLambdaSolve(),3,0); // TODO: 3,1
     ts.release();
+    pipe.clearCache();
     System.err.printf("Emptying %d keys of partial parse cache.\n", partialParseCache.size());
     fullParseCache.clear();
     partialParseCache.clear();
@@ -548,8 +581,9 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     DependencyLanguageModelFeaturizer featurizer = (DependencyLanguageModelFeaturizer)super.clone();
     featurizer.pipe = (DependencyPipe) pipe.clone();
     featurizer.decoder = new DependencyDecoder(featurizer.pipe);
-    featurizer.fullParseCache = new HashMap<String,Pair<String,Double>>();
-    featurizer.partialParseCache = new HashMap<String, DependencyScores>();
+    featurizer.fullParseCache = new THashMap<String,Pair<String,Double>>();
+    featurizer.partialParseCache = new THashMap<String, DependencyScores>();
+    featurizer.long2short = new THashMap<String,String>();
     featurizer.srcInstances = new ArrayList<DependencyInstance>(featurizer.srcInstances);
     return featurizer;
 	}
@@ -567,21 +601,32 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     return (float)Math.log(e/(1+e));
   }
 
+  private float lenNorm(float oldTotalScore, float localScore, int pos, int phraseLen) {
+    float lenNormScore = (oldTotalScore+localScore)/(pos+phraseLen);
+    if(pos > 0)
+      lenNormScore -= oldTotalScore/pos;
+    System.err.printf("%f\t", lenNormScore);
+    return lenNormScore;
+  }
+
   private String[] getLocalFeatureNames() {
     List<String> names = new ArrayList<String>();
-    if(normAndUnnorm || !localNorm || !localNormInv) names.add(":argmax");
+    if(normAndUnnorm || !localNorm || !localInvNorm) names.add(":argmax");
     if(localNorm) names.add(":largmax");
-    if(localNormInv) names.add(":nlargmax");
+    if(localInvNorm) names.add(":nlargmax");
+    if(lenNorm) names.add(":argmax:len");
     if(posScore) names.add(":pos");
     return names.toArray(new String[names.size()]);
   }
 
-  private float[] getLocalFeatures(float tagScore, float depScore) {
+  private float[] getLocalFeatures(DependencyScores d, int pos, int phraseLen, float tagScore, float depScore) {
     float[] scores = new float[depFeatures.length];
     int i=-1;
-    if(normAndUnnorm || !localNorm || !localNormInv) scores[++i] = depScore;
+    if(normAndUnnorm || !localNorm || !localInvNorm) scores[++i] = depScore;
     if(localNorm) scores[++i] = localNorm(depScore);
-    if(localNormInv) scores[++i] = localNorm(-depScore);
+    if(localInvNorm) scores[++i] = localNorm(-depScore);
+    boolean hasPrev = d != null && d.totalScores != null;
+    if(lenNorm) scores[++i] = lenNorm(hasPrev ? d.totalScores[0] : 0.0f, depScore, pos, phraseLen);
     if(posScore) scores[++i] = tagScore;
     assert(++i == depFeatures.length);
     return scores;
@@ -597,13 +642,13 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
 
   class DependencyScores implements Cloneable {
 
-    final IncrementalDependencyInstance dep;
+    final DependencyInstance dep;
     float[] localScores;
     float[] totalScores;
 
-    DependencyScores(IncrementalDependencyInstance dep, float tagScore, float depScore, DependencyScores prior) {
+    DependencyScores(DependencyInstance dep, int pos, int phraseLen, float tagScore, float depScore, DependencyScores prior) {
       this.dep = dep;
-      localScores = getLocalFeatures(tagScore, depScore);
+      localScores = getLocalFeatures(prior, pos, phraseLen, tagScore, depScore);
       totalScores = (prior == null) ? localScores : ArrayMath.pairwiseAdd(localScores,prior.totalScores);
     }
 
@@ -614,15 +659,11 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
         localScores = totalScores;
     }
 
-    public DependencyScores clone() {
-      try {
-        DependencyScores sd = (DependencyScores) super.clone();
-        sd.localScores = localScores.clone();
-        sd.totalScores = totalScores.clone();
-        return sd;
-      } catch(CloneNotSupportedException e) {
-        throw new RuntimeException(e);
-      }
+    public DependencyScores clone() throws CloneNotSupportedException {
+      DependencyScores sd = (DependencyScores) super.clone();
+      sd.localScores = localScores.clone();
+      sd.totalScores = totalScores.clone();
+      return sd;
     }
 
   }

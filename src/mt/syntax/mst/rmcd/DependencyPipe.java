@@ -14,6 +14,7 @@ import java.util.zip.GZIPInputStream;
 import edu.stanford.nlp.util.StringUtils;
 
 import gnu.trove.TIntArrayList;
+import gnu.trove.THashMap;
 
 import mt.syntax.mst.rmcd.io.*;
 
@@ -43,6 +44,8 @@ public class DependencyPipe implements Cloneable {
   private StringBuilder sb;
 
   private static int[] distBin;
+
+  private Map<DependencyPair, Double> cache = new THashMap<DependencyPair, Double>();
 
   public DependencyPipe(ParserOptions options) throws Exception {
     this.opt = options;
@@ -104,7 +107,7 @@ public class DependencyPipe implements Cloneable {
   public void readMixtureModels() throws IOException, ClassNotFoundException {
     
     if(opt.mixModelNames != null) {
-      mixParams = new HashMap<String,Parameters>();
+      mixParams = new THashMap<String,Parameters>();
 
       for(String fileName : opt.mixModelNames.split("~")) {
 
@@ -153,7 +156,7 @@ public class DependencyPipe implements Cloneable {
   }
 
   public Map<String,Parameters> getMixParameters() {
-    return (mixParams != null) ? mixParams : new HashMap<String,Parameters>(0);
+    return (mixParams != null) ? mixParams : new THashMap<String,Parameters>(0);
   }
 
   public String[] getTypes() {
@@ -467,12 +470,25 @@ public class DependencyPipe implements Cloneable {
   }
 
   public double getScore(DependencyInstance instance, int w1, int w2, boolean attR, Parameters params) {
+    Double cachedScore;
+    DependencyPair dp = null;
+    if(!opt.bilingualC) {
+      dp = new DependencyPair(instance, w1, w2, attR);
+      cachedScore = cache.get(dp);
+      if(cachedScore != null)
+        return cachedScore;
+    }
+
     FeatureVector prodFV = new FeatureVector();
     addCoreFeatures(instance, w1, w2, attR, prodFV);
     addMixFeatures(prodFV);
     if(opt.debugFeatures)
       debugFeatures(prodFV, params);
-    return params.getScore(prodFV);
+    cachedScore = params.getScore(prodFV);
+
+    if(!opt.bilingualC)
+      cache.put(dp, cachedScore);
+    return cachedScore;
   }
 
   private void debugFeatures(FeatureVector prodFV, Parameters params) {
@@ -768,6 +784,7 @@ public class DependencyPipe implements Cloneable {
         for(String pos : inst.inBetweenPOS(first, second, coarse)) {
           key.clear();
           //System.err.printf("check: [%s] [%s]\n",featPos,pos);
+          //key.add(id).add(firstPOS).add(secondPOS).add(pos);
           key.add(featPos).add(pos);
           add(key, fv);
           key.add(attachDistance);
@@ -787,6 +804,7 @@ public class DependencyPipe implements Cloneable {
         int offset = i-first;
         String pos = coarse ? inst.getCPOSTag(i) : inst.getPOSTag(i);
         key.clear();
+        //key.add(id).add(firstPOS).add(secondPOS).add(pos);
         key.add(featPos).add(pos);
         add(key, fv);
         key.add(attachDistance);
@@ -800,6 +818,7 @@ public class DependencyPipe implements Cloneable {
         int offset = i-second;
         String pos = coarse ? inst.getCPOSTag(i) : inst.getPOSTag(i);
         key.clear();
+        //key.add(id).add(firstPOS).add(secondPOS).add(pos);
         key.add(featPos).add(pos);
         add(key, fv);
         key.add(attachDistance);
@@ -811,20 +830,20 @@ public class DependencyPipe implements Cloneable {
       }
     }
 
-    id = coarse ? "CPOSPT" : "POSPT";
-    addCorePosFeatures(id, pLeft, firstPOS, pLeftRight,
+    addCorePosFeatures(coarse, pLeft, firstPOS, pLeftRight,
          pRightLeft, secondPOS, pRight, attachDistance, fv);
   }
 
 
   private void
-  addCorePosFeatures(String prefix,
+  addCorePosFeatures(boolean coarse,
                      String leftOf1, String one, String rightOf1,
                      String leftOf2, String two, String rightOf2,
                      String attachDistance,
                      FeatureVector fv) {
 
     // feature posL-1 posL posR posR+1
+    String prefix = coarse ? "CPOSPT" : "POSPT";
 
     key.clear();
     key.add(prefix);
@@ -855,9 +874,10 @@ public class DependencyPipe implements Cloneable {
     add(key, fv);
 
     /////////////////////////////////////////////////////////////
-    sb.setLength(0);
-    sb.append('A').append(prefix);
-    prefix = sb.toString();
+    //sb.setLength(0);
+    //sb.append('A').append(prefix);
+    //prefix = sb.toString();
+    prefix = coarse ? "ACPOSPT" : "APOSPT";
 
     // feature posL posL+1 posR-1 posR
     key.clear();
@@ -893,9 +913,10 @@ public class DependencyPipe implements Cloneable {
     add(key, fv);
 
     ///////////////////////////////////////////////////////////////
-    sb.setLength(0);
-    sb.append('B').append(prefix);
-    prefix = sb.toString();
+    //sb.setLength(0);
+    //sb.append('B').append(prefix);
+    //prefix = sb.toString();
+    prefix = coarse ? "BACPOSPT" : "BAPOSPT";
 
     //// feature posL-1 posL posR-1 posR
     key.clear();
@@ -1181,14 +1202,17 @@ public class DependencyPipe implements Cloneable {
     }
   }
 
+  public void clearCache() {
+    cache.clear();
+  }
+
   @Override
   public Object clone() throws CloneNotSupportedException {
     System.err.println("cloned: "+this);
-    //try {
     DependencyPipe pipe = (DependencyPipe)super.clone();
     pipe.sb = new StringBuilder(50);
     pipe.key = new TrieKey(dataAlphabet);
+    pipe.cache = new THashMap<DependencyPair, Double>();
     return pipe;
-    //} catch (CloneNotSupportedException e) { return null;  /* will never happen */ }
   }
 }

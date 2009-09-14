@@ -92,7 +92,7 @@ public class PlainReader extends DependencyReader {
 
     // End of discourse stuff.
 
-    DependencyInstance in = new IncrementalDependencyInstance(pipe, forms, lemmas, cpos, pos);
+    DependencyInstance in = new DependencyInstance(pipe, forms, lemmas, cpos, pos);
     if(VERBOSE)
       System.err.println("returning instance: "+ Util.dump(in));
     return in;

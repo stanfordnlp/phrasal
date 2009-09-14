@@ -160,7 +160,7 @@ public class CONLLReader extends DependencyReader {
 
     // End of discourse stuff.
 
-    FixedSizeDependencyInstance in = new FixedSizeDependencyInstance(pipe, forms, lemmas, cpos, pos, feats, pfeats, deprels, heads, rfeatsList);
+    DependencyInstance in = new DependencyInstance(pipe, forms, lemmas, cpos, pos, feats, pfeats, deprels, heads, rfeatsList);
 
     // Bilingual features:
     if(sourceReader != null) {
@@ -189,7 +189,7 @@ public class CONLLReader extends DependencyReader {
     return in;
   }
 
-  public FixedSizeDependencyInstance readNext(String line) {
+  public DependencyInstance readNext(String line) {
     throw new UnsupportedOperationException();
   }
 
