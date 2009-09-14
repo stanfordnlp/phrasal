@@ -129,7 +129,7 @@ public class DependencyInstance implements Cloneable {
       lastDep.pfeats = pfeats[i];
       lastDep.depRel = labs[i];
       this.heads.set(i, (short) heads[i]);
-      lastDep.relFeats = relFeats[i];
+      lastDep.relFeats = (relFeats != null && relFeats.length > 0) ? relFeats[i] : null;
     }
   }
 
