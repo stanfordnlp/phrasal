@@ -45,6 +45,9 @@ public class DependencyParser {
 
   public void trainME(double l1reg) throws IOException {
 
+    if(options.labeled)
+      throw new RuntimeException("ME training currently not available with typed dependencies.");
+    
     initTrainReader();
 
     long start = System.currentTimeMillis();

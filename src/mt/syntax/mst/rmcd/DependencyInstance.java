@@ -256,7 +256,7 @@ public class DependencyInstance implements Cloneable {
 
   public void setWordAlignment(WordAlignment wa) { this.wa = wa; }
 
-  public int[] getSource(int i) { return wa.e2f(i); }
+  public int[] getSource(int i) { return (wa != null) ? wa.e2f(i) : deps.get(i).alignment; }
 
   /////////////////////////////////////////////////////////////
 	// Functions not recommended in incremental (MT) mode:
