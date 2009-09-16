@@ -385,7 +385,8 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     PhraseAlignment align = null;
     if(bilingual) {
       align = f.hyp.translationOpt.abstractOption.alignment;
-      assert(sz == align.size());
+			if(align != null)
+				assert(sz == align.size());
     }
 
     for(int i=0; i<sz; ++i) {

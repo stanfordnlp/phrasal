@@ -49,6 +49,7 @@ public class DependencyPipe implements Cloneable {
 
   public DependencyPipe(ParserOptions options) throws Exception {
     this.opt = options;
+    this.labeled = options.labeled;
 
     if (!options.format.equalsIgnoreCase("conll") &&
         !options.format.equalsIgnoreCase("plain") &&
@@ -77,6 +78,7 @@ public class DependencyPipe implements Cloneable {
     depReader = DependencyReader.createDependencyReader(this, options.format, options);
     options.printFeatureOptions();
     createDistBinArray(ParserOptions.distBinStr);
+    System.err.println("pipe with labels: "+labeled);
   }
 
   private static void createDistBinArray(String distBinStr) {
@@ -199,6 +201,7 @@ public class DependencyPipe implements Cloneable {
   
   public void initInputFile(String file, String sourceFile, String alignFile) throws IOException {
     labeled = depReader.startReading(file, sourceFile, alignFile) && opt.labeled;
+    System.err.printf("File %s is labeled: %s\n", file, labeled);
   }
 
   public void initOutputFile(String file) throws IOException {
@@ -241,6 +244,7 @@ public class DependencyPipe implements Cloneable {
     System.err.println("Num Features (dataAlphabet): " + dataAlphabet.size());
 
     labeled = depReader.startReading(file, sourceFile, alignFile) && opt.labeled;
+    System.err.println("labeled(a): "+labeled);
 
     TIntArrayList lengths = new TIntArrayList();
 

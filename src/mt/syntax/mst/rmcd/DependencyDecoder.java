@@ -19,6 +19,7 @@ public class DependencyDecoder {
   public DependencyDecoder(DependencyPipe pipe) {
     this.pipe = pipe;
     this.labeled = pipe.isLabeled();
+    System.err.println("decoding with labels: "+this.labeled);
     this.mstIgnoreLoops = pipe.ignoreLoops();
     System.err.printf("Decoder (%s) ignores loops: %s\n", this, mstIgnoreLoops);
   }

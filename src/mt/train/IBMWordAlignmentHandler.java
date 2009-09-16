@@ -111,12 +111,14 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
           if(els.length != 3)
             throw new RuntimeException("incorrect number of cols: "+els.length+" in "+str);
           if(Double.parseDouble(els[2]) >= MINP) {
-            int fi = Integer.parseInt(els[0]);
-            for(String eiStr : els[1].split(",")) {
-              int ei = Integer.parseInt(eiStr);
-              if(fi > 0 && ei > 0) {
-                f2e[fi-1].add(ei-1);
-                e2f[ei-1].add(fi-1);
+            for(String fiStr : els[0].split(",")) {
+              int fi = Integer.parseInt(fiStr);
+              for(String eiStr : els[1].split(",")) {
+                int ei = Integer.parseInt(eiStr);
+                if(fi > 0 && ei > 0) {
+                  f2e[fi-1].add(ei-1);
+                  e2f[ei-1].add(fi-1);
+                }
               }
             }
           }

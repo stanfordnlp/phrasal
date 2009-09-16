@@ -10,8 +10,12 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.io.Serializable;
+import java.io.ObjectOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
-public class DependencyInstance implements Cloneable {
+public class DependencyInstance implements Cloneable, Serializable {
 
   private static int INIT_SZ = 5;
   public static int LEMMA_LEN = 4;
@@ -36,7 +40,7 @@ public class DependencyInstance implements Cloneable {
   // HEAD SCORES: headScores[i] is the score of taking head[i] as head
   private FloatArrayList headScores;
 
-  class Dependent {
+  class Dependent implements Serializable {
 
     // The various data types. Here's an example from Portuguese:
     //
@@ -94,6 +98,35 @@ public class DependencyInstance implements Cloneable {
           posprev = cposprev = null;
         }
       }
+    }
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+      out.writeObject(form);
+      out.writeObject(lemma);
+      out.writeObject(cpostag);
+      out.writeObject(postag);
+      out.writeObject(feats);
+      out.writeObject(pfeats);
+      out.writeObject(alignment);
+      out.writeObject(depRel);
+      out.writeObject(posprev);
+      out.writeObject(cposprev);
+      out.writeObject(relFeats);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+      form = (String) in.readObject();
+      lemma = (String) in.readObject();
+      cpostag = (String) in.readObject();
+      postag = (String) in.readObject();
+      feats = (String[]) in.readObject();
+      pfeats = (String[][]) in.readObject();
+      alignment = (int[]) in.readObject();
+      depRel = (String) in.readObject();
+      posprev = (Map<String,Integer>) in.readObject();
+      cposprev = (Map<String,Integer>) in.readObject();
+      relFeats = (RelationalFeature ) in.readObject();
     }
   }
 
@@ -338,9 +371,34 @@ public class DependencyInstance implements Cloneable {
     if(pfeats == null) return null; return pfeats[j];
   }
 
-  public String getDepRel(int i) { String depRel = deps.get(i).depRel; return depRel != null ? depRel : "<no-type>"; }
+  public String getDepRel(int i) {
+    String depRel = deps.get(i).depRel;
+    if(depRel == null)
+      depRel = "<no-type>";
+    return depRel;
+  }
 
   public RelationalFeature getRelFeat(int i) { return deps.get(i).relFeats; }
 
   public void setFeats(int i, String[] f) { deps.get(i).feats = f; }
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    out.writeObject(heads);
+    out.writeObject(actParseTree);
+    out.writeInt(deps.size());
+    for(Dependent d : deps)
+      out.writeObject(d);
+    out.writeInt(-1);
+  }
+
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    heads = (ShortArrayList) in.readObject();
+    actParseTree = (String) in.readObject();
+    int sz = in.readInt();
+    deps = new ArrayList<Dependent>();
+    for(int i=0; i<sz; ++i)
+      deps.add((Dependent)in.readObject());
+    int check = in.readInt();
+    assert(check == -1);
+  }
 }
