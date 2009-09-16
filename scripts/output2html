@@ -19,6 +19,8 @@ use arg_utils qw(&get_args &get_opts);
 use data_utils qw(&load_file);
 use mt_utils qw(&load_mt_sgml &load_ibm_doc_scores &load_ptable);
 
+my $preserve_case = 0;
+
 my %opts = get_opts
   (
 	 ['ref=s','','reference translations (NIST MT sgml)',1],
@@ -31,7 +33,7 @@ my %opts = get_opts
 	 ['corpus=s','','corpus name',1],
 	 ['ptable=s','','phrase table'],
 	 ['counts=s','','phrase counts'],
-	 ['html=s','','noot name of html files to generate',1],
+	 ['html=s','','root name of html files to generate',1],
 	 ['lang=s','ar','source language'],
  	 ['v',0,'program will be more verbose'],
 	 );
@@ -218,6 +220,7 @@ sub print_translations {
 	} else {
 		print $fh "<tr><td><strong><a name=\"$id\">id</a></strong></td><td>$sid</td></tr>\n";
 	}
+	$input =~ s/\$\s*\w+\_\((.*?)\)/$1/g; # remove IBM classing
 	print $fh "<tr><td><strong>source</strong></td><td align=\"right\" dir=\"rtl\">$input</td></tr>\n";
 	print $fh "<tr><td><strong>MT input</strong></td><td align=\"right\" dir=\"rtl\">$pr</td></tr>\n" if $prep;
 	print $fh "<tr><td><strong>MT output</strong></td><td>$output</td></tr>\n";
@@ -302,35 +305,36 @@ sub color_for_count {
 sub flag_unmatched_words {
 	my ($refs,$hyp) = @_;
 	my (%ref,%hyp);
-	foreach my $w (tok($$hyp)) {
+	foreach my $w (tok(nistTok($$hyp))) {
 		$hyp{$w} = 1;
 	}
 	for my $i (0..$#$refs) {
-		foreach my $w (tok($refs->[$i])) {
+		foreach my $w (tok(nistTok($refs->[$i]))) {
 			$ref{$w} = 1;
 		}
 	}
 	$$hyp =~ s/(\S+)/mark_unk($1,\%ref,\%hyp)/ge;
-	#$$hyp =~ s/([A-Za-z\-0-9\-\'\"]+)/mark_unk($1,\%ref,\%hyp)/ge;
 	for my $i (0..$#$refs) {
 		$refs->[$i] =~ s/(\S+)/mark_unk($1,\%ref,\%hyp)/ge;
-		#$refs->[$i] =~ s/\b([A-Za-z\-0-9\-\'\"]+)\b/mark_unk($1,\%ref,\%hyp)/ge;
 	}
 }
 
 sub tok {
 	my $l = shift;
-	#$l =~ s/[^A-Za-z0-9\-\s]//g;
-	#$l =~ tr/A-Z/a-z/;
 	return split(/\s+/,$l);
 }
 
 sub mark_unk {
 	my ($tok,$ref,$hyp) = @_;
-	(my $lctok = $tok);
-	#print STDERR "tok: <$tok>\n";
-	#(my $lctok = $tok) =~ tr/A-Z/a-z/;
-	my $matched = ($ref->{$lctok} && $hyp->{$lctok}) ? 1 : 0;
+	my $normtok = nistTok($tok);
+	my @toks = split(/\s+/,$normtok);
+	my $matched = 1;
+	foreach my $t (@toks) {
+		if(!$ref->{$t} || !$hyp->{$t}) {
+			$matched = 0;
+			last;
+		}
+	}
 	return $matched ? $tok : red($tok);
 }
 
@@ -421,4 +425,30 @@ sub arabic_punc {
 	## Strip final punctuation from Arabic:
 	$str =~ s/\s*\.\s*$//g;
 	return $str;
+}
+
+sub nistTok {
+    my ($norm_text) = @_;
+ 
+# language-independent part:
+    $norm_text =~ s/<skipped>//g; # strip "skipped" tags
+    $norm_text =~ s/-\n//g; # strip end-of-line hyphenation and join lines
+    $norm_text =~ s/\n/ /g; # join lines
+    $norm_text =~ s/&quot;/"/g;  # convert SGML tag for quote to "
+    $norm_text =~ s/&amp;/&/g;   # convert SGML tag for ampersand to &
+    $norm_text =~ s/&lt;/</g;    # convert SGML tag for less-than to >
+    $norm_text =~ s/&gt;/>/g;    # convert SGML tag for greater-than to <
+ 
+# language-dependent part (assuming Western languages):
+    $norm_text = " $norm_text ";
+    $norm_text =~ tr/[A-Z]/[a-z]/ unless $preserve_case;
+    $norm_text =~ s/([\{-\~\[-\` -\&\(-\+\:-\@\/])/ $1 /g;   # tokenize punctuation
+    $norm_text =~ s/([^0-9])([\.,])/$1 $2 /g; # tokenize period and comma unless preceded by a digit
+    $norm_text =~ s/([\.,])([^0-9])/ $1 $2/g; # tokenize period and comma unless followed by a digit
+    $norm_text =~ s/([0-9])(-)/$1 $2 /g; # tokenize dash when preceded by a digit
+    $norm_text =~ s/\s+/ /g; # one space only between words
+    $norm_text =~ s/^\s+//;  # no leading space
+    $norm_text =~ s/\s+$//;  # no trailing space
+ 
+    return $norm_text;
 }

@@ -1,5 +1,132 @@
 #!/usr/bin/perl -p
 
-s/\?\s*\.\s*$/\?\n/;
-s/\,\./\./g;
-s/\:\./\./g;
+############################################################
+# A-E post processing script optimized for MT05 and MT06
+############################################################
+
+############## v1:
+# BLEU = 51.7541, BLEU-prec = 51.8174, 83.1/59.9/44.2/32.8 (BP=0.999, ration=0.999) sent=2853/2853 baseline (no postprocessing)
+# BLEU = 51.7584, BLEU-prec = 51.8229, 83.1/59.9/44.2/32.8 (BP=0.999, ration=0.999) sent=2853/2853 numbers
+# BLEU = 51.8066, BLEU-prec = 51.9431, 83.2/60.1/44.3/32.9 (BP=0.997, ration=0.997) sent=2853/2853 sentence-initial "and", "that", etc.
+# BLEU = 51.8158, BLEU-prec = 51.9523, 83.2/60.1/44.3/32.9 (BP=0.997, ration=0.997) sent=2853/2853 $ -> dollar
+# BLEU = 51.8254, BLEU-prec = 51.9660, 83.3/60.1/44.3/32.9 (BP=0.997, ration=0.997) sent=2853/2853 sentence-final punctuation, such as "? .":
+# BLEU = 51.8260, BLEU-prec = 51.9666, 83.3/60.1/44.3/32.9 (BP=0.997, ration=0.997) sent=2853/2853 dates
+# BLEU = 51.9026, BLEU-prec = 52.0358, 83.3/60.2/44.4/33.0 (BP=0.997, ration=0.997) sent=2853/2853 abbreviations
+# BLEU = 51.9136, BLEU-prec = 52.0538, 83.3/60.2/44.4/33.0 (BP=0.997, ration=0.997) sent=2853/2853 Arabic names
+# BLEU = 51.9336, BLEU-prec = 52.0325, 83.3/60.2/44.4/33.0 (BP=0.998, ration=0.998) sent=2853/2853 "" -> He added : ""
+# BLEU = 51.9431, BLEU-prec = 52.0548, 83.3/60.2/44.4/33.0 (BP=0.998, ration=0.998) sent=2853/2853 2 K -> 2K
+# BLEU = 51.9651, BLEU-prec = 52.0716, 83.3/60.2/44.4/33.0 (BP=0.998, ration=0.998) sent=2853/2853 dates in bylines
+#
+# BLEU = 51.9654, BLEU-prec = 52.0707, 83.3/60.2/44.4/33.0 (BP=0.998, ration=0.998) sent=2853/2853 (final, after minor rewrite of regex's)
+
+s=^= =g;
+s=$= =g;
+
+# Sentence-final punctuation, such as "? .":
+if(1) {
+s/(\:|\?)\s*\.\s*$/$1 \n/;
+s/ [\,\;]\s*$/ \. \n/;
+}
+
+# Sentence-initial "and", "that", etc.:
+if(1) {
+s/^\s*and\s+//i;
+s/^\s*that\s+//i;
+#s/^\s*then\s+//i;
+}
+
+# Bylines:
+if(1) {
+s/ (\d{1,2}) ?([\-\.]) ?(\d{1,2}) \(/date_byline($1,$2,$3)/ge;
+s/ (\d{1,2}) *(\-|\/) *(\d{1,2}) *(\-|\/) *(\d{4}) /full_date_byline($1,$2,$3,$4,$5)/ge;
+s/ (\d{4}) *(\-|\/) *(\d{1,2}) *(\-|\/) *(\d{1,2}) /full_date_byline($3,$2,$5,$4,$1)/ge;
+}
+
+sub date_byline {
+	my ($el1,$punc,$el2) = @_;
+	return " $el1-$el2 (" if($el2 > 12);
+	return " $el2-$el1 (";
+}
+
+sub full_date_byline {
+	my ($el1,$punc1,$el2,$punc2,$year) = @_;
+	return " ${el1}${punc1}${el2}${punc2}${year} " if($el2 > 12);
+	return " ${el2}${punc1}${el1}${punc2}${year} ";
+}
+
+# Dollar signs:
+if(1) {
+s/ \$ ([\d\,\.]+) million / $1 million dollars /gi;
+s/ \$ ([\d\,\.]+) thousand / $1 thousand dollars /gi;
+s/ \$ ([\d\,\.]+) / $1 dollars /gi;
+}
+
+# Dates:
+if(1) {
+my $month = "jan|january|feb|february|mar|march|apr|april|may|jun|june|jul|july|aug|august|sep|september|oct|october|nov|november|dec|december";
+s/ ($month) 1 / $1 1st /gi;
+s/ ($month) 2 / $1 2nd /gi;
+#s/ ($month) 3 / $1 3rd /gi;
+}
+
+# Numbers:
+if(1) {
+s/ (\d{1,3}) , (\d{3}) / $1,$2 /g;
+}
+
+# Unmatched '(', ')', '"', '"':
+if(0) { # disabled
+s/ \( / /g unless /\)/; # tiny gain, probably accidental
+#s/ \) / /g unless /\(/;
+#s/^([^"]*) \" ([^"]*)$/$1 $2/g;
+}
+
+# Quotes:
+if(1) {
+s/^\s*"([^"]{30,})"/He added : "$1"/g;
+#s/^\s*"([^"]{30,})"/He said : "$1"/g;
+#BLEU = 51.9136, BLEU-prec = 52.0538, 83.3/60.2/44.4/33.0 (BP=0.997, ration=0.997) sent=2853/2853 baseline
+#BLEU = 51.9336, BLEU-prec = 52.0325, 83.3/60.2/44.4/33.0 (BP=0.998, ration=0.998) sent=2853/2853 + "he added"
+#BLEU = 51.9081, BLEU-prec = 52.0070, 83.2/60.1/44.4/32.9 (BP=0.998, ration=0.998) sent=2853/2853 + "he said"
+}
+
+# Arabic names:
+if(1) {
+s/ al (\w)/ Al-$1/gi;
+}
+
+# Abbreviations:
+if(1) {
+s/ a US / an American /gi;
+s/ the US / the American /gi;
+# more cases where American is prefered to US?
+s/(\w) AFP (\w)/$1 Agence France Press $2/gi;
+s/ km / kilometers /gi;
+}
+
+# Tokenization:
+if(1) {
+s/(\d) k /${1}K /gi;
+}
+
+# Fix some "He said:"
+if(1) {
+s/ (he|she) said " / $1 said : " /gi;
+s/ (he|she) said [\.,] " / $1 said : " /gi;
+}
+
+# Remove hyphens in long words:
+s=(\w{6,}) - (\w{6,})=$1 $2=g;
+
+################################
+# v2: some minor additions:
+
+s/ percent / % /g;
+s/ b / /gi; # due to bad Arabic segmentation
+
+s=  += =g;
+s=^ +==g;
+s= +$==g;
+
+# Prevent empty lines, which make the official NIST scoring script crash:
+s=^\s*$=.\n=g;
