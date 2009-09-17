@@ -256,6 +256,7 @@ public NGramLanguageModelFeaturizer(String... args) throws IOException {
 	@Override
 	public void initialize(List<ConcreteTranslationOption<TK>> options,
 			Sequence<TK> foreign) {
+		rawLMScoreHistory.clear();
 	}
 	
 	public void reset() { }

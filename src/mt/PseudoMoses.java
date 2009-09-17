@@ -1951,6 +1951,16 @@ public class PseudoMoses {
       System.exit(-1);
     }
 
+    // by default, exit on uncaught exception
+		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      public void uncaughtException(Thread t, Throwable ex) {
+        System.err.println("Uncaught exception from thread: " + t.getName());
+        System.err.println(ex.toString());
+				ex.printStackTrace();
+				System.exit(-1);
+      }
+    });
+
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0]) : readArgs(args);
     PseudoMoses p = new PseudoMoses(config);
 
