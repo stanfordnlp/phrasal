@@ -58,7 +58,7 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
         }
       }
     }
-    align = new int[alTable.size()]; // TODO fit two alignments in each int instead of 1
+    align = new int[alTable.size()];
     int i=-1;
     for(Short a : alTable)
       align[++i] = a;

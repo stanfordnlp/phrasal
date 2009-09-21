@@ -15,6 +15,8 @@ import edu.stanford.nlp.trees.Constituent;
  */
 public class ConstituentPhraseExtractor extends LinearTimePhraseExtractor {
 
+  // NOTE: unfinished
+  
   public ConstituentPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
     System.err.println("Constituent phrase extractor.");

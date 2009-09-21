@@ -7,6 +7,8 @@ import java.util.Arrays;
  */
 public class DependencyPair {
 
+  // TODO: add support for bilingual features
+  
   private static final Object nil = new Object();
 
   final DependencyInstance inst;

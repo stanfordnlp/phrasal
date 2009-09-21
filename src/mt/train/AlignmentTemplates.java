@@ -162,18 +162,16 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       double fertility = alTemp.e().size()/alTemp.f().size();
       if(fertility > maxFertility)
         add = false;
-      alTemp.setKey(indexOf(alTemp,add));
-      alTemp.setFKey(indexOfF(alTemp,add));
-      alTemp.setEKey(indexOfE(alTemp,add));
+
+      int idxF = indexOfF(alTemp, add);
+      int idxE = indexOfE(alTemp, add);
+
+      alTemp.setKey(index.indexOf(new int[]{idxF, idxE}, add));
+      alTemp.setFKey(idxF);
+      alTemp.setEKey(idxE);
       alTemp.setAKey(indexOfA(alTemp,add));
     }
   }
-
-  /**
-   * Return index for alTemp.
-   */
-  private int indexOf(AlignmentTemplate alTemp, boolean add)
-  { return index.indexOf(new int[] {indexOfF(alTemp, add), indexOfE(alTemp, add)}, add); }
 
   /**
    * Return index for source-language phrase in alTemp.
