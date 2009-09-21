@@ -11,13 +11,13 @@ import edu.stanford.nlp.util.Pair;
 
 public final class ArabicSubjectBank {
   private static ArabicSubjectBank thisInstance = null;
-  private final Map<Sequence<IString>,SentenceData> subjectBank;
+  private final Map<Integer,SentenceData> subjectBank;
   private boolean isLoaded = false;
 
   private static final String DELIM = "|||";
 
   protected ArabicSubjectBank() {
-    subjectBank = new HashMap<Sequence<IString>,SentenceData>();
+    subjectBank = new HashMap<Integer,SentenceData>();
   }
 
   public static ArabicSubjectBank getInstance() {
@@ -29,10 +29,10 @@ public final class ArabicSubjectBank {
   private class SentenceData {
     public SentenceData() {
       subjSpans = new ArrayList<Pair<Integer,Integer>>();
-      verbs = new HashMap<Integer,Integer>();
+      verbs = new HashSet<Integer>();
     }
     public List<Pair<Integer,Integer>> subjSpans;
-    public Map<Integer,Integer> verbs;
+    public Set<Integer> verbs;
   }
 
   public void load(final File filename, final int maxSubjLen) {
@@ -43,6 +43,7 @@ public final class ArabicSubjectBank {
       int nullSubjects = 0;
       int numSubjects = 0;
       int numVerbs = 0;
+      int transId = 0;
       while(reader.ready()) {
         final SentenceData newSent = new SentenceData();
         Sequence<IString> sentence = null;
@@ -58,7 +59,7 @@ public final class ArabicSubjectBank {
             final StringTokenizer verbIndices = new StringTokenizer(stripped,",");
             while(verbIndices.hasMoreTokens()) {
               int verbIdx = Integer.parseInt(verbIndices.nextToken().trim());
-              newSent.verbs.put(verbIdx,verbIdx);
+              newSent.verbs.add(verbIdx);
             }
 
           } else {
@@ -80,8 +81,9 @@ public final class ArabicSubjectBank {
         else
           numSubjects += newSent.subjSpans.size();
         
-        numVerbs += newSent.verbs.keySet().size();
-        subjectBank.put(sentence, newSent);
+        numVerbs += newSent.verbs.size();
+        subjectBank.put(transId, newSent);
+        ++transId;
       }
 
       reader.close();
@@ -100,24 +102,24 @@ public final class ArabicSubjectBank {
     }
   }
 
-  public List<Pair<Integer,Integer>> subjectsForSentence(Sequence<IString> foreign) {
+  public List<Pair<Integer,Integer>> subjectsForSentence(final int translationId) {
     if(!isLoaded)
       throw new RuntimeException(String.format("%s: Subject bank not initialized (subj)", this.getClass().getName()));
 
-    if(subjectBank.get(foreign) == null)
-      throw new RuntimeException(String.format("%s: Could not find subjects for |||%s|||",this.getClass().getName(),foreign.toString()));
+    if(subjectBank.get(translationId) == null)
+      throw new RuntimeException(String.format("%s: Could not find subjects for id %d",this.getClass().getName(),translationId));
     
-    return Collections.unmodifiableList(subjectBank.get(foreign).subjSpans);
+    return Collections.unmodifiableList(subjectBank.get(translationId).subjSpans);
   }
 
-  public Map<Integer,Integer> verbsForSentence(Sequence<IString> foreign) {
+  public Set<Integer> verbsForSentence(final int translationId) {
     if(!isLoaded)
       throw new RuntimeException(String.format("%s: Subject bank not initialized (verb)", this.getClass().getName()));
 
-    if(subjectBank.get(foreign) == null)
-      throw new RuntimeException(String.format("%s: Could not find verbs for |||%s|||",this.getClass().getName(),foreign.toString()));
+    if(subjectBank.get(translationId) == null)
+      throw new RuntimeException(String.format("%s: Could not find verbs for id %d",this.getClass().getName(),translationId));
 
-    return Collections.unmodifiableMap(subjectBank.get(foreign).verbs);
+    return Collections.unmodifiableSet(subjectBank.get(translationId).verbs);
   }
 
   /**
