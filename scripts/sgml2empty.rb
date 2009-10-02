@@ -1,4 +1,4 @@
-#!/bin/env ruby -w
+#!/usr/bin/env ruby 
 
 ## quick and dirty! first arg should be the sysid you want extracted,
 ## or nothing for all.
