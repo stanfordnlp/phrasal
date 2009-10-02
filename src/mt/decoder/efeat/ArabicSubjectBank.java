@@ -9,12 +9,12 @@ import mt.base.IString;
 import mt.base.IStrings;
 import edu.stanford.nlp.util.Pair;
 
-public final class ArabicSubjectBank {
-  private static ArabicSubjectBank thisInstance = null;
-  private final Map<Integer,SentenceData> subjectBank;
-  private boolean isLoaded = false;
+public class ArabicSubjectBank {
+  protected static ArabicSubjectBank thisInstance = null;
+  protected final Map<Integer,SentenceData> subjectBank;
+  protected boolean isLoaded = false;
 
-  private static final String DELIM = "|||";
+  protected static final String DELIM = "|||";
 
   protected ArabicSubjectBank() {
     subjectBank = new HashMap<Integer,SentenceData>();
@@ -26,13 +26,14 @@ public final class ArabicSubjectBank {
     return thisInstance;
   }
 
-  private class SentenceData {
+  public class SentenceData {
     public SentenceData() {
       subjSpans = new ArrayList<Pair<Integer,Integer>>();
       verbs = new HashSet<Integer>();
     }
     public List<Pair<Integer,Integer>> subjSpans;
     public Set<Integer> verbs;
+    public double score = 0.0;
   }
 
   public void load(final File filename, final int maxSubjLen) {

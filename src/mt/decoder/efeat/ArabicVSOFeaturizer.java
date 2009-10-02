@@ -16,7 +16,8 @@ import edu.stanford.nlp.util.Pair;
 public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "ArabicVSOFeaturizer";
-
+  private static double FEATURE_VALUE = 1.0;
+  
   private boolean VERBOSE = false;
 
 //  private static final int NOT_IN_SUBJECT = Integer.MAX_VALUE;
@@ -29,16 +30,26 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   
   public ArabicVSOFeaturizer(String... args) {
 
-    assert args.length == 2;
+    assert args.length == 3;
+    
     File subjFile = new File(args[0]);
     if(!subjFile.exists())
       throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),subjFile.getPath()));
 
     int maxSubjLen = Integer.parseInt(args[1].trim());
-
+    int modeIndicator = Integer.parseInt(args[2].trim());
+    setFeatureValue(modeIndicator);
+    
     //Do the loading here to accommodate multi-threading
     subjectBank = ArabicSubjectBank.getInstance();
     subjectBank.load(subjFile,maxSubjLen);
+  }
+  
+  private void setFeatureValue(int modeIndicator) {
+    if(modeIndicator == 1)
+      FEATURE_VALUE = 1.0;
+    else
+      FEATURE_VALUE = -1.0;
   }
 
   /**
@@ -168,6 +179,21 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     return lastSubj;
   }
 
+  /**
+   * Indicates when the feature should fire dependent on the scoring mode.
+   * 
+   * @param eVerbEnd
+   * @param eSubjEnd
+   * @return
+   */
+  private boolean fireFeature(int eVerbEnd, int eSubjEnd) {
+    if(FEATURE_VALUE < 0.0 && eVerbEnd < eSubjEnd)
+      return true;
+    else if(FEATURE_VALUE > 0.0 && eVerbEnd >= eSubjEnd)
+      return true;
+    return false;
+  }
+  
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
     
     //Get the subjects. Return if there aren't any
@@ -210,7 +236,7 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
       final int eVerbStart = getEStartPosition(vIdx,f);
       final int eVerbEnd = getEEndPosition(vIdx, f);
       
-      if(eVerbEnd < eSubjEnd) {
+      if(fireFeature(eVerbEnd,eSubjEnd)) {
         if(VERBOSE) {
           System.err.printf("%s (3): f_verb(%d) f_sbj_end(%d) p_start(%d) p_end(%d) e_vb_start(%d) e_vb_end(%d) e_sbj_end(%d)\n", this.getClass().getName(),
               vIdx,
@@ -225,7 +251,7 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
           System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
         }
       
-        return new FeatureValue<String>(FEATURE_NAME, -1.0);
+        return new FeatureValue<String>(FEATURE_NAME, FEATURE_VALUE);
       }
     }
 
