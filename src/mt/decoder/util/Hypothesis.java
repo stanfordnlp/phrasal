@@ -8,6 +8,7 @@ import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
+import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.h.SearchHeuristic;
 
 /**
@@ -110,7 +111,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 			ConcreteTranslationOption<TK> translationOpt, 
 			int insertionPosition,
 			Hypothesis<TK,FV> baseHyp, 
-			IncrementalFeaturizer<TK,FV> featurizer,
+			CombinedFeaturizer<TK,FV> featurizer,
 			Scorer<FV> scorer,
 			SearchHeuristic<TK,FV> heuristic) {
 		synchronized(this.getClass()) { this.id = nextId++; }
@@ -125,8 +126,8 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 		foreignSequence = baseHyp.foreignSequence;
 		untranslatedTokens = baseHyp.untranslatedTokens - translationOpt.abstractOption.foreign.size();
 		linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos : baseHyp.translationOpt.linearDistortion(translationOpt));
-		featurizable = new Featurizable<TK,FV>(this, translationId);
-		localFeatures = featurizer.listFeaturize(featurizable);
+		featurizable = new Featurizable<TK,FV>(this, translationId, featurizer.getNumberStatefulFeaturizers());
+    localFeatures = featurizer.listFeaturize(featurizable);
 		score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
 		h = baseHyp.h + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
 		depth = baseHyp.depth + 1;

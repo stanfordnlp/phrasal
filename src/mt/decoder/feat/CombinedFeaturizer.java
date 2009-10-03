@@ -16,14 +16,14 @@ import mt.base.Sequence;
 public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,FV>, IsolatedPhraseFeaturizer<TK, FV>, Cloneable {
 	public List<IncrementalFeaturizer<TK,FV>> featurizers;
 
+  private final int nbStatefulFeaturizers;
+
   @SuppressWarnings("unchecked")
   public CombinedFeaturizer<TK, FV> clone() {
-    //System.err.println("cloned: "+this);
 		try {
       CombinedFeaturizer featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
       featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
       for(IncrementalFeaturizer<TK,FV> f : featurizers) {
-        //System.err.println("cloned: "+f);
         featurizer.featurizers.add(f instanceof ClonedFeaturizer ? ((ClonedFeaturizer)f).clone() : f);
       }
       return featurizer;
@@ -54,14 +54,26 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 	 * @param featurizers
 	 */
 	public CombinedFeaturizer(List<IncrementalFeaturizer<TK,FV>> featurizers) {
-		this.featurizers = new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers); 
-	}
+		this.featurizers = new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers);
+    int id = -1;
+    for(IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
+      if(featurizer instanceof StatefulFeaturizer) {
+        StatefulFeaturizer sfeaturizer = (StatefulFeaturizer) featurizer;
+        sfeaturizer.setId(++id);
+      }
+    }
+    this.nbStatefulFeaturizers = id+1;
+  }
+
+  public int getNumberStatefulFeaturizers() {
+    return nbStatefulFeaturizers;
+  }
 	
-	/**
+  /**
 	 * @param featurizers
 	 */
 	public CombinedFeaturizer(IncrementalFeaturizer<TK,FV>... featurizers) {
-		this.featurizers = Arrays.asList(featurizers);
+		this(Arrays.asList(featurizers));
 	}
 	
 	@SuppressWarnings("unchecked")

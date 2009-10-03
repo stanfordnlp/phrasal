@@ -1,6 +1,7 @@
 package mt.decoder.inferer;
 
 import mt.decoder.feat.IncrementalFeaturizer;
+import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.h.SearchHeuristic;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.Hypothesis;
@@ -14,7 +15,7 @@ import mt.decoder.util.Scorer;
  */
 abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<TK, FV> {
 
-  IncrementalFeaturizer<TK, FV> incrementalFeaturizer;
+  CombinedFeaturizer<TK, FV> incrementalFeaturizer;
   PhraseGenerator<TK> phraseGenerator;
   Scorer<FV> scorer;
   SearchHeuristic<TK,FV> heuristic;
@@ -25,7 +26,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
 
   @Override
   public InfererBuilder<TK, FV> setIncrementalFeaturizer(
-          IncrementalFeaturizer<TK, FV> featurizer) {
+          CombinedFeaturizer<TK, FV> featurizer) {
     this.incrementalFeaturizer = featurizer;
 
     return this;

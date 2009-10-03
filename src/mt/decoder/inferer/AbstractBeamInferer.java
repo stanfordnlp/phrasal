@@ -5,7 +5,6 @@ import java.util.*;
 import mt.base.*;
 import mt.decoder.recomb.*;
 import mt.decoder.util.*;
-import mt.decoder.feat.RichIncrementalFeaturizer;
 
 /**
  *
@@ -69,8 +68,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
     Set<Sequence<TK>> distinctTranslations = DISTINCT_NBEST ? new HashSet<Sequence<TK>>() : null;
 
-    if(featurizer instanceof RichIncrementalFeaturizer)
-      ((RichIncrementalFeaturizer)featurizer).rerankingMode(true);
+    featurizer.rerankingMode(true);
 
     StateLatticeDecoder<Hypothesis<TK, FV>> latticeDecoder = new StateLatticeDecoder<Hypothesis<TK, FV>>(
 				goalStates, recombinationHistory, size);
@@ -148,10 +146,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       }
     });
 
-    if(featurizer instanceof RichIncrementalFeaturizer) {
-      RichIncrementalFeaturizer<TK,FV> rf = (RichIncrementalFeaturizer<TK,FV>)featurizer;
-      rf.debugBest(translations.iterator().next().featurizable);
-    }
+    featurizer.debugBest(translations.iterator().next().featurizable);
 
     if (DEBUG) {
 			long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;
@@ -159,9 +154,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 					nBestConstructionTime / 1000.0);
 		}
 
-    if(featurizer instanceof RichIncrementalFeaturizer) {
-      ((RichIncrementalFeaturizer)featurizer).rerankingMode(false);
-    }
+    featurizer.rerankingMode(false);
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // code below is needed for generating nbest lists with no duplicates for GALE -- please do not delete

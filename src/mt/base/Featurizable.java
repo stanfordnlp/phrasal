@@ -1,6 +1,7 @@
 package mt.base;
 
 import mt.decoder.util.Hypothesis;
+import mt.decoder.feat.StatefulFeaturizer;
 
 
 /**
@@ -134,17 +135,18 @@ public class Featurizable<TK,FV> {
 	final public int[][] f2tAlignmentIndex;
 
   /**
-   * Can be used by any featurizer to store additional properties
-   * belonging to translation hypothesis.
+   * For stateful featurizers. If multiple featurizers require
+   * access to this variable, 'state' should probably reference
+   * a map or a list.
    */
-  public Object extra;
+  final private Object[] states;
 
 	/**
 	 * 
 	 * @param hypothesis
 	 */
 	@SuppressWarnings("unchecked")
-	public Featurizable(Hypothesis<TK,FV> hypothesis, int translationId) {
+	public Featurizable(Hypothesis<TK,FV> hypothesis, int translationId, int nbStatefulFeaturizers) {
 		this.translationId = translationId;
 		done = hypothesis.isDone();
 		option = hypothesis.translationOpt;
@@ -168,15 +170,26 @@ public class Featurizable<TK,FV> {
 		if (prior != null) {
 			t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
 			f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
-		} else {
+      states = new Object[nbStatefulFeaturizers];
+      //states = prior.states.clone();
+    } else {
 			t2fAlignmentIndex = new int[hypothesis.length][];
 			f2tAlignmentIndex = new int[foreignSentence.size()][];
-		}
+      states = new Object[nbStatefulFeaturizers];
+    }
 		hyp = hypothesis;
 		augmentAlignments(concreteOpt);
 	}
-	
-	/**
+
+  public Object getState(StatefulFeaturizer<IString,String> f) {
+    return states[f.getId()];
+  }
+
+  public void setState(StatefulFeaturizer<IString,String> f, Object s) {
+    states[f.getId()] = s;
+  }
+
+  /**
 	 * Avoid Arrays.copyOf and it's sluggish call to Class.getComponentType
 	 * @return
 	 */
@@ -208,7 +221,8 @@ public class Featurizable<TK,FV> {
 		foreignSentence = foreignSequence;
 		untranslatedTokens = foreignSequence.size() - foreignPhrase.size();
 		prior = null;
-		linearDistortion = Integer.MAX_VALUE;
+    states = null;
+    linearDistortion = Integer.MAX_VALUE;
 		t2fAlignmentIndex = new int[translatedPhrase.size()][];
 		f2tAlignmentIndex = new int[foreignSentence.size()][];
 		augmentAlignments(concreteOpt);

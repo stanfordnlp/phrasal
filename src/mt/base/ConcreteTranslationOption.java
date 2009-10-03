@@ -34,7 +34,7 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 		this.phraseTableName = phraseTableName;
 		this.foreignPos = foreignCoverage.nextSetBit(0);
 		Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this, translationId);
-		List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+    List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
 		this.isolationScore = scorer.getIncrementalScore(features);
 	}
 	

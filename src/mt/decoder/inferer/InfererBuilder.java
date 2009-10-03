@@ -1,6 +1,7 @@
 package mt.decoder.inferer;
 
 import mt.decoder.feat.IncrementalFeaturizer;
+import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.h.SearchHeuristic;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.Hypothesis;
@@ -27,7 +28,7 @@ public interface InfererBuilder<TK,FV> {
 	 * @param featurizer
 	 * @return
 	 */
-	InfererBuilder<TK,FV> setIncrementalFeaturizer(IncrementalFeaturizer<TK,FV> featurizer);
+	InfererBuilder<TK,FV> setIncrementalFeaturizer(CombinedFeaturizer<TK,FV> featurizer);
 	
 	/**
 	 * 

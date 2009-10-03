@@ -6,6 +6,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 
 import mt.decoder.feat.RichIncrementalFeaturizer;
 import mt.decoder.feat.ClonedFeaturizer;
+import mt.decoder.feat.StatefulFeaturizer;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.ConcreteTranslationOption;
@@ -26,7 +27,7 @@ import java.io.PrintStream;
  *
  * @author Michel Galley
  */
-public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String> {
+public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString,String> {
 
   private static final int ORDER = 4;
   private static final boolean BP_BEFORE_FINAL = System.getProperty("bpBeforeFinal") != null; // better be false
@@ -157,7 +158,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
 
     int sentId = getId(f);
 
-    BLEUIncrementalScorer scorer = f.prior != null ? (BLEUIncrementalScorer) f.prior.extra : null;
+    BLEUIncrementalScorer scorer = f.prior != null ? (BLEUIncrementalScorer) f.prior.getState(this) : null;
     double oldBLEU = (scorer != null) ? scorer.score : 0.0;
 
     // Find new ngram localCounts:
@@ -207,7 +208,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
       scorer = newScorer;
     }
     
-    f.extra = scorer;
+    f.setState(this,scorer);
     assert(scorer != null);
 
     //double percentDone = (f.foreignSentence.size()-f.untranslatedTokens)*1.0/f.foreignSentence.size();
@@ -234,7 +235,7 @@ public class BLEUFeaturizer implements RichIncrementalFeaturizer<IString,String>
     if(!rerankingStage && !featurizeDuringDecoding)
 			return;
 
-    BLEUIncrementalScorer scorer = (BLEUIncrementalScorer) f.extra;
+    BLEUIncrementalScorer scorer = (BLEUIncrementalScorer) f.getState(this);
     int sentId = getId(f);
 
     System.err.println("ref counts:");

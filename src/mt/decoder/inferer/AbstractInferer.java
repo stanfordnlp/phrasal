@@ -7,6 +7,7 @@ import mt.base.FeatureValue;
 import mt.base.RichTranslation;
 import mt.base.Sequence;
 import mt.decoder.feat.IncrementalFeaturizer;
+import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.h.SearchHeuristic;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.ConstrainedOutputSpace;
@@ -15,7 +16,7 @@ import mt.decoder.util.PhraseGenerator;
 import mt.decoder.util.Scorer;
 
 abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
-	protected final IncrementalFeaturizer<TK, FV> featurizer;
+	protected final CombinedFeaturizer<TK, FV> featurizer;
 	protected final PhraseGenerator<TK> phraseGenerator;
 	protected final Scorer<FV> scorer;
 	protected final SearchHeuristic<TK,FV> heuristic;

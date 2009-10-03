@@ -26,6 +26,7 @@ import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.base.PhraseAlignment;
 import mt.decoder.feat.RichIncrementalFeaturizer;
+import mt.decoder.feat.StatefulFeaturizer;
 import mt.PseudoMoses;
 import mt.tools.PrefixTagger;
 
@@ -44,7 +45,7 @@ import gnu.trove.THashMap;
 /**
  * @author Michel Galley
  */
-public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturizer<IString,String> {
+public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString,String> {
 
   // How many words of left context for POS tagging:
   public static final String ORDER_PROPERTY = "leftWords";
@@ -246,7 +247,7 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   private List<FeatureValue<String>> getFeatures(Featurizable<IString, String> f) {
 
     DependencyScores sd;
-    f.extra = sd = getDependencies(f);
+    f.setState(this, sd = getDependencies(f));
     float[] localScores = sd.localScores;
 
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>(1+depFeatures.length);
@@ -269,21 +270,25 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
       return new ArrayList<FeatureValue<String>>(0);
 
     // Find/score dependencies of prior phrase if not done already:
-    DependencyScores sd = (DependencyScores) f.prior.extra;
-    if(sd == null)
-      f.prior.extra = sd = getDependencies(f.prior);
+    DependencyScores sd = (DependencyScores) f.prior.getState(this);
+    if(sd == null) {
+      sd = getDependencies(f.prior);
+      f.prior.setState(this, sd);
+    }
     float[] localScores = sd.localScores;
 
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>(1+depFeatures.length);
     
     if(reranking && f.done) {
 
-      DependencyScores sd_done = (DependencyScores) f.extra;
+      DependencyScores sd_done = (DependencyScores) f.getState(this);
 
       // Score last phrase using approximate dependency features (dependencies with loops):
       // Find/score dependencies of current phrase if last one:
-      if(sd_done == null)
-        f.extra = sd_done = getDependencies(f);
+      if(sd_done == null) {
+        sd_done = getDependencies(f);
+        f.setState(this, sd_done);
+      }
       localScores = sd.localScores.clone();
       for(int i=0; i<localScores.length; ++i)
         localScores[i] += sd_done.localScores[i];
@@ -302,8 +307,8 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   @SuppressWarnings("unchecked")
   private DependencyScores getDependencies(Featurizable<IString, String> f) {
 
-    DependencyScores currentNode = (f.prior != null) ? (DependencyScores)f.prior.extra : null;
-    assert(f.extra == null);
+    DependencyScores currentNode = (f.prior != null) ? (DependencyScores)f.prior.getState(this) : null;
+    assert(f.getState(this) == null);
 
     // Determine if surface string was seen before:
     String partialTranslation = CACHE_PARTIAL ? (f.partialTranslation.toString()+" | "+f.done) : null;
@@ -357,10 +362,10 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
     // Create new dependency instance:
     DependencyInstance dep;
     if(f.prior != null) {
-      assert(f.prior.extra != null);
+      assert(f.prior.getState(this) != null);
       try {
         DependencyInstance prior_dep =
-             ((DependencyScores) f.prior.extra).dep;
+             ((DependencyScores) f.prior.getState(this)).dep;
         dep = (DependencyInstance) prior_dep.clone();
       } catch(CloneNotSupportedException e) {
         e.printStackTrace();
@@ -486,7 +491,7 @@ public class DependencyLanguageModelFeaturizer implements RichIncrementalFeaturi
   @Override
   public void debugBest(Featurizable<IString, String> f) {
 
-    DependencyScores sd = (DependencyScores) f.extra;
+    DependencyScores sd = (DependencyScores) f.getState(this);
     if(sd == null)
       return;
     DependencyInstance dep = sd.dep;

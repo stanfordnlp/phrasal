@@ -89,7 +89,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
 		// initialize viterbiSpanScores
 		for (ConcreteTranslationOption<TK> option : options) {
 			Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, option, translationId); 
-			List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer.phraseListFeaturize(f);
+      List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer.phraseListFeaturize(f);
 			double score = scorer.getIncrementalScore(phraseFeatures);
 			int terminalPos = option.foreignPos + option.abstractOption.foreign.size()-1;
 			if (score > viterbiSpanScores.getScore(option.foreignPos, terminalPos)) {
