@@ -18,10 +18,6 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
 
   private static final String FEATURE_NAME = "ArabicVSOkbestFeaturizer";
 
-  private boolean VERBOSE = false;
-
-//  private static final int NOT_IN_SUBJECT = Integer.MAX_VALUE;
-//  private static final int NO_VERB = Integer.MIN_VALUE;
   private static final int NO_ALIGNMENT = Integer.MIN_VALUE;
   
   private final ArabicKbestSubjectBank subjectBank;
@@ -44,26 +40,6 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
     subjectBank.load(subjFile,maxSubjLen,verbDistance);
   }
 
-  /**
-   * For a particular subject, return the token position of a verb at most two positions to the
-   * left *if it exists*.
-   * 
-   * @param subjectSpans
-   * @param verbs
-   * @param sId
-   * @return
-   */
-//  private int getVerbIdx(final Pair<Integer,Integer> subject,
-//                         final Set<Integer> verbs) {
-//    final int start = subject.first();
-//    if(verbs.contains(start - 1))
-//      return start - 1;
-//    else if(verbs.contains(start - 2))
-//      return start - 2;
-//
-//    return NO_VERB;
-//  }
-
   private int getEStartPosition(final int fWord, final Featurizable<IString,String> f) {
     final int[] eRange = f.f2tAlignmentIndex[fWord];
     if(eRange == null)
@@ -71,14 +47,6 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
 
     return eRange[Featurizable.PHRASE_START];
   }
-
-//  private int getEEndPosition(final int fWord, final Featurizable<IString,String> f) {
-//    final int[] eRange = f.f2tAlignmentIndex[fWord];
-//    if(eRange == null)
-//      return NO_ALIGNMENT;
-//
-//    return eRange[Featurizable.PHRASE_END] - 1; //Convert to real index
-//  }
 
   /**
    * Returns true if the span of token positions specified by span is completely covered
@@ -96,7 +64,7 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
     final BitSet fCoverage = 
       f.hyp.foreignCoverage.get(span.first(), span.second() + 1);
 
-    return fCoverage.cardinality() == (span.first() - span.second() + 1);
+    return fCoverage.cardinality() == (span.second() - span.first() + 1);
   }
   
   private SubjectState getSubjectState(Featurizable<IString,String> f,
@@ -118,29 +86,29 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
    * @param verbs
    * @return
    */
-  private int getLastSubjectVectScored(Featurizable<IString,String> f, 
+  private int getLastScoredSubject(Featurizable<IString,String> f, 
                                        int translationId, 
-                                       SortedSet<Integer> verbs) {
-    if(f == null)
-      return -1;
-    
-    int lastSubj = -1;
+                                       SortedSet<Integer> verbs) {    
+    int lastSubjId = -1;
     for(Integer verbIdx : verbs) {
+
+      if(f == null)
+        return lastSubjId;
+      
       List<Triple<Integer,Integer,Double>> subjects = subjectBank.getSubjectsForVerb(translationId, verbIdx);
       boolean hasBeenScored = false;
       for(Triple<Integer,Integer,Double> subjTriple : subjects) {
         Pair<Integer,Integer> subject = new Pair<Integer,Integer>(subjTriple.first(),subjTriple.second());
-        if(getSubjectState(f,subject,verbIdx) == SubjectState.COMPLETE) {
+        SubjectState state = getSubjectState(f,subject,verbIdx);
+        if(state == SubjectState.COMPLETE)
           hasBeenScored = true;
-          break;
-        }
       }
       
       if(!hasBeenScored)
-        return lastSubj;
-      lastSubj = verbIdx;
+        return lastSubjId;
+      lastSubjId = verbIdx;
     }
-    return lastSubj;
+    return lastSubjId;
   }
   
   /**
@@ -174,18 +142,21 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
       return null;
     
     //WSGDEBUG
-    VERBOSE = (translationId == 3);
+    boolean VERBOSE = (translationId == 16);
     
     //Get the subject vector that we should consider. Return if we have covered them all
-    final int lastSubjectVect = getLastSubjectVectScored(f.prior,translationId,verbs);
-    final int currentSubjectVect = getLastSubjectVectScored(f,translationId,verbs);
+    final int lastSubjectVect = getLastScoredSubject(f.prior,translationId,verbs);
+    final int currentSubjectVect = getLastScoredSubject(f,translationId,verbs);
       
+    //These two will be equal for the last subject, so the feature will not fire
     if(lastSubjectVect != currentSubjectVect) {
 
       //WSGDEBUG
       if(VERBOSE) {
-        String priorPartial = (f.prior == null) ? "" : f.prior.partialTranslation.toString();
-        System.err.printf("WSGDEBUG: Last %d Current %d\n prev: %s\n  cur: %s\n", lastSubjectVect, currentSubjectVect, priorPartial.toString(), f.partialTranslation.toString());
+        System.err.printf("WSGDEBUG: %d --> %d\n", lastSubjectVect,currentSubjectVect);
+        System.err.printf(" current: %s\n", f.partialTranslation.toString());
+        if (f.prior == null)
+          System.err.printf(" prior: %s\n", f.prior.partialTranslation.toString());
       }
       
       //Fire the feature

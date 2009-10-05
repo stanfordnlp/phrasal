@@ -20,13 +20,7 @@ public class ArabicSubjectBank {
     subjectBank = new HashMap<Integer,SentenceData>();
   }
 
-  public static ArabicSubjectBank getInstance() {
-    if(thisInstance == null)
-      thisInstance = new ArabicSubjectBank();
-    return thisInstance;
-  }
-
-  public class SentenceData {
+  private class SentenceData {
     public SentenceData() {
       subjSpans = new ArrayList<Pair<Integer,Integer>>();
       verbs = new HashSet<Integer>();
@@ -34,6 +28,12 @@ public class ArabicSubjectBank {
     public List<Pair<Integer,Integer>> subjSpans;
     public Set<Integer> verbs;
     public double score = 0.0;
+  }
+  
+  public static ArabicSubjectBank getInstance() {
+    if(thisInstance == null)
+      thisInstance = new ArabicSubjectBank();
+    return thisInstance;
   }
 
   public void load(final File filename, final int maxSubjLen) {
@@ -128,6 +128,15 @@ public class ArabicSubjectBank {
    */
   public static void main(String[] args) {
     ArabicSubjectBank asb = ArabicSubjectBank.getInstance();
-    asb.load(new File("/home/rayder441/sandbox/SubjDetector/mt04.unk.vso-feat"),5);
+    asb.load(new File("/home/rayder441/sandbox/SubjDetector/mt04.vso"),5);
+    
+    for(int transId = 0; transId < 10; transId++) {
+      System.out.printf(">> TransId %d <<\n", transId);
+      List<Pair<Integer,Integer>> subjs = asb.subjectsForSentence(transId);
+      for(Pair<Integer,Integer> subj : subjs)
+        System.out.println(subj.toString());
+      Set<Integer> verbs = asb.verbsForSentence(transId);
+      System.out.println(verbs.toString());
+    }
   }
 }

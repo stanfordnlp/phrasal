@@ -18,8 +18,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   private static final String FEATURE_NAME = "ArabicVSOFeaturizer";
   private static double FEATURE_VALUE = 1.0;
   
-  private boolean VERBOSE = false;
-
 //  private static final int NOT_IN_SUBJECT = Integer.MAX_VALUE;
   private static final int NO_VERB = Integer.MIN_VALUE;
   private static final int NO_ALIGNMENT = Integer.MIN_VALUE;
@@ -51,38 +49,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     else
       FEATURE_VALUE = -1.0;
   }
-
-  /**
-   * If this concrete translation option overlaps with a 1best subject, then return that 
-   * subject's id. Otherwise, return NOT_IN_SUBJECT.
-   * 
-   * @param subjectSpans
-   * @param optStart
-   * @param len
-   * @return
-   */
-//  private int getSubjectIdForOption(final List<Pair<Integer,Integer>> subjectSpans,
-//                                    final int optStart,
-//                                    final int len) {
-//    final int optEnd = optStart + len - 1;
-//
-//    Iterator<Pair<Integer,Integer>> itr = subjectSpans.iterator();
-//    for(int subjectId = 0; itr.hasNext(); subjectId++) {
-//
-//      Pair<Integer,Integer> subject = itr.next();
-//      final int subjStart = subject.first();
-//      final int subjEnd = subject.second();
-//
-//      //4 cases to consider
-//      if((optStart < subjStart && optEnd >= subjStart) ||
-//          (optStart >= subjStart && optEnd <= subjEnd) ||
-//          (optStart <= subjEnd && optEnd > subjEnd) ||
-//          (optStart <= subjStart && optEnd >= subjEnd))
-//        return subjectId;
-//    }
-//
-//    return NOT_IN_SUBJECT;
-//  }
 
   /**
    * For a particular subject, return the token position of a verb at most two positions to the
@@ -136,7 +102,7 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     final BitSet fCoverage = 
       f.hyp.foreignCoverage.get(span.first(), span.second() + 1);
 
-    return fCoverage.cardinality() == (span.first() - span.second() + 1);
+    return fCoverage.cardinality() == (span.second() - span.first() + 1);
   }
   
   private SubjectState getSubjectState(Featurizable<IString,String> f,
@@ -144,13 +110,10 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
                                        Set<Integer> verbs) {
     if(isCovered(subject,f)) {
       int verbIdx = getVerbIdx(subject,verbs);
-      if(verbIdx != NO_VERB) {
-        int eVerbIdx = getEStartPosition(verbIdx,f);
-        if(eVerbIdx != NO_ALIGNMENT)
-          return SubjectState.COMPLETE;
-      } 
-      else
+      if(verbIdx == NO_VERB)
         return SubjectState.CANNOT_SCORE;
+      else if(getEStartPosition(verbIdx,f) != NO_ALIGNMENT)
+        return SubjectState.COMPLETE;
     }
     return SubjectState.INCOMPLETE;
   }
@@ -194,6 +157,17 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     return false;
   }
   
+  private int getMaxRightPosition(Pair<Integer,Integer> span, Featurizable<IString,String> f) {
+    int max = -1;
+    for(int i = span.first(); i <= span.second(); i++) {
+      int rightPos = getEEndPosition(i, f);
+      System.err.printf(" rightPos %d token %d\n", rightPos,i);
+      if(rightPos > max)
+        max = rightPos;
+    }
+    return (max == -1) ? NO_ALIGNMENT : max;
+  }
+  
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
     
     //Get the subjects. Return if there aren't any
@@ -201,9 +175,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     List<Pair<Integer,Integer>> subjectSpans = subjectBank.subjectsForSentence(translationId);
     if(subjectSpans == null || subjectSpans.size() == 0)
       return null;
-    
-    //WSGDEBUG
-    VERBOSE = (translationId == 3);
     
     //Get the verbs. Return if there aren't any
     Set<Integer> verbs = subjectBank.verbsForSentence(translationId); 
@@ -217,9 +188,15 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
       return null;
     
     //WSGDEBUG
-    if(VERBOSE && lastSubjectScored != currentSubject) {
-      String priorPartial = (f.prior == null) ? "" : f.prior.partialTranslation.toString();
-      System.err.printf("WSGDEBUG: Last %d Current %d\n prev: %s\n  cur: %s\n", lastSubjectScored, currentSubject, priorPartial.toString(), f.partialTranslation.toString());
+    boolean VERBOSE = false;
+    
+    if(VERBOSE) {
+      System.err.printf("WSGDEBUG: Subject status for tId %d\n",translationId);
+
+      System.err.printf("  >> %d subjects\n",subjectSpans.size());
+      for(Pair<Integer,Integer> s : subjectSpans)
+        System.err.printf("  >>> (%d,%d)\n",s.first(),s.second());
+      System.err.printf("  >> %s\n",verbs.toString());
     }
     
     //Get the state of the subject we should consider
@@ -229,27 +206,26 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     //If the subject has just been completed, then score it.
     if(subjState == SubjectState.COMPLETE) {
       final int vIdx = getVerbIdx(activeSubject,verbs);
-      final int fSubjEnd = activeSubject.second();
-      final int eSubjEnd = getEEndPosition(fSubjEnd,f);
-      final int fOptStart = f.foreignPosition;
-      final int fOptEnd = f.foreignPosition + f.foreignPhrase.size() - 1;
-      final int eVerbStart = getEStartPosition(vIdx,f);
-      final int eVerbEnd = getEEndPosition(vIdx, f);
+      final int eSubjEnd = getMaxRightPosition(activeSubject,f);
+      final int eVerbEnd = getMaxRightPosition(new Pair<Integer,Integer>(vIdx,vIdx), f);
+
+      if(VERBOSE) {
+        System.err.printf("WSGDEBUG: Completed subject %d --> %d\n",lastSubjectScored,currentSubject);
+        System.err.printf(" fphrase: %s\n", f.foreignPhrase.toString());
+        System.err.printf(" ptrans:  %s\n", f.translatedPhrase.toString());
+        System.err.printf(" hyp:     %s\n", f.partialTranslation.toString());
+        if(f.prior != null)
+          System.err.printf(" prior:   %s\n", f.prior.partialTranslation.toString());
+        System.err.printf(" e_vb_end(%d) e_sbj_end(%d) vIdx(%d)\n",
+            eVerbEnd,
+            eSubjEnd,
+            vIdx);
+      }
+      
       
       if(fireFeature(eVerbEnd,eSubjEnd)) {
-        if(VERBOSE) {
-          System.err.printf("%s (3): f_verb(%d) f_sbj_end(%d) p_start(%d) p_end(%d) e_vb_start(%d) e_vb_end(%d) e_sbj_end(%d)\n", this.getClass().getName(),
-              vIdx,
-              fSubjEnd,
-              fOptStart,
-              fOptEnd,
-              eVerbStart,
-              eVerbEnd,
-              eSubjEnd);
-          System.err.printf(" fphrase: %s\n", f.foreignPhrase.toString());
-          System.err.printf(" ptrans: %s\n", f.translatedPhrase.toString());
-          System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
-        }
+        if(VERBOSE)
+          System.err.printf(" FIRING FEATURE %f\n",FEATURE_VALUE);
       
         return new FeatureValue<String>(FEATURE_NAME, FEATURE_VALUE);
       }

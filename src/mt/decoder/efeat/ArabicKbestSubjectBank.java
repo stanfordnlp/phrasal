@@ -6,7 +6,7 @@ import java.util.*;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.Triple;
 
-public class ArabicKbestSubjectBank extends ArabicSubjectBank {
+public class ArabicKbestSubjectBank {
   private static ArabicKbestSubjectBank thisInstance = null;
   private final Map<Integer,kBestSentenceData> kBestSubjectBank;
   
@@ -25,21 +25,31 @@ public class ArabicKbestSubjectBank extends ArabicSubjectBank {
     return thisInstance;
   }
   
+  private class kSentenceData {
+    public kSentenceData() {
+      subjSpans = new ArrayList<Pair<Integer,Integer>>();
+      verbs = new HashSet<Integer>();
+    }
+    public List<Pair<Integer,Integer>> subjSpans;
+    public Set<Integer> verbs;
+    public double score = 0.0;
+  }
+  
   protected class kBestSentenceData {
-    private List<SentenceData> kHypotheses;
+    private List<kSentenceData> kHypotheses;
     public boolean hasSubject;
     private Map<Integer,List<Triple<Integer,Integer,Double>>> invIndex;
     private SortedSet<Integer> verbs;
     
     public kBestSentenceData() {
-      kHypotheses = new ArrayList<SentenceData>();
+      kHypotheses = new ArrayList<kSentenceData>();
       hasSubject = false;
     }
     
     /**
      * Do an insertion sort
      */
-    public void addSentence(SentenceData sent) {
+    public void addSentence(kSentenceData sent) {
       for(int i = 0; i < kHypotheses.size(); i++) {
         if(sent.score > kHypotheses.get(i).score) {
           kHypotheses.add(i, sent);
@@ -52,9 +62,9 @@ public class ArabicKbestSubjectBank extends ArabicSubjectBank {
     public void makeInvertedIndex() {
       if(kHypotheses != null && kHypotheses.size() != 0) {
         invIndex = new HashMap<Integer,List<Triple<Integer,Integer,Double>>>();
-        verbs = new TreeSet<Integer>(kHypotheses.get(0).verbs);
+        verbs = new TreeSet<Integer>();
         
-        Iterator<Integer> itr = verbs.iterator();
+        Iterator<Integer> itr = kHypotheses.get(0).verbs.iterator();
         while(itr.hasNext()) {
           int verbIdx = itr.next();
           List<Triple<Integer,Integer,Double>> thisVerbsSubjects = new ArrayList<Triple<Integer,Integer,Double>>();
@@ -70,8 +80,11 @@ public class ArabicKbestSubjectBank extends ArabicSubjectBank {
               }
             }
           }
-          invIndex.put(verbIdx, thisVerbsSubjects);
-        }
+          if(thisVerbsSubjects.size() != 0) {
+            invIndex.put(verbIdx, thisVerbsSubjects);
+            verbs.add(verbIdx);
+          }
+        }        
       }
     }
     
@@ -90,7 +103,7 @@ public class ArabicKbestSubjectBank extends ArabicSubjectBank {
       int lastTransId = 0;
       kBestSentenceData kbest = new kBestSentenceData();
       while(reader.ready()) {
-        final SentenceData newSent = new SentenceData();
+        final kSentenceData newSent = new kSentenceData();
 
         final StringTokenizer st = new StringTokenizer(reader.readLine(),DELIM);
         int translationId = -1;
@@ -224,7 +237,6 @@ public class ArabicKbestSubjectBank extends ArabicSubjectBank {
     subjBank.load(testFile, 100, 2);
     
     for(int transId = 0; transId < subjBank.getNumSentences(); transId++) {
-      //Test the loaded data
       int kMax = subjBank.getK(transId);
       for(int k = 0; k < kMax; k++) {
         List<Pair<Integer,Integer>> subjs = subjBank.subjectsForSentence(transId, k);
