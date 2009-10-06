@@ -164,7 +164,7 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
       
       //WSGDEBUG
       //Fix the sign
-      featScore = 8.0 - featScore;
+      featScore = 8.0 + featScore;
       
       return new FeatureValue<String>(FEATURE_NAME, featScore);
     }

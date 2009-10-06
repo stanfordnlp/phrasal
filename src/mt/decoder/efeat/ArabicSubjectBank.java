@@ -3,11 +3,8 @@ package mt.decoder.efeat;
 import java.io.*;
 import java.util.*;
 
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.IString;
-import mt.base.IStrings;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.Triple;
 
 public class ArabicSubjectBank {
   protected static ArabicSubjectBank thisInstance = null;
@@ -22,12 +19,9 @@ public class ArabicSubjectBank {
 
   private class SentenceData {
     public SentenceData() {
-      subjSpans = new ArrayList<Pair<Integer,Integer>>();
-      verbs = new HashSet<Integer>();
+      subjects = new ArrayList<Triple<Integer,Integer,Integer>>();
     }
-    public List<Pair<Integer,Integer>> subjSpans;
-    public Set<Integer> verbs;
-    public double score = 0.0;
+    public List<Triple<Integer,Integer,Integer>> subjects;
   }
   
   public static ArabicSubjectBank getInstance() {
@@ -36,7 +30,7 @@ public class ArabicSubjectBank {
     return thisInstance;
   }
 
-  public void load(final File filename, final int maxSubjLen) {
+  public void load(final File filename, final int maxSubjLen, final int verbGap) {
     if(isLoaded) return;
     try {
       final LineNumberReader reader = new LineNumberReader(new InputStreamReader(new FileInputStream(filename),"UTF-8"));
@@ -46,21 +40,21 @@ public class ArabicSubjectBank {
       int numVerbs = 0;
       int transId = 0;
       while(reader.ready()) {
-        final SentenceData newSent = new SentenceData();
-        Sequence<IString> sentence = null;
-
+        final List<Pair<Integer,Integer>> subjSpans = new ArrayList<Pair<Integer,Integer>>();
+        final Set<Integer> verbs = new HashSet<Integer>();
+        
         final StringTokenizer st = new StringTokenizer(reader.readLine(),DELIM);
         for(int i = 0; st.hasMoreTokens(); i++) {
           final String token = st.nextToken();
           if(i == 0) {
-            sentence = new SimpleSequence<IString>(true, IStrings.toIStringArray(token.split("\\s+")));
-
+            transId = Integer.parseInt(token.trim());
+            
           } else if(token.contains("{")) {
             final String stripped = token.replaceAll("\\{|\\}", "");
             final StringTokenizer verbIndices = new StringTokenizer(stripped,",");
             while(verbIndices.hasMoreTokens()) {
               int verbIdx = Integer.parseInt(verbIndices.nextToken().trim());
-              newSent.verbs.add(verbIdx);
+              verbs.add(verbIdx);
             }
 
           } else {
@@ -70,21 +64,31 @@ public class ArabicSubjectBank {
             final int start = Integer.parseInt(indices[0].trim());
             final int end = Integer.parseInt(indices[1].trim());
             if(end - start < maxSubjLen)
-              newSent.subjSpans.add(new Pair<Integer,Integer>(start,end));
+              subjSpans.add(new Pair<Integer,Integer>(start,end));
           }
         }
 
-        if(sentence == null)
-          throw new RuntimeException(String.format("%s: File format problem at line %d",this.getClass().getName(),reader.getLineNumber()));
-
-        if(newSent.subjSpans.size() == 0) 
+        //Now build the sentence data representation
+        final SentenceData newSent = new SentenceData();
+        if(subjSpans.size() == 0) {
           nullSubjects++;
-        else
-          numSubjects += newSent.subjSpans.size();
-        
-        numVerbs += newSent.verbs.size();
+        } else {
+          for(Pair<Integer,Integer> subject : subjSpans) {
+            int start = subject.first();
+            for(int i = 1; i <= verbGap; i++) {
+              if(verbs.contains(start - i)) {
+                Triple<Integer,Integer,Integer> subjVerbGroup = 
+                  new Triple<Integer,Integer,Integer>(start - i, subject.first(), subject.second());
+                newSent.subjects.add(subjVerbGroup);
+                break;
+              }
+            }
+          }
+        }
+
+        numSubjects += newSent.subjects.size();
+        numVerbs += verbs.size();
         subjectBank.put(transId, newSent);
-        ++transId;
       }
 
       reader.close();
@@ -103,24 +107,14 @@ public class ArabicSubjectBank {
     }
   }
 
-  public List<Pair<Integer,Integer>> subjectsForSentence(final int translationId) {
+  public List<Triple<Integer,Integer,Integer>> subjectsForSentence(final int translationId) {
     if(!isLoaded)
       throw new RuntimeException(String.format("%s: Subject bank not initialized (subj)", this.getClass().getName()));
 
     if(subjectBank.get(translationId) == null)
       throw new RuntimeException(String.format("%s: Could not find subjects for id %d",this.getClass().getName(),translationId));
     
-    return Collections.unmodifiableList(subjectBank.get(translationId).subjSpans);
-  }
-
-  public Set<Integer> verbsForSentence(final int translationId) {
-    if(!isLoaded)
-      throw new RuntimeException(String.format("%s: Subject bank not initialized (verb)", this.getClass().getName()));
-
-    if(subjectBank.get(translationId) == null)
-      throw new RuntimeException(String.format("%s: Could not find verbs for id %d",this.getClass().getName(),translationId));
-
-    return Collections.unmodifiableSet(subjectBank.get(translationId).verbs);
+    return Collections.unmodifiableList(subjectBank.get(translationId).subjects);
   }
 
   /**
@@ -128,15 +122,13 @@ public class ArabicSubjectBank {
    */
   public static void main(String[] args) {
     ArabicSubjectBank asb = ArabicSubjectBank.getInstance();
-    asb.load(new File("/home/rayder441/sandbox/SubjDetector/mt04.vso"),5);
+    asb.load(new File("/home/rayder441/sandbox/SubjDetector/debug.vso"),100,2);
     
     for(int transId = 0; transId < 10; transId++) {
       System.out.printf(">> TransId %d <<\n", transId);
-      List<Pair<Integer,Integer>> subjs = asb.subjectsForSentence(transId);
-      for(Pair<Integer,Integer> subj : subjs)
+      List<Triple<Integer,Integer,Integer>> subjs = asb.subjectsForSentence(transId);
+      for(Triple<Integer,Integer,Integer> subj : subjs)
         System.out.println(subj.toString());
-      Set<Integer> verbs = asb.verbsForSentence(transId);
-      System.out.println(verbs.toString());
     }
   }
 }
