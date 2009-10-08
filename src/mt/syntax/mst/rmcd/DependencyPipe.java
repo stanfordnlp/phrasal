@@ -3,11 +3,11 @@ package mt.syntax.mst.rmcd;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.GZIPInputStream;
 
@@ -20,6 +20,22 @@ import mt.syntax.mst.rmcd.io.*;
 
 public class DependencyPipe implements Cloneable {
 
+  public static final String SKIP_UNLIKELY_ENGLISH_HEADS_PROPERTY = "skipUnlikelyHeads";
+  public static final boolean SKIP_UNLIKELY_ENGLISH_HEADS = System.getProperty(SKIP_UNLIKELY_ENGLISH_HEADS_PROPERTY) != null;
+
+  private static final Set<String> UNLIKELY_ENGLISH_HEADS =
+       // Note: some of these tokens are sometimes head, but it is rare:
+       new HashSet<String>(Arrays.asList(
+       // Note: "(", "}" purposedly not added:
+       ".", ",",  "\"", "'", ":", ")", "{",
+       "the", "an", "a",
+       "who", "which",
+       // Note: "this" purposedly not added (it's a head in, e.g., "you should do this, which is the best solution"):
+       "his", "her", "its", "these", "their", "you",
+       "also", "already",
+       "n't", "mr."
+       ));
+  
   private Alphabet typeAlphabet;
   private TrieAlphabet dataAlphabet;
   private Map<Integer, List<String>> dataReverseAlphabet;
@@ -66,6 +82,7 @@ public class DependencyPipe implements Cloneable {
       STR = "STR "; MID = "MID "; END = "END ";
     }
     System.err.println("Special tags: "+Arrays.toString(new String[] {STR,MID,END}));
+    System.err.println("Skip unlikely English heads: "+SKIP_UNLIKELY_ENGLISH_HEADS);
 
     key = new TrieKey(dataAlphabet);
     sb = new StringBuilder(50);
@@ -473,7 +490,14 @@ public class DependencyPipe implements Cloneable {
     }
   }
 
+  private boolean skipUnlikelyHead(DependencyInstance instance, int headIndex) {
+    String forms_headIndex = instance.getForm(headIndex);
+    return SKIP_UNLIKELY_ENGLISH_HEADS && UNLIKELY_ENGLISH_HEADS.contains(forms_headIndex);
+  }
+
   public double getScore(DependencyInstance instance, int w1, int w2, boolean attR, Parameters params) {
+    if(skipUnlikelyHead(instance, attR ? w1 : w2))
+      return -Float.MAX_VALUE;
     Double cachedScore;
     DependencyPair dp = null;
     if(!opt.bilingualC) {
