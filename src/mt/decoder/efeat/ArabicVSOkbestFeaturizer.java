@@ -17,13 +17,10 @@ import mt.decoder.feat.IncrementalFeaturizer;
 public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "ArabicVSOkbestFeaturizer";
+  private static final double DEFAULT_FEATURE_VALUE = -99.0;
 
-  private static final int NO_ALIGNMENT = Integer.MIN_VALUE;
-  
   private final ArabicKbestSubjectBank subjectBank;
 
-  public enum SubjectState {INCOMPLETE, COMPLETE, CANNOT_SCORE};
-  
   public ArabicVSOkbestFeaturizer(String... args) {
 
     assert args.length == 3;
@@ -40,14 +37,6 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
     subjectBank.load(subjFile,maxSubjLen,verbDistance);
   }
 
-  private int getEStartPosition(final int fWord, final Featurizable<IString,String> f) {
-    final int[] eRange = f.f2tAlignmentIndex[fWord];
-    if(eRange == null)
-      return NO_ALIGNMENT;
-
-    return eRange[Featurizable.PHRASE_START];
-  }
-
   /**
    * Returns true if the span of token positions specified by span is completely covered
    * in the partial hypothesis of f. Otherwise, returns false.
@@ -56,59 +45,68 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
    * @param f
    * @return
    */
-  private boolean isCovered(final Pair<Integer,Integer> span, 
-                            final Featurizable<IString,String> f) {
+  private boolean isCovered(final Pair<Integer,Integer> span, final int verbIdx, final Featurizable<IString,String> f) {
     if(f == null) 
       return false;
 
-    final BitSet fCoverage = 
-      f.hyp.foreignCoverage.get(span.first(), span.second() + 1);
+    boolean verbCovered = f.hyp.foreignCoverage.get(verbIdx);
 
-    return fCoverage.cardinality() == (span.second() - span.first() + 1);
+    final int leftSubjectBoundary = span.first();
+    final int rightSubjectBoundary = span.second();
+    final int length = rightSubjectBoundary - leftSubjectBoundary + 1;
+    
+    final BitSet fCoverage = 
+      f.hyp.foreignCoverage.get(leftSubjectBoundary, rightSubjectBoundary + 1);
+
+    boolean subjCovered = (fCoverage.cardinality() == length);
+
+    return verbCovered && subjCovered;
   }
-  
-  private SubjectState getSubjectState(Featurizable<IString,String> f,
-                                       Pair<Integer,Integer> subject,
-                                       int verbIdx) {
-    if(isCovered(subject,f)) {
-      int eVerbIdx = getEStartPosition(verbIdx,f);
-      if(eVerbIdx != NO_ALIGNMENT)
-        return SubjectState.COMPLETE;
-    }
-    return SubjectState.INCOMPLETE;
-  }
-  
+
   /**
-   * Returns the index of the last subject for which the feature fired.
+   * Returns the index of the last subject for which the feature *could* have fired.
    * 
    * @param f
    * @param subjects
    * @param verbs
    * @return
    */
-  private int getLastScoredSubject(Featurizable<IString,String> f, 
-                                       int translationId, 
-                                       SortedSet<Integer> verbs) {    
-    int lastSubjId = -1;
-    for(Integer verbIdx : verbs) {
-
-      if(f == null)
-        return lastSubjId;
+  private int getLastScoredSubject(final Featurizable<IString,String> f, 
+                                   final int translationId, 
+                                   final SortedSet<Integer> verbs) {    
+    int prevSubjIndex = -1;
+    for(int verbIdx : verbs) {
+      final List<Triple<Integer,Integer,Double>> subjects = subjectBank.getSubjectsForVerb(translationId, verbIdx);
       
-      List<Triple<Integer,Integer,Double>> subjects = subjectBank.getSubjectsForVerb(translationId, verbIdx);
-      boolean hasBeenScored = false;
+      boolean isComplete = false;
       for(Triple<Integer,Integer,Double> subjTriple : subjects) {
-        Pair<Integer,Integer> subject = new Pair<Integer,Integer>(subjTriple.first(),subjTriple.second());
-        SubjectState state = getSubjectState(f,subject,verbIdx);
-        if(state == SubjectState.COMPLETE)
-          hasBeenScored = true;
+        Pair<Integer,Integer> subjectSpan = new Pair<Integer,Integer>(subjTriple.first(),subjTriple.second());
+        if(isCovered(subjectSpan,verbIdx,f)) {
+          isComplete = true;
+          prevSubjIndex = verbIdx;
+          break;
+        }
       }
       
-      if(!hasBeenScored)
-        return lastSubjId;
-      lastSubjId = verbIdx;
+      if(!isComplete)
+        break;
     }
-    return lastSubjId;
+    return prevSubjIndex;
+  }
+  
+  
+  private int getRightTargetSideBoundary(final Pair<Integer,Integer> span, final Featurizable<IString,String> f) {
+    int maxRightIndex = -1;
+    for(int i = span.first(); i <= span.second(); i++) {
+      final int[] eRange = f.f2tAlignmentIndex[i];
+      if(eRange == null) continue;
+
+      final int rightIndex = eRange[Featurizable.PHRASE_END] - 1; //Convert to real index
+      if(rightIndex > maxRightIndex)
+        maxRightIndex = rightIndex;
+    }
+    
+    return maxRightIndex;
   }
   
   /**
@@ -119,18 +117,27 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
    * @param verbIdx
    * @return
    */
-  private double getFeatureScore(Featurizable<IString,String> f, int translationId, int verbIdx) {
+  private double getFeatureScore(final Featurizable<IString,String> f, 
+                                 final int translationId, 
+                                 final int verbIdx) {
+        
+    double accumulatedProbability = 0.0;
     
-    List<Triple<Integer,Integer,Double>> subjects = subjectBank.getSubjectsForVerb(translationId, verbIdx);
-    
-    for(Triple<Integer,Integer,Double> subjTriple : subjects) {
-      Pair<Integer,Integer> subject = new Pair<Integer,Integer>(subjTriple.first(),subjTriple.second());
-      if(getSubjectState(f,subject,verbIdx) == SubjectState.COMPLETE)
-        return subjTriple.third(); 
+    final List<Triple<Integer,Integer,Double>> subjects = subjectBank.getSubjectsForVerb(translationId, verbIdx);
+    for(Triple<Integer,Integer,Double> subjSpanAndScore : subjects) {
+      Pair<Integer,Integer> subjectSpan = new Pair<Integer,Integer>(subjSpanAndScore.first(),subjSpanAndScore.second());
+      
+      if(isCovered(subjectSpan,verbIdx,f)) {
+        
+        final int eSubjRightBound = getRightTargetSideBoundary(subjectSpan,f);
+        final int eVerbRightBound = getRightTargetSideBoundary(new Pair<Integer,Integer>(verbIdx,verbIdx), f);
+        
+        if(eVerbRightBound >= eSubjRightBound)
+          accumulatedProbability += Math.exp(subjSpanAndScore.third());
+      }
     }
-    
-    //The shit has hit the fan
-    throw new RuntimeException(String.format("Expected to find feature score for transId %d verbIdx %d.",translationId,verbIdx));
+
+    return (accumulatedProbability == 0.0) ? 0.0 : Math.log(accumulatedProbability);
   }
 
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
@@ -142,7 +149,8 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
       return null;
     
     //WSGDEBUG
-    boolean VERBOSE = (translationId == 16);
+    boolean VERBOSE = (translationId == 14);
+    //|| (translationId == 16) || (translationId == 41);
     
     //Get the subject vector that we should consider. Return if we have covered them all
     final int lastSubjectVect = getLastScoredSubject(f.prior,translationId,verbs);
@@ -153,25 +161,42 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
 
       //WSGDEBUG
       if(VERBOSE) {
-        System.err.printf("WSGDEBUG: %d --> %d\n", lastSubjectVect,currentSubjectVect);
-        System.err.printf(" current: %s\n", f.partialTranslation.toString());
-        if (f.prior == null)
-          System.err.printf(" prior: %s\n", f.prior.partialTranslation.toString());
-      }
-      
-      //Fire the feature
+        System.err.printf("WSGDEBUG tId %d: Completed subject %d --> %d\n",translationId,lastSubjectVect,currentSubjectVect);
+        System.err.println("=== Current Featurizer ===");
+        System.err.printf(" TransOpt: %s ||| %s\n", f.foreignPhrase.toString(), f.translatedPhrase.toString());
+        System.err.printf(" cov: %s\n", f.option.foreignCoverage.toString());
+        System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
+        System.err.printf(" hyp cov: %s\n", f.hyp.foreignCoverage.toString());
+        System.err.println("=== Prior Featurizer ===");
+        if(f.prior != null) {
+          System.err.printf(" TransOpt: %s ||| %s\n", f.prior.foreignPhrase.toString(), f.prior.translatedPhrase.toString());
+          System.err.printf(" cov: %s\n", f.prior.option.foreignCoverage.toString());
+          System.err.printf(" hyp: %s\n", f.prior.partialTranslation.toString());
+          System.err.printf(" hyp cov: %s\n", f.prior.hyp.foreignCoverage.toString());        
+        }
+      }      
+      //Get the accumulated feature score
       double featScore = getFeatureScore(f,translationId,currentSubjectVect);
+      if(VERBOSE)
+        System.err.printf(" FEATURE SCORE {%f}\n",featScore);
       
-      //WSGDEBUG
-      //Fix the sign
-      featScore = 8.0 + featScore;
-      
-      return new FeatureValue<String>(FEATURE_NAME, featScore);
-    }
+      //Case 1: None of the re-orderings in this hypothesis are correct, and this is the first option laid down
+      if(featScore == 0.0 && f.prior == null)
+        return new FeatureValue<String>(FEATURE_NAME, DEFAULT_FEATURE_VALUE);
+      else if(featScore == 0.0)
+        return null;//Case 2: None of the re-orderings are correct
+      else if(currentSubjectVect == 0) //Case 3: If we get the first re-ordering right, then back out the penalty
+        return new FeatureValue<String>(FEATURE_NAME, featScore - DEFAULT_FEATURE_VALUE);
+      else //Case 4: Otherwise just fire the feature
+        return new FeatureValue<String>(FEATURE_NAME, featScore);
+
+    } else if(f.prior == null)
+      return new FeatureValue<String>(FEATURE_NAME, DEFAULT_FEATURE_VALUE);
           
     return null;
   }
 
+  
   // Unused but required methods
   public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {}
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) { return null; }

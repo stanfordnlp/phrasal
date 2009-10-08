@@ -43,6 +43,7 @@ public class ArabicKbestSubjectBank {
     
     public kBestSentenceData() {
       kHypotheses = new ArrayList<kSentenceData>();
+      verbs = new TreeSet<Integer>();
       hasSubject = false;
     }
     
@@ -53,6 +54,7 @@ public class ArabicKbestSubjectBank {
       for(int i = 0; i < kHypotheses.size(); i++) {
         if(sent.score > kHypotheses.get(i).score) {
           kHypotheses.add(i, sent);
+          verbs.addAll(sent.verbs);
           return;
         }
       }
@@ -62,29 +64,25 @@ public class ArabicKbestSubjectBank {
     public void makeInvertedIndex() {
       if(kHypotheses != null && kHypotheses.size() != 0) {
         invIndex = new HashMap<Integer,List<Triple<Integer,Integer,Double>>>();
-        verbs = new TreeSet<Integer>();
         
-        Iterator<Integer> itr = kHypotheses.get(0).verbs.iterator();
-        while(itr.hasNext()) {
-          int verbIdx = itr.next();
+        for(int verbIdx : verbs) {
           List<Triple<Integer,Integer,Double>> thisVerbsSubjects = new ArrayList<Triple<Integer,Integer,Double>>();
-          for(int k = 0; k < kHypotheses.size(); k++) {
-            List<Pair<Integer,Integer>> subjects = (List<Pair<Integer, Integer>>) kHypotheses.get(k).subjSpans;
-            double kScore = kHypotheses.get(k).score;
-            
-            for(Pair<Integer,Integer> subject : subjects) {
+          
+          for(kSentenceData analysis : kHypotheses) {
+            for(Pair<Integer,Integer> subject : analysis.subjSpans) {
               int verbGap = subject.first() - verbIdx;
               if(verbGap > 0 && verbGap <= maxVerbGap) {
-                Triple<Integer,Integer,Double> newSubj = new Triple<Integer,Integer,Double>(subject.first(),subject.second(),kScore);
-                thisVerbsSubjects.add(newSubj); //This will be sorted by default
+                Triple<Integer,Integer,Double> newSubj = new Triple<Integer,Integer,Double>(subject.first(),subject.second(),analysis.score);
+                thisVerbsSubjects.add(newSubj);
               }
             }
           }
           if(thisVerbsSubjects.size() != 0) {
             invIndex.put(verbIdx, thisVerbsSubjects);
-            verbs.add(verbIdx);
           }
-        }        
+        }
+        
+        verbs = new TreeSet<Integer>(invIndex.keySet());
       }
     }
     
@@ -173,7 +171,30 @@ public class ArabicKbestSubjectBank {
     
   }
   
-  //WSGDEBUG: These methods are used to ensure that the kbest list is read in properly
+  public SortedSet<Integer> getVerbs(final int translationId) {
+    kBestSentenceData kbest = this.kBestSubjectBank.get(translationId);
+    if(kbest != null)
+      return kbest.verbs;
+    return null;
+  }
+  
+  public List<Triple<Integer,Integer,Double>> getSubjectsForVerb(final int translationId, final int verbIdx) {
+    kBestSentenceData kbest = this.kBestSubjectBank.get(translationId);
+    if(kbest != null && kbest.invIndex != null)
+      return kbest.invIndex.get(verbIdx);
+    return null;
+  }
+  
+  public int getNumSentences() {
+    if(this.kBestSubjectBank != null)
+      return kBestSubjectBank.keySet().size();
+    return 0;
+  }
+
+  
+  /*********************************************************************************
+   *  WSGDEBUG: Unit test methods
+  **********************************************************************************/
   public int getK(final int translationId) {
     if(kBestSubjectBank.get(translationId) != null)
       return kBestSubjectBank.get(translationId).kHypotheses.size();
@@ -205,28 +226,6 @@ public class ArabicKbestSubjectBank {
     return 0.0;
   }
   
-  
-  
-  public SortedSet<Integer> getVerbs(final int translationId) {
-    kBestSentenceData kbest = this.kBestSubjectBank.get(translationId);
-    if(kbest != null)
-      return kbest.verbs;
-    return null;
-  }
-  
-  public List<Triple<Integer,Integer,Double>> getSubjectsForVerb(final int translationId, final int verbIdx) {
-    kBestSentenceData kbest = this.kBestSubjectBank.get(translationId);
-    if(kbest != null && kbest.invIndex != null)
-      return kbest.invIndex.get(verbIdx);
-    return null;
-  }
-  
-  public int getNumSentences() {
-    if(this.kBestSubjectBank != null)
-      return kBestSubjectBank.keySet().size();
-    return 0;
-  }
-
   /**
    * @param args
    */
@@ -236,7 +235,8 @@ public class ArabicKbestSubjectBank {
     
     subjBank.load(testFile, 100, 2);
     
-    for(int transId = 0; transId < subjBank.getNumSentences(); transId++) {
+    for(int transId = 14; transId < 17; transId++) {
+      if(transId == 15) continue;
       int kMax = subjBank.getK(transId);
       for(int k = 0; k < kMax; k++) {
         List<Pair<Integer,Integer>> subjs = subjBank.subjectsForSentence(transId, k);

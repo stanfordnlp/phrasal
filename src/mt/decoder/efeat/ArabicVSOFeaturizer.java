@@ -41,9 +41,9 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
 
   private void setFeatureValue(int modeIndicator) {
     if(modeIndicator == 1)
-      FEATURE_VALUE = 1.0;
+      FEATURE_VALUE = 10.0;
     else
-      FEATURE_VALUE = -1.0;
+      FEATURE_VALUE = -10.0;
   }
 
   /**
@@ -135,28 +135,11 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
     final int currentSubject = getLastSubjectScored(f, subjectSpans);
 
     //WSGDEBUG
-    boolean VERBOSE = (translationId == 16);
+    boolean VERBOSE = (translationId == 5);
 
     //If the subject has just been completed, then score it.
     if(lastSubject != currentSubject) {
       Triple<Integer,Integer,Integer> activeSubjectGroup = subjectSpans.get(currentSubject);
-
-      //Sanity check
-      if(!isCovered(activeSubjectGroup,f)) {
-        System.err.printf("tId %d: Completed subject %d --> %d\n",translationId,lastSubject,currentSubject);
-        System.err.printf("WSGDEBUG: Subject status for tId %d\n",translationId);
-        System.err.printf("  >> %d subjects\n",subjectSpans.size());
-        for(Triple<Integer,Integer,Integer> s : subjectSpans)
-          System.err.printf("  >>> (%d,%d,%d)\n",s.first(),s.second(),s.third());
-        System.err.println("=====================");
-        System.err.printf(" vb %d lsb %d rsb %d\n", activeSubjectGroup.first(),activeSubjectGroup.second(),activeSubjectGroup.third());
-        System.err.printf(" fphrase: %s\n", f.foreignPhrase.toString());
-        System.err.printf(" ptrans:  %s\n", f.translatedPhrase.toString());
-        System.err.printf(" hyp:     %s\n", f.partialTranslation.toString());
-        System.err.printf(" coverage: %s\n", f.hyp.foreignCoverage.toString());
-        throw new RuntimeException("WSGDEBUG: Bombing out....");
-      }
-
       final int vIdx = activeSubjectGroup.first();
       Pair<Integer,Integer> subject = new Pair<Integer,Integer>(activeSubjectGroup.second(),activeSubjectGroup.third());
 
@@ -164,24 +147,28 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
       final int eVerbRightBound = getRightTargetSideBoundary(new Pair<Integer,Integer>(vIdx,vIdx), f);
 
       if(VERBOSE) {
-        System.err.printf("WSGDEBUG: Completed subject %d --> %d\n",lastSubject,currentSubject);
-        System.err.printf(" fphrase: %s\n", f.foreignPhrase.toString());
-        System.err.printf(" ptrans:  %s\n", f.translatedPhrase.toString());
-        System.err.printf(" hyp:     %s\n", f.partialTranslation.toString());
-        if(f.prior != null)
-          System.err.printf(" prior:   %s\n", f.prior.partialTranslation.toString());
-        System.err.printf(" e_vb_right_bound(%d) e_sbj_rightBound(%d) fverbIdx(%d)\n",
-            eVerbRightBound,
-            eSubjRightBound,
-            vIdx);
+        System.err.printf("WSGDEBUG tId %d: Completed subject %d --> %d\n",translationId,lastSubject,currentSubject);
+        System.err.printf(" vb %d lsb %d rsb %d\n", activeSubjectGroup.first(),activeSubjectGroup.second(),activeSubjectGroup.third());
+        System.err.println("=== Current Featurizer ===");
+        System.err.printf(" TransOpt: %s ||| %s\n", f.foreignPhrase.toString(), f.translatedPhrase.toString());
+        System.err.printf(" cov: %s\n", f.option.foreignCoverage.toString());
+        System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
+        System.err.printf(" hyp cov: %s\n", f.hyp.foreignCoverage.toString());
+        System.err.println("=== Prior Featurizer ===");
+        System.err.printf(" TransOpt: %s ||| %s\n", f.prior.foreignPhrase.toString(), f.prior.translatedPhrase.toString());
+        System.err.printf(" cov: %s\n", f.prior.option.foreignCoverage.toString());
+        System.err.printf(" hyp: %s\n", f.prior.partialTranslation.toString());
+        System.err.printf(" hyp cov: %s\n", f.prior.hyp.foreignCoverage.toString());        
       }
-
 
       if(fireFeature(eVerbRightBound,eSubjRightBound)) {
         if(VERBOSE)
-          System.err.printf(" FIRING FEATURE %f\n",FEATURE_VALUE);
+          System.err.printf("======>>FIRING FEATURE %f\n",FEATURE_VALUE);
 
         return new FeatureValue<String>(FEATURE_NAME, FEATURE_VALUE);
+      } else {
+        if(VERBOSE)
+          System.err.printf("======>>NOT FIRING FEATURE %f\n",FEATURE_VALUE);
       }
     }
 
