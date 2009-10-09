@@ -18,7 +18,8 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
 
   private static final String FEATURE_NAME = "ArabicVSOkbestFeaturizer";
   private static final double DEFAULT_FEATURE_VALUE = -99.0;
-
+  private static final double SCALING_CONSTANT = 10.0;
+  
   private final ArabicKbestSubjectBank subjectBank;
 
   public ArabicVSOkbestFeaturizer(String... args) {
@@ -176,18 +177,17 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
         }
       }      
       //Get the accumulated feature score
-      double featScore = getFeatureScore(f,translationId,currentSubjectVect);
+      double featScore = SCALING_CONSTANT * getFeatureScore(f,translationId,currentSubjectVect);
       if(VERBOSE)
         System.err.printf(" FEATURE SCORE {%f}\n",featScore);
       
-      //Case 1: None of the re-orderings in this hypothesis are correct, and this is the first option laid down
-      if(featScore == 0.0 && f.prior == null)
-        return new FeatureValue<String>(FEATURE_NAME, DEFAULT_FEATURE_VALUE);
-      else if(featScore == 0.0)
-        return null;//Case 2: None of the re-orderings are correct
-      else if(currentSubjectVect == 0) //Case 3: If we get the first re-ordering right, then back out the penalty
+      if(f.prior == null)
+        return new FeatureValue<String>(FEATURE_NAME, (featScore == 0.0) ? DEFAULT_FEATURE_VALUE : featScore);
+      if(featScore == 0.0)
+        return null;                            //Case 2: None of the re-orderings are correct
+      else if(lastSubjectVect == -1)            //Case 3: Fire the feature and back out the penalty
         return new FeatureValue<String>(FEATURE_NAME, featScore - DEFAULT_FEATURE_VALUE);
-      else //Case 4: Otherwise just fire the feature
+      else                                      //Case 4: Otherwise just fire the feature
         return new FeatureValue<String>(FEATURE_NAME, featScore);
 
     } else if(f.prior == null)

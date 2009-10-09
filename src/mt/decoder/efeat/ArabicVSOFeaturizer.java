@@ -16,8 +16,8 @@ import edu.stanford.nlp.util.Triple;
 
 public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, String> {
 
-  private static final String FEATURE_NAME = "ArabicVSOFeaturizer";
-  private static double FEATURE_VALUE = 1.0;
+  private String FEATURE_NAME = "ArabicVSOFeaturizer";
+  private double FEATURE_VALUE = 1.0;
 
   private final ArabicSubjectBank subjectBank;
 
@@ -40,10 +40,14 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   }
 
   private void setFeatureValue(int modeIndicator) {
-    if(modeIndicator == 1)
+    if(modeIndicator == 1) {
       FEATURE_VALUE = 10.0;
-    else
+      FEATURE_NAME += "1";
+    }
+    else {
       FEATURE_VALUE = -10.0;
+      FEATURE_NAME += "0";
+    }
   }
 
   /**
