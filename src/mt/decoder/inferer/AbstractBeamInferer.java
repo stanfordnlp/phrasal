@@ -148,7 +148,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
     Iterator<RichTranslation<TK, FV>> listIterator = translations.iterator();
     featurizer.debugBest(listIterator.next().featurizable);
-    featurizer.debugBest(listIterator.next().featurizable);
 
     if (DEBUG) {
 			long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;

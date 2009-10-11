@@ -9,31 +9,28 @@ import mt.base.Sequence;
 import mt.decoder.feat.*;
 
 /**
- * Same as LinearDistortionFeaturizer, though penalty is a polynomial x^a, where a is determined
- * at construction.
- *
  * @author Michel Galley
  *
  * @param <TK>
  */
-public class PolynomialDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK, String> {
+public class StepFunctionDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK, String> {
 
 	public static final String DEBUG_PROPERTY = "DebugPollyDistortionFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
   
-  private String FEATURE_NAME = "PolyDistortion";
-	private double DEGREE = 2.0;
+  private String FEATURE_NAME = "StepFunctionDistortion";
+	private double STEP = 6.0;
 
-  public PolynomialDistortionFeaturizer(String... args) {
-    String divStr = args[0];
-    DEGREE = Double.parseDouble(divStr);
-    FEATURE_NAME += ":"+Double.toString(DEGREE); 
+  public StepFunctionDistortionFeaturizer(String... args) {
+    String stepStr = args[0];
+    STEP = Double.parseDouble(stepStr);
+    FEATURE_NAME += ":"+Double.toString(STEP); 
   }
 
   @Override
 	public FeatureValue<String> featurize(Featurizable<TK,String> f) {
     assert(f.linearDistortion >= 0);
-    return new FeatureValue<String>(FEATURE_NAME, -Math.pow(f.linearDistortion,DEGREE));
+    return new FeatureValue<String>(FEATURE_NAME, f.linearDistortion > STEP ? -1.0 : 0.0);
 	}
 
 	@Override
