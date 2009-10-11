@@ -70,8 +70,13 @@ public class Featurizable<TK,FV> {
 	 * Source sequence
 	 */
 	public final Sequence<TK> foreignSentence;
-	
-	/** 
+
+  /**
+   * Coverage of the source sentence
+   */
+  public final CoverageSet foreignCoverage;
+
+  /**
 	 * Degree of linear distortion associated with the most recently translated phrase
 	 */
 	public final int linearDistortion;
@@ -160,23 +165,26 @@ public class Featurizable<TK,FV> {
 		translationPosition = hypothesis.insertionPosition;
 		foreignPosition = concreteOpt.foreignPos;
 		linearDistortion = hypothesis.linearDistortion;
-		
-		Object[] tokens = new Object[hypothesis.length];
+
+    Object[] tokens = new Object[hypothesis.length];
 		retreiveTokens(tokens, hypothesis);
 		partialTranslation = partialTranslationRaw = new RawSequence<TK>((TK[])tokens);
 		foreignSentence = hypothesis.foreignSequence;
 		untranslatedTokens = hypothesis.untranslatedTokens;	
 		prior = hypothesis.preceedingHyp.featurizable;
-		if (prior != null) {
-			t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
+    if (prior != null) {
+      foreignCoverage = prior.foreignCoverage.clone();
+      t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
 			f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
       states = new Object[nbStatefulFeaturizers];
       //states = prior.states.clone();
     } else {
+      foreignCoverage = new CoverageSet();
 			t2fAlignmentIndex = new int[hypothesis.length][];
 			f2tAlignmentIndex = new int[foreignSentence.size()][];
       states = new Object[nbStatefulFeaturizers];
     }
+    foreignCoverage.or(hypothesis.foreignCoverage);
 		hyp = hypothesis;
 		augmentAlignments(concreteOpt);
 	}
@@ -208,7 +216,8 @@ public class Featurizable<TK,FV> {
 		this.translationId = translationId;
 		option = concreteOpt;
 		done = false;
-		TranslationOption<TK> transOpt = concreteOpt.abstractOption;
+    foreignCoverage = null;
+    TranslationOption<TK> transOpt = concreteOpt.abstractOption;
 		foreignPhrase = transOpt.foreign;
 		translatedPhrase = transOpt.translation;
 		phraseTableName = concreteOpt.phraseTableName;
