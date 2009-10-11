@@ -61,7 +61,7 @@ public class PlainReader extends DependencyReader {
     for (int i = 1; i <= length; i++) {
       String formStr, posStr;
       if(tagged) {
-        String[] toks = sent.get(i-1).word().split("_", 2);
+        String[] toks = sent.get(i-1).word().split("/", 2);
         formStr = toks[0];
         posStr = toks[1];
       } else {
