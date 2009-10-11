@@ -18,12 +18,15 @@ public class LinearDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK,
 	public static final String DEBUG_PROPERTY = "DebugLinearDistortionFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	public static final String FEATURE_NAME = "LinearDistortion";
-	
-	
-	@Override
+
+  public static boolean ACTIVE = true;
+
+  @Override
 	public FeatureValue<String> featurize(Featurizable<TK,String> f) {
-		return new FeatureValue<String>(FEATURE_NAME, -1.0*f.linearDistortion);
-	}
+    if(ACTIVE)
+      return new FeatureValue<String>(FEATURE_NAME, -1.0*f.linearDistortion);
+    return null;
+  }
 
 	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<TK,String> f) {
