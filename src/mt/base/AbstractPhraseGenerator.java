@@ -14,8 +14,8 @@ import mt.decoder.util.Scorer;
  * @param <TK>
  */
 abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<TK>, PhraseTable<TK> {
-	private final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
-	private final Scorer<FV> scorer;
+	protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+	protected final Scorer<FV> scorer;
 	
 	public AbstractPhraseGenerator<TK,FV> clone() {
 		try {

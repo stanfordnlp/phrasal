@@ -67,7 +67,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	
 	int longestForeignPhrase;
 	
-	private class IntArrayTranslationOption implements Comparable<IntArrayTranslationOption> {
+	protected class IntArrayTranslationOption implements Comparable<IntArrayTranslationOption> {
 		final int[] translation;
 		final float[] scores;
 		final PhraseAlignment alignment;
