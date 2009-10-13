@@ -800,22 +800,6 @@ public class PseudoMoses {
 		return String.format("%s:%s", label, value);
 	}
 
-	private static double computeDelta(double[] oldWeights, double[] newWeights) {
-		double ssdiff = 0;
-		int max = Math.min(oldWeights.length, newWeights.length);
-		for (int i = 0; i < max; i++) {
-			double diff = oldWeights[i] - newWeights[i];
-			ssdiff += diff * diff;
-		}
-		for (int i = max; i < oldWeights.length; i++) {
-			ssdiff += oldWeights[i] * oldWeights[i];
-		}
-		for (int i = max; i < newWeights.length; i++) {
-			ssdiff += newWeights[i] * newWeights[i];
-		}
-
-		return Math.sqrt(ssdiff);
-	}
 
 	private class ProcDecode implements Runnable {
 

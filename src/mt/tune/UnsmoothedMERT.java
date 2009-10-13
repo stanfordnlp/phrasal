@@ -790,7 +790,9 @@ public class UnsmoothedMERT extends Thread {
 
   Random random;
 
-  public UnsmoothedMERT(String evalMetric, String referenceList, String optStr, String seedStr) throws IOException {
+  
+	@SuppressWarnings("unchecked")
+	public UnsmoothedMERT(String evalMetric, String referenceList, String optStr, String seedStr) throws IOException {
 
     this.optStr = optStr;
     this.seedStr = seedStr;
@@ -804,6 +806,7 @@ public class UnsmoothedMERT extends Thread {
             .readReferences(referenceList.split(","), false);
 			int BLEUOrder = 3;
       double terW = 2.0;
+      
       emetric = new LinearCombinationMetric<IString, String>
               (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(referencesBleu, BLEUOrder, smoothBLEU),

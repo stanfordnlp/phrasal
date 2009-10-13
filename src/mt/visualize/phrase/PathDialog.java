@@ -37,6 +37,7 @@ import javax.swing.filechooser.FileFilter;
  * 
  * @author Spence Green
  */
+
 public class PathDialog extends JFrame {
 
   private static final int DEFAULT_WIDTH = 170;
@@ -87,7 +88,8 @@ public class PathDialog extends JFrame {
   private static final Font killBoxFont;
   static {
     Font f = new Font(null); //Grab the defaults
-    Map fontProps = f.getAttributes();
+    @SuppressWarnings("unchecked")
+    Map<TextAttribute,Object> fontProps = (Map<TextAttribute,Object>)f.getAttributes();
     fontProps.put(TextAttribute.FAMILY, "SansSerif");
     fontProps.put(TextAttribute.SIZE, 14.0);
     fontProps.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD);

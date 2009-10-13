@@ -11,7 +11,6 @@ import mt.decoder.inferer.*;
 import mt.decoder.recomb.*;
 import mt.decoder.util.*;
 import mt.decoder.feat.RichIncrementalFeaturizer;
-import mt.decoder.feat.IncrementalFeaturizer;
 import mt.PseudoMoses;
 
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -328,6 +327,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     if(DETAILED_DEBUG) System.err.printf("ending beam expander: %s thread pool: %s\n", this, threadPool);
 	}
   
+  @SuppressWarnings("unchecked")
 	public int expandBeam(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, OptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {
 		int optionsApplied = 0;
 		int hypPos = -1;

@@ -7,16 +7,13 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.IntCounter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.util.StringUtils;
 
 import java.util.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.text.NumberFormat;
 
 import mt.base.IOTools;
-import mt.train.*;
 
 /**
  * Read in source, target and alignment and make examples
@@ -77,7 +74,6 @@ public class ReorderingClassifier {
     ALL_RECOGNIZED_OPTS.addAll(TypedDepFeatureExtractor.OPTS);
   }
 
-  private Properties prop;
   private String fCorpus, eCorpus, align, fParse, fPath;
   private Boolean trainAll;
   private String writeClassifier, writeHTML;
@@ -96,7 +92,6 @@ public class ReorderingClassifier {
 
 
   public void analyzeProperties(Properties prop) throws IOException {
-    this.prop = prop;
     // Check required, optional properties:
     System.err.println("properties: "+prop.toString());
     if(!prop.keySet().containsAll(REQUIRED_OPTS)) {
@@ -108,7 +103,7 @@ public class ReorderingClassifier {
       System.exit(1);
     }
     if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet<Object>(prop.keySet());
+      Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
         ("The following fields are unrecognized: %s\n", extraFields);
@@ -165,7 +160,7 @@ public class ReorderingClassifier {
 
     Counter<String> allTypesCounter = new IntCounter<String>();
 
-    Dataset trainDataset = new Dataset();
+    Dataset<TrainingExamples.ReorderingTypes,String> trainDataset = new Dataset<TrainingExamples.ReorderingTypes,String>();
     List<Datum<TrainingExamples.ReorderingTypes,String>> trainData
       = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
     List<Datum<TrainingExamples.ReorderingTypes,String>> devData
@@ -287,7 +282,7 @@ public class ReorderingClassifier {
           }
 
           Datum<TrainingExamples.ReorderingTypes,String> d
-            = new BasicDatum(features, ex.type);
+            = new BasicDatum<TrainingExamples.ReorderingTypes,String>(features, ex.type);
           
           // split:
           // train 80%, dev 10%, test 10%

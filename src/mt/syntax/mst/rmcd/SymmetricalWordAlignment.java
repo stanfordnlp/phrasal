@@ -2,7 +2,6 @@ package mt.syntax.mst.rmcd;
 
 import java.util.TreeSet;
 import java.util.Set;
-import java.util.Arrays;
 import java.io.*;
 
 import mt.base.IString;

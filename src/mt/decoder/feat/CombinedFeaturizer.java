@@ -58,7 +58,7 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
     int id = -1;
     for(IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
       if(featurizer instanceof StatefulFeaturizer) {
-        StatefulFeaturizer sfeaturizer = (StatefulFeaturizer) featurizer;
+        StatefulFeaturizer<TK,FV> sfeaturizer = (StatefulFeaturizer<TK,FV>) featurizer;
         sfeaturizer.setId(++id);
       }
     }

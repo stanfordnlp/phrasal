@@ -19,8 +19,10 @@ public class CombinedRecombinationFilter<S> implements
 	final CombinationRule combinationRule;
 	
 	
+	
+	@SuppressWarnings("unchecked")
 	public RecombinationFilter<S> clone() {
-		try {
+		try {			
 			return (RecombinationFilter<S>)super.clone();
 		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
 	}

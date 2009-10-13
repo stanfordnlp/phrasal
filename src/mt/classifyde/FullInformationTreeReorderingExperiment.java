@@ -18,8 +18,6 @@ class FullInformationTreeReorderingExperiment {
     PrintWriter decPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEC.txt")));
     PrintWriter degPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEG.txt")));
 
-    TreePattern va1 = TreePattern.compile("CP <, (IP <- (VP <: VA)) <- DEC");
-    TreePattern va2 = TreePattern.compile("CP <, (IP <- (VP <, (ADVP $+ (VP <: VA)))) <- DEC");
     TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
     TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
     TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");

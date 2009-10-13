@@ -1,9 +1,8 @@
 package mt.classifyde;
 
-import mt.train.transtb.*;
 import java.util.*;
 import java.io.*;
-import edu.stanford.nlp.util.*;
+
 
 class TrainDevTest {
   private static final Boolean VERBOSE = false;
@@ -28,7 +27,6 @@ class TrainDevTest {
     int npidx = 0;
     for (AnnotatedTreePair validSent : atreepairs) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
@@ -68,7 +66,6 @@ class TrainDevTest {
     for (AnnotatedTreePair validSent : atreepairs) {
       //for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs : validSent.NPwithDEs_categories.entrySet()) {
       for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);

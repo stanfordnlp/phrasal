@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.stats.Counter;
 
 import mt.base.IString;
 import mt.base.IStrings;
@@ -76,7 +74,6 @@ public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
     	double best = Double.NEGATIVE_INFINITY;
     	String hyp = trans.translation.toString();
 		
-			int totalWords = 0;
     	for (Sequence<TK> ref : refsSeq) {
 			 MeteorTestSet ts = new MeteorTestSet();
 			 ts.addTest(hyp);

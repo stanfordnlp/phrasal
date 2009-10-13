@@ -16,6 +16,7 @@ import mt.decoder.util.Hypothesis;
  */
 public class OptimisticForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
+	@SuppressWarnings("unchecked")
 	public SearchHeuristic<TK,FV> clone() {
 	   try {
 	  	 return (SearchHeuristic<TK,FV>) super.clone();

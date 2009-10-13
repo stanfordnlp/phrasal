@@ -1,7 +1,5 @@
 package mt.syntax.mst.rmcd;
 
-import java.util.*;
-
 import edu.stanford.nlp.util.Index;
 
 /**

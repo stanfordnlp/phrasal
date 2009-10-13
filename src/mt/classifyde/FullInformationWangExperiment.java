@@ -3,7 +3,6 @@ package mt.classifyde;
 import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.*;
 import edu.stanford.nlp.stats.*;
 import java.io.*;
 import java.util.*;
@@ -18,9 +17,6 @@ class FullInformationWangExperiment {
 
     List<AnnotatedTreePair> atreepairs = ExperimentUtils.readAnnotatedTreePairs(true, nonOracleTree);
 
-
-    TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
-    ClassicCounter<String> deTypeCounter = new ClassicCounter<String>();
 
     TwoDimensionalCounter<String, String> confusionMatrix = new TwoDimensionalCounter<String,String>();
 

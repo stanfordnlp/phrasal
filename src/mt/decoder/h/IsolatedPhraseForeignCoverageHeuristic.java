@@ -24,6 +24,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
 	final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
 	
+	@SuppressWarnings("unchecked")
 	public SearchHeuristic<TK,FV> clone() {
 	   try {
 	  	 return (SearchHeuristic<TK,FV>) super.clone();

@@ -79,7 +79,7 @@ public class CorpusOverlapFinder {
     }
 
     if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet<Object>(prop.keySet());
+      Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
        ("The following fields are unrecognized: %s\n", extraFields);

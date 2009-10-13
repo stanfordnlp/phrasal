@@ -17,6 +17,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
 	static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
 	
+	@SuppressWarnings("unchecked")
 	public PhraseGenerator<TK> clone() {
 		try{
 		return (PhraseGenerator<TK>)super.clone();

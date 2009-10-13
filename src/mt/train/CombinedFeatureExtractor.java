@@ -156,7 +156,7 @@ public class CombinedFeatureExtractor {
     }
     
     if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet<Object>(prop.keySet());
+      Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
        ("The following fields are unrecognized: %s\n", extraFields);
@@ -201,7 +201,8 @@ public class CombinedFeatureExtractor {
     outputFile = prop.getProperty(OUTPUT_FILE_OPT);
   }
 
-  public void init() {
+  
+	public void init() {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
       exsString = "mt.train.PharaohFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor";
@@ -235,9 +236,10 @@ public class CombinedFeatureExtractor {
           System.err.println("Running constructor: "+constructor);
           fe = (AbstractFeatureExtractor) interpreter.eval(constructor.toString());
         } else {
-          Class cls = Class.forName(exStr);
-          Constructor ct = cls.getConstructor(new Class[] {});
-          fe = (AbstractFeatureExtractor) ct.newInstance();
+        	@SuppressWarnings("unchecked")
+          Class<AbstractFeatureExtractor> cls = (Class<AbstractFeatureExtractor>)Class.forName(exStr);
+          Constructor<AbstractFeatureExtractor> ct = cls.getConstructor(new Class[] {});
+          fe = ct.newInstance();
           if(fe instanceof PharaohFeatureExtractor) {
             mosesExtractor = (PharaohFeatureExtractor) fe;
           }
@@ -266,11 +268,12 @@ public class CombinedFeatureExtractor {
       phraseExtractorName = fields[0];
       System.err.println("Phrase extractor: "+Arrays.toString(fields));
       try {
-        Class cls = Class.forName(phraseExtractorName);
-        Constructor ct = cls.getConstructor(new Class[] {
+      	@SuppressWarnings("unchecked")
+        Class<AbstractPhraseExtractor> cls = (Class<AbstractPhraseExtractor>)Class.forName(phraseExtractorName);
+        Constructor<AbstractPhraseExtractor> ct = cls.getConstructor(new Class[] {
          Properties.class, AlignmentTemplates.class, List.class
         });
-        phraseExtractor = (AbstractPhraseExtractor) ct.newInstance(prop,alTemps,extractors);
+        phraseExtractor = ct.newInstance(prop,alTemps,extractors);
       } catch(Exception e) {
         throw new RuntimeException(e);
       }

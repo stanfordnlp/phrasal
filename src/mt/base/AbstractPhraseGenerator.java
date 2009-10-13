@@ -17,6 +17,7 @@ abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<
 	protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	protected final Scorer<FV> scorer;
 	
+	@SuppressWarnings("unchecked")
 	public AbstractPhraseGenerator<TK,FV> clone() {
 		try {
 			return (AbstractPhraseGenerator<TK,FV>)super.clone();

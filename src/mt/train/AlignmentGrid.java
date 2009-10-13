@@ -62,7 +62,7 @@ public class AlignmentGrid {
     alTempList.clear();
     for(int fi = 0; fi < fsize; fi++) {
       for(int ei = 0; ei < esize; ei++) {
-        AlGridCell cell = alGridCells[fi][ei];
+        AlGridCell<AlignmentTemplateInstance> cell = alGridCells[fi][ei];
         if(cell == null)
           alGridCells[fi][ei] = new AlGridCell<AlignmentTemplateInstance>();
         else

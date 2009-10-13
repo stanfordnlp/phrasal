@@ -286,16 +286,6 @@ public class ExperimentUtils {
     }
   }
 
-  private static boolean hasDEC(Tree t) {
-    TreeMatcher decM = dec.matcher(t);
-    return decM.find();
-  }
-
-  private static boolean hasDEG(Tree t) {
-    TreeMatcher degM = deg.matcher(t);
-    return degM.find();
-  }
-
   static int countDE(Tree t) {
     TreeMatcher deM = de.matcher(t);
     int deCount = 0;
@@ -305,7 +295,8 @@ public class ExperimentUtils {
     return deCount;
   }
 
-  static List<Pair<String, String>>[] readFinalCategories(String categoryFile, String npFile, String fileidFile, String npidFile) throws IOException{
+  
+	static List<Pair<String, String>>[] readFinalCategories(String categoryFile, String npFile, String fileidFile, String npidFile) throws IOException{
     String content = StringUtils.slurpFileNoExceptions(categoryFile);
     String[] categories = content.split("\\n");
 
@@ -319,8 +310,8 @@ public class ExperimentUtils {
     String[] npids = content.split("\\n");
 
     //List<Pair<String, String>>[][] result = new List[326][];
+    @SuppressWarnings("unchecked")
     List<Pair<String, String>>[] result = new List[326];
-    int[] maxNP = new int[326];
 
     if (categories.length != nps.length ||
         nps.length != fileids.length ||
@@ -349,7 +340,6 @@ public class ExperimentUtils {
     for(int i = 0; i < categories.length; i++) {
       Pair<String, String> pair = new Pair<String, String>(categories[i], nps[i]);
       int fileid = Integer.parseInt(fileids[i]);
-      int npid = Integer.parseInt(npids[i]);
       //result[fileid][npid].add(pair);
       result[fileid].add(pair);
     }
@@ -365,6 +355,7 @@ public class ExperimentUtils {
     String content = StringUtils.slurpFileNoExceptions(allFile);
     String[] lines = content.split("\\n");
 
+    @SuppressWarnings("unchecked")
     List<Pair<String, String>>[] result = new List[326];
 
     for(int i = 1; i <= 325; i++) {
@@ -377,19 +368,16 @@ public class ExperimentUtils {
         throw new RuntimeException("finalCategories_all.txt should have 4 fields: "+lines[i]);
       }
       String fileidStr = fields[0];
-      String npidStr = fields[1];
       String categoriesStr = fields[2];
       String npStr = fields[3];
 
-      if (useReducedCategories)
+      if (useReducedCategories) {
         categoriesStr = normCategory(categoriesStr);
-      else
-        categoriesStr = categoriesStr;
-
+      }
+      
       Pair<String, String> pair = new Pair<String, String>(categoriesStr, npStr);
       fileidStr = fileidStr.replaceAll("[^\\d]","");
       int fileid = Integer.parseInt(fileidStr);
-      int npid = Integer.parseInt(npidStr);
       //result[fileid][npid].add(pair);
       result[fileid].add(pair);
     }

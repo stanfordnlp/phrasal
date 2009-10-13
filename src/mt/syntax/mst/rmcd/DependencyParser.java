@@ -11,7 +11,6 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.math.ArrayMath;
-import mt.syntax.mst.rmcd.io.DependencyWriter;
 
 import java.io.*;
 import java.util.Arrays;

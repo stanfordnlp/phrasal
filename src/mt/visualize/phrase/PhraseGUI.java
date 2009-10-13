@@ -78,7 +78,6 @@ public final class PhraseGUI {
   //Application members
   private final PhraseController controller;
   private static PhraseGUI thisInstance = null;
-  private boolean VERBOSE = false;
   private static final int DEFAULT_WIDTH = 400;
   private static final int DEFAULT_HEIGHT = 500;
 
@@ -90,7 +89,6 @@ public final class PhraseGUI {
 
   private PhraseGUI() {
     controller = PhraseController.getInstance();    
-    VERBOSE = controller.getVerbose();
   }
 
   private JFrame getMainFrame() {

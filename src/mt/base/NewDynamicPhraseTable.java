@@ -174,6 +174,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		
 		@SuppressWarnings("unchecked")
 		long startCacheCheckTime = System.currentTimeMillis();
+		@SuppressWarnings("unchecked")
 		List<String> commonTrans = (List<String>)commonDB.getlist(rawSequence.toString());
 		long endCacheCheckTime = System.currentTimeMillis();
 		System.err.printf("Cache Check time %.3f\n", (endCacheCheckTime-startCacheCheckTime)/1000.0);

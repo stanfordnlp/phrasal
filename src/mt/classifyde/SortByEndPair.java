@@ -1,12 +1,5 @@
 package mt.classifyde;
 
-import java.util.*;
-import java.io.*;
-import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.classify.*;
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.ling.*;
-
 public class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
   public T1 first;
   public T2 second;
@@ -21,7 +14,8 @@ public class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
     return "(" + first + "," + second + ")";
   }
 
-  public int compareTo(SortByEndPair<T1,T2> another) {
+  @SuppressWarnings("unchecked")
+	public int compareTo(SortByEndPair<T1,T2> another) {
     //System.err.println("CompareTo");
     int comp = ((Comparable) second).compareTo(another.second);
     if (comp != 0) {

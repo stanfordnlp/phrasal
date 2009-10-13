@@ -3,7 +3,6 @@ package mt.base;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 
 public class BiText {
@@ -63,6 +62,6 @@ public class BiText {
 	}
 	
 	public static void main(String[] args) {
-		BiText btext = new BiText(args[0], args[1]);
+		new BiText(args[0], args[1]);
 	}
 }

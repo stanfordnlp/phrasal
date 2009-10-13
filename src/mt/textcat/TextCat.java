@@ -172,8 +172,6 @@ public class TextCat {
     return new Pair<GeneralDataset,float[]>(dataset, dataWeightsArray);
   }
 
-  private static ChineseDocumentToSentenceProcessor cdtsp = new ChineseDocumentToSentenceProcessor();
-  
   private static ClassicCounter<String> getFeatures(List<String> doc) {
     ClassicCounter<String> features = new ClassicCounter<String>();
 
@@ -184,7 +182,7 @@ public class TextCat {
     String concat = StringUtils.join(doc, " ");
     List<String> sentences;
     try {
-      sentences = cdtsp.fromPlainText(concat, true);
+      sentences = ChineseDocumentToSentenceProcessor.fromPlainText(concat, true);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

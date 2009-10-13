@@ -1,6 +1,5 @@
 package mt.train;
 
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.SortedSet;
 import java.io.IOException;

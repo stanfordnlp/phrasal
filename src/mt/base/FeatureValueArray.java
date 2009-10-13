@@ -9,7 +9,9 @@ import java.util.Collection;
  * @author Michel Galley
  */
 public class FeatureValueArray<E> extends ArrayList<FeatureValue<E>> {
-
+	
+	private static final long serialVersionUID = 1L;
+	
 	double[] arr;
 
   public FeatureValueArray() {

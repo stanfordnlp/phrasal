@@ -1,11 +1,6 @@
 package mt.discrimreorder;
 
 import java.util.*;
-import java.io.*;
-
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.trees.semgraph.*;
 import edu.stanford.nlp.ling.IndexedWord;
 
@@ -32,8 +27,6 @@ public class TypedDepFeatureExtractor implements FeatureExtractor {
 
   public List<String> extractFeatures(AlignmentMatrix matrix, TrainingExample example) {
     List<String> features = new ArrayList<String>();
-    Set<Integer> gIdxs = null;
-    String headDep = null;
     
     if (HEAD_DEP_DIR) {
       // skip the boundary cases

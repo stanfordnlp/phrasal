@@ -8,9 +8,6 @@ import java.io.*;
 import java.util.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.ling.*;
-import edu.stanford.nlp.stats.*;
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.parser.lexparser.*;
 import edu.stanford.nlp.process.*;
 
 
@@ -22,10 +19,8 @@ public class TranslationAlignment {
   public int[][] matrix_;
   boolean wellformed_ = true;
 
-  private static boolean DEBUG = false;
-
   private ChineseEscaper ce_ = new ChineseEscaper();
-  private PTBEscapingProcessor ptbe_ = new PTBEscapingProcessor();
+  private PTBEscapingProcessor<HasWord,String,String> ptbe_ = new PTBEscapingProcessor<HasWord,String,String>();
 
   public boolean isWellFormed() {
     return wellformed_;
@@ -115,7 +110,6 @@ public class TranslationAlignment {
   }
 
   public TreeSet<Integer> mapChineseToEnglish_FillGap(Pair<Integer,Integer> ip, TreeSet<Integer> enRange) {
-    boolean contiguous = true;
     int prevI = -1;
     TreeSet<Integer> nullgaps = new TreeSet<Integer>();
     List<Pair<Integer,Integer>> gaps = new ArrayList<Pair<Integer,Integer>>();

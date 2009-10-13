@@ -11,6 +11,7 @@ import mt.decoder.util.Hypothesis;
  */
 public class LinearDistorionRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 
+	@SuppressWarnings("unchecked")
 	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
 		try {
 			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 

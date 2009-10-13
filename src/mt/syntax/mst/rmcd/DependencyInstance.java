@@ -17,7 +17,9 @@ import java.io.ObjectInputStream;
 
 public class DependencyInstance implements Cloneable, Serializable {
 
-  private static int INIT_SZ = 5;
+  private static final long serialVersionUID = 1L;
+	
+	private static int INIT_SZ = 5;
   public static int LEMMA_LEN = 4;
   public static int CPOS_LEN = 2;
 
@@ -49,7 +51,9 @@ public class DependencyInstance implements Cloneable, Serializable {
     //
     // We ignore PHEAD and PDEPREL for now.
 
-    // FORM: the forms - usually words, like "thought"
+		private static final long serialVersionUID = 1L;
+
+		// FORM: the forms - usually words, like "thought"
     String form;
 
     // LEMMA: the lemmas, or stems, e.g. "think"

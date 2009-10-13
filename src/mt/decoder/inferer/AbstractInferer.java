@@ -6,7 +6,6 @@ import java.util.List;
 import mt.base.FeatureValue;
 import mt.base.RichTranslation;
 import mt.base.Sequence;
-import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.h.SearchHeuristic;
 import mt.decoder.recomb.RecombinationFilter;

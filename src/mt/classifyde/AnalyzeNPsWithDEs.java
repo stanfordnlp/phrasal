@@ -3,16 +3,10 @@ package mt.classifyde;
 import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.io.*;
 import java.util.*;
-import edu.stanford.nlp.trees.international.pennchinese.*;
-import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.parser.lexparser.*;
-import edu.stanford.nlp.process.*;
 
 class AnalyzeNPsWithDEs {
 
@@ -176,7 +170,6 @@ class AnalyzeNPsWithDEs {
         return "relative clause";
       }
 
-      String deMappedWord = null;
       // check if deIdx aligns to somewhere in between max(rangeB) and min(rangeA)
       for(int eidx = rangeB.second+1; eidx <= rangeA.first-1; eidx++) {
         if (submatrix[eidx][deIdx] > 0) {
@@ -191,7 +184,6 @@ class AnalyzeNPsWithDEs {
           if (deWord.equals("that") || deWord.equals("which")) {
             return "relative clause";
           }
-          deMappedWord = deWord;
           break;
         }
       }
@@ -216,7 +208,7 @@ class AnalyzeNPsWithDEs {
     int numNPwithDE_fragmented = 0;
     int FIDX = Integer.parseInt(args[0]);
     Properties props =StringUtils.argsToProperties(args);
-    Counter typeCounter = new ClassicCounter<String>();
+    Counter<String> typeCounter = new ClassicCounter<String>();
 
     // For this to run on both NLP machine and my computer
     String dirname = "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
@@ -351,7 +343,6 @@ class AnalyzeNPsWithDEs {
         
         //for (Pair<Integer,Integer> NPwithDE : atp.NPwithDEs.keySet()) {
         for(int deIdxInSent : atp.NPwithDEs_deIdx_set) {
-          Pair<Integer,Integer> NPwithDE = atp.NPwithDEs_deIdx.get(deIdxInSent);
           //List<Pair<Integer,Integer>> englishNP = atp.NPwithDEs.get(NPwithDE);
           List<Pair<Integer,Integer>> englishNP = atp.getNPEnglishTranslation(deIdxInSent);
           if (englishNP.size()==1) {
@@ -439,29 +430,6 @@ class AnalyzeNPsWithDEs {
     }
     if (set) return deEidx;
     return -1;
-  }
-
-  private static void printRangeAandB(Pair<Integer,Integer> rangeA, Pair<Integer,Integer> rangeB, String[] subtranslation, String[] subsource) {
-    if (rangeA.first >= 0 && rangeA.first < subtranslation.length &&
-        rangeA.second >= 0 && rangeA.second < subtranslation.length) {
-      System.err.print("RangeA = ");
-      for (int i = rangeA.first; i <= rangeA.second; i++) {
-        System.err.print(subtranslation[i]+" ");
-      }
-      System.err.println();
-    } else {
-      System.err.println("RangeA = NULL");
-    }
-    if (rangeB.first >= 0 && rangeB.first < subtranslation.length &&
-        rangeB.second >= 0 && rangeB.second < subtranslation.length) {
-      System.err.print("RangeB = ");
-      for (int i = rangeB.first; i <= rangeB.second; i++) {
-        System.err.print(subtranslation[i]+" ");
-      }
-      System.err.println();
-    } else {
-      System.err.println("RangeB = NULL");
-    }
   }
 
   private static boolean onRangeEdge(int i, Pair<Integer,Integer> range) {
@@ -646,26 +614,6 @@ class AnalyzeNPsWithDEs {
     npPW.printf("%d\t%d\t%s\t%d\t%s\t%s\n", fileidx, npidx, type, englishNP.size(), chStr, enStr);
   }
 
-  private static List<List<Integer>> getIndexGroups(String[] leaves, String[] source) {
-    List<List<Integer>> indexgroups = new ArrayList<List<Integer>>();
-
-    int tidx = 0;
-    for(int lidx = 0; lidx < leaves.length; lidx++) {
-      List<Integer> indexgroup = new ArrayList<Integer>();
-      String leaf = leaves[lidx];
-      if (DEBUG) System.err.println("LEAF="+leaf);
-      StringBuilder chunk = new StringBuilder();
-      while(!leaf.equals(chunk.toString())) {
-        //while(!ExperimentUtils.tokenEquals(leaf, chunk.toString())) {
-        chunk.append(source[tidx]);
-        indexgroup.add(tidx+1); // have to offset by 1, because 0 is NULL
-        if (DEBUG) System.err.println("CHUNK="+chunk.toString());
-        tidx++;
-      }
-      indexgroups.add(indexgroup);
-    }
-    return indexgroups;
-  }
 
   private static void fixDeterminerOrOfOrWith(String[] translation, String[] source, int[][] matrix) {
     boolean err = false;

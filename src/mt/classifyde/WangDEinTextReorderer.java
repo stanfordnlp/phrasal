@@ -3,7 +3,6 @@ package mt.classifyde;
 import java.util.*;
 import java.io.*;
 import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.ling.*;
 
@@ -67,7 +66,6 @@ public class WangDEinTextReorderer {
 
       // check overlap
       // check error
-      boolean overlap = false;
       for(SortByEndPair<Integer, Integer> p1 : toOperate.keySet()) {
         for(SortByEndPair<Integer, Integer> p2 : toOperate.keySet()) {
           if (p1.first > p2.second || p1.second < p2.first) continue;
@@ -80,8 +78,6 @@ public class WangDEinTextReorderer {
             System.err.println("P1="+p1);
             System.err.println("P2="+p2);
             throw new RuntimeException(""); 
-          } else {
-            overlap = true;
           }
         }
       }
@@ -90,8 +86,7 @@ public class WangDEinTextReorderer {
       int counter = 1;
       for(Map.Entry<SortByEndPair<Integer, Integer>, Integer> e : toOperate.entrySet()) {
         SortByEndPair<Integer, Integer> p = e.getKey();
-        int deIdx = e.getValue();
-        String de = yield.get(deIdx);
+        int deIdx = e.getValue();        
         ExperimentUtils.ReverseSublist(yield, p.first, deIdx-1);
         ExperimentUtils.ReverseSublist(yield, deIdx+1, p.second);
         ExperimentUtils.ReverseSublist(yield, p.first, p.second);

@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
  *
  * @author Michel Galley
  */
+
 public class ThreadedFeatureExtractor {
 
   static public final String CONFIG_OPT = "config";
@@ -64,8 +65,8 @@ public class ThreadedFeatureExtractor {
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
-	static final Set<Class> THREAD_SAFE_EXTRACTORS = new HashSet<Class>();
-
+	static final Set<Class<? extends AbstractFeatureExtractor>> THREAD_SAFE_EXTRACTORS = new HashSet<Class<? extends AbstractFeatureExtractor>>();
+	
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(
        F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT, EXTRACTORS_OPT 
@@ -89,12 +90,12 @@ public class ThreadedFeatureExtractor {
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
-    THREAD_SAFE_EXTRACTORS.addAll(Arrays.asList(
-         mt.train.LexicalReorderingFeatureExtractor.class,
-         mt.train.ExperimentalLexicalReorderingFeatureExtractor.class,
-         mt.train.PhiFeatureExtractor.class,
-         mt.train.PharaohFeatureExtractor.class
-    ));
+
+    
+    THREAD_SAFE_EXTRACTORS.add(mt.train.LexicalReorderingFeatureExtractor.class);
+    THREAD_SAFE_EXTRACTORS.add(mt.train.ExperimentalLexicalReorderingFeatureExtractor.class);
+    THREAD_SAFE_EXTRACTORS.add(mt.train.PhiFeatureExtractor.class);
+    THREAD_SAFE_EXTRACTORS.add(mt.train.PharaohFeatureExtractor.class);
   }
   
   public static final String DEBUG_PROPERTY = "DebugThreadedFeatureExtractor";
@@ -153,7 +154,7 @@ public class ThreadedFeatureExtractor {
     }
 
     if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet<Object>(prop.keySet());
+      Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
        ("The following fields are unrecognized: %s\n", extraFields);
@@ -219,11 +220,12 @@ public class ThreadedFeatureExtractor {
           System.err.println("Running constructor: "+constructor);
           fe = (AbstractFeatureExtractor) interpreter.eval(constructor.toString());
         } else {
-          Class cls = Class.forName(exStr);
+        	@SuppressWarnings("unchecked")
+          Class<AbstractFeatureExtractor> cls = (Class<AbstractFeatureExtractor>)Class.forName(exStr);
           if(!THREAD_SAFE_EXTRACTORS.contains(cls))
             throw new RuntimeException("Extractor is not thread safe: "+cls);
-          Constructor ct = cls.getConstructor(new Class[] {});
-          fe = (AbstractFeatureExtractor) ct.newInstance();
+          Constructor<AbstractFeatureExtractor> ct = cls.getConstructor(new Class[] {});
+          fe = ct.newInstance();
         }
 
         fe.init(prop, featureIndex, alTemps);

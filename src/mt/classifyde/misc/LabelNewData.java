@@ -75,7 +75,8 @@ class LabelNewData {
       String autocat;
       String handcat;
       String finalcat;
-      String frags;
+      @SuppressWarnings("unused")
+			String frags;
       String chNP;
       String entrans;
 

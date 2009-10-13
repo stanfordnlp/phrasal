@@ -17,6 +17,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV> impleme
 	final List<LanguageModel<TK>> lgModels;
 	final boolean DETAILED_DEBUG = false;
 	
+	@SuppressWarnings("unchecked")
 	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
 		try {
 			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 

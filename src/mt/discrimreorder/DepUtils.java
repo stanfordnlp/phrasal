@@ -1,9 +1,6 @@
 package mt.discrimreorder;
 
 import java.util.*;
-import java.io.*;
-
-import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.trees.semgraph.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.IndexedWord;

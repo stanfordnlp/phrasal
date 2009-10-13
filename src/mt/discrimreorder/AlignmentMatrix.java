@@ -3,14 +3,10 @@ package mt.discrimreorder;
 import java.io.*;
 import mt.train.AbstractWordAlignment;
 
-import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.trees.semgraph.*;
-import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
-import java.util.*;
-import java.io.*;
 
 /**
  * This class is to represent the alignment in a 2d matrix form

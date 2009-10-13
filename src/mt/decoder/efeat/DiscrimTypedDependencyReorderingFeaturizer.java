@@ -4,21 +4,14 @@ import java.util.*;
 import java.io.*;
 
 import mt.base.IString;
-import mt.base.ARPALanguageModel;
 import mt.base.ConcreteTranslationOption;
 import mt.base.CoverageSet;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
-import mt.base.ExtendedLexicalReorderingTable;
+
 import mt.base.IOTools;
 import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
-import mt.decoder.feat.IncrementalFeaturizer;
-import mt.decoder.feat.LexicalReorderingFeaturizer;
-import mt.decoder.feat.RichIncrementalFeaturizer;
 import mt.decoder.feat.ClonedFeaturizer;
-import mt.train.AlignmentGrid;
 import mt.discrimreorder.DepUtils;
 import mt.discrimreorder.TrainingExamples;
 
@@ -26,7 +19,6 @@ import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.classify.*;
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
 /**
@@ -52,7 +44,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturi
   private int useNClass = 2;
   private LineNumberReader pathReader = null;
   private List<TwoDimensionalMap<Integer,Integer,String>> pathMaps = null;
-  private LinearClassifier lc = null;
+  private LinearClassifier<TrainingExamples.ReorderingTypes,String> lc = null;
   private ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double> featureCache;
 
   private Boolean usePathFile = true;
@@ -207,7 +199,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturi
 
       features.addAll(feats);
 
-      Datum<TrainingExamples.ReorderingTypes,String> d = new BasicDatum(features);
+      Datum<TrainingExamples.ReorderingTypes,String> d = new BasicDatum<TrainingExamples.ReorderingTypes,String>(features);
       Counter<TrainingExamples.ReorderingTypes> logPs = lc.logProbabilityOf(d);
       TrainingExamples.ReorderingTypes type;
       double logP;

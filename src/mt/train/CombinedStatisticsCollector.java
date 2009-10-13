@@ -165,8 +165,9 @@ public class CombinedStatisticsCollector {
 
     for(String clStr : clsString.split("\\s+")) {
       try {
-        Class ct = Class.forName(clStr);
-        StatisticsCollector fe = (StatisticsCollector)ct.newInstance();
+      	@SuppressWarnings("unchecked")
+        Class<StatisticsCollector> ct = (Class<StatisticsCollector>)Class.forName(clStr);
+        StatisticsCollector fe = ct.newInstance();
         collectors.add(fe);
         System.err.println("New class instance: "+fe.getClass());
       } catch (Exception e) {

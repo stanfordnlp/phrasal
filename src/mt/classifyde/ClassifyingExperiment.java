@@ -1,9 +1,6 @@
 package mt.classifyde;
 
-import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.*;
 import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.ling.*;
@@ -64,10 +61,10 @@ class ClassifyingExperiment {
 
     ClassicCounter<String> labelCounter = new ClassicCounter<String>();
 
-    GeneralDataset trainDataset = new Dataset();
-    GeneralDataset devDataset = new Dataset();
-    GeneralDataset testDataset = new Dataset();
-    GeneralDataset otherDataset = new Dataset();
+    GeneralDataset<String,String> trainDataset = new Dataset<String,String>();
+    GeneralDataset<String,String> devDataset = new Dataset<String,String>();
+    GeneralDataset<String,String> testDataset = new Dataset<String,String>();
+    GeneralDataset<String,String> otherDataset = new Dataset<String,String>();
     List<Datum<String,String>> trainData = new ArrayList<Datum<String,String>>();
     List<Datum<String,String>> devData = new ArrayList<Datum<String,String>>();
     List<Datum<String,String>> testData = new ArrayList<Datum<String,String>>();
@@ -101,7 +98,7 @@ class ClassifyingExperiment {
         // (2) make label
 
         // (3) Make Datum and add
-        Datum<String, String> d = new RVFDatum(featureList, label);
+        Datum<String, String> d = new RVFDatum<String,String>(featureList, label);
 
         if (notAdd || "n/a".equals(trainDevTest.get(npid))) {
           otherDataset.add(d);
@@ -175,7 +172,7 @@ class ClassifyingExperiment {
       System.out.println();
       
       System.out.println("Training set stats:");
-      System.out.println(((Dataset)trainDataset).toSummaryStatistics());
+      System.out.println(((Dataset<String,String>)trainDataset).toSummaryStatistics());
       System.out.println();
       
       displayEval(trainStats, devStats, testStats);

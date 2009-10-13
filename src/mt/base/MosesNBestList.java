@@ -70,9 +70,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		} else {
 			reader = new LineNumberReader(new FileReader(filename));
 		}
-		Pattern tripplePipes = Pattern.compile(" \\|\\|\\| ");
 		Pattern space = Pattern.compile(" ");
-		Pattern label = Pattern.compile(".*:");
 		String lastId = null;
 		String[] emptyStringArray = new String[0];
 		for (String inline; (inline = reader.readLine()) != null; ) {

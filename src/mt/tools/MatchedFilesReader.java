@@ -37,7 +37,7 @@ public class MatchedFilesReader {
     return getMatchedFiles(files);
   }
 
-  public static MatchedFilesReader getMatchedFilesByEnum(String rootName, EnumSet es) {
+  public static MatchedFilesReader getMatchedFilesByEnum(String rootName, EnumSet<?> es) {
 
     String rootName2 = rootName.endsWith(".") ? rootName : rootName+".";
 
@@ -83,7 +83,7 @@ public class MatchedFilesReader {
     return done;
   }
 
-  public String getLine(Enum e) {
+  public String getLine(Enum<?> e) {
     return lines[e.ordinal()];
   }
 

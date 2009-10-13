@@ -10,7 +10,6 @@ import mt.decoder.h.*;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.process.TrueCaser;
-import edu.stanford.nlp.ling.CoreLabel;
 
 import java.util.*;
 import java.io.*;
@@ -53,7 +52,8 @@ public class LanguageModelTrueCaser implements TrueCaser {
     System.exit(0);
   }
 
-  public void init(String lmFilename) {
+  @SuppressWarnings("unchecked")
+	public void init(String lmFilename) {
 
     MultiBeamDecoder.MultiBeamDecoderBuilder infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder) InfererBuilderFactory.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
     
@@ -151,7 +151,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString,String> {
       casings = new LinkedList<String>();
       casings.add(sequence.get(0).toString());
     }
-    RawSequence<IString> rawSource = new RawSequence(sequence);
+    RawSequence<IString> rawSource = new RawSequence<IString>(sequence);
   
     for (String casing : casings) {
       IString[] trgArr = IStrings.toIStringArray(new String[]{casing});

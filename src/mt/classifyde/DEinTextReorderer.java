@@ -3,7 +3,6 @@ package mt.classifyde;
 import java.util.*;
 import java.io.*;
 import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.ling.*;
 
@@ -64,7 +63,6 @@ public class DEinTextReorderer {
 
       // check overlap
       // check error
-      boolean overlap = false;
       for(SortByEndPair<Integer, Integer> p1 : toOperate.keySet()) {
         for(SortByEndPair<Integer, Integer> p2 : toOperate.keySet()) {
           if (p1.first > p2.second || p1.second < p2.first) continue;
@@ -84,8 +82,6 @@ public class DEinTextReorderer {
             System.err.println("P1="+p1);
             System.err.println("P2="+p2);
             throw new RuntimeException(""); 
-          } else {
-            overlap = true;
           }
         }
       }

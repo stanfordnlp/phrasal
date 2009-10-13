@@ -8,7 +8,6 @@ import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Ptr;
-import edu.stanford.nlp.util.ArrayUtils;
 import edu.stanford.nlp.svd.ReducedSVD;
 
 import edu.stanford.nlp.optimization.Function;
@@ -1753,8 +1752,6 @@ class SVDReducedObj extends AbstractNBestOptimizer {
     System.err.println(Counters.toString(recoveredInitialWts, 35));
 
 
-    MosesNBestList reducedRepNbest = nbestListToDimReducedNbestList(nbest,
-            pV.deref());
     Counter<String> reducedWts;
     switch (opt) {
       case exact:
@@ -1990,7 +1987,7 @@ class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
 
     public ObjELossDiffFunction(UnsmoothedMERT mert, Counter<String> initialWts) {
       this.mert = mert;
-      this.nbest = mert.nbest;
+      this.nbest = UnsmoothedMERT.nbest;
       this.initialWts = initialWts;
       this.emetric = mert.emetric;
       Set<String> featureSet = new HashSet<String>();

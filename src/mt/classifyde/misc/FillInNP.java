@@ -1,6 +1,5 @@
 package mt.classifyde.misc;
 
-import java.io.*;
 import java.util.*;
 import edu.stanford.nlp.util.*;
 

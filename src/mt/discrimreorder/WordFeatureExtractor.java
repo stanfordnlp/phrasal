@@ -1,7 +1,6 @@
 package mt.discrimreorder;
 
 import java.util.*;
-import java.io.*;
 
 public class WordFeatureExtractor implements FeatureExtractor {
   boolean SRCJ, TGT, SRCJ2, SRCJ_TGT, SRCJ_SRCJ2;

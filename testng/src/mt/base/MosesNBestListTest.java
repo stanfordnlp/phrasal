@@ -54,6 +54,6 @@ public class MosesNBestListTest{
 	 	
 	 	@Test(expectedExceptions = RuntimeException.class, dataProvider = "improperInputFiles")
 	 	public void testRuntimeException(String nbestListFilename) throws IOException {
-	 		MosesNBestList nbestList = new MosesNBestList(nbestListFilename);
+	 		new MosesNBestList(nbestListFilename);
 	 	}
 }

@@ -1,8 +1,7 @@
 package mt.classifyde;
 
-import mt.train.transtb.*;
+
 import java.util.*;
-import java.io.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.trees.*;

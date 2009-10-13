@@ -3,7 +3,6 @@ package mt.classifyde;
 import java.util.*;
 import java.io.*;
 import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.ling.*;
 
@@ -31,7 +30,6 @@ public class ImprovedDEinTextReorderer {
       for (int deIdx : markedDEIdxs) {
         // first, everything that's not under an NP, remove the label for 的
         String rootLabel = ExperimentUtils.getNPwithDE_rootLabel(parsedSent, deIdx);
-        String dnpOrCPLabel = ExperimentUtils.getNPwithDE_DNPorCPLabel(parsedSent, deIdx);
         // if not under NP, the 的 tag should be ignored
         if (!rootLabel.equals("NP")) {
           if (!newLeaves.get(deIdx).value().startsWith("的_")) throw new RuntimeException("...");

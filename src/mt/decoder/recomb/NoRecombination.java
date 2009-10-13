@@ -1,9 +1,5 @@
 package mt.decoder.recomb;
 
-import mt.decoder.util.Hypothesis;
-
-
-
 /**
  * 
  * @author danielcer
@@ -12,6 +8,7 @@ import mt.decoder.util.Hypothesis;
  */
 public class NoRecombination<S> implements RecombinationFilter<S> {
 	
+	@SuppressWarnings("unchecked")
 	public RecombinationFilter<S> clone() {
 		try {
 			return (RecombinationFilter<S>)super.clone(); 

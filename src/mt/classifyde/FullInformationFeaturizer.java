@@ -3,12 +3,9 @@ package mt.classifyde;
 import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.*;
 import edu.stanford.nlp.stats.*;
-import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.ling.*;
 import java.util.*;
-import java.io.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -350,9 +347,6 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     return features;
   }
 
-  private static Counter<String> extractAllPaths(Tree t) {
-    return extractAllPaths(t, "");
-  }
 
   private static Counter<String> extractAllPaths(Tree t, String prefix) {
     Counter<String> l = new ClassicCounter<String>();

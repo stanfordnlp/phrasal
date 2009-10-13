@@ -78,6 +78,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		return new RawSequence<T>((T[])newElements);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public int compareTo(Sequence<T> o) {
 		int sz = size();

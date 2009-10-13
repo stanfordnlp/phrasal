@@ -6,8 +6,6 @@ import edu.stanford.nlp.util.StringUtils;
 import java.io.*;
 import java.util.*;
 
-import mt.train.*;
-
 /**
  * This class collects utils that can display information in
  * {@link AlignmentMatrix}.
@@ -48,10 +46,11 @@ public class DisplayUtils {
   }
 
   public static void printExample(TrainingExample example, List<String> features, PrintWriter pw) {
-    TreeSet<String> fset = new TreeSet();
-    for(String f : features)
+    TreeSet<String> fset = new TreeSet<String>();
+    for(String f : features) {
       fset.add(escapeHtml(f));
-
+    }
+    
     pw.println("<tr>");
     pw.printf("<td> %d </td>\n", example.tgt_i);
     pw.printf("<td> %d </td>\n", example.src_j);
@@ -190,9 +189,6 @@ public class DisplayUtils {
       r_denom += FN.get(i);
       //System.err.printf("FN(%s)=%d\n", i, FN.get(i));
     }
-    double micro_precision = nom / p_denom;
-    double micro_recall = nom / r_denom;
-    double micro_F = 2*micro_precision*micro_recall/(micro_precision+micro_recall);
 
     double total_F = 0.0;
     int count_F = 0;

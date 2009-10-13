@@ -1,13 +1,6 @@
 package mt.classifyde;
 
-import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.tregex.*;
-import edu.stanford.nlp.stats.*;
-import edu.stanford.nlp.classify.*;
-import edu.stanford.nlp.ling.*;
-import java.io.*;
 import java.util.*;
 
 

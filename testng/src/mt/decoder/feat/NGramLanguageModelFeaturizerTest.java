@@ -95,7 +95,7 @@ public class NGramLanguageModelFeaturizerTest {
     
     @Test (dataProvider = "featurizer")
     public void testFromFile(NGramLanguageModelFeaturizer<IString> featurizer) throws IOException{
-      featurizer = featurizer.fromFile("/u/nlp/data/testng/inputs/sampleLM.gz", "sampleLM");      
+      featurizer = NGramLanguageModelFeaturizer.fromFile("/u/nlp/data/testng/inputs/sampleLM.gz", "sampleLM");      
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);
       
@@ -107,11 +107,11 @@ public class NGramLanguageModelFeaturizerTest {
     
     @Test (expectedExceptions = RuntimeException.class)
     public void testExceptionInConstructor4(String lmFile) throws IOException {
-      NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>("/u/nlp/data/testng/inputs/sampleLM.gz");
+      new NGramLanguageModelFeaturizer<IString>("/u/nlp/data/testng/inputs/sampleLM.gz");
     }
     
     @Test (dataProvider = "featurizer", expectedExceptions = RuntimeException.class)
     public void testExceptionInFromFile(NGramLanguageModelFeaturizer<IString> featurizer) throws IOException{
-      featurizer = featurizer.fromFile("/u/nlp/data/testng/inputs/sampleLM.gz");
+      featurizer = NGramLanguageModelFeaturizer.fromFile("/u/nlp/data/testng/inputs/sampleLM.gz");
     } 
 }

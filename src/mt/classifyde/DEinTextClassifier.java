@@ -17,8 +17,6 @@ import edu.stanford.cs.ra.arguments.ArgumentPolicy;
 import edu.stanford.cs.ra.arguments.Flag;
 import edu.stanford.cs.ra.RA;
 
-// imports from MT project
-import mt.train.transtb.*;
 
 public class DEinTextClassifier {
   @Argument("The trained DE classifier file (serialized)")
@@ -66,7 +64,6 @@ public class DEinTextClassifier {
     while((parsedSent=reader.next())!=null) {
       // Get the index of the DEs
       List<Integer> deIdxs = ExperimentUtils.getDEIndices(parsedSent.yield());
-      List<String>  labels = new ArrayList<String>();
       Map<Integer, String> deIdxWithPredictedClass = new TreeMap<Integer, String>();
       /*
       parsedSent.pennPrint(System.err);
@@ -82,11 +79,10 @@ public class DEinTextClassifier {
           System.err.println("WARNING: Flat tree. Don't mark");
           continue;
         }
-        Tree chNPTree = AlignmentUtils.getTreeWithEdges(parsedSent,range.first, range.second+1);
         Set<String> cachedWords = ExperimentUtils.mergeAllSets(cachedWordsBySent);
         
         Counter<String> features = feat.extractFeatures(deIdx, range, parsedSent, featProps, cachedWords);
-        Datum d = new RVFDatum(features);
+        Datum<String,String> d = new RVFDatum<String,String>(features);
         String predictedClass = classifier.classOf(d);
         //deIdxWithPredictedClass.put(deIdx, ExperimentUtils.short5class(predictedClass));
         if (sixclass.isSet)

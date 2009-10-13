@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.stats.Counter;
-
 import mt.base.IString;
 import mt.base.IStrings;
 import mt.base.NBestListContainer;

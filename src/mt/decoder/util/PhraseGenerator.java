@@ -2,7 +2,6 @@ package mt.decoder.util;
 
 import java.util.*;
 
-import mt.base.IString;
 import mt.base.ConcreteTranslationOption;
 import mt.base.Sequence;
 

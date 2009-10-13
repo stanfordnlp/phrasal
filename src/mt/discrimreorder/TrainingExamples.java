@@ -1,11 +1,7 @@
 package mt.discrimreorder;
 
 import edu.stanford.nlp.stats.*;
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.international.pennchinese.*;
-import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
 import java.util.*;
-import java.io.*;
 
 public class TrainingExamples {
   List<TrainingExample> examples;

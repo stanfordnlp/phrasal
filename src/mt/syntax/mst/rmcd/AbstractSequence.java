@@ -70,7 +70,8 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		int osz = o.size();
 		int max = Math.min(sz, osz);
 		for (int i = 0; i < max; i++) {
-			int cmp = ((Comparable)get(i)).compareTo((Comparable)o.get(i));
+			@SuppressWarnings("unchecked")
+			int cmp = ((Comparable<Object>)get(i)).compareTo((Comparable<Object>)o.get(i));
 			if (cmp == 0) continue;
 			return cmp;
 		}

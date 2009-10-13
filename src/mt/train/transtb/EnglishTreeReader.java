@@ -106,10 +106,10 @@ public class EnglishTreeReader extends AbstractTreeReader {
 }
 
 class NMLandPOSTreeTransformer implements TreeTransformer {
-  PTBEscapingProcessor ptbe;
+  PTBEscapingProcessor<HasWord,String,String> ptbe;
 
   public NMLandPOSTreeTransformer() {
-    ptbe = new PTBEscapingProcessor();
+    ptbe = new PTBEscapingProcessor<HasWord, String,String>();
   }
 
   @SuppressWarnings("unchecked")

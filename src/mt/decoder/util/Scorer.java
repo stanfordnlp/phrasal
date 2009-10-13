@@ -1,7 +1,6 @@
 package mt.decoder.util;
 
 import java.util.*;
-import java.io.*;
 
 import mt.base.FeatureValue;
 

@@ -1,6 +1,5 @@
 package mt.train;
 
-import java.util.Set;
 import java.util.SortedSet;
 
 import mt.base.IString;

@@ -79,7 +79,6 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		try {
 		List<TranslationOption<IString>> opts = new LinkedList<TranslationOption<IString>>();
 	
-		IString noConst = new IString("noConst");
 		RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 	
 		List<byte[]> listByteOpts = (List)bdb.getlist(sequence.toString().getBytes("UTF-8"));
@@ -182,6 +181,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		return pairSpecificPhrases;
 	} 
 
+	@SuppressWarnings("unchecked")
 	static public void extractDB(String fCorpus, String eCorpus, String tcFile, IBMModel1 model1F2E, IBMModel1 model1E2F)
 		throws Exception {
 		BufferedReader fReader = new BufferedReader(new FileReader(fCorpus));

@@ -2,10 +2,7 @@ package mt.classifyde;
 
 import java.util.*;
 import java.io.*;
-import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.ling.*;
 
 class SentTreeFileReader {
   BufferedReader sentBR;
