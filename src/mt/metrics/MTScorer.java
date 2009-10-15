@@ -208,7 +208,7 @@ public class MTScorer implements ExternalMTScorer {
     
   }
   
-  
+  @SuppressWarnings("unchecked")
 	private void addNgramPrecisionScores(Counter<String> c, NgramPrecisionIncrementalMetric<IString, String> m) {
 
     String name = m.getClass().toString().replace("class ","").replaceFirst("\\$.*","");
@@ -250,7 +250,7 @@ public class MTScorer implements ExternalMTScorer {
 
     // Smoothed BLEU:
     if(isBLEU) {
-      precisions = ((BLEUMetric<IString, String>.BLEUIncrementalMetric)m).ngramPrecisions();
+      precisions = ((BLEUMetric.BLEUIncrementalMetric)m).ngramPrecisions();
       for(int i=1; i<=4; ++i)
         addToCounter(c,name+"_"+i+"gram_smoothed_precision",precisions[i-1]);
       sum = 0;
