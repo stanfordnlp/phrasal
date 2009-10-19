@@ -51,6 +51,7 @@ public class CombinedFeatureExtractor {
   static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
   static public final String LOWERCASE_OPT = "lowercase";
   static public final String MAX_CROSSINGS_OPT = "maxCrossings";
+  static public final String WITH_GAPS_OPT = "withGaps";
   static public final String MEM_USAGE_FREQ_OPT = "memUsageFreq";
 
   // phrase translation probs:
@@ -90,7 +91,7 @@ public class CombinedFeatureExtractor {
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
-			 MAX_CROSSINGS_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT
+			 MAX_CROSSINGS_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT, WITH_GAPS_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
