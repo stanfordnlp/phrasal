@@ -182,7 +182,7 @@ public class ThreadedFeatureExtractor {
       fPhrases = SourceFilteringToolkit.getPhrasesFromList(fFilterList);
     else if(fFilterCorpus != null)
       fPhrases = SourceFilteringToolkit.getPhrasesFromFilterCorpus
-        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, addBoundaryMarkers);
+        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, Integer.MAX_VALUE, addBoundaryMarkers);
 
     // Other optional arguments:
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));

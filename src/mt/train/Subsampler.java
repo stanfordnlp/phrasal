@@ -129,7 +129,7 @@ public class Subsampler {
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
     phrases.addAll(Arrays.asList(SourceFilteringToolkit.getPhrasesFromFilterCorpus
-         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, false)));
+         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, Integer.MAX_VALUE, false)));
 
     // Other optional arguments:
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));

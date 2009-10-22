@@ -5,15 +5,29 @@ import mt.base.Sequence;
 
 import java.util.*;
 
-
 /**
  * @author Michel Galley
  */
 public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
+  static public final String WITH_GAPS_OPT  = "withGaps";
+
+  // Only affects phrases with gaps:
+  static public final String MAX_SPAN_OPT   = "maxSpan";
+  static public final String MAX_SPAN_E_OPT = "maxSpanE";
+  static public final String MAX_SPAN_F_OPT = "maxSpanF";
+
+  static boolean withGaps;
+  static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
+
+  public static final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
+
+  enum CrossSerialType { NONE, TYPE1_E, TYPE1_F, TYPE2_E, TYPE2_F }
+
+  private static final boolean DEBUG = System.getProperty("DebugDTU") != null;
   private static final int QUEUE_SZ = 1024;
 
-  final boolean withGaps;
+  boolean printCrossSerialDTU = true;
 
   int fSentenceLength, eSentenceLength;
 
@@ -22,9 +36,33 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    String optStr = prop.getProperty(CombinedFeatureExtractor.WITH_GAPS_OPT);
-    withGaps =  optStr != null && !optStr.equals("false");
     System.err.println("Using DTU phrase extractor.");
+    System.err.println("DTUPhraseExtractor: "+maxPhraseLenF);
+  }
+
+  static public void setDTUExtractionProperties(Properties prop) {
+
+    // With gaps or not:
+    String optStr = prop.getProperty(WITH_GAPS_OPT);
+    withGaps =  optStr != null && !optStr.equals("false");
+    if(!withGaps) {
+      System.err.println
+       ("WARNING: using DTUPhraseExtractor without gaps! "+
+        "Gapless phrases are more efficiently extracted using LinearTimePhraseExtractor");
+    }
+
+    String s;
+    if((s = prop.getProperty(MAX_SPAN_F_OPT)) != null) {
+      maxSpanF = Integer.parseInt(s);
+    } else if((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
+      maxSpanF = Integer.parseInt(s);
+    }
+
+    if((s = prop.getProperty(MAX_SPAN_E_OPT)) != null) {
+      maxSpanE = Integer.parseInt(s);
+    } else if((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
+      maxSpanE = Integer.parseInt(s);
+    }
   }
 
   static Set<Integer> bitSetToIntSet(BitSet b) {
@@ -48,7 +86,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     for(int i : sel) {
       if(oldI != -1) {
         if(i > oldI+1) {
-          sb.append(" [..] ");
+          sb.append(" ").append(GAP_STR).append(" ");
         } else {
           sb.append(" ");
         }
@@ -89,6 +127,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     Set<Integer> toConsistencizeInE();
     Set<Integer> toConsistencizeInF();
+
+    CrossSerialType getCrossSerialType();
   }
 
   abstract class AbstractPhrase implements Phrase {
@@ -172,6 +212,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       consistencizedE = new BitSet();
     }
 
+    @Override
+    public CrossSerialType getCrossSerialType() { return CrossSerialType.NONE; }
+
     public boolean sane() { return true; }
 
     public int getFirstE() { return e1; }
@@ -239,17 +282,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       }
     }
 
-    @Override
-    public int sizeF() { return f2-f1+1; }
+    @Override public int sizeF() { return f2-f1+1; }
+    @Override public int sizeE() { return e2-e1+1; }
 
-    @Override
-    public int sizeE() { return e2-e1+1; }
-
-    @Override
-    public boolean containsE(int ei) { return (e1 <= ei && ei <= e2); }
-    
-    @Override
-    public boolean containsF(int fi) { return (f1 <= fi && fi <= f2); }
+    @Override public boolean containsE(int ei) { return (e1 <= ei && ei <= e2); }
+    @Override public boolean containsF(int fi) { return (f1 <= fi && fi <= f2); }
 
     @Override
     public String toString() {
@@ -299,10 +336,138 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       consistencizedE = new BitSet();
     }
 
+    BitSet e() { return e; }
+    BitSet f() { return f; }
+
+    boolean fContiguous() { return isContiguous(f); }
+    boolean eContiguous() { return isContiguous(e); }
+
+    boolean isContiguous(BitSet bitset) {
+      int i = bitset.nextSetBit(0);
+      int j = bitset.nextClearBit(i+1);
+      return (bitset.nextSetBit(j+1) == -1);
+    }
+
+    @Override
+    public CrossSerialType getCrossSerialType() {
+      assert(sane());
+      if (isCrossSerialType1F()) return CrossSerialType.TYPE1_F; else
+      if (isCrossSerialType1E()) return CrossSerialType.TYPE1_E; else
+      if (isCrossSerialType2F()) return CrossSerialType.TYPE2_F; else
+      if (isCrossSerialType2E()) return CrossSerialType.TYPE2_E; else
+      return CrossSerialType.NONE;
+    }
+
+    private boolean isCrossSerialType2F() {
+      // Detect type 2:
+      // f: b1 a2 b3
+      // e: a1 b2 a3
+      for(int fi : bitSetToIntSet(f)) { // fi == a2
+        int firstE=Integer.MAX_VALUE, lastE=Integer.MIN_VALUE;
+        for(int ei : sent.f2e(fi)) {
+          if(e.get(ei)) {
+            if(ei < firstE) firstE = ei; // ei == a1
+            if(ei > lastE) lastE = ei; // ei == a3
+          }
+        }
+        if(firstE + 1 < lastE)  {
+          for(int ei = firstE+1; ei < lastE; ++ei) { // ei == b1
+            int firstF=Integer.MAX_VALUE, lastF=Integer.MIN_VALUE;
+            for(int fi2 : sent.e2f(ei)) {
+              if(fi2 < firstF) firstF = fi2; // fi2 == b1
+              if(fi2 > lastF) lastF = fi2; // fi2 == b3
+            }
+            if(firstF < fi && fi < lastF) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    private boolean isCrossSerialType2E() {
+      for(int ei : bitSetToIntSet(e)) {
+        int firstF=Integer.MAX_VALUE, lastF=Integer.MIN_VALUE;
+        for(int fi : sent.e2f(ei)) {
+          if(f.get(fi)) {
+            if(fi < firstF) firstF = fi;
+            if(fi > lastF) lastF = fi;
+          }
+        }
+        if(firstF + 1 < lastF) {
+          for(int fi = firstF+1; fi < lastF; ++fi) {
+            int firstE=Integer.MAX_VALUE, lastE=Integer.MIN_VALUE;
+            for(int ei2 : sent.f2e(fi)) {
+              if(ei2 < firstE) firstE = ei2;
+              if(ei2 > lastE) lastE = ei2;
+            }
+            if(firstE < ei && ei < lastE) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    private boolean isCrossSerialType1F() {
+      // Detect type 1:
+      // f:   a1   b2
+      // e:  a2 b1 a3 b3
+      for(int fi : bitSetToIntSet(f)) { // fi == a1
+        int firstE=Integer.MAX_VALUE, lastE=Integer.MIN_VALUE;
+        for(int ei : sent.f2e(fi)) {
+          if(ei < firstE) firstE = ei; // ei == a2
+          if(ei > lastE) lastE = ei; // ei == a3
+        }
+        for(int ei = firstE; ei <= lastE; ++ei) { // ei == b1
+          for(int fi2 : sent.e2f(ei)) {
+            if(fi != fi2) { // fi2 == b2
+              for(int ei2 : sent.f2e(fi2)) {
+                if(ei2 < firstE || ei2 > lastE) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    private boolean isCrossSerialType1E() {
+      // Detect case 1:
+      // e:   a1   b2
+      // f:  a2 b1 a3 b3
+      for(int ei : bitSetToIntSet(e)) { // ei == a1
+        int firstF=Integer.MAX_VALUE, lastF=Integer.MIN_VALUE;
+        for(int fi : sent.e2f(ei)) {
+          if(fi < firstF) firstF = fi; // fi == a2
+          if(fi > lastF) lastF = fi; // fi == a3
+        }
+        for(int fi = firstF; fi <= lastF; ++fi) { // fi == b1
+          for(int ei2 : sent.f2e(fi)) {
+            if(ei != ei2) { // ei2 == b2
+              for(int fi2 : sent.e2f(ei2)) {
+                if(fi2 < firstF || fi2 > firstF) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+      return false;
+    }
+
     public boolean sane() { return f.equals(consistencizedF) && e.equals(consistencizedE); } 
 
     public int sizeE() { return e.cardinality(); }
     public int sizeF() { return f.cardinality(); }
+
+    public int spanE() { return e.length()-e.nextSetBit(0); }
+    public int spanF() { return f.length()-f.nextSetBit(0); }
 
     public void addE(int ei) { e.set(ei); }
     public void addF(int fi) { f.set(fi); }
@@ -331,7 +496,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     @Override
     public String toString() {
-      return String.format("f={{{%s}}} e={{{%s}}}", stringWithGaps(sent.f(), f), stringWithGaps(sent.e(), e));
+      assert(sane());
+      CrossSerialType type = getCrossSerialType();
+      return String.format("f={{{%s}}} e={{{%s}}} cross-serial=%s", stringWithGaps(sent.f(), f), stringWithGaps(sent.e(), e), type);
     }
 
     @Override
@@ -349,12 +516,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     public Collection<? extends Phrase> successors(int fsize, int esize) {
-      List<AbstractPhrase> list = new LinkedList<AbstractPhrase>();
+      List<Phrase> list = new LinkedList<Phrase>();
       if(sizeF() < maxPhraseLenF) {
         for(int s : successorsIdx(f, fsize))
           list.add(new DTUPhrase(this).expandF(s));
       }
-      if(sizeE() <= maxPhraseLenE) {
+      if(sizeE() < maxPhraseLenE) {
         for(int s : successorsIdx(e, esize))
           list.add(new DTUPhrase(this).expandE(s));
       }
@@ -398,7 +565,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   @Override
   public void extractPhrases(WordAlignment sent) {
 
-    if(withGaps) {
+    if(DEBUG) {
       System.err.println("f: "+sent.f());
       System.err.println("e: "+sent.e());
       System.err.println("a: "+sent.toString());
@@ -413,8 +580,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         Phrase p = withGaps ? new DTUPhrase(sent, fi, ei) : new CTUPhrase(sent, fi, ei);
         if(p.consistencize(fi, true)) {
           if(!seen.contains(p)) {
-            if(withGaps)
-              System.err.println("dtu(m): "+p.toString());
+            if(DEBUG) System.err.println("dtu(m): "+p.toString());
             queue.add(p);
             seen.add(p);
             assert(p.sane());
@@ -427,9 +593,13 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     while(!queue.isEmpty()) {
       Phrase p = queue.poll();
       if(withGaps) {
-        System.err.println("dtu: "+p.toString());
-        assert(p.sane());
-        // TODO
+        if(DEBUG) System.err.println("dtu: "+p.toString());
+        assert(p instanceof DTUPhrase);
+        DTUPhrase dtu = (DTUPhrase) p;
+        boolean goodSpan = dtu.spanE() <= maxSpanE && dtu.spanF() <= maxSpanF;
+        boolean contiguous = dtu.eContiguous() && dtu.fContiguous();
+        if(goodSpan || contiguous)
+          extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
       } else {
         extractPhrase(sent, p.getFirstF(), p.getLastF(), p.getFirstE(), p.getLastE(), true, 1.0f);
       }

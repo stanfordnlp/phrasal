@@ -247,6 +247,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     // Each French word must be explained:
     double lex = 1.0;
     for(int fi=0; fi<alTemp.f().size();++fi) {
+      if(alTemp.f().get(fi).equals(DTUPhraseExtractor.GAP_STR))
+        continue;
       double wSum = 0.0;
       int alCount = alTemp.f2e(fi).size();
       if(alCount == 0) {
@@ -257,7 +259,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
         }
         wSum /= alCount;
       }
-      if(DEBUG_LEVEL >= 1) {
+      if(DEBUG_LEVEL >= 1 || wSum == 0.0) {
         System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
         if(wSum == 0)
           System.err.println("  WARNING: wsum = "+wSum);
@@ -278,6 +280,8 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     // Each English word must be explained:
     double lex = 1.0;
     for(int ei=0; ei<alTemp.e().size();++ei) {
+      if(alTemp.e().get(ei).equals(DTUPhraseExtractor.GAP_STR))
+        continue;
       double wSum = 0.0;
       int alCount = alTemp.e2f(ei).size();
       if(alCount == 0) {
@@ -288,8 +292,10 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
         }
         wSum /= alCount;
       }
-      if(DEBUG_LEVEL >= 1)
+      if(DEBUG_LEVEL >= 1 || wSum == 0.0)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei),wSum);
+      if(wSum == 0)
+        wSum = MIN_WSUM;
       lex *= wSum;
     }
     return lex;
