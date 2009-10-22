@@ -10,8 +10,6 @@ import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 
 import mt.base.IOTools;
-import mt.base.Sequence;
-import mt.base.IString;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
@@ -92,7 +90,9 @@ public class CombinedFeatureExtractor {
        ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
 			 MAX_CROSSINGS_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
        DTUPhraseExtractor.WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
-       DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT
+       DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT,
+       DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
+       DTUPhraseExtractor.MAX_SIZE_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -122,7 +122,7 @@ public class CombinedFeatureExtractor {
   private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq;
   private String fCorpus, eCorpus, alignCorpus, phraseExtractorInfoFile, outputFile;
   private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
-  Sequence<IString>[] fPhrases;
+  List<int[]> fPhrases;
 
   private int totalPassNumber = 1;
 
@@ -296,14 +296,14 @@ public class CombinedFeatureExtractor {
    * @param start Start index into list.
    * @param end End index into list.
    */
-  public void restrictExtractionTo(Sequence<IString>[] list, int start, int end) {
+  public void restrictExtractionTo(List<int[]> list, int start, int end) {
     assert(filterFromDev);
 
     if(end < Integer.MAX_VALUE)
       System.err.printf("Filtering against phrases: %d-%d\n", start, end-1);
 
-    for(int i=start; i<end && i<list.length; ++i) {
-      Sequence<IString> f = list[i];
+    for(int i=start; i<end && i<list.size(); ++i) {
+      int[] f = list.get(i);
       alTemps.addForeignPhraseToIndex(f);
     }
   }
@@ -312,7 +312,7 @@ public class CombinedFeatureExtractor {
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    * @param list Extract features only for this phrase list.
    */
-  public void restrictExtractionTo(Sequence<IString>[] list) {
+  public void restrictExtractionTo(List<int[]> list) {
     assert(filterFromDev);  
     restrictExtractionTo(list,0,Integer.MAX_VALUE);
   }
@@ -527,10 +527,10 @@ public class CombinedFeatureExtractor {
         throw new RuntimeException("-"+SPLIT_SIZE_OPT+" argument only possible with -"+FILTER_CORPUS_OPT+", -"+FILTER_LIST_OPT+".");
 
       PrintStream oStream = IOTools.getWriterFromFile(outputFile);
-      int size = fPhrases.length/numSplits+1;
+      int size = fPhrases.size()/numSplits+1;
       int startLine = 0;
 
-      while(startLine < fPhrases.length) {
+      while(startLine < fPhrases.size()) {
         init();
         restrictExtractionTo(fPhrases, startLine, startLine+size);
         extractFromAlignedData();

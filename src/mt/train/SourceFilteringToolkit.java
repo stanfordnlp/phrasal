@@ -30,9 +30,8 @@ public class SourceFilteringToolkit {
    * @param fFilterCorpus
    */
   @SuppressWarnings("unchecked")
-  public static Sequence<IString>[] getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF, int maxSpanF, boolean addBoundaryMarkers) {
-    AlignmentTemplates tmpSet;
-    tmpSet = new AlignmentTemplates();
+  public static List<int[]> getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF, int maxSpanF, boolean addBoundaryMarkers) {
+    AlignmentTemplates tmpSet = new AlignmentTemplates();
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     System.err.println("MaxSpanF: "+maxSpanF);
     //filterFromDev = true;
@@ -42,7 +41,8 @@ public class SourceFilteringToolkit {
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
         if(maxSpanF < Integer.MAX_VALUE) {
           assert(!addBoundaryMarkers);
-          System.err.printf("line %d...\n", lineNb);
+          if(lineNb % 10 == 0)
+            System.err.printf("line %d...\n", lineNb);
           extractDTUPhrasesFromLine(tmpSet, fLine, maxPhraseLenF, maxSpanF);
         }
         extractPhrasesFromLine(tmpSet, fLine, maxPhraseLenF, addBoundaryMarkers);
@@ -53,12 +53,14 @@ public class SourceFilteringToolkit {
       e.printStackTrace();
     }
     System.err.printf("Filtering against %d phrases.\n", tmpSet.sizeF());
-    Sequence<IString>[] phrases = new Sequence[tmpSet.sizeF()];
-    for(int i=0; i<phrases.length; ++i) {
-      int[] fArray = tmpSet.getF(i);
-      phrases[i] = new SimpleSequence<IString>(true, IStrings.toIStringArray(fArray));
-    }
-    Collections.shuffle(Arrays.asList(phrases));
+    System.gc(); System.gc(); System.gc();
+    long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
+    long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
+    System.err.printf("totalmem = %dm, freemem = %dm\n", totalMemory, freeMemory);
+    List<int[]> phrases = new ArrayList<int[]>(tmpSet.sizeF());
+    for(int i=0; i<tmpSet.sizeF(); ++i)
+      phrases.add(tmpSet.getF(i));
+    Collections.shuffle(phrases);
     return phrases;
   }
 
@@ -103,7 +105,6 @@ public class SourceFilteringToolkit {
         }
       }
     }
-    System.gc(); System.gc(); System.gc();
   }
 
 
@@ -111,14 +112,14 @@ public class SourceFilteringToolkit {
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    */
   @SuppressWarnings("unchecked")
-  public static Sequence<IString>[] getPhrasesFromList(String fileName) {
-    ArrayList<Sequence<IString>> list = new ArrayList<Sequence<IString>>();
+  public static List<int[]> getPhrasesFromList(String fileName) {
+    List<int[]> list = new ArrayList<int[]>();
     System.err.println("Filtering against list: "+fileName);
     //filterFromDev = true;
     try {
       LineNumberReader fReader = IOTools.getReaderFromFile(fileName);
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
-        Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
+        int[] f = IStrings.toIntArray(IStrings.toIStringArray(fLine.split("\\s+")));
         if(SHOW_PHRASE_RESTRICTION)
           System.err.printf("restrict to phrase: %s\n",f.toString());
         list.add(f);
@@ -127,6 +128,6 @@ public class SourceFilteringToolkit {
     } catch(IOException e) {
       e.printStackTrace();
     }
-    return list.toArray(new Sequence[list.size()]);
+    return list;
   }
 }

@@ -13,6 +13,8 @@ import java.io.PrintStream;
 import mt.base.IString;
 import mt.base.IOTools;
 import mt.base.Sequence;
+import mt.base.IStrings;
+import mt.base.SimpleSequence;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 /**
@@ -128,8 +130,10 @@ public class Subsampler {
 
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
-    phrases.addAll(Arrays.asList(SourceFilteringToolkit.getPhrasesFromFilterCorpus
-         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, Integer.MAX_VALUE, false)));
+    List<int[]> ints = SourceFilteringToolkit.getPhrasesFromFilterCorpus
+         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, Integer.MAX_VALUE, false);
+    for(int[] i : ints)
+      phrases.add(new SimpleSequence<IString>(true, IStrings.toIStringArray(i)));
 
     // Other optional arguments:
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));

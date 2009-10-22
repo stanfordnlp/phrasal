@@ -11,9 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
-import mt.base.IString;
 import mt.base.IOTools;
-import mt.base.Sequence;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
@@ -119,7 +117,7 @@ public class ThreadedFeatureExtractor {
   private int startAtLine = -1, endAtLine = -1, numSplits = 0;
   private String fCorpus, eCorpus, align, outputFile;
   private boolean filterFromDev = false, printFeatureNames = true, noAlign;
-  private Sequence<IString>[] fPhrases;
+  private List<int[]> fPhrases;
   private int totalPassNumber = 1;
   private boolean passDone = false;
 
@@ -249,14 +247,14 @@ public class ThreadedFeatureExtractor {
    * @param start Start index into list.
    * @param start End index into list.
    */
-  public void restrictExtractionTo(Sequence<IString>[] list, int start, int end) {
+  public void restrictExtractionTo(List<int[]> list, int start, int end) {
     assert(filterFromDev);  
 
     if(end < Integer.MAX_VALUE)
       System.err.printf("Filtering against phrases: %d-%d\n", start, end-1);
 
-    for(int i=start; i<end && i<list.length; ++i) {
-      Sequence<IString> f = list[i];
+    for(int i=start; i<end && i<list.size(); ++i) {
+      int[] f = list.get(i);
       alTemps.addForeignPhraseToIndex(f);
     }
   }
@@ -265,7 +263,7 @@ public class ThreadedFeatureExtractor {
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    * @param list Extract features only for this phrase list.
    */
-  public void restrictExtractionTo(Sequence<IString>[] list) {
+  public void restrictExtractionTo(List<int[]> list) {
     assert(filterFromDev);  
     restrictExtractionTo(list,0,Integer.MAX_VALUE);
   }
@@ -496,10 +494,10 @@ public class ThreadedFeatureExtractor {
       throw new RuntimeException("-"+SPLIT_SIZE_OPT+" argument only possible with -"+FILTER_CORPUS_OPT+", -"+FILTER_LIST_OPT+".");
 
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);
-    int size = fPhrases.length/numSplits+1;
+    int size = fPhrases.size()/numSplits+1;
     int startLine = 0;
 
-    while(startLine < fPhrases.length) {
+    while(startLine < fPhrases.size()) {
       init();
       restrictExtractionTo(fPhrases, startLine, startLine+size);
       extractFromAlignedData(fCorpus, eCorpus, align);

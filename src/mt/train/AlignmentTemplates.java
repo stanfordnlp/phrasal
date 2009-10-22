@@ -90,6 +90,10 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     fIndex.indexOf(Sequences.toIntArray(f), true);
   }
 
+  public synchronized void addForeignPhraseToIndex(int[] f) {
+    fIndex.indexOf(f, true);
+  }
+
   /**
    * Increment count for a given alignment for a given phrase-pair.
    */

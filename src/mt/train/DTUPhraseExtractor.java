@@ -13,11 +13,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String WITH_GAPS_OPT  = "withGaps";
 
   // Only affects phrases with gaps:
-  static public final String MAX_SPAN_OPT   = "maxSpan";
-  static public final String MAX_SPAN_E_OPT = "maxSpanE";
-  static public final String MAX_SPAN_F_OPT = "maxSpanF";
+  static public final String MAX_SPAN_OPT   = "maxDTUSpan";
+  static public final String MAX_SPAN_E_OPT = "maxDTUSpanE";
+  static public final String MAX_SPAN_F_OPT = "maxDTUSpanF";
+
+  static public final String MAX_SIZE_OPT   = "maxDTUSize";
+  static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
+  static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
   static boolean withGaps;
+  static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
   public static final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
@@ -63,6 +68,18 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     } else if((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
       maxSpanE = Integer.parseInt(s);
     }
+
+   if((s = prop.getProperty(MAX_SIZE_F_OPT)) != null) {
+      maxSizeF = Integer.parseInt(s);
+    } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
+      maxSizeF = Integer.parseInt(s);
+    }
+
+    if((s = prop.getProperty(MAX_SIZE_E_OPT)) != null) {
+      maxSizeE = Integer.parseInt(s);
+    } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
+      maxSizeE = Integer.parseInt(s);
+    }
   }
 
   static Set<Integer> bitSetToIntSet(BitSet b) {
@@ -99,7 +116,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   interface Phrase {
 
-    Collection<? extends Phrase> successors(int fsize, int esize);
+    Collection<? extends Phrase> successors(boolean growOutside, int fsize, int esize);
 
     boolean consistencize(int i, boolean source);
 
@@ -251,7 +268,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     @Override
-    public Collection<? extends Phrase> successors(int fsize, int esize) {
+    public Collection<? extends Phrase> successors(boolean growOutside, int fsize, int esize) {
       List<AbstractPhrase> list = new ArrayList<AbstractPhrase>(4);
       if(f2-f1 <= maxPhraseLenF) {
         if(f1 > 0) list.add(new CTUPhrase(this).expandLeftF());
@@ -515,14 +532,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return f.equals(dtu.f) && e.equals(dtu.e);
     }
 
-    public Collection<? extends Phrase> successors(int fsize, int esize) {
+    public Collection<? extends Phrase> successors(boolean growOutside, int fsize, int esize) {
       List<Phrase> list = new LinkedList<Phrase>();
       if(sizeF() < maxPhraseLenF) {
-        for(int s : successorsIdx(f, fsize))
+        //boolean growOutside = sizeF() < maxSizeF; // && spanF() < maxSpanF;
+        for(int s : successorsIdx(growOutside, f, fsize))
           list.add(new DTUPhrase(this).expandF(s));
       }
       if(sizeE() < maxPhraseLenE) {
-        for(int s : successorsIdx(e, esize))
+        //boolean growOutside = sizeE() < maxSizeE; // && spanE() < maxSpanE;
+        for(int s : successorsIdx(growOutside, e, esize))
           list.add(new DTUPhrase(this).expandE(s));
       }
       return list;
@@ -531,7 +550,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     private DTUPhrase expandF(int fi) { f.set(fi); return consistencize(fi, true) ? this : null; }
     private DTUPhrase expandE(int ei) { e.set(ei); return consistencize(ei, false) ? this : null; }
 
-    private Deque<Integer> successorsIdx(BitSet bitset, int size) {
+    private Deque<Integer> successorsIdx(boolean growOutside, BitSet bitset, int size) {
       Deque<Integer> ints = new LinkedList<Integer>();
       int si = 0;
       for(;;) {
@@ -548,7 +567,13 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         }
         si = ei;
       }
-      //System.err.printf("succ-idx: %s -> %s size=%d\n", bitset.toString(), ints.toString(), size);
+      if(!growOutside) {
+        if(!ints.isEmpty() && ints.getFirst() < bitset.nextSetBit(0))
+          ints.removeFirst();
+        if(!ints.isEmpty() && ints.getLast() > bitset.length()-1)
+          ints.removeLast();
+        //System.err.printf("succ-idx: %s -> %s size=%d\n", bitset.toString(), ints.toString(), size);
+      }
       return ints;
     }
   }
@@ -591,19 +616,24 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // Expand rules:
     while(!queue.isEmpty()) {
+      boolean growOutside = true;
       Phrase p = queue.poll();
       if(withGaps) {
         if(DEBUG) System.err.println("dtu: "+p.toString());
         assert(p instanceof DTUPhrase);
         DTUPhrase dtu = (DTUPhrase) p;
         boolean goodSpan = dtu.spanE() <= maxSpanE && dtu.spanF() <= maxSpanF;
+        boolean goodSize = dtu.sizeE() <= maxSizeE && dtu.sizeF() <= maxSizeF;
         boolean contiguous = dtu.eContiguous() && dtu.fContiguous();
-        if(goodSpan || contiguous)
+        if(contiguous || (goodSpan && goodSize)) {
           extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+        } else {
+          growOutside = false;
+        }
       } else {
         extractPhrase(sent, p.getFirstF(), p.getLastF(), p.getFirstE(), p.getLastE(), true, 1.0f);
       }
-      for(Phrase sp : p.successors(sent.f().size(), sent.e().size())) {
+      for(Phrase sp : p.successors(growOutside, sent.f().size(), sent.e().size())) {
         if(sp != null && !seen.contains(sp)) {
           queue.offer(sp);
           seen.add(sp);
