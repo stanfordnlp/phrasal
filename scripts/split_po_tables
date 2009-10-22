@@ -21,12 +21,11 @@ use mt_utils qw(&load_ptable_fh &filter_ptable &dump_ptable &remove_unreachable_
 
 my $pfile = $ARGV[0];
 my $ofile = $ARGV[1];
-#my $minp = $ARGV[2];
-my $sz = $ARGV[2];
-$sz = 6 unless defined $sz;
+my $numSz = $ARGV[2];
+my $deps = $ARGV[3] || 0;
+$numSz = 6 unless defined $numSz;
 
-my ($ptable,$nfeat) = load_ptable_fh(*STDIN, align => 1, index => 1);
-#filter_ptable($ptable,2,$minp) if($minp > 0);
+my ($ptable,$nfeat) = load_ptable_fh(*STDIN, index => 1, deps => $deps);
 remove_unreachable_phrases($ptable);
 
 if($pfile =~ /\.gz$/) { open(P,"| gzip > $pfile"); }
@@ -36,8 +35,8 @@ if($ofile =~ /\.gz$/) { open(O,"| gzip > $ofile"); }
 else { open(O,"> $ofile"); }
 binmode(O,":utf8");
 
-dump_ptable($ptable, fh => *P, first => 0, size => $nfeat-$sz, align => 1);
-dump_ptable($ptable, fh => *O, first => ($nfeat-$sz), size => $sz);
+dump_ptable($ptable, fh => *P, first => 0, size => $nfeat-$numSz, extra => 1);
+dump_ptable($ptable, fh => *O, first => ($nfeat-$numSz), size => $numSz);
 
 close(P);
 close(O);

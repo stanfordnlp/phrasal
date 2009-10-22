@@ -38,7 +38,7 @@ sub load_ptable {
 # Load phrase pairs, alignment, and scores from a phrase table:
 sub load_ptable_fh {
 	my ($fh,%opts) = @_;
-	my $align = $opts{align};
+	my $deps = $opts{deps};
 	my $last = $opts{last} || -1;
 	my %ptable;
 	binmode($fh,":utf8");
@@ -48,18 +48,12 @@ sub load_ptable_fh {
 		chomp;
 		print STDERR "loading $i...\n" if(++$i % 100000 == 0);
 		last if($last == $i);
-		my ($f,$e,@els) = split(/ \|\|\| /);
-		my $feat;
-		my $id;
-		my ($al1,$al2);
-		if($align) {
-			$feat = $els[2];
-			($al1,$al2) = ($els[0],$els[1]);
-		} else {
-			$feat = $els[0];
-		}
+		my ($f,@extra) = split(/ \|\|\| /);
+		my $e = $extra[0];
+		my $feat = pop @extra;
 		my @feat = split(/\s+/,$feat);
-		$ptable{$f}{$e} = [\@feat, $al1, $al2];
+		$e = join(':',@extra[0..5]) if($deps);
+		$ptable{$f}{$e} = [\@feat, @extra];
 		my $lsz = scalar @feat;
 		if($sz == -1) { $sz = $lsz } else { assert($sz == $lsz) }
 	}
@@ -86,24 +80,23 @@ sub dump_ptable {
 	my $size = defined $opts{size} ? $opts{size} : -1;
 	my $last = $first+$size-1;
 	my $fh = $opts{fh} || *STDOUT;
-	my $align = $opts{align};
+	my $extra = $opts{extra};
 	print STDERR "first: $first last: $last\n";
 	my ($f,$p);
 	while (($f,$p) = each %{$ptable}) {
 		my ($e,$v);
 		while (($e,$v) = each %$p) {
 			next unless defined $v;
+			my ($feat,@extra) = @$v;
 			my $scores; 
-			my $v2 = $v->[0];
 	    if($first >= 0) {
-				$scores = join(' ',@{$v2}[$first..$last]);
+				$scores = join(' ',@{$feat}[$first..$last]);
 			} else {
-				$scores = join(' ',@$v2);
+				$scores = join(' ',@$feat);
 			}
-			if($align) {
-				print $fh "$f ||| $e ||| $v->[1] ||| $v->[2] ||| $scores\n";
-			} else {
-				print $fh "$f ||| $e ||| $scores\n";
+			my $extraStr = $extra ? join(' ||| ', @extra) : $extra[0];
+			print $fh "$f ||| $extraStr ||| $scores\n";
+			if($extra) {
 			}
 		}
 	}

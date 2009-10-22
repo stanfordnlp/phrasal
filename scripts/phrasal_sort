@@ -2,10 +2,12 @@
 
 my %sents;
 
+my $mThreaded = 1;
 while(<STDIN>) {
-	if(/^(\d+):(.*)/) {
+	if($mThreaded && /^(\d+):(.*)/) {
 		$sents{$1} = $2
 	} else {
+		$mThreaded=0;
 		print;
 	}
 }
@@ -14,3 +16,5 @@ for(my $i=0;;++$i) {
 	last if(!defined $sents{$i});
 	print "$sents{$i}\n";
 }
+
+#print STDERR "IN: $i\n"

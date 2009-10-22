@@ -88,12 +88,15 @@ sub handle_arg {
   } elsif ($arg =~ /^--java-flags=.*/) {
      $java_flags = $arg;
      $java_flags =~ s/^--java-flags=//g;
+		 print STDERR "JAVA FLAGS: $java_flags\n";
   } elsif ($arg =~ /^--phrasal-flags=.*/) {
      $phrasal_flags = $arg;
      $phrasal_flags =~ s/^--phrasal-flags=//g;
+		 print STDERR "PHRASAL FLAGS: $phrasal_flags\n";
   } elsif ($arg =~ /^--opt-flags=.*/) {
      $opt_flags = $arg;
      $opt_flags =~ s/^--opt-flags=//g;
+		 print STDERR "OPT FLAGS: $opt_flags\n";
   } else {
      print stderr "Unrecognized flag $arg\n";
      exit -1;

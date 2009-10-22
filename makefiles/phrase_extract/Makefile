@@ -358,7 +358,7 @@ $(DEVID).%.$N.bt_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEV
 
 ### Split translation features and re-ordering features:
 %.tables/phrase-table.gz: %.tables/filtered.gz
-	zcat $< | $(SCRIPTS)/split_po_tables $(*F).tables/phrase-table.gz $(*F).tables/$(LO_ID).gz $(LO_SZ) >& $@.log
+	zcat $< | $(SCRIPTS)/split_po_tables $(*F).tables/phrase-table.gz $(*F).tables/$(LO_ID).gz $(LO_SZ) $(DEP) >& $@.log
 %.tables/filtered.gz: %.tables/merged.gz
 	zcat $< | $(SCRIPTS)/filter_po_tables $(*F).tables/filtered.gz /dev/null $(MINP) 0 >& $@.log
 
