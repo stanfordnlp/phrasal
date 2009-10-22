@@ -92,7 +92,7 @@ public class CombinedFeatureExtractor {
        DTUPhraseExtractor.WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
        DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
-       DTUPhraseExtractor.MAX_SIZE_OPT
+       DTUPhraseExtractor.MAX_SIZE_OPT, DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);

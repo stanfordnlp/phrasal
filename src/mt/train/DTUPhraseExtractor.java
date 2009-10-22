@@ -11,6 +11,7 @@ import java.util.*;
 public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   static public final String WITH_GAPS_OPT  = "withGaps";
+  static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT   = "maxDTUSpan";
@@ -21,7 +22,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps;
+  static boolean withGaps, onlyCrossSerialDTU;
   static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
@@ -55,6 +56,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
        ("WARNING: using DTUPhraseExtractor without gaps! "+
         "Gapless phrases are more efficiently extracted using LinearTimePhraseExtractor");
     }
+
+    // With gaps or not:
+    optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
+    onlyCrossSerialDTU = optStr != null && !optStr.equals("false");
 
     String s;
     if((s = prop.getProperty(MAX_SPAN_F_OPT)) != null) {
@@ -606,6 +611,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         if(p.consistencize(fi, true)) {
           if(!seen.contains(p)) {
             if(DEBUG) System.err.println("dtu(m): "+p.toString());
+            if(onlyCrossSerialDTU && p.getCrossSerialType() == CrossSerialType.NONE) 
+              continue;
             queue.add(p);
             seen.add(p);
             assert(p.sane());
@@ -633,12 +640,13 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       } else {
         extractPhrase(sent, p.getFirstF(), p.getLastF(), p.getFirstE(), p.getLastE(), true, 1.0f);
       }
-      for(Phrase sp : p.successors(growOutside, sent.f().size(), sent.e().size())) {
-        if(sp != null && !seen.contains(sp)) {
-          queue.offer(sp);
-          seen.add(sp);
+      if(!onlyCrossSerialDTU)
+        for(Phrase sp : p.successors(growOutside, sent.f().size(), sent.e().size())) {
+          if(sp != null && !seen.contains(sp)) {
+            queue.offer(sp);
+            seen.add(sp);
+          }
         }
-      }
     }
   }
 }
