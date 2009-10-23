@@ -45,6 +45,10 @@ public class IOTools {
 		return set;
 	}
 
+	public static LineNumberReader getReaderFromFile(File fileName) {
+	  return getReaderFromFile(fileName.getPath());
+	}
+	
   public static LineNumberReader getReaderFromFile(String fileName) {
     LineNumberReader reader = null;
     File f = new File(fileName);
@@ -53,7 +57,7 @@ public class IOTools {
         reader = new LineNumberReader
               (new InputStreamReader(new GZIPInputStream(new FileInputStream(f))));
       } else {
-         reader = new LineNumberReader(new FileReader(f));
+         reader = new LineNumberReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(f)),"UTF-8"));
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -61,16 +65,20 @@ public class IOTools {
     }
     return reader;
   }
+  
+  public static PrintStream getWriterFromFile(File fileName) {
+    return getWriterFromFile(fileName.getPath());
+  }
 
-  public static PrintStream getWriterFromFile(String outputFile) {
+  public static PrintStream getWriterFromFile(String fileName) {
     PrintStream output = null;
     try {
-      if(outputFile != null) {
-        System.err.println("output file: "+outputFile);
-        if(outputFile.endsWith(".gz")) {
-          output = new PrintStream(new GZIPOutputStream(new FileOutputStream(outputFile)));
+      if(fileName != null) {
+        System.err.println("output file: "+fileName);
+        if(fileName.endsWith(".gz")) {
+          output = new PrintStream(new GZIPOutputStream(new FileOutputStream(fileName)));
         } else {
-          output = new PrintStream(new FileOutputStream(outputFile));
+          output = new PrintStream(new FileOutputStream(fileName),false,"UTF-8");
         }
       }
     } catch (IOException e) {
