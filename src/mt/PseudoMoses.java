@@ -73,6 +73,7 @@ public class PseudoMoses {
   public static final String EVAL_METRIC = "eval-metric";
   public static final String LEARNING_METRIC = "learning-metric";
   public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
+  public static final String GAPS_OPT = "gaps";
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   public static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
   static final Set<String> REQUIRED_FIELDS = new HashSet<String>();
@@ -103,7 +104,7 @@ public class PseudoMoses {
 				PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
 				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
 				MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
-				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS}));
+				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT}));
 		IGNORED_FIELDS.addAll(Arrays.asList(new String[] { INPUT_FACTORS_OPT,
 				MAPPING_OPT, FACTOR_DELIM_OPT }));
 		ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -681,6 +682,15 @@ public class PseudoMoses {
       generateMosesNBestList = Boolean.parseBoolean(config.get(MOSES_NBEST_LIST_OPT).get(0));
     }
 
+    boolean withGaps = config.containsKey(GAPS_OPT);
+    if(withGaps) {
+      List<String> gapOpts = config.get(GAPS_OPT);
+      if(gapOpts.size() != 1)
+        throw new UnsupportedOperationException();
+      int maxPhraseSpan = Integer.parseInt(gapOpts.get(0));
+      DTUTable.setMaxPhraseSpan(maxPhraseSpan);
+    }
+
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
 		System.err.printf("Phrase table: %s\n", phraseTable);
 		
@@ -700,11 +710,14 @@ public class PseudoMoses {
 									PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable,
 									optionLimit));
 		} else {
-		   phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
+       String generatorName = withGaps ?
+         PhraseGeneratorFactory.DTU_GENERATOR :
+         PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
+       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
 				.<String> factory(featurizer, scorer,
-						PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, phraseTable)
+						generatorName, phraseTable)
 						: PhraseGeneratorFactory.<String> factory(featurizer, scorer,
-								PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, phraseTable,
+								generatorName, phraseTable,
 								optionLimit));
 		}
 

@@ -118,17 +118,21 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		}
 		intTransOpts.add(new IntArrayTranslationOption(translationInts, scores, alignment));
 	}
-		
-	/**
+
+  public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
+    this(phraseFeaturizer, scorer, filename, TRIE_INDEX);
+  }
+
+  /**
 	 * 
 	 * @param filename
 	 * @throws IOException
 	 */
-	public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
+	public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename, boolean trieIndex) throws IOException {
 		super(phraseFeaturizer, scorer);
-		File f = new File(filename);
+    File f = new File(filename);
 		name = String.format("Pharaoh(%s)", f.getName());
-		foreignIndex = TRIE_INDEX ? new TrieIntegerArrayIndex() : new DynamicIntegerArrayIndex();
+		foreignIndex = trieIndex ? new TrieIntegerArrayIndex() : new DynamicIntegerArrayIndex();
 		translations = new ArrayList<List<IntArrayTranslationOption>>();
 		int countScores = init(f);
 		scoreNames = getScoreNames(countScores);

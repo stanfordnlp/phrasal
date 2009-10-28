@@ -14,21 +14,23 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
 
   // Only affects phrases with gaps:
-  static public final String MAX_SPAN_OPT   = "maxDTUSpan";
+  static public final String MAX_SPAN_OPT = "maxDTUSpan";
   static public final String MAX_SPAN_E_OPT = "maxDTUSpanE";
   static public final String MAX_SPAN_F_OPT = "maxDTUSpanF";
 
-  static public final String MAX_SIZE_OPT   = "maxDTUSize";
+  static public final String MAX_SIZE_OPT = "maxDTUSize";
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
   static boolean withGaps, onlyCrossSerialDTU;
-  static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE;
+  static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
+  //public static final IString GAP_STR = new IString("x"); // uppercase, so shouldn't clash with other symbols
   public static final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
 
   enum CrossSerialType { NONE, TYPE1_E, TYPE1_F, TYPE2_E, TYPE2_F }
+  static final BitSet noCrossSerial = new BitSet();
 
   private static final boolean DEBUG = System.getProperty("DebugDTU") != null;
   private static final int QUEUE_SZ = 1024;
@@ -85,6 +87,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
       maxSizeE = Integer.parseInt(s);
     }
+
+    if(DEBUG)
+      AlignmentTemplateInstance.lazy = false;
   }
 
   static Set<Integer> bitSetToIntSet(BitSet b) {
@@ -150,7 +155,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     Set<Integer> toConsistencizeInE();
     Set<Integer> toConsistencizeInF();
 
-    CrossSerialType getCrossSerialType();
+    BitSet getCrossSerialTypes();
+
+    String getCrossings();
   }
 
   abstract class AbstractPhrase implements Phrase {
@@ -235,7 +242,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     @Override
-    public CrossSerialType getCrossSerialType() { return CrossSerialType.NONE; }
+    public BitSet getCrossSerialTypes() { return noCrossSerial; }
+
+    @Override
+    public String getCrossings() { return ""; }
 
     public boolean sane() { return true; }
 
@@ -371,13 +381,14 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     @Override
-    public CrossSerialType getCrossSerialType() {
+    public BitSet getCrossSerialTypes() {
       assert(sane());
-      if (isCrossSerialType1F()) return CrossSerialType.TYPE1_F; else
-      if (isCrossSerialType1E()) return CrossSerialType.TYPE1_E; else
-      if (isCrossSerialType2F()) return CrossSerialType.TYPE2_F; else
-      if (isCrossSerialType2E()) return CrossSerialType.TYPE2_E; else
-      return CrossSerialType.NONE;
+      BitSet b = new BitSet();
+      if (isCrossSerialType1F()) b.set(CrossSerialType.TYPE1_F.ordinal());
+      if (isCrossSerialType1E()) b.set(CrossSerialType.TYPE1_E.ordinal());
+      if (isCrossSerialType2F()) b.set(CrossSerialType.TYPE2_F.ordinal());
+      if (isCrossSerialType2E()) b.set(CrossSerialType.TYPE2_E.ordinal());
+      return b;
     }
 
     private boolean isCrossSerialType2F() {
@@ -519,8 +530,28 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     @Override
     public String toString() {
       assert(sane());
-      CrossSerialType type = getCrossSerialType();
-      return String.format("f={{{%s}}} e={{{%s}}} cross-serial=%s", stringWithGaps(sent.f(), f), stringWithGaps(sent.e(), e), type);
+      String fp = stringWithGaps(sent.f(), f);
+      String ep = stringWithGaps(sent.e(), e);
+      return String.format("f={{{%s}}} e={{{%s}}}", fp, ep);
+    }
+
+    @Override
+    public String getCrossings() {
+      assert(sane());
+      BitSet types = getCrossSerialTypes();
+      String fp = stringWithGaps(sent.f(), f);
+      String ep = stringWithGaps(sent.e(), e);
+      StringBuilder str = new StringBuilder();
+      for(CrossSerialType t : CrossSerialType.values()) {
+        if(types.get(t.ordinal())) {
+          str.append(t).append(": ").append
+            (String.format("f={{{%s}}} e={{{%s}}} || f={{{%s}}} e={{{%s}}}", fp, ep,
+               sent.f().subsequence(f.nextSetBit(0),f.length()),
+               sent.e().subsequence(e.nextSetBit(0),e.length())
+            )).append("\n");
+        }
+      }
+      return str.toString();
     }
 
     @Override
@@ -610,8 +641,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         Phrase p = withGaps ? new DTUPhrase(sent, fi, ei) : new CTUPhrase(sent, fi, ei);
         if(p.consistencize(fi, true)) {
           if(!seen.contains(p)) {
-            if(DEBUG) System.err.println("dtu(m): "+p.toString());
-            if(onlyCrossSerialDTU && p.getCrossSerialType() == CrossSerialType.NONE) 
+            //if(DEBUG) System.err.println("dtu(m): "+p.toString());
+            if(onlyCrossSerialDTU && p.getCrossSerialTypes().isEmpty()) 
               continue;
             queue.add(p);
             seen.add(p);
@@ -626,14 +657,15 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       boolean growOutside = true;
       Phrase p = queue.poll();
       if(withGaps) {
-        if(DEBUG) System.err.println("dtu: "+p.toString());
         assert(p instanceof DTUPhrase);
         DTUPhrase dtu = (DTUPhrase) p;
         boolean goodSpan = dtu.spanE() <= maxSpanE && dtu.spanF() <= maxSpanF;
-        boolean goodSize = dtu.sizeE() <= maxSizeE && dtu.sizeF() <= maxSizeF;
+        boolean goodSize = dtu.sizeE() <= maxSizeE && dtu.sizeF() <= maxSizeF && (dtu.sizeE()+dtu.sizeF()) <= maxCSize;
         boolean contiguous = dtu.eContiguous() && dtu.fContiguous();
         if(contiguous || (goodSpan && goodSize)) {
-          extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+          AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+          if(DEBUG && alTemp != null)
+            System.err.printf("dtu: %s\n%s", alTemp.toString(false), p.getCrossings());
         } else {
           growOutside = false;
         }

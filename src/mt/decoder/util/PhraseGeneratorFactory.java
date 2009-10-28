@@ -12,6 +12,7 @@ import mt.base.NewDynamicPhraseTable;
 import mt.base.PharaohPhraseTable;
 import mt.base.IString;
 import mt.base.SymbolFilter;
+import mt.base.DTUTable;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.feat.UnknownWordFeaturizer;
 import mt.tools.NumericFilter;
@@ -25,6 +26,7 @@ public class PhraseGeneratorFactory {
 	public static final String CONCATENATIVE_LIST_GENERATOR = "tablelist"; 
 	public static final String BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR = "augmentedtablelist";
 	public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
+  public static final String DTU_GENERATOR = "dtu";
 	public static final String DYNAMIC_GENERATOR = "dpt";
 	public static final String PHAROAH_PHRASE_TABLE = "pharaohphrasetable";
 	public static final String PHAROAH_PHRASE_TABLE_ALT = "ppt";
@@ -39,8 +41,8 @@ public class PhraseGeneratorFactory {
 	 */
 	@SuppressWarnings("unchecked")
 	static public <FV>  PhraseGenerator<IString> factory(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String... pgSpecs) throws IOException {
-		
-		if (pgSpecs.length == 0) {
+
+    if (pgSpecs.length == 0) {
 			throw new RuntimeException(
 					"PhraseGenerator specifier is empty. PhraseGenerators "+
 					"must be explicitly identified and parameterized.");
@@ -62,7 +64,9 @@ public class PhraseGeneratorFactory {
 				String filename = fields[1];
 				if (type.equals(PHAROAH_PHRASE_TABLE) || type.equals(PHAROAH_PHRASE_TABLE_ALT)) {
 					phraseTables.add((new PharaohPhraseTable(phraseFeaturizer, scorer, filename)));					
-				} else {
+        } else if(type.equals(DTU_GENERATOR)) {
+          phraseTables.add((new DTUTable(phraseFeaturizer, scorer, filename)));
+        } else {
 					throw new RuntimeException(String.format("Unknown phrase table type: '%s'\n", type));
 				}
 			}
@@ -87,8 +91,11 @@ public class PhraseGeneratorFactory {
 				
 				return new CombinedPhraseGenerator<IString,FV>(augmentedList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			}
-		} else if (pgName.equals(PSEUDO_PHARAOH_GENERATOR)) {
-			List<PhraseGenerator<IString>> pharoahList = new LinkedList<PhraseGenerator<IString>>();
+		} else if (pgName.equals(PSEUDO_PHARAOH_GENERATOR) || pgName.equals(DTU_GENERATOR)) {
+
+      boolean withGaps = pgName.equals(DTU_GENERATOR);
+
+      List<PhraseGenerator<IString>> pharoahList = new LinkedList<PhraseGenerator<IString>>();
 			List<PhraseGenerator<IString>> finalList = new LinkedList<PhraseGenerator<IString>>();
 			if (pgSpecs.length < 2) {
 				throw new RuntimeException("A phrase table filename must be specified.");
@@ -109,8 +116,10 @@ public class PhraseGeneratorFactory {
 			String[] filenames = pgSpecs[1].split(":");
 			for (String filename : filenames) {
 				System.err.printf("loading pt: %s\n", filename);
-				pharoahList.add(new PharaohPhraseTable<FV>(phraseFeaturizer, 
-					scorer, filename));
+        if(withGaps)
+          pharoahList.add(new DTUTable<FV>(phraseFeaturizer, scorer, filename));
+        else
+          pharoahList.add(new PharaohPhraseTable<FV>(phraseFeaturizer, scorer, filename));
 			}
 
 			finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList, 

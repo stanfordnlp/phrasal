@@ -1,7 +1,9 @@
 package mt.base;
 
 import it.unimi.dsi.fastutil.longs.*;
+import edu.stanford.nlp.util.Function;
 
+import java.util.Arrays;
 
 /**
  * Implementation of IntegerArrayIndex as a trie. This trie implementation 
@@ -14,11 +16,13 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
 
   private static final int GROWTH_FACTOR = 4; // slow growth, we want to save space
 
-  private static final int IDX_ROOT = 0;
-  private static final int IDX_NOSUCCESSOR = Integer.MIN_VALUE;
+  public static final int IDX_ROOT = 0;
+  public static final int IDX_NOSUCCESSOR = Integer.MIN_VALUE;
 
-  private final Long2IntOpenHashMap map; 
-  // maps transitions to next state. Each transition is a long, whose 32 first bits 
+  private Function<Integer,Integer> transitionNormalizer;
+
+  public final Long2IntOpenHashMap map;
+  // maps transitions to next state. Each transition is a long, whose 32 first bits
   // identify an input symbol, and 32 last bits identify the current state.
 
   private int lastStateIdx = IDX_ROOT;
@@ -32,9 +36,17 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
       map = new Long2IntOpenHashMap(sz);
     else
       map = new Long2IntOpenHashMap();
-    map.growthFactor(GROWTH_FACTOR); 
+    map.growthFactor(GROWTH_FACTOR);
     map.defaultReturnValue(IDX_NOSUCCESSOR);
     System.err.println("TrieIntegerArrayIndex: constructor.");
+    this.transitionNormalizer = new Function<Integer,Integer>() {
+      public Integer apply(Integer x) { return x; }
+    };
+  }
+
+  TrieIntegerArrayIndex(int sz, Function<Integer,Integer> transitionNormalizer) {
+    this(sz);
+    this.transitionNormalizer = transitionNormalizer;
   }
 
   int supplementalHash(int h) {
@@ -42,7 +54,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     return ((h << 7) - h + (h >>> 9) + (h >>> 17));
   }
 
-  private synchronized long getTransition(int curState, int input) {
+  public synchronized long getTransition(int curState, int input) {
     // Perform some bit manipulations because Long's hashCode is not particularly clever.
     int input2 = supplementalHash(input);
     int curState2 = supplementalHash(curState);
@@ -61,13 +73,15 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   }
 
   public synchronized int indexOf(int[] input, boolean add) {
+    //System.err.println("adding: "+ Arrays.toString(IStrings.toStringArray(input)));
     int curState = IDX_ROOT;
-    for(int i=0; i<input.length; ++i) {
-      long transition = getTransition(curState, input[i]);
+    for (int anInput : input) {
+      long transition = getTransition(curState, transitionNormalizer.apply(anInput));
+      assert (map != null);
       int nextState = map.get(transition);
-      if(nextState == IDX_NOSUCCESSOR) {
-        if(!add) return -1;
-        if(lastStateIdx == Integer.MAX_VALUE)
+      if (nextState == IDX_NOSUCCESSOR) {
+        if (!add) return -1;
+        if (lastStateIdx == Integer.MAX_VALUE)
           throw new RuntimeException("Running out of state indices!");
         nextState = ++lastStateIdx;
         map.put(transition, nextState);

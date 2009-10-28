@@ -129,7 +129,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   }
 
   // For DTU phrase extraction:
-  void extractPhrase(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous, boolean isConsistent) {
+  AlignmentTemplateInstance extractPhrase(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous, boolean isConsistent) {
 
     // Check if alTemp meets length requirements:
     if(fs.cardinality() > maxExtractedPhraseLenF || es.cardinality() > maxExtractedPhraseLenE) {
@@ -138,7 +138,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       }
       if(DETAILED_DEBUG)
         System.err.printf("skipping too long: %d %d\n",fs.cardinality(),es.cardinality());
-      return;
+      return null;
     }
 
     // Create alTemp:
@@ -157,10 +157,12 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     }
 
     // Run each feature extractor for each altemp:
-    if(!needAlGrid)
+    if(!needAlGrid) {
       for(AbstractFeatureExtractor e : extractors) {
         e.extract(alTemp, null);
       }
+    }
+    return alTemp;
   }
 
   public void extractPhrasesFromAlGrid(WordAlignment sent) {
