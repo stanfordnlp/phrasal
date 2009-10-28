@@ -44,6 +44,8 @@ abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<
 				}
 			}
 		}
+    //for(ConcreteTranslationOption<TK> o : opts)
+    //  System.err.println(o);
 		return opts;
 	}
 	

@@ -50,13 +50,13 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
     assert(targets == null);
     List<ConcreteTranslationOption<IString>> opts = new LinkedList<ConcreteTranslationOption<IString>>();
 		int sequenceSz = sequence.size();
-    System.err.println("sent: "+sequence);
+    //System.err.println("sent: "+sequence);
 
     assert(foreignIndex instanceof TrieIntegerArrayIndex);
     TrieIntegerArrayIndex trieIndex = (TrieIntegerArrayIndex) foreignIndex;
 
     for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
-      System.err.println("s: "+startIdx);
+      //System.err.println("s: "+startIdx);
       Deque<MatchState> deque = new LinkedList<MatchState>();
       deque.add(new MatchState(TrieIntegerArrayIndex.IDX_ROOT, startIdx));
       while(!deque.isEmpty()) {
@@ -117,7 +117,9 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
         }
       }
 		}
-		return opts;
+    //for(ConcreteTranslationOption<IString> o : opts)
+    //  System.err.println(o);
+    return opts;
   }
 
 	@Override
