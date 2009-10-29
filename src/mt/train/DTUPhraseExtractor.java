@@ -27,7 +27,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
-  //public static final IString GAP_STR = new IString("x"); // uppercase, so shouldn't clash with other symbols
   public static final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
 
   enum CrossSerialType { NONE, TYPE1_E, TYPE1_F, TYPE2_E, TYPE2_F }

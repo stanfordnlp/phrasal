@@ -9,6 +9,7 @@ import mt.decoder.util.*;
 public class InfererBuilderFactory {
 	public static final String GREEDY_DECODER = "greedy";
 	public static final String MULTIBEAM_DECODER = "multibeam";
+  public static final String DTU_DECODER = "dtu";
 	public static final String COVERAGEBEAM_DECODER = "coveragebeam";
 	public static final String UNIBEAM_DECODER = "unibeam";
 	public static final String DEFAULT_INFERER = MULTIBEAM_DECODER;
@@ -20,6 +21,7 @@ public class InfererBuilderFactory {
 	static {
 		BEAM_INFERERS.add(UNIBEAM_DECODER);
 		BEAM_INFERERS.add(MULTIBEAM_DECODER);
+    BEAM_INFERERS.add(DTU_DECODER);
 		BEAM_INFERERS.add(COVERAGEBEAM_DECODER);
 	}
 
@@ -61,9 +63,16 @@ public class InfererBuilderFactory {
 			if (beamSize != -1) builder.setBeamCapacity(beamSize);
 			if (beamType != null) builder.setBeamType(beamType);
 			return builder;
-		} 
-		
-		throw new RuntimeException(String.format( 
+		}
+
+    if (infererName.equals(DTU_DECODER)) {
+      DTUDecoder.DTUDecoderBuilder<IString,String> builder = DTUDecoder.builder();
+      if (beamSize != -1) builder.setBeamCapacity(beamSize);
+      if (beamType != null) builder.setBeamType(beamType);
+      return builder;
+    }
+
+    throw new RuntimeException(String.format(
 				"Unrecognized Inferer '%s'", infererName));
 	}
 

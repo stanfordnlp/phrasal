@@ -38,7 +38,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
   public static final String DISABLED_SCORES = System.getProperty(DISABLED_SCORES_PROPERTY);
 
   final String[] scoreNames;
-	final String name;
+	String name;
 	
 	
 	// Originally, PharaohPhraseTables were backed by a nice simple

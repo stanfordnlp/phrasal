@@ -2,6 +2,7 @@ package mt.base;
 
 import mt.decoder.util.Hypothesis;
 import mt.decoder.feat.StatefulFeaturizer;
+import mt.PseudoMoses;
 
 
 /**
@@ -234,10 +235,14 @@ public class Featurizable<TK,FV> {
 	 * @param concreteOpt
 	 */
 	private void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
-		int transSz = concreteOpt.abstractOption.translation.elements.length;
-		int foreignSz = concreteOpt.abstractOption.foreign.elements.length;
-		int limit;
-		int[] range =  new int[2];
+    int transSz = concreteOpt.abstractOption.translation.elements.length;
+    int foreignSz = PseudoMoses.withGaps ?
+         // MG2009: these two lines should achieve the same result for phrases without gaps, 
+         // though the first one is slower:
+      concreteOpt.foreignCoverage.length()-concreteOpt.foreignCoverage.nextSetBit(0) :
+      concreteOpt.abstractOption.foreign.elements.length;
+    int limit;
+    int[] range =  new int[2];
 		range[PHRASE_START] = foreignPosition;
 		range[PHRASE_END]   = foreignPosition + foreignSz;
 		limit = translationPosition+transSz; 

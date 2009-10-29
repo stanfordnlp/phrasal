@@ -15,6 +15,7 @@ import mt.PseudoMoses;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 
+
 /**
  * 
  * 
@@ -85,16 +86,20 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		boolean useITGConstraints = DEFAULT_USE_ITG_CONSTRAINTS;
 		boolean internalMultiThread;
 
-		public MultiBeamDecoderBuilder<TK,FV> setInternalMultiThread(boolean internalMultiThread) {
+    @Override
+		public AbstractBeamInfererBuilder<TK,FV> setInternalMultiThread(boolean internalMultiThread) {
 			this.internalMultiThread = internalMultiThread;
 			return this;
-    }		
-		public MultiBeamDecoderBuilder<TK,FV> setMaxDistortion(int maxDistortion) {
+    }
+
+    @Override
+    public AbstractBeamInfererBuilder<TK,FV> setMaxDistortion(int maxDistortion) {
 			this.maxDistortion = maxDistortion;
 			return this;
 		}
-		
-		public MultiBeamDecoderBuilder<TK,FV> useITGConstraints(boolean useITGConstraints) {
+
+    @Override
+    public AbstractBeamInfererBuilder<TK,FV> useITGConstraints(boolean useITGConstraints) {
 			this.useITGConstraints = useITGConstraints;
 			return this;
 		}

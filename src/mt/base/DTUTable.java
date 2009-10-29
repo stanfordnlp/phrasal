@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.io.IOException;
+import java.io.File;
 
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
@@ -21,6 +22,8 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
   public DTUTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
 		super(phraseFeaturizer, scorer, filename, true);
     System.err.println("DTU phrase table: "+filename);
+    File f = new File(filename);
+    name = String.format("DTU(%s)", f.getName());
 	}
 
   class MatchState {
@@ -117,8 +120,15 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
         }
       }
 		}
-    //for(ConcreteTranslationOption<IString> o : opts)
-    //  System.err.println(o);
+    /*
+    for(ConcreteTranslationOption<IString> o : opts) {
+      System.err.println("concrete translation option: ");
+      System.err.println("       pos: "+o.foreignPos);
+      System.err.println("  coverage: "+o.foreignCoverage);
+      System.err.println("        fr: "+o.abstractOption.foreign);
+      System.err.println("        en: "+o.abstractOption.translation);
+    }
+    */
     return opts;
   }
 

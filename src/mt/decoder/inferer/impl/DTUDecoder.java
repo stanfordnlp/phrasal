@@ -1,4 +1,4 @@
-package mt.decoder.dtu;
+package mt.decoder.inferer.impl;
 
 import java.io.*;
 import java.util.*;
@@ -23,7 +23,6 @@ import edu.stanford.nlp.stats.ClassicCounter;
  * @param <TK>
  * @param <FV>
  */
-// TODO: use new projects/mt/src/mt/decoder/util/Hypothesis.java
 public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	// class level constants
 	public static final String DEBUG_PROPERTY = "DTUDecoderDebug";
@@ -86,16 +85,20 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		boolean useITGConstraints = DEFAULT_USE_ITG_CONSTRAINTS;
 		boolean internalMultiThread;
 
-		public DTUDecoderBuilder<TK,FV> setInternalMultiThread(boolean internalMultiThread) {
+    @Override
+    public AbstractBeamInfererBuilder<TK,FV> setInternalMultiThread(boolean internalMultiThread) {
 			this.internalMultiThread = internalMultiThread;
 			return this;
-    }		
-		public DTUDecoderBuilder<TK,FV> setMaxDistortion(int maxDistortion) {
+    }
+
+    @Override
+    public AbstractBeamInfererBuilder<TK,FV> setMaxDistortion(int maxDistortion) {
 			this.maxDistortion = maxDistortion;
 			return this;
 		}
-		
-		public DTUDecoderBuilder<TK,FV> useITGConstraints(boolean useITGConstraints) {
+
+    @Override
+		public AbstractBeamInfererBuilder<TK,FV> useITGConstraints(boolean useITGConstraints) {
 			this.useITGConstraints = useITGConstraints;
 			return this;
 		}
@@ -167,7 +170,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 			System.err.printf("Translation options after reduction by output space constraint: %d\n", options.size());
 		}
 		
-		OptionGrid<TK> optionGrid = new OptionGrid<TK>(options, foreign);
+		DTUOptionGrid<TK> optionGrid = new DTUOptionGrid<TK>(options, foreign);
 		
 		// insert initial hypothesis
 		Hypothesis<TK,FV> nullHyp = new Hypothesis<TK,FV>(translationId, foreign, heuristic, options);
@@ -307,10 +310,10 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	}
 	
   class BeamExpander implements Runnable{
-  	Beam<Hypothesis<TK,FV>>[] beams; int beamId; int foreignSz; OptionGrid<TK> optionGrid; ConstrainedOutputSpace<TK,FV> constrainedOutputSpace; int translationId; int threadId; int threadCount;
+  	Beam<Hypothesis<TK,FV>>[] beams; int beamId; int foreignSz; DTUOptionGrid<TK> optionGrid; ConstrainedOutputSpace<TK,FV> constrainedOutputSpace; int translationId; int threadId; int threadCount;
   	CountDownLatch cdl;
   	
-  public  BeamExpander(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, OptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {
+  public  BeamExpander(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, DTUOptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {
   	this.beams = beams;
   	this.beamId = beamId;
   	this.foreignSz = foreignSz;
@@ -330,7 +333,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	}
   
   @SuppressWarnings("unchecked")
-	public int expandBeam(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, OptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {
+	public int expandBeam(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, DTUOptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {
 		int optionsApplied = 0;
 		int hypPos = -1;
 		int totalHypothesesGenerated = 0;
@@ -349,17 +352,16 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		  hypPos++;
 			if (hypPos % threadCount != threadId) continue;
 			if (hyp == null) continue;
-			//System.err.printf("\nExpanding hyp: %s\n", hyp);
+			//System.err.printf("\nExpanding hyp: %s\n", hyp); // TODO: remove
 			int localOptionsApplied = 0;
-		    //	System.err.printf("Start position: %d\n", hyp.foreignCoverage.nextClearBit(0));
+		  //System.err.printf("Start position: %d\n", hyp.foreignCoverage.nextClearBit(0)); // TODO: remove
 			int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
-			int priorStartPos = (hyp.featurizable == null ? 0 : hyp.featurizable.foreignPosition);
-			int priorEndPos   = (hyp.featurizable == null ? 0 : hyp.featurizable.foreignPosition + hyp.featurizable.foreignPhrase.size());
-			
+
 			for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
 				int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
-				
-				// check distortion limit					
+
+        //System.err.printf("endPosMax = %d ", endPosMax);
+        // check distortion limit
 				if (endPosMax < 0) {
 					if (maxDistortion >= 0 && startPos != firstCoverageGap) {
 						endPosMax = Math.min(firstCoverageGap + maxDistortion+1, foreignSz);
@@ -367,48 +369,22 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 						endPosMax = foreignSz;
 					}
 				}
-				if (useITGConstraints) {
-					boolean ITGOK = true;						
-					if (startPos > priorStartPos) {
-						// System.err.printf("startPos(%d) > priorStartPos(%d)\n", startPos, priorStartPos);
-						for (int pos = priorEndPos+1; pos < startPos; pos++) {
-							if (hyp.foreignCoverage.get(pos) && !hyp.foreignCoverage.get(pos-1)) {
-								//System.err.printf("not okay-1 %d & %d - %s\n" ,pos, pos-1, hyp.foreignCoverage);
-								ITGOK = false;
-								break;
-							}
-						}
-					} else {
-						//System.err.printf("startPos(%d) < priorStartPos(%d)\n", startPos, priorStartPos);
-						for (int pos = startPos; pos < priorStartPos; pos++) {
-							if (hyp.foreignCoverage.get(pos) && !hyp.foreignCoverage.get(pos+1)) {
-							//	System.err.printf("not okay-2 %d & %d - %s\n" ,pos, pos+1, hyp.foreignCoverage);
-								ITGOK = false;
-								break;
-							}
-						}
-					}
-					if (!ITGOK) continue;
-					//System.err.printf("okay\n");
-				}
+        //System.err.printf("%d\n", endPosMax);
 				for (int endPos = startPos; endPos < endPosMax; endPos++) {
+          // TODO: remove
           List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid.get(startPos, endPos);
+          //System.err.printf("startPos=%d endPos=%d options=%s\n", startPos, endPos, applicableOptions == null ? "0" : applicableOptions.size());
 					if (applicableOptions == null) continue;
 					// System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
 			
 					for (ConcreteTranslationOption<TK> option : applicableOptions) {
+            //System.err.printf("option: %s\n", option.abstractOption.foreign);
             // TODO: splice phrase if gaps:
 						assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
 
 						if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option)) {
 							continue;
 						}
-						
-					
-						/* if (option.abstractOption.phraseScoreNames[0] == UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG && 
-							hypNextForeignPos != startPos) { 
-								continue; // lets not allow untranslated foreign phrases to float around randomly
-						} */
 						
 						Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
 								option, hyp.length, hyp, featurizer,
@@ -430,9 +406,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 							
 						}
 						totalHypothesesGenerated++;
-						
-						
-						
+
 						if (newHyp.featurizable.untranslatedTokens != 0) {
 							if (constrainedOutputSpace != null && !constrainedOutputSpace.allowablePartial(newHyp.featurizable)) {
 								continue;
@@ -493,5 +467,53 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		}
 		alignmentDump.append("\n");
 	}
-}
 
+  public class DTUOptionGrid<TK> {
+    @SuppressWarnings("unchecked")
+    private List[] grid;
+    private int foreignSz;
+
+    /**
+     *
+     * @param options
+     * @param foreign
+     */
+    @SuppressWarnings("unchecked")
+    public DTUOptionGrid(List<ConcreteTranslationOption<TK>> options, Sequence<TK> foreign) {
+      foreignSz = foreign.size();
+      grid = new List[foreignSz*foreignSz];
+      for (int startIdx = 0; startIdx < foreignSz; startIdx++) {
+        for (int endIdx = startIdx; endIdx < foreignSz; endIdx++) {
+          grid[getIndex(startIdx, endIdx)] = new LinkedList();
+        }
+      }
+      for (ConcreteTranslationOption<TK> opt : options) {
+        int startPos = opt.foreignPos;
+        int endPos = opt.foreignCoverage.length() - 1;
+        //int endPos = opt.foreignCoverage.nextClearBit(opt.foreignPos) - 1;
+        grid[getIndex(startPos, endPos)].add(opt);
+      }
+    }
+
+    /**
+     *
+     * @param startPos
+     * @param endPos
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public List<ConcreteTranslationOption<TK>> get(int startPos, int endPos) {
+      return grid[getIndex(startPos, endPos)];
+    }
+
+    /**
+     *
+     * @param startPos
+     * @param endPos
+     * @return
+     */
+    private int getIndex(int startPos, int endPos) {
+      return startPos*foreignSz + endPos;
+    }
+  }
+}

@@ -1,5 +1,10 @@
 #!/usr/bin/perl -w
 
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
 ## Draws an alignment grid, given files that are sets of 4 lines:
 ##   chinese
 ##   english

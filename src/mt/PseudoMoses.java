@@ -144,6 +144,7 @@ public class PseudoMoses {
 		+ System.currentTimeMillis();
 
   public static int local_procs = DEFAULT_LOCAL_PROCS;
+  public static boolean withGaps = false;
 
   List<Inferer<IString, String>> inferers;
 	Inferer<IString, String> refInferer;
@@ -682,7 +683,7 @@ public class PseudoMoses {
       generateMosesNBestList = Boolean.parseBoolean(config.get(MOSES_NBEST_LIST_OPT).get(0));
     }
 
-    boolean withGaps = config.containsKey(GAPS_OPT);
+    withGaps = config.containsKey(GAPS_OPT);
     if(withGaps) {
       List<String> gapOpts = config.get(GAPS_OPT);
       if(gapOpts.size() != 1)
@@ -738,8 +739,8 @@ public class PseudoMoses {
     inferers = new ArrayList<Inferer<IString, String>>(local_procs == 0 ? 1 : local_procs);
     for (int i = 0; i < (local_procs == 0 ? 1 : local_procs); i++) {
   		// Configure InfererBuilder
-  		MultiBeamDecoder.MultiBeamDecoderBuilder infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder) InfererBuilderFactory
-  		.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
+      AbstractBeamInfererBuilder infererBuilder = (AbstractBeamInfererBuilder) InfererBuilderFactory
+        .factory(withGaps ? InfererBuilderFactory.DTU_DECODER : InfererBuilderFactory.MULTIBEAM_DECODER);
   		infererBuilder.setIncrementalFeaturizer(featurizer.clone());
   		infererBuilder.setPhraseGenerator(phraseGenerator.clone());
   		infererBuilder.setScorer(scorer);
