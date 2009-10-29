@@ -1,4 +1,4 @@
-package mt.discrimdistortion;
+package mt.train.discrimdistortion;
 
 import java.util.Date;
 import java.util.List;

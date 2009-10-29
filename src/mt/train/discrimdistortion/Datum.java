@@ -1,4 +1,4 @@
-package mt.discrimdistortion;
+package mt.train.discrimdistortion;
 
 public class Datum {
 	

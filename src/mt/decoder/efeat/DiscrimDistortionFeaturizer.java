@@ -15,8 +15,8 @@ import mt.base.Sequence;
 import mt.base.SimpleSequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.StatefulFeaturizer;
-import mt.discrimdistortion.Datum;
-import mt.discrimdistortion.DistortionModel;
+import mt.train.discrimdistortion.Datum;
+import mt.train.discrimdistortion.DistortionModel;
 
 public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, String> implements IncrementalFeaturizer<IString, String> {
 
