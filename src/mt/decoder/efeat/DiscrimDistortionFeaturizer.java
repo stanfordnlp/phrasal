@@ -10,7 +10,9 @@ import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.IOTools;
 import mt.base.IString;
+import mt.base.IStrings;
 import mt.base.Sequence;
+import mt.base.SimpleSequence;
 import mt.decoder.feat.IncrementalFeaturizer;
 import mt.decoder.feat.StatefulFeaturizer;
 import mt.discrimdistortion.Datum;
@@ -22,7 +24,9 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
 
   //Shared objects for all threads
   private static DistortionModel model;
-  private final List<List<String>> posTags;  
+  private final List<List<String>> posTags;
+  private static Map<Sequence<IString>,Integer> sentenceToId;
+  
   private final float DEFAULT_C;
   private final float TOL;
 
@@ -38,44 +42,56 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
 
     assert args.length == 4;
 
+    //The serialized distortion model
     File modelFile = new File(args[0]);
     if(!modelFile.exists())
-      throw new RuntimeException(String.format("%s: Model file %s does not exist!\n", this.getClass().getName(), modelFile));
+      throw new RuntimeException(String.format("%s: Model file %s does not exist!\n", this.getClass().getName(), modelFile.getPath()));
 
     try {
       model = (DistortionModel) IOUtils.readObjectFromFile(modelFile);
     } catch (IOException e) {
       e.printStackTrace();
+      throw new RuntimeException("Could not load discriminative distortion model");
+
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
+      throw new RuntimeException("Could not load discriminative distortion model");
     }
 
+    //The tagged file to be translated
     File tagFile = new File(args[1]);
     if(!tagFile.exists())
-      throw new RuntimeException(String.format("%s: Tag file %s does not exist!\n",this.getClass().getName(),tagFile));
+      throw new RuntimeException(String.format("%s: Tag file %s does not exist!\n",this.getClass().getName(),tagFile.getPath()));
 
     posTags = getTagCache(tagFile);
-
-    DEFAULT_C = Float.parseFloat(args[2]);
-    TOL = Float.parseFloat(args[3]);
+    
+    DEFAULT_C = Float.parseFloat(args[2].trim());
+    TOL = Float.parseFloat(args[3].trim());
   }
 
+  
   //Re-factor to use a jagged array if memory is an issue
   private List<List<String>> getTagCache(final File tagFile) {
     List<List<String>> posTags = new ArrayList<List<String>>();
+    sentenceToId = new HashMap<Sequence<IString>,Integer>();
 
     LineNumberReader reader = IOTools.getReaderFromFile(tagFile);
     try {
-      while(reader.ready()) {
+      for(int transId = 0; reader.ready(); transId++) {
         StringTokenizer st = new StringTokenizer(reader.readLine());
+        List<String> words = new ArrayList<String>();
         List<String> tagsForSentence = new ArrayList<String>();
 
         while(st.hasMoreTokens()) {
           String[] parts = st.nextToken().split("#");
           assert parts.length == 2;   
           assert !parts[1].equals("");
+          words.add(parts[0].trim().intern());
           tagsForSentence.add(parts[1].intern());
         }
+
+        Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toIStringArray(words));
+        sentenceToId.put(foreign, transId);
 
         posTags.add(tagsForSentence);
       }
@@ -83,8 +99,8 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
       reader.close();
 
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
+      throw new RuntimeException("Error while reading POS tag file");
     }
 
     return posTags;
@@ -99,13 +115,15 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
 
 
     //Compute the previous and target length constants
+    //Units are (target length / source length)
     final float lastC = (f.prior == null) ? DEFAULT_C :
-      (float) f.prior.hyp.foreignSequence.size() / (float) f.prior.partialTranslation.size();
-    final float thisC = (float) f.hyp.foreignSequence.size() / (float) f.partialTranslation.size();
+      (float) f.prior.partialTranslation.size() / (float) f.prior.hyp.foreignSequence.size();
+    final float thisC = (float) f.partialTranslation.size() / (float) f.hyp.foreignSequence.size();
     final float thisTLen = sLen * thisC;
 
 
     //Setup the state (with sanity check)
+    //TODO WSGDEBUG -- Need to clone here
     int[][] f2e = (f.prior == null) ? new int[f.foreignSentence.size()][] : (int[][]) f.prior.getState(this);
     if(f.done)
       for(int i = 0; i < f2e.length; i++)
@@ -115,7 +133,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
 
     //Calculate the feature score adjustment (if needed)
     double adjustment = 0.0;
-    if(Math.abs(lastC - thisC) < TOL) {
+    if(Math.abs(lastC - thisC) > TOL) {
       final float lastTLen = sLen * lastC;
 
       double oldScore = 0.0;
@@ -126,8 +144,8 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
         int sIdx = f2e[i][SOURCE_IDX];
         int tIdx = f2e[i][TARGET_IDX];
 
-        float oldRel = ((float) tIdx / lastTLen) - ((float) sIdx / sLen);
-        float newRel = ((float) tIdx / thisTLen) - ((float) sIdx / sLen);
+        float oldRel = (((float) tIdx / lastTLen) * 100.0f) - (((float) sIdx / sLen) * 100.0f);
+        float newRel = (((float) tIdx / thisTLen) * 100.0f) - (((float) sIdx / sLen) * 100.0f);
 
         DistortionModel.Class oldClass = DistortionModel.discretizeDistortion(oldRel);
         DistortionModel.Class newClass = DistortionModel.discretizeDistortion(newRel);
@@ -147,19 +165,19 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
     //Iterate over target side alignments
     double optScore = 0;
     for(int i = 0; i < tOptLen; i++) {
-      int[] sIndices = f.option.abstractOption.alignment.e2f(i);
+      final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
       for(int j = 0; j < sIndices.length; j++) {
         final int sIdx = sOffset + sIndices[j];
 
         if(sIdx >= sLen)
-          throw new RuntimeException(String.format("%d alignment index for sentence of length %f",sIdx,sLen));
+          throw new RuntimeException(String.format("%d alignment index for source sentence of length %f",sIdx,sLen));
         
         //Greedily score source words
         if(f2e[sIdx] != null) continue;
 
         //Calculate the score for this source word
         final int tIdx = tOffset + i;
-        float relMovement = ((float) tIdx / thisTLen) - ((float) sIdx / sLen);
+        float relMovement = (((float) tIdx / thisTLen) * 100.0f) - (((float) sIdx / sLen) * 100.0f);
 
         optScore += computeScoreAndUpdateAlignments(sIdx,tIdx,relMovement,f2e);      
       }      
@@ -171,7 +189,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
         int tIdx = interpolateTargetPosition(i,f2e);
         int sIdx = sOffset + i;
 
-        float relMovement = ((float) tIdx / thisTLen) - ((float) sIdx / sLen);
+        float relMovement = (((float) tIdx / thisTLen) * 100.0f) - (((float) sIdx / sLen) * 100.0f);
         optScore += computeScoreAndUpdateAlignments(sIdx,tIdx,relMovement,f2e);
       }
     }
@@ -201,11 +219,13 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
     int rightTargetIdx = -1;
     for(int offset = 1; offset <= maxOffset; offset++) {
       final int leftSIdx = sIdx - offset;
-      final int rightSIdx = sIdx + offset;
       if(leftSIdx >= 0 && f2e[leftSIdx] != null)
         leftTargetIdx = f2e[leftSIdx][TARGET_IDX];
+
+      final int rightSIdx = sIdx + offset;
       if(rightSIdx < f2e.length && f2e[rightSIdx] != null)
         rightTargetIdx = f2e[rightSIdx][TARGET_IDX];
+      
       if(leftTargetIdx != -1 || rightTargetIdx != -1)
         break;
     }
@@ -224,27 +244,31 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {
 
-    //WSGDEBUG Need to get the translationId here somehow
-    //Could pass a file in from the constructor...
-    int translationId = 0;
-    //f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+    if(!sentenceToId.containsKey(foreign))
+      throw new RuntimeException(String.format("No translation ID for sentence:\n%s\n",foreign.toString()));
+    
+    final int translationId = sentenceToId.get(foreign);
 
+    assert posTags.get(translationId).size() == foreign.size();
+    
     logProbCache = new double[foreign.size()][];
     sLen = (float) foreign.size();
 
     final int slenBin = DistortionModel.getSlenBin(foreign.size());
+    final int numClasses = DistortionModel.Class.values().length;
 
     for(int sIdx = 0; sIdx < logProbCache.length; sIdx++) {
+      final String word = foreign.get(sIdx).toString().trim();
       final int rPos = DistortionModel.getSlocBin((float) sIdx / (float) sLen);
-      final boolean isOOV = model.featureIndex.contains(foreign.get(sIdx));
+      final boolean isOOV = model.featureIndex.contains(word);
       final String posTag = posTags.get(translationId).get(sIdx);
 
       //Setup the datum
       float[] feats = new float[model.getFeatureDimension()];
       int featPtr = 0;
       for(DistortionModel.Feature feat : model.featureIndex) {
-        if(feat == DistortionModel.Feature.Word)
-          feats[featPtr++] = (isOOV) ? 0.0f : (float) model.wordIndex.indexOf(foreign.get(sIdx).toString());
+        if(feat == DistortionModel.Feature.Word && !isOOV)
+          feats[featPtr++] = (float) model.wordIndex.indexOf(word);
         else if(feat == DistortionModel.Feature.CurrentTag)
           feats[featPtr++] = (float) model.tagIndex.indexOf(posTag);
         else if(feat == DistortionModel.Feature.RelPosition)
@@ -256,12 +280,10 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
       final Datum datum = new Datum(0.0f,feats);
 
       //Cache the log probabilities for each class
-      logProbCache[sIdx] = new double[DistortionModel.Class.values().length];
+      logProbCache[sIdx] = new double[numClasses];
       for(DistortionModel.Class c : DistortionModel.Class.values())
         logProbCache[sIdx][c.ordinal()] = Math.log(model.prob(datum,c,isOOV));
-
     }
-
   }
 
 
