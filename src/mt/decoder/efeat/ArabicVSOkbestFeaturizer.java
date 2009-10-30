@@ -10,17 +10,26 @@ import mt.PseudoMoses;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
+import mt.base.IOTools;
 import mt.base.IString;
+import mt.base.IStrings;
 import mt.base.Sequence;
+import mt.base.SimpleSequence;
 import mt.decoder.feat.IncrementalFeaturizer;
+import mt.decoder.feat.StatefulFeaturizer;
 
-public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, String> {
+public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String> implements IncrementalFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "ArabicVSOkbestFeaturizer";
-  private static final double DEFAULT_FEATURE_VALUE = -99.0;
-  private static final double SCALING_CONSTANT = 10.0;
   
+  private static Map<Sequence<IString>,Integer> sentenceToId;
   private final ArabicKbestSubjectBank subjectBank;
+  private final int verbGap;
+  
+  //Set by initialize()
+  private double nullAnalysisLogProb;
+  private Map<Integer,List<Triple<Integer,Integer,Double>>> verbMap = null;
+  private List<Integer> orderedVerbs = null;
 
   public ArabicVSOkbestFeaturizer(String... args) {
 
@@ -30,12 +39,37 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
     if(!subjFile.exists())
       throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),subjFile.getPath()));
 
-    int maxSubjLen = Integer.parseInt(args[1].trim());
-    int verbDistance = Integer.parseInt(args[2].trim());
-    
-    //Do the loading here to accommodate multi-threading
     subjectBank = ArabicKbestSubjectBank.getInstance();
-    subjectBank.load(subjFile,maxSubjLen,verbDistance);
+    subjectBank.load(subjFile);
+
+    File unkFile = new File(args[1]);
+    if(!unkFile.exists())
+      throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),unkFile.getPath()));
+    
+    sentenceToId = getSentenceMap(unkFile);
+    
+    verbGap = Integer.parseInt(args[2].trim());
+  }
+
+  
+  private Map<Sequence<IString>, Integer> getSentenceMap(File unkFile) {
+    Map<Sequence<IString>,Integer> sentenceMap = new HashMap<Sequence<IString>,Integer>();
+    
+    LineNumberReader reader = IOTools.getReaderFromFile(unkFile);
+    try {
+      for(int transId = 0; reader.ready(); transId++) {
+        String[] tokens = reader.readLine().split("\\s+");
+        Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
+        sentenceMap.put(foreign, transId);
+      }
+      reader.close();
+      
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Error while reading unk file");
+    }
+    
+    return sentenceMap;
   }
 
   /**
@@ -46,14 +80,12 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
    * @param f
    * @return
    */
-  private boolean isCovered(final Pair<Integer,Integer> span, final int verbIdx, final Featurizable<IString,String> f) {
+  private boolean isCovered(int leftSubjectBoundary, int rightSubjectBoundary, final int verbIdx, final Featurizable<IString,String> f) {
     if(f == null) 
       return false;
 
     boolean verbCovered = f.hyp.foreignCoverage.get(verbIdx);
 
-    final int leftSubjectBoundary = span.first();
-    final int rightSubjectBoundary = span.second();
     final int length = rightSubjectBoundary - leftSubjectBoundary + 1;
     
     final BitSet fCoverage = 
@@ -63,42 +95,10 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
 
     return verbCovered && subjCovered;
   }
-
-  /**
-   * Returns the index of the last subject for which the feature *could* have fired.
-   * 
-   * @param f
-   * @param subjects
-   * @param verbs
-   * @return
-   */
-  private int getLastScoredSubject(final Featurizable<IString,String> f, 
-                                   final int translationId, 
-                                   final SortedSet<Integer> verbs) {    
-    int prevSubjIndex = -1;
-    for(int verbIdx : verbs) {
-      final List<Triple<Integer,Integer,Double>> subjects = subjectBank.getSubjectsForVerb(translationId, verbIdx);
-      
-      boolean isComplete = false;
-      for(Triple<Integer,Integer,Double> subjTriple : subjects) {
-        Pair<Integer,Integer> subjectSpan = new Pair<Integer,Integer>(subjTriple.first(),subjTriple.second());
-        if(isCovered(subjectSpan,verbIdx,f)) {
-          isComplete = true;
-          prevSubjIndex = verbIdx;
-          break;
-        }
-      }
-      
-      if(!isComplete)
-        break;
-    }
-    return prevSubjIndex;
-  }
   
-  
-  private int getRightTargetSideBoundary(final Pair<Integer,Integer> span, final Featurizable<IString,String> f) {
+  private int getRightTargetSideBoundary(int sLeft, int sRight, final Featurizable<IString,String> f) {
     int maxRightIndex = -1;
-    for(int i = span.first(); i <= span.second(); i++) {
+    for(int i = sLeft; i <= sRight; i++) {
       final int[] eRange = f.f2tAlignmentIndex[i];
       if(eRange == null) continue;
 
@@ -110,95 +110,179 @@ public class ArabicVSOkbestFeaturizer implements IncrementalFeaturizer<IString, 
     return maxRightIndex;
   }
   
-  /**
-   * Returns the feature score for the specified subject vector. Greedily matches the first completed subject.
-   * 
-   * @param f
-   * @param translationId
-   * @param verbIdx
-   * @return
-   */
-  private double getFeatureScore(final Featurizable<IString,String> f, 
-                                 final int translationId, 
-                                 final int verbIdx) {
-        
-    double accumulatedProbability = 0.0;
+  private boolean matches(Featurizable<IString, String> f,
+                          Triple<Integer, Integer, Double> subject, int thisVerbIdx) {
     
-    final List<Triple<Integer,Integer,Double>> subjects = subjectBank.getSubjectsForVerb(translationId, verbIdx);
-    for(Triple<Integer,Integer,Double> subjSpanAndScore : subjects) {
-      Pair<Integer,Integer> subjectSpan = new Pair<Integer,Integer>(subjSpanAndScore.first(),subjSpanAndScore.second());
+    if(isCovered(subject.first(),subject.second(),thisVerbIdx,f)) {
+      int rightSubjTargetBoundary = getRightTargetSideBoundary(subject.first(), subject.second(), f);
+      int rightVerbTargetBoundary = getRightTargetSideBoundary(thisVerbIdx,thisVerbIdx,f);
+      int leftVerbTargetBoundary = f.f2tAlignmentIndex[thisVerbIdx][Featurizable.PHRASE_START];
       
-      if(isCovered(subjectSpan,verbIdx,f)) {
-        
-        final int eSubjRightBound = getRightTargetSideBoundary(subjectSpan,f);
-        final int eVerbRightBound = getRightTargetSideBoundary(new Pair<Integer,Integer>(verbIdx,verbIdx), f);
-        
-        if(eVerbRightBound >= eSubjRightBound)
-          accumulatedProbability += Math.exp(subjSpanAndScore.third());
-      }
+      if(rightSubjTargetBoundary == rightVerbTargetBoundary || rightSubjTargetBoundary + 1 == leftVerbTargetBoundary)
+        return true;
     }
 
-    return (accumulatedProbability == 0.0) ? 0.0 : Math.log(accumulatedProbability);
+    return false;
   }
-
+  
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
     
-    //Get the verbs. Return if there aren't any
-    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
-    SortedSet<Integer> verbs = subjectBank.getVerbs(translationId);
-    if(verbs == null || verbs.size() == 0)
+    //No subjects
+    if(verbMap == null)
       return null;
     
-    //WSGDEBUG
-    boolean VERBOSE = (translationId == 14);
-    //|| (translationId == 16) || (translationId == 41);
+//    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+//    boolean VERBOSE = (translationId == 14);
     
-    //Get the subject vector that we should consider. Return if we have covered them all
-    final int lastSubjectVect = getLastScoredSubject(f.prior,translationId,verbs);
-    final int currentSubjectVect = getLastScoredSubject(f,translationId,verbs);
+    //Check for the last verb scored
+    final int lastVerbIdx = (f.prior == null) ? -1 : (Integer) f.prior.getState(this);
+    final int thisVerbIdx = orderedVerbs.get(lastVerbIdx + 1);
+    
+    //Score as soon as the verb is laid down
+    if(f.hyp.foreignCoverage.get(thisVerbIdx)) {
       
-    //These two will be equal for the last subject, so the feature will not fire
-    if(lastSubjectVect != currentSubjectVect) {
-
-      //WSGDEBUG
-      if(VERBOSE) {
-        System.err.printf("WSGDEBUG tId %d: Completed subject %d --> %d\n",translationId,lastSubjectVect,currentSubjectVect);
-        System.err.println("=== Current Featurizer ===");
-        System.err.printf(" TransOpt: %s ||| %s\n", f.foreignPhrase.toString(), f.translatedPhrase.toString());
-        System.err.printf(" cov: %s\n", f.option.foreignCoverage.toString());
-        System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
-        System.err.printf(" hyp cov: %s\n", f.hyp.foreignCoverage.toString());
-        System.err.println("=== Prior Featurizer ===");
-        if(f.prior != null) {
-          System.err.printf(" TransOpt: %s ||| %s\n", f.prior.foreignPhrase.toString(), f.prior.translatedPhrase.toString());
-          System.err.printf(" cov: %s\n", f.prior.option.foreignCoverage.toString());
-          System.err.printf(" hyp: %s\n", f.prior.partialTranslation.toString());
-          System.err.printf(" hyp cov: %s\n", f.prior.hyp.foreignCoverage.toString());        
+      List<Triple<Integer,Integer,Double>> subjectAnalyses = verbMap.get(thisVerbIdx);
+      if(subjectAnalyses == null)
+        throw new RuntimeException(String.format("%s: No subjects for verb idx (%d)",thisVerbIdx));
+      
+      Triple<Integer,Integer,Double> nullAnalysis = null;
+      double logProb = 0.0;
+      for(Triple<Integer,Integer,Double> subject : subjectAnalyses) {
+        if(subject.first() == -1 && subject.second() == -1) {
+          nullAnalysis = subject;
+        } else if(matches(f,subject,thisVerbIdx)) {
+          logProb = subject.third();
+          break;
         }
-      }      
-      //Get the accumulated feature score
-      double featScore = SCALING_CONSTANT * getFeatureScore(f,translationId,currentSubjectVect);
-      if(VERBOSE)
-        System.err.printf(" FEATURE SCORE {%f}\n",featScore);
-      
-      if(f.prior == null)
-        return new FeatureValue<String>(FEATURE_NAME, (featScore == 0.0) ? DEFAULT_FEATURE_VALUE : featScore);
-      if(featScore == 0.0)
-        return null;                            //Case 2: None of the re-orderings are correct
-      else if(lastSubjectVect == -1)            //Case 3: Fire the feature and back out the penalty
-        return new FeatureValue<String>(FEATURE_NAME, featScore - DEFAULT_FEATURE_VALUE);
-      else                                      //Case 4: Otherwise just fire the feature
-        return new FeatureValue<String>(FEATURE_NAME, featScore);
+      }
 
-    } else if(f.prior == null)
-      return new FeatureValue<String>(FEATURE_NAME, DEFAULT_FEATURE_VALUE);
-          
+      f.setState(this, thisVerbIdx);
+
+      //Compute the feature score
+      if(logProb != 0.0)
+        return new FeatureValue<String>(FEATURE_NAME,logProb);
+      else if(nullAnalysis != null)
+        return new FeatureValue<String>(FEATURE_NAME,nullAnalysis.third());
+      else
+        return new FeatureValue<String>(FEATURE_NAME,nullAnalysisLogProb);
+    }
+    
+    f.setState(this, lastVerbIdx);
+
     return null;
+    
+      //WSGDEBUG
+//      if(VERBOSE) {
+//        System.err.printf("WSGDEBUG tId %d: Completed subject %d --> %d\n",translationId,lastSubjectVect,currentSubjectVect);
+//        System.err.println("=== Current Featurizer ===");
+//        System.err.printf(" TransOpt: %s ||| %s\n", f.foreignPhrase.toString(), f.translatedPhrase.toString());
+//        System.err.printf(" cov: %s\n", f.option.foreignCoverage.toString());
+//        System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
+//        System.err.printf(" hyp cov: %s\n", f.hyp.foreignCoverage.toString());
+//        System.err.println("=== Prior Featurizer ===");
+//        if(f.prior != null) {
+//          System.err.printf(" TransOpt: %s ||| %s\n", f.prior.foreignPhrase.toString(), f.prior.translatedPhrase.toString());
+//          System.err.printf(" cov: %s\n", f.prior.option.foreignCoverage.toString());
+//          System.err.printf(" hyp: %s\n", f.prior.partialTranslation.toString());
+//          System.err.printf(" hyp cov: %s\n", f.prior.hyp.foreignCoverage.toString());        
+//        }
+//      }
   }
 
+
+  public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {
+    
+    if(!sentenceToId.containsKey(foreign))
+      throw new RuntimeException(String.format("%s: No mapping found for sentence:\n%s\n",foreign.toString()));
+    
+    final int translationId = sentenceToId.get(foreign);
+    List<ArabicKbestAnalysis> analyses = subjectBank.getAnalyses(translationId);
+    
+    if(analyses != null) {
+      
+      //Set the null analysis log prob and get the verbs
+      Set<Integer> allVerbs = new HashSet<Integer>();
+      double nullAnalRealAccumulator = 0.0;
+      double minLogCRFScore = Integer.MAX_VALUE;
+      for(ArabicKbestAnalysis anal : analyses) {
+        if(anal.subjects.keySet().size() == 0)
+          nullAnalRealAccumulator += Math.exp(anal.logCRFScore);
+        else {
+          allVerbs.addAll(anal.verbs);
+          if(anal.logCRFScore < minLogCRFScore)
+            minLogCRFScore = anal.logCRFScore;
+        }
+      }
+      
+      if(nullAnalRealAccumulator == 0.0)
+        nullAnalysisLogProb = Math.log(nullAnalRealAccumulator);
+      else
+        nullAnalysisLogProb = 2.0 * Math.log(minLogCRFScore);
+      
+      
+      //Set the other probabilities (for each verb)
+      verbMap = new HashMap<Integer,List<Triple<Integer,Integer,Double>>>(allVerbs.size());
+      
+      for(int verbIdx : allVerbs) {
+        Map<Pair<Integer,Integer>,Double> subjects = new HashMap<Pair<Integer,Integer>,Double>();
+        
+        //Iterate over the analyses and compute the real-valued numerator(s) and
+        //denominator
+        double denom = 0.0;
+        double nullNumerator = 0.0;
+        for(ArabicKbestAnalysis anal : analyses) {
+          
+          boolean noAnalysis = true;
+          for(int gap = 1; gap <= verbGap; gap++) {
+            if(anal.subjects.containsKey(verbIdx + gap)) {
+              denom += Math.exp(anal.logCRFScore);
+              noAnalysis = true;
+              Pair<Integer,Integer> thisSubj = new Pair<Integer,Integer>(verbIdx + gap, anal.subjects.get(verbIdx + gap));
+              
+              if(subjects.containsKey(thisSubj)) {
+                double realScore = subjects.get(thisSubj);
+                realScore += Math.exp(anal.logCRFScore);
+                subjects.put(thisSubj, realScore);
+              } else {
+                subjects.put(thisSubj, Math.exp(anal.logCRFScore));
+              }
+              break;
+              
+            }
+          }
+          if(noAnalysis)
+            nullNumerator += Math.exp(anal.logCRFScore);
+        }
+        
+        //Now compute the log probabilities from the real values
+        List<Triple<Integer,Integer,Double>> probList = new ArrayList<Triple<Integer,Integer,Double>>(subjects.keySet().size());
+        
+        //Check for null analyses
+        if(nullNumerator != 0.0) {
+          double logProb = Math.log(nullNumerator / denom);
+          Triple<Integer,Integer,Double> nullAnal = new Triple<Integer,Integer,Double>(-1,-1,logProb);
+          probList.add(nullAnal);
+        }
+        
+        //Iterate over the other analyses
+        for(Map.Entry<Pair<Integer,Integer>, Double> subject : subjects.entrySet()) {
+          double logProb = Math.log(subject.getValue() / denom);
+          Pair<Integer,Integer> span = subject.getKey();
+          Triple<Integer,Integer,Double> finalSubj = new Triple<Integer,Integer,Double>(span.first(),span.second(),logProb);
+          probList.add(finalSubj);
+        }
+        
+        verbMap.put(verbIdx, probList);
+      }
+      
+      orderedVerbs = new ArrayList<Integer>(verbMap.keySet());
+      Collections.sort(orderedVerbs);
+    }
+      
+  }
   
+
   // Unused but required methods
-  public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {}
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) { return null; }
   public void reset() {}
 

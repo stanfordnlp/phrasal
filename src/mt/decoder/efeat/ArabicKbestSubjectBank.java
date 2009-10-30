@@ -3,21 +3,18 @@ package mt.decoder.efeat;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.Triple;
+import mt.base.IOTools;
 
 public class ArabicKbestSubjectBank {
   private static ArabicKbestSubjectBank thisInstance = null;
-  private final Map<Integer,AnalysisIndex> kBestSubjectBank;
+  private final Map<Integer,List<ArabicKbestAnalysis>> kBestSubjectBank;
   
   private boolean isLoaded = false;
-  private int maxVerbGap = 2;
-  private int maxSubjectLen = 5;
   
   protected static final String DELIM = "|||";
   
   protected ArabicKbestSubjectBank() {
-    kBestSubjectBank = new HashMap<Integer,AnalysisIndex>();
+    kBestSubjectBank = new HashMap<Integer,List<ArabicKbestAnalysis>>();
   }
   
   public static ArabicKbestSubjectBank getInstance() {
@@ -25,149 +22,48 @@ public class ArabicKbestSubjectBank {
       thisInstance = new ArabicKbestSubjectBank();
     return thisInstance;
   }
-  
-  private class SentenceAnalysis {
-    public SentenceAnalysis() {
-      subjSpans = new ArrayList<Pair<Integer,Integer>>();
-      verbs = new HashSet<Integer>();
-    }
-    public List<Pair<Integer,Integer>> subjSpans;
-    public Set<Integer> verbs;
-    public double score = 0.0;
-  }
-  
-  protected class AnalysisIndex {
-    private List<SentenceAnalysis> kAnalyses;
-    public boolean hasAnalysis;
-    private Map<Integer,List<Triple<Integer,Integer,Double>>> index;
-    private SortedSet<Integer> verbs;
-    private double nullRealAccumulator = 0.0;
     
-    public AnalysisIndex() {
-      kAnalyses = new ArrayList<SentenceAnalysis>();
-      verbs = new TreeSet<Integer>();
-      hasAnalysis = false;
-    }
+  /**
+   * Collapse identical analyses
+   * @param analyses
+   */
+  private List<ArabicKbestAnalysis> compress(List<ArabicKbestAnalysis> analyses) {
+    List<ArabicKbestAnalysis> compressedList = new ArrayList<ArabicKbestAnalysis>();
     
-    /**
-     * Do an insertion sort
-     */
-    public void addAnalysis(SentenceAnalysis analysis) {
-      for(int i = 0; i < kAnalyses.size(); i++) {
-        if(analysis.score > kAnalyses.get(i).score) {
-          kAnalyses.add(i, analysis);
-          verbs.addAll(analysis.verbs);
-          hasAnalysis = (verbs.size() != 0);
-          return;
+    for(int i = 0; i < analyses.size(); i++) {
+      ArabicKbestAnalysis thisAnal = (ArabicKbestAnalysis) analyses.get(i).clone();
+      for(int j = i + 1; j < analyses.size(); j++) {
+        if(thisAnal.equals(analyses.get(j))) {
+          double newLogScore = Math.log(Math.exp(thisAnal.logCRFScore) + Math.exp(analyses.get(j).logCRFScore));
+          thisAnal.logCRFScore = newLogScore;
+          analyses.remove(j);
+          j--;
         }
       }
-      kAnalyses.add(analysis);
-      hasAnalysis = (verbs.size() != 0);
+      compressedList.add(thisAnal);
     }
-    
-    public void addNullAnalysis(SentenceAnalysis analysis) {
-      if(analysis != null)
-        nullRealAccumulator += Math.exp(analysis.score);
-    }
-    
-    private void findAnalyses(final int verbIdx, final int nextVerbIdx) {
-
-      Map<Pair<Integer,Integer>,Double> subjectMap = new HashMap<Pair<Integer,Integer>,Double>();
-      
-      double noAnalysisAccumulator = 0.0;
-      for(SentenceAnalysis analysis : kAnalyses) {
-        
-        double realAnalysisScore = Math.exp(analysis.score);
-        boolean noAnalysis = true;
-        for(Pair<Integer,Integer> subject : analysis.subjSpans) {
-          int length = subject.second() - subject.first() + 1;
-          int verbGap = subject.first() - verbIdx;
-          
-          if(verbGap < 0 || length > maxSubjectLen) {
-            continue;
-          
-          } else if(verbGap <= maxVerbGap) {
-            if(subjectMap.containsKey(subject)) {
-              double score = realAnalysisScore + subjectMap.get(subject);
-              subjectMap.put(subject, score);
-            } else
-              subjectMap.put(subject, realAnalysisScore);
-            
-            noAnalysis = false;
-            
-          } else if(subject.first() >= nextVerbIdx)
-            break;
-        }
-        
-        if(noAnalysis)
-          noAnalysisAccumulator += realAnalysisScore;
-      }
-      
-      //Now convert the scores to log space and add to the index
-      List<Triple<Integer,Integer,Double>> subjList = new ArrayList<Triple<Integer,Integer,Double>>();
-      for(Pair<Integer,Integer> subject : subjectMap.keySet()) {
-        double logScore = Math.log(subjectMap.get(subject));
-        subjList.add(new Triple<Integer,Integer,Double>(subject.first(),subject.second(),logScore));
-      }
-      if(noAnalysisAccumulator != 0.0)
-        subjList.add(new Triple<Integer,Integer,Double>(-1,-1, Math.log(noAnalysisAccumulator)));
-      
-      index.put(verbIdx, subjList);
-    }
-    
-    
-    /**
-     * Accumulates negative log-likelihoods. The yes/no cases are distinguished by
-     * the span (-1 in  for should *not* re-order).
-     */
-    public void makeIndex() {
-      if(kAnalyses.size() != 0 && index == null) {
-        index = new HashMap<Integer,List<Triple<Integer,Integer,Double>>>();
-        
-        //For each verb, see if the analysis has a subject
-        int lastIdx = -1;
-        for(final int nextIdx : verbs) {
-          if(lastIdx != -1)
-            findAnalyses(lastIdx, nextIdx);
-          
-          lastIdx = nextIdx;
-        }
-        
-        //Don't forget to process the last verb here
-        findAnalyses(lastIdx,Integer.MAX_VALUE);
-        
-        verbs = new TreeSet<Integer>(index.keySet());
-        kAnalyses = null; //Mark for gc
-        
-        if(nullRealAccumulator != 0.0)
-          nullRealAccumulator = Math.log(nullRealAccumulator);
-        
-      } else
-        throw new RuntimeException("Attempted to make index for empty analysis set");
-    }   
+    return compressedList;
   }
   
   
-  public void load(final File filename, final int maxSubjLen, final int verbGap) {
+  public void load(final File filename) {
     if(isLoaded) return;
     
-    //Set indexing options
-    maxVerbGap = verbGap;
-    maxSubjectLen = maxSubjLen;
-    
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
-      final LineNumberReader reader = new LineNumberReader(new InputStreamReader(new FileInputStream(filename),"UTF-8"));
 
-      int nullAnalyses = 0;
       int lastTransId = 0;
-      AnalysisIndex analysisIndex = new AnalysisIndex();
+      boolean hasAtLeastOneSubject = false;
+      List<ArabicKbestAnalysis> analysisList = new ArrayList<ArabicKbestAnalysis>();
+      
       while(reader.ready()) {
         String line = reader.readLine();
         if(line.trim().equals("")) continue;
         
-        final SentenceAnalysis newAnalysis = new SentenceAnalysis();
+        ArabicKbestAnalysis analysis = new ArabicKbestAnalysis();
         final StringTokenizer st = new StringTokenizer(line, DELIM);
         int translationId = -1;
+        
         for(int i = 0; st.hasMoreTokens(); i++) {
           String token = st.nextToken();
           
@@ -175,13 +71,10 @@ public class ArabicKbestSubjectBank {
             translationId = Integer.parseInt(token);
             
             if(translationId != lastTransId) {
-              if(analysisIndex.hasAnalysis) {
-                analysisIndex.makeIndex();
-                kBestSubjectBank.put(lastTransId, analysisIndex);
-              } else
-                nullAnalyses++;
-              
-              analysisIndex = new AnalysisIndex();
+              if(hasAtLeastOneSubject)
+                kBestSubjectBank.put(lastTransId, compress(analysisList));
+              hasAtLeastOneSubject = false;
+              analysisList = new ArrayList<ArabicKbestAnalysis>();
             }
             
             lastTransId = translationId;
@@ -191,12 +84,12 @@ public class ArabicKbestSubjectBank {
             final StringTokenizer verbIndices = new StringTokenizer(stripped,",");
             while(verbIndices.hasMoreTokens()) {
               int verbIdx = Integer.parseInt(verbIndices.nextToken().trim());
-              newAnalysis.verbs.add(verbIdx);
+              analysis.verbs.add(verbIdx);
             }
 
           } else if(token.charAt(0) == 's') {
             token = token.substring(1, token.length() - 1);
-            newAnalysis.score = Double.parseDouble(token);
+            analysis.logCRFScore = Double.parseDouble(token);
             
           } else {
             final String[] indices = token.split(",");
@@ -205,31 +98,25 @@ public class ArabicKbestSubjectBank {
 
             final int start = Integer.parseInt(indices[0].trim());
             final int end = Integer.parseInt(indices[1].trim());
-            newAnalysis.subjSpans.add(new Pair<Integer,Integer>(start,end));
+            analysis.subjects.put(start, end);
+            hasAtLeastOneSubject = true;
           }
         }
 
         if(translationId == -1)
           throw new RuntimeException(String.format("%s: File format problem at line %d",this.getClass().getName(),reader.getLineNumber()));
 
-        if(newAnalysis.subjSpans.size() == 0)
-          analysisIndex.addNullAnalysis(newAnalysis);
-        else
-          analysisIndex.addAnalysis(newAnalysis);
+        analysisList.add(analysis);
       }
-      
-      if(analysisIndex.hasAnalysis) {
-        analysisIndex.makeIndex();
-        kBestSubjectBank.put(lastTransId, analysisIndex);
-      } else
-        nullAnalyses++;
-
       reader.close();
+      
+      if(hasAtLeastOneSubject)
+        kBestSubjectBank.put(lastTransId, compress(analysisList));
+      
       isLoaded = true;
 
       System.err.printf(">> %s Stats <<\n", this.getClass().getName());
       System.err.printf("sentences: %d\n", kBestSubjectBank.keySet().size());
-      System.err.printf("null:      %d\n", nullAnalyses);
 
     } catch (FileNotFoundException e) {
       System.err.printf("%s: Could not load %s\n", this.getClass().getName(), filename);
@@ -238,17 +125,9 @@ public class ArabicKbestSubjectBank {
     } 
   }
   
-  public SortedSet<Integer> getVerbs(final int translationId) {
-    AnalysisIndex kbest = this.kBestSubjectBank.get(translationId);
-    if(kbest != null)
-      return kbest.verbs;
-    return null;
-  }
-  
-  public List<Triple<Integer,Integer,Double>> getSubjectsForVerb(final int translationId, final int verbIdx) {
-    AnalysisIndex kbest = this.kBestSubjectBank.get(translationId);
-    if(kbest != null && kbest.index != null)
-      return kbest.index.get(verbIdx);
+  public List<ArabicKbestAnalysis> getAnalyses(final int translationId) {
+    if(kBestSubjectBank != null && kBestSubjectBank.containsKey(translationId))
+      return new ArrayList<ArabicKbestAnalysis>(kBestSubjectBank.get(translationId));
     return null;
   }
   
@@ -258,64 +137,25 @@ public class ArabicKbestSubjectBank {
     return 0;
   }
 
-  
-  /*********************************************************************************
-   *  WSGDEBUG: Unit test methods
-  **********************************************************************************/
-  
-  public List<Pair<Integer,Integer>> subjectsForSentence(final int translationId, final int k) {
-    AnalysisIndex kbest = this.kBestSubjectBank.get(translationId);
-    if(kbest != null && k <= kbest.kAnalyses.size())
-      return kbest.kAnalyses.get(k).subjSpans;
-
-    return null;
-  }
-  
-  public Set<Integer> verbsForSentence(final int translationId, final int k) {
-    AnalysisIndex kbest = this.kBestSubjectBank.get(translationId);
-    if(kbest != null && k <= kbest.kAnalyses.size())
-      return kbest.kAnalyses.get(k).verbs;
-
-    return null;
-  }
-  
-  public double getScore(final int translationId, final int k) {
-    AnalysisIndex kbest = this.kBestSubjectBank.get(translationId);
-    if(kbest != null && k <= kbest.kAnalyses.size())
-      return kbest.kAnalyses.get(k).score;
-
-    return 0.0;
-  }
-  
+    
   /**
    * @param args
    */
   public static void main(String[] args) {
-    File testFile = new File("debug.kbest");
+    File testFile = new File("mt04.vso.k");
     ArabicKbestSubjectBank subjBank = ArabicKbestSubjectBank.getInstance();
     
-    subjBank.load(testFile, 100, 2);
+    subjBank.load(testFile);
     
-    for(int transId = 0; transId < 4; transId++) {
-      System.out.printf("============ TransID %d ============\n", transId);
-      SortedSet<Integer> verbs = subjBank.getVerbs(transId);
-      if(verbs == null || verbs.size() == 0)
-        System.out.println(" No verbs");
-      else {
-        System.out.print("verbs = {");
-        for(final int verbIdx : verbs)
-          System.out.printf("%d ",verbIdx);
-        System.out.println("}");       
-
-        //Test the inverted index
-        System.out.println(">> Inverted Index <<");
-        for(final int verbIdx : verbs) {
-          for(Triple<Integer,Integer,Double> subj : subjBank.getSubjectsForVerb(transId, verbIdx))
-            System.out.printf("%d --> %d %d (%f)\n", verbIdx,subj.first(),subj.second(),subj.third());
-        }
-        System.out.println();
-      }
-    }    
-  }
+    Set<Integer> testIds = new HashSet<Integer>();
+    testIds.add(8);
+    
+    for(int transId : testIds) {
+      List<ArabicKbestAnalysis> analyses = subjBank.getAnalyses(transId);
+      System.out.printf("%d: %d analyses:\n", transId, analyses.size());
+      for(ArabicKbestAnalysis anal : analyses)
+        System.out.println(anal.toString());
+    }
+   }
 
 }

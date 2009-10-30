@@ -106,6 +106,13 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
     return posTags;
   }
 
+  private int[][] copy(int[][] array) {
+    int[][] thisCopy = new int[array.length][];
+    for(int i = 0; i < array.length; i++)
+      thisCopy[i] = Arrays.copyOf(array[i], array.length);
+    return thisCopy;
+  }
+  
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
@@ -123,8 +130,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
 
 
     //Setup the state (with sanity check)
-    //TODO WSGDEBUG -- Need to clone here
-    int[][] f2e = (f.prior == null) ? new int[f.foreignSentence.size()][] : (int[][]) f.prior.getState(this);
+    int[][] f2e = (f.prior == null) ? new int[f.foreignSentence.size()][] : copy((int[][]) f.prior.getState(this));
     if(f.done)
       for(int i = 0; i < f2e.length; i++)
         if(f2e[i] == null)
