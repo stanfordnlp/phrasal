@@ -123,8 +123,14 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	}
 	
 	private Runtime rt = Runtime.getRuntime();
-	
-	@Override
+
+  private static boolean isContiguous(BitSet bitset) {
+    int i = bitset.nextSetBit(0);
+    int j = bitset.nextClearBit(i+1);
+    return (bitset.nextSetBit(j+1) == -1);
+  }
+
+  @Override
 	@SuppressWarnings("unchecked")
 	protected Beam<Hypothesis<TK,FV>> decode(Scorer<FV> scorer, Sequence<TK> foreign, int translationId, RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory,
 			ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int nbest) {
@@ -147,12 +153,19 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		// retrieve translation options
 		if (DEBUG) System.err.println("Generating Translation Options");
 
-    // TODO: use gap-enabled phrase generator
     List<ConcreteTranslationOption<TK>> options =
-					phraseGenerator.translationOptions(foreign, targets, translationId);	
-		
-		System.err.printf("Translation options: %d\n", options.size());
-		
+					phraseGenerator.translationOptions(foreign, targets, translationId);
+
+    // Remove all options with gaps in the source, since they cause problems with future cost estimation:
+    List<ConcreteTranslationOption<TK>> futureOptions = new ArrayList<ConcreteTranslationOption<TK>>();
+    for(ConcreteTranslationOption<TK> opt : options) {
+      if(isContiguous(opt.foreignCoverage))
+        futureOptions.add(opt);
+    }
+
+    System.err.printf("Translation options: %d\n", options.size());
+    System.err.printf("Translation options (future): %d\n", futureOptions.size());
+
 		if (OPTIONS_DUMP || DETAILED_DEBUG) {
       int sentId = translationId + ((PseudoMoses.local_procs > 1) ? 2:0);
       synchronized(System.err) {
@@ -173,7 +186,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		DTUOptionGrid<TK> optionGrid = new DTUOptionGrid<TK>(options, foreign);
 		
 		// insert initial hypothesis
-		Hypothesis<TK,FV> nullHyp = new Hypothesis<TK,FV>(translationId, foreign, heuristic, options);
+		Hypothesis<TK,FV> nullHyp = new Hypothesis<TK,FV>(translationId, foreign, heuristic, futureOptions);
 		beams[0].put(nullHyp);
 		if (DEBUG) {
 			System.err.printf("Estimated Future Cost: %e\n", nullHyp.h);
@@ -337,7 +350,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		int optionsApplied = 0;
 		int hypPos = -1;
 		int totalHypothesesGenerated = 0;
-	
+    //System.err.printf("\nBeam id: %d\n", beamId);
+
 		Hypothesis<TK, FV>[] hyps;
 		synchronized(beams[beamId]) {			
 		  hyps = new Hypothesis[beams[beamId].size()]; 	
@@ -352,15 +366,17 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		  hypPos++;
 			if (hypPos % threadCount != threadId) continue;
 			if (hyp == null) continue;
-			//System.err.printf("\nExpanding hyp: %s\n", hyp); // TODO: remove
+			//System.err.printf("\nExpanding hyp: %s\n", hyp);
+      //System.err.printf("\nCoverage: %s\n", hyp.foreignCoverage);
 			int localOptionsApplied = 0;
-		  //System.err.printf("Start position: %d\n", hyp.foreignCoverage.nextClearBit(0)); // TODO: remove
+		  //System.err.printf("Start position: %d\n", hyp.foreignCoverage.nextClearBit(0));
+      //System.err.printf("foreignSz: %d\n", foreignSz);
 			int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
 
 			for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
-				int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
+				int endPosMax = -1; //hyp.foreignCoverage.nextSetBit(startPos);
 
-        //System.err.printf("endPosMax = %d ", endPosMax);
+        //System.err.printf("  s=%s endPosMax = %d -> ", startPos, endPosMax);
         // check distortion limit
 				if (endPosMax < 0) {
 					if (maxDistortion >= 0 && startPos != firstCoverageGap) {
@@ -371,18 +387,18 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 				}
         //System.err.printf("%d\n", endPosMax);
 				for (int endPos = startPos; endPos < endPosMax; endPos++) {
-          // TODO: remove
           List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid.get(startPos, endPos);
-          //System.err.printf("startPos=%d endPos=%d options=%s\n", startPos, endPos, applicableOptions == null ? "0" : applicableOptions.size());
+          //System.err.printf("    startPos=%d endPos=%d options=%s\n", startPos, endPos, applicableOptions == null ? "0" : applicableOptions.size());
 					if (applicableOptions == null) continue;
 					// System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
 			
 					for (ConcreteTranslationOption<TK> option : applicableOptions) {
             //System.err.printf("option: %s\n", option.abstractOption.foreign);
             // TODO: splice phrase if gaps:
-						assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
+						if(hyp.foreignCoverage.intersects(option.foreignCoverage))
+              continue;
 
-						if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option)) {
+            if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option)) {
 							continue;
 						}
 						

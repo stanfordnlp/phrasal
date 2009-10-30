@@ -53,11 +53,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // With gaps or not:
     String optStr = prop.getProperty(WITH_GAPS_OPT);
     withGaps =  optStr != null && !optStr.equals("false");
-    if(!withGaps) {
-      System.err.println
-       ("WARNING: using DTUPhraseExtractor without gaps! "+
-        "Gapless phrases are more efficiently extracted using LinearTimePhraseExtractor");
-    }
 
     // No gaps on the target:
     optStr = prop.getProperty(NO_TARGET_GAPS_OPT);

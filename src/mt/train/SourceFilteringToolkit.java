@@ -65,6 +65,8 @@ public class SourceFilteringToolkit {
   }
 
   private static void extractPhrasesFromLine(AlignmentTemplates set, String fLine, int maxPhraseLenF, boolean addBoundaryMarkers) {
+    fLine = fLine.trim();
+    //System.err.printf("line: %s\n", fLine);
     if(addBoundaryMarkers)
       fLine = new StringBuffer("<s> ").append(fLine).append(" </s>").toString();
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
@@ -79,6 +81,7 @@ public class SourceFilteringToolkit {
   }
 
   private static void extractDTUPhrasesFromLine(AlignmentTemplates set, String fLine, int maxPhraseLenF, int maxSpanF) {
+    fLine = fLine.trim();
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
     for(int i=0; i<f.size(); ++i) {
       for(int j=i; j<f.size() && j-i<maxSpanF; ++j) {

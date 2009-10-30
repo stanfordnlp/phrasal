@@ -185,9 +185,10 @@ public class CombinedFeatureExtractor {
       filterFromDev = true;
     if(fFilterList != null)
       fPhrases = SourceFilteringToolkit.getPhrasesFromList(fFilterList);
-    else if(fFilterCorpus != null)
+    else if(fFilterCorpus != null) {
       fPhrases = SourceFilteringToolkit.getPhrasesFromFilterCorpus
         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, DTUPhraseExtractor.maxSpanF, addBoundaryMarkers);
+    }
     
     // Other optional arguments:
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));
