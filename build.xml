@@ -68,6 +68,7 @@
     <echo message="${ant.project.name}" />
     <junit maxmemory="2048m" printsummary="off" outputtoformatters="false" forkmode="perBatch">
       <classpath refid="classpath"/>
+      <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
       <batchtest fork="yes">
         <fileset dir="${tests.path}">
@@ -83,6 +84,7 @@
     <echo message="${ant.project.name}" />
     <junit maxmemory="2048m" printsummary="off" outputtoformatters="false" forkmode="perBatch">
       <classpath refid="classpath"/>
+      <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
       <batchtest fork="yes">
         <fileset dir="${tests.path}">
