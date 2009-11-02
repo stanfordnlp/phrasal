@@ -19,15 +19,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	public static final String FIVESCORE_LEX_f_t = "lex(f|t)";
 	public static final String ONESCORE_P_t_f = "p(t|f)";
 	public static final String FIVESCORE_PHRASE_PENALTY = "phrasePenalty";
-	public static final String COUNT = "count";
-	public static final String UNIQ = "uniq";
-	public static final String NOISY = "noisy"; // "noisy" phrases, i.e., extracted despite inconsistencies with word alignment
 	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES = { 
 		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY };
-	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_NOISY = { 
-		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY, NOISY };
-	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_COUNT = { 
-		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY, COUNT, UNIQ };
 	public static final String[] CANONICAL_ONESCORE_SCORE_TYPES = {ONESCORE_P_t_f};
 	public static final boolean DEFAULT_EQUIVALENCE_CUTTOFFS = true;
 
@@ -37,11 +30,31 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
   public static final String DISABLED_SCORES_PROPERTY = "disableScores";
   public static final String DISABLED_SCORES = System.getProperty(DISABLED_SCORES_PROPERTY);
 
+  public static final String CUSTOM_SCORES_PROPERTY = "customScores";
+  public static final String CUSTOM_SCORES = System.getProperty(CUSTOM_SCORES_PROPERTY);
+
+  static String[] customScores;
+
   final String[] scoreNames;
 	String name;
-	
-	
-	// Originally, PharaohPhraseTables were backed by a nice simple
+
+  static {
+    List<String> l = new ArrayList<String>();
+    // Custom score names:
+    if(CUSTOM_SCORES != null) {
+      for(String el : CUSTOM_SCORES.split(",")) {
+        if(el.equals("phi_tf")) { l.add(FIVESCORE_PHI_t_f); } else
+        if(el.equals("phi_ft")) { l.add(FIVESCORE_PHI_f_t); } else
+        if(el.equals("lex_tf")) { l.add(FIVESCORE_LEX_t_f); } else
+        if(el.equals("lex_ft")) { l.add(FIVESCORE_LEX_f_t); } else
+        if(el.equals("p_tf")) { l.add(ONESCORE_P_t_f); } else
+        l.add(el);
+      }
+    }
+    customScores = l.toArray(new String[l.size()]);
+  }
+
+  // Originally, PharaohPhraseTables were backed by a nice simple
 	// HashMap from a foreign sequence to a list of translations.
 	//	
 	// However, this resulted in a phrase table that only 
@@ -140,10 +153,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	
 	private String[] getScoreNames(int countScores) {
 		String[] scoreNames;
-		if (countScores == 7) {
-			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_COUNT;
-		} else if(countScores == 6) {
-			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES_PLUS_NOISY;
+		if (customScores != null) {
+			scoreNames = customScores;
 		} else if (countScores == 5) {
 			scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES;
 		} else if (countScores == 1) {

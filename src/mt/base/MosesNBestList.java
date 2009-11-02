@@ -97,7 +97,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
           System.err.printf("Warning: expected at least 3 fields, but found only %d\n",fields.length);
           continue;
         }
-				String id = fields[0];
+        String id = fields[0];
 				String translation = fields[1];
 				String featuresStr = fields[2];
 				String scoreStr = (fields.length >= 4 ? fields[3] : "0");
@@ -140,12 +140,16 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				
 				long latticeId = -1;
 				if (latticeIdStr != null) {
-					try {
-						latticeId = Long.parseLong(latticeIdStr);
-					} catch (NumberFormatException e) {
-						throw new RuntimeException(String.format("Contents of lattice id field, '%s', cannot be parsed as a long integer value (line: %d)", latticeIdStr, reader.getLineNumber()));
-					}
-				}
+          if(latticeIdStr.indexOf('=') == -1) {
+            try {
+              latticeId = Long.parseLong(latticeIdStr);
+            } catch (NumberFormatException e) {
+              throw new RuntimeException(String.format("Contents of lattice id field, '%s', cannot be parsed as a long integer value (line: %d)", latticeIdStr, reader.getLineNumber()));
+            }
+          } else {
+            // phrase alignment instead of latticeId
+          }
+        }
 				
 				String[] featureFields = space.split(featuresStr);
 				String featureName = "unlabeled";

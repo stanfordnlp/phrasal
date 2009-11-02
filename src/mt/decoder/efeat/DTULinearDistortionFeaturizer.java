@@ -36,11 +36,12 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
     int span = f.option.foreignCoverage.length()-f.option.foreignCoverage.nextSetBit(0);
-    int size = 0;
+    int totalSz = 0;
     for(IString fw : f.foreignPhrase)
       if(fw.id != DTUPhraseExtractor.GAP_STR.id)
-        ++size;
-    list.add(new FeatureValue<String>(GAP_FEATURE_NAME, -1.0*(span-size)));
+        ++totalSz;
+    int gapSz = span-totalSz;
+    list.add(new FeatureValue<String>(GAP_FEATURE_NAME, -1.0*gapSz));
     list.add(new FeatureValue<String>(FEATURE_NAME, -1.0*f.linearDistortion));
     return list;
   }

@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  */
 public class CountFeatureExtractor extends AbstractFeatureExtractor {
 
-  public static final String DEBUG_PROPERTY = "DebugPharaohFeatureExtractor";
+  public static final String DEBUG_PROPERTY = "DebugCountFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 
   public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";

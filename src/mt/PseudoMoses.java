@@ -196,6 +196,13 @@ public class PseudoMoses {
 				LearningTarget.REFERENCE);
 	}
 
+  static void initStaticMembers(Map<String, List<String>> config) {
+    withGaps = config.containsKey(GAPS_OPT);
+		if (config.containsKey(LOCAL_PROCS)) {
+			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
+		}
+  }
+
   static Map<String, List<String>> readConfig(String filename) throws IOException {
 		Map<String, List<String>> config = new HashMap<String, List<String>>();
 		LineNumberReader reader = new LineNumberReader(new FileReader(filename));
@@ -310,13 +317,9 @@ public class PseudoMoses {
 			momentumTerm = Double.parseDouble(config.get(MOMENTUM).get(0));
 		}
 
-		if (config.containsKey(LOCAL_PROCS)) {
-			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
-		}
-
-                if (config.containsKey(RECOMBINATION_HEURISTIC)) {
-                  recomb_heuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
-                }
+    if (config.containsKey(RECOMBINATION_HEURISTIC)) {
+      recomb_heuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
+    }
 
 
 		System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
@@ -683,7 +686,6 @@ public class PseudoMoses {
       generateMosesNBestList = Boolean.parseBoolean(config.get(MOSES_NBEST_LIST_OPT).get(0));
     }
 
-    withGaps = config.containsKey(GAPS_OPT);
     if(withGaps) {
       List<String> gapOpts = config.get(GAPS_OPT);
       if(gapOpts.size() != 1)
@@ -1960,6 +1962,7 @@ public class PseudoMoses {
     });
 
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0]) : readArgs(args);
+    initStaticMembers(config);
     PseudoMoses p = new PseudoMoses(config);
 
 		p.executiveLoop();

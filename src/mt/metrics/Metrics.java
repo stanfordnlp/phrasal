@@ -140,7 +140,21 @@ public class Metrics {
 		return readReferences(referenceFilenames, true);
 	}
 
-	static public List<List<Sequence<IString>>> readReferences(String[] referenceFilenames, boolean NISTTokenize) throws IOException {
+  static public List<List<Sequence<IString>>> readReferencesFromRoot(String root) throws IOException {
+    int i=0;
+    List<String> files = new ArrayList<String>();
+    for(;;) {
+      String name = root+Integer.toString(i);
+      if(!(new File(name).exists()))
+        break;
+      files.add(name);
+      System.err.println("Found reference: "+name);
+      ++i;
+    }
+    return readReferences(files.toArray(new String[files.size()]), true);
+	}
+
+  static public List<List<Sequence<IString>>> readReferences(String[] referenceFilenames, boolean NISTTokenize) throws IOException {
 		List<List<Sequence<IString>>> referencesList = new ArrayList<List<Sequence<IString>>>();
 		for (String referenceFilename : referenceFilenames) {
 			LineNumberReader reader = new LineNumberReader(new FileReader(referenceFilename));

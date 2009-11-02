@@ -35,9 +35,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	public static final int DEFAULT_BEAM_SIZE = 200;
 	public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam; 
 	public static final int DEFAULT_MAX_DISTORTION = -1;
-	public static final boolean DEFAULT_USE_ITG_CONSTRAINTS = false;
-	
-	public final boolean useITGConstraints;
+
 	final int maxDistortion;
 	final int numProcs; 
 	
@@ -57,7 +55,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	protected DTUDecoder(DTUDecoderBuilder<TK, FV> builder) {
 		super(builder);
 		maxDistortion = builder.maxDistortion;
-		useITGConstraints = builder.useITGConstraints;
 
 		if (builder.internalMultiThread) {
 			numProcs = (System.getProperty("numProcs") != null ?
@@ -68,11 +65,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		}
  		threadPool = Executors.newFixedThreadPool(numProcs); 
 
-		if (useITGConstraints) {
-			System.err.printf("Using ITG Constraints\n");
-		} else {
-			System.err.printf("Not using ITG Constraints\n");
-		}
 		if (maxDistortion != -1) {
 			System.err.printf("Using distortion limit: %d\n", maxDistortion);
 		} else {
@@ -82,7 +74,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	
 	public static class DTUDecoderBuilder<TK,FV> extends AbstractBeamInfererBuilder<TK,FV> {
 		int maxDistortion = DEFAULT_MAX_DISTORTION;
-		boolean useITGConstraints = DEFAULT_USE_ITG_CONSTRAINTS;
 		boolean internalMultiThread;
 
     @Override
@@ -99,8 +90,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     @Override
 		public AbstractBeamInfererBuilder<TK,FV> useITGConstraints(boolean useITGConstraints) {
-			this.useITGConstraints = useITGConstraints;
-			return this;
+      assert(!useITGConstraints);
+      return this;
 		}
 		
 		public DTUDecoderBuilder() {
@@ -316,8 +307,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		} 
 		
 		try{
-		alignmentDump.append("<<< decoder failure >>>\n\n");
-		alignmentDump.close(); } catch (Exception e) { }
+      alignmentDump.append("<<< decoder failure >>>\n\n");
+      alignmentDump.close();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
 		
 		return null;
 	}

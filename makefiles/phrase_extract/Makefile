@@ -52,6 +52,9 @@ D=logs/.create $(DEVID).tables/.create $(TESTID).tables/.create
 all:
 	echo "No default target; please refer to http://nlp.stanford.edu/nlpwiki/MTPipelineJavaNLP for a list of valid targets."
 
+$D:
+	mkdir $(DEVID).tables $(TESTID).tables logs || true
+
 # Build LMs (test):
 test_lm: $(TESTID).flt_giga.lm.gz
 test_lm_google: $(TESTID).flt_giga.lm.gz $(TESTID).rsc_google.lm.gz
@@ -345,6 +348,7 @@ $(DEVID).%.$N.bt_pmert/phrasal.final.ini: %.ini $D $(DEVID).flt_giga.lm.gz $(DEV
 	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -tolower
 
 %.e.class.phrases: %.e.phrases
+	mkdir logs || true
 	(cat $< | eng_simpl_class.pl 1 0 | ibm2class > $@) 2> logs/$@.log
 
 %.e.phrases: %.tables/phrase-table.gz %.$(FE)
@@ -430,8 +434,6 @@ $(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpu
 
 NE=sed 's/^ *$$/null/'
 
-%/.create:
-	mkdir $(*F) && touch $@
 
 ### sgml with unknown words marked in the text:
 %.mprep: %.prep %.unk

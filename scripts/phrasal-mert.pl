@@ -27,6 +27,7 @@ use List::Util qw[max];
 
 $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
+$SLEEP = 30;
 $DEFAULT_MAX_ITERS = 25;
 $MIN_OBJ_DIFF = 1e-7;
 $DEFAULT_WORK_DIR = "pmert-dir";
@@ -79,7 +80,11 @@ if (not ($work_dir =~ /^\//)) {
 sub handle_arg {
   my ($arg) = @_;
   
-  if ($arg =~ /^--working-dir=.*/) {
+  if ($arg =~ /^--sleep=.*/) {
+     $SLEEP = $arg;
+     $SLEEP =~ s/^--sleep=//;
+		 chomp $SLEEP;
+  } elsif ($arg =~ /^--working-dir=.*/) {
      $work_dir = $arg;
      $work_dir =~ s/^--working-dir=//;
   } elsif ($arg =~ /^--nbest=.*/) {
@@ -359,7 +364,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
         exit -1;
      } 
      print stderr "Success.\n";
-     sleep 30; # nfs weirdness with slow writes?!?!
+     sleep $SLEEP; # nfs weirdness with slow writes?!?!
      print "gziping $iter_nbest_list\n";
 		 `sort -t '|' -n -s $iter_nbest_list | gzip > $iter_nbest_list.gz`;
      unlink("$iter_nbest_list");

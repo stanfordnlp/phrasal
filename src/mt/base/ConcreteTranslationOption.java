@@ -4,6 +4,7 @@ import java.util.*;
 
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
+import mt.PseudoMoses;
 
 /**
  * 
@@ -49,7 +50,8 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 	}
 	
 	public int linearDistortion(ConcreteTranslationOption<T> opt) {
-		int nextForeignToken = foreignPos + abstractOption.foreign.size();
+		int nextForeignToken = PseudoMoses.withGaps ?
+      foreignCoverage.length(): (foreignPos + abstractOption.foreign.size());
 		return Math.abs(nextForeignToken - opt.foreignPos);
 	}
 	
