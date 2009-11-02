@@ -34,9 +34,11 @@ use arg_utils qw(&get_args &get_opts);
 my %opts = get_opts(['t',0,'Chinese Name Transliteration will be used'],
                     ['n',0,'NIST: using a different conversion table!'],
                     ['e',0,'NIST: using extended conversion table!!'],
-                    ['i',0,'output index mapping of input and output']);
+                    ['i',0,'output index mapping of input and output'],
+										['j',0,'Joshua phrase table']);
 
 my %args = get_args();
+my $joshua = $opts{j};
 
 if ($opts{t} == 1) {
     print STDERR "-t is on : using Chinese Name Transliteration\n";
@@ -170,7 +172,7 @@ $line=0;
 while (<fh>) { chomp; $line++;
   print stderr "line > $line\n" if (!($line % 1000000));
   @fields = split /\|\|\|/;
-  $src_phrs = $fields[0];
+  $src_phrs = $fields[$joshua ? 1 : 0];
   @src_tokens = split /\s+/, $src_phrs;
   foreach $token (@src_tokens) { $known_words{$token} = 1; }
 }
