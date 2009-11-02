@@ -6,7 +6,6 @@ import java.util.*;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.Triple;
 
-import mt.PseudoMoses;
 import mt.base.ConcreteTranslationOption;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
@@ -15,10 +14,10 @@ import mt.base.IString;
 import mt.base.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
-import mt.decoder.feat.IncrementalFeaturizer;
+import mt.decoder.feat.ClonedFeaturizer;
 import mt.decoder.feat.StatefulFeaturizer;
 
-public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String> implements IncrementalFeaturizer<IString, String> {
+public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String> implements ClonedFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "ArabicVSOkbestFeaturizer";
   
@@ -27,7 +26,7 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
   private final int verbGap;
   
   //Set by initialize()
-  private double nullAnalysisLogProb;
+  private double defaultNullAnalysisLogProb;
   private Map<Integer,List<Triple<Integer,Integer,Double>>> verbMap = null;
   private List<Integer> orderedVerbs = null;
 
@@ -86,12 +85,12 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
 
     boolean verbCovered = f.hyp.foreignCoverage.get(verbIdx);
 
-    final int length = rightSubjectBoundary - leftSubjectBoundary + 1;
+    final int subjLength = rightSubjectBoundary - leftSubjectBoundary + 1;
     
-    final BitSet fCoverage = 
+    final BitSet fSubjCoverage = 
       f.hyp.foreignCoverage.get(leftSubjectBoundary, rightSubjectBoundary + 1);
 
-    boolean subjCovered = (fCoverage.cardinality() == length);
+    boolean subjCovered = (fSubjCoverage.cardinality() == subjLength);
 
     return verbCovered && subjCovered;
   }
@@ -136,7 +135,10 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
     
     //Check for the last verb scored
     final int lastVerbIdx = (f.prior == null) ? -1 : (Integer) f.prior.getState(this);
-    final int thisVerbIdx = orderedVerbs.get(lastVerbIdx + 1);
+    final int thisVerbIdx = (lastVerbIdx + 1 < orderedVerbs.size()) ? 
+        orderedVerbs.get(lastVerbIdx + 1) : -1;
+    if(thisVerbIdx == -1)
+      return null; //We're done
     
     //Score as soon as the verb is laid down
     if(f.hyp.foreignCoverage.get(thisVerbIdx)) {
@@ -164,7 +166,7 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
       else if(nullAnalysis != null)
         return new FeatureValue<String>(FEATURE_NAME,nullAnalysis.third());
       else
-        return new FeatureValue<String>(FEATURE_NAME,nullAnalysisLogProb);
+        return new FeatureValue<String>(FEATURE_NAME,defaultNullAnalysisLogProb);
     }
     
     f.setState(this, lastVerbIdx);
@@ -204,6 +206,7 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
       Set<Integer> allVerbs = new HashSet<Integer>();
       double nullAnalRealAccumulator = 0.0;
       double minLogCRFScore = Integer.MAX_VALUE;
+      double nullDenom = 0.0;
       for(ArabicKbestAnalysis anal : analyses) {
         if(anal.subjects.keySet().size() == 0)
           nullAnalRealAccumulator += Math.exp(anal.logCRFScore);
@@ -212,12 +215,13 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
           if(anal.logCRFScore < minLogCRFScore)
             minLogCRFScore = anal.logCRFScore;
         }
+        nullDenom += Math.exp(anal.logCRFScore);
       }
       
       if(nullAnalRealAccumulator == 0.0)
-        nullAnalysisLogProb = Math.log(nullAnalRealAccumulator);
-      else
-        nullAnalysisLogProb = 2.0 * Math.log(minLogCRFScore);
+        defaultNullAnalysisLogProb = Math.log(nullAnalRealAccumulator) - Math.log(nullDenom);
+      else //Some arbitrarily (low) score
+        defaultNullAnalysisLogProb = (3.0 * minLogCRFScore) - Math.log(nullDenom);
       
       
       //Set the other probabilities (for each verb)
@@ -234,6 +238,7 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
           
           boolean noAnalysis = true;
           for(int gap = 1; gap <= verbGap; gap++) {
+            
             if(anal.subjects.containsKey(verbIdx + gap)) {
               denom += Math.exp(anal.logCRFScore);
               noAnalysis = true;
@@ -259,14 +264,14 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
         
         //Check for null analyses
         if(nullNumerator != 0.0) {
-          double logProb = Math.log(nullNumerator / denom);
+          double logProb = Math.log(nullNumerator) - Math.log(denom);
           Triple<Integer,Integer,Double> nullAnal = new Triple<Integer,Integer,Double>(-1,-1,logProb);
           probList.add(nullAnal);
         }
         
         //Iterate over the other analyses
         for(Map.Entry<Pair<Integer,Integer>, Double> subject : subjects.entrySet()) {
-          double logProb = Math.log(subject.getValue() / denom);
+          double logProb = Math.log(subject.getValue()) - Math.log(denom);
           Pair<Integer,Integer> span = subject.getKey();
           Triple<Integer,Integer,Double> finalSubj = new Triple<Integer,Integer,Double>(span.first(),span.second(),logProb);
           probList.add(finalSubj);
@@ -281,6 +286,10 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
       
   }
   
+  @Override
+  public ArabicVSOkbestFeaturizer clone() throws CloneNotSupportedException {
+    return (ArabicVSOkbestFeaturizer)super.clone();
+  }
 
   // Unused but required methods
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) { return null; }
