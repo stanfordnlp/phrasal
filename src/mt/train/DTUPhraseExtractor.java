@@ -39,13 +39,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   int fSentenceLength, eSentenceLength;
 
-  private final PriorityQueue<Phrase> queue = new PriorityQueue<Phrase>(QUEUE_SZ, new PhraseComparator());
+  final LinearTimePhraseExtractor baseExtractor;
+
+  //private final PriorityQueue<Phrase> queue = new PriorityQueue<Phrase>(QUEUE_SZ, new PhraseComparator());
+  private final Deque<Phrase> queue = new LinkedList<Phrase>();
   private final Set<Phrase> seen = new HashSet<Phrase>(QUEUE_SZ);
 
   public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
+    baseExtractor = new LinearTimePhraseExtractor(prop, alTemps, extractors);
     System.err.println("Using DTU phrase extractor.");
-    System.err.println("DTUPhraseExtractor: "+maxPhraseLenF);
   }
 
   static public void setDTUExtractionProperties(Properties prop) {
@@ -183,8 +186,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       if(!consistencize(i, source, true))
         return false;
       sane();
-      if(sizeF() > maxPhraseLenF) return false;
-      if(sizeE() > maxPhraseLenE) return false;
+      if(sizeF() > maxSizeF) return false;
+      if(sizeE() > maxSizeE) return false;
       if(!fContiguous() || !eContiguous()) {
         if(sizeF() > maxSizeF) return false;
         if(sizeE() > maxSizeE) return false;
@@ -197,8 +200,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     private boolean consistencize(int i, boolean source, boolean topLevel) {
       //System.err.println("C: "+toString());
 
-      if(sizeF() > maxPhraseLenF) return false;
-      if(sizeE() > maxPhraseLenE) return false;
+      if(sizeF() > maxSizeF) return false;
+      if(sizeE() > maxSizeE) return false;
 
       if(source) {
         setConsistencizedF(i);
@@ -304,12 +307,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     public Collection<Phrase> successors() {
       int fsize = sent.f().size();
       List<Phrase> list = new ArrayList<Phrase>(4);
-      if(f2-f1 <= maxPhraseLenF) {
+      if(f2-f1 <= maxSizeF) {
         if(f1 > 0) list.add(new CTUPhrase(this).expandLeftF());
         if(f2+1 < fsize) list.add(new CTUPhrase(this).expandRightF());
       }
       int esize = sent.e().size();
-      if(e2-e1 <= maxPhraseLenE) {
+      if(e2-e1 <= maxSizeE) {
         if(e1 > 0) list.add(new CTUPhrase(this).expandLeftE());
         if(e2+1 < esize) list.add(new CTUPhrase(this).expandRightE());
       }
@@ -597,10 +600,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     private boolean addContiguousSuccessors(Collection<Phrase> list) {
       int fsize = sent.f().size();
       int esize = sent.e().size();
-      assert(sizeF() <= maxPhraseLenF);
-      assert(sizeE() <= maxPhraseLenE);
-      boolean growF = sizeF() < maxPhraseLenF;
-      boolean growE = sizeE() < maxPhraseLenE;
+      assert(sizeF() <= maxSizeF);
+      assert(sizeE() <= maxSizeE);
+      boolean growF = sizeF() < maxSizeF;
+      boolean growE = sizeE() < maxSizeE;
       if(growF) {
         for(int s : successorsIdx(true, f, fsize))
           list.add(new DTUPhrase(this).expandF(s));
@@ -653,8 +656,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     public Phrase toContiguous() {
       DTUPhrase p = new DTUPhrase(this);
       for(;;) {
-        if(p.sizeF() > maxPhraseLenF) return null;
-        if(p.sizeE() > maxPhraseLenE) return null;
+        if(p.sizeF() > maxSizeF) return null;
+        if(p.sizeE() > maxSizeE) return null;
         boolean cF = p.isContiguous(p.f);
         boolean cE = p.isContiguous(p.e);
         if(cF && cE)
@@ -674,8 +677,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
               p.consistencize(ei, false);
         }
       }
-      if(p.sizeF() > maxPhraseLenF) return null;
-      if(p.sizeE() > maxPhraseLenE) return null;
+      if(p.sizeF() > maxSizeF) return null;
+      if(p.sizeE() > maxSizeE) return null;
       return p;
     }
 
@@ -710,17 +713,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
   }
 
-  class PhraseComparator implements Comparator<Phrase> {
-
-    public int compare(Phrase o1, Phrase o2) {
-      int sz1 = o1.sizeE()+o1.sizeF();
-      int sz2 = o2.sizeE()+o2.sizeF();
-      return (Double.compare(sz1,sz2));
-    }
+  @Override
+  boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
+    return false;
   }
 
   @Override
   public void extractPhrases(WordAlignment sent) {
+
+    // Extract contiguous phrases:
+    baseExtractor.extractPhrases(sent);
 
     if(DEBUG) {
       System.err.println("f: "+sent.f());
@@ -740,7 +742,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
             //if(DEBUG) System.err.println("dtu(m): "+p.toString());
             if(onlyCrossSerialDTU && p.getCrossSerialTypes().isEmpty()) 
               continue;
-            queue.add(p);
+            queue.offerLast(p);
             seen.add(p);
             assert(p.sane());
           }
@@ -750,14 +752,17 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // Expand rules:
     while(!queue.isEmpty()) {
-      Phrase p = queue.poll();
+      Phrase p = queue.pollFirst();
       if(withGaps) {
         assert(p instanceof DTUPhrase);
         DTUPhrase dtu = (DTUPhrase) p;
         if(!noTargetGaps || dtu.eContiguous()) {
-        AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
-        if(DEBUG && alTemp != null)
-          System.err.printf("dtu: %s\n%s", alTemp.toString(false), p.getCrossings());
+          if(!dtu.eContiguous() || !dtu.fContiguous()) {
+            // Only extract non-contiguous phrases:
+            AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+            if(DEBUG && alTemp != null)
+              System.err.printf("dtu: %s\n%s", alTemp.toString(false), p.getCrossings());
+          }
         }
       } else {
         extractPhrase(sent, p.getFirstF(), p.getLastF(), p.getFirstE(), p.getLastE(), true, 1.0f);
@@ -765,7 +770,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       if(!onlyCrossSerialDTU) {
         for(Phrase sp : p.successors()) {
           if(sp != null && !seen.contains(sp)) {
-            queue.offer(sp);
+            queue.offerLast(sp);
             seen.add(sp);
           }
         }

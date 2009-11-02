@@ -238,6 +238,10 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     System.err.printf("maximum phrase length (E): %d\n", maxPhraseLenE);
     System.err.printf("maximum extracted phrase length (F): %d\n", maxExtractedPhraseLenF);
     System.err.printf("maximum extracted phrase length (E): %d\n", maxExtractedPhraseLenE);
+
+    assert(maxPhraseLenE >= maxExtractedPhraseLenE);
+    assert(maxPhraseLenF >= maxExtractedPhraseLenF);
+
     DTUPhraseExtractor.setDTUExtractionProperties(prop);
   }
 }

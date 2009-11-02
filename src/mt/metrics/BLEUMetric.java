@@ -333,7 +333,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
       return cached;
     }
 
-    private double computeLocalSmoothScore(Sequence<TK> seq, int pos) {
+    public double computeLocalSmoothScore(Sequence<TK> seq, int pos) {
 			Map<Sequence<TK>, Integer> canidateCounts = Metrics.getNGramCounts(seq, order);
 			Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(pos));
 			int seqSz = seq.size();
