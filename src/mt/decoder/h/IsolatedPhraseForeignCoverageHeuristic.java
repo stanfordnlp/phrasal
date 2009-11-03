@@ -8,6 +8,7 @@ import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
+import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.util.Hypothesis;
 import mt.decoder.util.Scorer;
 
@@ -20,7 +21,7 @@ import mt.decoder.util.Scorer;
  */
 public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 	public static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
-	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
 	
@@ -73,7 +74,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
 	
 	@Override
 	public double getInitialHeuristic(Sequence<TK> foreignSequence,
-			List<ConcreteTranslationOption<TK>> options, int translationId) {
+			List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
 		
 		int foreignSequenceSize = foreignSequence.size();
 		
@@ -88,7 +89,8 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
 		}
 		
 		// initialize viterbiSpanScores
-		for (ConcreteTranslationOption<TK> option : options) {
+    assert(options.size() == 1);
+    for (ConcreteTranslationOption<TK> option : options.get(0)) {
 			Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, option, translationId); 
       List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer.phraseListFeaturize(f);
 			double score = scorer.getIncrementalScore(phraseFeatures);

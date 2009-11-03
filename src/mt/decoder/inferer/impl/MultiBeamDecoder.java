@@ -173,7 +173,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		OptionGrid<TK> optionGrid = new OptionGrid<TK>(options, foreign);
 		
 		// insert initial hypothesis
-		Hypothesis<TK,FV> nullHyp = new Hypothesis<TK,FV>(translationId, foreign, heuristic, options);
+    List<List<ConcreteTranslationOption<TK>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK>>>();
+    allOptions.add(options);
+    Hypothesis<TK,FV> nullHyp = new Hypothesis<TK,FV>(translationId, foreign, heuristic, allOptions);
 		beams[0].put(nullHyp);
 		if (DEBUG) {
 			System.err.printf("Estimated Future Cost: %e\n", nullHyp.h);

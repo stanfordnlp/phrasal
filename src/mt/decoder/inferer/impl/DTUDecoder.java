@@ -16,8 +16,8 @@ import mt.PseudoMoses;
 import edu.stanford.nlp.stats.ClassicCounter;
 
 /**
- * Like MultiBeamDecoder, but allows phrases with discontinuities in them (source and target).
- * 
+ * Extension of MultiBeamDecoder that allows phrases with discontinuities in them (source and target).
+ *
  * @author Michel Galley
  *
  * @param <TK>
@@ -36,10 +36,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 	public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam; 
 	public static final int DEFAULT_MAX_DISTORTION = -1;
 
-	final int maxDistortion;
-	final int numProcs; 
-	
-	static {
+  final int maxDistortion;
+	final int numProcs;
+  public static boolean gapsInFutureCost;
+
+  static {
 		if (ALIGNMENT_DUMP != null) {
 			(new File(ALIGNMENT_DUMP)).delete();
 		}
@@ -148,16 +149,26 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 					phraseGenerator.translationOptions(foreign, targets, translationId);
 
     // Remove all options with gaps in the source, since they cause problems with future cost estimation:
-    List<ConcreteTranslationOption<TK>> futureOptions = new ArrayList<ConcreteTranslationOption<TK>>();
+    List<ConcreteTranslationOption<TK>>
+      optionsWithoutGaps = new ArrayList<ConcreteTranslationOption<TK>>(),
+      optionsWithGaps = new ArrayList<ConcreteTranslationOption<TK>>();
     for(ConcreteTranslationOption<TK> opt : options) {
       if(isContiguous(opt.foreignCoverage))
-        futureOptions.add(opt);
+         optionsWithoutGaps.add(opt);
+      else if(gapsInFutureCost)
+        optionsWithGaps.add(opt);
     }
 
     System.err.printf("Translation options: %d\n", options.size());
-    System.err.printf("Translation options (future): %d\n", futureOptions.size());
+    System.err.printf("Translation options (no gaps): %d\n",  optionsWithoutGaps.size());
+    System.err.printf("Translation options (with gaps): %d\n",  optionsWithGaps.size());
 
-		if (OPTIONS_DUMP || DETAILED_DEBUG) {
+    List<List<ConcreteTranslationOption<TK>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK>>>();
+    allOptions.add(optionsWithoutGaps);
+    if(gapsInFutureCost)
+      allOptions.add(optionsWithGaps);
+
+    if (OPTIONS_DUMP || DETAILED_DEBUG) {
       int sentId = translationId + ((PseudoMoses.local_procs > 1) ? 2:0);
       synchronized(System.err) {
         System.err.print(">> Translation Options <<\n");
@@ -177,7 +188,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		DTUOptionGrid<TK> optionGrid = new DTUOptionGrid<TK>(options, foreign);
 		
 		// insert initial hypothesis
-		Hypothesis<TK,FV> nullHyp = new Hypothesis<TK,FV>(translationId, foreign, heuristic, futureOptions);
+    Hypothesis<TK,FV> nullHyp = new Hypothesis<TK,FV>(translationId, foreign, heuristic, allOptions);
 		beams[0].put(nullHyp);
 		if (DEBUG) {
 			System.err.printf("Estimated Future Cost: %e\n", nullHyp.h);

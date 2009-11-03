@@ -17,7 +17,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   static public final String DEBUG_OPT = "AbstractBeamInfererDebug";
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
   static public final String DISTINCT_NBEST_OPT = "UniqNBest";
-  static public final boolean DISTINCT_NBEST = Boolean.parseBoolean(System.getProperty(DISTINCT_NBEST_OPT, "false"));
+  static public boolean DISTINCT_NBEST = Boolean.parseBoolean(System.getProperty(DISTINCT_NBEST_OPT, "false"));
   static public final String MAX_TIME_NBEST_OPT = "MaxTimeNBest";
   static public final long MAX_TIME_NBEST = Integer.parseInt(System.getProperty(MAX_TIME_NBEST_OPT,"60"))*1000;
   public final int beamCapacity;

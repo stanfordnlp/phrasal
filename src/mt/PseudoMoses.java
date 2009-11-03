@@ -9,12 +9,11 @@ import mt.base.*;
 import mt.decoder.feat.*;
 import mt.decoder.h.*;
 import mt.decoder.inferer.*;
-import mt.decoder.inferer.impl.MultiBeamDecoder;
+import mt.decoder.inferer.impl.DTUDecoder;
 import mt.decoder.recomb.*;
 import mt.decoder.util.*;
 import mt.decoder.efeat.SentenceBoundaryFeaturizer;
 import mt.metrics.*;
-
 
 import edu.stanford.nlp.km.StructuredSVM;
 import edu.stanford.nlp.km.kernels.Kernel;
@@ -44,6 +43,7 @@ public class PseudoMoses {
   public static final String MAPPING_OPT = "mapping";
   public static final String NBEST_LIST_OPT = "n-best-list";
   public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
+  public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   public static final String CONSTRAIN_TO_REFS = "constrain-to-refs";
   public static final String PREFERED_REF_STRUCTURE = "use-prefered-ref-structure";
   public static final String LEARN_WEIGHTS_USING_REFS = "learn-weights-using-refs";
@@ -74,8 +74,12 @@ public class PseudoMoses {
   public static final String LEARNING_METRIC = "learning-metric";
   public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
   public static final String GAPS_OPT = "gaps";
+  public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
+  public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
+
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   public static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
+
   static final Set<String> REQUIRED_FIELDS = new HashSet<String>();
   static final Set<String> OPTIONAL_FIELDS = new HashSet<String>();
   static final Set<String> IGNORED_FIELDS = new HashSet<String>();
@@ -97,14 +101,16 @@ public class PseudoMoses {
 		OPTIONAL_FIELDS.addAll(Arrays.asList(new String[] { INLINE_WEIGHTS,ITER_LIMIT,
 				DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
 				USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
-				NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
+				NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT,
         CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
         RECOMBINATION_HEURISTIC,
 				LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
 				PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
 				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
 				MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
-				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT}));
+				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
+        LINEAR_DISTORTION_TYPE
+    }));
 		IGNORED_FIELDS.addAll(Arrays.asList(new String[] { INPUT_FACTORS_OPT,
 				MAPPING_OPT, FACTOR_DELIM_OPT }));
 		ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -198,9 +204,15 @@ public class PseudoMoses {
 
   static void initStaticMembers(Map<String, List<String>> config) {
     withGaps = config.containsKey(GAPS_OPT);
-		if (config.containsKey(LOCAL_PROCS)) {
+    if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
+      DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(GAPS_IN_FUTURE_COST_OPT).get(0));
+    if (config.containsKey(DISTINCT_NBEST_LIST_OPT))
+      if (!AbstractBeamInferer.DISTINCT_NBEST)
+        AbstractBeamInferer.DISTINCT_NBEST = Boolean.parseBoolean(config.get(DISTINCT_NBEST_LIST_OPT).get(0));
+    if (config.containsKey(LINEAR_DISTORTION_TYPE))
+      ConcreteTranslationOption.setLinearDistortionType(config.get(LINEAR_DISTORTION_TYPE).get(0));
+    if (config.containsKey(LOCAL_PROCS))
 			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
-		}
   }
 
   static Map<String, List<String>> readConfig(String filename) throws IOException {
@@ -735,8 +747,9 @@ public class PseudoMoses {
 		// Create Search Heuristic
 		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
 		SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
-				isolatedPhraseFeaturizer, scorer,
-				HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
+				isolatedPhraseFeaturizer, scorer, withGaps ?
+        HeuristicFactory.ISOLATED_DTU_FOREIGN_COVERAGE :
+        HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
 		// Create Inferer
     inferers = new ArrayList<Inferer<IString, String>>(local_procs == 0 ? 1 : local_procs);
     for (int i = 0; i < (local_procs == 0 ? 1 : local_procs); i++) {

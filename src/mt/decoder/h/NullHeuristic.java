@@ -28,8 +28,8 @@ public class NullHeuristic<TK,FV> implements SearchHeuristic<TK,FV> {
 	}
 
 	@Override
-	public double getInitialHeuristic(Sequence<TK> sequence, List<ConcreteTranslationOption<TK>> options, int translationId) {
+	public double getInitialHeuristic(Sequence<TK> sequence, List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
 		return 0;
 	}
-	
+
 }

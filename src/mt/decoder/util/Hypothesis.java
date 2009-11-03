@@ -25,7 +25,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	// primitives
 	public final long id;
 	public final double score;
-	public final double h;	
+	public final double h;
 	public final int insertionPosition;
 	public final int untranslatedTokens;
 	public final int depth;
@@ -80,10 +80,10 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	 * @param foreignSequence
 	 * @param heuristic
 	 */
-	public Hypothesis(int translationId, Sequence<TK> foreignSequence, SearchHeuristic<TK,FV> heuristic, List<ConcreteTranslationOption<TK>> options) {
+	public Hypothesis(int translationId, Sequence<TK> foreignSequence, SearchHeuristic<TK,FV> heuristic, List<List<ConcreteTranslationOption<TK>>> options) {
 		synchronized(this.getClass()) { id = nextId++; }
-		score = 0; 
-		h = heuristic.getInitialHeuristic(foreignSequence, options, translationId);
+		score = 0;
+    h = heuristic.getInitialHeuristic(foreignSequence, options, translationId);
 		insertionPosition = 0;
 		length = 0;
 		translationOpt = null;

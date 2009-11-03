@@ -24,8 +24,8 @@ public interface SearchHeuristic<TK,FV> extends Cloneable {
 	 * @param options TODO
 	 * @return
 	 */
-	double getInitialHeuristic(Sequence<TK> sequence, List<ConcreteTranslationOption<TK>> options, int translationId);
-	
+	double getInitialHeuristic(Sequence<TK> sequence, List<List<ConcreteTranslationOption<TK>>> options, int translationId);
+
 	/**
 	 * 
 	 * @param newHypothesis

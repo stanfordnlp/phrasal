@@ -39,8 +39,7 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements SearchHeurist
 	}
 
 	@Override
-	public double getInitialHeuristic(Sequence<TK> sequence, List<ConcreteTranslationOption<TK>> options, int translationId) {
+	public double getInitialHeuristic(Sequence<TK> sequence, List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
 		return 0;
 	}
-
 }
