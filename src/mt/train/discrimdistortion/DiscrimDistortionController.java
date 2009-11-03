@@ -48,7 +48,8 @@ public class DiscrimDistortionController {
 	public void setFeatureFlags(final boolean use_word, 
 								final boolean use_tag,
 								final boolean use_position,
-								final boolean use_slen) {
+								final boolean use_slen,
+								final boolean use_context) {
 		features = new HashIndex<DistortionModel.Feature>();
 		
 		//WARNING!!! If you change the ordering, be sure that nothing
@@ -63,6 +64,10 @@ public class DiscrimDistortionController {
 			features.add(DistortionModel.Feature.SourceLen);
 		if(use_position)
 			features.add(DistortionModel.Feature.RelPosition);
+		if(use_context) {
+		  features.add(DistortionModel.Feature.RightTag);
+		  features.add(DistortionModel.Feature.LeftTag);
+		}
 		
 		if(VERBOSE)
 			System.err.printf("Features:\n %s\n", features.toString());
@@ -166,6 +171,10 @@ public class DiscrimDistortionController {
 					ps.printf(" %d", (int) d.get(i));
 				else if(feat == DistortionModel.Feature.SourceLen)
 					ps.printf(" %d", (int) d.get(i));
+				else if(feat == DistortionModel.Feature.LeftTag)
+				  ps.printf(" %s",model.tagIndex.get((int) d.get(i)));
+				else if(feat == DistortionModel.Feature.RightTag)
+				  ps.printf(" %s",model.tagIndex.get((int) d.get(i)));
 				i++;
 			}
 			ps.println();

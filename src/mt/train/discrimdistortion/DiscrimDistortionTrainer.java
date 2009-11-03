@@ -24,12 +24,13 @@ public final class DiscrimDistortionTrainer {
 		classUsage.append(" -s          : Feature: source POS tag (source file must be tagged with delimiter #)\n");
 		classUsage.append(" -w <thresh> : Feature: word (cutoff threshold for vocabulary)\n");
 		classUsage.append(" -e <file>   : Extract and write feature set ONLY\n");
+		classUsage.append(" -c          : Feature: right/left POS tag context\n");
 
 		return classUsage.toString();
 	}
 
 	//Uses GNU getopt() syntax
-	private final static OptionParser op = new OptionParser("ve:w:plst:f:d:");
+	private final static OptionParser op = new OptionParser("vce:w:plst:f:d:");
 	private final static int MIN_ARGS = 3;
 
 	//Command line options
@@ -38,6 +39,7 @@ public final class DiscrimDistortionTrainer {
 	private static boolean USE_TAG = false;
 	private static boolean USE_POSITION = false;
 	private static boolean USE_SLEN = false;
+	private static boolean USE_CONTEXT = false;
 	private static boolean EXTRACT_ONLY = false;
 	
 	private static int numThreads = 1;
@@ -71,6 +73,7 @@ public final class DiscrimDistortionTrainer {
 		USE_SLEN = opts.has("l");
 		USE_POSITION = opts.has("p");
 		USE_TAG = opts.has("s");
+		USE_CONTEXT = opts.has("c");
 		if(opts.has("t"))
 			numThreads = Integer.parseInt((String) opts.valueOf("t"));
 		if(opts.has("f"))
@@ -106,7 +109,7 @@ public final class DiscrimDistortionTrainer {
 
 		DiscrimDistortionController controller = new DiscrimDistortionController(sourceFile,targetFile,alignFile);
 		controller.setVerbose(VERBOSE);
-		controller.setFeatureFlags(USE_WORD,USE_TAG,USE_POSITION,USE_SLEN);
+		controller.setFeatureFlags(USE_WORD,USE_TAG,USE_POSITION,USE_SLEN, USE_CONTEXT);
 		controller.setNumThreads(numThreads);
 		controller.setMinWordCount(minWordCount);
 		controller.preAllocateMemory(numExpectedFeatures);

@@ -9,7 +9,7 @@ import edu.stanford.nlp.util.Pair;
 public class DistortionModel implements Serializable {
 	private static final long serialVersionUID = 8119388926319744131L;
 
-	public static enum Feature { Word, RelPosition, CurrentTag, SourceLen }
+	public static enum Feature { Word, RelPosition, CurrentTag, SourceLen, LeftTag, RightTag }
 	public static enum FeatureType { Binary, Real };
 	public static enum Class { C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12 }
 

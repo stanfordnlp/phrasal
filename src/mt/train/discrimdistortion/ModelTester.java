@@ -51,6 +51,9 @@ public class ModelTester {
 			System.exit(-1);
 		}
 		
+		System.out.println("POS Tag Index:");
+		System.out.println(m.tagIndex.toString());
+		
 		if(EVAL_SINGLE)
 			evalSingle(m,evalFile);
 		else
@@ -145,27 +148,42 @@ public class ModelTester {
 				PrintStream ps = IOTools.getWriterFromFile(evalFile + ".out." + Integer.toString(reader.getLineNumber()));
 				
 				StringTokenizer st = new StringTokenizer(input);
-				String word = null,tag = null;
+				String word = null,tag = null,rTag = null, lTag = null;
 				int slen = 0;
 				for(int j = 0; st.hasMoreTokens(); j++) {
 					if(j == 0) word = st.nextToken();
 					else if(j == 1) tag = st.nextToken();
 					else if(j == 2) slen = Integer.parseInt(st.nextToken());
+          else if(j == 3) lTag = st.nextToken();
+					else if(j == 4) rTag = st.nextToken();
 				}
 
 				//Assumes these words and tags are in the model...exception otherwise
+        boolean isOOV = !model.wordIndex.contains(word);
 				float[] feats = new float[model.getFeatureDimension()];
-				feats[0] = (float) model.wordIndex.indexOf(word);
-				feats[1] = (float) model.tagIndex.indexOf(tag);
-				feats[2] = (float) DistortionModel.getSlenBin(slen);
-
+				int featPtr = 0;
+	      for(DistortionModel.Feature feat : model.featureIndex) {
+	        if(feat == DistortionModel.Feature.Word && !isOOV)
+	          feats[featPtr++] = (float) model.wordIndex.indexOf(word);
+	        else if(feat == DistortionModel.Feature.CurrentTag)
+	          feats[featPtr++] = (float) model.tagIndex.indexOf(tag);
+	        else if(feat == DistortionModel.Feature.RelPosition)
+	          feats[featPtr++] = 0.0f;
+	        else if(feat == DistortionModel.Feature.SourceLen)
+	          feats[featPtr++] = (float) DistortionModel.getSlenBin(slen);
+	        else if(feat == DistortionModel.Feature.RightTag)
+              feats[featPtr++] = (float) model.tagIndex.indexOf(rTag, true);
+          else if(feat == DistortionModel.Feature.LeftTag)
+            feats[featPtr++] = (float) model.tagIndex.indexOf(lTag, true);
+          }
+				
 				for(int rpos = 0; rpos < 100; rpos += 20) {
 					feats[3] = DistortionModel.getSlocBin((float) rpos / 100.0f);
 					Datum d = new Datum(0.0f,feats);
 					double totalMass = 0.0;
 					ps.println(feats[3]);
 					for(DistortionModel.Class c : DistortionModel.Class.values()) {
-						double prob = model.prob(d, c, false);
+						double prob = model.prob(d, c, isOOV);
 						totalMass += prob;
 						ps.printf("%d %f\n", c.ordinal(), prob);
 					}

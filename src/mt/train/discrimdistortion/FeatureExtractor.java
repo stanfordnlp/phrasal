@@ -136,6 +136,17 @@ public class FeatureExtractor {
 						datum[datPtr++] = (float) slenBin;
 					else if(feature == DistortionModel.Feature.RelPosition)
 						datum[datPtr++] = DistortionModel.getSlocBin((float) sIdx / (float) sourceWords.size());
+					else if(feature == DistortionModel.Feature.RightTag) {
+					  if(sIdx == sourceWords.size() - 1)
+					    datum[datPtr++] = (float) tagIndex.indexOf("</S>",true);
+					  else
+					    datum[datPtr++] = (float) tagIndex.indexOf(posTags.get(sIdx + 1), true);
+					} else if(feature == DistortionModel.Feature.LeftTag) {
+					  if(sIdx == 0)
+					    datum[datPtr++] = (float) tagIndex.indexOf("<S>", true);
+					  else
+					    datum[datPtr++] = (float) tagIndex.indexOf(posTags.get(sIdx - 1), true);
+					}
 				}
 				ts.addDatum(new Datum(targetValue, datum));
 			}
@@ -235,6 +246,12 @@ public class FeatureExtractor {
 				} else if(feature == DistortionModel.Feature.RelPosition) {
 					ts.addFeatureParameters(feature, DistortionModel.FeatureType.Binary, offset, DistortionModel.NUM_SLOC_BINS);
 					offset += DistortionModel.NUM_SLOC_BINS;
+				} else if(feature == DistortionModel.Feature.RightTag) {
+				  ts.addFeatureParameters(feature, DistortionModel.FeatureType.Binary, offset, tagIndex.size());
+				  offset += tagIndex.size();
+				} else if(feature == DistortionModel.Feature.LeftTag) {
+				  ts.addFeatureParameters(feature, DistortionModel.FeatureType.Binary, offset, tagIndex.size());
+				  offset += tagIndex.size();
 				}
 			}
 						
