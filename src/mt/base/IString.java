@@ -3,7 +3,6 @@ package mt.base;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
-import edu.stanford.nlp.util.HasIntegerIdentity;
 
 import java.io.Serializable;
 import java.io.Writer;
