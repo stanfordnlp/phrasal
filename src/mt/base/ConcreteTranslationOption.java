@@ -19,7 +19,14 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 	public final int foreignPos;
 	public final double isolationScore;
 
-  public enum LinearDistortionType { standard, first_contiguous_segment, last_contiguous_segment }
+  public enum LinearDistortionType {
+    standard,
+    first_contiguous_segment,
+    last_contiguous_segment,
+    closest_contiguous_segment,
+    min_first_last_contiguous_segment,
+    average_distance
+  }
 
   private static LinearDistortionType linearDistortionType = LinearDistortionType.standard;
 
@@ -65,18 +72,43 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 
   public int linearDistortion(ConcreteTranslationOption<T> opt, LinearDistortionType type) {
 		final int nextForeignToken;
+    if(type != LinearDistortionType.standard)
+      assert(PseudoMoses.withGaps);
     switch(type) {
     case standard:
       nextForeignToken = foreignPos + abstractOption.foreign.size();
       break;
     case last_contiguous_segment:
-      assert(PseudoMoses.withGaps);
       nextForeignToken = foreignCoverage.length();
       break;
     case first_contiguous_segment:
-      assert(PseudoMoses.withGaps);
       nextForeignToken = foreignCoverage.nextClearBit(foreignCoverage.nextSetBit(0));
       break;
+    case closest_contiguous_segment:
+      {
+        //int firstIdx = foreignCoverage.nextClearBit(foreignCoverage.nextSetBit(0));
+        //int lastIdx = foreignCoverage.length();
+        // TODO
+        throw new UnsupportedOperationException();
+      }
+    case min_first_last_contiguous_segment:
+      {
+        int firstIdx = foreignCoverage.nextClearBit(foreignCoverage.nextSetBit(0));
+        int lastIdx = foreignCoverage.length();
+        int firstDelta = Math.abs(firstIdx - opt.foreignPos);
+        int lastDelta = Math.abs(lastIdx - opt.foreignPos);
+        return Math.min(firstDelta, lastDelta);
+      }
+    case average_distance:
+      {
+        int firstIdx = foreignCoverage.nextClearBit(foreignCoverage.nextSetBit(0));
+        int lastIdx = foreignCoverage.length();
+        int firstDelta = Math.abs(firstIdx - opt.foreignPos);
+        int lastDelta = Math.abs(lastIdx - opt.foreignPos);
+        //System.err.printf("coverage: %s first=%d last=%d pos=%d delta=(%d,%d) min=%d\n",
+        //     foreignCoverage, firstIdx, lastIdx, opt.foreignPos, firstDelta, lastDelta, Math.min(firstDelta, lastDelta));
+        return (firstDelta+lastDelta)/2;
+      }
     default:
       throw new UnsupportedOperationException();
     }

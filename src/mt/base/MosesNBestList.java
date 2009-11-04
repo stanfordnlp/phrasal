@@ -7,6 +7,7 @@ import java.util.zip.GZIPInputStream;
 import java.text.DecimalFormat;
 
 import mt.decoder.util.Scorer;
+import mt.metrics.NISTTokenizer;
 
 import edu.stanford.nlp.util.OAIndex;
 
@@ -23,6 +24,9 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	public final OAIndex<String> featureIndex = new OAIndex<String>();
 	public static final String DEBUG_PROPERTY = "MosesNBestListDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
+  public static final String NIST_TOKENIZE_PROPERTY = "NISTtokenize";
+	public static final boolean NIST_TOKENIZE = Boolean.parseBoolean(System.getProperty(NIST_TOKENIZE_PROPERTY, "false"));
 
 
   @SuppressWarnings("unchecked")
@@ -99,7 +103,9 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
         }
         String id = fields[0];
 				String translation = fields[1];
-				String featuresStr = fields[2];
+        if(NIST_TOKENIZE)
+          translation = NISTTokenizer.tokenize(translation);
+        String featuresStr = fields[2];
 				String scoreStr = (fields.length >= 4 ? fields[3] : "0");
 				String latticeIdStr = (fields.length >= 5 ? fields[4] : null);
 				// System.err.printf("reading id: %s\n", id);
