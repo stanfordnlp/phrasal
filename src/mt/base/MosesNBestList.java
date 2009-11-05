@@ -25,13 +25,12 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	public static final String DEBUG_PROPERTY = "MosesNBestListDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  public static final String NIST_TOKENIZE_PROPERTY = "NISTtokenize";
-	public static final boolean NIST_TOKENIZE = Boolean.parseBoolean(System.getProperty(NIST_TOKENIZE_PROPERTY, "false"));
-
+	public final boolean tokenizeNIST;
 
   @SuppressWarnings("unchecked")
-	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer scorer) {
-		sequenceSelfMap = null;
+	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer scorer, boolean tokenizeNIST) {
+    this.tokenizeNIST = tokenizeNIST;
+    sequenceSelfMap = null;
 		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>(list1.nbestLists());
 		
 		List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists2 = list2.nbestLists();
@@ -44,18 +43,25 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		}
 	}
 	
-	public MosesNBestList(List<List<ScoredFeaturizedTranslation<IString,String>>> rawList) {
-		sequenceSelfMap = null;
+	public MosesNBestList(List<List<ScoredFeaturizedTranslation<IString,String>>> rawList, boolean tokenizeNIST) {
+    this.tokenizeNIST = tokenizeNIST;
+    sequenceSelfMap = null;
 		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>(rawList);
 	}
 	
 	public final Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap;
-	
-	public MosesNBestList(String filename) throws IOException {
-		this(filename, new HashMap<Sequence<IString>, Sequence<IString>>());
+
+
+  public MosesNBestList(String filename) throws IOException {
+    this(filename, false);
+  }
+
+  public MosesNBestList(String filename, boolean tokenizeNIST) throws IOException {
+		this(filename, new HashMap<Sequence<IString>, Sequence<IString>>(), tokenizeNIST);
 	}
 	
-	public MosesNBestList(String filename, Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap) throws IOException {
+	public MosesNBestList(String filename, Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap, boolean tokenizeNIST) throws IOException {
+    this.tokenizeNIST = tokenizeNIST;
 	  this.sequenceSelfMap = sequenceSelfMap;
 		Runtime rt = Runtime.getRuntime();
 		long preNBestListLoadMemUsed = rt.totalMemory()-rt.freeMemory();
@@ -103,7 +109,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
         }
         String id = fields[0];
 				String translation = fields[1];
-        if(NIST_TOKENIZE)
+        if(tokenizeNIST)
           translation = NISTTokenizer.tokenize(translation);
         String featuresStr = fields[2];
 				String scoreStr = (fields.length >= 4 ? fields[3] : "0");
@@ -317,7 +323,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		}
 		
 		String nbestListFilename = args[0];
-		MosesNBestList nbestList = new MosesNBestList(nbestListFilename);
+		MosesNBestList nbestList = new MosesNBestList(nbestListFilename, false);
 		System.out.print(nbestList.printMosesFormat());
 	}
 

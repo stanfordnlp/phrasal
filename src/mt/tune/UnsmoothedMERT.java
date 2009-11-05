@@ -22,6 +22,8 @@ import edu.stanford.nlp.util.ErasureUtils;
  */
 public class UnsmoothedMERT extends Thread {
 
+  private static boolean tokenizeNIST = false;
+
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
@@ -635,9 +637,9 @@ public class UnsmoothedMERT extends Thread {
     EvaluationMetric<IString, String> emetric = defaultMERT.emetric;
 
     // Load nbest list:
-    nbest = new MosesNBestList(nbestListFile);
+    nbest = new MosesNBestList(nbestListFile, tokenizeNIST);
     //nbest.setArraysFromIndex();
-    MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap);
+    MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap, tokenizeNIST);
     //localNbest.setArraysFromIndex();
     AbstractNBestOptimizer.nbest = nbest;
 
@@ -801,9 +803,9 @@ public class UnsmoothedMERT extends Thread {
 		TERpMetric.MAX_SHIFT_DIST = 10; // XXX - make cleaner/safer
 		if (evalMetric.equals("bleu:3-2terp")) {
     	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
     	List<List<Sequence<IString>>> referencesTERp = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
 			int BLEUOrder = 3;
       double terW = 2.0;
       
@@ -814,9 +816,9 @@ public class UnsmoothedMERT extends Thread {
       System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("bleu:3-terp")) {
       List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
       List<List<Sequence<IString>>> referencesTERp = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
       int BLEUOrder = 3;
       double terW = 1.0;
       emetric = new LinearCombinationMetric<IString, String>
@@ -826,15 +828,15 @@ public class UnsmoothedMERT extends Thread {
       System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("terp")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
       emetric = new TERpMetric<IString, String>(references);
     } else if (evalMetric.equals("terpa")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
       emetric = new TERpMetric<IString, String>(references, false, true);
     } else if (evalMetric.equals("meteor") || evalMetric.startsWith("meteor:")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
       String[] fields = evalMetric.split(":");
 			if (fields.length > 1) {
 				double alpha = Double.parseDouble(fields[1]);
@@ -846,7 +848,7 @@ public class UnsmoothedMERT extends Thread {
 			}
     } else if (evalMetric.equals("ter") || evalMetric.startsWith("ter:")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
       String[] fields = evalMetric.split(":");
       TERMetric<IString,String> termetric = new TERMetric<IString, String>(references);
       setFastTER(termetric.calc);
@@ -863,7 +865,7 @@ public class UnsmoothedMERT extends Thread {
       emetric = termetric;
     } else if (evalMetric.equals("bleu") || evalMetric.startsWith("bleu:")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
       if (evalMetric.contains(":")) {
 				String[] fields = evalMetric.split(":");
 				int BLEUOrder = Integer.parseInt(fields[1]);
@@ -873,13 +875,13 @@ public class UnsmoothedMERT extends Thread {
 			}
     } else if (evalMetric.equals("nist")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
        emetric = new NISTMetric<IString, String>(references);
     } else if (evalMetric.startsWith("bleu-2terp")) {
     	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
     	List<List<Sequence<IString>>> referencesTERp = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
       String[] fields = evalMetric.split(":");
       double terW = 2.0;
       if(fields.length > 1) {
@@ -893,9 +895,9 @@ public class UnsmoothedMERT extends Thread {
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu+2meteor")) {
     	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
     	List<List<Sequence<IString>>> referencesMeteor = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
       String[] fields = evalMetric.split(":");
 			double alpha = 0.95, beta = 0.5, gamma = 0.5;
       if(fields.length > 1) {
@@ -912,9 +914,9 @@ public class UnsmoothedMERT extends Thread {
               evalMetric, 2.0);
     } else if (evalMetric.startsWith("bleu-2terpa")) {
     	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
     	List<List<Sequence<IString>>> referencesTERpa = Metrics
-            .readReferences(referenceList.split(","), false);
+            .readReferences(referenceList.split(","), tokenizeNIST);
       String[] fields = evalMetric.split(":");
       double terW = 2.0;
       if(fields.length > 1) {
@@ -928,7 +930,7 @@ public class UnsmoothedMERT extends Thread {
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
       String[] fields = evalMetric.split(":");
       double terW = 1.0;
       if(fields.length > 1) {
@@ -942,7 +944,7 @@ public class UnsmoothedMERT extends Thread {
       System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("wer")) {
     	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","));
+            .readReferences(referenceList.split(","), tokenizeNIST);
       emetric = new WERMetric<IString, String>(references);
     } else {
       emetric = null;
@@ -1082,6 +1084,8 @@ public class UnsmoothedMERT extends Thread {
         nStartingPoints = Integer.parseInt(args[++argi]);
       } else if(arg.equals("-o")) {
         optStr = args[++argi];
+      } else if(arg.equals("-N")) {
+        tokenizeNIST = true;
       } else if(arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
         try {
@@ -1099,7 +1103,15 @@ public class UnsmoothedMERT extends Thread {
     }
 
     if(args.length-argi != 6) {
-      System.err.printf("Usage:\n\tjava mt.UnsmoothedMERT [-t (nb of threads)] [-s (seed)] [-p (nb of starting points)] [-o (optimizer name)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
+      System.err.printf("Usage:\n\tjava mt.UnsmoothedMERT [-N] [-t (nb of threads)] [-s (seed)] [-p (nb of starting points)] [-o (optimizer name)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
+      System.err.println("-s <N>: provide seed to initialize random number generator.");
+      System.err.println("-p <N>: number of starting points.");
+      System.err.println("-o <N>: search algorithm.");
+      System.err.println("-t <N>: number of threads.");
+      System.err.println("-f <file>: weights read from file remain fixed during MERT.");
+      System.err.println("-S: tune using sentence-level BLEU (smoothed).");
+      System.err.println("-N: apply NIST tokenization to hypotheses.");
+      System.err.println("-N: apply NIST tokenization to hypotheses.");
       System.exit(-1);
     }
 

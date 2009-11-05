@@ -1911,7 +1911,7 @@ class SVDReducedObj extends AbstractNBestOptimizer {
       }
     }
 
-    return new MosesNBestList(newNbestLists);
+    return new MosesNBestList(newNbestLists, false);
   }
 }
 
@@ -2236,7 +2236,7 @@ class PointwisePerceptron extends AbstractNBestOptimizer {
         List<List<ScoredFeaturizedTranslation<IString, String>>> nbestSlice = Arrays
                 .asList(nbest.nbestLists().get(i));
         List<ScoredFeaturizedTranslation<IString, String>> current = argmaxByScore
-                .maximize(new MosesNBestList(nbestSlice));
+                .maximize(new MosesNBestList(nbestSlice, false));
         Counter<String> dir = UnsmoothedMERT.summarizedAllFeaturesVector(Arrays
                 .asList(targets.get(i)));
         Counters.subtractInPlace(dir, UnsmoothedMERT.summarizedAllFeaturesVector(current));

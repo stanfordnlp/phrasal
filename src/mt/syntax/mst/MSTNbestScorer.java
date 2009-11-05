@@ -40,7 +40,7 @@ public class MSTNbestScorer {
     for(int i=3; i<args.length; ++i) {
       String nbestListFile = args[i];
       System.err.println("Loading nbest list: "+nbestListFile);
-      final MosesNBestList nbestList = new MosesNBestList(nbestListFile);
+      final MosesNBestList nbestList = new MosesNBestList(nbestListFile, true);
 
       doneThreads.set(0);
       curSent.set(0);
