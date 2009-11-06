@@ -23,6 +23,8 @@ public class FeatureExtractor {
 	
 	private boolean VERBOSE = false;
 	
+	private boolean ADD_FEATURE_INDEX = true;
+	
 	protected TrainingSet ts = null;
 	protected Index<String> tagIndex = null;
 	protected Index<String> wordIndex = null;
@@ -32,6 +34,8 @@ public class FeatureExtractor {
 	protected Index<DistortionModel.Class> classIndex = null;
 	
 	private final ExecutorService threadPool;
+	
+	private DistortionModel initModel = null;
 	
 	//Assumes that these files exist
 	public FeatureExtractor(int numThreads, File sourceFile, File targetFile, File alignFile) {
@@ -46,9 +50,9 @@ public class FeatureExtractor {
 	
 	public void setMinWordCount(int minWordCount) { WORD_COUNT_LIMIT = minWordCount; }	
 	
-//	public synchronized void printTarget(float f) {
-//		ps.println(f);
-//	}
+	public void setExtractOnly() { ADD_FEATURE_INDEX = false; }
+	
+	public void initializeWithModel(DistortionModel d) { initModel = d; }
 	
 	protected class ExtractionTask implements Runnable {
 
@@ -109,7 +113,7 @@ public class FeatureExtractor {
 			// We ignore unaligned words. They are interpolated at decoding time.
 			for(Map.Entry<Integer, Integer> alignment : alignmentMap.entrySet()) {
 				final int sIdx = alignment.getKey();
-				if(!wordIndex.contains(sourceWords.get(sIdx))) continue;
+				if(!wordIndex.contains(sourceWords.get(sIdx)) && ADD_FEATURE_INDEX) continue;
 				
 				final int tIdx = alignment.getValue();
 
@@ -130,7 +134,7 @@ public class FeatureExtractor {
 						datum[datPtr++] = (float) wordIndex.indexOf(sourceWords.get(sIdx));
 					else if(feature == DistortionModel.Feature.CurrentTag) {
 						String thisTag = posTags.get(sIdx);
-						datum[datPtr++] = (float) tagIndex.indexOf(thisTag,true);
+						datum[datPtr++] = (float) tagIndex.indexOf(thisTag,ADD_FEATURE_INDEX);
 					}
 					else if(feature == DistortionModel.Feature.SourceLen)
 						datum[datPtr++] = (float) slenBin;
@@ -138,14 +142,14 @@ public class FeatureExtractor {
 						datum[datPtr++] = DistortionModel.getSlocBin((float) sIdx / (float) sourceWords.size());
 					else if(feature == DistortionModel.Feature.RightTag) {
 					  if(sIdx == sourceWords.size() - 1)
-					    datum[datPtr++] = (float) tagIndex.indexOf("</S>",true);
+					    datum[datPtr++] = (float) tagIndex.indexOf("</S>",ADD_FEATURE_INDEX);
 					  else
-					    datum[datPtr++] = (float) tagIndex.indexOf(posTags.get(sIdx + 1), true);
+					    datum[datPtr++] = (float) tagIndex.indexOf(posTags.get(sIdx + 1), ADD_FEATURE_INDEX);
 					} else if(feature == DistortionModel.Feature.LeftTag) {
 					  if(sIdx == 0)
-					    datum[datPtr++] = (float) tagIndex.indexOf("<S>", true);
+					    datum[datPtr++] = (float) tagIndex.indexOf("<S>", ADD_FEATURE_INDEX);
 					  else
-					    datum[datPtr++] = (float) tagIndex.indexOf(posTags.get(sIdx - 1), true);
+					    datum[datPtr++] = (float) tagIndex.indexOf(posTags.get(sIdx - 1), ADD_FEATURE_INDEX);
 					}
 				}
 				ts.addDatum(new Datum(targetValue, datum));
@@ -188,18 +192,22 @@ public class FeatureExtractor {
 		ts = new TrainingSet(featureIndex, classIndex, numExpectedFeatures);
 		
 		if(featureIndex.contains(DistortionModel.Feature.CurrentTag))
-			tagIndex = new HashIndex<String>();
+			tagIndex = (initModel == null) ? new HashIndex<String>() : initModel.tagIndex;
 		if(featureIndex.contains(DistortionModel.Feature.Word)) {
-			if(VERBOSE)
-				System.out.printf("%s: Extracting vocabulary...\n", this.getClass().getName());
-			Counter<String> vocab = extractVocabulary(sourceFile.getPath(), featureIndex.contains(DistortionModel.Feature.CurrentTag));
-			wordIndex = new HashIndex<String>();
-			for(String word : vocab.keySet())
-				if(vocab.getCount(word) >= WORD_COUNT_LIMIT)
-					wordIndex.add(word);
-			if(VERBOSE)
-				System.out.printf("%s: Extracted %d terms (discarded %d \\ final vocab %d)\n", 
-						this.getClass().getName(), vocab.keySet().size(), vocab.keySet().size() - wordIndex.size(), wordIndex.size());
+		  if(initModel == null) {
+		    if(VERBOSE)
+		      System.out.printf("%s: Extracting vocabulary...\n", this.getClass().getName());
+		    Counter<String> vocab = extractVocabulary(sourceFile.getPath(), featureIndex.contains(DistortionModel.Feature.CurrentTag));
+		    wordIndex = new HashIndex<String>();
+		    for(String word : vocab.keySet())
+		      if(vocab.getCount(word) >= WORD_COUNT_LIMIT)
+		        wordIndex.add(word);
+		    if(VERBOSE)
+		      System.out.printf("%s: Extracted %d terms (discarded %d \\ final vocab %d)\n", 
+		          this.getClass().getName(), vocab.keySet().size(), vocab.keySet().size() - wordIndex.size(), wordIndex.size());
+		  }
+		  else
+		    wordIndex = initModel.wordIndex;
 		}
 		
 		LineNumberReader sourceReader = IOTools.getReaderFromFile(sourceFile);

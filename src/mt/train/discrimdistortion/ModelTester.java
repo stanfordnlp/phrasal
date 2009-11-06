@@ -1,8 +1,6 @@
 package mt.train.discrimdistortion;
 
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -11,13 +9,14 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import mt.base.IOTools;
+import mt.train.discrimdistortion.DistortionModel.Class;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.util.Pair;
 
 public class ModelTester {
 
 	//Uses GNU getopt() syntax
-	private final static OptionParser op = new OptionParser("s");
+	private final static OptionParser op = new OptionParser("sl");
 	private final static int MIN_ARGS = 2;
 	
 	public static void main(String[] args) {
@@ -36,7 +35,6 @@ public class ModelTester {
 			System.exit(-1);
 		}
 		
-		boolean EVAL_SINGLE = opts.has("s");
 		String modelFile = parsedArgs.get(0);
 		String evalFile = parsedArgs.get(1);
 		
@@ -54,13 +52,46 @@ public class ModelTester {
 		System.out.println("POS Tag Index:");
 		System.out.println(m.tagIndex.toString());
 		
-		if(EVAL_SINGLE)
+		if(opts.has("s"))
 			evalSingle(m,evalFile);
+		else if(opts.has("l"))
+		  evalLogLik(m,evalFile);
 		else
 			evalTestSet(m,evalFile);	
 	}
 	
-	private static void evalTestSet(DistortionModel model, String testFile) {
+	private static void evalLogLik(DistortionModel m, String testPrefix) {
+    
+	  System.out.println(">> Evaluating Log Likelihood <<");
+	  
+	  File algnFile = new File(testPrefix + ".algn");
+    File arFile = new File(testPrefix + ".f");
+    File enFile = new File(testPrefix + ".e");
+    
+	  FeatureExtractor fe = new FeatureExtractor(1,arFile,enFile,algnFile);
+	  fe.setMinWordCount(1);
+	  fe.setVerbose(true);
+	  fe.setExtractOnly();
+	  fe.initializeWithModel(m);
+	  
+	  double logLik = 0.0;
+	  TrainingSet ts = fe.extract(m.featureIndex, m.classIndex, 120000);
+	  for(Datum d : ts) {
+	    boolean isOOV = false;
+	    if(m.featureIndex.contains(DistortionModel.Feature.Word)) {
+	      int wordIdx = m.featureIndex.indexOf(DistortionModel.Feature.Word);
+	      isOOV = (d.get(wordIdx) == -1.0f);
+	    }
+	    
+	    Pair<Double, DistortionModel.Class> thisClass = m.argmax(d, isOOV);
+	    logLik += Math.log(m.prob(d, thisClass.second(), isOOV));
+	  }
+	  
+	  System.out.printf("Test alignments: %d\n", ts.getNumExamples());
+	  System.out.printf("logLik: %f\n", logLik);  
+  }
+
+  private static void evalTestSet(DistortionModel model, String testFile) {
 		LineNumberReader reader = IOTools.getReaderFromFile(testFile);
 		try {
 			int totalExamples = 0;
