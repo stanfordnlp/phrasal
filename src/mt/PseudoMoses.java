@@ -89,6 +89,7 @@ public class PseudoMoses {
   public static double DEFAULT_MOMENTUM_TERM = 0.9;
   static final int DEFAULT_LOCAL_PROCS = 1;
   static final int DEFAULT_MAX_EPOCHS = 5;
+  static final int DEFAULT_DISTORTION_LIMIT = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
   static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 
@@ -151,6 +152,7 @@ public class PseudoMoses {
 
   public static int local_procs = DEFAULT_LOCAL_PROCS;
   public static boolean withGaps = false;
+  public static int distortionLimit = DEFAULT_DISTORTION_LIMIT;
 
   List<Inferer<IString, String>> inferers;
 	Inferer<IString, String> refInferer;
@@ -350,7 +352,7 @@ public class PseudoMoses {
 			learningTarget = configToLearningTarget.get(strLearningTarget.get(0));
 		}
 
-		int distortionLimit = -1;
+		//int distortionLimit = -1;
 		if (config.containsKey(DISTORTION_LIMIT)) {
 			List<String> strDistortionLimit = config.get(DISTORTION_LIMIT);
 			if (strDistortionLimit.size() != 1) {
@@ -568,8 +570,9 @@ public class PseudoMoses {
 			}
 			weightConfig.add(makePair(NGramLanguageModelFeaturizer.FEATURE_NAME,
 					config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
-			weightConfig.add(makePair(LinearDistortionFeaturizer.FEATURE_NAME, config
-					.get(DISTORTION_WT_OPT).get(0)));
+			weightConfig.add(makePair(LinearDistortionFeaturizer.FEATURE_NAME, 
+					config.get(DISTORTION_WT_OPT).get(0)));
+			
 			if (config.get(DISTORTION_WT_OPT).size() > 1) {
 				int numAdditionalWts = config.get(DISTORTION_WT_OPT).size() - 1;
 				if (lexReorderFeaturizer == null) {
