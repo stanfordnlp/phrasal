@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.BitSetUtils;
  * @author Michel Galley
  */
  
-public class SourceFilteringToolkit {
+public class SourceFilter {
 
   public static final String SHOW_PHRASE_RESTRICTION_PROPERTY = "ShowPhraseRestriction";
   public static final boolean SHOW_PHRASE_RESTRICTION = 

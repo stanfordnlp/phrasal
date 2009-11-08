@@ -51,13 +51,13 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	  }
 	  
 	  @SuppressWarnings("unchecked")
-	  public int[] get(int idx) {
+	  public synchronized int[] get(int idx) {
 	      int pos = reverseIndex[idx];
 	      if (pos == -1) return null;
 	      return keys[pos];
 	  }
 	  
-	  synchronized void sizeUp() {      
+	  void sizeUp() {
 	    int newSize = keys.length<<1;
 	    mask = newSize-1;
 	    //System.err.printf("size up to: %d\n", newSize);
@@ -73,8 +73,8 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    }
 	  } 
 	  
-	@SuppressWarnings("unused")
-	private int getSearchOffset(int pos, int[] key) {
+    @SuppressWarnings("unused")
+    private int getSearchOffset(int pos, int[] key) {
 	      int idealIdx = supplementalHash(Arrays.hashCode(key)) & mask;      
 	      int distance;
 	      if (idealIdx < pos) {
@@ -85,7 +85,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	      return distance;
 	  }
 	  
-	synchronized int add(int key[], int pos, boolean sharedRep) {
+	  int add(int key[], int pos, boolean sharedRep) {
 	    if ((load++)/(double)keys.length > MAX_LOAD) { 
 	      sizeUp();
 	      pos = -findPos(key, true)-1;
@@ -100,19 +100,19 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    return maxIndex-1;
 	  }
 	  	  
-	  public int indexOf(int[] key) { 
+	  public synchronized int indexOf(int[] key) { 
 	      int pos = findPos(key, false);
 	      if (pos < 0) return -1;
 	      return values[pos]; 
 	  }
 	  
-	  public boolean contains(int[] key) {
+	  public synchronized boolean contains(int[] key) {
 	      int pos = findPos(key, false);
 	      if (pos < 0) return false;
 	      return true;
 	  }
 	  
-	  public int commonRepIndexOf(int[] key, boolean add) {
+	  public synchronized int commonRepIndexOf(int[] key, boolean add) {
 	  	int pos = findPos(key, add);
 	    if (pos >= 0) return values[pos];
 	    if (!add) return -1;
@@ -121,7 +121,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    return insert;
 	  }
 
-	  public int indexOf(int[] key, boolean add) {
+	  public synchronized int indexOf(int[] key, boolean add) {
 	    int pos = findPos(key, add);
 	    if (pos >= 0) return values[pos];
 	    if (!add) return -1;
@@ -133,7 +133,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    } */    
 	  } 
 	  
-	  public int size() {
+	  public synchronized int size() {
 	    return load;
 	  }
 

@@ -54,7 +54,15 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   
   List<AbstractFeatureExtractor> extractors;
   final AlignmentTemplates alTemps;
-  AlignmentTemplateInstance alTemp;
+  AlignmentTemplateInstance alTemp, alTemp2;
+
+  public Object clone() throws CloneNotSupportedException {
+    AbstractPhraseExtractor c = (AbstractPhraseExtractor) super.clone();
+    c.alGrid = new AlignmentGrid(0,0);
+    c.alTemp = new AlignmentTemplateInstance();
+    c.alTemp2 = new AlignmentTemplateInstance();
+    return c;
+  }
 
   public AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
 
@@ -62,6 +70,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
+    this.alTemp2 = new AlignmentTemplateInstance();
     needAlGrid = false;
     
     if(PRINT_GRID_MAX_LEN >= 0)
@@ -116,11 +125,9 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       alTemp.init(sent,f1,f2,e1,e2,weight);
     }
 
-    synchronized(alTemps) {
-      alTemps.addToIndex(alTemp);
-      alTemps.incrementAlignmentCount(alTemp);
-    }
-    
+    alTemps.addToIndex(alTemp);
+    alTemps.incrementAlignmentCount(alTemp);
+
     // Run each feature extractor for each altemp:
     if(!needAlGrid)
       for(AbstractFeatureExtractor e : extractors) {
@@ -147,14 +154,12 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       alTemp = new AlignmentTemplateInstance(sent, fs, es, fContiguous, eContiguous);
       alGrid.addAlTemp(alTemp, isConsistent);
     } else {
-      alTemp = this.alTemp;
+      alTemp = this.alTemp2;
       alTemp.init(sent, fs, es, fContiguous, eContiguous);
     }
 
-    synchronized(alTemps) {
-      alTemps.addToIndex(alTemp);
-      alTemps.incrementAlignmentCount(alTemp);
-    }
+    alTemps.addToIndex(alTemp);
+    alTemps.incrementAlignmentCount(alTemp);
 
     // Run each feature extractor for each altemp:
     if(!needAlGrid) {

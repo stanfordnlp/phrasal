@@ -203,7 +203,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     }
   }
 
-  private synchronized void addLexCount(IString f, IString e) {
+  private void addLexCount(IString f, IString e) {
     if(DEBUG_LEVEL >= 2)
       System.err.println("Adding lexical alignment count: c(f = "+f+"("+f.getId()+"), e="+e+" ("+e.getId()+"))");
     if(FILL_HASH) {
@@ -214,14 +214,14 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     }
   }
 
-  private synchronized int indexOfLex(IString f, IString e, boolean add)
+  private int indexOfLex(IString f, IString e, boolean add)
   { return lexIndex.indexOf(new int[] {f.getId(), e.getId()}, add); }
 
-  private synchronized int indexOfFLex(IString f, boolean add)
-  { return fLexIndex.indexOf(f.getId(), add); }
+  private int indexOfFLex(IString f, boolean add)
+  { synchronized(fLexIndex) { return fLexIndex.indexOf(f.getId(), add); } }
 
-  private synchronized int indexOfELex(IString e, boolean add)
-  { return eLexIndex.indexOf(e.getId(), add); }
+  private int indexOfELex(IString e, boolean add)
+  { synchronized(eLexIndex) { return eLexIndex.indexOf(e.getId(), add); } }
 
   private static void addCountToArray(IntArrayList list, int idx) {
     if(idx < 0)
@@ -232,9 +232,9 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
           list.add(0);
         int newCount = list.get(idx)+1;
         list.set(idx,newCount);
-        if(DEBUG_LEVEL >= 3)
-          System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
       }
+      if(DEBUG_LEVEL >= 3)
+        System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
     }
   }
 

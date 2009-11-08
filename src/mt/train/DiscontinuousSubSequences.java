@@ -11,12 +11,8 @@ import java.util.BitSet;
 
 public class DiscontinuousSubSequences {
 
-  private static final int BUFFER_SIZE = 100;
-
-  static List<IString> toks = new ArrayList<IString>(BUFFER_SIZE);
-
   public static Sequence<IString> subsequence(Sequence<IString> seq, BitSet bs, Map<Integer,Integer> align) {
-    toks.clear();
+    List<IString> toks = new ArrayList<IString>(bs.cardinality()+3);
     if(align != null)
       align.clear();
     int pos = -1;

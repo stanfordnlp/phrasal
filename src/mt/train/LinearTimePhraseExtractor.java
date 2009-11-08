@@ -12,6 +12,10 @@ import java.util.*;
  */
 public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
 
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
+
   public LinearTimePhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
     System.err.println("Using Moses phrase extractor (faster version).");

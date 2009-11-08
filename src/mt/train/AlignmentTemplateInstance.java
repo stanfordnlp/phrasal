@@ -81,9 +81,6 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
   // DTU stuff:
   ///////////////////////////////////////////////
 
-  static Map<Integer,Integer> fAlign = new HashMap<Integer,Integer>();
-  static Map<Integer,Integer> eAlign = new HashMap<Integer,Integer>();
-
   /**
    * Construct alignment template from phrase pair set using bit sets fs and es.
    * @param lazy If true, some alignment member variables are null,
@@ -94,6 +91,10 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
   }
 
   public void init(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous) {
+    
+    Map<Integer,Integer> fAlign = new HashMap<Integer,Integer>();
+    Map<Integer,Integer> eAlign = new HashMap<Integer,Integer>();
+
     reset();
     this.sent = sent;
     int f1 = fs.nextSetBit(0), f2 = fs.length()-1;

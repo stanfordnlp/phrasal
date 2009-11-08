@@ -13,6 +13,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String WITH_GAPS_OPT  = "withGaps";
   static public final String NO_TARGET_GAPS_OPT  = "noTargetGaps";
   static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
+  static public final String SKIP_UNALIGNED_GAPS_OPT  = "skipUnalignedGaps";
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
@@ -23,7 +24,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps;
+  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps;
   static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
@@ -39,11 +40,18 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   int fSentenceLength, eSentenceLength;
 
-  final LinearTimePhraseExtractor baseExtractor;
+  LinearTimePhraseExtractor baseExtractor;
 
-  //private final PriorityQueue<Phrase> queue = new PriorityQueue<Phrase>(QUEUE_SZ, new PhraseComparator());
-  private final Deque<Phrase> queue = new LinkedList<Phrase>();
-  private final Set<Phrase> seen = new HashSet<Phrase>(QUEUE_SZ);
+  private Deque<DTUPhrase> queue = new LinkedList<DTUPhrase>();
+  private Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
+
+  public Object clone() throws CloneNotSupportedException {
+    DTUPhraseExtractor c = (DTUPhraseExtractor) super.clone();
+    c.baseExtractor = (LinearTimePhraseExtractor) baseExtractor.clone();
+    c.queue = new LinkedList<DTUPhrase>();
+    c.seen = new HashSet<DTUPhrase>(QUEUE_SZ);
+    return c;
+  }
 
   public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
@@ -61,7 +69,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     optStr = prop.getProperty(NO_TARGET_GAPS_OPT);
     noTargetGaps =  optStr != null && !optStr.equals("false");
 
-    // With gaps or not:
+    // Ignore DTU if a gap only covers unaligned words:
+    optStr = prop.getProperty(SKIP_UNALIGNED_GAPS_OPT);
+    skipUnalignedGaps =  optStr != null && !optStr.equals("false");
+
+    // Only extracting cross-serial dependencies (for debugging):
     optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
     onlyCrossSerialDTU = optStr != null && !optStr.equals("false");
 
@@ -126,55 +138,32 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     return sb.toString();
   }
 
-  interface Phrase {
-
-    Collection<Phrase> successors();
-
-    public Phrase toContiguous();
-
-    boolean consistencize(int i, boolean source);
-
-    boolean sane();
-
-    int getFirstE();
-    int getLastE();
-    int getFirstF();
-    int getLastF();
-
-    int sizeE();
-    int sizeF();
-
-    int spanE();
-    int spanF();
-
-    void addE(int ei);
-    void addF(int fi);
-
-    boolean containsE(int ei);
-    boolean containsF(int fi);
-
-    boolean fContiguous();
-    boolean eContiguous();
-
-    void setConsistencizedE(int ei);
-    void setConsistencizedF(int fi);
-
-    boolean isConsistencizedE(int ei);
-    boolean isConsistencizedF(int fi);
-
-    Set<Integer> toConsistencizeInE();
-    Set<Integer> toConsistencizeInF();
-
-    BitSet getCrossSerialTypes();
-
-    String getCrossings();
-  }
-
-  abstract class AbstractPhrase implements Phrase {
+  class DTUPhrase {
 
     WordAlignment sent;
 
     BitSet consistencizedF, consistencizedE;
+
+    final BitSet f, e;
+
+    DTUPhrase(DTUPhrase dtu) {
+      sent = dtu.sent;
+      f = (BitSet) dtu.f.clone();
+      e = (BitSet) dtu.e.clone();
+      consistencizedF = (BitSet) dtu.consistencizedF.clone();
+      consistencizedE = (BitSet) dtu.consistencizedE.clone();
+    }
+
+    DTUPhrase(WordAlignment sent, int fi, int ei) {
+      super();
+      this.sent = sent;
+      f = new BitSet();
+      e = new BitSet();
+      f.set(fi);
+      e.set(ei);
+      consistencizedF = new BitSet();
+      consistencizedE = new BitSet();
+    }
 
     public boolean isConsistencizedE(int ei) { return consistencizedE.get(ei); }
     public boolean isConsistencizedF(int fi) { return consistencizedF.get(fi); }
@@ -185,7 +174,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     public boolean consistencize(int i, boolean source) {
       if(!consistencize(i, source, true))
         return false;
-      sane();
+
+      //Drop phrase if too large:
       if(sizeF() > maxSizeF) return false;
       if(sizeE() > maxSizeE) return false;
       if(!fContiguous() || !eContiguous()) {
@@ -194,7 +184,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         if(spanF() > maxSpanF) return false;
         if(spanE() > maxSpanE) return false;
       }
-      return true;
+
+      // Drop phrase if any of the gaps only contains unaligned words:
+      return !(skipUnalignedGaps && hasUnalignedGap());
     }
 
     private boolean consistencize(int i, boolean source, boolean topLevel) {
@@ -236,171 +228,50 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       }
       return true;
     }
-  }
-
-  class CTUPhrase extends AbstractPhrase {
-
-    private int f1, f2, e1, e2;
-
-    CTUPhrase(CTUPhrase ctu) {
-      sent = ctu.sent;
-      f1 = ctu.f1; f2 = ctu.f2;
-      e1 = ctu.e1; e2 = ctu.e2;
-      consistencizedF = (BitSet) ctu.consistencizedF.clone();
-      consistencizedE = (BitSet) ctu.consistencizedE.clone();
-    }
-
-    CTUPhrase(WordAlignment sent, int fi, int ei) {
-      super();
-      this.sent = sent;
-      f1 = f2 = fi;
-      e1 = e2 = ei;
-      consistencizedF = new BitSet();
-      consistencizedE = new BitSet();
-    }
-
-    @Override
-    public BitSet getCrossSerialTypes() { return noCrossSerial; }
-
-    @Override
-    public String getCrossings() { return ""; }
-
-    public boolean sane() { return true; }
-
-    public int getFirstE() { return e1; }
-    public int getLastE() { return e2; }
-    public int getFirstF() { return f1; }
-    public int getLastF() { return f2; }
-
-    @Override public boolean fContiguous() { return true; }
-    @Override public boolean eContiguous() { return true; }
-
-    @Override
-    public Set<Integer> toConsistencizeInE() {
-      Set<Integer> s = new TreeSet<Integer>();
-      int pos = e1;
-      for(;;) {
-        pos = consistencizedE.nextClearBit(pos);
-        if(pos < e1 || e2 < pos)
-          break;
-        s.add(pos);
-        ++pos;
-      }
-      return s;
-    }
-
-    @Override
-    public Set<Integer> toConsistencizeInF() {
-      Set<Integer> s = new TreeSet<Integer>();
-      int pos = f1;
-      for(;;) {
-        pos = consistencizedF.nextClearBit(pos);
-        if(pos < f1 || f2 < pos)
-          break;
-        s.add(pos);
-        ++pos;
-      }
-      return s;
-    }
-
-    @Override
-    public Collection<Phrase> successors() {
-      int fsize = sent.f().size();
-      List<Phrase> list = new ArrayList<Phrase>(4);
-      if(f2-f1 <= maxSizeF) {
-        if(f1 > 0) list.add(new CTUPhrase(this).expandLeftF());
-        if(f2+1 < fsize) list.add(new CTUPhrase(this).expandRightF());
-      }
-      int esize = sent.e().size();
-      if(e2-e1 <= maxSizeE) {
-        if(e1 > 0) list.add(new CTUPhrase(this).expandLeftE());
-        if(e2+1 < esize) list.add(new CTUPhrase(this).expandRightE());
-      }
-      return list;
-    }
-
-    @Override
-    public void addE(int ei) {
-      if(ei < e1) {
-        e1 = ei;
-      } else if(ei > e2) {
-        e2 = ei;
-      }
-    }
-
-    @Override
-    public void addF(int fi) {
-      if(fi < f1) {
-        f1 = fi;
-      } else if(fi > f2) {
-        f2 = fi;
-      }
-    }
-
-    @Override public Phrase toContiguous() { return new CTUPhrase(this); }
-
-    @Override public int sizeF() { return f2-f1+1; }
-    @Override public int sizeE() { return e2-e1+1; }
-
-    @Override public int spanF() { return sizeF(); }
-    @Override public int spanE() { return sizeE(); }
-
-    @Override public boolean containsE(int ei) { return (e1 <= ei && ei <= e2); }
-    @Override public boolean containsF(int fi) { return (f1 <= fi && fi <= f2); }
-
-    @Override
-    public String toString() {
-      return String.format("f=[%d %d] e=[%d %d] cf=%s ce=%s", f1, f2, e1, e2, consistencizedF.toString(), consistencizedE.toString());
-    }
-
-    private CTUPhrase expandLeftF()  { --f1; return consistencize(f1, true)  ? this : null; }
-    private CTUPhrase expandRightF() { ++f2; return consistencize(f2, true)  ? this : null; }
-    private CTUPhrase expandLeftE()  { --e1; return consistencize(e1, false) ? this : null; }
-    private CTUPhrase expandRightE() { ++e2; return consistencize(e2, false) ? this : null; }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(new int[] {e1, e2, f1, f2});
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if(!(o instanceof CTUPhrase))
-        return false;
-      CTUPhrase ctu = (CTUPhrase) o;
-      return e1 == ctu.e1 && e2 == ctu.e2 &&
-             f1 == ctu.f1 && f2 == ctu.f2;
-    }
-  }
-
-  class DTUPhrase extends AbstractPhrase {
-
-    final BitSet f, e;
-
-    DTUPhrase(DTUPhrase dtu) {
-      sent = dtu.sent;
-      f = (BitSet) dtu.f.clone();
-      e = (BitSet) dtu.e.clone();
-      consistencizedF = (BitSet) dtu.consistencizedF.clone();
-      consistencizedE = (BitSet) dtu.consistencizedE.clone();
-    }
-
-    DTUPhrase(WordAlignment sent, int fi, int ei) {
-      super();
-      this.sent = sent;
-      f = new BitSet();
-      e = new BitSet();
-      f.set(fi);
-      e.set(ei);
-      consistencizedF = new BitSet();
-      consistencizedE = new BitSet();
-    }
 
     BitSet e() { return e; }
     BitSet f() { return f; }
 
-    @Override public boolean fContiguous() { return isContiguous(f); }
-    @Override public boolean eContiguous() { return isContiguous(e); }
+    public boolean hasUnalignedGap() {
+      boolean unalignedGap = hasUnalignedGap(sent, f, true) || hasUnalignedGap(sent, e, false);
+      if (DEBUG) {
+        System.err.printf("f: "+sent.f());
+        System.err.printf("e: "+sent.e());
+        System.err.printf("fs: "+f);
+        System.err.printf("es: "+e);
+        System.err.printf("gap: "+unalignedGap);
+      }
+      return unalignedGap;
+    }
+
+    private boolean hasUnalignedGap(WordAlignment sent, BitSet fs, boolean source) {
+      int startIdx = 0, endIdx = 0;
+      while (startIdx <= endIdx) {
+        startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
+        endIdx = fs.nextSetBit(startIdx)-1;
+        boolean unalignedGap = true;
+        for (int i=startIdx; i <= endIdx; ++i) {
+          assert(!fs.get(i));
+          if(source) {
+            if(sent.f2e(i).size() > 0) {
+              unalignedGap = false;
+              break;
+            }
+          }  else {
+            if(sent.e2f(i).size() > 0) {
+              unalignedGap = false;
+              break;
+            }
+          }
+        }
+        if(unalignedGap)
+         return true;
+      }
+      return false;
+    }
+
+    public boolean fContiguous() { return isContiguous(f); }
+    public boolean eContiguous() { return isContiguous(e); }
 
     boolean isContiguous(BitSet bitset) {
       int i = bitset.nextSetBit(0);
@@ -408,7 +279,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return (bitset.nextSetBit(j+1) == -1);
     }
 
-    @Override
     public BitSet getCrossSerialTypes() {
       assert(sane());
       BitSet b = new BitSet();
@@ -563,7 +433,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return String.format("f={{{%s}}} e={{{%s}}}", fp, ep);
     }
 
-    @Override
     public String getCrossings() {
       assert(sane());
       BitSet types = getCrossSerialTypes();
@@ -596,27 +465,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return f.equals(dtu.f) && e.equals(dtu.e);
     }
 
-    // Current phrase is contiguous, add contiguous successors:
-    private boolean addContiguousSuccessors(Collection<Phrase> list) {
-      int fsize = sent.f().size();
-      int esize = sent.e().size();
-      assert(sizeF() <= maxSizeF);
-      assert(sizeE() <= maxSizeE);
-      boolean growF = sizeF() < maxSizeF;
-      boolean growE = sizeE() < maxSizeE;
-      if(growF) {
-        for(int s : successorsIdx(true, f, fsize))
-          list.add(new DTUPhrase(this).expandF(s));
-      }
-      if(growE) {
-        for(int s : successorsIdx(true, e, esize))
-          list.add(new DTUPhrase(this).expandE(s));
-      }
-      return growF && growE;
-    }
-
     // Current phrase is discontiguous, add discontiguous (and possibly contiguous) successors:
-    private boolean addDiscontiguousSuccessors(Collection<Phrase> list) {
+    private boolean addSuccessors(Collection<DTUPhrase> list) {
       int fsize = sent.f().size();
       int esize = sent.e().size();
       assert(sizeF() <= maxSizeF);
@@ -628,6 +478,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         boolean growOutside = spanF() < maxSpanF;
         for(int s : successorsIdx(growOutside, f, fsize))
           list.add(new DTUPhrase(this).expandF(s));
+        // TODO: add discontiguous
       }
       if(growE) {
         assert(spanE() <= maxSpanE);
@@ -638,22 +489,17 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return growF && growE;
     }
 
-    public Collection<Phrase> successors() {
-      List<Phrase> list = new LinkedList<Phrase>();
-      if(isContiguous(f) && isContiguous(e)) {
-        addContiguousSuccessors(list);
-      } else {
-        if(!noTargetGaps || isContiguous(e))
-          addDiscontiguousSuccessors(list);
-        Phrase ctu = toContiguous();
-        if(ctu != null)
-          list.add(ctu);
-      }
+    public Collection<DTUPhrase> successors() {
+      List<DTUPhrase> list = new LinkedList<DTUPhrase>();
+      if(!noTargetGaps || isContiguous(e))
+        addSuccessors(list);
+      DTUPhrase ctu = toContiguous();
+      if(ctu != null)
+        list.add(ctu);
       return list;
     }
 
-    @Override
-    public Phrase toContiguous() {
+    public DTUPhrase toContiguous() {
       DTUPhrase p = new DTUPhrase(this);
       for(;;) {
         if(p.sizeF() > maxSizeF) return null;
@@ -702,6 +548,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         }
         si = ei;
       }
+
       if(!growOutside) {
         if(!ints.isEmpty() && ints.getFirst() < bitset.nextSetBit(0))
           ints.removeFirst();
@@ -736,7 +583,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // Add minimal phrases:
     for(int ei=0; ei<sent.e().size(); ++ei) {
       for(int fi : sent.e2f(ei)) {
-        Phrase p = withGaps ? new DTUPhrase(sent, fi, ei) : new CTUPhrase(sent, fi, ei);
+        DTUPhrase p = new DTUPhrase(sent, fi, ei);
         if(p.consistencize(fi, true)) {
           if(!seen.contains(p)) {
             //if(DEBUG) System.err.println("dtu(m): "+p.toString());
@@ -752,23 +599,21 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // Expand rules:
     while(!queue.isEmpty()) {
-      Phrase p = queue.pollFirst();
+      DTUPhrase dtu = queue.pollFirst();
       if(withGaps) {
-        assert(p instanceof DTUPhrase);
-        DTUPhrase dtu = (DTUPhrase) p;
         if(!noTargetGaps || dtu.eContiguous()) {
           if(!dtu.eContiguous() || !dtu.fContiguous()) {
             // Only extract non-contiguous phrases:
             AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
             if(DEBUG && alTemp != null)
-              System.err.printf("dtu: %s\n%s", alTemp.toString(false), p.getCrossings());
+              System.err.printf("dtu: %s\n%s", alTemp.toString(false), dtu.getCrossings());
           }
         }
       } else {
-        extractPhrase(sent, p.getFirstF(), p.getLastF(), p.getFirstE(), p.getLastE(), true, 1.0f);
+        extractPhrase(sent, dtu.getFirstF(), dtu.getLastF(), dtu.getFirstE(), dtu.getLastE(), true, 1.0f);
       }
       if(!onlyCrossSerialDTU) {
-        for(Phrase sp : p.successors()) {
+        for(DTUPhrase sp : dtu.successors()) {
           if(sp != null && !seen.contains(sp)) {
             queue.offerLast(sp);
             seen.add(sp);

@@ -36,10 +36,12 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
   private static void addCountToArray(IntArrayList list, int idx) {
     if(idx < 0)
       return;
-    while(idx >= list.size())
-      list.add(0);
-    int newCount = list.get(idx)+1;
-    list.set(idx,newCount);
+    synchronized(list) {
+      while(idx >= list.size())
+        list.add(0);
+      int newCount = list.get(idx)+1;
+      list.set(idx,newCount);
+    }
     if(DEBUG_LEVEL >= 3)
       System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
   }

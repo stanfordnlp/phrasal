@@ -14,6 +14,8 @@ import mt.train.AlignmentGrid.RelativePos;
  */
 public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
+	// Note: Not thread safe; use ExperimentalLexicalReorderingFeatureExtractor instead
+
   public static final String DEBUG_PROPERTY = "DebugLexicalReorderingFeatureExtractor";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 

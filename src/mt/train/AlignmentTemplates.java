@@ -39,7 +39,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
      fIndex = new DynamicIntegerArrayIndex(), 
      eIndex = new DynamicIntegerArrayIndex();
 
-  private ArrayList<Int2IntArrayMap> aCounter = new ArrayList<Int2IntArrayMap>();
+  private final ArrayList<Int2IntArrayMap> aCounter = new ArrayList<Int2IntArrayMap>();
 
   private boolean storeAlignmentCounts = false;
   private boolean filterFromDev = false;
@@ -64,7 +64,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Add alignment template to phrase table. 
    */
-  public synchronized void addToIndex(AlignmentTemplate alTemp) {
+  public void addToIndex(AlignmentTemplate alTemp) {
     if(filterFromDev) {
       int fKey = indexOfF(alTemp,false);
       boolean add = (fKey >= 0);
@@ -77,7 +77,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Add alignment template to phrase table if the source-language phrase is in the dev corpus. 
    */
-  public synchronized void addToIndexIfInDev(AlignmentTemplate alTemp) {
+  public void addToIndexIfInDev(AlignmentTemplate alTemp) {
     int fKey = indexOfF(alTemp,false);
     boolean add = (fKey >= 0);
     addToIndex(alTemp,add);
@@ -86,31 +86,36 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Add source-language phrase to index.
    */
-  public synchronized void addForeignPhraseToIndex(Sequence<IString> f) {
+  public void addForeignPhraseToIndex(Sequence<IString> f) {
     fIndex.indexOf(Sequences.toIntArray(f), true);
   }
 
-  public synchronized void addForeignPhraseToIndex(int[] f) {
+  public void addForeignPhraseToIndex(int[] f) {
     fIndex.indexOf(f, true);
   }
 
   /**
    * Increment count for a given alignment for a given phrase-pair.
    */
-  public synchronized void incrementAlignmentCount(AlignmentTemplate alTemp) {
+  public void incrementAlignmentCount(AlignmentTemplate alTemp) {
     if(FILL_HASH && storeAlignmentCounts) {
       int idx = alTemp.getKey();
       int alIdx = alTemp.getAKey();
+      final Int2IntArrayMap aCounts;
       if(idx >= 0) {
         assert(idx <= index.size());
-        assert(idx <= aCounter.size());
-        if(idx == aCounter.size())
-          aCounter.add(new Int2IntArrayMap());
-        Int2IntArrayMap aCounts = aCounter.get(idx);
-        assert(aCounts != null);
-        int oldCount = aCounts.get(alIdx);
-        if(oldCount < Integer.MAX_VALUE)
-          aCounts.put(alIdx, 1+oldCount);
+        synchronized(aCounter) {
+          //assert(idx <= aCounter.size());
+          while(idx >= aCounter.size())
+            aCounter.add(new Int2IntArrayMap());
+          aCounts = aCounter.get(idx);
+        }
+        synchronized(aCounts) {
+          assert(aCounts != null);
+          int oldCount = aCounts.get(alIdx);
+          if(oldCount < Integer.MAX_VALUE)
+            aCounts.put(alIdx, 1+oldCount);
+        }
       }
     }
   }
@@ -121,7 +126,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * kept in memory, this function is the only way
    * to get the alignment template from the index.
    */
-  public synchronized void reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
+  public void reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
     int[] idxInts = index.get(idx);
     int[] idxIntsF = fIndex.get(idxInts[0]);
     int[] idxIntsE = eIndex.get(idxInts[1]);
@@ -186,7 +191,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return the source-language phrase indexed by idx.
    */
-  public synchronized int[] getF(int idx) { return fIndex.get(idx); }
+  public int[] getF(int idx) { return fIndex.get(idx); }
   public int sizeF() { return fIndex.size(); }
 
   /**
@@ -198,7 +203,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   /**
    * Return the target-language phrase indexed by idx.
    */
-  public synchronized int[] getE(int idx) { return eIndex.get(idx); }
+  public int[] getE(int idx) { return eIndex.get(idx); }
   public int sizeE() { return eIndex.size(); }
 
   /**

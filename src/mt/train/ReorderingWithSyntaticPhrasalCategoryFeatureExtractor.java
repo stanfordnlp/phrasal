@@ -27,6 +27,8 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
 
 public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends AbstractFeatureExtractor {
 
+	// mg2009: probably not thread safe
+
   Map<AlignmentTemplateInstance, Set<Integer>> labelsForAlTemp = new HashMap<AlignmentTemplateInstance, Set<Integer>>();
   Index<Pair<String, Integer>> phraseNamesIndex = new HashIndex<Pair<String, Integer>>();
 

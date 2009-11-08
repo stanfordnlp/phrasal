@@ -17,6 +17,7 @@ import mt.base.IString;
 public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeatureExtractor {
 
   // TODO: reimplement more stuff available in the C++ version.
+	// TODO: make thread safe
 
   private static final boolean SKIP_UNK = true;
   private static final boolean SKIP_SENT_BND = false;

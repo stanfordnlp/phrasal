@@ -10,7 +10,7 @@ package mt.train;
  * 
  * @author Michel Galley
  */
-public interface PhraseExtractor {
+public interface PhraseExtractor extends Cloneable {
 
   /**
    * Extract all admissible phrase pairs from a given word-aligned sentence pair.
