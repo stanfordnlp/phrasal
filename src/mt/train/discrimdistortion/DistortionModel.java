@@ -3,6 +3,7 @@ package mt.train.discrimdistortion;
 import java.io.Serializable;
 import java.util.Map;
 
+import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
@@ -28,14 +29,23 @@ public class DistortionModel implements Serializable {
 	public static final int NUM_SLEN_BINS = 4;
 	public static final int NUM_SLOC_BINS = 5;
 	
+	/**
+	 * Returns the logprob from the model for this datum and class
+	 * @param datum
+	 * @param thisC
+	 * @param isOOV
+	 * @return
+	 */
 	public double prob(Datum datum, DistortionModel.Class thisC, boolean isOOV) {
-		double denom = 0.0;
+		double[] logScores = new double[DistortionModel.Class.values().length];
 		for(DistortionModel.Class c : DistortionModel.Class.values())
-			denom += Math.exp(modelScore(datum, c, isOOV));
+			logScores[c.ordinal()] = modelScore(datum, c, isOOV);
+		
+		double denom = ArrayMath.logSum(logScores);
 		
 		double scoreFromModel = modelScore(datum, thisC, isOOV);
 
-		return Math.exp(scoreFromModel) / denom;
+		return scoreFromModel - denom;
 	}
 	
 	public Pair<Double,DistortionModel.Class> argmax(Datum datum, boolean isOOV) {
@@ -173,7 +183,7 @@ public class DistortionModel implements Serializable {
 //			return Class.C14;
 //		else if(relMovement < 29.30f)
 //			return Class.C15;
-//		else if(relMovement < 60.0f) //By construction
+//		else if(relMovement < 65.0f) //By construction
 //			return Class.C16;
 //		return Class.C17;
 

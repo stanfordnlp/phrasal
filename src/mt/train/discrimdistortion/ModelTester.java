@@ -9,7 +9,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
 import mt.base.IOTools;
-import mt.train.discrimdistortion.DistortionModel.Class;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.util.Pair;
 
@@ -76,6 +75,7 @@ public class ModelTester {
 	  
 	  double logLik = 0.0;
 	  TrainingSet ts = fe.extract(m.featureIndex, m.classIndex, 120000);
+	  int exampleNum = 1;
 	  for(Datum d : ts) {
 	    boolean isOOV = false;
 	    if(m.featureIndex.contains(DistortionModel.Feature.Word)) {
@@ -84,7 +84,8 @@ public class ModelTester {
 	    }
 	    
 	    Pair<Double, DistortionModel.Class> thisClass = m.argmax(d, isOOV);
-	    logLik += Math.log(m.prob(d, thisClass.second(), isOOV));
+	    double logProb = m.prob(d, thisClass.second(), isOOV);
+	    logLik += logProb;
 	  }
 	  
 	  System.out.printf("Test alignments: %d\n", ts.getNumExamples());
