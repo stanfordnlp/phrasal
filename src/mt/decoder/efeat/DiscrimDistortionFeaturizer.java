@@ -17,7 +17,6 @@ import mt.base.IString;
 import mt.base.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
-import mt.decoder.feat.ClonedFeaturizer;
 import mt.decoder.feat.RichIncrementalFeaturizer;
 import mt.decoder.feat.StatefulFeaturizer;
 import mt.train.discrimdistortion.Datum;
@@ -41,19 +40,12 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
   private float sLen = 0;
   private Map<Pair<CoverageSet,Integer>,Double> futureCostCache;
 
-
   private static final Pattern ibmEscaper = Pattern.compile("#|\\+");
   private static final int TARGET_IDX = 0; 
-  private static final double SKIPPED_WORD_PENALTY = -0.50;
+  private static final double UNALIGNED_WORD_PENALTY = 2.0; 
 
   //WSGDEBUG Debugging objects
   private boolean VERBOSE = false;
-  private boolean SET_STATE = true;
-  //  private static final Set<Integer> debugIds = new HashSet<Integer>();
-  //  static {
-  //    debugIds.add(1);
-  //    debugIds.add(4);
-  //  }
 
 
   public DiscrimDistortionFeaturizer(String... args) {
@@ -181,19 +173,31 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
   private double estimateFutureCost(Featurizable<IString, String> f, int tLenEstimate) {
     if(f == null || f.done) return 0.0;
 
-    Pair<CoverageSet,Integer> cacheKey = new Pair<CoverageSet,Integer>(f.hyp.foreignCoverage,tLenEstimate);
+//    Pair<CoverageSet,Integer> cacheKey = new Pair<CoverageSet,Integer>(f.hyp.foreignCoverage,tLenEstimate);
     double futureCost = 0.0;
 
-    if(futureCostCache.containsKey(cacheKey))
-      futureCost = futureCostCache.get(cacheKey);
-    else {
+//    if(futureCostCache.containsKey(cacheKey))
+//      futureCost = futureCostCache.get(cacheKey);
+//      if(VERBOSE)
+//        System.err.printf(" cached: %f\n", futureCost);
+//    else {
 
       final CoverageSet coverage = f.hyp.foreignCoverage;
       final int tPosition = f.partialTranslation.size();
       int sPosition = coverage.nextClearBit(0);
-      int rightSBound = sPosition + PseudoMoses.distortionLimit;
-      if(rightSBound > f.foreignSentence.size())
-        rightSBound = f.foreignSentence.size();
+      final int rightSBound = Math.min(f.foreignSentence.size(), sPosition + PseudoMoses.distortionLimit);
+      
+      if(tPosition > tLenEstimate) {
+        final float numCoveredSourceTokens = f.foreignSentence.size() - f.hyp.untranslatedTokens;
+        float thisC = (float) f.partialTranslation.size() / numCoveredSourceTokens;
+        System.err.printf(" c:   %f\n", thisC);
+        System.err.printf(" partial: %s\n", f.partialTranslation);
+        System.err.printf(" cov: %s\n", coverage.toString());
+        throw new RuntimeException(String.format("WSGDEBUG: tPos %d tLenEst %d  sPos %d sBound %d\n", tPosition,tLenEstimate,sPosition,rightSBound));
+      }
+      
+      if(VERBOSE)
+        System.err.printf(" params: tPos %d tLenEst %d  sPos %d sBound %d\n", tPosition,tLenEstimate,sPosition,rightSBound);
       
       //Uncovered positions
       while(sPosition < coverage.length()) {
@@ -209,47 +213,69 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
         futureCost += minLogCost;
         sPosition = coverage.nextClearBit(sPosition + 1); 
       }
+      
+      if(VERBOSE)
+        System.err.printf(" uncovered: %f (sPos %d)\n", futureCost,sPosition);
 
       // Rest of the sentence
       for(int sIdx = sPosition; sIdx < rightSBound; sIdx++) {
         
         double minLogCost = -999999.0;
         for(int tIdx = tPosition; tIdx < tLenEstimate; tIdx++) {
-          float relMovement = getTargetVariable(tIdx, tLenEstimate, sPosition);
+          float relMovement = getTargetVariable(tIdx, tLenEstimate, sIdx);
           DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(relMovement);
-          double logCost = logProbCache[sPosition][thisClass.ordinal()];
+          double logCost = logProbCache[sIdx][thisClass.ordinal()];
           if(logCost > minLogCost)
             minLogCost = logCost;
         }
         futureCost += minLogCost;
       }
+      
+      if(VERBOSE)
+        System.err.printf(" rest: %f (sPos %d)\n", futureCost,rightSBound - 1);
 
-      futureCostCache.put(cacheKey, futureCost); 
-    }
-    
-    //WSGDEBUG
-//    double skippedWordPenalty = 0.0;
-//    if(f.prior == null)
-//      skippedWordPenalty = (f.foreignPosition * SKIPPED_WORD_PENALTY);
-//    else {
-//      //No future cost payment just like Moses
-//      int mosesDistortion = f.prior.foreignPosition + f.prior.foreignPhrase.size() - f.foreignPosition;
-//      if (mosesDistortion > 0) mosesDistortion--; //Fix the step function
-//      skippedWordPenalty = Math.abs(mosesDistortion) * SKIPPED_WORD_PENALTY;
+//      futureCostCache.put(cacheKey, futureCost); 
 //    }
-//    futureCost += skippedWordPenalty;
     
     if(VERBOSE) {
       System.err.printf(" tLen       : %d\n", tLenEstimate);
       System.err.printf(" coverageSet: %s\n", f.hyp.foreignCoverage.toString());
       System.err.printf(" future cost: %f\n", futureCost);
-//      System.err.printf(" skipped_penalty: %f\n", skippedWordPenalty);
     }
 
     return futureCost;
   }
 
+  private Pair<Float,Float> computeC(Featurizable<IString, String> f) {
+    //Compute the defaults
+    float lastC = DEFAULT_C;
+    float thisC = DEFAULT_C;
+    if(Math.ceil(DEFAULT_C * f.foreignSentence.size()) < f.partialTranslation.size()) {
+      lastC = (float) f.partialTranslation.size() / (float) f.foreignSentence.size();
+      thisC = lastC;
+    }
+      
+    //Adjust if sufficient information exists
+    if(f.prior != null) {
+      final float numCoveredSourceTokens = f.foreignSentence.size() - f.hyp.untranslatedTokens;
+      thisC = (float) f.partialTranslation.size() / numCoveredSourceTokens;
 
+      if(f.prior.prior != null) {
+        final float lastNumCoveredSourceTokens = f.foreignSentence.size() - f.prior.hyp.untranslatedTokens;
+        lastC = (float) f.prior.partialTranslation.size() / lastNumCoveredSourceTokens;
+      }
+    }
+    
+    return new Pair<Float,Float>(lastC,thisC);
+  }
+  
+  private double getLogProb(int tIdx, int tLenEstimate, int sIdx) {
+    float relMovement = getTargetVariable(tIdx, tLenEstimate, sIdx);
+    final DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(relMovement);
+    
+    return logProbCache[sIdx][thisClass.ordinal()];
+  }
+  
   @Override
   /**
    * Feature score is a sum of:
@@ -259,7 +285,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
    */
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
-    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+//    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
 
     //
     // Setup the state
@@ -279,75 +305,54 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
     //
     //Compute the previous and target length constants
     //Units are (target length / source length)
-    //Added an (empirical) 10 word buffer because the first few options usually cause huge jumps in the value
     //
-    float lastC, thisC;
-    if(f.prior == null) {
-      lastC = DEFAULT_C;
-      thisC = DEFAULT_C;
-
-    } else {
-
-      final int numCoveredSourceTokens = f.foreignSentence.size() - f.hyp.untranslatedTokens;
-      thisC = (float) f.hyp.length / numCoveredSourceTokens;
-
-      final int lastNumCoveredSourceTokens = f.foreignSentence.size() - f.prior.hyp.untranslatedTokens;
-      if(f.prior.prior == null)
-        lastC = DEFAULT_C;
-      else
-        lastC = (float) f.prior.hyp.length / lastNumCoveredSourceTokens;
-    }
+    Pair<Float,Float> c = computeC(f);
+    final float lastC = c.first();
+    final float thisC = c.second();
 
     //
-    // Estimate the length of the translation
+    // Estimate the length of the translation, or get the actual length if finished
     //
-    final int thisTLenEstimate = Math.round(sLen * thisC);
+    final int thisTLenEstimate = (f.done) ? f.partialTranslation.size() : (int) Math.ceil(sLen * thisC);
 
     //
     // Estimate the future cost to translate
     //
     if(VERBOSE)
       System.err.println("FUTURE COST ESTIMATE");
-    double futureCostEstimate = estimateFutureCost(f, thisTLenEstimate);
+    double futureCostEstimate = 0.0;
+    //double futureCostEstimate = estimateFutureCost(f, thisTLenEstimate);
     
 
     //
     // Calculate the feature score adjustment (if needed)
+    //   Always adjust when the hypothesis is completed
     //
     double adjustment = 0.0;
-    if(Math.abs(lastC - thisC) > TOL) {
-      final int lastTLenEstimate = Math.round(sLen * lastC);
+    if(lastC != thisC || f.done) {
+      final int lastTLenEstimate = (int) Math.ceil(sLen * lastC);
 
       if(VERBOSE) {
         System.err.println("FEATURE SCORE ADJUSTMENT");
         System.err.printf(" lastC %f  lastTLen %d ||| thisC %f  thisTLen %d ||| tol %f\n", lastC,lastTLenEstimate,thisC,thisTLenEstimate,TOL);
       }
       
-      double oldScore = estimateFutureCost(f.prior,lastTLenEstimate);
-      double newScore = estimateFutureCost(f.prior,thisTLenEstimate);
-      double oldWordScore = 0.0;
-      double newWordScore = 0.0;
+      double oldScore = 0.0;
+      double newScore = 0.0;
+//      double oldScore = estimateFutureCost(f.prior,lastTLenEstimate);
+//      double newScore = estimateFutureCost(f.prior,thisTLenEstimate);
       for(int sIdx = 0; sIdx < f2e.length; sIdx++) {
         if(f2e[sIdx] == null) continue; //Skip over uncovered source tokens
 
         int tIdx = f2e[sIdx][TARGET_IDX];
-        oldWordScore = 0.0;
-        newWordScore = 0.0;
-
-          float oldRel = getTargetVariable(tIdx, lastTLenEstimate, sIdx);
-          DistortionModel.Class oldClass = DistortionModel.discretizeDistortion(oldRel);
-          oldWordScore += logProbCache[sIdx][oldClass.ordinal()];
-
-          float newRel = getTargetVariable(tIdx, thisTLenEstimate, sIdx);
-          DistortionModel.Class newClass = DistortionModel.discretizeDistortion(newRel);
-          newWordScore += logProbCache[sIdx][newClass.ordinal()];
-          
-          if(VERBOSE) {
-            System.err.printf(" [ t %d s %d ] %f --> %f\n", tIdx, sIdx, oldWordScore, newWordScore);
-            System.err.printf("  oldRel %f (class %s) --> newRel %f (class %s)\n", oldRel, oldClass.toString(), newRel, newClass.toString());
-          }
-        oldScore += oldWordScore;
-        newScore += newWordScore;
+        double MULTIPLIER = 1.0;
+        if(tIdx < 0) {
+          tIdx *= -1;
+          MULTIPLIER = UNALIGNED_WORD_PENALTY; 
+        }
+        
+        oldScore += MULTIPLIER * getLogProb(tIdx, lastTLenEstimate, sIdx);
+        newScore += MULTIPLIER * getLogProb(tIdx, thisTLenEstimate, sIdx);
       }
 
       adjustment = newScore - oldScore; //Difference in log scores
@@ -382,27 +387,29 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
         if(sIndices == null) continue;
 
         for(int j = 0; j < sIndices.length; j++) {
-          final int sIdx = sOffset + sIndices[j];
-          final int tIdx = tOffset + i;
+          int tIdx = tOffset + i;
 
+          final int sIdx = sOffset + sIndices[j];
           if(sIdx >= sLen)
             throw new RuntimeException(String.format("%d alignment index for source sentence of length %f (%s)",sIdx,sLen,sIndices.toString()));
 
+          //Break the tie by adding in the score of the most costly alignment
+          if(f2e[sIdx] == null)
+            optScore += getLogProb(tIdx, thisTLenEstimate, sIdx);
+            
+          else {
+            final int lastTidx = f2e[sIdx][TARGET_IDX];
+            double lastOptScore = getLogProb(lastTidx,thisTLenEstimate,sIdx);
+            double thisOptScore = getLogProb(tIdx, thisTLenEstimate,sIdx);
+            if(thisOptScore < lastOptScore)
+              optScore += (thisOptScore - lastOptScore);
+            else
+              tIdx = lastTidx;
+          }
+          
           int[] alignment = new int[1];
           alignment[TARGET_IDX] = tIdx;
           f2e[sIdx] = alignment;        
-
-          //Calculate the score for this source word
-          String posTag = posTags.get(translationId).get(sIdx);
-
-          float relMovement = getTargetVariable(tIdx, thisTLenEstimate, sIdx);
-          final DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(relMovement);
-          final double logProb = logProbCache[sIdx][thisClass.ordinal()];
-
-          if(VERBOSE)
-            System.err.printf("  optscore: %f  (sIdx %d  tIdx %d  pos %s  mvmnt %f  class %s)\n", logProb, sIdx, tIdx, posTag, relMovement, thisClass.toString());
-
-          optScore += logProb;
         }
       }
     }
@@ -417,45 +424,22 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
     for(int sIdx = sOffset; sIdx < sOffset + f.foreignPhrase.size() && sIdx < f2e.length; sIdx++) {
       if(f2e[sIdx] == null) {
 
-        final String posTag = posTags.get(translationId).get(sIdx);
-
         int tIdx = interpolateTargetPosition(sIdx,f2e,sOffset,sOffset + f.foreignPhrase.size());
 
         //Should ONLY happen for OOVs
-        if(tIdx == Integer.MIN_VALUE) {
+        if(tIdx == Integer.MIN_VALUE)
           tIdx = tOffset; //Assume monotone
-          float relMovement = getTargetVariable(tIdx, thisTLenEstimate, sIdx);
-          final DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(relMovement);
-          final double logProb = logProbCache[sIdx][thisClass.ordinal()];
-          
-          optScore += logProb;
-          
-          if(VERBOSE)
-            System.err.printf(" unkscore: %f  (sIdx %d tIdx %d POS %s) OOV\n", logProb, sIdx, tIdx, posTag);
-
-        } else {
-          float relMovement = getTargetVariable(tIdx, thisTLenEstimate, sIdx);
-          final DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(relMovement);
-          final double logProb = logProbCache[sIdx][thisClass.ordinal()];
-
-          if(VERBOSE)
-            System.err.printf(" unkscore: %f  (sIdx %d  tIdx %d  POS %s  mvmnt %f  class %s)\n", logProb, sIdx, tIdx, posTag, relMovement, thisClass.toString());
-
-          optScore += logProb;
-        }
+        
+        optScore += UNALIGNED_WORD_PENALTY * getLogProb(tIdx, thisTLenEstimate, sIdx);
 
         int[] alignment = new int[1];
-        alignment[TARGET_IDX] = tIdx;
+        alignment[TARGET_IDX] = -1 * tIdx;
         f2e[sIdx] = alignment;             
       }
     }
 
 
-    //
-    // Record the state
-    //
-    if(SET_STATE)
-      f.setState(this, f2e);
+    f.setState(this, f2e);
 
     return new FeatureValue<String>(FEATURE_NAME, futureCostEstimate + optScore + adjustment);
   }
@@ -481,36 +465,37 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
     //Should only happen for OOVs
     if(leftTargetIdx == -1 && rightTargetIdx == -1)
       return Integer.MIN_VALUE;
-    else if(leftTargetIdx != -1 && rightTargetIdx != -1) {
-      if(leftTargetIdx == rightTargetIdx)
-        return leftTargetIdx;
-      else
-        return Math.abs((rightTargetIdx + leftTargetIdx) / 2);
-    } else
+    else if(leftTargetIdx != -1 && rightTargetIdx != -1)
+      return (rightTargetIdx + leftTargetIdx) / 2;
+    else
       return (leftTargetIdx != -1) ? leftTargetIdx : rightTargetIdx;
   }
   
 
-  private void prettyPrint(Datum d, boolean isOOV, String word) {
+  private String prettyPrint(Datum d, boolean isOOV, String word) {
     int i = 0;
+    StringBuilder sb = new StringBuilder();
+    sb.append("[");
     for(DistortionModel.Feature feat : model.featureIndex) {
       if(feat == DistortionModel.Feature.Word && isOOV)
-        System.err.print(" " + word);
+        sb.append(String.format(" " + word));
       else if(feat == DistortionModel.Feature.Word)
-        System.err.printf(" %s",model.wordIndex.get((int) d.get(i)));
+        sb.append(String.format(" %s",model.wordIndex.get((int) d.get(i))));
       else if(feat == DistortionModel.Feature.CurrentTag)
-        System.err.printf(" %s",model.tagIndex.get((int) d.get(i)));
+        sb.append(String.format(" %s",model.tagIndex.get((int) d.get(i))));
       else if(feat == DistortionModel.Feature.RelPosition)
-        System.err.printf(" %d", (int) d.get(i));
+        sb.append(String.format(" %d", (int) d.get(i)));
       else if(feat == DistortionModel.Feature.SourceLen)
-        System.err.printf(" %d", (int) d.get(i));
+        sb.append(String.format(" %d", (int) d.get(i)));
       else if(feat == DistortionModel.Feature.LeftTag)
-        System.err.printf(" %s",model.tagIndex.get((int) d.get(i)));
+        sb.append(String.format(" %s",model.tagIndex.get((int) d.get(i))));
       else if(feat == DistortionModel.Feature.RightTag)
-        System.err.printf(" %s",model.tagIndex.get((int) d.get(i)));
+        sb.append(String.format(" %s",model.tagIndex.get((int) d.get(i))));
       i++;
     }
-    System.err.println();
+    sb.append(" ]");
+    
+    return sb.toString();
   }
 
   @Override
@@ -532,7 +517,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
     final int numClasses = DistortionModel.Class.values().length;
 
     //WSGDEBUG
-    System.err.println("FEATURE DATUMS:");
+    ArrayList<String> datums = new ArrayList<String>();
 
     for(int sIdx = 0; sIdx < logProbCache.length; sIdx++) {
       final String rawWord = foreign.get(sIdx).toString().trim();
@@ -566,7 +551,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
             feats[featPtr++] = (float) model.tagIndex.indexOf(posTags.get(translationId).get(sIdx + 1));
         } else if(feat == DistortionModel.Feature.LeftTag) {
           if(sIdx == 0)
-            feats[featPtr++] = (float) model.tagIndex.indexOf("<S>", true);
+            feats[featPtr++] = (float) model.tagIndex.indexOf("<S>");
           else
             feats[featPtr++] = (float) model.tagIndex.indexOf(posTags.get(translationId).get(sIdx - 1));
         }
@@ -575,28 +560,23 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
       final Datum datum = new Datum(0.0f,feats);
 
       //WSGDEBUG
-      prettyPrint(datum, isOOV, word);
+      datums.add(prettyPrint(datum, isOOV, word));
 
       //Cache the log probabilities for each class
       logProbCache[sIdx] = new double[numClasses];
-      for(DistortionModel.Class c : DistortionModel.Class.values()) {
-        double realProb = model.prob(datum,c,isOOV);
-        if(realProb == 0.0)
-          realProb = 0.000001; //Guard against underflow (compute logprob in model)
-        logProbCache[sIdx][c.ordinal()] = Math.log(realProb);
-      }
+      for(DistortionModel.Class c : DistortionModel.Class.values())
+        logProbCache[sIdx][c.ordinal()] = model.prob(datum,c,isOOV);
     }
 
-    //WSGDEBUG
-    //    if(VERBOSE) {
-    System.err.printf("PROB CACHE FOR transId %d\n",translationId);
-    for(int i = 0; i < logProbCache.length; i++) {
-      System.err.printf("%d: %s / %s\n", i, foreign.get(i), posTags.get(translationId).get(i));
-      for(int j = 0; j < logProbCache[i].length; j++)
-        System.err.printf("  %d  %f\n", j, logProbCache[i][j]);
+    synchronized(System.err) {
+      System.err.printf("PROB CACHE FOR transId %d\n",translationId);
+      for(int i = 0; i < logProbCache.length; i++) {
+        System.err.printf("%d: %s\n",i,datums.get(i));
+        for(DistortionModel.Class c : DistortionModel.Class.values())
+          System.err.printf("  %s  %f\n", c.toString(), logProbCache[i][c.ordinal()]);
+      }
+      System.err.println("\n\n\n");
     }
-    System.err.println("\n\n\n");
-    //    }
   }
 
   @Override
@@ -605,37 +585,70 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
   }
 
   @Override
+  public void debugBest(Featurizable<IString, String> f) {
+    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+    final Sequence<IString> foreign = f.foreignSentence;
+    
+    //Walk back through the priors so that the output
+    //is in the correct translation order
+    Stack<Featurizable<IString,String>> featurizers = new Stack<Featurizable<IString,String>>();
+    Featurizable<IString,String> fPtr = f;
+    while(fPtr != null) {
+      featurizers.push(fPtr);
+      fPtr = fPtr.prior;
+    }
+    
+    synchronized(System.err) {
+
+      System.err.printf(">> Translation ID %d<<\n", translationId);
+      
+      int iter = 0;
+      while(!featurizers.empty()) {
+        Featurizable<IString, String> thisF = featurizers.pop();
+        final Sequence<IString> translation = thisF.partialTranslation;
+        
+        System.err.printf("ITERATION %d\n", iter++);
+        System.err.println(" partial: " + thisF.partialTranslation);
+        System.err.println(" coverage: " + thisF.hyp.foreignCoverage.toString());
+        System.err.println(" opt:\n" + thisF.option.toString());
+
+        //Get state
+        final int[][] f2e = (int[][]) thisF.getState(this);
+
+        //Is this a re-estimation iteration?
+        Pair<Float,Float> c = computeC(thisF);
+        float lastC = c.first();
+        float thisC = c.second();
+        if(Math.abs(lastC - thisC) > TOL || thisF.done)
+          System.err.printf(" re-estimate tLen: oldC %f --> newC %f\n", lastC, thisC);
+        
+        //Future cost
+        VERBOSE = true;
+        final int thisTLenEstimate = (thisF.done) ? thisF.partialTranslation.size() : (int) Math.ceil(sLen * thisC);
+        final double estFutureCost = estimateFutureCost(thisF, thisTLenEstimate);
+        System.err.printf(" future cost: %f (tlen: %d)\n", estFutureCost,thisTLenEstimate);
+        VERBOSE = false;
+        
+        //Print feature scores
+        for(int sIdx = 0; sIdx < f2e.length; sIdx++) {
+          if(f2e[sIdx] == null) continue; //Skip over uncovered source tokens
+
+          int tIdx = f2e[sIdx][TARGET_IDX];
+          int tWordIdx = (tIdx > 0) ? tIdx : -1 * tIdx;
+
+          System.err.printf("  %d||%s\t-->\t%d||%s\n", sIdx,foreign.get(sIdx), tIdx, translation.get(tWordIdx));
+        }        
+        System.err.println("==============\n");
+      }
+  
+    }
+  }
+
+  //Unused methods
+  @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) { return null; }
   @Override
   public void reset() {}
-
-
-  @Override
-  public void debugBest(Featurizable<IString, String> f) {
-    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
-
-    VERBOSE = true;
-    SET_STATE = false;
-
-    System.err.printf(">> Translation ID %d<<\n", translationId);
-
-    //Walk back though the priors
-    double finalValue = 0.0;
-    Featurizable<IString,String> fPtr = f;
-    for(int i = 0; fPtr != null; i++) {
-      System.err.printf("ITERATION %d\n", i);
-      FeatureValue<String> featScore = featurize(fPtr);
-      System.err.printf("Value at end of iteration: %f\n\n", featScore.value);
-      finalValue += featScore.value;
-      fPtr = fPtr.prior;
-    }
-
-    System.err.printf("DiscrimDistortionScore: %f\n", finalValue);
-
-    VERBOSE = false;
-    SET_STATE = true;
-  }
-
   @Override
   public void rerankingMode(boolean r) {}
 }
