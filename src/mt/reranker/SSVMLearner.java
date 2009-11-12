@@ -3,9 +3,9 @@ package mt.reranker;
 import java.util.*; import java.io.*;
 
 import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.km.*;
-import edu.stanford.nlp.km.kernels.Kernel;
-import edu.stanford.nlp.km.sparselinearalgebra.SparseVector;
+import edu.stanford.nlp.classify.km.*;
+import edu.stanford.nlp.classify.km.kernels.Kernel;
+import edu.stanford.nlp.classify.km.sparselinearalgebra.SparseVector;
 import edu.stanford.nlp.util.ArrayUtils;
 
 /**

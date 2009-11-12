@@ -15,9 +15,9 @@ import mt.decoder.util.*;
 import mt.decoder.efeat.SentenceBoundaryFeaturizer;
 import mt.metrics.*;
 
-import edu.stanford.nlp.km.StructuredSVM;
-import edu.stanford.nlp.km.kernels.Kernel;
-import edu.stanford.nlp.km.sparselinearalgebra.SparseVector;
+import edu.stanford.nlp.classify.km.StructuredSVM;
+import edu.stanford.nlp.classify.km.kernels.Kernel;
+import edu.stanford.nlp.classify.km.sparselinearalgebra.SparseVector;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.OAIndex;

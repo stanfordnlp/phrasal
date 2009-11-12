@@ -6,9 +6,9 @@ import java.io.*;
 import mt.base.FeatureValue;
 
 import edu.stanford.nlp.util.OAIndex;
-import edu.stanford.nlp.km.*;
-import edu.stanford.nlp.km.kernels.*;
-import edu.stanford.nlp.km.sparselinearalgebra.SparseVector;
+import edu.stanford.nlp.classify.km.*;
+import edu.stanford.nlp.classify.km.kernels.*;
+import edu.stanford.nlp.classify.km.sparselinearalgebra.SparseVector;
 
 
 public class SSVMScorer implements Scorer<String> {
