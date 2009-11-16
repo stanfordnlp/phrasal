@@ -28,6 +28,9 @@ public class DiscrimDistortionController {
 	private int numFeThreads = 1;
 	private int numExpectedFeatures = -1;
 	private int minWordCount = 40;
+	private int numFeatures = 0;
+	private float trainingThreshold = 100.0f;
+
 	
 	public DiscrimDistortionController(final String sourceFile, final String targetFile,
 			final String alignFile) {
@@ -44,7 +47,9 @@ public class DiscrimDistortionController {
 	public void preAllocateMemory(int numExpectedFeatures) { this.numExpectedFeatures  = numExpectedFeatures; }
 
 	public void setMinWordCount(int minWordCount) { this.minWordCount  = minWordCount; }
-	
+
+  public void setTrainingThreshold(float thresh) { trainingThreshold = thresh; }
+
 	public void setFeatureFlags(final boolean use_word, 
 								final boolean use_tag,
 								final boolean use_position,
@@ -65,8 +70,8 @@ public class DiscrimDistortionController {
 		if(use_position)
 			features.add(DistortionModel.Feature.RelPosition);
 		if(use_context) {
+      features.add(DistortionModel.Feature.LeftTag);
 		  features.add(DistortionModel.Feature.RightTag);
-		  features.add(DistortionModel.Feature.LeftTag);
 		}
 		
 		if(VERBOSE)
@@ -77,11 +82,13 @@ public class DiscrimDistortionController {
 		Index<DistortionModel.Class> classIndex = new HashIndex<DistortionModel.Class>();
 		for(DistortionModel.Class c : DistortionModel.Class.values())
 			classIndex.add(c);
+		
+		if(VERBOSE)
+		  System.err.printf("Classes: %d\n", DistortionModel.Class.values().length);
+		
 		return classIndex;
 	}
-	
-	private int numFeatures = 0;
-	
+		
 	public boolean run() {
 		if(!sourceFile.exists())
 			System.err.printf("%s: %s does not exist!\n", this.getClass().getName(), sourceFile.getAbsolutePath());
@@ -93,6 +100,7 @@ public class DiscrimDistortionController {
 			FeatureExtractor fe = new FeatureExtractor(numFeThreads,sourceFile,targetFile,alignFile);
 			fe.setVerbose(VERBOSE);
 			fe.setMinWordCount(minWordCount);
+			fe.setThreshold(trainingThreshold);
 			
 			System.out.println("Extracting features...");
 			TrainingSet ts = fe.extract(features, getClassIndex(), numExpectedFeatures);
@@ -145,6 +153,7 @@ public class DiscrimDistortionController {
 		FeatureExtractor fe = new FeatureExtractor(numFeThreads,sourceFile,targetFile,alignFile);
 		fe.setVerbose(VERBOSE);
 		fe.setMinWordCount(minWordCount);
+		fe.setThreshold(trainingThreshold);
 		
 		System.out.println("Extracting features...");
 		TrainingSet ts = fe.extract(features, getClassIndex(), numExpectedFeatures);
@@ -158,8 +167,9 @@ public class DiscrimDistortionController {
 		PrintStream ps = IOTools.getWriterFromFile(extractFile);
 		for(Datum d : ts) {
 			
-			DistortionModel.Class goldClass = DistortionModel.discretizeDistortion(d.getTarget());
-			ps.print(goldClass.toString());
+			//DistortionModel.Class goldClass = DistortionModel.discretizeDistortion(d.getTarget());
+			//ps.print(goldClass.toString());
+			ps.print(d.getTarget());
 			
 			int i = 0;
 			for(DistortionModel.Feature feat : features) {

@@ -25,6 +25,8 @@ public class FeatureExtractor {
 	
 	private boolean ADD_FEATURE_INDEX = true;
 	
+	private float trainingThreshold = 100.0f;
+	
 	protected TrainingSet ts = null;
 	protected Index<String> tagIndex = null;
 	protected Index<String> wordIndex = null;
@@ -53,19 +55,21 @@ public class FeatureExtractor {
 	public void setExtractOnly() { ADD_FEATURE_INDEX = false; }
 	
 	public void initializeWithModel(DistortionModel d) { initModel = d; }
+
+  public void setThreshold(float thresh) { trainingThreshold = thresh; }
 	
 	protected class ExtractionTask implements Runnable {
 
 		private final String sourceString;
 		private final String alignments;
 		private final int bitextLineNumber;
-		private final float targetLen;
+		private final float tMaxIdx;
 		
 		public ExtractionTask(String source, String alignments, int targetLen, int bitextLineNumber) {
 			sourceString = source;
 			this.alignments = alignments;
 			this.bitextLineNumber = bitextLineNumber;
-			this.targetLen = (float) targetLen;
+			tMaxIdx = (float) (targetLen - 1);
 		}
 		
 		@Override
@@ -108,6 +112,8 @@ public class FeatureExtractor {
 				alignmentMap.put(sIdx, tIdx);
 			}
 			
+			final float sMaxIdx = (float) (sourceWords.size() - 1);
+			
 			//WSGDEBUG (22 Oct 2009)
 			// 1. Compute relative movement, not Moses distortion
 			// We ignore unaligned words. They are interpolated at decoding time.
@@ -118,13 +124,17 @@ public class FeatureExtractor {
 				final int tIdx = alignment.getValue();
 
 				//Scale up to percentages
-				float sRel = ((float) sIdx / (float) sourceWords.size()) * 100.0f;	
-				float tRel = ((float) tIdx / (float) targetLen) * 100.0f;
+				final float sRel = ((float) sIdx / sMaxIdx) * 100.0f;	
+				final float tRel = ((float) tIdx / tMaxIdx) * 100.0f;
 				
 				//Target variable rel(T) - rel(S), so that right movement is positive and
 				//left movement is negative
 				//Units = %
-				float targetValue = tRel - sRel;
+				final float targetValue = tRel - sRel;
+				
+				//Filter out discourse markers in 
+				if(Math.abs(targetValue) > trainingThreshold || (posTags.get(sIdx).equals("CC") && sIdx == 0))
+				  continue;
 								
 				float[] datum = new float[featureIndex.size()];
 				int datPtr = 0;
@@ -132,10 +142,8 @@ public class FeatureExtractor {
 				for(DistortionModel.Feature feature : featureIndex) {
 					if(feature == DistortionModel.Feature.Word)
 						datum[datPtr++] = (float) wordIndex.indexOf(sourceWords.get(sIdx));
-					else if(feature == DistortionModel.Feature.CurrentTag) {
-						String thisTag = posTags.get(sIdx);
-						datum[datPtr++] = (float) tagIndex.indexOf(thisTag,ADD_FEATURE_INDEX);
-					}
+					else if(feature == DistortionModel.Feature.CurrentTag)
+						datum[datPtr++] = (float) tagIndex.indexOf(posTags.get(sIdx),ADD_FEATURE_INDEX);
 					else if(feature == DistortionModel.Feature.SourceLen)
 						datum[datPtr++] = (float) slenBin;
 					else if(feature == DistortionModel.Feature.RelPosition)

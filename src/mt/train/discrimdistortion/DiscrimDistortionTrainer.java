@@ -25,12 +25,13 @@ public final class DiscrimDistortionTrainer {
 		classUsage.append(" -w <thresh> : Feature: word (cutoff threshold for vocabulary)\n");
 		classUsage.append(" -e <file>   : Extract and write feature set ONLY\n");
 		classUsage.append(" -c          : Feature: right/left POS tag context\n");
+		classUsage.append(" -r thresh    : Restrict training to abs(thresh) relative movement\n");
 
 		return classUsage.toString();
 	}
 
 	//Uses GNU getopt() syntax
-	private final static OptionParser op = new OptionParser("vce:w:plst:f:d:");
+	private final static OptionParser op = new OptionParser("r:vce:w:plst:f:d:");
 	private final static int MIN_ARGS = 3;
 
 	//Command line options
@@ -41,11 +42,13 @@ public final class DiscrimDistortionTrainer {
 	private static boolean USE_SLEN = false;
 	private static boolean USE_CONTEXT = false;
 	private static boolean EXTRACT_ONLY = false;
+	private static boolean THRESHOLD_TRAINING = false;
 	
 	private static int numThreads = 1;
 	private static int numExpectedFeatures = 0;
 	private static int minWordCount = 40;
 	private static String extractFile = "";
+	private static float trainingThreshold = 0.0f;
 	
 	//Arguments
 	private static String sourceFile = "";
@@ -86,6 +89,10 @@ public final class DiscrimDistortionTrainer {
 			EXTRACT_ONLY = true;
 			extractFile = (String) opts.valueOf("e");
 		}
+		if(opts.has("r")) {
+		  THRESHOLD_TRAINING = true;
+		  trainingThreshold = Float.parseFloat((String) opts.valueOf("r"));
+		}
 		
 		sourceFile = parsedArgs.get(0);
 		targetFile = parsedArgs.get(1);
@@ -113,6 +120,9 @@ public final class DiscrimDistortionTrainer {
 		controller.setNumThreads(numThreads);
 		controller.setMinWordCount(minWordCount);
 		controller.preAllocateMemory(numExpectedFeatures);
+		
+		if(THRESHOLD_TRAINING)
+		  controller.setTrainingThreshold(trainingThreshold);
 				
 		if(EXTRACT_ONLY) {
 			controller.extractOnly(extractFile);
