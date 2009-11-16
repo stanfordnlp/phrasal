@@ -41,7 +41,7 @@ public class DistortionFeaturizer extends StatefulFeaturizer<IString, String> im
 
   public DistortionFeaturizer() {
     // Disable "standard" LinearDistortion:
-    mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+    //mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
     dlimit = DEFAULT_MAX_DISTORTION;
     polyOrder = DEFAULT_POLYNOMIAL_ORDER;
@@ -49,7 +49,7 @@ public class DistortionFeaturizer extends StatefulFeaturizer<IString, String> im
   }
 
   public DistortionFeaturizer(String... args) {
-    mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+    //mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
     assert(args.length == 3);
     // First argument determines how much future cost to pay upfront:
     // 0.0 => nothing, as in Moses; 1.0 => everything

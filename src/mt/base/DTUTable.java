@@ -4,12 +4,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Arrays;
 import java.io.IOException;
 import java.io.File;
 
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 import mt.train.DTUPhraseExtractor;
+import edu.stanford.nlp.math.ArrayMath;
 
 public class DTUTable<FV> extends PharaohPhraseTable<FV> {
 
@@ -70,11 +72,23 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
           if(intTransOpts != null) {
             List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(intTransOpts.size());
             for (IntArrayTranslationOption intTransOpt : intTransOpts) {
-              RawSequence<IString> translation = new RawSequence<IString>(intTransOpt.translation,
-                  IString.identityIndex());
-              transOpts.add(
-                  new TranslationOption<IString>(intTransOpt.scores, scoreNames,
-                      translation, new RawSequence(s.foreign), intTransOpt.alignment));
+              if(intTransOpts.getClass().equals(DTUIntArrayTranslationOption.class)) {
+                DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
+                RawSequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
+                for(int i=0; i<multiIntTransOpt.dtus.length; ++i) {
+                  dtus[i] =  new RawSequence<IString>(multiIntTransOpt.dtus[i],
+                     IString.identityIndex());
+                }
+                transOpts.add(
+                    new DTUOption<IString>(intTransOpt.scores, scoreNames,
+                        dtus, new RawSequence(s.foreign), intTransOpt.alignment));
+              } else {
+                RawSequence<IString> translation = new RawSequence<IString>(intTransOpt.translation,
+                     IString.identityIndex());
+                transOpts.add(
+                     new TranslationOption<IString>(intTransOpt.scores, scoreNames,
+                          translation, new RawSequence(s.foreign), intTransOpt.alignment));
+              }
             }
             for (TranslationOption<IString> abstractOpt : transOpts) {
               opts.add(new ConcreteTranslationOption<IString>(abstractOpt, s.coverage, phraseFeaturizer, scorer, sequence, this.getName(), translationId));
@@ -120,19 +134,75 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
         }
       }
 		}
-    /*
-    for(ConcreteTranslationOption<IString> o : opts) {
-      System.err.println("concrete translation option: ");
-      System.err.println("       pos: "+o.foreignPos);
-      System.err.println("  coverage: "+o.foreignCoverage);
-      System.err.println("        fr: "+o.abstractOption.foreign);
-      System.err.println("        en: "+o.abstractOption.translation);
-    }
-    */
     return opts;
   }
 
-	@Override
+  @Override
+  protected void addEntry(Sequence<IString> foreignSequence, Sequence<IString> translationSequence, PhraseAlignment alignment,
+			float[] scores) {
+
+    int[] foreignInts = Sequences.toIntArray(foreignSequence);
+    int[] translationInts = Sequences.toIntArray(translationSequence);
+		int fIndex = foreignIndex.indexOf(foreignInts, true);
+
+    if (translations.size() <= fIndex) {
+			translations.ensureCapacity(fIndex+1);
+			while (translations.size() <= fIndex)
+        translations.add(null);
+		}
+
+    List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
+
+    if (intTransOpts == null) {
+			intTransOpts = new LinkedList<IntArrayTranslationOption>();
+			translations.set(fIndex, intTransOpts);
+		}
+
+    int numSpans = 1;
+    for(int el : translationInts) {
+      if(el == DTUPhraseExtractor.GAP_STR.id) {
+        ++numSpans;
+      }
+    }
+    if(numSpans == 1) {
+      intTransOpts.add(new IntArrayTranslationOption(translationInts, scores, alignment));
+    } else {
+      if(true) {
+        System.err.printf("Skipping rule: {{{%s}}} {{{%s}}}\n", translationSequence, foreignSequence);
+        return;
+      }
+      int start=0, pos=0;
+      // TODO: check scores:
+      //float[] subScores = ArrayMath.multiply(scores, 1.0f/numSpans);
+      //List<IntArrayTranslationOption> opts = new ArrayList<IntArrayTranslationOption>(numSpans);
+      int i = -1;
+      int[][] dtus = new int[numSpans][];
+      while(pos < translationInts.length) {
+        if(translationInts[pos] == DTUPhraseExtractor.GAP_STR.id) {
+          dtus[++i] = Arrays.copyOfRange(translationInts,start,pos);
+          //int[] subTranslationInts = Arrays.copyOfRange(translationInts,start,pos);
+          //opts.add(new IntArrayTranslationOption(subTranslationInts, subScores, alignment));
+          start = pos+1;
+        }
+        ++pos;
+      }
+      intTransOpts.add(new DTUIntArrayTranslationOption(dtus, scores, alignment));
+    }
+  }
+
+  protected class DTUIntArrayTranslationOption extends IntArrayTranslationOption {
+
+    //final List<IntArrayTranslationOption> opts;
+    final int[][] dtus;
+
+    //public DTUIntArrayTranslationOption(float[] scores, PhraseAlignment alignment, List<IntArrayTranslationOption> opts) {
+    public DTUIntArrayTranslationOption(int[][] dtus, float[] scores, PhraseAlignment alignment) {
+      super(null, scores, alignment);
+      this.dtus = dtus;
+    }
+	}
+
+  @Override
 	public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> foreignSequence) {
     throw new UnsupportedOperationException();
   }

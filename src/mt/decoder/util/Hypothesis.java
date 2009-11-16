@@ -123,12 +123,15 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 				       baseHyp.length :  // internal insertion 
 			           insertionPosition + translationOpt.abstractOption.translation.size()); // edge insertion
 		foreignSequence = baseHyp.foreignSequence;
-		untranslatedTokens = baseHyp.untranslatedTokens - translationOpt.abstractOption.foreign.size();
+		untranslatedTokens = this.foreignSequence.size() - this.foreignCoverage.cardinality();
+		//untranslatedTokens = baseHyp.untranslatedTokens - translationOpt.abstractOption.foreign.size();
 		linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos : baseHyp.translationOpt.linearDistortion(translationOpt));
 		featurizable = new Featurizable<TK,FV>(this, translationId, featurizer.getNumberStatefulFeaturizers());
     localFeatures = featurizer.listFeaturize(featurizable);
 		score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
-		h = baseHyp.h + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
+		h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
+    //System.err.printf("h: %f %f %d %s\n", baseHyp.h, heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage), untranslatedTokens, foreignCoverage);
+		assert(!Double.isNaN(h));
 		depth = baseHyp.depth + 1;
 	}
 		

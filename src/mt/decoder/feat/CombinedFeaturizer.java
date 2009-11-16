@@ -18,6 +18,29 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 
   private final int nbStatefulFeaturizers;
 
+  public void deleteFeaturizers(Set<String> disabledFeaturizers) {
+    System.err.println("Featurizers to disable: "+disabledFeaturizers);
+    Set<String> foundFeaturizers = new HashSet<String>();
+    List<IncrementalFeaturizer<TK,FV>> filteredFeaturizers
+     = new LinkedList<IncrementalFeaturizer<TK,FV>>();
+    for(IncrementalFeaturizer<TK, FV> f : featurizers) {
+      String className = f.getClass().getName();
+      if(f instanceof CombinedFeaturizer)
+        ((CombinedFeaturizer)f).deleteFeaturizers(disabledFeaturizers);
+      if(!disabledFeaturizers.contains(className)) {
+        System.err.println("Keeping featurizer: "+f);
+        filteredFeaturizers.add(f);
+      } else {
+        System.err.println("Disabling featurizer: "+f);
+        foundFeaturizers.add(className);
+      }
+    }
+    for(String f : disabledFeaturizers)
+      if(!foundFeaturizers.contains(f))
+        System.err.println("No featurizer to disable for class: "+f);
+    featurizers = filteredFeaturizers;
+  }
+
   @SuppressWarnings("unchecked")
   public CombinedFeaturizer<TK, FV> clone() {
 		try {

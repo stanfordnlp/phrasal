@@ -19,9 +19,11 @@ import mt.decoder.util.Scorer;
  * @param <FV>
  */
 public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
-	public static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
-	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
-	final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+
+  public static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
+  final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
 	
 	@SuppressWarnings("unchecked")
@@ -44,30 +46,46 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
   }
 	
 	@Override
-	public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,
-			CoverageSet newCoverage) {
-		double oldH = newHypothesis.preceedingHyp.h;
-		double newH = 0;
-		CoverageSet coverage = newHypothesis.foreignCoverage;
+	public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis, CoverageSet newCoverage) {
+    
+    double oldH = newHypothesis.preceedingHyp.h;
+		double newH = 0.0;
+
+
+    CoverageSet coverage = newHypothesis.foreignCoverage;
 		int startEdge = coverage.nextClearBit(0);
-		
-		//System.out.printf("getHeuristicDelta:\n");
-		//System.out.printf("coverage: %s", newHypothesis.foreignCoverage);
-		
-		int foreignSize = newHypothesis.foreignSequence.size();
+
+    if(Double.isNaN(oldH)) {
+      System.err.printf("getHeuristicDelta:\n");
+      System.err.printf("coverage: %s\n", newHypothesis.foreignCoverage);
+      System.err.println("old H: "+oldH);
+      throw new RuntimeException();
+    }
+
+    int foreignSize = newHypothesis.foreignSequence.size();
 		for (int endEdge; startEdge < foreignSize; startEdge = coverage.nextClearBit(endEdge)) {
 			endEdge = coverage.nextSetBit(startEdge);
 			
 			if (endEdge == -1) {
 				endEdge = newHypothesis.foreignSequence.size();
 			}
-			double localH = hSpanScores.getScore(startEdge, endEdge-1);
-			
-			//System.out.printf("retreiving score for %d:%d ==> %f", startEdge, endEdge-1, localH);
-			
-			newH += localH;
+      
+      double localH = hSpanScores.getScore(startEdge, endEdge-1);
+
+      if (Double.isNaN(localH)) {
+        System.err.printf("Bad retrieved score for %d:%d ==> %f\n", startEdge, endEdge-1, localH);
+        throw new RuntimeException();
+      }
+
+      newH += localH;
+      if (Double.isNaN(newH)) {
+        System.err.printf("Bad total retrieved score for %d:%d ==> %f (localH=%f)\n", startEdge, endEdge-1, newH, localH);
+        throw new RuntimeException();
+      }
 		}
-		return newH - oldH;
+    if(Double.isInfinite(newH) && Double.isInfinite(oldH))
+      return 0.0;
+    return newH - oldH;
 	}
 
 	private SpanScores hSpanScores;
@@ -89,6 +107,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
 		}
 		
 		// initialize viterbiSpanScores
+    System.err.println("Lists of options: "+options.size());
     assert(options.size() == 1 || options.size() == 2); // options[0]: phrases without gaps; options[1]: phrases with gaps
     for (int i=0; i<options.size(); ++i) {
       for (ConcreteTranslationOption<TK> option : options.get(i)) {
@@ -100,6 +119,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
           terminalPos = option.foreignPos + option.abstractOption.foreign.size()-1;
           if (score > viterbiSpanScores.getScore(option.foreignPos, terminalPos)) {
             viterbiSpanScores.setScore(option.foreignPos, terminalPos, score);
+            if(Double.isNaN(score)) {
+              System.err.printf("Bad Viterbi score: score[%d,%d]=%.3f\n", option.foreignPos, terminalPos, score);
+              throw new RuntimeException();
+            }
           }
         } else {
           terminalPos = option.foreignCoverage.length()-1;
@@ -120,6 +143,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
           double oldScore = viterbiSpanScores.getScore(option.foreignPos, terminalPos);
           if (totalScore > oldScore) {
             viterbiSpanScores.setScore(option.foreignPos, terminalPos, totalScore);
+            if(Double.isNaN(totalScore)) {
+              System.err.printf("Bad Viterbi score[%d,%d]: score=%.3f childScore=%.3f\n", option.foreignPos, terminalPos, score, childScore);
+              throw new RuntimeException();
+            }
             if(DEBUG)
               System.err.printf("Improved with gaps: %.3f -> %.3f\n", oldScore, totalScore);
 

@@ -112,7 +112,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		return fArray;
 	}
 		
-	private void addEntry(Sequence<IString> foreignSequence, Sequence<IString> translationSequence, PhraseAlignment alignment, 
+	protected void addEntry(Sequence<IString> foreignSequence, Sequence<IString> translationSequence, PhraseAlignment alignment, 
 			float[] scores) {
 		int[] foreignInts = Sequences.toIntArray(foreignSequence);
 		int[] translationInts = Sequences.toIntArray(translationSequence);

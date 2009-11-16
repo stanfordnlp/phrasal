@@ -27,11 +27,11 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
 
   private int lastStateIdx = IDX_ROOT;
 
-  TrieIntegerArrayIndex() {
+  public TrieIntegerArrayIndex() {
     this(-1);
   }
 
-  TrieIntegerArrayIndex(int sz) {
+  public TrieIntegerArrayIndex(int sz) {
     if(sz > 0)
       map = new Long2IntOpenHashMap(sz);
     else
@@ -44,10 +44,14 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     };
   }
 
-  TrieIntegerArrayIndex(int sz, Function<Integer,Integer> transitionNormalizer) {
+  public TrieIntegerArrayIndex(int sz, Function<Integer,Integer> transitionNormalizer) {
     this(sz);
     this.transitionNormalizer = transitionNormalizer;
   }
+
+  public int[] get(int idx) {
+		throw new UnsupportedOperationException();
+	}
 
   int supplementalHash(int h) {
     // use the same supplemental hash function used by HashMap
@@ -59,6 +63,11 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     int input2 = supplementalHash(input);
     int curState2 = supplementalHash(curState);
     return (((long)input2) << 32) | (((long)curState2) & 0xffffffffL);
+  }
+
+  public synchronized int getSuccessor(int curState, int input) {
+    long t = getTransition(curState, input);
+    return map.get(t);
   }
 
   public int size() { return lastStateIdx+1; }

@@ -62,6 +62,7 @@ public class PseudoMoses {
   public static final String FORCE_DECODE_ONLY = "force-decode-only";
   public static final String DISTORTION_LIMIT = "distortion-limit";
   public static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
+  public static final String DISABLED_FEATURIZERS = "disabled-featurizers";
   public static final String INLINE_WEIGHTS = "inline-weights";
   public static final String LEARNING_RATE = "lrate";
   public static final String MAX_EPOCHS = "max-epochs";
@@ -100,7 +101,7 @@ public class PseudoMoses {
 				LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
 				TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT }));
 		OPTIONAL_FIELDS.addAll(Arrays.asList(new String[] { INLINE_WEIGHTS,ITER_LIMIT,
-				DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
+				DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
 				USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
 				NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT,
         CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
@@ -519,6 +520,13 @@ public class PseudoMoses {
 								+ discriminativeLMOrder), makePair(
 										FeaturizerFactory.DISCRIMINATIVE_TM_PARAMETER, ""
 										+ discriminativeTMParameter));
+
+    if (config.containsKey(DISABLED_FEATURIZERS)) {
+      Set<String> disabledFeaturizers = new HashSet<String>();
+      for (String f : config.get(DISABLED_FEATURIZERS))
+        disabledFeaturizers.add(f);
+      featurizer.deleteFeaturizers(disabledFeaturizers);
+    }
 
 		if (lexReorderFeaturizer != null) {
 			additionalFeaturizers.add(lexReorderFeaturizer);
@@ -975,7 +983,7 @@ public class PseudoMoses {
         StringBuilder sb = new StringBuilder(translations.size() * 500); // initialize it as reasonably large
         for (RichTranslation<IString, String> tran : translations) {
           if (generateMosesNBestList) {
-            tran.nbestToMosesStringBuilder(translationId, sb);
+            tran.nbestToMosesStringBuilder(translationId, sb, withGaps);
           } else {
             tran.nbestToStringBuilder(translationId, sb);
           }

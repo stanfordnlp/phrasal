@@ -31,13 +31,13 @@ public class LinearDistortionFeaturizer extends StatefulFeaturizer<IString, Stri
 
   public LinearDistortionFeaturizer() {
     // Disable "standard" LinearDistortion (hack):
-    mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+    //mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
   }
 
   public LinearDistortionFeaturizer(String... args) {
     // Disable "standard" LinearDistortion:
-    mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+    //mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
 		// Argument determines how much future cost to pay upfront:
 		// 1.0 => everything; 0.0 => nothing, as in Moses
     if(args.length == 1) {

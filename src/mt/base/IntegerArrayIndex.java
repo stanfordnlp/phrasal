@@ -7,7 +7,9 @@ public interface IntegerArrayIndex {
 
   public int size();
 
-	public int indexOf(int[] key);
+  public int[] get(int idx);
+
+  public int indexOf(int[] key);
 
 	public int indexOf(int[] key, boolean add);
 }

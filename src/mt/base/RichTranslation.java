@@ -138,7 +138,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
    * @param id Segment id
    * @param sbuf Where to append the output to
    */
-  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf) {
+  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean withGaps) {
     sbuf.append(id);
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(this.translation);
@@ -150,19 +150,37 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(NBEST_SEP);
     // Alignment:
-    for(int lastRangeEnd=-1, i=0; i<t2fAlignmentIndex.length; ++i) {
-      int[] range = t2fAlignmentIndex[i];
-      if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] == t2fAlignmentIndex[i+1][0])
-        continue;
-      sbuf.append(' ').append(range[0]);
-      // Foreign positions:
-      if(range[0]+1 != range[1])
-        sbuf.append('-').append(range[1]-1);
-      // Translation positions:
-      sbuf.append('=').append(lastRangeEnd+1);
-      if(i != lastRangeEnd+1)
-        sbuf.append('-').append(i);
-      lastRangeEnd=i;
+    if(withGaps) {
+      // TODO: target gaps
+      for(int lastRangeEnd=-1, i=0; i<f2tAlignmentIndex.length; ++i) {
+        int[] range = f2tAlignmentIndex[i];
+        if(i+1<f2tAlignmentIndex.length && f2tAlignmentIndex[i][0] == f2tAlignmentIndex[i+1][0])
+          continue;
+        // Foreign positions:
+        // Translation positions:
+        sbuf.append(' ').append(lastRangeEnd+1);
+        if(i != lastRangeEnd+1)
+          sbuf.append('-').append(i);
+        sbuf.append('=').append(range[0]);
+        if(range[0]+1 != range[1])
+          sbuf.append('-').append(range[1]-1);
+        lastRangeEnd=i;
+      }
+    } else {
+      for(int lastRangeEnd=-1, i=0; i<t2fAlignmentIndex.length; ++i) {
+        int[] range = t2fAlignmentIndex[i];
+        if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] == t2fAlignmentIndex[i+1][0])
+          continue;
+        // Foreign positions:
+        sbuf.append(' ').append(range[0]);
+        if(range[0]+1 != range[1])
+          sbuf.append('-').append(range[1]-1);
+        // Translation positions:
+        sbuf.append('=').append(lastRangeEnd+1);
+        if(i != lastRangeEnd+1)
+          sbuf.append('-').append(i);
+        lastRangeEnd=i;
+      }
     }
   }
 
@@ -179,7 +197,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
    */
   public String nbestToMosesString(int id) {
     StringBuilder sbuf = new StringBuilder();
-    nbestToMosesStringBuilder(id, sbuf);
+    nbestToMosesStringBuilder(id, sbuf, false);
     return sbuf.toString();
   }
 

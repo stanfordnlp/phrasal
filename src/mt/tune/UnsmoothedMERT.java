@@ -1111,7 +1111,6 @@ public class UnsmoothedMERT extends Thread {
       System.err.println("-f <file>: weights read from file remain fixed during MERT.");
       System.err.println("-S: tune using sentence-level BLEU (smoothed).");
       System.err.println("-N: apply NIST tokenization to hypotheses.");
-      System.err.println("-N: apply NIST tokenization to hypotheses.");
       System.exit(-1);
     }
 

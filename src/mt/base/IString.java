@@ -59,7 +59,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
         }
       }
     }
-    stringRep = string; //.intern();
+    stringRep = string.intern();
     id = index.indexOf(string, true);
   }
 

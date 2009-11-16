@@ -9,6 +9,7 @@ import mt.base.DynamicIntegerArrayIndex;
 import mt.base.Sequence;
 import mt.base.Sequences;
 import mt.base.IString;
+import mt.base.TrieIntegerArrayIndex;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 // Int2IntLinkedOpenHashMap is second choice
@@ -36,8 +37,10 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   private final DynamicIntegerArrayIndex
      index = new DynamicIntegerArrayIndex(), 
      aIndex = new DynamicIntegerArrayIndex(),
-     fIndex = new DynamicIntegerArrayIndex(), 
+     fIndex = new DynamicIntegerArrayIndex(),
      eIndex = new DynamicIntegerArrayIndex();
+
+  private TrieIntegerArrayIndex fTrieIndex = new TrieIntegerArrayIndex(0);
 
   private final ArrayList<Int2IntArrayMap> aCounter = new ArrayList<Int2IntArrayMap>();
 
@@ -180,6 +183,20 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       alTemp.setEKey(idxE);
       alTemp.setAKey(indexOfA(alTemp,add));
     }
+  }
+
+  public void updateTrieIndex() {
+    System.err.println("Updating trie index: "+fIndex.size());
+    fTrieIndex = new TrieIntegerArrayIndex(0);
+    for (int i=0; i<fIndex.size(); ++i) {
+      fTrieIndex.indexOf(fIndex.get(i), true);
+      //System.err.println("adding: "+ Arrays.toString(IStrings.toStringArray(fIndex.get(i))));
+    }
+    System.err.println("Updating trie index: done.");
+  }
+
+  public TrieIntegerArrayIndex getTrieIndex() {
+    return fTrieIndex;
   }
 
   /**

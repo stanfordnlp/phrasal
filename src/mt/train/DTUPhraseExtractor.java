@@ -2,8 +2,15 @@ package mt.train;
 
 import mt.base.IString;
 import mt.base.Sequence;
+import mt.base.IOTools;
+import mt.base.TrieIntegerArrayIndex;
+import mt.tools.Levenshtein;
 
 import java.util.*;
+import java.io.IOException;
+
+import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.Triple;
 
 /**
  * @author Michel Galley
@@ -14,6 +21,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String NO_TARGET_GAPS_OPT  = "noTargetGaps";
   static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
   static public final String SKIP_UNALIGNED_GAPS_OPT  = "skipUnalignedGaps";
+  static public final String ALL_SUBSEQUENCES_OPT  = "allSubsequences";
+  static public final String ALL_SUBSEQUENCES2_OPT  = "allSubsequences2";
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
@@ -24,7 +33,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps;
+  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps, allSubsequences, allSubsequences2;
   static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
@@ -36,26 +45,32 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   private static final boolean DEBUG = System.getProperty("DebugDTU") != null;
   private static final int QUEUE_SZ = 1024;
 
+  List<Sequence<IString>> fFilter;
+
   boolean printCrossSerialDTU = true;
 
   int fSentenceLength, eSentenceLength;
 
-  LinearTimePhraseExtractor baseExtractor;
+  LinearTimePhraseExtractor substringExtractor;
 
   private Deque<DTUPhrase> queue = new LinkedList<DTUPhrase>();
   private Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
 
   public Object clone() throws CloneNotSupportedException {
     DTUPhraseExtractor c = (DTUPhraseExtractor) super.clone();
-    c.baseExtractor = (LinearTimePhraseExtractor) baseExtractor.clone();
+    c.substringExtractor = (LinearTimePhraseExtractor) substringExtractor.clone();
     c.queue = new LinkedList<DTUPhrase>();
     c.seen = new HashSet<DTUPhrase>(QUEUE_SZ);
+    c.dp = new Levenshtein<IString>();
+    c.bitsets = new HashSet<BitSet>();
     return c;
   }
 
-  public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+  public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) throws IOException {
     super(prop, alTemps, extractors);
-    baseExtractor = new LinearTimePhraseExtractor(prop, alTemps, extractors);
+    if(prop.containsKey(CombinedFeatureExtractor.FILTER_CORPUS_OPT))
+      fFilter = IOTools.slurpIStringSequences(prop.getProperty(CombinedFeatureExtractor.FILTER_CORPUS_OPT));
+    substringExtractor = new LinearTimePhraseExtractor(prop, alTemps, extractors);
     System.err.println("Using DTU phrase extractor.");
   }
 
@@ -72,6 +87,14 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // Ignore DTU if a gap only covers unaligned words:
     optStr = prop.getProperty(SKIP_UNALIGNED_GAPS_OPT);
     skipUnalignedGaps =  optStr != null && !optStr.equals("false");
+
+    // All subsequences:
+    optStr = prop.getProperty(ALL_SUBSEQUENCES_OPT);
+    allSubsequences = optStr != null && !optStr.equals("false");
+
+    // All subsequences:
+    optStr = prop.getProperty(ALL_SUBSEQUENCES2_OPT);
+    allSubsequences2 = optStr != null && !optStr.equals("false");
 
     // Only extracting cross-serial dependencies (for debugging):
     optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
@@ -106,7 +129,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       AlignmentTemplateInstance.lazy = false;
   }
 
-  static Set<Integer> bitSetToIntSet(BitSet b) {
+  public static Set<Integer> bitSetToIntSet(BitSet b) {
     Set<Integer> s = new TreeSet<Integer>();
     int i = b.nextSetBit(0);
     if (i != -1) {
@@ -161,6 +184,15 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       e = new BitSet();
       f.set(fi);
       e.set(ei);
+      consistencizedF = new BitSet();
+      consistencizedE = new BitSet();
+    }
+
+    DTUPhrase(WordAlignment sent, BitSet f, BitSet e) {
+      super();
+      this.sent = sent;
+      this.f = f;
+      this.e = e;
       consistencizedF = new BitSet();
       consistencizedE = new BitSet();
     }
@@ -235,20 +267,23 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     public boolean hasUnalignedGap() {
       boolean unalignedGap = hasUnalignedGap(sent, f, true) || hasUnalignedGap(sent, e, false);
       if (DEBUG) {
-        System.err.printf("f: "+sent.f());
-        System.err.printf("e: "+sent.e());
-        System.err.printf("fs: "+f);
-        System.err.printf("es: "+e);
-        System.err.printf("gap: "+unalignedGap);
+        System.err.println("f: "+sent.f());
+        System.err.println("e: "+sent.e());
+        System.err.println("fs: "+f);
+        System.err.println("es: "+e);
+        System.err.println("gap: "+hasUnalignedGap(sent, f, true));
+        System.err.println("gap: "+hasUnalignedGap(sent, e, false));
       }
       return unalignedGap;
     }
 
     private boolean hasUnalignedGap(WordAlignment sent, BitSet fs, boolean source) {
-      int startIdx = 0, endIdx = 0;
-      while (startIdx <= endIdx) {
+      int startIdx, endIdx = 0;
+      for(;;) {
         startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
         endIdx = fs.nextSetBit(startIdx)-1;
+        if(startIdx > endIdx)
+          break;
         boolean unalignedGap = true;
         for (int i=startIdx; i <= endIdx; ++i) {
           assert(!fs.get(i));
@@ -264,6 +299,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
             }
           }
         }
+        //System.err.printf("[%d-%d] %s\n", startIdx, endIdx, unalignedGap);
         if(unalignedGap)
          return true;
       }
@@ -427,7 +463,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     @Override
     public String toString() {
-      assert(sane());
+      if(!sane()) {
+        System.err.println("f: "+f);
+        System.err.println("cf: "+consistencizedF);
+        System.err.println("e: "+e);
+        System.err.println("ce: "+consistencizedE);
+      }
       String fp = stringWithGaps(sent.f(), f);
       String ep = stringWithGaps(sent.e(), e);
       return String.format("f={{{%s}}} e={{{%s}}}", fp, ep);
@@ -478,7 +519,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         boolean growOutside = spanF() < maxSpanF;
         for(int s : successorsIdx(growOutside, f, fsize))
           list.add(new DTUPhrase(this).expandF(s));
-        // TODO: add discontiguous
       }
       if(growE) {
         assert(spanE() <= maxSpanE);
@@ -531,6 +571,39 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     private DTUPhrase expandF(int fi) { f.set(fi); return consistencize(fi, true) ? this : null; }
     private DTUPhrase expandE(int ei) { e.set(ei); return consistencize(ei, false) ? this : null; }
 
+    boolean consistencize() {
+      boolean done = false;
+      while(!done) {
+        //System.err.println("f1: "+f);
+        //System.err.println("f2: "+consistencizedF);
+        //System.err.println("e1: "+e);
+        //System.err.println("e2: "+consistencizedE);
+        boolean doneF=false, doneE=false;
+        if(f.equals(consistencizedF)) {
+          doneF = true;
+        } else {
+          for(int fi : bitSetToIntSet(f))
+            if(!consistencizedF.get(fi))
+              if(!consistencize(fi,true))
+                return false;
+          if(e.isEmpty())
+            return false;
+        }
+        if(e.equals(consistencizedE)) {
+          doneE = true;
+        } else {
+          for(int ei : bitSetToIntSet(e))
+            if(!consistencizedE.get(ei))
+              if(!consistencize(ei,false))
+                return false;
+          if(f.isEmpty())
+            return false;
+        }
+        done = doneF && doneE;
+      }
+      return true;
+    }
+
     private Deque<Integer> successorsIdx(boolean growOutside, BitSet bitset, int size) {
       Deque<Integer> ints = new LinkedList<Integer>();
       int si = 0;
@@ -565,11 +638,96 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     return false;
   }
 
+  Levenshtein<IString> dp = new Levenshtein<IString>();
+  Set<BitSet> bitsets = new HashSet<BitSet>();
+
+  // Extract all subsequences:
+  private void subsequenceExtract(WordAlignment sent) {
+    bitsets.clear();
+    for(Sequence<IString> testSeq : fFilter) {
+      dp.init(sent.f(), testSeq);
+      BitSet bitset = dp.longestCommonSubsequence();
+      Levenshtein.addSubsequences(bitset, bitsets, maxSpanF);
+    }
+
+    //System.err.println("sz(1): "+bitsets.size());
+    for(BitSet bitset : bitsets) {
+      DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
+      if(dtu.consistencize()) {
+        //System.err.println("sent: dtu: "+dtu);
+        if(!noTargetGaps || dtu.eContiguous()) {
+          if(!seen.contains(dtu)) {
+            extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+            seen.add(dtu);
+          }
+        }
+      }
+    }
+  }
+
+  // Extract all subsequences:
+  private void subsequenceExtract2(WordAlignment sent) {
+    TrieIntegerArrayIndex index = alTemps.getTrieIndex();
+    Deque<Triple<Integer,Integer,BitSet>> q = new LinkedList<Triple<Integer,Integer,BitSet>>();
+    bitsets.clear();
+    for (int i=0; i < sent.f().size(); ++i) {
+      //System.err.println("i: "+i);
+      q.clear();
+      int startState = TrieIntegerArrayIndex.IDX_ROOT;
+      q.offerFirst(new Triple<Integer,Integer,BitSet>(i, startState, new BitSet()));
+      while(!q.isEmpty()) {
+        Triple<Integer,Integer,BitSet> el = q.pollLast();
+        int pos = el.first();
+        int curState = el.second();
+        BitSet bitset = el.third();
+        if(!bitset.isEmpty()) {
+          bitsets.add(bitset);
+          //System.err.printf("bs=%s %s\n",bitset,stringWithGaps(sent.f(),bitset));
+        }
+        if(pos >= sent.f().size()) continue;
+        // Try to match a terminal:
+        int nextState = index.getSuccessor(curState, sent.f().get(pos).id);
+        if(nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+          BitSet newBitset = (BitSet) bitset.clone();
+          newBitset.set(pos);
+          q.offerFirst(new Triple<Integer,Integer,BitSet>(pos+1,nextState,newBitset));
+        }
+        // Try to match non terminals:
+        int ntNextState = index.getSuccessor(curState, DTUPhraseExtractor.GAP_STR.id);
+        if(ntNextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+          int lastPos = i+maxSpanF;
+          for(int pos2=pos+1; pos2<=lastPos; ++pos2) {
+            if(pos2 >= sent.f().size()) break;
+            int next2State = index.getSuccessor(ntNextState, sent.f().get(pos2).id);
+            if(next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+              BitSet newBitset = (BitSet) bitset.clone();
+              newBitset.set(pos2);
+              q.offerFirst(new Triple<Integer,Integer,BitSet>(pos2+1,next2State,newBitset));
+            }
+          }
+        }
+      }
+    }
+
+    //System.err.println("sz(2): "+bitsets.size());
+    for(BitSet bitset : bitsets) {
+      DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
+      if(dtu.consistencize()) {
+        //System.err.println("sent: dtu: "+dtu);
+        if(!noTargetGaps || dtu.eContiguous()) {
+          if(!seen.contains(dtu)) {
+            extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+            seen.add(dtu);
+          }
+        }
+      }
+    }
+  }
+
   @Override
   public void extractPhrases(WordAlignment sent) {
 
-    // Extract contiguous phrases:
-    baseExtractor.extractPhrases(sent);
+    substringExtractor.extractPhrases(sent);
 
     if(DEBUG) {
       System.err.println("f: "+sent.f());
@@ -621,5 +779,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         }
       }
     }
+
+    // Add rules specific to test set:
+    if (allSubsequences)
+      subsequenceExtract(sent);
+    if (allSubsequences2)
+      subsequenceExtract2(sent);
   }
 }

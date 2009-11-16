@@ -247,7 +247,7 @@ public class Featurizable<TK,FV> {
 		range[PHRASE_END]   = foreignPosition + foreignSz;
 		limit = translationPosition+transSz; 
 		for (int i = translationPosition; i < limit; i++) {
-			t2fAlignmentIndex[i] = range;
+      t2fAlignmentIndex[i] = range;
 		}
 		
 		range =  new int[2];
@@ -255,7 +255,8 @@ public class Featurizable<TK,FV> {
 		range[PHRASE_END]   = translationPosition+transSz;
 		limit = foreignPosition+foreignSz;
 		for (int i = foreignPosition; i < limit; i++) {
-			f2tAlignmentIndex[i] = range;
+      if(concreteOpt.foreignCoverage.get(i))
+        f2tAlignmentIndex[i] = range;
 		}	
 	}
 	

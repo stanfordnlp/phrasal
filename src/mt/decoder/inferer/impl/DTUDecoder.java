@@ -153,12 +153,14 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       optionsWithoutGaps = new ArrayList<ConcreteTranslationOption<TK>>(),
       optionsWithGaps = new ArrayList<ConcreteTranslationOption<TK>>();
     for(ConcreteTranslationOption<TK> opt : options) {
-      if(isContiguous(opt.foreignCoverage))
+      // TODO: CHECK:
+      if(isContiguous(opt.foreignCoverage) && !opt.abstractOption.getClass().equals(DTUOption.class))
          optionsWithoutGaps.add(opt);
       else if(gapsInFutureCost)
         optionsWithGaps.add(opt);
     }
 
+    // TODO: CHECK:
     System.err.printf("Translation options: %d\n", options.size());
     System.err.printf("Translation options (no gaps): %d\n",  optionsWithoutGaps.size());
     System.err.printf("Translation options (with gaps): %d\n",  optionsWithGaps.size());
@@ -167,6 +169,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     allOptions.add(optionsWithoutGaps);
     if(gapsInFutureCost)
       allOptions.add(optionsWithGaps);
+    System.err.printf("Translation options (use for future cost estimation): %d\n", allOptions.size());
 
     if (OPTIONS_DUMP || DETAILED_DEBUG) {
       int sentId = translationId + ((PseudoMoses.local_procs > 1) ? 2:0);
@@ -399,19 +402,24 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 			
 					for (ConcreteTranslationOption<TK> option : applicableOptions) {
             //System.err.printf("option: %s\n", option.abstractOption.foreign);
-            // TODO: splice phrase if gaps:
-						if(hyp.foreignCoverage.intersects(option.foreignCoverage))
+						if(hyp.foreignCoverage.intersects(option.foreignCoverage)) {
+              //System.err.printf("Intersection is not empty: %s ^ %s != empty_set\n", hyp.foreignCoverage, option.foreignCoverage);
               continue;
+            }
 
             if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option)) {
 							continue;
 						}
+
+            // TODO: recombination:
+            final Hypothesis<TK, FV> newHyp;
+            if(option.getClass().equals(DTUOption.class)) {
+              newHyp = new DTUHypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic);
+            } else {
+              newHyp = new Hypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic);
+            }
 						
-						Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
-								option, hyp.length, hyp, featurizer,
-								scorer, heuristic);
-						
-						if (DETAILED_DEBUG) {
+            if (DETAILED_DEBUG) {
 							System.err.printf("creating hypothesis %d from %d\n", newHyp.id, hyp.id);
 							System.err.printf("hyp: %s\n", newHyp.featurizable.partialTranslation);
 							System.err.printf("coverage: %s\n", newHyp.foreignCoverage);
