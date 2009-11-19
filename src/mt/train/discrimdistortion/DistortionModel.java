@@ -98,10 +98,11 @@ public class DistortionModel implements Serializable {
 	public int getFeatureDimension() { return (featureIndex == null) ? 0 : featureIndex.size(); }
 	
 	
-	public static final float[] classBounds = {-50.0f,-22.09f,-11.84f,-6.69f,-3.38f,
-	  -1.0f, 0.64f, 3.45f, 8.68f, 32.0f, 65.0f };
+	public static final float[] classRightBounds = {-50.0f,-22.09f,-11.84f,-6.69f,-3.38f,
+	  -1.0f, 0.64f, 3.45f, 8.68f, 32.0f, 65.0f, 100.0f };
 	public static final Class FIRST_CLASS = Class.C1;
 	public static final Class LAST_CLASS = Class.C12;
+	public static final Class MONOTONE = Class.C7;
 	
 	//Expects relative movement as a percentage (e.g., 100%)
 	public static Class discretizeDistortion(float relMovement) {
