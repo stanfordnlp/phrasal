@@ -50,8 +50,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
         if(el.equals("p_tf")) { l.add(ONESCORE_P_t_f); } else
         l.add(el);
       }
+			customScores = l.toArray(new String[l.size()]);
     }
-    customScores = l.toArray(new String[l.size()]);
   }
 
   // Originally, PharaohPhraseTables were backed by a nice simple
