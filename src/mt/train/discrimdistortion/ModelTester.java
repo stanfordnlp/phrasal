@@ -59,6 +59,32 @@ public class ModelTester {
 			evalTestSet(m,evalFile);	
 	}
 	
+  private static String prettyPrint(DistortionModel model, Datum d, boolean isOOV, String word) {
+    int i = 0;
+    StringBuilder sb = new StringBuilder();
+    sb.append("[");
+    for(DistortionModel.Feature feat : model.featureIndex) {
+      if(feat == DistortionModel.Feature.Word && isOOV)
+        sb.append(String.format(" " + word));
+      else if(feat == DistortionModel.Feature.Word)
+        sb.append(String.format(" %s",model.wordIndex.get((int) d.get(i))));
+      else if(feat == DistortionModel.Feature.CurrentTag)
+        sb.append(String.format(" %s",model.tagIndex.get((int) d.get(i))));
+      else if(feat == DistortionModel.Feature.RelPosition)
+        sb.append(String.format(" %d", (int) d.get(i)));
+      else if(feat == DistortionModel.Feature.SourceLen)
+        sb.append(String.format(" %d", (int) d.get(i)));
+      else if(feat == DistortionModel.Feature.LeftTag)
+        sb.append(String.format(" %s",model.tagIndex.get((int) d.get(i))));
+      else if(feat == DistortionModel.Feature.RightTag)
+        sb.append(String.format(" %s",model.tagIndex.get((int) d.get(i))));
+      i++;
+    }
+    sb.append(" ]");
+
+    return sb.toString();
+  }
+	
 	private static void evalLogLik(DistortionModel m, String testPrefix) {
     
 	  System.out.println(">> Evaluating Log Likelihood <<");
@@ -71,11 +97,15 @@ public class ModelTester {
 	  fe.setMinWordCount(1);
 	  fe.setVerbose(true);
 	  fe.setExtractOnly();
+	  fe.setSubSampling(false);
 	  fe.initializeWithModel(m);
 	  
+	  double predLogLik = 0.0;
+	  double logLikNoNull = 0.0;
 	  double logLik = 0.0;
-	  TrainingSet ts = fe.extract(m.featureIndex, m.classIndex, 120000);
-	  int exampleNum = 1;
+	  TrainingSet ts = fe.extract(m.featureIndex, m.classIndex, 14000);
+	  int nullPredictions = 0;
+	  
 	  for(Datum d : ts) {
 	    boolean isOOV = false;
 	    if(m.featureIndex.contains(DistortionModel.Feature.Word)) {
@@ -83,13 +113,36 @@ public class ModelTester {
 	      isOOV = (d.get(wordIdx) == -1.0f);
 	    }
 	    
-	    Pair<Double, DistortionModel.Class> thisClass = m.argmax(d, isOOV);
-	    double logProb = m.prob(d, thisClass.second(), isOOV);
-	    logLik += logProb;
+	    //What the model predicts
+	    Pair<Double, DistortionModel.Class> predClass = m.argmax(d, isOOV);
+      double predProb = m.prob(d, predClass.second(), isOOV);	    	    
+	    
+      //What it will return for MT at test time
+      DistortionModel.Class goldClass = DistortionModel.discretizeDistortion((int) d.getTarget());
+	    double goldProb = m.prob(d, goldClass, isOOV);
+	    
+	    //If we throw out the null class
+	    if(goldClass == DistortionModel.Class.NULL) {
+        nullPredictions++;
+      } else {
+        logLikNoNull += goldProb;
+      }
+
+	    predLogLik += predProb;
+      logLik += goldProb;
+
+      String debugDatum = prettyPrint(m,d,isOOV,"");
+   //   System.err.printf("%s (pred: %s): %f ||| %s\n",goldClass, predClass.second().toString(), goldProb, debugDatum);
 	  }
 	  
-	  System.out.printf("Test alignments: %d\n", ts.getNumExamples());
-	  System.out.printf("logLik: %f\n", logLik);  
+	  System.out.println("===============================");
+	  System.out.printf("Test alignments:  %d\n", ts.getNumExamples());
+	  System.out.printf("Null predictions: %d\n", nullPredictions);
+	  System.out.printf("If null skipped: %d\n", ts.getNumExamples() - nullPredictions);
+	  System.out.println("Log likelihoods:");
+    System.out.printf("  Test:   %f\n", logLik);
+    System.out.printf("  NoNull: %f\n", logLikNoNull);
+	  System.out.printf("  Pred:   %f\n", predLogLik);  
   }
 
   private static void evalTestSet(DistortionModel model, String testFile) {
@@ -204,11 +257,12 @@ public class ModelTester {
 	        else if(feat == DistortionModel.Feature.SourceLen)
 	          feats[featPtr++] = (float) DistortionModel.getSlenBin(slen);
 	        else if(feat == DistortionModel.Feature.RightTag)
-              feats[featPtr++] = (float) model.tagIndex.indexOf(rTag, true);
+              feats[featPtr++] = (float) model.tagIndex.indexOf(rTag);
           else if(feat == DistortionModel.Feature.LeftTag)
-            feats[featPtr++] = (float) model.tagIndex.indexOf(lTag, true);
-          }
+            feats[featPtr++] = (float) model.tagIndex.indexOf(lTag);
+	      }
 				
+	      
 				for(int rpos = 0; rpos < 100; rpos += 20) {
 					feats[3] = DistortionModel.getSlocBin((float) rpos / 100.0f);
 					Datum d = new Datum(0.0f,feats);
@@ -216,7 +270,7 @@ public class ModelTester {
 					ps.println(feats[3]);
 					for(DistortionModel.Class c : DistortionModel.Class.values()) {
 						double prob = model.prob(d, c, isOOV);
-						totalMass += prob;
+						totalMass += Math.exp(prob);
 						ps.printf("%d %f\n", c.ordinal(), prob);
 					}
 					System.out.printf("pos: %f mass: %f\n", feats[3], totalMass);

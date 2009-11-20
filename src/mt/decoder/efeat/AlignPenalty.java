@@ -61,7 +61,7 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
     
     Pair<Integer,Integer> featVals = internalFeaturize(f);
 
-    return new FeatureValue<String>(FEATURE_NAME, -1 * (featVals.first() + featVals.second()));
+    return new FeatureValue<String>(FEATURE_NAME, -1 * featVals.first());
   }
 
   @Override

@@ -25,6 +25,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	final int order;
 	final double multiplier;
 	final boolean smooth;
+	
+	private static final boolean printLocalScores = (System.getProperty("printLocalScores") != null);
 
   private static final boolean enableCache = true;
   private final Map<Pair<Integer,Integer>,Double> smoothScoreCache = new HashMap<Pair<Integer,Integer>,Double>();
@@ -367,7 +369,10 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			}
 
 			// System.err.printf("BLEUS: %e logbp %e logPrec %e Prec %e\n",  Math.exp(localLogBP + localNgramPrecisionScore), localLogBP, localNgramPrecisionScore, Math.exp(localNgramPrecisionScore));
-			return Math.exp(localLogBP + localNgramPrecisionScore);
+			final double localScore = Math.exp(localLogBP + localNgramPrecisionScore);
+			if(printLocalScores)
+			  System.out.printf("%d %f\n", pos, localScore);
+			return localScore;
 		}
 
     public IncrementalEvaluationMetric<TK,FV> add(ScoredFeaturizedTranslation<TK,FV> tran) {

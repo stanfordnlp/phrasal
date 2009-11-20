@@ -29,7 +29,8 @@ public class DiscrimDistortionController {
 	private int numExpectedFeatures = -1;
 	private int minWordCount = 40;
 	private int numFeatures = 0;
-	private float trainingThreshold = 100.0f;
+	private float trainingThreshold = Integer.MAX_VALUE;
+	private boolean subSample = false;
 
 	
 	public DiscrimDistortionController(final String sourceFile, final String targetFile,
@@ -49,6 +50,8 @@ public class DiscrimDistortionController {
 	public void setMinWordCount(int minWordCount) { this.minWordCount  = minWordCount; }
 
   public void setTrainingThreshold(float thresh) { trainingThreshold = thresh; }
+  
+  public void subSampleFeatureExtraction(boolean b) { subSample = b; }
 
 	public void setFeatureFlags(final boolean use_word, 
 								final boolean use_tag,
@@ -84,7 +87,7 @@ public class DiscrimDistortionController {
 			classIndex.add(c);
 		
 		if(VERBOSE)
-		  System.err.printf("Classes: %d\n", DistortionModel.Class.values().length);
+		  System.err.printf("Classes:\n %s\n", classIndex.toString());
 		
 		return classIndex;
 	}
@@ -101,6 +104,7 @@ public class DiscrimDistortionController {
 			fe.setVerbose(VERBOSE);
 			fe.setMinWordCount(minWordCount);
 			fe.setThreshold(trainingThreshold);
+			fe.setSubSampling(subSample);
 			
 			System.out.println("Extracting features...");
 			TrainingSet ts = fe.extract(features, getClassIndex(), numExpectedFeatures);
@@ -169,7 +173,7 @@ public class DiscrimDistortionController {
 			
 			//DistortionModel.Class goldClass = DistortionModel.discretizeDistortion(d.getTarget());
 			//ps.print(goldClass.toString());
-			ps.print(d.getTarget());
+			ps.printf("%s %f",DistortionModel.discretizeDistortion((int)d.getTarget()).toString(),d.getTarget());
 			
 			int i = 0;
 			for(DistortionModel.Feature feat : features) {

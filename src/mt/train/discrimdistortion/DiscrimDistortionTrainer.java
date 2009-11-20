@@ -9,137 +9,141 @@ import joptsimple.OptionSet;
 
 public final class DiscrimDistortionTrainer {
 
-	private DiscrimDistortionTrainer() {}
+  private DiscrimDistortionTrainer() {}
 
-	private static String usage()
-	{
-		String cmdLineUsage = "Usage: java DiscDistortionTrainer [features] source target align\n";
-		StringBuilder classUsage = new StringBuilder(cmdLineUsage);
-		
-		classUsage.append(" -v          : Verbose output\n");
-		classUsage.append(" -f  <num>   : Expected number of features (for mem pre-allocation)\n");
-		classUsage.append(" -t  <num>   : Number of threads to use in feature extraction\n");
-		classUsage.append(" -l          : Feature: source sentence length\n");
-		classUsage.append(" -p          : Feature: relative sentence position\n");
-		classUsage.append(" -s          : Feature: source POS tag (source file must be tagged with delimiter #)\n");
-		classUsage.append(" -w <thresh> : Feature: word (cutoff threshold for vocabulary)\n");
-		classUsage.append(" -e <file>   : Extract and write feature set ONLY\n");
-		classUsage.append(" -c          : Feature: right/left POS tag context\n");
-		classUsage.append(" -r thresh    : Restrict training to abs(thresh) relative movement\n");
+  private static String usage()
+  {
+    String cmdLineUsage = "Usage: java DiscrimDistortionTrainer [features] source target align\n";
+    StringBuilder classUsage = new StringBuilder(cmdLineUsage);
 
-		return classUsage.toString();
-	}
+    classUsage.append(" -v          : Verbose output\n");
+    classUsage.append(" -f  <num>   : Expected number of features (for mem pre-allocation)\n");
+    classUsage.append(" -t  <num>   : Number of threads to use in feature extraction\n");
+    classUsage.append(" -l          : Feature: source sentence length\n");
+    classUsage.append(" -p          : Feature: relative sentence position\n");
+    classUsage.append(" -s          : Feature: source POS tag (source file must be tagged with delimiter #)\n");
+    classUsage.append(" -w <thresh> : Feature: word (cutoff threshold for vocabulary)\n");
+    classUsage.append(" -e <file>   : Extract and write feature set ONLY\n");
+    classUsage.append(" -c          : Feature: right/left POS tag context\n");
+    classUsage.append(" -r thresh   : Restrict training to abs(thresh) relative movement\n");
+    classUsage.append(" -x          : Sub-sample monotone and null classes\n");
 
-	//Uses GNU getopt() syntax
-	private final static OptionParser op = new OptionParser("r:vce:w:plst:f:d:");
-	private final static int MIN_ARGS = 3;
+    return classUsage.toString();
+  }
 
-	//Command line options
-	private static boolean VERBOSE = false;
-	private static boolean USE_WORD = false;
-	private static boolean USE_TAG = false;
-	private static boolean USE_POSITION = false;
-	private static boolean USE_SLEN = false;
-	private static boolean USE_CONTEXT = false;
-	private static boolean EXTRACT_ONLY = false;
-	private static boolean THRESHOLD_TRAINING = false;
-	
-	private static int numThreads = 1;
-	private static int numExpectedFeatures = 0;
-	private static int minWordCount = 40;
-	private static String extractFile = "";
-	private static float trainingThreshold = 0.0f;
-	
-	//Arguments
-	private static String sourceFile = "";
-	private static String targetFile = "";
-	private static String alignFile = "";
+  //Uses GNU getopt() syntax
+  private final static OptionParser op = new OptionParser("xr:vce:w:plst:f:d:");
+  private final static int MIN_ARGS = 3;
 
-	private static boolean validateCommandLine(String[] args) {
-		//Command line parsing
-		OptionSet opts = null;
-		List<String> parsedArgs = null;
-		try {
-			opts = op.parse(args);
+  //Command line options
+  private static boolean VERBOSE = false;
+  private static boolean USE_WORD = false;
+  private static boolean USE_TAG = false;
+  private static boolean USE_POSITION = false;
+  private static boolean USE_SLEN = false;
+  private static boolean USE_CONTEXT = false;
+  private static boolean EXTRACT_ONLY = false;
+  private static boolean THRESHOLD_TRAINING = false;
+  private static boolean SUB_SAMPLE = false;
 
-			parsedArgs = opts.nonOptionArguments();
+  private static int numThreads = 1;
+  private static int numExpectedFeatures = 0;
+  private static int minWordCount = 40;
+  private static String extractFile = "";
+  private static float trainingThreshold = 0.0f;
 
-			if(parsedArgs == null || parsedArgs.size() < MIN_ARGS)
-				return false;
+  //Arguments
+  private static String sourceFile = "";
+  private static String targetFile = "";
+  private static String alignFile = "";
 
-		} catch (OptionException e) {
-			System.err.println(e.toString());
-			return false;
-		}
+  private static boolean validateCommandLine(String[] args) {
+    //Command line parsing
+    OptionSet opts = null;
+    List<String> parsedArgs = null;
+    try {
+      opts = op.parse(args);
 
-		VERBOSE = opts.has("v");
-		USE_SLEN = opts.has("l");
-		USE_POSITION = opts.has("p");
-		USE_TAG = opts.has("s");
-		USE_CONTEXT = opts.has("c");
-		if(opts.has("t"))
-			numThreads = Integer.parseInt((String) opts.valueOf("t"));
-		if(opts.has("f"))
-			numExpectedFeatures = Integer.parseInt((String) opts.valueOf("f"));
-		if(opts.has("w")) {
-			USE_WORD = true;
-			minWordCount = Integer.parseInt((String) opts.valueOf("w"));
-		}
-		if(opts.has("e")) {
-			EXTRACT_ONLY = true;
-			extractFile = (String) opts.valueOf("e");
-		}
-		if(opts.has("r")) {
-		  THRESHOLD_TRAINING = true;
-		  trainingThreshold = Float.parseFloat((String) opts.valueOf("r"));
-		}
-		
-		sourceFile = parsedArgs.get(0);
-		targetFile = parsedArgs.get(1);
-		alignFile = parsedArgs.get(2);
+      parsedArgs = opts.nonOptionArguments();
 
-		return true;
-	}
+      if(parsedArgs == null || parsedArgs.size() < MIN_ARGS)
+        return false;
+
+    } catch (OptionException e) {
+      System.err.println(e.toString());
+      return false;
+    }
+
+    VERBOSE = opts.has("v");
+    SUB_SAMPLE = opts.has("x");
+    USE_SLEN = opts.has("l");
+    USE_POSITION = opts.has("p");
+    USE_TAG = opts.has("s");
+    USE_CONTEXT = opts.has("c");
+    if(opts.has("t"))
+      numThreads = Integer.parseInt((String) opts.valueOf("t"));
+    if(opts.has("f"))
+      numExpectedFeatures = Integer.parseInt((String) opts.valueOf("f"));
+    if(opts.has("w")) {
+      USE_WORD = true;
+      minWordCount = Integer.parseInt((String) opts.valueOf("w"));
+    }
+    if(opts.has("e")) {
+      EXTRACT_ONLY = true;
+      extractFile = (String) opts.valueOf("e");
+    }
+    if(opts.has("r")) {
+      THRESHOLD_TRAINING = true;
+      trainingThreshold = Float.parseFloat((String) opts.valueOf("r"));
+    }
+
+    sourceFile = parsedArgs.get(0);
+    targetFile = parsedArgs.get(1);
+    alignFile = parsedArgs.get(2);
+
+    return true;
+  }
 
 
-	public static void main(String[] args) {
-		if(!validateCommandLine(args)) {
-			System.err.println(usage());
-			System.exit(-1);
-		}
+  public static void main(String[] args) {
+    if(!validateCommandLine(args)) {
+      System.err.println(usage());
+      System.exit(-1);
+    }
 
-		Date startTime = new Date();
-		System.out.println("###############################################");
-		System.out.println("### Discriminative Distortion Model Trainer ###");
-		System.out.println("###############################################");
-		System.out.printf("Start time: %s\n", startTime);
+    Date startTime = new Date();
+    System.out.println("###############################################");
+    System.out.println("### Discriminative Distortion Model Trainer ###");
+    System.out.println("###############################################");
+    System.out.printf("Start time: %s\n", startTime);
 
-		DiscrimDistortionController controller = new DiscrimDistortionController(sourceFile,targetFile,alignFile);
-		controller.setVerbose(VERBOSE);
-		controller.setFeatureFlags(USE_WORD,USE_TAG,USE_POSITION,USE_SLEN, USE_CONTEXT);
-		controller.setNumThreads(numThreads);
-		controller.setMinWordCount(minWordCount);
-		controller.preAllocateMemory(numExpectedFeatures);
-		
-		if(THRESHOLD_TRAINING)
-		  controller.setTrainingThreshold(trainingThreshold);
-				
-		if(EXTRACT_ONLY) {
-			controller.extractOnly(extractFile);
-			System.out.println("done!");
-		} else if(controller.run()) {
-			System.out.print("Writing final weights and indices...");
-			controller.outputModel();
-			System.out.println("done!");
-		} else
-			System.out.println("ERROR: Terminating execution...");
+    DiscrimDistortionController controller = new DiscrimDistortionController(sourceFile,targetFile,alignFile);
+    controller.setVerbose(VERBOSE);
+    controller.setFeatureFlags(USE_WORD,USE_TAG,USE_POSITION,USE_SLEN, USE_CONTEXT);
+    controller.setNumThreads(numThreads);
+    controller.setMinWordCount(minWordCount);
+    controller.preAllocateMemory(numExpectedFeatures);
+    controller.subSampleFeatureExtraction(SUB_SAMPLE);
 
-		Date stopTime = new Date();
-		long elapsedTime = stopTime.getTime() - startTime.getTime();
-		System.out.println();
-		System.out.println();
-		System.out.printf("Completed processing at %s\n",stopTime);
-		System.out.printf("Elapsed time: %d seconds\n", (int) (elapsedTime / 1000F));
-	}
+    if(THRESHOLD_TRAINING)
+      controller.setTrainingThreshold(trainingThreshold);
+
+    if(EXTRACT_ONLY) {
+      controller.extractOnly(extractFile);
+      System.out.println("done!");
+    } else if(controller.run()) {
+      System.out.print("Writing final weights and indices...");
+      controller.outputModel();
+      System.out.println("done!");
+    } else
+      System.out.println("ERROR: Terminating execution...");
+
+    Date stopTime = new Date();
+    long elapsedTime = stopTime.getTime() - startTime.getTime();
+    System.out.println();
+    System.out.println();
+    System.out.printf("Completed processing at %s\n",stopTime);
+    System.out.printf("Elapsed time: %d seconds\n", (int) (elapsedTime / 1000F));
+  }
 
 }

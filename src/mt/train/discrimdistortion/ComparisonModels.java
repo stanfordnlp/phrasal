@@ -66,7 +66,7 @@ public class ComparisonModels {
 
             float targetValue = tRel - sRel;
 
-            DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(targetValue);
+            DistortionModel.Class thisClass = DistortionModel.discretizeDistortion((int) targetValue);
 
             if(mode == Mode.Train)
               counts.incrementCount(thisClass);
@@ -119,6 +119,7 @@ public class ComparisonModels {
         while(algnReader.ready()) {
           StringTokenizer alignTokenizer = new StringTokenizer(algnReader.readLine());
           Map<Integer,Integer> alignmentMap = new TreeMap<Integer,Integer>();
+          Set<Integer> alignedSToks = new HashSet<Integer>();
           while(alignTokenizer.hasMoreTokens()) {
             String alignment = alignTokenizer.nextToken();
             String[] indices = alignment.split("-");
@@ -128,6 +129,8 @@ public class ComparisonModels {
             int sIdx = Integer.parseInt(indices[0]);
             int tIdx = Integer.parseInt(indices[1]);
 
+            alignedSToks.add(sIdx);
+            
             if(alignmentMap.containsKey(tIdx))
               System.err.printf("%WARNING many-to-one alignment at line %d. Are you using the intersect heuristic?\n", algnReader.getLineNumber());
 
@@ -139,10 +142,20 @@ public class ComparisonModels {
 
           int lastSPos = Integer.MIN_VALUE;
           for(Map.Entry<Integer, Integer> alignment : alignmentMap.entrySet()) {
-            final int distortion = (lastSPos == Integer.MIN_VALUE) ? 
-                alignment.getValue() : lastSPos + 1 - alignment.getValue();
-
+            //Account for null alignments
+            int distortion = 0;
+            if(lastSPos == Integer.MIN_VALUE)
+              distortion = alignment.getValue();
+            else {
+              int sIdx = alignment.getValue();
+//              for(int i = lastSPos; !(alignedSToks.contains(i)) && i < sIdx; i++)
+//                lastSPos++;
+              distortion = lastSPos + 1 - sIdx;
+            }
+            distortion *= -1; //Turn it into a cost
+            
             lastSPos = alignment.getValue();
+            
             if(mode == Mode.Train) {
               m++;
               meanNum += distortion;

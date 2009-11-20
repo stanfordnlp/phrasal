@@ -12,7 +12,7 @@ public class DistortionModel implements Serializable {
 
 	public static enum Feature { Word, RelPosition, CurrentTag, SourceLen, LeftTag, RightTag }
 	public static enum FeatureType { Binary, Real };
-	public static enum Class { C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12 }
+	public static enum Class { C1, C2, C3, C4, C5, C6, C7, C8, C9, NULL }
 
 	public Index<DistortionModel.Feature> featureIndex = null;
 	public Index<DistortionModel.Class> classIndex = null;
@@ -45,7 +45,7 @@ public class DistortionModel implements Serializable {
 		
 		double scoreFromModel = modelScore(datum, thisC, isOOV);
 
-		return scoreFromModel - denom;
+		return scoreFromModel - denom; //Division in real space
 	}
 	
 	public Pair<Double,DistortionModel.Class> argmax(Datum datum, boolean isOOV) {
@@ -101,36 +101,35 @@ public class DistortionModel implements Serializable {
 	public static final float[] classRightBounds = {-50.0f,-22.09f,-11.84f,-6.69f,-3.38f,
 	  -1.0f, 0.64f, 3.45f, 8.68f, 32.0f, 65.0f, 100.0f };
 	public static final Class FIRST_CLASS = Class.C1;
-	public static final Class LAST_CLASS = Class.C12;
-	public static final Class MONOTONE = Class.C7;
+	public static final Class LAST_CLASS = Class.C9;
+	public static final Class MONOTONE = Class.C5;
+	public static final int NULL_VALUE = -5000;
 	
 	//Expects relative movement as a percentage (e.g., 100%)
-	public static Class discretizeDistortion(float relMovement) {
-		
+	public static Class discretizeDistortion(int relMovement) {
+	
+	  if(relMovement == NULL_VALUE)
+	    return Class.NULL;
+	  
 		//10 class implementation (28 Oct 2009)
-		if(relMovement < -50.0f)    //By construction
-			return Class.C1;
-		if(relMovement < -22.09f)
-			return Class.C2;
-		else if(relMovement < -11.84f)
-			return Class.C3;
-		else if(relMovement < -6.69f)
-			return Class.C4;
-		else if(relMovement < -3.38f)
-			return Class.C5;
-		else if(relMovement < -1.0f)
-			return Class.C6;
-		else if(relMovement < 0.64f)
-			return Class.C7;
-		else if(relMovement < 3.45f)
-			return Class.C8;
-		else if(relMovement < 8.68f)
-			return Class.C9;
-		else if(relMovement < 32.0f)
-			return Class.C10;
-		else if(relMovement < 65.0f)  //By construction
-			return Class.C11;
-		return Class.C12;
+	  if(relMovement <= -7)    //By construction
+	    return Class.C1;
+	  else if(relMovement <= -4)
+	    return Class.C2;
+	  else if(relMovement <= -2)
+	    return Class.C3;
+	  else if(relMovement == -1)
+	    return Class.C4;
+	  else if(relMovement == 0)
+	    return Class.C5;
+	  else if(relMovement == 1)
+	    return Class.C6;
+	  else if(relMovement <= 3)
+	    return Class.C7;
+	  else if(relMovement <= 6)
+	    return Class.C8;
+	  
+	  return Class.C9;
 		
 //    if (relMovement == 0.0)
 //      return Class.Zero;
@@ -267,17 +266,4 @@ public class DistortionModel implements Serializable {
 			return 4;
 	}
 
-	/**
-	 * For debugging
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		System.out.println(DistortionModel.discretizeDistortion(0.0f));
-		System.out.println(DistortionModel.discretizeDistortion(3.0f));
-		System.out.println(DistortionModel.discretizeDistortion(-3.0f));
-		System.out.println(DistortionModel.discretizeDistortion(17.0f));
-		System.out.println(DistortionModel.discretizeDistortion(-17.0f));
-		System.out.println(DistortionModel.discretizeDistortion(-100.0f));
-		
-	}
 }
