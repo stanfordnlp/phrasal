@@ -22,6 +22,8 @@ import java.util.Set;
 public class IString implements CharSequence, Serializable, HasIntegerIdentity, HasWord, Comparable<IString> {
   public static final OAIndex<String> index = new OAIndex<String>();
 
+  private static boolean internStrings = true;
+
   private String stringRep;
   public final int id;
 
@@ -59,7 +61,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
         }
       }
     }
-    stringRep = string.intern();
+    stringRep = internStrings ? string.intern() : string;
     id = index.indexOf(string, true);
   }
 
@@ -90,6 +92,9 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
     return lazyStringRep().length();
   }
 
+  public static void internStrings(boolean i) {
+    internStrings = i;
+  }
 
   public CharSequence subSequence(int start, int end) {
     return lazyStringRep().subSequence(start, end);

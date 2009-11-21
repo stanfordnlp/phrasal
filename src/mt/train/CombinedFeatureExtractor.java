@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 
 import mt.base.IOTools;
+import mt.base.IString;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
@@ -666,6 +667,7 @@ public class CombinedFeatureExtractor {
 
   public static void main(String[] args) throws IOException {
 
+		IString.internStrings(false);
     Properties prop = StringUtils.argsToProperties(args);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
