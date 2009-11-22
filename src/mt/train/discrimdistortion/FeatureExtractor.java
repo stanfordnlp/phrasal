@@ -10,6 +10,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.Pair;
 import mt.base.IOTools;
 
 public class FeatureExtractor {
@@ -68,13 +69,11 @@ public class FeatureExtractor {
     private final String sourceString;
     private final String alignments;
     private final int bitextLineNumber;
-    private final float tMaxIdx;
 
     public ExtractionTask(String source, String alignments, int targetLen, int bitextLineNumber) {
       sourceString = source;
       this.alignments = alignments;
       this.bitextLineNumber = bitextLineNumber;
-      tMaxIdx = (float) (targetLen - 1);
     }
 
     @Override
@@ -83,8 +82,10 @@ public class FeatureExtractor {
 
       //Tokenize the source string
       StringTokenizer sourceTokenizer = new StringTokenizer(sourceString);
+      Set<Integer> nullAlignments = new HashSet<Integer>();
       List<String> sourceWords = new ArrayList<String>();
       List<String> posTags = new ArrayList<String>();
+      int sourceIdx = 0;
       while(sourceTokenizer.hasMoreTokens()) {
         String token = sourceTokenizer.nextToken();
         if(featureIndex.contains(DistortionModel.Feature.CurrentTag)) {
@@ -95,6 +96,7 @@ public class FeatureExtractor {
           posTags.add(parts[1].intern());
         } else
           sourceWords.add(token);
+        nullAlignments.add(sourceIdx++); //Source isn't aligned yet, so add everything!
       }
 
       final int slenBin = DistortionModel.getSlenBin(sourceWords.size());
@@ -102,7 +104,8 @@ public class FeatureExtractor {
       //Process the alignment
       //Map is target --> source
       SortedMap<Integer,Integer> alignmentMap = new TreeMap<Integer,Integer>();
-      Set<Integer> alignedSToks = new HashSet<Integer>();
+      Map<Integer,Integer> sTokMapping = new HashMap<Integer,Integer>();
+      int newSIdx = 0;
       while(alignTokenizer.hasMoreTokens()) {
         String alignment = alignTokenizer.nextToken();
         String[] indices = alignment.split("-");
@@ -112,55 +115,54 @@ public class FeatureExtractor {
         int sIdx = Integer.parseInt(indices[0]);
         int tIdx = Integer.parseInt(indices[1]);
 
-        alignedSToks.add(sIdx);
+        sTokMapping.put(sIdx,newSIdx);
+        newSIdx++;
+        nullAlignments.remove(sIdx);
 
         if(alignmentMap.containsKey(tIdx))
           System.err.printf("%s: WARNING many-to-one alignment at line %d. Are you using the intersect heuristic?\n", this.getClass().getName(),bitextLineNumber);
 
-        alignmentMap.put(tIdx, sIdx);
+        alignmentMap.put(tIdx, sIdx); //Sort by target side
       }
-
+      
       //Work out the translation order
-      // Here we know the null alignments, which are latent at MT decoding time
-      // We assume that if a source token is translated, then all null aligned tokens prior to
-      // that token have also been laid down
-      List<Integer> sTranslationOrder = new ArrayList<Integer>();
+      // First coordinate is the normalized index in the set of aligned source words
+      // Second coordinate is the index into the set of source words
+      List<Pair<Integer,Integer>> sTranslationOrder = new ArrayList<Pair<Integer,Integer>>();
       for(Map.Entry<Integer, Integer> alignment : alignmentMap.entrySet()) {
-        //final int tIdx = alignment.getKey();
         final int sIdx = alignment.getValue();
-        for(int j = sTranslationOrder.size(); j < sIdx; j++) {
-          if(!alignedSToks.contains(j)) //null alignment
-            sTranslationOrder.add(j);
-        }
-        sTranslationOrder.add(sIdx);
+        
+        assert sTokMapping.containsKey(sIdx);
+        
+        final int normSIdx = sTokMapping.get(sIdx);
+        sTranslationOrder.add(new Pair<Integer,Integer>(normSIdx,sIdx));
       }
       
-      //Fill out the end of the translation order
-      for(int i = sTranslationOrder.size(); i < sourceWords.size(); i++) {
-        if(alignedSToks.contains(i))
-          throw new RuntimeException("Aligned token not processed from alignment map!");
-        else
-          sTranslationOrder.add(i);
-      }
-      
-      System.out.printf("%d: %d nulls\n",sourceWords.size(), sourceWords.size() - alignedSToks.size());
-
+      //Add the null alignments, with normalized coordinates equal to -1
+      for(int nullSIdx : nullAlignments)
+        sTranslationOrder.add(new Pair<Integer,Integer>(-1,nullSIdx));
+            
       //WSGDEBUG
       //Train on the translation order
       Random rand = new Random();
+      float sMaxIdx = (float) (sourceWords.size() - 1);
       for(int i = 0; i < sTranslationOrder.size(); i++) {
-        final int sIdx = sTranslationOrder.get(i);
+        final Pair<Integer,Integer> sWord = sTranslationOrder.get(i);
+        final int normSIdx = sWord.first();
+        final int sIdx = sWord.second();
+        
         if(!wordIndex.contains(sourceWords.get(sIdx)) && ADD_FEATURE_INDEX) continue;
 
-        final float targetValue = (alignedSToks.contains(sIdx)) ? i - sIdx :
-                                      (float) DistortionModel.NULL_VALUE;
+        final float targetValue = (normSIdx == -1) ? DistortionModel.NULL_VALUE : i - normSIdx;
         
+        // Best values:
+        // .50% / .65%
         if(SUB_SAMPLE && targetValue == 0.0) {
-          if(rand.nextFloat() <= 0.40f) //Parameter set by experimentation%
+          if(rand.nextFloat() <= 0.57f) //Parameter set by experimentation%
             continue;
         } 
-        else if(SUB_SAMPLE && !alignedSToks.contains(sIdx)) {
-          if(rand.nextFloat() <= 0.75f) //Parameter set by experimentation%
+        else if(SUB_SAMPLE && normSIdx == -1) {
+          if(rand.nextFloat() <= 0.65f) //Parameter set by experimentation%
             continue;
         }
         
@@ -179,7 +181,7 @@ public class FeatureExtractor {
           else if(feature == DistortionModel.Feature.SourceLen)
             datum[datPtr++] = (float) slenBin;
           else if(feature == DistortionModel.Feature.RelPosition)
-            datum[datPtr++] = DistortionModel.getSlocBin((float) sIdx / (float) sourceWords.size());
+            datum[datPtr++] = DistortionModel.getSlocBin((float) sIdx / sMaxIdx );
           else if(feature == DistortionModel.Feature.RightTag) {
             if(sIdx == sourceWords.size() - 1)
               datum[datPtr++] = (float) tagIndex.indexOf("</S>",ADD_FEATURE_INDEX);
@@ -212,6 +214,9 @@ public class FeatureExtractor {
             counter.incrementCount(st.nextToken());
         }
       }
+      
+      if(VERBOSE)
+        System.out.printf("%s: Read %d lines\n", this.getClass().getName(), reader.getLineNumber());
 
       reader.close();
 

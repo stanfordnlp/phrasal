@@ -132,7 +132,7 @@ public class ModelTester {
       logLik += goldProb;
 
       String debugDatum = prettyPrint(m,d,isOOV,"");
-   //   System.err.printf("%s (pred: %s): %f ||| %s\n",goldClass, predClass.second().toString(), goldProb, debugDatum);
+      System.err.printf("%s (pred: %s): %f ||| %s\n",goldClass, predClass.second().toString(), goldProb, debugDatum);
 	  }
 	  
 	  System.out.println("===============================");
@@ -245,6 +245,8 @@ public class ModelTester {
 
 				//Assumes these words and tags are in the model...exception otherwise
         boolean isOOV = !model.wordIndex.contains(word);
+        if(isOOV)
+          System.out.println(word + " is OOV");
 				float[] feats = new float[model.getFeatureDimension()];
 				int featPtr = 0;
 	      for(DistortionModel.Feature feat : model.featureIndex) {

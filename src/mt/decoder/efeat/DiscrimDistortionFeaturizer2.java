@@ -16,10 +16,11 @@ import mt.base.IStrings;
 import mt.base.Sequence;
 import mt.base.SimpleSequence;
 import mt.decoder.feat.RichIncrementalFeaturizer;
+import mt.decoder.feat.StatefulFeaturizer;
 import mt.train.discrimdistortion.Datum;
 import mt.train.discrimdistortion.DistortionModel;
 
-public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<IString, String>{
+public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString, String>{
 
   private final String FEATURE_NAME = "DiscrimDistortion";
 
@@ -33,6 +34,8 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
   private double[][] logProbCache = null;
 
   private boolean DEBUG = true;
+  
+  private boolean USE_NULL = false;
 
   //Constants used for all hypotheses
   private static final Pattern ibmEscaper = Pattern.compile("#|\\+");
@@ -40,7 +43,7 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
 
   public DiscrimDistortionFeaturizer2(String... args) {
 
-    assert args.length == 3;
+    assert args.length <= 4;
 
     //The serialized distortion model
     File modelFile = new File(args[0]);
@@ -70,6 +73,9 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
       throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),unkFile.getPath()));
 
     sentenceToId = getSentenceMap(unkFile);
+    
+    if(args.length == 4)
+      USE_NULL = Boolean.parseBoolean(args[3]);
   }
 
   private Map<Sequence<IString>, Integer> getSentenceMap(File unkFile) {
@@ -124,40 +130,31 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
   }
 
 
-
-
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
     //final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+    int numNullAlignments = (f.prior == null) ? 0 : (Integer) f.prior.getState(this);
 
-    if(!f.option.abstractOption.alignment.hasAlignment())
-      throw new RuntimeException(String.format("Unaligned translation option (did you filter the input for OOVs?):\n %s\n",f.option.toString()));
-
+    //TODO This should not happen
+    if(!f.option.abstractOption.alignment.hasAlignment()) {
+      numNullAlignments += f.foreignPhrase.size();
+      f.setState(this, numNullAlignments);
+      return new FeatureValue<String>(FEATURE_NAME,0.0);
+    }    
+    
     final int sOffset = f.foreignPosition;
-
-    //Work out the null alignments
-    //
-    final BitSet optCoverage = f.hyp.foreignCoverage.get(sOffset, f.foreignPhrase.size() + 1);
-    final Set<Integer> nullAlignments = new HashSet<Integer>();
-
-    int uncoveredIdx = optCoverage.nextClearBit(0);
-    while(uncoveredIdx < f.foreignPhrase.size()) {
-      nullAlignments.add(sOffset + uncoveredIdx);
-      uncoveredIdx++;
-      if(uncoveredIdx < optCoverage.size()) //Skip over covered tokens
-        uncoveredIdx = optCoverage.nextClearBit(uncoveredIdx);
-    }
-
-
+        
     //Now score the alignments
     //   (the partial hypotheses is built left-to-right, so no sorting necessary)
     //
     int sHatPosition = (f.prior == null) ? 0 :
       f.foreignSentence.size() - f.prior.hyp.untranslatedTokens;
+    sHatPosition -= numNullAlignments;
+    
     double optScore = 0.0;      
     final int tOptLen = f.translatedPhrase.size();
-
+    final Set<Integer> alignedSToks = new HashSet<Integer>();
     for(int i = 0; i < tOptLen; i++) {
 
       final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
@@ -165,20 +162,31 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
         continue; //skip over null aligned target tokens
 
       final int sIdx = sOffset + sIndices[0];
-      DistortionModel.Class predClass;
-      if(nullAlignments.contains(sIdx))
-        predClass = DistortionModel.MONOTONE;
-      else {
-        int movement = sHatPosition - sIdx;
-        predClass = DistortionModel.discretizeDistortion(movement);
-      }
-
+      alignedSToks.add(sIdx);
+      
+      int movement = sHatPosition - sIdx;
+      DistortionModel.Class predClass = DistortionModel.discretizeDistortion(movement);
       optScore += logProbCache[sIdx][predClass.ordinal()];
 
       sHatPosition++;
     }
+    
+    //Now score the nulls
+    //(21 Nov.): About 56.9 on dev *without* null scores...also the scores look smooth,
+    //except for shorter sentences. May want to experiment with disabling this feature.
+    double nullScore = 0.0;
+    if(USE_NULL) {
+      for(int i = 0; i < f.foreignPhrase.size(); i++) {
+        if(!alignedSToks.contains(sOffset + i)) {
+          nullScore += logProbCache[sOffset + i][DistortionModel.Class.NULL.ordinal()];
+          numNullAlignments++;
+        }
+      }
+    }
+    
+    f.setState(this, numNullAlignments);
 
-    return new FeatureValue<String>(FEATURE_NAME, optScore);
+    return new FeatureValue<String>(FEATURE_NAME, optScore + nullScore);
   }
 
   private String prettyPrint(Datum d, boolean isOOV, String word) {
@@ -288,8 +296,8 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
   }
 
   @Override
-  public DiscrimDistortionFeaturizer clone() throws CloneNotSupportedException {
-    return (DiscrimDistortionFeaturizer) super.clone();
+  public DiscrimDistortionFeaturizer2 clone() throws CloneNotSupportedException {
+    return (DiscrimDistortionFeaturizer2) super.clone();
   }
 
   @Override
@@ -316,6 +324,8 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
       while(!featurizers.empty()) {
         Featurizable<IString, String> thisF = featurizers.pop();
 
+        int numNulls = (thisF.prior == null) ? 0 : (Integer) thisF.getState(this);
+        
         System.err.printf("T STEP %d\n", iter++);
         System.err.println(" partial: " + thisF.partialTranslation);
         System.err.println(" coverage: " + thisF.hyp.foreignCoverage.toString());
@@ -323,6 +333,7 @@ public class DiscrimDistortionFeaturizer2 implements RichIncrementalFeaturizer<I
         System.err.printf(" opt: %s --> %s\n\n", thisF.foreignPhrase.toString(), thisF.translatedPhrase.toString());
         System.err.printf(" tpos: %d\n", thisF.translationPosition);
         System.err.printf(" spos: %d\n", thisF.foreignPosition);
+        System.err.printf(" prev nulls: %d\n", numNulls);
       }
     }
   }
