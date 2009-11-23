@@ -148,12 +148,11 @@ public class ComparisonModels {
               distortion = alignment.getValue();
             else {
               int sIdx = alignment.getValue();
-//              for(int i = lastSPos; !(alignedSToks.contains(i)) && i < sIdx; i++)
-//                lastSPos++;
               distortion = lastSPos + 1 - sIdx;
+              if(distortion > 0)
+                distortion--; //Adjust for gap
             }
-            distortion *= -1; //Turn it into a cost
-            
+            distortion *= -1; //Turn it into a cost            
             lastSPos = alignment.getValue();
             
             if(mode == Mode.Train) {
