@@ -4,6 +4,7 @@ import mt.decoder.util.Hypothesis;
 import mt.decoder.feat.StatefulFeaturizer;
 import mt.PseudoMoses;
 
+import java.util.Arrays;
 
 /**
  * Packages information about a newly constructed hypothesis
@@ -91,7 +92,7 @@ public class Featurizable<TK,FV> {
 	 * I don't want to make that part of the API for people involved with
 	 * writing features. 
 	 */
-	 private final RawSequence<TK> partialTranslationRaw;
+	protected final RawSequence<TK> partialTranslationRaw;
 	 
 	/**
 	 * Featurizable associated with the partial hypothesis that was used to 
@@ -162,8 +163,7 @@ public class Featurizable<TK,FV> {
 		foreignPosition = concreteOpt.foreignPos;
 		linearDistortion = hypothesis.linearDistortion;
 		
-		Object[] tokens = new Object[hypothesis.length];
-		retreiveTokens(tokens, hypothesis);
+		Object[] tokens = retrieveTokens(hypothesis.length, hypothesis);
 		partialTranslation = partialTranslationRaw = new RawSequence<TK>((TK[])tokens);
 		foreignSentence = hypothesis.foreignSequence;
 		untranslatedTokens = hypothesis.untranslatedTokens;	
@@ -173,6 +173,45 @@ public class Featurizable<TK,FV> {
 			f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
       states = new Object[nbStatefulFeaturizers];
       //states = prior.states.clone();
+    } else {
+			t2fAlignmentIndex = new int[hypothesis.length][];
+			f2tAlignmentIndex = new int[foreignSentence.size()][];
+      states = new Object[nbStatefulFeaturizers];
+    }
+		hyp = hypothesis;
+		augmentAlignments(concreteOpt);
+	}
+
+	@SuppressWarnings("unchecked")
+	protected Featurizable(Hypothesis<TK,FV> hypothesis, int translationId, int nbStatefulFeaturizers,
+                        Sequence<TK> translatedPhrase, Object[] tokens, boolean hasFloatingPhrases, boolean targetOnly) {
+		this.translationId = translationId;
+		done = hypothesis.isDone() && !hasFloatingPhrases;
+		option = hypothesis.translationOpt;
+		TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
+		ConcreteTranslationOption<TK> concreteOpt = hypothesis.translationOpt;
+		foreignPhrase = transOpt.foreign;
+		this.translatedPhrase = translatedPhrase;
+		phraseTableName = concreteOpt.phraseTableName;
+    if(targetOnly) {
+      translationScores = nullScores;
+      phraseScoreNames = nullNames;
+    } else {
+      translationScores = transOpt.scores;
+      phraseScoreNames = transOpt.phraseScoreNames;
+    }
+    translationPosition = hypothesis.insertionPosition;
+		foreignPosition = concreteOpt.foreignPos;
+		linearDistortion = hypothesis.linearDistortion;
+
+    partialTranslation = partialTranslationRaw = new RawSequence<TK>((TK[])tokens);
+		foreignSentence = hypothesis.foreignSequence;
+		untranslatedTokens = hypothesis.untranslatedTokens;
+		prior = hypothesis.preceedingHyp.featurizable;
+		if (prior != null) {
+			t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
+			f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
+      states = new Object[nbStatefulFeaturizers];
     } else {
 			t2fAlignmentIndex = new int[hypothesis.length][];
 			f2tAlignmentIndex = new int[foreignSentence.size()][];
@@ -214,7 +253,36 @@ public class Featurizable<TK,FV> {
 		translatedPhrase = transOpt.translation;
 		phraseTableName = concreteOpt.phraseTableName;
 		translationScores = transOpt.scores;
-		phraseScoreNames = transOpt.phraseScoreNames;
+    phraseScoreNames = transOpt.phraseScoreNames;
+		translationPosition = 0;
+		foreignPosition = concreteOpt.foreignPos;
+		partialTranslation = translatedPhrase;
+		partialTranslationRaw = null;
+		foreignSentence = foreignSequence;
+		untranslatedTokens = foreignSequence.size() - foreignPhrase.size();
+		prior = null;
+    states = null;
+    linearDistortion = Integer.MAX_VALUE;
+		t2fAlignmentIndex = new int[translatedPhrase != null ? translatedPhrase.size() : 0][];
+		f2tAlignmentIndex = new int[foreignSentence.size()][];
+		augmentAlignments(concreteOpt);
+		hyp = null;
+	}
+
+  protected Featurizable(Sequence<TK> foreignSequence, ConcreteTranslationOption<TK> concreteOpt, int translationId, Sequence<TK> translatedPhrase) {
+    // TODO: check that scoring the right stuff
+    assert(concreteOpt.abstractOption.getClass().equals(DTUOption.class));
+    this.translationId = translationId;
+		option = concreteOpt;
+		done = false;
+		TranslationOption<TK> transOpt = concreteOpt.abstractOption;
+		foreignPhrase = transOpt.foreign;
+		this.translatedPhrase = translatedPhrase;
+		phraseTableName = concreteOpt.phraseTableName;
+		translationScores = nullScores;
+    //translationScores = transOpt.scores;
+		phraseScoreNames = nullNames;
+    //phraseScoreNames = transOpt.phraseScoreNames;
 		translationPosition = 0;
 		foreignPosition = concreteOpt.foreignPos;
 		partialTranslation = translatedPhrase;
@@ -230,11 +298,13 @@ public class Featurizable<TK,FV> {
 		hyp = null;
 	}
 
-	/**
+  /**
 	 * 
 	 * @param concreteOpt
 	 */
-	private void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
+	protected void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
+    if (concreteOpt.abstractOption.translation == null)
+      return;
     int transSz = concreteOpt.abstractOption.translation.elements.length;
     int foreignSz = PseudoMoses.withGaps ?
          // MG2009: these two lines should achieve the same result for phrases without gaps, 
@@ -259,19 +329,24 @@ public class Featurizable<TK,FV> {
         f2tAlignmentIndex[i] = range;
 		}	
 	}
-	
-	
-	private void retreiveTokens(Object[] tokens, Hypothesis<TK,FV> h) {
-		int pos = 0;
-		Featurizable<TK,FV> preceedingF = h.preceedingHyp.featurizable; 
+
+  protected static <TK,FV> Object[] retrieveTokens(int sz, Hypothesis<TK,FV> h) {
+    Object[] tokens = new Object[sz];
+    int pos = 0;
+    Featurizable<TK,FV> preceedingF = h.preceedingHyp.featurizable;
 		if (preceedingF != null) {
 			Object[] preceedingTokens = preceedingF.partialTranslationRaw.elements;
 			System.arraycopy(preceedingTokens, 0, tokens, 0, pos=preceedingTokens.length);
 		}
-		
-		ConcreteTranslationOption<TK> concreteOpt = h.translationOpt; 
+
+		ConcreteTranslationOption<TK> concreteOpt = h.translationOpt;
 		Object[] newTokens = concreteOpt.abstractOption.translation.elements;
 		System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
-	}
-	
+    return tokens;
+  }
+
+  private static final float[] nullScores = new float[0];
+  private static final String[] nullNames = new String[0];
+
+
 }

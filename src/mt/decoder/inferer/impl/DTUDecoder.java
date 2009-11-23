@@ -140,7 +140,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		
 		// create beams
 		if (DEBUG) System.err.println("Creating beams");
-		Beam<Hypothesis<TK,FV>>[] beams = createBeamsForCoverageCounts(foreign.size()+1, beamCapacity, filter, recombinationHistory);
+		Beam<Hypothesis<TK,FV>>[] beams = createBeamsForCoverageCounts(foreign.size()+2, beamCapacity, filter, recombinationHistory);
 		
 		// retrieve translation options
 		if (DEBUG) System.err.println("Generating Translation Options");
@@ -152,15 +152,14 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     List<ConcreteTranslationOption<TK>>
       optionsWithoutGaps = new ArrayList<ConcreteTranslationOption<TK>>(),
       optionsWithGaps = new ArrayList<ConcreteTranslationOption<TK>>();
+    
     for(ConcreteTranslationOption<TK> opt : options) {
-      // TODO: CHECK:
-      if(isContiguous(opt.foreignCoverage) && !opt.abstractOption.getClass().equals(DTUOption.class))
+      if(isContiguous(opt.foreignCoverage))
          optionsWithoutGaps.add(opt);
       else if(gapsInFutureCost)
         optionsWithGaps.add(opt);
     }
 
-    // TODO: CHECK:
     System.err.printf("Translation options: %d\n", options.size());
     System.err.printf("Translation options (no gaps): %d\n",  optionsWithoutGaps.size());
     System.err.printf("Translation options (with gaps): %d\n",  optionsWithGaps.size());
@@ -169,7 +168,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     allOptions.add(optionsWithoutGaps);
     if(gapsInFutureCost)
       allOptions.add(optionsWithGaps);
-    System.err.printf("Translation options (use for future cost estimation): %d\n", allOptions.size());
+    //System.err.printf("Translation options (use for future cost estimation): %d\n", allOptions.size());
 
     if (OPTIONS_DUMP || DETAILED_DEBUG) {
       int sentId = translationId + ((PseudoMoses.local_procs > 1) ? 2:0);
@@ -260,8 +259,26 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 				if (beams[beamIdx].size() != 0) break;
 			}
 			Hypothesis<TK, FV> bestHyp = beams[beamIdx].iterator().next();
-			
-			List<Hypothesis<TK,FV>> trace = new ArrayList<Hypothesis<TK,FV>>();
+
+      /*if(bestHyp instanceof DTUHypothesis) {
+        // Since bestHyp may not be the best hypothesis:
+        Beam<Hypothesis<TK,FV>> newLastBeam = HypothesisBeamFactory.factory(beamType, filter, beamCapacity, recombinationHistory);
+
+        for (Hypothesis<TK, FV> tkfvHypothesis : beams[beamIdx]) {
+          Hypothesis<TK,FV> curHyp = tkfvHypothesis;
+          if (!(curHyp instanceof DTUHypothesis))
+            continue;
+          DTUHypothesis<TK, FV> curDTUHyp = (DTUHypothesis) curHyp;
+          if (!curDTUHyp.hasExpired() && curDTUHyp.nbFloatingPhrases() == 0) {
+            newLastBeam.put(curHyp);
+          } else {
+            System.err.printf("skip best: %s\n", curHyp);
+          }
+        }
+        beams[beamIdx] = newLastBeam;
+      }*/
+
+      List<Hypothesis<TK,FV>> trace = new ArrayList<Hypothesis<TK,FV>>();
 			for (Hypothesis<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingHyp) {
 				trace.add(hyp);
 			}
@@ -276,15 +293,31 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 				List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
 				for (Hypothesis<TK,FV> hyp : trace) {
 					System.err.printf("%d:\n", hyp.id);
+          TranslationOption abstractOption = (hyp.translationOpt != null) ? hyp.translationOpt.abstractOption : null;
 					if (hyp.translationOpt != null) {
-						System.err.printf("\tPhrase: %s(%d) => %s(%d)",
-								hyp.translationOpt.abstractOption.foreign, 
-								hyp.featurizable.foreignPosition, 
-								hyp.translationOpt.abstractOption.translation,
-								hyp.featurizable.translationPosition);
-					}
-					System.err.printf("\tCoverage: %s\n", hyp.foreignCoverage);
-					System.err.printf("\tFeatures: %s\n", hyp.localFeatures);
+            //final String translation;
+            boolean noSource = false;
+            if (hyp instanceof DTUHypothesis) {
+              abstractOption = ((DTUHypothesis)hyp).getAbstractOption();
+              noSource = ((DTUHypothesis<TK,FV>)hyp).targetOnly;
+            }
+            if(noSource) {
+              System.err.printf("\tPhrase: nil => %s(%d)",
+                   hyp.featurizable.translatedPhrase,
+                   hyp.featurizable.translationPosition);
+            } else {
+              System.err.printf("\tPhrase: %s(%d) => %s(%d)",
+                  hyp.translationOpt.abstractOption.foreign,
+                  hyp.featurizable.foreignPosition,
+                  hyp.featurizable.translatedPhrase,
+                  hyp.featurizable.translationPosition);
+            }
+          }
+          System.err.printf("\tCoverage: %s\n", hyp.foreignCoverage);
+          if(abstractOption != null)
+            System.err.printf("\tAbstract option: %s", abstractOption);
+          System.err.printf("\tFeatures: %s\n", hyp.localFeatures);
+          System.err.printf("\tHypothesis: %s\n", hyp);
 					if (hyp.localFeatures != null) {
 						for (FeatureValue<FV> featureValue : hyp.localFeatures) {
 							finalFeatureVector.incrementCount(featureValue.name.toString(), featureValue.value);
@@ -330,7 +363,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		return null;
 	}
 	
-  class BeamExpander implements Runnable{
+  class BeamExpander implements Runnable {
   	Beam<Hypothesis<TK,FV>>[] beams; int beamId; int foreignSz; DTUOptionGrid<TK> optionGrid; ConstrainedOutputSpace<TK,FV> constrainedOutputSpace; int translationId; int threadId; int threadCount;
   	CountDownLatch cdl;
   	
@@ -364,13 +397,13 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		synchronized(beams[beamId]) {			
 		  hyps = new Hypothesis[beams[beamId].size()]; 	
 			int i = -1;
-		  for (Hypothesis<TK, FV> hyp : beams[beamId]) { i++;
+		  for (Hypothesis<TK, FV> hyp : beams[beamId]) {
+        i++;
 				hyps[i] = hyp;
 			}
 		}
 
-
-		for (Hypothesis<TK, FV> hyp : hyps) {
+    for (Hypothesis<TK, FV> hyp : hyps) {
 		  hypPos++;
 			if (hypPos % threadCount != threadId) continue;
 			if (hyp == null) continue;
@@ -393,81 +426,99 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 						endPosMax = foreignSz;
 					}
 				}
-        //System.err.printf("%d\n", endPosMax);
 				for (int endPos = startPos; endPos < endPosMax; endPos++) {
           List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid.get(startPos, endPos);
+
           //System.err.printf("    startPos=%d endPos=%d options=%s\n", startPos, endPos, applicableOptions == null ? "0" : applicableOptions.size());
-					if (applicableOptions == null) continue;
-					// System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
-			
-					for (ConcreteTranslationOption<TK> option : applicableOptions) {
+          if (applicableOptions == null) continue;
+
+          //System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
+
+          // Combine each hypothesis with each applicable option:
+          for (ConcreteTranslationOption<TK> option : applicableOptions) {
             //System.err.printf("option: %s\n", option.abstractOption.foreign);
-						if(hyp.foreignCoverage.intersects(option.foreignCoverage)) {
-              //System.err.printf("Intersection is not empty: %s ^ %s != empty_set\n", hyp.foreignCoverage, option.foreignCoverage);
+            if(hyp.foreignCoverage.intersects(option.foreignCoverage)) {
               continue;
             }
 
             if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option)) {
-							continue;
-						}
-
-            // TODO: recombination:
-            final Hypothesis<TK, FV> newHyp;
-            if(option.getClass().equals(DTUOption.class)) {
-              newHyp = new DTUHypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic);
-            } else {
-              newHyp = new Hypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic);
+              continue;
             }
-						
-            if (DETAILED_DEBUG) {
-							System.err.printf("creating hypothesis %d from %d\n", newHyp.id, hyp.id);
-							System.err.printf("hyp: %s\n", newHyp.featurizable.partialTranslation);
-							System.err.printf("coverage: %s\n", newHyp.foreignCoverage);
-							if (hyp.featurizable != null) { 
-								System.err.printf("par: %s\n", hyp.featurizable.partialTranslation);
-								System.err.printf("coverage: %s\n", hyp.foreignCoverage);
-							}
-							System.err.printf("\tbase score: %.3f\n", hyp.score);
-							System.err.printf("\tcovering: %s\n", newHyp.translationOpt.foreignCoverage);
-							System.err.printf("\tforeign: %s\n", newHyp.translationOpt.abstractOption.foreign);
-							System.err.printf("\ttranslated as: %s\n", newHyp.translationOpt.abstractOption.translation);
-							System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n", newHyp.score, newHyp.h, newHyp.score());
-							
-						}
-						totalHypothesesGenerated++;
 
-						if (newHyp.featurizable.untranslatedTokens != 0) {
-							if (constrainedOutputSpace != null && !constrainedOutputSpace.allowablePartial(newHyp.featurizable)) {
-								continue;
-							}
-						} else {
-							// System.err.printf("checking final %s\n", newHyp.featurizable.partialTranslation);
-							if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableFinal(newHyp.featurizable)) {
-								// System.err.printf("bad final: %s\n", newHyp.featurizable.partialTranslation);
-								continue;
-							}
-						}
-						
-						
-						
-						if (newHyp.score == Double.NEGATIVE_INFINITY || newHyp.score == Double.POSITIVE_INFINITY || 
-								newHyp.score != newHyp.score) {
-							// should we give a warning here? 
-							// 
-							// this normally happens when there's something brain dead about the user's baseline model/featurizers,
-							// like log(p) values that equal -inf for some featurizers. 
-							continue;
-						}
-						
-						int foreignWordsCovered = newHyp.foreignCoverage.cardinality();
-						beams[foreignWordsCovered].put(newHyp);
+            List<Hypothesis<TK,FV>> newHyps = new LinkedList<Hypothesis<TK,FV>>();
+            if(option.abstractOption instanceof DTUOption || hyp instanceof DTUHypothesis) {
+              DTUHypothesis<TK,FV> dtuHyp = new DTUHypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic);
+              Deque<DTUHypothesis<TK,FV>> currentHyps = new LinkedList<DTUHypothesis<TK,FV>>();
+              currentHyps.add(dtuHyp);
+              while(!currentHyps.isEmpty()) {
+                final DTUHypothesis<TK,FV> currentHyp = currentHyps.poll();
+                //System.err.printf("hypothesis added 1 (class=%s id=%d): %s\n", currentHyp.getClass().toString(), System.identityHashCode(hyp), currentHyp);
+                newHyps.add(currentHyp);
+                for(DTUHypothesis<TK,FV> nextHyp : currentHyp.collapseFloatingPhrases(translationId, featurizer, scorer, heuristic)) {
+                  if(!nextHyp.hasExpired())
+                    currentHyps.add(nextHyp);
+                }
+              }
+            } else {
+              newHyps.add(new Hypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic));
+            }
 
-						optionsApplied++;
-						localOptionsApplied++;
-					}
-					
-				
-				}					
+            for(Hypothesis<TK,FV> newHyp : newHyps) {
+							if(newHyp.isDone() != newHyp.featurizable.done) {
+                System.err.println("ERROR in DTUDecoder with: "+newHyp);
+                System.err.println("isDone(): "+newHyp.isDone());
+                System.err.println("f.done: "+newHyp.featurizable.done);
+                //throw new RuntimeException();
+              }
+
+              if (DETAILED_DEBUG) {
+                System.err.printf("creating hypothesis %d from %d\n", newHyp.id, hyp.id);
+                System.err.printf("hyp: %s\n", newHyp.featurizable.partialTranslation);
+                System.err.printf("coverage: %s\n", newHyp.foreignCoverage);
+                if (hyp.featurizable != null) {
+                  System.err.printf("par: %s\n", hyp.featurizable.partialTranslation);
+                  System.err.printf("coverage: %s\n", hyp.foreignCoverage);
+                }
+                System.err.printf("\tbase score: %.3f\n", hyp.score);
+                System.err.printf("\tcovering: %s\n", newHyp.translationOpt.foreignCoverage);
+                System.err.printf("\tforeign: %s\n", newHyp.translationOpt.abstractOption.foreign);
+                System.err.printf("\ttranslated as: %s\n", newHyp.translationOpt.abstractOption.translation);
+                System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n", newHyp.score, newHyp.h, newHyp.score());
+
+              }
+              totalHypothesesGenerated++;
+
+              if (newHyp.featurizable.untranslatedTokens != 0) {
+                if (constrainedOutputSpace != null && !constrainedOutputSpace.allowablePartial(newHyp.featurizable)) {
+                  continue;
+                }
+              } else {
+                // System.err.printf("checking final %s\n", newHyp.featurizable.partialTranslation);
+                if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableFinal(newHyp.featurizable)) {
+                  // System.err.printf("bad final: %s\n", newHyp.featurizable.partialTranslation);
+                  continue;
+                }
+              }
+
+              if (newHyp.score == Double.NEGATIVE_INFINITY || newHyp.score == Double.POSITIVE_INFINITY ||
+                  newHyp.score != newHyp.score) {
+                // should we give a warning here?
+                //
+                // this normally happens when there's something brain dead about the user's baseline model/featurizers,
+                // like log(p) values that equal -inf for some featurizers.
+                continue;
+              }
+
+              int beamIdx = newHyp.foreignCoverage.cardinality();
+              if(0 == newHyp.untranslatedTokens && newHyp.isDone())
+                ++beamIdx;
+              beams[beamIdx].put(newHyp);
+
+              optionsApplied++;
+              localOptionsApplied++;
+            }
+          }
+        }
 			}
 			if (DETAILED_DEBUG) {
 				System.err.printf("local options applied(%d): %d\n", hypPos, localOptionsApplied);
@@ -478,15 +529,12 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 			System.err.printf("Options applied: %d\n", optionsApplied);
 		}
 
-
-		cdl.countDown();
+    cdl.countDown();
 		return totalHypothesesGenerated;	
 	}
-
-	
   }
-  
-	void writeAlignments(BufferedWriter alignmentDump, Hypothesis<TK, FV> bestHyp) throws IOException {
+
+  void writeAlignments(BufferedWriter alignmentDump, Hypothesis<TK, FV> bestHyp) throws IOException {
 		alignmentDump.append(bestHyp.featurizable.partialTranslation.toString()).append("\n");
 		alignmentDump.append(bestHyp.featurizable.foreignSentence.toString()).append("\n");
 		for (Hypothesis<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingHyp) {

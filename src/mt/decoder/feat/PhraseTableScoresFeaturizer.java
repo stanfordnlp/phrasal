@@ -21,8 +21,9 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	final HashMap<String, String[]> featureNamesHash;
 	final boolean tagByTable;
 	final boolean phraseReweighting;
-	
-	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
+  public static final FeatureValue<String> emptyFV = new FeatureValue<String>(null, 0.0);
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	
 	private String[] getFeatureNames(String[] phraseScoreNames, String phraseTableName) {
 		String[] featureNames = new String[phraseScoreNames.length];
@@ -104,8 +105,9 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 			// construct array of FeatureValue objects 
 			featureValues = new FeatureValue[featureNames.length];
 			for (int i = 0; i < featureValues.length; i++) {
-        featureValues[i] = new FeatureValue(featureNames[i], featurizable.translationScores[i]);
-			}
+        featureValues[i] = (i < featurizable.translationScores.length) ?
+               new FeatureValue(featureNames[i], featurizable.translationScores[i]) : emptyFV;
+      }
 			
 			if (DEBUG) {
 				System.err.printf("Translation Phrase Pair: %s/%s\n", featurizable.translatedPhrase, featurizable.foreignPhrase);

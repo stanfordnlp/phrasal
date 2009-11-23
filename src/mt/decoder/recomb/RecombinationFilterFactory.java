@@ -24,6 +24,7 @@ public class RecombinationFilterFactory {
 	static public final String CLASSICAL_TRANSLATION_MODEL = "classicaltranslationmodel";
 	static public final String CLASSICAL_TRANSLATION_MODEL_ALT = "ctm";
   static public final String CLASSICAL_TRANSLATION_MODEL_FINE = "fine";
+  static public final String DTU_TRANSLATION_MODEL = "dtu";
 	static public final String DEFAULT_RECOMBINATION_FILTER = TRANSLATION_IDENTITY;
 	
 	static public final String TRANSLATION_NGRAM_PARAMETER = "ngramsize";
@@ -90,11 +91,19 @@ public class RecombinationFilterFactory {
 			return new CombinedRecombinationFilter<Hypothesis<IString, String>>(filters);
 
     } else if (rfName.equals(CLASSICAL_TRANSLATION_MODEL_FINE)) {
+      // Only recombine hypotheses that are identical, if coverage set and linear distortion are the same:
       List<RecombinationFilter<Hypothesis<IString, String>>> filters = new LinkedList<RecombinationFilter<Hypothesis<IString, String>>>();
       filters.add(new TranslationIdentityRecombinationFilter<IString, String>());
 			filters.add(new LinearDistorionRecombinationFilter<IString, String>());
 			filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
 			return new CombinedRecombinationFilter<Hypothesis<IString, String>>(filters);
+    } else if (rfName.equals(DTU_TRANSLATION_MODEL)) {
+			List<RecombinationFilter<Hypothesis<IString, String>>> filters = new LinkedList<RecombinationFilter<Hypothesis<IString, String>>>();
+			filters.add(new LinearDistorionRecombinationFilter<IString, String>());
+			filters.add(new TranslationNgramRecombinationFilter<IString, String>(lgModels, ngramHistory));
+			filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
+      filters.add(new DTURecombinationFilter<IString,String>());
+      return new CombinedRecombinationFilter<Hypothesis<IString, String>>(filters);
     }
 		throw new RuntimeException(String.format(
 				"Unrecognized recombination filter: %s", rfName));

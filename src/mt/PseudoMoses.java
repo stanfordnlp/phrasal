@@ -184,7 +184,7 @@ public class PseudoMoses {
 	
 	double cTarget = 0.001;
 	double cRisky =  0.010;
-  String recomb_heuristic = DEFAULT_RECOMBINATION_HEURISTIC;
+  static String recombinationHeuristic = DEFAULT_RECOMBINATION_HEURISTIC;
 
 	public static enum LearningTarget {
 		REFERENCE, BEST_ON_N_BEST_LIST
@@ -216,6 +216,9 @@ public class PseudoMoses {
       ConcreteTranslationOption.setLinearDistortionType(config.get(LINEAR_DISTORTION_TYPE).get(0));
     if (config.containsKey(LOCAL_PROCS))
 			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
+
+    if(withGaps)
+      recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
   }
 
   static Map<String, List<String>> readConfig(String filename) throws IOException {
@@ -333,7 +336,7 @@ public class PseudoMoses {
 		}
 
     if (config.containsKey(RECOMBINATION_HEURISTIC)) {
-      recomb_heuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
+      recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
 
 
@@ -711,10 +714,12 @@ public class PseudoMoses {
 
     if(withGaps) {
       List<String> gapOpts = config.get(GAPS_OPT);
-      if(gapOpts.size() != 1)
+      if(gapOpts.size() < 1 || gapOpts.size() > 2)
         throw new UnsupportedOperationException();
-      int maxPhraseSpan = Integer.parseInt(gapOpts.get(0));
-      DTUTable.setMaxPhraseSpan(maxPhraseSpan);
+      int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));
+      DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
+      int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts.get(1)) : distortionLimit;
+      DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
     }
 
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
@@ -753,7 +758,7 @@ public class PseudoMoses {
 
 		// Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
-      .factory(featurizer.getNestedFeaturizers(), recomb_heuristic);
+      .factory(featurizer.getNestedFeaturizers(), recombinationHeuristic);
 
 		// Create Search Heuristic
 		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;

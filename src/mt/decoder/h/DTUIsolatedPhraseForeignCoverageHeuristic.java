@@ -7,6 +7,7 @@ import mt.base.CoverageSet;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Sequence;
+import mt.base.DTUOption;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Hypothesis;
 import mt.decoder.util.Scorer;
@@ -111,6 +112,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
     assert(options.size() == 1 || options.size() == 2); // options[0]: phrases without gaps; options[1]: phrases with gaps
     for (int i=0; i<options.size(); ++i) {
       for (ConcreteTranslationOption<TK> option : options.get(i)) {
+        if(option.abstractOption instanceof DTUOption) {
+          //System.err.println("future cost: skipping: "+option.abstractOption);
+          continue;
+        }
         Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, option, translationId);
         List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer.phraseListFeaturize(f);
         double score = scorer.getIncrementalScore(phraseFeatures), childScore = 0.0;

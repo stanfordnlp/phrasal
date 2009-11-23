@@ -16,17 +16,13 @@ public class LanguageModels {
 	 */
 	static private final IString sequenceStart = new IString("<s>");
 	
-	static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s) {
+	static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {
 		double logP = 0;
-		int sz = s.size();
-		for (int i = 0; i < sz; i++) {			
-			if (s.get(i).equals(sequenceStart)) {
-                // don't explicitly score <s> as SRI LM
-				// assigns log p(<s>) to -99 (i.e. p(<s>) /approx 0)
-				continue;
-			}
-						
-			Sequence<T> ngram = s.subsequence(0, i+1);
+		Sequence<T> s = new InsertedStartEndToken<T>(s2, lm.getStartToken(), lm.getEndToken());
+    int sz = s.size();
+    for (int i = 1; i < sz; i++) {
+      
+      Sequence<T> ngram = s.subsequence(0, i+1);
 			
 			double ngramScore = lm.score(ngram);
 			

@@ -76,16 +76,43 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     int hypCount = 0, duplicateCount = 0, maxDuplicateCount = size*MAX_DUPLICATE_FACTOR;
 
     for (List<Hypothesis<TK, FV>> hypList : latticeDecoder) {
+      boolean withDTUs = false;
       ++hypCount;
       Hypothesis<TK, FV> hyp = null;
-			for (Hypothesis<TK, FV> nextHyp : hypList) {
-				if (hyp == null) {
+      Set<TranslationOption> seenOptions = new HashSet<TranslationOption>();
+      for (Hypothesis<TK, FV> nextHyp : hypList) {
+        if (hyp == null) {
 					hyp = nextHyp;
 					continue;
 				}
-				hyp = new Hypothesis<TK, FV>(translationId, nextHyp.translationOpt,
-						hyp.length, hyp, featurizer, scorer, heuristic);
-			}
+        if(nextHyp.translationOpt.abstractOption instanceof DTUOption)
+          withDTUs = true;
+        if(withDTUs) {
+          hyp = new DTUHypothesis<TK, FV>(translationId, nextHyp.translationOpt,
+              hyp.length, hyp, nextHyp, featurizer, scorer, heuristic, seenOptions);
+        } else {
+          hyp = new Hypothesis<TK, FV>(translationId, nextHyp.translationOpt,
+              hyp.length, hyp, featurizer, scorer, heuristic);
+        }
+      }
+
+      if(withDTUs) {
+        DTUHypothesis dtuHyp = (DTUHypothesis<TK,FV>)hyp;
+        if(!dtuHyp.isDone() || dtuHyp.hasExpired())
+          System.err.printf ("WARNING: option not complete(%d,%s): %s\n",translations.size(), dtuHyp.hasExpired(), hyp);
+      }
+
+      if(hyp != null && hyp.isDone() != hyp.featurizable.done) {
+        System.err.println("ERROR in AbstractBeamInferer with: "+hyp);
+        System.err.println("isDone(): "+hyp.isDone());
+        System.err.println("f.done: "+hyp.featurizable.done);
+        Hypothesis<TK,FV> curHyp = hyp;
+        while (curHyp != null) {
+          System.err.println("  "+curHyp.toString());
+          curHyp = curHyp.preceedingHyp;
+        }
+        //throw new RuntimeException();
+      }
 
       /////////////////////////////////////////////////////////////////////////////////////////////////////
       // code below is needed for generating nbest lists with no duplicates for GALE -- please do not delete

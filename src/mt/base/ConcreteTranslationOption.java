@@ -37,6 +37,26 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
   }
 
   /**
+	 *
+	 * @param <FV>
+	 * @param abstractOption
+	 * @param foreignCoverage
+	 * @param phraseFeaturizer
+	 * @param scorer
+	 * @param phraseTableName
+	 */
+	public <FV> ConcreteTranslationOption(TranslationOption<T> abstractOption, CoverageSet foreignCoverage,
+			IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, String phraseTableName, int translationId) {
+    this.abstractOption = abstractOption;
+		this.foreignCoverage = foreignCoverage;
+		this.phraseTableName = phraseTableName;
+		this.foreignPos = foreignCoverage.nextSetBit(0);
+    Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this, translationId);
+    List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+		this.isolationScore = scorer.getIncrementalScore(features);
+	}
+
+  /**
 	 * 
 	 * @param <FV>
 	 * @param abstractOption
@@ -46,15 +66,39 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 	 * @param phraseTableName
 	 */
 	public <FV> ConcreteTranslationOption(TranslationOption<T> abstractOption, CoverageSet foreignCoverage, 
-			IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, String phraseTableName, int translationId) {
-		this.abstractOption = abstractOption;
+			IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, String phraseTableName, int translationId, boolean hasTargetGap) {
+    //System.err.printf("compute isolation score for: %s\n", abstractOption);
+    assert(hasTargetGap);
+    this.abstractOption = abstractOption;
 		this.foreignCoverage = foreignCoverage;
 		this.phraseTableName = phraseTableName;
 		this.foreignPos = foreignCoverage.nextSetBit(0);
-		Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this, translationId);
-    List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
-		this.isolationScore = scorer.getIncrementalScore(features);
-	}
+
+    // TM scores:
+    double totalScore = 0.0;
+    {
+      Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this, translationId);
+      List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+      totalScore += scorer.getIncrementalScore(features);
+      //for(FeatureValue<FV> fv : features)
+      //  System.err.printf("feature(global): %s\n", fv);
+    }
+    // Get all other feature scores (LM, word penalty):
+    if(abstractOption instanceof DTUOption) {
+      DTUOption<T> dtuOpt = (DTUOption<T>) abstractOption;
+      for(int i=0; i<dtuOpt.dtus.length; ++i) {
+        Featurizable<T, FV> f = new DTUFeaturizable<T, FV>(foreignSequence, this, translationId, i);
+        assert(f.translationScores.length == 0);
+        assert(f.phraseScoreNames.length == 0);
+        List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+        //for(FeatureValue<FV> fv : features)
+        //  System.err.printf("feature(%s): %s\n", dtuOpt.dtus[i].toString(), fv);
+        totalScore += scorer.getIncrementalScore(features);
+      }
+    }
+    this.isolationScore = totalScore;
+    //System.err.printf("total isolation score for %s: %f\n", abstractOption, this.isolationScore);
+  }
 	
 	@Override
 	public String toString() {
@@ -88,7 +132,7 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
       {
         //int firstIdx = foreignCoverage.nextClearBit(foreignCoverage.nextSetBit(0));
         //int lastIdx = foreignCoverage.length();
-        // TODO
+        // TO DO: may want to implement this
         throw new UnsupportedOperationException();
       }
     case min_first_last_contiguous_segment:

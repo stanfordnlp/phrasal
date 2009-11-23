@@ -1,5 +1,7 @@
 package mt.base;
 
+import mt.train.DTUPhraseExtractor;
+
 import java.util.*;
 
 
@@ -13,10 +15,14 @@ public class DTUOption<T> extends TranslationOption<T> {
 
   public final RawSequence<T>[] dtus;
 
-	public DTUOption(float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment) {
-		super(scores, phraseScoreNames, null, foreign, alignment);
+  @SuppressWarnings("unchecked")
+  private final static RawSequence emptySeq = new RawSequence(new Object[0]);
+
+  @SuppressWarnings("unchecked")
+  public DTUOption(float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment) {
+		super(scores, phraseScoreNames, emptySeq, foreign, alignment);
     this.dtus = dtus;
-    // TODO: check dtus
+    //System.err.println("DTUOption: "+dtus.length);
   }
 	
 	public DTUOption(float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment, boolean forceAdd) {
@@ -26,8 +32,13 @@ public class DTUOption<T> extends TranslationOption<T> {
 	
 	@Override
 	public String toString() {
-		StringBuffer sbuf = new StringBuffer();
-		sbuf.append(String.format("TranslationOption: \"%s\" scores: %s\n", translation, Arrays.toString(scores)));
+		StringBuffer sbuf = new StringBuffer("TranslationOption: \"");
+    for(int i=0; i<dtus.length; ++i) {
+      if(i>0)
+        sbuf.append(" ").append(DTUPhraseExtractor.GAP_STR.word()).append(" ");
+      sbuf.append(dtus[i].toString());
+    }
+    sbuf.append(String.format("\" scores: %s\n", Arrays.toString(scores)));
 		return sbuf.toString();
 	}
 }

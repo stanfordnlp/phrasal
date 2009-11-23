@@ -13,10 +13,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-/** This featurizer attempts to detect Arabic verb-initial sentences.  The aim
- *  is to penalize verb-initial sentences that are translated monotonically,
- *  rather than with a word order swap.  The code strongly depends on using
- *  the IBM (ATBp3v3) POS tag set.
+/** 
+ * This featurizer attempts to detect Arabic verb-initial sentences.  The aim
+ * is to penalize verb-initial sentences that are translated monotonically,
+ * rather than with a word order swap.  The code strongly depends on using
+ * the IBM (ATBp3v3) POS tag set.
  *
  *  @author Michel Galley
  */

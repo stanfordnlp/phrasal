@@ -7,6 +7,9 @@ import mt.base.CoverageSet;
 import mt.base.FeatureValue;
 import mt.base.Featurizable;
 import mt.base.Sequence;
+import mt.base.DTUFeaturizable;
+import mt.base.RawSequence;
+import mt.base.TranslationOption;
 import mt.decoder.feat.CombinedFeaturizer;
 import mt.decoder.h.SearchHeuristic;
 
@@ -31,8 +34,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	public final int depth;
 	public final int linearDistortion;
 	public final int length;
-	
-	
+
 	// non-primitives that already exist at the time of
 	// hypothesis creation and just receive an additional
 	// reference here
@@ -119,7 +121,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 		this.preceedingHyp = baseHyp;
 		this.foreignCoverage = baseHyp.foreignCoverage.clone();
 		this.foreignCoverage.or(translationOpt.foreignCoverage);
-		this.length = (insertionPosition < baseHyp.length ? 
+		this.length = (insertionPosition < baseHyp.length ?
 				       baseHyp.length :  // internal insertion 
 			           insertionPosition + translationOpt.abstractOption.translation.size()); // edge insertion
 		foreignSequence = baseHyp.foreignSequence;
@@ -134,9 +136,39 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 		assert(!Double.isNaN(h));
 		depth = baseHyp.depth + 1;
 	}
-		
-	static final Random r = new Random(1);
-	/**
+
+  protected Hypothesis(int translationId,
+			ConcreteTranslationOption<TK> translationOpt,
+      TranslationOption<TK> abstractOption,
+			int insertionPosition,
+			Hypothesis<TK,FV> baseHyp,
+			CombinedFeaturizer<TK,FV> featurizer,
+			Scorer<FV> scorer,
+			SearchHeuristic<TK,FV> heuristic,
+      RawSequence<TK> targetPhrase,
+      boolean hasFloatingPhrases,
+      boolean targetOnly) {
+		synchronized(this.getClass()) { this.id = nextId++; }
+		this.insertionPosition = insertionPosition;
+		this.translationOpt = translationOpt;
+		this.preceedingHyp = baseHyp;
+		this.foreignCoverage = baseHyp.foreignCoverage.clone();
+		this.foreignCoverage.or(translationOpt.foreignCoverage);
+    this.length = (insertionPosition < baseHyp.length) ? baseHyp.length :  insertionPosition + targetPhrase.size();
+    foreignSequence = baseHyp.foreignSequence;
+		untranslatedTokens = this.foreignSequence.size() - this.foreignCoverage.cardinality();
+		linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos : baseHyp.translationOpt.linearDistortion(translationOpt));
+    featurizable = new DTUFeaturizable<TK,FV>(this, abstractOption, translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase, hasFloatingPhrases, targetOnly);
+    localFeatures = featurizer.listFeaturize(featurizable);
+    score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
+    depth = baseHyp.depth + 1;
+    h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
+    assert(!Double.isNaN(h));
+	}
+
+  static final Random r = new Random(1);
+
+  /**
 	 * 
 	 * @param sbuf
 	 * @param hyp

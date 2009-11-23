@@ -200,7 +200,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     if (bow != bow) bow = 0.0; // treat NaNs as bow that are not found at all
     double p = bow + scoreR(sequence.subsequence(1, ngramInts.length));
     if(verbose)
-      System.err.printf("scoreR: seq: %s logp: %f bow: %f\n", sequence.toString(), p, bow);
+      System.err.printf("scoreR: seq: %s logp: %f [%f] bow: %f\n", sequence.toString(), p, p/Math.log(10), bow);
     return p;
   }
 
@@ -237,7 +237,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
     double score = scoreR(ngram);
     if(verbose)
-      System.err.printf("score: seq: %s logp: %f\n", sequence.toString(), score);
+      System.err.printf("score: seq: %s logp: %f [%f]\n", sequence.toString(), score, score/Math.log(10));
     return score;
   }
 

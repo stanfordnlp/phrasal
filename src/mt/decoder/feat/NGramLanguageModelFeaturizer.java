@@ -235,8 +235,9 @@ public NGramLanguageModelFeaturizer(String... args) throws IOException {
 	@Override
 	public FeatureValue<String> phraseFeaturize(Featurizable<TK, String> f) {
 		if (ngramReweighting) return null;
-		
-		double lmScore = getScore(0, f.translatedPhrase.size(), f.translatedPhrase);
+
+    assert(f.translatedPhrase != null);
+    double lmScore = getScore(0, f.translatedPhrase.size(), f.translatedPhrase);
 		if (SVMNORM) {
 			return new FeatureValue<String>(featureName, lmScore/2.0);
 		} else if (lengthNorm) {

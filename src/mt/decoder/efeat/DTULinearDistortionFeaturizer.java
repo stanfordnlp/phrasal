@@ -8,8 +8,10 @@ import mt.base.Featurizable;
 import mt.base.Sequence;
 import mt.base.IString;
 import mt.decoder.feat.IncrementalFeaturizer;
+import mt.decoder.util.DTUHypothesis;
 import mt.train.DTUPhraseExtractor;
 import mt.base.ConcreteTranslationOption;
+import mt.base.DTUFeaturizable;
 import mt.base.ConcreteTranslationOption.LinearDistortionType;
 
 /**
@@ -74,6 +76,15 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
 	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
+    if(f instanceof DTUFeaturizable)
+      if(((DTUFeaturizable)f).targetOnly) {
+        return null;
+      }
+
+    ///////////////////////////////////////////
+    // (1) Source gaps:
+    ///////////////////////////////////////////
+
     //System.err.printf("done: %s size: %s\n", f.done, f.untranslatedTokens);
     //if(!f.done) {
     //  assert(f.option.foreignCoverage.cardinality() < f.foreignSentence.size());
@@ -111,6 +122,10 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
       //}
     }
     list.add(new FeatureValue<String>(GAP_FEATURE_NAME, -1.0*gapSz));
+
+    ///////////////////////////////////////////
+    // (2) Standard linear distortion features:
+    ///////////////////////////////////////////
 
     if(featureTypes.length == 0) {
       int linearDistortion = f.linearDistortion + getEOSDistortion(f);

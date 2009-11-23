@@ -11,11 +11,11 @@ import java.io.File;
 import mt.decoder.feat.IsolatedPhraseFeaturizer;
 import mt.decoder.util.Scorer;
 import mt.train.DTUPhraseExtractor;
-import edu.stanford.nlp.math.ArrayMath;
 
 public class DTUTable<FV> extends PharaohPhraseTable<FV> {
 
   public static int maxPhraseSpan = 12;
+  public static int maxTargetSpans = 2;
 
   public static void setMaxPhraseSpan(int m) {
     maxPhraseSpan = m;
@@ -55,7 +55,7 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
     assert(targets == null);
     List<ConcreteTranslationOption<IString>> opts = new LinkedList<ConcreteTranslationOption<IString>>();
 		int sequenceSz = sequence.size();
-    //System.err.println("sent: "+sequence);
+    System.err.println("sent: "+sequence);
 
     assert(foreignIndex instanceof TrieIntegerArrayIndex);
     TrieIntegerArrayIndex trieIndex = (TrieIntegerArrayIndex) foreignIndex;
@@ -72,26 +72,35 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
           if(intTransOpts != null) {
             List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(intTransOpts.size());
             for (IntArrayTranslationOption intTransOpt : intTransOpts) {
-              if(intTransOpts.getClass().equals(DTUIntArrayTranslationOption.class)) {
+
+              if(intTransOpt instanceof DTUIntArrayTranslationOption) {
+                // Gaps in target:
+                //System.err.println("option: target dtus for input: "+Arrays.toString(s.foreign));
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
                 RawSequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
                 for(int i=0; i<multiIntTransOpt.dtus.length; ++i) {
                   dtus[i] =  new RawSequence<IString>(multiIntTransOpt.dtus[i],
                      IString.identityIndex());
+                  //System.err.printf("dtu[%d]: %s\n", i, dtus[i].toString());
                 }
                 transOpts.add(
                     new DTUOption<IString>(intTransOpt.scores, scoreNames,
                         dtus, new RawSequence(s.foreign), intTransOpt.alignment));
               } else {
+                // No gaps in target:
                 RawSequence<IString> translation = new RawSequence<IString>(intTransOpt.translation,
                      IString.identityIndex());
                 transOpts.add(
                      new TranslationOption<IString>(intTransOpt.scores, scoreNames,
                           translation, new RawSequence(s.foreign), intTransOpt.alignment));
               }
+
             }
             for (TranslationOption<IString> abstractOpt : transOpts) {
-              opts.add(new ConcreteTranslationOption<IString>(abstractOpt, s.coverage, phraseFeaturizer, scorer, sequence, this.getName(), translationId));
+              if(abstractOpt instanceof DTUOption)
+                opts.add(new ConcreteTranslationOption<IString>(abstractOpt, s.coverage, phraseFeaturizer, scorer, sequence, this.getName(), translationId, true));
+              else
+                opts.add(new ConcreteTranslationOption<IString>(abstractOpt, s.coverage, phraseFeaturizer, scorer, sequence, this.getName(), translationId));
             }
           }
         }
@@ -159,30 +168,28 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
 		}
 
     int numSpans = 1;
-    for(int el : translationInts) {
-      if(el == DTUPhraseExtractor.GAP_STR.id) {
+    for (int el : translationInts) {
+      if (el == DTUPhraseExtractor.GAP_STR.id) {
         ++numSpans;
       }
     }
-    if(numSpans == 1) {
+    if (numSpans == 1) {
       intTransOpts.add(new IntArrayTranslationOption(translationInts, scores, alignment));
+      //System.err.printf("no gap in target: {{{%s}}} {{{%s}}} {{{%s}}}\n", translationSequence, foreignSequence, Arrays.toString(scores));
     } else {
-      if(true) {
-        System.err.printf("Skipping rule: {{{%s}}} {{{%s}}}\n", translationSequence, foreignSequence);
+      if(numSpans > maxTargetSpans)
         return;
-      }
+      //System.err.printf("gap in target: {{{%s}}} {{{%s}}} {{{%s}}}\n", translationSequence, foreignSequence, Arrays.toString(scores));
       int start=0, pos=0;
-      // TODO: check scores:
-      //float[] subScores = ArrayMath.multiply(scores, 1.0f/numSpans);
-      //List<IntArrayTranslationOption> opts = new ArrayList<IntArrayTranslationOption>(numSpans);
       int i = -1;
       int[][] dtus = new int[numSpans][];
-      while(pos < translationInts.length) {
-        if(translationInts[pos] == DTUPhraseExtractor.GAP_STR.id) {
+      while (pos <= translationInts.length) {
+        if (pos == translationInts.length || translationInts[pos] == DTUPhraseExtractor.GAP_STR.id) {
           dtus[++i] = Arrays.copyOfRange(translationInts,start,pos);
-          //int[] subTranslationInts = Arrays.copyOfRange(translationInts,start,pos);
-          //opts.add(new IntArrayTranslationOption(subTranslationInts, subScores, alignment));
+          //System.err.printf("Span: {{{%s}}}\n", Arrays.toString(IStrings.toStringArray(dtus[i])));
           start = pos+1;
+          if (pos == translationInts.length)
+            break;
         }
         ++pos;
       }
@@ -190,14 +197,12 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
     }
   }
 
-  protected class DTUIntArrayTranslationOption extends IntArrayTranslationOption {
+  protected static class DTUIntArrayTranslationOption extends IntArrayTranslationOption {
 
-    //final List<IntArrayTranslationOption> opts;
     final int[][] dtus;
 
-    //public DTUIntArrayTranslationOption(float[] scores, PhraseAlignment alignment, List<IntArrayTranslationOption> opts) {
     public DTUIntArrayTranslationOption(int[][] dtus, float[] scores, PhraseAlignment alignment) {
-      super(null, scores, alignment);
+      super(new int[0], scores, alignment);
       this.dtus = dtus;
     }
 	}

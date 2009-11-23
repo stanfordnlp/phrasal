@@ -50,7 +50,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
         if(el.equals("p_tf")) { l.add(ONESCORE_P_t_f); } else
         l.add(el);
       }
-			customScores = l.toArray(new String[l.size()]);
+      customScores = l.toArray(new String[l.size()]);
     }
   }
 
@@ -80,7 +80,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	
 	int longestForeignPhrase;
 	
-	protected class IntArrayTranslationOption implements Comparable<IntArrayTranslationOption> {
+	protected static class IntArrayTranslationOption implements Comparable<IntArrayTranslationOption> {
 		final int[] translation;
 		final float[] scores;
 		final PhraseAlignment alignment;
@@ -170,8 +170,10 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
     if(DISABLED_SCORES != null)
       for(String istr : DISABLED_SCORES.split(",")) {
         int i = Integer.parseInt(istr);
-        System.err.printf("Feature %s disabled.\n", scoreNames[i]);
-        scoreNames[i] = null;
+        if(i < scoreNames.length) {
+          System.err.printf("Feature %s disabled.\n", scoreNames[i]);
+          scoreNames[i] = null;
+        }
       }
 
     return scoreNames;
