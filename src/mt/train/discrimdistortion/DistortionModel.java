@@ -62,10 +62,12 @@ public class DistortionModel implements Serializable {
 		return new Pair<Double,DistortionModel.Class>(maxScore, maxClass);
 	}
 	
-	//TODO Assumes that the word feature is in the first position, which is dependent
-	//on the implementation in DiscrimDistortionController
 	public double modelScore(Datum datum, DistortionModel.Class c, boolean isOOV) {
-		return (isOOV) ? Math.exp(modelScore(datum, c, 1)) : Math.exp(modelScore(datum, c, 0));
+	  if(featureIndex.contains(Feature.Word)) {
+	    return (isOOV) ? Math.exp(modelScore(datum, c, 1)) : Math.exp(modelScore(datum, c, 0));
+	  }  else {
+	    return Math.exp(modelScore(datum, c, 0));
+	  }
 	}
 	
 	private double modelScore(Datum datum, DistortionModel.Class c, int startPos) {

@@ -23,7 +23,7 @@ public class DiscrimDistortionController {
 	private Index<DistortionModel.Feature> features;
 
 	private DistortionModel model = null;
-	private final String modelFile = "ddmodel.ser.gz";
+	private final String modelFile;
 	
 	private int numFeThreads = 1;
 	private int numExpectedFeatures = -1;
@@ -34,11 +34,12 @@ public class DiscrimDistortionController {
 
 	
 	public DiscrimDistortionController(final String sourceFile, final String targetFile,
-			final String alignFile) {
+			final String alignFile, final String modelName) {
 		
 		this.sourceFile = new File(sourceFile);
 		this.targetFile = new File(targetFile);
 		this.alignFile = new File(alignFile);
+		modelFile = modelName;
 	}
 
 	public void setVerbose(final boolean verbose) { VERBOSE = verbose; }
@@ -117,6 +118,7 @@ public class DiscrimDistortionController {
 			
 			//Run QNminimizer with a log conditional objective function
 			// (Gaussian prior)
+			//OWLQNMinimizer, try this
 			System.out.println("Running Newton's method minimizer...");
 			AbstractCachingDiffFunction logCond = new LogConditionalObjectiveFunction(ts);
 			Minimizer<DiffFunction> m = new QNMinimizer(15);

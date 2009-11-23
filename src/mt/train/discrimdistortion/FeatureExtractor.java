@@ -142,21 +142,21 @@ public class FeatureExtractor {
       for(int nullSIdx : nullAlignments)
         sTranslationOrder.add(new Pair<Integer,Integer>(-1,nullSIdx));
             
-      //WSGDEBUG
       //Train on the translation order
       Random rand = new Random();
       float sMaxIdx = (float) (sourceWords.size() - 1);
       for(int i = 0; i < sTranslationOrder.size(); i++) {
-        final Pair<Integer,Integer> sWord = sTranslationOrder.get(i);
-        final int normSIdx = sWord.first();
-        final int sIdx = sWord.second();
+        final Pair<Integer,Integer> sIdxPair = sTranslationOrder.get(i);
+        final int normSIdx = sIdxPair.first();
+        final int sIdx = sIdxPair.second();
         
-        if(!wordIndex.contains(sourceWords.get(sIdx)) && ADD_FEATURE_INDEX) continue;
+        if(featureIndex.contains(DistortionModel.Feature.Word) &&
+            !wordIndex.contains(sourceWords.get(sIdx)) && ADD_FEATURE_INDEX) continue;
 
         final float targetValue = (normSIdx == -1) ? DistortionModel.NULL_VALUE : i - normSIdx;
         
         // Best values:
-        // .50% / .65%
+        // .50% / .65% (for 5m training sentences)
         if(SUB_SAMPLE && targetValue == 0.0) {
           if(rand.nextFloat() <= 0.57f) //Parameter set by experimentation%
             continue;
@@ -236,24 +236,25 @@ public class FeatureExtractor {
 
     ts = new TrainingSet(featureIndex, classIndex, numExpectedFeatures);
 
-    if(featureIndex.contains(DistortionModel.Feature.CurrentTag))
+    if(featureIndex.contains(DistortionModel.Feature.CurrentTag)) {
       tagIndex = (initModel == null) ? new HashIndex<String>() : initModel.tagIndex;
-      if(featureIndex.contains(DistortionModel.Feature.Word)) {
-        if(initModel == null) {
-          if(VERBOSE)
-            System.out.printf("%s: Extracting vocabulary...\n", this.getClass().getName());
-          Counter<String> vocab = extractVocabulary(sourceFile.getPath(), featureIndex.contains(DistortionModel.Feature.CurrentTag));
-          wordIndex = new HashIndex<String>();
-          for(String word : vocab.keySet())
-            if(vocab.getCount(word) >= WORD_COUNT_LIMIT)
-              wordIndex.add(word);
-          if(VERBOSE)
-            System.out.printf("%s: Extracted %d terms (discarded %d \\ final vocab %d)\n", 
-                this.getClass().getName(), vocab.keySet().size(), vocab.keySet().size() - wordIndex.size(), wordIndex.size());
-        }
-        else
-          wordIndex = initModel.wordIndex;
+    }
+    if(featureIndex.contains(DistortionModel.Feature.Word)) {
+      if(initModel == null) {
+        if(VERBOSE)
+          System.out.printf("%s: Extracting vocabulary...\n", this.getClass().getName());
+        Counter<String> vocab = extractVocabulary(sourceFile.getPath(), featureIndex.contains(DistortionModel.Feature.CurrentTag));
+        wordIndex = new HashIndex<String>();
+        for(String word : vocab.keySet())
+          if(vocab.getCount(word) >= WORD_COUNT_LIMIT)
+            wordIndex.add(word);
+        if(VERBOSE)
+          System.out.printf("%s: Extracted %d terms (discarded %d \\ final vocab %d)\n", 
+              this.getClass().getName(), vocab.keySet().size(), vocab.keySet().size() - wordIndex.size(), wordIndex.size());
       }
+      else
+        wordIndex = initModel.wordIndex;
+    }
 
       LineNumberReader sourceReader = IOTools.getReaderFromFile(sourceFile);
       LineNumberReader alignReader = IOTools.getReaderFromFile(alignFile);
@@ -285,7 +286,7 @@ public class FeatureExtractor {
 
         if(threadPool != null) {
           threadPool.shutdown();
-          threadPool.awaitTermination(1, TimeUnit.DAYS);
+          threadPool.awaitTermination(2, TimeUnit.HOURS);
           System.out.printf("%s: Successful thread pool shutdown\n",this.getClass().getName());
         }			
 

@@ -27,12 +27,14 @@ public final class DiscrimDistortionTrainer {
     classUsage.append(" -c          : Feature: right/left POS tag context\n");
     classUsage.append(" -r thresh   : Restrict training to abs(thresh) relative movement\n");
     classUsage.append(" -x          : Sub-sample monotone and null classes\n");
+    classUsage.append(" -n          : Use null alignments\n");
+    classUsage.append(" -m <name>   : Name of the serialized output model\n");
 
     return classUsage.toString();
   }
 
   //Uses GNU getopt() syntax
-  private final static OptionParser op = new OptionParser("xr:vce:w:plst:f:d:");
+  private final static OptionParser op = new OptionParser("nxr:vce:w:plst:f:d:m:");
   private final static int MIN_ARGS = 3;
 
   //Command line options
@@ -51,7 +53,8 @@ public final class DiscrimDistortionTrainer {
   private static int minWordCount = 40;
   private static String extractFile = "";
   private static float trainingThreshold = 0.0f;
-
+  private static String modelName = "ddmodel.ser.gz"; //Default
+  
   //Arguments
   private static String sourceFile = "";
   private static String targetFile = "";
@@ -80,6 +83,7 @@ public final class DiscrimDistortionTrainer {
     USE_POSITION = opts.has("p");
     USE_TAG = opts.has("s");
     USE_CONTEXT = opts.has("c");
+    
     if(opts.has("t"))
       numThreads = Integer.parseInt((String) opts.valueOf("t"));
     if(opts.has("f"))
@@ -96,7 +100,9 @@ public final class DiscrimDistortionTrainer {
       THRESHOLD_TRAINING = true;
       trainingThreshold = Float.parseFloat((String) opts.valueOf("r"));
     }
-
+    if(opts.has("m"))
+      modelName = (String) opts.valueOf("m");
+    
     sourceFile = parsedArgs.get(0);
     targetFile = parsedArgs.get(1);
     alignFile = parsedArgs.get(2);
@@ -117,7 +123,7 @@ public final class DiscrimDistortionTrainer {
     System.out.println("###############################################");
     System.out.printf("Start time: %s\n", startTime);
 
-    DiscrimDistortionController controller = new DiscrimDistortionController(sourceFile,targetFile,alignFile);
+    DiscrimDistortionController controller = new DiscrimDistortionController(sourceFile,targetFile,alignFile,modelName);
     controller.setVerbose(VERBOSE);
     controller.setFeatureFlags(USE_WORD,USE_TAG,USE_POSITION,USE_SLEN, USE_CONTEXT);
     controller.setNumThreads(numThreads);

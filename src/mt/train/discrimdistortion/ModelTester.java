@@ -235,18 +235,23 @@ public class ModelTester {
 				StringTokenizer st = new StringTokenizer(input);
 				String word = null,tag = null,rTag = null, lTag = null;
 				int slen = 0;
+				int featIdx = (model.featureIndex.contains(DistortionModel.Feature.Word)) ? 0 : 1;
 				for(int j = 0; st.hasMoreTokens(); j++) {
-					if(j == 0) word = st.nextToken();
-					else if(j == 1) tag = st.nextToken();
-					else if(j == 2) slen = Integer.parseInt(st.nextToken());
-          else if(j == 3) lTag = st.nextToken();
-					else if(j == 4) rTag = st.nextToken();
+					if(featIdx == 0) word = st.nextToken();
+					else if(featIdx == 1) tag = st.nextToken();
+					else if(featIdx == 2) slen = Integer.parseInt(st.nextToken());
+          else if(featIdx == 3) lTag = st.nextToken();
+					else if(featIdx == 4) rTag = st.nextToken();
+					featIdx++;
 				}
 
 				//Assumes these words and tags are in the model...exception otherwise
-        boolean isOOV = !model.wordIndex.contains(word);
-        if(isOOV)
-          System.out.println(word + " is OOV");
+        boolean isOOV = false;
+        if(model.featureIndex.contains(DistortionModel.Feature.Word)) {
+          isOOV = !model.wordIndex.contains(word);
+          if(isOOV)
+            System.out.println(word + " is OOV");
+        }
 				float[] feats = new float[model.getFeatureDimension()];
 				int featPtr = 0;
 	      for(DistortionModel.Feature feat : model.featureIndex) {
