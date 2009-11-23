@@ -35,7 +35,9 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
 
   private boolean DEBUG = true;
   
-  private boolean USE_NULL = false;
+  private double dampingTerm = 1.0;
+  
+//  private boolean USE_NULL = false;
 
   //Constants used for all hypotheses
   private static final Pattern ibmEscaper = Pattern.compile("#|\\+");
@@ -75,7 +77,11 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
     sentenceToId = getSentenceMap(unkFile);
     
     if(args.length == 4)
-      USE_NULL = Boolean.parseBoolean(args[3]);
+      dampingTerm = Double.parseDouble(args[3].trim());
+    System.err.printf("%s: Damping: %f\n", this.getClass().getName(), dampingTerm);
+    
+//    if(args.length == 4)
+//      USE_NULL = Boolean.parseBoolean(args[3]);
   }
 
   private Map<Sequence<IString>, Integer> getSentenceMap(File unkFile) {
@@ -140,7 +146,7 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
     if(!f.option.abstractOption.alignment.hasAlignment()) {
       numNullAlignments += f.foreignPhrase.size();
       f.setState(this, numNullAlignments);
-      return new FeatureValue<String>(FEATURE_NAME,0.0);
+      return new FeatureValue<String>(FEATURE_NAME, 0.0);
     }    
     
     final int sOffset = f.foreignPosition;
@@ -175,14 +181,15 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
     //(21 Nov.): About 56.9 on dev *without* null scores...also the scores look smooth,
     //except for shorter sentences. May want to experiment with disabling this feature.
     double nullScore = 0.0;
-    if(USE_NULL) {
-      for(int i = 0; i < f.foreignPhrase.size(); i++) {
-        if(!alignedSToks.contains(sOffset + i)) {
-          nullScore += logProbCache[sOffset + i][DistortionModel.Class.NULL.ordinal()];
-          numNullAlignments++;
-        }
-      }
-    }
+//    if(USE_NULL) {
+//      for(int i = 0; i < f.foreignPhrase.size(); i++) {
+//        if(!alignedSToks.contains(sOffset + i)) {
+//          nullScore += logProbCache[sOffset + i][DistortionModel.Class.NULL.ordinal()];
+//          numNullAlignments++;
+//        }
+//      }
+//    }
+    numNullAlignments += (f.foreignPhrase.size() - alignedSToks.size());
     
     f.setState(this, numNullAlignments);
 
@@ -280,8 +287,13 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
 
       //Cache the log probabilities for each class
       logProbCache[sIdx] = new double[numClasses];
-      for(DistortionModel.Class c : DistortionModel.Class.values())
-        logProbCache[sIdx][c.ordinal()] = model.prob(datum,c,isOOV);
+      for(DistortionModel.Class c : DistortionModel.Class.values()) {
+        double logProb = model.prob(datum,c,isOOV);
+        if(dampingTerm != 1.0) {
+          logProb = -1 * Math.pow(Math.abs(logProb),dampingTerm);
+        }
+        logProbCache[sIdx][c.ordinal()] = logProb;
+      }
     }
 
     synchronized(System.err) {

@@ -139,8 +139,8 @@ public class FeatureExtractor {
       }
       
       //Add the null alignments, with normalized coordinates equal to -1
-      for(int nullSIdx : nullAlignments)
-        sTranslationOrder.add(new Pair<Integer,Integer>(-1,nullSIdx));
+//      for(int nullSIdx : nullAlignments)
+//        sTranslationOrder.add(new Pair<Integer,Integer>(-1,nullSIdx));
             
       //Train on the translation order
       Random rand = new Random();
@@ -153,18 +153,19 @@ public class FeatureExtractor {
         if(featureIndex.contains(DistortionModel.Feature.Word) &&
             !wordIndex.contains(sourceWords.get(sIdx)) && ADD_FEATURE_INDEX) continue;
 
-        final float targetValue = (normSIdx == -1) ? DistortionModel.NULL_VALUE : i - normSIdx;
+//        final float targetValue = (normSIdx == -1) ? DistortionModel.NULL_VALUE : i - normSIdx;
+        final float targetValue = (float) (i - normSIdx);
         
         // Best values:
         // .50% / .65% (for 5m training sentences)
         if(SUB_SAMPLE && targetValue == 0.0) {
-          if(rand.nextFloat() <= 0.57f) //Parameter set by experimentation%
+          if(rand.nextFloat() <= 0.47f) //Parameter set by experimentation%
             continue;
         } 
-        else if(SUB_SAMPLE && normSIdx == -1) {
-          if(rand.nextFloat() <= 0.65f) //Parameter set by experimentation%
-            continue;
-        }
+//        else if(SUB_SAMPLE && normSIdx == -1) {
+//          if(rand.nextFloat() <= 0.65f) //Parameter set by experimentation%
+//            continue;
+//        }
         
         //Threshold training
         if(Math.abs(targetValue) > trainingThreshold)

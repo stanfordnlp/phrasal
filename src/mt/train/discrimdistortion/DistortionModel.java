@@ -12,7 +12,7 @@ public class DistortionModel implements Serializable {
 
 	public static enum Feature { Word, RelPosition, CurrentTag, SourceLen, LeftTag, RightTag }
 	public static enum FeatureType { Binary, Real };
-	public static enum Class { C1, C2, C3, C4, C5, C6, C7, C8, C9, NULL }
+	public static enum Class { C1, C2, C3, C4, C5, C6, C7, C8, C9}
 
 	public Index<DistortionModel.Feature> featureIndex = null;
 	public Index<DistortionModel.Class> classIndex = null;
@@ -105,13 +105,13 @@ public class DistortionModel implements Serializable {
 	public static final Class FIRST_CLASS = Class.C1;
 	public static final Class LAST_CLASS = Class.C9;
 	public static final Class MONOTONE = Class.C5;
-	public static final int NULL_VALUE = -5000;
+//	public static final int NULL_VALUE = -5000;
 	
 	//Expects relative movement as a percentage (e.g., 100%)
 	public static Class discretizeDistortion(int relMovement) {
 	
-	  if(relMovement == NULL_VALUE)
-	    return Class.NULL;
+//	  if(relMovement == NULL_VALUE)
+//	    return Class.NULL;
 	  
 		//10 class implementation (28 Oct 2009)
 	  if(relMovement <= -7)    //By construction

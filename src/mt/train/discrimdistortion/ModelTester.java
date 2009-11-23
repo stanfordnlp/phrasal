@@ -26,8 +26,10 @@ public class ModelTester {
 
 			parsedArgs = opts.nonOptionArguments();
 
-			if(parsedArgs == null || parsedArgs.size() < MIN_ARGS)
-				System.exit(-1);
+			if(parsedArgs == null || parsedArgs.size() < MIN_ARGS) {
+				System.err.println("Insufficient number of arguments. Terminating.");
+			  System.exit(-1);
+			}
 
 		} catch (OptionException e) {
 			System.err.println(e.toString());
@@ -114,25 +116,26 @@ public class ModelTester {
 	    }
 	    
 	    //What the model predicts
-	    Pair<Double, DistortionModel.Class> predClass = m.argmax(d, isOOV);
-      double predProb = m.prob(d, predClass.second(), isOOV);	    	    
+	    Pair<Double, DistortionModel.Class> predClassPair = m.argmax(d, isOOV);
+      DistortionModel.Class predClass = predClassPair.second();
+	    double predProb = m.prob(d, predClass, isOOV);	    	    
 	    
       //What it will return for MT at test time
       DistortionModel.Class goldClass = DistortionModel.discretizeDistortion((int) d.getTarget());
 	    double goldProb = m.prob(d, goldClass, isOOV);
 	    
-	    //If we throw out the null class
-	    if(goldClass == DistortionModel.Class.NULL) {
-        nullPredictions++;
-      } else {
+//	    If we throw out the null class
+//	    if(goldClass == DistortionModel.Class.NULL) {
+//        nullPredictions++;
+//      } else {
         logLikNoNull += goldProb;
-      }
+//      }
 
 	    predLogLik += predProb;
       logLik += goldProb;
 
       String debugDatum = prettyPrint(m,d,isOOV,"");
-      System.err.printf("%s (pred: %s): %f ||| %s\n",goldClass, predClass.second().toString(), goldProb, debugDatum);
+      System.err.printf("%s %f (pred: %s %f) ||| %s ||| isOOV: %b\n", goldClass, goldProb, predClass, predProb, debugDatum, isOOV);
 	  }
 	  
 	  System.out.println("===============================");

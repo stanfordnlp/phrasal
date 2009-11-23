@@ -9,6 +9,7 @@ import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
+import edu.stanford.nlp.optimization.OWLQNMinimizer;
 import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
@@ -121,7 +122,8 @@ public class DiscrimDistortionController {
 			//OWLQNMinimizer, try this
 			System.out.println("Running Newton's method minimizer...");
 			AbstractCachingDiffFunction logCond = new LogConditionalObjectiveFunction(ts);
-			Minimizer<DiffFunction> m = new QNMinimizer(15);
+//			Minimizer<DiffFunction> m = new QNMinimizer(15);
+			Minimizer<DiffFunction> m = new OWLQNMinimizer();
 			double[] initial = logCond.initial();
 			model.weights = m.minimize(logCond, 1e-3, initial);
 			System.out.println("done!");
