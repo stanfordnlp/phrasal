@@ -34,10 +34,10 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
   private double[][] logProbCache = null;
 
   private boolean DEBUG = true;
-  
+
   private double dampingTerm = 1.0;
-  
-//  private boolean USE_NULL = false;
+
+  //  private boolean USE_NULL = false;
 
   //Constants used for all hypotheses
   private static final Pattern ibmEscaper = Pattern.compile("#|\\+");
@@ -75,13 +75,13 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
       throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),unkFile.getPath()));
 
     sentenceToId = getSentenceMap(unkFile);
-    
+
     if(args.length == 4)
       dampingTerm = Double.parseDouble(args[3].trim());
     System.err.printf("%s: Damping: %f\n", this.getClass().getName(), dampingTerm);
-    
-//    if(args.length == 4)
-//      USE_NULL = Boolean.parseBoolean(args[3]);
+
+    //    if(args.length == 4)
+    //      USE_NULL = Boolean.parseBoolean(args[3]);
   }
 
   private Map<Sequence<IString>, Integer> getSentenceMap(File unkFile) {
@@ -136,64 +136,56 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
   }
 
 
+  private int getDistortion(int sIdx, int lastSIdx) {
+    int distortion = 0;
+    if(lastSIdx == -1)
+      distortion = sIdx;
+    else {
+      distortion = lastSIdx + 1 - sIdx;
+      if(distortion > 0)
+        distortion--; //Adjust for bias 
+      distortion *= -1; //Turn it into a cost
+    }
+
+    return distortion;
+  }
+  
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
     //final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
-    int numNullAlignments = (f.prior == null) ? 0 : (Integer) f.prior.getState(this);
 
-    //TODO This should not happen
-    if(!f.option.abstractOption.alignment.hasAlignment()) {
-      numNullAlignments += f.foreignPhrase.size();
-      f.setState(this, numNullAlignments);
-      return new FeatureValue<String>(FEATURE_NAME, 0.0);
-    }    
-    
+    int lastSIdx = (f.prior == null) ? -1 : (Integer) f.prior.getState(this);
+
     final int sOffset = f.foreignPosition;
-        
-    //Now score the alignments
-    //   (the partial hypotheses is built left-to-right, so no sorting necessary)
-    //
-    int sHatPosition = (f.prior == null) ? 0 :
-      f.foreignSentence.size() - f.prior.hyp.untranslatedTokens;
-    sHatPosition -= numNullAlignments;
-    
+
     double optScore = 0.0;      
-    final int tOptLen = f.translatedPhrase.size();
-    final Set<Integer> alignedSToks = new HashSet<Integer>();
-    for(int i = 0; i < tOptLen; i++) {
+    if(f.option.abstractOption.alignment.hasAlignment()) {
+      final int tOptLen = f.translatedPhrase.size();
+      for(int i = 0; i < tOptLen; i++) {
 
-      final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
-      if(sIndices == null || sIndices.length == 0)
-        continue; //skip over null aligned target tokens
+        final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
+        if(sIndices == null || sIndices.length == 0)
+          continue; //skip over null aligned target tokens
 
-      final int sIdx = sOffset + sIndices[0];
-      alignedSToks.add(sIdx);
-      
-      int movement = sHatPosition - sIdx;
-      DistortionModel.Class predClass = DistortionModel.discretizeDistortion(movement);
-      optScore += logProbCache[sIdx][predClass.ordinal()];
+        final int sIdx = sOffset + sIndices[0];
+        int distortion = getDistortion(sIdx,lastSIdx);
+        lastSIdx = sIdx;
 
-      sHatPosition++;
+        DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
+        optScore += logProbCache[sIdx][thisClass.ordinal()];
+      }
+
+    } else {
+      int distortion = getDistortion(sOffset, lastSIdx);      
+      lastSIdx += sOffset + f.foreignPhrase.size() - 1;
+      DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
+      optScore += logProbCache[sOffset][thisClass.ordinal()];      
     }
-    
-    //Now score the nulls
-    //(21 Nov.): About 56.9 on dev *without* null scores...also the scores look smooth,
-    //except for shorter sentences. May want to experiment with disabling this feature.
-    double nullScore = 0.0;
-//    if(USE_NULL) {
-//      for(int i = 0; i < f.foreignPhrase.size(); i++) {
-//        if(!alignedSToks.contains(sOffset + i)) {
-//          nullScore += logProbCache[sOffset + i][DistortionModel.Class.NULL.ordinal()];
-//          numNullAlignments++;
-//        }
-//      }
-//    }
-    numNullAlignments += (f.foreignPhrase.size() - alignedSToks.size());
-    
-    f.setState(this, numNullAlignments);
 
-    return new FeatureValue<String>(FEATURE_NAME, optScore + nullScore);
+    f.setState(this, lastSIdx);
+
+    return new FeatureValue<String>(FEATURE_NAME, optScore);
   }
 
   private String prettyPrint(Datum d, boolean isOOV, String word) {
@@ -288,7 +280,7 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
       //Cache the log probabilities for each class
       logProbCache[sIdx] = new double[numClasses];
       for(DistortionModel.Class c : DistortionModel.Class.values()) {
-        double logProb = model.prob(datum,c,isOOV);
+        double logProb = model.logProb(datum,c,isOOV);
         if(dampingTerm != 1.0) {
           logProb = -1 * Math.pow(Math.abs(logProb),dampingTerm);
         }
@@ -337,7 +329,7 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
         Featurizable<IString, String> thisF = featurizers.pop();
 
         int numNulls = (thisF.prior == null) ? 0 : (Integer) thisF.getState(this);
-        
+
         System.err.printf("T STEP %d\n", iter++);
         System.err.println(" partial: " + thisF.partialTranslation);
         System.err.println(" coverage: " + thisF.hyp.foreignCoverage.toString());

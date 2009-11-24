@@ -42,14 +42,16 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
   private static final Pattern ibmEscaper = Pattern.compile("#|\\+");
   private static final int TARGET_IDX = 0;
 
-  private static final double[] MIDPOINTS = new double[DistortionModel.classRightBounds.length];
-  static {
-    double lastX = -100.0;
-    for(int i = 0; i < MIDPOINTS.length; i++) {
-      MIDPOINTS[i] = (lastX + DistortionModel.classRightBounds[i]) / 2.0;
-      lastX = DistortionModel.classRightBounds[i];
-    }
-  }
+  //WSGDEBUG (23 Nov): Dead code
+  private static final double[] MIDPOINTS = null;
+//  private static final double[] MIDPOINTS = new double[DistortionModel.classRightBounds.length];
+//  static {
+//    double lastX = -100.0;
+//    for(int i = 0; i < MIDPOINTS.length; i++) {
+//      MIDPOINTS[i] = (lastX + DistortionModel.classRightBounds[i]) / 2.0;
+//      lastX = DistortionModel.classRightBounds[i];
+//    }
+//  }
 
 
   public DiscrimDistortionFeaturizer(String... args) {
@@ -470,7 +472,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
       //Cache the log probabilities for each class
       logProbCache[sIdx] = new double[numClasses];
       for(DistortionModel.Class c : DistortionModel.Class.values())
-        logProbCache[sIdx][c.ordinal()] = model.prob(datum,c,isOOV);
+        logProbCache[sIdx][c.ordinal()] = model.logProb(datum,c,isOOV);
     }
 
     synchronized(System.err) {
