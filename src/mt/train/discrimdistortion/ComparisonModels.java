@@ -2,12 +2,13 @@ package mt.train.discrimdistortion;
 
 import java.util.*;
 import java.io.*;
-import java.util.HashMap;
 import java.util.Map;
 
 import mt.base.IOTools;
 
 import edu.stanford.nlp.stats.*;
+import edu.stanford.nlp.util.HashIndex;
+import edu.stanford.nlp.util.Index;
 
 public class ComparisonModels {
 
@@ -19,6 +20,9 @@ public class ComparisonModels {
 
   private static void trainTestCounts(final String trainPrefix, final String testPrefix) {
     Counter<DistortionModel.Class> counts = new ClassicCounter<DistortionModel.Class>();
+    Index<DistortionModel.Class> classIndex = new HashIndex<DistortionModel.Class>();
+    for(DistortionModel.Class c : DistortionModel.Class.values())
+      classIndex.add(c);
 
     System.out.println(">> Counts model <<");
 
@@ -27,69 +31,32 @@ public class ComparisonModels {
     for(Mode mode : Mode.values()) {
       if(mode == Mode.Train2) continue; //Not needed for this model
       String filePrefix = (mode == Mode.Train) ? trainPrefix : testPrefix;
-      LineNumberReader algnReader = IOTools.getReaderFromFile(filePrefix + algnExtension);
-      LineNumberReader enReader = IOTools.getReaderFromFile(filePrefix + eExtension);
-      LineNumberReader arReader = IOTools.getReaderFromFile(filePrefix + fExtension);
+      File algnFile = new File(filePrefix + algnExtension);
+      File enFile = new File(filePrefix + eExtension);
+      File arFile = new File(filePrefix + fExtension);
 
-      //Estimate the parameters
-      try {
-        while(algnReader.ready() && enReader.ready() && arReader.ready()) {
-          final float arLen = arReader.readLine().split("\\s+").length;
-          final float enLen = enReader.readLine().split("\\s+").length;
+      FeatureExtractor fe = new FeatureExtractor(1,arFile,enFile,algnFile);
+      fe.setMinWordCount(1);
+      fe.setVerbose(true);
+      fe.setExtractOnly();
 
-          StringTokenizer alignTokenizer = new StringTokenizer(algnReader.readLine());
-          Map<Integer,Integer> alignmentMap = new HashMap<Integer,Integer>();
-          while(alignTokenizer.hasMoreTokens()) {
-            String alignment = alignTokenizer.nextToken();
-            String[] indices = alignment.split("-");
+      TrainingSet ts = fe.extract(new HashIndex<DistortionModel.Feature>(), classIndex, 14000);
+      if(mode == Mode.Test)
+        testAlignments = ts.getNumExamples();
+      
+      for(Datum d : ts) {
+        DistortionModel.Class goldClass = DistortionModel.discretizeDistortion((int) d.getTarget());
+        if(mode == Mode.Train)
+          counts.incrementCount(goldClass);
+        else
+          logLik += Math.log(counts.getCount(goldClass));
+      }
 
-            assert indices.length == 2;
-
-            int sIdx = Integer.parseInt(indices[0]);
-            int tIdx = Integer.parseInt(indices[1]);
-
-            if(alignmentMap.containsKey(sIdx))
-              System.err.printf("%WARNING many-to-one alignment at line %d. Are you using the intersect heuristic?\n", algnReader.getLineNumber());
-
-            alignmentMap.put(sIdx, tIdx);
-          }
-
-          if(mode == Mode.Test)
-            testAlignments += alignmentMap.keySet().size();
-
-          for(Map.Entry<Integer, Integer> alignment : alignmentMap.entrySet()) {
-            final int sIdx = alignment.getKey();
-            final int tIdx = alignment.getValue();
-
-            float sRel = ((float) sIdx / arLen) * 100.0f;  
-            float tRel = ((float) tIdx / enLen) * 100.0f;
-
-            float targetValue = tRel - sRel;
-
-            DistortionModel.Class thisClass = DistortionModel.discretizeDistortion((int) targetValue);
-
-            if(mode == Mode.Train)
-              counts.incrementCount(thisClass);
-            else
-              logLik += Math.log(counts.getCount(thisClass));
-          }     
-        }
-
-        algnReader.close();
-        enReader.close();
-        arReader.close();
-
-        if(mode == Mode.Train) {
-          Counters.normalize(counts);
-          System.out.println("Parameters: ");
-          for(DistortionModel.Class c : counts.keySet())
-            System.out.printf("%s: %f\n", c.toString(), counts.getCount(c));
-        }
-
-      } catch (NumberFormatException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
+      if(mode == Mode.Train) {
+        Counters.normalize(counts);
+        System.out.println("Parameters: ");
+        for(DistortionModel.Class c : counts.keySet())
+          System.out.printf("%s: %f\n", c.toString(), counts.getCount(c));
       }
     }
 
@@ -100,7 +67,7 @@ public class ComparisonModels {
 
 
   private static void trainTestMoses(final String trainPrefix, final String testPrefix) {
-    
+
     System.out.println(">> Moses model (Laplacian) <<");
 
     double m = 0.0;
@@ -130,7 +97,7 @@ public class ComparisonModels {
             int tIdx = Integer.parseInt(indices[1]);
 
             alignedSToks.add(sIdx);
-            
+
             if(alignmentMap.containsKey(tIdx))
               System.err.printf("%WARNING many-to-one alignment at line %d. Are you using the intersect heuristic?\n", algnReader.getLineNumber());
 
@@ -151,17 +118,17 @@ public class ComparisonModels {
               distortion = lastSPos + 1 - sIdx;
               if(distortion > 0)
                 distortion--; //Adjust for gap
+              distortion *= -1; //Turn it into a cost            
             }
-            distortion *= -1; //Turn it into a cost            
             lastSPos = alignment.getValue();
-            
+
             if(mode == Mode.Train) {
               m++;
               meanNum += distortion;
             } else if(mode == Mode.Train2)
               b_hat += Math.abs((double) distortion - u_hat);
             else
-              logLik += (-1*Math.log(2*b_hat)) - (Math.abs((double) distortion - u_hat) / b_hat);
+              logLik += (-1.0 * Math.log(2.0 * b_hat)) - (Math.abs((double) distortion - u_hat) / b_hat);
           }     
         }
 
@@ -172,7 +139,7 @@ public class ComparisonModels {
           System.out.println("Parameters: ");
           System.out.printf("m: %f\n",m);
           System.out.printf("u_hat: %f\n", u_hat);
-        
+
         } else if(mode == Mode.Train2) {
           b_hat /= m;
           System.out.printf("b_hat: %f\n", b_hat);

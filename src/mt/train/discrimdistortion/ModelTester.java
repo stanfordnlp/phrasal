@@ -99,14 +99,11 @@ public class ModelTester {
 	  fe.setMinWordCount(1);
 	  fe.setVerbose(true);
 	  fe.setExtractOnly();
-	  fe.setSubSampling(false);
 	  fe.initializeWithModel(m);
 	  
 	  double predLogLik = 0.0;
-	  double logLikNoNull = 0.0;
 	  double logLik = 0.0;
 	  TrainingSet ts = fe.extract(m.featureIndex, m.classIndex, 14000);
-	  int nullPredictions = 0;
 	  
 	  for(Datum d : ts) {
 	    boolean isOOV = false;
@@ -124,13 +121,6 @@ public class ModelTester {
       DistortionModel.Class goldClass = DistortionModel.discretizeDistortion((int) d.getTarget());
 	    double goldProb = m.prob(d, goldClass, isOOV);
 	    
-//	    If we throw out the null class
-//	    if(goldClass == DistortionModel.Class.NULL) {
-//        nullPredictions++;
-//      } else {
-        logLikNoNull += goldProb;
-//      }
-
 	    predLogLik += predProb;
       logLik += goldProb;
 
@@ -140,11 +130,8 @@ public class ModelTester {
 	  
 	  System.out.println("===============================");
 	  System.out.printf("Test alignments:  %d\n", ts.getNumExamples());
-	  System.out.printf("Null predictions: %d\n", nullPredictions);
-	  System.out.printf("If null skipped: %d\n", ts.getNumExamples() - nullPredictions);
 	  System.out.println("Log likelihoods:");
     System.out.printf("  Test:   %f\n", logLik);
-    System.out.printf("  NoNull: %f\n", logLikNoNull);
 	  System.out.printf("  Pred:   %f\n", predLogLik);  
   }
 

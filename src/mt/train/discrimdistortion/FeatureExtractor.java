@@ -26,7 +26,8 @@ public class FeatureExtractor {
 
   private boolean ADD_FEATURE_INDEX = true;
 
-  private boolean SUB_SAMPLE = true;
+  private boolean SUB_SAMPLE = false;
+  private float sampleRate = 0.0f;
 
   private float trainingThreshold = Integer.MAX_VALUE;
 
@@ -62,7 +63,10 @@ public class FeatureExtractor {
 
   public void setThreshold(float thresh) { trainingThreshold = thresh; }
 
-  public void setSubSampling(boolean t) { SUB_SAMPLE = t; }
+  public void setSubSampling(boolean t, float rate) { 
+    SUB_SAMPLE = t; 
+    sampleRate = rate;
+  }
 
   protected class ExtractionTask implements Runnable {
 
@@ -128,15 +132,15 @@ public class FeatureExtractor {
       //Work out the translation order
       // First coordinate is the normalized index in the set of aligned source words
       // Second coordinate is the index into the set of source words
-      List<Pair<Integer,Integer>> sTranslationOrder = new ArrayList<Pair<Integer,Integer>>();
-      for(Map.Entry<Integer, Integer> alignment : alignmentMap.entrySet()) {
-        final int sIdx = alignment.getValue();
-        
-        assert sTokMapping.containsKey(sIdx);
-        
-        final int normSIdx = sTokMapping.get(sIdx);
-        sTranslationOrder.add(new Pair<Integer,Integer>(normSIdx,sIdx));
-      }
+//      List<Pair<Integer,Integer>> sTranslationOrder = new ArrayList<Pair<Integer,Integer>>();
+//      for(Map.Entry<Integer, Integer> alignment : alignmentMap.entrySet()) {
+//        final int sIdx = alignment.getValue();
+//        
+//        assert sTokMapping.containsKey(sIdx);
+//        
+//        final int normSIdx = sTokMapping.get(sIdx);
+//        sTranslationOrder.add(new Pair<Integer,Integer>(normSIdx,sIdx));
+//      }
       
       //Add the null alignments, with normalized coordinates equal to -1
 //      for(int nullSIdx : nullAlignments)
@@ -145,27 +149,31 @@ public class FeatureExtractor {
       //Train on the translation order
       Random rand = new Random();
       float sMaxIdx = (float) (sourceWords.size() - 1);
-      for(int i = 0; i < sTranslationOrder.size(); i++) {
-        final Pair<Integer,Integer> sIdxPair = sTranslationOrder.get(i);
-        final int normSIdx = sIdxPair.first();
-        final int sIdx = sIdxPair.second();
+      int lastSIdx = Integer.MIN_VALUE;
+      for(Map.Entry<Integer, Integer> algnPair : alignmentMap.entrySet()) {
+//        final Pair<Integer,Integer> sIdxPair = sTranslationOrder.get(i);
+//        final int normSIdx = sIdxPair.first();
+        final int sIdx = algnPair.getValue();
+        float targetValue = 0.0f;
+        if(lastSIdx == Integer.MIN_VALUE)
+          targetValue = sIdx;
+        else {
+          targetValue = (float) (lastSIdx + 1 - sIdx);
+          if(targetValue > 0.0f)
+            targetValue -= 1.0f; //Adjust for bias 
+          targetValue *= -1.0f; //Turn it into a cost
+        }
+        lastSIdx = sIdx;
         
         if(featureIndex.contains(DistortionModel.Feature.Word) &&
             !wordIndex.contains(sourceWords.get(sIdx)) && ADD_FEATURE_INDEX) continue;
-
-//        final float targetValue = (normSIdx == -1) ? DistortionModel.NULL_VALUE : i - normSIdx;
-        final float targetValue = (float) (i - normSIdx);
         
         // Best values:
         // .50% / .65% (for 5m training sentences)
-        if(SUB_SAMPLE && targetValue == 0.0) {
-          if(rand.nextFloat() <= 0.47f) //Parameter set by experimentation%
+        if(SUB_SAMPLE && targetValue == 0.0f) {
+          if(rand.nextFloat() <= sampleRate) //Parameter set by experimentation%
             continue;
         } 
-//        else if(SUB_SAMPLE && normSIdx == -1) {
-//          if(rand.nextFloat() <= 0.65f) //Parameter set by experimentation%
-//            continue;
-//        }
         
         //Threshold training
         if(Math.abs(targetValue) > trainingThreshold)

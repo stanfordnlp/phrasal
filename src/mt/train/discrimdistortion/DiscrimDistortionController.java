@@ -32,6 +32,7 @@ public class DiscrimDistortionController {
 	private int numFeatures = 0;
 	private float trainingThreshold = Integer.MAX_VALUE;
 	private boolean subSample = false;
+	private float subSampleRate = 0.0f;
 
 	
 	public DiscrimDistortionController(final String sourceFile, final String targetFile,
@@ -53,7 +54,10 @@ public class DiscrimDistortionController {
 
   public void setTrainingThreshold(float thresh) { trainingThreshold = thresh; }
   
-  public void subSampleFeatureExtraction(boolean b) { subSample = b; }
+  public void subSampleFeatureExtraction(boolean b, float rate) { 
+    subSample = b; 
+    subSampleRate = rate;
+  }
 
 	public void setFeatureFlags(final boolean use_word, 
 								final boolean use_tag,
@@ -106,7 +110,7 @@ public class DiscrimDistortionController {
 			fe.setVerbose(VERBOSE);
 			fe.setMinWordCount(minWordCount);
 			fe.setThreshold(trainingThreshold);
-			fe.setSubSampling(subSample);
+			fe.setSubSampling(subSample,subSampleRate);
 			
 			System.out.println("Extracting features...");
 			TrainingSet ts = fe.extract(features, getClassIndex(), numExpectedFeatures);

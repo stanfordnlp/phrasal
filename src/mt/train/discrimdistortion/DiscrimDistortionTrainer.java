@@ -26,7 +26,7 @@ public final class DiscrimDistortionTrainer {
     classUsage.append(" -e <file>   : Extract and write feature set ONLY\n");
     classUsage.append(" -c          : Feature: right/left POS tag context\n");
     classUsage.append(" -r thresh   : Restrict training to abs(thresh) relative movement\n");
-    classUsage.append(" -x          : Sub-sample monotone and null classes\n");
+    classUsage.append(" -x <rate>   : Sub-sample monotone and null classes\n");
     classUsage.append(" -n          : Use null alignments\n");
     classUsage.append(" -m <name>   : Name of the serialized output model\n");
 
@@ -34,7 +34,7 @@ public final class DiscrimDistortionTrainer {
   }
 
   //Uses GNU getopt() syntax
-  private final static OptionParser op = new OptionParser("nxr:vce:w:plst:f:d:m:");
+  private final static OptionParser op = new OptionParser("nx:r:vce:w:plst:f:d:m:");
   private final static int MIN_ARGS = 3;
 
   //Command line options
@@ -54,6 +54,7 @@ public final class DiscrimDistortionTrainer {
   private static String extractFile = "";
   private static float trainingThreshold = 0.0f;
   private static String modelName = "ddmodel.ser.gz"; //Default
+  private static float subSampleRate = 0.0f;
   
   //Arguments
   private static String sourceFile = "";
@@ -78,12 +79,15 @@ public final class DiscrimDistortionTrainer {
     }
 
     VERBOSE = opts.has("v");
-    SUB_SAMPLE = opts.has("x");
     USE_SLEN = opts.has("l");
     USE_POSITION = opts.has("p");
     USE_TAG = opts.has("s");
     USE_CONTEXT = opts.has("c");
     
+    if(opts.has("x")) {
+      SUB_SAMPLE = true;
+      subSampleRate = Float.parseFloat((String) opts.valueOf("x"));
+    }
     if(opts.has("t"))
       numThreads = Integer.parseInt((String) opts.valueOf("t"));
     if(opts.has("f"))
@@ -129,7 +133,7 @@ public final class DiscrimDistortionTrainer {
     controller.setNumThreads(numThreads);
     controller.setMinWordCount(minWordCount);
     controller.preAllocateMemory(numExpectedFeatures);
-    controller.subSampleFeatureExtraction(SUB_SAMPLE);
+    controller.subSampleFeatureExtraction(SUB_SAMPLE, subSampleRate);
 
     if(THRESHOLD_TRAINING)
       controller.setTrainingThreshold(trainingThreshold);
