@@ -21,6 +21,8 @@ import mt.decoder.util.Scorer;
  */
 public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
+  private static final double MINUS_INF = -10000.0;
+
   public static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
@@ -84,10 +86,16 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
         throw new RuntimeException();
       }
 		}
-    if(Double.isInfinite(newH) && Double.isInfinite(oldH))
+    if((Double.isInfinite(newH) || newH == MINUS_INF) && (Double.isInfinite(oldH) || oldH == MINUS_INF))
       return 0.0;
-    return newH - oldH;
-	}
+    double delta = newH - oldH;
+    //if(Double.isInfinite(delta) || Double.isNaN(delta)) {
+      //System.err.println("h delta is not valid: "+delta);
+      //System.err.println("newH: "+newH);
+      //System.err.println("oldH: "+oldH);
+    //}
+    return delta;
+  }
 
 	private SpanScores hSpanScores;
 	
@@ -222,7 +230,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
 		if (DEBUG) {
 			System.err.println("Done IsolatedForeignCoverageHeuristic");
 		}
-		return hCompleteSequence;
+
+    if(Double.isInfinite(hCompleteSequence) || Double.isNaN(hCompleteSequence))
+      return MINUS_INF;
+    return hCompleteSequence;
 	}
 		
 	private class SpanScores {

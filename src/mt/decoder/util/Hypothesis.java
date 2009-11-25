@@ -238,4 +238,8 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	public int hashCode() {
 		return (int)id;
 	}
+
+  public boolean hasExpired() {
+    return false;
+  }
 }

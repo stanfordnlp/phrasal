@@ -26,6 +26,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
   private final RawSequence<TK> latestTranslationPhrase;
 
   private static int maxTargetPhraseSpan;
+  private static int maxFloatingPhrases = 5;
 
   private final double floatingPhraseH;
   public final boolean targetOnly;
@@ -37,7 +38,14 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
   }
   public static int getMaxTargetPhraseSpan() { return maxTargetPhraseSpan; }
 
-  static class FloatingPhrase<TK,FV> implements Cloneable {//, Comparable<FloatingPhrase<TK,FV>> {
+  public static void setMaxFloatingPhrases(int m) {
+    System.err.println("Setting max floating phrases: "+m);
+    maxFloatingPhrases = m;
+  }
+  public static int getMaxFloatingPhrases() { return maxFloatingPhrases; }
+
+
+  static class FloatingPhrase<TK,FV> implements Cloneable {
 
     final Deque<RawSequence<TK>> translationPhrases;
     final DTUOption<TK> abstractOption;
@@ -50,6 +58,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       this.firstPosition = old.firstPosition;
       this.lastPosition = old.lastPosition;
       this.abstractOption = old.abstractOption;
+      assert(abstractOption != null);
     }
 
     public FloatingPhrase(DTUOption<TK> dtuOpt, RawSequence<TK>[] seqs, int startIdx, int endIdx, int firstPosition, int lastPosition) {
@@ -59,6 +68,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       this.firstPosition = firstPosition;
       this.lastPosition = lastPosition;
       this.abstractOption = dtuOpt;
+      assert(abstractOption != null);
     }
 
     /*
@@ -139,7 +149,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     }
     if(!this.hasExpired && baseHyp instanceof DTUHypothesis) {
       DTUHypothesis<TK,FV> dtuBaseHyp = (DTUHypothesis<TK,FV>) baseHyp;
-      if(dtuBaseHyp.hasExpired)
+      if(dtuBaseHyp.hasExpired && (nextHyp.untranslatedTokens != 0))
         this.hasExpired = true;
     }
     seenOptions.add(translationOpt.abstractOption);
@@ -173,7 +183,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     assert(featurizable.partialTranslation.size() == this.length);
 
     // Copy old floating phrases:
-    boolean isExpired = false;
+    boolean hasExpired = baseHyp.hasExpired();
     if(baseHyp instanceof DTUHypothesis) {
       List<FloatingPhrase<TK,FV>> oldPhrases = ((DTUHypothesis<TK,FV>)baseHyp).floatingPhrases;
       floatingPhrases = new ArrayList<FloatingPhrase<TK,FV>>(oldPhrases.size()+1);
@@ -181,12 +191,12 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
         this.floatingPhrases.add(new FloatingPhrase<TK,FV>(oldPhrase));
         int lastPosition = oldPhrase.lastPosition;
         if(lastPosition < this.length)
-          isExpired = true;
+          hasExpired = true;
       }
     } else {
       this.floatingPhrases = new ArrayList<FloatingPhrase<TK,FV>>(1);
     }
-    this.hasExpired = isExpired;
+    this.hasExpired = hasExpired;
 
     // Add new floating phrases:
     if(translationOpt.abstractOption instanceof DTUOption) {
@@ -202,6 +212,10 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       for(Sequence<TK> seq : ph.translationPhrases)
         this.sortedFloatingPhrases.add(seq);
     Collections.sort(sortedFloatingPhrases);
+
+    // Too many floating phrases?:
+    if(floatingPhrases.size() > maxFloatingPhrases)
+      this.hasExpired = true;
 
     // Estimate future cost for floating phrases:
     floatingPhraseH = getFloatingPhraseH(featurizer, scorer, translationId);
@@ -250,7 +264,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
 
     // Copy floating phrases from baseHyp, and move one floating phrase (identified by floatingPhraseIdx)
     // from floatingPhrases to current partial hypothesis:
-    boolean isExpired = false;
+    boolean hasExpired = baseHyp.hasExpired();
     for(int i=0; i<oldPhrases.size(); ++i) {
       FloatingPhrase<TK,FV> oldPhrase = oldPhrases.get(i);
       assert(oldPhrase.translationPhrases.size() >= 1);
@@ -268,7 +282,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       }
       int lastPosition = oldPhrase.lastPosition;
       if(lastPosition < this.length) {
-        isExpired = true;
+        hasExpired = true;
       }
     }
 
@@ -279,7 +293,11 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
         this.sortedFloatingPhrases.add(seq);
     Collections.sort(sortedFloatingPhrases);
 
-    this.hasExpired = isExpired;
+    // Too many floating phrases?:
+    this.hasExpired = hasExpired;
+    if(floatingPhrases.size() > maxFloatingPhrases)
+      this.hasExpired = true;
+
     floatingPhraseH = getFloatingPhraseH(featurizer, scorer, translationId);
     //debug(this, false);
   }
@@ -320,6 +338,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     return nextHyps;
   }
 
+  @Override
   public boolean hasExpired() {
     return hasExpired;
   }
@@ -343,6 +362,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
   }
 
   public TranslationOption<TK> getAbstractOption() {
+    assert(this.abstractOption != null);
     return abstractOption;
   }
 
@@ -386,4 +406,5 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     //assert(EXPIRATION_PENALTY <= 0.0);
 		return score + (hasExpired ? -EXPIRATION_PENALTY : 0.0);
   }
+
 }

@@ -2,7 +2,6 @@ package mt.base;
 
 import java.util.Iterator;
 
-
 /**
  * 
  * @author danielcer
@@ -85,7 +84,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		int osz = o.size();
 		int max = Math.min(sz, osz);
 		for (int i = 0; i < max; i++) {
-			int cmp = ((Comparable)get(i)).compareTo((Comparable)o.get(i));
+			int cmp = ((Comparable)get(i)).compareTo(o.get(i));
 			if (cmp == 0) continue;
 			return cmp;
 		}

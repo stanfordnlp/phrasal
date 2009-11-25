@@ -346,8 +346,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		for (int i = beams.length -1; i >= 0; i--) {
 			if (beams[i].size() != 0 && (constrainedOutputSpace == null || constrainedOutputSpace.allowableFinal(beams[i].iterator().next().featurizable))) {
 					Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
-					try { writeAlignments(alignmentDump, bestHyp); } catch (Exception e) { }
-					try { alignmentDump.close(); } catch (Exception e) { }
+					try { writeAlignments(alignmentDump, bestHyp); } catch (Exception e) { /* okay */ }
+					try { alignmentDump.close(); } catch (Exception e) { /* okay */ }
           if(DEBUG) System.err.println("Returning beam of size: "+beams[i].size());
           return beams[i];
 			}
@@ -389,7 +389,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   @SuppressWarnings("unchecked")
 	public int expandBeam(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, DTUOptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {
 		int optionsApplied = 0;
-		int hypPos = -1;
+    int hypPos = -1;
 		int totalHypothesesGenerated = 0;
     //System.err.printf("\nBeam id: %d\n", beamId);
 
@@ -464,7 +464,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             }
 
             for(Hypothesis<TK,FV> newHyp : newHyps) {
-							if(newHyp.isDone() != newHyp.featurizable.done) {
+              if(newHyp.hasExpired())
+                continue;
+              if(newHyp.isDone() != newHyp.featurizable.done) {
                 System.err.println("ERROR in DTUDecoder with: "+newHyp);
                 System.err.println("isDone(): "+newHyp.isDone());
                 System.err.println("f.done: "+newHyp.featurizable.done);
@@ -509,13 +511,16 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 continue;
               }
 
-              int beamIdx = newHyp.foreignCoverage.cardinality();
-              if(0 == newHyp.untranslatedTokens && newHyp.isDone())
-                ++beamIdx;
-              beams[beamIdx].put(newHyp);
+              if(!hyp.hasExpired()) {
+                int beamIdx = newHyp.foreignCoverage.cardinality();
+                if(0 == newHyp.untranslatedTokens && newHyp.isDone())
+                  ++beamIdx;
+                beams[beamIdx].put(newHyp);
 
-              optionsApplied++;
-              localOptionsApplied++;
+                optionsApplied++;
+                localOptionsApplied++;
+
+              }
             }
           }
         }

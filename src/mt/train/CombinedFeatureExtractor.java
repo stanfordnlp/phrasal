@@ -98,8 +98,7 @@ public class CombinedFeatureExtractor {
        DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_OPT, DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
        DTUPhraseExtractor.NO_TARGET_GAPS_OPT, DTUPhraseExtractor.SKIP_UNALIGNED_GAPS_OPT,
-       DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT, DTUPhraseExtractor.ALL_SUBSEQUENCES2_OPT,
-       THREADS_OPT
+       DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT, THREADS_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -612,7 +611,7 @@ public class CombinedFeatureExtractor {
 
   public void extractAll() {
 
-    boolean useTrieIndex = prop.getProperty(DTUPhraseExtractor.ALL_SUBSEQUENCES2_OPT,"false").equals("true");
+    boolean useTrieIndex = prop.getProperty(DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT,"false").equals("true");
     System.err.println("Use trie index: "+useTrieIndex);
 
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);

@@ -9,7 +9,6 @@ import mt.tools.Levenshtein;
 import java.util.*;
 import java.io.IOException;
 
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.Triple;
 
 /**
@@ -22,7 +21,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
   static public final String SKIP_UNALIGNED_GAPS_OPT  = "skipUnalignedGaps";
   static public final String ALL_SUBSEQUENCES_OPT  = "allSubsequences";
-  static public final String ALL_SUBSEQUENCES2_OPT  = "allSubsequences2";
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
@@ -33,7 +31,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps, allSubsequences, allSubsequences2;
+  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps, allSubsequences;
   static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
@@ -91,10 +89,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // All subsequences:
     optStr = prop.getProperty(ALL_SUBSEQUENCES_OPT);
     allSubsequences = optStr != null && !optStr.equals("false");
-
-    // All subsequences:
-    optStr = prop.getProperty(ALL_SUBSEQUENCES2_OPT);
-    allSubsequences2 = optStr != null && !optStr.equals("false");
 
     // Only extracting cross-serial dependencies (for debugging):
     optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
@@ -642,7 +636,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   Set<BitSet> bitsets = new HashSet<BitSet>();
 
   // Extract all subsequences:
-  private void subsequenceExtract(WordAlignment sent) {
+  void subsequenceExtractOld(WordAlignment sent) {
     bitsets.clear();
     for(Sequence<IString> testSeq : fFilter) {
       dp.init(sent.f(), testSeq);
@@ -666,7 +660,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   }
 
   // Extract all subsequences:
-  private void subsequenceExtract2(WordAlignment sent) {
+  void subsequenceExtract(WordAlignment sent) {
     TrieIntegerArrayIndex index = alTemps.getTrieIndex();
     Deque<Triple<Integer,Integer,BitSet>> q = new LinkedList<Triple<Integer,Integer,BitSet>>();
     bitsets.clear();
@@ -783,7 +777,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // Add rules specific to test set:
     if (allSubsequences)
       subsequenceExtract(sent);
-    if (allSubsequences2)
-      subsequenceExtract2(sent);
+      //subsequenceExtractOld(sent);
   }
 }

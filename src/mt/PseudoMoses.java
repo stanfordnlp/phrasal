@@ -75,7 +75,9 @@ public class PseudoMoses {
   public static final String LEARNING_METRIC = "learning-metric";
   public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
   public static final String GAPS_OPT = "gaps";
+  public static final String MAX_FLOATING_PHRASES_OPT = "max-floating-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
+  
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
 
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
@@ -111,7 +113,7 @@ public class PseudoMoses {
 				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
 				MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
 				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
-        LINEAR_DISTORTION_TYPE
+        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT
     }));
 		IGNORED_FIELDS.addAll(Arrays.asList(new String[] { INPUT_FACTORS_OPT,
 				MAPPING_OPT, FACTOR_DELIM_OPT }));
@@ -713,13 +715,24 @@ public class PseudoMoses {
     }
 
     if(withGaps) {
+      // Support for gaps:
       List<String> gapOpts = config.get(GAPS_OPT);
       if(gapOpts.size() < 1 || gapOpts.size() > 2)
         throw new UnsupportedOperationException();
       int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));
       DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
+
       int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts.get(1)) : distortionLimit;
       DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
+
+      // Support for floating phrases:
+      if(config.containsKey(MAX_FLOATING_PHRASES_OPT)) {
+        List<String> floatOpts = config.get(MAX_FLOATING_PHRASES_OPT);
+        if(floatOpts.size() != 1)
+          throw new UnsupportedOperationException();
+        int maxFloatingPhrases = Integer.parseInt(floatOpts.get(0));
+        DTUHypothesis.setMaxFloatingPhrases(maxFloatingPhrases); 
+      }
     }
 
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);

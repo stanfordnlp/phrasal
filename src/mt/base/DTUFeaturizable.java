@@ -42,33 +42,6 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
 
   @Override
   protected void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
-    /*
-    if(!(concreteOpt.abstractOption instanceof DTUOption)) {
-      super.augmentAlignments(concreteOpt);
-      return;
-    }
-    DTUOption dtuOpt = (DTUOption) concreteOpt.abstractOption;
-    int foreignSz = concreteOpt.foreignCoverage.length()-concreteOpt.foreignCoverage.nextSetBit(0);
-    for (int j=0; j<dtuOpt.dtus.length; ++j) {
-      int transSz = dtuOpt.dtus[j].elements.length;
-      int limit;
-      int[] range =  new int[2];
-      range[PHRASE_START] = foreignPosition;
-      range[PHRASE_END]   = foreignPosition + foreignSz;
-      limit = translationPosition+transSz;
-      for (int i = translationPosition; i < limit; i++) {
-        t2fAlignmentIndex[i] = range;
-      }
-
-      range =  new int[2];
-      range[PHRASE_START] = translationPosition;
-      range[PHRASE_END]   = translationPosition+transSz;
-      limit = foreignPosition+foreignSz;
-      for (int i = foreignPosition; i < limit; i++) {
-        if(concreteOpt.foreignCoverage.get(i))
-          f2tAlignmentIndex[i] = range;
-      }
-    }
-    */
+    // TODO
   }
 }
