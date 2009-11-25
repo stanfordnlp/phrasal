@@ -1,6 +1,5 @@
 package mt.decoder.efeat;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.util.Pair;
@@ -23,16 +22,7 @@ import mt.decoder.feat.IncrementalFeaturizer;
 public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
 
   public static String FEATURE_NAME = "AlignPenalty";
-  public static String FEATURE_NAME2 = "AlignPenalty2";
-  
-  private static boolean useTwoFeatures;
-  
-  public AlignPenalty(String... args) {
-    assert args.length != 1;
 
-    useTwoFeatures = (Integer.parseInt(args[0]) == 2);
-  }
-  
   private Pair<Integer,Integer> internalFeaturize(Featurizable<IString, String> f) {
     final int tOptLen = f.translatedPhrase.size();
 
@@ -51,32 +41,21 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
       }
     } else
       numNullAlignments += f.translatedPhrase.size();
-    
+
     return new Pair<Integer,Integer>(numAlignments,numNullAlignments);
   }
-  
+
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    if (useTwoFeatures) return null;
-    
+
     Pair<Integer,Integer> featVals = internalFeaturize(f);
 
-    return new FeatureValue<String>(FEATURE_NAME, -1 * featVals.first());
+    return new FeatureValue<String>(FEATURE_NAME, -1.0 * featVals.first());
   }
+
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) { 
-    if(!useTwoFeatures) return null;
-    
-    Pair<Integer,Integer> featVals = internalFeaturize(f);
-
-    List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>();
-    feats.add(new FeatureValue<String>(FEATURE_NAME, -1 * featVals.first()));
-    feats.add(new FeatureValue<String>(FEATURE_NAME2, -1 * featVals.second()));
-    
-    return feats; 
-  }
-
+  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) { return null; }
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {}
   @Override

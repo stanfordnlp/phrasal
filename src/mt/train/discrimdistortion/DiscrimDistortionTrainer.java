@@ -24,17 +24,20 @@ public final class DiscrimDistortionTrainer {
     classUsage.append(" -s          : Feature: source POS tag (source file must be tagged with delimiter #)\n");
     classUsage.append(" -w <thresh> : Feature: word (cutoff threshold for vocabulary)\n");
     classUsage.append(" -e <file>   : Extract and write feature set ONLY\n");
-    classUsage.append(" -c          : Feature: right/left POS tag context\n");
-    classUsage.append(" -r thresh   : Restrict training to abs(thresh) relative movement\n");
+//    classUsage.append(" -c          : Feature: right/left POS tag context\n");
+    classUsage.append(" -a          : Feature: Arc POS tag in sequence\n");
+    classUsage.append(" -r thresh   : Restrict training to abs(thresh) distortion movement\n");
     classUsage.append(" -x <rate>   : Sub-sample monotone and null classes\n");
     classUsage.append(" -n          : Use null alignments\n");
     classUsage.append(" -m <name>   : Name of the serialized output model\n");
+    classUsage.append(" -o          : Train an outbound model\n");
+    classUsage.append(" -d          : Use sentence begin/end delimiters\n");
 
     return classUsage.toString();
   }
 
   //Uses GNU getopt() syntax
-  private final static OptionParser op = new OptionParser("nx:r:vce:w:plst:f:d:m:");
+  private final static OptionParser op = new OptionParser("aodnx:r:ve:w:plst:f:m:");
   private final static int MIN_ARGS = 3;
 
   //Command line options
@@ -47,6 +50,9 @@ public final class DiscrimDistortionTrainer {
   private static boolean EXTRACT_ONLY = false;
   private static boolean THRESHOLD_TRAINING = false;
   private static boolean SUB_SAMPLE = false;
+  private static boolean OUTBOUND = false; //default is inbound
+  private static boolean USE_ARC_TAG = false;
+  private static boolean INSERT_DELIM = false;
 
   private static int numThreads = 1;
   private static int numExpectedFeatures = 0;
@@ -83,6 +89,9 @@ public final class DiscrimDistortionTrainer {
     USE_POSITION = opts.has("p");
     USE_TAG = opts.has("s");
     USE_CONTEXT = opts.has("c");
+    USE_ARC_TAG = opts.has("a");
+    OUTBOUND = opts.has("o"); //inbound is the default
+    INSERT_DELIM = opts.has("d");
     
     if(opts.has("x")) {
       SUB_SAMPLE = true;
@@ -129,20 +138,24 @@ public final class DiscrimDistortionTrainer {
 
     DiscrimDistortionController controller = new DiscrimDistortionController(sourceFile,targetFile,alignFile,modelName);
     controller.setVerbose(VERBOSE);
-    controller.setFeatureFlags(USE_WORD,USE_TAG,USE_POSITION,USE_SLEN, USE_CONTEXT);
+    controller.setFeatureFlags(USE_WORD,USE_TAG,USE_POSITION,USE_SLEN, USE_CONTEXT, USE_ARC_TAG);
     controller.setNumThreads(numThreads);
     controller.setMinWordCount(minWordCount);
     controller.preAllocateMemory(numExpectedFeatures);
     controller.subSampleFeatureExtraction(SUB_SAMPLE, subSampleRate);
+    controller.insertDelimiters(INSERT_DELIM);
 
     if(THRESHOLD_TRAINING)
       controller.setTrainingThreshold(trainingThreshold);
+    
+    if(OUTBOUND)
+      controller.trainOutboundModel();
 
     if(EXTRACT_ONLY) {
       controller.extractOnly(extractFile);
       System.out.println("done!");
     } else if(controller.run()) {
-      System.out.print("Writing final weights and indices...");
+      System.out.println("Writing final weights and indices...");
       controller.outputModel();
       System.out.println("done!");
     } else

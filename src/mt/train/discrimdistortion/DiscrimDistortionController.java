@@ -33,6 +33,8 @@ public class DiscrimDistortionController {
 	private float trainingThreshold = Integer.MAX_VALUE;
 	private boolean subSample = false;
 	private float subSampleRate = 0.0f;
+	private boolean OUTBOUND = false;
+	private boolean useDelims = false;
 
 	
 	public DiscrimDistortionController(final String sourceFile, final String targetFile,
@@ -58,13 +60,23 @@ public class DiscrimDistortionController {
     subSample = b; 
     subSampleRate = rate;
   }
+  
+  public void insertDelimiters(boolean b) { 
+    if(VERBOSE && b == true)
+      System.err.println("Inserting sentence begin/end delimiters");
+    useDelims = b; 
+  }
+
+  public void trainOutboundModel() { OUTBOUND = true; }
 
 	public void setFeatureFlags(final boolean use_word, 
-								final boolean use_tag,
-								final boolean use_position,
-								final boolean use_slen,
-								final boolean use_context) {
-		features = new HashIndex<DistortionModel.Feature>();
+								              final boolean use_tag,
+								              final boolean use_position,
+								              final boolean use_slen,
+								              final boolean use_context,
+								              final boolean use_arc_tag) {
+		
+	  features = new HashIndex<DistortionModel.Feature>();
 		
 		//WARNING!!! If you change the ordering, be sure that nothing
 		//breaks in FeatureExtractor
@@ -82,6 +94,8 @@ public class DiscrimDistortionController {
       features.add(DistortionModel.Feature.LeftTag);
 		  features.add(DistortionModel.Feature.RightTag);
 		}
+		if(use_arc_tag)
+		  features.add(DistortionModel.Feature.ArcTag);
 		
 		if(VERBOSE)
 			System.err.printf("Features:\n %s\n", features.toString());
@@ -111,6 +125,13 @@ public class DiscrimDistortionController {
 			fe.setMinWordCount(minWordCount);
 			fe.setThreshold(trainingThreshold);
 			fe.setSubSampling(subSample,subSampleRate);
+			if(useDelims)
+			  fe.insertDelims();
+			if(OUTBOUND)
+			  fe.extractOutbound();
+			
+			if(VERBOSE)
+			  System.err.printf("Model type: %s\n", (OUTBOUND) ? "outbound" : "inbound");
 			
 			System.out.println("Extracting features...");
 			TrainingSet ts = fe.extract(features, getClassIndex(), numExpectedFeatures);
@@ -123,7 +144,6 @@ public class DiscrimDistortionController {
 			
 			//Run QNminimizer with a log conditional objective function
 			// (Gaussian prior)
-			//OWLQNMinimizer, try this
 			System.out.println("Running Newton's method minimizer...");
 			AbstractCachingDiffFunction logCond = new LogConditionalObjectiveFunction(ts);
 //			Minimizer<DiffFunction> m = new QNMinimizer(15);
@@ -166,6 +186,10 @@ public class DiscrimDistortionController {
 		fe.setVerbose(VERBOSE);
 		fe.setMinWordCount(minWordCount);
 		fe.setThreshold(trainingThreshold);
+    if(useDelims)
+      fe.insertDelims();
+    if(OUTBOUND)
+      fe.extractOutbound();
 		
 		System.out.println("Extracting features...");
 		TrainingSet ts = fe.extract(features, getClassIndex(), numExpectedFeatures);
@@ -179,9 +203,8 @@ public class DiscrimDistortionController {
 		PrintStream ps = IOTools.getWriterFromFile(extractFile);
 		for(Datum d : ts) {
 			
-			//DistortionModel.Class goldClass = DistortionModel.discretizeDistortion(d.getTarget());
-			//ps.print(goldClass.toString());
-			ps.printf("%s %f",DistortionModel.discretizeDistortion((int)d.getTarget()).toString(),d.getTarget());
+		  String goldClass = DistortionModel.discretizeDistortion((int)d.getTarget()).toString();
+			ps.printf("%s %f",goldClass, d.getTarget());
 			
 			int i = 0;
 			for(DistortionModel.Feature feat : features) {
@@ -196,6 +219,8 @@ public class DiscrimDistortionController {
 				else if(feat == DistortionModel.Feature.LeftTag)
 				  ps.printf(" %s",model.tagIndex.get((int) d.get(i)));
 				else if(feat == DistortionModel.Feature.RightTag)
+				  ps.printf(" %s",model.tagIndex.get((int) d.get(i)));
+				else if(feat == DistortionModel.Feature.ArcTag)
 				  ps.printf(" %s",model.tagIndex.get((int) d.get(i)));
 				i++;
 			}
