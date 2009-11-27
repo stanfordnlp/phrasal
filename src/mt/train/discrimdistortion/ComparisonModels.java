@@ -55,8 +55,13 @@ public class ComparisonModels {
       if(mode == Mode.Train) {
         Counters.normalize(counts);
         System.out.println("Parameters: ");
-        for(DistortionModel.Class c : counts.keySet())
-          System.out.printf("%s: %f\n", c.toString(), counts.getCount(c));
+        PrintStream ps = IOTools.getWriterFromFile("multinomial.params");
+        for(DistortionModel.Class c : counts.keySet()) {
+          String params = String.format("%s %f", c.toString(), counts.getCount(c));
+          System.out.println(params);
+          ps.println(params);
+        }
+        ps.close();
       }
     }
 
@@ -126,16 +131,16 @@ public class ComparisonModels {
               m++;
               meanNum += distortion;
             } else if(mode == Mode.Train2)
-              b_hat += Math.abs((double) distortion - u_hat);
+              b_hat += Math.abs(((double) distortion) - u_hat);
             else
-              logLik += (-1.0 * Math.log(2.0 * b_hat)) - (Math.abs((double) distortion - u_hat) / b_hat);
+              logLik += (-1.0 * Math.log(2.0 * b_hat)) - (Math.abs(((double) distortion) - u_hat) / b_hat);
           }     
         }
 
         algnReader.close();
 
         if(mode == Mode.Train) {
-          u_hat = (double) meanNum / m; //Sample mean
+          u_hat = ((double) meanNum) / m; //Sample mean
           System.out.println("Parameters: ");
           System.out.printf("m: %f\n",m);
           System.out.printf("u_hat: %f\n", u_hat);

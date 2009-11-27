@@ -23,8 +23,11 @@ import mt.train.discrimdistortion.DistortionModel;
 
 public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString, String>{
 
-  private final String FEATURE_NAME = "DiscrimDistortion";
+  private static final String FEATURE_NAME = "DiscrimDistortion";
 
+  private static final String DEBUG_PROPERTY = "Debug" + FEATURE_NAME;
+  private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  
   //Shared objects for all threads initialized in the constructor
   private static boolean useTwoModels = false;
   private static double dampingTerm = 1.0;
@@ -44,9 +47,13 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
   List<Datum> outDatums = null;
 
   //Constants used for all hypotheses
-  private static boolean DEBUG = true;
   private static final Pattern ibmEscaper = Pattern.compile("#|\\+");
 
+  //WSGDEBUG
+  //TODO Re-factor later
+  private static final int outerClassBound = 6;
+  private static final double exponent = 1.5;
+  
   public DiscrimDistortionFeaturizer2(String... args) {
 
     assert args.length <= 5;
@@ -230,8 +237,7 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
         int distortion = getDistortion(lastSIdx,sIdx);
         int cacheIndex = (useDelims) ? lastSIdx + 1 : lastSIdx;
 
-        DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
-        optScore += outLogProbCache[cacheIndex][thisClass.ordinal()];
+        optScore += getScoreFromCache(outLogProbCache, cacheIndex, distortion);
         lastSIdx = sIdx;
       }
 
@@ -239,8 +245,7 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
       if(useDelims || lastSIdx != -1) {
         int distortion = getDistortion(lastSIdx,sOffset);
         int cacheIndex = (useDelims) ? lastSIdx + 1 : lastSIdx;
-        DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
-        optScore += outLogProbCache[cacheIndex][thisClass.ordinal()];
+        optScore += getScoreFromCache(outLogProbCache, cacheIndex, distortion);
       }
       lastSIdx = sOffset + f.foreignPhrase.size() - 1;
     }
@@ -248,8 +253,7 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
     if(useDelims && f.done) {
       int distortion = getDistortion(lastSIdx,f.foreignSentence.size());
       int cacheIndex = (useDelims) ? lastSIdx + 1 : lastSIdx;
-      DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
-      optScore += outLogProbCache[cacheIndex][thisClass.ordinal()];
+      optScore += getScoreFromCache(outLogProbCache, cacheIndex, distortion);
     }
 
     return new Pair<Integer,Double>(lastSIdx,optScore);
@@ -274,27 +278,35 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
         int distortion = getDistortion(lastSIdx,sIdx);
 
         int cacheIndex = (useDelims) ? sIdx + 1 : sIdx;
-        DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
-        optScore += inLogProbCache[cacheIndex][thisClass.ordinal()];
+        optScore += getScoreFromCache(inLogProbCache, cacheIndex, distortion);
         lastSIdx = sIdx;
       }
 
     } else {
       int distortion = getDistortion(lastSIdx,sOffset);
       int cacheIndex = (useDelims) ? sOffset + 1 : sOffset;
-      DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
-      optScore += inLogProbCache[cacheIndex][thisClass.ordinal()];      
+      optScore += getScoreFromCache(inLogProbCache, cacheIndex, distortion);      
       lastSIdx = sOffset + f.foreignPhrase.size() - 1;
     }
 
     if(useDelims && f.done) {
       int distortion = getDistortion(lastSIdx,f.foreignSentence.size());
       int cacheIndex = inLogProbCache.length - 1;
-      DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
-      optScore += inLogProbCache[cacheIndex][thisClass.ordinal()];
+      optScore += getScoreFromCache(inLogProbCache, cacheIndex, distortion);
     }
 
     return new Pair<Integer,Double>(lastSIdx, optScore);
+  }
+  
+  private double getScoreFromCache(double[][] cache, int cacheIndex, int distortion) {
+    DistortionModel.Class thisClass = DistortionModel.discretizeDistortion(distortion);
+    double bigHammer = 0.0;
+    if(Math.abs(distortion) > outerClassBound) {
+      int diff = Math.abs(distortion) - outerClassBound;
+      bigHammer = -1.0 * Math.pow(diff, exponent);
+    }
+    
+    return cache[cacheIndex][thisClass.ordinal()] + bigHammer;
   }
 
   private String prettyPrint(DistortionModel model, Datum d, boolean isOOV, String word) {
