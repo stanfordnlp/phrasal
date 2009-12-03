@@ -7,6 +7,7 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.StreamGobbler;
 import edu.stanford.nlp.io.FileUtils;
+import edu.stanford.nlp.io.IOUtils;
 import mt.base.IOTools;
 
 /**
@@ -65,7 +66,7 @@ public class METEOR0_7Metric {
         System.out.println("Process exit value: " + p.exitValue());
 
       int i=0;
-      for(String line : StringUtils.slurpFileNoExceptions(outFile).split("\\n")) {
+      for(String line : IOUtils.slurpFileNoExceptions(outFile).split("\\n")) {
 
         line = line.replaceAll("^\\s+", "");  // no leading space
         line = line.replaceAll("\\s+$", "");  // no trailing space

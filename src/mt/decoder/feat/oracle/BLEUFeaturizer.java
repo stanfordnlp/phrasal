@@ -1,6 +1,6 @@
 package mt.decoder.feat.oracle;
 
-import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 
@@ -75,10 +75,10 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
       throw new UnsupportedOperationException("Need at least one reference file.");
     lines = new String[refs.length][];
     System.err.printf("Reading %s...\n", refs[0]);
-    lines[0] = StringUtils.slurpFile(refs[0]).split("\\n");
+    lines[0] = IOUtils.slurpFile(refs[0]).split("\\n");
     for (int i = 1; i < refs.length; i++) {
       System.err.printf("Reading %s...\n", refs[i]);
-      lines[i] = StringUtils.slurpFile(refs[i]).split("\\n");
+      lines[i] = IOUtils.slurpFile(refs[i]).split("\\n");
       if(lines[i].length != lines[0].length)
         throw new RuntimeException(String.format("References with mismatched number of lines: %d != %d.\n", lines[i].length, lines[0].length));
     }

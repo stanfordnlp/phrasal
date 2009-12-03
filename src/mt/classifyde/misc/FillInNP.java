@@ -1,6 +1,8 @@
 package mt.classifyde.misc;
 
 import java.util.*;
+
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.util.*;
 
 
@@ -35,8 +37,8 @@ public class FillInNP {
    * project/mt/src/mt/translationtreebank/data/finalCategories_all.txt
    */
   public static void main(String[] args) throws Exception {
-    String[] lines_NPs = StringUtils.slurpFileNoExceptions("NPs.txt").split("\\n");
-    String[] lines_all = StringUtils.slurpFileNoExceptions("all").split("\\n");
+    String[] lines_NPs = IOUtils.slurpFileNoExceptions("NPs.txt").split("\\n");
+    String[] lines_all = IOUtils.slurpFileNoExceptions("all").split("\\n");
     Map<Integer, Map<Integer, NP>> nps_all = linesToNPs(lines_all);
     Map<Integer, Map<Integer, NP>> nps_NPs = linesToNPs(lines_NPs);
 

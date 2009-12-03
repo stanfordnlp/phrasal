@@ -10,6 +10,7 @@ import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.math.SloppyMath;
 import edu.stanford.nlp.math.ArrayMath;
 
@@ -267,7 +268,7 @@ public class LinearCombinationMetricOptimizer implements Function {
   public double[] getExternalScores(String filename) throws IOException {
     int sz = windowSize;
     List<Double> l = new ArrayList<Double>();
-    List<String> lines = Arrays.asList(StringUtils.slurpFile(filename).split("[\r\n]+"));
+    List<String> lines = Arrays.asList(IOUtils.slurpFile(filename).split("[\r\n]+"));
     lines = permute(lines);
     for (String line : lines)
       l.add(Double.parseDouble(line));

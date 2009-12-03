@@ -3,7 +3,7 @@ package mt.decoder.efeat;
 import mt.base.*;
 import mt.base.Featurizable;
 import mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.tagger.maxent.TaggerConfig;
@@ -246,7 +246,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
       System.exit(1);
     }
     IncrementalFeaturizer<IString,String> f = new ArabicInitialVerbFeaturizer();
-    for(String line : StringUtils.slurpFileNoExceptions(args[0]).split("\\n")) {
+    for(String line : IOUtils.slurpFileNoExceptions(args[0]).split("\\n")) {
       f.initialize(null, new SimpleSequence<IString>(true,IStrings.toIStringArray(line.split("\\s+"))));
     }
   }

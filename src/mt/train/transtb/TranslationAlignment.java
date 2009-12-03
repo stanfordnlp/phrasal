@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import java.io.*;
 import java.util.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.process.*;
 
@@ -270,7 +271,7 @@ public class TranslationAlignment {
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
 
     if (file.exists()) {
-      String content = StringUtils.slurpFile(file);
+      String content = IOUtils.slurpFile(file);
       String[] sents = content.split("</seg>");
       for (String sent : sents) {
         sent = sent.trim();;

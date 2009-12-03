@@ -2,6 +2,7 @@ package mt.classifyde;
 
 import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.tregex.*;
@@ -297,16 +298,16 @@ public class ExperimentUtils {
 
   
 	static List<Pair<String, String>>[] readFinalCategories(String categoryFile, String npFile, String fileidFile, String npidFile) throws IOException{
-    String content = StringUtils.slurpFileNoExceptions(categoryFile);
+    String content = IOUtils.slurpFileNoExceptions(categoryFile);
     String[] categories = content.split("\\n");
 
-    content = StringUtils.slurpFileNoExceptions(npFile);
+    content = IOUtils.slurpFileNoExceptions(npFile);
     String[] nps = content.split("\\n");
 
-    content = StringUtils.slurpFileNoExceptions(fileidFile);
+    content = IOUtils.slurpFileNoExceptions(fileidFile);
     String[] fileids = content.split("\\n");
 
-    content = StringUtils.slurpFileNoExceptions(npidFile);
+    content = IOUtils.slurpFileNoExceptions(npidFile);
     String[] npids = content.split("\\n");
 
     //List<Pair<String, String>>[][] result = new List[326][];
@@ -352,7 +353,7 @@ public class ExperimentUtils {
   }
 
   public static List<Pair<String, String>>[] readFinalCategories(String allFile, Boolean useReducedCategories) {
-    String content = StringUtils.slurpFileNoExceptions(allFile);
+    String content = IOUtils.slurpFileNoExceptions(allFile);
     String[] lines = content.split("\\n");
 
     @SuppressWarnings("unchecked")
@@ -477,7 +478,7 @@ public class ExperimentUtils {
   }
 
   public static List<String> readTrainDevTest(String trainDevTestFile) {
-    String content = StringUtils.slurpFileNoExceptions(trainDevTestFile);
+    String content = IOUtils.slurpFileNoExceptions(trainDevTestFile);
     String[] lines = content.split("\\n");
     List<String> ans = new ArrayList<String>();
     for (String line : lines)

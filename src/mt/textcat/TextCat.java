@@ -101,7 +101,7 @@ public class TextCat {
     } else {
       FileSequentialCollection files = new FileSequentialCollection(Collections.singleton(labelDir), ".norm", true);
       for (File file : files) {
-        List<String> doc = Arrays.asList(StringUtils.slurpFile(file.getAbsolutePath(), "utf-8").split("\\s+"));
+        List<String> doc = Arrays.asList(IOUtils.slurpFile(file.getAbsolutePath(), "utf-8").split("\\s+"));
 //        EncodingPrintWriter.err.println(doc);
         Pair<String,Counter<String>> probs = label(doc, classifier);
         System.out.println(file+"\t"+probs.first()+"\t"+probs.second());
@@ -124,7 +124,7 @@ public class TextCat {
     IteratorFromReaderFactory<List<String>> ifrf = new IteratorFromReaderFactory<List<String>>() {
 
       public Iterator<List<String>> getIterator(Reader r) {
-        String doc = StringUtils.slurpReader(r);
+        String doc = IOUtils.slurpReader(r);
         List<String> words = Arrays.asList(doc.split("\\s+"));
         return Collections.singleton(words).iterator();
       }        

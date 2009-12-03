@@ -4,6 +4,7 @@ import mt.train.transtb.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.stats.*;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -195,7 +196,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
         String ciLinPath =
           System.getenv("JAVANLP_HOME")+
           "/projects/mt/src/mt/classifyde/data/CILIN.TXT.utf8";
-        String[] cilinLines = StringUtils.slurpFileNoExceptions(ciLinPath).split("\\n");
+        String[] cilinLines = IOUtils.slurpFileNoExceptions(ciLinPath).split("\\n");
         System.err.println(cilinLines.length+" lines in CILIN");
         //for (String cilinLine : cilinLines) {
         for (int i = 0; i < cilinLines.length; i++) {

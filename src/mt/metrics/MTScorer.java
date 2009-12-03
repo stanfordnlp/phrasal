@@ -7,6 +7,7 @@ import mt.base.*;
 import mt.metrics.ter.TERcost;
 import mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.util.*;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 
@@ -41,8 +42,8 @@ public class MTScorer implements ExternalMTScorer {
     
     scorer.init(args.length == 3 ? args[2] : null);
 
-    String[] refs = StringUtils.slurpFile(args[0]).split("[\r\n]+");
-    String[] hyps = StringUtils.slurpFile(args[1]).split("[\r\n]+");
+    String[] refs = IOUtils.slurpFile(args[0]).split("[\r\n]+");
+    String[] hyps = IOUtils.slurpFile(args[1]).split("[\r\n]+");
     assert(refs.length == hyps.length);
 
     List<Pair<String,String>> data = new ArrayList<Pair<String,String>>();

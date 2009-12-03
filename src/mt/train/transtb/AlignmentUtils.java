@@ -6,6 +6,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.*;
 import java.util.*;
+
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.trees.*;
 
@@ -180,7 +182,7 @@ public class AlignmentUtils {
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
 
     if (file.exists()) {
-      String content = StringUtils.slurpFile(file);
+      String content = IOUtils.slurpFile(file);
       String[] sents = content.split("</seg>");
       for (String sent : sents) {
         sent = sent.trim();
@@ -201,8 +203,8 @@ public class AlignmentUtils {
   throws IOException {
     List<TranslationAlignment> alignment_list = new ArrayList<TranslationAlignment>();
 
-    String[] cLines = StringUtils.slurpFile(cFile).split("\\n");
-    String[] eLines = StringUtils.slurpFile(eFile).split("\\n");
+    String[] cLines = IOUtils.slurpFile(cFile).split("\\n");
+    String[] eLines = IOUtils.slurpFile(eFile).split("\\n");
     if(eLines.length != cLines.length)
       throw new RuntimeException(String.format("Two files with different number of lines: %s %s\n",cFile,eFile));
     for(int i=0; i<eLines.length; ++i) {
