@@ -53,6 +53,7 @@ public class ComparisonModels {
       }
 
       if(mode == Mode.Train) {
+        Counters.printCounterSortedByKeys(counts);
         Counters.normalize(counts);
         System.out.println("Parameters: ");
         PrintStream ps = IOTools.getWriterFromFile("multinomial.params");
