@@ -437,7 +437,7 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeat
 
 
   /**
-   * @param wordPostiion the position of the source word we want to check if it has been translated or not
+   * @param wordPosition the position of the source word we want to check if it has been translated or not
    **/
   protected static <TK> boolean wordTranslated(
     Featurizable<TK,String> f, int wordPosition) {
