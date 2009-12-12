@@ -14,7 +14,7 @@ public interface FeatureExtractor {
   /**
    * Extract features for given abstract rule (we know nothing about its context).
    * This function may do nothing, and the given FeatureExtractor may rely solely 
-   * on {@link extractFeatures(RuleInstace)} to extract features.
+   * on {@link #extractFeatures(RuleInstance)} to extract features.
    */
   public void extractFeatures(Rule r, int ruleId, int rootId, int lhsId, int rhsId);
 
@@ -22,7 +22,7 @@ public interface FeatureExtractor {
    * Extract features for given rule instance (each symbol of the rule links to the 
    * AlignmentTreeNode from which it was extracted).
    * This function may do nothing, and the given FeatureExtractor may rely solely 
-   * on {@link extractFeatures(Rule,int,int,int,int)} to extract features.
+   * on {@link #extractFeatures(Rule,int,int,int,int)} to extract features.
    */
   public void extractFeatures(RuleInstance r);
 

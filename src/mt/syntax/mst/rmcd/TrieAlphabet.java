@@ -84,7 +84,7 @@ public class TrieAlphabet implements Index<String>, Serializable {
 
   /**
    * Reindex alphabet, dropping keys whose corresponding weights are zero.
-   * @param weights Weights determining whether keys are dropped.
+   * @param mixParams Weights determining whether keys are dropped.
    * A key j is dropped if weights[i][j] == 0 for all i.
    */
   public void reindex(Parameters params, Map<String,Parameters> mixParams) {

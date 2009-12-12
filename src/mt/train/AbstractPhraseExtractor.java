@@ -6,7 +6,7 @@ import java.util.*;
 /**
  * The preferred way of instanciating PhraseExtractor is to extend AbstractPhraseExtractor.
  * Its constructor takes a list of AbstractFeatureExtractor as argument, which are then 
- * used in {@link #extractPhrase(WordAlignment,int,int,int,int)} and
+ * used in {@link #extractPhrase(WordAlignment,int,int,int,int,boolean,float)} and
  * {@link #extractPhrasesFromAlGrid(WordAlignment)}, 
  * where each feature extractor is executed on earch phrase pair.
  *

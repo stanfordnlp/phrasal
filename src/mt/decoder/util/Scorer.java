@@ -6,8 +6,6 @@ import mt.base.FeatureValue;
 
 /**
  * @author danielcer
- *
- * @param <T>
  */
 public interface Scorer<FV> {
 	/**

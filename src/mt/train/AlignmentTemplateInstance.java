@@ -83,8 +83,6 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
 
   /**
    * Construct alignment template from phrase pair set using bit sets fs and es.
-   * @param lazy If true, some alignment member variables are null,
-   * which cause f2e() and e2f() to raise a NullPointerException.
    */
   public AlignmentTemplateInstance(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous) {
     init(sent, fs, es, fContiguous, eContiguous);

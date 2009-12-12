@@ -7,10 +7,6 @@ package mt.base;
  *
  */
 public class LanguageModels {
-	/**
-	 * 
-	 * @param <T>
-	 */
 	static private final IString sequenceStart = new IString("<s>");
 	
 	static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {

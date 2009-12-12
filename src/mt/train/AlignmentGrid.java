@@ -94,7 +94,6 @@ public class AlignmentGrid {
   /**
    * Add coordinates of an alignment template to the grid. Allows to cut down memory usage,
    * since one doesn't need to allocate each alignment template.
-   * @see AlignmentGrid#addAlTemp(AlignmentTemplateInstance)
    */
   public void addAlTemp(int f1, int f2, int e1, int e2) {
     alGridCells[f1][e1].setTopLeft(true);

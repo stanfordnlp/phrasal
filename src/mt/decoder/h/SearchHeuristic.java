@@ -10,8 +10,6 @@ import mt.decoder.util.Hypothesis;
 /**
  * 
  * @author danielcer
- *
- * @param <T>
  */
 public interface SearchHeuristic<TK,FV> extends Cloneable {
 

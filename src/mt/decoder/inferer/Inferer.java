@@ -10,8 +10,6 @@ import mt.decoder.util.Scorer;
 /**
  *
  * @author danielcer
- *
- * @param <TK,TV>
  */
 public interface Inferer<TK,FV> {
 

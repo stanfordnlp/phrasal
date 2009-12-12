@@ -31,11 +31,6 @@ public class PhraseGeneratorFactory {
 	public static final String PHAROAH_PHRASE_TABLE = "pharaohphrasetable";
 	public static final String PHAROAH_PHRASE_TABLE_ALT = "ppt";
 	public static final String NEW_DYNAMIC_GENERATOR = "newdg";
-	/**
-	 * 
-	 * @param <T>
-	 * @throws IOException
-	 */
 	@SuppressWarnings("unchecked")
 	static public <FV>  PhraseGenerator<IString> factory(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String... pgSpecs) throws IOException {
 

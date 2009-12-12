@@ -71,7 +71,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	}
 	
 	/**
-	 * @see mt.decoder.feat.IncrementalFeaturizer#featurize(mt.base.Sequence, java.util.BitSet, java.util.BitSet)
+	 * @see mt.decoder.feat.IncrementalFeaturizer#featurize(Featurizable)
 	 */
 	@Override
 	public FeatureValue<String> featurize(Featurizable<T,String> featurizable) {
@@ -79,7 +79,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	}
 
 	/**
-	 * @see mt.decoder.feat.IncrementalFeaturizer#listFeaturize(mt.base.Sequence, java.util.BitSet, java.util.BitSet)
+	 * @see mt.decoder.feat.IncrementalFeaturizer#listFeaturize(Featurizable)
 	 */
 	@SuppressWarnings("unchecked")
 	@Override

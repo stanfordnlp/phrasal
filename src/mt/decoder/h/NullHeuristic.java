@@ -10,8 +10,6 @@ import mt.decoder.util.Hypothesis;
 /**
  * 
  * @author Daniel Cer
- *
- * @param <T>
  */
 public class NullHeuristic<TK,FV> implements SearchHeuristic<TK,FV> {
 

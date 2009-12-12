@@ -14,8 +14,6 @@ import mt.base.IString;
 /**
  * 
  * @author danielcer
- *
- * @param <TK>
  */
 public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IString, String> {
 	static final String FEATURE_PREFIX = "LexR:";

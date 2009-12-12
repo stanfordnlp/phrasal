@@ -12,7 +12,7 @@ import mt.base.IString;
  * are not necessarily symmetrical (since words aligners such as GIZA do not 
  * produce symmetrical word alignments). 
  *
- * @see GIZAWordAlignment
+ * @see mt.train.GIZAWordAlignment
  * @see SymmetricalWordAlignment
  *
  * @author Michel Galley

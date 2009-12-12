@@ -7,11 +7,7 @@ import mt.decoder.recomb.RecombinationHash;
 import mt.decoder.recomb.RecombinationHistory;
 
 /**
- * 
  * @author danielcer
- *
- * @param <TK>
- * @param <FV>
  */
 public class SloppyBeam<S extends State<S>> implements Beam<S> {
 	static public final String DEBUG_PROPERTY = "SloppyBeamDebug";
