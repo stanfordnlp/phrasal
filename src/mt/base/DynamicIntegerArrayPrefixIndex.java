@@ -52,7 +52,6 @@ public class DynamicIntegerArrayPrefixIndex extends DynamicIntegerArrayIndex {
 
   /**
    * Hashes the prefix of an array.
-   * @return
    */
   static int arrayHashCode(int a[], int sz) {
     if (a == null)

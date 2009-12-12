@@ -22,13 +22,11 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
 	/**
 	 * 
 	 * @param i
-	 * @return
 	 */
 	T get(int i);
 	
 	/**
 	 * 
-	 * @return
 	 */
 	int size();
 	
@@ -36,20 +34,17 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
 	 * 
 	 * @param start
 	 * @param end
-	 * @return
 	 */
 	public Sequence<T> subsequence(int start, int end);
 	
 	/**
 	 * 
 	 * @param select
-	 * @return
 	 */
 	public Sequence<T> subsequence(CoverageSet select);
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public long longHashCode();
 	
@@ -62,7 +57,6 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
 	/**
 	 * 
 	 * @param subsequence
-	 * @return
 	 */
 	public boolean contains(Sequence<T> subsequence);
 	

@@ -652,7 +652,6 @@ public class LegacyFeatureExtractor implements Serializable {
    * only one of tname or pname will be non null!!
    * @param tname file name of the tree file
    * @param pname file name of the POS file
-   * @return
    * @throws IOException
    */
   public static List<Candidate> readCandidates(String tname, String pname) throws IOException {

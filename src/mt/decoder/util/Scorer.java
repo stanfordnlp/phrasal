@@ -12,7 +12,6 @@ import mt.base.FeatureValue;
 public interface Scorer<FV> {
 	/**
 	 * @param features
-	 * @return
 	 */
 	double getIncrementalScore(List<FeatureValue<FV>> features);
 }

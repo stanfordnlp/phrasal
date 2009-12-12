@@ -34,7 +34,6 @@ public class RecombinationFilterFactory {
 	/**
 	 * 
 	 * @param rfSpecs
-	 * @return
 	 */
 	static public RecombinationFilter<Hypothesis<IString,String>> factory(List<IncrementalFeaturizer<IString, String>> featurizers, String... rfSpecs) {
 		String rfName;

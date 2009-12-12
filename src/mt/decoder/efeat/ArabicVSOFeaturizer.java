@@ -47,7 +47,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
    * 
    * @param span
    * @param f
-   * @return
    */
   private boolean isCovered(final Triple<Integer,Integer,Integer> span, final Featurizable<IString,String> f) {
     if(f == null) 
@@ -64,7 +63,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
    * @param f
    * @param subjects
    * @param verbs
-   * @return
    */
   private int getLastSubjectScored(Featurizable<IString,String> f, List<Triple<Integer,Integer,Integer>> subjects) {
     int prevSubjIndex = -1;
@@ -83,7 +81,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
    * 
    * @param eVerbLeftBound
    * @param eSubjRightBound
-   * @return
    */
   private boolean fireFeature(final Pair<Integer,Integer> subject,
                               final int verbIdx,

@@ -231,7 +231,6 @@ public class Featurizable<TK,FV> {
 
   /**
 	 * Avoid Arrays.copyOf and it's sluggish call to Class.getComponentType
-	 * @return
 	 */
 	private int[][] copyOfIndex(int[][] index, int newLength) {
 		int[][] newIndex = new int[newLength][];

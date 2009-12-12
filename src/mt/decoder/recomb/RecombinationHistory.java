@@ -62,7 +62,6 @@ public class RecombinationHistory<S extends State<S>> {
 	/**
 	 * 
 	 * @param retainedState
-	 * @return
 	 */
 	public List<S> recombinations(State<S> retainedState) {
 		return historyMap.get(retainedState);

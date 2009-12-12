@@ -77,7 +77,6 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
    * 
    * @param span
    * @param f
-   * @return
    */
   private boolean isCovered(int leftSubjectBoundary, int rightSubjectBoundary, final int verbIdx, final Featurizable<IString,String> f) {
     if(f == null) 

@@ -35,7 +35,6 @@ public class FastFeaturizableHash<V> {
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public V get(Featurizable<IString,String> f) {
 		if (f == null) return null;

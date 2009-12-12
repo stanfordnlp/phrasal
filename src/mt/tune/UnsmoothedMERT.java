@@ -482,7 +482,6 @@ public class UnsmoothedMERT extends Thread {
    * Previously, profiling revealed that this was a serious hotspot
    *
    * @param nbest
-   * @return
    */
   private double quickEvalAtPoint(MosesNBestList nbest,
                                          Set<InterceptIDs> s) {

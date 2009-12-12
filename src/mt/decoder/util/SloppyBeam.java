@@ -172,7 +172,6 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public double worstScore() {
 		return worst;

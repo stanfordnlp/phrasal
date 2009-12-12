@@ -54,7 +54,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public boolean isDone() {
 		return untranslatedTokens == 0; 	
@@ -63,7 +62,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public double finalScoreEstimate() {
 		return score + h;
@@ -71,7 +69,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public double score() {
 		return score + h;
@@ -184,7 +181,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	/**
 	 * 
 	 * @param verbosity
-	 * @return
 	 */
 	public String toString(int verbosity) {
 		StringBuffer sbuf = new StringBuffer();

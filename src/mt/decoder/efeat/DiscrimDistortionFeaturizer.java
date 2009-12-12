@@ -152,7 +152,6 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
    * Stolen from DanC
    * @param index
    * @param newLength
-   * @return
    */
   private int[][] copy(final int[][] index) {
     int[][] newIndex = new int[index.length][];
@@ -166,7 +165,6 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
    * @param tIdx
    * @param tMaxIdx
    * @param sIdx
-   * @return
    */
   private float getTargetVariable(int tIdx, int tMaxIdx, int sIdx) {
     float tRelPosition = ((float) tIdx / (float) tMaxIdx) * 100.0f;
@@ -239,7 +237,6 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
    * @param tIdx
    * @param tLenEstimate
    * @param sIdx
-   * @return
    */
   private double getLogProb(final int tIdx, final int tLenEstimate, final int sIdx) {
     final float relMovement = getTargetVariable(tIdx, tLenEstimate, sIdx);

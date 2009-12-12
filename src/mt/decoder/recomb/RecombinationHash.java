@@ -64,7 +64,6 @@ public class RecombinationHash<S extends State<S>> {
 	/**
 	 * 
 	 * @param hypothesis
-	 * @return
 	 */
 	public Status queryStatus(S hypothesis) {
 		return queryStatus(hypothesis, false);		
@@ -80,7 +79,6 @@ public class RecombinationHash<S extends State<S>> {
 	/**
 	 * 
 	 * @param hypothesis
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public Status queryStatus(S hypothesis, boolean update) {

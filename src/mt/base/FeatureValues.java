@@ -18,7 +18,6 @@ public class FeatureValues {
 	 * 
 	 * @param <T>
 	 * @param featureValues
-	 * @return
 	 */
 	public static <T> List<FeatureValue<T>> combine(List<FeatureValue<T>> featureValues) {
 		ClassicCounter<T> counter = new ClassicCounter<T>();

@@ -38,7 +38,6 @@ abstract public class AbstractBeamInfererBuilder<TK, FV> extends
 	/**
 	 *
 	 * @param beamCapacity
-	 * @return
 	 */
 	public AbstractBeamInfererBuilder<TK,FV> setBeamCapacity(int beamCapacity) {
 		if (beamCapacity <= 0) {

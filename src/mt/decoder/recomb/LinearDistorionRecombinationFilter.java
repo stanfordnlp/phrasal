@@ -21,7 +21,6 @@ public class LinearDistorionRecombinationFilter<TK, FV> implements Recombination
 	/**
 	 * 
 	 * @param hyp
-	 * @return
 	 */
 	private int lastOptionForeignEdge(Hypothesis<TK,FV> hyp) {
 		if (hyp.translationOpt == null) {

@@ -128,7 +128,6 @@ public class MosesLexicalReorderingTable {
 	 * 
 	 * @param foreign
 	 * @param translation
-	 * @return
 	 */
 	public double[] getReorderingScores(Sequence<IString> foreign, Sequence<IString> translation) {
 		int[] indexInts = null;

@@ -45,7 +45,6 @@ public class DistortionModel implements Serializable {
 	 * @param datum
 	 * @param thisC
 	 * @param isOOV
-	 * @return
 	 */
 	public double logProb(Datum datum, DistortionModel.Class thisC, boolean isOOV) {
 		double[] logScores = new double[DistortionModel.Class.values().length];

@@ -172,7 +172,6 @@ public class MTScorer implements ExternalMTScorer {
   /**
    * Returns the list of features.
    * 
-   * @return
    */
   public Set<String> scoresProvided() {
     Counter<String> c = scoreMTOutput("","");

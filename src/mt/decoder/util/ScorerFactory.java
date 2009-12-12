@@ -24,7 +24,6 @@ public class ScorerFactory {
 	/**
 	 * 
 	 * @param scorerSpecs
-	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
@@ -41,7 +40,6 @@ public class ScorerFactory {
 	/**
 	 * 
 	 * @param scorerSpecs
-	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")

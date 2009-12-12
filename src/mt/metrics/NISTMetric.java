@@ -106,7 +106,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	 * 
 	 * @param index
 	 * @param candidateLength
-	 * @return
 	 */
 	private double averageReferenceLength(int index, int candidateLength) {
 		double sum = 0.0;
@@ -317,7 +316,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 		/**
 		 * 
-		 * @return
 		 */
 		public double[] ngramPrecisions() {
 			double[] p = new double[matchCounts.length];
@@ -338,7 +336,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 *
-		 * @return
 		 */
 		public double[][] ngramPrecisionCounts() {
 			double[][] counts = new double[matchCounts.length][];
@@ -380,7 +377,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
     /**
 		 * 
-		 * @return
 		 */
 		public int candidateLength() {
 			return c;
@@ -388,7 +384,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		public double effectiveReferenceLength() {
 			return r;

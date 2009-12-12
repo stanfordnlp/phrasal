@@ -18,7 +18,6 @@ public interface Inferer<TK,FV> {
   /**
    *
    * @param foreign
-   * @return
    */
   RichTranslation<TK,FV> translate(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets);
 
@@ -27,7 +26,6 @@ public interface Inferer<TK,FV> {
    *
    * @param foreign
    * @param size
-   * @return
    */
   List<RichTranslation<TK,FV>> nbest(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int size);
   

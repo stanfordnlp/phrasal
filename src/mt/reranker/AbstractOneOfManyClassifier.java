@@ -202,7 +202,6 @@ public abstract class AbstractOneOfManyClassifier {
    *
    * @param chls
    * @param tieLast when choosing the best one, should we take the last one (true), or the first one (false)
-   * @return
    */
   final public int[] getBestPrediction(List<CompactHypothesisList> chls, boolean tieLast) {
     int[] best = new int[chls.size()];

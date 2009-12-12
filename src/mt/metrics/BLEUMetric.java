@@ -134,7 +134,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	 * 
 	 * @param index
 	 * @param candidateLength
-	 * @return
 	 */
 	private int bestMatchLength(int index, int candidateLength) {
 		int best = refLengths[index][0];
@@ -469,7 +468,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		public double logScore() {
 			return logScore(matchCounts.length);
@@ -490,7 +488,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		private int maxNonZeroPrecision() {
 			double[] precisions = ngramPrecisions();
@@ -502,7 +499,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		public double[] ngramPrecisions() {
 			double[] p = new double[matchCounts.length];
@@ -523,7 +519,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		public int[][] ngramPrecisionCounts() {
 			int[][] counts = new int[matchCounts.length][];
@@ -537,7 +532,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		public double logBrevityPenalty() {
 			if (c < r) {
@@ -552,7 +546,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		public int candidateLength() {
 			return c;
@@ -560,7 +553,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @return
 		 */
 		public int effectiveReferenceLength() {
 			return r;

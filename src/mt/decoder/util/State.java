@@ -21,26 +21,22 @@ public interface State<T> extends Comparable<T> {
 	/**
 	 * Score assigned to the current state, including future cost heuristic if applicable.
 	 * 
-	 * @return
 	 */
 	public double score();
 	
 	/**
 	 * Score assigned to the current state w.r.t the future cost heuristic
 	 * 
-	 * @return
 	 */
 	public double partialScore();
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public State<T> parent();
 	
 	/**
 	 * 
-	 * @return
 	 */
 	public int depth();
 }

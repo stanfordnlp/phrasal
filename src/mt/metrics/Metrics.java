@@ -40,7 +40,6 @@ public class Metrics {
 	 * @param <TK>
 	 * @param sequence
 	 * @param maxOrder
-	 * @return
 	 */
 	static public <TK> Map<Sequence<TK>, Integer> getNGramCounts(Sequence<TK> sequence, int maxOrder) {
 		Map<Sequence<TK>, Integer> counts = new HashMap<Sequence<TK>, Integer>();
@@ -61,7 +60,6 @@ public class Metrics {
 	 * @param <TK>
 	 * @param sequences
 	 * @param maxOrder
-	 * @return
 	 */
 	static public <TK> Map<Sequence<TK>, Integer> getMaxNGramCounts(List<Sequence<TK>> sequences, int maxOrder) {
 		Map<Sequence<TK>, Integer> maxCounts = new HashMap<Sequence<TK>, Integer>();

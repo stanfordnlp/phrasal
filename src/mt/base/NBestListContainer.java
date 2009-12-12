@@ -13,7 +13,6 @@ import java.util.List;
 public interface NBestListContainer<TK,FV> {
 	/**
 	 * 
-	 * @return
 	 */
 	List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists();
 }

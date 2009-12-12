@@ -178,7 +178,6 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
    * 
    * @param fromIdx
    * @param toIdx
-   * @return
    */
   private int getDistortion(int fromIdx, int toIdx) {
     int distortion = 0;

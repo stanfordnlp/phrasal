@@ -22,14 +22,12 @@ public interface IncrementalFeaturizer<TK,FV> {
 	/**
 	 * 
 	 * @param f
-	 * @return
 	 */
 	List<FeatureValue<FV>> listFeaturize(Featurizable<TK,FV> f);
 	
 	/**
 	 * 
 	 * @param f
-	 * @return
 	 */
 	FeatureValue<FV> featurize(Featurizable<TK,FV> f); 
 }

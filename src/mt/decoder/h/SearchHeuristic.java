@@ -22,7 +22,6 @@ public interface SearchHeuristic<TK,FV> extends Cloneable {
 	 * 
 	 * @param sequence
 	 * @param options TODO
-	 * @return
 	 */
 	double getInitialHeuristic(Sequence<TK> sequence, List<List<ConcreteTranslationOption<TK>>> options, int translationId);
 
@@ -30,7 +29,6 @@ public interface SearchHeuristic<TK,FV> extends Cloneable {
 	 * 
 	 * @param newHypothesis
 	 * @param newCoverage
-	 * @return
 	 */
 	double getHeuristicDelta(Hypothesis<TK,FV> newHypothesis, CoverageSet newCoverage);
 }

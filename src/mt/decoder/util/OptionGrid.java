@@ -41,7 +41,6 @@ public class OptionGrid<TK> {
 	 * 
 	 * @param startPos
 	 * @param endPos
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public List<ConcreteTranslationOption<TK>> get(int startPos, int endPos) {
@@ -52,7 +51,6 @@ public class OptionGrid<TK> {
 	 * 
 	 * @param startPos
 	 * @param endPos
-	 * @return
 	 */
 	private int getIndex(int startPos, int endPos) {
 		return startPos*foreignSz + endPos;

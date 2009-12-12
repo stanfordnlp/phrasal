@@ -111,7 +111,6 @@ public class FeaturizerFactory {
 	
 	/**
 	 * @param featurizerSpecs
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public static CombinedFeaturizer<IString,String> factory(String... featurizerSpecs) throws IOException {

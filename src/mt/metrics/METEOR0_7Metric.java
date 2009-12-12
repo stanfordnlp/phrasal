@@ -25,7 +25,6 @@ public class METEOR0_7Metric {
    * There is currently no support for multi-references.
    *
    * @param refAndHyp
-   * @return
    */
   public static Map<String,Double> score(List<Pair<String,String>> refsAndHyps, String modules) {
 

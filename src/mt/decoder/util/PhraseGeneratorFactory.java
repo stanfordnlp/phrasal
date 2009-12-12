@@ -36,7 +36,6 @@ public class PhraseGeneratorFactory {
 	 * @param <T>
 	 * @param t
 	 * @param pgSpecs
-	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")

@@ -26,7 +26,6 @@ public class HypothesisBeamFactory {
 	 * @param filter
 	 * @param capacity
 	 * @param recombinationHistory
-	 * @return
 	 */
 	static public <TK, FV> Beam<Hypothesis<TK, FV>> factory(BeamType beamType, RecombinationFilter<Hypothesis<TK,FV>> filter, int capacity, RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory) {
 		switch (beamType) {
@@ -46,7 +45,6 @@ public class HypothesisBeamFactory {
 	 * @param beamType
 	 * @param filter
 	 * @param capacity
-	 * @return
 	 */
 	static public <TK, FV> Beam<Hypothesis<TK, FV>> factory(BeamType beamType, RecombinationFilter<Hypothesis<TK,FV>> filter, int capacity) {
 		return factory(beamType, filter, capacity, null);

@@ -36,7 +36,6 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
 	/**
 	 *
 	 * @param hyp
-	 * @return
 	 */
 	protected List<FeatureValue<FV>> collectFeatureValues(Hypothesis<TK,FV> hyp) {
 		List<FeatureValue<FV>> features = new LinkedList<FeatureValue<FV>>();

@@ -13,7 +13,6 @@ public class Sequences {
 	 * 
 	 * @param <T>
 	 * @param sequence
-	 * @return
 	 */
 	public static <T extends HasIntegerIdentity> int[] toIntArray(Sequence<T> sequence) {
 		int sz = sequence.size();
@@ -30,7 +29,6 @@ public class Sequences {
 	 * @param <T>
 	 * @param sequence
 	 * @param index
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> int[] toIntArray(Sequence<T> sequence, Index<T> index) {

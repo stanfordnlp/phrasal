@@ -55,7 +55,6 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 
   /**
 	 * 
-	 * @return
 	 */
 	public List<IncrementalFeaturizer<TK,FV>> getFeaturizers() {
 		return new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers);

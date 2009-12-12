@@ -581,7 +581,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
      *
      * @param startPos
      * @param endPos
-     * @return
      */
     @SuppressWarnings("unchecked")
     public List<ConcreteTranslationOption<TK>> get(int startPos, int endPos) {
@@ -592,7 +591,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
      *
      * @param startPos
      * @param endPos
-     * @return
      */
     private int getIndex(int startPos, int endPos) {
       return startPos*foreignSz + endPos;

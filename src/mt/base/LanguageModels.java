@@ -12,7 +12,6 @@ public class LanguageModels {
 	 * @param <T>
 	 * @param lm
 	 * @param s
-	 * @return
 	 */
 	static private final IString sequenceStart = new IString("<s>");
 	
