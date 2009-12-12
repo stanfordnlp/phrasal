@@ -34,7 +34,7 @@ public class Rule {
    * from a given tree node; this function returns all of them.
 	 * To Avoid combinatorial explosion, this function returns just one minimal rule if the number of
    * unaligned foreign words appearing in the RHS of the rule is greater than a given threshold.
-   * @arg unalignedRHS Set of indices of unaligned words in RHS
+   * @param uRHS Set of indices of unaligned words in RHS
 	 */
 	public List<Rule> getAllRHSVariants(Set<Character> uRHS) {
     if(DEBUG) {

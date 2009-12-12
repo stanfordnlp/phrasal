@@ -7,7 +7,7 @@ import java.lang.reflect.Field;
  * Utility methods that may be generally useful.
  *
  * @author     Jason Baldridge
- * @created    August 27, 2006
+ * August 27, 2006
  */
 public class Util {
 
