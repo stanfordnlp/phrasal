@@ -17,8 +17,6 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
 	
 	/**
 	 * 
-	 * @param wrapDontCopy
-	 * @param elements
 	 */
 	public SimpleSequence(boolean wrapDontCopy, T... elements) {
 		if (wrapDontCopy) {
@@ -32,8 +30,6 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
 	
 	/**
 	 * 
-	 * @param intElements
-	 * @param index
 	 */
 	public SimpleSequence(int[] intElements, Index<T> index) {
 		elements = new Object[intElements.length];
@@ -46,7 +42,6 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
 	
 	/**
 	 * 
-	 * @param elements
 	 */
 	public SimpleSequence(T... elements) {
 		this.elements = Arrays.copyOf(elements, elements.length);

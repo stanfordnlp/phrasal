@@ -43,8 +43,6 @@ public class TreeBeam<S extends State<S>> implements Beam<S> {
 	
 	/**
 	 * 
-	 * @param capacity
-	 * @param filter
 	 */
 	public TreeBeam(int capacity, RecombinationFilter<S> filter) {
 		this.capacity = capacity;
@@ -55,9 +53,6 @@ public class TreeBeam<S extends State<S>> implements Beam<S> {
 	
 	/**
 	 * 
-	 * @param capacity
-	 * @param filter
-	 * @param recombinationHistory
 	 */
 	public TreeBeam(int capacity, RecombinationFilter<S> filter, RecombinationHistory<S> recombinationHistory) {
 		this.capacity = capacity;

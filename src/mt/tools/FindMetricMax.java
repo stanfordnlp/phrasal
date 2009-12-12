@@ -27,7 +27,6 @@ public class FindMetricMax {
 	
 	/**
 	 * 
-	 * @param args
 	 */
 	static public void main(String[] args) throws IOException {
 		if (args.length != 3) {

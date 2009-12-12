@@ -172,8 +172,6 @@ public class ExtendedLexicalReorderingTable {
 	
 	/**
 	 * 
-	 * @param foreign
-	 * @param translation
 	 */
 	public double[] getReorderingScores(Sequence<IString> foreign, Sequence<IString> translation) {
 		int[] indexInts = null;
@@ -197,7 +195,6 @@ public class ExtendedLexicalReorderingTable {
 	
 	/**
 	 * 
-	 * @param filename
 	 * @throws IOException
 	 */
 	public ExtendedLexicalReorderingTable(String filename) throws IOException {

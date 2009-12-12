@@ -187,7 +187,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
    * Restrict feature extraction to source-language phrases that appear in 
    * a given test/dev corpus.
    *
-   * @param fFilterCorpus
    */
   @SuppressWarnings("unchecked")
   public static Sequence<IString>[] getPhrasesFromDevCorpus(String fFilterCorpus) {
@@ -266,9 +265,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   /**
    * Make as many passes over training data as needed to extract features. 
    *
-   * @param fCorpus
-   * @param eCorpus
-   * @param aCorpus
    */
   public void extractFromMergedAlignment(String fCorpus, String eCorpus, String aCorpus) {
     if(!filterFromDev)

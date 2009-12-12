@@ -75,8 +75,6 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
    * Returns true if the span of token positions specified by span is completely covered
    * in the partial hypothesis of f. Otherwise, returns false.
    * 
-   * @param span
-   * @param f
    */
   private boolean isCovered(int leftSubjectBoundary, int rightSubjectBoundary, final int verbIdx, final Featurizable<IString,String> f) {
     if(f == null) 

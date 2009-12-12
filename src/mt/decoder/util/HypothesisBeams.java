@@ -15,7 +15,6 @@ public class HypothesisBeams {
 	 * 
 	 * @param <TK>
 	 * @param <FV>
-	 * @param hypotheses
 	 */
 	static public <TK,FV>  CoverageSet coverageIntersection(Iterable<Hypothesis<TK,FV>> hypotheses) {
 		CoverageSet c = null;

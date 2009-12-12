@@ -40,7 +40,6 @@ public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IStrin
 	/**
 	 * Discriminative lexical reordering - using selected reordering types
 	 * 
-	 * @param strTypes
 	 */
 	public LexicalReorderingFeaturizer(String... strTypes) {
 		discriminativeSet = MosesLexicalReorderingTable.ReorderingTypes.values();

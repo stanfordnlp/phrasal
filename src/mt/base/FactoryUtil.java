@@ -10,7 +10,6 @@ public class FactoryUtil {
 	
 	/**
 	 * 
-	 * @param specs
 	 */
 	public static Map<String,String> getParamPairs(String[] specs) {
 		Map<String,String> paramPairs = new HashMap<String, String>();

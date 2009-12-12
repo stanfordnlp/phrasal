@@ -53,7 +53,6 @@ public class LogConditionalObjectiveFunction extends AbstractCachingDiffFunction
 	 * Calculate the conditional likelihood of this data by multiplying
 	 * conditional estimates.
 	 *
-	 * @param x
 	 */
 	@Override
 	public void calculate(double[] x) {

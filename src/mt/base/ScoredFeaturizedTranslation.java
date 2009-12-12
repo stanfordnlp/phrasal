@@ -17,8 +17,6 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
 	
 	/**
 	 * 
-	 * @param translation
-	 * @param features
 	 */
 	public ScoredFeaturizedTranslation(Sequence<TK> translation,
 			List<FeatureValue<FV>> features, double score) {
@@ -29,10 +27,6 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
 	
 	/**
 	 * 
-	 * @param translation
-	 * @param features
-	 * @param score
-	 * @param latticeSourceId
 	 */
 	public ScoredFeaturizedTranslation(Sequence<TK> translation,
 			List<FeatureValue<FV>> features, double score, long latticeSourceId) {

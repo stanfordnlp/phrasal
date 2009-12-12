@@ -18,8 +18,6 @@ public class OptionGrid<TK> {
 	
 	/**
 	 * 
-	 * @param options
-	 * @param foreign
 	 */
 	@SuppressWarnings("unchecked")
 	public OptionGrid(List<ConcreteTranslationOption<TK>> options, Sequence<TK> foreign) {
@@ -39,8 +37,6 @@ public class OptionGrid<TK> {
 	
 	/**
 	 * 
-	 * @param startPos
-	 * @param endPos
 	 */
 	@SuppressWarnings("unchecked")
 	public List<ConcreteTranslationOption<TK>> get(int startPos, int endPos) {
@@ -49,8 +45,6 @@ public class OptionGrid<TK> {
 	
 	/**
 	 * 
-	 * @param startPos
-	 * @param endPos
 	 */
 	private int getIndex(int startPos, int endPos) {
 		return startPos*foreignSz + endPos;

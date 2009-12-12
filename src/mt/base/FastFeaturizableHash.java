@@ -24,7 +24,6 @@ public class FastFeaturizableHash<V> {
 	
 	/**
 	 * 
-	 * @param value
 	 */
 	public void put(Featurizable<IString,String> f, V value) {
 		int idx = (int)(f.hyp.id-offset);

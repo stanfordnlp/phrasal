@@ -24,7 +24,6 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 	
 	/**
 	 * 
-	 * @param filter
 	 */
 	public IdentityPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, SequenceFilter<TK> filter ) {
 		super(phraseFeaturizer, scorer);
@@ -34,8 +33,6 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 	
 	/**
 	 * 
-	 * @param filter
-	 * @param scoreName
 	 */
 	public IdentityPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer, SequenceFilter<TK> filter, String scoreName) {
 		super(phraseFeaturizer, scorer);

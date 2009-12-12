@@ -34,7 +34,6 @@ public class BeamMultiTranslationMetricMax<TK, FV> implements MultiTranslationMe
 	
 	/**
 	 * 
-	 * @param metric
 	 */
 	public BeamMultiTranslationMetricMax(EvaluationMetric<TK,FV> metric, int beamSize) {
 		this.metric = metric;

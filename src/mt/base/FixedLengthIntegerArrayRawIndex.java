@@ -41,7 +41,6 @@ public class FixedLengthIntegerArrayRawIndex implements IntegerArrayRawIndex {
 
 	/**
 	 * 
-	 * @param array
 	 */
 	public int getIndex(int[] array) {
 		return getIndex(array, initialSearchIndex(array));
@@ -62,7 +61,6 @@ public class FixedLengthIntegerArrayRawIndex implements IntegerArrayRawIndex {
 	
 	/**
 	 * 
-	 * @param array
 	 */
 	public synchronized int insertIntoIndex(int[] array) {
 		int initIndex = initialSearchIndex(array);

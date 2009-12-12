@@ -13,7 +13,6 @@ public interface PhraseTable<T> {
 	
 	/**
 	 * 
-	 * @param sequence
 	 */
 	List<TranslationOption<T>> getTranslationOptions(Sequence<T> sequence);
 	

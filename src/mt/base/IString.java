@@ -41,7 +41,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
   }
   /**
    *
-   * @param string
    */
   public IString(String string) {
     if(classing == Classing.BACKSLASH) { // e.g., on december 4\\num
@@ -67,7 +66,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
 
   /**
    *
-   * @param id
    */
   public IString(int id) {
     this.id = id;

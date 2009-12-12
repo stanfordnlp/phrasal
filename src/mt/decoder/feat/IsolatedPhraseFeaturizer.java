@@ -15,13 +15,11 @@ import mt.base.Featurizable;
 public interface IsolatedPhraseFeaturizer<TK,FV> {
 	/**
 	 * 
-	 * @param f
 	 */
 	List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK,FV> f);
 	
 	/**
 	 * 
-	 * @param f
 	 */
 	FeatureValue<FV> phraseFeaturize(Featurizable<TK,FV> f); 
 }

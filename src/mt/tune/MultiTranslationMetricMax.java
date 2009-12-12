@@ -16,7 +16,6 @@ public interface MultiTranslationMetricMax<TK,FV> {
 	
 	/**
 	 * 
-	 * @param nbest
 	 */
 	List<ScoredFeaturizedTranslation<TK,FV>>  maximize(NBestListContainer<TK,FV> nbest);
 }

@@ -29,9 +29,6 @@ public class TERsegmentwise {
 
   /**
 	 * Computes segmentwise TER for a hypothesis/reference plain text filepair.
-	 * @param hypFilename
-	 * @param refFilename
-	 * @param costfunc
 	 * @return double[] with TER scores. Currently, the number of edits and words are not returned
 	 */
 	public static List<Double> segmentwiseTER(String hypFilename, String refFilename, TERcost costfunc) throws FileNotFoundException, IOException {

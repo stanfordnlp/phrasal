@@ -34,8 +34,6 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
 	
 	/**
 	 * 
-	 * @param filter
-	 * @param capacity
 	 */
 	public SloppyBeam(int capacity, RecombinationFilter<S> filter) {
 		if (DEBUG_LEVEL >= DEBUG_BASIC) {
@@ -48,9 +46,6 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
 	
 	/**
 	 * 
-	 * @param capacity
-	 * @param filter
-	 * @param recombinationHistory
 	 */
 	public SloppyBeam(int capacity, RecombinationFilter<S> filter, RecombinationHistory<S> recombinationHistory) {
 		if (DEBUG_LEVEL >= DEBUG_BASIC) {

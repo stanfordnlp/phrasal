@@ -10,8 +10,6 @@ public class ConcreteTranslationOptions {
 	/**
 	 * 
 	 * @param <TK>
-	 * @param coverage
-	 * @param options
 	 */
 	static public <TK> List<ConcreteTranslationOption<TK>> filterOptions(CoverageSet coverage, int foreignLength, List<ConcreteTranslationOption<TK>> options) {
 		List<ConcreteTranslationOption<TK>> applicableOptions = new ArrayList<ConcreteTranslationOption<TK>>(options.size());

@@ -33,7 +33,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
   /**
 	 * 
-	 * @param referencesList
 	 */
 	public BLEUMetric(double multiplier, List<List<Sequence<TK>>> referencesList) {
 		this.order = DEFAULT_MAX_NGRAM_ORDER;
@@ -50,7 +49,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	/**
 	 * 
-	 * @param referencesList
 	 */
 	public BLEUMetric(List<List<Sequence<TK>>> referencesList, boolean smooth) {
 		this.order = DEFAULT_MAX_NGRAM_ORDER;
@@ -64,8 +62,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	/**
 	 * 
-	 * @param referencesList
-	 * @param order
 	 */
 	public BLEUMetric(List<List<Sequence<TK>>> referencesList, int order, boolean smooth) {
 		this.order = order;
@@ -132,8 +128,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	/**
 	 * 
-	 * @param index
-	 * @param candidateLength
 	 */
 	private int bestMatchLength(int index, int candidateLength) {
 		int best = refLengths[index][0];
@@ -237,7 +231,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		
 		/**
 		 * 
-		 * @param m
 		 */
 		private BLEUIncrementalMetric(BLEUIncrementalMetric m) {
 			this.futureMatchCounts = m.futureMatchCounts;

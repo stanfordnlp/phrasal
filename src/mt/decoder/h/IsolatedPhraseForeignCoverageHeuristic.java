@@ -35,8 +35,6 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
 	
 	/**
 	 * 
-	 * @param phraseFeaturizer
-	 * @param scorer
 	 */
 	public IsolatedPhraseForeignCoverageHeuristic(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
 		this.phraseFeaturizer = phraseFeaturizer;

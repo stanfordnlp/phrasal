@@ -13,7 +13,6 @@ public class Featurizables {
 	 * 
 	 * @param <TK>
 	 * @param <FV>
-	 * @param f
 	 */
 	public static <TK, FV> int locationOfSwappedPhrase(Featurizable<TK,FV> f) {
 		return f.hyp.foreignCoverage.nextSetBit(f.foreignPosition+f.foreignPhrase.size());

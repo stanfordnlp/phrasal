@@ -20,9 +20,6 @@ public class CollapsedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>,
 	final FV combinedFeatureName;
 	
 	/**
-	 * @param combinedFeatureName
-	 * @param featurizerWts
-	 * @param featurizers
 	 */
 	public CollapsedFeaturizer(FV combinedFeatureName, Map<FV,Double> weightMap, IncrementalFeaturizer<TK,FV>... featurizers) {
 		this.combinedFeatureName = combinedFeatureName;
@@ -33,9 +30,6 @@ public class CollapsedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>,
 	}
 	
 	/**
-	 * @param combinedFeatureName
-	 * @param featurizerWts
-	 * @param featurizers
 	 */
 	public CollapsedFeaturizer(FV combinedFeatureName, double[] featurizerWts, IncrementalFeaturizer<TK,FV>... featurizers) {
 		this.combinedFeatureName = combinedFeatureName;
@@ -45,8 +39,6 @@ public class CollapsedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>,
 	}
 			
 	/**
-	 * @param combinedFeatureName
-	 * @param featurizers
 	 */
 	public CollapsedFeaturizer(FV combinedFeatureName, IncrementalFeaturizer<TK,FV>... featurizers) {
 		this.combinedFeatureName = combinedFeatureName;

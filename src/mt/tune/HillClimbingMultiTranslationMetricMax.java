@@ -25,7 +25,6 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 	
 	/**
 	 * 
-	 * @param metric
 	 */
 	public HillClimbingMultiTranslationMetricMax(EvaluationMetric<TK,FV> metric) {
 		this.metric = metric;

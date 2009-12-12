@@ -16,26 +16,21 @@ public interface ConstrainedOutputSpace<TK,FV> {
 	
 	/**
 	 * 
-	 * @param optionList
 	 */
 	List<ConcreteTranslationOption<TK>> filterOptions(List<ConcreteTranslationOption<TK>> optionList);
 	
 	/**
 	 * 
-	 * @param featurizable
-	 * @param nextPhrase
 	 */
 	boolean allowableContinuation(Featurizable<TK,FV> featurizable, ConcreteTranslationOption<TK> option);
 	
 	/**
 	 * 
-	 * @param partialTranslation
 	 */
 	boolean allowablePartial(Featurizable<TK,FV> featurizable);
 	
 	/**
 	 * 
-	 * @param partialTranslation
 	 */
 	boolean allowableFinal(Featurizable<TK,FV> featurizable);
 	

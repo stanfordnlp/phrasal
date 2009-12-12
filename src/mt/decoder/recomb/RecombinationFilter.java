@@ -7,14 +7,11 @@ package mt.decoder.recomb;
 public interface RecombinationFilter<S> extends Cloneable {
 	/**
 	 * 
-	 * @param hypA
-	 * @param hypB
 	 */
 	boolean combinable(S hypA, S hypB);
 	
 	/**
 	 * 
-	 * @param hyp
 	 */
 	long recombinationHashCode(S hyp);
 	

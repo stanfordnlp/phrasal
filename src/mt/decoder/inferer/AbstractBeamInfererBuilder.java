@@ -19,7 +19,6 @@ abstract public class AbstractBeamInfererBuilder<TK, FV> extends
 
 	/**
 	 *
-	 * @param defaultBeamCapacity
 	 */
 	public AbstractBeamInfererBuilder(int defaultBeamCapacity, HypothesisBeamFactory.BeamType defaultBeamType) {
 		beamCapacity = defaultBeamCapacity;
@@ -29,7 +28,6 @@ abstract public class AbstractBeamInfererBuilder<TK, FV> extends
 
 	/**
 	 *
-	 * @param beamType
 	 */
 	public void setBeamType(HypothesisBeamFactory.BeamType beamType) {
 		this.beamType = beamType;
@@ -37,7 +35,6 @@ abstract public class AbstractBeamInfererBuilder<TK, FV> extends
 
 	/**
 	 *
-	 * @param beamCapacity
 	 */
 	public AbstractBeamInfererBuilder<TK,FV> setBeamCapacity(int beamCapacity) {
 		if (beamCapacity <= 0) {

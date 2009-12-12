@@ -48,11 +48,6 @@ public class CombinedStatisticsCollector {
   /**
    * Make as many passes over training data as needed to extract features.
    *
-   * @param fCorpus
-   * @param eCorpus
-   * @param a1Corpus
-   * @param a2Corpus
-   * @param numLines
    */
   public void collectFromTrainingCorpus(String fCorpus, String eCorpus, String a1Corpus, String a2Corpus, int numLines) {
     

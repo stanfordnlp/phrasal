@@ -25,7 +25,6 @@ public class AgendaMultiTranslationMetricMax<TK, FV> implements MultiTranslation
 	
 	/**
 	 * 
-	 * @param metric
 	 */
 	public AgendaMultiTranslationMetricMax(EvaluationMetric<TK, FV> metric) {
 		this.metric = metric;

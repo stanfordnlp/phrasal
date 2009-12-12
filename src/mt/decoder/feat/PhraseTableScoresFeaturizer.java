@@ -57,7 +57,6 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	
 	/**
 	 * 
-	 * @param tagByTable
 	 */
 	public PhraseTableScoresFeaturizer(boolean tagByTable) {
 		this.tagByTable = tagByTable;

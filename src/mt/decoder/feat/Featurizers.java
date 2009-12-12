@@ -16,7 +16,6 @@ public class Featurizers {
 	 * 
 	 * @param <TK>
 	 * @param <FV>
-	 * @param featurizers
 	 */
 	@SuppressWarnings("unchecked")
 	static public <TK, FV> List<LanguageModel<TK>> extractNGramLanguageModels(List<IncrementalFeaturizer<TK,FV>> featurizers) {

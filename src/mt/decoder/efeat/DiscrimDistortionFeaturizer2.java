@@ -176,8 +176,6 @@ public class DiscrimDistortionFeaturizer2 extends StatefulFeaturizer<IString,Str
   /**
    * -1 indicates that this is an inbound link from the sentence delimiter
    * 
-   * @param fromIdx
-   * @param toIdx
    */
   private int getDistortion(int fromIdx, int toIdx) {
     int distortion = 0;

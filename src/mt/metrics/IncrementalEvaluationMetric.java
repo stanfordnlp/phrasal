@@ -17,7 +17,6 @@ public interface IncrementalEvaluationMetric<TK,FV> extends State<IncrementalEva
 	
 	/**
 	 * 
-	 * @param index
 	 */
 	IncrementalEvaluationMetric<TK,FV> replace(int index, ScoredFeaturizedTranslation<TK,FV> trans);
 	

@@ -47,7 +47,6 @@ public class RecombinationHash<S extends State<S>> {
 	
 	/**
 	 * 
-	 * @param filter
 	 */
 	public RecombinationHash(RecombinationFilter<S> filter) {
 		this.recombinationHash = new HashMap<FilterWrappedHypothesis,FilterWrappedHypothesis>();
@@ -63,7 +62,6 @@ public class RecombinationHash<S extends State<S>> {
 	
 	/**
 	 * 
-	 * @param hypothesis
 	 */
 	public Status queryStatus(S hypothesis) {
 		return queryStatus(hypothesis, false);		
@@ -78,7 +76,6 @@ public class RecombinationHash<S extends State<S>> {
 	
 	/**
 	 * 
-	 * @param hypothesis
 	 */
 	@SuppressWarnings("unchecked")
 	public Status queryStatus(S hypothesis, boolean update) {
@@ -152,7 +149,6 @@ public class RecombinationHash<S extends State<S>> {
 	
 	/**
 	 * 
-	 * @param hypothesis
 	 */
 	public void put(S hypothesis) {
 		if (filter instanceof NoRecombination) {

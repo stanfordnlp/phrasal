@@ -19,7 +19,6 @@ public class IndicatorFunctionLM implements LanguageModel<IString> {
 	/**
 	 * 
 	 * @param <FV>
-	 * @param order
 	 */
 	public <FV> IndicatorFunctionLM(int order) {
 		this.order = order;

@@ -346,7 +346,6 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	}
 	
 	/**
-	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
 		String strModel1F2E = args[0].split(":")[1];

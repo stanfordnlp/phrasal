@@ -62,7 +62,6 @@ public class PhraseAlignment {
 
   /**
    *
-   * @param string
    */
   public PhraseAlignment(String string) {
     AlignmentHolder holder = map.get(string);

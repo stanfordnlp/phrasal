@@ -219,8 +219,6 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   /**
    * Add MST feature once decoding is complete.
    *
-   * @param dep
-   * @param features
    */
   private void addMSTFeature(DependencyInstance instance, List<FeatureValue<String>> features) {
     if(this.reranking && this.mstScore) {
@@ -490,7 +488,6 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   /**
    * Print dependency structure of 1-best hypothesis.
    * 
-   * @param f
    */
   @Override
   public void debugBest(Featurizable<IString, String> f) {

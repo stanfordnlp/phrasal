@@ -10,7 +10,6 @@ package mt.decoder.util;
 public interface Beam<S extends State<S>> extends Iterable<S> {
 	/**
 	 * 
-	 * @param state
 	 */
 	S put(S state);
 	

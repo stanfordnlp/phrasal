@@ -16,8 +16,6 @@ public class FeaturizedTranslation<TK, FV> {
 
 	/**
 	 * 
-	 * @param translation
-	 * @param features
 	 */
 	public FeaturizedTranslation(Sequence<TK> translation, List<FeatureValue<FV>> features) {
 		this.translation = translation;

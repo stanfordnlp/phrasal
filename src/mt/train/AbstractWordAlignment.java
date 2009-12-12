@@ -159,7 +159,6 @@ public class AbstractWordAlignment implements WordAlignment {
    * Initialize alignment using a matrix in LDC format (such as the ones
    * used in parallel treebanks. Convention: 1-indexed words, and index zero
    * reseved for unaligned words.
-   * @param matrix
    */
   @SuppressWarnings("unchecked")
   public void init(int[][] matrix) {

@@ -118,7 +118,6 @@ public class ArabicSubjectBank {
   }
 
   /**
-   * @param args
    */
   public static void main(String[] args) {
     ArabicSubjectBank asb = ArabicSubjectBank.getInstance();

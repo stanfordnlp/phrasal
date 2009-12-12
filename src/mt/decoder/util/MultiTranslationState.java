@@ -23,7 +23,6 @@ public class MultiTranslationState<TK,FV> implements State<MultiTranslationState
 	public final int depth;
 	/**
 	 * 
-	 * @param incMetric
 	 */
 	public MultiTranslationState(NBestListContainer<TK, FV> nbest, EvaluationMetric<TK,FV> metric) {
 		this.incMetric = metric.getIncrementalMetric(nbest);
@@ -34,8 +33,6 @@ public class MultiTranslationState<TK,FV> implements State<MultiTranslationState
 	
 	/**
 	 * 
-	 * @param parent
-	 * @param selected
 	 */
 	private MultiTranslationState(MultiTranslationState<TK, FV> parent, ScoredFeaturizedTranslation<TK,FV> selected) {
 		this.parent = parent;

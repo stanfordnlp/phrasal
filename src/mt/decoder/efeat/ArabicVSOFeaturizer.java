@@ -45,8 +45,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   /**
    * We can fire as soon as the verb is laid down.
    * 
-   * @param span
-   * @param f
    */
   private boolean isCovered(final Triple<Integer,Integer,Integer> span, final Featurizable<IString,String> f) {
     if(f == null) 
@@ -60,9 +58,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   /**
    * Returns the index of the last subject for which the feature fired.
    * 
-   * @param f
-   * @param subjects
-   * @param verbs
    */
   private int getLastSubjectScored(Featurizable<IString,String> f, List<Triple<Integer,Integer,Integer>> subjects) {
     int prevSubjIndex = -1;
@@ -79,8 +74,6 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
   /**
    * Indicates when the feature should fire dependent on the scoring mode.
    * 
-   * @param eVerbLeftBound
-   * @param eSubjRightBound
    */
   private boolean fireFeature(final Pair<Integer,Integer> subject,
                               final int verbIdx,

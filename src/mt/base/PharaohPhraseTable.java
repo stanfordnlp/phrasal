@@ -138,7 +138,6 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 
   /**
 	 * 
-	 * @param filename
 	 * @throws IOException
 	 */
 	public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename, boolean trieIndex) throws IOException {

@@ -24,8 +24,6 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 
 	/**
 	 *
-	 * @param goalStates
-	 * @param recombinationHistory
 	 */
 	public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S> recombinationHistory, int requestLimit){
 		init(goalStates, recombinationHistory);

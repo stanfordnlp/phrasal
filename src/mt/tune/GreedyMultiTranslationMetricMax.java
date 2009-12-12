@@ -18,7 +18,6 @@ public class GreedyMultiTranslationMetricMax<TK, FV> implements MultiTranslation
 	
 	/**
 	 * 
-	 * @param metric
 	 */
 	public GreedyMultiTranslationMetricMax(EvaluationMetric<TK,FV> metric) {
 		this.metric = metric;

@@ -76,8 +76,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	
 	/**
 	 * 
-	 * @param foreignSequence
-	 * @param heuristic
 	 */
 	public Hypothesis(int translationId, Sequence<TK> foreignSequence, SearchHeuristic<TK,FV> heuristic, List<List<ConcreteTranslationOption<TK>>> options) {
 		synchronized(this.getClass()) { id = nextId++; }
@@ -98,12 +96,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	
 	/**
 	 * 
-	 * @param translationOpt
-	 * @param insertionPosition
-	 * @param baseHyp
-	 * @param featurizer
-	 * @param scorer
-	 * @param heuristic
 	 */
 	public Hypothesis(int translationId,
 			ConcreteTranslationOption<TK> translationOpt, 
@@ -167,8 +159,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 
   /**
 	 * 
-	 * @param sbuf
-	 * @param hyp
 	 */
 	private void injectSegmentationBuffer(StringBuffer sbuf, Hypothesis<TK,FV> hyp) {
 		if (hyp.preceedingHyp != null) injectSegmentationBuffer(sbuf, hyp.preceedingHyp);
@@ -180,7 +170,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	
 	/**
 	 * 
-	 * @param verbosity
 	 */
 	public String toString(int verbosity) {
 		StringBuffer sbuf = new StringBuffer();

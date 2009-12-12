@@ -30,8 +30,6 @@ public class RecombinationHistory<S extends State<S>> {
 
   /**
 	 * 
-	 * @param retained
-	 * @param discarded
 	 */
 	public void log(S retained, S discarded) {
     if (discarded == null) {
@@ -53,7 +51,6 @@ public class RecombinationHistory<S extends State<S>> {
 	
 	/**
 	 * 
-	 * @param pruned
 	 */
 	public void remove(S pruned) {
 		historyMap.remove(pruned);
@@ -61,7 +58,6 @@ public class RecombinationHistory<S extends State<S>> {
 	
 	/**
 	 * 
-	 * @param retainedState
 	 */
 	public List<S> recombinations(State<S> retainedState) {
 		return historyMap.get(retainedState);

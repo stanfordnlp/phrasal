@@ -25,7 +25,6 @@ public class ArabicKbestSubjectBank {
     
   /**
    * Collapse identical analyses
-   * @param analyses
    */
   private List<ArabicKbestAnalysis> compress(List<ArabicKbestAnalysis> analyses) {
     List<ArabicKbestAnalysis> compressedList = new ArrayList<ArabicKbestAnalysis>();
@@ -139,7 +138,6 @@ public class ArabicKbestSubjectBank {
 
     
   /**
-   * @param args
    */
   public static void main(String[] args) {
     File testFile = new File("mt04.vso.k");

@@ -15,8 +15,6 @@ public class FeatureValue<T> {
 	static WeakHashMap<Object, WeakReference<Object>> nameCache = new WeakHashMap<Object, WeakReference<Object>>();
 	
 	/**
-	 * @param name
-	 * @param value
 	 */
 	@SuppressWarnings("unchecked")
 	public FeatureValue(T name, double value, boolean cacheName) {

@@ -145,7 +145,6 @@ public class Featurizable<TK,FV> {
 
 	/**
 	 * 
-	 * @param hypothesis
 	 */
 	@SuppressWarnings("unchecked")
 	public Featurizable(Hypothesis<TK,FV> hypothesis, int translationId, int nbStatefulFeaturizers) {
@@ -240,8 +239,6 @@ public class Featurizable<TK,FV> {
 	
 	/**
 	 * 
-	 * @param foreignSequence
-	 * @param concreteOpt
 	 */
 	public Featurizable(Sequence<TK> foreignSequence, ConcreteTranslationOption<TK> concreteOpt, int translationId) {
 		this.translationId = translationId;
@@ -299,7 +296,6 @@ public class Featurizable<TK,FV> {
 
   /**
 	 * 
-	 * @param concreteOpt
 	 */
 	protected void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
     if (concreteOpt.abstractOption.translation == null)

@@ -25,9 +25,6 @@ public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, 
 	
 	/**
 	 * 
-	 * @param lossMetric
-	 * @param scorer
-	 * @param inverted
 	 */
 	public MarginRescaleEvaluationMetric(EvaluationMetric<IString,String> lossMetric, Scorer<String> scorer, boolean inverted) {
 		this.lossMetric = lossMetric;
@@ -53,8 +50,6 @@ public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, 
 	
 	/**
 	 * 
-	 * @param lossMetric
-	 * @param scorer
 	 */
 	public MarginRescaleEvaluationMetric(EvaluationMetric<IString,String> lossMetric, Scorer<String> scorer) {
 		this.lossMetric = lossMetric;
@@ -92,7 +87,6 @@ public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, 
 		
 		/**
 		 * 
-		 * @param nbestList
 		 */
 		public MarginRescaleEvaluationIncMetric(NBestListContainer<IString, String> nbestList) {
 			if (lossMetric != null) {

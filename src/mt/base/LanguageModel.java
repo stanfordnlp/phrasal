@@ -11,7 +11,6 @@ public interface LanguageModel<T> {
 	
 	/**
 	 * 
-	 * @param sequence
 	 */
 	double score(Sequence<T> sequence);
 	
@@ -37,7 +36,6 @@ public interface LanguageModel<T> {
 	
 	/**
 	 * 
-	 * @param sequence
 	 */
 	boolean releventPrefix(Sequence<T> sequence);
 }

@@ -133,7 +133,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	
 	/**
 	 * 
-	 * @param phraseGenerators
 	 */
 	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators) {
 		this.phraseGenerators = phraseGenerators;
@@ -143,8 +142,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	
 	/**
 	 * 
-	 * @param phraseGenerators
-	 * @param type
 	 */
 	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, Type type) {
 		this.phraseGenerators = phraseGenerators;
@@ -154,9 +151,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	
 	/**
 	 * 
-	 * @param phraseGenerators
-	 * @param type
-	 * @param phraseLimit
 	 */
 	public CombinedPhraseGenerator(List<PhraseGenerator<TK>> phraseGenerators, Type type, int phraseLimit) {
 		this.phraseGenerators = phraseGenerators;
@@ -168,7 +162,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 	
 	/**
 	 * 
-	 * @param args
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {

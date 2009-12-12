@@ -14,7 +14,6 @@ public interface IncrementalNBestEvaluationMetric<TK,FV> extends IncrementalEval
 
   /**
 	 *
-	 * @param index
 	 */
 	IncrementalEvaluationMetric<TK,FV> replace(int index, int nbestId, ScoredFeaturizedTranslation<TK,FV> trans);
 

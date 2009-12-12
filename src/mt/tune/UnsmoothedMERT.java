@@ -481,7 +481,6 @@ public class UnsmoothedMERT extends Thread {
    *
    * Previously, profiling revealed that this was a serious hotspot
    *
-   * @param nbest
    */
   private double quickEvalAtPoint(MosesNBestList nbest,
                                          Set<InterceptIDs> s) {
@@ -623,10 +622,6 @@ public class UnsmoothedMERT extends Thread {
 
   /**
    * Initialize everything that is read only, i.e., nbest list, starting points.
-   * @param nbestListFile
-   * @param localNbestListFile
-   * @param previousWtsFiles
-   * @param nStartingPoints
    * @throws IOException
    */
   public static void initStatic(String nbestListFile, String localNbestListFile, String previousWtsFiles, int nStartingPoints, UnsmoothedMERT defaultMERT) throws IOException {

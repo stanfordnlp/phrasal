@@ -19,7 +19,6 @@ public class StaticScorer implements Scorer<String> {
 	final double[] weights;
 	     	
 	/**
-	 * @param filename
 	 * @throws IOException
 	 */
 	public StaticScorer(String filename) throws IOException {
@@ -44,7 +43,6 @@ public class StaticScorer implements Scorer<String> {
 	
 	/**
 	 * 
-	 * @param featureWts
 	 */
 	public StaticScorer(Map<String,Double> featureWts) {
 		featureIndex = new OAIndex<String>();
@@ -62,7 +60,6 @@ public class StaticScorer implements Scorer<String> {
 
   /**
 	 *
-	 * @param featureWts
 	 */
 	public StaticScorer(Counter<String> featureWts, OAIndex<String> index) {
 		featureIndex = index;

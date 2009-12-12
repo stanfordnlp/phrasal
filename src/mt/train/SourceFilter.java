@@ -27,7 +27,6 @@ public class SourceFilter {
    * Restrict feature extraction to source-language phrases that appear in 
    * a given test/dev corpus.
    *
-   * @param fFilterCorpus
    */
   @SuppressWarnings("unchecked")
   public static List<int[]> getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF, int maxSpanF, boolean addBoundaryMarkers) {

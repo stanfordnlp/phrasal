@@ -20,9 +20,6 @@ public class TranslationOption<T> {
 	
 	/**
 	 * 
-	 * @param scores
-	 * @param translation
-	 * @param foreign
 	 */
 	public TranslationOption(float[] scores, String[] phraseScoreNames, RawSequence<T> translation, RawSequence<T> foreign, PhraseAlignment alignment) {
 		this.alignment = alignment;

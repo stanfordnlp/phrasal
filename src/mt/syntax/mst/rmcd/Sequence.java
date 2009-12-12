@@ -20,7 +20,6 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
 	
 	/**
 	 * 
-	 * @param i
 	 */
 	T get(int i);
 	
@@ -31,8 +30,6 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
 	
 	/**
 	 * 
-	 * @param start
-	 * @param end
 	 */
 	public Sequence<T> subsequence(int start, int end);
 	
@@ -43,13 +40,11 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
 	
 	/**
 	 * 
-	 * @param prefix
 	 */
 	public boolean startsWith(Sequence<T> prefix);
 	
 	/**
 	 * 
-	 * @param subsequence
 	 */
 	public boolean contains(Sequence<T> subsequence);
 	

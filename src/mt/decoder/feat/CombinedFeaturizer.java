@@ -73,7 +73,6 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 	}
 	
 	/**
-	 * @param featurizers
 	 */
 	public CombinedFeaturizer(List<IncrementalFeaturizer<TK,FV>> featurizers) {
 		this.featurizers = new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers);
@@ -92,7 +91,6 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
   }
 	
   /**
-	 * @param featurizers
 	 */
 	public CombinedFeaturizer(IncrementalFeaturizer<TK,FV>... featurizers) {
 		this(Arrays.asList(featurizers));

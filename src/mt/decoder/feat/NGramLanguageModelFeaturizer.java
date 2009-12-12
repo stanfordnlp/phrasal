@@ -66,7 +66,6 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	
 	/**
 	 * 
-	 * @param lm
 	 */
 	public NGramLanguageModelFeaturizer(LanguageModel<TK> lm, boolean lmLabeled) {
 		this.lm = lm;
@@ -155,9 +154,6 @@ public NGramLanguageModelFeaturizer(String... args) throws IOException {
 	
 	/**
 	 * 
-	 * @param startPos
-	 * @param limit
-	 * @param translation
 	 */
 	private double getScore(int startPos, int limit, Sequence<TK> translation) {
 		double lmSumScore = 0;
@@ -201,9 +197,6 @@ public NGramLanguageModelFeaturizer(String... args) throws IOException {
 	
 	/**
 	 * 
-	 * @param startPos
-	 * @param limit
-	 * @param translation
 	 */
 	private List<FeatureValue<String>> getFeatureList(int startPos, int limit, Sequence<TK> translation) {
 		int maxOrder = lmOrder;

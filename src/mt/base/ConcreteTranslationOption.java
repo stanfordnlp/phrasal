@@ -39,11 +39,6 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
   /**
 	 *
 	 * @param <FV>
-	 * @param abstractOption
-	 * @param foreignCoverage
-	 * @param phraseFeaturizer
-	 * @param scorer
-	 * @param phraseTableName
 	 */
 	public <FV> ConcreteTranslationOption(TranslationOption<T> abstractOption, CoverageSet foreignCoverage,
 			IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, String phraseTableName, int translationId) {
@@ -59,11 +54,6 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
   /**
 	 * 
 	 * @param <FV>
-	 * @param abstractOption
-	 * @param foreignCoverage
-	 * @param phraseFeaturizer
-	 * @param scorer
-	 * @param phraseTableName
 	 */
 	public <FV> ConcreteTranslationOption(TranslationOption<T> abstractOption, CoverageSet foreignCoverage, 
 			IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer, Sequence<T> foreignSequence, String phraseTableName, int translationId, boolean hasTargetGap) {

@@ -83,7 +83,6 @@ public class ScoreDistribution {
 
 
   /**
-   * @param args
    */
   public static void main(String[] args) {
     ScoreDistribution dist = new ScoreDistribution(300);

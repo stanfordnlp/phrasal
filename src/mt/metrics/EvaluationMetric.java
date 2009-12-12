@@ -18,7 +18,6 @@ public interface EvaluationMetric<TK,FV>  {
 	
 	/**
 	 * 
-	 * @param sequences
 	 */
 	double score(List<ScoredFeaturizedTranslation<TK,FV>> sequences);
 	
@@ -29,7 +28,6 @@ public interface EvaluationMetric<TK,FV>  {
 
 	/**
 	 * 
-	 * @param nbestList
 	 */
 	public IncrementalEvaluationMetric<TK,FV> getIncrementalMetric(NBestListContainer<TK, FV> nbestList);
 		

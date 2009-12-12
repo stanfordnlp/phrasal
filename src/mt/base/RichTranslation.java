@@ -22,12 +22,6 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 
   /**
 	 *
-	 * @param foreign
-	 * @param translation
-	 * @param score
-	 * @param t2fAlignmentIndex
-	 * @param f2tAlignmentIndex
-	 * @param features
 	 */
 	public RichTranslation(Sequence<TK> foreign, Sequence<TK> translation, CoverageSet foreignCoverage, double score, int[][] t2fAlignmentIndex, int[][] f2tAlignmentIndex, List<FeatureValue<FV>> features) {
 		super(translation, features, score);
@@ -40,9 +34,6 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 
 	/**
 	 *
-	 * @param f
-	 * @param score
-	 * @param features
 	 */
 	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score);
@@ -62,10 +53,6 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 
 	/**
 	 *
-	 * @param f
-	 * @param score
-	 * @param features
-	 * @param latticeSourceId
 	 */
 	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features, long latticeSourceId) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score, latticeSourceId);

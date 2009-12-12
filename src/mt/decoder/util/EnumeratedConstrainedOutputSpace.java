@@ -40,7 +40,6 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements ConstrainedOutp
 	
 	/**
 	 * 
-	 * @param allowableSequences
 	 */
 	public EnumeratedConstrainedOutputSpace(Collection<Sequence<TK>> allowableSequences, int longestPhrase) {
 		this.allowableSequences = new ArrayList<Sequence<TK>>(allowableSequences);

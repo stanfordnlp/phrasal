@@ -104,8 +104,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	/**
 	 * 
-	 * @param index
-	 * @param candidateLength
 	 */
 	private double averageReferenceLength(int index, int candidateLength) {
 		double sum = 0.0;
@@ -198,7 +196,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 		/**
 		 * 
-		 * @param m
 		 */
 		private NISTIncrementalMetric(NISTIncrementalMetric m) {
 			this.futureMatchCounts = m.futureMatchCounts;

@@ -126,8 +126,6 @@ public class MosesLexicalReorderingTable {
 	
 	/**
 	 * 
-	 * @param foreign
-	 * @param translation
 	 */
 	public double[] getReorderingScores(Sequence<IString> foreign, Sequence<IString> translation) {
 		int[] indexInts = null;
@@ -151,7 +149,6 @@ public class MosesLexicalReorderingTable {
 	
 	/**
 	 * 
-	 * @param filename
 	 * @throws IOException
 	 */
 	public MosesLexicalReorderingTable(String filename) throws IOException {

@@ -219,20 +219,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
   /**
 	 * 
-	 * @param foreign
-	 * @param recombinationHistory
-	 * @param constrainedOutputSpace
-	 * @param nbest
 	 */
   abstract protected Beam<Hypothesis<TK,FV>> decode(Scorer<FV> scorer, Sequence<TK> foreign, int translationId, RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory,
                                                     ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int nbest);
 
   /**
    *
-   * @param beamCnt
-   * @param capacity
-   * @param filter
-   * @param recombinationHistory
    */
   @SuppressWarnings("unchecked")
   protected Beam<Hypothesis<TK,FV>>[] createBeamsForCoverageCounts(int beamCnt, int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter,
@@ -246,9 +238,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
   /**
    *
-   * @param beamCnt
-   * @param capacity
-   * @param filter
    */
   @SuppressWarnings("unchecked")
   protected Beam<Hypothesis<TK,FV>>[] createBeamsForCoverageCounts(int beamCnt, int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter) {

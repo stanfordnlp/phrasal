@@ -33,7 +33,6 @@ public class IBMModel1TargetGivenSource implements IncrementalFeaturizer<IString
 	
 	/**
 	 * 
-	 * @param filenameTargetSourceModel
 	 * @throws IOException
 	 */
 	public IBMModel1TargetGivenSource(String... args) throws IOException {

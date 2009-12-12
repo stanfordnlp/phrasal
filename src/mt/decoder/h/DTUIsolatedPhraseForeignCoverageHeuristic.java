@@ -39,8 +39,6 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
 	
 	/**
 	 * 
-	 * @param phraseFeaturizer
-	 * @param scorer
 	 */
 	public DTUIsolatedPhraseForeignCoverageHeuristic(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
 		this.phraseFeaturizer = phraseFeaturizer;

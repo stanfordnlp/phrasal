@@ -150,8 +150,6 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
 
   /**
    * Stolen from DanC
-   * @param index
-   * @param newLength
    */
   private int[][] copy(final int[][] index) {
     int[][] newIndex = new int[index.length][];
@@ -162,9 +160,6 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
   /**
    * Current target variable is relative movement.
    * 
-   * @param tIdx
-   * @param tMaxIdx
-   * @param sIdx
    */
   private float getTargetVariable(int tIdx, int tMaxIdx, int sIdx) {
     float tRelPosition = ((float) tIdx / (float) tMaxIdx) * 100.0f;
@@ -234,9 +229,6 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString, Str
   /**
    * Do linear interpolation between the two boundary classes
    * 
-   * @param tIdx
-   * @param tLenEstimate
-   * @param sIdx
    */
   private double getLogProb(final int tIdx, final int tLenEstimate, final int sIdx) {
     final float relMovement = getTargetVariable(tIdx, tLenEstimate, sIdx);
