@@ -151,10 +151,9 @@ public class DistortionFeaturizer extends StatefulFeaturizer<IString, String> im
   @Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 		List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(3);
-//    boolean debug = (DEBUG && random.nextInt(1000) == 0);
-		boolean debug = false;
-//    list.add(internalFeaturize(L_FEATURE_NAME, f, debug, linearDistortionCurrentCost, linearDistortionFutureCost));
-    list.add(internalFeaturize(P_FEATURE_NAME, f, debug, polynomialDistortionCurrentCost, polynomialDistortionFutureCost));
+    boolean debug = (DEBUG && random.nextInt(1000) == 0);
+    list.add(internalFeaturize(L_FEATURE_NAME, f, debug, linearDistortionCurrentCost, linearDistortionFutureCost));
+//    list.add(internalFeaturize(P_FEATURE_NAME, f, debug, polynomialDistortionCurrentCost, polynomialDistortionFutureCost));
 //    list.add(internalFeaturize(S_FEATURE_NAME, f, debug, stepDistortionCurrentCost, stepDistortionFutureCost));
     return list;
   }

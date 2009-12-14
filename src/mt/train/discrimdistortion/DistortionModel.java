@@ -14,9 +14,6 @@ public class DistortionModel implements Serializable {
 	public static enum FeatureType { Binary, Real };
 
 	public static enum Class { C1, C2, C3, C4, C5, C6, C7, C8, C9}
-	public static final Class FIRST_CLASS = Class.C1;
-	public static final Class LAST_CLASS = Class.C9;
-	public static final Class MONOTONE = Class.C5;
 
 	public Index<DistortionModel.Feature> featureIndex = null;
 	public Index<DistortionModel.Class> classIndex = null;
@@ -40,26 +37,27 @@ public class DistortionModel implements Serializable {
 	public static final int NUM_SLEN_BINS = 4;
 	public static final int NUM_SLOC_BINS = 5;
 	
-	/**
+	
+	public int getFeatureDimension() { return (featureIndex == null) ? 0 : featureIndex.size(); }
+  
+  /**
 	 * Returns the logprob from the model for this datum and class
 	 */
-	public double logProb(Datum datum, DistortionModel.Class thisC, boolean isOOV) {
+	public double logProb(Datum datum, DistortionModel.Class thisC) {
 		double[] logScores = new double[DistortionModel.Class.values().length];
 		for(DistortionModel.Class c : DistortionModel.Class.values())
-			logScores[c.ordinal()] = modelScore(datum, c, isOOV);
+			logScores[c.ordinal()] = modelScore(datum, c);
 		
 		double denom = ArrayMath.logSum(logScores);
 		
-		double scoreFromModel = modelScore(datum, thisC, isOOV);
-
-		return scoreFromModel - denom; //Division in real space
+		return logScores[thisC.ordinal()] - denom; //Division in real space
 	}
 	
-	public Pair<Double,DistortionModel.Class> argmax(Datum datum, boolean isOOV) {
+	public Pair<Double,DistortionModel.Class> argmax(Datum datum) {
 		DistortionModel.Class maxClass = null;
 		double maxScore = -1.0;
 		for(DistortionModel.Class c : DistortionModel.Class.values()) {
-			double modelScore = modelScore(datum, c, isOOV);
+			double modelScore = modelScore(datum, c);
 			if(modelScore > maxScore) {
 				maxScore = modelScore;
 				maxClass = c;
@@ -69,17 +67,10 @@ public class DistortionModel implements Serializable {
 		return new Pair<Double,DistortionModel.Class>(maxScore, maxClass);
 	}
 	
-	public double modelScore(Datum datum, DistortionModel.Class c, boolean isOOV) {
-	  if(featureIndex.contains(Feature.Word)) {
-	    return (isOOV) ? Math.exp(modelScore(datum, c, 1)) : Math.exp(modelScore(datum, c, 0));
-	  }  else {
-	    return Math.exp(modelScore(datum, c, 0));
-	  }
-	}
-	
-	private double modelScore(Datum datum, DistortionModel.Class c, int startPos) {
+	private double modelScore(Datum datum, DistortionModel.Class c) {
 		double score = 0.0;
-		for (int i = startPos; i < datum.numFeatures(); i++) {
+		for (int i = 0; i < datum.numFeatures(); i++) {
+		  if(datum.get(i) < 0.0) continue; //Unseen strings
 			DistortionModel.Feature feat = featureIndex.get(i);
 			DistortionModel.FeatureType type = featureTypes.get(feat);
 			
@@ -104,12 +95,7 @@ public class DistortionModel implements Serializable {
 	}
 	
 	
-	public int getFeatureDimension() { return (featureIndex == null) ? 0 : featureIndex.size(); }
-	
-	
 	public static Class discretizeDistortion(int relMovement) {
-	
-		//10 class implementation (28 Oct 2009)
 	  if(relMovement <= -7)
 	    return Class.C1;
 	  else if(relMovement <= -4)
@@ -126,7 +112,6 @@ public class DistortionModel implements Serializable {
 	    return Class.C7;
 	  else if(relMovement <= 6)
 	    return Class.C8;
-	  
 	  return Class.C9;
 	}
 	

@@ -59,14 +59,12 @@ public class ModelTester {
 		  evalLogLik(m,evalFile);
 	}
 	
-  private static String prettyPrint(DistortionModel model, Datum d, boolean isOOV, String word) {
+  private static String prettyPrint(DistortionModel model, Datum d, String word) {
     int featPtr = 0;
     StringBuilder sb = new StringBuilder();
     sb.append("[");
     for(DistortionModel.Feature feat : model.featureIndex) {
-      if(feat == DistortionModel.Feature.Word && isOOV)
-        sb.append(String.format(" " + word));
-      else if(feat == DistortionModel.Feature.Word)
+      if(feat == DistortionModel.Feature.Word && model.wordIndex.contains((int) d.get(featPtr)))
         sb.append(String.format(" %s",model.wordIndex.get((int) d.get(featPtr))));
       else if(feat == DistortionModel.Feature.CurrentTag)
         sb.append(String.format(" %s",model.tagIndex.get((int) d.get(featPtr))));
@@ -77,8 +75,6 @@ public class ModelTester {
       else if(feat == DistortionModel.Feature.LeftTag)
         sb.append(String.format(" %s",model.tagIndex.get((int) d.get(featPtr))));
       else if(feat == DistortionModel.Feature.RightTag)
-        sb.append(String.format(" %s",model.tagIndex.get((int) d.get(featPtr))));
-      else if(feat == DistortionModel.Feature.ArcTag)
         sb.append(String.format(" %s",model.tagIndex.get((int) d.get(featPtr))));
       featPtr++;
     }
@@ -115,7 +111,6 @@ public class ModelTester {
 	  TrainingSet ts = fe.extract(m.featureIndex, m.classIndex, 14000);
 	  
 	  for(Datum d : ts) {
-	    boolean isOOV = false;
 	    if(m.featureIndex.contains(DistortionModel.Feature.Word)) {
 	      int wordIdx = m.featureIndex.indexOf(DistortionModel.Feature.Word);
 	      
@@ -126,24 +121,22 @@ public class ModelTester {
 	             continue; //Don't score these
 	           }
 	      }
-	      
-	      isOOV = (thisWordKey == -1);
 	    }
 	    
 	    //What the model predicts
-	    Pair<Double, DistortionModel.Class> predClassPair = m.argmax(d, isOOV);
+	    Pair<Double, DistortionModel.Class> predClassPair = m.argmax(d);
       DistortionModel.Class predClass = predClassPair.second();
-	    double predProb = m.logProb(d, predClass, isOOV);	    	    
+	    double predProb = m.logProb(d, predClass);	    	    
 	    
       //What it will return for MT at test time
       DistortionModel.Class goldClass = DistortionModel.discretizeDistortion((int) d.getTarget());
-	    double goldProb = m.logProb(d, goldClass, isOOV);
+	    double goldProb = m.logProb(d, goldClass);
 	    
 	    predLogLik += predProb;
       logLik += goldProb;
 
-      String debugDatum = prettyPrint(m,d,isOOV,"");
-      System.err.printf("%s %f (pred: %s %f) ||| %s ||| isOOV: %b\n", goldClass, goldProb, predClass, predProb, debugDatum, isOOV);
+      String debugDatum = prettyPrint(m,d,"");
+      System.err.printf("%s %f (pred: %s %f) ||| %s\n", goldClass, goldProb, predClass, predProb, debugDatum);
 	  }
 	  
 	  System.out.println("===============================");
@@ -178,17 +171,10 @@ public class ModelTester {
 					featIdx++;
 				}
 
-				//Assumes these words and tags are in the model...exception otherwise
-        boolean isOOV = false;
-        if(model.featureIndex.contains(DistortionModel.Feature.Word)) {
-          isOOV = !model.wordIndex.contains(word);
-          if(isOOV)
-            System.out.println(word + " is OOV");
-        }
 				float[] feats = new float[model.getFeatureDimension()];
 				int featPtr = 0;
 	      for(DistortionModel.Feature feat : model.featureIndex) {
-	        if(feat == DistortionModel.Feature.Word && !isOOV)
+	        if(feat == DistortionModel.Feature.Word)
 	          feats[featPtr++] = (float) model.wordIndex.indexOf(word);
 	        else if(feat == DistortionModel.Feature.CurrentTag)
 	          feats[featPtr++] = (float) model.tagIndex.indexOf(tag);
@@ -211,9 +197,9 @@ public class ModelTester {
 					double totalMass = 0.0;
 					ps.println(feats[3]);
 					for(DistortionModel.Class c : DistortionModel.Class.values()) {
-						double prob = model.logProb(d, c, isOOV);
-						totalMass += Math.exp(prob);
-						ps.printf("%d %f\n", c.ordinal(), prob);
+						double logProb = model.logProb(d, c);
+						totalMass += Math.exp(logProb);
+						ps.printf("%d %f\n", c.ordinal(), logProb);
 					}
 					System.out.printf("pos: %f mass: %f\n", feats[3], totalMass);
 				}
