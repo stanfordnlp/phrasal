@@ -10,7 +10,6 @@ import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.OWLQNMinimizer;
-import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 
