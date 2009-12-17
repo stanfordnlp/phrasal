@@ -119,8 +119,9 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 		List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
 
     boolean locallyMonotone = f.linearDistortion == 0;
-    // TODO: avoid use of f.foreignPhrase.size(), since can't be right with source gaps:
-    boolean locallySwapping = (f.prior == null ? false : f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
+    // old buggy code (as used in NAACL experiments...):
+    boolean locallySwapping = (f.prior == null ? false : f.hyp.foreignCoverage.length() == f.prior.foreignPosition);
+    //boolean locallySwapping = (f.prior == null ? false : f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
     boolean discont2 = (f.prior == null ? false : fEnd(f) <= fStart(f.prior));
 
     double[] scores = mlrt.getReorderingScores(f.foreignPhrase, f.translatedPhrase);
@@ -423,6 +424,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
   }
 
   private static int fStart(Featurizable<IString, String> f) { return f.foreignPosition; }
-  // TODO: don't use foreignPhrase.size(), since results is incorrect with gappy phrases:
-  private static int fEnd(Featurizable<IString, String> f) { return f.foreignPosition+f.foreignPhrase.size()-1; }
+  private static int fEnd(Featurizable<IString, String> f) { return f.hyp.foreignCoverage.length()-1; }
+  // old buggy code (as used in NAACL experiments...):
+  //private static int fEnd(Featurizable<IString, String> f) { return f.foreignPosition+f.foreignPhrase.size()-1; }
 }

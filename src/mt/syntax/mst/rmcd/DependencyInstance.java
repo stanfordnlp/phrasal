@@ -368,7 +368,14 @@ public class DependencyInstance implements Cloneable, Serializable {
   public void setHeadScore(int i, float s) { headScores.set(i, s); }
 
   public String getFeat(int i, int j) { return deps.get(i).feats[j]; }
-  public String[] getFeats(int i) { return deps.get(i).feats; }
+  public String[] getFeats(int i) {
+    if(i >= deps.size()) {
+      System.err.printf("error in: %s\n",this);
+      System.err.printf("index out of bounds: %d\n",i);
+      System.err.printf("index out of bounds: %d\n",deps.size());
+    }
+    return deps.get(i).feats;
+  }
 
   public String[] getPairwiseFeats(int i, int j) {
     String[][] pfeats = deps.get(i).pfeats;

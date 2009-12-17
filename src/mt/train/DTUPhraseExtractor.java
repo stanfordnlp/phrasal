@@ -57,6 +57,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   public Object clone() throws CloneNotSupportedException {
     DTUPhraseExtractor c = (DTUPhraseExtractor) super.clone();
     c.substringExtractor = (LinearTimePhraseExtractor) substringExtractor.clone();
+    c.substringExtractor.alGrid = c.alGrid;
     c.queue = new LinkedList<DTUPhrase>();
     c.seen = new HashSet<DTUPhrase>(QUEUE_SZ);
     c.dp = new Levenshtein<IString>();
@@ -69,6 +70,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     if(prop.containsKey(CombinedFeatureExtractor.FILTER_CORPUS_OPT))
       fFilter = IOTools.slurpIStringSequences(prop.getProperty(CombinedFeatureExtractor.FILTER_CORPUS_OPT));
     substringExtractor = new LinearTimePhraseExtractor(prop, alTemps, extractors);
+    substringExtractor.alGrid = alGrid;
     System.err.println("Using DTU phrase extractor.");
   }
 
@@ -729,6 +731,14 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       System.err.println("a: "+sent.toString());
     }
 
+    int fsize = sent.f().size();
+    int esize = sent.e().size();
+    if(needAlGrid) {
+      alGrid.init(esize,fsize);
+      if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
+        alGrid.printAlTempInGrid("line: "+sent.getId(),sent,null,System.err);
+    }
+    
     queue.clear();
     seen.clear();
 
@@ -778,5 +788,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     if (allSubsequences)
       subsequenceExtract(sent);
       //subsequenceExtractOld(sent);
+    if(needAlGrid)
+      extractPhrasesFromAlGrid(sent);
   }
 }

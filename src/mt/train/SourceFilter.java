@@ -79,7 +79,7 @@ public class SourceFilter {
     }
   }
 
-  private static void extractDTUPhrasesFromLine(AlignmentTemplates set, String fLine, int maxPhraseLenF, int maxSpanF) {
+  private static void extractDTUPhrasesFromLineOld(AlignmentTemplates set, String fLine, int maxPhraseLenF, int maxSpanF) {
     fLine = fLine.trim();
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
     for(int i=0; i<f.size(); ++i) {
@@ -98,8 +98,7 @@ public class SourceFilter {
             int mask = firstBit + (k<<1) + 1;
             BitSet bs = BitSetUtils.toBitSet(mask, i);
             if(bs.cardinality() <= maxPhraseLenF) {
-              Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f, bs, null);
-              //Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f, bs, null,2);
+              Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f, bs, null,2);
               if(fPhrase != null) {
                 if(SHOW_PHRASE_RESTRICTION)
                   System.err.printf("restrict to dtu (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
@@ -181,7 +180,7 @@ public class SourceFilter {
     }
   }
 
-  private static void extractDTUPhrasesFromLineNew(AlignmentTemplates set, String fLine, int maxPhraseLenF, int maxSpanF) {
+  private static void extractDTUPhrasesFromLine(AlignmentTemplates set, String fLine, int maxPhraseLenF, int maxSpanF) {
     fLine = fLine.trim();
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
     Deque<PartialBitSet> oq = new LinkedList<PartialBitSet>();

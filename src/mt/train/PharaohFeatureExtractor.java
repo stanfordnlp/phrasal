@@ -127,6 +127,10 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     int idx = alTemp.getKey();
     int idxF = alTemp.getFKey();
     int idxE = alTemp.getEKey();
+    if(idx >= feCounts.size() || idxF >= fCounts.size() || idxE >= eCounts.size()) {
+      System.err.println("can't get Pharaoh translation features for phrase: "+alTemp.toString(true));
+      return null;
+    }
     assert(idx >= 0 && idxF >= 0 && idxE >= 0);
     assert(idx < feCounts.size());
     // Compute phi features p(f|e) and p(e|f):

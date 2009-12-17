@@ -81,6 +81,8 @@ public class AlignmentGrid {
    * Add alignment template to the grid.
    */
   public void addAlTemp(AlignmentTemplateInstance alTemp, boolean isConsistent) {
+    //if(fsize == 0 && esize == 0)
+    //  return;
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
     if(isConsistent) {
       alGridCells[f1][e1].addTopLeft(alTemp);
@@ -96,6 +98,8 @@ public class AlignmentGrid {
    * since one doesn't need to allocate each alignment template.
    */
   public void addAlTemp(int f1, int f2, int e1, int e2) {
+    //if(fsize == 0 && esize == 0)
+    //  return;
     alGridCells[f1][e1].setTopLeft(true);
     alGridCells[f2][e1].setTopRight(true);
     alGridCells[f1][e2].setBottomLeft(true);
