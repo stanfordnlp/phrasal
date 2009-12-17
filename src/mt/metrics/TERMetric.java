@@ -28,7 +28,7 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   public final TERcalc calc = new TERcalc();
 
-  enum EditType { ins, del, sub, sft };
+  enum EditType { ins, del, sub, sft }
   boolean countEdits = false;
 
   public TERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {

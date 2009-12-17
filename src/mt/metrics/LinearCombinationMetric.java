@@ -3,7 +3,6 @@ package mt.metrics;
 import mt.base.*;
 import mt.decoder.recomb.RecombinationFilter;
 import mt.decoder.util.State;
-import mt.metrics.IncrementalEvaluationMetric;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,7 +22,9 @@ import java.util.Map;
  */
 public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
-  enum MetricType { full, bp, precision };
+  enum MetricType { full, bp, precision }
+
+  final boolean DEBUG = System.getProperty("debugLinearCombination") != null;
 
   final double[] weights;
   final AbstractMetric<TK,FV>[] metrics;
@@ -122,9 +123,11 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
     public double score() {
       double score = 0.0;
       for(int i=0; i<weights.length; ++i) {
-        score += weights[i]*score(i);
-        //score += weights[i]*iems.get(i).score();
+        double scorei = score(i);
+        score += weights[i] * scorei;
+        if(DEBUG) System.err.printf("w[%d]=%f\tscore[%d]=%f\n", i, weights[i], i, scorei);
       }
+      if(DEBUG) System.err.printf("score=%f\n", score);
       return score;
     }
 
@@ -195,12 +198,12 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
       System.err.println("Usage:\n\tjava LinearCombinationMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, true);
 
     TERMetric<IString,String> ter = new TERMetric<IString,String>(referencesList);
     TERMetric<IString,String>.TERIncrementalMetric terIncMetric = ter.getIncrementalMetric();
 
-		BLEUMetric<IString,String> bleu = new BLEUMetric<IString,String>(referencesList);
+		BLEUMetric<IString,String> bleu = new BLEUMetric<IString,String>(referencesList,true);
 		BLEUMetric<IString,String>.BLEUIncrementalMetric bleuIncMetric = bleu.getIncrementalMetric();
 
 		LinearCombinationMetric<IString,String> lc = new LinearCombinationMetric<IString,String>(new double[] {1.0,1.0}, bleu, ter);

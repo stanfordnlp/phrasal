@@ -416,9 +416,11 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			}
 			Map<Sequence<TK>, Integer> canidateCounts = null;
 			if (smooth) {
-				smoothSum -= getLocalSmoothScore(sequences.get(index), index, nbestId);
-				smoothCnt--;	
-			} else {
+        if (sequences.get(index) != null) {
+          smoothSum -= getLocalSmoothScore(sequences.get(index), index, nbestId);
+          smoothCnt--;
+        }
+      } else {
 				canidateCounts = (trans == null ? new HashMap<Sequence<TK>,Integer> () : Metrics.getNGramCounts(trans.translation, order));
 				Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(index));
 				if (sequences.get(index) != null) {
