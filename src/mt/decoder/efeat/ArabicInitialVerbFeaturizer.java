@@ -6,14 +6,13 @@ import mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 
 import java.util.List;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-/** 
+/**
  * This featurizer attempts to detect Arabic verb-initial sentences.  The aim
  * is to penalize verb-initial sentences that are translated monotonically,
  * rather than with a word order swap.  The code strongly depends on using
@@ -108,10 +107,8 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
     try {
       System.err.printf("Loading tagger from serialized file %s ...\n", taggerFile);
       // mg2008: note this doesn't load the serialized config file!!
-      // tagger = new MaxentTagger(taggerFile);
-      tagger = new MaxentTagger();
-      TaggerConfig config = new TaggerConfig(new String[] {"-model",taggerFile});
-      MaxentTagger.init(config.getModel(),config);
+      // cdm 2009: now it does! honest.
+      tagger = new MaxentTagger(taggerFile);
     } catch (Exception e) {
       e.printStackTrace();
     }

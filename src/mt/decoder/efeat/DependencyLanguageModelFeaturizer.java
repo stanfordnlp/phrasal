@@ -3,7 +3,6 @@ package mt.decoder.efeat;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.tagger.maxent.GlobalHolder;
 
@@ -159,7 +158,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     if(bilingual && CACHE_PARTIAL) {
       throw new RuntimeException("Can't cache target side dependency structure when dependencies also depend on the source!!");
     } else if(!bilingual && !CACHE_PARTIAL) {
-      System.err.println("WARNING: depLM without caching is going to be inefficient!"); 
+      System.err.println("WARNING: depLM without caching is going to be inefficient!");
     }
 
     // Parsing options:
@@ -182,8 +181,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     depFeatures = getLocalFeatureNames();
 
     // Load tagger:
-    TaggerConfig config = new TaggerConfig(new String[] {"-model",taggerFile});
-    MaxentTagger.init(config.getModel(),config);
+    MaxentTagger tagger = new MaxentTagger(taggerFile);
 
     // Load McDonald MST model:
     options.modelName = dparserFile;
@@ -280,7 +278,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     float[] localScores = sd.localScores;
 
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>(1+depFeatures.length);
-    
+
     if(reranking && f.done) {
 
       DependencyScores sd_done = (DependencyScores) f.getState(this);
@@ -384,7 +382,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
         dep.setSourceInstance(instance);
       }
     }
-    
+
     // Dep starts with root token, so its length is up by one:
     assert(loc == dep.length()-1);
 
@@ -487,7 +485,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
   /**
    * Print dependency structure of 1-best hypothesis.
-   * 
+   *
    */
   @Override
   public void debugBest(Featurizable<IString, String> f) {
@@ -562,7 +560,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
   @Override
   public void reset() {
-    if(tagger == null) tagger = new PrefixTagger(GlobalHolder.getLambdaSolve(),3,0); // TODO: 3,1
+    if (tagger == null) tagger = new PrefixTagger(GlobalHolder.getLambdaSolve(),3,0); // TODO: 3,1
     tagger.release();
     pipe.clearCache();
     System.err.printf("Emptying %d keys of partial parse cache.\n", partialParseCache.size());

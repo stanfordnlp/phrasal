@@ -13,7 +13,6 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
 
-import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import mt.syntax.mst.rmcd.ParserOptions;
 import mt.syntax.mst.rmcd.DependencyPipe;
@@ -26,7 +25,7 @@ import edu.stanford.nlp.util.MutableInteger;
 public class MSTNbestScorer {
 
   private static final Map<String,Double> cache = new HashMap<String,Double>();
-  
+
   private final MutableInteger curSent, lastSent, doneThreads;
 
   public MSTNbestScorer() {
@@ -36,7 +35,7 @@ public class MSTNbestScorer {
   }
 
   public void score(final String taggerFile, final String dparserFile, String extension, String[] args) throws IOException {
-    
+
     for(int i=3; i<args.length; ++i) {
       String nbestListFile = args[i];
       System.err.println("Loading nbest list: "+nbestListFile);
@@ -49,7 +48,7 @@ public class MSTNbestScorer {
       DependencyParser dp = init(taggerFile, dparserFile);
       for(int j=0; j<=lastSent.intValue(); ++j)
         addMSTFeatures(dp, nbestList, j);
-      
+
       String outFile = nbestListFile.replaceAll(".gz$","."+extension+".gz");
       if(outFile.equals(nbestListFile))
         throw new RuntimeException("Wrong file format: "+nbestListFile);
@@ -65,8 +64,7 @@ public class MSTNbestScorer {
     try {
       // Load tagger:
       System.err.println("Loading tagger...");
-      TaggerConfig config = new TaggerConfig(new String[] {"-model",taggerFile});
-      MaxentTagger.init(config.getModel(),config);
+      MaxentTagger tagger = new MaxentTagger(taggerFile);
 
       // Load McDonald MST model:
       String[] opts = new String[] {
@@ -86,7 +84,7 @@ public class MSTNbestScorer {
       writer.setStdErrWriter();
       return dp;
     } catch(Exception e) {
-      e.printStackTrace(); 
+      e.printStackTrace();
     }
     return null;
   }

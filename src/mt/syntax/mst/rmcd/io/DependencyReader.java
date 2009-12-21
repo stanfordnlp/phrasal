@@ -5,17 +5,15 @@
 //
 // This software is licensed under the terms of the Common Public
 // License, Version 1.0 or (at your option) any subsequent version.
-// 
+//
 // The license is approved by the Open Source Initiative, and is
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
 package mt.syntax.mst.rmcd.io;
 
-import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 import edu.stanford.nlp.tagger.maxent.TestSentence;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-import edu.stanford.nlp.tagger.maxent.GlobalHolder;
 
 import java.io.*;
 
@@ -30,6 +28,7 @@ import mt.syntax.mst.rmcd.*;
  * </p>
  *
  * @author Jason Baldridge
+ * @author Michel Galley (substantially modified)
  * @version $Id: DependencyReader.java 112 2007-03-23 19:19:28Z jasonbaldridge $
  */
 public abstract class DependencyReader {
@@ -52,6 +51,7 @@ public abstract class DependencyReader {
   protected boolean labeled = true;
   protected boolean trim = false;
 
+
   public DependencyReader(DependencyPipe pipe, ParserOptions opts, boolean pretag) throws Exception {
     this.pretag = pretag;
     this.pipe = pipe;
@@ -61,9 +61,8 @@ public abstract class DependencyReader {
 
     if(pretag) {
       System.err.println("Loading model: "+serializedTaggerFile);
-      TaggerConfig config = new TaggerConfig(new String[] {"-model", serializedTaggerFile});
-      MaxentTagger.init(config.getModel(),config);
-      ts = new TestSentence(GlobalHolder.getLambdaSolve());
+      MaxentTagger tagger = new MaxentTagger(serializedTaggerFile);
+      ts = tagger.getTestSentence();
     }
     System.err.println("Pre-tagging: "+pretag);
   }
@@ -113,8 +112,8 @@ public abstract class DependencyReader {
     System.err.println("Setting tagger: "+t);
     serializedTaggerFile = t;
   }
-  
-  protected String numberClassing(String s) {
+
+  protected static String numberClassing(String s) {
     //if (s.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[0-9,]+ *"))
     //  return "<num>";
     return s;
@@ -131,7 +130,7 @@ public abstract class DependencyReader {
   }
 
   public abstract DependencyInstance getNext() throws IOException;
-  
+
   public abstract DependencyInstance readNext(String line) throws IOException;
 
   protected abstract boolean fileContainsLabels(String filename) throws IOException;

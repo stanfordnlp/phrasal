@@ -6,7 +6,6 @@ import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.maxent.iis.LambdaSolve;
 import edu.stanford.nlp.tagger.maxent.TestSentence;
 import edu.stanford.nlp.tagger.maxent.GlobalHolder;
-import edu.stanford.nlp.tagger.maxent.TaggerConfig;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
 import java.util.Map;
@@ -22,13 +21,12 @@ import mt.base.IStrings;
  * Greedy prefix tagger. Its search is exact iff the tagging model is non-sequential
  * (i.e., does not condition on contextual class labels) and only looks at the current
  * word and a left context of <i>prefixSize</i> words to determine the best tag.
- * 
+ *
  * @author Michel Galley
  */
 public class PrefixTagger extends TestSentence {
 
-  // How many words of left context for POS tagging:
-  public static boolean CACHE_POS = System.getProperty("cachePOS") != null;
+  public static final boolean CACHE_POS = System.getProperty("cachePOS") != null;
 
   static {
     System.err.println("cache POS: "+CACHE_POS);
@@ -37,6 +35,7 @@ public class PrefixTagger extends TestSentence {
   private final Map<IStringArrayWrapper, Pair<IString,Float>> cache
     = new HashMap<IStringArrayWrapper,Pair<IString,Float>>();
   private final int offset;
+  // How many words of left context for POS tagging:
   private int leftWindow = 3;
   private int rightWindow = 1;
   private int len;
@@ -76,7 +75,7 @@ public class PrefixTagger extends TestSentence {
   }
 
   public Pair<IString,Float> getBestTag(IString[] s) {
-    return getBestTag(s, this.offset); 
+    return getBestTag(s, this.offset);
   }
 
   /**
@@ -183,8 +182,7 @@ public class PrefixTagger extends TestSentence {
     int leftWindow = Integer.parseInt(args[2]);
     int rightWindow = Integer.parseInt(args[3]);
 
-    TaggerConfig config = new TaggerConfig(new String[] {"-model", modelFile});
-    MaxentTagger.init(config.getModel(),config);
+    MaxentTagger tagger = new MaxentTagger(modelFile);
     PrefixTagger ts = new PrefixTagger(GlobalHolder.getLambdaSolve(), leftWindow, rightWindow);
     ts.tagFile(inputFile);
  }
