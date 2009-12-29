@@ -90,7 +90,16 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     	}
 			bestAl.numWords = totalWords/(double)refs.length;
 			terCache.put(key, bestAl);
-		}
+
+      // Member variables no longer needed; free some memory:
+      bestAl.hyp = null;
+      bestAl.ref = null;
+      bestAl.allshifts = null;
+      bestAl.aftershift = null;
+      bestAl.bestRef = null;
+      if (editCounts != null)
+        bestAl.alignment = null;
+    }
 
     if(editCounts != null) {
       bestAl.scoreDetails();
