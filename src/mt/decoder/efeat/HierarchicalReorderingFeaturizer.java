@@ -120,7 +120,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 
     boolean locallyMonotone = f.linearDistortion == 0;
     // old buggy code (as used in NAACL experiments...):
-    boolean locallySwapping = (f.prior == null ? false : f.hyp.foreignCoverage.length() == f.prior.foreignPosition);
+    boolean locallySwapping = (f.prior == null ? false : f.hyp.translationOpt.foreignCoverage.length() == f.prior.foreignPosition);
     //boolean locallySwapping = (f.prior == null ? false : f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
     boolean discont2 = (f.prior == null ? false : fEnd(f) <= fStart(f.prior));
 
