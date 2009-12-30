@@ -8,7 +8,10 @@ import mt.base.Sequence;
 import mt.base.SimpleSequence;
 import mt.base.IString;
 import mt.base.IStrings;
-import edu.stanford.nlp.util.BitSetUtils;
+import mt.base.TrieIntegerArrayIndex;
+import mt.base.Sequences;
+import mt.base.IntegerArrayIndex;
+import mt.base.DynamicIntegerArrayIndex;
 
 /**
  * Toolkit for extracting source-language n-grams that must be considered
@@ -20,8 +23,12 @@ import edu.stanford.nlp.util.BitSetUtils;
 public class SourceFilter {
 
   public static final String SHOW_PHRASE_RESTRICTION_PROPERTY = "ShowPhraseRestriction";
-  public static final boolean SHOW_PHRASE_RESTRICTION = 
-    Boolean.parseBoolean(System.getProperty(SHOW_PHRASE_RESTRICTION_PROPERTY, "false"));
+  public static final boolean SHOW_PHRASE_RESTRICTION =
+       Boolean.parseBoolean(System.getProperty(SHOW_PHRASE_RESTRICTION_PROPERTY, "false"));
+  
+  private final IntegerArrayIndex sourcePhraseTable = new DynamicIntegerArrayIndex();
+  private final TrieIntegerArrayIndex sourcePhraseTrie = new TrieIntegerArrayIndex(0); 
+  private int startId, endId;
 
   /**
    * Restrict feature extraction to source-language phrases that appear in 
@@ -29,11 +36,9 @@ public class SourceFilter {
    *
    */
   @SuppressWarnings("unchecked")
-  public static List<int[]> getPhrasesFromFilterCorpus(String fFilterCorpus, int maxPhraseLenF, int maxSpanF, boolean addBoundaryMarkers) {
-    AlignmentTemplates tmpSet = new AlignmentTemplates();
+  public void addPhrasesFromCorpus(String fFilterCorpus, int maxPhraseLenF, int maxSpanF, boolean addBoundaryMarkers) {
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     System.err.println("MaxSpanF: "+maxSpanF);
-    //filterFromDev = true;
     try {
       LineNumberReader fReader = IOTools.getReaderFromFile(fFilterCorpus);
       int lineNb = 0;
@@ -42,30 +47,24 @@ public class SourceFilter {
           assert(!addBoundaryMarkers);
           if(lineNb % 10 == 0)
             System.err.printf("line %d...\n", lineNb);
-          extractDTUPhrasesFromLine(tmpSet, fLine, maxPhraseLenF, maxSpanF);
+          extractDTUPhrasesFromLine(fLine, maxPhraseLenF, maxSpanF);
         }
-        extractPhrasesFromLine(tmpSet, fLine, maxPhraseLenF, addBoundaryMarkers);
+        extractPhrasesFromLine(fLine, maxPhraseLenF, addBoundaryMarkers);
         ++lineNb;
       }
       fReader.close();
     } catch(IOException e) {
       e.printStackTrace();
     }
-    System.err.printf("Filtering against %d phrases.\n", tmpSet.sizeF());
+    System.err.printf("Filtering against %d phrases.\n", sourcePhraseTable.size());
     System.gc(); System.gc(); System.gc();
     long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
     long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
     System.err.printf("totalmem = %dm, freemem = %dm\n", totalMemory, freeMemory);
-    List<int[]> phrases = new ArrayList<int[]>(tmpSet.sizeF());
-    for(int i=0; i<tmpSet.sizeF(); ++i)
-      phrases.add(tmpSet.getF(i));
-    Collections.shuffle(phrases);
-    return phrases;
   }
 
-  private static void extractPhrasesFromLine(AlignmentTemplates set, String fLine, int maxPhraseLenF, boolean addBoundaryMarkers) {
+  private void extractPhrasesFromLine(String fLine, int maxPhraseLenF, boolean addBoundaryMarkers) {
     fLine = fLine.trim();
-    //System.err.printf("line: %s\n", fLine);
     if(addBoundaryMarkers)
       fLine = new StringBuffer("<s> ").append(fLine).append(" </s>").toString();
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
@@ -74,22 +73,23 @@ public class SourceFilter {
         Sequence<IString> fPhrase = f.subsequence(i,j+1);
         if(SHOW_PHRASE_RESTRICTION)
           System.err.printf("restrict to phrase (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
-        set.addForeignPhraseToIndex(fPhrase);
+        sourcePhraseTable.indexOf(Sequences.toIntArray(fPhrase), true);
       }
     }
   }
 
-  private static void extractDTUPhrasesFromLineOld(AlignmentTemplates set, String fLine, int maxPhraseLenF, int maxSpanF) {
+  /*
+  private void extractDTUPhrasesFromLineOld(String fLine, int maxPhraseLenF, int maxSpanF) {
     fLine = fLine.trim();
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
     for(int i=0; i<f.size(); ++i) {
       for(int j=i; j<f.size() && j-i<maxSpanF; ++j) {
-        // TODO: make this polynomial instead of exponential!! (e.g., use suffix arrays for phrase extraction)
+        // Exponential!!:
         if(j-i <= 1) {
           Sequence<IString> fPhrase = f.subsequence(i,j+1);
           if(SHOW_PHRASE_RESTRICTION)
             System.err.printf("restrict to phrase (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
-          set.addForeignPhraseToIndex(fPhrase);
+          fFilter.indexOf(Sequences.toIntArray(fPhrase), true);
         } else {
           int bits = (j-i)-1;
           int combinations = 1 << bits;
@@ -102,7 +102,7 @@ public class SourceFilter {
               if(fPhrase != null) {
                 if(SHOW_PHRASE_RESTRICTION)
                   System.err.printf("restrict to dtu (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
-                set.addForeignPhraseToIndex(fPhrase);
+                fFilter.indexOf(Sequences.toIntArray(fPhrase), true);
               }
             }
           }
@@ -110,6 +110,7 @@ public class SourceFilter {
       }
     }
   }
+  */
 
   static class PartialBitSet {
 
@@ -127,11 +128,7 @@ public class SourceFilter {
       if(!(o instanceof PartialBitSet))
         return false;
       PartialBitSet s = (PartialBitSet) o;
-      if(!bs.equals(s.bs))
-        return false;
-      if(xStartPos != s.xStartPos)
-        return false;
-      return true;
+      return bs.equals(s.bs) && (xStartPos == s.xStartPos);
     }
 
     PartialBitSet(int phraseStartPos) {
@@ -180,7 +177,7 @@ public class SourceFilter {
     }
   }
 
-  private static void extractDTUPhrasesFromLine(AlignmentTemplates set, String fLine, int maxPhraseLenF, int maxSpanF) {
+  private void extractDTUPhrasesFromLine(String fLine, int maxPhraseLenF, int maxSpanF) {
     fLine = fLine.trim();
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
     Deque<PartialBitSet> oq = new LinkedList<PartialBitSet>();
@@ -207,9 +204,9 @@ public class SourceFilter {
     for (PartialBitSet s : cq) {
       Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f, s.bs, null, -1);
       if(fPhrase != null) {
-        if(SHOW_PHRASE_RESTRICTION)
+        if (SHOW_PHRASE_RESTRICTION)
           System.err.printf("restrict to dtu (i=%d,j=%d,M=%d): %s\n",s.phraseStartPos,s.phraseEndPos,maxPhraseLenF,fPhrase.toString());
-        set.addForeignPhraseToIndex(fPhrase);
+        sourcePhraseTable.indexOf(Sequences.toIntArray(fPhrase), true);
       }
     }
   }
@@ -218,8 +215,7 @@ public class SourceFilter {
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    */
   @SuppressWarnings("unchecked")
-  public static List<int[]> getPhrasesFromList(String fileName) {
-    List<int[]> list = new ArrayList<int[]>();
+  public void addPhrasesFromList(String fileName) {
     System.err.println("Filtering against list: "+fileName);
     //filterFromDev = true;
     try {
@@ -228,12 +224,43 @@ public class SourceFilter {
         int[] f = IStrings.toIntArray(IStrings.toIStringArray(fLine.split("\\s+")));
         if(SHOW_PHRASE_RESTRICTION)
           System.err.printf("restrict to phrase: %s\n",f.toString());
-        list.add(f);
+        sourcePhraseTable.indexOf(f, true);
       }
       fReader.close();
     } catch(IOException e) {
       e.printStackTrace();
     }
-    return list;
+  }
+
+  public int size() {
+    return sourcePhraseTable.size(); 
+  }
+
+  public void setRange(int startId, int endId) {
+    this.startId = startId;
+    this.endId = endId;
+  }
+
+  public boolean allows(AlignmentTemplate alTemp) {
+    int fKey = sourcePhraseTable.indexOf(Sequences.toIntArray(alTemp.f()), false);
+    return fKey >= 0 && fKey >= startId && fKey < endId;
+  }
+
+  public void createSourceTrie() {
+    System.err.println("Updating trie index. Source table: "+sourcePhraseTable.size());
+    System.err.println("Updating trie index. Source trie: "+sourcePhraseTrie.size());
+    assert (sourcePhraseTrie.size() <= 1);
+    for (int i=0; i<sourcePhraseTable.size(); ++i) {
+      int[] el = sourcePhraseTable.get(i);
+      sourcePhraseTrie.indexOf(el, true);
+    }
+    System.err.println("Updating trie index: done.");
+  }
+
+  public TrieIntegerArrayIndex getSourceTrie() { return sourcePhraseTrie; }
+  public IntegerArrayIndex getSourceTable() { return sourcePhraseTable; }
+
+  public boolean isEnabled() {
+    return sourcePhraseTable.size() > 0;
   }
 }

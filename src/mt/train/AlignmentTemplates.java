@@ -6,10 +6,8 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import mt.base.DynamicIntegerArrayIndex;
-import mt.base.Sequence;
 import mt.base.Sequences;
-import mt.base.IString;
-import mt.base.TrieIntegerArrayIndex;
+import mt.base.IntegerArrayIndex;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 // Int2IntLinkedOpenHashMap is second choice
@@ -34,29 +32,35 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   public static final String FILL_HASH_PROPERTY = "FillHash";
   public static final boolean FILL_HASH = Boolean.parseBoolean(System.getProperty(FILL_HASH_PROPERTY, "true"));
 
-  private final DynamicIntegerArrayIndex
-     index = new DynamicIntegerArrayIndex(), 
-     aIndex = new DynamicIntegerArrayIndex(),
-     fIndex = new DynamicIntegerArrayIndex(),
-     eIndex = new DynamicIntegerArrayIndex();
+  private final SourceFilter sourceFilter;
 
-  private TrieIntegerArrayIndex fTrieIndex = new TrieIntegerArrayIndex(0);
+  private final IntegerArrayIndex fIndex,
+     index = new DynamicIntegerArrayIndex(),
+     aIndex = new DynamicIntegerArrayIndex(),
+     eIndex = new DynamicIntegerArrayIndex();
 
   private final ArrayList<Int2IntArrayMap> aCounter = new ArrayList<Int2IntArrayMap>();
 
   private boolean storeAlignmentCounts = false;
-  private boolean filterFromDev = false;
   private double maxFertility = Double.MAX_VALUE;
 
-  public AlignmentTemplates() {}
+  public AlignmentTemplates() {
+    sourceFilter = null;
+    fIndex = new DynamicIntegerArrayIndex();
+  }
 
   /**
    * Initialize alignment template table with a specified max fertility.
    */
-  public AlignmentTemplates(Properties prop, boolean filterFromDev) {
+  public AlignmentTemplates(Properties prop, SourceFilter sourceFilter) { // boolean filterFromDev) {
     this.maxFertility = Double.parseDouble
       (prop.getProperty(CombinedFeatureExtractor.MAX_FERTILITY_OPT,"1e30"));
-    this.filterFromDev = filterFromDev;
+    this.sourceFilter = sourceFilter;
+    fIndex = sourceFilter.getSourceTable();
+  }
+
+  public SourceFilter getSourceFilter() {
+    return this.sourceFilter;
   }
 
   public void enableAlignmentCounts(boolean storeAlignmentCounts) {
@@ -68,9 +72,8 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * Add alignment template to phrase table. 
    */
   public void addToIndex(AlignmentTemplate alTemp) {
-    if(filterFromDev) {
-      int fKey = indexOfF(alTemp,false);
-      boolean add = (fKey >= 0);
+    if(sourceFilter.isEnabled()) {
+      boolean add = sourceFilter.allows(alTemp);
       addToIndex(alTemp,add);
     } else {
       addToIndex(alTemp,true);
@@ -84,17 +87,6 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     int fKey = indexOfF(alTemp,false);
     boolean add = (fKey >= 0);
     addToIndex(alTemp,add);
-  }
-
-  /**
-   * Add source-language phrase to index.
-   */
-  public void addForeignPhraseToIndex(Sequence<IString> f) {
-    fIndex.indexOf(Sequences.toIntArray(f), true);
-  }
-
-  public void addForeignPhraseToIndex(int[] f) {
-    fIndex.indexOf(f, true);
   }
 
   /**
@@ -183,20 +175,6 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       alTemp.setEKey(idxE);
       alTemp.setAKey(indexOfA(alTemp,add));
     }
-  }
-
-  public void updateTrieIndex() {
-    System.err.println("Updating trie index: "+fIndex.size());
-    fTrieIndex = new TrieIntegerArrayIndex(0);
-    for (int i=0; i<fIndex.size(); ++i) {
-      fTrieIndex.indexOf(fIndex.get(i), true);
-      //System.err.println("adding: "+ Arrays.toString(IStrings.toStringArray(fIndex.get(i))));
-    }
-    System.err.println("Updating trie index: done.");
-  }
-
-  public TrieIntegerArrayIndex getTrieIndex() {
-    return fTrieIndex;
   }
 
   /**

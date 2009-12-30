@@ -11,6 +11,7 @@ import mt.train.AlignmentTemplateInstance;
 import mt.train.AlignmentTemplates;
 import mt.train.BshInterpreter;
 import mt.train.SymmetricalWordAlignment;
+import mt.train.SourceFilter;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
@@ -130,13 +131,15 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   private int passNumber = 0;
   private int totalPassNumber = 1;
 
+  private static SourceFilter sourceFilter = new SourceFilter();
+
   @SuppressWarnings("unchecked")
-    public ChineseSyntaxCombinedFeatureExtractor(Properties prop) {
+  public ChineseSyntaxCombinedFeatureExtractor(Properties prop) {
   	
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
       exsString = "mt.PharaohFeatureExtractor:mt.LexicalReorderingFeatureExtractor";
-    alTemps = new AlignmentTemplates(prop,filterFromDev);
+    alTemps = new AlignmentTemplates(prop, sourceFilter);
     extractors = new ArrayList<AbstractChineseSyntaxFeatureExtractor<String>>();
     infoFileForExtractors = new ArrayList<String>();
 
@@ -190,8 +193,9 @@ public class ChineseSyntaxCombinedFeatureExtractor {
    */
   @SuppressWarnings("unchecked")
   public static Sequence<IString>[] getPhrasesFromDevCorpus(String fFilterCorpus) {
+    sourceFilter.addPhrasesFromCorpus(fFilterCorpus, maxPhraseLenF, Integer.MAX_VALUE, false);
+    /*
     AlignmentTemplates tmpSet = new AlignmentTemplates();
-    
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     filterFromDev = true;  
     try {
@@ -218,6 +222,8 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     }
     Collections.shuffle(Arrays.asList(phrases));
     return phrases;
+    */
+    return null;
   }
 
   /**
@@ -251,15 +257,18 @@ public class ChineseSyntaxCombinedFeatureExtractor {
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    */
   public void restrictExtractionTo(Sequence<IString>[] list, int start, int end) {
+    sourceFilter.setRange(start, end);
     if(end < Integer.MAX_VALUE)
       System.err.printf("Filtering against phrases: %d-%d\n", start, end-1);
-    filterFromDev = true;  
+    /*
+    filterFromDev = true;
     for(int i=start; i<end && i<list.length; ++i) {
       Sequence<IString> f = list[i];
       if(SHOW_PHRASE_RESTRICTION)
         System.err.printf("restrict to: %s\n",f.toString());
       alTemps.addForeignPhraseToIndex(f);
     }
+    */
   }
 
   /**

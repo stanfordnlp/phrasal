@@ -78,8 +78,8 @@ public class CombinedFeatureExtractor {
      ));
     OPTIONAL_OPTS.addAll(Arrays.asList(
        FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT, 
-       SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, 
-       AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT, 
+       SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT,
+       AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT,
        AbstractPhraseExtractor.MAX_PHRASE_LEN_E_OPT, 
        AbstractPhraseExtractor.MAX_PHRASE_LEN_F_OPT, 
        AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_OPT, 
@@ -98,7 +98,7 @@ public class CombinedFeatureExtractor {
        DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_OPT, DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
        DTUPhraseExtractor.NO_TARGET_GAPS_OPT, DTUPhraseExtractor.SKIP_UNALIGNED_GAPS_OPT,
-       DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT, THREADS_OPT
+       DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT, DTUPhraseExtractor.ALL_SUBSEQUENCES_LOOSE_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -129,24 +129,16 @@ public class CombinedFeatureExtractor {
   boolean doneReadingData;
 
   private Properties prop;
+  private final SourceFilter sourceFilter = new SourceFilter();
   private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq, nThreads = 0;
   private String fCorpus, eCorpus, alignCorpus, phraseExtractorInfoFile, outputFile;
   private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
-  List<int[]> fPhrases;
 
   private int totalPassNumber = 1;
 
   public CombinedFeatureExtractor(Properties prop) throws IOException {
     processProperties(prop);
   }
-
-  /*
-  public Object clone() throws CloneNotSupportedException {
-    CombinedFeatureExtractor c = (CombinedFeatureExtractor) super.clone();
-    c.phraseExtractor = (AbstractPhraseExtractor) phraseExtractor.clone();
-    return c;
-  }
-  */
 
   public void processProperties(Properties prop) throws IOException {
 
@@ -197,16 +189,19 @@ public class CombinedFeatureExtractor {
     boolean emptyFilterList =
       Boolean.parseBoolean(prop.getProperty(EMPTY_FILTER_LIST_OPT,"false"));
     numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
-    fPhrases = null;
+    //fPhrases = null;
     if(emptyFilterList || fFilterList != null || fFilterCorpus != null)
       filterFromDev = true;
     if(fFilterList != null)
-      fPhrases = SourceFilter.getPhrasesFromList(fFilterList);
+      sourceFilter.addPhrasesFromList(fFilterList);
     else if(fFilterCorpus != null) {
-      fPhrases = SourceFilter.getPhrasesFromFilterCorpus
+      sourceFilter.addPhrasesFromCorpus
         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, DTUPhraseExtractor.maxSpanF, addBoundaryMarkers);
     }
-    
+    if(Boolean.parseBoolean(prop.getProperty(DTUPhraseExtractor.WITH_GAPS_OPT))) {
+      sourceFilter.createSourceTrie();
+    }
+
     // Other optional arguments:
     nThreads = Integer.parseInt(prop.getProperty(THREADS_OPT,"0"));
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));
@@ -228,7 +223,7 @@ public class CombinedFeatureExtractor {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
       exsString = "mt.train.PharaohFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor";
-    alTemps = new AlignmentTemplates(prop, filterFromDev);
+    alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
     extractors = new ArrayList<AbstractFeatureExtractor>();
     infoFileForExtractors = new ArrayList<String>();
@@ -280,6 +275,7 @@ public class CombinedFeatureExtractor {
     }
     int maxCrossings = Integer.parseInt(prop.getProperty(MAX_CROSSINGS_OPT,"-1"));
 
+    // HERE
     String phraseExtractorName = prop.getProperty(PHRASE_EXTRACTOR_OPT);
     if(phraseExtractorName != null) {
       String[] fields = phraseExtractorName.split("=");
@@ -308,33 +304,6 @@ public class CombinedFeatureExtractor {
       ((SoftPhraseExtractor)phraseExtractor).setMaxCrossings(maxCrossings);
 
     setTotalPassNumber();
-  }
-
-  /**
-   * Restrict feature extraction to a pre-defined list of source-language phrases.
-   * @param list Extract features only for this phrase list.
-   * @param start Start index into list.
-   * @param end End index into list.
-   */
-  public void restrictExtractionTo(List<int[]> list, int start, int end) {
-    assert(filterFromDev);
-
-    if(end < Integer.MAX_VALUE)
-      System.err.printf("Filtering against phrases: %d-%d\n", start, end-1);
-
-    for(int i=start; i<end && i<list.size(); ++i) {
-      int[] f = list.get(i);
-      alTemps.addForeignPhraseToIndex(f);
-    }
-  }
-
-  /**
-   * Restrict feature extraction to a pre-defined list of source-language phrases.
-   * @param list Extract features only for this phrase list.
-   */
-  public void restrictExtractionTo(List<int[]> list) {
-    assert(filterFromDev);  
-    restrictExtractionTo(list,0,Integer.MAX_VALUE);
   }
 
   private boolean doneReadingData() { return doneReadingData; }
@@ -572,7 +541,12 @@ public class CombinedFeatureExtractor {
           break;
         }
 
-        if(scores.getClass().isArray()) { // as dense vector
+        if(scores instanceof float[]) { // as dense vector
+          float[] scoreArray = (float[]) scores;
+          for (float aScoreArray : scoreArray) {
+            str.append(aScoreArray).append(" ");
+          }
+        } else if (scores instanceof double[]) {
           double[] scoreArray = (double[]) scores;
           for (double aScoreArray : scoreArray) {
             str.append((float) aScoreArray).append(" ");
@@ -617,23 +591,23 @@ public class CombinedFeatureExtractor {
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);
 
     if(filterFromDev) {
-      int size = 1 + (numSplits == 0 ? fPhrases.size() : fPhrases.size()/numSplits);
+      int sz = sourceFilter.size();
+      int size = 1 + (numSplits == 0 ? sz : sz/numSplits);
       int startLine = 0;
-      while(startLine < fPhrases.size()) {
+      while(startLine < sz) {
         init();
-        restrictExtractionTo(fPhrases, startLine, startLine+size);
-        if(useTrieIndex)
-          alTemps.updateTrieIndex();
+        sourceFilter.setRange(startLine, startLine+size);
+        //alTemps.setSourceFilter(sourceFilter);
         extractFromAlignedData();
         write(oStream, noAlign);
         startLine += size;
       }
     } else {
       init();
+      //alTemps.setSourceFilter(null);
       extractFromAlignedData();
       write(oStream, noAlign);
     }
-
 
     if(oStream != null)
       oStream.close();

@@ -19,7 +19,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
   ArrayList<Object> forwardCounts = null, backwardCounts = null, jointCounts = null;
-  double[] totalForwardCounts = null, totalBackwardCounts = null, totalJointCounts = null;
+  float[] totalForwardCounts = null, totalBackwardCounts = null, totalJointCounts = null;
 
   static int printCounter = 0;
 
@@ -38,7 +38,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   private boolean phrasalReordering = false;
 
   public static final String LAPLACE_PROPERTY = "LaplaceSmoothing";
-  private static double LAPLACE_SMOOTHING = Double.parseDouble(System.getProperty(LAPLACE_PROPERTY, "0.5"));
+  private static float LAPLACE_SMOOTHING = Float.parseFloat(System.getProperty(LAPLACE_PROPERTY, "0.5f"));
 
   @Override
 	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
@@ -111,16 +111,16 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     // Init count arrays:
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       forwardCounts = new ArrayList<Object>();
-      totalForwardCounts = new double[modelSize];
+      totalForwardCounts = new float[modelSize];
     }
     if(directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
       backwardCounts = new ArrayList<Object>();
-      totalBackwardCounts = new double[modelSize];
+      totalBackwardCounts = new float[modelSize];
     }
     if(directionType == DirectionTypes.joint) {
       modelSize *= modelSize;
       jointCounts = new ArrayList<Object>();
-      totalJointCounts = new double[modelSize];
+      totalJointCounts = new float[modelSize];
     }
   }
 
@@ -195,17 +195,17 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     else if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
     else if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     assert(idx >= 0);
-    double[] scores = new double[modelSize*numModels];
+    float[] scores = new float[modelSize*numModels];
     if(directionType == DirectionTypes.joint) {
-      fillProbDist((double[])jointCounts.get(idx), scores, 0);
+      fillProbDist((float[])jointCounts.get(idx), scores, 0);
     } else {
       int offset = 0;
       if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
-        fillProbDist((double[])forwardCounts.get(idx), scores, offset);
+        fillProbDist((float[])forwardCounts.get(idx), scores, offset);
         offset += modelSize;
       }
       if(directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
-        fillProbDist((double[])backwardCounts.get(idx), scores, offset);
+        fillProbDist((float[])backwardCounts.get(idx), scores, offset);
         offset += modelSize;
       }
     }
@@ -261,8 +261,8 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     }
   }
 
-  public void fillProbDist(double[] counts, double[] probs, int offset) {
-    double norm=0.0;
+  public void fillProbDist(float[] counts, float[] probs, int offset) {
+    float norm=0.0f;
     for(int i=0; i<modelSize; ++i)
       norm += counts[i];
     if(norm > 0)
@@ -271,7 +271,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   }
 
   private void addCountToArray
-      (ArrayList<Object> list, double[] totalCounts, int type, AlignmentTemplate alTemp) {
+      (ArrayList<Object> list, float[] totalCounts, int type, AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
     synchronized(totalCounts) {
       ++totalCounts[type];
@@ -283,14 +283,14 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
     if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
-    double[] counts; // = null;
+    float[] counts; // = null;
     synchronized(list) {
       while(idx >= list.size()) {
-        double[] arr = new double[modelSize];
+        float[] arr = new float[modelSize];
         Arrays.fill(arr, LAPLACE_SMOOTHING);
         list.add(arr);
       }
-      counts = (double[]) list.get(idx);
+      counts = (float[]) list.get(idx);
       ++counts[type];
     }
   }
@@ -298,7 +298,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   @Override
 	public void report() {
     System.err.println("LexicalReorderingFeatureExtractor: done.");
-    double[] prob = new double[totalForwardCounts.length];
+    float[] prob = new float[totalForwardCounts.length];
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       fillProbDist(totalForwardCounts, prob, 0);
       System.err.println("Distrbuction over labels (forward):");

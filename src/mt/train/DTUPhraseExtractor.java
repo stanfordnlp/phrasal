@@ -2,7 +2,6 @@ package mt.train;
 
 import mt.base.IString;
 import mt.base.Sequence;
-import mt.base.IOTools;
 import mt.base.TrieIntegerArrayIndex;
 import mt.tools.Levenshtein;
 
@@ -21,6 +20,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
   static public final String SKIP_UNALIGNED_GAPS_OPT  = "skipUnalignedGaps";
   static public final String ALL_SUBSEQUENCES_OPT  = "allSubsequences";
+  static public final String ALL_SUBSEQUENCES_LOOSE_OPT  = "allSubsequencesLoose";
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
@@ -31,7 +31,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps, allSubsequences;
+  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps, allSubsequences, allSubsequencesLoose;
   static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
@@ -42,8 +42,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   private static final boolean DEBUG = System.getProperty("DebugDTU") != null;
   private static final int QUEUE_SZ = 1024;
-
-  List<Sequence<IString>> fFilter;
 
   boolean printCrossSerialDTU = true;
 
@@ -67,8 +65,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) throws IOException {
     super(prop, alTemps, extractors);
-    if(prop.containsKey(CombinedFeatureExtractor.FILTER_CORPUS_OPT))
-      fFilter = IOTools.slurpIStringSequences(prop.getProperty(CombinedFeatureExtractor.FILTER_CORPUS_OPT));
     substringExtractor = new LinearTimePhraseExtractor(prop, alTemps, extractors);
     substringExtractor.alGrid = alGrid;
     System.err.println("Using DTU phrase extractor.");
@@ -91,6 +87,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // All subsequences:
     optStr = prop.getProperty(ALL_SUBSEQUENCES_OPT);
     allSubsequences = optStr != null && !optStr.equals("false");
+
+    optStr = prop.getProperty(ALL_SUBSEQUENCES_LOOSE_OPT);
+    allSubsequencesLoose = optStr != null && !optStr.equals("false");
+    assert(!allSubsequences || !allSubsequencesLoose);
 
     // Only extracting cross-serial dependencies (for debugging):
     optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
@@ -459,7 +459,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     @Override
     public String toString() {
-      if(!sane()) {
+      if (!sane()) {
         System.err.println("f: "+f);
         System.err.println("cf: "+consistencizedF);
         System.err.println("e: "+e);
@@ -496,7 +496,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     @Override
     public boolean equals(Object o) {
-      if(!(o instanceof DTUPhrase))
+      if (!(o instanceof DTUPhrase))
         return false;
       DTUPhrase dtu = (DTUPhrase) o;
       return f.equals(dtu.f) && e.equals(dtu.e);
@@ -510,13 +510,13 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       assert(sizeE() <= maxSizeE);
       boolean growF = sizeF() < maxSizeF;
       boolean growE = sizeE() < maxSizeE;
-      if(growF) {
+      if (growF) {
         assert(spanF() <= maxSpanF);
         boolean growOutside = spanF() < maxSpanF;
         for(int s : successorsIdx(growOutside, f, fsize))
           list.add(new DTUPhrase(this).expandF(s));
       }
-      if(growE) {
+      if (growE) {
         assert(spanE() <= maxSpanE);
         boolean growOutside = spanE() < maxSpanE;
         for(int s : successorsIdx(growOutside, e, esize))
@@ -527,10 +527,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     public Collection<DTUPhrase> successors() {
       List<DTUPhrase> list = new LinkedList<DTUPhrase>();
-      if(!noTargetGaps || isContiguous(e))
+      if (!noTargetGaps || isContiguous(e))
         addSuccessors(list);
       DTUPhrase ctu = toContiguous();
-      if(ctu != null)
+      if (ctu != null)
         list.add(ctu);
       return list;
     }
@@ -538,20 +538,20 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     public DTUPhrase toContiguous() {
       DTUPhrase p = new DTUPhrase(this);
       for(;;) {
-        if(p.sizeF() > maxSizeF) return null;
-        if(p.sizeE() > maxSizeE) return null;
+        if (p.sizeF() > maxSizeF) return null;
+        if (p.sizeE() > maxSizeE) return null;
         boolean cF = p.isContiguous(p.f);
         boolean cE = p.isContiguous(p.e);
         if(cF && cE)
           break;
-        if(!cF) {
+        if (!cF) {
           int f1 = p.getFirstF(), f2 = p.getLastF();
           p.f.set(f1, f2+1);
           for(int fi = f1+1; fi < f2; ++fi)
             if(!f.get(fi))
               p.consistencize(fi, true);
         }
-        if(!cE) {
+        if (!cE) {
           int e1 = p.getFirstE(), e2 = p.getLastE();
           p.e.set(e1, e2+1);
           for(int ei = e1+1; ei < e2; ++ei)
@@ -559,8 +559,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
               p.consistencize(ei, false);
         }
       }
-      if(p.sizeF() > maxSizeF) return null;
-      if(p.sizeE() > maxSizeE) return null;
+      if (p.sizeF() > maxSizeF) return null;
+      if (p.sizeE() > maxSizeE) return null;
       return p;
     }
 
@@ -575,17 +575,17 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         //System.err.println("e1: "+e);
         //System.err.println("e2: "+consistencizedE);
         boolean doneF=false, doneE=false;
-        if(f.equals(consistencizedF)) {
+        if (f.equals(consistencizedF)) {
           doneF = true;
         } else {
-          for(int fi : bitSetToIntSet(f))
-            if(!consistencizedF.get(fi))
-              if(!consistencize(fi,true))
+          for (int fi : bitSetToIntSet(f))
+            if (!consistencizedF.get(fi))
+              if (!consistencize(fi,true))
                 return false;
-          if(e.isEmpty())
+          if (e.isEmpty())
             return false;
         }
-        if(e.equals(consistencizedE)) {
+        if (e.equals(consistencizedE)) {
           doneE = true;
         } else {
           for(int ei : bitSetToIntSet(e))
@@ -603,25 +603,25 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     private Deque<Integer> successorsIdx(boolean growOutside, BitSet bitset, int size) {
       Deque<Integer> ints = new LinkedList<Integer>();
       int si = 0;
-      for(;;) {
+      for (;;) {
         si = bitset.nextSetBit(si);
-        if(si > 0) {
+        if (si > 0) {
           if(ints.isEmpty() || ints.getLast() < si-1) {
             ints.add(si-1);
           }
         }
-        if(si == -1) break;
+        if (si == -1) break;
         int ei = bitset.nextClearBit(++si);
-        if(ei < size) {
+        if (ei < size) {
           ints.add(ei);
         }
         si = ei;
       }
 
-      if(!growOutside) {
-        if(!ints.isEmpty() && ints.getFirst() < bitset.nextSetBit(0))
+      if (!growOutside) {
+        if (!ints.isEmpty() && ints.getFirst() < bitset.nextSetBit(0))
           ints.removeFirst();
-        if(!ints.isEmpty() && ints.getLast() > bitset.length()-1)
+        if (!ints.isEmpty() && ints.getLast() > bitset.length()-1)
           ints.removeLast();
         //System.err.printf("succ-idx: %s -> %s size=%d\n", bitset.toString(), ints.toString(), size);
       }
@@ -638,32 +638,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   Set<BitSet> bitsets = new HashSet<BitSet>();
 
   // Extract all subsequences:
-  void subsequenceExtractOld(WordAlignment sent) {
-    bitsets.clear();
-    for(Sequence<IString> testSeq : fFilter) {
-      dp.init(sent.f(), testSeq);
-      BitSet bitset = dp.longestCommonSubsequence();
-      Levenshtein.addSubsequences(bitset, bitsets, maxSpanF);
-    }
+  Set<BitSet> subsequenceExtract(WordAlignment sent) {
 
-    //System.err.println("sz(1): "+bitsets.size());
-    for(BitSet bitset : bitsets) {
-      DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
-      if(dtu.consistencize()) {
-        //System.err.println("sent: dtu: "+dtu);
-        if(!noTargetGaps || dtu.eContiguous()) {
-          if(!seen.contains(dtu)) {
-            extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
-            seen.add(dtu);
-          }
-        }
-      }
-    }
-  }
-
-  // Extract all subsequences:
-  void subsequenceExtract(WordAlignment sent) {
-    TrieIntegerArrayIndex index = alTemps.getTrieIndex();
+    TrieIntegerArrayIndex fTrieIndex = alTemps.getSourceFilter().getSourceTrie();
+    assert((fTrieIndex != null) == (allSubsequences || allSubsequencesLoose));
+    
     Deque<Triple<Integer,Integer,BitSet>> q = new LinkedList<Triple<Integer,Integer,BitSet>>();
     bitsets.clear();
     for (int i=0; i < sent.f().size(); ++i) {
@@ -671,31 +650,31 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       q.clear();
       int startState = TrieIntegerArrayIndex.IDX_ROOT;
       q.offerFirst(new Triple<Integer,Integer,BitSet>(i, startState, new BitSet()));
-      while(!q.isEmpty()) {
+      while (!q.isEmpty()) {
         Triple<Integer,Integer,BitSet> el = q.pollLast();
         int pos = el.first();
         int curState = el.second();
         BitSet bitset = el.third();
-        if(!bitset.isEmpty()) {
+        if (!bitset.isEmpty()) {
           bitsets.add(bitset);
           //System.err.printf("bs=%s %s\n",bitset,stringWithGaps(sent.f(),bitset));
         }
-        if(pos >= sent.f().size()) continue;
+        if (pos >= sent.f().size()) continue;
         // Try to match a terminal:
-        int nextState = index.getSuccessor(curState, sent.f().get(pos).id);
-        if(nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+        int nextState = fTrieIndex.getSuccessor(curState, sent.f().get(pos).id);
+        if (nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
           BitSet newBitset = (BitSet) bitset.clone();
           newBitset.set(pos);
           q.offerFirst(new Triple<Integer,Integer,BitSet>(pos+1,nextState,newBitset));
         }
         // Try to match non terminals:
-        int ntNextState = index.getSuccessor(curState, DTUPhraseExtractor.GAP_STR.id);
-        if(ntNextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+        int ntNextState = fTrieIndex.getSuccessor(curState, DTUPhraseExtractor.GAP_STR.id);
+        if (ntNextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
           int lastPos = i+maxSpanF;
-          for(int pos2=pos+1; pos2<=lastPos; ++pos2) {
-            if(pos2 >= sent.f().size()) break;
-            int next2State = index.getSuccessor(ntNextState, sent.f().get(pos2).id);
-            if(next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+          for (int pos2=pos+1; pos2<=lastPos; ++pos2) {
+            if (pos2 >= sent.f().size()) break;
+            int next2State = fTrieIndex.getSuccessor(ntNextState, sent.f().get(pos2).id);
+            if (next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
               BitSet newBitset = (BitSet) bitset.clone();
               newBitset.set(pos2);
               q.offerFirst(new Triple<Integer,Integer,BitSet>(pos2+1,next2State,newBitset));
@@ -704,20 +683,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         }
       }
     }
-
-    //System.err.println("sz(2): "+bitsets.size());
-    for(BitSet bitset : bitsets) {
-      DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
-      if(dtu.consistencize()) {
-        //System.err.println("sent: dtu: "+dtu);
-        if(!noTargetGaps || dtu.eContiguous()) {
-          if(!seen.contains(dtu)) {
-            extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
-            seen.add(dtu);
-          }
-        }
-      }
-    }
+    return bitsets;
   }
 
   @Override
@@ -725,7 +691,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     substringExtractor.extractPhrases(sent);
 
-    if(DEBUG) {
+    if (DEBUG) {
       System.err.println("f: "+sent.f());
       System.err.println("e: "+sent.e());
       System.err.println("a: "+sent.toString());
@@ -733,7 +699,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     int fsize = sent.f().size();
     int esize = sent.e().size();
-    if(needAlGrid) {
+    if (needAlGrid) {
       alGrid.init(esize,fsize);
       if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
         alGrid.printAlTempInGrid("line: "+sent.getId(),sent,null,System.err);
@@ -743,11 +709,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     seen.clear();
 
     // Add minimal phrases:
-    for(int ei=0; ei<sent.e().size(); ++ei) {
-      for(int fi : sent.e2f(ei)) {
+    for (int ei=0; ei<sent.e().size(); ++ei) {
+      for (int fi : sent.e2f(ei)) {
         DTUPhrase p = new DTUPhrase(sent, fi, ei);
-        if(p.consistencize(fi, true)) {
-          if(!seen.contains(p)) {
+        if (p.consistencize(fi, true)) {
+          if (!seen.contains(p)) {
             //if(DEBUG) System.err.println("dtu(m): "+p.toString());
             if(onlyCrossSerialDTU && p.getCrossSerialTypes().isEmpty()) 
               continue;
@@ -759,12 +725,29 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       }
     }
 
+    // Add all subsequence phrases:
+    if (allSubsequencesLoose) {
+      for (BitSet bitset : subsequenceExtract(sent)) {
+        DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
+        if (dtu.consistencize()) {
+          //System.err.println("sent: dtu: "+dtu);
+          if (!noTargetGaps || dtu.eContiguous()) {
+            if (!seen.contains(dtu)) {
+              queue.offerLast(dtu);
+              //extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+              seen.add(dtu);
+            }
+          }
+        }
+      }
+    }
+
     // Expand rules:
-    while(!queue.isEmpty()) {
+    while (!queue.isEmpty()) {
       DTUPhrase dtu = queue.pollFirst();
-      if(withGaps) {
-        if(!noTargetGaps || dtu.eContiguous()) {
-          if(!dtu.eContiguous() || !dtu.fContiguous()) {
+      if (withGaps) {
+        if (!noTargetGaps || dtu.eContiguous()) {
+          if (!dtu.eContiguous() || !dtu.fContiguous()) {
             // Only extract non-contiguous phrases:
             AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
             if(DEBUG && alTemp != null)
@@ -774,9 +757,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       } else {
         extractPhrase(sent, dtu.getFirstF(), dtu.getLastF(), dtu.getFirstE(), dtu.getLastE(), true, 1.0f);
       }
-      if(!onlyCrossSerialDTU) {
-        for(DTUPhrase sp : dtu.successors()) {
-          if(sp != null && !seen.contains(sp)) {
+      if (!onlyCrossSerialDTU) {
+        for (DTUPhrase sp : dtu.successors()) {
+          if (sp != null && !seen.contains(sp)) {
             queue.offerLast(sp);
             seen.add(sp);
           }
@@ -785,10 +768,21 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     // Add rules specific to test set:
-    if (allSubsequences)
-      subsequenceExtract(sent);
-      //subsequenceExtractOld(sent);
-    if(needAlGrid)
+    if (allSubsequences) {
+      for (BitSet bitset : subsequenceExtract(sent)) {
+        DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
+        if (dtu.consistencize()) {
+          //System.err.println("sent: dtu: "+dtu);
+          if (!noTargetGaps || dtu.eContiguous()) {
+            if (!seen.contains(dtu)) {
+              extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+              seen.add(dtu);
+            }
+          }
+        }
+      }
+    }
+    if (needAlGrid)
       extractPhrasesFromAlGrid(sent);
   }
 }

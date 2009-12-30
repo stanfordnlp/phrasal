@@ -130,11 +130,13 @@ public class Subsampler {
 
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
-    List<int[]> ints = SourceFilter.getPhrasesFromFilterCorpus
-         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, Integer.MAX_VALUE, false);
-    for(int[] i : ints)
-      phrases.add(new SimpleSequence<IString>(true, IStrings.toIStringArray(i)));
-
+    SourceFilter sourceFilter = new SourceFilter();
+    sourceFilter.addPhrasesFromCorpus
+      (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, Integer.MAX_VALUE, false);
+    for (int i=0; i<sourceFilter.getSourceTable().size(); ++i) {
+      int[] el = sourceFilter.getSourceTable().get(i);
+      phrases.add(new SimpleSequence<IString>(true, IStrings.toIStringArray(el)));
+    }
     // Other optional arguments:
     startAtLine = Integer.parseInt(prop.getProperty(START_AT_LINE_OPT,"-1"));
     endAtLine = Integer.parseInt(prop.getProperty(END_AT_LINE_OPT,"-2"))+1;
