@@ -25,7 +25,8 @@ public class LinearDistorionRecombinationFilter<TK, FV> implements Recombination
 		if (hyp.translationOpt == null) {
 			return 0;
 		}
-		return hyp.translationOpt.foreignPos + hyp.translationOpt.abstractOption.foreign.size(); 
+    return hyp.translationOpt.foreignCoverage.length();
+    //return hyp.translationOpt.foreignPos + hyp.translationOpt.abstractOption.foreign.size();
 	}
 	
 	@Override
