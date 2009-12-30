@@ -78,13 +78,16 @@ public class SRILanguageModel implements LanguageModel<IString> {
     p_vocab = srilm.initVocab(lm_start_sym_id, lm_end_sym_id);
     p_srilm = srilm.initLM(order, p_vocab);
     if (vocabFilename != null) {
+      for (String w : IString.keySet())
+        srilm.getIndexForWord(p_vocab, w);
       System.err.println("SRILM: closed vocabulary: "+vocabFilename);
       srilm.readLM_limitVocab(p_srilm, p_vocab, filename, vocabFilename);
     } else {
       System.err.println("SRILM: open vocabulary.");
       srilm.readLM(p_srilm, filename);
     }
-    if(addVocabToIStrings)
+    // Needed by LM truecaser requires this:
+    if (addVocabToIStrings)
       addVocabToIStrings(filename);
 
     ids = new int[lm_end_sym_id];

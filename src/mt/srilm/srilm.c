@@ -23,7 +23,7 @@ unsigned getIndexForWord(Vocab* vo, const char *s) {
   unsigned ans;
   ans = vo->addWord((VocabString)s);
   if(ans == Vocab_None) {
-    printf("Trying to get index for Vocab_None.\n");
+    fprintf(stderr,"Trying to get index for Vocab_None.\n");
   }
   return ans;
 }
@@ -35,8 +35,10 @@ int readLM(Ngram* ngram, const char* filename) {
 		fprintf(stderr,"Error:: Could not open file %s\n", filename);
 		return 0;
 	}
-	else 
+	else  {
+    fprintf(stderr, "JNI: loading LM %s with unrestricted vocabulary.\n",filename);
 		return ngram->read(file, 0);
+	}
 }
 
 // Read in an LM file into the model:
@@ -49,6 +51,7 @@ int readLM_limitVocab(Ngram* ngram, Vocab* vocab, const char* filename, const ch
 	}
 	else {
 		vocab->read(vocabFile);
+    fprintf(stderr, "JNI: loading LM %s with restricted vocabulary of %d tokens.\n",filename,vocab->numWords());
 		return ngram->read(file, 1);
 	}
 }
