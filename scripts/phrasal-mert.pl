@@ -55,6 +55,7 @@ print "Host: ".`hostname`;
 $work_dir=$DEFAULT_WORK_DIR;
 $nbest_size=$DEFAULT_NBEST_SIZE;
 $java_flags=$DEFAULT_JAVA_FLAGS;
+$mert_java_flags=$DEFAULT_JAVA_FLAGS;
 $opt_flags=$DEFAULT_OPT_FLAGS;
 $phrasal_flags="";
 
@@ -94,6 +95,10 @@ sub handle_arg {
      $java_flags = $arg;
      $java_flags =~ s/^--java-flags=//g;
 		 print STDERR "JAVA FLAGS: $java_flags\n";
+  } elsif ($arg =~ /^--mert-java-flags=.*/) {
+     $mert_java_flags = $arg;
+     $mert_java_flags =~ s/^--mert-java-flags=//g;
+		 print STDERR "MERT JAVA FLAGS: $mert_java_flags\n";
   } elsif ($arg =~ /^--phrasal-flags=.*/) {
      $phrasal_flags = $arg;
      $phrasal_flags =~ s/^--phrasal-flags=//g;
@@ -199,6 +204,7 @@ print stderr "\tcmert_dir: $cmert_dir\n";
 print stderr "\twork dir: $work_dir\n";
 print stderr "\tnbest size: $nbest_size\n";
 print stderr "\tjava flags: $java_flags\n";
+print stderr "\tMERT java flags: $mert_java_flags\n";
 print stderr "\n";
 
 if (!$ENV{"RECOVER"}) {
@@ -476,7 +482,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 				for(my $i = $iter-1; $i>=0; --$i) {
 					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
 				}
-				my $mertCMD = "java $java_flags mt.tune.UnsmoothedMERT -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+				my $mertCMD = "java $mert_java_flags mt.tune.UnsmoothedMERT -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
 	      print stderr "MERT command: $mertCMD\n";
 	      `$mertCMD`;
 	      if (not -e $next_iter_weights) {
