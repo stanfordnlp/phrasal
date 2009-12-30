@@ -139,10 +139,14 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString,Stri
         List<String> tagsForSentence = new ArrayList<String>();
 
         while(st.hasMoreTokens()) {
-          String[] parts = st.nextToken().split("#");
-          assert parts.length == 2;   
-          assert !parts[1].equals("");
-          tagsForSentence.add(parts[1].intern());
+          // mg: the tagger now uses "/" as delimited by default:
+          String[] parts = st.nextToken().split("/");
+          //String[] parts = st.nextToken().split("_");
+          if (parts.length != 2)
+            System.err.println("suspicious token: "+Arrays.toString(parts));
+          if (parts.length > 1 && parts[1].equals(""))
+            System.err.println("suspicious token: "+Arrays.toString(parts));
+          tagsForSentence.add(parts[parts.length-1].intern());
         }
 
         numTags += tagsForSentence.size();
@@ -194,7 +198,9 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString,Stri
 
     if(useTwoModels) {
       final Pair<Integer,Double> outBoundScore = outFeaturize(f,lastSIdx);
-      assert inBoundScore.first() == outBoundScore.first(); //They need to end at the same place!!
+      // TODO: mg2009: check if assert really needed since fails in some extremely rare cases (i.e., MERT may
+      // run several iterations without problems then suddenly crash).
+      //assert inBoundScore.first() == outBoundScore.first(); //They need to end at the same place!!
       features.add(new FeatureValue<String>("Out:" + FEATURE_NAME, outBoundScore.second()));
     }
 

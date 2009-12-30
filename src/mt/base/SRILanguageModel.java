@@ -55,19 +55,19 @@ public class SRILanguageModel implements LanguageModel<IString> {
 
   protected static final WeakHashMap<String, LanguageModel<IString>> lmStore = new WeakHashMap<String, LanguageModel<IString>>();
 
-  public static LanguageModel<IString> load(String filename) throws IOException {
+  public static LanguageModel<IString> load(String filename, String vocabFilename) throws IOException {
 		// Check if we've already created and cached lm
     File f = new File(filename);
     String filepath = f.getAbsolutePath();
     if (lmStore.containsKey(filepath)) return lmStore.get(filepath);
 
 		// Otherwise, create a new one and add it to the cache
-    LanguageModel<IString> newLM =  new SRILanguageModel(filename);
+    LanguageModel<IString> newLM =  new SRILanguageModel(filename, vocabFilename);
 		lmStore.put(filepath, newLM);
 		return newLM;
   }
 
-  protected SRILanguageModel(String filename) throws IOException {
+  protected SRILanguageModel(String filename, String vocabFilename) throws IOException {
     this.order = getOrder(filename);
     name = String.format("APRA(%s)",filename);
     System.gc();
@@ -77,7 +77,13 @@ public class SRILanguageModel implements LanguageModel<IString> {
 
     p_vocab = srilm.initVocab(lm_start_sym_id, lm_end_sym_id);
     p_srilm = srilm.initLM(order, p_vocab);
-		srilm.readLM(p_srilm, filename);
+    if (vocabFilename != null) {
+      System.err.println("SRILM: closed vocabulary: "+vocabFilename);
+      srilm.readLM_limitVocab(p_srilm, p_vocab, filename, vocabFilename);
+    } else {
+      System.err.println("SRILM: open vocabulary.");
+      srilm.readLM(p_srilm, filename);
+    }
     if(addVocabToIStrings)
       addVocabToIStrings(filename);
 
@@ -232,7 +238,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
     String modelStr = args[0]; String file = args[1];
     for(String model : modelStr.split(":")) {
       System.out.printf("Loading lm: %s...\n", model);
-      LanguageModel<IString> lm = SRILanguageModel.load(model);
+      LanguageModel<IString> lm = SRILanguageModel.load(model, null);
       System.out.printf("done loading lm.\n");
 
       long startTimeMillis = System.currentTimeMillis();

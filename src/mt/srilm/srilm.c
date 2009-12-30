@@ -39,6 +39,20 @@ int readLM(Ngram* ngram, const char* filename) {
 		return ngram->read(file, 0);
 }
 
+// Read in an LM file into the model:
+int readLM_limitVocab(Ngram* ngram, Vocab* vocab, const char* filename, const char* vocabFilename) {
+	File file(filename, "r");
+	File vocabFile(vocabFilename, "r");
+	if(!file) {
+		fprintf(stderr,"Error:: Could not open file %s\n", filename);
+		return 0;
+	}
+	else {
+		vocab->read(vocabFile);
+		return ngram->read(file, 1);
+	}
+}
+
 // Get word probability:
 float getWordProb(Ngram* ngram, unsigned w, unsigned* context) {
     return (float)ngram->wordProb(w, context);

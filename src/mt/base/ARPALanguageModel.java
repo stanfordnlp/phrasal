@@ -58,13 +58,21 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   protected static final WeakHashMap<String, ARPALanguageModel> lmStore = new WeakHashMap<String, ARPALanguageModel>();
 
   public static LanguageModel<IString> load(String filename) throws IOException {
+    return load(filename, null);
+  }
+
+  public static LanguageModel<IString> load(String filename, String vocabFilename) throws IOException {
     File f = new File(filename);
     String filepath = f.getAbsolutePath();
     if (lmStore.containsKey(filepath)) return lmStore.get(filepath);
 
+    if (vocabFilename != null && !USE_SRILM) {
+      System.err.printf("Warning: vocabulary file %s is ignored.\n", vocabFilename);
+    }
+
     LanguageModel<IString> alm = QUANTIZED_LM ? new QuantizedARPALanguageModel(filename) :
         (USE_TRIE ? new TrieARPALanguageModel(filename) : 
-        (USE_SRILM ? new SRILanguageModel(filename) : new ARPALanguageModel(filename)));
+        (USE_SRILM ? new SRILanguageModel(filename, vocabFilename) : new ARPALanguageModel(filename)));
     if(alm instanceof ARPALanguageModel)
       lmStore.put(filepath, (ARPALanguageModel)alm);
 

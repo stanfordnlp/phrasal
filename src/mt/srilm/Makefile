@@ -1,5 +1,5 @@
 #change this
-SRILM_ROOT=/scr/mgalley/research/mt/joshua/srilm
+SRILM_ROOT=/scr/mgalley/research/current/dtu/joshua-2008-05/srilm
 SRILM_LIBS=$(SRILM_ROOT)/lib/i686-m64
 SRILM_INC=$(SRILM_ROOT)/include
 

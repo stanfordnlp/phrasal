@@ -30,9 +30,9 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	static public final double MOSES_LM_UNKNOWN_WORD_SCORE = -100; // in sri lm -99 is -infinity
 
 	static public NGramLanguageModelFeaturizer<IString> fromFile(String... args) throws IOException {
-		if(args.length != 2)
+		if(args.length < 2 || args.length > 3)
       throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
-		LanguageModel<IString> lm = ARPALanguageModel.load(args[0]);
+		LanguageModel<IString> lm = args.length == 3 ? ARPALanguageModel.load(args[0],args[2]) : ARPALanguageModel.load(args[0]);
 		return new NGramLanguageModelFeaturizer<IString>(lm, args[1], false);
 	}
 
@@ -86,18 +86,24 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	 */
  @SuppressWarnings("unchecked")
 public NGramLanguageModelFeaturizer(String... args) throws IOException {
-    if(args.length != 2 && args.length != 3)
+    if(args.length < 2 || args.length > 3)
       throw new RuntimeException("Two arguments are needed: LM file name and LM ID");
-    this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
     featureName = args[1];
     featureNameWithColen = featureName + ":";
     this.ngramReweighting = false;
-    this.lmOrder = lm.order();
-		if (args.length == 3) {
-			this.lengthNorm = Boolean.parseBoolean(args[2]);
-		} else {
+    if (args.length == 3) {
+      if (args[2].equals("true") || args[2].equals("false")) {
+        this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
+        this.lengthNorm = Boolean.parseBoolean(args[2]);
+      } else {
+        this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0],args[2]);
+        this.lengthNorm = false;
+      }
+    } else {
+      this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
 			this.lengthNorm = false;
 		}
+    this.lmOrder = lm.order();
   }
 
 	/**

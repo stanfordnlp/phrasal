@@ -11,6 +11,8 @@ Ngram* initLM(int order, Vocab* vocab);
 
 int readLM(Ngram* ngram, const char* filename);
 
+int readLM_limitVocab(Ngram* ngram, Vocab* vocab, const char* filename, const char* vocabFilename);
+
 float getProb(Ngram* ngram, unsigned *context, int hist_size, unsigned cur_wrd);
 
 float getWordProb(Ngram* ngram, unsigned w, unsigned* context);

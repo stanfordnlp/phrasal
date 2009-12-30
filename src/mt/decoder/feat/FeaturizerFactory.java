@@ -22,6 +22,7 @@ public class FeaturizerFactory {
 	public static final String DEFAULT_FEATURIZERS = DEFAULT_WEIGHTING_BASELINE_FEATURIZERS;
 	public static final String DISCRIMINATIVE_TM_PARAMETER = "discrimtm";
 	public static final String ARPA_LM_PARAMETER = "arpalm";
+  public static final String ARPA_LM_VOC_PARAMETER = "arpalmvoc";
 	public static final String DISCRIMINATIVE_LM_PARAMETER = "discrimlm";
 	public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
 	
@@ -136,8 +137,15 @@ public class FeaturizerFactory {
 			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer, linearDistortionFeaturizer;
 			
 			// ARPA LM
-			arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(paramPairs.get(ARPA_LM_PARAMETER)));
-			baselineFeaturizers.add(arpaLmFeaturizer);
+      String lm = paramPairs.get(ARPA_LM_PARAMETER);
+      String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
+      System.err.println("LM vocabulary file: "+lmVoc);
+      if(lmVoc == null || lmVoc.equals("")) {
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm));
+      } else {
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm,lmVoc));
+      }
+      baselineFeaturizers.add(arpaLmFeaturizer);
 			
 			// Precomputed phrase to phrase translation scores
 			phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>();
@@ -163,8 +171,15 @@ public class FeaturizerFactory {
 				unknownWordFeaturizer;
 			
 			// ARPA LM
-			arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(paramPairs.get(ARPA_LM_PARAMETER)));
-			pharaohFeaturizers.add(arpaLmFeaturizer);
+      String lm = paramPairs.get(ARPA_LM_PARAMETER);
+      String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
+      System.err.println("LM vocabulary file: "+lmVoc);
+      if(lmVoc == null || lmVoc.equals("")) {
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm));
+      } else {
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm,lmVoc));
+      }
+      pharaohFeaturizers.add(arpaLmFeaturizer);
 			
 			String discriminativeLMOrderStr = paramPairs.get(DISCRIMINATIVE_LM_PARAMETER);
 			int discriminativeLMOrder = (discriminativeLMOrderStr == null ? 0 : Integer.parseInt(discriminativeLMOrderStr));

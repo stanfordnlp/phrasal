@@ -494,10 +494,13 @@ public class PseudoMoses {
 		}
 
 		// Create Featurizer
-		String lgModel;
+		String lgModel, lgModelVoc="";
 		if (config.get(LANGUAGE_MODEL_OPT).size() == 1) {
 			lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-		} else if (config.get(LANGUAGE_MODEL_OPT).size() == 4) {
+    } else if (config.get(LANGUAGE_MODEL_OPT).size() == 2) {
+      lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
+      lgModelVoc = config.get(LANGUAGE_MODEL_OPT).get(1);
+    } else if (config.get(LANGUAGE_MODEL_OPT).size() == 4) {
 			List<String> lmOpts = config.get(LANGUAGE_MODEL_OPT);
 			System.err.printf(
 					"Ignoring Moses factor & model order information: %s, %s, %s\n",
@@ -521,6 +524,7 @@ public class PseudoMoses {
 		featurizer = FeaturizerFactory.factory(
 				FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR, makePair(
 						FeaturizerFactory.ARPA_LM_PARAMETER, lgModel), makePair(
+             FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc), makePair(
 								FeaturizerFactory.DISCRIMINATIVE_LM_PARAMETER, ""
 								+ discriminativeLMOrder), makePair(
 										FeaturizerFactory.DISCRIMINATIVE_TM_PARAMETER, ""

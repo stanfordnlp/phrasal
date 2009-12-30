@@ -3,8 +3,6 @@ package mt.base;
 import it.unimi.dsi.fastutil.longs.*;
 import edu.stanford.nlp.util.Function;
 
-import java.util.Arrays;
-
 /**
  * Implementation of IntegerArrayIndex as a trie. This trie implementation 
  * is optimized for space, by instanciating only one object: an open-address hash table. 
