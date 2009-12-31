@@ -124,8 +124,8 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
     //boolean locallySwapping = (f.prior == null ? false : f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
     boolean discont2 = (f.prior == null ? false : fEnd(f) <= fStart(f.prior));
 
-    double[] scores = mlrt.getReorderingScores(f.foreignPhrase, f.translatedPhrase);
-    double[] priorScores = (f.prior == null ? null : mlrt.getReorderingScores(f.prior.foreignPhrase, f.prior.translatedPhrase));
+    float[] scores = mlrt.getReorderingScores(f.foreignPhrase, f.translatedPhrase);
+    float[] priorScores = (f.prior == null ? null : mlrt.getReorderingScores(f.prior.foreignPhrase, f.prior.translatedPhrase));
 
     ReorderingTypes 
       forwardOrientation = ReorderingTypes.discontinousWithPrevious, 

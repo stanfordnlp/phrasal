@@ -173,7 +173,7 @@ public class ExtendedLexicalReorderingTable {
 	/**
 	 * 
 	 */
-	public double[] getReorderingScores(Sequence<IString> foreign, Sequence<IString> translation) {
+	public float[] getReorderingScores(Sequence<IString> foreign, Sequence<IString> translation) {
 		int[] indexInts = null;
 		
 		if (conditionType == ConditionTypes.f) {
@@ -190,7 +190,7 @@ public class ExtendedLexicalReorderingTable {
 		
 		if (idx < 0) return null;
 		
-		return (double[]) reorderingScores.get(idx);
+		return (float[]) reorderingScores.get(idx);
 	}
 	
 	/**
@@ -310,11 +310,11 @@ public class ExtendedLexicalReorderingTable {
 				indexInts = mergeInts(fIndexInts, eIndexInts);
 			} 
 			
-			double[] scores = new double[scoreList.size()];
+			float[] scores = new float[scoreList.size()];
 			int scoreId = 0;
 			for (String score : scoreList) {
 				try {
-					scores[scoreId++] = Math.log(Double.parseDouble(score));
+					scores[scoreId++] = (float) Math.log(Double.parseDouble(score));
 				} catch (NumberFormatException e) {
 					throw new RuntimeException(String.format("Can't parse %s as a number (line %d)\n", score, reader.getLineNumber()));
 				}
@@ -357,7 +357,7 @@ public class ExtendedLexicalReorderingTable {
 			String[] fields = query.split("\\s*\\|\\|\\|\\s*");
 			Sequence<IString> foreign = new RawSequence<IString>(IStrings.toIStringArray(fields[0].split("\\s+")));
 			Sequence<IString> translation = new RawSequence<IString>(IStrings.toIStringArray(fields[1].split("\\s+")));
-			double[] scores = mlrt.getReorderingScores(foreign, translation);
+			float[] scores = mlrt.getReorderingScores(foreign, translation);
 			for (int i = 0; i < scores.length; i++) {
 				System.out.printf("%s: %e\n", mlrt.positionalMapping[i], scores[i]);
 			}
