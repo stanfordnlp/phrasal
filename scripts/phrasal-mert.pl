@@ -348,7 +348,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
      open fh, $iter_trans or die;
      while (<fh>) {
        chomp;
-       next if (not /^[0-9]+:/);
+       last if (not /^[0-9]+:/);
        $id = $_; 
        $sent = $_;
        $id =~ s/:.*//; 
