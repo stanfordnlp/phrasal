@@ -77,7 +77,8 @@ public class PseudoMoses {
   public static final String GAPS_OPT = "gaps";
   public static final String MAX_FLOATING_PHRASES_OPT = "max-floating-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
-  
+  public static final String REDUCE_MEMORY_USAGE_OPT = "reduce-memory-usage";
+
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
 
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
@@ -113,7 +114,7 @@ public class PseudoMoses {
 				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
 				MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
 				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
-        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT
+        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT, REDUCE_MEMORY_USAGE_OPT
     }));
 		IGNORED_FIELDS.addAll(Arrays.asList(new String[] { INPUT_FACTORS_OPT,
 				MAPPING_OPT, FACTOR_DELIM_OPT }));
@@ -218,6 +219,11 @@ public class PseudoMoses {
       ConcreteTranslationOption.setLinearDistortionType(config.get(LINEAR_DISTORTION_TYPE).get(0));
     if (config.containsKey(LOCAL_PROCS))
 			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
+
+    if (config.containsKey(REDUCE_MEMORY_USAGE_OPT)) {
+      // Additional memory savings, though some non-standard featurizers may break due to this:
+      Featurizable.NO_ALIGN = true;
+    }
 
     if(withGaps)
       recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;

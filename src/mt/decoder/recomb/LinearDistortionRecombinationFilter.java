@@ -9,9 +9,9 @@ import mt.decoder.util.Hypothesis;
  * @param <TK>
  * @param <FV>
  */
-public class LinearDistorionRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
+public class LinearDistortionRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 
-	@SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")
 	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
 		try {
 			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
@@ -26,7 +26,6 @@ public class LinearDistorionRecombinationFilter<TK, FV> implements Recombination
 			return 0;
 		}
     return hyp.translationOpt.foreignCoverage.length();
-    //return hyp.translationOpt.foreignPos + hyp.translationOpt.abstractOption.foreign.size();
 	}
 	
 	@Override

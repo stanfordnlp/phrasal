@@ -46,7 +46,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 			return;
 		}
 		this.foreign = f.foreignSentence;
-		this.foreignCoverage = constructCoverageSet(f.t2fAlignmentIndex);
+		this.foreignCoverage = (f.t2fAlignmentIndex != null) ? constructCoverageSet(f.t2fAlignmentIndex) : null;
 		this.t2fAlignmentIndex = f.t2fAlignmentIndex;
 		this.f2tAlignmentIndex = f.f2tAlignmentIndex;
 	}
@@ -65,7 +65,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 			return;
 		}
 		this.foreign = f.foreignSentence;
-		this.foreignCoverage = constructCoverageSet(f.t2fAlignmentIndex);
+		this.foreignCoverage = (f.t2fAlignmentIndex != null) ? constructCoverageSet(f.t2fAlignmentIndex) : null;
 		this.t2fAlignmentIndex = f.t2fAlignmentIndex;
 		this.f2tAlignmentIndex = f.f2tAlignmentIndex;
 	}

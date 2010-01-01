@@ -15,8 +15,10 @@ import java.util.Arrays;
  * @param <TK>
  */
 public class Featurizable<TK,FV> {
-	
-	/**
+
+  public static boolean NO_ALIGN = true; // TODO: set this to false
+
+  /**
 	 * Unique id associated with the current hypothesis
 	 */
 	public final int translationId;
@@ -167,18 +169,26 @@ public class Featurizable<TK,FV> {
 		foreignSentence = hypothesis.foreignSequence;
 		untranslatedTokens = hypothesis.untranslatedTokens;	
 		prior = hypothesis.preceedingHyp.featurizable;
-		if (prior != null) {
-			t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
-			f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
-      states = new Object[nbStatefulFeaturizers];
-      //states = prior.states.clone();
+    if (prior != null) {
+      if (!NO_ALIGN) {
+        t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
+        f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
+      } else {
+        t2fAlignmentIndex = f2tAlignmentIndex = null;
+      }
+      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers] : null;
     } else {
-			t2fAlignmentIndex = new int[hypothesis.length][];
-			f2tAlignmentIndex = new int[foreignSentence.size()][];
-      states = new Object[nbStatefulFeaturizers];
+      if (!NO_ALIGN) {
+        t2fAlignmentIndex = new int[hypothesis.length][];
+        f2tAlignmentIndex = new int[foreignSentence.size()][];
+      } else {
+        t2fAlignmentIndex = f2tAlignmentIndex = null;
+      }
+      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers] : null;
     }
 		hyp = hypothesis;
-		augmentAlignments(concreteOpt);
+    if (!NO_ALIGN)
+      augmentAlignments(concreteOpt);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -208,16 +218,25 @@ public class Featurizable<TK,FV> {
 		untranslatedTokens = hypothesis.untranslatedTokens;
 		prior = hypothesis.preceedingHyp.featurizable;
 		if (prior != null) {
-			t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
-			f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
-      states = new Object[nbStatefulFeaturizers];
+      if (!NO_ALIGN) {
+        t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex, hypothesis.length);
+        f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex, prior.f2tAlignmentIndex.length);
+      } else {
+        t2fAlignmentIndex = f2tAlignmentIndex = null;
+      }
+      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers] : null;
     } else {
-			t2fAlignmentIndex = new int[hypothesis.length][];
-			f2tAlignmentIndex = new int[foreignSentence.size()][];
-      states = new Object[nbStatefulFeaturizers];
+      if (!NO_ALIGN) {
+        t2fAlignmentIndex = new int[hypothesis.length][];
+        f2tAlignmentIndex = new int[foreignSentence.size()][];
+      } else {
+        t2fAlignmentIndex = f2tAlignmentIndex = null;
+      }
+      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers] : null;
     }
 		hyp = hypothesis;
-		augmentAlignments(concreteOpt);
+    if (!NO_ALIGN)
+      augmentAlignments(concreteOpt);
 	}
 
   public Object getState(StatefulFeaturizer<IString,String> f) {
@@ -261,7 +280,8 @@ public class Featurizable<TK,FV> {
     linearDistortion = Integer.MAX_VALUE;
 		t2fAlignmentIndex = new int[translatedPhrase != null ? translatedPhrase.size() : 0][];
 		f2tAlignmentIndex = new int[foreignSentence.size()][];
-		augmentAlignments(concreteOpt);
+    if (!NO_ALIGN)
+      augmentAlignments(concreteOpt);
 		hyp = null;
 	}
 
@@ -290,7 +310,8 @@ public class Featurizable<TK,FV> {
     linearDistortion = Integer.MAX_VALUE;
 		t2fAlignmentIndex = new int[translatedPhrase.size()][];
 		f2tAlignmentIndex = new int[foreignSentence.size()][];
-		augmentAlignments(concreteOpt);
+    if (!NO_ALIGN)
+      augmentAlignments(concreteOpt);
 		hyp = null;
 	}
 
