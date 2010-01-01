@@ -16,7 +16,7 @@ import java.util.Arrays;
  */
 public class Featurizable<TK,FV> {
 
-  public static boolean NO_ALIGN = true; // TODO: set this to false
+  public static boolean NO_ALIGN = false;
 
   /**
 	 * Unique id associated with the current hypothesis

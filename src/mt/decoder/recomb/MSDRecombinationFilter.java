@@ -2,8 +2,6 @@ package mt.decoder.recomb;
 
 import mt.decoder.util.Hypothesis;
 
-import java.util.BitSet;
-
 /**
  * @author Michel Galley
  */
