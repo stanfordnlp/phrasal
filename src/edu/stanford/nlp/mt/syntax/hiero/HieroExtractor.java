@@ -1,14 +1,14 @@
-package mt.syntax.hiero;
+package edu.stanford.nlp.mt.syntax.hiero;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 
-import mt.syntax.hiero.HieroGrammarScorer_Hashtable.Rule;
+import edu.stanford.nlp.mt.syntax.hiero.HieroGrammarScorer_Hashtable.Rule;
 
-import mt.syntax.util.Alignment;
-import mt.syntax.util.FileUtility;
+import edu.stanford.nlp.mt.syntax.util.Alignment;
+import edu.stanford.nlp.mt.syntax.util.FileUtility;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University
@@ -62,9 +62,9 @@ public class HieroExtractor {
 	
 	public static void main(String[] args) {		
 		//init symbol
-		mt.syntax.decoder.Symbol.add_global_symbols(true);
-		NULL_ALIGN_WRD_SYM_ID = mt.syntax.decoder.Symbol.add_terminal_symbol(NULL_ALIGN_WRD_SYM);
-		NON_TERMINAL_TAG_SYM_ID = mt.syntax.decoder.Symbol.add_non_terminal_symbol(NON_TERMINAL_TAG_SYM);
+		edu.stanford.nlp.mt.syntax.decoder.Symbol.add_global_symbols(true);
+		NULL_ALIGN_WRD_SYM_ID = edu.stanford.nlp.mt.syntax.decoder.Symbol.add_terminal_symbol(NULL_ALIGN_WRD_SYM);
+		NON_TERMINAL_TAG_SYM_ID = edu.stanford.nlp.mt.syntax.decoder.Symbol.add_non_terminal_symbol(NON_TERMINAL_TAG_SYM);
 		
 		//read weights files
 		eweights_table = read_weight_file("C:\\data_disk\\java_work_space\\SyntaxMT\\mt.syntax.train.hiero\\lex.f2e.gz");
@@ -116,8 +116,8 @@ public class HieroExtractor {
 			n++;
 			if(n%500000==0) System.out.println("reading lines " + n);
 			String[] fds = line.split("\\s+");//format: wrd1 wrd2 weight
-			int id1 = mt.syntax.decoder.Symbol.add_terminal_symbol(fds[0]);
-			int id2 = mt.syntax.decoder.Symbol.add_terminal_symbol(fds[1]);
+			int id1 = edu.stanford.nlp.mt.syntax.decoder.Symbol.add_terminal_symbol(fds[0]);
+			int id2 = edu.stanford.nlp.mt.syntax.decoder.Symbol.add_terminal_symbol(fds[1]);
 			res.put(form_weight_key(id1,id2), new Double(fds[2]));
 		}
 		FileUtility.close_read_file(t_reader);
@@ -417,7 +417,7 @@ public class HieroExtractor {
 				int[] sub_phrase = (int[])item.get(t);
 				original_en_len -= sub_phrase[3] - sub_phrase[2];//reserved one slot for the NT symbol
 				//System.out.println("e span: " + sub_phrase[0] +" - " + sub_phrase[1] +" ; len " + original_en_len);
-				int nt = mt.syntax.decoder.Symbol.add_non_terminal_symbol(NON_TERMINAL_TAG_SYM+","+nt_index);//get [PHRASE,nt_index]
+				int nt = edu.stanford.nlp.mt.syntax.decoder.Symbol.add_non_terminal_symbol(NON_TERMINAL_TAG_SYM+","+nt_index);//get [PHRASE,nt_index]
 				rule_fwords[t] = nt;
 				original_en_wrds[sub_phrase[2]-phrase[2]]=nt;
 				for(int k=sub_phrase[2]-phrase[2]+1; k<=sub_phrase[3]-phrase[2]; k++)
@@ -434,7 +434,7 @@ public class HieroExtractor {
 		for(int t=0, k=0; t<original_en_wrds.length; t++){
 			if(original_en_wrds[t]!=INVALID_WRD_ID){
 				rule_ewords[k] = original_en_wrds[t];
-				if(mt.syntax.decoder.Symbol.is_nonterminal(original_en_wrds[t])==true)
+				if(edu.stanford.nlp.mt.syntax.decoder.Symbol.is_nonterminal(original_en_wrds[t])==true)
 					epos[k]=INVALID_POS;
 				else
 					epos[k]=phrase[2]+t;
@@ -469,7 +469,7 @@ public class HieroExtractor {
 		
 		//P_lex(eng|fr)
 		for(int t=0; t<r_in.french.length; t++){
-			if( mt.syntax.decoder.Symbol.is_nonterminal(r_in.french[t])==false ){
+			if( edu.stanford.nlp.mt.syntax.decoder.Symbol.is_nonterminal(r_in.french[t])==false ){
 				if(align.num_alignments_infor_for_french[fpos[t]]<=0)
 					funaligned++;
 				if(fweights!=null)
@@ -481,7 +481,7 @@ public class HieroExtractor {
 		
 		//P_lex(fr|eng)
 		for(int t=0; t<r_in.english.length; t++){
-			if( mt.syntax.decoder.Symbol.is_nonterminal(r_in.english[t])==false ){
+			if( edu.stanford.nlp.mt.syntax.decoder.Symbol.is_nonterminal(r_in.english[t])==false ){
 				if(align.num_alignments_infor_for_english[epos[t]]<=0)
 					eunaligned++;
 				if(eweights!=null)
@@ -507,11 +507,11 @@ public class HieroExtractor {
 	private static void print_phrase(Alignment align, int[] phrase){
 		String str="zh: " + phrase[0] + "-" + phrase[1];
 		for(int t=phrase[0]; t<=phrase[1]; t++)
-			str += " " + mt.syntax.decoder.Symbol.get_string(align.french_wrds[t]);
+			str += " " + edu.stanford.nlp.mt.syntax.decoder.Symbol.get_string(align.french_wrds[t]);
 		str += " en: " + phrase[2] + "-" + phrase[3];
 		for(int t=phrase[2]; t<=phrase[3]; t++)
-			str += " " + mt.syntax.decoder.Symbol.get_string(align.english_wrds[t]);
-		str += " nt: " + mt.syntax.decoder.Symbol.get_string(phrase[4]);
+			str += " " + edu.stanford.nlp.mt.syntax.decoder.Symbol.get_string(align.english_wrds[t]);
+		str += " nt: " + edu.stanford.nlp.mt.syntax.decoder.Symbol.get_string(phrase[4]);
 		System.out.println("phrase is = " +str);
 	}
 	

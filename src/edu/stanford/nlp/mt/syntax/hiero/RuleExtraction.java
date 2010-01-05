@@ -1,12 +1,12 @@
-package mt.syntax.hiero;
+package edu.stanford.nlp.mt.syntax.hiero;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import mt.syntax.util.FileUtility;
-import mt.syntax.util.Tree;
+import edu.stanford.nlp.mt.syntax.util.FileUtility;
+import edu.stanford.nlp.mt.syntax.util.Tree;
 
 
 /*Zhifei Li, <zhifei.work@gmail.com>

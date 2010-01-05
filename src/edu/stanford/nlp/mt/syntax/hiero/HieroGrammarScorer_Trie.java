@@ -1,4 +1,4 @@
-package mt.syntax.hiero;
+package edu.stanford.nlp.mt.syntax.hiero;
 
 import java.util.Comparator;
 import java.util.HashMap ;
@@ -247,12 +247,12 @@ public class HieroGrammarScorer_Trie  {
 		
 		public void print_info(){
 			//Support.write_log("Rule is: "+ lhs + " ||| " + Support.arrayToString(french, " ") + " ||| " + Support.arrayToString(english, " ") + " |||", level);
-			System.out.print("Rule is: "+ mt.syntax.decoder.Symbol.get_string(lhs) +  " ||| ");
+			System.out.print("Rule is: "+ edu.stanford.nlp.mt.syntax.decoder.Symbol.get_string(lhs) +  " ||| ");
 			for(int i=0; i<french.length;i++)
-				 System.out.print(mt.syntax.decoder.Symbol.get_string(french[i]) +" ");
+				 System.out.print(edu.stanford.nlp.mt.syntax.decoder.Symbol.get_string(french[i]) +" ");
 			System.out.print("||| ");
 			for(int i=0; i<english.length;i++)
-				 System.out.print(mt.syntax.decoder.Symbol.get_string(english[i]) +" ");
+				 System.out.print(edu.stanford.nlp.mt.syntax.decoder.Symbol.get_string(english[i]) +" ");
 			System.out.print("||| ");
 			for(int i=0; i< feat_scores.length; i++)
 				System.out.print(" " + feat_scores[i]);
