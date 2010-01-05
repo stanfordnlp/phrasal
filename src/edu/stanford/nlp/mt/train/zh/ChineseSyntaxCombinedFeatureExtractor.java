@@ -1,17 +1,17 @@
-package mt.train.zh;
+package edu.stanford.nlp.mt.train.zh;
 
-import mt.base.IOTools;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.train.AlignmentGrid;
-import mt.train.AlignmentTemplate;
-import mt.train.AlignmentTemplateInstance;
-import mt.train.AlignmentTemplates;
-import mt.train.BshInterpreter;
-import mt.train.SymmetricalWordAlignment;
-import mt.train.SourceFilter;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.train.AlignmentGrid;
+import edu.stanford.nlp.mt.train.AlignmentTemplate;
+import edu.stanford.nlp.mt.train.AlignmentTemplateInstance;
+import edu.stanford.nlp.mt.train.AlignmentTemplates;
+import edu.stanford.nlp.mt.train.BshInterpreter;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.train.SourceFilter;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;

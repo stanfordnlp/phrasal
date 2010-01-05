@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 //Object2IntOpenHashMap
 //it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap<K>
 

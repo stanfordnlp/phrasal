@@ -1,6 +1,6 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
-import mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.CoverageSet;
 
 
 /**

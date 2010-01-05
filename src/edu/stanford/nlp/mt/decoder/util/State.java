@@ -1,4 +1,4 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 /**
  * Marks classes that can be placed on Beam objects 

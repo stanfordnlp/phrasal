@@ -1,7 +1,7 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
-import mt.metrics.ter.TERalignment;
-import mt.metrics.ter.TERcalc;
+import edu.stanford.nlp.mt.metrics.ter.TERalignment;
+import edu.stanford.nlp.mt.metrics.ter.TERcalc;
 
 /**
  * @author Pi-Chuan Chang

@@ -10,9 +10,9 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
-import mt.syntax.mst.rmcd.io.*;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import java.net.InetAddress;
  *
  * @author Jason Baldridge
  * @version $Id: CONLLReader.java 103 2007-01-21 20:26:39Z jasonbaldridge $
- * @see mt.syntax.mst.rmcd.io.DependencyReader
+ * @see edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader
  */
 public final class ParserOptions {
 

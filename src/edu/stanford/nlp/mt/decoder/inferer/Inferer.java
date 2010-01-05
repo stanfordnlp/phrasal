@@ -1,11 +1,11 @@
-package mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder.inferer;
 
 import java.util.*;
 
-import mt.base.RichTranslation;
-import mt.base.Sequence;
-import mt.decoder.util.ConstrainedOutputSpace;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  *

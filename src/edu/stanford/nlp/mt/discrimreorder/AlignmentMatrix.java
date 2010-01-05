@@ -1,7 +1,7 @@
-package mt.discrimreorder;
+package edu.stanford.nlp.mt.discrimreorder;
 
 import java.io.*;
-import mt.train.AbstractWordAlignment;
+import edu.stanford.nlp.mt.train.AbstractWordAlignment;
 
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
@@ -10,7 +10,7 @@ import edu.stanford.nlp.trees.semgraph.*;
 
 /**
  * This class is to represent the alignment in a 2d matrix form
- * (Note that there's similar class in the mt.train package or mt.train.transtb.
+ * (Note that there's similar class in the edu.stanford.nlp.mt.train package or edu.stanford.nlp.mt.train.transtb.
  *  But I think it's good to make a new one in this package so things don't get tangled up.(
  *
  * @author Pi-Chuan Chang

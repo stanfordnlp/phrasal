@@ -1,7 +1,7 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
-import mt.metrics.ter.TERalignment;
-import mt.metrics.ter.TERcalc;
+import edu.stanford.nlp.mt.metrics.ter.TERalignment;
+import edu.stanford.nlp.mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.math.ArrayMath;
 
 import java.io.*;
@@ -9,7 +9,7 @@ import java.io.*;
 
 /**
  * A standalone N-best reranker.<br>
- * Usage: <code>java mt.reranker.NBest (datadescriptor)</code>
+ * Usage: <code>java edu.stanford.nlp.mt.reranker.NBest (datadescriptor)</code>
  * <h3>Data Descriptor</h3>
  * The data descriptor should look like:<br>
  * <code>/u/nlp/data/gale/n-best-reranking/reranker/mt03/datadescriptor.txt</code>
@@ -445,7 +445,7 @@ public class NBest {
 
 
   public static void displayUsage() {
-    System.err.println("Usage:\n\tjava mt.reranker.NBest (data descriptor)");
+    System.err.println("Usage:\n\tjava edu.stanford.nlp.mt.reranker.NBest (data descriptor)");
     System.err.println("\nExample Descriptors:\n\n" + "* Heiro n-best:\n" + "  /u/nlp/data/gale/scr/n-best-reranking/reranker/datadescriptor.txt\n");
   }
 

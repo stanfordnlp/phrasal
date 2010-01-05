@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeSet;
 
-import mt.base.Sequence;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
 
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;

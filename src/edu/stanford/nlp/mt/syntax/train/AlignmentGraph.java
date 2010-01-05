@@ -1,11 +1,11 @@
-package mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.train;
 
 import edu.stanford.nlp.trees.Tree;
 
 import java.util.*;
 import java.io.IOException;
 
-import mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
 /**
  * A graph containing two types of edges: (1) edges of an English parse tree

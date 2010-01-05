@@ -1,10 +1,10 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 import java.io.*;
 
-import mt.decoder.util.PhraseGenerator;
-import mt.decoder.util.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
+import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
 
 /**
  * 

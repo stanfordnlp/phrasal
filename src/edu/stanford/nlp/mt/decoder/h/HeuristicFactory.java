@@ -1,8 +1,8 @@
-package mt.decoder.h;
+package edu.stanford.nlp.mt.decoder.h;
 
-import mt.base.IString;
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  * 

@@ -1,4 +1,4 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
@@ -6,28 +6,28 @@ import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.tagger.maxent.GlobalHolder;
 
-import mt.syntax.mst.rmcd.ParserOptions;
-import mt.syntax.mst.rmcd.DependencyParser;
-import mt.syntax.mst.rmcd.DependencyDecoder;
-import mt.syntax.mst.rmcd.Parameters;
-import mt.syntax.mst.rmcd.DependencyPipe;
-import mt.syntax.mst.rmcd.DependencyInstance;
-import mt.syntax.mst.rmcd.DependencyInstanceFeatures;
-import mt.syntax.mst.rmcd.FeatureVector;
-import mt.syntax.mst.rmcd.io.CONLLWriter;
-import mt.syntax.mst.rmcd.io.DependencyWriter;
-import mt.syntax.mst.rmcd.io.DependencyReader;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.ParserOptions;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.DependencyParser;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.DependencyDecoder;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.Parameters;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.DependencyPipe;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.DependencyInstance;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.DependencyInstanceFeatures;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.FeatureVector;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.CONLLWriter;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader;
 
-import mt.base.IString;
-import mt.base.ConcreteTranslationOption;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.Sequence;
-import mt.base.PhraseAlignment;
-import mt.decoder.feat.RichIncrementalFeaturizer;
-import mt.decoder.feat.StatefulFeaturizer;
-import mt.PseudoMoses;
-import mt.tools.PrefixTagger;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
+import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.tools.PrefixTagger;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -640,7 +640,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   public static void main(String[] args) throws Exception {
     if(args.length != 3)
       System.err.println
-       ("Usage: mt.decoder.efeat.DependencyLanguageModelFeaturizer (serialized tagger) (serialized dparser) (text to tag)");
+       ("Usage: edu.stanford.nlp.mt.decoder.efeat.DependencyLanguageModelFeaturizer (serialized tagger) (serialized dparser) (text to tag)");
     DependencyLanguageModelFeaturizer feat = new DependencyLanguageModelFeaturizer("mst","",args[0],args[1]);
     feat.reset();
     feat.tagger.tagFile(args[2]);

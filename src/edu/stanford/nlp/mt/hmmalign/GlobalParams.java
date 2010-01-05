@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /**
  * This class will hold some static parameters that will be used by many classes

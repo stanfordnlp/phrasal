@@ -1,4 +1,4 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import it.unimi.dsi.fastutil.longs.*;
 import edu.stanford.nlp.util.Function;

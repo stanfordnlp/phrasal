@@ -1,11 +1,11 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.*;
 import java.util.*;
 
-import mt.base.*;
-import mt.metrics.*;
-import mt.tune.*;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.tune.*;
 
 /**
  * 

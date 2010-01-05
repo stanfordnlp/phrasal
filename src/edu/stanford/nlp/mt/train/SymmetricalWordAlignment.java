@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.TreeSet;
 import java.io.*;
@@ -7,10 +7,10 @@ import java.util.*;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.io.FileUtils;
 
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
 
 /**
   * Sentence pair with symmetrical word alignment (i.e., if e_i aligns to f_j in one direction, 

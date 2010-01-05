@@ -1,9 +1,9 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
 
-import mt.syntax.util.FileUtility;
+import edu.stanford.nlp.mt.syntax.util.FileUtility;
 
 /*!!!!!!!!!!!!!!!!!!!!! replaced by LMGrammar_JAVA_General*/
 

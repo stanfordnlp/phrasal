@@ -10,14 +10,14 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mt.syntax.mst.rmcd.io;
+package edu.stanford.nlp.mt.syntax.mst.rmcd.io;
 
 import edu.stanford.nlp.tagger.maxent.TestSentence;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
 import java.io.*;
 
-import mt.syntax.mst.rmcd.*;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 
 /**
  * A class that defines common behavior and abstract methods for

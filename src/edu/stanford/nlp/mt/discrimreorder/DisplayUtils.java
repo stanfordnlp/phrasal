@@ -1,4 +1,4 @@
-package mt.discrimreorder;
+package edu.stanford.nlp.mt.discrimreorder;
 
 import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.util.StringUtils;
@@ -10,7 +10,7 @@ import java.util.*;
  * This class collects utils that can display information in
  * {@link AlignmentMatrix}.
  *
- * Some code are the same as in {@link mt.train.transtb.AlignmentUtils}
+ * Some code are the same as in {@link edu.stanford.nlp.mt.train.transtb.AlignmentUtils}
  * 
  * This class also collects other displaying utils, such as
  * outputing the confusion matrix.

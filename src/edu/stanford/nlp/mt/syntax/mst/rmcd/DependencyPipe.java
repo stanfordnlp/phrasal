@@ -1,4 +1,4 @@
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import java.io.*;
 import java.util.Arrays;
@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.StringUtils;
 import gnu.trove.TIntArrayList;
 import gnu.trove.THashMap;
 
-import mt.syntax.mst.rmcd.io.*;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.*;
 
 public class DependencyPipe implements Cloneable {
 

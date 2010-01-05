@@ -1,8 +1,8 @@
-package mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.train;
 
 import edu.stanford.nlp.util.MutableInteger;
 
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.IString;
 
 import java.util.*;
 

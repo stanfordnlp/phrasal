@@ -1,12 +1,12 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.io.PrintStream;
 
-import mt.base.IString;
-import mt.base.Featurizable;
-import mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * A representation of an AlignmentTemplate collection as a matrix.

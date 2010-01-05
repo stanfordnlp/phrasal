@@ -1,8 +1,8 @@
-package mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.train;
 
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
-import mt.base.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 
 import java.util.Collection;
 

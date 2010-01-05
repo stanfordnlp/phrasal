@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /**
  * This serves to handle the alignment probabilities

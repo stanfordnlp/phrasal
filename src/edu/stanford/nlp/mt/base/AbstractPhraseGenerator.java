@@ -1,11 +1,11 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.util.PhraseGenerator;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  * 

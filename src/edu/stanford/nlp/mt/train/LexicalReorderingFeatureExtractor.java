@@ -1,11 +1,11 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Arrays;
 
 import edu.stanford.nlp.util.Index;
-import mt.train.AlignmentGrid.RelativePos;
+import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 
 /**
  * Extractor for lexicalized re-ordering probabilities of Moses.

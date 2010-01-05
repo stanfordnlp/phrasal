@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 
 import edu.stanford.nlp.util.MutableInteger;

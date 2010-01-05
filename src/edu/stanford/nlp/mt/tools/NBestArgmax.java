@@ -1,11 +1,11 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
-import mt.base.*;
-import mt.decoder.util.*;
-import mt.metrics.EvaluationMetric;
-import mt.metrics.MetricFactory;
-import mt.metrics.ScorerWrapperEvaluationMetric;
-import mt.tune.GreedyMultiTranslationMetricMax;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.MetricFactory;
+import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
+import edu.stanford.nlp.mt.tune.GreedyMultiTranslationMetricMax;
 
 import java.util.*;
 
@@ -22,7 +22,7 @@ import java.util.*;
 public class NBestArgmax {
 	
 	static public void usage() {
-		System.err.printf("Usage:\n\tjava mt.tool.NBestArgmax (nbest list) (wts file) [evaluationMetric:refs] > argmaxTrans 2> evaluationScore");
+		System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.tool.NBestArgmax (nbest list) (wts file) [evaluationMetric:refs] > argmaxTrans 2> evaluationScore");
 	}
 	
 	static public void main(String[] args) throws Exception {

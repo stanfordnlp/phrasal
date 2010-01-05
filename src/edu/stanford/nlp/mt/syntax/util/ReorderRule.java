@@ -1,4 +1,4 @@
-package mt.syntax.util;
+package edu.stanford.nlp.mt.syntax.util;
 
 import java.util.Hashtable;
 import java.util.Iterator;

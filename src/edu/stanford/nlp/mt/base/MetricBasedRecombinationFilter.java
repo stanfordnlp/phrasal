@@ -1,8 +1,8 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
-import mt.decoder.recomb.RecombinationFilter;
-import mt.decoder.util.MultiTranslationState;
-import mt.metrics.*;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.util.MultiTranslationState;
+import edu.stanford.nlp.mt.metrics.*;
 
 public class MetricBasedRecombinationFilter<TK,FV> implements RecombinationFilter<MultiTranslationState<TK, FV>> {
 	RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> metricFilter;

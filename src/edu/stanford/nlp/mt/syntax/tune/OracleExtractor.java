@@ -1,9 +1,9 @@
-package mt.syntax.tune;
+package edu.stanford.nlp.mt.syntax.tune;
 
 import java.util.HashMap;
 
-import mt.syntax.decoder.Chart;
-import mt.syntax.decoder.HyperGraph.Item;
+import edu.stanford.nlp.mt.syntax.decoder.Chart;
+import edu.stanford.nlp.mt.syntax.decoder.HyperGraph.Item;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University

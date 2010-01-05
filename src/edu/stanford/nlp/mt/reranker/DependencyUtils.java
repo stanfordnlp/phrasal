@@ -1,4 +1,4 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.stats.ClassicCounter;

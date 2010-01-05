@@ -1,4 +1,4 @@
-package mt.metrics.ter;
+package edu.stanford.nlp.mt.metrics.ter;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;

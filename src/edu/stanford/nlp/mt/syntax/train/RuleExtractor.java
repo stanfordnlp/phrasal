@@ -1,6 +1,6 @@
-package mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.train;
 
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -27,7 +27,7 @@ public class RuleExtractor {
   public static final String TRAIN_MARKOV_OPT = "model";
 
   // GHKM rule extraction class:
-  static public final String EXTRACTORS_OPT = "extractors"; // default: mt.syntax.train.RelativeFrequencyFeatureExtractor
+  static public final String EXTRACTORS_OPT = "extractors"; // default: edu.stanford.nlp.mt.syntax.train.RelativeFrequencyFeatureExtractor
 
   // Rule filtering:
   static public final String MAX_COMPOSITIONS_OPT = "maxCompositions";

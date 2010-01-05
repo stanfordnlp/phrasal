@@ -1,11 +1,11 @@
-package mt.decoder.h;
+package edu.stanford.nlp.mt.decoder.h;
 
 import java.util.List;
 
-import mt.base.ConcreteTranslationOption;
-import mt.base.CoverageSet;
-import mt.base.Sequence;
-import mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
 /**
  * 

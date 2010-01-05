@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /**
  * this is like ATableHMM2 but uses equivalence classes

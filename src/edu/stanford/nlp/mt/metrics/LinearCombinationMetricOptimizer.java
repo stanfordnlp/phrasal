@@ -1,10 +1,10 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 import java.util.*;
 import java.io.*;
 
-import mt.base.*;
-import mt.metrics.ter.TERcost;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.metrics.ter.TERcost;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Pair;
@@ -88,7 +88,7 @@ public class LinearCombinationMetricOptimizer implements Function {
 
     if(metrics == null || refPrefix == null || hypFile == null || humanScoreFile == null) {
 			System.err.println
-       ("Usage:\n\tjava mt.tools.MetricLinearCombination "+
+       ("Usage:\n\tjava edu.stanford.nlp.mt.tools.MetricLinearCombination "+
         "[OPTIONS] -metrics <metric1:...:metricN> -refs <reference_trans> -hyp <system_trans> -human <human_judgments>\n"+
         "where OPTIONS are:\n"+
         "-tuneCosts: whether to tune TER costs (slow, default false)\n"+

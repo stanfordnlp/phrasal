@@ -1,11 +1,11 @@
-package mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder.inferer;
 
-import mt.decoder.feat.CombinedFeaturizer;
-import mt.decoder.h.SearchHeuristic;
-import mt.decoder.recomb.RecombinationFilter;
-import mt.decoder.util.Hypothesis;
-import mt.decoder.util.PhraseGenerator;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  *

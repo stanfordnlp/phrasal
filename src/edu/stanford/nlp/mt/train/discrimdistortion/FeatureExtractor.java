@@ -1,4 +1,4 @@
-package mt.train.discrimdistortion;
+package edu.stanford.nlp.mt.train.discrimdistortion;
 
 import java.io.*;
 import java.util.*;
@@ -10,7 +10,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 public class FeatureExtractor {
 

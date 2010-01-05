@@ -1,21 +1,21 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 import java.io.*;
 
-import mt.base.BiText;
-import mt.base.CombinedPhraseGenerator;
-import mt.base.DynamicPhraseTable;
-import mt.base.IBMModel1;
-import mt.base.IdentityPhraseGenerator;
-import mt.base.NewDynamicPhraseTable;
-import mt.base.PharaohPhraseTable;
-import mt.base.IString;
-import mt.base.SymbolFilter;
-import mt.base.DTUTable;
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.feat.UnknownWordFeaturizer;
-import mt.tools.NumericFilter;
+import edu.stanford.nlp.mt.base.BiText;
+import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
+import edu.stanford.nlp.mt.base.DynamicPhraseTable;
+import edu.stanford.nlp.mt.base.IBMModel1;
+import edu.stanford.nlp.mt.base.IdentityPhraseGenerator;
+import edu.stanford.nlp.mt.base.NewDynamicPhraseTable;
+import edu.stanford.nlp.mt.base.PharaohPhraseTable;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.SymbolFilter;
+import edu.stanford.nlp.mt.base.DTUTable;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.UnknownWordFeaturizer;
+import edu.stanford.nlp.mt.tools.NumericFilter;
 
 /**
  * 

@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /**
  * getProb(i,j) = p(fj|ei) if i not eq 0 and else p(fj|fj-1)

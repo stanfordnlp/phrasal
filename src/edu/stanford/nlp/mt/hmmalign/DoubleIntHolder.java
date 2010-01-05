@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /**
  * Used as a wrapper for values in a HashMap which hold

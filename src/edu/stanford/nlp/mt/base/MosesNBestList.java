@@ -1,4 +1,4 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 import java.io.*;
@@ -6,8 +6,8 @@ import java.util.regex.*;
 import java.util.zip.GZIPInputStream;
 import java.text.DecimalFormat;
 
-import mt.decoder.util.Scorer;
-import mt.metrics.NISTTokenizer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 
 import edu.stanford.nlp.util.OAIndex;
 

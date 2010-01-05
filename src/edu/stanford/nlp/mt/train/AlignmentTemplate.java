@@ -1,12 +1,12 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.*;
 import java.io.IOException;
 
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
 
 /**
  * An alignment template: a source-language phrase (f), a target-language phrase (c), and

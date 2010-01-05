@@ -1,4 +1,4 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.*;
 import java.util.*;

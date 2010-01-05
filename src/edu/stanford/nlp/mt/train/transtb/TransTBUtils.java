@@ -1,4 +1,4 @@
-package mt.train.transtb;
+package edu.stanford.nlp.mt.train.transtb;
 
 import java.util.*;
 import java.io.*;

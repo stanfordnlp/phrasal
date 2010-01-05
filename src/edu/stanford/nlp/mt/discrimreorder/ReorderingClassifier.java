@@ -1,4 +1,4 @@
-package mt.discrimreorder;
+package edu.stanford.nlp.mt.discrimreorder;
 
 import edu.stanford.nlp.classify.*;
 import edu.stanford.nlp.ling.*;
@@ -13,7 +13,7 @@ import java.util.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
 
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 /**
  * Read in source, target and alignment and make examples
@@ -384,7 +384,7 @@ public class ReorderingClassifier {
 
   static void usage() {
     System.err.print
-      ("Usage: java mt.discrimreorder.ReorderingClassifier [ARGS]\n"+
+      ("Usage: java edu.stanford.nlp.mt.discrimreorder.ReorderingClassifier [ARGS]\n"+
        "Mandatory arguments:\n"+
        " -fCorpus <file> : source-language corpus\n"+
        " -eCorpus <file> : target-language corpus\n"+

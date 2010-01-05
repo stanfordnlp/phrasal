@@ -1,4 +1,4 @@
-package mt.decoder.inferer.impl;
+package edu.stanford.nlp.mt.decoder.inferer.impl;
 
 import java.io.*;
 import java.util.*;
@@ -6,12 +6,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import mt.base.*;
-import mt.decoder.inferer.*;
-import mt.decoder.recomb.*;
-import mt.decoder.util.*;
-import mt.decoder.feat.RichIncrementalFeaturizer;
-import mt.PseudoMoses;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.inferer.*;
+import edu.stanford.nlp.mt.decoder.recomb.*;
+import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
+import edu.stanford.nlp.mt.PseudoMoses;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 

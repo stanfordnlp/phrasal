@@ -1,4 +1,4 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
 /**
  * This class computes <b>Negative</b> TER score.

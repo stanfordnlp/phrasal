@@ -1,9 +1,9 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 import java.io.IOException;
 import java.util.List;
 
-import mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.FeatureValue;
 
 import static java.lang.System.*;
 

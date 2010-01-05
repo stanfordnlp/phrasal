@@ -1,4 +1,4 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
 
@@ -7,10 +7,10 @@ import java.util.Arrays;
 import java.util.WeakHashMap;
 import java.util.StringTokenizer;
 
-import mt.srilm.srilm;
-import mt.srilm.SWIGTYPE_p_Ngram;
-import mt.srilm.SWIGTYPE_p_unsigned_int;
-import mt.srilm.SWIGTYPE_p_Vocab;
+import edu.stanford.nlp.mt.srilm.srilm;
+import edu.stanford.nlp.mt.srilm.SWIGTYPE_p_Ngram;
+import edu.stanford.nlp.mt.srilm.SWIGTYPE_p_unsigned_int;
+import edu.stanford.nlp.mt.srilm.SWIGTYPE_p_Vocab;
 
 /**
  * Language model class using SRILM native code.

@@ -1,10 +1,10 @@
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import java.util.Set;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.IString;
 
 /**
  * Abstract class representing a set of word alignments for one sentence pair.
@@ -12,7 +12,7 @@ import mt.base.IString;
  * are not necessarily symmetrical (since words aligners such as GIZA do not 
  * produce symmetrical word alignments). 
  *
- * @see mt.train.GIZAWordAlignment
+ * @see edu.stanford.nlp.mt.train.GIZAWordAlignment
  * @see SymmetricalWordAlignment
  *
  * @author Michel Galley

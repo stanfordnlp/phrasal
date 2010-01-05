@@ -10,12 +10,12 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mt.syntax.mst.rmcd.io;
+package edu.stanford.nlp.mt.syntax.mst.rmcd.io;
 
 import java.io.*;
 
 import edu.stanford.nlp.util.StringUtils;
-import mt.syntax.mst.rmcd.*;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 
 /**
  * A writer to create files in CONLL format.
@@ -26,7 +26,7 @@ import mt.syntax.mst.rmcd.*;
  *
  * @author Jason Baldridge
  * @version $Id: CONLLWriter.java 94 2007-01-17 17:05:12Z jasonbaldridge $
- * @see mt.syntax.mst.rmcd.io.DependencyWriter
+ * @see edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter
  */
 public class CONLLWriter extends DependencyWriter {
 

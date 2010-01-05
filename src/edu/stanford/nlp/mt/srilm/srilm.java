@@ -6,7 +6,7 @@
  * the SWIG interface file instead.
  * ----------------------------------------------------------------------------- */
 
-package mt.srilm;
+package edu.stanford.nlp.mt.srilm;
 
 public class srilm {
   public static SWIGTYPE_p_unsigned_int new_unsigned_array(int nelements) {

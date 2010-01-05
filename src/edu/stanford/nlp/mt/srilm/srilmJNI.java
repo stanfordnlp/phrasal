@@ -6,7 +6,7 @@
  * the SWIG interface file instead.
  * ----------------------------------------------------------------------------- */
 
-package mt.srilm;
+package edu.stanford.nlp.mt.srilm;
 
 class srilmJNI {
   public final static native long new_unsigned_array(int jarg1);

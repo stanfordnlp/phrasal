@@ -1,4 +1,4 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
 import edu.stanford.nlp.stats.Counter;
 

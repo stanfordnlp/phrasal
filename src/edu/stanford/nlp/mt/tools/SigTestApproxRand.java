@@ -1,9 +1,9 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import java.util.*;
 
-import mt.base.*;
-import mt.metrics.*;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.metrics.*;
 
 /**
  * Approximate Randomization Test for Statistical Significance Testing 
@@ -26,7 +26,7 @@ public class SigTestApproxRand {
 	
 	static public void main(String[] args) throws Exception {
 		if (args.length != 4) {
-			System.err.printf("Usage:\n\tjava mt.tools.SigTestApproxRand (eval type:bleu/ter) (reference prefix) (system1.trans) (system2.trans)\n");
+			System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.tools.SigTestApproxRand (eval type:bleu/ter) (reference prefix) (system1.trans) (system2.trans)\n");
 			System.exit(-1);
 		}
 		String evalMetricName = args[0];

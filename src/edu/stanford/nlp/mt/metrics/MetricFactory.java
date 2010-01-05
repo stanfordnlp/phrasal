@@ -1,10 +1,10 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 import java.io.*;
 import java.util.*;
 
-import mt.base.IString;
-import mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * 

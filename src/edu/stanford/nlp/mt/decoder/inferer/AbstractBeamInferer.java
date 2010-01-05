@@ -1,10 +1,10 @@
-package mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder.inferer;
 
 import java.util.*;
 
-import mt.base.*;
-import mt.decoder.recomb.*;
-import mt.decoder.util.*;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.recomb.*;
+import edu.stanford.nlp.mt.decoder.util.*;
 
 /**
  *

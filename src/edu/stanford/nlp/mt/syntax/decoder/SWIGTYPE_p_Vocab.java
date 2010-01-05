@@ -6,7 +6,7 @@
  * the SWIG interface file instead.
  * ----------------------------------------------------------------------------- */
 
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 @SuppressWarnings("unchecked")
 public class SWIGTYPE_p_Vocab {

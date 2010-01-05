@@ -1,4 +1,4 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.*;
 import java.util.*;

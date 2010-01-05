@@ -1,19 +1,19 @@
-package mt;
+package edu.stanford.nlp.mt;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 
-import mt.base.*;
-import mt.decoder.feat.*;
-import mt.decoder.h.*;
-import mt.decoder.inferer.*;
-import mt.decoder.inferer.impl.DTUDecoder;
-import mt.decoder.recomb.*;
-import mt.decoder.util.*;
-import mt.decoder.efeat.SentenceBoundaryFeaturizer;
-import mt.metrics.*;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.feat.*;
+import edu.stanford.nlp.mt.decoder.h.*;
+import edu.stanford.nlp.mt.decoder.inferer.*;
+import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
+import edu.stanford.nlp.mt.decoder.recomb.*;
+import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.decoder.efeat.SentenceBoundaryFeaturizer;
+import edu.stanford.nlp.mt.metrics.*;
 
 import edu.stanford.nlp.classify.km.StructuredSVM;
 import edu.stanford.nlp.classify.km.kernels.Kernel;

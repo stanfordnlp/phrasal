@@ -1,13 +1,13 @@
-package mt.decoder.recomb;
+package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.*;
 
-import mt.base.IString;
-import mt.base.FactoryUtil;
-import mt.base.LanguageModel;
-import mt.decoder.feat.Featurizers;
-import mt.decoder.feat.IncrementalFeaturizer;
-import mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.FactoryUtil;
+import edu.stanford.nlp.mt.base.LanguageModel;
+import edu.stanford.nlp.mt.decoder.feat.Featurizers;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
 
 /**

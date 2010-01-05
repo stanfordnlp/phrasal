@@ -1,21 +1,21 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.*;
 import java.io.*;
 
-import mt.base.ARPALanguageModel;
-import mt.base.ConcreteTranslationOption;
-import mt.base.CoverageSet;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.ExtendedLexicalReorderingTable;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.IString;
-import mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
-import mt.decoder.feat.IncrementalFeaturizer;
-import mt.decoder.feat.LexicalReorderingFeaturizer;
-import mt.train.AlignmentGrid;
+import edu.stanford.nlp.mt.base.ARPALanguageModel;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.LexicalReorderingFeaturizer;
+import edu.stanford.nlp.mt.train.AlignmentGrid;
 
 
 /**

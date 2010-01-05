@@ -1,4 +1,4 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 import java.io.*;
 import java.util.*;

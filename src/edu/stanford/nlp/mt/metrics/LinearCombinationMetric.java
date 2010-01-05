@@ -1,8 +1,8 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
-import mt.base.*;
-import mt.decoder.recomb.RecombinationFilter;
-import mt.decoder.util.State;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.util.State;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

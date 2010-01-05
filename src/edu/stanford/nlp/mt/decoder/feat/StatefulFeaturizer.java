@@ -1,4 +1,4 @@
-package mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat;
 
 /**
  * @author Michel Galley

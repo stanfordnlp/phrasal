@@ -1,4 +1,4 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -11,7 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-import mt.syntax.util.FileUtility;
+import edu.stanford.nlp.mt.syntax.util.FileUtility;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University

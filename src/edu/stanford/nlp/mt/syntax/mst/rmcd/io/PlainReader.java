@@ -1,4 +1,4 @@
-package mt.syntax.mst.rmcd.io;
+package edu.stanford.nlp.mt.syntax.mst.rmcd.io;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.ling.TaggedWord;
 
-import mt.syntax.mst.rmcd.*;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 
 public class PlainReader extends DependencyReader {
 

@@ -6,7 +6,7 @@
  * the SWIG interface file instead.
  * ----------------------------------------------------------------------------- */
 
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 public class srilm {
   public static SWIGTYPE_p_unsigned_int new_unsigned_array(int nelements) {

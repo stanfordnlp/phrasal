@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /* This class will make sure every word-tag-etc pair has a unique Id
  * Also the objects will not be created too many times - just once

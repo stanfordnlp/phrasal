@@ -1,4 +1,4 @@
-package mt.classifyde;
+package edu.stanford.nlp.mt.classifyde;
 
 public class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
   public T1 first;

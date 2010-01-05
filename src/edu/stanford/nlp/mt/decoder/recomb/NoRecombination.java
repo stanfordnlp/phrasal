@@ -1,4 +1,4 @@
-package mt.decoder.recomb;
+package edu.stanford.nlp.mt.decoder.recomb;
 
 /**
  * 

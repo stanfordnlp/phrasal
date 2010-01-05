@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 
 /* This serves for input from files. Copied from Bruce Eckel

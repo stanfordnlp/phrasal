@@ -1,4 +1,4 @@
-package mt.classifyde.misc;
+package edu.stanford.nlp.mt.classifyde.misc;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package mt.classifyde;
+package edu.stanford.nlp.mt.classifyde;
 
 import java.util.*;
 
@@ -13,9 +13,9 @@ import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.ArrayUtils;
-import mt.train.transtb.AlignmentUtils;
-import mt.train.transtb.TranslationAlignment;
-import mt.train.transtb.TreePair;
+import edu.stanford.nlp.mt.train.transtb.AlignmentUtils;
+import edu.stanford.nlp.mt.train.transtb.TranslationAlignment;
+import edu.stanford.nlp.mt.train.transtb.TreePair;
 
 
 /**

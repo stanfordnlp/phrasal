@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
@@ -7,9 +7,9 @@ import java.util.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import mt.base.DynamicIntegerArrayIndex;
-import mt.base.Sequence;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 

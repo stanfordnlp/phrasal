@@ -1,11 +1,11 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import mt.base.Sequence;
-import mt.base.IString;
-import mt.decoder.efeat.WordLevelDiscrimDistortionFeaturizer;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.efeat.WordLevelDiscrimDistortionFeaturizer;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
@@ -130,7 +130,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
       }
       */
 
-      //String distortionType = mt.ExperimentalFeaturizers.WordLevelDiscrimDistortionFeaturizer.getDistortionType(distance);
+      //String distortionType = edu.stanford.nlp.mt.ExperimentalFeaturizers.WordLevelDiscrimDistortionFeaturizer.getDistortionType(distance);
       String distortionType = WordLevelDiscrimDistortionFeaturizer.getDistortionTypeAll(distance);
 
       IString f_first  = f.get(curr);
@@ -288,7 +288,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     System.err.println("distortionTypeCounter="+c.distortionTypeCounter);
     System.err.println("distortionTypeCounter.all="+c.distortionTypeCounter.totalCount());
 
-    //int numKeys = mt.ExperimentalFeaturizers.WordLevelDiscrimDistortionFeaturizer.getNumDistortionType();
+    //int numKeys = edu.stanford.nlp.mt.ExperimentalFeaturizers.WordLevelDiscrimDistortionFeaturizer.getNumDistortionType();
     /*
     for(Map.Entry<String,Counter<String>> e : c.counterF1F2.entrySet()) {
       System.err.println(e.getKey());

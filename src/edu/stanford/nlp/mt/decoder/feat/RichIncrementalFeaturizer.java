@@ -1,6 +1,6 @@
-package mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat;
 
-import mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.Featurizable;
 
 /**
  *

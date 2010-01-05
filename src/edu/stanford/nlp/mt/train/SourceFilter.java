@@ -1,17 +1,17 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.*;
 import java.io.*;
 
-import mt.base.IOTools;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.TrieIntegerArrayIndex;
-import mt.base.Sequences;
-import mt.base.IntegerArrayIndex;
-import mt.base.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.IntegerArrayIndex;
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 
 /**
  * Toolkit for extracting source-language n-grams that must be considered

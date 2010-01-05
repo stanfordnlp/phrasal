@@ -1,4 +1,4 @@
-package mt.tools.turk;
+package edu.stanford.nlp.mt.tools.turk;
 
 import static java.lang.System.*;
 import java.util.Random;

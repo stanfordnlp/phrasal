@@ -1,4 +1,4 @@
-package mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.train;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -9,14 +9,14 @@ import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.optimization.*;
 
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.DynamicIntegerArrayPrefixIndex;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayPrefixIndex;
 
 /**
  * Interpolated backoff ML estimation of multinomials using Witten-Bell discounting.
  * Currently used to smooth lexical probabilities of sytnax-based models in
- * mt.syntax.train (similarly to Michael Collins's thesis, p. 65). 
+ * edu.stanford.nlp.mt.syntax.train (similarly to Michael Collins's thesis, p. 65). 
  *
  * @author Michel Galley
  */

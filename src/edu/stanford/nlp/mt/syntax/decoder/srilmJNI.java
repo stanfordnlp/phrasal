@@ -6,7 +6,7 @@
  * the SWIG interface file instead.
  * ----------------------------------------------------------------------------- */
 
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 class srilmJNI {
   public final static native long new_unsigned_array(int jarg1);

@@ -1,7 +1,7 @@
-package mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder.inferer;
 
-import mt.decoder.inferer.Inferer;
-import mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.inferer.Inferer;
+import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
 
 /**
  *

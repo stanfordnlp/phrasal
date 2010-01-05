@@ -1,6 +1,6 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
-import mt.metrics.NISTTokenizer;
+import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import java.text.DecimalFormat;
 import java.util.*;
 

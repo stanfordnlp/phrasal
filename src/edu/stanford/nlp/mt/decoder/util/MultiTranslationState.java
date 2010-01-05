@@ -1,13 +1,13 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import mt.base.NBestListContainer;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.metrics.EvaluationMetric;
-import mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 
 /**
  * 

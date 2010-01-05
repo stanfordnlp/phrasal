@@ -1,13 +1,13 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
-import mt.base.DynamicIntegerArrayIndex;
-import mt.base.Sequences;
-import mt.base.IntegerArrayIndex;
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.IntegerArrayIndex;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 // Int2IntLinkedOpenHashMap is second choice

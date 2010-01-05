@@ -1,10 +1,10 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.util.HashMap;
 
-import mt.syntax.decoder.HyperGraph;
+import edu.stanford.nlp.mt.syntax.decoder.HyperGraph;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University

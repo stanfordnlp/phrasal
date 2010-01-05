@@ -1,8 +1,8 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.util.ArrayList;
 
-import mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
 /**
  * 

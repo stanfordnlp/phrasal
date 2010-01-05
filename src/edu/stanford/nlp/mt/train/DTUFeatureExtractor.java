@@ -1,7 +1,7 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.IString;
 
 /**
  * Extractor for printing the number of occurrences of each alignment template.

@@ -1,4 +1,4 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.*;
 import java.util.List;
@@ -6,14 +6,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import mt.base.IString;
-import mt.base.Sequence;
-import mt.base.IStrings;
-import mt.base.RawSequence;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.metrics.Metrics;
-import mt.metrics.BLEUMetric;
-import mt.metrics.NISTTokenizer;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.BLEUMetric;
+import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import edu.stanford.nlp.util.Pair;
 
 /**

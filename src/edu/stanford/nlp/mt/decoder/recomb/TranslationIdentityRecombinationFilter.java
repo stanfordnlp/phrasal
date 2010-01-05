@@ -1,6 +1,6 @@
-package mt.decoder.recomb;
+package edu.stanford.nlp.mt.decoder.recomb;
 
-import mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
 
 /**

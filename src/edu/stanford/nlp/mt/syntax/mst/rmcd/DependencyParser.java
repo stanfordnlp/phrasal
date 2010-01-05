@@ -1,4 +1,4 @@
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import edu.stanford.nlp.classify.LogisticClassifier;
 import edu.stanford.nlp.classify.RVFDataset;

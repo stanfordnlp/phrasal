@@ -1,26 +1,26 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
 
-import mt.base.ConcreteTranslationOption;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.Sequence;
-import mt.base.IString;
-import mt.decoder.feat.StatefulFeaturizer;
-import mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 /**
  * @author Michel Galley
  */
 public class LinearDistortionFeaturizer extends StatefulFeaturizer<IString, String> implements IncrementalFeaturizer<IString, String> {
 
-	// TODO: implement a cleaner way to disable mt.decoder.feat.LinearDistortionFeaturizer
+	// TODO: implement a cleaner way to disable edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer
 
 	public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  // Purposedely the same name as in mt.decoder.feat.LinearDistortionFeaturizer:
+  // Purposedely the same name as in edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer:
   public static final String FEATURE_NAME = "LinearDistortion";
 
   public final float futureCostDelay;

@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /**
  * The purpose of this class is to hold separate ATableHMMs for different contexts. With

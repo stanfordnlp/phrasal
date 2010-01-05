@@ -1,4 +1,4 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -8,9 +8,9 @@ import java.util.Arrays;
 import java.io.IOException;
 import java.io.File;
 
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.util.Scorer;
-import mt.train.DTUPhraseExtractor;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 
 public class DTUTable<FV> extends PharaohPhraseTable<FV> {
 

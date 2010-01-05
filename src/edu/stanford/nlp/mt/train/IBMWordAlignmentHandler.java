@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.io.*;
 import java.util.*;
@@ -6,10 +6,10 @@ import java.util.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 
 /**
  *  @author Michel Galley

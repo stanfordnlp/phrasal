@@ -1,13 +1,13 @@
-package mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import java.io.*;
 import java.util.*;
 
-import mt.base.ARPALanguageModel;
-import mt.base.FactoryUtil;
-import mt.base.LanguageModel;
-import mt.base.PharaohPhraseTable;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.ARPALanguageModel;
+import edu.stanford.nlp.mt.base.FactoryUtil;
+import edu.stanford.nlp.mt.base.LanguageModel;
+import edu.stanford.nlp.mt.base.PharaohPhraseTable;
+import edu.stanford.nlp.mt.base.IString;
 
 /**
  * @author danielcer

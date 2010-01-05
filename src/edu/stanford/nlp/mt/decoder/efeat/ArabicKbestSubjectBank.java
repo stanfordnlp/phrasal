@@ -1,9 +1,9 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.*;
 import java.util.*;
 
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 public class ArabicKbestSubjectBank {
   private static ArabicKbestSubjectBank thisInstance = null;

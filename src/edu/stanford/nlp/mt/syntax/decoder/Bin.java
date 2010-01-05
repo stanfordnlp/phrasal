@@ -1,4 +1,4 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,10 +6,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
-import mt.syntax.decoder.HyperGraph.Deduction;
-import mt.syntax.decoder.HyperGraph.Item;
-import mt.syntax.decoder.TMGrammar.Rule;
-import mt.syntax.decoder.TMGrammar.RuleBin;
+import edu.stanford.nlp.mt.syntax.decoder.HyperGraph.Deduction;
+import edu.stanford.nlp.mt.syntax.decoder.HyperGraph.Item;
+import edu.stanford.nlp.mt.syntax.decoder.TMGrammar.Rule;
+import edu.stanford.nlp.mt.syntax.decoder.TMGrammar.RuleBin;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University

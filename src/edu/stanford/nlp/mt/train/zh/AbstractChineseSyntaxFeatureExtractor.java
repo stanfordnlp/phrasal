@@ -1,9 +1,9 @@
-package mt.train.zh;
+package edu.stanford.nlp.mt.train.zh;
 
-import mt.train.AbstractFeatureExtractor;
-import mt.train.AlignmentGrid;
-import mt.train.AlignmentTemplateInstance;
-import mt.train.AlignmentTemplates;
+import edu.stanford.nlp.mt.train.AbstractFeatureExtractor;
+import edu.stanford.nlp.mt.train.AlignmentGrid;
+import edu.stanford.nlp.mt.train.AlignmentTemplateInstance;
+import edu.stanford.nlp.mt.train.AlignmentTemplates;
 
 import java.util.Properties;
 import edu.stanford.nlp.util.Index;

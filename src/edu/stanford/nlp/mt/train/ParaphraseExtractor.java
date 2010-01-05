@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -6,8 +6,8 @@ import java.util.*;
 import java.io.PrintStream;
 import java.io.IOException;
 
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.util.*;
 
 /**

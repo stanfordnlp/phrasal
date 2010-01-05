@@ -1,10 +1,10 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
 
-import mt.base.*;
-import mt.decoder.feat.IncrementalFeaturizer;
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 
 /**
  * Assign large cost to phrase if sentence boundaries are not at the right place.

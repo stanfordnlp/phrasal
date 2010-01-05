@@ -1,10 +1,10 @@
-package mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder.inferer;
 
 import java.util.*;
 
-import mt.base.*;
-import mt.decoder.inferer.impl.*;
-import mt.decoder.util.*;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.inferer.impl.*;
+import edu.stanford.nlp.mt.decoder.util.*;
 
 public class InfererBuilderFactory {
 	public static final String GREEDY_DECODER = "greedy";

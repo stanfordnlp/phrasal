@@ -1,20 +1,20 @@
-package mt.decoder.feat.oracle;
+package edu.stanford.nlp.mt.decoder.feat.oracle;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 
-import mt.decoder.feat.RichIncrementalFeaturizer;
-import mt.decoder.feat.ClonedFeaturizer;
-import mt.decoder.feat.StatefulFeaturizer;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.ConcreteTranslationOption;
-import mt.base.Sequence;
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.metrics.NISTTokenizer;
-import mt.PseudoMoses;
+import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.metrics.NISTTokenizer;
+import edu.stanford.nlp.mt.PseudoMoses;
 
 import java.util.List;
 import java.util.Map;
@@ -61,7 +61,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
   public BLEUFeaturizer(String... args) throws Exception {
 
     if(args.length < 3)
-      throw new RuntimeException("Usage: mt.decoder.feat.oracle.BLEUFeaturizer (feature name) (featurize during decoding) (ref0) ... (refN)");
+      throw new RuntimeException("Usage: edu.stanford.nlp.mt.decoder.feat.oracle.BLEUFeaturizer (feature name) (featurize during decoding) (ref0) ... (refN)");
 
     this.sentOffset = PseudoMoses.local_procs>1 ? 2:0;
 

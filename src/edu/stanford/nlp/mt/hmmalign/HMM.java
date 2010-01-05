@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 /* This class does HMM training with EM
  * Reports perplexity on training and test data

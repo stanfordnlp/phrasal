@@ -1,4 +1,4 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -17,16 +17,16 @@ import edu.stanford.nlp.optimization.HasInitial;
 import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;
 import edu.stanford.nlp.math.ArrayMath;
 
-import mt.base.MosesNBestList;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.base.FeatureValue;
-import mt.base.IString;
-import mt.metrics.EvaluationMetric;
-import mt.metrics.IncrementalEvaluationMetric;
-import mt.metrics.ScorerWrapperEvaluationMetric;
-import mt.decoder.util.StaticScorer;
-import mt.decoder.util.Scorer;
-import mt.decoder.feat.WordPenaltyFeaturizer;
+import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
+import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.feat.WordPenaltyFeaturizer;
 
 import java.util.List;
 import java.util.Set;

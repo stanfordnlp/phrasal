@@ -1,10 +1,10 @@
-package mt.train.discrimdistortion;
+package edu.stanford.nlp.mt.train.discrimdistortion;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.optimization.AbstractCachingDiffFunction;
 import edu.stanford.nlp.optimization.DiffFunction;

@@ -1,4 +1,4 @@
-package mt.syntax.util;
+package edu.stanford.nlp.mt.syntax.util;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University
@@ -23,12 +23,12 @@ public class Alignment {
 		String[] french_wrds1 = french_str.split("\\s+");
 		french_wrds = new int[french_wrds1.length];
 		for(int i=0; i<french_wrds1.length; i++)
-			french_wrds[i] = mt.syntax.decoder.Symbol.add_terminal_symbol(french_wrds1[i]);
+			french_wrds[i] = edu.stanford.nlp.mt.syntax.decoder.Symbol.add_terminal_symbol(french_wrds1[i]);
 
 		String[] english_wrds1 = english_str.split("\\s+");
 		english_wrds = new int[english_wrds1.length];
 		for(int i=0; i<english_wrds1.length; i++)
-			english_wrds[i] = mt.syntax.decoder.Symbol.add_terminal_symbol(english_wrds1[i]);
+			english_wrds[i] = edu.stanford.nlp.mt.syntax.decoder.Symbol.add_terminal_symbol(english_wrds1[i]);
 
 		alignment_matrix = new int[french_wrds.length][english_wrds.length];
 		num_alignments_infor_for_french = new int[french_wrds.length];

@@ -1,11 +1,11 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 import java.util.*;
 import java.io.*;
 
-import mt.base.*;
-import mt.metrics.ter.TERcost;
-import mt.metrics.ter.TERcalc;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.metrics.ter.TERcost;
+import edu.stanford.nlp.mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;

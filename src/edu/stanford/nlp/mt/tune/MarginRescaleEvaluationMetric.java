@@ -1,14 +1,14 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
 import java.util.*;
 
-import mt.base.IString;
-import mt.base.NBestListContainer;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.decoder.recomb.RecombinationFilter;
-import mt.decoder.util.Scorer;
-import mt.decoder.util.State;
-import mt.metrics.*;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.metrics.*;
 
 /**
  * 

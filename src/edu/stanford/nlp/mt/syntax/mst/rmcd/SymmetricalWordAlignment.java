@@ -1,11 +1,11 @@
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import java.util.TreeSet;
 import java.util.Set;
 import java.io.*;
 
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 
 import edu.stanford.nlp.util.ArrayUtils;
 

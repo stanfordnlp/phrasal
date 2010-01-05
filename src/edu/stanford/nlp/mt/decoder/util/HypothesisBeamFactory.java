@@ -1,7 +1,7 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
-import mt.decoder.recomb.RecombinationFilter;
-import mt.decoder.recomb.RecombinationHistory;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 
 
 /**

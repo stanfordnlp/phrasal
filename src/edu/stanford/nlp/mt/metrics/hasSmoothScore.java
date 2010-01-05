@@ -1,4 +1,4 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 /**
  * 

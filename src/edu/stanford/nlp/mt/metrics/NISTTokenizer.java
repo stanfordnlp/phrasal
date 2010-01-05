@@ -1,8 +1,8 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 /**
   * NIST tokenization according to mtevalv11 specs.
-  * Taken from mt.reranker.ter.
+  * Taken from edu.stanford.nlp.mt.reranker.ter.
   * 
   * @author Michel Galley
   */

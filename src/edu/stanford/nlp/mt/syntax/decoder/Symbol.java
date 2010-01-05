@@ -1,11 +1,11 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.HashMap ;
 import java.util.List;
 
-import mt.syntax.util.FileUtility;
+import edu.stanford.nlp.mt.syntax.util.FileUtility;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University

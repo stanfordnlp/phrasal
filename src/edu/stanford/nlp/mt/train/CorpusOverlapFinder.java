@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -9,10 +9,10 @@ import java.util.*;
 import java.text.SimpleDateFormat;
 import java.io.IOException;
 
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 
 /**
  * Class for finding long n-gram sequences that appear in both training and test data.
@@ -160,7 +160,7 @@ public class CorpusOverlapFinder {
 
   static void usage() {
     System.err.print
-    ("Usage: java mt.train.CorpusOverlapFinder test train1 ... trainN\n");
+    ("Usage: java edu.stanford.nlp.mt.train.CorpusOverlapFinder test train1 ... trainN\n");
   }
 
   public static void main(String[] args) {

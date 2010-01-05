@@ -1,10 +1,10 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.util.StringUtils;
 
-import mt.base.IString;
-import mt.base.Sequence;
-import mt.train.GIZAWordAlignment;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.train.GIZAWordAlignment;
 
 import java.util.*;
 import java.io.*;

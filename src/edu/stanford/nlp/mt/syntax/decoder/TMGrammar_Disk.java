@@ -1,4 +1,4 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

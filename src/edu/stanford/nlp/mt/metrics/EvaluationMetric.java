@@ -1,11 +1,11 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 import java.util.*;
 
-import mt.base.NBestListContainer;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.decoder.recomb.RecombinationFilter;
-import mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 
 
 /**

@@ -1,9 +1,9 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
 import java.io.*;
 import java.util.*;
 
-import mt.metrics.ter.*;
+import edu.stanford.nlp.mt.metrics.ter.*;
 
 /**
  * @author Pi-Chuan Chang

@@ -1,4 +1,4 @@
-package mt.train.discrimdistortion;
+package edu.stanford.nlp.mt.train.discrimdistortion;
 
 import java.io.*;
 import java.util.List;
@@ -8,7 +8,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.util.Pair;
 

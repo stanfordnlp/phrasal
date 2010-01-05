@@ -1,4 +1,4 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -6,7 +6,7 @@ import java.io.LineNumberReader;
 import java.io.IOException;
 import java.util.EnumSet;
 
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 /**
  * @author Michel Galley

@@ -1,9 +1,9 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 import java.io.*;
 import java.util.*;
 
-import mt.base.FeatureValue;
-import mt.base.FeatureValueArray;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.FeatureValueArray;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;

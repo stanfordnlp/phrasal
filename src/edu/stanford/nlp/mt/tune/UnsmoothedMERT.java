@@ -1,12 +1,12 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
 import java.io.*;
 import java.util.*;
 
-import mt.base.*;
-import mt.decoder.util.*;
-import mt.metrics.*;
-import mt.metrics.ter.TERcalc;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.metrics.ter.TERcalc;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -1097,7 +1097,7 @@ public class UnsmoothedMERT extends Thread {
     }
 
     if(args.length-argi != 6) {
-      System.err.printf("Usage:\n\tjava mt.UnsmoothedMERT [-N] [-t (nb of threads)] [-s (seed)] [-p (nb of starting points)] [-o (optimizer name)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
+      System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.UnsmoothedMERT [-N] [-t (nb of threads)] [-s (seed)] [-p (nb of starting points)] [-o (optimizer name)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
       System.err.println("-s <N>: provide seed to initialize random number generator.");
       System.err.println("-p <N>: number of starting points.");
       System.err.println("-o <N>: search algorithm.");

@@ -1,9 +1,9 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
-import mt.base.IString;
-import mt.base.Sequence;
-import mt.base.TrieIntegerArrayIndex;
-import mt.tools.Levenshtein;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
+import edu.stanford.nlp.mt.tools.Levenshtein;
 
 import java.util.*;
 import java.io.IOException;

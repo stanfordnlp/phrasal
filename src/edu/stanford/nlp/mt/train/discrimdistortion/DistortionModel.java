@@ -1,4 +1,4 @@
-package mt.train.discrimdistortion;
+package edu.stanford.nlp.mt.train.discrimdistortion;
 
 import java.io.Serializable;
 import java.util.Map;

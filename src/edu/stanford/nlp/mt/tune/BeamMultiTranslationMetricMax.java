@@ -1,14 +1,14 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
 import java.util.*;
 
-import mt.base.MetricBasedRecombinationFilter;
-import mt.base.NBestListContainer;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.decoder.util.Beam;
-import mt.decoder.util.MultiTranslationState;
-import mt.decoder.util.TreeBeam;
-import mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.base.MetricBasedRecombinationFilter;
+import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.decoder.util.Beam;
+import edu.stanford.nlp.mt.decoder.util.MultiTranslationState;
+import edu.stanford.nlp.mt.decoder.util.TreeBeam;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 
 
 /**

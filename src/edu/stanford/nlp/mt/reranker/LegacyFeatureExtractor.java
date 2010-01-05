@@ -1,4 +1,4 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
 import edu.stanford.nlp.ling.TaggedWord;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -17,9 +17,9 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * A standalone feature extractor.<br>
- * Usage: <code>java mt.reranker.LegacyFeatureExtractor (datadescriptor) (outputFeatureFile) [options for what features to extract]</code><br>
+ * Usage: <code>java edu.stanford.nlp.mt.reranker.LegacyFeatureExtractor (datadescriptor) (outputFeatureFile) [options for what features to extract]</code><br>
  * example:<br>
- * <code>java -mx3g mt.reranker.LegacyFeatureExtractor scr/features/datadescriptors/0.txt   scr/features/sets/extractAlignedWordPairsBigram/0.feats -extractAlignedWordPairsBigram</code>
+ * <code>java -mx3g edu.stanford.nlp.mt.reranker.LegacyFeatureExtractor scr/features/datadescriptors/0.txt   scr/features/sets/extractAlignedWordPairsBigram/0.feats -extractAlignedWordPairsBigram</code>
  * <h3>Data Descriptor</h3>
  * The data descriptor should look like:<br>
  * <code>/u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/features/datadescriptors/0.txt</code><br>

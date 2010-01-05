@@ -1,4 +1,4 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -6,8 +6,8 @@ import java.util.*;
 
 import tokyocabinet.*;
 
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;

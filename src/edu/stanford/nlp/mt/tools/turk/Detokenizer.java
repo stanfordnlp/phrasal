@@ -1,4 +1,4 @@
-package mt.tools.turk;
+package edu.stanford.nlp.mt.tools.turk;
 
 import edu.stanford.nlp.process.PTBTokenizer;
 import java.io.BufferedReader;

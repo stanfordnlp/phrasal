@@ -1,4 +1,4 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.math.ArrayMath;
@@ -14,8 +14,8 @@ import java.util.HashMap;
 import java.util.Arrays;
 import java.io.File;
 
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 
 /**
  * Greedy prefix tagger. Its search is exact iff the tagging model is non-sequential

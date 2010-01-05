@@ -1,9 +1,9 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
 import java.util.List;
 
-import mt.base.NBestListContainer;
-import mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 
 /**
  * 

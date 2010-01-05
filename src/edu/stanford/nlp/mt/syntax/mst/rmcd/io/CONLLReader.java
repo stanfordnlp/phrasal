@@ -10,7 +10,7 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mt.syntax.mst.rmcd.io;
+package edu.stanford.nlp.mt.syntax.mst.rmcd.io;
 
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.ling.Sentence;
@@ -19,7 +19,7 @@ import edu.stanford.nlp.ling.TaggedWord;
 import java.io.*;
 import java.util.*;
 
-import mt.syntax.mst.rmcd.*;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 
 /**
  * A reader for files in CoNLL format.
@@ -30,7 +30,7 @@ import mt.syntax.mst.rmcd.*;
  *
  * @author Jason Baldridge
  * @version $Id: CONLLReader.java 112 2007-03-23 19:19:28Z jasonbaldridge $
- * @see mt.syntax.mst.rmcd.io.DependencyReader
+ * @see edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader
  */
 public class CONLLReader extends DependencyReader {
 

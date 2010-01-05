@@ -1,4 +1,4 @@
-package mt.train.transtb;
+package edu.stanford.nlp.mt.train.transtb;
 
 import java.util.*;
 
@@ -7,12 +7,12 @@ import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.io.FileUtils;
 import edu.stanford.nlp.ling.HasWord;
-import mt.syntax.mst.rmcd.io.DependencyWriter;
-import mt.syntax.mst.rmcd.io.DependencyReader;
-import mt.syntax.mst.rmcd.io.CONLLWriter;
-import mt.syntax.mst.rmcd.DependencyInstance;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.CONLLWriter;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.DependencyInstance;
 
-import mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
 /**
  * Reads in a CoNLL2007 file and annotate it with features

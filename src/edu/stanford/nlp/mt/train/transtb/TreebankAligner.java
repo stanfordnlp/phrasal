@@ -1,4 +1,4 @@
-package mt.train.transtb;
+package edu.stanford.nlp.mt.train.transtb;
 
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.ChineseUtils;
@@ -8,9 +8,9 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.io.*;
 
-import mt.base.IOTools;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
 
 /**
  * Generate a sentence-aligned parallel treebank from CTB and its translation as distributed
@@ -40,7 +40,7 @@ public class TreebankAligner {
     else if(args.length == 2)
       new TreebankAligner(args[0],args[1]).align();
     else
-			System.err.println("Usage: java mt.train.transtb.TreebankAligner (outBasename)");
+			System.err.println("Usage: java edu.stanford.nlp.mt.train.transtb.TreebankAligner (outBasename)");
   }
 
   public TreebankAligner(String outDir) {

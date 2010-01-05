@@ -1,19 +1,19 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.List;
 
-import mt.base.ConcreteTranslationOption;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.IOTools;
-import mt.base.IString;
-import mt.base.Sequence;
-import mt.decoder.feat.IncrementalFeaturizer;
-import mt.decoder.feat.StatefulFeaturizer;
-import mt.train.discrimdistortion.DistortionModel;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.train.discrimdistortion.DistortionModel;
 
 public class MultinomialDistortionFeaturizer extends StatefulFeaturizer<IString,String> implements IncrementalFeaturizer<IString, String> {
 

@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 import edu.stanford.nlp.util.IntQuadruple;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -1,14 +1,14 @@
 /**
  * 
  */
-package mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import mt.base.ConcreteTranslationOption;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.Sequence;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * @author danielcer
@@ -71,7 +71,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	}
 	
 	/**
-	 * @see mt.decoder.feat.IncrementalFeaturizer#featurize(Featurizable)
+	 * @see edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer#featurize(Featurizable)
 	 */
 	@Override
 	public FeatureValue<String> featurize(Featurizable<T,String> featurizable) {
@@ -79,7 +79,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 	}
 
 	/**
-	 * @see mt.decoder.feat.IncrementalFeaturizer#listFeaturize(Featurizable)
+	 * @see edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer#listFeaturize(Featurizable)
 	 */
 	@SuppressWarnings("unchecked")
 	@Override

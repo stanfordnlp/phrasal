@@ -1,8 +1,8 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
-import mt.base.RawSequence;
-import mt.base.Sequence;
-import mt.base.SequenceFilter;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SequenceFilter;
 
 /**
  * 

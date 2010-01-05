@@ -1,9 +1,9 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import mt.base.ConcreteTranslationOption;
-import mt.base.Sequence;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * 

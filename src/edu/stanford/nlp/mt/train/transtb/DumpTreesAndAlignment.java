@@ -1,12 +1,12 @@
-package mt.train.transtb;
+package edu.stanford.nlp.mt.train.transtb;
 
 import edu.stanford.nlp.trees.*;
 import java.util.*;
 import java.io.*;
 
-import mt.base.IOTools;
-import mt.train.SymmetricalWordAlignment;
-import mt.train.AbstractWordAlignment;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.train.AbstractWordAlignment;
 
 class DumpTreesAndAlignment {
   static void printTreesAndAlignment(TreePair treepair, 

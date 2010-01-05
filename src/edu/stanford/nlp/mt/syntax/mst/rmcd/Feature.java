@@ -10,7 +10,7 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 /**
  * A simple class holding a feature index and value that can be used
@@ -22,7 +22,7 @@ package mt.syntax.mst.rmcd;
  *
  * @author Jason Baldridge
  * @version $Id: TLinkedList.java,v 1.5 2005/03/26 17:52:56 ericdf Exp $
- * @see mt.syntax.mst.rmcd.FeatureVector
+ * @see edu.stanford.nlp.mt.syntax.mst.rmcd.FeatureVector
  */
 
 public final class Feature extends TLinkableAdaptor<Feature> {

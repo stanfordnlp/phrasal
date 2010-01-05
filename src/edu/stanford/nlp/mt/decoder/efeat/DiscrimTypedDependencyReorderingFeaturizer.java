@@ -1,19 +1,19 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.*;
 import java.io.*;
 
-import mt.base.IString;
-import mt.base.ConcreteTranslationOption;
-import mt.base.CoverageSet;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
 
-import mt.base.IOTools;
-import mt.base.Sequence;
-import mt.decoder.feat.ClonedFeaturizer;
-import mt.discrimreorder.DepUtils;
-import mt.discrimreorder.TrainingExamples;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
+import edu.stanford.nlp.mt.discrimreorder.DepUtils;
+import edu.stanford.nlp.mt.discrimreorder.TrainingExamples;
 
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.Datum;
@@ -25,12 +25,12 @@ import edu.stanford.nlp.stats.Counter;
  * Featurizer for a discriminative reordering model that uses typed dependency
  * features from the source (Chinese) side.
  * 
- * The classifier is built with the package: mt.discrimreorder
+ * The classifier is built with the package: edu.stanford.nlp.mt.discrimreorder
  * For details, look at the package.html for that package.
  * 
  * @author Pi-Chuan Chang
  *
- * @see mt.discrimreorder.ReorderingClassifier
+ * @see edu.stanford.nlp.mt.discrimreorder.ReorderingClassifier
  */
 public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturizer<IString, String> {
 

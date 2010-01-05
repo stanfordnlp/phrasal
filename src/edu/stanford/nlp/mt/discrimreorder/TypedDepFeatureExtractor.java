@@ -1,4 +1,4 @@
-package mt.discrimreorder;
+package edu.stanford.nlp.mt.discrimreorder;
 
 import java.util.*;
 import edu.stanford.nlp.trees.semgraph.*;

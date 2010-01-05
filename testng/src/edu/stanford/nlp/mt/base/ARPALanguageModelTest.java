@@ -1,10 +1,10 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.io.*;
 import org.testng.annotations.*;
 
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 
 /**
  * 

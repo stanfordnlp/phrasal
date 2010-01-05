@@ -1,4 +1,4 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

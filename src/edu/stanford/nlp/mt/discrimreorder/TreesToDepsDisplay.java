@@ -1,4 +1,4 @@
-package mt.discrimreorder;
+package edu.stanford.nlp.mt.discrimreorder;
 
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.util.*;
@@ -7,7 +7,7 @@ import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
 import java.util.*;
 import java.io.*;
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 public class TreesToDepsDisplay {
   public static void main(String[] args) throws Exception {

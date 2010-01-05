@@ -1,11 +1,11 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.*;
 import java.io.*;
 
-import mt.base.IOTools;
-import mt.base.Sequence;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
 
 /**
  * Feature extractor collecting function words appearing right next to a given alignment template.

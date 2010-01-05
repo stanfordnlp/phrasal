@@ -1,9 +1,9 @@
-package mt.decoder.recomb;
+package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import mt.decoder.util.State;
+import edu.stanford.nlp.mt.decoder.util.State;
 
 /**
  * 

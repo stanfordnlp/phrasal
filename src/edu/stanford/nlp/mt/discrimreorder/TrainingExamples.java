@@ -1,4 +1,4 @@
-package mt.discrimreorder;
+package edu.stanford.nlp.mt.discrimreorder;
 
 import edu.stanford.nlp.stats.*;
 import java.util.*;

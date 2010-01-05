@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 /**
  * Interface for phrase extraction (or, more specifically, extraction of {@link AlignmentTemplateInstance} 

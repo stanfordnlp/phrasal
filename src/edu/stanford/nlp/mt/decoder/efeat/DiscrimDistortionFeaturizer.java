@@ -1,4 +1,4 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.*;
 import java.util.*;
@@ -7,19 +7,19 @@ import java.util.regex.*;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.util.Pair;
 
-import mt.PseudoMoses;
-import mt.base.ConcreteTranslationOption;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.IOTools;
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.decoder.feat.RichIncrementalFeaturizer;
-import mt.decoder.feat.StatefulFeaturizer;
-import mt.train.discrimdistortion.Datum;
-import mt.train.discrimdistortion.DistortionModel;
+import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.train.discrimdistortion.Datum;
+import edu.stanford.nlp.mt.train.discrimdistortion.DistortionModel;
 
 public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString, String>{
 

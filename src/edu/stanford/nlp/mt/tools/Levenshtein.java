@@ -1,11 +1,11 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
-import mt.base.HasIntegerIdentity;
-import mt.base.Sequence;
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.SimpleSequence;
-import mt.train.DTUPhraseExtractor;
+import edu.stanford.nlp.mt.base.HasIntegerIdentity;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 
 import java.util.List;
 import java.util.BitSet;

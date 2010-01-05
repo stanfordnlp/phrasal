@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.stats.Counter;
@@ -10,11 +10,11 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 
-import mt.base.IString;
-import mt.base.IOTools;
-import mt.base.Sequence;
-import mt.base.IStrings;
-import mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.SimpleSequence;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 /**
@@ -277,7 +277,7 @@ public class Subsampler {
 
   static void usage() {
     System.err.print
-    ("Usage: java mt.train.Subsampler [ARGS]\n"+
+    ("Usage: java edu.stanford.nlp.mt.train.Subsampler [ARGS]\n"+
      "Mandatory arguments:\n"+
      " -in <root> : root name of input files\n"+
      " -out <root> : root name of output files\n"+

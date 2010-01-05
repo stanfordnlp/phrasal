@@ -9,7 +9,7 @@
  @author Andrew McCallum <a href="mailto:mccallum@cs.umass.edu">mccallum@cs.umass.edu</a>
  */
 
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;

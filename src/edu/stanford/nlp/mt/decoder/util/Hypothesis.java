@@ -1,17 +1,17 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import mt.base.ConcreteTranslationOption;
-import mt.base.CoverageSet;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.Sequence;
-import mt.base.DTUFeaturizable;
-import mt.base.RawSequence;
-import mt.base.TranslationOption;
-import mt.decoder.feat.CombinedFeaturizer;
-import mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.DTUFeaturizable;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 
 /**
  * 

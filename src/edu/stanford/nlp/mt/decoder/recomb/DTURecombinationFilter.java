@@ -1,8 +1,8 @@
-package mt.decoder.recomb;
+package edu.stanford.nlp.mt.decoder.recomb;
 
-import mt.decoder.util.Hypothesis;
-import mt.decoder.util.DTUHypothesis;
-import mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * 

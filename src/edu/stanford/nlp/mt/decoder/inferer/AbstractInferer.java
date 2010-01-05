@@ -1,18 +1,18 @@
-package mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder.inferer;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import mt.base.FeatureValue;
-import mt.base.RichTranslation;
-import mt.base.Sequence;
-import mt.decoder.feat.CombinedFeaturizer;
-import mt.decoder.h.SearchHeuristic;
-import mt.decoder.recomb.RecombinationFilter;
-import mt.decoder.util.ConstrainedOutputSpace;
-import mt.decoder.util.Hypothesis;
-import mt.decoder.util.PhraseGenerator;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
 	protected final CombinedFeaturizer<TK, FV> featurizer;

@@ -1,4 +1,4 @@
-package mt.visualize.phrase;
+package edu.stanford.nlp.mt.visualize.phrase;
 
 import java.io.File;
 import java.io.FileNotFoundException;

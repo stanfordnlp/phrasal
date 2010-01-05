@@ -1,8 +1,8 @@
-package mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat;
 
-import mt.base.IString;
-import mt.base.LanguageModel;
-import mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.LanguageModel;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * 

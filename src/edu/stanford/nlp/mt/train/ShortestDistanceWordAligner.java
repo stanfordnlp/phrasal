@@ -1,11 +1,11 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 
-import mt.base.IBMModel1;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.IBMModel1;
+import edu.stanford.nlp.mt.base.IString;
 
 /**
  * 

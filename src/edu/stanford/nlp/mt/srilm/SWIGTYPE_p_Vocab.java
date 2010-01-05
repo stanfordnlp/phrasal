@@ -6,7 +6,7 @@
  * the SWIG interface file instead.
  * ----------------------------------------------------------------------------- */
 
-package mt.srilm;
+package edu.stanford.nlp.mt.srilm;
 
 public class SWIGTYPE_p_Vocab {
   private long swigCPtr;

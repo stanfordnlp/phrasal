@@ -1,8 +1,8 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
-import mt.metrics.EvaluationMetric;
-import mt.base.MosesNBestList;
-import mt.base.IString;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.IString;
 
 import java.util.Random;
 

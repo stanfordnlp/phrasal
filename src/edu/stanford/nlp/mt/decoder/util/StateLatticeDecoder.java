@@ -1,8 +1,8 @@
-package mt.decoder.util;
+package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import mt.decoder.recomb.RecombinationHistory;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 
 
 /**

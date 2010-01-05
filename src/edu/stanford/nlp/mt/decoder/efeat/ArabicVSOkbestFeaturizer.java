@@ -1,4 +1,4 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.*;
 import java.util.*;
@@ -6,16 +6,16 @@ import java.util.*;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.Triple;
 
-import mt.base.ConcreteTranslationOption;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.IOTools;
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.decoder.feat.ClonedFeaturizer;
-import mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 
 public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String> implements ClonedFeaturizer<IString, String> {
 

@@ -1,8 +1,8 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 
-import mt.tune.MultiTranslationMetricMax;
+import edu.stanford.nlp.mt.tune.MultiTranslationMetricMax;
 
 /**
  * 

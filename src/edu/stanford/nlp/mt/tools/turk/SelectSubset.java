@@ -1,4 +1,4 @@
-package mt.tools.turk;
+package edu.stanford.nlp.mt.tools.turk;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

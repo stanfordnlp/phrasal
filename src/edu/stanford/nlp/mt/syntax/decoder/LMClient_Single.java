@@ -1,4 +1,4 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University
@@ -7,7 +7,7 @@ package mt.syntax.decoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import mt.syntax.util.SocketUtility;
+import edu.stanford.nlp.mt.syntax.util.SocketUtility;
 
 @SuppressWarnings({"unchecked", "unused"})
 public class LMClient_Single extends LMClient {

@@ -1,4 +1,4 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
 

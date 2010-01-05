@@ -1,13 +1,13 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import java.util.*;
 import java.io.*;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 
-import mt.base.IString;
-import mt.base.MosesNBestList;
-import mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 
 
 public class NBestSourceHistogram {

@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import java.util.Set;
 import java.util.Arrays;
@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.SortedSet;
 
-import mt.base.IString;
-import mt.base.Sequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * Abstract class representing a set of word alignments for one sentence pair.

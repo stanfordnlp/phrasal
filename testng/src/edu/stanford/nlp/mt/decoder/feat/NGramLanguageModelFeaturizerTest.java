@@ -1,9 +1,9 @@
-package mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat;
 
-import mt.base.Sequence;
-import mt.base.SimpleSequence;
-import mt.base.IString;
-import mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 
 
 import java.io.*;
@@ -21,7 +21,7 @@ public class NGramLanguageModelFeaturizerTest {
     @DataProvider (name = "languageModel")
       public Object[][] languageModel() throws IOException {
         return new Object[][] {           
-          new Object[] { mt.base.ARPALanguageModel.load("/u/nlp/data/testng/inputs/sampleLM.gz") }
+          new Object[] { edu.stanford.nlp.mt.base.ARPALanguageModel.load("/u/nlp/data/testng/inputs/sampleLM.gz") }
        };      
       }
     

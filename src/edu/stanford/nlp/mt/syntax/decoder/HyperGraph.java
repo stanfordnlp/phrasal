@@ -1,4 +1,4 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
@@ -7,8 +7,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 
-import mt.syntax.util.FileUtility;
-import mt.syntax.decoder.TMGrammar.Rule;
+import edu.stanford.nlp.mt.syntax.util.FileUtility;
+import edu.stanford.nlp.mt.syntax.decoder.TMGrammar.Rule;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University

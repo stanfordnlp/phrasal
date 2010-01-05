@@ -1,11 +1,11 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.io.*;
 
-import mt.decoder.feat.IsolatedPhraseFeaturizer;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 
 /**

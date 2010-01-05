@@ -1,16 +1,16 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.PrintStream;
 import java.util.List;
 
 import edu.stanford.nlp.stats.Counter;
 
-import mt.base.IString;
-import mt.base.MosesNBestList;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.metrics.EvaluationMetric;
-import mt.metrics.MetricFactory;
-import mt.tune.UnsmoothedMERT;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.MetricFactory;
+import edu.stanford.nlp.mt.tune.UnsmoothedMERT;
 
 /**
  * 

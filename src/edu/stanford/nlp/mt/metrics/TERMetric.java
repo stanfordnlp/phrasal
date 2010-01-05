@@ -1,4 +1,4 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,18 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import mt.base.IString;
-import mt.base.IStrings;
-import mt.base.NBestListContainer;
-import mt.base.RawSequence;
-import mt.base.ScoredFeaturizedTranslation;
-import mt.base.Sequence;
-import mt.decoder.recomb.RecombinationFilter;
-import mt.decoder.util.State;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.util.State;
 
-import mt.metrics.ter.TERcalc;
-import mt.metrics.ter.TERalignment;
-import mt.tune.UnsmoothedMERT;
+import edu.stanford.nlp.mt.metrics.ter.TERcalc;
+import edu.stanford.nlp.mt.metrics.ter.TERalignment;
+import edu.stanford.nlp.mt.tune.UnsmoothedMERT;
 
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {

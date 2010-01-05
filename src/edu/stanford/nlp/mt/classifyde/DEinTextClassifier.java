@@ -1,4 +1,4 @@
-package mt.classifyde;
+package edu.stanford.nlp.mt.classifyde;
 
 // Java imports
 import java.io.*;

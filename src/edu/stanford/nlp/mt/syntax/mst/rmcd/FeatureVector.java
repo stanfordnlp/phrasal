@@ -10,7 +10,7 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import gnu.trove.*;
 
@@ -38,7 +38,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  *
  * @author Jason Baldridge
  * @version $Id: FeatureVector.java 90 2007-01-17 07:42:20Z jasonbaldridge $
- * @see mt.syntax.mst.rmcd.Feature
+ * @see edu.stanford.nlp.mt.syntax.mst.rmcd.Feature
  */
 public final class FeatureVector extends TLinkedList<Feature> {
   private static final long serialVersionUID = -7512329174682925929L;

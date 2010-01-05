@@ -1,4 +1,4 @@
-package mt.reranker;
+package edu.stanford.nlp.mt.reranker;
 
 /**
  * An incremental implementation of BLEU. SegStats objects (each one

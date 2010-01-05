@@ -1,4 +1,4 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
 
 public class InsertedStartEndToken<TK> extends AbstractSequence<TK> {

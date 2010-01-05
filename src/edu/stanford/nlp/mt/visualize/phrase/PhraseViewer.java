@@ -1,4 +1,4 @@
-package mt.visualize.phrase;
+package edu.stanford.nlp.mt.visualize.phrase;
 
 import joptsimple.*;
 import java.util.List;

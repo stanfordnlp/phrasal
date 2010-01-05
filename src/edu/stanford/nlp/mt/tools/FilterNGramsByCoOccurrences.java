@@ -1,6 +1,6 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.IString;
 
 import java.io.*;
 import java.util.*;

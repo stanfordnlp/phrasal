@@ -1,15 +1,15 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
 
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.Sequence;
-import mt.decoder.feat.IncrementalFeaturizer;
-import mt.decoder.util.DTUHypothesis;
-import mt.base.ConcreteTranslationOption;
-import mt.base.DTUFeaturizable;
-import mt.base.DTUOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.DTUFeaturizable;
+import edu.stanford.nlp.mt.base.DTUOption;
 
 /**
  * @author Michel Galley

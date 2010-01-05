@@ -1,8 +1,8 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
-import mt.base.*;
-import mt.base.Featurizable;
-import mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
@@ -239,7 +239,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
 
   public static void main(String[] args) {
     if(args.length != 1) {
-      System.err.println("Usage: java mt.decoder.efeat.ArabicInitialVerbFeaturizer (ar-file)");
+      System.err.println("Usage: java edu.stanford.nlp.mt.decoder.efeat.ArabicInitialVerbFeaturizer (ar-file)");
       System.exit(1);
     }
     IncrementalFeaturizer<IString,String> f = new ArabicInitialVerbFeaturizer();

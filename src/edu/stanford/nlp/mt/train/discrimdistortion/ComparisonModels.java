@@ -1,10 +1,10 @@
-package mt.train.discrimdistortion;
+package edu.stanford.nlp.mt.train.discrimdistortion;
 
 import java.util.*;
 import java.io.*;
 import java.util.Map;
 
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 import edu.stanford.nlp.stats.*;
 import edu.stanford.nlp.util.HashIndex;

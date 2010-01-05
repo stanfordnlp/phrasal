@@ -1,11 +1,11 @@
-package mt.tune;
+package edu.stanford.nlp.mt.tune;
 
 import java.io.*;
 import java.util.*;
 
-import mt.base.FeatureValue;
-import mt.decoder.util.SSVMScorer;
-import mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.decoder.util.SSVMScorer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.OAIndex;

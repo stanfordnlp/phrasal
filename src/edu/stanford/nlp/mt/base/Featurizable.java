@@ -1,8 +1,8 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
-import mt.decoder.util.Hypothesis;
-import mt.decoder.feat.StatefulFeaturizer;
-import mt.PseudoMoses;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.PseudoMoses;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package mt.syntax.util;
+package edu.stanford.nlp.mt.syntax.util;
 
 
 /*Zhifei Li, <zhifei.work@gmail.com>

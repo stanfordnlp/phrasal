@@ -1,4 +1,4 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 import edu.stanford.nlp.trees.Tree;
 
 import java.io.*;

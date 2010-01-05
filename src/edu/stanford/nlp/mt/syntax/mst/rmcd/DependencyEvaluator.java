@@ -1,6 +1,6 @@
-package mt.syntax.mst.rmcd;
+package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
-import mt.syntax.mst.rmcd.io.*;
+import edu.stanford.nlp.mt.syntax.mst.rmcd.io.*;
 
 public class DependencyEvaluator {
 

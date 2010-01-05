@@ -1,4 +1,4 @@
-package mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat;
 
 /**
  * IncrementalFeaturizer that should be cloned

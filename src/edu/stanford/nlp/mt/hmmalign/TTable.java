@@ -1,4 +1,4 @@
-package mt.hmmalign;
+package edu.stanford.nlp.mt.hmmalign;
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;

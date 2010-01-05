@@ -1,4 +1,4 @@
-package mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -8,14 +8,14 @@ import java.io.LineNumberReader;
 import java.io.FileReader;
 
 /*
-import mt.IString;
+import edu.stanford.nlp.mt.IString;
 */
-import mt.base.ConcreteTranslationOption;
-import mt.base.FeatureValue;
-import mt.base.Featurizable;
-import mt.base.IBMModel1;
-import mt.base.Sequence;
-import mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IBMModel1;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 /**
  *

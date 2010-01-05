@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import bsh.Interpreter;
 
@@ -23,13 +23,13 @@ public class BshInterpreter extends bsh.Interpreter
         "import java.util.*;"+
         "import java.util.regex.*;"+
         "import java.io.*;"+
-        "import mt.*;"+
-        "import mt.base.*;"+
-        "import mt.train.*;"+
-        "import mt.tools.*;"+
-        "import mt.decoder.*;"+
-        "import mt.decoder.feat.*;"+
-        "import mt.decoder.efeat.*;"
+        "import edu.stanford.nlp.mt.*;"+
+        "import edu.stanford.nlp.mt.base.*;"+
+        "import edu.stanford.nlp.mt.train.*;"+
+        "import edu.stanford.nlp.mt.tools.*;"+
+        "import edu.stanford.nlp.mt.decoder.*;"+
+        "import edu.stanford.nlp.mt.decoder.feat.*;"+
+        "import edu.stanford.nlp.mt.decoder.efeat.*;"
       );
     } catch (bsh.EvalError e) {
       throw new IllegalArgumentException ("bsh Interpreter error: "+e);

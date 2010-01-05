@@ -1,6 +1,6 @@
-package mt.base;
+package edu.stanford.nlp.mt.base;
 
-import mt.train.DTUPhraseExtractor;
+import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 
 import java.util.*;
 

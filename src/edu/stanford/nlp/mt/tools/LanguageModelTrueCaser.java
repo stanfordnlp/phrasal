@@ -1,12 +1,12 @@
-package mt.tools;
+package edu.stanford.nlp.mt.tools;
 
-import mt.decoder.feat.*;
-import mt.decoder.inferer.impl.*;
-import mt.decoder.inferer.*;
-import mt.decoder.util.*;
-import mt.base.*;
-import mt.decoder.recomb.*;
-import mt.decoder.h.*;
+import edu.stanford.nlp.mt.decoder.feat.*;
+import edu.stanford.nlp.mt.decoder.inferer.impl.*;
+import edu.stanford.nlp.mt.decoder.inferer.*;
+import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.recomb.*;
+import edu.stanford.nlp.mt.decoder.h.*;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.process.TrueCaser;

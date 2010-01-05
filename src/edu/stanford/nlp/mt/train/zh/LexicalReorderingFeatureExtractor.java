@@ -1,11 +1,11 @@
-package mt.train.zh;
+package edu.stanford.nlp.mt.train.zh;
 
-import mt.train.AlGridCell;
-import mt.train.AlignmentGrid;
-import mt.train.AlignmentTemplate;
-import mt.train.AlignmentTemplateInstance;
-import mt.train.AlignmentTemplates;
-import mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.train.AlGridCell;
+import edu.stanford.nlp.mt.train.AlignmentGrid;
+import edu.stanford.nlp.mt.train.AlignmentTemplate;
+import edu.stanford.nlp.mt.train.AlignmentTemplateInstance;
+import edu.stanford.nlp.mt.train.AlignmentTemplates;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
 import java.util.ArrayList;
 import java.util.Set;

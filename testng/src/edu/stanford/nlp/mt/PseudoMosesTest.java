@@ -1,7 +1,7 @@
-package mt;
+package edu.stanford.nlp.mt;
 
-import mt.base.RichTranslation;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.IString;
 
 import java.io.*;
 import java.util.List;

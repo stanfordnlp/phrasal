@@ -1,9 +1,9 @@
-package mt.syntax.decoder;
+package edu.stanford.nlp.mt.syntax.decoder;
 
 import java.util.ArrayList;
 
-import mt.syntax.decoder.Bin.SuperItem;
-import mt.syntax.decoder.TMGrammar.TrieNode;
+import edu.stanford.nlp.mt.syntax.decoder.Bin.SuperItem;
+import edu.stanford.nlp.mt.syntax.decoder.TMGrammar.TrieNode;
 
 /* Zhifei Li, <zhifei.work@gmail.com>
 * Johns Hopkins University

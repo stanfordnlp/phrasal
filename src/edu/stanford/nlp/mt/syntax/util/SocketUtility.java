@@ -1,4 +1,4 @@
-package mt.syntax.util;
+package edu.stanford.nlp.mt.syntax.util;
 import java.io.*;
 import java.io.BufferedReader;
 import java.io.IOException;

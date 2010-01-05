@@ -1,4 +1,4 @@
-package mt.visualize.phrase;
+package edu.stanford.nlp.mt.visualize.phrase;
 
 @SuppressWarnings("unchecked")
 public class Phrase implements Comparable {

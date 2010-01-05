@@ -1,9 +1,9 @@
-package mt.decoder.recomb;
+package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.*;
 
-import mt.decoder.util.Hypothesis;
-import mt.decoder.util.State;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.State;
 
 
 /**

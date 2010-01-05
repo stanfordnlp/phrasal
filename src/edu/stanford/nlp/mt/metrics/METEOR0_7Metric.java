@@ -1,4 +1,4 @@
-package mt.metrics;
+package edu.stanford.nlp.mt.metrics;
 
 import java.util.*;
 import java.io.*;
@@ -8,7 +8,7 @@ import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.StreamGobbler;
 import edu.stanford.nlp.io.FileUtils;
 import edu.stanford.nlp.io.IOUtils;
-import mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IOTools;
 
 /**
  * @author Michel Galley
@@ -141,7 +141,7 @@ public class METEOR0_7Metric {
   public static void main(String[] args) {
 
     if(args.length != 2) {
-      System.err.println("Usage: java mt.metrics.METEORMetric <ref> <hyp>");
+      System.err.println("Usage: java edu.stanford.nlp.mt.metrics.METEORMetric <ref> <hyp>");
     }
 
     List<Pair<String,String>> data = new ArrayList<Pair<String,String>>();

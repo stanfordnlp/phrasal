@@ -1,4 +1,4 @@
-package mt.train;
+package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
@@ -11,8 +11,8 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 
-import mt.base.IOTools;
-import mt.base.IString;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 public class CombinedFeatureExtractor {
 
   // Note: could make phrase extraction more memory efficient
-  // by storing each block (phrase pair) as mt.base.SimpleSequence pairs
+  // by storing each block (phrase pair) as edu.stanford.nlp.mt.base.SimpleSequence pairs
   // rather than int[] (since SimpleSequence).
 
   static public final String CONFIG_OPT = "config";
@@ -616,7 +616,7 @@ public class CombinedFeatureExtractor {
 
   static void usage() {
     System.err.print
-    ("Usage: java mt.train.CombinedFeatureExtractor [ARGS]\n"+
+    ("Usage: java edu.stanford.nlp.mt.train.CombinedFeatureExtractor [ARGS]\n"+
      "Mandatory arguments:\n"+
      " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+
