@@ -17,7 +17,7 @@ public class SSVMScorer implements Scorer<String> {
 	public static final double DEFAULT_BIAS_C = Double.POSITIVE_INFINITY;
 	public static final double DEFAULT_BIAS_MARGIN = Double.MIN_NORMAL;
 
-	public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
+	public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "edu/stanford/nlp/mt/resources/generative.features";
 	public static final Set<String> generativeFeatures = readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 	
 	public static Set<String> readGenerativeFeatureList(String resourceName) {

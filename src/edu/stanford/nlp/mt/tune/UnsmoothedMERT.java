@@ -28,7 +28,7 @@ public class UnsmoothedMERT extends Thread {
 
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
   static final Set<String> generativeFeatures = SSVMScorer
-          .readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
+          .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
 
 	public static final String DEBUG_PROPERTY = "UnsmoothedMERTDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
