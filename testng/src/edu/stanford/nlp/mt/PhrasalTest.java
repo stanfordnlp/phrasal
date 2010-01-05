@@ -17,7 +17,7 @@ import org.testng.annotations.*;
  */
 
 @Test (groups = "mt")
-public class PseudoMosesTest {
+public class PhrasalTest {
 
   @Test
   public void testReadConfig() throws IOException{

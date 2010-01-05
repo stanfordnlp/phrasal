@@ -28,12 +28,12 @@ public class NGramLanguageModelFeaturizerTest {
     @DataProvider (name = "featurizer")
     public Object[][] featurizer() throws IOException {
       return new Object[][] {           
-        new Object[] { new NGramLanguageModelFeaturizer<IString>(mt.base.ARPALanguageModel.load("/u/nlp/data/testng/inputs/tinyLM.test")) }
+        new Object[] { new NGramLanguageModelFeaturizer<IString>(edu.stanford.nlp.mt.base.ARPALanguageModel.load("/u/nlp/data/testng/inputs/tinyLM.test")) }
       };      
     }
     
     @Test (dataProvider = "languageModel")
-    public void testConstructor1(mt.base.ARPALanguageModel lm) {      
+    public void testConstructor1(edu.stanford.nlp.mt.base.ARPALanguageModel lm) {      
       NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(lm);
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);   
@@ -45,7 +45,7 @@ public class NGramLanguageModelFeaturizerTest {
     }
     
     @Test (dataProvider = "languageModel")
-    public void testConstructor2(mt.base.ARPALanguageModel lm) throws IOException{
+    public void testConstructor2(edu.stanford.nlp.mt.base.ARPALanguageModel lm) throws IOException{
       NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(lm, "sampleLM", false);
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);
@@ -58,7 +58,7 @@ public class NGramLanguageModelFeaturizerTest {
     }
     
     @Test (dataProvider = "languageModel")
-    public void testConstructor3WithLabel(mt.base.ARPALanguageModel lm) {      
+    public void testConstructor3WithLabel(edu.stanford.nlp.mt.base.ARPALanguageModel lm) {      
       NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(lm, true);
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);   
@@ -70,7 +70,7 @@ public class NGramLanguageModelFeaturizerTest {
     }
     
     @Test (dataProvider = "languageModel")
-    public void testConstructor3WithoutLabel(mt.base.ARPALanguageModel lm) {      
+    public void testConstructor3WithoutLabel(edu.stanford.nlp.mt.base.ARPALanguageModel lm) {      
       NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(lm, false);
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);   
@@ -82,7 +82,7 @@ public class NGramLanguageModelFeaturizerTest {
     }
     
     @Test (dataProvider = "languageModel")
-    public void testConstructor4(mt.base.ARPALanguageModel lm) throws IOException{
+    public void testConstructor4(edu.stanford.nlp.mt.base.ARPALanguageModel lm) throws IOException{
       NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>("/u/nlp/data/testng/inputs/sampleLM.gz", "sampleLM");      
       assert(featurizer.order() == 3);      
       assert(featurizer.lmOrder == 3);
