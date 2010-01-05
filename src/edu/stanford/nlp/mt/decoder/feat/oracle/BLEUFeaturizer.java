@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
-import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.Phrasal;
 
 import java.util.List;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
     if(args.length < 3)
       throw new RuntimeException("Usage: edu.stanford.nlp.mt.decoder.feat.oracle.BLEUFeaturizer (feature name) (featurize during decoding) (ref0) ... (refN)");
 
-    this.sentOffset = PseudoMoses.local_procs>1 ? 2:0;
+    this.sentOffset = Phrasal.local_procs>1 ? 2:0;
 
     this.featureName = args[0];
 		this.featurizeDuringDecoding = Boolean.parseBoolean(args[1]);

@@ -7,7 +7,7 @@ import java.util.regex.*;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.util.Pair;
 
-import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -256,7 +256,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString,Stri
 
   public Pair<Integer, Double> inFeaturize(Featurizable<IString, String> f, int lastSIdx) {
 
-    //final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+    //final int translationId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
 
     final int sOffset = f.foreignPosition;
 
@@ -460,7 +460,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString,Stri
 
     if(!DEBUG) return;
 
-    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+    final int translationId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
 
     //Walk back through the priors so that the output
     //is in the correct translation order

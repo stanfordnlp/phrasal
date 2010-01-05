@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
-import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.Phrasal;
 
 import java.util.Arrays;
 
@@ -322,7 +322,7 @@ public class Featurizable<TK,FV> {
     if (concreteOpt.abstractOption.translation == null)
       return;
     int transSz = concreteOpt.abstractOption.translation.elements.length;
-    int foreignSz = PseudoMoses.withGaps ?
+    int foreignSz = Phrasal.withGaps ?
          // MG2009: these two lines should achieve the same result for phrases without gaps, 
          // though the first one is slower:
       concreteOpt.foreignCoverage.length()-concreteOpt.foreignCoverage.nextSetBit(0) :

@@ -4,7 +4,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.Phrasal;
 
 /**
  * 
@@ -32,7 +32,7 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 
   public static void setLinearDistortionType(String type) {
     linearDistortionType = LinearDistortionType.valueOf(type);
-    if (linearDistortionType == LinearDistortionType.standard && PseudoMoses.withGaps)
+    if (linearDistortionType == LinearDistortionType.standard && Phrasal.withGaps)
       System.err.println("warning: standard linear distortion with DTU phrases.");
   }
 
@@ -107,7 +107,7 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
   public int linearDistortion(ConcreteTranslationOption<T> opt, LinearDistortionType type) {
 		final int nextForeignToken;
     if(type != LinearDistortionType.standard)
-      assert(PseudoMoses.withGaps);
+      assert(Phrasal.withGaps);
     switch(type) {
     case standard:
       nextForeignToken = foreignPos + abstractOption.foreign.size();

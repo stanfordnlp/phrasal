@@ -29,7 +29,7 @@ import edu.stanford.nlp.util.StringUtils;
  * @author danielcer
  *
  */
-public class PseudoMoses {
+public class Phrasal {
 
   public static final String TRANSLATION_TABLE_OPT = "ttable-file";
   public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
@@ -289,7 +289,7 @@ public class PseudoMoses {
   }
 
   @SuppressWarnings("unchecked")
-	public PseudoMoses(Map<String, List<String>> config) throws IOException,
+	public Phrasal(Map<String, List<String>> config) throws IOException,
 	InstantiationException, IllegalAccessException, IllegalArgumentException,
 	SecurityException, InvocationTargetException, NoSuchMethodException {
     if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
@@ -1999,7 +1999,7 @@ public class PseudoMoses {
 	public static void main(String[] args) throws Exception {
 
     if(args.length < 1) {
-      System.err.println("Usage:\n\tjava ...PseudoMoses (pharaoh.ini)");
+      System.err.println("Usage:\n\tjava ...Phrasal (pharaoh.ini)");
       System.exit(-1);
     }
 
@@ -2015,7 +2015,7 @@ public class PseudoMoses {
 
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0]) : readArgs(args);
     initStaticMembers(config);
-    PseudoMoses p = new PseudoMoses(config);
+    Phrasal p = new Phrasal(config);
 
 		p.executiveLoop();
 		System.exit(0);

@@ -707,7 +707,7 @@ public class UnsmoothedMERT extends Thread {
             minReachableScore = score;
         }
 				if(nbestlist.size() == 0)
-					throw new RuntimeException(String.format("Nbest list of size zero at %d. Perhaps PseudoMoses ran out of memory?\n", lI));
+					throw new RuntimeException(String.format("Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n", lI));
         System.err.printf("l %d - min reachable score: %f (orig size: %d)\n",
                 lI, minReachableScore, nbestlist.size());
         for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {

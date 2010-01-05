@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.decoder.inferer.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
-import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.Phrasal;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 
@@ -154,7 +154,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		System.err.printf("Translation options: %d\n", options.size());
 		
 		if (OPTIONS_DUMP || DETAILED_DEBUG) {
-      int sentId = translationId + ((PseudoMoses.local_procs > 1) ? 2:0);
+      int sentId = translationId + ((Phrasal.local_procs > 1) ? 2:0);
       synchronized(System.err) {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteTranslationOption<TK> option : options)

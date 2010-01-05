@@ -26,7 +26,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
-import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.tools.PrefixTagger;
 
 import java.io.IOException;
@@ -375,7 +375,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
       dep = new DependencyInstance(pipe);
       dep.add("<root>","<root-LEMMA>","<root-CPOS>","<root-POS>", new int[0]);
       if(!srcInstances.isEmpty()) {
-        int transId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+        int transId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
         assert(transId >= 0);
         assert(transId < srcInstances.size());
         DependencyInstance instance = srcInstances.get(transId);

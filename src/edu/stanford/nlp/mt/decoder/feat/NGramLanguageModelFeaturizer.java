@@ -81,7 +81,7 @@ public class NGramLanguageModelFeaturizer<TK> implements IncrementalFeaturizer<T
 	}
 
 	/**
-   * Constructor called by PseudoMoses when NGramLanguageModelFeaturizer appears
+   * Constructor called by Phrasal when NGramLanguageModelFeaturizer appears
    * in [additional-featurizers].
 	 */
  @SuppressWarnings("unchecked")

@@ -21,7 +21,7 @@ public class PseudoMosesTest {
 
   @Test
   public void testReadConfig() throws IOException{
-    Map<String, List<String>> config = PseudoMoses.readConfig("/u/nlp/data/testng/inputs/sample.ini");
+    Map<String, List<String>> config = Phrasal.readConfig("/u/nlp/data/testng/inputs/sample.ini");
 
     List<String> test = new ArrayList<String>();
     test.add("0.085872");
@@ -70,8 +70,8 @@ public class PseudoMosesTest {
 
   @Test
   public void testDecodeOnly() throws Exception{
-    Map<String, List<String>> config = PseudoMoses.readConfig("/u/nlp/data/testng/inputs/sample.ini");
-    PseudoMoses p = new PseudoMoses(config);
+    Map<String, List<String>> config = Phrasal.readConfig("/u/nlp/data/testng/inputs/sample.ini");
+    Phrasal p = new Phrasal(config);
     String line = "代表";
     String[] tokens = line.split("\\s+");
     RichTranslation<IString, String> translation = p.decodeOnly(tokens, 1, 1, 0);

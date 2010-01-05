@@ -127,7 +127,7 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
     if(verbMap == null)
       return null;
     
-//    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+//    final int translationId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
 //    boolean VERBOSE = (translationId == 14);
     
     //Check for the last verb scored

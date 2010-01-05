@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.io.File;
 import java.util.*;
 
-import edu.stanford.nlp.mt.PseudoMoses;
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -141,7 +141,7 @@ public class ArabicVSOFeaturizer implements IncrementalFeaturizer<IString, Strin
 
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
 
-    final int translationId = f.translationId + (PseudoMoses.local_procs > 1 ? 2 : 0);
+    final int translationId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
     
     //Get the subject triplets Return if there aren't any
     List<Triple<Integer,Integer,Integer>> subjectSpans = subjectBank.subjectsForSentence(translationId);
