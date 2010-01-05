@@ -339,7 +339,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr
    "------------------------------------------------------------------------\n\n";
    if (!$ENV{"SDI$iter"} && $iter >= $first_active_iter) { 
-     my $cmd = "java $java_flags mt.PseudoMoses $phrasal_flags -config-file $iter_decoder_ini < $input_text 2>$iter_dlog > $iter_trans";
+     my $cmd = "java $java_flags edu.stanford.nlp.mt.PseudoMoses $phrasal_flags -config-file $iter_decoder_ini < $input_text 2>$iter_dlog > $iter_trans";
 		 print "CMD:\n$cmd\n\n";
      my $now = localtime time;
      print "Start time: ",$now,"\n";
@@ -379,29 +379,29 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    }
 
    if ($opt_type eq 'bleu-ter') {
-     my $terStr = `java $java_flags mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; chomp $terStr;
+     my $terStr = `java $java_flags edu.stanford.nlp.mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; chomp $terStr;
 		 $terStr =~ /TER = -(\S+)/; 
 		 my $terScore = $1;
-		 my $bleuStr = `java $java_flags mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; chomp $bleuStr;
+		 my $bleuStr = `java $java_flags edu.stanford.nlp.mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; chomp $bleuStr;
 		 $bleuStr =~ /BLEU = (\S+),/; 
 		 my $bleuScore = $1;
      $trans_eval = "(TER-BLEU)/2 = ".(($terScore-$bleuScore)/2).", TER = $terScore, $bleuStr\n";
    } elsif ($opt_type eq 'ter') {
-     $trans_eval = `java $java_flags mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'terp') {
-     $trans_eval = `java $java_flags mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'terpa') {
-     $trans_eval = `java $java_flags -Dterpa mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags -Dterpa edu.stanford.nlp.mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'meteor') {
-     $trans_eval = `java $java_flags mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type =~ /meteor:/) {
      @abg = split /:/, $opt_type;
-     $trans_eval = `java -Dabg=$abg[1]:$abg[2]:$abg[3] $java_flags mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java -Dabg=$abg[1]:$abg[2]:$abg[3] $java_flags edu.stanford.nlp.mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
    } elsif ($opt_type =~ /^bleu:/) {
      @fields = split /:/, $opt_type;
-     $trans_eval = `java $java_flags mt.metrics.BLEUMetric -order $fields[1] $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.BLEUMetric -order $fields[1] $referenceList < $iter_trans 2>&1`; 
    } else { # bleu or cmert path, the latter implies bleu 
-     $trans_eval = `java $java_flags mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; 
+     $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; 
    }
 
    chomp $trans_eval;
@@ -482,7 +482,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 				for(my $i = $iter-1; $i>=0; --$i) {
 					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
 				}
-				my $mertCMD = "java $mert_java_flags mt.tune.UnsmoothedMERT -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.UnsmoothedMERT -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
 	      print stderr "MERT command: $mertCMD\n";
 	      `$mertCMD`;
 	      if (not -e $next_iter_weights) {

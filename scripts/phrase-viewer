@@ -15,7 +15,7 @@ JAVANLP_HOME=os.environ.get('JAVANLP_HOME')
 DEF_SCHEMA=JAVANLP_HOME + '/projects/mt/schema/phrase-viewer-paths.xsd'
 
 def run_phrase_viewer(opts):
-    cmd_line = 'java -Xmx%s -Xms%s mt.visualize.phrase.PhraseViewer' % (opts.jmem,opts.jmem)
+    cmd_line = 'java -Xmx%s -Xms%s edu.stanford.nlp.mt.visualize.phrase.PhraseViewer' % (opts.jmem,opts.jmem)
 
     if opts.verbose:
         cmd_line = cmd_line + ' -v'

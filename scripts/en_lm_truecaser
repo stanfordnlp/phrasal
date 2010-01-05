@@ -14,4 +14,4 @@ host=`hostname -s`
 java="java -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$host"
 
 # LM truecaser:
-cat | $java -Xmx2g mt.tools.LanguageModelTrueCaser $lm
+cat | $java -Xmx2g edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm
