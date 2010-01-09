@@ -52,6 +52,10 @@ public class srilm {
     return srilmJNI.getWordProb(SWIGTYPE_p_Ngram.getCPtr(ngram), w, SWIGTYPE_p_unsigned_int.getCPtr(context));
   }
 
+  public static float getSentenceProb(SWIGTYPE_p_Ngram ngram, SWIGTYPE_p_unsigned_int sentence) {
+    return srilmJNI.getSentenceProb(SWIGTYPE_p_Ngram.getCPtr(ngram), SWIGTYPE_p_unsigned_int.getCPtr(sentence));
+  }
+
   public static long getDepth(SWIGTYPE_p_Ngram ngram, SWIGTYPE_p_unsigned_int context, int hist_size) {
     return srilmJNI.getDepth(SWIGTYPE_p_Ngram.getCPtr(ngram), SWIGTYPE_p_unsigned_int.getCPtr(context), hist_size);
   }

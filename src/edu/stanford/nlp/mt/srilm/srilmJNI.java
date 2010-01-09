@@ -19,6 +19,7 @@ class srilmJNI {
   public final static native int readLM_limitVocab(long jarg1, long jarg2, String jarg3, String jarg4);
   public final static native float getProb(long jarg1, long jarg2, int jarg3, long jarg4);
   public final static native float getWordProb(long jarg1, long jarg2, long jarg3);
+  public final static native float getSentenceProb(long jarg1, long jarg2);
   public final static native long getDepth(long jarg1, long jarg2, int jarg3);
   public final static native long getIndexForWord(long jarg1, String jarg2);
   public final static native int getVocab_None();

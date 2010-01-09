@@ -70,6 +70,11 @@ float getProb(Ngram* ngram, unsigned *context, int hist_size, unsigned cur_wrd) 
 	return getWordProb(ngram, cur_wrd, hist);
 }
 
+float getSentenceProb(Ngram* ngram, unsigned* sentence) {
+  TextStats stats;
+  return (float)ngram->sentenceProb((VocabIndex*)sentence, stats);
+}
+
 unsigned getDepth(Ngram* ngram, unsigned *context, int hist_size) {
 	unsigned hist[hist_size+1];
 	for(int i=hist_size-1; i>=0; --i)

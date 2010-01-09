@@ -17,6 +17,8 @@ float getProb(Ngram* ngram, unsigned *context, int hist_size, unsigned cur_wrd);
 
 float getWordProb(Ngram* ngram, unsigned w, unsigned* context);
 
+float getSentenceProb(Ngram* ngram, unsigned* sentence);
+
 unsigned getDepth(Ngram* ngram, unsigned *context, int hist_size);
 
 unsigned getIndexForWord(Vocab* vo, const char *s);
