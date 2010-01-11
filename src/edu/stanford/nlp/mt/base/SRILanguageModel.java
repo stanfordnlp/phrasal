@@ -7,10 +7,10 @@ import java.util.Arrays;
 import java.util.WeakHashMap;
 import java.util.StringTokenizer;
 
-import edu.stanford.nlp.mt.srilm.srilm;
-import edu.stanford.nlp.mt.srilm.SWIGTYPE_p_Ngram;
-import edu.stanford.nlp.mt.srilm.SWIGTYPE_p_unsigned_int;
-import edu.stanford.nlp.mt.srilm.SWIGTYPE_p_Vocab;
+import edu.stanford.nlp.lm.SWIGTYPE_p_Ngram;
+import edu.stanford.nlp.lm.SWIGTYPE_p_Vocab;
+import edu.stanford.nlp.lm.SWIGTYPE_p_unsigned_int;
+import edu.stanford.nlp.lm.srilm;
 
 /**
  * Language model class using SRILM native code.
