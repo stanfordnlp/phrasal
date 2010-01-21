@@ -791,6 +791,7 @@ public class Phrasal {
         HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
 		// Create Inferer
     inferers = new ArrayList<Inferer<IString, String>>(local_procs == 0 ? 1 : local_procs);
+    System.err.printf("Inferer Count: %d\n", inferers.size());
     for (int i = 0; i < (local_procs == 0 ? 1 : local_procs); i++) {
   		// Configure InfererBuilder
       AbstractBeamInfererBuilder infererBuilder = (AbstractBeamInfererBuilder) InfererBuilderFactory
