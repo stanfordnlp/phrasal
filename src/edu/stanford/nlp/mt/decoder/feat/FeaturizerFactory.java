@@ -26,7 +26,7 @@ public class FeaturizerFactory {
 	public static final String DISCRIMINATIVE_LM_PARAMETER = "discrimlm";
 	public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
 	
-	public static final String FEATURE_ALIASES_RESOURCE = "mt/resources/feature.aliases"; 
+	public static final String FEATURE_ALIASES_RESOURCE = "edu/stanford/nlp/mt/resources/feature.aliases"; 
 	public static final Map<String,List<String>> featureAliases = readFeatureAliases(FEATURE_ALIASES_RESOURCE);
 	
 	
