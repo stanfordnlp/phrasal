@@ -375,7 +375,7 @@ endif
 ### (needs to be run on 16G machines)
 %.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	mkdir $(*F).tables 2> /dev/null || true
-	$(JAVA) -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.CombinedFeatureExtractor $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PharaohFeatureExtractor:mt.train.CountFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
+	$(JAVA) -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.CombinedFeatureExtractor $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PharaohFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################
 # Soft phrases:
@@ -418,19 +418,19 @@ LEX_EXTRACT=$(JAVA) -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanf
 
 ### for tuning set:
 $(DEVID).tables/lo-word.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
 $(DEVID).tables/lo-phrase.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 $(DEVID).tables/lo-hier.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen 500        -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen 500        -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 
 ### for test set:
 $(TESTID).tables/lo-word.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
 $(TESTID).tables/lo-phrase.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen $(maxPLen) -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 $(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen 500        -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.ExperimentalLexicalReorderingFeatureExtractor -maxLen 500        -pharaohLexicalizedModel $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 
 #############################################
 # Pre-processing: 
