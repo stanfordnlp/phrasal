@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 public class CombinedFeatureExtractor {
 
   // Note: could make phrase extraction more memory efficient
-  // by storing each block (phrase pair) as edu.stanford.nlp.mt.base.SimpleSequence pairs
+  // by storing each block (phrase pair) as mt.base.SimpleSequence pairs
   // rather than int[] (since SimpleSequence).
 
   static public final String CONFIG_OPT = "config";
@@ -84,7 +84,9 @@ public class CombinedFeatureExtractor {
        AbstractPhraseExtractor.MAX_PHRASE_LEN_F_OPT, 
        AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_OPT, 
        AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_E_OPT, 
-       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_F_OPT, 
+       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_F_OPT,
+       AbstractPhraseExtractor.ONLY_TIGHT_PHRASES_OPT,
+       AbstractPhraseExtractor.ONLY_TIGHT_DTUS_OPT,
        NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT,
@@ -97,8 +99,10 @@ public class CombinedFeatureExtractor {
        DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_OPT, DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
-       DTUPhraseExtractor.NO_TARGET_GAPS_OPT, DTUPhraseExtractor.SKIP_UNALIGNED_GAPS_OPT,
-       DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT, DTUPhraseExtractor.ALL_SUBSEQUENCES_LOOSE_OPT
+       DTUPhraseExtractor.NO_TARGET_GAPS_OPT, DTUPhraseExtractor.NO_UNALIGNED_GAPS_OPT,
+       DTUPhraseExtractor.NO_UNALIGNED_OR_LOOSE_GAPS_OPT, DTUPhraseExtractor.HIERO_RULES_OPT,
+       DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT, DTUPhraseExtractor.ALL_SUBSEQUENCES_OLD_OPT,
+       DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -616,7 +620,7 @@ public class CombinedFeatureExtractor {
 
   static void usage() {
     System.err.print
-    ("Usage: java edu.stanford.nlp.mt.train.CombinedFeatureExtractor [ARGS]\n"+
+    ("Usage: java mt.train.CombinedFeatureExtractor [ARGS]\n"+
      "Mandatory arguments:\n"+
      " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+

@@ -4,7 +4,6 @@ import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import java.text.DecimalFormat;
 import java.util.*;
 
-
 /**
  *
  * @author danielcer
@@ -157,19 +156,21 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
       }
       */
     } else {
-      for(int lastRangeEnd=-1, i=0; i<t2fAlignmentIndex.length; ++i) {
-        int[] range = t2fAlignmentIndex[i];
-        if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] == t2fAlignmentIndex[i+1][0])
-          continue;
-        // Foreign positions:
-        sbuf.append(' ').append(range[0]);
-        if(range[0]+1 != range[1])
-          sbuf.append('-').append(range[1]-1);
-        // Translation positions:
-        sbuf.append('=').append(lastRangeEnd+1);
-        if(i != lastRangeEnd+1)
-          sbuf.append('-').append(i);
-        lastRangeEnd=i;
+      if(t2fAlignmentIndex != null) {
+        for(int lastRangeEnd=-1, i=0; i<t2fAlignmentIndex.length; ++i) {
+          int[] range = t2fAlignmentIndex[i];
+          if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] == t2fAlignmentIndex[i+1][0])
+            continue;
+          // Foreign positions:
+          sbuf.append(' ').append(range[0]);
+          if(range[0]+1 != range[1])
+            sbuf.append('-').append(range[1]-1);
+          // Translation positions:
+          sbuf.append('=').append(lastRangeEnd+1);
+          if(i != lastRangeEnd+1)
+            sbuf.append('-').append(i);
+          lastRangeEnd=i;
+        }
       }
     }
   }

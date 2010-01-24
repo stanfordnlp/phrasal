@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.train;
 
 import java.util.*;
 
-
 /**
  * The preferred way of instanciating PhraseExtractor is to extend AbstractPhraseExtractor.
  * Its constructor takes a list of AbstractFeatureExtractor as argument, which are then 
@@ -28,6 +27,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   static public final String MAX_EXTRACTED_PHRASE_LEN_OPT = "maxELen";
   static public final String MAX_EXTRACTED_PHRASE_LEN_E_OPT = "maxELenE";
   static public final String MAX_EXTRACTED_PHRASE_LEN_F_OPT = "maxELenF";
+  static public final String ONLY_TIGHT_PHRASES_OPT = "onlyTightPhrases";
+  static public final String ONLY_TIGHT_DTUS_OPT  = "onlyTightDTUs";
 
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugAbstractPhraseExtractor";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
@@ -46,6 +47,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
   static int maxPhraseLenF = 7, maxPhraseLenE = 7;
   static int maxExtractedPhraseLenF = 7, maxExtractedPhraseLenE = 7;
+
+  static boolean onlyTightPhrases = false, onlyTightDTUs = false;
 
   AlignmentGrid alGrid = null;
   boolean needAlGrid = false;
@@ -102,6 +105,12 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   public void setSentenceInfo(WordAlignment sent, String infoStr) {}
 
   void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent, float weight) {
+
+    if (onlyTightPhrases) {
+      if (sent.f2e(f1).size() == 0 || sent.f2e(f2).size() == 0 || sent.e2f(e1).size() == 0 || sent.e2f(e2).size() == 0)
+        return;
+    }
+
     if(ignore(sent, f1, f2, e1, e2))
       return;
 
@@ -137,6 +146,15 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
   // For DTU phrase extraction:
   AlignmentTemplateInstance extractPhrase(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous, boolean isConsistent) {
+
+    if (onlyTightPhrases || (onlyTightDTUs && (!fContiguous || !eContiguous))) {
+      int f1 = fs.nextSetBit(0);
+      int f2 = fs.length()-1;
+      int e1 = es.nextSetBit(0);
+      int e2 = es.length()-1;
+      if (sent.f2e(f1).size() == 0 || sent.f2e(f2).size() == 0 || sent.e2f(e1).size() == 0 || sent.e2f(e2).size() == 0)
+        return null;
+    }
 
     // Check if alTemp meets length requirements:
     if(fs.cardinality() > maxExtractedPhraseLenF || es.cardinality() > maxExtractedPhraseLenE) {
@@ -246,6 +264,12 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
     assert(maxPhraseLenE >= maxExtractedPhraseLenE);
     assert(maxPhraseLenF >= maxExtractedPhraseLenF);
+
+    String optStr = prop.getProperty(ONLY_TIGHT_PHRASES_OPT);
+    onlyTightPhrases = optStr != null && !optStr.equals("false");
+
+    optStr = prop.getProperty(ONLY_TIGHT_DTUS_OPT);
+    onlyTightDTUs = optStr != null && !optStr.equals("false");
 
     DTUPhraseExtractor.setDTUExtractionProperties(prop);
   }

@@ -18,9 +18,13 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String WITH_GAPS_OPT  = "withGaps";
   static public final String NO_TARGET_GAPS_OPT  = "noTargetGaps";
   static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
-  static public final String SKIP_UNALIGNED_GAPS_OPT  = "skipUnalignedGaps";
+  static public final String HIERO_RULES_OPT  = "hieroRules";
   static public final String ALL_SUBSEQUENCES_OPT  = "allSubsequences";
-  static public final String ALL_SUBSEQUENCES_LOOSE_OPT  = "allSubsequencesLoose";
+  static public final String ALL_SUBSEQUENCES_OLD_OPT  = "allSubsequencesOld";
+  static public final String NO_UNALIGNED_GAPS_OPT = "noUnalignedGaps"; // do not extract "w X w" if X is unaligned
+  static public final String NO_UNALIGNED_OR_LOOSE_GAPS_OPT = "noUnalignedOrLooseGaps"; // do not extract w X w unless the first and last words of X are unaligned
+  static public final String NO_UNALIGNED_SUBPHRASE_OPT = "noUnalignedSubphrase";
+  static public final String NO_CROSS_SERIAL_PHRASES_OPT  = "noCrossSerialPhrases";
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
@@ -31,14 +35,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps, onlyCrossSerialDTU, noTargetGaps, skipUnalignedGaps, allSubsequences, allSubsequencesLoose;
+  static boolean withGaps, onlyCrossSerialDTU, allSubsequences, allSubsequencesOld,
+       noTargetGaps, noUnalignedSubphrase, noUnalignedGaps, noUnalignedOrLooseGaps;
+  static boolean noCrossSerialPhrases = false;
   static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
   public static final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
 
   enum CrossSerialType { NONE, TYPE1_E, TYPE1_F, TYPE2_E, TYPE2_F }
-  static final BitSet noCrossSerial = new BitSet();
+  //static final BitSet noCrossSerial = new BitSet();
 
   private static final boolean DEBUG = System.getProperty("DebugDTU") != null;
   private static final int QUEUE_SZ = 1024;
@@ -74,23 +80,33 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // With gaps or not:
     String optStr = prop.getProperty(WITH_GAPS_OPT);
-    withGaps =  optStr != null && !optStr.equals("false");
+    withGaps = optStr != null && !optStr.equals("false");
 
     // No gaps on the target:
     optStr = prop.getProperty(NO_TARGET_GAPS_OPT);
-    noTargetGaps =  optStr != null && !optStr.equals("false");
+    noTargetGaps = optStr != null && !optStr.equals("false");
 
     // Ignore DTU if a gap only covers unaligned words:
-    optStr = prop.getProperty(SKIP_UNALIGNED_GAPS_OPT);
-    skipUnalignedGaps =  optStr != null && !optStr.equals("false");
+    optStr = prop.getProperty(NO_UNALIGNED_GAPS_OPT);
+    noUnalignedGaps = optStr != null && !optStr.equals("false");
+
+    // Ignore DTU if first or last word of X is unaligned (same as Hiero):
+    optStr = prop.getProperty(NO_UNALIGNED_OR_LOOSE_GAPS_OPT);
+    noUnalignedOrLooseGaps = optStr != null && !optStr.equals("false");
+
+    // Each wi in w1 X w2 X ... X wN must be licensed by at least one alignment:
+    optStr = prop.getProperty(NO_UNALIGNED_SUBPHRASE_OPT);
+    noUnalignedSubphrase = optStr != null && !optStr.equals("false");
 
     // All subsequences:
     optStr = prop.getProperty(ALL_SUBSEQUENCES_OPT);
     allSubsequences = optStr != null && !optStr.equals("false");
 
-    optStr = prop.getProperty(ALL_SUBSEQUENCES_LOOSE_OPT);
-    allSubsequencesLoose = optStr != null && !optStr.equals("false");
-    assert(!allSubsequences || !allSubsequencesLoose);
+    // All subsequences (as in NAACL submission):
+    // (extracts a subset of "allSubsequences")
+    optStr = prop.getProperty(ALL_SUBSEQUENCES_OLD_OPT);
+    allSubsequencesOld = optStr != null && !optStr.equals("false");
+    assert(!allSubsequences || !allSubsequencesOld);
 
     // Only extracting cross-serial dependencies (for debugging):
     optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
@@ -119,6 +135,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       maxSizeE = Integer.parseInt(s);
     } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
       maxSizeE = Integer.parseInt(s);
+    }
+
+    // Same as Hiero:
+    optStr = prop.getProperty(HIERO_RULES_OPT);
+    boolean hieroRules = optStr != null && !optStr.equals("false");
+    if (hieroRules) {
+      allSubsequences = true;
+      noUnalignedOrLooseGaps = true;
+      //onlyTightPhrases = true;
+      noCrossSerialPhrases = true; // TODO
     }
 
     if(DEBUG)
@@ -214,7 +240,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       }
 
       // Drop phrase if any of the gaps only contains unaligned words:
-      return !(skipUnalignedGaps && hasUnalignedGap());
+      return !(noUnalignedGaps && hasUnalignedGap());
     }
 
     private boolean consistencize(int i, boolean source, boolean topLevel) {
@@ -274,6 +300,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     private boolean hasUnalignedGap(WordAlignment sent, BitSet fs, boolean source) {
+      if (fs.isEmpty())
+        return false;
       int startIdx, endIdx = 0;
       for(;;) {
         startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
@@ -298,6 +326,66 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         //System.err.printf("[%d-%d] %s\n", startIdx, endIdx, unalignedGap);
         if(unalignedGap)
          return true;
+      }
+      return false;
+    }
+
+    public boolean hasUnalignedSubphrase() {
+      return hasUnalignedSubphrase(sent, f, true) || hasUnalignedSubphrase(sent, e, false);
+    }
+
+    private boolean hasUnalignedSubphrase(WordAlignment sent, BitSet fs, boolean source) {
+      int startIdx, endIdx=0;
+      //System.err.printf("segment: %s\n", fs);
+      for(;;) {
+        startIdx = fs.nextSetBit(endIdx);
+        if(startIdx < 0)
+          break;
+        endIdx = fs.nextClearBit(startIdx)-1;
+        boolean unalignedSP = true;
+        for (int i=startIdx; i <= endIdx; ++i) {
+          if(source) {
+            if(sent.f2e(i).size() > 0) {
+              unalignedSP = false;
+              break;
+            }
+          }  else {
+            if(sent.e2f(i).size() > 0) {
+              unalignedSP = false;
+              break;
+            }
+          }
+        }
+        //System.err.printf("[%d-%d] %s\n", startIdx, endIdx, unalignedSP);
+        ++endIdx;
+        if(unalignedSP)
+         return true;
+      }
+      return false;
+    }
+
+    public boolean hasUnalignedOrLooseGap() {
+      return hasUnalignedOrLooseGap(sent, f, true) || hasUnalignedOrLooseGap(sent, e, false);
+    }
+    
+    private boolean hasUnalignedOrLooseGap(WordAlignment sent, BitSet fs, boolean source) {
+      if (fs.isEmpty())
+        return false;
+      int startIdx, endIdx = 0;
+      for(;;) {
+        startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
+        endIdx = fs.nextSetBit(startIdx)-1;
+        if(startIdx > endIdx)
+          break;
+        if(source) {
+          if (sent.f2e(startIdx).size() == 0 || sent.f2e(startIdx).size() == 0) {
+            return true;
+          }
+        }  else {
+          if (sent.e2f(endIdx).size() == 0 || sent.e2f(endIdx).size() == 0) {
+            return true;
+          }
+        }
       }
       return false;
     }
@@ -641,7 +729,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   Set<BitSet> subsequenceExtract(WordAlignment sent) {
 
     TrieIntegerArrayIndex fTrieIndex = alTemps.getSourceFilter().getSourceTrie();
-    assert((fTrieIndex != null) == (allSubsequences || allSubsequencesLoose));
+    assert((fTrieIndex != null) == (allSubsequences || allSubsequencesOld));
     
     Deque<Triple<Integer,Integer,BitSet>> q = new LinkedList<Triple<Integer,Integer,BitSet>>();
     bitsets.clear();
@@ -726,7 +814,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     // Add all subsequence phrases:
-    if (allSubsequencesLoose) {
+    if (allSubsequences) {
       for (BitSet bitset : subsequenceExtract(sent)) {
         DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
         if (dtu.consistencize()) {
@@ -749,9 +837,13 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         if (!noTargetGaps || dtu.eContiguous()) {
           if (!dtu.eContiguous() || !dtu.fContiguous()) {
             // Only extract non-contiguous phrases:
-            AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
-            if(DEBUG && alTemp != null)
-              System.err.printf("dtu: %s\n%s", alTemp.toString(false), dtu.getCrossings());
+            if (!noUnalignedOrLooseGaps || !dtu.hasUnalignedOrLooseGap()) {
+              if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
+                AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+                if(DEBUG && alTemp != null)
+                  System.err.printf("dtu: %s\n%s", alTemp.toString(false), dtu.getCrossings());
+              }
+            }
           }
         }
       } else {
@@ -768,21 +860,32 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     // Add rules specific to test set:
-    if (allSubsequences) {
+    if (allSubsequencesOld) {
+      // This will only extract tight phrases:
       for (BitSet bitset : subsequenceExtract(sent)) {
         DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
         if (dtu.consistencize()) {
           //System.err.println("sent: dtu: "+dtu);
           if (!noTargetGaps || dtu.eContiguous()) {
             if (!seen.contains(dtu)) {
-              extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+              if (!noUnalignedOrLooseGaps || !dtu.hasUnalignedOrLooseGap()) {
+                if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
+                  extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+                }
+              }
               seen.add(dtu);
             }
           }
         }
       }
     }
-    if (needAlGrid)
+
+    // Rules are processed after being enumarated:
+    if (needAlGrid) {
+      if (noCrossSerialPhrases) {
+        // TODO
+      }
       extractPhrasesFromAlGrid(sent);
+    }
   }
 }

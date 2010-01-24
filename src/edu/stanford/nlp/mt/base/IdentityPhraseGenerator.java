@@ -17,7 +17,7 @@ public class IdentityPhraseGenerator<TK,FV> extends AbstractPhraseGenerator<TK,F
 	static public final float SCORE_VALUES[] = {(float)1.0};
 
   // do we need to account for "(0) (1)", etc?
-  static public final PhraseAlignment DEFAULT_ALIGNMENT = new PhraseAlignment("I-I");
+  static public final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment.getPhraseAlignment("I-I");
 
   private final String[] scoreNames;
 	private final SequenceFilter<TK> filter;
