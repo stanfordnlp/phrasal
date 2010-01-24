@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+while(<STDIN>) {
+	if(m=(<seg.*?>) *(.*?) *(</seg>)=) {
+		my @els = ($1,$2,$3);
+		$els[1] =~ s/EMPTY_LINE//g;
+		#$els[1] =~ s/^[\,\.]+ //g;
+		#$els[1] =~ s/\,{4,}/\,/g;
+		#$els[1] =~ s/\,+\.\,*/\./g;
+		#$els[1] =~ s/\.{2}$/\./g;
+		$els[1] =~ s/^ *//g;
+		$els[1] =~ s/ *$//g;
+		$els[1] =~ s/  +/ /g;
+		print "$els[0] $els[1] $els[2]\n"
+	} else {
+		print
+	}
+}

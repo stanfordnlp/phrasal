@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Convert Joshua grammar file into DTU format:
+
+# 2 or 3:
+COLUMN=$1
+
+sed 's/ ||| /\t/g' | cut -f $COLUMN | perl -pe 's/\[X,\d+\]/X/g' | sed 's/^[X ]* //' | sed 's/ [X ]*$//' | sed 's/\( X\)\( X\)*/ X/g'

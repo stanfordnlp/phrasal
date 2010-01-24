@@ -20,8 +20,8 @@ while(<STDIN>) {
 	my @w = split /\s+/;
 	my @w2;
 	foreach my $w (@w) {
-		if($w =~/[^\$\[\]A-Za-z0-9,.()'"%&;:+-\?\!\{\}_\*\@]/) {
-			print STDERR $w,"\n";
+		if($w =~/[^\$\[\]A-Za-z0-9,.()'"%&;:+-\?\!\{\}_\*\@\\]/) {
+			print STDERR "unk: ",$w,"\n";
 		} else {
 			push @w2, $w;
 		}

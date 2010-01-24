@@ -100,17 +100,9 @@ MOSES_ARGS=$(LOCAL_MOSES_ARGS)
 
 ### BLEU:
 $(DEVID).%.bleu: $(DEVID).%
-<<<<<<< .mine
 	cat $< | phrasal_sort | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
-=======
-	cat $< | phrasal_sort | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
->>>>>>> .r27848
 $(TESTID).%.bleu: $(TESTID).%
-<<<<<<< .mine
 	cat $< | phrasal_sort | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
-=======
-	cat $< | phrasal_sort | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
->>>>>>> .r27848
 
 ### TER:
 $(DEVID).%.ter: $(DEVID).%
@@ -188,28 +180,28 @@ $(TESTID).$(DEVID).mix.%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest $(TESTID).$(MIX
 #############################################
 
 # Use best MERT paramters to generate n-best list:
-test.$(TESTID).%.$Nbest: %.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+test.$(TESTID).%.$Nbest: %.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 # Use best MERT paramters to generate n-best list:
-$(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+$(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
-$(TESTID).$(DEVID).%-bt.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+$(TESTID).$(DEVID).%-bt.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 # Use final MERT paramters:
-$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 
 # Use best MERT paramters:
-$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
-$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 
@@ -228,7 +220,7 @@ $(TESTID).%.phrasal.ini: $(DEVID).%.pmert/phrasal.final.ini
 #############################################
 
 # Maximize BLEU (n-best):
-$(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) 
+$(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE)
 	$(SCRIPTS)/update_ini SETID $(DEVID) < $< > $(DEVID).$<
 	$(PM) --working-dir=$(DEVID).$(*F).$N.pmert \
 	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" --mert-java-flags="$(JAVA_MERT_ARGS)" \

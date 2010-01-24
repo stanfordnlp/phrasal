@@ -124,6 +124,8 @@ s=(\w{6,}) - (\w{6,})=$1 $2=g;
 s/ percent / % /g;
 s/ b / /gi; # due to bad Arabic segmentation
 
+s/R *\. Component/Aramco/gi;
+
 s=  += =g;
 s=^ +==g;
 s= +$==g;

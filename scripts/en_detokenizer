@@ -2,5 +2,5 @@
 
 tmp=`mktempname /tmp/tc_input.XXXXXX`
 cat | perl -pe 's/^\s+$/null\n/'> $tmp.lc
-java edu.stanford.nlp.process.PTBTokenizer -untok $tmp.lc | sed 's/^null$//i'
+java edu.stanford.nlp.process.PTBTokenizer -untok $tmp.lc | sed 's/^null$//i' 
 rm -f $tmp.lc

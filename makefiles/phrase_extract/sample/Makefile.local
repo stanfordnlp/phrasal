@@ -23,15 +23,6 @@ LINES=100000
 ### MT word-aligned training data:
 TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
 
-### Unfiltered Gigaword LM:
-### (not actually taken from Gigaword, but small enough
-### for this tiny example)
-GIGA=/scr/nlp/data/gale/acl_2005_workshop/lm/europarl.en.srilm
-
-### Count-based Google LM:
-GOOGLE_CT=/scr/nlp/data/gale2/NIST_EVAL08/GoogleNgrams-ibm
-GOOGLE_LM=/scr/nlp/data/gale2/NIST_EVAL08/LM/google/google.countlm.3 
-
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
 TESTID=mt05
@@ -81,6 +72,7 @@ MINP=1e-4
 
 ### How much memory for Java:
 MEMSIZE=3000m
+MMEMSIZE=3000m
 PMEMSIZE=3000m
 PMEMSIZE_BM=3000m
 
@@ -138,7 +130,7 @@ LM_FILTER_SCRIPT=filter_lm_unigram
 # Size of test-time nbest list:
 #########################################
 
-N=10
+N=200
 
 #########################################
 # Misc
