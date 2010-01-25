@@ -609,7 +609,7 @@ public class UnsmoothedMERT extends Thread {
   static Counter<String> initialWts;
   static List<Counter<String>> previousWts;
 
-  static Counter<String> fixedWts = null;
+  static Counter<String> fixedWts = new ClassicCounter<String>();
   static Counter<String> bestWts;
   static double bestObj = Double.POSITIVE_INFINITY;
 
@@ -1048,7 +1048,7 @@ public class UnsmoothedMERT extends Thread {
 
     double wtSsd = wtSsd(initialWts, bestWts);
 
-    if(fixedWts != null) {
+    if(fixedWts != null && !fixedWts.keySet().isEmpty()) {
       removeWts(bestWts, fixedWts);
       bestWts.addAll(fixedWts);
     }
@@ -1072,6 +1072,10 @@ public class UnsmoothedMERT extends Thread {
     while((arg = args[argi]).startsWith("-")) {
       if(arg.equals("-S")) {
         smoothBLEU = true;
+      } else if(arg.equals("-D")) {
+        String disableStr = args[++argi];
+        fixedWts.incrementCount(disableStr, 0.0);
+        System.err.println("Disabling feature: "+disableStr);
       } else if(arg.equals("-s")) {
         seedStr = args[++argi];
       } else if(arg.equals("-p")) {
@@ -1083,7 +1087,7 @@ public class UnsmoothedMERT extends Thread {
       } else if(arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
         try {
-          fixedWts = readWeights(fixedWtsFile);
+          fixedWts.addAll(readWeights(fixedWtsFile));
         } catch(IOException e) {
           System.err.println("Fixed weight file missing: "+fixedWtsFile);
           fixedWts = null;
