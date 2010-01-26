@@ -940,6 +940,10 @@ public class UnsmoothedMERT extends Thread {
     	List<List<Sequence<IString>>> references = Metrics
             .readReferences(referenceList.split(","), tokenizeNIST);
       emetric = new WERMetric<IString, String>(references);
+    } else if (evalMetric.equals("per")) {
+    	List<List<Sequence<IString>>> references = Metrics
+      .readReferences(referenceList.split(","), tokenizeNIST);
+    	emetric = new PERMetric<IString, String>(references);
     } else {
       emetric = null;
       System.err.printf("Unrecognized metric: %s\n", evalMetric);

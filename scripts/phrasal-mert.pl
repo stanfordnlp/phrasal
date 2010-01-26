@@ -394,6 +394,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
      $trans_eval = `java $java_flags -Dterpa edu.stanford.nlp.mt.metrics.TERpMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type eq 'meteor') {
      $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
+   } elsif($opt_type eq 'per') {
+     $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.PERMetric $referenceList < $iter_trans 2>&1`; 
    } elsif($opt_type =~ /meteor:/) {
      @abg = split /:/, $opt_type;
      $trans_eval = `java -Dabg=$abg[1]:$abg[2]:$abg[3] $java_flags edu.stanford.nlp.mt.metrics.METEORMetric $referenceList < $iter_trans 2>&1`; 
