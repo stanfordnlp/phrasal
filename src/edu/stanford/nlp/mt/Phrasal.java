@@ -527,7 +527,7 @@ public class Phrasal {
 		if (discriminativeTMParameter) {
 			System.err.printf("Using Discriminative TM\n");
 		}
-    featurizer = FeaturizerFactory.factory(
+		featurizer = FeaturizerFactory.factory(
 				FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR, makePair(
 						FeaturizerFactory.ARPA_LM_PARAMETER, lgModel), makePair(
              FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc), makePair(
@@ -543,7 +543,18 @@ public class Phrasal {
       featurizer.deleteFeaturizers(disabledFeaturizers);
     }
 
-    // Create Scorer
+		if (lexReorderFeaturizer != null) {
+			additionalFeaturizers.add(lexReorderFeaturizer);
+		}
+
+		if (additionalFeaturizers.size() != 0) {
+			List<IncrementalFeaturizer<IString, String>> allFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
+			allFeaturizers.addAll(featurizer.featurizers);
+			allFeaturizers.addAll(additionalFeaturizers);
+			featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);
+		}
+
+		// Create Scorer
 		List<String> weightConfig = new LinkedList<String>();
 		weightConfig.add(ScorerFactory.STATIC_SCORER_INLINE);
 
@@ -764,29 +775,11 @@ public class Phrasal {
 								optionLimit));
 		}
 
+
 		System.err.printf("Phrase Limit: %d\n",
 				((CombinedPhraseGenerator) phraseGenerator).getPhraseLimit());
 
-    // Additional featurizers:
-    // ARPA LM featurizer:
-    if (!lgModelVoc.isEmpty()) {
-      System.err.println("LM vocabulary file: "+lgModelVoc);
-      IncrementalFeaturizer<IString, String> arpaLmFeaturizer
-         = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lgModel,lgModelVoc));
-      additionalFeaturizers.add(arpaLmFeaturizer);
-    }
-
-    // Lexicalized reordering featurizer:
-    if (lexReorderFeaturizer != null) {
-			additionalFeaturizers.add(lexReorderFeaturizer);
-		}
-
-    List<IncrementalFeaturizer<IString, String>> allFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
-    allFeaturizers.addAll(featurizer.featurizers);
-    allFeaturizers.addAll(additionalFeaturizers);
-    featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);
-
-    // Create Recombination Filter
+		// Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
       .factory(featurizer.getNestedFeaturizers(), recombinationHeuristic);
 

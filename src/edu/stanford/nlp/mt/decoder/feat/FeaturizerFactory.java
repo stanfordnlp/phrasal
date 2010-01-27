@@ -134,16 +134,19 @@ public class FeaturizerFactory {
 			}
 			List<IncrementalFeaturizer<IString,String>> baselineFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();			
 			
-			IncrementalFeaturizer<IString,String> arpaLmFeaturizer=null, phraseTableScoresFeaturizer, linearDistortionFeaturizer;
+			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer, linearDistortionFeaturizer;
 			
 			// ARPA LM
+      String lm = paramPairs.get(ARPA_LM_PARAMETER);
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
-      if(lmVoc == null || lmVoc.isEmpty()) {
-        String lm = paramPairs.get(ARPA_LM_PARAMETER);
+      System.err.println("LM vocabulary file: "+lmVoc);
+      if(lmVoc == null || lmVoc.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm));
-        baselineFeaturizers.add(arpaLmFeaturizer);
+      } else {
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm,lmVoc));
       }
-
+      baselineFeaturizers.add(arpaLmFeaturizer);
+			
 			// Precomputed phrase to phrase translation scores
 			phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>();
 			baselineFeaturizers.add(phraseTableScoresFeaturizer);
@@ -168,14 +171,17 @@ public class FeaturizerFactory {
 				unknownWordFeaturizer;
 			
 			// ARPA LM
+      String lm = paramPairs.get(ARPA_LM_PARAMETER);
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
-      if (lmVoc == null || lmVoc.isEmpty()) {
-        String lm = paramPairs.get(ARPA_LM_PARAMETER);
+      System.err.println("LM vocabulary file: "+lmVoc);
+      if(lmVoc == null || lmVoc.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm));
-        pharaohFeaturizers.add(arpaLmFeaturizer);
+      } else {
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm,lmVoc));
       }
-
-      String discriminativeLMOrderStr = paramPairs.get(DISCRIMINATIVE_LM_PARAMETER);
+      pharaohFeaturizers.add(arpaLmFeaturizer);
+			
+			String discriminativeLMOrderStr = paramPairs.get(DISCRIMINATIVE_LM_PARAMETER);
 			int discriminativeLMOrder = (discriminativeLMOrderStr == null ? 0 : Integer.parseInt(discriminativeLMOrderStr));
 			
 			String discriminativeTMStr = paramPairs.get(DISCRIMINATIVE_TM_PARAMETER);
