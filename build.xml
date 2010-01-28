@@ -1,11 +1,12 @@
 <!-- JavaNLP MT5 build file -->
 
 <project name="mt" default="compile" basedir=".">
-  <property name="project.core"     value="${basedir}/../core" />
-  <property name="project.research" value="${basedir}/../research" />
-  <property name="build.path"       value="${basedir}/classes" />
-  <property name="source.path"      value="${basedir}/src" />
-  <property name="tests.path"       value="${basedir}/test/src" />
+  <property name="project.core"   value="${basedir}/../core" />
+  <property name="project.more"   value="${basedir}/../more" />
+  <property name="build.path"     value="${basedir}/classes" />
+  <property name="source.path"    value="${basedir}/src" />
+  <property name="tests.path"     value="${basedir}/test/src" />
+  <property name="itests.path"     value="${basedir}/itest/src" />
   
   <property name="compile.debug"       value="true"/>
   <property name="compile.deprecation" value="false"/>
@@ -23,14 +24,20 @@
         <exclude name="javanlp*"/>
       </fileset>
       <pathelement path="${project.core}/classes" />
-
+	  
+	  <!-- depends on more -->
+      <fileset dir="${project.more}/lib">
+        <include name="*.jar"/>
+        <exclude name="javanlp*"/>
+      </fileset>
+      <pathelement path="${project.more}/classes" />
+      
       <!-- depends on local libs -->
       <fileset dir="${basedir}/lib">
         <include name="*.jar"/>
         <exclude name="javanlp*"/>
       </fileset>
     </path>
-
   </target>
   
   <target name="clean" description="Delete old classes">
@@ -66,7 +73,7 @@
   <target name="test" depends="classpath"
           description="Run core unit tests">
     <echo message="${ant.project.name}" />
-    <junit maxmemory="2048m" printsummary="off" outputtoformatters="false" forkmode="perBatch">
+    <junit maxmemory="1g" printsummary="off" outputtoformatters="false" forkmode="perBatch">
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
