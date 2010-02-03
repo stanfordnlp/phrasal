@@ -31,25 +31,28 @@ public class CorpusOverlapFinder {
   static public final String TEST_OPT = "test";
   static public final String TRAIN_OPT = "train";
 
-  static public final String MIN_LEN_OPT = "min";
-  static public final String MAX_LEN_OPT = "max";
+  static public final String MIN_LEN_OPT = "ngramOrder";
+  static public final String MAX_LEN_OPT = "maxNgram";
+  static public final String WINDOW_SIZE_OPT = "windowSize";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
+
+	static final boolean verbose = false;
 
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(
        TRAIN_OPT, TEST_OPT
      ));
     OPTIONAL_OPTS.addAll(Arrays.asList(
-       MIN_LEN_OPT, MAX_LEN_OPT
+       MIN_LEN_OPT, MAX_LEN_OPT, WINDOW_SIZE_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
 
-  private static final int minLen = 15, maxLen = 50, windowSize = 20;
+  private static int minLen = 15, maxLen = 50, windowSize = 20;
   private final Counter<Sequence<IString>>[] counters;
   private final  Map<String,String> ngramSources;
 
@@ -61,7 +64,12 @@ public class CorpusOverlapFinder {
     for(int i=0; i<=maxLen; ++i)
       counters[i] = new OpenAddressCounter<Sequence<IString>>();
     String test = prop.getProperty(TEST_OPT);
-    System.err.println("Extracting ngrams from test corpus: " + test);
+		minLen = Integer.parseInt(prop.getProperty(MIN_LEN_OPT,"15"));
+		maxLen = Integer.parseInt(prop.getProperty(MAX_LEN_OPT,"50"));
+		windowSize = Integer.parseInt(prop.getProperty(WINDOW_SIZE_OPT,"20"));
+		System.err.printf("Find n-grams of length %d to %d\n", minLen, maxLen);
+		System.err.printf("Window size: %d\n", windowSize);
+		System.err.println("Extracting ngrams from test corpus: " + test);
     extractPhrases(test, false);
   }
 
@@ -131,11 +139,13 @@ public class CorpusOverlapFinder {
         eLines.add(eLine);
         matches.add(localMatches);
         if(!localMatches.isEmpty()) {
-          System.err.printf("train: %s\n",eLine);
-          for(String ngram : localMatches) {
-            System.err.printf("    match: {{{ %s }}}\n", ngram);
-            System.err.printf("   source: {{{ %s }}}\n",ngramSources.get(ngram));
-          }
+					/*if (verbose) {
+						System.err.printf("train: %s\n",eLine);
+						for(String ngram : localMatches) {
+							System.err.printf("    match: {{{ %s }}}\n", ngram);
+							//System.err.printf("   source: {{{ %s }}}\n",ngramSources.get(ngram));
+						}
+					}*/
         }
       }
     }
@@ -150,11 +160,13 @@ public class CorpusOverlapFinder {
           ++c;
       }
       double o = c*1.0/total;
-      System.out.printf("%d\t%f\t%s\n",i+1,o,eLines.get(i));
-      for(String m : matches.get(i)) {
-        System.out.printf("    match: {{{ %s }}}\n",m);
-        System.out.printf("   source: {{{ %s }}}\n",ngramSources.get(m));
-      }
+			System.out.printf("%d\t%f\t%s\n",i+1,o,eLines.get(i));
+			if (verbose) {
+				for(String m : matches.get(i)) {
+					System.out.printf("    match: {{{ %s }}}\n",m);
+					//System.out.printf("   source: {{{ %s }}}\n",ngramSources.get(m));
+				}
+			}
     }
   }
 
@@ -168,7 +180,7 @@ public class CorpusOverlapFinder {
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
     Properties prop = StringUtils.argsToProperties(args);
 
-    System.err.println("CorpusOverlapFinder started at: "+formatter.format(new Date()));
+    //System.err.println("CorpusOverlapFinder started at: "+formatter.format(new Date()));
 
     try {
       CorpusOverlapFinder t = new CorpusOverlapFinder(prop);
@@ -182,7 +194,7 @@ public class CorpusOverlapFinder {
       usage();
     }
 
-    System.err.println("CorpusOverlapFinder ended at: "+formatter.format(new Date()));
+    //System.err.println("CorpusOverlapFinder ended at: "+formatter.format(new Date()));
   }
 
 }
