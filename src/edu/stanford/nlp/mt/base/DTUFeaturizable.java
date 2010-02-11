@@ -15,6 +15,7 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
     super(hypothesis, translationId, nbStatefulFeaturizers, toks, retrieveDTUTokens(hypothesis, toks), notYetDone, targetOnly);
     this.targetOnly = targetOnly;
     this.abstractOption = abstractOption;
+    assert(translatedPhrase.size() > 0);
   }
 
   public DTUFeaturizable(Sequence<TK> foreignSequence, ConcreteTranslationOption<TK> concreteOpt, int translationId, int dtuId) {
@@ -22,6 +23,7 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
           ((DTUOption<TK>)concreteOpt.abstractOption).dtus[dtuId]);
     this.abstractOption = null;
     this.targetOnly = false;
+    assert(translatedPhrase.size() > 0);
   }
 
   protected static <TK,FV> Object[] retrieveDTUTokens(Hypothesis<TK,FV> h, RawSequence<TK> newTokens) {
@@ -42,6 +44,6 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
 
   @Override
   protected void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
-    // TODO
+    /* effectively disable augmentAlignments */
   }
 }

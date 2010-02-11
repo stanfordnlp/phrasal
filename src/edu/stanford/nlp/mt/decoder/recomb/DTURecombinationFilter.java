@@ -4,6 +4,8 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.base.Sequence;
 
+import java.util.Iterator;
+
 /**
  * 
  * @author Michel Galley
@@ -32,34 +34,30 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
       combine = true;
     } else if(isDTU_A && !isDTU_B) {
       DTUHypothesis dtuA = (DTUHypothesis<TK,FV>) hypA;
-      combine = (dtuA.sortedFloatingPhrases.size() == 0);
+      combine = (dtuA.discTargetPhrases.size() == 0);
     } else if(!isDTU_A) {
       DTUHypothesis dtuB = (DTUHypothesis<TK,FV>) hypB;
-      combine = (dtuB.sortedFloatingPhrases.size() == 0);
+      combine = (dtuB.discTargetPhrases.size() == 0);
     } else {
       DTUHypothesis<TK,FV> dtuA = (DTUHypothesis<TK,FV>) hypA;
       DTUHypothesis<TK,FV> dtuB = (DTUHypothesis<TK,FV>) hypB;
-      if (dtuA.sortedFloatingPhrases.size() != dtuB.sortedFloatingPhrases.size()) {
+      if (dtuA.discTargetPhrases.size() != dtuB.discTargetPhrases.size()) {
         combine = false;
       } else {
         combine = true;
-        for (int i=0; i<dtuA.sortedFloatingPhrases.size(); ++i) {
-          Sequence<TK> seqA = dtuA.sortedFloatingPhrases.get(i);
-          Sequence<TK> seqB = dtuB.sortedFloatingPhrases.get(i);
-          if(!seqA.equals(seqB)) {
+        Iterator<DTUHypothesis.DiscTargetPhrase<TK,FV>> itA = dtuA.discTargetPhrases.iterator();
+        Iterator<DTUHypothesis.DiscTargetPhrase<TK,FV>> itB = dtuB.discTargetPhrases.iterator();
+        while (itA.hasNext()) {
+          assert (itB.hasNext());
+          DTUHypothesis.DiscTargetPhrase<TK,FV> elA = itA.next();
+          DTUHypothesis.DiscTargetPhrase<TK,FV> elB = itB.next();
+          if(elA.concreteOpt.abstractOption != elB.concreteOpt.abstractOption || elA.segmentIdx != elB.segmentIdx) {
             combine = false;
             break;
           }
         }
+        assert (!combine || !itB.hasNext());
       }
-      /*
-      StringBuilder sbA = new StringBuilder(), sbB = new StringBuilder();
-      for(Sequence<TK> el : dtuA.sortedFloatingPhrases)
-        sbA.append("|").append(el);
-      for(Sequence<TK> el : dtuB.sortedFloatingPhrases)
-        sbB.append("|").append(el);
-      System.err.printf("Recombine\t%s\t%s\t%s\n", combine, sbA, sbB);
-      */
     }
     //System.err.printf("Recombine\t%s\t{{{%s}}}\t{{{%s}}}\n", combine, hypA.toString(), hypB.toString());
     return combine;

@@ -33,6 +33,7 @@ public class TargetGapFeaturizer<TK> implements IncrementalFeaturizer<TK, String
     int dtuIdx = -1;
     Sequence<TK>[] dtus = ((DTUOption<TK>)dtuF.abstractOption).dtus;
     for(int i=0; i<dtus.length; ++i) {
+      assert(f.translatedPhrase.size() > 0);
       if(dtus[i] == f.translatedPhrase) {
         dtuIdx = i;
         break;

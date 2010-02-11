@@ -36,6 +36,15 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
       System.err.println("warning: standard linear distortion with DTU phrases.");
   }
 
+  public <FV> ConcreteTranslationOption
+      (TranslationOption<T> abstractOption, CoverageSet foreignCoverage, int foreignPos, String phraseTableName, double isolationScore) {
+    this.abstractOption = abstractOption;
+    this.foreignCoverage = foreignCoverage;
+    this.foreignPos = foreignPos;
+	  this.phraseTableName = phraseTableName;
+    this.isolationScore = isolationScore;
+	}
+
   /**
 	 *
 	 * @param <FV>
