@@ -221,78 +221,29 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		}
 		decodeLoopTime += System.currentTimeMillis();
 		System.err.printf("Decoding loop time: %f s\n", decodeLoopTime/1000.0);
-		
-		if (DEBUG) {
-			int recombined = 0;
-			int preinsertionDiscarded = 0;
-			int pruned = 0;
-			for (Beam<Hypothesis<TK,FV>> beam : beams) {
-				recombined += beam.recombined();
-				preinsertionDiscarded += beam.preinsertionDiscarded();
-				pruned += beam.pruned();
-			}
-			System.err.printf("Stats:\n");
-			System.err.printf("\ttotal hypotheses generated: %d\n", totalHypothesesGenerated);
-			System.err.printf("\tcount recombined : %d\n", recombined);
-			System.err.printf("\tnumber pruned: %d\n", pruned);
-			System.err.printf("\tpre-insertion discarded: %d\n", preinsertionDiscarded);
-			
-		
-			
-			int beamIdx = beams.length-1;
-			for ( ; beamIdx >= 0; beamIdx--) {
-				if (beams[beamIdx].size() != 0) break;
-			}
-			Hypothesis<TK, FV> bestHyp = beams[beamIdx].iterator().next();
-			
-			List<Hypothesis<TK,FV>> trace = new ArrayList<Hypothesis<TK,FV>>();
-			for (Hypothesis<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingHyp) {
-				trace.add(hyp);
-			}
-			Collections.reverse(trace);
-			
-			ClassicCounter finalFeatureVector = new ClassicCounter();
-			if (bestHyp.featurizable != null) {
-				System.err.printf("hyp: %s\n",  bestHyp.featurizable.partialTranslation);
-				System.err.printf("score: %e\n", bestHyp.score());
-				System.err.printf("Trace:\n");
-				System.err.printf("--------------\n");
-				List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
-				for (Hypothesis<TK,FV> hyp : trace) {
-					System.err.printf("%d:\n", hyp.id);
-					if (hyp.translationOpt != null) {
-						System.err.printf("\tPhrase: %s(%d) => %s(%d)",
-								hyp.translationOpt.abstractOption.foreign, 
-								hyp.featurizable.foreignPosition, 
-								hyp.translationOpt.abstractOption.translation,
-								hyp.featurizable.translationPosition);
-					}
-					System.err.printf("\tCoverage: %s\n", hyp.foreignCoverage);
-					System.err.printf("\tFeatures: %s\n", hyp.localFeatures);
-					if (hyp.localFeatures != null) {
-						for (FeatureValue<FV> featureValue : hyp.localFeatures) {
-							finalFeatureVector.incrementCount(featureValue.name.toString(), featureValue.value);
-							allfeatures.add(featureValue);
-						}
-					}
-				}
-	
-				System.err.printf("\n\nFeatures: %s\n", finalFeatureVector);
-				System.err.println();
-				System.err.printf("Best hyp score: %.4f\n", bestHyp.finalScoreEstimate());
-				System.err.printf("true score: %.3f h: %.3f\n", bestHyp.score, bestHyp.h);
-				System.err.println();
-				
-        if(featurizer instanceof RichIncrementalFeaturizer)
-          ((RichIncrementalFeaturizer)featurizer).debugBest(bestHyp.featurizable);
-        
-        double score = scorer.getIncrementalScore(allfeatures);
-				System.err.printf("Recalculated score: %.3f\n", score);
-			} else {
-				System.err.printf("Only null hypothesis was produced.\n");
-			}
-		}
-		
+
+    if (DEBUG) {
+      int recombined = 0;
+      int preinsertionDiscarded = 0;
+      int pruned = 0;
+      for (Beam<Hypothesis<TK,FV>> beam : beams) {
+        recombined += beam.recombined();
+        preinsertionDiscarded += beam.preinsertionDiscarded();
+        pruned += beam.pruned();
+      }
+      System.err.printf("Stats:\n");
+      System.err.printf("\ttotal hypotheses generated: %d\n", totalHypothesesGenerated);
+      System.err.printf("\tcount recombined : %d\n", recombined);
+      System.err.printf("\tnumber pruned: %d\n", pruned);
+      System.err.printf("\tpre-insertion discarded: %d\n", preinsertionDiscarded);
+
+      int beamIdx = beams.length-1;
+      for ( ; beamIdx >= 0; beamIdx--) {
+        if (beams[beamIdx].size() != 0) break;
+      }
+      Hypothesis<TK, FV> bestHyp = beams[beamIdx].iterator().next();
+      dump(bestHyp);
+    }
 		
 		for (int i = beams.length -1; i >= 0; i--) {
 			if (beams[i].size() != 0 && (constrainedOutputSpace == null || constrainedOutputSpace.allowableFinal(beams[i].iterator().next().featurizable))) {
@@ -310,7 +261,56 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		
 		return null;
 	}
-	
+
+  public void dump(Hypothesis<TK, FV> bestHyp) {
+
+    List<Hypothesis<TK,FV>> trace = new ArrayList<Hypothesis<TK,FV>>();
+    for (Hypothesis<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingHyp) {
+      trace.add(hyp);
+    }
+    Collections.reverse(trace);
+
+    ClassicCounter finalFeatureVector = new ClassicCounter();
+    if (bestHyp.featurizable != null) {
+      System.err.printf("hyp: %s\n",  bestHyp.featurizable.partialTranslation);
+      System.err.printf("score: %e\n", bestHyp.score());
+      System.err.printf("Trace:\n");
+      System.err.printf("--------------\n");
+      List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
+      for (Hypothesis<TK,FV> hyp : trace) {
+        System.err.printf("%d:\n", hyp.id);
+        if (hyp.translationOpt != null) {
+          System.err.printf("\tPhrase: %s(%d) => %s(%d)",
+              hyp.translationOpt.abstractOption.foreign,
+              hyp.featurizable.foreignPosition,
+              hyp.translationOpt.abstractOption.translation,
+              hyp.featurizable.translationPosition);
+        }
+        System.err.printf("\tCoverage: %s\n", hyp.foreignCoverage);
+        System.err.printf("\tFeatures: %s\n", hyp.localFeatures);
+        if (hyp.localFeatures != null) {
+          for (FeatureValue<FV> featureValue : hyp.localFeatures) {
+            finalFeatureVector.incrementCount(featureValue.name.toString(), featureValue.value);
+            allfeatures.add(featureValue);
+          }
+        }
+      }
+
+      System.err.printf("\n\nFeatures: %s\n", finalFeatureVector);
+      System.err.println();
+      System.err.printf("Best hyp score: %.4f\n", bestHyp.finalScoreEstimate());
+      System.err.printf("true score: %.3f h: %.3f\n", bestHyp.score, bestHyp.h);
+      System.err.println();
+
+      if (scorer != null) {
+        double score = scorer.getIncrementalScore(allfeatures);
+        System.err.printf("Recalculated score: %.3f\n", score);
+      }
+    } else {
+      System.err.printf("Only null hypothesis was produced.\n");
+    }
+  }
+
   class BeamExpander implements Runnable{
   	Beam<Hypothesis<TK,FV>>[] beams; int beamId; int foreignSz; OptionGrid<TK> optionGrid; ConstrainedOutputSpace<TK,FV> constrainedOutputSpace; int translationId; int threadId; int threadCount;
   	CountDownLatch cdl;
