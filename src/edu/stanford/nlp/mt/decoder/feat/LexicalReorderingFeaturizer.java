@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.base.IString;
  * 
  * @author danielcer
  */
-public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IString, String> {
+public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IString, String>, MSDFeaturizer {
 	static final String FEATURE_PREFIX = "LexR:";
 	public final String[] featureTags;
 	public final MosesLexicalReorderingTable mlrt;

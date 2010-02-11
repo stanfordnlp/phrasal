@@ -36,17 +36,27 @@ public class RecombinationFilterFactory {
 	/**
 	 * 
 	 */
-	static public RecombinationFilter<Hypothesis<IString,String>> factory(List<IncrementalFeaturizer<IString, String>> featurizers, String... rfSpecs) {
+	static public RecombinationFilter<Hypothesis<IString,String>>
+           factory(List<IncrementalFeaturizer<IString, String>> featurizers, boolean msdRecombination, String... rfSpecs) {
 		String rfName;
 		if (rfSpecs.length == 0) {
 			rfName = DEFAULT_RECOMBINATION_FILTER;
 		} else {
 			rfName = rfSpecs[0].toLowerCase();
 		}
-		
+    System.err.println("recombination name: "+rfName);
+
+    if (msdRecombination) {
+      if (rfName.equals(CLASSICAL_TRANSLATION_MODEL) || rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD)) {
+        rfName = CLASSICAL_TRANSLATION_MODEL_MSD;
+      } else if(rfName.equals(DTU_TRANSLATION_MODEL) || rfName.equals(DTU_TRANSLATION_MODEL_MSD)) {
+        rfName = DTU_TRANSLATION_MODEL_MSD;
+      } else {
+        throw new UnsupportedOperationException("Don't know how to handle recombination heuristic with MSD model: "+rfName);
+      }
+    }
+
 		Map<String,String> paramPairs = FactoryUtil.getParamPairs(rfSpecs);
-		
-		
 		
 		// default to a history window that is appropriate for the highest order lm
 		List<LanguageModel<IString>> lgModels = Featurizers.extractNGramLanguageModels(featurizers);  
