@@ -488,7 +488,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
    *
    */
   @Override
-  public void debugBest(Featurizable<IString, String> f) {
+  public void dump(Featurizable<IString, String> f) {
 
     DependencyScores sd = (DependencyScores) f.getState(this);
     if(sd == null)

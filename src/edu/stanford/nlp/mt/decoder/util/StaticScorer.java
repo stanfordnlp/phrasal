@@ -15,9 +15,9 @@ import edu.stanford.nlp.math.ArrayMath;
  */
 public class StaticScorer implements Scorer<String> {
 
-  final OAIndex<String> featureIndex;
-	final double[] weights;
-	     	
+  protected final OAIndex<String> featureIndex;
+  protected final double[] weights;
+
 	/**
 	 * @throws IOException
 	 */

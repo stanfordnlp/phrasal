@@ -188,10 +188,10 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 
   @SuppressWarnings("unchecked")
   @Override
-  public void debugBest(Featurizable<TK,FV> f) {
+  public void dump(Featurizable<TK,FV> f) {
     for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
       if (featurizer instanceof RichIncrementalFeaturizer) {
-        ((RichIncrementalFeaturizer)featurizer).debugBest(f);
+        ((RichIncrementalFeaturizer)featurizer).dump(f);
       }
     }
   }

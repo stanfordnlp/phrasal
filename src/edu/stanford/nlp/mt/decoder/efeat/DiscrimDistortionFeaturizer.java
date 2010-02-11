@@ -456,7 +456,7 @@ public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString,Stri
   }
 
   @Override
-  public void debugBest(Featurizable<IString, String> f) {
+  public void dump(Featurizable<IString, String> f) {
 
     if(!DEBUG) return;
 

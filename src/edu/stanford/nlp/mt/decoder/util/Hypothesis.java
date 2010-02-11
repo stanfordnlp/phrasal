@@ -142,7 +142,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 		this.translationOpt = translationOpt;
 		this.preceedingHyp = baseHyp;
 		this.foreignCoverage = baseHyp.foreignCoverage.clone();
-		this.foreignCoverage.or(translationOpt.foreignCoverage);
+    this.foreignCoverage.or(translationOpt.foreignCoverage);
     this.length = (insertionPosition < baseHyp.length) ? baseHyp.length :  insertionPosition + targetPhrase.size();
     foreignSequence = baseHyp.foreignSequence;
 		untranslatedTokens = this.foreignSequence.size() - this.foreignCoverage.cardinality();
@@ -154,8 +154,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
     assert(!Double.isNaN(h));
 	}
-
-  static final Random r = new Random(1);
 
   /**
 	 * 

@@ -180,7 +180,7 @@ public class AlignmentGrid {
     for(int fi=0; fi<fsize; ++fi) { 
       out.printf("%d=%s ",fi,sent.f().get(fi).toString());
     }
-    out.println("\n\n");
+    //out.println("\n\n");
   } 
 
   /**

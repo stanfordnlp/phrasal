@@ -9,10 +9,9 @@ import edu.stanford.nlp.mt.base.Featurizable;
 public interface RichIncrementalFeaturizer<TK,FV> extends ClonedFeaturizer<TK,FV> {
 
   /**
-	 * Print information pertaining to the highest-scoring Featurizable, which is
-   * passed as argument. This method is called only once decoding is complete.
+   * Dump internal state of Featurizer, which is constructed using featurizable f.
 	 */
-	void debugBest(Featurizable<TK,FV> f);
+	void dump(Featurizable<TK,FV> f);
 
   /**
    * Tells the Featurizer whether decoding is complete or not. If decoding
