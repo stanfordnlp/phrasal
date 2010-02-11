@@ -23,21 +23,18 @@ public class LinearDistortionFeaturizer extends StatefulFeaturizer<IString, Stri
 
   public final float futureCostDelay;
 
-	// mg2009: For C-E, 0.75 works better than 1, 0.5, and 0.125 (on MT05, with dlimit set to 6);
-	// I haven't tried A-E.
-  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","0.75f"));
-  //public static final float DEFAULT_FUTURE_COST_DELAY = 0.75f;
+  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","1.0f"));
 
   public LinearDistortionFeaturizer() {
     // Disable "standard" LinearDistortion (hack):
-    //mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+    edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
     System.err.println("Future cost delay: "+futureCostDelay);
   }
 
   public LinearDistortionFeaturizer(String... args) {
     // Disable "standard" LinearDistortion:
-    //mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+    edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
 		// Argument determines how much future cost to pay upfront:
 		// 1.0 => everything; 0.0 => nothing, as in Moses
     if(args.length == 1) {
