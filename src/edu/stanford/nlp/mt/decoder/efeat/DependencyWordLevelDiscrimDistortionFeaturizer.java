@@ -15,6 +15,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IBMModel1;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 /**
@@ -23,7 +24,7 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
  *
  * @param <TK>
  */
-public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK, String> {
+public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK, String>, AlignmentFeaturizer {
 
   private static boolean TESTING = false;
 

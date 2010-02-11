@@ -3,9 +3,7 @@ package edu.stanford.nlp.mt.decoder.inferer;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
@@ -46,4 +44,32 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
 		}
 		return features;
 	}
+
+  protected List<String> collectAlignments(Hypothesis<TK,FV> hyp) {
+    LinkedList<String> alignments = new LinkedList<String>();
+		for ( ; hyp != null; hyp = hyp.preceedingHyp) {
+      ConcreteTranslationOption<TK> opt = hyp.translationOpt;
+      if(opt == null)
+        continue;
+      int teIdx = hyp.length-1;
+      int tsIdx = hyp.preceedingHyp == null ? 0 : hyp.length-1;
+      CoverageSet cs = opt.foreignCoverage;
+      int feIdx=-1;
+      for (;;) {
+        int fsIdx = cs.nextSetBit(feIdx+1);
+        if(fsIdx < 0)
+          break;
+        feIdx = cs.nextClearBit(fsIdx)-1;
+        StringBuilder sbuf = new StringBuilder();
+        sbuf.append(fsIdx);
+        if(fsIdx != feIdx)
+          sbuf.append("-").append(feIdx);
+        sbuf.append("=").append(tsIdx);
+        if (tsIdx != teIdx)
+          sbuf.append("-").append(teIdx);
+        alignments.addFirst(sbuf.toString());
+      }
+		}
+		return alignments;
+  }
 }

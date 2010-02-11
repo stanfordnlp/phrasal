@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IBMModel1;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 import edu.stanford.nlp.ling.WordTag;
@@ -26,7 +27,7 @@ import edu.stanford.nlp.ling.WordTag;
  *
  * @param <TK>
  */
-public class WordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK, String> {
+public class WordLevelDiscrimDistortionFeaturizer<TK> implements IncrementalFeaturizer<TK, String>, AlignmentFeaturizer {
   
   public static final String DEBUG_PROPERTY = "DebugWordLevelDiscrimDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));

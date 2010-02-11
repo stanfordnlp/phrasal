@@ -18,8 +18,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
   static public final String DISTINCT_NBEST_OPT = "UniqNBest";
   static public boolean DISTINCT_NBEST = Boolean.parseBoolean(System.getProperty(DISTINCT_NBEST_OPT, "false"));
-  static public final String MAX_TIME_NBEST_OPT = "MaxTimeNBest";
-  static public final long MAX_TIME_NBEST = Integer.parseInt(System.getProperty(MAX_TIME_NBEST_OPT,"60"))*1000;
   public final int beamCapacity;
   public final HypothesisBeamFactory.BeamType beamType;
 
@@ -73,7 +71,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     StateLatticeDecoder<Hypothesis<TK, FV>> latticeDecoder = new StateLatticeDecoder<Hypothesis<TK, FV>>(
 				goalStates, recombinationHistory, size);
 
-    int hypCount = 0, duplicateCount = 0, maxDuplicateCount = size*MAX_DUPLICATE_FACTOR;
+    int hypCount = 0, maxDuplicateCount = size*MAX_DUPLICATE_FACTOR;
 
     for (List<Hypothesis<TK, FV>> hypList : latticeDecoder) {
       boolean withDTUs = false;
@@ -111,7 +109,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
           System.err.println("  "+curHyp.toString());
           curHyp = curHyp.preceedingHyp;
         }
-        //throw new RuntimeException();
       }
 
       /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,14 +119,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
         // Avoid spending too much time generating the nbest list (when can take dozens of minutes for very
         // long inputs):
-        if(hypCount > SAFE_LIST && (hypCount % 100 == 0)) {
+        /*if(hypCount > SAFE_LIST && (hypCount % 100 == 0)) {
           long curTime = System.currentTimeMillis();
           if(++duplicateCount >= maxDuplicateCount || curTime-nbestStartTime > MAX_TIME_NBEST) {
             System.err.printf("\nNbest list construction taking too long (hyps=%d, uniq-hyps=%d, nbest=%d, time=%fs); giving up.\n", 
               hypCount, duplicateCount, translations.size(), (curTime-nbestStartTime)/1000.0);
             break;
           }
-        }
+        }*/
         // Get surface string:
         AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
         // If seen this string before and not among the top-k, skip it:
@@ -138,9 +135,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         // Add current hypothesis to nbest list and set of uniq strings:
         Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
-            collectFeatureValues(hyp), beamGoalHyp.id));
+            collectFeatureValues(hyp), collectAlignments(hyp), beamGoalHyp.id));
         distinctTranslations.add(seq);
-        if (distinctTranslations.size() >= size) 
+        if (distinctTranslations.size() >= size || hypCount >= maxDuplicateCount) 
           break;
 
       } else {
@@ -149,11 +146,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         // code above is needed for generating nbest lists with no duplicates for GALE -- please do not delete
         /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        // System.err.printf("Translations size: %d (/%d)\n", translations.size(),
-        // size);
         Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
-            collectFeatureValues(hyp), beamGoalHyp.id));
+            collectFeatureValues(hyp), collectAlignments(hyp), beamGoalHyp.id));
         if (translations.size() >= size)
           break;
 
@@ -173,8 +168,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       }
     });
 
+    assert(!translations.isEmpty());
     Iterator<RichTranslation<TK, FV>> listIterator = translations.iterator();
-    featurizer.debugBest(listIterator.next().featurizable);
+    featurizer.dump(listIterator.next().featurizable);
 
     if (DEBUG) {
 			long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;
@@ -294,6 +290,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       return hypothesisList;
     }
   }
+
+  abstract public void dump(Hypothesis<TK,FV> hyp);
 
 }
 

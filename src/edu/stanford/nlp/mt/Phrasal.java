@@ -77,7 +77,6 @@ public class Phrasal {
   public static final String GAPS_OPT = "gaps";
   public static final String MAX_FLOATING_PHRASES_OPT = "max-floating-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
-  public static final String REDUCE_MEMORY_USAGE_OPT = "reduce-memory-usage";
 
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
 
@@ -95,7 +94,7 @@ public class Phrasal {
   static final int DEFAULT_MAX_EPOCHS = 5;
   static final int DEFAULT_DISTORTION_LIMIT = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
-  static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
+  //static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 
   static final boolean VERBOSE_LEARNER = true;
 
@@ -108,13 +107,13 @@ public class Phrasal {
 				USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
 				NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT,
         CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
-        RECOMBINATION_HEURISTIC,
-				LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
+        RECOMBINATION_HEURISTIC, 
+        LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
 				PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
 				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
 				MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
 				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
-        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT, REDUCE_MEMORY_USAGE_OPT
+        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT
     }));
 		IGNORED_FIELDS.addAll(Arrays.asList(new String[] { INPUT_FACTORS_OPT,
 				MAPPING_OPT, FACTOR_DELIM_OPT }));
@@ -219,11 +218,6 @@ public class Phrasal {
       ConcreteTranslationOption.setLinearDistortionType(config.get(LINEAR_DISTORTION_TYPE).get(0));
     if (config.containsKey(LOCAL_PROCS))
 			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
-
-    if (config.containsKey(REDUCE_MEMORY_USAGE_OPT)) {
-      // Additional memory savings, though some non-standard featurizers may break due to this:
-      Featurizable.NO_ALIGN = true;
-    }
 
     if(withGaps)
       recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
@@ -384,7 +378,9 @@ public class Phrasal {
 
 		LexicalReorderingFeaturizer lexReorderFeaturizer = null;
 
+    boolean msdRecombination = false;
 		if (config.containsKey(DISTORTION_FILE)) {
+      msdRecombination = true;
 			List<String> strDistortionFile = config.get(DISTORTION_FILE);
 			String modelType;
 			String modelFilename;
@@ -425,11 +421,12 @@ public class Phrasal {
 			String featurizerName = null;
 			String args = null;
 			for (String token : tokens) {
+        IncrementalFeaturizer<IString, String> featurizer = null;
 				if (featurizerName == null) {
 					if (token.endsWith("()")) {
 						String name = token.replaceFirst("\\(\\)$", "");
 						Class featurizerClass = FeaturizerFactory.loadFeaturizer(name);
-						IncrementalFeaturizer<IString, String> featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+						featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
 						.newInstance();
 						additionalFeaturizers.add(featurizer);
 					} else if (token.contains("(")) {
@@ -445,7 +442,7 @@ public class Phrasal {
 							System.err.printf("args: %s\n", Arrays.toString(argsList));
 							Class featurizerClass = FeaturizerFactory
 							.loadFeaturizer(featurizerName);
-							IncrementalFeaturizer<IString, String> featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+							featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
 							.getConstructor(argsList.getClass()).newInstance(
 									new Object[]{argsList});
 							additionalFeaturizers.add(featurizer);
@@ -472,7 +469,7 @@ public class Phrasal {
 						System.err.printf("args: %s\n", Arrays.toString(argsList));
 						Class featurizerClass = FeaturizerFactory
 						.loadFeaturizer(featurizerName);
-						IncrementalFeaturizer<IString, String> featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+						featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
 						.getConstructor(argsList.getClass()).newInstance(
 								(Object) argsList);
 						additionalFeaturizers.add(featurizer);
@@ -482,7 +479,10 @@ public class Phrasal {
 						args += " " + token;
 					}
 				}
-
+        if (featurizer instanceof AlignmentFeaturizer)
+          Featurizable.enableAlignments();
+        if (featurizer instanceof MSDFeaturizer)
+          msdRecombination = true;
 			}
 			if (featurizerName != null) {
 				System.err.printf("Error: no ')' found for featurizer %s\n",
@@ -702,9 +702,9 @@ public class Phrasal {
 		}
 
 		System.err.printf("WeightConfig: '%s'\n", weightConfig);
-		scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig.toArray(new String[0]));
+    scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig.toArray(new String[0]));
 
-		// Create phrase generator
+    // Create phrase generator
 		String phraseTable;
 		if (config.get(TRANSLATION_TABLE_OPT).size() == 1) {
 			phraseTable = config.get(TRANSLATION_TABLE_OPT).get(0);
@@ -781,7 +781,7 @@ public class Phrasal {
 
 		// Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
-      .factory(featurizer.getNestedFeaturizers(), recombinationHeuristic);
+      .factory(featurizer.getNestedFeaturizers(), msdRecombination, recombinationHeuristic);
 
 		// Create Search Heuristic
 		IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
@@ -1013,7 +1013,7 @@ public class Phrasal {
         StringBuilder sb = new StringBuilder(translations.size() * 500); // initialize it as reasonably large
         for (RichTranslation<IString, String> tran : translations) {
           if (generateMosesNBestList) {
-            tran.nbestToMosesStringBuilder(translationId, sb, withGaps);
+            tran.nbestToMosesStringBuilder(translationId, sb);
           } else {
             tran.nbestToStringBuilder(translationId, sb);
           }

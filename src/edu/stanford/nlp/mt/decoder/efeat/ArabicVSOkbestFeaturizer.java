@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.io.*;
 import java.util.*;
 
+import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.Triple;
 
@@ -17,7 +18,7 @@ import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 
-public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String> implements ClonedFeaturizer<IString, String> {
+public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String> implements ClonedFeaturizer<IString, String>, AlignmentFeaturizer {
 
   private static final String FEATURE_NAME = "ArabicVSOkbestFeaturizer";
   
