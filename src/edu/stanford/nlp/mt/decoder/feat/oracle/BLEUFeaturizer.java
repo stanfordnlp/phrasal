@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.oracle;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 
 import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
@@ -18,9 +18,10 @@ import edu.stanford.nlp.mt.Phrasal;
 
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.io.PrintStream;
+
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 
 /**
  * BLEU score as a feature.
@@ -230,7 +231,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
     rerankingStage = r;
   }
 
-  public void debugBest(Featurizable<IString, String> f) {
+  public void dump(Featurizable<IString, String> f) {
 
     if(!rerankingStage && !featurizeDuringDecoding)
 			return;
@@ -247,7 +248,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
 
     int hypLength = f.translationPosition+f.translatedPhrase.size();
     //scorer.updateScore(sentId, hypLength, 1.0, true);
-    scorer.updateScore(sentId, hypLength, true, true);
+    scorer.updateScore(sentId, hypLength, true, false);
     System.err.println("unigram matches:");
     for(Map.Entry<Trie,Double> e : scorer.fullMatches.entrySet()) {
       if(e.getKey().ngramSz == 1) {
@@ -293,7 +294,8 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
       localCounts = new int[ORDER];
       localPossibleMatchCounts = new int[ORDER];
       partialMatches = new LinkedList<Trie>();
-      fullMatches = new ClassicCounter<Trie>();
+      fullMatches = new OpenAddressCounter<Trie>();
+      //fullMatches = new ClassicCounter<Trie>();
       //backPtr = null;
       score = 0.0;
     }
@@ -302,7 +304,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
       if(deep) {
         localCounts = old.localCounts.clone();
         localPossibleMatchCounts = old.localPossibleMatchCounts.clone();
-        fullMatches = new ClassicCounter<Trie>(old.fullMatches);
+        fullMatches = new OpenAddressCounter<Trie>(old.fullMatches);
       } else {
         localCounts = old.localCounts;
         localPossibleMatchCounts = old.localPossibleMatchCounts;
@@ -356,7 +358,9 @@ class Trie {
 
   final static int mapType = Integer.parseInt(System.getProperty("mapType", "0"));
 
-  private static final Map<String,Trie> roots = new HashMap<String,Trie>();
+  private static final Map<String,Trie> roots = new Object2ObjectArrayMap<String,Trie>();
+  //private static final Map<String,Trie> roots = new Object2ObjectOpenHashMap<String,Trie>();
+  //private static final Map<String,Trie> roots = new HashMap<String,Trie>();
 
   Map<IString,Trie> map;
   final IString tok;
@@ -385,7 +389,9 @@ class Trie {
 
   public Trie put(IString key, Trie trie) {
     if(map == null) {
-      map = new HashMap<IString,Trie>();
+      map = new Object2ObjectArrayMap<IString,Trie>();
+      //map = new Object2ObjectOpenHashMap<IString,Trie>();
+      //map = new HashMap<IString,Trie>();
     }
     return map.put(key, trie);
   }
