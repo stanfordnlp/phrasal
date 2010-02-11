@@ -3,18 +3,15 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.LexicalReorderingFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 
 
@@ -26,7 +23,8 @@ import edu.stanford.nlp.mt.train.AlignmentGrid;
  *
  * @see LexicalReorderingFeaturizer
  */
-public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<IString, String> {
+@SuppressWarnings("unused")
+public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString, String>, MSDFeaturizer, ClonedFeaturizer<IString,String> {
 
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -43,10 +41,24 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
   }
 
   // local: should produce the same as the non-hierarchical reordering model in LexicalReorderingFeaturizer
-  // hierblock: as described in the ACL short paper submission (runtime: O(1) for each call of listFeaturize())
-  // backtrack: backtracks to find max size contiguous block preceding current block 
-  //    (runtime: O(n) for each call of listFeaturize(), where n is the len of the input sentence)
-	private enum ForwardOrientationComputation { local, hierblock, backtrack }
+  // hierblock (default): as described in the 2008 EMNLP paper (runtime: O(1) for each call of listFeaturize())
+  // backtrack (experimental): backtracks to find max size contiguous block preceding current block.
+  //   It was implemented to test the accuracy of hierblock.
+  //   Runtime: O(n) for each call of listFeaturize(), where n is the len of the input sentence. It is close to O(1) on average,
+  //   though sometimes gets stuck very long on some sentences with a lot of reordering.
+  // backtrackFast (experimental): faster version than backtrack, though its predictions are currently incorrect in some
+  //   boundary conditions.
+  // Note: hierblock chokes on constructions that are not ITG binarizable, e.g.,
+  //    ..x..
+  //    ...x.
+  //    x....
+  //    .x...
+  //    ....a
+  // Here, 'a' should have monotone orientation, though hierblock predicts discontinuous. backtrack and backtrackFast
+  // both predict monotone here.
+  // Performance: hierblock is yields slightly higher BLEU scores.
+  // Performance: backtrackFast is the fastest. The two others are about 2-5% slower.
+	private enum ForwardOrientationComputation { local, hierblock, backtrack, backtrackFast }
   private ForwardOrientationComputation forwardOrientationComputation = ForwardOrientationComputation.hierblock;
 
   // local: should produce the same as the non-hierarchical reordering model in LexicalReorderingFeaturizer
@@ -59,17 +71,15 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
   //    predict Discontinuous otherwise)
   // reranking: featurizer returns no forward-looking features until done decoding. Once done, compute
   // all feature values exactly.
-	private enum BackwardOrientationComputation { local, contiuousDefault, reranking, continuousDefaultWithReranking }
+	private enum BackwardOrientationComputation { local, continuousDefault }
   private BackwardOrientationComputation backwardOrientationComputation = BackwardOrientationComputation.local;
 
-	public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(ARPALanguageModel.START_TOKEN);
-
-	String FEATURE_PREFIX = "HLexR:";
+	String FEATURE_PREFIX = "HLexR";
 
   final boolean has2Disc;
 	final String[] featureTags;
 	final ExtendedLexicalReorderingTable mlrt;
-  final Map<Featurizable<IString, String>,HierBlock> hBlocks = new HashMap<Featurizable<IString, String>,HierBlock>();
+  private BitSet tmpCoverage = new BitSet();
 
 	public HierarchicalReorderingFeaturizer(String... args) throws IOException {  
     if(args.length < 2 || args.length > 5)
@@ -93,36 +103,16 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 		featureTags = new String[mlrt.positionalMapping.length];
 		for (int i = 0; i < mlrt.positionalMapping.length; i++) 
       featureTags[i] = String.format("%s:%s", FEATURE_PREFIX, mlrt.positionalMapping[i]);
-    //long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
-    //long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
-    //long items = ExtendedLexicalReorderingTable.index.size();
-    //System.err.printf("HierarchicalReorderingFeaturizer: constructor: totalmem = %dm, freemem = %dm, items = %d.\n",
-    //  totalMemory, freeMemory, items);
 	}
 
 	@Override
-	public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) { 
-    System.err.println("HierarchicalReorderingFeaturizer: initialize.");
-  } 
-
-	public void reset() { 
-    System.err.println("HierarchicalReorderingFeaturizer: reset.");
-    for(HierBlock h : hBlocks.values()) { h.start = null; }
-    hBlocks.clear();
-  }
-
-	@Override
-	public FeatureValue<String> featurize(Featurizable<IString, String> f) { return null; }
-
-	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
+    
 		List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
 
     boolean locallyMonotone = f.linearDistortion == 0;
-    // old buggy code (as used in NAACL experiments...):
-    boolean locallySwapping = (f.prior == null ? false : f.hyp.translationOpt.foreignCoverage.length() == f.prior.foreignPosition);
-    //boolean locallySwapping = (f.prior == null ? false : f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
-    boolean discont2 = (f.prior == null ? false : fEnd(f) <= fStart(f.prior));
+    boolean locallySwapping = (f.prior != null && f.hyp.translationOpt.foreignCoverage.length() == f.prior.foreignPosition);
+    boolean discont2 = (f.prior != null && fEnd(f) <= fStart(f.prior));
 
     float[] scores = mlrt.getReorderingScores(f.foreignPhrase, f.translatedPhrase);
     float[] priorScores = (f.prior == null ? null : mlrt.getReorderingScores(f.prior.foreignPhrase, f.prior.translatedPhrase));
@@ -156,6 +146,10 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
         if(backtrackForMonotoneWithPrevious(f)) monotone = true;
         else if(backtrackForSwapWithPrevious(f)) swap = true;
         break;
+      case backtrackFast:
+        if(backtrackForMonotoneWithPreviousFast(f)) monotone = true;
+        else if(backtrackForSwapWithPreviousFast(f)) swap = true;
+        break;
       case local:
         monotone = locallyMonotone;
         swap = locallySwapping;
@@ -176,7 +170,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
         monotone = locallyMonotone;
         swap = locallySwapping;
         break;
-      case contiuousDefault:
+      case continuousDefault:
         if(possiblyMonotoneWithNext(f)) monotone = true;
         else if(possiblySwappingWithNext(f)) swap = true;
         break;
@@ -213,10 +207,23 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 			for(FeatureValue<String> value : values) 
         System.err.printf("\t%s: %f\n", value.name, value.value); 
     }	
-    if(DEBUG && f.done)
-      AlignmentGrid.printDecoderGrid(f, System.err);
     if(forwardOrientationComputation == ForwardOrientationComputation.hierblock)
       buildHierarchicalBlocks(f);
+
+    if (f.done) {
+
+      boolean incomplete = false;
+      if (forwardOrientationComputation == ForwardOrientationComputation.hierblock) {
+        HierBlock hb = (HierBlock) f.getState(this);
+        incomplete = (hb.fStart != 0 || hb.fEnd+1 != f.foreignSentence.size());
+      }
+
+      if(DEBUG) {
+        AlignmentGrid.printDecoderGrid(f, System.err);
+        if(incomplete) dump(f);
+        System.err.println("\n");
+      }
+    }
 		return values;
 	}
 	
@@ -242,7 +249,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
       //System.err.printf("HierarchicalReorderingFeaturizer: run%d [%d-%d]\n", featurizerCall, fStart, fEnd);
       HierBlock prevBlock = null;
       if(curF.prior != null) {
-        prevBlock = hBlocks.get(curF.prior);
+        prevBlock = (HierBlock) curF.prior.getState(this);
         // Check if new Block should contain curBlock:
         if(prevBlock.fEnd+1 == fStart) {
           if(DETAILED_DEBUG)
@@ -267,7 +274,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
         curF = prevBlock.start;
       } else {
         HierBlock newBlock = new HierBlock(fStart,fEnd,curF);
-        hBlocks.put(f,newBlock);
+        f.setState(this,newBlock);
         if(DETAILED_DEBUG)
           System.err.printf("HierarchicalReorderingFeaturizer: new block [%d-%d]\n", fStart, fEnd);
       }
@@ -280,16 +287,15 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
   private boolean monotoneWithPrevious(Featurizable<IString, String> f) {
     if(f.prior == null)
       return f.linearDistortion == 0; 
-    return (hBlocks.get(f.prior).fEnd+1 == fStart(f));
+    return (((HierBlock)f.prior.getState(this)).fEnd+1 == fStart(f));
   }
 
   /**
    * Returns true if current phrase is swap according to the hierarchical model.
    */
   private boolean swapWithPrevious(Featurizable<IString, String> f) {
-    if(f.prior == null)
-      return false;
-    return (hBlocks.get(f.prior).fStart == fEnd(f)+1);
+    return f.prior != null && (((HierBlock)f.prior.getState(this)).fStart == fEnd(f) + 1);
+    //return f.prior != null && (hBlocks.get(f.prior).fStart == fEnd(f) + 1);
   }
 
   /**
@@ -345,17 +351,106 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 
   /**
    * Returns true if current block is monotone with any contiguous set
-   * of previous blocks. This is a slow version that steps back to check 
+   * of previous blocks.
    */
-  private static boolean backtrackForMonotoneWithPrevious(Featurizable<IString, String> f) {
-    int indexPreviousForeign = fStart(f)-1;
-    if(indexPreviousForeign < 0) {
-      boolean monotone = (f.prior == null);
-      return monotone;
+  private boolean backtrackForMonotoneWithPrevious(Featurizable<IString, String> f) {
+    // Five easy cases where M vs. not-M can be detected without backtracking:
+    // Case 1: Handle case where fStart is the first input word, and/or there is no prior phrase:
+    int indexLeftCurrentPhrase = fStart(f)-1; // if f_x...f_y is the current phrase: f_here [ f_x ... f_y ]
+    if(indexLeftCurrentPhrase < 0) {
+      return (f.prior == null); // start of the sentence => monotone
     } else if(f.prior == null) {
       return false;
     }
-    // If previous foreign isn't yet translated, current block can't be monontone
+    // Case 2: If f.prior comes after f, return false:
+    if (fStart(f) < fStart(f.prior)) return false;
+    // Case 3: If phrases are adjacent, return true:
+    int indexRightPreviousPhrase = fEnd(f.prior)+1; // if f_x...f_y is the previous phrase: [ f_x ... f_y ] f_here
+    if (indexRightPreviousPhrase-1 == indexLeftCurrentPhrase) return true;
+    // Case 4: Analyze gap between previous and current phrase. If any untranslated word, monotone is impossible.
+    CoverageSet fCoverage = f.hyp.foreignCoverage;
+    for (int i=indexRightPreviousPhrase; i<=indexLeftCurrentPhrase; ++i) {
+      if(!fCoverage.get(i))
+        return false;
+    }
+    // Case 5: If first uncovered word is after indexLeftCurrentPhrase, it must be monotone:
+    if (fCoverage.nextClearBit(0) > indexLeftCurrentPhrase &&
+        fCoverage.nextSetBit(fEnd(f)+1) < 0) return true;
+    // Otherwise, traverse previous blocks until we reach the one translating indexLeftCurrentPhrase.
+    // If any of these blocks lies after f in foreign side, we know it's not monotone:
+    Featurizable<IString, String> tmp_f = f.prior;
+    tmpCoverage.clear();
+    boolean foundAdjPhrase = false;
+    for(;;) {
+      if (fEnd(tmp_f) == indexLeftCurrentPhrase)
+        foundAdjPhrase = true;
+      int fStart = fStart(tmp_f);
+      int fEnd = fEnd(tmp_f);
+      tmpCoverage.set(fStart,fEnd+1);
+      if (foundAdjPhrase && contiguous(tmpCoverage))
+        break;
+      if(fStart > indexLeftCurrentPhrase)
+        return false;
+      tmp_f = tmp_f.prior;
+      if(tmp_f == null) return false;
+    }
+    return true;
+	}
+
+  /**
+   * Returns true if current block is swap with any contiguous set
+   * of previous blocks.
+   */
+  private boolean backtrackForSwapWithPrevious(Featurizable<IString, String> f) {
+    // Five easy cases where S vs. not-S can be detected without backtracking:
+    // Case 1: If f.prior does not exist, can't be swapping:
+    if(f.prior == null)
+      return false;
+    // Case 2: If f.prior comes before f, return false:
+    if (fStart(f.prior) < fStart(f)) return false;
+    // Case 3: If phrases are adjacent, return true:
+    int indexRightCurrentPhrase = fEnd(f)+1;
+    int indexLeftPreviousPhrase = fStart(f.prior)-1; // if f_x...f_y is the previous phrase: f_here [ f_x ... f_y ]
+    if (indexLeftPreviousPhrase+1 == indexRightCurrentPhrase) return true;
+    // Case 4: Analyze gap between previous and current phrase. If any untranslated word, monotone is impossible.
+    CoverageSet fCoverage = f.hyp.foreignCoverage;
+    for (int i=indexRightCurrentPhrase; i<=indexLeftPreviousPhrase; ++i) {
+      if(!fCoverage.get(i))
+        return false;
+    }
+    // Otherwise, traverse previous blocks until we reach the one translating indexRightCurrentPhrase.
+    // If any of these blocks lies before f in foreign side, we know it's not monotone:
+    Featurizable<IString, String> tmp_f = f.prior;
+    tmpCoverage.clear();
+    boolean foundAdjPhrase = false;
+    for(;;) {
+      if(fStart(tmp_f) == indexRightCurrentPhrase)
+        foundAdjPhrase = true;
+      int fStart = fStart(tmp_f);
+      int fEnd = fEnd(tmp_f);
+      tmpCoverage.set(fStart,fEnd+1);
+      if (foundAdjPhrase && contiguous(tmpCoverage))
+        break;
+      if(fEnd < indexRightCurrentPhrase)
+        return false;
+      tmp_f = tmp_f.prior;
+      if(tmp_f == null) return false;
+    }
+    return true;
+	}
+
+  /**
+   * Returns true if current block is monotone with any contiguous set
+   * of previous blocks. Result is incorrect in some boundary conditions, but it is faster.
+   */
+  private static boolean backtrackForMonotoneWithPreviousFast(Featurizable<IString, String> f) {
+    int indexPreviousForeign = fStart(f)-1; // if f_x...f_y is the current phrase: f_here [ f_x ... f_y ]
+    if(indexPreviousForeign < 0) {
+      return (f.prior == null); // start of the sentence => monotone
+    } else if(f.prior == null) {
+      return false;
+    }
+    // If previous foreign isn't yet translated, current block can't be monotone
     // with what comes before:
     CoverageSet fCoverage = f.hyp.foreignCoverage;
     if(!fCoverage.get(indexPreviousForeign)) {
@@ -380,6 +475,7 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
       if(tmp_f == null) return false;
     }
     // Make sure all foreign words between indexLeftmostForeign and indexPreviousForeign are translated:
+    // (even if this loop does not return false, the result may still be "false")
     for(int i=indexLeftmostForeign; i<=indexPreviousForeign; ++i) {
       if(!fCoverage.get(i))
         return false;
@@ -389,8 +485,9 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
 
   /**
    * Returns true if current block is swapping with any contiguous set of blocks.
+   * Result is incorrect in some boundary conditions, but it is faster.
    */
-  private static boolean backtrackForSwapWithPrevious(Featurizable<IString, String> f) {
+  private static boolean backtrackForSwapWithPreviousFast(Featurizable<IString, String> f) {
     int indexNextForeign = fEnd(f)+1;
     // If next foreign isn't yet translated, current block can't be swapping
     // with what comes next:
@@ -428,13 +525,47 @@ public class HierarchicalReorderingFeaturizer implements IncrementalFeaturizer<I
    * Note that, if this condition is true, we can immediately infer that the current phrase
    * is globally monotone with what comes next.
    */
+  @SuppressWarnings("unused")
   static boolean isStronglyMonotone(Featurizable<IString, String> f) {
     CoverageSet fCoverage = f.hyp.foreignCoverage;
     return (fCoverage.length()-fCoverage.cardinality() == 0);
   }
 
+  public void dump(Featurizable<IString, String> f) {
+    if (forwardOrientationComputation != ForwardOrientationComputation.hierblock)
+      return;
+    System.err.println("input length: "+f.foreignSentence.size());
+    Deque<String> lines = new LinkedList<String>();
+    while (f != null) {
+      HierBlock hb = (HierBlock) f.getState(this);
+      lines.addFirst(String.format("%d-%d M=%s S=%s",
+        hb.fStart, hb.fEnd, monotoneWithPrevious(f), swapWithPrevious(f)));
+      f = f.prior;
+    }
+    int i=0;
+    for (String line : lines)
+      System.err.printf(" block[%d] %s\n",++i,line);
+  }
+
   private static int fStart(Featurizable<IString, String> f) { return f.foreignPosition; }
   private static int fEnd(Featurizable<IString, String> f) { return f.hyp.translationOpt.foreignCoverage.length()-1; }
-  // old buggy code (as used in NAACL experiments...):
-  //private static int fEnd(Featurizable<IString, String> f) { return f.foreignPosition+f.foreignPhrase.size()-1; }
+
+  private static boolean contiguous(BitSet bs) { return (bs.nextSetBit(bs.nextClearBit(bs.nextSetBit(0))) < 0); }
+
+  public void rerankingMode(boolean reranking) {}
+
+  @Override
+	public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {}
+
+	public void reset() {}
+
+	@Override
+	public FeatureValue<String> featurize(Featurizable<IString, String> f) { return null; }
+
+
+  public ClonedFeaturizer<IString,String> clone() throws CloneNotSupportedException {
+    HierarchicalReorderingFeaturizer featurizer = (HierarchicalReorderingFeaturizer)super.clone();
+    featurizer.tmpCoverage = new BitSet();
+    return featurizer;
+  }
 }
