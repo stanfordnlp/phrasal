@@ -15,21 +15,23 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 
 	public final Sequence<TK> foreign;
 	public final CoverageSet foreignCoverage;
-	public final int[][] t2fAlignmentIndex;
-	public final int[][] f2tAlignmentIndex;
+	//public final int[][] t2fAlignmentIndex;
+	//public final int[][] f2tAlignmentIndex;
+  public final List<String> alignmentIndex;
   public final Featurizable<TK,FV> featurizable;
 
-  /**
-	 *
-	 */
+  /*
+  // no longer used:
 	public RichTranslation(Sequence<TK> foreign, Sequence<TK> translation, CoverageSet foreignCoverage, double score, int[][] t2fAlignmentIndex, int[][] f2tAlignmentIndex, List<FeatureValue<FV>> features) {
 		super(translation, features, score);
     this.featurizable = null;
     this.foreign = foreign;
 		this.foreignCoverage = foreignCoverage;
-		this.t2fAlignmentIndex = Arrays.copyOf(t2fAlignmentIndex, t2fAlignmentIndex.length);
-		this.f2tAlignmentIndex = Arrays.copyOf(f2tAlignmentIndex, f2tAlignmentIndex.length);
+		//this.t2fAlignmentIndex = Arrays.copyOf(t2fAlignmentIndex, t2fAlignmentIndex.length);
+		//this.f2tAlignmentIndex = Arrays.copyOf(f2tAlignmentIndex, f2tAlignmentIndex.length);
+    this.alignmentIndex = null;
 	}
+	*/
 
 	/**
 	 *
@@ -37,36 +39,38 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score);
     this.featurizable = f;
+    this.alignmentIndex = null;
     if (f == null) {
 			this.foreign = new EmptySequence<TK>();
 			this.foreignCoverage = null;
-			this.t2fAlignmentIndex = null;
-			this.f2tAlignmentIndex = null;
+			//this.t2fAlignmentIndex = null;
+			//this.f2tAlignmentIndex = null;
 			return;
 		}
 		this.foreign = f.foreignSentence;
 		this.foreignCoverage = (f.t2fAlignmentIndex != null) ? constructCoverageSet(f.t2fAlignmentIndex) : null;
-		this.t2fAlignmentIndex = f.t2fAlignmentIndex;
-		this.f2tAlignmentIndex = f.f2tAlignmentIndex;
+		//this.t2fAlignmentIndex = f.t2fAlignmentIndex;
+		//this.f2tAlignmentIndex = f.f2tAlignmentIndex;
 	}
 
 	/**
 	 *
 	 */
-	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features, long latticeSourceId) {
+	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features, List<String> alignmentIndex, long latticeSourceId) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score, latticeSourceId);
     this.featurizable = f;
+    this.alignmentIndex = alignmentIndex;
     if (f == null) {
 			this.foreign = new EmptySequence<TK>();
 			this.foreignCoverage = null;
-			this.t2fAlignmentIndex = null;
-			this.f2tAlignmentIndex = null;
+			//this.t2fAlignmentIndex = null;
+			//this.f2tAlignmentIndex = null;
 			return;
 		}
 		this.foreign = f.foreignSentence;
 		this.foreignCoverage = (f.t2fAlignmentIndex != null) ? constructCoverageSet(f.t2fAlignmentIndex) : null;
-		this.t2fAlignmentIndex = f.t2fAlignmentIndex;
-		this.f2tAlignmentIndex = f.f2tAlignmentIndex;
+		//this.t2fAlignmentIndex = f.t2fAlignmentIndex;
+		//this.f2tAlignmentIndex = f.f2tAlignmentIndex;
 	}
 
 	private static CoverageSet constructCoverageSet(int[][] t2fAlignmentIndex) {
@@ -125,7 +129,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
    * @param id Segment id
    * @param sbuf Where to append the output to
    */
-  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean withGaps) {
+  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf) {
     sbuf.append(id);
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(this.translation);
@@ -137,42 +141,28 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(NBEST_SEP);
     // Alignment:
-    if(withGaps) {
-      /*
-      // TODO: target gaps
-      for(int lastRangeEnd=-1, i=0; i<f2tAlignmentIndex.length; ++i) {
-        int[] range = f2tAlignmentIndex[i];
-        if(i+1<f2tAlignmentIndex.length && f2tAlignmentIndex[i][0] == f2tAlignmentIndex[i+1][0])
+    for (String el : alignmentIndex)
+      sbuf.append(" ").append(el);
+    /*
+    // Old way of generating alignment. To save memory, {f2t,t2f}AlignmentIndex are no longer
+    // stored in RichTranslation.
+    if(t2fAlignmentIndex != null) {
+      for(int lastRangeEnd=-1, i=0; i<t2fAlignmentIndex.length; ++i) {
+        int[] range = t2fAlignmentIndex[i];
+        if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] == t2fAlignmentIndex[i+1][0])
           continue;
         // Foreign positions:
-        // Translation positions:
-        sbuf.append(' ').append(lastRangeEnd+1);
-        if(i != lastRangeEnd+1)
-          sbuf.append('-').append(i);
-        sbuf.append('=').append(range[0]);
+        sbuf.append(' ').append(range[0]);
         if(range[0]+1 != range[1])
           sbuf.append('-').append(range[1]-1);
+        // Translation positions:
+        sbuf.append('=').append(lastRangeEnd+1);
+        if(i != lastRangeEnd+1)
+          sbuf.append('-').append(i);
         lastRangeEnd=i;
       }
-      */
-    } else {
-      if(t2fAlignmentIndex != null) {
-        for(int lastRangeEnd=-1, i=0; i<t2fAlignmentIndex.length; ++i) {
-          int[] range = t2fAlignmentIndex[i];
-          if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] == t2fAlignmentIndex[i+1][0])
-            continue;
-          // Foreign positions:
-          sbuf.append(' ').append(range[0]);
-          if(range[0]+1 != range[1])
-            sbuf.append('-').append(range[1]-1);
-          // Translation positions:
-          sbuf.append('=').append(lastRangeEnd+1);
-          if(i != lastRangeEnd+1)
-            sbuf.append('-').append(i);
-          lastRangeEnd=i;
-        }
-      }
     }
+    */
   }
 
   /**
@@ -188,7 +178,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
    */
   public String nbestToMosesString(int id) {
     StringBuilder sbuf = new StringBuilder();
-    nbestToMosesStringBuilder(id, sbuf, false);
+    nbestToMosesStringBuilder(id, sbuf);
     return sbuf.toString();
   }
 
