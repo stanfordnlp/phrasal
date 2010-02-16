@@ -28,6 +28,7 @@ use List::Util qw[max];
 $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
 $SLEEP = 30;
+$ORACLE = 0;
 $DEFAULT_MAX_ITERS = 25;
 $MIN_OBJ_DIFF = 1e-7;
 $DEFAULT_WORK_DIR = "pmert-dir";
@@ -81,7 +82,12 @@ if (not ($work_dir =~ /^\//)) {
 sub handle_arg {
   my ($arg) = @_;
   
-  if ($arg =~ /^--sleep=.*/) {
+
+  if ($arg =~ /^--oracle=.*/) {
+     $ORACLE = $arg;
+     $ORACLE =~ s/^--oracle=//;
+		 chomp $SLEEP;
+  } elsif ($arg =~ /^--sleep=.*/) {
      $SLEEP = $arg;
      $SLEEP =~ s/^--sleep=//;
 		 chomp $SLEEP;
@@ -268,20 +274,28 @@ while (!eof(difh)) {
 }
 close difh; 
 
-$ini_weight_file = "$work_dir/phrasal.0.wts\n";
-
 if($init_weight_file) {
-	print stderr "Copying initial weights file: $init_weight_file -> $ini_weight_file\n";
-	`cp -p $init_weight_file $ini_weight_file`;
-} else {
-	print stderr "Writing initial weights file:\n$ini_weight_file\n";
-	open wtfh, ">$ini_weight_file" or die;
-	foreach $key (keys %init_wts) {
-		 print "$key => $init_wts{$key}\n";
-		 print wtfh "$key $init_wts{$key}\n"
+	open(W,$init_weight_file);
+	while(<W>) {
+		chomp;
+		/(\S+)\s+(\S+)/;
+		$init_wts{$1} = $2;
 	}
-	close wtfh;
 }
+
+if($ORACLE) {
+	$init_wts{BLEU} = $ORACLE;
+	 $opt_flags .= " -D BLEU";
+}
+
+$ini_weight_file = "$work_dir/phrasal.0.wts\n";
+print stderr "Writing initial weights file:\n$ini_weight_file\n";
+open wtfh, ">$ini_weight_file" or die;
+foreach $key (keys %init_wts) {
+	 print "$key => $init_wts{$key}\n";
+	 print wtfh "$key $init_wts{$key}\n"
+}
+close wtfh;
 
 $first_active_iter = 0;
 
@@ -491,6 +505,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	        print stderr "Exiting, error running $opt_type MERT\n";
 	        exit -1;
 	      }
+				if($ORACLE) {
+					print STDERR `cat $next_iter_weights | grep -v BLEU > $next_iter_weights.tmp`;
+					print STDERR `echo "BLEU $ORACLE" | cat - $next_iter_weights.tmp > $next_iter_weights`;
+					unlink "$next_iter_weights.tmp"
+				}
    	  } else {
    	  	print stderr "Skipping running JMERT for iter $iter ($first_active_iter)\n";
    	  }
