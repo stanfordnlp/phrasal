@@ -90,8 +90,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       alGrid = new AlignmentGrid(0,0);
     System.err.println("Using AlignmentGrid: "+needAlGrid);
 
-    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.ADD_BOUNDARY_MARKERS_OPT,"false"));
-    boolean unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
+    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT,"false"));
+    boolean unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
     extractBoundaryPhrases = (addBoundaryMarkers && unalignedBoundaryMarkers);
   }
 

@@ -30,14 +30,17 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   public static final String VDEBUG_PROPERTY = "VerboseDebugWordAlignment";
   public static final boolean VERBOSE_DEBUG = Boolean.parseBoolean(System.getProperty(VDEBUG_PROPERTY, "false"));
 
+  static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
+  static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
+
   boolean addBoundaryMarkers = false;
   boolean unalignedBoundaryMarkers = false;
 
   public SymmetricalWordAlignment() {}
 
   public SymmetricalWordAlignment(Properties prop) {
-    addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.ADD_BOUNDARY_MARKERS_OPT,"false"));
-    unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
+    addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(ADD_BOUNDARY_MARKERS_OPT,"false"));
+    unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
   }
 
   SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,

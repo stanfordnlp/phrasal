@@ -48,8 +48,6 @@ public class CombinedFeatureExtractor {
   static public final String START_AT_LINE_OPT = "startAtLine";
   static public final String END_AT_LINE_OPT = "endAtLine";
   static public final String MAX_FERTILITY_OPT = "maxFertility";
-  static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
-  static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
   static public final String LOWERCASE_OPT = "lowercase";
   static public final String MAX_CROSSINGS_OPT = "maxCrossings";
   static public final String MEM_USAGE_FREQ_OPT = "memUsageFreq";
@@ -93,7 +91,8 @@ public class CombinedFeatureExtractor {
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
-       ADD_BOUNDARY_MARKERS_OPT, UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
+       SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT, 
+			 SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
 			 MAX_CROSSINGS_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
        DTUPhraseExtractor.WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
        DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT,
@@ -189,7 +188,7 @@ public class CombinedFeatureExtractor {
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
     String fFilterList = prop.getProperty(FILTER_LIST_OPT);
-    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(ADD_BOUNDARY_MARKERS_OPT,"false"));
+    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT,"false"));
     boolean emptyFilterList =
       Boolean.parseBoolean(prop.getProperty(EMPTY_FILTER_LIST_OPT,"false"));
     numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
