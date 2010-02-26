@@ -71,9 +71,9 @@
   </target>
  
   <target name="test" depends="classpath"
-          description="Run core unit tests">
+          description="Run mt unit tests">
     <echo message="${ant.project.name}" />
-    <junit maxmemory="1g" printsummary="off" outputtoformatters="false" forkmode="perBatch">
+    <junit fork="true" maxmemory="1g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
@@ -87,9 +87,9 @@
   </target>
   
   <target name="itest" depends="classpath"
-          description="Run core integration tests">
+          description="Run mt integration tests">
     <echo message="${ant.project.name}" />
-    <junit maxmemory="2048m" printsummary="off" outputtoformatters="false" forkmode="perBatch">
+    <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
