@@ -58,7 +58,8 @@
       deprecation="${compile.deprecation}"
          optimize="${compile.optimize}"
            source="${compile.source}"
-           target="${compile.target}">
+           target="${compile.target}"
+includeantruntime="false">
         <classpath refid="classpath" />
       <!-- <compilerarg value="-Xmaxerrs"/>
            <compilerarg value="20"/> -->
