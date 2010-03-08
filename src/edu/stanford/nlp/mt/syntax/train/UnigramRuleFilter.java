@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.syntax.train;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
-
 import edu.stanford.nlp.mt.base.IString;
 
 import java.util.Set;
@@ -20,22 +19,22 @@ public class UnigramRuleFilter {
   Set<Integer> filterWords = new HashSet<Integer>();
 
   public UnigramRuleFilter(String fileName) {
-    for(String line : ObjectBank.getLineIterator(fileName))
-      for(String word : line.split("\\s+")) {
+    for (String line : ObjectBank.getLineIterator(fileName))
+      for (String word : line.split("\\s+")) {
         IString w = new IString(word);
         filterWords.add(w.getId());
-        if(DEBUG)
+        if (DEBUG)
           System.err.printf("UnigramRuleFilter: adding word: %s\n",w);
       }
   }
 
   public boolean keep(Rule r) {
     for(int i=0; i<r.rhsLabels.length; ++i) {
-      if(r.rhs2lhs.get((char)i) == null) {
+      if (!r.is_lhs_non_terminal(i)) {
         int id = r.rhsLabels[i];
-        if(DEBUG)
+        if (DEBUG)
           System.err.printf("rhs el: %s\n",IString.getString(id));
-        if(!filterWords.contains(id))
+        if (!filterWords.contains(id))
           return false;
       }
     }

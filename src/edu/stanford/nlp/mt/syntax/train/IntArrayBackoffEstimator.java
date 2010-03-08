@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.base.DynamicIntegerArrayPrefixIndex;
  * Currently used to smooth lexical probabilities of sytnax-based models in
  * edu.stanford.nlp.mt.syntax.train (similarly to Michael Collins's thesis, p. 65). 
  *
- * @author Michel Galley
+ * @author Michel Galley (mgalley@cs.stanford.edu)
  */
 public class IntArrayBackoffEstimator {
 
@@ -331,9 +331,11 @@ public class IntArrayBackoffEstimator {
     return IStrings.toIntArray((IString[])a.toArray());
   }
 
+  /*
   static void printArray(String id, int[] a) {
     String[] strs = IStrings.toStringArray(a);
     System.err.printf("BackoffMLE array: %s = %s\n",id,Arrays.toString(strs));
   }
+  */
 
 }

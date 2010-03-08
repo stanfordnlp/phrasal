@@ -1,56 +1,56 @@
 package edu.stanford.nlp.mt.syntax.train;
 
-import it.unimi.dsi.fastutil.chars.CharAVLTreeSet;
-
 import java.util.*;
 import java.io.PrintStream;
 
 /**
  * Class representing a set of unaligned foreign words
  * that may appear in RHS constituents of a rule.
+ *
+ * @author Michel Galley (mgalley@cs.stanford.edu)
  */
 public class UnalignedWordSet {
 
   public static final String DEBUG_PROPERTY = "DebugGHKM";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  private final Set<Character> subsetWordIdx = new CharAVLTreeSet();
-  private final Set<Character> wordIdx;
-  private final Map<Character,Character> rhs2lhs;
+  private final Set<Integer> subsetWordIdx = new TreeSet<Integer>();
+  private final Set<Integer> wordIdx;
+  private final Rule rule;
   private final int rhsSize;
 
-  public UnalignedWordSet(Set<Character> wordIdx, Set<Character> subsetWordIdx, Map<Character,Character> rhs2lhs, int rhsSize) {
+  public UnalignedWordSet(Rule rule, Set<Integer> wordIdx, Set<Integer> subsetWordIdx, int rhsSize) {
     this.subsetWordIdx.addAll(subsetWordIdx);
     this.wordIdx = wordIdx;
     this.rhsSize = rhsSize;
-    this.rhs2lhs = rhs2lhs;
+    this.rule = rule;
   }
 
   public Set<UnalignedWordSet> getSizeMinusOneSets() {
     Set<UnalignedWordSet> s = new HashSet<UnalignedWordSet>();
-    for(int i : subsetWordIdx) {
-      UnalignedWordSet newInst = new UnalignedWordSet(wordIdx,subsetWordIdx,rhs2lhs,rhsSize);
+    for (int i : subsetWordIdx) {
+      UnalignedWordSet newInst = new UnalignedWordSet(rule,wordIdx,subsetWordIdx,rhsSize);
 			boolean canAssignLeft =
-       (i == 0 || rhs2lhs.containsKey((char)(i-1)) ||
-        (wordIdx.contains((char)(i-1)) && !subsetWordIdx.contains((char)(i-1))));
+       (i == 0 || rule.is_rhs_non_terminal(i-1) ||
+        (wordIdx.contains(i-1) && !subsetWordIdx.contains(i-1)));
       boolean canAssignRight =
-       (i+1 == rhsSize || rhs2lhs.containsKey((char)(i+1)) ||
-        (wordIdx.contains((char)(i+1)) && !subsetWordIdx.contains((char)(i+1))));
-      if(!canAssignLeft && !canAssignRight)
+       (i+1 == rhsSize || rule.is_rhs_non_terminal(i+1) ||
+        (wordIdx.contains(i+1) && !subsetWordIdx.contains(i+1)));
+      if (!canAssignLeft && !canAssignRight)
         continue;
-      newInst.subsetWordIdx.remove((char)i);
+      newInst.subsetWordIdx.remove(i);
       s.add(newInst);
     }
     return s;
   }
 
-  public Set<Character> getSubset() {
+  public Set<Integer> getSubset() {
     return subsetWordIdx;
   }
 
   @Override
 	public boolean equals(Object object) {
-    if(object.getClass() != getClass())
+    if (object.getClass() != getClass())
       return false;
     UnalignedWordSet ws = (UnalignedWordSet) object;
     return subsetWordIdx.equals(ws.subsetWordIdx);

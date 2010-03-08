@@ -6,11 +6,8 @@ import edu.stanford.nlp.ling.LabelFactory;
 import edu.stanford.nlp.ling.StringLabel;
 import edu.stanford.nlp.ling.CategoryWordTag;
 
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
 
 /**
  * An English tree (class {@link AlignmentTreeNode}) that
@@ -18,12 +15,11 @@ import java.text.DecimalFormat;
  * cases where RHS consituents of a given CFG production have English yields that
  * align to overlapping Chinese phrases (i.e., there is no sensible way of
  * reordering these consituents).
+ *
+ * @author Michel Galley (mgalley@cs.stanford.edu)
  */
 public class AlignmentTreeNode extends Tree {
 
-  /**
-	 *
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public static final String DEBUG_PROPERTY = "DebugGHKM";
@@ -80,39 +76,27 @@ public class AlignmentTreeNode extends Tree {
   protected RuleInstance minimalRule = null;
 
   /**
-   * (Default) constructor from a tree.
-   */
-  public AlignmentTreeNode(Tree t) {
-    this(t, null);
-  }
-
-  /**
    * Constructor assigning parent, children, syntactic label,
-   * head word, and head pos to each node.
+   * head word, and head POS to each node.
    */
   protected AlignmentTreeNode(Tree t, AlignmentTreeNode parent) {
+
     this.parent = parent;
     Tree[] tChildren = t.children();
     int numChildren = tChildren.length;
     setLabel(new CategoryWordTag(t.label()));
-    if(numChildren > 0) {
+
+    if (numChildren > 0) {
       Tree tPos = t.headPreTerminal(COLLINS_HEAD_FINDER);
       if(tPos != null) {
-        label.setTag(tPos.label().toString());
-        label.setWord(tPos.getChild(0).label().toString());
+        label.setTag(tPos.label().value());
+        label.setWord(tPos.getChild(0).label().value());
       }
     }
+
     children = new AlignmentTreeNode[numChildren];
     for (int i = 0; i < numChildren; i++)
       children[i] = new AlignmentTreeNode(tChildren[i], this);
-  }
-
-  /**
-   * Construct a new node from a label and list of children nodes.
-   */
-  protected AlignmentTreeNode(CategoryWordTag label, List<Tree> daughterTreesList) {
-    this.label = label;
-    setChildren(daughterTreesList);
   }
 
   /**
@@ -121,17 +105,21 @@ public class AlignmentTreeNode extends Tree {
 	 * i.e., if a MimimalRule is rooted at current node.
    */
   protected void setFrontierNode() {
-    if(fSpan.isEmpty()) {
+
+    if (fSpan.isEmpty()) {
       frontierNode = false;
       return;
     }
     frontierNode = true;
-    for(int i = fSpan.first(); i <= fSpan.last(); ++i)
-      if(fComplementSpan.contains(i)) {
+
+    for (int i = fSpan.first(); i <= fSpan.last(); ++i) {
+      if (fComplementSpan.contains(i)) {
         frontierNode = false;
         break;
       }
-		if(DEBUG && frontierNode)
+    }
+
+		if (DEBUG && frontierNode)
 			System.err.printf("AlignmentTreeNode: setFrontierNode: "+
 			  "new frontier node cat=%s span=%s complement-span=%s\n",
 			  label,fSpan.toString(),fComplementSpan.toString());
@@ -157,7 +145,6 @@ public class AlignmentTreeNode extends Tree {
   public Set<Integer> getFSpan() {
     return fSpan;
   }
-
 
   /**
    * Return true if foreign span is empty.
@@ -187,7 +174,7 @@ public class AlignmentTreeNode extends Tree {
    * (Galley et al., 2004).
    */
   public boolean isFrontierNode() {
-      return frontierNode;
+    return frontierNode;
   }
 
   /**
@@ -203,7 +190,7 @@ public class AlignmentTreeNode extends Tree {
    * Return label of current node (lowercase if leaf).
    */
   public String getNodeString() {
-    if(isLeaf())
+    if (isLeaf())
       return ((CategoryWordTag)label()).category().toLowerCase();
     return ((CategoryWordTag)label()).category();
   }
@@ -212,7 +199,7 @@ public class AlignmentTreeNode extends Tree {
    * Return label of current node (lowercase if leaf).
    */
   public static String getNodeString(Tree n) {
-    if(n.isLeaf())
+    if (n.isLeaf())
       return ((CategoryWordTag)n.label()).category().toLowerCase();
     return ((CategoryWordTag)n.label()).category();
   }
@@ -303,9 +290,9 @@ public class AlignmentTreeNode extends Tree {
    * Set the foreign-language span of all nodes of AlignmentGraph.
    */
   public void setFSpans() {
-    for(AlignmentTreeNode c : children) {
+    for (AlignmentTreeNode c : children) {
       c.setFSpans();
-      for(int fi : c.getFSpan())
+      for (int fi : c.getFSpan())
         addToFSpan(fi);
     }
   }
@@ -314,20 +301,22 @@ public class AlignmentTreeNode extends Tree {
    * Set the foreign-language span of all nodes of AlignmentGraph.
    */
   public void setFComplementSpans() {
-    for(AlignmentTreeNode c1 : children)
-      for(int fi : c1.getFSpan())
-        for(AlignmentTreeNode c2 : children)
-          if(c1 != c2)
+
+    for (AlignmentTreeNode c1 : children)
+      for (int fi : c1.getFSpan())
+        for (AlignmentTreeNode c2 : children)
+          if (c1 != c2)
             c2.addToFComplementSpan(fi);
-    for(AlignmentTreeNode c : children) {
-      for(int fi : getFComplementSpan())
+
+    for (AlignmentTreeNode c : children) {
+      for (int fi : getFComplementSpan())
         c.addToFComplementSpan(fi);
       c.setFComplementSpans();
     }
   }
 
   public void setFrontierNodes() {
-    for(Tree node : this)
+    for (Tree node : this)
       ((AlignmentTreeNode)node).setFrontierNode();
   }
 
@@ -360,8 +349,6 @@ public class AlignmentTreeNode extends Tree {
   public static TreeFactory factory(LabelFactory lf) {
     return new LabeledScoredTreeFactory(lf);
   }
-
-  static NumberFormat nf = new DecimalFormat("0.000");
 
   @Override
 	public String nodeString() {

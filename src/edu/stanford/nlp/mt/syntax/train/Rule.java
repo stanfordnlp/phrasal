@@ -1,33 +1,42 @@
 package edu.stanford.nlp.mt.syntax.train;
 
 import edu.stanford.nlp.util.MutableInteger;
-
 import edu.stanford.nlp.mt.base.IString;
 
 import java.util.*;
 
-import it.unimi.dsi.fastutil.chars.Char2CharArrayMap;
-
 /**
- * @author Michel Galley
+ * @author Michel Galley (mgalley@cs.stanford.edu)
  */
 public class Rule {
 
   public static final String DEBUG_PROPERTY = "DebugGHKM";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
+	// Whether to print syntactic constituents in the rhs of each rule (e.g., x0:NP instead of just x0)
   public static final String SYNCAT_RHS_PROPERTY = "SynCatRHS";
-  public static final boolean SYNCAT_RHS = Boolean.parseBoolean(System.getProperty(SYNCAT_RHS_PROPERTY, "true"));
+  public static final boolean SYNCAT_RHS = Boolean.parseBoolean(System.getProperty(SYNCAT_RHS_PROPERTY, "false"));
 
-  static public final String MAX_UNALIGNED_RHS_OPT = "MaxUnalignedRHS";
+  static final String MAX_UNALIGNED_RHS_OPT = "MaxUnalignedRHS";
+  static final char UNALIGNED = Character.MAX_VALUE;
+  static final int MISSING_RHS_EL_IDX = -1;
 
-  static public int MAX_UNALIGNED_RHS = 7;
+  static int MAX_UNALIGNED_RHS = 7;
 
-  public static final int MISSING_RHS_EL_IDX = -1;
+  // Compact representation of a GHKM rule:
+  // Note: it would probably be safe to move from char to byte (i.e., 16 to 8 bits)
+  char[] lhsStruct; // tree structure (LHS)
+  char[] rhs2lhs; // non-terminals (maps RHS to LHS)
+  int[] lhsLabels, rhsLabels; // labels of LHS and RHS
 
-  char[] lhsStruct; // tree structure of lhs
-  int[] lhsLabels, rhsLabels; // labels of lhs and rhs
-  Map<Character,Character> rhs2lhs = new Char2CharArrayMap(); // alignment between vars of rhs and lhs
+  Rule() {}
+
+  Rule(char[] lhsStruct, char[] rhs2lhs, int[] lhsLabels, int[] rhsLabels) {
+    this.lhsStruct = lhsStruct;
+    this.rhs2lhs = rhs2lhs;
+    this.lhsLabels = lhsLabels;
+    this.rhsLabels = rhsLabels;
+  }
 
   /**
 	 * Because of unaligned foreign words, there may be more than one minimal rule extractible
@@ -36,62 +45,73 @@ public class Rule {
    * unaligned foreign words appearing in the RHS of the rule is greater than a given threshold.
    * @param uRHS Set of indices of unaligned words in RHS
 	 */
-	public List<Rule> getAllRHSVariants(Set<Character> uRHS) {
-    if(DEBUG) {
+	public List<Rule> getAllRHSVariants(Set<Integer> uRHS) {
+
+    if (DEBUG) {
       System.err.printf("Rule: getAllRHSVariants: unalignedRHS:");
-      for(int i : uRHS) {
+      for (int i : uRHS)
         System.err.printf(" "+i);
-      }
       System.err.println();
     }
-    if(uRHS.size() > MAX_UNALIGNED_RHS) {
+
+    if (uRHS.size() > MAX_UNALIGNED_RHS) {
       // Too many unaligned words to account for in RHS:
       List<Rule> list = new ArrayList<Rule>();
 			list.add(this);
-      if(DEBUG)
+      if (DEBUG)
         System.err.printf("Too many (%d) unaligned words in RHS of rule: %s\n",uRHS.size(),toString());
       return list;
 		}
+
     Stack<UnalignedWordSet> openList = new Stack<UnalignedWordSet>();
     Set<UnalignedWordSet> closedList = new HashSet<UnalignedWordSet>();
-    openList.push(new UnalignedWordSet(uRHS,uRHS,rhs2lhs,rhsLabels.length));
+    openList.push(new UnalignedWordSet(this,uRHS,uRHS,rhsLabels.length));
     List<Rule> rules = new ArrayList<Rule>();
-    while(openList.size() > 0) {
+
+    while (!openList.isEmpty()) {
+
       UnalignedWordSet curSet = openList.pop();
-      Set<Character> usRHS = curSet.getSubset();
-      if(closedList.contains(curSet))
+      Set<Integer> usRHS = curSet.getSubset();
+      if (closedList.contains(curSet))
         continue;
-      if(!closedList.add(curSet))
+      if (!closedList.add(curSet))
         continue;
-      for(UnalignedWordSet successorSet : curSet.getSizeMinusOneSets()) {
-        if(!closedList.contains(successorSet))
+      for (UnalignedWordSet successorSet : curSet.getSizeMinusOneSets()) {
+        if (!closedList.contains(successorSet))
           openList.push(successorSet);
       }
-      // new rule with different assignments of unaligned foreign words:
+
+      // New rule with different assignments of unaligned foreign words:
+      // TODO:
       Rule newInst = new Rule();
+
       // No deep copy for lhsStruct and lhsLabels, in order to fit as
-      // many rules as possible in memory, but could be dangerous (!):
+      // many rules as possible in memory:
       newInst.lhsStruct = lhsStruct;
       newInst.lhsLabels = lhsLabels;
+
       // Deep copy:
       int oldSz = rhsLabels.length;
       int newSz = oldSz-uRHS.size()+usRHS.size();
       newInst.rhsLabels = new int[newSz];
-      newInst.rhs2lhs = new Char2CharArrayMap();
-      for(int src=oldSz-1, tgt=newSz-1; tgt>=0; --src, --tgt) {
-        while(uRHS.contains((char)src) && !usRHS.contains((char)src))
+      newInst.clear_non_terminals(newSz);
+
+      for (int src=oldSz-1, tgt=newSz-1; tgt>=0; --src, --tgt) {
+        while (uRHS.contains(src) && !usRHS.contains(src))
           --src;
         newInst.rhsLabels[tgt] = rhsLabels[src];
-        if(rhs2lhs.containsKey((char)src)) {
-          newInst.rhs2lhs.put((char)tgt,rhs2lhs.get((char)src));
-        }
+        if (is_rhs_non_terminal(src))
+          newInst.add_non_terminal(tgt,get_lhs_non_terminal(src));
       }
+
       rules.add(newInst);
-      if(DEBUG) {
+
+      if (DEBUG) {
         curSet.debug(System.err);
         newInst.toString();
       }
     }
+
     return rules;
   }
 
@@ -106,7 +126,23 @@ public class Rule {
     printXrsLHS(buf);
     buf.append(" -> ");
     printXrsRHS(buf);
-		if(DEBUG)
+		if (DEBUG)
+			System.err.println("Rule: toString: "+buf.toString());
+    return buf.toString();
+  }
+
+  public String toJoshuaLHS() {
+    StringBuffer buf = new StringBuffer();
+    printJoshuaLHS(buf);
+		if (DEBUG)
+			System.err.println("Rule: toString: "+buf.toString());
+    return buf.toString();
+  }
+
+  public String toJoshuaRHS() {
+    StringBuffer buf = new StringBuffer();
+    printJoshuaRHS(buf);
+		if (DEBUG)
 			System.err.println("Rule: toString: "+buf.toString());
     return buf.toString();
   }
@@ -117,19 +153,20 @@ public class Rule {
 
   private void printXrsLHS(StringBuffer buf, MutableInteger arrayIdx, MutableInteger varIdx) {
     int sz = lhsStruct[arrayIdx.intValue()];
-    if(sz == 0)
+    if (sz == 0)
       return;
     buf.append("(");
-    for(int i=0; i<sz; ++i) {
+    for (int i=0; i<sz; ++i) {
       if(i>0) buf.append(" ");
-      boolean isNT = (rhs2lhs.containsValue((char)(arrayIdx.intValue()+1)));
-      if(isNT) {
+      int arrayPos = arrayIdx.intValue()+1;
+      boolean isNT = (is_lhs_non_terminal(arrayPos));
+      if (isNT) {
         buf.append("x").append(varIdx).append(":");
         varIdx.incValue(1);
       }
-      boolean isLex = (lhsStruct[arrayIdx.intValue()+1] == 0 && !isNT);
+      boolean isLex = (lhsStruct[arrayPos] == 0 && !isNT);
       if(isLex) buf.append("\"");
-      buf.append(IString.getString(lhsLabels[arrayIdx.intValue()+1]));
+      buf.append(IString.getString(lhsLabels[arrayPos]));
       if(isLex) buf.append("\"");
       arrayIdx.incValue(1);
       printXrsLHS(buf,arrayIdx,varIdx);
@@ -138,69 +175,151 @@ public class Rule {
   }
 
   private void printXrsRHS(StringBuffer buf) {
-    List<Character> idxs = new ArrayList<Character>(rhs2lhs.values());
+    List<Character> idxs = new ArrayList<Character>();
+    for (char c : get_lhs_non_terminals())
+      if (c != UNALIGNED)
+        idxs.add(c);
     Collections.sort(idxs);
-    Map<Character,Character> idxToVar = new TreeMap<Character,Character>();
+    Map<Integer,Integer> idxToVar = new TreeMap<Integer,Integer>();
     int curVarIdx =-1;
-    for(char idx : idxs)
-      idxToVar.put(idx,(char)++curVarIdx);
+    for (int idx : idxs)
+      idxToVar.put(idx,++curVarIdx);
     boolean first = true;
-    for(int i=0; i<rhsLabels.length; ++i) {
-			if(rhsLabels[i] == MISSING_RHS_EL_IDX)
+    for (int i=0; i<rhsLabels.length; ++i) {
+			if (rhsLabels[i] == MISSING_RHS_EL_IDX)
 				continue;
-      boolean isNT = (rhs2lhs.containsKey((char)i));
-      if(isNT) {
-				char idx = rhs2lhs.get((char)i);
+      boolean isNT = is_rhs_non_terminal(i);
+      if (!first)
+        buf.append(" ");
+      if (isNT) {
+				int idx = get_lhs_non_terminal(i);
         int varIdx = idxToVar.get(idx);
-        if(!first)
-          buf.append(" ");
         buf.append("x").append(varIdx);
-				if(SYNCAT_RHS)
+				if (SYNCAT_RHS)
 					buf.append(":");
       } else {
-        if(!first)
-          buf.append(" ");
         buf.append("\"");
       }
-      if(SYNCAT_RHS || !isNT)
+      if (SYNCAT_RHS || !isNT)
 				buf.append(IString.getString(rhsLabels[i]));
-			if(!isNT)
+			if (!isNT)
         buf.append("\"");
+      first = false;
+    }
+  }
+
+  public void printJoshuaRHS(StringBuffer buf) {
+    Map<Integer,Integer> idxToVar = new TreeMap<Integer,Integer>();
+    int curVarIdx = 0;
+    for (char c : get_lhs_non_terminals())
+      if (c != UNALIGNED)
+        idxToVar.put((int)c,++curVarIdx);
+    printJoshuaRHS(buf, new MutableInteger(0), idxToVar);
+  }
+
+  private void printJoshuaRHS(StringBuffer buf, MutableInteger arrayIdx, Map<Integer,Integer> idxToVar) {
+    int sz = lhsStruct[arrayIdx.intValue()];
+    if (sz == 0)
+      return;
+    for (int i=0; i<sz; ++i) {
+      if (i>0) buf.append(" ");
+      int arrayPos = arrayIdx.intValue()+1;
+      boolean isNT = is_lhs_non_terminal(arrayPos);
+      boolean isLex = (lhsStruct[arrayPos] == 0 && !isNT);
+      String tok = IString.getString(lhsLabels[arrayPos]);
+      if (isNT) {
+        buf.append("[").append(tok).append(",").append(idxToVar.get(arrayPos)).append("]");
+      } else if(isLex) {
+        buf.append(tok);
+      }
+      arrayIdx.incValue(1);
+      printJoshuaRHS(buf,arrayIdx,idxToVar);
+    }
+  }
+
+  private void printJoshuaLHS(StringBuffer buf) {
+    int curVarIdx = 0;
+    boolean first = true;
+    for(int i=0; i<rhsLabels.length; ++i) {
+			if (rhsLabels[i] == MISSING_RHS_EL_IDX)
+				continue;
+      boolean isNT = is_rhs_non_terminal(i);
+      if (!first)
+        buf.append(" ");
+      if (isNT) {
+        buf.append("[");
+        buf.append(IString.getString(rhsLabels[i]));
+        buf.append(",").append(++curVarIdx).append("]");
+      } else {
+        buf.append(IString.getString(rhsLabels[i]));
+      }
       first = false;
     }
   }
 
   @Override
 	public boolean equals(Object object) {
-    if(object.getClass() != getClass())
-      return false;
+    assert(object instanceof Rule);
     Rule r = (Rule) object;
-    boolean isEq =
+    return
      (Arrays.equals(lhsStruct,r.lhsStruct) &&
       Arrays.equals(lhsLabels,r.lhsLabels) &&
       Arrays.equals(rhsLabels,r.rhsLabels) &&
-      rhs2lhs.equals(r.rhs2lhs));
-    return isEq;
+      Arrays.equals(rhs2lhs,r.rhs2lhs));
   }
 
   @Override
 	public int hashCode() {
     return
-     Arrays.hashCode(lhsStruct)+
-     Arrays.hashCode(lhsLabels)+
-     Arrays.hashCode(rhsLabels)+
-     rhs2lhs.hashCode(); 
+     Arrays.hashCode(new int[] {
+       Arrays.hashCode(lhsStruct),
+       Arrays.hashCode(lhsLabels),
+       Arrays.hashCode(rhsLabels),
+       Arrays.hashCode(rhs2lhs) });
   }
 
   /**
    * Return an int array that uniquely determines the LHS of this rule.
    */
   public int[] getLHSIntArray() {
-    int[] array = new int[lhsStruct.length+lhsLabels.length];
-    for(int i=0; i<lhsStruct.length; ++i) {
-      array[i] = lhsStruct[i];
+    int[] array = new int[1+lhsStruct.length+lhsLabels.length];
+    array[0] = lhsLabels.length;
+    for (int i=0; i<lhsStruct.length; ++i) {
+      array[i+1] = lhsStruct[i];
     }
-    System.arraycopy(lhsLabels,0,array,lhsStruct.length,lhsLabels.length);
+    System.arraycopy(lhsLabels,0,array,lhsStruct.length+1,lhsLabels.length);
     return array;
   }
+
+  //////////////////////////
+  // Non-terminals:
+  //////////////////////////
+
+  public void clear_non_terminals(int sz) {
+    rhs2lhs = new char[sz];
+    Arrays.fill(rhs2lhs,UNALIGNED);
+  }
+
+  public char[] get_lhs_non_terminals() {
+    return rhs2lhs;
+  }
+
+  public int get_lhs_non_terminal(int rhsIdx) {
+    return rhs2lhs[rhsIdx];
+  }
+
+  public boolean is_rhs_non_terminal(int rhsIdx) {
+    return rhsIdx < rhs2lhs.length && rhs2lhs[rhsIdx] != UNALIGNED;
+  }
+
+  public boolean is_lhs_non_terminal(int lhsIdx) {
+    for (char el : rhs2lhs) if (el == lhsIdx) return true; return false;
+  }
+
+  public void add_non_terminal(int rhsIdx, int lhsIdx) {
+    assert (lhsIdx < UNALIGNED);
+    assert (rhsIdx < UNALIGNED);
+    rhs2lhs[rhsIdx] = (char)lhsIdx;
+  }
+
 }

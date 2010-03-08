@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import java.util.Properties;
 
 /**
- * @author Michel Galley
+ * @author Michel Galley (mgalley@cs.stanford.edu)
  */
 public class AbstractFeatureExtractor implements FeatureExtractor {
 
@@ -20,20 +20,22 @@ public class AbstractFeatureExtractor implements FeatureExtractor {
     this.prop = prop;
   }
 
-  static void addCountToArray(IntArrayList list, int idx) {
-    if(idx < 0)
+  static void addCountToIntArray(final IntArrayList list, int idx) {
+    if (idx < 0)
       return;
-    while(idx >= list.size())
-      list.add(0);
-    int newCount = list.get(idx)+1;
-    list.set(idx,newCount);
-    if(DEBUG_LEVEL >= 3)
+    synchronized (list) {
+      while (idx >= list.size())
+        list.add(0);
+      int newCount = list.get(idx)+1;
+      list.set(idx,newCount);
+    }
+    if (DEBUG_LEVEL >= 3)
       System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
   }
 
-  public void extractFeatures(Rule r, int ruleId, int rootId, int lhsId, int rhsId) {}
+  public void extractFeatures(RuleIndex.RuleId r) {}
   public void extractFeatures(RuleInstance r) {}
-  public double[] score(Rule r, int ruleId, int rootId, int lhsId, int rhsId)  { return null; }
+  public double[] score(RuleIndex.RuleId r)  { return null; }
   public double[] score(RuleInstance r) { return null; }
   public void save(String prefixName) {}
 }
