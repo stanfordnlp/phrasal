@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.ghkm;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -93,7 +93,7 @@ public class RuleExtractor {
 
     // Optional arguments:
     String extractorStr = prop.getProperty(EXTRACTORS_OPT,
-         edu.stanford.nlp.mt.syntax.train.RelativeFrequencyFeatureExtractor.class.getName());
+         edu.stanford.nlp.mt.syntax.ghkm.RelativeFrequencyFeatureExtractor.class.getName());
     String[] extractorNames = extractorStr.split(":");
     int maxCompositions = Integer.parseInt(prop.getProperty(MAX_COMPOSITIONS_OPT,"0"));
     AlignmentGraph.setMaxCompositions(maxCompositions);

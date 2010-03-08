@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.ghkm;
 
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.mt.base.IString;

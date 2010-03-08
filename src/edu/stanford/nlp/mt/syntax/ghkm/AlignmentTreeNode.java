@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.syntax.train;
+package edu.stanford.nlp.mt.syntax.ghkm;
 
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.ling.Label;
