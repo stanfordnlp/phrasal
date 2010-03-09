@@ -1112,6 +1112,7 @@ public class UnsmoothedMERT extends Thread {
       System.err.println("-t <N>: number of threads.");
       System.err.println("-f <file>: weights read from file remain fixed during MERT.");
       System.err.println("-S: tune using sentence-level BLEU (smoothed).");
+      System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");
       System.err.println("-N: apply NIST tokenization to hypotheses.");
       System.exit(-1);
     }
