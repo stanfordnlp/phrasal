@@ -52,21 +52,24 @@ public class RuleIndex implements Iterable<RuleIndex.RuleId> {
 
     int lhsId = intA[0];
     int rhsId = intA[1];
-    int szTree = intA[2];
-    int szVars = intA[3];
 
-    char[] tree = new char[szTree];
-    char[] vars = new char[szVars];
+    // Reconstruct RHS:
+    int[] rhs = rhsIndex.get(rhsId);
 
-    for (int i=0; i<szTree; ++i)
-      tree[i] = (char) intA[4+i];
-    for (int i=0; i<szVars; ++i)
-      vars[i] = (char) intA[4+szTree+i];
-
+    // Reconstruct LHS:
     int[] lhsWithStruct = lhsIndex.get(lhsId);
     int[] lhs = new int[lhsWithStruct[0]];
     System.arraycopy(lhsWithStruct,lhsWithStruct.length-lhs.length,lhs,0,lhs.length);
-    int[] rhs = rhsIndex.get(rhsId);
+
+    // Reconstruct tree:
+    char[] tree = new char[lhsWithStruct.length - lhs.length - 1];
+    for (int i=0; i<tree.length; ++i)
+      tree[i] = (char) lhsWithStruct[1+i];
+
+    // Reconstruct vars:
+    char[] vars = new char[intA.length-2];
+    for (int i=0; i<vars.length; ++i)
+      vars[i] = (char) intA[2+i];
 
     Rule r = new Rule(tree, vars, lhs, rhs);
     int ruleId = ruleIndex.indexOf(intA, true);
@@ -77,19 +80,15 @@ public class RuleIndex implements Iterable<RuleIndex.RuleId> {
   public RuleId getRuleId(Rule r) {
 
     int rootId = getRootId(r);
-    int lhsId = getLHSId(r);
+    int lhsId = getTreeLHSId(r);
     int rhsId = getRHSId(r);
 
-    int[] intA = new int[4+r.lhsStruct.length+r.rhs2lhs.length];
+    int[] intA = new int[2+r.rhs2lhs.length];
     intA[0] = lhsId;
     intA[1] = rhsId;
-    intA[2] = r.lhsStruct.length;
-    intA[3] = r.rhs2lhs.length;
 
-    for (int i=0; i<r.lhsStruct.length; ++i)
-      intA[4+i] = r.lhsStruct[i];
     for (int i=0; i<r.rhs2lhs.length; ++i)
-      intA[4+r.lhsStruct.length+i] = r.rhs2lhs[i];
+      intA[2+i] = r.rhs2lhs[i];
     int id = ruleIndex.indexOf(intA, true);
 
     return new RuleId(r, lhsId, rhsId, rootId, id);
@@ -99,8 +98,8 @@ public class RuleIndex implements Iterable<RuleIndex.RuleId> {
     synchronized(rootIndex) { return rootIndex.indexOf(r.lhsLabels[0], true); }
   }
 
-  private int getLHSId(Rule r) {
-    int[] lhsArray = r.getLHSIntArray();
+  private int getTreeLHSId(Rule r) {
+    int[] lhsArray = r.getTreeLHSIntArray();
     return lhsIndex.indexOf(lhsArray,true);
   }
 

@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.syntax.ghkm;
+package edu.stanford.nlp.mt.syntax.ghkm.experimental;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 

@@ -29,8 +29,6 @@ public class Rule {
   char[] rhs2lhs; // non-terminals (maps RHS to LHS)
   int[] lhsLabels, rhsLabels; // labels of LHS and RHS
 
-  Rule() {}
-
   Rule(char[] lhsStruct, char[] rhs2lhs, int[] lhsLabels, int[] rhsLabels) {
     this.lhsStruct = lhsStruct;
     this.rhs2lhs = rhs2lhs;
@@ -81,19 +79,12 @@ public class Rule {
           openList.push(successorSet);
       }
 
-      // New rule with different assignments of unaligned foreign words:
-      // TODO:
-      Rule newInst = new Rule();
-
-      // No deep copy for lhsStruct and lhsLabels, in order to fit as
-      // many rules as possible in memory:
-      newInst.lhsStruct = lhsStruct;
-      newInst.lhsLabels = lhsLabels;
-
       // Deep copy:
       int oldSz = rhsLabels.length;
       int newSz = oldSz-uRHS.size()+usRHS.size();
-      newInst.rhsLabels = new int[newSz];
+
+      // New rule with different assignments of unaligned foreign words:
+      Rule newInst = new Rule(lhsStruct, null, lhsLabels, new int[newSz]);
       newInst.clear_non_terminals(newSz);
 
       for (int src=oldSz-1, tgt=newSz-1; tgt>=0; --src, --tgt) {
@@ -281,7 +272,7 @@ public class Rule {
   /**
    * Return an int array that uniquely determines the LHS of this rule.
    */
-  public int[] getLHSIntArray() {
+  public int[] getTreeLHSIntArray() {
     int[] array = new int[1+lhsStruct.length+lhsLabels.length];
     array[0] = lhsLabels.length;
     for (int i=0; i<lhsStruct.length; ++i) {

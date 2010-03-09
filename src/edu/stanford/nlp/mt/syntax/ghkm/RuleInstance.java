@@ -36,7 +36,7 @@ public class RuleInstance {
            extractionNode.label(),lowFSpan,highFSpan);
 		}
     assert(rule == null);
-    rule = new Rule();
+    rule = new Rule(null, null, null, null);
     initLHS(extractionNode, compositions);
     initRHS(sent, lowFSpan, highFSpan);
   }
