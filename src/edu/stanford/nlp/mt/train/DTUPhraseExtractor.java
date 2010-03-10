@@ -24,7 +24,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String NO_UNALIGNED_GAPS_OPT = "noUnalignedGaps"; // do not extract "w X w" if X is unaligned
   static public final String NO_UNALIGNED_OR_LOOSE_GAPS_OPT = "noUnalignedOrLooseGaps"; // do not extract w X w unless the first and last words of X are unaligned
   static public final String NO_UNALIGNED_SUBPHRASE_OPT = "noUnalignedSubphrase";
-  static public final String NO_CROSS_SERIAL_PHRASES_OPT  = "noCrossSerialPhrases";
+  //static public final String NO_CROSS_SERIAL_PHRASES_OPT  = "noCrossSerialPhrases";
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
@@ -38,20 +38,20 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static boolean withGaps, onlyCrossSerialDTU, allSubsequences, allSubsequencesOld,
        noTargetGaps, noUnalignedSubphrase, noUnalignedGaps, noUnalignedOrLooseGaps;
   static boolean noCrossSerialPhrases = false;
-  static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE, maxCSize = Integer.MAX_VALUE;
+  static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE; //maxCSize = Integer.MAX_VALUE;
   static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
 
   public static final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
 
-  enum CrossSerialType { NONE, TYPE1_E, TYPE1_F, TYPE2_E, TYPE2_F }
+  enum CrossSerialType { TYPE1_E, TYPE1_F, TYPE2_E, TYPE2_F }
   //static final BitSet noCrossSerial = new BitSet();
 
   private static final boolean DEBUG = System.getProperty("DebugDTU") != null;
   private static final int QUEUE_SZ = 1024;
 
-  boolean printCrossSerialDTU = true;
+  //boolean printCrossSerialDTU = true;
 
-  int fSentenceLength, eSentenceLength;
+  //int fSentenceLength, eSentenceLength;
 
   LinearTimePhraseExtractor substringExtractor;
 
@@ -74,6 +74,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     substringExtractor = new LinearTimePhraseExtractor(prop, alTemps, extractors);
     substringExtractor.alGrid = alGrid;
     System.err.println("Using DTU phrase extractor.");
+    if (!substringExtractor.needAlGrid)
+      System.err.println("Warning: no alignment grid.");
   }
 
   static public void setDTUExtractionProperties(Properties prop) {
@@ -537,8 +539,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return bitSetToIntSet(newE);
     }
 
-    public boolean containsE(int ei) { return e.get(ei); }
-    public boolean containsF(int fi) { return f.get(fi); }
+    //public boolean containsE(int ei) { return e.get(ei); }
+    //public boolean containsF(int fi) { return f.get(fi); }
 
     public int getFirstE() { return e.nextSetBit(0); }
     public int getLastE() { return e.length()-1; }
@@ -778,6 +780,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   public void extractPhrases(WordAlignment sent) {
 
     substringExtractor.extractPhrases(sent);
+    //substringExtractor.extractPhrasesNoAlGrid(sent);
 
     if (DEBUG) {
       System.err.println("f: "+sent.f());
@@ -788,9 +791,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     int fsize = sent.f().size();
     int esize = sent.e().size();
     if (needAlGrid) {
-      alGrid.init(esize,fsize);
+      alGrid.init(sent);
       if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
-        alGrid.printAlTempInGrid("line: "+sent.getId(),sent,null,System.err);
+        alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
     }
     
     queue.clear();
@@ -822,7 +825,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
           if (!noTargetGaps || dtu.eContiguous()) {
             if (!seen.contains(dtu)) {
               queue.offerLast(dtu);
-              //extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
               seen.add(dtu);
             }
           }
@@ -839,7 +841,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
             // Only extract non-contiguous phrases:
             if (!noUnalignedOrLooseGaps || !dtu.hasUnalignedOrLooseGap()) {
               if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
-                AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+                AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true, true);
                 if(DEBUG && alTemp != null)
                   System.err.printf("dtu: %s\n%s", alTemp.toString(false), dtu.getCrossings());
               }
@@ -870,7 +872,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
             if (!seen.contains(dtu)) {
               if (!noUnalignedOrLooseGaps || !dtu.hasUnalignedOrLooseGap()) {
                 if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
-                  extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true);
+                  extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true, true);
                 }
               }
               seen.add(dtu);

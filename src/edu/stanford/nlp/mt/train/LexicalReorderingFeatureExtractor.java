@@ -26,7 +26,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
   double[] totalForwardCounts = null, totalBackwardCounts = null, totalJointCounts = null;
 
-  static int printCounter = 0;
+  //static int printCounter = 0;
   static boolean modelStart = false;
 
   enum DirectionTypes { forward, backward, bidirectional, joint }
@@ -158,7 +158,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     if(alTemp.f().size() > 20 || alTemp.e().size() > 20) return;
     assert(alGrid != null);
     System.err.printf("Model %s has orientation %s according to the grid:\n", id, type.toString());
-    alGrid.printAlTempInGrid(null,alTemp.getSentencePair(),alTemp,System.err);
+    alGrid.setWordAlignment(alTemp.getSentencePair());
+    alGrid.printAlTempInGrid(null,alTemp,System.err);
   }
 
   @Override

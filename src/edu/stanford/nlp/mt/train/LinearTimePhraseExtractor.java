@@ -23,19 +23,25 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
 
   @Override
   public void extractPhrases(WordAlignment sent) {
+    if (extractPhrasesNoAlGrid(sent))
+      if (needAlGrid)
+        extractPhrasesFromAlGrid(sent);
+  }
+
+  public boolean extractPhrasesNoAlGrid(WordAlignment sent) {
 
     int fsize = sent.f().size();
     int esize = sent.e().size();
 
     if(fsize > MAX_SENT_LEN || esize > MAX_SENT_LEN) {
       System.err.println("Warning: skipping too long sentence. Length: f="+fsize+" e="+esize);
-      return;
+      return false;
     }
 
     if(needAlGrid) {
-      alGrid.init(esize,fsize);
+      alGrid.init(sent);
       if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
-        alGrid.printAlTempInGrid("line: "+sent.getId(),sent,null,System.err);
+        alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
     }
 
     // Sentence boundaries:
@@ -100,7 +106,11 @@ public class LinearTimePhraseExtractor extends AbstractPhraseExtractor {
         }
       }
     }
-    if(needAlGrid)
-      extractPhrasesFromAlGrid(sent);
+    // Note: don't extract here from alGrid, since function is named extractPhrasesNoAlGrid:
+    //if (needAlGrid) {
+    //  //System.err.printf("proc: %d %d\n", sent.getId(), alGrid.getAlTemps().size());
+    //  extractPhrasesFromAlGrid(sent);
+    //}
+    return true;
   }
 }

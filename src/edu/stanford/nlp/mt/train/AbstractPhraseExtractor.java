@@ -57,13 +57,14 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   
   List<AbstractFeatureExtractor> extractors;
   final AlignmentTemplates alTemps;
-  AlignmentTemplateInstance alTemp, alTemp2;
+  AlignmentTemplateInstance alTemp;
+  DTUInstance dtuTemp;
 
   public Object clone() throws CloneNotSupportedException {
     AbstractPhraseExtractor c = (AbstractPhraseExtractor) super.clone();
     c.alGrid = new AlignmentGrid(0,0);
     c.alTemp = new AlignmentTemplateInstance();
-    c.alTemp2 = new AlignmentTemplateInstance();
+    c.dtuTemp = new DTUInstance();
     return c;
   }
 
@@ -73,10 +74,10 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
-    this.alTemp2 = new AlignmentTemplateInstance();
+    this.dtuTemp = new DTUInstance();
     needAlGrid = false;
     
-    if(PRINT_GRID_MAX_LEN >= 0)
+    if (PRINT_GRID_MAX_LEN >= 0)
       needAlGrid = true;
     else {
       for(AbstractFeatureExtractor ex : extractors)
@@ -86,7 +87,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
         }
     }
 
-    if(needAlGrid)
+    if (needAlGrid)
       alGrid = new AlignmentGrid(0,0);
     System.err.println("Using AlignmentGrid: "+needAlGrid);
 
@@ -111,12 +112,12 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
         return;
     }
 
-    if(ignore(sent, f1, f2, e1, e2))
+    if (ignore(sent, f1, f2, e1, e2))
       return;
 
     // Check if alTemp meets length requirements:
-    if(f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
-      if(needAlGrid && isConsistent) {
+    if (f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
+      if (needAlGrid && isConsistent) {
         alGrid.addAlTemp(f1,f2,e1,e2);
       }
       if(DETAILED_DEBUG)
@@ -126,7 +127,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
     // Create alTemp:
     AlignmentTemplateInstance alTemp;
-    if(needAlGrid) {
+    if (needAlGrid) {
       alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,weight);
       alGrid.addAlTemp(alTemp, isConsistent);
     } else {
@@ -138,14 +139,18 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     alTemps.incrementAlignmentCount(alTemp);
 
     // Run each feature extractor for each altemp:
-    if(!needAlGrid)
-      for(AbstractFeatureExtractor e : extractors) {
+    if (!needAlGrid)
+      for (AbstractFeatureExtractor e : extractors) {
         e.extract(alTemp, null);
       }
   }
 
   // For DTU phrase extraction:
-  AlignmentTemplateInstance extractPhrase(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous, boolean isConsistent) {
+  AlignmentTemplateInstance extractPhrase(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous, boolean isConsistent, boolean ignoreContiguous) {
+
+    if (ignoreContiguous)
+      if (fContiguous && eContiguous)
+        return null;
 
     if (onlyTightPhrases || (onlyTightDTUs && (!fContiguous || !eContiguous))) {
       int f1 = fs.nextSetBit(0);
@@ -156,36 +161,36 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
         return null;
     }
 
-    // Check if alTemp meets length requirements:
-    if(fs.cardinality() > maxExtractedPhraseLenF || es.cardinality() > maxExtractedPhraseLenE) {
-      if(needAlGrid && isConsistent && fContiguous && eContiguous) {
+    // Check if dtuTemp meets length requirements:
+    if (fs.cardinality() > maxExtractedPhraseLenF || es.cardinality() > maxExtractedPhraseLenE) {
+      if (needAlGrid && isConsistent && fContiguous && eContiguous) {
         alGrid.addAlTemp(fs.nextSetBit(0), fs.length()-1, es.nextSetBit(0), es.length()-1);
       }
-      if(DETAILED_DEBUG)
+      if (DETAILED_DEBUG)
         System.err.printf("skipping too long: %d %d\n",fs.cardinality(),es.cardinality());
       return null;
     }
 
-    // Create alTemp:
-    AlignmentTemplateInstance alTemp;
-    if(needAlGrid) {
-      alTemp = new AlignmentTemplateInstance(sent, fs, es, fContiguous, eContiguous);
-      alGrid.addAlTemp(alTemp, isConsistent);
+    // Create dtuTemp:
+    DTUInstance dtuTemp;
+    if (needAlGrid) {
+      dtuTemp = new DTUInstance(sent, fs, es, fContiguous, eContiguous);
+      alGrid.addAlTemp(dtuTemp, isConsistent);
     } else {
-      alTemp = this.alTemp2;
-      alTemp.init(sent, fs, es, fContiguous, eContiguous);
+      dtuTemp = this.dtuTemp;
+      dtuTemp.init(sent, fs, es, fContiguous, eContiguous);
     }
 
-    alTemps.addToIndex(alTemp);
-    alTemps.incrementAlignmentCount(alTemp);
+    alTemps.addToIndex(dtuTemp);
+    alTemps.incrementAlignmentCount(dtuTemp);
 
     // Run each feature extractor for each altemp:
-    if(!needAlGrid) {
-      for(AbstractFeatureExtractor e : extractors) {
-        e.extract(alTemp, null);
+    if (!needAlGrid) {
+      for (AbstractFeatureExtractor e : extractors) {
+        e.extract(dtuTemp, null);
       }
     }
-    return alTemp;
+    return dtuTemp;
   }
 
   public void extractPhrasesFromAlGrid(WordAlignment sent) {
@@ -193,30 +198,32 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     int fsize = sent.f().size();
     int esize = sent.e().size();
     // Features are extracted only once all phrases for a given
-    // sentece pair are in memory
-    for(AbstractFeatureExtractor e : extractors)
-      for(AlignmentTemplateInstance alTemp : alGrid.getAlTemps()) {
+    // sentence pair are in memory
+    for (AbstractFeatureExtractor e : extractors) {
+      for (AlignmentTemplateInstance alTemp : alGrid.getAlTemps()) {
         e.extract(alTemp, alGrid);
-        if(PRINT_PHRASAL_GRID && fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
+        if (PRINT_PHRASAL_GRID && fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
           alGrid.printAlTempInGrid
-            ("phrase id: "+alTemp.getKey(),sent,alTemp,System.err);
+            ("phrase id: "+alTemp.getKey(),alTemp,System.err);
       }
+    }
   }
 
+  @SuppressWarnings("unused")
   boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
     boolean aligned = false;
     if(f2-f1 > maxPhraseLenF) return false;
     if(e2-e1 > maxPhraseLenE) return false;
-    for(int fi=f1; fi<=f2; ++fi)
-      for(int ei : sent.f2e(fi)) {
-        if(!(e1 <= ei && ei <= e2))
+    for (int fi=f1; fi<=f2; ++fi)
+      for (int ei : sent.f2e(fi)) {
+        if (!(e1 <= ei && ei <= e2))
           return false;
         aligned = true;
       }
-    if(!aligned) return false;
-    for(int ei=e1; ei<=e2; ++ei)
-      for(int fi : sent.e2f(ei))
-        if(!(f1 <= fi && fi <= f2))
+    if (!aligned) return false;
+    for (int ei=e1; ei<=e2; ++ei)
+      for (int fi : sent.e2f(ei))
+        if (!(f1 <= fi && fi <= f2))
           return false;
     return true;
   }
@@ -230,30 +237,30 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     int max2F = Integer.parseInt(prop.getProperty(MAX_EXTRACTED_PHRASE_LEN_F_OPT,"-1"));
     int max2E = Integer.parseInt(prop.getProperty(MAX_EXTRACTED_PHRASE_LEN_E_OPT,"-1"));
 
-    if(max > 0) {
+    if (max > 0) {
       System.err.printf("changing default max phrase length: %d -> %d\n", maxPhraseLenF, max);
       maxPhraseLenF = maxPhraseLenE = max;
       if(max2 < 0)
         max2 = max;
     }
-    if(maxF > 0) {
+    if (maxF > 0) {
       System.err.printf("changing default max phrase length (F): %d -> %d\n", maxPhraseLenF, maxF);
       maxPhraseLenF = maxF;
     }
-    if(maxE > 0) {
+    if (maxE > 0) {
       System.err.printf("changing default max phrase length (E): %d -> %d\n", maxPhraseLenE, maxE);
       maxPhraseLenE = maxE;
     }
 
-    if(max2 > 0) {
+    if (max2 > 0) {
       System.err.printf("changing default max extracted phrase length: %d -> %d\n", maxExtractedPhraseLenF, max2);
       maxExtractedPhraseLenF = maxExtractedPhraseLenE = max2;
     }
-    if(max2F > 0) {
+    if (max2F > 0) {
       System.err.printf("changing default max extracted phrase length (F): %d -> %d\n", maxExtractedPhraseLenF, max2F);
       maxExtractedPhraseLenF = max2F;
     }
-    if(max2E > 0) {
+    if (max2E > 0) {
       System.err.printf("changing default max extracted phrase length (E): %d -> %d\n", maxExtractedPhraseLenE, max2E);
       maxExtractedPhraseLenE = max2E;
     }

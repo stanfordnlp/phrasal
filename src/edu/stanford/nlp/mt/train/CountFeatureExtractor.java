@@ -13,9 +13,6 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
   public static final String DEBUG_PROPERTY = "DebugCountFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 
-  public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";
-  public static final boolean PRINT_COUNTS = Boolean.parseBoolean(System.getProperty(PRINT_COUNTS_PROPERTY, "false"));
-
   private static final double EXP_M1 = Math.exp(-1);
 
   IntArrayList feCounts = new IntArrayList();
@@ -33,7 +30,7 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
     return new double[] { c, ((c>1)? 1.0 : EXP_M1) };
   }
 
-  private static void addCountToArray(IntArrayList list, int idx) {
+  private static void addCountToArray(final IntArrayList list, int idx) {
     if(idx < 0)
       return;
     synchronized(list) {

@@ -19,9 +19,6 @@ public class AlignmentTemplate {
   public static final String DEBUG_PROPERTY = "DebugAlignmentTemplate";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  public static final String FILL_HASH_PROPERTY = "FillHash";
-  public static final boolean FILL_HASH = Boolean.parseBoolean(System.getProperty(FILL_HASH_PROPERTY, "true"));
-
   public static final String DELIM = " ||| ";
 
   // phrases:
@@ -135,14 +132,18 @@ public class AlignmentTemplate {
     buf.append(f.toString()).append(DELIM).append(e.toString());
     if(!noAlign) {
       buf.append(DELIM);
-      for(int i=0; i<f2e.length; ++i) {
-        if(i > 0) buf.append(" ");
-        buf.append("(").append(alignmentToString(f2e[i])).append(")");
+      if (f2e != null) {
+        for(int i=0; i<f2e.length; ++i) {
+          if(i > 0) buf.append(" ");
+          buf.append("(").append(alignmentToString(f2e[i])).append(")");
+        }
       }
       buf.append(DELIM);
-      for(int i=0; i<e2f.length; ++i) {
-        if(i > 0) buf.append(" ");
-        buf.append("(").append(alignmentToString(e2f[i])).append(")");
+      if (e2f != null) {
+        for(int i=0; i<e2f.length; ++i) {
+          if(i > 0) buf.append(" ");
+          buf.append("(").append(alignmentToString(e2f[i])).append(")");
+        }
       }
     }
     return buf.toString();

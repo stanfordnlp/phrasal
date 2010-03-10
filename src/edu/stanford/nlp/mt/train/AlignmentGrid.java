@@ -20,6 +20,9 @@ public class AlignmentGrid {
 
   private int fsize, esize;
 
+  private WordAlignment sent;
+  Integer sentId;
+
   public enum RelativePos { N, NW, W, SW, S, SE, E, NE, I }
 
   private static final String SYM_C = "+"; 
@@ -29,7 +32,7 @@ public class AlignmentGrid {
   private static final String SYM_P = "#"; // altemp
   private static final String SYM_A = "x"; // word alignment
 
-  private List<AlignmentTemplateInstance> 
+  private List<AlignmentTemplateInstance>
     alTempList = new ArrayList<AlignmentTemplateInstance>();
 
   private AlGridCell<AlignmentTemplateInstance>[][] alGridCells = null;
@@ -43,6 +46,7 @@ public class AlignmentGrid {
     System.err.printf("AlignmentGrid: constructor (%d x %d).\n",MAX_SENT_LEN,MAX_SENT_LEN);
     this.fsize = fsize;
     this.esize = esize;
+    this.sent = null;
     init(esize, fsize);
   }
 
@@ -54,16 +58,27 @@ public class AlignmentGrid {
   /**
    * Initialize an alignment grid of size esize x fsize.
    */
+
+  public void init(WordAlignment s) {
+    if (sentId != null && s.getId() == sentId) {
+      return;
+    }
+    init(s.e().size(), s.f().size());
+    this.sent = s;
+    sentId = s.getId();
+  }
+
   public void init(int esize, int fsize) {
+    this.sent = null;
     if(esize >= MAX_SENT_LEN || fsize >= MAX_SENT_LEN)
       throw new UnsupportedOperationException("Sentence too long: fsize="+fsize+" esize="+esize);
     this.esize = esize;
     this.fsize = fsize;
     alTempList.clear();
-    for(int fi = 0; fi < fsize; fi++) {
-      for(int ei = 0; ei < esize; ei++) {
+    for (int fi = 0; fi < fsize; fi++) {
+      for (int ei = 0; ei < esize; ei++) {
         AlGridCell<AlignmentTemplateInstance> cell = alGridCells[fi][ei];
-        if(cell == null)
+        if (cell == null)
           alGridCells[fi][ei] = new AlGridCell<AlignmentTemplateInstance>();
         else
           cell.init();
@@ -109,18 +124,18 @@ public class AlignmentGrid {
   public RelativePos relativePos(AlignmentTemplateInstance alTemp, int f, int e) {
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
 
-    if(f < f1) {
+    if (f < f1) {
       if(e < e1) return RelativePos.NW;
       if(e > e2) return RelativePos.SW;
       return RelativePos.W;
     }
-    if(f > f2) {
+    if (f > f2) {
       if(e < e1) return RelativePos.NE;
       if(e > e2) return RelativePos.SE;
       return RelativePos.N;
     }
-    if(e < e1) return RelativePos.N;
-    if(e > e2) return RelativePos.S;
+    if (e < e1) return RelativePos.N;
+    if (e > e2) return RelativePos.S;
     return RelativePos.I;
   }
 
@@ -133,32 +148,33 @@ public class AlignmentGrid {
    * north-west relative to altemp. The same goes for "2", "3", and "4" for the three
    * other directions.
    */
-  public void printAlTempInGrid(String id, WordAlignment sent, AlignmentTemplateInstance alTemp, PrintStream out) {
-    if(id != null)
+  public void printAlTempInGrid(String id, AlignmentTemplateInstance alTemp, PrintStream out) {
+    if (id != null)
       out.println(id);
     out.print(SYM_C);
-    for(int fi=0; fi<fsize; ++fi) { 
-      if(fi>0) out.print(SYM_H);
+    for (int fi=0; fi<fsize; ++fi) {
+      if (fi>0) out.print(SYM_H);
       out.print(SYM_H+SYM_H);
     }
     out.println(SYM_H+SYM_C);
-    for(int ei=0; ei<esize; ++ei) { 
+    for (int ei=0; ei<esize; ++ei) {
       out.print(SYM_V);
-      for(int fi=0; fi<fsize; ++fi) { 
-        if(fi>0) out.print(" ");
+      for (int fi=0; fi<fsize; ++fi) {
+        if (fi>0) out.print(" ");
+        assert (sent != null);
         String alignSym = sent.f2e(fi).contains(ei) ? SYM_A : SYM_U;
         String phraseSym = " ";
-        if(alTemp != null) {
+        if (alTemp != null) {
           RelativePos pos = relativePos(alTemp,fi,ei);
-          if(pos == RelativePos.NW && alGridCells[fi][ei].hasBottomRight()) phraseSym = "1";
-          if(pos == RelativePos.SW && alGridCells[fi][ei].hasTopRight()) phraseSym = "2";
-          if(pos == RelativePos.NE && alGridCells[fi][ei].hasBottomLeft()) phraseSym = "3";
-          if(pos == RelativePos.SE && alGridCells[fi][ei].hasTopLeft()) phraseSym = "4";
-          if(alTemp.fStartPos() <= fi && fi <= alTemp.fEndPos() &&
+          if (pos == RelativePos.NW && alGridCells[fi][ei].hasBottomRight()) phraseSym = "1";
+          if (pos == RelativePos.SW && alGridCells[fi][ei].hasTopRight()) phraseSym = "2";
+          if (pos == RelativePos.NE && alGridCells[fi][ei].hasBottomLeft()) phraseSym = "3";
+          if (pos == RelativePos.SE && alGridCells[fi][ei].hasTopLeft()) phraseSym = "4";
+          if (alTemp.fStartPos() <= fi && fi <= alTemp.fEndPos() &&
              alTemp.eStartPos() <= ei && ei <= alTemp.eEndPos()) {
              assert(" ".equals(phraseSym));
              phraseSym = SYM_P;
-             if(alignSym.equals(SYM_U))
+             if (alignSym.equals(SYM_U))
               alignSym = SYM_P;
           }
         }
@@ -167,17 +183,17 @@ public class AlignmentGrid {
       out.printf(" %s %2d %s\n",SYM_V,ei,sent.e().get(ei).toString());
     }
     out.print(SYM_C);
-    for(int fi=0; fi<fsize; ++fi) { 
-      if(fi>0) out.print(SYM_H);
+    for (int fi=0; fi<fsize; ++fi) {
+      if (fi>0) out.print(SYM_H);
       out.print(SYM_H+SYM_H);
     }
     out.print(SYM_H+SYM_C+"\n ");
-    for(int fi=0; fi<fsize; ++fi) { 
-      if(fi>0) out.print(" ");
+    for (int fi=0; fi<fsize; ++fi) {
+      if (fi>0) out.print(" ");
       out.printf("%2d",fi);
     }
     out.println();
-    for(int fi=0; fi<fsize; ++fi) { 
+    for (int fi=0; fi<fsize; ++fi) {
       out.printf("%d=%s ",fi,sent.f().get(fi).toString());
     }
     //out.println("\n\n");
@@ -187,17 +203,23 @@ public class AlignmentGrid {
    * Print alignment grid corresponding decoding history.
    */
   public static void printDecoderGrid(Featurizable<IString, String> f, PrintStream out) {
-    if(!f.done) 
+    if (!f.done)
       throw new RuntimeException("AlignmentGrid: not finished decoding!");
     Sequence<IString> eSeq = f.partialTranslation, fSeq = f.foreignSentence;
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(fSeq, eSeq);
     AlignmentGrid alGrid = new AlignmentGrid(eSeq.size(),fSeq.size());
-    while(f != null) {
-      for(int fi = f.foreignPosition; fi<f.foreignPosition+f.foreignPhrase.size(); ++fi)
-        for(int ei = f.translationPosition; ei<f.translationPosition+f.translatedPhrase.size(); ++ei)
+    while (f != null) {
+      for (int fi = f.foreignPosition; fi<f.foreignPosition+f.foreignPhrase.size(); ++fi)
+        for (int ei = f.translationPosition; ei<f.translationPosition+f.translatedPhrase.size(); ++ei)
           sent.addAlign(fi,ei);
       f = f.prior;
     }
-    alGrid.printAlTempInGrid("Alignment grid for decoded sentence: "+eSeq, sent, null, out);
+    alGrid.sent = sent;
+    alGrid.printAlTempInGrid("Alignment grid for decoded sentence: "+eSeq, null, out);
   }
+
+  public void setWordAlignment(WordAlignment sent) {
+    this.sent = sent;
+  }
+
 }

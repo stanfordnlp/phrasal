@@ -398,8 +398,10 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     }
 
     if(needAlGrid) {
-      alGrid.init(esize,fsize);
-      fullAlGrid.init(esize,fsize);
+      alGrid.init(sent);
+      //alGrid.init(esize,fsize);
+      fullAlGrid.init(sent);
+      //fullAlGrid.init(esize,fsize);
     }
 
     // For each English phrase:
@@ -460,7 +462,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         for(AlignmentTemplateInstance alTemp : alGrid.getAlTemps()) {
           e.extract(alTemp, alGrid, fullAlGrid, infoLine);
           if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
-            alGrid.printAlTempInGrid(null,sent,alTemp,System.out);
+            alGrid.printAlTempInGrid(null,alTemp,System.out);
         }
       }
     }

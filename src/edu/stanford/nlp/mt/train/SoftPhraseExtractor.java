@@ -49,9 +49,9 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     if(needAlGrid) {
-      alGrid.init(esize,fsize);
+      alGrid.init(sent);
       if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
-        alGrid.printAlTempInGrid("line: "+sent.getId(),sent,null,System.err);
+        alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
     }
 
     // For each Foreign phrase [f1,f2]:
