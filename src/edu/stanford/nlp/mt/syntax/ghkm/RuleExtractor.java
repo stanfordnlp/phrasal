@@ -360,8 +360,6 @@ public class RuleExtractor {
   public static void main(String[] args)
       throws IllegalAccessException, InstantiationException, ClassNotFoundException {
 
-    IString.internStrings(false);
-
     Properties prop = StringUtils.argsToProperties(args);
     String configFile = prop.getProperty(CONFIG_OPT);
 

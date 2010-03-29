@@ -643,7 +643,6 @@ public class CombinedFeatureExtractor {
 
   public static void main(String[] args) throws IOException {
 
-		IString.internStrings(false);
     Properties prop = StringUtils.argsToProperties(args);
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
