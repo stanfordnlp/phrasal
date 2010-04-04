@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/classes" />
-    <exclude-output />
-    <output-test url="file://$MODULE_DIR$/classes" />
-    <testFolder url="file://$MODULE_DIR$/test/src" />
+<component LANGUAGE_LEVEL="JDK_1_6">
+	<output-test url="file://$MODULE_DIR$/classes"/>
+	<exclude-output/>
+	<contentEntry url="file://$MODULE_DIR$">
+		<testFolder url="file://$MODULE_DIR$/test/src"/>
+		<testFolder url="file://$MODULE_DIR$/testng/src"/>
+		<excludeFolder url="file://$MODULE_DIR$/classes"/>
+		<excludeFolder url="file://$MODULE_DIR$/classes"/>
+		<excludeFolder url="file://$MODULE_DIR$/classes"/>
+	</contentEntry>
+	<lib name="bsh.jar" scope="COMPILE">
+		<srcroot url="jar://$MODULE_DIR$/libsrc/bsh-2.0b4-src.zip!/"/>
+	</lib>
+	<lib name="testng.jar" scope="COMPILE">
+		<srcroot url="jar://$MODULE_DIR$/libsrc/testng-5.8-src.zip!/"/>
+	</lib>
+	<lib name="create_phrasedb.jar" scope="COMPILE">
+		<srcroot url="jar://$MODULE_DIR$/lib/tercom.jar!/"/>
+	</lib>
+	<lib name="jopt-simple.jar" scope="COMPILE">
+		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-3.1-sources.jar!/"/>
+	</lib>
 </component>
-
