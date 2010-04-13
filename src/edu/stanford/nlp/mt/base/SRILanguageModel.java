@@ -28,13 +28,26 @@ public class SRILanguageModel implements LanguageModel<IString> {
     System.loadLibrary("srilm");
   }
 
+  private static final int MAX_NGRAM_ORDER = 16;
+  private static final ThreadLocal<SWIGTYPE_p_unsigned_int> threadHist
+     = new ThreadLocal<SWIGTYPE_p_unsigned_int>() {
+       @Override protected SWIGTYPE_p_unsigned_int initialValue() {
+         SWIGTYPE_p_unsigned_int p = srilm.new_unsigned_array(MAX_NGRAM_ORDER+1);
+         for (int i=0; i<=MAX_NGRAM_ORDER; ++i) {
+           srilm.unsigned_array_setitem(p, i, srilm.getVocab_None());
+         }
+         return p;
+       }
+  };
+
   static boolean verbose = false;
 
   protected final String name;
 
   private static final IString START_TOKEN = new IString("<s>");
   private static final IString END_TOKEN = new IString("</s>");
-  private static final double LOG10 = Math.log(10); 
+  private static int NONE_TOKEN;
+  private static final double LOG10 = Math.log(10);
   private final SWIGTYPE_p_Ngram p_srilm;
   private final SWIGTYPE_p_Vocab p_vocab;
   private int[] ids;
@@ -64,6 +77,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
 		// Otherwise, create a new one and add it to the cache
     LanguageModel<IString> newLM =  new SRILanguageModel(filename, vocabFilename);
 		lmStore.put(filepath, newLM);
+    NONE_TOKEN = srilm.getVocab_None();
 		return newLM;
   }
 
@@ -125,12 +139,11 @@ public class SRILanguageModel implements LanguageModel<IString> {
   public boolean releventPrefix(Sequence<IString> prefix) {
     if (prefix.size() > order-1) return false;
     int hist_size = prefix.size();
-    SWIGTYPE_p_unsigned_int hist;
-    hist = srilm.new_unsigned_array(hist_size);
+    SWIGTYPE_p_unsigned_int hist = threadHist.get();
+
     for(int i=0; i< hist_size; i++)
-    srilm.unsigned_array_setitem(hist, i, id(prefix.get(i)));
+      srilm.unsigned_array_setitem(hist, i, id(prefix.get(i)));
     long depth = srilm.getDepth(p_srilm, hist, hist_size);
-    srilm.delete_unsigned_array(hist);
     return (depth == prefix.size());
   }
 
@@ -143,17 +156,13 @@ public class SRILanguageModel implements LanguageModel<IString> {
 
   private double scoreR(Sequence<IString> ngram_wrds) {
     int hist_size = ngram_wrds.size()-1;
-    SWIGTYPE_p_unsigned_int hist;
+    SWIGTYPE_p_unsigned_int hist = threadHist.get();
 
-    hist = srilm.new_unsigned_array(hist_size+1);
-    srilm.unsigned_array_setitem(hist, hist_size, srilm.getVocab_None());
-
+    srilm.unsigned_array_setitem(hist, hist_size, NONE_TOKEN);
     for(int i=0; i<hist_size; ++i)
       srilm.unsigned_array_setitem(hist, hist_size-1-i, id(ngram_wrds.get(i)));
     
     double res = srilm.getWordProb(p_srilm, id(ngram_wrds.get(hist_size)), hist);
-
-    srilm.delete_unsigned_array(hist);
 
     return res*LOG10;
   }
