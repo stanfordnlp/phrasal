@@ -24,7 +24,7 @@ public class ImprovedDEinTextReorderer {
         yield.add(w.word());
       }
 
-      Tree newTree = parsedSent.deepCopy();
+      Tree newTree = parsedSent.treeSkeletonCopy();
       List<Tree> newLeaves = newTree.getLeaves();
       // collect the ones to operate on
       for (int deIdx : markedDEIdxs) {
@@ -39,7 +39,7 @@ public class ImprovedDEinTextReorderer {
         // if DE is not DEC/DEG, they're not going to be reordered.
         // remove the 的 tags as well
         Tree dePOS = newLeaves.get(deIdx).parent(newTree);
-        if(!dePOS.value().equals("DEG") && 
+        if(!dePOS.value().equals("DEG") &&
            !dePOS.value().equals("DEC")) {
           String newLeaveVal = newLeaves.get(deIdx).value();
           if (newLeaveVal.equals("的_BprepA") || newLeaveVal.equals("的_relc") ||
@@ -48,7 +48,7 @@ public class ImprovedDEinTextReorderer {
             continue;
           }
         }
-        
+
         String de = yield.get(deIdx);
         if (!de.startsWith("的_"))
           throw new RuntimeException(de+"("+deIdx+") in "+StringUtils.join(yield, " ")+" is not a valid DE");
@@ -95,7 +95,7 @@ public class ImprovedDEinTextReorderer {
               //System.err.println("DEBUG: push stack"+c);
             }
             else {
-              newChildren.add(c.deepCopy());
+              newChildren.add(c.treeSkeletonCopy());
               //System.err.println("DEBUG: add child"+c);
             }
           }
@@ -122,7 +122,7 @@ public class ImprovedDEinTextReorderer {
       }
       System.out.println(StringUtils.join(newYield, " "));
     }
-    
+
   }
 }
 

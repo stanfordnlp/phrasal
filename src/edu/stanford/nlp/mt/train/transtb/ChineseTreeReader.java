@@ -23,7 +23,7 @@ public class ChineseTreeReader extends AbstractTreeReader {
   public ChineseTreeReader(String filename) throws IOException {
     readMoreTrees(filename);
   }
-  
+
   public List<Tree> getTreesWithWords(String[] sent) {
     return getTreesWithWords(sent, false);
   }
@@ -52,9 +52,9 @@ public class ChineseTreeReader extends AbstractTreeReader {
   }
 
 
-  
+
   public static void main(String args[]) throws IOException {
-    
+
     ChineseTreeReader ctr = new ChineseTreeReader();
     String dirName = TransTBUtils.ctbDir();
     for(int i = 1; i <= 325; i++) {
@@ -75,8 +75,8 @@ class ChineseTreeTransformer implements TreeTransformer {
   }
 
   public Tree transformTree(Tree tree) {
-    tree = tree.deepCopy();
-    
+    tree = tree.treeSkeletonCopy();
+
     List<Tree> leaves = tree.getLeaves();
 
     List<HasWord> words = new ArrayList<HasWord>();

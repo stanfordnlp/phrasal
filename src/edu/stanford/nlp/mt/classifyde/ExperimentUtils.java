@@ -21,7 +21,7 @@ public class ExperimentUtils {
   static TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- (DEG < 的)");
   static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- (DEG < 的)");
   static TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- (DEG < 的)");
-  
+
   static void ReverseSublist(List<String> list, int start, int end) {
     if (start < 0 || start >= list.size() ||
         end < 0 || end >= list.size() ||
@@ -124,7 +124,7 @@ public class ExperimentUtils {
     tag = tag.replaceAll("r$", "");
     t.label().setValue(tag);
 
-    Tree newT = t.deepCopy();
+    Tree newT = t.treeSkeletonCopy();
     List<Tree> children = t.getChildrenAsList();
     int moveIdx = -1;
     for(int i = 0 ; i < children.size(); i++) {
@@ -206,7 +206,7 @@ public class ExperimentUtils {
         if (deIdx != -1) {
           //System.err.println("multi-DEs: ");
           //t.pennPrint(System.err);
-        } else 
+        } else
           deIdx = Trees.rightEdge(c, t)-1;
       }
     }
@@ -216,7 +216,7 @@ public class ExperimentUtils {
 
 
   public static Tree maskIrrelevantDEs(Tree tree, int deInTree) {
-    Tree newTree = tree.deeperCopy();
+    Tree newTree = tree.deepCopy();
 
     List<Tree> leaves = newTree.getLeaves();
 
@@ -239,13 +239,13 @@ public class ExperimentUtils {
         words.add(new Word(leaf.value()));
       }
     }
-    
+
     for (int i = 0; i < leaves.size(); i++) {
       leaves.get(i).setValue(words.get(i).word());
     }
     return newTree;
   }
-  
+
   static boolean hasVApattern(Tree t) {
     TreeMatcher va1M = va1.matcher(t);
     TreeMatcher va2M = va2.matcher(t);
@@ -256,7 +256,7 @@ public class ExperimentUtils {
     TreeMatcher adjpdegM = adjpdeg.matcher(t);
     return adjpdegM.find();
   }
-  
+
   static boolean hasQPpattern(Tree t) {
     TreeMatcher qpdegM = qpdeg.matcher(t);
     return qpdegM.find();
@@ -266,7 +266,7 @@ public class ExperimentUtils {
     TreeMatcher nppndegM = nppndeg.matcher(t);
     return nppndegM.find();
   }
-  
+
   static boolean hasDEC(Tree npT, Tree wholeT, int deIdx) {
     return hasDE(npT, wholeT, deIdx, "DEC");
   }
@@ -296,7 +296,7 @@ public class ExperimentUtils {
     return deCount;
   }
 
-  
+
 	static List<Pair<String, String>>[] readFinalCategories(String categoryFile, String npFile, String fileidFile, String npidFile) throws IOException{
     String content = IOUtils.slurpFileNoExceptions(categoryFile);
     String[] categories = content.split("\\n");
@@ -327,10 +327,10 @@ public class ExperimentUtils {
         maxNP[fileid] = npid;
       }
     }
-    
+
     for(int i = 1; i <= 325; i++) {
       result[i] = new List[maxNP[i]+1];
-      for(int j = 1; j <= maxNP[fileid]; j++) 
+      for(int j = 1; j <= maxNP[fileid]; j++)
         result[i][j] = new ArrayList<Pair<String, String>>();
     }
     */
@@ -375,7 +375,7 @@ public class ExperimentUtils {
       if (useReducedCategories) {
         categoriesStr = normCategory(categoriesStr);
       }
-      
+
       Pair<String, String> pair = new Pair<String, String>(categoriesStr, npStr);
       fileidStr = fileidStr.replaceAll("[^\\d]","");
       int fileid = Integer.parseInt(fileidStr);
@@ -392,7 +392,7 @@ public class ExperimentUtils {
     return cat;
   }
 
-    
+
   static void resultSummary(TwoDimensionalCounter<String,String> confusionMatrix) {
     double totalNum = 0;
     double totalDenom = confusionMatrix.totalCount();
@@ -402,7 +402,7 @@ public class ExperimentUtils {
       totalNum += num;
       System.out.printf("#[ %s ] = %d |\tAcc:\t%.2f\n", k, (int)denom, 100.0*num/denom);
     }
-    System.out.printf("#total = %d |\tAcc:\t%f\n", (int)totalDenom, 100.0*totalNum/totalDenom);    
+    System.out.printf("#total = %d |\tAcc:\t%f\n", (int)totalDenom, 100.0*totalNum/totalDenom);
   }
 
   public static String coarseCategory(String cat) {
@@ -443,7 +443,7 @@ public class ExperimentUtils {
   }
 
   public static String short5class(String cat) {
-    if ("no B".equals(cat)) 
+    if ("no B".equals(cat))
       throw new RuntimeException("the category ["+cat+"] is not valid in 'is5class'");
     return ExperimentUtils.short6class(cat);
   }
@@ -457,12 +457,12 @@ public class ExperimentUtils {
     if ("no B".equals(cat)) return "noB";
     throw new RuntimeException("the category ["+cat+"] is not valid in 'is6class'");
   }
-    
+
 
 
   static void resultCoarseSummary(TwoDimensionalCounter<String,String> confusionMatrix) {
     TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String> ();
-    
+
     for (Map.Entry<String,ClassicCounter<String>> k : confusionMatrix.entrySet()) {
       String k1 = k.getKey();
       ClassicCounter<String> k2 = k.getValue();
@@ -473,7 +473,7 @@ public class ExperimentUtils {
         cc.incrementCount(normK1, normval, count);
       }
     }
-    
+
     resultSummary(cc);
   }
 
@@ -514,8 +514,8 @@ public class ExperimentUtils {
       System.getenv("JAVANLP_HOME")+
       "/projects/mt/src/mt/classifyde/data/finalCategories_all.txt";
 
-    List<Pair<String, String>>[] finalCategories = 
-      ExperimentUtils.readFinalCategories(finalCategoriesFile, 
+    List<Pair<String, String>>[] finalCategories =
+      ExperimentUtils.readFinalCategories(finalCategoriesFile,
                                           useReducedCategories);
 
     for (TreePair tp : treepairs) {
@@ -565,9 +565,9 @@ public class ExperimentUtils {
     }
 
     int pickTreeIdx = -1;
-    
+
     for(int i = 0; i < startIndices.length; i++) {
-      if (leftEdge >= startIndices[i] && 
+      if (leftEdge >= startIndices[i] &&
           (i==startIndices.length-1 || rightEdge <= startIndices[i+1])) {
         pickTreeIdx = i;
       }
@@ -587,7 +587,7 @@ public class ExperimentUtils {
         int left = Trees.leftEdge(c, root);
         int right = Trees.rightEdge(c, root);
 
-        if (left==leftEdge-startIndices[pickTreeIdx] && 
+        if (left==leftEdge-startIndices[pickTreeIdx] &&
             right==rightEdge-startIndices[pickTreeIdx]) {
           return c;
         }

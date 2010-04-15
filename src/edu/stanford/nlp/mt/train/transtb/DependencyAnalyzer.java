@@ -67,7 +67,7 @@ public class DependencyAnalyzer {
   public void addUntypedPathsDistance2(Tree t, HeadFinder hf) {
 
     Filter<Dependency<Label, Label, Object>> dependencyFilter = Filters.acceptFilter();
-    Tree indexedTree = t.deeperCopy(t.treeFactory(), CyclicCoreLabel.factory());
+    Tree indexedTree = t.deepCopy(t.treeFactory(), CyclicCoreLabel.factory());
     indexedTree.indexLeaves();
     Set<Dependency<Label, Label, Object>> depsSet = indexedTree.mapDependencies(dependencyFilter, hf, "ROOT");
     List<Dependency<Label, Label, Object>> sortedDeps = new ArrayList<Dependency<Label, Label, Object>>(depsSet);
@@ -162,7 +162,7 @@ public class DependencyAnalyzer {
     System.err.println("type="+StringUtils.join(p,":"));
     return "type="+StringUtils.join(p,":");
   }
-  
+
   @SuppressWarnings("unchecked")
   private Map<Integer,Set<String>>[] initDeps(int len) {
     Map<Integer,Set<String>>[] deps = new TreeMap[len];
