@@ -15,7 +15,7 @@ class ClassifyingExperiment {
   public ClassifyingExperiment() {
   }
 
-  public static void main(String args[]) throws Exception {
+  public static void main(String[] args) throws Exception {
     Properties props = StringUtils.argsToProperties(args);
     String trainDevTestFile;
     trainDevTestFile = "projects/mt/src/mt/classifyde/data/TrainDevTest_6class.txt";
@@ -83,7 +83,7 @@ class ClassifyingExperiment {
         }
         prevTpIdx--;
       }
-      
+
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
         Counter<String> featureList = featurizer.extractFeatures(deIdxInSent, validSent, props, cachedWords);
         String label = validSent.NPwithDEs_categories.get(deIdxInSent);
@@ -107,7 +107,7 @@ class ClassifyingExperiment {
         else if (trainDevTest.get(npid).endsWith("train")) {
             trainDataset.add(d);
             trainData.add(d);
-        } 
+        }
         else if ("dev".equals(trainDevTest.get(npid))) {
           if (trainAll) {
             trainDataset.add(d);
@@ -126,7 +126,7 @@ class ClassifyingExperiment {
         } else {
           throw new RuntimeException("trainDevTest error, line: "+trainDevTest.get(npid));
         }
-   
+
         // (4) collect other statistics
         labelCounter.incrementCount(label);
         npid++;
@@ -142,8 +142,7 @@ class ClassifyingExperiment {
     // train classifier
 
     LinearClassifierFactory<String, String> factory = new LinearClassifierFactory<String, String>();
-    LinearClassifier<String, String> classifier 
-      = (LinearClassifier<String, String>)factory.trainClassifier(trainDataset);
+    LinearClassifier<String, String> classifier = factory.trainClassifier(trainDataset);
 
     if (writeClassifier != null) {
       LinearClassifier.writeClassifier(classifier, writeClassifier);
@@ -170,20 +169,20 @@ class ClassifyingExperiment {
       System.out.println("Overall label counter:");
       System.out.println(labelCounter);
       System.out.println();
-      
+
       System.out.println("Training set stats:");
       System.out.println(((Dataset<String,String>)trainDataset).toSummaryStatistics());
       System.out.println();
-      
+
       displayEval(trainStats, devStats, testStats);
-      
+
       System.out.println("Evaluate on Other set:");
       TwoDimensionalCounter<String,String> confusionMatrix = getConfusionMatrix(otherData, classifier);
       evaluateOnSet(confusionMatrix);
       System.out.println();
     }
   }
-  
+
   public static void displayEval(TwoDimensionalCounter<String,String> trainStats,
                                  TwoDimensionalCounter<String,String> devStats,
                                  TwoDimensionalCounter<String,String> testStats) {
@@ -200,11 +199,11 @@ class ClassifyingExperiment {
     System.out.println();
   }
 
-  public TwoDimensionalCounter<String, String> getConfusionMatrix(List<Datum<String,String>> data, LinearClassifier<String, String> lc) {
+  public static TwoDimensionalCounter<String, String> getConfusionMatrix(List<Datum<String,String>> data, LinearClassifier<String, String> lc) {
     return getConfusionMatrix(data, lc, null);
   }
 
-  public TwoDimensionalCounter<String, String> getConfusionMatrix(List<Datum<String,String>> data, LinearClassifier<String, String> lc, PrintWriter decisionPW) {
+  public static TwoDimensionalCounter<String, String> getConfusionMatrix(List<Datum<String,String>> data, LinearClassifier<String, String> lc, PrintWriter decisionPW) {
     TwoDimensionalCounter<String, String> confusionMatrix = new TwoDimensionalCounter<String,String>();
     for (Datum<String,String> d : data) {
       String predictedClass = lc.classOf(d);
