@@ -84,7 +84,8 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   private String depFeatureName = ":dep";
 
   // Stanford Tagger:
-  PrefixTagger tagger;
+  MaxentTagger maxentTagger;
+  PrefixTagger prefixTagger;
 
   // McDonald dependency parser:
   Parameters par;
@@ -181,7 +182,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     depFeatures = getLocalFeatureNames();
 
     // Load tagger:
-    MaxentTagger tagger = new MaxentTagger(taggerFile);
+    maxentTagger = new MaxentTagger(taggerFile);
 
     // Load McDonald MST model:
     options.modelName = dparserFile;
@@ -336,25 +337,25 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     Pair<IString,Float>[] tags = new Pair[sz];
     if(TAG_WITH_RIGHT_CONTEXT) {
       // faster, better POS accuracy, lower BLEU
-      int sp = Math.max(0, loc- tagger.getOrder());
+      int sp = Math.max(0, loc- prefixTagger.getOrder());
       int ep = loc+sz;
       Sequence<IString> seq = f.partialTranslation.subsequence(sp, ep);
       IString[] context = new IString[seq.size()];
       for(int j=0; j<context.length; ++j)
         context[j] = seq.get(j);
       for(int i=0; i<sz; ++i) {
-        tags[i] = tagger.getBestTag(context, -sz+i+1);
+        tags[i] = prefixTagger.getBestTag(context, -sz+i+1);
         tagScore += tags[i].second;
       }
     } else {
       for(int i=0; i<sz; ++i) {
-        int s = Math.max(0, loc+i- tagger.getOrder());
+        int s = Math.max(0, loc+i- prefixTagger.getOrder());
         int e = loc+Math.min(sz, i+1);
         Sequence<IString> seq = f.partialTranslation.subsequence(s, e);
         IString[] context = new IString[seq.size()];
         for(int j=0; j<context.length; ++j)
           context[j] = seq.get(j);
-        tags[i] = tagger.getBestTag(context, 0);
+        tags[i] = prefixTagger.getBestTag(context, 0);
         tagScore += tags[i].second;
       }
     }
@@ -560,8 +561,9 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
   @Override
   public void reset() {
-    if (tagger == null) tagger = new PrefixTagger(GlobalHolder.getLambdaSolve(),3,0); // TODO: 3,1
-    tagger.release();
+    if (prefixTagger == null) 
+      prefixTagger = new PrefixTagger(maxentTagger.getGlobalHolder(),3,0); // TODO: 3,1
+    prefixTagger.release();
     pipe.clearCache();
     System.err.printf("Emptying %d keys of partial parse cache.\n", partialParseCache.size());
     fullParseCache.clear();
@@ -643,7 +645,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
        ("Usage: edu.stanford.nlp.mt.decoder.efeat.DependencyLanguageModelFeaturizer (serialized tagger) (serialized dparser) (text to tag)");
     DependencyLanguageModelFeaturizer feat = new DependencyLanguageModelFeaturizer("mst","",args[0],args[1]);
     feat.reset();
-    feat.tagger.tagFile(args[2]);
+    feat.prefixTagger.tagFile(args[2]);
   }
 
   class DependencyScores implements Cloneable {
