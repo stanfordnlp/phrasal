@@ -4,7 +4,6 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-import edu.stanford.nlp.tagger.maxent.GlobalHolder;
 
 import edu.stanford.nlp.mt.syntax.mst.rmcd.ParserOptions;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.DependencyParser;
@@ -562,7 +561,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   @Override
   public void reset() {
     if (prefixTagger == null) 
-      prefixTagger = new PrefixTagger(maxentTagger.getGlobalHolder(),3,0); // TODO: 3,1
+      prefixTagger = new PrefixTagger(maxentTagger,3,0); // TODO: 3,1
     prefixTagger.release();
     pipe.clearCache();
     System.err.printf("Emptying %d keys of partial parse cache.\n", partialParseCache.size());

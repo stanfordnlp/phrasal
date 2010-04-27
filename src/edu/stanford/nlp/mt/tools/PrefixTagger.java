@@ -5,7 +5,6 @@ import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.maxent.iis.LambdaSolve;
 import edu.stanford.nlp.tagger.maxent.TestSentence;
-import edu.stanford.nlp.tagger.maxent.GlobalHolder;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
 import java.util.Map;
@@ -44,11 +43,11 @@ public class PrefixTagger extends TestSentence {
    * Creates a new PrefixTagger. Since PrefixTagger can't determine how many
    * words of context are needed by the tagging model, <i>leftWindow</i> must
    * be manually specified.
-   * @param GlobalHolder general information on the tagger (this parameter will soon change)
+   * @param MaxentTagger general information on the tagger (this parameter will soon change)
    * @param leftWindow How many words to the left determine the current tag.
    */
-  public PrefixTagger(GlobalHolder globalHolder, int leftWindow, int rightWindow) {
-    super(globalHolder);
+  public PrefixTagger(MaxentTagger maxentTagger, int leftWindow, int rightWindow) {
+    super(maxentTagger);
     if(leftWindow < 0 || rightWindow < 0)
       throw new UnsupportedOperationException();
     this.leftWindow = leftWindow;
@@ -110,7 +109,8 @@ public class PrefixTagger extends TestSentence {
     bestTags[loc] = vals[am];
     cleanUpScorer();
 
-    tag = new Pair<IString,Float>(new IString(globalHolder.getTags().getTag(bestTags[loc])),(float)scores[am]);
+    tag = new Pair<IString,Float>(new IString(maxentTagger.getTags().getTag(bestTags[loc])),
+                                  (float)scores[am]);
     if(CACHE_POS)
       cache.put(aw,tag);
     return tag;
@@ -183,7 +183,7 @@ public class PrefixTagger extends TestSentence {
     int rightWindow = Integer.parseInt(args[3]);
 
     MaxentTagger tagger = new MaxentTagger(modelFile);
-    PrefixTagger ts = new PrefixTagger(tagger.getGlobalHolder(), leftWindow, rightWindow);
+    PrefixTagger ts = new PrefixTagger(tagger, leftWindow, rightWindow);
     ts.tagFile(inputFile);
  }
 }

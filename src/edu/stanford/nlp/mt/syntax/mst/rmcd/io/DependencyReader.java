@@ -62,7 +62,7 @@ public abstract class DependencyReader {
     if(pretag) {
       System.err.println("Loading model: "+serializedTaggerFile);
       MaxentTagger tagger = new MaxentTagger(serializedTaggerFile);
-      ts = new TestSentence(tagger.getGlobalHolder());
+      ts = new TestSentence(tagger);
     }
     System.err.println("Pre-tagging: "+pretag);
   }
