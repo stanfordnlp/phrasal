@@ -18,13 +18,14 @@ public class FeaturizerFactory {
 	public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
 	public static final String BASELINE_FEATURIZERS = "baseline";
 	public static final String DEFAULT_WEIGHTING_BASELINE_FEATURIZERS = "weightedbaseline";
-	public static final String WEIGHTED_NGRAM_MATCH = "weightedngrammatch";
+	//public static final String WEIGHTED_NGRAM_MATCH = "weightedngrammatch";
 	public static final String DEFAULT_FEATURIZERS = DEFAULT_WEIGHTING_BASELINE_FEATURIZERS;
 	public static final String DISCRIMINATIVE_TM_PARAMETER = "discrimtm";
 	public static final String ARPA_LM_PARAMETER = "arpalm";
   public static final String ARPA_LM_VOC_PARAMETER = "arpalmvoc";
+  public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
 	public static final String DISCRIMINATIVE_LM_PARAMETER = "discrimlm";
-	public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
+	//public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
 	
 	public static final String FEATURE_ALIASES_RESOURCE = "edu/stanford/nlp/mt/resources/feature.aliases"; 
 	public static final Map<String,List<String>> featureAliases = readFeatureAliases(FEATURE_ALIASES_RESOURCE);
@@ -123,7 +124,17 @@ public class FeaturizerFactory {
 		}
 		
 		Map<String,String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
-		
+
+    // Linear distortion
+    final IncrementalFeaturizer<IString,String> linearDistortionFeaturizer;
+    try {
+      linearDistortionFeaturizer = (IncrementalFeaturizer<IString,String>)
+        Class.forName(paramPairs.get(LINEAR_DISTORTION_PARAMETER)).newInstance();
+      System.err.println("Linear distortion featurizer: "+linearDistortionFeaturizer);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+
 		if (featurizerName.equals(BASELINE_FEATURIZERS) ||
 			featurizerName.equals(DEFAULT_WEIGHTING_BASELINE_FEATURIZERS)) {
 			
@@ -134,7 +145,7 @@ public class FeaturizerFactory {
 			}
 			List<IncrementalFeaturizer<IString,String>> baselineFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();			
 			
-			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer, linearDistortionFeaturizer;
+			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer;
 			
 			// ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
@@ -152,7 +163,6 @@ public class FeaturizerFactory {
 			baselineFeaturizers.add(phraseTableScoresFeaturizer);
 			
 			// Linear distortion
-			linearDistortionFeaturizer = new LinearDistortionFeaturizer<IString>();
 			baselineFeaturizers.add(linearDistortionFeaturizer);
 			
 			if (featurizerName.equals(BASELINE_FEATURIZERS)) {
@@ -167,7 +177,7 @@ public class FeaturizerFactory {
 		} else if (featurizerName.equals(PSEUDO_PHARAOH_GENERATOR)) {
 			List<IncrementalFeaturizer<IString,String>> pharaohFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();			
 			
-			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer, linearDistortionFeaturizer, wordPenaltyFeaturizer,
+			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer, wordPenaltyFeaturizer,
 				unknownWordFeaturizer;
 			
 			// ARPA LM
@@ -185,7 +195,7 @@ public class FeaturizerFactory {
 			int discriminativeLMOrder = (discriminativeLMOrderStr == null ? 0 : Integer.parseInt(discriminativeLMOrderStr));
 			
 			String discriminativeTMStr = paramPairs.get(DISCRIMINATIVE_TM_PARAMETER);
-			boolean discriminativeTM = (discriminativeTMStr == null ? false : Boolean.parseBoolean(discriminativeTMStr));
+			boolean discriminativeTM = (discriminativeTMStr != null && Boolean.parseBoolean(discriminativeTMStr));
 			
 			if (discriminativeLMOrder != 0) {
 				LanguageModel<IString> dLM = new IndicatorFunctionLM(discriminativeLMOrder);
@@ -204,7 +214,6 @@ public class FeaturizerFactory {
 			pharaohFeaturizers.add(phraseTableScoresFeaturizer);
 			
 			// Linear distortion
-			linearDistortionFeaturizer = new LinearDistortionFeaturizer<IString>();
 			pharaohFeaturizers.add(linearDistortionFeaturizer);
 			
 			// Word Penalty

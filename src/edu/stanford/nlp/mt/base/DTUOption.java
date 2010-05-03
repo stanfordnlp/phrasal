@@ -19,14 +19,14 @@ public class DTUOption<T> extends TranslationOption<T> {
   private final static RawSequence emptySeq = new RawSequence(new Object[0]);
 
   @SuppressWarnings("unchecked")
-  public DTUOption(float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment) {
-		super(scores, phraseScoreNames, emptySeq, foreign, alignment);
+  public DTUOption(int id, float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment) {
+		super(id, scores, phraseScoreNames, emptySeq, foreign, alignment);
     this.dtus = dtus;
     //System.err.println("DTUOption: "+dtus.length);
   }
 	
-	public DTUOption(float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment, boolean forceAdd) {
-		super(scores, phraseScoreNames, null, foreign, alignment, forceAdd);
+	public DTUOption(int id, float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment, boolean forceAdd) {
+		super(id, scores, phraseScoreNames, null, foreign, alignment, forceAdd);
     this.dtus = dtus;
 	}
 	

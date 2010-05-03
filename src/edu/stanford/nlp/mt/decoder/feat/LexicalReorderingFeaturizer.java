@@ -15,14 +15,16 @@ import edu.stanford.nlp.mt.base.IString;
  * 
  * @author danielcer
  */
-public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IString, String>, MSDFeaturizer {
+public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String> {
+
 	static final String FEATURE_PREFIX = "LexR:";
 	public final String[] featureTags;
 	public final MosesLexicalReorderingTable mlrt;
 	final boolean DETAILED_DEBUG = false;
 	final MosesLexicalReorderingTable.ReorderingTypes[] discriminativeSet;
 	public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(ARPALanguageModel.START_TOKEN);
-	final boolean useAlignmentConstellations; 
+	final boolean useAlignmentConstellations;
+  
 	/**
 	 * Discriminative Lexical Reordering - using all reordering types
 	 *  

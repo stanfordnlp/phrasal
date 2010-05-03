@@ -7,6 +7,8 @@ import java.io.*;
 
 
 /**
+ * Similar to MosesLexicalizedReorderingTable, but adds classes not supported in Moses: 
+ * left-discontinuous and right-discontinuous.
  * 
  * @author danielcer
  * @author Michel Galley

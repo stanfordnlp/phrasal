@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
@@ -7,34 +7,27 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 /**
  * @author Michel Galley
  */
-public class LinearDistortionFeaturizer extends StatefulFeaturizer<IString, String> implements IncrementalFeaturizer<IString, String> {
+public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, String> implements IncrementalFeaturizer<IString, String> {
 
 	public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  // Purposedely the same name as in mt.decoder.feat.LinearDistortionFeaturizer:
-  public static final String FEATURE_NAME = "LinearDistortion";
-
   public final float futureCostDelay;
 
-  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","1.0f"));
+  public static final String FEATURE_NAME = "LinearDistortion";
 
-  public LinearDistortionFeaturizer() {
-    // Disable "standard" LinearDistortion (hack):
-    edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","0.5f"));
+
+  public LinearFutureCostFeaturizer() {
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
     System.err.println("Future cost delay: "+futureCostDelay);
   }
 
-  public LinearDistortionFeaturizer(String... args) {
-    // Disable "standard" LinearDistortion:
-    edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
+  public LinearFutureCostFeaturizer(String... args) {
 		// Argument determines how much future cost to pay upfront:
 		// 1.0 => everything; 0.0 => nothing, as in Moses
     if(args.length == 1) {

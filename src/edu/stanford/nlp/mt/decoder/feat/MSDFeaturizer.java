@@ -6,5 +6,5 @@ package edu.stanford.nlp.mt.decoder.feat;
  *
  * @author Michel Galley
  */
-public interface MSDFeaturizer {
+public interface MSDFeaturizer<TK,FV> extends IncrementalFeaturizer<TK,FV> {
 }

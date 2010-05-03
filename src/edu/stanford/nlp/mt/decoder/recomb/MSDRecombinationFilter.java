@@ -1,13 +1,13 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.efeat.HierarchicalReorderingFeaturizer;
-import edu.stanford.nlp.mt.decoder.efeat.HierarchicalReorderingFeaturizer.HierBlock;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer.HierBlock;
 import edu.stanford.nlp.mt.decoder.feat.CollapsedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
 import java.util.Deque;
 import java.util.LinkedList;

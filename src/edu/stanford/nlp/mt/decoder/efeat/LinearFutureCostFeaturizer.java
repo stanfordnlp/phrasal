@@ -30,9 +30,6 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
     assert args.length <= 1;
     if(args.length == 1)
       alpha = Float.parseFloat(args[0].trim());
-
-    // Disable Moses LinearDistortion:
-    edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
   }
 
   @Override

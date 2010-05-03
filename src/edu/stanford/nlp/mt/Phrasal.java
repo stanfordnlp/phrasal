@@ -6,14 +6,14 @@ import java.util.*;
 
 
 import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.mt.decoder.h.*;
 import edu.stanford.nlp.mt.decoder.inferer.*;
 import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
-import edu.stanford.nlp.mt.decoder.efeat.SentenceBoundaryFeaturizer;
 import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.decoder.feat.*;
+import edu.stanford.nlp.mt.decoder.efeat.SentenceBoundaryFeaturizer;
 
 import edu.stanford.nlp.classify.km.StructuredSVM;
 import edu.stanford.nlp.classify.km.kernels.Kernel;
@@ -78,7 +78,7 @@ public class Phrasal {
   public static final String MAX_FLOATING_PHRASES_OPT = "max-floating-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
   public static final String ISTRING_VOC_OPT = "istring-vocabulary";
-
+  public static final String MOSES_COMPATIBILITY_OPT = "moses-compatibility";
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
 
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
@@ -100,24 +100,23 @@ public class Phrasal {
   static final boolean VERBOSE_LEARNER = true;
 
 	static {
-		REQUIRED_FIELDS.addAll(Arrays.asList(new String[] { TRANSLATION_TABLE_OPT,
-				LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
-				TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT }));
-		OPTIONAL_FIELDS.addAll(Arrays.asList(new String[] { INLINE_WEIGHTS,ITER_LIMIT,
-				DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
-				USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
-				NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT,
+		REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,
+        LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
+        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT));
+		OPTIONAL_FIELDS.addAll(Arrays.asList(INLINE_WEIGHTS,ITER_LIMIT,
+        DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
+        USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
+        NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT,
         CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
-        RECOMBINATION_HEURISTIC, 
+        RECOMBINATION_HEURISTIC,
         LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
-				PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
-				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
-				MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
-				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
-        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT, ISTRING_VOC_OPT
-    }));
-		IGNORED_FIELDS.addAll(Arrays.asList(new String[] { INPUT_FACTORS_OPT,
-				MAPPING_OPT, FACTOR_DELIM_OPT }));
+        PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
+        WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
+        MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
+        LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
+        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT, ISTRING_VOC_OPT, MOSES_COMPATIBILITY_OPT));
+		IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT,
+        MAPPING_OPT, FACTOR_DELIM_OPT));
 		ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
 		ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
 		ALL_RECOGNIZED_FIELDS.addAll(IGNORED_FIELDS);
@@ -131,12 +130,12 @@ public class Phrasal {
 		IDEALIZED_TARGETS.put("TM:phi(t|f)", 0.0);
 		IDEALIZED_TARGETS.put("LM", 0.0);
 	  IDEALIZED_TARGETS.put("LinearDistortion", 0.0);
-	  IDEALIZED_TARGETS.put("LexR::discontinousWithNext", 0.0);
-	  IDEALIZED_TARGETS.put("LexR::discontinousWithPrevious", 0.0);
-	  IDEALIZED_TARGETS.put("LexR::monotoneWithNext", 0.0);
-	  IDEALIZED_TARGETS.put("LexR::monotoneWithPrevious", 0.0);
-	  IDEALIZED_TARGETS.put("LexR::swapWithNext", 0.0);
-	  IDEALIZED_TARGETS.put("LexR::swapWithPrevious", 0.0);
+	  IDEALIZED_TARGETS.put("LexR:discontinuousWithNext", 0.0);
+	  IDEALIZED_TARGETS.put("LexR:discontinuousWithPrevious", 0.0);
+	  IDEALIZED_TARGETS.put("LexR:monotoneWithNext", 0.0);
+	  IDEALIZED_TARGETS.put("LexR:monotoneWithPrevious", 0.0);
+	  IDEALIZED_TARGETS.put("LexR:swapWithNext", 0.0);
+	  IDEALIZED_TARGETS.put("LexR:swapWithPrevious", 0.0);
 	  IDEALIZED_TARGETS.put("UnknownWord", 0.0);
     IDEALIZED_TARGETS.put("SentenceBoundary", 0.0);
 	}
@@ -151,15 +150,15 @@ public class Phrasal {
 	public static final String MAXMARGIN_C = "C";
 	
 	public static final String DEFAULT_LEARNING_ALGORITHM = PERCEPTRON_LEARNING;
-	public static final String DEFAULT_SAVE_WEIGHTS = "unname_model_"
-		+ System.currentTimeMillis();
+	//public static final String DEFAULT_SAVE_WEIGHTS = "unname_model_"
+	//	+ System.currentTimeMillis();
 
   public static int local_procs = DEFAULT_LOCAL_PROCS;
   public static boolean withGaps = false;
   public static int distortionLimit = DEFAULT_DISTORTION_LIMIT;
 
   List<Inferer<IString, String>> inferers;
-	Inferer<IString, String> refInferer;
+	//Inferer<IString, String> refInferer;
 	PhraseGenerator<IString> phraseGenerator;
 	
 	final BufferedWriter nbestListWriter;
@@ -171,7 +170,6 @@ public class Phrasal {
 	boolean learnWeights;
   boolean constrainManualWeights;
   boolean generateMosesNBestList;
-  boolean uniqNBestList;
   List<List<Sequence<IString>>> learnFromReferences;
 	String learningAlgorithm;
 	List<String> learningAlgorithmConfig;
@@ -196,7 +194,7 @@ public class Phrasal {
 	public static LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.BEST_ON_N_BEST_LIST;
 	LearningTarget learningTarget = DEFAULT_LEARNING_TARGET;
 
-	static final int DEBUG_LEVEL = 0;
+	//static final int DEBUG_LEVEL = 0;
 	EvaluationMetric<IString,String> learningMetric = null;
 	EvaluationMetric<IString,String> evalMetric = null;
 
@@ -262,9 +260,7 @@ public class Phrasal {
   					break;
   				line = line.replaceAll("#.*$", "");
   				String[] fields = line.split("\\s+");
-  				for (String field : fields) {
-  					entries.add(field);
-  				}
+          entries.addAll(Arrays.asList(fields));
   			}
 
   			if (entries.size() != 0)
@@ -347,12 +343,13 @@ public class Phrasal {
       recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
 
+    boolean mosesMode = true; //TODO: config.containsKey(MOSES_COMPATIBILITY_OPT);
 
 		System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
 
 		if (config.containsKey(CONSTRAIN_TO_REFS)) {
 			constrainedToRefs = Metrics.readReferences(config.get(CONSTRAIN_TO_REFS)
-					.toArray(new String[0]));
+          .toArray(new String[config.get(CONSTRAIN_TO_REFS).size()]));
 		}		
 		
 		if (config.containsKey(LEARNING_TARGET)) {
@@ -382,7 +379,7 @@ public class Phrasal {
 			}
 		}
 
-		LexicalReorderingFeaturizer lexReorderFeaturizer = null;
+		MSDFeaturizer lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
 		if (config.containsKey(DISTORTION_FILE)) {
@@ -404,8 +401,9 @@ public class Phrasal {
 								"Parameter '%s' takes two arguments: distortion-model-type & model-filename)",
 								DISTORTION_FILE));
 			}
-			lexReorderFeaturizer = new LexicalReorderingFeaturizer(
-					new MosesLexicalReorderingTable(modelFilename, modelType));
+			lexReorderFeaturizer = mosesMode ?
+        new LexicalReorderingFeaturizer(new MosesLexicalReorderingTable(modelFilename, modelType)) :
+        new HierarchicalReorderingFeaturizer(modelFilename, modelType);
 		}
 		int discriminativeLMOrder;
 		if (config.containsKey(USE_DISCRIMINATIVE_LM)) {
@@ -533,10 +531,15 @@ public class Phrasal {
 		if (discriminativeTMParameter) {
 			System.err.printf("Using Discriminative TM\n");
 		}
+    String linearDistortion = withGaps ?
+       DTULinearDistortionFeaturizer.class.getName() :
+        (mosesMode ? LinearDistortionFeaturizer.class.getName() :
+                     LinearFutureCostFeaturizer.class.getName());
 		featurizer = FeaturizerFactory.factory(
 				FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR, makePair(
+          FeaturizerFactory.LINEAR_DISTORTION_PARAMETER, linearDistortion), makePair(
 						FeaturizerFactory.ARPA_LM_PARAMETER, lgModel), makePair(
-             FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc), makePair(
+              FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc), makePair(
 								FeaturizerFactory.DISCRIMINATIVE_LM_PARAMETER, ""
 								+ discriminativeLMOrder), makePair(
 										FeaturizerFactory.DISCRIMINATIVE_TM_PARAMETER, ""
@@ -611,18 +614,21 @@ public class Phrasal {
 									"Additional weights given for parameter %s but no lexical reordering file was specified",
 									DISTORTION_WT_OPT));
 				}
-				if (numAdditionalWts != lexReorderFeaturizer.mlrt.positionalMapping.length) {
-					throw new RuntimeException(
-							String
-							.format(
-									"%d re-ordering weights given with parameter %s, but %d expected",
-									numAdditionalWts, DISTORTION_WT_OPT,
-									lexReorderFeaturizer.mlrt.positionalMapping.length));
-				}
-				for (int i = 0; i < lexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
-					weightConfig.add(makePair(lexReorderFeaturizer.featureTags[i], config
-							.get(DISTORTION_WT_OPT).get(i + 1)));
-				}
+        if (lexReorderFeaturizer instanceof LexicalReorderingFeaturizer) {
+          LexicalReorderingFeaturizer mosesLexReorderFeaturizer = (LexicalReorderingFeaturizer) lexReorderFeaturizer;
+          if (numAdditionalWts != mosesLexReorderFeaturizer.mlrt.positionalMapping.length) {
+            throw new RuntimeException(
+                String
+                .format(
+                    "%d re-ordering weights given with parameter %s, but %d expected",
+                    numAdditionalWts, DISTORTION_WT_OPT,
+                    mosesLexReorderFeaturizer.mlrt.positionalMapping.length));
+          }
+          for (int i = 0; i < mosesLexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
+            weightConfig.add(makePair(mosesLexReorderFeaturizer.featureTags[i], config
+                .get(DISTORTION_WT_OPT).get(i + 1)));
+          }
+        }
 			}
 			weightConfig.add(makePair(WordPenaltyFeaturizer.FEATURE_NAME, config.get(
 					WORD_PENALTY_WT_OPT).get(0)));
@@ -661,7 +667,8 @@ public class Phrasal {
 				learningAlgorithmConfig = null;
 			}
 			learnFromReferences = Metrics.readReferences(config.get(
-					LEARN_WEIGHTS_USING_REFS).toArray(new String[0]));
+          LEARN_WEIGHTS_USING_REFS).toArray(new String[config.get(
+          LEARN_WEIGHTS_USING_REFS).size()]));
 			learningMetric = (config.containsKey(LEARNING_METRIC) ? MetricFactory.metric(config.get(LEARNING_METRIC).get(0), learnFromReferences) : MetricFactory.metric(learnFromReferences));
 			evalMetric = (config.containsKey(EVAL_METRIC) ? MetricFactory.metric(config.get(EVAL_METRIC).get(0), learnFromReferences) :  MetricFactory.metric(learnFromReferences));
 		}
@@ -708,7 +715,7 @@ public class Phrasal {
 		}
 
 		System.err.printf("WeightConfig: '%s'\n", weightConfig);
-    scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig.toArray(new String[0]));
+    scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig.toArray(new String[weightConfig.size()]));
 
     // Create phrase generator
 		String phraseTable;
@@ -755,18 +762,18 @@ public class Phrasal {
 		System.err.printf("Phrase table: %s\n", phraseTable);
 		
 		if (phraseTable.startsWith("bitext:")) {			
-			 phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String> factory(featurizer, scorer,
+			 phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(featurizer, scorer,
 								PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR, phraseTable)
-								: PhraseGeneratorFactory.<String> factory(featurizer, scorer,
+								: PhraseGeneratorFactory.factory(featurizer, scorer,
 										PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR, phraseTable.replaceFirst("^bitext:", ""),
 										optionLimit));
 		} else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
 			
 			System.err.println("Dyanamic pt\n========================");
 			phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
-					.<String> factory(featurizer, scorer,
+					.factory(featurizer, scorer,
 							PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable)
-							: PhraseGeneratorFactory.<String> factory(featurizer, scorer,
+							: PhraseGeneratorFactory.factory(featurizer, scorer,
 									PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable,
 									optionLimit));
 		} else {
@@ -774,9 +781,9 @@ public class Phrasal {
          PhraseGeneratorFactory.DTU_GENERATOR :
          PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
        phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory
-				.<String> factory(featurizer, scorer,
+				.factory(featurizer, scorer,
 						generatorName, phraseTable)
-						: PhraseGeneratorFactory.<String> factory(featurizer, scorer,
+						: PhraseGeneratorFactory.factory(featurizer, scorer,
 								generatorName, phraseTable,
 								optionLimit));
 		}
@@ -1058,9 +1065,10 @@ public class Phrasal {
   }
 
 
-        public static int MAX_LEARN_NBEST_ITER = 100;
-	public static int LEARNING_NBEST_LIST_SIZE = 1000;
+  public static int MAX_LEARN_NBEST_ITER = 100;
+	//public static int LEARNING_NBEST_LIST_SIZE = 1000;
 
+  @SuppressWarnings("unused")
 	List<ScoredFeaturizedTranslation<IString, String>> filterLowScoring(
 			List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
 			double dropFrac) {
@@ -1098,6 +1106,7 @@ public class Phrasal {
 		return filtered;
 	}
 
+  @SuppressWarnings("unused")
 	List<ScoredFeaturizedTranslation<IString, String>> filterHighLowScoring(
 			List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
 			double dropFracTop, double dropFracBottom) {
@@ -1225,7 +1234,7 @@ public class Phrasal {
 					q.add(new ComparableWtPair(featureName, value));
 				}
 				for (ComparableWtPair cwp = q.poll(); cwp != null; cwp = q.poll()) {
-					writer.append(cwp.featureName).append(" ").append("" + String.format("%e",cwp.value)).append("\n");
+					writer.append(cwp.featureName).append(" ").append(String.format("%e",cwp.value)).append("\n");
 				}
 				writer.close();
 			}
@@ -1446,10 +1455,10 @@ public class Phrasal {
 				RichTranslation<IString, String> argmax, double loss) {
 			throw new RuntimeException();
 		}
-		
-		public void weightUpdate(int epoch, int id, 
+
+		public void weightUpdate(int epoch, //int id,
 				List<RichTranslation<IString, String>> target,
-				List<RichTranslation<IString, String>> argmax, double loss) {
+				List<RichTranslation<IString, String>> argmax) {//, double loss) {
 				double tZ = 0;
 				double aZ = 0;
 				int tInfs = 0;
@@ -1471,8 +1480,8 @@ public class Phrasal {
 					}
 				}
 				
-				System.out.printf("tZ is approximated as (infs: %d): %e\n", tZ, tInfs);
-				System.out.printf("aZ is approximated as (infs: %d): %e\n", aZ, aInfs);
+				System.out.printf("tZ is approximated as (infs: %f): %d\n", tZ, tInfs);
+				System.out.printf("aZ is approximated as (infs: %f): %d\n", aZ, aInfs);
 				
 				
 				Set<String> featureNames = new HashSet<String>(wts.keySet());
@@ -1537,7 +1546,7 @@ public class Phrasal {
 	} 	
 
 	private void learningLoop(Learner learner, String inputFilename, int maxEpoch, String saveWeights) throws IOException {
-		LineNumberReader reader = null;
+		LineNumberReader reader; // = null;
 	
 			
 		for (int epoch = 0; epoch < maxEpoch; epoch++) {
@@ -1605,7 +1614,7 @@ public class Phrasal {
 			  
 			  double loss = evalTarget-evalArgmax;
 			  if (learner instanceof SGDLogLinearLearner) {
-			  	((SGDLogLinearLearner)learner).weightUpdate(epoch, translationId, targetNBest, argmaxNBest, loss);
+			  	((SGDLogLinearLearner)learner).weightUpdate(epoch, /* translationId, */ targetNBest, argmaxNBest); //, loss);
 			  } else {
 			  	learner.weightUpdate(epoch, translationId, target, argmax, loss);
 			  }
@@ -2031,6 +2040,7 @@ public class Phrasal {
 
 }
 
+@SuppressWarnings("unused")
 class IdScorePair implements Comparable<IdScorePair> {
 	public final int id;
 	public final double score;

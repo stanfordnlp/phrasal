@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -7,8 +7,6 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
@@ -35,18 +33,16 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
   private boolean addEOS;
   private boolean noGapAtEnd;
 
+  @SuppressWarnings("unused")
   public DTULinearDistortionFeaturizer() {
-    // Disable "standard" LinearDistortion (hack):
-    edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
     featureTypes = new LinearDistortionType[0];
     featureNames = new String[0];
-    addEOS = false;
+    addEOS = true;
     noGapAtEnd = false;
   }
 
+  @SuppressWarnings("unused")
   public DTULinearDistortionFeaturizer(String... args) {
-    // Disable "standard" LinearDistortion (hack):
-    edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer.ACTIVE = false;
     List<String> featureTypesL = new ArrayList<String>();
     for (String arg : args) {
       if (arg.equals(EOS_DISTORTION)) {

@@ -84,14 +84,14 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
                   //System.err.printf("dtu[%d]: %s\n", i, dtus[i].toString());
                 }
                 transOpts.add(
-                    new DTUOption<IString>(intTransOpt.scores, scoreNames,
+                    new DTUOption<IString>(intTransOpt.id, intTransOpt.scores, scoreNames,
                         dtus, new RawSequence(s.foreign), intTransOpt.alignment));
               } else {
                 // No gaps in target:
                 RawSequence<IString> translation = new RawSequence<IString>(intTransOpt.translation,
                      IString.identityIndex());
                 transOpts.add(
-                     new TranslationOption<IString>(intTransOpt.scores, scoreNames,
+                     new TranslationOption<IString>(intTransOpt.id, intTransOpt.scores, scoreNames,
                           translation, new RawSequence(s.foreign), intTransOpt.alignment));
               }
 
