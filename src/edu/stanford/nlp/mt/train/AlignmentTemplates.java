@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 
+import edu.stanford.nlp.mt.base.DynamicByteArrayIndex;
 import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.IntegerArrayIndex;
@@ -36,8 +37,8 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
 
   private final IntegerArrayIndex fIndex,
      index = new DynamicIntegerArrayIndex(),
-     aIndex = new DynamicIntegerArrayIndex(),
-     eIndex = new DynamicIntegerArrayIndex();
+     aIndex = new DynamicByteArrayIndex(),
+     eIndex = new DynamicByteArrayIndex();
 
   private final ArrayList<Int2IntArrayMap> aCounter = new ArrayList<Int2IntArrayMap>();
 

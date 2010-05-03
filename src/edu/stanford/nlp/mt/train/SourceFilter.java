@@ -78,40 +78,6 @@ public class SourceFilter {
     }
   }
 
-  /*
-  private void extractDTUPhrasesFromLineOld(String fLine, int maxPhraseLenF, int maxSpanF) {
-    fLine = fLine.trim();
-    Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
-    for(int i=0; i<f.size(); ++i) {
-      for(int j=i; j<f.size() && j-i<maxSpanF; ++j) {
-        // Exponential!!:
-        if(j-i <= 1) {
-          Sequence<IString> fPhrase = f.subsequence(i,j+1);
-          if(SHOW_PHRASE_RESTRICTION)
-            System.err.printf("restrict to phrase (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
-          fFilter.indexOf(Sequences.toIntArray(fPhrase), true);
-        } else {
-          int bits = (j-i)-1;
-          int combinations = 1 << bits;
-          int firstBit = 1 << (bits+1);
-          for(int k = 0; k < combinations; ++k) {
-            int mask = firstBit + (k<<1) + 1;
-            BitSet bs = BitSetUtils.toBitSet(mask, i);
-            if(bs.cardinality() <= maxPhraseLenF) {
-              Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f, bs, null,2);
-              if(fPhrase != null) {
-                if(SHOW_PHRASE_RESTRICTION)
-                  System.err.printf("restrict to dtu (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
-                fFilter.indexOf(Sequences.toIntArray(fPhrase), true);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  */
-
   static class PartialBitSet {
 
     private static final int MAX_GAP = 2;

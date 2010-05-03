@@ -22,7 +22,7 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
   }
 
   public DTUTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
-		super(phraseFeaturizer, scorer, filename, true);
+		super(phraseFeaturizer, scorer, filename);
     System.err.println("DTU phrase table: "+filename);
     File f = new File(filename);
     name = String.format("DTU(%s)", f.getName());
@@ -153,6 +153,8 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
     int[] foreignInts = Sequences.toIntArray(foreignSequence);
     int[] translationInts = Sequences.toIntArray(translationSequence);
 		int fIndex = foreignIndex.indexOf(foreignInts, true);
+    int eIndex = translationIndex.indexOf(translationInts, true);
+    int id = translationIndex.indexOf(new int[] {fIndex, eIndex}, true);
 
     if (translations.size() <= fIndex) {
 			translations.ensureCapacity(fIndex+1);
@@ -174,7 +176,7 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
       }
     }
     if (numSpans == 1) {
-      intTransOpts.add(new IntArrayTranslationOption(translationInts, scores, alignment));
+      intTransOpts.add(new IntArrayTranslationOption(id, translationIndex.get(eIndex), scores, alignment));
       //System.err.printf("no gap in target: {{{%s}}} {{{%s}}} {{{%s}}}\n", translationSequence, foreignSequence, Arrays.toString(scores));
     } else {
       if(numSpans > maxTargetSpans)
@@ -193,7 +195,7 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
         }
         ++pos;
       }
-      intTransOpts.add(new DTUIntArrayTranslationOption(dtus, scores, alignment));
+      intTransOpts.add(new DTUIntArrayTranslationOption(id, dtus, scores, alignment));
     }
   }
 
@@ -201,8 +203,8 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
 
     final int[][] dtus;
 
-    public DTUIntArrayTranslationOption(int[][] dtus, float[] scores, PhraseAlignment alignment) {
-      super(new int[0], scores, alignment);
+    public DTUIntArrayTranslationOption(int id, int[][] dtus, float[] scores, PhraseAlignment alignment) {
+      super(id, new int[0], scores, alignment);
       this.dtus = dtus;
     }
 	}

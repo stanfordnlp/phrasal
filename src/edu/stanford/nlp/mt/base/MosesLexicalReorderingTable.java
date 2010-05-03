@@ -12,7 +12,7 @@ import java.io.*;
  *
  */
 public class MosesLexicalReorderingTable {
-	final DynamicIntegerArrayIndex index = new DynamicIntegerArrayIndex();
+	final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
 	
 	/** 
 	 * Reordering types
@@ -51,23 +51,23 @@ public class MosesLexicalReorderingTable {
 	 */
 	
 	
-	public enum ReorderingTypes {monotoneWithPrevious, swapWithPrevious, discontinousWithPrevious, nonMonotoneWithPrevious, 
-		                  monotoneWithNext, swapWithNext, discontinousWithNext, nonMonotoneWithNext};
+	public enum ReorderingTypes {monotoneWithPrevious, swapWithPrevious, discontinuousWithPrevious, nonMonotoneWithPrevious,
+		                  monotoneWithNext, swapWithNext, discontinuousWithNext, nonMonotoneWithNext}
 	
-	enum ConditionTypes {f, e, fe};
+	enum ConditionTypes {f, e, fe}
 	
 	static final ReorderingTypes[] msdPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
 			ReorderingTypes.swapWithPrevious,
-			ReorderingTypes.discontinousWithPrevious};
+			ReorderingTypes.discontinuousWithPrevious};
 	
 	static final ReorderingTypes[] msdBidirectionalPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
             ReorderingTypes.swapWithPrevious,
-            ReorderingTypes.discontinousWithPrevious,
+            ReorderingTypes.discontinuousWithPrevious,
             ReorderingTypes.monotoneWithNext, 
             ReorderingTypes.swapWithNext, 
-            ReorderingTypes.discontinousWithNext
+            ReorderingTypes.discontinuousWithNext
 	};
 
 	static final ReorderingTypes[] monotonicityPositionalMapping = {
@@ -118,7 +118,7 @@ public class MosesLexicalReorderingTable {
 	
 	private int[] mergeInts(int[] array1, int[] array2) {
 		int[] combinedInts = new int[array1.length+1+array2.length];
-		for (int i = 0; i < array1.length; i++) combinedInts[i] = array1[i];
+    System.arraycopy(array1, 0, combinedInts, 0, array1.length);
 		combinedInts[array1.length] = internalDelim.id;
 		for (int i = 0, offset = array1.length + 1; i < array2.length; i++) combinedInts[offset+i] = array2[i];
 		return combinedInts;
@@ -154,7 +154,7 @@ public class MosesLexicalReorderingTable {
 	public MosesLexicalReorderingTable(String filename) throws IOException {
 		String filetype = init(filename, null);
 		this.filetype = filetype;  
-		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);;
+		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);
 		this.conditionType = fileTypeToConditionType.get(filetype);
 		
 	}
@@ -165,7 +165,7 @@ public class MosesLexicalReorderingTable {
 			throw new RuntimeException(String.format("Reordering file '%s' of type %s not %s\n", filename, filetype, desiredFileType));
 		}
 		this.filetype = filetype;  
-		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);;
+		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);
 		this.conditionType = fileTypeToConditionType.get(filetype);
 		
 	}
@@ -251,7 +251,7 @@ public class MosesLexicalReorderingTable {
 				throw new RuntimeException(String.format("File type '%s' requires that %d scores be provided for each entry, however only %d were found (line %d)", filetype, positionalMapping.length, scoreList.size(), reader.getLineNumber()));
 			}
 
-			int[] indexInts = null;
+			int[] indexInts; // = null;
 			if (conditionType == ConditionTypes.e || conditionType == ConditionTypes.f) {
 				IString[] tokens = IStrings.toIStringArray(phrase1TokenList);
 				indexInts = IStrings.toIntArray(tokens);

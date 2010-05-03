@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <FV>
  */
 public class CollapsedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>, IsolatedPhraseFeaturizer<TK, FV> {
-	final List<IncrementalFeaturizer<TK,FV>> featurizers;
+	final public List<IncrementalFeaturizer<TK,FV>> featurizers;
 	final double[] featurizerWts;
 	final Map<FV,Double> weightMap;
 	final FV combinedFeatureName;

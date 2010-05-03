@@ -1,33 +1,73 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.efeat.HierarchicalReorderingFeaturizer;
+import edu.stanford.nlp.mt.decoder.efeat.HierarchicalReorderingFeaturizer.HierBlock;
+import edu.stanford.nlp.mt.decoder.feat.CollapsedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author Michel Galley
  */
-public class MSDRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
+public class MSDRecombinationFilter implements RecombinationFilter<Hypothesis<IString, String>> {
+
+  // Don't set to true (this dramatically reduces the amount of recombination, and hurts search)
+  private static final boolean HIERARCHICAL_RECOMBINATION = false;
+
+  private final List<StatefulFeaturizer<IString,String>> hierFeaturizers = new LinkedList<StatefulFeaturizer<IString, String>>();
+
+  public MSDRecombinationFilter(List<IncrementalFeaturizer<IString, String>> featurizers) {
+
+    System.err.println("MSD recombination enabled.");
+
+    if (HIERARCHICAL_RECOMBINATION) {
+      Deque<IncrementalFeaturizer<IString,String>> tmpList = new LinkedList<IncrementalFeaturizer<IString,String>>(featurizers);
+
+      while (!tmpList.isEmpty()) {
+        IncrementalFeaturizer<IString,String> el = tmpList.removeLast();
+        if (el instanceof CombinedFeaturizer) {
+          tmpList.addAll(((CombinedFeaturizer<IString,String>)el).featurizers);
+        } else if (el instanceof CollapsedFeaturizer) {
+          tmpList.addAll(((CollapsedFeaturizer<IString,String>)el).featurizers);
+        } else {
+          if (el instanceof HierarchicalReorderingFeaturizer) {
+            hierFeaturizers.add((StatefulFeaturizer<IString,String>)el);
+            //System.err.println("ADD: "+el);
+          }
+        }
+      }
+    }
+  }
 
   @SuppressWarnings("unchecked")
-	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
+	public RecombinationFilter<Hypothesis<IString,String>> clone() {
 		try {
-			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
+			return (RecombinationFilter<Hypothesis<IString,String>>)super.clone();
 		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
 	}
 
-  private int lastOptionLeftEdge(Hypothesis<TK,FV> hyp) {
+  private int lastOptionLeftEdge(Hypothesis<IString,String> hyp) {
 		if (hyp.translationOpt == null)
 			return -1;
     return hyp.translationOpt.foreignPos-1;
 	}
 
-  private int lastOptionRightEdge(Hypothesis<TK,FV> hyp) {
+  private int lastOptionRightEdge(Hypothesis<IString,String> hyp) {
 		if (hyp.translationOpt == null)
 			return 0;
     return hyp.translationOpt.foreignCoverage.length();
 	}
 	
 	@Override
-	public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
+	public boolean combinable(Hypothesis<IString,String> hypA, Hypothesis<IString,String> hypB) {
+
 		if (lastOptionRightEdge(hypA) != lastOptionRightEdge(hypB))
       // same as LinearDistortionRecombinationFilter:
       return false;
@@ -35,6 +75,7 @@ public class MSDRecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
     int leftB = lastOptionLeftEdge(hypB);
     if (leftA == leftB)
       return true;
+
     // Now hypA and hypB may look like this:
     // hypA: y y . . . . x x . . . z z
     // hypB: y y y . . x x x . . . z z
@@ -80,11 +121,23 @@ public class MSDRecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
       return false;
     }
 
+    if (HIERARCHICAL_RECOMBINATION) {
+      for (StatefulFeaturizer<IString,String> featurizer : hierFeaturizers) {
+        HierBlock hbA = (HierBlock) hypA.featurizable.getState(featurizer);
+        HierBlock hbB = (HierBlock) hypB.featurizable.getState(featurizer);
+        //System.err.printf("CMP: %d<->%d %d<->%d\n", hbA.fStart(), hbA.fEnd(), hbB.fStart(), hbB.fEnd());
+        if (hbA != null && hbB != null)
+          if (hbA.fStart() != hbB.fStart() || hbA.fEnd() != hbB.fEnd()) {
+            return false;
+        }
+      }
+    }
+
     return true;
   }
 
 	@Override
-	public long recombinationHashCode(Hypothesis<TK, FV> hyp) {
+	public long recombinationHashCode(Hypothesis<IString,String> hyp) {
 		return lastOptionRightEdge(hyp);
 	}
 

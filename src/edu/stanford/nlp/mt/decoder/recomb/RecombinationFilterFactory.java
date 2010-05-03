@@ -100,7 +100,7 @@ public class RecombinationFilterFactory {
 			filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
 
       if (rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD))
-        filters.add(new MSDRecombinationFilter<IString, String>());
+        filters.add(new MSDRecombinationFilter(featurizers));
 
       return new CombinedRecombinationFilter<Hypothesis<IString, String>>(filters);
 
@@ -118,7 +118,7 @@ public class RecombinationFilterFactory {
 			filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
       filters.add(new DTURecombinationFilter<IString,String>());
       if (rfName.equals(DTU_TRANSLATION_MODEL_MSD))
-        filters.add(new MSDRecombinationFilter<IString, String>());
+        filters.add(new MSDRecombinationFilter(featurizers));
       return new CombinedRecombinationFilter<Hypothesis<IString, String>>(filters);
     }
 		throw new RuntimeException(String.format(

@@ -139,7 +139,7 @@ public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IStrin
 	}
 	
 	private boolean usePrior(MosesLexicalReorderingTable.ReorderingTypes type) {
-		switch(type) { case monotoneWithNext: case swapWithNext: case discontinousWithNext: case nonMonotoneWithNext: return true; }
+		switch(type) { case monotoneWithNext: case swapWithNext: case discontinuousWithNext: case nonMonotoneWithNext: return true; }
 		return false;
 	}
 	
@@ -147,7 +147,7 @@ public class LexicalReorderingFeaturizer implements IncrementalFeaturizer<IStrin
 		switch (type) {
 		case monotoneWithPrevious: case monotoneWithNext: return monotone;
 		case swapWithPrevious: case swapWithNext: return swap;
-		case discontinousWithPrevious: case discontinousWithNext: return  !(monotone || swap);
+		case discontinuousWithPrevious: case discontinuousWithNext: return  !(monotone || swap);
 		case nonMonotoneWithPrevious: case nonMonotoneWithNext: return !monotone;
 		}
 		return false;

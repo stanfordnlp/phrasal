@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
 
@@ -140,6 +141,15 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
       wrapperIndex = new WrapperIndex();
     }
     return wrapperIndex;
+  }
+
+  public static void load(String fileName) {
+    for(String line : ObjectBank.getLineIterator(fileName)) {
+      for (String word : line.split("\\s+")) {
+        System.err.println("adding: "+word);
+        new IString(word);
+      }
+    }
   }
 
   static private class WrapperIndex implements Index<IString> {

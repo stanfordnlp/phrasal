@@ -77,6 +77,7 @@ public class Phrasal {
   public static final String GAPS_OPT = "gaps";
   public static final String MAX_FLOATING_PHRASES_OPT = "max-floating-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
+  public static final String ISTRING_VOC_OPT = "istring-vocabulary";
 
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
 
@@ -113,7 +114,7 @@ public class Phrasal {
 				WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
 				MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
 				LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
-        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT
+        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT, ISTRING_VOC_OPT
     }));
 		IGNORED_FIELDS.addAll(Arrays.asList(new String[] { INPUT_FACTORS_OPT,
 				MAPPING_OPT, FACTOR_DELIM_OPT }));
@@ -208,7 +209,12 @@ public class Phrasal {
 	}
 
   static void initStaticMembers(Map<String, List<String>> config) {
+
+    if (config.containsKey(ISTRING_VOC_OPT))
+      IString.load(config.get(ISTRING_VOC_OPT).get(0));
+
     withGaps = config.containsKey(GAPS_OPT);
+    PharaohPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(GAPS_IN_FUTURE_COST_OPT).get(0));
     if (config.containsKey(DISTINCT_NBEST_LIST_OPT))

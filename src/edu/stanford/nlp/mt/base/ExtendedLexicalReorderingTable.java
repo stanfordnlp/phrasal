@@ -7,22 +7,12 @@ import java.io.*;
 
 
 /**
- * Supports many more types, not just M, S, D.
  * 
  * @author danielcer
  * @author Michel Galley
  *
  */
 public class ExtendedLexicalReorderingTable {
-	public static final DynamicIntegerArrayIndex index = new DynamicIntegerArrayIndex();
-
-  // MG: 
-  // Fairly confident could just rename ExtendedLexicalReorderingTable to 
-  // ExtendedLexicalReorderingTable without breaking anything, 
-  // though some people may want to see this extra code (which is only used by
-  // experimental featurizers) in some other class. 
-  // I didn't find any trivial way to have ExtendedLexicalReorderingTable
-  // extend MosesLexicalReorderingTable. Any suggestion?
 
 	/** 
 	 * Reordering types
@@ -59,53 +49,48 @@ public class ExtendedLexicalReorderingTable {
 	 * @author danielcer
 	 *
 	 */
-	
-	
-	public enum ReorderingTypes {monotoneWithPrevious, swapWithPrevious, discontinousWithPrevious, nonMonotoneWithPrevious, 
-		                  monotoneWithNext, swapWithNext, discontinousWithNext, nonMonotoneWithNext, 
+
+	public enum ReorderingTypes {monotoneWithPrevious, swapWithPrevious, discontinuousWithPrevious, nonMonotoneWithPrevious,
+		                  monotoneWithNext, swapWithNext, discontinuousWithNext, nonMonotoneWithNext,
                       // types not in moses:
-                      discontinous2WithPrevious, discontinous2WithNext, fromStart, toStart, fromEnd, toEnd };
+                      discontinuous2WithPrevious, discontinuous2WithNext }
 	
-	enum ConditionTypes {f, e, fe};
+	enum ConditionTypes {f, e, fe}
 	
 	static final ReorderingTypes[] msdPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
 			ReorderingTypes.swapWithPrevious,
-			ReorderingTypes.discontinousWithPrevious};
+			ReorderingTypes.discontinuousWithPrevious};
 	
 	static final ReorderingTypes[] msdBidirectionalPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
             ReorderingTypes.swapWithPrevious,
-            ReorderingTypes.discontinousWithPrevious,
+            ReorderingTypes.discontinuousWithPrevious,
             ReorderingTypes.monotoneWithNext, 
             ReorderingTypes.swapWithNext, 
-            ReorderingTypes.discontinousWithNext
+            ReorderingTypes.discontinuousWithNext
 	};
 
 	static final ReorderingTypes[] msd2BidirectionalPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
             ReorderingTypes.swapWithPrevious,
-            ReorderingTypes.discontinousWithPrevious,
-            ReorderingTypes.discontinous2WithPrevious,
+            ReorderingTypes.discontinuousWithPrevious,
+            ReorderingTypes.discontinuous2WithPrevious,
             ReorderingTypes.monotoneWithNext, 
             ReorderingTypes.swapWithNext, 
-            ReorderingTypes.discontinousWithNext,
-            ReorderingTypes.discontinous2WithNext
+            ReorderingTypes.discontinuousWithNext,
+            ReorderingTypes.discontinuous2WithNext
 	};
 
 	static final ReorderingTypes[] msd2seBidirectionalPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
             ReorderingTypes.swapWithPrevious,
-            ReorderingTypes.discontinousWithPrevious,
-            ReorderingTypes.discontinous2WithPrevious,
+            ReorderingTypes.discontinuousWithPrevious,
+            ReorderingTypes.discontinuous2WithPrevious,
             ReorderingTypes.monotoneWithNext, 
             ReorderingTypes.swapWithNext, 
-            ReorderingTypes.discontinousWithNext,
-            ReorderingTypes.discontinous2WithNext,
-            ReorderingTypes.fromStart,
-            ReorderingTypes.toStart,
-            ReorderingTypes.fromEnd,
-            ReorderingTypes.toEnd
+            ReorderingTypes.discontinuousWithNext,
+            ReorderingTypes.discontinuous2WithNext
 	};
 
 	static final ReorderingTypes[] monotonicityPositionalMapping = {
@@ -137,8 +122,6 @@ public class ExtendedLexicalReorderingTable {
 		fileTypeToReorderingType.put("monotonicity-bidirectional-f", monotonicityBidirectionalMapping);
 	}
 	
-	private static final IString internalDelim = new IString("|||");
-	
 	static final Map<String, ConditionTypes> fileTypeToConditionType = new HashMap<String,ConditionTypes>();
 	
 	static {
@@ -162,37 +145,30 @@ public class ExtendedLexicalReorderingTable {
 	public final ReorderingTypes[] positionalMapping;
 	public final ConditionTypes conditionType;
 	
-	private int[] mergeInts(int[] array1, int[] array2) {
-		int[] combinedInts = new int[array1.length+1+array2.length];
-		for (int i = 0; i < array1.length; i++) combinedInts[i] = array1[i];
-		combinedInts[array1.length] = internalDelim.id;
-		for (int i = 0, offset = array1.length + 1; i < array2.length; i++) combinedInts[offset+i] = array2[i];
-		return combinedInts;
+	private static int[] mergeInts(int[] array1, int[] array2) {
+    return new int[] {
+      PharaohPhraseTable.foreignIndex.indexOf(array1,true),
+      PharaohPhraseTable.translationIndex.indexOf(array2,true)
+    };
 	}
-	
-	/**
-	 * 
-	 */
-	public float[] getReorderingScores(Sequence<IString> foreign, Sequence<IString> translation) {
-		int[] indexInts = null;
-		
-		if (conditionType == ConditionTypes.f) {
-			indexInts = Sequences.toIntArray(foreign);
+
+  public float[] getReorderingScores(int phraseId) {
+
+    int reorderingId = -1;
+
+    if (conditionType == ConditionTypes.f) {
+      reorderingId = PharaohPhraseTable.translationIndex.get(phraseId)[0];
 		} else if (conditionType == ConditionTypes.e) {
-			indexInts = Sequences.toIntArray(translation);
+      reorderingId = PharaohPhraseTable.translationIndex.get(phraseId)[1];
 		} else if (conditionType == ConditionTypes.fe) {
-			int[] fInts = Sequences.toIntArray(foreign);
-			int[] tInts = Sequences.toIntArray(translation);
-			indexInts = mergeInts(fInts, tInts);
+      reorderingId = phraseId;
 		}
-		
-		int idx = index.indexOf(indexInts);
-		
-		if (idx < 0) return null;
-		
-		return (float[]) reorderingScores.get(idx);
-	}
-	
+
+    if (reorderingId < 0) return null;
+
+    return (float[]) reorderingScores.get(reorderingId);
+  }
+
 	/**
 	 * 
 	 * @throws IOException
@@ -200,7 +176,7 @@ public class ExtendedLexicalReorderingTable {
 	public ExtendedLexicalReorderingTable(String filename) throws IOException {
 		String filetype = init(filename, null);
 		this.filetype = filetype;  
-		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);;
+		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);
 		this.conditionType = fileTypeToConditionType.get(filetype);
 		
 	}
@@ -211,12 +187,12 @@ public class ExtendedLexicalReorderingTable {
 			throw new RuntimeException(String.format("Reordering file '%s' of type %s not %s\n", filename, filetype, desiredFileType));
 		}
 		this.filetype = filetype;  
-		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);;
+		this.positionalMapping = (ReorderingTypes[])fileTypeToReorderingType.get(filetype);
 		this.conditionType = fileTypeToConditionType.get(filetype);
   }
 
   private String init(String filename, String type) throws IOException {
-		System.gc();
+    System.gc();
 		Runtime rt = Runtime.getRuntime();
 		long preTableLoadMemUsed = rt.totalMemory()-rt.freeMemory();
 		long startTimeMillis = System.currentTimeMillis();
@@ -298,7 +274,7 @@ public class ExtendedLexicalReorderingTable {
 				throw new RuntimeException(String.format("File type '%s' requires that %d scores be provided for each entry, however only %d were found (line %d)", filetype, positionalMapping.length, scoreList.size(), reader.getLineNumber()));
 			}
 
-			int[] indexInts = null;
+			final int[] indexInts;
 			if (conditionType == ConditionTypes.e || conditionType == ConditionTypes.f) {
 				IString[] tokens = IStrings.toIStringArray(phrase1TokenList);
 				indexInts = IStrings.toIntArray(tokens);				
@@ -320,7 +296,7 @@ public class ExtendedLexicalReorderingTable {
 				}
 			}
 			
-			int idx = index.indexOf(indexInts, true);
+			int idx = PharaohPhraseTable.translationIndex.indexOf(indexInts, true);
 			/* if (idx != reorderingScores.size()) {
         System.err.println("Current index: "+idx);
         System.err.println("Reordering score size: "+reorderingScores.size());
@@ -332,7 +308,7 @@ public class ExtendedLexicalReorderingTable {
 			reorderingScores.set(idx,scores);
 			//reorderingScores.add(scores);
 		}
-		System.gc();
+    System.gc();
 		long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
 		long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
 		System.err.printf("Done loading reordering table: %s (mem used: %d MiB time: %.3f s)\n", filename, 
@@ -355,9 +331,11 @@ public class ExtendedLexicalReorderingTable {
 		System.out.print("\n>");
 		for (String query = reader.readLine(); query != null; query = reader.readLine()) {
 			String[] fields = query.split("\\s*\\|\\|\\|\\s*");
-			Sequence<IString> foreign = new RawSequence<IString>(IStrings.toIStringArray(fields[0].split("\\s+")));
-			Sequence<IString> translation = new RawSequence<IString>(IStrings.toIStringArray(fields[1].split("\\s+")));
-			float[] scores = mlrt.getReorderingScores(foreign, translation);
+			int[] foreign = IStrings.toIntArray(IStrings.toIStringArray(fields[0].split("\\s+")));
+			int[] translation = IStrings.toIntArray(IStrings.toIStringArray(fields[1].split("\\s+")));
+      int[] merged = mergeInts(foreign, translation);
+      int id = PharaohPhraseTable.translationIndex.indexOf(merged);
+			float[] scores = mlrt.getReorderingScores(id);
 			for (int i = 0; i < scores.length; i++) {
 				System.out.printf("%s: %e\n", mlrt.positionalMapping[i], scores[i]);
 			}

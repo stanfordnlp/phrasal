@@ -13,7 +13,8 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  * @author Daniel Cer
  */
 public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> implements PhraseTable<IString> {
-	public static final String FIVESCORE_PHI_t_f = "phi(t|f)";
+
+  public static final String FIVESCORE_PHI_t_f = "phi(t|f)";
 	public static final String FIVESCORE_LEX_t_f = "lex(t|f)";
 	public static final String FIVESCORE_PHI_f_t = "phi(f|t)";
 	public static final String FIVESCORE_LEX_f_t = "lex(f|t)";
@@ -22,7 +23,6 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES = { 
 		FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t, FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY };
 	public static final String[] CANONICAL_ONESCORE_SCORE_TYPES = {ONESCORE_P_t_f};
-	public static final boolean DEFAULT_EQUIVALENCE_CUTTOFFS = true;
 
   public static final String TRIE_INDEX_PROPERTY = "TriePhraseTable";
   public static final boolean TRIE_INDEX = Boolean.parseBoolean(System.getProperty(TRIE_INDEX_PROPERTY, "false"));
@@ -32,6 +32,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 
   public static final String CUSTOM_SCORES_PROPERTY = "customScores";
   public static final String CUSTOM_SCORES = System.getProperty(CUSTOM_SCORES_PROPERTY);
+
+  static IntegerArrayIndex foreignIndex, translationIndex;
 
   static String[] customScores;
 
@@ -76,16 +78,16 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	// java 6 64-bit  254 MiB
 	/////////////////////////////////////////////////////////////////
 	
-	final IntegerArrayIndex foreignIndex;
-	
 	int longestForeignPhrase;
 	
 	protected static class IntArrayTranslationOption implements Comparable<IntArrayTranslationOption> {
 		final int[] translation;
 		final float[] scores;
 		final PhraseAlignment alignment;
+    final int id;
 		
-		public IntArrayTranslationOption(int[] translation, float[] scores, PhraseAlignment alignment) {
+		public IntArrayTranslationOption(int id, int[] translation, float[] scores, PhraseAlignment alignment) {
+      this.id = id;
 			this.translation = translation;
 			this.scores = scores;
 			this.alignment = alignment;
@@ -117,6 +119,8 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 		int[] foreignInts = Sequences.toIntArray(foreignSequence);
 		int[] translationInts = Sequences.toIntArray(translationSequence);
 		int fIndex = foreignIndex.indexOf(foreignInts, true);
+    int eIndex = translationIndex.indexOf(translationInts, true);
+    int id = translationIndex.indexOf(new int[] {fIndex, eIndex}, true);
 		/*System.err.printf("foreign ints: %s translation ints: %s\n", Arrays.toString(foreignInts),
 				Arrays.toString(translationInts));
 		System.err.printf("fIndex: %d\n", fIndex); */
@@ -129,22 +133,18 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			intTransOpts = new LinkedList<IntArrayTranslationOption>();
 			translations.set(fIndex, intTransOpts);
 		}
-		intTransOpts.add(new IntArrayTranslationOption(translationInts, scores, alignment));
+		intTransOpts.add(new IntArrayTranslationOption(id, translationIndex.get(eIndex), scores, alignment));
 	}
-
-  public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
-    this(phraseFeaturizer, scorer, filename, TRIE_INDEX);
-  }
 
   /**
 	 * 
 	 * @throws IOException
 	 */
-	public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename, boolean trieIndex) throws IOException {
+	public PharaohPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
 		super(phraseFeaturizer, scorer);
     File f = new File(filename);
 		name = String.format("Pharaoh(%s)", f.getName());
-		foreignIndex = trieIndex ? new TrieIntegerArrayIndex() : new DynamicIntegerArrayIndex();
+		//arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new DynamicIntegerArrayIndex();
 		translations = new ArrayList<List<IntArrayTranslationOption>>();
 		int countScores = init(f);
 		scoreNames = getScoreNames(countScores);
@@ -317,7 +317,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			RawSequence<IString> translation = new RawSequence<IString>(intTransOpt.translation, 
 					IString.identityIndex());
 			transOpts.add( 
-					new TranslationOption<IString>(intTransOpt.scores, scoreNames,
+					new TranslationOption<IString>(intTransOpt.id, intTransOpt.scores, scoreNames,
 							translation,
 							rawForeign, intTransOpt.alignment));
     }
@@ -338,7 +338,7 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
     long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
     double totalSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
     System.err.printf("size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n", 
-      ppt.foreignIndex.size(), totalSecs, totalMemory, freeMemory);
+      foreignIndex.size(), totalSecs, totalMemory, freeMemory);
 
 		List<TranslationOption<IString>> translationOptions = 
 			ppt.getTranslationOptions(new SimpleSequence<IString>(IStrings.toIStringArray(phrase.split("\\s+"))));
@@ -372,4 +372,10 @@ public class PharaohPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			List<Sequence<IString>> tranList) {
 		// no op
   }
+
+  public static void createIndex(boolean withGaps) {
+    foreignIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex() : new DynamicIntegerArrayIndex();
+    translationIndex = new DynamicIntegerArrayIndex();
+  }
+
 }
