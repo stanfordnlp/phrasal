@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.syntax.ghkm;
 import java.util.Properties;
 
 /**
- * Collect statistics (e.g., relative frequences estimation, Markovization) on GHKM rules.
+ * Collect statistics (e.g., relative frequency estimation, Markovization) on GHKM rules.
  * 
  * @author Michel Galley (mgalley@cs.stanford.edu)
  */
@@ -31,13 +31,6 @@ public interface FeatureExtractor {
    * may simply return null.
    */
   public double[] score(RuleIndex.RuleId rId);
-
-  /**
-   * Score given rule instance (each symbol of the rule links to the 
-   * AlignmentTreeNode from which it was extracted). This function may simply 
-   * return null.
-   */
-  public double[] score(RuleInstance r);
 
   public void save(String prefixName);
 }

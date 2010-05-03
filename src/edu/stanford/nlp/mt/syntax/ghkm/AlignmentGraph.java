@@ -80,7 +80,7 @@ public class AlignmentGraph {
     maxCompositions = m;
   }
 
-  private void setFrontierNodes() {
+  protected void setFrontierNodes() {
 
     if (eLeaves.size() != align.e().size()) {
       System.err.println(align.e().toString());

@@ -319,10 +319,12 @@ public class RuleExtractor {
 
       // Features for each rule:
       for (FeatureExtractor extractor : extractors) {
-        for (double s : extractor.score(rId)) {
-          System.out.print(" ");
-          System.out.print((float)s);
-        }
+        double[] scores = extractor.score(rId);
+        if (scores != null)
+          for (double s : scores) {
+            System.out.print(" ");
+            System.out.print((float)s);
+          }
       }
 
       System.out.println();

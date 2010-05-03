@@ -36,6 +36,5 @@ public class AbstractFeatureExtractor implements FeatureExtractor {
   public void extractFeatures(RuleIndex.RuleId r) {}
   public void extractFeatures(RuleInstance r) {}
   public double[] score(RuleIndex.RuleId r)  { return null; }
-  public double[] score(RuleInstance r) { return null; }
   public void save(String prefixName) {}
 }
