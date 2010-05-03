@@ -61,10 +61,10 @@
 |||
 
 [additional-featurizers]
-mt.decoder.efeat.HierarchicalReorderingFeaturizer(dev07-nw.tables/lo-hier.msd2-bidirectional-fe.gz,msd2-bidirectional-fe,backtrack,contiuousDefault)
-mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-nw.rsc_google.lm.gz,LM2)
-mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-nw.flt_bbn1.lm.gz,LM3)
-mt.decoder.efeat.ArabicInitialVerbFeaturizer()
+edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer(dev07-nw.tables/lo-hier.msd2-bidirectional-fe.gz,msd2-bidirectional-fe)
+edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-nw.rsc_google.lm.gz,LM2)
+edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-nw.flt_bbn1.lm.gz,LM3)
+edu.stanford.nlp.mt.decoder.efeat.ArabicInitialVerbFeaturizer()
 
 
 [n-best-list]

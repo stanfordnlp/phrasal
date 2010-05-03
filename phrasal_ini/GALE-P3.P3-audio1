@@ -67,9 +67,9 @@
 |||
 
 [additional-featurizers]
-mt.decoder.efeat.HierarchicalReorderingFeaturizer(P3-audio1.tables/lo-hier.msd2-bidirectional-fe.gz,msd2-bidirectional-fe,backtrack,contiuousDefault)
-mt.decoder.feat.NGramLanguageModelFeaturizer(P3-audio1.rsc_google.lm.gz,LM2)
-mt.decoder.feat.NGramLanguageModelFeaturizer(P3-audio1.flt_bbn.lm.gz,LM3)
+edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer(P3-audio1.tables/lo-hier.msd2-bidirectional-fe.gz,msd2-bidirectional-fe)
+edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer(P3-audio1.rsc_google.lm.gz,LM2)
+edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer(P3-audio1.flt_bbn.lm.gz,LM3)
 
 [n-best-list]
 P3-audio1.mt06.v3-2lm-hr2-v17.500.200best

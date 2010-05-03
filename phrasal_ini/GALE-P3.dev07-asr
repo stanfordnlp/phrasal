@@ -67,9 +67,9 @@
 |||
 
 [additional-featurizers]
-mt.decoder.efeat.HierarchicalReorderingFeaturizer(dev07-asr.tables/lo-hier.msd2-bidirectional-fe.gz,msd2-bidirectional-fe,backtrack,contiuousDefault)
-mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-asr.rsc_google.lm.gz,LM2)
-mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-asr.flt_bbn.lm.gz,LM3)
+edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer(dev07-asr.tables/lo-hier.msd2-bidirectional-fe.gz,msd2-bidirectional-fe)
+edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-asr.rsc_google.lm.gz,LM2)
+edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer(dev07-asr.flt_bbn.lm.gz,LM3)
 
 
 [n-best-list]
