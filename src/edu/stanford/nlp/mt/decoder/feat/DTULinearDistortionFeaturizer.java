@@ -13,10 +13,13 @@ import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption.LinearDistortionType;
 
 /**
- * 
+ * TODO: move this version to efeat, and make it as in paper.
  * @author Michel Galley
  */
-public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IString, String> {
+public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, String> {
+
+  public static final String EXP_PROPERTY = "ExpDTU";
+  public static final boolean EXP = Boolean.parseBoolean(System.getProperty(EXP_PROPERTY, "false"));
 
 	public static final String DEBUG_PROPERTY = "DebugDTULinearDistortionFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -27,8 +30,12 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
   public static final String NO_GAP_AT_END = "NoGapAtEnd";
   public static final int GAP_AT_END_COST = 100;
 
+  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("dtuFutureCostDelay","1f"));
+
   private final LinearDistortionType[] featureTypes;
   private final String[] featureNames;
+
+  public final float futureCostDelay;
 
   private boolean addEOS;
   private boolean noGapAtEnd;
@@ -39,6 +46,8 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
     featureNames = new String[0];
     addEOS = true;
     noGapAtEnd = false;
+    futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
+    System.err.println("Future cost delay: "+futureCostDelay);
   }
 
   @SuppressWarnings("unused")
@@ -62,6 +71,8 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
       featureTypes[i] = LinearDistortionType.valueOf(args[i]);
       featureNames[i] = FEATURE_NAME+":"+featureTypes[i].name();
     }
+    futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
+    System.err.println("Future cost delay: "+futureCostDelay);
   }
 
   @Override
@@ -72,8 +83,8 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
 	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
-    if(f instanceof DTUFeaturizable)
-      if(((DTUFeaturizable)f).targetOnly) {
+    if (f instanceof DTUFeaturizable)
+      if (((DTUFeaturizable)f).targetOnly) {
         return null;
       }
 
@@ -123,36 +134,35 @@ public class DTULinearDistortionFeaturizer implements IncrementalFeaturizer<IStr
     // (2) Standard linear distortion features:
     ///////////////////////////////////////////
 
-    if(featureTypes.length == 0) {
-      int linearDistortion = f.linearDistortion + getEOSDistortion(f);
-      list.add(new FeatureValue<String>(FEATURE_NAME, -1.0*linearDistortion));
+    if (featureTypes.length == 0) {
+      int linearDistortion = f.linearDistortion;
+      if (addEOS)
+        linearDistortion += LinearFutureCostFeaturizer.getEOSDistortion(f);
+      float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this)) : 0.0f;
+      float futureCost;
+      if(f.done) {
+        futureCost = 0.0f;
+      } else {
+        futureCost = (1.0f-futureCostDelay)*LinearFutureCostFeaturizer.futureCost(f) + futureCostDelay*oldFutureCost;
+        f.setState(this, futureCost);
+      }
+      float deltaCost = futureCost - oldFutureCost;
+      list.add(new FeatureValue<String>(FEATURE_NAME, -1.0*(linearDistortion+deltaCost)));
     } else {
+      // Experimental code:
+      assert (EXP);
       ConcreteTranslationOption<IString>
         priorOpt = (f.prior != null) ? f.prior.option : null,
         currentOpt = f.option;
       for (int i=0; i<featureTypes.length; ++i) {
         int linearDistortion = (priorOpt == null) ? f.option.foreignPos : priorOpt.linearDistortion(currentOpt, featureTypes[i]);
-        linearDistortion += getEOSDistortion(f);
+        if (addEOS)
+          linearDistortion += LinearFutureCostFeaturizer.getEOSDistortion(f);
         list.add(new FeatureValue<String>(featureNames[i], -1.0*linearDistortion));
       }
     }
 
     return list;
-  }
-
-  private int getEOSDistortion(Featurizable<IString,String> f) {
-    if(f.done && addEOS) {
-      int endGap = f.foreignSentence.size() - f.option.foreignCoverage.length();
-      //System.err.println("hyp span: "+f.hyp.foreignCoverage);
-      //System.err.println("opt span: "+f.option.foreignCoverage);
-      //System.err.println("opt text: "+f.option.abstractOption.foreign);
-      //System.err.println("len: "+f.option.foreignCoverage.length());
-      //System.err.println("size: "+f.foreignSentence.size());
-      //System.err.println("endGap: "+endGap);
-      assert(endGap >= 0);
-      return endGap;
-    }
-    return 0;
   }
 
   @Override

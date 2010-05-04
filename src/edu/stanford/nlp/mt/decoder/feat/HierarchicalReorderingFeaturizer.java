@@ -238,8 +238,8 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
           incomplete = (hb.fEnd()+1 != f.foreignSentence.size() || !hb.isPrefix());
         }
 
-        if (f.foreignSentence.size() < 20)
-          AlignmentGrid.printDecoderGrid(f, System.err);
+        //if (f.foreignSentence.size() < 15)
+        //  AlignmentGrid.printDecoderGrid(f, System.err);
         if (incomplete) dump(f);
         System.err.println("\n");
       }
@@ -250,9 +250,9 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       if (forwardOrientationComputation == ForwardOrientationComputation.hierarchical) {
         HierBlock hb = (HierBlock)f.getState(this);
         HierBlock phb = (f.prior != null) ? (HierBlock)f.prior.getState(this) : null;
-        int stackSz = (phb != null) ? (hb.stackSz-phb.stackSz) : (hb.stackSz-1);
-        if (stackSz > 0)
-          values.add(new FeatureValue<String>(NB_FEATURE_PREFIX, -1.0*stackSz));
+        int stackSzDelta = (phb != null) ? (hb.stackSz-phb.stackSz) : (hb.stackSz-1);
+        if (stackSzDelta != 0)
+          values.add(new FeatureValue<String>(NB_FEATURE_PREFIX, -1.0*stackSzDelta));
       }
     }
 
@@ -280,6 +280,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
 
     while (canMerge) {
       HierBlock prevBlock = null;
+      int merges = 0;
       
       if (curF.prior != null) {
 
@@ -290,6 +291,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
             System.err.printf
               ("HierarchicalReorderingFeaturizer: merged (%s) with (%s)\n", curCS, prevBlock.cs);
           curCS.or(prevBlock.cs);
+          ++merges;
         } else {
           canMerge = false;
           if (DETAILED_DEBUG)
@@ -303,7 +305,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       if (canMerge) {
         curF = prevBlock.previousF;
       } else {
-        HierBlock newBlock = new HierBlock(curCS,curF, prevBlock == null ? 1 : prevBlock.stackSz+1);
+        HierBlock newBlock = new HierBlock(curCS,curF, prevBlock == null ? 1 : (prevBlock.stackSz+1-merges));
         f.setState(this,newBlock);
         if(DETAILED_DEBUG)
           System.err.printf("HierarchicalReorderingFeaturizer: new block (%s)\n", curCS.toString());
