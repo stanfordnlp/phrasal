@@ -33,7 +33,7 @@ public abstract class AbstractTreeReader {
     return trees_.size();
   }
 
-  public static Sentence<HasWord> getWords(Tree t) {
+  public static ArrayList<HasWord> getWords(Tree t) {
     return t.yield();
   }
 

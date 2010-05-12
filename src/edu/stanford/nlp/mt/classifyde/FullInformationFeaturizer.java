@@ -58,7 +58,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     }
     int deIdxInPhrase = deIdxInSent-chNPrange.first;
     Tree maskedChNPTree = ExperimentUtils.maskIrrelevantDEs(chNPTree, deIdxInPhrase);
-    Sentence<TaggedWord> npYield = maskedChNPTree.taggedYield();
+    ArrayList<TaggedWord> npYield = maskedChNPTree.taggedYield();
 
     // (1) make feature list
 
@@ -88,7 +88,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
     }
 
     // get deIndices
-    Sentence<TaggedWord> sentence = chNPTree.taggedYield();
+    ArrayList<TaggedWord> sentence = chNPTree.taggedYield();
     int deIdx = deIdxInSent - chNPrange.first;
     
     if (ngram) {

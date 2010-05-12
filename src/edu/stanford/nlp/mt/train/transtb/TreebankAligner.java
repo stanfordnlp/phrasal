@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train.transtb;
 
+import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.ChineseUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -353,7 +354,7 @@ public class TreebankAligner {
 
   static String yield(Tree t) {
     Tree t2 = t.prune(new BobChrisTreeNormalizer.EmptyFilter());
-    return t2.yield().toString(false);
+    return Sentence.listToString(t2.yield(), false);
   }
 
 

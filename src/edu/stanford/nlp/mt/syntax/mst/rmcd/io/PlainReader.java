@@ -38,7 +38,7 @@ public class PlainReader extends DependencyReader {
 
     //System.err.printf("Reading line: {{{%s}}})\n", line);
     line = StringUtils.chomp(line);
-    Sentence<Word> sent = Sentence.toSentence(line.split("\\s+"));
+    ArrayList<Word> sent = Sentence.toUntaggedList(line.split("\\s+"));
     int length = sent.size();
     
     List<TaggedWord> taggedSent = null;

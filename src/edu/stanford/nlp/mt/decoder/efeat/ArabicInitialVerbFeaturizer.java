@@ -8,6 +8,7 @@ import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -178,7 +179,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
                          Sequence<IString> foreign) {
 
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
-    Sentence<TaggedWord> sentence = tagger.processSentence(Sentence.toSentence(Arrays.asList(words)));
+    ArrayList<TaggedWord> sentence = tagger.processSentence(Sentence.toUntaggedList(Arrays.asList(words)));
     tags = sentence.toArray(new TaggedWord[sentence.size()]);
 
     String taggedSent = Arrays.toString(tags);

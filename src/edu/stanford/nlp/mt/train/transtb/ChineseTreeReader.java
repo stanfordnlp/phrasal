@@ -33,7 +33,7 @@ public class ChineseTreeReader extends AbstractTreeReader {
     List<Tree> trees = new ArrayList<Tree>();
     for(Tree t : trees_) {
       StringBuilder sb = new StringBuilder();
-      Sentence<HasWord> hws = getWords(t);
+      ArrayList<HasWord> hws = getWords(t);
       //for (HasWord hw : hws) {
       for (HasWord hw : hws) {
         sb.append(hw.word());

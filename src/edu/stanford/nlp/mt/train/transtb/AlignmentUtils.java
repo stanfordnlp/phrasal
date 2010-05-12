@@ -221,7 +221,7 @@ public class AlignmentUtils {
     List<String> leaveslist = new ArrayList<String>();
     
     for(Tree eT : enTrees) {
-      Sentence<HasWord> sentence = eT.yield();
+      ArrayList<HasWord> sentence = eT.yield();
       for (int i = 0; i < sentence.size(); i++) {
         HasWord hw = sentence.get(i);
         leaveslist.add(hw.word());
@@ -434,7 +434,7 @@ public class AlignmentUtils {
 
   public static TranslationAlignment fixAlignmentGridMergingChinese(
     TranslationAlignment ta, List<Tree> chTrees) {
-    Sentence<HasWord> sentence = chTrees.get(0).yield();
+    ArrayList<HasWord> sentence = chTrees.get(0).yield();
     String[] leaves = new String[sentence.size()];
     for (int i = 0; i < sentence.size(); i++) {
       HasWord hw = sentence.get(i);
@@ -470,7 +470,7 @@ public class AlignmentUtils {
 
   public static TranslationAlignment fixAlignmentGridMergingEnglish(
     TranslationAlignment ta, List<Tree> enTrees) {
-    Sentence<HasWord> sentence = new Sentence<HasWord>();
+    ArrayList<HasWord> sentence = new ArrayList<HasWord>();
     for (Tree enT : enTrees) {
       sentence.addAll(enT.yield());
     }
@@ -511,7 +511,7 @@ public class AlignmentUtils {
     if (chTrees.size() > 1) {
       throw new RuntimeException("more than one chTree");
     }
-    Sentence<HasWord> sentence = chTrees.get(0).yield();
+    ArrayList<HasWord> sentence = chTrees.get(0).yield();
     String[] leaves = new String[sentence.size()];
     if (DEBUG) System.err.print("leaves=");
     for (int i = 0; i < sentence.size(); i++) {
@@ -579,7 +579,7 @@ public class AlignmentUtils {
 
   public static void checkTranslationAlignmentAndEnTrees(TranslationAlignment ta, List<Tree> enTrees) {
     String[] enFromAlignment = ta.translation_;
-    Sentence<HasWord> enFromTrees = new Sentence<HasWord>();
+    ArrayList<HasWord> enFromTrees = new ArrayList<HasWord>();
     for (Tree eT : enTrees) {
       enFromTrees.addAll(eT.yield());
     }
@@ -601,7 +601,7 @@ public class AlignmentUtils {
 
   public static void checkTranslationAlignmentAndChTrees(TranslationAlignment ta, List<Tree> chTrees) {
     String[] chFromAlignment = ta.source_;
-    Sentence<HasWord> chFromTrees = chTrees.get(0).yield();
+    ArrayList<HasWord> chFromTrees = chTrees.get(0).yield();
     if (chFromAlignment.length != chFromTrees.size()) {
       System.out.println("Check failed.<br>");
       System.out.println("ALGN: "+StringUtils.join(chFromAlignment, " ")+"<br>");

@@ -35,7 +35,7 @@ public class EnglishTreeReader extends AbstractTreeReader {
   }
 
   public static String createSignature(Tree t) {
-    Sentence<HasWord> hws = getWords(t);
+    ArrayList<HasWord> hws = getWords(t);
     String[] treeSent = new String[hws.size()];
     for(int i = 0; i < hws.size(); i++) {
       treeSent[i] = hws.get(i).word();
@@ -191,7 +191,7 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
   // I just haven't figure out how to relabel with 's
   // Thu Jan 15 23:12:16 2009 -pichuan
   static Tree mergeApostropheS(Tree tree) {
-    Sentence<TaggedWord> tws = tree.taggedYield();
+    ArrayList<TaggedWord> tws = tree.taggedYield();
     boolean needProcess = (tws.size()>=2);
     while(needProcess) {
       int apostropheIdx = -1;

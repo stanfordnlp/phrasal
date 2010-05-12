@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.syntax.ghkm;
 
+import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -50,7 +51,7 @@ public class AlignmentGraph {
     if (eString != null)
       checkEStringAgainstLeaves(eString);
 
-    String yield = eTree.yield().toString();
+    String yield = Sentence.listToString(eTree.yield());
     synchronized (IString.class) {
       align.init(fString, yield, aString, reversedAlignment, oneIndexedAlignment);
     }

@@ -44,7 +44,7 @@ public class ExperimentUtils {
   }
 
   static Set<String> treeToSetWords(Tree tree) {
-    Sentence<Word> sent = tree.yield();
+    ArrayList<Word> sent = tree.yield();
     Set<String> sow = new HashSet<String>();
     for (Word w : sent) {
       sow.add(w.value());
@@ -200,7 +200,7 @@ public class ExperimentUtils {
     Tree[] children = t.children();
     int deIdx = -1;
     for (Tree c : children) {
-      Sentence<Word> words = c.yield();
+      ArrayList<Word> words = c.yield();
       String lastW = words.get(words.size()-1).word();
       if (lastW.equals("的")) {
         if (deIdx != -1) {
@@ -276,7 +276,7 @@ public class ExperimentUtils {
   }
 
   private static boolean hasDE(Tree npT, Tree wholeT, int deIdx, String dePat) {
-    Sentence<TaggedWord> tws = wholeT.taggedYield();
+    ArrayList<TaggedWord> tws = wholeT.taggedYield();
     TaggedWord tw = tws.get(deIdx);
     if (tw.tag().startsWith("DE")) {
       if (tw.tag().equals(dePat)) return true;
