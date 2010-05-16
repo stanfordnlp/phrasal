@@ -51,7 +51,7 @@
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
-    <javac srcdir="${source.path}:${tests.path}"
+    <javac srcdir="${source.path}:${tests.path}:${itests.path}"
           destdir="${build.path}"
             debug="${compile.debug}"
          encoding="utf-8"   
