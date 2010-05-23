@@ -9,11 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.xml.XMLConstants;
-
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -22,14 +18,14 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import edu.stanford.nlp.util.XMLUtils;
 
 /**
  * 
@@ -105,12 +101,12 @@ public class PathModel {
   }
 
   public boolean load(File file, File schema) {
-    DocumentBuilder parser = getValidatingXmlParser(schema);
+    DocumentBuilder parser = XMLUtils.getValidatingXmlParser(schema);
     if(parser == null) return false;
 
     final int minTranslationId = controller.getMinTranslationId();
     final int maxTranslationId = minTranslationId + controller.getNumTranslationLayouts() - 1;
-    
+
     try {
       Document xmlDocument = parser.parse(file);
 
@@ -119,7 +115,7 @@ public class PathModel {
       for(int i = 0; i < sentences.getLength(); i++) {
         Element sentence = (Element) sentences.item(i);
         final int translationId = Integer.parseInt(sentence.getAttribute(SENT_ID));
-        
+
         if(translationId < minTranslationId) continue;
         else if(translationId > maxTranslationId) break;
 
@@ -192,39 +188,12 @@ public class PathModel {
     return phrase;
   }
 
-  private DocumentBuilder getValidatingXmlParser(File schemaFile) {
-    DocumentBuilder db = null;
-    try {
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-
-      SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-      Schema schema = factory.newSchema(schemaFile);
-      dbf.setSchema(schema);
-
-      db = dbf.newDocumentBuilder();
-
-    } catch (ParserConfigurationException e) {
-      System.err.printf("%s: Unable to create XML parser\n", this.getClass().getName());
-      e.printStackTrace();
-
-    } catch (SAXException e) {
-      System.err.printf("%s: XML parsing exception while loading schema %s\n", this.getClass().getName(),schemaFile.getPath());
-      e.printStackTrace();
-
-    } catch(UnsupportedOperationException e) {
-      System.err.printf("%s: API error while setting up XML parser. Check your JAXP version\n", this.getClass().getName());
-      e.printStackTrace();
-    }
-
-    return db;
-  }
-
   public boolean isLoaded() {
     return isLoaded;
   }
 
   public boolean save(File file, File schema) {
-    DocumentBuilder parser = getValidatingXmlParser(schema);
+    DocumentBuilder parser = XMLUtils.getValidatingXmlParser(schema);
     if(parser == null) return false;
 
     try {
@@ -399,11 +368,4 @@ public class PathModel {
           return p;
     return null;
   }
-  
-  public static void main(String[] args) {
-    PathModel p = new PathModel();
-    p.getValidatingXmlParser(new File("/u/spenceg/javanlp/projects/mt/schema/phrase-viewer-paths.xsd"));
-    
-  }
-
 }
