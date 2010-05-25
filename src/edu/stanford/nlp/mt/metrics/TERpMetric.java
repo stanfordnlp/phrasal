@@ -211,7 +211,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     @Override
     public double score() {
-			//System.err.printf("(%s/%s)\n", editsTotal, numWordsTotal);
+			System.err.printf("(%s/%s)\n", editsTotal, numWordsTotal);
       return -editsTotal/(numWordsTotal);
     }
 

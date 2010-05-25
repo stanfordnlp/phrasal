@@ -934,6 +934,7 @@ public class Phrasal {
 		LineNumberReader reader = new LineNumberReader(new InputStreamReader(
 				System.in, "UTF-8"));
 		int translationId = 0;
+		long startTime = System.currentTimeMillis();
 		if (local_procs == 1) {
   		for (String line; (line = reader.readLine()) != null; translationId++) {
   			String[] tokens = line.split("\\s+");
@@ -994,6 +995,8 @@ public class Phrasal {
   		}
 
     }
+		long totalTime = System.currentTimeMillis() - startTime;
+	  System.err.printf("Total Decoding time: %.3f\n", totalTime/1000.0);	
 
     if (nbestListWriter != null) {
 			System.err.printf("Closing n-best writer\n");
