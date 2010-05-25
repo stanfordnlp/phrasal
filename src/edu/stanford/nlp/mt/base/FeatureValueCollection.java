@@ -13,32 +13,32 @@ import java.util.Iterator;
 public class FeatureValueCollection<E> implements Collection<FeatureValue<E>> {
 
   final Index<E> featureIndex;
-  final double[] arr;
+  final double[] w;
   final BitSet isDefined;
 
   public FeatureValueCollection(FeatureValueCollection<E> c) {
-    this.arr = Arrays.copyOf(c.arr, c.arr.length); // TODO: check if really need deep copy
+    this.w = Arrays.copyOf(c.w, c.w.length); // TODO: check if really need deep copy
     this.featureIndex = c.featureIndex;
     this.isDefined = c.isDefined;
   }
 
   public FeatureValueCollection(Collection<? extends FeatureValue<E>> c, Index<E> featureIndex) {
-    arr = new double[featureIndex.size()];
+    w = new double[featureIndex.size()];
     isDefined = new BitSet(c.size());
     this.featureIndex = featureIndex;
 		for (FeatureValue<E> feature : c) {
 			int index = featureIndex.indexOf(feature.name, true);
-			arr[index] = feature.value;
+			w[index] = feature.value;
       isDefined.set(index);
 		}
   }
 
   private FeatureValue<E> denseGet(int index) {
     assert (isDefined.get(index));
-    return new FeatureValue<E>(featureIndex.get(index), arr[index]);
+    return new FeatureValue<E>(featureIndex.get(index), w[index]);
   }
 
-  public double[] toDoubleArray() { return arr; }
+  public double[] toDoubleArray() { return w; }
 
   @Override public int size() { return isDefined.cardinality(); }
   @Override public boolean isEmpty() { return size() == 0; }

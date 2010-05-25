@@ -406,7 +406,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
 
   @Override
 	public void report() {
-    System.err.println("LexicalReorderingFeatureExtractor: done.");
+    System.err.println("OldLexicalReorderingFeatureExtractor: done.");
     float[] prob = new float[totalForwardCounts.length];
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       fillProbDist(totalForwardCounts, prob, 0);

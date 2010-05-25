@@ -18,7 +18,7 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
 
 
 /**
- * This class follows the idea of LexicalReorderingFeatureExtractor, but instead of 
+ * This class follows the idea of OldLexicalReorderingFeatureExtractor, but instead of
  * conditioning on the phrases, we label each statistical phrase with the syntatic
  * phrasal categories and condition on those.
  * 

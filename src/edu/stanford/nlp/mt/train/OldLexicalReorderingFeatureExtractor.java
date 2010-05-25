@@ -10,11 +10,11 @@ import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 /**
  * Extractor for lexicalized re-ordering probabilities of Moses.
  * 
+ * @deprecated Use LexicalReorderingFeatureExtractor instead (OldLexicalReorderingFeatureExtractor doesn't support hierarchical reordering model and isn't thread safe).
+ *
  * @author Michel Galley
  */
-public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
-
-	// Note: Not thread safe; use ExperimentalLexicalReorderingFeatureExtractor instead
+public class OldLexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugLexicalReorderingFeatureExtractor";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -98,7 +98,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     // Error messages for unsupported models:
     if(languageType != LanguageTypes.fe)
       throw new UnsupportedOperationException
-       ("LexicalReorderingFeatureExtractor: model currently not supported.");
+       ("OldLexicalReorderingFeatureExtractor: model currently not supported.");
     // Store total counts for each reordering type:
     int size = (int)Math.pow(modelSize,modelOrder);
     totalForwardCounts = new double[size];
@@ -254,7 +254,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
   @Override
 	public void report() {
-    System.err.println("LexicalReorderingFeatureExtractor: done.");
+    System.err.println("OldLexicalReorderingFeatureExtractor: done.");
     double[] prob = new double[totalForwardCounts.length];
     if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       fillProbDist(totalForwardCounts, prob, 0);
