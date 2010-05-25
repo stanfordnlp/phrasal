@@ -635,51 +635,59 @@ public class DependencyPipe implements Cloneable {
 
         // Source unigram features:
         if(opt.bilingualC) {
-          for(int sci : childSource) {
-            for (int j = 0; j < srcInstance.getFeats(sci).length; ++j) {
-              sb.setLength(0);
-              sb.append("FF").append(j);
-              addTwoObsFeatures(sb.toString(),
-                   instance.getForm(headIndex),
-                   instance.getPOSTag(headIndex),
-                   srcInstance.getForm(sci),
-                   srcInstance.getFeat(sci,j),
-                   attDist, fv);
+          for (int sci : childSource) {
+            if (sci >= srcInstance.length()) {
+              System.err.printf("Warning: array out of bounds: %d >= %d\n",
+                sci, srcInstance.length());
+            } else {
+              for (int j = 0; j < srcInstance.getFeats(sci).length; ++j) {
+                sb.setLength(0);
+                sb.append("FF").append(j);
+                addTwoObsFeatures(sb.toString(),
+                     instance.getForm(headIndex),
+                     instance.getPOSTag(headIndex),
+                     srcInstance.getForm(sci),
+                     srcInstance.getFeat(sci,j),
+                     attDist, fv);
 
-              sb.setLength(0);
-              sb.append("LF").append(j);
-              addTwoObsFeatures(sb.toString(),
-                   instance.getLemma(headIndex),
-                   instance.getPOSTag(headIndex),
-                   srcInstance.getLemma(sci),
-                   srcInstance.getFeat(sci,j),
-                   attDist, fv);
+                sb.setLength(0);
+                sb.append("LF").append(j);
+                addTwoObsFeatures(sb.toString(),
+                     instance.getLemma(headIndex),
+                     instance.getPOSTag(headIndex),
+                     srcInstance.getLemma(sci),
+                     srcInstance.getFeat(sci,j),
+                     attDist, fv);
+              }
             }
           }
         }
 
-        if(opt.bilingualH) {
+        if (opt.bilingualH) {
           for (int shi : headSource) {
-            //System.err.printf("pipe(%s) instance(%s) srcInstance(%s) srcInstanceLen(%d) headSource(%d)\n",
-            //  this, instance, srcInstance, srcInstance.length(), shi);
-            for (int j = 0; j < srcInstance.getFeats(shi).length; ++j) {
-              sb.setLength(0);
-              sb.append("FF").append(j);
-              addTwoObsFeatures(sb.toString(),
-                   instance.getForm(childIndex),
-                   instance.getPOSTag(childIndex),
-                   srcInstance.getForm(shi),
-                   srcInstance.getFeat(shi,j),
-                   attDist, fv);
+            if (shi >= srcInstance.length()) {
+              System.err.printf("Warning: array out of bounds: %d >= %d\n",
+                  shi, srcInstance.length());
+            } else {
+              for (int j = 0; j < srcInstance.getFeats(shi).length; ++j) {
+                sb.setLength(0);
+                sb.append("FF").append(j);
+                addTwoObsFeatures(sb.toString(),
+                     instance.getForm(childIndex),
+                     instance.getPOSTag(childIndex),
+                     srcInstance.getForm(shi),
+                     srcInstance.getFeat(shi,j),
+                     attDist, fv);
 
-              sb.setLength(0);
-              sb.append("LF").append(j);
-              addTwoObsFeatures(sb.toString(),
-                   instance.getLemma(childIndex),
-                   instance.getPOSTag(childIndex),
-                   srcInstance.getLemma(shi),
-                   srcInstance.getFeat(shi,j),
-                   attDist, fv);
+                sb.setLength(0);
+                sb.append("LF").append(j);
+                addTwoObsFeatures(sb.toString(),
+                     instance.getLemma(childIndex),
+                     instance.getPOSTag(childIndex),
+                     srcInstance.getLemma(shi),
+                     srcInstance.getFeat(shi,j),
+                     attDist, fv);
+              }
             }
           }
         }
@@ -692,27 +700,37 @@ public class DependencyPipe implements Cloneable {
 
         // Source bigram features:
         for(int sci : childSource) {
-          for(int shi : headSource) {
-            if(sci == shi)
-              sameAlign = true;
-            String[] hpf = srcInstance.getPairwiseFeats(shi, sci);
-            if(hpf != null) {
-              hFeature = true;
-              for (String fName : hpf) {
-                sb.setLength(0);
-                sb.append("CFh").append(fName);
-                String id = sb.toString();
-                boolean conjFeature = Character.isUpperCase(id.charAt(0));
-                switch(opt.bilingualDetail) {
-                  case 2: case 1:
-                    if(conjFeature)
-                      addTwoObsFeatures(id,
-                         forms_headIndex, posA_headIndex,
-                         forms_childIndex, posA_headIndex, attDist, fv);
-                  case 0:
-                    key.clear();
-                    key.add(id);
-                    add(key,fv);
+          if (sci >= srcInstance.length()) {
+            System.err.printf("Warning: array out of bounds: %d >= %d\n",
+                sci, srcInstance.length());
+          } else {
+            for (int shi : headSource) {
+              if (shi >= srcInstance.length()) {
+                System.err.printf("Warning: array out of bounds: %d >= %d\n",
+                    shi, srcInstance.length());
+              } else {
+                if (sci == shi)
+                  sameAlign = true;
+                String[] hpf = srcInstance.getPairwiseFeats(shi, sci);
+                if(hpf != null) {
+                  hFeature = true;
+                  for (String fName : hpf) {
+                    sb.setLength(0);
+                    sb.append("CFh").append(fName);
+                    String id = sb.toString();
+                    boolean conjFeature = Character.isUpperCase(id.charAt(0));
+                    switch(opt.bilingualDetail) {
+                      case 2: case 1:
+                        if(conjFeature)
+                          addTwoObsFeatures(id,
+                             forms_headIndex, posA_headIndex,
+                             forms_childIndex, posA_headIndex, attDist, fv);
+                      case 0:
+                        key.clear();
+                        key.add(id);
+                        add(key,fv);
+                    }
+                  }
                 }
               }
             }

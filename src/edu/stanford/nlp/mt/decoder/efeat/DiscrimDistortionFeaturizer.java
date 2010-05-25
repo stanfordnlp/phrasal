@@ -21,6 +21,7 @@ import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 import edu.stanford.nlp.mt.train.discrimdistortion.Datum;
 import edu.stanford.nlp.mt.train.discrimdistortion.DistortionModel;
 
+@SuppressWarnings("unused")
 public class DiscrimDistortionFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString, String>{
 
   private static final String FEATURE_NAME = "DiscrimDistortion";

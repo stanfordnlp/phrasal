@@ -40,6 +40,7 @@ public class CollapsedFeaturizer<TK,FV> implements IncrementalFeaturizer<TK,FV>,
 			
 	/**
 	 */
+  @SuppressWarnings("unused")
 	public CollapsedFeaturizer(FV combinedFeatureName, IncrementalFeaturizer<TK,FV>... featurizers) {
 		this.combinedFeatureName = combinedFeatureName;
 		this.featurizers = Arrays.asList(featurizers);

@@ -30,7 +30,7 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
   public LinearFutureCostFeaturizer(String... args) {
 		// Argument determines how much future cost to pay upfront:
 		// 1.0 => everything; 0.0 => nothing, as in Moses
-    if(args.length == 1) {
+    if (args.length == 1) {
       futureCostDelay = Float.parseFloat(args[0]);
       assert(futureCostDelay >= 0.0);
       assert(futureCostDelay <= 1.0);
@@ -44,7 +44,7 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 	public FeatureValue<String> featurize(Featurizable<IString,String> f) {
     float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this)) : 0.0f;
     float futureCost;
-    if(f.done) {
+    if (f.done) {
       futureCost = 0.0f;
     } else {
       futureCost = (1.0f-futureCostDelay)*futureCost(f) + futureCostDelay*oldFutureCost;
@@ -68,7 +68,7 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 
 	public void reset() { }
 
-  static int futureCost(Featurizable<IString,String> f) {
+  public static int futureCost(Featurizable<IString,String> f) {
     int nextWordIndex = f.hyp.translationOpt.foreignCoverage.length();
     int firstGapIndex = f.hyp.foreignCoverage.nextClearBit(0);
     if (firstGapIndex > nextWordIndex)
@@ -95,8 +95,8 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
     return futureCost;
   }
 
-  static int getEOSDistortion(Featurizable<IString,String> f) {
-    if(f.done) {
+  public static int getEOSDistortion(Featurizable<IString,String> f) {
+    if (f.done) {
       int endGap = f.foreignSentence.size() - f.option.foreignCoverage.length();
       //System.err.println("hyp span: "+f.hyp.foreignCoverage);
       //System.err.println("opt span: "+f.option.foreignCoverage);

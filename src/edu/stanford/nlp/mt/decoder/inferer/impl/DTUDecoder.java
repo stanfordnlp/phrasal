@@ -340,8 +340,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.printf("true score: %.3f h: %.3f\n", bestHyp.score, bestHyp.h);
       System.err.println();
 
-      if(featurizer instanceof RichIncrementalFeaturizer)
-        ((RichIncrementalFeaturizer)featurizer).dump(bestHyp.featurizable);
+      //if (featurizer instanceof RichIncrementalFeaturizer)
+      //  ((RichIncrementalFeaturizer)featurizer).dump(bestHyp.featurizable);
 
       double score = scorer.getIncrementalScore(allfeatures);
       System.err.printf("Recalculated score: %.3f\n", score);

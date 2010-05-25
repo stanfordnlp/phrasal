@@ -30,16 +30,20 @@ public class ArabicKbestSubjectBank {
     List<ArabicKbestAnalysis> compressedList = new ArrayList<ArabicKbestAnalysis>();
     
     for(int i = 0; i < analyses.size(); i++) {
-      ArabicKbestAnalysis thisAnal = (ArabicKbestAnalysis) analyses.get(i).clone();
-      for(int j = i + 1; j < analyses.size(); j++) {
-        if(thisAnal.equals(analyses.get(j))) {
-          double newLogScore = Math.log(Math.exp(thisAnal.logCRFScore) + Math.exp(analyses.get(j).logCRFScore));
-          thisAnal.logCRFScore = newLogScore;
-          analyses.remove(j);
-          j--;
+      try {
+        ArabicKbestAnalysis thisAnal = (ArabicKbestAnalysis) analyses.get(i).clone();
+        for(int j = i + 1; j < analyses.size(); j++) {
+          if(thisAnal.equals(analyses.get(j))) {
+            double newLogScore = Math.log(Math.exp(thisAnal.logCRFScore) + Math.exp(analyses.get(j).logCRFScore));
+            thisAnal.logCRFScore = newLogScore;
+            analyses.remove(j);
+            j--;
+          }
         }
+        compressedList.add(thisAnal);
+      } catch(CloneNotSupportedException e) {
+        throw new RuntimeException(e);
       }
-      compressedList.add(thisAnal);
     }
     return compressedList;
   }

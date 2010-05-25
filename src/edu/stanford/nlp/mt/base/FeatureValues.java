@@ -18,7 +18,7 @@ public class FeatureValues {
 	 * 
 	 * @param <T>
 	 */
-	public static <T> List<FeatureValue<T>> combine(List<FeatureValue<T>> featureValues) {
+	public static <T> List<FeatureValue<T>> combine(Collection<FeatureValue<T>> featureValues) {
 		ClassicCounter<T> counter = new ClassicCounter<T>();
 		for (FeatureValue<T> fv : featureValues) {
 			counter.incrementCount(fv.name, fv.value);

@@ -43,7 +43,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
   private DirectionTypes directionType;
   private LanguageTypes languageType;
 
-  private boolean phrasalReordering = false, withDTU = false;
+  private boolean phrasalReordering = false;
 
   @Override
 	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
@@ -126,7 +126,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
       totalJointCounts = new float[modelSize];
     }
     if(Boolean.parseBoolean(prop.getProperty(DTUPhraseExtractor.WITH_GAPS_OPT))) {
-      withDTU = true;
+      //withDTU = true;
       if (!phrasalReordering)
         System.err.println("Reordering model: discontinuous phrases without phrasal reordering.");
     }

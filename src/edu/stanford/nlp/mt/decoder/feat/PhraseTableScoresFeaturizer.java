@@ -31,7 +31,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 			System.err.printf("PhraseTableScoresFeaturizer: generating feature names for %s\n", phraseTableName);
 		}
 		for (int i = 0; i < phraseScoreNames.length; i++) {
-      if(phraseScoreNames[i] != null)
+      if (phraseScoreNames[i] != null)
         if (!tagByTable) {
           featureNames[i] = String.format("%s:%s", PREFIX, phraseScoreNames[i]);
         } else {

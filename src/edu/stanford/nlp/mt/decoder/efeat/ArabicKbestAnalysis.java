@@ -42,7 +42,7 @@ public class ArabicKbestAnalysis implements Cloneable {
    * Performs a deep copy
    */
   @Override
-  public Object clone() {
+  public Object clone() throws CloneNotSupportedException {
     ArabicKbestAnalysis clonedObj = new ArabicKbestAnalysis();
     clonedObj.subjects = new HashMap<Integer,Integer>(subjects);
     clonedObj.verbs = new HashSet<Integer>(verbs);

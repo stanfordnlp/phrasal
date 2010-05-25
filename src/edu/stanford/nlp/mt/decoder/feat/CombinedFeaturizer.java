@@ -42,7 +42,7 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
   }
 
   @SuppressWarnings("unchecked")
-  public CombinedFeaturizer<TK, FV> clone() {
+  public CombinedFeaturizer<TK, FV> clone() throws CloneNotSupportedException {
 		try {
       CombinedFeaturizer featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
       featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
@@ -56,6 +56,7 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
   /**
 	 * 
 	 */
+  @SuppressWarnings("unused")
 	public List<IncrementalFeaturizer<TK,FV>> getFeaturizers() {
 		return new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers);
 	}

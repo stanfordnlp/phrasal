@@ -11,7 +11,6 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
-
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 
 /**
@@ -81,7 +80,9 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
   String NB_FEATURE_PREFIX = "LexR:NB";
 
   // Extra features:
-  boolean nbFeature = false; // penalty if not binarizable
+  boolean nbFeature = false, // penalty if not binarizable
+    finalizeFeature = false, // compute backward model score on final phrase
+    binarize = false; // if false, k-arize instead of binarize
 
   final boolean has2Disc;
 	final String[] featureTags;
@@ -107,6 +108,8 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
           if (args.length >= 6) {
             for (String opt : args[5].split(":")) {
               if ("nb".equals(opt)) { nbFeature = true; }
+              if ("fin".equals(opt)) { finalizeFeature = true; }
+              if ("bin".equals(opt)) { binarize = true; }
             }
           }
         }
@@ -224,35 +227,39 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       System.err.printf("Feature values:\n");
 			for (FeatureValue<String> value : values)
         System.err.printf("\t%s: %f\n", value.name, value.value); 
-    }	
-    if (forwardOrientationComputation == ForwardOrientationComputation.hierarchical)
-      buildHierarchicalBlocks(f);
-
-    if (f.done) {
-
-      if (DEBUG) {
-        boolean incomplete = false;
-
-        if (forwardOrientationComputation == ForwardOrientationComputation.hierarchical) {
-          HierBlock hb = (HierBlock) f.getState(this);
-          incomplete = (hb.fEnd()+1 != f.foreignSentence.size() || !hb.isPrefix());
-        }
-
-        //if (f.foreignSentence.size() < 15)
-        //  AlignmentGrid.printDecoderGrid(f, System.err);
-        if (incomplete) dump(f);
-        System.err.println("\n");
-      }
     }
 
-    if (nbFeature) {
-      // Determine if alignment grid is binarizable:
-      if (forwardOrientationComputation == ForwardOrientationComputation.hierarchical) {
+    if (forwardOrientationComputation == ForwardOrientationComputation.hierarchical) {
+      // Update stack of hierarchical blocks:
+      buildHierarchicalBlocks(f);
+
+      // Determine if alignment grid is binarizable. If not, use stack size as a feature:
+      if (nbFeature) {
         HierBlock hb = (HierBlock)f.getState(this);
         HierBlock phb = (f.prior != null) ? (HierBlock)f.prior.getState(this) : null;
         int stackSzDelta = (phb != null) ? (hb.stackSz-phb.stackSz) : (hb.stackSz-1);
         if (stackSzDelta != 0)
           values.add(new FeatureValue<String>(NB_FEATURE_PREFIX, -1.0*stackSzDelta));
+      }
+    }
+
+    // Add backward model score on last phrase (missing/inconsistent in Moses):
+    if (f.done && finalizeFeature) {
+      int fEndPos = f.hyp.translationOpt.foreignCoverage.length();
+      int fLen = f.foreignSentence.size();
+      assert(fEndPos <= fLen);
+      ReorderingTypes finalBackwardOrientation = (fEndPos == fLen) ?
+          ReorderingTypes.monotoneWithNext : ReorderingTypes.discontinuousWithNext;
+
+      float[] finalScores = mlrt.getReorderingScores(f.hyp.translationOpt.abstractOption.id);
+      // Create feature functions:
+      for (int i = 0; i < mlrt.positionalMapping.length; ++i) {
+        ReorderingTypes type = mlrt.positionalMapping[i];
+        if (type == finalBackwardOrientation) {
+          if (usePrior(mlrt.positionalMapping[i])) {
+            if (finalScores != null) values.add(new FeatureValue<String>(featureTags[i], finalScores[i]));
+          }
+        }
       }
     }
 
@@ -271,6 +278,28 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
 		return false;
 	}
 
+  private boolean isBinarizable(CoverageSet curBlockCS, CoverageSet prevBlockCS, CoverageSet fullCS) {
+    int min1 = curBlockCS.nextSetBit(0); int max1 = curBlockCS.length();
+    int min2 = prevBlockCS.nextSetBit(0); int max2 = prevBlockCS.length();
+
+    // Check if there is a gap between curBlockCS and prevBlockCS. If so, return false:
+    //if (max2 < min1 || max1 < min2) return IsBinarizable.NO;
+
+    int min = Math.min(min1, min2);
+    int max = Math.max(max1, max2);
+    
+    for (int i=min+1; i<max; ++i) {
+      if (!curBlockCS.get(i) && !prevBlockCS.get(i))
+        if (!fullCS.get(i))
+          return false;
+        else {
+          if (binarize)
+            return false;
+        }
+    }
+    return true;
+  }
+
   private void buildHierarchicalBlocks(Featurizable<IString, String> f) {
     
     CoverageSet curCS = new CoverageSet(f.option.foreignCoverage.size());
@@ -286,8 +315,8 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
 
         prevBlock = (HierBlock) curF.prior.getState(this);
         // Check if new Block should contain curBlock:
-        if (CoverageSet.areContiguous(curCS, prevBlock.cs)) {
-          if (DETAILED_DEBUG)
+        if (isBinarizable(curCS, prevBlock.cs, f.hyp.foreignCoverage)) {
+           if (DETAILED_DEBUG)
             System.err.printf
               ("HierarchicalReorderingFeaturizer: merged (%s) with (%s)\n", curCS, prevBlock.cs);
           curCS.or(prevBlock.cs);
@@ -305,7 +334,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       if (canMerge) {
         curF = prevBlock.previousF;
       } else {
-        HierBlock newBlock = new HierBlock(curCS,curF, prevBlock == null ? 1 : (prevBlock.stackSz+1-merges));
+        HierBlock newBlock = new HierBlock(curCS, curF, prevBlock == null ? 1 : (prevBlock.stackSz+1-merges));
         f.setState(this,newBlock);
         if(DETAILED_DEBUG)
           System.err.printf("HierarchicalReorderingFeaturizer: new block (%s)\n", curCS.toString());
@@ -318,19 +347,23 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
    */
   private boolean monotoneWithPrevious(Featurizable<IString, String> f) {
     if (f.prior == null)
-      return f.linearDistortion == 0; 
-    return (((HierBlock)f.prior.getState(this)).fEnd()+1 == fStart(f));
+      return f.linearDistortion == 0;
+    HierBlock phb = (HierBlock)f.prior.getState(this);
+    return phb.cs.isContiguous() && (phb.fEnd()+1 == fStart(f));
   }
 
   /**
    * Returns true if current phrase is swap according to the hierarchical model.
    */
   private boolean swapWithPrevious(Featurizable<IString, String> f) {
-    return f.prior != null && (((HierBlock)f.prior.getState(this)).fStart() == fEnd(f) + 1);
+    if (f.prior == null)
+      return false;
+    HierBlock phb = (HierBlock)f.prior.getState(this);
+    return f.prior != null && phb.cs.isContiguous() && (phb.fStart() == fEnd(f) + 1);
   }
 
   /**
-   * Returns true if current block is possibly monotone with next. 
+   * Returns true if current block (nextF.prior) is possibly monotone with next (nextF). 
    * Specifically, if current block ranges fi...fj and next block ranges fk...fl, return true
    * if j+1 <= k and f_{j+1}...f_{k-1} have not yet been translated. Return false otherwise.
    */
@@ -381,14 +414,21 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
   }
 
   public void dump(Featurizable<IString, String> f) {
+    assert (f.done);
     if (forwardOrientationComputation != ForwardOrientationComputation.hierarchical)
       return;
     System.err.println("input length: "+f.foreignSentence.size());
+    if (DEBUG && f.foreignSentence.size() < 20) {
+      AlignmentGrid.printDecoderGrid(f, System.err);
+      System.err.println();
+    }
     Deque<String> lines = new LinkedList<String>();
     while (f != null) {
       HierBlock hb = (HierBlock) f.getState(this);
-      lines.addFirst(String.format("cs=%s M=%s S=%s sz=%d",
-        hb.cs, monotoneWithPrevious(f), swapWithPrevious(f), hb.stackSz));
+      lines.addFirst(String.format("cs=%s sz=%d (M,S)=(%d,%d) (M,S)=(%d,%d)",
+        hb.cs, hb.stackSz,
+        monotoneWithPrevious(f)?1:0, swapWithPrevious(f)?1:0,
+        possiblyMonotoneWithNext(f)?1:0, possiblySwappingWithNext(f)?1:0));
       f = f.prior;
     }
     int i=0;

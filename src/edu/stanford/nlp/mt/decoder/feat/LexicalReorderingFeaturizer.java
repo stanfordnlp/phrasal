@@ -29,6 +29,7 @@ public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String
 	 * Discriminative Lexical Reordering - using all reordering types
 	 *  
 	 */
+  @SuppressWarnings("unused")
 	public LexicalReorderingFeaturizer() {
 		// by default include everything
 		discriminativeSet = MosesLexicalReorderingTable.ReorderingTypes.values();
@@ -41,16 +42,17 @@ public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String
 	 * Discriminative lexical reordering - using selected reordering types
 	 * 
 	 */
+  @SuppressWarnings("unused")
 	public LexicalReorderingFeaturizer(String... strTypes) {
 		discriminativeSet = MosesLexicalReorderingTable.ReorderingTypes.values();
-		boolean useAlignmentConstellations = false; 
-		for (int i = 0; i < strTypes.length; i++) {
-			if (strTypes[i].equals("conditionOnConstellations")) { 
-				useAlignmentConstellations = true;
-				System.err.printf("using constillations\n");
-			}
-			// XXdiscriminativeSet[i] = MosesLexicalReorderingTable.ReorderingTypes.values();
-		}
+		boolean useAlignmentConstellations = false;
+    for (String strType : strTypes) {
+      if (strType.equals("conditionOnConstellations")) {
+        useAlignmentConstellations = true;
+        System.err.printf("using constillations\n");
+      }
+      // XXdiscriminativeSet[i] = MosesLexicalReorderingTable.ReorderingTypes.values();
+    }
 		this.useAlignmentConstellations = useAlignmentConstellations;
 		mlrt = null;
 		featureTags = null;
@@ -73,13 +75,13 @@ public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String
 		List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
 		
 		boolean monotone = f.linearDistortion == 0; 
-		boolean swap = (f.prior == null ? false : f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
+		boolean swap = (f.prior != null && f.foreignPosition + f.foreignPhrase.size() == f.prior.foreignPosition);
 		
 		if (discriminativeSet != null) {
 			for (MosesLexicalReorderingTable.ReorderingTypes mrt : discriminativeSet) {
 				if (!featureFunction(monotone, swap, mrt)) continue;
 				if (usePrior(mrt)) {
-					String condRep = null;
+					String condRep; // = null;
 					if (!useAlignmentConstellations) {
 						Sequence<IString> priorForeignPhrase = (f.prior != null ? f.prior.foreignPhrase : INITIAL_PHRASE);
 						Sequence<IString> priorTranslatedPhrase = (f.prior != null ? f.prior.translatedPhrase : INITIAL_PHRASE);
@@ -90,7 +92,7 @@ public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String
 					}
 					values.add(new FeatureValue<String>(FEATURE_PREFIX+":"+mrt+":"+condRep, 1.0));
 				} else {
-					String condRep = null;
+					String condRep; // = null;
 					if (!useAlignmentConstellations) {
 						condRep = f.foreignPhrase.toString("_")+"=>"+f.translatedPhrase.toString("_");
 					} else {

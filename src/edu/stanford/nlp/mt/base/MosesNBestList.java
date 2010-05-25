@@ -9,7 +9,7 @@ import java.text.DecimalFormat;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 
-import edu.stanford.nlp.util.OAIndex;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -21,7 +21,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
   static public final String NBEST_SEP = " |||";
 
   private final List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists;
-	public final OAIndex<String> featureIndex = new OAIndex<String>();
+	public final Index<String> featureIndex;
 	public static final String DEBUG_PROPERTY = "MosesNBestListDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
@@ -29,6 +29,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 
   @SuppressWarnings("unchecked")
 	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer scorer, boolean tokenizeNIST) {
+    this.featureIndex = null;
     this.tokenizeNIST = tokenizeNIST;
     sequenceSelfMap = null;
 		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>(list1.nbestLists());
@@ -44,6 +45,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	}
 	
 	public MosesNBestList(List<List<ScoredFeaturizedTranslation<IString,String>>> rawList, boolean tokenizeNIST) {
+    this.featureIndex = null;
     this.tokenizeNIST = tokenizeNIST;
     sequenceSelfMap = null;
 		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>(rawList);
@@ -53,14 +55,23 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 
 
   public MosesNBestList(String filename) throws IOException {
-    this(filename, false);
+    this(filename, null);
+  }
+
+  public MosesNBestList(String filename, Index<String> featureIndex) throws IOException {
+    this(filename, featureIndex, false);
   }
 
   public MosesNBestList(String filename, boolean tokenizeNIST) throws IOException {
-		this(filename, new HashMap<Sequence<IString>, Sequence<IString>>(), tokenizeNIST);
+    this(filename, null, tokenizeNIST);
+  }
+
+  public MosesNBestList(String filename, Index<String> featureIndex, boolean tokenizeNIST) throws IOException {
+		this(filename, new HashMap<Sequence<IString>, Sequence<IString>>(), featureIndex, tokenizeNIST);
 	}
 	
-	public MosesNBestList(String filename, Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap, boolean tokenizeNIST) throws IOException {
+	public MosesNBestList(String filename, Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap, Index<String> featureIndex, boolean tokenizeNIST) throws IOException {
+    this.featureIndex = featureIndex;
     this.tokenizeNIST = tokenizeNIST;
 	  this.sequenceSelfMap = sequenceSelfMap;
 		Runtime rt = Runtime.getRuntime();
@@ -181,7 +192,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 					}
 				}
 				
-				List<FeatureValue<String>> featureValues = new FeatureValueArray<String>();
+				List<FeatureValue<String>> featureValuesTmp = new LinkedList<FeatureValue<String>>();
 
         for (String feature : featureMap.keySet()) {
           featureIndex.indexOf(feature, true);
@@ -192,7 +203,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 							featureNameSelfMap.put(feature, feature);
 							featureNameStored = feature;
 						}
-						featureValues.add(new FeatureValue<String>(featureNameStored, values.get(0), true));
+						featureValuesTmp.add(new FeatureValue<String>(featureNameStored, values.get(0), true));
 					} else {
 						for (int i = 0; i < values.size(); i++) {
 							String composedName = feature + "_" + i;
@@ -201,11 +212,14 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 								featureNameSelfMap.put(composedName, composedName);
 								featureNameStored = composedName;
 							}	
-							featureValues.add(new FeatureValue<String>(featureNameStored, values.get(i), true));
+							featureValuesTmp.add(new FeatureValue<String>(featureNameStored, values.get(i), true));
 						}
 					}
 				}
-				
+
+        Collection<FeatureValue<String>> featureValues = (featureIndex == null) ?
+          featureValuesTmp : new FeatureValueCollection<String>(featureValuesTmp, featureIndex);
+
 				Sequence<IString> sequence = new RawIStringSequence(IStrings.toIStringArray(space.split(translation)));
 				Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);
 				if (sequenceStored == null) {
@@ -242,6 +256,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		reader.close();
 	}
 
+  /*
   public void setArraysFromIndex() {
 
     Runtime rt = Runtime.getRuntime();
@@ -252,8 +267,8 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
     for(List<ScoredFeaturizedTranslation<IString,String>> nbestList : nbestLists) {
       for(ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
         List<FeatureValue<String>> fvl = trans.features;
-        if(fvl instanceof FeatureValueArray) {
-          FeatureValueArray<String> fva = (FeatureValueArray<String>) fvl;
+        if(fvl instanceof FeatureValueCollection) {
+          FeatureValueCollection<String> fva = (FeatureValueCollection<String>) fvl;
           fva.setArrayFromIndex(featureIndex);
         }
       }
@@ -265,6 +280,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		System.err.printf("Done generating feature arrays for n-best lists (mem used: %d MiB time: %.3f s)\n", 
 				(endMemUsed - startMemUsed)/(1024*1024), loadTimeMillis/1000.0);
   }
+  */
 
   @Override
 	public List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists() {
@@ -323,7 +339,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		}
 		
 		String nbestListFilename = args[0];
-		MosesNBestList nbestList = new MosesNBestList(nbestListFilename, false);
+		MosesNBestList nbestList = new MosesNBestList(nbestListFilename, null, false);
 		System.out.print(nbestList.printMosesFormat());
 	}
 

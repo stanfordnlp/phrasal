@@ -25,6 +25,10 @@ public class CoverageSet extends BitSet {
 		return c;
 	}
 
+  public boolean isContiguous() {
+    return cardinality() == (length() - nextSetBit(0));
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -44,22 +48,6 @@ public class CoverageSet extends BitSet {
     }
     sb.append("}");
     return sb.toString();
-  }
-
-  public static boolean areContiguous(CoverageSet cs1, CoverageSet cs2) {
-    int min1 = cs1.nextSetBit(0); int max1 = cs1.length();
-    int min2 = cs2.nextSetBit(0); int max2 = cs2.length();
-
-    // Check if there is a gap between cs1 and cs2. If so, return false:
-    if (max2 < min1 || max1 < min2) return false;
-
-    int min = Math.min(min1, min2);
-    int max = Math.max(max1, max2);
-    for (int i=min+1; i<max; ++i) {
-      if (!cs1.get(i) && !cs2.get(i))
-        return false;
-    }
-    return true;
   }
 
 }

@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.inferer;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 
@@ -170,7 +171,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 
     assert(!translations.isEmpty());
     Iterator<RichTranslation<TK, FV>> listIterator = translations.iterator();
-    featurizer.dump(listIterator.next().featurizable);
+    Featurizable<TK,FV> featurizable = listIterator.next().featurizable;
+    if (featurizable.done)
+      featurizer.dump(featurizable);
+    else
+      System.err.println("WARNING: 1-best not complete!");
 
     if (DEBUG) {
 			long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;

@@ -809,7 +809,11 @@ public class Phrasal {
   		// Configure InfererBuilder
       AbstractBeamInfererBuilder infererBuilder = (AbstractBeamInfererBuilder) InfererBuilderFactory
         .factory(withGaps ? InfererBuilderFactory.DTU_DECODER : InfererBuilderFactory.MULTIBEAM_DECODER);
-  		infererBuilder.setIncrementalFeaturizer(featurizer.clone());
+      try {
+        infererBuilder.setIncrementalFeaturizer(featurizer.clone());
+      } catch(CloneNotSupportedException e) {
+        throw new RuntimeException(e);
+      }
   		infererBuilder.setPhraseGenerator(phraseGenerator.clone());
   		infererBuilder.setScorer(scorer);
   		infererBuilder.setSearchHeuristic(heuristic.clone());
@@ -1205,7 +1209,7 @@ public class Phrasal {
 		}
 		
 		@Override
-		public double getIncrementalScore(List<FeatureValue<String>> features) {
+		public double getIncrementalScore(Collection<FeatureValue<String>> features) {
 				double score = 0;
 				
 				for (FeatureValue<String> feature : features) {
@@ -1297,7 +1301,7 @@ public class Phrasal {
 		}
 
 		@Override
-		public double getIncrementalScore(List<FeatureValue<String>> features) {
+		public double getIncrementalScore(Collection<FeatureValue<String>> features) {
 			double sum = 0;
 			
 			for (FeatureValue<String> feature : features) {
@@ -1355,7 +1359,7 @@ public class Phrasal {
 		}
 
 		@Override
-		public double getIncrementalScore(List<FeatureValue<String>> features) {
+		public double getIncrementalScore(Collection<FeatureValue<String>> features) {
 			double sum = 0;
 			
 			for (FeatureValue<String> feature : features) {
@@ -1418,7 +1422,7 @@ public class Phrasal {
 		}
 
 		@Override
-		public double getIncrementalScore(List<FeatureValue<String>> features) {
+		public double getIncrementalScore(Collection<FeatureValue<String>> features) {
 			double sum = 0;
 			
 			for (FeatureValue<String> feature : features) {
@@ -1534,7 +1538,7 @@ public class Phrasal {
 		}
 
 		@Override
-		public double getIncrementalScore(List<FeatureValue<String>> features) {
+		public double getIncrementalScore(Collection<FeatureValue<String>> features) {
 			double sum = 0;
 			
 			for (FeatureValue<String> feature : features) {

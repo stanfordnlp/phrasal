@@ -12,14 +12,14 @@ import java.util.*;
  */
 public class FeaturizedTranslation<TK, FV> {
 	public final Sequence<TK> translation;
-  public final List<FeatureValue<FV>> features;
+  public final Collection<FeatureValue<FV>> features;
 
 	/**
 	 * 
 	 */
-	public FeaturizedTranslation(Sequence<TK> translation, List<FeatureValue<FV>> features) {
+	public FeaturizedTranslation(Sequence<TK> translation, Collection<FeatureValue<FV>> features) {
 		this.translation = translation;
-		this.features = (features == null ? null : ( (features.getClass() == edu.stanford.nlp.mt.base.FeatureValueArray.class) ?
-       new FeatureValueArray<FV>(features) : new ArrayList<FeatureValue<FV>>(features)) );
+		this.features = (features == null ? null : ( (features instanceof FeatureValueCollection) ?
+       new FeatureValueCollection<FV>((FeatureValueCollection<FV>)features) : new ArrayList<FeatureValue<FV>>(features)) );
 	}
 }

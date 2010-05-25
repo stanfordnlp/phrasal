@@ -12,6 +12,8 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.ErasureUtils;
+import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.OAIndex;
 
 /**
  * Minimum Error Rate Training (MERT).
@@ -61,6 +63,8 @@ public class UnsmoothedMERT extends Thread {
   private static long SEED = 8682522807148012L;
   private static Random globalRandom;
 
+  final static OAIndex<String> featureIndex = new OAIndex<String>();
+
   public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
   }
@@ -81,7 +85,7 @@ public class UnsmoothedMERT extends Thread {
       }
     }
 
-    Scorer<String> scorer = new StaticScorer(wts);
+    Scorer<String> scorer = new StaticScorer(wts, featureIndex);
 
     int cnt = 0;
     double dEEval = Double.POSITIVE_INFINITY;
@@ -226,8 +230,8 @@ public class UnsmoothedMERT extends Thread {
       initialWts.addAll(fixedWts);
     }
 
-    Scorer<String> currentScorer = new StaticScorer(initialWts);
-    Scorer<String> slopScorer = new StaticScorer(direction);
+    Scorer<String> currentScorer = new StaticScorer(initialWts, featureIndex);
+    Scorer<String> slopScorer = new StaticScorer(direction, featureIndex);
     ArrayList<Double> intercepts = new ArrayList<Double>();
     Map<Double, Set<InterceptIDs>> interceptToIDs = new HashMap<Double, Set<InterceptIDs>>();
 
@@ -419,7 +423,7 @@ public class UnsmoothedMERT extends Thread {
 
   static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(
           MosesNBestList nbest, Counter<String> wts) {
-    Scorer<String> scorer = new StaticScorer(wts);
+    Scorer<String> scorer = new StaticScorer(wts, featureIndex);
     MultiTranslationMetricMax<IString, String> oneBestSearch = new GreedyMultiTranslationMetricMax<IString, String>(
             new ScorerWrapperEvaluationMetric<IString, String>(scorer));
     return oneBestSearch.maximize(nbest);
@@ -507,7 +511,7 @@ public class UnsmoothedMERT extends Thread {
       removeWts(wts, fixedWts);
       wts.addAll(fixedWts);
     }
-    Scorer<String> scorer = new StaticScorer(wts, nbest.featureIndex);
+    Scorer<String> scorer = new StaticScorer(wts, featureIndex);
     if(DEBUG)
       System.err.printf("eval at point (%d,%d): %s\n", optWts.size(), wts.size(), wts.toString());
     IncrementalEvaluationMetric<IString, String> incEval = emetric
@@ -542,12 +546,14 @@ public class UnsmoothedMERT extends Thread {
     return score;
   }
 
-  public static Counter<String> readWeights(String filename) throws IOException {
+  public static Counter<String> readWeights(String filename, Index<String> featureIndex) throws IOException {
     BufferedReader reader = new BufferedReader(new FileReader(filename));
     Counter<String> wts = new ClassicCounter<String>();
     for (String line = reader.readLine(); line != null; line = reader
             .readLine()) {
       String[] fields = line.split("\\s+");
+      if (featureIndex != null)
+        featureIndex.indexOf(fields[0], true);
       wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
     }
     reader.close();
@@ -630,18 +636,11 @@ public class UnsmoothedMERT extends Thread {
 
     EvaluationMetric<IString, String> emetric = defaultMERT.emetric;
 
-    // Load nbest list:
-    nbest = new MosesNBestList(nbestListFile, tokenizeNIST);
-    //nbest.setArraysFromIndex();
-    MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap, tokenizeNIST);
-    //localNbest.setArraysFromIndex();
-    AbstractNBestOptimizer.nbest = nbest;
-
 
     // Load weight files:
     previousWts = new ArrayList<Counter<String>>();
     for(String previousWtsFile : previousWtsFiles.split(","))
-      previousWts.add(removeWts(readWeights(previousWtsFile), fixedWts));
+      previousWts.add(removeWts(readWeights(previousWtsFile, featureIndex), fixedWts));
     initialWts = previousWts.get(0);
 
     for (int i = 0; i < nStartingPoints; i++) {
@@ -659,6 +658,13 @@ public class UnsmoothedMERT extends Thread {
     }
     nInitialStartingPoints = startingPoints.size();
 
+    StaticScorer scorer = new StaticScorer(initialWts, featureIndex);
+
+    // Load nbest list:
+    nbest = new MosesNBestList(nbestListFile, featureIndex, tokenizeNIST);
+    MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
+    AbstractNBestOptimizer.nbest = nbest;
+
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null ||
         System.getProperty("mcmcELossSGD") != null ||
         System.getProperty("mcmcELossCG") != null);
@@ -668,8 +674,6 @@ public class UnsmoothedMERT extends Thread {
     } else {
       initialObjValue = nbestEval;
     }
-
-    Scorer<String> scorer = new StaticScorer(initialWts);
 
     List<ScoredFeaturizedTranslation<IString, String>> localNbestArgmax = transArgmax(localNbest, initialWts);
     List<ScoredFeaturizedTranslation<IString, String>> nbestArgmax = transArgmax(nbest, initialWts);
@@ -748,7 +752,8 @@ public class UnsmoothedMERT extends Thread {
             .nbestLists()) {
       for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
         for (FeatureValue<String> f : trans.features) {
-          initialWts.incrementCount(f.name, 0);
+          if (f != null)
+            initialWts.incrementCount(f.name, 0);
         }
       }
     }
@@ -786,7 +791,6 @@ public class UnsmoothedMERT extends Thread {
 
   Random random;
 
-  
 	@SuppressWarnings("unchecked")
 	public UnsmoothedMERT(String evalMetric, String referenceList, String optStr, String seedStr) throws IOException {
 
@@ -1091,7 +1095,7 @@ public class UnsmoothedMERT extends Thread {
       } else if(arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
         try {
-          fixedWts.addAll(readWeights(fixedWtsFile));
+          fixedWts.addAll(readWeights(fixedWtsFile, featureIndex));
         } catch(IOException e) {
           System.err.println("Fixed weight file missing: "+fixedWtsFile);
           fixedWts = null;

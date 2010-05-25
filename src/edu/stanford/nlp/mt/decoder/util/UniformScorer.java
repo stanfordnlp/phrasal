@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.util;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -35,7 +36,7 @@ public class UniformScorer<T> implements Scorer<T> {
 		if (warn) warn();
 	}
 
-	public double getIncrementalScore(List<FeatureValue<T>> features) {
+	public double getIncrementalScore(Collection<FeatureValue<T>> features) {
 		double score = 0;
 		
 		for (FeatureValue<T> feature : features) {

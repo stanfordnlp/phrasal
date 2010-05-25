@@ -208,7 +208,7 @@ public class SSVMScorer implements Scorer<String> {
 	}
 	
 	@Override
-	public double getIncrementalScore(List<FeatureValue<String>> features) {
+	public double getIncrementalScore(Collection<FeatureValue<String>> features) {
 		if (!useRBF) {
 			double[] ssvmWeights = ssvm.getWeights();
 			
@@ -237,7 +237,7 @@ public class SSVMScorer implements Scorer<String> {
 		}		
 	}
 	
-	public SparseVector createVector(List<FeatureValue<String>> features, boolean addFeatureValues) {
+	public SparseVector createVector(Collection<FeatureValue<String>> features, boolean addFeatureValues) {
 		
 		Map<Integer,Double> vMap = new HashMap<Integer,Double>();
 		for (FeatureValue<String> feature : features) {

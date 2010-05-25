@@ -51,7 +51,7 @@ public class PhraseAlignment {
   }
 
   public int[] e2f(int i) {
-    return e2f[i];
+    return (e2f != null) ? e2f[i] : new int[] {i};
   }
 
   public static final Map<String,PhraseAlignment> map = new Object2ObjectOpenHashMap<String,PhraseAlignment>();
@@ -79,6 +79,6 @@ public class PhraseAlignment {
   }
 
   public int size() {
-    return e2f.length;
+    return (e2f != null) ? e2f.length : 0;
   }
 }

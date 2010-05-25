@@ -28,6 +28,7 @@ import edu.stanford.nlp.mt.decoder.util.StaticScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.feat.WordPenaltyFeaturizer;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -452,7 +453,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
           incEvalMetric.replace(incEvalMetric.size() - 1, null);
         incEvalMetric.add(null);
         //List<ScoredFeaturizedTranslation<IString, String>> sfTrans = nbestlist;
-        List<List<FeatureValue<String>>> featureVectors = new ArrayList<List<FeatureValue<String>>>(
+        List<Collection<FeatureValue<String>>> featureVectors = new ArrayList<Collection<FeatureValue<String>>>(
                 nbestlist.size());
         double[] us = new double[nbestlist.size()];
         int pos = incEvalMetric.size() - 1;
@@ -462,7 +463,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
           featureVectors.add(sfTran.features);
         }
 
-        dEl.addAll(EValueLearningScorer.dEl(new StaticScorer(scaledWts),
+        dEl.addAll(EValueLearningScorer.dEl(new StaticScorer(scaledWts, UnsmoothedMERT.featureIndex),
                 featureVectors, us));
       }
 
@@ -889,7 +890,7 @@ class MCMCDerivative extends AbstractNBestOptimizer {
     }
 
     Counter<String> dE = new ClassicCounter<String>();
-    Scorer<String> scorer = new StaticScorer(wts);
+    Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
 
     double hardEval = emetric.score(argmax);
     System.err.printf("Hard eval: %.5f\n", hardEval);
@@ -2185,7 +2186,7 @@ class PerceptronOptimizer extends AbstractNBestOptimizer {
     Counter<String> wts = initialWts;
 
     while (true) {
-      Scorer<String> scorer = new StaticScorer(wts);
+      Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
       MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
               new ScorerWrapperEvaluationMetric<IString, String>(scorer));
       List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch
@@ -2230,7 +2231,7 @@ class PointwisePerceptron extends AbstractNBestOptimizer {
     do {
       for (int i = 0; i < targets.size(); i++) {
         // get current classifier argmax
-        Scorer<String> scorer = new StaticScorer(wts);
+        Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
         GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(
                 new ScorerWrapperEvaluationMetric<IString, String>(scorer));
         List<List<ScoredFeaturizedTranslation<IString, String>>> nbestSlice = Arrays
@@ -2367,7 +2368,7 @@ class RandomAltPairs extends AbstractNBestOptimizer {
     for (int noProgress = 0; noProgress < UnsmoothedMERT.NO_PROGRESS_LIMIT;) {
       Counter<String> dir;
       List<ScoredFeaturizedTranslation<IString, String>> rTrans;
-      Scorer<String> scorer = new StaticScorer(wts);
+      Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
 
       dir = UnsmoothedMERT.summarizedAllFeaturesVector(rTrans = (forceBetter ? mert.randomBetterTranslations(
               nbest, wts, emetric)

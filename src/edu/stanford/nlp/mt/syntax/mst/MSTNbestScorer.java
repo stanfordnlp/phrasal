@@ -5,6 +5,7 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -109,7 +110,7 @@ public class MSTNbestScorer {
     }
   }
 
-  private void addFeatures(List<FeatureValue<String>> f, double score) {
+  private void addFeatures(Collection<FeatureValue<String>> f, double score) {
     f.add(new FeatureValue<String>("mst",score));
   }
 

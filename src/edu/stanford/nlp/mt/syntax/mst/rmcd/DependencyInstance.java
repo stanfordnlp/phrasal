@@ -305,7 +305,7 @@ public class DependencyInstance implements Cloneable, Serializable {
     return forms.toArray(new String[length()]);
   }
 
-  public String[] getLemms() {
+  public String[] getLemmas() {
     List<String> forms = new ArrayList<String>();
     getFormsOrLemmas(forms, false);
     return forms.toArray(new String[length()]);

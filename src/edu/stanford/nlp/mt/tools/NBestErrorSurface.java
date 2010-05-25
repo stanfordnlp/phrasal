@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricFactory;
 import edu.stanford.nlp.mt.tune.UnsmoothedMERT;
+import edu.stanford.nlp.util.OAIndex;
 
 /**
  * 
@@ -19,7 +20,7 @@ import edu.stanford.nlp.mt.tune.UnsmoothedMERT;
  */
 public class NBestErrorSurface {
 	static public final int gridSize = 25;
-	
+
 	static public void main(String[] args) throws Exception {
 		if (args.length != 7) {
 			System.err.println(
@@ -35,10 +36,12 @@ public class NBestErrorSurface {
 		String feature1Field = args[4];
 		String feature2Field = args[5];
 		String outPrefix = args[6];
-		
-		EvaluationMetric<IString, String> eval = MetricFactory.metric(evalMetricFn, refsFn);
-		MosesNBestList nbest = new MosesNBestList(nbestFn);
-		Counter<String> wts = UnsmoothedMERT.readWeights(weightsFn);
+
+    OAIndex<String> featureIndex = new OAIndex<String>();
+
+    EvaluationMetric<IString, String> eval = MetricFactory.metric(evalMetricFn, refsFn);
+		MosesNBestList nbest = new MosesNBestList(nbestFn, featureIndex);
+		Counter<String> wts = UnsmoothedMERT.readWeights(weightsFn, featureIndex);
 		String feature1Name = feature1Field.split("\\|\\|\\|")[0];
 		String feature2Name = feature2Field.split("\\|\\|\\|")[0];
 		double feature1Min = Double.parseDouble(

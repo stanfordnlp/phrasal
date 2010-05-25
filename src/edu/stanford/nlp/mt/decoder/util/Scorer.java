@@ -10,5 +10,5 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 public interface Scorer<FV> {
 	/**
 	 */
-	double getIncrementalScore(List<FeatureValue<FV>> features);
+	double getIncrementalScore(Collection<FeatureValue<FV>> features);
 }

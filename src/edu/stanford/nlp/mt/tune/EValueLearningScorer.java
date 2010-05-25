@@ -60,18 +60,18 @@ public class EValueLearningScorer implements Scorer<String> {
 	}
 	
 	
-	public double objectiveValue(List<List<FeatureValue<String>>> featureVectors, double[] l) {
+	public double objectiveValue(List<Collection<FeatureValue<String>>> featureVectors, double[] l) {
 		double Z = 0;
 		double[] n = new double[l.length];
 		
-		for (List<FeatureValue<String>> featureVector : featureVectors) {
+		for (Collection<FeatureValue<String>> featureVector : featureVectors) {
 			Z += Math.exp(getIncrementalScore(featureVector));
 		}
 		
 		double o = 0;
 		System.out.printf("Z:%e\n", Z);
 		{ int nIdx = -1; 
-		for (List<FeatureValue<String>> featureVector : featureVectors) { nIdx++;
+		for (Collection<FeatureValue<String>> featureVector : featureVectors) { nIdx++;
 			n[nIdx] = Math.exp(getIncrementalScore(featureVector));
 			double p = n[nIdx]/Z;
 			o += p*l[nIdx];
@@ -81,11 +81,11 @@ public class EValueLearningScorer implements Scorer<String> {
 	}
 	
 	
-	static public ClassicCounter<String> dEl(Scorer<String> scorer, List<List<FeatureValue<String>>> featureVectors, double[] l) {
+	static public ClassicCounter<String> dEl(Scorer<String> scorer, List<Collection<FeatureValue<String>>> featureVectors, double[] l) {
 		double Z = Double.MIN_NORMAL;
 		double[] n = new double[l.length];
 		ClassicCounter<String> dEl = new ClassicCounter<String>();
-		for (List<FeatureValue<String>> featureVector : featureVectors) {
+		for (Collection<FeatureValue<String>> featureVector : featureVectors) {
 			Z += Math.exp(scorer.getIncrementalScore(featureVector));
 		}
 		
@@ -93,7 +93,7 @@ public class EValueLearningScorer implements Scorer<String> {
 		
 		ClassicCounter<String> eF = new ClassicCounter<String>();
 		{ int nIdx = -1; 
-		for (List<FeatureValue<String>> featureVector : featureVectors) { nIdx++;
+		for (Collection<FeatureValue<String>> featureVector : featureVectors) { nIdx++;
 			n[nIdx] = Math.exp(scorer.getIncrementalScore(featureVector));
 			double p = n[nIdx]/Z;
 			for (FeatureValue<String> feature : featureVector) {
@@ -104,7 +104,7 @@ public class EValueLearningScorer implements Scorer<String> {
 		
 		// System.out.printf("Z:%e (vectors: %d)\n", Z, featureVectors.size());
 		{ int lIdx = -1;
-		for (List<FeatureValue<String>> featureVector : featureVectors) { lIdx++;
+		for (Collection<FeatureValue<String>> featureVector : featureVectors) { lIdx++;
 			if (l[lIdx] != l[lIdx]) continue;
 			double p = n[lIdx]/Z;
 			/*System.err.printf("%d:%e (%e/%e)\n", lIdx, p, n[lIdx], Z);
@@ -203,7 +203,7 @@ public class EValueLearningScorer implements Scorer<String> {
 	}
 	
 	@Override
-	public double getIncrementalScore(List<FeatureValue<String>> features) {
+	public double getIncrementalScore(Collection<FeatureValue<String>> features) {
 		
 		double score = 0;
 		for (FeatureValue<String> feature : features) {
@@ -224,11 +224,12 @@ public class EValueLearningScorer implements Scorer<String> {
 	}
 
 
-	public static List<FeatureValue<String>> summarizedFeatureVector(List<FeatureValue<String>> featureValues) {
+	public static List<FeatureValue<String>> summarizedFeatureVector(Collection<FeatureValue<String>> featureValues) {
 		ClassicCounter<String> sumValues = new ClassicCounter<String>();
 		List<FeatureValue<String>> fVector = new ArrayList<FeatureValue<String>>(featureValues.size());
 		for (FeatureValue<String> fValue : featureValues) {
-			sumValues.incrementCount(fValue.name, fValue.value);
+      if (fValue != null)
+        sumValues.incrementCount(fValue.name, fValue.value);
 		}
 		for (String featureName : sumValues.keySet()) {
 			fVector.add(new FeatureValue<String>(featureName, sumValues.getCount(featureName)));

@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -19,7 +20,7 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
 	 * 
 	 */
 	public ScoredFeaturizedTranslation(Sequence<TK> translation,
-			List<FeatureValue<FV>> features, double score) {
+			Collection<FeatureValue<FV>> features, double score) {
 		super(translation, features);
 		this.score = score;
 		this.latticeSourceId = -1;
@@ -29,7 +30,7 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
 	 * 
 	 */
 	public ScoredFeaturizedTranslation(Sequence<TK> translation,
-			List<FeatureValue<FV>> features, double score, long latticeSourceId) {
+			Collection<FeatureValue<FV>> features, double score, long latticeSourceId) {
 		super(translation, features);
 		this.score = score;
 		this.latticeSourceId = latticeSourceId;

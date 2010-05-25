@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
+import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.math.ArrayMath;
@@ -43,7 +44,7 @@ import gnu.trove.THashMap;
 /**
  * @author Michel Galley
  */
-public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString,String> {
+public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString,String>, AlignmentFeaturizer {
 
   // How many words of left context for POS tagging:
   public static final String ORDER_PROPERTY = "leftWords";
@@ -77,7 +78,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   static final Set<String> allOpts = new HashSet<String>
     (Arrays.asList
       (LOCAL_NORM_OPT, LOCAL_INV_NORM_OPT, LEN_NORM_OPT, MST_LEN_NORM_OPT,
-       NORM_PLUS_UNNORM_OPT, MST_SCORE_OPT, POS_SCORE_OPT,
+       NORM_PLUS_UNNORM_OPT, MST_SCORE_OPT, POS_SCORE_OPT, VERBOSE_DEBUG_OPT,
        DEBUG_OPT, DEBUG_MATRIX_SCORES_OPT));
 
   private String depFeatureName = ":dep";
@@ -202,10 +203,6 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
-    /*if(reranking) {
-      System.err.printf("@(%d)", f.translationPosition);
-      try { throw new Exception(); } catch(Exception e) { e.printStackTrace(); }
-    }*/
     return NODELAY ? getFeatures(f) : getDelayedFeatures(f, reranking);
   }
 
@@ -252,12 +249,12 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>(1+depFeatures.length);
 
-    if(f.done)
+    if (f.done)
       addMSTFeature(sd.dep,features);
 
-    for(int i=0; i<localScores.length; ++i) {
+    for (int i=0; i<localScores.length; ++i) {
       double ds = localScores[i];
-      if(ds != 0.0)
+      if (ds != 0.0)
         features.add(new FeatureValue<String>(depFeatureName+depFeatures[i], ds));
     }
     return features;
@@ -266,12 +263,12 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   private List<FeatureValue<String>> getDelayedFeatures(Featurizable<IString, String> f, boolean reranking) {
 
     // If first phrase, skip:
-    if(f.prior == null)
+    if (f.prior == null)
       return new ArrayList<FeatureValue<String>>(0);
 
     // Find/score dependencies of prior phrase if not done already:
     DependencyScores sd = (DependencyScores) f.prior.getState(this);
-    if(sd == null) {
+    if (sd == null) {
       sd = getDependencies(f.prior);
       f.prior.setState(this, sd);
     }
@@ -279,26 +276,26 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>(1+depFeatures.length);
 
-    if(reranking && f.done) {
+    if (reranking && f.done) {
 
       DependencyScores sd_done = (DependencyScores) f.getState(this);
 
       // Score last phrase using approximate dependency features (dependencies with loops):
       // Find/score dependencies of current phrase if last one:
-      if(sd_done == null) {
+      if (sd_done == null) {
         sd_done = getDependencies(f);
         f.setState(this, sd_done);
       }
       localScores = sd.localScores.clone();
-      for(int i=0; i<localScores.length; ++i)
+      for (int i=0; i<localScores.length; ++i)
         localScores[i] += sd_done.localScores[i];
 
       addMSTFeature(sd_done.dep, features);
     }
 
-    for(int i=0; i<localScores.length; ++i) {
+    for (int i=0; i<localScores.length; ++i) {
       double ds = localScores[i];
-      if(ds != 0.0)
+      if (ds != 0.0)
         features.add(new FeatureValue<String>(depFeatureName+depFeatures[i], ds));
     }
     return features;
@@ -312,11 +309,11 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
     // Determine if surface string was seen before:
     String partialTranslation = CACHE_PARTIAL ? (f.partialTranslation.toString()+" | "+f.done) : null;
-    if(CACHE_PARTIAL) {
-      if(debug)
+    if (CACHE_PARTIAL) {
+      if (debug)
         System.err.println("cache: "+partialTranslation);
       DependencyScores equiv_sd = partialParseCache.get(partialTranslation);
-      if(equiv_sd != null) {
+      if (equiv_sd != null) {
         try {
           DependencyScores copy_sd = equiv_sd.clone();
           copy_sd.updateLocalFromTotal(currentNode);
@@ -334,25 +331,25 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     // POS tagging:
     float tagScore = 0.0f;
     Pair<IString,Float>[] tags = new Pair[sz];
-    if(TAG_WITH_RIGHT_CONTEXT) {
+    if (TAG_WITH_RIGHT_CONTEXT) {
       // faster, better POS accuracy, lower BLEU
       int sp = Math.max(0, loc- prefixTagger.getOrder());
       int ep = loc+sz;
       Sequence<IString> seq = f.partialTranslation.subsequence(sp, ep);
       IString[] context = new IString[seq.size()];
-      for(int j=0; j<context.length; ++j)
+      for (int j=0; j<context.length; ++j)
         context[j] = seq.get(j);
-      for(int i=0; i<sz; ++i) {
+      for (int i=0; i<sz; ++i) {
         tags[i] = prefixTagger.getBestTag(context, -sz+i+1);
         tagScore += tags[i].second;
       }
     } else {
-      for(int i=0; i<sz; ++i) {
+      for (int i=0; i<sz; ++i) {
         int s = Math.max(0, loc+i- prefixTagger.getOrder());
         int e = loc+Math.min(sz, i+1);
         Sequence<IString> seq = f.partialTranslation.subsequence(s, e);
         IString[] context = new IString[seq.size()];
-        for(int j=0; j<context.length; ++j)
+        for (int j=0; j<context.length; ++j)
           context[j] = seq.get(j);
         tags[i] = prefixTagger.getBestTag(context, 0);
         tagScore += tags[i].second;
@@ -361,20 +358,20 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
     // Create new dependency instance:
     DependencyInstance dep;
-    if(f.prior != null) {
-      assert(f.prior.getState(this) != null);
+    if (f.prior != null) {
+      assert (f.prior.getState(this) != null);
       try {
         DependencyInstance prior_dep =
              ((DependencyScores) f.prior.getState(this)).dep;
         dep = (DependencyInstance) prior_dep.clone();
-      } catch(CloneNotSupportedException e) {
+      } catch (CloneNotSupportedException e) {
         e.printStackTrace();
         throw new RuntimeException();
       }
     } else {
       dep = new DependencyInstance(pipe);
       dep.add("<root>","<root-LEMMA>","<root-CPOS>","<root-POS>", new int[0]);
-      if(!srcInstances.isEmpty()) {
+      if (!srcInstances.isEmpty()) {
         int transId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
         assert(transId >= 0);
         assert(transId < srcInstances.size());
@@ -388,19 +385,19 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
     // Phrase alignment:
     PhraseAlignment align = null;
-    if(bilingual) {
+    if (bilingual) {
       align = f.hyp.translationOpt.abstractOption.alignment;
-			if(align != null)
-				assert(sz == align.size());
+			if (align != null)
+				assert(sz == align.size() || align.size() == 0);
     }
 
-    for(int i=0; i<sz; ++i) {
+    for (int i=0; i<sz; ++i) {
       // Add word, POS and alignment to dependency instance:
       int[] pAlign = new int[0];
-      if(bilingual) {
-        if(align.hasAlignment()) {
+      if (bilingual) {
+        if (align.hasAlignment()) {
           int[] localAlign = align.e2f(i);
-          if(align == null || i >= align.size()) {
+          if (align == null || i >= align.size()) {
             System.err.printf("Array index: %d >= %d\n", i, align.size());
             System.err.printf("Phrase pair: [%s] [%s]\n", f.foreignPhrase.toString(), f.translatedPhrase.toString());
             System.err.printf("Alignment: %s\n", align.toString());
@@ -409,9 +406,9 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
             System.err.printf("Position: [%d] [%d]\n", f.foreignPosition, f.partialTranslation.size());
             throw new RuntimeException();
           }
-          if(localAlign != null) {
+          if (localAlign != null) {
             pAlign = new int[localAlign.length];
-            for(int j=0; j<localAlign.length; ++j) {
+            for (int j=0; j<localAlign.length; ++j) {
               pAlign[j] = localAlign[j]+f.foreignPosition+1;
             }
           }
@@ -422,29 +419,32 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
     // Dependency parsing:
     float argmaxDepScore = 0.0f, rootDepScore = 0.0f;
-    if(pipe != null) {
-      if(verboseDebug) {
+    if (pipe != null) {
+      if (verboseDebug) {
         System.err.printf("\n===============\ndep of phrase: %s\nin sentence: %s\n",f.translatedPhrase,f.partialTranslation);
         parser.debugHeadScores(dep);
       }
-      for(int j=loc; j<loc+sz+(f.done?1:0); ++j) { // 1 word delay, except when processing last word.
-        if(verboseDebug) System.err.println("word: "+dep.getForm(j));
-        for(int i=0; i<j; ++i) {
+      for (int j=loc; j<loc+sz+(f.done?1:0); ++j) { // 1 word delay, except when processing last word.
+        for (int i=0; i<j; ++i) {
+          if (verboseDebug) {
+            System.err.printf("dep(i) i=%d j=%d n=%d\n",i, j, dep.length());
+            System.err.printf("dep(s) i=%s j=%s\n", dep.getForm(i), dep.getForm(j));
+          }
           float old_sL = dep.getHeadScore(i);
           float old_sR = dep.getHeadScore(j);
           float sL = (float) pipe.getScore(dep, i, j, false, par); // left modifier attaches to right head
           float sR = (float) pipe.getScore(dep, i, j, true, par); // right modifier attaches to left head
-          if(verboseDebug) {
-            if(i > 0) {
+          if (verboseDebug) {
+            if (i > 0) {
               printDep(dep,i,j,sL,j-i,"   L score",false);
               printDep(dep,i,dep.getHead(i),old_sL,j-i,"   old L score"+(sL>old_sL?" (outperformed)":""), false);
             }
             printDep(dep,i,j,sR,j-i,"   R score",true);
             printDep(dep,dep.getHead(j),j,old_sR,j-i,"   old R score"+(sR>old_sR?" (outperformed)":""), true);
           }
-          if(sL > old_sL) {
-            if(i>0) {
-              if(old_sL > -Float.MAX_VALUE) {
+          if (sL > old_sL) {
+            if (i>0) {
+              if (old_sL > -Float.MAX_VALUE) {
                 float delta = sL - old_sL;
                 argmaxDepScore += delta;
               } else {
@@ -454,8 +454,8 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
             dep.setHeadScore(i, sL);
             dep.setHead(i,j);
           }
-          if(sR > old_sR) {
-            if(old_sR > -Float.MAX_VALUE) {
+          if (sR > old_sR) {
+            if (old_sR > -Float.MAX_VALUE) {
               float delta =  sR - old_sR;
               argmaxDepScore += delta;
             } else {
@@ -465,12 +465,12 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
             dep.setHead(j,i);
           }
         }
-        if(debug) {
+        if (debug) {
           int hj = dep.getHead(j);
           if(verboseDebug) System.err.printf("m(%d)=%s h(%d)=%s\n", j, dep.getForm(j), hj, hj >= 0 ? dep.getForm(hj) : null);
         }
       }
-      if(debug) {
+      if (debug) {
         System.err.printf("argmax score: %.3f\nroot score: %.3f\n",
             argmaxDepScore, rootDepScore);
       }
@@ -634,7 +634,8 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     boolean hasPrev = d != null && d.totalScores != null;
     if(lenNorm) scores[++i] = lenNorm(hasPrev ? d.totalScores[0] : 0.0f, depScore, pos, phraseLen);
     if(posScore) scores[++i] = tagScore;
-    assert(++i == depFeatures.length);
+    ++i;
+    assert(i == depFeatures.length);
     return scores;
   }
 

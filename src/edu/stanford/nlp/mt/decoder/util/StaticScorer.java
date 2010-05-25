@@ -1,9 +1,10 @@
 package edu.stanford.nlp.mt.decoder.util;
+
 import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.FeatureValueArray;
+import edu.stanford.nlp.mt.base.FeatureValueCollection;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
@@ -15,16 +16,16 @@ import edu.stanford.nlp.math.ArrayMath;
  */
 public class StaticScorer implements Scorer<String> {
 
-  protected final OAIndex<String> featureIndex;
-  protected final double[] weights;
+  final public OAIndex<String> featureIndex;
+  final protected double[] weights;
+  final private boolean sharedFeatureIndex;
 
 	/**
 	 * @throws IOException
 	 */
 	public StaticScorer(String filename) throws IOException {
-		
-		featureIndex = new OAIndex<String>();
-		
+    this.sharedFeatureIndex = false;
+    this.featureIndex = new OAIndex<String>();
 		Map<Integer,Double> wts = new HashMap<Integer,Double>();
 		
 				
@@ -45,70 +46,61 @@ public class StaticScorer implements Scorer<String> {
 	 * 
 	 */
 	public StaticScorer(Map<String,Double> featureWts) {
-		featureIndex = new OAIndex<String>();
+    this.sharedFeatureIndex = false;
+    featureIndex = new OAIndex<String>();
 		for (String key : featureWts.keySet()) {
 			featureIndex.indexOf(key, true);
 		//	System.err.printf("---inserting: '%s' index: %d\n", key, featureIndex.indexOf(key));
 		}
-		
+
 		weights = new double[featureIndex.boundOnMaxIndex()];
 		
 		for (String key : featureWts.keySet()) {
-			weights[featureIndex.indexOf(key)] = featureWts.get(key).doubleValue();
+			weights[featureIndex.indexOf(key)] = featureWts.get(key); //.doubleValue();
 		}
 	}
 
-  /**
-	 *
-	 */
-	public StaticScorer(Counter<String> featureWts, OAIndex<String> index) {
-		featureIndex = index;
-    weights = new double[featureIndex.size()];
-
-		for (String key : featureWts.keySet()) {
-      int i = featureIndex.indexOf(key);
-      double w = featureWts.getCount(key);
-      if(i>=0)
-        weights[i] = w;
-    }
-
-  }
-
-  public StaticScorer(Counter<String> featureWts) {
-		featureIndex = new OAIndex<String>();
+  public StaticScorer(Counter<String> featureWts, OAIndex<String> featureIndex) {
+    this.sharedFeatureIndex = true;
+    this.featureIndex = featureIndex;
 		for (String key : featureWts.keySet()) {
 			featureIndex.indexOf(key, true);
 			//System.err.printf("---inserting: '%s' index: %d\n", key, featureIndex.indexOf(key));
 		}
 		
-		weights = new double[featureIndex.boundOnMaxIndex()];
-		
+		weights = new double[featureIndex.size()];
+    //weights = new double[featureIndex.boundOnMaxIndex()];
+
 		for (String key : featureWts.keySet()) {
 			weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
 		}
 	}
 
   @Override
-	public double getIncrementalScore(List<FeatureValue<String>> features) {
-    if(features instanceof FeatureValueArray) {
-      FeatureValueArray<String> fva = (FeatureValueArray<String>) features;
-      double[] arr = fva.toDoubleArray();
-      if(arr != null)
-        // TODO: currently not functional; make it work:
-        return ArrayMath.innerProduct(fva.toDoubleArray(), weights);
-    }
-    // original code:
+	public double getIncrementalScore(Collection<FeatureValue<String>> features) {
+    if (sharedFeatureIndex && features instanceof FeatureValueCollection)
+      return getIncrementalScoreInnerProduct((FeatureValueCollection<String>)features);
+    return getIncrementalScoreHash(features);
+  }
+
+  private double getIncrementalScoreInnerProduct(FeatureValueCollection<String> fva) {
+    return ArrayMath.innerProduct(fva.toDoubleArray(), weights);
+  }
+
+  private double getIncrementalScoreHash(Collection<FeatureValue<String>> features) {
     double score = 0;
 
     for (FeatureValue<String> feature : features) {
       int index = featureIndex.indexOf(feature.name);
-      if (index >= 0) score += weights[index]*feature.value;
+      if (index >= 0 && index < weights.length) {
+        score += weights[index]*feature.value;
+      }
     }
-
+    
     return score;
   }
-	
-	@SuppressWarnings("unchecked")
+
+	@SuppressWarnings("unchecked,unused")
 	public double getIncrementalScoreNoisy(List features) {
 		double score = 0;
 		
@@ -125,39 +117,36 @@ public class StaticScorer implements Scorer<String> {
 		return score;
 	}
 
-
+  @SuppressWarnings("unused")
 	public void saveWeights(String filename) {
 		throw new UnsupportedOperationException();
 	}
 
-
+  @SuppressWarnings("unused")
 	public boolean hasNonZeroWeight(String featureName) {
 		int idx = featureIndex.indexOf(featureName);
-		if (idx < 0) {
-			return false;
-		}
-		return weights[idx] == weights[idx] && weights[idx] != 0;
-	}
+    return idx >= 0 && weights[idx] == weights[idx] && weights[idx] != 0;
+  }
 
-
+  @SuppressWarnings("unused")
 	public boolean randomizeTag() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-
+  @SuppressWarnings("unused")
 	public void setRandomizeTag(boolean randomizeTag) {
 		// TODO Auto-generated method stub
-		
 	}
 
-
+  @SuppressWarnings("unused")
 	public void setWeightMultipliers(double manualWeightMul,
 			double classifierWeightMul) {
 		// TODO Auto-generated method stub
 		
 	}
 
+  @SuppressWarnings("unused")
 	public void displayWeights() {
 		// TODO Auto-generated method stub
 		
