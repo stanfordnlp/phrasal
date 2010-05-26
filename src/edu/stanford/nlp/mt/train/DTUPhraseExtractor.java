@@ -779,8 +779,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   @Override
   public void extractPhrases(WordAlignment sent) {
 
-    substringExtractor.extractPhrases(sent);
-    //substringExtractor.extractPhrasesNoAlGrid(sent);
+    if (needAlGrid)
+      substringExtractor.extractPhrasesNoAlGrid(sent);
+    else
+      substringExtractor.extractPhrases(sent);
+
 
     if (DEBUG) {
       System.err.println("f: "+sent.f());
