@@ -53,6 +53,7 @@ public class Phrasal {
   public static final String SAVE_WEIGHTS = "save-weights";
   public static final String BEAM_SIZE = "stack";
   public static final String DISTORTION_FILE = "distortion-file";
+  public static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
   public static final String WEIGHTS_FILE = "weights-file";
   public static final String CONFIG_FILE = "config-file";
   public static final String USE_DISCRIMINATIVE_LM = "discriminative-lm";
@@ -75,6 +76,7 @@ public class Phrasal {
   public static final String LEARNING_METRIC = "learning-metric";
   public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
   public static final String GAPS_OPT = "gaps";
+  public static final String MAX_GAP_SPAN_OPT = "max-gap-span";
   public static final String MAX_FLOATING_PHRASES_OPT = "max-floating-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
   public static final String ISTRING_VOC_OPT = "istring-vocabulary";
@@ -108,12 +110,12 @@ public class Phrasal {
         USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY, OPTION_LIMIT_OPT,
         NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT,
         CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
-        RECOMBINATION_HEURISTIC,
+        RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE,
         LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
         PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
         WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
-        LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
+        LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
         LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT, ISTRING_VOC_OPT, MOSES_COMPATIBILITY_OPT));
 		IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT,
         MAPPING_OPT, FACTOR_DELIM_OPT));
@@ -211,7 +213,7 @@ public class Phrasal {
     if (config.containsKey(ISTRING_VOC_OPT))
       IString.load(config.get(ISTRING_VOC_OPT).get(0));
 
-    withGaps = config.containsKey(GAPS_OPT);
+    withGaps = config.containsKey(GAPS_OPT) || config.containsKey(MAX_GAP_SPAN_OPT);
     PharaohPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(GAPS_IN_FUTURE_COST_OPT).get(0));
@@ -220,6 +222,9 @@ public class Phrasal {
         AbstractBeamInferer.DISTINCT_NBEST = Boolean.parseBoolean(config.get(DISTINCT_NBEST_LIST_OPT).get(0));
     if (config.containsKey(LINEAR_DISTORTION_TYPE))
       ConcreteTranslationOption.setLinearDistortionType(config.get(LINEAR_DISTORTION_TYPE).get(0));
+    else if (withGaps)
+      ConcreteTranslationOption.setLinearDistortionType
+        (ConcreteTranslationOption.LinearDistortionType.last_contiguous_segment.name());
     if (config.containsKey(LOCAL_PROCS))
 			local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
 
@@ -343,7 +348,7 @@ public class Phrasal {
       recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
 
-    boolean mosesMode = true; //TODO: config.containsKey(MOSES_COMPATIBILITY_OPT);
+    boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
 
 		System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
 
@@ -382,9 +387,13 @@ public class Phrasal {
 		MSDFeaturizer lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
-		if (config.containsKey(DISTORTION_FILE)) {
+		if (config.containsKey(DISTORTION_FILE) || config.containsKey(HIER_DISTORTION_FILE) ) {
+      if (config.containsKey(DISTORTION_FILE) && config.containsKey(HIER_DISTORTION_FILE))
+        throw new UnsupportedOperationException("Two distortion files instead of one. " +
+            "To use more than one, please use "+ADDITIONAL_FEATURIZERS+" field.");
+      boolean stdDistFile = config.containsKey(DISTORTION_FILE);
       msdRecombination = true;
-			List<String> strDistortionFile = config.get(DISTORTION_FILE);
+			List<String> strDistortionFile = stdDistFile ? config.get(DISTORTION_FILE) : config.get(HIER_DISTORTION_FILE);
 			String modelType;
 			String modelFilename;
 			if (strDistortionFile.size() == 2) {
@@ -401,7 +410,7 @@ public class Phrasal {
 								"Parameter '%s' takes two arguments: distortion-model-type & model-filename)",
 								DISTORTION_FILE));
 			}
-			lexReorderFeaturizer = mosesMode ?
+			lexReorderFeaturizer = mosesMode || stdDistFile ?
         new LexicalReorderingFeaturizer(new MosesLexicalReorderingTable(modelFilename, modelType)) :
         new HierarchicalReorderingFeaturizer(modelFilename, modelType);
 		}
@@ -739,8 +748,9 @@ public class Phrasal {
 
     if(withGaps) {
       // Support for gaps:
-      List<String> gapOpts = config.get(GAPS_OPT);
-      if(gapOpts.size() < 1 || gapOpts.size() > 2)
+      List<String> gapOpts =
+        config.containsKey(MAX_GAP_SPAN_OPT) ? config.get(MAX_GAP_SPAN_OPT) : config.get(GAPS_OPT);
+      if (gapOpts.size() < 1 || gapOpts.size() > 2)
         throw new UnsupportedOperationException();
       int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));
       DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
@@ -749,7 +759,7 @@ public class Phrasal {
       DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
 
       // Support for floating phrases:
-      if(config.containsKey(MAX_FLOATING_PHRASES_OPT)) {
+      if (config.containsKey(MAX_FLOATING_PHRASES_OPT)) {
         List<String> floatOpts = config.get(MAX_FLOATING_PHRASES_OPT);
         if(floatOpts.size() != 1)
           throw new UnsupportedOperationException();

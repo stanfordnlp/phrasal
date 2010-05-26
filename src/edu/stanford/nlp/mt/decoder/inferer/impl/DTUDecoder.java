@@ -38,7 +38,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   final int maxDistortion;
 	final int numProcs;
-  public static boolean gapsInFutureCost;
+  public static boolean gapsInFutureCost = true;
 
   static {
 		if (ALIGNMENT_DUMP != null) {

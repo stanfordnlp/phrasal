@@ -12,7 +12,6 @@ import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 
 import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IString;
 
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
@@ -225,7 +224,7 @@ public class CombinedFeatureExtractor {
 	public void init() {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
-      exsString = "mt.train.PharaohFeatureExtractor:mt.train.ExperimentalLexicalReorderingFeatureExtractor";
+      exsString = "mt.train.PharaohFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
     extractors = new ArrayList<AbstractFeatureExtractor>();

@@ -12,11 +12,11 @@ import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 import edu.stanford.nlp.util.Index;
 
 /**
- * Extractor for lexicalized re-ordering probabilities of Moses (new version).
+ * Extractor for lexicalized re-ordering probabilities of Moses.
  *
  * @author Michel Galley
  */
-public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
+public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugLexicalReorderingFeatureExtractor";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -173,6 +173,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
     return ReorderingTypes.discont1;
   }
 
+  /*
   private ReorderingTypes getDTUReorderingType(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, boolean forward) {
     
     DTUInstance dtu = alTemp instanceof DTUInstance ? ((DTUInstance) alTemp) : null;
@@ -263,6 +264,7 @@ public class ExperimentalLexicalReorderingFeatureExtractor extends AbstractFeatu
       return getReorderingType(alTemp, alGrid, forward);
     return ReorderingTypes.monotone;
   }
+  */
 
   @Override
 	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
