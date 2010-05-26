@@ -96,10 +96,12 @@ public class LanguageModelTrueCaser implements TrueCaser {
     // manual fix up(s)
     // capitalize the first letter
     String[] trg = translation.translation.toString().split("\\s+");
-    String firstLetter = trg[0].substring(0,1);
-    String rest = trg[0].substring(1,trg[0].length());
-    String capTrg = firstLetter.toUpperCase() + rest;
-    trg[0] = capTrg;
+    if (trg.length > 0 && trg[0].length() > 0) {
+      String firstLetter = trg[0].substring(0,1);
+      String rest = trg[0].substring(1,trg[0].length());
+      String capTrg = firstLetter.toUpperCase() + rest;
+      trg[0] = capTrg;
+    }
 
     return trg;
   }
