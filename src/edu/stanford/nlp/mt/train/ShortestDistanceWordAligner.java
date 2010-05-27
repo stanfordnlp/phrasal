@@ -54,11 +54,10 @@ public class ShortestDistanceWordAligner implements WordAligner {
     }
   }
 
+  @SuppressWarnings("unused")
   public ShortestDistanceWordAligner(IBMModel1 model) {
     this.model1 = model;
   }
-
-
 
   /**
    * @param sp Contains information of the foreign sentence, the English sentence, and the GIZA++ style alignment

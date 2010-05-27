@@ -113,7 +113,6 @@ public class CombinedFeatureExtractor {
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
   private static BshInterpreter interpreter = new BshInterpreter();
-  private static int minCount = 1;
 
   protected List<AbstractFeatureExtractor> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
@@ -557,6 +556,7 @@ public class CombinedFeatureExtractor {
           Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;
           for(int fIdx : counter.keySet()) {
             int cnt = counter.get(fIdx);
+            int minCount = 1;
             if(cnt >= minCount) {
               str.append(printFeatureNames ? featureIndex.get(fIdx) : fIdx);
               str.append("=").append(cnt).append(" ");

@@ -45,8 +45,8 @@ public class AlGridCell<T extends AlignmentTemplateInstance> {
   public boolean hasBottomLeft() { return hasBottomLeft; }
   public boolean hasBottomRight() { return hasBottomRight; }
 
-  public List<T> getTopLeft() { return topLeft; }
-  public List<T> getTopRight() { return topRight; }
-  public List<T> getBottomLeft() { return bottomLeft; }
-  public List<T> getBottomRight() { return bottomRight; }
+  @SuppressWarnings("unused") public List<T> getTopLeft() { return topLeft; }
+  @SuppressWarnings("unused") public List<T> getTopRight() { return topRight; }
+  @SuppressWarnings("unused") public List<T> getBottomLeft() { return bottomLeft; }
+  @SuppressWarnings("unused") public List<T> getBottomRight() { return bottomRight; }
 }

@@ -12,6 +12,7 @@ import java.util.*;
  *
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class MosesPhraseExtractor extends AbstractPhraseExtractor {
 
   public MosesPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {

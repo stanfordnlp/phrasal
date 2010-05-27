@@ -83,7 +83,7 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
   public int fEndPos() { return fStartPos+f.size()-1; }
   public int eEndPos() { return eStartPos+e.size()-1; }
 
-  public boolean isDiscontinuous() { return false; }
+  //public boolean isDiscontinuous() { return false; }
 
   /*
   public boolean equals(Object o) {

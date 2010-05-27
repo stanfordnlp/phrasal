@@ -203,9 +203,9 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
 
   @Override
 	public String toString() { return toString(f2e); }
-  public String toString1() { return toString(f2e,false); }
+  //public String toString1() { return toString(f2e,false); }
 
-  public String toReverseString() { return toString(e2f); }
+  //public String toReverseString() { return toString(e2f); }
   public String toReverseString1() { return toString(e2f,false); }
 
   static public SymmetricalWordAlignment[] readFromIBMWordAlignment(String xmlFile) {

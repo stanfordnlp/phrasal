@@ -8,6 +8,7 @@ import edu.stanford.nlp.util.*;
  *
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class Block extends IntQuadruple {
   
 	private static final long serialVersionUID = 1L;

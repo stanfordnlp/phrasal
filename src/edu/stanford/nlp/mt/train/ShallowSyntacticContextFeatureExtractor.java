@@ -14,6 +14,7 @@ import edu.stanford.nlp.mt.base.IString;
  * 
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeatureExtractor {
 
   // TODO: reimplement more stuff available in the C++ version.
@@ -81,6 +82,7 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
     addWordFeatureToSparseVector(Em1, e, e1-1, eOCWords);  
     addWordFeatureToSparseVector(Ep1, e, e2+1, eOCWords);
 
+    /*
     if(false) {
     // Get all function words close to alignment template:
     addBOWFeatureToSparseVector(Fm, f, f1-ws, f1-1, fCCWords);
@@ -88,6 +90,7 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
     addBOWFeatureToSparseVector(Em, e, e1-ws, e1-1, eCCWords);
     addBOWFeatureToSparseVector(Ep, e, e2+1, e2+ws, eCCWords);
     }
+    */
   }
 
   /**

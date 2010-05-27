@@ -15,8 +15,9 @@ import edu.stanford.nlp.stats.ClassicCounter;
  * @author Pi-Chuan Chang
  */
 public class WordPairDistortionStatisticsCollector implements StatisticsCollector {
-  
-  private final boolean DETAILED_DEBUG = false;
+
+  final boolean DETAILED_DEBUG = false;
+
   //private IBMModel1 model1 = null;
   private WordAligner waligner = null;
   private TwoDimensionalCounter<String,String> counterF1F2 = null;

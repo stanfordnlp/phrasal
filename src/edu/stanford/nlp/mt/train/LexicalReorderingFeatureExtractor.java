@@ -1,9 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
 import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Arrays;
 
@@ -31,8 +28,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   float[] totalForwardCounts = null, totalBackwardCounts = null, totalJointCounts = null;
 
   enum DirectionTypes { forward, backward, bidirectional, joint }
-  enum ReorderingTypes { monotone, swap, discont1, discont2, inside, outside }
-  enum PermType { x, y, nil }
+  enum ReorderingTypes { monotone, swap, discont1, discont2 } //, inside, outside }
+  enum PermType { x, y } //, nil }
   enum LanguageTypes { fe, f, e }
 
   int modelSize = 0;
@@ -384,7 +381,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   private void addCountToArray
       (final ArrayList<Object> list, final float[] totalCounts, int type, AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
-    synchronized(totalCounts) { // TODO: warning
+    synchronized(totalCounts) {
       ++totalCounts[type];
     }
     // Exit if alignment template was filtered out:
@@ -395,7 +392,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
     float[] counts;
-    synchronized(list) { // TODO: warning
+    synchronized(list) {
       while(idx >= list.size()) {
         float[] arr = new float[modelSize];
         Arrays.fill(arr, LAPLACE_SMOOTHING);

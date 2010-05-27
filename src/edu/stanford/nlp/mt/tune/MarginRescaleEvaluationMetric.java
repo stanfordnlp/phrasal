@@ -15,6 +15,7 @@ import edu.stanford.nlp.mt.metrics.*;
  * @author danielcer
  *
  */
+@SuppressWarnings("unused")
 public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, String> {
 	final EvaluationMetric<IString,String> lossMetric;
 	final Scorer<String> scorer;

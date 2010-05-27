@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  *
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
 
   private static final boolean DEBUG = System.getProperty("debugDependencyPhraseExtractor") != null;

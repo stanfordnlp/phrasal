@@ -138,6 +138,7 @@ public class AbstractWordAlignment implements WordAlignment {
     return hs.hashCode();
   }
 
+  @SuppressWarnings("unused")
   public double ratioFtoE() {
     assert(eSize() > 0);
     return fSize()*1.0/eSize();

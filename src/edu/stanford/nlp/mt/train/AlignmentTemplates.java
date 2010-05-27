@@ -188,7 +188,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * Return the source-language phrase indexed by idx.
    */
   public int[] getF(int idx) { return fIndex.get(idx); }
-  public int sizeF() { return fIndex.size(); }
+  //public int sizeF() { return fIndex.size(); }
 
   /**
    * Return index for target-language phrase in alTemp.
@@ -200,7 +200,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * Return the target-language phrase indexed by idx.
    */
   public int[] getE(int idx) { return eIndex.get(idx); }
-  public int sizeE() { return eIndex.size(); }
+  //public int sizeE() { return eIndex.size(); }
 
   /**
    * Return index for phrase alignment in alTemp.

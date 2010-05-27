@@ -13,6 +13,7 @@ import edu.stanford.nlp.trees.Constituent;
  *
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class ConstituentPhraseExtractor extends LinearTimePhraseExtractor {
 
   // NOTE: unfinished

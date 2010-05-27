@@ -10,7 +10,6 @@ import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.inferer.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
-import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
 import edu.stanford.nlp.mt.Phrasal;
 
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -42,7 +41,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   static {
 		if (ALIGNMENT_DUMP != null) {
-			(new File(ALIGNMENT_DUMP)).delete();
+      if ((new File(ALIGNMENT_DUMP)).delete()) {}
 		}
 	}
 	
@@ -288,8 +287,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
     Collections.reverse(trace);
 
-    ClassicCounter finalFeatureVector = new ClassicCounter();
-    if (bestHyp.featurizable != null) {
+    ClassicCounter<String> finalFeatureVector = new ClassicCounter<String>();
+    if (bestHyp != null && bestHyp.featurizable != null) {
       System.err.printf("hyp: %s\n",  bestHyp.featurizable.partialTranslation);
       System.err.printf("score: %e\n", bestHyp.score());
       System.err.printf("Trace:\n");

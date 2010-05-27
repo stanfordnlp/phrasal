@@ -159,6 +159,7 @@ public class UnsmoothedMERT extends Thread {
     return obj;
   }
 
+  @SuppressWarnings("unused")
   static public List<ScoredFeaturizedTranslation<IString,String>>
   transEvalArgmax(MosesNBestList nbest,
                   EvaluationMetric<IString, String> emetric) {

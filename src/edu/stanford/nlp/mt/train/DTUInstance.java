@@ -75,11 +75,13 @@ public class DTUInstance extends AlignmentTemplateInstance {
     if(eContiguous) assert(eEndPos() == e2);
   }
 
+  /*
   @Override
   public boolean isDiscontinuous() {
     return discontinuous; 
   }
+  */
 
-  public BitSet getFAlignment() { return fSet; }
-  public BitSet getEAlignment() { return eSet; }
+  //public BitSet getFAlignment() { return fSet; }
+  //public BitSet getEAlignment() { return eSet; }
 }

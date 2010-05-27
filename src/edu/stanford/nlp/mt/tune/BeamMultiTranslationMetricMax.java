@@ -74,7 +74,8 @@ public class BeamMultiTranslationMetricMax<TK, FV> implements MultiTranslationMe
 		if (DEBUG) {
 			System.err.printf("Done Best Score: %.5f\n", bestScore);
 		}
-		
+
+    assert(beam != null);
 		MultiTranslationState<TK, FV> best = beam.remove();
 		
 		return best.selected();

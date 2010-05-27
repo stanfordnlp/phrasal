@@ -24,7 +24,7 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
  * 
  * @author Pi-Chuan Chang
  */
-
+@SuppressWarnings("unused")
 public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends AbstractFeatureExtractor {
 
 	// mg2009: probably not thread safe

@@ -170,6 +170,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   /**
    * Check features against those read from Moses phrase table.
    */
+  @SuppressWarnings("unused")
   public void checkAgainst(BufferedReader ref) {
     try {
       for (String fLine; (fLine = ref.readLine()) != null;) {

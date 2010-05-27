@@ -31,7 +31,8 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 		this.greedyMetrixMax = new GreedyMultiTranslationMetricMax<TK, FV>(metric);
 		this.subMetric = null;
 	}
-	
+
+  @SuppressWarnings("unused")
 	public HillClimbingMultiTranslationMetricMax(EvaluationMetric<TK,FV> metric, EvaluationMetric<TK, FV> subMetric) {
 		this.metric = metric;
 		this.greedyMetrixMax = new GreedyMultiTranslationMetricMax<TK, FV>(metric);
@@ -65,6 +66,7 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 				for (ScoredFeaturizedTranslation<TK,FV> ftrans : nbestList) { tI++;
 					incrementalMetric.replace(i, ftrans);
 					if (subMetric != null) {
+            assert(incrementalSubMetric != null);
 						incrementalSubMetric.replace(i, ftrans);
 					}
 					double score = incrementalMetric.score();
