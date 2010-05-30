@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.Collection;
 import java.io.*;
 import org.testng.annotations.*;
 
@@ -9,7 +10,7 @@ import org.testng.annotations.*;
  *
  */
 @Test (groups = "base")
-public class MosesNBestListTest{
+public class MosesNBestListTest {
 	
 		@DataProvider (name = "improperInputFiles")
 		public Object[][] improperInputFiles() throws IOException {
@@ -26,21 +27,24 @@ public class MosesNBestListTest{
 	 	@Test
 	 	public void testConstructor() throws IOException	{
 	 		MosesNBestList nbestList = new MosesNBestList("/u/nlp/data/testng/inputs/properSample.test");
-//	 		MosesNBestList nbestList = new MosesNBestList("properSample.test");
-	 		
-	 		//  Features[3]: LM
-	 		//  Features[11]: TM:phi(t|f)
 	 		
 	 		assert(nbestList.nbestLists().size() == 20);			
 
-	 		assert(nbestList.nbestLists().get(0).get(0).features.get(3).value == -43.621000);
-			assert(nbestList.nbestLists().get(0).get(0).features.get(11).value == -36.746000);
+			assert(getValue(nbestList.nbestLists().get(0).get(0).features,"LM") == -43.621000);
+			assert(getValue(nbestList.nbestLists().get(0).get(0).features,"TM:phi(t|f)") == -36.746000);
 			assert(nbestList.nbestLists().get(0).get(0).translation.toString().equals("a computer into the means of taiwan ."));
 			
-			assert(nbestList.nbestLists().get(1).get(0).features.get(3).value == -66.212000);
-			assert(nbestList.nbestLists().get(1).get(0).features.get(11).value == -11.933000);
+			assert(getValue(nbestList.nbestLists().get(1).get(0).features,"LM") == -66.212000);
+			assert(getValue(nbestList.nbestLists().get(1).get(0).features,"TM:phi(t|F)") == -11.933000);
       assert(nbestList.nbestLists().get(1).get(0).translation.toString().equals("5 afp following are closing ("));			
 	 	} 	
+
+		private double getValue(Collection<FeatureValue<String>> fvs, String name) {
+			for (FeatureValue<String> fv : fvs)
+				if (name.equals(fv.name))
+					return fv.value;
+			return 0;
+		}
 		
 	 	@Test
 	 	public void testToString() throws IOException	{
