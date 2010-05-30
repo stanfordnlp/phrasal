@@ -37,7 +37,9 @@ public class ARPALanguageModelTest{
       String sent = "This is a test sentence to be scored by the language model";
       Sequence<IString> seq = new SimpleSequence<IString>(IStrings.toIStringArray(sent.split("\\s")));
       double score =  LanguageModels.scoreSequence(lm, seq);      
-      assert(score == (double)-73.03947854042053);   
+      assert(score == (double)-79.66288304328918);
+			// mg2010: the gollowing is wrong according to "ngram -lm sampleLM.gz -ppl":
+      //assert(score == (double)-73.03947854042053);   
 	 	}
 		
 		@Test (dataProvider = "languageModel")

@@ -195,7 +195,8 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				List<FeatureValue<String>> featureValuesTmp = new LinkedList<FeatureValue<String>>();
 
         for (String feature : featureMap.keySet()) {
-          featureIndex.indexOf(feature, true);
+					if (featureIndex != null)
+						featureIndex.indexOf(feature, true);
 					List<Double> values = featureMap.get(feature);
 					if (values.size() == 1) {
 						String featureNameStored = featureNameSelfMap.get(feature);

@@ -33,7 +33,7 @@ public class PhrasalTest {
     assert(config.get("ttable-limit").equals(test));
 
     test = new ArrayList<String>();
-    test.add("sample/mt06.tables/phrase-table.gz");
+    test.add("/u/nlp/data/testng/inputs/mt06.tables/phrase-table.gz");
     assert(config.get("ttable-file").equals(test));
 
     test = new ArrayList<String>();
@@ -60,11 +60,11 @@ public class PhrasalTest {
     test.add("0-0");
     test.add("msd-bidirectional-fe");
     test.add("6");
-    test.add("sample/mt06.tables/msd-bidirectional-fe.gz");
+    test.add("/u/nlp/data/testng/inputs/mt06.tables/msd-bidirectional-fe.gz");
     assert(config.get("distortion-file").equals(test));
 
     test = new ArrayList<String>();
-    test.add("sample/mt06.flt_giga.lm.gz");
+    test.add("/u/nlp/data/testng/inputs/mt06.flt_giga.lm.gz");
     assert(config.get("lmodel-file").equals(test));
   }
 

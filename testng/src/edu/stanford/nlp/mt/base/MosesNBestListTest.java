@@ -35,7 +35,7 @@ public class MosesNBestListTest {
 			assert(nbestList.nbestLists().get(0).get(0).translation.toString().equals("a computer into the means of taiwan ."));
 			
 			assert(getValue(nbestList.nbestLists().get(1).get(0).features,"LM") == -66.212000);
-			assert(getValue(nbestList.nbestLists().get(1).get(0).features,"TM:phi(t|F)") == -11.933000);
+			assert(getValue(nbestList.nbestLists().get(1).get(0).features,"TM:phi(t|f)") == -11.933000);
       assert(nbestList.nbestLists().get(1).get(0).translation.toString().equals("5 afp following are closing ("));			
 	 	} 	
 
