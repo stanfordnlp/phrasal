@@ -179,7 +179,7 @@ public class ArabicInitialVerbFeaturizer implements IncrementalFeaturizer<IStrin
                          Sequence<IString> foreign) {
 
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
-    ArrayList<TaggedWord> sentence = tagger.processSentence(Sentence.toUntaggedList(Arrays.asList(words)));
+    ArrayList<TaggedWord> sentence = tagger.tagSentence(Sentence.toUntaggedList(Arrays.asList(words)));
     tags = sentence.toArray(new TaggedWord[sentence.size()]);
 
     String taggedSent = Arrays.toString(tags);
