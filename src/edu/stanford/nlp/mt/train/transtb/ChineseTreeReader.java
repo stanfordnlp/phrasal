@@ -33,10 +33,10 @@ public class ChineseTreeReader extends AbstractTreeReader {
     List<Tree> trees = new ArrayList<Tree>();
     for(Tree t : trees_) {
       StringBuilder sb = new StringBuilder();
-      ArrayList<HasWord> hws = getWords(t);
+      ArrayList<Label> hws = getWords(t);
       //for (HasWord hw : hws) {
-      for (HasWord hw : hws) {
-        sb.append(hw.word());
+      for (Label hw : hws) {
+        sb.append(hw.value());
       }
       // the tree should already be normalized
       String treeStr = sb.toString();

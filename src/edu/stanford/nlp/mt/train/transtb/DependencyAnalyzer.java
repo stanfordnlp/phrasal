@@ -6,7 +6,7 @@ import edu.stanford.nlp.trees.semgraph.SemanticGraphFactory;
 import edu.stanford.nlp.trees.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CyclicCoreLabel;
-import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.util.CoreMap;
@@ -22,7 +22,10 @@ import java.io.IOException;
  */
 public class DependencyAnalyzer {
 
-  private List<HasWord> yield;
+  // TODO: This may have changed the behavior... there were some
+  // hidden conversions for HasWord in the Tree.yield() class.  Maybe
+  // it should just use yieldHasWord instead
+  private List<Label> yield;
   private Map<Integer,Set<String>>[] deps;
 
   public static void main(String[] args) throws IOException {

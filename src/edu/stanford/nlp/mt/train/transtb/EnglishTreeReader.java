@@ -35,10 +35,10 @@ public class EnglishTreeReader extends AbstractTreeReader {
   }
 
   public static String createSignature(Tree t) {
-    ArrayList<HasWord> hws = getWords(t);
+    ArrayList<Label> hws = getWords(t);
     String[] treeSent = new String[hws.size()];
     for(int i = 0; i < hws.size(); i++) {
-      treeSent[i] = hws.get(i).word();
+      treeSent[i] = hws.get(i).value();
     }
     return StringUtils.join(treeSent, "");
   }

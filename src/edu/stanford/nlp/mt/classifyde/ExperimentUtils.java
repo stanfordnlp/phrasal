@@ -44,9 +44,9 @@ public class ExperimentUtils {
   }
 
   static Set<String> treeToSetWords(Tree tree) {
-    ArrayList<Word> sent = tree.yield();
+    ArrayList<Label> sent = tree.yield();
     Set<String> sow = new HashSet<String>();
-    for (Word w : sent) {
+    for (Label w : sent) {
       sow.add(w.value());
     }
     return sow;
@@ -172,20 +172,22 @@ public class ExperimentUtils {
   }
 
 
-  static List<Integer> getDEIndices(List<HasWord> sent) {
+  static List<Integer> getDEIndices(List<? extends Label> sent) {
     List<Integer> des = new ArrayList<Integer>();
     for(int i = 0; i < sent.size(); i++) {
-      if (sent.get(i).word().equals("的")) {
+      // what does getDEIndices do?  duhhhh....
+      if (sent.get(i).value().equals("的")) {
         des.add(i);
       }
     }
     return des;
   }
 
-  static List<Integer> getMarkedDEIndices(List<HasWord> sent) {
+  // TODO: is this correct?  can labels have values that look like this?
+  static List<Integer> getMarkedDEIndices(List<Label> sent) {
     List<Integer> des = new ArrayList<Integer>();
     for(int i = 0; i < sent.size(); i++) {
-      if (sent.get(i).word().startsWith("的_")) {
+      if (sent.get(i).value().startsWith("的_")) {
         des.add(i);
       }
     }
@@ -200,14 +202,15 @@ public class ExperimentUtils {
     Tree[] children = t.children();
     int deIdx = -1;
     for (Tree c : children) {
-      ArrayList<Word> words = c.yield();
-      String lastW = words.get(words.size()-1).word();
+      ArrayList<Label> words = c.yield();
+      String lastW = words.get(words.size()-1).value();
       if (lastW.equals("的")) {
         if (deIdx != -1) {
           //System.err.println("multi-DEs: ");
           //t.pennPrint(System.err);
-        } else
+        } else {
           deIdx = Trees.rightEdge(c, t)-1;
+        }
       }
     }
     //System.err.println("DEIDX="+deIdx+"\t"+t.toString());

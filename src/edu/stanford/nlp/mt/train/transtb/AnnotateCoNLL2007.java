@@ -6,7 +6,7 @@ import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.io.FileUtils;
-import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.io.CONLLWriter;
@@ -145,11 +145,11 @@ public class AnnotateCoNLL2007 {
       }
 
       // Check that tree and fSent match:
-      List<HasWord> fYield = fTree.yield();
+      List<Label> fYield = fTree.yield();
       List<Tree> fTreeYield = treeYield(fTree, new ArrayList<Tree>());
       assert(fYield.size() == fSent.length);
       for(int i=0; i<fSent.length; ++i) {
-        String yw = fYield.get(i).word();
+        String yw = fYield.get(i).value();
         String fw = fSent[i];
         if(!yw.equals(fw))
           System.err.printf("WARNING: mismatch: %s != %s\n",yw,fw);

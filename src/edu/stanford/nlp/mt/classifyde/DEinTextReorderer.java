@@ -23,8 +23,8 @@ public class DEinTextReorderer {
       // Get the index of the DEs
       List<Integer> markedDEIdxs = ExperimentUtils.getMarkedDEIndices(parsedSent.yield());
       List<String> yield = new ArrayList<String>();
-      for (HasWord w : parsedSent.yield()) {
-        yield.add(w.word());
+      for (Label w : parsedSent.yield()) {
+        yield.add(w.value());
       }
       Map<SortByEndPair<Integer, Integer>, Integer> toOperate = new TreeMap<SortByEndPair<Integer, Integer>, Integer>();
 

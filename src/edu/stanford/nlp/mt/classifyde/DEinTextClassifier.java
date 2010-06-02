@@ -93,7 +93,8 @@ public class DEinTextClassifier {
       List<String> newSentence = new ArrayList<String>();
       for (int i = 0; i < parsedSent.yield().size(); i++) {
         String pClass = deIdxWithPredictedClass.get(i);
-        String currW = parsedSent.yield().get(i).word();
+        // TODO FIXME: yield() is not cached.  is this not crazy slow?
+        String currW = parsedSent.yield().get(i).value();
         if (pClass == null) {
           newSentence.add(currW);
         } else {

@@ -16,11 +16,12 @@ public class WangDEinTextReorderer {
     Tree parsedSent = null;
 
     while((parsedSent=reader.next())!=null) {
-      List<HasWord> hw_yield = new ArrayList<HasWord>();
+      // TODO: this looks like the same as it was before, but it would
+      // be good to test it
+      List<TaggedWord> hw_yield = parsedSent.taggedYield();
       List<String> yield = new ArrayList<String>();
-      for (HasWord w : parsedSent.taggedYield()) {
+      for (TaggedWord w : hw_yield) {
         yield.add(w.word());
-        hw_yield.add(w);
       }
       List<Integer> deIndices = ExperimentUtils.getDEIndices(hw_yield);
       Map<SortByEndPair<Integer, Integer>, Integer> toOperate = new TreeMap<SortByEndPair<Integer, Integer>, Integer>();
@@ -34,7 +35,7 @@ public class WangDEinTextReorderer {
         System.err.println("rootTree=");
         rootTree.pennPrint(System.err);
 
-        String tag = ((TaggedWord)hw_yield.get(deIdx)).tag();
+        String tag = hw_yield.get(deIdx).tag();
         if (!rootLabel.equals("NP"))
           continue;
         

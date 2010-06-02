@@ -20,8 +20,8 @@ public class ImprovedDEinTextReorderer {
       // Get the index of the DEs
       List<Integer> markedDEIdxs = ExperimentUtils.getMarkedDEIndices(parsedSent.yield());
       List<String> yield = new ArrayList<String>();
-      for (HasWord w : parsedSent.yield()) {
-        yield.add(w.word());
+      for (Label w : parsedSent.yield()) {
+        yield.add(w.value());
       }
 
       Tree newTree = parsedSent.treeSkeletonCopy();
@@ -117,8 +117,8 @@ public class ImprovedDEinTextReorderer {
       System.out.println("---------------------------------------------");
       */
       List<String> newYield = new ArrayList<String>();
-      for (HasWord w : newTree.yield()) {
-        newYield.add(w.word());
+      for (Label w : newTree.yield()) {
+        newYield.add(w.value());
       }
       System.out.println(StringUtils.join(newYield, " "));
     }

@@ -221,10 +221,10 @@ public class AlignmentUtils {
     List<String> leaveslist = new ArrayList<String>();
     
     for(Tree eT : enTrees) {
-      ArrayList<HasWord> sentence = eT.yield();
+      ArrayList<Label> sentence = eT.yield();
       for (int i = 0; i < sentence.size(); i++) {
-        HasWord hw = sentence.get(i);
-        leaveslist.add(hw.word());
+        Label hw = sentence.get(i);
+        leaveslist.add(hw.value());
       }
     }
 
@@ -434,11 +434,11 @@ public class AlignmentUtils {
 
   public static TranslationAlignment fixAlignmentGridMergingChinese(
     TranslationAlignment ta, List<Tree> chTrees) {
-    ArrayList<HasWord> sentence = chTrees.get(0).yield();
+    ArrayList<Label> sentence = chTrees.get(0).yield();
     String[] leaves = new String[sentence.size()];
     for (int i = 0; i < sentence.size(); i++) {
-      HasWord hw = sentence.get(i);
-      leaves[i] = hw.word();
+      Label hw = sentence.get(i);
+      leaves[i] = hw.value();
     }
     String[] source = ta.source_;
     List<List<Integer>> indexgroups = getIndexGroups(leaves, source);
@@ -470,14 +470,14 @@ public class AlignmentUtils {
 
   public static TranslationAlignment fixAlignmentGridMergingEnglish(
     TranslationAlignment ta, List<Tree> enTrees) {
-    ArrayList<HasWord> sentence = new ArrayList<HasWord>();
+    ArrayList<Label> sentence = new ArrayList<Label>();
     for (Tree enT : enTrees) {
       sentence.addAll(enT.yield());
     }
     String[] leaves = new String[sentence.size()];
     for (int i = 0; i < sentence.size(); i++) {
-      HasWord hw = sentence.get(i);
-      leaves[i] = hw.word();
+      Label hw = sentence.get(i);
+      leaves[i] = hw.value();
     }
     String[] translation = ta.translation_;
     List<List<Integer>> indexgroups = getIndexGroups(leaves, translation);
@@ -511,12 +511,12 @@ public class AlignmentUtils {
     if (chTrees.size() > 1) {
       throw new RuntimeException("more than one chTree");
     }
-    ArrayList<HasWord> sentence = chTrees.get(0).yield();
+    ArrayList<Label> sentence = chTrees.get(0).yield();
     String[] leaves = new String[sentence.size()];
     if (DEBUG) System.err.print("leaves=");
     for (int i = 0; i < sentence.size(); i++) {
-      HasWord hw = sentence.get(i);
-      leaves[i] = hw.word();
+      Label hw = sentence.get(i);
+      leaves[i] = hw.value();
       if (DEBUG) System.err.print(leaves[i]+" ");
     }
     if (DEBUG) System.err.println();
@@ -579,7 +579,7 @@ public class AlignmentUtils {
 
   public static void checkTranslationAlignmentAndEnTrees(TranslationAlignment ta, List<Tree> enTrees) {
     String[] enFromAlignment = ta.translation_;
-    ArrayList<HasWord> enFromTrees = new ArrayList<HasWord>();
+    ArrayList<Label> enFromTrees = new ArrayList<Label>();
     for (Tree eT : enTrees) {
       enFromTrees.addAll(eT.yield());
     }
@@ -589,7 +589,7 @@ public class AlignmentUtils {
       System.out.println("TREE: "+StringUtils.join(enFromTrees, " ")+"<br>");
     } else {
       for (int i = 0; i < enFromTrees.size(); i++) {
-        if (!enFromTrees.get(i).word().equals(enFromAlignment[i])) {
+        if (!enFromTrees.get(i).value().equals(enFromAlignment[i])) {
           System.out.println("Check failed.<br>");
           System.out.println("ALGN: "+StringUtils.join(enFromAlignment, " ")+"<br>");
           System.out.println("TREE: "+StringUtils.join(enFromTrees, " ")+"<br>");
@@ -601,14 +601,14 @@ public class AlignmentUtils {
 
   public static void checkTranslationAlignmentAndChTrees(TranslationAlignment ta, List<Tree> chTrees) {
     String[] chFromAlignment = ta.source_;
-    ArrayList<HasWord> chFromTrees = chTrees.get(0).yield();
+    ArrayList<Label> chFromTrees = chTrees.get(0).yield();
     if (chFromAlignment.length != chFromTrees.size()) {
       System.out.println("Check failed.<br>");
       System.out.println("ALGN: "+StringUtils.join(chFromAlignment, " ")+"<br>");
       System.out.println("TREE: "+StringUtils.join(chFromTrees, " ")+"<br>");
     } else {
       for (int i = 0; i < chFromTrees.size(); i++) {
-        if (!chFromTrees.get(i).word().equals(chFromAlignment[i])) {
+        if (!chFromTrees.get(i).value().equals(chFromAlignment[i])) {
           System.out.println("Check failed.<br>");
           System.out.println("ALGN: "+StringUtils.join(chFromAlignment, " ")+"<br>");
           System.out.println("TREE: "+StringUtils.join(chFromTrees, " ")+"<br>");
