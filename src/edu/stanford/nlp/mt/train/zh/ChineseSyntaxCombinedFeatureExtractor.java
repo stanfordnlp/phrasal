@@ -24,7 +24,7 @@ import java.lang.reflect.Constructor;
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
 /**
- * modifined from CombinedFeatureExtractor.java
+ * modifined from PhraseExtract.java
  *
  * @author Pi-Chuan Chang
  * @author Michel Galley

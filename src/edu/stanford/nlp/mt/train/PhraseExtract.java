@@ -1,3 +1,30 @@
+//Phrasal -- A Statistical Machine Translation Toolkit
+//for Exploring New Model Features.
+//Copyright (c) 2007-2010 Leland Stanford Junior University
+
+//This program is free software; you can redistribute it and/or
+//modify it under the terms of the GNU General Public License
+//as published by the Free Software Foundation; either version 2
+//of the License, or (at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+//along with this program; if not, write to the Free Software
+//Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+//For more information, bug reports, fixes, contact:
+//Christopher Manning
+//Dept of Computer Science, Gates 1A
+//Stanford CA 94305-9010
+//USA
+//Support/Questions: java-nlp-user@lists.stanford.edu
+//Licensing: java-nlp-support@lists.stanford.edu
+//http://nlp.stanford.edu/software/phrasal
+
 package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.util.StringUtils;
@@ -21,7 +48,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
  *
  * @author Michel Galley
  */
-public class CombinedFeatureExtractor {
+public class PhraseExtract {
 
   // Note: could make phrase extraction more memory efficient
   // by storing each block (phrase pair) as mt.base.SimpleSequence pairs
@@ -137,7 +164,7 @@ public class CombinedFeatureExtractor {
 
   private int totalPassNumber = 1;
 
-  public CombinedFeatureExtractor(Properties prop) throws IOException {
+  public PhraseExtract(Properties prop) throws IOException {
     processProperties(prop);
   }
 
@@ -311,12 +338,12 @@ public class CombinedFeatureExtractor {
 
   class Extractor extends Thread {
 
-    final CombinedFeatureExtractor ex;
+    final PhraseExtract ex;
     final AbstractPhraseExtractor phraseEx;
     final LinkedBlockingQueue<Pair<Integer,String[]>> dataQueue;
     final SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
 
-    Extractor(CombinedFeatureExtractor ex, LinkedBlockingQueue<Pair<Integer,String[]>> q) {
+    Extractor(PhraseExtract ex, LinkedBlockingQueue<Pair<Integer,String[]>> q) {
       this.ex = ex;
       try {
         this.phraseEx = (AbstractPhraseExtractor) phraseExtractor.clone();
@@ -618,7 +645,7 @@ public class CombinedFeatureExtractor {
 
   static void usage() {
     System.err.print
-    ("Usage: java mt.train.CombinedFeatureExtractor [ARGS]\n"+
+    ("Usage: java mt.train.PhraseExtract [ARGS]\n"+
      "Mandatory arguments:\n"+
      " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+
@@ -648,7 +675,7 @@ public class CombinedFeatureExtractor {
     System.err.println("extraction started at: "+formatter.format(new Date()));
 
     try {
-      CombinedFeatureExtractor e = new CombinedFeatureExtractor(prop);
+      PhraseExtract e = new PhraseExtract(prop);
       e.extractAll();
     } catch(Exception e) {
       e.printStackTrace();

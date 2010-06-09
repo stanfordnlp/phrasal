@@ -55,7 +55,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    */
   public AlignmentTemplates(Properties prop, SourceFilter sourceFilter) { // boolean filterFromDev) {
     this.maxFertility = Double.parseDouble
-      (prop.getProperty(CombinedFeatureExtractor.MAX_FERTILITY_OPT,"1e30"));
+      (prop.getProperty(PhraseExtract.MAX_FERTILITY_OPT,"1e30"));
     this.sourceFilter = sourceFilter;
     fIndex = sourceFilter.getSourceTable();
   }

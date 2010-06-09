@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.*;
  *
  * @author Michel Galley
  */
-public class ParaphraseExtractor extends CombinedFeatureExtractor {
+public class ParaphraseExtractor extends PhraseExtract {
 
   public static final String NBEST_SZ_PROPERTY = "NBestSize";
   public static final int NBEST_SZ = Integer.parseInt(System.getProperty(NBEST_SZ_PROPERTY, "10"));

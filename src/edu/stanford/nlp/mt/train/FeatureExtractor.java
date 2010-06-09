@@ -63,7 +63,7 @@ public interface FeatureExtractor {
    * Called to report the status of  each FeatureExtrator, but only if a
    * specific output is provided with the FeatureExtractor. Note: do not
    * output to STDOUT since that will mess up the combined behavior of the
-   * CombinedFeatureExtractor.
+   * PhraseExtract.
    */
   public void report();
 

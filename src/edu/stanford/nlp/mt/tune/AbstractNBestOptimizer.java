@@ -13,11 +13,11 @@ abstract class AbstractNBestOptimizer implements NBestOptimizer {
 
   protected static MosesNBestList nbest;
 
-  protected final UnsmoothedMERT mert;
+  protected final MERT mert;
   protected final Random random;
   protected final EvaluationMetric<IString,String> emetric;
 
-  AbstractNBestOptimizer(UnsmoothedMERT mert) {
+  AbstractNBestOptimizer(MERT mert) {
     this.mert = mert;
     this.emetric = mert.emetric;
     this.random = mert.random;

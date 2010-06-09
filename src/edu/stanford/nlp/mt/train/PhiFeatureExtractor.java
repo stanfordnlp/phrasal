@@ -26,7 +26,7 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
 	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop, featureIndex, alTemps);
     phiFilter = Double.parseDouble
-      (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
+      (prop.getProperty(PhraseExtract.PTABLE_PHI_FILTER_OPT,"-1e30"));
     System.err.printf("minimum phi(e|f) = %.5f\n", phiFilter);
   }
 

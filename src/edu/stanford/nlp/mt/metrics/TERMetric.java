@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.decoder.util.State;
 
 import edu.stanford.nlp.mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.mt.metrics.ter.TERalignment;
-import edu.stanford.nlp.mt.tune.UnsmoothedMERT;
+import edu.stanford.nlp.mt.tune.MERT;
 
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
@@ -240,10 +240,10 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     TERMetric<IString,String>.TERIncrementalMetric incMetric = ter.getIncrementalMetric();
 
     if (System.getProperty("fastTER") != null) {
-      System.err.println("beam width: "+UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
-      System.err.println("ter shift dist: "+UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
-      ter.calc.setBeamWidth(UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
-      ter.calc.setShiftDist(UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
+      System.err.println("beam width: "+ MERT.DEFAULT_TER_BEAM_WIDTH);
+      System.err.println("ter shift dist: "+ MERT.DEFAULT_TER_SHIFT_DIST);
+      ter.calc.setBeamWidth(MERT.DEFAULT_TER_BEAM_WIDTH);
+      ter.calc.setShiftDist(MERT.DEFAULT_TER_SHIFT_DIST);
     }
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));

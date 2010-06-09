@@ -28,7 +28,7 @@ public class DTUTable<FV> extends PharaohPhraseTable<FV> {
     name = String.format("DTU(%s)", f.getName());
 	}
 
-  class MatchState {
+  static class MatchState {
     final int state;
     final int pos;
     final CoverageSet coverage;

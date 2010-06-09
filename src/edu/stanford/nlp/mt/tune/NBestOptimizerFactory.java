@@ -53,7 +53,7 @@ public class NBestOptimizerFactory {
 
   private NBestOptimizerFactory() {}
 
-  public static NBestOptimizer factory(String name, UnsmoothedMERT mert) {
+  public static NBestOptimizer factory(String name, MERT mert) {
 
     if(name.contains("+") || name.endsWith("~")) {
       boolean loop = name.endsWith("~");
@@ -151,7 +151,7 @@ class SequenceOptimizer extends AbstractNBestOptimizer {
   private final List<NBestOptimizer> opts;
   private final boolean loop;
 
-  public SequenceOptimizer(UnsmoothedMERT mert, List<NBestOptimizer> opts, boolean loop) {
+  public SequenceOptimizer(MERT mert, List<NBestOptimizer> opts, boolean loop) {
     super(mert);
     this.opts = opts;
     this.loop = loop;
@@ -166,11 +166,11 @@ class SequenceOptimizer extends AbstractNBestOptimizer {
       while(!done) {
         Counter<String> newWts = opt.optimize(wts);
         
-        double wtSsd = UnsmoothedMERT.wtSsd(newWts, wts);
+        double wtSsd = MERT.wtSsd(newWts, wts);
 
-        double oldE = UnsmoothedMERT.evalAtPoint(nbest,wts,emetric);
-        double newE = UnsmoothedMERT.evalAtPoint(nbest,newWts,emetric);
-        //UnsmoothedMERT.updateBest(newWts, -newE);
+        double oldE = MERT.evalAtPoint(nbest,wts,emetric);
+        double newE = MERT.evalAtPoint(nbest,newWts,emetric);
+        //MERT.updateBest(newWts, -newE);
 
         boolean worse = oldE > newE;
         done = Math.abs(oldE-newE) <= MIN_OBJECTIVE_CHANGE || !loop || worse;
@@ -197,7 +197,7 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
 
-  public KoehnStyleOptimizer(UnsmoothedMERT mert) {
+  public KoehnStyleOptimizer(MERT mert) {
     super(mert);
   }
 
@@ -215,7 +215,7 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
         Counter<String> dir = new ClassicCounter<String>();
         dir.incrementCount(feature, 1.0);
         Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
-        double eval = UnsmoothedMERT.evalAtPoint(nbest, newWts, emetric);
+        double eval = MERT.evalAtPoint(nbest, newWts, emetric);
         if (DEBUG)
           System.out.printf("\t%e\n", eval);
         if (eval > fromBestDirScore) {
@@ -229,8 +229,8 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
               fromBestDirScore);
       wts = wtsFromBestDir;
 
-      double eval = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric);
-      if (Math.abs(eval - oldEval) < UnsmoothedMERT.MIN_OBJECTIVE_DIFF)
+      double eval = MERT.evalAtPoint(nbest, wts, emetric);
+      if (Math.abs(eval - oldEval) < MERT.MIN_OBJECTIVE_DIFF)
         break;
       oldEval = eval;
     }
@@ -250,7 +250,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
   private Counter<String> featureVars;
   private Counter<String> featureNbestOccurances;
 
-  public CerStyleOptimizer(UnsmoothedMERT mert) {
+  public CerStyleOptimizer(MERT mert) {
     super(mert);
   }
 
@@ -263,7 +263,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
     double finalEval;
     int iter = 0;
 
-    double initialEval = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric);
+    double initialEval = MERT.evalAtPoint(nbest, wts, emetric);
     System.out.printf("Initial (Pre-optimization) Score: %f\n", initialEval);
 
     if (featureMeans == null) {
@@ -308,7 +308,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
 
       Counters.divideInPlace(featureVars, totalVecs - 1);
       System.out.printf("Feature N-best Occurences: (Cut off: %d)\n",
-              UnsmoothedMERT.MIN_NBEST_OCCURANCES);
+              MERT.MIN_NBEST_OCCURANCES);
       for (String w : Counters.toPriorityQueue(featureNbestOccurances)) {
         System.out.printf("%f: %s \n", featureNbestOccurances.getCount(w), w);
       }
@@ -330,11 +330,11 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
     }
 
     for (String w : wts.keySet()) {
-      if (featureNbestOccurances.getCount(w) < UnsmoothedMERT.MIN_NBEST_OCCURANCES) {
+      if (featureNbestOccurances.getCount(w) < MERT.MIN_NBEST_OCCURANCES) {
         wts.setCount(w, 0);
       }
     }
-    UnsmoothedMERT.normalize(wts);
+    MERT.normalize(wts);
 
     for (;; iter++) {
       Counter<String> dEl = new ClassicCounter<String>();
@@ -346,7 +346,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
         ErasureUtils.noop(i);
         boolean atLeastOneParameter = false;
         for (String w : initialWts.keySet()) {
-          if (featureNbestOccurances.getCount(w) >= UnsmoothedMERT.MIN_NBEST_OCCURANCES) {
+          if (featureNbestOccurances.getCount(w) >= MERT.MIN_NBEST_OCCURANCES) {
             dEl.setCount(w, random.nextGaussian()
                     * Math.sqrt(featureVars.getCount(w)));
             atLeastOneParameter = true;
@@ -356,12 +356,12 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
           System.err
                   .printf(
                           "Error: no feature occurs on %d or more n-best lists - can't optimization.\n",
-                          UnsmoothedMERT.MIN_NBEST_OCCURANCES);
+                          MERT.MIN_NBEST_OCCURANCES);
           System.err
                   .printf("(This probably means your n-best lists are too small)\n");
           System.exit(-1);
         }
-        UnsmoothedMERT.normalize(dEl);
+        MERT.normalize(dEl);
         Counter<String> searchDir = new ClassicCounter<String>(dEl);
         for (Counter<String> priorDir : priorSearchDirs) {
           Counter<String> projOnPrior = new ClassicCounter<String>(
@@ -370,7 +370,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
                   / Counters.dotProduct(priorDir, priorDir));
           Counters.subtractInPlace(searchDir, projOnPrior);
         }
-        if (Counters.dotProduct(searchDir, searchDir) < UnsmoothedMERT.NO_PROGRESS_SSD) {
+        if (Counters.dotProduct(searchDir, searchDir) < MERT.NO_PROGRESS_SSD) {
           noProgressCnt++;
           continue;
         }
@@ -378,7 +378,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
         if (DEBUG)
           System.out.printf("Searching %s\n", searchDir);
         nextWts = mert.lineSearch(nbest, nextWts, searchDir, emetric);
-        double eval = UnsmoothedMERT.evalAtPoint(nbest, nextWts, emetric);
+        double eval = MERT.evalAtPoint(nbest, nextWts, emetric);
         if (Math.abs(eval - bestEval) < 1e-9) {
           noProgressCnt++;
         } else {
@@ -388,7 +388,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
         bestEval = eval;
       }
 
-      UnsmoothedMERT.normalize(nextWts);
+      MERT.normalize(nextWts);
       double eval;
       Counter<String> oldWts = wts;
       eval = bestEval;
@@ -404,11 +404,11 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
       System.out
               .printf(
                       "Global max along dEl dir(%d): %f obj diff: %f (*-1+%f=%f) Total Cnt: %f l1norm: %f\n",
-                      iter, eval, Math.abs(oldEval - eval), UnsmoothedMERT.MIN_OBJECTIVE_DIFF,
-                      UnsmoothedMERT.MIN_OBJECTIVE_DIFF - Math.abs(oldEval - eval), wts.totalCount(),
-                      UnsmoothedMERT.l1norm(wts));
+                      iter, eval, Math.abs(oldEval - eval), MERT.MIN_OBJECTIVE_DIFF,
+                      MERT.MIN_OBJECTIVE_DIFF - Math.abs(oldEval - eval), wts.totalCount(),
+                      MERT.l1norm(wts));
 
-      if (Math.abs(oldEval - eval) < UnsmoothedMERT.MIN_OBJECTIVE_DIFF) {
+      if (Math.abs(oldEval - eval) < MERT.MIN_OBJECTIVE_DIFF) {
         finalEval = eval;
         break;
       }
@@ -428,7 +428,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
 
-  public OldCerStyleOptimizer(UnsmoothedMERT mert) {
+  public OldCerStyleOptimizer(MERT mert) {
     super(mert);
   }
 
@@ -438,7 +438,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
     Counter<String> wts = initialWts;
     double finalEval;
     int iter = 0;
-    double initialEval = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric);
+    double initialEval = MERT.evalAtPoint(nbest, wts, emetric);
     System.out.printf("Initial (Pre-optimization) Score: %f\n", initialEval);
     for (;; iter++) {
       Counter<String> dEl = new ClassicCounter<String>();
@@ -463,7 +463,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
           featureVectors.add(sfTran.features);
         }
 
-        dEl.addAll(EValueLearningScorer.dEl(new StaticScorer(scaledWts, UnsmoothedMERT.featureIndex),
+        dEl.addAll(EValueLearningScorer.dEl(new StaticScorer(scaledWts, MERT.featureIndex),
                 featureVectors, us));
       }
 
@@ -471,7 +471,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
 
       // System.out.printf("Searching %s\n", dEl);
       Counter<String> wtsdEl = mert.lineSearch(nbest, wts, dEl, emetric);
-      double evaldEl = UnsmoothedMERT.evalAtPoint(nbest, wtsdEl, emetric);
+      double evaldEl = MERT.evalAtPoint(nbest, wtsdEl, emetric);
 
       double eval;
       Counter<String> oldWts = wts;
@@ -487,7 +487,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
       System.out.printf("Global max along dEl dir(%d): %f wts ssd: %f\n", iter,
               eval, ssd);
 
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD) {
+      if (ssd < MERT.NO_PROGRESS_SSD) {
         finalEval = eval;
         break;
       }
@@ -511,12 +511,12 @@ class LineSearchOptimizer extends AbstractNBestOptimizer {
 
   private String featureName;
 
-  public LineSearchOptimizer(UnsmoothedMERT mert) {
+  public LineSearchOptimizer(MERT mert) {
     super(mert);
     featureName = WordPenaltyFeaturizer.FEATURE_NAME;
   }
 
-  public LineSearchOptimizer(UnsmoothedMERT mert, String featureName) {
+  public LineSearchOptimizer(MERT mert, String featureName) {
     super(mert);
     this.featureName = featureName;
   }
@@ -541,18 +541,18 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
   private final boolean doRandomSteps;
   private final int minIter;
 
-  public DownhillSimplexOptimizer(UnsmoothedMERT mert, int minIter, boolean doRandomSteps) {
+  public DownhillSimplexOptimizer(MERT mert, int minIter, boolean doRandomSteps) {
     super(mert);
     this.minIter = minIter;
     this.doRandomSteps = doRandomSteps;
-    this.szMinusOne = UnsmoothedMERT.fixedWts == null;
+    this.szMinusOne = MERT.fixedWts == null;
   }
 
-  public DownhillSimplexOptimizer(UnsmoothedMERT mert, boolean doRandomSteps) {
+  public DownhillSimplexOptimizer(MERT mert, boolean doRandomSteps) {
     super(mert);
     this.minIter = 1;
     this.doRandomSteps = doRandomSteps;
-    this.szMinusOne = UnsmoothedMERT.fixedWts == null;
+    this.szMinusOne = MERT.fixedWts == null;
   }
 
   private static final double SIMPLEX_RELATIVE_SIZE = 4;
@@ -560,7 +560,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
   private Counter<String> randomStep(Set<String> keySet) {
     Counter<String> randpt = new ClassicCounter<String>();
     for (String f : keySet) {
-      if (UnsmoothedMERT.generativeFeatures.contains(f)) {
+      if (MERT.generativeFeatures.contains(f)) {
         randpt.setCount(f, random.nextDouble());
       } else {
         randpt.setCount(f, random.nextDouble() * 2 - 1.0);
@@ -605,13 +605,13 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
   private Counter<String> optimizeOnce(final Counter<String> initialWts) {
 
     System.err.printf("\nDownhill simplex starts at: %s value: %.5f\n",
-       initialWts.toString(), UnsmoothedMERT.evalAtPoint(nbest, initialWts, emetric));
+       initialWts.toString(), MERT.evalAtPoint(nbest, initialWts, emetric));
 
     final int sz = initialWts.size();
     final String[] keys = initialWts.keySet().toArray(new String[sz]);
     final MutableDouble bestEval = new MutableDouble(-Double.MAX_VALUE);
     final MutableInteger it = new MutableInteger(0);
-    UnsmoothedMERT.normalize(initialWts);
+    MERT.normalize(initialWts);
 
     double[] initx = counterToArray(keys, initialWts);
 
@@ -619,7 +619,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     if(doRandomSteps) {
       Set<String> keySet = new HashSet<String>(Arrays.asList(keys));
       Counter<String> randomStep = randomStep(keySet);
-      UnsmoothedMERT.normalize(randomStep);
+      MERT.normalize(randomStep);
       double[] randx = counterToArray(keys, randomStep);
       ArrayMath.multiplyInPlace(randx, SIMPLEX_RELATIVE_SIZE);
       opt = new DownhillSimplexMinimizer(randx);
@@ -629,7 +629,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
     Function f = new Function() {
       public double valueAt(double[] x) {
-        double curEval = UnsmoothedMERT.evalAtPoint(nbest, arrayToCounter(keys, x), emetric);
+        double curEval = MERT.evalAtPoint(nbest, arrayToCounter(keys, x), emetric);
         if(curEval > bestEval.doubleValue())
           bestEval.set(curEval);
         it.set(it.intValue()+1);
@@ -641,8 +641,8 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
     double[] wtsA = opt.minimize(f, 1e-4, initx, 1000);
     Counter<String> wts = arrayToCounter(keys, wtsA);
-    UnsmoothedMERT.normalize(wts);
-    System.err.printf("\nDownhill simplex converged at: %s value: %.5f\n", wts.toString(), UnsmoothedMERT.evalAtPoint(nbest, wts, emetric));
+    MERT.normalize(wts);
+    System.err.printf("\nDownhill simplex converged at: %s value: %.5f\n", wts.toString(), MERT.evalAtPoint(nbest, wts, emetric));
     return wts;
   }
 }
@@ -662,7 +662,7 @@ class PowellOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
 
-  public PowellOptimizer(UnsmoothedMERT mert) {
+  public PowellOptimizer(MERT mert) {
     super(mert);
   }
 
@@ -684,17 +684,17 @@ class PowellOptimizer extends AbstractNBestOptimizer {
 
     // main optimization loop
     Counter[] p = new ClassicCounter[dirs.size()];
-    double objValue = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric); // obj value w/o
+    double objValue = MERT.evalAtPoint(nbest, wts, emetric); // obj value w/o
     // smoothing
     for (int iter = 0;; iter++) {
       // search along each direction
       p[0] = mert.lineSearch(nbest, wts, dirs.get(0), emetric);
-      double eval = UnsmoothedMERT.evalAtPoint(nbest, p[0], emetric);
+      double eval = MERT.evalAtPoint(nbest, p[0], emetric);
       double biggestWin = Math.max(0, eval - objValue);
       System.err.printf("initial totalWin: %e (%e-%e)\n", biggestWin,
               eval, objValue);
-      System.err.printf("eval @ wts: %e\n", UnsmoothedMERT.evalAtPoint(nbest, wts, emetric));
-      System.err.printf("eval @ p[0]: %e\n", UnsmoothedMERT.evalAtPoint(nbest, p[0], emetric));
+      System.err.printf("eval @ wts: %e\n", MERT.evalAtPoint(nbest, wts, emetric));
+      System.err.printf("eval @ p[0]: %e\n", MERT.evalAtPoint(nbest, p[0], emetric));
       objValue = eval;
       int biggestWinId = 0;
       double totalWin = biggestWin;
@@ -702,7 +702,7 @@ class PowellOptimizer extends AbstractNBestOptimizer {
       for (int i = 1; i < p.length; i++) {
         p[i] = mert.lineSearch(nbest, (Counter<String>) p[i - 1],
                 dirs.get(i), emetric);
-        eval = UnsmoothedMERT.evalAtPoint(nbest, p[i], emetric);
+        eval = MERT.evalAtPoint(nbest, p[i], emetric);
         if (Math.max(0, eval - objValue) > biggestWin) {
           biggestWin = eval - objValue;
           biggestWinId = i;
@@ -726,7 +726,7 @@ class PowellOptimizer extends AbstractNBestOptimizer {
       Counter<String> testPoint = new ClassicCounter<String>(
               p[p.length - 1]);
       testPoint.addAll(combinedDir);
-      double testPointEval = UnsmoothedMERT.evalAtPoint(nbest, testPoint, emetric);
+      double testPointEval = MERT.evalAtPoint(nbest, testPoint, emetric);
       double extrapolatedWin = testPointEval - objValue;
       System.err.printf("Test Point Eval: %e, extrapolated win: %e\n",
               testPointEval, extrapolatedWin);
@@ -738,13 +738,13 @@ class PowellOptimizer extends AbstractNBestOptimizer {
         System.err.printf(
                 "%d: updating direction %d with combined search dir\n", iter,
                 biggestWinId);
-        UnsmoothedMERT.normalize(combinedDir);
+        MERT.normalize(combinedDir);
         dirs.set(biggestWinId, combinedDir);
       }
 
       // Search along combined dir even if replacement didn't happen
       wts = mert.lineSearch(nbest, p[p.length - 1], combinedDir, emetric);
-      eval = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric);
+      eval = MERT.evalAtPoint(nbest, wts, emetric);
       System.err.printf(
               "%d: Objective after combined search (gain: %e prior:%e)\n", iter,
               eval - objValue, objValue);
@@ -754,7 +754,7 @@ class PowellOptimizer extends AbstractNBestOptimizer {
       double finalObjValue = objValue;
       System.err.printf("Actual win: %e (%e-%e)\n", finalObjValue
               - initObjValue, finalObjValue, initObjValue);
-      if (Math.abs(initObjValue - finalObjValue) < UnsmoothedMERT.MIN_OBJECTIVE_DIFF)
+      if (Math.abs(initObjValue - finalObjValue) < MERT.MIN_OBJECTIVE_DIFF)
         break; // changed to prevent infinite loops
     }
 
@@ -776,7 +776,7 @@ class BasicPowellOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
 
-  public BasicPowellOptimizer(UnsmoothedMERT mert) {
+  public BasicPowellOptimizer(MERT mert) {
     super(mert);
   }
 
@@ -797,7 +797,7 @@ class BasicPowellOptimizer extends AbstractNBestOptimizer {
 
     // main optimization loop
     Counter[] p = new ClassicCounter[axisDirs.size()];
-    double objValue = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric); // obj value w/o
+    double objValue = MERT.evalAtPoint(nbest, wts, emetric); // obj value w/o
     // smoothing
     List<Counter<String>> dirs = null;
     for (int iter = 0;; iter++) {
@@ -816,10 +816,10 @@ class BasicPowellOptimizer extends AbstractNBestOptimizer {
         dirs.set(i - 1, dirs.get(i)); // shift search directions
       }
 
-      double totalWin = UnsmoothedMERT.evalAtPoint(nbest, p[p.length-1], emetric) - objValue;
+      double totalWin = MERT.evalAtPoint(nbest, p[p.length-1], emetric) - objValue;
       System.err.printf("%d: totalWin: %e Objective: %e\n", iter, totalWin,
               objValue);
-      if (Math.abs(totalWin) < UnsmoothedMERT.MIN_OBJECTIVE_DIFF)
+      if (Math.abs(totalWin) < MERT.MIN_OBJECTIVE_DIFF)
         break;
 
       // construct combined direction
@@ -832,7 +832,7 @@ class BasicPowellOptimizer extends AbstractNBestOptimizer {
       // search along combined direction
       wts = mert.lineSearch(nbest, (Counter<String>) p[p.length - 1], dirs
               .get(p.length - 1), emetric);
-      objValue = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric);
+      objValue = MERT.evalAtPoint(nbest, wts, emetric);
       System.err.printf("%d: Objective after combined search %e\n", iter,
               objValue);
     }
@@ -850,15 +850,15 @@ class MCMCDerivative extends AbstractNBestOptimizer {
 	MutableDouble expectedEval;
 	MutableDouble objValue;
 
-  public MCMCDerivative(UnsmoothedMERT mert) {
+  public MCMCDerivative(MERT mert) {
     this(mert,null);
   }
 
-  public MCMCDerivative(UnsmoothedMERT mert, MutableDouble expectedEval) {
+  public MCMCDerivative(MERT mert, MutableDouble expectedEval) {
     this(mert,expectedEval,null);
   }
 
-  public MCMCDerivative(UnsmoothedMERT mert, MutableDouble expectedEval, MutableDouble objValue) {
+  public MCMCDerivative(MERT mert, MutableDouble expectedEval, MutableDouble objValue) {
     super(mert);
 		this.expectedEval = expectedEval;
 		this.objValue = objValue;
@@ -867,14 +867,14 @@ class MCMCDerivative extends AbstractNBestOptimizer {
   @SuppressWarnings({ "deprecation" })
   public Counter<String> optimize(Counter<String> wts) {
 
-    double C = UnsmoothedMERT.C;
+    double C = MERT.C;
 
     System.err.printf("MCMC weights:\n%s\n\n", Counters.toString(wts, 35));
 
     // for quick mixing, get current classifier argmax
     System.err.println("finding argmax");
     List<ScoredFeaturizedTranslation<IString, String>> argmax =
-            UnsmoothedMERT.transArgmax(nbest, wts), current =
+            MERT.transArgmax(nbest, wts), current =
             new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
 
 
@@ -890,7 +890,7 @@ class MCMCDerivative extends AbstractNBestOptimizer {
     }
 
     Counter<String> dE = new ClassicCounter<String>();
-    Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
+    Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
 
     double hardEval = emetric.score(argmax);
     System.err.printf("Hard eval: %.5f\n", hardEval);
@@ -903,9 +903,9 @@ class MCMCDerivative extends AbstractNBestOptimizer {
     double dEDiff; // = Double.POSITIVE_INFINITY;
     double dECosine = 0.0;
     for (int batch = 0;
-         (dECosine < UnsmoothedMERT.NO_PROGRESS_MCMC_COSINE
-                 || batch < UnsmoothedMERT.MCMC_MIN_BATCHES) &&
-                 batch < UnsmoothedMERT.MCMC_MAX_BATCHES; batch++) {
+         (dECosine < MERT.NO_PROGRESS_MCMC_COSINE
+                 || batch < MERT.MCMC_MIN_BATCHES) &&
+                 batch < MERT.MCMC_MAX_BATCHES; batch++) {
       Counter<String> oldDe = new ClassicCounter<String>(dE);
 
       // reset current to argmax
@@ -920,12 +920,12 @@ class MCMCDerivative extends AbstractNBestOptimizer {
         incEval.add(tran);
 
       OpenAddressCounter<String> currentF;
-      //= new OpenAddressCounter<String>(UnsmoothedMERT.summarizedAllFeaturesVector(current), 0.50f);
+      //= new OpenAddressCounter<String>(MERT.summarizedAllFeaturesVector(current), 0.50f);
 
       System.err.println("Sampling");
 
       long time = -System.currentTimeMillis();
-      for (int bi = 0; bi < UnsmoothedMERT.MCMC_BATCH_SAMPLES; bi++) {
+      for (int bi = 0; bi < MERT.MCMC_BATCH_SAMPLES; bi++) {
         // gibbs mcmc sample
         if (cnt != 0)  // always sample once from argmax
           for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
@@ -965,7 +965,7 @@ class MCMCDerivative extends AbstractNBestOptimizer {
 
         // adjust currentF & eval
         currentF =
-                new OpenAddressCounter<String>(UnsmoothedMERT.summarizedAllFeaturesVector(current), 0.50f);
+                new OpenAddressCounter<String>(MERT.summarizedAllFeaturesVector(current), 0.50f);
         double eval = emetric.score(current);
         sumExpL += eval;
 
@@ -985,7 +985,7 @@ class MCMCDerivative extends AbstractNBestOptimizer {
       Counters.multiplyInPlace(dE, sumExpL/cnt);
       Counters.subtractInPlace(dE, sumExpLF);
       Counters.divideInPlace(dE, -1*cnt);
-      dEDiff = UnsmoothedMERT.wtSsd(oldDe, dE);
+      dEDiff = MERT.wtSsd(oldDe, dE);
       dECosine = Counters.dotProduct(oldDe, dE)/
               (Counters.L2Norm(dE)*Counters.L2Norm(oldDe));
       if (dECosine != dECosine) dECosine = 0;
@@ -1037,7 +1037,7 @@ class BetterWorseCentroids extends AbstractNBestOptimizer {
   boolean useCurrentAsWorse;
 	boolean useOnlyBetter;
 
-  public BetterWorseCentroids(UnsmoothedMERT mert, boolean useCurrentAsWorse, boolean useOnlyBetter) {
+  public BetterWorseCentroids(MERT mert, boolean useCurrentAsWorse, boolean useOnlyBetter) {
     super(mert);
 		this.useCurrentAsWorse = useCurrentAsWorse;
 		this.useOnlyBetter = useOnlyBetter;
@@ -1051,7 +1051,7 @@ class BetterWorseCentroids extends AbstractNBestOptimizer {
     //Counter<String> wts = initialWts;
 
     for (int iter = 0;; iter++) {
-      List<ScoredFeaturizedTranslation<IString, String>> current = UnsmoothedMERT.transArgmax(
+      List<ScoredFeaturizedTranslation<IString, String>> current = MERT.transArgmax(
               nbest, wts);
       IncrementalEvaluationMetric<IString, String> incEval = emetric
               .getIncrementalMetric();
@@ -1071,24 +1071,24 @@ class BetterWorseCentroids extends AbstractNBestOptimizer {
           incEval.replace(lI, tran);
           if (incEval.score() >= baseScore) {
             betterCnt++;
-            betterVec.addAll(UnsmoothedMERT.normalize(UnsmoothedMERT.summarizedAllFeaturesVector(Arrays
+            betterVec.addAll(MERT.normalize(MERT.summarizedAllFeaturesVector(Arrays
                     .asList(tran))));
           } else {
             worseCnt++;
-            worseVec.addAll(UnsmoothedMERT.normalize(UnsmoothedMERT.summarizedAllFeaturesVector(Arrays
+            worseVec.addAll(MERT.normalize(MERT.summarizedAllFeaturesVector(Arrays
                     .asList(tran))));
           }
         }
         incEval.replace(lI, current.get(lI));
       }
-      UnsmoothedMERT.normalize(betterVec);
+      MERT.normalize(betterVec);
       if (useCurrentAsWorse)
-        worseVec = UnsmoothedMERT.summarizedAllFeaturesVector(current);
-      UnsmoothedMERT.normalize(worseVec);
+        worseVec = MERT.summarizedAllFeaturesVector(current);
+      MERT.normalize(worseVec);
       Counter<String> dir = new ClassicCounter<String>(betterVec);
       if (!useOnlyBetter)
         Counters.subtractInPlace(dir, worseVec);
-      UnsmoothedMERT.normalize(dir);
+      MERT.normalize(dir);
       System.err.printf("iter: %d\n", iter);
       System.err.printf("Better cnt: %d\n", betterCnt);
       System.err.printf("Worse cnt: %d\n", worseCnt);
@@ -1097,10 +1097,10 @@ class BetterWorseCentroids extends AbstractNBestOptimizer {
       System.err.printf("Dir:\n%s\n\n", dir);
       Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
       System.err.printf("new wts:\n%s\n\n", wts);
-      double ssd = UnsmoothedMERT.wtSsd(wts, newWts);
+      double ssd = MERT.wtSsd(wts, newWts);
       wts = newWts;
       System.err.printf("ssd: %f\n", ssd);
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+      if (ssd < MERT.NO_PROGRESS_SSD)
         break;
     }
 
@@ -1121,7 +1121,7 @@ class FullKMeans extends AbstractNBestOptimizer {
 	int K;
 	boolean clusterToCluster;
 
-  public FullKMeans(UnsmoothedMERT mert, int K, boolean clusterToCluster) {
+  public FullKMeans(MERT mert, int K, boolean clusterToCluster) {
     super(mert);
 		this.K = K;
 		this.clusterToCluster = clusterToCluster;
@@ -1160,7 +1160,7 @@ class FullKMeans extends AbstractNBestOptimizer {
       // Extract all feature vectors & use them to seed the clusters;
       for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) {
         for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
-          Counter<String> feats = Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(Arrays
+          Counter<String> feats = Counters.L2Normalize(MERT.summarizedAllFeaturesVector(Arrays
                   .asList(tran)));
           int clusterId = random.nextInt(K);
           clusterIds[kMeans.size()] = clusterId;
@@ -1253,7 +1253,7 @@ class FullKMeans extends AbstractNBestOptimizer {
           Counters.subtractInPlace(dir, kMeans.get(j));
           Counter<String> eWts = mert.lineSearch(nbest, kMeans.get(j), dir,
                   emetric);
-          double eval = UnsmoothedMERT.evalAtPoint(nbest, eWts, emetric);
+          double eval = MERT.evalAtPoint(nbest, eWts, emetric);
           if (eval > bestEval) {
             bestEval = eval;
             bestWts = eWts;
@@ -1268,15 +1268,15 @@ class FullKMeans extends AbstractNBestOptimizer {
         ErasureUtils.noop(iter);
         Counter<String> newWts = new ClassicCounter<String>(wts);
         for (int i = 0; i < K; i++) {
-          List<ScoredFeaturizedTranslation<IString, String>> current = UnsmoothedMERT.transArgmax(
+          List<ScoredFeaturizedTranslation<IString, String>> current = MERT.transArgmax(
                   nbest, newWts);
-          Counter<String> c = Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(current));
+          Counter<String> c = Counters.L2Normalize(MERT.summarizedAllFeaturesVector(current));
           Counter<String> dir = new ClassicCounter<String>(kMeans.get(i));
           Counters.subtractInPlace(dir, c);
 
           System.err.printf("seach perceptron to cluster: %d\n", i);
           newWts = mert.lineSearch(nbest, newWts, dir, emetric);
-          System.err.printf("new eval: %f\n", UnsmoothedMERT.evalAtPoint(nbest, newWts,
+          System.err.printf("new eval: %f\n", MERT.evalAtPoint(nbest, newWts,
                   emetric));
           for (int j = i; j < K; j++) {
             dir = new ClassicCounter<String>(kMeans.get(i));
@@ -1288,15 +1288,15 @@ class FullKMeans extends AbstractNBestOptimizer {
             }
 
             newWts = mert.lineSearch(nbest, newWts, dir, emetric);
-            System.err.printf("new eval: %f\n", UnsmoothedMERT.evalAtPoint(nbest, newWts,
+            System.err.printf("new eval: %f\n", MERT.evalAtPoint(nbest, newWts,
                     emetric));
           }
         }
         System.err.printf("new wts:\n%s\n\n", newWts);
-        double ssd = UnsmoothedMERT.wtSsd(wts, newWts);
+        double ssd = MERT.wtSsd(wts, newWts);
         wts = newWts;
         System.err.printf("ssd: %f\n", ssd);
-        if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+        if (ssd < MERT.NO_PROGRESS_SSD)
           break;
       }
     }
@@ -1322,7 +1322,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
 
   Cluster3LearnType lType;
 
-  public BetterWorse3KMeans(UnsmoothedMERT mert, Cluster3LearnType lType) {
+  public BetterWorse3KMeans(MERT mert, Cluster3LearnType lType) {
     super(mert);
 		this.lType = lType;
   }
@@ -1335,7 +1335,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
     Counter<String> wts = initialWts;
 
     for (int iter = 0;; iter++) {
-      List<ScoredFeaturizedTranslation<IString, String>> current = UnsmoothedMERT.transArgmax(
+      List<ScoredFeaturizedTranslation<IString, String>> current = MERT.transArgmax(
               nbest, wts);
       IncrementalEvaluationMetric<IString, String> incEval = emetric
               .getIncrementalMetric();
@@ -1347,7 +1347,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
       Counter<String> worseVec = new ClassicCounter<String>();
       int worseClusterCnt = 0;
       Counter<String> sameVec = new ClassicCounter<String>(
-              Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(current)));
+              Counters.L2Normalize(MERT.summarizedAllFeaturesVector(current)));
       int sameClusterCnt = 0;
 
       double baseScore = incEval.score();
@@ -1359,7 +1359,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
         lI++;
         for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
           incEval.replace(lI, tran);
-          Counter<String> feats = Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(Arrays
+          Counter<String> feats = Counters.L2Normalize(MERT.summarizedAllFeaturesVector(Arrays
                   .asList(tran)));
           if (incEval.score() >= baseScore) {
             betterVec.addAll(feats);
@@ -1457,7 +1457,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
 
       switch (lType) {
         case betterPerceptron:
-          Counter<String> c = Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(current));
+          Counter<String> c = Counters.L2Normalize(MERT.summarizedAllFeaturesVector(current));
           Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
           Counters.subtractInPlace(dir, c);
           System.out.printf("betterPerceptron");
@@ -1478,7 +1478,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
           break;
       }
 
-      UnsmoothedMERT.normalize(dir);
+      MERT.normalize(dir);
       System.err.printf("iter: %d\n", iter);
       System.err.printf("Better cnt: %d\n", betterClusterCnt);
       System.err.printf("SameClust: %d\n", sameClusterCnt);
@@ -1493,7 +1493,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
       if (lType != Cluster3LearnType.allDirs) {
         newWts = mert.lineSearch(nbest, wts, dir, emetric);
       } else {
-        Counter<String> c = Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(current));
+        Counter<String> c = Counters.L2Normalize(MERT.summarizedAllFeaturesVector(current));
         Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
 
         newWts = wts;
@@ -1529,10 +1529,10 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
         newWts = mert.lineSearch(nbest, newWts, dir, emetric);
       }
       System.err.printf("new wts:\n%s\n\n", newWts);
-      double ssd = UnsmoothedMERT.wtSsd(wts, newWts);
+      double ssd = MERT.wtSsd(wts, newWts);
       wts = newWts;
       System.err.printf("ssd: %f\n", ssd);
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+      if (ssd < MERT.NO_PROGRESS_SSD)
         break;
     }
 
@@ -1549,7 +1549,7 @@ class BetterWorse2KMeans extends AbstractNBestOptimizer {
 	boolean perceptron;
 	boolean useWts;
 
-  public BetterWorse2KMeans(UnsmoothedMERT mert, boolean perceptron, boolean useWts) {
+  public BetterWorse2KMeans(MERT mert, boolean perceptron, boolean useWts) {
     super(mert);
 		this.perceptron = perceptron;
 		this.useWts = useWts;
@@ -1563,7 +1563,7 @@ class BetterWorse2KMeans extends AbstractNBestOptimizer {
     Counter<String> wts = initialWts;
 
     for (int iter = 0;; iter++) {
-      List<ScoredFeaturizedTranslation<IString, String>> current = UnsmoothedMERT.transArgmax(
+      List<ScoredFeaturizedTranslation<IString, String>> current = MERT.transArgmax(
               nbest, wts);
       IncrementalEvaluationMetric<IString, String> incEval = emetric
               .getIncrementalMetric();
@@ -1583,7 +1583,7 @@ class BetterWorse2KMeans extends AbstractNBestOptimizer {
         lI++;
         for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
           incEval.replace(lI, tran);
-          Counter<String> feats = Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(Arrays
+          Counter<String> feats = Counters.L2Normalize(MERT.summarizedAllFeaturesVector(Arrays
                   .asList(tran)));
           if (incEval.score() >= baseScore) {
             betterVec.addAll(feats);
@@ -1668,7 +1668,7 @@ class BetterWorse2KMeans extends AbstractNBestOptimizer {
           Counters.subtractInPlace(dir, normWts);
           System.err.printf("l2: %f\n", Counters.L2Norm(normWts));
         } else {
-          Counter<String> c = Counters.L2Normalize(UnsmoothedMERT.summarizedAllFeaturesVector(current));
+          Counter<String> c = Counters.L2Normalize(MERT.summarizedAllFeaturesVector(current));
           Counters.multiplyInPlace(c, Counters.L2Norm(betterVec));
           System.err.printf("Subing current:\n%s\n", c);
           Counters.subtractInPlace(dir, c);
@@ -1678,7 +1678,7 @@ class BetterWorse2KMeans extends AbstractNBestOptimizer {
         if (worseClusterCnt != 0)
           Counters.subtractInPlace(dir, worseVec);
       }
-      UnsmoothedMERT.normalize(dir);
+      MERT.normalize(dir);
       System.err.printf("iter: %d\n", iter);
       System.err.printf("Better cnt: %d\n", betterClusterCnt);
       System.err.printf("Worse cnt: %d\n", worseClusterCnt);
@@ -1688,10 +1688,10 @@ class BetterWorse2KMeans extends AbstractNBestOptimizer {
       System.err.printf("Dir:\n%s\n\n", dir);
       Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
       System.err.printf("new wts:\n%s\n\n", wts);
-      double ssd = UnsmoothedMERT.wtSsd(wts, newWts);
+      double ssd = MERT.wtSsd(wts, newWts);
       wts = newWts;
       System.err.printf("ssd: %f\n", ssd);
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+      if (ssd < MERT.NO_PROGRESS_SSD)
         break;
     }
 
@@ -1713,7 +1713,7 @@ class SVDReducedObj extends AbstractNBestOptimizer {
 	int rank;
 	SVDOptChoices opt;
 
-  public SVDReducedObj(UnsmoothedMERT mert, int rank, SVDOptChoices opt) {
+  public SVDReducedObj(MERT mert, int rank, SVDOptChoices opt) {
     super(mert);
 		this.rank = rank;
 		this.opt = opt;
@@ -1778,10 +1778,10 @@ class SVDReducedObj extends AbstractNBestOptimizer {
     System.err.println("======================");
     System.err.println(Counters.toString(recoveredWts, 35));
 
-    double wtSsd = UnsmoothedMERT.wtSsd(reducedInitialWts, reducedWts);
+    double wtSsd = MERT.wtSsd(reducedInitialWts, reducedWts);
     System.out.printf("reduced wts ssd: %e\n", wtSsd);
 
-    double twtSsd = UnsmoothedMERT.wtSsd(initialWts, recoveredWts);
+    double twtSsd = MERT.wtSsd(initialWts, recoveredWts);
     System.out.printf("recovered wts ssd: %e\n", twtSsd);
     return recoveredWts;
   }
@@ -1922,18 +1922,18 @@ class SVDReducedObj extends AbstractNBestOptimizer {
  */
 class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
 
-  public MCMCELossObjectiveCG(UnsmoothedMERT mert) {
+  public MCMCELossObjectiveCG(MERT mert) {
     super(mert);
   }
 
   public Counter<String> optimize(Counter<String> initialWts) {
 
-    double C = UnsmoothedMERT.C;
+    double C = MERT.C;
 
     Counter<String> sgdWts;
     System.err.println("Begin SGD optimization\n");
     sgdWts = new MCMCELossObjectiveSGD(mert, 50).optimize(initialWts);
-    double eval = UnsmoothedMERT.evalAtPoint(nbest, sgdWts, emetric);
+    double eval = MERT.evalAtPoint(nbest, sgdWts, emetric);
     double regE = mert.mcmcTightExpectedEval(nbest, sgdWts, emetric);
     double l2wtsSqred = Counters.L2Norm(sgdWts); l2wtsSqred *= l2wtsSqred;
     System.err.printf("SGD final reg objective 0.5||w||_2^2 - C*E(Eval): %e\n",
@@ -1963,7 +1963,7 @@ class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
     }
     Counter<String> wts = obj.getBestWts();
 
-    eval = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric);
+    eval = MERT.evalAtPoint(nbest, wts, emetric);
     regE = mert.mcmcTightExpectedEval(nbest, wts, emetric);
     System.err.printf("CG final reg 0.5||w||_2^2 - C*E(Eval): %e\n", -regE);
     l2wtsSqred = Counters.L2Norm(wts); l2wtsSqred *= l2wtsSqred;
@@ -1976,7 +1976,7 @@ class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
 
   static class ObjELossDiffFunction implements DiffFunction, HasInitial {
 
-    final UnsmoothedMERT mert;
+    final MERT mert;
     final MosesNBestList nbest;
     final Counter<String> initialWts;
     final EvaluationMetric<IString,String> emetric;
@@ -1986,9 +1986,9 @@ class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
     final double[] initial;
     final double[] derivative;
 
-    public ObjELossDiffFunction(UnsmoothedMERT mert, Counter<String> initialWts) {
+    public ObjELossDiffFunction(MERT mert, Counter<String> initialWts) {
       this.mert = mert;
-      this.nbest = UnsmoothedMERT.nbest;
+      this.nbest = MERT.nbest;
       this.initialWts = initialWts;
       this.emetric = mert.emetric;
       Set<String> featureSet = new HashSet<String>();
@@ -2078,11 +2078,11 @@ class MCMCELossObjectiveSGD extends AbstractNBestOptimizer {
 
 	int max_iter;
 
-  public MCMCELossObjectiveSGD(UnsmoothedMERT mert) {
+  public MCMCELossObjectiveSGD(MERT mert) {
     this(mert,DEFAULT_MAX_ITER_SGD);
   }
 
-  public MCMCELossObjectiveSGD(UnsmoothedMERT mert, int max_iter) {
+  public MCMCELossObjectiveSGD(MERT mert, int max_iter) {
     super(mert);
 		this.max_iter = max_iter;
   }
@@ -2100,7 +2100,7 @@ class MCMCELossObjectiveSGD extends AbstractNBestOptimizer {
       MutableDouble objValue = new MutableDouble();
 
       Counter<String> dE = new MCMCDerivative(mert, expectedEval, objValue).optimize(wts);
-      Counters.multiplyInPlace(dE, -1.0* UnsmoothedMERT.lrate);
+      Counters.multiplyInPlace(dE, -1.0* MERT.lrate);
       wts.addAll(dE);
 
       double ssd = Counters.L2Norm(dE);
@@ -2117,12 +2117,12 @@ class MCMCELossObjectiveSGD extends AbstractNBestOptimizer {
         winObjDiff = sum/objDiffWin.length;
       }
       lastExpectedEval = expectedEval.doubleValue();
-      eval = UnsmoothedMERT.evalAtPoint(nbest, wts, emetric);
+      eval = MERT.evalAtPoint(nbest, wts, emetric);
       System.err.printf("sgd step %d: eval: %e wts ssd: %e E(Eval): %e delta E(Eval): %e obj: %e (delta: %e)\n", iter, eval, ssd, expectedEval.doubleValue(), expectedEvalDiff, objValue.doubleValue(), objDiff);
       if (iter > objDiffWin.length) {
         System.err.printf("objDiffWin: %e\n", winObjDiff);
       }
-      if (UnsmoothedMERT.MIN_OBJECTIVE_CHANGE_SGD > Math.abs(winObjDiff)) break;
+      if (MERT.MIN_OBJECTIVE_CHANGE_SGD > Math.abs(winObjDiff)) break;
     }
     System.err.printf("Last eval: %e\n", eval);
     return wts;
@@ -2135,7 +2135,7 @@ class MCMCELossObjectiveSGD extends AbstractNBestOptimizer {
  */
 class MCMCELossDirOptimizer extends AbstractNBestOptimizer {
 
-  public MCMCELossDirOptimizer(UnsmoothedMERT mert) {
+  public MCMCELossDirOptimizer(MERT mert) {
     super(mert);
   }
 
@@ -2148,19 +2148,19 @@ class MCMCELossDirOptimizer extends AbstractNBestOptimizer {
       double[] tset = {1e-5, 1e-4, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 1e4, 1e5};
       Counter<String> newWts = new ClassicCounter<String>(wts);
       for (double aTset : tset) {
-        UnsmoothedMERT.T = aTset;
+        MERT.T = aTset;
         MutableDouble md = new MutableDouble();
         Counter<String> dE = new MCMCDerivative(mert, md).optimize(newWts);
         newWts = mert.lineSearch(nbest, newWts, dE, emetric);
-        eval = UnsmoothedMERT.evalAtPoint(nbest, newWts, emetric);
+        eval = MERT.evalAtPoint(nbest, newWts, emetric);
         System.err.printf("T:%e Eval: %.5f E(Eval): %.5f\n", aTset, eval, md.doubleValue());
       }
-      double ssd = UnsmoothedMERT.wtSsd(wts, newWts);
+      double ssd = MERT.wtSsd(wts, newWts);
 
 
-      eval = UnsmoothedMERT.evalAtPoint(nbest, newWts, emetric);
+      eval = MERT.evalAtPoint(nbest, newWts, emetric);
       System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD) break;
+      if (ssd < MERT.NO_PROGRESS_SSD) break;
       wts = newWts;
     }
     System.err.printf("Last eval: %e\n", eval);
@@ -2174,7 +2174,7 @@ class MCMCELossDirOptimizer extends AbstractNBestOptimizer {
  */
 class PerceptronOptimizer extends AbstractNBestOptimizer {
 
-  public PerceptronOptimizer(UnsmoothedMERT mert) {
+  public PerceptronOptimizer(MERT mert) {
     super(mert);
   }
 
@@ -2182,16 +2182,16 @@ class PerceptronOptimizer extends AbstractNBestOptimizer {
 
     List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
             emetric)).maximize(nbest);
-    Counter<String> targetFeatures = UnsmoothedMERT.summarizedAllFeaturesVector(target);
+    Counter<String> targetFeatures = MERT.summarizedAllFeaturesVector(target);
     Counter<String> wts = initialWts;
 
     while (true) {
-      Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
+      Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
       MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
               new ScorerWrapperEvaluationMetric<IString, String>(scorer));
       List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch
               .maximize(nbest);
-      Counter<String> dir = UnsmoothedMERT.summarizedAllFeaturesVector(oneBest);
+      Counter<String> dir = MERT.summarizedAllFeaturesVector(oneBest);
       Counters.multiplyInPlace(dir, -1.0);
       dir.addAll(targetFeatures);
       Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
@@ -2201,7 +2201,7 @@ class PerceptronOptimizer extends AbstractNBestOptimizer {
         ssd += diff * diff;
       }
       wts = newWts;
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+      if (ssd < MERT.NO_PROGRESS_SSD)
         break;
     }
     return wts;
@@ -2214,7 +2214,7 @@ class PerceptronOptimizer extends AbstractNBestOptimizer {
  */
 class PointwisePerceptron extends AbstractNBestOptimizer {
 
-  public PointwisePerceptron(UnsmoothedMERT mert) {
+  public PointwisePerceptron(MERT mert) {
     super(mert);
   }
 
@@ -2231,23 +2231,23 @@ class PointwisePerceptron extends AbstractNBestOptimizer {
     do {
       for (int i = 0; i < targets.size(); i++) {
         // get current classifier argmax
-        Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
+        Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
         GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(
                 new ScorerWrapperEvaluationMetric<IString, String>(scorer));
         List<List<ScoredFeaturizedTranslation<IString, String>>> nbestSlice = Arrays
                 .asList(nbest.nbestLists().get(i));
         List<ScoredFeaturizedTranslation<IString, String>> current = argmaxByScore
                 .maximize(new MosesNBestList(nbestSlice, false));
-        Counter<String> dir = UnsmoothedMERT.summarizedAllFeaturesVector(Arrays
+        Counter<String> dir = MERT.summarizedAllFeaturesVector(Arrays
                 .asList(targets.get(i)));
-        Counters.subtractInPlace(dir, UnsmoothedMERT.summarizedAllFeaturesVector(current));
+        Counters.subtractInPlace(dir, MERT.summarizedAllFeaturesVector(current));
         Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
-        double ssd = UnsmoothedMERT.wtSsd(wts, newWts);
+        double ssd = MERT.wtSsd(wts, newWts);
         System.err.printf(
                 "%d.%d - ssd: %e changes(total: %d iter: %d) eval: %f\n", iter, i,
-                ssd, totalChanges, changes, UnsmoothedMERT.evalAtPoint(nbest, newWts, emetric));
+                ssd, totalChanges, changes, MERT.evalAtPoint(nbest, newWts, emetric));
         wts = newWts;
-        if (ssd >= UnsmoothedMERT.NO_PROGRESS_SSD) {
+        if (ssd >= MERT.NO_PROGRESS_SSD) {
           changes++;
           totalChanges++;
         }
@@ -2267,7 +2267,7 @@ class RandomNBestPoint extends AbstractNBestOptimizer {
 
 	boolean better;
 
-  public RandomNBestPoint(UnsmoothedMERT mert, boolean better) {
+  public RandomNBestPoint(MERT mert, boolean better) {
     super(mert);
 		this.better = better;
   }
@@ -2277,19 +2277,19 @@ class RandomNBestPoint extends AbstractNBestOptimizer {
 
     Counter<String> wts = initialWts;
 
-    for (int noProgress = 0; noProgress < UnsmoothedMERT.NO_PROGRESS_LIMIT;) {
+    for (int noProgress = 0; noProgress < MERT.NO_PROGRESS_LIMIT;) {
       Counter<String> dir;
       List<ScoredFeaturizedTranslation<IString, String>> rTrans;
-      dir = UnsmoothedMERT.summarizedAllFeaturesVector(rTrans = (better ? mert.randomBetterTranslations(
+      dir = MERT.summarizedAllFeaturesVector(rTrans = (better ? mert.randomBetterTranslations(
               nbest, wts, emetric)
               : mert.randomTranslations(nbest)));
 
       System.err.printf("Random n-best point score: %.5f\n", emetric
               .score(rTrans));
       Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
-      double eval = UnsmoothedMERT.evalAtPoint(nbest, newWts, emetric);
-      double ssd = UnsmoothedMERT.wtSsd(wts, newWts);
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+      double eval = MERT.evalAtPoint(nbest, newWts, emetric);
+      double ssd = MERT.wtSsd(wts, newWts);
+      if (ssd < MERT.NO_PROGRESS_SSD)
         noProgress++;
       else
         noProgress = 0;
@@ -2307,7 +2307,7 @@ class RandomNBestPoint extends AbstractNBestOptimizer {
  */
 class RandomPairs extends AbstractNBestOptimizer {
 
-  public RandomPairs(UnsmoothedMERT mert) {
+  public RandomPairs(MERT mert) {
     super(mert);
   }
 
@@ -2316,19 +2316,19 @@ class RandomPairs extends AbstractNBestOptimizer {
 
     Counter<String> wts = initialWts;
 
-    for (int noProgress = 0; noProgress < UnsmoothedMERT.NO_PROGRESS_LIMIT;) {
+    for (int noProgress = 0; noProgress < MERT.NO_PROGRESS_LIMIT;) {
       Counter<String> dir;
       List<ScoredFeaturizedTranslation<IString, String>> rTrans1, rTrans2;
 
-      dir = UnsmoothedMERT.summarizedAllFeaturesVector(rTrans1 = mert.randomTranslations(nbest));
-      Counter<String> counter = UnsmoothedMERT.summarizedAllFeaturesVector(rTrans2 = mert.randomTranslations(nbest));
+      dir = MERT.summarizedAllFeaturesVector(rTrans1 = mert.randomTranslations(nbest));
+      Counter<String> counter = MERT.summarizedAllFeaturesVector(rTrans2 = mert.randomTranslations(nbest));
       Counters.subtractInPlace(dir, counter);
 
       System.err.printf("Pair scores: %.5f %.5f\n", emetric.score(rTrans1),
               emetric.score(rTrans2));
 
       Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
-      double eval = UnsmoothedMERT.evalAtPoint(nbest, newWts, emetric);
+      double eval = MERT.evalAtPoint(nbest, newWts, emetric);
 
       double ssd = 0;
       for (String k : newWts.keySet()) {
@@ -2338,7 +2338,7 @@ class RandomPairs extends AbstractNBestOptimizer {
       System.err.printf("Eval: %.5f SSD: %e (no progress: %d)\n", eval, ssd,
               noProgress);
       wts = newWts;
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+      if (ssd < MERT.NO_PROGRESS_SSD)
         noProgress++;
       else
         noProgress = 0;
@@ -2355,7 +2355,7 @@ class RandomAltPairs extends AbstractNBestOptimizer {
 
 	boolean forceBetter;
 
-  public RandomAltPairs(UnsmoothedMERT mert, boolean forceBetter) {
+  public RandomAltPairs(MERT mert, boolean forceBetter) {
     super(mert);
 		this.forceBetter = forceBetter;
   }
@@ -2365,25 +2365,25 @@ class RandomAltPairs extends AbstractNBestOptimizer {
 
     Counter<String> wts = initialWts;
 
-    for (int noProgress = 0; noProgress < UnsmoothedMERT.NO_PROGRESS_LIMIT;) {
+    for (int noProgress = 0; noProgress < MERT.NO_PROGRESS_LIMIT;) {
       Counter<String> dir;
       List<ScoredFeaturizedTranslation<IString, String>> rTrans;
-      Scorer<String> scorer = new StaticScorer(wts, UnsmoothedMERT.featureIndex);
+      Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
 
-      dir = UnsmoothedMERT.summarizedAllFeaturesVector(rTrans = (forceBetter ? mert.randomBetterTranslations(
+      dir = MERT.summarizedAllFeaturesVector(rTrans = (forceBetter ? mert.randomBetterTranslations(
               nbest, wts, emetric)
               : mert.randomTranslations(nbest)));
       MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
               new ScorerWrapperEvaluationMetric<IString, String>(scorer));
       List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch
               .maximize(nbest);
-      Counters.subtractInPlace(dir, UnsmoothedMERT.summarizedAllFeaturesVector(oneBest));
+      Counters.subtractInPlace(dir, MERT.summarizedAllFeaturesVector(oneBest));
 
       System.err.printf("Random alternate score: %.5f \n", emetric
               .score(rTrans));
 
       Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
-      double eval = UnsmoothedMERT.evalAtPoint(nbest, newWts, emetric);
+      double eval = MERT.evalAtPoint(nbest, newWts, emetric);
 
       double ssd = 0;
       for (String k : newWts.keySet()) {
@@ -2393,7 +2393,7 @@ class RandomAltPairs extends AbstractNBestOptimizer {
       System.err.printf("Eval: %.5f SSD: %e (no progress: %d)\n", eval, ssd,
               noProgress);
       wts = newWts;
-      if (ssd < UnsmoothedMERT.NO_PROGRESS_SSD)
+      if (ssd < MERT.NO_PROGRESS_SSD)
         noProgress++;
       else
         noProgress = 0;

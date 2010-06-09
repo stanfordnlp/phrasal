@@ -47,7 +47,7 @@ public class OldLexicalReorderingFeatureExtractor extends AbstractFeatureExtract
 	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
     super.init(prop,featureIndex,alTemps);
     boolean fail = false;
-    String type = prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
+    String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
     String[] tokens = type.split("-");
     assert(2 <= tokens.length && tokens.length <= 3);
     // Get categories:

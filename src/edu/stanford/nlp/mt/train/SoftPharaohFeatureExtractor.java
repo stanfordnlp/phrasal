@@ -58,21 +58,21 @@ public class SoftPharaohFeatureExtractor extends AbstractFeatureExtractor {
     eLexCounts.add(0);
     // Do we want exact counts?
     boolean exact = prop.getProperty
-      (CombinedFeatureExtractor.EXACT_PHI_OPT,"true").equals("true");
+      (PhraseExtract.EXACT_PHI_OPT,"true").equals("true");
     this.numPasses = exact ? 2 : 1;
     System.err.println("Exact denominator counts for phi(f|e): "+exact);
     // IBM lexicalized model?
     ibmLexModel = prop.getProperty
-      (CombinedFeatureExtractor.IBM_LEX_MODEL_OPT,"false").equals("true");
+      (PhraseExtract.IBM_LEX_MODEL_OPT,"false").equals("true");
     if(!ibmLexModel)
       alTemps.enableAlignmentCounts(true);
     onlyML = prop.getProperty
-      (CombinedFeatureExtractor.ONLY_ML_OPT,"false").equals("true");
+      (PhraseExtract.ONLY_ML_OPT,"false").equals("true");
     // Filtering:
     phiFilter = Double.parseDouble
-      (prop.getProperty(CombinedFeatureExtractor.PTABLE_PHI_FILTER_OPT,"-1e30"));
+      (prop.getProperty(PhraseExtract.PTABLE_PHI_FILTER_OPT,"-1e30"));
     lexFilter = Double.parseDouble
-      (prop.getProperty(CombinedFeatureExtractor.PTABLE_LEX_FILTER_OPT,"-1e30"));
+      (prop.getProperty(PhraseExtract.PTABLE_LEX_FILTER_OPT,"-1e30"));
     System.err.printf("minimum phi(e|f) = %.5f\n", phiFilter);
     System.err.printf("minimum lex(e|f) = %.5f\n", lexFilter);
   }

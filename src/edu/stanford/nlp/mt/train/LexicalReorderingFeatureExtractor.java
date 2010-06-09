@@ -50,15 +50,15 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     enabledTypes[ReorderingTypes.monotone.ordinal()] = true;
     enabledTypes[ReorderingTypes.discont1.ordinal()] = true;
     // Type of reordering model:
-    String type = prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
+    String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
     String[] tokens = type.split("-");
     assert(2 <= tokens.length && tokens.length <= 3);
     // Type of extraction: word-phrase (Moses) vs. phrase-phrase (Tillmann, etc):
-    phrasalReordering = Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_PHRASAL_OPT, "false"));
+    phrasalReordering = Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_PHRASAL_OPT, "false"));
     System.err.println("phrase-phrase reordering: "+phrasalReordering);
     if(phrasalReordering) {
       enabledTypes[ReorderingTypes.discont2.ordinal()] =
-        Boolean.parseBoolean(prop.getProperty(CombinedFeatureExtractor.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
+        Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
     }
     // Get categories:
     if("msd".equals(tokens[0]) || "msd2".equals(tokens[0]) || "orientation".equals(tokens[0])) {

@@ -24,7 +24,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
 	}
 	
-	public enum Type {CONCATENATIVE, STRICT_DOMINANCE};
+	public enum Type { CONCATENATIVE, STRICT_DOMINANCE }
 	static public final Type DEFAULT_TYPE = Type.CONCATENATIVE;
 	static public final int DEFAULT_PHRASE_LIMIT = 50;
 	

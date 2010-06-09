@@ -1,3 +1,30 @@
+//Phrasal -- A Statistical Machine Translation Toolkit
+//for Exploring New Model Features.
+//Copyright (c) 2007-2010 Leland Stanford Junior University
+
+//This program is free software; you can redistribute it and/or
+//modify it under the terms of the GNU General Public License
+//as published by the Free Software Foundation; either version 2
+//of the License, or (at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+
+//You should have received a copy of the GNU General Public License
+//along with this program; if not, write to the Free Software
+//Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+//For more information, bug reports, fixes, contact:
+//Christopher Manning
+//Dept of Computer Science, Gates 1A
+//Stanford CA 94305-9010
+//USA
+//Support/Questions: java-nlp-user@lists.stanford.edu
+//Licensing: java-nlp-support@lists.stanford.edu
+//http://nlp.stanford.edu/software/phrasal
+
 package edu.stanford.nlp.mt.tune;
 
 import java.io.*;
@@ -21,8 +48,9 @@ import edu.stanford.nlp.util.OAIndex;
  * Optimization for non smooth error surfaces.
  *
  * @author danielcer
+ * @author Michel Galley
  */
-public class UnsmoothedMERT extends Thread {
+public class MERT extends Thread {
 
   private static boolean tokenizeNIST = false;
 
@@ -631,7 +659,7 @@ public class UnsmoothedMERT extends Thread {
    * Initialize everything that is read only, i.e., nbest list, starting points.
    * @throws IOException
    */
-  public static void initStatic(String nbestListFile, String localNbestListFile, String previousWtsFiles, int nStartingPoints, UnsmoothedMERT defaultMERT) throws IOException {
+  public static void initStatic(String nbestListFile, String localNbestListFile, String previousWtsFiles, int nStartingPoints, MERT defaultMERT) throws IOException {
 
     startTime = System.currentTimeMillis();
 
@@ -793,7 +821,7 @@ public class UnsmoothedMERT extends Thread {
   Random random;
 
 	@SuppressWarnings("unchecked")
-	public UnsmoothedMERT(String evalMetric, String referenceList, String optStr, String seedStr) throws IOException {
+	public MERT(String evalMetric, String referenceList, String optStr, String seedStr) throws IOException {
 
     this.optStr = optStr;
     this.seedStr = seedStr;
@@ -958,15 +986,15 @@ public class UnsmoothedMERT extends Thread {
 
   static void setFastTER(TERcalc calc) {
     if (System.getProperty("fastTER") != null) {
-      System.err.println("beam width: "+UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
-      System.err.println("ter shift dist: "+UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
-      calc.setBeamWidth(UnsmoothedMERT.DEFAULT_TER_BEAM_WIDTH);
-      calc.setShiftDist(UnsmoothedMERT.DEFAULT_TER_SHIFT_DIST);
+      System.err.println("beam width: "+ MERT.DEFAULT_TER_BEAM_WIDTH);
+      System.err.println("ter shift dist: "+ MERT.DEFAULT_TER_SHIFT_DIST);
+      calc.setBeamWidth(MERT.DEFAULT_TER_BEAM_WIDTH);
+      calc.setShiftDist(MERT.DEFAULT_TER_SHIFT_DIST);
     }
   }
 
   static boolean updateBest(Counter<String> newWts, double obj) {
-    synchronized(UnsmoothedMERT.class) {
+    synchronized(MERT.class) {
       if (bestObj > obj) {
         System.err.printf("\n<<<IMPROVED BEST: %f -> %f with {{{%s}}}.>>>\n", -bestObj, -obj, newWts);
         bestWts = newWts;
@@ -1110,7 +1138,7 @@ public class UnsmoothedMERT extends Thread {
     }
 
     if(args.length-argi != 6) {
-      System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.UnsmoothedMERT [-N] [-t (nb of threads)] [-s (seed)] [-p (nb of starting points)] [-o (optimizer name)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
+      System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.MERT [-N] [-t (nb of threads)] [-s (seed)] [-p (nb of starting points)] [-o (optimizer name)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
       System.err.println("-s <N>: provide seed to initialize random number generator.");
       System.err.println("-p <N>: number of starting points.");
       System.err.println("-o <N>: search algorithm.");
@@ -1133,16 +1161,16 @@ public class UnsmoothedMERT extends Thread {
     String referenceList = args[++argi];
     String finalWtsFile = args[++argi];
 
-    UnsmoothedMERT mert = new UnsmoothedMERT(evalMetric, referenceList, optStr, seedStr);
+    MERT mert = new MERT(evalMetric, referenceList, optStr, seedStr);
     System.err.printf("Starting points: %d\n", nStartingPoints);
     System.err.printf("Threads: %d\n", nThreads);
 
-    // Initialize static members (nbest list, etc); need UnsmoothedMERT instance for filtering the nbest list:
+    // Initialize static members (nbest list, etc); need MERT instance for filtering the nbest list:
     initStatic(nbestListFile, localNbestListFile, previousWtsFiles, nStartingPoints, mert);
 
     List<Thread> threads = new ArrayList<Thread>(nThreads);
     for(int i=0; i<nThreads; ++i) {
-      UnsmoothedMERT thread = (i==0) ? mert : new UnsmoothedMERT(evalMetric, referenceList, optStr, seedStr);
+      MERT thread = (i==0) ? mert : new MERT(evalMetric, referenceList, optStr, seedStr);
       thread.start();
       threads.add(thread);
     }

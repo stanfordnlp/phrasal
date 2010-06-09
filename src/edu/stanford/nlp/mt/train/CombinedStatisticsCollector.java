@@ -12,7 +12,7 @@ import java.util.zip.GZIPInputStream;
 
 /**
  * go through the SentencePairs and collect global information
- * General structure following CombinedFeatureExtractor class
+ * General structure following PhraseExtract class
  *
  * @author Pi-Chuan Chang
  */

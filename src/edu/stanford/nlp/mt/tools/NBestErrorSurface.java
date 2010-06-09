@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.tools;
 import java.io.PrintStream;
 import java.util.List;
 
+import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.Counter;
 
 import edu.stanford.nlp.mt.base.IString;
@@ -10,7 +11,6 @@ import edu.stanford.nlp.mt.base.MosesNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricFactory;
-import edu.stanford.nlp.mt.tune.UnsmoothedMERT;
 import edu.stanford.nlp.util.OAIndex;
 
 /**
@@ -41,7 +41,7 @@ public class NBestErrorSurface {
 
     EvaluationMetric<IString, String> eval = MetricFactory.metric(evalMetricFn, refsFn);
 		MosesNBestList nbest = new MosesNBestList(nbestFn, featureIndex);
-		Counter<String> wts = UnsmoothedMERT.readWeights(weightsFn, featureIndex);
+		Counter<String> wts = MERT.readWeights(weightsFn, featureIndex);
 		String feature1Name = feature1Field.split("\\|\\|\\|")[0];
 		String feature2Name = feature2Field.split("\\|\\|\\|")[0];
 		double feature1Min = Double.parseDouble(
@@ -89,7 +89,7 @@ public class NBestErrorSurface {
 			for (int j = 0; j < gridSize; j++) {
 				double f2Val = feature2Min+j*deltaf2;				
 				wts.setCount(feature2Name, f2Val);
-				List<ScoredFeaturizedTranslation<IString, String>> trans = UnsmoothedMERT.transArgmax(nbest, wts);
+				List<ScoredFeaturizedTranslation<IString, String>> trans = MERT.transArgmax(nbest, wts);
 				double e = eval.score(trans);
 				pstrm.print(e);
 				if (j+1 < gridSize) pstrm.print(" ");
