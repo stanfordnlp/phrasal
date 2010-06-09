@@ -1,12 +1,10 @@
-package edu.stanford.nlp.mt.orphan;
+package edu.stanford.nlp.mt.train;
 
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IBMModel1;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.train.WordAligner;
-import edu.stanford.nlp.mt.train.WordAlignment;
 
 /**
  * This class makes use of the GIZA++ style alignment information in SymmetricalWordAlignment to limit the

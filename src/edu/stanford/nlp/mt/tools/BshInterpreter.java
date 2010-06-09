@@ -1,6 +1,4 @@
-package edu.stanford.nlp.mt.train;
-
-//import bsh.Interpreter;
+package edu.stanford.nlp.mt.tools;
 
 /**
  * Interpreter providing support for BeanShell Scripting Language.
@@ -9,12 +7,11 @@ package edu.stanford.nlp.mt.train;
  *
  * @author Michel Galley
  */
-public class BshInterpreter extends bsh.Interpreter implements Interpreter {
+public class BshInterpreter extends bsh.Interpreter
+   implements edu.stanford.nlp.mt.tools.Interpreter {
   
   private static final long serialVersionUID = 1L;
 	
-	//Interpreter interpreter;
-
   public BshInterpreter()
   {
     try {
@@ -43,5 +40,3 @@ public class BshInterpreter extends bsh.Interpreter implements Interpreter {
     }
   }
 }
-
-interface Interpreter { public Object evalString(String s); }

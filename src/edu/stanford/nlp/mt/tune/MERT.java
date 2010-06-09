@@ -56,6 +56,7 @@ public class MERT extends Thread {
 
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
+  @SuppressWarnings("unused")
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
   static final Set<String> generativeFeatures = SSVMScorer
           .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
@@ -613,6 +614,7 @@ public class MERT extends Thread {
     }
   }
 
+  @SuppressWarnings("unused")
   static void displayWeightsOneLine(Counter<String> wts) {
     System.out.print("[ ");
     for (String f : wts.keySet()) {

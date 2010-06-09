@@ -5,11 +5,11 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.tools.BshInterpreter;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.mt.train.AlignmentTemplateInstance;
 import edu.stanford.nlp.mt.train.AlignmentTemplates;
-import edu.stanford.nlp.mt.train.BshInterpreter;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.train.SourceFilter;
 

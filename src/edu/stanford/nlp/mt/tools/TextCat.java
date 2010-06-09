@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.textcat;
+package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.objectbank.IteratorFromReaderFactory;

@@ -195,10 +195,8 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   private int indexOfE(AlignmentTemplate alTemp, boolean add)
   { return eIndex.indexOf(Sequences.toIntArray(alTemp.e()), add); }
 
-  /**
-   * Return the target-language phrase indexed by idx.
-   */
-  public int[] getE(int idx) { return eIndex.get(idx); }
+  // Return the target-language phrase indexed by idx.
+  //public int[] getE(int idx) { return eIndex.get(idx); }
   //public int sizeE() { return eIndex.size(); }
 
   /**

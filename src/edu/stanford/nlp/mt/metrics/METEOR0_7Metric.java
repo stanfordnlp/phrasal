@@ -11,10 +11,10 @@ import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.mt.base.IOTools;
 
 /**
+ * @deprecated Use METEORMetric instead.
  * @author Michel Galley
  */
 public class METEOR0_7Metric {
-  // TODO: have METEOR extend AbstractMetric<TK,FV>
 
   private static final String rootName = "meteor.tmp.";
   private static final boolean verbose = false;

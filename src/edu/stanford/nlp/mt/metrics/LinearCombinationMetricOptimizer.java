@@ -25,8 +25,6 @@ import edu.stanford.nlp.math.ArrayMath;
  */
 public class LinearCombinationMetricOptimizer implements Function {
 
-  // TODO: This class is a big mess; rewrite it after MetricsMATR
-
   private static IString
    TER = new IString("ter"), BLEU = new IString("bleu"), LBLEU = new IString("lbleu"),
    BLEU_BP = new IString("bleu_bp"), LBLEU_BP = new IString("lbleu_bp"), 

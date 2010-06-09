@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.train;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import edu.stanford.nlp.mt.base.IString;
 
 /**
@@ -8,6 +7,7 @@ import edu.stanford.nlp.mt.base.IString;
  * 
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class DTUFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugDTUFeatureExtractor";

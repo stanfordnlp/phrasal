@@ -13,8 +13,6 @@ import java.util.Iterator;
  */
 public class RuleIndex implements Iterable<RuleIndex.RuleId> {
 
-  // TODO: represent data more compactly (int -> byte)
-
   class RuleId {
 
     final Rule rule;

@@ -30,7 +30,7 @@ public class AbstractWordAlignment implements WordAlignment {
   public static final boolean KEEP_BAD_TOKENS
    = Boolean.parseBoolean(System.getProperty(KEEP_BAD_TOKENS_PROPERTY, "false"));
 
-  Integer id;
+  protected Integer id;
 
   Sequence<IString> f;
   Sequence<IString> e;
@@ -57,6 +57,7 @@ public class AbstractWordAlignment implements WordAlignment {
   public SortedSet<Integer> f2e(int i) { return f2e[i]; }
   public SortedSet<Integer> e2f(int i) { return e2f[i]; }
 
+  @SuppressWarnings("unused")
   public int f2eSize(int i, int min, int max) { return _size(f2e[i],min,max); }
   public int e2fSize(int i, int min, int max) { return _size(e2f[i],min,max); }
 

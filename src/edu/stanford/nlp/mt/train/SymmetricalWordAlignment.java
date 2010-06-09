@@ -48,10 +48,6 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     super(f,e,f2e,e2f);
   }
 
-  public SymmetricalWordAlignment(Integer id, String fStr, String eStr, String aStr) throws IOException {
-    init(id,fStr,eStr,aStr);
-  }
-  
   public SymmetricalWordAlignment(String fStr, String eStr, String aStr, boolean s2t, boolean oneIndexed) throws IOException {
     init(fStr,eStr,aStr,s2t,oneIndexed);
   }
@@ -63,11 +59,6 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   public SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e) {
     this.f = f; this.e = e;
     initAlignment();
-  }
-
-  public void init(Integer id, String fStr, String eStr, String aStr) throws IOException {
-    this.id = id;
-    init(fStr,eStr,aStr);
   }
 
   public void init(Integer id, String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed)
@@ -203,9 +194,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
 
   @Override
 	public String toString() { return toString(f2e); }
-  //public String toString1() { return toString(f2e,false); }
 
-  //public String toReverseString() { return toString(e2f); }
   public String toReverseString1() { return toString(e2f,false); }
 
   static public SymmetricalWordAlignment[] readFromIBMWordAlignment(String xmlFile) {

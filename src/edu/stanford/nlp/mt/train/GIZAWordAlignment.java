@@ -97,9 +97,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
       //System.err.println("adding: "+w);
       if(!tokens[++pos].equals("({"))
         throw new IOException("Bad GIZA file format at position "+pos+": "+tokens[pos]);
-      while(!tokens[++pos].equals("})"))
-        ;
-      //++wpos;
+      while(!tokens[++pos].equals("})")) {}
     }
     return words;
   }

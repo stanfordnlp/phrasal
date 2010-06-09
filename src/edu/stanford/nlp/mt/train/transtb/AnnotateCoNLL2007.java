@@ -31,8 +31,6 @@ public class AnnotateCoNLL2007 {
 
   private static final boolean DEBUG = false;
 
-  // TODO: add crossing features
-  // TODO: add valency
   public static final boolean FWORDS = Boolean.parseBoolean(System.getProperty("fWords","false"));
 
   static void usage() {

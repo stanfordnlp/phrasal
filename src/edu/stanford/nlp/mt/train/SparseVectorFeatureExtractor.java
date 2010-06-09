@@ -7,12 +7,11 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
 /**
  * Class that associates one sparse vector to each alignment template.
+ * Note: not thread safe.
  * 
  * @author Michel Galley
  */
 public abstract class SparseVectorFeatureExtractor extends AbstractFeatureExtractor {
-
-	// TODO: make thread safe
 
   private List<Int2IntLinkedOpenHashMap> featureMaps
      = new ArrayList<Int2IntLinkedOpenHashMap>();

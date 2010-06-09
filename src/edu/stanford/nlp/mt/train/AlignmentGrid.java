@@ -60,7 +60,7 @@ public class AlignmentGrid {
    */
 
   public void init(WordAlignment s) {
-    if (sentId != null && s.getId() == sentId) {
+    if (sentId != null && s.getId().equals(sentId)) {
       return;
     }
     init(s.e().size(), s.f().size());

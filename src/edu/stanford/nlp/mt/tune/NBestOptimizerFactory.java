@@ -146,7 +146,7 @@ public class NBestOptimizerFactory {
  */
 class SequenceOptimizer extends AbstractNBestOptimizer {
 
-  private final double MIN_OBJECTIVE_CHANGE = 1e-5;
+  private static final double MIN_OBJECTIVE_CHANGE = 1e-5;
 
   private final List<NBestOptimizer> opts;
   private final boolean loop;
@@ -424,6 +424,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
 /**
  * @author danielcer
  */
+@SuppressWarnings("unused")
 class OldCerStyleOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
@@ -516,6 +517,7 @@ class LineSearchOptimizer extends AbstractNBestOptimizer {
     featureName = WordPenaltyFeaturizer.FEATURE_NAME;
   }
 
+  @SuppressWarnings("unused")
   public LineSearchOptimizer(MERT mert, String featureName) {
     super(mert);
     this.featureName = featureName;
@@ -850,6 +852,7 @@ class MCMCDerivative extends AbstractNBestOptimizer {
 	MutableDouble expectedEval;
 	MutableDouble objValue;
 
+  @SuppressWarnings("unused")
   public MCMCDerivative(MERT mert) {
     this(mert,null);
   }
@@ -1878,6 +1881,7 @@ class SVDReducedObj extends AbstractNBestOptimizer {
     return wts;
   }
 
+  @SuppressWarnings("unused")
   static public MosesNBestList nbestListToDimReducedNbestList(
           MosesNBestList nbest, Matrix reducedRepV) {
 
@@ -1893,21 +1897,21 @@ class SVDReducedObj extends AbstractNBestOptimizer {
            new ArrayList<ScoredFeaturizedTranslation<IString, String>>
                 (oldNbestlist.size());
       newNbestLists.add(newNbestlist);
-      for (int transId = 0; transId < oldNbestlist.size(); transId++) {
+      for (ScoredFeaturizedTranslation<IString, String> anOldNbestlist : oldNbestlist) {
         nbestId++;
         ScoredFeaturizedTranslation<IString, String> oldTrans =
-             oldNbestlist.get(transId);
+            anOldNbestlist;
         List<FeatureValue<String>> reducedFeatures =
-             new ArrayList<FeatureValue<String>>(numNewFeat);
+            new ArrayList<FeatureValue<String>>(numNewFeat);
         for (int featId = 0; featId < numNewFeat; featId++) {
           //      System.err.printf("%d:%d\n", featId, nbestId);
           reducedFeatures.add(new FeatureValue<String>(
-               (Integer.valueOf(featId)).toString(),
-               reducedRepV.get(nbestId, featId)));
+              (Integer.valueOf(featId)).toString(),
+              reducedRepV.get(nbestId, featId)));
         }
         ScoredFeaturizedTranslation<IString, String> newTrans =
-             new ScoredFeaturizedTranslation<IString, String>
-                  (oldTrans.translation, reducedFeatures, 0);
+            new ScoredFeaturizedTranslation<IString, String>
+                (oldTrans.translation, reducedFeatures, 0);
         newNbestlist.add(newTrans);
       }
     }
@@ -2111,8 +2115,8 @@ class MCMCELossObjectiveSGD extends AbstractNBestOptimizer {
       double winObjDiff = Double.POSITIVE_INFINITY;
       if (iter > objDiffWin.length) {
         double sum = 0;
-        for (int i = 0; i < objDiffWin.length; i++) {
-          sum += objDiffWin[i];
+        for (double anObjDiffWin : objDiffWin) {
+          sum += anObjDiffWin;
         }
         winObjDiff = sum/objDiffWin.length;
       }

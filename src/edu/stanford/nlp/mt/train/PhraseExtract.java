@@ -27,6 +27,7 @@
 
 package edu.stanford.nlp.mt.train;
 
+import edu.stanford.nlp.mt.tools.Interpreter;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;

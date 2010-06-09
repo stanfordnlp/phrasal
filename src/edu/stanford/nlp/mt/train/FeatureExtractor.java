@@ -8,9 +8,6 @@ package edu.stanford.nlp.mt.train;
  */
 public interface FeatureExtractor {
 
-  // TODO: add fuction to score only source or target language phrases
-  // (used in some lex re-ordering models).
-
   /**
    * Returns true if the feature extractor needs to have access to access
    * to the alignment grid, which may contain various information such as 
@@ -57,6 +54,7 @@ public interface FeatureExtractor {
   /**
    * Names of features returned by {@link #score(AlignmentTemplate)}. 
    */
+  @SuppressWarnings("unused")
   public Object scoreNames();
 
   /**

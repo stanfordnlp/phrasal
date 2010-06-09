@@ -17,9 +17,6 @@ import edu.stanford.nlp.mt.base.IString;
 @SuppressWarnings("unused")
 public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeatureExtractor {
 
-  // TODO: reimplement more stuff available in the C++ version.
-	// TODO: make thread safe
-
   private static final boolean SKIP_UNK = true;
   private static final boolean SKIP_SENT_BND = false;
 
@@ -33,9 +30,8 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
     UNK_WORD = new IString("<unk>"), START_SENT = new IString("<s>"), END_SENT = new IString("</s>");
 
   private int winSize = 1;
-  private Set<IString> 
-    fCCWords = new HashSet<IString>(), eCCWords = new HashSet<IString>(),
-    fOCWords = new HashSet<IString>(), eOCWords = new HashSet<IString>();
+  private Set<IString> fOCWords = new HashSet<IString>();
+  private Set<IString> eOCWords = new HashSet<IString>();
 
   /**
    * Preferred constructor. 
@@ -47,8 +43,8 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
   public ShallowSyntacticContextFeatureExtractor(String fCCVocab, String eCCVocab, String fOCVocab, String eOCVocab, int winSize) {
     this.winSize = winSize;
     try {
-      fCCWords = IOTools.slurpIStringSet(fCCVocab);
-      eCCWords = IOTools.slurpIStringSet(eCCVocab);
+      Set<IString> fCCWords = IOTools.slurpIStringSet(fCCVocab);
+      Set<IString> eCCWords = IOTools.slurpIStringSet(eCCVocab);
       fOCWords = IOTools.slurpIStringSet(fOCVocab);
       eOCWords = IOTools.slurpIStringSet(eOCVocab);
     } catch(IOException e) {

@@ -20,8 +20,6 @@ import edu.stanford.nlp.objectbank.ObjectBank;
  */
 public class Levenshtein<T extends HasIntegerIdentity> {
 
-  // TODO: make this more generic and move this to core.
-
   private static final byte U = 2;
   private static final byte L = 3;
   private static final byte M = 5;

@@ -29,6 +29,7 @@ public class DualWordAlignment implements WordAlignment {
 
   DualWordAlignment() {}
 
+  @SuppressWarnings("unused")
   public DualWordAlignment(String fStr, String eStr, String a1Str, String a2Str) throws IOException {
     init(fStr,eStr,a1Str,a2Str);
   }

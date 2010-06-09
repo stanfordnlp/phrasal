@@ -35,7 +35,7 @@ public class AnnotateChineseCoNLL2007 {
 
     if(args.length != 6)
       usage();
-    String fTextFile = args[0]; // TODO: try removing
+    String fTextFile = args[0];
     String conllFile = args[1];
     String fParseFile = args[2];
     String hfName = args[3];
