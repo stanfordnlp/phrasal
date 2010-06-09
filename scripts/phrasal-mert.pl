@@ -498,7 +498,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 				for(my $i = $iter-1; $i>=0; --$i) {
 					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
 				}
-				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.UnsmoothedMERT -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
 	      print stderr "MERT command: $mertCMD\n";
 	      `$mertCMD`;
 	      if (not -e $next_iter_weights) {

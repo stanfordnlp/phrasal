@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.train;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
-import edu.stanford.nlp.mt.tools.Levenshtein;
 
 import java.util.*;
 import java.io.IOException;
@@ -64,7 +63,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     c.substringExtractor.alGrid = c.alGrid;
     c.queue = new LinkedList<DTUPhrase>();
     c.seen = new HashSet<DTUPhrase>(QUEUE_SZ);
-    c.dp = new Levenshtein<IString>();
     c.bitsets = new HashSet<BitSet>();
     return c;
   }
@@ -146,7 +144,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       allSubsequences = true;
       noUnalignedOrLooseGaps = true;
       //onlyTightPhrases = true;
-      noCrossSerialPhrases = true; // TODO
+      noCrossSerialPhrases = true;
     }
 
     if(DEBUG)
@@ -724,7 +722,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     return false;
   }
 
-  Levenshtein<IString> dp = new Levenshtein<IString>();
   Set<BitSet> bitsets = new HashSet<BitSet>();
 
   // Extract all subsequences:
@@ -887,9 +884,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // Rules are processed after being enumarated:
     if (needAlGrid) {
-      if (noCrossSerialPhrases) {
-        // TODO
-      }
       extractPhrasesFromAlGrid(sent);
     }
   }

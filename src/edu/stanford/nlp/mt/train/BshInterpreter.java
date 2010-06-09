@@ -9,8 +9,8 @@ package edu.stanford.nlp.mt.train;
  *
  * @author Michel Galley
  */
-public class BshInterpreter extends bsh.Interpreter
-{
+public class BshInterpreter extends bsh.Interpreter implements Interpreter {
+  
   private static final long serialVersionUID = 1L;
 	
 	//Interpreter interpreter;
@@ -34,4 +34,14 @@ public class BshInterpreter extends bsh.Interpreter
       throw new IllegalArgumentException ("bsh Interpreter error: "+e);
     }
   }
+
+  public Object evalString(String s) {
+    try {
+      return eval(s);
+    } catch (bsh.EvalError e) {
+      throw new RuntimeException(e);
+    }
+  }
 }
+
+interface Interpreter { public Object evalString(String s); }

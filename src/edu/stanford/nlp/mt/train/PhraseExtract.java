@@ -32,9 +32,9 @@ import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Pair;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.io.*;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 
@@ -133,13 +133,11 @@ public class PhraseExtract {
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
   
-  public static final String DEBUG_PROPERTY = "DebugCombinedFeatureExtractor";
+  public static final String DEBUG_PROPERTY = "DebugPhraseExtract";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugCombinedFeatureExtractor";
+  public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugPhraseExtract";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
-
-  private static BshInterpreter interpreter = new BshInterpreter();
 
   protected List<AbstractFeatureExtractor> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
@@ -279,15 +277,13 @@ public class PhraseExtract {
         if(pos >= 0) {
           StringBuffer constructor = new StringBuffer("new ").append(exStr);
           System.err.println("Running constructor: "+constructor);
-          fe = (AbstractFeatureExtractor) interpreter.eval(constructor.toString());
+          Interpreter interpreter = (Interpreter) Class.forName("edu.stanford.nlp.mt.BshInterpreter").newInstance();
+          fe = (AbstractFeatureExtractor) interpreter.evalString(constructor.toString());
         } else {
         	@SuppressWarnings("unchecked")
           Class<AbstractFeatureExtractor> cls = (Class<AbstractFeatureExtractor>)Class.forName(exStr);
           Constructor<AbstractFeatureExtractor> ct = cls.getConstructor(new Class[] {});
           fe = ct.newInstance();
-          //if(fe instanceof PharaohFeatureExtractor) {
-          //  mosesExtractor = (PharaohFeatureExtractor) fe;
-          //}
         }
 
         fe.init(prop, featureIndex, alTemps);

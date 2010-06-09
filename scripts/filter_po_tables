@@ -2,7 +2,7 @@
 
 #####################################################
 # Create a phrase-table and lexical re-ordering tables
-# from the output of CombinedFeatureExtractor.
+# from the output of mt.train.PhraseExtract.
 # The optional third argument is a threshold on p(e|f).
 #
 # Created by Michel Galley (mgalley@stanford.edu)

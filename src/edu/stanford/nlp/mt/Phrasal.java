@@ -40,7 +40,6 @@ import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.*;
 import edu.stanford.nlp.mt.decoder.feat.*;
-import edu.stanford.nlp.mt.decoder.efeat.SentenceBoundaryFeaturizer;
 
 import edu.stanford.nlp.classify.km.StructuredSVM;
 import edu.stanford.nlp.classify.km.kernels.Kernel;

@@ -30,7 +30,7 @@ import com.bbn.mt.terp.NormalizeText;
 public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
-  enum EditType { ins, del, sub, sft };
+  enum EditType { ins, del, sub, sft }
   boolean countEdits = false;
 
   public static int BEAM_WIDTH = 20;

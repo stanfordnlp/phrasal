@@ -220,7 +220,7 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
     verbose = true;
     String model = args[0]; String file = args[1]; boolean quantized = Boolean.parseBoolean(args[2]);
     System.out.printf("Loading lm: %s...\n", model);
-    ARPALanguageModel lm = quantized ? new QuantizedARPALanguageModel(model) : new ARPALanguageModel(model);
+    ARPALanguageModel lm = new ARPALanguageModel(model);
     System.out.printf("done loading lm.\n");
 
     for(String sent : ObjectBank.getLineIterator(file)) {

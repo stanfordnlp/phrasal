@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.inferer;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 
@@ -112,22 +111,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         }
       }
 
-      /////////////////////////////////////////////////////////////////////////////////////////////////////
-      // code below is needed for generating nbest lists with no duplicates for GALE -- please do not delete
-      /////////////////////////////////////////////////////////////////////////////////////////////////////
-
       if(distinctTranslations != null) {
 
-        // Avoid spending too much time generating the nbest list (when can take dozens of minutes for very
-        // long inputs):
-        /*if(hypCount > SAFE_LIST && (hypCount % 100 == 0)) {
-          long curTime = System.currentTimeMillis();
-          if(++duplicateCount >= maxDuplicateCount || curTime-nbestStartTime > MAX_TIME_NBEST) {
-            System.err.printf("\nNbest list construction taking too long (hyps=%d, uniq-hyps=%d, nbest=%d, time=%fs); giving up.\n", 
-              hypCount, duplicateCount, translations.size(), (curTime-nbestStartTime)/1000.0);
-            break;
-          }
-        }*/
         // Get surface string:
         AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
         // If seen this string before and not among the top-k, skip it:
@@ -142,10 +127,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
           break;
 
       } else {
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////
-        // code above is needed for generating nbest lists with no duplicates for GALE -- please do not delete
-        /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
@@ -184,10 +165,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 		}
 
     featurizer.rerankingMode(false);
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // code below is needed for generating nbest lists with no duplicates for GALE -- please do not delete
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     if(distinctTranslations != null) {
       List<RichTranslation<TK, FV>> dtranslations = new LinkedList<RichTranslation<TK, FV>>();

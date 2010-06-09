@@ -60,7 +60,7 @@ public class MERT extends Thread {
   static final Set<String> generativeFeatures = SSVMScorer
           .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
 
-	public static final String DEBUG_PROPERTY = "UnsmoothedMERTDebug";
+	public static final String DEBUG_PROPERTY = "MERTDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
   static final double DEFAULT_C = 100;

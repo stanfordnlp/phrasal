@@ -3,7 +3,7 @@ BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 
 #####################################################
 # Creates a phrase-table and a lexical re-ordering table
-# from the output of CombinedFeatureExtractor.
+# from the output of mt.train.PhraseExtract.
 # The optional third argument is a threshold on p(e|f).
 #
 # Created by Michel Galley (mgalley@stanford.edu)

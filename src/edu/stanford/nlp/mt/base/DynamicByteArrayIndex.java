@@ -3,9 +3,7 @@ package edu.stanford.nlp.mt.base;
 import java.util.*;
 
 /**
- * 
  * @author Michel Galley
- *
  */
 public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex {
   

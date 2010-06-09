@@ -13,12 +13,6 @@ import java.util.zip.GZIPInputStream;
  */
 public class ARPALanguageModel implements LanguageModel<IString> {
 
-  public static final String QUANTIZED_LM_PROPERTY = "quantizedLM";
-  public static final boolean QUANTIZED_LM = Boolean.parseBoolean(System.getProperty(QUANTIZED_LM_PROPERTY, "false"));
-
-  public static final String USE_TRIE_PROPERTY = "trieLM";
-  public static final boolean USE_TRIE = Boolean.parseBoolean(System.getProperty(USE_TRIE_PROPERTY, "false"));
-
   public static final String USE_SRILM_PROPERTY = "SRILM";
   public static final boolean USE_SRILM = Boolean.parseBoolean(System.getProperty(USE_SRILM_PROPERTY, "false"));
 
@@ -70,9 +64,8 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       System.err.printf("Warning: vocabulary file %s is ignored.\n", vocabFilename);
     }
 
-    LanguageModel<IString> alm = QUANTIZED_LM ? new QuantizedARPALanguageModel(filename) :
-        (USE_TRIE ? new TrieARPALanguageModel(filename) : 
-        (USE_SRILM ? new SRILanguageModel(filename, vocabFilename) : new ARPALanguageModel(filename)));
+    LanguageModel<IString> alm = 
+        (USE_SRILM ? new SRILanguageModel(filename, vocabFilename) : new ARPALanguageModel(filename));
     if(alm instanceof ARPALanguageModel)
       lmStore.put(filepath, (ARPALanguageModel)alm);
 
@@ -97,7 +90,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
             new LineNumberReader(new FileReader(f)));
 
     // skip everything until the line that begins with '\data\'
-    while (!readLineNonNull(reader).startsWith("\\data\\"));
+    while (!readLineNonNull(reader).startsWith("\\data\\")) {}
 
     // read in ngram counts
     int[] ngramCounts = new int[MAX_GRAM];
@@ -134,7 +127,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       int[] ngramInts = new int[order+1];
 
       // skip all material upto the next n-gram table header
-      while (!readLineNonNull(reader).startsWith(nextOrderHeader));
+      while (!readLineNonNull(reader).startsWith(nextOrderHeader)) {}
 
       // read in table
       while (!(inline = readLineNonNull(reader)).equals("")) {

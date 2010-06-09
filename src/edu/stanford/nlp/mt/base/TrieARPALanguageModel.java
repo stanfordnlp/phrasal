@@ -34,8 +34,6 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
   // If loading is deemed too slow, either switch back to ARPALanguageModel
   // or increase TrieIntegerArrayIndex.GROWTH_FACTOR.
 
-  // TODO: enable quantization in this class
-
   protected TrieIntegerArrayIndex table;
   float[] mprobs;
   float[] mbows;
