@@ -6,9 +6,3 @@ wordpenalty edu.stanford.nlp.mt.decoder.feat.WordPenaltyFeaturizer
 unknownword edu.stanford.nlp.mt.decoder.feat.UnknownWordFeaturizer
 ngramlm edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer
 phrasetablescores edu.stanford.nlp.mt.decoder.feat.PhraseTableScoresFeaturizer
-
-# Experimental Features
-########################################
-
-phrasehistogram edu.stanford.nlp.mt.decoder.efeat.PhraseLengthHistogramFeaturizer
-biaswt edu.stanford.nlp.mt.decoder.efeat.BiasWtFeaturizer
