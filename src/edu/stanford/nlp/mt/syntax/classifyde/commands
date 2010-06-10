@@ -1,9 +1,9 @@
 # this command outputs the Gold standard parse trees & parsed parse trees of
 # the CTB data
-java -Xmx1g edu.stanford.nlp.mt.train.classifyde.OutputAllTrees > correctNPs.tree 2> parsedNPs.tree
+java -Xmx1g edu.stanford.nlp.mt.syntax.classifyde.OutputAllTrees > correctNPs.tree 2> parsedNPs.tree
 
 # This commands read in the GALE data and marked them with the predicted DEs
-java edu.stanford.nlp.mt.train.classifyde.DEinTextClassifier -sentFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent -treeFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.parsed > /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.predicted 2> err
+java edu.stanford.nlp.mt.syntax.classifyde.DEinTextClassifier -sentFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent -treeFile /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.parsed > /user/pichuan/analysis/NPwithDE/WholeSentence/allNW.sent.predicted 2> err
 
 # make TrainDevTest.txt
-java -Xmx1g edu.stanford.nlp.mt.train.classifyde.TrainDevTest > projects/mt/src/edu/stanford/nlp/mt/train/classifyde/data/TrainDevTest_6class.txt
+java -Xmx1g edu.stanford.nlp.mt.syntax.classifyde.TrainDevTest > projects/mt/src/edu/stanford/nlp/mt.syntax/classifyde/data/TrainDevTest_6class.txt
