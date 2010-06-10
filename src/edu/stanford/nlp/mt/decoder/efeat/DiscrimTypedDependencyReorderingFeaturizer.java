@@ -12,8 +12,8 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
-import edu.stanford.nlp.mt.discrimreorder.DepUtils;
-import edu.stanford.nlp.mt.discrimreorder.TrainingExamples;
+import edu.stanford.nlp.mt.syntax.discrimreorder.DepUtils;
+import edu.stanford.nlp.mt.syntax.discrimreorder.TrainingExamples;
 
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.ling.Datum;
