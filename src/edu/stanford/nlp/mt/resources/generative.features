@@ -1,4 +1,5 @@
-# List of generative features
+# List of generative features (or, otherwise, features for which
+# negative weights do not make much sense)
 #
 # Currently, SSVMScorer constrains the weights associated with each
 # of these to be >= 0
@@ -8,12 +9,27 @@ TM:lex(f|t)
 TM:lex(t|f)
 TM:phi(f|t)
 TM:phi(t|f)
+TM:count
+TM:uniq
+GapCount
+Gap2Count
+Gap3Count
+Gap4Count
+CrossingCount
 LM
+LM2
+LM3
+LM4
+LM5
 LinearDistortion
-LexR:discontinuousWithNext
-LexR:discontinuousWithPrevious
+TargetGapLinearDistortion
 LexR:monotoneWithNext
 LexR:monotoneWithPrevious
 LexR:swapWithNext
 LexR:swapWithPrevious
+LexR:discontinuousWithNext
+LexR:discontinuousWithPrevious
+LexR:discontinuous2WithNext
+LexR:discontinuous2WithPrevious
+LexR:NB
 UnknownWord

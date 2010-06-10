@@ -163,11 +163,11 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
         if (monotoneWithPrevious(f)) monotone = true;
         else if (swapWithPrevious(f)) swap = true;
         break;
-      case backtrack:
+      case backtrack: // backtracks instead of using a stack; only for debugging
         if (backtrackForMonotoneWithPrevious(f)) monotone = true;
         else if (backtrackForSwapWithPrevious(f)) swap = true;
         break;
-      case backtrackFast:
+      case backtrackFast: // only for debugging
         if (backtrackForMonotoneWithPreviousFast(f)) monotone = true;
         else if (backtrackForSwapWithPreviousFast(f)) swap = true;
         break;
