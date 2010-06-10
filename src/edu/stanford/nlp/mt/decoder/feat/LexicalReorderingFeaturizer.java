@@ -119,13 +119,13 @@ public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String
 			/*	if (scores != null && (
 						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.monotoneWithPrevious && monotone) || 
 						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.swapWithPrevious && swap) || 
-						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.discontinousWithPrevious && !(monotone || swap)) || 
+						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.discontinuousWithPrevious && !(monotone || swap)) ||
 						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.nonMonotoneWithPrevious && !monotone)))
 					values.add(new FeatureValue<String>(featureTags[i], scores[i]));
 				if (priorScores != null && ( 
 						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.monotoneWithNext && monotone) || 
 						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.swapWithNext && swap) || 
-						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.discontinousWithNext && !(monotone || swap)) || 
+						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.discontinuousWithNext && !(monotone || swap)) || 
 						(mlrt.positionalMapping[i] == MosesLexicalReorderingTable.ReorderingTypes.nonMonotoneWithNext && !monotone)))
 					values.add(new FeatureValue<String>(featureTags[i], priorScores[i])); */
 				boolean ff = featureFunction(monotone, swap, mlrt.positionalMapping[i]);

@@ -36,7 +36,7 @@ public class SSVMScorer implements Scorer<String> {
 				if (verbose) System.err.printf("\t'%s'\n", featureName);
 			}
 		} catch(IOException e) {
-			System.err.printf("Unable to load resouce: %s\n", resourceName);
+			System.err.printf("Unable to load resource: %s\n", resourceName);
 			System.exit(-1);
 		}
 		return gF;
@@ -95,7 +95,7 @@ public class SSVMScorer implements Scorer<String> {
 		manualWeights = new double[featureIndex.boundOnMaxIndex()];
 		
 		for (String key : manualFeatureWts.keySet()) {
-			manualWeights[featureIndex.indexOf(key)] = wtMultiplier*manualFeatureWts.get(key).doubleValue();
+			manualWeights[featureIndex.indexOf(key)] = wtMultiplier* manualFeatureWts.get(key);
 		}
 		
 		this.maxDataPts = dataPts;
