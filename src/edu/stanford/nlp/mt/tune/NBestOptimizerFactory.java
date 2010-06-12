@@ -539,6 +539,8 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
 
+  static public final double BAD_WEIGHT_PENALTY = 1<<20;
+
   private final boolean szMinusOne;
   private final boolean doRandomSteps;
   private final int minIter;
@@ -631,9 +633,18 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
     Function f = new Function() {
       public double valueAt(double[] x) {
-        double curEval = MERT.evalAtPoint(nbest, arrayToCounter(keys, x), emetric);
+        Counter<String> xC = arrayToCounter(keys, x);
+
+        double penalty = 0.0;
+        for (Map.Entry<String,Double> el : xC.entrySet())
+          if (el.getValue() < 0 && MERT.generativeFeatures.contains(el.getKey()))
+            penalty += BAD_WEIGHT_PENALTY;
+
+        double curEval = MERT.evalAtPoint(nbest, xC, emetric) - penalty;
+
         if(curEval > bestEval.doubleValue())
           bestEval.set(curEval);
+        
         it.set(it.intValue()+1);
         System.err.printf("current eval(%d): %.5f - best eval: %.5f\n", it.intValue(), curEval, bestEval.doubleValue());
         return -curEval;
