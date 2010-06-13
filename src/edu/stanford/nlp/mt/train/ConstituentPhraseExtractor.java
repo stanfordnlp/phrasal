@@ -9,12 +9,12 @@ import edu.stanford.nlp.trees.Constituent;
 
 
 /**
- * Same as LinearTimePhraseExtractor, but restricts phrases according to consituencies read from a parse tree.
+ * Same as MosesPhraseExtractor, but restricts phrases according to consituencies read from a parse tree.
  *
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class ConstituentPhraseExtractor extends LinearTimePhraseExtractor {
+public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
 
   // NOTE: unfinished
   

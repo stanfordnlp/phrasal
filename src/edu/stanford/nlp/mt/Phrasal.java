@@ -240,7 +240,7 @@ public class Phrasal {
       IString.load(config.get(ISTRING_VOC_OPT).get(0));
 
     withGaps = config.containsKey(GAPS_OPT) || config.containsKey(MAX_GAP_SPAN_OPT);
-    PharaohPhraseTable.createIndex(withGaps);
+    MosesPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(GAPS_IN_FUTURE_COST_OPT).get(0));
     if (config.containsKey(DISTINCT_NBEST_LIST_OPT))
@@ -616,12 +616,12 @@ public class Phrasal {
 			List<String> tmodelWtsStr = config.get(TRANSLATION_MODEL_WT_OPT);
 			if (tmodelWtsStr.size() == 5) {
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.FIVESCORE_LEX_t_f), "1.0"));
+						MosesPhraseTable.FIVESCORE_LEX_t_f), "1.0"));
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.FIVESCORE_PHRASE_PENALTY), "-10.0"));
+						MosesPhraseTable.FIVESCORE_PHRASE_PENALTY), "-10.0"));
 			} else if (tmodelWtsStr.size() == 1) {
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.ONESCORE_P_t_f), "1.0"));
+						MosesPhraseTable.ONESCORE_P_t_f), "1.0"));
 			} else {
 				throw new RuntimeException(String.format(
 						"Unsupported weight count for translation model: %d", tmodelWtsStr
@@ -673,18 +673,18 @@ public class Phrasal {
 			List<String> tmodelWtsStr = config.get(TRANSLATION_MODEL_WT_OPT);
 			if (tmodelWtsStr.size() == 5) {
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.FIVESCORE_PHI_t_f), tmodelWtsStr.get(0)));
+						MosesPhraseTable.FIVESCORE_PHI_t_f), tmodelWtsStr.get(0)));
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.FIVESCORE_LEX_t_f), tmodelWtsStr.get(1)));
+						MosesPhraseTable.FIVESCORE_LEX_t_f), tmodelWtsStr.get(1)));
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.FIVESCORE_PHI_f_t), tmodelWtsStr.get(2)));
+						MosesPhraseTable.FIVESCORE_PHI_f_t), tmodelWtsStr.get(2)));
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.FIVESCORE_LEX_f_t), tmodelWtsStr.get(3)));
+						MosesPhraseTable.FIVESCORE_LEX_f_t), tmodelWtsStr.get(3)));
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.FIVESCORE_PHRASE_PENALTY), tmodelWtsStr.get(4)));
+						MosesPhraseTable.FIVESCORE_PHRASE_PENALTY), tmodelWtsStr.get(4)));
 			} else if (tmodelWtsStr.size() == 1) {
 				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						PharaohPhraseTable.ONESCORE_P_t_f), tmodelWtsStr.get(0)));
+						MosesPhraseTable.ONESCORE_P_t_f), tmodelWtsStr.get(0)));
 			} else {
 				throw new RuntimeException(String.format(
 						"Unsupported weight count for translation model: %d", tmodelWtsStr

@@ -13,6 +13,7 @@ import edu.stanford.nlp.util.Index;
  *
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugLexicalReorderingFeatureExtractor";
@@ -29,7 +30,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
   enum DirectionTypes { forward, backward, bidirectional, joint }
   enum ReorderingTypes { monotone, swap, discont1, discont2 } //, inside, outside }
-  enum PermType { x, y } //, nil }
+  enum PermType { x, y , nil }
   enum LanguageTypes { fe, f, e }
 
   int modelSize = 0;
@@ -52,26 +53,26 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     // Type of reordering model:
     String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
     String[] tokens = type.split("-");
-    assert(2 <= tokens.length && tokens.length <= 3);
+    assert (2 <= tokens.length && tokens.length <= 3);
     // Type of extraction: word-phrase (Moses) vs. phrase-phrase (Tillmann, etc):
     phrasalReordering = Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_PHRASAL_OPT, "false"));
     System.err.println("phrase-phrase reordering: "+phrasalReordering);
-    if(phrasalReordering) {
+    if (phrasalReordering) {
       enabledTypes[ReorderingTypes.discont2.ordinal()] =
         Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
     }
     // Get categories:
-    if("msd".equals(tokens[0]) || "msd2".equals(tokens[0]) || "orientation".equals(tokens[0])) {
+    if ("msd".equals(tokens[0]) || "msd2".equals(tokens[0]) || "orientation".equals(tokens[0])) {
       enabledTypes[ReorderingTypes.swap.ordinal()] = true;
-      if("msd2".equals(tokens[0])) {
+      if ("msd2".equals(tokens[0])) {
         enabledTypes[ReorderingTypes.discont2.ordinal()] = true;
         System.err.println("msd2: yes");
       }
-    } else if("monotonicity".equals(tokens[0])) {
+    } else if ("monotonicity".equals(tokens[0])) {
       // No swap category.
     }
     else
-      fail= true;
+      fail = true;
     modelSize = initTypeToIdx();
     // Determine whether model is forward, backward, both, or joint:
     switch(tokens.length) {
@@ -94,14 +95,14 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     }
     // Get language:
     String lang = tokens[tokens.length-1];
-    if("fe".equals(lang)) languageType = LanguageTypes.fe;
-    else if("f".equals(lang)) languageType = LanguageTypes.f;
-    else if("e".equals(lang)) languageType = LanguageTypes.e;
+    if ("fe".equals(lang)) languageType = LanguageTypes.fe;
+    else if ("f".equals(lang)) languageType = LanguageTypes.f;
+    else if ("e".equals(lang)) languageType = LanguageTypes.e;
     else fail = true;
-    if(languageType != LanguageTypes.fe)
+    if (languageType != LanguageTypes.fe)
       throw new UnsupportedOperationException
           ("LexicalReorderingFeatureExtractor: model currently not supported.");
-    if(fail)
+    if (fail)
       throw new UnsupportedOperationException("unknown model type: "+type);
     // Check whether the re-ordering model is a phrase-phrase ordering model rather than
     // the phrase-word ordering model of moses:
@@ -109,20 +110,20 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     System.err.println("direction type: "+directionType.toString());
     // Store total counts for each reordering type:
     // Init count arrays:
-    if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
+    if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       forwardCounts = new ArrayList<Object>();
       totalForwardCounts = new float[modelSize];
     }
-    if(directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
+    if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
       backwardCounts = new ArrayList<Object>();
       totalBackwardCounts = new float[modelSize];
     }
-    if(directionType == DirectionTypes.joint) {
+    if (directionType == DirectionTypes.joint) {
       modelSize *= modelSize;
       jointCounts = new ArrayList<Object>();
       totalJointCounts = new float[modelSize];
     }
-    if(Boolean.parseBoolean(prop.getProperty(DTUPhraseExtractor.WITH_GAPS_OPT))) {
+    if (Boolean.parseBoolean(prop.getProperty(DTUPhraseExtractor.WITH_GAPS_OPT))) {
       //withDTU = true;
       if (!phrasalReordering)
         System.err.println("Reordering model: discontinuous phrases without phrasal reordering.");
@@ -136,37 +137,74 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   private ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, boolean forward) {
+
     WordAlignment sent = alTemp.getSentencePair();
     int f1 = alTemp.fStartPos()-1, f2 = alTemp.fEndPos()+1, e1 = alTemp.eStartPos()-1, e2 = alTemp.eEndPos()+1;
+
     boolean connectedMonotone = forward ?
       isAligned(sent,e1,f1,RelativePos.NW,alGrid) : isAligned(sent,e2,f2,RelativePos.SE,alGrid);
     boolean connectedSwap = forward ? 
       isAligned(sent,e1,f2,RelativePos.NE,alGrid) : isAligned(sent,e2,f1,RelativePos.SW,alGrid);
-    // Determine if Monotone, Swap, or Discontinuous:
-    if(connectedMonotone && !connectedSwap) return ReorderingTypes.monotone;
-    if(!connectedMonotone && connectedSwap) return ReorderingTypes.swap;
+
+    boolean insideAlignment = false;
+    /*
+    if (alTemp instanceof DTUInstance) {
+      DTUInstance dtu = (DTUInstance) alTemp;
+      int ei = dtu.eStartPos();
+      int fi = dtu.fStartPos();
+      BitSet ea = dtu.getEAlignment();
+      BitSet fa = dtu.getFAlignment();
+      // e align:
+      while (!insideAlignment) {
+        ei = ea.nextClearBit(ei+1);
+        if (ei > dtu.eEndPos())
+          break;
+        if (!sent.e2f(ei).isEmpty())
+          insideAlignment = true;
+      }
+      // f align:
+      while (!insideAlignment) {
+        fi = fa.nextClearBit(fi+1);
+        if (fi > dtu.fEndPos())
+          break;
+        if (!sent.f2e(fi).isEmpty())
+          insideAlignment = true;
+      }
+    }
+    */
+
+    if (!insideAlignment) {
+      // Determine if Monotone, Swap, or Discontinuous:
+      if (connectedMonotone && !connectedSwap) return ReorderingTypes.monotone;
+      if (!connectedMonotone && connectedSwap) return ReorderingTypes.swap;
+    }
+
     // If distinction between discont1 and discont2 is impossible, return discont1:
-    if(!enabledTypes[ReorderingTypes.discont2.ordinal()] || !phrasalReordering) 
+    if (!enabledTypes[ReorderingTypes.discont2.ordinal()] || !phrasalReordering)
       return ReorderingTypes.discont1;
+
     // If needed, distinguish between forward and backward discontinuous:
-    if(forward) {
-      if(e1 >= 0)
-        for(int fPos = f2; fPos<sent.f().size(); ++fPos)
-          if(alGrid.cellAt(fPos,e1).hasBottomLeft())
+    if (forward) {
+      if (e1 >= 0)
+        for (int fPos = f2; fPos<sent.f().size(); ++fPos)
+          if (alGrid.cellAt(fPos,e1).hasBottomLeft())
             return ReorderingTypes.discont2;
     } else {
-      if(e2 < sent.e().size())
-        for(int fPos = f1; fPos>=0; --fPos) {
-          if(alGrid.cellAt(fPos,e2) == null) {
+      if (e2 < sent.e().size())
+        for (int fPos = f1; fPos >= 0; --fPos) {
+          if (alGrid.cellAt(fPos,e2) == null) {
             System.err.printf("ERROR: no grid cell at [%d,%d] in sentence pair of length [%d,%d]\n",
               fPos,e2,sent.f().size(), sent.e().size());
             throw new RuntimeException("Out of bounds.");
           }
-          if(alGrid.cellAt(fPos,e2).hasTopRight())
+          if (alGrid.cellAt(fPos,e2).hasTopRight())
             return ReorderingTypes.discont2;
         }
     }
-    if(DEBUG) System.err.println("warning: falling back to default (3)");
+
+    if (DEBUG)
+      System.err.println("warning: falling back to default (3)");
+
     return ReorderingTypes.discont1;
   }
 
@@ -240,7 +278,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
           //System.err.println("other(4d): "+(fi == f1+1));
         }
       }
-      if(otherPhraseActive && thisPhraseActive) {
+      if (otherPhraseActive && thisPhraseActive) {
         System.err.printf(" [fi=%d ei=%d : curOn=%s]\n", fi, ei+(forward?1:-1), thisPhraseActive);
         System.err.printf("  fi=%d ei=%d : altOn=%s {%s,%s,%s,%s}\n", fi, ei, otherPhraseActive, otherPhraseCell.hasTopLeft(), otherPhraseCell.hasTopRight(), otherPhraseCell.hasBottomLeft(), otherPhraseCell.hasBottomRight());
         alGrid.printAlTempInGrid("",alTemp,System.err);
@@ -267,24 +305,22 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     if(getCurrentPass()+1 != getRequiredPassNumber())
       return;
+
     //System.err.printf("id=%d a=%d p=[%d,%d] s=%s\n", alGrid.sentId, getCurrentPass(), alTemp.fStartPos, alTemp.eStartPos, alTemp.toString(true));
-    //ReorderingTypes type1 = getDTUReorderingType(alTemp, alGrid, true);
-    //ReorderingTypes type2 = getDTUReorderingType(alTemp, alGrid, false);
-    //ReorderingTypes type1 = withDTU ? getDTUReorderingType(alTemp, alGrid, true) : getReorderingType(alTemp, alGrid, true);
-    //ReorderingTypes type2 = withDTU ? getDTUReorderingType(alTemp, alGrid, false) : getReorderingType(alTemp, alGrid, false);
     ReorderingTypes type1 = getReorderingType(alTemp, alGrid, true);
     ReorderingTypes type2 = getReorderingType(alTemp, alGrid, false);
-    if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
+    
+    if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       // Analyze reordering (forward):
       if(DEBUG) debugOrientation("forward_global="+ phrasalReordering, alTemp, alGrid, type1);
       addCountToArray(forwardCounts, totalForwardCounts, typeToIdx[type1.ordinal()], alTemp);
     }
-    if(directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
+    if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
       // Analyze reordering (backward):
       if(DEBUG) debugOrientation("backward_global="+ phrasalReordering, alTemp, alGrid, type2);
       addCountToArray(backwardCounts, totalBackwardCounts, typeToIdx[type2.ordinal()], alTemp);
     }
-    if(directionType == DirectionTypes.joint) {
+    if (directionType == DirectionTypes.joint) {
       // Analyze reordering (bidirectional):
       int type = typeToIdx[type1.ordinal()]*modelSize + typeToIdx[type2.ordinal()];
       addCountToArray(jointCounts, totalJointCounts, type, alTemp);
@@ -294,20 +330,20 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   @Override
 	public Object score(AlignmentTemplate alTemp) {
     int idx = -1;
-    if(languageType == LanguageTypes.fe) idx = alTemp.getKey();
-    else if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
-    else if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
+    if (languageType == LanguageTypes.fe) idx = alTemp.getKey();
+    else if (languageType == LanguageTypes.f) idx = alTemp.getFKey();
+    else if (languageType == LanguageTypes.e) idx = alTemp.getEKey();
     assert(idx >= 0);
     float[] scores = new float[modelSize*numModels];
-    if(directionType == DirectionTypes.joint) {
+    if (directionType == DirectionTypes.joint) {
       fillProbDist((float[])jointCounts.get(idx), scores, 0);
     } else {
       int offset = 0;
-      if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
+      if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
         fillProbDist((float[])forwardCounts.get(idx), scores, offset);
         offset += modelSize;
       }
-      if(directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
+      if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
         fillProbDist((float[])backwardCounts.get(idx), scores, offset);
         offset += modelSize;
       }
@@ -317,9 +353,9 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
   private int initTypeToIdx() {
     int curOrd = -1, curIdx = -1;
-    for(int i=0; i<enabledTypes.length; ++i) {
+    for (int i=0; i<enabledTypes.length; ++i) {
       ++curOrd;
-      if(!enabledTypes[i]) continue;
+      if (!enabledTypes[i]) continue;
       typeToIdx[curOrd] = ++curIdx;
       System.err.printf("reordering type enabled: %s, idx=%d\n",ReorderingTypes.values()[i],curIdx);
     }
@@ -327,24 +363,24 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   }
 
   private void debugOrientation(String id, AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, ReorderingTypes type) {
-    if(alTemp.f().size() > 20 || alTemp.e().size() > 20) return;
-    assert(alGrid != null);
+    if (alTemp.f().size() > 20 || alTemp.e().size() > 20) return;
+    assert (alGrid != null);
     System.err.printf("Model %s has orientation %s according to the grid:\n", id, type.toString());
     alGrid.setWordAlignment(alTemp.getSentencePair());
     alGrid.printAlTempInGrid(null,alTemp,System.err);
   }
 
   private boolean isAligned(WordAlignment sent, int ei, int fi, RelativePos pos, AlignmentGrid alGrid) {
-    assert(fi >= -1 && ei >= -1);
-    assert(fi <= sent.f().size() && ei <= sent.e().size());
-    if(fi == -1 && ei == -1) return true;
-    if(fi == -1 || ei == -1) return false;
-    if(fi == sent.f().size() && ei == sent.e().size()) return true;
-    if(fi == sent.f().size() || ei == sent.e().size()) return false;
-    if(phrasalReordering) {
+    assert (fi >= -1 && ei >= -1);
+    assert (fi <= sent.f().size() && ei <= sent.e().size());
+    if (fi == -1 && ei == -1) return true;
+    if (fi == -1 || ei == -1) return false;
+    if (fi == sent.f().size() && ei == sent.e().size()) return true;
+    if (fi == sent.f().size() || ei == sent.e().size()) return false;
+    if (phrasalReordering) {
       // Phrase-phrase reordering as in Tillman:
       AlGridCell<AlignmentTemplateInstance> cell = alGrid.cellAt(fi,ei);
-      if(DEBUG) {
+      if (DEBUG) {
         System.err.printf("relative position: %s\n",pos.toString());
         System.err.printf("orientation at: f=%d e=%d\n",fi,ei);
         System.err.println("  hasTopLeft: "+cell.hasTopLeft());
@@ -369,9 +405,9 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     float norm=0.0f;
     for(int i=0; i<modelSize; ++i)
       norm += counts[i];
-    if(norm > 0)
-      for(int i=0; i<modelSize; ++i)
-        if(UNNORM) {
+    if (norm > 0)
+      for (int i=0; i<modelSize; ++i)
+        if (UNNORM) {
           probs[i+offset] = counts[i];
         } else {
           probs[i+offset] = counts[i]/norm;
@@ -385,15 +421,15 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
       ++totalCounts[type];
     }
     // Exit if alignment template was filtered out:
-    if(idx < 0)
+    if (idx < 0)
       return;
     // Determine which language to condition on:
-    if(languageType == LanguageTypes.f) idx = alTemp.getFKey();
-    if(languageType == LanguageTypes.e) idx = alTemp.getEKey();
+    if (languageType == LanguageTypes.f) idx = alTemp.getFKey();
+    if (languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
     float[] counts;
-    synchronized(list) {
-      while(idx >= list.size()) {
+    synchronized (list) {
+      while (idx >= list.size()) {
         float[] arr = new float[modelSize];
         Arrays.fill(arr, LAPLACE_SMOOTHING);
         list.add(arr);
@@ -407,19 +443,19 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 	public void report() {
     System.err.println("OldLexicalReorderingFeatureExtractor: done.");
     float[] prob = new float[totalForwardCounts.length];
-    if(directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
+    if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       fillProbDist(totalForwardCounts, prob, 0);
       System.err.println("Distrbuction over labels (forward):");
       System.err.println(Arrays.toString(totalForwardCounts));
       System.err.println(Arrays.toString(prob));
     }
-    if(directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
+    if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
       fillProbDist(totalBackwardCounts, prob, 0);
       System.err.println("Distrbuction over labels (backward):");
       System.err.println(Arrays.toString(totalBackwardCounts));
       System.err.println(Arrays.toString(prob));
     }
-    if(directionType == DirectionTypes.joint) {
+    if (directionType == DirectionTypes.joint) {
       fillProbDist(totalJointCounts, prob, 0);
       System.err.println("Distrbuction over labels (joint):");
       System.err.println(Arrays.toString(totalJointCounts));

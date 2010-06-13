@@ -35,10 +35,10 @@ public class AlGridCell<T extends AlignmentTemplateInstance> {
   public void setBottomLeft(boolean s) { hasBottomLeft = s; }
   public void setBottomRight(boolean s) { hasBottomRight = s; }
 
-  public void addTopLeft(T h) { topLeft.add(h); hasTopLeft=true; }
-  public void addTopRight(T h) { topRight.add(h); hasTopRight=true; }
-  public void addBottomLeft(T h) { bottomLeft.add(h); hasBottomLeft=true; }
-  public void addBottomRight(T h) { bottomRight.add(h); hasBottomRight=true; }
+  public void addTopLeft(T h) { if (!h.isDiscontinuous()) { topLeft.add(h); hasTopLeft=true; } }
+  public void addTopRight(T h) { if (!h.isDiscontinuous()) { topRight.add(h); hasTopRight=true; } }
+  public void addBottomLeft(T h) { if (!h.isDiscontinuous()) { bottomLeft.add(h); hasBottomLeft=true; } }
+  public void addBottomRight(T h) { if (!h.isDiscontinuous()) { bottomRight.add(h); hasBottomRight=true; } }
 
   public boolean hasTopLeft() { return hasTopLeft; }
   public boolean hasTopRight() { return hasTopRight; }

@@ -10,6 +10,7 @@ import java.util.*;
  *
  * @author Michel Galley
  */
+@SuppressWarnings("unused")
 public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
   private int maxCrossings;
@@ -48,11 +49,9 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
       return;
     }
 
-    if(needAlGrid) {
-      alGrid.init(sent);
-      if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
-        alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
-    }
+    alGrid.init(sent);
+    if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
+      alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
 
     // For each Foreign phrase [f1,f2]:
     for(int f1=0; f1<fsize; ++f1) {
@@ -110,7 +109,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                   crossingsU += sent.e2f(j).size();
                 if(maxCrossings >= crossingsU && newPair(i,j)) {
                   //System.err.printf("G-G %d %d %d\n",crossingsInside,crossingsInsideBelowD,crossingsU);
-                  extractPhrase(sent,f1,f2,i,j,crossingsU==0,expDecay(crossingsU));
+                  addPhraseToIndex(sent,f1,f2,i,j,crossingsU==0,expDecay(crossingsU));
                 }
               }
             }
@@ -124,7 +123,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                   crossingsD += 2*in[j] - sent.e2f(j).size();
                 if(maxCrossings >= crossingsD && newPair(i,j)) {
                   //System.err.printf("G-S %d %d %d\n",crossingsInside,crossingsInsideBelowD,crossingsD);
-                  extractPhrase(sent,f1,f2,i,j,false,expDecay(crossingsD));
+                  addPhraseToIndex(sent,f1,f2,i,j,false,expDecay(crossingsD));
                 }
               }
             }
@@ -154,7 +153,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                   crossingsU += sent.e2f(j).size();
                 if(maxCrossings >= crossingsU && newPair(i,j)) {
                   //System.err.printf("S-G %d %d %d\n",crossingsInside,crossingsInsideBelowU,crossingsU);
-                  extractPhrase(sent,f1,f2,i,j,false,expDecay(crossingsU));
+                  addPhraseToIndex(sent,f1,f2,i,j,false,expDecay(crossingsU));
                 }
               }
             }
@@ -170,7 +169,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
                 }
                 if(maxCrossings >= crossingsD && newPair(i,j)) {
                   //System.err.printf("S-S %d %d %d\n",crossingsInside,crossingsInsideBelowU,crossingsD);
-                  extractPhrase(sent,f1,f2,i,j,false,expDecay(crossingsD));
+                  addPhraseToIndex(sent,f1,f2,i,j,false,expDecay(crossingsD));
                 }
               }
             }
@@ -179,8 +178,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
       }
       
     }
-    if(needAlGrid)
-      extractPhrasesFromAlGrid(sent);
+    extractPhrasesFromGrid(sent);
   }
 
   private boolean newPair(int i, int j) {

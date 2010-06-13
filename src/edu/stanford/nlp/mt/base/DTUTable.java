@@ -12,7 +12,7 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 
-public class DTUTable<FV> extends PharaohPhraseTable<FV> {
+public class DTUTable<FV> extends MosesPhraseTable<FV> {
 
   public static int maxPhraseSpan = 12;
   public static int maxTargetSpans = 2;

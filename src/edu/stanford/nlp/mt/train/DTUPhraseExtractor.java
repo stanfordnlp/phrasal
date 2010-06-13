@@ -52,14 +52,14 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   //int fSentenceLength, eSentenceLength;
 
-  LinearTimePhraseExtractor substringExtractor;
+  MosesPhraseExtractor substringExtractor;
 
   private Deque<DTUPhrase> queue = new LinkedList<DTUPhrase>();
   private Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
 
   public Object clone() throws CloneNotSupportedException {
     DTUPhraseExtractor c = (DTUPhraseExtractor) super.clone();
-    c.substringExtractor = (LinearTimePhraseExtractor) substringExtractor.clone();
+    c.substringExtractor = (MosesPhraseExtractor) substringExtractor.clone();
     c.substringExtractor.alGrid = c.alGrid;
     c.queue = new LinkedList<DTUPhrase>();
     c.seen = new HashSet<DTUPhrase>(QUEUE_SZ);
@@ -69,18 +69,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) throws IOException {
     super(prop, alTemps, extractors);
-    substringExtractor = new LinearTimePhraseExtractor(prop, alTemps, extractors);
+    substringExtractor = new MosesPhraseExtractor(prop, alTemps, extractors);
     substringExtractor.alGrid = alGrid;
     System.err.println("Using DTU phrase extractor.");
-    if (!substringExtractor.needAlGrid)
-      System.err.println("Warning: no alignment grid.");
   }
 
   static public void setDTUExtractionProperties(Properties prop) {
 
     // With gaps or not:
     String optStr = prop.getProperty(WITH_GAPS_OPT);
-    withGaps = optStr != null && !optStr.equals("false");
+    withGaps = optStr == null || !optStr.equals("false");
 
     // No gaps on the target:
     optStr = prop.getProperty(NO_TARGET_GAPS_OPT);
@@ -718,7 +716,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   }
 
   @Override
-  boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
+  protected boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
     return false;
   }
 
@@ -776,11 +774,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   @Override
   public void extractPhrases(WordAlignment sent) {
 
-    if (needAlGrid)
-      substringExtractor.extractPhrasesNoAlGrid(sent);
-    else
-      substringExtractor.extractPhrases(sent);
-
+    substringExtractor.addPhrasesToGrid(sent);
 
     if (DEBUG) {
       System.err.println("f: "+sent.f());
@@ -790,12 +784,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     int fsize = sent.f().size();
     int esize = sent.e().size();
-    if (needAlGrid) {
-      alGrid.init(sent);
-      if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
-        alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
-    }
-    
+    alGrid.init(sent);
+    if(fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
+      alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
+
     queue.clear();
     seen.clear();
 
@@ -841,7 +833,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
             // Only extract non-contiguous phrases:
             if (!noUnalignedOrLooseGaps || !dtu.hasUnalignedOrLooseGap()) {
               if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
-                AlignmentTemplate alTemp = extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true, true);
+                AlignmentTemplate alTemp = addPhraseToIndex(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true, true);
                 if(DEBUG && alTemp != null)
                   System.err.printf("dtu: %s\n%s", alTemp.toString(false), dtu.getCrossings());
               }
@@ -849,7 +841,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
           }
         }
       } else {
-        extractPhrase(sent, dtu.getFirstF(), dtu.getLastF(), dtu.getFirstE(), dtu.getLastE(), true, 1.0f);
+        addPhraseToIndex(sent, dtu.getFirstF(), dtu.getLastF(), dtu.getFirstE(), dtu.getLastE(), true, 1.0f);
       }
       if (!onlyCrossSerialDTU) {
         for (DTUPhrase sp : dtu.successors()) {
@@ -872,7 +864,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
             if (!seen.contains(dtu)) {
               if (!noUnalignedOrLooseGaps || !dtu.hasUnalignedOrLooseGap()) {
                 if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
-                  extractPhrase(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true, true);
+                  addPhraseToIndex(sent, dtu.f(), dtu.e(), dtu.fContiguous(), dtu.eContiguous(), true, true);
                 }
               }
               seen.add(dtu);
@@ -883,8 +875,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     // Rules are processed after being enumarated:
-    if (needAlGrid) {
-      extractPhrasesFromAlGrid(sent);
-    }
+    extractPhrasesFromGrid(sent);
   }
 }

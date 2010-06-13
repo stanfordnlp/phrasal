@@ -6,12 +6,12 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 
 /**
- * Same as LinearTimePhraseExtractor, but restricts phrases according to dependencies read from an info file.
+ * Same as MosesPhraseExtractor, but restricts phrases according to dependencies read from an info file.
  *
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class DependencyPhraseExtractor extends LinearTimePhraseExtractor {
+public class DependencyPhraseExtractor extends MosesPhraseExtractor {
 
   private static final boolean DEBUG = System.getProperty("debugDependencyPhraseExtractor") != null;
   private static final boolean EXTRACT_MODIFIER_PHRASES = System.getProperty("extractModifierPhrases") != null;

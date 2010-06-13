@@ -138,7 +138,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   	
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
-      exsString = "mt.PharaohFeatureExtractor:mt.LexicalReorderingFeatureExtractor";
+      exsString = "mt.MosesFeatureExtractor:mt.LexicalReorderingFeatureExtractor";
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     extractors = new ArrayList<AbstractChineseSyntaxFeatureExtractor<String>>();
     infoFileForExtractors = new ArrayList<String>();

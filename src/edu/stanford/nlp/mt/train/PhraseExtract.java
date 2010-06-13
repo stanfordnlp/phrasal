@@ -76,7 +76,7 @@ public class PhraseExtract {
   static public final String END_AT_LINE_OPT = "endAtLine";
   static public final String MAX_FERTILITY_OPT = "maxFertility";
   static public final String LOWERCASE_OPT = "lowercase";
-  static public final String MAX_CROSSINGS_OPT = "maxCrossings";
+  static public final String MAX_INCONSISTENCIES_OPT = "maxInconsistencies";
   static public final String MEM_USAGE_FREQ_OPT = "memUsageFreq";
   static public final String THREADS_OPT = "threads";
 
@@ -120,7 +120,7 @@ public class PhraseExtract {
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT, 
 			 SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
-			 MAX_CROSSINGS_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
+			 MAX_INCONSISTENCIES_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
        DTUPhraseExtractor.WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
        DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
@@ -145,7 +145,6 @@ public class PhraseExtract {
   private List<String> infoFileForExtractors;
   private List<String> infoLinesForExtractors;
   private AbstractPhraseExtractor phraseExtractor = null;
-  //private PharaohFeatureExtractor mosesExtractor;
 
   protected AlignmentTemplates alTemps;
   protected AlignmentTemplateInstance alTemp;
@@ -249,7 +248,7 @@ public class PhraseExtract {
 	public void init() {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if(exsString.equals("moses"))
-      exsString = "mt.train.PharaohFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
+      exsString = "mt.train.MosesFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
     extractors = new ArrayList<AbstractFeatureExtractor>();
@@ -298,15 +297,14 @@ public class PhraseExtract {
         System.exit(1);
       }
     }
-    int maxCrossings = Integer.parseInt(prop.getProperty(MAX_CROSSINGS_OPT,"-1"));
+    int maxCrossings = Integer.parseInt(prop.getProperty(MAX_INCONSISTENCIES_OPT,"-1"));
 
-    // HERE
     String phraseExtractorName = prop.getProperty(PHRASE_EXTRACTOR_OPT);
-    if(phraseExtractorName != null) {
+    if (phraseExtractorName != null) {
       String[] fields = phraseExtractorName.split("=");
-      if(fields.length == 2)
+      if (fields.length == 2)
         phraseExtractorInfoFile = fields[1];
-      else if(fields.length != 1)
+      else if (fields.length != 1)
         throw new RuntimeException("Can't parse: "+phraseExtractorName);
       phraseExtractorName = fields[0];
       System.err.println("Phrase extractor: "+Arrays.toString(fields));
@@ -321,12 +319,12 @@ public class PhraseExtract {
         throw new RuntimeException(e);
       }
     } else {
-      phraseExtractor = (maxCrossings >= 0) ?
-        new SoftPhraseExtractor(prop,alTemps,extractors) :
-        new LinearTimePhraseExtractor(prop,alTemps,extractors);
+      phraseExtractor = //(maxCrossings >= 0) ?
+        //new SoftPhraseExtractor(prop,alTemps,extractors) :
+        new MosesPhraseExtractor(prop,alTemps,extractors);
     }
-    if(phraseExtractor instanceof SoftPhraseExtractor)
-      ((SoftPhraseExtractor)phraseExtractor).setMaxCrossings(maxCrossings);
+    //if (phraseExtractor instanceof SoftPhraseExtractor)
+    //  ((SoftPhraseExtractor)phraseExtractor).setMaxCrossings(maxCrossings);
 
     setTotalPassNumber();
   }

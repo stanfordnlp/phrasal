@@ -22,7 +22,7 @@ import meteor.*;
 public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
-  enum EditType { ins, del, sub, sft };
+  enum EditType { ins, del, sub, sft }
 
 	static {
 		System.loadLibrary("MeteorWrapper");

@@ -8,8 +8,8 @@ import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.base.DynamicPhraseTable;
 import edu.stanford.nlp.mt.base.IBMModel1;
 import edu.stanford.nlp.mt.base.IdentityPhraseGenerator;
+import edu.stanford.nlp.mt.base.MosesPhraseTable;
 import edu.stanford.nlp.mt.base.NewDynamicPhraseTable;
-import edu.stanford.nlp.mt.base.PharaohPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SymbolFilter;
 import edu.stanford.nlp.mt.base.DTUTable;
@@ -55,7 +55,7 @@ public class PhraseGeneratorFactory {
 				String type = fields[0].toLowerCase();
 				String filename = fields[1];
 				if (type.equals(PHAROAH_PHRASE_TABLE) || type.equals(PHAROAH_PHRASE_TABLE_ALT)) {
-					phraseTables.add((new PharaohPhraseTable(phraseFeaturizer, scorer, filename)));					
+					phraseTables.add((new MosesPhraseTable(phraseFeaturizer, scorer, filename)));
         } else if(type.equals(DTU_GENERATOR)) {
           phraseTables.add((new DTUTable(phraseFeaturizer, scorer, filename)));
         } else {
@@ -111,7 +111,7 @@ public class PhraseGeneratorFactory {
         if(withGaps)
           pharoahList.add(new DTUTable<FV>(phraseFeaturizer, scorer, filename));
         else
-          pharoahList.add(new PharaohPhraseTable<FV>(phraseFeaturizer, scorer, filename));
+          pharoahList.add(new MosesPhraseTable<FV>(phraseFeaturizer, scorer, filename));
 			}
 
 			finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList, 
@@ -139,7 +139,8 @@ public class PhraseGeneratorFactory {
 			String filename = pgSpecs[1];
 			
 			if (filename.contains(".db:")) {
-				String model1S2T = null, model1T2S = null;
+				String model1S2T, // = null,
+               model1T2S; // = null;
 				String[] fields = filename.split(":");
 				filename = fields[0];
 				model1S2T = fields[1];
@@ -173,8 +174,8 @@ public class PhraseGeneratorFactory {
 			IBMModel1 model1S2T = null;
 			IBMModel1 model1T2S = null;
 			
-			String fText = null; 
-			String eText = null;
+			String fText; // = null;
+			String eText; // = null;
 			if (fileList.length == 4) {
 				fText = fileList[0];
 				model1S2T = IBMModel1.load(fileList[1]);

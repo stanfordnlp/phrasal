@@ -53,11 +53,11 @@ public class DTUInstance extends AlignmentTemplateInstance {
           continue;
         //System.err.printf("ei=%d e1=%d\n",ei,e1);
         int eIndex = eContiguous ? ei-e1 : eAlign.get(ei);
-        if(eIndex < 0) continue;
-        if(eIndex >= Byte.MAX_VALUE) continue;
-        if(eIndex >= e.size()) continue;
+        if (eIndex < 0) continue;
+        if (eIndex >= Byte.MAX_VALUE) continue;
+        if (eIndex >= e.size()) continue;
         alTable.add(alignmentToNumber((byte)eIndex,(byte)fIndex));
-        if(!lazy) {
+        if (!lazy) {
           f2e[fIndex].add(eIndex);
           e2f[eIndex].add(fIndex);
         }
@@ -75,13 +75,11 @@ public class DTUInstance extends AlignmentTemplateInstance {
     if(eContiguous) assert(eEndPos() == e2);
   }
 
-  /*
   @Override
   public boolean isDiscontinuous() {
-    return discontinuous; 
+    return true; 
   }
-  */
 
-  //public BitSet getFAlignment() { return fSet; }
-  //public BitSet getEAlignment() { return eSet; }
+  public BitSet getFAlignment() { return fSet; }
+  public BitSet getEAlignment() { return eSet; }
 }

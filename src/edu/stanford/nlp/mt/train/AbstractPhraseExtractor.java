@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * The preferred way of instanciating PhraseExtractor is to extend AbstractPhraseExtractor.
  * Its constructor takes a list of AbstractFeatureExtractor as argument, which are then 
- * used in {@link #extractPhrase(WordAlignment,int,int,int,int,boolean,float)} and
+ * used in {@link #addPhraseToIndex(WordAlignment,int,int,int,int,boolean,float)} and
  * {@link #extractPhrasesFromAlGrid(WordAlignment)}, 
  * where each feature extractor is executed on earch phrase pair.
  *
@@ -50,62 +50,33 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
   static boolean onlyTightPhrases = false, onlyTightDTUs = false;
 
-  AlignmentGrid alGrid = null;
-  boolean needAlGrid = false;
-
   final boolean extractBoundaryPhrases;
-  
-  List<AbstractFeatureExtractor> extractors;
+  final List<AbstractFeatureExtractor> extractors;
   final AlignmentTemplates alTemps;
   AlignmentTemplateInstance alTemp;
   DTUInstance dtuTemp;
+  AlignmentGrid alGrid;
 
-  public Object clone() throws CloneNotSupportedException {
-    AbstractPhraseExtractor c = (AbstractPhraseExtractor) super.clone();
-    c.alGrid = new AlignmentGrid(0,0);
-    c.alTemp = new AlignmentTemplateInstance();
-    c.dtuTemp = new DTUInstance();
-    return c;
-  }
-
-  public AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+  protected AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
 
     System.err.println("AbstractPhraseExtractor: "+maxPhraseLenF);
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
     this.dtuTemp = new DTUInstance();
-    needAlGrid = false;
-    
-    if (PRINT_GRID_MAX_LEN >= 0)
-      needAlGrid = true;
-    else {
-      for(AbstractFeatureExtractor ex : extractors)
-        if(ex.needAlGrid()) {
-          needAlGrid = true;
-          break;
-        }
-    }
-
-    if (needAlGrid)
-      alGrid = new AlignmentGrid(0,0);
-    System.err.println("Using AlignmentGrid: "+needAlGrid);
+    this.alGrid = new AlignmentGrid(0,0);
 
     boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT,"false"));
     boolean unalignedBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT,"false"));
     extractBoundaryPhrases = (addBoundaryMarkers && unalignedBoundaryMarkers);
   }
 
-  public AlignmentGrid getAlGrid() { return alGrid; }
-
-  boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
+  protected boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
     return false;
   }
 
-  @Override
-  public void setSentenceInfo(WordAlignment sent, String infoStr) {}
-
-  void extractPhrase(WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent, float weight) {
+  protected void addPhraseToIndex
+      (WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent, float weight) {
 
     if (onlyTightPhrases) {
       if (sent.f2e(f1).size() == 0 || sent.f2e(f2).size() == 0 || sent.e2f(e1).size() == 0 || sent.e2f(e2).size() == 0)
@@ -117,7 +88,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
     // Check if alTemp meets length requirements:
     if (f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
-      if (needAlGrid && isConsistent) {
+      if (isConsistent) {
         alGrid.addAlTemp(f1,f2,e1,e2);
       }
       if(DETAILED_DEBUG)
@@ -127,26 +98,17 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
     // Create alTemp:
     AlignmentTemplateInstance alTemp;
-    if (needAlGrid) {
-      alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,weight);
-      alGrid.addAlTemp(alTemp, isConsistent);
-    } else {
-      alTemp = this.alTemp;
-      alTemp.init(sent,f1,f2,e1,e2,weight);
-    }
+    alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,weight);
+    alGrid.addAlTemp(alTemp, isConsistent);
 
     alTemps.addToIndex(alTemp);
     alTemps.incrementAlignmentCount(alTemp);
-
-    // Run each feature extractor for each altemp:
-    if (!needAlGrid)
-      for (AbstractFeatureExtractor e : extractors) {
-        e.extract(alTemp, null);
-      }
   }
 
   // For DTU phrase extraction:
-  AlignmentTemplateInstance extractPhrase(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous, boolean isConsistent, boolean ignoreContiguous) {
+  protected AlignmentTemplateInstance addPhraseToIndex
+      (WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous,
+       boolean eContiguous, boolean isConsistent, boolean ignoreContiguous) {
 
     if (ignoreContiguous)
       if (fContiguous && eContiguous)
@@ -163,7 +125,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
     // Check if dtuTemp meets length requirements:
     if (fs.cardinality() > maxExtractedPhraseLenF || es.cardinality() > maxExtractedPhraseLenE) {
-      if (needAlGrid && isConsistent && fContiguous && eContiguous) {
+      if (isConsistent && fContiguous && eContiguous) {
         alGrid.addAlTemp(fs.nextSetBit(0), fs.length()-1, es.nextSetBit(0), es.length()-1);
       }
       if (DETAILED_DEBUG)
@@ -172,29 +134,16 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     }
 
     // Create dtuTemp:
-    DTUInstance dtuTemp;
-    if (needAlGrid) {
-      dtuTemp = new DTUInstance(sent, fs, es, fContiguous, eContiguous);
-      alGrid.addAlTemp(dtuTemp, isConsistent);
-    } else {
-      dtuTemp = this.dtuTemp;
-      dtuTemp.init(sent, fs, es, fContiguous, eContiguous);
-    }
+    DTUInstance dtuTemp = new DTUInstance(sent, fs, es, fContiguous, eContiguous);
+    alGrid.addAlTemp(dtuTemp, isConsistent);
 
     alTemps.addToIndex(dtuTemp);
     alTemps.incrementAlignmentCount(dtuTemp);
 
-    // Run each feature extractor for each altemp:
-    if (!needAlGrid) {
-      for (AbstractFeatureExtractor e : extractors) {
-        e.extract(dtuTemp, null);
-      }
-    }
     return dtuTemp;
   }
 
-  public void extractPhrasesFromAlGrid(WordAlignment sent) {
-    assert(needAlGrid);
+  protected void extractPhrasesFromGrid(WordAlignment sent) {
     int fsize = sent.f().size();
     int esize = sent.e().size();
     // Features are extracted only once all phrases for a given
@@ -210,10 +159,10 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   }
 
   @SuppressWarnings("unused")
-  boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
+  private boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
     boolean aligned = false;
-    if(f2-f1 > maxPhraseLenF) return false;
-    if(e2-e1 > maxPhraseLenE) return false;
+    if (f2-f1 > maxPhraseLenF) return false;
+    if (e2-e1 > maxPhraseLenE) return false;
     for (int fi=f1; fi<=f2; ++fi)
       for (int ei : sent.f2e(fi)) {
         if (!(e1 <= ei && ei <= e2))
@@ -228,7 +177,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     return true;
   }
 
-  public static void setPhraseExtractionProperties(Properties prop) {
+  static void setPhraseExtractionProperties(Properties prop) {
     int max = Integer.parseInt(prop.getProperty(MAX_PHRASE_LEN_OPT,"-1"));
     int maxF = Integer.parseInt(prop.getProperty(MAX_PHRASE_LEN_F_OPT,"-1"));
     int maxE = Integer.parseInt(prop.getProperty(MAX_PHRASE_LEN_E_OPT,"-1"));
@@ -240,7 +189,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     if (max > 0) {
       System.err.printf("changing default max phrase length: %d -> %d\n", maxPhraseLenF, max);
       maxPhraseLenF = maxPhraseLenE = max;
-      if(max2 < 0)
+      if (max2 < 0)
         max2 = max;
     }
     if (maxF > 0) {
@@ -280,4 +229,18 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
     DTUPhraseExtractor.setDTUExtractionProperties(prop);
   }
+
+  AlignmentGrid getAlGrid() { return alGrid; }
+
+  @Override
+  public void setSentenceInfo(WordAlignment sent, String infoStr) {}
+
+  public Object clone() throws CloneNotSupportedException {
+    AbstractPhraseExtractor c = (AbstractPhraseExtractor) super.clone();
+    c.alGrid = new AlignmentGrid(0,0);
+    c.alTemp = new AlignmentTemplateInstance();
+    c.dtuTemp = new DTUInstance();
+    return c;
+  }
+
 }

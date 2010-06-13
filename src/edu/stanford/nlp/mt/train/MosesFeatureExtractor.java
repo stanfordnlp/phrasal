@@ -19,21 +19,15 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * 
  * @author Michel Galley
  */
-public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
+public class MosesFeatureExtractor extends AbstractFeatureExtractor {
 
-  public static final double MIN_WSUM = 1e-4;
+  public static final double MINP = 1e-5;
 
   public static final String DEBUG_PROPERTY = "DebugPharaohFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 
   public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";
   public static final boolean PRINT_COUNTS = Boolean.parseBoolean(System.getProperty(PRINT_COUNTS_PROPERTY, "false"));
-
-  public static final String STORE_PROPERTY = "Store";
-  public static final boolean STORE = Boolean.parseBoolean(System.getProperty(STORE_PROPERTY, "true"));
-
-  public static final String FILL_HASH_PROPERTY = "FillHash";
-  public static final boolean FILL_HASH = Boolean.parseBoolean(System.getProperty(FILL_HASH_PROPERTY, "true"));
 
   double phiFilter = 0.0, lexFilter = 0.0;
   boolean ibmLexModel = false, onlyML = false;
@@ -108,11 +102,9 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       if(DEBUG_LEVEL >= 2)
         System.err.println("Adding phrase to table: "+alTemp.f().toString(" ")+" -> "+alTemp.e().toString(" "));
       // Increment phrase counts c(f,e), c(f), c(e):
-      if(FILL_HASH) {
-        addCountToArray(feCounts, alTemp.getKey());
-        addCountToArray(fCounts, alTemp.getFKey());
-        addCountToArray(eCounts, alTemp.getEKey());
-      }
+      addCountToArray(feCounts, alTemp.getKey());
+      addCountToArray(fCounts, alTemp.getFKey());
+      addCountToArray(eCounts, alTemp.getEKey());
       if(DEBUG_LEVEL >= 2)
         System.err.printf("Assigned IDs: key=%d fKey=%d eKey=%d\n",alTemp.getKey(), alTemp.getFKey(), alTemp.getEKey());
     }
@@ -211,12 +203,10 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   private void addLexCount(IString f, IString e) {
     if(DEBUG_LEVEL >= 2)
       System.err.println("Adding lexical alignment count: c(f = "+f+"("+f.getId()+"), e="+e+" ("+e.getId()+"))");
-    if(FILL_HASH) {
-      // Increment word counts for lexical weighting:
-      addCountToArray(feLexCounts, indexOfLex(f,e,true));
-      addCountToArray(fLexCounts, indexOfFLex(f,true));
-      addCountToArray(eLexCounts, indexOfELex(e,true));
-    }
+    // Increment word counts for lexical weighting:
+    addCountToArray(feLexCounts, indexOfLex(f,e,true));
+    addCountToArray(fLexCounts, indexOfFLex(f,true));
+    addCountToArray(eLexCounts, indexOfELex(e,true));
   }
 
   private int indexOfLex(IString f, IString e, boolean add)
@@ -231,16 +221,14 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
   private static void addCountToArray(IntArrayList list, int idx) {
     if(idx < 0)
       return;
-    if(STORE) {
-      synchronized(list) {
-        while(idx >= list.size())
-          list.add(0);
-        int newCount = list.get(idx)+1;
-        list.set(idx,newCount);
-      }
-      if(DEBUG_LEVEL >= 3)
-        System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
+    synchronized(list) {
+      while(idx >= list.size())
+        list.add(0);
+      int newCount = list.get(idx)+1;
+      list.set(idx,newCount);
     }
+    if(DEBUG_LEVEL >= 3)
+      System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
   }
 
   /**
@@ -270,7 +258,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
           System.err.println("  WARNING: wsum = "+wSum);
       }
       if(wSum == 0)
-        wSum = MIN_WSUM;
+        wSum = MINP;
       lex *= wSum;
     }
     return lex;
@@ -284,72 +272,81 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
       System.err.println("Computing p(e|f) for alignment template: "+alTemp.toString());
     // Each English word must be explained:
     double lex = 1.0;
-    for(int ei=0; ei<alTemp.e().size();++ei) {
-      if(alTemp.e().get(ei).equals(DTUPhraseExtractor.GAP_STR))
+    for (int ei=0; ei<alTemp.e().size();++ei) {
+      if (alTemp.e().get(ei).equals(DTUPhraseExtractor.GAP_STR))
         continue;
       double wSum = 0.0;
       int alCount = alTemp.e2f(ei).size();
-      if(alCount == 0) {
-        wSum += getLexProbInv(NULL_STR,alTemp.e().get(ei));
+      if (alCount == 0) {
+        wSum += getLexProbInv(NULL_STR, alTemp.e().get(ei));
       } else {
         for(int fi : alTemp.e2f(ei)) {
           wSum += getLexProbInv(alTemp.f().get(fi),alTemp.e().get(ei));
         }
         wSum /= alCount;
       }
-      if(DEBUG_LEVEL >= 1 || wSum == 0.0)
+      if (DEBUG_LEVEL >= 1 || wSum == 0.0)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei),wSum);
-      if(wSum == 0)
-        wSum = MIN_WSUM;
+      if (wSum == 0)
+        wSum = MINP;
       lex *= wSum;
     }
     return lex;
   }
   
   /**
-   * Lexically-weighted probability of alTemp.f() given alTemp.e() according to IBM.
-   * In the IBM model, the sum is over all word pairs. It is generally not as good as 
-   * as the IBM version, but this version requires much less memory.
+   * Lexically-weighted probability of alTemp.f() given alTemp.e().
+   * Alternative to Moses' feature, which is similar to a feature in (Tillmann and Zhang, 2006).
+   * getIBMLexScore (as opposed to getLexScore) does not require to storage of any word alignment.
    */
   private double getIBMLexScore(AlignmentTemplate alTemp) {
     if(DEBUG_LEVEL >= 1)
       System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString());
     // Each French word must be explained:
     double lex = 1.0;
-    for(int fi=0; fi<alTemp.f().size();++fi) {
-      double wSum = 0.0;
-      for(int ei=0; ei<alTemp.e().size();++ei) {
-        wSum += getLexProb(alTemp.f().get(fi),alTemp.e().get(ei));
+    for (int fi=0; fi<alTemp.f().size();++fi) {
+      double wMax = MINP;
+      int sz = alTemp.e().size();
+      for (int ei=0; ei<sz; ++ei) {
+        double wCur = getLexProb(alTemp.f().get(fi), alTemp.e().get(ei));
+        if (wCur > wMax)
+          wMax = wCur;
       }
-      wSum /= alTemp.e().size();
-      if(DEBUG_LEVEL >= 1)
-        System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
-      assert(wSum > 0);
-      lex *= wSum;
+      double wNull = getLexProb(alTemp.f().get(fi),NULL_STR);
+      if (wNull > wMax)
+        wMax = wNull;
+      if (DEBUG_LEVEL >= 1)
+        System.err.printf("w(%s|...) = %.3f\n", alTemp.f().get(fi), wMax);
+      assert (wMax > 0);
+      lex *= wMax;
     }
     return lex;
   }
 
   /**
-   * Lexically-weighted probability of alTemp.e() given alTemp.f() according to IBM.
-   * In the IBM model, the sum is over all word pairs. It is generally not as good as 
-   * as the IBM version, but this version requires much less memory.
+   * Lexically-weighted probability of alTemp.e() given alTemp.f().
+   * Alternative to Moses' feature, which is similar to a feature in (Tillmann and Zhang, 2006).
+   * getIBMLexScoreInv (as opposed to getLexScoreInv) does not require to storage of any word alignment.
    */
   private double getIBMLexScoreInv(AlignmentTemplate alTemp) {
-    if(DEBUG_LEVEL >= 1)
+    if (DEBUG_LEVEL >= 1)
       System.err.println("Computing p(e|f) for alignment template: "+alTemp.toString());
     // Each French word must be explained:
     double lex = 1.0;
-    for(int ei=0; ei<alTemp.e().size();++ei) {
-      double wSum = 0.0;
-      for(int fi=0; fi<alTemp.f().size();++fi) {
-        wSum += getLexProbInv(alTemp.f().get(fi),alTemp.e().get(ei));
+    for (int ei=0; ei<alTemp.e().size();++ei) {
+      double wMax = MINP;
+      int sz = alTemp.f().size();
+      for (int fi=0; fi<sz;++fi) {
+        double wCur = getLexProbInv(alTemp.f().get(fi),alTemp.e().get(ei));
+        if (wCur > wMax)
+          wMax = wCur;
       }
-      wSum /= alTemp.f().size();
-      if(DEBUG_LEVEL >= 1)
-        System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei),wSum);
-      assert(wSum > 0);
-      lex *= wSum;
+      double wNull = getLexProbInv(NULL_STR, alTemp.e().get(ei));
+      if (wNull > wMax)
+        wMax = wNull;
+      if (DEBUG_LEVEL >= 1)
+        System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei), wMax);
+      lex *= wMax;
     }
     return lex;
   }
@@ -360,7 +357,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
    * normalization counts are different.
    */
   private double getLexProb(IString f, IString e) {
-    if(DEBUG_LEVEL >= 1) {
+    if (DEBUG_LEVEL >= 1) {
       System.err.print("p(f = \""+f+"\" | e = \""+e+"\") = ");
       System.err.print(feLexCounts.get(indexOfLex(f,e,false)));
       System.err.print("/");
@@ -368,7 +365,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     }
     int fei = indexOfLex(f,e,false);
     int ei = indexOfELex(e,false);
-    if(fei < 0 || ei < 0) return 0.0;
+    if (fei < 0 || ei < 0) return 0.0;
     return feLexCounts.get(fei)*1.0/eLexCounts.get(ei);
   }
   
@@ -378,7 +375,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
    * normalization counts are different.
    */
   private double getLexProbInv(IString f, IString e) {
-    if(DEBUG_LEVEL >= 1) {
+    if (DEBUG_LEVEL >= 1) {
       System.err.print("p(e = \""+e+"\" | f = \""+f+"\") = ");
       System.err.print(feLexCounts.get(indexOfLex(f,e,false)));
       System.err.print("/");
@@ -386,7 +383,7 @@ public class PharaohFeatureExtractor extends AbstractFeatureExtractor {
     }
     int fei = indexOfLex(f,e,false);
     int fi = indexOfFLex(f,false);
-    if(fei < 0 || fi < 0) return 0.0;
+    if (fei < 0 || fi < 0) return 0.0;
     return feLexCounts.get(fei)*1.0/fLexCounts.get(fi);
   }
 }

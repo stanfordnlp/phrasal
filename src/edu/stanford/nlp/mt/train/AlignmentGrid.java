@@ -222,4 +222,8 @@ public class AlignmentGrid {
     this.sent = sent;
   }
 
+  public WordAlignment getWordAlignment() {
+    return this.sent;
+  }
+
 }
