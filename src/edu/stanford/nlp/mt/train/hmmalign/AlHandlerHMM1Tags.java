@@ -1,28 +1,30 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This serves to handle the alignment probabilities
- * the basic functionality is getProb(i,j,alignment) and incCount(i,j,alignment,val);
- * Handles conditioning on many different tag configurations - french tags and english tags
- * The conditioning tags are specified with a number which contains flags for different tags
+ * This serves to handle the alignment probabilities.
+ * The basic functionality is getProb(i,j,alignment) and incCount(i,j,alignment,val).
+ * Handles conditioning on many different tag configurations - french tags and english tags.
+ * The conditioning tags are specified with a number which contains flags for different tags.
  *
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
-  ATableHMMHolder aHolder;
-  ATableHMM tables[]; //in some cases we will use just one dimension , when conditioning on just one tag
-  ATableHMM tables_b[][]; // when using both french and english tags, will use the 2 dim array
-  int mask;
-  int numTags = 0;
-  boolean useF;
-  boolean useE;
-  WordEx fEOS;
-  WordEx eEOS;
-  double lambdasm = .1;
-  double addBeta = 400;
-  //in the mask the bits specify the presence/absence of tags
-  // the meanings are     | 32-ETaj-1-1| 16-ET(aj-1)| 8-ET(aj-1)+1| 4-FTj-1| 2-FTj| 1 - FTj+1|
+
+  private ATableHMMHolder aHolder;
+  private ATableHMM[] tables; //in some cases we will use just one dimension , when conditioning on just one tag
+  private ATableHMM[][] tables_b; // when using both french and english tags, will use the 2 dim array
+  /** In the mask the bits specify the presence/absence of tags.
+   *  The meanings are     | 32-ETaj-1-1| 16-ET(aj-1)| 8-ET(aj-1)+1| 4-FTj-1| 2-FTj| 1 - FTj+1|
+   */
+  private int mask;
+  private int numTags = 0;
+  private boolean useF;
+  private boolean useE;
+  private WordEx fEOS;
+  private WordEx eEOS;
+  private static final double lambdasm = .1;
+  // private double addBeta = 400;
 
 
   public AlHandlerHMM1Tags(ATableHMMHolder a, int mask) {
@@ -48,14 +50,14 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
 
   @Override
-	public void setPair(SentencePair sent) {
+  public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
   }
 
 
   @Override
-	public void init() {
+  public void init() {
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
 
@@ -72,11 +74,11 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
     IntTuple iT = IntTuple.getIntTuple(numTags);
     int current = 0;
-    int i_real = 0;
 
 
     if (useE) {
 
+      int i_real = 0;
       for (int i = 0; i <= 2 * l; i++) {
 
         current = 0;
@@ -414,12 +416,11 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
     IntTuple iT = IntTuple.getIntTuple(numTags);
     int current = 0;
-    int i;
 
 
     if (false) {
       //print out stuff about the sentence & alignment
-      //System.out.println(" Priniting alignment");
+      //System.out.println(" Printing alignment");
       System.out.println(" French sentence length " + m + " english " + l);
       for (int j = 1; j <= m; j++) {
         System.out.print(" " + j + " " + viterbi_alignment[j]);
@@ -436,7 +437,7 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
     for (int jM = 1; jM <= m + 1; jM++) {
 
       //if(jM==m+1){i=2*l+1;}else{
-      i = viterbi_alignment[jM - 1];
+      int i = viterbi_alignment[jM - 1];
 
       if (useE) {
 
@@ -620,10 +621,10 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
    * get the probability p choose i for j
    */
   @Override
-	public double getProb(int i, int j, int[] alignment) {
+  public double getProb(int i, int j, int[] alignment) {
 
     ATableHMM a;
-    double prob1, prob2;
+    double prob1;
 
     if (useE && useF) {
       a = tables_b[alignment[j - 1]][j];
@@ -640,15 +641,12 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
     prob1 = a.getProb(i, alignment[j - 1], l);
 
     if (this.aHolder.smooth) {
-      prob2 = aHolder.getSmoothTable().getProb(i, alignment[j - 1], l);
+      double prob2 = aHolder.getSmoothTable().getProb(i, alignment[j - 1], l);
       //lambdasm=addBeta/(double)(a.getCount()+addBeta);
-      
+
       prob1 = (1 - lambdasm) * prob1 + lambdasm * prob2;
-
-
     }
     return prob1;
-
   }
 
 
@@ -658,13 +656,13 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
    */
 
   @Override
-	public void incCount(int i, int j, int[] alignment, double val) {
+  public void incCount(int i, int j, int[] alignment, double val) {
     ATableHMM a;
 
     if (val == 0) {
       return;
     }
-    if (val != val) {
+    if (Double.isNaN(val)) {
       System.out.println(" Incrementing with NAN " + i + " " + j);
       System.exit(-1);
     }

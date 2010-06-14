@@ -138,11 +138,9 @@ public class ATableHMM2 extends ATable {
    * Increment the corresponding counts
    */
   @Override
-	public void incCount(int i, int i_prev, int i_prev2, int l, double val1) {
-
+  public void incCount(int i, int i_prev, int i_prev2, int l, double val1) {
 
     float val = (float) val1;
-    int jump, jump_1;
 
     if ((i_prev == 0) && (i_prev2 == 0)) {
       incCountInitPos(i, val);
@@ -151,11 +149,13 @@ public class ATableHMM2 extends ATable {
       if (i_prev2 > l) {
         i_prev2 -= l;
       }
+      int jump_1;
       if (i_prev > l) {
         jump_1 = -MAX_LENGTH;
       } else {
         jump_1 = i_prev - i_prev2;
       }
+      int jump;
       if ((i > l) && (i <= 2 * l)) {
         jump = -MAX_LENGTH;
         if ((i - l != i_prev) && (i != i_prev)) {
@@ -173,8 +173,6 @@ public class ATableHMM2 extends ATable {
         jump_1--;
       }
       incCount(jump, jump_1, val);
-
-
     }
   }
 
@@ -233,11 +231,8 @@ public class ATableHMM2 extends ATable {
       total_mass += initialCounts[length + 1];
       for (int i = 0; i <= length + 1; i++) {
         prob_arr.set((initialCounts[i] / total_mass), i, 0, 0, length);
-
       }
-
     }
-
   }
 
 
@@ -264,11 +259,9 @@ public class ATableHMM2 extends ATable {
 
   public void normalizeProbArr() {
     //first make the params sum to 1, put params[0] into pEmpty
-    //then put normalzied params in prob_arr
+    //then put normalized params in prob_arr
 
     float total;
-    float prob;
-    int jump, jump_1;
 
     total = 0;
 
@@ -306,6 +299,7 @@ public class ATableHMM2 extends ATable {
             continue;
           }
 
+          int jump_1;
           if (i_prev == 0) {
             jump_1 = -MAX_LENGTH;
           } else {
@@ -317,6 +311,7 @@ public class ATableHMM2 extends ATable {
 
           total = 0;
 
+          int jump;
           for (int i = 0; i <= l + 1; i++) {
 
             if (i == 0) {
@@ -330,8 +325,6 @@ public class ATableHMM2 extends ATable {
               }
             }
             total += getProbJump(jump, jump_1);
-
-
           }
 
           for (int i = 0; i <= l + 1; i++) {
@@ -347,23 +340,13 @@ public class ATableHMM2 extends ATable {
               }
             }
 
-            prob = getProbJump(jump, jump_1) / total;
+            float prob = getProbJump(jump, jump_1) / total;
 
             prob_arr.set(prob, i, i_prev, i_prev2, l);
-
-
           }
-
-
         }
-
-
       }
-
-
     }
-
-
   }
 
 
@@ -379,7 +362,6 @@ public class ATableHMM2 extends ATable {
       this.printBasicProbs();
     }
     zeroCounts(); //prepare for the next eStep
-
   }
 
 
@@ -391,7 +373,6 @@ public class ATableHMM2 extends ATable {
 	public void initializeUniform() {
     // first the initial probabilities
     float inc_init = 1 / (float) (MAX_LENGTH + 2);
-    float inc;
     float empty = PROB_EMPTY; //making the empty twice lower than the others
     for (int i = 0; i <= MAX_LENGTH + 1; i++) {
       incCountInitPos(i, inc_init);
@@ -401,14 +382,12 @@ public class ATableHMM2 extends ATable {
     //then the jump + empty probabilities
     for (int dist1 = -MAX_LENGTH; dist1 <= MAX_LENGTH - 1; dist1++) {
       incEmpty(dist1, empty);
-      inc = (1 - empty) / (2 * MAX_LENGTH);
+      float inc = (1 - empty) / (2 * MAX_LENGTH);
       for (int dist = -MAX_LENGTH + 1; dist <= MAX_LENGTH; dist++) {
         incCount(dist, dist1, inc);
       }
     }
     normalize();
-
-
   }
 
   /*
@@ -416,24 +395,21 @@ public class ATableHMM2 extends ATable {
   */
 
   @Override
-	public void initialize(ATable a1) {
-
-
-    ATableHMM2 a = (ATableHMM2) a1;
-    int i1, i_p1;
+  public void initialize(ATable a1) {
+  ATableHMM2 a = (ATableHMM2) a1;
     for (int l = 1; l <= MAX_LENGTH; l++) {
 
       for (int i_pp = 0; i_pp <= l; i_pp++) {
         for (int i_p = 0; i_p <= l; i_p++) {
           for (int i = 0; i <= l + 1; i++) {
 
-            i_p1 = i_p;
+            int i_p1 = i_p;
             if ((i_p == 0) && (i_pp > 0)) {
               i_p1 = i_pp + l;
             }
 
 
-            i1 = i;
+            int i1 = i;
             if ((i == 0) && (i_p1 > 0)) {
               i1 = i_p1;
               if (i1 <= l) {
@@ -453,13 +429,11 @@ public class ATableHMM2 extends ATable {
       }
     }
     pEmpty = a.getEmpty();
-
-
   }
 
 
   @Override
-	public float getEmpty() {
+  public float getEmpty() {
     return pEmpty;
   }
 
@@ -489,7 +463,7 @@ public class ATableHMM2 extends ATable {
     for (int i = 0; i <= len + 1; i++) {
       total += getInitialProb(i, len);
     }
-    if (Mabs(total - 1) > .001) {
+    if (Math.abs(total - 1) > .001) {
       return false;
     }
 
@@ -503,7 +477,7 @@ public class ATableHMM2 extends ATable {
         for (int i = 0; i <= 2 * len + 1; i++) {
           total += getProb(i, i_prev, i_prev2, len);
         }
-        if (Mabs(total - 1) > .001) {
+        if (Math.abs(total - 1) > .001) {
           return false;
         }
 
@@ -573,19 +547,10 @@ public class ATableHMM2 extends ATable {
     }
   }
 
-  public float Mabs(float x) {
-    if (x < 0) {
-      x = -x;
-    }
-    return x;
-  }
-
 
   /**
    * Some code to test the class
    */
-
-
   public static void main(String[] args) {
     boolean ok;
 
@@ -657,9 +622,6 @@ public class ATableHMM2 extends ATable {
 
 
   public void read(String filename) {
-    int current;
-    String line, token;
-    StringTokenizer st;
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
@@ -671,6 +633,10 @@ public class ATableHMM2 extends ATable {
       pEmpty = PROB_EMPTY;
 
 
+      int current;
+      String line;
+      String token;
+      StringTokenizer st;
       for (int current_jump_prev = 0; current_jump_prev < 2 * MAX_LENGTH; current_jump_prev++) {
         current = 0;
         line = in.readLine(); //read the line of probabilities
@@ -722,7 +688,6 @@ public class ATableHMM2 extends ATable {
    */
 
   public void readHMM1(String filename) {
-    String line, token;
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
@@ -733,10 +698,10 @@ public class ATableHMM2 extends ATable {
       prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, MAX_LENGTH + 1, MAX_LENGTH + 1);
       pEmpty = PROB_EMPTY;
 
-      line = in.readLine();
+      String line = in.readLine();
       StringTokenizer st;
       st = new StringTokenizer(line, " \t");
-      token = st.nextToken();
+      String token = st.nextToken();
       token = st.nextToken();
 
       counts[0][0] = (float) Double.parseDouble(token);
@@ -773,7 +738,6 @@ public class ATableHMM2 extends ATable {
 
       }
 
-
       in.close();
 
       //normalize the tables
@@ -786,18 +750,6 @@ public class ATableHMM2 extends ATable {
     } catch (Exception e) {
       e.printStackTrace();
     }
-
-
   }
-
-
-  /*
-   * calculate the kl divergance between this table and a in terms of the
-   * jump probabilities
-   */
-  public double DKL(ATableHMM a) {
-    return 0;
-  }
-
 
 }

@@ -1,9 +1,10 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * this is like ATableHMM2 but uses equivalence classes
- * for the previous jumps
- *@author Kristina Toutanova (kristina@cs.stanford.edu)
+ * This is like ATableHMM2 but uses equivalence classes
+ * for the previous jumps.
+ *
+ * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 import java.io.FileOutputStream;
@@ -35,8 +36,6 @@ public class ATableHMM2EQ extends ATable {
     counts = new float[2 * MAX_LENGTH + 1][2 * MAX_FLDS];
     initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH+1 filed 0 is not used
     prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, 2 * MAX_FLDS, MAX_LENGTH + 1);
-
-
   }
 
   public ATableHMM2EQ() {
@@ -57,7 +56,7 @@ public class ATableHMM2EQ extends ATable {
 
 
   @Override
-	public boolean isPopulated() {
+  public boolean isPopulated() {
     return count > countCutoff;
   }
 
@@ -116,14 +115,11 @@ public class ATableHMM2EQ extends ATable {
       }
     }
     return prob_arr.get(i, i_prev, j_prev2, l);
-
-
   }
 
 
   public boolean isToNull(int jump) {
     return (jump == 0);
-
   }
 
   /*
@@ -131,15 +127,12 @@ public class ATableHMM2EQ extends ATable {
    */
 
   public boolean possibleExternal(int i_prev, int jump, int l) {
-
-
     if ((i_prev == 0) && (jump != MAX_FLDS)) {
       return false;
     }
 
-
     if ((i_prev > l)) {
-      return (jump == 0 ? true : false);
+      return jump == 0;
     }
 
     if (i_prev - jump + MAX_FLDS < 0) {
@@ -151,15 +144,12 @@ public class ATableHMM2EQ extends ATable {
     }
 
     return true;
-
-
   }
 
 
   public boolean possibleInternal(int i_prev, int jump, int l) {
 
     // in the internal i_prev is from 0 to l and jump is from 0 to 2MAXFLDS-1
-
 
     if ((i_prev == 0) && (jump != MAX_FLDS)) {
       return false;
@@ -178,8 +168,6 @@ public class ATableHMM2EQ extends ATable {
     }
 
     return true;
-
-
   }
 
 
@@ -188,7 +176,7 @@ public class ATableHMM2EQ extends ATable {
    */
 
   @Override
-	public float getProb(int i, int i_prev, int i_prev2, int l) {
+  public float getProb(int i, int i_prev, int i_prev2, int l) {
     float prob;
 
 
@@ -212,8 +200,6 @@ public class ATableHMM2EQ extends ATable {
     } else {
       return prob;
     }
-
-
   }
 
 
@@ -221,9 +207,7 @@ public class ATableHMM2EQ extends ATable {
    * Increment the corresponding counts
    */
   @Override
-	public void incCount(int i, int i_prev, int i_prev2, int l, double val1) {
-
-
+  public void incCount(int i, int i_prev, int i_prev2, int l, double val1) {
     float val = (float) val1;
     int jump, jump_1;
     jump_1 = i_prev2;
@@ -368,11 +352,9 @@ public class ATableHMM2EQ extends ATable {
 
   public void normalizeProbArr() {
     //first make the params sum to 1, put params[0] into pEmpty
-    //then put normalzied params in prob_arr
+    //then put normalized params in prob_arr
 
     float total;
-    float prob;
-    int jump;
     float uniform = 1 / (float) (2 * MAX_LENGTH + 1);
 
     total = 0;
@@ -411,8 +393,6 @@ public class ATableHMM2EQ extends ATable {
         params[i][jump_1Abs] = (1 - pEmpty) * (counts[i][jump_1Abs] + PROB_SMOOTH) / total;
       }
       pEmpty = params[0][jump_1Abs]; //this one is used by initialParams
-
-
     }
 
 
@@ -433,6 +413,7 @@ public class ATableHMM2EQ extends ATable {
 
           total = 0;
 
+          int jump;
           for (int i = 0; i <= l + 1; i++) {
 
             if (i == 0) {
@@ -454,23 +435,13 @@ public class ATableHMM2EQ extends ATable {
               jump = i - i_prev;
             }
 
-            prob = getProbJump(jump, j_prev2 - MAX_FLDS) / total;
+            float prob = getProbJump(jump, j_prev2 - MAX_FLDS) / total;
 
             prob_arr.set(prob, i, i_prev, j_prev2, l);
-
-
           }
-
-
         }
-
-
       }
-
-
     }
-
-
   }
 
 
@@ -478,7 +449,7 @@ public class ATableHMM2EQ extends ATable {
    * This does the normalization of the component distributions
    */
   @Override
-	public void normalize() {
+  public void normalize() {
     normalizeProbArr();
     normalizeInitialProbs();
 
@@ -486,7 +457,6 @@ public class ATableHMM2EQ extends ATable {
       this.printBasicProbs();
     }
     zeroCounts(); //prepare for the next eStep
-
   }
 
 
@@ -495,10 +465,9 @@ public class ATableHMM2EQ extends ATable {
    */
 
   @Override
-	public void initializeUniform() {
+  public void initializeUniform() {
     // first the initial probabilities
     float inc_init = 1 / (float) (MAX_LENGTH + 2);
-    float inc;
     float empty = (fixEmpty ? PROB_EMPTY : 1 / (float) (2 * MAX_LENGTH)); //making the empty twice lower than the others
     for (int i = 0; i <= MAX_LENGTH + 1; i++) {
       incCountInitPos(i, inc_init);
@@ -508,17 +477,13 @@ public class ATableHMM2EQ extends ATable {
     //then the jump + empty probabilities
     for (int dist1 = -MAX_FLDS; dist1 <= MAX_FLDS - 1; dist1++) {
       incEmpty(dist1, empty);
-      inc = (1 - empty) / (2 * MAX_LENGTH);
+      float inc = (1 - empty) / (2 * MAX_LENGTH);
       for (int dist = -MAX_LENGTH + 1; dist <= MAX_LENGTH; dist++) {
         incCount(dist, dist1, inc);
       }
     }
     normalize();
-
-
   }
-
-
 
 
   /*
@@ -526,7 +491,7 @@ public class ATableHMM2EQ extends ATable {
   */
 
   @Override
-	public void initialize(ATable a1) {
+  public void initialize(ATable a1) {
 
     ATableHMM2EQ a = (ATableHMM2EQ) a1; //a little dirty here
     this.MAX_LENGTH = a.MAX_LENGTH;
@@ -539,9 +504,7 @@ public class ATableHMM2EQ extends ATable {
 
     for (int i = 0; i < params.length; i++) {
       for (int j = 0; j < params[0].length; j++) {
-
         counts[i][j] = a.params[i][j];
-
       }
 
     }
@@ -550,13 +513,8 @@ public class ATableHMM2EQ extends ATable {
 
     //now the initial probs
     for (int jump = 0; jump <= MAX_LENGTH + 1; jump++) {
-
-
       initialCounts[jump] = a.getProbHMM(jump, 0, MAX_FLDS, MAX_LENGTH);
-
-
     }//jump
-
 
     pEmpty = a.getEmpty();
     //normalize the tables
@@ -565,19 +523,17 @@ public class ATableHMM2EQ extends ATable {
     PROB_SMOOTH = 0;
     normalize();
     PROB_SMOOTH = old;
-
-
   }
 
 
   @Override
-	public float getEmpty() {
+  public float getEmpty() {
     return pEmpty;
   }
 
 
   @Override
-	public boolean checkOK() {
+  public boolean checkOK() {
 
     boolean ok = true;
     for (int len = 1; len <= MAX_LENGTH; len++) {
@@ -603,7 +559,7 @@ public class ATableHMM2EQ extends ATable {
       total += getInitialProb(i, len);
     }
     total += getInitialProb(len + 1, len);
-    if (Mabs(total - 1) > .001) {
+    if (Math.abs(total - 1) > .001) {
       System.out.println(" not ok initial prob " + total + " len " + len);
       return false;
     }
@@ -619,7 +575,7 @@ public class ATableHMM2EQ extends ATable {
         for (int i = 0; i <= 2 * len + 1; i++) {
           total += getProb(i, i_prev, i_prev2, len);
         }
-        if (Mabs(total - 1) > .001) {
+        if (Math.abs(total - 1) > .001) {
           System.out.println(" total is " + total + " for len " + len + " and prev " + i_prev + " jump " + i_prev2);
           for (int i = 0; i <= 2 * len + 1; i++) {
             System.out.println(i + " " + i_prev + " " + len + " " + getProb(i, i_prev, i_prev2, len));
@@ -633,8 +589,6 @@ public class ATableHMM2EQ extends ATable {
     }
 
     return true;
-
-
   }
 
 
@@ -658,7 +612,7 @@ public class ATableHMM2EQ extends ATable {
 
 
   @Override
-	public void printProbs() {
+  public void printProbs() {
 
     //print the initial probabilities
 
@@ -698,8 +652,6 @@ public class ATableHMM2EQ extends ATable {
       System.out.println("*************************");
 
     }
-
-
   }
 
 
@@ -720,13 +672,6 @@ public class ATableHMM2EQ extends ATable {
     }
   }
 
-  public float Mabs(float x) {
-    if (x < 0) {
-      x = -x;
-    }
-    return x;
-  }
-
 
   /**
    * Some code to test the class
@@ -742,8 +687,6 @@ public class ATableHMM2EQ extends ATable {
     a.printProbs();
     ok = a.checkOK();
     System.out.println("a is" + ok);
-
-
   }
 
 
@@ -752,7 +695,7 @@ public class ATableHMM2EQ extends ATable {
    */
 
   @Override
-	public void save(String filename) {
+  public void save(String filename) {
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
       //MAX_LENGTH
@@ -783,29 +726,13 @@ public class ATableHMM2EQ extends ATable {
     } catch (Exception e) {
       e.printStackTrace();
     }
-
-
-  }
-
-
-  /*
-   * calculate the kl divergance between this table and a in terms of the
-   * jump probabilities
-   */
-  public double DKL(ATableHMM a) {
-    return 0;
   }
 
 
   /**
    * reading the jump probabilities and initializing
    */
-
-
   public void read(String filename) {
-    int current;
-    String line, token;
-    StringTokenizer st;
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
@@ -817,6 +744,10 @@ public class ATableHMM2EQ extends ATable {
       pEmpty = PROB_EMPTY;
 
 
+      int current;
+      String line;
+      String token;
+      StringTokenizer st;
       for (int current_jump_prev = 0; current_jump_prev < 2 * MAX_FLDS; current_jump_prev++) {
         current = 0;
         line = in.readLine(); //read the line of probabilities
@@ -845,7 +776,6 @@ public class ATableHMM2EQ extends ATable {
 
       }
 
-
       in.close();
 
       //normalize the tables
@@ -858,8 +788,6 @@ public class ATableHMM2EQ extends ATable {
     } catch (Exception e) {
       e.printStackTrace();
     }
-
-
   }
 
 
@@ -868,7 +796,6 @@ public class ATableHMM2EQ extends ATable {
    */
 
   public void readHMM1(String filename) {
-    String line, token;
     try {
       InFile in = new InFile(filename);
       //MAX_LENGTH
@@ -879,10 +806,10 @@ public class ATableHMM2EQ extends ATable {
       prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, 2 * MAX_FLDS, MAX_LENGTH + 1);
       pEmpty = PROB_EMPTY;
 
-      line = in.readLine();
+      String line = in.readLine();
       StringTokenizer st;
       st = new StringTokenizer(line, " \t");
-      token = st.nextToken();
+      String token = st.nextToken();
       token = st.nextToken();
 
       counts[0][0] = (float) Double.parseDouble(token);
@@ -908,7 +835,6 @@ public class ATableHMM2EQ extends ATable {
         }
       }
 
-
       line = in.readLine(); //read the line of initial probabilities
       st = new StringTokenizer(line, " \t");
       current = 0;
@@ -918,7 +844,6 @@ public class ATableHMM2EQ extends ATable {
         initialCounts[current++] = (float) Double.parseDouble(token);
 
       }
-
 
       in.close();
 
@@ -932,8 +857,6 @@ public class ATableHMM2EQ extends ATable {
     } catch (Exception e) {
       e.printStackTrace();
     }
-
-
   }
 
 

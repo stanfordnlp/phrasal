@@ -25,14 +25,13 @@ public class IntTriple extends IntTuple {
 
 
   @Override
-	public IntTuple getCopy() {
-    IntTriple nT = new IntTriple(source, middle, target);
-    return nT;
+  public IntTuple getCopy() {
+    return new IntTriple(source, middle, target);
   }
 
 
   @Override
-	public void set(int num, int val) {
+  public void set(int num, int val) {
     switch (num) {
       case 0:
         {
@@ -46,7 +45,6 @@ public class IntTriple extends IntTuple {
         {
           target = val;
         }
-
     }
 
 
@@ -54,7 +52,7 @@ public class IntTriple extends IntTuple {
 
 
   @Override
-	public int get(int num) {
+  public int get(int num) {
     if (num == 0) {
       return source;
     }
@@ -100,14 +98,16 @@ public class IntTriple extends IntTuple {
   }
 
   @Override
-	public boolean equals(Object o) {
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null) return false;
+    if ( ! (o instanceof IntTriple)) return false;
     IntTriple iP = (IntTriple) o;
-    return ((iP.source == source) && (iP.middle == middle) && (iP.target == target));
-
+    return (iP.source == source) && (iP.middle == middle) && (iP.target == target);
   }
 
   @Override
-	public void print() {
+  public void print() {
     System.out.println(target + "|" + middle + "|" + source);
   }
 

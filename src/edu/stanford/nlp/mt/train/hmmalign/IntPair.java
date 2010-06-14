@@ -49,7 +49,7 @@ public class IntPair extends IntTuple {
   }
 
   @Override
-	public void set(int num, int val) {
+  public void set(int num, int val) {
     if (num > 0) {
       target = val;
     } else {
@@ -58,7 +58,7 @@ public class IntPair extends IntTuple {
   }
 
   @Override
-	public int get(int num) {
+  public int get(int num) {
     if (num > 0) {
       return target;
     } else {
@@ -67,50 +67,47 @@ public class IntPair extends IntTuple {
   }
 
   @Override
-	public int hashCode() {
+  public int hashCode() {
     return (65536 * source) ^ target;
   }
 
   @Override
-	public boolean equals(Object o) {
-    IntPair iP = (IntPair) o;
-    return ((iP.source == source) && (iP.target == target));
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null) return false;
+    if ( ! (o instanceof IntPair)) return false;
 
+    IntPair iP = (IntPair) o;
+    return (iP.source == source) && (iP.target == target);
   }
 
   @Override
-	public void print() {
+  public void print() {
     System.out.println(target + "|" + source);
   }
 
 
   @Override
-	public String toString() {
-
+  public String toString() {
     return source + " " + target;
   }
 
 
   @Override
-	public String toNameStringE() {
-
+  public String toNameStringE() {
     return SentenceHandler.sTableE.getName(source) + " " + SentenceHandler.sTableE.getName(target);
-
   }
 
 
   @Override
-	public String toNameStringF() {
-
+  public String toNameStringF() {
     return SentenceHandler.sTableF.getName(source) + " " + SentenceHandler.sTableF.getName(target);
-
   }
 
 
   @Override
-	public IntTuple getCopy() {
-    IntPair nT = new IntPair(source, target);
-    return nT;
+  public IntTuple getCopy() {
+    return new IntPair(source, target);
   }
 
 

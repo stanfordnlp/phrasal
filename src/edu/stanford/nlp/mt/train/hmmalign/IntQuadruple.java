@@ -28,14 +28,13 @@ public class IntQuadruple extends IntTuple {
 
 
   @Override
-	public IntTuple getCopy() {
-    IntQuadruple nT = new IntQuadruple(source, middle, target, target2);
-    return nT;
+  public IntTuple getCopy() {
+    return new IntQuadruple(source, middle, target, target2);
   }
 
 
   @Override
-	public void set(int num, int val) {
+  public void set(int num, int val) {
     switch (num) {
       case 0:
         {

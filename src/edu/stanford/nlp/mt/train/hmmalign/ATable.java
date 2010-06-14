@@ -1,8 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This is a base class for aligment tables
- *@author Kristina Toutanova (kristina@cs.stanford.edu)
+ * This is a base class for alignment tables.
+ *
+ * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 import java.io.FileOutputStream;
@@ -25,16 +26,17 @@ public class ATable {
   }
 
   public void normalize() {
-  };
+  }
 
   public void initializeUniform() {
-  };
+  }
 
   public void initialize(ATable a) {
-  };
+  }
 
   public void printProbs() {
-  };
+  }
+
   public void incCount(int inc) {
     count += inc;
   }
@@ -75,7 +77,6 @@ public class ATable {
    * e.g. different contexts.
    */
   public void save(String filename) {
-    int ii;
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
       //MAX_LENGTH
@@ -87,6 +88,7 @@ public class ATable {
         for (int i_p = 0; i_p <= l; i_p++) {
 
           for (int i = 0; i <= l; i++) {
+            int ii;
             if ((i == 0) && (i_p > 0)) {
               ii = i_p + l;
             } else {
@@ -97,7 +99,6 @@ public class ATable {
           }//i
 
         }//i_p
-
 
       }//l
 

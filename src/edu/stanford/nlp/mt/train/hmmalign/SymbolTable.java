@@ -1,21 +1,21 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-/* This class will make sure every word-tag-etc pair has a unique Id
- * Also the objects will not be created too many times - just once
- * The Buffer in SentenceHandler will hold references to these objects
- *@author Kristina Toutanova (kristina@cs.stanford.edu)
- */
-
-
-/* There are two stages. First all Word-Tag pairs are put into a hashmap
- * and get their Ids
- * then the Ids are rearranged so that the Id of s <wordId,tagId> pair in which one of the fields is missing will
- * be the Id of the thing that is there
- */
 
 import java.util.HashMap;
 import java.util.StringTokenizer;
 
+/**
+ * This class will make sure every word-tag-etc pair has a unique Id.
+ * Also the objects will not be created too many times - just once.
+ * The Buffer in SentenceHandler will hold references to these objects
+ * <p>
+ * There are two stages. First all Word-Tag pairs are put into a hashmap
+ * and get their Ids
+ * then the Ids are rearranged so that the Id of s &lt;wordId,tagId&gt; pair in which one of the fields is missing will
+ * be the Id of the thing that is there.
+ *
+ * @author Kristina Toutanova (kristina@cs.stanford.edu)
+ */
 public class SymbolTable {
 
   private HashMap<WordEx,WordEx> initialMap = new HashMap<WordEx,WordEx>();
@@ -85,8 +85,6 @@ public class SymbolTable {
       }
 
     }
-
-
   }
 
 
@@ -116,10 +114,9 @@ public class SymbolTable {
     int baseSize = maxSimpleIds + 4;  //these four are for the empty word and its tag and the eos word and its tag
     numAllIds = maxSimpleIds + numComplexIds;
     entries = new WordEx[numAllIds + 5]; // five be/ in addition to those for above i want to have one complex entry for eos+eos_tag
-    Object[] keys = initialMap.keySet().toArray();
+    WordEx[] keys = initialMap.keySet().toArray(new WordEx[initialMap.keySet().size()]);
     //if(numAllIds!=keys.length){System.out.println("Something wrong here in reorganizeTable");}
-    for (int i = 0; i < keys.length; i++) {
-      WordEx current = (WordEx) keys[i];
+    for (WordEx current : keys) {
       int index = 0;
       if (current.isSimple()) {
         if (current.getWordId() > index) {
@@ -135,7 +132,7 @@ public class SymbolTable {
         entries[index] = current;
       }
 
-    }//for i
+    }
 
     entries[0] = empty;
     empty.set(0, maxSimpleIds + 1);
@@ -165,13 +162,10 @@ public class SymbolTable {
 
     try {
       InFile in = new InFile(filename);
-      String line;
-      StringTokenizer st;
       String name;
-      int id;
-      while ((line = in.readLine()) != null) {
-        st = new StringTokenizer(line, "\t");
-        id = Integer.parseInt(st.nextToken());
+      for (String line; (line = in.readLine()) != null; ) {
+        StringTokenizer st = new StringTokenizer(line, "\t");
+        int id = Integer.parseInt(st.nextToken());
         name = st.nextToken();
 
         if (id >= entries.length) {
@@ -186,6 +180,7 @@ public class SymbolTable {
         }
 
       }//while
+      in.close();
 
       System.out.println("Dictionary read");
       //now create the names for the other entries as well;
@@ -210,7 +205,7 @@ public class SymbolTable {
 
     } catch (Exception e) {
       e.printStackTrace();
-      System.exit(0);
+      throw new RuntimeException(e);
     }
 
   }

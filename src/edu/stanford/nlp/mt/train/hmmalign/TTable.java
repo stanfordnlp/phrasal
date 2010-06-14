@@ -219,8 +219,7 @@ public class TTable {
         }
       }
       if (!okProbs) {
-        System.err.println("Probabilities not Ok");
-        System.exit(-1);
+        throw new RuntimeException("Probabilities not Ok");
       }
 
     }//else iter is 0

@@ -28,8 +28,6 @@ public class ATableHMMFull extends ATable {
     MAX_LENGTH = maxsize;
     count_arr = new ArrayN(MAX_LENGTH + 1, MAX_LENGTH + 1, MAX_LENGTH + 1);
     prob_arr = new ArrayN(MAX_LENGTH + 1, MAX_LENGTH + 1, MAX_LENGTH + 1);
-
-
   }
 
 
@@ -43,12 +41,12 @@ public class ATableHMMFull extends ATable {
 
 
   @Override
-	public float getEmpty() {
+  public float getEmpty() {
     return pEmpty;
   }
 
   @Override
-	public boolean isPopulated() {
+  public boolean isPopulated() {
     return count > countCutoff;
   }
 
@@ -89,13 +87,11 @@ public class ATableHMMFull extends ATable {
       return prob_arr.get(i, i_prev, l);
 
     }
-
-
   }
 
 
   @Override
-	public float getProb(int i, int i_prev, int l) {
+  public float getProb(int i, int i_prev, int l) {
     float prob;
     prob = getProbHMM(i, i_prev, l);
     if (prob == 0) {
@@ -107,8 +103,6 @@ public class ATableHMMFull extends ATable {
     } else {
       return prob;
     }
-
-
   }
 
 
@@ -116,7 +110,7 @@ public class ATableHMMFull extends ATable {
    * Increment the corresponding counts
    */
   @Override
-	public void incCount(int i, int i_prev, int l, double val1) {
+  public void incCount(int i, int i_prev, int l, double val1) {
 
     float val = (float) val1;
     if (i_prev > l) {
@@ -144,15 +138,14 @@ public class ATableHMMFull extends ATable {
    */
 
   public void normalizeInitialProbs() {
-    float total = 0, val;
     for (int l = 1; l <= MAX_LENGTH; l++) { //for each length size
-      total = 0;
+      float total = 0.0F;
       for (int i = 0; i <= l; i++) { //for each initial position
         total += count_arr.get(i, 0, l) + PROB_SMOOTH;
       }
-      //now normalzie
+      //now normalize
       for (int i = 0; i <= l; i++) { //for each initial position
-        val = (count_arr.get(i, 0, l) + PROB_SMOOTH) / total;
+        float val = (count_arr.get(i, 0, l) + PROB_SMOOTH) / total;
         prob_arr.set(val, i, 0, l);
       }
 
@@ -176,7 +169,7 @@ public class ATableHMMFull extends ATable {
 
   public void normalizeProbArr() {
     int index = 0;
-    float total = 0, mult = 1, val;
+    float mult = 1;
     if (fixEmpty) {
       index = 1;
       mult = 1 - pEmpty;
@@ -184,20 +177,18 @@ public class ATableHMMFull extends ATable {
     for (int l = 1; l <= MAX_LENGTH; l++) { //for each possible length
 
       for (int i_p = 1; i_p <= l; i_p++) { //for each previous position
-        total = 0;
+        float total = 0.0F;
         for (int i = index; i <= l; i++) {
           total += count_arr.get(i, i_p, l) + PROB_SMOOTH;
         }
         //normalize
         for (int i = index; i <= l; i++) {
-          val = (count_arr.get(i, i_p, l) + PROB_SMOOTH) / total;
+          float val = (count_arr.get(i, i_p, l) + PROB_SMOOTH) / total;
           prob_arr.set(val * mult, i, i_p, l);
         }
         if (fixEmpty) {
           prob_arr.set(pEmpty, 0, i_p, l);
         }
-        ;
-
       }//i_p
 
     }//l
@@ -209,7 +200,7 @@ public class ATableHMMFull extends ATable {
    * This does the normalization of the component distributions
    */
   @Override
-	public void normalize() {
+  public void normalize() {
     normalizeProbArr();
     normalizeInitialProbs();
 
@@ -217,7 +208,6 @@ public class ATableHMMFull extends ATable {
       this.printProbs();
     }
     zeroCounts(); //prepare for the next eStep
-
   }
 
 
@@ -226,7 +216,7 @@ public class ATableHMMFull extends ATable {
    */
 
   @Override
-	public void initializeUniform() {
+  public void initializeUniform() {
     // first the initial probabilities
 
     for (int l = 1; l <= MAX_LENGTH; l++) {
@@ -279,13 +269,11 @@ public class ATableHMMFull extends ATable {
       }
     }
     pEmpty = a.getEmpty();
-
-
   }
 
 
   @Override
-	public boolean checkOK() {
+  public boolean checkOK() {
 
     boolean ok = true;
     for (int len = 1; len <= MAX_LENGTH; len++) {
@@ -309,7 +297,7 @@ public class ATableHMMFull extends ATable {
     for (int i = 0; i <= len; i++) {
       total += getInitialProb(i, len);
     }
-    if (Mabs(total - 1) > .001) {
+    if (Math.abs(total - 1) > .001) {
       return false;
     }
 
@@ -318,15 +306,13 @@ public class ATableHMMFull extends ATable {
       for (int i = 1; i <= 2 * len; i++) {
         total += getProb(i, i_prev, len);
       }
-      if (Mabs(total - 1) > .001) {
+      if (Math.abs(total - 1) > .001) {
         return false;
       }
 
     }
 
     return true;
-
-
   }
 
 
@@ -357,13 +343,11 @@ public class ATableHMMFull extends ATable {
     System.out.println(" Ok is "+ok);
     a.printProbs();
     */
-
-
   }
 
 
   @Override
-	public void printProbs() {
+  public void printProbs() {
 
     //print the initial probabilities
 
@@ -377,26 +361,11 @@ public class ATableHMMFull extends ATable {
       for (i_prev = 1; i_prev <= l; i_prev++) {
         for (int i = 1; i <= 2 * l; i++) {
           System.out.println("P(" + i + "|" + i_prev + "," + l + ")" + getProb(i, i_prev, l));
-
         }
         System.out.println("*************************");
-
-
       }
       System.out.println("*************************");
-
     }
-
-
   }
-
-
-  public float Mabs(float x) {
-    if (x < 0) {
-      x = -x;
-    }
-    return x;
-  }
-
 
 }
