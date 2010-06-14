@@ -138,9 +138,7 @@ public class TextCat {
       files1 = files1.subList(0,600);
     }
     ReaderIteratorFactory rif = new ReaderIteratorFactory(files1, "UTF-8");
-    ObjectBank<List<String>> ob = new ObjectBank<List<String>>(rif, ifrf);
-    
-    return ob;
+    return new ObjectBank<List<String>>(rif, ifrf);
   }
 
   @SuppressWarnings("unchecked")

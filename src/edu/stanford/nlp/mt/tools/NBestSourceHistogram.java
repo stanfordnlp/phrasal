@@ -71,5 +71,5 @@ class CompareIdsByCount implements Comparator<Long> {
 	@Override
 	public int compare(Long o1, Long o2) {
 		return (int)Math.signum(counts.getCount(o2) - counts.getCount(o1));
-	};
+	}
 }

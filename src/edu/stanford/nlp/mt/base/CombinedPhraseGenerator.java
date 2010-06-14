@@ -12,7 +12,7 @@ import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
  *
  * @param <TK>
  */
-public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
+public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
 	static public final int FORCE_ADD_LIMIT = Integer.MAX_VALUE; // 200;
 	static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
 	static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
@@ -171,8 +171,8 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK> {
 		}
 		
 		String[] conf = new String[args.length+1];		
-		conf[0] = PhraseGeneratorFactory.CONCATENATIVE_LIST_GENERATOR;		
-		for (int i = 0; i < args.length; i++) conf[1+i] = args[i];
+		conf[0] = PhraseGeneratorFactory.CONCATENATIVE_LIST_GENERATOR;
+    System.arraycopy(args, 0, conf, 1, args.length);
 		
 		PhraseGenerator<IString> ptGen = PhraseGeneratorFactory.factory(null, null, conf);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));

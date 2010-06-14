@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.tools;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.maxent.iis.LambdaSolve;
 import edu.stanford.nlp.tagger.maxent.TestSentence;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 

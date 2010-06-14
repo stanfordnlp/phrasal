@@ -29,7 +29,9 @@ public class AnalyzeF2E {
 
     Map<String, Set<String>> zhW2EnWs = new HashMap<String, Set<String>>();
     Map<String, Boolean> charMap = new HashMap<String, Boolean>();
-    LineNumberReader feReader = null, efReader = null, chWordReader = null;
+    LineNumberReader feReader, // = null,
+      efReader, // = null, 
+      chWordReader; // = null;
     //GIZAWordAlignment sent = new GIZAWordAlignment();
     try {
       feReader = new LineNumberReader
@@ -40,7 +42,7 @@ public class AnalyzeF2E {
         (new InputStreamReader((new FileInputStream(chWordList))));
 
       /* read in the char list first */
-      String line = null;
+      String line; // = null;
       while((line=chWordReader.readLine())!=null) {
         line = line.trim();
         //char[] c = line.toCharArray();
@@ -109,7 +111,7 @@ public class AnalyzeF2E {
         (new InputStreamReader((new FileInputStream(chWordList))));
       
       /* read in the char list first */
-      String chWord = null;
+      String chWord; // = null;
       Set<String> totalEnWs = new HashSet<String>();
       while((chWord=chWordReader.readLine())!=null) {
         chWord = chWord.trim();

@@ -58,7 +58,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
             new LineNumberReader(new FileReader(f)));
 
     // skip everything until the line that begins with '\data\'
-    while (!readLineNonNull(reader).startsWith("\\data\\"));
+    while (!readLineNonNull(reader).startsWith("\\data\\")) {}
 
     // read in ngram counts
     int[] ngramCounts = new int[MAX_GRAM];
@@ -99,7 +99,7 @@ public class TrieARPALanguageModel extends ARPALanguageModel {
       int[] ngramInts = new int[order+1];
 
       // skip all material upto the next n-gram table header
-      while (!readLineNonNull(reader).startsWith(nextOrderHeader));
+      while (!readLineNonNull(reader).startsWith(nextOrderHeader)) {}
 
       // read in table
       int c=0;

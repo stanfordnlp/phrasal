@@ -41,12 +41,9 @@ public class ReorderTreeWithPatterns {
       System.err.println("Usage: java ReorderPatterns pattern1 cmd1 [pattern2 cmd2 ...] < treeFile");
     }
 
-    String[] changes = args;
-
-
 
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    String line = null;
+    String line; //= null;
     
 
     List<Tree> lTrees = new ArrayList<Tree>();
@@ -66,7 +63,7 @@ public class ReorderTreeWithPatterns {
       origTrees.add(tree2);
     }
 
-    lTrees = surgeriesOnTrees(changes, lTrees);
+    lTrees = surgeriesOnTrees(args, lTrees);
 
     int numDiff = 0;
     

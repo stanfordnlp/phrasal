@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 
+import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -27,7 +28,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 
 	public final boolean tokenizeNIST;
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked,unused")
 	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer scorer, boolean tokenizeNIST) {
     this.featureIndex = null;
     this.tokenizeNIST = tokenizeNIST;
@@ -36,7 +37,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		
 		List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists2 = list2.nbestLists();
 		for (int i = 0; i < nbestLists2.size(); i++) {
-			((List)nbestLists.get(i)).addAll(nbestLists2.get(i));
+			(nbestLists.get(i)).addAll(nbestLists2.get(i));
 			// rescore
 			for (ScoredFeaturizedTranslation sft : nbestLists.get(i)) {
 				sft.score = scorer.getIncrementalScore(sft.features);
@@ -129,7 +130,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				if (lastId == null) {
 					lastId = id;
 				} else if (!id.equals(lastId)) {
-					int intId = -1;
+					int intId; // = -1;
 					try {
 						intId = Integer.parseInt(id);
 					}  catch (NumberFormatException e) {
@@ -247,6 +248,8 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		
 		sequenceSelfMap = null;
 		featureNameSelfMap = null;
+    ErasureUtils.noop(sequenceSelfMap);
+    ErasureUtils.noop(featureNameSelfMap);
 		System.gc();
 		
 		long postNBestListLoadMemUsed = rt.totalMemory() - rt.freeMemory();
@@ -344,6 +347,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		System.out.print(nbestList.printMosesFormat());
 	}
 
+  @SuppressWarnings("unused")
 	public static String escape(String featureName) {
 		return featureName.replaceAll("\\\\", "\\\\").replaceAll(" ", "\\_");
 	}

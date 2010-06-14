@@ -37,7 +37,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	      return ((h << 7) - h + (h >>> 9) + (h >>> 17));
 	  }	  
 	  
-	  private int findPos(int[] e, boolean add) { 
+	  private int findPos(int[] e) {
 	    int hashCode = supplementalHash(Arrays.hashCode(e));    
 	    int idealIdx = hashCode & mask;
 	    
@@ -66,7 +66,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    reverseIndex = new int[newSize]; Arrays.fill(reverseIndex, -1);
 	    hashCodes = new int[newSize];
 	    for (int i = 0; i < oldKeys.length; i++) { if (oldKeys[i]==null) continue;
-	      int pos = -findPos(oldKeys[i], true)-1; 
+	      int pos = -findPos(oldKeys[i])-1;
 	      keys[pos] = oldKeys[i]; values[pos] = oldValues[i];
 	      reverseIndex[values[pos]] = pos;
 	      hashCodes[pos] = oldHashCodes[i];      
@@ -88,7 +88,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	  int add(int key[], int pos, boolean sharedRep) {
 	    if ((load++)/(double)keys.length > MAX_LOAD) { 
 	      sizeUp();
-	      pos = -findPos(key, true)-1;
+	      pos = -findPos(key)-1;
 	    }
 	    if (!sharedRep) {
 	    	keys[pos] = Arrays.copyOf(key, key.length); values[pos] = maxIndex++;
@@ -101,28 +101,26 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	  }
 	  	  
 	  public synchronized int indexOf(int[] key) { 
-	      int pos = findPos(key, false);
-	      if (pos < 0) return -1;
-	      return values[pos]; 
+	    int pos = findPos(key);
+	    if (pos < 0) return -1;
+	    return values[pos];
 	  }
 	  
 	  public synchronized boolean contains(int[] key) {
-	      int pos = findPos(key, false);
-	      if (pos < 0) return false;
-	      return true;
-	  }
-	  
+	    int pos = findPos(key);
+      return pos >= 0;
+    }
+
+    @SuppressWarnings("unused")
 	  public synchronized int commonRepIndexOf(int[] key, boolean add) {
-	  	int pos = findPos(key, add);
+	  	int pos = findPos(key);
 	    if (pos >= 0) return values[pos];
 	    if (!add) return -1;
-	    int insert = add(key, -pos-1,true);
-
-	    return insert;
+      return add(key, -pos-1,true);
 	  }
 
 	  public synchronized int indexOf(int[] key, boolean add) {
-	    int pos = findPos(key, add);
+	    int pos = findPos(key);
 	    if (pos >= 0) return values[pos];
 	    if (!add) return -1;
 	    //System.out.printf("adding: %s %d\n", key, -pos-1);

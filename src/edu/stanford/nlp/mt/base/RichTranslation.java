@@ -111,6 +111,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
    * @param id Segment id
    * @return The NIST-tokenized String representation of nbest item
    */
+  @SuppressWarnings("unused")
   public String nbestToString(int id) {
     StringBuilder sbuf = new StringBuilder();
     nbestToStringBuilder(id, sbuf);

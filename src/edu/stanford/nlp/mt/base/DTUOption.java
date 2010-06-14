@@ -24,7 +24,8 @@ public class DTUOption<T> extends TranslationOption<T> {
     this.dtus = dtus;
     //System.err.println("DTUOption: "+dtus.length);
   }
-	
+
+  @SuppressWarnings("unused")
 	public DTUOption(int id, float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment, boolean forceAdd) {
 		super(id, scores, phraseScoreNames, null, foreign, alignment, forceAdd);
     this.dtus = dtus;

@@ -41,7 +41,7 @@ public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex
       return ((h << 7) - h + (h >>> 9) + (h >>> 17));
   }
 
-  private int findPos(byte[] e, boolean add) {
+  private int findPos(byte[] e) {//, boolean add) {
     int hashCode = supplementalHash(Arrays.hashCode(e));
     int idealIdx = hashCode & mask;
 
@@ -75,7 +75,7 @@ public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex
     reverseIndex = new int[newSize]; Arrays.fill(reverseIndex, -1);
     hashCodes = new int[newSize];
     for (int i = 0; i < oldKeys.length; i++) { if (oldKeys[i]==null) continue;
-      int pos = -findPos(oldKeys[i], true)-1;
+      int pos = -findPos(oldKeys[i])-1;
       keys[pos] = oldKeys[i]; values[pos] = oldValues[i];
       reverseIndex[values[pos]] = pos;
       hashCodes[pos] = oldHashCodes[i];
@@ -97,7 +97,7 @@ public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex
   private int add(byte[] key, int pos, boolean sharedRep) {
     if ((load++)/(double)keys.length > MAX_LOAD) {
       sizeUp();
-      pos = -findPos(key, true)-1;
+      pos = -findPos(key)-1;
     }
     if (!sharedRep) {
       keys[pos] = Arrays.copyOf(key, key.length); values[pos] = maxIndex++;
@@ -110,24 +110,23 @@ public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex
   }
 
   public synchronized int indexOf(int[] key) {
-      int pos = findPos(compress(key), false);
-      if (pos < 0) return -1;
-      return values[pos];
+    int pos = findPos(compress(key));
+    if (pos < 0) return -1;
+    return values[pos];
   }
 
+  @SuppressWarnings("unused")
   private synchronized boolean contains(byte[] key) {
-      int pos = findPos(key, false);
-      if (pos < 0) return false;
-      return true;
+    int pos = findPos(key);
+    return pos >= 0;
   }
 
+  @SuppressWarnings("unused")
   private synchronized int commonRepIndexOf(byte[] key, boolean add) {
-    int pos = findPos(key, add);
+    int pos = findPos(key);
     if (pos >= 0) return values[pos];
     if (!add) return -1;
-    int insert = add(key, -pos-1,true);
-
-    return insert;
+    return add(key, -pos-1,true);
   }
 
 
@@ -136,7 +135,7 @@ public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex
   }
 
   private int indexOf(byte[] key, boolean add) {
-    int pos = findPos(key, add);
+    int pos = findPos(key);
     if (pos >= 0) return values[pos];
     if (!add) return -1;
     if (PRINT_SIZE_STATS) {

@@ -15,11 +15,10 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.tune.MERT;
 
 import edu.stanford.nlp.mt.metrics.ter.TERcalc;
 import edu.stanford.nlp.mt.metrics.ter.TERalignment;
-import edu.stanford.nlp.mt.tune.MERT;
-
 
 public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
@@ -65,16 +64,16 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans, int idx, double[] editCounts) {
     List<Sequence<TK>> refsSeq = referencesList.get(idx);
-    String[] refs = new String[refsSeq.size()];
+    //String[] refs = new String[refsSeq.size()];
 		String key = String.format("%d|||%s", idx, trans.translation.toString());
     TERalignment bestAl = terCache.get(key);
 
 		if (bestAl == null) {
     	double best = Double.POSITIVE_INFINITY;
     	String hyp = trans.translation.toString();
-    	for (int i = 0; i < refs.length; i++) {
-     	 refs[i] = refsSeq.get(i).toString();
-    	} 
+    	//for (int i = 0; i < refs.length; i++) {
+     	// refs[i] = refsSeq.get(i).toString();
+    	//}
 			//System.err.printf("Hyp: %s\n", hyp);
 		
 			int totalWords = 0;
@@ -88,7 +87,8 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
      	   bestAl = terAl;
      	 }
     	}
-			bestAl.numWords = totalWords/(double)refs.length;
+      assert (bestAl != null);
+			bestAl.numWords = totalWords/(double)refsSeq.size();
 			terCache.put(key, bestAl);
 
       // Member variables no longer needed; free some memory:

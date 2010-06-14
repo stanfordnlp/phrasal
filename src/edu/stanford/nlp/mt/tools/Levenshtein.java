@@ -134,11 +134,10 @@ public class Levenshtein<T extends HasIntegerIdentity> {
         System.err.printf("line %d, secs = %.3f...\n", lineNb, totalStepSecs);
       }
       Set<BitSet> bitsets = new HashSet<BitSet>();
-      for (int j=0; j < test.size(); ++j) {
-        Sequence<IString> y = test.get(j);
-        System.out.println("x: "+x);
-        System.out.println("y: "+y);
-        l.init(x,y);
+      for (Sequence<IString> y : test) {
+        System.out.println("x: " + x);
+        System.out.println("y: " + y);
+        l.init(x, y);
         BitSet bitset = l.longestCommonSubsequence();
         addSubsequences(bitset, bitsets, 12);
       }

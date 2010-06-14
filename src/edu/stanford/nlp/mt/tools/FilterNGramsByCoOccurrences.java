@@ -15,8 +15,8 @@ import static java.lang.System.*;
  */
 public class FilterNGramsByCoOccurrences {
 	public static final boolean DEBUG = false;
-	public static final String ARPA_TYPE = "arpa";
-	public static final String RAW_TYPE = "raw";
+	//public static final String ARPA_TYPE = "arpa";
+	//public static final String RAW_TYPE = "raw";
 	
 
 	public static BitSet intArrayToSet(int[] arr) {		
@@ -37,7 +37,8 @@ public class FilterNGramsByCoOccurrences {
 			else intersect.and(sentIds);
 			if (intersect.size() == 0) return false;
 		}
-		
+
+    assert(intersect != null);
 		return intersect.size() != 0;
 	}
 	
@@ -78,9 +79,7 @@ public class FilterNGramsByCoOccurrences {
 				if (type.equals("raw")) {
 					String[] tokens = line.split("\\s+");
 					words = new String[tokens.length-1];
-					for (int j = 0; j < tokens.length-1; j++) {
-						words[j] = tokens[j];
-					}
+          System.arraycopy(tokens, 0, words, 0, tokens.length - 1);
 				} else if (type.equals("arpa")) {
 					if (line.startsWith("\\") || line.equals("")) {
 						if (line.endsWith("-grams:")) {
@@ -94,9 +93,7 @@ public class FilterNGramsByCoOccurrences {
 					
 					String[] tokens = line.split("\\s+");
 					words = new String[arpaNgramOrder];
-					for (int j = 0; j < arpaNgramOrder; j++) {
-						words[j] = tokens[j+1];
-					}					
+          System.arraycopy(tokens, 1, words, 0, arpaNgramOrder);
 				}
 				if (!canCoOccur(wordSents, words)) {
 					err.printf("filtering(%d): %s\n", words.length, Arrays.toString(words));

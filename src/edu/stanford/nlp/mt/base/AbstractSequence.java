@@ -204,7 +204,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		return true;
 	}
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked,unused")
 	public boolean noisyEquals(Object o) {
 		if (!(o instanceof Sequence)) return false;
 		Sequence<IString> seq = (Sequence<IString>)o;

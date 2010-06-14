@@ -35,6 +35,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private int beamWidth = 20;
   private int maxShiftDist = 50;
 
+  @SuppressWarnings("unused")
   public TERpMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;
     this.countEdits = countEdits;
@@ -127,6 +128,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
      	   bestAl = terAl;
      	 }
     	}
+      assert (bestAl != null);
 			bestAl.numWords = totalWords/(double)refs.length;
 			terCache.put(key, bestAl);
 			//System.err.printf("Cache size: %d\n", terCache.size());
@@ -250,10 +252,10 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
       return new TERpIncrementalMetric(this);
     }
 
-    public double insCount() { return editCounts[EditType.ins.ordinal()]; }
-    public double delCount() { return editCounts[EditType.del.ordinal()]; }
-    public double subCount() { return editCounts[EditType.sub.ordinal()]; }
-    public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
+    //public double insCount() { return editCounts[EditType.ins.ordinal()]; }
+    //public double delCount() { return editCounts[EditType.del.ordinal()]; }
+    //public double subCount() { return editCounts[EditType.sub.ordinal()]; }
+    //public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
   }
 
   @SuppressWarnings("unchecked")

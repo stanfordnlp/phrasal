@@ -170,8 +170,8 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 
 		RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 		
-		List<Pair<RawSequence<IString>,Double>> sortedTrans = null;
-		double cntNormalizer = Double.NaN;
+		List<Pair<RawSequence<IString>,Double>> sortedTrans; // = null;
+		double cntNormalizer; // = Double.NaN;
 		
 		@SuppressWarnings("unchecked")
 		long startCacheCheckTime = System.currentTimeMillis();
@@ -194,9 +194,7 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
         tStart < Math.min(bitext.ecorpus[line].length, tEquivFStart+MAX_ABSOLUTE_DISTORTION); tStart++) {
   				for (int tEnd = tStart; tEnd < bitext.ecorpus[line].length && tEnd < tStart + phraseLengthLimit; tEnd++) {
   					int[] ids = new int[tEnd-tStart+1];
-  					for (int i = 0; i < ids.length; i++) {
-  						ids[i] = bitext.ecorpus[line][tStart+i];
-  					}
+            System.arraycopy(bitext.ecorpus[line], tStart, ids, 0, ids.length);
   					RawSequence<IString> transSeq = new RawSequence<IString>(IStrings.toIStringArray(ids));
   					//System.err.printf("-->%d:%s\n", tStart, transSeq);
   					transSet.incrementCount(transSeq);					

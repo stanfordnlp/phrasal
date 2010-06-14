@@ -70,7 +70,6 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 		double editSum = 0;
 		double lengthSum = 0;
 	
-		
 		private void collapseObjects(Object[] arr) {
 			for (int i = 0; i < arr.length; i++) {
 				Object collapseTo = collapseMap.get(arr[i]);
@@ -106,9 +105,7 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 					refCount = refArr.length;
 				}
 			}
-			double[] retVal =  new double[]{minEd,refCount};
-			//editDistanceCache.put(key,retVal);
-			return retVal;
+      return new double[] {minEd, refCount};
 		}
 		
 		@Override

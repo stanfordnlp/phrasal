@@ -13,7 +13,7 @@ public class TreeToSpans {
 
   public static void main(String[] args) throws Exception {
     BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-    String line = null;
+    String line; // = null;
 
     while((line = br.readLine()) != null) {
       Tree tree = null;
@@ -25,7 +25,7 @@ public class TreeToSpans {
 
       //tree.pennPrint();
 
-      List<String> spans = new ArrayList<String>();
+      List<String> spans; // = new ArrayList<String>();
       spans = printSpans(tree,0);
       System.out.println(StringUtils.join(spans,";"));
     }
@@ -65,7 +65,7 @@ public class TreeToSpans {
 
     List<String> iStrs = new ArrayList<String>();
     for (int i = 0; i < kids.length; i++) {
-      String last = null;
+      String last; // = null;
       if (i == kids.length-1) {
         if (DEBUG) {
           System.err.println("looking at the last");

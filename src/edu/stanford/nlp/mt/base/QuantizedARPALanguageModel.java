@@ -59,7 +59,7 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
       hBins[i] = Integer.parseInt(header[i+2]); 
 
     // then skip everything until the line that begins with '\data\'
-    while (!readLineNonNull(reader).startsWith("\\data\\"));
+    while (!readLineNonNull(reader).startsWith("\\data\\")) {}
 
     // read in ngram counts
     int[] ngramCounts = new int[MAX_GRAM];
@@ -97,7 +97,7 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
       int[] ngramInts = new int[order+1];
 
       // skip all material upto the next n-gram table header
-      while (!readLineNonNull(reader).startsWith(nextOrderHeader));
+      while (!readLineNonNull(reader).startsWith(nextOrderHeader)) {}
       
       // Read cluster centers:
       int bins = Integer.parseInt(readLineNonNull(reader));
@@ -126,7 +126,7 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
         StringTokenizer tok = new StringTokenizer(inline);
         int prob = Integer.parseInt(tok.nextToken());
 				if(prob > Character.MAX_VALUE) {
-          throw new RuntimeException(String.format("Token (%d/%d) not a byte at line: \"%s\"", prob, Character.MAX_VALUE, inline));
+          throw new RuntimeException(String.format("Token (%d/%d) not a byte at line: \"%s\"", prob, (int)Character.MAX_VALUE, inline));
         }
 
         for (int i = 0; i <= order; i++) {
@@ -203,8 +203,7 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
     int index = tables[prefixInts.length-1].getIndex(prefixInts);
     if (index < 0) return false;
     byte bow = qbows[prefixInts.length-1][index];
-    if(bow == -1) return false;
-    return true;
+    return bow != -1;
   }
 
   public int order() {
@@ -218,7 +217,8 @@ public class QuantizedARPALanguageModel extends ARPALanguageModel {
     }
 
     verbose = true;
-    String model = args[0]; String file = args[1]; boolean quantized = Boolean.parseBoolean(args[2]);
+    String model = args[0]; String file = args[1];
+    //boolean quantized = Boolean.parseBoolean(args[2]);
     System.out.printf("Loading lm: %s...\n", model);
     ARPALanguageModel lm = new ARPALanguageModel(model);
     System.out.printf("done loading lm.\n");

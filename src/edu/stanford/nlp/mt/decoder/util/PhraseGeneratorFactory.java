@@ -63,7 +63,7 @@ public class PhraseGeneratorFactory {
 				}
 			}
 			if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)) {
-				return new CombinedPhraseGenerator<IString,FV>(phraseTables, CombinedPhraseGenerator.Type.CONCATENATIVE);
+				return new CombinedPhraseGenerator<IString>(phraseTables, CombinedPhraseGenerator.Type.CONCATENATIVE);
 			} else if (pgName.equals(BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR)){
 				List<PhraseGenerator<IString>> augmentedList = new LinkedList<PhraseGenerator<IString>>();
 				
@@ -75,13 +75,13 @@ public class PhraseGeneratorFactory {
 				
 				userEquivList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, new SymbolFilter())); // symbol identity phrase generator
 				
-				CombinedPhraseGenerator<IString,FV> equivUserRanking = new CombinedPhraseGenerator<IString,FV>(userEquivList);
+				CombinedPhraseGenerator<IString> equivUserRanking = new CombinedPhraseGenerator<IString>(userEquivList);
 				augmentedList.add(equivUserRanking);
 				
 				// catch all foreign phrase identity generator
 				augmentedList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer));
 				
-				return new CombinedPhraseGenerator<IString,FV>(augmentedList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString>(augmentedList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			}
 		} else if (pgName.equals(PSEUDO_PHARAOH_GENERATOR) || pgName.equals(DTU_GENERATOR)) {
 
@@ -114,15 +114,15 @@ public class PhraseGeneratorFactory {
           pharoahList.add(new MosesPhraseTable<FV>(phraseFeaturizer, scorer, filename));
 			}
 
-			finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList, 
+			finalList.add(new CombinedPhraseGenerator<IString>(pharoahList,
 				CombinedPhraseGenerator.Type.CONCATENATIVE));
 
 			finalList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 
       if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString,FV>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
-				return new CombinedPhraseGenerator<IString,FV>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		}  else if (pgName.equals(DYNAMIC_GENERATOR)) {
 			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();
@@ -157,9 +157,9 @@ public class PhraseGeneratorFactory {
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 			
 			if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		} else if (pgName.equals(NEW_DYNAMIC_GENERATOR)) {
 			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();
@@ -198,9 +198,9 @@ public class PhraseGeneratorFactory {
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 		
 			if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
 			} else {
-				return new CombinedPhraseGenerator<IString,FV>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString>(ptgList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
 			}
 		}
 		
