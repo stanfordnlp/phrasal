@@ -11,7 +11,7 @@ crf_model=/scr/nlp/data/gale3/NIST09/truecaser/crf/noUN.ser.gz
 lm=/scr/nlp/data/gale3/NIST09/truecaser/lm/releases/mt_giga3_afp_xin.1233.unk.lm.gz
 
 host=`hostname -s`
-java="java -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$host"
+java="java -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$host -XX:+UseCompressedOops"
 
 # LM truecaser:
 cat | $java -Xmx2g edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm
