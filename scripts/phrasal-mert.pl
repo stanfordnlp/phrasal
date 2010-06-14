@@ -510,6 +510,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 					print STDERR `echo "BLEU $ORACLE" | cat - $next_iter_weights.tmp > $next_iter_weights`;
 					unlink "$next_iter_weights.tmp"
 				}
+				unlink $iter_pcumulative_nbest;
    	  } else {
    	  	print stderr "Skipping running JMERT for iter $iter ($first_active_iter)\n";
    	  }
