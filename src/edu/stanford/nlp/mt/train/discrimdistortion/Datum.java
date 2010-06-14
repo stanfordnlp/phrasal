@@ -29,8 +29,7 @@ public class Datum {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(String.format("target: %f [ ",target));
-		for(int i = 0; i < features.length; i++)
-			sb.append(String.format("%f ",features[i]));
+    for (float feature : features) sb.append(String.format("%f ", feature));
 		sb.append("]");
 		return sb.toString();
 	}

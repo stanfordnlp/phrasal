@@ -57,9 +57,7 @@ public class TranslationAlignment {
     if(newRowLength != m.length-1) throw new RuntimeException("new row length should be just one less");
     int[][] newM = new int[newRowLength][];
     for(int i = 0; i < newRowLength; i++) {
-      for(int j = 0; j < m[i].length; j++) {
-        newM[i][j] = m[i][j];
-      }
+      System.arraycopy(m[i], 0, newM[i], 0, m[i].length);
     }
     return newM;  
   }
@@ -110,7 +108,7 @@ public class TranslationAlignment {
     return english;
   }
 
-  public TreeSet<Integer> mapChineseToEnglish_FillGap(Pair<Integer,Integer> ip, TreeSet<Integer> enRange) {
+  public TreeSet<Integer> mapChineseToEnglish_FillGap(TreeSet<Integer> enRange) {
     int prevI = -1;
     TreeSet<Integer> nullgaps = new TreeSet<Integer>();
     List<Pair<Integer,Integer>> gaps = new ArrayList<Pair<Integer,Integer>>();
@@ -144,19 +142,18 @@ public class TranslationAlignment {
     return nullgaps;
   }
 
-
-
+  @SuppressWarnings("unused")
   public static boolean checkDeIsOf(String[] translation, String[] source, int[][] matrix, int deIdx) {
     boolean set = false;
     int deEidx = -1;
     for (int eidx = 0; eidx < translation.length; eidx++) {
       if (matrix[eidx][deIdx] > 0) {
         if (set) return false;
-        if (!set) { deEidx = eidx; set = true; }
+        deEidx = eidx;
+        set = true;
       }
     }
-    if (set && translation[deEidx].equals("of")) return true;
-    return false;
+    return set && translation[deEidx].equals("of");
   }
 
   TranslationAlignment(String[] source, String[] translation) {
@@ -169,18 +166,12 @@ public class TranslationAlignment {
     this.translation_ = new String[translation.length];
     this.matrix_ = new int[translation.length+1][];
 
-    for(int i = 0; i < translation.length; i++) {
-      this.translation_[i] = translation[i];
-    }
-    for(int j = 0; j < source.length; j++) {
-      this.source_[j] = source[j];
-    }
+    System.arraycopy(translation, 0, this.translation_, 0, translation.length);
+    System.arraycopy(source, 0, this.source_, 0, source.length);
 
     for(int i = 0; i < translation.length+1; i++) {
       this.matrix_[i] = new int[source.length+1];
-      for(int j = 0; j < source.length+1; j++) {
-        this.matrix_[i][j] = matrix[i][j];
-      }
+      System.arraycopy(matrix[i], 0, this.matrix_[i], 0, source.length + 1);
     }
   }
 
@@ -254,13 +245,12 @@ public class TranslationAlignment {
     } else {
       System.err.println("Ill-formed:");
       System.err.println(dataStr);
-      wellformed_ = false; return;
+      wellformed_ = false; // return;
     }
   }
 
-
-
-  public static List<TranslationAlignment> readFromFile(String filename) 
+  @SuppressWarnings("unused")
+  public static List<TranslationAlignment> readFromFile(String filename)
   throws IOException {
     File file = new File(filename);
     return readFromFile(file);
@@ -274,7 +264,7 @@ public class TranslationAlignment {
       String content = IOUtils.slurpFile(file);
       String[] sents = content.split("</seg>");
       for (String sent : sents) {
-        sent = sent.trim();;
+        sent = sent.trim();
         if (sent.length()>0) {
           TranslationAlignment ta = new TranslationAlignment(sent);
           if (ta.isWellFormed()) {

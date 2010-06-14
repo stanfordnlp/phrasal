@@ -194,7 +194,7 @@ public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, false);
 
-    METEORMetric<IString,String> meteor = null;
+    METEORMetric<IString,String> meteor; // = null;
 		if (System.getProperty("abg") != null) {
 			String[] fields = System.getProperty("abg").split(":");
 			double alpha = Double.parseDouble(fields[0]);

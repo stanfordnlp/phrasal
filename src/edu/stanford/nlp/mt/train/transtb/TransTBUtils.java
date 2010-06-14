@@ -31,25 +31,19 @@ public class TransTBUtils {
    * useReducedCategories=true (means "B of A" is maped to "B prep A"), and
    * useNonOracleTrees=false (means features are extracted from parsed trees, not gold-standard trees)
    **/
+  @SuppressWarnings("unused")
   public static List<TreePair> readAnnotatedTreePairs() throws IOException {
-    return readAnnotatedTreePairs(true, false);
+    return readAnnotatedTreePairs(false);
   }
 
   public static List<TreePair> readAnnotatedTreePairs(
-    boolean useReducedCategories) throws IOException {
-    return readAnnotatedTreePairs(useReducedCategories, false);
+      boolean useNonOracleTrees) throws IOException {
+    return readAnnotatedTreePairs(1, 325, useNonOracleTrees);
   }
 
   public static List<TreePair> readAnnotatedTreePairs(
-    boolean useReducedCategories,
-    boolean useNonOracleTrees) throws IOException {
-    return readAnnotatedTreePairs(1, 325, useReducedCategories, useNonOracleTrees);
-  }
-
-  public static List<TreePair> readAnnotatedTreePairs(
-    int min, int max, 
-    boolean useReducedCategories,
-    boolean useNonOracleTrees) throws IOException {
+      int min, int max,
+      boolean useNonOracleTrees) throws IOException {
 
     String wordalignmentDir = wordAlignmentDir();
     String ctbDir = ctbDir();
@@ -188,8 +182,10 @@ public class TransTBUtils {
     throw new RuntimeException("EnglishChineseTranslationTreebankV1.0 doesn't exist in any of the hard-coded locations.");
   }
 
+  /*
   static String chParsedDir() {
     return "chParsed/";
   }
+  */
 
 }

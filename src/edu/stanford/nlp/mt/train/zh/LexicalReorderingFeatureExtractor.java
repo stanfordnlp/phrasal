@@ -22,10 +22,10 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
   ArrayList<Object> backwardCounts_f = new ArrayList<Object>();
   
 
-  static int printCounter = 0;
+  //static int printCounter = 0;
 
-  enum DirectionTypes { forward, backward, bidirectional, joint };
-  enum ReorderingTypes { monotone, discontinuous, swap };
+  enum DirectionTypes { forward, backward, bidirectional }
+  enum ReorderingTypes { monotone, discontinuous, swap }
 
   private DirectionTypes directionType;
 
@@ -88,8 +88,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
   @Override
 	public void report(AlignmentTemplates alTemps) {
     Set<Integer> isPrinted = new HashSet<Integer>();
-    int[] countsP_f = null;
-    int[] countsN_f = null;
+    int[] countsP_f; // = null;
+    int[] countsN_f; // = null;
     System.out.println("----------------------------------------------");
 
     AlignmentTemplateInstance alTemp = new AlignmentTemplateInstance();
@@ -104,7 +104,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
       countsN_f = (int[]) backwardCounts_f.get(fidx);
       int sumP_f = countsP_f[0]+countsP_f[1]+countsP_f[2];
       int sumN_f = countsN_f[0]+countsN_f[1]+countsN_f[2];
-      if (sumP_f != sumN_f) { throw new RuntimeException("sumP_f != sumN_f"); };
+      if (sumP_f != sumN_f) { throw new RuntimeException("sumP_f != sumN_f"); }
       System.out.printf("REPORT:\t%s\t%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n",
                         alTemp.f().toString(),
                         sumP_f,
@@ -134,6 +134,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
       countsN   = (int[]) backwardCounts.get(idx);
       countsN_f = (int[]) backwardCounts_f.get(alTemp.getFKey());
     }
+    assert(countsP != null && countsN != null);
     int sumP = countsP[0]+countsP[1]+countsP[2];
     int sumN = countsN[0]+countsN[1]+countsN[2];
     int sumP_f = countsP_f[0]+countsP_f[1]+countsP_f[2];
@@ -143,8 +144,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
       countsP[0]/sumP, countsP[2]/sumP, countsP[1]/sumP,
       countsN[0]/sumN, countsN[2]/sumN, countsN[1]/sumN };
     */
-    if (sumP != sumN) { throw new RuntimeException("sumP != sumN"); };
-    if (sumP_f != sumN_f) { throw new RuntimeException("sumP_f != sumN_f"); };
+    if (sumP != sumN) { throw new RuntimeException("sumP != sumN"); }
+    if (sumP_f != sumN_f) { throw new RuntimeException("sumP_f != sumN_f"); }
     return new double[] {
       sumP, sumP_f
     };
@@ -157,8 +158,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize()) 
       return false;
     AlGridCell<AlignmentTemplateInstance> cell = fullAlGrid.cellAt(cellf,celle);
-    if (cell == null) return false;
-    return cell.hasBottomRight();
+    return cell != null && cell.hasBottomRight();
   }
 
   private boolean isConnectedTopRight(AlignmentGrid fullAlGrid, int fi, int ei) {
@@ -180,8 +180,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
       return false;
     AlGridCell<AlignmentTemplateInstance> cell = fullAlGrid.cellAt(cellf,celle);
-    if (cell == null) return false;
-    return cell.hasTopRight();
+    return cell != null && cell.hasTopRight();
     //return cell.hasBottomLeft();
   }
 
@@ -191,9 +190,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
       return false;
     AlGridCell<AlignmentTemplateInstance> cell = fullAlGrid.cellAt(cellf,celle);
-    if (cell == null) return false;
-    return cell.hasTopLeft();
-
+    return cell != null && cell.hasTopLeft();
   }
 
   private void addCountToArray(ArrayList<Object> list, ReorderingTypes type, AlignmentTemplate alTemp) {
@@ -202,7 +199,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     if(idx < 0)
       return;
     // Handle distinction between swap and discontinuous:
-    int[] counts = null;
+    int[] counts; // = null;
     while(idx >= list.size())
       list.add(new int[] {LAPLACE_SMOOTHING, LAPLACE_SMOOTHING, LAPLACE_SMOOTHING});
     counts = (int[]) list.get(idx);
@@ -214,7 +211,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     if(idx < 0)
       return;
     // Handle distinction between swap and discontinuous:
-    int[] counts = null;
+    int[] counts; // = null;
     while(idx >= list.size())
       list.add(new int[] {LAPLACE_SMOOTHING, LAPLACE_SMOOTHING, LAPLACE_SMOOTHING});
     counts = (int[]) list.get(idx);

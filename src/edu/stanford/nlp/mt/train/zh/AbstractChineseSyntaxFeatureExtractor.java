@@ -35,5 +35,5 @@ public abstract class AbstractChineseSyntaxFeatureExtractor<E> extends AbstractF
 
   public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, AlignmentGrid fullAlGrid, String infoLine) {}
 
-  public void report(AlignmentTemplates alTemps) {};
+  public void report(AlignmentTemplates alTemps) {}
 }

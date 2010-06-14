@@ -23,6 +23,7 @@ public class EnglishTreeReader extends AbstractTreeReader {
     //ptbe_ = new PTBEscapingProcessor();
   }
 
+  @SuppressWarnings("unused")
   public EnglishTreeReader(String filename) throws IOException {
     this();
     readMoreTrees(filename);

@@ -69,8 +69,8 @@ public final class DiscrimDistortionTrainer {
 
   private static boolean validateCommandLine(String[] args) {
     //Command line parsing
-    OptionSet opts = null;
-    List<String> parsedArgs = null;
+    OptionSet opts; // = null;
+    List<String> parsedArgs; // = null;
     try {
       opts = op.parse(args);
 

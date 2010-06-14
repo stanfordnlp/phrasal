@@ -21,10 +21,6 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	final int[][] refLengths;
 	final int order;
 	
-	public NISTMetric(List<List<Sequence<TK>>> referencesList) {
-		this(referencesList, false);
-	}
-
   public void setNgramInfo(Map<Sequence<TK>,Double> i) {
     ngramInfo = i;
   }
@@ -33,7 +29,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
     return ngramInfo; 
   }
 
-  public NISTMetric(List<List<Sequence<TK>>> referencesList, boolean smooth) {
+  public NISTMetric(List<List<Sequence<TK>>> referencesList) {
 		this.order = DEFAULT_MAX_NGRAM_ORDER;
 		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
 		refLengths = new int[referencesList.size()][];
@@ -73,12 +69,11 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
   private void initNgramWeights(List<List<Sequence<TK>>> referencesList) {
     int len = 0;
     Map<Sequence<TK>,Integer> allNgrams = new HashMap<Sequence<TK>,Integer>();
-    for (int listI = 0; listI < referencesList.size(); listI++) {
-      List<Sequence<TK>> references = referencesList.get(listI);
-      for (int refI = 0; refI < references.size(); refI++) {
-        len += references.get(refI).size();
-        Map<Sequence<TK>,Integer> altCounts = Metrics.getNGramCounts(references.get(refI), order);
-        addToCounts(allNgrams,altCounts);
+    for (List<Sequence<TK>> references : referencesList) {
+      for (Sequence<TK> reference : references) {
+        len += reference.size();
+        Map<Sequence<TK>, Integer> altCounts = Metrics.getNGramCounts(reference, order);
+        addToCounts(allNgrams, altCounts);
       }
     }
     ngramInfo = Metrics.getNGramInfo(allNgrams,len);
@@ -105,7 +100,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	/**
 	 * 
 	 */
-	private double averageReferenceLength(int index, int candidateLength) {
+	private double averageReferenceLength(int index) {
 		double sum = 0.0;
 		for (int i = 0; i < refLengths[index].length; i++) {
       sum += refLengths[index][i];
@@ -186,7 +181,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			for (int i = 0; i < futureMatchCounts.length; i++) {
 				System.err.printf("%d:", i);
 				for (int j = 0; j < futureMatchCounts[i].length; j++) {
-					System.err.printf(" %d/%d", futureMatchCounts[i][j], futurePossibleCounts[i][j]);
+					System.err.printf(" %f/%f", futureMatchCounts[i][j], futurePossibleCounts[i][j]);
 				}
 				System.err.println();
 			}
@@ -265,7 +260,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				sequences.add(tran.translation);
 				incCounts(canidateCounts, tran.translation);
 				c += tran.translation.size();
-				r += averageReferenceLength(pos, tran.translation.size());
+				r += averageReferenceLength(pos);
 			} else {
 				sequences.add(null);
 			}
@@ -285,13 +280,13 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 				Metrics.clipCounts(oldCanidateCounts, maxReferenceCounts.get(index));
 				decCounts(oldCanidateCounts, sequences.get(index));
 				c -= sequences.get(index).size();
-				r -= averageReferenceLength(index, sequences.get(index).size());
+				r -= averageReferenceLength(index);
 			}
 			sequences.set(index, (trans == null ? null : trans.translation));
 			if (trans != null) {
 				incCounts(canidateCounts, trans.translation);
 				c += sequences.get(index).size();
-				r += averageReferenceLength(index, sequences.get(index).size());
+				r += averageReferenceLength(index);
 			}
 		
 			return this;
@@ -306,7 +301,7 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			double[] precisions = ngramPrecisions();
 			for (int i = 0; i < order; i++) {
         double p = precisions[i];
-        ngramPrecisionScore += (p==p) ? p : 0;
+        ngramPrecisionScore += !Double.isNaN(p) ? p : 0;
 			}
 			return ngramPrecisionScore;
 		}

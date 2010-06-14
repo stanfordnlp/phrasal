@@ -70,19 +70,15 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
   static {
-    REQUIRED_OPTS.addAll(Arrays.asList(new String[] { 
-                                         F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT, EXTRACTORS_OPT 
-                                       }));
-    OPTIONAL_OPTS.addAll(Arrays.asList(new String[] { 
-                                         FILTER_CORPUS_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT, 
-                                         SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, 
-                                         MAX_PHRASE_LEN_OPT, MAX_PHRASE_LEN_E_OPT, MAX_PHRASE_LEN_F_OPT, 
-                                         NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
-                                         START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
-                                         EXACT_PHI_OPT, IBM_LEX_MODEL_OPT,
-                                         PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
-                                         PHARAOH_LEX_MODEL_OPT 
-                                       }));
+    REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT, EXTRACTORS_OPT));
+    OPTIONAL_OPTS.addAll(Arrays.asList(FILTER_CORPUS_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT,
+        SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT,
+        MAX_PHRASE_LEN_OPT, MAX_PHRASE_LEN_E_OPT, MAX_PHRASE_LEN_F_OPT,
+        NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
+        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
+        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT,
+        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
+        PHARAOH_LEX_MODEL_OPT));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(IGNORED_OPTS);
@@ -121,7 +117,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   private static int startAtLine = -1, endAtLine = -1;
   private static int maxPhraseLenF = 7;
   private static int maxPhraseLenE = 7;
-  private static int minCount = 1;
   private static boolean filterFromDev = false;
   private static boolean printFeatureNames = true;
 
@@ -145,7 +140,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
 
     for(String exStr : exsString.split(":")) {
       try {
-        AbstractChineseSyntaxFeatureExtractor fe = null;
+        AbstractChineseSyntaxFeatureExtractor fe; // = null;
         String[] extractorAndInfofile = exStr.split("=");
         String infoFilename = null;
         // if the extractor string contains "=", then assume 
@@ -167,7 +162,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         } else {
           Class cls = Class.forName(exStr);
           Constructor ct = cls.getConstructor(new Class[] {});
-          fe = (AbstractChineseSyntaxFeatureExtractor) ct.newInstance(new Object[] {});
+          fe = (AbstractChineseSyntaxFeatureExtractor) ct.newInstance();
         }
         fe.init(prop, featureIndex, alTemps);
         extractors.add(fe);
@@ -246,17 +241,18 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     } catch(IOException e) {
       e.printStackTrace();
     }
-    return (Sequence<IString>[]) list.toArray(new Sequence[list.size()]);
+    Sequence<IString>[] seq = new Sequence[list.size()];
+    return list.toArray(seq);
   }
 
-  public void restrictExtractionTo(Sequence<IString>[] list) {
-    restrictExtractionTo(list,0,Integer.MAX_VALUE);
+  public void restrictExtractionTo() {
+    restrictExtractionTo(0,Integer.MAX_VALUE);
   }
 
   /**
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    */
-  public void restrictExtractionTo(Sequence<IString>[] list, int start, int end) {
+  public void restrictExtractionTo(int start, int end) {
     sourceFilter.setRange(start, end);
     if(end < Integer.MAX_VALUE)
       System.err.printf("Filtering against phrases: %d-%d\n", start, end-1);
@@ -479,7 +475,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   private void addAlTemp(SymmetricalWordAlignment sent, int f1, int f2, int e1, int e2) {
     assert(checkAlignmentConsistency(sent,f1,f2,e1,e2));
     // Create alTemp:
-    AlignmentTemplateInstance alTemp = null;
+    AlignmentTemplateInstance alTemp; // = null;
 
     if(needAlGrid) {
       alTemp = new AlignmentTemplateInstance(sent,f1,f2,e1,e2,1.0f);
@@ -535,7 +531,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         System.err.println("saving features to: "+fileName);
         oStream = IOTools.getWriterFromFile(fileName);
         needToClose = true;
-      } else if(oStream instanceof PrintStream)
+      } else if(oStream != null)
         oStream = (PrintStream) output;
     }
 
@@ -561,13 +557,14 @@ public class ChineseSyntaxCombinedFeatureExtractor {
           continue;
         if(scores instanceof double[]) { // as dense vector
           double[] scoreArray = (double[]) scores;
-          for(int i=0; i<scoreArray.length; ++i) {
-            str.append(scoreArray[i]).append("\t");
+          for (double aScoreArray : scoreArray) {
+            str.append(aScoreArray).append("\t");
           }
         } else if(scores instanceof Int2IntLinkedOpenHashMap) { // as sparse vector
           Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;
           for(int fIdx : counter.keySet()) {
             int cnt = counter.get(fIdx);
+            int minCount = 1;
             if(cnt >= minCount) {
               str.append(printFeatureNames ? featureIndex.get(fIdx) : fIdx);
               str.append("=").append(cnt).append(" ");
@@ -578,6 +575,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
             ("AbstractChineseSyntaxFeatureExtractor should return double[] or Counter, not "+scores.getClass());
         }
       }
+      assert (oStream != null);
       oStream.println(str.toString());
     }
     if(needToClose)
@@ -588,10 +586,10 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     return true;
   }
 
-  public int getMaxPhraseLenE() { return maxPhraseLenE; }
-  public int getMaxPhraseLenF() { return maxPhraseLenF; }
-  public void setMaxPhraseLenE(int newMaxPhraseLenE) { maxPhraseLenE = newMaxPhraseLenE; }
-  public void setMaxPhraseLenF(int newMaxPhraseLenF) { maxPhraseLenF = newMaxPhraseLenF; }
+  //public int getMaxPhraseLenE() { return maxPhraseLenE; }
+  //public int getMaxPhraseLenF() { return maxPhraseLenF; }
+  //public void setMaxPhraseLenE(int newMaxPhraseLenE) { maxPhraseLenE = newMaxPhraseLenE; }
+  //public void setMaxPhraseLenF(int newMaxPhraseLenF) { maxPhraseLenF = newMaxPhraseLenF; }
 
   private void setTotalPassNumber() {
     totalPassNumber = 0;
@@ -653,11 +651,12 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         return false;
       }
       PrintStream oStream = IOTools.getWriterFromFile(outputFile);
+      assert(fPhrases != null);
       int size = fPhrases.length/numSplits+1;
       int startLine = 0;
       while(startLine < fPhrases.length) {
         ChineseSyntaxCombinedFeatureExtractor combined = new ChineseSyntaxCombinedFeatureExtractor(prop);
-        combined.restrictExtractionTo(fPhrases, startLine, startLine+size);
+        combined.restrictExtractionTo(startLine, startLine+size);
         combined.extractFromMergedAlignment(fCorpus, eCorpus, align);
         combined.write(oStream, noAlign);
         startLine += size;
@@ -670,7 +669,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
       ChineseSyntaxCombinedFeatureExtractor combined = new ChineseSyntaxCombinedFeatureExtractor(prop);
       // Various filtering options:
       if(fPhrases != null)
-        combined.restrictExtractionTo(fPhrases);
+        combined.restrictExtractionTo();
       combined.extractFromMergedAlignment(fCorpus, eCorpus, align);
       // Check phrase table against existing one:
       combined.write(outputFile, noAlign);

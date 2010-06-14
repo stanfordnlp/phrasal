@@ -30,7 +30,7 @@ public class MetricFactory {
 				if (!f.exists()) break;
 				references.add(referencePrefix+i);
 			}
-			return metric(name, Metrics.readReferences(references.toArray(new String[0])));
+			return metric(name, Metrics.readReferences(references.toArray(new String[references.size()])));
 		} 
 		
 		throw new RuntimeException(String.format("Invalid reference prefix: %s (file/files not found)\n", referencePrefix));

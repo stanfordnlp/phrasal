@@ -16,7 +16,7 @@ public class ComparisonModels {
   private static final String fExtension = ".f";
   private static final String eExtension = ".e";
 
-  public static enum Mode {Train, Train2, Test};
+  public static enum Mode {Train, Train2, Test}
 
   private static void trainTestCounts(final String trainPrefix, final String testPrefix) {
     Counter<DistortionModel.Class> counts = new ClassicCounter<DistortionModel.Class>();
@@ -92,7 +92,7 @@ public class ComparisonModels {
         while(algnReader.ready()) {
           StringTokenizer alignTokenizer = new StringTokenizer(algnReader.readLine());
           Map<Integer,Integer> alignmentMap = new TreeMap<Integer,Integer>();
-          Set<Integer> alignedSToks = new HashSet<Integer>();
+          //Set<Integer> alignedSToks = new HashSet<Integer>();
           while(alignTokenizer.hasMoreTokens()) {
             String alignment = alignTokenizer.nextToken();
             String[] indices = alignment.split("-");
@@ -102,10 +102,10 @@ public class ComparisonModels {
             int sIdx = Integer.parseInt(indices[0]);
             int tIdx = Integer.parseInt(indices[1]);
 
-            alignedSToks.add(sIdx);
+            //alignedSToks.add(sIdx);
 
             if(alignmentMap.containsKey(tIdx))
-              System.err.printf("%WARNING many-to-one alignment at line %d. Are you using the intersect heuristic?\n", algnReader.getLineNumber());
+              System.err.printf("#WARNING many-to-one alignment at line %d. Are you using the intersect heuristic?\n", algnReader.getLineNumber());
 
             alignmentMap.put(tIdx, sIdx);
           }
@@ -116,7 +116,7 @@ public class ComparisonModels {
           int lastSPos = Integer.MIN_VALUE;
           for(Map.Entry<Integer, Integer> alignment : alignmentMap.entrySet()) {
             //Account for null alignments
-            int distortion = 0;
+            int distortion; // = 0;
             if(lastSPos == Integer.MIN_VALUE)
               distortion = alignment.getValue();
             else {
@@ -177,6 +177,6 @@ public class ComparisonModels {
     else if(args[0].equals("-c"))
       trainTestCounts(args[1],args[2]);
     else
-      System.err.printf("Unknown option %f\n", args[0]);
+      System.err.printf("Unknown option %s\n", args[0]);
   }
 }

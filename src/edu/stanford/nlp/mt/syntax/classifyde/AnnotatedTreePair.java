@@ -211,7 +211,7 @@ public class AnnotatedTreePair {
 
       for (Pair<Integer,Integer> deSpan : deSpans) {
         TreeSet<Integer> enSpan = treepair_.alignment().mapChineseToEnglish(deSpan);
-        TreeSet<Integer> nullSpan = treepair_.alignment().mapChineseToEnglish_FillGap(deSpan, enSpan);
+        TreeSet<Integer> nullSpan = treepair_.alignment().mapChineseToEnglish_FillGap(enSpan);
         // merge these 2
         enSpan.addAll(nullSpan);
 

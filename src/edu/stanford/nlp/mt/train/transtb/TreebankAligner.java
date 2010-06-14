@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.train.transtb;
 import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.ChineseUtils;
+import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.StringUtils;
 
 import java.util.*;
@@ -58,8 +59,8 @@ public class TreebankAligner {
       System.err.println("Target directory exists already : "+uf.getAbsolutePath());
       System.exit(1);
     }
-    af.mkdir();
-    uf.mkdir();
+    ErasureUtils.noop(af.mkdir());
+    ErasureUtils.noop(uf.mkdir());
   }
 
   public TreebankAligner(String inDir, String outDir) {
@@ -76,7 +77,7 @@ public class TreebankAligner {
       System.err.println("Target directory exists already : "+af.getAbsolutePath());
       System.exit(1);
     }
-    af.mkdir();
+    ErasureUtils.noop(af.mkdir());
   }
 
   public void align() throws IOException {

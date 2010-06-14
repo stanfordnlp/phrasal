@@ -507,7 +507,7 @@ public class ExperimentUtils {
   public static List<AnnotatedTreePair> readAnnotatedTreePairs(
     Boolean useReducedCategories,
     Boolean useNonOracleTrees) throws IOException {
-    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(useReducedCategories, useNonOracleTrees);
+    List<TreePair> treepairs = TransTBUtils.readAnnotatedTreePairs(useNonOracleTrees);
     List<AnnotatedTreePair> atps = new ArrayList<AnnotatedTreePair>();
 
     // Open the hand-annotate file

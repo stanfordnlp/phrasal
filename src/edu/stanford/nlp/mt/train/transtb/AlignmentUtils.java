@@ -46,6 +46,7 @@ public class AlignmentUtils {
     pw.println("<br></body></html>");
   }
 
+  @SuppressWarnings("unused")
   public static void printAlignmentGrids(Collection<TranslationAlignment> tas) {
     printAlignmentGridHeader();
     for(TranslationAlignment ta : tas) {
@@ -58,7 +59,7 @@ public class AlignmentUtils {
     printAlignmentGrid(ta, new PrintWriter(System.out, true));
   }
 
-
+  @SuppressWarnings("unused")
   public static void printNPTree(Tree t, PrintWriter pw) {
     pw.println("<pre>");
     if (t != null) {
@@ -69,34 +70,36 @@ public class AlignmentUtils {
     pw.println("</pre>");
   }
 
+  @SuppressWarnings("unused")
   public static boolean checkDeIsOf(String[] translation, String[] source, int[][] matrix, int deIdx) {
     boolean set = false;
     int deEidx = -1;
     for (int eidx = 0; eidx < translation.length; eidx++) {
       if (matrix[eidx][deIdx] > 0) {
         if (set) return false;
-        if (!set) { deEidx = eidx; set = true; }
+        deEidx = eidx;
+        set = true;
       }
     }
-    if (set && translation[deEidx].equals("of")) return true;
-    return false;
+    return set && translation[deEidx].equals("of");
   }
 
+  @SuppressWarnings("unused")
   public static boolean checkDeIsPrep(String[] translation, String[] source, int[][] matrix, int deIdx) {
     boolean set = false;
     int deEidx = -1;
     for (int eidx = 0; eidx < translation.length; eidx++) {
       if (matrix[eidx][deIdx] > 0) {
         if (set) return false;
-        if (!set) { deEidx = eidx; set = true; }
+        deEidx = eidx;
+        set = true;
       }
     }
-    if (set && isPrep(translation[deEidx])) return true;
-    return false;
+    return set && isPrep(translation[deEidx]);
   }
 
   private static boolean isPrep(String word) {
-    if (word.equals("with") ||
+    return word.equals("with") ||
         word.equals("within") ||
         word.equals("from") ||
         word.equals("in") ||
@@ -107,14 +110,11 @@ public class AlignmentUtils {
         word.equals("by") ||
         word.equals("among") ||
         word.equals("at") ||
-        word.equals("under")) 
-      return true;
-    
-    return false;
+        word.equals("under");
+
   }
-    
 
-
+  @SuppressWarnings("unused")
   public static void printGridNoNull(String[] translation, String[] source, int[][] matrix, PrintWriter pw) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
@@ -126,8 +126,8 @@ public class AlignmentUtils {
 
     pw.println("<table>");
     pw.println("<tr><td></td>");
-    for(int i = 0; i < source.length; i++) {
-      pw.printf("<td>%s</td>\n", source[i]);
+    for (String aSource : source) {
+      pw.printf("<td>%s</td>\n", aSource);
     }
     
     for(int tidx = 0; tidx < translation.length; tidx++) {
@@ -171,7 +171,8 @@ public class AlignmentUtils {
     pw.println("</table>");
   }
 
-  public static List<TranslationAlignment> readFromFile(String filename) 
+  @SuppressWarnings("unused")
+  public static List<TranslationAlignment> readFromFile(String filename)
   throws IOException {
     File file = new File(filename);
     return readFromFile(file);
@@ -222,8 +223,7 @@ public class AlignmentUtils {
     
     for(Tree eT : enTrees) {
       ArrayList<Label> sentence = eT.yield();
-      for (int i = 0; i < sentence.size(); i++) {
-        Label hw = sentence.get(i);
+      for (Label hw : sentence) {
         leaveslist.add(hw.value());
       }
     }
@@ -278,16 +278,12 @@ public class AlignmentUtils {
       System.out.println("<p>Before<p>\n");
       printAlignmentGrid(ta);
       for (int i = 0; i < translationEnd; i++) {
-        for (int j = 0; j < sourceEnd; j++) {
-          ta.matrix_[i][j] = newMatrix[i][j];
-        }
+        System.arraycopy(newMatrix[i], 0, ta.matrix_[i], 0, sourceEnd);
       }
       System.out.println("<p>After<p>\n");
       printAlignmentGrid(ta);
       for (int i = 0; i < translationEnd; i++) {
-        for (int j = 0; j < sourceEnd; j++) {
-          ta.matrix_[i][j] = newMatrix[i][j];
-        }
+        System.arraycopy(newMatrix[i], 0, ta.matrix_[i], 0, sourceEnd);
       }
       System.out.println("<p>After<p>\n");
       printAlignmentGrid(ta);
@@ -565,9 +561,7 @@ public class AlignmentUtils {
       System.out.println("<p>Before<p>\n");
       printAlignmentGrid(ta);
       for (int i = 0; i < translationEnd; i++) {
-        for (int j = 0; j < sourceEnd; j++) {
-          ta.matrix_[i][j] = newMatrix[i][j];
-        }
+        System.arraycopy(newMatrix[i], 0, ta.matrix_[i], 0, sourceEnd);
       }
       System.out.println("<p>After<p>\n");
       printAlignmentGrid(ta);
@@ -622,16 +616,16 @@ public class AlignmentUtils {
     List<List<Integer>> indexgroups = new ArrayList<List<Integer>>();
 
     int tidx = 0;
-    for(int lidx = 0; lidx < leaves.length; lidx++) {
+    for (String leave : leaves) {
       List<Integer> indexgroup = new ArrayList<Integer>();
-      String leaf = leaves[lidx];
-      if (DEBUG) System.err.println("LEAF="+leaf);
+      String leaf = leave;
+      if (DEBUG) System.err.println("LEAF=" + leaf);
       StringBuilder chunk = new StringBuilder();
-      while(!leaf.equals(chunk.toString())) {
+      while (!leaf.equals(chunk.toString())) {
         //while(!ExperimentUtils.tokenEquals(leaf, chunk.toString())) {
         chunk.append(source[tidx]);
-        indexgroup.add(tidx+1); // have to offset by 1, because 0 is NULL
-        if (DEBUG) System.err.println("CHUNK="+chunk.toString());
+        indexgroup.add(tidx + 1); // have to offset by 1, because 0 is NULL
+        if (DEBUG) System.err.println("CHUNK=" + chunk.toString());
         tidx++;
       }
       indexgroups.add(indexgroup);

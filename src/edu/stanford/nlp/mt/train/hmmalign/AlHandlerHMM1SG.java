@@ -16,6 +16,7 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
   double lambda = .2;
   double empty;
 
+  @SuppressWarnings("unused")
   public AlHandlerHMM1SG() {
   }
 
@@ -61,7 +62,7 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
    */
   @Override
 	public double getProb(int i, int j, int[] alignment) {
-    double prob = 0;
+    double prob; // = 0;
     //System.out.println(" getting prob "+i+" "+j);
 
     if ((i <= l) && ((i == alignment[j - 1]) || (i == alignment[j - 1] - l))) {

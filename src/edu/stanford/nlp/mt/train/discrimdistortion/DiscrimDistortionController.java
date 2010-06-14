@@ -61,7 +61,7 @@ public class DiscrimDistortionController {
   }
   
   public void insertDelimiters(boolean b) { 
-    if(VERBOSE && b == true)
+    if(VERBOSE && b)
       System.err.println("Inserting sentence begin/end delimiters");
     useDelims = b; 
   }

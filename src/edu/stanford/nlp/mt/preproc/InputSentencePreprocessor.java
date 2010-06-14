@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
   * 
   * @author Michel Galley
   */
+@SuppressWarnings("unused")
 public interface InputSentencePreprocessor {
   
   void process(SymmetricalWordAlignment sent);

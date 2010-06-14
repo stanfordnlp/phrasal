@@ -58,12 +58,12 @@ public class LinearCombinationMetricOptimizer implements Function {
   double simplexSize = 1.0; 
 
   // For RandomGreedyLocalSearch:
-  public static final String LEARN_RATE_PROPERTY = "LearnRate";
-  public static final double LEARN_RATE = Double.parseDouble(System.getProperty(LEARN_RATE_PROPERTY, "0.3"));
-  public static final String PERSEVERENCE_PROPERTY = "Perseverence";
-  public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "5"));
-  public static final String MAX_ITERATIONS_PROPERTY = "MaxIterations";
-  public static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROPERTY, "1000000"));
+  //public static final String LEARN_RATE_PROPERTY = "LearnRate";
+  //public static final double LEARN_RATE = Double.parseDouble(System.getProperty(LEARN_RATE_PROPERTY, "0.3"));
+  //public static final String PERSEVERENCE_PROPERTY = "Perseverence";
+  //public static final int PERSEVERENCE = Integer.parseInt(System.getProperty(PERSEVERENCE_PROPERTY, "5"));
+  //public static final String MAX_ITERATIONS_PROPERTY = "MaxIterations";
+  //public static final int MAX_ITERATIONS = Integer.parseInt(System.getProperty(MAX_ITERATIONS_PROPERTY, "1000000"));
   public static final String STARTING_POINTS_PROPERTY = "StartingPoints";
   public static final int STARTING_POINTS = Integer.parseInt(System.getProperty(STARTING_POINTS_PROPERTY, "10"));
   public static final String SIMPLEX_GROWTH_PROPERTY = "SimplexGrows";
@@ -257,6 +257,7 @@ public class LinearCombinationMetricOptimizer implements Function {
     return -pearson;
   }
 
+  @SuppressWarnings("unused")
   void dump(String name, List<?> l) {
     System.err.printf("Dumping list %s\n",name);
     for(int i=0; i<l.size(); ++i)
@@ -345,7 +346,7 @@ public class LinearCombinationMetricOptimizer implements Function {
         v = bleu.score();
       } else if(s.equals(LBLEU)) {
         v = Math.log(bleu.score());
-        if(v == -Double.NEGATIVE_INFINITY)
+        if(Double.isInfinite(v))
           v = -100;
       } else if(s.equals(BLEU_BP)) {
         v = bleu.brevityPenalty();
@@ -359,28 +360,28 @@ public class LinearCombinationMetricOptimizer implements Function {
         v = -ter.score();
       } else if(s.equals(BLEU_1)) {
         v = bleu.ngramPrecisions()[0];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(BLEU_2)) {
         v = bleu.ngramPrecisions()[1];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(BLEU_3)) {
         v = bleu.ngramPrecisions()[2];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(BLEU_4)) {
         v = bleu.ngramPrecisions()[3];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(NIST_1)) {
         v = nist.ngramPrecisions()[0];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(NIST_2)) {
         v = nist.ngramPrecisions()[1];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(NIST_3)) {
         v = nist.ngramPrecisions()[2];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(NIST_4)) {
         v = nist.ngramPrecisions()[3];
-        v = (v == v) ? v : 0.0; 
+        v = !Double.isNaN(v) ? v : 0.0;
       } else if(s.equals(EXTERNAL)) {
         v = externalScores[line];
       } else {
@@ -398,6 +399,7 @@ public class LinearCombinationMetricOptimizer implements Function {
     //return ArrayMath.innerProduct(scores1,scores2)/(scores1.length-1);
   }
 
+  @SuppressWarnings("unused")
   void printWorseCorrelationCases(double[] combinedScores) {
     double[] combinedScoresStd = combinedScores.clone(); 
     double[] humanScoresStd = humanScores.clone();
@@ -411,15 +413,15 @@ public class LinearCombinationMetricOptimizer implements Function {
         return p1.first().compareTo(p2.first());
       }
     });
-    for(int i=0; i<l.size();++i) {
-      int ii = l.get(i).second();
+    for (Pair<Double, Integer> aL : l) {
+      int ii = aL.second();
       System.err.printf("===============================================\n");
       System.err.printf("index=%d human=%.3f metric=%.3f (standardized scores: human=%.3f metric=%.3f diff=%.3f):\n",
-        ii,humanScores[ii],combinedScores[ii],humanScoresStd[ii],combinedScoresStd[ii],humanScoresStd[ii]-combinedScoresStd[ii]);
-      for(int j=0;j<windowSize; ++j) {
-        int line = ii*windowSize+j;
-        System.err.printf("  ref(%d)=%s\n",line,refs.get(line).get(0).toString());
-        System.err.printf("  hyp(%d)=%s\n",line,hyps.get(line).toString());
+          ii, humanScores[ii], combinedScores[ii], humanScoresStd[ii], combinedScoresStd[ii], humanScoresStd[ii] - combinedScoresStd[ii]);
+      for (int j = 0; j < windowSize; ++j) {
+        int line = ii * windowSize + j;
+        System.err.printf("  ref(%d)=%s\n", line, refs.get(line).get(0).toString());
+        System.err.printf("  hyp(%d)=%s\n", line, hyps.get(line).toString());
       }
     }
   }

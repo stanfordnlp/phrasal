@@ -17,7 +17,7 @@ public class FeatureValueCollection<E> implements Collection<FeatureValue<E>> {
   final BitSet isDefined;
 
   public FeatureValueCollection(FeatureValueCollection<E> c) {
-    this.w = Arrays.copyOf(c.w, c.w.length); // TODO: check if really need deep copy
+    this.w = Arrays.copyOf(c.w, c.w.length);
     this.featureIndex = c.featureIndex;
     this.isDefined = c.isDefined;
   }

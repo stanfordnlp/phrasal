@@ -59,7 +59,7 @@ public class ModelTester {
 		  evalLogLik(m,evalFile);
 	}
 	
-  private static String prettyPrint(DistortionModel model, Datum d, String word) {
+  private static String prettyPrint(DistortionModel model, Datum d) {
     int featPtr = 0;
     StringBuilder sb = new StringBuilder();
     sb.append("[");
@@ -135,7 +135,7 @@ public class ModelTester {
 	    predLogLik += predProb;
       logLik += goldProb;
 
-      String debugDatum = prettyPrint(m,d,"");
+      String debugDatum = prettyPrint(m,d);
       System.err.printf("%s %f (pred: %s %f) ||| %s\n", goldClass, goldProb, predClass, predProb, debugDatum);
 	  }
 	  
@@ -161,7 +161,7 @@ public class ModelTester {
 				String word = null,tag = null,rTag = null, lTag = null, arcTag = null;
 				int slen = 0;
 				int featIdx = (model.featureIndex.contains(DistortionModel.Feature.Word)) ? 0 : 1;
-				for(int j = 0; st.hasMoreTokens(); j++) {
+				for(; st.hasMoreTokens();) {
 					if(featIdx == 0) word = st.nextToken();
 					else if(featIdx == 1) tag = st.nextToken();
 					else if(featIdx == 2) slen = Integer.parseInt(st.nextToken());

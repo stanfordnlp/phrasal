@@ -8,7 +8,6 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CyclicCoreLabel;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;

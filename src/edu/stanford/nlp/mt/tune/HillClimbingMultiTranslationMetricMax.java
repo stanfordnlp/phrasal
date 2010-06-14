@@ -62,8 +62,8 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 				ScoredFeaturizedTranslation<TK,FV> bestFTrans = null;
 				double bestScore = Double.NaN;
 				double bestScoreSub = Double.NaN;
-				int tI = -1;
-				for (ScoredFeaturizedTranslation<TK,FV> ftrans : nbestList) { tI++;
+				//int tI = -1;
+				for (ScoredFeaturizedTranslation<TK,FV> ftrans : nbestList) { //tI++;
 					incrementalMetric.replace(i, ftrans);
 					if (subMetric != null) {
             assert(incrementalSubMetric != null);

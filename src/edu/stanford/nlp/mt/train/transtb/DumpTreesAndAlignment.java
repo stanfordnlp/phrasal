@@ -48,7 +48,7 @@ class DumpTreesAndAlignment {
     // Other than trees, the "alignment" data member is also useful 
     // for general purpose.
     treepairs = TransTBUtils.readAnnotatedTreePairs
-         (reducedCategory,  nonOracleTree);
+         (nonOracleTree);
 
     if(genHTML)
       AlignmentUtils.printAlignmentGridHeader();

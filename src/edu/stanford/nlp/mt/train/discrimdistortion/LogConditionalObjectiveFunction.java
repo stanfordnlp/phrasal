@@ -82,7 +82,7 @@ public class LogConditionalObjectiveFunction extends AbstractCachingDiffFunction
 
 			Arrays.fill(sums, 0.0);
 
-			double total = 0;
+			double total; // = 0;
 			for (int c = 0; c < numClasses; c++) {
 				for (int i = 0; i < datum.numFeatures(); i++) {
 					DistortionModel.Feature feat = trainingSet.featureIndex.get(i);

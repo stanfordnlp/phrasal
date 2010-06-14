@@ -41,7 +41,7 @@ public class FeatureExtractor {
   protected TrainingSet ts = null;
   protected Index<String> tagIndex = null;
   protected Index<String> wordIndex = null;
-  protected Index<String> slenIndex = null;
+  //protected Index<String> slenIndex = null;
 
   protected Index<DistortionModel.Feature> featureIndex = null;
   protected Index<DistortionModel.Class> classIndex = null;
@@ -91,7 +91,7 @@ public class FeatureExtractor {
     protected final float sMaxIdx;
     protected boolean useTag;
 
-    public ExtractionTask(String source, String alignments, int targetLen, int bitextLineNumber) {
+    public ExtractionTask(String source, String alignments, int bitextLineNumber) {
 
       useTag = featureIndex.contains(DistortionModel.Feature.CurrentTag);
 
@@ -135,7 +135,7 @@ public class FeatureExtractor {
     }
     
     protected int getDistortion(int fromIdx, int toIdx) {
-      int distortion = 0;
+      int distortion; // = 0;
       if(fromIdx == -1)
         distortion = toIdx;
       else {
@@ -157,8 +157,8 @@ public class FeatureExtractor {
   //"Inbound" is equivalent to "Linear Distortion"
   protected class InboundExtractionTask extends ExtractionTask implements Runnable {
 
-    public InboundExtractionTask(String source, String alignments, int targetLen, int bitextLineNumber) {
-      super(source, alignments, targetLen, bitextLineNumber);
+    public InboundExtractionTask(String source, String alignments, int bitextLineNumber) {
+      super(source, alignments, bitextLineNumber);
     }
 
     @Override
@@ -176,7 +176,7 @@ public class FeatureExtractor {
       int lastSIdx = Integer.MIN_VALUE;
       for(Map.Entry<Integer, Integer> algnPair : alignmentMap.entrySet()) {
         final int sIdx = algnPair.getValue();
-        float targetValue = 0.0f;
+        float targetValue; // = 0.0f;
         boolean WAS_FIRST = false;
         if(lastSIdx == Integer.MIN_VALUE) {
           targetValue = sIdx;
@@ -243,8 +243,8 @@ public class FeatureExtractor {
 
   protected class OutboundExtractionTask extends ExtractionTask implements Runnable {
 
-    public OutboundExtractionTask(String source, String alignments, int targetLen, int bitextLineNumber) {
-      super(source, alignments, targetLen, bitextLineNumber);
+    public OutboundExtractionTask(String source, String alignments, int bitextLineNumber) {
+      super(source, alignments, bitextLineNumber);
     }
 
     @Override
@@ -442,8 +442,8 @@ public class FeatureExtractor {
         String alignLine = alignReader.readLine();
         int targetToks = targetReader.readLine().split("\\s+").length;
 
-        ExtractionTask task = (OUTBOUND) ? new OutboundExtractionTask(sourceLine, alignLine, targetToks, currentLine) :
-          new InboundExtractionTask(sourceLine, alignLine, targetToks, currentLine);
+        ExtractionTask task = (OUTBOUND) ? new OutboundExtractionTask(sourceLine, alignLine, currentLine) :
+          new InboundExtractionTask(sourceLine, alignLine, currentLine);
 
         if(threadPool == null)
           task.run();

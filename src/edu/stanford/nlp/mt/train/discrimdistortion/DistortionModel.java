@@ -11,7 +11,7 @@ public class DistortionModel implements Serializable {
 	private static final long serialVersionUID = 8119388926319744131L;
 
 	public static enum Feature { Word, RelPosition, CurrentTag, SourceLen, LeftTag, RightTag, ArcTag }
-	public static enum FeatureType { Binary, Real };
+	public static enum FeatureType { Binary } //, Real }
 
 	public static enum Class { C1, C2, C3, C4, C5, C6, C7, C8, C9}
 
