@@ -5,17 +5,17 @@ import java.io.*;
 
 import edu.stanford.nlp.mt.base.BiText;
 import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.base.DynamicPhraseTable;
 import edu.stanford.nlp.mt.base.IBMModel1;
 import edu.stanford.nlp.mt.base.IdentityPhraseGenerator;
 import edu.stanford.nlp.mt.base.MosesPhraseTable;
-import edu.stanford.nlp.mt.base.NewDynamicPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SymbolFilter;
 import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.tools.NumericFilter;
+//import edu.stanford.nlp.mt.base.DynamicPhraseTable;
+//import edu.stanford.nlp.mt.base.NewDynamicPhraseTable;
 
 /**
  * 
@@ -145,9 +145,13 @@ public class PhraseGeneratorFactory {
 				filename = fields[0];
 				model1S2T = fields[1];
 				model1T2S = fields[2];
-				ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename, model1S2T, model1T2S));
+        // TODO: create DynamicPhraseTable by reflection
+				//ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename, model1S2T, model1T2S));
+        assert(false);
 			} else {
-				ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename));
+        // TODO: create DynamicPhraseTable by reflection
+				//ptgList.add(new DynamicPhraseTable<FV>(phraseFeaturizer, scorer, filename));
+        assert(false);
 			}
 			
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
@@ -187,8 +191,10 @@ public class PhraseGeneratorFactory {
 			}
 			
 			BiText bitext = new BiText(fText, eText);
-			                                      
-			ptgList.add(new NewDynamicPhraseTable((IsolatedPhraseFeaturizer)phraseFeaturizer, (Scorer)scorer, bitext, model1S2T, model1T2S));
+
+      // TODO: create NewDynamicPhraseTable by reflection
+			//ptgList.add(new NewDynamicPhraseTable((IsolatedPhraseFeaturizer)phraseFeaturizer, (Scorer)scorer, bitext, model1S2T, model1T2S));
+      assert (false);
 			ptgList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 		
 			if (phraseLimit == -1) {

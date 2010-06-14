@@ -308,7 +308,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
 
       Counters.divideInPlace(featureVars, totalVecs - 1);
       System.out.printf("Feature N-best Occurences: (Cut off: %d)\n",
-              MERT.MIN_NBEST_OCCURANCES);
+              MERT.MIN_NBEST_OCCURRENCES);
       for (String w : Counters.toPriorityQueue(featureNbestOccurances)) {
         System.out.printf("%f: %s \n", featureNbestOccurances.getCount(w), w);
       }
@@ -330,7 +330,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
     }
 
     for (String w : wts.keySet()) {
-      if (featureNbestOccurances.getCount(w) < MERT.MIN_NBEST_OCCURANCES) {
+      if (featureNbestOccurances.getCount(w) < MERT.MIN_NBEST_OCCURRENCES) {
         wts.setCount(w, 0);
       }
     }
@@ -346,7 +346,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
         ErasureUtils.noop(i);
         boolean atLeastOneParameter = false;
         for (String w : initialWts.keySet()) {
-          if (featureNbestOccurances.getCount(w) >= MERT.MIN_NBEST_OCCURANCES) {
+          if (featureNbestOccurances.getCount(w) >= MERT.MIN_NBEST_OCCURRENCES) {
             dEl.setCount(w, random.nextGaussian()
                     * Math.sqrt(featureVars.getCount(w)));
             atLeastOneParameter = true;
@@ -356,7 +356,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
           System.err
                   .printf(
                           "Error: no feature occurs on %d or more n-best lists - can't optimization.\n",
-                          MERT.MIN_NBEST_OCCURANCES);
+                          MERT.MIN_NBEST_OCCURRENCES);
           System.err
                   .printf("(This probably means your n-best lists are too small)\n");
           System.exit(-1);
@@ -552,6 +552,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     this.szMinusOne = MERT.fixedWts == null;
   }
 
+  @SuppressWarnings("unused")
   public DownhillSimplexOptimizer(MERT mert, boolean doRandomSteps) {
     super(mert);
     this.minIter = 1;
@@ -1910,8 +1911,6 @@ class SVDReducedObj extends AbstractNBestOptimizer {
       newNbestLists.add(newNbestlist);
       for (ScoredFeaturizedTranslation<IString, String> anOldNbestlist : oldNbestlist) {
         nbestId++;
-        ScoredFeaturizedTranslation<IString, String> oldTrans =
-            anOldNbestlist;
         List<FeatureValue<String>> reducedFeatures =
             new ArrayList<FeatureValue<String>>(numNewFeat);
         for (int featId = 0; featId < numNewFeat; featId++) {
@@ -1922,7 +1921,7 @@ class SVDReducedObj extends AbstractNBestOptimizer {
         }
         ScoredFeaturizedTranslation<IString, String> newTrans =
             new ScoredFeaturizedTranslation<IString, String>
-                (oldTrans.translation, reducedFeatures, 0);
+                (anOldNbestlist.translation, reducedFeatures, 0);
         newNbestlist.add(newTrans);
       }
     }

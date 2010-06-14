@@ -1673,7 +1673,7 @@ public class Phrasal {
 	}
 	
 	private double optionalSmoothScoring(IncrementalEvaluationMetric<IString,String>  incEval, int pos, RichTranslation<IString, String> trans) {
-		return (incEval instanceof hasSmoothScore ? ((hasSmoothScore)incEval.replace(pos, trans)).smoothScore()  :  incEval.replace(pos, trans).score());
+		return (incEval instanceof HasSmoothScore ? ((HasSmoothScore)incEval.replace(pos, trans)).smoothScore()  :  incEval.replace(pos, trans).score());
 	}
 	
 	private RichTranslation<IString, String> listArgMax(List<RichTranslation<IString, String>> list, IncrementalEvaluationMetric<IString,String>  incEval, int pos) {

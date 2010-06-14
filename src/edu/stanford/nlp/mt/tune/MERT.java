@@ -28,6 +28,8 @@
 package edu.stanford.nlp.mt.tune;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
@@ -60,6 +62,8 @@ public class MERT extends Thread {
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
   static final Set<String> generativeFeatures = SSVMScorer
           .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
+
+  public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.METEORMetric";
 
 	public static final String DEBUG_PROPERTY = "MERTDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -397,10 +401,8 @@ public class MERT extends Thread {
 
   static final int SEARCH_WINDOW = Integer.parseInt(System.getProperty(
           "SEARCH_WINDOW", "1"));
-  static public int MIN_NBEST_OCCURANCES = Integer.parseInt(System.getProperty(
-          "MIN_NBEST_OCCURENCES", "5"));
-  //static int STARTING_POINTS = Integer.parseInt(System.getProperty(
-  //        "STARTING_POINTS", "5")); //XXX
+  static public int MIN_NBEST_OCCURRENCES = Integer.parseInt(System.getProperty(
+          "MIN_NBEST_OCCURRENCES", "5"));
   static final SmoothingType smoothingType = SmoothingType.valueOf(System
           .getProperty("SMOOTHING_TYPE", "min"));
   static final boolean filterUnreachable = Boolean.parseBoolean(System
@@ -409,7 +411,7 @@ public class MERT extends Thread {
   static {
     System.err.println();
     System.err.printf("Search Window Size: %d\n", SEARCH_WINDOW);
-    System.err.printf("Min nbest occurences: %d\n", MIN_NBEST_OCCURANCES);
+    System.err.printf("Min nbest occurrences: %d\n", MIN_NBEST_OCCURRENCES);
     System.err.printf("Smoothing Type: %s\n", smoothingType);
     System.err.printf("Min plateau diff: %f\n", MIN_PLATEAU_DIFF);
     System.err.printf("Min objective diff: %f\n", MIN_OBJECTIVE_DIFF);
@@ -828,57 +830,55 @@ public class MERT extends Thread {
     this.optStr = optStr;
     this.seedStr = seedStr;
 
-    TERpMetric.BEAM_WIDTH = 5; // XXX - make cleaner/safer
-		TERpMetric.MAX_SHIFT_DIST = 10; // XXX - make cleaner/safer
+    List<List<Sequence<IString>>> references =
+        Metrics.readReferences(referenceList.split(","), tokenizeNIST);
+
+    String[] fields = evalMetric.split(":");
+
+    // METEORMetric created using reflection:
+    AbstractMetric<IString,String> meteorMetric = null;
+    if (evalMetric.contains("meteor")) {
+      try {
+        Class<AbstractMetric<IString,String>> cls = (Class<AbstractMetric<IString,String>>)Class.forName(METEOR_CLASS_NAME);
+        double alpha = 0.95, beta = 0.5, gamma = 0.5;
+        if (fields.length > 1) {
+          assert (fields.length == 4);
+          alpha = Double.parseDouble(fields[1]);
+          beta = Double.parseDouble(fields[2]);
+          gamma = Double.parseDouble(fields[3]);
+        }
+        Constructor<AbstractMetric<IString,String>> ct =
+          cls.getConstructor(new Class[] { List.class, Double.class, Double.class, Double.class});
+        meteorMetric = ct.newInstance(references, alpha, beta, gamma);
+      }
+      catch (ClassNotFoundException e) { e.printStackTrace(); }
+      catch (NoSuchMethodException e) { e.printStackTrace(); }
+      catch (IllegalAccessException e) { e.printStackTrace(); }
+      catch (InstantiationException e) { e.printStackTrace(); }
+      catch (InvocationTargetException e) { e.printStackTrace(); }
+    }
+
 		if (evalMetric.equals("bleu:3-2terp")) {
-    	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-    	List<List<Sequence<IString>>> referencesTERp = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
 			int BLEUOrder = 3;
       double terW = 2.0;
-      
-      emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(referencesBleu, BLEUOrder, smoothBLEU),
-                      new TERpMetric<IString, String>(referencesTERp));
+      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU),
+                      new TERpMetric<IString, String>(references, 5, 10));
       System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("bleu:3-terp")) {
-      List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-      List<List<Sequence<IString>>> referencesTERp = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
       int BLEUOrder = 3;
       double terW = 1.0;
-      emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(referencesBleu, BLEUOrder, smoothBLEU),
-                      new TERpMetric<IString, String>(referencesTERp));
+      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU),
+                      new TERpMetric<IString, String>(references));
       System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("terp")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
       emetric = new TERpMetric<IString, String>(references);
     } else if (evalMetric.equals("terpa")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
       emetric = new TERpMetric<IString, String>(references, false, true);
     } else if (evalMetric.equals("meteor") || evalMetric.startsWith("meteor:")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-      String[] fields = evalMetric.split(":");
-			if (fields.length > 1) {
-				double alpha = Double.parseDouble(fields[1]);
-      	double beta = Double.parseDouble(fields[2]);
-      	double gamma = Double.parseDouble(fields[3]);
-      	emetric = new METEORMetric<IString, String>(references, alpha, beta, gamma);
-			} else {
-      	emetric = new METEORMetric<IString, String>(references);
-			}
+      emetric = meteorMetric;
     } else if (evalMetric.equals("ter") || evalMetric.startsWith("ter:")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-      String[] fields = evalMetric.split(":");
       TERMetric<IString,String> termetric = new TERMetric<IString, String>(references);
       setFastTER(termetric.calc);
       if (fields.length > 1) {
@@ -893,74 +893,39 @@ public class MERT extends Thread {
       }
       emetric = termetric;
     } else if (evalMetric.equals("bleu") || evalMetric.startsWith("bleu:")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
       if (evalMetric.contains(":")) {
-				String[] fields = evalMetric.split(":");
 				int BLEUOrder = Integer.parseInt(fields[1]);
       	emetric = new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU);
 			} else {
       	emetric = new BLEUMetric<IString, String>(references, smoothBLEU);
 			}
     } else if (evalMetric.equals("nist")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
        emetric = new NISTMetric<IString, String>(references);
     } else if (evalMetric.startsWith("bleu-2terp")) {
-    	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-    	List<List<Sequence<IString>>> referencesTERp = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-      String[] fields = evalMetric.split(":");
       double terW = 2.0;
-      if(fields.length > 1) {
-        assert(fields.length == 2);
+      if (fields.length > 1) {
+        assert (fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
-      emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
-                      new TERpMetric<IString, String>(referencesTERp));
+      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(references, smoothBLEU),
+                      new TERpMetric<IString, String>(references));
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu+2meteor")) {
-    	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-    	List<List<Sequence<IString>>> referencesMeteor = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-      String[] fields = evalMetric.split(":");
-			double alpha = 0.95, beta = 0.5, gamma = 0.5;
-      if(fields.length > 1) {
-        assert(fields.length == 4);
-        alpha = Double.parseDouble(fields[1]);
-        beta = Double.parseDouble(fields[2]);
-        gamma = Double.parseDouble(fields[2]);
-      }
-      emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, 2.0},
-                      new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
-                      new METEORMetric<IString, String>(referencesMeteor, alpha, beta, gamma));
-      System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n",
-              evalMetric, 2.0);
+      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, 2.0},
+                      new BLEUMetric<IString, String>(references, smoothBLEU), meteorMetric);
+      System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n", evalMetric, 2.0);
     } else if (evalMetric.startsWith("bleu-2terpa")) {
-    	List<List<Sequence<IString>>> referencesBleu = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-    	List<List<Sequence<IString>>> referencesTERpa = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-      String[] fields = evalMetric.split(":");
       double terW = 2.0;
       if(fields.length > 1) {
         assert(fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
-      emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(referencesBleu, smoothBLEU),
-                      new TERpMetric<IString, String>(referencesTERpa, false, true));
+      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
+                      new BLEUMetric<IString, String>(references, smoothBLEU),
+                      new TERpMetric<IString, String>(references, false, true));
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
-      String[] fields = evalMetric.split(":");
       double terW = 1.0;
       if(fields.length > 1) {
         assert(fields.length == 2);
@@ -972,17 +937,12 @@ public class MERT extends Thread {
               (new double[] {1.0, terW}, new BLEUMetric<IString, String>(references, smoothBLEU), termetric);
       System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("wer")) {
-    	List<List<Sequence<IString>>> references = Metrics
-            .readReferences(referenceList.split(","), tokenizeNIST);
       emetric = new WERMetric<IString, String>(references);
     } else if (evalMetric.equals("per")) {
-    	List<List<Sequence<IString>>> references = Metrics
-      .readReferences(referenceList.split(","), tokenizeNIST);
     	emetric = new PERMetric<IString, String>(references);
     } else {
       emetric = null;
-      System.err.printf("Unrecognized metric: %s\n", evalMetric);
-      System.exit(-1);
+      throw new UnsupportedOperationException(String.format("Unrecognized metric: %s\n", evalMetric));
     }
   }
 

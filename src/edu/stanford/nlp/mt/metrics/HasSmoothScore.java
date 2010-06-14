@@ -5,6 +5,6 @@ package edu.stanford.nlp.mt.metrics;
  * @author danielcer
  *
  */
-public interface hasSmoothScore {
+public interface HasSmoothScore {
 	double smoothScore();
 }

@@ -31,10 +31,9 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
   enum EditType { ins, del, sub, sft }
-  boolean countEdits = false;
-
-  public static int BEAM_WIDTH = 20;
-  public static int MAX_SHIFT_DIST = 50;
+  private boolean countEdits = false;
+  private int beamWidth = 20;
+  private int maxShiftDist = 50;
 
   public TERpMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;
@@ -60,7 +59,13 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
   public TERpMetric(List<List<Sequence<TK>>> referencesList) {
+    this(referencesList, 0, 0);
+  }
+
+  public TERpMetric(List<List<Sequence<TK>>> referencesList, int beamWidth, int maxShiftDist) {
     this.referencesList = referencesList;
+    if (beamWidth > 0) this.beamWidth = beamWidth;
+    if (maxShiftDist > 0) this.maxShiftDist = maxShiftDist;
 		WordNet.setWordNetDB(TERpara.para().get_string(TERpara.OPTIONS.WORDNET_DB_DIR));
 		NormalizeText.init();
   }
@@ -106,8 +111,8 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     	} 
     	TERinput terinput = new TERinput(hyp, refs);     
     	TERcalc calc = TERplus.terCalcFactory(phrasedb, terinput, costfunc);
-			calc.BEAM_WIDTH = BEAM_WIDTH;
-			calc.MAX_SHIFT_DIST = MAX_SHIFT_DIST;
+			calc.BEAM_WIDTH = beamWidth;
+			calc.MAX_SHIFT_DIST = maxShiftDist;
 			//System.err.println(calc.get_info());
 			//System.err.printf("Hyp: %s\n", hyp);
 		

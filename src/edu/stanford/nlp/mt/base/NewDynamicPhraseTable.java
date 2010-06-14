@@ -15,6 +15,7 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Pair;
 
 
+@SuppressWarnings("unused")
 public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,String> {
 	final BiText bitext;
 	final int[] sortedindex;
