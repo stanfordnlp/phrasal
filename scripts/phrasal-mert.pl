@@ -29,6 +29,7 @@ $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
 $SLEEP = 30;
 $ORACLE = 0;
+$SORT = 'sort --buffer-size=3g -T /tmp';
 $DEFAULT_MAX_ITERS = 25;
 $MIN_OBJ_DIFF = 1e-7;
 $DEFAULT_WORK_DIR = "pmert-dir";
@@ -386,7 +387,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
      print stderr "Success.\n";
      sleep $SLEEP; # nfs weirdness with slow writes?!?!
      print "gziping $iter_nbest_list\n";
-		 `sort -t '|' -n -s $iter_nbest_list | gzip > $iter_nbest_list.gz`;
+		 `$SORT -t '|' -n -s $iter_nbest_list | gzip > $iter_nbest_list.gz`;
      unlink("$iter_nbest_list");
    } else {
      print "skipping decoding for iter $iter ($first_active_iter)\n";
@@ -468,7 +469,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    
    
 	     $temp_unsorted_uniq = "$work_dir/temp_unsorted.uniq.gz";
-	     `sort $local_iter_pcumulative_nbest | uniq | gzip > $temp_unsorted_uniq`; 
+	     `$SORT $local_iter_pcumulative_nbest | uniq | gzip > $temp_unsorted_uniq`; 
 			 unlink("$local_iter_pcumulative_nbest");
 	     $totalNbestListSize = `zcat $temp_unsorted_uniq | wc -l`;
 	     chomp $totalNbestListSize;
@@ -482,7 +483,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	     }
 	     
 	     $lastTotalNbestListSize = $totalNbestListSize;  
-	     `zcat $temp_unsorted_uniq | sort -n -k 1 -s -T /tmp | gzip > $iter_pcumulative_nbest`;
+	     `zcat $temp_unsorted_uniq | $SORT -n -k 1 -s | gzip > $iter_pcumulative_nbest`;
 			 unlink("$temp_unsorted_uniq");
 	   }
    } else {
@@ -550,8 +551,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       `zcat $iter_pcumulative_nbest.gz | $SCRIPTS_DIR/phrasal_nbest_to_cmert_nbest.pl 2>&1 > $iter_cumulative_nbest`;
    
       
-      print "cmd: sort -T /tmp -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1\n";
-      $log = `sort -T /tmp -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1`;
+      print "cmd: $SORT -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1\n";
+      $log = `$SORT -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1`;
       
       if ($? != 0) {
         print stderr "Failure during the production of: feats.opt & cands.opts\n";
