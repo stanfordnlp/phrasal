@@ -78,7 +78,7 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 
 
 	private class CompositeState implements Comparable<CompositeState> {
-		final List<S> states;
+    final List<S> states;
 		final double score;
 		final int hashCode;
 
@@ -101,15 +101,14 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 			return states.equals(oCS.states);
 		}
 
-
 		@SuppressWarnings("unchecked")
 		public CompositeState(S initialState) {
-
-			int length = 0;
-			for (State<S> state = initialState; state != null; state = state.parent()) length++;
-			states = new ArrayList<S>(length);
-			for (State<S> state = initialState; state != null; state = state.parent()) states.add((S)state);
-			Collections.reverse(states);
+      assert(initialState != null);
+			int length = initialState.depth()+1;
+      states = new ArrayList<S>(length);
+      states.addAll(Collections.nCopies(length, (S)null));
+      int pos=1;
+			for (State<S> state = initialState; state != null; state = state.parent(), ++pos) states.set(length-pos, (S)state);
 			score = initialState.partialScore();
 			hashCode = computeHashCode();
 			// System.err.printf("cost from goal state: %e cost from computeListCost: %e\n", score, computeListCost());
@@ -127,12 +126,12 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 
 		@SuppressWarnings("unchecked")
 		public CompositeState(CompositeState original, S varState, int varPosition) {
-			int newPrefixLength = 0;
-			for (State<S> state = varState; state != null; state = state.parent()) newPrefixLength++;
-
-			states = new ArrayList<S>(original.states.size()+newPrefixLength-varPosition-1);
-			for (State<S> state = varState; state != null; state = state.parent()) states.add((S)state);
-			Collections.reverse(states);
+			int newPrefixLength = varState.depth() + 1;
+      int length = original.states.size()+newPrefixLength-varPosition-1;
+			states = new ArrayList<S>(length);
+      states.addAll(Collections.nCopies(newPrefixLength, (S)null));
+      int pos=1;
+			for (State<S> state = varState; state != null; state = state.parent(), ++pos) states.set(newPrefixLength-pos, (S)state);
 			int originalStatesLength = original.states.size();
 			for (int i = varPosition+1; i < originalStatesLength; i++) {
 				states.add(original.states.get(i));
