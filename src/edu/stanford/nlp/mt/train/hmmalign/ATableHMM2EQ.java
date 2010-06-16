@@ -8,6 +8,7 @@ package edu.stanford.nlp.mt.train.hmmalign;
  */
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
 import edu.stanford.nlp.util.ArrayN;
@@ -118,7 +119,7 @@ public class ATableHMM2EQ extends ATable {
   }
 
 
-  public boolean isToNull(int jump) {
+  public static boolean isToNull(int jump) {
     return (jump == 0);
   }
 
@@ -126,7 +127,7 @@ public class ATableHMM2EQ extends ATable {
    * Is it possible to get with a jump jump to position i
    */
 
-  public boolean possibleExternal(int i_prev, int jump, int l) {
+  public static boolean possibleExternal(int i_prev, int jump, int l) {
     if ((i_prev == 0) && (jump != MAX_FLDS)) {
       return false;
     }
@@ -147,7 +148,7 @@ public class ATableHMM2EQ extends ATable {
   }
 
 
-  public boolean possibleInternal(int i_prev, int jump, int l) {
+  public static boolean possibleInternal(int i_prev, int jump, int l) {
 
     // in the internal i_prev is from 0 to l and jump is from 0 to 2MAXFLDS-1
 
@@ -188,7 +189,7 @@ public class ATableHMM2EQ extends ATable {
       return 0;
     }
 
-    if (!this.possibleExternal(i_prev, i_prev2, l)) {
+    if ( ! possibleExternal(i_prev, i_prev2, l)) {
       return 0;
     }
 
@@ -226,7 +227,7 @@ public class ATableHMM2EQ extends ATable {
       if (i_prev > l) {
         i_prev -= l;
       }
-      ;
+
       if (i == 2 * l + 1) {
         i -= l;
       }
@@ -248,7 +249,6 @@ public class ATableHMM2EQ extends ATable {
    */
   public void incCount(int distance, int distance1, float cnt) {
     counts[distance + MAX_LENGTH][distance1 + MAX_FLDS] += cnt;
-
   }
 
 
@@ -258,7 +258,6 @@ public class ATableHMM2EQ extends ATable {
 
   public float getProbJump(int distance, int distance1) {
     return params[distance + MAX_LENGTH][distance1 + MAX_FLDS];
-
   }
 
   /**
@@ -267,7 +266,6 @@ public class ATableHMM2EQ extends ATable {
 
   public void incEmpty(int absjump, float cnt) {
     counts[0][absjump + MAX_FLDS] += cnt;
-
   }
 
   /**
@@ -704,9 +702,7 @@ public class ATableHMM2EQ extends ATable {
       for (int jump_1 = -MAX_FLDS; jump_1 <= MAX_FLDS - 1; jump_1++) {
         for (int jump = -MAX_LENGTH; jump <= MAX_LENGTH; jump++) {
 
-
           out.print(jump + " " + jump_1 + " " + this.getProbJump(jump, jump_1) + "\t");
-
 
         }//jump
         out.println();
@@ -715,9 +711,7 @@ public class ATableHMM2EQ extends ATable {
       //now the initial probs
       for (int jump = 0; jump <= MAX_LENGTH + 1; jump++) {
 
-
         out.print(jump + " " + getProbHMM(jump, 0, MAX_FLDS, MAX_LENGTH) + "\t");
-
 
       }//jump
 
@@ -785,7 +779,7 @@ public class ATableHMM2EQ extends ATable {
       normalize();
       PROB_SMOOTH = old;
 
-    } catch (Exception e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }

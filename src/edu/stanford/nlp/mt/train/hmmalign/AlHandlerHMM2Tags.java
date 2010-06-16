@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This serves to handle the alignment probabilities
- * the basic functionality is getProb(i,j,alignment) and incCount(i,j,alignment,val);
+ * This serves to handle the alignment probabilities.
+ * The basic functionality is getProb(i,j,alignment) and incCount(i,j,alignment,val);
  * Handles conditioning on many different tag configurations - french tags and english tags
  * The conditioning tags are specified with a number which contains flags for different tags
  *
@@ -11,8 +11,8 @@ package edu.stanford.nlp.mt.train.hmmalign;
 
 public class AlHandlerHMM2Tags extends AlHandlerHMM2 {
   ATableHMMHolder aHolder;
-  ATable tables[]; //in some cases we will use just one dimension , when conditioning on just one tag
-  ATable tables_b[][]; // when using both french and english tags, will use the 2 dim array
+  ATable[] tables; //in some cases we will use just one dimension , when conditioning on just one tag
+  ATable[][] tables_b; // when using both french and english tags, will use the 2 dim array
   int mask;
   int numTags = 0;
   boolean useF;
@@ -239,7 +239,7 @@ public class AlHandlerHMM2Tags extends AlHandlerHMM2 {
    * get the probability p choose i for j
    */
   @Override
-	public double getProb(int i, int j, int[] alignment) {
+  public double getProb(int i, int j, int[] alignment) {
 
     ATable a;
     double prob, prob1;
@@ -287,7 +287,7 @@ public class AlHandlerHMM2Tags extends AlHandlerHMM2 {
    */
 
   @Override
-	public void incCount(int i, int j, int[] alignment, double val) {
+  public void incCount(int i, int j, int[] alignment, double val) {
     ATable a;
 
     if (val == 0) {

@@ -2,16 +2,18 @@ package edu.stanford.nlp.mt.train.hmmalign;
 
 
 /**
- * Serves to keep the stay and go probabilities for words
- * I am keeping it as an array
- * For each English word - 2 ProbCountHolders at indexes 2k (go) and 2k+1 (stay)
- *@author Kristina Toutanova (kristina@cs.stanford.edu)
+ * Serves to keep the stay and go probabilities for words.
+ * I am keeping it as an array.
+ * For each English word - 2 ProbCountHolders at indexes 2k (go) and 2k+1 (stay).
+ *
+ * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
 public class StayGoTable {
+
   private ProbCountHolder[] table;
 
   public StayGoTable(SentenceHandler sH) {
@@ -21,39 +23,31 @@ public class StayGoTable {
 
   public ProbCountHolder getEntryStay(int index) {
     return table[2 * index + 1];
-
   }
 
 
   public ProbCountHolder getEntryGo(int index) {
     return table[2 * index];
-
   }
 
 
   public double getProbStay(int index) {
     return table[2 * index + 1].getProb();
-
   }
 
 
   public double getProbGo(int index) {
     return table[2 * index].getProb();
-
   }
 
 
   public void incCountStay(int index, double val) {
-
     table[2 * index + 1].incCount(val);
-
   }
 
 
   public void incCountGo(int index, double val) {
-
     table[2 * index].incCount(val);
-
   }
 
 
@@ -72,22 +66,20 @@ public class StayGoTable {
       table[2 * index + 1].setProb(pstay);
 
     }
-
-
   }
 
 
   public void normalize() {
     int bound = table.length / 2;
-    double total = 0;
-    double pstay, pgo;
     int countCutoff = 3;
     double priorGo = 0;
     double priorStay = 0;
 
     for (int index = 0; index < bound; index++) {
-      total = 0;
+      double total = 0.0;
+      double pgo;
       total += priorGo + (pgo = table[2 * index].getCount());
+      double pstay;
       total += priorStay + (pstay = table[2 * index + 1].getCount());
       if (total == priorGo + priorStay) {
         continue;
@@ -105,9 +97,8 @@ public class StayGoTable {
       //not ok ");}
 
     }
-
-
   }
+
 
   public void save(String filename) {
 
@@ -120,12 +111,10 @@ public class StayGoTable {
 
       }
 
-
       p.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
 
 

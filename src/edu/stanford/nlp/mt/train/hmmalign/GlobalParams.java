@@ -10,9 +10,9 @@ import java.util.TimeZone;
 
 public class GlobalParams {
   static boolean verbose = false;
-  static boolean useETagsT = false;// use etags for translation probabilities
+  static boolean useETagsT = false;  // use etags for translation probabilities
   static boolean useETagsA = false;
-  static boolean useFTagsA = false;
+  static boolean useFTagsA = false;  // use the french tags for alignment probabilities in the HMM
   static boolean useFTagsT = true;
   static boolean useETagsC = false;
   static boolean windows = false;

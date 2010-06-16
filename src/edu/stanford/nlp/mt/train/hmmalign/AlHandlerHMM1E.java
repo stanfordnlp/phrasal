@@ -8,8 +8,9 @@ package edu.stanford.nlp.mt.train.hmmalign;
  */
 @SuppressWarnings("unused")
 public class AlHandlerHMM1E extends AlHandlerHMM1 {
+
   ATableHMMHolder aHolder;
-  ATableHMM tables[];
+  ATableHMM[] tables;
 
 
   public AlHandlerHMM1E(ATableHMMHolder a) {
@@ -18,14 +19,14 @@ public class AlHandlerHMM1E extends AlHandlerHMM1 {
 
 
   @Override
-	public void setPair(SentencePair sent) {
+  public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
   }
 
 
   @Override
-	public void init() {
+  public void init() {
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
     tables = new ATableHMM[2 * l + 1];
@@ -45,7 +46,7 @@ public class AlHandlerHMM1E extends AlHandlerHMM1 {
    * get the probability p choose i for j
    */
   @Override
-	public double getProb(int i, int j, int[] alignment) {
+  public double getProb(int i, int j, int[] alignment) {
     ATableHMM a = tables[alignment[j - 1]];
     return a.getProb(i, alignment[j - 1], l);
 
@@ -58,7 +59,7 @@ public class AlHandlerHMM1E extends AlHandlerHMM1 {
    */
 
   @Override
-	public void incCount(int i, int j, int[] alignment, double val) {
+  public void incCount(int i, int j, int[] alignment, double val) {
     ATableHMM a = tables[alignment[j - 1]];
     a.incCount(i, alignment[j - 1], l, val);
     //nothing

@@ -1,8 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-/* This class does HMM training with EM
- * Reports perplexity on training and test data
- *@author Kristina Toutanova (kristina@cs.stanford.edu)
+/* This class does HMM training with EM.
+ * Reports perplexity on training and test data.
+ *
+ * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 import edu.stanford.nlp.util.MutableInteger;
@@ -13,17 +14,16 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class HMM {
+
   private TTable tTable;
   private SentenceHandler corpus;
   static double PROB_SMOOTH;
   private TTable fTable;
   boolean eTags;
   boolean fTags;
-  boolean useETagsA = GlobalParams.useETagsA;
-  boolean useFTagsA = GlobalParams.useFTagsA; // use the french tags for alignment probabilities in the HMM
-  boolean useFTagsT = GlobalParams.useFTagsT; //use the french tags for translation probabilities
-  boolean useETagsT = GlobalParams.useETagsT; //use the English tags in translation probabilities
-  ATable aTable;
+  private boolean useFTagsT = GlobalParams.useFTagsT; //use the french tags for translation probabilities
+  private boolean useETagsT = GlobalParams.useETagsT; //use the English tags in translation probabilities
+  private ATable aTable;
   boolean verbose = false;
   static boolean trigram = false;
   boolean init_translation = true;
@@ -33,15 +33,14 @@ public class HMM {
   boolean useFNull = false;
   static boolean eQClasses = true;
   static boolean frontier = false;
-  ATableHMMHolder aTablesHolder;
+  private ATableHMMHolder aTablesHolder;
   String fileAlignment = "";
   PrintStream aFile;
-  StayGoTable sgTable = null;
-  StayGoTables sgTables = null;
+  private StayGoTable sgTable = null;
+  private StayGoTables sgTables = null;
   int mask = 0;
 
   public HMM() {
-
   }
 
 
@@ -101,7 +100,6 @@ public class HMM {
     init_translation = false;
     init();
     train_test_loop(startiter, numIterations);
-
   }
 
 
@@ -144,7 +142,6 @@ public class HMM {
         sgTables.initialize(.08);
       }
 
-
     }
 
     if (useFNull) {
@@ -159,7 +156,6 @@ public class HMM {
     }
 
     initializeATables(mask);
-
   }
 
 
@@ -196,13 +192,11 @@ public class HMM {
 
 
     //now add to aTablesHolder only the tuples with enough support
-    MutableInteger iH;
-    IntTuple iT;
     ATable a;
     for (Iterator<Map.Entry<IntTuple, MutableInteger>> i = TC.getIterator(); i.hasNext();) {
     	Map.Entry<IntTuple, MutableInteger> eN = i.next();
-      iT = eN.getKey();
-      iH = eN.getValue();
+      IntTuple iT = eN.getKey();
+      MutableInteger iH = eN.getValue();
       if (iH.intValue() > ATable.countCutoff) {
         //add an ATable for that one
         //if(iT.getSource()!=6){continue;}
@@ -221,7 +215,6 @@ public class HMM {
           else {
             a = new ATableHMM(corpus.getMaxLength());
           }
-
 
           //distonly
         } else {
@@ -276,7 +269,6 @@ public class HMM {
 
     System.out.println("The number of alignment tables is " + numTables);
     aTablesHolder.setUniform(aTable);
-
   }
 
 
@@ -377,7 +369,7 @@ public class HMM {
       }
 
       if ((it + 1) % GlobalParams.saveFreq == 0) {
-        ;//tTable.save(GlobalParams.resultPath+"tt.hmm."+(it+1));
+        //tTable.save(GlobalParams.resultPath+"tt.hmm."+(it+1));
         if (mask > 0) {
           aTablesHolder.saveNames(mask, GlobalParams.resultPath + "alt.hmm." + (it + 1));
         } else {
@@ -437,8 +429,7 @@ public class HMM {
    */
 
   public void em_loop(boolean inTrain, PrintStream alStream, TupleCounter TC) {
-    double cross_entropy = 0, viterbi_cross_entropy = 0, prob, probF, pjump, pmax, denom, max_prob = 0;
-    double perplexity = 0, viterbi_perplexity = 0;
+    double cross_entropy = 0.0, viterbi_cross_entropy = 0.0;
     SentencePair sentPair;
     TPHandler tpHandler;
     AlHandlerHMM1 alHandler;
@@ -453,12 +444,7 @@ public class HMM {
       }
     }
 
-    int numWords = 0, index, sent_no = 0;
-    double[][] sum; // forward probabilities
-    double[][] max; //maximum probability
-    int[][] argmax; //maximizing previous state
-    double[][] backward;//backward probabilities
-    int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
+    int numWords = 0, sent_no = 0;
 
     if (useFNull) {
 
@@ -493,18 +479,20 @@ public class HMM {
       int start = 0, inc = 1, bound;
       tpHandler.setPair(sentPair);
       alHandler.setPair(sentPair);
-      alignment = new int[m + 1];
-      //now start collecting tables
+      int[] alignment = new int[m + 1];  //for f from 1 to m, the corresponding i in the viterbi alignment
+//now start collecting tables
 
-      sum = new double[m + 1][2 * l + 1];   //sum(j,i)=p(f1,...,fj,i|e)  , j=0..m
-      max = new double[m + 1][2 * l + 1];   //max{aj-1}max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
-      argmax = new int[m + 1][2 * l + 1]; //argmax {aj-1} max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
-      backward = new double[m + 1][2 * l + 1]; // backward(j,i)=p(fj+1,..fm|aj=i) j=0..m
+      double[][] sum = new double[m + 1][2 * l + 1]; // forward probabilities
+      double[][] max = new double[m + 1][2 * l + 1]; //maximum probability
+      int[][] argmax = new int[m + 1][2 * l + 1]; //maximizing previous state
+      double[][] backward = new double[m + 1][2 * l + 1];//backward probabilities
       bound = 2 * l;
 
       sum[0][0] = 1; // the rest are 0, starting in state 0
       max[0][0] = 1; // the rest are 0, starting in state 0
 
+      int index;
+      double prob;
       for (int j = 1; j <= m; j++) {
         //collect the sum, the max and the argmax
         for (int i = 0; i <= 2 * l; i++) {
@@ -532,9 +520,9 @@ public class HMM {
 
           for (int i_p = start; i_p <= bound; i_p += inc) {
             alignment[j - 1] = i_p;
-            pjump = alHandler.getProb(i, j, alignment);
+            double pjump = alHandler.getProb(i, j, alignment);
             sum[j][i] += sum[j - 1][i_p] * pjump * prob;
-            pmax = max[j - 1][i_p] * pjump * prob;
+            double pmax = max[j - 1][i_p] * pjump * prob;
             if (pmax > max[j][i]) {
               max[j][i] = pmax;
               argmax[j][i] = i_p;
@@ -551,11 +539,7 @@ public class HMM {
         double jmp = alHandler.getProb(2 * l + 1, m + 1, alignment);
         sum[m][i] *= jmp;
         max[m][i] *= jmp;
-
-
       }
-
-
 
       //now collect the backward probabilities
 
@@ -604,13 +588,13 @@ public class HMM {
 
       //now backward[0][0] should be the total probability
 
-      denom = backward[0][0];
+      double denom = backward[0][0];
 
       if (denom == 0) {
         System.out.println("Denom is 0");
       }
 
-      max_prob = 0;
+      double max_prob = 0;
       int max_i = 0;
       double total_prob = 0;
 
@@ -630,13 +614,11 @@ public class HMM {
       //System.out.println(" total "+total_prob+" denom "+denom);
       //collect the viterbi alignment
 
-      viterbi_alignment = new int[m + 1];
+      int[] viterbi_alignment = new int[m + 1];
       viterbi_alignment[m] = max_i;
       for (int j = m; j > 0; j--) {
         viterbi_alignment[j - 1] = argmax[j][viterbi_alignment[j]];
-
       }
-
 
       if (GlobalParams.dumpAlignments && (!inTrain) && (TC == null)) {
 
@@ -645,13 +627,8 @@ public class HMM {
       } else {
         if (TC != null) {
           AlHandlerHMM1Tags aH = new AlHandlerHMM1Tags(aTablesHolder, mask);
-
-
           aH.addEntries(sentPair, TC, viterbi_alignment);
-
         }
-
-
       }
 
       //now again, this time incrementing counts and computing perplexity
@@ -666,7 +643,7 @@ public class HMM {
             if (i > l) {
               index = 0;
             }
-            probF = tpHandler.getProb(index, j);
+            double probF = tpHandler.getProb(index, j);
 
             if (i == 0) {
               bound = 0;
@@ -685,7 +662,6 @@ public class HMM {
               alignment[j - 1] = i_p;
               prob = sum[j - 1][i_p] * alHandler.getProb(i, j, alignment) * probF * backward[j][i];
               alHandler.incCount(i, j, alignment, prob * val);
-
             }
           }//i
         }//j
@@ -714,11 +690,8 @@ public class HMM {
               index = 0;
             }
             tpHandler.incCount(index, j, prob * val);
-
-
           }//i
         } //j
-
 
       } //in train
 
@@ -732,8 +705,8 @@ public class HMM {
 
     }// while next pair
 
-    perplexity = Math.exp(-cross_entropy / numWords);
-    viterbi_perplexity = Math.exp(-viterbi_cross_entropy / numWords);
+    double perplexity = Math.exp(-cross_entropy / numWords);
+    double viterbi_perplexity = Math.exp(-viterbi_cross_entropy / numWords);
     if (inTrain) {
       System.out.println("Training set results");
     } else {
@@ -1592,19 +1565,14 @@ public class HMM {
       viterbi_alignment[m] = max_i;
 
       for (int j = m; j > 1; j--) {
-
         viterbi_alignment[j - 1] = argmax[j][viterbi_alignment[j]][max_i_1].getSource();
-        ;
         max_i_1 = argmax[j][viterbi_alignment[j]][max_i_1].getTarget();
         //viterbi_alignment[j-2]=argmax[j][viterbi_alignment[j]][viterbi_alignment[j-1]];
-
       }
 
 
       if (GlobalParams.dumpAlignments && (!inTrain)) {
-
         Reports.printAlignToFile(sentPair, alStream, viterbi_alignment, sent_no, max_prob);
-
       }
 
       //now again, this time incrementing counts and computing perplexity
@@ -1666,9 +1634,7 @@ public class HMM {
             alignment[m] = i;
             alignment[m - 1] = jump_1;
             alHandler.incCount(2 * l + 1, m + 1, alignment, prob * val);
-
           }
-
         }
 
 
@@ -1724,7 +1690,7 @@ public class HMM {
   /**
    * returns true if i can legitimately follow i_p
    */
-  public boolean legitimate(int i, int i_p, int l) {
+  public static boolean legitimate(int i, int i_p, int l) {
 
     if ((i > l) && (i < 2 * l + 1) && (i_p == 0)) {
       return false;
@@ -1746,7 +1712,7 @@ public class HMM {
    */
 
   public void em_loop_2_beam(boolean inTrain, PrintStream alStream) {
-    double cross_entropy = 0, viterbi_cross_entropy = 0, prob, probF, pjump, pmax, denom, max_prob = 0;
+    double cross_entropy = 0, viterbi_cross_entropy = 0, probF, pjump, pmax, denom, max_prob = 0;
     double perplexity = 0, viterbi_perplexity = 0;
     SentencePair sentPair;
     TPHandler tpHandler;
@@ -1756,13 +1722,7 @@ public class HMM {
     } else {
       alHandler = new AlHandlerHMM2(aTable);
     }
-    int numWords = 0, index, sent_no = 0;
-    double[][][] sum; // forward probabilities
-    double[][][] max; //maximum probability
-    double[][][] max_backward; //maximum backward probability
-    int[][][] argmax; //maximizing previous state
-    double[][][] backward;//backward probabilities
-    int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
+    int numWords = 0, sent_no = 0;
     if (useFNull) {
       tpHandler = new TPHandlerNULL(tTable, fTable, 0);
     } else {
@@ -1790,14 +1750,14 @@ public class HMM {
       int start = 0, inc = 1, bound;
       tpHandler.setPair(sentPair);
       alHandler.setPair(sentPair);
-      alignment = new int[m + 1];
-      //now start collecting tables
+      int[] alignment = new int[m + 1];  //for f from 1 to m, the corresponding i in the viterbi alignment
+//now start collecting tables
 
-      backward = new double[m + 1][2 * l + 1][2 * l + 1];
-      sum = new double[m + 1][2 * l + 1][2 * l + 1];      //sum(j,i)=p(f1,...,fj,i|e)  , j=0..m
-      max = new double[m + 1][2 * l + 1][2 * l + 1];      //max{aj-1}max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
-      max_backward = new double[m + 1][2 * l + 1][2 * l + 1];
-      argmax = new int[m + 1][2 * l + 1][2 * l + 1];      //argmax {aj-1} max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
+      double[][][] backward = new double[m + 1][2 * l + 1][2 * l + 1];//backward probabilities
+      double[][][] sum = new double[m + 1][2 * l + 1][2 * l + 1]; // forward probabilities
+      double[][][] max = new double[m + 1][2 * l + 1][2 * l + 1]; //maximum probability
+      double[][][] max_backward = new double[m + 1][2 * l + 1][2 * l + 1]; //maximum backward probability
+      int[][][] argmax = new int[m + 1][2 * l + 1][2 * l + 1]; //maximizing previous state
 
       bound = 2 * l;
 
@@ -1811,6 +1771,8 @@ public class HMM {
       int total = 0;
       int kept = 0;
 
+      int index;
+      double prob;
       for (int j = 1; j <= m; j++) {
         //collect the sum, the max and the argmax
         for (int i = 0; i <= 2 * l; i++) {
@@ -1976,7 +1938,6 @@ public class HMM {
 
       }
 
-
       max_prob = 0;
       int max_i = 0;
       int max_i_1 = 0;
@@ -1998,7 +1959,7 @@ public class HMM {
 
       //collect the viterbi alignment
 
-      viterbi_alignment = new int[m + 1];
+      int[] viterbi_alignment = new int[m + 1];
       viterbi_alignment[m] = max_i;
       viterbi_alignment[m - 1] = max_i_1;
       for (int j = m; j > 1; j--) {
@@ -2084,8 +2045,6 @@ public class HMM {
 
 
       } //in train
-
-
 
       /*
        if(inTrain){
@@ -2182,13 +2141,7 @@ public class HMM {
       }
     }
 
-    int numWords = 0, index, sent_no = 0;
-    double[][] forward; // forward probabilities
-    double[][] max; //maximum probability
-    IntPair[][] argmax; //maximizing previous state
-    double[][] backward;//backward probabilities
-    double[][][][] sigma; // these are sigma probabilities
-    int[] viterbi_alignment, alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
+    int numWords = 0, sent_no = 0;
 
 
     if (useFNull) {
@@ -2218,14 +2171,14 @@ public class HMM {
       int start = 0, inc = 1, bound;
       tpHandler.setPair(sentPair);
       alHandler.setPair(sentPair);
-      alignment = new int[m + 1];
+      int[] alignment = new int[m + 1];  //for f from 1 to m, the corresponding i in the viterbi alignment
       //now start collecting tables
 
-      forward = new double[m + 2][l + 2];   //sum(j,i)=p(f1,...,fj,i|e)  , j=0..m
-      max = new double[m + 2][l + 2];   //max{aj-1}max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
-      argmax = new IntPair[m + 2][l + 2]; //argmax {aj-1} max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
-      backward = new double[m + 1][l + 2]; // backward(j,i)=p(fj+1,..fm|aj=i) j=0..m
-      sigma = new double[m + 1][m + 1][l + 1][l + 1];//sigma(s,j,i,i_next)
+      double[][] forward = new double[m + 2][l + 2]; // forward probabilities
+      double[][] max = new double[m + 2][l + 2]; //maximum probability
+      IntPair[][] argmax = new IntPair[m + 2][l + 2]; //maximizing previous state
+      double[][] backward = new double[m + 1][l + 2];//backward probabilities
+      double[][][][] sigma = new double[m + 1][m + 1][l + 1][l + 1]; // these are sigma probabilities
       bound = 2 * l;
 
       forward[0][0] = 1; // the rest are 0, starting in state 0
@@ -2254,23 +2207,17 @@ public class HMM {
               for (int j = start + 1; j <= end - 1; j++) {
                 prob *= p_zeros;
                 alignment[j] = 0;
-
-
               }
 
               for (int j = start + 1; j <= end - 1; j++) {
-
                 prob *= tpHandler.getProb(0, j, alignment);
-
               }
 
               sigma[start][end - start - 1][i_prev][i] = prob;
 
             } //i
 
-
           } //i_prev
-
 
         } //end
 
@@ -2329,9 +2276,6 @@ public class HMM {
 
       }
 
-
-
-
       //now collect the backward probabilities
 
       for (int i = 0; i <= l; i++) {
@@ -2362,9 +2306,7 @@ public class HMM {
 
             }//s
 
-
           }//i_next
-
 
         }//i
 
@@ -2396,7 +2338,7 @@ public class HMM {
 
       //collect the viterbi alignment
 
-      viterbi_alignment = new int[m + 1];
+      int[] viterbi_alignment = new int[m + 1];
       viterbi_alignment[m] = max_i;
       int jw = m - 1;
       while (jw > 0) {
@@ -2420,6 +2362,7 @@ public class HMM {
       if (inTrain) {
 
         //increment the alignment counts
+        int index;
         for (int j = 1; j <= m; j++) {
           for (int i = 0; i <= 2 * l; i++) {
             index = i;
@@ -2752,7 +2695,6 @@ public class HMM {
               cache[index][j].incCount(val * prob);
             }
 
-
           }//i
         } //j
 
@@ -2828,8 +2770,6 @@ public class HMM {
         }
       }
 
-
-
       //cache the alignment probabilities tables in the array tables
 
 
@@ -2847,9 +2787,6 @@ public class HMM {
         iP.setMiddle(target);
 
       }
-
-
-
 
       //now start collecting tables
 
@@ -2962,9 +2899,7 @@ public class HMM {
 
             backward[j][i] += tmpATable.getProb(i_next, i, l) * backward[j + 1][i_next] * prob;
 
-
           }//i_next
-
 
         }//i
 
@@ -3024,12 +2959,10 @@ public class HMM {
               tmpATable = aTable;
               if (i_p > 0) {
                 tmpATable = (i_p > l ? tables[i_p - l - 1] : tables[i_p - 1]);
-
               }
 
               prob = sum[j - 1][i_p] * tmpATable.getProb(i, i_p, l) * probF * backward[j][i];
               tmpATable.incCount(i, i_p, l, prob * val);
-
             }
           }//i
         }//j
@@ -3052,7 +2985,6 @@ public class HMM {
             } else {
               cache[index][j].incCount(val * prob);
             }
-
 
           }//i
         } //j
@@ -3092,21 +3024,14 @@ public class HMM {
    */
 
   public void em_loop_sg(boolean inTrain, PrintStream alStream) {
-    double cross_entropy = 0, viterbi_cross_entropy = 0, prob, probF, pjump, pmax, denom, max_prob = 0;
+    double cross_entropy = 0, viterbi_cross_entropy = 0;
     double perplexity = 0, viterbi_perplexity = 0;
     SentencePair sentPair;
-    int numWords = 0, index, sent_no = 0;
-    WordEx eWord, fWord;
+    int numWords = 0, sent_no = 0;
     IntPair tmpPair = new IntPair();
-    ProbCountHolder[][] cache;
     ProbCountHolder[] cacheS; // caching the stay go probabilities
     ProbCountHolder[] cacheG;
 
-    double[][] sum; // forward probabilities
-    double[][] max; //maximum probability
-    int[][] argmax; //maximizing previous state
-    double[][] backward;//backward probabilities
-    int[] viterbi_alignment;  //for f from 1 to m, the corresponding i in the viterbi alignment
     double unifunknown = 1 / (double) (SentenceHandler.sTableF.getMaxSimpleIds());
 
     cacheG = new ProbCountHolder[corpus.getMaxLength() + 1];
@@ -3122,10 +3047,10 @@ public class HMM {
       double viterbi_cross_entropy_sent = 0;
       int start = 0, inc = 1, bound;
 
-      cache = new ProbCountHolder[l + 1][m + 1];
+      ProbCountHolder[][] cache = new ProbCountHolder[l + 1][m + 1];
       //put first all probabilities in the cache
       for (int j = 1; j <= m; j++) {
-        fWord = sentPair.f.getWord(j);
+        WordEx fWord = sentPair.f.getWord(j);
         if (GlobalParams.tagsOnly) {
           tmpPair.setTarget(fWord.getTagId());
         } else {
@@ -3137,7 +3062,7 @@ public class HMM {
           }
         }
         for (int i = 0; i <= l; i++) {
-          eWord = sentPair.e.getWord(i);
+          WordEx eWord = sentPair.e.getWord(i);
           if (GlobalParams.tagsOnly) {
             tmpPair.setSource(eWord.getTagId());
           } else {
@@ -3154,15 +3079,18 @@ public class HMM {
 
       //now start collecting tables
 
-      sum = new double[m + 1][2 * l + 1];   //sum(j,i)=p(f1,...,fj,i|e)  , j=0..m
-      max = new double[m + 1][2 * l + 1];   //max{aj-1}max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
-      argmax = new int[m + 1][2 * l + 1]; //argmax {aj-1} max(j-1,aj-1)*p(i|aj-1)*p(fj|i)
-      backward = new double[m + 1][2 * l + 1]; // backward(j,i)=p(fj+1,..fm|aj=i) j=0..m
+      double[][] sum = new double[m + 1][2 * l + 1]; // forward probabilities
+      double[][] max = new double[m + 1][2 * l + 1]; //maximum probability
+      int[][] argmax = new int[m + 1][2 * l + 1]; //maximizing previous state
+      double[][] backward = new double[m + 1][2 * l + 1];//backward probabilities
       bound = 2 * l;
 
       sum[0][0] = 1; // the rest are 0, starting in state 0
       max[0][0] = 1; // the rest are 0, starting in state 0
 
+      int index;
+      double prob;
+      double pjump;
       for (int j = 1; j <= m; j++) {
         //collect the sum, the max and the argmax
         for (int i = 0; i <= 2 * l; i++) {
@@ -3210,12 +3138,10 @@ public class HMM {
                 pjump = cacheG[i_p > l ? 0 : i_p].getProb() * aTable.getProb(i, i_p, l);
 
               }
-
             }
 
-
             sum[j][i] += sum[j - 1][i_p] * pjump * prob;
-            pmax = max[j - 1][i_p] * pjump * prob;
+            double pmax = max[j - 1][i_p] * pjump * prob;
             if (pmax > max[j][i]) {
               max[j][i] = pmax;
               argmax[j][i] = i_p;
@@ -3274,14 +3200,10 @@ public class HMM {
                 pjumpNext = cacheG[i > l ? 0 : i].getProb() * aTable.getProb(i_next, i, l);
 
               }
-
             }
 
             backward[j][i] += pjumpNext * backward[j + 1][i_next] * prob;
-
-
           }//i_next
-
 
         }//i
 
@@ -3289,8 +3211,8 @@ public class HMM {
 
       //now backward[0][0] should be the total probability
 
-      denom = backward[0][0];
-      max_prob = 0;
+      double denom = backward[0][0];
+      double max_prob = 0.0;
       int max_i = 0;
 
       for (int i = 0; i <= 2 * l; i++) {
@@ -3303,7 +3225,6 @@ public class HMM {
       double sumprobs = 0;
       for (int i = 0; i <= 2 * l; i++) {
         sumprobs += sum[m][i];
-
       }
 
       if (Math.abs(sumprobs - denom) > 0.0001) {
@@ -3318,26 +3239,20 @@ public class HMM {
 
       //collect the viterbi alignment
 
-      viterbi_alignment = new int[m + 1];
+      int[] viterbi_alignment = new int[m + 1];  //for f from 1 to m, the corresponding i in the viterbi alignment
       viterbi_alignment[m] = max_i;
       for (int j = m; j > 0; j--) {
         viterbi_alignment[j - 1] = argmax[j][viterbi_alignment[j]];
-
       }
 
-
       if (GlobalParams.dumpAlignments) {
-
         Reports.printAlignToFile(sentPair, alStream, viterbi_alignment, sent_no, max_prob);
-
-
       }
 
       //now again, this time incrementing counts and computing perplexity
       double val = count / denom;
 
       if (inTrain) {
-
 
         //increment the alignment counts
         for (int j = 1; j <= m; j++) {
@@ -3348,6 +3263,7 @@ public class HMM {
             if (i > l) {
               index = 0;
             }
+            double probF;
             if (cache[index][j] == null) {
               probF = (sentPair.getSource().getWord(index).getCount() == 0 ? unifunknown : PROB_SMOOTH);
             } else {
@@ -3389,29 +3305,20 @@ public class HMM {
                 aTable.incCount(i, i_p, l, prob * val);
               }
 
-
               if ((i == i_p) && (i_p > 0)) {
                 //increment the stay probability for index
                 cacheS[index].incCount(prob * val);
-
               }
-
 
               if ((i_p > 0) && (i != i_p)) {
                 //increment the go probabilities for i_p
                 cacheG[i_p > l ? 0 : i_p].incCount(prob * val);
-
               }
-
-
             }
           }//i
           //System.out.println(" total "+totalProb+" denom "+denom);
         }//j
         //increment the translation probability counts
-
-
-
 
         for (int j = 1; j <= m; j++) {
           for (int i = 0; i <= 2 * l; i++) {
@@ -3431,10 +3338,8 @@ public class HMM {
               cache[index][j].incCount(val * prob);
             }
 
-
           }//i
         } //j
-
 
       } //in train
 

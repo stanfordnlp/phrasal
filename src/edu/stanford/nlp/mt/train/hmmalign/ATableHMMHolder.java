@@ -3,7 +3,8 @@ package edu.stanford.nlp.mt.train.hmmalign;
 /**
  * The purpose of this class is to hold separate ATableHMMs for different contexts. With
  * the idea to have a context of 2 French tags, I am implementing the key as an IntPair.
- *@author Kristina Toutanova (kristina@cs.stanford.edu)
+ *
+ * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 import java.io.FileOutputStream;
@@ -43,15 +44,12 @@ public class ATableHMMHolder {
 
   public void setSmoothing(ATable u) {
     smoothTable = u;
-
   }
 
 
   public ATable getUniform() {
-
     //if(smooth){return smoothTable;}
     return uniform;
-
   }
 
   public void add(IntTuple wP, ATable t) {
@@ -77,9 +75,6 @@ public class ATableHMMHolder {
 
   public void printProbs() {
 
-    ATable aT;
-    IntTuple wP;
-
     System.out.println("**** uniform ****");
     uniform.printProbs();
 
@@ -89,33 +84,26 @@ public class ATableHMMHolder {
       smoothTable.printProbs();
     }
 
-    for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
-    	Map.Entry<IntTuple, ATable> eN = i.next();
-      wP = eN.getKey();
+    for (Map.Entry<IntTuple, ATable> eN : tables.entrySet()) {
+      IntTuple wP = eN.getKey();
       wP.print();
-      aT = eN.getValue();
+      ATable aT = eN.getValue();
       aT.printProbs();
     }
-
 
   }
 
 
   public void clearInfrequent() {
 
-    ATable aT;
-
-
     for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
     	Map.Entry<IntTuple, ATable> eN = i.next();
-      aT = eN.getValue();
+      ATable aT = eN.getValue();
       if (!aT.isPopulated()) {
         //remove aT
         i.remove();
-
       }
     }
-
 
   }
 
@@ -124,8 +112,6 @@ public class ATableHMMHolder {
    * Save all alignment probabilities to a file
    */
   public void save(String filename) {
-
-    IntTuple wP;
 
     try {
       PrintStream p = new PrintStream(new FileOutputStream(filename, true));
@@ -141,14 +127,12 @@ public class ATableHMMHolder {
 
       }
 
-      for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
-      	Map.Entry<IntTuple, ATable> eN = i.next();
-        wP = eN.getKey();
+      for (Map.Entry<IntTuple, ATable> eN : tables.entrySet()) {
+        IntTuple wP = eN.getKey();
         p.println(wP.toString());
         p.flush();
         //eN.getValue().save(filename);
       }
-
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -162,8 +146,6 @@ public class ATableHMMHolder {
    */
   public void saveNames(String filename) {
 
-    IntTuple wP;
-
     try {
       PrintStream p = new PrintStream(new FileOutputStream(filename, true));
 
@@ -178,9 +160,8 @@ public class ATableHMMHolder {
 
       }
 
-      for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
-      	Map.Entry<IntTuple, ATable> eN = i.next();
-        wP = eN.getKey();
+      for (Map.Entry<IntTuple, ATable> eN : tables.entrySet()) {
+        IntTuple wP = eN.getKey();
         p.println(wP.toNameStringE());
         p.flush();
         eN.getValue().save(filename);
@@ -199,8 +180,6 @@ public class ATableHMMHolder {
    */
   public void saveNames(int mask, String filename) {
 
-    IntTuple wP;
-
     try {
       PrintStream p = new PrintStream(new FileOutputStream(filename, true));
 
@@ -215,14 +194,12 @@ public class ATableHMMHolder {
 
       }
 
-      for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
-      	Map.Entry<IntTuple, ATable> eN = i.next();
-        wP = eN.getKey();
+      for (Map.Entry<IntTuple, ATable> eN : tables.entrySet()) {
+        IntTuple wP = eN.getKey();
         p.println(wP.toNameString(mask));
         p.flush();
         eN.getValue().save(filename);
       }
-
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -233,10 +210,7 @@ public class ATableHMMHolder {
 
   public void normalize() {
 
-    ATable aT;
-    ATable haT, un;
-
-    un = uniform;
+    ATable un = uniform;
     if (GlobalParams.verbose) {
       System.out.println("Normalizing uniform ");
     }
@@ -250,9 +224,8 @@ public class ATableHMMHolder {
       smoothTable.checkOK();
     }
 
-    for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
-      Map.Entry<IntTuple, ATable> eN = i.next();
-      aT = eN.getValue();
+    for (Map.Entry<IntTuple, ATable> eN : tables.entrySet()) {
+      ATable aT = eN.getValue();
       if (GlobalParams.verbose || true) {
         System.out.println((eN.getKey()).toNameString(mask));
       }
@@ -261,13 +234,11 @@ public class ATableHMMHolder {
         aT.printProbs();
         System.exit(0);
       }
-      haT = aT;
+      ATable haT = aT;
       double d = un.DKL(haT);
       System.out.println("Divergence " + d);
       //if(d<.20){i.remove();}
     }
-
-
   }//normalize
 
 

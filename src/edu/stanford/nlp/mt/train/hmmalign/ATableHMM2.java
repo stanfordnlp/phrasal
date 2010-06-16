@@ -10,6 +10,7 @@ package edu.stanford.nlp.mt.train.hmmalign;
  */
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
 import edu.stanford.nlp.util.ArrayN;
@@ -261,12 +262,8 @@ public class ATableHMM2 extends ATable {
     //first make the params sum to 1, put params[0] into pEmpty
     //then put normalized params in prob_arr
 
-    float total;
-
-    total = 0;
-
     for (int jump_1Abs = 0; jump_1Abs <= 2 * MAX_LENGTH - 1; jump_1Abs++) {
-      total = 0;
+      float total = 0.0F;
       for (int i = 1; i < counts[jump_1Abs].length + 1; i++) {
         total += counts[i][jump_1Abs] + PROB_SMOOTH;
       }
@@ -309,7 +306,7 @@ public class ATableHMM2 extends ATable {
             }
           }
 
-          total = 0;
+          float total = 0.0F;
 
           int jump;
           for (int i = 0; i <= l + 1; i++) {
@@ -675,7 +672,7 @@ public class ATableHMM2 extends ATable {
       normalize();
       PROB_SMOOTH = old;
 
-    } catch (Exception e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
 

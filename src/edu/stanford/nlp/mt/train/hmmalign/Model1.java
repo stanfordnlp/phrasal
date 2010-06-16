@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 
 public class Model1 {
+
   private TTable tTable;
   private SentenceHandler corpus;
   private PTable pTable;
@@ -18,13 +19,14 @@ public class Model1 {
   boolean eTags;
   boolean fTags;
   boolean verbose = true;
-  boolean useCProbs = false;
+  boolean useCProbs; // = false;
   boolean useETagsT = GlobalParams.useETagsT;
   boolean useFTagsT = GlobalParams.useFTagsT;
   PrintStream alStream;
   String fileAlignment;
-  boolean useFNull = false;
+  boolean useFNull; // = false;
 
+  
   public Model1() {
   }
 
@@ -43,7 +45,6 @@ public class Model1 {
     if (useCProbs) {
       pTable.save(GlobalParams.resultPath + "/" + "cnc.final");
     }
-
 
   }
 
@@ -133,7 +134,7 @@ public class Model1 {
 
 
       if ((it + 1) % GlobalParams.saveFreq == 0) {
-        ;//tTable.save(GlobalParams.resultPath+"tt.m1."+(it+1));
+        // tTable.save(GlobalParams.resultPath+"tt.m1."+(it+1));
       } else {
         System.out.println(" didn't save b/e res is " + ((it + 1) % GlobalParams.saveFreq));
       }
@@ -150,18 +151,18 @@ public class Model1 {
   public void initializeTable() {
     tTable = new TTable(true);
     SentencePair sentPair;
-    int word_e, word_f;
     while ((sentPair = corpus.getNextPairTrain()) != null) {
       int count = sentPair.getCount();
       double uniform = count * (1 / (double) (sentPair.e.getLength()));
       for (int i = 0; i < sentPair.e.getLength(); i++) {
+        int word_e;
         if (eTags && useETagsT) {
           word_e = sentPair.getSource().getWord(i).getIndex();
         } else {
           word_e = sentPair.getSource().getWord(i).getWordId();
         }
         for (int j = 1; j < sentPair.getTarget().getLength(); j++) {
-          word_f = sentPair.getTarget().getWord(j).getWordId();
+          int word_f = sentPair.getTarget().getWord(j).getWordId();
           tTable.insert(word_e, word_f, 0, uniform);
           if (eTags && useETagsT) {
             tTable.insert(sentPair.getSource().getWord(i).getTagId(), word_f, 0, uniform);
@@ -179,10 +180,8 @@ public class Model1 {
 
   public void em_loop(boolean inTrain, PrintStream alStream) {
     double cross_entropy = 0, viterbi_cross_entropy = 0;
-    double perplexity = 0, viterbi_perplexity = 0;
     SentencePair sentPair;
     int numWords = 0;
-    int[] viterbi_alignment;
     int pair_no = 0;
     TPHandler tpHandler = null;
     AlHandler aHandler;
@@ -201,7 +200,6 @@ public class Model1 {
 
       }
 
-
     } else {
 
       if (fTags && useFTagsT) {
@@ -218,7 +216,6 @@ public class Model1 {
           tpHandler = new TPHandler(tTable);
         }
       }
-
 
     }
     if (useCProbs) {
@@ -238,7 +235,7 @@ public class Model1 {
       int m = sentPair.f.getLength() - 1;
       double cross_entropy_sent = 0;
       double viterbi_cross_entropy_sent = 0;
-      viterbi_alignment = new int[m + 1];
+      int[] viterbi_alignment = new int[m + 1];
       double max_prob_total = 1;
 
       pair_no++;
@@ -251,10 +248,9 @@ public class Model1 {
         double denom = 0;
         double max_prob = 0;
         int max_i = 0;
-        double prob = 0;
 
         for (int i = 0; i <= l; i++) {
-          prob = tpHandler.getProb(i, j);
+          double prob = tpHandler.getProb(i, j);
           prob *= aHandler.getProb(i, j);
           if (prob > max_prob) {
             max_prob = prob;
@@ -270,7 +266,7 @@ public class Model1 {
 
         if (inTrain) {
           for (int i = 0; i <= l; i++) {
-            prob = tpHandler.getProb(i, j);
+            double prob = tpHandler.getProb(i, j);
             prob *= aHandler.getProb(i, j);
             tpHandler.incCount(i, j, val * prob);
             aHandler.incCount(i, j, prob * val);
@@ -295,8 +291,8 @@ public class Model1 {
 
     }// while next pair
 
-    perplexity = Math.exp(-cross_entropy / numWords);
-    viterbi_perplexity = Math.exp(-viterbi_cross_entropy / numWords);
+    double perplexity = Math.exp(-cross_entropy / numWords);
+    double viterbi_perplexity = Math.exp(-viterbi_cross_entropy / numWords);
     if (inTrain) {
       System.out.println("Training set results");
     } else {
