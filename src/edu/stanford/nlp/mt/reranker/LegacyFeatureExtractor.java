@@ -22,7 +22,7 @@ import java.util.zip.GZIPOutputStream;
  * <code>java -mx3g edu.stanford.nlp.mt.reranker.LegacyFeatureExtractor scr/features/datadescriptors/0.txt   scr/features/sets/extractAlignedWordPairsBigram/0.feats -extractAlignedWordPairsBigram</code>
  * <h3>Data Descriptor</h3>
  * The data descriptor should look like:<br>
- * <code>/u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/features/datadescriptors/0.txt</code><br>
+ * <code>/u/nlp/data/gale/n-best-reranking-2007/reranker/mt03/scr/features/datadescriptors/0.txt</code><br>
  * Valid fields in the data descriptor:
  * <ul>
  * <li> LoadOffset: by default, the data number starts at 0. If there's an offset, use "LoadOffset" to override it.
@@ -52,7 +52,7 @@ public class LegacyFeatureExtractor implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  static final boolean DEBUG = false; 
+  static final boolean DEBUG = false;
   static final double DEFAULT_TRAIN_PERCENT = 0.80;
   static final double DEFAULT_DEV_PERCENT = 0.10;
   static final String AUTO_UNIFY_TO_PROP = "lfe.unifyTo";
@@ -60,7 +60,6 @@ public class LegacyFeatureExtractor implements Serializable {
   transient long loadTime;
 
   public LegacyFeatureExtractor() {
-    ;
   }
 
   int[] trainRange;
@@ -130,13 +129,11 @@ public class LegacyFeatureExtractor implements Serializable {
 
   static public LegacyFeatureExtractor load(String dataSetDescriptor, PrintStream pstrm, Properties p) throws IOException {
     System.out.printf("Loading data set specified by descriptor: '%s'\n", dataSetDescriptor);
-
     Exception priorException = null;
-    String priorStackTrace = null;
-    LegacyFeatureExtractor ds = null;
+
     try {
       /*
-      // First, attempt to load a serialized LegacyFeatureExtractor 
+      // First, attempt to load a serialized LegacyFeatureExtractor
       // from the filename given by dataSetDescriptor
       try {
         ds = loadSerialized(dataSetDescriptor);
@@ -145,24 +142,24 @@ public class LegacyFeatureExtractor implements Serializable {
         System.out.printf("Load time: %.3f s\n", ds.loadTime*1.0e-9);
         return ds;
       } catch (IOException e) {
-        // okay, so we're probably not dealing with a serializd 
-        // LegacyFeatureExtractor as this is probably a 
+        // okay, so we're probably not dealing with a serialized
+        // LegacyFeatureExtractor as this is probably a
         // "Not in GZIP format" IOException
-        priorException = e; 
+        priorException = e;
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw); pw.close();
         priorStackTrace = sw.toString();
-      } 
+      }
       */
 
-      // Now, we'll try treating the file specified by dataSetDescriptor 
+      // Now, we'll try treating the file specified by dataSetDescriptor
       // as a LegacyFeatureExtractor plain text descriptor
-      ds = loadByTextDescriptor(dataSetDescriptor, pstrm, p);
+      LegacyFeatureExtractor ds = loadByTextDescriptor(dataSetDescriptor, pstrm, p);
       System.out.printf("Data set successfully loaded as plain text data set description\n");
       System.out.printf("Load time: %.3f s\n", ds.loadTime * 1.0e-9);
 
-      // If requested, unify the data set to a single binary file 
+      // If requested, unify the data set to a single binary file
       String unifyFilename = System.getProperty(AUTO_UNIFY_TO_PROP);
       if (unifyFilename != null) {
         ds.write(unifyFilename);
@@ -175,6 +172,7 @@ public class LegacyFeatureExtractor implements Serializable {
       System.err.printf("Can't load '%s' as either a " + "serialized .gale.LegacyFeatureExtractor or as a plain text " + "descriptor.\n", dataSetDescriptor);
       if (priorException != null) {
         System.err.printf("Deserialization error: %s\n", priorException);
+        String priorStackTrace = null;
         System.err.println(priorStackTrace);
         System.err.printf("Plain text descriptor error: %s\n", e);
         e.printStackTrace();
@@ -497,7 +495,7 @@ public class LegacyFeatureExtractor implements Serializable {
 
     //for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
     for(int enIdx : align.get(true).keySet()) {
-      String enWord = enWords.get(enIdx).tag().toString();
+      String enWord = enWords.get(enIdx).tag();
       List<Integer> al = align.get(enIdx, true);
       for (int chIdx : al) {
         StringBuilder sb = new StringBuilder();
@@ -505,7 +503,7 @@ public class LegacyFeatureExtractor implements Serializable {
         sb.append("ATP-");
         sb.append(enWord);
         sb.append("-");
-        String chWord = ((TaggedWord) chWords.get(chIdx)).tag().toString();
+        String chWord = chWords.get(chIdx).tag();
         sb.append(chWord);
         features.incrementCount(sb.toString());
       }
@@ -540,8 +538,8 @@ public class LegacyFeatureExtractor implements Serializable {
         hit_cnt++;
         int chPos = cur_al.get(0);
         int nextChPos = next_al.get(0);
-        TaggedWord chTW = ((TaggedWord) chWords.get(chPos));
-        TaggedWord nextChTW = ((TaggedWord) chWords.get(nextChPos));
+        TaggedWord chTW = chWords.get(chPos);
+        TaggedWord nextChTW = chWords.get(nextChPos);
 
         StringBuilder sbW = new StringBuilder();
         if (EnZh) sbW.append("EnZh|"); else sbW.append("ZhEn|");
@@ -597,10 +595,10 @@ public class LegacyFeatureExtractor implements Serializable {
         hit_cnt++;
         int chPos = cur_al.get(0);
         int nextChPos = next_al.get(0);
-        TaggedWord enTW = ((TaggedWord) enWords.get(enIdx));
-        TaggedWord nextEnTW = ((TaggedWord) enWords.get(nextEnIdx));
-        TaggedWord chTW = ((TaggedWord) chWords.get(chPos));
-        TaggedWord nextChTW = ((TaggedWord) chWords.get(nextChPos));
+        TaggedWord enTW = enWords.get(enIdx);
+        TaggedWord nextEnTW = enWords.get(nextEnIdx);
+        TaggedWord chTW = chWords.get(chPos);
+        TaggedWord nextChTW = chWords.get(nextChPos);
 
         StringBuilder sb1 = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
@@ -659,17 +657,16 @@ public class LegacyFeatureExtractor implements Serializable {
     BufferedReader posBr = (pname != null ? new BufferedReader(new FileReader(pname)) : null);
 
     List<Candidate> cands = new ArrayList<Candidate>();
-    Tree t = null;
     List<TaggedWord> tws = null;
 
-    if (br!=null) {
-      while ((t = readTree(br)) != null) {
+    if (br != null) {
+      for (Tree t; (t = readTree(br)) != null; ) {
         tws = readPOS(posBr);
          Candidate newc = new Candidate(t, tws);
          cands.add(newc);
-       }
+      }
     } else {
-      while((tws=readPOS(br))!=null) {
+      while ((tws=readPOS(br))!=null) {
         Candidate newc = new Candidate(null, tws);
         cands.add(newc);
       }
@@ -682,7 +679,7 @@ public class LegacyFeatureExtractor implements Serializable {
 
   static List<TaggedWord> readPOS(BufferedReader br){
     if (br==null) return null;
-    
+
     List<TaggedWord> tws = new ArrayList<TaggedWord>();
     String inline;
     try {
@@ -713,8 +710,7 @@ public class LegacyFeatureExtractor implements Serializable {
   static Tree readTree(BufferedReader br) throws IOException {
     Tree t = null;
     StringBuilder tree = new StringBuilder("(");
-    String line = null;
-    while ((line = br.readLine()) != null) {
+    for (String line; (line = br.readLine()) != null; ) {
       if (line.matches("<tree style=\"penn\">")) {
       } else if (line.matches("</tree>")) {
         try {

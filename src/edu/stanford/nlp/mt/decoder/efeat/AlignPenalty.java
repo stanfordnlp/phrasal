@@ -14,16 +14,16 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 /**
  * Note: This should only be used for phrases extracted using one-to-one
- * alignments, i.e. using the Berkeley "intersection."
- * 
+ * alignments, i.e., using the Berkeley "intersection."
+ *
  * @author Spence Green
  *
  */
 public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
 
-  public static String FEATURE_NAME = "AlignPenalty";
+  public static final String FEATURE_NAME = "AlignPenalty";
 
-  private Pair<Integer,Integer> internalFeaturize(Featurizable<IString, String> f) {
+  private static Pair<Integer,Integer> internalFeaturize(Featurizable<IString, String> f) {
     final int tOptLen = f.translatedPhrase.size();
 
     int numAlignments = 0;
@@ -32,7 +32,7 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
       for(int i = 0; i < tOptLen; i++) {
 
         final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
-        if(sIndices == null) 
+        if(sIndices == null)
           numNullAlignments++;
         else if(sIndices.length != 1)
           throw new RuntimeException(String.format("Many-to-one alignment...Shouldn't happen with intersect heuristic (sIndices %d)",sIndices.length));
@@ -60,4 +60,5 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
   public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {}
   @Override
   public void reset() {}
+
 }

@@ -8,13 +8,14 @@ package edu.stanford.nlp.mt.train.hmmalign;
  */
 
 public class Word {
+
   private int wordId;
   private int tagId;
   private int hashCode;
   static int noneTagId = 0;
 
   public Word() {
-  };
+  }
 
   public Word(int wordId, int tagId) {
     this.wordId = wordId;
@@ -40,12 +41,12 @@ public class Word {
   }
 
   @Override
-	public int hashCode() {
+  public int hashCode() {
     return hashCode;
   }
 
   @Override
-	public boolean equals(Object o) {
+  public boolean equals(Object o) {
 
     if (o instanceof Word) {
       Word w1 = (Word) o;
@@ -69,15 +70,13 @@ public class Word {
   }
 
   @Override
-	public String toString() {
+  public String toString() {
     return wordId + "_" + tagId;
-
   }
 
 
   public String toNameString() {
     return null;
-
   }
 
 
@@ -89,7 +88,6 @@ public class Word {
     System.out.print('(');
     System.out.print(hashCode);
     System.out.print(')');
-
   }
 
 

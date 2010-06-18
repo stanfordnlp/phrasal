@@ -21,9 +21,8 @@ public class IntQuadruple extends IntTuple {
     target = trgt;
     middle = mid;
     target2 = trgt2;
-//    numElements = 4;
-    //init();
-
+    // numElements = 4;
+    // init();
   }
 
 
@@ -60,7 +59,7 @@ public class IntQuadruple extends IntTuple {
 
 
   @Override
-	public int get(int num) {
+  public int get(int num) {
     if (num == 0) {
       return source;
     }
@@ -74,8 +73,6 @@ public class IntQuadruple extends IntTuple {
       return target2;
     }
     return 0;
-
-
   }
 
 
@@ -112,45 +109,41 @@ public class IntQuadruple extends IntTuple {
   }
 
   @Override
-	public int hashCode() {
+  public int hashCode() {
     return (source << 20) ^ (middle << 10) ^ (target << 5) ^ (target2);
   }
 
   @Override
-	public boolean equals(Object o) {
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null) return false;
+    if ( ! (o instanceof IntQuadruple)) return false;
     IntQuadruple iP = (IntQuadruple) o;
     return ((iP.source == source) && (iP.middle == middle) && (iP.target == target) && (iP.target2 == target2));
 
   }
 
   @Override
-	public void print() {
+  public void print() {
     System.out.println(target2 + "|" + target + "|" + middle + "|" + source);
   }
 
 
   @Override
-	public String toString() {
-
+  public String toString() {
     return source + " " + middle + " " + target + " " + target2;
-
   }
 
 
   @Override
-	public String toNameStringE() {
-
+  public String toNameStringE() {
     return SentenceHandler.sTableE.getName(source) + " " + SentenceHandler.sTableE.getName(middle) + " " + SentenceHandler.sTableE.getName(target) + " " + SentenceHandler.sTableE.getName(target2);
-
   }
 
 
   @Override
-	public String toNameStringF() {
-
+  public String toNameStringF() {
     return SentenceHandler.sTableF.getName(source) + " " + SentenceHandler.sTableF.getName(middle) + " " + SentenceHandler.sTableF.getName(target) + " " + SentenceHandler.sTableF.getName(target2);
-
-
   }
 
 

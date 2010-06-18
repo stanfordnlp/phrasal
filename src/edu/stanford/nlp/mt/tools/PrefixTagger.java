@@ -42,7 +42,7 @@ public class PrefixTagger extends TestSentence {
    * Creates a new PrefixTagger. Since PrefixTagger can't determine how many
    * words of context are needed by the tagging model, <i>leftWindow</i> must
    * be manually specified.
-   * @param MaxentTagger general information on the tagger (this parameter will soon change)
+   * @param maxentTagger general information on the tagger (this parameter will soon change)
    * @param leftWindow How many words to the left determine the current tag.
    */
   public PrefixTagger(MaxentTagger maxentTagger, int leftWindow, int rightWindow) {
