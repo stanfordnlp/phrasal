@@ -180,28 +180,28 @@ $(TESTID).$(DEVID).mix.%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest $(TESTID).$(MIX
 #############################################
 
 # Use best MERT paramters to generate n-best list:
-test.$(TESTID).%.$Nbest: %.ini $(TESTID).$(IE)
+test.$(TESTID).%.$Nbest: %.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 # Use best MERT paramters to generate n-best list:
-$(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
+$(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
-$(TESTID).$(DEVID).%-bt.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
+$(TESTID).$(DEVID).%-bt.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 # Use final MERT paramters:
-$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE)
+$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 
 # Use best MERT paramters:
-$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
-$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE)
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 
@@ -220,11 +220,42 @@ $(TESTID).%.phrasal.ini: $(DEVID).%.pmert/phrasal.final.ini
 #############################################
 
 # Maximize BLEU (n-best):
-$(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE)
+$(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) $(DEVID).flt_giga.lm.gz
 	$(SCRIPTS)/update_ini SETID $(DEVID) < $< > $(DEVID).$<
 	$(PM) --working-dir=$(DEVID).$(*F).$N.pmert \
 	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" --mert-java-flags="$(JAVA_MERT_ARGS)" \
 	--nbest=$N $(DEVID).$(IE) $(DEV_REF)/ref $(OPT_METRIC) $(DEVID).$< >& logs/$(DEVID).$(*F).$N.pmert.log
+
+#############################################
+# Language models:
+#############################################
+
+### Binarize LM:
+%.lm.bin: %.lm.gz
+	ngram -order 5 -lm $< -write-bin-lm $@ > $@.log
+
+### Filter LM for target dev/test set:
+%.flt_giga.lm.gz: %.e.phrases %.e.class.phrases $(GIGA)
+	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(GIGA) 5 2> $@.log | gzip > $@
+
+#############################################
+# Vocabulary files:
+#############################################
+
+%.aliases: %.vocab
+	make_alias < $< > $@
+
+%.e.vocab: %.e.phrases %.e.class.phrases
+	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -tolower
+
+%.e.class.phrases: %.e.phrases
+	mkdir logs 2> /dev/null || true
+	(cat $< | eng_simpl_class.pl 1 0 | ibm2class > $@) 2> logs/$@.log
+
+%.e.phrases: %.tables/phrase-table.gz %.$(FE)
+	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
+	remove_bad_english 2> $@.skip | grep -v '^$$' | \
+	cat - $(*F).$(FE) | sort | uniq > $@
 
 #############################################
 # Phrase tables:
@@ -245,7 +276,7 @@ endif
 ### (needs to be run on 16G machines)
 %.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
 	mkdir $(*F).tables 2> /dev/null || true
-	$(JAVA) -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
+	$(JAVA) -DShowPhraseRestriction=false -DkeepBadTokens=true -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxELen $(maxPLen) -exactPhiCounts $(exactPhiCounts) -endAtLine $(LINES) -maxFertility 5 $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################
 # Phrase counts:

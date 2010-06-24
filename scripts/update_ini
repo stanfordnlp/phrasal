@@ -32,9 +32,10 @@ while(<STDIN>) {
  	}
 	if($field eq 'ttable-file' ||
 	   $field eq 'distortion-file' ||
+	   $field eq 'hierarchical-distortion-file' ||
 	   $field eq 'lmodel-file' ||
 		 $field eq 'additional-featurizers') {
-		if(s/XXXX/$newid/g || s/$oldid/$newid/g) {
+		if(s/DEVID/$newid/g || s/$oldid/$newid/g) {
 			if($field eq 'additional-featurizers') {
 				/\((.*)\)/;
 				foreach my $el (split(/,/,$1)) {
