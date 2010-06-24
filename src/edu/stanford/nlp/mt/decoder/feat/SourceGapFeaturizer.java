@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.BitSet;
 import java.util.List;
@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 
@@ -18,15 +17,15 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class GapCountFeaturizer implements IncrementalFeaturizer<IString, String> {
+public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, String> {
 
 	public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
-	public static final String GC_FEATURE_NAME = "GapCount"; // number of DTU's that have gaps
-  public static final String CROSSING_FEATURE_NAME = "CrossingCount"; // number of DTU's that have gaps
-	public static final String GC2_FEATURE_NAME = "Gap2Count"; // number of DTU's that have >= 2 gaps
-  public static final String GC3_FEATURE_NAME = "Gap3Count"; // number of DTU's that have >= 3 gaps
-  public static final String GC4_FEATURE_NAME = "Gap4Count"; // number of DTU's that have >= 4 gaps
+  public static final String CROSSING_FEATURE_NAME = "SG:CrossingCount"; // number of DTU's that have gaps
+	public static final String GC_FEATURE_NAME = "SG:GapCount"; // number of DTU's that have gaps
+	public static final String GC2_FEATURE_NAME = "SG:Gap2Count"; // number of DTU's that have >= 2 gaps
+  public static final String GC3_FEATURE_NAME = "SG:Gap3Count"; // number of DTU's that have >= 3 gaps
+  public static final String GC4_FEATURE_NAME = "SG:Gap4Count"; // number of DTU's that have >= 4 gaps
 
 	public String gcFeatureName, gc2FeatureName, gc3FeatureName, gc4FeatureName, crossingFeatureName;
 
@@ -37,17 +36,17 @@ public class GapCountFeaturizer implements IncrementalFeaturizer<IString, String
     gc4OnValue, gc4OffValue,
     crossingOnValue;
 
-  public GapCountFeaturizer() {
+  public SourceGapFeaturizer() {
 		gcFeatureName = GC_FEATURE_NAME;
 		gc2FeatureName = GC2_FEATURE_NAME;
     gc3FeatureName = GC3_FEATURE_NAME;
     gc4FeatureName = GC4_FEATURE_NAME;
     crossingFeatureName = CROSSING_FEATURE_NAME;
-    gcOnValue = -1.0;
+    gcOnValue = 0.0; gcOffValue = 1.0; // Defined like this for historical reasons
     crossingOnValue = -1.0;
 	}
 
-  public GapCountFeaturizer(String... args) {
+  public SourceGapFeaturizer(String... args) {
     this();
     for (String arg : args) {
       String[] els = arg.split(":");

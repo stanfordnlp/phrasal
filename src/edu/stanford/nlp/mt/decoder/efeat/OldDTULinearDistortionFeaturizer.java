@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption.LinearDistortionType;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, String> {
+public class OldDTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, String> {
 
   public static final String EXP_PROPERTY = "ExpDTU";
   public static final boolean EXP = Boolean.parseBoolean(System.getProperty(EXP_PROPERTY, "false"));
@@ -43,7 +43,7 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
   private boolean noGapAtEnd;
 
   @SuppressWarnings("unused")
-  public DTULinearDistortionFeaturizer() {
+  public OldDTULinearDistortionFeaturizer() {
     featureTypes = new LinearDistortionType[0];
     featureNames = new String[0];
     addEOS = true;
@@ -53,7 +53,7 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
   }
 
   @SuppressWarnings("unused")
-  public DTULinearDistortionFeaturizer(String... args) {
+  public OldDTULinearDistortionFeaturizer(String... args) {
     List<String> featureTypesL = new ArrayList<String>();
     for (String arg : args) {
       if (arg.equals(EOS_DISTORTION)) {

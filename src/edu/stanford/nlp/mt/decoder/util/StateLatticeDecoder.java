@@ -15,24 +15,25 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>>, Iterable<List<S>> {
 	static public final String DEBUG_OPT = "StateLatticeDecoderDebug";
 	static public final int DEBUG = Integer.parseInt(System.getProperty(DEBUG_OPT, "0"));
-	static public final int DEBUG_STATS  = 1;
-	static public final int DEBUG_DETAIL = 2;
+	//static public final int DEBUG_STATS  = 1;
+	//static public final int DEBUG_DETAIL = 2;
 
 	PriorityQueue<CompositeState> agenda = new PriorityQueue<CompositeState>();
 	Set<CompositeState> dupCheckSet = new HashSet<CompositeState>();
 
-
 	/**
 	 *
 	 */
-	public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S> recombinationHistory, int requestLimit){
+	public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S> recombinationHistory) {
 		init(goalStates, recombinationHistory);
 	}
 
+  /*
 	public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S> recombinationHistory, int requestLimit, boolean reverse) {
 	//	this.reverse = reverse; XXX reverse is currently being ignored
 		init(goalStates, recombinationHistory);
 	}
+	*/
 
 	private RecombinationHistory<S> recombinationHistory;
 	private void init(List<S> goalStates, RecombinationHistory<S> recombinationHistory) {
@@ -88,17 +89,15 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 		}
 
 		private int computeHashCode() {
-			int code = 0;
-			for (State<S> s : states) {
-				code += 32*s.hashCode();
-			}
-			return code;
+      return states.hashCode();
 		}
 
 		@Override
+    @SuppressWarnings("unchecked")
 		public boolean equals(Object o) {
 			CompositeState oCS = (CompositeState)o;
-			return states.equals(oCS.states);
+			return score == oCS.score && // comparing "score" speeds up equals()
+        states.equals(oCS.states);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -107,8 +106,8 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 			int length = initialState.depth()+1;
       states = new ArrayList<S>(length);
       states.addAll(Collections.nCopies(length, (S)null));
-      int pos=1;
-			for (State<S> state = initialState; state != null; state = state.parent(), ++pos) states.set(length-pos, (S)state);
+      int pos = length-1;
+			for (State<S> state = initialState; state != null; state = state.parent(), --pos) states.set(pos, (S)state);
 			score = initialState.partialScore();
 			hashCode = computeHashCode();
 			// System.err.printf("cost from goal state: %e cost from computeListCost: %e\n", score, computeListCost());
@@ -130,8 +129,8 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
       int length = original.states.size()+newPrefixLength-varPosition-1;
 			states = new ArrayList<S>(length);
       states.addAll(Collections.nCopies(newPrefixLength, (S)null));
-      int pos=1;
-			for (State<S> state = varState; state != null; state = state.parent(), ++pos) states.set(newPrefixLength-pos, (S)state);
+      int pos = newPrefixLength-1;
+			for (State<S> state = varState; state != null; state = state.parent(), --pos) states.set(pos, (S)state);
 			int originalStatesLength = original.states.size();
 			for (int i = varPosition+1; i < originalStatesLength; i++) {
 				states.add(original.states.get(i));
@@ -160,7 +159,6 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 			return sbuf.toString();
 		}
 	}
-
 
 	@Override
 	public Iterator<List<S>> iterator() {

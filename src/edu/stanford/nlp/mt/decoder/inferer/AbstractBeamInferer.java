@@ -69,7 +69,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     featurizer.rerankingMode(true);
 
     StateLatticeDecoder<Hypothesis<TK, FV>> latticeDecoder = new StateLatticeDecoder<Hypothesis<TK, FV>>(
-				goalStates, recombinationHistory, size);
+				goalStates, recombinationHistory);
 
     int hypCount = 0, maxDuplicateCount = size*MAX_DUPLICATE_FACTOR;
 
@@ -114,6 +114,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       if(distinctTranslations != null) {
 
         // Get surface string:
+        assert (hyp != null);
         AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
         // If seen this string before and not among the top-k, skip it:
         if(hypCount > SAFE_LIST && distinctTranslations.contains(seq)) 
@@ -129,6 +130,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       } else {
 
         Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
+        assert(hyp != null);
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
             collectFeatureValues(hyp), collectAlignments(hyp), beamGoalHyp.id));
         if (translations.size() >= size)
@@ -217,7 +219,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   /**
    *
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked,unused")
   protected Beam<Hypothesis<TK,FV>>[] createBeamsForCoverageCounts(int beamCnt, int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter) {
     Beam<Hypothesis<TK,FV>>[] beams = new Beam[beamCnt];
     for (int i = 0; i < beams.length; i++) {
@@ -230,6 +232,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
    *
    * @author danielcer
    */
+  @SuppressWarnings("unused")
   public class CoverageBeams {
     final private Map<CoverageSet, Beam<Hypothesis<TK,FV>>> beams =  new HashMap<CoverageSet, Beam<Hypothesis<TK,FV>>>();
     final private Set<CoverageSet>[] coverageCountToCoverageSets;

@@ -185,6 +185,8 @@ public class Phrasal {
   public static boolean withGaps = false;
   public static int distortionLimit = DEFAULT_DISTORTION_LIMIT;
 
+  static List<String> gapOpts = null;
+
   List<Inferer<IString, String>> inferers;
 	//Inferer<IString, String> refInferer;
 	PhraseGenerator<IString> phraseGenerator;
@@ -240,6 +242,8 @@ public class Phrasal {
       IString.load(config.get(ISTRING_VOC_OPT).get(0));
 
     withGaps = config.containsKey(GAPS_OPT) || config.containsKey(MAX_GAP_SPAN_OPT);
+    if (withGaps)
+      gapOpts = config.containsKey(MAX_GAP_SPAN_OPT) ? config.get(MAX_GAP_SPAN_OPT) : config.get(GAPS_OPT);
     MosesPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(GAPS_IN_FUTURE_COST_OPT).get(0));
@@ -566,19 +570,26 @@ public class Phrasal {
 		if (discriminativeTMParameter) {
 			System.err.printf("Using Discriminative TM\n");
 		}
+
     String linearDistortion = withGaps ?
        DTULinearDistortionFeaturizer.class.getName() :
         (mosesMode ? LinearDistortionFeaturizer.class.getName() :
                      LinearFutureCostFeaturizer.class.getName());
+
+    String gapType = !withGaps ? FeaturizerFactory.GapType.none.name() :
+        ((gapOpts.size() > 1 && Integer.parseInt(gapOpts.get(1)) > 0) ?
+          FeaturizerFactory.GapType.both.name() : FeaturizerFactory.GapType.source.name());
+
 		featurizer = FeaturizerFactory.factory(
 				FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR, makePair(
           FeaturizerFactory.LINEAR_DISTORTION_PARAMETER, linearDistortion), makePair(
-						FeaturizerFactory.ARPA_LM_PARAMETER, lgModel), makePair(
-              FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc), makePair(
-								FeaturizerFactory.DISCRIMINATIVE_LM_PARAMETER, ""
-								+ discriminativeLMOrder), makePair(
-										FeaturizerFactory.DISCRIMINATIVE_TM_PARAMETER, ""
-										+ discriminativeTMParameter));
+            FeaturizerFactory.GAP_PARAMETER, gapType), makePair(
+              FeaturizerFactory.ARPA_LM_PARAMETER, lgModel), makePair(
+                FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc), makePair(
+                  FeaturizerFactory.DISCRIMINATIVE_LM_PARAMETER, ""
+                  + discriminativeLMOrder), makePair(
+                      FeaturizerFactory.DISCRIMINATIVE_TM_PARAMETER, ""
+                      + discriminativeTMParameter));
 
     if (config.containsKey(DISABLED_FEATURIZERS)) {
       Set<String> disabledFeaturizers = new HashSet<String>();
@@ -772,10 +783,8 @@ public class Phrasal {
       generateMosesNBestList = Boolean.parseBoolean(config.get(MOSES_NBEST_LIST_OPT).get(0));
     }
 
-    if(withGaps) {
+    if (withGaps) {
       // Support for gaps:
-      List<String> gapOpts =
-        config.containsKey(MAX_GAP_SPAN_OPT) ? config.get(MAX_GAP_SPAN_OPT) : config.get(GAPS_OPT);
       if (gapOpts.size() < 1 || gapOpts.size() > 2)
         throw new UnsupportedOperationException();
       int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));

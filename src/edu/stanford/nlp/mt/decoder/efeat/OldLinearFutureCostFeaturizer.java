@@ -13,7 +13,8 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 /**
  * @author Spence Green
  */
-public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, String> implements IncrementalFeaturizer<IString, String> {
+@SuppressWarnings("unused")
+public class OldLinearFutureCostFeaturizer extends StatefulFeaturizer<IString, String> implements IncrementalFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDistortionFeaturizer";
   public static final boolean DEBUG = (System.getProperty(DEBUG_PROPERTY) != null);
@@ -25,7 +26,7 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
   // 1.0 - all cost
   private float alpha = 1.0f;
 
-  public LinearFutureCostFeaturizer(String... args) {
+  public OldLinearFutureCostFeaturizer(String... args) {
 
     assert args.length <= 1;
     if(args.length == 1)
@@ -46,7 +47,7 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 
         //Known forward jumps
         final int cSize = f.hyp.foreignCoverage.size();
-        float numCoveredPositions = 0.0f;
+        float numCoveredPositions; // = 0.0f;
         
         if(f.hyp.foreignCoverage.size() == f.foreignSentence.size())
           numCoveredPositions = (float) f.hyp.foreignCoverage.get(firstGapIndex, f.foreignPosition).cardinality();
@@ -60,7 +61,7 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
       }
     }
 
-    f.setState(this, (float) futureCost);
+    f.setState(this, futureCost);
 
     double deltaCost = futureCost - oldFutureCost;
 

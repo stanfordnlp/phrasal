@@ -31,6 +31,7 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
     System.err.println("Future cost delay: "+futureCostDelay);
   }
 
+  @SuppressWarnings("unused")
   public DTULinearDistortionFeaturizer(String... args) {
     futureCostDelay = Float.parseFloat(args[0]);
     System.err.println("Future cost delay: "+futureCostDelay);

@@ -25,11 +25,13 @@ public class FeaturizerFactory {
   public static final String ARPA_LM_VOC_PARAMETER = "arpalmvoc";
   public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
 	public static final String DISCRIMINATIVE_LM_PARAMETER = "discrimlm";
+  public static final String GAP_PARAMETER = "gap";
 	//public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
 	
 	public static final String FEATURE_ALIASES_RESOURCE = "edu/stanford/nlp/mt/resources/feature.aliases"; 
 	public static final Map<String,List<String>> featureAliases = readFeatureAliases(FEATURE_ALIASES_RESOURCE);
-	
+
+  public enum GapType { none, source, target, both }
 	
 	// Legacy stuff
 	public static final Map<String,Double> DEFAULT_TM_FEATURE_WEIGHTS_MAP = new HashMap<String,Double>();
@@ -48,7 +50,7 @@ public class FeaturizerFactory {
 		m.put(PhraseTableScoresFeaturizer.PREFIX+ MosesPhraseTable.FIVESCORE_PHRASE_PENALTY, -1.0);
 		m.put(PhraseTableScoresFeaturizer.PREFIX+ MosesPhraseTable.ONESCORE_P_t_f, 4.0);
 		
-		DEFAULT_BASELINE_WTS = new double[]{DEFAULT_LINEAR_DISTORTION_WT, DEFAULT_ARPALM_WT, DEFAULT_COLLAPSE_TM_WT};
+		DEFAULT_BASELINE_WTS = new double[] {DEFAULT_LINEAR_DISTORTION_WT, DEFAULT_ARPALM_WT, DEFAULT_COLLAPSE_TM_WT};
 	}
 	
 	static private Map<String,List<String>> readFeatureAliases(String aliasResource) {
@@ -135,6 +137,14 @@ public class FeaturizerFactory {
       throw new RuntimeException(e);
     }
 
+    // Gaps:
+    List<IncrementalFeaturizer<IString,String>> gapFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();
+    GapType gapType = GapType.valueOf(paramPairs.get(GAP_PARAMETER));
+    if (gapType == GapType.source || gapType == GapType.both)
+      gapFeaturizers.add(new SourceGapFeaturizer());
+    if (gapType == GapType.target || gapType == GapType.both)
+      gapFeaturizers.add(new TargetGapFeaturizer());
+
 		if (featurizerName.equals(BASELINE_FEATURIZERS) ||
 			featurizerName.equals(DEFAULT_WEIGHTING_BASELINE_FEATURIZERS)) {
 			
@@ -143,7 +153,8 @@ public class FeaturizerFactory {
 						"Baseline featurizers requires that a language model is specificed using the parameter '%s'",
 						ARPA_LM_PARAMETER));
 			}
-			List<IncrementalFeaturizer<IString,String>> baselineFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();			
+			List<IncrementalFeaturizer<IString,String>> baselineFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();
+      baselineFeaturizers.addAll(gapFeaturizers);
 			
 			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer;
 			
@@ -175,8 +186,9 @@ public class FeaturizerFactory {
 				return new CombinedFeaturizer<IString,String>(fullModel);
 			}
 		} else if (featurizerName.equals(PSEUDO_PHARAOH_GENERATOR)) {
-			List<IncrementalFeaturizer<IString,String>> pharaohFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();			
-			
+			List<IncrementalFeaturizer<IString,String>> pharaohFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();
+      pharaohFeaturizers.addAll(gapFeaturizers);
+
 			IncrementalFeaturizer<IString,String> arpaLmFeaturizer, phraseTableScoresFeaturizer, wordPenaltyFeaturizer,
 				unknownWordFeaturizer;
 			
