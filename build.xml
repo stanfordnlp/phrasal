@@ -149,7 +149,11 @@ includeantruntime="false">
 
   <!-- End of TestNG stuff -->
 
-  <target name="all" depends="clean,compile"
+
+  <target name="compile-all" depends="compile"
+          description="Compile everything" />
+
+  <target name="all" depends="clean,compile-all"
           description="Clean and re-compile." />
 
 </project>
