@@ -91,7 +91,7 @@ public class PhraseExtract {
   static public final String PTABLE_LEX_FILTER_OPT = "lexFilter"; // p_lex(e|f) filtering
 
   // lexicalized re-ordering models:
-  static public final String LEX_REORDERING_TYPE_OPT = "lexicalizedModelType";
+  static public final String LEX_REORDERING_TYPE_OPT = "orientationModelType";
   static public final String LEX_REORDERING_PHRASAL_OPT = "phrasalLexicalizedModel";
   static public final String LEX_REORDERING_HIER_OPT = "hierarchicalLexicalizedModel";
   static public final String LEX_REORDERING_START_CLASS_OPT = "lexicalizedModelHasStart";
@@ -174,6 +174,8 @@ public class PhraseExtract {
 
     this.prop = prop;
 
+    boolean withGaps = Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT, "false"));
+
     // Possibly load properties from config file:
     String configFile = prop.getProperty(CONFIG_OPT);
     if (configFile != null) {
@@ -225,8 +227,9 @@ public class PhraseExtract {
     if (fFilterList != null)
       sourceFilter.addPhrasesFromList(fFilterList);
     else if (fFilterCorpus != null) {
+		  Integer maxSpanF = withGaps ? DTUPhraseExtractor.maxSpanF : null;
       sourceFilter.addPhrasesFromCorpus
-        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, DTUPhraseExtractor.maxSpanF, addBoundaryMarkers);
+        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, maxSpanF, addBoundaryMarkers);
     }
     if (Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT))) {
       sourceFilter.createSourceTrie();
@@ -250,9 +253,11 @@ public class PhraseExtract {
 
   
 	public void init() {
+
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if (exsString == null || exsString.equals("") || exsString.equals("moses"))
       exsString = "edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor";
+
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
     extractors = new ArrayList<AbstractFeatureExtractor>();

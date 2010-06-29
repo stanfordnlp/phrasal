@@ -20,7 +20,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
 @EXPORT      = ();
-@EXPORT_OK   = qw(&load_ptable &load_ptable_fh &dump_ptable &load_phrases &filter_ptable 
+@EXPORT_OK   = qw(&load_ptable &load_ptable_fh &dump_ptable &load_phrases &filter_ptable &load_nbest 
                   &remove_unreachable_phrases &load_mt_sgml &load_ibm_doc_scores &add_feature);
 
 # Load phrase pairs, alignment, and scores from a phrase table:
@@ -219,10 +219,29 @@ sub load_phrases {
 	return \%phrases;
 }
 
+# Load n-best list:
+sub load_nbest {
+	my ($file,%args) = @_;
+	my $fh;
+	my @nbest;
+	open($fh,$file);
+	binmode($fh,":utf8");
+	while(<$fh>) {
+		s/^\s*//;
+		s/\s*$//;
+		my @w = split(/ \|\|\| /);
+		push @{$nbest[$w[0]]}, \@w;
+	}
+	close($fh);
+	return \@nbest;
+}
+
 # Load MT SGML or XML file:
 sub load_mt_sgml {
 	my ($file,%args) = @_;
 	my $fdocs = $args{docs};
+	my $keepid = $args{keepid};
+	my $removez = $args{removez};
 	my (@segs,%segs,%docs,$fh);
 	open($fh,$file) || die "Can't open: $file\n";
 	binmode($fh,":utf8");
@@ -235,8 +254,17 @@ sub load_mt_sgml {
 		elsif(/<seg id=(\S+)>(.*)<\/seg>/i) {
 			if(!defined $fdocs || $fdocs->{$docid}) {
 				my ($segid,$txt) = ($1,$2);
+				$segid =~ s/[">]//g;
+				$txt =~ s/^ +//;
+				$txt =~ s/ +$//;
 				$segid =~ s/"//g;
-				if($segid =~ s/^\d+s/s/) { $segid =~ s/000//g }
+				if ($removez) {
+					if($segid =~ /^\d+s/) { $segid =~ s/(\d)000/$1/g }
+				} else {
+					unless($keepid) {
+						if($segid =~ s/^\d+s/s/) { $segid =~ s/000//g }
+					}
+				}
 				$docs{$docid} ||= scalar @segs;
 				if(defined $segs{$docid}{$segid}) {
 					push @{$segs[$segs{$docid}{$segid}][2]}, $txt;
