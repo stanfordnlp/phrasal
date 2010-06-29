@@ -59,6 +59,8 @@ public class PhraseExtract {
   static public final String F_CORPUS_OPT = "fCorpus";
   static public final String E_CORPUS_OPT = "eCorpus";
   static public final String A_CORPUS_OPT = "align";
+  static public final String A_FE_CORPUS_OPT = "efAlign";
+  static public final String A_EF_CORPUS_OPT = "feAlign";
   static public final String EXTRACTORS_OPT = "extractors";
 
   static public final String PHRASE_EXTRACTOR_OPT = "phraseExtractor";
@@ -79,6 +81,7 @@ public class PhraseExtract {
   static public final String MAX_INCONSISTENCIES_OPT = "maxInconsistencies";
   static public final String MEM_USAGE_FREQ_OPT = "memUsageFreq";
   static public final String THREADS_OPT = "threads";
+  static public final String WITH_GAPS_OPT  = "withGaps";
 
   // phrase translation probs:
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -88,8 +91,9 @@ public class PhraseExtract {
   static public final String PTABLE_LEX_FILTER_OPT = "lexFilter"; // p_lex(e|f) filtering
 
   // lexicalized re-ordering models:
-  static public final String LEX_REORDERING_TYPE_OPT = "pharaohLexicalizedModel";
+  static public final String LEX_REORDERING_TYPE_OPT = "lexicalizedModelType";
   static public final String LEX_REORDERING_PHRASAL_OPT = "phrasalLexicalizedModel";
+  static public final String LEX_REORDERING_HIER_OPT = "hierarchicalLexicalizedModel";
   static public final String LEX_REORDERING_START_CLASS_OPT = "lexicalizedModelHasStart";
   static public final String LEX_REORDERING_2DISC_CLASS_OPT = "lexicalizedModelHas2Disc";
 
@@ -99,11 +103,11 @@ public class PhraseExtract {
 
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(
-       F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT, EXTRACTORS_OPT 
+       F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT
      ));
     OPTIONAL_OPTS.addAll(Arrays.asList(
        FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT, 
-       SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT,
+       SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT, EXTRACTORS_OPT,
        AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT,
        AbstractPhraseExtractor.MAX_PHRASE_LEN_E_OPT, 
        AbstractPhraseExtractor.MAX_PHRASE_LEN_F_OPT, 
@@ -116,18 +120,18 @@ public class PhraseExtract {
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT,
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
-       LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT,
+       LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT, LEX_REORDERING_HIER_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT, 
 			 SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
 			 MAX_INCONSISTENCIES_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
-       DTUPhraseExtractor.WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
+       WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
        DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_OPT, DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
        DTUPhraseExtractor.NO_TARGET_GAPS_OPT, DTUPhraseExtractor.NO_UNALIGNED_GAPS_OPT,
        DTUPhraseExtractor.NO_UNALIGNED_OR_LOOSE_GAPS_OPT, DTUPhraseExtractor.HIERO_RULES_OPT,
-       DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT, DTUPhraseExtractor.ALL_SUBSEQUENCES_OLD_OPT,
+       DTUPhraseExtractor.ALL_SUBSEQUENCES_LOOSE_OPT, DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT,
        DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
@@ -172,10 +176,10 @@ public class PhraseExtract {
 
     // Possibly load properties from config file:
     String configFile = prop.getProperty(CONFIG_OPT);
-    if(configFile != null) {
+    if (configFile != null) {
       try {
         IOTools.addConfigFileProperties(prop, configFile);
-      } catch(IOException e) {
+      } catch (IOException e) {
         e.printStackTrace();
         usage();
         System.exit(1);
@@ -184,7 +188,7 @@ public class PhraseExtract {
 
     // Check required, optional properties:
     System.err.println("properties: "+prop.toString());
-    if(!prop.keySet().containsAll(REQUIRED_OPTS)) {
+    if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
       Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
       System.err.printf
@@ -193,7 +197,7 @@ public class PhraseExtract {
       System.exit(1);
     }
     
-    if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
+    if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
       Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
@@ -216,15 +220,15 @@ public class PhraseExtract {
       Boolean.parseBoolean(prop.getProperty(EMPTY_FILTER_LIST_OPT,"false"));
     numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
     //fPhrases = null;
-    if(emptyFilterList || fFilterList != null || fFilterCorpus != null)
+    if (emptyFilterList || fFilterList != null || fFilterCorpus != null)
       filterFromDev = true;
-    if(fFilterList != null)
+    if (fFilterList != null)
       sourceFilter.addPhrasesFromList(fFilterList);
-    else if(fFilterCorpus != null) {
+    else if (fFilterCorpus != null) {
       sourceFilter.addPhrasesFromCorpus
         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, DTUPhraseExtractor.maxSpanF, addBoundaryMarkers);
     }
-    if(Boolean.parseBoolean(prop.getProperty(DTUPhraseExtractor.WITH_GAPS_OPT))) {
+    if (Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT))) {
       sourceFilter.createSourceTrie();
     }
 
@@ -235,7 +239,7 @@ public class PhraseExtract {
     memUsageFreq = Integer.parseInt(prop.getProperty(MEM_USAGE_FREQ_OPT,"1000"));
     printFeatureNames = Boolean.parseBoolean(prop.getProperty(PRINT_FEATURE_NAMES_OPT,"true"));
     int numLines = Integer.parseInt(prop.getProperty(NUM_LINES_OPT,"-1"));
-    if(numLines > 0) {
+    if (numLines > 0) {
       startAtLine = 0;
       endAtLine = numLines;
     }
@@ -247,14 +251,16 @@ public class PhraseExtract {
   
 	public void init() {
     String exsString = prop.getProperty(EXTRACTORS_OPT);
-    if(exsString.equals("moses"))
-      exsString = "mt.train.MosesFeatureExtractor:mt.train.LexicalReorderingFeatureExtractor";
+    if (exsString == null || exsString.equals("") || exsString.equals("moses"))
+      exsString = "edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor";
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
     extractors = new ArrayList<AbstractFeatureExtractor>();
     infoFileForExtractors = new ArrayList<String>();
 
-    for(String exStr : exsString.split(":")) {
+    boolean withGaps = Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT,"false"));
+
+    for (String exStr : exsString.split(":")) {
       try {
         AbstractFeatureExtractor fe;
         String[] extractorAndInfofile = exStr.split("=");
@@ -274,7 +280,7 @@ public class PhraseExtract {
         // if exStr contains parentheses, assume it is a call to a constructor 
         // (without the "new"):
         int pos = exStr.indexOf('(');
-        if(pos >= 0) {
+        if (pos >= 0) {
           StringBuffer constructor = new StringBuffer("new ").append(exStr);
           System.err.println("Running constructor: "+constructor);
           Interpreter interpreter = (Interpreter) Class.forName("edu.stanford.nlp.mt.BshInterpreter").newInstance();
@@ -297,7 +303,7 @@ public class PhraseExtract {
         System.exit(1);
       }
     }
-    int maxCrossings = Integer.parseInt(prop.getProperty(MAX_INCONSISTENCIES_OPT,"-1"));
+    //int maxCrossings = Integer.parseInt(prop.getProperty(MAX_INCONSISTENCIES_OPT,"-1"));
 
     String phraseExtractorName = prop.getProperty(PHRASE_EXTRACTOR_OPT);
     if (phraseExtractorName != null) {
@@ -315,12 +321,13 @@ public class PhraseExtract {
          Properties.class, AlignmentTemplates.class, List.class
         });
         phraseExtractor = ct.newInstance(prop,alTemps,extractors);
-      } catch(Exception e) {
+      } catch (Exception e) {
         throw new RuntimeException(e);
       }
     } else {
-      phraseExtractor = //(maxCrossings >= 0) ?
-        //new SoftPhraseExtractor(prop,alTemps,extractors) :
+      phraseExtractor = withGaps ?
+        new DTUPhraseExtractor(prop,alTemps,extractors) :
+         //(maxCrossings >= 0) ? new SoftPhraseExtractor(prop,alTemps,extractors) :
         new MosesPhraseExtractor(prop,alTemps,extractors);
     }
     //if (phraseExtractor instanceof SoftPhraseExtractor)
@@ -371,7 +378,7 @@ public class PhraseExtract {
   // Make as many passes over training data as needed to extract features.
   void extractFromAlignedData() {
 
-    if(!filterFromDev)
+    if (!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
@@ -379,18 +386,18 @@ public class PhraseExtract {
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
 
     try {
-      for(int passNumber=0; passNumber<totalPassNumber; ++passNumber) {
+      for (int passNumber=0; passNumber<totalPassNumber; ++passNumber) {
         alTemps.enableAlignmentCounts(passNumber == 0);
 
         // Set current pass:
-        for(AbstractFeatureExtractor e : extractors)
+        for (AbstractFeatureExtractor e : extractors)
           e.setCurrentPass(passNumber);
 
         doneReadingData = false;
 
         assert(threads.isEmpty());
         assert(dataQueue.isEmpty());
-        for(int i=0; i<nThreads; ++i) {
+        for (int i=0; i<nThreads; ++i) {
           System.err.printf("Creating thread %d...\n", i);
           Extractor thread = new Extractor(this, dataQueue);
           thread.start();
@@ -404,13 +411,13 @@ public class PhraseExtract {
           fReader = IOTools.getReaderFromFile(fCorpus),
           eReader = IOTools.getReaderFromFile(eCorpus),
           aReader = IOTools.getReaderFromFile(alignCorpus);
-        if(phraseExtractorInfoFile != null)
+        if (phraseExtractorInfoFile != null)
           pReader = IOTools.getReaderFromFile(phraseExtractorInfoFile);
 
         // make Readers from the info files for each extractors
         List<LineNumberReader>
           infoReaders = new ArrayList<LineNumberReader>();
-        for(String infoFile : infoFileForExtractors) {
+        for (String infoFile : infoFileForExtractors) {
           LineNumberReader r = null;
           if (infoFile != null) {
             r = IOTools.getReaderFromFile(infoFile);
@@ -423,7 +430,7 @@ public class PhraseExtract {
           fLine = fReader.readLine();
           boolean done = (fLine == null || lineNb == endAtLine);
 
-          if(lineNb % memUsageFreq == 0 || done) {
+          if (lineNb % memUsageFreq == 0 || done) {
             long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
             long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
             double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
@@ -432,55 +439,55 @@ public class PhraseExtract {
                               lineNb, totalStepSecs, totalMemory, freeMemory, alTemps.getSizeInfo());
           }
 
-          if(done) {
-            if(startAtLine >= 0 || endAtLine >= 0)
+          if (done) {
+            if (startAtLine >= 0 || endAtLine >= 0)
               System.err.printf("Range done: [%d-%d], current line is %d.\n",
                                 startAtLine, endAtLine-1, lineNb);
             break;
           }
 
           String eLine = eReader.readLine();
-          if(eLine == null) throw new IOException("Target-language corpus is too short!");
+          if (eLine == null) throw new IOException("Target-language corpus is too short!");
           String aLine = aReader.readLine();
-          if(aLine == null) throw new IOException("Alignment file is too short!");
+          if (aLine == null) throw new IOException("Alignment file is too short!");
           String pLine = pReader == null ? null : pReader.readLine();
-          if(aLine.equals(""))
+          if (aLine.equals(""))
             continue;
 
-          if(nThreads == 0) {
+          if (nThreads == 0) {
             infoLinesForExtractors = new ArrayList<String>();
             for (LineNumberReader infoReader : infoReaders) {
               String infoLine = null;
               if (infoReader != null) {
                 infoLine = infoReader.readLine();
-                if(infoLine == null)
+                if (infoLine == null)
                   throw new IOException("Info file for one extractor is too short!");
               }
               infoLinesForExtractors.add(infoLine);
             }
           }
           
-          if(lineNb < startAtLine)
+          if (lineNb < startAtLine)
             continue;
-          if(DETAILED_DEBUG) {
+          if (DETAILED_DEBUG) {
             System.err.printf("e(%d): %s\n",lineNb,eLine);
             System.err.printf("f(%d): %s\n",lineNb,fLine);
             System.err.printf("a(%d): %s\n",lineNb,aLine);
           }
-          if(lowercase) {
+          if (lowercase) {
             fLine = fLine.toLowerCase();
             eLine = eLine.toLowerCase();
           }
-          if(threads.size() == 0) {
+          if (threads.size() == 0) {
             processLine(phraseExtractor, lineNb, sent, fLine, eLine, aLine, pLine);
           } else {
             dataQueue.put(new Pair<Integer,String[]>(lineNb, new String[] {fLine, eLine, aLine, pLine}));
           }
         }
 
-        if(eReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
+        if (eReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
           throw new IOException("Target-language corpus contains extra lines!");
-        if(aReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
+        if (aReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
           throw new IOException("Alignment file contains extra lines!");
 
         fReader.close();
@@ -489,10 +496,10 @@ public class PhraseExtract {
 
         doneReadingData = true;
 
-        for(int i=0; i<nThreads; ++i)
+        for (int i=0; i<nThreads; ++i)
           threads.get(i).join();
         
-        assert(dataQueue.isEmpty());
+        assert (dataQueue.isEmpty());
         threads.clear();
 
         double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
@@ -500,12 +507,12 @@ public class PhraseExtract {
       }
 
       // just let each extractor output some stuff to the STDERR
-      for(AbstractFeatureExtractor e : extractors)
+      for (AbstractFeatureExtractor e : extractors)
         e.report();
 
-    } catch(IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
-    } catch(InterruptedException e) {
+    } catch (InterruptedException e) {
       e.printStackTrace();
     }
   }
@@ -517,13 +524,13 @@ public class PhraseExtract {
   }
 
   private void extractPhrasalFeatures(PhraseExtractor ex, SymmetricalWordAlignment sent, String pLine) {
-    if(pLine != null)
+    if (pLine != null)
       ex.setSentenceInfo(sent, pLine);
     ex.extractPhrases(sent);
   }
 
   private void extractSententialFeatures(AbstractPhraseExtractor ex, SymmetricalWordAlignment sent) {
-    for(int i = 0; i < extractors.size(); i++) {
+    for (int i = 0; i < extractors.size(); i++) {
       AbstractFeatureExtractor e = extractors.get(i);
       String infoLine = (nThreads == 0) ? infoLinesForExtractors.get(i) : "";
       e.extract(sent,infoLine, ex.getAlGrid());
@@ -532,18 +539,18 @@ public class PhraseExtract {
 
   // Write combined features to a stream.
   boolean write(PrintStream oStream, boolean noAlign) {
-    if(oStream == null)
+    if (oStream == null)
         oStream = System.out;
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
     System.err.printf("Alignment templates to write: %d\n",alTemps.size());
 
-    for(int idx=0; idx<alTemps.size(); ++idx) {
+    for (int idx=0; idx<alTemps.size(); ++idx) {
       boolean skip=false;
       StringBuilder str = new StringBuilder();
 
-      if(idx % 10000 == 0 || idx+1==alTemps.size()) {
+      if (idx % 10000 == 0 || idx+1==alTemps.size()) {
         long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
         long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
         double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
@@ -556,15 +563,15 @@ public class PhraseExtract {
       str.append(alTemp.toString(noAlign));
       str.append(AlignmentTemplate.DELIM);
 
-      for(AbstractFeatureExtractor e : extractors) {
+      for (AbstractFeatureExtractor e : extractors) {
         Object scores = e.score(alTemp);
 
-        if(scores == null) {
+        if (scores == null) {
           skip=true;
           break;
         }
 
-        if(scores instanceof float[]) { // as dense vector
+        if (scores instanceof float[]) { // as dense vector
           float[] scoreArray = (float[]) scores;
           for (float aScoreArray : scoreArray) {
             str.append(aScoreArray).append(" ");
@@ -574,12 +581,12 @@ public class PhraseExtract {
           for (double aScoreArray : scoreArray) {
             str.append((float) aScoreArray).append(" ");
           }
-        } else if(scores.getClass().equals(Int2IntLinkedOpenHashMap.class)) { // as sparse vector
+        } else if (scores.getClass().equals(Int2IntLinkedOpenHashMap.class)) { // as sparse vector
           Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;
-          for(int fIdx : counter.keySet()) {
+          for (int fIdx : counter.keySet()) {
             int cnt = counter.get(fIdx);
             int minCount = 1;
-            if(cnt >= minCount) {
+            if (cnt >= minCount) {
               str.append(printFeatureNames ? featureIndex.get(fIdx) : fIdx);
               str.append("=").append(cnt).append(" ");
             }
@@ -589,7 +596,7 @@ public class PhraseExtract {
             ("AbstractFeatureExtractor should return double[] or Counter, not "+scores.getClass());
         }
       }
-      if(!skip)
+      if (!skip)
         oStream.println(str.toString());
     }
 
@@ -600,25 +607,27 @@ public class PhraseExtract {
 
   private void setTotalPassNumber() {
     totalPassNumber = 0;
-    for(AbstractFeatureExtractor ex : extractors) {
+    for (AbstractFeatureExtractor ex : extractors) {
       int p = ex.getRequiredPassNumber();
-      if(p > totalPassNumber)
+      if (p > totalPassNumber)
         totalPassNumber = p;
     }
   }
 
   public void extractAll() {
 
-    boolean useTrieIndex = prop.getProperty(DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT,"false").equals("true");
+    boolean useTrieIndex =
+     prop.getProperty(DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT,"false").equals("true") ||
+     prop.getProperty(DTUPhraseExtractor.ALL_SUBSEQUENCES_LOOSE_OPT,"false").equals("true");
     System.err.println("Use trie index: "+useTrieIndex);
 
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);
 
-    if(filterFromDev) {
+    if (filterFromDev) {
       int sz = sourceFilter.size();
       int size = 1 + (numSplits == 0 ? sz : sz/numSplits);
       int startLine = 0;
-      while(startLine < sz) {
+      while (startLine < sz) {
         init();
         sourceFilter.setRange(startLine, startLine+size);
         //alTemps.setSourceFilter(sourceFilter);
@@ -633,7 +642,7 @@ public class PhraseExtract {
       write(oStream, noAlign);
     }
 
-    if(oStream != null)
+    if (oStream != null)
       oStream.close();
     
   }

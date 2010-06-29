@@ -32,6 +32,8 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   public static final String FILL_HASH_PROPERTY = "FillHash";
   public static final boolean FILL_HASH = Boolean.parseBoolean(System.getProperty(FILL_HASH_PROPERTY, "true"));
 
+  public static final int DEFAULT_MAX_FERTILITY = 5;
+
   private final SourceFilter sourceFilter;
 
   private final IntegerArrayIndex fIndex,
@@ -54,7 +56,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    */
   public AlignmentTemplates(Properties prop, SourceFilter sourceFilter) { // boolean filterFromDev) {
     this.maxFertility = Double.parseDouble
-      (prop.getProperty(PhraseExtract.MAX_FERTILITY_OPT,"1e30"));
+      (prop.getProperty(PhraseExtract.MAX_FERTILITY_OPT, Integer.toString(DEFAULT_MAX_FERTILITY)));
     this.sourceFilter = sourceFilter;
     fIndex = sourceFilter.getSourceTable();
   }
@@ -72,7 +74,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * Add alignment template to phrase table. 
    */
   public void addToIndex(AlignmentTemplate alTemp) {
-    if(sourceFilter.isEnabled()) {
+    if (sourceFilter.isEnabled()) {
       boolean add = sourceFilter.allows(alTemp);
       addToIndex(alTemp,add);
     } else {
@@ -97,7 +99,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       int idx = alTemp.getKey();
       int alIdx = alTemp.getAKey();
       final Int2IntArrayMap aCounts;
-      if(idx >= 0) {
+      if (idx >= 0) {
         assert(idx <= index.size());
         synchronized(aCounter) {
           //assert(idx <= aCounter.size());
@@ -105,10 +107,10 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
             aCounter.add(new Int2IntArrayMap());
           aCounts = aCounter.get(idx);
         }
-        synchronized(aCounts) {
+        synchronized (aCounts) {
           assert(aCounts != null);
           int oldCount = aCounts.get(alIdx);
-          if(oldCount < Integer.MAX_VALUE)
+          if (oldCount < Integer.MAX_VALUE)
             aCounts.put(alIdx, 1+oldCount);
         }
       }

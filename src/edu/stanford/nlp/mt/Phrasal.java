@@ -123,7 +123,6 @@ public class Phrasal {
   static final int DEFAULT_MAX_EPOCHS = 5;
   static final int DEFAULT_DISTORTION_LIMIT = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
-  //static final boolean DO_PAIRED = Boolean.parseBoolean(System.getProperty("DO_PAIRED", "false"));
 
   static final boolean VERBOSE_LEARNER = true;
 
@@ -224,7 +223,6 @@ public class Phrasal {
 	public static LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.BEST_ON_N_BEST_LIST;
 	LearningTarget learningTarget = DEFAULT_LEARNING_TARGET;
 
-	//static final int DEBUG_LEVEL = 0;
 	EvaluationMetric<IString,String> learningMetric = null;
 	EvaluationMetric<IString,String> evalMetric = null;
 
@@ -307,10 +305,10 @@ public class Phrasal {
 
   static Map<String, List<String>> readArgs(String[] args) throws IOException {
     Map<String, List<String>> config = new HashMap<String, List<String>>();
-    for(Map.Entry<Object,Object> e : StringUtils.argsToProperties(args).entrySet()) {
+    for (Map.Entry<Object,Object> e : StringUtils.argsToProperties(args).entrySet()) {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
-      if(CONFIG_FILE.equals(key)) {
+      if (CONFIG_FILE.equals(key)) {
         config.putAll(readConfig(value));
       } else {
         config.put(key,Arrays.asList(value));

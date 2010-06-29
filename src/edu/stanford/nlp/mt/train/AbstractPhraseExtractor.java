@@ -30,6 +30,10 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   static public final String ONLY_TIGHT_PHRASES_OPT = "onlyTightPhrases";
   static public final String ONLY_TIGHT_DTUS_OPT  = "onlyTightDTUs";
 
+  static public final int DEFAULT_MAX_LEN = 7;
+  static public final int DEFAULT_MAX_LEN_HIER = 500;
+  static public final int DEFAULT_MAX_E_LEN = 7;
+
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugAbstractPhraseExtractor";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
@@ -45,8 +49,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   public static final String NO_EMPTY_ALIGNMENT_PROPERTY = "NoEmptyAlignmentPhrases";
   public static final boolean NO_EMPTY_ALIGNMENT = Boolean.parseBoolean(System.getProperty(NO_EMPTY_ALIGNMENT_PROPERTY, "true"));
 
-  static int maxPhraseLenF = 7, maxPhraseLenE = 7;
-  static int maxExtractedPhraseLenF = 7, maxExtractedPhraseLenE = 7;
+  static int maxPhraseLenF = DEFAULT_MAX_LEN, maxPhraseLenE = DEFAULT_MAX_LEN;
+  static int maxExtractedPhraseLenF = DEFAULT_MAX_E_LEN, maxExtractedPhraseLenE = DEFAULT_MAX_E_LEN;
 
   static boolean onlyTightPhrases = false, onlyTightDTUs = false;
 
@@ -178,6 +182,13 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   }
 
   static void setPhraseExtractionProperties(Properties prop) {
+
+    if (Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_HIER_OPT, "false"))) {
+      prop.setProperty(PhraseExtract.LEX_REORDERING_PHRASAL_OPT,"true");
+      maxPhraseLenF = DEFAULT_MAX_LEN_HIER; 
+      maxPhraseLenE = DEFAULT_MAX_LEN_HIER;
+    }
+
     int max = Integer.parseInt(prop.getProperty(MAX_PHRASE_LEN_OPT,"-1"));
     int maxF = Integer.parseInt(prop.getProperty(MAX_PHRASE_LEN_F_OPT,"-1"));
     int maxE = Integer.parseInt(prop.getProperty(MAX_PHRASE_LEN_E_OPT,"-1"));
@@ -218,8 +229,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     System.err.printf("maximum extracted phrase length (F): %d\n", maxExtractedPhraseLenF);
     System.err.printf("maximum extracted phrase length (E): %d\n", maxExtractedPhraseLenE);
 
-    assert(maxPhraseLenE >= maxExtractedPhraseLenE);
-    assert(maxPhraseLenF >= maxExtractedPhraseLenF);
+    assert (maxPhraseLenE >= maxExtractedPhraseLenE);
+    assert (maxPhraseLenF >= maxExtractedPhraseLenF);
 
     String optStr = prop.getProperty(ONLY_TIGHT_PHRASES_OPT);
     onlyTightPhrases = optStr != null && !optStr.equals("false");

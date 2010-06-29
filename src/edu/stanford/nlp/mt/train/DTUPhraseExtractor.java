@@ -14,16 +14,18 @@ import edu.stanford.nlp.util.Triple;
  */
 public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
-  static public final String WITH_GAPS_OPT  = "withGaps";
   static public final String NO_TARGET_GAPS_OPT  = "noTargetGaps";
   static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
   static public final String HIERO_RULES_OPT  = "hieroRules";
-  static public final String ALL_SUBSEQUENCES_OPT  = "allSubsequences";
-  static public final String ALL_SUBSEQUENCES_OLD_OPT  = "allSubsequencesOld";
+  static public final String ALL_SUBSEQUENCES_LOOSE_OPT = "allSubsequencesLoose";
+  static public final String ALL_SUBSEQUENCES_OPT = "allSubsequences";
   static public final String NO_UNALIGNED_GAPS_OPT = "noUnalignedGaps"; // do not extract "w X w" if X is unaligned
   static public final String NO_UNALIGNED_OR_LOOSE_GAPS_OPT = "noUnalignedOrLooseGaps"; // do not extract w X w unless the first and last words of X are unaligned
   static public final String NO_UNALIGNED_SUBPHRASE_OPT = "noUnalignedSubphrase";
   //static public final String NO_CROSS_SERIAL_PHRASES_OPT  = "noCrossSerialPhrases";
+
+  static public final int DEFAULT_MAX_SIZE = 5;
+  static public final int DEFAULT_MAX_SPAN = 12;
 
   // Only affects phrases with gaps:
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
@@ -34,11 +36,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps, onlyCrossSerialDTU, allSubsequences, allSubsequencesOld,
+  static boolean withGaps, onlyCrossSerialDTU, allSubsequencesLoose, allSubsequences,
        noTargetGaps, noUnalignedSubphrase, noUnalignedGaps, noUnalignedOrLooseGaps;
   static boolean noCrossSerialPhrases = false;
-  static int maxSizeE = Integer.MAX_VALUE, maxSizeF = Integer.MAX_VALUE; //maxCSize = Integer.MAX_VALUE;
-  static int maxSpanE = Integer.MAX_VALUE, maxSpanF = Integer.MAX_VALUE;
+  static int maxSizeE = DEFAULT_MAX_SIZE, maxSizeF = DEFAULT_MAX_SIZE;
+  static int maxSpanE = DEFAULT_MAX_SPAN, maxSpanF = DEFAULT_MAX_SPAN;
 
   public static final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
 
@@ -67,7 +69,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     return c;
   }
 
-  public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) throws IOException {
+  public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
     substringExtractor = new MosesPhraseExtractor(prop, alTemps, extractors);
     substringExtractor.alGrid = alGrid;
@@ -76,9 +78,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   static public void setDTUExtractionProperties(Properties prop) {
 
-    // With gaps or not:
-    String optStr = prop.getProperty(WITH_GAPS_OPT);
-    withGaps = optStr == null || !optStr.equals("false");
+    String optStr;
+    withGaps = true;
 
     // No gaps on the target:
     optStr = prop.getProperty(NO_TARGET_GAPS_OPT);
@@ -96,40 +97,41 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     optStr = prop.getProperty(NO_UNALIGNED_SUBPHRASE_OPT);
     noUnalignedSubphrase = optStr != null && !optStr.equals("false");
 
-    // All subsequences:
-    optStr = prop.getProperty(ALL_SUBSEQUENCES_OPT);
-    allSubsequences = optStr != null && !optStr.equals("false");
-
     // All subsequences (as in NAACL submission):
     // (extracts a subset of "allSubsequences")
-    optStr = prop.getProperty(ALL_SUBSEQUENCES_OLD_OPT);
-    allSubsequencesOld = optStr != null && !optStr.equals("false");
-    assert(!allSubsequences || !allSubsequencesOld);
+    optStr = prop.getProperty(ALL_SUBSEQUENCES_OPT);
+    allSubsequences = optStr == null || !optStr.equals("false");
+
+    // All subsequences (more phrases):
+    optStr = prop.getProperty(ALL_SUBSEQUENCES_LOOSE_OPT);
+    allSubsequencesLoose = optStr != null && !optStr.equals("false");
+    if (allSubsequencesLoose)
+      allSubsequences = false;
 
     // Only extracting cross-serial dependencies (for debugging):
     optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
     onlyCrossSerialDTU = optStr != null && !optStr.equals("false");
 
     String s;
-    if((s = prop.getProperty(MAX_SPAN_F_OPT)) != null) {
+    if ((s = prop.getProperty(MAX_SPAN_F_OPT)) != null) {
       maxSpanF = Integer.parseInt(s);
     } else if((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
       maxSpanF = Integer.parseInt(s);
     }
 
-    if((s = prop.getProperty(MAX_SPAN_E_OPT)) != null) {
+    if ((s = prop.getProperty(MAX_SPAN_E_OPT)) != null) {
       maxSpanE = Integer.parseInt(s);
     } else if((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
       maxSpanE = Integer.parseInt(s);
     }
 
-   if((s = prop.getProperty(MAX_SIZE_F_OPT)) != null) {
+    if ((s = prop.getProperty(MAX_SIZE_F_OPT)) != null) {
       maxSizeF = Integer.parseInt(s);
     } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
       maxSizeF = Integer.parseInt(s);
     }
 
-    if((s = prop.getProperty(MAX_SIZE_E_OPT)) != null) {
+    if ((s = prop.getProperty(MAX_SIZE_E_OPT)) != null) {
       maxSizeE = Integer.parseInt(s);
     } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
       maxSizeE = Integer.parseInt(s);
@@ -139,13 +141,14 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     optStr = prop.getProperty(HIERO_RULES_OPT);
     boolean hieroRules = optStr != null && !optStr.equals("false");
     if (hieroRules) {
-      allSubsequences = true;
+      // Note: no longer working
+      allSubsequencesLoose = true;
       noUnalignedOrLooseGaps = true;
       //onlyTightPhrases = true;
       noCrossSerialPhrases = true;
     }
 
-    if(DEBUG)
+    if (DEBUG)
       AlignmentTemplateInstance.lazy = false;
   }
 
@@ -726,7 +729,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   Set<BitSet> subsequenceExtract(WordAlignment sent) {
 
     TrieIntegerArrayIndex fTrieIndex = alTemps.getSourceFilter().getSourceTrie();
-    assert((fTrieIndex != null) == (allSubsequences || allSubsequencesOld));
+    assert((fTrieIndex != null) == (allSubsequencesLoose || allSubsequences));
     
     Deque<Triple<Integer,Integer,BitSet>> q = new LinkedList<Triple<Integer,Integer,BitSet>>();
     bitsets.clear();
@@ -809,7 +812,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     // Add all subsequence phrases:
-    if (allSubsequences) {
+    if (allSubsequencesLoose) {
       for (BitSet bitset : subsequenceExtract(sent)) {
         DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
         if (dtu.consistencize()) {
@@ -854,7 +857,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     // Add rules specific to test set:
-    if (allSubsequencesOld) {
+    if (allSubsequences) {
       // This will only extract tight phrases:
       for (BitSet bitset : subsequenceExtract(sent)) {
         DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());

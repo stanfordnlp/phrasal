@@ -52,11 +52,17 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     enabledTypes[ReorderingTypes.discont1.ordinal()] = true;
     // Type of reordering model:
     String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
+    System.err.println("reordering type: "+type);
     String[] tokens = type.split("-");
     assert (2 <= tokens.length && tokens.length <= 3);
-    // Type of extraction: word-phrase (Moses) vs. phrase-phrase (Tillmann, etc):
+    // Type of extraction: word-phrase (Moses), phrase-phrase (Tillmann, etc), or hierarchical:
     phrasalReordering = Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_PHRASAL_OPT, "false"));
-    System.err.println("phrase-phrase reordering: "+phrasalReordering);
+    boolean hierReordering = Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_HIER_OPT, "false"));
+    System.err.println("phrasal reordering: "+phrasalReordering);
+    System.err.println("hierarchical reordering: "+ hierReordering);
+    if (hierReordering) {
+      phrasalReordering = true;
+    }
     if (phrasalReordering) {
       enabledTypes[ReorderingTypes.discont2.ordinal()] =
         Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
@@ -123,7 +129,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
       jointCounts = new ArrayList<Object>();
       totalJointCounts = new float[modelSize];
     }
-    if (Boolean.parseBoolean(prop.getProperty(DTUPhraseExtractor.WITH_GAPS_OPT))) {
+    if (Boolean.parseBoolean(prop.getProperty(PhraseExtract.WITH_GAPS_OPT))) {
       //withDTU = true;
       if (!phrasalReordering)
         System.err.println("Reordering model: discontinuous phrases without phrasal reordering.");
@@ -417,7 +423,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   private void addCountToArray
       (final ArrayList<Object> list, final float[] totalCounts, int type, AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
-    synchronized(totalCounts) {
+    synchronized (totalCounts) {
       ++totalCounts[type];
     }
     // Exit if alignment template was filtered out:
