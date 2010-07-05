@@ -1,0 +1,58 @@
+Note: it would be great if someone could wikify all these README files.
+
+###########################################
+Before you start:
+###########################################
+
+The following directories should be in your PATH:
+
+$JAVANLP_HOME/projects/mt/scripts
+$JAVANLP_HOME/projects/mt/external_scripts
+/u/nlp/packages/SRILM-1.5.11/bin
+/u/nlp/packages/SRILM-1.5.11/bin/i686-m64_c
+
+###########################################
+Steps to build the full GALE system:
+###########################################
+
+Create a new directory for your experiments, e.g., /scr/gale/P5-arabic.
+$ mkdir /scr/gale/P5-arabic
+
+Then follow instructions in STEPS.txt, which will create subdirectories:
+/scr/gale/P5-arabic/{01-lm,02-align,03-phrasal,etc}
+
+1) train LM
+	 directory: 01-lm
+   requires: SRILM and $JAVANLP_HOME/projects/mt/makefiles/lm/train/Makefile
+	 documentation: 
+	 	 STEPS.txt
+	   $JAVANLP_HOME/projects/mt/makefiles/lm/README (LM makefile)
+	   http://www-speech.sri.com/projects/srilm/ (general doc)
+		 http://www.speech.sri.com/projects/srilm/manpages/srilm-faq.7.html (faq)
+
+2) align words
+	 directory: 02-align
+   requires: Berkeley aligner and Moses symmetrization resources
+	 documentation: 
+	 	 STEPS.txt
+	   http://code.google.com/p/berkeleyaligner/
+
+3) run Phrasal (phrase extraction, MERT, and final decoding), automated with a makefile:
+   directory: 03-phrasal
+	 requires: JavaNLP
+	 documentation:
+	 	 STEPS.txt
+		 http://nlp.stanford.edu/nlpwiki/MTPipelineJavaNLP
+
+###########################################
+Directories of previous evaluations:
+(documentation in these directories 
+is often lacking!)
+###########################################
+
+/scr/nlp/data/gale2/GALE_Chinese_P3
+/scr/nlp/data/gale2/GALE-P3-arabic
+/scr/nlp/data/gale2/GALE-P3-arabic
+/scr/nlp/data/gale4/P4-Chinese
+/scr/nlp/data/gale4/P4-arabic
+/scr/nlp/data/gale4/P5-arabic

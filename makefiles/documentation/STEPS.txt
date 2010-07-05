@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Note: while this file is written as a bash script, 
+# you actually can't run it as a single command. 
+# Some commands in Step 2 must be run manually.
+
+####################################
+# Step 1: train LM
+# (Note: steps 1 & 2 can be run simultaneously)
+####################################
+
+# Checkout scripts and makefiles from javanlp:
+svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/makefiles/lm 01-lm
+cd 01-lm/train
+
+# The following scripts run 'make' to perform the following steps:
+# (1) extract documents from sources like /scr/nlp/data/ldc, 
+#     tokenize them, and merged them (-> input/*.utok.gz files)
+#     Note that scripts that perform step (1) take care of 
+#     removing documents released during the dev/test periods.
+#     If you you experiment with any new dev/test set, make 
+#     sure you modify 01-lm/scripts/LDC* to remove months 
+#     of the dev/test period.
+# (2) correct sentence segmentation (-> input/*.tok.gz files)
+# (3) compute ngram counts (-> train/*.counts.gz files)
+# (4) generate final ARPA file (-> releases/$ID.lm.gz file)
+# 
+# Note: this uses the configuration that works best for GALE.
+# If you need to customize anything in any makefile or script, 
+# please read 01-lm/README.
+../scripts/ae_mtFB_g4_afp_xin_1222 # generate Gigaword+MT LM
+../scripts/ae_bbn_1233 # generate BBN LM
+
+cd ../..
+
+####################################
+# Step 2: word alignment
+# (Note: steps 1 & 2 can be run simultaneously)
+####################################
+
+svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/makefiles/align 02-align
+cd 02-align
+
+# Preprocess data and split it into N chunks (N=7 by default):
+make
+
+# Perform word alignment (takes 1-3 days)
+echo "Data ready to be aligned.
+# Run Berkeley aligner on a separate 16+gb machine for each split:
+align 15g split1.conf >&split1.log
+align 15g split2.conf >&split2.log
+align 15g split3.conf >&split3.log
+align 15g split4.conf >&split4.log
+align 15g split5.conf >&split5.log
+align 15g split6.conf >&split6.log
+align 15g split7.conf >&split7.log"
+sleep 5d # but 'align' shouldn't take as long as 5 days
+
+# TODO: alignment symmetrization
+
+cd ..
+
+####################################
+# Step 3: phrase extraction, MERT, 
+# and final decoding.
+# (Step must be run after steps 1 & 2)
+####################################
+
+svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/makefiles/phrasal 03-phrasal
+cd 03-phrasal
+
+

@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+#####################################################
+# Make the command-line argument behave like a filter command.
+# Put a XXX in the command line, and it be replaced by the
+# name of a temporary file containin stdin of this script.
+#
+# Created by Michel Galley (mgalley@stanford.edu)
+# on Tue 18 Dec 2007 10:52:08 PM PST
+# $Id$
+#####################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+# Read command line:
+my $cmd = join(' ',@ARGV);
+
+# Replace XXX with temp file:
+my $tmp = `mktemp tmpXXXXXXXX`;
+chomp $tmp;
+$cmd =~ s/ XXX / $tmp /;
+print STDERR "cmd: $cmd\n";
+
+while(<STDIN>) {
+	chomp;
+	next unless -f $_;
+	my $cat = ($_ =~ /\.gz$/i) ? 'zcat' : 'cat';
+	print STDERR "CAT : $cat\n";
+	# Save data to temp file:
+	system("$cat $_ > $tmp");
+
+	# Run command line:
+	system($cmd);
+}
+
+# Cleanup:
+system("rm -f $tmp")

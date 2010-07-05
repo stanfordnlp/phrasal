@@ -1,0 +1,102 @@
+GENERAL
+
+To build state-of-the-art MT systems, you can find good insight in
+NIST reports and presentations: (presentation slides tend to be more
+useful since more than a couple of people read them...)
+
+/scr/nlp/data/gale2/NIST_EVAL08/presentations
+/scr/nlp/data/gale3/NIST09/presentations
+
+NIST 2008 is summarized here: http://nlp.stanford.edu/nlpwiki/NIST08Workshop
+
+Questions regarding NIST 2009 should be adressed to Spence Green (who
+attended the workshop.)
+
+The Stanford MT page (http://nlp.stanford.edu/projects/mt.shtml) provides
+access to Stanford's NIST reports, which are much longer and detailed
+than the average NIST reports.
+
+WORD ALIGNER
+
+Berkeley aligner provides a performance comparable to GIZA++, and the
+former is easier to use and exploits multithreading. So I would
+recommend using the Berkeley aligner. (GIZA++ was actually slightly
+worse in the two cases where I happended to use both aligners on
+relatively small datasets, but it would be hard to conclude anything
+from such experiments). 
+
+TODO: split alignment data (ref to BBN's slide)
+
+ALIGNMENT SYMMETRIZATION 
+
+"grow" (2nd choice: intersection) seems to work best for A-E using the
+Berkeley aligner. "grow-diag" seems to work best for C-E using the
+Berkeley aligner. Note that finding presented in NIST reports are generally
+not applicable in our case, since we use the Berkeley aligner while 
+most other sites use GIZA (though this is starting to change).
+
+LANGUAGE MODEL TRAINING
+
+(See NIST reports and presentations.)
+
+The general consensus in NIST reports is that one should include the
+following data:
+
+1) Target side of MT parallel data. Keep low ngram count cutoffs on
+this data. Marcello Federico recommends using _all_ 1-5grams seen in
+that data, even singletons (we never tried this).
+
+2) Non-US newswire sources in Gigaword (in particular AFP and Xinhua,
+and optionally APW). US sources like NYT generally do not help. Always
+make sure you are using the latest version of Gigaword, but check 
+with Yaser to make sure we can use all the data.
+
+3) For tuning and testing on data other than newswire (i.e., wb, bc,
+bn), add Google 1T (so far, we have only used 1-3grams in 1T, but
+4-5grams could also be useful). Web data harvested by BBN is also
+useful. Note that several sites failed to get any gains from Google
+1T, but our Google 1T in our setup generally provides gains ranging
+0.5-1 BLEU on test data other than newswire. 
+
+***Important note***: remove epoch of the eval data before running
+MERT and testing, otherwise you are likely to get inflated scores. In
+particular, failing to remove documents of the training data that
+overlap in time with the tuning set is likely to make MERT
+overconfident regarding the LM.
+
+Instead of selecting different LM sources for each test genre, the
+current approach is to create different LMs (MT+giga, google1T, bbn)
+and let MERT adjust the weight of each LM source. For newswire,
+MT+giga typically gets a high weight (and the other ones get a low
+weight, which suggests  google1T and bbn could be dropped entirely for
+this genre). 
+
+We typically can't fit all ngrams of the training data into memory, during
+both LM training and MT decoding. The following ngram count cut-offs 
+seem to work well in practice:
+	-gt2min 1 -gt3min 2 -gt4min 2 -gt5min 2 (requires more memory)
+	-gt2min 1 -gt3min 2 -gt4min 2 -gt5min 3
+	-gt2min 1 -gt3min 2 -gt4min 3 -gt5min 3 (requires less memory)
+Note that -gt1min is set to 1 by default.
+The last four numbers in file names such as 01-lm/scripts/ae_bbn_1233
+indicate the cutoffs for 1/2/3/4-grams, respectively. For Gigaword, 
+I recommend using: 01-lm/scripts/ae_mtFB_g4_afp_xin_1222.
+For the BBN data: 01-lm/scripts/ae_bbn_1233.
+
+CREATING PHRASE TABLES
+
+Phrasal's default phrase extraction settings work well with both A-E and C-E: 
+max phrase length = 7.
+max fertility = 5 (i.e., the maximum ratio between the number of
+source and target words).
+Hierarchical lexical phrase reordering of type: msd2-bidirectional-fe.
+
+DECODING
+
+Maximum distortion: 6 works well with C-E; 4 and 5 work well with A-E
+(the GALE A-E system sets it to 5). 
+
+Beam size of 200 is fine in most cases (we used to set it to 500,
+before fixing linear distortion future cost estimation).
+
+Using N-best list of 1000 

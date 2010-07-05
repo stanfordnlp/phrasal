@@ -1,0 +1,78 @@
+Q: How do I get started with GALE/MT at Stanford?
+
+A: 1) First steps are the same as for other new NLPers:
+
+	 http://nlp.stanford.edu/local/newbie.shtml
+	 http://nlp.stanford.edu/javanlp/welcome.shtml
+
+   2) Add yourself to stanford-mt@lists.stanford.edu:
+	 https://mailman.stanford.edu/mailman/listinfo/stanford-mt
+	 (You can do this yourself.)
+
+	 3) Email Yaser Al-onaizan (onaizan@us.ibm.com) and ask him to add
+	 you to rosetta-mt-weekly@umiacs.umd.edu and to create an QuickPlace
+	 account for you.
+
+	 4) Get access to the wiki:
+	 http://nlp.stanford.edu/nlpwiki/Wiki
+	 (See instructions on the front page)
+
+Q: How do I access the SCP server?
+
+A: Read /u/nlp/data/gale/ldc-scp/README. If you upload anything, you
+   should make sure you update the Stanford manifest file
+   (/u/nlp/data/gale/manifests/manifest.stanford.xml) and commit it to scp:
+	 
+	 $ scp -oIdentityFile=~/.ssh/ldc-scp-id /u/nlp/data/gale/manifests/manifest.stanford.xml \
+	    wtm@scp.ldc.upenn.edu:group-files/manifests/manifest.stanford.xml
+
+   Then log into QuickPlace and copy and paste the last item -- e.g.,
+	 
+		<item id="56">
+		<path>/home/ibm-rosetta/Stanford/Arabic/P5/stanford-phrasal-mbr-monthly-2010-06-28.tar.gz</path>
+		<size>29101229</size>
+		<desc>Stanford Phrasal Monthly Progress (06-28-2010) </desc>
+		<sitelocal>/scr/nlp/data/gale4/P5-arabic/releases/stanford-phrasal-mbr-monthly-2010-06-28.tar.gz</sitelocal>
+		</item>
+
+	 -- on a new page under "Translation" (to create a new page, click
+	 "New Page or Folder..." on the left, then click "Post"). To make
+	 sure other people of the MT Rosetta team are notified, change "No
+	 notification" to "Specify specific individuals" at the bottom of
+	 the current page (do not select "Notify all members"!). On the next
+	 page, set "MT" as the only recipient of your post (i.e., "To: MT"),
+	 which will send an email to each member of the MT Rosetta team
+	 (about 20-30 people).
+
+	 If files to post are small, it is then fine to upload them
+	 on QuickPlace directly (click on "Choose file..." at the bottom).
+ 
+Q: I am experiencing problems with QuickPlace. What should I do?
+
+A: This happens on a regular basis. If there is some kind of deadline,
+   email Yaser (he can email or call QP sysadmins). Note that QP sometimes
+	 takes up to one hour to send out emails when a new page has been created.
+
+Q: I was the note taker for the telecon. What should I do with them?
+
+A: Send them to rosetta-mt-weekly@umiacs.umd.edu, and make sure you do that
+   using the email address that Yaser registered for you.
+
+Q: Where can I store files for my GALE experiments?
+
+A: You can use any free space on /scr/nlp/data/gale{,2,3,4}. Some good practices:
+
+	 1) avoid cluttering these disks with lots of 1st-level
+	 subdirectories under /scr/nlp/data/gale{,2,3,4}. Give meaningful
+	 names to these 1st-level subdirectories, e.g.,
+	 /scr/nlp/data/gale3/NIST09/.
+
+	 2) Regularly delete temporary files. For instance, n-best lists
+	 (*.nbest.gz) are generally not so useful once MERT is complete.
+
+	 3) move/copy files using "rsync" instead of "mv" or "cp".
+	 rsync's --bwlimit=KBPS command-line argument puts a
+	 limit on the I/O bandwidth.
+
+	 4) run experiments on local disks. /tmp often doesn't have much free
+	 space, but you can use /$HOST/scr{1,2,3}.
