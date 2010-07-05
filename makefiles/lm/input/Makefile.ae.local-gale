@@ -1,0 +1,4 @@
+# Parallel data:
+TMDIR=/scr/nlp/data/gale4/P4-arabic/train/data/enfiles/atb-non_fouo
+TMDIR_EXTRA=/scr/nlp/data/gale4/P4-arabic/train/data-new/enfiles/atb
+TMDIR_FOUO=/scr/nlp/data/gale4/P4-arabic/train/data/enfiles/atb-fouo

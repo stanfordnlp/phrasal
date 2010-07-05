@@ -19,7 +19,6 @@ Steps to build large LMs:
 1) Log into a 16gb machine, e.g. jen. Move this checked out directory to its local disk 
    (e.g., /jen/scr1/ IF you are on jen). Make sure you have enough disk space (>= 30gb).
 2) run scripts/init.sh 
-   (this also deletes all .svn directories, in order to avoid any accidental svn commit).
 3) Modify scripts/LDC*.sh to filter out epoch of tune/test data.
 5) Modify input/Makefile.local to point to the MT parallel data and
    to the correct LM tokenization script (i.e., make sure that the 
