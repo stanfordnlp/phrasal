@@ -54,6 +54,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
       }
       customScores = l.toArray(new String[l.size()]);
     }
+		createIndex(false);
   }
 
   // Originally, PharaohPhraseTables were backed by a nice simple
