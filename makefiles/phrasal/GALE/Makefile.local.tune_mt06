@@ -73,7 +73,7 @@ ALIGN=grow
 LO_ID=lo-hier.msd2-bidirectional-fe
 
 ### Parameters for lexicalized reordering model:
-LO_ARGS=-maxLen 500 -phiFilter $(MINP) -pharaohLexicalizedModel msd2-bidirectional-fe -phrasalLexicalizedModel true  
+LO_ARGS=-maxLen 500 -phiFilter $(MINP) -orientationModelType msd2-bidirectional-fe -phrasalLexicalizedModel true  
 
 ### Number of columns produced by lexicalized re-ordering extractor:
 LO_SZ=8
@@ -127,7 +127,7 @@ DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server -XX:+AggressiveHeap
 ## generic phrasal mert:
 #PM=phrasal-mert.pl
 ## my personal version:
-PM=phrasal-mert-michel.pl
+PM=phrasal-mert.pl
 
 #########################################
 # Extension of input files:
@@ -141,10 +141,6 @@ FE=unk
 #########################################
 # LM:
 #########################################
-
-# Mix between Gigaword LM and Google LM (not used):
-#LM_MIX1=0.3498
-#LM_MIX2=0.3333
 
 # LM filtering script:
 LM_FILTER_SCRIPT=filter_lm_unigram
