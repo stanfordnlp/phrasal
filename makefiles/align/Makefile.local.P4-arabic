@@ -1,0 +1,29 @@
+### Language IDs:
+E=en
+F=ar
+
+### Location of the sentence-aligned training data (e.g., data distributed by IBM):
+ID=P4-arabic
+DATA=/scr/gale/$(ID)/train
+
+### Data to split:
+SPLIT_DATA_E= \
+	split1/noclass.$E \
+	split2/noclass.$E \
+	split3/noclass.$E \
+	split4/noclass.$E \
+	split5/noclass.$E \
+	split6/noclass.$E \
+	split7/noclass.$E 
+
+### Alignment symmetrization heuristic:
+ALIGN=grow-diag
+#ALIGN=srctotgt
+#ALIGN=tgttosrc
+#ALIGN=intersection
+#ALIGN=union
+#ALIGN=grow
+#ALIGN=grow-diag-final
+
+### Training options:
+TRAIN_OPTIONS=$(GIZA) --root-dir . --f $F --e $E --corpus corpus --scripts-root-dir=$(MOSES_SCRIPTS) --factor-delimiter="|||" --parallel --alignment $(ALIGN)

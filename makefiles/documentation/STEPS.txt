@@ -42,7 +42,7 @@ svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/make
 cd 02-align
 
 # Preprocess data and split it into N chunks (N=7 by default):
-make
+make split ID=P4-arabic
 
 # Perform word alignment (takes 1-3 days)
 echo "Data ready to be aligned.
@@ -56,7 +56,8 @@ align 15g split6.conf >&split6.log
 align 15g split7.conf >&split7.log"
 sleep 5d # but 'align' shouldn't take as long as 5 days
 
-# TODO: alignment symmetrization
+# Alignment symmetrization
+make sym ID=P4-arabic
 
 cd ..
 
