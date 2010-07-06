@@ -9,14 +9,14 @@ N=500
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=P4-ae-text-hier2-d5
+SYSID=P5-ae-text-hier2-d5
 
 #########################################
 # Training/test/dev stuff:
 #########################################
 
 ### MT word-aligned training data:
-TRAIN=/scr/gale/P4-arabic/align/model
+TRAIN=../02-align/model
 
 ### Directory containing reference translations:
 #REFS=/scr/nlp/data/gale/AE-MT-eval-data
