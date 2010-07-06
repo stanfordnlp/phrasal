@@ -180,28 +180,28 @@ $(TESTID).$(DEVID).mix.%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest $(TESTID).$(MIX
 #############################################
 
 # Use best MERT paramters to generate n-best list:
-test.$(TESTID).%.$Nbest: %.ini $(TESTID).$(IE) in.voc
+test.$(TESTID).%.$Nbest: %.ini $(TESTID).$(IE) $(TESTID).f.vocab
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 # Use best MERT paramters to generate n-best list:
-$(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) in.voc
+$(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
-$(TESTID).$(DEVID).%-bt.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) in.voc 
+$(TESTID).$(DEVID).%-bt.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS_N) -DUniqNBest=true edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 # Use final MERT paramters:
-$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE) in.voc
+$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE) $(TESTID).f.vocab
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 
 # Use best MERT paramters:
-$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) in.voc
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
-$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) in.voc
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
 	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
 	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
 
@@ -220,7 +220,7 @@ $(TESTID).%.phrasal.ini: $(DEVID).%.pmert/phrasal.final.ini
 #############################################
 
 # Maximize BLEU (n-best):
-$(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) in.voc
+$(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) $(DEVID).f.vocab
 	$(SCRIPTS)/update_ini SETID $(DEVID) < $< > $(DEVID).$<
 	$(PM) --working-dir=$(DEVID).$(*F).$N.pmert \
 	--phrasal-flags="$(PHRASAL_ARGS)" --java-flags="$(JAVA_PHRASAL_ARGS)" --mert-java-flags="$(JAVA_MERT_ARGS)" \
@@ -242,8 +242,11 @@ $(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) in.voc
 # Vocabulary files:
 #############################################
 
+%.f.vocab: %.unk
+	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -unk
+
 %.e.vocab: %.e.phrases
-	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -tolower
+	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -tolower -unk
 
 %.e.phrases: %.tables/phrase-table.gz %.$(FE)
 	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
@@ -267,39 +270,39 @@ endif
 
 ### Generate table containing both phrase and lexicalized re-ordering probabilities for a given dev/test set:
 ### (needs to be run on 16G machines)
-%.tables/merged.gz: %.$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+%.tables/merged.gz: %.$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN)
 	mkdir $(*F).tables 2> /dev/null || true
-	$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -fFilterCorpus $< -maxELen $(maxPLen) -endAtLine $(LINES) $(LO_ARGS) 2> $@.log | gzip > $@
+	$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -fFilterCorpus $< -maxELen $(maxPLen) -endAtLine $(LINES) $(LO_ARGS) 2> $@.log | gzip > $@
 
 #############################################
 # Phrase counts:
 #############################################
 
-COUNT_EXTRACT=$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxELen $(maxPLen) -extractors edu.stanford.nlp.mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
+COUNT_EXTRACT=$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxELen $(maxPLen) -extractors edu.stanford.nlp.mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
 
-$(TESTID).tables/counts.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN)
+$(TESTID).tables/counts.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN)
 	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
 
 #############################################
 # Lexicalized reordering tables:
 #############################################
 
-LEX_EXTRACT=$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/corpus.$F -eCorpus $(TRAIN)/corpus.$E -align $(TRAIN)/corpus.$(ALIGN) -phiFilter 0 -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxELen $(maxPLen)
+LEX_EXTRACT=$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -phiFilter 0 -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxELen $(maxPLen)
 
 ### for tuning set:
-$(DEVID).tables/lo-word.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
+$(DEVID).tables/lo-word.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
-$(DEVID).tables/lo-phrase.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
+$(DEVID).tables/lo-phrase.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
-$(DEVID).tables/lo-hier.%.gz: $(DEVID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
+$(DEVID).tables/lo-hier.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 
 ### for test set:
-$(TESTID).tables/lo-word.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
+$(TESTID).tables/lo-word.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
-$(TESTID).tables/lo-phrase.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
+$(TESTID).tables/lo-phrase.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
-$(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/corpus.$F $(TRAIN)/corpus.$E $(TRAIN)/corpus.$(ALIGN) $D
+$(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
 	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
 
 #############################################

@@ -1,0 +1,170 @@
+#########################################
+# Size of nbest lists:
+#########################################
+
+N=500
+
+#########################################
+# Java command (must have MT stuff in class
+# path; and locales must be set correctly)
+#########################################
+
+SYSID=ae-text-hier2-d5
+#SYSID=hier2-d5-gale-counts-bbnB-mt06.v7
+#SYSID=hier2-d5-gale-counts-bbnB-speech.v6b
+
+#########################################
+# Training/test/dev stuff:
+#########################################
+
+### MT word-aligned training data:
+TRAIN=../02-align/model
+#TRAIN=/scr/gale/P4-arabic/align/model
+
+### Directory containing reference translations:
+#REFS=/scr/nlp/data/gale/AE-MT-eval-data
+REFS=/scr/nlp/data/gale4/P4-arabic/refs
+
+### Dev/test corpus and genre identifiers:
+DEVID=mt06
+#DEVID=tune-speech
+GENRE=-nw
+TESTID=mt08$(GENRE)
+
+### References:
+DEV_REF=$(REFS)/$(DEVID)/tune
+TEST_REF=$(REFS)/$(TESTID)
+
+#########################################
+# Language/data specific variables:
+#########################################
+
+### Language identifiers:
+F=ar
+E=en
+
+### How much data to use:
+LINES=90000000
+
+#########################################
+# Pruning:
+#########################################
+
+maxPLen=10
+
+### Minimum p(e|f) probability:
+### (Note: filtering based on p(f|e), lex(e|f), lex(f|e)
+### isn't really effective)
+MINP=1e-3
+
+#########################################
+# Phrase extraction heuristics:
+#########################################
+
+### Specify alignment merging heuristic:
+ALIGN=grow
+
+### Lexicalized re-ordering model identifier:
+LO_ID=lo-hier.msd2-bidirectional-fe
+
+### Parameters for lexicalized reordering model:
+LO_ARGS=-maxLen 500 -phiFilter 0 -pharaohLexicalizedModel msd2-bidirectional-fe -phrasalLexicalizedModel true  
+
+### Number of columns produced by lexicalized re-ordering extractor:
+LO_SZ=8
+
+### Other options:
+XOPTS=-threads 4
+
+#########################################
+# Memory and extraction duration:
+#########################################
+
+### How much memory for Java and sort:
+MEMSIZE=45000m
+PMEMSIZE=17000m
+PMEMSIZE_BM=17000m
+MMEMSIZE=15600m
+#MEMSIZE=15000m
+#PMEMSIZE=29000m
+#PMEMSIZE_BM=29000m
+
+### Whether to compute exact relative frequencies p(f|e). 
+### If so, requires two passes over training data. 
+### Setting this to false requires only one pass, and 
+### generally causes a .2-.3 BLEU point drop.
+exactPhiCounts=true
+
+### In how many chunks to split phrase extraction. Setting the
+### value to X makes phrase extraction run X times slower,
+### though one needs about X times less memory.
+### Note: "split" means we split the dev/test-set phrases to score
+### into X chunks, and make 1-2 passes over the training data
+### for each one of them.
+### (if you run out of memory, increase the split value)
+SPLIT=-split 1
+
+#########################################
+# Pre/post processing:
+#########################################
+
+PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen) 
+POST=post-$(GENRE).sh
+TC=en_truecaser 
+NTC=en_detokenizer
+POSTTC=en_fix_detokenizer
+
+#########################################
+# Debug flags
+#########################################
+
+### Uncomment this to debug Phrasal decoder:
+HOST=`hostname -s`
+#DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -DcustomScores=
+DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -DcustomScores=phi_tf,lex_tf,phi_ft,lex_ft,phrasePenalty,count,uniq -DsmoothBLEU=true -XX:+UseCompressedOops
+#Add this to remove count-based features: -DdisableScores=5,6
+
+#########################################
+# Phrasal MERT:
+# (in case you run a customized version)
+#########################################
+
+PROC=8
+PM=phrasal-mert.pl --opt-flags="-o koehn+cer -t $(PROC) -p 8"
+
+#########################################
+# Extension of input files:
+# unk : with unk words
+# prep : with preprocessing
+#########################################
+
+IE=prep
+FE=unk
+
+#########################################
+# LM:
+#########################################
+
+# LM filtering script:
+LM_FILTER_SCRIPT=filter_lm_unigram
+
+#########################################
+# Misc:
+#########################################
+
+JAVA=java
+OPT_METRIC=bleu-ter
+CLASS=ibm2noclass
+
+#########################################
+# Google LM:
+#########################################
+
+ignore:
+	echo "No default target. Run 'make train' to build phrase tables and run MERT. Run 'make nbest' to decode test data."
+
+all.e.vocab: $(TRAIN)/aligned.$E 
+	cat /scr/gale/P4-arabic/test/{select,P4-text,P4-speech}/*sgm | sgml2plain | ibm2noclass | cat - $< | ngram-count -order 1 -write-vocab $@ -text - -debug 2 > $@.log 2> $@.err
+
+google.3gram.kn.lm.gz: all.e.vocab
+	gen-google-lm.sh
