@@ -4,8 +4,8 @@ LOWER=-tolower
 LMOPTS=-order 5 -kndiscount -interpolate -debug 2 $(LOWER)
 
 all: ulm
-ulm: ../releases/$(LMID).$(FID).unk.lm.gz
-lm: ../releases/$(LMID).$(FID).lm.gz
+ulm: ../releases/$(LMID).$(FID).unk.lm.bin
+lm: ../releases/$(LMID).$(FID).lm.bin
 counts: counts/$(LMID).counts.gz
 allcounts: $(LMS)
 
@@ -31,3 +31,10 @@ counts/$(LMID).counts.gz: $(LMSRC)
 
 ../input/%.tok.gz:
 	make -C ../input -f Makefile.$(LANG) $(*F).tok.gz
+
+### Binarize LM:
+
+%.lm.bin: %.lm.gz
+	ngram -order 5 -lm $< -write-bin-lm $@ > $@.log
+
+
