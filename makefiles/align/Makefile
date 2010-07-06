@@ -3,6 +3,8 @@ include Makefile.local.$(ID)
 MOSES_SCRIPTS=/u/nlp/packages/moses-2008-05-18/trunk/scripts
 TRAIN=$(MOSES_SCRIPTS)/training/train-factored-phrase-model.perl
 
+TRAIN_OPTIONS=$(GIZA) --root-dir . --f $F --e $E --corpus corpus --scripts-root-dir=$(MOSES_SCRIPTS) --factor-delimiter="|||" --parallel --alignment $(ALIGN)
+
 SYM_DATA=model/aligned.$(ALIGN) model/aligned.$E model/aligned.$F
 MERGED_DATA=giza.$E-$F/$E-$F.A3.gz giza.$F-$E/$F-$E.A3.gz
 SPLIT_DATA=$(SPLIT_DATA_E) $(SPLIT_DATA_F)
