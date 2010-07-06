@@ -1,5 +1,7 @@
 all: \
 	mt.tok.gz \
+	mtp2.tok.gz \
+	fouo.tok.gz \
 	LDC2009T13-giga4-xin.tok.gz \
 	LDC2009T13-giga4-afp-0.tok.gz
 
