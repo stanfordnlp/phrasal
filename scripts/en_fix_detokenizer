@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Fixes detokenizer:
+# (TODO: fix this in javanlp)
+
+perl -pe "s/(\S)-AFP(\W)/\$1 - AFP\$2/gi" | \
+perl -pe "s/(\S)-Reuters(\W)/\$1 - Reuters\$2/gi" | \
+perl -pe "s/(\S)-News(\W)/\$1 - News\$2/gi" | \
+perl -pe "s/(^| )(said|says|say|saying|headline)-(\S)/\$1\$2 - \$3/gi" | \
+cat

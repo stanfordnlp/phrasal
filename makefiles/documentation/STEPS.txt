@@ -7,9 +7,10 @@
 ####################################
 # Step 1: train LM
 # (Note: steps 1 & 2 can be run simultaneously)
+# Memory needs: 48+GB
 ####################################
 
-# Checkout scripts and makefiles from javanlp:
+# Check out scripts and makefiles:
 svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/makefiles/lm 01-lm
 cd 01-lm/train
 
@@ -36,12 +37,14 @@ cd ../..
 ####################################
 # Step 2: word alignment
 # (Note: steps 1 & 2 can be run simultaneously)
+# Memory needs: 16GB
 ####################################
 
+# Check out scripts and makefiles:
 svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/makefiles/align 02-align
 cd 02-align
 
-# Preprocess data and split it into N chunks (N=7 by default):
+# Pre-process data and split it into N chunks (N=7 by default):
 make split ID=P4-arabic
 
 # Perform word alignment (takes 1-3 days)
@@ -65,9 +68,23 @@ cd ..
 # Step 3: phrase extraction, MERT, 
 # and final decoding.
 # (Step must be run after steps 1 & 2)
+# Memory needs: 48GB
 ####################################
 
 svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/makefiles/phrasal 03-phrasal
 cd 03-phrasal
 
+# Select configuration files:
+ln -s GALE/Makefile.local.P4-text Makefile.local
+ln -s GALE/ae-text-hier2-d5.ini
+ln -s GALE/ae-audio-hier2-d5.ini
 
+# Build Google LM (filtered against phrase table, so this happens here and not in step 1):
+make google.3gram.kn.lm.bin 
+
+# Select which data to decode (e.g., mt06 as tuning set and mt08-nw as test set):
+ln -s /scr/gale/AE-MT-eval-data/GALE/P5-select/mt06.sgm 
+ln -s /scr/gale/AE-MT-eval-data/GALE/P5-select/mt08-nw.sgm 
+
+# Phrase extraction and MERT:
+make train

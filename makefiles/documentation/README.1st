@@ -15,11 +15,11 @@ $JAVANLP_HOME/projects/mt/external_scripts
 Steps to build the full GALE system:
 ###########################################
 
-Create a new directory for your experiments, e.g., /scr/gale/P5-arabic.
-$ mkdir /scr/gale/P5-arabic
+Create a new directory for your experiments, e.g., /$HOST/scr1/$USER/P5-arabic.
+$ mkdir -p /$HOST/scr1/$USER/P5-arabic
 
 Then follow instructions in STEPS.txt, which will create subdirectories:
-/scr/gale/P5-arabic/{01-lm,02-align,03-phrasal,etc}
+/$HOST/scr1/$USER/P5-arabic/{01-lm,02-align,03-phrasal,etc}
 
 1) train LM
 	 directory: 01-lm
@@ -50,9 +50,10 @@ Directories of previous evaluations:
 is often lacking!)
 ###########################################
 
-/scr/nlp/data/gale2/GALE_Chinese_P3
-/scr/nlp/data/gale2/GALE-P3-arabic
-/scr/nlp/data/gale2/GALE-P3-arabic
-/scr/nlp/data/gale4/P4-Chinese
-/scr/nlp/data/gale4/P4-arabic
-/scr/nlp/data/gale4/P5-arabic
+/scr/gale/NIST_EVAL08
+/scr/gale/NIST09
+/scr/gale/GALE_Chinese_P3
+/scr/gale/GALE-P3-arabic
+/scr/gale/P4-Chinese
+/scr/gale/P4-arabic
+/scr/gale/P5-arabic

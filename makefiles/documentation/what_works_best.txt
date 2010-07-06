@@ -1,4 +1,6 @@
+###################################
 GENERAL
+###################################
 
 To build state-of-the-art MT systems, you can find good insight in
 NIST reports and presentations: (presentation slides tend to be more
@@ -16,7 +18,9 @@ The Stanford MT page (http://nlp.stanford.edu/projects/mt.shtml) provides
 access to Stanford's NIST reports, which are much longer and detailed
 than the average NIST reports.
 
+###################################
 WORD ALIGNER
+###################################
 
 Berkeley aligner provides a performance comparable to GIZA++, and the
 former is easier to use and exploits multithreading. So I would
@@ -27,7 +31,9 @@ from such experiments).
 
 TODO: split alignment data (ref to BBN's slide)
 
+###################################
 ALIGNMENT SYMMETRIZATION 
+###################################
 
 "grow" (2nd choice: intersection) seems to work best for A-E using the
 Berkeley aligner. "grow-diag" seems to work best for C-E using the
@@ -35,7 +41,9 @@ Berkeley aligner. Note that finding presented in NIST reports are generally
 not applicable in our case, since we use the Berkeley aligner while 
 most other sites use GIZA (though this is starting to change).
 
+###################################
 LANGUAGE MODEL TRAINING
+###################################
 
 (See NIST reports and presentations.)
 
@@ -83,7 +91,9 @@ indicate the cutoffs for 1/2/3/4-grams, respectively. For Gigaword,
 I recommend using: 01-lm/scripts/ae_mtFB_g4_afp_xin_1222.
 For the BBN data: 01-lm/scripts/ae_bbn_1233.
 
+###################################
 CREATING PHRASE TABLES
+###################################
 
 Phrasal's default phrase extraction settings work well with both A-E and C-E: 
 max phrase length = 7.
@@ -91,7 +101,9 @@ max fertility = 5 (i.e., the maximum ratio between the number of
 source and target words).
 Hierarchical lexical phrase reordering of type: msd2-bidirectional-fe.
 
+###################################
 DECODING
+###################################
 
 Maximum distortion: 6 works well with C-E; 4 and 5 work well with A-E
 (the GALE A-E system sets it to 5). 
@@ -100,3 +112,9 @@ Beam size of 200 is fine in most cases (we used to set it to 500,
 before fixing linear distortion future cost estimation).
 
 Using N-best list of 1000 
+
+###################################
+TUNING SET
+###################################
+
+TODO
