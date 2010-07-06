@@ -10,8 +10,6 @@ N=500
 #########################################
 
 SYSID=ae-text-hier2-d5
-#SYSID=hier2-d5-gale-counts-bbnB-mt06.v7
-#SYSID=hier2-d5-gale-counts-bbnB-speech.v6b
 
 #########################################
 # Training/test/dev stuff:
@@ -68,7 +66,7 @@ ALIGN=grow
 LO_ID=lo-hier.msd2-bidirectional-fe
 
 ### Parameters for lexicalized reordering model:
-LO_ARGS=-maxLen 500 -phiFilter 0 -pharaohLexicalizedModel msd2-bidirectional-fe -phrasalLexicalizedModel true  
+LO_ARGS=-maxLen 500 -phiFilter 0 -orientationModelType msd2-bidirectional-fe -phrasalLexicalizedModel true  
 
 ### Number of columns produced by lexicalized re-ordering extractor:
 LO_SZ=8

@@ -74,7 +74,7 @@ ALIGN=grow
 LO_ID=lo-hier.msd2-bidirectional-fe
 
 ### Parameters for lexicalized reordering model:
-LO_ARGS=-maxLen 500 -phiFilter $(MINP) -pharaohLexicalizedModel msd2-bidirectional-fe -phrasalLexicalizedModel true  
+LO_ARGS=-maxLen 500 -phiFilter $(MINP) -orientationModelType msd2-bidirectional-fe -phrasalLexicalizedModel true  
 
 ### Number of columns produced by lexicalized re-ordering extractor:
 LO_SZ=8
