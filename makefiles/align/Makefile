@@ -9,7 +9,7 @@ SYM_DATA=model/aligned.$(ALIGN) model/aligned.$E model/aligned.$F
 MERGED_DATA=giza.$E-$F/$E-$F.A3.gz giza.$F-$E/$F-$E.A3.gz
 SPLIT_DATA=$(SPLIT_DATA_E) $(SPLIT_DATA_F)
 
-SPLIT_DATA_F=$(patsubst $E,$F,$(SPLIT_DATA_E))
+SPLIT_DATA_F=$(patsubst %.$E,%.$F,$(SPLIT_DATA_E))
 
 ALIGNED_EF_DATA=$(patsubst %/noclass.$E,%.out/training.$E-$F.A3,$(SPLIT_DATA_E))
 ALIGNED_FE_DATA=$(patsubst %/noclass.$E,%.out/training.$F-$E.A3,$(SPLIT_DATA_E))
@@ -34,14 +34,14 @@ NOCLASS=sed 's/\$$[^ ][^ ]*_(\([^ ][^ ]*\))/\1/g'
 %/noclass.$E: %/clean.$E.gz
 	zcat $< | $(NOCLASS) > $@
 
-%/class.$F: %/clean.$F.gz
-	zcat $< | $(CLASS) > $@
+%/class.$F: %/clean.$E.gz
+	zcat $(*F)/clean.$F.gz | $(CLASS) > $@
 %/class.$E: %/clean.$E.gz
-	zcat $< | $(CLASS) > $@
+	zcat $(*F)/clean.$E.gz | $(CLASS) > $@
 
-%/clean.$E.gz %/clean.$F.gz: %/clean.$E.gz.log
-	echo temp target
-%/clean.$E.gz.log: %/tok.$E.gz %/tok.$F.gz
+#%/clean.$E.gz %/clean.$F.gz: %/clean.$E.gz.log
+#	echo temp target
+%/clean.$E.gz: %/tok.$E.gz %/tok.$F.gz
 	clean-corpus-n-gz.perl $(*F)/tok $E $F $(*F)/clean 1 125 >& $@
 
 ### Data in 6 splits (BBN approach):
@@ -76,9 +76,13 @@ giza.$F-$E/$F-$E.A3.final.gz: $(ALIGNED_FE_DATA)
 # Alignment symmetrization:
 #######################################
 
-model/aligned.$(ALIGN): giza.$E-$F/$E-$F.A3.final.gz giza.$F-$E/$F-$E.A3.final.gz
+model/aligned.$(ALIGN).reversed: giza.$E-$F/$E-$F.A3.final.gz giza.$F-$E/$F-$E.A3.final.gz
 	mkdir model || true
-	(time $(TRAIN) $(TRAIN_OPTIONS) --first-step 3 --last-step 3 > $@) 2> $@.err
+	(time $(TRAIN) $(TRAIN_OPTIONS) --first-step 3 --last-step 3 > $@.log) 2> $@.err
+	mv model/aligned.$(ALIGN) model/aligned.$(ALIGN).reversed
+
+model/aligned.$(ALIGN): model/aligned.$(ALIGN).reversed
+	cat $< | reverse-align > $@
 
 model/aligned.$E: $(SPLIT_DATA_E)
 	cat $+ > $@
