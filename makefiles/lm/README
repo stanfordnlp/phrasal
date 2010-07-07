@@ -16,38 +16,38 @@ releases/
 ------------------------------------------------------------------------
 Steps to build large LMs:
 
-1) Log into a 16gb machine, e.g. jen. Move this checked out directory to its local disk 
+1) Log into a 16gb machine, e.g. jen. Move this checked out directory to its local disk
    (e.g., /jen/scr1/ IF you are on jen). Make sure you have enough disk space (>= 30gb).
-2) run scripts/init.sh 
+2) run scripts/init.sh
 3) Modify scripts/LDC*.sh to filter out epoch of tune/test data.
 5) Modify input/Makefile.local to point to the MT parallel data and
-   to the correct LM tokenization script (i.e., make sure that the 
+   to the correct LM tokenization script (i.e., make sure that the
 	 target side of MT data and LM data have same tokenization).
 6) cd train
 7) run "../scripts/mt_g3_afp_xin_1233 -n"; it should produce the same
-   output as in Appendix A (see blow).
-8) run "../scripts/mt_g3_afp_xin_1233"; this may take 1-2 days to 
+   output as in Appendix A (see below).
+8) run "../scripts/mt_g3_afp_xin_1233"; this may take 1-2 days to
    build a LM. Rebuilding may take as little as 3-4 hours (see notes below how to do this).
 
 -------------------------------------------------------------------------
 Important notes:
 - If you need to RE-train a LM, you may need to manually delete some temporary files.
  * if you changed anything in scripts/LDC*sh (e.g., filtered out Gigaword3 by epoch)
-	 or in input/Makefile*, you need to manually delete all intermediate files: 
+	 or in input/Makefile*, you need to manually delete all intermediate files:
 	 input/*.gz, train/*.gz train/counts
- * if you increased, removed, or altered LM sources, e.g., modified ../scripts/mt_g3_afp_xin_1233 
-   to also include NYT data, you need to delete merged counts (train/counts). Alternatively, 
+ * if you increased, removed, or altered LM sources, e.g., modified ../scripts/mt_g3_afp_xin_1233
+   to also include NYT data, you need to delete merged counts (train/counts). Alternatively,
 	 copy mt_g3_afp_xin_1233 to a new file name and change its setting of LMID.
  * if you just changed ngram count cutoffs, e.g., set "-gt5min 2" instead of "-gt5min 3"
    you don't need to delete any file
    (look at ../scripts/mt_g3_afp_xin_1233 to see how these cutoffs are specified)
-- If you set -gt4min and/or -gt5min to 2, you need a 48gb machine. You only need 
+- If you set -gt4min and/or -gt5min to 2, you need a 48gb machine. You only need
   that much memory during the very last step of LM construction, so *please* do the following:
-	1) First use a 16gb machine to generate a LM with higher ngram count thresholds, e.g.: 
+	1) First use a 16gb machine to generate a LM with higher ngram count thresholds, e.g.:
 	  $ ../scripts/mt_g3_afp_xin_1233
     This will take 1-2 days, unless you already generated some intermediate files.
-	2) Log into a 48gb machine, and rerun the last command executed by the above script 
-	  (it should be "make-big-lm" followed by some arguments), but this time with lower thresholds, 
+	2) Log into a 48gb machine, and rerun the last command executed by the above script
+	  (it should be "make-big-lm" followed by some arguments), but this time with lower thresholds,
 		e.g., change:
 		make-big-lm [...] -gt4min 3 -gt5min 3 -lm ../releases/mt_giga3_afp_xin.1233.unk.lm.gz
 		into

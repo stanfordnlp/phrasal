@@ -3,19 +3,19 @@ package edu.stanford.nlp.mt.base;
 import java.util.Iterator;
 
 /**
- * 
+ *
  * @author danielcer
  *
  * @param <T>
  */
-abstract public class AbstractSequence<T> implements Sequence<T> {		
+abstract public class AbstractSequence<T> implements Sequence<T> {
 	public Iterator<T> iterator() {
 		return new AbstractSequenceIterator();
 	}
-	
+
 	private class AbstractSequenceIterator implements Iterator<T> {
 		int position = 0;
-		
+
 		public boolean hasNext() {
 			return position < AbstractSequence.this.size();
 		}
@@ -25,48 +25,48 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		}
 
 		public void remove() {
-			throw new UnsupportedOperationException();			
+			throw new UnsupportedOperationException();
 		}
 	}
-	
+
 	@Override
 	public Sequence<T> subsequence(int start, int end) {
 		return new AbstractSequenceWrapper(start, end);
 	}
-	
+
 	@Override
-	public String toString(String prefix, String delimeter) {
+	public String toString(String prefix, String delimiter) {
 		StringBuilder sbuf = new StringBuilder(prefix);
 		int sz = size();
 		for (int i = 0; i < sz; i++) {
-			if (i > 0) sbuf.append(delimeter);
+			if (i > 0) sbuf.append(delimiter);
 			sbuf.append(get(i));
 		}
 		return sbuf.toString();
 	}
-	
+
 	@Override
-	public String toString(String prefix, String delimeter, String suffix) {
-		StringBuffer sbuf = new StringBuffer(prefix);
+	public String toString(String prefix, String delimiter, String suffix) {
+          StringBuilder sbuf = new StringBuilder(prefix);
 		int sz = size();
 		for (int i = 0; i < sz; i++) {
-			if (i > 0) sbuf.append(delimeter);
+			if (i > 0) sbuf.append(delimiter);
 			sbuf.append(get(i));
 		}
 		sbuf.append(suffix);
 		return sbuf.toString();
 	}
-	
+
 	@Override
-	public String toString(String delimeter) {
-		return toString("", delimeter);
+	public String toString(String delimiter) {
+		return toString("", delimiter);
 	}
-	
-	@Override 
+
+	@Override
 	public String toString() {
 		return toString(" ");
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public Sequence<T> subsequence(CoverageSet select) {
 		Object[] newElements = new Object[select.cardinality()];
@@ -76,7 +76,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		}
 		return new RawSequence<T>((T[])newElements);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public int compareTo(Sequence<T> o) {
@@ -90,11 +90,11 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		}
 		return sz-osz;
 	}
-	
+
 	private class AbstractSequenceWrapper extends AbstractSequence<T> {
 		private final int size, start;
-		
-		
+
+
 		public AbstractSequenceWrapper(int start, int end) {
 			size = end-start;
 			this.start = start;
@@ -104,7 +104,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 			if (i >= size) {
 				throw new ArrayIndexOutOfBoundsException("index: "+i+" size: "+size);
 			}
-			
+
 			return AbstractSequence.this.get(start+i);
 		}
 
@@ -112,21 +112,21 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 			return size;
 		}
 
-		
+
 	}
-	
+
 	private long hashCode = Long.MAX_VALUE;
-	
+
 	public long longHashCode() {
 		if (hashCode != Long.MAX_VALUE) {
 			return hashCode;
 		}
-		
+
 		hashCode = 0;
 		long mul = 0x5DEECE66DL;
 		long offset = 0xBL;
 		int sz = size();
-		
+
 		// okay, this is slightly evil
 		// but, previously we were spend alot of time in IString#hashCode()
 		if (sz != 0 && get(0) instanceof IString) {
@@ -142,15 +142,15 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 				hashCode += mul * token.hashCode() + offset;
 			}
 		}
-		
+
 		return hashCode;
 	}
-	
-	@Override 
+
+	@Override
 	public int hashCode() {
 		return (int)(longHashCode());
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object o) {
@@ -169,7 +169,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public boolean contains(Sequence<T> subsequence) {
 		int subSequenceSize = subsequence.size();
@@ -188,7 +188,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		}
 		return false;
 	}
-	
+
 	public boolean startsWith(Sequence<T> prefix) {
 		int prefixSize = prefix.size();
 		if (prefixSize > this.size()) return false;
@@ -203,7 +203,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		}
 		return true;
 	}
-	
+
 	@SuppressWarnings("unchecked,unused")
 	public boolean noisyEquals(Object o) {
 		if (!(o instanceof Sequence)) return false;
