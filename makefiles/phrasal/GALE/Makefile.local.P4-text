@@ -71,7 +71,7 @@ LO_ARGS=-maxLen 500 -phiFilter 0 -orientationModelType msd2-bidirectional-fe -ph
 LO_SZ=8
 
 ### Other options:
-XOPTS=-threads 4
+XOPTS=-threads 4 -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor
 
 #########################################
 # Memory and extraction duration:
