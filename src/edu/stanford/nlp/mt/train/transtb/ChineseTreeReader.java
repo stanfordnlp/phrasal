@@ -54,7 +54,7 @@ public class ChineseTreeReader extends AbstractTreeReader {
 
 
 
-  public static void main(String args[]) throws IOException {
+  public static void main(String[] args) throws IOException {
 
     ChineseTreeReader ctr = new ChineseTreeReader();
     String dirName = TransTBUtils.ctbDir();
@@ -75,6 +75,7 @@ class ChineseTreeTransformer implements TreeTransformer {
     ce = new ChineseEscaper();
   }
 
+  @Override
   public Tree transformTree(Tree tree) {
     tree = tree.treeSkeletonCopy();
 
