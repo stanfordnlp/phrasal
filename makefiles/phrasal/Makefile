@@ -242,7 +242,7 @@ $(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) $(DEVID).f.vocab
 # Vocabulary files:
 #############################################
 
-%.f.vocab: %.unk
+%.f.vocab: %.$(IE)
 	cat $+ | ngram-count -text - -write-vocab $@ -order 1 -unk
 
 %.e.vocab: %.e.phrases
