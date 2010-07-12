@@ -9,7 +9,7 @@ N=500
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=P5-ae-text-hier2-d5
+SYSID=P5-ae-text-hier2-d5-v2
 
 #########################################
 # Training/test/dev stuff:
@@ -71,7 +71,7 @@ LO_ARGS=-maxLen 500 -phiFilter 0 -orientationModelType msd2-bidirectional-fe -ph
 LO_SZ=8
 
 ### Other options:
-XOPTS=-threads 4
+XOPTS=-threads 4 -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor
 
 #########################################
 # Memory and extraction duration:
@@ -160,6 +160,7 @@ CLASS=ibm2noclass
 ignore:
 	echo "No default target. Run 'make train' to build phrase tables and run MERT. Run 'make nbest' to decode test data."
 
+# Note this is the currently the same target for both P4 and P5:
 all.e.vocab: $(TRAIN)/aligned.$E 
 	cat /scr/gale/P4-arabic/test/{select,P4-text,P4-speech}/*sgm | sgml2plain | ibm2noclass | cat - $< | ngram-count -order 1 -write-vocab $@ -text - -debug 2 > $@.log 2> $@.err
 

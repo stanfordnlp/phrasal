@@ -160,6 +160,7 @@ CLASS=ibm2noclass
 ignore:
 	echo "No default target. Run 'make train' to build phrase tables and run MERT. Run 'make nbest' to decode test data."
 
+# Note this is the currently the same target for both P4 and P5:
 all.e.vocab: $(TRAIN)/aligned.$E 
 	cat /scr/gale/P4-arabic/test/{select,P4-text,P4-speech}/*sgm | sgml2plain | ibm2noclass | cat - $< | ngram-count -order 1 -write-vocab $@ -text - -debug 2 > $@.log 2> $@.err
 
