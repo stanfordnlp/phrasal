@@ -9,7 +9,7 @@ N=500
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=P5-ae-text-hier2-d5-v2
+SYSID=P5-ae-text-hier2-d5
 
 #########################################
 # Training/test/dev stuff:

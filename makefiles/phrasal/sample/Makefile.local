@@ -23,9 +23,6 @@ LINES=100000
 ### MT word-aligned training data:
 TRAIN=/scr/nlp/data/gale2/GrammaticalTrainingSubsetEval/TM
 
-### Language model:
-GIGA=/scr/nlp/data/gale/acl_2005_workshop/lm/europarl.en.srilm
-
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
 TESTID=mt05

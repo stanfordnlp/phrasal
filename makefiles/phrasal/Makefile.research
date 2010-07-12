@@ -1,0 +1,199 @@
+# Moses Paths
+# See below for configuration settings
+MOSESDIR=/u/nlp/packages/moses-2008-05-18
+MOSESDEC=$(MOSESDIR)/bin/moses
+SCRIPTS_ROOTDIR=$(MOSESDIR)/trunk/scripts
+MM=$(SCRIPTS_ROOTDIR)/training/mert-moses.pl
+
+### TER default parameters (too slow for MERT):
+# BEAM_WIDTH=20
+# SHIFT_SIZE=50
+### TER parameters (runs about 4x faster than default, but still slow -- 
+### e.g., 1 iteration of MERT takes 24h on MT06):
+BEAM_WIDTH=5
+SHIFT_SIZE=12
+
+# Evaluation scripts:
+METEOR=/u/nlp/packages/meteor-0.7
+JTER=tercom_mult_java.pl
+
+# Moses Configuration
+MOSES_ARGS=$(LOCAL_MOSES_ARGS)
+
+### Decode test data (with nbest list):
+test: test_extract $(TESTID).$(DEVID).$(SYSID).$N.f1best.post
+test_google: test_extract_google $(TESTID).$(DEVID).$(SYSID).$N.b1best.post
+test_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).$N.b1best.post
+
+#############################################
+# Old targets:
+#############################################
+
+dev_extract_google: $(DEVID).tables/phrase-table.gz
+dev_extract_gale: $(DEVID).tables/phrase-table.gz
+train_google: dev_extract_google $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+train_gale: dev_extract_gale $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
+test_extract_google: $(TESTID).tables/phrase-table.gz
+test_extract_gale: $(TESTID).tables/phrase-table.gz
+nbest_google: test_extract_google $(TESTID).$(DEVID).$(SYSID).$N.$Nbest
+nbest_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).$N.$Nbest
+
+#############################################
+# MT evaluation:
+#############################################
+
+### BLEU:
+$(DEVID).%.bleu: $(DEVID).%
+	cat $< | phrasal_sort | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
+$(TESTID).%.bleu: $(TESTID).%
+	cat $< | phrasal_sort | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
+
+### TER:
+$(DEVID).%.ter: $(DEVID).%
+	cat $< | $(JAVA) edu.stanford.nlp.mt.metrics.TERMetric $(DEV_REF)/ref{0,1,2,3} > $@
+$(TESTID).%.ter: $(TESTID).%
+	cat $< | $(JAVA) edu.stanford.nlp.mt.metrics.TERMetric $(TEST_REF)/ref{0,1,2,3} > $@
+
+### TER-BLEU:
+$(DEVID).%.tb: $(DEVID).%
+	cat $< | $(JAVA) -Xmx2g -Xms2g edu.stanford.nlp.mt.metrics.LinearCombinationMetric $(DEV_REF)/ref{0,1,2,3} > $@
+$(TESTID).%.tb: $(TESTID).%
+	cat $< | $(JAVA) -Xmx2g -Xms2g edu.stanford.nlp.mt.metrics.LinearCombinationMetric $(TEST_REF)/ref{0,1,2,3} > $@
+
+#############################################
+# Old GALE n-best format:
+#############################################
+
+### Generate XML nbest list:
+$(TESTID).%.gale.xml: $(TESTID).%.sorted $(TESTID).$(IE)
+	cat $(TESTID).$(*F).1best.log | grep ^WeightConfig | perl -ne 'while(/:([\d\.E\-]+)/g) { print "$$1 " }' > .tmp.weights
+	mtij.py $+ "`cat .tmp.weights`" stanford > $@
+	rm .tmp.weights
+
+%.sorted: %
+	nbest_sort < $< > $@
+
+#############################################
+# Post-processing:
+#############################################
+
+%.post.xml.scbleu: %.post.xml
+	mteval-v13.pl --brevity-penalty shortest -s $(TESTID)-src.sgm -r $(TESTID)-ref.sgm -t $< -c -b > $@ 
+%.post.xml.cbleu: %.post.xml
+	mteval-v13.pl -s $(TESTID)-src.sgm -r $(TESTID)-ref.sgm -t $< -c -b > $@ 
+%.lcpost.xml: %
+	(cat $< | phrasal_sort | $(POST) | en_detokenizer | plain2sgml $(TESTID).sgm stanford | perl -pe 's/<doc docid="(.*)">/<DOC docid="$$1">/ig') 2> logs/$@.err > $@
+
+#############################################
+# Convert dev ini file into test:
+#############################################
+
+$(TESTID).%.ini: $(DEVID).%.mert/moses.ini
+	$(SCRIPTS)/update_ini SETID $(TESTID) < $< > $@
+
+$(TESTID).%.phrasal.ini: $(DEVID).%.pmert/phrasal.final.ini
+	$(SCRIPTS)/update_ini SETID $(TESTID) < $< > $@
+
+#############################################
+# 1-best and n-best output with Phrasal:
+#############################################
+
+# Use best MERT paramters to generate n-best list:
+test.$(TESTID).%.$Nbest: %.ini $(TESTID).$(IE) $(TESTID).f.vocab
+	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	($(JAVA) $(JAVA_PHRASAL_ARGS_N) edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
+
+# Use best MERT paramters to generate n-best list (alt):
+$(TESTID).$(DEVID).%-bt.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
+	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	($(JAVA) $(JAVA_PHRASAL_ARGS_N) edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
+
+# Use final MERT paramters:
+$(TESTID).$(DEVID).%.f1best: $(DEVID).%.pmert/phrasal.final.ini $(TESTID).$(IE) $(TESTID).f.vocab
+	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
+
+# Use best MERT paramters:
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
+	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
+$(TESTID).$(DEVID).%.b1best: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
+	$(SCRIPTS)/update_ini $(DEVID) $(TESTID) < $< > $<.$(TESTID)
+	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal $<.$(TESTID) < $(TESTID).$(IE) > $@) 2> $@.log
+
+#############################################
+# Phrase counts:
+#############################################
+
+COUNT_EXTRACT=$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxELen $(maxPLen) -extractors edu.stanford.nlp.mt.train.CountFeatureExtractor -maxLen $(maxPLen) 
+
+$(TESTID).tables/counts.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN)
+	$(COUNT_EXTRACT) -fFilterCorpus $< 2> $@.log | gzip > $@
+
+#############################################
+# Lexicalized reordering tables:
+#############################################
+
+LTABLES_DEV= \
+	$(DEVID).tables/lo-word.msd-bidirectional-fe.gz \
+	$(DEVID).tables/lo-phrase.msd-bidirectional-fe.gz \
+	$(DEVID).tables/lo-phrase.msd2-bidirectional-fe.gz \
+	$(DEVID).tables/lo-hier.msd-bidirectional-fe.gz \
+	$(DEVID).tables/lo-hier.msd2-bidirectional-fe.gz
+
+LTABLES_TEST= \
+	$(TESTID).tables/lo-word.msd-bidirectional-fe.gz \
+	$(TESTID).tables/lo-phrase.msd-bidirectional-fe.gz \
+	$(TESTID).tables/lo-phrase.msd2-bidirectional-fe.gz \
+	$(TESTID).tables/lo-hier.msd-bidirectional-fe.gz \
+	$(TESTID).tables/lo-hier.msd2-bidirectional-fe.gz
+
+ltables: $(LTABLES_DEV) $(LTABLES_TEST)
+
+LEX_EXTRACT=$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -phiFilter 0 -endAtLine $(LINES) -noAlign -exactPhiCounts false -maxELen $(maxPLen)
+
+### for tuning set:
+$(DEVID).tables/lo-word.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
+$(DEVID).tables/lo-phrase.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+$(DEVID).tables/lo-hier.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+
+### for test set:
+$(TESTID).tables/lo-word.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
+$(TESTID).tables/lo-phrase.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+$(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+
+#############################################
+# Misc
+#############################################
+
+### sgml with unknown words marked in the text:
+%.mprep: %.prep %.unk
+	dwdiff $(*F).unk $(*F).prep > $@ || true
+
+%.counts.html: %.counts
+	cat $< | counts2html $(TESTID) > $@
+
+$(TESTID).$(DEVID).mix.%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest $(TESTID).$(MIXMBR).$Nbest
+	cat $+ | nbest_sort > $<.mix
+	nbest_sparse2dense `grep -A 1 '^\[weights-file\]' $(DEVID).$(*F).pmert/phrasal.best.ini | tail -1` $<.mix uniq  2> $@.wts | perl -pe 's/([^|])\|([^|])/$1$2/g' | sort -s -k 1n -k 10nr -t '|' > $@
+
+### Meteor:
+$(TESTID).%.meteor: $(TESTID).%
+	/scr/nlp/data/gale/MT-metric-correlation/scripts/txt2sgml --type hyp < $< > $<.hyp.sgm
+	/scr/nlp/data/gale/MT-metric-correlation/scripts/txt2sgml --type ref < $(TEST_REF)/ref0 > $<.ref.sgm
+	perl $(METEOR)/meteor.pl -s any -t $<.hyp.sgm -r $<.ref.sgm --modules "exact porter_stem wn_synonymy" >& $@
+	rm $<.hyp.sgm $<.ref.sgm
+
+### Get phrase alignment for 1best:
+%.align: %.$Nbest
+	nbest-to-1best < $< > $@
+
+
+
+
