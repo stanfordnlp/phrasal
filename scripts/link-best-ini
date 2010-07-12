@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+
+die "Usage: $0 <MERT directory>\n" unless scalar @ARGV == 1;
+my $D = $ARGV[0];
+
+my $metric;
+my $best;
+my $best_ini;
+my $tmb = "(TER-BLEU)/2";
+my $max = 1e10;
+
+open(I,"grep \"# Actual Translation\" $D/*ini | sort -k 6 -t' ' -n -r |");
+while(<I>) {
+	chomp;
+	my @els = split(/[\s,:]+/);
+	my $m = $els[4];
+	if (defined $metric) {
+		assert ($m eq $metric);
+	} else {
+		$metric = $m;
+		$best = $m eq $tmb ? $max : -$max;
+	}
+	my $v = $els[6];
+	if ($m eq $tmb) {
+		if($v < $best) {
+			$best = $v;
+			$best_ini = $els[0];
+			print STDERR "new best (TER-BLEU)/2: ini=$best_ini eval=$v\n";
+		}
+	} else {
+		if($v > $best) {
+			$best = $v;
+			$best_ini = $els[0];
+			print STDERR "new best: ini=$best_ini eval=$v\n";
+		}
+	}
+}
+close(I);
+$best_ini =~ s/^$D\/?//;
+print "cd $D; ln -s $best_ini phrasal.final.ini; cd .."

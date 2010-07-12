@@ -373,7 +373,7 @@ public class PhraseExtract {
           //System.err.printf("done reading: %s size: %d\n", ex.doneReadingData(), dataQueue.size());
         }
       } catch(IOException e) {
-        throw new RuntimeException();
+        throw new RuntimeException(e);
       }
       System.err.printf("Ending thread %s.\n", this);
     }
