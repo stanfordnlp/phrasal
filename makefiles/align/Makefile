@@ -83,7 +83,7 @@ model/aligned.$(ALIGN): model/aligned.$(ALIGN).reversed
 	cat $< | reverse-align > $@
 
 model/aligned.$E: $(SPLIT_DATA_E)
-	cat $+ > $@
+	cat $+ | tr '[A-Z]' '[a-z]' > $@
 
 model/aligned.$F: $(SPLIT_DATA_F)
-	cat $+ > $@
+	cat $+ | tr '[A-Z]' '[a-z]'  > $@
