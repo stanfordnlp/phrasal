@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Used to train cased LM:
+
 make $* -C /scr/nlp/data/gale2/ARABIC_LM/train \
  LANG=ae \
  LMID=mt_giga3_afp_xin \

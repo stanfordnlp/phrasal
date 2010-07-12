@@ -1,8 +1,0 @@
-#!/bin/bash
-
-make $* \
- LANG=ae-class \
- LMID=Cmt_giga3_afp_xin \
- FID=1233 \
- LMSRC="mt.counts.gz LDC2007T07-giga3-xin.counts.gz LDC2007T07-giga3-afp-0.counts.gz LDC2007T07-giga3-afp-1.counts.gz" \
- LMFILTER="-gt2min 1 -gt3min 2 -gt4min 3 -gt5min 3"

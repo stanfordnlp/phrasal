@@ -1,8 +1,0 @@
-#!/bin/bash
-
-make $* \
- LANG=ae-class \
- LMID=bbn1 \
- FID=1233 \
- LMSRC="bbn_google2007-0.counts.gz bbn_google2007-1.counts.gz bbn_google2007-2.counts.gz bbn_other-0.counts.gz bbn_other-1.counts.gz bbn_other-2.counts.gz" \
- LMFILTER="-gt2min 1 -gt3min 2 -gt4min 3 -gt5min 3"

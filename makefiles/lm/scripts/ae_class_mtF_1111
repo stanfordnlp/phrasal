@@ -1,8 +1,0 @@
-#!/bin/bash
-
-make $* \
- LANG=ae-class \
- LMID=CmtF \
- FID=1111 \
- LMSRC="mt.counts.gz fouo.counts.gz" \
- LMFILTER="-gt2min 1 -gt3min 1 -gt4min 1 -gt5min 1"
