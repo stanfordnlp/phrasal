@@ -102,7 +102,7 @@ DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true
 #########################################
 
 PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl -n -t
-POST=perl $(SCRIPTS)/remove_unk | en_truecaser
+POST=remove_unk
 
 #########################################
 # Phrasal MERT:
@@ -139,3 +139,4 @@ N=200
 EXTRACT=fast
 JAVA=java
 THREADS=-threads 4
+TC=en_truecaser

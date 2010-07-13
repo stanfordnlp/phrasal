@@ -12,8 +12,19 @@ JNLP=$(JAVANLP_HOME)
 SCRIPTS=$(JNLP)/projects/mt/scripts
 ESCRIPTS=$(JNLP)/projects/mt/external_scripts
 
-### By default, optimize BLEU:
+### Default parameters for entries defined in Makefile.local:
+JAVA=java
+PM=phrasal-mert.pl
+TC=en_truecaser
+POSTTC=en_fix_detokenizer
+POST=remove_unk
+LM_FILTER_SCRIPT=filter_lm_unigram
+N=200
 OPT_METRIC=bleu
+EXTRACT=fast
+THREADS=-threads 4
+IE=prep
+FE=unk
 
 ### Corpus/genre/language specific stuff here:
 include Makefile.local
@@ -46,17 +57,21 @@ dev_extract: $(DEVID).tables/phrase-table.gz
 train: dev_extract $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
 
 ### Decode test data:
-nbest: test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest
+nbest: train test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+mbr: $(TESTID).$(DEVID).$(SYSID).$N.mbr.$Nbest.s1.post
+sgml: $(TESTID).$(DEVID).$(SYSID).$N.mbr.$Nbest.s1.final.xml
+
+### Generate nbest in format expected for GALE:
 
 #############################################
 # Post-processing:
 #############################################
 
 ### Truecase and generate xml:
-%.post.xml: %.post
-	cat $< | $(TC) $(TESTID).sgm 2> $@.log | $(POSTTC) > $@ 
-%.fixed.xml: %.post.xml
+%.final.xml: %.post.xml
 	cat $< | perl -pe 's/<doc docid="(.*)">/<DOC docid="$$1">/ig' > $@
+%.post.xml: %.post $(TESTID).sgm
+	cat $< | $(TC) $(TESTID).sgm 2> $@.log | $(POSTTC) > $@ 
 
 ### Language specific postprocessing:
 %.post: %
@@ -87,6 +102,7 @@ $(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $
 
 ### Find best set of parameters:
 $(DEVID).%.pmert/phrasal.best.ini: $(DEVID).%.pmert/phrasal.final.ini
+	rm $@ || true
 	eval `link-best-ini $(DEVID).$(*F).pmert`
 
 #############################################
@@ -175,7 +191,7 @@ NE=sed 's/^ *$$/null/'
 
 ### Check that Makefile.local is correct:
 check:
-	cat Makefile.local | $(JAVANLP_HOME)/projects/mt/makefiles/phrase_extract/scripts/check-local-makefile
+	cat Makefile.local | $(JAVANLP_HOME)/projects/mt/makefiles/phrasal/scripts/check-local-makefile
 
 #############################################
 # All rules not needed in core Makefile 
