@@ -10,6 +10,7 @@ $JAVANLP_HOME/projects/mt/scripts
 $JAVANLP_HOME/projects/mt/external_scripts
 /u/nlp/packages/SRILM-1.5.11/bin
 /u/nlp/packages/SRILM-1.5.11/bin/i686-m64_c
+/u/nlp/packages/moses-2009-05-07/scripts/training/mbr
 
 ###########################################
 Steps to build the full GALE system:

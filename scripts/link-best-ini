@@ -41,4 +41,4 @@ while(<I>) {
 }
 close(I);
 $best_ini =~ s/^$D\/?//;
-print "cd $D; ln -s $best_ini phrasal.best.ini; cd .."
+print "cd $D; cp -f $best_ini phrasal.best.ini; cd .."
