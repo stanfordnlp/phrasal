@@ -6,9 +6,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public class PhraseAlignment {
 
-  // This is a fairly large object, though it is instanciated only once for each alignment matrix.
+  // This is a fairly large object, though it is instantiated only once for each alignment matrix.
   // Since phrase pairs are typically small, there are not that many distinct matrices.
-  // Hence, storing these alignments typically have the cost of just storing one pointer in memory.
+  // Hence, storing these alignments typically has the cost of just storing one pointer in memory.
 
   final IString str;
   final int[][] e2f;
@@ -81,4 +81,5 @@ public class PhraseAlignment {
   public int size() {
     return (e2f != null) ? e2f.length : 0;
   }
+
 }
