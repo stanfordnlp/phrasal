@@ -9,7 +9,7 @@ N=500
 # path; and locales must be set correctly)
 #########################################
 
-SYSID=P5-ae-text-hier2-d5
+SYSID=P5-ae-audio-hier2-d5
 
 #########################################
 # Training/test/dev stuff:
@@ -23,8 +23,8 @@ TRAIN=../02-align/model
 REFS=/scr/nlp/data/gale4/P4-arabic/refs
 
 ### Dev/test corpus and genre identifiers:
-DEVID=mt06
-GENRE=-nw
+DEVID=tune-speech
+GENRE=
 TESTID=mt08$(GENRE)
 
 ### References:
