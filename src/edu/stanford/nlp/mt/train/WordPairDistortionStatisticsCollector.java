@@ -16,7 +16,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
  */
 public class WordPairDistortionStatisticsCollector implements StatisticsCollector {
 
-  final boolean DETAILED_DEBUG = false;
+  private static final boolean DETAILED_DEBUG = false;
 
   //private IBMModel1 model1 = null;
   private WordAligner waligner = null;
@@ -34,7 +34,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
   private int wordPair_aligned = 0;
 
   // this is hard coded for now
-  private final static String serializedFileName = "WordLevelStatistics2.ser.gz";
+  private static final String serializedFileName = "WordLevelStatistics2.ser.gz";
 
   private void initWordAligner() {
     //waligner = new IBMModel1InformedWordAligner();
@@ -75,14 +75,14 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
       System.err.println("  e.class="+e.getClass().getName());
       System.err.println("  align="+sent);
     }
-    
+
 
     /* this array records what is the one E that aligns to each f by the WordAligner */
     int[] ftoE = new int[f.size()];
-    
+
     for(int fidx = 0; fidx < f.size(); fidx++) {
-      // eidx is the one best English word for the Foreing word fidx
-      // (according to whatever WordAligner you use) 
+      // eidx is the one best English word for the Foreign word fidx
+      // (according to whatever WordAligner you use)
       if (waligner == null) initWordAligner();
       int eidx = waligner.getAlignedEnglishIndex(sent, fidx);
       ftoE[fidx] = eidx;
@@ -94,7 +94,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
 
       if (DETAILED_DEBUG) {
         System.err.printf("f(%d)=%s\n", fidx, f.get(fidx));
-        
+
         if (eidx >= 0) {
           System.err.printf("e(%d)=%s\n", eidx, e.get(eidx));
         } else {
@@ -105,7 +105,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
 
     }
 
-    
+
     for(int curr=0; curr < f.size()-1; curr++) {
       int next = curr+1;
       int eCurr = ftoE[curr];
@@ -159,7 +159,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     System.err.printf ("1.5) Word Pairs total         = %d\n",wordPair_aligned+wordPair_notAligned);
     System.err.println("1.6) Foreign words that are aligned = "+fWords_aligned);
     System.err.printf ("1.7) Foreign words that are NOT aligned = %d , perc = %.3f%%\n",
-                      fWords_notAligned, 
+                      fWords_notAligned,
                       (double)fWords_notAligned/(fWords_notAligned+fWords_aligned)*100);
     System.err.println("1.8) counterF1F2.size = "+counterF1F2.size());
     System.err.println("1.9) counterF1.size = "+counterF1.size());
@@ -179,8 +179,8 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     total+=ShortestDistanceWordAligner.INTERSECTED;
     /*
     for(int i = 0; i < ShortestDistanceWordAligner.MAXSTEP; i++) {
-      System.err.printf("3.2.%d) STEPINTERSECTED[%d] = %d (%.3f)\n", 
-                        i+1, 
+      System.err.printf("3.2.%d) STEPINTERSECTED[%d] = %d (%.3f)\n",
+                        i+1,
                         i,
                         ShortestDistanceWordAligner.STEPINTERSECTED[i],
                         ShortestDistanceWordAligner.STEPINTERSECTED[i]/total*100);
@@ -202,7 +202,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     System.err.printf("3.5) total = %d\n",(int)total);
     System.err.printf("3.6) TOTAL = %d\n",ShortestDistanceWordAligner.TOTAL);
   }
-  
+
   public void serializeTo(String filename) {
     System.err.print("Serializing statistics to " + filename + "...");
     long startTimeMillis = System.currentTimeMillis();
@@ -232,12 +232,12 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     c.loadFrom(filename);
     return c;
   }
-  
+
   @SuppressWarnings("unchecked")
   public void loadFrom(String filename) {
     try {
       ObjectInputStream ois = IOUtils.readStreamFromString(filename);
-      
+
       counterF1F2  = (TwoDimensionalCounter<String, String>) ois.readObject();
       counterF1    = (TwoDimensionalCounter<String, String>) ois.readObject();
       counterF2    = (TwoDimensionalCounter<String, String>) ois.readObject();
