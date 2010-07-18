@@ -21,6 +21,17 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   public static final String DEBUG_PROPERTY = "DebugGIZAWordAlignment";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
+  enum SymmetricalType {
+    intersection,
+    grow,
+    grow_diag,
+    grow_diag_final,
+    grow_diag_final_and,
+    union,
+    srctotgt,
+    tgttosrc
+  }
+
   double p_f2e = 0.0;
   double p_e2f = 0.0;
 
@@ -133,9 +144,10 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   }
 
   /**
-   * Returns a string reresenting the word alignment.
    * It prints many-to-one alignments, unless inverse is true
    * (in which case it prints one-to-many).
+   * @param inverse whether to print target-to-source.
+   * @return word alignment
    */
   public String toString(boolean inverse) {
     return toString(inverse ? e2f : f2e);
@@ -201,4 +213,16 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
       System.exit(1);
     }
   }
+
+  public SymmetricalWordAlignment symmetricize() {
+    return symmetricize(SymmetricalType.grow_diag_final);
+  }
+
+  public SymmetricalWordAlignment symmetricize(SymmetricalType type) {
+    switch (type) {
+
+    }
+    return null; // TODO
+  }
+
 }

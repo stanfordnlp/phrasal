@@ -102,11 +102,10 @@ public class PhraseExtract {
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
   static {
-    REQUIRED_OPTS.addAll(Arrays.asList(
-       F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT
-     ));
+    REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT));
     OPTIONAL_OPTS.addAll(Arrays.asList(
-       FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT, 
+       A_CORPUS_OPT, A_EF_CORPUS_OPT, A_FE_CORPUS_OPT,
+       FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT,
        SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT, EXTRACTORS_OPT,
        AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT,
        AbstractPhraseExtractor.MAX_PHRASE_LEN_E_OPT, 
@@ -115,7 +114,6 @@ public class PhraseExtract {
        AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_E_OPT, 
        AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_F_OPT,
        AbstractPhraseExtractor.ONLY_TIGHT_PHRASES_OPT,
-       AbstractPhraseExtractor.ONLY_TIGHT_DTUS_OPT,
        NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT,
@@ -126,12 +124,19 @@ public class PhraseExtract {
 			 SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
 			 MAX_INCONSISTENCIES_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
        WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
-       DTUPhraseExtractor.MAX_SPAN_E_OPT, DTUPhraseExtractor.MAX_SPAN_F_OPT,
-       DTUPhraseExtractor.MAX_SIZE_E_OPT, DTUPhraseExtractor.MAX_SIZE_F_OPT,
-       DTUPhraseExtractor.MAX_SIZE_OPT, DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
-       DTUPhraseExtractor.NO_TARGET_GAPS_OPT, DTUPhraseExtractor.NO_UNALIGNED_GAPS_OPT,
-       DTUPhraseExtractor.NO_UNALIGNED_OR_LOOSE_GAPS_OPT, DTUPhraseExtractor.HIERO_RULES_OPT,
-       DTUPhraseExtractor.ALL_SUBSEQUENCES_LOOSE_OPT, DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT,
+       DTUPhraseExtractor.MAX_SPAN_E_OPT,
+       DTUPhraseExtractor.MAX_SPAN_F_OPT,
+       DTUPhraseExtractor.MAX_SIZE_E_OPT,
+       DTUPhraseExtractor.MAX_SIZE_F_OPT,
+       DTUPhraseExtractor.MAX_SIZE_OPT,
+       DTUPhraseExtractor.NO_TARGET_GAPS_OPT,
+       DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
+       DTUPhraseExtractor.NO_UNALIGNED_GAPS_OPT,
+       DTUPhraseExtractor.NO_UNALIGNED_OR_LOOSE_GAPS_OPT,
+       DTUPhraseExtractor.LOOSE_DISC_PHRASES_OPT,
+       DTUPhraseExtractor.LOOSE_DISC_PHRASES_OUTSIDE_OPT,
+       DTUPhraseExtractor.NAACL2010_OPT,
+       DTUPhraseExtractor.HIERO_OPT,
        DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
@@ -161,8 +166,9 @@ public class PhraseExtract {
   private Properties prop;
   private final SourceFilter sourceFilter = new SourceFilter();
   private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq, nThreads = 0;
-  private String fCorpus, eCorpus, alignCorpus, phraseExtractorInfoFile, outputFile;
-  private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
+  private String fCorpus, eCorpus, phraseExtractorInfoFile, outputFile;
+  private String alignCorpus, alignInvCorpus;
+  private boolean filterFromDev = false, printFeatureNames = true, isGIZA = false, noAlign, lowercase;
 
   private int totalPassNumber = 1;
 
@@ -212,8 +218,15 @@ public class PhraseExtract {
     // Mandatory arguments:
     fCorpus = prop.getProperty(F_CORPUS_OPT);
     eCorpus = prop.getProperty(E_CORPUS_OPT);
+
+    // Alignment arguments:
     alignCorpus = prop.getProperty(A_CORPUS_OPT);
-    
+    if (alignCorpus == null) {
+      alignCorpus = prop.getProperty(A_EF_CORPUS_OPT);
+      alignInvCorpus = prop.getProperty(A_FE_CORPUS_OPT);
+      isGIZA = true;
+    }
+
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
     String fFilterList = prop.getProperty(FILTER_LIST_OPT);
@@ -412,10 +425,12 @@ public class PhraseExtract {
         // Read data and process data:
         System.err.printf("Pass %d on training data (max phrase len: %d,%d)...\n",
           passNumber+1, AbstractPhraseExtractor.maxPhraseLenF, AbstractPhraseExtractor.maxPhraseLenE);
-        LineNumberReader pReader=null,
+        LineNumberReader pReader=null, aInvReader=null,
           fReader = IOTools.getReaderFromFile(fCorpus),
           eReader = IOTools.getReaderFromFile(eCorpus),
           aReader = IOTools.getReaderFromFile(alignCorpus);
+        if (isGIZA)
+          aInvReader = IOTools.getReaderFromFile(alignInvCorpus);
         if (phraseExtractorInfoFile != null)
           pReader = IOTools.getReaderFromFile(phraseExtractorInfoFile);
 
@@ -453,12 +468,24 @@ public class PhraseExtract {
 
           String eLine = eReader.readLine();
           if (eLine == null) throw new IOException("Target-language corpus is too short!");
-          String aLine = aReader.readLine();
-          if (aLine == null) throw new IOException("Alignment file is too short!");
           String pLine = pReader == null ? null : pReader.readLine();
-          if (aLine.equals(""))
-            continue;
 
+          // Read alignment
+          String aLine;
+          if (isGIZA) {
+            String ef1 = aReader.readLine(); String ef2 = aReader.readLine(); String ef3 = aReader.readLine();
+            String fe1 = aInvReader.readLine(); String fe2 = aInvReader.readLine(); String fe3 = aInvReader.readLine();
+            GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2, fe3, ef1, ef2, ef3);
+            SymmetricalWordAlignment symAlign = gizaAlign.symmetricize();
+            aLine = symAlign.toString();
+          } else {
+            aLine = aReader.readLine();
+            if (aLine == null) throw new IOException("Alignment file is too short!");
+            if (aLine.equals(""))
+              continue;
+          }
+
+          // Read line with extra/custom information:
           if (nThreads == 0) {
             infoLinesForExtractors = new ArrayList<String>();
             for (LineNumberReader infoReader : infoReaders) {
@@ -622,8 +649,7 @@ public class PhraseExtract {
   public void extractAll() {
 
     boolean useTrieIndex =
-     prop.getProperty(DTUPhraseExtractor.ALL_SUBSEQUENCES_OPT,"false").equals("true") ||
-     prop.getProperty(DTUPhraseExtractor.ALL_SUBSEQUENCES_LOOSE_OPT,"false").equals("true");
+     prop.getProperty(WITH_GAPS_OPT,"false").equals("true");
     System.err.println("Use trie index: "+useTrieIndex);
 
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);

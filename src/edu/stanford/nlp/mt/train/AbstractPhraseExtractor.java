@@ -5,8 +5,7 @@ import java.util.*;
 /**
  * The preferred way of instanciating PhraseExtractor is to extend AbstractPhraseExtractor.
  * Its constructor takes a list of AbstractFeatureExtractor as argument, which are then 
- * used in {@link #addPhraseToIndex(WordAlignment,int,int,int,int,boolean,float)} and
- * {@link #extractPhrasesFromAlGrid(WordAlignment)}, 
+ * used in {@link #addPhraseToIndex(WordAlignment,int,int,int,int,boolean,float)}.
  * where each feature extractor is executed on earch phrase pair.
  *
  * @author Michel Galley
@@ -28,7 +27,6 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   static public final String MAX_EXTRACTED_PHRASE_LEN_E_OPT = "maxELenE";
   static public final String MAX_EXTRACTED_PHRASE_LEN_F_OPT = "maxELenF";
   static public final String ONLY_TIGHT_PHRASES_OPT = "onlyTightPhrases";
-  static public final String ONLY_TIGHT_DTUS_OPT  = "onlyTightDTUs";
 
   static public final int DEFAULT_MAX_LEN = 7;
   static public final int DEFAULT_MAX_LEN_HIER = 500;
@@ -52,13 +50,12 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   static int maxPhraseLenF = DEFAULT_MAX_LEN, maxPhraseLenE = DEFAULT_MAX_LEN;
   static int maxExtractedPhraseLenF = DEFAULT_MAX_E_LEN, maxExtractedPhraseLenE = DEFAULT_MAX_E_LEN;
 
-  static boolean onlyTightPhrases = false, onlyTightDTUs = false;
+  static boolean onlyTightPhrases = false;
 
   final boolean extractBoundaryPhrases;
   final List<AbstractFeatureExtractor> extractors;
   final AlignmentTemplates alTemps;
   AlignmentTemplateInstance alTemp;
-  DTUInstance dtuTemp;
   AlignmentGrid alGrid;
 
   protected AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
@@ -67,7 +64,6 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
-    this.dtuTemp = new DTUInstance();
     this.alGrid = new AlignmentGrid(0,0);
 
     boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT,"false"));
@@ -107,44 +103,6 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
     alTemps.addToIndex(alTemp);
     alTemps.incrementAlignmentCount(alTemp);
-  }
-
-  // For DTU phrase extraction:
-  protected AlignmentTemplateInstance addPhraseToIndex
-      (WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous,
-       boolean eContiguous, boolean isConsistent, boolean ignoreContiguous) {
-
-    if (ignoreContiguous)
-      if (fContiguous && eContiguous)
-        return null;
-
-    if (onlyTightPhrases || (onlyTightDTUs && (!fContiguous || !eContiguous))) {
-      int f1 = fs.nextSetBit(0);
-      int f2 = fs.length()-1;
-      int e1 = es.nextSetBit(0);
-      int e2 = es.length()-1;
-      if (sent.f2e(f1).size() == 0 || sent.f2e(f2).size() == 0 || sent.e2f(e1).size() == 0 || sent.e2f(e2).size() == 0)
-        return null;
-    }
-
-    // Check if dtuTemp meets length requirements:
-    if (fs.cardinality() > maxExtractedPhraseLenF || es.cardinality() > maxExtractedPhraseLenE) {
-      if (isConsistent && fContiguous && eContiguous) {
-        alGrid.addAlTemp(fs.nextSetBit(0), fs.length()-1, es.nextSetBit(0), es.length()-1);
-      }
-      if (DETAILED_DEBUG)
-        System.err.printf("skipping too long: %d %d\n",fs.cardinality(),es.cardinality());
-      return null;
-    }
-
-    // Create dtuTemp:
-    DTUInstance dtuTemp = new DTUInstance(sent, fs, es, fContiguous, eContiguous);
-    alGrid.addAlTemp(dtuTemp, isConsistent);
-
-    alTemps.addToIndex(dtuTemp);
-    alTemps.incrementAlignmentCount(dtuTemp);
-
-    return dtuTemp;
   }
 
   protected void extractPhrasesFromGrid(WordAlignment sent) {
@@ -235,10 +193,8 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     String optStr = prop.getProperty(ONLY_TIGHT_PHRASES_OPT);
     onlyTightPhrases = optStr != null && !optStr.equals("false");
 
-    optStr = prop.getProperty(ONLY_TIGHT_DTUS_OPT);
-    onlyTightDTUs = optStr != null && !optStr.equals("false");
-
     DTUPhraseExtractor.setDTUExtractionProperties(prop);
+    //OldDTUPhraseExtractor.setDTUExtractionProperties(prop);
   }
 
   AlignmentGrid getAlGrid() { return alGrid; }
@@ -250,7 +206,6 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     AbstractPhraseExtractor c = (AbstractPhraseExtractor) super.clone();
     c.alGrid = new AlignmentGrid(0,0);
     c.alTemp = new AlignmentTemplateInstance();
-    c.dtuTemp = new DTUInstance();
     return c;
   }
 

@@ -67,7 +67,6 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(fStr,eStr,aStr, reverse, oneIndexed);
   }
 
-
   public void init(String fStr, String eStr, String aStr) throws IOException {
     init(fStr, eStr, aStr, false);
   }
@@ -76,18 +75,22 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(fStr, eStr, aStr, reverse, false);
   }
 
+  protected void initSentPair(String fStr, String eStr) {
+    if (addBoundaryMarkers) {
+      fStr = new StringBuffer("<s> ").append(fStr).append(" </s>").toString();
+      eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
+    }
+    synchronized (OAIndex.class) {
+      f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
+      e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
+    }
+  }
+
   public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed)
        throws IOException {
     if(VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
-    if(addBoundaryMarkers) {
-      fStr = new StringBuffer("<s> ").append(fStr).append(" </s>").toString();
-      eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
-    }
-    synchronized(OAIndex.class) {
-      f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
-      e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
-    }
+    initSentPair(fStr, eStr);
     initAlignment();
     if(aStr == null) {
       System.err.println("Warning: empty line.");
@@ -147,6 +150,9 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
 	 * Compute alignment error rate. Since there is (currently) no S vs. P distinction
    * alignment in this class, 
 	 * AER is 1 minus F-measure.
+   * @return alignment error rate
+   * @param ref reference alignment
+   * @param hyp hypothesis alignment
 	 */
 	static double computeAER(SymmetricalWordAlignment[] ref, SymmetricalWordAlignment[] hyp) {
 		int tpC = 0, refC = 0, hypC = 0;
@@ -249,4 +255,5 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       }
     }
   }
+
 }

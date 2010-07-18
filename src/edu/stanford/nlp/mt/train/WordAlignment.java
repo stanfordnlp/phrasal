@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
+import java.util.BitSet;
 import java.util.SortedSet;
 
 import edu.stanford.nlp.mt.base.IString;
@@ -18,6 +19,9 @@ public interface WordAlignment {
 
   public Sequence<IString> f();
   public Sequence<IString> e();
+
+  public BitSet unalignedF();
+  public BitSet unalignedE();
 
   public SortedSet<Integer> f2e(int i);
   public SortedSet<Integer> e2f(int i);

@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
+import java.util.BitSet;
 import java.util.TreeSet;
 import java.util.SortedSet;
 import java.io.IOException;
@@ -37,6 +38,9 @@ public class DualWordAlignment implements WordAlignment {
   public Integer getId() { 
     throw new UnsupportedOperationException("Not implemented."); 
   }
+
+  @Override public BitSet unalignedE() { throw new UnsupportedOperationException(); }
+  @Override public BitSet unalignedF() { throw new UnsupportedOperationException(); }
 
   @SuppressWarnings("unchecked")
   public void init(String fStr, String eStr, String a1Str, String a2Str) throws IOException {

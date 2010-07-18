@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
+import java.util.BitSet;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -161,6 +162,7 @@ public class AbstractWordAlignment implements WordAlignment {
    * Initialize alignment using a matrix in LDC format (such as the ones
    * used in parallel treebanks. Convention: 1-indexed words, and index zero
    * reseved for unaligned words.
+   * @param matrix alignment matrix
    */
   @SuppressWarnings("unchecked")
   public void init(int[][] matrix) {
@@ -180,4 +182,23 @@ public class AbstractWordAlignment implements WordAlignment {
           f2e[j-1].add(i-1);
         }
   }
+
+  public BitSet unalignedF() {
+    BitSet unaligned = new BitSet();
+    for (int fi=0; fi<f().size(); ++fi) {
+      if (f2e(fi).isEmpty())
+        unaligned.set(fi);
+    }
+    return unaligned;
+  }
+
+  public BitSet unalignedE() {
+    BitSet unaligned = new BitSet();
+    for (int ei=0; ei<e().size(); ++ei) {
+      if (e2f(ei).isEmpty())
+        unaligned.set(ei);
+    }
+    return unaligned;
+  }
+
 }
