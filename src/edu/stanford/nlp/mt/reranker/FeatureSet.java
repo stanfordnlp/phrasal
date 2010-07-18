@@ -22,7 +22,8 @@ public class FeatureSet {
     new HashMap<Integer, Map<Integer, Map<String, Double>>>();
 
   String featureSetName = "Unnamed Feature Set\n";
-  public FeatureSet() { ; }
+
+  public FeatureSet() { }
 
   public static void pruneFeaturesByCount(FeatureSet featSet, int threshold, ClassicCounter<String> cnt) {
     /*
@@ -61,7 +62,6 @@ public class FeatureSet {
   }
   public static FeatureSet load(String filename) throws IOException {
     ClassicCounter<String> cnt = new ClassicCounter<String>();
-    BufferedReader breader = null;
     // we support both gzipped and non-gzipped feature sets
     String n = System.getProperty(N_THRESH_PROP, DEFAULT_N_THRESH);
     int nThresh = Integer.MAX_VALUE;
@@ -69,6 +69,7 @@ public class FeatureSet {
       nThresh = Integer.parseInt(n);
     System.err.println("Max N = "+nThresh);
 
+    BufferedReader breader;
     try {
       breader = new BufferedReader(new InputStreamReader(
         new GZIPInputStream(new FileInputStream(filename))));
@@ -76,11 +77,11 @@ public class FeatureSet {
       breader = new BufferedReader(new FileReader(filename));
     }
     FeatureSet featureSet = new FeatureSet();
-    
+
     for (String line; (line = breader.readLine()) != null; ) {
       if (line.toLowerCase().matches("^# feature set name:.*")) {
         String name = line.replaceFirst(".*:", "");
-        featureSet.setName(name); 
+        featureSet.setName(name);
       }
       line = line.replaceFirst("#.*$", "").replaceAll("\\s*$", "");
       if (line.equals("")) continue;
@@ -91,7 +92,7 @@ public class FeatureSet {
       if (hypId >= nThresh) continue;
       for (int i = 1; i < fields.length; i++) {
         String[] featurePair = fields[i].split(":");
-        double v = (featurePair.length == 1 ? 1.0 : 
+        double v = (featurePair.length == 1 ? 1.0 :
           Double.parseDouble(featurePair[1]));
         featureSet.setFeature(dataPt, hypId, featurePair[0], v);
         cnt.incrementCount(featurePair[0],v);
@@ -104,21 +105,21 @@ public class FeatureSet {
     System.err.println("Done pruning.");
     return featureSet;
   }
-   
+
   public void write(String filename) throws IOException {
     PrintStream pstrm = new PrintStream(new FileOutputStream(filename));
-    pstrm.printf("# Feature Set Name: %f\n", featureSetName);
+    pstrm.printf("# Feature Set Name: %s\n", featureSetName);
     pstrm.printf("# Created: %s\n", new Date());
     for (Integer dataPt  : new TreeSet<Integer>(dataSetMap.keySet())) {
       pstrm.printf("\n# Data Pt %d\n", dataPt);
       for (Integer hypId : new TreeSet<Integer>(
         dataSetMap.get(dataPt).keySet())) {
-        pstrm.printf("%d,%d");
+        pstrm.printf("%d,%d", dataPt, hypId);
         for (String feat : new TreeSet<String>(dataSetMap.get(dataPt).
           get(hypId).keySet())) {
           pstrm.printf(" %s:%f", feat, dataSetMap.get(dataPt).get(hypId).
             get(feat));
-        } 
+        }
         pstrm.println();
       }
     }
@@ -128,7 +129,7 @@ public class FeatureSet {
   public void setName(String pName) { featureSetName = pName; }
   public String getName() { return featureSetName; }
 
-  public void setFeature(int dataPtIdx, int hypothesisIdx, 
+  public void setFeature(int dataPtIdx, int hypothesisIdx,
                     String featureName, double featureVal) {
     if (!dataSetMap.containsKey(dataPtIdx)) {
       dataSetMap.put(dataPtIdx, new HashMap<Integer, Map<String, Double>>());
@@ -136,11 +137,11 @@ public class FeatureSet {
     Map<Integer, Map<String, Double>> grpMap = dataSetMap.get(dataPtIdx);
     if (!grpMap.containsKey(hypothesisIdx)) {
         grpMap.put(hypothesisIdx, new HashMap<String, Double>());
-    } 
+    }
     Map<String, Double> featuresMap = grpMap.get(hypothesisIdx);
     featuresMap.put(featureName, featureVal);
-  } 
-  
+  }
+
   public Map<String, Double> getFeatures(int dataPtIdx, int hypothesisIdx) {
     if (dataSetMap.containsKey(dataPtIdx) &&
         dataSetMap.get(dataPtIdx).containsKey(hypothesisIdx)) {
@@ -148,9 +149,9 @@ public class FeatureSet {
     }
     return null;
   }
- 
+
   public SortedSet<Integer> getDataPointIndices() {
-    return new TreeSet<Integer>(dataSetMap.keySet()); 
+    return new TreeSet<Integer>(dataSetMap.keySet());
   }
 
   public SortedSet<Integer> getHypothesisIndices(int dataPtIdx) {
@@ -160,7 +161,7 @@ public class FeatureSet {
   static public void main(String[] args) throws Exception {
     if (args.length != 1) {
       System.err.println(
-         "Usage:\n\tjava ...AuxiliarFeatures (feature filename)\n");
+         "Usage:\n\tjava ...AuxiliaryFeatures (feature filename)\n");
       System.exit(-1);
     }
     FeatureSet featureSet = FeatureSet.load(args[0]);
@@ -174,6 +175,6 @@ public class FeatureSet {
        }
        System.out.println();
      }
-    } 
+    }
   }
 }
