@@ -77,13 +77,12 @@ XOPTS=-threads 4 -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu
 #########################################
 
 ### How much memory for Java and sort:
+# default:
 MEMSIZE=45000m
+# Phrasal decoding:
 PMEMSIZE=17000m
-PMEMSIZE_BM=17000m
+# MERT:
 MMEMSIZE=15600m
-#MEMSIZE=15000m
-#PMEMSIZE=29000m
-#PMEMSIZE_BM=29000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -126,7 +125,7 @@ DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djav
 #########################################
 
 PROC=8
-PM=phrasal-mert.pl --opt-flags="-o koehn+cer -t $(PROC) -p 8"
+PM=phrasal-mert.pl --opt-flags="-o koehn+cer -t $(PROC) -p 8" --history-size=3
 
 #########################################
 # Extension of input files:
