@@ -92,6 +92,11 @@ sub handle_arg {
      $SLEEP = $arg;
      $SLEEP =~ s/^--sleep=//;
 		 chomp $SLEEP;
+  } elsif ($arg =~ /^--history-size=.*/) {
+		 $NBEST_HISTORY_WINDOW = $arg;
+     $NBEST_HISTORY_WINDOW =~ s/^--history-size=//;
+		 print STDERR "HISTORY SIZE: $NBEST_HISTORY_WINDOW\n";
+		 chomp $SLEEP;
   } elsif ($arg =~ /^--working-dir=.*/) {
      $work_dir = $arg;
      $work_dir =~ s/^--working-dir=//;

@@ -21,7 +21,7 @@ POST=remove_unk
 LM_FILTER_SCRIPT=filter_lm_unigram
 N=200
 OPT_METRIC=bleu
-EXTRACT=fast
+FILTER=fast
 THREADS=-threads 4
 IE=prep
 FE=unk
@@ -41,7 +41,6 @@ $D:
 ### Java configuration:
 JAVA_MERT_ARGS=$(DEBUG_PHRASAL) -Xmx$(MMEMSIZE) -Xms$(MMEMSIZE)
 JAVA_PHRASAL_ARGS=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE) -Xms$(PMEMSIZE)
-JAVA_PHRASAL_ARGS_N=$(DEBUG_PHRASAL) -Xmx$(PMEMSIZE_BM) -Xms$(PMEMSIZE_BM) 
 
 #############################################
 # Main targets
@@ -98,7 +97,7 @@ $(TESTID).$(DEVID).%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest
 ### Use best MERT paramters to generate n-best list:
 $(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
 	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	($(JAVA) $(JAVA_PHRASAL_ARGS_N) edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
+	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 ### Find best set of parameters:
 $(DEVID).%.pmert/phrasal.best.ini: $(DEVID).%.pmert/phrasal.final.ini

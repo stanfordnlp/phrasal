@@ -1,0 +1,143 @@
+#########################################
+# Java command (must have MT stuff in class
+# path; and locales must be set correctly)
+#########################################
+
+SYSID=ce-src18
+
+#########################################
+# Language/data specific variables:
+#########################################
+
+### Language identifiers:
+F=zh
+E=en
+
+#########################################
+# Data:
+#########################################
+
+### How many sentence pairs used for training:
+LINES=90000000
+
+### MT word-aligned training data:
+TRAIN=../../dep/align/output/corpus
+
+### Unfiltered Gigaword LM:
+GIGA=/scr/mgalley/research/current/dtu/dep/lm/releases/mt_giga3_afp_xin.1233.unk.lm.gz
+
+### Dev/test corpus and genre identifiers:
+DEVID=mt06
+TESTID=mt06
+
+### Directory containing reference translations:
+REFS=/scr/nlp/data/gale/NIST-MT-eval-data/
+
+### References:
+DEV_REF=$(REFS)/$(DEVID)$(TYPE)/chinese
+TEST_REF=$(REFS)/$(TESTID)$(TYPE)/chinese
+
+#########################################
+# Phrase extraction heuristics:
+#########################################
+
+### Specify alignment merging heuristic:
+ALIGN=grow-diag
+
+### Lexicalized re-ordering model identifier:
+LO_ID=lo-hier.msd2-bidirectional-fe
+
+### Parameters for lexicalized reordering model:
+LO_ARGS=-orientationModelType msd2-bidirectional-fe -hierarchicalLexicalizedModel true
+
+### Number of columns produced by lexicalized re-ordering extractor:
+LO_SZ=8
+
+### Other options:
+XOPTS=-withGaps true -noTargetGaps true -naacl2010 true
+
+#########################################
+# Pruning:
+#########################################
+
+### Maximum phrase length:
+maxPLen=7
+
+### Minimum p(e|f) probability:
+### (Note: filtering based on p(f|e), lex(e|f), lex(f|e)
+### isn't really effective)
+MINP=1e-4
+
+#########################################
+# Memory and extraction duration:
+#########################################
+
+### How much memory for Java:
+MEMSIZE=15000m
+MMEMSIZE=15000m
+PMEMSIZE=11000m
+
+### Whether to compute exact relative frequencies p(f|e). 
+### If so, requires two passes over training data. 
+### Setting this to false requires only one pass, and 
+### generally causes a .2-.3 BLEU point drop.
+exactPhiCounts=true
+
+### In how many chunks to split phrase extraction. Setting the
+### value to X makes phrase extraction run X times slower,
+### though one needs about X times less memory.
+### Note: "split" means we split the dev/test-set phrases to score
+### into X chunks, and make 1-2 passes over the training data
+### for each one of them.
+### (if you run out of memory, increase the split value)
+SPLIT=-split 2
+
+#########################################
+# Debug levels
+#########################################
+
+HOST=`hostname -s`
+#CP=-cp /scr/mgalley/mirror/main/javanlp/projects/core/classes:/scr/mgalley/mirror/main/javanlp/projects/mt/classes:/scr/mgalley/mirror/main/javanlp/projects/more/classes:$(CLASSPATH) 
+#-DPrintTranslationOptions=true 
+DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DDTUDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -XX:+UseCompressedOops
+
+PHRASAL_ARGS=-moses-n-best-list true
+
+#########################################
+# Pre- and post-processing:
+#########################################
+
+PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl -n -t
+POST=phrasal_sort | perl $(SCRIPTS)/remove_unk | java -cp /scr/nlp/data/gale3/NIST09/postprocess:$(CLASSPATH) AmericanizeInOut | aren-postprocess-text
+
+#########################################
+# Phrasal MERT:
+# (in case you run a customized version)
+#########################################
+
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -t 4 -p 16" --history-size=3
+
+#########################################
+# Extension of input files:
+# unk : with unk words
+# prep : with preprocessing
+#########################################
+
+IE=prep
+FE=unk
+
+#########################################
+# LM filtering script:
+#########################################
+
+LM_FILTER_SCRIPT=filter_lm_unigram
+
+#########################################
+# Size of nbest list (test time):
+#########################################
+
+N=200
+
+CLASS=ibm2noclass
+
+#include Makefile.extra

@@ -74,20 +74,26 @@ cd ..
 svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/makefiles/phrasal 03-phrasal
 cd 03-phrasal
 
-### Select configuration files:
+### Symlink configuration files:
 ln -s GALE/Makefile.local.P5-text Makefile.local
 ln -s GALE/P5-ae-text-hier2-d5.ini
 ln -s GALE/P5-ae-audio-hier2-d5.ini
 
-### Select which data to decode (e.g., mt06 as tuning set and mt08-nw as test set):
-ln -s /scr/gale/AE-MT-eval-data/GALE/P5-select/mt06.sgm 
-ln -s /scr/gale/AE-MT-eval-data/GALE/P5-select/mt08-nw.sgm 
+### Symlink tuning sets (MT06 for text; "tune-speech" 
+### puts together most speech sources in NIST data):
+ln -s /scr/gale/AE-MT-eval-data/GALE/P5-select/mt06.sgm
+ln -s GALE/tune-speech.unk
 
-### Three steps:
-### 1) build Google LM (filtered against phrase table, so this happens here and not in Step 1):
-### 2) run phrase extraction and MERT:
-### 3) evaluation on unseen data:
-make google.3gram.kn.lm.bin train nbest
+### Train Google LM:
+make google.3gram.kn.lm.bin
 
-### Run GALE evaluation scripts (TER-BLEU):
-# TODO
+### Tune system for text genres (nw and wb):
+make train
+
+### Tune system for speech genres (bc and bn):
+ln -s -f GALE/Makefile.local.P5-audio Makefile.local
+make train
+
+# evaluation on unseen data:
+# Run GALE evaluation scripts (TER-BLEU)
+# make train nbest
