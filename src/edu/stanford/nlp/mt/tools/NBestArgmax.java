@@ -48,7 +48,8 @@ public class NBestArgmax {
 		List<ScoredFeaturizedTranslation<IString, String>> argmaxTrans = argmaxByScore.maximize(nbestlists);
 		
 		for (ScoredFeaturizedTranslation<IString, String> trans : argmaxTrans) {
-			System.out.println(trans.translation);
+			System.out.println(trans);
+      //System.out.println(trans.translation);
 		}
 		
 		if (eval != null) System.err.printf("Eval score: %f\n", eval.score(argmaxTrans));			

@@ -405,7 +405,7 @@ public class MERT extends Thread {
           "MIN_NBEST_OCCURRENCES", "5"));
   static final SmoothingType smoothingType = SmoothingType.valueOf(System
           .getProperty("SMOOTHING_TYPE", "min"));
-  static final boolean filterUnreachable = Boolean.parseBoolean(System
+  static boolean filterUnreachable = Boolean.parseBoolean(System
           .getProperty("FILTER_UNREACHABLE", "false"));
 
   static {
@@ -1077,6 +1077,8 @@ public class MERT extends Thread {
         System.err.println("Disabling feature: "+disableStr);
       } else if(arg.equals("-s")) {
         seedStr = args[++argi];
+      } else if(arg.equals("-F")) {
+        filterUnreachable = true;
       } else if(arg.equals("-p")) {
         nStartingPoints = Integer.parseInt(args[++argi]);
       } else if(arg.equals("-o")) {
@@ -1105,6 +1107,7 @@ public class MERT extends Thread {
       System.err.println("-p <N>: number of starting points.");
       System.err.println("-o <N>: search algorithm.");
       System.err.println("-t <N>: number of threads.");
+      System.err.println("-F: filter unreachable.");
       System.err.println("-f <file>: weights read from file remain fixed during MERT.");
       System.err.println("-S: tune using sentence-level BLEU (smoothed).");
       System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");

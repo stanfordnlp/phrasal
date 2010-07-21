@@ -22,4 +22,13 @@ public class FeaturizedTranslation<TK, FV> {
 		this.features = (features == null ? null : ( (features instanceof FeatureValueCollection) ?
        new FeatureValueCollection<FV>((FeatureValueCollection<FV>)features) : new ArrayList<FeatureValue<FV>>(features)) );
 	}
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append(translation).append(" |||");
+    for (FeatureValue fv : features)
+      sb.append(" ").append(fv.name).append(": ").append(fv.value);
+    return sb.toString();
+  }
 }
