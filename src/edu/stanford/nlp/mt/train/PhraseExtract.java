@@ -131,6 +131,8 @@ public class PhraseExtract {
        DTUPhraseExtractor.MAX_SIZE_OPT,
        DTUPhraseExtractor.NO_TARGET_GAPS_OPT,
        DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
+       DTUPhraseExtractor.GAPS_BOTH_SIDES_OPT,
+       DTUPhraseExtractor.GROW_SOURCE_OPT,
        DTUPhraseExtractor.NO_UNALIGNED_GAPS_OPT,
        DTUPhraseExtractor.NO_UNALIGNED_OR_LOOSE_GAPS_OPT,
        DTUPhraseExtractor.LOOSE_DISC_PHRASES_OPT,
