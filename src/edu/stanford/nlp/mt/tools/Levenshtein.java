@@ -1,14 +1,13 @@
 package edu.stanford.nlp.mt.tools;
 
+import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.HasIntegerIdentity;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 
 import java.util.List;
-import java.util.BitSet;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
@@ -29,7 +28,7 @@ public class Levenshtein<T extends HasIntegerIdentity> {
 
   final byte[][] c = new byte[256][256];
   final byte[][] b = new byte[256][256];
-  final BitSet bitset = new BitSet();
+  final CoverageSet bitset = new CoverageSet();
 
   public void init(Sequence<T> x, Sequence<T> y) {
 
@@ -75,12 +74,12 @@ public class Levenshtein<T extends HasIntegerIdentity> {
     return val == flag;
   }
 
-  public BitSet longestCommonSubsequence() {
+  public CoverageSet longestCommonSubsequence() {
     longestCommonSubsequence(bitset, x.size(), y.size());
     return bitset;
   }
 
-  private void longestCommonSubsequence(BitSet bitset, int i, int j) {
+  private void longestCommonSubsequence(CoverageSet bitset, int i, int j) {
     if (0 == i || 0 == j)
       return;
 
@@ -96,17 +95,17 @@ public class Levenshtein<T extends HasIntegerIdentity> {
     }
   }
 
-  public static void addSubsequences(BitSet in, Set<BitSet> out, int maxSpan) {
+  public static void addSubsequences(CoverageSet in, Set<CoverageSet> out, int maxSpan) {
     int startIdx = in.nextSetBit(0);
     while (startIdx >= 0) {
       int endIdx = in.nextSetBit(in.nextClearBit(startIdx));
-      BitSet tmpSet = new BitSet();
+      CoverageSet tmpSet = new CoverageSet();
       for(int i=startIdx; i<=endIdx; ++i) {
         tmpSet.set(i, in.get(i));
       }
       while(startIdx < endIdx && endIdx-startIdx+1 <= maxSpan) {
         tmpSet.set(endIdx);
-        out.add((BitSet)tmpSet.clone());
+        out.add(tmpSet.clone());
         endIdx = in.nextSetBit(endIdx+1);
       }
       startIdx = in.nextSetBit(startIdx+1);
@@ -133,18 +132,18 @@ public class Levenshtein<T extends HasIntegerIdentity> {
         startStepTimeMillis = System.currentTimeMillis();
         System.err.printf("line %d, secs = %.3f...\n", lineNb, totalStepSecs);
       }
-      Set<BitSet> bitsets = new HashSet<BitSet>();
+      Set<CoverageSet> bitsets = new HashSet<CoverageSet>();
       for (Sequence<IString> y : test) {
         System.out.println("x: " + x);
         System.out.println("y: " + y);
         l.init(x, y);
-        BitSet bitset = l.longestCommonSubsequence();
+        CoverageSet bitset = l.longestCommonSubsequence();
         addSubsequences(bitset, bitsets, 12);
       }
-      for(BitSet bs : bitsets) {
+      for(CoverageSet bs : bitsets) {
         System.out.print(bs);
         System.out.print(" :");
-        for(int i : DTUPhraseExtractor.bitSetToIntSet(bs)) {
+        for(int i : bs) {
           System.out.print(" "+x.get(i));
         }
         System.out.println();

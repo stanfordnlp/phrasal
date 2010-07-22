@@ -415,9 +415,7 @@ public class MERT extends Thread {
     System.err.printf("Smoothing Type: %s\n", smoothingType);
     System.err.printf("Min plateau diff: %f\n", MIN_PLATEAU_DIFF);
     System.err.printf("Min objective diff: %f\n", MIN_OBJECTIVE_DIFF);
-    System.err.printf("FilterUnreachable?: %b\n", filterUnreachable);
   }
-
 
   static double windowSmooth(double[] a, int pos, int window) {
     int strt = Math.max(0, pos - window);
@@ -1117,6 +1115,7 @@ public class MERT extends Thread {
 
     SEED = seedStr.hashCode();
     System.err.println("Seed used to generate random points: "+SEED);
+    System.err.printf("FilterUnreachable?: %b\n", filterUnreachable);
     globalRandom = new Random(SEED);
 
     String evalMetric = args[argi].toLowerCase();

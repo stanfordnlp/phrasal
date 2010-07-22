@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
+import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
@@ -76,25 +77,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     return c;
   }
 
-  public static Set<Integer> bitSetToIntSet(BitSet b) {
-    Set<Integer> s = new TreeSet<Integer>();
-    int i = b.nextSetBit(0);
-    if (i != -1) {
-      s.add(i);
-      for (i = b.nextSetBit(i+1); i >= 0; i = b.nextSetBit(i+1)) {
-        int endOfRun = b.nextClearBit(i);
-        do { s.add(i); }
-        while (++i < endOfRun);
-      }
-    }
-    return s;
-  }
-
-  static String stringWithGaps(Sequence<IString> f, BitSet b) {
+  static String stringWithGaps(Sequence<IString> f, CoverageSet bitset) {
     StringBuilder sb = new StringBuilder();
-    Set<Integer> sel = bitSetToIntSet(b);
     int oldI = -1;
-    for (int i : sel) {
+    for (int i : bitset) {
       if (oldI != -1) {
         if (i > oldI+1) {
           sb.append(" ").append(DTUPhraseExtractor.GAP_STR).append(" ");
@@ -195,9 +181,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     WordAlignment sent;
 
-    BitSet consistencizedF, consistencizedE;
+    CoverageSet consistencizedF, consistencizedE;
 
-    final BitSet f, e;
+    final CoverageSet f, e;
 
     boolean isContiguous(BitSet bitset) {
       int i = bitset.nextSetBit(0);
@@ -225,16 +211,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     void addE(int ei) { e.set(ei); }
     void addF(int fi) { f.set(fi); }
 
-    Set<Integer> toConsistencizeInF() {
-      BitSet newF = (BitSet) f.clone();
+    CoverageSet toConsistencizeInF() {
+      CoverageSet newF = f.clone();
       newF.xor(consistencizedF);
-      return bitSetToIntSet(newF);
+      return newF;
     }
 
-    Set<Integer> toConsistencizeInE() {
-      BitSet newE = (BitSet) e.clone();
+    CoverageSet toConsistencizeInE() {
+      CoverageSet newE = e.clone();
       newE.xor(consistencizedE);
-      return bitSetToIntSet(newE);
+      return newE;
     }
 
     @Override
@@ -270,30 +256,30 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     DTUPhrase(DTUPhrase dtu) {
       sent = dtu.sent;
-      f = (BitSet) dtu.f.clone();
-      e = (BitSet) dtu.e.clone();
-      consistencizedF = (BitSet) dtu.consistencizedF.clone();
-      consistencizedE = (BitSet) dtu.consistencizedE.clone();
+      f = dtu.f.clone();
+      e = dtu.e.clone();
+      consistencizedF = dtu.consistencizedF.clone();
+      consistencizedE = dtu.consistencizedE.clone();
     }
 
     DTUPhrase(WordAlignment sent, int fi, int ei) {
       super();
       this.sent = sent;
-      f = new BitSet();
-      e = new BitSet();
+      f = new CoverageSet();
+      e = new CoverageSet();
       f.set(fi);
       e.set(ei);
-      consistencizedF = new BitSet();
-      consistencizedE = new BitSet();
+      consistencizedF = new CoverageSet();
+      consistencizedE = new CoverageSet();
     }
 
-    DTUPhrase(WordAlignment sent, BitSet f, BitSet e) {
+    DTUPhrase(WordAlignment sent, CoverageSet f, CoverageSet e) {
       super();
       this.sent = sent;
       this.f = f;
       this.e = e;
-      consistencizedF = new BitSet();
-      consistencizedE = new BitSet();
+      consistencizedF = new CoverageSet();
+      consistencizedE = new CoverageSet();
     }
 
     boolean isConsistencizedE(int ei) { return consistencizedE.get(ei); }
@@ -464,7 +450,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         if (f.equals(consistencizedF)) {
           doneF = true;
         } else {
-          for (int fi : bitSetToIntSet(f))
+          for (int fi : f)
             if (!consistencizedF.get(fi))
               if (!consistencize(fi,true))
                 return false;
@@ -474,7 +460,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         if (e.equals(consistencizedE)) {
           doneE = true;
         } else {
-          for (int ei : bitSetToIntSet(e))
+          for (int ei : e)
             if (!consistencizedE.get(ei))
               if (!consistencize(ei,false))
                 return false;
@@ -595,25 +581,24 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
   }
 
-
   // Extract all subsequences:
-  Set<BitSet> subsequenceExtract(WordAlignment sent) {
+  Set<CoverageSet> subsequenceExtract(WordAlignment sent) {
 
     TrieIntegerArrayIndex fTrieIndex = alTemps.getSourceFilter().getSourceTrie();
     assert(fTrieIndex != null);
 
-    Deque<Triple<Integer,Integer,BitSet>> q = new LinkedList<Triple<Integer,Integer,BitSet>>();
-    Set<BitSet> bitsets = new HashSet<BitSet>();
+    Deque<Triple<Integer,Integer, CoverageSet>> q = new LinkedList<Triple<Integer,Integer, CoverageSet>>();
+    Set<CoverageSet> bitsets = new HashSet<CoverageSet>();
     for (int i=0; i < sent.f().size(); ++i) {
       //System.err.println("i: "+i);
       q.clear();
       int startState = TrieIntegerArrayIndex.IDX_ROOT;
-      q.offerFirst(new Triple<Integer,Integer,BitSet>(i, startState, new BitSet()));
+      q.offerFirst(new Triple<Integer,Integer, CoverageSet>(i, startState, new CoverageSet()));
       while (!q.isEmpty()) {
-        Triple<Integer,Integer,BitSet> el = q.pollLast();
+        Triple<Integer,Integer, CoverageSet> el = q.pollLast();
         int pos = el.first();
         int curState = el.second();
-        BitSet bitset = el.third();
+        CoverageSet bitset = el.third();
         if (!bitset.isEmpty()) {
           bitsets.add(bitset);
           //System.err.printf("bs=%s %s\n",bitset,stringWithGaps(sent.f(),bitset));
@@ -622,9 +607,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         // Try to match a terminal:
         int nextState = fTrieIndex.getSuccessor(curState, sent.f().get(pos).id);
         if (nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
-          BitSet newBitset = (BitSet) bitset.clone();
+          CoverageSet newBitset = bitset.clone();
           newBitset.set(pos);
-          q.offerFirst(new Triple<Integer,Integer,BitSet>(pos+1,nextState,newBitset));
+          q.offerFirst(new Triple<Integer,Integer, CoverageSet>(pos+1,nextState,newBitset));
         }
         // Try to match non terminals:
         int ntNextState = fTrieIndex.getSuccessor(curState, DTUPhraseExtractor.GAP_STR.id);
@@ -634,9 +619,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
             if (pos2 >= sent.f().size()) break;
             int next2State = fTrieIndex.getSuccessor(ntNextState, sent.f().get(pos2).id);
             if (next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
-              BitSet newBitset = (BitSet) bitset.clone();
+              CoverageSet newBitset = bitset.clone();
               newBitset.set(pos2);
-              q.offerFirst(new Triple<Integer,Integer,BitSet>(pos2+1,next2State,newBitset));
+              q.offerFirst(new Triple<Integer,Integer, CoverageSet>(pos2+1,next2State,newBitset));
             }
           }
         }
@@ -723,8 +708,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       // Q: Why have both (A) and (B)?
       // A: so that
       Deque<DTUPhrase> matchQueue = new LinkedList<DTUPhrase>();
-      for (BitSet bitset : subsequenceExtract(sent)) {
-        DTUPhrase dtu = new DTUPhrase(sent, (BitSet)bitset.clone(), new BitSet());
+      for (CoverageSet bitset : subsequenceExtract(sent)) {
+        DTUPhrase dtu = new DTUPhrase(sent, bitset.clone(), new CoverageSet());
         if (dtu.consistencize()) {
           if (!seen.contains(dtu)) {
             matchQueue.offerLast(dtu);
