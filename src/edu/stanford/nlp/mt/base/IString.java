@@ -21,6 +21,7 @@ import java.util.Set;
  *
  */
 public class IString implements CharSequence, Serializable, HasIntegerIdentity, HasWord, Comparable<IString> {
+  
   public static final OAIndex<String> index = new OAIndex<String>();
 
   private String stringRep;
@@ -59,7 +60,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
         }
       }
     }
-    stringRep = string;
+    stringRep = null; //string;
     id = index.indexOf(string, true);
   }
 

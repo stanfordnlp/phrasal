@@ -1202,7 +1202,7 @@ public class Phrasal {
 		public void saveWeights(String filename) throws IOException;
 	}
 	
-	private class PerceptronLearner implements Learner {
+	private static class PerceptronLearner implements Learner {
 		private double[] lrate;
 		OAIndex<String> featureIndex = new OAIndex<String>();
 		double[] weights = new double[0];
@@ -1290,7 +1290,7 @@ public class Phrasal {
 			}
 	}
 	
-	private class ComparableWtPair implements Comparable<ComparableWtPair> {
+	private static class ComparableWtPair implements Comparable<ComparableWtPair> {
 		String featureName;
 		double value;
 		public ComparableWtPair(String featureName, double value) {
@@ -1306,7 +1306,7 @@ public class Phrasal {
 		}
 	}
 	
-	private class AvgPerceptronLearner implements Learner {
+	private static class AvgPerceptronLearner implements Learner {
 		double[] lrate;
 		ClassicCounter<String> wts = new ClassicCounter<String>(); 
 		ClassicCounter<String> wtsSum = new ClassicCounter<String>();
@@ -1358,7 +1358,7 @@ public class Phrasal {
 		}		
 	}
 	
-	private class MiraLearner implements Learner {		
+	private static class MiraLearner implements Learner {
 		ClassicCounter<String> wts = new ClassicCounter<String>();
 		final double C;
 		
@@ -1417,7 +1417,7 @@ public class Phrasal {
 		
 	}
 	
-  private class SSVMLearner implements Learner {
+  private static class SSVMLearner implements Learner {
   	final double C;
   	final StructuredSVM ssvm;
   	final OAIndex<String> featureIndex = new OAIndex<String>();

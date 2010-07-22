@@ -78,7 +78,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	 * 
 	 */
 	public Hypothesis(int translationId, Sequence<TK> foreignSequence, SearchHeuristic<TK,FV> heuristic, List<List<ConcreteTranslationOption<TK>>> options) {
-		synchronized(this.getClass()) { id = nextId++; }
+		synchronized (Hypothesis.class) { id = nextId++; }
 		score = 0;
     h = heuristic.getInitialHeuristic(foreignSequence, options, translationId);
 		insertionPosition = 0;
@@ -104,7 +104,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 			CombinedFeaturizer<TK,FV> featurizer,
 			Scorer<FV> scorer,
 			SearchHeuristic<TK,FV> heuristic) {
-		synchronized(this.getClass()) { this.id = nextId++; }
+		synchronized (Hypothesis.class) { this.id = nextId++; }
 		this.insertionPosition = insertionPosition;
 		this.translationOpt = translationOpt;
 		this.preceedingHyp = baseHyp;
@@ -137,7 +137,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
       RawSequence<TK> targetPhrase,
       boolean hasFloatingPhrases,
       boolean targetOnly) {
-		synchronized(this.getClass()) { this.id = nextId++; }
+		synchronized (Hypothesis.class) { this.id = nextId++; }
 		this.insertionPosition = insertionPosition;
 		this.translationOpt = translationOpt;
 		this.preceedingHyp = baseHyp;

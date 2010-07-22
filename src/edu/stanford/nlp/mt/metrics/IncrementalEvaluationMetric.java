@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.decoder.util.State;
  *
  * @param <TK>
  */
-public interface IncrementalEvaluationMetric<TK,FV> extends State<IncrementalEvaluationMetric<TK,FV>>{
+public interface IncrementalEvaluationMetric<TK,FV> extends State<IncrementalEvaluationMetric<TK,FV>>, Cloneable {
 	/**
 	 * 
 	 */
