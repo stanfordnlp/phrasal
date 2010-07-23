@@ -102,6 +102,7 @@ public class MTScorer implements ExternalMTScorer {
    * 
    * @param data List of all (reference,hypothese) pairs that need to be scored.
    */
+  @SuppressWarnings("deprecation")
   public void readAllReferencesAndHypotheses(List<Pair<String,String>> data) {
     
     if(withNIST) {
@@ -289,7 +290,7 @@ public class MTScorer implements ExternalMTScorer {
     return terCosts;
   }
 
-  private double safeLog(double x) {
+  private static double safeLog(double x) {
     if(x <= 0)
       return -100;
     return Math.log(x);

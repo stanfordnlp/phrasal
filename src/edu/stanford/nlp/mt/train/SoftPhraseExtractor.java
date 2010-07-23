@@ -34,7 +34,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
     this.maxCrossings = maxCrossings;
   }
 
-  private float expDecay(float w) {
+  private static float expDecay(float w) {
     return (float)Math.exp(-w);
   }
 

@@ -105,7 +105,7 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
       word = END_SENT;
     } else {
       word = seq.get(pos);
-      if(limitMap.size() > 0 && !limitMap.contains(word)) {
+      if(!limitMap.isEmpty() && !limitMap.contains(word)) {
         if(SKIP_UNK) return;
         word = UNK_WORD;
       }
@@ -130,7 +130,7 @@ public class ShallowSyntacticContextFeatureExtractor extends SparseVectorFeature
         word = END_SENT;
       } else { 
         word = seq.get(i);
-        if(limitMap.size() > 0 && !limitMap.contains(word)) {
+        if(!limitMap.isEmpty() && !limitMap.contains(word)) {
           if(SKIP_UNK) continue;
           word = UNK_WORD;
         }

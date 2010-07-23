@@ -85,33 +85,33 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
     // Increment word counts:
     Sequence<IString> f = sent.f();
     Sequence<IString> e = sent.e();
-    for(int fi=0; fi<f.size(); ++fi) {
+    for (int fi=0; fi<f.size(); ++fi) {
       // Word pair counts (f,e):
-      for(int ei : sent.f2e(fi))
+      for (int ei : sent.f2e(fi))
         addLexCount(f.get(fi),e.get(ei));
       // Unaligned foreign words (f,NULL):
-      if(sent.f2e(fi).size() == 0)
+      if (sent.f2e(fi).isEmpty())
         addLexCount(f.get(fi),NULL_STR);
     }
     // Unaligned English words (NULL,e):
-    for(int ei=0; ei<e.size(); ++ei)
-      if(sent.e2f(ei).size() == 0)
+    for (int ei=0; ei<e.size(); ++ei)
+      if (sent.e2f(ei).isEmpty())
         addLexCount(NULL_STR,e.get(ei));
   }
 
   @Override
 	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     // Code below will only get executed during the last pass:
-    if(getCurrentPass()+1 == getRequiredPassNumber()) {
-      if(DEBUG_LEVEL >= 2)
+    if (getCurrentPass()+1 == getRequiredPassNumber()) {
+      if (DEBUG_LEVEL >= 2)
         System.err.println("Adding phrase to table: "+alTemp.f().toString(" ")+" -> "+alTemp.e().toString(" "));
       // Increment phrase counts c(f,e), c(f), c(e):
-      if(FILL_HASH) {
+      if (FILL_HASH) {
         addCountToArray(feCounts, alTemp.getKey(), alTemp.getWeight());
         addCountToArray(fCounts, alTemp.getFKey(), alTemp.getWeight());
         addCountToArray(eCounts, alTemp.getEKey(), alTemp.getWeight());
       }
-      if(DEBUG_LEVEL >= 2)
+      if (DEBUG_LEVEL >= 2)
         System.err.printf("Assigned IDs: key=%d fKey=%d eKey=%d\n",alTemp.getKey(), alTemp.getFKey(), alTemp.getEKey());
     }
   }
@@ -125,17 +125,17 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
     int idx = alTemp.getKey();
     int idxF = alTemp.getFKey();
     int idxE = alTemp.getEKey();
-    assert(idx >= 0 && idxF >= 0 && idxE >= 0);
-    assert(idx < feCounts.size());
+    assert (idx >= 0 && idxF >= 0 && idxE >= 0);
+    assert (idx < feCounts.size());
     // Compute phi features p(f|e) and p(e|f):
     double phi_f_e = feCounts.get(idx)*1.0/eCounts.get(idxE);
     double phi_e_f = feCounts.get(idx)*1.0/fCounts.get(idxF);
-    if(phiFilter > phi_e_f)
+    if (phiFilter > phi_e_f)
       return null;
     // Compute lexical weighting features:
     double lex_f_e;
     double lex_e_f;
-    if(ibmLexModel) {
+    if (ibmLexModel) {
       lex_f_e = getIBMLexScore(alTemp);
       lex_e_f = getIBMLexScoreInv(alTemp);
     } else {
@@ -145,9 +145,9 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
     // Set phrase penalty:
     double phrasePen = 2.718;
     // Determine if need to filter phrase:
-    if(lexFilter > lex_e_f)
+    if (lexFilter > lex_e_f)
       return null;
-    if(PRINT_COUNTS) {
+    if (PRINT_COUNTS) {
       // -- Additional info for debugging purposes:
       return new double[] { 
         phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen,
@@ -175,16 +175,16 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
         }
         String oldStr = els[0]+" ||| "+els[1]+" ||| "+els[2]+" ||| "+els[3];
         AlignmentTemplate alTemp = new AlignmentTemplate(els[0], els[1], els[2], false);
-        assert(alTemp.toString().equals(oldStr));
+        assert (alTemp.toString().equals(oldStr));
         alTemps.addToIndex(alTemp);
         // Get our scores for it:
         double[] ourScores = (double[]) score(alTemp);
         // Compare them to scores in the file:
         String[] mosesScores = els[4].split("\\s+");
-        for(int i=0; i<mosesScores.length; ++i) {
+        for (int i=0; i<mosesScores.length; ++i) {
           double mosesScore = Double.parseDouble(mosesScores[i]);
           double error = 1-mosesScore/ourScores[i];
-          if(Math.abs(error) > 1e-2) {
+          if (Math.abs(error) > 1e-2) {
             System.err.printf("Different score for feature %d : %.3f != %.3f\n", i, mosesScore, ourScores[i]);
             System.err.println("Phrase from Moses phrase table: "+oldStr);
             System.err.println("Phrase from our model: "+alTemp.toString());
@@ -202,9 +202,9 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
   }
 
   private void addLexCount(IString f, IString e) {
-    if(DEBUG_LEVEL >= 2)
+    if (DEBUG_LEVEL >= 2)
       System.err.println("Adding lexical alignment count: c(f = "+f+"("+f.getId()+"), e="+e+" ("+e.getId()+"))");
-    if(FILL_HASH) {
+    if (FILL_HASH) {
       // Increment word counts for lexical weighting:
       addCountToArray(feLexCounts, indexOfLex(f,e,true), 1.0f);
       addCountToArray(fLexCounts, indexOfFLex(f,true), 1.0f);
@@ -222,15 +222,15 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
   { synchronized(eLexIndex) { return eLexIndex.indexOf(e.getId(), add); } }
 
   private static void addCountToArray(FloatArrayList list, int idx, float w) {
-    if(idx < 0)
+    if (idx < 0)
       return;
-    if(STORE) {
+    if (STORE) {
       synchronized(list) {
-        while(idx >= list.size())
+        while (idx >= list.size())
           list.add(0);
         float newCount = list.get(idx)+w;
         list.set(idx,newCount);
-        if(DEBUG_LEVEL >= 3)
+        if (DEBUG_LEVEL >= 3)
           System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
       }
     }
@@ -240,27 +240,27 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
    * Lexically-weighted probability of alTemp.f() given alTemp.e() according to Moses.
    */
   private double getLexScore(AlignmentTemplate alTemp) {
-    if(DEBUG_LEVEL >= 1)
+    if (DEBUG_LEVEL >= 1)
       System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString(false));
     // Each French word must be explained:
     double lex = 1.0;
-    for(int fi=0; fi<alTemp.f().size();++fi) {
+    for (int fi=0; fi<alTemp.f().size();++fi) {
       double wSum = 0.0;
       int alCount = alTemp.f2e(fi).size();
-      if(alCount == 0) {
+      if (alCount == 0) {
         wSum = getLexProb(alTemp.f().get(fi),NULL_STR);
       } else {
-        for(int ei : alTemp.f2e(fi)) {
+        for (int ei : alTemp.f2e(fi)) {
           wSum += getLexProb(alTemp.f().get(fi),alTemp.e().get(ei));
         }
         wSum /= alCount;
       }
-      if(DEBUG_LEVEL >= 1) {
+      if (DEBUG_LEVEL >= 1) {
         System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
-        if(wSum == 0)
+        if (wSum == 0)
           System.err.println("  WARNING: wsum = "+wSum);
       }
-      if(wSum == 0)
+      if (wSum == 0)
         wSum = MIN_WSUM;
       lex *= wSum;
     }
@@ -271,22 +271,22 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
    * Lexically-weighted probability of alTemp.e() given alTemp.f() according to Moses.
    */
   private double getLexScoreInv(AlignmentTemplate alTemp) {
-    if(DEBUG_LEVEL >= 1)
+    if (DEBUG_LEVEL >= 1)
       System.err.println("Computing p(e|f) for alignment template: "+alTemp.toString());
     // Each English word must be explained:
     double lex = 1.0;
-    for(int ei=0; ei<alTemp.e().size();++ei) {
+    for (int ei=0; ei<alTemp.e().size();++ei) {
       double wSum = 0.0;
       int alCount = alTemp.e2f(ei).size();
-      if(alCount == 0) {
+      if (alCount == 0) {
         wSum += getLexProbInv(NULL_STR,alTemp.e().get(ei));
       } else {
-        for(int fi : alTemp.e2f(ei)) {
+        for (int fi : alTemp.e2f(ei)) {
           wSum += getLexProbInv(alTemp.f().get(fi),alTemp.e().get(ei));
         }
         wSum /= alCount;
       }
-      if(DEBUG_LEVEL >= 1)
+      if (DEBUG_LEVEL >= 1)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei),wSum);
       lex *= wSum;
     }
@@ -299,17 +299,17 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
    * as the IBM version, but this version requires much less memory.
    */
   private double getIBMLexScore(AlignmentTemplate alTemp) {
-    if(DEBUG_LEVEL >= 1)
+    if (DEBUG_LEVEL >= 1)
       System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString());
     // Each French word must be explained:
     double lex = 1.0;
-    for(int fi=0; fi<alTemp.f().size();++fi) {
+    for (int fi=0; fi<alTemp.f().size();++fi) {
       double wSum = 0.0;
-      for(int ei=0; ei<alTemp.e().size();++ei) {
+      for (int ei=0; ei<alTemp.e().size();++ei) {
         wSum += getLexProb(alTemp.f().get(fi),alTemp.e().get(ei));
       }
       wSum /= alTemp.e().size();
-      if(DEBUG_LEVEL >= 1)
+      if (DEBUG_LEVEL >= 1)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
       assert(wSum > 0);
       lex *= wSum;
@@ -323,17 +323,17 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
    * as the IBM version, but this version requires much less memory.
    */
   private double getIBMLexScoreInv(AlignmentTemplate alTemp) {
-    if(DEBUG_LEVEL >= 1)
+    if (DEBUG_LEVEL >= 1)
       System.err.println("Computing p(e|f) for alignment template: "+alTemp.toString());
     // Each French word must be explained:
     double lex = 1.0;
-    for(int ei=0; ei<alTemp.e().size();++ei) {
+    for (int ei=0; ei<alTemp.e().size();++ei) {
       double wSum = 0.0;
-      for(int fi=0; fi<alTemp.f().size();++fi) {
+      for (int fi=0; fi<alTemp.f().size();++fi) {
         wSum += getLexProbInv(alTemp.f().get(fi),alTemp.e().get(ei));
       }
       wSum /= alTemp.f().size();
-      if(DEBUG_LEVEL >= 1)
+      if (DEBUG_LEVEL >= 1)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei),wSum);
       assert(wSum > 0);
       lex *= wSum;
@@ -347,7 +347,7 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
    * normalization counts are different.
    */
   private double getLexProb(IString f, IString e) {
-    if(DEBUG_LEVEL >= 1) {
+    if (DEBUG_LEVEL >= 1) {
       System.err.print("p(f = \""+f+"\" | e = \""+e+"\") = ");
       System.err.print(feLexCounts.get(indexOfLex(f,e,false)));
       System.err.print("/");
@@ -355,7 +355,7 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
     }
     int fei = indexOfLex(f,e,false);
     int ei = indexOfELex(e,false);
-    if(fei < 0 || ei < 0) return 0.0;
+    if (fei < 0 || ei < 0) return 0.0;
     return feLexCounts.get(fei)*1.0/eLexCounts.get(ei);
   }
   
@@ -365,7 +365,7 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
    * normalization counts are different.
    */
   private double getLexProbInv(IString f, IString e) {
-    if(DEBUG_LEVEL >= 1) {
+    if (DEBUG_LEVEL >= 1) {
       System.err.print("p(e = \""+e+"\" | f = \""+f+"\") = ");
       System.err.print(feLexCounts.get(indexOfLex(f,e,false)));
       System.err.print("/");
@@ -373,7 +373,7 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
     }
     int fei = indexOfLex(f,e,false);
     int fi = indexOfFLex(f,false);
-    if(fei < 0 || fi < 0) return 0.0;
+    if (fei < 0 || fi < 0) return 0.0;
     return feLexCounts.get(fei)*1.0/fLexCounts.get(fi);
   }
 }

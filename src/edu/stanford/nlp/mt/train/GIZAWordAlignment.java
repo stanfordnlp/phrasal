@@ -135,7 +135,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
         int wpos2 = Integer.parseInt(curTok)-1;
         if(wpos >= 0) {
           //System.err.println("align: "+wpos2+" -> "+wpos+" "+align.length);
-          assert(align[wpos2].size() == 0);
+          assert(align[wpos2].isEmpty());
           align[wpos2].add(wpos);
         }
       }

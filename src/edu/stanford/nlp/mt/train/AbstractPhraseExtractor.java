@@ -79,7 +79,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       (WordAlignment sent, int f1, int f2, int e1, int e2, boolean isConsistent, float weight) {
 
     if (onlyTightPhrases) {
-      if (sent.f2e(f1).size() == 0 || sent.f2e(f2).size() == 0 || sent.e2f(e1).size() == 0 || sent.e2f(e2).size() == 0)
+      if (sent.f2e(f1).isEmpty() || sent.f2e(f2).isEmpty() || sent.e2f(e1).isEmpty() || sent.e2f(e2).isEmpty())
         return;
     }
 
@@ -121,7 +121,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   }
 
   @SuppressWarnings("unused")
-  private boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
+  private static boolean checkAlignmentConsistency(WordAlignment sent, int f1, int f2, int e1, int e2) {
     boolean aligned = false;
     if (f2-f1 > maxPhraseLenF) return false;
     if (e2-e1 > maxPhraseLenE) return false;

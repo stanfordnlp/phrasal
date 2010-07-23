@@ -33,7 +33,7 @@ public class GreedyMultiTranslationMetricMax<TK, FV> implements MultiTranslation
 		for (List<ScoredFeaturizedTranslation<TK,FV>> nbestList : nbestLists) {
 			ScoredFeaturizedTranslation<TK,FV> localBest = null;
 			double bestScore = Double.NaN;
-			if (nbestList.size() != 0) incrementalMetric.add(nbestList.get(0));
+			if (!nbestList.isEmpty()) incrementalMetric.add(nbestList.get(0));
 			for (ScoredFeaturizedTranslation<TK,FV> featurizedTranslation : nbestList) {
 				incrementalMetric.replace(incrementalMetric.size()-1, featurizedTranslation);
 				double score = incrementalMetric.score();

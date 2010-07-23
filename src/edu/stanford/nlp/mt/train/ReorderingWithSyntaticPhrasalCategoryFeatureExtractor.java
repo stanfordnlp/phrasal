@@ -66,7 +66,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
           }
           
           Set<Integer> labels = labelsForAlTemp.get(t);
-          if (labels.size() == 0) {
+          if (labels.isEmpty()) {
             continue; // t not labeled!;
           }
           
@@ -112,7 +112,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
 
       // check if this template has a label at all
       Set<Integer> labels = labelsForAlTemp.get(t);
-      if (labels.size() == 0) {
+      if (labels.isEmpty()) {
         continue;
       }
 
@@ -129,7 +129,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
 
         int num = p.second();
         List<AlignmentTemplateInstance> sameLabelList = getSameLabelTemplates(list, phraseStr, num);
-        if (sameLabelList.size() > 0) {
+        if (!sameLabelList.isEmpty()) {
           System.err.printf("  (label) %s - %d\n", phraseStr, num);
         }
         for (AlignmentTemplateInstance sameLabelTemp : sameLabelList) {
@@ -180,7 +180,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
             int e2 = t.eEndPos();
 
             Set<Integer> labels = labelsForAlTemp.get(t);
-            if (labels.size() > 0) {
+            if (!labels.isEmpty()) {
               System.err.printf(" ---> f(%d-%d) e(%d-%d) %s\n", f1, f2, e1, e2, t.toString(true));
               
               for(Integer l : labels) {

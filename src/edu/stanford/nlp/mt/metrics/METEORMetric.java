@@ -22,6 +22,7 @@ import meteor.*;
 public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
+  @SuppressWarnings("unused")
   enum EditType { ins, del, sub, sft }
 
 	static {
@@ -180,7 +181,8 @@ public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     @Override
-		public METEORIncrementalMetric clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
       return new METEORIncrementalMetric(this);
     }
 

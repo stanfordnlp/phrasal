@@ -132,11 +132,12 @@ public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, 
 		@Override
 		public double score() {
 			double score;
-			if (maxScore) { 
+			if (maxScore) {
+        assert (lossIncMetric != null);
 				double evalScore = lossIncMetric.score();
 				lossIncMetric.size();
-				score = (lossIncMetric != null ? 10*evalScore + classifierScore : classifierScore);
-			} else {				
+				score = 10*evalScore + classifierScore;
+			} else {
 				double eScore = (lossIncMetric != null ? lossIncMetric.score() : 0);
 				if (eScore >= evalScoreCap) return Double.NEGATIVE_INFINITY;
 				score = (lossIncMetric != null ? classifierScore - eScore : classifierScore);
@@ -171,7 +172,8 @@ public class MarginRescaleEvaluationMetric implements EvaluationMetric<IString, 
 		}
 		
 		@Override
-		public IncrementalEvaluationMetric<IString, String> clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
 			throw new UnsupportedOperationException();
 		}
 

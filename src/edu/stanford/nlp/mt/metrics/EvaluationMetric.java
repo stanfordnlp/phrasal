@@ -5,8 +5,6 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.NBestListContainer;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
-import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
-
 
 /**
  * 

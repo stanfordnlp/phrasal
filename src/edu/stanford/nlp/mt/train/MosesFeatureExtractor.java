@@ -81,17 +81,17 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
     // Increment word counts:
     Sequence<IString> f = sent.f();
     Sequence<IString> e = sent.e();
-    for(int fi=0; fi<f.size(); ++fi) {
+    for (int fi=0; fi<f.size(); ++fi) {
       // Word pair counts (f,e):
-      for(int ei : sent.f2e(fi))
+      for (int ei : sent.f2e(fi))
         addLexCount(f.get(fi),e.get(ei));
       // Unaligned foreign words (f,NULL):
-      if(sent.f2e(fi).size() == 0)
+      if (sent.f2e(fi).isEmpty())
         addLexCount(f.get(fi),NULL_STR);
     }
     // Unaligned English words (NULL,e):
-    for(int ei=0; ei<e.size(); ++ei)
-      if(sent.e2f(ei).size() == 0)
+    for (int ei=0; ei<e.size(); ++ei)
+      if (sent.e2f(ei).isEmpty())
         addLexCount(NULL_STR,e.get(ei));
   }
 

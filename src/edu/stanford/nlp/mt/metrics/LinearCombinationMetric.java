@@ -92,10 +92,15 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
         iems.add(metric.getIncrementalMetric());
     }
 
+    @SuppressWarnings("unchecked")
     LCIncrementalMetric(LCIncrementalMetric o) {
       List<IncrementalEvaluationMetric<TK,FV>> oiems = o.iems;
       for(IncrementalEvaluationMetric<TK,FV> oiem : oiems) {
-        iems.add(oiem.clone()); 
+        try {
+          iems.add((IncrementalEvaluationMetric<TK,FV>) oiem.clone());
+        } catch (CloneNotSupportedException e) {
+          throw new RuntimeException(e);
+        }
       }
     }
 
@@ -188,7 +193,8 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
     }
 
     @Override
-		public IncrementalEvaluationMetric<TK, FV> clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
       return new LCIncrementalMetric(this);
     }
   }

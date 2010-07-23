@@ -5,6 +5,7 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
+@SuppressWarnings("unused")
 public class InverseMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	private final EvaluationMetric<TK,FV> emetric;
 	
@@ -37,7 +38,8 @@ public class InverseMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		IncrementalEvaluationMetric<TK, FV> imetric = emetric.getIncrementalMetric();
 		
 		@Override
-		public IncrementalMetric clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
 			throw new UnsupportedOperationException();
 		}
 		

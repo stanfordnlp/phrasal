@@ -143,7 +143,7 @@ public class ShortestDistanceWordAligner implements WordAligner {
     return -1;
   }
 
-  private int getIntersectedEnglishIdx(WordAlignment sp, int fidx) {
+  private static int getIntersectedEnglishIdx(WordAlignment sp, int fidx) {
     // out of boundary
     if (fidx < 0 || fidx >= sp.f().size()) {
       return -1;
@@ -160,7 +160,7 @@ public class ShortestDistanceWordAligner implements WordAligner {
       // yay! Let's get this aligned..
       Object[] a = intersect.toArray();
       return (Integer)(a[0]);
-    } else if (intersect.size() == 0) {
+    } else if (intersect.isEmpty()) {
       return -1;
     } else {
       throw new RuntimeException

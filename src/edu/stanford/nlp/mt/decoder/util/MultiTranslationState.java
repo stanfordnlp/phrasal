@@ -34,23 +34,27 @@ public class MultiTranslationState<TK,FV> implements State<MultiTranslationState
 	/**
 	 * 
 	 */
+  @SuppressWarnings("unchecked")
 	private MultiTranslationState(MultiTranslationState<TK, FV> parent, ScoredFeaturizedTranslation<TK,FV> selected) {
 		this.parent = parent;
-		this.incMetric = parent.incMetric.clone();
+    try {
+      this.incMetric = (IncrementalEvaluationMetric<TK,FV>) parent.incMetric.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new RuntimeException(e); 
+    }
 		incMetric.add(selected);
 		this.selected = selected;
 		this.depth = parent.depth + 1;
 	}
 	
 	public MultiTranslationState<TK, FV> append(ScoredFeaturizedTranslation<TK,FV> selected) {
-		MultiTranslationState<TK, FV> mts = new MultiTranslationState<TK, FV>(this, selected);
-	/*	System.out.printf("score: %f ", mts.incMetric.score());
-		for (double p : ((BLEUIncrementalMetric)mts.incMetric).ngramPrecisions()) {
-			System.out.printf(" %.3f", p);
-		}
-		System.out.println();
-		*/
-		return mts;
+    /*	System.out.printf("score: %f ", mts.incMetric.score());
+      for (double p : ((BLEUIncrementalMetric)mts.incMetric).ngramPrecisions()) {
+        System.out.printf(" %.3f", p);
+      }
+      System.out.println();
+      */
+		return new MultiTranslationState<TK, FV>(this, selected);
 	}
 	
 	@Override

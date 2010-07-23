@@ -34,7 +34,7 @@ public class ParaphraseExtractor extends PhraseExtract {
   public static final String PMI_PROPERTY = "PMI";
   public static final boolean PMI = Boolean.parseBoolean(System.getProperty(PMI_PROPERTY, "false"));
 
-  class PhraseHyp { int i; double d; public PhraseHyp(int i, double d) { this.i=i; this.d=d; } }
+  static class PhraseHyp { int i; double d; public PhraseHyp(int i, double d) { this.i=i; this.d=d; } }
 
   static Comparator<PhraseHyp> beamCmp;
 
@@ -70,12 +70,12 @@ public class ParaphraseExtractor extends PhraseExtract {
     if(oStream == null)
         oStream = System.out;
     
-    for(int fKey : kbest_ef.keySet()) {
+    for(Map.Entry<Integer, Beam<PhraseHyp>> integerBeamEntry : kbest_ef.entrySet()) {
 
-      if(alTemps.getF(fKey) == null)
+      if(alTemps.getF(integerBeamEntry.getKey()) == null)
         continue;
       
-      String phrase = keyToPlainString(fKey);
+      String phrase = keyToPlainString(integerBeamEntry.getKey());
       oStream.print(phrase);
       oStream.print("\n");
 
@@ -83,7 +83,7 @@ public class ParaphraseExtractor extends PhraseExtract {
 
       double totalFCount = totalFCount();
 
-      for(PhraseHyp eh : kbest_ef.get(fKey)) {
+      for(PhraseHyp eh : integerBeamEntry.getValue()) {
         for(PhraseHyp fh : kbest_fe.get(eh.i)) {
           int fKey2 = fh.i;
           double sum = (scores.get(fKey2) != null) ? scores.get(fh.i) : 0.0;
@@ -102,9 +102,9 @@ public class ParaphraseExtractor extends PhraseExtract {
 
       Beam<PhraseHyp> nbest = new Beam<PhraseHyp>(NBEST_SZ,beamCmp);
 
-      for(int fKey2 : scores.keySet()) {
-        double s = scores.get(fKey2);
-        nbest.add(new PhraseHyp(fKey2, PMI ? Math.log(s) : s));
+      for(Map.Entry<Integer, Double> integerDoubleEntry : scores.entrySet()) {
+        double s = integerDoubleEntry.getValue();
+        nbest.add(new PhraseHyp(integerDoubleEntry.getKey(), PMI ? Math.log(s) : s));
       }
       
       for(PhraseHyp hyp : nbest.asSortedList()) { 

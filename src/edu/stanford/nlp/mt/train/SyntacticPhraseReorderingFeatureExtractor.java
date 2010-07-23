@@ -223,7 +223,7 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
     }
   }
 
-  String checkPhraseDistortionType(IntPair firstPhraseRange, IntPair secondPhraseRange) {
+  static String checkPhraseDistortionType(IntPair firstPhraseRange, IntPair secondPhraseRange) {
     int begin_firstPhrase  = firstPhraseRange.getSource();
     int end_firstPhrase    = firstPhraseRange.getTarget();
     int begin_secondPhrase = secondPhraseRange.getSource();
@@ -301,5 +301,5 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
     System.out.println("---------------------------------------------------------------");
   }
 
-  public boolean needBatchAlTemp() { return false; }
+  public static boolean needBatchAlTemp() { return false; }
 }

@@ -80,10 +80,10 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
   }
 
   static private <TK> void addToCounts(Map<Sequence<TK>, Integer> counter, Map<Sequence<TK>, Integer> otherCounter) {
-    for(Sequence<TK> ngram : otherCounter.keySet()) {
-      Integer icnt = counter.get(ngram);
+    for(Map.Entry<Sequence<TK>, Integer> sequenceIntegerEntry : otherCounter.entrySet()) {
+      Integer icnt = counter.get(sequenceIntegerEntry.getKey());
       int cnt = (icnt != null) ? icnt : 0;
-      counter.put(ngram,cnt+otherCounter.get(ngram));
+      counter.put(sequenceIntegerEntry.getKey(),cnt+ sequenceIntegerEntry.getValue());
     }
   }
 
@@ -123,7 +123,8 @@ public class NISTMetric<TK,FV> extends AbstractMetric<TK,FV> {
     int c;
 		
 		@Override
-		public NISTIncrementalMetric clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
 			return new NISTIncrementalMetric(this);
 		}
 		

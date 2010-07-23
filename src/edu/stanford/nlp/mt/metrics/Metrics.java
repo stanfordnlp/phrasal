@@ -60,11 +60,11 @@ public class Metrics {
 
 		for (Sequence<TK> sequence : sequences) {
 			Map<Sequence<TK>, Integer> counts = getNGramCounts(sequence, maxOrder);
-			for (Sequence<TK> key : counts.keySet()) {
-				Integer countValue = counts.get(key);
-				Integer maxCountValue = maxCounts.get(key);
+			for (Map.Entry<Sequence<TK>, Integer> sequenceIntegerEntry : counts.entrySet()) {
+				Integer countValue = sequenceIntegerEntry.getValue();
+				Integer maxCountValue = maxCounts.get(sequenceIntegerEntry.getKey());
 				if (maxCountValue == null || maxCountValue.compareTo(countValue) < 0) {
-					maxCounts.put(key, countValue);
+					maxCounts.put(sequenceIntegerEntry.getKey(), countValue);
 				}
 			}
 		}
@@ -82,15 +82,15 @@ public class Metrics {
   static public <TK> Map<Sequence<TK>, Double> getNGramInfo(Map<Sequence<TK>,Integer> ngramCounts, int totWords) {
 		Map<Sequence<TK>, Double> ngramInfo = new HashMap<Sequence<TK>, Double>();
 
-    for (Sequence<TK> ngram : ngramCounts.keySet()) {
-      double num = ngramCounts.get(ngram);
+    for (Map.Entry<Sequence<TK>, Integer> sequenceIntegerEntry : ngramCounts.entrySet()) {
+      double num = sequenceIntegerEntry.getValue();
       double denom = totWords;
-      if(ngram.size() > 1) {
-        Sequence<TK> ngramPrefix = ngram.subsequence(0,ngram.size()-1);
+      if(sequenceIntegerEntry.getKey().size() > 1) {
+        Sequence<TK> ngramPrefix = sequenceIntegerEntry.getKey().subsequence(0, sequenceIntegerEntry.getKey().size()-1);
         denom = ngramCounts.get(ngramPrefix);
       }
       double inf = -Math.log(num/denom)/LOG2;
-      ngramInfo.put(ngram,inf);
+      ngramInfo.put(sequenceIntegerEntry.getKey(),inf);
       //System.err.printf("ngram info: %s %.3f\n", ngram.toString(), inf);
     }
 		return ngramInfo;

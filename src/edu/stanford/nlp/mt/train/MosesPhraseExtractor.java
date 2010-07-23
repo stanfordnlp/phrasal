@@ -91,9 +91,9 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
         // See how much we can expand the phrase to cover unaligned words:
         int F1 = f1, F2 = f2;
         int lastF1 = Math.max(0,f2-maxPhraseLenF+1);
-        while (F1 > lastF1 && sent.f2e(F1-1).size()==0) { --F1; }
+        while (F1 > lastF1 && sent.f2e(F1 - 1).isEmpty()) { --F1; }
         int lastF2 = Math.min(fsize-1,f1+maxPhraseLenF-1);
-        while (F2 < lastF2 && sent.f2e(F2+1).size()==0) { ++F2; }
+        while (F2 < lastF2 && sent.f2e(F2 + 1).isEmpty()) { ++F2; }
 
         for (int i=F1; i<=f1; ++i) {
           int lasti = Math.min(F2,i+maxPhraseLenF-1);

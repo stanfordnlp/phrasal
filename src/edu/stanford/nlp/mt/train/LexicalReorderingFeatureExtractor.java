@@ -368,7 +368,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     return curIdx+1;
   }
 
-  private void debugOrientation(String id, AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, ReorderingTypes type) {
+  private static void debugOrientation(String id, AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, ReorderingTypes type) {
     if (alTemp.f().size() > 20 || alTemp.e().size() > 20) return;
     assert (alGrid != null);
     System.err.printf("Model %s has orientation %s according to the grid:\n", id, type.toString());

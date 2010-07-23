@@ -25,7 +25,7 @@ public class DiscontinuousSubSequences {
       pos = bs.nextSetBit(pos+1);
       if(pos == -1)
         break;
-      if(toks.size() > 0 && !bs.get(pos-1)) {
+      if(!toks.isEmpty() && !bs.get(pos-1)) {
         if(gaps++ == maxGaps)
           return null;
         toks.add(DTUPhraseExtractor.GAP_STR);

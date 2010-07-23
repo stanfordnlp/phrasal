@@ -62,7 +62,7 @@ public class AbstractWordAlignment implements WordAlignment {
   public int f2eSize(int i, int min, int max) { return _size(f2e[i],min,max); }
   public int e2fSize(int i, int min, int max) { return _size(e2f[i],min,max); }
 
-  private int _size(SortedSet<Integer> al, int min, int max) {
+  private static int _size(SortedSet<Integer> al, int min, int max) {
     int count = 0;
     for(int el : al) {
       if(el > max) return count;
@@ -71,11 +71,11 @@ public class AbstractWordAlignment implements WordAlignment {
     return count;
   }
 
-  String toString(Set<Integer>[] align) {
+  static String toString(Set<Integer>[] align) {
     return toString(align,true);
   }
   
-  String toString(Set<Integer>[] align, boolean zeroIndexed) {
+  static String toString(Set<Integer>[] align, boolean zeroIndexed) {
     int o = zeroIndexed ? 0 : 1;
     StringBuffer str = new StringBuffer();
     for(int i=0; i<align.length; ++i)

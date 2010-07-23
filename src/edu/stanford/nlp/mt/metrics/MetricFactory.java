@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  *
  */
 public class MetricFactory {
+  
 	public static final String TER_STRING = "ter";
 	public static final String BLEU_STRING = "bleu";
   public static final String NIST_STRING = "nist";

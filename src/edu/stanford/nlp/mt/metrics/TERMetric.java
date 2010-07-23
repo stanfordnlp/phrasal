@@ -216,7 +216,8 @@ public class TERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     @Override
-		public TERIncrementalMetric clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
       return new TERIncrementalMetric(this);
     }
 

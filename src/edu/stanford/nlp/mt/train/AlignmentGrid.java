@@ -121,7 +121,7 @@ public class AlignmentGrid {
     alGridCells[f2][e2].setBottomRight(true);
   }
 
-  public RelativePos relativePos(AlignmentTemplateInstance alTemp, int f, int e) {
+  public static RelativePos relativePos(AlignmentTemplateInstance alTemp, int f, int e) {
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
 
     if (f < f1) {

@@ -11,8 +11,6 @@ public class DTUInstance extends AlignmentTemplateInstance {
   protected BitSet fSet=null, eSet=null;
   protected boolean discontinuous=false;
 
-  DTUInstance() { super(); }
-
   /**
    * Construct alignment template from phrase pair set using bit sets fs and es.
    */
@@ -80,6 +78,9 @@ public class DTUInstance extends AlignmentTemplateInstance {
     return true; 
   }
 
+  @SuppressWarnings("unused")
   public BitSet getFAlignment() { return fSet; }
+
+  @SuppressWarnings("unused")
   public BitSet getEAlignment() { return eSet; }
 }

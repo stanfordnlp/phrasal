@@ -78,7 +78,8 @@ public class ScorerWrapperEvaluationMetric<TK, FV> implements EvaluationMetric<T
 		}
 		
 		@Override
-		public IncrementalEvaluationMetric<TK, FV> clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
 			throw new UnsupportedOperationException();
 		}
 

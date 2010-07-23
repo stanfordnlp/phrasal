@@ -368,12 +368,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         for (int i=startIdx; i <= endIdx; ++i) {
           assert (!fs.get(i));
           if (source) {
-            if (sent.f2e(i).size() > 0) {
+            if (!sent.f2e(i).isEmpty()) {
               unalignedGap = false;
               break;
             }
           }  else {
-            if (sent.e2f(i).size() > 0) {
+            if (!sent.e2f(i).isEmpty()) {
               unalignedGap = false;
               break;
             }
@@ -399,12 +399,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         boolean unalignedSP = true;
         for (int i=startIdx; i <= endIdx; ++i) {
           if (source) {
-            if (sent.f2e(i).size() > 0) {
+            if (!sent.f2e(i).isEmpty()) {
               unalignedSP = false;
               break;
             }
           }  else {
-            if (sent.e2f(i).size() > 0) {
+            if (!sent.e2f(i).isEmpty()) {
               unalignedSP = false;
               break;
             }
@@ -431,11 +431,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         if (startIdx > endIdx)
           break;
         if (source) {
-          if (sent.f2e(startIdx).size() == 0 || sent.f2e(startIdx).size() == 0) {
+          if (sent.f2e(startIdx).isEmpty() || sent.f2e(startIdx).isEmpty()) {
             return true;
           }
         }  else {
-          if (sent.e2f(endIdx).size() == 0 || sent.e2f(endIdx).size() == 0) {
+          if (sent.e2f(endIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
             return true;
           }
         }

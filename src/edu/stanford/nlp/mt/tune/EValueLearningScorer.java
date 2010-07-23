@@ -19,9 +19,10 @@ public class EValueLearningScorer implements Scorer<String> {
 	OAIndex<String> featureIndex = new OAIndex<String>();
 	private   double manualWeightMul = 0.0;
 	private  double classifierWeightMul = 1.0;
-	final boolean DEBUG = false;
-	final double alpha = 1e-4;
-	
+	static final boolean DEBUG = false;
+	static final double alpha = 1e-4;
+
+  @SuppressWarnings("unused")
 	public void setWeightMultipliers(double manualWeightMul, double classifierWeightMul) {
 		this.manualWeightMul = manualWeightMul;
 		this.classifierWeightMul = classifierWeightMul;
@@ -31,7 +32,8 @@ public class EValueLearningScorer implements Scorer<String> {
 	final double lrate;
 	final double momentumTerm;
 	final double acclTerm;
-	
+
+  @SuppressWarnings("unused")
 	public EValueLearningScorer(Map<String,Double> manualFeatureWts) {
 		this(manualFeatureWts, 0.1, 0.0);
 	}
@@ -52,14 +54,14 @@ public class EValueLearningScorer implements Scorer<String> {
 	
 		manualWeights = new double[featureIndex.boundOnMaxIndex()];
 		
-		for (String key : manualFeatureWts.keySet()) {
-			manualWeights[featureIndex.indexOf(key)] = manualFeatureWts.get(key).doubleValue()/100.0;
+		for (Map.Entry<String, Double> stringDoubleEntry : manualFeatureWts.entrySet()) {
+			manualWeights[featureIndex.indexOf(stringDoubleEntry.getKey())] = stringDoubleEntry.getValue() /100.0;
 		}
 		wts = manualWeights.clone(); // new double[manualWeights.length]; 
 		deltaWts = new double[wts.length];
 	}
-	
-	
+
+  @SuppressWarnings("unused")
 	public double objectiveValue(List<Collection<FeatureValue<String>>> featureVectors, double[] l) {
 		double Z = 0;
 		double[] n = new double[l.length];
@@ -120,7 +122,8 @@ public class EValueLearningScorer implements Scorer<String> {
 		
 		return dEl;
 	}
-	
+
+  @SuppressWarnings("unused")
 	public void wtUpdate(List<List<FeatureValue<String>>> featureVectors, double[] l, int iter) {
 		double Z = 0.0;
 		ClassicCounter<String> eF = new ClassicCounter<String>();
@@ -236,7 +239,8 @@ public class EValueLearningScorer implements Scorer<String> {
 		}
 		return fVector;
 	}
-	
+
+  @SuppressWarnings("unused")
 	public void saveWeights(String filename) throws IOException {
 		System.err.printf("Saving weights to: %s\n", filename);
 		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
@@ -256,11 +260,12 @@ public class EValueLearningScorer implements Scorer<String> {
 			q.add(new ComparableWtPair(featureName, value));
 		}
 		for (ComparableWtPair cwp = q.poll(); cwp != null; cwp = q.poll()) {
-			writer.append(cwp.featureName).append(" ").append("" + String.format("%e",cwp.value)).append("\n");
+			writer.append(cwp.featureName).append(" ").append(String.format("%e",cwp.value)).append("\n");
 		}
 		writer.close();
 	}
-	
+
+  @SuppressWarnings("unused")
 	public void displayWts() throws IOException {
 		double[] weights = wts;
 		PriorityQueue<ComparableWtPair> q = new PriorityQueue<ComparableWtPair>();

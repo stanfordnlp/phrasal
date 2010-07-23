@@ -71,9 +71,8 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 					refCount = refArr.length;
 				}
 			}
-			double[] retVal =  new double[]{minEd,refCount};
-			//editDistanceCache.put(key,retVal);
-			return retVal;
+      //editDistanceCache.put(key,retVal);
+			return new double[]{minEd,refCount};
 		}
 		
 		@Override
@@ -143,7 +142,8 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 			throw new UnsupportedOperationException();
 		}
 		
-		public PERIncrementalMetric clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
       return new PERIncrementalMetric();
     }
 	}

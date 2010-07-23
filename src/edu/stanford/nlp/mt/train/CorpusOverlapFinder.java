@@ -73,7 +73,7 @@ public class CorpusOverlapFinder {
     extractPhrases(test, false);
   }
 
-  public void analyzeProperties(Properties prop) throws IOException {
+  public static void analyzeProperties(Properties prop) throws IOException {
 
     // Check required, optional properties:
     System.err.println("properties: "+prop.toString());
@@ -139,13 +139,13 @@ public class CorpusOverlapFinder {
         eLines.add(eLine);
         matches.add(localMatches);
         if(!localMatches.isEmpty()) {
-					/*if (verbose) {
+					if (verbose) {
 						System.err.printf("train: %s\n",eLine);
 						for(String ngram : localMatches) {
 							System.err.printf("    match: {{{ %s }}}\n", ngram);
-							//System.err.printf("   source: {{{ %s }}}\n",ngramSources.get(ngram));
+							System.err.printf("   source: {{{ %s }}}\n",ngramSources.get(ngram));
 						}
-					}*/
+					}
         }
       }
     }
@@ -194,7 +194,7 @@ public class CorpusOverlapFinder {
       usage();
     }
 
-    //System.err.println("CorpusOverlapFinder ended at: "+formatter.format(new Date()));
+    System.err.println("CorpusOverlapFinder ended at: "+formatter.format(new Date()));
   }
 
 }

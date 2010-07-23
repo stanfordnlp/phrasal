@@ -20,7 +20,7 @@ public class AgendaMultiTranslationMetricMax<TK, FV> implements MultiTranslation
 	public static final String DEBUG_PROPERTY = "AgendaMultiTranslationMetricMaxDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	public static int DEFAULT_WINDOW_SIZE = 2;
-	final int windowSize = DEFAULT_WINDOW_SIZE;
+	static final int windowSize = DEFAULT_WINDOW_SIZE;
 	final EvaluationMetric<TK,FV> metric;
 	
 	/**

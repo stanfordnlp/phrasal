@@ -72,7 +72,9 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 	
 		private void collapseObjects(Object[] arr) {
 			for (int i = 0; i < arr.length; i++) {
-				Object collapseTo = collapseMap.get(arr[i]);
+        assert (arr[i] instanceof IString);
+        IString arrI = (IString) arr[i];
+				Object collapseTo = collapseMap.get(arrI);
 				if (collapseTo != null) {
 					arr[i] = collapseTo;
 				}
@@ -174,8 +176,10 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 		public double partialScore() {
 			throw new UnsupportedOperationException();
 		}
-		
-		public WERIncrementalMetric clone() {
+
+    @Override
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
       return new WERIncrementalMetric();
     }
 	}

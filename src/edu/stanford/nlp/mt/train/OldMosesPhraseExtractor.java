@@ -11,6 +11,8 @@ import java.util.*;
  * maximum phrase length, i.e., O(m * s * t).
  *
  * @author Michel Galley
+ * @deprecated Use MosesPhraseExtractor instead (OldMosesPhraseExtractor is slower,
+ * but should produce the same output).
  */
 @SuppressWarnings("unused")
 public class OldMosesPhraseExtractor extends AbstractPhraseExtractor {
@@ -73,8 +75,8 @@ public class OldMosesPhraseExtractor extends AbstractPhraseExtractor {
           continue;
         // See how much we can expand the phrase to cover unaligned words:
         int F1 = f1, F2 = f2;
-        while(F1-1>=0    && f2-F1<maxPhraseLenF-1 && sent.f2e(F1-1).size()==0) { --F1; }
-        while(F2+1<fsize && F2-f1<maxPhraseLenF-1 && sent.f2e(F2+1).size()==0) { ++F2; }
+        while(F1-1>=0    && f2-F1<maxPhraseLenF-1 && sent.f2e(F1 - 1).isEmpty()) { --F1; }
+        while(F2+1<fsize && F2-f1<maxPhraseLenF-1 && sent.f2e(F2 + 1).isEmpty()) { ++F2; }
 
         for(int i=F1; i<=f1; ++i)
           for(int j=f2; j<=F2; ++j)

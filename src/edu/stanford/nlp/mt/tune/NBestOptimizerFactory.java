@@ -1003,7 +1003,8 @@ class MCMCDerivative extends AbstractNBestOptimizer {
       dEDiff = MERT.wtSsd(oldDe, dE);
       dECosine = Counters.dotProduct(oldDe, dE)/
               (Counters.L2Norm(dE)*Counters.L2Norm(oldDe));
-      if (dECosine != dECosine) dECosine = 0;
+      if (Double.isNaN(dECosine)) dECosine = 0;
+      //if (dECosine != dECosine) dECosine = 0;
 
       System.err.printf("Batch: %d dEDiff: %e dECosine: %g)\n",
               batch, dEDiff, dECosine);

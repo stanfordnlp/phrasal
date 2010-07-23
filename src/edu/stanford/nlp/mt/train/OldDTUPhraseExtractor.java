@@ -9,6 +9,7 @@ import java.util.*;
 import edu.stanford.nlp.util.Triple;
 
 /**
+ * @deprecated Use DTUPhraseExtractor instead
  * @author Michel Galley
  */
 public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
@@ -25,7 +26,7 @@ public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static boolean withGaps, onlyCrossSerialDTU, looseDTU, looseOutsideDTU, unalignedDTU,
+  static boolean withGaps, onlyCrossSerialDTU, looseDTU, looseOutsideDTU, //unalignedDTU,
        noTargetGaps, noUnalignedSubphrase, noUnalignedGaps, noUnalignedOrLooseGaps; //hieroDTU;
   //static boolean noCrossSerialPhrases = false;
 
@@ -68,6 +69,7 @@ public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
     //OldDTUPhraseExtractor.setDTUExtractionProperties(prop);
   }
 
+  @SuppressWarnings("unused")
   static public void setDTUExtractionProperties(Properties prop) {
 
     String optStr;

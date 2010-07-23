@@ -38,5 +38,5 @@ public interface IncrementalEvaluationMetric<TK,FV> extends State<IncrementalEva
 	/**
 	 * 
 	 */
-	public IncrementalEvaluationMetric<TK,FV> clone();
+	public Object clone() throws CloneNotSupportedException;
 }

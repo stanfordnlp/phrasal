@@ -221,7 +221,7 @@ public class LinearCombinationMetricOptimizer implements Function {
     valueAt(bw);
   }
 
-  private void normalizeW(double[] w) {
+  private static void normalizeW(double[] w) {
     double m1 = Math.abs(ArrayMath.max(w)), m2 = Math.abs(ArrayMath.min(w));
     ArrayMath.multiplyInPlace(w,1.0/Math.max(m1,m2));
   }
@@ -258,7 +258,7 @@ public class LinearCombinationMetricOptimizer implements Function {
   }
 
   @SuppressWarnings("unused")
-  void dump(String name, List<?> l) {
+  static void dump(String name, List<?> l) {
     System.err.printf("Dumping list %s\n",name);
     for(int i=0; i<l.size(); ++i)
       System.err.printf("%d: %s\n",i,l.get(i).toString());
@@ -430,7 +430,7 @@ public class LinearCombinationMetricOptimizer implements Function {
    * Transform input cost (any real value) into value that works
    * reasonably well with TER (between .05 and 1).
    */
-  private double tcost(double v) {
+  private static double tcost(double v) {
     return (SloppyMath.sigmoid(v) * .95) + .05;
   }
 
@@ -449,7 +449,7 @@ public class LinearCombinationMetricOptimizer implements Function {
     Collections.shuffle(permutation);
   }
 
-  private <T> List<T> permute(List<T> list) {
+  private static <T> List<T> permute(List<T> list) {
     List<T> newList = new ArrayList<T>();
     for(int i=0; i<list.size(); ++i)
       newList.add(list.get(permutation.get(i)));

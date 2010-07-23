@@ -28,12 +28,13 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	
 	private static final boolean printLocalScores = (System.getProperty("printLocalScores") != null);
 
-  private static final boolean enableCache = true;
+  static boolean enableCache = true;
   private final Map<Pair<Integer,Integer>,Double> smoothScoreCache = new HashMap<Pair<Integer,Integer>,Double>();
 
   /**
 	 * 
 	 */
+  @SuppressWarnings("unused")
 	public BLEUMetric(double multiplier, List<List<Sequence<TK>>> referencesList) {
 		this.order = DEFAULT_MAX_NGRAM_ORDER;
 		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
@@ -73,6 +74,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
     //System.err.println("smoothed BLEU: "+smooth);
 	}
 
+  @SuppressWarnings("unused")
 	public BLEUMetric(List<List<Sequence<TK>>> referencesList, int order) {
 		this.order = order;
 		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
@@ -159,7 +161,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		int r, c;
 
     @Override
-		public BLEUIncrementalMetric clone() {
+		public Object clone() throws CloneNotSupportedException {
+      super.clone();
       return new BLEUIncrementalMetric(this);
 		}
 
@@ -224,7 +227,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			
 			this.sequences = new ArrayList<Sequence<TK>>(maxReferenceCounts.size());
 		}
-	
+
+    @SuppressWarnings("unused")
 		public double getMultiplier() {
 			return multiplier;
 		}
@@ -316,7 +320,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		}
 
     private double getLocalSmoothScore(Sequence<TK> seq, int pos, int nbestId) {
-      if(!enableCache || nbestId < 0)
+      if (!enableCache || nbestId < 0)
         return computeLocalSmoothScore(seq, pos);
       Pair<Integer,Integer> pair = new Pair<Integer,Integer>(pos, nbestId);
       Double cached = smoothScoreCache.get(pair);
@@ -458,8 +462,9 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			} else {
 				s = multiplier*Math.exp(logScore());
 			}
-			return (s != s ? 0 : s);			
-		}
+			return (Double.isNaN(s) ? 0 : s);
+      //return (s != s ? 0 : s);
+    }
 		
 		/**
 		 * 
@@ -591,7 +596,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 		if (args[0].equals("-order")) {
 			BLEUOrder = Integer.parseInt(args[1]);
 			String[] newArgs = new String[args.length-2];
-			for (int i = 2; i < args.length; i++) newArgs[i-2] = args[i];
+      System.arraycopy(args, 2, newArgs, 0, args.length - 2);
 			args = newArgs;
 		}
 		List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
@@ -643,8 +648,9 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 
 class BLEUIncrementalMetricRecombinationFilter<TK,FV> implements RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> {
 	
-	public RecombinationFilter<IncrementalEvaluationMetric<TK,FV>> clone() {
-		 throw new RuntimeException();
+	public Object clone() throws CloneNotSupportedException {
+    super.clone();
+		throw new RuntimeException();
 	}
 	
 	@SuppressWarnings("unchecked")
