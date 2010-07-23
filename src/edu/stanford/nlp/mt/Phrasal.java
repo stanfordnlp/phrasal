@@ -296,7 +296,7 @@ public class Phrasal {
           entries.addAll(Arrays.asList(fields));
   			}
 
-  			if (entries.size() != 0)
+  			if (!entries.isEmpty())
   				config.put(key, entries);
   		}
 		}
@@ -600,7 +600,7 @@ public class Phrasal {
 			additionalFeaturizers.add(lexReorderFeaturizer);
 		}
 
-		if (additionalFeaturizers.size() != 0) {
+		if (!additionalFeaturizers.isEmpty()) {
 			List<IncrementalFeaturizer<IString, String>> allFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
 			allFeaturizers.addAll(featurizer.featurizers);
 			allFeaturizers.addAll(additionalFeaturizers);
@@ -853,14 +853,15 @@ public class Phrasal {
       AbstractBeamInfererBuilder infererBuilder = (AbstractBeamInfererBuilder) InfererBuilderFactory
         .factory(withGaps ? InfererBuilderFactory.DTU_DECODER : InfererBuilderFactory.MULTIBEAM_DECODER);
       try {
-        infererBuilder.setIncrementalFeaturizer(featurizer.clone());
+        infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
+        infererBuilder.setPhraseGenerator((PhraseGenerator<IString>) phraseGenerator.clone());
+        infererBuilder.setScorer(scorer);
+        infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
+        infererBuilder.setRecombinationFilter((RecombinationFilter<Hypothesis<IString, String>>) filter.clone());
       } catch(CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
-  		infererBuilder.setPhraseGenerator(phraseGenerator.clone());
-  		infererBuilder.setScorer(scorer);
-  		infererBuilder.setSearchHeuristic(heuristic.clone());
-  		infererBuilder.setRecombinationFilter(filter.clone());
+
   		infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
 			if (local_procs == 0) {
 				infererBuilder.setInternalMultiThread(true);
@@ -1119,7 +1120,7 @@ public class Phrasal {
 	//public static int LEARNING_NBEST_LIST_SIZE = 1000;
 
   @SuppressWarnings("unused")
-	List<ScoredFeaturizedTranslation<IString, String>> filterLowScoring(
+  static List<ScoredFeaturizedTranslation<IString, String>> filterLowScoring(
 			List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
 			double dropFrac) {
 		List<ScoredFeaturizedTranslation<IString, String>> filtered = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
@@ -1157,7 +1158,7 @@ public class Phrasal {
 	}
 
   @SuppressWarnings("unused")
-	List<ScoredFeaturizedTranslation<IString, String>> filterHighLowScoring(
+  static List<ScoredFeaturizedTranslation<IString, String>> filterHighLowScoring(
 			List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
 			double dropFracTop, double dropFracBottom) {
 		List<ScoredFeaturizedTranslation<IString, String>> filtered = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
@@ -1206,7 +1207,7 @@ public class Phrasal {
 		private double[] lrate;
 		OAIndex<String> featureIndex = new OAIndex<String>();
 		double[] weights = new double[0];
-	  final double DEFAULT_WT = 0.001;
+	  static final double DEFAULT_WT = 0.001;
 		
 		public PerceptronLearner(double lrate[]) {
 			this.lrate = lrate;
@@ -1479,7 +1480,7 @@ public class Phrasal {
 		}		
 	} 	
 
-  private class SGDLogLinearLearner implements Learner {		
+  private static class SGDLogLinearLearner implements Learner {
 		ClassicCounter<String> wts = new ClassicCounter<String>();
 		final double R;
 		final double[] lrate;
@@ -1679,11 +1680,11 @@ public class Phrasal {
 		learner.saveWeights(saveWeights);
 	}
 	
-	private double optionalSmoothScoring(IncrementalEvaluationMetric<IString,String>  incEval, int pos, RichTranslation<IString, String> trans) {
+	private static double optionalSmoothScoring(IncrementalEvaluationMetric<IString,String>  incEval, int pos, RichTranslation<IString, String> trans) {
 		return (incEval instanceof HasSmoothScore ? ((HasSmoothScore)incEval.replace(pos, trans)).smoothScore()  :  incEval.replace(pos, trans).score());
 	}
 	
-	private RichTranslation<IString, String> listArgMax(List<RichTranslation<IString, String>> list, IncrementalEvaluationMetric<IString,String>  incEval, int pos) {
+	private static RichTranslation<IString, String> listArgMax(List<RichTranslation<IString, String>> list, IncrementalEvaluationMetric<IString,String>  incEval, int pos) {
 		double best = Double.NEGATIVE_INFINITY;
 		RichTranslation<IString,String> bestTrans = null;
 		for (RichTranslation<IString, String> trans : list) {

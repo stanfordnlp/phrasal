@@ -13,12 +13,10 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public interface SearchHeuristic<TK,FV> extends Cloneable {
 
-	public SearchHeuristic<TK,FV> clone();
+	public Object clone() throws CloneNotSupportedException;
 	
 	/**
 	 * Note reset semantics
-	 * 
-	 * @param options TODO
 	 */
 	double getInitialHeuristic(Sequence<TK> sequence, List<List<ConcreteTranslationOption<TK>>> options, int translationId);
 

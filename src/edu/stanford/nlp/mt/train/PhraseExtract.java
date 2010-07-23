@@ -512,7 +512,7 @@ public class PhraseExtract {
             fLine = fLine.toLowerCase();
             eLine = eLine.toLowerCase();
           }
-          if (threads.size() == 0) {
+          if (threads.isEmpty()) {
             processLine(phraseExtractor, lineNb, sent, fLine, eLine, aLine, pLine);
           } else {
             dataQueue.put(new Pair<Integer,String[]>(lineNb, new String[] {fLine, eLine, aLine, pLine}));
@@ -557,7 +557,7 @@ public class PhraseExtract {
     extractSententialFeatures(ex, sent);
   }
 
-  private void extractPhrasalFeatures(PhraseExtractor ex, SymmetricalWordAlignment sent, String pLine) {
+  private static void extractPhrasalFeatures(PhraseExtractor ex, SymmetricalWordAlignment sent, String pLine) {
     if (pLine != null)
       ex.setSentenceInfo(sent, pLine);
     ex.extractPhrases(sent);

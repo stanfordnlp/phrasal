@@ -30,8 +30,9 @@ import edu.stanford.nlp.stats.Counter;
  * 
  * @author Pi-Chuan Chang
  *
- * @see edu.stanford.nlp.mt.discrimreorder.ReorderingClassifier
+ * @see edu.stanford.nlp.mt.syntax.discrimreorder.ReorderingClassifier
  */
+@SuppressWarnings("unused")
 public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDiscrimTypedDependencyReorderingFeaturizer";
@@ -42,7 +43,6 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturi
 
   private Boolean useSRCJ2 = false;
   private int useNClass = 2;
-  private LineNumberReader pathReader = null;
   private List<TwoDimensionalMap<Integer,Integer,String>> pathMaps = null;
   private LinearClassifier<TrainingExamples.ReorderingTypes,String> lc = null;
   private ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double> featureCache;
@@ -54,14 +54,12 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturi
   public static final String FEATURE_NAME = "DiscrimReorder:Path";
 
   @Override
-  public DiscrimTypedDependencyReorderingFeaturizer clone() {
+  public Object clone() throws CloneNotSupportedException {
     System.err.println("cloned: "+this);
-    try {
-		  DiscrimTypedDependencyReorderingFeaturizer featurizer = (DiscrimTypedDependencyReorderingFeaturizer)super.clone();
-      featurizer.featureCache = new ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double>();
-      featurizer.pathMaps = new ArrayList<TwoDimensionalMap<Integer,Integer,String>>();
-      return featurizer;
-    } catch (CloneNotSupportedException e) { return null;  /* will never happen */ }
+    DiscrimTypedDependencyReorderingFeaturizer featurizer = (DiscrimTypedDependencyReorderingFeaturizer)super.clone();
+    featurizer.featureCache = new ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double>();
+    featurizer.pathMaps = new ArrayList<TwoDimensionalMap<Integer,Integer,String>>();
+    return featurizer;
 	}
 
   public DiscrimTypedDependencyReorderingFeaturizer(String... args) throws IOException {
@@ -88,6 +86,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturi
 
     System.err.printf("\nDone loading discrim reorder classifier: %s (mem used: %d MiB time: %.3f s)\n", classifierFile,
                       (postTableLoadMemUsed - preTableLoadMemUsed)/(1024*1024), loadTimeMillis/1000.0);
+    LineNumberReader pathReader = null;
     if (usePathFile)
       pathReader = IOTools.getReaderFromFile(pathFile);
     pathMaps = new ArrayList<TwoDimensionalMap<Integer,Integer,String>>();
@@ -257,7 +256,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturi
     return null;
   }
 
-  private IString getWordInSequence(Sequence<IString> seq, int idx) {
+  private static IString getWordInSequence(Sequence<IString> seq, int idx) {
     if (idx < 0) return new IString("<s>");
     if (idx >= seq.size()) return new IString("</s>");
     return seq.get(idx);
@@ -285,14 +284,14 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturi
     return features;
   }
 
-  private List<String> extractPathFeatures(Sequence<IString> f, int j, int lenC, int j2, int lenC2,
+  private static List<String> extractPathFeatures(Sequence<IString> f, int j, int lenC, int j2, int lenC2,
                                            Sequence<IString> e, int i, int lenE,
                                            TwoDimensionalMap<Integer,Integer,String> pathMap) {
     List<String> features = new ArrayList<String>();
 
     // path feature
     StringBuilder path = new StringBuilder("PATH:");
-    if (pathMap.entrySet().size() > 0) {
+    if (!pathMap.entrySet().isEmpty()) {
       for (int J = j; J < j+lenC; J++) {
         for (int J2 = j2; J2 < j2+lenC2; J2++) {
           path.append(DepUtils.getPathName(J, J2, pathMap));

@@ -16,11 +16,8 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public class OptimisticForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
-	@SuppressWarnings("unchecked")
-	public SearchHeuristic<TK,FV> clone() {
-	   try {
-	  	 return (SearchHeuristic<TK,FV>) super.clone();
-	   } catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
 	
 	

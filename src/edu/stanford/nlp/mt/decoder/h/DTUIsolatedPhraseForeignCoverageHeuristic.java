@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.DTUOption;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.util.ErasureUtils;
 
 /**
  * 
@@ -29,13 +30,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
   final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
 	
-	@SuppressWarnings("unchecked")
-	public SearchHeuristic<TK,FV> clone() {
-	   try {
-	  	 return (SearchHeuristic<TK,FV>) super.clone();
-	   } catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
-	
 	
 	/**
 	 * 
@@ -87,6 +84,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
     if((Double.isInfinite(newH) || newH == MINUS_INF) && (Double.isInfinite(oldH) || oldH == MINUS_INF))
       return 0.0;
     double delta = newH - oldH;
+    ErasureUtils.noop(delta);
     //if(Double.isInfinite(delta) || Double.isNaN(delta)) {
       //System.err.println("h delta is not valid: "+delta);
       //System.err.println("newH: "+newH);
@@ -234,7 +232,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
     return hCompleteSequence;
 	}
 		
-	private class SpanScores {
+	private static class SpanScores {
 		final double[] spanValues;
 		final int terminalPositions;
 		public SpanScores(int length) {

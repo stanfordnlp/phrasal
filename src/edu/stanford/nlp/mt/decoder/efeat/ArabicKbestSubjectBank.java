@@ -26,7 +26,7 @@ public class ArabicKbestSubjectBank {
   /**
    * Collapse identical analyses
    */
-  private List<ArabicKbestAnalysis> compress(List<ArabicKbestAnalysis> analyses) {
+  private static List<ArabicKbestAnalysis> compress(List<ArabicKbestAnalysis> analyses) {
     List<ArabicKbestAnalysis> compressedList = new ArrayList<ArabicKbestAnalysis>();
     
     for(int i = 0; i < analyses.size(); i++) {
@@ -133,7 +133,8 @@ public class ArabicKbestSubjectBank {
       return new ArrayList<ArabicKbestAnalysis>(kBestSubjectBank.get(translationId));
     return null;
   }
-  
+
+  @SuppressWarnings("unused")
   public int getNumSentences() {
     if(this.kBestSubjectBank != null)
       return kBestSubjectBank.keySet().size();

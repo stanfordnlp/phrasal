@@ -13,12 +13,11 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 public class TranslationIdentityRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 	boolean noisy = false;
 	
-	@SuppressWarnings("unchecked")
-	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
-		try {
-			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
+  
 	@Override
 	public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
 		if (hypA.featurizable == null && hypB.featurizable == null) return true;

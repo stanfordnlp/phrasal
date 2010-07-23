@@ -41,16 +41,15 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
     featurizers = filteredFeaturizers;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public CombinedFeaturizer<TK, FV> clone() throws CloneNotSupportedException {
-		try {
-      CombinedFeaturizer featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
-      featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
-      for(IncrementalFeaturizer<TK,FV> f : featurizers) {
-        featurizer.featurizers.add(f instanceof ClonedFeaturizer ? ((ClonedFeaturizer)f).clone() : f);
-      }
-      return featurizer;
-    } catch (CloneNotSupportedException e) { return null;  /* will never happen */ }
+  public Object clone() throws CloneNotSupportedException {
+    CombinedFeaturizer featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
+    featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
+    for(IncrementalFeaturizer<TK,FV> f : featurizers) {
+      featurizer.featurizers.add(f instanceof ClonedFeaturizer ? ((ClonedFeaturizer)f).clone() : f);
+    }
+    return featurizer;
 	}
 
   /**

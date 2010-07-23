@@ -18,14 +18,11 @@ public class CombinedRecombinationFilter<S> implements
 	final RecombinationFilter<S>[] filters;
 	final CombinationRule combinationRule;
 	
-	
-	
-	@SuppressWarnings("unchecked")
-	public RecombinationFilter<S> clone() {
-		try {			
-			return (RecombinationFilter<S>)super.clone();
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
+  
 	/**
 	 * 
 	 */

@@ -11,13 +11,11 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public class ForeignCoverageRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 
-	@SuppressWarnings("unchecked")
-	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
-		try {
-			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
-	}
-	
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone(); 
+  }
+
 	@Override
 	public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
 		return hypA.foreignCoverage.equals(hypB.foreignCoverage);

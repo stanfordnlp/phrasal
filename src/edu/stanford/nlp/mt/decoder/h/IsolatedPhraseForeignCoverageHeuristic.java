@@ -8,7 +8,6 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
@@ -24,14 +23,11 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 	final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
-	
-	@SuppressWarnings("unchecked")
-	public SearchHeuristic<TK,FV> clone() {
-	   try {
-	  	 return (SearchHeuristic<TK,FV>) super.clone();
-	   } catch (CloneNotSupportedException e) { return null; /* wnh */ }
+
+  @Override
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
-	
 	
 	/**
 	 * 
@@ -163,7 +159,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
 		return hCompleteSequence;
 	}
 		
-	private class SpanScores {
+	private static class SpanScores {
 		final double[] spanValues;
 		final int terminalPositions;
 		public SpanScores(int length) {

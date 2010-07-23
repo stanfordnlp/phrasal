@@ -11,11 +11,8 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public class LinearDistortionRecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 
-  @SuppressWarnings("unchecked")
-	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
-		try {
-			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	public Object clone() throws CloneNotSupportedException  {
+    return super.clone(); 
 	}
 	
 	/**

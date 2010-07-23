@@ -15,13 +15,11 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 public class TranslationNgramRecombinationFilter<TK extends IString, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 	final int tokenHistoryExamined;
 	final List<LanguageModel<TK>> lgModels;
-	final boolean DETAILED_DEBUG = false;
+	static final boolean DETAILED_DEBUG = false;
 	
-	@SuppressWarnings("unchecked")
-	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
-		try {
-			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone(); 
 	}
 	
 	public TranslationNgramRecombinationFilter(List<LanguageModel<TK>> lgModels, int maxTokenHistoryExamined) {
@@ -55,8 +53,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV> impleme
 		if (transSize <= tokenHistoryExamined) { 
 			return trans;
 		}
-		Sequence<TK> ngram = trans.subsequence(transSize - tokenHistoryExamined, transSize);
-		return ngram;
+    return trans.subsequence(transSize - tokenHistoryExamined, transSize);
 	}
 	
 	public Sequence<TK> getNgram(Hypothesis<TK,FV> hyp) {

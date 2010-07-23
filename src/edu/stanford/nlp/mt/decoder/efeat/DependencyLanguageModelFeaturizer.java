@@ -47,8 +47,8 @@ import gnu.trove.THashMap;
 public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString,String>, AlignmentFeaturizer {
 
   // How many words of left context for POS tagging:
-  public static final String ORDER_PROPERTY = "leftWords";
-  public static final int ORDER = Integer.parseInt(System.getProperty(ORDER_PROPERTY, "3"));
+  //public static final String ORDER_PROPERTY = "leftWords";
+  //public static final int ORDER = Integer.parseInt(System.getProperty(ORDER_PROPERTY, "3"));
 
   public static final String TAG_WITH_RIGHT_CONTEXT_PROPERTY = "tagWithRight";
   public static final boolean TAG_WITH_RIGHT_CONTEXT = System.getProperty(TAG_WITH_RIGHT_CONTEXT_PROPERTY) != null;
@@ -569,7 +569,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     partialParseCache.clear();
   }
 
-  private void printDep(DependencyInstance dep, int i, int j, double score, int dist, String prefix, boolean attR) {
+  private static void printDep(DependencyInstance dep, int i, int j, double score, int dist, String prefix, boolean attR) {
     int len = dep.length();
     System.err.printf("%s: %s/%s %s %s/%s score=%f dist=%d\n",
          prefix,
@@ -582,7 +582,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   }
 
   @Override
-  public DependencyLanguageModelFeaturizer clone() throws CloneNotSupportedException {
+  public Object clone() throws CloneNotSupportedException {
     System.err.println("cloned: "+this);
     DependencyLanguageModelFeaturizer featurizer = (DependencyLanguageModelFeaturizer)super.clone();
     featurizer.pipe = (DependencyPipe) pipe.clone();
@@ -602,12 +602,12 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   public FeatureValue<String> featurize(
        Featurizable<IString, String> f) { return null; }
 
-  private float localNorm(float v) {
+  private static float localNorm(float v) {
     double e = Math.exp(v);
     return (float)Math.log(e/(1+e));
   }
 
-  private float lenNorm(float oldTotalScore, float localScore, int pos, int phraseLen) {
+  private static float lenNorm(float oldTotalScore, float localScore, int pos, int phraseLen) {
     float lenNormScore = (oldTotalScore+localScore)/(pos+phraseLen);
     if(pos > 0)
       lenNormScore -= oldTotalScore/pos;

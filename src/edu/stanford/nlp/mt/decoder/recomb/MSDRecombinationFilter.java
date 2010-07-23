@@ -46,20 +46,18 @@ public class MSDRecombinationFilter implements RecombinationFilter<Hypothesis<IS
     }
   }
 
-  @SuppressWarnings("unchecked")
-	public RecombinationFilter<Hypothesis<IString,String>> clone() {
-		try {
-			return (RecombinationFilter<Hypothesis<IString,String>>)super.clone();
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+  @Override
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
 
-  private int lastOptionLeftEdge(Hypothesis<IString,String> hyp) {
+  private static int lastOptionLeftEdge(Hypothesis<IString,String> hyp) {
 		if (hyp.translationOpt == null)
 			return -1;
     return hyp.translationOpt.foreignPos-1;
 	}
 
-  private int lastOptionRightEdge(Hypothesis<IString,String> hyp) {
+  private static int lastOptionRightEdge(Hypothesis<IString,String> hyp) {
 		if (hyp.translationOpt == null)
 			return 0;
     return hyp.translationOpt.foreignCoverage.length();

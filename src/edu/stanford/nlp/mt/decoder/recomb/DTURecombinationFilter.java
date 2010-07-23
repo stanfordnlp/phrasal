@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.recomb;
 
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
-import edu.stanford.nlp.mt.base.Sequence;
 
 import java.util.Iterator;
 
@@ -17,11 +16,8 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
 
   public static final boolean DEBUG = false;
 
-  @SuppressWarnings("unchecked")
-	public RecombinationFilter<Hypothesis<TK,FV>> clone() {
-		try {
-			return (RecombinationFilter<Hypothesis<TK,FV>>)super.clone(); 
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
 
 
@@ -34,10 +30,10 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
       combine = true;
     } else if(isDTU_A && !isDTU_B) {
       DTUHypothesis dtuA = (DTUHypothesis<TK,FV>) hypA;
-      combine = (dtuA.discTargetPhrases.size() == 0);
+      combine = (dtuA.discTargetPhrases.isEmpty());
     } else if(!isDTU_A) {
       DTUHypothesis dtuB = (DTUHypothesis<TK,FV>) hypB;
-      combine = (dtuB.discTargetPhrases.size() == 0);
+      combine = (dtuB.discTargetPhrases.isEmpty());
     } else {
       DTUHypothesis<TK,FV> dtuA = (DTUHypothesis<TK,FV>) hypA;
       DTUHypothesis<TK,FV> dtuB = (DTUHypothesis<TK,FV>) hypB;

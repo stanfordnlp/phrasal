@@ -17,13 +17,10 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
 	static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
 	static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
 	
-	@SuppressWarnings("unchecked")
-	public PhraseGenerator<TK> clone() {
-		try{
-		return (PhraseGenerator<TK>)super.clone();
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
-	
+
 	public enum Type { CONCATENATIVE, STRICT_DOMINANCE }
 	static public final Type DEFAULT_TYPE = Type.CONCATENATIVE;
 	static public final int DEFAULT_PHRASE_LIMIT = 50;

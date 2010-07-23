@@ -5,7 +5,6 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 
 import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -262,13 +261,8 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
   public void reset() { }
 
   @SuppressWarnings("unchecked")
-  public ClonedFeaturizer<IString, String> clone() throws CloneNotSupportedException {
-    try {
-      return (ClonedFeaturizer<IString,String>) super.clone();
-    } catch(CloneNotSupportedException e) {
-      e.printStackTrace();
-      return null;
-    }
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
   }
 
   private int bestMatchLength(int index, int candidateLength) {
@@ -356,7 +350,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
 
 class Trie {
 
-  final static int mapType = Integer.parseInt(System.getProperty("mapType", "0"));
+  //final static int mapType = Integer.parseInt(System.getProperty("mapType", "0"));
 
   private static final Map<String,Trie> roots = new Object2ObjectArrayMap<String,Trie>();
   //private static final Map<String,Trie> roots = new Object2ObjectOpenHashMap<String,Trie>();

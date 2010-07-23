@@ -15,5 +15,5 @@ public interface RecombinationFilter<S> extends Cloneable {
 	 */
 	long recombinationHashCode(S hyp);
 	
-	public RecombinationFilter<S> clone();
+	public Object clone() throws CloneNotSupportedException;
 }

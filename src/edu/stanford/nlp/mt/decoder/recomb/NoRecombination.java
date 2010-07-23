@@ -7,14 +7,12 @@ package edu.stanford.nlp.mt.decoder.recomb;
  * @param <S>
  */
 public class NoRecombination<S> implements RecombinationFilter<S> {
-	
+
 	@SuppressWarnings("unchecked")
-	public RecombinationFilter<S> clone() {
-		try {
-			return (RecombinationFilter<S>)super.clone(); 
-		} catch (CloneNotSupportedException e) { return null; /* wnh */ }
+	public Object clone() throws CloneNotSupportedException {
+    return super.clone();
 	}
-	
+
 	@Override
 	public boolean combinable(S hypA, S hypB) {
 		return false;
