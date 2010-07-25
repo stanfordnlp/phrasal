@@ -61,7 +61,7 @@ public class IBMModel1InformedWordAligner implements WordAligner {
     double max = Double.MIN_VALUE;
     int max_idx = -1;
     if (DETAILED_DEBUG) System.err.println("chWord="+chWord);
-    for(int eidx : englishWordsIndices) {
+    for (int eidx : englishWordsIndices) {
       IString eWord= e.get(eidx);
       double score = model1.score(chWord, eWord);
       if (max < score) {

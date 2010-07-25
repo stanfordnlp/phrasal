@@ -70,7 +70,7 @@ public class AlignmentGrid {
 
   public void init(int esize, int fsize) {
     this.sent = null;
-    if(esize >= MAX_SENT_LEN || fsize >= MAX_SENT_LEN)
+    if (esize >= MAX_SENT_LEN || fsize >= MAX_SENT_LEN)
       throw new UnsupportedOperationException("Sentence too long: fsize="+fsize+" esize="+esize);
     this.esize = esize;
     this.fsize = fsize;
@@ -99,7 +99,7 @@ public class AlignmentGrid {
     //if(fsize == 0 && esize == 0)
     //  return;
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
-    if(isConsistent) {
+    if (isConsistent) {
       alGridCells[f1][e1].addTopLeft(alTemp);
       alGridCells[f2][e1].addTopRight(alTemp);
       alGridCells[f1][e2].addBottomLeft(alTemp);

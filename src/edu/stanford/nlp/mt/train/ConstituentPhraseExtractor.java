@@ -32,9 +32,9 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
 
     try {
       Tree t = Tree.valueOf(infoStr);
-      for(Constituent c : t.constituents())
+      for (Constituent c : t.constituents())
         spans.add(new Pair<Integer,Integer>(c.start(), c.end()));
-    } catch(IOException e) {
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -42,13 +42,13 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
   @Override
   public boolean ignore(WordAlignment sent, int f1, int f2, int e1, int e2) {
     boolean ignore = ignorePhrase(sent, -1, -1, e1, e2);
-    if(ignore) System.err.printf("ignore: %s\n", sent.e().subsequence(e1, e2+1));
+    if (ignore) System.err.printf("ignore: %s\n", sent.e().subsequence(e1, e2+1));
     return ignore;
   }
 
   private boolean ignorePhrase(WordAlignment sent, int f1, int f2, int e1, int e2) {
 
-    if(spans.isEmpty()) {
+    if (spans.isEmpty()) {
       System.err.println("warning: constituents missing!");
       return false;
     }

@@ -21,8 +21,8 @@ public class DTUFeatureExtractor extends AbstractFeatureExtractor {
   @Override
 	public Object score(AlignmentTemplate alTemp) {
     boolean hasGap = false;
-    for(IString w : alTemp.f()) {
-      if(w.id == DTUPhraseExtractor.GAP_STR.id) {
+    for (IString w : alTemp.f()) {
+      if (w.id == DTUPhraseExtractor.GAP_STR.id) {
         hasGap = true;
         break;
       }

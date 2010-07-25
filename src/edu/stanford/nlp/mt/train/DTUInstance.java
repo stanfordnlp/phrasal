@@ -45,7 +45,7 @@ public class DTUInstance extends AlignmentTemplateInstance {
         continue;
       //System.err.printf("f=%s %d-%d %d\n", fs, f1, f2, fi);
       int fIndex = fContiguous ? fi-f1 : fAlign.get(fi);
-      assert(fIndex >= 0 && fIndex < Byte.MAX_VALUE && fIndex < f.size());
+      assert (fIndex >= 0 && fIndex < Byte.MAX_VALUE && fIndex < f.size());
       for (Integer ei : sent.f2e(fi)) {
         if (!es.get(ei))
           continue;
@@ -69,8 +69,8 @@ public class DTUInstance extends AlignmentTemplateInstance {
       System.err.printf("New alignment template [%d-%d] [%d-%d]: %s\n",f1,f2,e1,e2,toString(true));
       System.err.println("String representation: "+Arrays.toString(align));
     }
-    if(fContiguous) assert(fEndPos() == f2);
-    if(eContiguous) assert(eEndPos() == e2);
+    if (fContiguous) assert (fEndPos() == f2);
+    if (eContiguous) assert (eEndPos() == e2);
   }
 
   @Override

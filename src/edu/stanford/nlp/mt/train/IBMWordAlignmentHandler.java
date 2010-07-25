@@ -69,19 +69,19 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
 														Attributes atts)
 			throws SAXException {
     tagType = TagType.OTHER;
-    if("bead".equals(localName)) {
+    if ("bead".equals(localName)) {
       fLen = Integer.parseInt(atts.getValue("src_leng"));
       eLen = Integer.parseInt(atts.getValue("tgt_leng"));
-    } else if("sstr".equals(localName)) {
+    } else if ("sstr".equals(localName)) {
       tagType = TagType.SSTR;
-    } else if("tstr".equals(localName)) {
+    } else if ("tstr".equals(localName)) {
       tagType = TagType.TSTR;
-    } else if("alignment".equals(localName)) {
+    } else if ("alignment".equals(localName)) {
       tagType = TagType.AL;
       f2e = new TreeSet[fLen];
-      for(int i=0; i<fLen; ++i) f2e[i] = new TreeSet();
+      for (int i=0; i<fLen; ++i) f2e[i] = new TreeSet();
       e2f = new TreeSet[eLen];
-      for(int i=0; i<eLen; ++i) e2f[i] = new TreeSet();
+      for (int i=0; i<eLen; ++i) e2f[i] = new TreeSet();
     }
     //System.err.printf("start: %s\n",localName);
 	}
@@ -92,30 +92,30 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
 												 String qName)
 			throws SAXException {
 		//System.err.printf("end: %s\n",localName);
-    if(tagType != TagType.OTHER) {
+    if (tagType != TagType.OTHER) {
       String str = buf.toString().trim();
-      if(str.isEmpty())
+      if (str.isEmpty())
         return;
       //System.err.printf("  chars: type=%s str={{{%s}}}\n", tagType.name(), str);
-      if(tagType == TagType.SSTR) {
+      if (tagType == TagType.SSTR) {
         f = new SimpleSequence<IString>(true, IStrings.toIStringArray(str.split("\\s+")));
-        if(f.size() != fLen)
+        if (f.size() != fLen)
           throw new RuntimeException("length mismatch: "+f.size()+" != "+fLen);
       } else if(tagType == TagType.TSTR) {
         e = new SimpleSequence<IString>(true, IStrings.toIStringArray(str.split("\\s+")));
-        if(e.size() != eLen)
+        if (e.size() != eLen)
           throw new RuntimeException("length mismatch: "+e.size()+" != "+eLen);
       } else if(tagType == TagType.AL) {
-        for(String line : str.split("\\n+")) {
+        for (String line : str.split("\\n+")) {
           String[] els = line.split("\\s+");
-          if(els.length != 3)
+          if (els.length != 3)
             throw new RuntimeException("incorrect number of cols: "+els.length+" in "+str);
-          if(Double.parseDouble(els[2]) >= MINP) {
-            for(String fiStr : els[0].split(",")) {
+          if (Double.parseDouble(els[2]) >= MINP) {
+            for (String fiStr : els[0].split(",")) {
               int fi = Integer.parseInt(fiStr);
-              for(String eiStr : els[1].split(",")) {
+              for (String eiStr : els[1].split(",")) {
                 int ei = Integer.parseInt(eiStr);
-                if(fi > 0 && ei > 0) {
+                if (fi > 0 && ei > 0) {
                   f2e[fi-1].add(ei-1);
                   e2f[ei-1].add(fi-1);
                 }
@@ -141,9 +141,9 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
   }
 
   public static void main(String[] args) {
-    for(String arg : args) {
+    for (String arg : args) {
       SymmetricalWordAlignment[] aligns = SymmetricalWordAlignment.readFromIBMWordAlignment(arg);
-      for(SymmetricalWordAlignment a: aligns)
+      for (SymmetricalWordAlignment a: aligns)
         System.out.println(a.toReverseString1());
     }
   }

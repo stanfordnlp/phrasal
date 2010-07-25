@@ -46,6 +46,8 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
                         SortedSet<Integer>[] f2e, SortedSet<Integer>[] e2f) {
     super(f,e,f2e,e2f);
+    if (f2e == null && e2f == null)
+      initAlignment();
   }
 
   public SymmetricalWordAlignment(String fStr, String eStr, String aStr, boolean s2t, boolean oneIndexed) throws IOException {
@@ -88,11 +90,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
 
   public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed)
        throws IOException {
-    if(VERBOSE_DEBUG)
+    if (VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
     initSentPair(fStr, eStr);
     initAlignment();
-    if(aStr == null) {
+    if (aStr == null) {
       System.err.println("Warning: empty line.");
       return;
     }
@@ -101,15 +103,15 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       if(els.length == 2) {
         int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);
         int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
-        if(oneIndexed) { --fpos; --epos; }
-        if(addBoundaryMarkers) { ++fpos; ++epos; }
-        if(0 > fpos || fpos >= f.size())
+        if (oneIndexed) { --fpos; --epos; }
+        if (addBoundaryMarkers) { ++fpos; ++epos; }
+        if (0 > fpos || fpos >= f.size())
           throw new IOException("f has index out of bounds (fsize="+f.size()+",esize="+e.size()+") : "+fpos);
-        if(0 > epos || epos >= e.size())
+        if (0 > epos || epos >= e.size())
           throw new IOException("e has index out of bounds (esize="+e.size()+",fsize="+f.size()+") : "+epos);
         f2e[fpos].add(epos);
         e2f[epos].add(fpos);
-        if(VERBOSE_DEBUG) {
+        if (VERBOSE_DEBUG) {
           System.err.println
            ("word alignment: ["+f.get(fpos)+"] -> ["+e.get(epos)+"]");
           System.err.println
@@ -119,7 +121,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
         System.err.println("Warning: bad alignment token: "+al);
       }
     }
-    if(addBoundaryMarkers && !unalignedBoundaryMarkers) {
+    if (addBoundaryMarkers && !unalignedBoundaryMarkers) {
       int lastf = f2e.length-1;
       int laste = e2f.length-1;
       f2e[0].add(0);
@@ -127,7 +129,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       f2e[lastf].add(laste);
       e2f[laste].add(lastf);
     }
-    if(VERBOSE_DEBUG)
+    if (VERBOSE_DEBUG)
       System.err.println("sentence alignment: "+toString());
   }
 
@@ -135,9 +137,9 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   private void initAlignment() {
     f2e = new TreeSet[f.size()];
     e2f = new TreeSet[e.size()];
-    for(int i=0; i<f2e.length; ++i)
+    for (int i=0; i<f2e.length; ++i)
       f2e[i] = new TreeSet<Integer>();
-    for(int i=0; i<e2f.length; ++i)
+    for (int i=0; i<e2f.length; ++i)
       e2f[i] = new TreeSet<Integer>();
   }
   

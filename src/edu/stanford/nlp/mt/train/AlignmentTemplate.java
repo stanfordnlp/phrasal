@@ -57,7 +57,7 @@ public class AlignmentTemplate {
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fArray));
     e = new SimpleSequence<IString>(true, IStrings.toIStringArray(eArray));
     this.align = align;
-    if(!lazy)
+    if (!lazy)
       initAlignmentArrays();
   }
 
@@ -66,20 +66,20 @@ public class AlignmentTemplate {
     f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fStr.split("\\s+")));
     e = new SimpleSequence<IString>(true, IStrings.toIStringArray(eStr.split("\\s+")));
     String[] aligns = aStr.split("\\s+");
-    if(!lazy)
+    if (!lazy)
       allocAlignmentArrays();
-    for(int fIndex=0; fIndex<aligns.length; ++fIndex) {
-      assert(fIndex >= 0 && fIndex < f.size());
+    for (int fIndex=0; fIndex<aligns.length; ++fIndex) {
+      assert (fIndex >= 0 && fIndex < f.size());
       String align = aligns[fIndex];
-      if(!align.startsWith("(") || !align.endsWith(")"))
+      if (!align.startsWith("(") || !align.endsWith(")"))
         throw new IOException("Wrong alignment format: "+align);
-      for(String eIndexStr : align.substring(1,align.length()-1).split(",")) {
-        if(eIndexStr.length() == 0)
+      for (String eIndexStr : align.substring(1,align.length()-1).split(",")) {
+        if (eIndexStr.length() == 0)
           continue;
         int eIndex = Integer.parseInt(eIndexStr);
-        assert(eIndex >= 0 && eIndex < e.size());
+        assert (eIndex >= 0 && eIndex < e.size());
         alTable.add(alignmentToNumber((byte)eIndex,(byte)fIndex));
-        if(!lazy) {
+        if (!lazy) {
           f2e[fIndex].add(eIndex);
           e2f[eIndex].add(fIndex);
         }

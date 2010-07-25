@@ -50,14 +50,15 @@ public class IOTools {
 	}
 	
   public static LineNumberReader getReaderFromFile(String fileName) {
-    LineNumberReader reader = null;
+    LineNumberReader reader; // = null;
     File f = new File(fileName);
     try {
       if (f.getAbsolutePath().endsWith(".gz")) {
         reader = new LineNumberReader
-              (new InputStreamReader(new GZIPInputStream(new FileInputStream(f))));
+           (new InputStreamReader(new GZIPInputStream(new FileInputStream(f),8192),"UTF-8"));
       } else {
-         reader = new LineNumberReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(f)),"UTF-8"));
+         reader = new LineNumberReader
+           (new InputStreamReader(new BufferedInputStream(new FileInputStream(f)),"UTF-8"));
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -65,7 +66,8 @@ public class IOTools {
     }
     return reader;
   }
-  
+
+  @SuppressWarnings("unused")
   public static PrintStream getWriterFromFile(File fileName) {
     return getWriterFromFile(fileName.getPath());
   }

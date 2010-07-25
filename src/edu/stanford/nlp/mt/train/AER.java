@@ -20,7 +20,7 @@ public class AER {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
   public static void main(String[] args) {
-    if(args.length != 6) {
+    if (args.length != 6) {
       System.err.println("Usage: AER <fCorpus> <eCorpus> <refAlignment> <refUCB> <hypAlignment> <hypUCB>");
       System.err.println("where:");
       System.err.println("  fCorpus: source-language text");
@@ -33,10 +33,10 @@ public class AER {
       System.exit(1);
     }
     boolean r_s2t = true, r_zeroBased = false, h_s2t = true, h_zeroBased = false;
-    if(Boolean.parseBoolean(args[3])) {
+    if (Boolean.parseBoolean(args[3])) {
       r_s2t = false; r_zeroBased = true;
     } 
-    if(Boolean.parseBoolean(args[5])) {
+    if (Boolean.parseBoolean(args[5])) {
       h_s2t = false; h_zeroBased = true;
     }
     Iterator<String>
@@ -47,14 +47,14 @@ public class AER {
     List<SymmetricalWordAlignment> rAlign = new ArrayList<SymmetricalWordAlignment>();
     List<SymmetricalWordAlignment> hAlign = new ArrayList<SymmetricalWordAlignment>();
     int lineNb = 0;
-    while(fCorpus.hasNext()) {
+    while (fCorpus.hasNext()) {
       ++lineNb;
       System.err.println("line : "+lineNb);
       String fLine = fCorpus.next();
       String eLine = eCorpus.next();
       String rLine = rCorpus.next();
       String hLine = hCorpus.next();
-      assert(eLine != null && rLine != null && hLine != null);
+      assert (eLine != null && rLine != null && hLine != null);
       boolean isHyp=false;
       try {
         rAlign.add(new SymmetricalWordAlignment(fLine,eLine,rLine,r_s2t,r_zeroBased));
@@ -67,9 +67,9 @@ public class AER {
         System.exit(1);
       }
     }
-    assert(!eCorpus.hasNext());
-    assert(!rCorpus.hasNext());
-    assert(!hCorpus.hasNext());
+    assert (!eCorpus.hasNext());
+    assert (!rCorpus.hasNext());
+    assert (!hCorpus.hasNext());
     System.out.println(SymmetricalWordAlignment.computeAER
          (rAlign.toArray(new SymmetricalWordAlignment[rAlign.size()]),
           hAlign.toArray(new SymmetricalWordAlignment[hAlign.size()])));

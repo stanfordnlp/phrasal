@@ -61,7 +61,7 @@ public class CorpusOverlapFinder {
     analyzeProperties(prop);
     counters = new OpenAddressCounter[maxLen+1];
     ngramSources = new HashMap<String,String>();
-    for(int i=0; i<=maxLen; ++i)
+    for (int i=0; i<=maxLen; ++i)
       counters[i] = new OpenAddressCounter<Sequence<IString>>();
     String test = prop.getProperty(TEST_OPT);
 		minLen = Integer.parseInt(prop.getProperty(MIN_LEN_OPT,"15"));
@@ -77,7 +77,7 @@ public class CorpusOverlapFinder {
 
     // Check required, optional properties:
     System.err.println("properties: "+prop.toString());
-    if(!prop.keySet().containsAll(REQUIRED_OPTS)) {
+    if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
       Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
       System.err.printf
@@ -86,7 +86,7 @@ public class CorpusOverlapFinder {
       System.exit(1);
     }
 
-    if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
+    if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
       Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       System.err.printf
@@ -100,8 +100,8 @@ public class CorpusOverlapFinder {
   public void findDuplicates(String file) throws IOException {
 
     // Init test-set n-gram counts:
-    for(Counter<Sequence<IString>> c : counters)
-      for(Sequence<IString> s : c.keySet())
+    for (Counter<Sequence<IString>> c : counters)
+      for (Sequence<IString> s : c.keySet())
         c.setCount(s,0);
 
     // Count test-set n-grams appearing in rootName:
@@ -113,18 +113,18 @@ public class CorpusOverlapFinder {
 
     List<Set<String>> matches = new ArrayList<Set<String>>();
     List<String> eLines = new ArrayList<String>();
-    for(String eLine : ObjectBank.getLineIterator(file)) {
+    for (String eLine : ObjectBank.getLineIterator(file)) {
       Set<String> localMatches = new HashSet<String>();
       String nopunc = eLine.replaceAll("[^\\w\\d ]"," ");
       Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(nopunc.toLowerCase().split("\\s+")));
-      for(int i=0; i<f.size(); ++i) {
-        for(int j=i+minLen-1; j<f.size() && j-i<maxLen; ++j) {
+      for (int i=0; i<f.size(); ++i) {
+        for (int j=i+minLen-1; j<f.size() && j-i<maxLen; ++j) {
           Sequence<IString> phrase = f.subsequence(i,j+1);
           int sz = phrase.size();
           Counter<Sequence<IString>> c = counters[sz];
-          if(train) {
+          if (train) {
             // Training data:
-            if(c.containsKey(phrase)) {
+            if (c.containsKey(phrase)) {
               c.incrementCount(phrase);
               localMatches.add(phrase.toString());
             }
@@ -135,10 +135,10 @@ public class CorpusOverlapFinder {
           }
         }
       }
-      if(train) {
+      if (train) {
         eLines.add(eLine);
         matches.add(localMatches);
-        if(!localMatches.isEmpty()) {
+        if (!localMatches.isEmpty()) {
 					if (verbose) {
 						System.err.printf("train: %s\n",eLine);
 						for(String ngram : localMatches) {
@@ -150,19 +150,19 @@ public class CorpusOverlapFinder {
       }
     }
 
-    for(int i=0; i<matches.size(); ++i) {
+    for (int i=0; i<matches.size(); ++i) {
       int c = 0, total = 0;
       int r1=Math.max(i-windowSize,0);
       int r2=Math.min(i+windowSize,matches.size()-1);
-      for(int j=r1; j<=r2; ++j) {
+      for (int j=r1; j<=r2; ++j) {
         ++total;
-        if(!matches.get(j).isEmpty())
+        if (!matches.get(j).isEmpty())
           ++c;
       }
       double o = c*1.0/total;
 			System.out.printf("%d\t%f\t%s\n",i+1,o,eLines.get(i));
 			if (verbose) {
-				for(String m : matches.get(i)) {
+				for (String m : matches.get(i)) {
 					System.out.printf("    match: {{{ %s }}}\n",m);
 					//System.out.printf("   source: {{{ %s }}}\n",ngramSources.get(m));
 				}
@@ -185,11 +185,11 @@ public class CorpusOverlapFinder {
     try {
       CorpusOverlapFinder t = new CorpusOverlapFinder(prop);
       String[] train = prop.getProperty(TRAIN_OPT).split("\\s+");
-      for(String aTrain : train) {
+      for (String aTrain : train) {
         System.err.println("Finding matches in: " + aTrain);
         t.findDuplicates(aTrain);
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
       usage();
     }

@@ -29,9 +29,6 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   public static final String DEBUG_PROPERTY = "DebugAlignmentTemplate";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  public static final String FILL_HASH_PROPERTY = "FillHash";
-  public static final boolean FILL_HASH = Boolean.parseBoolean(System.getProperty(FILL_HASH_PROPERTY, "true"));
-
   public static final int DEFAULT_MAX_FERTILITY = 5;
 
   private final SourceFilter sourceFilter;
@@ -95,7 +92,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * Increment count for a given alignment for a given phrase-pair.
    */
   public void incrementAlignmentCount(AlignmentTemplate alTemp) {
-    if(FILL_HASH && storeAlignmentCounts) {
+    if (storeAlignmentCounts) {
       int idx = alTemp.getKey();
       int alIdx = alTemp.getAKey();
       final Int2IntArrayMap aCounts;
@@ -164,19 +161,17 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   }
 
   private void addToIndex(AlignmentTemplate alTemp, boolean add) {
-    if(FILL_HASH) {
-      double fertility = alTemp.e().size()/alTemp.f().size();
-      if(fertility > maxFertility)
-        add = false;
+    double fertility = alTemp.e().size()/alTemp.f().size();
+    if (fertility > maxFertility)
+      add = false;
 
-      int idxF = indexOfF(alTemp, add);
-      int idxE = indexOfE(alTemp, add);
+    int idxF = indexOfF(alTemp, add);
+    int idxE = indexOfE(alTemp, add);
 
-      alTemp.setKey(index.indexOf(new int[]{idxF, idxE}, add));
-      alTemp.setFKey(idxF);
-      alTemp.setEKey(idxE);
-      alTemp.setAKey(indexOfA(alTemp,add));
-    }
+    alTemp.setKey(index.indexOf(new int[]{idxF, idxE}, add));
+    alTemp.setFKey(idxF);
+    alTemp.setEKey(idxE);
+    alTemp.setAKey(indexOfA(alTemp,add));
   }
 
   /**
@@ -208,26 +203,26 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   { return aIndex.indexOf(alTemp.getCompactAlignment(), add); }
 
   private int getArgmaxAlignment(int idx) {
-    if(idx >= aCounter.size())
+    if (idx >= aCounter.size())
       return -1;
     // Linear search:
     Int2IntArrayMap aCounts = aCounter.get(idx);
     int maxK = -1;
     int maxV = Integer.MIN_VALUE;
     String maxKLex = null;
-    for(int k : aCounts.keySet()) {
+    for (int k : aCounts.keySet()) {
       int v = aCounts.get(k);
-      if(v == maxV) {
+      if (v == maxV) {
         // If there is a tie, take lexicographic order as defined in Moses:
         String kLex = AlignmentTemplate.alignmentToString(aIndex.get(k));
-        if(maxKLex == null)
+        if (maxKLex == null)
           maxKLex = AlignmentTemplate.alignmentToString(aIndex.get(maxK));
-        if(kLex.compareTo(maxKLex) < 0) {
+        if (kLex.compareTo(maxKLex) < 0) {
           maxK = k;
           maxV = v;
           maxKLex = kLex;
         }
-      } else if(v > maxV) {
+      } else if (v > maxV) {
         maxK = k;
         maxV = v;
         maxKLex = null;

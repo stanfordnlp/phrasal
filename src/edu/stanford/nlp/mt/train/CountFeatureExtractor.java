@@ -19,7 +19,7 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
 
   @Override
 	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
-    if(getCurrentPass()+1 == getRequiredPassNumber())
+    if (getCurrentPass()+1 == getRequiredPassNumber())
       addCountToArray(feCounts, alTemp.getKey());
   }
 
@@ -31,15 +31,15 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
   }
 
   private static void addCountToArray(final IntArrayList list, int idx) {
-    if(idx < 0)
+    if (idx < 0)
       return;
-    synchronized(list) {
-      while(idx >= list.size())
+    synchronized (list) {
+      while (idx >= list.size())
         list.add(0);
       int newCount = list.get(idx)+1;
       list.set(idx,newCount);
     }
-    if(DEBUG_LEVEL >= 3)
+    if (DEBUG_LEVEL >= 3)
       System.err.println("Increasing count idx="+idx+" in vector ("+list+").");
   }
 

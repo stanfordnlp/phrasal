@@ -63,8 +63,8 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
         if (!fss.isEmpty()) {
           int fmin = fss.first();
           int fmax = fss.last();
-          if(fmin<f1) f1 = fmin;
-          if(fmax>f2) f2 = fmax;
+          if (fmin<f1) f1 = fmin;
+          if (fmax>f2) f2 = fmax;
         }
 
         // Phrase too long:
@@ -98,7 +98,7 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
         for (int i=F1; i<=f1; ++i) {
           int lasti = Math.min(F2,i+maxPhraseLenF-1);
           for (int j=f2; j<=lasti; ++j) {
-            assert(j-i < maxPhraseLenF);
+            assert (j-i < maxPhraseLenF);
             addPhraseToIndex(sent,i,j,e1,e2,true,1.0f);
           }
         }

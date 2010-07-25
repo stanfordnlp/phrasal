@@ -61,6 +61,7 @@ public class PhraseExtract {
   static public final String A_CORPUS_OPT = "align";
   static public final String A_FE_CORPUS_OPT = "efAlign";
   static public final String A_EF_CORPUS_OPT = "feAlign";
+  static public final String SYMMETRIZE_OPT = "symmetrization";
   static public final String EXTRACTORS_OPT = "extractors";
 
   static public final String PHRASE_EXTRACTOR_OPT = "phraseExtractor";
@@ -151,6 +152,7 @@ public class PhraseExtract {
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugPhraseExtract";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
+
   protected List<AbstractFeatureExtractor> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
   private List<String> infoFileForExtractors;
@@ -170,7 +172,8 @@ public class PhraseExtract {
   private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq, nThreads = 0;
   private String fCorpus, eCorpus, phraseExtractorInfoFile, outputFile;
   private String alignCorpus, alignInvCorpus;
-  private boolean filterFromDev = false, printFeatureNames = true, isGIZA = false, noAlign, lowercase;
+  private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
+  private AlignmentSymmetrizer.SymmetrizationType symmetrizationType = null;
 
   private int totalPassNumber = 1;
 
@@ -222,11 +225,13 @@ public class PhraseExtract {
     eCorpus = prop.getProperty(E_CORPUS_OPT);
 
     // Alignment arguments:
+    symmetrizationType = AlignmentSymmetrizer.SymmetrizationType.valueOf(prop.getProperty(SYMMETRIZE_OPT, "none"));
     alignCorpus = prop.getProperty(A_CORPUS_OPT);
     if (alignCorpus == null) {
       alignCorpus = prop.getProperty(A_EF_CORPUS_OPT);
       alignInvCorpus = prop.getProperty(A_FE_CORPUS_OPT);
-      isGIZA = true;
+      if (symmetrizationType == AlignmentSymmetrizer.SymmetrizationType.none)
+        throw new RuntimeException("You need to specify a symmetrization heuristic with GIZA input.");
     }
 
     // Phrase filtering arguments:
@@ -266,7 +271,6 @@ public class PhraseExtract {
     outputFile = prop.getProperty(OUTPUT_FILE_OPT);
   }
 
-  
 	public void init() {
 
     String exsString = prop.getProperty(EXTRACTORS_OPT);
@@ -431,7 +435,7 @@ public class PhraseExtract {
           fReader = IOTools.getReaderFromFile(fCorpus),
           eReader = IOTools.getReaderFromFile(eCorpus),
           aReader = IOTools.getReaderFromFile(alignCorpus);
-        if (isGIZA)
+        if (symmetrizationType != null)
           aInvReader = IOTools.getReaderFromFile(alignInvCorpus);
         if (phraseExtractorInfoFile != null)
           pReader = IOTools.getReaderFromFile(phraseExtractorInfoFile);
@@ -472,13 +476,13 @@ public class PhraseExtract {
           if (eLine == null) throw new IOException("Target-language corpus is too short!");
           String pLine = pReader == null ? null : pReader.readLine();
 
-          // Read alignment
+          // Read alignment:
           String aLine;
-          if (isGIZA) {
+          if (symmetrizationType != null) {
             String ef1 = aReader.readLine(); String ef2 = aReader.readLine(); String ef3 = aReader.readLine();
             String fe1 = aInvReader.readLine(); String fe2 = aInvReader.readLine(); String fe3 = aInvReader.readLine();
             GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2, fe3, ef1, ef2, ef3);
-            SymmetricalWordAlignment symAlign = gizaAlign.symmetricize();
+            SymmetricalWordAlignment symAlign = AlignmentSymmetrizer.symmetrize(gizaAlign, symmetrizationType);
             aLine = symAlign.toString();
           } else {
             aLine = aReader.readLine();

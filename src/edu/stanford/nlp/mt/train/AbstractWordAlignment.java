@@ -64,9 +64,9 @@ public class AbstractWordAlignment implements WordAlignment {
 
   private static int _size(SortedSet<Integer> al, int min, int max) {
     int count = 0;
-    for(int el : al) {
-      if(el > max) return count;
-      if(el >= min) ++count;
+    for (int el : al) {
+      if (el > max) return count;
+      if (el >= min) ++count;
     }
     return count;
   }
@@ -78,8 +78,8 @@ public class AbstractWordAlignment implements WordAlignment {
   static String toString(Set<Integer>[] align, boolean zeroIndexed) {
     int o = zeroIndexed ? 0 : 1;
     StringBuffer str = new StringBuffer();
-    for(int i=0; i<align.length; ++i)
-      for(int j : align[i])
+    for (int i=0; i<align.length; ++i)
+      for (int j : align[i])
         str.append(i+o).append("-").append(j+o).append(" ");
     return str.toString();
   }
@@ -103,10 +103,10 @@ public class AbstractWordAlignment implements WordAlignment {
   static public String[] removeBadTokens(String[] words) {
     if(KEEP_BAD_TOKENS)
       return words;
-    for(int i=0; i<words.length; ++i) {
-      if(words[i].indexOf('|') >= 0) {
+    for (int i=0; i<words.length; ++i) {
+      if (words[i].indexOf('|') >= 0) {
         words[i] = ",";
-        if(DEBUG)
+        if (DEBUG)
           System.err.println
            ("AbstractWordAlignment: WARNING: "+
             "\"|\" converted to \";\" to avoid problems with phrase tables.");
@@ -116,15 +116,15 @@ public class AbstractWordAlignment implements WordAlignment {
   }
 
   public boolean equals(Object o) {
-    assert(o instanceof AbstractWordAlignment);
+    assert (o instanceof AbstractWordAlignment);
     AbstractWordAlignment wa = (AbstractWordAlignment)o;
-    if(!f.equals(wa.f()) || !e.equals(wa.e()))
+    if (!f.equals(wa.f()) || !e.equals(wa.e()))
       return false;
-    for(int i=0; i<f.size(); ++i)
-       if(!f2e[i].equals(wa.f2e[i]))
+    for (int i=0; i<f.size(); ++i)
+       if (!f2e[i].equals(wa.f2e[i]))
         return false;
-    for(int i=0; i<e.size(); ++i)
-      if(!e2f[i].equals(wa.e2f[i]))
+    for (int i=0; i<e.size(); ++i)
+      if (!e2f[i].equals(wa.e2f[i]))
         return false;
     return true;
   }
@@ -142,17 +142,17 @@ public class AbstractWordAlignment implements WordAlignment {
 
   @SuppressWarnings("unused")
   public double ratioFtoE() {
-    assert(eSize() > 0);
+    assert (eSize() > 0);
     return fSize()*1.0/eSize();
   }
 
   public boolean isAdmissiblePhraseF(int i, int j) {
     boolean empty = true;
-    for(int k=i; k<=j; ++k)
-      for(int ei : f2e[k]) {
+    for (int k=i; k<=j; ++k)
+      for (int ei : f2e[k]) {
         empty = false;
-        for(int fi : e2f[ei])
-          if(fi < i && fi > j)
+        for (int fi : e2f[ei])
+          if (fi < i && fi > j)
             return false;
       }
     return !empty;
@@ -168,16 +168,16 @@ public class AbstractWordAlignment implements WordAlignment {
   public void init(int[][] matrix) {
     
     f2e = new TreeSet[matrix[0].length-1];
-    for(int i=0; i<f2e.length; ++i)
+    for (int i=0; i<f2e.length; ++i)
       f2e[i] = new TreeSet<Integer>();
 
     e2f = new TreeSet[matrix.length-1];
-    for(int i=0; i<e2f.length; ++i)
+    for (int i=0; i<e2f.length; ++i)
       e2f[i] = new TreeSet<Integer>();
 
-    for(int i=1; i<matrix.length; ++i)
-      for(int j=1; j<matrix[0].length; ++j)
-        if(matrix[i][j] != 0) {
+    for (int i=1; i<matrix.length; ++i)
+      for (int j=1; j<matrix[0].length; ++j)
+        if (matrix[i][j] != 0) {
           e2f[i-1].add(j-1);
           f2e[j-1].add(i-1);
         }
@@ -199,6 +199,12 @@ public class AbstractWordAlignment implements WordAlignment {
         unaligned.set(ei);
     }
     return unaligned;
+  }
+
+  public boolean isEmpty() {
+    for (SortedSet ss : f2e) if (!ss.isEmpty()) return false;
+    for (SortedSet ss : e2f) if (!ss.isEmpty()) return false;
+    return true;
   }
 
 }
