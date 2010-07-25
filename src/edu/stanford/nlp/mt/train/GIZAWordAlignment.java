@@ -20,6 +20,8 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   public static final String DEBUG_PROPERTY = "DebugGIZAWordAlignment";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
+  // If set to false, silently ignore the many-to-many alignments specified in A3 GIZA++ files (note that GIZA++/IBM models do not
+  // produce such as alignments, but the Berkeley aligner does). If set to true, do not ignore these extra alignments.
   public static final String ALLOW_MANY_TO_MANY_PROPERTY = "allowManyToMany";
   public static final boolean ALLOW_MANY_TO_MANY = Boolean.parseBoolean(System.getProperty(ALLOW_MANY_TO_MANY_PROPERTY, "false"));
 
@@ -134,8 +136,11 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
           if (!align[wpos2].isEmpty()) {
             if (DEBUG)
               System.err.printf("Warning: many-to-many alignment detected: %d-%d\n"+wpos2,wpos);
-            if (!ALLOW_MANY_TO_MANY)
+            if (!ALLOW_MANY_TO_MANY) {
+              // Reproduces Moses (giza2bal.pl)'s questionable behavior: if we see a many-to-many alignment,
+              // silently erase old alignment(s) so that we only have 1-to-many alignments.
               align[wpos2].clear();
+            }
           }
           align[wpos2].add(wpos);
         }

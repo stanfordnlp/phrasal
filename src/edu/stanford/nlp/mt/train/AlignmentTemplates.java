@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.IntegerArrayIndex;
 
@@ -157,6 +158,8 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     buf.append(aIndex.size());
     buf.append(", a-counts=");
     buf.append(aCounter.size());
+    buf.append(", istring=");
+    buf.append(IString.index.size());
     return buf.toString();
   }
 

@@ -7,14 +7,20 @@ import java.io.LineNumberReader;
 import java.util.SortedSet;
 
 /**
-  * @author Michel Galley
-  */
+ * Alignment symmetrization algorithms. Produce the same outputs as symal.cpp in Moses.
+ *
+ * @author Michel Galley
+ */
 
 public class AlignmentSymmetrizer {
 
-  public static final boolean DEBUG = false;
+  private static final boolean DEBUG = false;
 
-  @SuppressWarnings("unused")
+  private static final int[][] GROW_NEIGHBORS =
+    { {-1,0},{0,-1},{1,0},{0,1} };
+  private static final int[][] GROW_DIAG_NEIGHBORS =
+    { {-1,0},{0,-1},{1,0},{0,1},{-1,-1},{-1,1},{1,-1},{1,1} };
+
   enum SymmetrizationType {
     none,
     intersection,
@@ -26,11 +32,6 @@ public class AlignmentSymmetrizer {
     srctotgt,
     tgttosrc
   }
-
-  private static final int[][] GROW_NEIGHBORS =
-    { {-1,0},{0,-1},{1,0},{0,1} };
-  private static final int[][] GROW_DIAG_NEIGHBORS =
-    { {-1,0},{0,-1},{1,0},{0,1},{-1,-1},{-1,1},{1,-1},{1,1} };
 
   public static void symmetrizeA3Files(String feAlignFile, String efAlignFile, String typeName) {
 
@@ -88,10 +89,10 @@ public class AlignmentSymmetrizer {
       case grow_diag:
         growDiag(in, out, GROW_DIAG_NEIGHBORS);
         break;
-      case grow_diag_final: // check
+      case grow_diag_final:
         growDiagFinal(in, out);
         break;
-      case grow_diag_final_and: // check
+      case grow_diag_final_and:
         growDiagFinalAnd(in, out);
         break;
       case union:
@@ -105,7 +106,7 @@ public class AlignmentSymmetrizer {
         addAlignment(in.e2f, true, out);
         break;
       default:
-        throw new UnsupportedOperationException("unsupported case: "+type);
+        throw new UnsupportedOperationException("Unsupported alignment symmetrization algorithm: "+type);
     }
     return out;
   }
@@ -167,18 +168,18 @@ public class AlignmentSymmetrizer {
   private static void growDiagFinal(AbstractWordAlignment in, SymmetricalWordAlignment out) {
     assert (out.isEmpty());
     growDiag(in, out, GROW_DIAG_NEIGHBORS);
-    runFinal(in, out, false);
-    runFinalInv(in, out, false);
+    runFinal(in, false, out);
+    runFinalInv(in, false, out);
   }
 
   private static void growDiagFinalAnd(AbstractWordAlignment in, SymmetricalWordAlignment out) {
     assert (out.isEmpty());
     growDiag(in, out, GROW_DIAG_NEIGHBORS);
-    runFinal(in, out, true);
-    runFinalInv(in, out, true);
+    runFinal(in, true, out);
+    runFinalInv(in, true, out);
   }
 
-  private static void runFinal(AbstractWordAlignment in, SymmetricalWordAlignment out, boolean both) {
+  private static void runFinal(AbstractWordAlignment in, boolean both, SymmetricalWordAlignment out) {
     for (int ei = 0; ei < in.e2f.length; ++ei) {
       for (int fi : in.e2f[ei]) {
         if (!out.f2e[fi].contains(ei)) {
@@ -192,7 +193,7 @@ public class AlignmentSymmetrizer {
     }
   }
 
-  private static void runFinalInv(AbstractWordAlignment in, SymmetricalWordAlignment out, boolean both) {
+  private static void runFinalInv(AbstractWordAlignment in, boolean both, SymmetricalWordAlignment out) {
     for (int fi = 0; fi < in.f2e.length; ++fi) {
       for (int ei : in.f2e[fi]) {
         if (!out.f2e[fi].contains(ei)) {

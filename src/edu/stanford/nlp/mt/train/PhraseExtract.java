@@ -32,6 +32,7 @@ import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 
 import java.io.*;
 import java.util.*;
@@ -105,7 +106,7 @@ public class PhraseExtract {
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT));
     OPTIONAL_OPTS.addAll(Arrays.asList(
-       A_CORPUS_OPT, A_EF_CORPUS_OPT, A_FE_CORPUS_OPT,
+       A_CORPUS_OPT, A_EF_CORPUS_OPT, A_FE_CORPUS_OPT, SYMMETRIZE_OPT,
        FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT,
        SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT, EXTRACTORS_OPT,
        AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT,
@@ -173,7 +174,7 @@ public class PhraseExtract {
   private String fCorpus, eCorpus, phraseExtractorInfoFile, outputFile;
   private String alignCorpus, alignInvCorpus;
   private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
-  private AlignmentSymmetrizer.SymmetrizationType symmetrizationType = null;
+  private SymmetrizationType symmetrizationType = null;
 
   private int totalPassNumber = 1;
 
@@ -225,12 +226,12 @@ public class PhraseExtract {
     eCorpus = prop.getProperty(E_CORPUS_OPT);
 
     // Alignment arguments:
-    symmetrizationType = AlignmentSymmetrizer.SymmetrizationType.valueOf(prop.getProperty(SYMMETRIZE_OPT, "none"));
+    symmetrizationType = SymmetrizationType.valueOf(prop.getProperty(SYMMETRIZE_OPT, "none"));
     alignCorpus = prop.getProperty(A_CORPUS_OPT);
     if (alignCorpus == null) {
       alignCorpus = prop.getProperty(A_EF_CORPUS_OPT);
       alignInvCorpus = prop.getProperty(A_FE_CORPUS_OPT);
-      if (symmetrizationType == AlignmentSymmetrizer.SymmetrizationType.none)
+      if (symmetrizationType == SymmetrizationType.none)
         throw new RuntimeException("You need to specify a symmetrization heuristic with GIZA input.");
     }
 
@@ -435,7 +436,7 @@ public class PhraseExtract {
           fReader = IOTools.getReaderFromFile(fCorpus),
           eReader = IOTools.getReaderFromFile(eCorpus),
           aReader = IOTools.getReaderFromFile(alignCorpus);
-        if (symmetrizationType != null)
+        if (symmetrizationType != SymmetrizationType.none)
           aInvReader = IOTools.getReaderFromFile(alignInvCorpus);
         if (phraseExtractorInfoFile != null)
           pReader = IOTools.getReaderFromFile(phraseExtractorInfoFile);
@@ -478,7 +479,7 @@ public class PhraseExtract {
 
           // Read alignment:
           String aLine;
-          if (symmetrizationType != null) {
+          if (symmetrizationType != SymmetrizationType.none) {
             String ef1 = aReader.readLine(); String ef2 = aReader.readLine(); String ef3 = aReader.readLine();
             String fe1 = aInvReader.readLine(); String fe2 = aInvReader.readLine(); String fe3 = aInvReader.readLine();
             GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2, fe3, ef1, ef2, ef3);
