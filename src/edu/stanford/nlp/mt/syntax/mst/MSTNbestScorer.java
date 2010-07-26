@@ -50,7 +50,7 @@ public class MSTNbestScorer {
       for(int j=0; j<=lastSent.intValue(); ++j)
         addMSTFeatures(dp, nbestList, j);
 
-      String outFile = nbestListFile.replaceAll(".gz$","."+extension+".gz");
+      String outFile = nbestListFile.replaceAll("\\.gz$","."+extension+".gz");
       if(outFile.equals(nbestListFile))
         throw new RuntimeException("Wrong file format: "+nbestListFile);
       System.err.printf("Saving to %s ...\n", outFile);
@@ -61,7 +61,7 @@ public class MSTNbestScorer {
     }
   }
 
-  public final DependencyParser init(String taggerFile, String dparserFile) {
+  public static DependencyParser init(String taggerFile, String dparserFile) {
     try {
       // Load tagger:
       System.err.println("Loading tagger...");
@@ -90,7 +90,7 @@ public class MSTNbestScorer {
     return null;
   }
 
-  public void addMSTFeatures(DependencyParser dp, MosesNBestList nbest, int i) throws IOException {
+  private static void addMSTFeatures(DependencyParser dp, MosesNBestList nbest, int i) throws IOException {
     // Add dependency parsing score:
     List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLL = nbest.nbestLists();
     List<ScoredFeaturizedTranslation<IString,String>> nbestL = nbestLL.get(i);
@@ -110,7 +110,7 @@ public class MSTNbestScorer {
     }
   }
 
-  private void addFeatures(Collection<FeatureValue<String>> f, double score) {
+  private static void addFeatures(Collection<FeatureValue<String>> f, double score) {
     f.add(new FeatureValue<String>("mst",score));
   }
 
@@ -126,4 +126,5 @@ public class MSTNbestScorer {
 
     new MSTNbestScorer().score(taggerFile, dparserFile, extension, args);
   }
+  
 }
