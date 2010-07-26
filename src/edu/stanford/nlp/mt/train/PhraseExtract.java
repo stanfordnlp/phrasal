@@ -194,9 +194,9 @@ public class PhraseExtract {
       try {
         IOTools.addConfigFileProperties(prop, configFile);
       } catch (IOException e) {
-        e.printStackTrace();
         usage();
-        System.exit(1);
+        throw new RuntimeException
+          (String.format("I/O error while reading configuration file: %s\n", configFile));
       }
     }
 
@@ -205,19 +205,17 @@ public class PhraseExtract {
     if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
       Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
-      System.err.printf
-       ("The following required fields are missing: %s\n", missingFields);
       usage();
-      System.exit(1);
+      throw new RuntimeException
+        (String.format("The following required fields are missing: %s\n", missingFields));
     }
     
     if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
       Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
-      System.err.printf
-       ("The following fields are unrecognized: %s\n", extraFields);
       usage();
-      System.exit(1);
+      throw new RuntimeException
+        (String.format("The following fields are unrecognized: %s\n", extraFields));
     }
     
     // Analyze props:

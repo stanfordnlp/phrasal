@@ -406,7 +406,7 @@ public class MERT extends Thread {
   static final SmoothingType smoothingType = SmoothingType.valueOf(System
           .getProperty("SMOOTHING_TYPE", "min"));
   static boolean filterUnreachable = Boolean.parseBoolean(System
-          .getProperty("FILTER_UNREACHABLE", "false"));
+          .getProperty("FILTER_UNREACHABLE", "true"));
 
   static {
     System.err.println();

@@ -497,7 +497,7 @@ public class Phrasal {
 						System.err.printf(
 								"Error: '(' expected immediately after feature name %s", token);
 						System.err
-						.printf("Note that no whitespace between '(' and the associated feature name is allowed\n");
+              .printf("Note that no whitespace between '(' and the associated feature name is allowed\n");
 						System.exit(-1);
 					}
 				} else {

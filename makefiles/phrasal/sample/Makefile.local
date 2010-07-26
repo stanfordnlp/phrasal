@@ -74,7 +74,6 @@ MINP=1e-4
 MEMSIZE=3000m
 MMEMSIZE=3000m
 PMEMSIZE=3000m
-PMEMSIZE_BM=3000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -109,7 +108,7 @@ POST=remove_unk
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert.pl
+PM=phrasal-mert.pl --opt-flags="-o koehn+cer -t $(PROC) -F -p 8"
 
 #########################################
 # Extension of input files:
