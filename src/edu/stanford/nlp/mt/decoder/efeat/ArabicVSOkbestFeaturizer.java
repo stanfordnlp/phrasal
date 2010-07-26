@@ -21,11 +21,11 @@ import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String> implements ClonedFeaturizer<IString, String>, AlignmentFeaturizer {
 
   private static final String FEATURE_NAME = "ArabicVSOkbestFeaturizer";
-  
+
   private static Map<Sequence<IString>,Integer> sentenceToId;
   private final ArabicKbestSubjectBank subjectBank;
   private final int verbGap;
-  
+
   //Set by initialize()
   private double defaultNullAnalysisLogProb;
   private Map<Integer,List<Triple<Integer,Integer,Double>>> verbMap = null;
@@ -34,7 +34,7 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
   public ArabicVSOkbestFeaturizer(String... args) {
 
     assert args.length == 3;
-    
+
     File subjFile = new File(args[0]);
     if(!subjFile.exists())
       throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),subjFile.getPath()));
@@ -45,16 +45,16 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
     File unkFile = new File(args[1]);
     if(!unkFile.exists())
       throw new RuntimeException(String.format("%s: File does not exist (%s)",this.getClass().getName(),unkFile.getPath()));
-    
+
     sentenceToId = getSentenceMap(unkFile);
-    
+
     verbGap = Integer.parseInt(args[2].trim());
   }
 
-  
-  private Map<Sequence<IString>, Integer> getSentenceMap(File unkFile) {
+
+  private static Map<Sequence<IString>, Integer> getSentenceMap(File unkFile) {
     Map<Sequence<IString>,Integer> sentenceMap = new HashMap<Sequence<IString>,Integer>();
-    
+
     LineNumberReader reader = IOTools.getReaderFromFile(unkFile);
     try {
       for(int transId = 0; reader.ready(); transId++) {
@@ -63,37 +63,37 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
         sentenceMap.put(foreign, transId);
       }
       reader.close();
-      
+
     } catch (IOException e) {
       e.printStackTrace();
       throw new RuntimeException("Error while reading unk file");
     }
-    
+
     return sentenceMap;
   }
 
   /**
    * Returns true if the span of token positions specified by span is completely covered
    * in the partial hypothesis of f. Otherwise, returns false.
-   * 
+   *
    */
-  private boolean isCovered(int leftSubjectBoundary, int rightSubjectBoundary, final int verbIdx, final Featurizable<IString,String> f) {
-    if(f == null) 
+  private static boolean isCovered(int leftSubjectBoundary, int rightSubjectBoundary, final int verbIdx, final Featurizable<IString,String> f) {
+    if(f == null)
       return false;
 
     boolean verbCovered = f.hyp.foreignCoverage.get(verbIdx);
 
     final int subjLength = rightSubjectBoundary - leftSubjectBoundary + 1;
-    
-    final BitSet fSubjCoverage = 
+
+    final BitSet fSubjCoverage =
       f.hyp.foreignCoverage.get(leftSubjectBoundary, rightSubjectBoundary + 1);
 
     boolean subjCovered = (fSubjCoverage.cardinality() == subjLength);
 
     return verbCovered && subjCovered;
   }
-  
-  private int getRightTargetSideBoundary(int sLeft, int sRight, final Featurizable<IString,String> f) {
+
+  private static int getRightTargetSideBoundary(int sLeft, int sRight, final Featurizable<IString,String> f) {
     int maxRightIndex = -1;
     for(int i = sLeft; i <= sRight; i++) {
       final int[] eRange = f.f2tAlignmentIndex[i];
@@ -103,48 +103,49 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
       if(rightIndex > maxRightIndex)
         maxRightIndex = rightIndex;
     }
-    
+
     return maxRightIndex;
   }
-  
-  private boolean matches(Featurizable<IString, String> f,
+
+  private static boolean matches(Featurizable<IString, String> f,
                           Triple<Integer, Integer, Double> subject, int thisVerbIdx) {
-    
+
     if(isCovered(subject.first(),subject.second(),thisVerbIdx,f)) {
       int rightSubjTargetBoundary = getRightTargetSideBoundary(subject.first(), subject.second(), f);
       int rightVerbTargetBoundary = getRightTargetSideBoundary(thisVerbIdx,thisVerbIdx,f);
       int leftVerbTargetBoundary = f.f2tAlignmentIndex[thisVerbIdx][Featurizable.PHRASE_START];
-      
+
       if(rightSubjTargetBoundary == rightVerbTargetBoundary || rightSubjTargetBoundary + 1 == leftVerbTargetBoundary)
         return true;
     }
 
     return false;
   }
-  
+
+  @Override
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
-    
+
     //No subjects
     if(verbMap == null)
       return null;
-    
+
 //    final int translationId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
 //    boolean VERBOSE = (translationId == 14);
-    
+
     //Check for the last verb scored
     final int lastVerbIdx = (f.prior == null) ? -1 : (Integer) f.prior.getState(this);
-    final int thisVerbIdx = (lastVerbIdx + 1 < orderedVerbs.size()) ? 
+    final int thisVerbIdx = (lastVerbIdx + 1 < orderedVerbs.size()) ?
         orderedVerbs.get(lastVerbIdx + 1) : -1;
     if(thisVerbIdx == -1)
       return null; //We're done
-    
+
     //Score as soon as the verb is laid down
     if(f.hyp.foreignCoverage.get(thisVerbIdx)) {
-      
+
       List<Triple<Integer,Integer,Double>> subjectAnalyses = verbMap.get(thisVerbIdx);
       if(subjectAnalyses == null)
-        throw new RuntimeException(String.format("%s: No subjects for verb idx (%d)",thisVerbIdx));
-      
+        throw new RuntimeException(String.format("%s: No subjects for verb idx (%d)", FEATURE_NAME, thisVerbIdx));
+
       Triple<Integer,Integer,Double> nullAnalysis = null;
       double logProb = 0.0;
       for(Triple<Integer,Integer,Double> subject : subjectAnalyses) {
@@ -166,11 +167,11 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
       else
         return new FeatureValue<String>(FEATURE_NAME,defaultNullAnalysisLogProb);
     }
-    
+
     f.setState(this, lastVerbIdx);
 
     return null;
-    
+
       //WSGDEBUG
 //      if(VERBOSE) {
 //        System.err.printf("WSGDEBUG tId %d: Completed subject %d --> %d\n",translationId,lastSubjectVect,currentSubjectVect);
@@ -184,29 +185,30 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
 //          System.err.printf(" TransOpt: %s ||| %s\n", f.prior.foreignPhrase.toString(), f.prior.translatedPhrase.toString());
 //          System.err.printf(" cov: %s\n", f.prior.option.foreignCoverage.toString());
 //          System.err.printf(" hyp: %s\n", f.prior.partialTranslation.toString());
-//          System.err.printf(" hyp cov: %s\n", f.prior.hyp.foreignCoverage.toString());        
+//          System.err.printf(" hyp cov: %s\n", f.prior.hyp.foreignCoverage.toString());
 //        }
 //      }
   }
 
 
+  @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {
-    
+
     if(!sentenceToId.containsKey(foreign))
-      throw new RuntimeException(String.format("%s: No mapping found for sentence:\n%s\n",foreign.toString()));
-    
+      throw new RuntimeException(String.format("%s: No mapping found for sentence:\n%s\n", FEATURE_NAME, foreign.toString()));
+
     final int translationId = sentenceToId.get(foreign);
     List<ArabicKbestAnalysis> analyses = subjectBank.getAnalyses(translationId);
-    
+
     if(analyses != null) {
-      
+
       //Set the null analysis log prob and get the verbs
       Set<Integer> allVerbs = new HashSet<Integer>();
       double nullAnalRealAccumulator = 0.0;
       double minLogCRFScore = Integer.MAX_VALUE;
       double nullDenom = 0.0;
       for(ArabicKbestAnalysis anal : analyses) {
-        if(anal.subjects.keySet().size() == 0)
+        if (anal.subjects.keySet().isEmpty())
           nullAnalRealAccumulator += Math.exp(anal.logCRFScore);
         else {
           allVerbs.addAll(anal.verbs);
@@ -215,33 +217,33 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
         }
         nullDenom += Math.exp(anal.logCRFScore);
       }
-      
+
       if(nullAnalRealAccumulator == 0.0)
         defaultNullAnalysisLogProb = Math.log(nullAnalRealAccumulator) - Math.log(nullDenom);
       else //Some arbitrarily (low) score
         defaultNullAnalysisLogProb = (3.0 * minLogCRFScore) - Math.log(nullDenom);
-      
-      
+
+
       //Set the other probabilities (for each verb)
       verbMap = new HashMap<Integer,List<Triple<Integer,Integer,Double>>>(allVerbs.size());
-      
+
       for(int verbIdx : allVerbs) {
         Map<Pair<Integer,Integer>,Double> subjects = new HashMap<Pair<Integer,Integer>,Double>();
-        
+
         //Iterate over the analyses and compute the real-valued numerator(s) and
         //denominator
         double denom = 0.0;
         double nullNumerator = 0.0;
         for(ArabicKbestAnalysis anal : analyses) {
-          
+
           boolean noAnalysis = true;
           for(int gap = 1; gap <= verbGap; gap++) {
-            
+
             if(anal.subjects.containsKey(verbIdx + gap)) {
               denom += Math.exp(anal.logCRFScore);
               noAnalysis = true;
               Pair<Integer,Integer> thisSubj = new Pair<Integer,Integer>(verbIdx + gap, anal.subjects.get(verbIdx + gap));
-              
+
               if(subjects.containsKey(thisSubj)) {
                 double realScore = subjects.get(thisSubj);
                 realScore += Math.exp(anal.logCRFScore);
@@ -250,23 +252,23 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
                 subjects.put(thisSubj, Math.exp(anal.logCRFScore));
               }
               break;
-              
+
             }
           }
           if(noAnalysis)
             nullNumerator += Math.exp(anal.logCRFScore);
         }
-        
+
         //Now compute the log probabilities from the real values
         List<Triple<Integer,Integer,Double>> probList = new ArrayList<Triple<Integer,Integer,Double>>(subjects.keySet().size());
-        
+
         //Check for null analyses
         if(nullNumerator != 0.0) {
           double logProb = Math.log(nullNumerator) - Math.log(denom);
           Triple<Integer,Integer,Double> nullAnal = new Triple<Integer,Integer,Double>(-1,-1,logProb);
           probList.add(nullAnal);
         }
-        
+
         //Iterate over the other analyses
         for(Map.Entry<Pair<Integer,Integer>, Double> subject : subjects.entrySet()) {
           double logProb = Math.log(subject.getValue()) - Math.log(denom);
@@ -274,23 +276,26 @@ public class ArabicVSOkbestFeaturizer extends StatefulFeaturizer<IString,String>
           Triple<Integer,Integer,Double> finalSubj = new Triple<Integer,Integer,Double>(span.first(),span.second(),logProb);
           probList.add(finalSubj);
         }
-        
+
         verbMap.put(verbIdx, probList);
       }
-      
+
       orderedVerbs = new ArrayList<Integer>(verbMap.keySet());
       Collections.sort(orderedVerbs);
     }
-      
+
   }
-  
+
   @Override
   public ArabicVSOkbestFeaturizer clone() throws CloneNotSupportedException {
     return (ArabicVSOkbestFeaturizer)super.clone();
   }
 
   // Unused but required methods
+  @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) { return null; }
+
+  @Override
   public void reset() {}
 
 }
