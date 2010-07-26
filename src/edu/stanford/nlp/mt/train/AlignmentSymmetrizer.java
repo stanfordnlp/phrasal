@@ -225,7 +225,7 @@ public class AlignmentSymmetrizer {
     if (args.length != 3) {
       System.err.printf
        ("Usage: java %s (en-fr.A3) (fr-en.A3) (symmetrization heuristic)\n",
-           GIZAWordAlignment.class.getName());
+           AlignmentSymmetrizer.class.getName());
       System.exit(-1);
     }
     String type = args[2];

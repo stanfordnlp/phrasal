@@ -4,7 +4,6 @@ import java.util.TreeSet;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.io.FileUtils;
 
 import edu.stanford.nlp.mt.base.IString;
@@ -116,7 +115,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
            ("with indices: ("+fpos+")["+f.get(fpos)+"] -> ("+epos+")["+e.get(epos)+"]");
         }
       } else {
-        System.err.println("Warning: bad alignment token: "+al);
+        System.err.printf("Warning: bad alignment token: <%s>\n",al);
       }
     }
     if (addBoundaryMarkers && !unalignedBoundaryMarkers) {

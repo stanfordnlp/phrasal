@@ -47,6 +47,11 @@ public class AbstractWordAlignment implements WordAlignment {
     this.f2e = f2e; this.e2f = e2f;
   }
 
+  public void reverse() {
+    Sequence<IString> tmpS = f; f = e; e = tmpS;
+    SortedSet<Integer>[] tmpSS = f2e; f2e = e2f; e2f = tmpSS;
+  }
+
   public Integer getId() { return id; }
 
   public Sequence<IString> f() { return f; }

@@ -226,11 +226,11 @@ public class PhraseExtract {
     eCorpus = prop.getProperty(E_CORPUS_OPT);
 
     // Alignment arguments:
-    symmetrizationType = SymmetrizationType.valueOf(prop.getProperty(SYMMETRIZE_OPT, "none"));
+    symmetrizationType = SymmetrizationType.valueOf(prop.getProperty(SYMMETRIZE_OPT, "none").replace('-','_'));
     alignCorpus = prop.getProperty(A_CORPUS_OPT);
     if (alignCorpus == null) {
-      alignCorpus = prop.getProperty(A_EF_CORPUS_OPT);
-      alignInvCorpus = prop.getProperty(A_FE_CORPUS_OPT);
+      alignCorpus = prop.getProperty(A_FE_CORPUS_OPT);
+      alignInvCorpus = prop.getProperty(A_EF_CORPUS_OPT);
       if (symmetrizationType == SymmetrizationType.none)
         throw new RuntimeException("You need to specify a symmetrization heuristic with GIZA input.");
     }
@@ -276,7 +276,7 @@ public class PhraseExtract {
 
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if (exsString == null || exsString.equals("") || exsString.equals("moses"))
-      exsString = "edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor";
+      exsString = MosesFeatureExtractor.class.getName()+":"+LexicalReorderingFeatureExtractor.class.getName();
 
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
@@ -288,17 +288,17 @@ public class PhraseExtract {
     for (String exStr : exsString.split(":")) {
       try {
         AbstractFeatureExtractor fe;
-        String[] extractorAndInfofile = exStr.split("=");
+        String[] extractorAndInfoFile = exStr.split("=");
         String infoFilename = null;
 
         // if the extractor string contains "=", then assume 
         // that A in A=B is the extractor class name, and 
         // B is an "info" file with same number of lines as sentence pairs.
-        if (extractorAndInfofile.length==2) {
-          infoFilename = extractorAndInfofile[1];
-          exStr = extractorAndInfofile[0];
+        if (extractorAndInfoFile.length==2) {
+          infoFilename = extractorAndInfoFile[1];
+          exStr = extractorAndInfoFile[0];
           System.err.printf("File read by extractor %s: %s.\n", exStr, infoFilename);
-        } else if (extractorAndInfofile.length!=1) {
+        } else if (extractorAndInfoFile.length!=1) {
           throw new RuntimeException("extractor argument format error");
         }
         
@@ -323,9 +323,7 @@ public class PhraseExtract {
         System.err.println("New class instance: "+fe.getClass());
 
       } catch (Exception e) {
-        e.printStackTrace();
-        usage();
-        System.exit(1);
+        throw new RuntimeException(e);
       }
     }
     //int maxCrossings = Integer.parseInt(prop.getProperty(MAX_INCONSISTENCIES_OPT,"-1"));
@@ -484,13 +482,14 @@ public class PhraseExtract {
             String fe1 = aInvReader.readLine(); String fe2 = aInvReader.readLine(); String fe3 = aInvReader.readLine();
             GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2, fe3, ef1, ef2, ef3);
             SymmetricalWordAlignment symAlign = AlignmentSymmetrizer.symmetrize(gizaAlign, symmetrizationType);
-            aLine = symAlign.toString();
+            symAlign.reverse();
+            aLine = symAlign.toString().trim();
           } else {
             aLine = aReader.readLine();
             if (aLine == null) throw new IOException("Alignment file is too short!");
-            if (aLine.equals(""))
-              continue;
           }
+          if (aLine.equals(""))
+            continue;
 
           // Read line with extra/custom information:
           if (nThreads == 0) {
