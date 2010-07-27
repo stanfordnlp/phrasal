@@ -73,10 +73,10 @@ public class MERT extends Thread {
   static final Set<String> generativeFeatures = SSVMScorer
           .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
 
-  public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.METEORMetric";
-  public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.TERMetric";
-  public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.TERpMetric";
-  public static final String OTER_CLASS_NAME = "edu.stanford.nlp.mt.OriginalTERMetric";
+  public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.metrics.METEORMetric";
+  public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERMetric";
+  public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERpMetric";
+  public static final String OTER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.OriginalTERMetric";
 
 	public static final String DEBUG_PROPERTY = "MERTDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));

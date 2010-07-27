@@ -99,7 +99,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     }
     for(String al : aStr.split("\\s+")) {
       String[] els = al.split("-");
-      if(els.length == 2) {
+      if (els.length == 2) {
         int fpos = reverse ? Integer.parseInt(els[1]) : Integer.parseInt(els[0]);
         int epos = reverse ? Integer.parseInt(els[0]) : Integer.parseInt(els[1]);
         if (oneIndexed) { --fpos; --epos; }
@@ -158,16 +158,16 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
 	static double computeAER(SymmetricalWordAlignment[] ref, SymmetricalWordAlignment[] hyp) {
 		int tpC = 0, refC = 0, hypC = 0;
     double totalPrec = 0.0, totalRecall = 0.0, totalF = 0.0;
-    if(ref.length != hyp.length)
+    if (ref.length != hyp.length)
      throw new RuntimeException("Not same number of aligned sentences!");
-    for(int i=0; i<ref.length; ++i) {
+    for (int i=0; i<ref.length; ++i) {
       int _tpC = 0, _refC = 0, _hypC = 0;
       SymmetricalWordAlignment r = ref[i], h = hyp[i];
       assert(r.f().equals(h.f()));
       assert(r.e().equals(h.e()));
-      for(int j=0; j<r.fSize(); ++j) {
-        for(int k : r.f2e(j)) {
-          if(h.f2e(j).contains(k))
+      for (int j=0; j<r.fSize(); ++j) {
+        for (int k : r.f2e(j)) {
+          if (h.f2e(j).contains(k))
             ++_tpC;
         }
         _refC += r.f2e(j).size();
@@ -182,7 +182,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       totalPrec += _prec;
       totalRecall += _recall;
       totalF += _f;
-      if(DEBUG) {
+      if (DEBUG) {
         int len = r.f().size()+r.e().size();
         System.err.printf("sent\t%d\t%g\t%g\t%g\n", len, _prec, _recall, _f);
       }
@@ -190,7 +190,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     double prec = tpC*1.0/hypC;
     double recall = tpC*1.0/refC;
     double fMeasure = 2*prec*recall/(prec+recall);
-    if(DEBUG) {
+    if (DEBUG) {
       System.err.printf("micro: Precision = %.3g, Recall = %.3g, F = %.3g (TP=%d, HC=%d, RC=%d)\n", 
         prec, recall, fMeasure, tpC, hypC, refC);
       System.err.printf("macro: Precision = %.3g, Recall = %.3g, F = %.3g\n",
@@ -222,7 +222,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
         }
 			}
 		}
-    if(h==null)
+    if (h==null)
       throw new RuntimeException("Error in alignment file");
     return h.getIBMWordAlignment();
   }

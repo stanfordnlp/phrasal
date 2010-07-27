@@ -28,6 +28,7 @@
 package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.mt.tools.Interpreter;
+import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
@@ -57,6 +58,7 @@ public class PhraseExtract {
   // rather than int[] (since SimpleSequence).
 
   static public final String CONFIG_OPT = "config";
+  static public final String INPUT_DIR_OPT = "inputDir";
   static public final String F_CORPUS_OPT = "fCorpus";
   static public final String E_CORPUS_OPT = "eCorpus";
   static public final String A_CORPUS_OPT = "align";
@@ -106,7 +108,7 @@ public class PhraseExtract {
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT));
     OPTIONAL_OPTS.addAll(Arrays.asList(
-       A_CORPUS_OPT, A_EF_CORPUS_OPT, A_FE_CORPUS_OPT, SYMMETRIZE_OPT,
+       A_CORPUS_OPT, A_EF_CORPUS_OPT, A_FE_CORPUS_OPT, SYMMETRIZE_OPT, INPUT_DIR_OPT,
        FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT,
        SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT, EXTRACTORS_OPT,
        AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT,
@@ -200,6 +202,26 @@ public class PhraseExtract {
       }
     }
 
+    // UCB aligner input dir:
+    if (prop.containsKey(INPUT_DIR_OPT)) {
+      String inputDir = prop.getProperty(INPUT_DIR_OPT);
+      String fId=null, eId=null, cFile = inputDir+"/options.map";
+      for (String line : ObjectBank.getLineIterator(cFile)) {
+        String[] els = line.split("\\t");
+        if (els[0].equals("Data.foreignSuffix")) {
+          fId = els[1];
+        } else if(els[0].equals("Data.englishSuffix")) {
+          eId = els[1];
+        }
+      }
+      if (fId == null || eId == null)
+        throw new RuntimeException("Didn't find language identifiers in: "+cFile);
+      prop.setProperty(F_CORPUS_OPT,inputDir+"/training."+fId);
+      prop.setProperty(E_CORPUS_OPT,inputDir+"/training."+eId);
+      prop.setProperty(A_EF_CORPUS_OPT,inputDir+"/training."+fId+"-"+eId+".A3");
+      prop.setProperty(A_FE_CORPUS_OPT,inputDir+"/training."+eId+"-"+fId+".A3");
+    }
+
     // Check required, optional properties:
     System.err.println("properties: "+prop.toString());
     if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
@@ -217,14 +239,14 @@ public class PhraseExtract {
       throw new RuntimeException
         (String.format("The following fields are unrecognized: %s\n", extraFields));
     }
-    
+
     // Analyze props:
     // Mandatory arguments:
     fCorpus = prop.getProperty(F_CORPUS_OPT);
     eCorpus = prop.getProperty(E_CORPUS_OPT);
 
     // Alignment arguments:
-    symmetrizationType = SymmetrizationType.valueOf(prop.getProperty(SYMMETRIZE_OPT, "none").replace('-','_'));
+    symmetrizationType = SymmetrizationType.valueOf(prop.getProperty(SYMMETRIZE_OPT, "grow-diag").replace('-','_'));
     alignCorpus = prop.getProperty(A_CORPUS_OPT);
     if (alignCorpus == null) {
       alignCorpus = prop.getProperty(A_FE_CORPUS_OPT);
@@ -379,16 +401,14 @@ public class PhraseExtract {
     public void run() {
       System.err.printf("Starting thread %s...\n", this);
       try {
-        while(!dataQueue.isEmpty() || !ex.doneReadingData()) {
+        while (!dataQueue.isEmpty() || !ex.doneReadingData()) {
           Pair<Integer, String[]> p = dataQueue.poll();
           if(p != null) {
             String[] lines = p.second();
-            //System.err.printf("Processing line %d.\n", p.first());
             ex.processLine(phraseEx, p.first(), sent, lines[0], lines[1], lines[2], lines[3]);
           }
-          //System.err.printf("done reading: %s size: %d\n", ex.doneReadingData(), dataQueue.size());
         }
-      } catch(IOException e) {
+      } catch (IOException e) {
         throw new RuntimeException(e);
       }
       System.err.printf("Ending thread %s.\n", this);
@@ -473,20 +493,24 @@ public class PhraseExtract {
           if (eLine == null) throw new IOException("Target-language corpus is too short!");
           String pLine = pReader == null ? null : pReader.readLine();
 
+          boolean skipLine = (fLine.isEmpty() || eLine.isEmpty());
+
           // Read alignment:
-          String aLine;
+          String aLine=null;
           if (symmetrizationType != SymmetrizationType.none) {
             String ef1 = aReader.readLine(); String ef2 = aReader.readLine(); String ef3 = aReader.readLine();
             String fe1 = aInvReader.readLine(); String fe2 = aInvReader.readLine(); String fe3 = aInvReader.readLine();
-            GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2, fe3, ef1, ef2, ef3);
-            SymmetricalWordAlignment symAlign = AlignmentSymmetrizer.symmetrize(gizaAlign, symmetrizationType);
-            symAlign.reverse();
-            aLine = symAlign.toString().trim();
+            if (!skipLine) {
+              GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2, fe3, ef1, ef2, ef3);
+              SymmetricalWordAlignment symAlign = AlignmentSymmetrizer.symmetrize(gizaAlign, symmetrizationType);
+              symAlign.reverse();
+              aLine = symAlign.toString().trim();
+            }
           } else {
             aLine = aReader.readLine();
             if (aLine == null) throw new IOException("Alignment file is too short!");
           }
-          if (aLine.equals(""))
+          if (skipLine || aLine.isEmpty())
             continue;
 
           // Read line with extra/custom information:
