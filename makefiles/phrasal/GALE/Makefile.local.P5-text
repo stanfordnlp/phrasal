@@ -24,8 +24,7 @@ REFS=/scr/nlp/data/gale4/P4-arabic/refs
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-GENRE=-nw
-TESTID=mt08$(GENRE)
+TESTID=mt08
 
 ### References:
 DEV_REF=$(REFS)/$(DEVID)/tune
@@ -82,7 +81,7 @@ MEMSIZE=45000m
 # Phrasal decoding:
 PMEMSIZE=17000m
 # MERT:
-MMEMSIZE=15600m
+MMEMSIZE=17000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -104,7 +103,7 @@ SPLIT=-split 1
 #########################################
 
 PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen) 
-POST=post-$(GENRE).sh
+POST=GALE/post-$(GENRE).sh
 TC=en_truecaser 
 NTC=en_detokenizer
 POSTTC=en_fix_detokenizer
@@ -125,7 +124,7 @@ DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djav
 #########################################
 
 PROC=8
-PM=phrasal-mert.pl --opt-flags="-o koehn+cer -t $(PROC) -p 8" --history-size=3
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t $(PROC) -p 8"
 
 #########################################
 # Extension of input files:

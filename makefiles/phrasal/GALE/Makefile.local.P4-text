@@ -24,7 +24,6 @@ REFS=/scr/nlp/data/gale4/P4-arabic/refs
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-#DEVID=tune-speech
 GENRE=-nw
 TESTID=mt08$(GENRE)
 
@@ -79,12 +78,8 @@ XOPTS=-threads 4 -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu
 
 ### How much memory for Java and sort:
 MEMSIZE=45000m
-PMEMSIZE=17000m
-PMEMSIZE_BM=17000m
-MMEMSIZE=15600m
-#MEMSIZE=15000m
-#PMEMSIZE=29000m
-#PMEMSIZE_BM=29000m
+PMEMSIZE=15000m
+MMEMSIZE=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -106,7 +101,7 @@ SPLIT=-split 1
 #########################################
 
 PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen) 
-POST=post-$(GENRE).sh
+POST=GALE/post-$(GENRE).sh
 TC=en_truecaser 
 NTC=en_detokenizer
 POSTTC=en_fix_detokenizer
@@ -127,7 +122,7 @@ DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djav
 #########################################
 
 PROC=8
-PM=phrasal-mert.pl --opt-flags="-o koehn+cer -t $(PROC) -p 8"
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t $(PROC) -p 8"
 
 #########################################
 # Extension of input files:

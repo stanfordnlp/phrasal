@@ -108,7 +108,7 @@ POST=remove_unk
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert.pl --opt-flags="-o koehn+cer -t $(PROC) -F -p 8"
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t 4 -p 4"
 
 #########################################
 # Extension of input files:

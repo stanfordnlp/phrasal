@@ -78,8 +78,8 @@ MINP=1e-4
 
 ### How much memory for Java:
 MEMSIZE=15000m
+MMEMSIZE=15000m
 PMEMSIZE=15000m
-PMEMSIZE_BM=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -114,7 +114,8 @@ POST=perl $(SCRIPTS)/remove_unk | en_truecaser
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert.pl
+PROC=4
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t $(PROC) -p 8"
 
 #########################################
 # Extension of input files:
@@ -123,7 +124,7 @@ PM=phrasal-mert.pl
 #########################################
 
 IE=prep
-FE=prep
+FE=unk
 
 #########################################
 # LM filtering script:

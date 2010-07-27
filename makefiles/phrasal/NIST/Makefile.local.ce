@@ -31,13 +31,8 @@ TRAIN=/scr/nlp/data/gale2/NIST_EVAL08/nist_eval_giza/fixed
 ### Unfiltered Gigaword LM:
 GIGA=/scr/nlp/data/gale2/NIST_EVAL08/LM/releases/w23wo56/mt_giga3_afp_xin.1233.lm.gz
 
-### Count-based Google LM:
-GOOGLE_CT=/scr/nlp/data/gale2/NIST_EVAL08/GoogleNgrams-ibm
-GOOGLE_LM=/scr/nlp/data/gale2/NIST_EVAL08/LM/google/google.countlm.3 
-
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-#TESTID=mt05
 TESTID=mt08
 
 ### Directory containing reference translations:
@@ -84,8 +79,8 @@ MINP=1e-4
 
 ### How much memory for Java:
 MEMSIZE=22000m
+MMEMSIZE=22000m
 PMEMSIZE=22000m
-PMEMSIZE_BM=22000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -120,7 +115,8 @@ POST=perl $(SCRIPTS)/remove_unk | en_truecaser
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert.pl
+PROC=8
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t $(PROC) -p 8"
 
 #########################################
 # Extension of input files:

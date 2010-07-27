@@ -29,10 +29,6 @@ TRAIN=/scr/nlp/data/gale/MichelMTsystem/mt-experiments/ar-en.reorder
 ### Unfiltered LMs:
 GIGA=/scr/nlp/data/gale2/ARABIC_LM/releases/mt_giga3_afp_xin.1233.unk.lm.gz
 
-### Count-based Google LM:
-GOOGLE_CT=/scr/nlp/data/gale2/GoogleNgrams
-GOOGLE_LM=/scr/nlp/data/gale2/ARABIC_LM/google/google.countlm.3 
-
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
 TESTID=mt05
@@ -81,8 +77,8 @@ MINP=1e-4
 
 ### How much memory for Java:
 MEMSIZE=15000m
+MMEMSIZE=15000m
 PMEMSIZE=15000m
-PMEMSIZE_BM=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -117,7 +113,8 @@ POST=perl $(SCRIPTS)/remove_unk
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert.pl
+PROC=8
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t $(PROC) -p 8"
 
 #########################################
 # Extension of input files:
@@ -125,7 +122,7 @@ PM=phrasal-mert.pl
 # prep : with preprocessing
 #########################################
 
-IE=unk
+IE=prep
 FE=unk
 
 #########################################
