@@ -73,9 +73,9 @@ MINP=1e-4
 #########################################
 
 ### How much memory for Java:
-MEMSIZE=15000m
-MMEMSIZE=15000m
-PMEMSIZE=11000m
+MEMSIZE=19000m
+MMEMSIZE=19000m
+PMEMSIZE=15000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -97,8 +97,6 @@ SPLIT=-split 2
 #########################################
 
 HOST=`hostname -s`
-#CP=-cp /scr/mgalley/mirror/main/javanlp/projects/core/classes:/scr/mgalley/mirror/main/javanlp/projects/mt/classes:/scr/mgalley/mirror/main/javanlp/projects/more/classes:$(CLASSPATH) 
-#-DPrintTranslationOptions=true 
 DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DDTUDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -XX:+UseCompressedOops
 
 PHRASAL_ARGS=-moses-n-best-list true
@@ -136,8 +134,7 @@ LM_FILTER_SCRIPT=filter_lm_unigram
 # Size of nbest list (test time):
 #########################################
 
-N=200
+N=500
 
 CLASS=ibm2noclass
-
-#include Makefile.extra
+JAVA=java
