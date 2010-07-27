@@ -75,14 +75,14 @@ svn co svn+ssh://jacob.stanford.edu/u/nlp/svnroot/trunk/javanlp/projects/mt/make
 cd 03-phrasal
 
 ### Symlink configuration files:
-ln -s GALE/Makefile.local.P5-text Makefile.local
-ln -s GALE/P5-ae-text-hier2-d5.ini
-ln -s GALE/P5-ae-audio-hier2-d5.ini
+ln -fs GALE/Makefile.local.P5-text Makefile.local
+ln -fs GALE/P5-ae-text-hier2-d5.ini
+ln -fs GALE/P5-ae-audio-hier2-d5.ini
 
 ### Symlink tuning sets (MT06 for text; "tune-speech" 
 ### puts together most speech sources in NIST data):
-ln -s /scr/gale/AE-MT-eval-data/GALE/P5-select/mt06.sgm
-ln -s GALE/tune-speech.unk
+ln -fs /scr/gale/AE-MT-eval-data/GALE/P5-select/mt06.sgm
+ln -fs GALE/tune-speech.unk
 
 ### Train Google LM:
 make google.3gram.kn.lm.bin
@@ -91,9 +91,38 @@ make google.3gram.kn.lm.bin
 make train
 
 ### Tune system for speech genres (bc and bn):
-ln -s -f GALE/Makefile.local.P5-audio Makefile.local
+ln -fs GALE/Makefile.local.P5-audio Makefile.local
 make train
 
-# evaluation on unseen data:
-# Run GALE evaluation scripts (TER-BLEU)
-# make train nbest
+### Evaluation on unseen data:
+### (Note that files to translate for GALE
+### are in: /scr/gale/P5-arabic/00-references/source/ready-for-mt-atb-v3.1)
+
+### Symlink test sets:
+### nw:
+REFS=/scr/gale/P5-arabic/00-references/source/ready-for-mt-atb-v3.1
+ln -fs $REFS/mt08_arabic_evalset_current_v0-nw.atb-v3.1.unk.split.sgm mt08-nw.sgm
+ln -fs $REFS/mt09_arabic_evalset_current_v0_nw-unseq.atb-v3.1.unk.split.sgm mt09-nw.sgm
+ln -fs $REFS/GALE-DEV09-arabic-text-nw-syscomtune.atb-v3.1.unk.split.sgm dev09-nw-syscomtune.sgm
+ln -fs $REFS/GALE-DEV09-arabic-text-nw-testonly.atb-v3.1.unk.split.sgm dev09-nw-testonly.sgm
+### wb:
+ln -fs $REFS/mt08_arabic_evalset_current_v0-wb.spell.atb-v3.1.unk.split.sgm mt08-wb.sgm
+ln -fs $REFS/GALE-DEV08-arabic-text-wb.spell.atb-v3.1.unk.split.sgm dev08-wb.sgm
+ln -fs $REFS/GALE-DEV09-arabic-text-wb-testonly.spell.atb-v3.1.unk.split.sgm dev09-wb-testonly.sgm 
+ln -fs $REFS/GALE-DEV09-arabic-text-wb-syscomtune.spell.atb-v3.1.unk.split.sgm dev09-wb-syscomtune.sgm 
+### bc:
+ln -fs $REFS/GALE-DEV07-arabic-asrout-bc-nov26.spell.atb-v3.1.unk.split.sgm dev07-bc.sgm
+ln -fs $REFS/GALE-DEV08-arabic-asrout-nov08-bc.spell.atb-v3.1.unk.split.sgm dev08-bc.sgm
+ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bc-syscomtune.spell.atb-v3.1.unk.split.sgm dev09-bc-syscomtune.sgm
+ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bc-testonly.spell.atb-v3.1.unk.split.sgm dev09-bc-testonly.sgm
+### bn:
+ln -fs $REFS/GALE-DEV07-arabic-asrout-bn-nov26.spell.atb-v3.1.unk.split.sgm dev07-bn.sgm 
+ln -fs $REFS/GALE-DEV08-arabic-asrout-nov08-bn.spell.atb-v3.1.unk.split.sgm dev08-bn.sgm
+ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bn-syscomtune.spell.atb-v3.1.unk.split.sgm dev09-bn-syscomtune.sgm
+ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bn-testonly.spell.atb-v3.1.unk.split.sgm dev09-bn-testonly.sgm
+
+### Run system on test data, which involves creating a phrase table:
+### (in order to decode testid.sgm, simply set TESTID=testid)
+make sgml TESTID=dev09-nw-syscomtune GENRE=nw
+
+# Run GALE evaluation scripts (TER-BLEU):

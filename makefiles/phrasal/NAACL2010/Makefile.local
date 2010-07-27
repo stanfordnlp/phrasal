@@ -115,7 +115,7 @@ POST=phrasal_sort | perl $(SCRIPTS)/remove_unk | java -cp /scr/nlp/data/gale3/NI
 # (in case you run a customized version)
 #########################################
 
-PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -t 4 -p 16" --history-size=3
+PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t 4 -p 16"
 
 #########################################
 # Extension of input files:
