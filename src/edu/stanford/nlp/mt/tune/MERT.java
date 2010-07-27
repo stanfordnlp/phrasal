@@ -29,13 +29,10 @@ package edu.stanford.nlp.mt.tune;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.util.*;
-import edu.stanford.nlp.mt.metrics.*;
-import edu.stanford.nlp.mt.metrics.ter.TERcalc;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -43,6 +40,19 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
+
+import edu.stanford.nlp.mt.metrics.BLEUMetric;
+import edu.stanford.nlp.mt.metrics.NISTMetric;
+import edu.stanford.nlp.mt.metrics.PERMetric;
+import edu.stanford.nlp.mt.metrics.WERMetric;
+import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.AbstractMetric;
+import edu.stanford.nlp.mt.metrics.AbstractTERMetric;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.metrics.IncrementalNBestEvaluationMetric;
+import edu.stanford.nlp.mt.metrics.LinearCombinationMetric;
+import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 
 /**
  * Minimum Error Rate Training (MERT).
@@ -64,6 +74,9 @@ public class MERT extends Thread {
           .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
 
   public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.METEORMetric";
+  public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.TERMetric";
+  public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.TERpMetric";
+  public static final String OTER_CLASS_NAME = "edu.stanford.nlp.mt.OriginalTERMetric";
 
 	public static final String DEBUG_PROPERTY = "MERTDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -90,13 +103,12 @@ public class MERT extends Thread {
   static public double MIN_PLATEAU_DIFF = 0.0;
   static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 
-  public static final int DEFAULT_TER_BEAM_WIDTH = 5; // almost as good as 20
-  public static final int DEFAULT_TER_SHIFT_DIST = 12; // Yaser suggested 10; I set it to 2*dlimit = 12
-
   private static long SEED = 8682522807148012L;
   private static Random globalRandom;
 
   final static OAIndex<String> featureIndex = new OAIndex<String>();
+
+  private static int nThreads = 1;
 
   public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
@@ -341,7 +353,7 @@ public class MERT extends Thread {
     // check eval score at each intercept;
     double bestEval = Double.NEGATIVE_INFINITY;
     //Counter<String> bestWts = initialWts;
-    if (intercepts.size() == 0)
+    if (intercepts.isEmpty())
       return initialWts;
     intercepts.add(Double.NEGATIVE_INFINITY);
     Collections.sort(intercepts);
@@ -741,7 +753,7 @@ public class MERT extends Thread {
           if (score < minReachableScore)
             minReachableScore = score;
         }
-				if(nbestlist.size() == 0)
+				if(nbestlist.isEmpty())
 					throw new RuntimeException(String.format("Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n", lI));
         System.err.printf("l %d - min reachable score: %f (orig size: %d)\n",
                 lI, minReachableScore, nbestlist.size());
@@ -836,24 +848,16 @@ public class MERT extends Thread {
     // METEORMetric created using reflection:
     AbstractMetric<IString,String> meteorMetric = null;
     if (evalMetric.contains("meteor")) {
-      try {
-        Class<AbstractMetric<IString,String>> cls = (Class<AbstractMetric<IString,String>>)Class.forName(METEOR_CLASS_NAME);
-        double alpha = 0.95, beta = 0.5, gamma = 0.5;
-        if (fields.length > 1) {
-          assert (fields.length == 4);
-          alpha = Double.parseDouble(fields[1]);
-          beta = Double.parseDouble(fields[2]);
-          gamma = Double.parseDouble(fields[3]);
-        }
-        Constructor<AbstractMetric<IString,String>> ct =
-          cls.getConstructor(new Class[] { List.class, Double.class, Double.class, Double.class});
-        meteorMetric = ct.newInstance(references, alpha, beta, gamma);
+      double alpha = 0.95, beta = 0.5, gamma = 0.5;
+      if (fields.length > 1) {
+        assert (fields.length == 4);
+        alpha = Double.parseDouble(fields[1]);
+        beta = Double.parseDouble(fields[2]);
+        gamma = Double.parseDouble(fields[3]);
       }
-      catch (ClassNotFoundException e) { e.printStackTrace(); }
-      catch (NoSuchMethodException e) { e.printStackTrace(); }
-      catch (IllegalAccessException e) { e.printStackTrace(); }
-      catch (InstantiationException e) { e.printStackTrace(); }
-      catch (InvocationTargetException e) { e.printStackTrace(); }
+      meteorMetric = createMetric(METEOR_CLASS_NAME,
+          new Class[] { List.class, Double.class, Double.class, Double.class},
+          new Object[] { references, alpha, beta, gamma });
     }
 
 		if (evalMetric.equals("bleu:3-2terp")) {
@@ -861,31 +865,44 @@ public class MERT extends Thread {
       double terW = 2.0;
       emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU),
-                      new TERpMetric<IString, String>(references, 5, 10));
+                      createMetric(TERP_CLASS_NAME, 
+                                   new Class[] { List.class, Integer.class, Integer.class },
+                                   new Object[] { references, 5, 10 }));
+                      //new TERpMetric<IString, String>(references, 5, 10));
       System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("bleu:3-terp")) {
       int BLEUOrder = 3;
       double terW = 1.0;
-      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU),
-                      new TERpMetric<IString, String>(references));
+                      createMetric(TERP_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
+                      //new TERpMetric<IString, String>(references));
       System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.equals("terp")) {
-      emetric = new TERpMetric<IString, String>(references);
+      emetric = createMetric(TERP_CLASS_NAME, new Class[] { List.class }, new Object[] { references });
+      //emetric = new TERpMetric<IString, String>(references);
     } else if (evalMetric.equals("terpa")) {
-      emetric = new TERpMetric<IString, String>(references, false, true);
+      emetric = createMetric(TERP_CLASS_NAME,
+                             new Class[] { List.class, Boolean.class, Boolean.class },
+                             new Object[] { references, Boolean.FALSE, Boolean.TRUE });
+      //emetric = new TERpMetric<IString, String>(references, false, true);
     } else if (evalMetric.equals("meteor") || evalMetric.startsWith("meteor:")) {
       emetric = meteorMetric;
     } else if (evalMetric.equals("ter") || evalMetric.startsWith("ter:")) {
-      TERMetric<IString,String> termetric = new TERMetric<IString, String>(references);
-      setFastTER(termetric.calc);
+      AbstractTERMetric<IString,String> termetric = (AbstractTERMetric<IString,String>) (
+         nThreads > 1 ?
+           createMetric(TER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }) :
+           createMetric(OTER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
+           //new TERMetric<IString, String>(references) :
+           //new OriginalTERMetric<IString, String>(references);
+      termetric.enableFastTER();
       if (fields.length > 1) {
         int beamWidth = Integer.parseInt(fields[1]);
-        termetric.calc.setBeamWidth(beamWidth);
+        termetric.setBeamWidth(beamWidth);
         System.err.printf("TER beam width set to %d (default: 20)\n",beamWidth);
         if (fields.length > 2) {
           int maxShiftDist = Integer.parseInt(fields[2]);
-          termetric.calc.setShiftDist(maxShiftDist);
+          termetric.setShiftDist(maxShiftDist);
           System.err.printf("TER maximum shift distance set to %d (default: 50)\n",maxShiftDist);
         }
       }
@@ -907,7 +924,8 @@ public class MERT extends Thread {
       }
       emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(references, smoothBLEU),
-                      new TERpMetric<IString, String>(references));
+                      createMetric(TERP_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
+                      //new TERpMetric<IString, String>(references));
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu+2meteor")) {
       emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, 2.0},
@@ -921,7 +939,10 @@ public class MERT extends Thread {
       }
       emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(references, smoothBLEU),
-                      new TERpMetric<IString, String>(references, false, true));
+                      createMetric(TERP_CLASS_NAME,
+                                   new Class[] { List.class, Boolean.class, Boolean.class }, 
+                                   new Object[] { references, Boolean.FALSE, Boolean.TRUE }));
+                      //new TERpMetric<IString, String>(references, false, true));
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {
       double terW = 1.0;
@@ -929,8 +950,13 @@ public class MERT extends Thread {
         assert(fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
-      TERMetric termetric = new TERMetric<IString, String>(references);
-      setFastTER(termetric.calc);
+      AbstractTERMetric<IString,String> termetric = (AbstractTERMetric<IString,String>) (
+          nThreads > 1 ?
+              createMetric(TER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }) :
+              createMetric(OTER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
+         //new TERMetric<IString, String>(references) :
+         //new OriginalTERMetric<IString, String>(references);
+      termetric.enableFastTER();
       emetric = new LinearCombinationMetric<IString, String>
               (new double[] {1.0, terW}, new BLEUMetric<IString, String>(references, smoothBLEU), termetric);
       System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n", evalMetric, terW);
@@ -941,15 +967,6 @@ public class MERT extends Thread {
     } else {
       emetric = null;
       throw new UnsupportedOperationException(String.format("Unrecognized metric: %s\n", evalMetric));
-    }
-  }
-
-  static void setFastTER(TERcalc calc) {
-    if (System.getProperty("fastTER") != null) {
-      System.err.println("beam width: "+ MERT.DEFAULT_TER_BEAM_WIDTH);
-      System.err.println("ter shift dist: "+ MERT.DEFAULT_TER_SHIFT_DIST);
-      calc.setBeamWidth(MERT.DEFAULT_TER_BEAM_WIDTH);
-      calc.setShiftDist(MERT.DEFAULT_TER_SHIFT_DIST);
     }
   }
 
@@ -1056,12 +1073,23 @@ public class MERT extends Thread {
   }
 
   @SuppressWarnings("unchecked")
+  private static AbstractMetric<IString,String> createMetric(String metricName, Class[] argClasses, Object[] args) {
+    AbstractMetric<IString,String> metric;
+    try {
+      Class<AbstractMetric<IString,String>> cls = (Class<AbstractMetric<IString,String>>)Class.forName(metricName);
+      Constructor<AbstractMetric<IString,String>> ct = cls.getConstructor(argClasses);
+      metric = ct.newInstance(args);
+    }
+    catch (Exception e) { throw new RuntimeException(e); }
+    return metric;
+  }
+
+  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {
 
     String optStr = "cer";
     String seedStr = "mert";
     int nStartingPoints = 5;
-    int nThreads = 1;
 
     int argi = 0;
     String arg;

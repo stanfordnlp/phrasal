@@ -81,8 +81,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       fStr = new StringBuffer("<s> ").append(fStr).append(" </s>").toString();
       eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
     }
-    f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
-    e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
+    synchronized (IString.class) {
+      f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(fStr.split("\\s+"))));
+      e = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(eStr.split("\\s+"))));
+    }
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse, boolean oneIndexed)

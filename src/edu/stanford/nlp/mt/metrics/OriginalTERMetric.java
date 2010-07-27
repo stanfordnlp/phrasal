@@ -16,26 +16,24 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
-import edu.stanford.nlp.mt.metrics.ter.TERcalc;
-import edu.stanford.nlp.mt.metrics.ter.TERalignment;
+import com.bbn.mt.ter.TERcalc;
+import com.bbn.mt.ter.TERalignment;
 
-public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
-
+public class OriginalTERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
   public static boolean VERBOSE = false;
 
-  public final TERcalc calc = new TERcalc();
-
   enum EditType { ins, del, sub, sft }
   boolean countEdits = false;
 
-  public TERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
+  @SuppressWarnings("unused")
+  public OriginalTERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;
     this.countEdits = countEdits;
   }
 
-  public TERMetric(List<List<Sequence<TK>>> referencesList) {
+  public OriginalTERMetric(List<List<Sequence<TK>>> referencesList) {
     this.referencesList = referencesList;
   }
 
@@ -78,7 +76,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 		
 			int totalWords = 0;
     	for (Sequence<TK> ref : refsSeq) {
-     	 TERalignment terAl = calc.TER(hyp, ref.toString());
+     	 TERalignment terAl = TERcalc.TER(hyp, ref.toString());
 				totalWords += terAl.numWords;
 			//System.err.printf("ter: %f\n", ter);
 			//System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits, terAl.numWords);
@@ -221,10 +219,6 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
       return new TERIncrementalMetric(this);
     }
 
-    public double insCount() { return editCounts[EditType.ins.ordinal()]; }
-    public double delCount() { return editCounts[EditType.del.ordinal()]; }
-    public double subCount() { return editCounts[EditType.sub.ordinal()]; }
-    public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
   }
 
   @SuppressWarnings("unchecked")
@@ -237,14 +231,14 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     VERBOSE = true;
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
-    TERMetric<IString,String> ter = new TERMetric<IString,String>(referencesList);
-    TERMetric<IString,String>.TERIncrementalMetric incMetric = ter.getIncrementalMetric();
+    OriginalTERMetric<IString,String> ter = new OriginalTERMetric<IString,String>(referencesList);
+    OriginalTERMetric<IString,String>.TERIncrementalMetric incMetric = ter.getIncrementalMetric();
 
     if (System.getProperty("fastTER") != null) {
       System.err.println("beam width: "+ DEFAULT_TER_BEAM_WIDTH);
       System.err.println("ter shift dist: "+ DEFAULT_TER_SHIFT_DIST);
-      ter.calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
-      ter.calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
+      TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
+      TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
     }
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
@@ -268,19 +262,19 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     if (System.getProperty("fastTER") != null) {
       System.err.println("beam width: "+ DEFAULT_TER_BEAM_WIDTH);
       System.err.println("ter shift dist: "+ DEFAULT_TER_SHIFT_DIST);
-      calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
-      calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
+      TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
+      TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
     }
   }
 
   @Override
   public void setBeamWidth(int beamWidth) {
-    calc.setBeamWidth(beamWidth);
+    TERcalc.setBeamWidth(beamWidth);
   }
 
   @Override
   public void setShiftDist(int maxShiftDist) {
-    calc.setShiftDist(maxShiftDist);
+    TERcalc.setShiftDist(maxShiftDist);
   }
 
 }

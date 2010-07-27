@@ -27,7 +27,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
   private String stringRep;
   public final int id;
 
-  private enum Classing { NONE, BACKSLASH, IBM }
+  private enum Classing { BACKSLASH, IBM }
   private static final Classing classing = Classing.IBM;
 
 
@@ -103,10 +103,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
     }
     IString istr = (IString)o;
     return this.id == istr.id;
-  }
-
-  public long longHashCode() {
-    return id;
   }
 
   @Override
@@ -207,10 +203,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
     }
 
     public void saveToFilename(String s) {
-      throw new UnsupportedOperationException();
-    }
-
-    public boolean isEmpty() {
       throw new UnsupportedOperationException();
     }
 
