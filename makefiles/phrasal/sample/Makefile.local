@@ -42,17 +42,17 @@ TEST_REF=$(REFS)/$(TESTID)$(TYPE)/chinese
 ALIGN=grow-diag
 
 ### Lexicalized re-ordering model identifier:
-LO_ID=msd-bidirectional-fe
+LO_ID=lo-hier.msd2-bidirectional-fe
 
 ### Parameters for lexicalized reordering model:
 ### (if empty, uses default)
-LO_ARGS=
+LO_ARGS=-hierarchicalOrientationModel true -orientationModelType msd2-bidirectional-fe
 
 ### Number of columns produced by lexicalized re-ordering extractor:
 LO_SZ=6
 
 ### Other options:
-XOPTS=-phrasalLexicalizedModel true -maxLen 500 -maxELen 500
+XOPTS=
 
 #########################################
 # Pruning:

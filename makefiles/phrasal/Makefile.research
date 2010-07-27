@@ -154,19 +154,19 @@ LEX_EXTRACT=$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.Phra
 
 ### for tuning set:
 $(DEVID).tables/lo-word.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalOrientationModel false 2> $@.log | gzip > $@
 $(DEVID).tables/lo-phrase.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalOrientationModel true  2> $@.log | gzip > $@
 $(DEVID).tables/lo-hier.%.gz: $(DEVID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalOrientationModel true  2> $@.log | gzip > $@
 
 ### for test set:
 $(TESTID).tables/lo-word.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel false 2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalOrientationModel false 2> $@.log | gzip > $@
 $(TESTID).tables/lo-phrase.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen $(maxPLen) -orientationModelType $(*F) -phrasalOrientationModel true  2> $@.log | gzip > $@
 $(TESTID).tables/lo-hier.%.gz: $(TESTID).$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN) $D
-	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalLexicalizedModel true  2> $@.log | gzip > $@
+	$(LEX_EXTRACT) -fFilterCorpus $< -extractors edu.stanford.nlp.mt.train.PhiFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor -maxLen 500        -orientationModelType $(*F) -phrasalOrientationModel true  2> $@.log | gzip > $@
 
 #############################################
 # Misc

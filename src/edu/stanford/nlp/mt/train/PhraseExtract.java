@@ -96,8 +96,8 @@ public class PhraseExtract {
 
   // lexicalized re-ordering models:
   static public final String LEX_REORDERING_TYPE_OPT = "orientationModelType";
-  static public final String LEX_REORDERING_PHRASAL_OPT = "phrasalLexicalizedModel";
-  static public final String LEX_REORDERING_HIER_OPT = "hierarchicalLexicalizedModel";
+  static public final String LEX_REORDERING_PHRASAL_OPT = "phrasalOrientationModel";
+  static public final String LEX_REORDERING_HIER_OPT = "hierarchicalOrientationModel";
   static public final String LEX_REORDERING_START_CLASS_OPT = "lexicalizedModelHasStart";
   static public final String LEX_REORDERING_2DISC_CLASS_OPT = "lexicalizedModelHas2Disc";
 
@@ -218,8 +218,9 @@ public class PhraseExtract {
         throw new RuntimeException("Didn't find language identifiers in: "+cFile);
       prop.setProperty(F_CORPUS_OPT,inputDir+"/training."+fId);
       prop.setProperty(E_CORPUS_OPT,inputDir+"/training."+eId);
-      prop.setProperty(A_EF_CORPUS_OPT,inputDir+"/training."+fId+"-"+eId+".A3");
-      prop.setProperty(A_FE_CORPUS_OPT,inputDir+"/training."+eId+"-"+fId+".A3");
+      prop.setProperty(A_CORPUS_OPT,inputDir+"/training.align");
+      //prop.setProperty(A_EF_CORPUS_OPT,inputDir+"/training."+fId+"-"+eId+".A3");
+      //prop.setProperty(A_FE_CORPUS_OPT,inputDir+"/training."+eId+"-"+fId+".A3");
     }
 
     // Check required, optional properties:
