@@ -18,7 +18,7 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
 
   public MosesPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    System.err.println("Using Moses phrase extractor (faster version).");
+    System.err.println("Using Moses phrase extractor (fast version).");
   }
 
   @Override

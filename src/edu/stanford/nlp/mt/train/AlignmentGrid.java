@@ -43,7 +43,7 @@ public class AlignmentGrid {
   @SuppressWarnings("unchecked")
 	public AlignmentGrid(int esize, int fsize) {
     alGridCells = new AlGridCell[MAX_SENT_LEN][MAX_SENT_LEN];
-    System.err.printf("AlignmentGrid: constructor (%d x %d).\n",MAX_SENT_LEN,MAX_SENT_LEN);
+    //System.err.printf("AlignmentGrid: constructor (%d x %d).\n",MAX_SENT_LEN,MAX_SENT_LEN);
     this.fsize = fsize;
     this.esize = esize;
     this.sent = null;

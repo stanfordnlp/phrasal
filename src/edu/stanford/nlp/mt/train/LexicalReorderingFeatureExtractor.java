@@ -52,14 +52,14 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     enabledTypes[ReorderingTypes.discont1.ordinal()] = true;
     // Type of reordering model:
     String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
-    System.err.println("reordering type: "+type);
+    System.err.println("Orientation type: "+type);
     String[] tokens = type.split("-");
     assert (2 <= tokens.length && tokens.length <= 3);
     // Type of extraction: word-phrase (Moses), phrase-phrase (Tillmann, etc), or hierarchical:
     phrasalReordering = Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_PHRASAL_OPT, "false"));
     boolean hierReordering = Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_HIER_OPT, "false"));
-    System.err.println("phrasal reordering: "+phrasalReordering);
-    System.err.println("hierarchical reordering: "+ hierReordering);
+    System.err.println("Phrasal orientation model: "+phrasalReordering);
+    System.err.println("Hierarchical orientation model: "+ hierReordering);
     if (hierReordering) {
       phrasalReordering = true;
     }
@@ -112,8 +112,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
       throw new UnsupportedOperationException("unknown model type: "+type);
     // Check whether the re-ordering model is a phrase-phrase ordering model rather than
     // the phrase-word ordering model of moses:
-    System.err.println("lexicalized reordering model: "+type);
-    System.err.println("direction type: "+directionType.toString());
+    System.err.println("Orientation model direction: "+directionType.toString());
     // Store total counts for each reordering type:
     // Init count arrays:
     if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
@@ -363,7 +362,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
       ++curOrd;
       if (!enabledTypes[i]) continue;
       typeToIdx[curOrd] = ++curIdx;
-      System.err.printf("reordering type enabled: %s, idx=%d\n",ReorderingTypes.values()[i],curIdx);
+      System.err.printf("Orientation enabled: %s, idx=%d\n",ReorderingTypes.values()[i],curIdx);
     }
     return curIdx+1;
   }
@@ -447,25 +446,25 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
   @Override
 	public void report() {
-    System.err.println("OldLexicalReorderingFeatureExtractor: done.");
+    //System.err.println("LexicalReorderingFeatureExtractor: done.");
     float[] prob = new float[totalForwardCounts.length];
     if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
       fillProbDist(totalForwardCounts, prob, 0);
-      System.err.println("Distrbuction over labels (forward):");
-      System.err.println(Arrays.toString(totalForwardCounts));
-      System.err.println(Arrays.toString(prob));
+      System.err.println("Counts of MSD labels (forward):");
+      System.err.println("Counts: "+Arrays.toString(totalForwardCounts));
+      System.err.println("RelFreq: "+Arrays.toString(prob));
     }
     if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
       fillProbDist(totalBackwardCounts, prob, 0);
-      System.err.println("Distrbuction over labels (backward):");
-      System.err.println(Arrays.toString(totalBackwardCounts));
-      System.err.println(Arrays.toString(prob));
+      System.err.println("Counts of MSD labels (backward):");
+      System.err.println("Counts: "+Arrays.toString(totalBackwardCounts));
+      System.err.println("RelFreq: "+Arrays.toString(prob));
     }
     if (directionType == DirectionTypes.joint) {
       fillProbDist(totalJointCounts, prob, 0);
-      System.err.println("Distrbuction over labels (joint):");
-      System.err.println(Arrays.toString(totalJointCounts));
-      System.err.println(Arrays.toString(prob));
+      System.err.println("Counts of MSD labels (joint):");
+      System.err.println("Counts: "+Arrays.toString(totalJointCounts));
+      System.err.println("RelFreq: "+Arrays.toString(prob));
     }
   }
 }

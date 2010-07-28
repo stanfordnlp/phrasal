@@ -64,8 +64,10 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   }
 
   public void enableAlignmentCounts(boolean storeAlignmentCounts) {
+    if (this.storeAlignmentCounts == storeAlignmentCounts)
+      return;
     this.storeAlignmentCounts = storeAlignmentCounts;
-    System.err.println("AlignmentTemplates: some feature extractor requires alignment counts.");
+    System.err.println("Phrase extractor set to count alignments: "+storeAlignmentCounts);
   }
 
   /**

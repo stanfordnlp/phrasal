@@ -36,6 +36,7 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.lang.reflect.Constructor;
@@ -66,6 +67,7 @@ public class PhraseExtract {
   static public final String A_EF_CORPUS_OPT = "feAlign";
   static public final String SYMMETRIZE_OPT = "symmetrization";
   static public final String EXTRACTORS_OPT = "extractors";
+  static public final String VERBOSE_OPT = "verbose";
 
   static public final String PHRASE_EXTRACTOR_OPT = "phraseExtractor";
   static public final String FILTER_CORPUS_OPT = "fFilterCorpus";
@@ -121,7 +123,7 @@ public class PhraseExtract {
        NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT,
-       PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT,
+       PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT, VERBOSE_OPT,
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT, LEX_REORDERING_HIER_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
        SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT, 
@@ -169,6 +171,7 @@ public class PhraseExtract {
   private final List<Thread> threads = new LinkedList<Thread>();
   private final LinkedBlockingQueue<Pair<Integer,String[]>> dataQueue = new LinkedBlockingQueue<Pair<Integer,String[]>>(1000);
   boolean doneReadingData;
+  boolean verbose;
 
   private Properties prop;
   private final SourceFilter sourceFilter = new SourceFilter();
@@ -224,7 +227,6 @@ public class PhraseExtract {
     }
 
     // Check required, optional properties:
-    System.err.println("properties: "+prop.toString());
     if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
       Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
@@ -274,7 +276,7 @@ public class PhraseExtract {
         (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, maxSpanF, addBoundaryMarkers);
     }
     if (Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT))) {
-      sourceFilter.createSourceTrie();
+      sourceFilter.fillSourceTrie();
     }
 
     // Other optional arguments:
@@ -290,6 +292,7 @@ public class PhraseExtract {
     }
     noAlign = Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
     lowercase = Boolean.parseBoolean(prop.getProperty(LOWERCASE_OPT,"false"));
+    verbose = Boolean.parseBoolean(prop.getProperty(VERBOSE_OPT,"false"));
     outputFile = prop.getProperty(OUTPUT_FILE_OPT);
   }
 
@@ -341,7 +344,7 @@ public class PhraseExtract {
         fe.init(prop, featureIndex, alTemps);
         extractors.add(fe);
         infoFileForExtractors.add(infoFilename);
-        System.err.println("New class instance: "+fe.getClass());
+        System.err.println("Instantiating feature extractor: "+fe.getClass().getName());
 
       } catch (Exception e) {
         throw new RuntimeException(e);
@@ -446,14 +449,18 @@ public class PhraseExtract {
           threads.add(thread);
         }
 
+        boolean useGIZA = alignInvCorpus != null;
+
         // Read data and process data:
+        if (passNumber > 0)
+          System.err.println("Some feature extractor needs an additional pass over the data.");
         System.err.printf("Pass %d on training data (max phrase len: %d,%d)...\n",
           passNumber+1, AbstractPhraseExtractor.maxPhraseLenF, AbstractPhraseExtractor.maxPhraseLenE);
         LineNumberReader pReader=null, aInvReader=null,
           fReader = IOTools.getReaderFromFile(fCorpus),
           eReader = IOTools.getReaderFromFile(eCorpus),
           aReader = IOTools.getReaderFromFile(alignCorpus);
-        if (symmetrizationType != SymmetrizationType.none)
+        if (useGIZA)
           aInvReader = IOTools.getReaderFromFile(alignInvCorpus);
         if (phraseExtractorInfoFile != null)
           pReader = IOTools.getReaderFromFile(phraseExtractorInfoFile);
@@ -479,8 +486,9 @@ public class PhraseExtract {
             long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
             double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
             startStepTimeMillis = System.currentTimeMillis();
-            System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
-                              lineNb, totalStepSecs, totalMemory, freeMemory, alTemps.getSizeInfo());
+            if (verbose)
+              System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
+                                lineNb, totalStepSecs, totalMemory, freeMemory, alTemps.getSizeInfo());
           }
 
           if (done) {
@@ -498,7 +506,7 @@ public class PhraseExtract {
 
           // Read alignment:
           String aLine=null;
-          if (symmetrizationType != SymmetrizationType.none) {
+          if (useGIZA) {
             String ef1 = aReader.readLine(); String ef2 = aReader.readLine(); String ef3 = aReader.readLine();
             String fe1 = aInvReader.readLine(); String fe2 = aInvReader.readLine(); String fe3 = aInvReader.readLine();
             if (!skipLine) {
@@ -605,7 +613,8 @@ public class PhraseExtract {
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
 
-    System.err.printf("Alignment templates to write: %d\n",alTemps.size());
+    System.err.printf("Phrases in memory: %d\n",alTemps.size());
+    int phrasesWritten = 0;
 
     for (int idx=0; idx<alTemps.size(); ++idx) {
       boolean skip=false;
@@ -616,8 +625,9 @@ public class PhraseExtract {
         long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
         double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
         startStepTimeMillis = System.currentTimeMillis();
-        System.err.printf("writing phrase %d (secs = %.3f, totalmem = %dm, freemem = %dm)...\n",
-                          idx, totalStepSecs, totalMemory, freeMemory);
+        if (verbose)
+          System.err.printf("writing phrase %d (secs = %.3f, totalmem = %dm, freemem = %dm)...\n",
+                            idx, totalStepSecs, totalMemory, freeMemory);
       }
 
       alTemps.reconstructAlignmentTemplate(alTemp, idx);
@@ -657,12 +667,15 @@ public class PhraseExtract {
             ("AbstractFeatureExtractor should return double[] or Counter, not "+scores.getClass());
         }
       }
-      if (!skip)
+      if (!skip) {
         oStream.println(str.toString());
+        ++phrasesWritten;
+      }
     }
 
+    System.err.printf("Phrases written: %d\n", phrasesWritten);
     double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
-    System.err.printf("Done with writing phrase table. Seconds: %.3f.\n", totalTimeSecs);
+    System.err.printf("Done generating phrase table. Seconds: %.3f.\n", totalTimeSecs);
     return true;
   }
 
@@ -679,7 +692,7 @@ public class PhraseExtract {
 
     boolean useTrieIndex =
      prop.getProperty(WITH_GAPS_OPT,"false").equals("true");
-    System.err.println("Use trie index: "+useTrieIndex);
+    System.err.println("Using trie index: "+useTrieIndex);
 
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);
 
@@ -709,14 +722,23 @@ public class PhraseExtract {
 
   static void usage() {
     System.err.print
-    ("Usage: java mt.train.PhraseExtract [ARGS]\n"+
-     "Mandatory arguments:\n"+
+    ("Usage: java edu.stanford.nlp.mt.train.PhraseExtract [ARGS]\n"+
+     "Sets of mandatory arguments (user must select either set 1, 2, or 3):\n"+
+     "Set 1:"+
      " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+
-     " -align <file> : alignment file\n"+
-     " -extractors <class1>[:<class2>:...:<classN>]\n"+
+     " -align <file> : alignment file (Moses format)\n"+
+     "Set 2:"+
+     " -fCorpus <file> : source-language corpus\n"+
+     " -eCorpus <file> : target-language corpus\n"+
+     " -feAlign <file> : f-e alignment file (GIZA format)\n"+
+     " -efAlign <file> : e-f alignment file (GIZA format)\n"+
+     "Set 3:"+
+     " -inputDir <directory> : alignment directory created by Berkeley aligner v2.1\n"+
      "Optional arguments:\n"+
-     " -outputFile <file>\n"+
+     " -outputFile <file> : phrases are written to this file\n"+
+     " -symmetrization <type> : alignment symmetrization heuristic (expects -feAlign and -efAlign)\n"+
+     " -extractors <class1>[:<class2>:...:<classN>] : feature extractors\n"+
      " -fFilterCorpus <file> : filter against a specific dev/test set\n"+
      " -fFilterList <file> : phrase extraction restricted to this list\n"+
      " -split <N> : split filter list into N chunks\n"+
@@ -728,15 +750,20 @@ public class PhraseExtract {
      " -numLines <n> : number of lines to process (<0 : all)\n"+
      " -startAtLine <n> : start at line <n> (<0 : all)\n"+
      " -endAtLine <n> : end at line <n> (<0 : all)\n"+
-     " -noAlign : do not write alignment to stdout\n");
+     " -noAlign : do not specify alignment in phrase table\n"+
+     " -verbose : enable verbose mode\n"
+    );
   }
 
   public static void main(String[] args) throws IOException {
 
-    Properties prop = StringUtils.argsToProperties(args);
-    AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
-    System.err.println("extraction started at: "+formatter.format(new Date()));
+    System.err.printf("Extraction started at %s on %s.\n",
+      formatter.format(new Date()), InetAddress.getLocalHost().getHostName());
+    
+    Properties prop = StringUtils.argsToProperties(args);
+    System.err.println("Properties: "+prop.toString());
+    AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
 
     try {
       PhraseExtract e = new PhraseExtract(prop);
@@ -746,6 +773,6 @@ public class PhraseExtract {
       usage();
     }
     
-    System.err.println("extraction ended at: "+formatter.format(new Date()));
+    System.err.println("Extraction ended at "+formatter.format(new Date()));
   }
 }

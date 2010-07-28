@@ -60,7 +60,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
   protected AbstractPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
 
-    System.err.println("AbstractPhraseExtractor: "+maxPhraseLenF);
+    //System.err.println("AbstractPhraseExtractor: "+maxPhraseLenF);
     this.alTemps = alTemps;
     this.extractors = extractors;
     this.alTemp = new AlignmentTemplateInstance();
@@ -156,36 +156,36 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     int max2E = Integer.parseInt(prop.getProperty(MAX_EXTRACTED_PHRASE_LEN_E_OPT,"-1"));
 
     if (max > 0) {
-      System.err.printf("changing default max phrase length: %d -> %d\n", maxPhraseLenF, max);
+      System.err.printf("Changing default max phrase length: %d -> %d\n", maxPhraseLenF, max);
       maxPhraseLenF = maxPhraseLenE = max;
       if (max2 < 0)
         max2 = max;
     }
     if (maxF > 0) {
-      System.err.printf("changing default max phrase length (F): %d -> %d\n", maxPhraseLenF, maxF);
+      System.err.printf("Changing default max phrase length (F): %d -> %d\n", maxPhraseLenF, maxF);
       maxPhraseLenF = maxF;
     }
     if (maxE > 0) {
-      System.err.printf("changing default max phrase length (E): %d -> %d\n", maxPhraseLenE, maxE);
+      System.err.printf("Changing default max phrase length (E): %d -> %d\n", maxPhraseLenE, maxE);
       maxPhraseLenE = maxE;
     }
 
     if (max2 > 0) {
-      System.err.printf("changing default max extracted phrase length: %d -> %d\n", maxExtractedPhraseLenF, max2);
+      System.err.printf("Changing default max extracted phrase length: %d -> %d\n", maxExtractedPhraseLenF, max2);
       maxExtractedPhraseLenF = maxExtractedPhraseLenE = max2;
     }
     if (max2F > 0) {
-      System.err.printf("changing default max extracted phrase length (F): %d -> %d\n", maxExtractedPhraseLenF, max2F);
+      System.err.printf("Changing default max extracted phrase length (F): %d -> %d\n", maxExtractedPhraseLenF, max2F);
       maxExtractedPhraseLenF = max2F;
     }
     if (max2E > 0) {
-      System.err.printf("changing default max extracted phrase length (E): %d -> %d\n", maxExtractedPhraseLenE, max2E);
+      System.err.printf("Changing default max extracted phrase length (E): %d -> %d\n", maxExtractedPhraseLenE, max2E);
       maxExtractedPhraseLenE = max2E;
     }
-    System.err.printf("maximum phrase length (F): %d\n", maxPhraseLenF);
-    System.err.printf("maximum phrase length (E): %d\n", maxPhraseLenE);
-    System.err.printf("maximum extracted phrase length (F): %d\n", maxExtractedPhraseLenF);
-    System.err.printf("maximum extracted phrase length (E): %d\n", maxExtractedPhraseLenE);
+    System.err.printf("Maximum internal phrase length (F): %d\n", maxPhraseLenF);
+    System.err.printf("Maximum internal phrase length (E): %d\n", maxPhraseLenE);
+    System.err.printf("Maximum extracted phrase length (F): %d\n", maxExtractedPhraseLenF);
+    System.err.printf("Maximum extracted phrase length (E): %d\n", maxExtractedPhraseLenE);
 
     assert (maxPhraseLenE >= maxExtractedPhraseLenE);
     assert (maxPhraseLenF >= maxExtractedPhraseLenF);
@@ -193,8 +193,10 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     String optStr = prop.getProperty(ONLY_TIGHT_PHRASES_OPT);
     onlyTightPhrases = optStr != null && !optStr.equals("false");
 
-    DTUPhraseExtractor.setDTUExtractionProperties(prop);
-    //OldDTUPhraseExtractor.setDTUExtractionProperties(prop);
+    if (Boolean.parseBoolean(prop.getProperty(PhraseExtract.WITH_GAPS_OPT,"false"))) {
+      DTUPhraseExtractor.setDTUExtractionProperties(prop);
+      //OldDTUPhraseExtractor.setDTUExtractionProperties(prop);
+    }
   }
 
   AlignmentGrid getAlGrid() { return alGrid; }

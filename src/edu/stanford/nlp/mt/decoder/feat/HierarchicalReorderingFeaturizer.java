@@ -98,7 +98,8 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     String modelFilename=args[0];
     String modelType=args[1];
     has2Disc = modelType.indexOf("msd2") >= 0;
-    System.err.println("Distinguishes between left and right discontinuous: "+has2Disc);
+    System.err.println("Hierarchical reordering model:");
+    System.err.println("... distinguishes between left and right discontinuous: "+has2Disc);
     if (args.length >= 3) {
       FEATURE_PREFIX = args[2];
       if (args.length >= 4) {
@@ -116,8 +117,8 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       }
     }
 
-    System.err.printf("HierarchicalReorderingFeaturizer: forward orientation computation: %s.\n", forwardOrientationComputation);
-    System.err.printf("HierarchicalReorderingFeaturizer: backward orientation computation: %s.\n", backwardOrientationComputation);
+    System.err.printf("... forward orientation: %s.\n", forwardOrientationComputation);
+    System.err.printf("... backward orientation: %s.\n", backwardOrientationComputation);
 
     mlrt = new ExtendedLexicalReorderingTable(modelFilename, modelType);
     
@@ -417,7 +418,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     assert (f.done);
     if (forwardOrientationComputation != ForwardOrientationComputation.hierarchical)
       return;
-    System.err.println("input length: "+f.foreignSentence.size());
+    System.err.printf("Stack for hierarchical reordering (length of input sentence: %d)\n", f.foreignSentence.size());
     if (DEBUG && f.foreignSentence.size() < 20) {
       AlignmentGrid.printDecoderGrid(f, System.err);
       System.err.println();

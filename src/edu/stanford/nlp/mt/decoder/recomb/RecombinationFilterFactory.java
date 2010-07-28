@@ -44,7 +44,7 @@ public class RecombinationFilterFactory {
 		} else {
 			rfName = rfSpecs[0].toLowerCase();
 		}
-    System.err.println("recombination name: "+rfName);
+    System.err.println("Recombination name: "+rfName);
 
     if (msdRecombination) {
       if (rfName.equals(CLASSICAL_TRANSLATION_MODEL) || rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD)) {

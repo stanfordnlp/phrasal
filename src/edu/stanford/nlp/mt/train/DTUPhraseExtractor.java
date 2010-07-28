@@ -159,7 +159,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       maxSizeE = Integer.parseInt(s);
     }
     maxSize = Math.max(maxSizeF, maxSizeE);
-    System.err.printf("size=%d/%d/%d span=%d/%d/%d\n",
+    System.err.printf
+     ("discontinuous phrase constraints:"+
+      "size: max=%d,maxE=%d,maxF=%d span: max=%d,maxE=%d,maxF=%d\n",
         maxSize, maxSizeE, maxSizeF,
         maxSpan, maxSpanE, maxSpanF);
 

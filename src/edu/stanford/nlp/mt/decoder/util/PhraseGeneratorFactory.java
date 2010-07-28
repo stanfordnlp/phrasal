@@ -107,7 +107,7 @@ public class PhraseGeneratorFactory {
 			
 			String[] filenames = pgSpecs[1].split(":");
 			for (String filename : filenames) {
-				System.err.printf("loading pt: %s\n", filename);
+				//System.err.printf("loading pt: %s\n", filename);
         if(withGaps)
           pharoahList.add(new DTUTable<FV>(phraseFeaturizer, scorer, filename));
         else

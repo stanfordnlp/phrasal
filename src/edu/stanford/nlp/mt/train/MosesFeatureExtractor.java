@@ -69,8 +69,8 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
       (prop.getProperty(PhraseExtract.PTABLE_PHI_FILTER_OPT,"-1e30"));
     lexFilter = Double.parseDouble
       (prop.getProperty(PhraseExtract.PTABLE_LEX_FILTER_OPT,"-1e30"));
-    System.err.printf("minimum phi(e|f) = %.5f\n", phiFilter);
-    System.err.printf("minimum lex(e|f) = %.5f\n", lexFilter);
+    //System.err.printf("minimum phi(e|f) = %.5f\n", phiFilter);
+    //System.err.printf("minimum lex(e|f) = %.5f\n", lexFilter);
   }
 
   @Override

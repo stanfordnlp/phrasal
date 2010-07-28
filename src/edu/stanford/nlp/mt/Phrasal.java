@@ -378,7 +378,7 @@ public class Phrasal {
 
     boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
 
-		System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
+		//System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
 
 		if (config.containsKey(CONSTRAIN_TO_REFS)) {
 			constrainedToRefs = Metrics.readReferences(config.get(CONSTRAIN_TO_REFS)

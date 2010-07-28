@@ -94,15 +94,17 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		}
  		threadPool = Executors.newFixedThreadPool(numProcs); 
 
+		/*
 		if (useITGConstraints) {
 			System.err.printf("Using ITG Constraints\n");
 		} else {
 			System.err.printf("Not using ITG Constraints\n");
 		}
+		*/
 		if (maxDistortion != -1) {
 			System.err.printf("Using distortion limit: %d\n", maxDistortion);
 		} else {
-			System.err.printf("No hard distortion limit\n");
+			System.err.printf("No hard distortion limit.\n");
 		}
 	}
 	

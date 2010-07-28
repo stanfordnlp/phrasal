@@ -166,8 +166,8 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 			}
 		}
 
-    System.err.println("Disabled scores: "+DISABLED_SCORES);
-    if(DISABLED_SCORES != null)
+    if(DISABLED_SCORES != null) {
+      System.err.println("Disabled features: "+DISABLED_SCORES);
       for(String istr : DISABLED_SCORES.split(",")) {
         int i = Integer.parseInt(istr);
         if(i < scoreNames.length) {
@@ -175,6 +175,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
           scoreNames[i] = null;
         }
       }
+    }
 
     return scoreNames;
 	}

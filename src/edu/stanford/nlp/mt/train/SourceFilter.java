@@ -27,7 +27,7 @@ public class SourceFilter {
        Boolean.parseBoolean(System.getProperty(SHOW_PHRASE_RESTRICTION_PROPERTY, "false"));
   
   private final IntegerArrayIndex sourcePhraseTable = new DynamicIntegerArrayIndex();
-  private final TrieIntegerArrayIndex sourcePhraseTrie = new TrieIntegerArrayIndex(0); 
+  private TrieIntegerArrayIndex sourcePhraseTrie = null;
   private int startId, endId;
 	private boolean isEnabled = false;
 
@@ -38,7 +38,7 @@ public class SourceFilter {
    */
   @SuppressWarnings("unchecked")
   public void addPhrasesFromCorpus(String fFilterCorpus, int maxPhraseLenF, Integer maxSpanF, boolean addBoundaryMarkers) {
-    System.err.println("Filtering against corpus: "+fFilterCorpus);
+    //System.err.println("Filtering against corpus: "+fFilterCorpus);
 		if (maxSpanF != null)
 			System.err.println("MaxSpanF: "+maxSpanF);
     try {
@@ -58,11 +58,11 @@ public class SourceFilter {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    System.err.printf("Filtering against %d phrases.\n", sourcePhraseTable.size());
+    System.err.printf("Phrases in %s: %d\n", fFilterCorpus, sourcePhraseTable.size());
     System.gc(); System.gc(); System.gc();
-    long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
-    long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
-    System.err.printf("totalmem = %dm, freemem = %dm\n", totalMemory, freeMemory);
+    //long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
+    //long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
+    //System.err.printf("totalmem = %dm, freemem = %dm\n", totalMemory, freeMemory);
 		isEnabled = true;
   }
 
@@ -216,18 +216,22 @@ public class SourceFilter {
     return fKey >= 0 && fKey >= startId && fKey < endId;
   }
 
-  public void createSourceTrie() {
-    System.err.println("Updating trie index. Source table: "+sourcePhraseTable.size());
-    System.err.println("Updating trie index. Source trie: "+sourcePhraseTrie.size());
+  public void fillSourceTrie() {
+    sourcePhraseTrie = new TrieIntegerArrayIndex(0);
     assert (sourcePhraseTrie.size() <= 1);
     for (int i=0; i<sourcePhraseTable.size(); ++i) {
       int[] el = sourcePhraseTable.get(i);
       sourcePhraseTrie.indexOf(el, true);
     }
-    System.err.println("Updating trie index: done.");
+    System.err.println("Source phrase table: "+sourcePhraseTable.size());
+    System.err.println("Source phrase trie: "+sourcePhraseTrie.size());
   }
 
-  public TrieIntegerArrayIndex getSourceTrie() { return sourcePhraseTrie; }
+  public TrieIntegerArrayIndex getSourceTrie() {
+    assert (sourcePhraseTrie != null);
+    return sourcePhraseTrie;
+  }
+  
   public IntegerArrayIndex getSourceTable() { return sourcePhraseTable; }
 
   public boolean isEnabled() {
