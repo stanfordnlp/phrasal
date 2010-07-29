@@ -1,24 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component LANGUAGE_LEVEL="JDK_1_6">
+<component>
 	<output-test url="file://$MODULE_DIR$/classes"/>
 	<exclude-output/>
 	<contentEntry url="file://$MODULE_DIR$">
 		<testFolder url="file://$MODULE_DIR$/test/src"/>
-		<testFolder url="file://$MODULE_DIR$/testng/src"/>
 		<excludeFolder url="file://$MODULE_DIR$/classes"/>
 		<excludeFolder url="file://$MODULE_DIR$/classes"/>
 		<excludeFolder url="file://$MODULE_DIR$/classes"/>
 	</contentEntry>
 	<lib name="bsh.jar" scope="COMPILE">
 		<srcroot url="jar://$MODULE_DIR$/libsrc/bsh-2.0b4-src.zip!/"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/bsh-2.0b4-src.zip!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/bsh.jar!/"/>
 	</lib>
-	<lib name="testng.jar" scope="COMPILE">
-		<srcroot url="jar://$MODULE_DIR$/libsrc/testng-5.8-src.zip!/"/>
+	<lib name="tokyocabinet.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tokyocabinet.jar!/"/>
 	</lib>
 	<lib name="create_phrasedb.jar" scope="COMPILE">
-		<srcroot url="jar://$MODULE_DIR$/lib/tercom.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/create_phrasedb.jar!/"/>
+	</lib>
+	<lib name="meteor.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/meteor.jar!/"/>
+	</lib>
+	<lib name="optimize_terp.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/optimize_terp.jar!/"/>
+	</lib>
+	<lib name="terp.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/terp.jar!/"/>
 	</lib>
 	<lib name="jopt-simple.jar" scope="COMPILE">
 		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-3.1-sources.jar!/"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-3.1-sources.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/jopt-simple.jar!/"/>
+	</lib>
+	<lib name="$MODULE_DIR$/lib/tercom.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tercom.jar!/"/>
 	</lib>
 </component>
