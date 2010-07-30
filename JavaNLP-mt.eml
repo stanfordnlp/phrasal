@@ -5,8 +5,6 @@
 	<contentEntry url="file://$MODULE_DIR$">
 		<testFolder url="file://$MODULE_DIR$/test/src"/>
 		<excludeFolder url="file://$MODULE_DIR$/classes"/>
-		<excludeFolder url="file://$MODULE_DIR$/classes"/>
-		<excludeFolder url="file://$MODULE_DIR$/classes"/>
 	</contentEntry>
 	<lib name="bsh.jar" scope="COMPILE">
 		<srcroot url="jar://$MODULE_DIR$/libsrc/bsh-2.0b4-src.zip!/"/>
@@ -33,7 +31,7 @@
 		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-3.1-sources.jar!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/jopt-simple.jar!/"/>
 	</lib>
-	<lib name="$MODULE_DIR$/lib/tercom.jar" scope="COMPILE">
+	<lib name="tercom.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tercom.jar!/"/>
 	</lib>
 </component>
