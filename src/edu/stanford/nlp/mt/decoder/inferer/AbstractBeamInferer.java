@@ -42,12 +42,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> foreign,
 			int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets,
 			int size) {
+		/*
 		if (size > beamCapacity) {
 			System.err
 					.printf(
 							"Warning: Requested nbest list size, %d, exceeds beam capacity of %d\n",
 							size, beamCapacity);
 		}
+		*/
 		RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory = new RecombinationHistory<Hypothesis<TK, FV>>();
 
 		Beam<Hypothesis<TK, FV>> beam = decode(scorer, foreign, translationId,

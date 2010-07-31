@@ -161,7 +161,7 @@ public class FeaturizerFactory {
 			// ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
-      System.err.println("LM vocabulary file: "+lmVoc);
+      //System.err.println("LM vocabulary file: "+lmVoc);
       if(lmVoc == null || lmVoc.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm));
       } else {
@@ -195,7 +195,7 @@ public class FeaturizerFactory {
 			// ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
-      System.err.println("LM vocabulary file: "+lmVoc);
+      //System.err.println("LM vocabulary file: "+lmVoc);
       if(lmVoc == null || lmVoc.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(ARPALanguageModel.load(lm));
       } else {

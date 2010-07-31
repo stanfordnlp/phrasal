@@ -62,12 +62,12 @@ public abstract class AbstractFeatureExtractor implements FeatureExtractor {
   /**
    * Empty sentence-level feature extractor.
    */
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+  public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   /**
    * Empty phrase-level feature extractor.
    */
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
+  public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
 
   /**
    * By default, this feature extractor returns null.

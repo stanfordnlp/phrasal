@@ -18,7 +18,7 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
   IntArrayList feCounts = new IntArrayList();
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     if (getCurrentPass()+1 == getRequiredPassNumber())
       addCountToArray(feCounts, alTemp.getKey());
   }

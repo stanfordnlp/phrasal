@@ -21,7 +21,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  */
 public class MosesFeatureExtractor extends AbstractFeatureExtractor {
 
-  public static final double MINP = 1e-5;
+  public static final double MIN_LEX_PROB = 1e-5;
+  
+  public static final double DEFAULT_PHI_FILTER = 1e-4;
+  public static final double DEFAULT_LEX_FILTER = 0;
 
   public static final String DEBUG_PROPERTY = "DebugPharaohFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
@@ -29,8 +32,8 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
   public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";
   public static final boolean PRINT_COUNTS = Boolean.parseBoolean(System.getProperty(PRINT_COUNTS_PROPERTY, "false"));
 
-  double phiFilter = 0.0, lexFilter = 0.0;
-  boolean ibmLexModel = false, onlyML = false;
+  double phiFilter = DEFAULT_PHI_FILTER, lexFilter = DEFAULT_LEX_FILTER;
+  boolean ibmLexModel = false, onlyPhi = false;
   int numPasses = 1; 
 
   final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
@@ -62,22 +65,22 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
       (PhraseExtract.IBM_LEX_MODEL_OPT,"false").equals("true");
     if(!ibmLexModel)
       alTemps.enableAlignmentCounts(true);
-    onlyML = prop.getProperty
+    onlyPhi = prop.getProperty
       (PhraseExtract.ONLY_ML_OPT,"false").equals("true");
     // Filtering:
     phiFilter = Double.parseDouble
-      (prop.getProperty(PhraseExtract.PTABLE_PHI_FILTER_OPT,"-1e30"));
+      (prop.getProperty(PhraseExtract.PTABLE_PHI_FILTER_OPT, Double.toString(DEFAULT_PHI_FILTER)));
     lexFilter = Double.parseDouble
-      (prop.getProperty(PhraseExtract.PTABLE_LEX_FILTER_OPT,"-1e30"));
-    //System.err.printf("minimum phi(e|f) = %.5f\n", phiFilter);
-    //System.err.printf("minimum lex(e|f) = %.5f\n", lexFilter);
+      (prop.getProperty(PhraseExtract.PTABLE_LEX_FILTER_OPT, Double.toString(DEFAULT_LEX_FILTER)));
+    System.err.printf("Cut-off value for phi(e|f): %.5f\n", phiFilter);
+    System.err.printf("Cut-off value for lex(e|f): %.5f\n", lexFilter);
   }
 
   @Override
 	public int getRequiredPassNumber() { return numPasses; }
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
     // Increment word counts:
     Sequence<IString> f = sent.f();
     Sequence<IString> e = sent.e();
@@ -96,7 +99,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
   }
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     // Code below will only get executed during the last pass:
     if(getCurrentPass()+1 == getRequiredPassNumber()) {
       if(DEBUG_LEVEL >= 2)
@@ -150,7 +153,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
       return new double[] { 
         phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen,
         feCounts.get(idx), eCounts.get(idxE), fCounts.get(idxF) };
-    } else if(onlyML) {
+    } else if(onlyPhi) {
       // -- only two features: relative freq. in both directions:
       return new double[] { phi_f_e, phi_e_f };
     } else {
@@ -239,12 +242,12 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
       System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString(false));
     // Each French word must be explained:
     double lex = 1.0;
-    for(int fi=0; fi<alTemp.f().size();++fi) {
-      if(alTemp.f().get(fi).equals(DTUPhraseExtractor.GAP_STR))
+    for (int fi=0; fi<alTemp.f().size();++fi) {
+      if (alTemp.f().get(fi).equals(DTUPhraseExtractor.GAP_STR))
         continue;
       double wSum = 0.0;
       int alCount = alTemp.f2e(fi).size();
-      if(alCount == 0) {
+      if (alCount == 0) {
         wSum = getLexProb(alTemp.f().get(fi),NULL_STR);
       } else {
         for(int ei : alTemp.f2e(fi)) {
@@ -252,13 +255,13 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
         }
         wSum /= alCount;
       }
-      if(DEBUG_LEVEL >= 1 || wSum == 0.0) {
+      if (DEBUG_LEVEL >= 1 || wSum == 0.0) {
         System.err.printf("w(%s|...) = %.3f\n",alTemp.f().get(fi),wSum);
-        if(wSum == 0)
+        if (wSum == 0)
           System.err.println("  WARNING: wsum = "+wSum);
       }
-      if(wSum == 0)
-        wSum = MINP;
+      if (wSum == 0)
+        wSum = MIN_LEX_PROB;
       lex *= wSum;
     }
     return lex;
@@ -288,7 +291,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
       if (DEBUG_LEVEL >= 1 || wSum == 0.0)
         System.err.printf("w(%s|...) = %.3f\n",alTemp.e().get(ei),wSum);
       if (wSum == 0)
-        wSum = MINP;
+        wSum = MIN_LEX_PROB;
       lex *= wSum;
     }
     return lex;
@@ -305,7 +308,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
     // Each French word must be explained:
     double lex = 1.0;
     for (int fi=0; fi<alTemp.f().size();++fi) {
-      double wMax = MINP;
+      double wMax = MIN_LEX_PROB;
       int sz = alTemp.e().size();
       for (int ei=0; ei<sz; ++ei) {
         double wCur = getLexProb(alTemp.f().get(fi), alTemp.e().get(ei));
@@ -334,7 +337,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
     // Each French word must be explained:
     double lex = 1.0;
     for (int ei=0; ei<alTemp.e().size();++ei) {
-      double wMax = MINP;
+      double wMax = MIN_LEX_PROB;
       int sz = alTemp.f().size();
       for (int fi=0; fi<sz;++fi) {
         double wCur = getLexProbInv(alTemp.f().get(fi),alTemp.e().get(ei));

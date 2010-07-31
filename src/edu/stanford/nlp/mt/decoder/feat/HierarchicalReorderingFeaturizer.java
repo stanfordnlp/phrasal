@@ -30,7 +30,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugHierarchicalReorderingFeaturizer";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
-  public class HierBlock {
+  public static class HierBlock {
 
     final int stackSz;
     final CoverageSet cs;
@@ -99,7 +99,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     String modelType=args[1];
     has2Disc = modelType.indexOf("msd2") >= 0;
     System.err.println("Hierarchical reordering model:");
-    System.err.println("... distinguishes between left and right discontinuous: "+has2Disc);
+    System.err.println("Distinguish between left and right discontinuous: "+has2Disc);
     if (args.length >= 3) {
       FEATURE_PREFIX = args[2];
       if (args.length >= 4) {
@@ -117,8 +117,8 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       }
     }
 
-    System.err.printf("... forward orientation: %s.\n", forwardOrientationComputation);
-    System.err.printf("... backward orientation: %s.\n", backwardOrientationComputation);
+    System.err.printf("Forward orientation: %s\n", forwardOrientationComputation);
+    System.err.printf("Backward orientation: %s\n", backwardOrientationComputation);
 
     mlrt = new ExtendedLexicalReorderingTable(modelFilename, modelType);
     
@@ -267,7 +267,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
 		return values;
 	}
 	
-  private boolean usePrior(ExtendedLexicalReorderingTable.ReorderingTypes type) {
+  private static boolean usePrior(ExtendedLexicalReorderingTable.ReorderingTypes type) {
     switch (type) {  // returns true if dealing with backward model:
       case monotoneWithNext: 
       case swapWithNext: 

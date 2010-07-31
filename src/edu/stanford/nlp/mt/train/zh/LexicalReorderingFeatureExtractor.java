@@ -42,7 +42,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
 	public boolean needAlGrid() { return true; }
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   @Override
 	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, AlignmentGrid fullAlGrid, String infoLine) {

@@ -34,10 +34,10 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
 	public int getRequiredPassNumber() { return 1; }
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     // Code below will only get executed during the last pass:
     if(getCurrentPass()+1 == getRequiredPassNumber()) {
       if(DEBUG_LEVEL >= 2)

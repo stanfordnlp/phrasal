@@ -54,10 +54,6 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
  */
 public class PhraseExtract {
 
-  // Note: could make phrase extraction more memory efficient
-  // by storing each block (phrase pair) as mt.base.SimpleSequence pairs
-  // rather than int[] (since SimpleSequence).
-
   static public final String CONFIG_OPT = "config";
   static public final String INPUT_DIR_OPT = "inputDir";
   static public final String F_CORPUS_OPT = "fCorpus";
@@ -96,12 +92,12 @@ public class PhraseExtract {
   static public final String PTABLE_PHI_FILTER_OPT = "phiFilter"; // p_phi(e|f) filtering
   static public final String PTABLE_LEX_FILTER_OPT = "lexFilter"; // p_lex(e|f) filtering
 
-  // lexicalized re-ordering models:
+  // orientation models:
   static public final String LEX_REORDERING_TYPE_OPT = "orientationModelType";
   static public final String LEX_REORDERING_PHRASAL_OPT = "phrasalOrientationModel";
   static public final String LEX_REORDERING_HIER_OPT = "hierarchicalOrientationModel";
-  static public final String LEX_REORDERING_START_CLASS_OPT = "lexicalizedModelHasStart";
-  static public final String LEX_REORDERING_2DISC_CLASS_OPT = "lexicalizedModelHas2Disc";
+  static public final String LEX_REORDERING_START_CLASS_OPT = "orientationModelHasStart";
+  static public final String LEX_REORDERING_2DISC_CLASS_OPT = "orientationModelHas2Disc";
 
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
@@ -136,16 +132,11 @@ public class PhraseExtract {
        DTUPhraseExtractor.MAX_SIZE_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_OPT,
        DTUPhraseExtractor.NO_TARGET_GAPS_OPT,
-       DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT,
        DTUPhraseExtractor.GAPS_BOTH_SIDES_OPT,
-       DTUPhraseExtractor.GROW_SOURCE_OPT,
-       DTUPhraseExtractor.NO_UNALIGNED_GAPS_OPT,
-       DTUPhraseExtractor.NO_UNALIGNED_OR_LOOSE_GAPS_OPT,
-       DTUPhraseExtractor.LOOSE_DISC_PHRASES_OPT,
-       DTUPhraseExtractor.LOOSE_DISC_PHRASES_OUTSIDE_OPT,
-       DTUPhraseExtractor.NAACL2010_OPT,
-       DTUPhraseExtractor.HIERO_OPT,
-       DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT
+       DTUPhraseExtractor.ALLOW_UNALIGNED_GAPS_OPT,
+       DTUPhraseExtractor.ALLOW_LOOSE_GAPS_OPT,
+       DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
+       DTUPhraseExtractor.HIERO_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
@@ -588,21 +579,21 @@ public class PhraseExtract {
 
   private void processLine(AbstractPhraseExtractor ex, int lineNb, SymmetricalWordAlignment sent, String fLine, String eLine, String aLine, String pLine) throws IOException {
     sent.init(lineNb,fLine,eLine,aLine,false,false);
-    extractPhrasalFeatures(ex, sent, pLine);
-    extractSententialFeatures(ex, sent);
+    featurizePhrases(ex, sent, pLine);
+    featurizeSentence(ex, sent);
   }
 
-  private static void extractPhrasalFeatures(PhraseExtractor ex, SymmetricalWordAlignment sent, String pLine) {
+  private static void featurizePhrases(PhraseExtractor ex, SymmetricalWordAlignment sent, String pLine) {
     if (pLine != null)
       ex.setSentenceInfo(sent, pLine);
     ex.extractPhrases(sent);
   }
 
-  private void extractSententialFeatures(AbstractPhraseExtractor ex, SymmetricalWordAlignment sent) {
+  private void featurizeSentence(AbstractPhraseExtractor ex, SymmetricalWordAlignment sent) {
     for (int i = 0; i < extractors.size(); i++) {
       AbstractFeatureExtractor e = extractors.get(i);
       String infoLine = (nThreads == 0) ? infoLinesForExtractors.get(i) : "";
-      e.extract(sent,infoLine, ex.getAlGrid());
+      e.featurizeSentence(sent,infoLine, ex.getAlGrid());
     }
   }
 
@@ -690,9 +681,9 @@ public class PhraseExtract {
 
   public void extractAll() {
 
-    boolean useTrieIndex =
-     prop.getProperty(WITH_GAPS_OPT,"false").equals("true");
-    System.err.println("Using trie index: "+useTrieIndex);
+    //boolean useTrieIndex =
+    // prop.getProperty(WITH_GAPS_OPT,"false").equals("true");
+    //System.err.println("Using trie index: "+useTrieIndex);
 
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);
 

@@ -212,8 +212,8 @@ public class Phrasal {
 	double momentumTerm = DEFAULT_MOMENTUM_TERM;
 	int maxEpochs = DEFAULT_MAX_EPOCHS;
 	
-	double cTarget = 0.001;
-	double cRisky =  0.010;
+	//double cTarget = 0.001;
+	//double cRisky =  0.010;
   static String recombinationHeuristic = DEFAULT_RECOMBINATION_HEURISTIC;
 
 	public static enum LearningTarget {
@@ -574,9 +574,10 @@ public class Phrasal {
         (mosesMode ? LinearDistortionFeaturizer.class.getName() :
                      LinearFutureCostFeaturizer.class.getName());
 
-    String gapType = !withGaps ? FeaturizerFactory.GapType.none.name() :
+    FeaturizerFactory.GapType gapT = !withGaps ? FeaturizerFactory.GapType.none :
         ((gapOpts.size() > 1 && Integer.parseInt(gapOpts.get(1)) > 0) ?
-          FeaturizerFactory.GapType.both.name() : FeaturizerFactory.GapType.source.name());
+          FeaturizerFactory.GapType.both : FeaturizerFactory.GapType.source);
+    String gapType = gapT.name();
 
 		featurizer = FeaturizerFactory.factory(
 				FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR, makePair(
@@ -789,7 +790,8 @@ public class Phrasal {
       DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
 
       int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts.get(1)) : distortionLimit;
-      DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
+      if (gapT == FeaturizerFactory.GapType.target || gapT == FeaturizerFactory.GapType.both)
+        DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
 
       // Support for floating phrases:
       if (config.containsKey(MAX_FLOATING_PHRASES_OPT)) {
@@ -847,11 +849,13 @@ public class Phrasal {
         HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
 		// Create Inferer
     inferers = new ArrayList<Inferer<IString, String>>(local_procs == 0 ? 1 : local_procs);
-    
+
+    boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
+    //boolean dtuDecoder = (gapT == FeaturizerFactory.GapType.none || gapT == FeaturizerFactory.GapType.both);
     for (int i = 0; i < (local_procs == 0 ? 1 : local_procs); i++) {
   		// Configure InfererBuilder
       AbstractBeamInfererBuilder infererBuilder = (AbstractBeamInfererBuilder) InfererBuilderFactory
-        .factory(withGaps ? InfererBuilderFactory.DTU_DECODER : InfererBuilderFactory.MULTIBEAM_DECODER);
+        .factory(dtuDecoder ? InfererBuilderFactory.DTU_DECODER : InfererBuilderFactory.MULTIBEAM_DECODER);
       try {
         infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString>) phraseGenerator.clone());

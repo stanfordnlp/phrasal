@@ -11,22 +11,23 @@ import edu.stanford.nlp.mt.base.IString;
 /**
  * @author Michel Galley
  */
-public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, String> implements IncrementalFeaturizer<IString, String> {
+public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, String> {
 
 	public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  public static final String FEATURE_NAME = "LinearDistortion";
 
   public final float futureCostDelay;
 
-  public static final String FEATURE_NAME = "LinearDistortion";
-
   public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","0.5f"));
 
+  @SuppressWarnings("unused")
   public LinearFutureCostFeaturizer() {
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
     System.err.println("Future cost delay: "+futureCostDelay);
   }
 
+  @SuppressWarnings("unused")
   public LinearFutureCostFeaturizer(String... args) {
 		// Argument determines how much future cost to pay upfront:
 		// 1.0 => everything; 0.0 => nothing, as in Moses
@@ -41,6 +42,11 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
   }
 
   @Override
+	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
+		return null;
+	}
+
+  @Override
 	public FeatureValue<String> featurize(Featurizable<IString,String> f) {
     float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this)) : 0.0f;
     float futureCost;
@@ -53,12 +59,6 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
     }
     float deltaCost = futureCost - oldFutureCost;
     return new FeatureValue<String>(FEATURE_NAME, -1.0*(f.linearDistortion+deltaCost));
-	}
-
-
-	@Override
-	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
-		return null;
 	}
 
 	@Override

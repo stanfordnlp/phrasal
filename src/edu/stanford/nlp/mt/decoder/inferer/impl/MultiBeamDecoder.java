@@ -102,9 +102,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		}
 		*/
 		if (maxDistortion != -1) {
-			System.err.printf("Using distortion limit: %d\n", maxDistortion);
+			System.err.printf("Multi-beam decoder. Distortion limit: %d\n", maxDistortion);
 		} else {
-			System.err.printf("No hard distortion limit.\n");
+			System.err.printf("Multi-beam decoder. No hard distortion limit.\n");
 		}
 	}
 	
@@ -182,7 +182,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		
 		if (OPTIONS_DUMP || DETAILED_DEBUG) {
       int sentId = translationId + ((Phrasal.local_procs > 1) ? 2:0);
-      synchronized(System.err) {
+      synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteTranslationOption<TK> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n",
@@ -368,7 +368,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		int totalHypothesesGenerated = 0;
 	
 		Hypothesis<TK, FV>[] hyps;
-		synchronized(beams[beamId]) {
+		synchronized (beams[beamId]) {
 		  hyps = new Hypothesis[beams[beamId].size()]; 	
 			int i = -1;
 		  for (Hypothesis<TK, FV> hyp : beams[beamId]) { i++;
@@ -429,7 +429,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 					// System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
 			
 					for (ConcreteTranslationOption<TK> option : applicableOptions) {
-						assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
+						//assert(!hyp.foreignCoverage.intersects(option.foreignCoverage)); // TODO: put back
 
 						if (constrainedOutputSpace != null && !constrainedOutputSpace.allowableContinuation(hyp.featurizable, option)) {
 							continue;

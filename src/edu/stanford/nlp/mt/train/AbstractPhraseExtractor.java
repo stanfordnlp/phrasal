@@ -87,7 +87,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
       return;
 
     // Check if alTemp meets length requirements:
-    if (f2-f1>=maxExtractedPhraseLenF || e2-e1>=maxExtractedPhraseLenE) {
+    if (f2-f1 >= maxExtractedPhraseLenF || e2-e1 >= maxExtractedPhraseLenE) {
       if (isConsistent) {
         alGrid.addAlTemp(f1,f2,e1,e2);
       }
@@ -105,14 +105,14 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     alTemps.incrementAlignmentCount(alTemp);
   }
 
-  protected void extractPhrasesFromGrid(WordAlignment sent) {
+  protected void featurize(WordAlignment sent) {
     int fsize = sent.f().size();
     int esize = sent.e().size();
     // Features are extracted only once all phrases for a given
     // sentence pair are in memory
     for (AbstractFeatureExtractor e : extractors) {
       for (AlignmentTemplateInstance alTemp : alGrid.getAlTemps()) {
-        e.extract(alTemp, alGrid);
+        e.featurizePhrase(alTemp, alGrid);
         if (PRINT_PHRASAL_GRID && fsize < PRINT_GRID_MAX_LEN && esize < PRINT_GRID_MAX_LEN)
           alGrid.printAlTempInGrid
             ("phrase id: "+alTemp.getKey(),alTemp,System.err);

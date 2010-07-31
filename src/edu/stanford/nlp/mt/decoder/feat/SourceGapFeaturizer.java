@@ -79,8 +79,10 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
 
 	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
+
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
     int gapCount = 0;
+
     for (IString w : f.foreignPhrase) {
       if (w.id == DTUPhraseExtractor.GAP_STR.id)
         ++gapCount;
@@ -96,14 +98,18 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
       list.add(new FeatureValue<String>(gc4FeatureName, gapCount >= 4 ? gc4OnValue : gc4OffValue));
 
     if (crossingOnValue != 0.0 && gapCount >= 1) {
+
       CoverageSet phraseCS = f.hyp.translationOpt.foreignCoverage; // e.g. .x...x...
       CoverageSet hypCS = f.hyp.foreignCoverage;                   // e.g. xxx..xx..
+
       int phraseStartIdx = phraseCS.nextSetBit(0);
       int phraseEndIdx = phraseCS.length();
+
       BitSet middleCS = new BitSet(phraseEndIdx-1);                // e.g. ..x......
       middleCS.set(phraseStartIdx+1,phraseEndIdx-1);
       middleCS.and(hypCS);
       Featurizable<IString,String> curF = f;
+
       int crossings = 0;
       while (middleCS.cardinality() > 0) {
         boolean inside=false, outside=false;

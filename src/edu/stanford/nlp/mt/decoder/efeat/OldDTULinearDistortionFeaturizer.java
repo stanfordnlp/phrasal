@@ -15,6 +15,7 @@ import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption.LinearDistortionType;
 
 /**
+ * @deprecated Use DTULinearDistortionFeaturizer
  * @author Michel Galley
  */
 @SuppressWarnings("unused")

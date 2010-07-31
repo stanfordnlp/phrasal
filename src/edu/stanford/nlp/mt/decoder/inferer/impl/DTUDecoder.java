@@ -93,9 +93,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
  		threadPool = Executors.newFixedThreadPool(numProcs); 
 
 		if (maxDistortion != -1) {
-			System.err.printf("Using distortion limit: %d\n", maxDistortion);
+			System.err.printf("Discontinuous phrase-based decoder. Using distortion limit: %d\n", maxDistortion);
 		} else {
-			System.err.printf("No hard distortion limit\n");
+			System.err.printf("Discontinuous phrase-based decoder. No hard distortion limit.\n");
 		}
 	}
 	
@@ -198,7 +198,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     if (OPTIONS_DUMP || DETAILED_DEBUG) {
       int sentId = translationId + ((Phrasal.local_procs > 1) ? 2:0);
-      synchronized(System.err) {
+      synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteTranslationOption<TK> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n",
@@ -408,7 +408,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
 		List<Hypothesis<TK, FV>> hyps;
     //Hypothesis<TK, FV>[] hyps;
-		synchronized(beams[beamId]) {
+		synchronized (beams[beamId]) {
 		  hyps = new LinkedList<Hypothesis<TK,FV>>();
       //hyps = new Hypothesis[beams[beamId].size()];
       //int i = -1;

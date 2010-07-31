@@ -33,6 +33,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   enum PermType { x, y , nil }
   enum LanguageTypes { fe, f, e }
 
+  boolean insideAlignment = false;
   int modelSize = 0;
   int numModels = 0;
   private boolean[] enabledTypes = new boolean[ReorderingTypes.values().length];
@@ -139,7 +140,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 	public boolean needAlGrid() { return phrasalReordering; }
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   private ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid, boolean forward) {
 
@@ -151,7 +152,6 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     boolean connectedSwap = forward ? 
       isAligned(sent,e1,f2,RelativePos.NE,alGrid) : isAligned(sent,e2,f1,RelativePos.SW,alGrid);
 
-    boolean insideAlignment = false;
     /*
     if (alTemp instanceof DTUInstance) {
       DTUInstance dtu = (DTUInstance) alTemp;
@@ -307,7 +307,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   */
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     if(getCurrentPass()+1 != getRequiredPassNumber())
       return;
 

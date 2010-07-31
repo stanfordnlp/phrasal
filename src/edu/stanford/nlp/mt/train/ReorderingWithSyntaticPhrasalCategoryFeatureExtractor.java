@@ -96,7 +96,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
   }
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
 
     labelAlTemps(sent, info, alGrid);
     System.err.println("END OF labelAlTemps");
@@ -300,7 +300,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
   }
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
 
   @Override
 	public Object score(AlignmentTemplate alTemp) { return null; }

@@ -94,7 +94,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
     if (vocabFilename != null) {
       for (String w : IString.keySet())
         srilm.getIndexForWord(p_vocab, w);
-      System.err.println("SRILM: closed vocabulary: "+vocabFilename);
+      System.err.println("SRILM: closed vocabulary.");
       srilm.readLM_limitVocab(p_srilm, p_vocab, filename, vocabFilename);
     } else {
       System.err.println("SRILM: open vocabulary.");

@@ -36,7 +36,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
       map = new Long2IntOpenHashMap();
     map.growthFactor(GROWTH_FACTOR);
     map.defaultReturnValue(IDX_NOSUCCESSOR);
-    System.err.println("TrieIntegerArrayIndex: constructor.");
+    //System.err.println("TrieIntegerArrayIndex: constructor.");
     this.transitionNormalizer = new Function<Integer,Integer>() {
       public Integer apply(Integer x) { return x; }
     };

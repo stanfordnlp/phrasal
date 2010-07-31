@@ -26,6 +26,17 @@ public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
+  // Old options, now either always on or always off.
+  static public final String LOOSE_DISC_PHRASES_OPT = "looseDTU"; // include loose (i.e., not only tight) discontinuous phrases
+  static public final String LOOSE_DISC_PHRASES_OUTSIDE_OPT = "looseOutsideDTU"; // include loose (i.e., not only tight) discontinuous phrases
+  static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
+  static public final String NO_UNALIGNED_GAPS_OPT = "noUnalignedGaps"; // do not extract "w X w" if X is unaligned
+  static public final String NO_UNALIGNED_OR_LOOSE_GAPS_OPT = "noUnalignedOrLooseGaps"; // do not extract w X w unless the first and last words of X are unaligned
+
+  //static public final String NO_CROSS_SERIAL_PHRASES_OPT  = "noCrossSerialPhrases";
+  //static public final String GROW_SOURCE_OPT = "growSource";
+  //static public final String NAACL2010_OPT = "naacl2010";
+
   static boolean withGaps, onlyCrossSerialDTU, looseDTU, looseOutsideDTU, //unalignedDTU,
        noTargetGaps, noUnalignedSubphrase, noUnalignedGaps, noUnalignedOrLooseGaps; //hieroDTU;
   //static boolean noCrossSerialPhrases = false;
@@ -80,11 +91,11 @@ public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
     noTargetGaps = optStr != null && !optStr.equals("false");
 
     // Ignore DTU if a gap only covers unaligned words:
-    optStr = prop.getProperty(DTUPhraseExtractor.NO_UNALIGNED_GAPS_OPT);
+    optStr = prop.getProperty(NO_UNALIGNED_GAPS_OPT);
     noUnalignedGaps = optStr != null && !optStr.equals("false");
 
     // Ignore DTU if first or last word of X is unaligned (same as Hiero):
-    optStr = prop.getProperty(DTUPhraseExtractor.NO_UNALIGNED_OR_LOOSE_GAPS_OPT);
+    optStr = prop.getProperty(NO_UNALIGNED_OR_LOOSE_GAPS_OPT);
     noUnalignedOrLooseGaps = optStr != null && !optStr.equals("false");
 
     // Each wi in w1 X w2 X ... X wN must be licensed by at least one alignment:
@@ -93,16 +104,16 @@ public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // All subsequences (as in NAACL submission):
     // (extracts a subset of "allSubsequences")
-    optStr = prop.getProperty(DTUPhraseExtractor.LOOSE_DISC_PHRASES_OUTSIDE_OPT);
+    optStr = prop.getProperty(LOOSE_DISC_PHRASES_OUTSIDE_OPT);
     looseOutsideDTU = optStr != null && !optStr.equals("false");
-    optStr = prop.getProperty(DTUPhraseExtractor.LOOSE_DISC_PHRASES_OPT);
+    optStr = prop.getProperty(LOOSE_DISC_PHRASES_OPT);
     looseDTU = optStr != null && !optStr.equals("false");
 
-    //optStr = prop.getProperty(DTUPhraseExtractor.GROW_UNALIGNED_OPT);
+    //optStr = prop.getProperty(GROW_UNALIGNED_OPT);
     //unalignedDTU = optStr != null && !optStr.equals("false");
 
     // Only extracting cross-serial dependencies (for debugging):
-    optStr = prop.getProperty(DTUPhraseExtractor.ONLY_CROSS_SERIAL_OPT);
+    optStr = prop.getProperty(ONLY_CROSS_SERIAL_OPT);
     onlyCrossSerialDTU = optStr != null && !optStr.equals("false");
 
     String s;
@@ -826,7 +837,7 @@ public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
   public void extractPhrases(WordAlignment sent) {
 
     // Step 0: extract contiguous phrases:
-    substringExtractor.addPhrasesToGrid(sent);
+    substringExtractor.addPhrasesToIndex(sent);
 
     if (DEBUG) {
       System.err.println("f: "+sent.f());
@@ -928,7 +939,7 @@ public class OldDTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     // Rules are processed after being enumerated:
-    extractPhrasesFromGrid(sent);
+    featurize(sent);
   }
 
 }

@@ -22,11 +22,11 @@ public interface FeatureExtractor {
    * FeatureExtractor is mainining its own data structures in order to assign 
    * scores with {@link #score(AlignmentTemplate)}. Hence, extract is 
    * returning void. As opposed to 
-   * {@link #extract(AlignmentTemplateInstance,AlignmentGrid)}, which is called
+   * {@link #featurizePhrase(AlignmentTemplateInstance,AlignmentGrid)}, which is called
    * once for each instance of alignment template, this function is called once for 
    * each sentence pair.
    */
-  public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid);
+  public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid);
 
   /**
    * Extract features from phrase pair f-e and sentence word alignment.
@@ -40,7 +40,7 @@ public interface FeatureExtractor {
    * in the alignment grid. Not that if {@link #needAlGrid} returns false, alTemps
    * is always null.
    */
-  public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid);
+  public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid);
 
   /**
    * Assign here a value for each alignment template and each feature. Return value must 

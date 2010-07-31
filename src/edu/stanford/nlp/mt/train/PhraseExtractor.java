@@ -4,7 +4,7 @@ package edu.stanford.nlp.mt.train;
  * Interface for phrase extraction (or, more specifically, extraction of {@link AlignmentTemplateInstance} 
  * objects). The main member of this interface -- extractPhrases -- does not explicitely return a list 
  * of AlignmentTemplateInstance objects. Instead, it is assumed that each PhraseExtractor instance will 
- * invoke {@link FeatureExtractor#extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid)} on each
+ * invoke {@link FeatureExtractor#featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid)} on each
  * AlignmentTemplateInstance object it constructs. The preferred way of instanciating PhraseExtractor
  * is to extend AbstractPhraseExtractor.
  * 

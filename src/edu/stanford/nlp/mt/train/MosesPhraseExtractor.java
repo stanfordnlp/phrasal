@@ -23,11 +23,11 @@ public class MosesPhraseExtractor extends AbstractPhraseExtractor {
 
   @Override
   public void extractPhrases(WordAlignment sent) {
-    if (addPhrasesToGrid(sent))
-      extractPhrasesFromGrid(sent);
+    if (addPhrasesToIndex(sent))
+      featurize(sent);
   }
 
-  protected boolean addPhrasesToGrid(WordAlignment sent) {
+  protected boolean addPhrasesToIndex(WordAlignment sent) {
 
     int fsize = sent.f().size();
     int esize = sent.e().size();

@@ -16,7 +16,7 @@ public class DTUFeatureExtractor extends AbstractFeatureExtractor {
   private static final double EXP_M1 = Math.exp(-1);
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
 
   @Override
 	public Object score(AlignmentTemplate alTemp) {

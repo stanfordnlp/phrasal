@@ -131,7 +131,7 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
 
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) { 
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
 
     collectStatsFromGrid(alGrid);
     

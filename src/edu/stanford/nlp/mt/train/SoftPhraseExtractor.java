@@ -178,7 +178,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
       }
       
     }
-    extractPhrasesFromGrid(sent);
+    featurize(sent);
   }
 
   private boolean newPair(int i, int j) {

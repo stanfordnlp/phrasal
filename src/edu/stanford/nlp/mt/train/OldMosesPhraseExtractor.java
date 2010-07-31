@@ -84,6 +84,6 @@ public class OldMosesPhraseExtractor extends AbstractPhraseExtractor {
               addPhraseToIndex(sent,i,j,e1,e2,true,1.0f);
       }
     }
-    extractPhrasesFromGrid(sent);
+    featurize(sent);
   }
 }

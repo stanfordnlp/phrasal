@@ -25,7 +25,7 @@ public abstract class SparseVectorFeatureExtractor extends AbstractFeatureExtrac
   }
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     int idx = alTemp.getKey();
     if(idx < 0)
       return;

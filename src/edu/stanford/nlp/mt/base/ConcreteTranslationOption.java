@@ -31,7 +31,7 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
   private static LinearDistortionType linearDistortionType = LinearDistortionType.standard;
 
   public static void setLinearDistortionType(String type) {
-    System.err.println("Linear distortion type: "+type);
+    //System.err.println("Linear distortion type: "+type);
     linearDistortionType = LinearDistortionType.valueOf(type);
     if (linearDistortionType == LinearDistortionType.standard && Phrasal.withGaps)
       System.err.println("warning: standard linear distortion with DTU phrases.");

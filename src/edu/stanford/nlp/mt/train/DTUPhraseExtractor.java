@@ -24,21 +24,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
   static public final String NO_TARGET_GAPS_OPT  = "noTargetGaps";
-  static public final String NAACL2010_OPT = "naacl2010";
   static public final String GAPS_BOTH_SIDES_OPT = "gapsBothSides";
-  static public final String GROW_SOURCE_OPT = "growSource";
-  static public final String LOOSE_DISC_PHRASES_OPT = "looseDTU"; // include loose (i.e., not only tight) discontinuous phrases
-  static public final String LOOSE_DISC_PHRASES_OUTSIDE_OPT = "looseOutsideDTU"; // include loose (i.e., not only tight) discontinuous phrases
-  static public final String NO_UNALIGNED_GAPS_OPT = "noUnalignedGaps"; // do not extract "w X w" if X is unaligned
-  static public final String NO_UNALIGNED_OR_LOOSE_GAPS_OPT = "noUnalignedOrLooseGaps"; // do not extract w X w unless the first and last words of X are unaligned
+  static public final String ALLOW_UNALIGNED_GAPS_OPT = "allowUnalignedGaps"; // do not extract "w X w" if X is unaligned
+  static public final String ALLOW_LOOSE_GAPS_OPT = "allowLooseGaps"; // do not extract "w X w" if X is unaligned
   static public final String NO_UNALIGNED_SUBPHRASE_OPT = "noUnalignedSubphrase";
-  static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
   static public final String HIERO_OPT  = "hieroDTU";
-
-  /*
-  static public final String ONLY_CROSS_SERIAL_OPT  = "onlyCrossSerialDTU";
-  static public final String NO_CROSS_SERIAL_PHRASES_OPT  = "noCrossSerialPhrases";
-  */
 
   static public final int DEFAULT_MAX_SIZE = 5;
   static public final int DEFAULT_MAX_SPAN = 12;
@@ -53,12 +43,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   static final boolean DEBUG = System.getProperty("DebugDTU") != null;
 
-
-  static boolean withGaps, looseDTU, looseOutsideDTU, hieroDTU, naacl2010, gapsBothSides,
-       noTargetGaps, noUnalignedSubphrase, noUnalignedGaps, noUnalignedOrLooseGaps, growSource;
+  static boolean looseDTU=true, looseOutsideDTU=true, growSource=false;
+  static boolean withGaps, gapsBothSides, noTargetGaps, hieroDTU,
+                 noUnalignedSubphrase, allowLooseGaps, allowUnalignedGaps;
 
   Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
-  BitSet unalignedWordsE, unalignedWordsF;
+  //BitSet unalignedWordsE, unalignedWordsF;
 
   MosesPhraseExtractor substringExtractor;
 
@@ -103,35 +93,22 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     optStr = prop.getProperty(NO_TARGET_GAPS_OPT);
     noTargetGaps = optStr != null && !optStr.equals("false");
 
-    // Ignore DTU if a gap only covers unaligned words:
-    optStr = prop.getProperty(NO_UNALIGNED_GAPS_OPT);
-    noUnalignedGaps = optStr != null && !optStr.equals("false");
+    // Don't ignore DTU if a gap only covers unaligned words:
+    optStr = prop.getProperty(ALLOW_UNALIGNED_GAPS_OPT);
+    allowUnalignedGaps = optStr != null && !optStr.equals("false");
 
-    // Ignore DTU if first or last word of X is unaligned (same as Hiero):
-    optStr = prop.getProperty(NO_UNALIGNED_OR_LOOSE_GAPS_OPT);
-    noUnalignedOrLooseGaps = optStr != null && !optStr.equals("false");
+    // Don't Ignore DTU if first or last word of X is unaligned (same as Hiero):
+    optStr = prop.getProperty(ALLOW_LOOSE_GAPS_OPT);
+    allowLooseGaps = optStr != null && !optStr.equals("false");
 
     // Each wi in w1 X w2 X ... X wN must be licensed by at least one alignment:
     optStr = prop.getProperty(NO_UNALIGNED_SUBPHRASE_OPT);
     noUnalignedSubphrase = optStr != null && !optStr.equals("false");
 
-    // Configuration of NAACL2010:
-    optStr = prop.getProperty(NAACL2010_OPT);
-    naacl2010 = optStr != null && !optStr.equals("false");
-
     // Enable phrases with gaps on both sides:
     // (note: this creates a lot of phrases)
     optStr = prop.getProperty(GAPS_BOTH_SIDES_OPT);
     gapsBothSides = optStr != null && !optStr.equals("false");
-
-    optStr = prop.getProperty(GROW_SOURCE_OPT);
-    growSource = optStr != null && !optStr.equals("false");
-
-    // Tight or loose discontinuous phrases?
-    optStr = prop.getProperty(LOOSE_DISC_PHRASES_OPT);
-    looseDTU = optStr != null && !optStr.equals("false");
-    optStr = prop.getProperty(LOOSE_DISC_PHRASES_OUTSIDE_OPT);
-    looseOutsideDTU = optStr != null && !optStr.equals("false");
 
     String s;
     if ((s = prop.getProperty(MAX_SPAN_F_OPT)) != null) {
@@ -160,20 +137,15 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
     maxSize = Math.max(maxSizeF, maxSizeE);
     System.err.printf
-     ("discontinuous phrase constraints:"+
-      "size: max=%d,maxE=%d,maxF=%d span: max=%d,maxE=%d,maxF=%d\n",
+     ("Discontinuous phrase constraints:\n"+
+      "Size: max=%d,maxE=%d,maxF=%d\nSpan: max=%d,maxE=%d,maxF=%d\n",
         maxSize, maxSizeE, maxSizeF,
         maxSpan, maxSpanE, maxSpanF);
 
     // Roughly the same set of phrases as Hiero:
     optStr = prop.getProperty(HIERO_OPT);
     hieroDTU = optStr != null && !optStr.equals("false");
-    if (hieroDTU) {
-      looseDTU = true;
-      looseOutsideDTU = true;
-      noUnalignedOrLooseGaps = true;
-      //noCrossSerialPhrases = true;
-    }
+    // TODO: restore Hiero restrictions (see old DTU classes)
 
     if (DEBUG)
       AlignmentTemplateInstance.lazy = false;
@@ -264,6 +236,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       consistencizedE = dtu.consistencizedE.clone();
     }
 
+    @SuppressWarnings("unused")
     DTUPhrase(WordAlignment sent, int fi, int ei) {
       super();
       this.sent = sent;
@@ -419,25 +392,28 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return false;
     }
 
-    boolean hasUnalignedOrLooseGap() {
-      return hasUnalignedOrLooseGap(sent, f, true) || hasUnalignedOrLooseGap(sent, e, false);
+    boolean hasLooseGap() {
+      boolean hlgF = hasLooseGap(sent, f, true);
+      boolean hlgE = hasLooseGap(sent, e, false);
+      return hlgF || hlgE;
     }
 
-    boolean hasUnalignedOrLooseGap(WordAlignment sent, BitSet fs, boolean source) {
+    boolean hasLooseGap(WordAlignment sent, BitSet fs, boolean source) {
       if (fs.isEmpty())
         return false;
       int startIdx, endIdx = 0;
       for (;;) {
+        // Position of the gap:
         startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
         endIdx = fs.nextSetBit(startIdx)-1;
         if (startIdx > endIdx)
           break;
         if (source) {
-          if (sent.f2e(startIdx).isEmpty() || sent.f2e(startIdx).isEmpty()) {
+          if (sent.f2e(startIdx).isEmpty() || sent.f2e(endIdx).isEmpty()) {
             return true;
           }
         }  else {
-          if (sent.e2f(endIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
+          if (sent.e2f(startIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
             return true;
           }
         }
@@ -530,10 +506,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     BitSet candidateIdx(BitSet currentSet, boolean growOutside) {
       BitSet successors = adjacentWords(currentSet, growOutside);
-      if (hieroDTU) {
-        // TODO: speedup:
-        successors.or(unalignedWordsE);
-      }
+      //if (hieroDTU) {
+      //  successors.or(unalignedWordsE);
+      //}
       if (DEBUG) {
         System.err.printf("sent: %s\n",sent);
         System.err.println("dtu to expand: "+this);
@@ -680,58 +655,32 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     if (fSize < PRINT_GRID_MAX_LEN && eSize < PRINT_GRID_MAX_LEN)
       alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
 
-    unalignedWordsF = sent.unalignedF();
-    unalignedWordsE = sent.unalignedE();
+    //unalignedWordsF = sent.unalignedF();
+    //unalignedWordsE = sent.unalignedE();
 
     seen.clear();
 
     // Add contiguous phrases:
-    substringExtractor.addPhrasesToGrid(sent);
+    substringExtractor.addPhrasesToIndex(sent);
 
-    if (naacl2010) {
-      // (A) Add minimal translation units:
-      Deque<DTUPhrase> minimalUnitsQueue = new LinkedList<DTUPhrase>();
-      for (int fi=0; fi<sent.f().size(); ++fi) {
-        for (int ei : sent.f2e(fi)) {
-          DTUPhrase p = new DTUPhrase(sent, fi, ei);
-          if (p.consistencize(fi, true)) {
-            if (!seen.contains(p)) {
-              minimalUnitsQueue.offerLast(p);
-              seen.add(p);
-            }
-          }
+    // Find discontinuous translation units that match input string:
+    Deque<DTUPhrase> matchQueue = new LinkedList<DTUPhrase>();
+    for (CoverageSet bitset : subsequenceExtract(sent)) {
+      DTUPhrase dtu = new DTUPhrase(sent, bitset.clone(), new CoverageSet());
+      if (dtu.consistencize()) {
+        if (!seen.contains(dtu)) {
+          matchQueue.offerLast(dtu);
+          seen.add(dtu);
         }
       }
-      growDTUs(minimalUnitsQueue, true, true, true);
     }
+    growDTUs(matchQueue, growSource, looseDTU, looseOutsideDTU);
 
-    {
-      // (B) Add discontinuous translation units that match input string:
-      // Q: Why have both (A) and (B)?
-      // A: so that
-      Deque<DTUPhrase> matchQueue = new LinkedList<DTUPhrase>();
-      for (CoverageSet bitset : subsequenceExtract(sent)) {
-        DTUPhrase dtu = new DTUPhrase(sent, bitset.clone(), new CoverageSet());
-        if (dtu.consistencize()) {
-          if (!seen.contains(dtu)) {
-            matchQueue.offerLast(dtu);
-            seen.add(dtu);
-          }
-        }
-      }
-      if (naacl2010) {
-        growDTUs(matchQueue, growSource, false, false);
-      } else {
-        growDTUs(matchQueue, growSource, looseDTU, looseOutsideDTU);
-      }
-    }
-
-    // Add each discontinuous phrase to grid:
+    // Add discontinuous phrases to index:
     for (DTUPhrase dtu : seen) {
-      //assert(dtu instanceof DTUPhrase);
       if (!noTargetGaps || dtu.eContiguous()) {
-        if (!noUnalignedGaps || !dtu.hasUnalignedGap()) {
-          if (!noUnalignedOrLooseGaps || !dtu.hasUnalignedOrLooseGap()) {
+        if (allowLooseGaps || !dtu.hasLooseGap()) {
+          if (allowUnalignedGaps || !dtu.hasUnalignedGap()) {
             if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
               addPhraseToIndex(sent, dtu, true);
             }
@@ -740,8 +689,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       }
     }
 
-    // Rules are processed after being enumerated:
-    extractPhrasesFromGrid(sent);
+    // Featurize all phrases in current sentence:
+    featurize(sent);
   }
 
 }

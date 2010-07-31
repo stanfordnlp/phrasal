@@ -81,7 +81,7 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
 	public int getRequiredPassNumber() { return numPasses; }
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {
     // Increment word counts:
     Sequence<IString> f = sent.f();
     Sequence<IString> e = sent.e();
@@ -100,7 +100,7 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
   }
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     // Code below will only get executed during the last pass:
     if (getCurrentPass()+1 == getRequiredPassNumber()) {
       if (DEBUG_LEVEL >= 2)

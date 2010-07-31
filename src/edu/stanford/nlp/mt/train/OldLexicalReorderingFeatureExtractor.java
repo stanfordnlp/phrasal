@@ -110,10 +110,10 @@ public class OldLexicalReorderingFeatureExtractor extends AbstractFeatureExtract
 	public boolean needAlGrid() { return phrasalContext; }
 
   @Override
-	public void extract(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
+	public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   @Override
-	public void extract(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
     if(getCurrentPass()+1 != getRequiredPassNumber())
       return;
     int maxSize = 3;

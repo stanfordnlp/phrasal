@@ -468,7 +468,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     for(int i = 0; i < extractors.size(); i++) {
       AbstractChineseSyntaxFeatureExtractor<String> e = extractors.get(i);
       String infoLine = infoLinesForExtractors.get(i);
-      e.extract(sent,infoLine,alGrid);
+      e.featurizeSentence(sent,infoLine,alGrid);
     }
   }
 
@@ -497,7 +497,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     // Run each feature extractor for each altemp:
     if(!needAlGrid)
       for(AbstractChineseSyntaxFeatureExtractor<String> e : extractors) {
-        e.extract(alTemp, null);
+        e.featurizePhrase(alTemp, null);
       }
   }
 

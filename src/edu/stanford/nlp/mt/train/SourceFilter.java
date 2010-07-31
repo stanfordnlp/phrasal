@@ -38,17 +38,16 @@ public class SourceFilter {
    */
   @SuppressWarnings("unchecked")
   public void addPhrasesFromCorpus(String fFilterCorpus, int maxPhraseLenF, Integer maxSpanF, boolean addBoundaryMarkers) {
-    //System.err.println("Filtering against corpus: "+fFilterCorpus);
-		if (maxSpanF != null)
-			System.err.println("MaxSpanF: "+maxSpanF);
+    System.err.println("Enumerating "+(maxSpanF!=null?"dis":"")+"continuous phrases in: "+fFilterCorpus);
+    System.err.print("Line");
     try {
       LineNumberReader fReader = IOTools.getReaderFromFile(fFilterCorpus);
       int lineNb = 0;
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
+        if (lineNb % 100 == 0)
+          System.err.printf(" %d...", lineNb);
         if (maxSpanF != null) {
           assert (!addBoundaryMarkers);
-          if (lineNb % 10 == 0)
-            System.err.printf("line %d...\n", lineNb);
           extractDTUPhrasesFromLine(fLine, maxPhraseLenF, maxSpanF);
         }
         extractPhrasesFromLine(fLine, maxPhraseLenF, addBoundaryMarkers);
@@ -58,8 +57,8 @@ public class SourceFilter {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    System.err.printf("Phrases in %s: %d\n", fFilterCorpus, sourcePhraseTable.size());
-    System.gc(); System.gc(); System.gc();
+    System.err.printf("\nPhrases in %s: %d\n", fFilterCorpus, sourcePhraseTable.size());
+    //System.gc(); System.gc(); System.gc();
     //long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
     //long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
     //System.err.printf("totalmem = %dm, freemem = %dm\n", totalMemory, freeMemory);
@@ -75,7 +74,7 @@ public class SourceFilter {
       for (int j=i; j<f.size() && j-i<maxPhraseLenF; ++j) {
         Sequence<IString> fPhrase = f.subsequence(i,j+1);
         if (SHOW_PHRASE_RESTRICTION)
-          System.err.printf("restrict to phrase (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
+          System.err.printf("Restrict to phrase (i=%d,j=%d,M=%d): %s\n",i,j,maxPhraseLenF,fPhrase.toString());
         sourcePhraseTable.indexOf(Sequences.toIntArray(fPhrase), true);
       }
     }
@@ -118,7 +117,7 @@ public class SourceFilter {
     }
 
     PartialBitSet resizeNoGap() {
-      if(xStartPos > phraseEndPos) {
+      if (xStartPos > phraseEndPos) {
         PartialBitSet ns = new PartialBitSet(this);
         ++ns.xStartPos;
         ++ns.phraseEndPos;
@@ -129,7 +128,7 @@ public class SourceFilter {
     }
 
     PartialBitSet resizeGap() {
-      if(xStartPos > phraseEndPos && xCount == MAX_GAP)
+      if (xStartPos > phraseEndPos && xCount == MAX_GAP)
         return null;
       PartialBitSet ns = new PartialBitSet(this);
       ++ns.phraseEndPos;
@@ -137,7 +136,7 @@ public class SourceFilter {
     }
 
     PartialBitSet closeGap() {
-      if(xStartPos > phraseEndPos)
+      if (xStartPos > phraseEndPos)
         return null;
       PartialBitSet ns = new PartialBitSet(this);
       ns.xStartPos = ns.phraseEndPos+1;
@@ -151,30 +150,30 @@ public class SourceFilter {
     Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
     Deque<PartialBitSet> oq = new LinkedList<PartialBitSet>();
     Set<PartialBitSet> cq = new HashSet<PartialBitSet>();
-    for(int i=0; i<f.size(); ++i)
+    for (int i=0; i<f.size(); ++i)
       oq.add(new PartialBitSet(i));
-    while(!oq.isEmpty()) {
+    while (!oq.isEmpty()) {
       PartialBitSet s = oq.pop();
-      if(s == null)
+      if (s == null)
         continue;
-      if(s.xStartPos > s.phraseEndPos && s.phraseEndPos <= f.size())
+      if (s.xStartPos > s.phraseEndPos && s.phraseEndPos <= f.size())
         if(!cq.add(s))
           continue;
-      if(s.phraseEndPos - s.phraseStartPos + 1 > maxSpanF)
+      if (s.phraseEndPos - s.phraseStartPos + 1 > maxSpanF)
         continue;
-      if(s.bs.cardinality() >= maxPhraseLenF)
+      if (s.bs.cardinality() >= maxPhraseLenF)
         continue;
       oq.push(s.closeGap());
-      if(s.phraseEndPos+1 <= f.size()) {
+      if (s.phraseEndPos+1 <= f.size()) {
         oq.push(s.resizeGap());
         oq.push(s.resizeNoGap());
       }
     }
     for (PartialBitSet s : cq) {
       Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f, s.bs, null, -1);
-      if(fPhrase != null) {
+      if (fPhrase != null) {
         if (SHOW_PHRASE_RESTRICTION)
-          System.err.printf("restrict to dtu (i=%d,j=%d,M=%d): %s\n",s.phraseStartPos,s.phraseEndPos,maxPhraseLenF,fPhrase.toString());
+          System.err.printf("Restrict to dtu (i=%d,j=%d,M=%d): %s\n",s.phraseStartPos,s.phraseEndPos,maxPhraseLenF,fPhrase.toString());
         sourcePhraseTable.indexOf(Sequences.toIntArray(fPhrase), true);
       }
     }
@@ -191,12 +190,12 @@ public class SourceFilter {
       LineNumberReader fReader = IOTools.getReaderFromFile(fileName);
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
         int[] f = IStrings.toIntArray(IStrings.toIStringArray(fLine.split("\\s+")));
-        if(SHOW_PHRASE_RESTRICTION)
-          System.err.printf("restrict to phrase: %s\n",f.toString());
+        if (SHOW_PHRASE_RESTRICTION)
+          System.err.printf("Restrict to phrase: %s\n",f.toString());
         sourcePhraseTable.indexOf(f, true);
       }
       fReader.close();
-    } catch(IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
 		isEnabled = true;
@@ -223,8 +222,10 @@ public class SourceFilter {
       int[] el = sourcePhraseTable.get(i);
       sourcePhraseTrie.indexOf(el, true);
     }
-    System.err.println("Source phrase table: "+sourcePhraseTable.size());
-    System.err.println("Source phrase trie: "+sourcePhraseTrie.size());
+    //Note: the two tables may not report the same number of phrases, since
+    //the latter size() also enumerates prefixes.
+    //System.err.println("Source phrase table entries: "+sourcePhraseTable.size());
+    //System.err.println("Source phrase trie entries: "+sourcePhraseTrie.size());
   }
 
   public TrieIntegerArrayIndex getSourceTrie() {

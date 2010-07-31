@@ -59,7 +59,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
   }
 
   private static final double EXPIRATION_PENALTY = 1000.0; // When a DTUHypothesis expires, it suffers this cost
-  private static int maxTargetPhraseSpan = 10;
+  private static int maxTargetPhraseSpan = -1;
   private static int maxFloatingPhrases = 5;
 
   private boolean hasExpired=false;
@@ -70,13 +70,13 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
                                         // score of "floating" phrases
 
   public static void setMaxTargetPhraseSpan(int m) {
-    System.err.println("Setting max target phrase span: "+m);
+    System.err.println("Setting new maximum target phrase span: "+m);
     maxTargetPhraseSpan = m;
   }
   public static int getMaxTargetPhraseSpan() { return maxTargetPhraseSpan; }
 
   public static void setMaxFloatingPhrases(int m) {
-    System.err.println("Setting max floating phrases: "+m);
+    System.err.println("Setting new maximum number of stacked phrases: "+m);
     maxFloatingPhrases = m;
   }
 
@@ -153,6 +153,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     this.targetOnly = false;
 
     // Add new floating phrases:
+    assert (maxTargetPhraseSpan >= 0);
     if(translationOpt.abstractOption instanceof DTUOption) {
       currentDiscTargetPhrase = new DiscTargetPhrase<TK,FV>
          (translationOpt, 0, this.length+1, this.length + maxTargetPhraseSpan);
