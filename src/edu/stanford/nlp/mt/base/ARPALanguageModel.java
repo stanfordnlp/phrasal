@@ -13,8 +13,8 @@ import java.util.zip.GZIPInputStream;
  */
 public class ARPALanguageModel implements LanguageModel<IString> {
 
-  public static final String USE_SRILM_PROPERTY = "SRILM";
-  public static final boolean USE_SRILM = Boolean.parseBoolean(System.getProperty(USE_SRILM_PROPERTY, "false"));
+  //public static final String USE_SRILM_PROPERTY = "SRILM";
+  //public static final boolean USE_SRILM = Boolean.parseBoolean(System.getProperty(USE_SRILM_PROPERTY, "false"));
 
   static boolean verbose = false;
 
@@ -60,12 +60,20 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     String filepath = f.getAbsolutePath();
     if (lmStore.containsKey(filepath)) return lmStore.get(filepath);
 
-    if (vocabFilename != null && !USE_SRILM) {
-      System.err.printf("Warning: vocabulary file %s is ignored.\n", vocabFilename);
+    boolean useSRILM = true;
+    LanguageModel<IString> alm;
+    
+    try {
+      alm = new SRILanguageModel(filename, vocabFilename);
+    } catch(UnsatisfiedLinkError e) {
+      System.err.println("Unable to load SRILM library. Default to Java ARPA implementation.");
+      alm = new ARPALanguageModel(filename);
+      useSRILM = false;
     }
 
-    LanguageModel<IString> alm = 
-        (USE_SRILM ? new SRILanguageModel(filename, vocabFilename) : new ARPALanguageModel(filename));
+    if (vocabFilename != null && !useSRILM)
+      System.err.printf("Warning: vocabulary file %s is ignored.\n", vocabFilename);
+    
     if(alm instanceof ARPALanguageModel)
       lmStore.put(filepath, (ARPALanguageModel)alm);
 
@@ -198,7 +206,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     index = tables[prefixInts.length-1].getIndex(prefixInts);
     double bow = 0;
     if (index >= 0) bow = bows[prefixInts.length-1][index];
-    if (bow != bow) bow = 0.0; // treat NaNs as bow that are not found at all
+    if (Double.isNaN(bow)) bow = 0.0; // treat NaNs as bow that are not found at all
     double p = bow + scoreR(sequence.subsequence(1, ngramInts.length));
     if(verbose)
       System.err.printf("scoreR: seq: %s logp: %f [%f] bow: %f\n", sequence.toString(), p, p/Math.log(10), bow);
@@ -252,9 +260,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     int index = tables[prefixInts.length-1].getIndex(prefixInts);
     if (index < 0) return false;
     double bow = bows[prefixInts.length-1][index];
-
-    if (bow != bow) return false;
-    return true;
+    return !Double.isNaN(bow);
   }
 
   static public void main(String[] args) throws Exception {

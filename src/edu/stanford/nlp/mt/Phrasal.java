@@ -475,12 +475,11 @@ public class Phrasal {
 							featurizerName = token.replaceFirst("\\(.*", "");
 							args = token.replaceFirst("^.*\\(", "");
 							args = args.substring(0, args.length() - 1);
-							System.err.printf("featurizerName: %s\n", featurizerName);
 							args = args.replaceAll("\\s*,\\s*", ",");
 							args = args.replaceAll("^\\s+", "");
 							args = args.replaceAll("\\s+$", "");
 							String[] argsList = args.split(",");
-							System.err.printf("args: %s\n", Arrays.toString(argsList));
+							System.err.printf("Additional featurizer: %s.\nArgs: %s\n", featurizerName, Arrays.toString(argsList));
 							Class featurizerClass = FeaturizerFactory
 							.loadFeaturizer(featurizerName);
 							featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
