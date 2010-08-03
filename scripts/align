@@ -13,7 +13,6 @@ CONF=$2
 shift
 shift
 
-OPTS="-server -XX:+UseCompressedOops -XX:+AggressiveHeap -Xmx$MEM -Xms$MEM"
+OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM"
 
 java $OPTS -jar /u/nlp/packages/berkeleyaligner2.1/berkeleyaligner.jar ++$CONF $@ 
-#java $OPTS -jar /u/nlp/packages/berkeleyaligner1.1/distribution/berkeleyaligner-1.1.jar ++$CONF $@ 
