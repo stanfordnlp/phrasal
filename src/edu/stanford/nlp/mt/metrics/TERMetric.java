@@ -75,7 +75,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
      	// refs[i] = refsSeq.get(i).toString();
     	//}
 			//System.err.printf("Hyp: %s\n", hyp);
-		
+
 			int totalWords = 0;
     	for (Sequence<TK> ref : refsSeq) {
      	 TERalignment terAl = calc.TER(hyp, ref.toString());
@@ -122,7 +122,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     int cnt = 0;
     int nullCnt = 0;
 
-    public TERIncrementalMetric() { 
+    public TERIncrementalMetric() {
       if(countEdits)
         editCounts = new double[EditType.values().length];
     }
@@ -231,7 +231,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
   public static void main(String[] args) throws IOException {
 
     if (args.length == 0) {
-      System.err.println("Usage:\n\tjava TERMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
+      System.err.println("Usage:\n\tjava TERMetric (ref 1) (ref 2) ... (ref n) < candidateTranslations\n");
       System.exit(-1);
     }
     VERBOSE = true;

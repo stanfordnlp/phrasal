@@ -18,7 +18,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
   /**
    * This class represents a phrase with one or more discontinuities in its target side.
    * It holds this information: which abstract translation option is used to generate
-   * the discontinuous phrase, and the index of the index of the current contignuous segment.
+   * the discontinuous phrase, and the index of the index of the current contiguous segment.
    */
   public static class DiscTargetPhrase<TK,FV> implements Cloneable, Comparable<DiscTargetPhrase<TK,FV>> {
 
@@ -161,7 +161,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     } else {
       currentDiscTargetPhrase = null;
     }
-    
+
     // Too many floating phrases?:
     if(discTargetPhrases.size() > maxFloatingPhrases)
       this.hasExpired = true;
