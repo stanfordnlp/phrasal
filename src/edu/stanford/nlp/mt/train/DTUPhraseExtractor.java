@@ -27,6 +27,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String GAPS_BOTH_SIDES_OPT = "gapsBothSides";
   static public final String ALLOW_UNALIGNED_GAPS_OPT = "allowUnalignedGaps"; // do not extract "w X w" if X is unaligned
   static public final String ALLOW_LOOSE_GAPS_OPT = "allowLooseGaps"; // do not extract "w X w" if X is unaligned
+  static public final String ALLOW_LOOSE_GAPS_E_OPT = "allowLooseGapsE";
+  static public final String ALLOW_LOOSE_GAPS_F_OPT = "allowLooseGapsF";
   static public final String NO_UNALIGNED_SUBPHRASE_OPT = "noUnalignedSubphrase";
   static public final String HIERO_OPT  = "hieroDTU";
 
@@ -45,10 +47,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   static boolean looseDTU=true, looseOutsideDTU=true, growSource=false;
   static boolean withGaps, gapsBothSides, noTargetGaps, hieroDTU,
-                 noUnalignedSubphrase, allowLooseGaps, allowUnalignedGaps;
+                 noUnalignedSubphrase, allowLooseGapsE, allowLooseGapsF, allowUnalignedGaps;
 
   Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
-  //BitSet unalignedWordsE, unalignedWordsF;
 
   MosesPhraseExtractor substringExtractor;
 
@@ -99,7 +100,15 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // Don't Ignore DTU if first or last word of X is unaligned (same as Hiero):
     optStr = prop.getProperty(ALLOW_LOOSE_GAPS_OPT);
-    allowLooseGaps = optStr != null && !optStr.equals("false");
+    boolean allowLooseGaps = optStr != null && !optStr.equals("false");
+    if (allowLooseGaps) {
+      allowLooseGapsE = allowLooseGapsF = true;
+    } else {
+      optStr = prop.getProperty(ALLOW_LOOSE_GAPS_E_OPT);
+      allowLooseGapsE = optStr != null && !optStr.equals("false");
+      optStr = prop.getProperty(ALLOW_LOOSE_GAPS_F_OPT);
+      allowLooseGapsF = optStr != null && !optStr.equals("false");
+    }
 
     // Each wi in w1 X w2 X ... X wN must be licensed by at least one alignment:
     optStr = prop.getProperty(NO_UNALIGNED_SUBPHRASE_OPT);
@@ -392,11 +401,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return false;
     }
 
-    boolean hasLooseGap() {
-      boolean hlgF = hasLooseGap(sent, f, true);
-      boolean hlgE = hasLooseGap(sent, e, false);
-      return hlgF || hlgE;
-    }
+    //boolean hasLooseGaps() { return hasLooseGap(sent, f, true) || hasLooseGap(sent, e, false); }
+    boolean hasLooseGapsE() { return hasLooseGap(sent, e, false); }
+    boolean hasLooseGapsF() { return hasLooseGap(sent, f, true); }
 
     boolean hasLooseGap(WordAlignment sent, BitSet fs, boolean source) {
       if (fs.isEmpty())
@@ -409,10 +416,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         if (startIdx > endIdx)
           break;
         if (source) {
+          //if (sent.f2e(startIdx).isEmpty() || sent.f2e(startIdx).isEmpty()) {
           if (sent.f2e(startIdx).isEmpty() || sent.f2e(endIdx).isEmpty()) {
             return true;
           }
         }  else {
+          //if (sent.e2f(endIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
           if (sent.e2f(startIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
             return true;
           }
@@ -679,10 +688,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // Add discontinuous phrases to index:
     for (DTUPhrase dtu : seen) {
       if (!noTargetGaps || dtu.eContiguous()) {
-        if (allowLooseGaps || !dtu.hasLooseGap()) {
-          if (allowUnalignedGaps || !dtu.hasUnalignedGap()) {
-            if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
-              addPhraseToIndex(sent, dtu, true);
+        if (allowLooseGapsE || !dtu.hasLooseGapsE()) {
+          if (allowLooseGapsF || !dtu.hasLooseGapsF()) {
+            if (allowUnalignedGaps || !dtu.hasUnalignedGap()) {
+              if (!noUnalignedSubphrase || !dtu.hasUnalignedSubphrase()) {
+                addPhraseToIndex(sent, dtu, true);
+              }
             }
           }
         }

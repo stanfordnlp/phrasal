@@ -64,6 +64,7 @@ public class PhraseExtract {
   static public final String SYMMETRIZE_OPT = "symmetrization";
   static public final String EXTRACTORS_OPT = "extractors";
   static public final String VERBOSE_OPT = "verbose";
+  static public final String HELP_OPT = "help";
 
   static public final String PHRASE_EXTRACTOR_OPT = "phraseExtractor";
   static public final String FILTER_CORPUS_OPT = "fFilterCorpus";
@@ -118,7 +119,7 @@ public class PhraseExtract {
        AbstractPhraseExtractor.ONLY_TIGHT_PHRASES_OPT,
        NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
-       EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT,
+       EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT, HELP_OPT,
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT, VERBOSE_OPT,
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT, LEX_REORDERING_HIER_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
@@ -135,6 +136,8 @@ public class PhraseExtract {
        DTUPhraseExtractor.GAPS_BOTH_SIDES_OPT,
        DTUPhraseExtractor.ALLOW_UNALIGNED_GAPS_OPT,
        DTUPhraseExtractor.ALLOW_LOOSE_GAPS_OPT,
+       DTUPhraseExtractor.ALLOW_LOOSE_GAPS_E_OPT,
+       DTUPhraseExtractor.ALLOW_LOOSE_GAPS_F_OPT,
        DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
        DTUPhraseExtractor.HIERO_OPT
      ));
@@ -756,12 +759,16 @@ public class PhraseExtract {
     System.err.println("Properties: "+prop.toString());
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
 
-    try {
-      PhraseExtract e = new PhraseExtract(prop);
-      e.extractAll();
-    } catch(Exception e) {
-      e.printStackTrace();
+    if (prop.getProperty(HELP_OPT,"false").equals("true")) {
       usage();
+    } else {
+      try {
+        PhraseExtract e = new PhraseExtract(prop);
+        e.extractAll();
+      } catch(Exception e) {
+        e.printStackTrace();
+        usage();
+      }
     }
     
     System.err.println("Extraction ended at "+formatter.format(new Date()));

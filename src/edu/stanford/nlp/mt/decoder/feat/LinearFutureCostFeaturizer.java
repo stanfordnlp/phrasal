@@ -19,7 +19,7 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 
   public final float futureCostDelay;
 
-  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","0.5f"));
+  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","0f"));
 
   @SuppressWarnings("unused")
   public LinearFutureCostFeaturizer() {

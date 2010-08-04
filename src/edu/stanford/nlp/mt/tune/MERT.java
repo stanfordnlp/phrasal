@@ -856,7 +856,7 @@ public class MERT extends Thread {
         gamma = Double.parseDouble(fields[3]);
       }
       meteorMetric = createMetric(METEOR_CLASS_NAME,
-          new Class[] { List.class, Double.class, Double.class, Double.class},
+          new Class[] { List.class, double.class, double.class, double.class},
           new Object[] { references, alpha, beta, gamma });
     }
 
@@ -866,7 +866,7 @@ public class MERT extends Thread {
       emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU),
                       createMetric(TERP_CLASS_NAME, 
-                                   new Class[] { List.class, Integer.class, Integer.class },
+                                   new Class[] { List.class, int.class, int.class },
                                    new Object[] { references, 5, 10 }));
                       //new TERpMetric<IString, String>(references, 5, 10));
       System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n", evalMetric, terW);
@@ -883,8 +883,8 @@ public class MERT extends Thread {
       //emetric = new TERpMetric<IString, String>(references);
     } else if (evalMetric.equals("terpa")) {
       emetric = createMetric(TERP_CLASS_NAME,
-                             new Class[] { List.class, Boolean.class, Boolean.class },
-                             new Object[] { references, Boolean.FALSE, Boolean.TRUE });
+                             new Class[] { List.class, boolean.class, boolean.class },
+                             new Object[] { references, false, true });
       //emetric = new TERpMetric<IString, String>(references, false, true);
     } else if (evalMetric.equals("meteor") || evalMetric.startsWith("meteor:")) {
       emetric = meteorMetric;
@@ -940,8 +940,8 @@ public class MERT extends Thread {
       emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
                       new BLEUMetric<IString, String>(references, smoothBLEU),
                       createMetric(TERP_CLASS_NAME,
-                                   new Class[] { List.class, Boolean.class, Boolean.class }, 
-                                   new Object[] { references, Boolean.FALSE, Boolean.TRUE }));
+                                   new Class[] { List.class, boolean.class, boolean.class },
+                                   new Object[] { references, false, true }));
                       //new TERpMetric<IString, String>(references, false, true));
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {

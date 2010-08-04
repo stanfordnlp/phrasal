@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tune;
 
+import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -14,7 +15,6 @@ import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.QNMinimizer;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.HasInitial;
-import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;
 import edu.stanford.nlp.math.ArrayMath;
 
 import edu.stanford.nlp.mt.base.MosesNBestList;
@@ -28,6 +28,8 @@ import edu.stanford.nlp.mt.decoder.util.StaticScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.feat.WordPenaltyFeaturizer;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -538,8 +540,9 @@ class LineSearchOptimizer extends AbstractNBestOptimizer {
 class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
-
   static public final double BAD_WEIGHT_PENALTY = 1<<20;
+  static public final String SIMPLEX_CLASS_NAME =
+    "edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer";
 
   private final boolean szMinusOne;
   private final boolean doRandomSteps;
@@ -607,6 +610,18 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     return wts;
   }
 
+  @SuppressWarnings("unchecked")
+  private static Minimizer<Function> createSimplexMinimizer(Class[] argClasses, Object[] args) {
+    Minimizer<Function> metric;
+    try {
+      Class<Minimizer<Function>> cls = (Class<Minimizer<Function>>)Class.forName(SIMPLEX_CLASS_NAME);
+      Constructor<Minimizer<Function>> ct = cls.getConstructor(argClasses);
+      metric = ct.newInstance(args);
+    }
+    catch (Exception e) { throw new RuntimeException(e); }
+    return metric;
+  }
+
   private Counter<String> optimizeOnce(final Counter<String> initialWts) {
 
     System.err.printf("\nDownhill simplex starts at: %s value: %.5f\n",
@@ -620,16 +635,18 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
     double[] initx = counterToArray(keys, initialWts);
 
-    final DownhillSimplexMinimizer opt;
+    final Minimizer<Function> opt;
     if(doRandomSteps) {
       Set<String> keySet = new HashSet<String>(Arrays.asList(keys));
       Counter<String> randomStep = randomStep(keySet);
       MERT.normalize(randomStep);
       double[] randx = counterToArray(keys, randomStep);
       ArrayMath.multiplyInPlace(randx, SIMPLEX_RELATIVE_SIZE);
-      opt = new DownhillSimplexMinimizer(randx);
+      opt = createSimplexMinimizer(new Class[] {Array.class}, new Object[] {randx});
+      //opt = new DownhillSimplexMinimizer(randx);
     } else {
-      opt = new DownhillSimplexMinimizer(SIMPLEX_RELATIVE_SIZE);
+      opt = createSimplexMinimizer(new Class[] {double.class}, new Object[] {SIMPLEX_RELATIVE_SIZE});
+      //opt = new DownhillSimplexMinimizer(SIMPLEX_RELATIVE_SIZE);
     }
 
     Function f = new Function() {
