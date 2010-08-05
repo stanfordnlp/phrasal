@@ -136,10 +136,21 @@ foreach $arg (@ARGV) {
 
 $work_dir =~ s/\/$//g;
 
-if (@POSITIONAL_ARGS != 4) {
+if (@POSITIONAL_ARGS != 4 && @POSITIONAL_ARGS != 5) {
    $nm = $0; $nm =~ s/.*\///g;
-   print stderr "Usage:\n\t$nm input-text references (bleu/ter or :cmert-dir) decoder.ini\n";
+   print stderr "Usage:\n\t$nm [mem-size] input-text references (bleu/ter or :cmert-dir) decoder.ini\n";
    exit -1;
+}
+
+if (@POSITIONAL_ARGS == 5) {
+	my $dirname = `dirname $0`;
+	chomp $dirname;
+	my $memsize = shift(@POSITIONAL_ARGS);
+	my $cp = "-cp $dirname/../phrasal.jar:$dirname/../lib/fastutil.jar:$dirname/../lib/mtj.jar";
+	$java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
+	$mert_java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
+	$java_flags .= " -Xmx$memsize $cp";
+	$mert_java_flags .= "-Xmx$memsize $cp";
 }
 
 $input_text   = $POSITIONAL_ARGS[0];

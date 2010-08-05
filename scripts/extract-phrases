@@ -1,0 +1,23 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]
+	then
+  		echo "Usage: $0 <memory> <model-directory> [options]"
+  		exit 1
+fi
+
+MEM=$1
+DIR=$2
+shift
+shift
+
+BASEDIR=`dirname $0`
+
+JAVA_OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM -cp $BASEDIR/../phrasal.jar:$BASEDIR/../lib/fastutil.jar:$BASEDIR/../lib/mtj.jar"
+EXTRACT_OPTS="-inputDir $DIR -outputFile $DIR/phrases.gz"
+
+# Generate phrase table:
+java $JAVA_OPTS edu.stanford.nlp.mt.train.PhraseExtract $EXTRACT_OPTS $@ 2> $DIR/phrases.log
+
+# Split model into two: translation and reordering models:
+zcat $DIR/phrases.gz | $BASEDIR/../scripts/split-table $DIR/phrases-tm.gz $DIR/phrases-om.gz
