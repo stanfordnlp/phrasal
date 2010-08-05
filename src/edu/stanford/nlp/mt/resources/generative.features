@@ -12,12 +12,14 @@ TM:phi(t|f)
 TM:count
 TM:uniq
 SG:CrossingCount
+SG:Length
 SG:GapCount
 SG:Gap2Count
 SG:Gap3Count
 SG:Gap4Count
 TG:CrossingCount
 TG:Length
+TG:GapCount
 LM
 LM2
 LM3

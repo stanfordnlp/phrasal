@@ -151,7 +151,6 @@ public class PhraseExtract {
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugPhraseExtract";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
-
   protected List<AbstractFeatureExtractor> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
   private List<String> infoFileForExtractors;
@@ -397,11 +396,11 @@ public class PhraseExtract {
     }
 
     public void run() {
-      System.err.printf("Starting thread %s...\n", this);
+      //System.err.printf("Starting thread %s...\n", this);
       try {
         while (!dataQueue.isEmpty() || !ex.doneReadingData()) {
           Pair<Integer, String[]> p = dataQueue.poll();
-          if(p != null) {
+          if (p != null) {
             String[] lines = p.second();
             ex.processLine(phraseEx, p.first(), sent, lines[0], lines[1], lines[2], lines[3]);
           }
@@ -409,7 +408,7 @@ public class PhraseExtract {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      System.err.printf("Ending thread %s.\n", this);
+      //System.err.printf("Ending thread %s.\n", this);
     }
     
   }
@@ -420,7 +419,7 @@ public class PhraseExtract {
     if (!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
-    long startStepTimeMillis = startTimeMillis;
+    //long startStepTimeMillis = startTimeMillis;
 
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
 
@@ -437,7 +436,7 @@ public class PhraseExtract {
         assert(threads.isEmpty());
         assert(dataQueue.isEmpty());
         for (int i=0; i<nThreads; ++i) {
-          System.err.printf("Creating thread %d...\n", i);
+          //System.err.printf("Creating thread %d...\n", i);
           Extractor thread = new Extractor(this, dataQueue);
           thread.start();
           threads.add(thread);
@@ -448,7 +447,7 @@ public class PhraseExtract {
         // Read data and process data:
         if (passNumber > 0)
           System.err.println("Some feature extractor needs an additional pass over the data.");
-        System.err.printf("Pass %d on training data (max phrase len: %d,%d)...\n",
+        System.err.printf("Pass %d on training data (max phrase len: %d,%d)...\nLine",
           passNumber+1, AbstractPhraseExtractor.maxPhraseLenF, AbstractPhraseExtractor.maxPhraseLenE);
         LineNumberReader pReader=null, aInvReader=null,
           fReader = IOTools.getReaderFromFile(fCorpus),
@@ -476,18 +475,19 @@ public class PhraseExtract {
           boolean done = (fLine == null || lineNb == endAtLine);
 
           if (lineNb % memUsageFreq == 0 || done) {
-            long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
+            //long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
             long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
-            double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
-            startStepTimeMillis = System.currentTimeMillis();
-            if (verbose)
-              System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
-                                lineNb, totalStepSecs, totalMemory, freeMemory, alTemps.getSizeInfo());
+            //double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
+            //startStepTimeMillis = System.currentTimeMillis();
+            System.err.printf(" %d (mem=%dm)...", lineNb, freeMemory);
+            //if (verbose)
+            //  System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
+            //                    lineNb, totalStepSecs, totalMemory, freeMemory, alTemps.getSizeInfo());
           }
 
           if (done) {
             if (startAtLine >= 0 || endAtLine >= 0)
-              System.err.printf("Range done: [%d-%d], current line is %d.\n",
+              System.err.printf("\nRange done: [%d-%d], current line is %d.\n",
                                 startAtLine, endAtLine-1, lineNb);
             break;
           }
@@ -566,7 +566,7 @@ public class PhraseExtract {
         threads.clear();
 
         double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis)/1000.0;
-        System.err.printf("Done with pass %d. Seconds: %.3f.\n", passNumber+1, totalTimeSecs);
+        System.err.printf("\nDone with pass %d. Seconds: %.3f.\n", passNumber+1, totalTimeSecs);
       }
 
       // just let each extractor output some stuff to the STDERR
@@ -718,16 +718,16 @@ public class PhraseExtract {
     System.err.print
     ("Usage: java edu.stanford.nlp.mt.train.PhraseExtract [ARGS]\n"+
      "Sets of mandatory arguments (user must select either set 1, 2, or 3):\n"+
-     "Set 1:"+
+     "Set 1:\n"+
      " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+
      " -align <file> : alignment file (Moses format)\n"+
-     "Set 2:"+
+     "Set 2:\n"+
      " -fCorpus <file> : source-language corpus\n"+
      " -eCorpus <file> : target-language corpus\n"+
      " -feAlign <file> : f-e alignment file (GIZA format)\n"+
      " -efAlign <file> : e-f alignment file (GIZA format)\n"+
-     "Set 3:"+
+     "Set 3:\n"+
      " -inputDir <directory> : alignment directory created by Berkeley aligner v2.1\n"+
      "Optional arguments:\n"+
      " -outputFile <file> : phrases are written to this file\n"+
@@ -751,6 +751,11 @@ public class PhraseExtract {
 
   public static void main(String[] args) throws IOException {
 
+    if (args.length == 1 && args[0].equals("-help")) {
+      usage();
+      return;
+    }
+
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
     System.err.printf("Extraction started at %s on %s.\n",
       formatter.format(new Date()), InetAddress.getLocalHost().getHostName());
@@ -759,18 +764,14 @@ public class PhraseExtract {
     System.err.println("Properties: "+prop.toString());
     AbstractPhraseExtractor.setPhraseExtractionProperties(prop);
 
-    if (prop.getProperty(HELP_OPT,"false").equals("true")) {
+    try {
+      PhraseExtract e = new PhraseExtract(prop);
+      e.extractAll();
+    } catch(Exception e) {
+      e.printStackTrace();
       usage();
-    } else {
-      try {
-        PhraseExtract e = new PhraseExtract(prop);
-        e.extractAll();
-      } catch(Exception e) {
-        e.printStackTrace();
-        usage();
-      }
     }
-    
+
     System.err.println("Extraction ended at "+formatter.format(new Date()));
   }
 }
