@@ -418,7 +418,9 @@ public class MERT extends Thread {
   static final SmoothingType smoothingType = SmoothingType.valueOf(System
           .getProperty("SMOOTHING_TYPE", "min"));
   static boolean filterUnreachable = Boolean.parseBoolean(System
-          .getProperty("FILTER_UNREACHABLE", "true"));
+          .getProperty("FILTER_UNREACHABLE", "false"));
+  static boolean zeroUnreachable = Boolean.parseBoolean(System
+      .getProperty("ZERO_UNREACHABLE", "false"));
 
   static {
     System.err.println();
@@ -759,10 +761,13 @@ public class MERT extends Thread {
                 lI, minReachableScore, nbestlist.size());
         for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
           trans.score = scorer.getIncrementalScore(trans.features);
-          if (filterUnreachable && trans.score > minReachableScore) { // mark as
+          if (trans.score > minReachableScore) { // mark as
             // potentially
             // unreachable
-            trans.score = Double.NaN;
+            if (filterUnreachable)
+              trans.score = Double.NaN;
+            else if (zeroUnreachable)
+              trans.score = 1e-5;
           }
         }
       }
@@ -778,12 +783,11 @@ public class MERT extends Thread {
 
       for (ScoredFeaturizedTranslation<IString, String> trans : nbest
               .nbestLists().get(lI)) {
-        if (trans.score == trans.score)
+        if (!Double.isNaN(trans.score))
           newList.add(trans);
       }
       if (filterUnreachable)
-        newList.addAll(lNbestList); // otherwise entries are
-      // already on the n-best list
+        newList.addAll(lNbestList); // otherwise entries are already on the n-best list
       nbest.nbestLists().set(lI, newList);
       System.err.printf(
               "l %d - final (filtered) combined n-best list size: %d\n", lI,
@@ -993,16 +997,16 @@ public class MERT extends Thread {
 
     System.out.printf("\nthread started (%d): %s\n", startingPoints.size(), this);
 
-    for(;;) {
+    while (true) {
 
       Counter<String> wts;
 
       int sz;
-      synchronized(startingPoints) {
+      synchronized (startingPoints) {
         sz = startingPoints.size();
         wts = startingPoints.poll();
       }
-      if(wts == null)
+      if (wts == null)
         break;
 
       int ptI = nInitialStartingPoints - sz;
@@ -1011,21 +1015,21 @@ public class MERT extends Thread {
       // ensure experiments are reproducible:
       List<Double> v = new ArrayList<Double>(wts.values());
       Collections.sort(v);
-      v.add(SEED*1.0); 
+      v.add(SEED * 1.0);
       long threadSeed = Arrays.hashCode(v.toArray());
       this.random = new Random(threadSeed);
 
       System.out.printf("\npoint %d - initial wts: %s", ptI, wts.toString());
       System.out.printf("\npoint %d - seed: %d\n", ptI, threadSeed);
-      
+
       NBestOptimizer opt = NBestOptimizerFactory.factory(optStr, this);
-      System.err.println("using: "+opt.toString());
+      System.err.println("using: " + opt.toString());
 
       // Make sure weights that shouldn't be optimized are not in wts:
       removeWts(wts, fixedWts);
       Counter<String> optWts = opt.optimize(wts);
       // Temporarily add them back before normalization:
-      if(fixedWts != null) optWts.addAll(fixedWts);
+      if (fixedWts != null) optWts.addAll(fixedWts);
       Counter<String> newWts = normalize(optWts);
       // Remove them again:
       removeWts(newWts, fixedWts);
@@ -1038,7 +1042,7 @@ public class MERT extends Thread {
 
       System.out.printf("\npoint %d - final wts: %s", ptI, newWts.toString());
       System.out.printf("\npoint %d - eval: %e E(eval): %e obj: %e best obj: %e (l1: %f)\n\n",
-                        ptI, evalAt, mcmcEval2, obj, bestObj, l1norm(newWts));
+          ptI, evalAt, mcmcEval2, obj, bestObj, l1norm(newWts));
     }
   }
 
@@ -1105,6 +1109,8 @@ public class MERT extends Thread {
         seedStr = args[++argi];
       } else if(arg.equals("-F")) {
         filterUnreachable = true;
+      } else if(arg.equals("-Z")) {
+        zeroUnreachable = true;
       } else if(arg.equals("-p")) {
         nStartingPoints = Integer.parseInt(args[++argi]);
       } else if(arg.equals("-o")) {
@@ -1134,6 +1140,7 @@ public class MERT extends Thread {
       System.err.println("-o <N>: search algorithm.");
       System.err.println("-t <N>: number of threads.");
       System.err.println("-F: filter unreachable.");
+      System.err.println("-Z: zero unreachable.");
       System.err.println("-f <file>: weights read from file remain fixed during MERT.");
       System.err.println("-S: tune using sentence-level BLEU (smoothed).");
       System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");
@@ -1144,6 +1151,7 @@ public class MERT extends Thread {
     SEED = seedStr.hashCode();
     System.err.println("Seed used to generate random points: "+SEED);
     System.err.printf("FilterUnreachable?: %b\n", filterUnreachable);
+    System.err.printf("ZeroUnreachable?: %b\n", zeroUnreachable);
     globalRandom = new Random(SEED);
 
     String evalMetric = args[argi].toLowerCase();
