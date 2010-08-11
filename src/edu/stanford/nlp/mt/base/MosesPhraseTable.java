@@ -151,7 +151,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 		scoreNames = getScoreNames(countScores);
 	}
 	
-	private String[] getScoreNames(int countScores) {
+	private static String[] getScoreNames(int countScores) {
 		String[] scoreNames;
 		if (customScores != null) {
 			scoreNames = customScores;
@@ -196,7 +196,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 		for (String line; (line = reader.readLine()) != null; ) {
       //System.err.println("line: "+line);
       StringTokenizer toker = new StringTokenizer(line);
-			List<String> foreignTokenList = new LinkedList<String>();
+			Collection<String> foreignTokenList = new LinkedList<String>();
 			do {
 				String token = toker.nextToken();
 				if ("|||".equals(token)) { 
@@ -209,7 +209,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 				throw new RuntimeException(String.format("Additional fields expected (line %d)", reader.getLineNumber()));
 			}
 			
-			List<String> translationTokenList = new LinkedList<String>();
+			Collection<String> translationTokenList = new LinkedList<String>();
 			
 			do {
 				String token = toker.nextToken();
@@ -222,7 +222,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 			if (!toker.hasMoreTokens()) {
 				throw new RuntimeException(String.format("Additional fields expected (line %d)", reader.getLineNumber()));
 			}
-			List<String> constilationList = new LinkedList<String>();
+			Collection<String> constilationList = new LinkedList<String>();
 			List<String> scoreList = new LinkedList<String>();
       boolean first=true;
       do {

@@ -17,7 +17,8 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
 	static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
 	static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_OPT, "false"));
 	
-	public Object clone() throws CloneNotSupportedException {
+	@Override
+  public Object clone() throws CloneNotSupportedException {
 		return super.clone();
 	}
 
@@ -42,7 +43,8 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
 		return phraseLimit;
 	}
 	
-	public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId) {
+	@Override
+  public List<ConcreteTranslationOption<TK>> translationOptions(Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId) {
 		Map<CoverageSet, List<ConcreteTranslationOption<TK>>> optsMap = new HashMap<CoverageSet, List<ConcreteTranslationOption<TK>>>();
 		
 		if (DEBUG) {
@@ -66,7 +68,7 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
 					System.err.printf("Generator: %s\n", phraseGenerator.getClass().getName());
 				}
 				List<ConcreteTranslationOption<TK>> potentialOptions = phraseGenerator.translationOptions(sequence, targets, translationId);
-				CoverageSet novelCoverage = new CoverageSet(sequence.size());
+				BitSet novelCoverage = new CoverageSet(sequence.size());
 				for (ConcreteTranslationOption<TK> option : potentialOptions) {
 					if (coverage.intersects(option.foreignCoverage)) {
 						if (DEBUG) {

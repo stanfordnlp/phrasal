@@ -11,7 +11,7 @@ public class BiText {
 	final int sourceWordCount;
 	public final String BiTextName;
 	
-	private int[] wc(String filename) {
+	private static int[] wc(String filename) {
 		try {
 		int lineCnt = 0;
 		int wordCnt = 0;
@@ -25,7 +25,7 @@ public class BiText {
 		} catch (Exception e) { throw new RuntimeException(); }
 	}
 	
-	private void readCorpus(String filename, int[][] store) {
+	private static void readCorpus(String filename, int[][] store) {
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
 			int pos = -1;

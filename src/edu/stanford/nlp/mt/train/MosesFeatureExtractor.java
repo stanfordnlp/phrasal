@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 
+import it.unimi.dsi.fastutil.ints.AbstractIntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
@@ -221,10 +222,10 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
   private int indexOfELex(IString e, boolean add)
   { synchronized(eLexIndex) { return eLexIndex.indexOf(e.getId(), add); } }
 
-  private static void addCountToArray(IntArrayList list, int idx) {
-    if(idx < 0)
+  private static void addCountToArray(AbstractIntList list, int idx) {
+    if (idx < 0)
       return;
-    synchronized(list) {
+    synchronized (list) {
       while(idx >= list.size())
         list.add(0);
       int newCount = list.get(idx)+1;

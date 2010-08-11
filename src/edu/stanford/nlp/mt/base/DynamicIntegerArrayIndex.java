@@ -8,31 +8,32 @@ import java.util.*;
  *
  */
 public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIndex {
+
 	  public static final long serialVersionUID = 127L;
 	    
 	  static final int INIT_SZ = 1<<10;
 	  static final double MAX_LOAD = 0.60;
 	  
-	  int[][] keys; int[] values; int mask;
-	  int[] hashCodes;
-	  int[] reverseIndex;
-	  int maxIndex; int load;
+	  protected int[][] keys;
+    protected int[] values;
+    protected int mask;
+	  protected int[] hashCodes;
+	  protected int[] reverseIndex;
+	  protected int maxIndex;
+    protected int load;
 
 	  public static final DynamicIntegerArrayIndex CommonDynamiIntegerArrayIndex = new DynamicIntegerArrayIndex();
 	  
 	  public DynamicIntegerArrayIndex() { 
-		  init(); 
-	  } 
-	  
-	  private void init() {
 	    keys = new int[INIT_SZ][];
 	    values = new int[INIT_SZ];
 	    hashCodes = new int[INIT_SZ];
-	    reverseIndex = new int[INIT_SZ]; Arrays.fill(reverseIndex, -1);
+	    reverseIndex = new int[INIT_SZ];
+      Arrays.fill(reverseIndex, -1);
 	    mask = INIT_SZ - 1;
 	  }
 
-	  int supplementalHash(int h) {
+	  protected static int supplementalHash(int h) {
 	      // use the same supplemental hash function used by HashMap
 	      return ((h << 7) - h + (h >>> 9) + (h >>> 17));
 	  }	  
@@ -50,14 +51,15 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    return -keys.length-1;
 	  }
 	  
-	  @SuppressWarnings("unchecked")
+	  @Override
+    @SuppressWarnings("unchecked")
 	  public synchronized int[] get(int idx) {
 	      int pos = reverseIndex[idx];
 	      if (pos == -1) return null;
 	      return keys[pos];
 	  }
 	  
-	  void sizeUp() {
+	  protected void sizeUp() {
 	    int newSize = keys.length<<1;
 	    mask = newSize-1;
 	    //System.err.printf("size up to: %d\n", newSize);
@@ -85,7 +87,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	      return distance;
 	  }
 	  
-	  int add(int key[], int pos, boolean sharedRep) {
+	  private int add(int key[], int pos, boolean sharedRep) {
 	    if ((load++)/(double)keys.length > MAX_LOAD) { 
 	      sizeUp();
 	      pos = -findPos(key)-1;
@@ -100,7 +102,8 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    return maxIndex-1;
 	  }
 	  	  
-	  public synchronized int indexOf(int[] key) { 
+	  @Override
+    public synchronized int indexOf(int[] key) {
 	    int pos = findPos(key);
 	    if (pos < 0) return -1;
 	    return values[pos];
@@ -119,22 +122,20 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
       return add(key, -pos-1,true);
 	  }
 
-	  public synchronized int indexOf(int[] key, boolean add) {
+	  @Override
+    public synchronized int indexOf(int[] key, boolean add) {
 	    int pos = findPos(key);
 	    if (pos >= 0) return values[pos];
 	    if (!add) return -1;
-	    //System.out.printf("adding: %s %d\n", key, -pos-1);
-	    return add(key, -pos-1, false); /*
-	    if (pos != sanityIndex.indexOf(key, true)) {
-		System.err.printf("%d != %d", pos, sanityIndex.indexOf(key));
-		System.exit(-1);
-	    } */    
-	  } 
+	    return add(key, -pos-1, false);
+	  }
 	  
-	  public synchronized int size() {
+	  @Override
+    public synchronized int size() {
 	    return load;
 	  }
 
+    @Override
     public Iterator<int[]> iterator() {
       return new Itr();
     }
@@ -143,14 +144,17 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 
       int cursor = 0;
 
+      @Override
       public boolean hasNext() {
         return cursor < size();
       }
 
+      @Override
       public int[] next() {
          return get(cursor++);
       }
 
+      @Override
       public void remove() {
          throw new UnsupportedOperationException();
       }

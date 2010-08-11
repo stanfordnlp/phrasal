@@ -8,7 +8,7 @@ import java.util.Arrays;
  * 
  * @author Michel Galley
  */
-public class DynamicIntegerArrayPrefixIndex extends DynamicIntegerArrayIndex {
+public final class DynamicIntegerArrayPrefixIndex extends DynamicIntegerArrayIndex {
 
   private int findPos(int[] key, int sz) {
     int hashCode = supplementalHash(arrayHashCode(key,sz));
@@ -32,14 +32,14 @@ public class DynamicIntegerArrayPrefixIndex extends DynamicIntegerArrayIndex {
     return -keys.length-1;
   }
 
-  public int indexOf(int[] key, int sz, boolean add) {
+  public synchronized int indexOf(int[] key, int sz, boolean add) {
     int pos = findPos(key, sz);
     if (pos >= 0) return values[pos];
     if (!add) return -1;
     return add(key, sz, -pos-1);
   }
 
-  int add(int[] key, int sz, int pos) {
+  private int add(int[] key, int sz, int pos) {
     if ((load++)/(double)keys.length > MAX_LOAD) {
       sizeUp();
       pos = -findPos(key, sz)-1;
@@ -53,7 +53,7 @@ public class DynamicIntegerArrayPrefixIndex extends DynamicIntegerArrayIndex {
   /**
    * Hashes the prefix of an array.
    */
-  static int arrayHashCode(int a[], int sz) {
+  private static int arrayHashCode(int a[], int sz) {
     if (a == null)
         return 0;
     int result = 1;

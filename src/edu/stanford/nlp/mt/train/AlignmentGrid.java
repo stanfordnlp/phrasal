@@ -18,7 +18,7 @@ public class AlignmentGrid {
 
   public static final int MAX_SENT_LEN = 256;
 
-  private int fsize, esize;
+  private int fSize, eSize; //, maxSizeF, maxSizeE;
 
   private WordAlignment sent;
   Integer sentId;
@@ -32,7 +32,7 @@ public class AlignmentGrid {
   private static final String SYM_P = "#"; // altemp
   private static final String SYM_A = "x"; // word alignment
 
-  private List<AlignmentTemplateInstance>
+  private final List<AlignmentTemplateInstance>
     alTempList = new ArrayList<AlignmentTemplateInstance>();
 
   private AlGridCell<AlignmentTemplateInstance>[][] alGridCells = null;
@@ -41,13 +41,13 @@ public class AlignmentGrid {
    * Create an alignment grid of size esize x fsize.
    */
   @SuppressWarnings("unchecked")
-	public AlignmentGrid(int esize, int fsize) {
+	public AlignmentGrid(int eSize, int fSize) {
     alGridCells = new AlGridCell[MAX_SENT_LEN][MAX_SENT_LEN];
     //System.err.printf("AlignmentGrid: constructor (%d x %d).\n",MAX_SENT_LEN,MAX_SENT_LEN);
-    this.fsize = fsize;
-    this.esize = esize;
     this.sent = null;
-    init(esize, fsize);
+    //this.maxSizeE = -1;
+    //this.maxSizeF = -1;
+    init(eSize, fSize);
   }
 
   /**
@@ -68,15 +68,20 @@ public class AlignmentGrid {
     sentId = s.getId();
   }
 
-  public void init(int esize, int fsize) {
+  public void init(int eSize, int fSize) {
+
     this.sent = null;
-    if (esize >= MAX_SENT_LEN || fsize >= MAX_SENT_LEN)
-      throw new UnsupportedOperationException("Sentence too long: fsize="+fsize+" esize="+esize);
-    this.esize = esize;
-    this.fsize = fsize;
+
+    if (eSize >= MAX_SENT_LEN || fSize >= MAX_SENT_LEN)
+      throw new UnsupportedOperationException("Sentence too long: fsize="+ fSize +" esize="+ eSize);
+
+    this.eSize = eSize;
+    this.fSize = fSize;
+
     alTempList.clear();
-    for (int fi = 0; fi < fsize; fi++) {
-      for (int ei = 0; ei < esize; ei++) {
+
+    for (int fi = 0; fi < fSize; ++fi) {
+      for (int ei = 0; ei < eSize; ++ei) {
         AlGridCell<AlignmentTemplateInstance> cell = alGridCells[fi][ei];
         if (cell == null)
           alGridCells[fi][ei] = new AlGridCell<AlignmentTemplateInstance>();
@@ -86,9 +91,9 @@ public class AlignmentGrid {
     }
   }
 
-  public int fsize() { return fsize; }
+  public int fsize() { return fSize; }
 
-  public int esize() { return esize; }
+  public int esize() { return eSize; }
 
   public AlGridCell<AlignmentTemplateInstance> cellAt(int fi, int ei) { return alGridCells[fi][ei]; }
 
@@ -96,8 +101,6 @@ public class AlignmentGrid {
    * Add alignment template to the grid.
    */
   public void addAlTemp(AlignmentTemplateInstance alTemp, boolean isConsistent) {
-    //if(fsize == 0 && esize == 0)
-    //  return;
     int e1 = alTemp.eStartPos(), e2 = alTemp.eEndPos(), f1 = alTemp.fStartPos(), f2 = alTemp.fEndPos();
     if (isConsistent) {
       alGridCells[f1][e1].addTopLeft(alTemp);
@@ -113,8 +116,6 @@ public class AlignmentGrid {
    * since one doesn't need to allocate each alignment template.
    */
   public void addAlTemp(int f1, int f2, int e1, int e2) {
-    //if(fsize == 0 && esize == 0)
-    //  return;
     alGridCells[f1][e1].setTopLeft(true);
     alGridCells[f2][e1].setTopRight(true);
     alGridCells[f1][e2].setBottomLeft(true);
@@ -149,21 +150,28 @@ public class AlignmentGrid {
    * other directions.
    */
   public void printAlTempInGrid(String id, AlignmentTemplateInstance alTemp, PrintStream out) {
+
     if (id != null)
       out.println(id);
     out.print(SYM_C);
-    for (int fi=0; fi<fsize; ++fi) {
+
+    for (int fi=0; fi<fSize; ++fi) {
       if (fi>0) out.print(SYM_H);
       out.print(SYM_H+SYM_H);
     }
     out.println(SYM_H+SYM_C);
-    for (int ei=0; ei<esize; ++ei) {
+
+    for (int ei=0; ei<eSize; ++ei) {
+
       out.print(SYM_V);
-      for (int fi=0; fi<fsize; ++fi) {
+
+      for (int fi=0; fi<fSize; ++fi) {
+
         if (fi>0) out.print(" ");
         assert (sent != null);
         String alignSym = sent.f2e(fi).contains(ei) ? SYM_A : SYM_U;
         String phraseSym = " ";
+
         if (alTemp != null) {
           RelativePos pos = relativePos(alTemp,fi,ei);
           if (pos == RelativePos.NW && alGridCells[fi][ei].hasBottomRight()) phraseSym = "1";
@@ -178,22 +186,28 @@ public class AlignmentGrid {
               alignSym = SYM_P;
           }
         }
+
         out.print(phraseSym+alignSym);
-      } 
+
+      }
+
       out.printf(" %s %2d %s\n",SYM_V,ei,sent.e().get(ei).toString());
     }
     out.print(SYM_C);
-    for (int fi=0; fi<fsize; ++fi) {
+
+    for (int fi=0; fi<fSize; ++fi) {
       if (fi>0) out.print(SYM_H);
       out.print(SYM_H+SYM_H);
     }
     out.print(SYM_H+SYM_C+"\n ");
-    for (int fi=0; fi<fsize; ++fi) {
+
+    for (int fi=0; fi<fSize; ++fi) {
       if (fi>0) out.print(" ");
       out.printf("%2d",fi);
     }
     out.println();
-    for (int fi=0; fi<fsize; ++fi) {
+
+    for (int fi=0; fi<fSize; ++fi) {
       out.printf("%d=%s ",fi,sent.f().get(fi).toString());
     }
     //out.println("\n\n");
@@ -220,10 +234,6 @@ public class AlignmentGrid {
 
   public void setWordAlignment(WordAlignment sent) {
     this.sent = sent;
-  }
-
-  public WordAlignment getWordAlignment() {
-    return this.sent;
   }
 
 }

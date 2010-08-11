@@ -39,6 +39,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
     id = -1;
     stringRep = "";
   }
+
   /**
    *
    */
@@ -82,15 +83,17 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
    */
   private static final long serialVersionUID = 2718L;
 
+  @Override
   public char charAt(int index) {
     return lazyStringRep().charAt(index);
   }
 
+  @Override
   public int length() {
     return lazyStringRep().length();
   }
 
-
+  @Override
   public CharSequence subSequence(int start, int end) {
     return lazyStringRep().subSequence(start, end);
   }
@@ -115,6 +118,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
     return lazyStringRep();
   }
 
+  @Override
   public int getId() {
     return id;
   }
@@ -123,10 +127,12 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
     return index.get(id);
   }
 
+  @Override
   public String word() {
     return toString();
   }
 
+  @Override
   public void setWord(String word) {
     throw new UnsupportedOperationException();
   }
@@ -156,81 +162,100 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
      */
     private static final long serialVersionUID = 2718L;
 
+    @Override
     public boolean contains(Object o) {
       if (!(o instanceof IString)) return false;
       IString istring = (IString)o;
       return index.contains(istring.lazyStringRep());
     }
 
+    @Override
     public IString get(int i) {
       return new IString(index.get(i));
     }
 
+    @Override
     public int indexOf(IString o) {
       return index.indexOf(o.lazyStringRep());
     }
 
+    @Override
     public int indexOf(IString o, boolean add) {
       return index.indexOf(o.lazyStringRep(), add);
     }
 
+    @Override
     public int size() {
       return index.size();
     }
-    
+
+    @Override
     public List<IString> objectsList() {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public Collection<IString> objects(int[] ints) {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public boolean isLocked() {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public void lock() {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public void unlock() {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public void saveToWriter(Writer out) throws IOException {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public void saveToFilename(String s) {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public Iterator<IString> iterator() {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public <T> T[] toArray(T[] a) {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public boolean add(IString iString) {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public boolean remove(Object o) {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public boolean addAll(Collection<? extends IString> c) {
       throw new UnsupportedOperationException();
     }
 
+    @Override
     public void clear() {
       throw new UnsupportedOperationException();
     }
   }
 
+  @Override
   public int compareTo(IString o) {
     return lazyStringRep().compareTo(o.lazyStringRep());
   }

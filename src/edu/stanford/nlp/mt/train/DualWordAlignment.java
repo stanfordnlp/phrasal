@@ -44,8 +44,8 @@ public class DualWordAlignment implements WordAlignment {
 
   @SuppressWarnings("unchecked")
   public void init(String fStr, String eStr, String a1Str, String a2Str) throws IOException {
-    f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fStr.split("\\s+")));
-    e = new SimpleSequence<IString>(true, IStrings.toIStringArray(eStr.split("\\s+")));
+    f = new SimpleSequence<IString>(true, IStrings.toSyncIStringArray(fStr.split("\\s+")));
+    e = new SimpleSequence<IString>(true, IStrings.toSyncIStringArray(eStr.split("\\s+")));
     alignment1_f2e = new TreeSet[f.size()];
     alignment2_f2e = new TreeSet[f.size()];
     for(int i=0; i<alignment1_f2e.length; ++i)

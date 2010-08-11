@@ -36,6 +36,12 @@ public class CoverageSet extends BitSet implements Iterable<Integer> {
     return cardinality() == (length() - nextSetBit(0));
   }
 
+  public static boolean cross(CoverageSet c1, CoverageSet c2) {
+    int c1S = c1.nextSetBit(0); int c1E = c1.length()-1;
+    int c2S = c2.nextSetBit(0); int c2E = c2.length()-1;
+    return (c1S < c2S && c2S < c1E) || (c1S < c2E && c2E < c1E);
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();

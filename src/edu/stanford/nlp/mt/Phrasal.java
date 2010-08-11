@@ -1055,7 +1055,7 @@ public class Phrasal {
   public RichTranslation<IString, String> decodeOnly(String[] tokens, int translationId, int lineNumber, int procid) throws IOException {
 
     Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings
-      .toIStringArray(tokens));
+      .toSyncIStringArray(tokens));
     // log foreign sentence
     synchronized(System.err) { System.err.printf("Translating(%d): %s\n", procid, foreign); }
 
@@ -1610,7 +1610,7 @@ public class Phrasal {
 			IncrementalEvaluationMetric<IString,String>  incEval = evalMetric.getIncrementalMetric();
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) { translationId++;
 				String[] tokens = line.split("\\s+");
-				Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
+				Sequence<IString> foreign = new SimpleSequence<IString>(true, IStrings.toSyncIStringArray(tokens));
 			  List<RichTranslation<IString,String>> targetNBest = null;
 			  List<RichTranslation<IString,String>> argmaxNBest;
 			  

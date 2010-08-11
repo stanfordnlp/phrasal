@@ -12,7 +12,7 @@ import java.util.ArrayList;
  */
 public class AlGridCell<T extends AlignmentTemplateInstance> {
 
-  private List<T>
+  private final List<T>
    topLeft = new ArrayList<T>(), 
    topRight = new ArrayList<T>(), 
    bottomLeft = new ArrayList<T>(), 

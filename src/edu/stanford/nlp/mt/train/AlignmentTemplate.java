@@ -128,7 +128,7 @@ public class AlignmentTemplate {
   }
 
   public String toString(boolean noAlign) {
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
     buf.append(f.toString()).append(DELIM).append(e.toString());
     if(!noAlign) {
       buf.append(DELIM);
@@ -150,7 +150,7 @@ public class AlignmentTemplate {
   }
 
   static String alignmentToString(Set<Integer> alSet) {
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
     int i=-1;
     for(int al : alSet) {
       if(++i>0) buf.append(",");
@@ -160,7 +160,7 @@ public class AlignmentTemplate {
   }
 
   static String alignmentToString(int[] align) {
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
     for(int i=0; i<align.length; ++i) {
       if(i>0) buf.append(" ");
       buf.append(numberToAlignmentF(align[i]));

@@ -101,7 +101,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       final Int2IntArrayMap aCounts;
       if (idx >= 0) {
         assert(idx <= index.size());
-        synchronized(aCounter) {
+        synchronized (aCounter) {
           //assert(idx <= aCounter.size());
           while(idx >= aCounter.size())
             aCounter.add(new Int2IntArrayMap());
@@ -149,7 +149,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   { return index.size(); }
 
   public String getSizeInfo() {
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
     buf.append("ptable=");
     buf.append(index.size());
     buf.append(", f-ptable=");

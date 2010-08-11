@@ -20,13 +20,15 @@ SG:Gap4Count
 TG:CrossingCount
 TG:Length
 TG:GapCount
+TG:Gap2Count
+TG:Gap3Count
+TG:Gap4Count
 LM
 LM2
 LM3
 LM4
 LM5
 LinearDistortion
-TargetGapLinearDistortion
 LexR:monotoneWithNext
 LexR:monotoneWithPrevious
 LexR:swapWithNext

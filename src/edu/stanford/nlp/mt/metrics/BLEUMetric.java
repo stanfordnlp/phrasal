@@ -166,7 +166,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
       return new BLEUIncrementalMetric(this);
 		}
 
-		public double[] precisions() {
+		@Override
+    public double[] precisions() {
 			double[] r = new double[order];
 			for (int i = 0; i < r.length; i++) {
 				r[i] = matchCounts[i]/(double)possibleMatchCounts[i];
@@ -371,6 +372,7 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return localScore;
 		}
 
+    @Override
     public IncrementalEvaluationMetric<TK,FV> add(ScoredFeaturizedTranslation<TK,FV> tran) {
       return add(-1, tran);
     }
@@ -540,7 +542,8 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return 0.0;
 		}
 		
-		public double brevityPenalty() {
+		@Override
+    public double brevityPenalty() {
 			return Math.exp(logBrevityPenalty());
 		}
 		

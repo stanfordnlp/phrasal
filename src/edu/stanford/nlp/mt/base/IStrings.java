@@ -12,8 +12,8 @@ import java.util.*;
  */
 public class IStrings {
 	
-	private IStrings() { }
-	
+	private IStrings() { super(); }
+
 	static public IString[] toIStringArray(String[] strings) {
 		IString[] istrs = new IString[strings.length];
 		for (int i = 0; i < istrs.length; i++) {
@@ -21,8 +21,18 @@ public class IStrings {
 		}
 		return istrs;
 	}
-	
-	static public IString[] toIStringArray(List<String> strings) {
+
+  static public IString[] toSyncIStringArray(String[] strings) {
+		IString[] istrs = new IString[strings.length];
+		for (int i = 0; i < istrs.length; i++) {
+      synchronized (IString.class) {
+        istrs[i] = new IString(strings[i]);
+      }
+		}
+		return istrs;
+	}
+
+	static public IString[] toIStringArray(Collection<String> strings) {
 		IString[] istrs = new IString[strings.size()];
 		int i = 0;
 		for (String str : strings) {
@@ -58,7 +68,7 @@ public class IStrings {
   static public String[] toStringArray(int[] ids) {
 		String[] strs = new String[ids.length];
 		for (int i = 0; i < strs.length; i++) {
-			strs[i] = new String(IString.getString(ids[i]));
+			strs[i] = IString.getString(ids[i]);
 		}
 		return strs;
 	}
