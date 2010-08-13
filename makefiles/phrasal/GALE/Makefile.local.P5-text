@@ -79,9 +79,9 @@ XOPTS=-threads 4 -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu
 # default:
 MEMSIZE=45000m
 # Phrasal decoding:
-PMEMSIZE=17000m
+PMEMSIZE=15500m
 # MERT:
-MMEMSIZE=17000m
+MMEMSIZE=15500m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -106,7 +106,7 @@ PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen)
 POST=GALE/post-$(GENRE).sh
 TC=en_truecaser 
 NTC=en_detokenizer
-POSTTC=en_fix_detokenizer
+POSTTC=cat
 
 #########################################
 # Debug flags
@@ -124,7 +124,7 @@ DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djav
 #########################################
 
 PROC=8
-PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t $(PROC) -p 8"
+PM=phrasal-mert.pl --opt-flags="-o koehn+cer -F -t $(PROC) -p 8"
 
 #########################################
 # Extension of input files:
