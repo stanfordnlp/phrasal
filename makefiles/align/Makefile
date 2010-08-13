@@ -1,18 +1,11 @@
 include Makefile.local.$(ID)
 
-MOSES_SCRIPTS=/u/nlp/packages/moses-2008-05-18/trunk/scripts
-TRAIN=$(MOSES_SCRIPTS)/training/train-factored-phrase-model.perl
-
-TRAIN_OPTIONS=$(GIZA) --root-dir . --f $F --e $E --corpus corpus --scripts-root-dir=$(MOSES_SCRIPTS) --factor-delimiter="|||" --parallel --alignment $(ALIGN)
-
 SYM_DATA=model/aligned.$(ALIGN) model/aligned.$E model/aligned.$F
-MERGED_DATA=giza.$E-$F/$E-$F.A3.gz giza.$F-$E/$F-$E.A3.gz
 SPLIT_DATA=$(SPLIT_DATA_E) $(SPLIT_DATA_F)
 
 SPLIT_DATA_F=$(patsubst %.$E,%.$F,$(SPLIT_DATA_E))
 
-ALIGNED_EF_DATA=$(patsubst %/noclass.$E,%.out/training.$E-$F.A3,$(SPLIT_DATA_E))
-ALIGNED_FE_DATA=$(patsubst %/noclass.$E,%.out/training.$F-$E.A3,$(SPLIT_DATA_E))
+SPLIT_DATA_A=$(patsubst %/noclass.$E,%.out/training*.align,$(SPLIT_DATA_E))
 
 .SECONDARY:
 
@@ -59,28 +52,11 @@ good/tok.$F.gz:
 	cat `cat lists.$(ID)/list.clean | perl -pe 's=^=$(DATA)/=' | sed 's/$Efiles/$Ffiles/g; s/\.$E\./.$F./g; s/\.$E$$/\.$F/g'` | $(PRE) | gzip > $@
 
 #######################################
-# Merge data after word alignment:
-#######################################
-
-giza.$E-$F/$E-$F.A3.final.gz: $(ALIGNED_EF_DATA)
-	mkdir giza.$E-$F || true
-	cat $+ | gzip > $@
-
-giza.$F-$E/$F-$E.A3.final.gz: $(ALIGNED_FE_DATA)
-	mkdir giza.$F-$E || true
-	cat $+ | gzip > $@
-
-#######################################
 # Alignment symmetrization:
 #######################################
 
-model/aligned.$(ALIGN).reversed: giza.$E-$F/$E-$F.A3.final.gz giza.$F-$E/$F-$E.A3.final.gz
-	mkdir model || true
-	(time $(TRAIN) $(TRAIN_OPTIONS) --first-step 3 --last-step 3 > $@.log) 2> $@.err
-	mv model/aligned.$(ALIGN) model/aligned.$(ALIGN).reversed
-
-model/aligned.$(ALIGN): model/aligned.$(ALIGN).reversed
-	cat $< | reverse-align > $@
+model/aligned.$(ALIGN): $(SPLIT_DATA_A)
+	cat $+ > $@
 
 model/aligned.$E: $(SPLIT_DATA_E)
 	cat $+ | tr '[A-Z]' '[a-z]' > $@

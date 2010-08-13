@@ -29,7 +29,8 @@ SPLIT_DATA_E= \
 ### Alignment symmetrization heuristic:
 ###################################################################################
 
-ALIGN=grow
+ALIGN=ucb
+#ALIGN=grow
 #ALIGN=grow-diag
 #ALIGN=srctotgt
 #ALIGN=tgttosrc
