@@ -7,11 +7,11 @@ import edu.stanford.nlp.mt.base.IString;
 import java.util.Random;
 
 /**
- * @author Michel Galley
+ * @author Michel Galley, Daniel Cer
  */
 abstract class AbstractNBestOptimizer implements NBestOptimizer {
 
-  protected static MosesNBestList nbest;
+  protected final MosesNBestList nbest;
 
   protected final MERT mert;
   protected final Random random;
@@ -21,5 +21,6 @@ abstract class AbstractNBestOptimizer implements NBestOptimizer {
     this.mert = mert;
     this.emetric = mert.emetric;
     this.random = mert.random;
+    this.nbest = mert.nbest;
   }
 }

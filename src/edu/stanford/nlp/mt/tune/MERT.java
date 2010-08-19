@@ -708,7 +708,6 @@ public class MERT extends Thread {
     // Load nbest list:
     nbest = new MosesNBestList(nbestListFile, featureIndex, tokenizeNIST);
     MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
-    AbstractNBestOptimizer.nbest = nbest;
 
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null ||
         System.getProperty("mcmcELossSGD") != null ||

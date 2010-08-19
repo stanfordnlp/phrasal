@@ -190,6 +190,7 @@ class SequenceOptimizer extends AbstractNBestOptimizer {
   }
 }
 
+
 /**
  * Optimization algorithm used by cmert included in Moses.
  *
@@ -240,6 +241,21 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
     return wts;
   }
 }
+
+class LogLinearOptimizer extends AbstractNBestOptimizer {
+	public LogLinearOptimizer(MERT mert) {
+		super(mert);
+	}
+	
+	@Override
+	public Counter<String> optimize(Counter<String> initialWts) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
+}
+
 
 /**
  * @author danielcer
