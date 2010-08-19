@@ -5,6 +5,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.util.ErasureUtils;
@@ -69,7 +70,9 @@ public class NBestOptimizerFactory {
       return new SequenceOptimizer(mert, opts, loop);
     }
 
-    if (name.equalsIgnoreCase("cer")) {
+    if (name.equalsIgnoreCase("ll")) {
+       return new LogLinearOptimizer(mert);
+    } else if (name.equalsIgnoreCase("cer")) {
       return new CerStyleOptimizer(mert);
     } else if (name.equalsIgnoreCase("koehn")) {
       return new KoehnStyleOptimizer(mert);
@@ -249,11 +252,140 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	
 	@Override
 	public Counter<String> optimize(Counter<String> initialWts) {
-		// TODO Auto-generated method stub
-		return null;
+		Counter<String> wts = new ClassicCounter<String>(initialWts);
+		List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+	            emetric)).maximize(nbest);
+		
+		// create a mapping between weight names and optimization 
+		// weight vector positions
+		
+		String[] weightNames = new String[wts.size()];
+		int nameIdx = 0;
+		for (String feature : wts.keySet()) {
+			weightNames[nameIdx++] = feature;
+		}
+		
+		System.err.println("Target Score: "+emetric.score(target));
+		QNMinimizer qn = new QNMinimizer(15, true);
+		LogLinearObjective llo = new LogLinearObjective(weightNames, target);
+		double newX[] = qn.minimize(llo, 1e-4, new double[weightNames.length]);
+		
+		Counter<String> newWts = new ClassicCounter<String>();
+		for (int i = 0; i < weightNames.length; i++) {
+			newWts.setCount(weightNames[i], newX[i]);
+		}
+		
+		System.err.println("Final Objective value: "+llo.valueAt(newX));
+		System.err.println("Final Eval at point: "+MERT.evalAtPoint(nbest, newWts, emetric));
+		return newWts;
 	}
 
-	
+	class LogLinearObjective implements DiffFunction {
+		final String[] weightNames;
+		final List<ScoredFeaturizedTranslation<IString, String>> target;
+		
+		
+		public LogLinearObjective(String[] weightNames, List<ScoredFeaturizedTranslation<IString, String>> target) {
+			this.weightNames = weightNames;
+			this.target = target;
+		}
+		
+		private Counter<String> vectorToWeights(double[] x) {
+			Counter<String> wts = new ClassicCounter<String>();
+			for (int i = 0; i < weightNames.length; i++) {
+				wts.setCount(weightNames[i], x[i]);
+			}
+			return wts;
+		}
+		
+		private double[]  counterToVector(Counter<String> c) {
+			double[] v = new double[weightNames.length];			
+			for (int i = 0; i < weightNames.length; i++) {
+				v[i] = c.getCount(weightNames[i]);
+			}
+			return v;
+		}
+		
+		private double scoreTranslation(Counter<String> wts, ScoredFeaturizedTranslation<IString,String> trans) {
+			double s = 0;
+			for (FeatureValue<String> fv : trans.features) {
+				s += fv.value * wts.getCount(fv.name);
+			}
+			return s;
+		}
+		
+		@Override
+		public double[] derivativeAt(double[] x) {
+           Counter<String> wts = vectorToWeights(x);
+           Counter<String> dOplus = new ClassicCounter<String>();
+           Counter<String> dOminus = new ClassicCounter<String>();
+           
+	       Counter<String> dOdW = new ClassicCounter<String>();
+	       List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
+	       for (int sentId = 0; sentId < nbestLists.size(); sentId++) {
+	           List<ScoredFeaturizedTranslation<IString,String>> nbestList = nbestLists.get(sentId);
+	           ScoredFeaturizedTranslation<IString,String> targetTrans = target.get(sentId);
+	           
+	    	   double Z = 0;
+	    	   for (ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
+	    		   Z += Math.exp(scoreTranslation(wts, trans));
+	    	   }
+
+		       for (FeatureValue<String> fv : targetTrans.features) {
+		    	  dOplus.incrementCount(fv.name, fv.value);
+		       }
+		       
+		       for (ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
+		    	   double p = Math.exp(scoreTranslation(wts, trans))/Z;
+	    		   for (FeatureValue<String> fv : trans.features) {
+	    			   dOminus.incrementCount(fv.name, fv.value*p);
+	    		   }
+		       }
+	       }
+	       System.err.println("dOPlus "+dOplus);
+	       
+	       System.err.println("dOMinus "+dOminus);
+	       
+	       dOdW.addAll(dOplus);
+	       Counters.subtractInPlace(dOdW, dOminus);
+           Counters.multiplyInPlace(dOdW, -1);
+	       return counterToVector(dOdW);
+		}
+
+		@Override
+		public double valueAt(double[] x) {
+			System.err.println("valueAt x[]: "+Arrays.toString(x));
+			Counter<String> wts = vectorToWeights(x);
+			System.err.println("wts: "+wts);
+			List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
+		    double sumLogP = 0;
+ 	        for (int sentId = 0; sentId < nbestLists.size(); sentId++) {
+	           List<ScoredFeaturizedTranslation<IString,String>> nbestList = nbestLists.get(sentId);
+	           ScoredFeaturizedTranslation<IString,String> targetTrans = target.get(sentId);
+	           
+	    	   double Z = 0;
+	    	   for (ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
+	    		   Z += Math.exp(scoreTranslation(wts, trans));
+	    		   //System.err.println("raw: "+scoreTranslation(wts, trans));
+	    	   }
+	    	   //System.err.println("Z: "+Z);
+
+		       double p = Math.exp(scoreTranslation(wts, targetTrans))/Z;
+		       if (p != p) return Double.POSITIVE_INFINITY;
+	    	   
+		       //System.err.println("p: "+p);
+		       sumLogP += -Math.log(p);
+	        }		    
+ 	        
+ 	        System.err.println("sumLogP: "+sumLogP + "Eval at point: "+MERT.evalAtPoint(nbest, wts, emetric));
+			return sumLogP;
+		}
+
+		@Override
+		public int domainDimension() {
+			return weightNames.length;
+		}
+	}
 }
 
 
