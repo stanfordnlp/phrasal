@@ -65,7 +65,12 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     
     try {
       alm = new SRILanguageModel(filename, vocabFilename);
-    } catch(UnsatisfiedLinkError e) {
+    } catch (UnsatisfiedLinkError e) {
+      //e.printStackTrace();
+      System.err.println("Unable to load SRILM library. Default to Java ARPA implementation.");
+      alm = new ARPALanguageModel(filename);
+      useSRILM = false;
+    } catch (NoClassDefFoundError e) {
       //e.printStackTrace();
       System.err.println("Unable to load SRILM library. Default to Java ARPA implementation.");
       alm = new ARPALanguageModel(filename);
