@@ -141,7 +141,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
 
   static void setPhraseExtractionProperties(Properties prop) {
 
-    if (Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_HIER_OPT, "false"))) {
+    if (Boolean.parseBoolean(prop.getProperty(PhraseExtract.LEX_REORDERING_HIER_OPT, "true"))) {
       prop.setProperty(PhraseExtract.LEX_REORDERING_PHRASAL_OPT,"true");
       maxPhraseLenF = DEFAULT_MAX_LEN_HIER; 
       maxPhraseLenE = DEFAULT_MAX_LEN_HIER;
