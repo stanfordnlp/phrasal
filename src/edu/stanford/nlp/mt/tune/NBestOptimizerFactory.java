@@ -70,8 +70,13 @@ public class NBestOptimizerFactory {
       return new SequenceOptimizer(mert, opts, loop);
     }
 
-    if (name.equalsIgnoreCase("ll")) {
-       return new LogLinearOptimizer(mert);
+    if (name.startsWith("loglinear")) {
+   	 String[] fields = name.split(":");
+   	 double C = 0;
+   	 if (fields.length == 2) {
+   		 C = Double.parseDouble(fields[1]);
+   	 }
+       return new LogLinearOptimizer(mert, C);
     } else if (name.equalsIgnoreCase("cer")) {
       return new CerStyleOptimizer(mert);
     } else if (name.equalsIgnoreCase("koehn")) {
@@ -246,8 +251,12 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
 }
 
 class LogLinearOptimizer extends AbstractNBestOptimizer {
-	public LogLinearOptimizer(MERT mert) {
+	final double sigma;
+	public LogLinearOptimizer(MERT mert, double sigma) {
 		super(mert);
+		double C = sigma*sigma;
+		System.err.printf("Loglinear Training with C: %.2f sigma: %.2f", C, sigma);
+		this.sigma = sigma;
 	}
 	
 	@Override
@@ -319,6 +328,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
            Counter<String> wts = vectorToWeights(x);
            Counter<String> dOplus = new ClassicCounter<String>();
            Counter<String> dOminus = new ClassicCounter<String>();
+           Counter<String> dORegularize = new ClassicCounter<String>();
            
 	       Counter<String> dOdW = new ClassicCounter<String>();
 	       List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
@@ -342,13 +352,22 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	    		   }
 		       }
 	       }
+	       double N = nbestLists.size();
+	       for (String wt : wts.keySet()) {
+	      	 dORegularize.setCount(wt, N*(1./(sigma*sigma))*wts.getCount(wt)); 
+	       }
+	       
 	       System.err.println("dOPlus "+dOplus);
 	       
 	       System.err.println("dOMinus "+dOminus);
 	       
+	       System.err.println("dORegularize "+dORegularize);
+	       
+	       
 	       dOdW.addAll(dOplus);
-	       Counters.subtractInPlace(dOdW, dOminus);
-           Counters.multiplyInPlace(dOdW, -1);
+	       Counters.subtractInPlace(dOdW, dOminus);          
+	       Counters.multiplyInPlace(dOdW, -1);
+	       dOdW.addAll(dORegularize);
 	       return counterToVector(dOdW);
 		}
 
@@ -374,11 +393,20 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		       if (p != p) return Double.POSITIVE_INFINITY;
 	    	   
 		       //System.err.println("p: "+p);
-		       sumLogP += -Math.log(p);
+		       sumLogP += Math.log(p);
 	        }		    
- 	        
- 	        System.err.println("sumLogP: "+sumLogP + "Eval at point: "+MERT.evalAtPoint(nbest, wts, emetric));
-			return sumLogP;
+ 	      double regTerm = 0;
+ 	      double N = nbestLists.size();
+ 	      for (double w : x) {
+ 	      	regTerm += N*(1./(2.*sigma*sigma))*w*w;
+ 	      }
+ 	      
+ 	      double regularizeObjective = -sumLogP+regTerm; 
+ 	      System.err.printf("sumLogP: %.5f Eval at point: %.5f\n", sumLogP, MERT.evalAtPoint(nbest, wts, emetric));
+ 	      double C = sigma*sigma; 	      
+ 	      System.err.printf("regTerm(sigma: %.5f C: %.5f): %.5f regularized objective: %.5f\n", sigma, C, regTerm, regularizeObjective);
+			
+ 	      return regularizeObjective;
 		}
 
 		@Override
@@ -403,8 +431,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
   public CerStyleOptimizer(MERT mert) {
     super(mert);
   }
-
-  @SuppressWarnings("deprecation")
+  
   public Counter<String> optimize(Counter<String> initialWts) {
 
     Counter<String> featureOccurances;
@@ -574,7 +601,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
 /**
  * @author danielcer
  */
-@SuppressWarnings("unused")
+
 class OldCerStyleOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
@@ -583,7 +610,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
     super(mert);
   }
 
-  @SuppressWarnings("deprecation")
+ 
   public Counter<String> optimize(Counter<String> initialWts) {
 
     Counter<String> wts = initialWts;
@@ -667,7 +694,6 @@ class LineSearchOptimizer extends AbstractNBestOptimizer {
     featureName = WordPenaltyFeaturizer.FEATURE_NAME;
   }
 
-  @SuppressWarnings("unused")
   public LineSearchOptimizer(MERT mert, String featureName) {
     super(mert);
     this.featureName = featureName;
@@ -703,7 +729,6 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     this.szMinusOne = MERT.fixedWts == null;
   }
 
-  @SuppressWarnings("unused")
   public DownhillSimplexOptimizer(MERT mert, boolean doRandomSteps) {
     super(mert);
     this.minIter = 1;
