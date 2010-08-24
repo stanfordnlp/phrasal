@@ -108,7 +108,7 @@ public class MERT extends Thread {
 
   final static OAIndex<String> featureIndex = new OAIndex<String>();
 
-  private static int nThreads = 1;
+  private static int nThreads = 4;
 
   public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);

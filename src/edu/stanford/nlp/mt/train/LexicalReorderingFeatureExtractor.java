@@ -52,7 +52,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     enabledTypes[ReorderingTypes.monotone.ordinal()] = true;
     enabledTypes[ReorderingTypes.discont1.ordinal()] = true;
     // Type of reordering model:
-    String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,"msd-bidirectional-fe");
+    String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,"msd2-bidirectional-fe");
     System.err.println("Orientation type: "+type);
     String[] tokens = type.split("-");
     assert (2 <= tokens.length && tokens.length <= 3);
