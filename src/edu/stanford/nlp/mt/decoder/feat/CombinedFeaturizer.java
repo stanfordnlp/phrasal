@@ -18,7 +18,8 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 
   private final int nbStatefulFeaturizers;
 
-  public void deleteFeaturizers(Set<String> disabledFeaturizers) {
+
+public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     System.err.println("Featurizers to disable: "+disabledFeaturizers);
     Set<String> foundFeaturizers = new HashSet<String>();
     List<IncrementalFeaturizer<TK,FV>> filteredFeaturizers
@@ -26,7 +27,7 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
     for(IncrementalFeaturizer<TK, FV> f : featurizers) {
       String className = f.getClass().getName();
       if(f instanceof CombinedFeaturizer)
-        ((CombinedFeaturizer)f).deleteFeaturizers(disabledFeaturizers);
+        ((CombinedFeaturizer<?,?>)f).deleteFeaturizers(disabledFeaturizers);
       if(!disabledFeaturizers.contains(className)) {
         System.err.println("Keeping featurizer: "+f);
         filteredFeaturizers.add(f);
@@ -44,10 +45,10 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
   @Override
   @SuppressWarnings("unchecked")
   public Object clone() throws CloneNotSupportedException {
-    CombinedFeaturizer featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
+    CombinedFeaturizer<TK,FV> featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
     featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
     for(IncrementalFeaturizer<TK,FV> f : featurizers) {
-      featurizer.featurizers.add(f instanceof ClonedFeaturizer ? ((ClonedFeaturizer)f).clone() : f);
+      featurizer.featurizers.add(f instanceof ClonedFeaturizer ? (ClonedFeaturizer<TK,FV>)((ClonedFeaturizer<TK,FV>)f).clone() : f);
     }
     return featurizer;
 	}
@@ -55,12 +56,11 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
   /**
 	 * 
 	 */
-  @SuppressWarnings("unused")
+ 
 	public List<IncrementalFeaturizer<TK,FV>> getFeaturizers() {
 		return new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public List<IncrementalFeaturizer<TK,FV>> getNestedFeaturizers() {
 		List<IncrementalFeaturizer<TK,FV>> allFeaturizers = new LinkedList<IncrementalFeaturizer<TK,FV>>(featurizers);
 		for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
@@ -124,7 +124,7 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 		}
 		ArrayList<FeatureValue<FV>> featureValues = new ArrayList<FeatureValue<FV>>(featureCount);
 		for (Object o : featureValueLists) {
-			if (o instanceof FeatureValue) { featureValues.add((FeatureValue)o); continue; }
+			if (o instanceof FeatureValue) { featureValues.add((FeatureValue<FV>)o); continue; }
 			List<FeatureValue<FV>> listFeatureValues = (List<FeatureValue<FV>>)o;
 			// profiling reveals that addAll is slow due to a buried call to clone() 
 			for (FeatureValue<FV> fv : listFeatureValues) {
@@ -186,22 +186,20 @@ public class CombinedFeaturizer<TK,FV> implements RichIncrementalFeaturizer<TK,F
 		}
 	}
 
-  @SuppressWarnings("unchecked")
   @Override
   public void dump(Featurizable<TK,FV> f) {
     for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
       if (featurizer instanceof RichIncrementalFeaturizer) {
-        ((RichIncrementalFeaturizer)featurizer).dump(f);
+        ((RichIncrementalFeaturizer<TK,FV>)featurizer).dump(f);
       }
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void rerankingMode(boolean r) {
     for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
       if (featurizer instanceof RichIncrementalFeaturizer) {
-        ((RichIncrementalFeaturizer)featurizer).rerankingMode(r);
+        ((RichIncrementalFeaturizer<TK,FV>)featurizer).rerankingMode(r);
       }
     }
   }
