@@ -56,10 +56,13 @@ good/tok.$F.gz:
 #######################################
 
 model/aligned.$(ALIGN): $(SPLIT_DATA_A)
+	mkdir model || true
 	cat $+ > $@
 
 model/aligned.$E: $(SPLIT_DATA_E)
+	mkdir model || true
 	cat $+ | tr '[A-Z]' '[a-z]' > $@
 
 model/aligned.$F: $(SPLIT_DATA_F)
+	mkdir model || true
 	cat $+ | tr '[A-Z]' '[a-z]'  > $@
