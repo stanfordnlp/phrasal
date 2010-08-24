@@ -29,7 +29,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   static public final String ONLY_TIGHT_PHRASES_OPT = "onlyTightPhrases";
 
   static public final int DEFAULT_MAX_LEN = 7;
-  static public final int DEFAULT_MAX_LEN_HIER = 500;
+  static public final int DEFAULT_MAX_LEN_HIER = 1000;
   static public final int DEFAULT_MAX_E_LEN = 7;
 
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugAbstractPhraseExtractor";

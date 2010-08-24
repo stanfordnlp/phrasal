@@ -24,7 +24,8 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
   @SuppressWarnings("unused")
   public LinearFutureCostFeaturizer() {
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
-    System.err.println("Future cost delay: "+futureCostDelay);
+    if (futureCostDelay != 0.0)
+      System.err.println("Future cost delay: "+futureCostDelay);
   }
 
   @SuppressWarnings("unused")
@@ -86,8 +87,8 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
     //     6 5 4 3 2 1 cost = 3
     //     j           i
     int p = firstGapIndex-1;
-    for (;;) {
-      p = f.hyp.foreignCoverage.nextSetBit(p+1);
+    while (true) {
+      p = f.hyp.foreignCoverage.nextSetBit(p + 1);
       if (p < 0)
         break;
       ++futureCost;

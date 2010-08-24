@@ -25,16 +25,12 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
   public final float futureCostDelay;
 
   public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("dtuFutureCostDelay","0f"));
-  public static final boolean VERSION_2 = Boolean.parseBoolean(System.getProperty("v2","false")); // TODO remove
-
-  static {
-    System.err.println("version2: "+VERSION_2);
-  }
 
   @SuppressWarnings("unused")
   public DTULinearDistortionFeaturizer() {
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
-    System.err.println("Future cost delay: "+futureCostDelay);
+    if (futureCostDelay != 0.0)
+      System.err.println("Future cost delay: "+futureCostDelay);
   }
 
   @SuppressWarnings("unused")
@@ -76,15 +72,15 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
       if(fw.id != DTUPhraseExtractor.GAP_STR.id)
         ++totalSz;
     int gapSz = span-totalSz;
+    list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0*gapSz));
 
     ///////////////////////////////////////////
     // (2) Standard linear distortion features:
     ///////////////////////////////////////////
 
     int linearDistortion = f.linearDistortion;
-    if (!VERSION_2) linearDistortion += gapSz;
 
-    linearDistortion += LinearFutureCostFeaturizer.getEOSDistortion(f);
+    //linearDistortion += LinearFutureCostFeaturizer.getEOSDistortion(f);
     float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this)) : 0.0f;
     float futureCost;
     if (f.done) {
@@ -95,7 +91,6 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
     }
     float deltaCost = futureCost - oldFutureCost;
     list.add(new FeatureValue<String>(LD_FEATURE_NAME, -1.0*(linearDistortion+deltaCost)));
-    if (VERSION_2) list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0*gapSz));
 
     return list;
   }
