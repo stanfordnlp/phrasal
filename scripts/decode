@@ -1,0 +1,20 @@
+#!/bin/sh
+
+BASEDIR=`dirname $0`
+CP_OPTS="-cp $BASEDIR/../phrasal.jar:$BASEDIR/../lib/fastutil.jar"
+
+if [ $# -lt 2 ]; then
+  		echo "Usage: $0 <memory> <configuration file> [options]"
+  		exit 1
+fi
+
+MEM=$1
+CONFIG=$2
+shift
+shift
+
+JAVA_OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM"
+PHRASAL_OPTS="-config-file $CONFIG"
+
+# Decode:
+java $CP_OPTS $JAVA_OPTS edu.stanford.nlp.mt.Phrasal $PHRASAL_OPTS $@

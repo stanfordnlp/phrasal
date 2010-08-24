@@ -32,7 +32,7 @@ $ORACLE = 0;
 $SORT = 'sort --buffer-size=3g -T /tmp';
 $DEFAULT_MAX_ITERS = 25;
 $MIN_OBJ_DIFF = 1e-7;
-$DEFAULT_WORK_DIR = "pmert-dir";
+$DEFAULT_WORK_DIR = "phrasal-mert";
 $DEFAULT_NBEST_SIZE = 100;
 $DEFAULT_JAVA_FLAGS = "-Xmx7g";
 $DEFAULT_OPT_FLAGS = "-o cer -t 1 -p 5"; # 5 starting points, 1 thread, Cer algorithm
