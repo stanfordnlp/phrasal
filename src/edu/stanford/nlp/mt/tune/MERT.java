@@ -419,8 +419,8 @@ public class MERT extends Thread {
           .getProperty("SMOOTHING_TYPE", "min"));
   static boolean filterUnreachable = Boolean.parseBoolean(System
           .getProperty("FILTER_UNREACHABLE", "false"));
-  static boolean zeroUnreachable = Boolean.parseBoolean(System
-      .getProperty("ZERO_UNREACHABLE", "false"));
+  static boolean filterStrictlyUnreachable = Boolean.parseBoolean(System
+      .getProperty("FILTER_STRICTLY_UNREACHABLE", "false"));
 
   static {
     System.err.println();
@@ -749,10 +749,13 @@ public class MERT extends Thread {
         // n-best list being mangled as well as
         // score rounding.
         double minReachableScore = Double.POSITIVE_INFINITY;
+        double maxReachableScore = Double.NEGATIVE_INFINITY;
         for (ScoredFeaturizedTranslation<IString, String> trans : lNbestList) {
           double score = scorer.getIncrementalScore(trans.features);
           if (score < minReachableScore)
             minReachableScore = score;
+          if (score > maxReachableScore)
+            maxReachableScore = score;
         }
 				if(nbestlist.isEmpty())
 					throw new RuntimeException(String.format("Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n", lI));
@@ -760,13 +763,10 @@ public class MERT extends Thread {
                 lI, minReachableScore, nbestlist.size());
         for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
           trans.score = scorer.getIncrementalScore(trans.features);
-          if (trans.score > minReachableScore) { // mark as
-            // potentially
-            // unreachable
-            if (filterUnreachable)
-              trans.score = Double.NaN;
-            else if (zeroUnreachable)
-              trans.score = 1e-5;
+          if (trans.score > minReachableScore && filterUnreachable) // mark for deletion (potentially unreachable)
+            trans.score = Double.NaN;
+          if (trans.score > maxReachableScore && filterStrictlyUnreachable) { // mark for deletion (unreachable)
+            trans.score = Double.NaN;
           }
         }
       }
@@ -1108,8 +1108,8 @@ public class MERT extends Thread {
         seedStr = args[++argi];
       } else if(arg.equals("-F")) {
         filterUnreachable = true;
-      } else if(arg.equals("-Z")) {
-        zeroUnreachable = true;
+      } else if(arg.equals("-T")) {
+        filterStrictlyUnreachable = true;
       } else if(arg.equals("-p")) {
         nStartingPoints = Integer.parseInt(args[++argi]);
       } else if(arg.equals("-o")) {
@@ -1150,7 +1150,7 @@ public class MERT extends Thread {
     SEED = seedStr.hashCode();
     System.err.println("Seed used to generate random points: "+SEED);
     System.err.printf("FilterUnreachable?: %b\n", filterUnreachable);
-    System.err.printf("ZeroUnreachable?: %b\n", zeroUnreachable);
+    System.err.printf("FilterStrictlyUnreachable?: %b\n", filterStrictlyUnreachable);
     globalRandom = new Random(SEED);
 
     String evalMetric = args[argi].toLowerCase();

@@ -73,7 +73,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
       enabledTypes[ReorderingTypes.swap.ordinal()] = true;
       if ("msd2".equals(tokens[0])) {
         enabledTypes[ReorderingTypes.discont2.ordinal()] = true;
-        System.err.println("msd2: yes");
+        System.err.println("Left and right discontinuous: yes");
       }
     } else if ("monotonicity".equals(tokens[0])) {
       // No swap category.

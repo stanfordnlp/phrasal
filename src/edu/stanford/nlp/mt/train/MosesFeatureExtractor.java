@@ -27,7 +27,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
   public static final double DEFAULT_PHI_FILTER = 1e-4;
   public static final double DEFAULT_LEX_FILTER = 0;
 
-  public static final String DEBUG_PROPERTY = "DebugPharaohFeatureExtractor";
+  public static final String DEBUG_PROPERTY = "DebugMosesFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 
   public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";
@@ -252,6 +252,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
         wSum = getLexProb(alTemp.f().get(fi),NULL_STR);
       } else {
         for(int ei : alTemp.f2e(fi)) {
+          assert (!alTemp.e().get(ei).equals(DTUPhraseExtractor.GAP_STR));
           wSum += getLexProb(alTemp.f().get(fi),alTemp.e().get(ei));
         }
         wSum /= alCount;
