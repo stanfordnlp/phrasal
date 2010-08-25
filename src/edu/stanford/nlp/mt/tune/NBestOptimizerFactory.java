@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.tune;
 
 import edu.stanford.nlp.optimization.Minimizer;
+import edu.stanford.nlp.optimization.OWLQNMinimizer;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -71,12 +72,15 @@ public class NBestOptimizerFactory {
     }
 
     if (name.startsWith("loglinear")) {
-   	 String[] fields = name.split(":");
-   	 double C = 0;
-   	 if (fields.length == 2) {
-   		 C = Double.parseDouble(fields[1]);
-   	 }
-       return new LogLinearOptimizer(mert, C);
+   	  String[] fields = name.split(":");
+   	  double l2 = 10.0, l1 = 0.0;
+   	  if (fields.length >= 2) {
+   		  l2 = Double.parseDouble(fields[1]);
+        if (fields.length >= 3) {
+          l1 = Double.parseDouble(fields[2]);
+        }
+   	  }
+      return new LogLinearOptimizer(mert, l2, l1);
     } else if (name.equalsIgnoreCase("cer")) {
       return new CerStyleOptimizer(mert);
     } else if (name.equalsIgnoreCase("koehn")) {
@@ -251,12 +255,18 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
 }
 
 class LogLinearOptimizer extends AbstractNBestOptimizer {
+
 	final double sigma;
-	public LogLinearOptimizer(MERT mert, double sigma) {
+  final double l1reg;
+
+	public LogLinearOptimizer(MERT mert, double sigma, double l1reg) {
 		super(mert);
 		double C = sigma*sigma;
-		System.err.printf("Loglinear Training with C: %.2f sigma: %.2f", C, sigma);
+		System.err.printf("Loglinear Training with C: %.2f sigma: %.2f\n", C, sigma);
+    if (l1reg != 0.0)
+      System.err.printf("L1 regularization: %.2f\n", l1reg);
 		this.sigma = sigma;
+    this.l1reg = l1reg;
 	}
 	
 	@Override
@@ -275,7 +285,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		}
 		
 		System.err.println("Target Score: "+emetric.score(target));
-		QNMinimizer qn = new QNMinimizer(15, true);
+		Minimizer<DiffFunction> qn = l1reg != 0.0 ? new OWLQNMinimizer(l1reg) : new QNMinimizer(15, true);
 		LogLinearObjective llo = new LogLinearObjective(weightNames, target);
 		double newX[] = qn.minimize(llo, 1e-4, new double[weightNames.length]);
 		
