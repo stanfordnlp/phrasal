@@ -56,7 +56,8 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
     if (f instanceof DTUFeaturizable)
-      if (((DTUFeaturizable)f).targetOnly) {
+      //if (((DTUFeaturizable)f).targetOnly) {
+      if (((DTUFeaturizable)f).segmentIdx > 0) {
         f.setState(this, f.prior.getState(this));
         return null;
       }
@@ -72,7 +73,8 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
       if(fw.id != DTUPhraseExtractor.GAP_STR.id)
         ++totalSz;
     int gapSz = span-totalSz;
-    list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0*gapSz));
+    if (gapSz != 0)
+      list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0*gapSz));
 
     ///////////////////////////////////////////
     // (2) Standard linear distortion features:
@@ -100,5 +102,6 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
 			Sequence<IString> foreign) {
 	}
 
-	public void reset() { }
+	@Override
+  public void reset() { }
 }

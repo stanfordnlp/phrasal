@@ -50,6 +50,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
  * @param <FV>
  */
 public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
+
 	// class level constants
 	public static final String DEBUG_PROPERTY = "DTUDecoderDebug";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -140,7 +141,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		System.err.println();	
 	}
 	
-	private Runtime rt = Runtime.getRuntime();
+	private final Runtime rt = Runtime.getRuntime();
 
   private static boolean isContiguous(BitSet bitset) {
     int i = bitset.nextSetBit(0);
@@ -306,6 +307,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		return null;
 	}
 
+  @Override
   public void dump(Hypothesis<TK, FV> bestHyp) {
 
     List<Hypothesis<TK,FV>> trace = new ArrayList<Hypothesis<TK,FV>>();
@@ -430,7 +432,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           assert (currentHyp != null);
           if (!currentHyp.hasExpired())
             newHyps.add(currentHyp);
-          for(DTUHypothesis<TK,FV> nextHyp : currentHyp.collapseFloatingPhrases(translationId, featurizer, scorer, heuristic)) {
+          for(DTUHypothesis<TK,FV> nextHyp : currentHyp.mergeHypothesisAndPendingPhrase(translationId, featurizer, scorer, heuristic)) {
             if(!nextHyp.hasExpired())
               currentHyps.add(nextHyp);
           }
@@ -573,8 +575,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   public class DTUOptionGrid<TK> {
     @SuppressWarnings("unchecked")
-    private List[] grid;
-    private int foreignSz;
+    private final List[] grid;
+    private final int foreignSz;
 
     /**
      *

@@ -103,7 +103,7 @@ public class Phrasal {
   public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
   public static final String GAPS_OPT = "gaps";
   public static final String MAX_GAP_SPAN_OPT = "max-gap-span";
-  public static final String MAX_FLOATING_PHRASES_OPT = "max-floating-phrases";
+  public static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
   public static final String ISTRING_VOC_OPT = "istring-vocabulary";
   public static final String MOSES_COMPATIBILITY_OPT = "moses-compatibility";
@@ -141,7 +141,7 @@ public class Phrasal {
         WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM, USE_ITG_CONSTRAINTS,
         LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
-        LINEAR_DISTORTION_TYPE, MAX_FLOATING_PHRASES_OPT, ISTRING_VOC_OPT, MOSES_COMPATIBILITY_OPT));
+        LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT, MOSES_COMPATIBILITY_OPT));
 		IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT,
         MAPPING_OPT, FACTOR_DELIM_OPT));
 		ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -282,19 +282,19 @@ public class Phrasal {
   			String key = line.substring(1, nextArgLine.length() - 1);
   			nextArgLine = null;
   			List<String> entries = new ArrayList<String>();
-  			for (; (line = reader.readLine()) != null;) {
-  				if (line.matches("^\\s*$"))
-  					break;
-  				if (line.startsWith("[")) {
-  					nextArgLine = line;
-  					break;
-  				}
-  				if (line.charAt(0) == '#')
-  					break;
-  				line = line.replaceAll("#.*$", "");
-  				String[] fields = line.split("\\s+");
+        while ((line = reader.readLine()) != null) {
+          if (line.matches("^\\s*$"))
+            break;
+          if (line.startsWith("[")) {
+            nextArgLine = line;
+            break;
+          }
+          if (line.charAt(0) == '#')
+            break;
+          line = line.replaceAll("#.*$", "");
+          String[] fields = line.split("\\s+");
           entries.addAll(Arrays.asList(fields));
-  			}
+        }
 
   			if (!entries.isEmpty())
   				config.put(key, entries);
@@ -793,12 +793,12 @@ public class Phrasal {
         DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
 
       // Support for floating phrases:
-      if (config.containsKey(MAX_FLOATING_PHRASES_OPT)) {
-        List<String> floatOpts = config.get(MAX_FLOATING_PHRASES_OPT);
+      if (config.containsKey(MAX_PENDING_PHRASES_OPT)) {
+        List<String> floatOpts = config.get(MAX_PENDING_PHRASES_OPT);
         if(floatOpts.size() != 1)
           throw new UnsupportedOperationException();
-        int maxFloatingPhrases = Integer.parseInt(floatOpts.get(0));
-        DTUHypothesis.setMaxFloatingPhrases(maxFloatingPhrases); 
+        int maxPendingPhrases = Integer.parseInt(floatOpts.get(0));
+        DTUHypothesis.setMaxPendingPhrases(maxPendingPhrases);
       }
     }
 
@@ -1207,7 +1207,7 @@ public class Phrasal {
 	}
 	
 	private static class PerceptronLearner implements Learner {
-		private double[] lrate;
+		private final double[] lrate;
 		OAIndex<String> featureIndex = new OAIndex<String>();
 		double[] weights = new double[0];
 	  static final double DEFAULT_WT = 0.001;
@@ -1231,7 +1231,8 @@ public class Phrasal {
 			weights[idx] = m*weights[idx] + b;
 		}
 		
-		public void weightUpdate(int epoch, int id, RichTranslation<IString,String> target, RichTranslation<IString,String> argmax, double loss) {
+		@Override
+    public void weightUpdate(int epoch, int id, RichTranslation<IString,String> target, RichTranslation<IString,String> argmax, double loss) {
 			if (VERBOSE_LEARNER) System.err.printf("Target features:\n");
 		  ClassicCounter<String> tVec = new ClassicCounter<String>();
 			for (FeatureValue<String> feature : target.features) {
@@ -1271,7 +1272,8 @@ public class Phrasal {
 				return score;
 			}		
 		
-			public void saveWeights(String filename) throws IOException {
+			@Override
+      public void saveWeights(String filename) throws IOException {
 				System.err.printf("Saving weights to: %s\n", filename);
 				BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 				PriorityQueue<ComparableWtPair> q = new PriorityQueue<ComparableWtPair>();
@@ -2076,6 +2078,7 @@ public class Phrasal {
 
     // by default, exit on uncaught exception
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      @Override
       public void uncaughtException(Thread t, Throwable ex) {
         System.err.println("Uncaught exception from thread: " + t.getName());
         System.err.println(ex.toString());

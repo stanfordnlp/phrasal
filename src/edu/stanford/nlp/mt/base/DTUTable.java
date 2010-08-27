@@ -213,4 +213,9 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
 	public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> foreignSequence) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
+	}
 }

@@ -66,6 +66,7 @@ public class MERT extends Thread {
 
   private static boolean tokenizeNIST = false;
 
+  static boolean breakTiesWithLastBest = false;
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
   @SuppressWarnings("unused")
@@ -109,6 +110,10 @@ public class MERT extends Thread {
   final static OAIndex<String> featureIndex = new OAIndex<String>();
 
   private static int nThreads = 4;
+
+  static void setBreakTiesWithLastBest() {
+    breakTiesWithLastBest = true;
+  }
 
   public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
@@ -271,7 +276,7 @@ public class MERT extends Thread {
                                     EvaluationMetric<IString, String> emetric) {
 
     Counter<String> initialWts = optWts;
-    if(fixedWts != null) {
+    if (fixedWts != null) {
       initialWts = new ClassicCounter<String>(optWts);
       initialWts.addAll(fixedWts);
     }
@@ -550,19 +555,19 @@ public class MERT extends Thread {
   static public double evalAtPoint(MosesNBestList nbest,
                                    Counter<String> optWts, EvaluationMetric<IString, String> emetric) {
     Counter<String> wts = optWts;
-    if(fixedWts != null) {
+    if (fixedWts != null) {
       wts = new ClassicCounter<String>(optWts);
       removeWts(wts, fixedWts);
       wts.addAll(fixedWts);
     }
     Scorer<String> scorer = new StaticScorer(wts, featureIndex);
-    if(DEBUG)
+    if (DEBUG)
       System.err.printf("eval at point (%d,%d): %s\n", optWts.size(), wts.size(), wts.toString());
     IncrementalEvaluationMetric<IString, String> incEval = emetric
             .getIncrementalMetric();
     IncrementalNBestEvaluationMetric<IString, String> incNBestEval = null;
     boolean isNBestEval = false;
-    if(incEval instanceof IncrementalNBestEvaluationMetric) {
+    if (incEval instanceof IncrementalNBestEvaluationMetric) {
       incNBestEval = (IncrementalNBestEvaluationMetric<IString,String>) incEval;
       isNBestEval = true;
     }
@@ -616,7 +621,7 @@ public class MERT extends Thread {
 
     for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
       double cnt = wts.getCount(f);
-      if(cnt != 0.0)
+      if (cnt != 0.0)
         writer.append(f).append(" ").append(Double.toString(cnt)).append("\n");
     }
     writer.close();
@@ -684,7 +689,7 @@ public class MERT extends Thread {
 
     // Load weight files:
     previousWts = new ArrayList<Counter<String>>();
-    for(String previousWtsFile : previousWtsFiles.split(","))
+    for (String previousWtsFile : previousWtsFiles.split(","))
       previousWts.add(removeWts(readWeights(previousWtsFile, featureIndex), fixedWts));
     initialWts = previousWts.get(0);
 
@@ -693,7 +698,7 @@ public class MERT extends Thread {
       if (i == 0) {
         wts = initialWts;
       } else {
-        if(i < previousWts.size()) {
+        if (i < previousWts.size()) {
           wts = previousWts.get(i);
         } else {
           wts = randomWts(initialWts.keySet());
@@ -757,7 +762,7 @@ public class MERT extends Thread {
           if (score > maxReachableScore)
             maxReachableScore = score;
         }
-				if(nbestlist.isEmpty())
+				if (nbestlist.isEmpty())
 					throw new RuntimeException(String.format("Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n", lI));
         System.err.printf("l %d - min reachable score: %f (orig size: %d)\n",
                 lI, minReachableScore, nbestlist.size());
@@ -818,7 +823,7 @@ public class MERT extends Thread {
     lrate = (C != 0 ? DEFAULT_UNSCALED_L_RATE/C : DEFAULT_UNSCALED_L_RATE);
     System.out.printf("sgd lrate: %e\n", lrate);
 
-    if(reuseWeights) {
+    if (reuseWeights) {
       System.err.printf("Re-using initial wts, gap: %e", Math.abs(localNbestEval - nbestEval));
     } else {
       System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e", Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
@@ -936,8 +941,8 @@ public class MERT extends Thread {
       System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n", evalMetric, 2.0);
     } else if (evalMetric.startsWith("bleu-2terpa")) {
       double terW = 2.0;
-      if(fields.length > 1) {
-        assert(fields.length == 2);
+      if (fields.length > 1) {
+        assert (fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
       emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
@@ -949,7 +954,7 @@ public class MERT extends Thread {
       System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {
       double terW = 1.0;
-      if(fields.length > 1) {
+      if (fields.length > 1) {
         assert(fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
@@ -974,9 +979,16 @@ public class MERT extends Thread {
   }
 
   static boolean updateBest(Counter<String> newWts, double obj) {
-    synchronized(MERT.class) {
+    synchronized (MERT.class) {
+      boolean better = false;
       if (bestObj > obj) {
         System.err.printf("\n<<<IMPROVED BEST: %f -> %f with {{{%s}}}.>>>\n", -bestObj, -obj, newWts);
+        better = true;
+      } else if (bestObj == obj && breakTiesWithLastBest) {
+        System.err.printf("\n<<<SAME BEST: %f with {{{%s}}}.>>>\n", -bestObj, newWts);
+        better = true;
+      }
+      if (better) {
         bestWts = newWts;
         bestObj = obj;
         return true;
@@ -992,6 +1004,7 @@ public class MERT extends Thread {
     return wts;
   }
 
+  @Override
   public void run() {
 
     System.out.printf("\nthread started (%d): %s\n", startingPoints.size(), this);
@@ -1139,7 +1152,7 @@ public class MERT extends Thread {
       System.err.println("-o <N>: search algorithm.");
       System.err.println("-t <N>: number of threads.");
       System.err.println("-F: filter unreachable.");
-      System.err.println("-Z: zero unreachable.");
+      System.err.println("-T: filter strictly unreachable.");
       System.err.println("-f <file>: weights read from file remain fixed during MERT.");
       System.err.println("-S: tune using sentence-level BLEU (smoothed).");
       System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");

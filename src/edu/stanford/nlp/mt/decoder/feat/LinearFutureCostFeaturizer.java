@@ -67,7 +67,8 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 			Sequence<IString> foreign) {
 	}
 
-	public void reset() { }
+	@Override
+  public void reset() { }
 
   public static int futureCost(Featurizable<IString,String> f) {
     int nextWordIndex = f.hyp.translationOpt.foreignCoverage.length();

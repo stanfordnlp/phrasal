@@ -89,9 +89,9 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
   // McDonald dependency parser:
   Parameters par;
-  DependencyParser parser;
+  final DependencyParser parser;
   DependencyDecoder decoder;
-  DependencyWriter writer;
+  final DependencyWriter writer;
   DependencyPipe pipe;
 
   // Dependency parsing options:
@@ -495,7 +495,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
       return;
     DependencyInstance dep = sd.dep;
 
-    synchronized(System.err) {
+    synchronized (writer) {
       // Print best words and POS tags:
       System.err.printf("\nsent:");
       for(int i=1; i<dep.length(); ++i)
@@ -506,7 +506,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
       System.err.printf("\n");
 
       // Print best dependencies:
-      if(writer != null) {
+      if (writer != null) {
         System.err.printf("dep scores:\n");
         try {
           writer.write(dep);
@@ -515,7 +515,7 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
           // no big deal
           ioe.printStackTrace();
         }
-        if(matrix) {
+        if (matrix) {
           System.err.printf("head scores:\n");
           parser.debugHeadScores(dep, 20);
           System.err.printf("\n");
@@ -602,19 +602,6 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
   public FeatureValue<String> featurize(
        Featurizable<IString, String> f) { return null; }
 
-  private static float localNorm(float v) {
-    double e = Math.exp(v);
-    return (float)Math.log(e/(1+e));
-  }
-
-  private static float lenNorm(float oldTotalScore, float localScore, int pos, int phraseLen) {
-    float lenNormScore = (oldTotalScore+localScore)/(pos+phraseLen);
-    if(pos > 0)
-      lenNormScore -= oldTotalScore/pos;
-    System.err.printf("%f\t", lenNormScore);
-    return lenNormScore;
-  }
-
   private String[] getLocalFeatureNames() {
     List<String> names = new ArrayList<String>();
     if(normAndUnnorm || !localNorm || !localInvNorm) names.add(":argmax");
@@ -623,20 +610,6 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
     if(lenNorm) names.add(":argmax:len");
     if(posScore) names.add(":pos");
     return names.toArray(new String[names.size()]);
-  }
-
-  private float[] getLocalFeatures(DependencyScores d, int pos, int phraseLen, float tagScore, float depScore) {
-    float[] scores = new float[depFeatures.length];
-    int i=-1;
-    if(normAndUnnorm || !localNorm || !localInvNorm) scores[++i] = depScore;
-    if(localNorm) scores[++i] = localNorm(depScore);
-    if(localInvNorm) scores[++i] = localNorm(-depScore);
-    boolean hasPrev = d != null && d.totalScores != null;
-    if(lenNorm) scores[++i] = lenNorm(hasPrev ? d.totalScores[0] : 0.0f, depScore, pos, phraseLen);
-    if(posScore) scores[++i] = tagScore;
-    ++i;
-    assert(i == depFeatures.length);
-    return scores;
   }
 
   public static void main(String[] args) throws Exception {
@@ -667,6 +640,34 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
         localScores = totalScores;
     }
 
+    private float[] getLocalFeatures(DependencyScores d, int pos, int phraseLen, float tagScore, float depScore) {
+      float[] scores = new float[depFeatures.length];
+      int i=-1;
+      if(normAndUnnorm || !localNorm || !localInvNorm) scores[++i] = depScore;
+      if(localNorm) scores[++i] = localNorm(depScore);
+      if(localInvNorm) scores[++i] = localNorm(-depScore);
+      boolean hasPrev = d != null && d.totalScores != null;
+      if(lenNorm) scores[++i] = lenNorm(hasPrev ? d.totalScores[0] : 0.0f, depScore, pos, phraseLen);
+      if(posScore) scores[++i] = tagScore;
+      ++i;
+      assert(i == depFeatures.length);
+      return scores;
+    }
+
+    private float localNorm(float v) {
+      double e = Math.exp(v);
+      return (float)Math.log(e/(1+e));
+    }
+
+    private float lenNorm(float oldTotalScore, float localScore, int pos, int phraseLen) {
+      float lenNormScore = (oldTotalScore+localScore)/(pos+phraseLen);
+      if(pos > 0)
+        lenNormScore -= oldTotalScore/pos;
+      System.err.printf("%f\t", lenNormScore);
+      return lenNormScore;
+    }
+
+    @Override
     public DependencyScores clone() throws CloneNotSupportedException {
       DependencyScores sd = (DependencyScores) super.clone();
       sd.localScores = localScores.clone();

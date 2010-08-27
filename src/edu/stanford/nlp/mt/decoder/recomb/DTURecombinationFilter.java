@@ -16,6 +16,7 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
 
   public static final boolean DEBUG = false;
 
+  @Override
 	public Object clone() throws CloneNotSupportedException {
     return super.clone();
 	}
@@ -30,23 +31,23 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
       combine = true;
     } else if(isDTU_A && !isDTU_B) {
       DTUHypothesis dtuA = (DTUHypothesis<TK,FV>) hypA;
-      combine = (dtuA.discTargetPhrases.isEmpty());
+      combine = (dtuA.pendingPhrases.isEmpty());
     } else if(!isDTU_A) {
       DTUHypothesis dtuB = (DTUHypothesis<TK,FV>) hypB;
-      combine = (dtuB.discTargetPhrases.isEmpty());
+      combine = (dtuB.pendingPhrases.isEmpty());
     } else {
       DTUHypothesis<TK,FV> dtuA = (DTUHypothesis<TK,FV>) hypA;
       DTUHypothesis<TK,FV> dtuB = (DTUHypothesis<TK,FV>) hypB;
-      if (dtuA.discTargetPhrases.size() != dtuB.discTargetPhrases.size()) {
+      if (dtuA.pendingPhrases.size() != dtuB.pendingPhrases.size()) {
         combine = false;
       } else {
         combine = true;
-        Iterator<DTUHypothesis.DiscTargetPhrase<TK,FV>> itA = dtuA.discTargetPhrases.iterator();
-        Iterator<DTUHypothesis.DiscTargetPhrase<TK,FV>> itB = dtuB.discTargetPhrases.iterator();
+        Iterator<DTUHypothesis.PendingPhrase<TK,FV>> itA = dtuA.pendingPhrases.iterator();
+        Iterator<DTUHypothesis.PendingPhrase<TK,FV>> itB = dtuB.pendingPhrases.iterator();
         while (itA.hasNext()) {
           assert (itB.hasNext());
-          DTUHypothesis.DiscTargetPhrase<TK,FV> elA = itA.next();
-          DTUHypothesis.DiscTargetPhrase<TK,FV> elB = itB.next();
+          DTUHypothesis.PendingPhrase<TK,FV> elA = itA.next();
+          DTUHypothesis.PendingPhrase<TK,FV> elB = itB.next();
           if(elA.concreteOpt.abstractOption != elB.concreteOpt.abstractOption || elA.segmentIdx != elB.segmentIdx) {
             combine = false;
             break;

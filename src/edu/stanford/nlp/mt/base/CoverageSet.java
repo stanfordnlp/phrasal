@@ -47,7 +47,7 @@ public class CoverageSet extends BitSet implements Iterable<Integer> {
     StringBuilder sb = new StringBuilder();
     sb.append("{");
     int end=0;
-    for (;;) {
+    while (true) {
       int start = nextSetBit(end);
       if (start < 0)
         break;

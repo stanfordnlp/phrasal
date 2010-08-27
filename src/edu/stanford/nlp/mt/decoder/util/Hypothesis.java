@@ -23,6 +23,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
  * @param <TK>
  */
 public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<Hypothesis<TK,FV>> {
+
 	public static long nextId;
 	
 	// primitives
@@ -70,14 +71,20 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	/**
 	 * 
 	 */
-	public double score() {
+	@Override
+  public double score() {
 		return score + h;
 	}
 	
 	/**
 	 * 
 	 */
-	public Hypothesis(int translationId, Sequence<TK> foreignSequence, SearchHeuristic<TK,FV> heuristic, List<List<ConcreteTranslationOption<TK>>> options) {
+	public Hypothesis
+     (int translationId,
+      Sequence<TK> foreignSequence,
+      SearchHeuristic<TK,FV> heuristic,
+      List<List<ConcreteTranslationOption<TK>>> options) 
+  {
 		synchronized (Hypothesis.class) { id = nextId++; }
 		score = 0;
     h = heuristic.getInitialHeuristic(foreignSequence, options, translationId);
@@ -97,13 +104,15 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 	/**
 	 * 
 	 */
-	public Hypothesis(int translationId,
+	public Hypothesis
+     (int translationId,
 			ConcreteTranslationOption<TK> translationOpt, 
 			int insertionPosition,
 			Hypothesis<TK,FV> baseHyp, 
 			CombinedFeaturizer<TK,FV> featurizer,
 			Scorer<FV> scorer,
-			SearchHeuristic<TK,FV> heuristic) {
+			SearchHeuristic<TK,FV> heuristic)
+  {
 		synchronized (Hypothesis.class) { this.id = nextId++; }
 		this.insertionPosition = insertionPosition;
 		this.translationOpt = translationOpt;
@@ -115,7 +124,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 			           insertionPosition + translationOpt.abstractOption.translation.size()); // edge insertion
 		foreignSequence = baseHyp.foreignSequence;
 		untranslatedTokens = this.foreignSequence.size() - this.foreignCoverage.cardinality();
-		//untranslatedTokens = baseHyp.untranslatedTokens - translationOpt.abstractOption.foreign.size();
 		linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos : baseHyp.translationOpt.linearDistortion(translationOpt));
 		featurizable = new Featurizable<TK,FV>(this, translationId, featurizer.getNumberStatefulFeaturizers());
     localFeatures = featurizer.listFeaturize(featurizable);
@@ -126,7 +134,8 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 		depth = baseHyp.depth + 1;
 	}
 
-  protected Hypothesis(int translationId,
+  protected Hypothesis
+     (int translationId,
 			ConcreteTranslationOption<TK> translationOpt,
       TranslationOption<TK> abstractOption,
 			int insertionPosition,
@@ -135,8 +144,9 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
 			Scorer<FV> scorer,
 			SearchHeuristic<TK,FV> heuristic,
       RawSequence<TK> targetPhrase,
-      boolean hasFloatingPhrases,
-      boolean targetOnly) {
+      boolean hasPendingPhrases,
+      int segmentIdx)
+  {
 		synchronized (Hypothesis.class) { this.id = nextId++; }
 		this.insertionPosition = insertionPosition;
 		this.translationOpt = translationOpt;
@@ -147,7 +157,7 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
     foreignSequence = baseHyp.foreignSequence;
 		untranslatedTokens = this.foreignSequence.size() - this.foreignCoverage.cardinality();
 		linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos : baseHyp.translationOpt.linearDistortion(translationOpt));
-    featurizable = new DTUFeaturizable<TK,FV>(this, abstractOption, translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase, hasFloatingPhrases, targetOnly);
+    featurizable = new DTUFeaturizable<TK,FV>(this, abstractOption, translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase, hasPendingPhrases, segmentIdx);
     localFeatures = featurizer.listFeaturize(featurizable);
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     depth = baseHyp.depth + 1;

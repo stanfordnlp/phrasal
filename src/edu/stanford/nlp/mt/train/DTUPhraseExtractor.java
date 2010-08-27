@@ -60,6 +60,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     System.err.println("Using DTU phrase extractor.");
   }
 
+  @Override
   public Object clone() throws CloneNotSupportedException {
     DTUPhraseExtractor c = (DTUPhraseExtractor) super.clone();
     c.substringExtractor = (MosesPhraseExtractor) substringExtractor.clone();
@@ -343,7 +344,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       if (fs.isEmpty())
         return false;
       int startIdx, endIdx = 0;
-      for (;;) {
+      while (true) {
         startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
         endIdx = fs.nextSetBit(startIdx)-1;
         if (startIdx > endIdx)
@@ -375,7 +376,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     boolean hasUnalignedSubphrase(WordAlignment sent, BitSet fs, boolean source) {
       int startIdx, endIdx=0;
-      for (;;) {
+      while (true) {
         startIdx = fs.nextSetBit(endIdx);
         if (startIdx < 0)
           break;
@@ -409,7 +410,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       if (fs.isEmpty())
         return false;
       int startIdx, endIdx = 0;
-      for (;;) {
+      while (true) {
         // Position of the gap:
         startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
         endIdx = fs.nextSetBit(startIdx)-1;
@@ -498,7 +499,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       int firstI = bitset.nextSetBit(0);
       int lastI = bitset.length()-1;
       int si = 0;
-      for (;;) {
+      while (true) {
         si = bitset.nextSetBit(si);
         if (si > 0) {
           if (growOutside || si > firstI)
@@ -533,7 +534,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         int s=-1;
         if (growInside && sizeF() < maxSize) {
           BitSet successors = candidateIdx(f, growInsideAndOutside && spanF() < maxSpan);
-          for (;;) {
+          while (true) {
             s = successors.nextSetBit(s+1);
             if (s < 0 || s >= sent.f().size()) break;
             list.add(new DTUPhrase(this).expandF(s));
@@ -544,7 +545,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         int s=-1;
         if (growInside && sizeE() < maxSize) {
           BitSet successors = candidateIdx(e, growInsideAndOutside && spanE() < maxSpan);
-          for (;;) {
+          while (true) {
             s = successors.nextSetBit(s+1);
             if (s < 0 || s >= sent.e().size()) break;
             list.add(new DTUPhrase(this).expandE(s));

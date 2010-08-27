@@ -102,7 +102,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 	
 	final ArrayList<List<IntArrayTranslationOption>> translations;
 	
-	private float[] stringProbListToFloatLogProbArray(List<String> sList) {
+	private static float[] stringProbListToFloatLogProbArray(List<String> sList) {
 		float[] fArray = new float[sList.size()];
 		int i = 0;
 		for (String s : sList) {
@@ -358,6 +358,10 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 		}		
 	}
 
+  @Override
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
+	}
 
 	@Override
 	public String getName() {

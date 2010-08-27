@@ -48,7 +48,7 @@ public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     CombinedFeaturizer<TK,FV> featurizer = (CombinedFeaturizer<TK, FV>)super.clone();
     featurizer.featurizers = new LinkedList<IncrementalFeaturizer<TK,FV>>();
     for(IncrementalFeaturizer<TK,FV> f : featurizers) {
-      featurizer.featurizers.add(f instanceof ClonedFeaturizer ? (ClonedFeaturizer<TK,FV>)((ClonedFeaturizer<TK,FV>)f).clone() : f);
+      featurizer.featurizers.add(f instanceof ClonedFeaturizer ? (IncrementalFeaturizer<TK,FV>)((ClonedFeaturizer<TK,FV>)f).clone() : f);
     }
     return featurizer;
 	}
@@ -56,7 +56,8 @@ public void deleteFeaturizers(Set<String> disabledFeaturizers) {
   /**
 	 * 
 	 */
- 
+
+  @SuppressWarnings("unused")
 	public List<IncrementalFeaturizer<TK,FV>> getFeaturizers() {
 		return new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers);
 	}
@@ -128,7 +129,7 @@ public void deleteFeaturizers(Set<String> disabledFeaturizers) {
 			List<FeatureValue<FV>> listFeatureValues = (List<FeatureValue<FV>>)o;
 			// profiling reveals that addAll is slow due to a buried call to clone() 
 			for (FeatureValue<FV> fv : listFeatureValues) {
-        if(fv.name != null)
+        if(fv.name != null && fv.value != 0.0)
           featureValues.add(fv);
 			}
 		}
@@ -179,7 +180,8 @@ public void deleteFeaturizers(Set<String> disabledFeaturizers) {
 			featurizer.initialize(options, foreign);
 		}
 	}
-	
+
+  @Override
 	public void reset() {
 		for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
 			featurizer.reset();

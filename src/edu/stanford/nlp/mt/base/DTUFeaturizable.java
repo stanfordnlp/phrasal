@@ -7,13 +7,13 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
 
-  public final boolean targetOnly;
+  public final int segmentIdx;
   public final TranslationOption<TK> abstractOption;
 
   @SuppressWarnings("unchecked")
-	public DTUFeaturizable(Hypothesis<TK,FV> hypothesis, TranslationOption<TK> abstractOption, int translationId, int nbStatefulFeaturizers, RawSequence<TK> toks, boolean notYetDone, boolean targetOnly) {
-    super(hypothesis, translationId, nbStatefulFeaturizers, toks, retrieveDTUTokens(hypothesis, toks), notYetDone, targetOnly);
-    this.targetOnly = targetOnly;
+	public DTUFeaturizable(Hypothesis<TK,FV> hypothesis, TranslationOption<TK> abstractOption, int translationId, int nbStatefulFeaturizers, RawSequence<TK> toks, boolean hasPendingPhrases, int segmentIdx) {
+    super(hypothesis, translationId, nbStatefulFeaturizers, toks, retrieveDTUTokens(hypothesis, toks), hasPendingPhrases, segmentIdx > 0);
+    this.segmentIdx = segmentIdx;
     this.abstractOption = abstractOption;
     assert(translatedPhrase.size() > 0);
   }
@@ -22,7 +22,7 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
     super(foreignSequence, concreteOpt, translationId,
           ((DTUOption<TK>)concreteOpt.abstractOption).dtus[dtuId]);
     this.abstractOption = null;
-    this.targetOnly = false;
+    this.segmentIdx = 0;
     assert(translatedPhrase.size() > 0);
   }
 
@@ -30,7 +30,7 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
     int pos = 0;
     Featurizable<TK,FV> preceedingF = h.preceedingHyp.featurizable;
     int sz = newTokens.size();
-    if(preceedingF != null)
+    if (preceedingF != null)
       sz += preceedingF.partialTranslationRaw.elements.length;
     Object[] tokens = new Object[sz];
 		if (preceedingF != null) {

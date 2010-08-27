@@ -21,7 +21,7 @@ public class DiscontinuousSubSequences {
       align.clear();
     int pos = -1;
     int gaps = 0;
-    for (;;) {
+    while (true) {
       pos = bs.nextSetBit(pos+1);
       if (pos == -1)
         break;

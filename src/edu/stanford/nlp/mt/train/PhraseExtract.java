@@ -376,7 +376,7 @@ public class PhraseExtract {
     setTotalPassNumber();
   }
 
-  private boolean doneReadingData() { return doneReadingData; }
+  //private boolean doneReadingData() { return doneReadingData; }
 
   class Extractor extends Thread {
 
@@ -395,10 +395,11 @@ public class PhraseExtract {
       dataQueue = q;
     }
 
+    @Override
     public void run() {
       //System.err.printf("Starting thread %s...\n", this);
       try {
-        while (!dataQueue.isEmpty() || !ex.doneReadingData()) {
+        while (!dataQueue.isEmpty() || !ex.doneReadingData) {
           Pair<Integer, String[]> p = dataQueue.poll();
           if (p != null) {
             String[] lines = p.second();

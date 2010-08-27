@@ -29,7 +29,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
 
   final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
-	
+
+  @Override
 	public Object clone() throws CloneNotSupportedException {
     return super.clone();
 	}
@@ -116,7 +117,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
     assert(options.size() == 1 || options.size() == 2); // options[0]: phrases without gaps; options[1]: phrases with gaps
     for (int i=0; i<options.size(); ++i) {
       for (ConcreteTranslationOption<TK> option : options.get(i)) {
-        if(option.abstractOption instanceof DTUOption) {
+        if (option.abstractOption instanceof DTUOption) {
           //System.err.println("future cost: skipping: "+option.abstractOption);
           continue;
         }
@@ -128,7 +129,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
           terminalPos = option.foreignPos + option.abstractOption.foreign.size()-1;
           if (score > viterbiSpanScores.getScore(option.foreignPos, terminalPos)) {
             viterbiSpanScores.setScore(option.foreignPos, terminalPos, score);
-            if(Double.isNaN(score)) {
+            if (Double.isNaN(score)) {
               System.err.printf("Bad Viterbi score: score[%d,%d]=%.3f\n", option.foreignPos, terminalPos, score);
               throw new RuntimeException();
             }
@@ -140,7 +141,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
           //System.err.println("coverage set: "+cs);
           int startIdx, endIdx = 0;
           childScore = 0.0;
-          for(;;) {
+          while (true) {
             startIdx = cs.nextClearBit(cs.nextSetBit(endIdx));
             endIdx = cs.nextSetBit(startIdx)-1;
             if(endIdx < 0)
@@ -152,11 +153,11 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
           double oldScore = viterbiSpanScores.getScore(option.foreignPos, terminalPos);
           if (totalScore > oldScore) {
             viterbiSpanScores.setScore(option.foreignPos, terminalPos, totalScore);
-            if(Double.isNaN(totalScore)) {
+            if (Double.isNaN(totalScore)) {
               System.err.printf("Bad Viterbi score[%d,%d]: score=%.3f childScore=%.3f\n", option.foreignPos, terminalPos, score, childScore);
               throw new RuntimeException();
             }
-            if(DEBUG)
+            if (DEBUG)
               System.err.printf("Improved with gaps: %.3f -> %.3f\n", oldScore, totalScore);
 
           }

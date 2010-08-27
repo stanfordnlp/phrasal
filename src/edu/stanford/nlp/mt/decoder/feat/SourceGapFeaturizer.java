@@ -29,6 +29,8 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
 
 	public String gcFeatureName, gc2FeatureName, gc3FeatureName, gc4FeatureName, crossingFeatureName;
 
+  public int nFeatures = 2;
+
   public double
     gcOnValue, gcOffValue,
     gc2OnValue, gc2OffValue,
@@ -58,12 +60,15 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
       } else if (name.equals("Gap2Count")) {
         gc2OnValue = Double.parseDouble(els[1]);
         gc2OffValue = Double.parseDouble(els[2]);
+        ++nFeatures;
       } else if (name.equals("Gap3Count")) {
         gc3OnValue = Double.parseDouble(els[1]);
         gc3OffValue = Double.parseDouble(els[2]);
+        ++nFeatures;
       } else if (name.equals("Gap4Count")) {
         gc4OnValue = Double.parseDouble(els[1]);
         gc4OffValue = Double.parseDouble(els[2]);
+        ++nFeatures;
       } else if (name.equals("CrossingCount")) {
         crossingOnValue = Double.parseDouble(els[1]);
       } else {
@@ -80,22 +85,22 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
 	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
-    List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
-    int gapCount = 0;
+    List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(nFeatures);
 
+    int gapCount = 0;
     for (IString w : f.foreignPhrase) {
       if (w.id == DTUPhraseExtractor.GAP_STR.id)
         ++gapCount;
     }
 
-    if (gcOnValue != 0.0 || gcOffValue != 0.0)
-      list.add(new FeatureValue<String>(gcFeatureName, gapCount >= 1 ? gcOnValue : gcOffValue));
-    if(gc2OnValue != 0.0 || gc2OffValue != 0.0)
-      list.add(new FeatureValue<String>(gc2FeatureName, gapCount >= 2 ? gc2OnValue : gc2OffValue));
-    if(gc3OnValue != 0.0 || gc3OffValue != 0.0)
-      list.add(new FeatureValue<String>(gc3FeatureName, gapCount >= 3 ? gc3OnValue : gc3OffValue));
-    if(gc4OnValue != 0.0 || gc4OffValue != 0.0)
-      list.add(new FeatureValue<String>(gc4FeatureName, gapCount >= 4 ? gc4OnValue : gc4OffValue));
+    double gcV = gapCount >= 1 ? gcOnValue : gcOffValue;
+    double gc2V = gapCount >= 2 ? gc2OnValue : gc2OffValue;
+    double gc3V = gapCount >= 3 ? gc3OnValue : gc3OffValue;
+    double gc4V = gapCount >= 4 ? gc4OnValue : gc4OffValue;
+    if (gcV != 0.0) list.add(new FeatureValue<String>(gcFeatureName, gcV));
+    if(gc2V != 0.0) list.add(new FeatureValue<String>(gc2FeatureName, gc2V));
+    if(gc3V != 0.0) list.add(new FeatureValue<String>(gc3FeatureName, gc3V));
+    if(gc4V != 0.0) list.add(new FeatureValue<String>(gc4FeatureName, gc4V));
 
     if (crossingOnValue != 0.0 && gapCount >= 1) {
 
@@ -115,7 +120,7 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
         boolean inside=false, outside=false;
         CoverageSet curCS = curF.hyp.translationOpt.foreignCoverage;
         int idx = -1;
-        for (;;) {
+        while (true) {
           idx = curCS.nextSetBit(idx+1);
           if (idx < 0)
             break;
@@ -141,5 +146,6 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
 			Sequence<IString> foreign) {
 	}
 
-	public void reset() { }
+	@Override
+  public void reset() { }
 }

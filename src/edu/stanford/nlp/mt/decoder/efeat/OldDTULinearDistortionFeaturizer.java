@@ -87,7 +87,7 @@ public class OldDTULinearDistortionFeaturizer extends StatefulFeaturizer<IString
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
     if (f instanceof DTUFeaturizable)
-      if (((DTUFeaturizable)f).targetOnly) {
+      if (((DTUFeaturizable)f).segmentIdx > 0) {
         return null;
       }
 

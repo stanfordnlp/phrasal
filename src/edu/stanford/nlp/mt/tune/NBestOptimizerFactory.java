@@ -6,7 +6,6 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
-import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.MutableDouble;
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.util.ErasureUtils;
@@ -171,6 +170,7 @@ class SequenceOptimizer extends AbstractNBestOptimizer {
     this.loop = loop;
   }
 
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
     Counter<String> wts = initialWts;
     for(NBestOptimizer opt : opts) {
@@ -216,6 +216,7 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
     super(mert);
   }
 
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
     Counter<String> wts = initialWts;
 
@@ -400,7 +401,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	    	   //System.err.println("Z: "+Z);
 
 		       double p = Math.exp(scoreTranslation(wts, targetTrans))/Z;
-		       if (p != p) return Double.POSITIVE_INFINITY;
+		       if (Double.isNaN(p)) return Double.POSITIVE_INFINITY;
 	    	   
 		       //System.err.println("p: "+p);
 		       sumLogP += Math.log(p);
@@ -441,7 +442,8 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
   public CerStyleOptimizer(MERT mert) {
     super(mert);
   }
-  
+
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     Counter<String> featureOccurances;
@@ -612,6 +614,7 @@ class CerStyleOptimizer extends AbstractNBestOptimizer {
  * @author danielcer
  */
 
+@SuppressWarnings("unused")
 class OldCerStyleOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
@@ -620,7 +623,7 @@ class OldCerStyleOptimizer extends AbstractNBestOptimizer {
     super(mert);
   }
 
- 
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     Counter<String> wts = initialWts;
@@ -697,18 +700,20 @@ class LineSearchOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = false;
 
-  private String featureName;
+  private final String featureName;
 
   public LineSearchOptimizer(MERT mert) {
     super(mert);
     featureName = WordPenaltyFeaturizer.FEATURE_NAME;
   }
 
+  @SuppressWarnings("unused")
   public LineSearchOptimizer(MERT mert, String featureName) {
     super(mert);
     this.featureName = featureName;
   }
 
+  @Override
   public Counter<String> optimize(final Counter<String> initialWts) {
     Counter<String> dir = new ClassicCounter<String>();
     dir.incrementCount(featureName, 1.0);
@@ -782,6 +787,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     return x;
   }
 
+  @Override
   public Counter<String> optimize(final Counter<String> initialWts) {
     assert(minIter >= 1);
     Counter<String> wts = initialWts;
@@ -833,6 +839,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
     }
 
     Function f = new Function() {
+      @Override
       public double valueAt(double[] x) {
         Counter<String> xC = arrayToCounter(keys, x);
 
@@ -850,6 +857,7 @@ class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
         System.err.printf("current eval(%d): %.5f - best eval: %.5f\n", it.intValue(), curEval, bestEval.doubleValue());
         return -curEval;
       }
+      @Override
       public int domainDimension() { return initialWts.size()-1; }
     };
 
@@ -880,6 +888,7 @@ class PowellOptimizer extends AbstractNBestOptimizer {
     super(mert);
   }
 
+  @Override
   @SuppressWarnings( { "unchecked", "deprecation" })
   public Counter<String> optimize(Counter<String> initialWts) {
     
@@ -995,6 +1004,7 @@ class BasicPowellOptimizer extends AbstractNBestOptimizer {
   }
 
   @SuppressWarnings( { "unchecked", "deprecation" })
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
     Counter<String> wts = initialWts;
 
@@ -1079,6 +1089,7 @@ class MCMCDerivative extends AbstractNBestOptimizer {
 		this.objValue = objValue;
   }
 
+  @Override
   @SuppressWarnings({ "deprecation" })
   public Counter<String> optimize(Counter<String> wts) {
 
@@ -1259,6 +1270,7 @@ class BetterWorseCentroids extends AbstractNBestOptimizer {
 		this.useOnlyBetter = useOnlyBetter;
   }
 
+  @Override
   @SuppressWarnings( { "deprecation", "unchecked" })
   public Counter<String> optimize(Counter<String> wts) {
 
@@ -1343,6 +1355,7 @@ class FullKMeans extends AbstractNBestOptimizer {
 		this.clusterToCluster = clusterToCluster;
   }
 
+  @Override
   @SuppressWarnings( { "deprecation", "unchecked" })
   public Counter<String> optimize(Counter<String> initialWts) {
 
@@ -1544,6 +1557,7 @@ class BetterWorse3KMeans extends AbstractNBestOptimizer {
   }
 
   @SuppressWarnings( { "deprecation", "unchecked" })
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest
@@ -1771,6 +1785,7 @@ class BetterWorse2KMeans extends AbstractNBestOptimizer {
 		this.useWts = useWts;
   }
 
+  @Override
   @SuppressWarnings( { "deprecation", "unchecked" })
   public Counter<String> optimize(Counter<String> initialWts) {
 
@@ -1936,6 +1951,7 @@ class SVDReducedObj extends AbstractNBestOptimizer {
   }
 
   @SuppressWarnings( { "deprecation", "unchecked" })
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     Ptr<Matrix> pFeatDocMat = new Ptr<Matrix>();
@@ -2141,6 +2157,7 @@ class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
     super(mert);
   }
 
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     double C = MERT.C;
@@ -2302,6 +2319,7 @@ class MCMCELossObjectiveSGD extends AbstractNBestOptimizer {
 		this.max_iter = max_iter;
   }
 
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     Counter<String> wts = new ClassicCounter<String>(initialWts);
@@ -2354,6 +2372,7 @@ class MCMCELossDirOptimizer extends AbstractNBestOptimizer {
     super(mert);
   }
 
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     Counter<String> wts = initialWts;
@@ -2393,6 +2412,7 @@ class PerceptronOptimizer extends AbstractNBestOptimizer {
     super(mert);
   }
 
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
@@ -2434,6 +2454,7 @@ class PointwisePerceptron extends AbstractNBestOptimizer {
   }
 
   @SuppressWarnings( { "deprecation", "unchecked" })
+  @Override
   public Counter<String> optimize(Counter<String> initialWts) {
 
     List<ScoredFeaturizedTranslation<IString, String>> targets = (new HillClimbingMultiTranslationMetricMax<IString, String>(
@@ -2487,6 +2508,7 @@ class RandomNBestPoint extends AbstractNBestOptimizer {
 		this.better = better;
   }
 
+  @Override
   @SuppressWarnings( { "deprecation", "unchecked" })
   public Counter<String> optimize(Counter<String> initialWts) {
 
@@ -2526,6 +2548,7 @@ class RandomPairs extends AbstractNBestOptimizer {
     super(mert);
   }
 
+  @Override
   @SuppressWarnings( { "deprecation", "unchecked" })
   public Counter<String> optimize(Counter<String> initialWts) {
 
@@ -2575,6 +2598,7 @@ class RandomAltPairs extends AbstractNBestOptimizer {
 		this.forceBetter = forceBetter;
   }
 
+  @Override
   @SuppressWarnings( { "deprecation", "unchecked" })
   public Counter<String> optimize(Counter<String> initialWts) {
 

@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.Phrasal;
  * @param <T>
  */
 public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslationOption<T>> {
+
 	public final TranslationOption<T> abstractOption;
 	public final CoverageSet foreignCoverage;
 	public final String phraseTableName;
@@ -102,7 +103,7 @@ public class ConcreteTranslationOption<T> implements Comparable<ConcreteTranslat
 	
 	@Override
 	public String toString() {
-		StringBuffer sbuf = new StringBuffer();
+    StringBuilder sbuf = new StringBuilder();
 		sbuf.append("ConcreteTranslationOption:\n");
 		sbuf.append(String.format("\tAbstractOption: %s\n", abstractOption.toString().replaceAll("\n", "\n\t")));
 		sbuf.append(String.format("\tForeignCoverage: %s\n", foreignCoverage));

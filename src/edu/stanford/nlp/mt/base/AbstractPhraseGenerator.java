@@ -16,7 +16,8 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 abstract public class AbstractPhraseGenerator<TK,FV> implements PhraseGenerator<TK>, PhraseTable<TK> {
 	protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	protected final Scorer<FV> scorer;
-	
+
+  @Override
 	public Object clone() throws CloneNotSupportedException {
 		return super.clone();
 	}

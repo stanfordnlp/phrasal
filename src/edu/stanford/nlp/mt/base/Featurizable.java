@@ -192,9 +192,9 @@ public class Featurizable<TK,FV> {
 
 	@SuppressWarnings("unchecked")
 	protected Featurizable(Hypothesis<TK,FV> hypothesis, int translationId, int nbStatefulFeaturizers,
-                        Sequence<TK> translatedPhrase, Object[] tokens, boolean remainingFloatingPhrases, boolean targetOnly) {
+                        Sequence<TK> translatedPhrase, Object[] tokens, boolean hasPendingPhrases, boolean targetOnly) {
 		this.translationId = translationId;
-		done = hypothesis.isDone() && !remainingFloatingPhrases;
+		done = hypothesis.isDone() && !hasPendingPhrases;
 		option = hypothesis.translationOpt;
 		TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
 		ConcreteTranslationOption<TK> concreteOpt = hypothesis.translationOpt;
@@ -238,18 +238,18 @@ public class Featurizable<TK,FV> {
       augmentAlignments(concreteOpt);
 	}
 
-  public Object getState(StatefulFeaturizer<IString,String> f) {
+  public Object getState(StatefulFeaturizer<TK,FV> f) {
     return states[f.getId()];
   }
 
-  public void setState(StatefulFeaturizer<IString,String> f, Object s) {
+  public void setState(StatefulFeaturizer<TK,FV> f, Object s) {
     states[f.getId()] = s;
   }
 
   /**
 	 * Avoid Arrays.copyOf and it's sluggish call to Class.getComponentType
 	 */
-	private int[][] copyOfIndex(int[][] index, int newLength) {
+	private static int[][] copyOfIndex(int[][] index, int newLength) {
 		int[][] newIndex = new int[newLength][];
 		System.arraycopy(index, 0, newIndex, 0, Math.min(index.length, newLength));
 		return newIndex;

@@ -9,21 +9,25 @@ import java.util.Iterator;
  * @param <T>
  */
 abstract public class AbstractSequence<T> implements Sequence<T> {
-	public Iterator<T> iterator() {
+	@Override
+  public Iterator<T> iterator() {
 		return new AbstractSequenceIterator();
 	}
 
 	private class AbstractSequenceIterator implements Iterator<T> {
 		int position = 0;
 
-		public boolean hasNext() {
+		@Override
+    public boolean hasNext() {
 			return position < AbstractSequence.this.size();
 		}
 
+    @Override
 		public T next() {
 			return AbstractSequence.this.get(position++);
 		}
 
+    @Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
@@ -67,7 +71,8 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		return toString(" ");
 	}
 
-	@SuppressWarnings("unchecked")
+  @Override
+  @SuppressWarnings("unchecked")
 	public Sequence<T> subsequence(CoverageSet select) {
 		Object[] newElements = new Object[select.cardinality()];
 		int sz = size();
@@ -100,6 +105,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 			this.start = start;
 		}
 
+    @Override
 		public T get(int i) {
 			if (i >= size) {
 				throw new ArrayIndexOutOfBoundsException("index: "+i+" size: "+size);
@@ -108,6 +114,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 			return AbstractSequence.this.get(start+i);
 		}
 
+    @Override
 		public int size() {
 			return size;
 		}
@@ -117,6 +124,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 
 	private long hashCode = Long.MAX_VALUE;
 
+  @Override
 	public long longHashCode() {
 		if (hashCode != Long.MAX_VALUE) {
 			return hashCode;
@@ -189,6 +197,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		return false;
 	}
 
+  @Override
 	public boolean startsWith(Sequence<T> prefix) {
 		int prefixSize = prefix.size();
 		if (prefixSize > this.size()) return false;

@@ -22,7 +22,6 @@ public class DTUOption<T> extends TranslationOption<T> {
   public DTUOption(int id, float[] scores, String[] phraseScoreNames, RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment) {
 		super(id, scores, phraseScoreNames, emptySeq, foreign, alignment);
     this.dtus = dtus;
-    //System.err.println("DTUOption: "+dtus.length);
   }
 
   @SuppressWarnings("unused")
@@ -33,7 +32,7 @@ public class DTUOption<T> extends TranslationOption<T> {
 	
 	@Override
 	public String toString() {
-		StringBuffer sbuf = new StringBuffer("TranslationOption: \"");
+    StringBuilder sbuf = new StringBuilder("TranslationOption: \"");
     for(int i=0; i<dtus.length; ++i) {
       if(i>0)
         sbuf.append(" ").append(DTUPhraseExtractor.GAP_STR.word()).append(" ");
