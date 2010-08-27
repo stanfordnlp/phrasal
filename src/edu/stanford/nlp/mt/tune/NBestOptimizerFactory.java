@@ -50,7 +50,7 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 /**
- * @author Michel Galley
+ * @author Daniel Cer, Michel Galley
  */
 public class NBestOptimizerFactory {
 
@@ -257,18 +257,30 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
 
 class LogLinearOptimizer extends AbstractNBestOptimizer {
 
-	final double sigma;
-  final double l1reg;
+  final double l2sigma;
+  final double l1b;
 
-	public LogLinearOptimizer(MERT mert, double sigma, double l1reg) {
-		super(mert);
-		double C = sigma*sigma;
-		System.err.printf("Loglinear Training with C: %.2f sigma: %.2f\n", C, sigma);
-    if (l1reg != 0.0)
-      System.err.printf("L1 regularization: %.2f\n", l1reg);
-		this.sigma = sigma;
-    this.l1reg = l1reg;
-	}
+  public LogLinearOptimizer(MERT mert, double l2sigma, double l1b) {
+    super(mert);
+    System.err.println("Log-Linear training:");
+		
+      if (l2sigma == 0) {
+         System.err.printf("   - No Gaussian prior / L2 regularization\n");
+      } else {
+         double truePenalty = l2sigma * l2sigma;
+         System.err.printf("   - Gaussian prior / L2 regularization with sigma: %.2f (penalty: %.2f)\n", l2sigma, truePenalty);
+      }
+
+      if (l1b == 0.0) {
+         System.err.printf("   - No Laplace prior / L1 regularization\n");
+      } else {
+         int N = nbest.nbestLists().size();
+         System.err.printf("   - Laplace prior / L1 regularization with b: %.2f\n", l1b);
+         System.err.printf("     OWLQNMinimizer C = N*1/b: %.2f\n", N*1./l1b);
+      }
+      this.l2sigma = l2sigma;
+      this.l1b = l1b;
+   }
 	
 	@Override
 	public Counter<String> optimize(Counter<String> initialWts) {
@@ -286,7 +298,8 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		}
 		
 		System.err.println("Target Score: "+emetric.score(target));
-		Minimizer<DiffFunction> qn = l1reg != 0.0 ? new OWLQNMinimizer(l1reg) : new QNMinimizer(15, true);
+		int N = nbest.nbestLists().size();
+		Minimizer<DiffFunction> qn = l1b != 0.0 ? new OWLQNMinimizer(N*1./l1b) : new QNMinimizer(15, true);
 		LogLinearObjective llo = new LogLinearObjective(weightNames, target);
 		double newX[] = qn.minimize(llo, 1e-4, new double[weightNames.length]);
 		
@@ -363,9 +376,12 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	    		   }
 		       }
 	       }
-	       double N = nbestLists.size();
-	       for (String wt : wts.keySet()) {
-	      	 dORegularize.setCount(wt, N*(1./(sigma*sigma))*wts.getCount(wt)); 
+	       
+	       if (l2sigma != 0) {
+	          double N = nbestLists.size();
+	          for (String wt : wts.keySet()) {
+	             dORegularize.setCount(wt, N*(1./(l2sigma*l2sigma))*wts.getCount(wt)); 
+	          }
 	       }
 	       
 	       System.err.println("dOPlus "+dOplus);
@@ -384,38 +400,45 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 
 		@Override
 		public double valueAt(double[] x) {
-			System.err.println("valueAt x[]: "+Arrays.toString(x));
-			Counter<String> wts = vectorToWeights(x);
-			System.err.println("wts: "+wts);
-			List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
-		    double sumLogP = 0;
- 	        for (int sentId = 0; sentId < nbestLists.size(); sentId++) {
-	           List<ScoredFeaturizedTranslation<IString,String>> nbestList = nbestLists.get(sentId);
-	           ScoredFeaturizedTranslation<IString,String> targetTrans = target.get(sentId);
-	           
-	    	   double Z = 0;
-	    	   for (ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
-	    		   Z += Math.exp(scoreTranslation(wts, trans));
-	    		   //System.err.println("raw: "+scoreTranslation(wts, trans));
-	    	   }
-	    	   //System.err.println("Z: "+Z);
+         System.err.println("valueAt x[]: " + Arrays.toString(x));
+         Counter<String> wts = vectorToWeights(x);
+         System.err.println("wts: " + wts);
+         List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest
+               .nbestLists();
+         double sumLogP = 0;
+         for (int sentId = 0; sentId < nbestLists.size(); sentId++) {
+            List<ScoredFeaturizedTranslation<IString, String>> nbestList = nbestLists
+                  .get(sentId);
+            ScoredFeaturizedTranslation<IString, String> targetTrans = target
+                  .get(sentId);
 
-		       double p = Math.exp(scoreTranslation(wts, targetTrans))/Z;
-		       if (Double.isNaN(p)) return Double.POSITIVE_INFINITY;
-	    	   
-		       //System.err.println("p: "+p);
-		       sumLogP += Math.log(p);
-	        }		    
+            double Z = 0;
+            for (ScoredFeaturizedTranslation<IString, String> trans : nbestList) {
+               Z += Math.exp(scoreTranslation(wts, trans));
+               // System.err.println("raw: "+scoreTranslation(wts, trans));
+            }
+            // System.err.println("Z: "+Z);
+
+            double p = Math.exp(scoreTranslation(wts, targetTrans)) / Z;
+            if (Double.isNaN(p))
+               return Double.POSITIVE_INFINITY;
+
+            // System.err.println("p: "+p);
+            sumLogP += Math.log(p);
+         }
+ 	        
  	      double regTerm = 0;
- 	      double N = nbestLists.size();
- 	      for (double w : x) {
- 	      	regTerm += N*(1./(2.*sigma*sigma))*w*w;
- 	      }
+ 	      if (l2sigma != 0) {
+ 	         double N = nbestLists.size(); 	         
+            for (double w : x) {
+               regTerm += N*(1./(2.*l2sigma*l2sigma))*w*w;
+            }
+         }
  	      
  	      double regularizeObjective = -sumLogP+regTerm; 
  	      System.err.printf("sumLogP: %.5f Eval at point: %.5f\n", sumLogP, MERT.evalAtPoint(nbest, wts, emetric));
- 	      double C = sigma*sigma; 	      
- 	      System.err.printf("regTerm(sigma: %.5f C: %.5f): %.5f regularized objective: %.5f\n", sigma, C, regTerm, regularizeObjective);
+ 	      double C = l2sigma*l2sigma; 	      
+ 	      System.err.printf("regTerm(sigma: %.5f C: %.5f): %.5f regularized objective: %.5f\n", l2sigma, C, regTerm, regularizeObjective);
 			
  	      return regularizeObjective;
 		}
