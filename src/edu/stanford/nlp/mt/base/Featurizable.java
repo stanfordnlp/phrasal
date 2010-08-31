@@ -247,6 +247,18 @@ public class Featurizable<TK,FV> {
   }
 
   /**
+   * Current segment in (dis)continuous phrase.
+   * Note: A continuous phrase hsa only one segment.
+   */
+  public int getSegmentIdx() { return 0; }
+
+  /**
+   * Number of segments in (dis)continuous phrase.
+   * Note: A continuous phrase hsa only one segment.
+   */
+  public int getSegmentNumber() { return 1; }
+
+  /**
 	 * Avoid Arrays.copyOf and it's sluggish call to Class.getComponentType
 	 */
 	private static int[][] copyOfIndex(int[][] index, int newLength) {

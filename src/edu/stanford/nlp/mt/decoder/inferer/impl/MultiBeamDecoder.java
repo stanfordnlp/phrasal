@@ -150,7 +150,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		System.err.println();	
 	}
 	
-	private Runtime rt = Runtime.getRuntime();
+	private final Runtime rt = Runtime.getRuntime();
 	
 	@Override
 	@SuppressWarnings("unchecked")
@@ -275,8 +275,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		for (int i = beams.length -1; i >= 0; i--) {
 			if (beams[i].size() != 0 && (constrainedOutputSpace == null || constrainedOutputSpace.allowableFinal(beams[i].iterator().next().featurizable))) {
 					Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
-					try { writeAlignments(alignmentDump, bestHyp); } catch (Exception e) { }
-					try { alignmentDump.close(); } catch (Exception e) { }
+					try { writeAlignments(alignmentDump, bestHyp); } catch (Exception e) { e.printStackTrace(); }
+					try { alignmentDump.close(); } catch (Exception e) { e.printStackTrace(); }
           if(DEBUG) System.err.println("Returning beam of size: "+beams[i].size());
           return beams[i];
 			}
@@ -284,11 +284,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		
 		try{
 		alignmentDump.append("<<< decoder failure >>>\n\n");
-		alignmentDump.close(); } catch (Exception e) { }
+		alignmentDump.close(); } catch (Exception e) { e.printStackTrace(); }
 		
 		return null;
 	}
 
+  @Override
   public void dump(Hypothesis<TK, FV> bestHyp) {
 
     List<Hypothesis<TK,FV>> trace = new ArrayList<Hypothesis<TK,FV>>();

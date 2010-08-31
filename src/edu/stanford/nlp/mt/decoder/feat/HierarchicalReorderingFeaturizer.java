@@ -97,7 +97,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
 
     String modelFilename=args[0];
     String modelType=args[1];
-    has2Disc = modelType.indexOf("msd2") >= 0;
+    has2Disc = modelType.contains("msd2");
     System.err.println("Hierarchical reordering model:");
     System.err.println("Distinguish between left and right discontinuous: "+has2Disc);
     if (args.length >= 3) {
@@ -217,9 +217,13 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       ReorderingTypes type = mlrt.positionalMapping[i];
       if (type == forwardOrientation || type == backwardOrientation) {
         if (!usePrior(mlrt.positionalMapping[i])) {
-          if (scores != null) values.add(new FeatureValue<String>(featureTags[i], scores[i]));
+          boolean firstInDTU = f.getSegmentIdx() == 0;
+          if (scores != null && firstInDTU)
+            values.add(new FeatureValue<String>(featureTags[i], scores[i]));
         } else {
-          if (priorScores != null) values.add(new FeatureValue<String>(featureTags[i], priorScores[i]));
+          boolean lastInDTU = (f.prior == null) || f.prior.getSegmentIdx()+1 == f.prior.getSegmentNumber();
+          if (priorScores != null && lastInDTU)
+            values.add(new FeatureValue<String>(featureTags[i], priorScores[i]));
         }
       }
     }
@@ -414,6 +418,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     return true;
   }
 
+  @Override
   public void dump(Featurizable<IString, String> f) {
     assert (f.done);
     if (forwardOrientationComputation != ForwardOrientationComputation.hierarchical)
@@ -442,16 +447,19 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
 
   private static boolean contiguous(BitSet bs) { return (bs.nextSetBit(bs.nextClearBit(bs.nextSetBit(0))) < 0); }
 
+  @Override
   public void rerankingMode(boolean reranking) {}
 
   @Override
 	public void initialize(List<ConcreteTranslationOption<IString>> options, Sequence<IString> foreign) {}
 
-	public void reset() {}
+	@Override
+  public void reset() {}
 
 	@Override
 	public FeatureValue<String> featurize(Featurizable<IString, String> f) { return null; }
 
+  @Override
   public ClonedFeaturizer<IString,String> clone() throws CloneNotSupportedException {
     HierarchicalReorderingFeaturizer featurizer = (HierarchicalReorderingFeaturizer)super.clone();
     featurizer.tmpCoverage = new BitSet();
@@ -511,7 +519,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     Featurizable<IString, String> tmp_f = f.prior;
     tmpCoverage.clear();
     boolean foundAdjPhrase = false;
-    for(;;) {
+    while (true) {
       if (fEnd(tmp_f) == indexLeftCurrentPhrase)
         foundAdjPhrase = true;
       int fStart = fStart(tmp_f);
@@ -558,7 +566,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     Featurizable<IString, String> tmp_f = f.prior;
     tmpCoverage.clear();
     boolean foundAdjPhrase = false;
-    for (;;) {
+    while (true) {
       if (fStart(tmp_f) == indexRightCurrentPhrase)
         foundAdjPhrase = true;
       int fStart = fStart(tmp_f);

@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
 
-  public final int segmentIdx;
+  private final int segmentIdx;
   public final TranslationOption<TK> abstractOption;
 
   @SuppressWarnings("unchecked")
@@ -45,5 +45,16 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
   @Override
   protected void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
     /* effectively disable augmentAlignments */
+  }
+
+  @Override
+  public int getSegmentIdx() { return segmentIdx; }
+
+  @Override
+  public int getSegmentNumber() {
+    if (hyp.translationOpt.abstractOption instanceof DTUOption) {
+      return ((DTUOption)hyp.translationOpt.abstractOption).dtus.length;
+    }
+    return 1;
   }
 }

@@ -14,7 +14,6 @@ import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.DTUOption;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
 /**
  * @author Michel Galley
@@ -45,10 +44,10 @@ public class TargetGapFeaturizer<TK> implements ClonedFeaturizer<TK, String> {
     List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>(3);
 
     // Find out where we currently are within f.abstractOption:
-    int dtuIdx = positionInDTU(f);
+    int segIdx = f.getSegmentIdx();
     Sequence<TK>[] dtus = ((DTUOption<TK>)dtuF.abstractOption).dtus;
 
-    if (dtuIdx == 0) { // We just started generating a discontinuous phrase:
+    if (segIdx == 0) { // We just started generating a discontinuous phrase:
 
       // First segment of a target-side dtu: cost will be <= -1.0, so pay -1.0 upfront:
       feats.add(new FeatureValue<String>(GAP_COUNT_FEATURE_NAME, -1.0));
@@ -69,7 +68,7 @@ public class TargetGapFeaturizer<TK> implements ClonedFeaturizer<TK, String> {
             // Same discontinuous phrase: 
             if (dtuF.abstractOption != null) {
 
-              int curIdx = dtuIdx-1;
+              int curIdx = segIdx-1;
               int szCurF = dtus[curIdx].size();
               int distance = f.translationPosition - curF.translationPosition - szCurF;
 
@@ -129,7 +128,7 @@ public class TargetGapFeaturizer<TK> implements ClonedFeaturizer<TK, String> {
     // Detect target-side cross-serial:
     int crossingCount = 0;
     for (DTUFeaturizable<TK,String> firstF : seenOptions.values()) {
-      if (positionInDTU(firstF) > 0) {
+      if (firstF.getSegmentIdx() > 0) {
         ++crossingCount;
       }
     }
@@ -142,19 +141,6 @@ public class TargetGapFeaturizer<TK> implements ClonedFeaturizer<TK, String> {
     }
     if (crossingCount > 0)
       feats.add(new FeatureValue<String>(CROSSING_FEATURE_NAME, -1.0*crossingCount));
-  }
-
-  private int positionInDTU(Featurizable<TK,String> f) {
-    Hypothesis h = f.hyp;
-    final int posIdx;
-    if (!(h instanceof DTUHypothesis)) {
-      posIdx = 0;
-    } else {
-      DTUHypothesis dtuH = ((DTUHypothesis)f.hyp);
-      posIdx = ((DTUFeaturizable)f).segmentIdx;
-    }
-    //System.err.printf("posIdx = %d in %s ||| %s", posIdx, f.translatedPhrase, f.hyp.translationOpt.abstractOption);
-    return posIdx;
   }
 
   @Override

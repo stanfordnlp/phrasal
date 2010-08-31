@@ -17,7 +17,7 @@ package edu.stanford.nlp.mt.base;
  *
  * @param <T>
  */
-public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>{
+public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>> {
 	
 	/**
 	 * 

@@ -87,18 +87,13 @@ public class OldDTULinearDistortionFeaturizer extends StatefulFeaturizer<IString
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
     if (f instanceof DTUFeaturizable)
-      if (((DTUFeaturizable)f).segmentIdx > 0) {
+      if (f.getSegmentIdx() > 0) {
         return null;
       }
 
     ///////////////////////////////////////////
     // (1) Source gaps:
     ///////////////////////////////////////////
-
-    //System.err.printf("done: %s size: %s\n", f.done, f.untranslatedTokens);
-    //if(!f.done) {
-    //  assert(f.option.foreignCoverage.cardinality() < f.foreignSentence.size());
-    //}
 
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(featureTypes.length+1);
     int span = f.option.foreignCoverage.length()-f.option.foreignCoverage.nextSetBit(0);

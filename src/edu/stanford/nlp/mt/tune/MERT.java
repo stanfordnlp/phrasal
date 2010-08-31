@@ -979,6 +979,7 @@ public class MERT extends Thread {
   }
 
   static boolean updateBest(Counter<String> newWts, double obj) {
+    boolean nonZero = Counters.L2Norm(newWts) > 0.0;
     synchronized (MERT.class) {
       boolean better = false;
       if (bestObj > obj) {
@@ -988,7 +989,7 @@ public class MERT extends Thread {
         System.err.printf("\n<<<SAME BEST: %f with {{{%s}}}.>>>\n", -bestObj, newWts);
         better = true;
       }
-      if (better) {
+      if (better && nonZero) {
         bestWts = newWts;
         bestObj = obj;
         return true;
@@ -1106,6 +1107,7 @@ public class MERT extends Thread {
     String optStr = "cer";
     String seedStr = "mert";
     int nStartingPoints = 5;
+    String optTransFile = null;
 
     int argi = 0;
     String arg;
@@ -1127,6 +1129,8 @@ public class MERT extends Thread {
         nStartingPoints = Integer.parseInt(args[++argi]);
       } else if(arg.equals("-o")) {
         optStr = args[++argi];
+      } else if(arg.equals("-a")) {
+        optTransFile = args[++argi];
       } else if(arg.equals("-N")) {
         tokenizeNIST = true;
       } else if(arg.equals("-f")) {
@@ -1153,6 +1157,7 @@ public class MERT extends Thread {
       System.err.println("-t <N>: number of threads.");
       System.err.println("-F: filter unreachable.");
       System.err.println("-T: filter strictly unreachable.");
+      System.err.println("-a <file>: save argmax translation to file after MERT");
       System.err.println("-f <file>: weights read from file remain fixed during MERT.");
       System.err.println("-S: tune using sentence-level BLEU (smoothed).");
       System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");
@@ -1190,5 +1195,16 @@ public class MERT extends Thread {
       threads.get(i).join();
     
     mert.save(finalWtsFile);
+
+    if (optTransFile != null) {
+      StaticScorer scorer = new StaticScorer(bestWts, featureIndex);
+      GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
+      List<ScoredFeaturizedTranslation<IString, String>> argmaxTrans = argmaxByScore.maximize(nbest);
+      PrintStream ps = IOTools.getWriterFromFile(optTransFile);
+      for (ScoredFeaturizedTranslation<IString, String> trans : argmaxTrans)
+        ps.println(trans);
+      ps.close();
+    }
+
   }
 }

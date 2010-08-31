@@ -6,11 +6,7 @@ import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import java.util.Iterator;
 
 /**
- * 
  * @author Michel Galley
- *
- * @param <TK>
- * @param <FV>
  */
 public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 

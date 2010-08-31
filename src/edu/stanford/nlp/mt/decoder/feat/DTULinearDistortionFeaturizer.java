@@ -56,8 +56,7 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
     if (f instanceof DTUFeaturizable)
-      //if (((DTUFeaturizable)f).targetOnly) {
-      if (((DTUFeaturizable)f).segmentIdx > 0) {
+      if (f.getSegmentIdx() > 0) {
         f.setState(this, f.prior.getState(this));
         return null;
       }

@@ -65,6 +65,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   final int maxDistortion;
 	final int numProcs;
+
   public static boolean gapsInFutureCost = true;
 
   static {
@@ -72,7 +73,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if ((new File(ALIGNMENT_DUMP)).delete()) {}
 		}
 	}
-	
 	
 	ExecutorService threadPool;
 
@@ -403,37 +403,34 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   
   @SuppressWarnings("unchecked")
 	public int expandBeam(Beam<Hypothesis<TK,FV>>[] beams, int beamId, int foreignSz, DTUOptionGrid<TK> optionGrid, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, int translationId, int threadId, int threadCount, CountDownLatch cdl) {
+
 		int optionsApplied = 0;
     int hypPos = -1;
 		int totalHypothesesGenerated = 0;
     //System.err.printf("\nBeam id: %d\n", beamId);
 
 		List<Hypothesis<TK, FV>> hyps;
-    //Hypothesis<TK, FV>[] hyps;
+    
 		synchronized (beams[beamId]) {
 		  hyps = new LinkedList<Hypothesis<TK,FV>>();
-      //hyps = new Hypothesis[beams[beamId].size()];
-      //int i = -1;
 		  for (Hypothesis<TK, FV> hyp : beams[beamId]) {
         hyps.add(hyp);
-        //i++;
-				//hyps[i] = hyp;
 			}
 		}
 
     List<Hypothesis<TK,FV>> newHyps = new LinkedList<Hypothesis<TK,FV>>();
     for (Hypothesis<TK, FV> hyp : hyps) {
-      if(hyp instanceof DTUHypothesis) {
+      if (hyp instanceof DTUHypothesis) {
         DTUHypothesis<TK,FV> dtuHyp = (DTUHypothesis<TK,FV>) hyp;
         Deque<DTUHypothesis<TK,FV>> currentHyps = new LinkedList<DTUHypothesis<TK,FV>>();
         currentHyps.add(dtuHyp);
-        while(!currentHyps.isEmpty()) {
+        while (!currentHyps.isEmpty()) {
           final DTUHypothesis<TK,FV> currentHyp = currentHyps.poll();
           assert (currentHyp != null);
           if (!currentHyp.hasExpired())
             newHyps.add(currentHyp);
-          for(DTUHypothesis<TK,FV> nextHyp : currentHyp.mergeHypothesisAndPendingPhrase(translationId, featurizer, scorer, heuristic)) {
-            if(!nextHyp.hasExpired())
+          for (DTUHypothesis<TK,FV> nextHyp : currentHyp.mergeHypothesisAndPendingPhrase(translationId, featurizer, scorer, heuristic)) {
+            if (!nextHyp.hasExpired())
               currentHyps.add(nextHyp);
           }
         }
@@ -451,6 +448,15 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		  //System.err.printf("Start position: %d\n", hyp.foreignCoverage.nextClearBit(0));
       //System.err.printf("foreignSz: %d\n", foreignSz);
 			int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
+      assert (firstCoverageGap <= foreignSz);
+
+      if (firstCoverageGap == foreignSz) {
+        if (hyp.isDone()) {
+          beams[beams.length-1].put(hyp);
+          optionsApplied++;
+          localOptionsApplied++;
+        }
+      }
 
 			for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
 				int endPosMax = -1; //hyp.foreignCoverage.nextSetBit(startPos);
@@ -471,7 +477,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           if (applicableOptions == null) continue;
           //System.err.printf("    startPos=%d endPos=%d options=%s\n", startPos, endPos, applicableOptions == null ? "0" : applicableOptions.size());
           //System.err.printf("options for (%d to %d): %d\n", startPos, endPos, applicableOptions.size());
-          
+
           for (ConcreteTranslationOption<TK> option : applicableOptions) {
             //System.err.printf("option: %s\n", option.abstractOption.foreign);
             if(hyp.foreignCoverage.intersects(option.foreignCoverage)) {
@@ -486,9 +492,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               new DTUHypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic) :
               new Hypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic);
             {
-              if(newHyp.hasExpired())
+              if (newHyp.hasExpired())
                 continue;
-              if(newHyp.isDone() != newHyp.featurizable.done) {
+              if (newHyp.isDone() != newHyp.featurizable.done) {
                 System.err.println("ERROR in DTUDecoder with: "+newHyp);
                 System.err.println("isDone(): "+newHyp.isDone());
                 System.err.println("f.done: "+newHyp.featurizable.done);
@@ -533,9 +539,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 continue;
               }
 
-              if(!hyp.hasExpired()) {
+              if (!hyp.hasExpired()) {
                 int beamIdx = newHyp.foreignCoverage.cardinality();
-                if(0 == newHyp.untranslatedTokens && newHyp.isDone()) {
+                if (0 == newHyp.untranslatedTokens && newHyp.isDone()) {
                   ++beamIdx;
                 }
                 beams[beamIdx].put(newHyp);
