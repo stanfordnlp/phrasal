@@ -57,7 +57,7 @@ MINP=1e-3
 #########################################
 
 ### Specify alignment merging heuristic:
-ALIGN=grow
+ALIGN=ucb
 
 ### Lexicalized re-ordering model identifier:
 LO_ID=lo-hier.msd2-bidirectional-fe
@@ -69,7 +69,7 @@ LO_ARGS=-hierarchicalOrientationModel true -orientationModelType msd2-bidirectio
 LO_SZ=8
 
 ### Other options:
-XOPTS=-threads 4 -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor
+XOPTS=-extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor
 
 #########################################
 # Memory and extraction duration:
@@ -79,9 +79,9 @@ XOPTS=-threads 4 -extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu
 # default:
 MEMSIZE=45000m
 # Phrasal decoding:
-PMEMSIZE=15500m
+PMEMSIZE=13800m
 # MERT:
-MMEMSIZE=15500m
+MMEMSIZE=45000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -114,7 +114,6 @@ POSTTC=cat
 
 ### Uncomment this to debug Phrasal decoder:
 HOST=`hostname -s`
-#DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -DcustomScores=
 DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -DcustomScores=phi_tf,lex_tf,phi_ft,lex_ft,phrasePenalty,count,uniq -DsmoothBLEU=true -XX:+UseCompressedOops
 #Add this to remove count-based features: -DdisableScores=5,6
 
@@ -124,7 +123,7 @@ DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djav
 #########################################
 
 PROC=8
-PM=phrasal-mert.pl --opt-flags="-o koehn+cer -F -t $(PROC) -p 8"
+PM=phrasal-mert.pl --opt-flags="-o koehn+cer -T -t $(PROC) -p 8"
 
 #########################################
 # Extension of input files:
