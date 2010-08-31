@@ -21,6 +21,7 @@ public class DiscriminativePhraseIdentity implements IncrementalFeaturizer<IStri
 	public static final String FEATURE_PREFIX = "DPI";
 	public static final String SOURCE = ":src";
 	public static final String TARGET = ":trg";
+	public static final String SOURCE_AND_TARGET = ":s+t";
 	public static final boolean DEFAULT_DO_SOURCE = true;
 	public static final boolean DEFAULT_DO_TARGET = true;
 	final Map<TranslationOption<IString>, List<FeatureValue<String>>> featureCache = new HashMap<TranslationOption<IString>, List<FeatureValue<String>>>();
@@ -54,16 +55,16 @@ public class DiscriminativePhraseIdentity implements IncrementalFeaturizer<IStri
 		
 		fvalues = new LinkedList<FeatureValue<String>>();
 		
-		if  (doSource) {
+		if (doSource && doTarget) {
+		   fvalues.add(new FeatureValue<String>(FEATURE_PREFIX+SOURCE_AND_TARGET+":"+f.foreignPhrase.toString("_")+"=>"+f.translatedPhrase.toString("_"), 1.0));
+		} else if  (doSource) {
 			fvalues.add(new FeatureValue<String>(FEATURE_PREFIX+SOURCE+":"+f.foreignPhrase.toString("_"), 1.0));
-		}
-		
-		if (doTarget) {
+		} else if (doTarget) {
 			fvalues.add(new FeatureValue<String>(FEATURE_PREFIX+TARGET+":"+f.translatedPhrase.toString("_"), 1.0));
 		}
 		
 		featureCache.put(f.option.abstractOption, fvalues);
-	  return fvalues;
+	   return fvalues;
 	}
 
 	@Override
