@@ -105,7 +105,7 @@ public class PhraseGeneratorFactory {
 				}
 			}
 			
-			String[] filenames = pgSpecs[1].split(":");
+			String[] filenames = pgSpecs[1].split(System.getProperty("path.separator"));
 			for (String filename : filenames) {
 				//System.err.printf("loading pt: %s\n", filename);
         if(withGaps)

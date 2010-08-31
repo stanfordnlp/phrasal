@@ -923,7 +923,7 @@ public class Phrasal {
 			}
 			System.err.printf("Generating n-best lists to: %s (size: %d)\n",
 					nbestListFilename, nbestListSize);
-			nbestListWriter = new BufferedWriter(new FileWriter(nbestListFilename));
+			nbestListWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(nbestListFilename), "UTF8"));
 		} else {
 			nbestListSize = -1;
 			nbestListWriter = null;
