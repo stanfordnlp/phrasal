@@ -29,13 +29,13 @@ $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
 $SLEEP = 30;
 $ORACLE = 0;
-$SORT = 'sort --buffer-size=3g -T /tmp';
+$SORT = 'sort --buffer-size=3g';
 $DEFAULT_MAX_ITERS = 25;
 $MIN_OBJ_DIFF = 1e-7;
 $DEFAULT_WORK_DIR = "phrasal-mert";
 $DEFAULT_NBEST_SIZE = 100;
 $DEFAULT_JAVA_FLAGS = "-Xmx7g";
-$DEFAULT_OPT_FLAGS = "-o cer -t 1 -p 5"; # 5 starting points, 1 thread, Cer algorithm
+$DEFAULT_OPT_FLAGS = "-o cer -t 4 -p 4"; # 5 starting points, 1 thread, Cer algorithm
 $MIN_WEIGHT_DELTA = 1e-5;
 $NBEST_HISTORY_WINDOW = 1000000;
 $SCRIPTS_DIR = $0;
@@ -515,9 +515,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 				for(my $i = $iter-1; $i>=0; --$i) {
 					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
 				}
-				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+				my $optOut = "$work_dir/jmert.$iter.opt";
+				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
 	      print stderr "MERT command: $mertCMD\n";
 	      `$mertCMD`;
+				`cat $optOut.feats | sed 's/ |||.*//' > $optOut.trans`;
 	      if (not -e $next_iter_weights) {
 	        print stderr "Exiting, error running $opt_type MERT\n";
 	        exit -1;

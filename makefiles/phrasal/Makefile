@@ -163,7 +163,7 @@ endif
 ### (needs to be run on 16G machines)
 %.tables/merged.gz: %.$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN)
 	mkdir $(*F).tables 2> /dev/null || true
-	$(JAVA) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -fFilterCorpus $< -maxELen $(maxPLen) -endAtLine $(LINES) $(LO_ARGS) 2> $@.log | gzip > $@
+	$(JAVA) $(DEBUG_PHRASAL) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -fFilterCorpus $< -maxELen $(maxPLen) -endAtLine $(LINES) $(LO_ARGS) 2> $@.log | gzip > $@
 
 ############################################
 # Pre-processing: 
