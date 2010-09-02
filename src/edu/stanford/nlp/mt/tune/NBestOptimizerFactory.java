@@ -384,12 +384,13 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	          }
 	       }
 	       
+	       /*
 	       System.err.println("dOPlus "+dOplus);
 	       
 	       System.err.println("dOMinus "+dOminus);
 	       
 	       System.err.println("dORegularize "+dORegularize);
-	       
+	       */
 	       
 	       dOdW.addAll(dOplus);
 	       Counters.subtractInPlace(dOdW, dOminus);          
@@ -400,9 +401,9 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 
 		@Override
 		public double valueAt(double[] x) {
-         System.err.println("valueAt x[]: " + Arrays.toString(x));
          Counter<String> wts = vectorToWeights(x);
-         System.err.println("wts: " + wts);
+         // System.err.println("valueAt x[]: " + Arrays.toString(x));         
+         // System.err.println("wts: " + wts);
          List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest
                .nbestLists();
          double sumLogP = 0;

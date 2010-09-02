@@ -88,9 +88,9 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		
 		LineNumberReader reader;
 		if (filename.endsWith(".gz")) {
-			reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))));
+			reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename)), "UTF8"));
 		} else {
-			reader = new LineNumberReader(new FileReader(filename));
+			reader = new LineNumberReader(new InputStreamReader(new FileInputStream(filename), "UTF8"));
 		}
 		Pattern space = Pattern.compile(" ");
 		String lastId = null;
@@ -220,7 +220,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				}
 
         Collection<FeatureValue<String>> featureValues = (featureIndex == null) ?
-          featureValuesTmp : new FeatureValueCollection<String>(featureValuesTmp, featureIndex);
+          featureValuesTmp : new SparseFeatureValueCollection<String>(featureValuesTmp, featureIndex);
 
 				Sequence<IString> sequence = new RawIStringSequence(IStrings.toIStringArray(space.split(translation)));
 				Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);

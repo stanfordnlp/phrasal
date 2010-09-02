@@ -516,7 +516,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
   
 	void writeAlignments(BufferedWriter alignmentDump, Hypothesis<TK, FV> bestHyp) throws IOException {
-		alignmentDump.append(bestHyp.featurizable.partialTranslation.toString()).append("\n");
+		if (alignmentDump == null) return;
+	   alignmentDump.append(bestHyp.featurizable.partialTranslation.toString()).append("\n");
 		alignmentDump.append(bestHyp.featurizable.foreignSentence.toString()).append("\n");
 		for (Hypothesis<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingHyp) {
 			alignmentDump.append(String.format("%d:%d => %d:%d # %s => %s\n", hyp.featurizable.foreignPosition, hyp.featurizable.foreignPosition+hyp.featurizable.foreignPhrase.size()-1,

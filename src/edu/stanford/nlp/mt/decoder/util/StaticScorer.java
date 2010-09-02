@@ -3,8 +3,9 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.io.*;
 import java.util.*;
 
+import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
 import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.FeatureValueCollection;
+import edu.stanford.nlp.mt.base.SparseFeatureValueCollection;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
@@ -78,12 +79,12 @@ public class StaticScorer implements Scorer<String> {
 
   @Override
 	public double getIncrementalScore(Collection<FeatureValue<String>> features) {
-    if (sharedFeatureIndex && features instanceof FeatureValueCollection)
-      return getIncrementalScoreInnerProduct((FeatureValueCollection<String>)features);
+    if (sharedFeatureIndex && features instanceof DenseFeatureValueCollection)
+      return getIncrementalScoreInnerProduct((DenseFeatureValueCollection<String>)features);
     return getIncrementalScoreHash(features);
   }
 
-  private double getIncrementalScoreInnerProduct(FeatureValueCollection<String> fva) {
+  private double getIncrementalScoreInnerProduct(DenseFeatureValueCollection<String> fva) {
     return ArrayMath.innerProduct(fva.toDoubleArray(), weights);
   }
 

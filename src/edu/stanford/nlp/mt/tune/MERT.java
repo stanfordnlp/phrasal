@@ -40,6 +40,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
+import edu.stanford.nlp.util.Pair;
 
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.NISTMetric;
@@ -612,8 +613,7 @@ public class MERT extends Thread {
   @SuppressWarnings("deprecation")
   static void writeWeights(String filename, Counter<String> wts)
           throws IOException {
-    BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
+    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF8"));    
     Counter<String> wtsMag = new ClassicCounter<String>();
     for (String w : wts.keySet()) {
       wtsMag.setCount(w, Math.abs(wts.getCount(w)));
@@ -628,8 +628,8 @@ public class MERT extends Thread {
   }
 
   static void displayWeights(Counter<String> wts) {
-    for (String f : wts.keySet()) {
-      System.out.printf("%s %g\n", f, wts.getCount(f));
+    for (Pair<String,Double> p : Counters.toDescendingMagnitudeSortedListWithCounts(wts)) {
+      System.out.printf("%s %g\n", p.first, p.second);
     }
   }
 
@@ -711,7 +711,9 @@ public class MERT extends Thread {
     StaticScorer scorer = new StaticScorer(initialWts, featureIndex);
 
     // Load nbest list:
+    System.err.printf("Loading nbest list: %s\n", nbestListFile);
     nbest = new MosesNBestList(nbestListFile, featureIndex, tokenizeNIST);
+    System.err.printf("Loading local nbest list: %s\n", localNbestListFile);
     MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
 
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null ||
@@ -983,10 +985,10 @@ public class MERT extends Thread {
     synchronized (MERT.class) {
       boolean better = false;
       if (bestObj > obj) {
-        System.err.printf("\n<<<IMPROVED BEST: %f -> %f with {{{%s}}}.>>>\n", -bestObj, -obj, newWts);
+        System.err.printf("\n<<<IMPROVED BEST: %f -> %f with {{{%s}}}.>>>\n", -bestObj, -obj, Counters.toString(newWts, 100));
         better = true;
       } else if (bestObj == obj && breakTiesWithLastBest) {
-        System.err.printf("\n<<<SAME BEST: %f with {{{%s}}}.>>>\n", -bestObj, newWts);
+        System.err.printf("\n<<<SAME BEST: %f with {{{%s}}}.>>>\n", -bestObj, Counters.toString(newWts, 100));
         better = true;
       }
       if (better && nonZero) {

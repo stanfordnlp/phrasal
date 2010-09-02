@@ -19,8 +19,8 @@ public class FeaturizedTranslation<TK, FV> {
 	 */
 	public FeaturizedTranslation(Sequence<TK> translation, Collection<FeatureValue<FV>> features) {
 		this.translation = translation;
-		this.features = (features == null ? null : ( (features instanceof FeatureValueCollection) ?
-       new FeatureValueCollection<FV>((FeatureValueCollection<FV>)features) : new ArrayList<FeatureValue<FV>>(features)) );
+		this.features = (features == null ? null : ( (features instanceof SparseFeatureValueCollection) ?
+       new SparseFeatureValueCollection<FV>((SparseFeatureValueCollection<FV>)features) : new ArrayList<FeatureValue<FV>>(features)) );
 	}
 
   @Override
