@@ -292,7 +292,9 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	@Override
 	public Counter<String> optimize(Counter<String> initialWts) {
 		Counter<String> wts = new ClassicCounter<String>(initialWts);
-		EvaluationMetric<IString, String> modelMetric = new ScorerWrapperEvaluationMetric<IString, String>(new StaticScorer(initialWts));
+		Counter<String> normedWts = new ClassicCounter<String>(initialWts);
+		Counters.normalize(normedWts);
+		EvaluationMetric<IString, String> modelMetric = new ScorerWrapperEvaluationMetric<IString, String>(new StaticScorer(normedWts));
 		EvaluationMetric<IString, String> combMetric = new LinearCombinationMetric<IString, String>(new double[]{1.0, 1.0}, modelMetric, emetric);
 		
 		
