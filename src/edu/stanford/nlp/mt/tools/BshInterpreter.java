@@ -32,6 +32,7 @@ public class BshInterpreter extends bsh.Interpreter
     }
   }
 
+  @Override
   public Object evalString(String s) {
     try {
       return eval(s);

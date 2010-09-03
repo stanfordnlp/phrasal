@@ -20,7 +20,9 @@ public interface WordAlignment {
   public Sequence<IString> f();
   public Sequence<IString> e();
 
+  @SuppressWarnings("unused")
   public BitSet unalignedF();
+  @SuppressWarnings("unused")
   public BitSet unalignedE();
 
   public SortedSet<Integer> f2e(int i);
@@ -28,6 +30,7 @@ public interface WordAlignment {
 
   @SuppressWarnings("unused")
   public int f2eSize(int i, int min, int max);
+  @SuppressWarnings("unused")
   public int e2fSize(int i, int min, int max);
 
 }

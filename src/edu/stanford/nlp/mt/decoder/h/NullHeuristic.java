@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public class NullHeuristic<TK,FV> implements SearchHeuristic<TK,FV> {
 
+  @Override
 	@SuppressWarnings("unchecked")
 	public Object clone() throws CloneNotSupportedException {
      return super.clone();

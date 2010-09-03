@@ -16,10 +16,10 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  */
 public class OptimisticForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
+  @Override
 	public Object clone() throws CloneNotSupportedException {
     return super.clone();
 	}
-	
 	
 	@Override
 	public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,

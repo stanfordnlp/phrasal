@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
  * @param <S>
  */
 public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>>, Iterable<List<S>> {
+
 	static public final String DEBUG_OPT = "StateLatticeDecoderDebug";
 	static public final int DEBUG = Integer.parseInt(System.getProperty(DEBUG_OPT, "0"));
 	//static public final int DEBUG_STATS  = 1;
@@ -151,7 +152,7 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 
 		@Override
 		public String toString() {
-			StringBuffer sbuf = new StringBuffer();
+      StringBuilder sbuf = new StringBuilder();
 			for (State<S> state : states) {
 				sbuf.append(state).append(",");
 			}

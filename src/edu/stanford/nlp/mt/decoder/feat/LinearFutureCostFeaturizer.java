@@ -17,9 +17,10 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
   public static final String FEATURE_NAME = "LinearDistortion";
 
-  public final float futureCostDelay;
-
+  public static final boolean ADD_EOS = Boolean.parseBoolean(System.getProperty("addEOS","false"));
   public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("futureCostDelay","0f"));
+
+  public final float futureCostDelay;
 
   @SuppressWarnings("unused")
   public LinearFutureCostFeaturizer() {
@@ -56,10 +57,9 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
     } else {
       futureCost = (1.0f-futureCostDelay)*futureCost(f) + futureCostDelay*oldFutureCost;
       f.setState(this, futureCost);
-      //System.err.printf("cs=%s pos=%d fc=%d\n", f.hyp.foreignCoverage, f.foreignPosition, (int)futureCost);
     }
     float deltaCost = futureCost - oldFutureCost;
-    return new FeatureValue<String>(FEATURE_NAME, -1.0*(f.linearDistortion+deltaCost));
+    return new FeatureValue<String>(FEATURE_NAME, -1.0*(cost(f)+deltaCost));
 	}
 
 	@Override
@@ -70,7 +70,14 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 	@Override
   public void reset() { }
 
-  public static int futureCost(Featurizable<IString,String> f) {
+  static int cost(Featurizable<IString,String> f) {
+    int cost = f.linearDistortion;
+    if (ADD_EOS)
+      cost += getEOSDistortion(f);
+    return cost;
+  }
+
+  static int futureCost(Featurizable<IString,String> f) {
     int nextWordIndex = f.hyp.translationOpt.foreignCoverage.length();
     int firstGapIndex = f.hyp.foreignCoverage.nextClearBit(0);
     if (firstGapIndex > nextWordIndex)
@@ -97,15 +104,9 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
     return futureCost;
   }
 
-  public static int getEOSDistortion(Featurizable<IString,String> f) {
+  private static int getEOSDistortion(Featurizable<IString,String> f) {
     if (f.done) {
       int endGap = f.foreignSentence.size() - f.option.foreignCoverage.length();
-      //System.err.println("hyp span: "+f.hyp.foreignCoverage);
-      //System.err.println("opt span: "+f.option.foreignCoverage);
-      //System.err.println("opt text: "+f.option.abstractOption.foreign);
-      //System.err.println("len: "+f.option.foreignCoverage.length());
-      //System.err.println("size: "+f.foreignSentence.size());
-      //System.err.println("endGap: "+endGap);
       assert(endGap >= 0);
       return endGap;
     }

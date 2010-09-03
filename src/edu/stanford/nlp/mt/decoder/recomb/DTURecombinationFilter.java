@@ -20,9 +20,11 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
 
   @Override
 	public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
+
 		boolean isDTU_A = hypA instanceof DTUHypothesis;
     boolean isDTU_B = hypB instanceof DTUHypothesis;
     boolean combine;
+
     if(!isDTU_A && !isDTU_B) {
       combine = true;
     } else if(isDTU_A && !isDTU_B) {
@@ -52,7 +54,6 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
         assert (!combine || !itB.hasNext());
       }
     }
-    //System.err.printf("Recombine\t%s\t{{{%s}}}\t{{{%s}}}\n", combine, hypA.toString(), hypB.toString());
     return combine;
   }
 

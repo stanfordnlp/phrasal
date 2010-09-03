@@ -17,7 +17,7 @@ import edu.stanford.nlp.trees.Constituent;
 public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
 
   // NOTE: unfinished
-  
+
   public ConstituentPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
     System.err.println("Constituent phrase extractor.");
@@ -56,4 +56,9 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
     return !spans.contains(new Pair<Integer,Integer>(e1,e2));
   }
 
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
 }
+

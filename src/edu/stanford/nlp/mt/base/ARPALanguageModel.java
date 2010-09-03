@@ -22,14 +22,17 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   public static final IString START_TOKEN = new IString("<s>");
   public static final IString END_TOKEN = new IString("</s>");
 
+	@Override
   public String getName() {
     return name;
   }
 
+  @Override
   public IString getStartToken() {
     return START_TOKEN;
   }
 
+  @Override
   public IString getEndToken() {
     return END_TOKEN;
   }
@@ -238,6 +241,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     return false;
   }
 
+  @Override
   public double score(Sequence<IString> sequence) {
     if(isBoundaryWord(sequence)) return 0.0;
     Sequence<IString> ngram;
@@ -256,10 +260,12 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     return score;
   }
 
+  @Override
   public int order() {
     return probs.length;
   }
 
+  @Override
   public boolean releventPrefix(Sequence<IString> prefix) {
     if (prefix.size() > probs.length-1) return false;
     int[] prefixInts = Sequences.toIntArray(prefix);

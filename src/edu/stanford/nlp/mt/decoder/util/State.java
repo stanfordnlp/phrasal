@@ -16,7 +16,8 @@ public interface State<T> extends Comparable<T> {
 	 * o1 == o2.
 	 * 
 	 */
-	public int compareTo(T o);
+	@Override
+  public int compareTo(T o);
 	
 	/**
 	 * Score assigned to the current state, including future cost heuristic if applicable.

@@ -80,7 +80,7 @@ public class BLEUSorter {
          scores.add(new Pair<Double,Integer>(score2-score1, sentId));
     }
     Collections.sort(scores, new Comparator<Pair<Double,Integer>>() {
-      public int compare(Pair<Double,Integer> el1, Pair<Double,Integer> el2) {
+      @Override public int compare(Pair<Double,Integer> el1, Pair<Double,Integer> el2) {
         return el1.first().compareTo(el2.first());
       }
     });

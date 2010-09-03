@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Information associated with each cell of an AlignmentGrid.
@@ -12,20 +11,11 @@ import java.util.ArrayList;
  */
 public class AlGridCell<T extends AlignmentTemplateInstance> {
 
-  private final List<T>
-   topLeft = new ArrayList<T>(), 
-   topRight = new ArrayList<T>(), 
-   bottomLeft = new ArrayList<T>(), 
-   bottomRight = new ArrayList<T>();
-
-  boolean 
-    hasTopLeft, hasTopRight, 
-    hasBottomLeft, hasBottomRight;
+  boolean  hasTopLeft, hasTopRight, hasBottomLeft, hasBottomRight;
 
   AlGridCell() { init(); }
 
   public void init() {
-    topLeft.clear(); topRight.clear(); bottomLeft.clear(); bottomRight.clear();
     hasTopLeft=false; hasTopRight=false;
     hasBottomLeft=false; hasBottomRight=false;
   }
@@ -35,18 +25,23 @@ public class AlGridCell<T extends AlignmentTemplateInstance> {
   public void setBottomLeft(boolean s) { hasBottomLeft = s; }
   public void setBottomRight(boolean s) { hasBottomRight = s; }
 
-  public void addTopLeft(T h) { if (!h.isDiscontinuous()) { topLeft.add(h); hasTopLeft=true; } }
-  public void addTopRight(T h) { if (!h.isDiscontinuous()) { topRight.add(h); hasTopRight=true; } }
-  public void addBottomLeft(T h) { if (!h.isDiscontinuous()) { bottomLeft.add(h); hasBottomLeft=true; } }
-  public void addBottomRight(T h) { if (!h.isDiscontinuous()) { bottomRight.add(h); hasBottomRight=true; } }
+  public void addTopLeft(T h) { if (!h.isDiscontinuous()) { hasTopLeft=true; } }
+  public void addTopRight(T h) { if (!h.isDiscontinuous()) { hasTopRight=true; } }
+  public void addBottomLeft(T h) { if (!h.isDiscontinuous()) { hasBottomLeft=true; } }
+  public void addBottomRight(T h) { if (!h.isDiscontinuous()) { hasBottomRight=true; } }
 
   public boolean hasTopLeft() { return hasTopLeft; }
   public boolean hasTopRight() { return hasTopRight; }
   public boolean hasBottomLeft() { return hasBottomLeft; }
   public boolean hasBottomRight() { return hasBottomRight; }
 
-  @SuppressWarnings("unused") public List<T> getTopLeft() { return topLeft; }
-  @SuppressWarnings("unused") public List<T> getTopRight() { return topRight; }
-  @SuppressWarnings("unused") public List<T> getBottomLeft() { return bottomLeft; }
-  @SuppressWarnings("unused") public List<T> getBottomRight() { return bottomRight; }
+  @SuppressWarnings("unused")
+  public static List<AlignmentTemplateInstance> getTopLeft() { throw new UnsupportedOperationException(); }
+  @SuppressWarnings("unused")
+  public static List<AlignmentTemplateInstance> getTopRight() { throw new UnsupportedOperationException(); }
+  @SuppressWarnings("unused")
+  public static List<AlignmentTemplateInstance> getBottomLeft() { throw new UnsupportedOperationException(); }
+  @SuppressWarnings("unused")
+  public static List<AlignmentTemplateInstance> getBottomRight() { throw new UnsupportedOperationException(); }
+
 }

@@ -125,7 +125,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
         List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer.phraseListFeaturize(f);
         double score = scorer.getIncrementalScore(phraseFeatures), childScore = 0.0;
         final int terminalPos;
-        if(i==0) {
+        if (i==0) {
           terminalPos = option.foreignPos + option.abstractOption.foreign.size()-1;
           if (score > viterbiSpanScores.getScore(option.foreignPos, terminalPos)) {
             viterbiSpanScores.setScore(option.foreignPos, terminalPos, score);

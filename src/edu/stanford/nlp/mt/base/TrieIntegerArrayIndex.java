@@ -5,7 +5,7 @@ import edu.stanford.nlp.util.Function;
 
 /**
  * Implementation of IntegerArrayIndex as a trie. This trie implementation 
- * is optimized for space, by instanciating only one object: an open-address hash table. 
+ * is optimized for space, by instantiating only one object: an open-address hash table. 
  * Keys stored into the trie are arrays of int primitive types.
  *
  * @author Michel Galley
@@ -38,6 +38,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     map.defaultReturnValue(IDX_NOSUCCESSOR);
     //System.err.println("TrieIntegerArrayIndex: constructor.");
     this.transitionNormalizer = new Function<Integer,Integer>() {
+      @Override
       public Integer apply(Integer x) { return x; }
     };
   }
@@ -47,11 +48,12 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     this.transitionNormalizer = transitionNormalizer;
   }
 
+  @Override
   public int[] get(int idx) {
 		throw new UnsupportedOperationException();
 	}
 
-  int supplementalHash(int h) {
+  static int supplementalHash(int h) {
     // use the same supplemental hash function used by HashMap
     return ((h << 7) - h + (h >>> 9) + (h >>> 17));
   }
@@ -68,6 +70,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     return map.get(t);
   }
 
+  @Override
   public int size() { return lastStateIdx+1; }
 
   public void printInfo() {
@@ -75,10 +78,12 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     System.err.printf("Map size:%d\n", map.size());
   }
 
+  @Override
   public int indexOf(int[] input) {
     return indexOf(input, false);
   }
 
+  @Override
   public synchronized int indexOf(int[] input, boolean add) {
     //System.err.println("adding: "+ Arrays.toString(IStrings.toStringArray(input)));
     int curState = IDX_ROOT;
@@ -102,10 +107,12 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     map.rehash();
   }
 
+  @Override
   public int getIndex(int[] array) {
     return indexOf(array,false);
   }
 
+  @Override
   public int insertIntoIndex(int[] array) {
     return indexOf(array,true);
   }

@@ -52,28 +52,30 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
   @Override
   @SuppressWarnings("unchecked")
 	public List<ConcreteTranslationOption<IString>> translationOptions(Sequence<IString> sequence, List<Sequence<IString>> targets, int translationId) {
-    assert(targets == null);
+
+    assert (targets == null);
     List<ConcreteTranslationOption<IString>> opts = new LinkedList<ConcreteTranslationOption<IString>>();
 		int sequenceSz = sequence.size();
     System.err.println("sent: "+sequence);
 
-    assert(foreignIndex instanceof TrieIntegerArrayIndex);
+    assert (foreignIndex instanceof TrieIntegerArrayIndex);
     TrieIntegerArrayIndex trieIndex = (TrieIntegerArrayIndex) foreignIndex;
 
     for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
       //System.err.println("s: "+startIdx);
       Deque<MatchState> deque = new LinkedList<MatchState>();
       deque.add(new MatchState(TrieIntegerArrayIndex.IDX_ROOT, startIdx));
-      while(!deque.isEmpty()) {
+      while (!deque.isEmpty()) {
         MatchState s = deque.pop();
-        if(translations.get(s.state) != null) {
+        if (translations.get(s.state) != null) {
+
           // Final state:
           List<IntArrayTranslationOption> intTransOpts = translations.get(s.state);
-          if(intTransOpts != null) {
+          if (intTransOpts != null) {
             List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(intTransOpts.size());
             for (IntArrayTranslationOption intTransOpt : intTransOpts) {
 
-              if(intTransOpt instanceof DTUIntArrayTranslationOption) {
+              if (intTransOpt instanceof DTUIntArrayTranslationOption) {
                 // Gaps in target:
                 //System.err.println("option: target dtus for input: "+Arrays.toString(s.foreign));
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
@@ -96,6 +98,7 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
               }
 
             }
+
             for (TranslationOption<IString> abstractOpt : transOpts) {
               if(abstractOpt instanceof DTUOption)
                 opts.add(new ConcreteTranslationOption<IString>(abstractOpt, s.coverage, phraseFeaturizer, scorer, sequence, this.getName(), translationId, true));
@@ -104,11 +107,12 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
             }
           }
         }
+
         // Try to match the next terminal at s.pos:
-        if(s.pos < sequence.size()) {
+        if (s.pos < sequence.size()) {
           long terminalTransition = trieIndex.getTransition(s.state, sequence.get(s.pos).id);
           int nextState = trieIndex.map.get(terminalTransition);
-          if(nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+          if (nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
             CoverageSet coverage = s.coverage.clone();
             coverage.set(s.pos);
             IString[] foreign = new IString[s.foreign.length+1];
@@ -117,17 +121,18 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
             deque.add(new MatchState(nextState, s.pos+1, coverage, foreign));
           }
         }
+
         // try to match an X at s.pos:
-        if(s.pos > startIdx && s.pos+1 < sequence.size()) {
+        if (s.pos > startIdx && s.pos+1 < sequence.size()) {
           long nonterminalTransition = trieIndex.getTransition(s.state, DTUPhraseExtractor.GAP_STR.id);
           int nextState = trieIndex.map.get(nonterminalTransition);
-          if(nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+          if (nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
             //System.err.printf("X after %s\n", new SimpleSequence<IString>(true, s.foreign));
             // OK, we found an X, now must determine how long:
-            for(int afterX=s.pos+1; afterX <= startIdx+maxPhraseSpan && afterX <sequence.size(); ++afterX) {
+            for (int afterX=s.pos+1; afterX <= startIdx+maxPhraseSpan && afterX <sequence.size(); ++afterX) {
               long terminalTransition = trieIndex.getTransition(nextState, sequence.get(afterX).id);
               int next2State = trieIndex.map.get(terminalTransition);
-              if(next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
+              if (next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
                 //System.err.printf("Found a DTU that covers %s\n", sequence.subsequence(startIdx, afterX+1));
                 //System.err.printf("  X covers %s\n", sequence.subsequence(s.pos, afterX));
                 CoverageSet coverage = s.coverage.clone();

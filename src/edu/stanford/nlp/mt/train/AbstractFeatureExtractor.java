@@ -52,31 +52,37 @@ public abstract class AbstractFeatureExtractor implements FeatureExtractor {
   /** 
    * By default, this class does not require an alignment grid for feature extraction.
    */
+  @Override
   public boolean needAlGrid() { return false; }
 
   /**
    * By default, this class does not give names to features.
    */
+  @Override
   public Object scoreNames() { return null; }
 
   /**
    * Empty sentence-level feature extractor.
    */
+  @Override
   public void featurizeSentence(SymmetricalWordAlignment sent, String info, AlignmentGrid alGrid) {}
 
   /**
    * Empty phrase-level feature extractor.
    */
+  @Override
   public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
 
   /**
    * By default, this feature extractor returns null.
    */
+  @Override
   public Object score(AlignmentTemplate alTemp) { return null; }
 
   /**
    * Let each extractor output some stuff to STDERR.
    */
+  @Override
   public void report() { }
 }
 

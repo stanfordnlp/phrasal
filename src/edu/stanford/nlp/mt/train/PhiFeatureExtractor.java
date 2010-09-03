@@ -70,7 +70,7 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
   private static void addCountToArray(IntArrayList list, int idx) {
     if(idx < 0)
       return;
-    synchronized(list) {
+    synchronized (list) {
       while(idx >= list.size())
         list.add(0);
       int newCount = list.get(idx)+1;

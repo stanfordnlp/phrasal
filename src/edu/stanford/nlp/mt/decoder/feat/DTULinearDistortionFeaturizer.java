@@ -79,9 +79,6 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
     // (2) Standard linear distortion features:
     ///////////////////////////////////////////
 
-    int linearDistortion = f.linearDistortion;
-
-    //linearDistortion += LinearFutureCostFeaturizer.getEOSDistortion(f);
     float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this)) : 0.0f;
     float futureCost;
     if (f.done) {
@@ -91,7 +88,8 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
       f.setState(this, futureCost);
     }
     float deltaCost = futureCost - oldFutureCost;
-    list.add(new FeatureValue<String>(LD_FEATURE_NAME, -1.0*(linearDistortion+deltaCost)));
+    int cost = LinearFutureCostFeaturizer.cost(f);
+    list.add(new FeatureValue<String>(LD_FEATURE_NAME, -1.0*(cost+deltaCost)));
 
     return list;
   }

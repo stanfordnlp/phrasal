@@ -112,6 +112,7 @@ public class MERT extends Thread {
 
   private static int nThreads = 4;
 
+  @SuppressWarnings("unused")
   static void setBreakTiesWithLastBest() {
     breakTiesWithLastBest = true;
   }
@@ -121,6 +122,7 @@ public class MERT extends Thread {
   }
 
   static boolean alwaysSkipMCMC = true;
+
   public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric, boolean regularize) {
 		if (alwaysSkipMCMC) return 0;
     System.err.printf("TMCMC weights:\n%s\n\n", Counters.toString(wts, 35));
@@ -1179,17 +1181,18 @@ public class MERT extends Thread {
     }
 
     if(args.length-argi != 6) {
-      System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.MERT [-N] [-t (nb of threads)] [-s (seed)] [-p (nb of starting points)] [-o (optimizer name)] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list); (new weights file)\n");
+      System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.MERT [OPTIONS] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list) (new weights file)\n");
+      System.err.printf("where OPTIONS are:\n");
+      System.err.println("-a <file>: save argmax translation to file after MERT");
+      System.err.println("-f <file>: weights read from file remain fixed during MERT.");
+      System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");
       System.err.println("-s <N>: provide seed to initialize random number generator.");
       System.err.println("-p <N>: number of starting points.");
       System.err.println("-o <N>: search algorithm.");
       System.err.println("-t <N>: number of threads.");
       System.err.println("-F: filter unreachable.");
       System.err.println("-T: filter strictly unreachable.");
-      System.err.println("-a <file>: save argmax translation to file after MERT");
-      System.err.println("-f <file>: weights read from file remain fixed during MERT.");
       System.err.println("-S: tune using sentence-level BLEU (smoothed).");
-      System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");
       System.err.println("-N: apply NIST tokenization to hypotheses.");
       System.exit(-1);
     }

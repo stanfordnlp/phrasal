@@ -12,6 +12,7 @@ import java.util.*;
  */
 public class MosesPhraseExtractor extends AbstractPhraseExtractor {
 
+  @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
   }

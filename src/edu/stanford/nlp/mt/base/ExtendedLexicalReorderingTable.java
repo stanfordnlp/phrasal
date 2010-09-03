@@ -52,12 +52,14 @@ public class ExtendedLexicalReorderingTable {
 	 *
 	 */
 
-	public enum ReorderingTypes {monotoneWithPrevious, swapWithPrevious, discontinuousWithPrevious, nonMonotoneWithPrevious,
-		                  monotoneWithNext, swapWithNext, discontinuousWithNext, nonMonotoneWithNext,
-                      // types not in moses:
-                      discontinuous2WithPrevious, discontinuous2WithNext }
+	public enum ReorderingTypes {
+    monotoneWithPrevious, swapWithPrevious, discontinuousWithPrevious, nonMonotoneWithPrevious,
+    monotoneWithNext, swapWithNext, discontinuousWithNext, nonMonotoneWithNext,
+    discontinuous2WithPrevious, discontinuous2WithNext,
+    containmentWithPrevious, containmentWithNext
+  }
 	
-	enum ConditionTypes {f, e, fe}
+	enum ConditionTypes { f, e, fe }
 	
 	static final ReorderingTypes[] msdPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
@@ -84,15 +86,17 @@ public class ExtendedLexicalReorderingTable {
             ReorderingTypes.discontinuous2WithNext
 	};
 
-	static final ReorderingTypes[] msd2seBidirectionalPositionMapping = {
+	static final ReorderingTypes[] msd2cBidirectionalPositionMapping = {
 			ReorderingTypes.monotoneWithPrevious, 
             ReorderingTypes.swapWithPrevious,
             ReorderingTypes.discontinuousWithPrevious,
             ReorderingTypes.discontinuous2WithPrevious,
-            ReorderingTypes.monotoneWithNext, 
+            ReorderingTypes.containmentWithPrevious,
+            ReorderingTypes.monotoneWithNext,
             ReorderingTypes.swapWithNext, 
             ReorderingTypes.discontinuousWithNext,
-            ReorderingTypes.discontinuous2WithNext
+            ReorderingTypes.discontinuous2WithNext,
+            ReorderingTypes.containmentWithNext
 	};
 
 	static final ReorderingTypes[] monotonicityPositionalMapping = {
@@ -113,13 +117,13 @@ public class ExtendedLexicalReorderingTable {
 		fileTypeToReorderingType.put("msd-fe", msdPositionMapping);
 		fileTypeToReorderingType.put("msd-bidirectional-fe", msdBidirectionalPositionMapping);
 		fileTypeToReorderingType.put("msd2-bidirectional-fe", msd2BidirectionalPositionMapping);
-		fileTypeToReorderingType.put("msd2se-bidirectional-fe", msd2seBidirectionalPositionMapping);
+		fileTypeToReorderingType.put("msd2c-bidirectional-fe", msd2cBidirectionalPositionMapping);
 		fileTypeToReorderingType.put("monotonicity-fe", monotonicityPositionalMapping);
 		fileTypeToReorderingType.put("monotonicity-bidirectional-fe", monotonicityBidirectionalMapping);
 		fileTypeToReorderingType.put("msd-f", msdPositionMapping);
 		fileTypeToReorderingType.put("msd-bidirectional-f", msdBidirectionalPositionMapping);
 		fileTypeToReorderingType.put("msd2-bidirectional-f", msd2BidirectionalPositionMapping);
-		fileTypeToReorderingType.put("msd2se-bidirectional-f", msd2seBidirectionalPositionMapping);
+		fileTypeToReorderingType.put("msd2c-bidirectional-f", msd2cBidirectionalPositionMapping);
 		fileTypeToReorderingType.put("monotonicity-f", monotonicityPositionalMapping);
 		fileTypeToReorderingType.put("monotonicity-bidirectional-f", monotonicityBidirectionalMapping);
 	}
@@ -130,13 +134,13 @@ public class ExtendedLexicalReorderingTable {
 		fileTypeToConditionType.put("msd-fe", ConditionTypes.fe);
 		fileTypeToConditionType.put("msd-bidirectional-fe", ConditionTypes.fe);
 		fileTypeToConditionType.put("msd2-bidirectional-fe", ConditionTypes.fe);
-		fileTypeToConditionType.put("msd2se-bidirectional-fe", ConditionTypes.fe);
+		fileTypeToConditionType.put("msd2c-bidirectional-fe", ConditionTypes.fe);
 		fileTypeToConditionType.put("monotonicity-fe", ConditionTypes.fe);
 		fileTypeToConditionType.put("monotonicity-bidirectional-fe", ConditionTypes.fe);
 		fileTypeToConditionType.put("msd-f", ConditionTypes.f);
 		fileTypeToConditionType.put("msd-bidirectional-f", ConditionTypes.f);
 		fileTypeToConditionType.put("msd2-bidirectional-f", ConditionTypes.f);
-		fileTypeToConditionType.put("msd2se-bidirectional-f", ConditionTypes.f);
+		fileTypeToConditionType.put("msd2c-bidirectional-f", ConditionTypes.f);
 		fileTypeToConditionType.put("monotonicity-f", ConditionTypes.f);
 		fileTypeToConditionType.put("monotonicity-bidirectional-f", ConditionTypes.f);
 	}

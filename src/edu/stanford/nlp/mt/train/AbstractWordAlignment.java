@@ -52,19 +52,22 @@ public class AbstractWordAlignment implements WordAlignment {
     SortedSet<Integer>[] tmpSS = f2e; f2e = e2f; e2f = tmpSS;
   }
 
-  public Integer getId() { return id; }
+  @Override public Integer getId() { return id; }
 
-  public Sequence<IString> f() { return f; }
-  public Sequence<IString> e() { return e; }
+  @Override public Sequence<IString> f() { return f; }
+  @Override public Sequence<IString> e() { return e; }
 
   public int fSize() { return f.size(); }
   public int eSize() { return e.size(); }
-  
-  public SortedSet<Integer> f2e(int i) { return f2e[i]; }
-  public SortedSet<Integer> e2f(int i) { return e2f[i]; }
 
+  @Override public SortedSet<Integer> f2e(int i) { return f2e[i]; }
+  @Override public SortedSet<Integer> e2f(int i) { return e2f[i]; }
+
+  @Override
   @SuppressWarnings("unused")
   public int f2eSize(int i, int min, int max) { return _size(f2e[i],min,max); }
+
+  @Override
   public int e2fSize(int i, int min, int max) { return _size(e2f[i],min,max); }
 
   private static int _size(SortedSet<Integer> al, int min, int max) {
@@ -82,7 +85,7 @@ public class AbstractWordAlignment implements WordAlignment {
   
   static String toString(Set<Integer>[] align, boolean zeroIndexed) {
     int o = zeroIndexed ? 0 : 1;
-    StringBuffer str = new StringBuffer();
+    StringBuilder str = new StringBuilder();
     for (int i=0; i<align.length; ++i)
       for (int j : align[i])
         str.append(i+o).append("-").append(j+o).append(" ");
@@ -188,6 +191,7 @@ public class AbstractWordAlignment implements WordAlignment {
         }
   }
 
+  @Override
   public BitSet unalignedF() {
     BitSet unaligned = new BitSet();
     for (int fi=0; fi<f().size(); ++fi) {
@@ -197,6 +201,7 @@ public class AbstractWordAlignment implements WordAlignment {
     return unaligned;
   }
 
+  @Override
   public BitSet unalignedE() {
     BitSet unaligned = new BitSet();
     for (int ei=0; ei<e().size(); ++ei) {

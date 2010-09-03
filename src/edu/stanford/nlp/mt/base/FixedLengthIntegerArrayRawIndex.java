@@ -21,7 +21,7 @@ public class FixedLengthIntegerArrayRawIndex implements IntegerArrayRawIndex {
 		this.arraySize = arraySize;
 	}
 
-  private int initialSearchIndex(int[] array) {
+  private static int initialSearchIndex(int[] array) {
 		long index = 0;
 		long mul = 0x5DEECE66DL;
 		for (int el : array) {
@@ -33,15 +33,16 @@ public class FixedLengthIntegerArrayRawIndex implements IntegerArrayRawIndex {
 	
 	private boolean matchAt(int[] array, int index) {
 		int pos = index * arraySize;
-		for (int i = 0; i < array.length; i++) {
-			if (array[i] != rawInts[pos++]) return false;
-		}
+    for (int anArray : array) {
+      if (anArray != rawInts[pos++]) return false;
+    }
 		return true;
 	}
 
 	/**
 	 * 
 	 */
+  @Override
 	public int getIndex(int[] array) {
 		return getIndex(array, initialSearchIndex(array));
 	}
@@ -62,15 +63,14 @@ public class FixedLengthIntegerArrayRawIndex implements IntegerArrayRawIndex {
 	/**
 	 * 
 	 */
+  @Override
 	public synchronized int insertIntoIndex(int[] array) {
 		int initIndex = initialSearchIndex(array);
 		int index = getIndex(array, initIndex);
 		if (index >= 0) return index;
 		index = -index-1;
 		int pos = index * arraySize;
-		for (int i = 0; i < array.length; i++) {
-			 rawInts[i+pos] = array[i];
-		}
+    System.arraycopy(array, 0, rawInts, pos, array.length);
 		used.set(index);
 		return index;
 	}

@@ -96,7 +96,7 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
 		}
 		
 		List<S> hypotheses = recombinationHash.hypotheses();
-		if (hypotheses.size() == 0) return;
+		if (hypotheses.isEmpty()) return;
 		
 		Collections.sort(hypotheses);
 		
@@ -164,11 +164,12 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
 	/**
 	 * 
 	 */
+  @SuppressWarnings("unused")
 	public double worstScore() {
 		return worst;
 	}
 	
-    @Override
+  @Override
 	public int recombined() {
 		return recombined;
 	}

@@ -35,11 +35,11 @@ public class FilterNGramsByCoOccurrences {
 			if (sentIds == null) return false;
 			if (intersect == null) intersect = (BitSet)sentIds.clone();
 			else intersect.and(sentIds);
-			if (intersect.size() == 0) return false;
+			if (intersect.isEmpty()) return false;
 		}
 
     assert(intersect != null);
-		return intersect.size() != 0;
+		return !intersect.isEmpty();
 	}
 	
 	public static void main(String[] args) throws IOException {

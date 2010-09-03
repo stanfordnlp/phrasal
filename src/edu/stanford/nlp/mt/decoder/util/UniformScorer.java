@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 
@@ -36,6 +35,7 @@ public class UniformScorer<T> implements Scorer<T> {
 		if (warn) warn();
 	}
 
+  @Override
 	public double getIncrementalScore(Collection<FeatureValue<T>> features) {
 		double score = 0;
 		
@@ -48,28 +48,23 @@ public class UniformScorer<T> implements Scorer<T> {
 		
 	}
 
-
 	public void saveWeights(String filename) throws IOException {
 		throw new UnsupportedOperationException();		
 	}
 
-
 	public boolean hasNonZeroWeight(String featureName) {
 		return true;
 	}
-
 
 	public boolean randomizeTag() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-
 	public void setRandomizeTag(boolean randomizeTag) {
 		// TODO Auto-generated method stub
 		
 	}
-
 
 	public void setWeightMultipliers(double manualWeightMul,
 			double classifierWeightMul) {
@@ -81,6 +76,4 @@ public class UniformScorer<T> implements Scorer<T> {
 		// TODO Auto-generated method stub
 		
 	}
-
-
 }

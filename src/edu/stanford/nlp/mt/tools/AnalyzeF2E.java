@@ -57,7 +57,7 @@ public class AnalyzeF2E {
       int lineCount = 0;
       int lineLimit = Integer.parseInt(lineLimitStr);
 
-      for(;;) {
+      while (true) {
         feLine1 = feReader.readLine(); efLine1 = efReader.readLine();
         if(feLine1 == null || efLine1 == null) {
           if(feLine1 != null || efLine1 != null)

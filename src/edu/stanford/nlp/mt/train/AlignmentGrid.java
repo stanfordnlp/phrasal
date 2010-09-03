@@ -95,6 +95,8 @@ public class AlignmentGrid {
 
   public int esize() { return eSize; }
 
+  public WordAlignment getWordAlignment() { return sent; }
+
   public AlGridCell<AlignmentTemplateInstance> cellAt(int fi, int ei) { return alGridCells[fi][ei]; }
 
   /**

@@ -21,7 +21,7 @@ public class CombinedStatisticsCollector {
   public static final String DEBUG_PROPERTY = "CombinedStatisticsCollector";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  private List<StatisticsCollector> collectors;
+  private final List<StatisticsCollector> collectors;
 
   public CombinedStatisticsCollector(List<StatisticsCollector> collectors) {
     this.collectors = collectors;

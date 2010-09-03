@@ -43,7 +43,7 @@ public class AlignmentSymmetrizer {
       feReader = IOTools.getReaderFromFile(feAlignFile);
       efReader = IOTools.getReaderFromFile(efAlignFile);
       String feLine1, feLine2, feLine3, efLine1, efLine2, efLine3;
-      for (;;) {
+      while (true) {
         feLine1 = feReader.readLine(); efLine1 = efReader.readLine();
         if (feLine1 == null || efLine1 == null) {
           if (feLine1 != null || efLine1 != null)

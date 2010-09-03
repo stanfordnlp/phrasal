@@ -70,7 +70,7 @@ public class Levenshtein<T extends HasIntegerIdentity> {
     bitset.clear();
   }
 
-  private boolean hasFlag(byte val, byte flag) {
+  private static boolean hasFlag(byte val, byte flag) {
     return val == flag;
   }
 

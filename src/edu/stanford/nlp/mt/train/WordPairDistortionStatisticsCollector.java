@@ -51,10 +51,12 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
   }
 
 
+  @Override
   public int getNumPasses() {
     return 1;
   }
 
+  @Override
   public void collect(WordAlignment sent) {
     Sequence<IString> f = sent.f();
     Sequence<IString> e = sent.e();
@@ -146,6 +148,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     }
   }
 
+  @Override
   public void postProcess() {
     System.err.println("----------postProcess step for WordPairDistortionStatisticsCollector----------");
     System.err.println("0) Settings");
@@ -203,6 +206,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     System.err.printf("3.6) TOTAL = %d\n",ShortestDistanceWordAligner.TOTAL);
   }
 
+  @Override
   public void serializeTo(String filename) {
     System.err.print("Serializing statistics to " + filename + "...");
     long startTimeMillis = System.currentTimeMillis();
@@ -233,6 +237,7 @@ public class WordPairDistortionStatisticsCollector implements StatisticsCollecto
     return c;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public void loadFrom(String filename) {
     try {

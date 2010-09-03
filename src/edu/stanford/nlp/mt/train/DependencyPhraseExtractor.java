@@ -110,4 +110,8 @@ public class DependencyPhraseExtractor extends MosesPhraseExtractor {
     return false;
   }
 
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
 }

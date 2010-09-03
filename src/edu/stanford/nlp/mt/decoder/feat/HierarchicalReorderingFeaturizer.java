@@ -84,7 +84,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     finalizeFeature = false, // compute backward model score on final phrase
     binarize = false; // if false, k-arize instead of binarize
 
-  final boolean has2Disc;
+  final boolean has2Disc, hasContainment;
 	final String[] featureTags;
 	final ExtendedLexicalReorderingTable mlrt;
   private BitSet tmpCoverage = new BitSet();
@@ -98,8 +98,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
     String modelFilename=args[0];
     String modelType=args[1];
     has2Disc = modelType.contains("msd2");
-    System.err.println("Hierarchical reordering model:");
-    System.err.println("Distinguish between left and right discontinuous: "+has2Disc);
+    hasContainment = modelType.contains("msd2c");
     if (args.length >= 3) {
       FEATURE_PREFIX = args[2];
       if (args.length >= 4) {
@@ -117,6 +116,9 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       }
     }
 
+    System.err.println("Hierarchical reordering model:");
+    System.err.println("Distinguish between left and right discontinuous: "+has2Disc);
+    System.err.println("Use containment orientation: "+ hasContainment);
     System.err.printf("Forward orientation: %s\n", forwardOrientationComputation);
     System.err.printf("Backward orientation: %s\n", backwardOrientationComputation);
 
@@ -156,52 +158,67 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       System.err.printf("PriorScores: %s\nScores: %s\n", (priorScores == null ? "null" : Arrays.toString(priorScores)), (scores == null ? "null" : Arrays.toString(scores)));			
     }
 
+    boolean containmentOrientation = false;
+    if (hasContainment && f.prior != null) {
+      CoverageSet prevCS = f.prior.hyp.translationOpt.foreignCoverage;
+      CoverageSet curCS = f.hyp.translationOpt.foreignCoverage;
+      containmentOrientation = CoverageSet.cross(prevCS, curCS);
+    }
+
     // Determine forward orientation:
     {
-      boolean monotone=false, swap=false;
-      switch (forwardOrientationComputation) {
-      case hierarchical:
-        if (monotoneWithPrevious(f)) monotone = true;
-        else if (swapWithPrevious(f)) swap = true;
-        break;
-      case backtrack: // backtracks instead of using a stack; only for debugging
-        if (backtrackForMonotoneWithPrevious(f)) monotone = true;
-        else if (backtrackForSwapWithPrevious(f)) swap = true;
-        break;
-      case backtrackFast: // only for debugging
-        if (backtrackForMonotoneWithPreviousFast(f)) monotone = true;
-        else if (backtrackForSwapWithPreviousFast(f)) swap = true;
-        break;
-      case local:
-        monotone = locallyMonotone;
-        swap = locallySwapping;
-        break;
-      default: 
-        throw new RuntimeException("HierarchicalReorderingFeaturizer: not yet implemented: "+forwardOrientationComputation);
+      if (containmentOrientation) { // Containment:
+        forwardOrientation = ReorderingTypes.containmentWithPrevious;
+      } else { // MSD classes:
+        boolean monotone=false, swap=false;
+        switch (forwardOrientationComputation) {
+        case hierarchical:
+          if (monotoneWithPrevious(f)) monotone = true;
+          else if (swapWithPrevious(f)) swap = true;
+          break;
+        case backtrack: // backtracks instead of using a stack; only for debugging
+          if (backtrackForMonotoneWithPrevious(f)) monotone = true;
+          else if (backtrackForSwapWithPrevious(f)) swap = true;
+          break;
+        case backtrackFast: // only for debugging
+          if (backtrackForMonotoneWithPreviousFast(f)) monotone = true;
+          else if (backtrackForSwapWithPreviousFast(f)) swap = true;
+          break;
+        case local:
+          monotone = locallyMonotone;
+          swap = locallySwapping;
+          break;
+        default:
+          throw new RuntimeException("HierarchicalReorderingFeaturizer: not yet implemented: "+forwardOrientationComputation);
+        }
+        assert (!monotone || !swap);
+        if (monotone) forwardOrientation = ReorderingTypes.monotoneWithPrevious;
+        if (swap) forwardOrientation = ReorderingTypes.swapWithPrevious;
       }
-      assert (!monotone || !swap);
-      if (monotone) forwardOrientation = ReorderingTypes.monotoneWithPrevious;
-      if (swap) forwardOrientation = ReorderingTypes.swapWithPrevious;
     }
 
     // Determine backward orientation:
     {
-      boolean monotone=false, swap=false;
-      switch(backwardOrientationComputation) {
-      case local:
-        monotone = locallyMonotone;
-        swap = locallySwapping;
-        break;
-      case hierarchical:
-        if (possiblyMonotoneWithNext(f)) monotone = true;
-        else if (possiblySwappingWithNext(f)) swap = true;
-        break;
-      default:
-        throw new RuntimeException("HierarchicalReorderingFeaturizer: not yet implemented: "+backwardOrientation);
+      if (containmentOrientation) { // Containment:
+        backwardOrientation = ReorderingTypes.containmentWithNext;
+      } else { // MSD classes:
+        boolean monotone=false, swap=false;
+        switch(backwardOrientationComputation) {
+        case local:
+          monotone = locallyMonotone;
+          swap = locallySwapping;
+          break;
+        case hierarchical:
+          if (possiblyMonotoneWithNext(f)) monotone = true;
+          else if (possiblySwappingWithNext(f)) swap = true;
+          break;
+        default:
+          throw new RuntimeException("HierarchicalReorderingFeaturizer: not yet implemented: "+backwardOrientation);
+        }
+        assert (!monotone || !swap);
+        if (monotone) backwardOrientation = ReorderingTypes.monotoneWithNext;
+        if (swap) backwardOrientation = ReorderingTypes.swapWithNext;
       }
-      assert (!monotone || !swap);
-      if (monotone) backwardOrientation = ReorderingTypes.monotoneWithNext;
-      if (swap) backwardOrientation = ReorderingTypes.swapWithNext;
     }
 
     // Distinguish between forward and backward discontinuous:
@@ -218,12 +235,14 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       if (type == forwardOrientation || type == backwardOrientation) {
         if (!usePrior(mlrt.positionalMapping[i])) {
           boolean firstInDTU = f.getSegmentIdx() == 0;
-          if (scores != null && firstInDTU)
+          if (scores != null && firstInDTU) {
             values.add(new FeatureValue<String>(featureTags[i], scores[i]));
+          }
         } else {
           boolean lastInDTU = (f.prior == null) || f.prior.getSegmentIdx()+1 == f.prior.getSegmentNumber();
-          if (priorScores != null && lastInDTU)
+          if (priorScores != null && lastInDTU) {
             values.add(new FeatureValue<String>(featureTags[i], priorScores[i]));
+          }
         }
       }
     }
@@ -278,6 +297,7 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
       case discontinuousWithNext:
       case discontinuous2WithNext:
       case nonMonotoneWithNext:
+      case containmentWithNext:
       return true;
     }
 		return false;

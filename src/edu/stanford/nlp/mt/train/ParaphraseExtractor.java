@@ -41,6 +41,7 @@ public class ParaphraseExtractor extends PhraseExtract {
   public ParaphraseExtractor(Properties prop) throws IOException {
     super(prop);
     beamCmp = new Comparator<PhraseHyp>() {
+      @Override
       public int compare(PhraseHyp p1, PhraseHyp p2) {
          return(Double.valueOf(p1.d).compareTo(p2.d));
       }
@@ -48,7 +49,7 @@ public class ParaphraseExtractor extends PhraseExtract {
   }
 
   private String keyToPlainString(int key) {
-    StringBuffer buf = new StringBuffer();
+    StringBuilder buf = new StringBuilder();
     IString[] strs = IStrings.toIStringArray(alTemps.getF(key));
     for(int i=0; i<strs.length; ++i) {
       if(i>0)

@@ -72,9 +72,9 @@ public class Subsampler {
   private String ofCorpus, oeCorpus, oaCorpus;
   private int startAtLine, endAtLine = -1, targetCount;
   private boolean lowercase;
-  private Set<SymmetricalWordAlignment> sents = new ObjectOpenHashSet<SymmetricalWordAlignment>();
-  private Set<Sequence<IString>> phrases = new ObjectOpenHashSet<Sequence<IString>>();
-  private Counter<Sequence<IString>> phraseCounts = new OpenAddressCounter<Sequence<IString>>();
+  private final Set<SymmetricalWordAlignment> sents = new ObjectOpenHashSet<SymmetricalWordAlignment>();
+  private final Set<Sequence<IString>> phrases = new ObjectOpenHashSet<Sequence<IString>>();
+  private final Counter<Sequence<IString>> phraseCounts = new OpenAddressCounter<Sequence<IString>>();
 
   public Subsampler(Properties prop) throws IOException {
     analyzeProperties(prop);

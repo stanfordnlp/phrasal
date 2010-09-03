@@ -52,6 +52,7 @@ public class IBMModel1InformedWordAligner implements WordAligner {
     this("/scr/nlp/data/gale2/acl08dd/resources/model1/zh_en.model.actual.t1");
   }
 
+  @Override
   public int getAlignedEnglishIndex(WordAlignment sp, int foreignIdx) {
     //private int getAlignedEnglishWordIndexFromSet(IString chWord, Set<Integer> englishWordsIndices, Sequence<IString> e) {
     IString chWord = sp.f().get(foreignIdx);

@@ -13,7 +13,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
  */
 public abstract class SparseVectorFeatureExtractor extends AbstractFeatureExtractor {
 
-  private List<Int2IntLinkedOpenHashMap> featureMaps
+  private final List<Int2IntLinkedOpenHashMap> featureMaps
      = new ArrayList<Int2IntLinkedOpenHashMap>();
   Int2IntLinkedOpenHashMap currentFeatureMap;
 

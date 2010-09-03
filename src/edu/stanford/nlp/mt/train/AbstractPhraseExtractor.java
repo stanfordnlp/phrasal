@@ -204,6 +204,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   @Override
   public void setSentenceInfo(WordAlignment sent, String infoStr) {}
 
+  @Override
   public Object clone() throws CloneNotSupportedException {
     AbstractPhraseExtractor c = (AbstractPhraseExtractor) super.clone();
     c.alGrid = new AlignmentGrid(0,0);

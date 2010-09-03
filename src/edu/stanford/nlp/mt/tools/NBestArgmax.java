@@ -34,9 +34,9 @@ public class NBestArgmax {
 		String nbestFilename = args[0]; String wtsFilename = args[1];
 		String evalArg = args.length == 3 ? args[2] : null;
 		
-		MosesNBestList nbestlists = new MosesNBestList(nbestFilename, true);
 		Scorer<String> wts = new StaticScorer(wtsFilename);
-		
+    MosesNBestList nbestlists = new MosesNBestList(nbestFilename, true);
+
 		EvaluationMetric<IString, String> eval = null;
 	 
 		if (evalArg != null) {

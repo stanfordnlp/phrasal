@@ -35,7 +35,8 @@ public class DualWordAlignment implements WordAlignment {
     init(fStr,eStr,a1Str,a2Str);
   }
 
-  public Integer getId() { 
+  @Override
+  public Integer getId() {
     throw new UnsupportedOperationException("Not implemented."); 
   }
 
@@ -87,18 +88,18 @@ public class DualWordAlignment implements WordAlignment {
 
   @Override
 	public String toString() {
-    StringBuffer str = new StringBuffer();
+    StringBuilder str = new StringBuilder();
     for(int i=0; i<f.size(); ++i)
       for(int j : f2e(i))
         str.append(i).append("-").append(j).append(" ");
     return str.toString();
   }
 
-  public Sequence<IString> f() { return f; }
-  public Sequence<IString> e() { return e; }
-  public SortedSet<Integer> f2e(int i) { return alignment1_f2e[i]; }
-  public SortedSet<Integer> e2f(int i) { return alignment2_f2e[i]; }
+  @Override public Sequence<IString> f() { return f; }
+  @Override public Sequence<IString> e() { return e; }
+  @Override public SortedSet<Integer> f2e(int i) { return alignment1_f2e[i]; }
+  @Override public SortedSet<Integer> e2f(int i) { return alignment2_f2e[i]; }
 
-  public int f2eSize(int i, int min, int max) { throw new UnsupportedOperationException(); }
-  public int e2fSize(int i, int min, int max) { throw new UnsupportedOperationException(); }
+  @Override public int f2eSize(int i, int min, int max) { throw new UnsupportedOperationException(); }
+  @Override public int e2fSize(int i, int min, int max) { throw new UnsupportedOperationException(); }
 }

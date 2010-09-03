@@ -12,9 +12,10 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  */
 public class OptionGrid<TK> {
+
 	@SuppressWarnings("unchecked")
-	private List[] grid;
-	private int foreignSz;
+	private final List[] grid;
+	private final int foreignSz;
 	
 	/**
 	 * 

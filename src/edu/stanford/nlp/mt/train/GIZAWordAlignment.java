@@ -67,10 +67,8 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     assert (comment_f2e[0].equals("#"));
     p_f2e = Double.parseDouble(comment_f2e[comment_f2e.length-1]);
     // Read target strings:
-    synchronized (IString.class) {
-      f = new SimpleSequence<IString>(true, IStrings.toIStringArray(preproc(f2e_line2.split("\\s+"))));
-      e = new SimpleSequence<IString>(true, IStrings.toIStringArray(extractWordsFromAlignment(f2e_line3)));
-    }
+    f = new SimpleSequence<IString>(true, IStrings.toSyncIStringArray(preproc(f2e_line2.split("\\s+"))));
+    e = new SimpleSequence<IString>(true, IStrings.toSyncIStringArray(extractWordsFromAlignment(f2e_line3)));
     // Read alignments:
     f2e = new TreeSet[f.size()];
     e2f = new TreeSet[e.size()];
@@ -192,7 +190,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
       feReader = IOTools.getReaderFromFile(feAlign);
       efReader = IOTools.getReaderFromFile(efAlign);
       String feLine1, feLine2, feLine3, efLine1, efLine2, efLine3;
-      for (;;) {
+      while (true) {
         feLine1 = feReader.readLine(); efLine1 = efReader.readLine();
         if (feLine1 == null || efLine1 == null) {
           if (feLine1 != null || efLine1 != null)

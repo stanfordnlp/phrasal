@@ -21,7 +21,7 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
 
   private static final double MINP = 0.5;
 
-  private List<SymmetricalWordAlignment> align = new ArrayList<SymmetricalWordAlignment>();
+  private final List<SymmetricalWordAlignment> align = new ArrayList<SymmetricalWordAlignment>();
 
   private Sequence<IString> f=null;
   private Sequence<IString> e=null;

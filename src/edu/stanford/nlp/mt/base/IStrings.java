@@ -41,6 +41,17 @@ public class IStrings {
 		return istrs;
 	}
 
+  static public IString[] toSyncIStringArray(Collection<String> strings) {
+		IString[] istrs = new IString[strings.size()];
+		int i = 0;
+		for (String str : strings) {
+      synchronized (IString.class) {
+        istrs[i++] = new IString(str);
+      }
+		}
+		return istrs;
+	}
+
   static public int[] toIntArray(IString[] strings) {
 		int[] intArray = new int[strings.length];
 		for (int i = 0; i < strings.length; i++) {
