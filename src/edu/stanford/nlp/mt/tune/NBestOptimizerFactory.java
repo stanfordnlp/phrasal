@@ -22,8 +22,10 @@ import edu.stanford.nlp.mt.base.MosesNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.metrics.LinearCombinationMetric;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.decoder.util.StaticScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -290,8 +292,15 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	@Override
 	public Counter<String> optimize(Counter<String> initialWts) {
 		Counter<String> wts = new ClassicCounter<String>(initialWts);
+		EvaluationMetric<IString, String> modelMetric = new ScorerWrapperEvaluationMetric<IString, String>(new StaticScorer(initialWts));
+		EvaluationMetric<IString, String> combMetric = new LinearCombinationMetric<IString, String>(new double[]{1.0, 1.0}, modelMetric, emetric);
+		
+		
+		//List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+	    //      emetric)).maximize(nbest);
 		List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
-	            emetric)).maximize(nbest);
+	          combMetric)).maximize(nbest);
+		
 		
 		// create a mapping between weight names and optimization 
 		// weight vector positions

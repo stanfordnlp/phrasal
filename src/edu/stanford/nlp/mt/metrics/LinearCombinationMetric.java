@@ -27,12 +27,12 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
   final boolean DEBUG = System.getProperty("debugLinearCombination") != null;
 
   final double[] weights;
-  final AbstractMetric<TK,FV>[] metrics;
+  final EvaluationMetric<TK,FV>[] metrics;
   final MetricType[] metricTypes;
   final Map<TK,FV>[] metricProperties;
 
   @SuppressWarnings("unchecked")
-	public LinearCombinationMetric(double[] weights, AbstractMetric<TK,FV>... metrics) {
+	public LinearCombinationMetric(double[] weights, EvaluationMetric<TK,FV>... metrics) {
     System.err.printf("LinearCombinationMetric: weights=%s metrics=%s\n", 
       Arrays.toString(weights), Arrays.toString(metrics));
     if(weights.length != metrics.length)
@@ -88,7 +88,7 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
     List<IncrementalEvaluationMetric<TK,FV>> iems = new ArrayList<IncrementalEvaluationMetric<TK,FV>>();
 
     LCIncrementalMetric() {
-      for(AbstractMetric<TK,FV> metric :  metrics)
+      for(EvaluationMetric<TK,FV> metric :  metrics)
         iems.add(metric.getIncrementalMetric());
     }
 
@@ -105,7 +105,7 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
     }
 
     LCIncrementalMetric(NBestListContainer<TK, FV> nbest) {
-      for(AbstractMetric<TK,FV> metric :  metrics)
+      for(EvaluationMetric<TK,FV> metric :  metrics)
         iems.add(metric.getIncrementalMetric(nbest));
     }
 
