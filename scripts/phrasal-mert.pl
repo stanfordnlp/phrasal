@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+use List::Util qw[min max];
+
 #############################################################################
 # Train Phrasal model parameters using minimum error rate training.
 #
@@ -25,6 +27,7 @@
 
 use List::Util qw[max];
 
+$WEIGHTS_SUFF = ".binwts";
 $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
 $SLEEP = 30;
@@ -84,7 +87,9 @@ sub handle_arg {
   my ($arg) = @_;
   
 
-  if ($arg =~ /^--oracle=.*/) {
+  if ($arg =~ /^--textwts/) {
+     $WEIGHTS_SUFF = ".wts";
+  } elsif ($arg =~ /^--oracle=.*/) {
      $ORACLE = $arg;
      $ORACLE =~ s/^--oracle=//;
 		 chomp $SLEEP;
@@ -318,7 +323,7 @@ $first_active_iter = 0;
 
 if ($ENV{"RECOVER"}) {
 	system stderr "Searching for work in progress....\n";
-	@trans_files = `ls $work_dir/phrasal.*.wts`; # we use a cue that is safe but, risks redoing some work
+	@trans_files = `ls $work_dir/phrasal.*$WEIGHTS_SUFF`; # we use a cue that is safe but, risks redoing some work
 	$max_weight_iter = 0;
 	foreach $trans_file (@trans_files) { chomp $trans_file;
 		$iter = $trans_file;
@@ -343,7 +348,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr "Preparing to produce nbest list:\n$iter_nbest_list\n";
    print stderr 
    "------------------------------------------------------------------------\n\n";
-   $iter_weights = "$work_dir/phrasal.$iter.wts";
+   if ($iter == 0) {
+     $iter_weights = "$work_dir/phrasal.$iter.wts";
+   } else {
+     $iter_weights = "$work_dir/phrasal.$iter$WEIGHTS_SUFF";
+   }
    print stderr "Using weights file:\n$iter_weights\n\n";
    $iter_decoder_ini = "$work_dir/phrasal.$iter.ini";
    print stderr "Writing decoder.ini:\n$iter_decoder_ini\n\n";
@@ -506,14 +515,18 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    	 print stderr "Skipping building cummulative nbest list for iter $iter ($first_active_iter)\n";
    }
    
-   $next_iter_weights = "$work_dir/phrasal.".($iter+1).".wts";
+   $next_iter_weights = "$work_dir/phrasal.".($iter+1)."$WEIGHTS_SUFF";
    if (!$cmert_dir) {
 	    $jmert_log = "$work_dir/jmert.$iter.log";
    	  if ($iter >= $first_active_iter) {
 	      unlink($next_iter_weights);
 				my $all_iter_weights = $iter_weights;
 				for(my $i = $iter-1; $i>=0; --$i) {
+                                        if ($i != 0) {
+					$all_iter_weights .= ",$work_dir/phrasal.$i$WEIGHTS_SUFF";
+					} else {
 					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
+                                        }
 				}
 				my $optOut = "$work_dir/jmert.$iter.opt";
 				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $all_iter_weights $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
@@ -529,7 +542,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 					print STDERR `echo "BLEU $ORACLE" | cat - $next_iter_weights.tmp > $next_iter_weights`;
 					unlink "$next_iter_weights.tmp"
 				}
-				unlink $iter_pcumulative_nbest;
+				#unlink $iter_pcumulative_nbest;
    	  } else {
    	  	print stderr "Skipping running JMERT for iter $iter ($first_active_iter)\n";
    	  }
@@ -537,7 +550,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       open jmlfh, $jmert_log or die "can't open jmert log file $jmert_log";
 
 			my $obj_diff = 1;
+      $converge_info = "";
       while (<jmlfh>) { chomp;
+         if (/>>>\[Converge Info\]/) {
+           $converge_info = $_;
+         }
          if (/^Final Eval Score:/) {
            $nbest_eval = $_;
            $nbest_init_eval = $nbest_eval;
@@ -579,7 +596,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       }
    
       $init_opt_file = "$work_dir/init.$iter.opt";
-      $cmert_weights = "$work_dir/cmert.$iter.wts";
+      $cmert_weights = "$work_dir/cmert.$iter$WEIGHTS_SUFF";
       print stderr "\nProducing cmert init.opt:\n$init_opt_file\n\n";
       $cmert_feature_names = `$SCRIPTS_DIR/phrasal_weights_to_cmert_weights.pl $iter_weights $iter_cumulative_nbest 2>&1 > $cmert_weights`;
       chomp $cmert_feature_names;
@@ -638,18 +655,41 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    }
 
 
-   $max_weight_delta = `$SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1`;
-   print stderr "cmd: $SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1\n";
+   #$max_weight_delta = `$SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1`;
+   if ($converge_info) {
+      print stderr "Using converge info\n+$converge_info\n";
+      $ObjDiff=$converge_info;$ObjDiff=~s/.*ObjDiff\(//;$ObjDiff=~s/\).*//g;
+      $ObjFinal=$converge_info;$ObjFinal=~s/.*ObjFinal\(//;$ObjFinal=~s/\).*//g;
+      print stderr "ObjDiff: $ObjDiff\n";
+      print stderr "ObjFinal: $ObjFinal\n";
+      $L2DInit=$converge_info;$L2DInit=~s/.*L2DInit\(//;$L2DInit=~s/\).*//g;
+      print stderr "L2DInit:  $L2DInit\n";
+      $L2XInit=$converge_info;$L2XInit=~s/.*L2XInit\(//;$L2XInit=~s/\).*//g;
+      print stderr "L2XInit:  $L2XInit\n";
+      $L2XFinal=$converge_info;$L2XFinal=~s/.*L2XFinal\(//;$L2XFinal=~s/\).*//g;
+      print stderr "L2XFinal:  $L2XFinal\n";
+      $L2XEffective = min($L2XInit, $L2XFinal);
+      print stderr "L2XEffective: $L2XEffective\n";
+      $convTest1 = $ObjDiff/$ObjFinal;
+      $convTest2 = $L2DInit/max(1,$L2XEffective);
+      print stderr "Test1 ObjDiff:$ObjDiff/ObjFinal:$ObjFinal = $convTest1\n";
+      print stderr "Test2 L2DInit:$L2DInit/max(1,L2XEffective:$L2XEffective) = $convTest2\n";
+       
+   } else {
+   print stderr "Can't find converge info - falling back to weight delta test\n";
+   
+   print stderr "cmd: java edu.stanford.nlp.mt.tools.CompareWeights $iter_weights $next_iter_weights  2>&1\n";
    chomp $max_weight_delta; 
    print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
    if ($max_weight_delta < $MIN_WEIGHT_DELTA) {
       print stderr "Done as max weight delta $weight_delta < $MIN_WEIGHT_DELTA\n\n";
       last; 
    }
+   }
 }
 
 $phrasal_final_ini = "$work_dir/phrasal.final.ini\n";
-$phrasal_final_wts = "$work_dir/phrasal.final.wts\n";
+$phrasal_final_wts = "$work_dir/phrasal.final$WEIGHTS_SUFF\n";
 
 print stderr "\nOptimization Complete\n";
 print stderr 

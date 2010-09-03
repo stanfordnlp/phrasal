@@ -45,6 +45,7 @@ import edu.stanford.nlp.classify.km.StructuredSVM;
 import edu.stanford.nlp.classify.km.kernels.Kernel;
 import edu.stanford.nlp.classify.km.sparselinearalgebra.SparseVector;
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Pair;
@@ -320,7 +321,7 @@ public class Phrasal {
   @SuppressWarnings("unchecked")
 	public Phrasal(Map<String, List<String>> config) throws IOException,
 	InstantiationException, IllegalAccessException, IllegalArgumentException,
-	SecurityException, InvocationTargetException, NoSuchMethodException {
+	SecurityException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
     if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
 			Set<String> missingFields = new HashSet<String>(REQUIRED_FIELDS);
 			missingFields.removeAll(config.keySet());
@@ -608,46 +609,33 @@ public class Phrasal {
 		}
 
 		// Create Scorer
-		List<String> weightConfig = new LinkedList<String>();
-		weightConfig.add(ScorerFactory.STATIC_SCORER_INLINE);
+		Counter<String> weightConfig = new ClassicCounter<String>();
 
 		if (config.containsKey(WEIGHTS_FILE)) {
-			BufferedReader reader = new BufferedReader(new FileReader(config.get(
-					WEIGHTS_FILE).get(0)));
-			for (String line; (line = reader.readLine()) != null;) {
-				String[] fields = line.split("\\s+");
-				weightConfig.add(makePair(fields[0], fields[1]));
-			}
-			reader.close();
-		} else if (config.containsKey(PREFERED_REF_STRUCTURE)) {
-			weightConfig.add(makePair(LinearDistortionFeaturizer.FEATURE_NAME,
-			"100.0"));
-			List<String> tmodelWtsStr = config.get(TRANSLATION_MODEL_WT_OPT);
-			if (tmodelWtsStr.size() == 5) {
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.FIVESCORE_LEX_t_f), "1.0"));
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.FIVESCORE_PHRASE_PENALTY), "-10.0"));
-			} else if (tmodelWtsStr.size() == 1) {
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.ONESCORE_P_t_f), "1.0"));
-			} else {
-				throw new RuntimeException(String.format(
-						"Unsupported weight count for translation model: %d", tmodelWtsStr
-						.size()));
-			}
+		   if (config.get(WEIGHTS_FILE).get(0).endsWith(".binwts")) {
+		     ObjectInputStream ois = new ObjectInputStream(new FileInputStream(config.get(WEIGHTS_FILE).get(0)));
+		     weightConfig = (Counter<String>)ois.readObject();
+		     ois.close();
+		   } else {
+   		      
+   			BufferedReader reader = new BufferedReader(new FileReader(config.get(
+   					WEIGHTS_FILE).get(0)));
+   			for (String line; (line = reader.readLine()) != null;) {
+   				String[] fields = line.split("\\s+");
+   				weightConfig.incrementCount(fields[0], Double.parseDouble(fields[1]));
+   			}
+   			reader.close();
+		   }
 		} else {
 			if (config.containsKey(INLINE_WEIGHTS)) {
 				List<String> inlineWts = config.get(TRANSLATION_MODEL_WT_OPT);
 				for (String inlineWt : inlineWts) {
 					String[] fields = inlineWt.split("=");
-					weightConfig.add(makePair(fields[0], fields[1]));
+					weightConfig.setCount(fields[0], Double.parseDouble(fields[1]));
 				}
 			}
-			weightConfig.add(makePair(NGramLanguageModelFeaturizer.FEATURE_NAME,
-					config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
-			weightConfig.add(makePair(LinearDistortionFeaturizer.FEATURE_NAME, 
-					config.get(DISTORTION_WT_OPT).get(0)));
+			weightConfig.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME, Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
+			weightConfig.setCount(LinearDistortionFeaturizer.FEATURE_NAME, Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
 			
 			if (config.get(DISTORTION_WT_OPT).size() > 1) {
 				int numAdditionalWts = config.get(DISTORTION_WT_OPT).size() - 1;
@@ -669,31 +657,30 @@ public class Phrasal {
                     mosesLexReorderFeaturizer.mlrt.positionalMapping.length));
           }
           for (int i = 0; i < mosesLexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
-            weightConfig.add(makePair(mosesLexReorderFeaturizer.featureTags[i], config
-                .get(DISTORTION_WT_OPT).get(i + 1)));
+            weightConfig.setCount(mosesLexReorderFeaturizer.featureTags[i], Double.parseDouble(config.get(DISTORTION_WT_OPT).get(i + 1)));
           }
         }
 			}
-			weightConfig.add(makePair(WordPenaltyFeaturizer.FEATURE_NAME, config.get(
+			weightConfig.setCount(WordPenaltyFeaturizer.FEATURE_NAME, Double.parseDouble(config.get(
 					WORD_PENALTY_WT_OPT).get(0)));
-			weightConfig.add(makePair(UnknownWordFeaturizer.FEATURE_NAME, "" + 1.0));
-      weightConfig.add(makePair(SentenceBoundaryFeaturizer.FEATURE_NAME, "" + 1.0));
+			weightConfig.setCount(UnknownWordFeaturizer.FEATURE_NAME,  1.0);
+			weightConfig.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME,  1.0);
 
 			List<String> tmodelWtsStr = config.get(TRANSLATION_MODEL_WT_OPT);
 			if (tmodelWtsStr.size() == 5) {
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.FIVESCORE_PHI_t_f), tmodelWtsStr.get(0)));
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.FIVESCORE_LEX_t_f), tmodelWtsStr.get(1)));
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.FIVESCORE_PHI_f_t), tmodelWtsStr.get(2)));
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.FIVESCORE_LEX_f_t), tmodelWtsStr.get(3)));
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.FIVESCORE_PHRASE_PENALTY), tmodelWtsStr.get(4)));
+				weightConfig.setCount(makePair(PhraseTableScoresFeaturizer.PREFIX,
+						MosesPhraseTable.FIVESCORE_PHI_t_f), Double.parseDouble(tmodelWtsStr.get(0)));
+				weightConfig.setCount(makePair(PhraseTableScoresFeaturizer.PREFIX,
+						MosesPhraseTable.FIVESCORE_LEX_t_f), Double.parseDouble(tmodelWtsStr.get(1)));
+				weightConfig.setCount(makePair(PhraseTableScoresFeaturizer.PREFIX,
+						MosesPhraseTable.FIVESCORE_PHI_f_t), Double.parseDouble(tmodelWtsStr.get(2)));
+				weightConfig.setCount(makePair(PhraseTableScoresFeaturizer.PREFIX,
+						MosesPhraseTable.FIVESCORE_LEX_f_t), Double.parseDouble(tmodelWtsStr.get(3)));
+				weightConfig.setCount(makePair(PhraseTableScoresFeaturizer.PREFIX,
+						MosesPhraseTable.FIVESCORE_PHRASE_PENALTY), Double.parseDouble(tmodelWtsStr.get(4)));
 			} else if (tmodelWtsStr.size() == 1) {
-				weightConfig.add(makePair(makePair(PhraseTableScoresFeaturizer.PREFIX,
-						MosesPhraseTable.ONESCORE_P_t_f), tmodelWtsStr.get(0)));
+				weightConfig.setCount(makePair(PhraseTableScoresFeaturizer.PREFIX,
+						MosesPhraseTable.ONESCORE_P_t_f), Double.parseDouble(tmodelWtsStr.get(0)));
 			} else {
 				throw new RuntimeException(String.format(
 						"Unsupported weight count for translation model: %d", tmodelWtsStr
@@ -759,7 +746,7 @@ public class Phrasal {
 		}
 
 		System.err.printf("WeightConfig: '%s'\n", weightConfig);
-    scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig.toArray(new String[weightConfig.size()]));
+    scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig);
 
     // Create phrase generator
 		String phraseTable;

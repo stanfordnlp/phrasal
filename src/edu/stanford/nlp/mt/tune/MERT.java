@@ -596,35 +596,48 @@ public class MERT extends Thread {
     return score;
   }
 
-  public static Counter<String> readWeights(String filename, Index<String> featureIndex) throws IOException {
-    BufferedReader reader = new BufferedReader(new FileReader(filename));
-    Counter<String> wts = new ClassicCounter<String>();
-    for (String line = reader.readLine(); line != null; line = reader
-            .readLine()) {
-      String[] fields = line.split("\\s+");
-      if (featureIndex != null)
-        featureIndex.indexOf(fields[0], true);
-      wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
+  public static Counter<String> readWeights(String filename, Index<String> featureIndex) throws IOException, ClassNotFoundException {
+    if (filename.endsWith(".binwts")) {
+      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename));
+      Counter<String> wts = (Counter<String>)ois.readObject();      
+      ois.close();
+      return wts;
+    } else {
+       BufferedReader reader = new BufferedReader(new FileReader(filename));
+       Counter<String> wts = new ClassicCounter<String>();
+       for (String line = reader.readLine(); line != null; line = reader
+               .readLine()) {
+         String[] fields = line.split("\\s+");
+         if (featureIndex != null)
+           featureIndex.indexOf(fields[0], true);
+         wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
+       }
+       reader.close();
+       return wts;
     }
-    reader.close();
-    return wts;
   }
 
   @SuppressWarnings("deprecation")
   static void writeWeights(String filename, Counter<String> wts)
           throws IOException {
-    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF8"));    
-    Counter<String> wtsMag = new ClassicCounter<String>();
-    for (String w : wts.keySet()) {
-      wtsMag.setCount(w, Math.abs(wts.getCount(w)));
+    if (filename.endsWith(".binwts")) {
+       ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename));
+       oos.writeObject(wts);
+       oos.close();
+    } else {
+       BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF8"));    
+       Counter<String> wtsMag = new ClassicCounter<String>();
+       for (String w : wts.keySet()) {
+         wtsMag.setCount(w, Math.abs(wts.getCount(w)));
+       }
+   
+       for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
+         double cnt = wts.getCount(f);
+         if (cnt != 0.0)
+           writer.append(f).append(" ").append(Double.toString(cnt)).append("\n");
+       }
+       writer.close();
     }
-
-    for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
-      double cnt = wts.getCount(f);
-      if (cnt != 0.0)
-        writer.append(f).append(" ").append(Double.toString(cnt)).append("\n");
-    }
-    writer.close();
   }
 
   static void displayWeights(Counter<String> wts) {
@@ -679,8 +692,9 @@ public class MERT extends Thread {
   /**
    * Initialize everything that is read only, i.e., nbest list, starting points.
    * @throws IOException
+ * @throws ClassNotFoundException 
    */
-  public static void initStatic(String nbestListFile, String localNbestListFile, String previousWtsFiles, int nStartingPoints, MERT defaultMERT) throws IOException {
+  public static void initStatic(String nbestListFile, String localNbestListFile, String previousWtsFiles, int nStartingPoints, MERT defaultMERT) throws IOException, ClassNotFoundException {
 
     startTime = System.currentTimeMillis();
 
@@ -981,6 +995,10 @@ public class MERT extends Thread {
   }
 
   static boolean updateBest(Counter<String> newWts, double obj) {
+     return updateBest(newWts, obj, false);     
+  }
+  
+  static boolean updateBest(Counter<String> newWts, double obj, boolean force) {
     boolean nonZero = Counters.L2Norm(newWts) > 0.0;
     synchronized (MERT.class) {
       boolean better = false;
@@ -990,8 +1008,10 @@ public class MERT extends Thread {
       } else if (bestObj == obj && breakTiesWithLastBest) {
         System.err.printf("\n<<<SAME BEST: %f with {{{%s}}}.>>>\n", -bestObj, Counters.toString(newWts, 100));
         better = true;
+      } if (force) {
+        System.err.printf("\n<<<FORCED BEST UPDATE: %f -> %f>>>\n", -bestObj, -obj);
       }
-      if (better && nonZero) {
+      if ((better && nonZero) || force) {
         bestWts = newWts;
         bestObj = obj;
         return true;
@@ -1045,7 +1065,14 @@ public class MERT extends Thread {
       Counter<String> optWts = opt.optimize(wts);
       // Temporarily add them back before normalization:
       if (fixedWts != null) optWts.addAll(fixedWts);
-      Counter<String> newWts = normalize(optWts);
+      Counter<String> newWts;
+      if (opt.doNormalization()) {
+         System.err.printf("Normalizing weights\n");
+         newWts = normalize(optWts);
+      } else {
+         System.err.printf("Saving unnormalized weights\n");
+         newWts = optWts;
+      }
       // Remove them again:
       removeWts(newWts, fixedWts);
 
