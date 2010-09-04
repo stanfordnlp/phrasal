@@ -27,6 +27,7 @@ use List::Util qw[min max];
 
 use List::Util qw[max];
 
+$TMP = $ENV{TMPDIR} || '/tmp';
 $WEIGHTS_SUFF = ".binwts";
 $WEIGHT_MIN = -1;
 $WEIGHT_MAX = 1;
@@ -472,7 +473,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    $iter_cmert_nbest = "$work_dir/cmert.$iter.nbest";
    print stderr "\n";
 
-   $local_iter_pcumulative_nbest = "/tmp/phrasal.$$.$iter.combined.nbest";
+   $local_iter_pcumulative_nbest = "$TMP/phrasal.$$.$iter.combined.nbest";
    $iter_pcumulative_nbest = "$work_dir/phrasal.$iter.combined.nbest.gz";
    
    if ($iter >= $first_active_iter) {
@@ -493,8 +494,8 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	      `zcat $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $local_iter_pcumulative_nbest`; 
    
    
-	     $temp_unsorted_uniq = "$work_dir/temp_unsorted.uniq.gz";
-	     `$SORT $local_iter_pcumulative_nbest | uniq | gzip > $temp_unsorted_uniq`; 
+	     $temp_unsorted_uniq = "$TMP/temp_unsorted.uniq.gz";
+	     `$SORT $local_iter_pcumulative_nbest -u | gzip > $temp_unsorted_uniq`; 
 			 unlink("$local_iter_pcumulative_nbest");
 	     $totalNbestListSize = `zcat $temp_unsorted_uniq | wc -l`;
 	     chomp $totalNbestListSize;
@@ -677,8 +678,9 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
        
    } else {
    print stderr "Can't find converge info - falling back to weight delta test\n";
-   
-   print stderr "cmd: java edu.stanford.nlp.mt.tools.CompareWeights $iter_weights $next_iter_weights  2>&1\n";
+	 my $cmd = "java edu.stanford.nlp.mt.tools.CompareWeights $iter_weights $next_iter_weights  2>&1";
+   print stderr "cmd: $cmd\n";
+   $max_weight_delta = `$cmd`;
    chomp $max_weight_delta; 
    print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
    if ($max_weight_delta < $MIN_WEIGHT_DELTA) {

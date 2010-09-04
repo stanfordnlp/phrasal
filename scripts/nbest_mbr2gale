@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+# Convert MBR nbest list into GALE format:
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+my @nbest;
+open(F, "sed 's/ ||| /\t/g' | cut -f 1,2,4 |");
+while(<F>) {
+	chomp;	
+	my ($id,$sent,$score) = split(/\t/);
+	#print "x: $id $sent $score\n";
+	push @{$nbest[$id]}, [$sent,$score];
+}
+
+foreach my $i (0..$#nbest) {
+	my %seen;
+	for my $j (sort {$nbest[$i][$b][1] <=> $nbest[$i][$a][1]} 0..$#{$nbest[$i]}) {
+		if(defined $seen{$nbest[$i][$j][0]}) {
+			print STDERR "Duplicate: $nbest[$i][$j][0]\n";
+			next;
+		}
+		print "$i ||| $nbest[$i][$j][0] ||| $nbest[$i][$j][1]\n";
+		$seen{$nbest[$i][$j][0]} = 1;
+	}
+}

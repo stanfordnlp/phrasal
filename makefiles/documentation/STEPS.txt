@@ -90,15 +90,7 @@ make google.3gram.kn.lm.bin
 ### Tune system for text genres (nw and wb):
 make train
 
-### Tune system for speech genres (bc and bn):
-ln -fs GALE/Makefile.local.P5-audio Makefile.local
-make train
-
-### Evaluation on unseen data:
-### (Note that files to translate for GALE
-### are in: /scr/gale/P5-arabic/00-references/source/ready-for-mt-atb-v3.1)
-
-### Symlink test sets:
+### Symlink text test sets:
 ### nw:
 REFS=/scr/gale/P5-arabic/00-references/source/ready-for-mt-atb-v3.1
 ln -fs $REFS/mt08_arabic_evalset_current_v0-nw.atb-v3.1.unk.split.sgm mt08-nw.sgm
@@ -110,6 +102,24 @@ ln -fs $REFS/mt08_arabic_evalset_current_v0-wb.spell.atb-v3.1.unk.split.sgm mt08
 ln -fs $REFS/GALE-DEV08-arabic-text-wb.spell.atb-v3.1.unk.split.sgm dev08-wb.sgm
 ln -fs $REFS/GALE-DEV09-arabic-text-wb-testonly.spell.atb-v3.1.unk.split.sgm dev09-wb-testonly.sgm 
 ln -fs $REFS/GALE-DEV09-arabic-text-wb-syscomtune.spell.atb-v3.1.unk.split.sgm dev09-wb-syscomtune.sgm 
+
+### Run system on test data, which involves creating a phrase table:
+### (in order to decode testid.sgm, simply set TESTID=testid)
+make sgml TESTID=mt08-nw GENRE=nw
+make sgml TESTID=mt09-nw GENRE=nw
+make sgml TESTID=dev09-nw-syscomtune GENRE=nw
+make sgml TESTID=dev09-nw-testonly GENRE=nw
+
+make sgml TESTID=mt08-wb GENRE=wb
+make sgml TESTID=dev08-wb GENRE=wb
+make sgml TESTID=dev09-wb-syscomtune GENRE=wb
+make sgml TESTID=dev09-wb-testonly GENRE=wb
+
+### Tune system for speech genres (bc and bn):
+ln -fs GALE/Makefile.local.P5-audio Makefile.local
+make train
+
+### Symlink speech test sets:
 ### bc:
 ln -fs $REFS/GALE-DEV07-arabic-asrout-bc-nov26.spell.atb-v3.1.unk.split.sgm dev07-bc.sgm
 ln -fs $REFS/GALE-DEV08-arabic-asrout-nov08-bc.spell.atb-v3.1.unk.split.sgm dev08-bc.sgm
@@ -122,7 +132,12 @@ ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bn-syscomtune.spell.atb-v3.1.un
 ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bn-testonly.spell.atb-v3.1.unk.split.sgm dev09-bn-testonly.sgm
 
 ### Run system on test data, which involves creating a phrase table:
-### (in order to decode testid.sgm, simply set TESTID=testid)
-make sgml TESTID=dev09-nw-syscomtune GENRE=nw
+make sgml TESTID=dev07-bc GENRE=bc
+make sgml TESTID=dev08-bc GENRE=bc
+make sgml TESTID=dev09-bc-syscomtune GENRE=bc
+make sgml TESTID=dev09-bc-testonly GENRE=bc
 
-# Run GALE evaluation scripts (TER-BLEU):
+make sgml TESTID=dev07-bn GENRE=bn
+make sgml TESTID=dev08-bn GENRE=bn
+make sgml TESTID=dev09-bn-syscomtune GENRE=bn
+make sgml TESTID=dev09-bn-testonly GENRE=bn
