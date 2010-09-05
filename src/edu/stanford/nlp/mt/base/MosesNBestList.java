@@ -10,6 +10,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 
 import edu.stanford.nlp.util.ErasureUtils;
+import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -73,14 +74,15 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	}
 	
 	public MosesNBestList(String filename, Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap, Index<String> featureIndex, boolean tokenizeNIST) throws IOException {
+    if (featureIndex == null)
+      featureIndex = new HashIndex<String>();
     this.featureIndex = featureIndex;
     this.tokenizeNIST = tokenizeNIST;
 	  this.sequenceSelfMap = sequenceSelfMap;
 		Runtime rt = Runtime.getRuntime();
 		long preNBestListLoadMemUsed = rt.totalMemory()-rt.freeMemory();
 		long startTimeMillis = System.currentTimeMillis();
-		
-		
+
 		Map<String, String> featureNameSelfMap = new HashMap<String, String>();
 		
 		nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString,String>>>();

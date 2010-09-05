@@ -44,7 +44,7 @@ public class MosesNBestListTest extends TestCase {
 	
 	public void testToString() throws IOException	{
 		assertTrue(nbestList.toString().length() == 168160);
-		assertTrue(nbestList.toString().trim().endsWith("UnknownWord:0.000000"));
+		assertTrue(nbestList.toString().trim().endsWith("LexR::swapWithPrevious:-3.874500"));
 		assertTrue(nbestList.toString().startsWith("Moses N-Best List"));			
 	} 	
 	
