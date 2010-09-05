@@ -61,12 +61,11 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
     for (Short a : alTable)
       align[++i] = a;
     if (DEBUG) {
-      System.err.printf("New alignment template [%d-%d] [%d-%d]: %s\n",f1,f2,e1,e2,toString(true));
+      System.err.printf("New alignment template [%d-%d] [%d-%d]: %s\n",f1,f2,e1,e2,toString(false));
       System.err.println("String representation: "+Arrays.toString(align));
     }
     assert (fEndPos() == f2);
     assert (eEndPos() == e2);
-    //check();
   }
 
   public void check() {
@@ -84,15 +83,4 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
   public int eEndPos() { return eStartPos+e.size()-1; }
 
   public boolean isDiscontinuous() { return false; }
-
-  /*
-  public boolean equals(Object o) {
-    assert(o instanceof AlignmentTemplateInstance);
-    AlignmentTemplateInstance a = (AlignmentTemplateInstance) o;
-    return this.eStartPos == a.eStartPos &&
-           this.fStartPos == a.fStartPos &&
-           this.e().size() == a.e().size() &&
-           this.f().size() == a.f().size();
-  }
-  */
 }

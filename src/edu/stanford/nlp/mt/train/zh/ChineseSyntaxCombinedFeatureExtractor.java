@@ -522,7 +522,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   /**
    * Write combined features to a stream.
    */
-  public boolean write(Object output, boolean noAlign) {
+  public boolean write(Object output, boolean withAlign) {
     boolean needToClose = false;
     PrintStream oStream = System.out;
     if(output != null) {
@@ -549,7 +549,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
                           idx, totalStepSecs, totalMemory, freeMemory);
       }
       alTemps.reconstructAlignmentTemplate(alTemp, idx);
-      str.append(alTemp.toString(noAlign));
+      str.append(alTemp.toString(withAlign));
       str.append(AlignmentTemplate.DELIM);
       for(AbstractChineseSyntaxFeatureExtractor<String> e : extractors) {
         Object scores = e.score(alTemp);
@@ -642,7 +642,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
       startAtLine = 0;
       endAtLine = numLines;
     }
-    boolean noAlign = Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
+    boolean withAlign = !Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
     String outputFile = prop.getProperty(OUTPUT_FILE_OPT);
     // Split filter list into N chunks:
     if(numSplits > 1) {
@@ -658,7 +658,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         ChineseSyntaxCombinedFeatureExtractor combined = new ChineseSyntaxCombinedFeatureExtractor(prop);
         combined.restrictExtractionTo(startLine, startLine+size);
         combined.extractFromMergedAlignment(fCorpus, eCorpus, align);
-        combined.write(oStream, noAlign);
+        combined.write(oStream, withAlign);
         startLine += size;
       }
       if(oStream != null)
@@ -672,7 +672,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         combined.restrictExtractionTo();
       combined.extractFromMergedAlignment(fCorpus, eCorpus, align);
       // Check phrase table against existing one:
-      combined.write(outputFile, noAlign);
+      combined.write(outputFile, withAlign);
     }
     return true;
   }

@@ -104,10 +104,10 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
       numModels = 1;
       break;
     case 3:
-      if("bidirectional".equals(tokens[1])) {
+      if ("bidirectional".equals(tokens[1])) {
         directionType = DirectionTypes.bidirectional;
         numModels = 2;
-      } else if("joint".equals(tokens[1])) {
+      } else if ("joint".equals(tokens[1])) {
         directionType = DirectionTypes.joint;
         numModels = 1;
       } else

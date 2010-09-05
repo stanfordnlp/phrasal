@@ -241,7 +241,7 @@ public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
    */
   private double getLexScore(AlignmentTemplate alTemp) {
     if (DEBUG_LEVEL >= 1)
-      System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString(false));
+      System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString(true));
     // Each French word must be explained:
     double lex = 1.0;
     for (int fi=0; fi<alTemp.f().size();++fi) {

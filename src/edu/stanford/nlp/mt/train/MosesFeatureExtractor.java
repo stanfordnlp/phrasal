@@ -20,7 +20,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * 
  * @author Michel Galley
  */
-public class MosesFeatureExtractor extends AbstractFeatureExtractor {
+public class MosesFeatureExtractor extends AbstractFeatureExtractor implements PhrasePrinter {
 
   public static final double MIN_LEX_PROB = 1e-5;
   
@@ -33,20 +33,20 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
   public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";
   public static final boolean PRINT_COUNTS = Boolean.parseBoolean(System.getProperty(PRINT_COUNTS_PROPERTY, "false"));
 
-  double phiFilter = DEFAULT_PHI_FILTER, lexFilter = DEFAULT_LEX_FILTER;
-  boolean ibmLexModel = false, onlyPhi = false;
-  int numPasses = 1; 
+  protected double phiFilter = DEFAULT_PHI_FILTER, lexFilter = DEFAULT_LEX_FILTER;
+  protected boolean ibmLexModel = false, onlyPhi = false;
+  protected int numPasses = 1;
 
-  final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
-  final Index<Integer> fLexIndex = new HashIndex<Integer>(), eLexIndex = new HashIndex<Integer>();
+  protected final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
+  protected final Index<Integer> fLexIndex = new HashIndex<Integer>(), eLexIndex = new HashIndex<Integer>();
 
-  IntArrayList feCounts = new IntArrayList();
-  IntArrayList fCounts = new IntArrayList();
-  IntArrayList eCounts = new IntArrayList();
+  protected final IntArrayList feCounts = new IntArrayList();
+  protected final IntArrayList fCounts = new IntArrayList();
+  protected final IntArrayList eCounts = new IntArrayList();
 
-  IntArrayList feLexCounts = new IntArrayList();
-  IntArrayList fLexCounts = new IntArrayList();
-  IntArrayList eLexCounts = new IntArrayList();
+  protected final IntArrayList feLexCounts = new IntArrayList();
+  protected final IntArrayList fLexCounts = new IntArrayList();
+  protected final IntArrayList eLexCounts = new IntArrayList();
 
   public static final IString NULL_STR = new IString("NULL");
 
@@ -226,7 +226,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
     if (idx < 0)
       return;
     synchronized (list) {
-      while(idx >= list.size())
+      while (idx >= list.size())
         list.add(0);
       int newCount = list.get(idx)+1;
       list.set(idx,newCount);
@@ -240,7 +240,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
    */
   private double getLexScore(AlignmentTemplate alTemp) {
     if(DEBUG_LEVEL >= 1)
-      System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString(false));
+      System.err.println("Computing p(f|e) for alignment template: "+alTemp.toString(true));
     // Each French word must be explained:
     double lex = 1.0;
     for (int fi=0; fi<alTemp.f().size();++fi) {
@@ -390,5 +390,10 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor {
     int fi = indexOfFLex(f,false);
     if (fei < 0 || fi < 0) return 0.0;
     return feLexCounts.get(fei)*1.0/fLexCounts.get(fi);
+  }
+
+  @Override
+  public String toString(AlignmentTemplateInstance phrase, boolean withAlignment) {
+    return phrase.toString(withAlignment);
   }
 }

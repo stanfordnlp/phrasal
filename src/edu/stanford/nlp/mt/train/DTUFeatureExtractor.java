@@ -1,35 +1,40 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.CoverageSet;
 
 /**
- * Extractor for printing the number of occurrences of each alignment template.
- * 
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class DTUFeatureExtractor extends AbstractFeatureExtractor {
+public class DTUFeatureExtractor extends MosesFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugDTUFeatureExtractor";
   public static final int DEBUG_LEVEL = Integer.parseInt(System.getProperty(DEBUG_PROPERTY, "0"));
 
-  private static final double EXP_M1 = Math.exp(-1);
-
   @Override
-	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {}
+  public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+    super.featurizePhrase(alTemp, alGrid);
+    
+    if (alTemp instanceof DTUInstance)  {
 
-  @Override
-	public Object score(AlignmentTemplate alTemp) {
-    boolean hasGap = false;
-    for (IString w : alTemp.f()) {
-      if (w.id == DTUPhraseExtractor.GAP_STR.id) {
-        hasGap = true;
-        break;
-      }
+      DTUInstance dtu = (DTUInstance) alTemp;
+
+      CoverageSet fSet = dtu.fSet;
+      CoverageSet eSet = dtu.fSet;
+
+      int fKey = alTemp.fKey;
+      int eKey = alTemp.eKey;
+
+      // TODO
     }
-    return new double[] { (hasGap ? EXP_M1 : 1.0) };
   }
 
   @Override
-  public int getRequiredPassNumber() { return 1; }
+  public String toString(AlignmentTemplateInstance phrase, boolean withAlignment) {
+
+    // TODO
+    
+    return null;
+  }
 }
+

@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.train;
 
+import edu.stanford.nlp.mt.base.CoverageSet;
+
 import java.util.*;
 
 
@@ -8,17 +10,17 @@ import java.util.*;
  */
 public class DTUInstance extends AlignmentTemplateInstance {
 
-  protected BitSet fSet=null, eSet=null;
+  protected CoverageSet fSet=null, eSet=null;
   protected boolean discontinuous=false;
 
   /**
    * Construct alignment template from phrase pair set using bit sets fs and es.
    */
-  public DTUInstance(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous) {
+  public DTUInstance(WordAlignment sent, CoverageSet fs, CoverageSet es, boolean fContiguous, boolean eContiguous) {
     init(sent, fs, es, fContiguous, eContiguous);
   }
 
-  public void init(WordAlignment sent, BitSet fs, BitSet es, boolean fContiguous, boolean eContiguous) {
+  public void init(WordAlignment sent, CoverageSet fs, CoverageSet es, boolean fContiguous, boolean eContiguous) {
     
     Map<Integer,Integer> fAlign = new HashMap<Integer,Integer>();
     Map<Integer,Integer> eAlign = new HashMap<Integer,Integer>();
@@ -66,7 +68,7 @@ public class DTUInstance extends AlignmentTemplateInstance {
     for (Short a : alTable)
       align[++i] = a;
     if (DEBUG) {
-      System.err.printf("New alignment template [%d-%d] [%d-%d]: %s\n",f1,f2,e1,e2,toString(true));
+      System.err.printf("New alignment template [%d-%d] [%d-%d]: %s\n",f1,f2,e1,e2,toString(false));
       System.err.println("String representation: "+Arrays.toString(align));
     }
     if (fContiguous) assert (fEndPos() == f2);

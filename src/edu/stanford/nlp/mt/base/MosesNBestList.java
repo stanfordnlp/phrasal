@@ -21,6 +21,8 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 
   static public final String NBEST_SEP = " |||";
 
+  static public final int MAX_DENSE_SIZE = 50;
+
   private final List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists;
 	public final Index<String> featureIndex;
 	public static final String DEBUG_PROPERTY = "MosesNBestListDebug";
@@ -53,7 +55,6 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 	}
 	
 	public final Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap;
-
 
   public MosesNBestList(String filename) throws IOException {
     this(filename, null);
@@ -114,14 +115,14 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				String[] fields = listFields.toArray(emptyStringArray);
 
 				// fields = tripplePipes.split(inline);
-        if(fields.length < 3) {
+        if (fields.length < 3) {
           System.err.printf("Warning: bad nbest-list format: %s\n",inline);
           System.err.printf("Warning: expected at least 3 fields, but found only %d\n",fields.length);
           continue;
         }
         String id = fields[0];
 				String translation = fields[1];
-        if(tokenizeNIST)
+        if (tokenizeNIST)
           translation = NISTTokenizer.tokenize(translation);
         String featuresStr = fields[2];
 				String scoreStr = (fields.length >= 4 ? fields[3] : "0");
@@ -179,7 +180,6 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 				String featureName = "unlabeled";
 				Map<String, List<Double>> featureMap = new HashMap<String, List<Double>>();
 				featureMap.put(featureName, new ArrayList<Double>());	
-				//featureIndex.indexOf(featureName, true);
 				for (String field : featureFields) {
 					if (field.endsWith(":")) {
 						featureName = field.substring(0, field.length()-1);
@@ -219,8 +219,10 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 					}
 				}
 
-        Collection<FeatureValue<String>> featureValues = (featureIndex == null) ?
-          featureValuesTmp : new SparseFeatureValueCollection<String>(featureValuesTmp, featureIndex);
+        boolean useSparse = featureIndex.size() >= MAX_DENSE_SIZE;
+        FeatureValueCollection<String> featureValues = useSparse ?
+          new SparseFeatureValueCollection<String>(featureValuesTmp, featureIndex) :
+          new DenseFeatureValueCollection<String>(featureValuesTmp, featureIndex);
 
 				Sequence<IString> sequence = new RawIStringSequence(IStrings.toIStringArray(space.split(translation)));
 				Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);
@@ -260,32 +262,6 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		reader.close();
 	}
 
-  /*
-  public void setArraysFromIndex() {
-
-    Runtime rt = Runtime.getRuntime();
-    rt.gc();
-    long startMemUsed = rt.totalMemory()-rt.freeMemory();
-		long startTimeMillis = System.currentTimeMillis();
-
-    for(List<ScoredFeaturizedTranslation<IString,String>> nbestList : nbestLists) {
-      for(ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
-        List<FeatureValue<String>> fvl = trans.features;
-        if(fvl instanceof FeatureValueCollection) {
-          FeatureValueCollection<String> fva = (FeatureValueCollection<String>) fvl;
-          fva.setArrayFromIndex(featureIndex);
-        }
-      }
-    }
-
-    rt.gc();
-    long endMemUsed = rt.totalMemory() - rt.freeMemory();
-		long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
-		System.err.printf("Done generating feature arrays for n-best lists (mem used: %d MiB time: %.3f s)\n", 
-				(endMemUsed - startMemUsed)/(1024*1024), loadTimeMillis/1000.0);
-  }
-  */
-
   @Override
 	public List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists() {
 		return nbestLists;
@@ -297,7 +273,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
   }
 
   public String printVerboseFormat() {
-		StringBuffer sbuf = new StringBuffer();
+    StringBuilder sbuf = new StringBuilder();
 		sbuf.append("Moses N-Best List:\n");
 		sbuf.append("----------------------\n");
 		for (int i = 0; i < nbestLists.size(); i++) {
@@ -316,7 +292,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 
 	public String printMosesFormat() {
     DecimalFormat df = new DecimalFormat("0.####E0");
-    StringBuffer sbuf = new StringBuffer();
+    StringBuilder sbuf = new StringBuilder();
 		for (int i = 0; i < nbestLists.size(); i++) {
 			for (int j = 0; j < nbestLists.get(i).size(); j++) {
         ScoredFeaturizedTranslation<IString,String> tr = nbestLists.get(i).get(j);

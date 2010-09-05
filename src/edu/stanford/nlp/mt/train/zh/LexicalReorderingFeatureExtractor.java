@@ -21,16 +21,12 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
   ArrayList<Object> forwardCounts_f = new ArrayList<Object>();
   ArrayList<Object> backwardCounts_f = new ArrayList<Object>();
   
-
-  //static int printCounter = 0;
-
   enum DirectionTypes { forward, backward, bidirectional }
   enum ReorderingTypes { monotone, discontinuous, swap }
 
   private DirectionTypes directionType;
 
-  //private static double LAPLACE_SMOOTHING = 0.0;
-  private static int LAPLACE_SMOOTHING = 0;
+  private final static int LAPLACE_SMOOTHING = 0;
 
   @Override
 	public void init(Properties prop, Index<String> featureIndex, AlignmentTemplates alTemps) {
@@ -62,7 +58,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
         //System.err.println("DEBUG: What is the type (fwd)??");
         throw new RuntimeException("DEBUG: What is the type (fwd)??");
       }
-      if (ChineseSyntaxCombinedFeatureExtractor.VERBOSE) System.err.printf("ADD FWD: (%s) %s\n", type1, alTemp.toString(true));
+      if (ChineseSyntaxCombinedFeatureExtractor.VERBOSE) System.err.printf("ADD FWD: (%s) %s\n", type1, alTemp.toString(false));
       addCountToArray(forwardCounts, type1, alTemp);
       addCountToArray(forwardCounts_f, type1, alTemp.getFKey());
     }
@@ -79,7 +75,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
       if (connectedBottomRight && connectedBottomLeft) {
         throw new RuntimeException("DEBUG: What is the type (bwd)??");
       }
-      if (ChineseSyntaxCombinedFeatureExtractor.VERBOSE) System.err.printf("ADD BWD: (%s) %s\n", type2, alTemp.toString(true));
+      if (ChineseSyntaxCombinedFeatureExtractor.VERBOSE) System.err.printf("ADD BWD: (%s) %s\n", type2, alTemp.toString(false));
       addCountToArray(backwardCounts, type2, alTemp);
       addCountToArray(backwardCounts_f, type2, alTemp.getFKey());
     }
@@ -151,8 +147,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     };
   }
 
-
-  private boolean isConnectedTopLeft(AlignmentGrid fullAlGrid, int fi, int ei) {
+  private static boolean isConnectedTopLeft(AlignmentGrid fullAlGrid, int fi, int ei) {
     int cellf = fi-1;
     int celle = ei-1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize()) 
@@ -161,7 +156,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     return cell != null && cell.hasBottomRight();
   }
 
-  private boolean isConnectedTopRight(AlignmentGrid fullAlGrid, int fi, int ei) {
+  private static boolean isConnectedTopRight(AlignmentGrid fullAlGrid, int fi, int ei) {
     int cellf = fi+1;
     int celle = ei-1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
@@ -174,7 +169,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
   }
 
 
-  private boolean isConnectedBottomLeft(AlignmentGrid fullAlGrid, int fi, int ei) {
+  private static boolean isConnectedBottomLeft(AlignmentGrid fullAlGrid, int fi, int ei) {
     int cellf = fi-1;
     int celle = ei+1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
@@ -184,7 +179,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     //return cell.hasBottomLeft();
   }
 
-  private boolean isConnectedBottomRight(AlignmentGrid fullAlGrid, int fi, int ei) {
+  private static boolean isConnectedBottomRight(AlignmentGrid fullAlGrid, int fi, int ei) {
     int cellf = fi+1;
     int celle = ei+1;
     if (cellf < 0 || celle < 0 || cellf >= fullAlGrid.fsize() || celle >= fullAlGrid.esize())
@@ -193,7 +188,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     return cell != null && cell.hasTopLeft();
   }
 
-  private void addCountToArray(ArrayList<Object> list, ReorderingTypes type, AlignmentTemplate alTemp) {
+  private static void addCountToArray(ArrayList<Object> list, ReorderingTypes type, AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
     // Exit if alignment template was filtered out:
     if(idx < 0)
@@ -206,7 +201,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractChineseSyntaxFeat
     ++counts[type.ordinal()];
   }
 
-  private void addCountToArray(ArrayList<Object> list, ReorderingTypes type, int idx) {
+  private static void addCountToArray(ArrayList<Object> list, ReorderingTypes type, int idx) {
     // Exit if alignment template was filtered out:
     if(idx < 0)
       return;

@@ -103,14 +103,14 @@ public class AlignmentTemplate {
   void allocAlignmentArrays() {
     f2e = new TreeSet[f.size()];
     e2f = new TreeSet[e.size()];
-    for(int i=0; i<f2e.length; ++i)
+    for (int i=0; i<f2e.length; ++i)
       f2e[i] = new TreeSet<Integer>();
-    for(int i=0; i<e2f.length; ++i)
+    for (int i=0; i<e2f.length; ++i)
       e2f[i] = new TreeSet<Integer>();
   }
 
   void initAlignmentArrays() {
-    if(align == null)
+    if (align == null)
       return;
     allocAlignmentArrays();
     for (int anAlign : align) {
@@ -127,21 +127,21 @@ public class AlignmentTemplate {
     }
   }
 
-  public String toString(boolean noAlign) {
+  public String toString(boolean withAlign) {
     StringBuilder buf = new StringBuilder();
     buf.append(f.toString()).append(DELIM).append(e.toString());
-    if(!noAlign) {
+    if (withAlign) {
       buf.append(DELIM);
       if (f2e != null) {
-        for(int i=0; i<f2e.length; ++i) {
-          if(i > 0) buf.append(" ");
+        for (int i=0; i<f2e.length; ++i) {
+          if (i > 0) buf.append(" ");
           buf.append("(").append(alignmentToString(f2e[i])).append(")");
         }
       }
       buf.append(DELIM);
       if (e2f != null) {
-        for(int i=0; i<e2f.length; ++i) {
-          if(i > 0) buf.append(" ");
+        for (int i=0; i<e2f.length; ++i) {
+          if (i > 0) buf.append(" ");
           buf.append("(").append(alignmentToString(e2f[i])).append(")");
         }
       }
@@ -152,8 +152,8 @@ public class AlignmentTemplate {
   static String alignmentToString(Set<Integer> alSet) {
     StringBuilder buf = new StringBuilder();
     int i=-1;
-    for(int al : alSet) {
-      if(++i>0) buf.append(",");
+    for (int al : alSet) {
+      if (++i>0) buf.append(",");
       buf.append(al);
     }
     return buf.toString();
@@ -161,8 +161,8 @@ public class AlignmentTemplate {
 
   static String alignmentToString(int[] align) {
     StringBuilder buf = new StringBuilder();
-    for(int i=0; i<align.length; ++i) {
-      if(i>0) buf.append(" ");
+    for (int i=0; i<align.length; ++i) {
+      if (i>0) buf.append(" ");
       buf.append(numberToAlignmentF(align[i]));
       buf.append("-");
       buf.append(numberToAlignmentE(align[i]));

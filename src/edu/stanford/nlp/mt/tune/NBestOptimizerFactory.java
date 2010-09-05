@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tune;
 
+import edu.stanford.nlp.mt.base.SparseFeatureValueCollection;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.optimization.OWLQNMinimizer;
 import edu.stanford.nlp.stats.Counter;
@@ -22,7 +23,6 @@ import edu.stanford.nlp.mt.base.MosesNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.LinearCombinationMetric;
@@ -354,7 +354,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		return newWts;
 	}
 
-	double norm2DoubleArray(double[] v) {
+	static double norm2DoubleArray(double[] v) {
 	   double normSum = 0;
       for (double d : v) {
          normSum += d*d;
@@ -2213,7 +2213,9 @@ class SVDReducedObj extends AbstractNBestOptimizer {
         }
         ScoredFeaturizedTranslation<IString, String> newTrans =
             new ScoredFeaturizedTranslation<IString, String>
-                (anOldNbestlist.translation, reducedFeatures, 0);
+                (anOldNbestlist.translation,
+            new SparseFeatureValueCollection<String>
+                (reducedFeatures,MERT.featureIndex), 0);
         newNbestlist.add(newTrans);
       }
     }

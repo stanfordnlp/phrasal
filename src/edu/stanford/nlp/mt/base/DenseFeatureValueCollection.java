@@ -10,16 +10,20 @@ import java.util.Iterator;
 /**
  * @author Michel Galley
  */
-public class DenseFeatureValueCollection<E> implements Collection<FeatureValue<E>> {
+public class DenseFeatureValueCollection<E> implements FeatureValueCollection<E> {
 
-  final Index<E> featureIndex;
-  final double[] w;
-  final BitSet isDefined;
+  Index<E> featureIndex;
+  double[] w;
+  BitSet isDefined;
 
-  public DenseFeatureValueCollection(DenseFeatureValueCollection<E> c) {
-    this.w = Arrays.copyOf(c.w, c.w.length);
-    this.featureIndex = c.featureIndex;
-    this.isDefined = c.isDefined;
+  @Override
+  @SuppressWarnings("unchecked")
+  public Object clone() throws CloneNotSupportedException {
+    DenseFeatureValueCollection<E> c = (DenseFeatureValueCollection<E>) super.clone();
+    c.w = Arrays.copyOf(this.w, this.w.length);
+    c.featureIndex = this.featureIndex;
+    c.isDefined = this.isDefined;
+    return c;
   }
 
   public DenseFeatureValueCollection(Collection<? extends FeatureValue<E>> c, Index<E> featureIndex) {
@@ -31,11 +35,6 @@ public class DenseFeatureValueCollection<E> implements Collection<FeatureValue<E
          w[index] = feature.value;
       isDefined.set(index);
       }
-  }
-
-  private FeatureValue<E> denseGet(int index) {
-    assert (isDefined.get(index));
-    return new FeatureValue<E>(featureIndex.get(index), w[index]);
   }
 
   public double[] toDoubleArray() { return w; }
@@ -55,6 +54,11 @@ public class DenseFeatureValueCollection<E> implements Collection<FeatureValue<E
     @Override public FeatureValue<E> next() {
       position = isDefined.nextSetBit(position+1);
       return denseGet(position);
+    }
+
+    private FeatureValue<E> denseGet(int index) {
+      assert (isDefined.get(index));
+      return new FeatureValue<E>(featureIndex.get(index), w[index]);
     }
 
     @Override public void remove() { throw new UnsupportedOperationException();  }

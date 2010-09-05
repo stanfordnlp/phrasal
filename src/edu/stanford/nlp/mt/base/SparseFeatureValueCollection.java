@@ -5,41 +5,42 @@ import edu.stanford.nlp.util.Index;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.TreeSet;
 import java.util.Arrays;
 
 /**
  * @author Daniel Cer
  */
-public class SparseFeatureValueCollection<E> implements Collection<FeatureValue<E>> {
+public class SparseFeatureValueCollection<E> implements FeatureValueCollection<E> {
 
-  final Index<E> featureIndex;
-  final double[] featureValues;
-  final int[] featureIndices;
+  Index<E> featureIndex;
+  double[] featureValues;
+  int[] featureIndices;
 
-
-  public SparseFeatureValueCollection(SparseFeatureValueCollection<E> c) {
-    this.featureValues = Arrays.copyOf(c.featureValues, c.featureValues.length);
-    this.featureIndex = c.featureIndex;
-    this.featureIndices = c.featureIndices;
+  @Override
+  @SuppressWarnings("unchecked")
+  public Object clone() throws CloneNotSupportedException {
+    SparseFeatureValueCollection<E> c = (SparseFeatureValueCollection<E>) super.clone();
+    c.featureValues = Arrays.copyOf(featureValues, featureValues.length);
+    c.featureIndex = this.featureIndex;
+    c.featureIndices = this.featureIndices;
+    return c;
   }
 
-  
   public SparseFeatureValueCollection(Collection<? extends FeatureValue<E>> c, Index<E> featureIndex) {
     ClassicCounter<Integer> cnts = new ClassicCounter<Integer>();
     this.featureIndex = featureIndex;
-	 for (FeatureValue<E> feature : c) {
-		int index = featureIndex.indexOf(feature.name, true);
-		cnts.incrementCount(index, feature.value);
-	 }
-	 featureValues = new double[cnts.size()];
-	 featureIndices = new int[cnts.size()];
-	 Iterator<Integer> keys = cnts.keySet().iterator();
-	 for (int i = 0; keys.hasNext(); i++) {
-	   Integer index = keys.next();
-	   featureValues[i] = cnts.getCount(index);
-	   featureIndices[i] = index;
-	 }
+	  for (FeatureValue<E> feature : c) {
+		  int index = featureIndex.indexOf(feature.name, true);
+		  cnts.incrementCount(index, feature.value);
+	  }
+    featureValues = new double[cnts.size()];
+    featureIndices = new int[cnts.size()];
+    Iterator<Integer> keys = cnts.keySet().iterator();
+    for (int i = 0; keys.hasNext(); i++) {
+      Integer index = keys.next();
+      featureValues[i] = cnts.getCount(index);
+      featureIndices[i] = index;
+    }
   }
 
   @Override public int size() { return featureValues.length; }

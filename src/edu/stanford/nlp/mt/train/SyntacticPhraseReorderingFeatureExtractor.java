@@ -67,7 +67,7 @@ public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureEx
       int e1 = t.eStartPos();
       int e2 = t.eEndPos();
       if (DEBUG) System.err.printf("Processing t - f : e [%d-%d] [%d-%d]\n", t.fStartPos(), t.fEndPos(), t.eStartPos(), t.eEndPos());
-      if (DEBUG) System.err.printf("Processing t : %s\n", t.toString(true));
+      if (DEBUG) System.err.printf("Processing t : %s\n", t.toString(false));
           if (e1 < min_E_for_F_range[f1][f2]) {
             min_E_for_F_range[f1][f2] = e1;
             alTemp_min_E_for_F_range[f1][f2] = t;

@@ -5,7 +5,6 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
 import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.SparseFeatureValueCollection;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
@@ -25,6 +24,7 @@ public class StaticScorer implements Scorer<String> {
     * @throws IOException
     * @throws ClassNotFoundException 
     */
+   @SuppressWarnings("unchecked")
    public StaticScorer(String filename) throws IOException, ClassNotFoundException {
       this.sharedFeatureIndex = false;
       this.featureIndex = new OAIndex<String>();
@@ -69,8 +69,8 @@ public class StaticScorer implements Scorer<String> {
 
       weights = new double[featureIndex.boundOnMaxIndex()];
 
-      for (String key : featureWts.keySet()) {
-         weights[featureIndex.indexOf(key)] = featureWts.get(key); // .doubleValue();
+      for (Map.Entry<String, Double> stringDoubleEntry : featureWts.entrySet()) {
+         weights[featureIndex.indexOf(stringDoubleEntry.getKey())] = stringDoubleEntry.getValue(); // .doubleValue();
       }
    }
 
@@ -153,7 +153,7 @@ public class StaticScorer implements Scorer<String> {
    }
 
    @SuppressWarnings("unused")
-   public void saveWeights(String filename) {
+   public static void saveWeights(String filename) {
       throw new UnsupportedOperationException();
    }
 
@@ -164,7 +164,7 @@ public class StaticScorer implements Scorer<String> {
    }
 
    @SuppressWarnings("unused")
-   public boolean randomizeTag() {
+   public static boolean randomizeTag() {
       // TODO Auto-generated method stub
       return false;
    }

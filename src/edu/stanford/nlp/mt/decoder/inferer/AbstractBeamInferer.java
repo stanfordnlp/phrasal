@@ -110,6 +110,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       if (distinctTranslations != null) {
 
         // Get surface string:
+        assert (hyp != null);
         AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
 
         // If seen this string before and not among the top-k, skip it:

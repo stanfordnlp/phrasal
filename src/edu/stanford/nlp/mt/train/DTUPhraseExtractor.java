@@ -175,8 +175,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return (bitset.nextSetBit(j+1) == -1);
     }
 
-    BitSet e() { return e; }
-    BitSet f() { return f; }
+    CoverageSet e() { return e; }
+    CoverageSet f() { return f; }
 
     boolean fContiguous() { return isContiguous(f); }
     boolean eContiguous() { return isContiguous(e); }
@@ -620,8 +620,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   protected AlignmentTemplateInstance addPhraseToIndex
       (WordAlignment sent, DTUPhrase dtu, boolean isConsistent) {
 
-    BitSet fs = dtu.f();
-    BitSet es = dtu.e();
+    CoverageSet fs = dtu.f();
+    CoverageSet es = dtu.e();
 
     boolean fContiguous = dtu.fContiguous();
     boolean eContiguous = dtu.eContiguous();

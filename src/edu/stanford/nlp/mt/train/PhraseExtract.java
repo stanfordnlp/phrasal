@@ -48,7 +48,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
 /**
  * Combines multiple phrase-level feature extractors into one,
- * and prints their outputs to stdout.
+ * and prints their outputs to STDOUT.
  *
  * @author Michel Galley
  */
@@ -110,23 +110,23 @@ public class PhraseExtract {
        A_CORPUS_OPT, A_EF_CORPUS_OPT, A_FE_CORPUS_OPT, SYMMETRIZE_OPT, INPUT_DIR_OPT,
        FILTER_CORPUS_OPT, EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT,
        SPLIT_SIZE_OPT, OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT, EXTRACTORS_OPT,
-       AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT,
-       AbstractPhraseExtractor.MAX_PHRASE_LEN_E_OPT, 
-       AbstractPhraseExtractor.MAX_PHRASE_LEN_F_OPT, 
-       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_OPT, 
-       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_E_OPT, 
-       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_F_OPT,
-       AbstractPhraseExtractor.ONLY_TIGHT_PHRASES_OPT,
-       NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT,
+       NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT, WITH_GAPS_OPT,
        START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT,
        EXACT_PHI_OPT, IBM_LEX_MODEL_OPT, ONLY_ML_OPT, HELP_OPT,
        PTABLE_PHI_FILTER_OPT, PTABLE_LEX_FILTER_OPT, VERBOSE_OPT,
        LEX_REORDERING_TYPE_OPT, LEX_REORDERING_PHRASAL_OPT, LEX_REORDERING_HIER_OPT,
        LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
-       SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT, 
-			 SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
 			 MAX_INCONSISTENCIES_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
-       WITH_GAPS_OPT, DTUPhraseExtractor.MAX_SPAN_OPT,
+       SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT,
+       SymmetricalWordAlignment.UNALIGN_BOUNDARY_MARKERS_OPT, LOWERCASE_OPT,
+       AbstractPhraseExtractor.MAX_PHRASE_LEN_OPT,
+       AbstractPhraseExtractor.MAX_PHRASE_LEN_E_OPT,
+       AbstractPhraseExtractor.MAX_PHRASE_LEN_F_OPT,
+       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_OPT,
+       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_E_OPT,
+       AbstractPhraseExtractor.MAX_EXTRACTED_PHRASE_LEN_F_OPT,
+       AbstractPhraseExtractor.ONLY_TIGHT_PHRASES_OPT,
+       DTUPhraseExtractor.MAX_SPAN_OPT,
        DTUPhraseExtractor.MAX_SPAN_E_OPT,
        DTUPhraseExtractor.MAX_SPAN_F_OPT,
        DTUPhraseExtractor.MAX_SIZE_E_OPT,
@@ -151,6 +151,7 @@ public class PhraseExtract {
   public static final String DETAILED_DEBUG_PROPERTY = "DetailedDebugPhraseExtract";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System.getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
+  protected PhrasePrinter phrasePrinter;
   protected List<AbstractFeatureExtractor> extractors;
   // each extract is allowed to have one file that contains extra information (one line per sentence)
   private List<String> infoFileForExtractors;
@@ -171,7 +172,7 @@ public class PhraseExtract {
   private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq, nThreads = 0;
   private String fCorpus, eCorpus, phraseExtractorInfoFile, outputFile;
   private String alignCorpus, alignInvCorpus;
-  private boolean filterFromDev = false, printFeatureNames = true, noAlign, lowercase;
+  private boolean filterFromDev = false, printFeatureNames = true, withAlign, lowercase;
   private SymmetrizationType symmetrizationType = null;
 
   private int totalPassNumber = 1;
@@ -215,8 +216,6 @@ public class PhraseExtract {
       prop.setProperty(F_CORPUS_OPT,inputDir+"/training."+fId);
       prop.setProperty(E_CORPUS_OPT,inputDir+"/training."+eId);
       prop.setProperty(A_CORPUS_OPT,inputDir+"/training.align");
-      //prop.setProperty(A_EF_CORPUS_OPT,inputDir+"/training."+fId+"-"+eId+".A3");
-      //prop.setProperty(A_FE_CORPUS_OPT,inputDir+"/training."+eId+"-"+fId+".A3");
     }
 
     // Check required, optional properties:
@@ -258,7 +257,6 @@ public class PhraseExtract {
     boolean emptyFilterList =
       Boolean.parseBoolean(prop.getProperty(EMPTY_FILTER_LIST_OPT,"false"));
     numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
-    //fPhrases = null;
     if (emptyFilterList || fFilterList != null || fFilterCorpus != null)
       filterFromDev = true;
     if (fFilterList != null)
@@ -283,7 +281,7 @@ public class PhraseExtract {
       startAtLine = 0;
       endAtLine = numLines;
     }
-    noAlign = Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
+    withAlign = !Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT,"false"));
     lowercase = Boolean.parseBoolean(prop.getProperty(LOWERCASE_OPT,"false"));
     verbose = Boolean.parseBoolean(prop.getProperty(VERBOSE_OPT,"false"));
     outputFile = prop.getProperty(OUTPUT_FILE_OPT);
@@ -335,6 +333,11 @@ public class PhraseExtract {
         }
 
         fe.init(prop, featureIndex, alTemps);
+        if (extractors.isEmpty()) {
+          if (!(fe instanceof PhrasePrinter))
+            throw new RuntimeException("First feature extractor must implement PhrasePrinter.");
+          phrasePrinter = (PhrasePrinter) fe;
+        }
         extractors.add(fe);
         infoFileForExtractors.add(infoFilename);
         System.err.println("Instantiating feature extractor: "+fe.getClass().getName());
@@ -343,7 +346,6 @@ public class PhraseExtract {
         throw new RuntimeException(e);
       }
     }
-    //int maxCrossings = Integer.parseInt(prop.getProperty(MAX_INCONSISTENCIES_OPT,"-1"));
 
     String phraseExtractorName = prop.getProperty(PHRASE_EXTRACTOR_OPT);
     if (phraseExtractorName != null) {
@@ -367,16 +369,11 @@ public class PhraseExtract {
     } else {
       phraseExtractor = withGaps ?
         new DTUPhraseExtractor(prop,alTemps,extractors) :
-         //(maxCrossings >= 0) ? new SoftPhraseExtractor(prop,alTemps,extractors) :
         new MosesPhraseExtractor(prop,alTemps,extractors);
     }
-    //if (phraseExtractor instanceof SoftPhraseExtractor)
-    //  ((SoftPhraseExtractor)phraseExtractor).setMaxCrossings(maxCrossings);
 
     setTotalPassNumber();
   }
-
-  //private boolean doneReadingData() { return doneReadingData; }
 
   class Extractor extends Thread {
 
@@ -397,7 +394,6 @@ public class PhraseExtract {
 
     @Override
     public void run() {
-      //System.err.printf("Starting thread %s...\n", this);
       try {
         while (!dataQueue.isEmpty() || !ex.doneReadingData) {
           Pair<Integer, String[]> p = dataQueue.poll();
@@ -409,7 +405,6 @@ public class PhraseExtract {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      //System.err.printf("Ending thread %s.\n", this);
     }
     
   }
@@ -420,7 +415,6 @@ public class PhraseExtract {
     if (!filterFromDev)
       System.err.println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
-    //long startStepTimeMillis = startTimeMillis;
 
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
 
@@ -602,7 +596,7 @@ public class PhraseExtract {
   }
 
   // Write combined features to a stream.
-  boolean write(PrintStream oStream, boolean noAlign) {
+  boolean write(PrintStream oStream, boolean withAlign) {
     if (oStream == null)
         oStream = System.out;
     long startTimeMillis = System.currentTimeMillis();
@@ -626,7 +620,7 @@ public class PhraseExtract {
       }
 
       alTemps.reconstructAlignmentTemplate(alTemp, idx);
-      str.append(alTemp.toString(noAlign));
+      str.append(phrasePrinter.toString(alTemp, withAlign));
       str.append(AlignmentTemplate.DELIM);
 
       for (AbstractFeatureExtractor e : extractors) {
@@ -700,14 +694,14 @@ public class PhraseExtract {
         sourceFilter.setRange(startLine, startLine+size);
         //alTemps.setSourceFilter(sourceFilter);
         extractFromAlignedData();
-        write(oStream, noAlign);
+        write(oStream, withAlign);
         startLine += size;
       }
     } else {
       init();
       //alTemps.setSourceFilter(null);
       extractFromAlignedData();
-      write(oStream, noAlign);
+      write(oStream, withAlign);
     }
 
     if (oStream != null)

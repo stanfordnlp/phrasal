@@ -1,8 +1,5 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
-
-
 /**
  * 
  * @author danielcer
@@ -12,15 +9,19 @@ import java.util.*;
  */
 public class FeaturizedTranslation<TK, FV> {
 	public final Sequence<TK> translation;
-  public final Collection<FeatureValue<FV>> features;
+  public final FeatureValueCollection<FV> features;
 
 	/**
 	 * 
 	 */
-	public FeaturizedTranslation(Sequence<TK> translation, Collection<FeatureValue<FV>> features) {
+  @SuppressWarnings("unchecked")
+	public FeaturizedTranslation(Sequence<TK> translation, FeatureValueCollection<FV> features) {
 		this.translation = translation;
-		this.features = (features == null ? null : ( (features instanceof SparseFeatureValueCollection) ?
-       new SparseFeatureValueCollection<FV>((SparseFeatureValueCollection<FV>)features) : new ArrayList<FeatureValue<FV>>(features)) );
+    try {
+      this.features = features == null ? null : (FeatureValueCollection<FV>) features.clone();
+    } catch (CloneNotSupportedException e) {
+      throw new RuntimeException(e);
+    }
 	}
 
   @Override

@@ -36,7 +36,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	/**
 	 *
 	 */
-	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features) {
+	public RichTranslation(Featurizable<TK,FV> f, double score, FeatureValueCollection<FV> features) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score);
     this.featurizable = f;
     this.alignmentIndex = null;
@@ -56,7 +56,7 @@ public class RichTranslation<TK,FV> extends ScoredFeaturizedTranslation<TK,FV> {
 	/**
 	 *
 	 */
-	public RichTranslation(Featurizable<TK,FV> f, double score, List<FeatureValue<FV>> features, List<String> alignmentIndex, long latticeSourceId) {
+	public RichTranslation(Featurizable<TK,FV> f, double score, FeatureValueCollection<FV> features, List<String> alignmentIndex, long latticeSourceId) {
 		super((f == null ? new EmptySequence<TK>() : f.partialTranslation), features, score, latticeSourceId);
     this.featurizable = f;
     this.alignmentIndex = alignmentIndex;

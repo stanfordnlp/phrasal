@@ -19,8 +19,9 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
 	protected final SearchHeuristic<TK,FV> heuristic;
 	protected final RecombinationFilter<Hypothesis<TK,FV>> filter;
 
-
-	abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int size);
+  @Override
+  abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets, int size);
+  @Override
 	abstract public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId, ConstrainedOutputSpace<TK,FV> constrainedOutputSpace, List<Sequence<TK>> targets);
 
 	protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
@@ -34,8 +35,11 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
 	/**
 	 *
 	 */
-	protected List<FeatureValue<FV>> collectFeatureValues(Hypothesis<TK,FV> hyp) {
-		List<FeatureValue<FV>> features = new LinkedList<FeatureValue<FV>>();
+	protected FeatureValueCollection<FV> collectFeatureValues(Hypothesis<TK,FV> hyp) {
+    class LinkedFeatureValues<FV> extends LinkedList<FeatureValue<FV>> implements FeatureValueCollection<FV> {
+      @Override public Object clone() { return super.clone(); }
+    }
+		LinkedFeatureValues<FV> features = new LinkedFeatureValues<FV>();
 		for ( ; hyp != null; hyp = hyp.preceedingHyp) {
 			List<FeatureValue<FV>> localFeatures = hyp.localFeatures;
 			if (localFeatures != null) {
@@ -55,7 +59,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
       int tsIdx = hyp.preceedingHyp == null ? 0 : hyp.length-1;
       CoverageSet cs = opt.foreignCoverage;
       int feIdx=-1;
-      for (;;) {
+      while (true) {
         int fsIdx = cs.nextSetBit(feIdx+1);
         if(fsIdx < 0)
           break;
