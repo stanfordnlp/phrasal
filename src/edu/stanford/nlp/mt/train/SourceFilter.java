@@ -65,6 +65,10 @@ public class SourceFilter {
 		isEnabled = true;
   }
 
+  public void lock() {
+    this.sourcePhraseTable.lock();
+  }
+
   private void extractPhrasesFromLine(String fLine, int maxPhraseLenF, boolean addBoundaryMarkers) {
     fLine = fLine.trim();
     if (addBoundaryMarkers)
@@ -222,6 +226,7 @@ public class SourceFilter {
       int[] el = sourcePhraseTable.get(i);
       sourcePhraseTrie.indexOf(el, true);
     }
+    sourcePhraseTrie.lock();
     //Note: the two tables may not report the same number of phrases, since
     //the latter size() also enumerates prefixes.
     //System.err.println("Source phrase table entries: "+sourcePhraseTable.size());

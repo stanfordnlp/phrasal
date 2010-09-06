@@ -76,7 +76,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   public void addToIndex(AlignmentTemplate alTemp) {
     if (sourceFilter.isEnabled()) {
       boolean add = sourceFilter.allows(alTemp);
-      addToIndex(alTemp,add);
+      addToIndex(alTemp, add);
     } else {
       addToIndex(alTemp,true);
     }

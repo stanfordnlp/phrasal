@@ -269,4 +269,9 @@ public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex
 		return s;
 	}
 
+  @Override
+  public void lock() {
+    throw new UnsupportedOperationException();
+  }
+
 }

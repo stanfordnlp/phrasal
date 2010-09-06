@@ -17,6 +17,8 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   public static final int IDX_ROOT = 0;
   public static final int IDX_NOSUCCESSOR = Integer.MIN_VALUE;
 
+  private boolean locked = false;
+  
   private Function<Integer,Integer> transitionNormalizer;
 
   public final Long2IntOpenHashMap map;
@@ -53,38 +55,71 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
 		throw new UnsupportedOperationException();
 	}
 
-  static int supplementalHash(int h) {
-    // use the same supplemental hash function used by HashMap
-    return ((h << 7) - h + (h >>> 9) + (h >>> 17));
-  }
-
-  public synchronized long getTransition(int curState, int input) {
-    // Perform some bit manipulations because Long's hashCode is not particularly clever.
-    int input2 = supplementalHash(input);
-    int curState2 = supplementalHash(curState);
-    return (((long)input2) << 32) | (((long)curState2) & 0xffffffffL);
-  }
-
-  public synchronized int getSuccessor(int curState, int input) {
-    long t = getTransition(curState, input);
-    return map.get(t);
-  }
-
-  @Override
-  public int size() { return lastStateIdx+1; }
-
-  public void printInfo() {
-    System.err.printf("Number of states: %d\n", size());
-    System.err.printf("Map size:%d\n", map.size());
-  }
-
   @Override
   public int indexOf(int[] input) {
     return indexOf(input, false);
   }
 
   @Override
-  public synchronized int indexOf(int[] input, boolean add) {
+  public int getIndex(int[] array) {
+    return indexOf(array, false);
+  }
+
+  @Override
+  public int insertIntoIndex(int[] array) {
+    return indexOf(array, true);
+  }
+
+  @Override
+  public int indexOf(int[] input, boolean add) {
+    if (locked)
+      return indexOf_unsync(input, add);
+    synchronized (this) {
+      return indexOf_unsync(input, add);
+    }
+  }
+
+  @Override
+  public int size() { return lastStateIdx+1; }
+
+  @Override
+  public void lock() {
+    this.locked = true;
+  }
+
+  public long getTransition(int curState, int input) {
+    if (locked)
+      return getTransition_unsync(curState, input);
+    synchronized (this) {
+      return getTransition_unsync(curState, input);
+    }
+  }
+
+  public int getSuccessor(int curState, int input) {
+    if (locked)
+      return getSuccessor_unsync(curState, input);
+    synchronized (this) {
+      return getSuccessor_unsync(curState, input);
+    }
+  }
+
+  public void printInfo() {
+    System.err.printf("Number of states: %d\n", size());
+    System.err.printf("Map size:%d\n", map.size());
+  }
+
+  public void rehash() {
+    map.rehash();
+  }
+
+  public static void main(String[] args) {
+    TrieIntegerArrayIndex idx = new TrieIntegerArrayIndex();
+    test(idx);
+    idx.printInfo();
+    test(new DynamicIntegerArrayIndex());
+  }
+
+  private int indexOf_unsync(int[] input, boolean add) {
     //System.err.println("adding: "+ Arrays.toString(IStrings.toStringArray(input)));
     int curState = IDX_ROOT;
     for (int anInput : input) {
@@ -103,26 +138,21 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     return curState;
   }
 
-  public void rehash() {
-    map.rehash();
+  private static int supplementalHash(int h) {
+    // use the same supplemental hash function used by HashMap
+    return ((h << 7) - h + (h >>> 9) + (h >>> 17));
   }
 
-  @Override
-  public int getIndex(int[] array) {
-    return indexOf(array,false);
+  private static long getTransition_unsync(int curState, int input) {
+    // Perform some bit manipulations because Long's hashCode is not particularly clever.
+    int input2 = supplementalHash(input);
+    int curState2 = supplementalHash(curState);
+    return (((long)input2) << 32) | (((long)curState2) & 0xffffffffL);
   }
 
-  @Override
-  public int insertIntoIndex(int[] array) {
-    return indexOf(array,true);
-  }
-
-  public static void main(String[] args) {
-    TrieIntegerArrayIndex idx = new TrieIntegerArrayIndex();
-    test(idx);
-    idx.printInfo();
-    //test(new TrieIntegerArrayIndex());
-    test(new DynamicIntegerArrayIndex());
+  private int getSuccessor_unsync(int curState, int input) {
+    long t = getTransition_unsync(curState, input);
+    return map.get(t);
   }
 
   private static void test(IntegerArrayIndex index) { 
@@ -132,4 +162,5 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     System.out.println("idx(127): " + index.indexOf(new int[] {1, 2, 7}, true));
     System.out.println("idx(12): " + index.indexOf(new int[] {1, 2}, true));
   }
+
 }

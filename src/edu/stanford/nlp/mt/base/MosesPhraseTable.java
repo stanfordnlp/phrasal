@@ -384,4 +384,9 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
     translationIndex = new DynamicIntegerArrayIndex();
   }
 
+  public static void lockIndex() {
+    foreignIndex.lock();
+  }
+
+
 }

@@ -21,6 +21,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	  protected int[] reverseIndex;
 	  protected int maxIndex;
     protected int load;
+    protected boolean locked = false;
 
 	  public static final DynamicIntegerArrayIndex CommonDynamiIntegerArrayIndex = new DynamicIntegerArrayIndex();
 	  
@@ -36,8 +37,14 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	  protected static int supplementalHash(int h) {
 	      // use the same supplemental hash function used by HashMap
 	      return ((h << 7) - h + (h >>> 9) + (h >>> 17));
-	  }	  
-	  
+	  }
+
+    @Override
+    public void lock() {
+      System.err.printf("%s locked.\n", this);
+      this.locked = true;
+    }
+
 	  private int findPos(int[] e) {
 	    int hashCode = supplementalHash(Arrays.hashCode(e));    
 	    int idealIdx = hashCode & mask;
@@ -50,10 +57,18 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    }        
 	    return -keys.length-1;
 	  }
-	  
+
 	  @Override
+    public int[] get(int idx) {
+      if (locked)
+        return get_unsync(idx);
+      synchronized (this) {
+        return get_unsync(idx);
+      }
+    }
+
     @SuppressWarnings("unchecked")
-	  public synchronized int[] get(int idx) {
+	  private int[] get_unsync(int idx) {
 	      int pos = reverseIndex[idx];
 	      if (pos == -1) return null;
 	      return keys[pos];
@@ -101,39 +116,62 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
 	    hashCodes[pos] = supplementalHash(Arrays.hashCode(key));
 	    return maxIndex-1;
 	  }
-	  	  
-	  @Override
-    public synchronized int indexOf(int[] key) {
+
+    @Override
+    public int indexOf(int[] key) {
+      if (locked)
+        return indexOf_unsync(key);
+      synchronized (this) {
+        return indexOf_unsync(key);
+      }
+    }
+
+    private int indexOf_unsync(int[] key) {
 	    int pos = findPos(key);
 	    if (pos < 0) return -1;
 	    return values[pos];
 	  }
-	  
-	  public synchronized boolean contains(int[] key) {
+
+    /*
+	  public boolean contains(int[] key) {
 	    int pos = findPos(key);
       return pos >= 0;
     }
+    */
 
+    /*
     @SuppressWarnings("unused")
-	  public synchronized int commonRepIndexOf(int[] key, boolean add) {
-	  	int pos = findPos(key);
-	    if (pos >= 0) return values[pos];
-	    if (!add) return -1;
+    public synchronized int commonRepIndexOf(int[] key, boolean add) {//s
+      int pos = findPos(key);
+      if (pos >= 0) return values[pos];
+      if (!add) return -1;
       return add(key, -pos-1,true);
-	  }
+    }
+    */
 
-	  @Override
-    public synchronized int indexOf(int[] key, boolean add) {
-	    int pos = findPos(key);
-	    if (pos >= 0) return values[pos];
-	    if (!add) return -1;
-	    return add(key, -pos-1, false);
-	  }
-	  
-	  @Override
-    public synchronized int size() {
-	    return load;
-	  }
+    @Override
+    public int indexOf(int[] key, boolean add) {
+      if (locked) {
+        //if (add)
+        //  throw new UnsupportedOperationException("Can't add key; index is locked.");
+        return indexOf_unsync(key, false);
+      }
+      synchronized (this) {
+        return indexOf_unsync(key, add);
+      }
+    }
+
+    private int indexOf_unsync(int[] key, boolean add) {
+      int pos = findPos(key);
+      if (pos >= 0) return values[pos];
+      if (!add) return -1;
+      return add(key, -pos-1, false);
+    }
+
+    @Override
+    public int size() {
+      return load;
+    }
 
     @Override
     public Iterator<int[]> iterator() {

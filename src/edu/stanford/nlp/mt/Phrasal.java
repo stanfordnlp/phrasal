@@ -2077,7 +2077,7 @@ public class Phrasal {
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0]) : readArgs(args);
     initStaticMembers(config);
     Phrasal p = new Phrasal(config);
-
+    MosesPhraseTable.lockIndex();
 		p.executiveLoop();
 		System.exit(0);
 	}

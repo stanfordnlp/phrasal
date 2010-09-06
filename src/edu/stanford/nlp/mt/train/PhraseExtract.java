@@ -269,6 +269,7 @@ public class PhraseExtract {
     if (Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT))) {
       sourceFilter.fillSourceTrie();
     }
+    sourceFilter.lock();
 
     // Other optional arguments:
     nThreads = Integer.parseInt(prop.getProperty(THREADS_OPT,"0"));
