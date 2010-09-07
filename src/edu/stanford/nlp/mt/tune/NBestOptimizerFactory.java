@@ -294,8 +294,11 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		// weight vector positions
 		
 		String[] weightNames = new String[wts.size()];
+		double[] initialWtsArr = new double[wts.size()];
+		
 		int nameIdx = 0;
 		for (String feature : wts.keySet()) {
+			initialWtsArr[nameIdx] = wts.getCount(feature);
 			weightNames[nameIdx++] = feature;
 		}
 		
@@ -303,16 +306,47 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		int N = nbest.nbestLists().size();
 		Minimizer<DiffFunction> qn = l1b != 0.0 ? new OWLQNMinimizer(N*1./l1b) : new QNMinimizer(15, true);
 		LogLinearObjective llo = new LogLinearObjective(weightNames, target);
-		double newX[] = qn.minimize(llo, 1e-4, new double[weightNames.length]);
+		double initialValueAt = llo.valueAt(initialWtsArr); 
+		if (initialValueAt == Double.POSITIVE_INFINITY) {
+		   System.err.printf("Initial Objective is infinite - normalizing weight vector");
+		   double normTerm = Counters.L2Norm(wts);
+		   for (int i = 0; i < initialWtsArr.length; i++) {
+		      initialWtsArr[i] /= normTerm;
+		   }
+		}
+		double initialObjValue = llo.valueAt(initialWtsArr);
+		double initalDNorm  = norm2DoubleArray(llo.derivativeAt(initialWtsArr));		
+		double initalXNorm  = norm2DoubleArray(initialWtsArr);
+		
+		System.err.println("Initial Objective value: "+initialObjValue);
+		System.err.println("l2 Original wts: "+ Counters.L2Norm(wts));
+		double newX[] = qn.minimize(llo, 1e-4, initialWtsArr);
 		
 		Counter<String> newWts = new ClassicCounter<String>();
 		for (int i = 0; i < weightNames.length; i++) {
 			newWts.setCount(weightNames[i], newX[i]);
 		}
 		
-		System.err.println("Final Objective value: "+llo.valueAt(newX));
-		System.err.println("Final Eval at point: "+MERT.evalAtPoint(nbest, newWts, emetric));
+		double finalObjValue = llo.valueAt(newX);
+	   double finalDNorm  = norm2DoubleArray(llo.derivativeAt(newX));
+	   double finalXNorm  = norm2DoubleArray(newX);
+	   
+		System.err.println("Final Objective value: "+finalObjValue);
+		double metricEval = MERT.evalAtPoint(nbest, newWts, emetric);
+		System.err.println("Final Eval at point: "+metricEval);
+		System.err.println("l2 Final wts: "+ Counters.L2Norm(newWts));
+		double objDiff = initialObjValue - finalObjValue;
+		System.err.println(">>>[Converge Info] ObjInit("+initialObjValue+") - ObjFinal("+finalObjValue+") = ObjDiff("+objDiff+") L2DInit("+initalDNorm+") L2DFinal("+finalDNorm+") L2XInit("+initalXNorm+") L2XFinal("+finalXNorm+")");
+		MERT.updateBest(newWts, metricEval, true);
 		return newWts;
+	}
+	
+	static double norm2DoubleArray(double[] v) {
+	   double normSum = 0;
+      for (double d : v) {
+         normSum += d*d;
+      }
+      return Math.sqrt(normSum);
 	}
 
 	class LogLinearObjective implements DiffFunction {
