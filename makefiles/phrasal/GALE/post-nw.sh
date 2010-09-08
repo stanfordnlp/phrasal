@@ -1,7 +1,7 @@
 #!/bin/bash
 
 remove_unk | \
-americanize | \
+java edu.stanford.nlp.process.Americanize | \
 #aren-postprocess-nw | \
 aren-postprocess-text | \
 cat

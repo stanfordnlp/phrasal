@@ -96,8 +96,8 @@ $(TESTID).$(DEVID).%.mbr.$Nbest: $(TESTID).$(DEVID).%.$Nbest
 
 ### Use best MERT paramters to generate n-best list:
 $(TESTID).$(DEVID).%.$Nbest: $(DEVID).%.pmert/phrasal.best.ini $(TESTID).$(IE) $(TESTID).f.vocab
-	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $<.$(TESTID)
-	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal -config-file $<.$(TESTID) -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
+	$(SCRIPTS)/update_ini -f $(TESTID).$(DEVID).$(*F).$Nbest -n $N $(DEVID) $(TESTID) < $< > $(TESTID).$(DEVID).$(*F).ini
+	($(JAVA) $(JAVA_PHRASAL_ARGS) edu.stanford.nlp.mt.Phrasal -config-file $(TESTID).$(DEVID).$(*F).ini -moses-n-best-list true < $(TESTID).$(IE) > $@.1best) 2> $@.1best.log
 
 ### Find best set of parameters:
 $(DEVID).%.pmert/phrasal.best.ini: $(DEVID).%.pmert/phrasal.final.ini
@@ -124,7 +124,7 @@ $(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) $(DEVID).f.vocab
 
 ### Filter LM for target dev/test set:
 %.flt_giga.lm.gz: %.e.phrases %.e.class.phrases $(GIGA)
-	cat $(*F).e.phrases $(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(GIGA) 5 2> $@.log | gzip > $@
+	cat $(*D)/$(*F).e.phrases $(*D)/$(*F).e.class.phrases | sort | uniq | $(LM_FILTER_SCRIPT) $(GIGA) 5 2> $@.log | gzip > $@
 
 #############################################
 # Vocabulary files:
@@ -142,7 +142,7 @@ $(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) $(DEVID).f.vocab
 %.e.phrases: %.tables/phrase-table.gz %.$(FE)
 	zcat $< | sed 's/ ||| /\t/g' | cut -f 2 | \
 	remove_bad_english 2> $@.skip | grep -v '^$$' | \
-	cat - $(*F).$(FE) | sort | uniq > $@
+	cat - $(*D)/$(*F).$(FE) | sort | uniq > $@
 
 #############################################
 # Phrase tables:
@@ -151,18 +151,18 @@ $(DEVID).%.$N.pmert/phrasal.final.ini: %.ini $D $(DEVID).$(IE) $(DEVID).f.vocab
 ### Split translation features and re-ordering features:
 ifneq ($(FILTER),fast)
 %.tables/phrase-table.gz: %.tables/filtered.gz
-	zcat $< | $(SCRIPTS)/split_po_tables $(*F).tables/phrase-table.gz $(*F).tables/$(LO_ID).gz $(LO_SZ) $(DEP) >& $@.log
+	zcat $< | $(SCRIPTS)/split_po_tables $(*D)/$(*F).tables/phrase-table.gz $(*D)/$(*F).tables/$(LO_ID).gz $(LO_SZ) $(DEP) >& $@.log
 %.tables/filtered.gz: %.tables/merged.gz
-	zcat $< | $(SCRIPTS)/filter_po_tables $(*F).tables/filtered.gz /dev/null $(MINP) 0 >& $@.log
+	zcat $< | $(SCRIPTS)/filter_po_tables $(*D)/$(*F).tables/filtered.gz /dev/null $(MINP) 0 >& $@.log
 else
 %.tables/phrase-table.gz: %.tables/merged.gz
-	zcat $< | $(SCRIPTS)/filter_po_tables $(*F).tables/phrase-table.gz $(*F).tables/$(LO_ID).gz $(MINP) $(LO_SZ) >& $@.log
+	zcat $< | $(SCRIPTS)/filter_po_tables $(*D)/$(*F).tables/phrase-table.gz $(*D)/$(*F).tables/$(LO_ID).gz $(MINP) $(LO_SZ) >& $@.log
 endif
 
 ### Generate table containing both phrase and lexicalized re-ordering probabilities for a given dev/test set:
 ### (needs to be run on 16G machines)
 %.tables/merged.gz: %.$(FE) $(TRAIN)/aligned.$F $(TRAIN)/aligned.$E $(TRAIN)/aligned.$(ALIGN)
-	mkdir $(*F).tables 2> /dev/null || true
+	mkdir $(*D)/$(*F).tables 2> /dev/null || true
 	$(JAVA) $(DEBUG_PHRASAL) -Xmx$(MEMSIZE) -Xms$(MEMSIZE) edu.stanford.nlp.mt.train.PhraseExtract $(THREADS) $(XOPTS) $(SPLIT) -fCorpus $(TRAIN)/aligned.$F -eCorpus $(TRAIN)/aligned.$E -align $(TRAIN)/aligned.$(ALIGN) -fFilterCorpus $< -maxELen $(maxPLen) -endAtLine $(LINES) $(LO_ARGS) 2> $@.log | gzip > $@
 
 ############################################
@@ -176,7 +176,7 @@ NE=sed 's/^ *$$/null/'
 ### Handle unknown words (e.g., delete them):
 %.prep: %.unk %.tables/phrase-table.gz
 	rm -f $@
-	$(PRE) $(*F).tables/phrase-table.gz $(*F).unk $@.tmp >& $@.err 
+	$(PRE) $(*D)/$(*F).tables/phrase-table.gz $(*D)/$(*F).unk $@.tmp >& $@.err 
 	cat $@.tmp | $(NE) > $@
 	rm -f $@.tmp
 
