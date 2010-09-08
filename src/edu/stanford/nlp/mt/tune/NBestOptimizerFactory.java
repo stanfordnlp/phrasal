@@ -25,6 +25,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SparseFeatureValueCollection;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.metrics.LinearCombinationMetric;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.decoder.util.StaticScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -288,12 +289,39 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
       this.l1b = l1b;
    }
 	
-	@Override
+	@SuppressWarnings("unchecked")
+   @Override
 	public Counter<String> optimize(Counter<String> initialWts) {
 		Counter<String> wts = new ClassicCounter<String>(initialWts);
 
-		List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+		EvaluationMetric<IString, String> modelMetric = new LinearCombinationMetric<IString, String>(new double[]{1.0}, new ScorerWrapperEvaluationMetric<IString, String>(new StaticScorer(initialWts)));
+           
+      List<ScoredFeaturizedTranslation<IString, String>> current = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+            modelMetric)).maximize(nbest);
+   
+      List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
 	            emetric)).maximize(nbest);
+		
+      System.err.println("Target model: "+ modelMetric.score(target) + " metric: "+ emetric.score(target));		
+		System.err.println("Current model: " + modelMetric.score(current) + " metric: " + emetric.score(current));
+		Counter<String> currentCounts = new ClassicCounter<String>();
+		for (ScoredFeaturizedTranslation<IString, String> t : current) {
+		   for (FeatureValue<String> feat : t.features)
+		   {
+		      currentCounts.incrementCount(feat.name, feat.value);
+		   }
+		}
+		
+		Counter<String> targetCounts = new ClassicCounter<String>();
+      
+		for (ScoredFeaturizedTranslation<IString, String> t : target) {
+         for (FeatureValue<String> feat : t.features)
+         {
+            targetCounts.incrementCount(feat.name, feat.value);
+         }
+      }
+      System.err.println("Current LD "+currentCounts.getCount("LinearDistortion"));
+      System.err.println("Target LD "+targetCounts.getCount("LinearDistortion"));
 		
 		// create a mapping between weight names and optimization 
 		// weight vector positions
@@ -438,6 +466,11 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	       Counters.subtractInPlace(dOdW, dOminus);          
 	       Counters.multiplyInPlace(dOdW, -1);
 	       dOdW.addAll(dORegularize);
+	       System.err.println("wts(LinearDistortion): "+       wts.getCount("LinearDistortion"));
+	       System.err.println("dOPlus(LinearDistortion): " +dOplus.getCount      ("LinearDistortion"));
+	       System.err.println("dOMinus(LinearDistortion): "+dOminus.getCount     ("LinearDistortion"));
+	       System.err.println("dOReg(LinearDistortion): "  +dORegularize.getCount("LinearDistortion"));
+	       System.err.println("dOdW(LinearDistortion): "   +dOdW.getCount        ("LinearDistortion"));
 	       return counterToVector(dOdW);
 		}
 
