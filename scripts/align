@@ -13,6 +13,6 @@ CONF=$2
 shift
 shift
 
-OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM"
+OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM -XX:MaxPermSize=2g"
 
 java $OPTS -jar /u/nlp/packages/berkeleyaligner2.1/berkeleyaligner.jar ++$CONF $@ 
