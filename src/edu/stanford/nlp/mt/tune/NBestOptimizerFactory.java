@@ -353,7 +353,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		
 		System.err.println("Initial Objective value: "+initialObjValue);
 		System.err.println("l2 Original wts: "+ Counters.L2Norm(wts));
-		double newX[] = qn.minimize(llo, 1e-4, initialWtsArr);
+		double newX[] = qn.minimize(llo, 1e-4, new double[wts.size()]); // initialWtsArr
 		
 		Counter<String> newWts = new ClassicCounter<String>();
 		for (int i = 0; i < weightNames.length; i++) {
