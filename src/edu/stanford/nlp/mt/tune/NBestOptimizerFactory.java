@@ -34,6 +34,7 @@ import edu.stanford.nlp.mt.decoder.feat.WordPenaltyFeaturizer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -340,8 +341,8 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		Minimizer<DiffFunction> qn = l1b != 0.0 ? new OWLQNMinimizer(N*1./l1b) : new QNMinimizer(15, true);
 		LogLinearObjective llo = new LogLinearObjective(weightNames, target);
 		double initialValueAt = llo.valueAt(initialWtsArr); 
-		if (initialValueAt == Double.POSITIVE_INFINITY) {
-		   System.err.printf("Initial Objective is infinite - normalizing weight vector");
+		if (initialValueAt == Double.POSITIVE_INFINITY || initialValueAt != initialValueAt) {
+		   System.err.printf("Initial Objective is infinite/NaN - normalizing weight vector");
 		   double normTerm = Counters.L2Norm(wts);
 		   for (int i = 0; i < initialWtsArr.length; i++) {
 		      initialWtsArr[i] /= normTerm;
@@ -353,7 +354,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		
 		System.err.println("Initial Objective value: "+initialObjValue);
 		System.err.println("l2 Original wts: "+ Counters.L2Norm(wts));
-		double newX[] = qn.minimize(llo, 1e-4, new double[wts.size()]); // initialWtsArr
+		double newX[] = qn.minimize(llo, 1e-4, initialWtsArr); // new double[wts.size()] 
 		
 		Counter<String> newWts = new ClassicCounter<String>();
 		for (int i = 0; i < weightNames.length; i++) {
@@ -429,18 +430,15 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	       for (int sentId = 0; sentId < nbestLists.size(); sentId++) {
 	           List<ScoredFeaturizedTranslation<IString,String>> nbestList = nbestLists.get(sentId);
 	           ScoredFeaturizedTranslation<IString,String> targetTrans = target.get(sentId);
-	           
-	    	   double Z = 0;
-	    	   for (ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
-	    		   Z += Math.exp(scoreTranslation(wts, trans));
-	    	   }
 
 		       for (FeatureValue<String> fv : targetTrans.features) {
 		    	  dOplus.incrementCount(fv.name, fv.value);
 		       }
 		       
+		       double logZ = logZ(nbestList, wts);
 		       for (ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
-		    	   double p = Math.exp(scoreTranslation(wts, trans))/Z;
+		    	   // double p = Math.exp(scoreTranslation(wts, trans))/Z;
+		    	   double p = Math.exp(scoreTranslation(wts, trans) - logZ);
 	    		   for (FeatureValue<String> fv : trans.features) {
 	    			   dOminus.incrementCount(fv.name, fv.value*p);
 	    		   }
@@ -474,6 +472,25 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 	       return counterToVector(dOdW);
 		}
 
+		private double logZ(List<ScoredFeaturizedTranslation<IString, String>> translations, Counter<String> wts) {
+		   double scores[] = new double[translations.size()];
+		   int max_i = 0;
+		   
+		   Iterator<ScoredFeaturizedTranslation<IString, String>> iter = translations.iterator();
+		   for (int i = 0; iter.hasNext(); i++) {
+		      ScoredFeaturizedTranslation<IString, String> trans = iter.next();		   
+		      scores[i] = scoreTranslation(wts, trans);
+		      if (scores[i] > scores[max_i]) max_i = i;
+		   }
+		   		   		  
+		   double expSum = 0;
+		   for (int i = 0; i < scores.length; i++) {		      
+		      expSum += Math.exp(scores[i]-scores[max_i]);
+		   }
+		   		   
+		   return scores[max_i] + Math.log(expSum);
+		}
+		
 		@Override
 		public double valueAt(double[] x) {
          Counter<String> wts = vectorToWeights(x);
@@ -488,19 +505,8 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
             ScoredFeaturizedTranslation<IString, String> targetTrans = target
                   .get(sentId);
 
-            double Z = 0;
-            for (ScoredFeaturizedTranslation<IString, String> trans : nbestList) {
-               Z += Math.exp(scoreTranslation(wts, trans));
-               // System.err.println("raw: "+scoreTranslation(wts, trans));
-            }
-            // System.err.println("Z: "+Z);
-
-            double p = Math.exp(scoreTranslation(wts, targetTrans)) / Z;
-            if (Double.isNaN(p))
-               return Double.POSITIVE_INFINITY;
-
-            // System.err.println("p: "+p);
-            sumLogP += Math.log(p);
+            double logP = scoreTranslation(wts, targetTrans) - logZ(nbestList, wts);           
+            sumLogP += logP;
          }
  	        
  	      double regTerm = 0;
