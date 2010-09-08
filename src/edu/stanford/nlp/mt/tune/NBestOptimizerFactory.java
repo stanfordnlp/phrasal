@@ -261,6 +261,11 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
   final double l2sigma;
   final double l1b;
 
+  @Override
+  public boolean doNormalization() {
+     return false;
+  }
+  
   public LogLinearOptimizer(MERT mert, double l2sigma, double l1b) {
     super(mert);
     System.err.println("Log-Linear training:");
@@ -336,7 +341,8 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		System.err.println("Final Eval at point: "+metricEval);
 		System.err.println("l2 Final wts: "+ Counters.L2Norm(newWts));
 		double objDiff = initialObjValue - finalObjValue;
-		System.err.println(">>>[Converge Info] ObjInit("+initialObjValue+") - ObjFinal("+finalObjValue+") = ObjDiff("+objDiff+") L2DInit("+initalDNorm+") L2DFinal("+finalDNorm+") L2XInit("+initalXNorm+") L2XFinal("+finalXNorm+")");
+		System.err.println(">>>[Converge Info] ObjInit("+initialObjValue+") - ObjFinal("+finalObjValue+") = ObjDiff("+objDiff+") L2DInit("+
+		      initalDNorm+") L2DFinal("+finalDNorm+") L2XInit("+initalXNorm+") L2XFinal("+finalXNorm+")");
 		MERT.updateBest(newWts, metricEval, true);
 		return newWts;
 	}
