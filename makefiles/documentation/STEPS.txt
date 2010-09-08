@@ -90,54 +90,30 @@ make google.3gram.kn.lm.bin
 ### Tune system for text genres (nw and wb):
 make train
 
-### Symlink text test sets:
-### nw:
-REFS=/scr/gale/P5-arabic/00-references/source/ready-for-mt-atb-v3.1
-ln -fs $REFS/mt08_arabic_evalset_current_v0-nw.atb-v3.1.unk.split.sgm mt08-nw.sgm
-ln -fs $REFS/mt09_arabic_evalset_current_v0_nw-unseq.atb-v3.1.unk.split.sgm mt09-nw.sgm
-ln -fs $REFS/GALE-DEV09-arabic-text-nw-syscomtune.atb-v3.1.unk.split.sgm dev09-nw-syscomtune.sgm
-ln -fs $REFS/GALE-DEV09-arabic-text-nw-testonly.atb-v3.1.unk.split.sgm dev09-nw-testonly.sgm
-### wb:
-ln -fs $REFS/mt08_arabic_evalset_current_v0-wb.spell.atb-v3.1.unk.split.sgm mt08-wb.sgm
-ln -fs $REFS/GALE-DEV08-arabic-text-wb.spell.atb-v3.1.unk.split.sgm dev08-wb.sgm
-ln -fs $REFS/GALE-DEV09-arabic-text-wb-testonly.spell.atb-v3.1.unk.split.sgm dev09-wb-testonly.sgm 
-ln -fs $REFS/GALE-DEV09-arabic-text-wb-syscomtune.spell.atb-v3.1.unk.split.sgm dev09-wb-syscomtune.sgm 
+### Copy test sets locally:
+cp -r /scr/gale/P5-arabic/00-references/P5/source P5
 
 ### Run system on test data, which involves creating a phrase table:
 ### (in order to decode testid.sgm, simply set TESTID=testid)
-make sgml TESTID=mt08-nw GENRE=nw
-make sgml TESTID=mt09-nw GENRE=nw
-make sgml TESTID=dev09-nw-syscomtune GENRE=nw
-make sgml TESTID=dev09-nw-testonly GENRE=nw
+make sgml TESTID=P5/MT09-unseq/nw/MT09-unseq GENRE=nw
+make sgml TESTID=P5/GALE-DEV09-syscomb/nw/GALE-DEV09-syscomb GENRE=nw
+make sgml TESTID=P5/GALE-DEV09-test/nw/GALE-DEV09-test GENRE=nw
 
-make sgml TESTID=mt08-wb GENRE=wb
-make sgml TESTID=dev08-wb GENRE=wb
-make sgml TESTID=dev09-wb-syscomtune GENRE=wb
-make sgml TESTID=dev09-wb-testonly GENRE=wb
+make sgml TESTID=P5/GALE-DEV08/wb/GALE-DEV08-wb GENRE=wb
+make sgml TESTID=P5/GALE-DEV09-syscomb/wb/GALE-DEV09-syscomb GENRE=wb
+make sgml TESTID=P5/GALE-DEV09-test/wb/GALE-DEV09-test GENRE=wb
 
 ### Tune system for speech genres (bc and bn):
 ln -fs GALE/Makefile.local.P5-audio Makefile.local
 make train
 
-### Symlink speech test sets:
-### bc:
-ln -fs $REFS/GALE-DEV07-arabic-asrout-bc-nov26.spell.atb-v3.1.unk.split.sgm dev07-bc.sgm
-ln -fs $REFS/GALE-DEV08-arabic-asrout-nov08-bc.spell.atb-v3.1.unk.split.sgm dev08-bc.sgm
-ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bc-syscomtune.spell.atb-v3.1.unk.split.sgm dev09-bc-syscomtune.sgm
-ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bc-testonly.spell.atb-v3.1.unk.split.sgm dev09-bc-testonly.sgm
-### bn:
-ln -fs $REFS/GALE-DEV07-arabic-asrout-bn-nov26.spell.atb-v3.1.unk.split.sgm dev07-bn.sgm 
-ln -fs $REFS/GALE-DEV08-arabic-asrout-nov08-bn.spell.atb-v3.1.unk.split.sgm dev08-bn.sgm
-ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bn-syscomtune.spell.atb-v3.1.unk.split.sgm dev09-bn-syscomtune.sgm
-ln -fs $REFS/GALE-DEV09-arabic-audio-asrout-oct5-bn-testonly.spell.atb-v3.1.unk.split.sgm dev09-bn-testonly.sgm
-
 ### Run system on test data, which involves creating a phrase table:
-make sgml TESTID=dev07-bc GENRE=bc
-make sgml TESTID=dev08-bc GENRE=bc
-make sgml TESTID=dev09-bc-syscomtune GENRE=bc
-make sgml TESTID=dev09-bc-testonly GENRE=bc
+make sgml TESTID=P5/GALE-DEV08/bc/GALE-DEV08 GENRE=bc
+make sgml TESTID=P5/GALE-DEV09-syscomb/bc/GALE-DEV09-syscomb GENRE=bc
+make sgml TESTID=P5/GALE-DEV09-test/bc/GALE-DEV09-test GENRE=bc
 
-make sgml TESTID=dev07-bn GENRE=bn
-make sgml TESTID=dev08-bn GENRE=bn
-make sgml TESTID=dev09-bn-syscomtune GENRE=bn
-make sgml TESTID=dev09-bn-testonly GENRE=bn
+make sgml TESTID=P5/GALE-DEV08/bn/GALE-DEV08 GENRE=bn
+make sgml TESTID=P5/GALE-DEV09-syscomb/bn/GALE-DEV09-syscomb GENRE=bn
+make sgml TESTID=P5/GALE-DEV09-test/bn/GALE-DEV09-test GENRE=bn
+
+
