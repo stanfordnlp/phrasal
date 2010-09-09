@@ -8,7 +8,7 @@ import java.io.ObjectInputStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import scala.actors.threadpool.Arrays;
+import java.util.Arrays;
 
 
 import edu.stanford.nlp.stats.ClassicCounter;
