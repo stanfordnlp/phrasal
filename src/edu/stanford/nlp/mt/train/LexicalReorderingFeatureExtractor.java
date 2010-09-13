@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.train;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Arrays;
 
@@ -25,8 +26,8 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   public static final String LAPLACE_PROPERTY = "LaplaceSmoothing";
   private static final float LAPLACE_SMOOTHING = Float.parseFloat(System.getProperty(LAPLACE_PROPERTY, "0.5f"));
 
-  ArrayList<Object> forwardCounts = null, backwardCounts = null, jointCounts = null;
-  float[] totalForwardCounts = null, totalBackwardCounts = null, totalJointCounts = null;
+  List<int[]> forwardCounts = null, backwardCounts = null, jointCounts = null;
+  int[] totalForwardCounts = null, totalBackwardCounts = null, totalJointCounts = null;
 
   enum DirectionTypes { forward, backward, bidirectional, joint }
   enum ReorderingTypes { monotone, swap, discont1, discont2, containment }
@@ -136,17 +137,17 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     // Store total counts for each reordering type:
     // Init count arrays:
     if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
-      forwardCounts = new ArrayList<Object>();
-      totalForwardCounts = new float[modelSize];
+      forwardCounts = new ArrayList<int[]>();
+      totalForwardCounts = new int[modelSize];
     }
     if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
-      backwardCounts = new ArrayList<Object>();
-      totalBackwardCounts = new float[modelSize];
+      backwardCounts = new ArrayList<int[]>();
+      totalBackwardCounts = new int[modelSize];
     }
     if (directionType == DirectionTypes.joint) {
       modelSize *= modelSize;
-      jointCounts = new ArrayList<Object>();
-      totalJointCounts = new float[modelSize];
+      jointCounts = new ArrayList<int[]>();
+      totalJointCounts = new int[modelSize];
     }
     if (Boolean.parseBoolean(prop.getProperty(PhraseExtract.WITH_GAPS_OPT))) {
       //withDTU = true;
@@ -261,15 +262,15 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     assert(idx >= 0);
     float[] scores = new float[modelSize*numModels];
     if (directionType == DirectionTypes.joint) {
-      fillProbDist((float[])jointCounts.get(idx), scores, 0);
+      fillProbDist(jointCounts.get(idx), scores, 0);
     } else {
       int offset = 0;
       if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
-        fillProbDist((float[])forwardCounts.get(idx), scores, offset);
+        fillProbDist(forwardCounts.get(idx), scores, offset);
         offset += modelSize;
       }
       if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
-        fillProbDist((float[])backwardCounts.get(idx), scores, offset);
+        fillProbDist(backwardCounts.get(idx), scores, offset);
         offset += modelSize;
       }
     }
@@ -341,7 +342,20 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     }
   }
 
-  public void fillProbDist(float[] counts, float[] probs, int offset) {
+  public void fillProbDist(int[] counts, float[] probs, int offset) {
+    float norm = modelSize * LAPLACE_SMOOTHING;
+    for(int i=0; i<modelSize; ++i)
+      norm += counts[i];
+    if (norm > 0)
+      for (int i=0; i<modelSize; ++i)
+        if (UNNORM) {
+          probs[i+offset] = counts[i] + LAPLACE_SMOOTHING;
+        } else {
+          probs[i+offset] = (counts[i] + LAPLACE_SMOOTHING)/norm;
+        }
+  }
+
+  public void fillProbDistI(int[] counts, float[] probs, int offset) {
     float norm=0.0f;
     for(int i=0; i<modelSize; ++i)
       norm += counts[i];
@@ -355,7 +369,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   }
 
   private void addCountToArray
-      (final ArrayList<Object> list, final float[] totalCounts, int type, AlignmentTemplate alTemp) {
+      (final List<int[]> list, final int[] totalCounts, int type, AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
     synchronized (totalCounts) {
       ++totalCounts[type];
@@ -367,14 +381,13 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     if (languageType == LanguageTypes.f) idx = alTemp.getFKey();
     if (languageType == LanguageTypes.e) idx = alTemp.getEKey();
     // Get array of count:
-    float[] counts;
+    int[] counts;
     synchronized (list) {
       while (idx >= list.size()) {
-        float[] arr = new float[modelSize];
-        Arrays.fill(arr, LAPLACE_SMOOTHING);
+        int[] arr = new int[modelSize];
         list.add(arr);
       }
-      counts = (float[]) list.get(idx);
+      counts = list.get(idx);
       ++counts[type];
     }
   }
@@ -384,19 +397,19 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     //System.err.println("LexicalReorderingFeatureExtractor: done.");
     float[] prob = new float[totalForwardCounts.length];
     if (directionType == DirectionTypes.forward || directionType == DirectionTypes.bidirectional) {
-      fillProbDist(totalForwardCounts, prob, 0);
+      fillProbDistI(totalForwardCounts, prob, 0);
       System.err.println("Counts of MSD labels (forward):");
       System.err.println("Counts: "+Arrays.toString(totalForwardCounts));
       System.err.println("RelFreq: "+Arrays.toString(prob));
     }
     if (directionType == DirectionTypes.backward || directionType == DirectionTypes.bidirectional) {
-      fillProbDist(totalBackwardCounts, prob, 0);
+      fillProbDistI(totalBackwardCounts, prob, 0);
       System.err.println("Counts of MSD labels (backward):");
       System.err.println("Counts: "+Arrays.toString(totalBackwardCounts));
       System.err.println("RelFreq: "+Arrays.toString(prob));
     }
     if (directionType == DirectionTypes.joint) {
-      fillProbDist(totalJointCounts, prob, 0);
+      fillProbDistI(totalJointCounts, prob, 0);
       System.err.println("Counts of MSD labels (joint):");
       System.err.println("Counts: "+Arrays.toString(totalJointCounts));
       System.err.println("RelFreq: "+Arrays.toString(prob));

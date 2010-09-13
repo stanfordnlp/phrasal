@@ -335,9 +335,10 @@ public class PhraseExtract {
 
         fe.init(prop, featureIndex, alTemps);
         if (extractors.isEmpty()) {
-          if (!(fe instanceof PhrasePrinter))
-            throw new RuntimeException("First feature extractor must implement PhrasePrinter.");
-          phrasePrinter = (PhrasePrinter) fe;
+          if (fe instanceof PhrasePrinter)
+            phrasePrinter = (PhrasePrinter) fe;
+          else
+            phrasePrinter = new PlainPhrasePrinter();
         }
         extractors.add(fe);
         infoFileForExtractors.add(infoFilename);

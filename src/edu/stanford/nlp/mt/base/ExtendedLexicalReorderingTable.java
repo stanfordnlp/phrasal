@@ -146,7 +146,7 @@ public class ExtendedLexicalReorderingTable {
 	}
 	
 	final String filetype;
-	final ArrayList<Object> reorderingScores = new ArrayList<Object>();
+	final ArrayList<float[]> reorderingScores = new ArrayList<float[]>();
 	
 	public final ReorderingTypes[] positionalMapping;
 	public final ConditionTypes conditionType;
@@ -172,7 +172,7 @@ public class ExtendedLexicalReorderingTable {
 
     if (reorderingId < 0) return null;
 
-    return (float[]) reorderingScores.get(reorderingId);
+    return reorderingScores.get(reorderingId);
   }
 
 	/**
@@ -283,12 +283,12 @@ public class ExtendedLexicalReorderingTable {
 			final int[] indexInts;
 			if (conditionType == ConditionTypes.e || conditionType == ConditionTypes.f) {
 				IString[] tokens = IStrings.toIStringArray(phrase1TokenList);
-				indexInts = IStrings.toIntArray(tokens);				
+				indexInts = DTUTable.toWordIndexArray(tokens); // IStrings.toIntArray(tokens);
 			} else {
 				IString[] fTokens = IStrings.toIStringArray(phrase1TokenList);
-				int[] fIndexInts = IStrings.toIntArray(fTokens);
+				int[] fIndexInts = DTUTable.toWordIndexArray(fTokens); // IStrings.toIntArray(fTokens);
 				IString[] eTokens = IStrings.toIStringArray(phrase2TokenList);
-				int[] eIndexInts = IStrings.toIntArray(eTokens);
+				int[] eIndexInts = DTUTable.toWordIndexArray(eTokens); // IStrings.toIntArray(eTokens);
 				indexInts = mergeInts(fIndexInts, eIndexInts);
 			} 
 			

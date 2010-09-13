@@ -35,10 +35,14 @@ public class DTUOption<T> extends TranslationOption<T> {
     StringBuilder sbuf = new StringBuilder("TranslationOption: \"");
     for(int i=0; i<dtus.length; ++i) {
       if(i>0)
-        sbuf.append(" ").append(DTUPhraseExtractor.GAP_STR.word()).append(" ");
+        sbuf.append(" ").append(DTUTable.GAP_STR.word()).append(" ");
       sbuf.append(dtus[i].toString());
     }
     sbuf.append(String.format("\" scores: %s\n", Arrays.toString(scores)));
 		return sbuf.toString();
 	}
+
+  @Override
+  public boolean hasTargetGap() { return true; }
+
 }

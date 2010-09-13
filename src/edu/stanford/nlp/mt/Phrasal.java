@@ -575,9 +575,9 @@ public class Phrasal {
                      LinearFutureCostFeaturizer.class.getName());
 
     FeaturizerFactory.GapType gapT = !withGaps ? FeaturizerFactory.GapType.none :
-        ((gapOpts.size() > 1 && Integer.parseInt(gapOpts.get(1)) > 0) ?
-          FeaturizerFactory.GapType.both : FeaturizerFactory.GapType.source);
+        ((gapOpts.size() > 1) ? FeaturizerFactory.GapType.both : FeaturizerFactory.GapType.source);
     String gapType = gapT.name();
+    System.err.println("Gap type: "+gapType);
 
 		featurizer = FeaturizerFactory.factory(
 				FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR, makePair(
@@ -775,9 +775,14 @@ public class Phrasal {
       int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));
       DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
 
-      int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts.get(1)) : distortionLimit;
-      if (gapT == FeaturizerFactory.GapType.target || gapT == FeaturizerFactory.GapType.both)
+      int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts.get(1)) : -1;
+      if (maxTargetPhraseSpan == -1) {
+        System.err.println("Phrases with target gaps not loaded into memory.");
+        DTUTable.maxNumberTargetSegments = 1;
+      }
+      if (gapT == FeaturizerFactory.GapType.target || gapT == FeaturizerFactory.GapType.both) {
         DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
+      }
 
       // Support for floating phrases:
       if (config.containsKey(MAX_PENDING_PHRASES_OPT)) {

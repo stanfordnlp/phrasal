@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
+import edu.stanford.nlp.util.IntPair;
+
 import java.util.BitSet;
 import java.util.Iterator;
 
@@ -86,4 +88,29 @@ public class CoverageSet extends BitSet implements Iterable<Integer> {
       }
     };
   }
+
+  public Iterator<IntPair> getSegmentIterator() {
+    return new Iterator<IntPair>() {
+
+      int idx = nextSetBit(0);
+
+      @Override
+      public boolean hasNext() {
+        return idx >= 0;
+      }
+
+      @Override
+      public IntPair next() {
+        int startIdx = idx;
+        int endIdx = nextClearBit(idx);
+        this.idx = nextSetBit(endIdx);
+        return new IntPair(startIdx,endIdx-1);
+      }
+
+      @Override public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
+  }
+
 }

@@ -49,5 +49,6 @@ public class WordPenaltyFeaturizer<TK> implements
 			Sequence<TK> foreign) {	
 	}
 
+  @Override
 	public void reset() { }
 }

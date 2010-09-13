@@ -64,4 +64,7 @@ public class TranslationOption<T> {
 		if (hashCode == -1) hashCode = super.hashCode();
 		return hashCode;
 	}
+
+  public boolean hasTargetGap() { return false; }
+
 }

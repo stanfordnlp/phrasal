@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
+import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SimpleSequence;
@@ -28,7 +29,7 @@ public class DiscontinuousSubSequences {
       if (!toks.isEmpty() && !bs.get(pos-1)) {
         if (gaps++ == maxGaps)
           return null;
-        toks.add(DTUPhraseExtractor.GAP_STR);
+        toks.add(DTUTable.GAP_STR);
       }
       if (align != null)
         align.put(pos, toks.size());

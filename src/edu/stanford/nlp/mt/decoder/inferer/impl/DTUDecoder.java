@@ -494,12 +494,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             {
               if (newHyp.hasExpired())
                 continue;
-              if (newHyp.isDone() != newHyp.featurizable.done) {
-                System.err.println("ERROR in DTUDecoder with: "+newHyp);
-                System.err.println("isDone(): "+newHyp.isDone());
-                System.err.println("f.done: "+newHyp.featurizable.done);
-                //throw new RuntimeException();
-              }
 
               if (DETAILED_DEBUG) {
                 System.err.printf("creating hypothesis %d from %d\n", newHyp.id, hyp.id);

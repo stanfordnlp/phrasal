@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 import java.util.List;
 import java.util.ArrayList;
 
+import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -10,12 +11,10 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 
-import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
-
 /**
  * @author Michel Galley
  */
-public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, String> {
+public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, String> implements IsolatedPhraseFeaturizer<IString,String> {
 
 	public static final String DEBUG_PROPERTY = "DebugDTULinearDistortionFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
@@ -52,6 +51,11 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
     return null;
   }
 
+  @Override
+	public FeatureValue<String> phraseFeaturize(Featurizable<IString,String> f) {
+    return null;
+  }
+
 	@Override
 	public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
@@ -62,14 +66,14 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
       }
 
     ///////////////////////////////////////////
-    // (1) Source gaps:
+    // (1) Source gap lengths:
     ///////////////////////////////////////////
 
-    List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(1);
+    List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
     int span = f.option.foreignCoverage.length()-f.option.foreignCoverage.nextSetBit(0);
     int totalSz = 0;
     for(IString fw : f.foreignPhrase)
-      if(fw.id != DTUPhraseExtractor.GAP_STR.id)
+      if(fw.id != DTUTable.GAP_STR.id)
         ++totalSz;
     int gapSz = span-totalSz;
     if (gapSz != 0)
@@ -93,6 +97,18 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
 
     return list;
   }
+
+  @Override
+	public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
+    List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(1);
+    int minTotalSz = 0;
+    for(IString fw : f.foreignPhrase)
+      if(fw.id == DTUTable.GAP_STR.id)
+        ++minTotalSz;
+    if (minTotalSz > 0)
+      list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0*minTotalSz));
+    return list;
+	}
 
   @Override
 	public void initialize(List<ConcreteTranslationOption<IString>> options,

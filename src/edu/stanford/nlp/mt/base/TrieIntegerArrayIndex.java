@@ -45,10 +45,12 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     };
   }
 
+  /*
   public TrieIntegerArrayIndex(int sz, Function<Integer,Integer> transitionNormalizer) {
     this(sz);
     this.transitionNormalizer = transitionNormalizer;
   }
+  */
 
   @Override
   public int[] get(int idx) {

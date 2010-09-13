@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
@@ -12,8 +13,6 @@ import java.util.*;
  * @author Michel Galley
  */
 public class DTUPhraseExtractor extends AbstractPhraseExtractor {
-
-  static public final IString GAP_STR = new IString("X"); // uppercase, so shouldn't clash with other symbols
 
   static public final String MAX_SPAN_OPT = "maxDTUSpan";
   static public final String MAX_SPAN_E_OPT = "maxDTUSpanE";
@@ -75,7 +74,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     for (int i : bitset) {
       if (oldI != -1) {
         if (i > oldI+1) {
-          sb.append(" ").append(DTUPhraseExtractor.GAP_STR).append(" ");
+          sb.append(" ").append(DTUTable.GAP_STR).append(" ");
         } else {
           sb.append(" ");
         }
@@ -599,7 +598,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
           q.offerFirst(new Triple<Integer,Integer, CoverageSet>(pos+1,nextState,newBitset));
         }
         // Try to match non terminals:
-        int ntNextState = fTrieIndex.getSuccessor(curState, DTUPhraseExtractor.GAP_STR.id);
+        int ntNextState = fTrieIndex.getSuccessor(curState, DTUTable.GAP_STR.id);
         if (ntNextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
           int lastPos = i+maxSpan;
           for (int pos2=pos+1; pos2<=lastPos; ++pos2) {

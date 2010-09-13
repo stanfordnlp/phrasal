@@ -7,18 +7,33 @@ import java.util.Deque;
 import java.util.Arrays;
 import java.io.IOException;
 import java.io.File;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.train.DTUPhraseExtractor;
 
 public class DTUTable<FV> extends MosesPhraseTable<FV> {
 
+  static public final IString GAP_STR = new IString("X");
+
   public static int maxPhraseSpan = 12;
-  public static int maxTargetSpans = 2;
+  public static int maxNumberTargetSegments = 2;
+
+  // Note: unpredictable result with more than one phrase table! (TODO: make non-static)
+  private static ArrayList<float[][]> gapSizeScoresF, gapSizeScoresE;
 
   public static void setMaxPhraseSpan(int m) {
     maxPhraseSpan = m;
+  }
+
+  @SuppressWarnings("unused")
+  public static float getSourceGapScore(int fIndex, int gapId, int binId) {
+    return gapSizeScoresF.get(fIndex)[gapId][binId];
+  }
+
+  @SuppressWarnings("unused")
+  public static float getTargetGapScore(int fIndex, int gapId, int binId) {
+    return gapSizeScoresE.get(fIndex)[gapId][binId];
   }
 
   public DTUTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer, Scorer<FV> scorer, String filename) throws IOException {
@@ -56,13 +71,13 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
     assert (targets == null);
     List<ConcreteTranslationOption<IString>> opts = new LinkedList<ConcreteTranslationOption<IString>>();
 		int sequenceSz = sequence.size();
-    System.err.println("sent: "+sequence);
+    //System.err.println("Seq to match: "+sequence);
 
     assert (foreignIndex instanceof TrieIntegerArrayIndex);
     TrieIntegerArrayIndex trieIndex = (TrieIntegerArrayIndex) foreignIndex;
 
     for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
-      //System.err.println("s: "+startIdx);
+      //System.err.println("startIdx: "+startIdx);
       Deque<MatchState> deque = new LinkedList<MatchState>();
       deque.add(new MatchState(TrieIntegerArrayIndex.IDX_ROOT, startIdx));
       while (!deque.isEmpty()) {
@@ -80,7 +95,7 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
                 //System.err.println("option: target dtus for input: "+Arrays.toString(s.foreign));
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
                 RawSequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
-                for(int i=0; i<multiIntTransOpt.dtus.length; ++i) {
+                for (int i=0; i<multiIntTransOpt.dtus.length; ++i) {
                   dtus[i] =  new RawSequence<IString>(multiIntTransOpt.dtus[i],
                      IString.identityIndex());
                   //System.err.printf("dtu[%d]: %s\n", i, dtus[i].toString());
@@ -95,6 +110,7 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
                 transOpts.add(
                      new TranslationOption<IString>(intTransOpt.id, intTransOpt.scores, scoreNames,
                           translation, new RawSequence(s.foreign), intTransOpt.alignment));
+                //System.err.printf("FULL MATCH: %s | %s\n",Arrays.toString(s.foreign), s.coverage);
               }
 
             }
@@ -118,30 +134,35 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
             IString[] foreign = new IString[s.foreign.length+1];
             System.arraycopy(s.foreign, 0, foreign, 0, s.foreign.length);
             foreign[foreign.length-1] = sequence.get(s.pos);
-            deque.add(new MatchState(nextState, s.pos+1, coverage, foreign));
+            MatchState newS = new MatchState(nextState, s.pos+1, coverage, foreign);
+            deque.add(newS);
+            //System.err.printf("matched a word: %s\n", sequence.get(s.pos));
+            //System.err.printf("matched a word: %s | %s | %d\n", sequence.get(s.pos), newS.coverage, newS.pos);
           }
         }
 
         // try to match an X at s.pos:
         if (s.pos > startIdx && s.pos+1 < sequence.size()) {
-          long nonterminalTransition = trieIndex.getTransition(s.state, DTUPhraseExtractor.GAP_STR.id);
+          long nonterminalTransition = trieIndex.getTransition(s.state, GAP_STR.id);
           int nextState = trieIndex.map.get(nonterminalTransition);
           if (nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
             //System.err.printf("X after %s\n", new SimpleSequence<IString>(true, s.foreign));
+            //System.err.printf("PARTIAL MATCH: %s | %s | %d\n",Arrays.toString(s.foreign), s.coverage, s.pos);
             // OK, we found an X, now must determine how long:
-            for (int afterX=s.pos+1; afterX <= startIdx+maxPhraseSpan && afterX <sequence.size(); ++afterX) {
+            for (int afterX=s.pos+1; afterX <= startIdx+maxPhraseSpan && afterX <sequence.size(); ++afterX) { // TODO: CHECK
               long terminalTransition = trieIndex.getTransition(nextState, sequence.get(afterX).id);
               int next2State = trieIndex.map.get(terminalTransition);
               if (next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
-                //System.err.printf("Found a DTU that covers %s\n", sequence.subsequence(startIdx, afterX+1));
-                //System.err.printf("  X covers %s\n", sequence.subsequence(s.pos, afterX));
+                //System.err.printf("matched a gap [s=%d][e=%d][d=%d]: %s\n",s.pos,afterX-1,afterX-s.pos,sequence.subsequence(s.pos, afterX));
                 CoverageSet coverage = s.coverage.clone();
                 coverage.set(afterX);
                 IString[] foreign = new IString[s.foreign.length+2];
                 System.arraycopy(s.foreign, 0, foreign, 0, s.foreign.length);
-                foreign[foreign.length-2] = DTUPhraseExtractor.GAP_STR;
+                foreign[foreign.length-2] = GAP_STR;
                 foreign[foreign.length-1] = sequence.get(afterX);
-                deque.add(new MatchState(next2State, afterX, coverage, foreign));
+                MatchState newS = new MatchState(next2State, afterX+1, coverage, foreign);
+                deque.add(newS);
+                //System.err.printf("PARTIAL MATCH: %s | %s | %d\n",Arrays.toString(newS.foreign), newS.coverage, newS.pos);
               }
             }
           }
@@ -151,15 +172,79 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
     return opts;
   }
 
+  // Custom version of Sequences.toIntArray, which converts tags to X.
+  static int[] toWordIndexArray(Sequence<IString> seq) {
+    int[] arr = new int[seq.size()];
+    for (int i=0; i<seq.size(); ++i) {
+      IString el = seq.get(i);
+      char c0 = el.word().charAt(0);
+      if (Character.isUpperCase(c0)) {
+        assert (el.word().startsWith(GAP_STR.word()));
+        arr[i] = GAP_STR.id;
+      } else {
+        arr[i] = el.id;
+      }
+    }
+    return arr;
+  }
+
+  static int[] toWordIndexArray(IString[] seq) {
+    return toWordIndexArray(new SimpleSequence<IString>(true, seq));
+  }
+
+  private final static Pattern pattern = Pattern.compile("[,X\\[\\]]+");
+
+  // Custom version of Sequences.toIntArray, which converts tags to X.
+  static float[][] toGapSizeScores(Sequence<IString> seq) {
+    List<float[]> list = new LinkedList<float[]>();
+    for (int i=0; i<seq.size(); ++i) {
+      IString el = seq.get(i);
+      char c0 = el.word().charAt(0);
+      if (Character.isUpperCase(c0)) {
+        assert (el.word().startsWith(GAP_STR.word()));
+        if (el.id != GAP_STR.id) {
+          String[] strs = pattern.split(el.word());
+          assert (strs.length == 5);
+          float[] scores = new float[strs.length-1];
+          for (int j=1; j<strs.length; ++j) {
+            float score = Float.parseFloat(strs[j]);
+            scores[j-1] = (float) Math.log(score); 
+          }
+          list.add(scores);
+        }
+      }
+    }
+    return list.toArray(new float[list.size()][]);
+  }
+
   @Override
   protected void addEntry(Sequence<IString> foreignSequence, Sequence<IString> translationSequence, PhraseAlignment alignment,
 			float[] scores) {
 
-    int[] foreignInts = Sequences.toIntArray(foreignSequence);
-    int[] translationInts = Sequences.toIntArray(translationSequence);
+    int[] foreignInts = toWordIndexArray(foreignSequence);
+    int[] translationInts = toWordIndexArray(translationSequence);
 		int fIndex = foreignIndex.indexOf(foreignInts, true);
     int eIndex = translationIndex.indexOf(translationInts, true);
     int id = translationIndex.indexOf(new int[] {fIndex, eIndex}, true);
+
+    float[][] foreignGapSzScores = toGapSizeScores(foreignSequence);
+    float[][] translationGapSzScores = toGapSizeScores(translationSequence);
+
+    if (foreignGapSzScores.length > 0) {
+      if (gapSizeScoresF == null)
+        gapSizeScoresF = new ArrayList<float[][]>();
+      while (id >= gapSizeScoresF.size())
+        gapSizeScoresF.add(null);
+      gapSizeScoresF.set(id, foreignGapSzScores);
+    }
+
+    if (translationGapSzScores.length > 0) {
+      if (gapSizeScoresE == null)
+        gapSizeScoresE = new ArrayList<float[][]>();
+      while (id >= gapSizeScoresE.size())
+        gapSizeScoresE.add(null);
+      gapSizeScoresE.set(id, translationGapSzScores);
+    }
 
     if (translations.size() <= fIndex) {
 			translations.ensureCapacity(fIndex+1);
@@ -174,24 +259,25 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
 			translations.set(fIndex, intTransOpts);
 		}
 
-    int numSpans = 1;
+    int numTgtSegments = 1;
     for (int el : translationInts) {
-      if (el == DTUPhraseExtractor.GAP_STR.id) {
-        ++numSpans;
+      if (el == GAP_STR.id) {
+        ++numTgtSegments;
       }
     }
-    if (numSpans == 1) {
+    if (numTgtSegments == 1) {
+      // no gaps:
       intTransOpts.add(new IntArrayTranslationOption(id, translationIndex.get(eIndex), scores, alignment));
       //System.err.printf("no gap in target: {{{%s}}} {{{%s}}} {{{%s}}}\n", translationSequence, foreignSequence, Arrays.toString(scores));
     } else {
-      if(numSpans > maxTargetSpans)
+      if(numTgtSegments > maxNumberTargetSegments)
         return;
       //System.err.printf("gap in target: {{{%s}}} {{{%s}}} {{{%s}}}\n", translationSequence, foreignSequence, Arrays.toString(scores));
       int start=0, pos=0;
       int i = -1;
-      int[][] dtus = new int[numSpans][];
+      int[][] dtus = new int[numTgtSegments][];
       while (pos <= translationInts.length) {
-        if (pos == translationInts.length || translationInts[pos] == DTUPhraseExtractor.GAP_STR.id) {
+        if (pos == translationInts.length || translationInts[pos] == GAP_STR.id) {
           dtus[++i] = Arrays.copyOfRange(translationInts,start,pos);
           //System.err.printf("Span: {{{%s}}}\n", Arrays.toString(IStrings.toStringArray(dtus[i])));
           start = pos+1;

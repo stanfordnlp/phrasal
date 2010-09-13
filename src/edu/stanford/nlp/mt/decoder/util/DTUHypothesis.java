@@ -170,17 +170,6 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     return sb.toString();
   }
 
-  @SuppressWarnings("unused")
-  static <TK,FV> void debug(DTUHypothesis<TK,FV> hyp, boolean first) {
-    System.err.println("###################");
-    System.err.printf( "hypothesis (first=%s) (bad=%s) (pending=%d) (class=%s id=%d): %s\n", first, hyp.hasExpired, hyp.pendingPhrases.size(), hyp.getClass().toString(), System.identityHashCode(hyp), hyp);
-    System.err.printf( "parent hypothesis (class=%s): %s\n", hyp.preceedingHyp.getClass().toString(), hyp.preceedingHyp);
-    System.err.println("translation position: "+hyp.featurizable.translationPosition);
-    System.err.println("score: "+hyp.score);
-    System.err.println("h: "+hyp.h);
-    System.err.println("pendingPhrasesCost: "+hyp.pendingPhrasesCost);
-  }
-
   /**
    * Compute cost of pending phrases.
    */
@@ -274,7 +263,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       this.hasExpired = true;
 
     // Add new pending phrases:
-    assert (MAX_TARGET_PHRASE_SPAN >= 0);
+    //assert (MAX_TARGET_PHRASE_SPAN >= 0);
     if (translationOpt.abstractOption instanceof DTUOption) {
       PendingPhrase<TK,FV> newPhrase = new PendingPhrase<TK,FV>
         (translationOpt, translationId, this, featurizer, scorer, 0, this.length+1, this.length + MAX_TARGET_PHRASE_SPAN);
@@ -287,8 +276,6 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
 
     // Estimate future cost for pending phrases:
     pendingPhrasesCost = getPendingPhrasesCost();
-    //debug(this, true);
-    //checkConsistency();
   }
 
   // Constructor used with successors:
@@ -341,7 +328,6 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       this.hasExpired = true;
 
     pendingPhrasesCost = getPendingPhrasesCost();
-    //checkConsistency();
   }
 
   // Constructor used during nbest list generation:
@@ -378,7 +364,6 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
 
     seenOptions.add(translationOpt.abstractOption);
     pendingPhrasesCost = getPendingPhrasesCost();
-    //checkConsistency();
   }
 
   private static <TK,FV> RawSequence<TK> getTranslation(Hypothesis<TK,FV> hyp) {
@@ -438,11 +423,20 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     return pendingPhrases;
   }
 
-  @SuppressWarnings("unused")
-  private void checkConsistency() {
+  @Override
+  public void debug() {
+    System.err.println("###################");
+    System.err.printf( "hypothesis [class=%s,id=%d,pos=%d,expired=%s,pending=%d]: %s\n",
+      getClass(), System.identityHashCode(this), featurizable.translationPosition, hasExpired, pendingPhrases.size(), this);
+    System.err.printf( "parent hypothesis [class=%s,id=%d,pos=%d,expired=%s]: %s\n", 
+      preceedingHyp.getClass(), System.identityHashCode(preceedingHyp),
+      preceedingHyp.featurizable.translationPosition,
+      preceedingHyp.hasExpired(), preceedingHyp);
+    System.err.println("pendingPhrasesCost: "+pendingPhrasesCost);
+
     DTUHypothesis<TK,FV> hyp = this;
     if (hyp.isDone() != hyp.featurizable.done) {
-      System.err.println("ERROR in AbstractBeamInferer with: "+hyp);
+      System.err.println("Error in AbstractBeamInferer with: "+hyp);
       System.err.println("isDone(): "+hyp.isDone());
       System.err.println("pending phrases: "+hyp.pendingPhrases.size());
       System.err.println("f.done: "+hyp.featurizable.done);
@@ -453,5 +447,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       }
       throw new RuntimeException();
     }
+    
   }
+
 }

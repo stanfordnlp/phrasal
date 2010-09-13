@@ -130,23 +130,26 @@ public class AlignmentTemplate {
   public String toString(boolean withAlign) {
     StringBuilder buf = new StringBuilder();
     buf.append(f.toString()).append(DELIM).append(e.toString());
-    if (withAlign) {
-      buf.append(DELIM);
-      if (f2e != null) {
-        for (int i=0; i<f2e.length; ++i) {
-          if (i > 0) buf.append(" ");
-          buf.append("(").append(alignmentToString(f2e[i])).append(")");
-        }
-      }
-      buf.append(DELIM);
-      if (e2f != null) {
-        for (int i=0; i<e2f.length; ++i) {
-          if (i > 0) buf.append(" ");
-          buf.append("(").append(alignmentToString(e2f[i])).append(")");
-        }
+    if (withAlign)
+      addAlignmentString(buf);
+    return buf.toString();
+  }
+
+  public void addAlignmentString(StringBuilder buf) {
+    buf.append(DELIM);
+    if (f2e != null) {
+      for (int i=0; i<f2e.length; ++i) {
+        if (i > 0) buf.append(" ");
+        buf.append("(").append(alignmentToString(f2e[i])).append(")");
       }
     }
-    return buf.toString();
+    buf.append(DELIM);
+    if (e2f != null) {
+      for (int i=0; i<e2f.length; ++i) {
+        if (i > 0) buf.append(" ");
+        buf.append("(").append(alignmentToString(e2f[i])).append(")");
+      }
+    }
   }
 
   static String alignmentToString(Set<Integer> alSet) {

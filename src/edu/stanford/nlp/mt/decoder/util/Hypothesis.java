@@ -235,4 +235,6 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
   public boolean hasExpired() {
     return false;
   }
+
+  public void debug() { /* nothing relevant to debug; meant to be overridden */ }
 }

@@ -15,14 +15,22 @@ import edu.stanford.nlp.mt.base.Sequence;
  *
  * @param <TK>
  */
+@SuppressWarnings("unused")
 public class PhrasePenaltyFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, IsolatedPhraseFeaturizer<TK, String>  {
 	static public String FEATURE_NAME = "TM:phrasePenalty";
   // mg2008: please don't change to "= 1" since not exactly the same value:
-  static private final double MOSES_PHRASE_PENALTY = Math.log(2.718);
+  private double phrasePenalty = Math.log(2.718);
+
+  public PhrasePenaltyFeaturizer(String... args) {
+    if (args.length >= 1) {
+      assert (args.length == 1);
+      phrasePenalty = Double.parseDouble(args[0]);
+    }
+  }
 
 	@Override
 	public FeatureValue<String> featurize(Featurizable<TK,String> f) {
-		return new FeatureValue<String>(FEATURE_NAME, MOSES_PHRASE_PENALTY); 
+		return new FeatureValue<String>(FEATURE_NAME, phrasePenalty);
 	}
 
 	@Override
@@ -46,5 +54,6 @@ public class PhrasePenaltyFeaturizer<TK> implements IncrementalFeaturizer<TK,Str
 			Sequence<TK> foreign) {
 	}
 
+  @Override
 	public void reset() { }
 }

@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
+import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
 
@@ -244,7 +245,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor implements P
     // Each French word must be explained:
     double lex = 1.0;
     for (int fi=0; fi<alTemp.f().size();++fi) {
-      if (alTemp.f().get(fi).equals(DTUPhraseExtractor.GAP_STR))
+      if (alTemp.f().get(fi).equals(DTUTable.GAP_STR))
         continue;
       double wSum = 0.0;
       int alCount = alTemp.f2e(fi).size();
@@ -252,7 +253,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor implements P
         wSum = getLexProb(alTemp.f().get(fi),NULL_STR);
       } else {
         for(int ei : alTemp.f2e(fi)) {
-          assert (!alTemp.e().get(ei).equals(DTUPhraseExtractor.GAP_STR));
+          assert (!alTemp.e().get(ei).equals(DTUTable.GAP_STR));
           wSum += getLexProb(alTemp.f().get(fi),alTemp.e().get(ei));
         }
         wSum /= alCount;
@@ -278,7 +279,7 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor implements P
     // Each English word must be explained:
     double lex = 1.0;
     for (int ei=0; ei<alTemp.e().size();++ei) {
-      if (alTemp.e().get(ei).equals(DTUPhraseExtractor.GAP_STR))
+      if (alTemp.e().get(ei).equals(DTUTable.GAP_STR))
         continue;
       double wSum = 0.0;
       int alCount = alTemp.e2f(ei).size();

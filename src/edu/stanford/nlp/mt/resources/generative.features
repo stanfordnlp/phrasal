@@ -17,12 +17,14 @@ SG:GapCount
 SG:Gap2Count
 SG:Gap3Count
 SG:Gap4Count
+SG:GapSizeLProb
 TG:CrossingCount
 TG:Length
 TG:GapCount
 TG:Gap2Count
 TG:Gap3Count
 TG:Gap4Count
+TG:GapSizeLProb
 LM
 LM2
 LM3
@@ -37,5 +39,7 @@ LexR:discontinuousWithNext
 LexR:discontinuousWithPrevious
 LexR:discontinuous2WithNext
 LexR:discontinuous2WithPrevious
+LexR:containmentWithNext
+LexR:containmentWithPrevious
 LexR:NB
 UnknownWord

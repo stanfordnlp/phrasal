@@ -275,8 +275,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 		for (int i = beams.length -1; i >= 0; i--) {
 			if (beams[i].size() != 0 && (constrainedOutputSpace == null || constrainedOutputSpace.allowableFinal(beams[i].iterator().next().featurizable))) {
 					Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
-					try { writeAlignments(alignmentDump, bestHyp); } catch (Exception e) { e.printStackTrace(); }
-					try { alignmentDump.close(); } catch (Exception e) { e.printStackTrace(); }
+					try { writeAlignments(alignmentDump, bestHyp); } catch (Exception e) { /* not an issue */ }
+					try { alignmentDump.close(); } catch (Exception e) { /* not an issue */ }
           if(DEBUG) System.err.println("Returning beam of size: "+beams[i].size());
           return beams[i];
 			}
