@@ -28,11 +28,13 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
 
   @SuppressWarnings("unused")
   public static float getSourceGapScore(int fIndex, int gapId, int binId) {
+    if (gapSizeScoresF == null) return 0.0f;
     return gapSizeScoresF.get(fIndex)[gapId][binId];
   }
 
   @SuppressWarnings("unused")
   public static float getTargetGapScore(int fIndex, int gapId, int binId) {
+    if (gapSizeScoresE == null) return 0.0f;
     return gapSizeScoresE.get(fIndex)[gapId][binId];
   }
 

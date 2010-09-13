@@ -236,5 +236,9 @@ public class Hypothesis<TK,FV> implements Comparable<Hypothesis<TK,FV>>, State<H
     return false;
   }
 
+  public boolean hasUntranslatedTokens() {
+    return untranslatedTokens > 0;
+  }
+
   public void debug() { /* nothing relevant to debug; meant to be overridden */ }
 }

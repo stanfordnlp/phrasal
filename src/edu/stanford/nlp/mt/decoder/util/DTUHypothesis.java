@@ -108,7 +108,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
    */
   @Override
   public boolean isDone() {
-    int nPendingPhrases = pendingPhrases == null ? 0 : pendingPhrases.size();
+    int nPendingPhrases = (pendingPhrases == null) ? 0 : pendingPhrases.size();
     return super.isDone() && nPendingPhrases == 0 && !hasExpired;
   }
 
@@ -276,6 +276,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
 
     // Estimate future cost for pending phrases:
     pendingPhrasesCost = getPendingPhrasesCost();
+    checkExpiration();
   }
 
   // Constructor used with successors:
@@ -328,6 +329,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       this.hasExpired = true;
 
     pendingPhrasesCost = getPendingPhrasesCost();
+    checkExpiration();
   }
 
   // Constructor used during nbest list generation:
@@ -364,6 +366,28 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
 
     seenOptions.add(translationOpt.abstractOption);
     pendingPhrasesCost = getPendingPhrasesCost();
+    checkExpiration();
+  }
+
+  // Determine whether hypothesis is bound to expire:
+  private void checkExpiration() {
+    // Note: this code leads to translation failures in some rare cases.
+
+    if (hasExpired)
+      return; // already expired
+
+    if (pendingPhrases == null || pendingPhrases.isEmpty())
+      return; // can't expire since there are no pending phrases
+
+    // Will any pending phrase be applicable at the next step of decoding?
+    int nextPosition = this.length+1;
+    for (PendingPhrase pp : this.pendingPhrases) {
+      if (pp.firstPosition <= nextPosition && nextPosition <= pp.lastPosition) // Answer: yes
+        return;
+      //System.err.printf("Fail: %d <= %d <= %d\n", pp.firstPosition, nextPosition, pp.lastPosition);
+    }
+    //System.err.println("Hypothesis bound to expire: "+this);
+    hasExpired = true; // Answer: no
   }
 
   private static <TK,FV> RawSequence<TK> getTranslation(Hypothesis<TK,FV> hyp) {

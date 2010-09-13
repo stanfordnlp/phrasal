@@ -53,7 +53,8 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 
 /**
- * @author Daniel Cer, Michel Galley
+ * @author Daniel Cer
+ * @author Michel Galley
  */
 public class NBestOptimizerFactory {
 
@@ -180,7 +181,7 @@ class SequenceOptimizer extends AbstractNBestOptimizer {
 
       boolean done = false;
       
-      while(!done) {
+      while (!done) {
         Counter<String> newWts = opt.optimize(wts);
         
         double wtSsd = MERT.wtSsd(newWts, wts);

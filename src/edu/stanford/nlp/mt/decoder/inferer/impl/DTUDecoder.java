@@ -492,6 +492,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               new DTUHypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic) :
               new Hypothesis<TK, FV>(translationId, option, hyp.length, hyp, featurizer, scorer, heuristic);
             {
+              // Discard hypothesis if ill-formed:
               if (newHyp.hasExpired())
                 continue;
 
