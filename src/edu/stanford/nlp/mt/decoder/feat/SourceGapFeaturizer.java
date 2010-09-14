@@ -22,14 +22,19 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
 
 	public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";
 	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
-  public static final String CROSSING_FEATURE_NAME = "SG:CrossingCount"; // number of DTU's that have gaps
-	public static final String GC_FEATURE_NAME = "SG:GapCount"; // number of DTU's that have gaps
-	public static final String GC2_FEATURE_NAME = "SG:Gap2Count"; // number of DTU's that have >= 2 gaps
-  public static final String GC3_FEATURE_NAME = "SG:Gap3Count"; // number of DTU's that have >= 3 gaps
-  public static final String GC4_FEATURE_NAME = "SG:Gap4Count"; // number of DTU's that have >= 4 gaps
-  public static final String GAP_SIZE_FEATURE_NAME = "SG:GapSizeLProb"; // log-probability of gap size
 
-	public String gcFeatureName, gc2FeatureName, gc3FeatureName, gc4FeatureName, crossingFeatureName, gapSizeFeatureName;
+  public static final String PREFIX = "SG:";
+  public static final String DEFAULT_CROSSING_FEATURE_NAME = "CrossingCount"; // number of DTU's that have gaps
+	public static final String DEFAULT_GC_FEATURE_NAME = "GapCount"; // number of DTU's that have gaps
+	public static final String DEFAULT_GC2_FEATURE_NAME = "Gap2Count"; // number of DTU's that have >= 2 gaps
+  public static final String DEFAULT_GC3_FEATURE_NAME = "Gap3Count"; // number of DTU's that have >= 3 gaps
+  public static final String DEFAULT_GC4_FEATURE_NAME = "Gap4Count"; // number of DTU's that have >= 4 gaps
+  public static final String DEFAULT_GAP_SIZE_FEATURE_NAME = "GapSizeLProb"; // log-probability of gap size
+  public static final String DEFAULT_GAP_SIZE_FEATURE_BIN_NAME = "GapSizeLProbPerBin"; // log-probability of gap size (one feature for each bin)
+
+	public String
+    gcFeatureName, gc2FeatureName, gc3FeatureName, gc4FeatureName, 
+    crossingFeatureName, gapSizeFeatureName, gapSizeFeaturePerBinName;
 
   public int nFeatures = 2;
 
@@ -40,15 +45,16 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
     gc4OnValue, gc4OffValue,
     crossingOnValue;
 
-  boolean addGapSizeProb = false;
+  boolean addGapSizeProb = false, featureForEachBin = false;
 
   public SourceGapFeaturizer() {
-		gcFeatureName = GC_FEATURE_NAME;
-		gc2FeatureName = GC2_FEATURE_NAME;
-    gc3FeatureName = GC3_FEATURE_NAME;
-    gc4FeatureName = GC4_FEATURE_NAME;
-    crossingFeatureName = CROSSING_FEATURE_NAME;
-    gapSizeFeatureName = GAP_SIZE_FEATURE_NAME;
+		gcFeatureName = PREFIX+ DEFAULT_GC_FEATURE_NAME;
+		gc2FeatureName = PREFIX+ DEFAULT_GC2_FEATURE_NAME;
+    gc3FeatureName = PREFIX+ DEFAULT_GC3_FEATURE_NAME;
+    gc4FeatureName = PREFIX+ DEFAULT_GC4_FEATURE_NAME;
+    crossingFeatureName = PREFIX+ DEFAULT_CROSSING_FEATURE_NAME;
+    gapSizeFeatureName = PREFIX+ DEFAULT_GAP_SIZE_FEATURE_NAME;
+    gapSizeFeaturePerBinName = PREFIX+ DEFAULT_GAP_SIZE_FEATURE_BIN_NAME;
     gcOnValue = 0.0; gcOffValue = 1.0; // Defined like this for historical reasons
     crossingOnValue = -1.0;
 	}
@@ -59,25 +65,27 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
       String[] els = arg.split(":");
       String name = els[0];
       assert (els.length <= 3);
-      if (name.equals("GapSizeLProb")) {
+      if (name.startsWith(DEFAULT_GAP_SIZE_FEATURE_NAME)) {
+        if (name.equals(DEFAULT_GAP_SIZE_FEATURE_BIN_NAME))
+          featureForEachBin = true;
         addGapSizeProb = true;
         ++nFeatures;
-      } else if (name.equals("GapCount")) {
+      } else if (name.equals(DEFAULT_GC_FEATURE_NAME)) {
         gcOnValue = Double.parseDouble(els[1]);
         gcOffValue = Double.parseDouble(els[2]);
-      } else if (name.equals("Gap2Count")) {
+      } else if (name.equals(DEFAULT_GC2_FEATURE_NAME)) {
         gc2OnValue = Double.parseDouble(els[1]);
         gc2OffValue = Double.parseDouble(els[2]);
         ++nFeatures;
-      } else if (name.equals("Gap3Count")) {
+      } else if (name.equals(DEFAULT_GC3_FEATURE_NAME)) {
         gc3OnValue = Double.parseDouble(els[1]);
         gc3OffValue = Double.parseDouble(els[2]);
         ++nFeatures;
-      } else if (name.equals("Gap4Count")) {
+      } else if (name.equals(DEFAULT_GC4_FEATURE_NAME)) {
         gc4OnValue = Double.parseDouble(els[1]);
         gc4OffValue = Double.parseDouble(els[2]);
         ++nFeatures;
-      } else if (name.equals("CrossingCount")) {
+      } else if (name.equals(DEFAULT_CROSSING_FEATURE_NAME)) {
         crossingOnValue = Double.parseDouble(els[1]);
       } else {
         throw new UnsupportedOperationException("Unknown feature: "+name);
@@ -143,16 +151,26 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
       CoverageSet cs = f.hyp.translationOpt.foreignCoverage;
       List<Integer> binIds = DTUFeatureExtractor.getBins(cs);
       if (gapCount != binIds.size()) {
-        System.err.printf("Error: gapCount = %d, binIds = %d, phrase = {%s}, input = {%s}, fc = {%s}\n", gapCount, binIds.size(), f.foreignPhrase, f.foreignSentence, cs);
+        System.err.printf("Error: gapCount = %d, binIds = %d, phrase = {%s}, input = {%s}, fc = {%s}\n",
+          gapCount, binIds.size(), f.foreignPhrase, f.foreignSentence, cs);
         throw new RuntimeException();
       }
-      double totalGapLogProb = 0.0;
-      for (int i=0; i<binIds.size(); ++i) {
-        int id = f.hyp.translationOpt.abstractOption.id;
-        double gapLogProb = DTUTable.getSourceGapScore(id, i, binIds.get(i));
-        totalGapLogProb += gapLogProb;
+      if (featureForEachBin) {
+        for (int i=0; i<binIds.size(); ++i) {
+          int phraseId = f.option.abstractOption.id;
+          int binId = binIds.get(i);
+          double gapLogProb = DTUTable.getSourceGapScore(phraseId, i, binIds.get(i));
+          list.add(new FeatureValue<String>(gapSizeFeaturePerBinName+":"+binId, gapLogProb));
+        }
+      } else {
+        double totalGapLogProb = 0.0;
+        for (int i=0; i<binIds.size(); ++i) {
+          int id = f.option.abstractOption.id;
+          double gapLogProb = DTUTable.getSourceGapScore(id, i, binIds.get(i));
+          totalGapLogProb += gapLogProb;
+        }
+        list.add(new FeatureValue<String>(gapSizeFeatureName, totalGapLogProb));
       }
-      list.add(new FeatureValue<String>(gapSizeFeatureName, totalGapLogProb));
     }
 
     // Crossing feature:

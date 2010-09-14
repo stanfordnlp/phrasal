@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -15,6 +16,7 @@ import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.DTUOption;
+import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
 
 /**
  * @author Michel Galley
@@ -27,12 +29,46 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
 
   private static final int MINIMUM_GAP_SIZE = 1; // this should reflect the minimum gap size in DTUDecoder
 
-  public static final String GAP_LENGTH_FEATURE_NAME = "TG:Length";
-  public static final String GAP_COUNT_FEATURE_NAME = "TG:GapCount";
-  public static final String CROSSING_FEATURE_NAME = "TG:CrossingCount";
-  public static final String BONBON_FEATURE_NAME = "TG:BonBonCount";
+  public static final String PREFIX = "TG:";
+  public static final String DEFAULT_GAP_LENGTH_FEATURE_NAME = "Length";
+  public static final String DEFAULT_GAP_COUNT_FEATURE_NAME = "GapCount";
+  public static final String DEFAULT_CROSSING_FEATURE_NAME = "CrossingCount";
+  public static final String DEFAULT_BONBON_FEATURE_NAME = "BonBonCount";
+  public static final String DEFAULT_GAP_SIZE_FEATURE_NAME = "GapSizeLProb";
+  public static final String DEFAULT_GAP_SIZE_FEATURE_BIN_NAME = "GapSizeLProbPerBin";
 
-  private static final boolean WITH_BONBON = false;
+  public static boolean WITH_BONBON = false;
+
+  private String
+    gapLengthFeatureName, gapCountFeatureName, gapCrossingFeatureName,
+      bonbonFeatureName, gapSizeFeatureName, gapSizeFeaturePerBinName;
+
+  boolean addGapSizeProb = false, featureForEachBin = false;
+
+  public TargetGapFeaturizer() {
+    gapLengthFeatureName = PREFIX+DEFAULT_GAP_LENGTH_FEATURE_NAME;
+    gapCountFeatureName = PREFIX+DEFAULT_GAP_COUNT_FEATURE_NAME;
+    gapCrossingFeatureName = PREFIX+DEFAULT_CROSSING_FEATURE_NAME;
+    bonbonFeatureName = PREFIX+DEFAULT_BONBON_FEATURE_NAME;
+    gapSizeFeatureName = PREFIX+DEFAULT_GAP_SIZE_FEATURE_NAME;
+    gapSizeFeaturePerBinName = PREFIX+DEFAULT_GAP_SIZE_FEATURE_BIN_NAME;
+  }
+
+  public TargetGapFeaturizer(String... args) {
+    this();
+    for (String arg : args) {
+      String[] els = arg.split(":");
+      String name = els[0];
+      assert (els.length <= 3);
+      if (name.startsWith(DEFAULT_GAP_SIZE_FEATURE_NAME)) {
+        addGapSizeProb = true;
+        if (name.equals(DEFAULT_GAP_SIZE_FEATURE_BIN_NAME)) {
+          featureForEachBin = true;
+        }
+      }
+    }
+  }
+
 
   @Override
   public FeatureValue<String> featurize(Featurizable<IString,String> f) {
@@ -56,8 +92,8 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
     if (segIdx == 0) { // We just started generating a discontinuous phrase:
 
       // First segment of a target-side dtu: cost will be <= -1.0, so pay -1.0 upfront:
-      feats.add(new FeatureValue<String>(GAP_COUNT_FEATURE_NAME, -1.0));
-      feats.add(new FeatureValue<String>(GAP_LENGTH_FEATURE_NAME, -1.0*MINIMUM_GAP_SIZE));
+      feats.add(new FeatureValue<String>(gapCountFeatureName, -1.0));
+      feats.add(new FeatureValue<String>(gapLengthFeatureName, -1.0*MINIMUM_GAP_SIZE));
 
       return feats;
 
@@ -93,11 +129,21 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
               if (distance > DTUHypothesis.getMaxTargetPhraseSpan()) {
                 // We might be here during nbest list extraction, because recombination can
                 // create a longer gap than seen during beam search:
-                feats.add(new FeatureValue<String>(GAP_LENGTH_FEATURE_NAME, -100));
+                feats.add(new FeatureValue<String>(gapLengthFeatureName, -100));
               } else {
                 int len = distance - MINIMUM_GAP_SIZE;
                 if (len != 0)
-                  feats.add(new FeatureValue<String>(GAP_LENGTH_FEATURE_NAME, -1.0*len));
+                  feats.add(new FeatureValue<String>(gapLengthFeatureName, -1.0*len));
+                if (addGapSizeProb) {
+                  int binId = DTUFeatureExtractor.sizeToBin(distance);
+                  int phraseId = f.option.abstractOption.id;
+                  double gapScore = DTUTable.getTargetGapScore(phraseId, curIdx, binId);
+                  if (featureForEachBin) {
+                    feats.add(new FeatureValue<String>(gapSizeFeaturePerBinName+":"+binId, gapScore));
+                  } else {
+                    feats.add(new FeatureValue<String>(gapSizeFeatureName, gapScore));
+                  }
+                }
               }
               addCrossingCountFeatures(feats, (DTUFeaturizable<IString,String>)curF, dtuF);
               return feats;
@@ -120,8 +166,8 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
     int gapCount = getGapCount(f);
     if (gapCount > 0) {
       double score = -1.0 * gapCount;
-      list.add(new FeatureValue<String>(GAP_COUNT_FEATURE_NAME, score));
-      list.add(new FeatureValue<String>(GAP_LENGTH_FEATURE_NAME, score));
+      list.add(new FeatureValue<String>(gapCountFeatureName, score));
+      list.add(new FeatureValue<String>(gapLengthFeatureName, score));
     }
     return list;
 	}
@@ -158,12 +204,12 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
 
     if (WITH_BONBON) {
       if (bonbonCount > 0)
-        feats.add(new FeatureValue<String>(BONBON_FEATURE_NAME, -1.0*bonbonCount));
+        feats.add(new FeatureValue<String>(bonbonFeatureName, -1.0*bonbonCount));
     } else {
       crossingCount += bonbonCount;
     }
     if (crossingCount > 0)
-      feats.add(new FeatureValue<String>(CROSSING_FEATURE_NAME, -1.0*crossingCount));
+      feats.add(new FeatureValue<String>(gapCrossingFeatureName, -1.0*crossingCount));
   }
 
   @Override

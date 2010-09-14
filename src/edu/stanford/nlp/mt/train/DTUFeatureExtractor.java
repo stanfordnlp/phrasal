@@ -96,7 +96,7 @@ public class DTUFeatureExtractor extends MosesFeatureExtractor {
 
   private static final int BINS = 4; // Note: number must reflect sizeToBin
 
-  private static int sizeToBin(int sz) {
+  public static int sizeToBin(int sz) {
     if (sz <= 2) return 0;
     if (sz <= 4) return 1;
     if (sz <= 8) return 2;
