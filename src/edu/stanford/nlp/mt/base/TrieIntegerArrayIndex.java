@@ -3,6 +3,11 @@ package edu.stanford.nlp.mt.base;
 import it.unimi.dsi.fastutil.longs.*;
 import edu.stanford.nlp.util.Function;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Implementation of IntegerArrayIndex as a trie. This trie implementation 
  * is optimized for space, by instantiating only one object: an open-address hash table. 
@@ -44,13 +49,6 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
       public Integer apply(Integer x) { return x; }
     };
   }
-
-  /*
-  public TrieIntegerArrayIndex(int sz, Function<Integer,Integer> transitionNormalizer) {
-    this(sz);
-    this.transitionNormalizer = transitionNormalizer;
-  }
-  */
 
   @Override
   public int[] get(int idx) {
@@ -122,7 +120,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   }
 
   private int indexOf_unsync(int[] input, boolean add) {
-    //System.err.println("adding: "+ Arrays.toString(IStrings.toStringArray(input)));
+    //System.err.println("Adding to index: "+ Arrays.toString(IStrings.toStringArray(input)));
     int curState = IDX_ROOT;
     for (int anInput : input) {
       long transition = getTransition(curState, transitionNormalizer.apply(anInput));
@@ -163,6 +161,17 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     System.out.println("idx(123): " + index.indexOf(new int[] {1, 2, 3}, true));
     System.out.println("idx(127): " + index.indexOf(new int[] {1, 2, 7}, true));
     System.out.println("idx(12): " + index.indexOf(new int[] {1, 2}, true));
+  }
+
+  @Override
+  public String toString() {
+    List<String> vals = new LinkedList<String>();
+    for (Map.Entry<Long,Integer> e : map.entrySet()) {
+      int v = e.getValue();
+      vals.add(IString.getString(v));
+    }
+    Collections.sort(vals);
+    return vals.toString();
   }
 
 }

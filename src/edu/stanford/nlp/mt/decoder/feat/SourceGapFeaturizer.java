@@ -147,7 +147,7 @@ public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, Strin
   private void addDynamicFeatures(Featurizable<IString,String> f, int gapCount, List<FeatureValue<String>> list) {
 
     // Gap size feature:
-    if (addGapSizeProb && gapCount >= 1) {
+    if (DTUTable.MIN_GAP_SIZE > 0 && addGapSizeProb && gapCount >= 1) {
       CoverageSet cs = f.hyp.translationOpt.foreignCoverage;
       List<Integer> binIds = DTUFeatureExtractor.getBins(cs);
       if (gapCount != binIds.size()) {
