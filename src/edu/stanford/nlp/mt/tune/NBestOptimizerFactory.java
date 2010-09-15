@@ -19,6 +19,7 @@ import edu.stanford.nlp.optimization.HasInitial;
 import edu.stanford.nlp.math.ArrayMath;
 
 import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.NBestListContainer;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
@@ -84,7 +85,14 @@ public class NBestOptimizerFactory {
         }
    	  }
       return new LogLinearOptimizer(mert, l2, l1);
-    } else if (name.equalsIgnoreCase("cer")) {
+    } else if (name.startsWith("softm3n")) {
+      String[] fields = name.split(":");
+      double C = 10;
+      if (fields.length == 2){
+        C = Double.parseDouble(fields[1]);
+      }
+      return new SoftmaxMaxMarginMarkovNetwork(mert, C);
+    } else if (name.equalsIgnoreCase("cer")) {    
       return new CerStyleOptimizer(mert);
     } else if (name.equalsIgnoreCase("koehn")) {
       return new KoehnStyleOptimizer(mert);
@@ -259,6 +267,258 @@ class KoehnStyleOptimizer extends AbstractNBestOptimizer {
   }
 }
 
+class OptimizerUtils {  
+  static <TK, FV> double[][] incontextMetricScores(NBestListContainer<TK, FV> nbest, List<ScoredFeaturizedTranslation<TK,FV>> context, EvaluationMetric<TK, FV> emetric) {    
+    IncrementalEvaluationMetric<TK, FV> incMetric = emetric.getIncrementalMetric();
+    
+    for (ScoredFeaturizedTranslation<TK, FV> trans: context) {
+      incMetric.add(trans);
+    }
+    
+    List<List<ScoredFeaturizedTranslation<TK,FV>>> nbestLists = nbest.nbestLists();     
+    double[][] incontextScores = new double[nbestLists.size()][];
+    
+    for (int i = 0; i < incontextScores.length; i++) {
+      List<ScoredFeaturizedTranslation<TK,FV>> nbestList = nbestLists.get(i);
+      incontextScores[i] = new double[nbestList.size()];
+      for (int j = 0; j < incontextScores[i].length; j++) {
+        ScoredFeaturizedTranslation<TK,FV> trans = nbestList.get(j);
+        incMetric.replace(i, trans);
+        incontextScores[i][j] = incMetric.score();
+      }
+      incMetric.replace(i, context.get(i));
+    }
+    return incontextScores;
+  }
+  
+  static <TK, FV> double[][] calcDeltaMetric(NBestListContainer<TK, FV> nbest, List<ScoredFeaturizedTranslation<TK,FV>> base, EvaluationMetric<TK, FV> emetric) {    
+    double baseScore = emetric.score(base);
+    double[][] incontextScores = incontextMetricScores(nbest, base, emetric);
+    double[][] deltaScores = new double[incontextScores.length][];
+    for (int i = 0; i < incontextScores.length; i++) {
+      deltaScores[i] = new double[incontextScores[i].length];
+      for (int j = 0; j < incontextScores[i].length; j++) {
+        deltaScores[i][j] = baseScore - incontextScores[i][j];
+      }
+    }
+    return deltaScores;
+  }
+  
+  static Counter<String> getWeightCounterFromArray(String[] weightNames, double[] wtsArr) {
+    Counter<String> wts = new ClassicCounter<String>();
+    for (int i = 0; i < weightNames.length; i++) {
+      wts.setCount(weightNames[i], wtsArr[i]);
+    }
+    return wts;
+  }
+  
+  static double[] getWeightArrayFromCounter(String[] weightNames, Counter<String> wts) {
+    double[] wtsArr = new double[weightNames.length];
+    for (int i = 0; i < wtsArr.length; i++) {
+      wtsArr[i] = wts.getCount(weightNames[i]);
+    }
+    return wtsArr;
+  }
+  
+  static double norm2DoubleArray(double[] v) {
+    double normSum = 0;
+     for (double d : v) {
+        normSum += d*d;
+     }
+     return Math.sqrt(normSum);
+  }
+  
+  static double sumSquareDoubleArray(double[] v) {
+    double sum = 0;
+     for (double d : v) {
+        sum += d*d;
+     }
+     return sum;
+  }
+  
+  static double scoreTranslation(Counter<String> wts, ScoredFeaturizedTranslation<IString,String> trans) {
+    double s = 0;
+    for (FeatureValue<String> fv : trans.features) {
+      s += fv.value * wts.getCount(fv.name);
+    }
+    return s;
+  }
+  
+  static double[] scoreTranslations(Counter<String> wts, List<ScoredFeaturizedTranslation<IString,String>> translations) {
+    double[] scores = new double[translations.size()];
+    for (int j = 0; j < scores.length; j++) {
+      scores[j] = OptimizerUtils.scoreTranslation(wts, translations.get(j));      
+    }
+    return scores;
+  }
+  
+  static double maxFromDoubleArray(double[] arr) {
+    double max = Double.NEGATIVE_INFINITY;
+    for (double d : arr) {
+      if (d > max) max = d;
+    }
+    return max;
+  }
+
+  static double softMaxFromDoubleArray(double[] arr) {
+     double B = maxFromDoubleArray(arr);
+     double sum = 0;
+     for (double d : arr) {
+       sum += Math.exp(d-B);
+     }
+     return B + Math.log(sum);
+  }
+}
+
+class SoftmaxMaxMarginMarkovNetwork extends AbstractNBestOptimizer {
+  final double C;
+  
+  @Override public boolean doNormalization() {
+    return false;
+  }
+  
+  public SoftmaxMaxMarginMarkovNetwork(MERT mert, double C) {
+    super(mert);
+    System.err.printf("Softmax Max Margin Markov Network C=%.2f", C);
+    this.C = C;
+  }
+
+  @SuppressWarnings("unchecked")
+  public Counter<String> optimize(Counter<String> initialWts) {
+    Counter<String> wts = new ClassicCounter<String>(initialWts);
+
+    EvaluationMetric<IString, String> modelMetric = new LinearCombinationMetric<IString, String>(new double[]{1.0}, new ScorerWrapperEvaluationMetric<IString, String>(new StaticScorer(initialWts)));
+           
+    List<ScoredFeaturizedTranslation<IString, String>> current = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+            modelMetric)).maximize(nbest);
+   
+    List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+              emetric)).maximize(nbest);
+    
+    System.err.println("Target model: "+ modelMetric.score(target) + " metric: "+ emetric.score(target));   
+    System.err.println("Current model: " + modelMetric.score(current) + " metric: " + emetric.score(current));
+
+    // create a mapping between weight names and optimization 
+    // weight vector positions    
+    String[] weightNames = new String[wts.size()];
+    double[] initialWtsArr = new double[wts.size()];
+    
+    int nameIdx = 0;
+    for (String feature : wts.keySet()) {
+      initialWtsArr[nameIdx] = wts.getCount(feature);
+      weightNames[nameIdx++] = feature;
+    }
+    
+    double[][] lossMatrix = OptimizerUtils.calcDeltaMetric(nbest, target, emetric);
+    
+    Minimizer<DiffFunction> qn = new QNMinimizer(15, true);    
+    SoftMaxMarginMarkovNetwork sm3n = new SoftMaxMarginMarkovNetwork(weightNames, target, lossMatrix);
+    double initialValueAt = sm3n.valueAt(initialWtsArr); 
+    if (initialValueAt == Double.POSITIVE_INFINITY || initialValueAt != initialValueAt) {
+       System.err.printf("Initial Objective is infinite/NaN - normalizing weight vector");
+       double normTerm = Counters.L2Norm(wts);
+       for (int i = 0; i < initialWtsArr.length; i++) {
+          initialWtsArr[i] /= normTerm;
+       }
+    }
+    double initialObjValue = sm3n.valueAt(initialWtsArr);
+    double initalDNorm  = OptimizerUtils.norm2DoubleArray(sm3n.derivativeAt(initialWtsArr));    
+    double initalXNorm  = OptimizerUtils.norm2DoubleArray(initialWtsArr);
+    
+    System.err.println("Initial Objective value: "+initialObjValue);
+    double newX[] = qn.minimize(sm3n, 1e-4, initialWtsArr); // new double[wts.size()] 
+    Counter<String> newWts = OptimizerUtils.getWeightCounterFromArray(weightNames, newX);
+    double finalObjValue = sm3n.valueAt(newX);
+      
+    double objDiff = initialObjValue - finalObjValue;
+    double finalDNorm  = OptimizerUtils.norm2DoubleArray(sm3n.derivativeAt(newX));
+    double finalXNorm  = OptimizerUtils.norm2DoubleArray(newX);
+    double metricEval = MERT.evalAtPoint(nbest, newWts, emetric);
+    System.err.println(">>>[Converge Info] ObjInit("+initialObjValue+") - ObjFinal("+finalObjValue+") = ObjDiff("+objDiff+") L2DInit("+
+        initalDNorm+") L2DFinal("+finalDNorm+") L2XInit("+initalXNorm+") L2XFinal("+finalXNorm+")");
+    
+    MERT.updateBest(newWts, metricEval, true);
+    
+    return newWts;
+  }
+  
+  class SoftMaxMarginMarkovNetwork implements DiffFunction {
+    final String[] weightNames;
+    final List<ScoredFeaturizedTranslation<IString,String>> target;
+    final double[][] lossMatrix;
+    
+    public SoftMaxMarginMarkovNetwork(String[] weightNames, List<ScoredFeaturizedTranslation<IString,String>> target, double[][] lossMatrix) {
+       this.weightNames = weightNames;
+       this.target = target;
+       this.lossMatrix = lossMatrix;
+    }
+    
+    @Override
+    public double valueAt(double[] wtsArr) {      
+      Counter<String> wts = OptimizerUtils.getWeightCounterFromArray(weightNames, wtsArr);
+      
+      double sqrNormWts = OptimizerUtils.sumSquareDoubleArray(wtsArr);
+      
+      double sumErrorTerm = 0;   
+      List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
+      for (int i = 0; i < nbestLists.size(); i++) {
+        List<ScoredFeaturizedTranslation<IString,String>> nbestList = nbestLists.get(i);
+        double[] scores = OptimizerUtils.scoreTranslations(wts, nbestList);
+        double targetScore = OptimizerUtils.scoreTranslation(wts, target.get(i));                      
+        double[] lossAugmentedScores = new double[scores.length];
+        for (int j = 0; j < scores.length; j++) {
+          lossAugmentedScores[j] = scores[j] + lossMatrix[i][j];
+        }
+        double errorTerm = OptimizerUtils.softMaxFromDoubleArray(lossAugmentedScores) - targetScore;
+        sumErrorTerm += errorTerm;
+      }
+      
+      return 0.5*sqrNormWts + C*sumErrorTerm;
+    }
+
+    @Override
+    public int domainDimension() {
+      return weightNames.length;
+    }
+
+    @Override
+    public double[] derivativeAt(double[] wtsArr) {
+      Counter<String> wts = OptimizerUtils.getWeightCounterFromArray(weightNames, wtsArr);
+      Counter<String> dOdW = new ClassicCounter<String>();
+      for (String wt : wts.keySet()) {
+        dOdW.incrementCount(wt, wts.getCount(wt));
+      }
+      List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
+      
+      for (int i = 0; i < target.size(); i++) {
+         for (FeatureValue<String> fv : target.get(i).features) {
+           dOdW.incrementCount(fv.name, -C*fv.value);
+         }
+      }
+      
+      for (int i = 0; i < nbestLists.size(); i++) {
+        List<ScoredFeaturizedTranslation<IString, String>> nbestList = nbestLists.get(i);
+        double[] scores = OptimizerUtils.scoreTranslations(wts, nbestList);                      
+        double[] lossAugmentedScores = new double[scores.length];
+        for (int j = 0; j < scores.length; j++) {
+          lossAugmentedScores[j] = scores[j] + lossMatrix[i][j];
+        }
+        
+        double Z = OptimizerUtils.softMaxFromDoubleArray(lossAugmentedScores);
+        for (int j = 0; j < nbestList.size(); j++) {
+           double p = Math.exp(lossAugmentedScores[j] - Z);
+           for (FeatureValue<String> fv : nbestList.get(j).features) {
+             dOdW.incrementCount(fv.name, C*(p*fv.value));
+           }
+        }
+      }
+      
+      return OptimizerUtils.getWeightArrayFromCounter(weightNames, dOdW);
+    }
+    
+  }
+}
+
 class LogLinearOptimizer extends AbstractNBestOptimizer {
 
   final double l2sigma;
@@ -298,13 +558,13 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 
 		EvaluationMetric<IString, String> modelMetric = new LinearCombinationMetric<IString, String>(new double[]{1.0}, new ScorerWrapperEvaluationMetric<IString, String>(new StaticScorer(initialWts)));
            
-      List<ScoredFeaturizedTranslation<IString, String>> current = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+    List<ScoredFeaturizedTranslation<IString, String>> current = (new HillClimbingMultiTranslationMetricMax<IString, String>(
             modelMetric)).maximize(nbest);
    
-      List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
+    List<ScoredFeaturizedTranslation<IString, String>> target = (new HillClimbingMultiTranslationMetricMax<IString, String>(
 	            emetric)).maximize(nbest);
 		
-      System.err.println("Target model: "+ modelMetric.score(target) + " metric: "+ emetric.score(target));		
+    System.err.println("Target model: "+ modelMetric.score(target) + " metric: "+ emetric.score(target));		
 		System.err.println("Current model: " + modelMetric.score(current) + " metric: " + emetric.score(current));
 		Counter<String> currentCounts = new ClassicCounter<String>();
 		for (ScoredFeaturizedTranslation<IString, String> t : current) {
@@ -326,8 +586,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
       System.err.println("Target LD "+targetCounts.getCount("LinearDistortion"));
 		
 		// create a mapping between weight names and optimization 
-		// weight vector positions
-		
+		// weight vector positions		
 		String[] weightNames = new String[wts.size()];
 		double[] initialWtsArr = new double[wts.size()];
 		
@@ -350,8 +609,8 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		   }
 		}
 		double initialObjValue = llo.valueAt(initialWtsArr);
-		double initalDNorm  = norm2DoubleArray(llo.derivativeAt(initialWtsArr));		
-		double initalXNorm  = norm2DoubleArray(initialWtsArr);
+		double initalDNorm  = OptimizerUtils.norm2DoubleArray(llo.derivativeAt(initialWtsArr));		
+		double initalXNorm  = OptimizerUtils.norm2DoubleArray(initialWtsArr);
 		
 		System.err.println("Initial Objective value: "+initialObjValue);
 		System.err.println("l2 Original wts: "+ Counters.L2Norm(wts));
@@ -362,9 +621,9 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 			newWts.setCount(weightNames[i], newX[i]);
 		}
 		
-		double finalObjValue = llo.valueAt(newX);
-	   double finalDNorm  = norm2DoubleArray(llo.derivativeAt(newX));
-	   double finalXNorm  = norm2DoubleArray(newX);
+		 double finalObjValue = llo.valueAt(newX);
+	   double finalDNorm  = OptimizerUtils.norm2DoubleArray(llo.derivativeAt(newX));
+	   double finalXNorm  = OptimizerUtils.norm2DoubleArray(newX);
 	   
 		System.err.println("Final Objective value: "+finalObjValue);
 		double metricEval = MERT.evalAtPoint(nbest, newWts, emetric);
@@ -377,13 +636,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		return newWts;
 	}
 	
-	static double norm2DoubleArray(double[] v) {
-	   double normSum = 0;
-      for (double d : v) {
-         normSum += d*d;
-      }
-      return Math.sqrt(normSum);
-	}
+	
 
 	class LogLinearObjective implements DiffFunction {
 		final String[] weightNames;
@@ -411,13 +664,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 			return v;
 		}
 		
-		private double scoreTranslation(Counter<String> wts, ScoredFeaturizedTranslation<IString,String> trans) {
-			double s = 0;
-			for (FeatureValue<String> fv : trans.features) {
-				s += fv.value * wts.getCount(fv.name);
-			}
-			return s;
-		}
+		
 		
 		@Override
 		public double[] derivativeAt(double[] x) {
@@ -439,7 +686,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		       double logZ = logZ(nbestList, wts);
 		       for (ScoredFeaturizedTranslation<IString,String> trans : nbestList) {
 		    	   // double p = Math.exp(scoreTranslation(wts, trans))/Z;
-		    	   double p = Math.exp(scoreTranslation(wts, trans) - logZ);
+		    	   double p = Math.exp(OptimizerUtils.scoreTranslation(wts, trans) - logZ);
 	    		   for (FeatureValue<String> fv : trans.features) {
 	    			   dOminus.incrementCount(fv.name, fv.value*p);
 	    		   }
@@ -480,7 +727,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
 		   Iterator<ScoredFeaturizedTranslation<IString, String>> iter = translations.iterator();
 		   for (int i = 0; iter.hasNext(); i++) {
 		      ScoredFeaturizedTranslation<IString, String> trans = iter.next();		   
-		      scores[i] = scoreTranslation(wts, trans);
+		      scores[i] = OptimizerUtils.scoreTranslation(wts, trans);
 		      if (scores[i] > scores[max_i]) max_i = i;
 		   }
 		   		   		  
@@ -506,7 +753,7 @@ class LogLinearOptimizer extends AbstractNBestOptimizer {
             ScoredFeaturizedTranslation<IString, String> targetTrans = target
                   .get(sentId);
 
-            double logP = scoreTranslation(wts, targetTrans) - logZ(nbestList, wts);           
+            double logP = OptimizerUtils.scoreTranslation(wts, targetTrans) - logZ(nbestList, wts);           
             sumLogP += logP;
          }
  	        
