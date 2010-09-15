@@ -34,7 +34,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
 
   private final SourceFilter sourceFilter;
 
-  private final IntegerArrayIndex fIndex,
+  private final IntegerArrayIndex fIndex = new DynamicIntegerArrayIndex(),
      index = new DynamicIntegerArrayIndex(),
      aIndex = new DynamicIntegerArrayIndex(),
      eIndex = new DynamicIntegerArrayIndex();
@@ -46,17 +46,15 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
 
   public AlignmentTemplates() {
     sourceFilter = null;
-    fIndex = new DynamicIntegerArrayIndex();
   }
 
   /**
    * Initialize alignment template table with a specified max fertility.
    */
-  public AlignmentTemplates(Properties prop, SourceFilter sourceFilter) { // boolean filterFromDev) {
+  public AlignmentTemplates(Properties prop, SourceFilter sourceFilter) {
     this.maxFertility = Double.parseDouble
       (prop.getProperty(PhraseExtract.MAX_FERTILITY_OPT, Integer.toString(DEFAULT_MAX_FERTILITY)));
     this.sourceFilter = sourceFilter;
-    fIndex = sourceFilter.getSourceTable();
   }
 
   public SourceFilter getSourceFilter() {
@@ -123,8 +121,10 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * kept in memory, this function is the only way
    * to get the alignment template from the index.
    */
-  public void reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
+  public boolean reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
     int[] idxInts = index.get(idx);
+    if (idxInts[0] < 0 || idxInts[1] < 0)
+      return false;
     int[] idxIntsF = fIndex.get(idxInts[0]);
     int[] idxIntsE = eIndex.get(idxInts[1]);
     int aIdx = getArgmaxAlignment(idx);
@@ -135,6 +135,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     alTemp.setFKey(idxInts[0]);
     alTemp.setEKey(idxInts[1]);
     alTemp.setAKey(aIdx);
+    return true;
   }
 
   @Override

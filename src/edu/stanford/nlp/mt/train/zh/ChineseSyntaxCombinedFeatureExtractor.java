@@ -10,8 +10,8 @@ import edu.stanford.nlp.mt.train.AlignmentGrid;
 import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.mt.train.AlignmentTemplateInstance;
 import edu.stanford.nlp.mt.train.AlignmentTemplates;
+import edu.stanford.nlp.mt.train.PhrasalSourceFilter;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
-import edu.stanford.nlp.mt.train.SourceFilter;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
@@ -126,7 +126,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
   private int passNumber = 0;
   private int totalPassNumber = 1;
 
-  private static SourceFilter sourceFilter = new SourceFilter();
+  private static PhrasalSourceFilter sourceFilter;
 
   @SuppressWarnings("unchecked")
   public ChineseSyntaxCombinedFeatureExtractor(Properties prop) {
@@ -188,8 +188,9 @@ public class ChineseSyntaxCombinedFeatureExtractor {
    */
   @SuppressWarnings("unchecked")
   public static Sequence<IString>[] getPhrasesFromDevCorpus(String fFilterCorpus) {
-    sourceFilter.addPhrasesFromCorpus(fFilterCorpus, maxPhraseLenF, Integer.MAX_VALUE, false);
+    return null;
     /*
+    sourceFilter.addPhrasesFromCorpus(fFilterCorpus, maxPhraseLenF, Integer.MAX_VALUE, false);
     AlignmentTemplates tmpSet = new AlignmentTemplates();
     System.err.println("Filtering against corpus: "+fFilterCorpus);
     filterFromDev = true;  
@@ -218,7 +219,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     Collections.shuffle(Arrays.asList(phrases));
     return phrases;
     */
-    return null;
   }
 
   /**

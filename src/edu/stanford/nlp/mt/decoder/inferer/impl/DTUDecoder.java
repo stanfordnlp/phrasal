@@ -45,9 +45,6 @@ import edu.stanford.nlp.stats.ClassicCounter;
  * Extension of MultiBeamDecoder that allows phrases with discontinuities in them (source and target).
  *
  * @author Michel Galley
- *
- * @param <TK>
- * @param <FV>
  */
 public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 

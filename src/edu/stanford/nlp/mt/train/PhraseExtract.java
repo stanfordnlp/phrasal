@@ -168,7 +168,7 @@ public class PhraseExtract {
   boolean verbose;
 
   private Properties prop;
-  private final SourceFilter sourceFilter = new SourceFilter();
+  private SourceFilter sourceFilter;
   private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq, nThreads = 0;
   private String fCorpus, eCorpus, phraseExtractorInfoFile, outputFile;
   private String alignCorpus, alignInvCorpus;
@@ -259,15 +259,22 @@ public class PhraseExtract {
     numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT,"0"));
     if (emptyFilterList || fFilterList != null || fFilterCorpus != null)
       filterFromDev = true;
-    if (fFilterList != null)
-      sourceFilter.addPhrasesFromList(fFilterList);
-    else if (fFilterCorpus != null) {
-		  Integer maxSpanF = withGaps ? DTUPhraseExtractor.maxSpanF : null;
-      sourceFilter.addPhrasesFromCorpus
-        (fFilterCorpus, AbstractPhraseExtractor.maxPhraseLenF, maxSpanF, addBoundaryMarkers);
-    }
-    if (Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT))) {
-      sourceFilter.fillSourceTrie();
+
+    int maxSpanF = DTUPhraseExtractor.maxSpanF;
+    int maxPhraseLenF = AbstractPhraseExtractor.maxPhraseLenF;
+    if (withGaps) {
+      assert (!addBoundaryMarkers);
+      DTUSourceFilter f = new DTUSourceFilter(maxPhraseLenF, maxSpanF);
+      f.filterAgainstCorpus(fFilterCorpus);
+      sourceFilter = f;
+    } else {
+      PhrasalSourceFilter f = new PhrasalSourceFilter(maxSpanF, addBoundaryMarkers);
+      if (fFilterList != null) {
+        f.filterAgainstList(fFilterList);
+      } else if (fFilterCorpus != null) {
+        f.filterAgainstCorpus(fFilterCorpus);
+      }
+      sourceFilter = f;
     }
     sourceFilter.lock();
 
@@ -621,7 +628,8 @@ public class PhraseExtract {
                             idx, totalStepSecs, totalMemory, freeMemory);
       }
 
-      alTemps.reconstructAlignmentTemplate(alTemp, idx);
+      if (!alTemps.reconstructAlignmentTemplate(alTemp, idx))
+        continue;
       str.append(phrasePrinter.toString(alTemp, withAlign));
       str.append(AlignmentTemplate.DELIM);
 
@@ -681,10 +689,6 @@ public class PhraseExtract {
 
   public void extractAll() {
 
-    //boolean useTrieIndex =
-    // prop.getProperty(WITH_GAPS_OPT,"false").equals("true");
-    //System.err.println("Using trie index: "+useTrieIndex);
-
     PrintStream oStream = IOTools.getWriterFromFile(outputFile);
 
     if (filterFromDev) {
@@ -694,14 +698,12 @@ public class PhraseExtract {
       while (startLine < sz) {
         init();
         sourceFilter.setRange(startLine, startLine+size);
-        //alTemps.setSourceFilter(sourceFilter);
         extractFromAlignedData();
         write(oStream, withAlign);
         startLine += size;
       }
     } else {
       init();
-      //alTemps.setSourceFilter(null);
       extractFromAlignedData();
       write(oStream, withAlign);
     }

@@ -570,7 +570,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   // Extract all subsequences:
   Set<CoverageSet> subsequenceExtract(WordAlignment sent) {
 
-    TrieIntegerArrayIndex fTrieIndex = alTemps.getSourceFilter().getSourceTrie();
+    SourceFilter sourceFilter = alTemps.getSourceFilter();
+    assert (sourceFilter instanceof DTUSourceFilter);
+    TrieIntegerArrayIndex fTrieIndex = ((DTUSourceFilter)sourceFilter).getSourceTrie();
     assert(fTrieIndex != null);
 
     Deque<Triple<Integer,Integer, CoverageSet>> q = new LinkedList<Triple<Integer,Integer, CoverageSet>>();
