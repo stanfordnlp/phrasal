@@ -41,6 +41,7 @@ $DEFAULT_NBEST_SIZE = 100;
 $DEFAULT_JAVA_FLAGS = "-Xmx7g";
 $DEFAULT_OPT_FLAGS = "-o cer -t 4 -p 4"; # 4 starting points, 4 thread, Cer algorithm
 $MIN_WEIGHT_DELTA = 1e-5;
+$DELETE_COMBINED_NBEST = 0;
 $NBEST_HISTORY_WINDOW = 1000000;
 $SCRIPTS_DIR = $0;
 $SCRIPTS_DIR =~ s/\/[^\/]*$//;
@@ -90,6 +91,8 @@ sub handle_arg {
 
   if ($arg =~ /^--textwts/) {
      $WEIGHTS_SUFF = ".wts";
+  } elsif ($arg =~ /^--clean/) {
+     $DELETE_COMBINED_NBEST = 1;
   } elsif ($arg =~ /^--oracle=.*/) {
      $ORACLE = $arg;
      $ORACLE =~ s/^--oracle=//;
@@ -543,7 +546,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 					print STDERR `echo "BLEU $ORACLE" | cat - $next_iter_weights.tmp > $next_iter_weights`;
 					unlink "$next_iter_weights.tmp"
 				}
-				#unlink $iter_pcumulative_nbest;
+				unlink $iter_pcumulative_nbest if $DELETE_COMBINED_NBEST;
    	  } else {
    	  	print stderr "Skipping running JMERT for iter $iter ($first_active_iter)\n";
    	  }
