@@ -10,7 +10,6 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
   private final int segmentIdx;
   public final TranslationOption<TK> abstractOption;
 
-  @SuppressWarnings("unchecked")
 	public DTUFeaturizable(Hypothesis<TK,FV> hypothesis, TranslationOption<TK> abstractOption, int translationId, int nbStatefulFeaturizers, RawSequence<TK> toks, boolean hasPendingPhrases, int segmentIdx) {
     super(hypothesis, translationId, nbStatefulFeaturizers, toks, retrieveDTUTokens(hypothesis, toks), hasPendingPhrases, segmentIdx > 0);
     this.segmentIdx = segmentIdx;
@@ -53,7 +52,7 @@ public class DTUFeaturizable<TK,FV> extends Featurizable<TK,FV> {
   @Override
   public int getSegmentNumber() {
     if (hyp.translationOpt.abstractOption instanceof DTUOption) {
-      return ((DTUOption)hyp.translationOpt.abstractOption).dtus.length;
+      return ((DTUOption<TK>)hyp.translationOpt.abstractOption).dtus.length;
     }
     return 1;
   }

@@ -73,7 +73,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 	public static final String[] labs = new String[]{"pc(e|f)", "pc(f|e)", "lex(e|f)", "lex(f|e)"};
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public List<TranslationOption<IString>> getTranslationOptions(
 			Sequence<IString> sequence) {
 		try {
@@ -81,6 +81,7 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 
 		RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		List<byte[]> listByteOpts = (List)bdb.getlist(sequence.toString().getBytes("UTF-8"));
 
 		if (listByteOpts == null) return opts;
@@ -255,7 +256,8 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
     while((key = fcur.key()) != null){
 			String fphrase = new String(key, "UTF-8");
 			System.err.printf("%s\n", fphrase);
-			List<byte[]> transByteList = (List)tmpF2E.getlist(fcur.key());
+			@SuppressWarnings("rawtypes")
+      List<byte[]> transByteList = (List)tmpF2E.getlist(fcur.key());
 			ClassicCounter<String> pF2E = new ClassicCounter<String>();
 
 			for (byte[] transByte : transByteList) {
@@ -292,7 +294,8 @@ public class DynamicPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> 
 			for (String trans : pF2E.keySet()) {
 				String probStr = tmpProbE2F.get(fphrase+":::"+trans);
 				if (probStr == null) {
-					List<byte[]> forByteList = (List)tmpE2F.getlist(trans.getBytes("UTF-8"));
+					@SuppressWarnings("rawtypes")
+          List<byte[]> forByteList = (List)tmpE2F.getlist(trans.getBytes("UTF-8"));
 					ClassicCounter<String> allE2F = new ClassicCounter<String>();
 					for (byte[] forByte : forByteList) {
 						 String eForeign = new String(forByte, "UTF-8");

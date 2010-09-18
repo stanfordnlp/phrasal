@@ -67,7 +67,6 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>, IntegerArrayIn
       }
     }
 
-    @SuppressWarnings("unchecked")
 	  private int[] get_unsync(int idx) {
 	      int pos = reverseIndex[idx];
 	      if (pos == -1) return null;

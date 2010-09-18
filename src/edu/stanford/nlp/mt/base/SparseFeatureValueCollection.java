@@ -67,7 +67,7 @@ public class SparseFeatureValueCollection<E> implements FeatureValueCollection<E
   @Override public boolean remove(Object o) { throw new UnsupportedOperationException(); }
   @Override public boolean contains(Object o) { throw new UnsupportedOperationException(); }
   @Override public Object[] toArray() { throw new UnsupportedOperationException(); }
-  @Override public <E> E[] toArray(E[] a) { throw new UnsupportedOperationException(); }
+  @Override public <F> F[] toArray(F[] a) { throw new UnsupportedOperationException(); }
   @Override public boolean add(FeatureValue<E> e) { throw new UnsupportedOperationException(); }
   @Override public boolean containsAll(Collection<?> c) { throw new UnsupportedOperationException();  }
   @Override public boolean addAll(Collection<? extends FeatureValue<E>> c) { throw new UnsupportedOperationException(); }

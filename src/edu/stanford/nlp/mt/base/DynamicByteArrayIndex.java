@@ -54,12 +54,10 @@ public class DynamicByteArrayIndex implements Iterable<int[]>, IntegerArrayIndex
     return -keys.length-1;
   }
 
-  @SuppressWarnings("unchecked")
   public synchronized int[] get(int idx) {
     return decompress(getB(idx));
   }
 
-  @SuppressWarnings("unchecked")
   private byte[] getB(int idx) {
       int pos = reverseIndex[idx];
       if (pos == -1) return null;

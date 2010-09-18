@@ -140,7 +140,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
 
     for(String exStr : exsString.split(":")) {
       try {
-        AbstractChineseSyntaxFeatureExtractor fe; // = null;
+        AbstractChineseSyntaxFeatureExtractor<String> fe; // = null;
         String[] extractorAndInfofile = exStr.split("=");
         String infoFilename = null;
         // if the extractor string contains "=", then assume 
@@ -158,11 +158,11 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         if(pos >= 0) {
           StringBuffer constructor = new StringBuffer("new ").append(exStr);
           System.err.println("Running constructor: "+constructor);
-          fe = (AbstractChineseSyntaxFeatureExtractor) interpreter.eval(constructor.toString());
+          fe = (AbstractChineseSyntaxFeatureExtractor<String>) interpreter.eval(constructor.toString());
         } else {
-          Class cls = Class.forName(exStr);
-          Constructor ct = cls.getConstructor(new Class[] {});
-          fe = (AbstractChineseSyntaxFeatureExtractor) ct.newInstance();
+          Class<?> cls = Class.forName(exStr);
+          Constructor<?> ct = cls.getConstructor(new Class[] {});
+          fe = (AbstractChineseSyntaxFeatureExtractor<String>) ct.newInstance();
         }
         fe.init(prop, featureIndex, alTemps);
         extractors.add(fe);
@@ -186,7 +186,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
    * a given test/dev corpus.
    *
    */
-  @SuppressWarnings("unchecked")
   public static Sequence<IString>[] getPhrasesFromDevCorpus(String fFilterCorpus) {
     return null;
     /*
@@ -618,7 +617,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     System.err.println("Using AlignmentGrid: "+needAlGrid);
   }
 
-  @SuppressWarnings("unchecked")
+
   public static boolean multiPassFeatureExtract(Properties prop) {
     // Check mandatory arguments:
     String fCorpus = prop.getProperty(F_CORPUS_OPT);

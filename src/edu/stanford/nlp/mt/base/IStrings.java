@@ -60,7 +60,6 @@ public class IStrings {
 		return intArray;
 	}
 
-  @SuppressWarnings("unused")
   static public String[] toStringArray(IString[] strings) {
     String[] stringArray = new String[strings.length];
 		for (int i = 0; i < strings.length; i++) {

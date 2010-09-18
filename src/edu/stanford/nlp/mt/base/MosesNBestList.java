@@ -31,8 +31,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 
 	public final boolean tokenizeNIST;
 
-  @SuppressWarnings("unchecked,unused")
-	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer scorer, boolean tokenizeNIST) {
+	public MosesNBestList(NBestListContainer<IString, String> list1, NBestListContainer<IString, String> list2, Scorer<String> scorer, boolean tokenizeNIST) {
     this.featureIndex = null;
     this.tokenizeNIST = tokenizeNIST;
     sequenceSelfMap = null;
@@ -42,7 +41,7 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		for (int i = 0; i < nbestLists2.size(); i++) {
 			(nbestLists.get(i)).addAll(nbestLists2.get(i));
 			// rescore
-			for (ScoredFeaturizedTranslation sft : nbestLists.get(i)) {
+			for (ScoredFeaturizedTranslation<IString,String> sft : nbestLists.get(i)) {
 				sft.score = scorer.getIncrementalScore(sft.features);
 			}
 		}
@@ -325,7 +324,6 @@ public class MosesNBestList implements NBestListContainer<IString, String> {
 		System.out.print(nbestList.printMosesFormat());
 	}
 
-  @SuppressWarnings("unused")
 	public static String escape(String featureName) {
 		return featureName.replaceAll("\\\\", "\\\\").replaceAll(" ", "\\_");
 	}

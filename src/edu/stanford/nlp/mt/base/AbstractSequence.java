@@ -89,7 +89,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		int osz = o.size();
 		int max = Math.min(sz, osz);
 		for (int i = 0; i < max; i++) {
-			int cmp = ((Comparable)get(i)).compareTo(o.get(i));
+			int cmp = ((Comparable<T>)get(i)).compareTo(o.get(i));
 			if (cmp == 0) continue;
 			return cmp;
 		}
@@ -159,11 +159,12 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		return (int)(longHashCode());
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
+	
+  @Override
 	public boolean equals(Object o) {
 		if (!(o instanceof Sequence)) return false;
-		Sequence seq = (Sequence)o;
+		@SuppressWarnings("unchecked")
+		Sequence<T> seq = (Sequence<T>)o;
 		int size = this.size();
 		if (size != seq.size()) return false;
 		if (size != 0 && get(0) instanceof IString) {
@@ -213,9 +214,10 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 		return true;
 	}
 
-	@SuppressWarnings("unchecked,unused")
+	
 	public boolean noisyEquals(Object o) {
 		if (!(o instanceof Sequence)) return false;
+		@SuppressWarnings("unchecked")
 		Sequence<IString> seq = (Sequence<IString>)o;
 		int size = this.size();
 		System.err.printf("sizes: %d %d\n", size, seq.size());

@@ -10,7 +10,6 @@ import edu.stanford.nlp.util.Index;
 public class RawIStringSequence extends AbstractSequence<IString> {
 	public final int[] elements;
 
-  @SuppressWarnings("unused")
 	public RawIStringSequence(int[] elements) {
 		this.elements = elements;
 	}
@@ -22,7 +21,6 @@ public class RawIStringSequence extends AbstractSequence<IString> {
 		}
 	}
 
-  @SuppressWarnings("unused")
 	public RawIStringSequence(Sequence<IString> sequence) {
 		elements = new int[sequence.size()];
 		for (int i = 0; i < elements.length; i++) {
@@ -30,13 +28,11 @@ public class RawIStringSequence extends AbstractSequence<IString> {
 		}
 	}
 
-  @SuppressWarnings("unused")
 	public RawIStringSequence(int[] intElements, Index<IString> index) {
 		elements = new int[intElements.length];
     System.arraycopy(intElements, 0, elements, 0, intElements.length);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public IString get(int i) {
 		return new IString(elements[i]);

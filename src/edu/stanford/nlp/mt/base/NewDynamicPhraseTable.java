@@ -15,7 +15,6 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Pair;
 
 
-@SuppressWarnings("unused")
 public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,String> {
 	final BiText bitext;
 	final int[] sortedindex;
@@ -173,7 +172,6 @@ public class NewDynamicPhraseTable extends AbstractPhraseGenerator<IString,Strin
 		List<Pair<RawSequence<IString>,Double>> sortedTrans; // = null;
 		double cntNormalizer; // = Double.NaN;
 		
-		@SuppressWarnings("unchecked")
 		long startCacheCheckTime = System.currentTimeMillis();
 		@SuppressWarnings("unchecked")
 		List<String> commonTrans = (List<String>)commonDB.getlist(rawSequence.toString());

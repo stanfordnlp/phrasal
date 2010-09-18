@@ -67,7 +67,6 @@ public class IOTools {
     return reader;
   }
 
-  @SuppressWarnings("unused")
   public static PrintStream getWriterFromFile(File fileName) {
     return getWriterFromFile(fileName.getPath());
   }

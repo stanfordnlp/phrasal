@@ -32,7 +32,6 @@ public class HillClimbingMultiTranslationMetricMax<TK, FV> implements MultiTrans
 		this.subMetric = null;
 	}
 
-  @SuppressWarnings("unused")
 	public HillClimbingMultiTranslationMetricMax(EvaluationMetric<TK,FV> metric, EvaluationMetric<TK, FV> subMetric) {
 		this.metric = metric;
 		this.greedyMetrixMax = new GreedyMultiTranslationMetricMax<TK, FV>(metric);

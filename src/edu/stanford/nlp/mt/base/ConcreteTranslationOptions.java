@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 
-@SuppressWarnings("unused")
 public class ConcreteTranslationOptions {
 
 	private ConcreteTranslationOptions() { }

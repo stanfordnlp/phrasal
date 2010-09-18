@@ -336,7 +336,7 @@ public class Phrasal {
 					"The following fields are unrecognized: %s\n", extraFields));
 		}
 
-		Set<String> ignoredItems = new HashSet(config.keySet());
+		Set<String> ignoredItems = new HashSet<String>(config.keySet());
 		ignoredItems.retainAll(IGNORED_FIELDS);
 
 		for (String ignored : ignoredItems) {
@@ -413,7 +413,7 @@ public class Phrasal {
 			}
 		}
 
-		MSDFeaturizer lexReorderFeaturizer = null;
+		MSDFeaturizer<IString,String> lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
 		if (config.containsKey(DISTORTION_FILE) || config.containsKey(HIER_DISTORTION_FILE) ) {
@@ -467,7 +467,7 @@ public class Phrasal {
 				if (featurizerName == null) {
 					if (token.endsWith("()")) {
 						String name = token.replaceFirst("\\(\\)$", "");
-						Class featurizerClass = FeaturizerFactory.loadFeaturizer(name);
+						Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory.loadFeaturizer(name);
 						featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
 						.newInstance();
 						additionalFeaturizers.add(featurizer);
@@ -481,7 +481,7 @@ public class Phrasal {
 							args = args.replaceAll("\\s+$", "");
 							String[] argsList = args.split(",");
 							System.err.printf("Additional featurizer: %s.\nArgs: %s\n", featurizerName, Arrays.toString(argsList));
-							Class featurizerClass = FeaturizerFactory
+							Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
 							.loadFeaturizer(featurizerName);
 							featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
 							.getConstructor(argsList.getClass()).newInstance(
@@ -508,7 +508,7 @@ public class Phrasal {
 						args = args.replaceAll("\\s+$", "");
 						String[] argsList = args.split(",");
 						System.err.printf("args: %s\n", Arrays.toString(argsList));
-						Class featurizerClass = FeaturizerFactory
+						Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
 						.loadFeaturizer(featurizerName);
 						featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
 						.getConstructor(argsList.getClass()).newInstance(
@@ -826,7 +826,7 @@ public class Phrasal {
 
 
 		System.err.printf("Phrase Limit: %d\n",
-				((CombinedPhraseGenerator) phraseGenerator).getPhraseLimit());
+				((CombinedPhraseGenerator<IString>) phraseGenerator).getPhraseLimit());
 
 		// Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
@@ -845,7 +845,7 @@ public class Phrasal {
     //boolean dtuDecoder = (gapT == FeaturizerFactory.GapType.none || gapT == FeaturizerFactory.GapType.both);
     for (int i = 0; i < (local_procs == 0 ? 1 : local_procs); i++) {
   		// Configure InfererBuilder
-      AbstractBeamInfererBuilder infererBuilder = (AbstractBeamInfererBuilder) InfererBuilderFactory
+      AbstractBeamInfererBuilder<IString,String> infererBuilder = (AbstractBeamInfererBuilder<IString,String>) InfererBuilderFactory
         .factory(dtuDecoder ? InfererBuilderFactory.DTU_DECODER : InfererBuilderFactory.MULTIBEAM_DECODER);
       try {
         infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
@@ -1114,7 +1114,6 @@ public class Phrasal {
   public static int MAX_LEARN_NBEST_ITER = 100;
 	//public static int LEARNING_NBEST_LIST_SIZE = 1000;
 
-  @SuppressWarnings("unused")
   static List<ScoredFeaturizedTranslation<IString, String>> filterLowScoring(
 			List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
 			double dropFrac) {
@@ -1152,7 +1151,6 @@ public class Phrasal {
 		return filtered;
 	}
 
-  @SuppressWarnings("unused")
   static List<ScoredFeaturizedTranslation<IString, String>> filterHighLowScoring(
 			List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
 			double dropFracTop, double dropFracBottom) {
@@ -1416,13 +1414,11 @@ public class Phrasal {
 	}
 	
   private static class SSVMLearner implements Learner {
-  	final double C;
   	final StructuredSVM ssvm;
   	final OAIndex<String> featureIndex = new OAIndex<String>();
   	final ClassicCounter<String> wts = new ClassicCounter<String>();
   	
 		public SSVMLearner(double C, boolean subgradient) {
-			this.C = C;
 			if (subgradient) {
 				ssvm = StructuredSVM.trainableMCSVM(Kernel.factory("linear"), C, StructuredSVM.StructLoss.MarginRescalePrimal, 1000000);
 			} else {
@@ -2089,7 +2085,6 @@ public class Phrasal {
 
 }
 
-@SuppressWarnings("unused")
 class IdScorePair implements Comparable<IdScorePair> {
 	public final int id;
 	public final double score;
