@@ -136,6 +136,18 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     MAX_PENDING_PHRASES = m;
   }
 
+  @SuppressWarnings("unused")
+  public int pendingWords() {
+    int sz = 0;
+    for (DTUHypothesis.PendingPhrase<TK,FV> elA : pendingPhrases) {
+      DTUOption dtuOpt = (DTUOption)elA.concreteOpt.abstractOption;
+      for (int segId = elA.segmentIdx+1; segId < dtuOpt.dtus.length; ++segId) {
+        sz += dtuOpt.dtus[segId].size();
+      }
+    }
+    return sz;
+  }
+
   /**
    * Hypothesis is "done" when the following conditions are met. (a) The number of untranslated tokens
    * must be zero, the number of "pending" phrases should be zero, and the hypothesis should be unexpired.
