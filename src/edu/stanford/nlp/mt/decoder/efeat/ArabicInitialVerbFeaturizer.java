@@ -65,7 +65,7 @@ public class ArabicInitialVerbFeaturizer implements
   private static final String[] TAGS_FAIL = new String[] { // This usually
                                                            // starts an SBAR or
                                                            // SBARQ:
-  "REL+ADV", "REL+PRON", "INTERROG+ADV",
+      "REL+ADV", "REL+PRON", "INTERROG+ADV",
       // PREP usually starts a PP, whereas the +PREP typically do not
       // Since it is fine to leave the PP after the verb, currently don't handle
       // PPs

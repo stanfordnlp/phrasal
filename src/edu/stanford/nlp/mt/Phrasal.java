@@ -1794,7 +1794,7 @@ public class Phrasal {
         double loss = evalTarget - evalArgmax;
         if (learner instanceof SGDLogLinearLearner) {
           ((SGDLogLinearLearner) learner).weightUpdate(epoch, /* translationId, */
-              targetNBest, argmaxNBest); // , loss);
+          targetNBest, argmaxNBest); // , loss);
         } else {
           learner.weightUpdate(epoch, translationId, target, argmax, loss);
         }

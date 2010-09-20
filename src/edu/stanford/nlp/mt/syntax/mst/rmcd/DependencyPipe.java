@@ -28,7 +28,8 @@ public class DependencyPipe implements Cloneable {
   // Note: some of these tokens are sometimes head, but it is rare:
   new HashSet<String>(Arrays.asList(
       // Note: "(", "}" purposedly not added:
-      ".", ",", "\"", "'", ":", ")", "{", "the", "an", "a", "who", "which",
+      ".", ",", "\"", "'", ":", ")", "{", "the", "an", "a", "who",
+      "which",
       // Note: "this" purposedly not added (it's a head in, e.g.,
       // "you should do this, which is the best solution"):
       "his", "her", "its", "these", "their", "you", "also", "already", "n't",
