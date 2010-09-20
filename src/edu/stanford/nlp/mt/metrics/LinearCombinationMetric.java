@@ -46,7 +46,6 @@ public class LinearCombinationMetric<TK,FV> extends AbstractMetric<TK,FV> {
       metricTypes[i] = MetricType.full;
   }
 
-  @SuppressWarnings("unused")
   public void setWeights(double[] w) {
     assert(w.length == weights.length);
     System.arraycopy(w,0,weights,0,w.length);

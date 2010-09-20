@@ -167,7 +167,6 @@ public class MosesFeatureExtractor extends AbstractFeatureExtractor implements P
   /**
    * Check features against those read from Moses phrase table.
    */
-  @SuppressWarnings("unused")
   public void checkAgainst(BufferedReader ref) {
     try {
       for (String fLine; (fLine = ref.readLine()) != null;) {

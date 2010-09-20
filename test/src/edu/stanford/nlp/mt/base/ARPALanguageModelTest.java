@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.base;
 import java.io.*;
 
 import junit.framework.TestCase;
-import static org.junit.Assert.* ;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;

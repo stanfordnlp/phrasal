@@ -34,7 +34,6 @@ public class ReorderTreeWithPatterns {
   }
 
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {
     
     if (args.length %2 != 0) {
@@ -85,7 +84,7 @@ public class ReorderTreeWithPatterns {
 
       // print the yield
       //List<Label> y = lTrees.get(idx).yield(new ArrayList<Label>());
-      List y = lTrees.get(idx).yield(new ArrayList());
+      List<Object> y = lTrees.get(idx).yield(new ArrayList<Object>());
       List<String> words = new ArrayList<String>();
       //for (HasWord w : y) {
       for (Object w : y) {

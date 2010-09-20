@@ -20,7 +20,6 @@ public class ChineseTreeReader extends AbstractTreeReader {
     //ce_ = new ChineseEscaper();
   }
 
-  @SuppressWarnings("unused")
   public ChineseTreeReader(String filename) throws IOException {
     readMoreTrees(filename);
   }

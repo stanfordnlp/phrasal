@@ -25,6 +25,6 @@ abstract class AbstractNBestOptimizer implements NBestOptimizer {
     this.mert = mert;
     this.emetric = mert.emetric;
     this.random = mert.random;
-    this.nbest = mert.nbest;
+    this.nbest = MERT.nbest;
   }
 }

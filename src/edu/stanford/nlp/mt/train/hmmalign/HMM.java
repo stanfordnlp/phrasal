@@ -1413,7 +1413,7 @@ public class HMM {
 
           for (int jump = 0; jump < 2 * MAX_FLDS; jump++) {
 
-            if (!aTable.possibleExternal(i, jump, l)) {
+            if (!ATableHMM2EQ.possibleExternal(i, jump, l)) {
               continue;
             }
 
@@ -1430,7 +1430,7 @@ public class HMM {
 
               for (int j_pp = 0; j_pp < 2 * MAX_FLDS; j_pp++) {
 
-                if (!aTable.possibleExternal(i_p, j_pp, l)) {
+                if (!ATableHMM2EQ.possibleExternal(i_p, j_pp, l)) {
                   continue;
                 }
 
@@ -1464,7 +1464,7 @@ public class HMM {
         alignment[m] = i;
         for (int i_p = 0; i_p < 2 * MAX_FLDS; i_p++) {
           alignment[m - 1] = i_p;
-          if (!aTable.possibleExternal(i, i_p, l)) {
+          if (!ATableHMM2EQ.possibleExternal(i, i_p, l)) {
             continue;
           }
           double jmp = alHandler.getProb(2 * l + 1, m + 1, alignment);
@@ -1477,7 +1477,7 @@ public class HMM {
 
       for (int i = 0; i <= 2 * l; i++) {
         for (int j = 0; j < 2 * MAX_FLDS; j++) {
-          if (!aTable.possibleExternal(i, j, l)) {
+          if (!ATableHMM2EQ.possibleExternal(i, j, l)) {
             continue;
           }
           alignment[m] = i;
@@ -1493,7 +1493,7 @@ public class HMM {
 
           for (int i = 0; i <= 2 * l; i++) {
             //looking at i to be the next
-            if (!aTable.possibleExternal(i, jump, l)) {
+            if (!ATableHMM2EQ.possibleExternal(i, jump, l)) {
               continue;
             }
 
@@ -1590,7 +1590,7 @@ public class HMM {
             probF = tpHandler.getProb(index, j);
 
             for (int jump_1 = 0; jump_1 < 2 * MAX_FLDS; jump_1++) {
-              if (!aTable.possibleExternal(i, jump_1, l)) {
+              if (!ATableHMM2EQ.possibleExternal(i, jump_1, l)) {
                 continue;
               }
 
@@ -1606,7 +1606,7 @@ public class HMM {
 
                 for (int jump = 0; jump < 2 * MAX_FLDS; jump++) {
 
-                  if (!aTable.possibleExternal(i_p, jump, l)) {
+                  if (!ATableHMM2EQ.possibleExternal(i_p, jump, l)) {
                     continue;
                   }
 
@@ -1627,7 +1627,7 @@ public class HMM {
         //increment for EOS
         for (int i = 0; i <= 2 * l; i++) {
           for (int jump_1 = 0; jump_1 < 2 * MAX_FLDS; jump_1++) {
-            if (!aTable.possibleExternal(i, jump_1, l)) {
+            if (!ATableHMM2EQ.possibleExternal(i, jump_1, l)) {
               continue;
             }
             prob = sum[m][i][jump_1];

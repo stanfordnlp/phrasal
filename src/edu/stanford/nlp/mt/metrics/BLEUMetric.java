@@ -34,7 +34,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
   /**
 	 * 
 	 */
-  @SuppressWarnings("unused")
 	public BLEUMetric(double multiplier, List<List<Sequence<TK>>> referencesList) {
 		this.order = DEFAULT_MAX_NGRAM_ORDER;
 		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
@@ -74,7 +73,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
     //System.err.println("smoothed BLEU: "+smooth);
 	}
 
-  @SuppressWarnings("unused")
 	public BLEUMetric(List<List<Sequence<TK>>> referencesList, int order) {
 		this.order = order;
 		maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(referencesList.size());
@@ -229,7 +227,6 @@ public class BLEUMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			this.sequences = new ArrayList<Sequence<TK>>(maxReferenceCounts.size());
 		}
 
-    @SuppressWarnings("unused")
 		public double getMultiplier() {
 			return multiplier;
 		}
@@ -656,13 +653,12 @@ class BLEUIncrementalMetricRecombinationFilter<TK,FV> implements RecombinationFi
 		throw new RuntimeException();
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public boolean combinable(IncrementalEvaluationMetric<TK,FV> oA,
 			IncrementalEvaluationMetric<TK,FV> oB) {
 		
-		BLEUMetric<TK,?>.BLEUIncrementalMetric hypA = (BLEUMetric.BLEUIncrementalMetric)oA;
-		BLEUMetric<TK,?>.BLEUIncrementalMetric hypB = (BLEUMetric.BLEUIncrementalMetric)oB;
+		BLEUMetric<TK,?>.BLEUIncrementalMetric hypA = (BLEUMetric<TK,?>.BLEUIncrementalMetric)oA;
+		BLEUMetric<TK,?>.BLEUIncrementalMetric hypB = (BLEUMetric<TK,?>.BLEUIncrementalMetric)oB;
 		
 		if (hypA.r != hypB.r) return false;
 		if (hypA.c != hypB.c) return false;
@@ -679,10 +675,9 @@ class BLEUIncrementalMetricRecombinationFilter<TK,FV> implements RecombinationFi
 		return true;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public long recombinationHashCode(IncrementalEvaluationMetric<TK,FV> o) {
-		BLEUMetric<TK,?>.BLEUIncrementalMetric hyp = (BLEUMetric.BLEUIncrementalMetric)o;
+		BLEUMetric<TK,?>.BLEUIncrementalMetric hyp = (BLEUMetric<TK,?>.BLEUIncrementalMetric)o;
 		
 		int hashCode = hyp.r + 31*hyp.c;
 		

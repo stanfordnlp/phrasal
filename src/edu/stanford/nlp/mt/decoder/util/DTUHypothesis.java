@@ -390,7 +390,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       Hypothesis<TK,FV> nextHyp,
       CombinedFeaturizer<TK,FV> featurizer,
 			Scorer<FV> scorer,
-			SearchHeuristic<TK,FV> heuristic, Set<TranslationOption> seenOptions)
+			SearchHeuristic<TK,FV> heuristic, Set<TranslationOption<TK>> seenOptions)
   {
 
     super(translationId, translationOpt, getAbstractOption(nextHyp.featurizable), insertionPosition, baseHyp,

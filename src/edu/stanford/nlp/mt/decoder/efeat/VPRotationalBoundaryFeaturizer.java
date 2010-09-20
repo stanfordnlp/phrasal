@@ -27,7 +27,6 @@ public class VPRotationalBoundaryFeaturizer implements IncrementalFeaturizer<ISt
 
   List<Map<Integer,String>> rotBs = null;
 
-  @SuppressWarnings("unchecked")
   public VPRotationalBoundaryFeaturizer(String... args) {
     String filename = args[0];
     if (DEBUG) System.err.printf("Debug Mode\n");

@@ -6,7 +6,7 @@ package edu.stanford.nlp.mt.train.hmmalign;
  *
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
-@SuppressWarnings("unused")
+
 public class AlHandlerHMM1E extends AlHandlerHMM1 {
 
   ATableHMMHolder aHolder;

@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * 
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class PhiFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugPhiFeatureExtractor";

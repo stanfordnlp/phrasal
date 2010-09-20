@@ -24,7 +24,6 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
  * 
  * @author Pi-Chuan Chang
  */
-@SuppressWarnings("unused")
 public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends AbstractFeatureExtractor {
 
 	// mg2009: probably not thread safe
@@ -55,7 +54,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
     for (int fidx = 0; fidx < alGrid.fsize(); fidx++) {
       AlGridCell<AlignmentTemplateInstance> cell = alGrid.cellAt(fidx,template_e2+1);
       if (cell.hasTopLeft()) {
-        List<AlignmentTemplateInstance> topLefts = cell.getTopLeft();
+        List<AlignmentTemplateInstance> topLefts = AlGridCell.getTopLeft();
         for (AlignmentTemplateInstance t : topLefts) {
           int f1 = t.fStartPos();
           int f2 = t.fEndPos();
@@ -172,7 +171,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends Abstr
       for (int fidx = 0; fidx < sent.f().size(); fidx++) {
         AlGridCell<AlignmentTemplateInstance> cell = alGrid.cellAt(fidx,eidx+1);
         if (cell.hasTopLeft()) {
-          List<AlignmentTemplateInstance> topLefts = cell.getTopLeft();
+          List<AlignmentTemplateInstance> topLefts = AlGridCell.getTopLeft();
           for (AlignmentTemplateInstance t : topLefts) {
             int f1 = t.fStartPos();
             int f2 = t.fEndPos();

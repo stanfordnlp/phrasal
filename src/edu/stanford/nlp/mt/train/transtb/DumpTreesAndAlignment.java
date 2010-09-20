@@ -36,7 +36,6 @@ class DumpTreesAndAlignment {
     }
 
     List<TreePair> treepairs;
-    Boolean reducedCategory = true;
     Boolean nonOracleTree = false;
 
     // This call reads in the data, including : 

@@ -69,12 +69,10 @@ public class AlignmentSymmetrizer {
     }
   }
 
-  @SuppressWarnings("unused")
   public static SymmetricalWordAlignment symmetrize(GIZAWordAlignment in) {
     return symmetrize(in, SymmetrizationType.grow_diag_final);
   }
 
-  @SuppressWarnings("unchecked")
   public static SymmetricalWordAlignment symmetrize(GIZAWordAlignment in, SymmetrizationType type) {
 
     SymmetricalWordAlignment out = new SymmetricalWordAlignment(in.f, in.e, null, null);
@@ -128,7 +126,6 @@ public class AlignmentSymmetrizer {
    * undesirable property: reverse(symmetrize(f,e)) == symmetrize(e,f)) is not always
    * true.
    */
-  @SuppressWarnings("unchecked")
   private static void growDiag(AbstractWordAlignment in, SymmetricalWordAlignment out, int[][] neighbors) {
 
     assert(out.isEmpty());

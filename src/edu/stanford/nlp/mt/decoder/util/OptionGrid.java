@@ -12,9 +12,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  */
 public class OptionGrid<TK> {
-
-	@SuppressWarnings("unchecked")
-	private final List[] grid;
+	private final List<ConcreteTranslationOption<TK>>[] grid;
 	private final int foreignSz;
 	
 	/**
@@ -26,7 +24,7 @@ public class OptionGrid<TK> {
 		grid = new List[foreignSz*foreignSz];
 		for (int startIdx = 0; startIdx < foreignSz; startIdx++) {
 			for (int endIdx = startIdx; endIdx < foreignSz; endIdx++) {
-				grid[getIndex(startIdx, endIdx)] = new LinkedList(); 
+				grid[getIndex(startIdx, endIdx)] = new LinkedList<ConcreteTranslationOption<TK>>(); 
 			}
 		}
 		for (ConcreteTranslationOption<TK> opt : options) {
@@ -39,7 +37,6 @@ public class OptionGrid<TK> {
 	/**
 	 * 
 	 */
-	@SuppressWarnings("unchecked")
 	public List<ConcreteTranslationOption<TK>> get(int startPos, int endPos) {
 		return grid[getIndex(startPos, endPos)];
 	}

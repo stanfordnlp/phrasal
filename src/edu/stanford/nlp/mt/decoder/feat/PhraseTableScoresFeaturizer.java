@@ -91,7 +91,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 		if (phraseReweighting) {
 			featureValues = new FeatureValue[1];
 			String featureName = featurizable.foreignPhrase.toString("DTM:", "_", featurizable.translatedPhrase.toString("=>","_"));
-			featureValues[0] = new FeatureValue(featureName, 1.0);
+			featureValues[0] = new FeatureValue<String>(featureName, 1.0);
 		} else {
 			// lookup/construct the list of feature names 
 			String phraseTableName = featurizable.phraseTableName;
@@ -105,7 +105,7 @@ public class PhraseTableScoresFeaturizer<T> implements IncrementalFeaturizer<T,S
 			featureValues = new FeatureValue[featureNames.length];
 			for (int i = 0; i < featureValues.length; i++) {
         featureValues[i] = (i < featurizable.translationScores.length) ?
-               new FeatureValue(featureNames[i], featurizable.translationScores[i]) : emptyFV;
+               new FeatureValue<String>(featureNames[i], featurizable.translationScores[i]) : emptyFV;
       }
 			
 			if (DEBUG) {

@@ -82,7 +82,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       boolean withDTUs = false;
       ++hypCount;
       Hypothesis<TK, FV> hyp = null;
-      Set<TranslationOption> seenOptions = new HashSet<TranslationOption>();
+      Set<TranslationOption<TK>> seenOptions = new HashSet<TranslationOption<TK>>();
 
       for (Hypothesis<TK, FV> nextHyp : hypList) {
         if (hyp == null) {
@@ -101,7 +101,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       }
 
       if (withDTUs) {
-        DTUHypothesis dtuHyp = (DTUHypothesis<TK,FV>)hyp;
+        DTUHypothesis<TK,FV> dtuHyp = (DTUHypothesis<TK,FV>)hyp;
         if (!dtuHyp.isDone() || dtuHyp.hasExpired())
           System.err.printf
             ("Warning: option not complete(%d,%s): %s\n",translations.size(), dtuHyp.hasExpired(), hyp);
@@ -216,8 +216,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   /**
    *
    */
-  @SuppressWarnings("unchecked,unused")
   protected Beam<Hypothesis<TK,FV>>[] createBeamsForCoverageCounts(int beamCnt, int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter) {
+    @SuppressWarnings("unchecked")
     Beam<Hypothesis<TK,FV>>[] beams = new Beam[beamCnt];
     for (int i = 0; i < beams.length; i++) {
       beams[i] = HypothesisBeamFactory.factory(beamType, filter, capacity);
@@ -229,7 +229,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
    *
    * @author danielcer
    */
-  @SuppressWarnings("unused")
   public class CoverageBeams {
     final private Map<CoverageSet, Beam<Hypothesis<TK,FV>>> beams =  new HashMap<CoverageSet, Beam<Hypothesis<TK,FV>>>();
     final private Set<CoverageSet>[] coverageCountToCoverageSets;

@@ -129,8 +129,7 @@ public class LegacyFeatureExtractor implements Serializable {
 
   static public LegacyFeatureExtractor load(String dataSetDescriptor, PrintStream pstrm, Properties p) throws IOException {
     System.out.printf("Loading data set specified by descriptor: '%s'\n", dataSetDescriptor);
-    Exception priorException = null;
-
+    
     try {
       /*
       // First, attempt to load a serialized LegacyFeatureExtractor
@@ -170,16 +169,8 @@ public class LegacyFeatureExtractor implements Serializable {
       return ds;
     } catch (Exception e) {
       System.err.printf("Can't load '%s' as either a " + "serialized .gale.LegacyFeatureExtractor or as a plain text " + "descriptor.\n", dataSetDescriptor);
-      if (priorException != null) {
-        System.err.printf("Deserialization error: %s\n", priorException);
-        String priorStackTrace = null;
-        System.err.println(priorStackTrace);
-        System.err.printf("Plain text descriptor error: %s\n", e);
-        e.printStackTrace();
-      } else {
-        System.err.printf("Error: %s\n", e);
-        e.printStackTrace();
-      }
+      System.err.printf("Error: %s\n", e);
+      e.printStackTrace();
       throw new RuntimeException("Error: unable to load data set given by descriptor '" + dataSetDescriptor + "'");
     }
   }

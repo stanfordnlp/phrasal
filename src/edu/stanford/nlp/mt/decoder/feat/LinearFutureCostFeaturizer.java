@@ -22,14 +22,12 @@ public class LinearFutureCostFeaturizer extends StatefulFeaturizer<IString, Stri
 
   public final float futureCostDelay;
 
-  @SuppressWarnings("unused")
   public LinearFutureCostFeaturizer() {
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
     if (futureCostDelay != 0.0)
       System.err.println("Future cost delay: "+futureCostDelay);
   }
 
-  @SuppressWarnings("unused")
   public LinearFutureCostFeaturizer(String... args) {
 		// Argument determines how much future cost to pay upfront:
 		// 1.0 => everything; 0.0 => nothing, as in Moses

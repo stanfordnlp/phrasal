@@ -17,12 +17,12 @@ public class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
   @SuppressWarnings("unchecked")
 	public int compareTo(SortByEndPair<T1,T2> another) {
     //System.err.println("CompareTo");
-    int comp = ((Comparable) second).compareTo(another.second);
+    int comp = ((Comparable<Object>) second).compareTo(another.second);
     if (comp != 0) {
       //System.err.println("Compared: "+comp);
       return comp;
     } else {
-      return ((Comparable) another.first).compareTo(first);
+      return ((Comparable<Object>) another.first).compareTo(first);
     }
   }
 

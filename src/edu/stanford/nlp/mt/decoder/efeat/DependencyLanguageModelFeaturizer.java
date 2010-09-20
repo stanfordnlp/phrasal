@@ -115,7 +115,6 @@ public class DependencyLanguageModelFeaturizer extends StatefulFeaturizer<IStrin
 
   boolean reranking;
 
-  @SuppressWarnings("unchecked")
   public DependencyLanguageModelFeaturizer(String... args) throws Exception {
 
     DependencyInstance.incremental = true;

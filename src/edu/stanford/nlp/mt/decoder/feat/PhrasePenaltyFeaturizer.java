@@ -15,7 +15,6 @@ import edu.stanford.nlp.mt.base.Sequence;
  *
  * @param <TK>
  */
-@SuppressWarnings("unused")
 public class PhrasePenaltyFeaturizer<TK> implements IncrementalFeaturizer<TK,String>, IsolatedPhraseFeaturizer<TK, String>  {
 	static public String FEATURE_NAME = "TM:phrasePenalty";
   // mg2008: please don't change to "= 1" since not exactly the same value:

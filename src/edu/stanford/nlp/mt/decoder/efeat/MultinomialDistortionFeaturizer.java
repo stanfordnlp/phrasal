@@ -19,8 +19,8 @@ public class MultinomialDistortionFeaturizer extends StatefulFeaturizer<IString,
 
   private static final String FEATURE_NAME = "MultinomialDistortion";
 
-  private static final String DEBUG_PROPERTY = "Debug" + FEATURE_NAME;
-  private static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  static final String DEBUG_PROPERTY = "Debug" + FEATURE_NAME;
+  static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
   private static final double[] paramCache = new double[DistortionModel.Class.values().length];
   

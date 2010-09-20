@@ -440,7 +440,7 @@ public class FeatureExtractor {
 
         String sourceLine = sourceReader.readLine();
         String alignLine = alignReader.readLine();
-        int targetToks = targetReader.readLine().split("\\s+").length;
+        targetReader.readLine().split("\\s+");
 
         ExtractionTask task = (OUTBOUND) ? new OutboundExtractionTask(sourceLine, alignLine, currentLine) :
           new InboundExtractionTask(sourceLine, alignLine, currentLine);

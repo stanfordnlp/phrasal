@@ -30,7 +30,6 @@ public class DualWordAlignment implements WordAlignment {
 
   DualWordAlignment() {}
 
-  @SuppressWarnings("unused")
   public DualWordAlignment(String fStr, String eStr, String a1Str, String a2Str) throws IOException {
     init(fStr,eStr,a1Str,a2Str);
   }
@@ -50,9 +49,9 @@ public class DualWordAlignment implements WordAlignment {
     alignment1_f2e = new TreeSet[f.size()];
     alignment2_f2e = new TreeSet[f.size()];
     for(int i=0; i<alignment1_f2e.length; ++i)
-      alignment1_f2e[i] = new TreeSet();
+      alignment1_f2e[i] = new TreeSet<Integer>();
     for(int i=0; i<alignment2_f2e.length; ++i)
-      alignment2_f2e[i] = new TreeSet();
+      alignment2_f2e[i] = new TreeSet<Integer>();
     for(String al : a1Str.split("\\s+")) {
       String[] els = al.split("-");
       int fpos = Integer.parseInt(els[0]);

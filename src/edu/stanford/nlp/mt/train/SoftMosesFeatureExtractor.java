@@ -16,7 +16,6 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 /**
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class SoftMosesFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final double MIN_WSUM = 1e-4;

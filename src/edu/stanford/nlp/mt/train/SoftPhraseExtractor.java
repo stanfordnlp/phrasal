@@ -10,7 +10,6 @@ import java.util.*;
  *
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
   private int maxCrossings;

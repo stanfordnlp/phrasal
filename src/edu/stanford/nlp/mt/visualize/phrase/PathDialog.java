@@ -163,7 +163,6 @@ public class PathDialog extends JFrame {
   };
 
   private class PathComponents {
-    public int row = -1;
     public JRadioButton on = null;
     public JRadioButton off = null;
     public NamedLabel kill = null;
@@ -436,8 +435,6 @@ public class PathDialog extends JFrame {
   private boolean addPathToPanel(String name, boolean isEnabled) {
     PathComponents comps = (pathMap.get(currentTranslationId) != null && pathMap.get(currentTranslationId).containsKey(name)) ? 
         pathMap.get(currentTranslationId).get(name) : new PathComponents();
-
-        comps.row = lastPathRow;
 
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(1,1,1,1);

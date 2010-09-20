@@ -15,6 +15,7 @@ import edu.stanford.nlp.classify.RVFDataset;
 import edu.stanford.nlp.classify.LogPrior;
 import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
+import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.RVFDatum;
 import edu.stanford.nlp.process.ChineseDocumentToSentenceProcessor;
 
@@ -28,7 +29,7 @@ public class TextCat {
     Properties prop = StringUtils.argsToProperties(args);
 
     String loadPath = prop.getProperty("load");
-    LinearClassifier classifier;
+    LinearClassifier<String,String> classifier;
     
     if (loadPath == null) {
 
@@ -44,17 +45,17 @@ public class TextCat {
       data.put("wl", wl);
       data.put("ng", ng);
       
-      Pair<GeneralDataset, float[]> p = getDataset(data);
-      GeneralDataset dataset = p.first();    
+      Pair<GeneralDataset<String,String>, float[]> p = getDataset(data);
+      GeneralDataset<String,String> dataset = p.first();    
       dataset.summaryStatistics();
       float[] dataWeights = p.second();
     
       LogPrior prior = new LogPrior(LogPrior.LogPriorType.QUADRATIC, 0.10, 1.0);
       
-      LinearClassifierFactory cf = new LinearClassifierFactory();
+      LinearClassifierFactory<String,String> cf = new LinearClassifierFactory<String,String>();
       cf.setPrior(prior);
       cf.useQuasiNewton(true);
-      classifier = (LinearClassifier)cf.trainClassifier(dataset, dataWeights, prior);
+      classifier = (LinearClassifier<String,String>)cf.trainClassifier(dataset, dataWeights, prior);
 
       String savePath = prop.getProperty("save");
       if (savePath != null) {
@@ -67,7 +68,7 @@ public class TextCat {
       }
       
     } else {
-      classifier = (LinearClassifier)IOUtils.readObjectFromFile(loadPath);
+      classifier = (LinearClassifier<String,String>)IOUtils.readObjectFromFile(loadPath);
     }
 
     String labelDir = prop.getProperty("label");
@@ -109,11 +110,11 @@ public class TextCat {
     }
   }
 
-  @SuppressWarnings("unchecked")
-	private static Pair<String,Counter<String>> label(List<String> doc, LinearClassifier classifier) {
+
+	private static Pair<String,Counter<String>> label(List<String> doc, LinearClassifier<String,String> classifier) {
     ClassicCounter<String> features = getFeatures(doc);
-    RVFDatum datum = new RVFDatum(features);
-    Counter<String> probs = classifier.probabilityOf(datum);
+    RVFDatum<String,String> datum = new RVFDatum<String,String>(features);
+    Counter<String> probs = classifier.probabilityOf((Datum<String,String>)datum);
     String guess = Counters.argmax(probs);
     if (!guess.equals("nw")) { guess = "web"; }
     return new Pair<String,Counter<String>>(guess, probs);
@@ -141,18 +142,17 @@ public class TextCat {
     return new ObjectBank<List<String>>(rif, ifrf);
   }
 
-  @SuppressWarnings("unchecked")
-  private static Pair<GeneralDataset,float[]> getDataset(Map<String,ObjectBank<List<String>>> data) {
+  private static Pair<GeneralDataset<String,String>,float[]> getDataset(Map<String,ObjectBank<List<String>>> data) {
 
     List<Float> dataWeights = new ArrayList<Float>();
-    GeneralDataset dataset = new RVFDataset();
+    GeneralDataset<String,String> dataset = new RVFDataset<String,String>();
     
     for (String label : data.keySet()) {
       System.err.println(label);
       ObjectBank<List<String>> docs = data.get(label);
       for (List<String> doc : docs) {
         ClassicCounter<String> features = getFeatures(doc);
-        RVFDatum datum = new RVFDatum(features, label);        
+        RVFDatum<String,String> datum = new RVFDatum<String,String>(features, label);        
         dataset.add(datum);        
         if (!label.equals("nw")) {
           dataWeights.add(1.0f);
@@ -167,7 +167,7 @@ public class TextCat {
       dataWeightsArray[i] = dataWeights.get(i);
     }
     
-    return new Pair<GeneralDataset,float[]>(dataset, dataWeightsArray);
+    return new Pair<GeneralDataset<String,String>,float[]>(dataset, dataWeightsArray);
   }
 
   private static ClassicCounter<String> getFeatures(List<String> doc) {

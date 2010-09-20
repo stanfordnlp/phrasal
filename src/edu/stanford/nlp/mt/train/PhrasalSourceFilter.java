@@ -41,7 +41,6 @@ public class PhrasalSourceFilter extends AbstractSourceFilter {
   /**
    * Restrict feature extraction to a pre-defined list of source-language phrases.
    */
-  @SuppressWarnings("unchecked")
   public void filterAgainstList(String fileName) {
     System.err.println("Filtering against list: "+fileName);
     //filterFromDev = true;

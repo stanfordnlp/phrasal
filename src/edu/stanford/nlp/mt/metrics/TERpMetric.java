@@ -35,7 +35,6 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private int beamWidth = 20;
   private int maxShiftDist = 50;
 
-  @SuppressWarnings("unused")
   public TERpMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;
     this.countEdits = countEdits;
@@ -259,7 +258,6 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     //public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
   }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws IOException {
     if (args.length == 0) {
       System.err.println("Usage:\n\tjava TERpMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");

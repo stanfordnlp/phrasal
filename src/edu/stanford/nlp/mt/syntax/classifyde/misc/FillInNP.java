@@ -3,8 +3,6 @@ package edu.stanford.nlp.mt.syntax.classifyde.misc;
 import java.util.*;
 
 import edu.stanford.nlp.io.IOUtils;
-import edu.stanford.nlp.util.*;
-
 
 public class FillInNP {
   static Map<Integer, Map<Integer, NP>> linesToNPs(String[] lines) {

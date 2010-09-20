@@ -32,7 +32,6 @@ import edu.stanford.nlp.stats.Counter;
  *
  * @see edu.stanford.nlp.mt.syntax.discrimreorder.ReorderingClassifier
  */
-@SuppressWarnings("unused")
 public class DiscrimTypedDependencyReorderingFeaturizer implements ClonedFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDiscrimTypedDependencyReorderingFeaturizer";

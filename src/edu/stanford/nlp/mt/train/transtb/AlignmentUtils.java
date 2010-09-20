@@ -46,7 +46,6 @@ public class AlignmentUtils {
     pw.println("<br></body></html>");
   }
 
-  @SuppressWarnings("unused")
   public static void printAlignmentGrids(Collection<TranslationAlignment> tas) {
     printAlignmentGridHeader();
     for(TranslationAlignment ta : tas) {
@@ -59,7 +58,6 @@ public class AlignmentUtils {
     printAlignmentGrid(ta, new PrintWriter(System.out, true));
   }
 
-  @SuppressWarnings("unused")
   public static void printNPTree(Tree t, PrintWriter pw) {
     pw.println("<pre>");
     if (t != null) {
@@ -70,7 +68,6 @@ public class AlignmentUtils {
     pw.println("</pre>");
   }
 
-  @SuppressWarnings("unused")
   public static boolean checkDeIsOf(String[] translation, String[] source, int[][] matrix, int deIdx) {
     boolean set = false;
     int deEidx = -1;
@@ -84,7 +81,6 @@ public class AlignmentUtils {
     return set && translation[deEidx].equals("of");
   }
 
-  @SuppressWarnings("unused")
   public static boolean checkDeIsPrep(String[] translation, String[] source, int[][] matrix, int deIdx) {
     boolean set = false;
     int deEidx = -1;
@@ -114,7 +110,6 @@ public class AlignmentUtils {
 
   }
 
-  @SuppressWarnings("unused")
   public static void printGridNoNull(String[] translation, String[] source, int[][] matrix, PrintWriter pw) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
@@ -171,7 +166,6 @@ public class AlignmentUtils {
     pw.println("</table>");
   }
 
-  @SuppressWarnings("unused")
   public static List<TranslationAlignment> readFromFile(String filename)
   throws IOException {
     File file = new File(filename);

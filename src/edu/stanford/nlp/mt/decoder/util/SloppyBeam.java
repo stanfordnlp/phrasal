@@ -164,7 +164,6 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
 	/**
 	 * 
 	 */
-  @SuppressWarnings("unused")
 	public double worstScore() {
 		return worst;
 	}

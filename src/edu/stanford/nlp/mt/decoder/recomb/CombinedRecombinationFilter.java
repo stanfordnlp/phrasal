@@ -26,7 +26,6 @@ public class CombinedRecombinationFilter<S> implements
 	/**
 	 * 
 	 */
-  @SuppressWarnings("unused")
 	public CombinedRecombinationFilter(RecombinationFilter<S>... filters) {
 		this.filters = Arrays.copyOf(filters, filters.length);
 		combinationRule = DEFAULT_COMBINATION_RULE;
@@ -45,7 +44,6 @@ public class CombinedRecombinationFilter<S> implements
 	/**
 	 * 
 	 */
-  @SuppressWarnings("unused")
 	public CombinedRecombinationFilter(CombinationRule combinationRule, RecombinationFilter<S>... filters) {
 		this.filters = Arrays.copyOf(filters, filters.length);
 		this.combinationRule = combinationRule;
@@ -54,8 +52,8 @@ public class CombinedRecombinationFilter<S> implements
 	/**
 	 * 
 	 */
-	@SuppressWarnings("unchecked,unused")
-	public CombinedRecombinationFilter(CombinationRule combinationRule, List<RecombinationFilter<S>> filters) {
+	@SuppressWarnings("unchecked")
+  public CombinedRecombinationFilter(CombinationRule combinationRule, List<RecombinationFilter<S>> filters) {
     this.filters = filters.toArray(new RecombinationFilter[filters.size()]);
 		this.combinationRule = combinationRule;
 	}

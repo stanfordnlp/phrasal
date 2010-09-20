@@ -8,7 +8,6 @@ package edu.stanford.nlp.mt.decoder.recomb;
  */
 public class NoRecombination<S> implements RecombinationFilter<S> {
 
-	@SuppressWarnings("unchecked")
 	public Object clone() throws CloneNotSupportedException {
     return super.clone();
 	}

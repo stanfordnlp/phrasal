@@ -70,7 +70,6 @@ public class MERT extends Thread {
   static boolean breakTiesWithLastBest = false;
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
-  @SuppressWarnings("unused")
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
   static final Set<String> generativeFeatures = SSVMScorer
           .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
@@ -111,8 +110,7 @@ public class MERT extends Thread {
   final static OAIndex<String> featureIndex = new OAIndex<String>();
 
   private static int nThreads = 4;
-
-  @SuppressWarnings("unused")
+  
   static void setBreakTiesWithLastBest() {
     breakTiesWithLastBest = true;
   }
@@ -212,7 +210,6 @@ public class MERT extends Thread {
     return obj;
   }
 
-  @SuppressWarnings("unused")
   static public List<ScoredFeaturizedTranslation<IString,String>>
   transEvalArgmax(MosesNBestList nbest,
                   EvaluationMetric<IString, String> emetric) {
@@ -273,7 +270,6 @@ public class MERT extends Thread {
     }
   }
 
-  @SuppressWarnings("deprecation")
   public Counter<String> lineSearch(MosesNBestList nbest,
                                     Counter<String> optWts, Counter<String> direction,
                                     EvaluationMetric<IString, String> emetric) {
@@ -506,7 +502,6 @@ public class MERT extends Thread {
     return ssd;
   }
 
-  @SuppressWarnings("deprecation")
   static public Counter<String> normalize(Counter<String> wts) {
     Counters.multiplyInPlace(wts, 1.0 / l1norm(wts));
     return wts;
@@ -601,6 +596,7 @@ public class MERT extends Thread {
   public static Counter<String> readWeights(String filename, Index<String> featureIndex) throws IOException, ClassNotFoundException {
     if (filename.endsWith(".binwts")) {
       ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename));
+      @SuppressWarnings("unchecked")
       Counter<String> wts = (Counter<String>)ois.readObject();      
       ois.close();
       return wts;
@@ -619,7 +615,6 @@ public class MERT extends Thread {
     }
   }
 
-  @SuppressWarnings("deprecation")
   static void writeWeights(String filename, Counter<String> wts)
           throws IOException {
     if (filename.endsWith(".binwts")) {
@@ -648,7 +643,6 @@ public class MERT extends Thread {
     }
   }
 
-  @SuppressWarnings("unused")
   static void displayWeightsOneLine(Counter<String> wts) {
     System.out.print("[ ");
     for (String f : wts.keySet()) {
@@ -1120,10 +1114,11 @@ public class MERT extends Thread {
     writeWeights(finalWtsFile, bestWts);
   }
 
-  @SuppressWarnings("unchecked")
-  private static AbstractMetric<IString,String> createMetric(String metricName, Class[] argClasses, Object[] args) {
+
+  private static AbstractMetric<IString,String> createMetric(String metricName, Class<AbstractMetric<IString,String>>[] argClasses, Object[] args) {
     AbstractMetric<IString,String> metric;
     try {
+      @SuppressWarnings("unchecked")
       Class<AbstractMetric<IString,String>> cls = (Class<AbstractMetric<IString,String>>)Class.forName(metricName);
       Constructor<AbstractMetric<IString,String>> ct = cls.getConstructor(argClasses);
       metric = ct.newInstance(args);
@@ -1132,7 +1127,6 @@ public class MERT extends Thread {
     return metric;
   }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {
 
     String optStr = "cer";

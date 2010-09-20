@@ -8,7 +8,6 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 
-@SuppressWarnings("unused")
 public class SyntacticPhraseReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   private int[][] min_E_for_F_range, max_E_for_F_range;

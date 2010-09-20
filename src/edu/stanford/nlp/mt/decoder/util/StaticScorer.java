@@ -134,12 +134,10 @@ public class StaticScorer implements Scorer<String> {
       return score;
    }
 
-   @SuppressWarnings("unchecked,unused")
-   public double getIncrementalScoreNoisy(List features) {
+   public double getIncrementalScoreNoisy(List<FeatureValue<String>> features) {
       double score = 0;
 
-      for (Object o : features) {
-         FeatureValue<String> feature = (FeatureValue<String>) o;
+      for (FeatureValue<String> feature : features) {
          int index = featureIndex.indexOf(feature.name);
          System.out.printf("feature: %s index: %d\n", feature.name, index);
          if (index >= 0) {
@@ -152,36 +150,30 @@ public class StaticScorer implements Scorer<String> {
       return score;
    }
 
-   @SuppressWarnings("unused")
    public static void saveWeights(String filename) {
       throw new UnsupportedOperationException();
    }
 
-   @SuppressWarnings("unused")
    public boolean hasNonZeroWeight(String featureName) {
       int idx = featureIndex.indexOf(featureName);
       return idx >= 0 && weights[idx] == weights[idx] && weights[idx] != 0;
    }
 
-   @SuppressWarnings("unused")
    public static boolean randomizeTag() {
       // TODO Auto-generated method stub
       return false;
    }
 
-   @SuppressWarnings("unused")
    public void setRandomizeTag(boolean randomizeTag) {
       // TODO Auto-generated method stub
    }
 
-   @SuppressWarnings("unused")
    public void setWeightMultipliers(double manualWeightMul,
          double classifierWeightMul) {
       // TODO Auto-generated method stub
 
    }
 
-   @SuppressWarnings("unused")
    public void displayWeights() {
       // TODO Auto-generated method stub
 

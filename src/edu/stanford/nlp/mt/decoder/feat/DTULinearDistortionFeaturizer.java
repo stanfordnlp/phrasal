@@ -25,14 +25,12 @@ public class DTULinearDistortionFeaturizer extends StatefulFeaturizer<IString, S
 
   public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System.getProperty("dtuFutureCostDelay","0f"));
 
-  @SuppressWarnings("unused")
   public DTULinearDistortionFeaturizer() {
     futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
     if (futureCostDelay != 0.0)
       System.err.println("Future cost delay: "+futureCostDelay);
   }
 
-  @SuppressWarnings("unused")
   public DTULinearDistortionFeaturizer(String... args) {
     // Argument determines how much future cost to pay upfront:
 		// 1.0 => everything; 0.0 => nothing, as in Moses

@@ -142,7 +142,6 @@ public class TranslationAlignment {
     return nullgaps;
   }
 
-  @SuppressWarnings("unused")
   public static boolean checkDeIsOf(String[] translation, String[] source, int[][] matrix, int deIdx) {
     boolean set = false;
     int deEidx = -1;
@@ -249,7 +248,6 @@ public class TranslationAlignment {
     }
   }
 
-  @SuppressWarnings("unused")
   public static List<TranslationAlignment> readFromFile(String filename)
   throws IOException {
     File file = new File(filename);

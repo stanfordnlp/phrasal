@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  *
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class DependencyPhraseExtractor extends MosesPhraseExtractor {
 
   private static final boolean DEBUG = System.getProperty("debugDependencyPhraseExtractor") != null;

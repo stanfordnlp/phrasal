@@ -172,7 +172,6 @@ public class LinearCombinationMetricOptimizer implements Function {
     createMetricScores();
   }
 
-  @SuppressWarnings("unchecked")
   public void maximize() {
     DownhillSimplexMinimizer m = new DownhillSimplexMinimizer(simplexSize);
     System.err.println("minimizer: "+m.toString());
@@ -257,7 +256,6 @@ public class LinearCombinationMetricOptimizer implements Function {
     return -pearson;
   }
 
-  @SuppressWarnings("unused")
   static void dump(String name, List<?> l) {
     System.err.printf("Dumping list %s\n",name);
     for(int i=0; i<l.size(); ++i)
@@ -293,7 +291,6 @@ public class LinearCombinationMetricOptimizer implements Function {
     return externalScores;
   }
 
-  @SuppressWarnings("unchecked")
   public void createMetricScores() {
     int sz = windowSize;
     metricScores = new double[metricScoresStr.length][];
@@ -306,9 +303,9 @@ public class LinearCombinationMetricOptimizer implements Function {
       for(int j=0; j<sz; ++j)
         refs1.add(refs.get(i+j));
       // Create hypotheses:
-      BLEUMetric.BLEUIncrementalMetric bleu = new BLEUMetric(refs1,true).getIncrementalMetric();
-      NISTMetric.NISTIncrementalMetric nist = new NISTMetric(refs1).getIncrementalMetric();
-      TERMetric.TERIncrementalMetric ter = new TERMetric(refs1).getIncrementalMetric();
+      BLEUMetric<IString, String>.BLEUIncrementalMetric bleu = new BLEUMetric<IString, String>(refs1,true).getIncrementalMetric();
+      NISTMetric<IString, String>.NISTIncrementalMetric nist = new NISTMetric<IString, String>(refs1).getIncrementalMetric();
+      TERMetric<IString, String>.TERIncrementalMetric ter = new TERMetric<IString, String>(refs1).getIncrementalMetric();
       for(int j=0; j<sz; ++j) {
         bleu.add(new ScoredFeaturizedTranslation<IString, String>(hyps.get(i+j), null, 0));
         nist.add(new ScoredFeaturizedTranslation<IString, String>(hyps.get(i+j), null, 0));
@@ -399,7 +396,6 @@ public class LinearCombinationMetricOptimizer implements Function {
     //return ArrayMath.innerProduct(scores1,scores2)/(scores1.length-1);
   }
 
-  @SuppressWarnings("unused")
   void printWorseCorrelationCases(double[] combinedScores) {
     double[] combinedScoresStd = combinedScores.clone(); 
     double[] humanScoresStd = humanScores.clone();

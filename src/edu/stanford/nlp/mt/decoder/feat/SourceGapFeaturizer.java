@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
  * 
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class SourceGapFeaturizer implements IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String> {
 
 	public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";

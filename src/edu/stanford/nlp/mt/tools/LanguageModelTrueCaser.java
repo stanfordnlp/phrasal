@@ -52,17 +52,16 @@ public class LanguageModelTrueCaser implements TrueCaser {
     System.exit(0);
   }
 
-  @SuppressWarnings("unchecked")
 	public void init(String lmFilename) {
 
-    MultiBeamDecoder.MultiBeamDecoderBuilder infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder) InfererBuilderFactory.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
+    MultiBeamDecoder.MultiBeamDecoderBuilder<IString, String> infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder<IString,String>) InfererBuilderFactory.factory(InfererBuilderFactory.MULTIBEAM_DECODER);
     
      // Read in LM & create LM featurizer
     try {
     NGramLanguageModelFeaturizer<IString> lmFeaturizer = NGramLanguageModelFeaturizer.fromFile(lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
     List<IncrementalFeaturizer<IString,String>> listFeaturizers = new LinkedList<IncrementalFeaturizer<IString,String>>();
     listFeaturizers.add(lmFeaturizer);
-    CombinedFeaturizer<IString,String> combinedFeaturizer = new CombinedFeaturizer(listFeaturizers);
+    CombinedFeaturizer<IString,String> combinedFeaturizer = new CombinedFeaturizer<IString,String>(listFeaturizers);
 
     infererBuilder.setIncrementalFeaturizer(combinedFeaturizer);
     Scorer<String> scorer = new UniformScorer<String>(false);

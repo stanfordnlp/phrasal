@@ -184,7 +184,6 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 	}
 	
-	 @SuppressWarnings("unchecked")
 	  public static void main(String[] args) throws IOException {
 	    if (args.length == 0) {
 	      System.err.println("Usage:\n\tjava WERMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");

@@ -57,7 +57,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
     refTries[senti].dump(out);
   }
 
-  @SuppressWarnings("unchecked")
+
   public BLEUFeaturizer(String... args) throws Exception {
 
     if(args.length < 3)
@@ -260,7 +260,6 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString,String> implement
 
   public void reset() { }
 
-  @SuppressWarnings("unchecked")
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
   }

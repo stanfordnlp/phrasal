@@ -23,7 +23,6 @@ public class EnglishTreeReader extends AbstractTreeReader {
     //ptbe_ = new PTBEscapingProcessor();
   }
 
-  @SuppressWarnings("unused")
   public EnglishTreeReader(String filename) throws IOException {
     this();
     readMoreTrees(filename);
@@ -113,7 +112,6 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
     ptbe = new PTBEscapingProcessor<HasWord, String,String>();
   }
 
-  @SuppressWarnings("unchecked")
   public Tree transformTree(Tree tree)  {
 
     try {

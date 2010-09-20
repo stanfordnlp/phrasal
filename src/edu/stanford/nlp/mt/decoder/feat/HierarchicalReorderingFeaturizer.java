@@ -21,7 +21,6 @@ import edu.stanford.nlp.mt.train.AlignmentGrid;
  *
  * @see LexicalReorderingFeaturizer
  */
-@SuppressWarnings("unused")
 public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString,String> implements RichIncrementalFeaturizer<IString, String>, MSDFeaturizer<IString,String>, ClonedFeaturizer<IString,String> {
 
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";
@@ -495,7 +494,6 @@ public class HierarchicalReorderingFeaturizer extends StatefulFeaturizer<IString
    * Note that, if this condition is true, we can immediately infer that the current phrase
    * is globally monotone with what comes next.
    */
-  @SuppressWarnings("unused")
   static boolean isStronglyMonotone(Featurizable<IString, String> f) {
     CoverageSet fCoverage = f.hyp.foreignCoverage;
     return (fCoverage.length()-fCoverage.cardinality() == 0);

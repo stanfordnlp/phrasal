@@ -31,7 +31,6 @@ public class TransTBUtils {
    * useReducedCategories=true (means "B of A" is maped to "B prep A"), and
    * useNonOracleTrees=false (means features are extracted from parsed trees, not gold-standard trees)
    **/
-  @SuppressWarnings("unused")
   public static List<TreePair> readAnnotatedTreePairs() throws IOException {
     return readAnnotatedTreePairs(false);
   }

@@ -54,7 +54,6 @@ public interface FeatureExtractor {
   /**
    * Names of features returned by {@link #score(AlignmentTemplate)}. 
    */
-  @SuppressWarnings("unused")
   public Object scoreNames();
 
   /**

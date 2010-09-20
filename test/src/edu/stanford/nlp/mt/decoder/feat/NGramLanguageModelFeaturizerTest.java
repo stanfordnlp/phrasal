@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import java.io.*;
 
 import junit.framework.TestCase;
-import static org.junit.Assert.* ;
 
 /**
  * @author Karthik Raghunathan

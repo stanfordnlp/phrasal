@@ -16,7 +16,6 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
   double lambda = .2;
   double empty;
 
-  @SuppressWarnings("unused")
   public AlHandlerHMM1SG() {
   }
 

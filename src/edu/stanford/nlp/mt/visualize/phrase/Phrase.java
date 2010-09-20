@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.visualize.phrase;
 
-@SuppressWarnings("unchecked")
-public class Phrase implements Comparable {
+public class Phrase implements Comparable<Object> {
   
   private final String phrase;
   private final int numTokens;

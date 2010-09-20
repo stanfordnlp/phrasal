@@ -52,7 +52,6 @@ public class StateLatticeDecoder<S extends State<S>> implements Iterator<List<S>
 		return !agenda.isEmpty();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<S> next() {
 		CompositeState best = agenda.remove();

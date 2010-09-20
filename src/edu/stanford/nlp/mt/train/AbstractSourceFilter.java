@@ -34,7 +34,6 @@ public abstract class AbstractSourceFilter implements SourceFilter {
    * a given test/dev corpus.
    */
   @Override
-  @SuppressWarnings("unchecked")
   public void filterAgainstCorpus(String sourceLanguageCorpus) {
     System.err.println("Enumerating phrases in: "+sourceLanguageCorpus);
     System.err.print("Line");

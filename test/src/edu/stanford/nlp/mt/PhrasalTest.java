@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import junit.framework.TestCase;
-import static org.junit.Assert.* ;
 
 /**
  * @author Karthik Raghunathan

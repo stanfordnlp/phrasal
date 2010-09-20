@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.io.*;
 
 import junit.framework.TestCase;
-import static org.junit.Assert.* ;
 
 /**
  * @author Karthik Raghunathan
@@ -48,7 +47,7 @@ public class MosesNBestListTest extends TestCase {
 		assertTrue(nbestList.toString().startsWith("Moses N-Best List"));			
 	} 	
 	
-	public void testRuntimeException(String nbestListFilename) throws IOException {
+	public void testRuntimeException() throws IOException {
 		String[] fileNames = new String[] {
 			"projects/mt/test/inputs/improperIDs.test",
 			"projects/mt/test/inputs/outOfOrderIDs.test",
@@ -56,7 +55,7 @@ public class MosesNBestListTest extends TestCase {
 		for (String fileName : fileNames) {
 			boolean goodFile = false;
 			try { 
-				new MosesNBestList(nbestListFilename);
+				new MosesNBestList(fileName);
 			  goodFile = true;
 			}
 			catch (Exception e) {

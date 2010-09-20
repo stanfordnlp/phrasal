@@ -64,7 +64,6 @@ public class AbstractWordAlignment implements WordAlignment {
   @Override public SortedSet<Integer> e2f(int i) { return e2f[i]; }
 
   @Override
-  @SuppressWarnings("unused")
   public int f2eSize(int i, int min, int max) { return _size(f2e[i],min,max); }
 
   @Override
@@ -148,7 +147,6 @@ public class AbstractWordAlignment implements WordAlignment {
     return hs.hashCode();
   }
 
-  @SuppressWarnings("unused")
   public double ratioFtoE() {
     assert (eSize() > 0);
     return fSize()*1.0/eSize();
@@ -212,8 +210,8 @@ public class AbstractWordAlignment implements WordAlignment {
   }
 
   public boolean isEmpty() {
-    for (SortedSet ss : f2e) if (!ss.isEmpty()) return false;
-    for (SortedSet ss : e2f) if (!ss.isEmpty()) return false;
+    for (SortedSet<Integer> ss : f2e) if (!ss.isEmpty()) return false;
+    for (SortedSet<Integer> ss : e2f) if (!ss.isEmpty()) return false;
     return true;
   }
 

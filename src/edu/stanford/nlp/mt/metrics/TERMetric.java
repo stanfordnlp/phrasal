@@ -227,7 +227,6 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
   }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws IOException {
 
     if (args.length == 0) {

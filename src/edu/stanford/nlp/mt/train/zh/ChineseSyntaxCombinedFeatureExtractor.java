@@ -722,7 +722,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     //System.exit(1);
   }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
     Properties prop = StringUtils.argsToProperties(args);
     System.err.println("props: "+prop.toString());
@@ -736,7 +735,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     }
 
     if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set extraFields = new HashSet(prop.keySet());
+      Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       usage();
       throw new RuntimeException(String.format(

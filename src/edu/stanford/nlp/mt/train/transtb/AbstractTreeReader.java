@@ -43,7 +43,6 @@ public abstract class AbstractTreeReader {
     }
   }
 
-  @SuppressWarnings("unused")
   public Tree getTree(int index) {
     return trees_.get(index);
   }

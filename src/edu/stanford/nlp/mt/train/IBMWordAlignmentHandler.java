@@ -79,9 +79,9 @@ public class IBMWordAlignmentHandler extends DefaultHandler {
     } else if ("alignment".equals(localName)) {
       tagType = TagType.AL;
       f2e = new TreeSet[fLen];
-      for (int i=0; i<fLen; ++i) f2e[i] = new TreeSet();
+      for (int i=0; i<fLen; ++i) f2e[i] = new TreeSet<Integer>();
       e2f = new TreeSet[eLen];
-      for (int i=0; i<eLen; ++i) e2f[i] = new TreeSet();
+      for (int i=0; i<eLen; ++i) e2f[i] = new TreeSet<Integer>();
     }
     //System.err.printf("start: %s\n",localName);
 	}

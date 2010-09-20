@@ -16,7 +16,6 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
  *
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class DummyAlignmentFeaturizer implements IncrementalFeaturizer<IString, String>, AlignmentFeaturizer {
 
   @Override

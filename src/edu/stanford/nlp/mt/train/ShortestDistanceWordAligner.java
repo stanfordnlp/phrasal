@@ -54,7 +54,6 @@ public class ShortestDistanceWordAligner implements WordAligner {
     }
   }
 
-  @SuppressWarnings("unused")
   public ShortestDistanceWordAligner(IBMModel1 model) {
     this.model1 = model;
   }

@@ -35,13 +35,9 @@ public class AlGridCell<T extends AlignmentTemplateInstance> {
   public boolean hasBottomLeft() { return hasBottomLeft; }
   public boolean hasBottomRight() { return hasBottomRight; }
 
-  @SuppressWarnings("unused")
   public static List<AlignmentTemplateInstance> getTopLeft() { throw new UnsupportedOperationException(); }
-  @SuppressWarnings("unused")
   public static List<AlignmentTemplateInstance> getTopRight() { throw new UnsupportedOperationException(); }
-  @SuppressWarnings("unused")
   public static List<AlignmentTemplateInstance> getBottomLeft() { throw new UnsupportedOperationException(); }
-  @SuppressWarnings("unused")
   public static List<AlignmentTemplateInstance> getBottomRight() { throw new UnsupportedOperationException(); }
 
 }

@@ -36,7 +36,9 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK,FV> {
 	 *
 	 */
 	protected FeatureValueCollection<FV> collectFeatureValues(Hypothesis<TK,FV> hyp) {
-    class LinkedFeatureValues<FV> extends LinkedList<FeatureValue<FV>> implements FeatureValueCollection<FV> {
+    class LinkedFeatureValues<FV2> extends LinkedList<FeatureValue<FV2>> implements FeatureValueCollection<FV2> {      
+      private static final long serialVersionUID = 1L;
+
       @Override public Object clone() { return super.clone(); }
     }
 		LinkedFeatureValues<FV> features = new LinkedFeatureValues<FV>();

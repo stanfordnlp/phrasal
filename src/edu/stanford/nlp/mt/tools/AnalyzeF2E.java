@@ -18,7 +18,6 @@ import java.util.zip.GZIPInputStream;
 
 public class AnalyzeF2E {
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
     
     Properties prop = StringUtils.argsToProperties(args);

@@ -369,10 +369,7 @@ public class DataSet implements Serializable  {
         System.err.println("(Training) Making compact hypothesis list for data point "+dataPt);
         CompactHypothesisList chl 
           = new CompactHypothesisList(trnFeatureIndex,
-                                      featureSets, scores, dataPt, false, nThresh);
-        if (chl==null) {
-          throw new RuntimeException("When adding... nothing in compact hypothesis list "+dataPt+"??");
-        }
+                                      featureSets, scores, dataPt, false, nThresh);        
         ds.lchl[dataPt] = chl;
       }
     }

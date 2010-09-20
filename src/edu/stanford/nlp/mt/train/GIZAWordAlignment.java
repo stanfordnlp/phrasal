@@ -158,8 +158,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   public String toString(boolean inverse) {
     return toString(inverse ? e2f : f2e);
   }
-
-  @SuppressWarnings("unused")
+  
   public static void readUnidirecionalAlignment(String feAlign) { 
     LineNumberReader feReader;
     GIZAWordAlignment sent = new GIZAWordAlignment();
@@ -181,7 +180,6 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     }
   }
 
-  @SuppressWarnings("unused")
   public static List<GIZAWordAlignment> readBidirecionalAlignment(String feAlign, String efAlign) {
     LineNumberReader feReader, efReader;
     GIZAWordAlignment sent = new GIZAWordAlignment();

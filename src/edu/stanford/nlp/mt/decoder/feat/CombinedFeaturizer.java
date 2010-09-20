@@ -57,7 +57,6 @@ public void deleteFeaturizers(Set<String> disabledFeaturizers) {
 	 * 
 	 */
 
-  @SuppressWarnings("unused")
 	public List<IncrementalFeaturizer<TK,FV>> getFeaturizers() {
 		return new ArrayList<IncrementalFeaturizer<TK,FV>>(featurizers);
 	}

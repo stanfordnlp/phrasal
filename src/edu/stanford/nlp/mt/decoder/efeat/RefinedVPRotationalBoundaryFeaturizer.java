@@ -30,7 +30,6 @@ public class RefinedVPRotationalBoundaryFeaturizer implements IncrementalFeaturi
 
   List<Map<Integer,Pair<Integer,String>>> rotBs = null;
 
-  @SuppressWarnings("unchecked")
   public RefinedVPRotationalBoundaryFeaturizer(String... args) {
     String filename = args[0];
     if (DEBUG) System.err.printf("Debug Mode\n");

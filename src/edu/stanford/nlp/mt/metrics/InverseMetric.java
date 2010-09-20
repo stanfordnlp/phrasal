@@ -5,7 +5,6 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
-@SuppressWarnings("unused")
 public class InverseMetric<TK,FV> extends AbstractMetric<TK,FV> {
 	private final EvaluationMetric<TK,FV> emetric;
 	
@@ -73,11 +72,10 @@ public class InverseMetric<TK,FV> extends AbstractMetric<TK,FV> {
 			return imetric.size();
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public int compareTo(IncrementalEvaluationMetric<TK, FV> o) {
 			if (o instanceof InverseMetric.IncrementalMetric) {
-				return ((InverseMetric.IncrementalMetric)o).imetric.compareTo(imetric);
+				return ((InverseMetric<TK,FV>.IncrementalMetric)o).imetric.compareTo(imetric);
 			}
 			throw new UnsupportedOperationException();
 		}

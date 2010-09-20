@@ -26,6 +26,7 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
   private static final double lambdasm = .1;
   // private double addBeta = 400;
 
+  private final boolean DEBUG = false;
 
   public AlHandlerHMM1Tags(ATableHMMHolder a, int mask) {
     this.aHolder = a;
@@ -418,7 +419,7 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
     int current = 0;
 
 
-    if (false) {
+    if (DEBUG) {
       //print out stuff about the sentence & alignment
       //System.out.println(" Printing alignment");
       System.out.println(" French sentence length " + m + " english " + l);

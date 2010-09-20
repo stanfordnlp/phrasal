@@ -76,7 +76,6 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString,String> f) {
 
     if (!(f instanceof DTUFeaturizable)) return null;
@@ -228,7 +227,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
   public void reset() { }
 
   private static int getGapCount(Featurizable<IString,String> f) {
-    TranslationOption opt = f.option.abstractOption;
+    TranslationOption<IString> opt = f.option.abstractOption;
     int sz = 0;
     for (IString el : f.translatedPhrase)
       if (el.equals(DTUTable.GAP_STR))

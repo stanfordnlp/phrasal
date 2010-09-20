@@ -134,7 +134,6 @@ public class ArabicKbestSubjectBank {
     return null;
   }
 
-  @SuppressWarnings("unused")
   public int getNumSentences() {
     if(this.kBestSubjectBank != null)
       return kBestSubjectBank.keySet().size();

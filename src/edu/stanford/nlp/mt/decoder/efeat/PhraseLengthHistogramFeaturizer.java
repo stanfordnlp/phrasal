@@ -15,7 +15,6 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
  * @author danielcer
  *
  */
-@SuppressWarnings("unused")
 public class PhraseLengthHistogramFeaturizer implements IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>{
 	public static final String FEATURE_NAME = "PhrLen";
 	enum FeatureConfig {source, target, sourceAndTarget}

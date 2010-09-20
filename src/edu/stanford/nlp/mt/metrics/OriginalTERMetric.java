@@ -27,7 +27,6 @@ public class OriginalTERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
   enum EditType { ins, del, sub, sft }
   boolean countEdits = false;
 
-  @SuppressWarnings("unused")
   public OriginalTERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;
     this.countEdits = countEdits;
@@ -221,7 +220,6 @@ public class OriginalTERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws IOException {
 
     if (args.length == 0) {

@@ -14,7 +14,6 @@ import edu.stanford.nlp.util.Index;
  *
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor {
 
   public static final String DEBUG_PROPERTY = "DebugLexicalReorderingFeatureExtractor";

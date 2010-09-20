@@ -29,7 +29,6 @@ public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String
 	 * Discriminative Lexical Reordering - using all reordering types
 	 *  
 	 */
-  @SuppressWarnings("unused")
 	public LexicalReorderingFeaturizer() {
 		// by default include everything
 		discriminativeSet = MosesLexicalReorderingTable.ReorderingTypes.values();
@@ -42,7 +41,6 @@ public class LexicalReorderingFeaturizer implements MSDFeaturizer<IString,String
 	 * Discriminative lexical reordering - using selected reordering types
 	 * 
 	 */
-  @SuppressWarnings("unused")
 	public LexicalReorderingFeaturizer(String... strTypes) {
 		discriminativeSet = MosesLexicalReorderingTable.ReorderingTypes.values();
 		boolean useAlignmentConstellations = false;

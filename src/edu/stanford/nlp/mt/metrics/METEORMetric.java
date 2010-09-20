@@ -22,7 +22,6 @@ import meteor.*;
 public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
-  @SuppressWarnings("unused")
   enum EditType { ins, del, sub, sft }
 
 	static {
@@ -188,7 +187,6 @@ public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   }
 
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws IOException {
     if (args.length == 0) {
       System.err.println("Usage:\n\tjava METEORMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");

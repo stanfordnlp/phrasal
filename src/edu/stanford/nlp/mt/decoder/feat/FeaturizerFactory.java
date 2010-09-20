@@ -99,12 +99,12 @@ public class FeaturizerFactory {
 	}
 	
 	@SuppressWarnings("unchecked")
-	static public Class loadFeaturizer(String name) {
+  static public <TK, FV> Class<IncrementalFeaturizer<TK, FV>> loadFeaturizer(String name) {
 		String trueName = (featureAliases.containsKey(name) ? featureAliases.get(name).get(0) : name);
-		Class featurizerClass = null;
+		Class<IncrementalFeaturizer<TK, FV>> featurizerClass = null;
 		
 		try {
-			featurizerClass = ClassLoader.getSystemClassLoader().loadClass(trueName);
+			featurizerClass = (Class<IncrementalFeaturizer<TK, FV>>)ClassLoader.getSystemClassLoader().loadClass(trueName);
 		} catch (ClassNotFoundException c) {
 			System.err.printf("Failed to load featurizer %s (class name: %s)\n", name, trueName);
 			System.exit(-1);
