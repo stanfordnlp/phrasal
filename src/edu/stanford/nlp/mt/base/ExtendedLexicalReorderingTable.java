@@ -219,21 +219,18 @@ public class ExtendedLexicalReorderingTable {
 			conditionType = fileTypeToConditionType.get(type);
 			selectedFiletype = type; 
 			}
-		
-		
+
 		if (positionalMapping == null) {
 			throw new RuntimeException(String.format("Unable to determine lexical re-ordering file type for: %s\n", filename));
 		}
-		
-		
+
 		LineNumberReader reader;
 		if (filename.endsWith(".gz")) {
-			System.err.printf("(unzipping %s)", filename);
+			System.err.printf("(unzipping %s)\n", filename);
 			reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename)), "UTF-8"));
 		} else {
 			reader = new LineNumberReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
 		}
-		
 		
 		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 			StringTokenizer toker = new StringTokenizer(line);
@@ -303,16 +300,10 @@ public class ExtendedLexicalReorderingTable {
 			}
 			
 			int idx = MosesPhraseTable.translationIndex.indexOf(indexInts, true);
-			/* if (idx != reorderingScores.size()) {
-        System.err.println("Current index: "+idx);
-        System.err.println("Reordering score size: "+reorderingScores.size());
-				throw new RuntimeException(String.format("Somehow indicies have outpaced/underpaced the size of the reorderingScore list (%d != %d).\n", idx, reorderingScores.size()));
-			} */
-      while(idx >= reorderingScores.size())
+      while (idx >= reorderingScores.size())
         reorderingScores.add(null);
       assert(reorderingScores.get(idx) == null);
 			reorderingScores.set(idx,scores);
-			//reorderingScores.add(scores);
 		}
     System.gc();
 		long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();

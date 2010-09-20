@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -21,17 +20,19 @@ import edu.stanford.nlp.util.Pair;
  */
 public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
-  private static final double MINUS_INF = -10000.0;
+  protected static final double MINUS_INF = -10000.0;
 
-  public static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  protected static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
+  protected static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
 
-  public static final String IGNORE_TGT_PROPERTY = "fcIgnoreTargetGaps";
-  public static final boolean IGNORE_TGT = Boolean.parseBoolean(System.getProperty(IGNORE_TGT_PROPERTY, "true"));
+  protected static final String IGNORE_TGT_PROPERTY = "fcIgnoreTargetGaps";
+  protected static final boolean IGNORE_TGT = Boolean.parseBoolean(System.getProperty(IGNORE_TGT_PROPERTY, "true"));
+
+  protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+	protected final Scorer<FV> scorer;
+  protected SpanScores hSpanScores;
+
   static { System.err.println("Ignoring target gaps in future cost computation: "+IGNORE_TGT); }
-
-  final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
-	final Scorer<FV> scorer;
 
   @Override
 	public Object clone() throws CloneNotSupportedException {
@@ -47,59 +48,6 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
     System.err.println("Heuristic: "+getClass());
   }
 
-  @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> hyp, CoverageSet cs) {
-    //return DTU ? Math.min(getHeuristicDeltaDTU(hyp),getHeuristicDeltaStandard(hyp)) : getHeuristicDeltaStandard(hyp);
-    //return DTU ? getHeuristicDeltaDTU(hyp) : getHeuristicDeltaStandard(hyp);
-    return getHeuristicDeltaStandard(hyp);
-  }
-
-  /**
-   * For a given coverage set C of a given hypothesis, this finds all contiguous segments in the coverage set
-   * (e.g., if C = {1,5,6,10}, then segments are {5-6} and {10}), and computes future cost as follows:
-   * fcost(C) = fcost(1-10) - fcost(5-6) - fcost(10).
-   * 
-   * This does not overestimate future cost (as opposed to getHeuristicDeltaStandard), even when dealing
-   * with discontinuous phrases. However, future cost estimate is often poorer than with getHeuristicDeltaStandard.
-   */
-  @SuppressWarnings("unused")
-  private double getHeuristicDeltaDTU(Hypothesis<TK, FV> hyp) {
-
-    double oldH = hyp.preceedingHyp.h;
-
-    CoverageSet coverage = hyp.foreignCoverage;
-		int startEdge = coverage.nextClearBit(0);
-    int endEdge = hyp.foreignSequence.size()-1;
-    if (endEdge < startEdge)
-      return 0.0;
-
-    //System.err.printf("================================\ndeltaDTU: for %s oldH=%f\n",coverage, oldH);
-
-    double newH = hSpanScores.getScore(startEdge, endEdge);
-    //System.err.printf("newH(%d-%d) = %f\n", startEdge, hyp.foreignSequence.size()-1,newH);
-
-    for (Iterator<IntPair> it = coverage.getSegmentIterator(); it.hasNext(); ) {
-      IntPair span = it.next();
-      if (span.getSource() < startEdge) { // skip:
-        assert (span.getTarget() <= startEdge);
-        continue;
-      }
-      double localH = hSpanScores.getScore(span.getSource(), span.getTarget());
-      if (!Double.isNaN(localH) && !Double.isInfinite(localH)) {
-        newH -= localH;
-        //System.err.printf(" newH(%d-%d) -=: %f\n", span.getSource(), span.getTarget(), localH);
-      }
-		}
-
-    if((Double.isInfinite(newH) || newH == MINUS_INF) && (Double.isInfinite(oldH) || oldH == MINUS_INF))
-      return 0.0;
-    
-    double deltaH = newH - oldH;
-    //System.err.printf("deltaH = newH - oldH: %f = %f - %f\n", deltaH, newH, oldH);
-    ErasureUtils.noop(deltaH);
-    return deltaH;
-  }
-
   /**
    * For a given coverage set C of a given hypothesis, this finds all the gaps in the coverage set
    * (e.g., if C = {1,5,10}, then gaps are 2-4 and 6-9), and sums the future costs associated with all
@@ -108,7 +56,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
    * This is the same as in Moses, though this may sometimes over estimate future cost with discontinuous
    * phrases.
    */
-	private double getHeuristicDeltaStandard(Hypothesis<TK, FV> hyp) {
+  @Override
+	public double getHeuristicDelta(Hypothesis<TK, FV> hyp, CoverageSet newCoverage) {
     
     double oldH = hyp.preceedingHyp.h;
 		double newH = 0.0;
@@ -148,15 +97,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
       return 0.0;
     double delta = newH - oldH;
     ErasureUtils.noop(delta);
-    //if(Double.isInfinite(delta) || Double.isNaN(delta)) {
-      //System.err.println("h delta is not valid: "+delta);
-      //System.err.println("newH: "+newH);
-      //System.err.println("oldH: "+oldH);
-    //}
     return delta;
   }
-
-	private SpanScores hSpanScores;
 
 	@Override
   @SuppressWarnings("unchecked")
@@ -317,7 +259,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
 		}
   }
 
-	private static class SpanScores {
+	protected static class SpanScores {
 		final double[] spanValues;
 		final int terminalPositions;
 		public SpanScores(int length) {

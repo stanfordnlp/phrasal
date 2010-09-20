@@ -19,19 +19,20 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  * @param <FV>
  */
 public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
+
 	public static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
 	final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
+
+  protected SpanScores hSpanScores;
 
   @Override
 	public Object clone() throws CloneNotSupportedException {
     return super.clone();
 	}
 	
-	/**
-	 * 
-	 */
 	public IsolatedPhraseForeignCoverageHeuristic(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
 		this.phraseFeaturizer = phraseFeaturizer;
 		this.scorer = scorer;
@@ -64,8 +65,6 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeu
 		return newH - oldH;
 	}
 
-	private SpanScores hSpanScores;
-	
 	@Override
 	public double getInitialHeuristic(Sequence<TK> foreignSequence,
 			List<List<ConcreteTranslationOption<TK>>> options, int translationId) {

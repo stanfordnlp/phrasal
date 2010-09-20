@@ -17,7 +17,7 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
   static public final IString GAP_STR = new IString("X");
   static public final boolean DEBUG = true;
 
-  public static final String MIN_GAP_SIZE_PROPERTY = "minGapSize";
+  private static final String MIN_GAP_SIZE_PROPERTY = "minSourceGapSize";
   public static final int MIN_GAP_SIZE = Integer.parseInt(System.getProperty(MIN_GAP_SIZE_PROPERTY, "1"));
   static { System.err.println("Minimum gap size: "+MIN_GAP_SIZE); }
 

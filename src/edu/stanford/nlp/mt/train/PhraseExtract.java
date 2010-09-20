@@ -138,8 +138,7 @@ public class PhraseExtract {
        DTUPhraseExtractor.ALLOW_LOOSE_GAPS_OPT,
        DTUPhraseExtractor.ALLOW_LOOSE_GAPS_E_OPT,
        DTUPhraseExtractor.ALLOW_LOOSE_GAPS_F_OPT,
-       DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
-       DTUPhraseExtractor.HIERO_OPT
+       DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT
      ));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);

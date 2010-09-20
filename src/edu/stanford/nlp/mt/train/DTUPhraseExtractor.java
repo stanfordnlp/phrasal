@@ -24,12 +24,11 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   static public final String NO_TARGET_GAPS_OPT  = "noTargetGaps";
   static public final String GAPS_BOTH_SIDES_OPT = "gapsBothSides";
-  static public final String ALLOW_UNALIGNED_GAPS_OPT = "allowUnalignedGaps"; // do not extract "w X w" if X is unaligned
-  static public final String ALLOW_LOOSE_GAPS_OPT = "allowLooseGaps"; // do not extract "w X w" if X is unaligned
+  static public final String ALLOW_UNALIGNED_GAPS_OPT = "allowUnalignedGaps"; // extract "w X w" if X is unaligned
+  static public final String ALLOW_LOOSE_GAPS_OPT = "allowLooseGaps";
   static public final String ALLOW_LOOSE_GAPS_E_OPT = "allowLooseGapsE";
   static public final String ALLOW_LOOSE_GAPS_F_OPT = "allowLooseGapsF";
   static public final String NO_UNALIGNED_SUBPHRASE_OPT = "noUnalignedSubphrase";
-  static public final String HIERO_OPT  = "hieroDTU";
 
   static public final int DEFAULT_MAX_SIZE = 5;
   static public final int DEFAULT_MAX_SPAN = 12;
@@ -45,8 +44,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static final boolean DEBUG = System.getProperty("DebugDTU") != null;
 
   static boolean looseDTU=true, looseOutsideDTU=true, growSource=false;
-  static boolean withGaps, gapsBothSides, noTargetGaps, hieroDTU,
-                 noUnalignedSubphrase, allowLooseGapsE, allowLooseGapsF, allowUnalignedGaps;
+  static boolean
+      withGaps, gapsBothSides, noTargetGaps, noUnalignedSubphrase, 
+      allowLooseGapsE, allowLooseGapsF, allowUnalignedGaps;
 
   Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
 
@@ -98,9 +98,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     optStr = prop.getProperty(ALLOW_UNALIGNED_GAPS_OPT);
     allowUnalignedGaps = optStr != null && !optStr.equals("false");
 
-    // Don't Ignore DTU if first or last word of X is unaligned (same as Hiero):
+    // Don't Ignore DTU if first or last word of X is unaligned:
     optStr = prop.getProperty(ALLOW_LOOSE_GAPS_OPT);
-    boolean allowLooseGaps = optStr != null && !optStr.equals("false");
+    boolean allowLooseGaps = optStr == null || optStr.equals("true"); // on by default
     if (allowLooseGaps) {
       allowLooseGapsE = allowLooseGapsF = true;
     } else {
@@ -150,11 +150,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       "Size: max=%d,maxE=%d,maxF=%d\nSpan: max=%d,maxE=%d,maxF=%d\n",
         maxSize, maxSizeE, maxSizeF,
         maxSpan, maxSpanE, maxSpanF);
-
-    // Roughly the same set of phrases as Hiero:
-    optStr = prop.getProperty(HIERO_OPT);
-    hieroDTU = optStr != null && !optStr.equals("false");
-    // TODO: restore Hiero restrictions (see old DTU classes)
 
     if (DEBUG)
       AlignmentTemplateInstance.lazy = false;
@@ -459,40 +454,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       return true;
     }
 
-    /*
-    DTUPhrase hieroTightness() {
-      if (hieroDTU) {
-        boolean done = false;
-        while (!done) {
-
-          boolean updated = false;
-
-          // source:
-          int firstI = f.nextSetBit(0);
-          int lastI = f.length()-1;
-          for (int i=firstI+1; i<lastI; ++i)
-            if (unalignedWordsF.get(i) && !f.get(i)) {
-              f.set(i);
-              updated = true;
-            }
-
-          // target:
-          firstI = e.nextSetBit(0);
-          lastI = e.length()-1;
-          for (int i=firstI+1; i<lastI; ++i)
-            if (unalignedWordsE.get(i) && !e.get(i)) {
-              e.set(i);
-              updated = true;
-            }
-
-          if (!updated || !consistencize())
-            done = true;
-        }
-      }
-      return this;
-    }
-    */
-
     BitSet adjacentWords(BitSet bitset, boolean growOutside) {
       BitSet adjWords = new BitSet();
       int firstI = bitset.nextSetBit(0);
@@ -515,9 +476,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     BitSet candidateIdx(BitSet currentSet, boolean growOutside) {
       BitSet successors = adjacentWords(currentSet, growOutside);
-      //if (hieroDTU) {
-      //  successors.or(unalignedWordsE);
-      //}
       if (DEBUG) {
         System.err.printf("sent: %s\n",sent);
         System.err.println("dtu to expand: "+this);

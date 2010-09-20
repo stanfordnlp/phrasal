@@ -15,6 +15,10 @@ import edu.stanford.nlp.util.Pair;
  */
 public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
 
+  private static final String MIN_GAP_SIZE_PROPERTY = "minTargetGapSize";
+  private static final int MIN_GAP_SIZE = Integer.parseInt(System.getProperty(MIN_GAP_SIZE_PROPERTY, "1"));
+  static { System.err.println("Minimum target gap size: "+MIN_GAP_SIZE); }
+
   private static final double EXPIRATION_PENALTY = 1000.0; // When a DTUHypothesis expires, it suffers this cost
   private static int MAX_TARGET_PHRASE_SPAN = -1; // to make sure it is overridden (an assert will fail otherwise)
   private static int MAX_PENDING_PHRASES = 2;
@@ -299,7 +303,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     //assert (MAX_TARGET_PHRASE_SPAN >= 0);
     if (translationOpt.abstractOption instanceof DTUOption) {
       PendingPhrase<TK,FV> newPhrase = new PendingPhrase<TK,FV>
-        (translationOpt, translationId, this, featurizer, scorer, 0, this.length+1, this.length + MAX_TARGET_PHRASE_SPAN);
+        (translationOpt, translationId, this, featurizer, scorer, 0, this.length + MIN_GAP_SIZE, this.length + MAX_TARGET_PHRASE_SPAN);
       pendingPhrases.add(newPhrase);
     }
 
@@ -347,7 +351,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
           continue; // just appended the last pending phrase
         PendingPhrase<TK,FV> tmpPhrase = new PendingPhrase<TK,FV>(currentPhrase);
         tmpPhrase.segmentIdx = currentPhrase.segmentIdx+1;
-        tmpPhrase.firstPosition = this.length+1;
+        tmpPhrase.firstPosition = this.length + MIN_GAP_SIZE;
         pendingPhrases.add(tmpPhrase);
       }
       if (oldPhrase.lastPosition < this.length)
