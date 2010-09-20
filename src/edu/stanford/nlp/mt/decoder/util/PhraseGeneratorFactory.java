@@ -119,10 +119,13 @@ public class PhraseGeneratorFactory {
 
 			finalList.add(new IdentityPhraseGenerator<IString,FV>(phraseFeaturizer, scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
 
+      CombinedPhraseGenerator.Type combinationType = withGaps ?
+          CombinedPhraseGenerator.Type.CONCATENATIVE :
+          CombinedPhraseGenerator.Type.STRICT_DOMINANCE;
       if (phraseLimit == -1) {
-				return new CombinedPhraseGenerator<IString>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
+				return new CombinedPhraseGenerator<IString>(finalList, combinationType);
 			} else {
-				return new CombinedPhraseGenerator<IString>(finalList, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, phraseLimit);
+				return new CombinedPhraseGenerator<IString>(finalList, combinationType, phraseLimit);
 			}
 		}  else if (pgName.equals(DYNAMIC_GENERATOR)) {
 			List<PhraseGenerator<IString>> ptgList = new LinkedList<PhraseGenerator<IString>>();

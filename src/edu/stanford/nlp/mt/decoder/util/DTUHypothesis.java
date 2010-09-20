@@ -5,6 +5,8 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.util.MutableInteger;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Hypothesis with words that still need to be added to the partial translation (aka, "pending phrases").
@@ -15,24 +17,24 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
 
   private static final double EXPIRATION_PENALTY = 1000.0; // When a DTUHypothesis expires, it suffers this cost
   private static int MAX_TARGET_PHRASE_SPAN = -1; // to make sure it is overridden (an assert will fail otherwise)
-  private static int MAX_PENDING_PHRASES = 3;
+  private static int MAX_PENDING_PHRASES = 2;
 
   /**
    * This class represents a phrase with one or more discontinuities in its target side.
-   * It holds this information: which abstract translation option is used to generate
-   * the discontinuous phrase, and the index of the index of the current contiguous segment.
+   * It holds this information: abstract translation option is used to generate
+   * the discontinuous phrase, and index of the current contiguous segment.
    */
   public static class PendingPhrase<TK,FV> implements Comparable<PendingPhrase<TK,FV>> {
 
     public final ConcreteTranslationOption<TK> concreteOpt;
 
     public int segmentIdx; // Current segment of the translation option.
-                            // For instance, segmentIdx=0 selects "ne" and segmentIdx=1 selects "pas"
+                           // For instance, segmentIdx=0 selects "ne" and segmentIdx=1 selects "pas"
     private int firstPosition;      // the discontinuous phrases segmentIdx+1,segmentIdx+2,etc.
     private final int lastPosition; // must be generated within the range
                                     // [firstPosition,lastPosition] of target words.
 
-    private final double[] futureCosts;
+    private final double[] futureCosts; // future cost associated with each segment
 
     // Copy constructor:
     public PendingPhrase(PendingPhrase<TK,FV> old) {
@@ -54,18 +56,46 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       this.futureCosts = setFutureCosts(translationId, hyp, featurizer, scorer);
     }
 
+    private static final ThreadLocal<MutableInteger> tlTranslationId = new ThreadLocal<MutableInteger>() {
+       @Override protected MutableInteger initialValue() {
+         return new MutableInteger();
+       }
+    };
+
+    private static class SegId extends Pair<DTUOption,Integer> { SegId(DTUOption o, Integer i) {super(o,i);}}
+    private static final ThreadLocal<Map<SegId,Double>> tlCache = new ThreadLocal<Map<SegId,Double>>() {
+       @Override protected Map<SegId,Double> initialValue() {
+         return new HashMap<SegId,Double>();
+       }
+    };
+
     @SuppressWarnings("unchecked")
     private double[] setFutureCosts(int translationId, Hypothesis<TK,FV> hyp, CombinedFeaturizer<TK,FV> featurizer, Scorer<FV> scorer) {
+
+      // Do we clear the cache of future cost?
+      MutableInteger lastId = tlTranslationId.get();
+      Map<SegId,Double> fcCache = tlCache.get();
+      if (lastId.intValue() != translationId) {
+        fcCache.clear();
+        lastId.set(translationId);
+      }
 
       DTUOption opt = (DTUOption)concreteOpt.abstractOption;
       double[] fc = new double[opt.dtus.length];
 
-      for (int i=segmentIdx+1; i<opt.dtus.length; ++i) {
-        Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(hyp, null, translationId, 0, opt.dtus[i], true, i);
-        List<FeatureValue<FV>> phraseFeatures = featurizer.phraseListFeaturize(f);
-        fc[i] = scorer.getIncrementalScore(phraseFeatures);
+      assert (segmentIdx == 0);
+      for (int i = segmentIdx+1; i<opt.dtus.length; ++i) {
+        SegId id = new SegId(opt,i);
+        Double score = fcCache.get(id);
+        if (score == null) {
+          Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(hyp.foreignSequence, concreteOpt, translationId, i);
+          List<FeatureValue<FV>> phraseFeatures = featurizer.phraseListFeaturize(f);
+          score = scorer.getIncrementalScore(phraseFeatures);
+          fcCache.put(id, score);
+        }
+        fc[i] = score;
+        //System.err.printf("Future cost: id=%d phrase={%s} features=%s fc=%.3f\n", translationId, opt.dtus[i], phraseFeatures, fc[i]);
       }
-
       return fc;
     }
 
@@ -150,6 +180,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     sb.append(" segIx=").append(segmentIdx);
     sb.append(" id=").append(System.identityHashCode(this));
     sb.append(" tOpt=").append(System.identityHashCode(translationOpt));
+    sb.append(String.format(" c=[%.3f,%.3f,%.3f]",partialScore(),pendingPhrasesCost,h));
 
     if (pendingPhrases != null) {
       sb.append(" | expired:").append(hasExpired);
@@ -158,10 +189,12 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       for (final PendingPhrase<TK,FV> discTargetPhrase : pendingPhrases) {
         DTUOption<TK> opt = (DTUOption<TK>) discTargetPhrase.concreteOpt.abstractOption;
         sb.append(" {");
-        for (int i = discTargetPhrase.segmentIdx+1; i < opt.dtus.length; ++i) {
-          sb.append(String.format(" %s ([%d,%d])",
+        int si = discTargetPhrase.segmentIdx+1;
+        for (int i = si; i < opt.dtus.length; ++i) {
+          if (i>si) sb.append(" ");
+          sb.append(String.format("{%s} ([s=%d,e=%d,c=%.3f])",
                opt.dtus[i].toString(" "),
-               discTargetPhrase.firstPosition, discTargetPhrase.lastPosition));
+               discTargetPhrase.firstPosition, discTargetPhrase.lastPosition, discTargetPhrase.futureCosts[i]));
         }
         sb.append("} ");
       }
@@ -173,7 +206,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
   /**
    * Compute cost of pending phrases.
    */
-  private double getPendingPhrasesCost() {
+  private double costPendingPhrases() {
 
     double score = 0.0;
 
@@ -183,7 +216,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       DTUOption<TK> dtuOpt = (DTUOption<TK>)opt.abstractOption;
       for (int i=pendingPhrase.segmentIdx+1; i<dtuOpt.dtus.length; ++i) {
         score += pendingPhrase.futureCosts[i];
-        //System.err.printf("pendingPhrasesCost: %s %f [%s]\n", dtuOpt.dtus[i].toString(), score, phraseFeatures);
+        //System.err.printf("cost pending phrases: %s %f\n", dtuOpt.dtus[i].toString(), score);
       }
     }
     return score;
@@ -275,7 +308,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
       this.hasExpired = true;
 
     // Estimate future cost for pending phrases:
-    pendingPhrasesCost = getPendingPhrasesCost();
+    pendingPhrasesCost = costPendingPhrases();
     checkExpiration();
   }
 
@@ -328,7 +361,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     if (pendingPhrases.size() > MAX_PENDING_PHRASES)
       this.hasExpired = true;
 
-    pendingPhrasesCost = getPendingPhrasesCost();
+    pendingPhrasesCost = costPendingPhrases();
     checkExpiration();
   }
 
@@ -365,7 +398,7 @@ public class DTUHypothesis<TK,FV> extends Hypothesis<TK,FV> {
     }
 
     seenOptions.add(translationOpt.abstractOption);
-    pendingPhrasesCost = getPendingPhrasesCost();
+    pendingPhrasesCost = costPendingPhrases();
     checkExpiration();
   }
 

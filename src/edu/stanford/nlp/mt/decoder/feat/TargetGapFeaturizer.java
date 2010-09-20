@@ -229,11 +229,11 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>, I
 
   private static int getGapCount(Featurizable<IString,String> f) {
     TranslationOption opt = f.option.abstractOption;
-    if (opt instanceof DTUOption) {
-      DTUOption dtuOpt = (DTUOption) opt;
-      return dtuOpt.dtus.length;
-    }
-    return 0;
+    int sz = 0;
+    for (IString el : f.translatedPhrase)
+      if (el.equals(DTUTable.GAP_STR))
+        ++sz;
+    return sz;
   }
 
 }

@@ -11,6 +11,9 @@ import java.util.Iterator;
 public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypothesis<TK, FV>> {
 
   public static final boolean DEBUG = false;
+  
+  public static final String SIMPLE_RECOMBINATION_PROPERTY = "simpleDTURecombination";
+  public static final boolean SIMPLE_RECOMBINATION = Boolean.parseBoolean(System.getProperty(SIMPLE_RECOMBINATION_PROPERTY, "false"));
 
   @Override
 	public Object clone() throws CloneNotSupportedException {
@@ -40,18 +43,20 @@ public class DTURecombinationFilter<TK, FV> implements RecombinationFilter<Hypot
         combine = false;
       } else {
         combine = true;
-        Iterator<DTUHypothesis.PendingPhrase<TK,FV>> itA = dtuA.pendingPhrases.iterator();
-        Iterator<DTUHypothesis.PendingPhrase<TK,FV>> itB = dtuB.pendingPhrases.iterator();
-        while (itA.hasNext()) {
-          assert (itB.hasNext());
-          DTUHypothesis.PendingPhrase<TK,FV> elA = itA.next();
-          DTUHypothesis.PendingPhrase<TK,FV> elB = itB.next();
-          if(elA.concreteOpt.abstractOption != elB.concreteOpt.abstractOption || elA.segmentIdx != elB.segmentIdx) {
-            combine = false;
-            break;
+        if (!SIMPLE_RECOMBINATION) {
+          Iterator<DTUHypothesis.PendingPhrase<TK,FV>> itA = dtuA.pendingPhrases.iterator();
+          Iterator<DTUHypothesis.PendingPhrase<TK,FV>> itB = dtuB.pendingPhrases.iterator();
+          while (itA.hasNext()) {
+            assert (itB.hasNext());
+            DTUHypothesis.PendingPhrase<TK,FV> elA = itA.next();
+            DTUHypothesis.PendingPhrase<TK,FV> elB = itB.next();
+            if(elA.concreteOpt.abstractOption != elB.concreteOpt.abstractOption || elA.segmentIdx != elB.segmentIdx) {
+              combine = false;
+              break;
+            }
           }
+          assert (!combine || !itB.hasNext());
         }
-        assert (!combine || !itB.hasNext());
       }
     }
     return combine;

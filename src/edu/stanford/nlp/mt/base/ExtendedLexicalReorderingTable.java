@@ -317,7 +317,7 @@ public class ExtendedLexicalReorderingTable {
     System.gc();
 		long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
 		long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
-		System.err.printf("\nDone loading reordering table: %s (mem used: %d MiB time: %.3f s)\n", filename, 
+		System.err.printf("Done loading reordering table: %s (mem used: %d MiB time: %.3f s)\n", filename, 
 				(postTableLoadMemUsed - preTableLoadMemUsed)/(1024*1024), loadTimeMillis/1000.0);
 
 		return selectedFiletype;

@@ -76,21 +76,27 @@ public class DTUFeatureExtractor extends MosesFeatureExtractor {
     synchronized (countList) {
       while (key >= countList.size())
         countList.add(null);
+
+      // Get count corresponding to key:
+      int[][] count = countList.get(key);
+
+      // If needed, initialize count:
+      if (count == null) {
+        count = new int[binCounts.size()][4];
+        countList.set(key, count);
+      }
+
+      for (int i=0; i<binCounts.size(); ++i) {
+        int bi = binCounts.get(i);
+        ++count[i][bi];
+      }
     }
 
-    // Get count corresponding to key:
-    int[][] count = countList.get(key);
-
-    // If needed, initialize count:
-    if (count == null) {
-      count = new int[binCounts.size()][4];
-      countList.set(key, count);
-    }
-
-    for (int i=0; i<binCounts.size(); ++i) {
-      int bi = binCounts.get(i);
-      ++count[i][bi];
-      ++totalCounts[bi];
+    synchronized (totalCounts) {
+      for (int i=0; i<binCounts.size(); ++i) {
+        int bi = binCounts.get(i);
+        ++totalCounts[bi];
+      }
     }
   }
 
@@ -138,7 +144,7 @@ public class DTUFeatureExtractor extends MosesFeatureExtractor {
   }
 
   private static float[] smooth(int[] counts, int[] totalCounts) {
-    //return addOneSmooth(counts);
+    //return addOneSmoothing(counts);
     return wbSmoothing(counts, totalCounts);
   }
 

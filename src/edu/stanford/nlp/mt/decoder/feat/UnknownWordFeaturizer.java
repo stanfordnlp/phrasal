@@ -21,14 +21,12 @@ public class UnknownWordFeaturizer<TK> implements IncrementalFeaturizer<TK,Strin
 	
 	@Override
 	public FeatureValue<String> featurize(Featurizable<TK,String> f) {
-		/*
-		if (f.phraseScoreNames.length != 1) return null;
-		if (f.phraseScoreNames[0] != UNKNOWN_PHRASE_TAG) return null;
-		*/
-		if (f.phraseScoreNames.length != 1) return new FeatureValue<String>(FEATURE_NAME, 0.0);
-		if (f.phraseScoreNames[0] != UNKNOWN_PHRASE_TAG) return new FeatureValue<String>(FEATURE_NAME, 0.0);
-		
-		return new FeatureValue<String>(FEATURE_NAME, MOSES_UNKNOWN_WORD_MUL*f.translatedPhrase.size()); 
+    if (f.phraseScoreNames.length != 1) return null;
+    if (f.phraseScoreNames[0] != UNKNOWN_PHRASE_TAG) return null;
+		//if (f.phraseScoreNames.length != 1) return new FeatureValue<String>(FEATURE_NAME, 0.0);
+		//if (f.phraseScoreNames[0] != UNKNOWN_PHRASE_TAG) return new FeatureValue<String>(FEATURE_NAME, 0.0);
+    int size = f.translatedPhrase.size();
+    return (size == 0) ? null : new FeatureValue<String>(FEATURE_NAME, MOSES_UNKNOWN_WORD_MUL*size);
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.DTUOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -12,21 +13,22 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.IntPair;
+import edu.stanford.nlp.util.Pair;
 
 /**
- * 
  * @author danielcer
- *
- * @param <TK>
- * @param <FV>
+ * @author Michel Galley
  */
 public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
   private static final double MINUS_INF = -10000.0;
 
   public static final String DEBUG_PROPERTY = "ipfcHeuristicDebug";
-  //public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "true"));
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+
+  public static final String IGNORE_TGT_PROPERTY = "fcIgnoreTargetGaps";
+  public static final boolean IGNORE_TGT = Boolean.parseBoolean(System.getProperty(IGNORE_TGT_PROPERTY, "true"));
+  static { System.err.println("Ignoring target gaps in future cost computation: "+IGNORE_TGT); }
 
   final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
 	final Scorer<FV> scorer;
@@ -155,8 +157,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
   }
 
 	private SpanScores hSpanScores;
-	
+
 	@Override
+  @SuppressWarnings("unchecked")
 	public double getInitialHeuristic(Sequence<TK> foreignSequence,
 			List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
 		
@@ -176,8 +179,13 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
     System.err.println("Lists of options: "+options.size());
     assert(options.size() == 1 || options.size() == 2); // options[0]: phrases without gaps; options[1]: phrases with gaps
     System.err.println("size: "+options.size());
+
+    List<Pair<ConcreteTranslationOption<TK>,Double>>[][] dtuLists = new LinkedList[foreignSequenceSize][foreignSequenceSize];
+
     for (int i=0; i<options.size(); ++i) {
       for (ConcreteTranslationOption<TK> option : options.get(i)) {
+        if (IGNORE_TGT && option.abstractOption instanceof DTUOption)
+          continue;
         Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, option, translationId);
         List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer.phraseListFeaturize(f);
         double score = scorer.getIncrementalScore(phraseFeatures), childScore = 0.0;
@@ -191,78 +199,38 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
               throw new RuntimeException();
             }
           }
+          if (DEBUG) {
+            System.err.printf("\t%d:%d:%d %s->%s score: %.3f %.3f\n",
+              option.foreignPos, terminalPos, i, option.abstractOption.foreign, option.abstractOption.translation, score, childScore);
+            System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
+          }
         } else {
+          // Discontinuous phrase: save it for later:
+          int startPos = option.foreignCoverage.nextSetBit(0);
           terminalPos = option.foreignCoverage.length()-1;
-          // Find all gaps:
-          CoverageSet cs = option.foreignCoverage;
-          //System.err.println("coverage set: "+cs);
-          int startIdx, endIdx = 0;
-          childScore = 0.0;
-          while (true) {
-            startIdx = cs.nextClearBit(cs.nextSetBit(endIdx));
-            endIdx = cs.nextSetBit(startIdx)-1;
-            if(endIdx < 0)
-              break;
-            childScore += viterbiSpanScores.getScore(startIdx, endIdx);
-            //System.err.printf("range: %d-%d\n", startIdx, endIdx);
-          }
-          double totalScore = score + childScore;
-          double oldScore = viterbiSpanScores.getScore(option.foreignPos, terminalPos);
-          if (totalScore > oldScore) {
-            viterbiSpanScores.setScore(option.foreignPos, terminalPos, totalScore);
-            if (Double.isNaN(totalScore)) {
-              System.err.printf("Bad Viterbi score[%d,%d]: score=%.3f childScore=%.3f\n",
-                option.foreignPos, terminalPos, score, childScore);
-              throw new RuntimeException();
-            }
-            if (DEBUG)
-              System.err.printf("Improved with gaps: %.3f -> %.3f\n", oldScore, totalScore);
-
-          }
-        }
-        if (DEBUG) {
-          System.err.printf("\t%d:%d:%d %s->%s score: %.3f %.3f\n",
-            option.foreignPos, terminalPos, i, option.abstractOption.foreign, option.abstractOption.translation, score, childScore);
-          System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
+          if (dtuLists[startPos][terminalPos] == null)
+            dtuLists[startPos][terminalPos] = new LinkedList<Pair<ConcreteTranslationOption<TK>,Double>>();
+          dtuLists[startPos][terminalPos].add(new Pair<ConcreteTranslationOption<TK>,Double>(option, score));
         }
       }
+    }
+    dumpScores(viterbiSpanScores, foreignSequence, "InitialMinimums");
 
+    if (DEBUG) {
+      System.err.println();
+      System.err.println("Merging span scores");
+      System.err.println("-------------------");
+    }
+
+    // Viterbi combination of spans
+    for (int spanSize = 2; spanSize <= foreignSequenceSize; spanSize++) {
       if (DEBUG) {
-        System.err.println("Initial Minimums");
-        System.err.println("------------------------------");
-
-        System.err.print("          last = ");
-        for (int endPos = 0; endPos < foreignSequenceSize; endPos++)
-          System.err.printf("%9d ", endPos);
-        System.err.println();
-        for (int startPos = 0; startPos < foreignSequenceSize; startPos++) {
-          System.err.printf("\t%d-last scores: ", startPos);
-          for (int endPos = 0; endPos < foreignSequenceSize; endPos++) {
-            if (startPos > endPos) {
-              System.err.printf("          ");
-            } else {
-              System.err.printf("%9.3f ", viterbiSpanScores.getScore(startPos, endPos));
-            }
-          }
-          System.err.printf("\n");
-        }
+        System.err.printf("\n* Merging span size: %d\n", spanSize);
       }
-
-
-
-      if (DEBUG) {
-        System.err.println();
-        System.err.println("Merging span scores");
-        System.err.println("-------------------");
-      }
-
-      // Viterbi combination of spans
-      for (int spanSize = 2; spanSize <= foreignSequenceSize; spanSize++) {
-        if (DEBUG) {
-          System.err.printf("\n* Merging span size: %d\n", spanSize);
-        }
-        for (int startPos = 0; startPos <= foreignSequenceSize-spanSize; startPos++) {
-          int terminalPos = startPos + spanSize-1;
+      for (int startPos = 0; startPos <= foreignSequenceSize-spanSize; startPos++) {
+        int terminalPos = startPos + spanSize-1;
+        {
+          // Merge two continuous phrases:
           double bestScore = viterbiSpanScores.getScore(startPos, terminalPos);
           for (int centerEdge = startPos+1; centerEdge <= terminalPos; centerEdge++) {
             double combinedScore = viterbiSpanScores.getScore(startPos, centerEdge-1) +
@@ -276,12 +244,60 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
           }
           viterbiSpanScores.setScore(startPos, terminalPos, bestScore);
         }
+        // Merge discontinuous phrase with other phrases:
+        if (dtuLists[startPos][terminalPos] != null) {
+          for (Pair<ConcreteTranslationOption<TK>,Double> dtu : dtuLists[startPos][terminalPos]) {
+            ConcreteTranslationOption<TK> option = dtu.first;
+            assert (option.foreignPos == startPos);
+            double dtuScore = dtu.second;
+            CoverageSet cs = option.foreignCoverage;
+            int startIdx, endIdx = 0;
+            double childScore = 0.0;
+            while (true) {
+              startIdx = cs.nextClearBit(cs.nextSetBit(endIdx));
+              endIdx = cs.nextSetBit(startIdx)-1;
+              if(endIdx < 0)
+                break;
+              childScore += viterbiSpanScores.getScore(startIdx, endIdx);
+            }
+            double totalScore = dtuScore + childScore;
+            double oldScore = viterbiSpanScores.getScore(option.foreignPos, terminalPos);
+            if (totalScore > oldScore) {
+              if (Double.isNaN(totalScore)) {
+                System.err.printf("Bad Viterbi score[%d,%d]: score=%.3f childScore=%.3f\n",
+                  option.foreignPos, terminalPos, dtuScore, childScore);
+                throw new RuntimeException();
+              }
+              viterbiSpanScores.setScore(option.foreignPos, terminalPos, totalScore);
+              if (DEBUG)
+                System.err.printf("Improved score with a DTU %s at [%d,%d]: %.3f -> %.3f (childScore=%.3f)\n",
+                  option.foreignCoverage, startPos, terminalPos, oldScore, totalScore, childScore);
+            }
+          }
+        }
       }
     }
+    dumpScores(viterbiSpanScores, foreignSequence, "Final Scores");
 
+		hSpanScores = viterbiSpanScores;
+		
+		double hCompleteSequence = hSpanScores.getScore(0, foreignSequenceSize-1); 
+		if (DEBUG) {
+			System.err.println("Done IsolatedForeignCoverageHeuristic");
+		}
+
+    if(Double.isInfinite(hCompleteSequence) || Double.isNaN(hCompleteSequence)) {
+      System.err.println("Warning: h is either NaN or infinite: "+hCompleteSequence);
+      return MINUS_INF;
+    }
+    return hCompleteSequence;
+	}
+
+  void dumpScores(SpanScores viterbiSpanScores, Sequence<TK> foreignSequence, String infoString) {
     if (DEBUG) {
+      int foreignSequenceSize = foreignSequence.size();
 			System.err.println();
-			System.err.println("Final Scores");
+			System.err.println(infoString);
 			System.err.println("------------");
       System.err.print("          last = ");
       for (int endPos = 0; endPos < foreignSequenceSize; endPos++)
@@ -298,22 +314,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements Search
         }
         System.err.printf("\n");
       }
-
-
 		}
-		
-		hSpanScores = viterbiSpanScores;
-		
-		double hCompleteSequence = hSpanScores.getScore(0, foreignSequenceSize-1); 
-		if (DEBUG) {
-			System.err.println("Done IsolatedForeignCoverageHeuristic");
-		}
+  }
 
-    if(Double.isInfinite(hCompleteSequence) || Double.isNaN(hCompleteSequence))
-      return MINUS_INF;
-    return hCompleteSequence;
-	}
-		
 	private static class SpanScores {
 		final double[] spanValues;
 		final int terminalPositions;

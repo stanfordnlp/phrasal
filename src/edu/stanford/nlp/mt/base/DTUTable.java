@@ -19,6 +19,7 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
 
   public static final String MIN_GAP_SIZE_PROPERTY = "minGapSize";
   public static final int MIN_GAP_SIZE = Integer.parseInt(System.getProperty(MIN_GAP_SIZE_PROPERTY, "1"));
+  static { System.err.println("Minimum gap size: "+MIN_GAP_SIZE); }
 
   public static int maxPhraseSpan = 12;
   public static int maxNumberTargetSegments = 2;

@@ -74,7 +74,7 @@ public class PhrasalTest extends TestCase {
     assertTrue(translation.score == -1.3398349461093697);
     assertTrue(translation.translation.toString().equals("representatives of the"));
     assertTrue(translation.foreign.toString().equals("代表"));
-		assertTrue(translation.nbestToString(1).equals("1 ||| representatives of the ||| LM: -1.8078E1 LinearDistortion: 0 TM:lex(f|t): -7.485E0 TM:lex(t|f): -9.3295E-1 TM:phi(f|t): -4.6372E0 TM:phi(t|f): -1.5041E0 TM:phrasePenalty: 9.999E-1 UnknownWord: 0 WordPenalty: -3 ||| -1.3398E0"));
+		assertTrue(translation.nbestToString(1).equals("1 ||| representatives of the ||| LM: -1.8078E1 LinearDistortion: 0 TM:lex(f|t): -7.485E0 TM:lex(t|f): -9.3295E-1 TM:phi(f|t): -4.6372E0 TM:phi(t|f): -1.5041E0 TM:phrasePenalty: 9.999E-1 WordPenalty: -3 ||| -1.3398E0"));
   }
 }
 

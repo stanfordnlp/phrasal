@@ -293,8 +293,9 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString,FV> im
 		// print some status information
 		long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
 		long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
-		System.err.printf("Done loading pharoah phrase table: %s (mem used: %d MiB time: %.3f s)\n", f.getAbsolutePath(), 
+		System.err.printf("Done loading pharoah phrase table: %s (mem used: %d MiB time: %.3f s)\n", f.getAbsolutePath(),
 				(postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)/(1024*1024), loadTimeMillis/1000.0);
+    System.err.println("Longest foreign phrase: "+longestForeignPhrase);
 		return countScores;
 	}
 	
