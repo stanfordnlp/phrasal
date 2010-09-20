@@ -8,6 +8,7 @@ import javax.swing.JLabel;
  */
 public class NamedLabel extends JLabel {
   private final String id;
+
   public NamedLabel(String id) {
     super();
     this.id = id;

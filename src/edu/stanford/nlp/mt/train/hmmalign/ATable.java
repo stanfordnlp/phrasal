@@ -11,15 +11,15 @@ import java.io.PrintStream;
 
 public class ATable {
 
-  int count; // this is used when we have a lot of these tables for different contexts and we want to keep only the ones with enough support
+  int count; // this is used when we have a lot of these tables for different
+             // contexts and we want to keep only the ones with enough support
   static int countCutoff = 150;
-  int MAX_LENGTH;//this is the maximum allowable sentence length
+  int MAX_LENGTH;// this is the maximum allowable sentence length
   boolean fixEmpty = true;
   String name = "none";
 
   public ATable() {
   }
-
 
   public ATable(int maxsize) {
     this.MAX_LENGTH = maxsize;
@@ -71,17 +71,15 @@ public class ATable {
     return 0;
   }
 
-
   /**
-   * Actually appends to file.  Used when we want to print all tables for
-   * e.g. different contexts.
+   * Actually appends to file. Used when we want to print all tables for e.g.
+   * different contexts.
    */
   public void save(String filename) {
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
-      //MAX_LENGTH
+      // MAX_LENGTH
       out.println(MAX_LENGTH);
-
 
       for (int l = 1; l <= MAX_LENGTH; l++) {
 
@@ -96,18 +94,17 @@ public class ATable {
             }
             out.println(i + " " + i_p + " " + l + " " + getProb(ii, i_p, l));
 
-          }//i
+          }// i
 
-        }//i_p
+        }// i_p
 
-      }//l
+      }// l
 
       out.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
-
 
   public double DKL(ATable a) {
     return 2;

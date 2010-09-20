@@ -54,7 +54,8 @@ public class DependencyInstanceFeatures {
     return nt_fvs[w1][w2][direction][dominance];
   }
 
-  public void setNT_FVS(int w1, int w2, int direction, int dominance, FeatureVector fv) {
+  public void setNT_FVS(int w1, int w2, int direction, int dominance,
+      FeatureVector fv) {
     nt_fvs[w1][w2][direction][dominance] = fv;
   }
 

@@ -18,11 +18,13 @@ public class FeatureIndex implements Serializable {
   Index<String> featureIndex = new HashIndex<String>();
 
   boolean add(String featName) {
-    //return featureIndex.add(featName.intern());
+    // return featureIndex.add(featName.intern());
     return featureIndex.add(featName);
   }
 
-  String get(int idx) { return featureIndex.get(idx); }
+  String get(int idx) {
+    return featureIndex.get(idx);
+  }
 
   int indexOf(String featName) {
     return featureIndex.indexOf(featName);

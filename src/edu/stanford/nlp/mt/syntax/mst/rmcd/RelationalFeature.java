@@ -8,7 +8,8 @@ public class RelationalFeature implements Serializable {
   public String name;
   public String[][] values;
 
-  public RelationalFeature(int size, String declaration, BufferedReader br) throws IOException {
+  public RelationalFeature(int size, String declaration, BufferedReader br)
+      throws IOException {
     values = new String[size][size];
     String[] declist = declaration.split(" ");
     name = declist[2];
@@ -29,8 +30,8 @@ public class RelationalFeature implements Serializable {
     out.writeObject(values);
   }
 
-
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+  private void readObject(ObjectInputStream in) throws IOException,
+      ClassNotFoundException {
     name = (String) in.readObject();
     values = (String[][]) in.readObject();
   }

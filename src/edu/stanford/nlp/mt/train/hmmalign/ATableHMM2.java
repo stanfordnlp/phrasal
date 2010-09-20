@@ -17,9 +17,10 @@ import edu.stanford.nlp.util.ArrayN;
 
 public class ATableHMM2 extends ATable {
 
-  //we need arrays to keep the counts, the parameters
-  //and finally the probabilities
-  float[][] params; //p0 is the probability of empty, p1 is p(-MAX_LENGTH+1) , etc . to p(MAX_LENGTH-1)
+  // we need arrays to keep the counts, the parameters
+  // and finally the probabilities
+  float[][] params; // p0 is the probability of empty, p1 is p(-MAX_LENGTH+1) ,
+                    // etc . to p(MAX_LENGTH-1)
   float[][] counts;// keep here the counts rather than in params
   float[] initialCounts;
   int shiftParams;
@@ -28,39 +29,40 @@ public class ATableHMM2 extends ATable {
   float PROB_EMPTY = (float) .4;
   boolean smoothUniform = true;
   float lambda = (float) .2;
-  private ArrayN prob_arr; //prob_arr will be formed by normalization from params
+  private ArrayN prob_arr; // prob_arr will be formed by normalization from
+                           // params
 
   public ATableHMM2(int maxsize) {
     MAX_LENGTH = maxsize;
     params = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
     counts = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
-    initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH+1 filed 0 is not used
-    prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, MAX_LENGTH + 1, MAX_LENGTH + 1);
-
+    initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH+1 filed 0
+                                               // is not used
+    prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, MAX_LENGTH + 1,
+        MAX_LENGTH + 1);
 
   }
-
 
   public ATableHMM2() {
   }
 
   /**
-   * Get the initial probability p(i|l) i is in 0..l , l is the length of the english sentence
+   * Get the initial probability p(i|l) i is in 0..l , l is the length of the
+   * english sentence
    */
 
   public float getInitialProb(int index, int l) {
     return prob_arr.get(index, 0, 0, l);
   }
 
-
   @Override
-	public boolean isPopulated() {
+  public boolean isPopulated() {
     return count > countCutoff;
   }
 
-
   /**
-   * Get the probability p(i|i_prev,i_prev2,l) i is from 1 to 2L+1 and i_prev,i_prev2 are in the same set as well without 2L+1
+   * Get the probability p(i|i_prev,i_prev2,l) i is from 1 to 2L+1 and
+   * i_prev,i_prev2 are in the same set as well without 2L+1
    */
   public float getProbHMM(int i, int i_prev, int i_prev2, int l) {
     boolean empty = false;
@@ -94,7 +96,6 @@ public class ATableHMM2 extends ATable {
       i_prev = 0;
     }
 
-
     if (empty) {
       if ((i_prev > 0) && (i != i_prev)) {
         return 0;
@@ -109,16 +110,14 @@ public class ATableHMM2 extends ATable {
 
     }
 
-
   }
-
 
   /**
    * Smooth the basic probability if smoothUniform is on
    */
 
   @Override
-	public float getProb(int i, int i_prev, int i_prev2, int l) {
+  public float getProb(int i, int i_prev, int i_prev2, int l) {
     float prob;
     prob = getProbHMM(i, i_prev, i_prev2, l);
     if (prob == 0) {
@@ -131,9 +130,7 @@ public class ATableHMM2 extends ATable {
       return prob;
     }
 
-
   }
-
 
   /**
    * Increment the corresponding counts
@@ -146,7 +143,7 @@ public class ATableHMM2 extends ATable {
     if ((i_prev == 0) && (i_prev2 == 0)) {
       incCountInitPos(i, val);
     } else {
-      //we need jump and jump_1
+      // we need jump and jump_1
       if (i_prev2 > l) {
         i_prev2 -= l;
       }
@@ -177,7 +174,6 @@ public class ATableHMM2 extends ATable {
     }
   }
 
-
   /**
    * Increment the count for a jump of distance distance
    */
@@ -185,7 +181,6 @@ public class ATableHMM2 extends ATable {
     counts[distance + MAX_LENGTH][distance1 + MAX_LENGTH] += cnt;
 
   }
-
 
   /**
    * Get the prior probability of jumping a distance distance
@@ -215,8 +210,8 @@ public class ATableHMM2 extends ATable {
 
   /**
    * Calculate normalized initial parameters from the counts in initialCounts
-   * This assumes we already have pEmpty calculated from params
-   * First, normalizes initialCounts so that p(1)+ ..p(MAX_LENGTH)+p0 is 1
+   * This assumes we already have pEmpty calculated from params First,
+   * normalizes initialCounts so that p(1)+ ..p(MAX_LENGTH)+p0 is 1
    */
 
   public void normalizeInitialProbs() {
@@ -236,7 +231,6 @@ public class ATableHMM2 extends ATable {
     }
   }
 
-
   /**
    * Before starting a new iteration the counts should be zero-ed
    */
@@ -253,14 +247,14 @@ public class ATableHMM2 extends ATable {
 
   }
 
-
   /**
-   * Normalize the transition table prob_arr and put the appropriate probabilities there
+   * Normalize the transition table prob_arr and put the appropriate
+   * probabilities there
    */
 
   public void normalizeProbArr() {
-    //first make the params sum to 1, put params[0] into pEmpty
-    //then put normalized params in prob_arr
+    // first make the params sum to 1, put params[0] into pEmpty
+    // then put normalized params in prob_arr
 
     for (int jump_1Abs = 0; jump_1Abs <= 2 * MAX_LENGTH - 1; jump_1Abs++) {
       float total = 0.0F;
@@ -268,23 +262,23 @@ public class ATableHMM2 extends ATable {
         total += counts[i][jump_1Abs] + PROB_SMOOTH;
       }
       if (!this.fixEmpty) {
-        params[0][jump_1Abs] = (counts[0][jump_1Abs] + PROB_SMOOTH) / (total + counts[0][jump_1Abs] + PROB_SMOOTH);
+        params[0][jump_1Abs] = (counts[0][jump_1Abs] + PROB_SMOOTH)
+            / (total + counts[0][jump_1Abs] + PROB_SMOOTH);
         pEmpty = params[0][jump_1Abs];
       } else {
-        //System.out.println("pEmpty is "+pEmpty);
+        // System.out.println("pEmpty is "+pEmpty);
         params[0][jump_1Abs] = pEmpty;
       }
 
-      //normalize
+      // normalize
 
       for (int i = 1; i < params[jump_1Abs].length + 1; i++) {
-        params[i][jump_1Abs] = (1 - pEmpty) * (counts[i][jump_1Abs] + PROB_SMOOTH) / total;
+        params[i][jump_1Abs] = (1 - pEmpty)
+            * (counts[i][jump_1Abs] + PROB_SMOOTH) / total;
       }
-      pEmpty = params[0][jump_1Abs]; //this one is used by initialParams
-
+      pEmpty = params[0][jump_1Abs]; // this one is used by initialParams
 
     }
-
 
     for (int l = 1; l <= MAX_LENGTH; l++) {
 
@@ -346,37 +340,35 @@ public class ATableHMM2 extends ATable {
     }
   }
 
-
   /**
    * This does the normalization of the component distributions
    */
   @Override
-	public void normalize() {
+  public void normalize() {
     normalizeProbArr();
     normalizeInitialProbs();
 
     if (GlobalParams.verbose) {
       this.printBasicProbs();
     }
-    zeroCounts(); //prepare for the next eStep
+    zeroCounts(); // prepare for the next eStep
   }
-
 
   /**
    * Initialize the probabilities in a brain dead manner uniformly
    */
 
   @Override
-	public void initializeUniform() {
+  public void initializeUniform() {
     // first the initial probabilities
     float inc_init = 1 / (float) (MAX_LENGTH + 2);
-    float empty = PROB_EMPTY; //making the empty twice lower than the others
+    float empty = PROB_EMPTY; // making the empty twice lower than the others
     for (int i = 0; i <= MAX_LENGTH + 1; i++) {
       incCountInitPos(i, inc_init);
     }
 
     pEmpty = empty;
-    //then the jump + empty probabilities
+    // then the jump + empty probabilities
     for (int dist1 = -MAX_LENGTH; dist1 <= MAX_LENGTH - 1; dist1++) {
       incEmpty(dist1, empty);
       float inc = (1 - empty) / (2 * MAX_LENGTH);
@@ -388,12 +380,12 @@ public class ATableHMM2 extends ATable {
   }
 
   /*
-  * Copy all the values of a
-  */
+   * Copy all the values of a
+   */
 
   @Override
   public void initialize(ATable a1) {
-  ATableHMM2 a = (ATableHMM2) a1;
+    ATableHMM2 a = (ATableHMM2) a1;
     for (int l = 1; l <= MAX_LENGTH; l++) {
 
       for (int i_pp = 0; i_pp <= l; i_pp++) {
@@ -404,7 +396,6 @@ public class ATableHMM2 extends ATable {
             if ((i_p == 0) && (i_pp > 0)) {
               i_p1 = i_pp + l;
             }
-
 
             int i1 = i;
             if ((i == 0) && (i_p1 > 0)) {
@@ -428,15 +419,13 @@ public class ATableHMM2 extends ATable {
     pEmpty = a.getEmpty();
   }
 
-
   @Override
   public float getEmpty() {
     return pEmpty;
   }
 
-
   @Override
-	public boolean checkOK() {
+  public boolean checkOK() {
 
     boolean ok = true;
     for (int len = 1; len <= MAX_LENGTH; len++) {
@@ -448,15 +437,13 @@ public class ATableHMM2 extends ATable {
     return ok;
   }
 
-
   /**
    * Check OK for a specific length len
    */
 
-
   public boolean checkOK(int len) {
     float total = 0;
-    //check initial
+    // check initial
     for (int i = 0; i <= len + 1; i++) {
       total += getInitialProb(i, len);
     }
@@ -483,20 +470,19 @@ public class ATableHMM2 extends ATable {
 
     return true;
 
-
   }
 
-
   @Override
-	public void printProbs() {
+  public void printProbs() {
 
-    //print the initial probabilities
+    // print the initial probabilities
 
     int i_prev = 0, i_prev2 = 0;
     for (int l = 1; l <= MAX_LENGTH; l++) {
 
       for (int i = 0; i <= l + 1; i++) {
-        System.out.println("P(" + i + "|" + i_prev + "," + i_prev2 + "," + l + ")" + getProb(i, i_prev, i_prev2, l));
+        System.out.println("P(" + i + "|" + i_prev + "," + i_prev2 + "," + l
+            + ")" + getProb(i, i_prev, i_prev2, l));
 
       }
     }
@@ -511,11 +497,11 @@ public class ATableHMM2 extends ATable {
             i_prev = i_prev2 + l;
           }
           for (int i = 1; i <= 2 * l + 1; i++) {
-            System.out.println("P(" + i + "|" + i_prev + "," + i_prev2 + "," + l + ")" + getProb(i, i_prev, i_prev2, l));
+            System.out.println("P(" + i + "|" + i_prev + "," + i_prev2 + ","
+                + l + ")" + getProb(i, i_prev, i_prev2, l));
 
           }
           System.out.println("*************************");
-
 
         }
       }
@@ -523,27 +509,25 @@ public class ATableHMM2 extends ATable {
 
     }
 
-
   }
-
 
   public void printBasicProbs() {
 
-    //print the stuff in initialCounts and in params
+    // print the stuff in initialCounts and in params
     for (int i = 0; i <= MAX_LENGTH + 1; i++) {
       System.out.println("Initial" + i + " " + initialCounts[i]);
     }
 
     System.out.println("**********************************");
-    //System.out.println(" empty "+params[0]);
+    // System.out.println(" empty "+params[0]);
 
     for (int dist = -MAX_LENGTH; dist <= MAX_LENGTH; dist++) {
       for (int dist1 = -MAX_LENGTH; dist1 <= MAX_LENGTH; dist1++) {
-        System.out.println(" jump " + dist + " " + dist1 + " " + getProbJump(dist1, dist));
+        System.out.println(" jump " + dist + " " + dist1 + " "
+            + getProbJump(dist1, dist));
       }
     }
   }
-
 
   /**
    * Some code to test the class
@@ -568,40 +552,35 @@ public class ATableHMM2 extends ATable {
     ok = b.checkOK();
     System.out.println("b is " + ok);
 
-
   }
-
 
   /**
    * Saving just the jump probabilities
    */
 
   @Override
-	public void save(String filename) {
+  public void save(String filename) {
     try {
       PrintStream out = new PrintStream(new FileOutputStream(filename, true));
-      //MAX_LENGTH
+      // MAX_LENGTH
       out.println(MAX_LENGTH);
 
       for (int jump_1 = -MAX_LENGTH; jump_1 <= MAX_LENGTH - 1; jump_1++) {
         for (int jump = -MAX_LENGTH; jump <= MAX_LENGTH; jump++) {
 
+          out.print(jump + " " + jump_1 + " " + this.getProbJump(jump, jump_1)
+              + "\t");
 
-          out.print(jump + " " + jump_1 + " " + this.getProbJump(jump, jump_1) + "\t");
-
-
-        }//jump
+        }// jump
         out.println();
       }
 
-      //now the initial probs
+      // now the initial probs
       for (int jump = 0; jump <= MAX_LENGTH + 1; jump++) {
-
 
         out.print(jump + " " + getProbHMM(jump, 0, 0, MAX_LENGTH) + "\t");
 
-
-      }//jump
+      }// jump
 
       out.println();
       out.close();
@@ -609,26 +588,24 @@ public class ATableHMM2 extends ATable {
       e.printStackTrace();
     }
 
-
   }
-
 
   /**
    * reading the jump probabilities and initializing
    */
 
-
   public void read(String filename) {
     try {
       InFile in = new InFile(filename);
-      //MAX_LENGTH
+      // MAX_LENGTH
       MAX_LENGTH = Integer.parseInt(in.readLine());
       params = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
       counts = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
-      initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH+1 filed 0 is not used
-      prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, MAX_LENGTH + 1, MAX_LENGTH + 1);
+      initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH+1 filed
+                                                 // 0 is not used
+      prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, MAX_LENGTH + 1,
+          MAX_LENGTH + 1);
       pEmpty = PROB_EMPTY;
-
 
       int current;
       String line;
@@ -636,7 +613,7 @@ public class ATableHMM2 extends ATable {
       StringTokenizer st;
       for (int current_jump_prev = 0; current_jump_prev < 2 * MAX_LENGTH; current_jump_prev++) {
         current = 0;
-        line = in.readLine(); //read the line of probabilities
+        line = in.readLine(); // read the line of probabilities
         st = new StringTokenizer(line, " \t");
         if (st.countTokens() == 2) {
           in.close();
@@ -645,27 +622,27 @@ public class ATableHMM2 extends ATable {
         }
         while (st.hasMoreTokens()) {
           token = st.nextToken();
-          token = st.nextToken();//skip the jump size and the previous size
+          token = st.nextToken();// skip the jump size and the previous size
           token = st.nextToken();
-          counts[current++][current_jump_prev] = (float) Double.parseDouble(token);
+          counts[current++][current_jump_prev] = (float) Double
+              .parseDouble(token);
 
         }
       }
 
-      line = in.readLine(); //read the line of initial probabilities
+      line = in.readLine(); // read the line of initial probabilities
       st = new StringTokenizer(line, " \t");
       current = 0;
       while (st.hasMoreTokens()) {
-        token = st.nextToken();//skip the jump size
+        token = st.nextToken();// skip the jump size
         token = st.nextToken();
         initialCounts[current++] = (float) Double.parseDouble(token);
 
       }
 
-
       in.close();
 
-      //normalize the tables
+      // normalize the tables
       float old;
       old = PROB_SMOOTH;
       PROB_SMOOTH = (float) 1E-12;
@@ -676,9 +653,7 @@ public class ATableHMM2 extends ATable {
       e.printStackTrace();
     }
 
-
   }
-
 
   /**
    * reading the jump probabilities from an HMM1 file and initializing
@@ -687,12 +662,14 @@ public class ATableHMM2 extends ATable {
   public void readHMM1(String filename) {
     try {
       InFile in = new InFile(filename);
-      //MAX_LENGTH
+      // MAX_LENGTH
       MAX_LENGTH = Integer.parseInt(in.readLine());
       params = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
       counts = new float[2 * MAX_LENGTH + 1][2 * MAX_LENGTH];
-      initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH filed 0 is not used
-      prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, MAX_LENGTH + 1, MAX_LENGTH + 1);
+      initialCounts = new float[MAX_LENGTH + 2]; // from 1 to MAX_LENGTH filed 0
+                                                 // is not used
+      prob_arr = new ArrayN(MAX_LENGTH + 2, MAX_LENGTH + 1, MAX_LENGTH + 1,
+          MAX_LENGTH + 1);
       pEmpty = PROB_EMPTY;
 
       String line = in.readLine();
@@ -708,11 +685,10 @@ public class ATableHMM2 extends ATable {
 
       int current = 1;
 
-
-      line = in.readLine(); //read the line of probabilities
+      line = in.readLine(); // read the line of probabilities
       st = new StringTokenizer(line, " \t");
       while (st.hasMoreTokens()) {
-        token = st.nextToken();//skip the jump size
+        token = st.nextToken();// skip the jump size
         token = st.nextToken();
         counts[current++][0] = (float) Double.parseDouble(token);
 
@@ -724,12 +700,11 @@ public class ATableHMM2 extends ATable {
         }
       }
 
-
-      line = in.readLine(); //read the line of initial probabilities
+      line = in.readLine(); // read the line of initial probabilities
       st = new StringTokenizer(line, " \t");
       current = 0;
       while (st.hasMoreTokens()) {
-        token = st.nextToken();//skip the jump size
+        token = st.nextToken();// skip the jump size
         token = st.nextToken();
         initialCounts[current++] = (float) Double.parseDouble(token);
 
@@ -737,7 +712,7 @@ public class ATableHMM2 extends ATable {
 
       in.close();
 
-      //normalize the tables
+      // normalize the tables
       float old;
       old = PROB_SMOOTH;
       PROB_SMOOTH = (float) 1E-12;

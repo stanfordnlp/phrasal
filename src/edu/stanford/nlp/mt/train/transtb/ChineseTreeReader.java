@@ -10,14 +10,15 @@ import java.util.*;
 
 public class ChineseTreeReader extends AbstractTreeReader {
 
-  //private ChineseEscaper ce_;
+  // private ChineseEscaper ce_;
 
   public ChineseTreeReader() {
     trees_ = new ArrayList<Tree>();
     tlpp_ = new ChineseTreebankParserParams();
-    treeprint_ = new TreePrint("words,penn,typedDependencies", "removeTopBracket,basicDependencies", tlpp_.treebankLanguagePack());
+    treeprint_ = new TreePrint("words,penn,typedDependencies",
+        "removeTopBracket,basicDependencies", tlpp_.treebankLanguagePack());
     tt_ = new ChineseTreeTransformer();
-    //ce_ = new ChineseEscaper();
+    // ce_ = new ChineseEscaper();
   }
 
   public ChineseTreeReader(String filename) throws IOException {
@@ -31,18 +32,18 @@ public class ChineseTreeReader extends AbstractTreeReader {
   public List<Tree> getTreesWithWords(String[] sent, Boolean DEBUG) {
     String sentStr = StringUtils.join(sent, "");
     List<Tree> trees = new ArrayList<Tree>();
-    for(Tree t : trees_) {
+    for (Tree t : trees_) {
       StringBuilder sb = new StringBuilder();
       ArrayList<Label> hws = getWords(t);
-      //for (HasWord hw : hws) {
+      // for (HasWord hw : hws) {
       for (Label hw : hws) {
         sb.append(hw.value());
       }
       // the tree should already be normalized
       String treeStr = sb.toString();
       if (DEBUG) {
-        System.err.println("sentStr="+sentStr);
-        System.err.println("treeStr="+treeStr);
+        System.err.println("sentStr=" + sentStr);
+        System.err.println("treeStr=" + treeStr);
       }
       if (sentStr.equals(treeStr)) {
         trees.add(t);
@@ -51,17 +52,15 @@ public class ChineseTreeReader extends AbstractTreeReader {
     return trees;
   }
 
-
-
   public static void main(String[] args) throws IOException {
 
     ChineseTreeReader ctr = new ChineseTreeReader();
     String dirName = TransTBUtils.ctbDir();
-    for(int i = 1; i <= 325; i++) {
-      String name = String.format(dirName+"/chtb_%04d.fid", i);
+    for (int i = 1; i <= 325; i++) {
+      String name = String.format(dirName + "/chtb_%04d.fid", i);
       System.err.println(name);
       ctr.readMoreTrees(name);
-      System.err.println("number of trees="+ctr.size());
+      System.err.println("number of trees=" + ctr.size());
     }
 
     ctr.printAllTrees();
@@ -70,6 +69,7 @@ public class ChineseTreeReader extends AbstractTreeReader {
 
 class ChineseTreeTransformer implements TreeTransformer {
   ChineseEscaper ce;
+
   public ChineseTreeTransformer() {
     ce = new ChineseEscaper();
   }

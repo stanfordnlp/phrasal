@@ -14,7 +14,8 @@ import edu.stanford.nlp.mt.base.IOTools;
 public class TreesToPaths {
   public static void main(String[] args) throws Exception {
     Properties prop = StringUtils.argsToProperties(args);
-    boolean useSameDirPath  = Boolean.parseBoolean(prop.getProperty("useSameDirPath", "false"));
+    boolean useSameDirPath = Boolean.parseBoolean(prop.getProperty(
+        "useSameDirPath", "false"));
 
     System.err.println("useSameDirPath = " + useSameDirPath);
 
@@ -23,22 +24,25 @@ public class TreesToPaths {
     LineNumberReader pReader = IOTools.getReaderFromFile(args[0]);
     String pLine;
     String outFilename = args[1];
-    PrintWriter pw = new PrintWriter(new GZIPOutputStream(new FileOutputStream(outFilename)));
+    PrintWriter pw = new PrintWriter(new GZIPOutputStream(new FileOutputStream(
+        outFilename)));
     int lineno = 1;
-    while((pLine = pReader.readLine()) != null) {
+    while ((pLine = pReader.readLine()) != null) {
       if (lineno % 100 == 0)
-        System.err.println("l="+lineno);
+        System.err.println("l=" + lineno);
       lineno++;
       pLine = ReorderingClassifier.fixCharsInParse(pLine);
-      Tree t = Tree.valueOf("("+pLine+")", trf);
+      Tree t = Tree.valueOf("(" + pLine + ")", trf);
       Filter<String> puncWordFilter = Filters.acceptFilter();
-      GrammaticalStructure gs = new ChineseGrammaticalStructure(t, puncWordFilter);
+      GrammaticalStructure gs = new ChineseGrammaticalStructure(t,
+          puncWordFilter);
       SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(gs, "doc1", 0);
       List<IndexedWord> list = chGraph.vertexList();
       for (int i = 0; i < list.size(); i++) {
         for (int j = 0; j < list.size(); j++) {
-          if (i!=j) {
-            String path = DepUtils.getPathName(i, j, list, chGraph, useSameDirPath);
+          if (i != j) {
+            String path = DepUtils.getPathName(i, j, list, chGraph,
+                useSameDirPath);
             if (path.length() > 0)
               pw.printf("%d:%d:%s ", i, j, path);
           }

@@ -18,7 +18,6 @@ public class WordEx extends Word {
     this.count = count;
   }
 
-
   public WordEx(int wordId, int tagId) {
 
     super(wordId, tagId);
@@ -47,13 +46,11 @@ public class WordEx extends Word {
 
   }
 
-
   public String toNameStringF() {
 
     return SentenceHandler.sTableF.getName(index);
 
   }
-
 
   @Override
   public void print() {

@@ -5,94 +5,97 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
-public class InverseMetric<TK,FV> extends AbstractMetric<TK,FV> {
-	private final EvaluationMetric<TK,FV> emetric;
-	
-	public InverseMetric(EvaluationMetric<TK,FV> emetric) {
-		this.emetric = emetric;
-	}
-	
-	@Override
-	public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
-		return new IncrementalMetric();
-	}
+public class InverseMetric<TK, FV> extends AbstractMetric<TK, FV> {
+  private final EvaluationMetric<TK, FV> emetric;
 
-	@Override
-	public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric(
-			NBestListContainer<TK, FV> nbestList) {
-		return new IncrementalMetric();
-	}
+  public InverseMetric(EvaluationMetric<TK, FV> emetric) {
+    this.emetric = emetric;
+  }
 
-	@Override
-	public RecombinationFilter<IncrementalEvaluationMetric<TK, FV>> getIncrementalMetricRecombinationFilter() {
-		return emetric.getIncrementalMetricRecombinationFilter();
-	}
+  @Override
+  public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
+    return new IncrementalMetric();
+  }
 
-	@Override
-	public double maxScore() {
-		return 0;
-	}
+  @Override
+  public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric(
+      NBestListContainer<TK, FV> nbestList) {
+    return new IncrementalMetric();
+  }
 
-	private class IncrementalMetric implements IncrementalEvaluationMetric<TK, FV> {
-		IncrementalEvaluationMetric<TK, FV> imetric = emetric.getIncrementalMetric();
-		
-		@Override
-		public Object clone() throws CloneNotSupportedException {
+  @Override
+  public RecombinationFilter<IncrementalEvaluationMetric<TK, FV>> getIncrementalMetricRecombinationFilter() {
+    return emetric.getIncrementalMetricRecombinationFilter();
+  }
+
+  @Override
+  public double maxScore() {
+    return 0;
+  }
+
+  private class IncrementalMetric implements
+      IncrementalEvaluationMetric<TK, FV> {
+    IncrementalEvaluationMetric<TK, FV> imetric = emetric
+        .getIncrementalMetric();
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
       super.clone();
-			throw new UnsupportedOperationException();
-		}
-		
-		@Override
-		public IncrementalEvaluationMetric<TK, FV> add(
-				ScoredFeaturizedTranslation<TK, FV> trans) {
-			imetric.add(trans);
+      throw new UnsupportedOperationException();
+    }
 
-			return this;
-		}
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        ScoredFeaturizedTranslation<TK, FV> trans) {
+      imetric.add(trans);
 
-		@Override
-		public double maxScore() {
-			return 0;
-		}
+      return this;
+    }
 
-		@Override
-		public IncrementalEvaluationMetric<TK, FV> replace(int index,
-				ScoredFeaturizedTranslation<TK, FV> trans) {
-			imetric.replace(index,trans);
-			return this;
-		}
+    @Override
+    public double maxScore() {
+      return 0;
+    }
 
-		@Override
-		public double score() {
-			return -imetric.score();
-		}
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> replace(int index,
+        ScoredFeaturizedTranslation<TK, FV> trans) {
+      imetric.replace(index, trans);
+      return this;
+    }
 
-		@Override
-		public int size() {
-			return imetric.size();
-		}
+    @Override
+    public double score() {
+      return -imetric.score();
+    }
 
-		@Override
-		public int compareTo(IncrementalEvaluationMetric<TK, FV> o) {
-			if (o instanceof InverseMetric.IncrementalMetric) {
-				return ((InverseMetric<TK,FV>.IncrementalMetric)o).imetric.compareTo(imetric);
-			}
-			throw new UnsupportedOperationException();
-		}
+    @Override
+    public int size() {
+      return imetric.size();
+    }
 
-		@Override
-		public int depth() {
-			return imetric.depth();
-		}
+    @Override
+    public int compareTo(IncrementalEvaluationMetric<TK, FV> o) {
+      if (o instanceof InverseMetric.IncrementalMetric) {
+        return ((InverseMetric<TK, FV>.IncrementalMetric) o).imetric
+            .compareTo(imetric);
+      }
+      throw new UnsupportedOperationException();
+    }
 
-		@Override
-		public State<IncrementalEvaluationMetric<TK, FV>> parent() {
-			throw new UnsupportedOperationException();
-		}
+    @Override
+    public int depth() {
+      return imetric.depth();
+    }
 
-		@Override
-		public double partialScore() {
-			return -imetric.partialScore();
-		}	
-	}
+    @Override
+    public State<IncrementalEvaluationMetric<TK, FV>> parent() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double partialScore() {
+      return -imetric.partialScore();
+    }
+  }
 }

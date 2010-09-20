@@ -18,8 +18,8 @@ import java.io.ObjectInputStream;
 public class DependencyInstance implements Cloneable, Serializable {
 
   private static final long serialVersionUID = 1L;
-	
-	private static int INIT_SZ = 5;
+
+  private static int INIT_SZ = 5;
   public static int LEMMA_LEN = 4;
   public static int CPOS_LEN = 2;
 
@@ -31,7 +31,7 @@ public class DependencyInstance implements Cloneable, Serializable {
   private String actParseTree;
   private DependencyPipe pipe;
   private WordAlignment wa;
-  
+
   private List<Dependent> deps;
 
   private DependencyInstance sourceInstance;
@@ -46,14 +46,14 @@ public class DependencyInstance implements Cloneable, Serializable {
 
     // The various data types. Here's an example from Portuguese:
     //
-    // 3  eles ele   pron       pron-pers M|3P|NOM 4    SUBJ   _     _
-    // ID FORM LEMMA COURSE-POS FINE-POS  FEATURES HEAD DEPREL PHEAD PDEPREL
+    // 3 eles ele pron pron-pers M|3P|NOM 4 SUBJ _ _
+    // ID FORM LEMMA COURSE-POS FINE-POS FEATURES HEAD DEPREL PHEAD PDEPREL
     //
     // We ignore PHEAD and PDEPREL for now.
 
-		private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-		// FORM: the forms - usually words, like "thought"
+    // FORM: the forms - usually words, like "thought"
     String form;
 
     // LEMMA: the lemmas, or stems, e.g. "think"
@@ -76,12 +76,13 @@ public class DependencyInstance implements Cloneable, Serializable {
     String depRel;
 
     // POS BACKPOINTERS: pointers to previous POS tags of each kind
-    Map<String,Integer> posprev, cposprev;
+    Map<String, Integer> posprev, cposprev;
 
-		// RELATIONAL FEATURE: relational features that hold between items
-		private RelationalFeature relFeats;
+    // RELATIONAL FEATURE: relational features that hold between items
+    private RelationalFeature relFeats;
 
-    Dependent(Dependent backPtr, String form, String lemma, String cpos, String pos, String[] f, int[] alignment) {
+    Dependent(Dependent backPtr, String form, String lemma, String cpos,
+        String pos, String[] f, int[] alignment) {
 
       this.form = form;
       this.lemma = lemma;
@@ -89,15 +90,18 @@ public class DependencyInstance implements Cloneable, Serializable {
       this.postag = pos;
       this.feats = f;
       this.alignment = alignment;
-      
-      if(deps.size() == 0) {
-        this.posprev = new THashMap<String,Integer>();
-        this.cposprev = new THashMap<String,Integer>();
+
+      if (deps.size() == 0) {
+        this.posprev = new THashMap<String, Integer>();
+        this.cposprev = new THashMap<String, Integer>();
       } else {
-        if(pipe != null) {
+        if (pipe != null) {
           int ipos = deps.size();
-          this.posprev = (pipe.inBetweenPOS != null) ? getPOSBackPointers(ipos, backPtr.postag, pipe.inBetweenPOS, backPtr.posprev) : null;
-          this.cposprev = (pipe.inBetweenCPOS != null) ? getPOSBackPointers(ipos, backPtr.cpostag, pipe.inBetweenCPOS, backPtr.cposprev) : null;
+          this.posprev = (pipe.inBetweenPOS != null) ? getPOSBackPointers(ipos,
+              backPtr.postag, pipe.inBetweenPOS, backPtr.posprev) : null;
+          this.cposprev = (pipe.inBetweenCPOS != null) ? getPOSBackPointers(
+              ipos, backPtr.cpostag, pipe.inBetweenCPOS, backPtr.cposprev)
+              : null;
         } else {
           posprev = cposprev = null;
         }
@@ -119,7 +123,8 @@ public class DependencyInstance implements Cloneable, Serializable {
     }
 
     @SuppressWarnings("unchecked")
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    private void readObject(ObjectInputStream in) throws IOException,
+        ClassNotFoundException {
       form = (String) in.readObject();
       lemma = (String) in.readObject();
       cpostag = (String) in.readObject();
@@ -128,16 +133,16 @@ public class DependencyInstance implements Cloneable, Serializable {
       pfeats = (String[][]) in.readObject();
       alignment = (int[]) in.readObject();
       depRel = (String) in.readObject();
-      posprev = (Map<String,Integer>) in.readObject();
-      cposprev = (Map<String,Integer>) in.readObject();
-      relFeats = (RelationalFeature ) in.readObject();
+      posprev = (Map<String, Integer>) in.readObject();
+      cposprev = (Map<String, Integer>) in.readObject();
+      relFeats = (RelationalFeature) in.readObject();
     }
   }
 
   private Dependent getLast() {
-    if(deps.isEmpty())
+    if (deps.isEmpty())
       return null;
-    return deps.get(deps.size()-1);
+    return deps.get(deps.size() - 1);
   }
 
   public DependencyInstance(DependencyPipe pipe) {
@@ -148,25 +153,27 @@ public class DependencyInstance implements Cloneable, Serializable {
     this.sourceInstance = null;
   }
 
-  public DependencyInstance(DependencyPipe pipe, String[] forms, String[] lemmas, String[] cpostags, String[] postags) {
+  public DependencyInstance(DependencyPipe pipe, String[] forms,
+      String[] lemmas, String[] cpostags, String[] postags) {
     this(pipe);
-    for (int i=0; i<forms.length;++i)
+    for (int i = 0; i < forms.length; ++i)
       add(forms[i], lemmas[i], cpostags[i], postags[i], null);
   }
 
-  public DependencyInstance(DependencyPipe pipe,
-                            String[] forms, String[] lemmas, String[] cpostags, String[] postags,
-                            String[][] feats, String[][][] pfeats,
-                            String[] labs, int[] heads, RelationalFeature[] relFeats) {
+  public DependencyInstance(DependencyPipe pipe, String[] forms,
+      String[] lemmas, String[] cpostags, String[] postags, String[][] feats,
+      String[][][] pfeats, String[] labs, int[] heads,
+      RelationalFeature[] relFeats) {
     this(pipe);
-    for (int i=0; i<forms.length;++i) {
+    for (int i = 0; i < forms.length; ++i) {
       add(forms[i], lemmas[i], cpostags[i], postags[i], null);
       Dependent lastDep = getLast();
       lastDep.feats = feats[i];
       lastDep.pfeats = pfeats[i];
       lastDep.depRel = labs[i];
       this.heads.set(i, (short) heads[i]);
-      lastDep.relFeats = (relFeats != null && relFeats.length > 0) ? relFeats[i] : null;
+      lastDep.relFeats = (relFeats != null && relFeats.length > 0) ? relFeats[i]
+          : null;
     }
   }
 
@@ -175,27 +182,32 @@ public class DependencyInstance implements Cloneable, Serializable {
   }
 
   public void add(String form, String pos, int[] alignment) {
-    String lemma = form.length() > LEMMA_LEN ? form.substring(0,LEMMA_LEN) : form;
-    String cpos = pos.length() > CPOS_LEN ? pos.substring(0,CPOS_LEN).intern() : pos;
+    String lemma = form.length() > LEMMA_LEN ? form.substring(0, LEMMA_LEN)
+        : form;
+    String cpos = pos.length() > CPOS_LEN ? pos.substring(0, CPOS_LEN).intern()
+        : pos;
     add(form, lemma, cpos, pos, alignment);
   }
 
-  public void add(String form, String lemma, String cpos, String pos, int[] alignment) {
+  public void add(String form, String lemma, String cpos, String pos,
+      int[] alignment) {
     add(form, lemma, cpos, pos, alignment, nil_1d);
   }
 
-  public void add(String form, String lemma, String cpos, String pos, int[] alignment, String[] f) {
+  public void add(String form, String lemma, String cpos, String pos,
+      int[] alignment, String[] f) {
     deps.add(new Dependent(getLast(), form, lemma, cpos, pos, f, alignment));
-    heads.add((short)-1);
+    heads.add((short) -1);
     headScores.add(-Float.MAX_VALUE);
   }
 
   @SuppressWarnings("unchecked")
-  Map<String,Integer> getPOSBackPointers(int position, String previousTag, Set<String> inb, Map<String,Integer> backPtr) {
-    Map<String,Integer> map;
-    if(inb.contains(previousTag)) {
-      map = ((THashMap<String,Integer>)backPtr).clone();
-      map.put(previousTag,position-1);
+  Map<String, Integer> getPOSBackPointers(int position, String previousTag,
+      Set<String> inb, Map<String, Integer> backPtr) {
+    Map<String, Integer> map;
+    if (inb.contains(previousTag)) {
+      map = ((THashMap<String, Integer>) backPtr).clone();
+      map.put(previousTag, position - 1);
     } else {
       map = backPtr;
     }
@@ -203,15 +215,15 @@ public class DependencyInstance implements Cloneable, Serializable {
   }
 
   public String[] inBetweenPOS(int i, int j, boolean coarse) {
-    assert(j < deps.size());
+    assert (j < deps.size());
     TreeSet<String> s = new TreeSet<String>();
-    if(coarse) {
-      for(String cpos : pipe.inBetweenCPOS)
-        if(inBetweenPOS(deps.get(j).cposprev, i, cpos))
+    if (coarse) {
+      for (String cpos : pipe.inBetweenCPOS)
+        if (inBetweenPOS(deps.get(j).cposprev, i, cpos))
           s.add(cpos);
     } else {
-      for(String pos : pipe.inBetweenPOS)
-        if(inBetweenPOS(deps.get(j).posprev, i, pos))
+      for (String pos : pipe.inBetweenPOS)
+        if (inBetweenPOS(deps.get(j).posprev, i, pos))
           s.add(pos);
     }
     return s.toArray(new String[s.size()]);
@@ -253,7 +265,7 @@ public class DependencyInstance implements Cloneable, Serializable {
   }
 
   private void toString(StringBuilder sb) {
-    for(Dependent dep : deps)
+    for (Dependent dep : deps)
       sb.append(dep.form).append("\n");
   }
 
@@ -264,24 +276,25 @@ public class DependencyInstance implements Cloneable, Serializable {
   }
 
   private void prettyPrint(StringBuilder sb) {
-    for(int i=0; i<deps.size(); ++i) {
-      if(i>0)
+    for (int i = 0; i < deps.size(); ++i) {
+      if (i > 0)
         sb.append(' ');
       int h = heads.get(i);
       sb.append(deps.get(i).form).append('/').append(deps.get(i).postag);
-      if(h >= 0)
+      if (h >= 0)
         sb.append('(').append(deps.get(h).form).append(')');
     }
   }
 
   public void setHeads(int[] h) {
-    assert(deps.size() == h.length);
-    for(int i=0; i<h.length; ++i)
+    assert (deps.size() == h.length);
+    for (int i = 0; i < h.length; ++i)
       heads.set(i, (short) h[i]);
   }
 
-  public boolean hasForms() { return deps != null; }
-
+  public boolean hasForms() {
+    return deps != null;
+  }
 
   public DependencyInstance getSourceInstance() {
     return sourceInstance;
@@ -291,13 +304,17 @@ public class DependencyInstance implements Cloneable, Serializable {
     this.sourceInstance = i;
   }
 
-  public void setWordAlignment(WordAlignment wa) { this.wa = wa; }
+  public void setWordAlignment(WordAlignment wa) {
+    this.wa = wa;
+  }
 
-  public int[] getSource(int i) { return (wa != null) ? wa.e2f(i) : deps.get(i).alignment; }
+  public int[] getSource(int i) {
+    return (wa != null) ? wa.e2f(i) : deps.get(i).alignment;
+  }
 
-  /////////////////////////////////////////////////////////////
-	// Functions not recommended in incremental (MT) mode:
-  /////////////////////////////////////////////////////////////
+  // ///////////////////////////////////////////////////////////
+  // Functions not recommended in incremental (MT) mode:
+  // ///////////////////////////////////////////////////////////
 
   public String[] getForms() {
     List<String> forms = new ArrayList<String>();
@@ -318,98 +335,131 @@ public class DependencyInstance implements Cloneable, Serializable {
   }
 
   private void getFormsOrLemmas(List<String> list, boolean doForms) {
-    for(Dependent d : deps) {
+    for (Dependent d : deps) {
       list.add(doForms ? d.form : d.lemma);
     }
   }
 
   private void getPOSTags(List<String> list) {
-    for(Dependent d : deps) {
+    for (Dependent d : deps) {
       list.add(d.postag);
     }
   }
 
   public Object clone() throws CloneNotSupportedException {
     DependencyInstance newO = (DependencyInstance) super.clone();
-    int len = newO.length()+5;
+    int len = newO.length() + 5;
     newO.deps = new ArrayList<Dependent>(deps); // read-only => shallow copy
-    newO.heads = new ShortArrayList(len); newO.heads.addAll(heads);
-    newO.headScores = new FloatArrayList(len); newO.headScores.addAll(headScores);
+    newO.heads = new ShortArrayList(len);
+    newO.heads.addAll(heads);
+    newO.headScores = new FloatArrayList(len);
+    newO.headScores.addAll(headScores);
     return newO;
   }
 
   public void setDepRels(String[] d) {
-    for(int i=0; i<d.length; ++i)
+    for (int i = 0; i < d.length; ++i)
       deps.get(i).depRel = d[i];
   }
 
   public DependencyInstance getPrefixInstance(int sz) {
     DependencyInstance p;
     try {
-      p = (DependencyInstance)this.clone();
-      if(sz >= length())
+      p = (DependencyInstance) this.clone();
+      if (sz >= length())
         return p;
-      p.deps = deps.subList(0,sz);
-    } catch(CloneNotSupportedException e) {
+      p.deps = deps.subList(0, sz);
+    } catch (CloneNotSupportedException e) {
       throw new RuntimeException(e);
     }
     return p;
   }
 
-  public String getForm(int i) { return deps.get(i).form; }
-  public String getLemma(int i) { return deps.get(i).lemma; }
-  public String getCPOSTag(int i) { return deps.get(i).cpostag; }
-  public String getPOSTag(int i) { return deps.get(i).postag; }
+  public String getForm(int i) {
+    return deps.get(i).form;
+  }
 
-  public int getHead(int i) { return heads.get(i); }
-  public void setHead(int i, int h) { heads.set(i, (short) h); }
+  public String getLemma(int i) {
+    return deps.get(i).lemma;
+  }
 
-  public float getHeadScore(int i) { return headScores.get(i); }
-  public void setHeadScore(int i, float s) { headScores.set(i, s); }
+  public String getCPOSTag(int i) {
+    return deps.get(i).cpostag;
+  }
 
-  public String getFeat(int i, int j) { return deps.get(i).feats[j]; }
+  public String getPOSTag(int i) {
+    return deps.get(i).postag;
+  }
+
+  public int getHead(int i) {
+    return heads.get(i);
+  }
+
+  public void setHead(int i, int h) {
+    heads.set(i, (short) h);
+  }
+
+  public float getHeadScore(int i) {
+    return headScores.get(i);
+  }
+
+  public void setHeadScore(int i, float s) {
+    headScores.set(i, s);
+  }
+
+  public String getFeat(int i, int j) {
+    return deps.get(i).feats[j];
+  }
+
   public String[] getFeats(int i) {
-    if(i >= deps.size()) {
-      System.err.printf("error in: %s\n",this);
-      System.err.printf("index out of bounds: %d\n",i);
-      System.err.printf("index out of bounds: %d\n",deps.size());
+    if (i >= deps.size()) {
+      System.err.printf("error in: %s\n", this);
+      System.err.printf("index out of bounds: %d\n", i);
+      System.err.printf("index out of bounds: %d\n", deps.size());
     }
     return deps.get(i).feats;
   }
 
   public String[] getPairwiseFeats(int i, int j) {
     String[][] pfeats = deps.get(i).pfeats;
-    if(pfeats == null) return null; return pfeats[j];
+    if (pfeats == null)
+      return null;
+    return pfeats[j];
   }
 
   public String getDepRel(int i) {
     String depRel = deps.get(i).depRel;
-    if(depRel == null)
+    if (depRel == null)
       depRel = "<no-type>";
     return depRel;
   }
 
-  public RelationalFeature getRelFeat(int i) { return deps.get(i).relFeats; }
+  public RelationalFeature getRelFeat(int i) {
+    return deps.get(i).relFeats;
+  }
 
-  public void setFeats(int i, String[] f) { deps.get(i).feats = f; }
+  public void setFeats(int i, String[] f) {
+    deps.get(i).feats = f;
+  }
 
   private void writeObject(ObjectOutputStream out) throws IOException {
     out.writeObject(heads);
     out.writeObject(actParseTree);
     out.writeInt(deps.size());
-    for(Dependent d : deps)
+    for (Dependent d : deps)
       out.writeObject(d);
     out.writeInt(-1);
   }
 
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+  private void readObject(ObjectInputStream in) throws IOException,
+      ClassNotFoundException {
     heads = (ShortArrayList) in.readObject();
     actParseTree = (String) in.readObject();
     int sz = in.readInt();
     deps = new ArrayList<Dependent>();
-    for(int i=0; i<sz; ++i)
-      deps.add((Dependent)in.readObject());
+    for (int i = 0; i < sz; ++i)
+      deps.add((Dependent) in.readObject());
     int check = in.readInt();
-    assert(check == -1);
+    assert (check == -1);
   }
 }

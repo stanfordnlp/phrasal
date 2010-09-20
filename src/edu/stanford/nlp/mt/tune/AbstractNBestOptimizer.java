@@ -15,12 +15,12 @@ abstract class AbstractNBestOptimizer implements NBestOptimizer {
 
   protected final MERT mert;
   protected final Random random;
-  protected final EvaluationMetric<IString,String> emetric;
+  protected final EvaluationMetric<IString, String> emetric;
 
   public boolean doNormalization() {
-     return true;
+    return true;
   }
-  
+
   AbstractNBestOptimizer(MERT mert) {
     this.mert = mert;
     this.emetric = mert.emetric;

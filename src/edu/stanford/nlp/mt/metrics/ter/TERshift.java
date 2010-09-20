@@ -1,95 +1,96 @@
 package edu.stanford.nlp.mt.metrics.ter;
 
-
 /*
-                                                                
-Copyright 2006 by BBN Technologies and University of Maryland (UMD)
 
-BBN and UMD grant a nonexclusive, source code, royalty-free right to
-use this Software known as Translation Error Rate COMpute (the
-"Software") solely for research purposes. Provided, you must agree
-to abide by the license and terms stated herein. Title to the
-Software and its documentation and all applicable copyrights, trade
-secrets, patents and other intellectual rights in it are and remain
-with BBN and UMD and shall not be used, revealed, disclosed in
-marketing or advertisement or any other activity not explicitly
-permitted in writing.
+ Copyright 2006 by BBN Technologies and University of Maryland (UMD)
 
-BBN and UMD make no representation about suitability of this
-Software for any purposes.  It is provided "AS IS" without express
-or implied warranties including (but not limited to) all implied
-warranties of merchantability or fitness for a particular purpose.
-In no event shall BBN or UMD be liable for any special, indirect or
-consequential damages whatsoever resulting from loss of use, data or
-profits, whether in an action of contract, negligence or other
-tortuous action, arising out of or in connection with the use or
-performance of this Software.
+ BBN and UMD grant a nonexclusive, source code, royalty-free right to
+ use this Software known as Translation Error Rate COMpute (the
+ "Software") solely for research purposes. Provided, you must agree
+ to abide by the license and terms stated herein. Title to the
+ Software and its documentation and all applicable copyrights, trade
+ secrets, patents and other intellectual rights in it are and remain
+ with BBN and UMD and shall not be used, revealed, disclosed in
+ marketing or advertisement or any other activity not explicitly
+ permitted in writing.
 
-Without limitation of the foregoing, user agrees to commit no act
-which, directly or indirectly, would violate any U.S. law,
-regulation, or treaty, or any other international treaty or
-agreement to which the United States adheres or with which the
-United States complies, relating to the export or re-export of any
-commodities, software, or technical data.  This Software is licensed
-to you on the condition that upon completion you will cease to use
-the Software and, on request of BBN and UMD, will destroy copies of
-the Software in your possession.                                                
+ BBN and UMD make no representation about suitability of this
+ Software for any purposes.  It is provided "AS IS" without express
+ or implied warranties including (but not limited to) all implied
+ warranties of merchantability or fitness for a particular purpose.
+ In no event shall BBN or UMD be liable for any special, indirect or
+ consequential damages whatsoever resulting from loss of use, data or
+ profits, whether in an action of contract, negligence or other
+ tortuous action, arising out of or in connection with the use or
+ performance of this Software.
 
-TERshift.java v1
-Matthew Snover (snover@cs.umd.edu)                           
+ Without limitation of the foregoing, user agrees to commit no act
+ which, directly or indirectly, would violate any U.S. law,
+ regulation, or treaty, or any other international treaty or
+ agreement to which the United States adheres or with which the
+ United States complies, relating to the export or re-export of any
+ commodities, software, or technical data.  This Software is licensed
+ to you on the condition that upon completion you will cease to use
+ the Software and, on request of BBN and UMD, will destroy copies of
+ the Software in your possession.                                                
 
-*/
+ TERshift.java v1
+ Matthew Snover (snover@cs.umd.edu)                           
+
+ */
 
 import java.util.List;
 
 /* This is just a useful class for containing shift information */
-@SuppressWarnings( {"unchecked", "unused"} )
+@SuppressWarnings({ "unchecked", "unused" })
 public class TERshift {
-  TERshift () {
-	start = 0;
-	end = 0;
-	moveto = 0;
-	newloc = 0;
+  TERshift() {
+    start = 0;
+    end = 0;
+    moveto = 0;
+    newloc = 0;
   }
-  TERshift (int _start, int _end, int _moveto, int _newloc) {
-	start = _start;
-	end = _end;
-	moveto = _moveto;
-	newloc = _newloc;
+
+  TERshift(int _start, int _end, int _moveto, int _newloc) {
+    start = _start;
+    end = _end;
+    moveto = _moveto;
+    newloc = _newloc;
   }
-  TERshift (int _start, int _end, int _moveto, int _newloc, List _shifted) {
-	start = _start;
-	end = _end;
-	moveto = _moveto;
-	newloc = _newloc;
+
+  TERshift(int _start, int _end, int _moveto, int _newloc, List _shifted) {
+    start = _start;
+    end = _end;
+    moveto = _moveto;
+    newloc = _newloc;
     shifted = _shifted;
   }
 
   @Override
-	public String toString() {
-	String s = "[" + start + ", " + end + ", " + moveto + "/" + newloc + "]";
-	if (shifted != null)
+  public String toString() {
+    String s = "[" + start + ", " + end + ", " + moveto + "/" + newloc + "]";
+    if (shifted != null)
       s += " (" + shifted + ")";
-	return s;
+    return s;
   }
 
   /* The distance of the shift. */
-  public int distance() {       
-	if (moveto < start) {
+  public int distance() {
+    if (moveto < start) {
       return start - moveto;
-	} else if (moveto > end) {
+    } else if (moveto > end) {
       return moveto - end;
-	} else {
+    } else {
       return moveto - start;
-	}
+    }
   }
 
   public boolean leftShift() {
-	return (moveto < start);
+    return (moveto < start);
   }
 
   public int size() {
-	return (end - start) + 1;
+    return (end - start) + 1;
   }
 
   public int start = 0;
@@ -101,5 +102,5 @@ public class TERshift {
   public Comparable[] aftershift = null; // for pra_more output
   // This is used to store the cost of a shift, so we don't have to
   // calculate it multiple times.
-  public double cost = 1.0; 
+  public double cost = 1.0;
 }

@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /*
-* Holds a pair of a French and an English Word
-*@author Kristina Toutanova (kristina@cs.stanford.edu)
-*/
+ * Holds a pair of a French and an English Word
+ *@author Kristina Toutanova (kristina@cs.stanford.edu)
+ */
 
 public class WordExPair {
   private WordEx source;
@@ -16,10 +16,8 @@ public class WordExPair {
     init();
   }
 
-
   public WordExPair() {
   }
-
 
   public void init() {
     hashcode = source.hashCode() ^ target.hashCode();
@@ -43,22 +41,21 @@ public class WordExPair {
   }
 
   @Override
-	public int hashCode() {
+  public int hashCode() {
     return hashcode;
   }
 
-
   @Override
-	public boolean equals(Object wP) {
+  public boolean equals(Object wP) {
 
     if (!(wP instanceof WordExPair)) {
       return false;
     } else {
       WordExPair wP1 = (WordExPair) wP;
-      return ((source.getIndex() == wP1.getSource().getIndex()) && (target.getIndex() == wP1.getTarget().getIndex()));
+      return ((source.getIndex() == wP1.getSource().getIndex()) && (target
+          .getIndex() == wP1.getTarget().getIndex()));
     }
   }
-
 
   public void print() {
 
@@ -68,6 +65,5 @@ public class WordExPair {
     target.print();
 
   }
-
 
 }

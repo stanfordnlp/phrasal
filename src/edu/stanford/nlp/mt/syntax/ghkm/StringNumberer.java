@@ -10,14 +10,16 @@ import java.util.WeakHashMap;
  */
 public class StringNumberer {
 
-  Map<String,Integer> map = new WeakHashMap<String,Integer>();
+  Map<String, Integer> map = new WeakHashMap<String, Integer>();
 
   public int getId(String s) {
     Integer n = map.get(s);
     if (n != null)
       return n;
-    synchronized(IString.class) { n = new IString(s).getId(); }
-    map.put(s,n);
+    synchronized (IString.class) {
+      n = new IString(s).getId();
+    }
+    map.put(s, n);
     return n;
   }
 

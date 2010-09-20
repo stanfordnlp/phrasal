@@ -31,16 +31,17 @@ public class VisualPhrase extends JLabel {
 
   public VisualPhrase(Phrase p, int id) {
     super(p.getPhrase());
-    
+
     score = p.getScore();
     this.id = id;
     fStart = p.getStart();
     fEnd = p.getEnd();
-    
+
     setToDefaultFormat();
     setOpaque(true);
-    
-    String toolTip = String.format("<html>rank: %d<br>score: %.4f</html>", id, score);
+
+    String toolTip = String.format("<html>rank: %d<br>score: %.4f</html>", id,
+        score);
     setToolTipText(toolTip);
   }
 
@@ -51,21 +52,21 @@ public class VisualPhrase extends JLabel {
   public int getId() {
     return id;
   }
-  
+
   public Phrase getPhrase() {
-    return new Phrase(this.getText(),fStart,fEnd,score);
+    return new Phrase(this.getText(), fStart, fEnd, score);
   }
 
   public void setFormat(Format newFormat) {
     formats.push(currentFormat);
-    
-    if(newFormat.fg == null)
+
+    if (newFormat.fg == null)
       newFormat.fg = currentFormat.fg;
-    if(newFormat.bg == null)
+    if (newFormat.bg == null)
       newFormat.bg = currentFormat.bg;
-    if(newFormat.border == null)
+    if (newFormat.border == null)
       newFormat.border = currentFormat.border;
-    
+
     setFormatHelper(newFormat);
   }
 
@@ -86,9 +87,9 @@ public class VisualPhrase extends JLabel {
     formats = new Stack<Format>();
     setFormatHelper(DEFAULT_FORMAT);
   }
-  
+
   public void revertToLastFormat() {
-    if(formats.size() == 0) 
+    if (formats.size() == 0)
       return;
     else
       setFormatHelper(formats.pop());

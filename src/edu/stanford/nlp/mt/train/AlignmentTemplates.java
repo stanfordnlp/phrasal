@@ -15,29 +15,31 @@ import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 // (overhead caused by this hashmap is relatively small)
 
 /**
- * AlignmentTemplates is a collection that maps between {@link AlignmentTemplate}
- * instances and a contiguous non-negative integer index series beginning (inclusively)
- * at 0. This class supports constant-time lookup in both directions
- * (via get(int) and indexOf(AlignmentTemplate)). Note that get(int) is a relatively
- * costly operation, since, due to memory constraints, AlignmentTemplate instances are
- * not stored in the Collection (hence, an new instance of AlignmentTemplate is
- * constructed on each call of get()).
- *
+ * AlignmentTemplates is a collection that maps between
+ * {@link AlignmentTemplate} instances and a contiguous non-negative integer
+ * index series beginning (inclusively) at 0. This class supports constant-time
+ * lookup in both directions (via get(int) and indexOf(AlignmentTemplate)). Note
+ * that get(int) is a relatively costly operation, since, due to memory
+ * constraints, AlignmentTemplate instances are not stored in the Collection
+ * (hence, an new instance of AlignmentTemplate is constructed on each call of
+ * get()).
+ * 
  * @author Michel Galley
  */
 public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
 
   public static final String DEBUG_PROPERTY = "DebugAlignmentTemplate";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
 
   public static final int DEFAULT_MAX_FERTILITY = 5;
 
   private final SourceFilter sourceFilter;
 
   private final IntegerArrayIndex fIndex = new DynamicIntegerArrayIndex(),
-     index = new DynamicIntegerArrayIndex(),
-     aIndex = new DynamicIntegerArrayIndex(),
-     eIndex = new DynamicIntegerArrayIndex();
+      index = new DynamicIntegerArrayIndex(),
+      aIndex = new DynamicIntegerArrayIndex(),
+      eIndex = new DynamicIntegerArrayIndex();
 
   private final ArrayList<Int2IntArrayMap> aCounter = new ArrayList<Int2IntArrayMap>();
 
@@ -52,8 +54,9 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
    * Initialize alignment template table with a specified max fertility.
    */
   public AlignmentTemplates(Properties prop, SourceFilter sourceFilter) {
-    this.maxFertility = Double.parseDouble
-      (prop.getProperty(PhraseExtract.MAX_FERTILITY_OPT, Integer.toString(DEFAULT_MAX_FERTILITY)));
+    this.maxFertility = Double.parseDouble(prop.getProperty(
+        PhraseExtract.MAX_FERTILITY_OPT,
+        Integer.toString(DEFAULT_MAX_FERTILITY)));
     this.sourceFilter = sourceFilter;
   }
 
@@ -65,28 +68,30 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     if (this.storeAlignmentCounts == storeAlignmentCounts)
       return;
     this.storeAlignmentCounts = storeAlignmentCounts;
-    System.err.println("Phrase extractor set to count alignments: "+storeAlignmentCounts);
+    System.err.println("Phrase extractor set to count alignments: "
+        + storeAlignmentCounts);
   }
 
   /**
-   * Add alignment template to phrase table. 
+   * Add alignment template to phrase table.
    */
   public void addToIndex(AlignmentTemplate alTemp) {
     if (sourceFilter.isEnabled()) {
       boolean add = sourceFilter.allows(alTemp);
       addToIndex(alTemp, add);
     } else {
-      addToIndex(alTemp,true);
+      addToIndex(alTemp, true);
     }
   }
 
   /**
-   * Add alignment template to phrase table if the source-language phrase is in the dev corpus. 
+   * Add alignment template to phrase table if the source-language phrase is in
+   * the dev corpus.
    */
   public void addToIndexIfInDev(AlignmentTemplate alTemp) {
-    int fKey = indexOfF(alTemp,false);
+    int fKey = indexOfF(alTemp, false);
     boolean add = (fKey >= 0);
-    addToIndex(alTemp,add);
+    addToIndex(alTemp, add);
   }
 
   /**
@@ -98,28 +103,27 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       int alIdx = alTemp.getAKey();
       final Int2IntArrayMap aCounts;
       if (idx >= 0) {
-        assert(idx <= index.size());
+        assert (idx <= index.size());
         synchronized (aCounter) {
-          //assert(idx <= aCounter.size());
-          while(idx >= aCounter.size())
+          // assert(idx <= aCounter.size());
+          while (idx >= aCounter.size())
             aCounter.add(new Int2IntArrayMap());
           aCounts = aCounter.get(idx);
         }
         synchronized (aCounts) {
-          assert(aCounts != null);
+          assert (aCounts != null);
           int oldCount = aCounts.get(alIdx);
           if (oldCount < Integer.MAX_VALUE)
-            aCounts.put(alIdx, 1+oldCount);
+            aCounts.put(alIdx, 1 + oldCount);
         }
       }
     }
   }
 
   /**
-   * Get the alignment template indexed by idx.
-   * When {@link AlignmentTemplate} instances are not
-   * kept in memory, this function is the only way
-   * to get the alignment template from the index.
+   * Get the alignment template indexed by idx. When {@link AlignmentTemplate}
+   * instances are not kept in memory, this function is the only way to get the
+   * alignment template from the index.
    */
   public boolean reconstructAlignmentTemplate(AlignmentTemplate alTemp, int idx) {
     int[] idxInts = index.get(idx);
@@ -129,7 +133,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     int[] idxIntsE = eIndex.get(idxInts[1]);
     int aIdx = getArgmaxAlignment(idx);
     int[] idxIntsA = (aIdx >= 0) ? aIndex.get(aIdx) : new int[] {};
-    alTemp.init(idxIntsF,idxIntsE,idxIntsA,false);
+    alTemp.init(idxIntsF, idxIntsE, idxIntsA, false);
     // Let the alignment template know its keys:
     alTemp.setKey(idx);
     alTemp.setFKey(idxInts[0]);
@@ -139,15 +143,14 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   }
 
   @Override
-	public Iterator<AlignmentTemplate> iterator()
-  { 
-  	throw new UnsupportedOperationException();
+  public Iterator<AlignmentTemplate> iterator() {
+    throw new UnsupportedOperationException();
   }
-  	
 
   @Override
-	public int size()
-  { return index.size(); }
+  public int size() {
+    return index.size();
+  }
 
   public String getSizeInfo() {
     StringBuilder buf = new StringBuilder();
@@ -167,46 +170,52 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   }
 
   private void addToIndex(AlignmentTemplate alTemp, boolean add) {
-    double fertility = alTemp.e().size()/alTemp.f().size();
+    double fertility = alTemp.e().size() / alTemp.f().size();
     if (fertility > maxFertility)
       add = false;
 
     int idxF = indexOfF(alTemp, add);
     int idxE = indexOfE(alTemp, add);
 
-    alTemp.setKey(index.indexOf(new int[]{idxF, idxE}, add));
+    alTemp.setKey(index.indexOf(new int[] { idxF, idxE }, add));
     alTemp.setFKey(idxF);
     alTemp.setEKey(idxE);
-    alTemp.setAKey(indexOfA(alTemp,add));
+    alTemp.setAKey(indexOfA(alTemp, add));
   }
 
   /**
    * Return index for source-language phrase in alTemp.
    */
-  private int indexOfF(AlignmentTemplate alTemp, boolean add)
-  { return fIndex.indexOf(Sequences.toIntArray(alTemp.f()), add); }
+  private int indexOfF(AlignmentTemplate alTemp, boolean add) {
+    return fIndex.indexOf(Sequences.toIntArray(alTemp.f()), add);
+  }
 
   /**
    * Return the source-language phrase indexed by idx.
    */
-  public int[] getF(int idx) { return fIndex.get(idx); }
-  //public int sizeF() { return fIndex.size(); }
+  public int[] getF(int idx) {
+    return fIndex.get(idx);
+  }
+
+  // public int sizeF() { return fIndex.size(); }
 
   /**
    * Return index for target-language phrase in alTemp.
    */
-  private int indexOfE(AlignmentTemplate alTemp, boolean add)
-  { return eIndex.indexOf(Sequences.toIntArray(alTemp.e()), add); }
+  private int indexOfE(AlignmentTemplate alTemp, boolean add) {
+    return eIndex.indexOf(Sequences.toIntArray(alTemp.e()), add);
+  }
 
   // Return the target-language phrase indexed by idx.
-  //public int[] getE(int idx) { return eIndex.get(idx); }
-  //public int sizeE() { return eIndex.size(); }
+  // public int[] getE(int idx) { return eIndex.get(idx); }
+  // public int sizeE() { return eIndex.size(); }
 
   /**
    * Return index for phrase alignment in alTemp.
    */
-  private int indexOfA(AlignmentTemplate alTemp, boolean add)
-  { return aIndex.indexOf(alTemp.getCompactAlignment(), add); }
+  private int indexOfA(AlignmentTemplate alTemp, boolean add) {
+    return aIndex.indexOf(alTemp.getCompactAlignment(), add);
+  }
 
   private int getArgmaxAlignment(int idx) {
     if (idx >= aCounter.size())
@@ -234,7 +243,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
         maxKLex = null;
       }
     }
-    assert(maxK >= 0);
+    assert (maxK >= 0);
     return maxK;
   }
 }

@@ -9,23 +9,24 @@ import edu.stanford.nlp.mt.base.IString;
 /**
  * Abstract class representing a set of word alignments for one sentence pair.
  * It defines both source-to-target and target-to-source word aligments, which
- * are not necessarily symmetrical (since words aligners such as GIZA do not 
- * produce symmetrical word alignments). 
- *
+ * are not necessarily symmetrical (since words aligners such as GIZA do not
+ * produce symmetrical word alignments).
+ * 
  * @see edu.stanford.nlp.mt.train.GIZAWordAlignment
  * @see SymmetricalWordAlignment
- *
+ * 
  * @author Michel Galley
  */
 
 public class AbstractWordAlignment implements WordAlignment {
 
   public static final String DEBUG_PROPERTY = "DebugWordAlignment";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
 
   public static final String KEEP_BAD_TOKENS_PROPERTY = "keepBadTokens";
-  public static final boolean KEEP_BAD_TOKENS
-   = Boolean.parseBoolean(System.getProperty(KEEP_BAD_TOKENS_PROPERTY, "false"));
+  public static final boolean KEEP_BAD_TOKENS = Boolean.parseBoolean(System
+      .getProperty(KEEP_BAD_TOKENS_PROPERTY, "false"));
 
   Integer id;
 
@@ -34,44 +35,66 @@ public class AbstractWordAlignment implements WordAlignment {
   int[][] f2e;
   int[][] e2f;
 
-  AbstractWordAlignment() {}
-
-  AbstractWordAlignment(Sequence<IString> f, Sequence<IString> e,
-                        int[][] f2e, int[][] e2f) {
-    id = 0;
-    this.f = f; this.e = e;
-    this.f2e = f2e; this.e2f = e2f;
+  AbstractWordAlignment() {
   }
 
-  public Integer getId() { return id; }
+  AbstractWordAlignment(Sequence<IString> f, Sequence<IString> e, int[][] f2e,
+      int[][] e2f) {
+    id = 0;
+    this.f = f;
+    this.e = e;
+    this.f2e = f2e;
+    this.e2f = e2f;
+  }
 
-  public Sequence<IString> f() { return f; }
-  public Sequence<IString> e() { return e; }
+  public Integer getId() {
+    return id;
+  }
 
-  public int fSize() { return f.size(); }
-  public int eSize() { return e.size(); }
-  
-  public int[] f2e(int i) { return f2e[i]; }
-  public int[] e2f(int i) { return e2f[i]; }
+  public Sequence<IString> f() {
+    return f;
+  }
+
+  public Sequence<IString> e() {
+    return e;
+  }
+
+  public int fSize() {
+    return f.size();
+  }
+
+  public int eSize() {
+    return e.size();
+  }
+
+  public int[] f2e(int i) {
+    return f2e[i];
+  }
+
+  public int[] e2f(int i) {
+    return e2f[i];
+  }
 
   String toString(Set<Integer>[] align) {
-    return toString(align,true);
+    return toString(align, true);
   }
-  
+
   String toString(Set<Integer>[] align, boolean zeroIndexed) {
     int o = zeroIndexed ? 0 : 1;
     StringBuffer str = new StringBuffer();
-    for(int i=0; i<align.length; ++i)
-      for(int j : align[i])
-        str.append(i+o).append("-").append(j+o).append(" ");
+    for (int i = 0; i < align.length; ++i)
+      for (int j : align[i])
+        str.append(i + o).append("-").append(j + o).append(" ");
     return str.toString();
   }
 
   /**
-   * Any training data pre-processing can be applied here. 
-   * Note that this pre-processing can't change the number of tokens.
-   * Probably not the right place for language specific stuff.
-   * @param words input sentence
+   * Any training data pre-processing can be applied here. Note that this
+   * pre-processing can't change the number of tokens. Probably not the right
+   * place for language specific stuff.
+   * 
+   * @param words
+   *          input sentence
    * @return output sentence
    */
   static public String[] preproc(String[] words) {
@@ -80,40 +103,42 @@ public class AbstractWordAlignment implements WordAlignment {
 
   /**
    * Convert words that may cause problems in phrase tables (for now, just '|').
-   * @param words input sentence
+   * 
+   * @param words
+   *          input sentence
    * @return output sentence
    */
   static public String[] removeBadTokens(String[] words) {
-    if(KEEP_BAD_TOKENS)
+    if (KEEP_BAD_TOKENS)
       return words;
-    for(int i=0; i<words.length; ++i) {
-      if(words[i].indexOf('|') >= 0) {
+    for (int i = 0; i < words.length; ++i) {
+      if (words[i].indexOf('|') >= 0) {
         words[i] = ",";
-        if(DEBUG)
-          System.err.println
-           ("AbstractWordAlignment: WARNING: "+
-            "\"|\" converted to \";\" to avoid problems with phrase tables.");
+        if (DEBUG)
+          System.err
+              .println("AbstractWordAlignment: WARNING: "
+                  + "\"|\" converted to \";\" to avoid problems with phrase tables.");
       }
     }
     return words;
   }
 
   public boolean equals(Object o) {
-    assert(o instanceof AbstractWordAlignment);
-    AbstractWordAlignment wa = (AbstractWordAlignment)o;
-    if(!f.equals(wa.f()) || !e.equals(wa.e()))
+    assert (o instanceof AbstractWordAlignment);
+    AbstractWordAlignment wa = (AbstractWordAlignment) o;
+    if (!f.equals(wa.f()) || !e.equals(wa.e()))
       return false;
-    for(int i=0; i<f.size(); ++i)
-       if(!Arrays.equals(f2e[i],wa.f2e[i]))
+    for (int i = 0; i < f.size(); ++i)
+      if (!Arrays.equals(f2e[i], wa.f2e[i]))
         return false;
-    for(int i=0; i<e.size(); ++i)
-      if(!Arrays.equals(e2f[i], wa.e2f[i]))
+    for (int i = 0; i < e.size(); ++i)
+      if (!Arrays.equals(e2f[i], wa.e2f[i]))
         return false;
     return true;
   }
 
   public int hashCode() {
-    ArrayList<Integer> hs = new ArrayList<Integer>(2+f2e.length+e2f.length);
+    ArrayList<Integer> hs = new ArrayList<Integer>(2 + f2e.length + e2f.length);
     hs.add(e().hashCode());
     hs.add(f().hashCode());
     for (int[] af2e : f2e)
@@ -124,17 +149,17 @@ public class AbstractWordAlignment implements WordAlignment {
   }
 
   public double ratioFtoE() {
-    assert(eSize() > 0);
-    return fSize()*1.0/eSize();
+    assert (eSize() > 0);
+    return fSize() * 1.0 / eSize();
   }
 
   public boolean isAdmissiblePhraseF(int i, int j) {
     boolean empty = true;
-    for(int k=i; k<=j; ++k)
-      for(int ei : f2e[k]) {
+    for (int k = i; k <= j; ++k)
+      for (int ei : f2e[k]) {
         empty = false;
-        for(int fi : e2f[ei])
-          if(fi < i && fi > j)
+        for (int fi : e2f[ei])
+          if (fi < i && fi > j)
             return false;
       }
     return !empty;

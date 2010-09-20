@@ -24,4 +24,3 @@ public class SWIGTYPE_p_Ngram {
     return (obj == null) ? 0 : obj.swigCPtr;
   }
 }
-

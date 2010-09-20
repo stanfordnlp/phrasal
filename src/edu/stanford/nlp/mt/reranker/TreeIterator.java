@@ -13,21 +13,21 @@ public class TreeIterator extends AbstractIterator<Tree> {
 
   private BufferedReader in;
   private Tree nextToken;
-  private Function<String,Tree> op;
+  private Function<String, Tree> op;
   private boolean inTree = false;
 
   public TreeIterator(Reader in) {
     this(in, new TreeParser());
   }
 
-  public TreeIterator(Reader in, Function<String,Tree> op) {
+  public TreeIterator(Reader in, Function<String, Tree> op) {
     this.in = new BufferedReader(in);
     this.op = op;
     setNext();
   }
 
   @Override
-	public boolean hasNext() {
+  public boolean hasNext() {
     return nextToken != null;
   }
 
@@ -41,7 +41,7 @@ public class TreeIterator extends AbstractIterator<Tree> {
   }
 
   @Override
-	public Tree next() {
+  public Tree next() {
     Tree token = nextToken;
     setNext();
     return token;
@@ -55,14 +55,14 @@ public class TreeIterator extends AbstractIterator<Tree> {
     StringBuilder tree = new StringBuilder();
     String line = null;
     try {
-      while((line = in.readLine()) != null) {
+      while ((line = in.readLine()) != null) {
         if (line.matches("\\s*<tree style=\"penn\">\\s*")) {
           inTree = true;
         } else if (line.matches("\\s*</tree>\\s*")) {
           inTree = false;
           return tree.toString();
         } else if (inTree) {
-          line = line.replaceAll("=H","");
+          line = line.replaceAll("=H", "");
           tree.append(line);
           tree.append("\n");
         }
@@ -73,7 +73,8 @@ public class TreeIterator extends AbstractIterator<Tree> {
     return null;
   }
 
-  public static IteratorFromReaderFactory<Tree> getFactory(Function<String,Tree> op) {
+  public static IteratorFromReaderFactory<Tree> getFactory(
+      Function<String, Tree> op) {
     return new TreeIterator.TreeIteratorFactory(op);
   }
 
@@ -81,13 +82,10 @@ public class TreeIterator extends AbstractIterator<Tree> {
     return new TreeIterator.TreeIteratorFactory(new TreeParser());
   }
 
-
-  
   static class TreeIteratorFactory implements IteratorFromReaderFactory<Tree> {
-    private Function<String,Tree> op;
+    private Function<String, Tree> op;
 
-
-    public TreeIteratorFactory(Function<String,Tree> op) {
+    public TreeIteratorFactory(Function<String, Tree> op) {
       this.op = op;
     }
 

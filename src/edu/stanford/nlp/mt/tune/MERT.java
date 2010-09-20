@@ -57,9 +57,9 @@ import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 
 /**
  * Minimum Error Rate Training (MERT).
- *
+ * 
  * Optimization for non smooth error surfaces.
- *
+ * 
  * @author danielcer
  * @author Michel Galley
  */
@@ -72,15 +72,16 @@ public class MERT extends Thread {
 
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
   static final Set<String> generativeFeatures = SSVMScorer
-          .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
+      .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
 
   public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.metrics.METEORMetric";
   public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERMetric";
   public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERpMetric";
   public static final String OTER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.OriginalTERMetric";
 
-	public static final String DEBUG_PROPERTY = "MERTDebug";
-	public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  public static final String DEBUG_PROPERTY = "MERTDebug";
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
 
   static final double DEFAULT_C = 100;
   static double C = DEFAULT_C;
@@ -110,29 +111,37 @@ public class MERT extends Thread {
   final static OAIndex<String> featureIndex = new OAIndex<String>();
 
   private static int nThreads = 4;
-  
+
   static void setBreakTiesWithLastBest() {
     breakTiesWithLastBest = true;
   }
 
-  public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric) {
+  public double mcmcTightExpectedEval(MosesNBestList nbest,
+      Counter<String> wts, EvaluationMetric<IString, String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
   }
 
   static boolean alwaysSkipMCMC = true;
 
-  public double mcmcTightExpectedEval(MosesNBestList nbest, Counter<String> wts, EvaluationMetric<IString,String> emetric, boolean regularize) {
-		if (alwaysSkipMCMC) return 0;
+  public double mcmcTightExpectedEval(MosesNBestList nbest,
+      Counter<String> wts, EvaluationMetric<IString, String> emetric,
+      boolean regularize) {
+    if (alwaysSkipMCMC)
+      return 0;
     System.err.printf("TMCMC weights:\n%s\n\n", Counters.toString(wts, 35));
 
     // for quick mixing, get current classifier argmax
-    List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(argmax);
+    List<ScoredFeaturizedTranslation<IString, String>> argmax = transArgmax(
+        nbest, wts), current = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
+        argmax);
 
     // recover which candidates were selected
-    int[] argmaxCandIds = new int[current.size()]; Arrays.fill(argmaxCandIds, -1);
+    int[] argmaxCandIds = new int[current.size()];
+    Arrays.fill(argmaxCandIds, -1);
     for (int i = 0; i < nbest.nbestLists().size(); i++) {
       for (int j = 0; j < nbest.nbestLists().get(i).size(); j++) {
-        if (current.get(i) == nbest.nbestLists().get(i).get(j)) argmaxCandIds[i] = j;
+        if (current.get(i) == nbest.nbestLists().get(i).get(j))
+          argmaxCandIds[i] = j;
       }
     }
 
@@ -143,29 +152,33 @@ public class MERT extends Thread {
 
     // expected value sum
     double sumExpL = 0.0;
-    for (int batch = 0;
-         (Math.abs(dEEval) > NO_PROGRESS_MCMC_TIGHT_DIFF
-                 || batch < MCMC_MIN_BATCHES) &&
-                 batch < MCMC_MAX_BATCHES_TIGHT;
-         batch++) {
+    for (int batch = 0; (Math.abs(dEEval) > NO_PROGRESS_MCMC_TIGHT_DIFF || batch < MCMC_MIN_BATCHES)
+        && batch < MCMC_MAX_BATCHES_TIGHT; batch++) {
 
-      double oldExpL = sumExpL/cnt;
+      double oldExpL = sumExpL / cnt;
 
       for (int bi = 0; bi < MCMC_BATCH_SAMPLES; bi++) {
         // gibbs mcmc sample
-        if (cnt != 0)  // always sample once from argmax
+        if (cnt != 0) // always sample once from argmax
           for (int sentId = 0; sentId < nbest.nbestLists().size(); sentId++) {
             double Z = 0;
             double[] num = new double[nbest.nbestLists().get(sentId).size()];
-            int pos = -1; for (ScoredFeaturizedTranslation<IString, String> trans : nbest.nbestLists().get(sentId)) { pos++;
-            Z += num[pos] = Math.exp(scorer.getIncrementalScore(trans.features));
-          }
+            int pos = -1;
+            for (ScoredFeaturizedTranslation<IString, String> trans : nbest
+                .nbestLists().get(sentId)) {
+              pos++;
+              Z += num[pos] = Math.exp(scorer
+                  .getIncrementalScore(trans.features));
+            }
 
             int selection = -1;
             if (Z != 0) {
-              double rv = random.nextDouble()*Z;
+              double rv = random.nextDouble() * Z;
               for (int i = 0; i < num.length; i++) {
-                if ((rv -= num[i]) <= 0) { selection = i; break; }
+                if ((rv -= num[i]) <= 0) {
+                  selection = i;
+                  break;
+                }
               }
             } else {
               selection = random.nextInt(num.length);
@@ -173,11 +186,11 @@ public class MERT extends Thread {
 
             if (Z == 0) {
               Z = 1.0;
-              num[selection] = 1.0/num.length;
+              num[selection] = 1.0 / num.length;
             }
             ErasureUtils.noop(Z);
 
-            if (selection == -1) 
+            if (selection == -1)
               selection = random.nextInt(num.length);
 
             // adjust current
@@ -188,63 +201,64 @@ public class MERT extends Thread {
         cnt++;
 
         // adjust currentF & eval
-        double  eval = emetric.score(current);
+        double eval = emetric.score(current);
 
         sumExpL += eval;
       }
 
-      dEEval = (oldExpL != oldExpL ? Double.POSITIVE_INFINITY :
-              oldExpL - sumExpL/cnt);
+      dEEval = (oldExpL != oldExpL ? Double.POSITIVE_INFINITY : oldExpL
+          - sumExpL / cnt);
 
       System.err.printf("TBatch: %d dEEval: %e cnt: %d\n", batch, dEEval, cnt);
-      System.err.printf("E(loss) = %e (sum: %e)\n", sumExpL/cnt, sumExpL);
+      System.err.printf("E(loss) = %e (sum: %e)\n", sumExpL / cnt, sumExpL);
     }
 
     // objective 0.5*||w||_2^2 - C * E(Eval), e.g. 0.5*||w||_2^2 - C * E(BLEU)
     double l2wts = Counters.L2Norm(wts);
-    double obj = (C != 0 && regularize ? 0.5*l2wts*l2wts -C*sumExpL/cnt : -sumExpL/cnt);
-    System.err.printf("Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", obj);
+    double obj = (C != 0 && regularize ? 0.5 * l2wts * l2wts - C * sumExpL
+        / cnt : -sumExpL / cnt);
+    System.err.printf(
+        "Regularized objective 0.5*||w||_2^2 - C * E(Eval): %e\n", obj);
     System.err.printf("C: %e\n", C);
-    System.err.printf("||w||_2^2: %e\n", l2wts*l2wts);
-    System.err.printf("E(loss) = %e\n", sumExpL/cnt);
+    System.err.printf("||w||_2^2: %e\n", l2wts * l2wts);
+    System.err.printf("E(loss) = %e\n", sumExpL / cnt);
     return obj;
   }
 
-  static public List<ScoredFeaturizedTranslation<IString,String>>
-  transEvalArgmax(MosesNBestList nbest,
-                  EvaluationMetric<IString, String> emetric) {
-    MultiTranslationMetricMax<IString, String> oneBestSearch =
-            new HillClimbingMultiTranslationMetricMax<IString, String>(emetric);
+  static public List<ScoredFeaturizedTranslation<IString, String>> transEvalArgmax(
+      MosesNBestList nbest, EvaluationMetric<IString, String> emetric) {
+    MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
+        emetric);
     return oneBestSearch.maximize(nbest);
   }
 
   public List<ScoredFeaturizedTranslation<IString, String>> randomBetterTranslations(
-          MosesNBestList nbest, Counter<String> wts,
-          EvaluationMetric<IString, String> emetric) {
+      MosesNBestList nbest, Counter<String> wts,
+      EvaluationMetric<IString, String> emetric) {
     return randomBetterTranslations(nbest, transArgmax(nbest, wts), emetric);
   }
 
   public List<ScoredFeaturizedTranslation<IString, String>> randomBetterTranslations(
-          MosesNBestList nbest,
-          List<ScoredFeaturizedTranslation<IString, String>> current,
-          EvaluationMetric<IString, String> emetric) {
+      MosesNBestList nbest,
+      List<ScoredFeaturizedTranslation<IString, String>> current,
+      EvaluationMetric<IString, String> emetric) {
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest
-            .nbestLists();
+        .nbestLists();
     List<ScoredFeaturizedTranslation<IString, String>> trans = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
-            nbestLists.size());
+        nbestLists.size());
     IncrementalEvaluationMetric<IString, String> incEval = emetric
-            .getIncrementalMetric();
+        .getIncrementalMetric();
     for (ScoredFeaturizedTranslation<IString, String> tran : current) {
       incEval.add(tran);
     }
     double baseScore = incEval.score();
     List<List<ScoredFeaturizedTranslation<IString, String>>> betterTrans = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(
-            nbestLists.size());
+        nbestLists.size());
     int lI = -1;
     for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestLists) {
       lI++;
       betterTrans
-              .add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>());
+          .add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>());
       for (ScoredFeaturizedTranslation<IString, String> tran : nbestlist) {
         incEval.replace(lI, tran);
         if (incEval.score() >= baseScore)
@@ -271,8 +285,8 @@ public class MERT extends Thread {
   }
 
   public Counter<String> lineSearch(MosesNBestList nbest,
-                                    Counter<String> optWts, Counter<String> direction,
-                                    EvaluationMetric<IString, String> emetric) {
+      Counter<String> optWts, Counter<String> direction,
+      EvaluationMetric<IString, String> emetric) {
 
     Counter<String> initialWts = optWts;
     if (fixedWts != null) {
@@ -288,7 +302,7 @@ public class MERT extends Thread {
     {
       int lI = -1;
       for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
-              .nbestLists()) {
+          .nbestLists()) {
         lI++;
         // calculate slops/intercepts
         double[] m = new double[nbestlist.size()];
@@ -306,7 +320,7 @@ public class MERT extends Thread {
         int firstBest = 0;
         for (int i = 1; i < m.length; i++) {
           if (m[i] < m[firstBest]
-                  || (m[i] == m[firstBest] && b[i] > b[firstBest])) {
+              || (m[i] == m[firstBest] && b[i] > b[firstBest])) {
             firstBest = i;
           }
         }
@@ -327,7 +341,7 @@ public class MERT extends Thread {
           int nextBest = -1;
           for (int i = 0; i < m.length; i++) {
             double intercept = (b[currentBest] - b[i])
-                    / (m[i] - m[currentBest]); // wow just like middle school
+                / (m[i] - m[currentBest]); // wow just like middle school
             if (intercept <= interceptLimit + MIN_PLATEAU_DIFF)
               continue;
             if (intercept < nearestIntercept) {
@@ -339,7 +353,7 @@ public class MERT extends Thread {
             break;
           if (DEBUG) {
             System.out.printf("Nearest intercept: %e Limit: %e\n",
-                    nearestIntercept, interceptLimit);
+                nearestIntercept, interceptLimit);
           }
           intercepts.add(nearestIntercept);
           interceptLimit = nearestIntercept;
@@ -356,7 +370,7 @@ public class MERT extends Thread {
 
     // check eval score at each intercept;
     double bestEval = Double.NEGATIVE_INFINITY;
-    //Counter<String> bestWts = initialWts;
+    // Counter<String> bestWts = initialWts;
     if (intercepts.isEmpty())
       return initialWts;
     intercepts.add(Double.NEGATIVE_INFINITY);
@@ -382,16 +396,16 @@ public class MERT extends Thread {
       }
       if (DEBUG)
         System.out.printf("intercept: %f, chkpt: %f\n", intercepts.get(i),
-                chkpt);
-      double eval = quickEvalAtPoint(nbest, interceptToIDs.get(intercepts
-              .get(i)));
+            chkpt);
+      double eval = quickEvalAtPoint(nbest,
+          interceptToIDs.get(intercepts.get(i)));
 
       chkpts[i] = chkpt;
       evals[i] = eval;
 
       if (DEBUG) {
         System.out.printf("pt(%d): %e eval: %e best: %e\n", i, chkpt, eval,
-                bestEval);
+            bestEval);
       }
     }
 
@@ -416,13 +430,13 @@ public class MERT extends Thread {
   }
 
   static final int SEARCH_WINDOW = Integer.parseInt(System.getProperty(
-          "SEARCH_WINDOW", "1"));
-  static public int MIN_NBEST_OCCURRENCES = Integer.parseInt(System.getProperty(
-          "MIN_NBEST_OCCURRENCES", "5"));
+      "SEARCH_WINDOW", "1"));
+  static public int MIN_NBEST_OCCURRENCES = Integer.parseInt(System
+      .getProperty("MIN_NBEST_OCCURRENCES", "5"));
   static final SmoothingType smoothingType = SmoothingType.valueOf(System
-          .getProperty("SMOOTHING_TYPE", "min"));
-  static boolean filterUnreachable = Boolean.parseBoolean(System
-          .getProperty("FILTER_UNREACHABLE", "false"));
+      .getProperty("SMOOTHING_TYPE", "min"));
+  static boolean filterUnreachable = Boolean.parseBoolean(System.getProperty(
+      "FILTER_UNREACHABLE", "false"));
   static boolean filterStrictlyUnreachable = Boolean.parseBoolean(System
       .getProperty("FILTER_STRICTLY_UNREACHABLE", "false"));
 
@@ -457,7 +471,7 @@ public class MERT extends Thread {
   }
 
   public static Counter<String> summarizedAllFeaturesVector(
-          List<ScoredFeaturizedTranslation<IString, String>> trans) {
+      List<ScoredFeaturizedTranslation<IString, String>> trans) {
     Counter<String> sumValues = new ClassicCounter<String>();
 
     for (ScoredFeaturizedTranslation<IString, String> tran : trans) {
@@ -470,30 +484,29 @@ public class MERT extends Thread {
   }
 
   static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(
-          MosesNBestList nbest, Counter<String> wts) {
+      MosesNBestList nbest, Counter<String> wts) {
     Scorer<String> scorer = new StaticScorer(wts, featureIndex);
     MultiTranslationMetricMax<IString, String> oneBestSearch = new GreedyMultiTranslationMetricMax<IString, String>(
-            new ScorerWrapperEvaluationMetric<IString, String>(scorer));
+        new ScorerWrapperEvaluationMetric<IString, String>(scorer));
     return oneBestSearch.maximize(nbest);
   }
 
   public List<ScoredFeaturizedTranslation<IString, String>> randomTranslations(
-          MosesNBestList nbest) {
+      MosesNBestList nbest) {
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest
-            .nbestLists();
+        .nbestLists();
     List<ScoredFeaturizedTranslation<IString, String>> trans = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
-            nbestLists.size());
+        nbestLists.size());
 
     for (List<ScoredFeaturizedTranslation<IString, String>> list : nbest
-            .nbestLists()) {
+        .nbestLists()) {
       trans.add(list.get(random.nextInt(list.size())));
     }
 
     return trans;
   }
 
-  static public double wtSsd(Counter<String> oldWts,
-                             Counter<String> newWts) {
+  static public double wtSsd(Counter<String> oldWts, Counter<String> newWts) {
     double ssd = 0;
     for (String k : newWts.keySet()) {
       double diff = oldWts.getCount(k) - newWts.getCount(k);
@@ -519,7 +532,7 @@ public class MERT extends Thread {
   IncrementalEvaluationMetric<IString, String> quickIncEval;
 
   private void resetQuickEval(EvaluationMetric<IString, String> emetric,
-                                     MosesNBestList nbest) {
+      MosesNBestList nbest) {
     quickIncEval = emetric.getIncrementalMetric();
     int sz = nbest.nbestLists().size();
     for (int i = 0; i < sz; i++) {
@@ -529,29 +542,29 @@ public class MERT extends Thread {
 
   /**
    * Specialized evalAt point just for line search
-   *
+   * 
    * Previously, profiling revealed that this was a serious hotspot
-   *
+   * 
    */
-  private double quickEvalAtPoint(MosesNBestList nbest,
-                                         Set<InterceptIDs> s) {
+  private double quickEvalAtPoint(MosesNBestList nbest, Set<InterceptIDs> s) {
     if (DEBUG)
       System.out.printf("replacing %d points\n", s.size());
     for (InterceptIDs iId : s) {
       ScoredFeaturizedTranslation<IString, String> trans = nbest.nbestLists()
-              .get(iId.list).get(iId.trans);
+          .get(iId.list).get(iId.trans);
       quickIncEval.replace(iId.list, trans);
     }
     return quickIncEval.score();
   }
 
-  private final static boolean FAST_STATIC_SCORER = System.getProperty("fastStaticScorer") != null;
+  private final static boolean FAST_STATIC_SCORER = System
+      .getProperty("fastStaticScorer") != null;
   static {
-    System.err.println("fast static scorer: "+FAST_STATIC_SCORER);
+    System.err.println("fast static scorer: " + FAST_STATIC_SCORER);
   }
 
   static public double evalAtPoint(MosesNBestList nbest,
-                                   Counter<String> optWts, EvaluationMetric<IString, String> emetric) {
+      Counter<String> optWts, EvaluationMetric<IString, String> emetric) {
     Counter<String> wts = optWts;
     if (fixedWts != null) {
       wts = new ClassicCounter<String>(optWts);
@@ -560,17 +573,19 @@ public class MERT extends Thread {
     }
     Scorer<String> scorer = new StaticScorer(wts, featureIndex);
     if (DEBUG)
-      System.err.printf("eval at point (%d,%d): %s\n", optWts.size(), wts.size(), wts.toString());
+      System.err.printf("eval at point (%d,%d): %s\n", optWts.size(),
+          wts.size(), wts.toString());
     IncrementalEvaluationMetric<IString, String> incEval = emetric
-            .getIncrementalMetric();
+        .getIncrementalMetric();
     IncrementalNBestEvaluationMetric<IString, String> incNBestEval = null;
     boolean isNBestEval = false;
     if (incEval instanceof IncrementalNBestEvaluationMetric) {
-      incNBestEval = (IncrementalNBestEvaluationMetric<IString,String>) incEval;
+      incNBestEval = (IncrementalNBestEvaluationMetric<IString, String>) incEval;
       isNBestEval = true;
     }
     for (int i = 0; i < nbest.nbestLists().size(); i++) {
-      List<ScoredFeaturizedTranslation<IString, String>> nbestlist = nbest.nbestLists().get(i);
+      List<ScoredFeaturizedTranslation<IString, String>> nbestlist = nbest
+          .nbestLists().get(i);
       ScoredFeaturizedTranslation<IString, String> highestScoreTrans = null;
       double highestScore = Double.NEGATIVE_INFINITY;
       int highestIndex = -1;
@@ -583,7 +598,7 @@ public class MERT extends Thread {
           highestIndex = j;
         }
       }
-      if(isNBestEval)
+      if (isNBestEval)
         incNBestEval.add(highestIndex, highestScoreTrans);
       else
         incEval.add(highestScoreTrans);
@@ -593,52 +608,58 @@ public class MERT extends Thread {
     return score;
   }
 
-  public static Counter<String> readWeights(String filename, Index<String> featureIndex) throws IOException, ClassNotFoundException {
+  public static Counter<String> readWeights(String filename,
+      Index<String> featureIndex) throws IOException, ClassNotFoundException {
     if (filename.endsWith(".binwts")) {
-      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename));
+      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
+          filename));
       @SuppressWarnings("unchecked")
-      Counter<String> wts = (Counter<String>)ois.readObject();      
+      Counter<String> wts = (Counter<String>) ois.readObject();
       ois.close();
       return wts;
     } else {
-       BufferedReader reader = new BufferedReader(new FileReader(filename));
-       Counter<String> wts = new ClassicCounter<String>();
-       for (String line = reader.readLine(); line != null; line = reader
-               .readLine()) {
-         String[] fields = line.split("\\s+");
-         if (featureIndex != null)
-           featureIndex.indexOf(fields[0], true);
-         wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
-       }
-       reader.close();
-       return wts;
+      BufferedReader reader = new BufferedReader(new FileReader(filename));
+      Counter<String> wts = new ClassicCounter<String>();
+      for (String line = reader.readLine(); line != null; line = reader
+          .readLine()) {
+        String[] fields = line.split("\\s+");
+        if (featureIndex != null)
+          featureIndex.indexOf(fields[0], true);
+        wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
+      }
+      reader.close();
+      return wts;
     }
   }
 
   static void writeWeights(String filename, Counter<String> wts)
-          throws IOException {
+      throws IOException {
     if (filename.endsWith(".binwts")) {
-       ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename));
-       oos.writeObject(wts);
-       oos.close();
+      ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
+          filename));
+      oos.writeObject(wts);
+      oos.close();
     } else {
-       BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename), "UTF8"));    
-       Counter<String> wtsMag = new ClassicCounter<String>();
-       for (String w : wts.keySet()) {
-         wtsMag.setCount(w, Math.abs(wts.getCount(w)));
-       }
-   
-       for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
-         double cnt = wts.getCount(f);
-         if (cnt != 0.0)
-           writer.append(f).append(" ").append(Double.toString(cnt)).append("\n");
-       }
-       writer.close();
+      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+          new FileOutputStream(filename), "UTF8"));
+      Counter<String> wtsMag = new ClassicCounter<String>();
+      for (String w : wts.keySet()) {
+        wtsMag.setCount(w, Math.abs(wts.getCount(w)));
+      }
+
+      for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
+        double cnt = wts.getCount(f);
+        if (cnt != 0.0)
+          writer.append(f).append(" ").append(Double.toString(cnt))
+              .append("\n");
+      }
+      writer.close();
     }
   }
 
   static void displayWeights(Counter<String> wts) {
-    for (Pair<String,Double> p : Counters.toDescendingMagnitudeSortedListWithCounts(wts)) {
+    for (Pair<String, Double> p : Counters
+        .toDescendingMagnitudeSortedListWithCounts(wts)) {
       System.out.printf("%s %g\n", p.first, p.second);
     }
   }
@@ -664,7 +685,7 @@ public class MERT extends Thread {
     System.err.printf("random Wts: %s\n", randpt);
     return randpt;
   }
- 
+
   static int nInitialStartingPoints;
   final static Queue<Counter<String>> startingPoints = new LinkedList<Counter<String>>();
 
@@ -687,20 +708,23 @@ public class MERT extends Thread {
 
   /**
    * Initialize everything that is read only, i.e., nbest list, starting points.
+   * 
    * @throws IOException
- * @throws ClassNotFoundException 
+   * @throws ClassNotFoundException
    */
-  public static void initStatic(String nbestListFile, String localNbestListFile, String previousWtsFiles, int nStartingPoints, MERT defaultMERT) throws IOException, ClassNotFoundException {
+  public static void initStatic(String nbestListFile,
+      String localNbestListFile, String previousWtsFiles, int nStartingPoints,
+      MERT defaultMERT) throws IOException, ClassNotFoundException {
 
     startTime = System.currentTimeMillis();
 
     EvaluationMetric<IString, String> emetric = defaultMERT.emetric;
 
-
     // Load weight files:
     previousWts = new ArrayList<Counter<String>>();
     for (String previousWtsFile : previousWtsFiles.split(","))
-      previousWts.add(removeWts(readWeights(previousWtsFile, featureIndex), fixedWts));
+      previousWts.add(removeWts(readWeights(previousWtsFile, featureIndex),
+          fixedWts));
     initialWts = previousWts.get(0);
 
     for (int i = 0; i < nStartingPoints; i++) {
@@ -724,42 +748,46 @@ public class MERT extends Thread {
     System.err.printf("Loading nbest list: %s\n", nbestListFile);
     nbest = new MosesNBestList(nbestListFile, featureIndex, tokenizeNIST);
     System.err.printf("Loading local nbest list: %s\n", localNbestListFile);
-    MosesNBestList localNbest = new MosesNBestList(localNbestListFile, nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
+    MosesNBestList localNbest = new MosesNBestList(localNbestListFile,
+        nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
 
-    mcmcObj = (System.getProperty("mcmcELossDirExact") != null ||
-        System.getProperty("mcmcELossSGD") != null ||
-        System.getProperty("mcmcELossCG") != null);
+    mcmcObj = (System.getProperty("mcmcELossDirExact") != null
+        || System.getProperty("mcmcELossSGD") != null || System
+        .getProperty("mcmcELossCG") != null);
 
     if (mcmcObj) {
-      initialObjValue = defaultMERT.mcmcTightExpectedEval(nbest, initialWts, emetric);
+      initialObjValue = defaultMERT.mcmcTightExpectedEval(nbest, initialWts,
+          emetric);
     } else {
       initialObjValue = nbestEval;
     }
 
-    List<ScoredFeaturizedTranslation<IString, String>> localNbestArgmax = transArgmax(localNbest, initialWts);
-    List<ScoredFeaturizedTranslation<IString, String>> nbestArgmax = transArgmax(nbest, initialWts);
+    List<ScoredFeaturizedTranslation<IString, String>> localNbestArgmax = transArgmax(
+        localNbest, initialWts);
+    List<ScoredFeaturizedTranslation<IString, String>> nbestArgmax = transArgmax(
+        nbest, initialWts);
     double localNbestEval = emetric.score(localNbestArgmax);
-    nbestEval    = emetric.score(nbestArgmax);
+    nbestEval = emetric.score(nbestArgmax);
     reuseWeights = Math.abs(localNbestEval - nbestEval) < MAX_LOCAL_ALL_GAP_WTS_REUSE;
     System.err.printf("Eval: %f Local eval: %f\n", nbestEval, localNbestEval);
     System.err.printf("Rescoring entries\n");
     // rescore all entries by weights
     System.err.printf("n-best list sizes %d, %d\n", localNbest.nbestLists()
-            .size(), nbest.nbestLists().size());
+        .size(), nbest.nbestLists().size());
     if (localNbest.nbestLists().size() != nbest.nbestLists().size()) {
       System.err
-              .printf(
-                      "Error incompatible local and cummulative n-best lists, sizes %d != %d\n",
-                      localNbest.nbestLists().size(), nbest.nbestLists().size());
+          .printf(
+              "Error incompatible local and cummulative n-best lists, sizes %d != %d\n",
+              localNbest.nbestLists().size(), nbest.nbestLists().size());
       System.exit(-1);
     }
     {
       int lI = -1;
       for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
-              .nbestLists()) {
+          .nbestLists()) {
         lI++;
         List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest
-                .nbestLists().get(lI);
+            .nbestLists().get(lI);
         // If we wanted, we could get the value of minReachableScore by just
         // checking the bottom of the n-best list.
         // However, lets make things robust to the order of the entries in the
@@ -774,15 +802,25 @@ public class MERT extends Thread {
           if (score > maxReachableScore)
             maxReachableScore = score;
         }
-				if (nbestlist.isEmpty())
-					throw new RuntimeException(String.format("Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n", lI));
+        if (nbestlist.isEmpty())
+          throw new RuntimeException(
+              String
+                  .format(
+                      "Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n",
+                      lI));
         System.err.printf("l %d - min reachable score: %f (orig size: %d)\n",
-                lI, minReachableScore, nbestlist.size());
+            lI, minReachableScore, nbestlist.size());
         for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
           trans.score = scorer.getIncrementalScore(trans.features);
-          if (trans.score > minReachableScore && filterUnreachable) // mark for deletion (potentially unreachable)
+          if (trans.score > minReachableScore && filterUnreachable) // mark for
+                                                                    // deletion
+                                                                    // (potentially
+                                                                    // unreachable)
             trans.score = Double.NaN;
-          if (trans.score > maxReachableScore && filterStrictlyUnreachable) { // mark for deletion (unreachable)
+          if (trans.score > maxReachableScore && filterStrictlyUnreachable) { // mark
+                                                                              // for
+                                                                              // deletion
+                                                                              // (unreachable)
             trans.score = Double.NaN;
           }
         }
@@ -793,26 +831,27 @@ public class MERT extends Thread {
     // remove everything that might not be reachable
     for (int lI = 0; lI < nbest.nbestLists().size(); lI++) {
       List<ScoredFeaturizedTranslation<IString, String>> newList = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
-              nbest.nbestLists().get(lI).size());
+          nbest.nbestLists().get(lI).size());
       List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest
-              .nbestLists().get(lI);
+          .nbestLists().get(lI);
 
       for (ScoredFeaturizedTranslation<IString, String> trans : nbest
-              .nbestLists().get(lI)) {
+          .nbestLists().get(lI)) {
         if (!Double.isNaN(trans.score))
           newList.add(trans);
       }
       if (filterUnreachable)
-        newList.addAll(lNbestList); // otherwise entries are already on the n-best list
+        newList.addAll(lNbestList); // otherwise entries are already on the
+                                    // n-best list
       nbest.nbestLists().set(lI, newList);
       System.err.printf(
-              "l %d - final (filtered) combined n-best list size: %d\n", lI,
-              newList.size());
+          "l %d - final (filtered) combined n-best list size: %d\n", lI,
+          newList.size());
     }
 
     // add entries for all wts in n-best list
     for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
-            .nbestLists()) {
+        .nbestLists()) {
       for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
         for (FeatureValue<String> f : trans.features) {
           if (f != null)
@@ -823,8 +862,7 @@ public class MERT extends Thread {
 
     if (System.getProperty("C") != null) {
       C = Double.parseDouble(System.getProperty("C"));
-      System.err.printf("Using C %f rather than default of %f\n",
-              C, DEFAULT_C);
+      System.err.printf("Using C %f rather than default of %f\n", C, DEFAULT_C);
     }
 
     if (System.getProperty("T") != null) {
@@ -832,13 +870,15 @@ public class MERT extends Thread {
       System.err.printf("Using T %f rather than default of %f\n", T, DEFAULT_T);
     }
 
-    lrate = (C != 0 ? DEFAULT_UNSCALED_L_RATE/C : DEFAULT_UNSCALED_L_RATE);
+    lrate = (C != 0 ? DEFAULT_UNSCALED_L_RATE / C : DEFAULT_UNSCALED_L_RATE);
     System.out.printf("sgd lrate: %e\n", lrate);
 
     if (reuseWeights) {
-      System.err.printf("Re-using initial wts, gap: %e", Math.abs(localNbestEval - nbestEval));
+      System.err.printf("Re-using initial wts, gap: %e",
+          Math.abs(localNbestEval - nbestEval));
     } else {
-      System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e", Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
+      System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e",
+          Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
     }
 
     removeWts(initialWts, fixedWts);
@@ -854,19 +894,20 @@ public class MERT extends Thread {
 
   Random random;
 
-	@SuppressWarnings("unchecked")
-	public MERT(String evalMetric, String referenceList, String optStr, String seedStr) throws IOException {
+  @SuppressWarnings("unchecked")
+  public MERT(String evalMetric, String referenceList, String optStr,
+      String seedStr) throws IOException {
 
     this.optStr = optStr;
     this.seedStr = seedStr;
 
-    List<List<Sequence<IString>>> references =
-        Metrics.readReferences(referenceList.split(","), tokenizeNIST);
+    List<List<Sequence<IString>>> references = Metrics.readReferences(
+        referenceList.split(","), tokenizeNIST);
 
     String[] fields = evalMetric.split(":");
 
     // METEORMetric created using reflection:
-    AbstractMetric<IString,String> meteorMetric = null;
+    AbstractMetric<IString, String> meteorMetric = null;
     if (evalMetric.contains("meteor")) {
       double alpha = 0.95, beta = 0.5, gamma = 0.5;
       if (fields.length > 1) {
@@ -875,137 +916,156 @@ public class MERT extends Thread {
         beta = Double.parseDouble(fields[2]);
         gamma = Double.parseDouble(fields[3]);
       }
-      meteorMetric = createMetric(METEOR_CLASS_NAME,
-          new Class[] { List.class, double.class, double.class, double.class},
-          new Object[] { references, alpha, beta, gamma });
+      meteorMetric = createMetric(METEOR_CLASS_NAME, new Class[] { List.class,
+          double.class, double.class, double.class }, new Object[] {
+          references, alpha, beta, gamma });
     }
 
-		if (evalMetric.equals("bleu:3-2terp")) {
-			int BLEUOrder = 3;
+    if (evalMetric.equals("bleu:3-2terp")) {
+      int BLEUOrder = 3;
       double terW = 2.0;
-      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU),
-                      createMetric(TERP_CLASS_NAME, 
-                                   new Class[] { List.class, int.class, int.class },
-                                   new Object[] { references, 5, 10 }));
-                      //new TERpMetric<IString, String>(references, 5, 10));
-      System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n", evalMetric, terW);
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          1.0, terW }, new BLEUMetric<IString, String>(references, BLEUOrder,
+          smoothBLEU), createMetric(TERP_CLASS_NAME, new Class[] { List.class,
+          int.class, int.class }, new Object[] { references, 5, 10 }));
+      // new TERpMetric<IString, String>(references, 5, 10));
+      System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n",
+          evalMetric, terW);
     } else if (evalMetric.equals("bleu:3-terp")) {
       int BLEUOrder = 3;
       double terW = 1.0;
-      emetric = new LinearCombinationMetric<IString, String>(new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU),
-                      createMetric(TERP_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
-                      //new TERpMetric<IString, String>(references));
-      System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n", evalMetric, terW);
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          1.0, terW }, new BLEUMetric<IString, String>(references, BLEUOrder,
+          smoothBLEU), createMetric(TERP_CLASS_NAME,
+          new Class[] { List.class }, new Object[] { references }));
+      // new TERpMetric<IString, String>(references));
+      System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n",
+          evalMetric, terW);
     } else if (evalMetric.equals("terp")) {
-      emetric = createMetric(TERP_CLASS_NAME, new Class[] { List.class }, new Object[] { references });
-      //emetric = new TERpMetric<IString, String>(references);
+      emetric = createMetric(TERP_CLASS_NAME, new Class[] { List.class },
+          new Object[] { references });
+      // emetric = new TERpMetric<IString, String>(references);
     } else if (evalMetric.equals("terpa")) {
-      emetric = createMetric(TERP_CLASS_NAME,
-                             new Class[] { List.class, boolean.class, boolean.class },
-                             new Object[] { references, false, true });
-      //emetric = new TERpMetric<IString, String>(references, false, true);
+      emetric = createMetric(TERP_CLASS_NAME, new Class[] { List.class,
+          boolean.class, boolean.class }, new Object[] { references, false,
+          true });
+      // emetric = new TERpMetric<IString, String>(references, false, true);
     } else if (evalMetric.equals("meteor") || evalMetric.startsWith("meteor:")) {
       emetric = meteorMetric;
     } else if (evalMetric.equals("ter") || evalMetric.startsWith("ter:")) {
-      AbstractTERMetric<IString,String> termetric = (AbstractTERMetric<IString,String>) (
-         nThreads > 1 ?
-           createMetric(TER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }) :
-           createMetric(OTER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
-           //new TERMetric<IString, String>(references) :
-           //new OriginalTERMetric<IString, String>(references);
+      AbstractTERMetric<IString, String> termetric = (AbstractTERMetric<IString, String>) (nThreads > 1 ? createMetric(
+          TER_CLASS_NAME, new Class[] { List.class },
+          new Object[] { references }) : createMetric(OTER_CLASS_NAME,
+          new Class[] { List.class }, new Object[] { references }));
+      // new TERMetric<IString, String>(references) :
+      // new OriginalTERMetric<IString, String>(references);
       termetric.enableFastTER();
       if (fields.length > 1) {
         int beamWidth = Integer.parseInt(fields[1]);
         termetric.setBeamWidth(beamWidth);
-        System.err.printf("TER beam width set to %d (default: 20)\n",beamWidth);
+        System.err
+            .printf("TER beam width set to %d (default: 20)\n", beamWidth);
         if (fields.length > 2) {
           int maxShiftDist = Integer.parseInt(fields[2]);
           termetric.setShiftDist(maxShiftDist);
-          System.err.printf("TER maximum shift distance set to %d (default: 50)\n",maxShiftDist);
+          System.err.printf(
+              "TER maximum shift distance set to %d (default: 50)\n",
+              maxShiftDist);
         }
       }
       emetric = termetric;
     } else if (evalMetric.equals("bleu") || evalMetric.startsWith("bleu:")) {
       if (evalMetric.contains(":")) {
-				int BLEUOrder = Integer.parseInt(fields[1]);
-      	emetric = new BLEUMetric<IString, String>(references, BLEUOrder, smoothBLEU);
-			} else {
-      	emetric = new BLEUMetric<IString, String>(references, smoothBLEU);
-			}
+        int BLEUOrder = Integer.parseInt(fields[1]);
+        emetric = new BLEUMetric<IString, String>(references, BLEUOrder,
+            smoothBLEU);
+      } else {
+        emetric = new BLEUMetric<IString, String>(references, smoothBLEU);
+      }
     } else if (evalMetric.equals("nist")) {
-       emetric = new NISTMetric<IString, String>(references);
+      emetric = new NISTMetric<IString, String>(references);
     } else if (evalMetric.startsWith("bleu-2terp")) {
       double terW = 2.0;
       if (fields.length > 1) {
         assert (fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
-      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(references, smoothBLEU),
-                      createMetric(TERP_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
-                      //new TERpMetric<IString, String>(references));
-      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          1.0, terW }, new BLEUMetric<IString, String>(references, smoothBLEU),
+          createMetric(TERP_CLASS_NAME, new Class[] { List.class },
+              new Object[] { references }));
+      // new TERpMetric<IString, String>(references));
+      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n",
+          evalMetric, terW);
     } else if (evalMetric.startsWith("bleu+2meteor")) {
-      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, 2.0},
-                      new BLEUMetric<IString, String>(references, smoothBLEU), meteorMetric);
-      System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n", evalMetric, 2.0);
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          1.0, 2.0 }, new BLEUMetric<IString, String>(references, smoothBLEU),
+          meteorMetric);
+      System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n",
+          evalMetric, 2.0);
     } else if (evalMetric.startsWith("bleu-2terpa")) {
       double terW = 2.0;
       if (fields.length > 1) {
         assert (fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
-      emetric = new LinearCombinationMetric<IString, String> (new double[] {1.0, terW},
-                      new BLEUMetric<IString, String>(references, smoothBLEU),
-                      createMetric(TERP_CLASS_NAME,
-                                   new Class[] { List.class, boolean.class, boolean.class },
-                                   new Object[] { references, false, true }));
-                      //new TERpMetric<IString, String>(references, false, true));
-      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n", evalMetric, terW);
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          1.0, terW }, new BLEUMetric<IString, String>(references, smoothBLEU),
+          createMetric(TERP_CLASS_NAME, new Class[] { List.class,
+              boolean.class, boolean.class }, new Object[] { references, false,
+              true }));
+      // new TERpMetric<IString, String>(references, false, true));
+      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n",
+          evalMetric, terW);
     } else if (evalMetric.startsWith("bleu-ter")) {
       double terW = 1.0;
       if (fields.length > 1) {
-        assert(fields.length == 2);
+        assert (fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
-      AbstractTERMetric<IString,String> termetric = (AbstractTERMetric<IString,String>) (
-          nThreads > 1 ?
-              createMetric(TER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }) :
-              createMetric(OTER_CLASS_NAME, new Class[] { List.class }, new Object[] { references }));
-         //new TERMetric<IString, String>(references) :
-         //new OriginalTERMetric<IString, String>(references);
+      AbstractTERMetric<IString, String> termetric = (AbstractTERMetric<IString, String>) (nThreads > 1 ? createMetric(
+          TER_CLASS_NAME, new Class[] { List.class },
+          new Object[] { references }) : createMetric(OTER_CLASS_NAME,
+          new Class[] { List.class }, new Object[] { references }));
+      // new TERMetric<IString, String>(references) :
+      // new OriginalTERMetric<IString, String>(references);
       termetric.enableFastTER();
-      emetric = new LinearCombinationMetric<IString, String>
-              (new double[] {1.0, terW}, new BLEUMetric<IString, String>(references, smoothBLEU), termetric);
-      System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n", evalMetric, terW);
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          1.0, terW }, new BLEUMetric<IString, String>(references, smoothBLEU),
+          termetric);
+      System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n",
+          evalMetric, terW);
     } else if (evalMetric.equals("wer")) {
       emetric = new WERMetric<IString, String>(references);
     } else if (evalMetric.equals("per")) {
-    	emetric = new PERMetric<IString, String>(references);
+      emetric = new PERMetric<IString, String>(references);
     } else {
       emetric = null;
-      throw new UnsupportedOperationException(String.format("Unrecognized metric: %s\n", evalMetric));
+      throw new UnsupportedOperationException(String.format(
+          "Unrecognized metric: %s\n", evalMetric));
     }
   }
 
   static boolean updateBest(Counter<String> newWts, double obj) {
-     return updateBest(newWts, obj, false);     
+    return updateBest(newWts, obj, false);
   }
-  
+
   static boolean updateBest(Counter<String> newWts, double obj, boolean force) {
     boolean nonZero = Counters.L2Norm(newWts) > 0.0;
     synchronized (MERT.class) {
       boolean better = false;
       if (bestObj > obj) {
-        System.err.printf("\n<<<IMPROVED BEST: %f -> %f with {{{%s}}}.>>>\n", -bestObj, -obj, Counters.toString(newWts, 100));
+        System.err.printf("\n<<<IMPROVED BEST: %f -> %f with {{{%s}}}.>>>\n",
+            -bestObj, -obj, Counters.toString(newWts, 100));
         better = true;
       } else if (bestObj == obj && breakTiesWithLastBest) {
-        System.err.printf("\n<<<SAME BEST: %f with {{{%s}}}.>>>\n", -bestObj, Counters.toString(newWts, 100));
+        System.err.printf("\n<<<SAME BEST: %f with {{{%s}}}.>>>\n", -bestObj,
+            Counters.toString(newWts, 100));
         better = true;
-      } if (force) {
-        System.err.printf("\n<<<FORCED BEST UPDATE: %f -> %f>>>\n", -bestObj, -obj);
+      }
+      if (force) {
+        System.err.printf("\n<<<FORCED BEST UPDATE: %f -> %f>>>\n", -bestObj,
+            -obj);
       }
       if ((better && nonZero) || force) {
         bestWts = newWts;
@@ -1017,7 +1077,7 @@ public class MERT extends Thread {
   }
 
   static Counter<String> removeWts(Counter<String> wts, Counter<String> fixedWts) {
-    if(fixedWts != null)
+    if (fixedWts != null)
       for (String s : fixedWts.keySet())
         wts.remove(s);
     return wts;
@@ -1026,7 +1086,8 @@ public class MERT extends Thread {
   @Override
   public void run() {
 
-    System.out.printf("\nthread started (%d): %s\n", startingPoints.size(), this);
+    System.out.printf("\nthread started (%d): %s\n", startingPoints.size(),
+        this);
 
     while (true) {
 
@@ -1060,14 +1121,15 @@ public class MERT extends Thread {
       removeWts(wts, fixedWts);
       Counter<String> optWts = opt.optimize(wts);
       // Temporarily add them back before normalization:
-      if (fixedWts != null) optWts.addAll(fixedWts);
+      if (fixedWts != null)
+        optWts.addAll(fixedWts);
       Counter<String> newWts;
       if (opt.doNormalization()) {
-         System.err.printf("Normalizing weights\n");
-         newWts = normalize(optWts);
+        System.err.printf("Normalizing weights\n");
+        newWts = normalize(optWts);
       } else {
-         System.err.printf("Saving unnormalized weights\n");
-         newWts = optWts;
+        System.err.printf("Saving unnormalized weights\n");
+        newWts = optWts;
       }
       // Remove them again:
       removeWts(newWts, fixedWts);
@@ -1079,24 +1141,26 @@ public class MERT extends Thread {
       double obj = (mcmcObj ? mcmcEval : -evalAt);
 
       System.out.printf("\npoint %d - final wts: %s", ptI, newWts.toString());
-      System.out.printf("\npoint %d - eval: %e E(eval): %e obj: %e best obj: %e (l1: %f)\n\n",
-          ptI, evalAt, mcmcEval2, obj, bestObj, l1norm(newWts));
+      System.out
+          .printf(
+              "\npoint %d - eval: %e E(eval): %e obj: %e best obj: %e (l1: %f)\n\n",
+              ptI, evalAt, mcmcEval2, obj, bestObj, l1norm(newWts));
     }
   }
 
   public void save(String finalWtsFile) throws IOException {
 
-    double finalObjValue = (mcmcObj ?
-            mcmcTightExpectedEval(nbest, bestWts, emetric) :
-            evalAtPoint(nbest, bestWts, emetric));
+    double finalObjValue = (mcmcObj ? mcmcTightExpectedEval(nbest, bestWts,
+        emetric) : evalAtPoint(nbest, bestWts, emetric));
 
     double finalEval = evalAtPoint(nbest, bestWts, emetric);
 
-    System.out.printf("Obj diff: %e\n", Math.abs(initialObjValue - finalObjValue));
+    System.out.printf("Obj diff: %e\n",
+        Math.abs(initialObjValue - finalObjValue));
 
     long endTime = System.currentTimeMillis();
     System.out.printf("Optimization Time: %.3f s\n",
-            (endTime - startTime) / 1000.0);
+        (endTime - startTime) / 1000.0);
 
     System.out.printf("Final Eval Score: %e->%e\n", initialEval, finalEval);
     System.out.printf("Final Obj: %e->%e\n", initialObjValue, finalObjValue);
@@ -1104,7 +1168,7 @@ public class MERT extends Thread {
 
     double wtSsd = wtSsd(initialWts, bestWts);
 
-    if(fixedWts != null && !fixedWts.keySet().isEmpty()) {
+    if (fixedWts != null && !fixedWts.keySet().isEmpty()) {
       removeWts(bestWts, fixedWts);
       bestWts.addAll(fixedWts);
     }
@@ -1114,16 +1178,20 @@ public class MERT extends Thread {
     writeWeights(finalWtsFile, bestWts);
   }
 
-
-  private static AbstractMetric<IString,String> createMetric(String metricName, Class<AbstractMetric<IString,String>>[] argClasses, Object[] args) {
-    AbstractMetric<IString,String> metric;
+  private static AbstractMetric<IString, String> createMetric(
+      String metricName, Class<AbstractMetric<IString, String>>[] argClasses,
+      Object[] args) {
+    AbstractMetric<IString, String> metric;
     try {
       @SuppressWarnings("unchecked")
-      Class<AbstractMetric<IString,String>> cls = (Class<AbstractMetric<IString,String>>)Class.forName(metricName);
-      Constructor<AbstractMetric<IString,String>> ct = cls.getConstructor(argClasses);
+      Class<AbstractMetric<IString, String>> cls = (Class<AbstractMetric<IString, String>>) Class
+          .forName(metricName);
+      Constructor<AbstractMetric<IString, String>> ct = cls
+          .getConstructor(argClasses);
       metric = ct.newInstance(args);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
-    catch (Exception e) { throw new RuntimeException(e); }
     return metric;
   }
 
@@ -1137,50 +1205,55 @@ public class MERT extends Thread {
     int argi = 0;
     String arg;
 
-    while((arg = args[argi]).startsWith("-")) {
-      if(arg.equals("-S")) {
+    while ((arg = args[argi]).startsWith("-")) {
+      if (arg.equals("-S")) {
         smoothBLEU = true;
-      } else if(arg.equals("-D")) {
+      } else if (arg.equals("-D")) {
         String disableStr = args[++argi];
         fixedWts.incrementCount(disableStr, 0.0);
-        System.err.println("Disabling feature: "+disableStr);
-      } else if(arg.equals("-s")) {
+        System.err.println("Disabling feature: " + disableStr);
+      } else if (arg.equals("-s")) {
         seedStr = args[++argi];
-      } else if(arg.equals("-F")) {
+      } else if (arg.equals("-F")) {
         filterUnreachable = true;
-      } else if(arg.equals("-T")) {
+      } else if (arg.equals("-T")) {
         filterStrictlyUnreachable = true;
-      } else if(arg.equals("-p")) {
+      } else if (arg.equals("-p")) {
         nStartingPoints = Integer.parseInt(args[++argi]);
-      } else if(arg.equals("-o")) {
+      } else if (arg.equals("-o")) {
         optStr = args[++argi];
-      } else if(arg.equals("-a")) {
+      } else if (arg.equals("-a")) {
         optTransFile = args[++argi];
-      } else if(arg.equals("-N")) {
+      } else if (arg.equals("-N")) {
         tokenizeNIST = true;
-      } else if(arg.equals("-f")) {
+      } else if (arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
         try {
           fixedWts.addAll(readWeights(fixedWtsFile, featureIndex));
-        } catch(IOException e) {
-          System.err.println("Fixed weight file missing: "+fixedWtsFile);
+        } catch (IOException e) {
+          System.err.println("Fixed weight file missing: " + fixedWtsFile);
           fixedWts = null;
         }
-      } else if(arg.equals("-t")) {
+      } else if (arg.equals("-t")) {
         nThreads = Integer.parseInt(args[++argi]);
       } else {
-        throw new UnsupportedOperationException("Unknown flag: "+arg);
+        throw new UnsupportedOperationException("Unknown flag: " + arg);
       }
       ++argi;
     }
 
-    if(args.length-argi != 6) {
-      System.err.printf("Usage:\n\tjava edu.stanford.nlp.mt.MERT [OPTIONS] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list) (new weights file)\n");
+    if (args.length - argi != 6) {
+      System.err
+          .printf("Usage:\n\tjava edu.stanford.nlp.mt.MERT [OPTIONS] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list) (new weights file)\n");
       System.err.printf("where OPTIONS are:\n");
-      System.err.println("-a <file>: save argmax translation to file after MERT");
-      System.err.println("-f <file>: weights read from file remain fixed during MERT.");
-      System.err.println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");
-      System.err.println("-s <N>: provide seed to initialize random number generator.");
+      System.err
+          .println("-a <file>: save argmax translation to file after MERT");
+      System.err
+          .println("-f <file>: weights read from file remain fixed during MERT.");
+      System.err
+          .println("-D <featureName>: disable specific feature (value is set to 0, and remains constant during MERT).");
+      System.err
+          .println("-s <N>: provide seed to initialize random number generator.");
       System.err.println("-p <N>: number of starting points.");
       System.err.println("-o <N>: search algorithm.");
       System.err.println("-t <N>: number of threads.");
@@ -1192,9 +1265,10 @@ public class MERT extends Thread {
     }
 
     SEED = seedStr.hashCode();
-    System.err.println("Seed used to generate random points: "+SEED);
+    System.err.println("Seed used to generate random points: " + SEED);
     System.err.printf("FilterUnreachable?: %b\n", filterUnreachable);
-    System.err.printf("FilterStrictlyUnreachable?: %b\n", filterStrictlyUnreachable);
+    System.err.printf("FilterStrictlyUnreachable?: %b\n",
+        filterStrictlyUnreachable);
     globalRandom = new Random(SEED);
 
     String evalMetric = args[argi].toLowerCase();
@@ -1208,24 +1282,29 @@ public class MERT extends Thread {
     System.err.printf("Starting points: %d\n", nStartingPoints);
     System.err.printf("Threads: %d\n", nThreads);
 
-    // Initialize static members (nbest list, etc); need MERT instance for filtering the nbest list:
-    initStatic(nbestListFile, localNbestListFile, previousWtsFiles, nStartingPoints, mert);
+    // Initialize static members (nbest list, etc); need MERT instance for
+    // filtering the nbest list:
+    initStatic(nbestListFile, localNbestListFile, previousWtsFiles,
+        nStartingPoints, mert);
 
     List<Thread> threads = new ArrayList<Thread>(nThreads);
-    for(int i=0; i<nThreads; ++i) {
-      MERT thread = (i==0) ? mert : new MERT(evalMetric, referenceList, optStr, seedStr);
+    for (int i = 0; i < nThreads; ++i) {
+      MERT thread = (i == 0) ? mert : new MERT(evalMetric, referenceList,
+          optStr, seedStr);
       thread.start();
       threads.add(thread);
     }
-    for(int i=0; i<nThreads; ++i)
+    for (int i = 0; i < nThreads; ++i)
       threads.get(i).join();
-    
+
     mert.save(finalWtsFile);
 
     if (optTransFile != null) {
       StaticScorer scorer = new StaticScorer(bestWts, featureIndex);
-      GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(new ScorerWrapperEvaluationMetric<IString, String>(scorer));
-      List<ScoredFeaturizedTranslation<IString, String>> argmaxTrans = argmaxByScore.maximize(nbest);
+      GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(
+          new ScorerWrapperEvaluationMetric<IString, String>(scorer));
+      List<ScoredFeaturizedTranslation<IString, String>> argmaxTrans = argmaxByScore
+          .maximize(nbest);
       PrintStream ps = IOTools.getWriterFromFile(optTransFile);
       for (ScoredFeaturizedTranslation<IString, String> trans : argmaxTrans)
         ps.println(trans);

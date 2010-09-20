@@ -10,34 +10,39 @@ import java.util.*;
 
 class FullInformationTreeReorderingExperiment {
   public static void main(String args[]) throws IOException {
-    List<AnnotatedTreePair> atreepairs = ExperimentUtils.readAnnotatedTreePairs();
+    List<AnnotatedTreePair> atreepairs = ExperimentUtils
+        .readAnnotatedTreePairs();
 
-    TwoDimensionalCounter<String,String> cc = new TwoDimensionalCounter<String,String>();
+    TwoDimensionalCounter<String, String> cc = new TwoDimensionalCounter<String, String>();
     ClassicCounter<String> deTypeCounter = new ClassicCounter<String>();
 
-    PrintWriter decPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEC.txt")));
-    PrintWriter degPW  = new PrintWriter(new BufferedWriter(new FileWriter("DEG.txt")));
+    PrintWriter decPW = new PrintWriter(new BufferedWriter(new FileWriter(
+        "DEC.txt")));
+    PrintWriter degPW = new PrintWriter(new BufferedWriter(new FileWriter(
+        "DEG.txt")));
 
     TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
     TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
     TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
 
     int tpCount = 0;
-    for(AnnotatedTreePair validSent : atreepairs) {
+    for (AnnotatedTreePair validSent : atreepairs) {
       String deType = "";
 
       tpCount++;
-      for(int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx.get(deIdxInSent);
+      for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx
+            .get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
         String type = validSent.NPwithDEs_categories.get(deIdxInSent);
 
         Tree chTree = validSent.chTrees().get(0);
-        Tree chNPTree = AlignmentUtils.getTreeWithEdges(chTree,chNPrange.first, chNPrange.second+1);
+        Tree chNPTree = AlignmentUtils.getTreeWithEdges(chTree,
+            chNPrange.first, chNPrange.second + 1);
 
         int deCount = ExperimentUtils.countDE(chNPTree);
-        
+
         boolean isDEC = ExperimentUtils.hasDEC(chNPTree, chTree, deIdxInSent);
         boolean isDEG = ExperimentUtils.hasDEG(chNPTree, chTree, deIdxInSent);
 
@@ -45,17 +50,16 @@ class FullInformationTreeReorderingExperiment {
           deType = ">1DE";
         } else if (deCount == 1) {
           if (isDEC && !isDEG) {
-            //chNPTree.pennPrint(decPW);
+            // chNPTree.pennPrint(decPW);
             deType = "DEC";
           } else if (isDEG && !isDEC) {
-            //chNPTree.pennPrint(degPW);
+            // chNPTree.pennPrint(degPW);
             deType = "DEG";
           } else {
             chNPTree.pennPrint(System.err);
             throw new RuntimeException("both?");
           }
-        }
-        else {
+        } else {
           chNPTree.pennPrint(System.err);
           throw new RuntimeException("");
         }

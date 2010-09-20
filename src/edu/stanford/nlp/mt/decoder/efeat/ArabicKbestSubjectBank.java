@@ -7,96 +7,101 @@ import edu.stanford.nlp.mt.base.IOTools;
 
 public class ArabicKbestSubjectBank {
   private static ArabicKbestSubjectBank thisInstance = null;
-  private final Map<Integer,List<ArabicKbestAnalysis>> kBestSubjectBank;
-  
+  private final Map<Integer, List<ArabicKbestAnalysis>> kBestSubjectBank;
+
   private boolean isLoaded = false;
-  
+
   protected static final String DELIM = "|||";
-  
+
   protected ArabicKbestSubjectBank() {
-    kBestSubjectBank = new HashMap<Integer,List<ArabicKbestAnalysis>>();
+    kBestSubjectBank = new HashMap<Integer, List<ArabicKbestAnalysis>>();
   }
-  
+
   public static ArabicKbestSubjectBank getInstance() {
-    if(thisInstance == null)
+    if (thisInstance == null)
       thisInstance = new ArabicKbestSubjectBank();
     return thisInstance;
   }
-    
+
   /**
    * Collapse identical analyses
    */
-  private static List<ArabicKbestAnalysis> compress(List<ArabicKbestAnalysis> analyses) {
+  private static List<ArabicKbestAnalysis> compress(
+      List<ArabicKbestAnalysis> analyses) {
     List<ArabicKbestAnalysis> compressedList = new ArrayList<ArabicKbestAnalysis>();
-    
-    for(int i = 0; i < analyses.size(); i++) {
+
+    for (int i = 0; i < analyses.size(); i++) {
       try {
-        ArabicKbestAnalysis thisAnal = (ArabicKbestAnalysis) analyses.get(i).clone();
-        for(int j = i + 1; j < analyses.size(); j++) {
-          if(thisAnal.equals(analyses.get(j))) {
-            double newLogScore = Math.log(Math.exp(thisAnal.logCRFScore) + Math.exp(analyses.get(j).logCRFScore));
+        ArabicKbestAnalysis thisAnal = (ArabicKbestAnalysis) analyses.get(i)
+            .clone();
+        for (int j = i + 1; j < analyses.size(); j++) {
+          if (thisAnal.equals(analyses.get(j))) {
+            double newLogScore = Math.log(Math.exp(thisAnal.logCRFScore)
+                + Math.exp(analyses.get(j).logCRFScore));
             thisAnal.logCRFScore = newLogScore;
             analyses.remove(j);
             j--;
           }
         }
         compressedList.add(thisAnal);
-      } catch(CloneNotSupportedException e) {
+      } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
     }
     return compressedList;
   }
-  
-  
+
   public void load(final File filename) {
-    if(isLoaded) return;
-    
+    if (isLoaded)
+      return;
+
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
 
       int lastTransId = 0;
       boolean hasAtLeastOneSubject = false;
       List<ArabicKbestAnalysis> analysisList = new ArrayList<ArabicKbestAnalysis>();
-      
-      while(reader.ready()) {
+
+      while (reader.ready()) {
         String line = reader.readLine();
-        if(line.trim().equals("")) continue;
-        
+        if (line.trim().equals(""))
+          continue;
+
         ArabicKbestAnalysis analysis = new ArabicKbestAnalysis();
         final StringTokenizer st = new StringTokenizer(line, DELIM);
         int translationId = -1;
-        
-        for(int i = 0; st.hasMoreTokens(); i++) {
+
+        for (int i = 0; st.hasMoreTokens(); i++) {
           String token = st.nextToken();
-          
-          if(i == 0) {
+
+          if (i == 0) {
             translationId = Integer.parseInt(token);
-            
-            if(translationId != lastTransId) {
-              if(hasAtLeastOneSubject)
+
+            if (translationId != lastTransId) {
+              if (hasAtLeastOneSubject)
                 kBestSubjectBank.put(lastTransId, compress(analysisList));
               hasAtLeastOneSubject = false;
               analysisList = new ArrayList<ArabicKbestAnalysis>();
             }
-            
+
             lastTransId = translationId;
-            
-          } else if(token.charAt(0) == '{') {
+
+          } else if (token.charAt(0) == '{') {
             final String stripped = token.replaceAll("\\{|\\}", "");
-            final StringTokenizer verbIndices = new StringTokenizer(stripped,",");
-            while(verbIndices.hasMoreTokens()) {
+            final StringTokenizer verbIndices = new StringTokenizer(stripped,
+                ",");
+            while (verbIndices.hasMoreTokens()) {
               int verbIdx = Integer.parseInt(verbIndices.nextToken().trim());
               analysis.verbs.add(verbIdx);
             }
 
-          } else if(token.charAt(0) == 's') {
+          } else if (token.charAt(0) == 's') {
             token = token.substring(1, token.length() - 1);
             analysis.logCRFScore = Double.parseDouble(token);
-            
+
           } else {
             final String[] indices = token.split(",");
-            
+
             assert indices.length == 2;
 
             final int start = Integer.parseInt(indices[0].trim());
@@ -106,58 +111,62 @@ public class ArabicKbestSubjectBank {
           }
         }
 
-        if(translationId == -1)
-          throw new RuntimeException(String.format("%s: File format problem at line %d",this.getClass().getName(),reader.getLineNumber()));
+        if (translationId == -1)
+          throw new RuntimeException(String.format(
+              "%s: File format problem at line %d", this.getClass().getName(),
+              reader.getLineNumber()));
 
         analysisList.add(analysis);
       }
       reader.close();
-      
-      if(hasAtLeastOneSubject)
+
+      if (hasAtLeastOneSubject)
         kBestSubjectBank.put(lastTransId, compress(analysisList));
-      
+
       isLoaded = true;
 
       System.err.printf(">> %s Stats <<\n", this.getClass().getName());
       System.err.printf("sentences: %d\n", kBestSubjectBank.keySet().size());
 
     } catch (FileNotFoundException e) {
-      System.err.printf("%s: Could not load %s\n", this.getClass().getName(), filename);
+      System.err.printf("%s: Could not load %s\n", this.getClass().getName(),
+          filename);
     } catch (IOException e) {
-      System.err.printf("%s: Failed to read file %s\n",this.getClass().getName(), filename);
-    } 
+      System.err.printf("%s: Failed to read file %s\n", this.getClass()
+          .getName(), filename);
+    }
   }
-  
+
   public List<ArabicKbestAnalysis> getAnalyses(final int translationId) {
-    if(kBestSubjectBank != null && kBestSubjectBank.containsKey(translationId))
-      return new ArrayList<ArabicKbestAnalysis>(kBestSubjectBank.get(translationId));
+    if (kBestSubjectBank != null && kBestSubjectBank.containsKey(translationId))
+      return new ArrayList<ArabicKbestAnalysis>(
+          kBestSubjectBank.get(translationId));
     return null;
   }
 
   public int getNumSentences() {
-    if(this.kBestSubjectBank != null)
+    if (this.kBestSubjectBank != null)
       return kBestSubjectBank.keySet().size();
     return 0;
   }
 
-    
   /**
    */
   public static void main(String[] args) {
     File testFile = new File("mt04.vso.k");
     ArabicKbestSubjectBank subjBank = ArabicKbestSubjectBank.getInstance();
-    
+
     subjBank.load(testFile);
-    
+
     Set<Integer> testIds = new HashSet<Integer>();
     testIds.add(8);
-    
-    for(int transId : testIds) {
+
+    for (int transId : testIds) {
       List<ArabicKbestAnalysis> analyses = subjBank.getAnalyses(transId);
       System.out.printf("%d: %d analyses:\n", transId, analyses.size());
-      for(ArabicKbestAnalysis anal : analyses)
+      for (ArabicKbestAnalysis anal : analyses)
         System.out.println(anal.toString());
     }
-   }
+  }
 
 }

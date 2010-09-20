@@ -17,13 +17,13 @@ import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 import java.io.*;
 
 /**
- * A class that defines common behavior and abstract methods for
- * writers for different formats.
+ * A class that defines common behavior and abstract methods for writers for
+ * different formats.
  * <p/>
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Jason Baldridge
  * @version $Id: DependencyWriter.java 94 2007-01-17 17:05:12Z jasonbaldridge $
  */
@@ -33,23 +33,26 @@ public abstract class DependencyWriter {
 
   boolean fileWriter = false;
 
-  public static DependencyWriter createDependencyWriter(String format) throws IOException {
-    System.err.println("New dependency writer with format: "+format);
+  public static DependencyWriter createDependencyWriter(String format)
+      throws IOException {
+    System.err.println("New dependency writer with format: " + format);
     if (format.equalsIgnoreCase("conll")) {
       return new CONLLWriter();
     } else {
-      throw new UnsupportedOperationException("Not a supported format: " + format);
+      throw new UnsupportedOperationException("Not a supported format: "
+          + format);
     }
   }
 
   public void startWriting(String file) throws IOException {
-    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF8"));
+    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+        file), "UTF8"));
     fileWriter = true;
   }
 
   public void finishWriting() throws IOException {
     writer.flush();
-    if(fileWriter)
+    if (fileWriter)
       writer.close();
   }
 
@@ -68,8 +71,9 @@ public abstract class DependencyWriter {
   }
 
   public void flush() {
-    try { writer.flush(); }
-    catch(IOException ioe) {
+    try {
+      writer.flush();
+    } catch (IOException ioe) {
       ioe.printStackTrace();
     }
   }

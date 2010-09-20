@@ -15,11 +15,11 @@ public class EditStats implements Stats {
   public EditStats(String sentence, String[] refS) {
     minEdits = Double.MAX_VALUE;
     double sumlen = 0.0;
-    for(int j = 0; j < refS.length; j++) {
+    for (int j = 0; j < refS.length; j++) {
       TERalignment result = ter.TER(sentence, refS[j]);
       minEdits = Math.min(result.numEdits, minEdits);
       sumlen += result.numWords;
     }
-    this.avgLen = sumlen/refS.length;
+    this.avgLen = sumlen / refS.length;
   }
 }

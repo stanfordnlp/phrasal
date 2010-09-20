@@ -13,19 +13,21 @@ public abstract class AbstractTreeReader {
   TreePrint treeprint_;
   TreeTransformer tt_;
 
-  //private PrintWriter pw = new PrintWriter(System.out, true);
+  // private PrintWriter pw = new PrintWriter(System.out, true);
 
   public int readMoreTrees(String filename) throws IOException {
     Reader reader;
     if (filename.endsWith(".gz")) {
-      reader = new InputStreamReader(new GZIPInputStream(new FileInputStream(filename)));
+      reader = new InputStreamReader(new GZIPInputStream(new FileInputStream(
+          filename)));
     } else {
       reader = new FileReader(filename);
     }
 
-    Iterator<Tree> i = tlpp_.treeTokenizerFactory().getTokenizer(new BufferedReader(reader));
+    Iterator<Tree> i = tlpp_.treeTokenizerFactory().getTokenizer(
+        new BufferedReader(reader));
 
-    while(i.hasNext()) {
+    while (i.hasNext()) {
       Tree t = i.next();
       trees_.add(tt_.transformTree(t));
     }
@@ -38,7 +40,7 @@ public abstract class AbstractTreeReader {
   }
 
   public void printAllTrees() {
-    for(Tree t : trees_) {
+    for (Tree t : trees_) {
       treeprint_.printTree(t);
     }
   }

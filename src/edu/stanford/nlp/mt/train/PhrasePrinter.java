@@ -6,5 +6,5 @@ package edu.stanford.nlp.mt.train;
 public interface PhrasePrinter {
 
   public String toString(AlignmentTemplateInstance phrase, boolean withAlignment);
-  
+
 }

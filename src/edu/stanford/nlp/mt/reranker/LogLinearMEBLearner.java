@@ -10,17 +10,19 @@ import edu.stanford.nlp.optimization.CGMinimizer;
 
 /**
  * LogLinear Max Expected BLEU (MEB) Trainer
- *
+ * 
  * @author Dan Cer (Daniel.Cer@colorado.edu)
  */
 
 public class LogLinearMEBLearner extends AbstractOneOfManyClassifier {
   class ObjF extends AbstractCachingDiffFunction {
     @Override
-		public int domainDimension() { return featureIndex.size(); }
+    public int domainDimension() {
+      return featureIndex.size();
+    }
 
     @Override
-		public void calculate(double[] testWts) {
+    public void calculate(double[] testWts) {
       wts = testWts;
       value = 0.0;
 
@@ -30,54 +32,61 @@ public class LogLinearMEBLearner extends AbstractOneOfManyClassifier {
 
       double C = 0.0001;
 
-      for (int i = 0; i < wts.length; i++) value += C*(wts[i]*wts[i]);
+      for (int i = 0; i < wts.length; i++)
+        value += C * (wts[i] * wts[i]);
       value *= lchl.size();
 
       for (CompactHypothesisList chl : lchl) {
         double[] probs = getProbs(chl);
         double[] bleus = chl.getScores();
         for (int j = 0; j < probs.length; j++) {
-          if (j > 0 && bleus[j-1] > bleus[j]) break;
-          value += -bleus[j]*probs[j];
+          if (j > 0 && bleus[j - 1] > bleus[j])
+            break;
+          value += -bleus[j] * probs[j];
         }
 
-        int[] fIndex; float[] fValue;
+        int[] fIndex;
+        float[] fValue;
         Arrays.fill(iEV, 0);
         for (int j = 0; j < probs.length; j++) {
-           // Warning: here, it would be incorrect to have
-           // the statement "if (j > 0 && bleus[j-1] > bleus[j]) break"
-           fIndex = chl.getFIndices()[j];
-           fValue = chl.getFValues()[j];
-           for (int fI = 0; fI < fIndex.length; fI++)
-             iEV[fIndex[fI]] += probs[j]*fValue[fI];
+          // Warning: here, it would be incorrect to have
+          // the statement "if (j > 0 && bleus[j-1] > bleus[j]) break"
+          fIndex = chl.getFIndices()[j];
+          fValue = chl.getFValues()[j];
+          for (int fI = 0; fI < fIndex.length; fI++)
+            iEV[fIndex[fI]] += probs[j] * fValue[fI];
         }
         for (int j = 0; j < probs.length; j++) {
-          if (j > 0 && bleus[j-1] > bleus[j]) break;
+          if (j > 0 && bleus[j - 1] > bleus[j])
+            break;
           for (int i = 0; i < oEV.length; i++) {
-            oEV[i] += bleus[j]*probs[j]*iEV[i];
+            oEV[i] += bleus[j] * probs[j] * iEV[i];
           }
         }
 
         for (int j = 0; j < probs.length; j++) {
-           if (j > 0 && bleus[j-1] > bleus[j]) break;
-           fIndex = chl.getFIndices()[j];
-           fValue = chl.getFValues()[j];
-           for (int fI = 0; fI < fIndex.length; fI++)
-            bvEV[fIndex[fI]] += bleus[j]*probs[j]*fValue[fI];
+          if (j > 0 && bleus[j - 1] > bleus[j])
+            break;
+          fIndex = chl.getFIndices()[j];
+          fValue = chl.getFValues()[j];
+          for (int fI = 0; fI < fIndex.length; fI++)
+            bvEV[fIndex[fI]] += bleus[j] * probs[j] * fValue[fI];
         }
       }
       for (int i = 0; i < wts.length; i++) {
-         derivative[i] = - bvEV[i] + oEV[i] + lchl.size()*C*2*wts[i];
+        derivative[i] = -bvEV[i] + oEV[i] + lchl.size() * C * 2 * wts[i];
       }
-     // System.err.println("final val: "+value);
+      // System.err.println("final val: "+value);
     }
   }
 
   @Override
-	public boolean isLogLinear() { return true; }
+  public boolean isLogLinear() {
+    return true;
+  }
 
   @Override
-	public void learn(List<CompactHypothesisList> lchl) {
+  public void learn(List<CompactHypothesisList> lchl) {
     super.learn(lchl);
     ObjF objF = new ObjF();
     Minimizer<DiffFunction> minim = new CGMinimizer(false);

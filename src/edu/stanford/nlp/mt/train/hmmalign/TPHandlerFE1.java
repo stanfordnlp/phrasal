@@ -1,17 +1,18 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This handles the translation probability
- * for the model p(fj,tfj|aj,e,te)=p(tfj|teaj)p(fj|eaj,[teaj,tfj])
- *
+ * This handles the translation probability for the model
+ * p(fj,tfj|aj,e,te)=p(tfj|teaj)p(fj|eaj,[teaj,tfj])
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 public class TPHandlerFE1 extends TPHandler {
 
-  //by default if there are eTags or fTags they will be ignored
+  // by default if there are eTags or fTags they will be ignored
 
-  TPHandler subHandler; //this one will handle p(fj|eaj,[teaj,tfj])
-  byte kindsub = 0; //simple 1 is with eTags , 2 is with ftags, and 3 is with both
+  TPHandler subHandler; // this one will handle p(fj|eaj,[teaj,tfj])
+  byte kindsub = 0; // simple 1 is with eTags , 2 is with ftags, and 3 is with
+                    // both
   float PROB_EMPTY = (float) .4;
   double correctFactor = 1;
   boolean specialEmpty = true;
@@ -31,29 +32,28 @@ public class TPHandlerFE1 extends TPHandler {
     }
     PROB_SMOOTH = 1e-7;
     unifunknown = 1e-2;
-    correctFactor = 1 / (1 - subHandler.PROB_SMOOTH * SentenceHandler.sTableF.getNumWords());
+    correctFactor = 1 / (1 - subHandler.PROB_SMOOTH
+        * SentenceHandler.sTableF.getNumWords());
     uniftags = 1 / (float) SentenceHandler.sTableF.getNumTags();
-
 
   }
 
-
   @Override
-	public void setPair(SentencePair sent) {
+  public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
     subHandler.setPair(sent);
   }
 
   @Override
-	public void init() {
+  public void init() {
     Word fWord, eWord;
 
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
 
     cache = new ProbCountHolder[l + 1][m + 1];
-    //put first all probabilities in the cache
+    // put first all probabilities in the cache
     for (int j = 1; j <= m; j++) {
       fWord = sentPair.f.getWord(j);
       tmpPair.setTarget(fWord.getTagId());
@@ -64,15 +64,13 @@ public class TPHandlerFE1 extends TPHandler {
       }
     }
 
-
   }
-
 
   /*
    * get the probability p(fj|ei)
    */
   @Override
-	public double getProb(int i, int j) {
+  public double getProb(int i, int j) {
 
     double prob;
 
@@ -91,8 +89,7 @@ public class TPHandlerFE1 extends TPHandler {
       }
     }
 
-
-    //prob=prob*correctFactor;
+    // prob=prob*correctFactor;
 
     if (specialEmpty) {
       if (i == 0) {
@@ -106,23 +103,21 @@ public class TPHandlerFE1 extends TPHandler {
 
     }
 
-
     if (!(prob == (PROB_SMOOTH * correctFactor))) {
-      ;//System.out.println("prob "+sentPair.e.getWord(i).getTagId()+" "+sentPair.f.getWord(j).getTagId()+" "+prob);
+      ;// System.out.println("prob "+sentPair.e.getWord(i).getTagId()+" "+sentPair.f.getWord(j).getTagId()+" "+prob);
     }
 
-    //double prob_last=prob*subHandler.getProb(i,j);
-    //System.out.println(" tag handler returning "+prob_last);
+    // double prob_last=prob*subHandler.getProb(i,j);
+    // System.out.println(" tag handler returning "+prob_last);
     return prob * subHandler.getProb(i, j);
   }
-
 
   /**
    * Increment the count for c(fj|ei)
    */
 
   @Override
-	public void incCount(int i, int j, double val) {
+  public void incCount(int i, int j, double val) {
 
     if (val == 0) {
       return;
@@ -132,7 +127,7 @@ public class TPHandlerFE1 extends TPHandler {
       i = 0;
     }
 
-    //if((i==0)&&(specialEmpty)){}else{
+    // if((i==0)&&(specialEmpty)){}else{
     if (cache[i][j] == null) {
       tmpPair.setSource(sentPair.e.getWord(i).getTagId());
       tmpPair.setTarget(sentPair.f.getWord(j).getTagId());
@@ -140,10 +135,9 @@ public class TPHandlerFE1 extends TPHandler {
     } else {
       cache[i][j].incCount(val);
     }
-    //}
+    // }
     subHandler.incCount(i, j, val);
 
   }
-
 
 }

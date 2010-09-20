@@ -9,25 +9,23 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * This class contains two <code>List<List<Integer>></code> to represent
- * how each word in an English sentence is aligned to the 
- * words in a Chinese sentence, and vice versa.
- * Note: the words are 0-indexed. NULL does not exist.
- *
+ * This class contains two <code>List<List<Integer>></code> to represent how
+ * each word in an English sentence is aligned to the words in a Chinese
+ * sentence, and vice versa. Note: the words are 0-indexed. NULL does not exist.
+ * 
  * @author Pi-Chuan Chang
- *
+ * 
  **/
 public class Alignment {
   public double score;
-  TreeMap<Integer,List<Integer>> en_zh;
-  TreeMap<Integer,List<Integer>> zh_en;
-  
+  TreeMap<Integer, List<Integer>> en_zh;
+  TreeMap<Integer, List<Integer>> zh_en;
+
   public Alignment() {
-    en_zh = new TreeMap<Integer,List<Integer>>();
-    zh_en = new TreeMap<Integer,List<Integer>>();
+    en_zh = new TreeMap<Integer, List<Integer>>();
+    zh_en = new TreeMap<Integer, List<Integer>>();
     score = 0.0;
   }
-
 
   public int sizeEnZh() {
     return en_zh.size();
@@ -44,19 +42,19 @@ public class Alignment {
   public void put(int zh, int en) {
     // zh --> en direction
     List<Integer> elist = zh_en.get(zh);
-    if (elist==null) {
+    if (elist == null) {
       elist = new ArrayList<Integer>();
     }
     elist.add(en);
-    zh_en.put(zh,elist);
+    zh_en.put(zh, elist);
 
     // en --> zh direction
     List<Integer> clist = en_zh.get(en);
-    if (clist==null) {
+    if (clist == null) {
       clist = new ArrayList<Integer>();
     }
     clist.add(zh);
-    en_zh.put(en,clist);
+    en_zh.put(en, clist);
   }
 
   public Map<Integer, List<Integer>> getZhEn() {
@@ -67,7 +65,6 @@ public class Alignment {
     return en_zh;
   }
 
-
   public List<Integer> getZhEn(int idx) {
     List<Integer> elist = zh_en.get(idx);
     if (elist == null) {
@@ -75,8 +72,6 @@ public class Alignment {
     }
     return elist;
   }
-
-
 
   public List<Integer> getEnZh(int idx) {
     List<Integer> clist = en_zh.get(idx);
@@ -105,15 +100,14 @@ public class Alignment {
    **/
   public List<Integer> get(int idx) {
     return getEnZh(idx);
- } 
-
+  }
 
   public List<Integer> get(int idx, boolean EnZh) {
     if (EnZh)
       return getEnZh(idx);
     else
       return getZhEn(idx);
- }
+  }
 
   static Alignment readOneAlignmentFromLine(String line) {
     line = line.trim();
@@ -123,7 +117,7 @@ public class Alignment {
       String[] en2zh = align.split("\\-");
       int eIdx = Integer.parseInt(en2zh[1]);
       int cIdx = Integer.parseInt(en2zh[0]);
-      a.put(cIdx,eIdx);
+      a.put(cIdx, eIdx);
     }
     return a;
   }
@@ -132,33 +126,34 @@ public class Alignment {
     try {
       BufferedReader alignR = new BufferedReader(new FileReader(growDiagFinal));
 
-      String line=null;
+      String line = null;
       List<Alignment> as = new ArrayList<Alignment>();
 
-      while((line=alignR.readLine())!=null) {
+      while ((line = alignR.readLine()) != null) {
         Alignment a = readOneAlignmentFromLine(line);
         as.add(a);
       }
       return as;
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       System.err.printf("Error reading alignments: '%s'\n", growDiagFinal);
       System.err.printf("\nStack Trace:\n==============\n");
-      e.printStackTrace(); System.exit(-1);
+      e.printStackTrace();
+      System.exit(-1);
     }
     return null;
   }
 
   @Override
-	public String toString() {
+  public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("Zh-En:\n");
     for (int i = 0; i < zh_en.size(); i++) {
-      sb.append(i); 
+      sb.append(i);
       sb.append(" ");
       sb.append("-->");
       List<Integer> l = zh_en.get(i);
-      if (l==null) break;
+      if (l == null)
+        break;
       for (Integer ai : l) {
         sb.append(ai);
         sb.append(" ");
@@ -168,30 +163,23 @@ public class Alignment {
 
     sb.append("En-Zh:\n");
     /*
-    for (int i = 0; i < en_zh.size(); i++) {
-      sb.append(i); 
-      sb.append(" ");
-      sb.append("-->");
-      List<Integer> l = en_zh.get(i);
-      if (l==null) break;
-      for (Integer ai : l) {
-        sb.append(ai);
-        sb.append(" ");
-      }
-      sb.append("\n");
-    */
+     * for (int i = 0; i < en_zh.size(); i++) { sb.append(i); sb.append(" ");
+     * sb.append("-->"); List<Integer> l = en_zh.get(i); if (l==null) break; for
+     * (Integer ai : l) { sb.append(ai); sb.append(" "); } sb.append("\n");
+     */
     for (Map.Entry<Integer, List<Integer>> entry : en_zh.entrySet()) {
       int e = entry.getKey();
       List<Integer> l = entry.getValue();
       sb.append(e);
       sb.append(" ");
       sb.append("-->");
-      if (l==null) break;
+      if (l == null)
+        break;
       for (Integer ai : l) {
         sb.append(ai);
         sb.append(" ");
       }
-      sb.append("\n");    
+      sb.append("\n");
     }
 
     return sb.toString();

@@ -17,20 +17,21 @@ public class TreesToDepsDisplay {
     String pLine;
     int lineno = 1;
     Counter<String> relns = new ClassicCounter<String>();
-    while((pLine = pReader.readLine()) != null) {
+    while ((pLine = pReader.readLine()) != null) {
       if (lineno % 100 == 0)
-        System.err.println("l="+lineno);
+        System.err.println("l=" + lineno);
       lineno++;
       pLine = ReorderingClassifier.fixCharsInParse(pLine);
-      Tree t = Tree.valueOf("("+pLine+")", trf);
+      Tree t = Tree.valueOf("(" + pLine + ")", trf);
       Filter<String> puncWordFilter = Filters.acceptFilter();
-      GrammaticalStructure gs = new ChineseGrammaticalStructure(t, puncWordFilter);
+      GrammaticalStructure gs = new ChineseGrammaticalStructure(t,
+          puncWordFilter);
       Collection<TypedDependency> deps = gs.allTypedDependencies();
-      System.out.println("Sent: "+StringUtils.join(t.yield(), " "));
+      System.out.println("Sent: " + StringUtils.join(t.yield(), " "));
       System.out.println("Tree: ");
       t.pennPrint(System.out);
       System.out.println("Deps: ");
-      for(TypedDependency dep : deps) {
+      for (TypedDependency dep : deps) {
         System.out.println(dep);
         String name = dep.reln().getShortName();
         relns.incrementCount(name);
@@ -39,7 +40,7 @@ public class TreesToDepsDisplay {
     }
 
     System.out.println("============ Stats of all deps ============");
-    for(String k : relns.keySet()) {
+    for (String k : relns.keySet()) {
       System.out.printf("%s\t%f\n", k, relns.getCount(k));
     }
   }

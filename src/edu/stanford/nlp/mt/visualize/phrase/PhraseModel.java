@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class PhraseModel {
 
-  //For validating the input file format
+  // For validating the input file format
   private static final int OPT_TOKS_PER_LINE = 5;
 
   private int NUM_VISUAL_OPTION_ROWS = 10;
@@ -37,10 +37,12 @@ public class PhraseModel {
     translations = new HashMap<Integer, Translation>();
     layouts = new HashMap<Integer, TranslationLayout>();
 
-    if(!sourceFile.exists())
-      throw new RuntimeException(String.format("%s: %s does not exist",this.getClass().getName(),sourceFile.getPath()));
-    if(!optsFile.exists())
-      throw new RuntimeException(String.format("%s: %s does not exist",this.getClass().getName(),sourceFile.getPath()));
+    if (!sourceFile.exists())
+      throw new RuntimeException(String.format("%s: %s does not exist", this
+          .getClass().getName(), sourceFile.getPath()));
+    if (!optsFile.exists())
+      throw new RuntimeException(String.format("%s: %s does not exist", this
+          .getClass().getName(), sourceFile.getPath()));
   }
 
   public void setVerbose(boolean verbose) {
@@ -53,44 +55,48 @@ public class PhraseModel {
 
       scoreDist = new ScoreDistribution(scoreHalfRange);
 
-      LineNumberReader sourceReader = new LineNumberReader(new FileReader(sourceFile));
-      LineNumberReader optsReader = new LineNumberReader(new FileReader(optsFile));
+      LineNumberReader sourceReader = new LineNumberReader(new FileReader(
+          sourceFile));
+      LineNumberReader optsReader = new LineNumberReader(new FileReader(
+          optsFile));
 
       String[] lastOpt = null;
       int transId;
-      for(transId = 0; sourceReader.ready(); transId++) {
+      for (transId = 0; sourceReader.ready(); transId++) {
         String source = sourceReader.readLine();
-        
-        if(transId < firstId) continue;
-        else if(transId > lastId) break;
-        
-        if(minTranslationId < 0) minTranslationId = transId;
-        
-        Translation translation = new Translation(transId,source);
 
-        if(lastOpt != null && Integer.parseInt(lastOpt[0]) == transId) {
+        if (transId < firstId)
+          continue;
+        else if (transId > lastId)
+          break;
+
+        if (minTranslationId < 0)
+          minTranslationId = transId;
+
+        Translation translation = new Translation(transId, source);
+
+        if (lastOpt != null && Integer.parseInt(lastOpt[0]) == transId) {
           String english = lastOpt[2].intern();
 
           double score = Double.parseDouble(lastOpt[3]);
-          if(NORM_SCORES) score /= (double) english.split("\\s+").length;
+          if (NORM_SCORES)
+            score /= (double) english.split("\\s+").length;
           score = Math.exp(score);
 
           scoreDist.add(score);
-          translation.addPhrase(Math.exp(score), 
-              english, 
-              lastOpt[4]);
+          translation.addPhrase(Math.exp(score), english, lastOpt[4]);
         }
         lastOpt = null;
 
-        for(int optsRead = 0; optsReader.ready(); optsRead++) {
+        for (int optsRead = 0; optsReader.ready(); optsRead++) {
           String transOpt = optsReader.readLine();
           String[] optToks = transOpt.split("\\s*\\|\\|\\|\\s*");
           assert optToks.length == OPT_TOKS_PER_LINE;
 
           final int transIdForOpt = Integer.parseInt(optToks[0]);
-          if(transIdForOpt < transId)
+          if (transIdForOpt < transId)
             continue;
-          else if(transIdForOpt != transId) {
+          else if (transIdForOpt != transId) {
             lastOpt = optToks;
             break;
           }
@@ -99,36 +105,40 @@ public class PhraseModel {
           String coverage = optToks[4];
 
           double score = Double.parseDouble(optToks[3]);
-          if(NORM_SCORES) score /= (double) english.split("\\s+").length;
+          if (NORM_SCORES)
+            score /= (double) english.split("\\s+").length;
           score = Math.exp(score);
 
           scoreDist.add(score);
           translation.addPhrase(score, english, coverage);
         }
-        translations.put(transId,translation);
+        translations.put(transId, translation);
       }
 
-      if(VERBOSE)
-        System.err.printf("%s: Read %d source sentences from %s\n",this.getClass().getName(), transId,sourceFile.getPath());
+      if (VERBOSE)
+        System.err.printf("%s: Read %d source sentences from %s\n", this
+            .getClass().getName(), transId, sourceFile.getPath());
 
       sourceReader.close();
       optsReader.close();
 
     } catch (FileNotFoundException e) {
-      System.err.printf("%s: Could not open file\n%s\n", this.getClass().getName(), e.toString());
+      System.err.printf("%s: Could not open file\n%s\n", this.getClass()
+          .getName(), e.toString());
       return false;
     } catch (IOException e) {
-      System.err.printf("%s: Error while reading file\n%s\n",this.getClass().getName(), e.toString());
+      System.err.printf("%s: Error while reading file\n%s\n", this.getClass()
+          .getName(), e.toString());
       return false;
     }
 
     return true;
   }
 
-  public boolean buildLayouts(boolean rightToLeft) {    
-    for(Integer translationId : translations.keySet()) {
+  public boolean buildLayouts(boolean rightToLeft) {
+    for (Integer translationId : translations.keySet()) {
       Translation t = translations.get(translationId);
-      TranslationLayout layout = new TranslationLayout(t,rightToLeft);
+      TranslationLayout layout = new TranslationLayout(t, rightToLeft);
       layout.createLayout(NUM_VISUAL_OPTION_ROWS);
       layouts.put(translationId, layout);
     }
@@ -152,7 +162,7 @@ public class PhraseModel {
   }
 
   public String getTranslationSource(int translationId) {
-    if(translations != null && translations.get(translationId) != null)
+    if (translations != null && translations.get(translationId) != null)
       return translations.get(translationId).getSource();
     return null;
   }
@@ -160,7 +170,7 @@ public class PhraseModel {
   public int getMinTranslationId() {
     return minTranslationId;
   }
-  
+
   public int getScoreRank(double score) {
     return scoreDist.getStdDev(score);
   }

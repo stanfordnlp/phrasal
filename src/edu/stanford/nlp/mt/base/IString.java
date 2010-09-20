@@ -14,26 +14,29 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * Represents a String with a corresponding integer ID.
- * Keeps a static index of all the Strings, indexed by ID.
+ * Represents a String with a corresponding integer ID. Keeps a static index of
+ * all the Strings, indexed by ID.
  * 
  * @author danielcer
- *
+ * 
  */
-public class IString implements CharSequence, Serializable, HasIntegerIdentity, HasWord, Comparable<IString> {
-  
+public class IString implements CharSequence, Serializable, HasIntegerIdentity,
+    HasWord, Comparable<IString> {
+
   public static final OAIndex<String> index = new OAIndex<String>();
 
   private String stringRep;
   public final int id;
 
-  private enum Classing { BACKSLASH, IBM }
+  private enum Classing {
+    BACKSLASH, IBM
+  }
+
   private static final Classing classing = Classing.IBM;
 
-
-	public static Set<String> keySet() {
-		return index.keySet();
-	}
+  public static Set<String> keySet() {
+    return index.keySet();
+  }
 
   public IString() {
     id = -1;
@@ -44,24 +47,24 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
    *
    */
   public IString(String string) {
-    if(classing == Classing.BACKSLASH) { // e.g., on december 4\\num
+    if (classing == Classing.BACKSLASH) { // e.g., on december 4\\num
       int doubleBackSlashPos = string.indexOf("\\\\");
       if (doubleBackSlashPos != -1) {
-        stringRep = string.substring(0, doubleBackSlashPos); //.intern();
+        stringRep = string.substring(0, doubleBackSlashPos); // .intern();
         id = index.indexOf(string.substring(doubleBackSlashPos), true);
         return;
       }
-    } else if(classing == Classing.IBM) { // e.g., on december $num_(4)
-      if(string.length() > 2 && string.startsWith("$")) {
+    } else if (classing == Classing.IBM) { // e.g., on december $num_(4)
+      if (string.length() > 2 && string.startsWith("$")) {
         int delim = string.indexOf("_(");
-        if(delim != -1 && string.endsWith(")")) {
-          stringRep = string.substring(delim+2,string.length()-1); //.intern();
-          id = index.indexOf(string.substring(0,delim), true);
+        if (delim != -1 && string.endsWith(")")) {
+          stringRep = string.substring(delim + 2, string.length() - 1); // .intern();
+          id = index.indexOf(string.substring(0, delim), true);
           return;
         }
       }
     }
-    stringRep = null; //string;
+    stringRep = null; // string;
     id = index.indexOf(string, true);
   }
 
@@ -70,13 +73,14 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
    */
   public IString(int id) {
     this.id = id;
-    stringRep = null; //index.get(id);
+    stringRep = null; // index.get(id);
   }
 
-	private String lazyStringRep() {
-		if (stringRep == null) stringRep = index.get(id);
-		return stringRep;
-	}
+  private String lazyStringRep() {
+    if (stringRep == null)
+      stringRep = index.get(id);
+    return stringRep;
+  }
 
   /**
    *
@@ -104,7 +108,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
       System.err.printf("o class: %s\n", o.getClass());
       throw new UnsupportedOperationException();
     }
-    IString istr = (IString)o;
+    IString istr = (IString) o;
     return this.id == istr.id;
   }
 
@@ -136,7 +140,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
   public void setWord(String word) {
     throw new UnsupportedOperationException();
   }
-  
+
   static private WrapperIndex wrapperIndex; // = null;
 
   static public Index<IString> identityIndex() {
@@ -147,9 +151,9 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
   }
 
   public static void load(String fileName) {
-    for(String line : ObjectBank.getLineIterator(fileName)) {
+    for (String line : ObjectBank.getLineIterator(fileName)) {
       for (String word : line.split("\\s+")) {
-        System.err.println("adding: "+word);
+        System.err.println("adding: " + word);
         new IString(word);
       }
     }
@@ -164,8 +168,9 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
 
     @Override
     public boolean contains(Object o) {
-      if (!(o instanceof IString)) return false;
-      IString istring = (IString)o;
+      if (!(o instanceof IString))
+        return false;
+      IString istring = (IString) o;
       return index.contains(istring.lazyStringRep());
     }
 
@@ -261,4 +266,3 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
   }
 
 }
-

@@ -16,12 +16,11 @@ import java.text.SimpleDateFormat;
 import edu.stanford.nlp.mt.base.IOTools;
 
 /**
- * Read in source, target and alignment and make examples
- * for training the reordering classifier.
- * The class definition is the same as in:
- * Richard Zens and Hermann Ney. Discriminative Reordering Models for
- * Statistical Machine Translation. In HLT-NAACL 2006.
- *
+ * Read in source, target and alignment and make examples for training the
+ * reordering classifier. The class definition is the same as in: Richard Zens
+ * and Hermann Ney. Discriminative Reordering Models for Statistical Machine
+ * Translation. In HLT-NAACL 2006.
+ * 
  * @author Pi-Chuan Chang
  */
 
@@ -44,30 +43,16 @@ public class ReorderingClassifier {
   static public final String WRITE_EXAMPLELINES_OPT = "writeExampleLines";
   static public final String USE_N_CLASS_OPT = "useNClass";
 
-
   static final Set<String> REQUIRED_OPTS = new HashSet<String>();
   static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
 
   static {
-    REQUIRED_OPTS.addAll(
-      Arrays.asList(
-        F_CORPUS_OPT,
-        E_CORPUS_OPT,
-        A_CORPUS_OPT
-        ));
-    OPTIONAL_OPTS.addAll(
-      Arrays.asList(
-        F_PARSE_OPT,
-        F_PATH_OPT,
-        TRAINALL_OPT,
-        WRITE_CLASSIFIER_OPT,
-        WRITE_HTML_OPT,
-        DEAL_EMPTY_OPT,
-        DEAL_MULTITGT_OPT,
-        WRITE_EXAMPLELINES_OPT,
-        USE_N_CLASS_OPT
-        ));
+    REQUIRED_OPTS.addAll(Arrays
+        .asList(F_CORPUS_OPT, E_CORPUS_OPT, A_CORPUS_OPT));
+    OPTIONAL_OPTS.addAll(Arrays.asList(F_PARSE_OPT, F_PATH_OPT, TRAINALL_OPT,
+        WRITE_CLASSIFIER_OPT, WRITE_HTML_OPT, DEAL_EMPTY_OPT,
+        DEAL_MULTITGT_OPT, WRITE_EXAMPLELINES_OPT, USE_N_CLASS_OPT));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(WordFeatureExtractor.OPTS);
@@ -82,7 +67,7 @@ public class ReorderingClassifier {
   private List<FeatureExtractor> extractors;
   private boolean dealWithEmpty, dealWithMultiTarget;
   private int useNClass;
-  
+
   public ReorderingClassifier(Properties prop) throws Exception {
     analyzeProperties(prop);
     extractors = new ArrayList<FeatureExtractor>();
@@ -90,23 +75,22 @@ public class ReorderingClassifier {
     extractors.add(new TypedDepFeatureExtractor(prop));
   }
 
-
   public void analyzeProperties(Properties prop) throws IOException {
     // Check required, optional properties:
-    System.err.println("properties: "+prop.toString());
-    if(!prop.keySet().containsAll(REQUIRED_OPTS)) {
+    System.err.println("properties: " + prop.toString());
+    if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
       Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
-      System.err.printf
-        ("The following required fields are missing: %s\n", missingFields);
+      System.err.printf("The following required fields are missing: %s\n",
+          missingFields);
       usage();
       System.exit(1);
     }
-    if(!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
+    if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
       Set<Object> extraFields = new HashSet<Object>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
-      System.err.printf
-        ("The following fields are unrecognized: %s\n", extraFields);
+      System.err.printf("The following fields are unrecognized: %s\n",
+          extraFields);
       usage();
       System.exit(1);
     }
@@ -122,7 +106,7 @@ public class ReorderingClassifier {
     writeClassifier = prop.getProperty(WRITE_CLASSIFIER_OPT);
     writeHTML = prop.getProperty(WRITE_HTML_OPT, null);
     String intsStr = prop.getProperty(WRITE_EXAMPLELINES_OPT, "");
-    
+
     writeExampleLines = new TreeSet<Integer>();
     if (intsStr.length() > 0) {
       String[] ints = intsStr.split(",");
@@ -131,10 +115,14 @@ public class ReorderingClassifier {
       }
     }
 
-    dealWithEmpty = Boolean.parseBoolean(prop.getProperty(DEAL_EMPTY_OPT, "false"));
-    dealWithMultiTarget = Boolean.parseBoolean(prop.getProperty(DEAL_MULTITGT_OPT, "false"));
+    dealWithEmpty = Boolean.parseBoolean(prop.getProperty(DEAL_EMPTY_OPT,
+        "false"));
+    dealWithMultiTarget = Boolean.parseBoolean(prop.getProperty(
+        DEAL_MULTITGT_OPT, "false"));
     useNClass = Integer.parseInt(prop.getProperty(USE_N_CLASS_OPT, "2"));
-    if (writeHTML != null) { htmlPW = new PrintWriter(new FileWriter(writeHTML)); }
+    if (writeHTML != null) {
+      htmlPW = new PrintWriter(new FileWriter(writeHTML));
+    }
 
     System.out.println("========== General Properties ==========");
     System.out.printf("-%s : %s\n", F_CORPUS_OPT, fCorpus);
@@ -145,48 +133,39 @@ public class ReorderingClassifier {
     System.out.printf("-%s : %s\n", TRAINALL_OPT, trainAll);
     System.out.printf("-%s : %s\n", WRITE_CLASSIFIER_OPT, writeClassifier);
     System.out.printf("-%s : %s\n", WRITE_HTML_OPT, writeHTML);
-    System.out.printf("-%s : %s\n", WRITE_EXAMPLELINES_OPT, StringUtils.join(writeExampleLines, ","));
+    System.out.printf("-%s : %s\n", WRITE_EXAMPLELINES_OPT,
+        StringUtils.join(writeExampleLines, ","));
     System.out.printf("-%s : %s\n", DEAL_EMPTY_OPT, dealWithEmpty);
     System.out.printf("-%s : %s\n", DEAL_MULTITGT_OPT, dealWithMultiTarget);
     System.out.println("========================================");
   }
 
-
   void extractFromAlignedData() {
     long startTimeMillis = System.currentTimeMillis();
     long startStepTimeMillis = startTimeMillis;
-    TwoDimensionalCounter<String,TrainingExamples.ReorderingTypes> typeCounter =
-      new TwoDimensionalCounter<String,TrainingExamples.ReorderingTypes>();
+    TwoDimensionalCounter<String, TrainingExamples.ReorderingTypes> typeCounter = new TwoDimensionalCounter<String, TrainingExamples.ReorderingTypes>();
 
     Counter<String> allTypesCounter = new IntCounter<String>();
 
-    Dataset<TrainingExamples.ReorderingTypes,String> trainDataset = new Dataset<TrainingExamples.ReorderingTypes,String>();
-    List<Datum<TrainingExamples.ReorderingTypes,String>> trainData
-      = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
-    List<Datum<TrainingExamples.ReorderingTypes,String>> devData
-      = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
-    List<Datum<TrainingExamples.ReorderingTypes,String>> testData
-      = new ArrayList<Datum<TrainingExamples.ReorderingTypes,String>>();
-
-
+    Dataset<TrainingExamples.ReorderingTypes, String> trainDataset = new Dataset<TrainingExamples.ReorderingTypes, String>();
+    List<Datum<TrainingExamples.ReorderingTypes, String>> trainData = new ArrayList<Datum<TrainingExamples.ReorderingTypes, String>>();
+    List<Datum<TrainingExamples.ReorderingTypes, String>> devData = new ArrayList<Datum<TrainingExamples.ReorderingTypes, String>>();
+    List<Datum<TrainingExamples.ReorderingTypes, String>> testData = new ArrayList<Datum<TrainingExamples.ReorderingTypes, String>>();
 
     try {
-      LineNumberReader
-        fReader = IOTools.getReaderFromFile(fCorpus),
-        eReader = IOTools.getReaderFromFile(eCorpus),
-        aReader = IOTools.getReaderFromFile(align),
-        pReader = null,
-        pathReader = null;
-      if (fParse != null && fPath !=null)
+      LineNumberReader fReader = IOTools.getReaderFromFile(fCorpus), eReader = IOTools
+          .getReaderFromFile(eCorpus), aReader = IOTools
+          .getReaderFromFile(align), pReader = null, pathReader = null;
+      if (fParse != null && fPath != null)
         throw new RuntimeException("-fParse and -fPath should not both exist");
       if (fParse != null)
         pReader = IOTools.getReaderFromFile(fParse);
       if (fPath != null)
         pathReader = IOTools.getReaderFromFile(fPath);
 
-      int lineNb=0;
+      int lineNb = 0;
 
-      if (htmlPW!=null) {
+      if (htmlPW != null) {
         DisplayUtils.printAlignmentMatrixHeader(htmlPW);
       }
 
@@ -195,95 +174,97 @@ public class ReorderingClassifier {
         boolean done = (fLine == null);
 
         if (lineNb % 100 == 0 || done) {
-          long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
-          long freeMemory = Runtime.getRuntime().freeMemory()/(1<<20);
-          double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis)/1000.0;
+          long totalMemory = Runtime.getRuntime().totalMemory() / (1 << 20);
+          long freeMemory = Runtime.getRuntime().freeMemory() / (1 << 20);
+          double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis) / 1000.0;
           startStepTimeMillis = System.currentTimeMillis();
-          System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm)...\n",
-                            lineNb, totalStepSecs, totalMemory, freeMemory);
+          System.err.printf(
+              "line %d (secs = %.3f, totalmem = %dm, freemem = %dm)...\n",
+              lineNb, totalStepSecs, totalMemory, freeMemory);
         }
 
-
-        if (done) break;
+        if (done)
+          break;
 
         String eLine = eReader.readLine();
-        if(eLine == null)
+        if (eLine == null)
           throw new IOException("Target-language corpus is too short!");
         String aLine = aReader.readLine();
-        if(aLine == null)
+        if (aLine == null)
           throw new IOException("Alignment file is too short!");
 
-        if(aLine.equals("")) {
+        if (aLine.equals("")) {
           // take one more pLine so it remained synced
           if (pReader != null) {
             String pLine = pReader.readLine();
-            if(pLine == null)
+            if (pLine == null)
               throw new IOException("Target-language parses is too short!");
           }
           // take one more pathLine so it remained synced
           if (pathReader != null) {
             String pathLine = pathReader.readLine();
-            if(pathLine == null)
+            if (pathLine == null)
               throw new IOException("Target-language paths is too short!");
           }
           continue;
         }
 
-        //fLine = fixCharsInSent(fLine);
+        // fLine = fixCharsInSent(fLine);
         AlignmentMatrix sent = new AlignmentMatrix(fLine, eLine, aLine);
-        
-        if (htmlPW!=null) {
-          if (writeExampleLines.size()==0) {
+
+        if (htmlPW != null) {
+          if (writeExampleLines.size() == 0) {
             DisplayUtils.printAlignmentMatrix(sent, htmlPW);
           } else {
-            if (writeExampleLines.contains(lineNb+1)) {
+            if (writeExampleLines.contains(lineNb + 1)) {
               DisplayUtils.printAlignmentMatrix(sent, htmlPW);
             }
           }
         }
-        
-        TrainingExamples exs = new TrainingExamples(dealWithEmpty, dealWithMultiTarget, useNClass);
+
+        TrainingExamples exs = new TrainingExamples(dealWithEmpty,
+            dealWithMultiTarget, useNClass);
 
         allTypesCounter.addAll(exs.extractExamples(sent));
 
         // get the parse if the parses file exist
         if (pReader != null) {
           String pLine = pReader.readLine();
-          if(pLine == null)
+          if (pLine == null)
             throw new IOException("Target-language parses is too short!");
           pLine = fixCharsInParse(pLine);
-          Tree t = Tree.valueOf("("+pLine+")", trf);
+          Tree t = Tree.valueOf("(" + pLine + ")", trf);
           sent.getParseInfo(t);
         }
 
         // get the patsh if the path file exist
         if (pathReader != null) {
           String pathLine = pathReader.readLine();
-          if(pathLine == null)
+          if (pathLine == null)
             throw new IOException("Target-language paths is too short!");
           sent.getPathInfo(pathLine);
         }
 
-        if (htmlPW!=null) {
-          if (writeExampleLines.size()==0) {
+        if (htmlPW != null) {
+          if (writeExampleLines.size() == 0) {
             DisplayUtils.printExamplesHeader(htmlPW);
           } else {
-            if (writeExampleLines.contains(lineNb+1)) {
+            if (writeExampleLines.contains(lineNb + 1)) {
               DisplayUtils.printExamplesHeader(htmlPW);
             }
           }
         }
 
-        for(TrainingExample ex : exs.examples) {
+        for (TrainingExample ex : exs.examples) {
           // extract features, add datum
           List<String> features = new ArrayList<String>();
           for (FeatureExtractor extractor : extractors) {
             features.addAll(extractor.extractFeatures(sent, ex));
           }
 
-          Datum<TrainingExamples.ReorderingTypes,String> d
-            = new BasicDatum<TrainingExamples.ReorderingTypes,String>(features, ex.type);
-          
+          Datum<TrainingExamples.ReorderingTypes, String> d = new BasicDatum<TrainingExamples.ReorderingTypes, String>(
+              features, ex.type);
+
           // split:
           // train 80%, dev 10%, test 10%
           if (lineNb % 10 == 0) {
@@ -308,48 +289,51 @@ public class ReorderingClassifier {
             typeCounter.incrementCount("train", ex.type);
           }
 
-          if (htmlPW!=null) {
-            if (writeExampleLines.size()==0) {
+          if (htmlPW != null) {
+            if (writeExampleLines.size() == 0) {
               DisplayUtils.printExample(ex, features, htmlPW);
             } else {
-              if (writeExampleLines.contains(lineNb+1)) {
+              if (writeExampleLines.contains(lineNb + 1)) {
                 DisplayUtils.printExample(ex, features, htmlPW);
               }
             }
           }
         }
-        if (htmlPW!=null) {
-          if (writeExampleLines.size()==0) {
+        if (htmlPW != null) {
+          if (writeExampleLines.size() == 0) {
             DisplayUtils.printExamplesBottom(htmlPW);
           } else {
-            if (writeExampleLines.contains(lineNb+1)) {
+            if (writeExampleLines.contains(lineNb + 1)) {
               DisplayUtils.printExamplesBottom(htmlPW);
             }
           }
         }
       }
-      if (htmlPW!=null) DisplayUtils.printAlignmentMatrixBottom(htmlPW);
-      
+      if (htmlPW != null)
+        DisplayUtils.printAlignmentMatrixBottom(htmlPW);
 
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
     System.out.println("=========== Overall stats ===========");
-    System.out.println("allTypesCounter=\n"+allTypesCounter);
-    System.out.println("typeCounter=\n"+typeCounter);
-    System.out.println("trainData.size()="+trainData.size());
-    System.out.println("devData.size()="+devData.size());
-    System.out.println("testData.size()="+testData.size());
+    System.out.println("allTypesCounter=\n" + allTypesCounter);
+    System.out.println("typeCounter=\n" + typeCounter);
+    System.out.println("trainData.size()=" + trainData.size());
+    System.out.println("devData.size()=" + devData.size());
+    System.out.println("testData.size()=" + testData.size());
 
     // Train the classifier:
-    LinearClassifierFactory<TrainingExamples.ReorderingTypes,String> factory = new LinearClassifierFactory<TrainingExamples.ReorderingTypes,String>();
-    LinearClassifier<TrainingExamples.ReorderingTypes,String> classifier
-      = (LinearClassifier<TrainingExamples.ReorderingTypes,String>)factory.trainClassifier(trainDataset);
-   
-    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> trainStats = getConfusionMatrix(trainData, classifier);
-    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> devStats = getConfusionMatrix(devData, classifier);
-    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> testStats = getConfusionMatrix(testData, classifier);
+    LinearClassifierFactory<TrainingExamples.ReorderingTypes, String> factory = new LinearClassifierFactory<TrainingExamples.ReorderingTypes, String>();
+    LinearClassifier<TrainingExamples.ReorderingTypes, String> classifier = (LinearClassifier<TrainingExamples.ReorderingTypes, String>) factory
+        .trainClassifier(trainDataset);
+
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes, TrainingExamples.ReorderingTypes> trainStats = getConfusionMatrix(
+        trainData, classifier);
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes, TrainingExamples.ReorderingTypes> devStats = getConfusionMatrix(
+        devData, classifier);
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes, TrainingExamples.ReorderingTypes> testStats = getConfusionMatrix(
+        testData, classifier);
 
     System.out.println("=========== classifier stats ===========");
     System.out.println("Train Data set:");
@@ -366,16 +350,15 @@ public class ReorderingClassifier {
 
     if (writeClassifier != null) {
       LinearClassifier.writeClassifier(classifier, writeClassifier);
-      System.err.println("Classifier Written to "+writeClassifier);
+      System.err.println("Classifier Written to " + writeClassifier);
     }
   }
 
-  public TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> 
-    getConfusionMatrix(List<Datum<TrainingExamples.ReorderingTypes,String>> data, 
-                       LinearClassifier<TrainingExamples.ReorderingTypes,String> lc) {
-    TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes> confusionMatrix 
-      = new TwoDimensionalCounter<TrainingExamples.ReorderingTypes,TrainingExamples.ReorderingTypes>();
-    for (Datum<TrainingExamples.ReorderingTypes,String> d : data) {
+  public TwoDimensionalCounter<TrainingExamples.ReorderingTypes, TrainingExamples.ReorderingTypes> getConfusionMatrix(
+      List<Datum<TrainingExamples.ReorderingTypes, String>> data,
+      LinearClassifier<TrainingExamples.ReorderingTypes, String> lc) {
+    TwoDimensionalCounter<TrainingExamples.ReorderingTypes, TrainingExamples.ReorderingTypes> confusionMatrix = new TwoDimensionalCounter<TrainingExamples.ReorderingTypes, TrainingExamples.ReorderingTypes>();
+    for (Datum<TrainingExamples.ReorderingTypes, String> d : data) {
       TrainingExamples.ReorderingTypes predictedClass = lc.classOf(d);
       confusionMatrix.incrementCount(d.label(), predictedClass);
     }
@@ -383,34 +366,34 @@ public class ReorderingClassifier {
   }
 
   static void usage() {
-    System.err.print
-      ("Usage: java edu.stanford.nlp.mt.discrimreorder.ReorderingClassifier [ARGS]\n"+
-       "Mandatory arguments:\n"+
-       " -fCorpus <file> : source-language corpus\n"+
-       " -eCorpus <file> : target-language corpus\n"+
-       " -align <file> : alignment file\n");
+    System.err
+        .print("Usage: java edu.stanford.nlp.mt.discrimreorder.ReorderingClassifier [ARGS]\n"
+            + "Mandatory arguments:\n"
+            + " -fCorpus <file> : source-language corpus\n"
+            + " -eCorpus <file> : target-language corpus\n"
+            + " -align <file> : alignment file\n");
   }
-
 
   public static void main(String[] args) {
     Properties prop = StringUtils.argsToProperties(args);
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
-    System.err.println("extraction started at: "+formatter.format(new Date()));
+    System.err
+        .println("extraction started at: " + formatter.format(new Date()));
 
     try {
       ReorderingClassifier e = new ReorderingClassifier(prop);
       e.extractFromAlignedData();
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
       usage();
     }
 
-    System.err.println("extraction ended at: "+formatter.format(new Date()));
+    System.err.println("extraction ended at: " + formatter.format(new Date()));
   }
 
   // there are some characters that can't be corectly read in
   // by Tree.valueOf(t, ctpp.treeReaderFactory())
-  // TODO: This really should be done by checking the range in CHTBLexer, 
+  // TODO: This really should be done by checking the range in CHTBLexer,
   // instead of checking each case
   static String fixChars(String str, String toReplace) {
     str = str.replaceAll("\u00e1", toReplace);
@@ -1170,6 +1153,7 @@ public class ReorderingClassifier {
     str = str.replaceAll("\ue547", toReplace);
     return str;
   }
+
   static String fixCharsInParse(String str) {
     return fixChars(str, "．");
   }

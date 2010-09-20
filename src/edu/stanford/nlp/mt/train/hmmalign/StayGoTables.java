@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
  * stores several stay go tables for different contexts
- *
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 public class StayGoTables {
@@ -20,15 +20,12 @@ public class StayGoTables {
 
   }
 
-
   public void initialize(double pstay) {
     for (int i = 0; i < numTables; i++) {
       arr[i].initialize(pstay);
     }
 
-
   }
-
 
   public void normalize() {
 
@@ -38,7 +35,6 @@ public class StayGoTables {
     }
   }
 
-
   public void save(String filename) {
 
     for (int i = 0; i < numTables; i++) {
@@ -47,18 +43,14 @@ public class StayGoTables {
 
     }
 
-
   }
-
 
   public ProbCountHolder getEntryStay(int index, int jump) {
 
     int i = getMap(jump);
     return arr[i].getEntryStay(index);
 
-
   }
-
 
   public ProbCountHolder getEntryGo(int index, int jump) {
     int i = getMap(jump);
@@ -66,12 +58,10 @@ public class StayGoTables {
 
   }
 
-
   public double getProbStay(int index, int jump) {
     int i = getMap(jump);
     return arr[i].getProbStay(index);
   }
-
 
   public double getProbGo(int index, int jump) {
 
@@ -80,25 +70,22 @@ public class StayGoTables {
 
   }
 
-
   public void incCountStay(int index, double val, int jump) {
 
     int i = getMap(jump);
-    //System.out.println(" incrementing stay for "+index + " value "+val);
+    // System.out.println(" incrementing stay for "+index + " value "+val);
     arr[i].incCountStay(index, val);
 
   }
-
 
   public void incCountGo(int index, double val, int jump) {
 
     int i = getMap(jump);
 
-    //System.out.println(" incrementing go for "+index + " value "+val);
+    // System.out.println(" incrementing go for "+index + " value "+val);
     arr[i].incCountGo(index, val);
 
   }
-
 
   public int getMap(int jump) {
 
@@ -109,6 +96,5 @@ public class StayGoTables {
     }
 
   }
-
 
 }

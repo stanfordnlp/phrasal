@@ -1,36 +1,33 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * Title:        Statistical MT tool
- * Description:  Your description
- * Copyright:    Copyright (c) 1999
- * Company:      Stanford University
- *
+ * Title: Statistical MT tool Description: Your description Copyright: Copyright
+ * (c) 1999 Company: Stanford University
+ * 
  * @author Kristina Toutanova
  * @version 1.0
  */
 
-/* In the hope that for the translation table using these will yield
- * better performance
+/*
+ * In the hope that for the translation table using these will yield better
+ * performance
  */
 
 public class IntPair extends IntTuple {
   private int source;
   private int target;
 
-
   public IntPair() {
-//    numElements = 2;
+    // numElements = 2;
   }
 
   public IntPair(int src, int trgt) {
     source = src;
     target = trgt;
-//    numElements = 2;
-    //init();
+    // numElements = 2;
+    // init();
 
   }
-
 
   public int getSource() {
     return source;
@@ -73,9 +70,12 @@ public class IntPair extends IntTuple {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null) return false;
-    if ( ! (o instanceof IntPair)) return false;
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    if (!(o instanceof IntPair))
+      return false;
 
     IntPair iP = (IntPair) o;
     return (iP.source == source) && (iP.target == target);
@@ -86,29 +86,26 @@ public class IntPair extends IntTuple {
     System.out.println(target + "|" + source);
   }
 
-
   @Override
   public String toString() {
     return source + " " + target;
   }
 
-
   @Override
   public String toNameStringE() {
-    return SentenceHandler.sTableE.getName(source) + " " + SentenceHandler.sTableE.getName(target);
+    return SentenceHandler.sTableE.getName(source) + " "
+        + SentenceHandler.sTableE.getName(target);
   }
-
 
   @Override
   public String toNameStringF() {
-    return SentenceHandler.sTableF.getName(source) + " " + SentenceHandler.sTableF.getName(target);
+    return SentenceHandler.sTableF.getName(source) + " "
+        + SentenceHandler.sTableF.getName(target);
   }
-
 
   @Override
   public IntTuple getCopy() {
     return new IntPair(source, target);
   }
-
 
 }

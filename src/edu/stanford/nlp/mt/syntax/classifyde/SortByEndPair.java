@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.syntax.classifyde;
 
-public class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
+public class SortByEndPair<T1, T2> implements Comparable<SortByEndPair<T1, T2>> {
   public T1 first;
   public T2 second;
 
@@ -15,11 +15,11 @@ public class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
   }
 
   @SuppressWarnings("unchecked")
-	public int compareTo(SortByEndPair<T1,T2> another) {
-    //System.err.println("CompareTo");
+  public int compareTo(SortByEndPair<T1, T2> another) {
+    // System.err.println("CompareTo");
     int comp = ((Comparable<Object>) second).compareTo(another.second);
     if (comp != 0) {
-      //System.err.println("Compared: "+comp);
+      // System.err.println("Compared: "+comp);
       return comp;
     } else {
       return ((Comparable<Object>) another.first).compareTo(first);
@@ -28,7 +28,8 @@ public class SortByEndPair<T1,T2> implements Comparable<SortByEndPair<T1,T2>> {
 
   @Override
   public int hashCode() {
-    return (((first == null) ? 0 : first.hashCode()) << 16) ^ ((second == null) ? 0 : second.hashCode());
+    return (((first == null) ? 0 : first.hashCode()) << 16)
+        ^ ((second == null) ? 0 : second.hashCode());
   }
 
 }

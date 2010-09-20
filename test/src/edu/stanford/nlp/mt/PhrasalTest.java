@@ -17,7 +17,8 @@ import junit.framework.TestCase;
 public class PhrasalTest extends TestCase {
 
   public void testReadConfig() throws IOException {
-    Map<String, List<String>> config = Phrasal.readConfig("projects/mt/test/inputs/sample.ini");
+    Map<String, List<String>> config = Phrasal
+        .readConfig("projects/mt/test/inputs/sample.ini");
 
     List<String> test = new ArrayList<String>();
     test.add("0.085872");
@@ -65,15 +66,20 @@ public class PhrasalTest extends TestCase {
   }
 
   public void testDecodeOnly() throws Exception {
-    Map<String, List<String>> config = Phrasal.readConfig("projects/mt/test/inputs/sample.ini");
+    Map<String, List<String>> config = Phrasal
+        .readConfig("projects/mt/test/inputs/sample.ini");
     Phrasal p = new Phrasal(config);
     String line = "代表";
     String[] tokens = line.split("\\s+");
-    RichTranslation<IString, String> translation = p.decodeOnly(tokens, 1, 1, 0);
+    RichTranslation<IString, String> translation = p
+        .decodeOnly(tokens, 1, 1, 0);
     assertTrue(translation.score == -1.3398349461093697);
-    assertTrue(translation.translation.toString().equals("representatives of the"));
+    assertTrue(translation.translation.toString().equals(
+        "representatives of the"));
     assertTrue(translation.foreign.toString().equals("代表"));
-		assertTrue(translation.nbestToString(1).equals("1 ||| representatives of the ||| LM: -1.8078E1 LinearDistortion: 0 TM:lex(f|t): -7.485E0 TM:lex(t|f): -9.3295E-1 TM:phi(f|t): -4.6372E0 TM:phi(t|f): -1.5041E0 TM:phrasePenalty: 9.999E-1 WordPenalty: -3 ||| -1.3398E0"));
+    assertTrue(translation
+        .nbestToString(1)
+        .equals(
+            "1 ||| representatives of the ||| LM: -1.8078E1 LinearDistortion: 0 TM:lex(f|t): -7.485E0 TM:lex(t|f): -9.3295E-1 TM:phi(f|t): -4.6372E0 TM:phi(t|f): -1.5041E0 TM:phrasePenalty: 9.999E-1 WordPenalty: -3 ||| -1.3398E0"));
   }
 }
-

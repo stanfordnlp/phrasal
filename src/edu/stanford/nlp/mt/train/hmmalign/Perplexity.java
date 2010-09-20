@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-
 /* A class to help calculate the preplexity
  * of a corpus
  * Keeps a pre-computed table of the exponential distribution
@@ -22,9 +21,7 @@ public class Perplexity {
     return probs[m][l];
   }
 
-
   public void initTable() {
-
 
     for (int l = 0; l < MAX_LENGTH; l++) {
       probs[0][l] = -LAMBDA * l;
@@ -47,6 +44,5 @@ public class Perplexity {
     }
 
   }
-
 
 }

@@ -6,37 +6,40 @@ import edu.stanford.nlp.mt.decoder.util.State;
 /**
  * 
  * @author danielcer
- *
+ * 
  * @param <TK>
  */
-public interface IncrementalEvaluationMetric<TK,FV> extends State<IncrementalEvaluationMetric<TK,FV>>, Cloneable {
-	/**
+public interface IncrementalEvaluationMetric<TK, FV> extends
+    State<IncrementalEvaluationMetric<TK, FV>>, Cloneable {
+  /**
 	 * 
 	 */
-	IncrementalEvaluationMetric<TK,FV> add(ScoredFeaturizedTranslation<TK,FV> trans);
-	
-	/**
+  IncrementalEvaluationMetric<TK, FV> add(
+      ScoredFeaturizedTranslation<TK, FV> trans);
+
+  /**
 	 * 
 	 */
-	IncrementalEvaluationMetric<TK,FV> replace(int index, ScoredFeaturizedTranslation<TK,FV> trans);
-	
-	/**
+  IncrementalEvaluationMetric<TK, FV> replace(int index,
+      ScoredFeaturizedTranslation<TK, FV> trans);
+
+  /**
 	 * 
 	 */
-	double score();
-	
-	/**
+  double score();
+
+  /**
 	 * 
 	 */
-	double maxScore();
-	
-	/**
+  double maxScore();
+
+  /**
 	 * 
 	 */
-	int size();
-	
-	/**
+  int size();
+
+  /**
 	 * 
 	 */
-	public Object clone() throws CloneNotSupportedException;
+  public Object clone() throws CloneNotSupportedException;
 }

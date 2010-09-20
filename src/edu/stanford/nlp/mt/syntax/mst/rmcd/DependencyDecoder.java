@@ -9,7 +9,8 @@ public class DependencyDecoder {
 
   // Prints head scores:
   public static final String DEBUG_PROPERTY = "debugDepDecoder";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
 
   final DependencyPipe pipe;
 
@@ -19,15 +20,14 @@ public class DependencyDecoder {
   public DependencyDecoder(DependencyPipe pipe) {
     this.pipe = pipe;
     this.labeled = pipe.isLabeled();
-    System.err.println("decoding with labels: "+this.labeled);
+    System.err.println("decoding with labels: " + this.labeled);
     this.mstIgnoreLoops = pipe.ignoreLoops();
     System.err.printf("Decoder (%s) ignores loops: %s\n", this, mstIgnoreLoops);
   }
 
   // static type for each edge: run time O(n^3 + Tn^2) T is number of types
   public Object[][] decodeProjective(DependencyInstance inst,
-                                     DependencyInstanceFeatures f,
-                                     int K) {
+      DependencyInstanceFeatures f, int K) {
 
     int[][] static_types = null;
     if (labeled)
@@ -87,7 +87,8 @@ public class DependencyDecoder {
                   fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
                   prob_fin += nt_prob_s_01 + nt_prob_t_00;
                 }
-                pf.add(s, r, t, type1, 0, 1, prob_fin, fv_fin, b1[comp1], c1[comp2]);
+                pf.add(s, r, t, type1, 0, 1, prob_fin, fv_fin, b1[comp1],
+                    c1[comp2]);
 
                 prob_fin = bc + prodProb_ts;
                 fv_fin = prodFV_ts;
@@ -95,13 +96,13 @@ public class DependencyDecoder {
                   fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
                   prob_fin += nt_prob_t_11 + nt_prob_s_10;
                 }
-                pf.add(s, r, t, type2, 1, 1, prob_fin, fv_fin, b1[comp1], c1[comp2]);
+                pf.add(s, r, t, type2, 1, 1, prob_fin, fv_fin, b1[comp1],
+                    c1[comp2]);
 
               }
             }
           }
         }
-
 
         for (int r = s; r <= t; r++) {
 
@@ -120,9 +121,8 @@ public class DependencyDecoder {
 
                 double bc = b1[comp1].prob + c1[comp2].prob;
 
-                if (!pf.add(s, r, t, -1, 0, 0, bc,
-                     new FeatureVector(),
-                     b1[comp1], c1[comp2]))
+                if (!pf.add(s, r, t, -1, 0, 0, bc, new FeatureVector(),
+                    b1[comp1], c1[comp2]))
                   break;
               }
             }
@@ -143,8 +143,8 @@ public class DependencyDecoder {
 
                 double bc = b1[comp1].prob + c1[comp2].prob;
 
-                if (!pf.add(s, r, t, -1, 1, 0, bc,
-                     new FeatureVector(), b1[comp1], c1[comp2]))
+                if (!pf.add(s, r, t, -1, 1, 0, bc, new FeatureVector(),
+                    b1[comp1], c1[comp2]))
                   break;
               }
             }
@@ -157,8 +157,7 @@ public class DependencyDecoder {
   }
 
   public Object[][] decodeNonProjective(DependencyInstance inst,
-                                        DependencyInstanceFeatures f,
-                                        int K, boolean train) {
+      DependencyInstanceFeatures f, int K, boolean train) {
 
     int numWords = inst.length();
 
@@ -179,20 +178,20 @@ public class DependencyDecoder {
       reps[i].put(i, 0);
       for (int j = 0; j < numWords; j++) {
         // score of edge (i,j) i --> j
-        scoreMatrix[i][j] =
-             f.probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
-                  + (labeled ? f.nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
-                  + f.nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0]
-                  : 0.0);
+        scoreMatrix[i][j] = f.probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
+            + (labeled ? f.nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
+                + f.nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0] : 0.0);
         orig_scoreMatrix[i][j] = scoreMatrix[i][j];
         oldI[i][j] = i;
         oldO[i][j] = j;
-        //if (i == j || j == 0) continue; // no self loops of i --> 0
+        // if (i == j || j == 0) continue; // no self loops of i --> 0
       }
     }
 
-    if(DEBUG) debugHeadScores(inst,scoreMatrix);
-    TIntIntHashMap final_edges = chuLiuEdmonds(scoreMatrix, curr_nodes, oldI, oldO, false, new TIntIntHashMap(), reps);
+    if (DEBUG)
+      debugHeadScores(inst, scoreMatrix);
+    TIntIntHashMap final_edges = chuLiuEdmonds(scoreMatrix, curr_nodes, oldI,
+        oldO, false, new TIntIntHashMap(), reps);
     int[] par = new int[numWords];
     int[] ns = final_edges.keys();
     for (int i = 0; i < ns.length; i++) {
@@ -204,7 +203,8 @@ public class DependencyDecoder {
     int[] n_par = getKChanges(par, orig_scoreMatrix, Math.min(K, par.length));
     int new_k = 1;
     for (int i = 0; i < n_par.length; i++)
-      if (n_par[i] > -1) new_k++;
+      if (n_par[i] > -1)
+        new_k++;
 
     int[][] fin_par = new int[new_k][numWords];
     fin_par[0] = par;
@@ -221,8 +221,8 @@ public class DependencyDecoder {
     }
 
     // Create Feature Vectors;
-    FeatureVector[][] fin_fv=null;
-    if(train) {
+    FeatureVector[][] fin_fv = null;
+    if (train) {
       fin_fv = new FeatureVector[new_k][numWords];
       for (int k = 0; k < fin_par.length; k++) {
         for (int i = 0; i < fin_par[k].length; i++) {
@@ -231,10 +231,10 @@ public class DependencyDecoder {
           if (pr != -1) {
             fin_fv[k][ch] = f.getFVS(ch, pr);
             if (labeled) {
-              fin_fv[k][ch] =
-                   fin_fv[k][ch].cat(f.getNT_FVS(ch, static_types[pr][ch], ch < pr ? 1 : 0, 0));
-              fin_fv[k][ch] =
-                   fin_fv[k][ch].cat(f.getNT_FVS(pr, static_types[pr][ch], ch < pr ? 1 : 0, 1));
+              fin_fv[k][ch] = fin_fv[k][ch].cat(f.getNT_FVS(ch,
+                  static_types[pr][ch], ch < pr ? 1 : 0, 0));
+              fin_fv[k][ch] = fin_fv[k][ch].cat(f.getNT_FVS(pr,
+                  static_types[pr][ch], ch < pr ? 1 : 0, 1));
             }
           } else
             fin_fv[k][ch] = new FeatureVector();
@@ -243,27 +243,28 @@ public class DependencyDecoder {
     }
 
     FeatureVector[] fin = null;
-    if(train)
+    if (train)
       fin = new FeatureVector[new_k];
     String[] result = new String[new_k];
     for (int k = 0; k < new_k; k++) {
-      if(train) {
+      if (train) {
         fin[k] = new FeatureVector();
         for (int i = 1; i < fin_fv[k].length; i++)
           fin[k] = fin_fv[k][i].cat(fin[k]);
       }
-      result[k] = ""; //ND
+      result[k] = ""; // ND
       for (int i = 1; i < par.length; i++)
-        result[k] += fin_par[k][i] + "|" + i + (labeled ? ":" + static_types[fin_par[k][i]][i] : ":0") + " ";
+        result[k] += fin_par[k][i] + "|" + i
+            + (labeled ? ":" + static_types[fin_par[k][i]][i] : ":0") + " ";
     }
 
     // create k-best dependencies:
     Object[][] d = new Object[new_k][2];
 
     for (int k = 0; k < new_k; k++) {
-      if(train)
-        d[k][0] = fin[k]; //NT
-      d[k][1] = result[k].trim(); //ND
+      if (train)
+        d[k][0] = fin[k]; // NT
+      d[k][1] = result[k].trim(); // ND
     }
 
     return d;
@@ -279,13 +280,15 @@ public class DependencyDecoder {
       n_score[i] = Double.NEGATIVE_INFINITY;
     }
 
-    boolean[][] isChild = mstIgnoreLoops ? calcChildsNoLoops(par) : calcChilds(par);
+    boolean[][] isChild = mstIgnoreLoops ? calcChildsNoLoops(par)
+        : calcChilds(par);
 
     for (int i = 1; i < n_par.length; i++) {
       double max = Double.NEGATIVE_INFINITY;
       int wh = -1;
       for (int j = 0; j < n_par.length; j++) {
-        if (i == j || par[i] == j || isChild[i][j]) continue;
+        if (i == j || par[i] == j || isChild[i][j])
+          continue;
         if (scoreMatrix[j][i] > max) {
           max = scoreMatrix[j][i];
           wh = j;
@@ -300,7 +303,8 @@ public class DependencyDecoder {
       int wh = -1;
       int whI = -1;
       for (int i = 0; i < n_par.length; i++) {
-        if (n_par[i] == -1) continue;
+        if (n_par[i] == -1)
+          continue;
         double score = scoreMatrix[n_par[i]][i];
         if (score > max) {
           max = score;
@@ -344,9 +348,9 @@ public class DependencyDecoder {
     return isChild;
   }
 
-  private TIntIntHashMap chuLiuEdmonds(double[][] scoreMatrix, boolean[] curr_nodes,
-                                       int[][] oldI, int[][] oldO, boolean print,
-                                       TIntIntHashMap final_edges, TIntIntHashMap[] reps) {
+  private TIntIntHashMap chuLiuEdmonds(double[][] scoreMatrix,
+      boolean[] curr_nodes, int[][] oldI, int[][] oldO, boolean print,
+      TIntIntHashMap final_edges, TIntIntHashMap[] reps) {
 
     // need to construct for each node list of nodes they represent (here only!)
 
@@ -357,12 +361,15 @@ public class DependencyDecoder {
     par[0] = -1;
     for (int i = 1; i < par.length; i++) {
       // only interested in current nodes
-      if (!curr_nodes[i]) continue;
+      if (!curr_nodes[i])
+        continue;
       double maxScore = scoreMatrix[0][i];
       par[i] = 0;
       for (int j = 0; j < par.length; j++) {
-        if (j == i) continue;
-        if (!curr_nodes[j]) continue;
+        if (j == i)
+          continue;
+        if (!curr_nodes[j])
+          continue;
         double newScore = scoreMatrix[j][i];
         if (newScore > maxScore) {
           maxScore = newScore;
@@ -380,13 +387,14 @@ public class DependencyDecoder {
       System.out.println();
     }
 
-    //Find a cycle
+    // Find a cycle
     ArrayList<TIntIntHashMap> cycles = new ArrayList<TIntIntHashMap>();
     boolean[] added = new boolean[numWords];
     for (int i = 0; i < numWords && cycles.size() == 0; i++) {
       // if I have already considered this or
       // This is not a valid node (i.e. has been contracted)
-      if (added[i] || !curr_nodes[i]) continue;
+      if (added[i] || !curr_nodes[i])
+        continue;
       added[i] = true;
       TIntIntHashMap cycle = new TIntIntHashMap();
       cycle.put(i, 0);
@@ -421,18 +429,19 @@ public class DependencyDecoder {
 
     // get all edges and return them
     if (cycles.size() == 0 || mstIgnoreLoops) {
-      //System.out.println("TREE:");
+      // System.out.println("TREE:");
       for (int i = 0; i < par.length; i++) {
-        if (!curr_nodes[i]) continue;
+        if (!curr_nodes[i])
+          continue;
         if (par[i] != -1) {
           int pr = oldI[par[i]][i];
           int ch = oldO[par[i]][i];
           final_edges.put(ch, pr);
-          //System.out.print(pr+"|"+ch + " ");
+          // System.out.print(pr+"|"+ch + " ");
         } else
           final_edges.put(0, -1);
       }
-      //System.out.println();
+      // System.out.println();
       return final_edges;
     }
 
@@ -462,11 +471,10 @@ public class DependencyDecoder {
       cyc_weight += scoreMatrix[par[cyc_nodes[j]]][cyc_nodes[j]];
     }
 
-
     for (int i = 0; i < numWords; i++) {
 
-      if (!curr_nodes[i] || cycle.contains(i)) continue;
-
+      if (!curr_nodes[i] || cycle.contains(i))
+        continue;
 
       double max1 = Double.NEGATIVE_INFINITY;
       int wh1 = -1;
@@ -503,12 +511,15 @@ public class DependencyDecoder {
       rep_cons[i] = new TIntIntHashMap();
       int[] keys = reps[cyc_nodes[i]].keys();
       Arrays.sort(keys);
-      if (print) System.out.print(cyc_nodes[i] + ": ");
+      if (print)
+        System.out.print(cyc_nodes[i] + ": ");
       for (int j = 0; j < keys.length; j++) {
         rep_cons[i].put(keys[j], 0);
-        if (print) System.out.print(keys[j] + " ");
+        if (print)
+          System.out.print(keys[j] + " ");
       }
-      if (print) System.out.println();
+      if (print)
+        System.out.println();
     }
 
     // don't consider not representative nodes
@@ -562,7 +573,7 @@ public class DependencyDecoder {
       return;
     System.err.println("Debug head scores(decoder): ");
     for (int j = 0; j < headScore[0].length; ++j)
-      System.err.printf("\t%s[%d]", words[j],j);
+      System.err.printf("\t%s[%d]", words[j], j);
     System.err.println();
     for (int i = 0; i < headScore.length; ++i) {
       System.err.printf("[%d]", i);

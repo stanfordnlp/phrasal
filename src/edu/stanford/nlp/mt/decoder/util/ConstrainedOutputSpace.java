@@ -9,33 +9,35 @@ import edu.stanford.nlp.mt.base.Sequence;
 /**
  * 
  * @author danielcer
- *
+ * 
  * @param <TK>
  */
-public interface ConstrainedOutputSpace<TK,FV> {
-	
-	/**
+public interface ConstrainedOutputSpace<TK, FV> {
+
+  /**
 	 * 
 	 */
-	List<ConcreteTranslationOption<TK>> filterOptions(List<ConcreteTranslationOption<TK>> optionList);
-	
-	/**
+  List<ConcreteTranslationOption<TK>> filterOptions(
+      List<ConcreteTranslationOption<TK>> optionList);
+
+  /**
 	 * 
 	 */
-	boolean allowableContinuation(Featurizable<TK,FV> featurizable, ConcreteTranslationOption<TK> option);
-	
-	/**
+  boolean allowableContinuation(Featurizable<TK, FV> featurizable,
+      ConcreteTranslationOption<TK> option);
+
+  /**
 	 * 
 	 */
-	boolean allowablePartial(Featurizable<TK,FV> featurizable);
-	
-	/**
+  boolean allowablePartial(Featurizable<TK, FV> featurizable);
+
+  /**
 	 * 
 	 */
-	boolean allowableFinal(Featurizable<TK,FV> featurizable);
-	
-	/**
+  boolean allowableFinal(Featurizable<TK, FV> featurizable);
+
+  /**
 	 * 
 	 */
-	public List<Sequence<TK>> getAllowableSequences();	
+  public List<Sequence<TK>> getAllowableSequences();
 }

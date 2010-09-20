@@ -16,7 +16,8 @@ import java.util.Map;
 public class ATableHMMHolder {
   private HashMap<IntTuple, ATable> tables;
   private ATable uniform;
-  private ATable smoothTable; // this table is optionally used for smoothing all other tables
+  private ATable smoothTable; // this table is optionally used for smoothing all
+                              // other tables
   boolean smooth = true;
   int mask;
 
@@ -24,12 +25,10 @@ public class ATableHMMHolder {
     tables = new HashMap<IntTuple, ATable>();
   }
 
-
   public ATableHMMHolder(int mask) {
     tables = new HashMap<IntTuple, ATable>();
     this.mask = mask;
   }
-
 
   public ATable getSmoothTable() {
     return smoothTable;
@@ -38,17 +37,15 @@ public class ATableHMMHolder {
   public void setUniform(ATable u) {
     uniform = u;
     System.out.println("Just set uniform");
-    //uniform.printProbs();
+    // uniform.printProbs();
   }
-
 
   public void setSmoothing(ATable u) {
     smoothTable = u;
   }
 
-
   public ATable getUniform() {
-    //if(smooth){return smoothTable;}
+    // if(smooth){return smoothTable;}
     return uniform;
   }
 
@@ -72,7 +69,6 @@ public class ATableHMMHolder {
     }
   }
 
-
   public void printProbs() {
 
     System.out.println("**** uniform ****");
@@ -93,20 +89,19 @@ public class ATableHMMHolder {
 
   }
 
-
   public void clearInfrequent() {
 
-    for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i.hasNext();) {
-    	Map.Entry<IntTuple, ATable> eN = i.next();
+    for (Iterator<Map.Entry<IntTuple, ATable>> i = tables.entrySet().iterator(); i
+        .hasNext();) {
+      Map.Entry<IntTuple, ATable> eN = i.next();
       ATable aT = eN.getValue();
       if (!aT.isPopulated()) {
-        //remove aT
+        // remove aT
         i.remove();
       }
     }
 
   }
-
 
   /**
    * Save all alignment probabilities to a file
@@ -131,7 +126,7 @@ public class ATableHMMHolder {
         IntTuple wP = eN.getKey();
         p.println(wP.toString());
         p.flush();
-        //eN.getValue().save(filename);
+        // eN.getValue().save(filename);
       }
 
     } catch (Exception e) {
@@ -140,9 +135,9 @@ public class ATableHMMHolder {
 
   }
 
-
   /**
-   * Save all alignment probabilities to a file with the words rather than their Ids
+   * Save all alignment probabilities to a file with the words rather than their
+   * Ids
    */
   public void saveNames(String filename) {
 
@@ -167,16 +162,15 @@ public class ATableHMMHolder {
         eN.getValue().save(filename);
       }
 
-
     } catch (Exception e) {
       e.printStackTrace();
     }
 
   }
 
-
   /**
-   * Save all alignment probabilities to a file with the words rather than their Ids
+   * Save all alignment probabilities to a file with the words rather than their
+   * Ids
    */
   public void saveNames(int mask, String filename) {
 
@@ -207,7 +201,6 @@ public class ATableHMMHolder {
 
   }
 
-
   public void normalize() {
 
     ATable un = uniform;
@@ -237,9 +230,8 @@ public class ATableHMMHolder {
       ATable haT = aT;
       double d = un.DKL(haT);
       System.out.println("Divergence " + d);
-      //if(d<.20){i.remove();}
+      // if(d<.20){i.remove();}
     }
-  }//normalize
-
+  }// normalize
 
 }

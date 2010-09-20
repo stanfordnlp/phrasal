@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.HashIndex;
 import java.io.*;
 
 public class Alphabet implements Serializable {
-  
+
   private Index<Object> index;
   private boolean growthStopped = false;
 
@@ -32,7 +32,8 @@ public class Alphabet implements Serializable {
   // Returns -1 if entry isn't present.
   public int lookupIndex(Object entry) {
     if (entry == null) {
-      throw new IllegalArgumentException("Can't lookup \"null\" in an Alphabet.");
+      throw new IllegalArgumentException(
+          "Can't lookup \"null\" in an Alphabet.");
     }
     return index.indexOf(entry, !growthStopped);
   }
@@ -77,11 +78,13 @@ public class Alphabet implements Serializable {
   }
 
   @SuppressWarnings("unchecked")
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+  private void readObject(ObjectInputStream in) throws IOException,
+      ClassNotFoundException {
     int serialVersion = in.readInt();
-    if(serialVersion != CURRENT_SERIAL_VERSION)
-      throw new RuntimeException(String.format("Wrong version of alphabet: %d != %d\n",
-         serialVersion, CURRENT_SERIAL_VERSION));
+    if (serialVersion != CURRENT_SERIAL_VERSION)
+      throw new RuntimeException(String.format(
+          "Wrong version of alphabet: %d != %d\n", serialVersion,
+          CURRENT_SERIAL_VERSION));
     index = (Index<Object>) in.readObject();
     growthStopped = in.readBoolean();
   }

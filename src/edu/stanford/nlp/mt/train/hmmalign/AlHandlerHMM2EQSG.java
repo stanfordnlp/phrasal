@@ -16,7 +16,8 @@ public class AlHandlerHMM2EQSG extends AlHandler {
   public AlHandlerHMM2EQSG() {
   }
 
-  public AlHandlerHMM2EQSG(StayGoTables sg, int mask, ATableHMMHolder aHolder, ATable a) {
+  public AlHandlerHMM2EQSG(StayGoTables sg, int mask, ATableHMMHolder aHolder,
+      ATable a) {
     this.sgTables = sg;
     this.mask = mask;
     if (mask > 0) {
@@ -27,33 +28,30 @@ public class AlHandlerHMM2EQSG extends AlHandler {
 
   }
 
-
   @Override
-	public void setPair(SentencePair sent) {
+  public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
     subHandler.setPair(sent);
   }
 
-
   @Override
-	public void init() {
+  public void init() {
 
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
     setEmpty();
   }
 
-
   /*
    * get the probability p choose i for j
    */
   @Override
-	public double getProb(int i, int j, int[] alignment) {
+  public double getProb(int i, int j, int[] alignment) {
     int ireal = 0;
     double prob = 0;
     int jump = ATableHMM2EQ.MAX_FLDS;
-    //System.out.println(" getting prob "+i+" "+j);
+    // System.out.println(" getting prob "+i+" "+j);
 
     if ((i > l) && (i < 2 * l + 1)) {
       return empty;
@@ -69,19 +67,18 @@ public class AlHandlerHMM2EQSG extends AlHandler {
     int index = sentPair.e.getWord(ireal).getWordId();
 
     if ((i <= l) && ((i == alignment[j - 1]) || (i == alignment[j - 1] - l))) {
-      //stay
+      // stay
       prob = sgTables.getProbStay(index, jump);
-    } else { //go
-      prob = sgTables.getProbGo(index, jump) * subHandler.getProb(i, j, alignment);
+    } else { // go
+      prob = sgTables.getProbGo(index, jump)
+          * subHandler.getProb(i, j, alignment);
 
     }
-    //System.out.println(" Returning "+prob);
-
+    // System.out.println(" Returning "+prob);
 
     return (1 - empty) * prob;
 
   }
-
 
   public void setEmpty() {
 
@@ -89,19 +86,16 @@ public class AlHandlerHMM2EQSG extends AlHandler {
 
   }
 
-
-
   /*
    * Increment the appropriate probabilities
-   *
    */
 
   @Override
-	public void incCount(int i, int j, int[] alignment, double val) {
+  public void incCount(int i, int j, int[] alignment, double val) {
     if (val == 0) {
       return;
     }
-    //System.out.println("Incrementing "+i+" "+alignment[j-1]+" with "+val);
+    // System.out.println("Incrementing "+i+" "+alignment[j-1]+" with "+val);
     int jump = ATableHMM2EQ.MAX_FLDS;
 
     if ((i > l) && (i < 2 * l + 1)) {
@@ -118,16 +112,15 @@ public class AlHandlerHMM2EQSG extends AlHandler {
     int index = sentPair.e.getWord(ireal).getWordId();
 
     if ((i <= l) && ((i == alignment[j - 1]) || (i == alignment[j - 1] - l))) {
-      //stay
+      // stay
       sgTables.incCountStay(index, val, jump);
 
     } else {
-      //go
+      // go
       sgTables.incCountGo(index, val, jump);
       subHandler.incCount(i, j, alignment, val);
     }
 
   }
-
 
 }

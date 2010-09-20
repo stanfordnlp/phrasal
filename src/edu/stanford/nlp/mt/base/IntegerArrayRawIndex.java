@@ -8,5 +8,5 @@ public interface IntegerArrayRawIndex {
   int getIndex(int[] array);
 
   int insertIntoIndex(int[] array);
-  
+
 }

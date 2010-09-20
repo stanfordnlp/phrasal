@@ -25,15 +25,14 @@ import java.net.InetAddress;
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Jason Baldridge
  * @version $Id: CONLLReader.java 103 2007-01-21 20:26:39Z jasonbaldridge $
  * @see edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader
  */
 public final class ParserOptions {
 
-  private static final String DEFAULT_SERIALIZED_TAGGER =
-   "/u/nlp/data/pos-tagger/wsj3t0-18-bidirectional/bidirectional-wsj-0-18.tagger";
+  private static final String DEFAULT_SERIALIZED_TAGGER = "/u/nlp/data/pos-tagger/wsj3t0-18-bidirectional/bidirectional-wsj-0-18.tagger";
 
   public String trainfile = null;
   public String testfile = null;
@@ -73,7 +72,7 @@ public final class ParserOptions {
   public boolean binary = false;
   public boolean noreindex = false;
   public static String distBinStr = "1,2,3,4,5,6,9,12,20";
-       // McDonald: "1,2,3,4,5,6,11";
+  // McDonald: "1,2,3,4,5,6,11";
   public boolean english = true;
   public boolean trim = false;
 
@@ -82,35 +81,30 @@ public final class ParserOptions {
   public String ftestfile = null, atestfile = null;
 
   // Feature extraction:
-  public int posWindowSize = 0; //Integer.MAX_VALUE;
+  public int posWindowSize = 0; // Integer.MAX_VALUE;
   public int offsetWindowSize = 0;
   public int bilingualDetail = 1;
-  public boolean
-     coreFeatures=true, lemmaFeatures=true, cposFeatures=true,
-     posLinearFeatures=true, cposLinearFeatures=true,
-     bilingualC=false, bilingualH=false,
-     bilingualH2C=false;
+  public boolean coreFeatures = true, lemmaFeatures = true,
+      cposFeatures = true, posLinearFeatures = true, cposLinearFeatures = true,
+      bilingualC = false, bilingualH = false, bilingualH2C = false;
   public String inBetweenPOS = "NN~NNS~VBD~VBZ~VBP~MD~,~.";
   public String inBetweenCPOS = "NN~VB~MD~IN~TO~CC~,~.";
 
   public void printFeatureOptions() {
-    System.err.println
-      ("Features:" +
-       "\n  english: " + english +
-       "\n  typed dependencies: " + labeled +
-       "\n  core features: " + coreFeatures +
-       "\n  lemma features: " + lemmaFeatures +
-       "\n  CPOS features: " + cposFeatures +
-       "\n  POS in-between features: " + posLinearFeatures +
-       "\n  CPOS in-between features: " + cposLinearFeatures +
-       "\n  POS in-between features (fast): " + inBetweenPOS +
-       "\n  CPOS in-between features (fast): " + inBetweenCPOS +
-       "\n  bilingual head unigram features: " + bilingualH +
-       "\n  bilingual child unigram features: " + bilingualC +
-       "\n  bilingual head-to-child features: " + bilingualH2C +
-       "\n  in-between POS window size:" + posWindowSize+
-       "\n  in-between POS+offset window size:" + offsetWindowSize +
-       "\n  bilingual features detail level: " + bilingualDetail);
+    System.err.println("Features:" + "\n  english: " + english
+        + "\n  typed dependencies: " + labeled + "\n  core features: "
+        + coreFeatures + "\n  lemma features: " + lemmaFeatures
+        + "\n  CPOS features: " + cposFeatures
+        + "\n  POS in-between features: " + posLinearFeatures
+        + "\n  CPOS in-between features: " + cposLinearFeatures
+        + "\n  POS in-between features (fast): " + inBetweenPOS
+        + "\n  CPOS in-between features (fast): " + inBetweenCPOS
+        + "\n  bilingual head unigram features: " + bilingualH
+        + "\n  bilingual child unigram features: " + bilingualC
+        + "\n  bilingual head-to-child features: " + bilingualH2C
+        + "\n  in-between POS window size:" + posWindowSize
+        + "\n  in-between POS+offset window size:" + offsetWindowSize
+        + "\n  bilingual features detail level: " + bilingualDetail);
   }
 
   public ParserOptions() {
@@ -120,9 +114,9 @@ public final class ParserOptions {
   public ParserOptions(String[] args) {
 
     try {
-      java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();	
-      System.err.println("Hostname: "+localMachine.getHostName());
-    } catch(java.net.UnknownHostException e) {
+      java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
+      System.err.println("Hostname: " + localMachine.getHostName());
+    } catch (java.net.UnknownHostException e) {
       e.printStackTrace();
     }
 
@@ -131,172 +125,120 @@ public final class ParserOptions {
 
       if (pair[0].equalsIgnoreCase("train")) {
         train = true;
-      }
-      else if (pair[0].equalsIgnoreCase("noreindex")) {
+      } else if (pair[0].equalsIgnoreCase("noreindex")) {
         noreindex = true;
-      }
-      else if (pair[0].equalsIgnoreCase("predict-right")) {
+      } else if (pair[0].equalsIgnoreCase("predict-right")) {
         predictRight = true;
-      }
-      else if (pair[0].equalsIgnoreCase("binary")) {
+      } else if (pair[0].equalsIgnoreCase("binary")) {
         binary = true;
-      }
-      else if (pair[0].equalsIgnoreCase("no-english")) {
+      } else if (pair[0].equalsIgnoreCase("no-english")) {
         english = false;
-      }
-      else if (pair[0].equalsIgnoreCase("trim")) {
+      } else if (pair[0].equalsIgnoreCase("trim")) {
         trim = true;
-      }
-      else if (pair[0].equalsIgnoreCase("dist-bin")) {
+      } else if (pair[0].equalsIgnoreCase("dist-bin")) {
         distBinStr = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("maxent")) {
+      } else if (pair[0].equalsIgnoreCase("maxent")) {
         train = true;
         trainME = true;
-      }
-      else if (pair[0].equalsIgnoreCase("debug")) {
+      } else if (pair[0].equalsIgnoreCase("debug")) {
         debug = true;
-      }
-      else if (pair[0].equalsIgnoreCase("debug-features")) {
+      } else if (pair[0].equalsIgnoreCase("debug-features")) {
         debug = true;
         debugFeatures = true;
-      }
-      else if (pair[0].equalsIgnoreCase("eval")) {
+      } else if (pair[0].equalsIgnoreCase("eval")) {
         eval = true;
-      }
-      else if (pair[0].equalsIgnoreCase("test")) {
+      } else if (pair[0].equalsIgnoreCase("test")) {
         test = true;
-      }
-      else if (pair[0].equalsIgnoreCase("tagger")) {
+      } else if (pair[0].equalsIgnoreCase("tagger")) {
         tagger = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("pretag")) {
+      } else if (pair[0].equalsIgnoreCase("pretag")) {
         pretag = true;
-      }
-      else if (pair[0].equalsIgnoreCase("prefix")) {
+      } else if (pair[0].equalsIgnoreCase("prefix")) {
         prefixParser = true;
-      }
-      else if (pair[0].equalsIgnoreCase("iters")) {
+      } else if (pair[0].equalsIgnoreCase("iters")) {
         numIters = Integer.parseInt(pair[1]);
-      }
-      else if (pair[0].equalsIgnoreCase("sents")) {
+      } else if (pair[0].equalsIgnoreCase("sents")) {
         sents = Integer.parseInt(pair[1]);
-      }
-      else if (pair[0].equalsIgnoreCase("l1reg")) {
+      } else if (pair[0].equalsIgnoreCase("l1reg")) {
         trainME = true;
         l1reg = Double.parseDouble(pair[1]);
-      }
-      else if (pair[0].equalsIgnoreCase("output-file")) {
+      } else if (pair[0].equalsIgnoreCase("output-file")) {
         outfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("gold-file")) {
+      } else if (pair[0].equalsIgnoreCase("gold-file")) {
         goldfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("train-file")) {
+      } else if (pair[0].equalsIgnoreCase("train-file")) {
         trainfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("test-file")) {
+      } else if (pair[0].equalsIgnoreCase("test-file")) {
         testfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("f-train-file")) {
+      } else if (pair[0].equalsIgnoreCase("f-train-file")) {
         ftrainfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("f-test-file")) {
+      } else if (pair[0].equalsIgnoreCase("f-test-file")) {
         ftestfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("a-train-file")) {
+      } else if (pair[0].equalsIgnoreCase("a-train-file")) {
         atrainfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("a-test-file")) {
+      } else if (pair[0].equalsIgnoreCase("a-test-file")) {
         atestfile = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("model-name")) {
+      } else if (pair[0].equalsIgnoreCase("model-name")) {
         modelName = pair[1];
-        txtModelName = pair[1].replaceAll("gz","txt.gz");
-        if(txtModelName.equals(modelName))
+        txtModelName = pair[1].replaceAll("gz", "txt.gz");
+        if (txtModelName.equals(modelName))
           txtModelName = null;
-      }
-      else if (pair[0].equalsIgnoreCase("model-txt")) {
+      } else if (pair[0].equalsIgnoreCase("model-txt")) {
         genTextModel = true;
-      }
-      else if (pair[0].equalsIgnoreCase("training-k")) {
+      } else if (pair[0].equalsIgnoreCase("training-k")) {
         trainK = Integer.parseInt(pair[1]);
-      }
-      else if (pair[0].equalsIgnoreCase("pos-win-sz")) {
+      } else if (pair[0].equalsIgnoreCase("pos-win-sz")) {
         posWindowSize = Integer.parseInt(pair[1]);
         english = false;
-      }
-      else if (pair[0].equalsIgnoreCase("offset-win-sz")) {
+      } else if (pair[0].equalsIgnoreCase("offset-win-sz")) {
         offsetWindowSize = Integer.parseInt(pair[1]);
         english = false;
-      }
-      else if (pair[0].equalsIgnoreCase("bilingual-feature-detail")) {
+      } else if (pair[0].equalsIgnoreCase("bilingual-feature-detail")) {
         bilingualDetail = Integer.parseInt(pair[1]);
-      }
-      else if (pair[0].equalsIgnoreCase("disable-core")) {
+      } else if (pair[0].equalsIgnoreCase("disable-core")) {
         coreFeatures = false;
-      }
-      else if (pair[0].equalsIgnoreCase("disable-lemma")) {
+      } else if (pair[0].equalsIgnoreCase("disable-lemma")) {
         lemmaFeatures = false;
-      }
-      else if (pair[0].equalsIgnoreCase("disable-cpos")) {
+      } else if (pair[0].equalsIgnoreCase("disable-cpos")) {
         cposFeatures = false;
-      }
-      else if (pair[0].equalsIgnoreCase("disable-linear-pos")) {
+      } else if (pair[0].equalsIgnoreCase("disable-linear-pos")) {
         posLinearFeatures = false;
-      }
-      else if (pair[0].equalsIgnoreCase("disable-linear-cpos")) {
+      } else if (pair[0].equalsIgnoreCase("disable-linear-cpos")) {
         cposLinearFeatures = false;
-      }
-      else if (pair[0].equalsIgnoreCase("enable-bilingual-h")) {
+      } else if (pair[0].equalsIgnoreCase("enable-bilingual-h")) {
         bilingualH = true;
-      }
-      else if (pair[0].equalsIgnoreCase("enable-bilingual-c")) {
+      } else if (pair[0].equalsIgnoreCase("enable-bilingual-c")) {
         bilingualC = true;
-      }
-      else if (pair[0].equalsIgnoreCase("enable-bilingual-h2c")) {
+      } else if (pair[0].equalsIgnoreCase("enable-bilingual-h2c")) {
         bilingualH2C = true;
-      }
-      else if (pair[0].equalsIgnoreCase("in-between-pos")) {
+      } else if (pair[0].equalsIgnoreCase("in-between-pos")) {
         inBetweenPOS = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("in-between-cpos")) {
+      } else if (pair[0].equalsIgnoreCase("in-between-cpos")) {
         inBetweenCPOS = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("ignore-loops")) {
+      } else if (pair[0].equalsIgnoreCase("ignore-loops")) {
         ignoreLoops = true;
-      }
-      else if (pair[0].equalsIgnoreCase("loss-type")) {
+      } else if (pair[0].equalsIgnoreCase("loss-type")) {
         lossType = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("mix-models")) {
+      } else if (pair[0].equalsIgnoreCase("mix-models")) {
         mixModelNames = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("create-forest")) {
+      } else if (pair[0].equalsIgnoreCase("create-forest")) {
         createForest = pair[1].equalsIgnoreCase("true");
-      }
-      else if (pair[0].equalsIgnoreCase("decode-type")) {
+      } else if (pair[0].equalsIgnoreCase("decode-type")) {
         decodeType = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("format")) {
+      } else if (pair[0].equalsIgnoreCase("format")) {
         format = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("gold-format")) {
+      } else if (pair[0].equalsIgnoreCase("gold-format")) {
         goldformat = pair[1];
-      }
-      else if (pair[0].equalsIgnoreCase("relational-features")) {
+      } else if (pair[0].equalsIgnoreCase("relational-features")) {
         useRelationalFeatures = pair[1].equalsIgnoreCase("true");
-      }
-      else if (pair[0].equalsIgnoreCase("discourse-mode")) {
+      } else if (pair[0].equalsIgnoreCase("discourse-mode")) {
         discourseMode = pair[1].equalsIgnoreCase("true");
-      }
-      else if (pair[0].equalsIgnoreCase("labeled")) {
+      } else if (pair[0].equalsIgnoreCase("labeled")) {
         labeled = Boolean.parseBoolean(pair[1]);
-      }
-      else if (pair[0].equalsIgnoreCase("txt-model")) {
+      } else if (pair[0].equalsIgnoreCase("txt-model")) {
         txtModelName = pair[1];
       } else {
-        throw new RuntimeException("unknown options: "+ Arrays.toString(pair));
+        throw new RuntimeException("unknown options: " + Arrays.toString(pair));
       }
     }
 
@@ -310,21 +252,23 @@ public final class ParserOptions {
 
     File localDir;
     try {
-      String machine = InetAddress.getLocalHost().getHostName().split("\\.")[0].toLowerCase();
-      System.err.println("Machine name: "+machine);
-      File tmpDir = new File("/"+machine+"/scr1");
-      if(!tmpDir.isDirectory())
+      String machine = InetAddress.getLocalHost().getHostName().split("\\.")[0]
+          .toLowerCase();
+      System.err.println("Machine name: " + machine);
+      File tmpDir = new File("/" + machine + "/scr1");
+      if (!tmpDir.isDirectory())
         tmpDir = new File("/tmp");
-      assert(tmpDir.isDirectory());
-      localDir = new File(tmpDir.toString()+"/mst");
-      if(!localDir.isDirectory()) {
-        if(!localDir.mkdir()) {
-          if(!localDir.isDirectory()) {
-            throw new IOException("Can't create directory: "+localDir.toString());
+      assert (tmpDir.isDirectory());
+      localDir = new File(tmpDir.toString() + "/mst");
+      if (!localDir.isDirectory()) {
+        if (!localDir.mkdir()) {
+          if (!localDir.isDirectory()) {
+            throw new IOException("Can't create directory: "
+                + localDir.toString());
           }
         }
       }
-      System.err.println("Local directory: "+localDir);
+      System.err.println("Local directory: " + localDir);
       if (null != trainfile) {
         trainforest = File.createTempFile("train", ".forest", localDir);
         trainforest.deleteOnExit();
@@ -339,7 +283,7 @@ public final class ParserOptions {
         test = false;
       }
 
-    } catch(java.io.IOException e) {
+    } catch (java.io.IOException e) {
       System.out.println("Unable to create tmp files for feature forests!");
       e.printStackTrace();
       System.exit(0);

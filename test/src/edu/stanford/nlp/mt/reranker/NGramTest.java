@@ -28,19 +28,19 @@ public class NGramTest extends TestCase {
     String[] sent2 = { "a", "b", "a", "d" };
     distrib = NGram.distribution(sent2, 1, 1);
     assertEquals(3, distrib.size());
-    assertEquals(2, (int)distrib.get(new NGram("a", 1)));
-    assertEquals(1, (int)distrib.get(new NGram("b", 1)));
-    assertEquals(1, (int)distrib.get(new NGram("d", 1)));
+    assertEquals(2, (int) distrib.get(new NGram("a", 1)));
+    assertEquals(1, (int) distrib.get(new NGram("b", 1)));
+    assertEquals(1, (int) distrib.get(new NGram("d", 1)));
 
     distrib = NGram.distribution(sent, 1, 4);
     assertEquals(10, distrib.size());
-    assertEquals(1, (int)distrib.get(new NGram("a-b-c-d", 4)));
-    assertEquals(1, (int)distrib.get(new NGram("a-b-c", 3)));
-    assertEquals(1, (int)distrib.get(new NGram("b-c-d", 3)));
-    assertEquals(1, (int)distrib.get(new NGram("a-b", 2)));
-    assertEquals(1, (int)distrib.get(new NGram("b-c", 2)));
-    assertEquals(1, (int)distrib.get(new NGram("c-d", 2)));
-    assertEquals(1, (int)distrib.get(new NGram("a", 1)));
+    assertEquals(1, (int) distrib.get(new NGram("a-b-c-d", 4)));
+    assertEquals(1, (int) distrib.get(new NGram("a-b-c", 3)));
+    assertEquals(1, (int) distrib.get(new NGram("b-c-d", 3)));
+    assertEquals(1, (int) distrib.get(new NGram("a-b", 2)));
+    assertEquals(1, (int) distrib.get(new NGram("b-c", 2)));
+    assertEquals(1, (int) distrib.get(new NGram("c-d", 2)));
+    assertEquals(1, (int) distrib.get(new NGram("a", 1)));
   }
 
   public void testMultiDistribution() {
@@ -52,9 +52,9 @@ public class NGramTest extends TestCase {
     String[][] corpus = { s1, s2, s3, s4 };
 
     HashMap<NGram, Integer> distrib = NGram.maxDistribution(corpus, 1, 4);
-    assertEquals(1, (int)distrib.get(new NGram("x", 1)));
+    assertEquals(1, (int) distrib.get(new NGram("x", 1)));
     assertFalse(distrib.containsKey(new NGram("c-d", 2)));
-    assertEquals(2, (int)distrib.get(new NGram("b-c", 2)));
+    assertEquals(2, (int) distrib.get(new NGram("b-c", 2)));
   }
 
 }

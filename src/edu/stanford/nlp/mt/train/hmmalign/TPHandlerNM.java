@@ -3,15 +3,14 @@ package edu.stanford.nlp.mt.train.hmmalign;
 /**
  * This is for use in the model with special null treatment
  * p(fj|null,alignment)=alfa*p(fj|fj+1) +(1-alfa)*p(fj|NULL)
- *
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
-
 
 public class TPHandlerNM extends TPHandler {
   SentencePair sentPair;
   TTable tTable;
-  //by default if there are eTags or fTags they will be ignored
+  // by default if there are eTags or fTags they will be ignored
   protected ProbCountHolder[][] cache;
   protected ProbCountHolder[][] cache_nulls;
   int l, m;
@@ -28,15 +27,14 @@ public class TPHandlerNM extends TPHandler {
 
   }
 
-
   @Override
-	public void setPair(SentencePair sent) {
+  public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
   }
 
   @Override
-	public void init() {
+  public void init() {
     Word fWord, eWord;
 
     l = sentPair.e.getLength() - 1;
@@ -45,7 +43,7 @@ public class TPHandlerNM extends TPHandler {
     cache = new ProbCountHolder[l + 1][m + 1];
     cache_nulls = new ProbCountHolder[m + 1][m + 2];
 
-    //put first all probabilities in the cache
+    // put first all probabilities in the cache
     for (int j = 1; j <= m; j++) {
       fWord = sentPair.f.getWord(j);
       tmpPair.setTarget(fWord.getWordId());
@@ -56,19 +54,17 @@ public class TPHandlerNM extends TPHandler {
       }
     }
 
-
   }
-
 
   /*
    * get the probability p(fj|ei)
    */
   @Override
-	public double getProb(int i, int j) {
+  public double getProb(int i, int j) {
 
     double prob;
 
-    //take care of the case where i might be greater than l
+    // take care of the case where i might be greater than l
 
     if ((i > l) && (i < 2 * l + 1)) {
       i = 0;
@@ -76,7 +72,8 @@ public class TPHandlerNM extends TPHandler {
 
     if (cache[i][j] == null) {
 
-      prob = (sentPair.getSource().getWord(i).getCount() == 0 ? PROB_SMOOTH : PROB_SMOOTH);
+      prob = (sentPair.getSource().getWord(i).getCount() == 0 ? PROB_SMOOTH
+          : PROB_SMOOTH);
 
     } else {
       prob = cache[i][j].getProb();
@@ -85,20 +82,18 @@ public class TPHandlerNM extends TPHandler {
       }
     }
 
-
     return prob;
   }
-
 
   /*
-  * get the probability p(fj|ei)
-  */
+   * get the probability p(fj|ei)
+   */
   @Override
-	public double getProb(int i, int j, int[] alignment) {
+  public double getProb(int i, int j, int[] alignment) {
 
     double prob;
 
-    //take care of the case where i might be greater than l
+    // take care of the case where i might be greater than l
 
     if ((i > l) && (i < 2 * l + 1)) {
       i = 0;
@@ -106,7 +101,8 @@ public class TPHandlerNM extends TPHandler {
 
     if (cache[i][j] == null) {
 
-      prob = (sentPair.getSource().getWord(i).getCount() == 0 ? PROB_SMOOTH : PROB_SMOOTH);
+      prob = (sentPair.getSource().getWord(i).getCount() == 0 ? PROB_SMOOTH
+          : PROB_SMOOTH);
 
     } else {
       prob = cache[i][j].getProb();
@@ -115,17 +111,15 @@ public class TPHandlerNM extends TPHandler {
       }
     }
 
-
     return prob;
   }
-
 
   /**
    * Increment the count for c(fj|ei)
    */
 
   @Override
-	public void incCount(int i, int j, double val) {
+  public void incCount(int i, int j, double val) {
 
     if (val == 0) {
       return;
@@ -143,8 +137,6 @@ public class TPHandlerNM extends TPHandler {
       cache[i][j].incCount(val);
     }
 
-
   }
-
 
 }

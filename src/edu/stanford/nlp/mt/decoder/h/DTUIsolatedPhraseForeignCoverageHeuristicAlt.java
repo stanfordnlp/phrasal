@@ -13,39 +13,45 @@ import java.util.Iterator;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class DTUIsolatedPhraseForeignCoverageHeuristicAlt<TK,FV> extends DTUIsolatedPhraseForeignCoverageHeuristic<TK,FV> {
+public class DTUIsolatedPhraseForeignCoverageHeuristicAlt<TK, FV> extends
+    DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> {
 
   @Override
-	public Object clone() throws CloneNotSupportedException {
+  public Object clone() throws CloneNotSupportedException {
     return super.clone();
-	}
+  }
 
-  public DTUIsolatedPhraseForeignCoverageHeuristicAlt(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
+  public DTUIsolatedPhraseForeignCoverageHeuristicAlt(
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
     super(phraseFeaturizer, scorer);
   }
 
   /**
-   * For a given coverage set C of a given hypothesis, this finds all contiguous segments in the coverage set
-   * (e.g., if C = {1,5,6,10}, then segments are {5-6} and {10}), and computes future cost as follows:
-   * fcost(C) = fcost(1-10) - fcost(5-6) - fcost(10).
-   *
-   * This does not overestimate future cost (as opposed to getHeuristicDeltaStandard), even when dealing
-   * with discontinuous phrases. However, future cost estimate is often poorer than with getHeuristicDeltaStandard.
+   * For a given coverage set C of a given hypothesis, this finds all contiguous
+   * segments in the coverage set (e.g., if C = {1,5,6,10}, then segments are
+   * {5-6} and {10}), and computes future cost as follows: fcost(C) =
+   * fcost(1-10) - fcost(5-6) - fcost(10).
+   * 
+   * This does not overestimate future cost (as opposed to
+   * getHeuristicDeltaStandard), even when dealing with discontinuous phrases.
+   * However, future cost estimate is often poorer than with
+   * getHeuristicDeltaStandard.
    */
   @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> hyp, CoverageSet newCoverage) {
+  public double getHeuristicDelta(Hypothesis<TK, FV> hyp,
+      CoverageSet newCoverage) {
 
     double oldH = hyp.preceedingHyp.h;
 
     CoverageSet coverage = hyp.foreignCoverage;
-		int startEdge = coverage.nextClearBit(0);
-    int endEdge = hyp.foreignSequence.size()-1;
+    int startEdge = coverage.nextClearBit(0);
+    int endEdge = hyp.foreignSequence.size() - 1;
     if (endEdge < startEdge)
       return 0.0;
 
     double newH = hSpanScores.getScore(startEdge, endEdge);
 
-    for (Iterator<IntPair> it = coverage.getSegmentIterator(); it.hasNext(); ) {
+    for (Iterator<IntPair> it = coverage.getSegmentIterator(); it.hasNext();) {
       IntPair span = it.next();
       if (span.getSource() < startEdge) { // skip:
         assert (span.getTarget() <= startEdge);
@@ -55,9 +61,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristicAlt<TK,FV> extends DTUIsol
       if (!Double.isNaN(localH) && !Double.isInfinite(localH)) {
         newH -= localH;
       }
-		}
+    }
 
-    if((Double.isInfinite(newH) || newH == MINUS_INF) && (Double.isInfinite(oldH) || oldH == MINUS_INF))
+    if ((Double.isInfinite(newH) || newH == MINUS_INF)
+        && (Double.isInfinite(oldH) || oldH == MINUS_INF))
       return 0.0;
 
     double deltaH = newH - oldH;

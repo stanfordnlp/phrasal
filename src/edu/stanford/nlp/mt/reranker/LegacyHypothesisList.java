@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LegacyHypothesisList {
-  //List<Word> srcWords;
+  // List<Word> srcWords;
   Tree srcTree;
   Map<Integer, Map<Integer, String>> srcDeps;
   private int nbestSize = 0;
@@ -23,10 +23,10 @@ public class LegacyHypothesisList {
   FeatureIndex featureIndex;
   String[] auxiliaryFeaturesFns;
 
-  public LegacyHypothesisList(Tree srcTree, List<Candidate> Cands, 
-    List<LegacyAlignment> alignments, Map<Integer, Map<Integer, String>> srcDeps, 
-                        FeatureIndex featureIndex, String extraFeatFiles,
-                        String[] auxiliaryFeaturesFns) {
+  public LegacyHypothesisList(Tree srcTree, List<Candidate> Cands,
+      List<LegacyAlignment> alignments,
+      Map<Integer, Map<Integer, String>> srcDeps, FeatureIndex featureIndex,
+      String extraFeatFiles, String[] auxiliaryFeaturesFns) {
 
     this.featureIndex = featureIndex;
     this.srcTree = srcTree;
@@ -37,21 +37,24 @@ public class LegacyHypothesisList {
     this.auxiliaryFeaturesFns = auxiliaryFeaturesFns;
   }
 
+  public List<Candidate> getCands() {
+    return cands;
+  }
 
-  public List<Candidate> getCands() { return cands; }
-  
-  public LegacyHypothesisList() { cands = new ArrayList<Candidate>(); }
-  
+  public LegacyHypothesisList() {
+    cands = new ArrayList<Candidate>();
+  }
+
   public Map<Integer, Double> extractFeaturesFromCand(Candidate cand) {
-    Map<Integer, Double> featureMap = new HashMap<Integer, Double>(); 
-    PaddedList<TaggedWord> tgtSent 
-      = new PaddedList<TaggedWord>(cand.getTree().taggedYield(new ArrayList<TaggedWord>()), new TaggedWord());
+    Map<Integer, Double> featureMap = new HashMap<Integer, Double>();
+    PaddedList<TaggedWord> tgtSent = new PaddedList<TaggedWord>(cand.getTree()
+        .taggedYield(new ArrayList<TaggedWord>()), new TaggedWord());
 
     // this part is for word/tag unigram/bigram
     for (int i = 0; i <= tgtSent.size(); i++) {
       TaggedWord cur_tw = tgtSent.get(i);
-      TaggedWord pre_tw = tgtSent.get(i-1);
-      
+      TaggedWord pre_tw = tgtSent.get(i - 1);
+
       // TODO: add more features extractors here
       appendBigramFeatures(pre_tw, cur_tw, featureMap);
       appendTagBigramFeatures(pre_tw, cur_tw, featureMap);
@@ -63,8 +66,8 @@ public class LegacyHypothesisList {
     return featureMap;
   }
 
-  public void appendUnigramFeatures(TaggedWord cur_tw, 
-    Map<Integer, Double> featureMap) {
+  public void appendUnigramFeatures(TaggedWord cur_tw,
+      Map<Integer, Double> featureMap) {
     String s = cur_tw.word();
     StringBuilder sb = new StringBuilder();
     sb.append("W-UNI-");
@@ -75,7 +78,7 @@ public class LegacyHypothesisList {
   }
 
   public void appendBigramFeatures(TaggedWord pre_tw, TaggedWord cur_tw,
-    Map<Integer, Double> featureMap) {
+      Map<Integer, Double> featureMap) {
 
     String pre = pre_tw.word();
     String cur = cur_tw.word();
@@ -90,9 +93,8 @@ public class LegacyHypothesisList {
     featureMap.put(idx, 1.0);
   }
 
-
-  public void appendTagUnigramFeatures(TaggedWord cur_tw, 
-    Map<Integer, Double> featureMap) {
+  public void appendTagUnigramFeatures(TaggedWord cur_tw,
+      Map<Integer, Double> featureMap) {
 
     String s = cur_tw.tag();
     StringBuilder sb = new StringBuilder();
@@ -103,8 +105,8 @@ public class LegacyHypothesisList {
     featureMap.put(idx, 1.0);
   }
 
-  public void appendTagBigramFeatures(TaggedWord pre_tw, TaggedWord cur_tw, 
-    Map<Integer, Double> featureMap) {
+  public void appendTagBigramFeatures(TaggedWord pre_tw, TaggedWord cur_tw,
+      Map<Integer, Double> featureMap) {
 
     String pre = pre_tw.tag();
     String cur = cur_tw.tag();
@@ -120,11 +122,11 @@ public class LegacyHypothesisList {
   }
 
   // immediate (1-path) Grammatical Relation Mapping Features
-  void immediateGRMappingFeatures(Candidate cand, LegacyAlignment alignment, 
-    Map<Integer, Double> featureMap) {
+  void immediateGRMappingFeatures(Candidate cand, LegacyAlignment alignment,
+      Map<Integer, Double> featureMap) {
     if (srcDeps == null || alignment == null) {
-      throw new RuntimeException("Grammatical Relation Mapping features - "+
-        " require srcDeps and alignments");
+      throw new RuntimeException("Grammatical Relation Mapping features - "
+          + " require srcDeps and alignments");
     }
     // go through each dependency in English Dependencies
     Map<Integer, Map<Integer, String>> enMap = cand.getDeps();
@@ -146,7 +148,7 @@ public class LegacyHypothesisList {
               if (cd != null) {
                 StringBuilder sb2 = new StringBuilder(sb);
                 sb2.append(cd);
-                //System.err.println("FEAT:"+sb.toString());
+                // System.err.println("FEAT:"+sb.toString());
                 featureIndex.add(sb2.toString());
                 int idx = featureIndex.indexOf(sb2.toString());
                 featureMap.put(idx, 1.0);
@@ -158,29 +160,29 @@ public class LegacyHypothesisList {
     }
   }
 
-  public void appendFeaturesFromFile(BufferedReader br, 
-    Map<Integer, Double> featureMap) throws IOException {
+  public void appendFeaturesFromFile(BufferedReader br,
+      Map<Integer, Double> featureMap) throws IOException {
     String line = br.readLine();
-    if (line==null) {
+    if (line == null) {
       throw new RuntimeException(
-        "candidates number from the feature file doesn't match");
+          "candidates number from the feature file doesn't match");
     }
-    //Pattern p = Pattern.compile("([^:]+): ([\\d\\.]+)");
+    // Pattern p = Pattern.compile("([^:]+): ([\\d\\.]+)");
     Pattern p = Pattern.compile("([^\\s]*?): ([\\d\\.]+)");
     Matcher m = p.matcher(line);
-    while(m.find()) {
+    while (m.find()) {
       String featName = m.group(1);
       double fWeight = Double.parseDouble(m.group(2));
       featureIndex.add(featName);
       int idx = featureIndex.indexOf(featName);
       featureMap.put(idx, fWeight);
-      //System.err.println("DEBUG: "+featName+"="+fWeight+"\n");
+      // System.err.println("DEBUG: "+featName+"="+fWeight+"\n");
     }
   }
-  
+
   @SuppressWarnings("deprecation")
-	public CompactHypothesisList extractFeatures(int dataPointIdx) 
-    throws IOException {
+  public CompactHypothesisList extractFeatures(int dataPointIdx)
+      throws IOException {
 
     if (alignments != null) {
       assert cands.size() == alignments.size();
@@ -201,7 +203,8 @@ public class LegacyHypothesisList {
 
     for (int i = 0; i < cands.size(); i++) {
       Candidate cand = cands.get(i);
-      LegacyAlignment alignment = (alignments != null ? alignments.get(i) : null);
+      LegacyAlignment alignment = (alignments != null ? alignments.get(i)
+          : null);
 
       Map<Integer, Double> candFeats = extractFeaturesFromCand(cand);
       immediateGRMappingFeatures(cand, alignment, candFeats);
@@ -211,24 +214,29 @@ public class LegacyHypothesisList {
       }
 
       Set<Integer> featureIndices = new TreeSet<Integer>(candFeats.keySet());
-      
+
       int[] fIndex = new int[featureIndices.size()];
       float[] fValue = new float[featureIndices.size()];
-      
-      int featId = 0; for (Integer index : featureIndices) {
+
+      int featId = 0;
+      for (Integer index : featureIndices) {
         fIndex[featId] = index;
         fValue[featId] = new Float(candFeats.get(index));
-      featId++; }
+        featId++;
+      }
       fIndices[nbestSize] = fIndex;
-      fValues[nbestSize] = fValue; 
+      fValues[nbestSize] = fValue;
       bleus[nbestSize] = cand.getBleu();
       nbestSize++;
     }
 
-    if (featBr != null) featBr.close();
-    return new CompactHypothesisList(fIndices, fValues, bleus, nbestSize, 
-      featureIndex);
+    if (featBr != null)
+      featBr.close();
+    return new CompactHypothesisList(fIndices, fValues, bleus, nbestSize,
+        featureIndex);
   }
 
-  public int size() { return cands.size(); }
+  public int size() {
+    return cands.size();
+  }
 }

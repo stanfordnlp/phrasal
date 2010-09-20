@@ -46,8 +46,7 @@ public class Parameters {
     FeatureVector[] dist = new FeatureVector[K];
 
     for (int k = 0; k < K; k++) {
-      lam_dist[k] = getScore(actFV)
-           - getScore((FeatureVector) d[k][0]);
+      lam_dist[k] = getScore(actFV) - getScore((FeatureVector) d[k][0]);
       b[k] = numErrors(inst, (String) d[k][1], actParseTree);
       b[k] -= lam_dist[k];
       dist[k] = actFV.getDistVector((FeatureVector) d[k][0]);
@@ -97,7 +96,6 @@ public class Parameters {
 
     int max_kkt_i = -1;
 
-
     for (i = 0; i < F.length; i++) {
       F[i] = b[i];
       kkt[i] = F[i];
@@ -114,9 +112,10 @@ public class Parameters {
 
     while (max_kkt >= eps && iter < max_iter) {
 
-      diff_alpha = A[max_kkt_i][max_kkt_i] <= zero ? 0.0 : F[max_kkt_i] / A[max_kkt_i][max_kkt_i];
+      diff_alpha = A[max_kkt_i][max_kkt_i] <= zero ? 0.0 : F[max_kkt_i]
+          / A[max_kkt_i][max_kkt_i];
       try_alpha = alpha[max_kkt_i] + diff_alpha;
-      //add_alpha = 0.0;
+      // add_alpha = 0.0;
 
       if (try_alpha < 0.0)
         add_alpha = -1.0 * alpha[max_kkt_i];
@@ -153,10 +152,10 @@ public class Parameters {
     return alpha;
   }
 
-
   public double numErrors(DependencyInstance inst, String pred, String act) {
     if (lossType.equals("nopunc"))
-      return numErrorsDepNoPunc(inst, pred, act) + numErrorsLabelNoPunc(inst, pred, act);
+      return numErrorsDepNoPunc(inst, pred, act)
+          + numErrorsLabelNoPunc(inst, pred, act);
     return numErrorsDep(pred, act) + numErrorsLabel(pred, act);
   }
 
@@ -198,7 +197,8 @@ public class Parameters {
 
   }
 
-  public double numErrorsDepNoPunc(DependencyInstance inst, String pred, String act) {
+  public double numErrorsDepNoPunc(DependencyInstance inst, String pred,
+      String act) {
 
     String[] act_spans = act.split(" ");
     String[] pred_spans = pred.split(" ");
@@ -223,7 +223,8 @@ public class Parameters {
 
   }
 
-  public double numErrorsLabelNoPunc(DependencyInstance inst, String pred, String act) {
+  public double numErrorsLabelNoPunc(DependencyInstance inst, String pred,
+      String act) {
 
     String[] act_spans = act.split(" ");
     String[] pred_spans = pred.split(" ");

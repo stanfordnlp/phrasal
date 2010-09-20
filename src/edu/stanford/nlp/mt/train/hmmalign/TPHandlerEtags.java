@@ -1,13 +1,12 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-
 /*
  *@author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 public class TPHandlerEtags extends TPHandler {
 
-  //by default if there are eTags or fTags they will be ignored
+  // by default if there are eTags or fTags they will be ignored
   private ProbCountHolder[][] cache_tags;
   private double[] lambdas; // these will be interpolation weights
 
@@ -17,13 +16,12 @@ public class TPHandlerEtags extends TPHandler {
 
   }
 
-
   /**
    * this init is different since we need to cache the tag probs as well
    */
 
   @Override
-	public void init() {
+  public void init() {
     WordEx fWord, eWord;
 
     l = sentPair.e.getLength() - 1;
@@ -32,7 +30,7 @@ public class TPHandlerEtags extends TPHandler {
     lambdas = new double[l + 1];
     cache = new ProbCountHolder[l + 1][m + 1];
     cache_tags = new ProbCountHolder[l + 1][m + 1];
-    //put first all probabilities in the cache
+    // put first all probabilities in the cache
     for (int j = 1; j <= m; j++) {
       fWord = sentPair.f.getWord(j);
       tmpPair.setTarget(fWord.getWordId());
@@ -43,23 +41,22 @@ public class TPHandlerEtags extends TPHandler {
         tmpPair.setSource(eWord.getTagId());
         cache_tags[i][j] = tTable.get(tmpPair);
         lambdas[i] = .9;
-      }//i
-    }//j
-
+      }// i
+    }// j
 
   }
-
 
   /*
    * get the probability p(fj|ei)
    */
   @Override
-	public double getProb(int i, int j) {
+  public double getProb(int i, int j) {
 
     double prob1, prob2, prob;
     if (cache[i][j] == null) {
 
-      prob1 = (sentPair.getSource().getWord(i).getCount() == 0 ? PROB_SMOOTH : PROB_SMOOTH);
+      prob1 = (sentPair.getSource().getWord(i).getCount() == 0 ? PROB_SMOOTH
+          : PROB_SMOOTH);
 
     } else {
       prob1 = cache[i][j].getProb();
@@ -70,7 +67,9 @@ public class TPHandlerEtags extends TPHandler {
 
     if (cache_tags[i][j] == null) {
 
-      prob2 = (SentenceHandler.sTableE.getEntry(sentPair.e.getWord(i).getTagId()).getCount() == 0 ? PROB_SMOOTH : PROB_SMOOTH);
+      prob2 = (SentenceHandler.sTableE.getEntry(
+          sentPair.e.getWord(i).getTagId()).getCount() == 0 ? PROB_SMOOTH
+          : PROB_SMOOTH);
 
     } else {
       prob2 = cache_tags[i][j].getProb();
@@ -79,20 +78,18 @@ public class TPHandlerEtags extends TPHandler {
       }
     }
 
-
     prob = lambdas[i] * prob1 + (1 - lambdas[i]) * prob2;
-    //System.out.println(" returning "+prob+" from "+prob1+" "+prob2+" for "+i+" "+j);
-     
+    // System.out.println(" returning "+prob+" from "+prob1+" "+prob2+" for "+i+" "+j);
+
     return prob;
   }
-
 
   /**
    * Increment the count for c(fj|ei)
    */
 
   @Override
-	public void incCount(int i, int j, double val) {
+  public void incCount(int i, int j, double val) {
 
     if (val == 0) {
       return;
@@ -106,7 +103,6 @@ public class TPHandlerEtags extends TPHandler {
       cache[i][j].incCount(lambdas[i] * val);
     }
 
-
     if (cache_tags[i][j] == null) {
 
       tmpPair.setSource(sentPair.e.getWord(i).getTagId());
@@ -116,8 +112,6 @@ public class TPHandlerEtags extends TPHandler {
       cache_tags[i][j].incCount((1 - lambdas[i]) * val);
     }
 
-
   }
-
 
 }

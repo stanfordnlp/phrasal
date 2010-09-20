@@ -23,7 +23,7 @@ import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Jason Baldridge
  * @version $Id: CONLLWriter.java 94 2007-01-17 17:05:12Z jasonbaldridge $
  * @see edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter
@@ -40,7 +40,7 @@ public class CONLLWriter extends DependencyWriter {
 
     int i = skipRoot ? 1 : 0;
     for (; i < instance.length(); i++) {
-      int pi = skipRoot ? i : i+1;
+      int pi = skipRoot ? i : i + 1;
       writer.write(Integer.toString(pi));
       writer.write('\t');
       writer.write(instance.getForm(i).trim());
@@ -54,8 +54,9 @@ public class CONLLWriter extends DependencyWriter {
       writer.write('\t');
       writer.write(pos);
       writer.write('\t');
-      String feats = StringUtils.join(instance.getFeats(i),"|");
-      if(feats.equals("")) feats = "-";
+      String feats = StringUtils.join(instance.getFeats(i), "|");
+      if (feats.equals(""))
+        feats = "-";
       writer.write(feats);
       writer.write('\t');
       writer.write(Integer.toString(instance.getHead(i)));
@@ -66,6 +67,6 @@ public class CONLLWriter extends DependencyWriter {
       writer.newLine();
     }
     writer.newLine();
-    //writer.flush();
+    // writer.flush();
   }
 }

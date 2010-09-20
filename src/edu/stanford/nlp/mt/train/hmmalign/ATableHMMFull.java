@@ -12,16 +12,19 @@ import edu.stanford.nlp.util.ArrayN;
 
 public class ATableHMMFull extends ATable {
 
-  //we need arrays to keep the counts, the parameters
-  //and finally the probabilities
+  // we need arrays to keep the counts, the parameters
+  // and finally the probabilities
   int shiftParams;
   float pEmpty;// this is the probability of going to the empty word
   float PROB_SMOOTH = (float) .0001;
-  boolean fixEmpty = false; // we sometimes want to fiz the empty b/e it tends to grow too much (why is that ???)
-  // if fixEmpty is true there will be the same pEmtpy probability for empty for all lengths
+  boolean fixEmpty = false; // we sometimes want to fiz the empty b/e it tends
+                            // to grow too much (why is that ???)
+  // if fixEmpty is true there will be the same pEmtpy probability for empty for
+  // all lengths
   boolean smoothUniform = false;
   float lambda = (float) .2;
-  private ArrayN prob_arr; //prob_arr will be formed by normalization from count_arr
+  private ArrayN prob_arr; // prob_arr will be formed by normalization from
+                           // count_arr
   private ArrayN count_arr;// keep the counts here
 
   public ATableHMMFull(int maxsize) {
@@ -30,15 +33,14 @@ public class ATableHMMFull extends ATable {
     prob_arr = new ArrayN(MAX_LENGTH + 1, MAX_LENGTH + 1, MAX_LENGTH + 1);
   }
 
-
   /**
-   * Get the initial probability p(i|l) i is in 0..l , l is the length of the english sentence
+   * Get the initial probability p(i|l) i is in 0..l , l is the length of the
+   * english sentence
    */
 
   public float getInitialProb(int index, int l) {
     return prob_arr.get(index, 0, l);
   }
-
 
   @Override
   public float getEmpty() {
@@ -50,9 +52,9 @@ public class ATableHMMFull extends ATable {
     return count > countCutoff;
   }
 
-
   /**
-   * Get the probability p(i|i_prev,l) i is from 1 to 2L and i_prev is in the same set as well
+   * Get the probability p(i|i_prev,l) i is from 1 to 2L and i_prev is in the
+   * same set as well
    */
   public float getProbHMM(int i, int i_prev, int l) {
     boolean empty = false;
@@ -89,7 +91,6 @@ public class ATableHMMFull extends ATable {
     }
   }
 
-
   @Override
   public float getProb(int i, int i_prev, int l) {
     float prob;
@@ -104,7 +105,6 @@ public class ATableHMMFull extends ATable {
       return prob;
     }
   }
-
 
   /**
    * Increment the corresponding counts
@@ -127,32 +127,28 @@ public class ATableHMMFull extends ATable {
       }
     }
 
-
   }
 
-
   /**
-   * Calculate normalized initial parameters
-   * No reason really why it should be separate from normalizeProbArr except for the
-   * empty parameters
+   * Calculate normalized initial parameters No reason really why it should be
+   * separate from normalizeProbArr except for the empty parameters
    */
 
   public void normalizeInitialProbs() {
-    for (int l = 1; l <= MAX_LENGTH; l++) { //for each length size
+    for (int l = 1; l <= MAX_LENGTH; l++) { // for each length size
       float total = 0.0F;
-      for (int i = 0; i <= l; i++) { //for each initial position
+      for (int i = 0; i <= l; i++) { // for each initial position
         total += count_arr.get(i, 0, l) + PROB_SMOOTH;
       }
-      //now normalize
-      for (int i = 0; i <= l; i++) { //for each initial position
+      // now normalize
+      for (int i = 0; i <= l; i++) { // for each initial position
         float val = (count_arr.get(i, 0, l) + PROB_SMOOTH) / total;
         prob_arr.set(val, i, 0, l);
       }
 
-    }//l
+    }// l
 
   }
-
 
   /**
    * Before starting a new iteration the counts should be zero-ed
@@ -162,9 +158,9 @@ public class ATableHMMFull extends ATable {
     count_arr.setZero();
   }
 
-
   /**
-   * Normalize the transition table prob_arr and put the appropriate probabilities there
+   * Normalize the transition table prob_arr and put the appropriate
+   * probabilities there
    */
 
   public void normalizeProbArr() {
@@ -174,14 +170,14 @@ public class ATableHMMFull extends ATable {
       index = 1;
       mult = 1 - pEmpty;
     }
-    for (int l = 1; l <= MAX_LENGTH; l++) { //for each possible length
+    for (int l = 1; l <= MAX_LENGTH; l++) { // for each possible length
 
-      for (int i_p = 1; i_p <= l; i_p++) { //for each previous position
+      for (int i_p = 1; i_p <= l; i_p++) { // for each previous position
         float total = 0.0F;
         for (int i = index; i <= l; i++) {
           total += count_arr.get(i, i_p, l) + PROB_SMOOTH;
         }
-        //normalize
+        // normalize
         for (int i = index; i <= l; i++) {
           float val = (count_arr.get(i, i_p, l) + PROB_SMOOTH) / total;
           prob_arr.set(val * mult, i, i_p, l);
@@ -189,12 +185,11 @@ public class ATableHMMFull extends ATable {
         if (fixEmpty) {
           prob_arr.set(pEmpty, 0, i_p, l);
         }
-      }//i_p
+      }// i_p
 
-    }//l
+    }// l
 
   }
-
 
   /**
    * This does the normalization of the component distributions
@@ -207,9 +202,8 @@ public class ATableHMMFull extends ATable {
     if (GlobalParams.verbose) {
       this.printProbs();
     }
-    zeroCounts(); //prepare for the next eStep
+    zeroCounts(); // prepare for the next eStep
   }
-
 
   /**
    * Initialize the probabilities in a brain dead manner uniformly
@@ -223,9 +217,9 @@ public class ATableHMMFull extends ATable {
       for (int i = 0; i <= MAX_LENGTH; i++) {
         count_arr.set(1, i, 0, l);
 
-      }//i
+      }// i
 
-    }//l
+    }// l
 
     pEmpty = 1 / (float) (MAX_LENGTH + 1);
 
@@ -233,24 +227,21 @@ public class ATableHMMFull extends ATable {
       for (int i_p = 1; i_p <= l; i_p++) {
         for (int i = 0; i <= l; i++) {
           count_arr.set(1, i, i_p, l);
-        }//i
-      }//i_p
+        }// i
+      }// i_p
 
-    }//l
+    }// l
 
     normalize();
 
-
   }
 
-
-
   /*
- * Copy all the values of a
- */
+   * Copy all the values of a
+   */
 
   @Override
-	public void initialize(ATable a) {
+  public void initialize(ATable a) {
 
     for (int l = 1; l <= MAX_LENGTH; l++) {
 
@@ -265,12 +256,10 @@ public class ATableHMMFull extends ATable {
 
         }
 
-
       }
     }
     pEmpty = a.getEmpty();
   }
-
 
   @Override
   public boolean checkOK() {
@@ -285,15 +274,13 @@ public class ATableHMMFull extends ATable {
     return ok;
   }
 
-
   /**
    * Check OK for a specific length len
    */
 
-
   public boolean checkOK(int len) {
     float total = 0;
-    //check initial
+    // check initial
     for (int i = 0; i <= len; i++) {
       total += getInitialProb(i, len);
     }
@@ -315,7 +302,6 @@ public class ATableHMMFull extends ATable {
     return true;
   }
 
-
   /**
    * Some code to test the class;
    */
@@ -330,37 +316,31 @@ public class ATableHMMFull extends ATable {
     a.printProbs();
     System.out.println(" Ok is " + ok);
     /*
-
-    a.incCount(0,1);
-    a.incCount(-1,1);
-    a.incCount(1,1);
-    a.incCountInitPos(1,3);
-    a.incCountInitPos(2,1);
-    a.incEmpty(2);
-    a.normalize();
-    ok=a.checkOK(1);
-    if(ok){ok=a.checkOK(2);}
-    System.out.println(" Ok is "+ok);
-    a.printProbs();
-    */
+     * 
+     * a.incCount(0,1); a.incCount(-1,1); a.incCount(1,1);
+     * a.incCountInitPos(1,3); a.incCountInitPos(2,1); a.incEmpty(2);
+     * a.normalize(); ok=a.checkOK(1); if(ok){ok=a.checkOK(2);}
+     * System.out.println(" Ok is "+ok); a.printProbs();
+     */
   }
-
 
   @Override
   public void printProbs() {
 
-    //print the initial probabilities
+    // print the initial probabilities
 
     int i_prev = 0;
     for (int i = 0; i <= MAX_LENGTH; i++) {
-      System.out.println("P(" + i + "|" + i_prev + "," + MAX_LENGTH + ")" + getProb(i, i_prev, MAX_LENGTH));
+      System.out.println("P(" + i + "|" + i_prev + "," + MAX_LENGTH + ")"
+          + getProb(i, i_prev, MAX_LENGTH));
 
     }
 
     for (int l = 1; l <= MAX_LENGTH; l++) {
       for (i_prev = 1; i_prev <= l; i_prev++) {
         for (int i = 1; i <= 2 * l; i++) {
-          System.out.println("P(" + i + "|" + i_prev + "," + l + ")" + getProb(i, i_prev, l));
+          System.out.println("P(" + i + "|" + i_prev + "," + l + ")"
+              + getProb(i, i_prev, l));
         }
         System.out.println("*************************");
       }

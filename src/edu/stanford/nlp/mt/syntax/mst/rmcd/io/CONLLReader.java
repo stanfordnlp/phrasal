@@ -27,7 +27,7 @@ import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Jason Baldridge
  * @version $Id: CONLLReader.java 112 2007-03-23 19:19:28Z jasonbaldridge $
  * @see edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader
@@ -35,10 +35,11 @@ import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 public class CONLLReader extends DependencyReader {
 
   protected boolean discourseMode = false;
-  
+
   private static final boolean VERBOSE = false;
 
-  public CONLLReader(DependencyPipe pipe, ParserOptions opts, boolean pretag) throws Exception {
+  public CONLLReader(DependencyPipe pipe, ParserOptions opts, boolean pretag)
+      throws Exception {
     super(pipe, opts, pretag);
     this.discourseMode = (opts != null) && opts.discourseMode;
   }
@@ -79,54 +80,55 @@ public class CONLLReader extends DependencyReader {
     heads[0] = -1;
 
     for (int i = 1; i <= length; i++) {
-      String[] info = lineList.get(i-1);
-      toTag[i-1] = info[1].intern();
+      String[] info = lineList.get(i - 1);
+      toTag[i - 1] = info[1].intern();
       forms[i] = numberClassing(normalize(info[1]).intern());
       lemmas[i] = numberClassing(normalize(info[2]).intern());
       cpos[i] = normalize(info[3]).intern();
       pos[i] = normalize(info[4]).intern();
-      String[] fs = (info[5].equals("") || info[5].equals("_")) ? new String[0] : info[5].split("\\|");
+      String[] fs = (info[5].equals("") || info[5].equals("_")) ? new String[0]
+          : info[5].split("\\|");
       heads[i] = Integer.parseInt(info[6]);
       String type = info[7];
-      if(!labeled || "-".equals(type) || "_".equals(type))
-        type =  "<no-type>";
+      if (!labeled || "-".equals(type) || "_".equals(type))
+        type = "<no-type>";
       deprels[i] = type;
 
       // Distinguish pairwise features from standard features:
       Set<String> featsl = new HashSet<String>();
-      Set<String>[] pfeatsl = new HashSet[length+1];
-      for(String f : fs) {
+      Set<String>[] pfeatsl = new HashSet[length + 1];
+      for (String f : fs) {
         int loc = f.indexOf('_');
-        if(loc > 0) {
-          String fName = f.substring(0,loc);
-          int idx = Integer.parseInt(f.substring(loc+1));
+        if (loc > 0) {
+          String fName = f.substring(0, loc);
+          int idx = Integer.parseInt(f.substring(loc + 1));
           Set<String> pf = pfeatsl[idx];
-          if(pf == null) {
+          if (pf == null) {
             pf = new HashSet<String>();
             pfeatsl[idx] = pf;
           }
-          if(!fName.equals("-") && !fName.equals("_"))
+          if (!fName.equals("-") && !fName.equals("_"))
             pf.add(fName);
         } else {
-          if(!f.equals("-") && !f.equals("_"))
+          if (!f.equals("-") && !f.equals("_"))
             featsl.add(f);
         }
       }
       feats[i] = featsl.toArray(new String[featsl.size()]);
-      pfeats[i] = new String[length+1][];
+      pfeats[i] = new String[length + 1][];
       for (int j = 1; j <= length; j++) {
-        if(pfeatsl[j] != null)
+        if (pfeatsl[j] != null)
           pfeats[i][j] = pfeatsl[j].toArray(new String[pfeatsl[j].size()]);
       }
     }
 
-    if(pretag) {
+    if (pretag) {
       ArrayList<Word> sent = Sentence.toUntaggedList(toTag);
       List<TaggedWord> tagged = ts.tagSentence(sent);
-      for(int i=1; i<=tagged.size(); ++i) {
-        String tag = tagged.get(i-1).tag();
+      for (int i = 1; i <= tagged.size(); ++i) {
+        String tag = tagged.get(i - 1).tag();
         pos[i] = tag;
-        cpos[i] = tag.substring(0,1);
+        cpos[i] = tag.substring(0, 1);
       }
     }
 
@@ -147,8 +149,7 @@ public class CONLLReader extends DependencyReader {
       feats = extended_feats;
     }
 
-    ArrayList<RelationalFeature> rfeats =
-         new ArrayList<RelationalFeature>();
+    ArrayList<RelationalFeature> rfeats = new ArrayList<RelationalFeature>();
 
     while (line != null && !line.equals("")) {
       rfeats.add(new RelationalFeature(length, line, inputReader));
@@ -160,32 +161,37 @@ public class CONLLReader extends DependencyReader {
 
     // End of discourse stuff.
 
-    DependencyInstance in = new DependencyInstance(pipe, forms, lemmas, cpos, pos, feats, pfeats, deprels, heads, rfeatsList);
+    DependencyInstance in = new DependencyInstance(pipe, forms, lemmas, cpos,
+        pos, feats, pfeats, deprels, heads, rfeatsList);
 
     // Bilingual features:
-    if(sourceReader != null) {
+    if (sourceReader != null) {
       DependencyInstance fin = sourceReader.getNext();
-      assert(fin != null);
+      assert (fin != null);
       in.setSourceInstance(fin);
-      if(alignReader != null) {
+      if (alignReader != null) {
         String alStr = alignReader.readLine();
         String[] ff = fin.getForms();
         String[] ef = in.getForms();
         try {
           WordAlignment al = new SymmetricalWordAlignment(ff, ef, alStr);
           in.setWordAlignment(al);
-        } catch(IOException e) {
-          System.err.printf("source dep (%d):\n%s\n", fin.length(), Arrays.toString(ff));
-          System.err.printf("target dep (%d):\n%s\n", in.length(), Arrays.toString(ef));
-          System.err.printf("alignment (%d):\n%s\n", alStr.split("\\s+").length, alStr);
-          RuntimeException re = new RuntimeException("Alignment line does not match CONLL files.");
+        } catch (IOException e) {
+          System.err.printf("source dep (%d):\n%s\n", fin.length(),
+              Arrays.toString(ff));
+          System.err.printf("target dep (%d):\n%s\n", in.length(),
+              Arrays.toString(ef));
+          System.err.printf("alignment (%d):\n%s\n",
+              alStr.split("\\s+").length, alStr);
+          RuntimeException re = new RuntimeException(
+              "Alignment line does not match CONLL files.");
           re.initCause(e);
           throw re;
         }
       }
     }
-    if(VERBOSE)
-      System.err.println("returning instance: "+ Util.dump(in));
+    if (VERBOSE)
+      System.err.println("returning instance: " + Util.dump(in));
     return in;
   }
 
@@ -194,7 +200,7 @@ public class CONLLReader extends DependencyReader {
   }
 
   protected boolean fileContainsLabels(String file) throws IOException {
-    System.err.println("Checking: "+file);
+    System.err.println("Checking: " + file);
     BufferedReader in = new BufferedReader(new FileReader(file));
     String line = in.readLine();
     in.close();

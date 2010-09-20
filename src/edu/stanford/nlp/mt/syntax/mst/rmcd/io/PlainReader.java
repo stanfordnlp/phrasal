@@ -14,12 +14,13 @@ import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 public class PlainReader extends DependencyReader {
 
   public static final boolean VERBOSE = false;
-  
+
   protected boolean discourseMode = false;
 
   protected final boolean tagged;
 
-  public PlainReader(DependencyPipe pipe, ParserOptions opts, boolean tagged) throws Exception {
+  public PlainReader(DependencyPipe pipe, ParserOptions opts, boolean tagged)
+      throws Exception {
     super(pipe, opts, !tagged);
     this.discourseMode = (opts != null) && opts.discourseMode;
     this.tagged = tagged;
@@ -36,15 +37,15 @@ public class PlainReader extends DependencyReader {
 
   public DependencyInstance readNext(String line) throws IOException {
 
-    //System.err.printf("Reading line: {{{%s}}})\n", line);
+    // System.err.printf("Reading line: {{{%s}}})\n", line);
     line = StringUtils.chomp(line);
     ArrayList<Word> sent = Sentence.toUntaggedList(line.split("\\s+"));
     int length = sent.size();
-    
+
     List<TaggedWord> taggedSent = null;
-    if(!tagged) {
+    if (!tagged) {
       taggedSent = ts.tagSentence(sent);
-      assert(length == taggedSent.size());
+      assert (length == taggedSent.size());
     }
 
     String[] forms = new String[length + 1];
@@ -60,23 +61,24 @@ public class PlainReader extends DependencyReader {
 
     for (int i = 1; i <= length; i++) {
       String formStr, posStr;
-      if(tagged) {
-        String[] toks = sent.get(i-1).word().split("/", 2);
+      if (tagged) {
+        String[] toks = sent.get(i - 1).word().split("/", 2);
         formStr = toks[0];
         posStr = toks[1];
       } else {
-        formStr = sent.get(i-1).word().trim();
-        posStr = taggedSent.get(i-1).tag().trim();
+        formStr = sent.get(i - 1).word().trim();
+        posStr = taggedSent.get(i - 1).tag().trim();
       }
-      
+
       forms[i] = numberClassing(normalize(formStr)).intern();
       pos[i] = normalize(posStr).intern();
       feats[i] = new String[0];
 
-      String lemmaStr = forms[i].length() > 4 ? formStr.substring(0,4) : formStr;
+      String lemmaStr = forms[i].length() > 4 ? formStr.substring(0, 4)
+          : formStr;
       lemmas[i] = numberClassing(normalize(lemmaStr)).intern();
 
-      String cposStr = posStr.length() > 2 ? posStr.substring(0,2) : posStr;
+      String cposStr = posStr.length() > 2 ? posStr.substring(0, 2) : posStr;
       cpos[i] = normalize(cposStr).intern();
     }
 
@@ -92,9 +94,10 @@ public class PlainReader extends DependencyReader {
 
     // End of discourse stuff.
 
-    DependencyInstance in = new DependencyInstance(pipe, forms, lemmas, cpos, pos);
-    if(VERBOSE)
-      System.err.println("returning instance: "+ Util.dump(in));
+    DependencyInstance in = new DependencyInstance(pipe, forms, lemmas, cpos,
+        pos);
+    if (VERBOSE)
+      System.err.println("returning instance: " + Util.dump(in));
     return in;
   }
 

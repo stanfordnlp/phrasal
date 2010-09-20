@@ -31,7 +31,7 @@ class TrieKey {
   }
 
   public int id() {
-    if(n == null)
+    if (n == null)
       return -1;
     return n.id;
   }

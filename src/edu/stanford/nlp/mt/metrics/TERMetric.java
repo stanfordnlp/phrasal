@@ -27,7 +27,10 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   public final TERcalc calc = new TERcalc();
 
-  enum EditType { ins, del, sub, sft }
+  enum EditType {
+    ins, del, sub, sft
+  }
+
   boolean countEdits = false;
 
   public TERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
@@ -46,7 +49,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   @Override
   public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric(
-          NBestListContainer<TK, FV> nbestList) {
+      NBestListContainer<TK, FV> nbestList) {
     throw new UnsupportedOperationException();
   }
 
@@ -60,36 +63,38 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     return 1.0;
   }
 
-	Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
+  Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
 
-  public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans, int idx, double[] editCounts) {
+  public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans,
+      int idx, double[] editCounts) {
     List<Sequence<TK>> refsSeq = referencesList.get(idx);
-    //String[] refs = new String[refsSeq.size()];
-		String key = String.format("%d|||%s", idx, trans.translation.toString());
+    // String[] refs = new String[refsSeq.size()];
+    String key = String.format("%d|||%s", idx, trans.translation.toString());
     TERalignment bestAl = terCache.get(key);
 
-		if (bestAl == null) {
-    	double best = Double.POSITIVE_INFINITY;
-    	String hyp = trans.translation.toString();
-    	//for (int i = 0; i < refs.length; i++) {
-     	// refs[i] = refsSeq.get(i).toString();
-    	//}
-			//System.err.printf("Hyp: %s\n", hyp);
+    if (bestAl == null) {
+      double best = Double.POSITIVE_INFINITY;
+      String hyp = trans.translation.toString();
+      // for (int i = 0; i < refs.length; i++) {
+      // refs[i] = refsSeq.get(i).toString();
+      // }
+      // System.err.printf("Hyp: %s\n", hyp);
 
-			int totalWords = 0;
-    	for (Sequence<TK> ref : refsSeq) {
-     	 TERalignment terAl = calc.TER(hyp, ref.toString());
-				totalWords += terAl.numWords;
-			//System.err.printf("ter: %f\n", ter);
-			//System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits, terAl.numWords);
-     	 if (terAl.numEdits < best) {
-     	   best = terAl.numEdits;
-     	   bestAl = terAl;
-     	 }
-    	}
+      int totalWords = 0;
+      for (Sequence<TK> ref : refsSeq) {
+        TERalignment terAl = calc.TER(hyp, ref.toString());
+        totalWords += terAl.numWords;
+        // System.err.printf("ter: %f\n", ter);
+        // System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits,
+        // terAl.numWords);
+        if (terAl.numEdits < best) {
+          best = terAl.numEdits;
+          bestAl = terAl;
+        }
+      }
       assert (bestAl != null);
-			bestAl.numWords = totalWords/(double)refsSeq.size();
-			terCache.put(key, bestAl);
+      bestAl.numWords = totalWords / (double) refsSeq.size();
+      terCache.put(key, bestAl);
 
       // Member variables no longer needed; free some memory:
       bestAl.hyp = null;
@@ -101,7 +106,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
         bestAl.alignment = null;
     }
 
-    if(editCounts != null) {
+    if (editCounts != null) {
       bestAl.scoreDetails();
       editCounts[EditType.ins.ordinal()] += bestAl.numIns;
       editCounts[EditType.del.ordinal()] += bestAl.numDel;
@@ -112,8 +117,9 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     return bestAl;
   }
 
-  public class TERIncrementalMetric implements IncrementalEvaluationMetric<TK,FV> {
-		TERalignment[] aligns = new TERalignment[referencesList.size()];
+  public class TERIncrementalMetric implements
+      IncrementalEvaluationMetric<TK, FV> {
+    TERalignment[] aligns = new TERalignment[referencesList.size()];
     boolean[] nulls = new boolean[referencesList.size()];
     double[] editCounts = null;
 
@@ -123,7 +129,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     int nullCnt = 0;
 
     public TERIncrementalMetric() {
-      if(countEdits)
+      if (countEdits)
         editCounts = new double[EditType.values().length];
     }
 
@@ -138,14 +144,14 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
     @Override
     public IncrementalEvaluationMetric<TK, FV> add(
-            ScoredFeaturizedTranslation<TK, FV> trans) {
+        ScoredFeaturizedTranslation<TK, FV> trans) {
       if (trans == null) {
         nulls[cnt++] = true;
         nullCnt++;
       } else {
-				aligns[cnt] =  calcTER(trans, cnt, editCounts);
-				editsTotal += aligns[cnt].numEdits;
-				numWordsTotal += aligns[cnt].numWords;
+        aligns[cnt] = calcTER(trans, cnt, editCounts);
+        editsTotal += aligns[cnt].numEdits;
+        numWordsTotal += aligns[cnt].numWords;
         cnt++;
       }
       return this;
@@ -158,15 +164,16 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
     @Override
     public IncrementalEvaluationMetric<TK, FV> replace(int index,
-                                                       ScoredFeaturizedTranslation<TK, FV> trans) {
-      if(countEdits)
-        throw new RuntimeException("TERMetric: can't both use edit counts and replace().");
-			if (aligns[index] != null) {
-				editsTotal -= aligns[index].numEdits;
-				numWordsTotal -= aligns[index].numWords;
-			}
+        ScoredFeaturizedTranslation<TK, FV> trans) {
+      if (countEdits)
+        throw new RuntimeException(
+            "TERMetric: can't both use edit counts and replace().");
+      if (aligns[index] != null) {
+        editsTotal -= aligns[index].numEdits;
+        numWordsTotal -= aligns[index].numWords;
+      }
       if (trans == null) {
-				aligns[index] = null;
+        aligns[index] = null;
         if (!nulls[index]) {
           nulls[index] = true;
           nullCnt++;
@@ -177,17 +184,17 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
           nullCnt--;
         }
         aligns[index] = calcTER(trans, index, null);
-				editsTotal += aligns[index].numEdits;
-				numWordsTotal += aligns[index].numWords;
+        editsTotal += aligns[index].numEdits;
+        numWordsTotal += aligns[index].numWords;
       }
       return this;
     }
 
     @Override
     public double score() {
-      if(VERBOSE)
+      if (VERBOSE)
         System.err.printf("(%s/%s)\n", editsTotal, numWordsTotal);
-      return -editsTotal/(numWordsTotal);
+      return -editsTotal / (numWordsTotal);
     }
 
     @Override
@@ -216,57 +223,74 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     }
 
     @Override
-		public Object clone() throws CloneNotSupportedException {
+    public Object clone() throws CloneNotSupportedException {
       super.clone();
       return new TERIncrementalMetric(this);
     }
 
-    public double insCount() { return editCounts[EditType.ins.ordinal()]; }
-    public double delCount() { return editCounts[EditType.del.ordinal()]; }
-    public double subCount() { return editCounts[EditType.sub.ordinal()]; }
-    public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
+    public double insCount() {
+      return editCounts[EditType.ins.ordinal()];
+    }
+
+    public double delCount() {
+      return editCounts[EditType.del.ordinal()];
+    }
+
+    public double subCount() {
+      return editCounts[EditType.sub.ordinal()];
+    }
+
+    public double sftCount() {
+      return editCounts[EditType.sft.ordinal()];
+    }
   }
 
   public static void main(String[] args) throws IOException {
 
     if (args.length == 0) {
-      System.err.println("Usage:\n\tjava TERMetric (ref 1) (ref 2) ... (ref n) < candidateTranslations\n");
+      System.err
+          .println("Usage:\n\tjava TERMetric (ref 1) (ref 2) ... (ref n) < candidateTranslations\n");
       System.exit(-1);
     }
     VERBOSE = true;
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
-    TERMetric<IString,String> ter = new TERMetric<IString,String>(referencesList);
-    TERMetric<IString,String>.TERIncrementalMetric incMetric = ter.getIncrementalMetric();
+    TERMetric<IString, String> ter = new TERMetric<IString, String>(
+        referencesList);
+    TERMetric<IString, String>.TERIncrementalMetric incMetric = ter
+        .getIncrementalMetric();
 
     if (System.getProperty("fastTER") != null) {
-      System.err.println("beam width: "+ DEFAULT_TER_BEAM_WIDTH);
-      System.err.println("ter shift dist: "+ DEFAULT_TER_SHIFT_DIST);
+      System.err.println("beam width: " + DEFAULT_TER_BEAM_WIDTH);
+      System.err.println("ter shift dist: " + DEFAULT_TER_SHIFT_DIST);
       ter.calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
       ter.calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
     }
 
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
+    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
+        System.in));
 
-    for (String line; (line = reader.readLine()) != null; ) {
+    for (String line; (line = reader.readLine()) != null;) {
       line = NISTTokenizer.tokenize(line);
       line = line.replaceAll("\\s+$", "");
       line = line.replaceAll("^\\s+", "");
-      Sequence<IString> translation = new RawSequence<IString>(IStrings.toIStringArray(line.split("\\s+")));
-      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(translation, null, 0);
+      Sequence<IString> translation = new RawSequence<IString>(
+          IStrings.toIStringArray(line.split("\\s+")));
+      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
+          translation, null, 0);
       incMetric.add(tran);
     }
 
     reader.close();
 
-    System.out.printf("TER = %.3f\n", 100*incMetric.score());
+    System.out.printf("TER = %.3f\n", 100 * incMetric.score());
   }
 
   @Override
   public void enableFastTER() {
     if (System.getProperty("fastTER") != null) {
-      System.err.println("beam width: "+ DEFAULT_TER_BEAM_WIDTH);
-      System.err.println("ter shift dist: "+ DEFAULT_TER_SHIFT_DIST);
+      System.err.println("beam width: " + DEFAULT_TER_BEAM_WIDTH);
+      System.err.println("ter shift dist: " + DEFAULT_TER_SHIFT_DIST);
       calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
       calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
     }

@@ -1,10 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This serves to handle the alignment probabilities
- * this is trigram HMM . The tags of the previous two english
- * words are used as well
- *
+ * This serves to handle the alignment probabilities this is trigram HMM . The
+ * tags of the previous two english words are used as well
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
@@ -12,21 +11,18 @@ public class AlHandlerHMM2E extends AlHandlerHMM2 {
   ATableHMMHolder aHolder;
   ATableHMM2[][] tables;
 
-
   public AlHandlerHMM2E(ATableHMMHolder aHolder) {
     this.aHolder = aHolder;
   }
 
-
   @Override
-	public void setPair(SentencePair sent) {
+  public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
   }
 
-
   @Override
-	public void init() {
+  public void init() {
 
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
@@ -59,18 +55,15 @@ public class AlHandlerHMM2E extends AlHandlerHMM2 {
 
       }
 
-
     }
 
   }
-
 
   /*
    * get the probability p choose i for j
    */
   @Override
-	public double getProb(int i, int j, int[] alignment) {
-
+  public double getProb(int i, int j, int[] alignment) {
 
     if (j == 1) {
       a = tables[0][0];
@@ -80,27 +73,28 @@ public class AlHandlerHMM2E extends AlHandlerHMM2 {
     if ((alignment[j - 1] == 0) && (alignment[j - 2] > 0)) {
       return 0;
     }
-    if ((alignment[j - 1] > l) && (alignment[j - 2] != alignment[j - 1]) && (alignment[j - 2] != alignment[j - 1] - l)) {
+    if ((alignment[j - 1] > l) && (alignment[j - 2] != alignment[j - 1])
+        && (alignment[j - 2] != alignment[j - 1] - l)) {
       return 0;
     }
 
     a = tables[alignment[j - 1]][alignment[j - 2]];
     if (a == null) {
 
-      System.out.println("The table for i_p " + alignment[j - 1] + " i_pp " + alignment[j - 2] + " length " + l + " is null");
+      System.out.println("The table for i_p " + alignment[j - 1] + " i_pp "
+          + alignment[j - 2] + " length " + l + " is null");
       return 0;
     }
     return a.getProb(i, alignment[j - 1], alignment[j - 2], l);
 
   }
 
-
   /**
    * increment the count for c(i|i_p,i_pp) by val
    */
 
   @Override
-	public void incCount(int i, int j, int[] alignment, double val) {
+  public void incCount(int i, int j, int[] alignment, double val) {
 
     int i_p, i_pp;
 
@@ -117,15 +111,14 @@ public class AlHandlerHMM2E extends AlHandlerHMM2 {
       i_pp = alignment[j - 2];
       a = tables[i_p][i_pp];
     }
-    //System.out.println("Incrementing count for "+i+" "+i_p+" "+i_pp+" with "+val+" length is "+l+" j is "+j);
+    // System.out.println("Incrementing count for "+i+" "+i_p+" "+i_pp+" with "+val+" length is "+l+" j is "+j);
 
     if (j == 1) {
       a.incCount(i, 0, 0, l, val);
       return;
     }
     a.incCount(i, i_p, i_pp, l, val);
-    //nothing
+    // nothing
   }
-
 
 }

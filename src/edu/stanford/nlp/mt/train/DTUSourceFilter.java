@@ -35,7 +35,8 @@ public class DTUSourceFilter extends AbstractSourceFilter {
     int xCount;
 
     public int hashCode() {
-      return Arrays.hashCode(new int[] { bs.hashCode(), phraseStartPos, xStartPos, phraseEndPos });
+      return Arrays.hashCode(new int[] { bs.hashCode(), phraseStartPos,
+          xStartPos, phraseEndPos });
     }
 
     public boolean equals(Object o) {
@@ -50,7 +51,7 @@ public class DTUSourceFilter extends AbstractSourceFilter {
       bs.set(phraseStartPos);
       this.phraseStartPos = phraseStartPos;
       this.phraseEndPos = phraseStartPos;
-      xStartPos = phraseEndPos+1;
+      xStartPos = phraseEndPos + 1;
       xCount = 0;
     }
 
@@ -85,7 +86,7 @@ public class DTUSourceFilter extends AbstractSourceFilter {
       if (xStartPos > phraseEndPos)
         return null;
       PartialBitSet ns = new PartialBitSet(this);
-      ns.xStartPos = ns.phraseEndPos+1;
+      ns.xStartPos = ns.phraseEndPos + 1;
       ++ns.xCount;
       return ns;
     }
@@ -96,34 +97,38 @@ public class DTUSourceFilter extends AbstractSourceFilter {
 
     // Enumerate all sub-sequences of fLine and add them to sourcePhraseTable:
     fLine = fLine.trim();
-    Sequence<IString> f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fLine.split("\\s+")));
+    Sequence<IString> f = new SimpleSequence<IString>(true,
+        IStrings.toIStringArray(fLine.split("\\s+")));
     Deque<PartialBitSet> oq = new LinkedList<PartialBitSet>();
     Set<PartialBitSet> cq = new HashSet<PartialBitSet>();
-    for (int i=0; i<f.size(); ++i)
+    for (int i = 0; i < f.size(); ++i)
       oq.add(new PartialBitSet(i));
     while (!oq.isEmpty()) {
       PartialBitSet s = oq.pop();
       if (s == null)
         continue;
       if (s.xStartPos > s.phraseEndPos && s.phraseEndPos <= f.size())
-        if(!cq.add(s))
+        if (!cq.add(s))
           continue;
       if (s.phraseEndPos - s.phraseStartPos + 1 > maxSpanF)
         continue;
       if (s.bs.cardinality() >= maxPhraseLenF)
         continue;
       oq.push(s.closeGap());
-      if (s.phraseEndPos+1 <= f.size()) {
+      if (s.phraseEndPos + 1 <= f.size()) {
         oq.push(s.resizeGap());
         oq.push(s.resizeNoGap());
       }
     }
-    
+
     for (PartialBitSet s : cq) {
-      Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f, s.bs, null, -1);
+      Sequence<IString> fPhrase = DiscontinuousSubSequences.subsequence(f,
+          s.bs, null, -1);
       if (fPhrase != null) {
         if (SHOW_PHRASE_RESTRICTION)
-          System.err.printf("Restrict to dtu (i=%d,j=%d,M=%d): %s\n",s.phraseStartPos,s.phraseEndPos,maxPhraseLenF,fPhrase.toString());
+          System.err.printf("Restrict to dtu (i=%d,j=%d,M=%d): %s\n",
+              s.phraseStartPos, s.phraseEndPos, maxPhraseLenF,
+              fPhrase.toString());
         sourcePhraseTable.indexOf(Sequences.toIntArray(fPhrase), true);
       }
     }
@@ -131,7 +136,7 @@ public class DTUSourceFilter extends AbstractSourceFilter {
   }
 
   public TrieIntegerArrayIndex getSourceTrie() {
-    assert (sourcePhraseTable!= null);
+    assert (sourcePhraseTable != null);
     return (TrieIntegerArrayIndex) sourcePhraseTable;
   }
 }

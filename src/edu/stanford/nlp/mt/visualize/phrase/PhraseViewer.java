@@ -5,7 +5,8 @@ import java.util.List;
 
 public final class PhraseViewer {
 
-  private PhraseViewer() {}
+  private PhraseViewer() {
+  }
 
   private static String usage() {
     String cmdLineUsage = String.format("Usage: java PhraseViewer [OPTS]\n");
@@ -32,7 +33,7 @@ public final class PhraseViewer {
   private static String XSD_FILE = null;
 
   private static boolean validateCommandLine(String[] args) {
-    //Command line parsing
+    // Command line parsing
     OptionSet opts = null;
     List<String> parsedArgs = null;
     try {
@@ -40,7 +41,7 @@ public final class PhraseViewer {
 
       parsedArgs = opts.nonOptionArguments();
 
-      if(parsedArgs.size() < MIN_ARGS)
+      if (parsedArgs.size() < MIN_ARGS)
         return false;
 
     } catch (OptionException e) {
@@ -49,23 +50,22 @@ public final class PhraseViewer {
     }
 
     VERBOSE = opts.has("v");
-    if(opts.has("s"))
+    if (opts.has("s"))
       SRC_FILE = (String) opts.valueOf("s");
-    if(opts.has("o"))
+    if (opts.has("o"))
       OPTS_FILE = (String) opts.valueOf("o");
-    if(opts.has("x"))
+    if (opts.has("x"))
       XSD_FILE = (String) opts.valueOf("x");
-    if(opts.has("f"))
+    if (opts.has("f"))
       FIRST_ID = Integer.parseInt(opts.valueOf("f").toString());
-    if(opts.has("l"))
+    if (opts.has("l"))
       LAST_ID = Integer.parseInt(opts.valueOf("l").toString());
 
     return true;
   }
 
-
   public static void main(String[] args) {
-    if(!validateCommandLine(args)) {
+    if (!validateCommandLine(args)) {
       System.err.println(usage());
       System.exit(-1);
     }
@@ -73,25 +73,26 @@ public final class PhraseViewer {
     PhraseController pc = PhraseController.getInstance();
 
     pc.setVerbose(VERBOSE);
-    
-    if(!pc.setRange(FIRST_ID,LAST_ID)) {
-      System.err.printf("ERROR: Invalid range specified {%d,%d}\n", FIRST_ID,LAST_ID);
+
+    if (!pc.setRange(FIRST_ID, LAST_ID)) {
+      System.err.printf("ERROR: Invalid range specified {%d,%d}\n", FIRST_ID,
+          LAST_ID);
       System.exit(-1);
     }
-    if(SRC_FILE != null && !pc.setSourceFile(SRC_FILE)) {
+    if (SRC_FILE != null && !pc.setSourceFile(SRC_FILE)) {
       System.err.printf("ERROR: %s does not exist!\n", SRC_FILE);
       System.exit(-1);
     }
-    if(OPTS_FILE != null && !pc.setOptsFile(OPTS_FILE)) {
+    if (OPTS_FILE != null && !pc.setOptsFile(OPTS_FILE)) {
       System.err.printf("ERROR: %s does not exist!\n", OPTS_FILE);
       System.exit(-1);
     }
-    if(XSD_FILE != null && !pc.setSchemaFile(XSD_FILE)) {
+    if (XSD_FILE != null && !pc.setSchemaFile(XSD_FILE)) {
       System.err.printf("ERROR: %s does not exist!\n", XSD_FILE);
       System.exit(-1);
     }
 
     pc.run();
 
-  } 
+  }
 }

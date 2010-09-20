@@ -1,21 +1,25 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This serves to handle the alignment probabilities.
- * The basic functionality is getProb(i,j,alignment) and incCount(i,j,alignment,val).
- * Handles conditioning on many different tag configurations - french tags and english tags.
- * The conditioning tags are specified with a number which contains flags for different tags.
- *
+ * This serves to handle the alignment probabilities. The basic functionality is
+ * getProb(i,j,alignment) and incCount(i,j,alignment,val). Handles conditioning
+ * on many different tag configurations - french tags and english tags. The
+ * conditioning tags are specified with a number which contains flags for
+ * different tags.
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
 public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
   private ATableHMMHolder aHolder;
-  private ATableHMM[] tables; //in some cases we will use just one dimension , when conditioning on just one tag
-  private ATableHMM[][] tables_b; // when using both french and english tags, will use the 2 dim array
-  /** In the mask the bits specify the presence/absence of tags.
-   *  The meanings are     | 32-ETaj-1-1| 16-ET(aj-1)| 8-ET(aj-1)+1| 4-FTj-1| 2-FTj| 1 - FTj+1|
+  private ATableHMM[] tables; // in some cases we will use just one dimension ,
+                              // when conditioning on just one tag
+  private ATableHMM[][] tables_b; // when using both french and english tags,
+                                  // will use the 2 dim array
+  /**
+   * In the mask the bits specify the presence/absence of tags. The meanings are
+   * | 32-ETaj-1-1| 16-ET(aj-1)| 8-ET(aj-1)+1| 4-FTj-1| 2-FTj| 1 - FTj+1|
    */
   private int mask;
   private int numTags = 0;
@@ -31,16 +35,16 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
   public AlHandlerHMM1Tags(ATableHMMHolder a, int mask) {
     this.aHolder = a;
     this.mask = mask;
-    //count the number of tags;
+    // count the number of tags;
     for (int i = 1; i <= 32; i *= 2) {
       if ((mask & i) > 0) {
         numTags++;
       }
     }
-    //System.out.println("Number of tags is "+numTags);
+    // System.out.println("Number of tags is "+numTags);
     fEOS = SentenceHandler.sTableF.getEos();
     eEOS = SentenceHandler.sTableE.getEos();
-    //addBeta=SentenceHandler.get
+    // addBeta=SentenceHandler.get
     if ((mask & (1 | 2 | 4)) > 0) {
       useF = true;
     }
@@ -49,13 +53,11 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
     }
   }
 
-
   @Override
   public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
   }
-
 
   @Override
   public void init() {
@@ -76,7 +78,6 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
     IntTuple iT = IntTuple.getIntTuple(numTags);
     int current = 0;
 
-
     if (useE) {
 
       int i_real = 0;
@@ -95,13 +96,13 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             } else {
               iT.set(current, sentPair.e.getWord(i_real - 1).getTagId());
             }
-          }//if i<=l
+          }// if i<=l
           else {
 
             iT.set(current, sentPair.e.getWord(i_real - 1).getTagId());
           }
           current++;
-        }//mask&32>0
+        }// mask&32>0
 
         if ((mask & 16) > 0) {
           i_real = i;
@@ -115,15 +116,14 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             } else {
               iT.set(current, sentPair.e.getWord(i_real).getTagId());
             }
-          }//if i<=l
+          }// if i<=l
           else {
-            iT.set(current, sentPair.e.getWord(i_real).getTagId());//null
+            iT.set(current, sentPair.e.getWord(i_real).getTagId());// null
           }
           current++;
-        }//mask&16>0
+        }// mask&16>0
 
-
-        if ((mask & 8) > 0) { //eai+1
+        if ((mask & 8) > 0) { // eai+1
           int ireal = i;
           if (i > l) {
             ireal -= l;
@@ -135,15 +135,14 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
           }
 
           current++;
-        }//mask&8>0
-
+        }// mask&8>0
 
         if (useF) {
           int current_start = current;
           for (int j = 1; j <= m + 1; j++) {
-            //add the tags for the js
+            // add the tags for the js
             current = current_start;
-            if ((mask & 4) > 0) { //tfj-1
+            if ((mask & 4) > 0) { // tfj-1
               if (j == 1) {
                 iT.set(current, fEOS.getTagId());
               } else {
@@ -151,9 +150,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
                 iT.set(current, sentPair.f.getWord(j - 1).getTagId());
               }
               current++;
-            }//mask 4
+            }// mask 4
 
-            if ((mask & 2) > 0) { //tfj
+            if ((mask & 2) > 0) { // tfj
               if (j == m + 1) {
                 iT.set(current, fEOS.getTagId());
               } else {
@@ -161,9 +160,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
                 iT.set(current, sentPair.f.getWord(j).getTagId());
               }
               current++;
-            }//mask 2
+            }// mask 2
 
-            if ((mask & 1) > 0) { //tfj+1
+            if ((mask & 1) > 0) { // tfj+1
               if (j >= m) {
                 iT.set(current, fEOS.getTagId());
               } else {
@@ -171,29 +170,27 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
                 iT.set(current, sentPair.f.getWord(j + 1).getTagId());
               }
               current++;
-            }//mask 1
+            }// mask 1
 
-            //the tuple is ready
+            // the tuple is ready
             tables_b[i][j] = (ATableHMM) aHolder.get(iT);
 
+          } // for j
 
-          } //for j
-
-        }//if useF
+        }// if useF
         else {
           tables[i] = (ATableHMM) aHolder.get(iT);
 
         }
 
+      } // for i
 
-      } //for i
-
-    }//useE
+    }// useE
     else {
       for (int j = 1; j <= m + 1; j++) {
-        //add the tags for the js
+        // add the tags for the js
         current = 0;
-        if ((mask & 4) > 0) { //tfj-1
+        if ((mask & 4) > 0) { // tfj-1
           if (j == 1) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -201,9 +198,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j - 1).getTagId());
           }
           current++;
-        }//mask 4
+        }// mask 4
 
-        if ((mask & 2) > 0) { //tfj
+        if ((mask & 2) > 0) { // tfj
           if (j == m + 1) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -211,9 +208,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j).getTagId());
           }
           current++;
-        }//mask 2
+        }// mask 2
 
-        if ((mask & 1) > 0) { //tfj+1
+        if ((mask & 1) > 0) { // tfj+1
           if (j >= m) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -221,19 +218,16 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j + 1).getTagId());
           }
           current++;
-        }//mask 1
+        }// mask 1
 
-        //the tuple is ready
+        // the tuple is ready
         tables[j] = (ATableHMM) aHolder.get(iT);
 
+      } // for j
 
-      } //for j
-
-    }//else
-
+    }// else
 
   }
-
 
   public void addEntries(SentencePair sentPair, TupleCounter TC) {
 
@@ -242,7 +236,6 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
     IntTuple iT = IntTuple.getIntTuple(numTags);
     int current = 0;
-
 
     if (useE) {
 
@@ -260,12 +253,12 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             } else {
               iT.set(current, sentPair.e.getWord(i_real - 1).getTagId());
             }
-          }//if i<=l
+          }// if i<=l
           else {
             iT.set(current, sentPair.e.getWord(i - l).getTagId());
           }
           current++;
-        }//mask&32>0
+        }// mask&32>0
 
         if ((mask & 16) > 0) {
           int i_real = i;
@@ -278,16 +271,15 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             } else {
               iT.set(current, sentPair.e.getWord(i_real).getTagId());
             }
-          }//if i<=l
+          }// if i<=l
           else {
-            iT.set(current, sentPair.e.getWord(0).getTagId());//null
+            iT.set(current, sentPair.e.getWord(0).getTagId());// null
             System.out.println(" just added a null i is " + i);
           }
           current++;
-        }//mask&16>0
+        }// mask&16>0
 
-
-        if ((mask & 8) > 0) { //eai+1
+        if ((mask & 8) > 0) { // eai+1
           int ireal = i;
           if (i > l) {
             ireal -= l;
@@ -299,28 +291,27 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
           }
 
           current++;
-        }//mask&8>0
-
+        }// mask&8>0
 
         if (useF) {
           int current_start = current;
           for (int j = 1; j <= m + 1; j++) {
             current = current_start;
-            //add the tags for the js
-            if ((mask & 4) > 0) { //tfj-1
-              //System.out.println(" mask contains 4");
+            // add the tags for the js
+            if ((mask & 4) > 0) { // tfj-1
+              // System.out.println(" mask contains 4");
               if (j == 1) {
                 iT.set(current, fEOS.getTagId());
               } else {
 
                 iT.set(current, sentPair.f.getWord(j - 1).getTagId());
-                //System.out.println(j+" setting current "+sentPair.f.getWord(j-1).getTagId());
+                // System.out.println(j+" setting current "+sentPair.f.getWord(j-1).getTagId());
               }
               current++;
-            }//mask 4
+            }// mask 4
 
-            if ((mask & 2) > 0) { //tfj
-              //System.out.println(" mask contains 2");
+            if ((mask & 2) > 0) { // tfj
+              // System.out.println(" mask contains 2");
               if (j == m + 1) {
                 iT.set(current, fEOS.getTagId());
               } else {
@@ -328,10 +319,10 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
                 iT.set(current, sentPair.f.getWord(j).getTagId());
               }
               current++;
-            }//mask 2
+            }// mask 2
 
-            if ((mask & 1) > 0) { //tfj+1
-              //System.out.println(" mask contains 1");
+            if ((mask & 1) > 0) { // tfj+1
+              // System.out.println(" mask contains 1");
               if (j >= m) {
                 iT.set(current, fEOS.getTagId());
               } else {
@@ -339,17 +330,16 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
                 iT.set(current, sentPair.f.getWord(j + 1).getTagId());
               }
               current++;
-            }//mask 1
+            }// mask 1
 
-            //the tuple is ready
+            // the tuple is ready
             if (wantadd(iT)) {
               TC.add(iT, sentPair.getCount());
             }
 
+          } // for j
 
-          } //for j
-
-        }//if useF
+        }// if useF
         else {
 
           if (wantadd(iT)) {
@@ -358,15 +348,14 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
         }
 
+      } // for i
 
-      } //for i
-
-    }//useE
+    }// useE
     else {
       for (int j = 1; j <= m + 1; j++) {
-        //add the tags for the js
+        // add the tags for the js
         current = 0;
-        if ((mask & 4) > 0) { //tfj-1
+        if ((mask & 4) > 0) { // tfj-1
           if (j == 1) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -374,9 +363,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j - 1).getTagId());
           }
           current++;
-        }//mask 4
+        }// mask 4
 
-        if ((mask & 2) > 0) { //tfj
+        if ((mask & 2) > 0) { // tfj
           if (j == m + 1) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -384,9 +373,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j).getTagId());
           }
           current++;
-        }//mask 2
+        }// mask 2
 
-        if ((mask & 1) > 0) { //tfj+1
+        if ((mask & 1) > 0) { // tfj+1
           if (j >= m) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -394,23 +383,21 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j + 1).getTagId());
           }
           current++;
-        }//mask 1
+        }// mask 1
 
-        //the tuple is ready
+        // the tuple is ready
         if (wantadd(iT)) {
           TC.add(iT, sentPair.getCount());
         }
 
+      } // for j
 
-      } //for j
-
-    }//else
-
+    }// else
 
   }
 
-
-  public void addEntries(SentencePair sentPair, TupleCounter TC, int[] viterbi_alignment) {
+  public void addEntries(SentencePair sentPair, TupleCounter TC,
+      int[] viterbi_alignment) {
 
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
@@ -418,26 +405,25 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
     IntTuple iT = IntTuple.getIntTuple(numTags);
     int current = 0;
 
-
     if (DEBUG) {
-      //print out stuff about the sentence & alignment
-      //System.out.println(" Printing alignment");
+      // print out stuff about the sentence & alignment
+      // System.out.println(" Printing alignment");
       System.out.println(" French sentence length " + m + " english " + l);
       for (int j = 1; j <= m; j++) {
         System.out.print(" " + j + " " + viterbi_alignment[j]);
       }
       System.out.println();
       for (int i1 = 1; i1 <= l; i1++) {
-        System.out.print(SentenceHandler.sTableE.getName(sentPair.e.getWord(i1).getTagId()) + " ");
+        System.out.print(SentenceHandler.sTableE.getName(sentPair.e.getWord(i1)
+            .getTagId()) + " ");
       }
       System.out.println();
 
     }
 
-
     for (int jM = 1; jM <= m + 1; jM++) {
 
-      //if(jM==m+1){i=2*l+1;}else{
+      // if(jM==m+1){i=2*l+1;}else{
       int i = viterbi_alignment[jM - 1];
 
       if (useE) {
@@ -454,12 +440,12 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             } else {
               iT.set(current, sentPair.e.getWord(i_real - 1).getTagId());
             }
-          }//if i<=l
+          }// if i<=l
           else {
             iT.set(current, sentPair.e.getWord(i_real - 1).getTagId());
           }
           current++;
-        }//mask&32>0
+        }// mask&32>0
 
         if ((mask & 16) > 0) {
           int i_real = i;
@@ -472,16 +458,15 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             } else {
               iT.set(current, sentPair.e.getWord(i_real).getTagId());
             }
-          }//if i<=l
+          }// if i<=l
           else {
-            iT.set(current, eEOS.getTagId());//null
-            //System.out.println(" just added a null i is "+i);
+            iT.set(current, eEOS.getTagId());// null
+            // System.out.println(" just added a null i is "+i);
           }
           current++;
-        }//mask&16>0
+        }// mask&16>0
 
-
-        if ((mask & 8) > 0) { //eai+1
+        if ((mask & 8) > 0) { // eai+1
           int ireal = i;
           if (i > l) {
             ireal -= l;
@@ -493,28 +478,27 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
           }
 
           current++;
-        }//mask&8>0
-
+        }// mask&8>0
 
         if (useF) {
           int current_start = current;
           int j = jM;
           current = current_start;
-          //add the tags for the js
-          if ((mask & 4) > 0) { //tfj-1
-            //System.out.println(" mask contains 4");
+          // add the tags for the js
+          if ((mask & 4) > 0) { // tfj-1
+            // System.out.println(" mask contains 4");
             if (j == 1) {
               iT.set(current, fEOS.getTagId());
             } else {
 
               iT.set(current, sentPair.f.getWord(j - 1).getTagId());
-              //System.out.println(j+" setting current "+sentPair.f.getWord(j-1).getTagId());
+              // System.out.println(j+" setting current "+sentPair.f.getWord(j-1).getTagId());
             }
             current++;
-          }//mask 4
+          }// mask 4
 
-          if ((mask & 2) > 0) { //tfj
-            //System.out.println(" mask contains 2");
+          if ((mask & 2) > 0) { // tfj
+            // System.out.println(" mask contains 2");
             if (j == m + 1) {
               iT.set(current, fEOS.getTagId());
             } else {
@@ -522,10 +506,10 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
               iT.set(current, sentPair.f.getWord(j).getTagId());
             }
             current++;
-          }//mask 2
+          }// mask 2
 
-          if ((mask & 1) > 0) { //tfj+1
-            //System.out.println(" mask contains 1");
+          if ((mask & 1) > 0) { // tfj+1
+            // System.out.println(" mask contains 1");
             if (j >= m) {
               iT.set(current, fEOS.getTagId());
             } else {
@@ -533,15 +517,14 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
               iT.set(current, sentPair.f.getWord(j + 1).getTagId());
             }
             current++;
-          }//mask 1
+          }// mask 1
 
-          //the tuple is ready
+          // the tuple is ready
           if (wantadd(iT)) {
             TC.add(iT, sentPair.getCount());
           }
 
-
-        }//if useF
+        }// if useF
         else {
 
           if (wantadd(iT)) {
@@ -550,12 +533,12 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
 
         }
 
-      }//useE
+      }// useE
       else {
         int j = jM;
-        //add the tags for the js
+        // add the tags for the js
         current = 0;
-        if ((mask & 4) > 0) { //tfj-1
+        if ((mask & 4) > 0) { // tfj-1
           if (j == 1) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -563,9 +546,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j - 1).getTagId());
           }
           current++;
-        }//mask 4
+        }// mask 4
 
-        if ((mask & 2) > 0) { //tfj
+        if ((mask & 2) > 0) { // tfj
           if (j == m + 1) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -573,9 +556,9 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j).getTagId());
           }
           current++;
-        }//mask 2
+        }// mask 2
 
-        if ((mask & 1) > 0) { //tfj+1
+        if ((mask & 1) > 0) { // tfj+1
           if (j >= m) {
             iT.set(current, fEOS.getTagId());
           } else {
@@ -583,40 +566,33 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
             iT.set(current, sentPair.f.getWord(j + 1).getTagId());
           }
           current++;
-        }//mask 1
+        }// mask 1
 
-        //the tuple is ready
+        // the tuple is ready
         if (wantadd(iT)) {
           TC.add(iT, sentPair.getCount());
         }
 
-
-      }//else
-
+      }// else
 
     }
 
-
   }
-
 
   public boolean wantadd(IntTuple iT) {
     return true;
     /*
-     for(int i=0;i<iT.numElements;i++){
-
-      tag=iT.get(i);
-      nameTag=SentenceHandler.sTableE.getName(tag);
-      if(nameTag.indexOf("NN") >-1){containsNN=true;}
-      if(nameTag.indexOf("JJ")>-1){containsJJ=true;}
-
-     }
-
-     if(containsNN&&containsJJ){return true;}
-     else{return false;}
+     * for(int i=0;i<iT.numElements;i++){
+     * 
+     * tag=iT.get(i); nameTag=SentenceHandler.sTableE.getName(tag);
+     * if(nameTag.indexOf("NN") >-1){containsNN=true;}
+     * if(nameTag.indexOf("JJ")>-1){containsJJ=true;}
+     * 
+     * }
+     * 
+     * if(containsNN&&containsJJ){return true;} else{return false;}
      */
   }
-
 
   /*
    * get the probability p choose i for j
@@ -637,23 +613,22 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
       }
     }
 
-    //System.out.println(" for j "+j+" i "+i+" using table "+a.name);
+    // System.out.println(" for j "+j+" i "+i+" using table "+a.name);
 
     prob1 = a.getProb(i, alignment[j - 1], l);
 
     if (this.aHolder.smooth) {
       double prob2 = aHolder.getSmoothTable().getProb(i, alignment[j - 1], l);
-      //lambdasm=addBeta/(double)(a.getCount()+addBeta);
+      // lambdasm=addBeta/(double)(a.getCount()+addBeta);
 
       prob1 = (1 - lambdasm) * prob1 + lambdasm * prob2;
     }
     return prob1;
   }
 
-
   /**
-   * Increment the count for c(choose|ei) by val and also increment the probability for not choose
-   * by 1-val
+   * Increment the count for c(choose|ei) by val and also increment the
+   * probability for not choose by 1-val
    */
 
   @Override
@@ -678,13 +653,12 @@ public class AlHandlerHMM1Tags extends AlHandlerHMM1 {
       }
     }
 
-    //System.out.println(" incrementing with "+val+" count for table "+a.name);
+    // System.out.println(" incrementing with "+val+" count for table "+a.name);
     a.incCount(i, alignment[j - 1], l, val);
     if (this.aHolder.smooth) {
       aHolder.getSmoothTable().incCount(i, alignment[j - 1], l, val);
     }
-    //nothing
+    // nothing
   }
-
 
 }

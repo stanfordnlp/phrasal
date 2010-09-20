@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-
 /* Stores a probability , which is a double, and a count, which is
  * double as well
  *@author Kristina Toutanova (kristina@cs.stanford.edu)
@@ -17,7 +16,6 @@ public class ProbCountHolder {
     this.prob = prob;
     this.count = count;
   }
-
 
   public void swap() {
     double tmp = prob;
@@ -46,4 +44,4 @@ public class ProbCountHolder {
     count += cnt;
   }
 
-} 
+}

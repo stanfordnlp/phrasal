@@ -14,36 +14,41 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-
 /**
  * A standalone feature extractor.<br>
- * Usage: <code>java edu.stanford.nlp.mt.reranker.LegacyFeatureExtractor (datadescriptor) (outputFeatureFile) [options for what features to extract]</code><br>
+ * Usage:
+ * <code>java edu.stanford.nlp.mt.reranker.LegacyFeatureExtractor (datadescriptor) (outputFeatureFile) [options for what features to extract]</code>
+ * <br>
  * example:<br>
  * <code>java -mx3g edu.stanford.nlp.mt.reranker.LegacyFeatureExtractor scr/features/datadescriptors/0.txt   scr/features/sets/extractAlignedWordPairsBigram/0.feats -extractAlignedWordPairsBigram</code>
- * <h3>Data Descriptor</h3>
- * The data descriptor should look like:<br>
- * <code>/u/nlp/data/gale/n-best-reranking-2007/reranker/mt03/scr/features/datadescriptors/0.txt</code><br>
+ * <h3>Data Descriptor</h3> The data descriptor should look like:<br>
+ * <code>/u/nlp/data/gale/n-best-reranking-2007/reranker/mt03/scr/features/datadescriptors/0.txt</code>
+ * <br>
  * Valid fields in the data descriptor:
  * <ul>
- * <li> LoadOffset: by default, the data number starts at 0. If there's an offset, use "LoadOffset" to override it.
- * For example: <code>LoadOffset: 100</code>
- * <li> TrainRange: For example: <code>Trainrange: 0-89</code>.
- * If LoadOffset was set to 100, then the traning examples are actually 100 to 189
- * <li> SourceTrees: where the source trees are. For example: /u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/srcSents/trees/
- * <li> TargetTrees: where the target trees are. For example: /u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/tgtSents/trees/
- * <li> Alignments: the location of the alignments. For example: /u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/tgtSents/alignments/
+ * <li>LoadOffset: by default, the data number starts at 0. If there's an
+ * offset, use "LoadOffset" to override it. For example:
+ * <code>LoadOffset: 100</code>
+ * <li>TrainRange: For example: <code>Trainrange: 0-89</code>. If LoadOffset was
+ * set to 100, then the traning examples are actually 100 to 189
+ * <li>SourceTrees: where the source trees are. For example:
+ * /u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/srcSents/trees/
+ * <li>TargetTrees: where the target trees are. For example:
+ * /u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/tgtSents/trees/
+ * <li>Alignments: the location of the alignments. For example:
+ * /u/nlp/data/gale/n-best-reranking/reranker/mt03/scr/tgtSents/alignments/
  * </ul>
  * <h3>Options for features to extract</h3>
  * <ul>
- * <li> -extractEnZhPathFeatures
- * <li> -extractEnZhPathFeatures_ZhEn
- * <li> -extractAlignedWordPairFeatures
- * <li> -extractAlignedTagPairFeatures
- * <li> -extractAlignedWordPairsBigram
- * <li> -extractAlignedWordPairsBigram_ZhEn
- * <li> -extractPathFeatures
+ * <li>-extractEnZhPathFeatures
+ * <li>-extractEnZhPathFeatures_ZhEn
+ * <li>-extractAlignedWordPairFeatures
+ * <li>-extractAlignedTagPairFeatures
+ * <li>-extractAlignedWordPairsBigram
+ * <li>-extractAlignedWordPairsBigram_ZhEn
+ * <li>-extractPathFeatures
  * </ul>
- *
+ * 
  * @author cer (daniel.cer@colorado.edu)
  * @author Pi-Chuan Chang
  */
@@ -102,7 +107,8 @@ public class LegacyFeatureExtractor implements Serializable {
 
   static public String getMandatoryProperty(Properties p, String name) {
     if (!p.containsKey(name)) {
-      throw new RuntimeException("Error: descriptor is missing mandatory " + "property '" + name + "'");
+      throw new RuntimeException("Error: descriptor is missing mandatory "
+          + "property '" + name + "'");
     }
     return p.getProperty(name).replaceAll("\\s+$", "");
   }
@@ -122,40 +128,38 @@ public class LegacyFeatureExtractor implements Serializable {
 
     String[] fields = r.split("-");
     if (fields.length != 2) {
-      throw new RuntimeException("Error: invalid range '" + r + "' found " + "when parsing data set descriptor");
+      throw new RuntimeException("Error: invalid range '" + r + "' found "
+          + "when parsing data set descriptor");
     }
     return newRange(Integer.parseInt(fields[0]), Integer.parseInt(fields[1]));
   }
 
-  static public LegacyFeatureExtractor load(String dataSetDescriptor, PrintStream pstrm, Properties p) throws IOException {
-    System.out.printf("Loading data set specified by descriptor: '%s'\n", dataSetDescriptor);
-    
+  static public LegacyFeatureExtractor load(String dataSetDescriptor,
+      PrintStream pstrm, Properties p) throws IOException {
+    System.out.printf("Loading data set specified by descriptor: '%s'\n",
+        dataSetDescriptor);
+
     try {
       /*
-      // First, attempt to load a serialized LegacyFeatureExtractor
-      // from the filename given by dataSetDescriptor
-      try {
-        ds = loadSerialized(dataSetDescriptor);
-        System.out.printf("Data set successfully loaded as "+
-          "serialized .mt.reranker.LegacyFeatureExtractor\n");
-        System.out.printf("Load time: %.3f s\n", ds.loadTime*1.0e-9);
-        return ds;
-      } catch (IOException e) {
-        // okay, so we're probably not dealing with a serialized
-        // LegacyFeatureExtractor as this is probably a
-        // "Not in GZIP format" IOException
-        priorException = e;
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        e.printStackTrace(pw); pw.close();
-        priorStackTrace = sw.toString();
-      }
-      */
+       * // First, attempt to load a serialized LegacyFeatureExtractor // from
+       * the filename given by dataSetDescriptor try { ds =
+       * loadSerialized(dataSetDescriptor);
+       * System.out.printf("Data set successfully loaded as "+
+       * "serialized .mt.reranker.LegacyFeatureExtractor\n");
+       * System.out.printf("Load time: %.3f s\n", ds.loadTime*1.0e-9); return
+       * ds; } catch (IOException e) { // okay, so we're probably not dealing
+       * with a serialized // LegacyFeatureExtractor as this is probably a //
+       * "Not in GZIP format" IOException priorException = e; StringWriter sw =
+       * new StringWriter(); PrintWriter pw = new PrintWriter(sw);
+       * e.printStackTrace(pw); pw.close(); priorStackTrace = sw.toString(); }
+       */
 
       // Now, we'll try treating the file specified by dataSetDescriptor
       // as a LegacyFeatureExtractor plain text descriptor
-      LegacyFeatureExtractor ds = loadByTextDescriptor(dataSetDescriptor, pstrm, p);
-      System.out.printf("Data set successfully loaded as plain text data set description\n");
+      LegacyFeatureExtractor ds = loadByTextDescriptor(dataSetDescriptor,
+          pstrm, p);
+      System.out
+          .printf("Data set successfully loaded as plain text data set description\n");
       System.out.printf("Load time: %.3f s\n", ds.loadTime * 1.0e-9);
 
       // If requested, unify the data set to a single binary file
@@ -163,23 +167,35 @@ public class LegacyFeatureExtractor implements Serializable {
       if (unifyFilename != null) {
         ds.write(unifyFilename);
       } else {
-        System.out.printf("---\n" + "Did you know you could dramatically reduce future load times by \n" + "unifying your data sets just by setting the system property '%s'?\n" + "However, only do so if you're not actively doing feature engineering." + "\n---\n", AUTO_UNIFY_TO_PROP);
+        System.out
+            .printf(
+                "---\n"
+                    + "Did you know you could dramatically reduce future load times by \n"
+                    + "unifying your data sets just by setting the system property '%s'?\n"
+                    + "However, only do so if you're not actively doing feature engineering."
+                    + "\n---\n", AUTO_UNIFY_TO_PROP);
       }
 
       return ds;
     } catch (Exception e) {
-      System.err.printf("Can't load '%s' as either a " + "serialized .gale.LegacyFeatureExtractor or as a plain text " + "descriptor.\n", dataSetDescriptor);
+      System.err.printf("Can't load '%s' as either a "
+          + "serialized .gale.LegacyFeatureExtractor or as a plain text "
+          + "descriptor.\n", dataSetDescriptor);
       System.err.printf("Error: %s\n", e);
       e.printStackTrace();
-      throw new RuntimeException("Error: unable to load data set given by descriptor '" + dataSetDescriptor + "'");
+      throw new RuntimeException(
+          "Error: unable to load data set given by descriptor '"
+              + dataSetDescriptor + "'");
     }
   }
 
-  static LegacyFeatureExtractor loadSerialized(String filename) throws IOException, ClassNotFoundException {
+  static LegacyFeatureExtractor loadSerialized(String filename)
+      throws IOException, ClassNotFoundException {
 
     long loadTime = -System.nanoTime();
 
-    ObjectInputStream oistrm = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(new FileInputStream(filename))));
+    ObjectInputStream oistrm = new ObjectInputStream(new BufferedInputStream(
+        new GZIPInputStream(new FileInputStream(filename))));
     LegacyFeatureExtractor ds = (LegacyFeatureExtractor) oistrm.readObject();
     oistrm.close();
 
@@ -188,7 +204,8 @@ public class LegacyFeatureExtractor implements Serializable {
   }
 
   public void write(String filename) throws IOException {
-    ObjectOutputStream oostrm = new ObjectOutputStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(filename))));
+    ObjectOutputStream oostrm = new ObjectOutputStream(new GZIPOutputStream(
+        new BufferedOutputStream(new FileOutputStream(filename))));
     oostrm.writeObject(this);
     oostrm.close();
   }
@@ -207,7 +224,8 @@ public class LegacyFeatureExtractor implements Serializable {
     return new File(filename);
   }
 
-  static private LegacyFeatureExtractor loadByTextDescriptor(String filename, PrintStream pstrm, Properties prop) throws IOException {
+  static private LegacyFeatureExtractor loadByTextDescriptor(String filename,
+      PrintStream pstrm, Properties prop) throws IOException {
 
     long loadTime = -System.nanoTime();
 
@@ -220,11 +238,12 @@ public class LegacyFeatureExtractor implements Serializable {
 
     String srcTreesDirName = p.getProperty("SourceTrees");
     String treesDirName = p.getProperty("TargetTrees");
-    //String bleuDirName = getMandatoryProperty(p, "TargetBleus");
+    // String bleuDirName = getMandatoryProperty(p, "TargetBleus");
     String alignmentDirName = p.getProperty("Alignments");
     String posDirName = p.getProperty("POSTags");
 
-    int numTranslations = Integer.parseInt(getMandatoryProperty(p, "Translations"));
+    int numTranslations = Integer.parseInt(getMandatoryProperty(p,
+        "Translations"));
 
     String strLoadOffset = p.getProperty("LoadOffset");
     int loadOffset = 0;
@@ -233,10 +252,14 @@ public class LegacyFeatureExtractor implements Serializable {
     }
 
     if ((ds.trainRange = getRange(p, "TrainRange")) == null) {
-      ds.trainRange = newRange(0, (int) (DEFAULT_TRAIN_PERCENT * numTranslations) - 1);
+      ds.trainRange = newRange(0,
+          (int) (DEFAULT_TRAIN_PERCENT * numTranslations) - 1);
     }
     if ((ds.devRange = getRange(p, "DevRange")) == null) {
-      ds.devRange = newRange(ds.trainRange[1], Math.min(numTranslations - 1, ds.trainRange[1] + (int) (DEFAULT_DEV_PERCENT * numTranslations) - 1));
+      ds.devRange = newRange(
+          ds.trainRange[1],
+          Math.min(numTranslations - 1, ds.trainRange[1]
+              + (int) (DEFAULT_DEV_PERCENT * numTranslations) - 1));
     }
     if ((ds.evalRange = getRange(p, "EvalRange")) == null) {
       ds.evalRange = newRange(ds.devRange[1], numTranslations - 1);
@@ -245,7 +268,7 @@ public class LegacyFeatureExtractor implements Serializable {
     File srcTreesDir = newFileIfNonNull(srcTreesDirName);
     File treesDir = newFileIfNonNull(treesDirName);
     File posDir = newFileIfNonNull(posDirName);
-    //File bleuDir = newFileIfNonNull(bleuDirName);
+    // File bleuDir = newFileIfNonNull(bleuDirName);
 
     ds.lchl = new ArrayList<CompactHypothesisList>();
 
@@ -260,7 +283,8 @@ public class LegacyFeatureExtractor implements Serializable {
         names = treesDir.list(filter);
         if (names.length != 1) {
           displayMatches(names);
-          throw new RuntimeException("More than 1 files or no files end with " + i + ".trees: " + StringUtils.join(names, "//"));
+          throw new RuntimeException("More than 1 files or no files end with "
+              + i + ".trees: " + StringUtils.join(names, "//"));
         }
         tname = treesDirName + "/" + names[0];
       }
@@ -269,20 +293,22 @@ public class LegacyFeatureExtractor implements Serializable {
         names = posDir.list(filter);
         if (names.length != 1) {
           displayMatches(names);
-          throw new RuntimeException("More than 1 files or no files end with " + i + ".sent.pos: " + StringUtils.join(names, "//"));
+          throw new RuntimeException("More than 1 files or no files end with "
+              + i + ".sent.pos: " + StringUtils.join(names, "//"));
         }
         pname = posDirName + "/" + names[0];
       }
 
-//
-//      filter = new myFilenameFilter(i + ".");
-//      names = bleuDir.list(filter);
-//      if (names.length != 1) {
-//        displayMatches(names);
-//        throw new RuntimeException("More than 1 files or no files end with " + i + ".bleus");
-//      }
-//      String bname = bleuDir + "/" + names[0];
-//
+      //
+      // filter = new myFilenameFilter(i + ".");
+      // names = bleuDir.list(filter);
+      // if (names.length != 1) {
+      // displayMatches(names);
+      // throw new RuntimeException("More than 1 files or no files end with " +
+      // i + ".bleus");
+      // }
+      // String bname = bleuDir + "/" + names[0];
+      //
       System.err.println("Start reading " + i);
       // TODO: this is not very robust here, because it assumes the
       // candidate trees and alignments match in number
@@ -294,7 +320,8 @@ public class LegacyFeatureExtractor implements Serializable {
         filter = new myFilenameFilter(i + ".trees");
         names = srcTreesDir.list(filter);
         if (names.length != 1) {
-          throw new RuntimeException("More than 1 files or no files end with " + i + ".trees: " + StringUtils.join(names, "//"));
+          throw new RuntimeException("More than 1 files or no files end with "
+              + i + ".trees: " + StringUtils.join(names, "//"));
         }
         tname = srcTreesDirName + "/" + names[0];
         BufferedReader br = new BufferedReader(new FileReader(tname));
@@ -309,8 +336,9 @@ public class LegacyFeatureExtractor implements Serializable {
         assert cands.size() == als.size();
       }
 
-      //spstrm.printf("# scores generated during legacy feature extraction of %s\n", filename);
-      //spstrm.printf("# Created: %s\n", new Date());
+      // spstrm.printf("# scores generated during legacy feature extraction of %s\n",
+      // filename);
+      // spstrm.printf("# Created: %s\n", new Date());
       extractAndWrite(srcTree, cands, als, pstrm, prop, loadOffset);
     }
 
@@ -320,10 +348,11 @@ public class LegacyFeatureExtractor implements Serializable {
 
   static int dataPt = 0;
 
-
   static PrintWriter depsPW;
 
-  private static void extractAndWrite(Tree chT, List<Candidate> cands, List<Alignment> als, PrintStream pstrm, Properties prop, int loadOffset) throws IOException {
+  private static void extractAndWrite(Tree chT, List<Candidate> cands,
+      List<Alignment> als, PrintStream pstrm, Properties prop, int loadOffset)
+      throws IOException {
     if (cands.size() != als.size()) {
       throw new RuntimeException("size not match.");
     }
@@ -331,17 +360,21 @@ public class LegacyFeatureExtractor implements Serializable {
     GrammaticalStructure gs = null;
     Collection<TypedDependency> deps;
 
-    if (depsPW==null && prop.containsKey("DepsFile")) {
+    if (depsPW == null && prop.containsKey("DepsFile")) {
       depsPW = new PrintWriter(prop.getProperty("DepsFile"));
     }
 
-    if (depsPW!=null) {
-      depsPW.println("Source Sent: "+StringUtils.join(chT.taggedYield(new ArrayList<TaggedWord>()), " "));
+    if (depsPW != null) {
+      depsPW
+          .println("Source Sent: "
+              + StringUtils.join(chT.taggedYield(new ArrayList<TaggedWord>()),
+                  " "));
       Filter<String> puncWordFilter = Filters.acceptFilter();
       TreebankLanguagePack tlp = new ChineseTreebankLanguagePack();
-      GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory(puncWordFilter);
+      GrammaticalStructureFactory gsf = tlp
+          .grammaticalStructureFactory(puncWordFilter);
       gs = gsf.newGrammaticalStructure(chT);
-      if (depsPW!=null) {
+      if (depsPW != null) {
         deps = gs.typedDependencies();
         for (TypedDependency d : deps) {
           depsPW.println(d);
@@ -350,20 +383,20 @@ public class LegacyFeatureExtractor implements Serializable {
       }
     }
 
-
-    //spstrm.printf("\n# data pt: %d\n", dataPt+loadOffset);
+    // spstrm.printf("\n# data pt: %d\n", dataPt+loadOffset);
     for (int hypId = 0; hypId < cands.size(); hypId++) {
-      System.err.println("DEBUG: hypId="+hypId);
+      System.err.println("DEBUG: hypId=" + hypId);
       Tree enT = cands.get(hypId).getTree();
       Alignment alignment = als.get(hypId);
 
       ClassicCounter<String> feats = new ClassicCounter<String>();
-      if(prop.containsKey("extractEnZhPathFeatures")) {
+      if (prop.containsKey("extractEnZhPathFeatures")) {
         if (gs == null) {
-          //gs = new ChineseGrammaticalStructure(chT);
+          // gs = new ChineseGrammaticalStructure(chT);
           Filter<String> puncWordFilter = Filters.acceptFilter();
           TreebankLanguagePack tlp = new ChineseTreebankLanguagePack();
-          GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory(puncWordFilter);
+          GrammaticalStructureFactory gsf = tlp
+              .grammaticalStructureFactory(puncWordFilter);
           gs = gsf.newGrammaticalStructure(chT);
 
           deps = gs.typedDependencies();
@@ -371,15 +404,17 @@ public class LegacyFeatureExtractor implements Serializable {
             System.err.println("DEBUG: chT: " + d);
           }
         }
-        Counters.addInPlace(feats, DependencyUtils.extractEnZhPathFeatures(enT, gs, alignment, true));
+        Counters.addInPlace(feats,
+            DependencyUtils.extractEnZhPathFeatures(enT, gs, alignment, true));
       }
 
-      if(prop.containsKey("extractEnZhPathFeatures_ZhEn")) {
+      if (prop.containsKey("extractEnZhPathFeatures_ZhEn")) {
         if (gs == null) {
-          //gs = new ChineseGrammaticalStructure(chT);
+          // gs = new ChineseGrammaticalStructure(chT);
           Filter<String> puncWordFilter = Filters.acceptFilter();
           TreebankLanguagePack tlp = new ChineseTreebankLanguagePack();
-          GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory(puncWordFilter);
+          GrammaticalStructureFactory gsf = tlp
+              .grammaticalStructureFactory(puncWordFilter);
           gs = gsf.newGrammaticalStructure(chT);
 
           deps = gs.typedDependencies();
@@ -387,40 +422,53 @@ public class LegacyFeatureExtractor implements Serializable {
             System.err.println("DEBUG: chT: " + d);
           }
         }
-        Counters.addInPlace(feats, DependencyUtils.extractEnZhPathFeatures(enT, gs, alignment, false));
+        Counters.addInPlace(feats,
+            DependencyUtils.extractEnZhPathFeatures(enT, gs, alignment, false));
       }
 
       // these feature don't really have directionality...
-      if(prop.containsKey("extractAlignedWordPairFeatures"))
-        Counters.addInPlace(feats, extractAlignedWordPairFeatures(enT, chT, alignment));
-      if(prop.containsKey("extractAlignedTagPairFeatures"))
-        Counters.addInPlace(feats, extractAlignedTagPairFeatures(enT, chT, alignment));
+      if (prop.containsKey("extractAlignedWordPairFeatures"))
+        Counters.addInPlace(feats,
+            extractAlignedWordPairFeatures(enT, chT, alignment));
+      if (prop.containsKey("extractAlignedTagPairFeatures"))
+        Counters.addInPlace(feats,
+            extractAlignedTagPairFeatures(enT, chT, alignment));
 
-      if(prop.containsKey("extractAlignedWordPairsBigram"))
-        Counters.addInPlace(feats, extractAlignedWordPairsBigram(enT, chT, alignment, true));
-      if(prop.containsKey("extractAlignedWordPairsBigram_ZhEn"))
-        Counters.addInPlace(feats, extractAlignedWordPairsBigram(enT, chT, alignment, false));
+      if (prop.containsKey("extractAlignedWordPairsBigram"))
+        Counters.addInPlace(feats,
+            extractAlignedWordPairsBigram(enT, chT, alignment, true));
+      if (prop.containsKey("extractAlignedWordPairsBigram_ZhEn"))
+        Counters.addInPlace(feats,
+            extractAlignedWordPairsBigram(enT, chT, alignment, false));
 
-      if(prop.containsKey("extractContiguousAlignedToFeatures"))
-        Counters.addInPlace(feats, extractContiguousAlignedToFeatures(enT, chT, alignment, true));
+      if (prop.containsKey("extractContiguousAlignedToFeatures"))
+        Counters.addInPlace(feats,
+            extractContiguousAlignedToFeatures(enT, chT, alignment, true));
 
-      if(prop.containsKey("extractPathFeatures") || prop.containsKey("DepsFile")) {
+      if (prop.containsKey("extractPathFeatures")
+          || prop.containsKey("DepsFile")) {
 
         if (gs == null) {
           Filter<String> puncWordFilter = Filters.acceptFilter();
           TreebankLanguagePack tlp = new ChineseTreebankLanguagePack();
-          GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory(puncWordFilter);
+          GrammaticalStructureFactory gsf = tlp
+              .grammaticalStructureFactory(puncWordFilter);
           gs = gsf.newGrammaticalStructure(chT);
         }
 
         Filter<String> puncWordFilter;
         puncWordFilter = Filters.acceptFilter();
         TreebankLanguagePack tlp = new PennTreebankLanguagePack();
-        GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory(puncWordFilter);
+        GrammaticalStructureFactory gsf = tlp
+            .grammaticalStructureFactory(puncWordFilter);
         GrammaticalStructure enGs = gsf.newGrammaticalStructure(enT);
 
-        if (depsPW!=null) {
-          depsPW.println("Target Sent["+hypId+"]: "+StringUtils.join(enT.taggedYield(new ArrayList<TaggedWord>()), " "));
+        if (depsPW != null) {
+          depsPW.println("Target Sent["
+              + hypId
+              + "]: "
+              + StringUtils.join(enT.taggedYield(new ArrayList<TaggedWord>()),
+                  " "));
           deps = enGs.typedDependencies();
           for (TypedDependency d : deps) {
             depsPW.println(d);
@@ -428,20 +476,22 @@ public class LegacyFeatureExtractor implements Serializable {
           depsPW.println();
         }
         if (prop.containsKey("extractPathFeatures")) {
-          int lengLimit = Integer.parseInt(prop.getProperty("extractPathFeatures", ""+Integer.MAX_VALUE));
-          Counters.addInPlace(feats, DependencyUtils.extractPathFeatures(enGs, gs, alignment, lengLimit));
+          int lengLimit = Integer.parseInt(prop.getProperty(
+              "extractPathFeatures", "" + Integer.MAX_VALUE));
+          Counters.addInPlace(feats, DependencyUtils.extractPathFeatures(enGs,
+              gs, alignment, lengLimit));
         }
       }
 
-      pstrm.printf("%d,%d", dataPt+loadOffset, hypId);
+      pstrm.printf("%d,%d", dataPt + loadOffset, hypId);
       for (String feat : feats) {
         pstrm.printf(" %s:%f", normFeature(feat), feats.getCount(feat));
       }
       pstrm.println();
-//      double score = cands.get(hypId).getBleu();
-//      spstrm.printf("%d,%d %f\n", dataPt+loadOffset, hypId, score);
+      // double score = cands.get(hypId).getBleu();
+      // spstrm.printf("%d,%d %f\n", dataPt+loadOffset, hypId, score);
     }
-    if (depsPW!=null) {
+    if (depsPW != null) {
       depsPW.println("------------------------------");
     }
     dataPt++;
@@ -449,15 +499,15 @@ public class LegacyFeatureExtractor implements Serializable {
     System.err.println("ALL_COUNT=" + all_cnt);
   }
 
-
-  private static ClassicCounter<String> extractAlignedWordPairFeatures(Tree enT, Tree chT, Alignment align) {
+  private static ClassicCounter<String> extractAlignedWordPairFeatures(
+      Tree enT, Tree chT, Alignment align) {
     ClassicCounter<String> features = new ClassicCounter<String>();
 
     List<TaggedWord> enWords = enT.yield(new ArrayList<TaggedWord>());
     List<TaggedWord> chWords = chT.yield(new ArrayList<TaggedWord>());
 
-    //for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
-    for(int enIdx : align.get(true).keySet()) {
+    // for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
+    for (int enIdx : align.get(true).keySet()) {
       String enWord = enWords.get(enIdx).toString();
       List<Integer> al = align.get(enIdx, true);
       for (int chIdx : al) {
@@ -475,17 +525,17 @@ public class LegacyFeatureExtractor implements Serializable {
     return features;
   }
 
-
-  private static ClassicCounter<String> extractAlignedTagPairFeatures(Tree enT, Tree chT, Alignment align) {
+  private static ClassicCounter<String> extractAlignedTagPairFeatures(Tree enT,
+      Tree chT, Alignment align) {
     ClassicCounter<String> features = new ClassicCounter<String>();
-    //List<List<Integer>> alignments = align.alignments;
-    //System.err.println(alignments);
+    // List<List<Integer>> alignments = align.alignments;
+    // System.err.println(alignments);
 
     List<TaggedWord> enWords = enT.taggedYield(new ArrayList<TaggedWord>());
     List<TaggedWord> chWords = chT.taggedYield(new ArrayList<TaggedWord>());
 
-    //for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
-    for(int enIdx : align.get(true).keySet()) {
+    // for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
+    for (int enIdx : align.get(true).keySet()) {
       String enWord = enWords.get(enIdx).tag();
       List<Integer> al = align.get(enIdx, true);
       for (int chIdx : al) {
@@ -503,17 +553,17 @@ public class LegacyFeatureExtractor implements Serializable {
     return features;
   }
 
-
-  private static ClassicCounter<String> extractAlignedWordPairsBigram(Tree enT, Tree chT, Alignment align, boolean EnZh) {
+  private static ClassicCounter<String> extractAlignedWordPairsBigram(Tree enT,
+      Tree chT, Alignment align, boolean EnZh) {
     ClassicCounter<String> features = new ClassicCounter<String>();
-    //List<List<Integer>> alignments = align.alignments;
-    //System.err.println(alignments);
+    // List<List<Integer>> alignments = align.alignments;
+    // System.err.println(alignments);
 
     List<TaggedWord> enWords = enT.taggedYield(new ArrayList<TaggedWord>());
     List<TaggedWord> chWords = chT.taggedYield(new ArrayList<TaggedWord>());
 
-    //for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
-    for(int enIdx : align.get(EnZh).keySet()) {
+    // for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
+    for (int enIdx : align.get(EnZh).keySet()) {
       int nextEnIdx = enIdx + 1;
 
       List<Integer> cur_al = align.get(enIdx, EnZh);
@@ -523,8 +573,8 @@ public class LegacyFeatureExtractor implements Serializable {
         break;
       }
 
-
-      // NOTE: for now, consider only English words that mapped to 1 Chinese word
+      // NOTE: for now, consider only English words that mapped to 1 Chinese
+      // word
       if (cur_al.size() == 1 && next_al.size() == 1) {
         hit_cnt++;
         int chPos = cur_al.get(0);
@@ -533,7 +583,10 @@ public class LegacyFeatureExtractor implements Serializable {
         TaggedWord nextChTW = chWords.get(nextChPos);
 
         StringBuilder sbW = new StringBuilder();
-        if (EnZh) sbW.append("EnZh|"); else sbW.append("ZhEn|");
+        if (EnZh)
+          sbW.append("EnZh|");
+        else
+          sbW.append("ZhEn|");
         sbW.append("AWPB-");
         sbW.append(enWords.get(enIdx).word());
         sbW.append("-");
@@ -545,7 +598,10 @@ public class LegacyFeatureExtractor implements Serializable {
         features.incrementCount(sbW.toString());
 
         StringBuilder sbT = new StringBuilder();
-        if (EnZh) sbT.append("EnZh|"); else sbT.append("ZhEn|");
+        if (EnZh)
+          sbT.append("EnZh|");
+        else
+          sbT.append("ZhEn|");
         sbT.append("ATPB-");
         sbW.append(enWords.get(enIdx).tag());
         sbW.append("-");
@@ -561,18 +617,18 @@ public class LegacyFeatureExtractor implements Serializable {
     return features;
   }
 
-
   static int hit_cnt = 0;
   static int all_cnt = 0;
 
-  private static ClassicCounter<String> extractContiguousAlignedToFeatures(Tree enT, Tree chT, Alignment align, boolean EnZh) {
+  private static ClassicCounter<String> extractContiguousAlignedToFeatures(
+      Tree enT, Tree chT, Alignment align, boolean EnZh) {
     ClassicCounter<String> features = new ClassicCounter<String>();
 
     List<TaggedWord> enWords = enT.taggedYield(new ArrayList<TaggedWord>());
     List<TaggedWord> chWords = chT.taggedYield(new ArrayList<TaggedWord>());
 
-    //for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
-    for(int enIdx : align.get(EnZh).keySet()) {
+    // for (int enIdx = 0; enIdx < align.sizeEnZh(); enIdx++) {
+    for (int enIdx : align.get(EnZh).keySet()) {
       int nextEnIdx = enIdx + 1;
 
       List<Integer> cur_al = align.get(enIdx, EnZh);
@@ -600,21 +656,25 @@ public class LegacyFeatureExtractor implements Serializable {
           sb1.append("ZhEn|");
           sb2.append("ZhEn|");
         }
-        // contiguous tags: [eT0 eT1] --> [cT0'] [cT1'] (with distance pos(cT1')-pos(cT0'))
+        // contiguous tags: [eT0 eT1] --> [cT0'] [cT1'] (with distance
+        // pos(cT1')-pos(cT0'))
         sb1.append("CEAD-T-");
         sb1.append("CEAD-W-");
-        features.incrementCount(decideFeature(sb1.toString(), enTW.tag(), nextEnTW.tag(), chTW.tag(), nextChTW.tag(), nextChPos - chPos));
-        // contiguous words: [eW0 eW1] --> [cW0'] [cW1'] (with distance pos(cT1')-pos(cT0'))
-        features.incrementCount(decideFeature(sb2.toString(), enTW.word(), nextEnTW.word(), chTW.word(), nextChTW.word(), nextChPos - chPos));
+        features.incrementCount(decideFeature(sb1.toString(), enTW.tag(),
+            nextEnTW.tag(), chTW.tag(), nextChTW.tag(), nextChPos - chPos));
+        // contiguous words: [eW0 eW1] --> [cW0'] [cW1'] (with distance
+        // pos(cT1')-pos(cT0'))
+        features.incrementCount(decideFeature(sb2.toString(), enTW.word(),
+            nextEnTW.word(), chTW.word(), nextChTW.word(), nextChPos - chPos));
       }
       all_cnt++;
     }
     return features;
   }
 
-
   // this is used in extractContiguousAlignedToFeatures only
-  private static String decideFeature(String prefix, String en0, String en1, String ch0, String ch1, int distance) {
+  private static String decideFeature(String prefix, String en0, String en1,
+      String ch0, String ch1, int distance) {
     StringBuilder sb = new StringBuilder(prefix);
     sb.append("[").append(en0).append(" ").append(en1).append("]");
     sb.append("}=>").append("[").append(ch0).append("]");
@@ -622,7 +682,6 @@ public class LegacyFeatureExtractor implements Serializable {
     sb.append("(").append(distance).append(")");
     return sb.toString();
   }
-
 
   public static class myFilenameFilter implements FilenameFilter {
     String pat;
@@ -632,44 +691,53 @@ public class LegacyFeatureExtractor implements Serializable {
     }
 
     public boolean accept(File dir, String name) {
-      //return (name.endsWith("."+pat) || name.matches(pat));
+      // return (name.endsWith("."+pat) || name.matches(pat));
       return name.startsWith(pat);
     }
   }
 
   /**
    * only one of tname or pname will be non null!!
-   * @param tname file name of the tree file
-   * @param pname file name of the POS file
+   * 
+   * @param tname
+   *          file name of the tree file
+   * @param pname
+   *          file name of the POS file
    * @throws IOException
    */
-  public static List<Candidate> readCandidates(String tname, String pname) throws IOException {
-    BufferedReader br = (tname != null ? new BufferedReader(new FileReader(tname)) : null);
-    BufferedReader posBr = (pname != null ? new BufferedReader(new FileReader(pname)) : null);
+  public static List<Candidate> readCandidates(String tname, String pname)
+      throws IOException {
+    BufferedReader br = (tname != null ? new BufferedReader(new FileReader(
+        tname)) : null);
+    BufferedReader posBr = (pname != null ? new BufferedReader(new FileReader(
+        pname)) : null);
 
     List<Candidate> cands = new ArrayList<Candidate>();
     List<TaggedWord> tws = null;
 
     if (br != null) {
-      for (Tree t; (t = readTree(br)) != null; ) {
+      for (Tree t; (t = readTree(br)) != null;) {
         tws = readPOS(posBr);
-         Candidate newc = new Candidate(t, tws);
-         cands.add(newc);
+        Candidate newc = new Candidate(t, tws);
+        cands.add(newc);
       }
     } else {
-      while ((tws=readPOS(br))!=null) {
+      while ((tws = readPOS(br)) != null) {
         Candidate newc = new Candidate(null, tws);
         cands.add(newc);
       }
     }
 
-    if (br != null) br.close();
-    if (posBr!=null) posBr.close();
+    if (br != null)
+      br.close();
+    if (posBr != null)
+      posBr.close();
     return cands;
   }
 
-  static List<TaggedWord> readPOS(BufferedReader br){
-    if (br==null) return null;
+  static List<TaggedWord> readPOS(BufferedReader br) {
+    if (br == null)
+      return null;
 
     List<TaggedWord> tws = new ArrayList<TaggedWord>();
     String inline;
@@ -679,7 +747,8 @@ public class LegacyFeatureExtractor implements Serializable {
       e.printStackTrace();
       throw new RuntimeException("in readPOS");
     }
-    if (inline==null) return null;
+    if (inline == null)
+      return null;
     String[] strs = inline.split("\\s+");
     for (String s : strs) {
       TaggedWord tw = new TaggedWord();
@@ -697,11 +766,10 @@ public class LegacyFeatureExtractor implements Serializable {
     return Double.valueOf(inline);
   }
 
-
   static Tree readTree(BufferedReader br) throws IOException {
     Tree t = null;
     StringBuilder tree = new StringBuilder("(");
-    for (String line; (line = br.readLine()) != null; ) {
+    for (String line; (line = br.readLine()) != null;) {
       if (line.matches("<tree style=\"penn\">")) {
       } else if (line.matches("</tree>")) {
         try {
@@ -712,15 +780,18 @@ public class LegacyFeatureExtractor implements Serializable {
           e.printStackTrace();
         }
       } else {
-        //tree += line;
+        // tree += line;
         tree.append(line);
       }
     }
     return t;
   }
 
-  static public void outputPredictedIndices(AbstractOneOfManyClassifier classifier, List<CompactHypothesisList> lchl) throws Exception {
-    PrintWriter pr = new PrintWriter(new BufferedWriter(new FileWriter("predictedIndices.txt", false)));
+  static public void outputPredictedIndices(
+      AbstractOneOfManyClassifier classifier, List<CompactHypothesisList> lchl)
+      throws Exception {
+    PrintWriter pr = new PrintWriter(new BufferedWriter(new FileWriter(
+        "predictedIndices.txt", false)));
     int[] bestChoices = classifier.getBestPrediction(lchl);
     for (int i : bestChoices) {
       pr.println(i);
@@ -746,19 +817,22 @@ public class LegacyFeatureExtractor implements Serializable {
     String[] regargs = p.getProperty("").split(" ");
 
     if (regargs.length != 2) {
-      System.err.printf("Usage:\n\tjava %s (data descriptor) " + "(feature set file) [features]\n\n", (new LegacyFeatureExtractor()).getClass().getName());
+      System.err.printf("Usage:\n\tjava %s (data descriptor) "
+          + "(feature set file) [features]\n\n", (new LegacyFeatureExtractor())
+          .getClass().getName());
       System.exit(-1);
     }
     String dataDescrFn = regargs[0];
     String featureSetFn = regargs[1];
-    //String scoresFn = regargs[2];
+    // String scoresFn = regargs[2];
 
     System.out.println("Doing legacy feature extraction...");
 
-    PrintStream pstrm = new PrintStream(new GZIPOutputStream(new FileOutputStream(featureSetFn)));
-    pstrm.printf("# feature set name: legacy feature extraction of %s\n", dataDescrFn);
+    PrintStream pstrm = new PrintStream(new GZIPOutputStream(
+        new FileOutputStream(featureSetFn)));
+    pstrm.printf("# feature set name: legacy feature extraction of %s\n",
+        dataDescrFn);
     pstrm.printf("# feature set specified:\n");
-
 
     Set<String> names = p.stringPropertyNames();
     for (String name : names) {
@@ -769,12 +843,12 @@ public class LegacyFeatureExtractor implements Serializable {
 
     pstrm.printf("# Created: %s\n", new Date());
 
-    //PrintStream spstrm = new PrintStream(new FileOutputStream(scoresFn));
+    // PrintStream spstrm = new PrintStream(new FileOutputStream(scoresFn));
 
     LegacyFeatureExtractor.load(dataDescrFn, pstrm, p);
     System.out.println("Done.\nWriting out feature set...");
-    //System.out.println("Done.\nWriting out scores");
+    // System.out.println("Done.\nWriting out scores");
     pstrm.close();
-    //spstrm.close();
+    // spstrm.close();
   }
 }

@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-
 /**
  * Serves to keep the stay and go probabilities for words.
  * I am keeping it as an array.
@@ -20,36 +19,29 @@ public class StayGoTable {
     this.table = new ProbCountHolder[2 * SentenceHandler.sTableE.getNumAllIds()];
   }
 
-
   public ProbCountHolder getEntryStay(int index) {
     return table[2 * index + 1];
   }
-
 
   public ProbCountHolder getEntryGo(int index) {
     return table[2 * index];
   }
 
-
   public double getProbStay(int index) {
     return table[2 * index + 1].getProb();
   }
-
 
   public double getProbGo(int index) {
     return table[2 * index].getProb();
   }
 
-
   public void incCountStay(int index, double val) {
     table[2 * index + 1].incCount(val);
   }
 
-
   public void incCountGo(int index, double val) {
     table[2 * index].incCount(val);
   }
-
 
   /**
    * Initialize the table with some given value of stay
@@ -68,7 +60,6 @@ public class StayGoTable {
     }
   }
 
-
   public void normalize() {
     int bound = table.length / 2;
     int countCutoff = 3;
@@ -86,19 +77,20 @@ public class StayGoTable {
       }
       System.out.println("cnt go " + table[2 * index].getCount());
       System.out.println("cnt stay " + table[2 * index + 1].getCount());
-      System.out.println("cnt word " + SentenceHandler.sTableE.getEntry(index).getCount());
+      System.out.println("cnt word "
+          + SentenceHandler.sTableE.getEntry(index).getCount());
       if (SentenceHandler.sTableE.getEntry(index).getCount() > countCutoff) {
         table[2 * index].setProb(.8 + .2 * (pgo + priorGo) / total);
         table[2 * index + 1].setProb(.2 * (pstay + priorStay) / total);
       }
       table[2 * index].setCount(0);
       table[2 * index + 1].setCount(0);
-      //if(Math.abs(pgo/total+pstay/total-1)>.00001){System.out.println("probabilities stay go
-      //not ok ");}
+      // if(Math.abs(pgo/total+pstay/total-1)>.00001){System.out.println("probabilities
+      // stay go
+      // not ok ");}
 
     }
   }
-
 
   public void save(String filename) {
 
@@ -107,7 +99,8 @@ public class StayGoTable {
 
       int bound = table.length / 2;
       for (int index = 0; index < bound; index++) {
-        p.println(SentenceHandler.sTableE.getName(index) + " " + table[2 * index].getProb() + " " + table[2 * index + 1].getProb());
+        p.println(SentenceHandler.sTableE.getName(index) + " "
+            + table[2 * index].getProb() + " " + table[2 * index + 1].getProb());
 
       }
 
@@ -116,6 +109,5 @@ public class StayGoTable {
       e.printStackTrace();
     }
   }
-
 
 }

@@ -8,51 +8,47 @@ import edu.stanford.nlp.trees.*;
 public class TransTBUtils {
 
   static final String[] ectbDirNames = new String[] {
-    "/u/nlp/scr/data/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/",
-    "C:\\cygwin\\home\\Pichuan Chang\\data\\LDC2007T02-EnglishChineseTranslationTreebankV1.0\\data\\pennTB-style-trees\\",
-    "/users/mgalley/research/resources/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/",
-  };
+      "/u/nlp/scr/data/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/",
+      "C:\\cygwin\\home\\Pichuan Chang\\data\\LDC2007T02-EnglishChineseTranslationTreebankV1.0\\data\\pennTB-style-trees\\",
+      "/users/mgalley/research/resources/ldc/LDC2007T02-EnglishChineseTranslationTreebankV1.0/data/pennTB-style-trees/", };
 
   static final String[] cctbDirNames = new String[] {
-    "/scr/nlp/data/ldc/ctb6.0/data/utf8/bracketed/",
-    //"/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/",
-    "C:\\cygwin\\home\\Pichuan Chang\\data\\CTB6\\data\\utf8\\bracketed\\",
-    "/users/mgalley/research/resources/ldc/ctb6.0/data/utf8/bracketed/"
-  };
+      "/scr/nlp/data/ldc/ctb6.0/data/utf8/bracketed/",
+      // "/afs/ir/data/linguistic-data/Chinese-Treebank/6/data/utf8/bracketed/",
+      "C:\\cygwin\\home\\Pichuan Chang\\data\\CTB6\\data\\utf8\\bracketed\\",
+      "/users/mgalley/research/resources/ldc/ctb6.0/data/utf8/bracketed/" };
 
   static final String[] alignDirNames = new String[] {
-    "/scr/nlp/data/ldc-processed/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/",
-    //"/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
-    "C:\\cygwin\\home\\Pichuan Chang\\data\\LDC2006E93\\GALE-Y1Q4\\word_alignment\\data\\chinese\\nw\\",
-    "/users/mgalley/research/resources/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/"
-  };
+      "/scr/nlp/data/ldc-processed/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/",
+      // "/u/nlp/scr/data/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/";
+      "C:\\cygwin\\home\\Pichuan Chang\\data\\LDC2006E93\\GALE-Y1Q4\\word_alignment\\data\\chinese\\nw\\",
+      "/users/mgalley/research/resources/ldc/LDC2006E93/GALE-Y1Q4/word_alignment/data/chinese/nw/" };
 
-  /** the default is to use
-   * useReducedCategories=true (means "B of A" is maped to "B prep A"), and
-   * useNonOracleTrees=false (means features are extracted from parsed trees, not gold-standard trees)
+  /**
+   * the default is to use useReducedCategories=true (means "B of A" is maped to
+   * "B prep A"), and useNonOracleTrees=false (means features are extracted from
+   * parsed trees, not gold-standard trees)
    **/
   public static List<TreePair> readAnnotatedTreePairs() throws IOException {
     return readAnnotatedTreePairs(false);
   }
 
-  public static List<TreePair> readAnnotatedTreePairs(
-      boolean useNonOracleTrees) throws IOException {
+  public static List<TreePair> readAnnotatedTreePairs(boolean useNonOracleTrees)
+      throws IOException {
     return readAnnotatedTreePairs(1, 325, useNonOracleTrees);
   }
 
-  public static List<TreePair> readAnnotatedTreePairs(
-      int min, int max,
+  public static List<TreePair> readAnnotatedTreePairs(int min, int max,
       boolean useNonOracleTrees) throws IOException {
 
     String wordalignmentDir = wordAlignmentDir();
     String ctbDir = ctbDir();
     String etbDir = etbDir();
-    
+
     String chParsedDir = null;
     if (useNonOracleTrees) {
-      chParsedDir =
-        System.getenv("JAVANLP_HOME")+
-        "/projects/mt/src/mt/classifyde/data/ctb_parsed/bracketed/";
+      chParsedDir = System.getenv("JAVANLP_HOME")
+          + "/projects/mt/src/mt/classifyde/data/ctb_parsed/bracketed/";
     }
 
     List<TranslationAlignment> alignment_list;
@@ -62,60 +58,59 @@ public class TransTBUtils {
 
     List<TreePair> treepairs = new ArrayList<TreePair>();
 
-    for(int fileidx = min; fileidx <= max; fileidx++) {
+    for (int fileidx = min; fileidx <= max; fileidx++) {
       // Everytime, restart them so that when we get trees,
       // we won't match tree & sentences in different files.
-      //alignment_list = new ArrayList<TranslationAlignment>();
+      // alignment_list = new ArrayList<TranslationAlignment>();
       ctr = new ChineseTreeReader();
       etr = new EnglishTreeReader();
-      //etr = new EnglishTreeReader(transformEnglishTrees);
+      // etr = new EnglishTreeReader(transformEnglishTrees);
       chparsedTR = new ChineseTreeReader();
 
       // (1) Read alignment files
-      String aname = String.format("%schtb_%03d.txt", wordalignmentDir, fileidx);
+      String aname = String
+          .format("%schtb_%03d.txt", wordalignmentDir, fileidx);
       File file = new File(aname);
       if (file.exists()) {
-        //System.err.println("Processing  "+fileidx);
+        // System.err.println("Processing  "+fileidx);
         alignment_list = AlignmentUtils.readFromFile(file);
       } else {
-        //System.err.println("Skip "+fileidx);
+        // System.err.println("Skip "+fileidx);
         continue;
       }
 
       // (2) Read Chinese Trees
-      String ctbname =
-        String.format("%schtb_%04d.fid", ctbDir, fileidx);
+      String ctbname = String.format("%schtb_%04d.fid", ctbDir, fileidx);
       ctr.readMoreTrees(ctbname);
 
       // (3) Read English Trees
-      String ename =
-        String.format("%schtb_%03d.mrg.gz", etbDir, fileidx);
+      String ename = String.format("%schtb_%03d.mrg.gz", etbDir, fileidx);
       etr.readMoreTrees(ename);
 
       // (4) Read parsed Chinese Trees
-      String chparsedname; //= null;
-      //if (chParsedDir!=null) { 
+      String chparsedname; // = null;
+      // if (chParsedDir!=null) {
       if (useNonOracleTrees) {
         chparsedname = String.format("%schtb_%04d.fid", chParsedDir, fileidx);
-        //System.err.println("Reading "+chparsedname);
+        // System.err.println("Reading "+chparsedname);
         chparsedTR.readMoreTrees(chparsedname);
-        //System.err.println("chparsedTR.size="+chparsedTR.size());
+        // System.err.println("chparsedTR.size="+chparsedTR.size());
       }
 
       // (4) Going through entries in (1) and check if they exist in (2)
       // (5) Going through entries in (1) and check if they exist in (3)
       // (6) also, if the tests passed, this is going to the final examples
-      //int taidx = 1;
+      // int taidx = 1;
       List<TreePair> treepairs_inFile = new ArrayList<TreePair>();
       for (TranslationAlignment ta : alignment_list) {
         List<Tree> chTrees = ctr.getTreesWithWords(ta.source_);
         List<Tree> chParsedTrees = null;
-        //if (chParsedDir != null) {
+        // if (chParsedDir != null) {
         if (useNonOracleTrees) {
           chParsedTrees = chparsedTR.getTreesWithWords(ta.source_);
-          //System.err.println("chParsedTrees.size="+chParsedTrees.size());
+          // System.err.println("chParsedTrees.size="+chParsedTrees.size());
         } else {
-          //System.err.println("chParsedTrees.null");
+          // System.err.println("chParsedTrees.null");
         }
 
         if (chTrees.size() == 0) {
@@ -124,9 +119,9 @@ public class TransTBUtils {
           continue;
           // skip for now
         } else if (chTrees.size() > 1) {
-          throw new RuntimeException("i="+fileidx+": Multiple trees.");
+          throw new RuntimeException("i=" + fileidx + ": Multiple trees.");
         }
-        
+
         List<Tree> enTrees = etr.getTreesWithWords(ta.translation_);
         if (enTrees.size() == 0) {
           System.err.printf("i=%d: Can't find tree in PTB.\n", fileidx);
@@ -134,7 +129,7 @@ public class TransTBUtils {
           continue;
           // skip for now
         } else if (enTrees.size() > 1) {
-          //System.err.printf("i=%d: Multiple trees.\n", fileidx);
+          // System.err.printf("i=%d: Multiple trees.\n", fileidx);
         }
         ta = AlignmentUtils.fixAlignmentGridWithChineseTree(ta, chTrees);
         ta = AlignmentUtils.fixAlignmentGridMergingChinese(ta, chTrees);
@@ -143,11 +138,10 @@ public class TransTBUtils {
         AlignmentUtils.checkTranslationAlignmentAndEnTrees(ta, enTrees);
         AlignmentUtils.checkTranslationAlignmentAndChTrees(ta, chTrees);
         TreePair tp;
-        //if (chParsedDir!=null) {
+        // if (chParsedDir!=null) {
         if (useNonOracleTrees) {
           tp = new TreePair(ta, enTrees, chTrees, chParsedTrees);
-        }
-        else 
+        } else
           tp = new TreePair(ta, enTrees, chTrees, chTrees);
 
         tp.setFileID(fileidx);
@@ -156,35 +150,36 @@ public class TransTBUtils {
       treepairs.addAll(treepairs_inFile);
     }
 
-    System.err.println("Total Treepairs = "+treepairs.size());
+    System.err.println("Total Treepairs = " + treepairs.size());
     return treepairs;
   }
 
   static String wordAlignmentDir() {
-    for(String dirname : alignDirNames)
-      if(new File(dirname).exists())
+    for (String dirname : alignDirNames)
+      if (new File(dirname).exists())
         return dirname;
-    throw new RuntimeException("LDC2006E93 doesn't exist in any of the hard-coded locations.");
+    throw new RuntimeException(
+        "LDC2006E93 doesn't exist in any of the hard-coded locations.");
   }
 
   static String ctbDir() {
-    for(String dirname : cctbDirNames)
-      if(new File(dirname).exists())
+    for (String dirname : cctbDirNames)
+      if (new File(dirname).exists())
         return dirname;
-    throw new RuntimeException("CTB6.0 doesn't exist in any of the hard-coded locations.");
+    throw new RuntimeException(
+        "CTB6.0 doesn't exist in any of the hard-coded locations.");
   }
 
   static String etbDir() {
-    for(String dirname : ectbDirNames)
-      if(new File(dirname).exists())
+    for (String dirname : ectbDirNames)
+      if (new File(dirname).exists())
         return dirname;
-    throw new RuntimeException("EnglishChineseTranslationTreebankV1.0 doesn't exist in any of the hard-coded locations.");
+    throw new RuntimeException(
+        "EnglishChineseTranslationTreebankV1.0 doesn't exist in any of the hard-coded locations.");
   }
 
   /*
-  static String chParsedDir() {
-    return "chParsed/";
-  }
-  */
+   * static String chParsedDir() { return "chParsed/"; }
+   */
 
 }

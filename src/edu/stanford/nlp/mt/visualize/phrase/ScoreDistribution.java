@@ -24,46 +24,49 @@ public class ScoreDistribution {
   }
 
   public int getStdDev(double score) {
-    if(!computed) return -1;
+    if (!computed)
+      return -1;
 
     double sign = 1.0;
-    if(score < mean) {
+    if (score < mean) {
       score = 1.0 - score;
       sign = -1.0;
     }
 
     double maxDev = (double) MAX_DEVIATION;
-    for(double i = 0; i < maxDev; i++)
-      if(isInRange(score,mean + (i * std_dev), mean + ((i + 1.0) * std_dev)))
+    for (double i = 0; i < maxDev; i++)
+      if (isInRange(score, mean + (i * std_dev), mean + ((i + 1.0) * std_dev)))
         return (int) (i * sign);
 
     return (int) (maxDev * sign);
   }
 
   public void add(double d) {
-    if(computed) return;
+    if (computed)
+      return;
     counts.incrementCount(round(d));
   }
 
   public void computeDistribution() {
-    if(computed) return;
+    if (computed)
+      return;
 
-    //Compute the sample mean
+    // Compute the sample mean
     double mean_num = 0.0;
-    for(double d : counts.keySet())
+    for (double d : counts.keySet())
       mean_num += d * counts.getCount(d);
     mean = mean_num / counts.totalCount();
 
-    //Compute the sample variance
+    // Compute the sample variance
     double varNum = 0.0;
-    for(double d : counts.keySet())
-      varNum += ( (d - mean) * (d - mean) );
+    for (double d : counts.keySet())
+      varNum += ((d - mean) * (d - mean));
     double variance = varNum / (counts.totalCount() - 1.0);
     std_dev = Math.sqrt(variance);
 
     computed = true;
     numSamples = (int) counts.totalCount();
-    counts = null; //Mark for GC
+    counts = null; // Mark for GC
   }
 
   private boolean isInRange(double val, double lower, double upper) {
@@ -77,10 +80,9 @@ public class ScoreDistribution {
 
   @Override
   public String toString() {
-    return String.format("samples:\t%d\nmean:\t%f\nstddev:\t%f", numSamples,mean,std_dev);
+    return String.format("samples:\t%d\nmean:\t%f\nstddev:\t%f", numSamples,
+        mean, std_dev);
   }
-
-
 
   /**
    */
@@ -88,16 +90,16 @@ public class ScoreDistribution {
     ScoreDistribution dist = new ScoreDistribution(300);
     Random random = new Random();
 
-    for(int i = 0; i < 100000; i++)
+    for (int i = 0; i < 100000; i++)
       dist.add(random.nextDouble());
     dist.computeDistribution();
 
     System.out.println(dist);
 
-    System.out.printf("%f: %d\n",0.2,dist.getStdDev(0.2));
-    System.out.printf("%f: %d\n",0.4,dist.getStdDev(0.4));
-    System.out.printf("%f: %d\n",0.6,dist.getStdDev(0.6));
-    System.out.printf("%f: %d\n",0.8,dist.getStdDev(0.8));
+    System.out.printf("%f: %d\n", 0.2, dist.getStdDev(0.2));
+    System.out.printf("%f: %d\n", 0.4, dist.getStdDev(0.4));
+    System.out.printf("%f: %d\n", 0.6, dist.getStdDev(0.6));
+    System.out.printf("%f: %d\n", 0.8, dist.getStdDev(0.8));
   }
 
 }

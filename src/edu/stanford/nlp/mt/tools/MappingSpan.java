@@ -10,22 +10,21 @@ import edu.stanford.nlp.util.StringUtils;
  * @author Pi-Chuan Chang
  */
 
-
 public class MappingSpan {
   public static void main(String[] args) throws Exception {
-    BufferedReader unkBR  = new BufferedReader(new FileReader(args[0]));
+    BufferedReader unkBR = new BufferedReader(new FileReader(args[0]));
     BufferedReader treeBR = new BufferedReader(new FileReader(args[1]));
-    BufferedReader idxBR  = new BufferedReader(new FileReader(args[2]));
+    BufferedReader idxBR = new BufferedReader(new FileReader(args[2]));
     BufferedReader spanBR = new BufferedReader(new FileReader(args[3]));
     BufferedReader prepBR = new BufferedReader(new FileReader(args[4]));
-    
+
     String unkLine, treeLine, idxLine, spanLine;
-    while((unkLine = unkBR.readLine()) != null) {
+    while ((unkLine = unkBR.readLine()) != null) {
       treeLine = treeBR.readLine();
       idxLine = idxBR.readLine();
       spanLine = spanBR.readLine();
       prepBR.readLine();
-      
+
       Tree tree = null;
       try {
         tree = Tree.valueOf(treeLine);
@@ -34,8 +33,9 @@ public class MappingSpan {
       }
       String[] unkToks = unkLine.split(" +");
       if (unkToks.length != tree.yield().size()) {
-        throw new RuntimeException("Error: length="+unkToks.length+": unkLine="+unkLine+
-                                   "\n length="+tree.yield().size()+": treeLine="+treeLine);
+        throw new RuntimeException("Error: length=" + unkToks.length
+            + ": unkLine=" + unkLine + "\n length=" + tree.yield().size()
+            + ": treeLine=" + treeLine);
       }
 
       String[] idxToks = idxLine.split(" +");
@@ -45,13 +45,14 @@ public class MappingSpan {
         String from = from_to[0];
         String[] tos = from_to[1].split(",");
         int range0 = Integer.parseInt(tos[0]);
-        int range1 = Integer.parseInt(tos[tos.length-1]);
+        int range1 = Integer.parseInt(tos[tos.length - 1]);
         IntPair ip = new IntPair(range0, range1);
-        if (mapping.get(from)==null) {
-          System.err.println("Inserting to mapping: "+from+"/"+ip);
+        if (mapping.get(from) == null) {
+          System.err.println("Inserting to mapping: " + from + "/" + ip);
           mapping.put(from, ip);
         } else {
-          throw new RuntimeException("multiple mapping for 'from' index "+from);
+          throw new RuntimeException("multiple mapping for 'from' index "
+              + from);
         }
       }
       String[] spanToks = spanLine.split(";");
@@ -61,20 +62,22 @@ public class MappingSpan {
       for (String spanTok : spanToks) {
         String[] items = spanTok.split(",");
         // 2*n + n + 1
-        if ((items.length-1)%3 != 0) {
-          throw new RuntimeException("#items in spanTok is wrong: "+spanTok);
+        if ((items.length - 1) % 3 != 0) {
+          throw new RuntimeException("#items in spanTok is wrong: " + spanTok);
         }
-        int n = (items.length-1)/3;
-        
+        int n = (items.length - 1) / 3;
+
         boolean spanGotDropped = false;
 
-        for(int idxidx = 0; idxidx < 2*n; idxidx++) {
+        for (int idxidx = 0; idxidx < 2 * n; idxidx++) {
           String num = items[idxidx];
           IntPair ip = mapping.get(num);
           if (ip == null) {
-            //throw new RuntimeException("IntPair of "+num+" is null");
+            // throw new RuntimeException("IntPair of "+num+" is null");
             spanGotDropped = true;
-            System.err.printf("tok %s in unk is dropped. so span %s is dropped\n", num, spanTok);
+            System.err.printf(
+                "tok %s in unk is dropped. so span %s is dropped\n", num,
+                spanTok);
           }
           if (spanGotDropped) {
             break;
@@ -82,23 +85,23 @@ public class MappingSpan {
           if (idxidx % 2 == 0) // beginning of a span
           {
             // overwritten with the first of the range
-            items[idxidx] = ip.getSource()+"";
+            items[idxidx] = ip.getSource() + "";
           } else {
-            items[idxidx] = ip.getTarget()+"";
+            items[idxidx] = ip.getTarget() + "";
           }
         }
         if (spanGotDropped) {
           continue;
         }
-        String newSpanTok = StringUtils.join(items,",");
+        String newSpanTok = StringUtils.join(items, ",");
         if (!spanTok.equals(newSpanTok)) {
-          System.err.println("old: "+spanTok);
-          System.err.println("new: "+newSpanTok);
+          System.err.println("old: " + spanTok);
+          System.err.println("new: " + newSpanTok);
         }
         newSpans.add(newSpanTok);
       }
-      System.out.println(StringUtils.join(newSpans,";"));
+      System.out.println(StringUtils.join(newSpans, ";"));
     }
-    
+
   }
 }

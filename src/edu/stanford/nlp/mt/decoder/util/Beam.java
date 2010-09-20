@@ -1,57 +1,54 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-
-
 /**
  * 
  * @author danielcer
- *
+ * 
  */
 public interface Beam<S extends State<S>> extends Iterable<S> {
-	/**
+  /**
 	 * 
 	 */
-	S put(S state);
-	
-	/**
+  S put(S state);
+
+  /**
 	 * 
 	 */
-	S remove();
-	
-	/**
+  S remove();
+
+  /**
 	 * 
 	 */
-	S removeWorst();
-	
-	
-	/**
+  S removeWorst();
+
+  /**
 	 * 
 	 */
-	int size();
-	
-	/**
+  int size();
+
+  /**
 	 * 
 	 */
-	int capacity();
-	
-	/**
+  int capacity();
+
+  /**
 	 * 
 	 */
-	double bestScore();
-	
-	/**
+  double bestScore();
+
+  /**
 	 * 
 	 */
-	public int recombined();
-	
-	/**
+  public int recombined();
+
+  /**
 	 * 
 	 */
-	public int preinsertionDiscarded();
-	
-	/**
+  public int preinsertionDiscarded();
+
+  /**
 	 * 
 	 */
-	public int pruned();
-	
+  public int pruned();
+
 }

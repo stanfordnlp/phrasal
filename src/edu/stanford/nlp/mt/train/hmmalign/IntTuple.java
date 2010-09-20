@@ -2,16 +2,15 @@ package edu.stanford.nlp.mt.train.hmmalign;
 
 public abstract class IntTuple {
 
-//  int numElements;
+  // int numElements;
 
+  // public IntTuple(int num) {
+  // numElements = num;
+  // }
 
-//  public IntTuple(int num) {
-//    numElements = num;
-//  }
-
-//
-//  public IntTuple() {
-//  }
+  //
+  // public IntTuple() {
+  // }
 
   public static IntTuple getIntTuple(int num) {
 
@@ -24,7 +23,8 @@ public abstract class IntTuple {
     if (num == 4) {
       return new IntQuadruple();
     }
-    throw new RuntimeException("Can't have an IntTuple with " + num + " elements.");
+    throw new RuntimeException("Can't have an IntTuple with " + num
+        + " elements.");
   }
 
   public abstract IntTuple getCopy();
@@ -77,6 +77,5 @@ public abstract class IntTuple {
     return name;
 
   }
-
 
 }

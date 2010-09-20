@@ -33,10 +33,11 @@ import edu.stanford.nlp.util.XMLUtils;
  */
 public class PathModel {
 
-  //TODO Make this arbitrary - fixing for now so that arbitrary color schemes need not be defined
+  // TODO Make this arbitrary - fixing for now so that arbitrary color schemes
+  // need not be defined
   public static final int MAX_PATHS = 5;
 
-  //Element names in the input file
+  // Element names in the input file
   private static final String ROOT = "tr";
   private static final String SYSTEM = "engine";
   private static final String SENTENCE = "sentence";
@@ -50,7 +51,7 @@ public class PathModel {
   private static final String ALGN_END = "end";
   private static final String SCORE = "sco";
 
-  //Members
+  // Members
   private final Map<Integer, List<Path>> translationPaths;
   private Path currentPath = null;
   private boolean isLoaded = false;
@@ -79,13 +80,14 @@ public class PathModel {
   };
 
   public void processClick(VisualPhrase vp) {
-    if(currentPath == null)
+    if (currentPath == null)
       return;
-    else if(currentPath.phrases.size() == 0)
+    else if (currentPath.phrases.size() == 0)
       currentPath.phrases.add(vp);
-    else if(currentPath.phrases.get(currentPath.phrases.size() - 1).getId() == vp.getId())
+    else if (currentPath.phrases.get(currentPath.phrases.size() - 1).getId() == vp
+        .getId())
       currentPath.phrases.remove(currentPath.phrases.size() - 1);
-    else if(currentPath.phrases.contains(vp))
+    else if (currentPath.phrases.contains(vp))
       return;
     else
       currentPath.phrases.add(vp);
@@ -102,39 +104,46 @@ public class PathModel {
 
   public boolean load(File file, File schema) {
     DocumentBuilder parser = XMLUtils.getValidatingXmlParser(schema);
-    if(parser == null) return false;
+    if (parser == null)
+      return false;
 
     final int minTranslationId = controller.getMinTranslationId();
-    final int maxTranslationId = minTranslationId + controller.getNumTranslationLayouts() - 1;
+    final int maxTranslationId = minTranslationId
+        + controller.getNumTranslationLayouts() - 1;
 
     try {
       Document xmlDocument = parser.parse(file);
 
       Element root = xmlDocument.getDocumentElement();
       NodeList sentences = root.getElementsByTagName(SENTENCE);
-      for(int i = 0; i < sentences.getLength(); i++) {
+      for (int i = 0; i < sentences.getLength(); i++) {
         Element sentence = (Element) sentences.item(i);
-        final int translationId = Integer.parseInt(sentence.getAttribute(SENT_ID));
+        final int translationId = Integer.parseInt(sentence
+            .getAttribute(SENT_ID));
 
-        if(translationId < minTranslationId) continue;
-        else if(translationId > maxTranslationId) break;
+        if (translationId < minTranslationId)
+          continue;
+        else if (translationId > maxTranslationId)
+          break;
 
-        if(translationPaths.get(translationId) == null)
+        if (translationPaths.get(translationId) == null)
           translationPaths.put(translationId, new ArrayList<Path>());
 
         NodeList xmlPaths = sentence.getElementsByTagName(PATH);
         final int formatOffset = translationPaths.get(translationId).size();
-        for(int pathIdx = 0; pathIdx < xmlPaths.getLength(); pathIdx++) {
+        for (int pathIdx = 0; pathIdx < xmlPaths.getLength(); pathIdx++) {
 
-          //Only allow up MAX_PATHS paths
-          if(translationPaths.get(translationId).size() >= MAX_PATHS) break;
+          // Only allow up MAX_PATHS paths
+          if (translationPaths.get(translationId).size() >= MAX_PATHS)
+            break;
 
           Element path = (Element) xmlPaths.item(pathIdx);
           String pathName = path.getAttribute(PATH_NAME);
 
-          //Disallow duplicate path names
-          Path p = getPath(translationId,pathName);
-          if(p != null) continue;
+          // Disallow duplicate path names
+          Path p = getPath(translationId, pathName);
+          if (p != null)
+            continue;
 
           Path newPath = new Path();
           newPath.name = pathName;
@@ -144,31 +153,32 @@ public class PathModel {
           StringBuilder newFullTrans = new StringBuilder();
 
           NodeList phrases = path.getElementsByTagName(PHRASE);
-          for(int phraseIdx = 0; phraseIdx < phrases.getLength(); phraseIdx++) {
+          for (int phraseIdx = 0; phraseIdx < phrases.getLength(); phraseIdx++) {
             Element xmlPhrase = (Element) phrases.item(phraseIdx);
 
             Phrase phrase = getPhraseFromXml(xmlPhrase);
             newFullTrans.append(phrase.getPhrase() + ' ');
 
-            VisualPhrase vp = controller.lookupVisualPhrase(translationId, phrase);
-            if(vp != null)
+            VisualPhrase vp = controller.lookupVisualPhrase(translationId,
+                phrase);
+            if (vp != null)
               newPath.phrases.add(vp);
-            else if(VERBOSE)
-              System.err.printf("%s: While loading [%d / %s], discarded %s\n", this.getClass().getName(),
-                  translationId,
-                  pathName,
-                  phrase);
+            else if (VERBOSE)
+              System.err.printf("%s: While loading [%d / %s], discarded %s\n",
+                  this.getClass().getName(), translationId, pathName, phrase);
           }
           newPath.trans = newFullTrans.toString();
           translationPaths.get(translationId).add(newPath);
         }
       }
     } catch (SAXException e) {
-      System.err.printf("%s: XML file %s does not conform to schema\n", this.getClass().getName(), file.getPath());
+      System.err.printf("%s: XML file %s does not conform to schema\n", this
+          .getClass().getName(), file.getPath());
       return false;
 
     } catch (IOException e) {
-      System.err.printf("%s: Error reading from %s\n", this.getClass().getName(), file.getPath());
+      System.err.printf("%s: Error reading from %s\n", this.getClass()
+          .getName(), file.getPath());
       e.printStackTrace();
       return false;
     }
@@ -183,7 +193,7 @@ public class PathModel {
     int end = Integer.parseInt(xmlPhrase.getAttribute(ALGN_END));
     double score = Double.parseDouble(xmlPhrase.getAttribute(SCORE));
 
-    Phrase phrase = new Phrase(english,start,end,score);
+    Phrase phrase = new Phrase(english, start, end, score);
 
     return phrase;
   }
@@ -194,7 +204,8 @@ public class PathModel {
 
   public boolean save(File file, File schema) {
     DocumentBuilder parser = XMLUtils.getValidatingXmlParser(schema);
-    if(parser == null) return false;
+    if (parser == null)
+      return false;
 
     try {
       Document xmlDoc = parser.newDocument();
@@ -202,69 +213,78 @@ public class PathModel {
       Element root = xmlDoc.createElement(ROOT);
       root.setAttribute(SYSTEM, "phrase-viewer");
       xmlDoc.appendChild(root);
-      for(int translationId : translationPaths.keySet()) {
-        //Create the sentence child
+      for (int translationId : translationPaths.keySet()) {
+        // Create the sentence child
         Element xmlSent = xmlDoc.createElement(SENTENCE);
         xmlSent.setAttribute(SENT_ID, Integer.toString(translationId));
         root.appendChild(xmlSent);
 
-        //Write the source
+        // Write the source
         Element xmlSource = xmlDoc.createElement(SOURCE);
         xmlSent.appendChild(xmlSource);
         String source = controller.getTranslationSource(translationId);
         StringTokenizer st = new StringTokenizer(source);
-        while(st.hasMoreTokens()) {
+        while (st.hasMoreTokens()) {
           Element xmlWord = xmlDoc.createElement(WORD);
           xmlWord.setTextContent(st.nextToken());
           xmlSource.appendChild(xmlWord);
         }
 
-        //Write out each path
-        for(Path path : translationPaths.get(translationId)) {
+        // Write out each path
+        for (Path path : translationPaths.get(translationId)) {
           Element xmlPath = xmlDoc.createElement(PATH);
           xmlSent.appendChild(xmlPath);
           xmlPath.setAttribute(PATH_NAME, path.name);
-          for(VisualPhrase vp : path.phrases) {
+          for (VisualPhrase vp : path.phrases) {
             Phrase p = vp.getPhrase();
             Element alignedPhrase = xmlDoc.createElement(PHRASE);
-            alignedPhrase.setAttribute(ALGN_START, Integer.toString(p.getStart()));
+            alignedPhrase.setAttribute(ALGN_START,
+                Integer.toString(p.getStart()));
             alignedPhrase.setAttribute(ALGN_END, Integer.toString(p.getEnd()));
             alignedPhrase.setAttribute(SCORE, Double.toString(p.getScore()));
             alignedPhrase.setTextContent(p.getPhrase());
-            xmlPath.appendChild(alignedPhrase); 
+            xmlPath.appendChild(alignedPhrase);
           }
-        }    
+        }
       }
 
-      //Write the xml document to file
-      Transformer transformer = TransformerFactory.newInstance().newTransformer();
+      // Write the xml document to file
+      Transformer transformer = TransformerFactory.newInstance()
+          .newTransformer();
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");
       StreamResult result = new StreamResult(file);
       DOMSource source = new DOMSource(xmlDoc);
       transformer.transform(source, result);
 
     } catch (DOMException e) {
-      System.err.printf("%s: XML DOM while writing path model to %s\n", this.getClass().getName(), file.getPath());
+      System.err.printf("%s: XML DOM while writing path model to %s\n", this
+          .getClass().getName(), file.getPath());
       e.printStackTrace();
       return false;
 
     } catch (TransformerConfigurationException e) {
-      System.err.printf("%s: Error writing XML document to %s\n", this.getClass().getName(), file.getPath());
+      System.err.printf("%s: Error writing XML document to %s\n", this
+          .getClass().getName(), file.getPath());
       e.printStackTrace();
       return false;
 
     } catch (IllegalArgumentException e) {
-      System.err.printf("%s: Unknown exception while writing path model to %s\n", this.getClass().getName(), file.getPath());
+      System.err.printf(
+          "%s: Unknown exception while writing path model to %s\n", this
+              .getClass().getName(), file.getPath());
       e.printStackTrace();
       return false;
 
     } catch (TransformerFactoryConfigurationError e) {
-      System.err.printf("%s: Unable to create a file writer for XML path model\n", this.getClass().getName());
+      System.err.printf(
+          "%s: Unable to create a file writer for XML path model\n", this
+              .getClass().getName());
       e.printStackTrace();
       return false;
 
     } catch (TransformerException e) {
-      System.err.printf("%s: Error while writing XML to %s\n", this.getClass().getName(), file.getPath());
+      System.err.printf("%s: Error while writing XML to %s\n", this.getClass()
+          .getName(), file.getPath());
       e.printStackTrace();
       return false;
     }
@@ -273,13 +293,13 @@ public class PathModel {
   }
 
   public boolean addPath(int translationId, String name) {
-    if(translationPaths.get(translationId) == null)
+    if (translationPaths.get(translationId) == null)
       translationPaths.put(translationId, new ArrayList<Path>());
 
     int numPaths = translationPaths.get(translationId).size();
     Path p = getPath(translationId, name);
 
-    if(p == null && numPaths < MAX_PATHS) {
+    if (p == null && numPaths < MAX_PATHS) {
       currentPath = new Path();
       currentPath.transId = translationId;
       currentPath.enabled = true;
@@ -292,11 +312,12 @@ public class PathModel {
   }
 
   public int getFormatId(int translationId, String name) {
-    if(currentPath != null && currentPath.transId == translationId && currentPath.name.equals(name))
+    if (currentPath != null && currentPath.transId == translationId
+        && currentPath.name.equals(name))
       return currentPath.formatId;
 
-    Path p = getPath(translationId,name);
-    if(p != null)
+    Path p = getPath(translationId, name);
+    if (p != null)
       return p.formatId;
 
     return -1;
@@ -309,13 +330,14 @@ public class PathModel {
 
   public void setTranslation(int translationId, String name, String translation) {
     Path p = getPath(translationId, name);
-    if(p != null)
+    if (p != null)
       p.trans = translation;
   }
 
   public boolean finishPath(int translationId, String name) {
-    if(currentPath == null || currentPath.transId != translationId || 
-        !currentPath.name.equals(name) || translationPaths.get(translationId).size() >= MAX_PATHS)
+    if (currentPath == null || currentPath.transId != translationId
+        || !currentPath.name.equals(name)
+        || translationPaths.get(translationId).size() >= MAX_PATHS)
       return false;
 
     translationPaths.get(translationId).add(currentPath);
@@ -324,20 +346,20 @@ public class PathModel {
     return true;
   }
 
-  public Map<String,List<VisualPhrase>> getPaths(int translationId) {
-    if(translationPaths.get(translationId) == null)
+  public Map<String, List<VisualPhrase>> getPaths(int translationId) {
+    if (translationPaths.get(translationId) == null)
       return null;
 
-    Map<String,List<VisualPhrase>> ret = new HashMap<String,List<VisualPhrase>>();
-    for(Path p : translationPaths.get(translationId))
+    Map<String, List<VisualPhrase>> ret = new HashMap<String, List<VisualPhrase>>();
+    for (Path p : translationPaths.get(translationId))
       ret.put(p.name.intern(), Collections.unmodifiableList(p.phrases));
     return ret;
   }
 
   public List<String> getPathNames(int translationId) {
-    if(translationPaths.get(translationId) != null) {
+    if (translationPaths.get(translationId) != null) {
       List<String> names = new ArrayList<String>();
-      for(Path p : translationPaths.get(translationId))
+      for (Path p : translationPaths.get(translationId))
         names.add(p.name.intern());
       return names;
     }
@@ -346,7 +368,7 @@ public class PathModel {
 
   public void setPathState(boolean isOn, int translationId, String name) {
     Path p = getPath(translationId, name);
-    if(p != null)
+    if (p != null)
       p.enabled = isOn;
   }
 
@@ -357,14 +379,14 @@ public class PathModel {
 
   public void deletePath(int translationId, String name) {
     Path p = getPath(translationId, name);
-    if(p != null)
+    if (p != null)
       translationPaths.get(translationId).remove(p);
   }
 
   private Path getPath(int translationId, String name) {
-    if(translationPaths.get(translationId) != null)
-      for(Path p : translationPaths.get(translationId))
-        if(p.name.equals(name))
+    if (translationPaths.get(translationId) != null)
+      for (Path p : translationPaths.get(translationId))
+        if (p.name.equals(name))
           return p;
     return null;
   }

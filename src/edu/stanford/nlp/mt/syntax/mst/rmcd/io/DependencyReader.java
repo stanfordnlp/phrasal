@@ -20,13 +20,13 @@ import java.io.*;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.*;
 
 /**
- * A class that defines common behavior and abstract methods for
- * readers for different formats.
+ * A class that defines common behavior and abstract methods for readers for
+ * different formats.
  * <p/>
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Jason Baldridge
  * @author Michel Galley (substantially modified)
  * @version $Id: DependencyReader.java 112 2007-03-23 19:19:28Z jasonbaldridge $
@@ -51,25 +51,25 @@ public abstract class DependencyReader {
   protected boolean labeled = true;
   protected boolean trim = false;
 
-
-  public DependencyReader(DependencyPipe pipe, ParserOptions opts, boolean pretag) throws Exception {
+  public DependencyReader(DependencyPipe pipe, ParserOptions opts,
+      boolean pretag) throws Exception {
     this.pretag = pretag;
     this.pipe = pipe;
-    if(opts != null && opts.trim)
+    if (opts != null && opts.trim)
       trim = true;
     System.err.printf("Dependency reader(trim=%s): %s\n", trim, this);
 
-    if(pretag) {
-      System.err.println("Loading model: "+serializedTaggerFile);
+    if (pretag) {
+      System.err.println("Loading model: " + serializedTaggerFile);
       MaxentTagger tagger = new MaxentTagger(serializedTaggerFile);
       ts = new TestSentence(tagger);
     }
-    System.err.println("Pre-tagging: "+pretag);
+    System.err.println("Pre-tagging: " + pretag);
   }
 
-  public static DependencyReader createDependencyReader(DependencyPipe pipe, String format, ParserOptions opts)
-       throws Exception {
-    System.err.println("New dependency reader with format: "+format);
+  public static DependencyReader createDependencyReader(DependencyPipe pipe,
+      String format, ParserOptions opts) throws Exception {
+    System.err.println("New dependency reader with format: " + format);
     parserOpts = opts;
     boolean pretag = (opts != null) && opts.pretag;
 
@@ -80,48 +80,54 @@ public abstract class DependencyReader {
     } else if (format.equalsIgnoreCase("tagged")) {
       return new PlainReader(pipe, opts, true);
     } else {
-      throw new UnsupportedOperationException("Not a supported format: " + format);
+      throw new UnsupportedOperationException("Not a supported format: "
+          + format);
     }
   }
 
-  public static DependencyReader createDependencyReader(DependencyPipe pipe, String format)
-       throws Exception {
+  public static DependencyReader createDependencyReader(DependencyPipe pipe,
+      String format) throws Exception {
     return createDependencyReader(pipe, format, null);
   }
 
-  public boolean startReading(String file, String sourceFile, String alignFile) throws IOException {
-    System.err.printf("Start reading: [e=%s] [f=%s] [a=%s]\n", file, sourceFile, alignFile);
+  public boolean startReading(String file, String sourceFile, String alignFile)
+      throws IOException {
+    System.err.printf("Start reading: [e=%s] [f=%s] [a=%s]\n", file,
+        sourceFile, alignFile);
     labeled = fileContainsLabels(file);
-    inputReader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF8"));
-    if(sourceFile != null) {
+    inputReader = new BufferedReader(new InputStreamReader(new FileInputStream(
+        file), "UTF8"));
+    if (sourceFile != null) {
       try {
         sourceReader = createDependencyReader(pipe, "conll", parserOpts);
-      } catch(Exception e) {
+      } catch (Exception e) {
         RuntimeException re = new RuntimeException();
         re.initCause(e);
         throw re;
       }
       sourceReader.startReading(sourceFile, null, null);
     }
-    if(alignFile != null)
-      alignReader = new BufferedReader(new InputStreamReader(new FileInputStream(alignFile)));
+    if (alignFile != null)
+      alignReader = new BufferedReader(new InputStreamReader(
+          new FileInputStream(alignFile)));
     return labeled;
   }
 
   public static void setSerializedTaggerModel(String t) {
-    System.err.println("Setting tagger: "+t);
+    System.err.println("Setting tagger: " + t);
     serializedTaggerFile = t;
   }
 
   protected static String numberClassing(String s) {
-    //if (s.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[0-9,]+ *"))
-    //  return "<num>";
+    // if (s.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[0-9,]+ *"))
+    // return "<num>";
     return s;
   }
 
   public String normalize(String s) {
     s = s.trim();
-    if(!trim) s = s+" ";
+    if (!trim)
+      s = s + " ";
     return s;
   }
 
@@ -133,5 +139,6 @@ public abstract class DependencyReader {
 
   public abstract DependencyInstance readNext(String line) throws IOException;
 
-  protected abstract boolean fileContainsLabels(String filename) throws IOException;
+  protected abstract boolean fileContainsLabels(String filename)
+      throws IOException;
 }

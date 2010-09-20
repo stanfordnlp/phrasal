@@ -9,110 +9,107 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.State;
 
-public class ScorerWrapperEvaluationMetric<TK, FV> implements EvaluationMetric<TK, FV> {
+public class ScorerWrapperEvaluationMetric<TK, FV> implements
+    EvaluationMetric<TK, FV> {
 
-	private final Scorer<FV> scorer;
-	
-	public ScorerWrapperEvaluationMetric(Scorer<FV> scorer) {
-		this.scorer = scorer;
-	}
-	
-	@Override
-	public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
-		return new EvaluationIncMetric();
-	}
-	
-	
-	private class EvaluationIncMetric implements IncrementalEvaluationMetric<TK,FV> {
+  private final Scorer<FV> scorer;
 
-		private double score = 0;
-		List<Double> scores = new ArrayList<Double>();
-		
-		@Override
-		public IncrementalEvaluationMetric<TK, FV> add(
-				ScoredFeaturizedTranslation<TK, FV> trans) {
-			double tscore;
-			score += tscore = scorer.getIncrementalScore(trans.features);
-			scores.add(tscore);
-			return this;
-		}
+  public ScorerWrapperEvaluationMetric(Scorer<FV> scorer) {
+    this.scorer = scorer;
+  }
 
-		@Override
-		public double maxScore() {
-			throw new UnsupportedOperationException();
-		}
+  @Override
+  public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric() {
+    return new EvaluationIncMetric();
+  }
 
-		@Override
-		public IncrementalEvaluationMetric<TK, FV> replace(int index,
-				ScoredFeaturizedTranslation<TK, FV> trans) {
-			double tscore;
-			score -= scores.get(index);
-			score += tscore = scorer.getIncrementalScore(trans.features);
-			scores.set(index, tscore);
-			return this;
-		}
+  private class EvaluationIncMetric implements
+      IncrementalEvaluationMetric<TK, FV> {
 
-		@Override
-		public double score() {
-			return score;
-		}
-  
-		@Override
-		public int size() {
-			return scores.size();
-		}
+    private double score = 0;
+    List<Double> scores = new ArrayList<Double>();
 
-		@Override
-		public int compareTo(IncrementalEvaluationMetric<TK, FV> o) {
-			throw new UnsupportedOperationException();
-		}
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        ScoredFeaturizedTranslation<TK, FV> trans) {
+      double tscore;
+      score += tscore = scorer.getIncrementalScore(trans.features);
+      scores.add(tscore);
+      return this;
+    }
 
-		@Override
-		public State<IncrementalEvaluationMetric<TK, FV>> parent() {
-			throw new UnsupportedOperationException();
-		}
+    @Override
+    public double maxScore() {
+      throw new UnsupportedOperationException();
+    }
 
-		@Override
-		public double partialScore() {
-			throw new UnsupportedOperationException();
-		}
-		
-		@Override
-		public Object clone() throws CloneNotSupportedException {
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> replace(int index,
+        ScoredFeaturizedTranslation<TK, FV> trans) {
+      double tscore;
+      score -= scores.get(index);
+      score += tscore = scorer.getIncrementalScore(trans.features);
+      scores.set(index, tscore);
+      return this;
+    }
+
+    @Override
+    public double score() {
+      return score;
+    }
+
+    @Override
+    public int size() {
+      return scores.size();
+    }
+
+    @Override
+    public int compareTo(IncrementalEvaluationMetric<TK, FV> o) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public State<IncrementalEvaluationMetric<TK, FV>> parent() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double partialScore() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
       super.clone();
-			throw new UnsupportedOperationException();
-		}
+      throw new UnsupportedOperationException();
+    }
 
-		@Override
-		public int depth() {
-			throw new UnsupportedOperationException();
-		}
-		
-		
-	}
+    @Override
+    public int depth() {
+      throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric(
-			NBestListContainer<TK, FV> nbestList) {
-		return new EvaluationIncMetric();
-	}
+  }
 
+  @Override
+  public IncrementalEvaluationMetric<TK, FV> getIncrementalMetric(
+      NBestListContainer<TK, FV> nbestList) {
+    return new EvaluationIncMetric();
+  }
 
-	@Override
-	public RecombinationFilter<IncrementalEvaluationMetric<TK, FV>> getIncrementalMetricRecombinationFilter() {
-		throw new UnsupportedOperationException();
-	}
+  @Override
+  public RecombinationFilter<IncrementalEvaluationMetric<TK, FV>> getIncrementalMetricRecombinationFilter() {
+    throw new UnsupportedOperationException();
+  }
 
-	@Override
-	public double maxScore() {
-		throw new UnsupportedOperationException();
-	}
+  @Override
+  public double maxScore() {
+    throw new UnsupportedOperationException();
+  }
 
-	@Override
-	public double score(
-			List<ScoredFeaturizedTranslation<TK, FV>> sequences) {
-		throw new UnsupportedOperationException();
-	}
-
+  @Override
+  public double score(List<ScoredFeaturizedTranslation<TK, FV>> sequences) {
+    throw new UnsupportedOperationException();
+  }
 
 }

@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This class holds a word Id together with a tag Id
- * Later other fields might be added as well
- *
+ * This class holds a word Id together with a tag Id Later other fields might be
+ * added as well
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
@@ -35,7 +35,6 @@ public class Word {
     init();
   }
 
-
   private void init() {
     hashCode = wordId << 7 + tagId;
   }
@@ -56,7 +55,6 @@ public class Word {
     }
   }
 
-
   public boolean isSimple() {
     return ((wordId == 0) || (tagId == 0));
   }
@@ -74,13 +72,14 @@ public class Word {
     return wordId + "_" + tagId;
   }
 
-
   public String toNameString() {
     return null;
   }
 
-
-  /* Print the word and tag separated with a _ and also print the hashcode in brackets */
+  /*
+   * Print the word and tag separated with a _ and also print the hashcode in
+   * brackets
+   */
   public void print() {
     System.out.print(wordId);
     System.out.print(SentenceHandler.UNDRSCR);
@@ -89,6 +88,5 @@ public class Word {
     System.out.print(hashCode);
     System.out.print(')');
   }
-
 
 }

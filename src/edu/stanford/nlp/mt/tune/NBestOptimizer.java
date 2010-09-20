@@ -8,7 +8,7 @@ import edu.stanford.nlp.stats.Counter;
 public interface NBestOptimizer {
 
   public Counter<String> optimize(Counter<String> initialWts);
-  
+
   public boolean doNormalization();
-  
+
 }

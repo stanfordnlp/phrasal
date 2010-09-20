@@ -2,28 +2,26 @@ package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 
-
 /**
  * 
  * @author danielcer
- *
+ * 
  * @param <T>
  */
 public interface PhraseTable<T> {
-	
-	/**
+
+  /**
 	 * 
 	 */
-	List<TranslationOption<T>> getTranslationOptions(Sequence<T> sequence);
-	
-	/**
+  List<TranslationOption<T>> getTranslationOptions(Sequence<T> sequence);
+
+  /**
 	 * 
 	 */
-	int longestForeignPhrase();
-	
-	
-	/**
+  int longestForeignPhrase();
+
+  /**
 	 * 
 	 */
-	String getName();
+  String getName();
 }

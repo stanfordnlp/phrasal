@@ -4,13 +4,12 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
-
 import static java.lang.System.*;
 
 /**
- *
+ * 
  * @author danielcer
- *
+ * 
  */
 public class IBMModel1 {
   final DynamicIntegerArrayIndex foreignIndex = new DynamicIntegerArrayIndex();
@@ -22,8 +21,7 @@ public class IBMModel1 {
 
   static WeakHashMap<String, IBMModel1> model1Store = new WeakHashMap<String, IBMModel1>();
 
-
-  public static IBMModel1  load(String filename) throws IOException {
+  public static IBMModel1 load(String filename) throws IOException {
     File f = new File(filename);
     if (model1Store.get(f.getAbsolutePath()) != null) {
       return model1Store.get(f.getAbsolutePath());
@@ -45,7 +43,8 @@ public class IBMModel1 {
     LineNumberReader reader;
 
     if (filename.endsWith(".gz")) {
-      reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(filename))));
+      reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(
+          new FileInputStream(filename))));
     } else {
       reader = new LineNumberReader(new FileReader(filename));
     }
@@ -55,10 +54,12 @@ public class IBMModel1 {
     Runtime rt = Runtime.getRuntime();
     long preMemUsed = rt.totalMemory() - rt.freeMemory();
     System.err.printf("IBMModel1: %s\n", filename);
-    for (String line; (line = reader.readLine()) != null; ) {
+    for (String line; (line = reader.readLine()) != null;) {
       String[] fields = line.split("\t");
       if (fields.length != 3) {
-        throw new RuntimeException(String.format("Only %d fields found on line %d, expected 3\n", fields.length, reader.getLineNumber()));
+        throw new RuntimeException(String.format(
+            "Only %d fields found on line %d, expected 3\n", fields.length,
+            reader.getLineNumber()));
       }
       IString sourceWord = new IString(fields[0]);
       IString targetWord = new IString(fields[1]);
@@ -66,18 +67,24 @@ public class IBMModel1 {
       try {
         p = Double.parseDouble(fields[2]);
       } catch (NumberFormatException e) {
-        throw new RuntimeException(String.format("Can't parse %s as a number on line %d\n", fields[2], reader.getLineNumber()));
+        throw new RuntimeException(String.format(
+            "Can't parse %s as a number on line %d\n", fields[2],
+            reader.getLineNumber()));
       }
-      int[] wordPair = new int[2]; wordPair[0] = sourceWord.id; wordPair[1] = targetWord.id;
+      int[] wordPair = new int[2];
+      wordPair[0] = sourceWord.id;
+      wordPair[1] = targetWord.id;
       int idx = foreignIndex.indexOf(wordPair, true);
       if (scoresList.size() != idx) {
-        throw new RuntimeException(String.format("Index error, likely cause : duplicate entries for %s=>%s\n",sourceWord,targetWord));
+        throw new RuntimeException(String.format(
+            "Index error, likely cause : duplicate entries for %s=>%s\n",
+            sourceWord, targetWord));
       }
       scoresList.add(p);
       if (idx % 500000 == 0) {
         long currentMemUsed = rt.totalMemory() - rt.freeMemory();
-        System.err.printf("model1 > %d pairs (mem used: %d MiB)\n",
-                idx, (currentMemUsed - preMemUsed)/(1024*1024));
+        System.err.printf("model1 > %d pairs (mem used: %d MiB)\n", idx,
+            (currentMemUsed - preMemUsed) / (1024 * 1024));
       }
     }
     this.scores = new double[scoresList.size()];
@@ -89,26 +96,30 @@ public class IBMModel1 {
   }
 
   public double score(IString sourceToken, IString targetToken) {
-    if (sourceToken.id == targetToken.id) return 1.0; // XXX experimental hack for unknown words
+    if (sourceToken.id == targetToken.id)
+      return 1.0; // XXX experimental hack for unknown words
     int[] pair = new int[2];
-    pair[0] = sourceToken.id; pair[1] = targetToken.id;
+    pair[0] = sourceToken.id;
+    pair[1] = targetToken.id;
     int idx = foreignIndex.indexOf(pair);
-    if (idx < 0) return UNKNOWN_SCORE;
+    if (idx < 0)
+      return UNKNOWN_SCORE;
     return scores[idx];
   }
 
   public double score(Sequence<IString> source, Sequence<IString> target) {
-    return score(source,target, false);
+    return score(source, target, false);
   }
 
   public double scoreTMOnly(Sequence<IString> source, Sequence<IString> target) {
     return score(source, target, true);
   }
 
-  private double score(Sequence<IString> source, Sequence<IString> target, boolean TMOnly) {
+  private double score(Sequence<IString> source, Sequence<IString> target,
+      boolean TMOnly) {
     int l = source.size();
     int m = target.size();
-    double singleAlignmentScore = -m*Math.log(l+1);
+    double singleAlignmentScore = -m * Math.log(l + 1);
     double transScore = 0;
     for (int j = 0; j < m; j++) {
       double sumJ = score(NULL_TOKEN, target.get(j));
@@ -117,16 +128,19 @@ public class IBMModel1 {
       }
       transScore += Math.log(sumJ);
     }
-    /*err.printf("s.sas: %e\n", singleAlignmentScore);
-                err.printf("s.transScore: %e\n", transScore); */
+    /*
+     * err.printf("s.sas: %e\n", singleAlignmentScore);
+     * err.printf("s.transScore: %e\n", transScore);
+     */
     if (TMOnly) {
       return transScore;
     } else {
-      return logEpsilon + singleAlignmentScore+transScore;
+      return logEpsilon + singleAlignmentScore + transScore;
     }
   }
 
-  public PartialTargetFeatureState partialTargetFeatureState(Sequence<IString> source) {
+  public PartialTargetFeatureState partialTargetFeatureState(
+      Sequence<IString> source) {
     return new PartialTargetFeatureState(source);
   }
 
@@ -141,7 +155,8 @@ public class IBMModel1 {
       this.source = source;
     }
 
-    private PartialTargetFeatureState(double partialTransScore, Sequence<IString> source, int targetSz) {
+    private PartialTargetFeatureState(double partialTransScore,
+        Sequence<IString> source, int targetSz) {
       this.partialTransScore = partialTransScore;
       this.source = source;
       this.targetSz = targetSz;
@@ -153,8 +168,8 @@ public class IBMModel1 {
 
     public double score() {
       double lengthScore = logEpsilon;
-      double singleAlignmentScore = -targetSz*Math.log(source.size()+1);
-      return lengthScore+singleAlignmentScore+partialTransScore;
+      double singleAlignmentScore = -targetSz * Math.log(source.size() + 1);
+      return lengthScore + singleAlignmentScore + partialTransScore;
     }
 
     public PartialTargetFeatureState appendTargetWord(IString targetWord) {
@@ -163,15 +178,19 @@ public class IBMModel1 {
       for (int i = 0; i < l; i++) {
         sumJ += IBMModel1.this.score(source.get(i), targetWord);
       }
-      return new PartialTargetFeatureState(partialTransScore + Math.log(sumJ), source, targetSz+1);
+      return new PartialTargetFeatureState(partialTransScore + Math.log(sumJ),
+          source, targetSz + 1);
     }
 
-    public PartialTargetFeatureState appendPhrasePrecompute(PhrasePrecomputePTarget pppt) {
-      return new PartialTargetFeatureState(partialTransScore + pppt.logSum, source, targetSz+pppt.targetSz);
+    public PartialTargetFeatureState appendPhrasePrecompute(
+        PhrasePrecomputePTarget pppt) {
+      return new PartialTargetFeatureState(partialTransScore + pppt.logSum,
+          source, targetSz + pppt.targetSz);
     }
   } // end class PartialTargetFeatureState
 
-  public PhrasePrecomputePTarget phrasePrecomputePTarget(Sequence<IString> targetPhrase, Sequence<IString> source) {
+  public PhrasePrecomputePTarget phrasePrecomputePTarget(
+      Sequence<IString> targetPhrase, Sequence<IString> source) {
     int l = source.size();
 
     int m = targetPhrase.size();
@@ -189,21 +208,22 @@ public class IBMModel1 {
   public static class PhrasePrecomputePTarget {
     final double logSum;
     final int targetSz;
+
     public PhrasePrecomputePTarget(double logSum, int targetSz) {
       this.logSum = logSum;
       this.targetSz = targetSz;
     }
   }
 
-  public PartialSourceFeatureState partialSourceFeatureState(Sequence<IString> target) {
+  public PartialSourceFeatureState partialSourceFeatureState(
+      Sequence<IString> target) {
     return new PartialSourceFeatureState(target);
   }
 
-
   /**
-   *
+   * 
    * @author danielcer
-   *
+   * 
    */
   public class PartialSourceFeatureState {
     private final int sourceSz;
@@ -219,7 +239,8 @@ public class IBMModel1 {
       }
     }
 
-    private PartialSourceFeatureState(double[] targetSums, Sequence<IString> target, int sourceSz) {
+    private PartialSourceFeatureState(double[] targetSums,
+        Sequence<IString> target, int sourceSz) {
       this.targetSums = targetSums;
       this.target = target;
       this.sourceSz = sourceSz;
@@ -227,25 +248,28 @@ public class IBMModel1 {
 
     public double score() {
       double lengthScore = logEpsilon;
-      double singleAlignmentScore = -targetSums.length*Math.log(sourceSz+1);
+      double singleAlignmentScore = -targetSums.length * Math.log(sourceSz + 1);
       double transScore = 0;
       for (double targetSum : targetSums) {
         transScore += Math.log(targetSum);
       }
-      /*err.printf("ps.sas: %e\n", singleAlignmentScore);
-                        err.printf("ps.transScore: %e\n", transScore); */
-      return lengthScore+singleAlignmentScore+transScore;
+      /*
+       * err.printf("ps.sas: %e\n", singleAlignmentScore);
+       * err.printf("ps.transScore: %e\n", transScore);
+       */
+      return lengthScore + singleAlignmentScore + transScore;
     }
 
     public PartialSourceFeatureState appendSourceWord(IString sourceWord) {
-      PartialSourceFeatureState pfs = new PartialSourceFeatureState(new double[targetSums.length], target, sourceSz+1);
+      PartialSourceFeatureState pfs = new PartialSourceFeatureState(
+          new double[targetSums.length], target, sourceSz + 1);
       for (int i = 0; i < targetSums.length; i++) {
-        pfs.targetSums[i] = targetSums[i] + IBMModel1.this.score(sourceWord, target.get(i));
+        pfs.targetSums[i] = targetSums[i]
+            + IBMModel1.this.score(sourceWord, target.get(i));
       }
       return pfs;
     }
   }
-
 
   static public void main(String[] args) throws IOException {
     if (args.length != 1) {
@@ -256,33 +280,45 @@ public class IBMModel1 {
     IBMModel1 model1 = new IBMModel1(args[0]);
     System.err.println("ready");
     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-    for (String sourceStr; (sourceStr = reader.readLine()) != null; ) {
+    for (String sourceStr; (sourceStr = reader.readLine()) != null;) {
       String targetStr = reader.readLine();
-      if (targetStr == null) break;
-      Sequence<IString> sourceSeq = new SimpleSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
-      Sequence<IString> targetSeq = new SimpleSequence<IString>(IStrings.toIStringArray(targetStr.split("\\s+")));
+      if (targetStr == null)
+        break;
+      Sequence<IString> sourceSeq = new SimpleSequence<IString>(
+          IStrings.toIStringArray(sourceStr.split("\\s+")));
+      Sequence<IString> targetSeq = new SimpleSequence<IString>(
+          IStrings.toIStringArray(targetStr.split("\\s+")));
       out.printf("p(%s=>%s)\n", sourceSeq, targetSeq);
       if (sourceSeq.size() == 1 && targetSeq.size() == 1) {
-        out.printf("%e (token score %e)\n", model1.score(sourceSeq, targetSeq), model1.score(sourceSeq.get(0), targetSeq.get(0)));
+        out.printf("%e (token score %e)\n", model1.score(sourceSeq, targetSeq),
+            model1.score(sourceSeq.get(0), targetSeq.get(0)));
       } else {
         double l = sourceSeq.size();
         double m = targetSeq.size();
-        double singleAlignmentScore = -m*Math.log(l+1);
-        out.printf("%e (TM only: %e single alignment factor: %e)\n", model1.score(sourceSeq, targetSeq), model1.scoreTMOnly(sourceSeq, targetSeq), singleAlignmentScore);
+        double singleAlignmentScore = -m * Math.log(l + 1);
+        out.printf("%e (TM only: %e single alignment factor: %e)\n",
+            model1.score(sourceSeq, targetSeq),
+            model1.scoreTMOnly(sourceSeq, targetSeq), singleAlignmentScore);
         out.printf("Incremental Target Scores:\n");
-        PartialTargetFeatureState ptfs = model1.partialTargetFeatureState(sourceSeq);
+        PartialTargetFeatureState ptfs = model1
+            .partialTargetFeatureState(sourceSeq);
         out.printf("\t() => %e\n", ptfs.score());
         for (int i = 0; i < targetSeq.size(); i++) {
           ptfs = ptfs.appendTargetWord(targetSeq.get(i));
-          out.printf("\t%s => %e (%e)\n", targetSeq.subsequence(0, i+1), ptfs.score(), model1.score(sourceSeq, targetSeq.subsequence(0, i+1)));
+          out.printf("\t%s => %e (%e)\n", targetSeq.subsequence(0, i + 1),
+              ptfs.score(),
+              model1.score(sourceSeq, targetSeq.subsequence(0, i + 1)));
         }
 
         out.printf("Incremental Source Scores:\n");
-        PartialSourceFeatureState psfs = model1.partialSourceFeatureState(targetSeq);
+        PartialSourceFeatureState psfs = model1
+            .partialSourceFeatureState(targetSeq);
         out.printf("\t() => %e\n", psfs.score());
         for (int i = 0; i < sourceSeq.size(); i++) {
           psfs = psfs.appendSourceWord(sourceSeq.get(i));
-          out.printf("\t%s => %e (%e)\n", sourceSeq.subsequence(0, i+1), psfs.score(), model1.score(sourceSeq.subsequence(0, i+1), targetSeq));
+          out.printf("\t%s => %e (%e)\n", sourceSeq.subsequence(0, i + 1),
+              psfs.score(),
+              model1.score(sourceSeq.subsequence(0, i + 1), targetSeq));
         }
       }
     }

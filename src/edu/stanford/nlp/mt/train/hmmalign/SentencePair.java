@@ -31,14 +31,11 @@ public class SentencePair {
     return f;
   }
 
-
   public void print() {
     System.out.println("Count = " + count);
     e.print();
     f.print();
 
-
   }
-
 
 }

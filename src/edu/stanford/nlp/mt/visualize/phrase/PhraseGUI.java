@@ -75,20 +75,20 @@ public final class PhraseGUI {
 
   private OptionsDialog optionsDialog = null;
 
-  //Application members
+  // Application members
   private final PhraseController controller;
   private static PhraseGUI thisInstance = null;
   private static final int DEFAULT_WIDTH = 400;
   private static final int DEFAULT_HEIGHT = 500;
 
   public static PhraseGUI getInstance() {
-    if(thisInstance == null)
+    if (thisInstance == null)
       thisInstance = new PhraseGUI();
     return thisInstance;
   }
 
   private PhraseGUI() {
-    controller = PhraseController.getInstance();    
+    controller = PhraseController.getInstance();
   }
 
   private JFrame getMainFrame() {
@@ -107,59 +107,59 @@ public final class PhraseGUI {
   private JPanel getMainPanel() {
     if (mainPanel == null) {
       mainPanel = new JPanel();
-      if(mainLayout == null)
+      if (mainLayout == null)
         mainLayout = new GroupLayout(mainPanel);
       mainPanel.setLayout(mainLayout);
 
       mainLayout.setAutoCreateGaps(true);
       mainLayout.setAutoCreateContainerGaps(true);
-      mainLayout.setHorizontalGroup(mainLayout.createSequentialGroup()
-          .addGroup(mainLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
-              .addComponent(this.getSourceLabel())
-              .addComponent(this.getOptsLabel())
-              .addComponent(this.getStatusBarSeparator())
-              .addComponent(this.getStatusBar())
-          )
-          .addGroup(mainLayout.createParallelGroup()
-              .addComponent(this.getSourceFileTextField())
-              .addComponent(this.getOptsFileTextField())
-          )
-          .addGroup(mainLayout.createParallelGroup()
-              .addComponent(this.getSourceFileButton())
-              .addComponent(this.getOptsFileButton())
-              .addComponent(this.getLoadButton())
-          )
-      );
-      mainLayout.setVerticalGroup(mainLayout.createSequentialGroup()
-          .addGroup(mainLayout.createParallelGroup()
-              .addComponent(this.getSourceLabel())
-              .addComponent(this.getSourceFileTextField())
-              .addComponent(this.getSourceFileButton())
-          )
-          .addGroup(mainLayout.createParallelGroup()
-              .addComponent(this.getOptsLabel())
-              .addComponent(this.getOptsFileTextField())
-              .addComponent(this.getOptsFileButton())
-          )
+      mainLayout.setHorizontalGroup(mainLayout
+          .createSequentialGroup()
+          .addGroup(
+              mainLayout.createParallelGroup(GroupLayout.Alignment.CENTER)
+                  .addComponent(this.getSourceLabel())
+                  .addComponent(this.getOptsLabel())
+                  .addComponent(this.getStatusBarSeparator())
+                  .addComponent(this.getStatusBar()))
+          .addGroup(
+              mainLayout.createParallelGroup()
+                  .addComponent(this.getSourceFileTextField())
+                  .addComponent(this.getOptsFileTextField()))
+          .addGroup(
+              mainLayout.createParallelGroup()
+                  .addComponent(this.getSourceFileButton())
+                  .addComponent(this.getOptsFileButton())
+                  .addComponent(this.getLoadButton())));
+      mainLayout.setVerticalGroup(mainLayout
+          .createSequentialGroup()
+          .addGroup(
+              mainLayout.createParallelGroup()
+                  .addComponent(this.getSourceLabel())
+                  .addComponent(this.getSourceFileTextField())
+                  .addComponent(this.getSourceFileButton()))
+          .addGroup(
+              mainLayout.createParallelGroup()
+                  .addComponent(this.getOptsLabel())
+                  .addComponent(this.getOptsFileTextField())
+                  .addComponent(this.getOptsFileButton()))
           .addComponent(this.getStatusBarSeparator())
-          .addGroup(mainLayout.createParallelGroup()
-              .addComponent(this.getStatusBar())
-              .addComponent(this.getLoadButton())
-          )
-      );
+          .addGroup(
+              mainLayout.createParallelGroup()
+                  .addComponent(this.getStatusBar())
+                  .addComponent(this.getLoadButton())));
     }
     return mainPanel;
   }
 
   private JLabel getSourceLabel() {
-    if(sourceLabel == null) {
+    if (sourceLabel == null) {
       sourceLabel = new JLabel("Source");
     }
     return sourceLabel;
   }
 
   private JLabel getOptsLabel() {
-    if(optsLabel == null) {
+    if (optsLabel == null) {
       optsLabel = new JLabel("Options");
     }
     return optsLabel;
@@ -237,7 +237,7 @@ public final class PhraseGUI {
   }
 
   private JMenuItem getOpenOptionsDialogMenuItem() {
-    if(openOptionsDialogMenuItem == null) {
+    if (openOptionsDialogMenuItem == null) {
       openOptionsDialogMenuItem = new JMenuItem("Other Options");
       openOptionsDialogMenuItem.addActionListener(new ActionListener() {
         @Override
@@ -254,7 +254,6 @@ public final class PhraseGUI {
     return openOptionsDialogMenuItem;
   }
 
-
   public static void show() {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -268,79 +267,80 @@ public final class PhraseGUI {
 
   private JTextField getSourceFileTextField() {
     if (sourceFileTextField == null) {
-      sourceFileTextField  = (controller.getSourceFilePath() != null) ? 
-          new JTextField(controller.getSourceFilePath()) : new JTextField();
+      sourceFileTextField = (controller.getSourceFilePath() != null) ? new JTextField(
+          controller.getSourceFilePath()) : new JTextField();
+      updateSourceFile();
+      sourceFileTextField.setPreferredSize(new Dimension(350, 15));
+      sourceFileTextField.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
           updateSourceFile();
-          sourceFileTextField.setPreferredSize(new Dimension(350, 15));
-          sourceFileTextField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-              updateSourceFile();
-            }
-          });
-          sourceFileTextField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent arg0) {}
-            @Override
-            public void focusLost(FocusEvent arg0) {
-              updateSourceFile();          
-            }
-          });
+        }
+      });
+      sourceFileTextField.addFocusListener(new FocusListener() {
+        @Override
+        public void focusGained(FocusEvent arg0) {
+        }
+
+        @Override
+        public void focusLost(FocusEvent arg0) {
+          updateSourceFile();
+        }
+      });
     }
     return sourceFileTextField;
   }
 
   private void updateSourceFile() {
-    if(getSourceFileTextField().getText() == "")
+    if (getSourceFileTextField().getText() == "")
       return;
 
-    if(controller.setSourceFile(getSourceFileTextField().getText())) {
+    if (controller.setSourceFile(getSourceFileTextField().getText())) {
       setStatusMessage("Loaded source file");
       toggleLoadButton();
-    }
-    else
+    } else
       setStatusMessage("Source file does not exist!");
   }
 
   private JTextField getOptsFileTextField() {
     if (optsFileTextField == null) {
-      optsFileTextField = (controller.getOptsFilePath() != null) ?
-          new JTextField(controller.getOptsFilePath()) : new JTextField();
+      optsFileTextField = (controller.getOptsFilePath() != null) ? new JTextField(
+          controller.getOptsFilePath()) : new JTextField();
+      updateOptsFile();
+      optsFileTextField.setPreferredSize(new Dimension(350, 15));
+      optsFileTextField.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
           updateOptsFile();
-          optsFileTextField.setPreferredSize(new Dimension(350, 15));
-          optsFileTextField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-              updateOptsFile();
-            }
-          });
-          optsFileTextField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {}
-            @Override
-            public void focusLost(FocusEvent e) {
-              updateOptsFile();
-            }
-          });
+        }
+      });
+      optsFileTextField.addFocusListener(new FocusListener() {
+        @Override
+        public void focusGained(FocusEvent e) {
+        }
+
+        @Override
+        public void focusLost(FocusEvent e) {
+          updateOptsFile();
+        }
+      });
     }
     return optsFileTextField;
   }
 
   private void updateOptsFile() {
-    if(getOptsFileTextField().getText() == "")
+    if (getOptsFileTextField().getText() == "")
       return;
 
-    if(controller.setOptsFile(getOptsFileTextField().getText())) {
+    if (controller.setOptsFile(getOptsFileTextField().getText())) {
       setStatusMessage("Loaded options file");
       toggleLoadButton();
-    }
-    else
+    } else
       setStatusMessage("Options file does not exist!");
   }
-
 
   private JButton getSourceFileButton() {
     if (sourceFileButton == null) {
       sourceFileButton = new JButton();
-      sourceFileButton.setPreferredSize(new Dimension(15,20));
+      sourceFileButton.setPreferredSize(new Dimension(15, 20));
       sourceFileButton.setText("Browse...");
       sourceFileButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -349,7 +349,7 @@ public final class PhraseGUI {
           getFileChooser().setLocation(loc);
           getFileChooser().showOpenDialog(getMainFrame());
           File selection = getFileChooser().getSelectedFile();
-          if(selection != null) {
+          if (selection != null) {
             getSourceFileTextField().setText(selection.getPath());
             updateSourceFile();
           }
@@ -362,7 +362,7 @@ public final class PhraseGUI {
   private JButton getOptsFileButton() {
     if (optsFileButton == null) {
       optsFileButton = new JButton();
-      optsFileButton.setPreferredSize(new Dimension(15,20));
+      optsFileButton.setPreferredSize(new Dimension(15, 20));
       optsFileButton.setText("Browse...");
       optsFileButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -371,7 +371,7 @@ public final class PhraseGUI {
           getFileChooser().setLocation(loc);
           getFileChooser().showOpenDialog(getMainFrame());
           File selection = getFileChooser().getSelectedFile();
-          if(selection != null) {
+          if (selection != null) {
             getOptsFileTextField().setText(selection.getPath());
             updateOptsFile();
           }
@@ -382,9 +382,9 @@ public final class PhraseGUI {
   }
 
   private JLabel getStatusBar() {
-    if(statusBar == null) {
+    if (statusBar == null) {
       statusBar = new JLabel("Ready");
-      statusBar.setPreferredSize(new Dimension(DEFAULT_WIDTH,20));
+      statusBar.setPreferredSize(new Dimension(DEFAULT_WIDTH, 20));
     }
     return statusBar;
   }
@@ -394,7 +394,7 @@ public final class PhraseGUI {
   }
 
   private JSeparator getStatusBarSeparator() {
-    if(statusBarSeparator == null) {
+    if (statusBarSeparator == null) {
       statusBarSeparator = new JSeparator();
     }
     return statusBarSeparator;
@@ -404,7 +404,7 @@ public final class PhraseGUI {
     if (loadButton == null) {
       loadButton = new JButton();
       loadButton.setEnabled(false);
-      loadButton.setPreferredSize(new Dimension(15,20));
+      loadButton.setPreferredSize(new Dimension(15, 20));
       loadButton.setText("Load");
       loadButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
@@ -422,9 +422,9 @@ public final class PhraseGUI {
   }
 
   public void toggleLoadButton() {
-    if(getSourceFileTextField().getText().isEmpty() ||
-        getOptsFileTextField().getText().isEmpty() || 
-        (analysisDialog != null && analysisDialog.isVisible()))
+    if (getSourceFileTextField().getText().isEmpty()
+        || getOptsFileTextField().getText().isEmpty()
+        || (analysisDialog != null && analysisDialog.isVisible()))
       getLoadButton().setEnabled(false);
     else
       getLoadButton().setEnabled(true);
@@ -437,7 +437,7 @@ public final class PhraseGUI {
   }
 
   private AnalysisDialog getAnalysisDialog() {
-    if(analysisDialog == null) {
+    if (analysisDialog == null) {
       analysisDialog = new AnalysisDialog();
       analysisDialog.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       analysisDialog.addWindowListener(new AnalysisDialogHandler());
@@ -456,7 +456,7 @@ public final class PhraseGUI {
   }
 
   private OptionsDialog getOptionsDialog() {
-    if(optionsDialog == null) {
+    if (optionsDialog == null) {
       optionsDialog = new OptionsDialog();
       optionsDialog.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
       optionsDialog.addWindowListener(new OptionsDialogHandler());

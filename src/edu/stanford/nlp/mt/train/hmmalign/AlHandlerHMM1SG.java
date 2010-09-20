@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * This serves to handle the alignment probabilities
- * the basic functionality is getProb(i,j) and incCount(i,j,val);
- *
+ * This serves to handle the alignment probabilities the basic functionality is
+ * getProb(i,j) and incCount(i,j,val);
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 public class AlHandlerHMM1SG extends AlHandlerHMM1 {
@@ -19,7 +19,8 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
   public AlHandlerHMM1SG() {
   }
 
-  public AlHandlerHMM1SG(StayGoTable sg, int mask, ATableHMMHolder aHolder, ATable a) {
+  public AlHandlerHMM1SG(StayGoTable sg, int mask, ATableHMMHolder aHolder,
+      ATable a) {
     this.sgTable = sg;
     this.mask = mask;
     if (mask > 0) {
@@ -30,17 +31,15 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
 
   }
 
-
   @Override
-	public void setPair(SentencePair sent) {
+  public void setPair(SentencePair sent) {
     sentPair = sent;
     init();
     subHandler.setPair(sent);
   }
 
-
   @Override
-	public void init() {
+  public void init() {
 
     l = sentPair.e.getLength() - 1;
     m = sentPair.f.getLength() - 1;
@@ -55,23 +54,23 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
     setEmpty();
   }
 
-
   /*
    * get the probability p choose i for j
    */
   @Override
-	public double getProb(int i, int j, int[] alignment) {
+  public double getProb(int i, int j, int[] alignment) {
     double prob; // = 0;
-    //System.out.println(" getting prob "+i+" "+j);
+    // System.out.println(" getting prob "+i+" "+j);
 
     if ((i <= l) && ((i == alignment[j - 1]) || (i == alignment[j - 1] - l))) {
-      //stay
+      // stay
       prob = cacheS[i].getProb();
-    } else { //go
-      prob = cacheG[alignment[j - 1] > l ? alignment[j - 1] - l : alignment[j - 1]].getProb() * subHandler.getProb(i, j, alignment);
+    } else { // go
+      prob = cacheG[alignment[j - 1] > l ? alignment[j - 1] - l
+          : alignment[j - 1]].getProb() * subHandler.getProb(i, j, alignment);
 
     }
-    //System.out.println(" Returning "+prob);
+    // System.out.println(" Returning "+prob);
 
     if ((i > l) && (i < 2 * l + 1)) {
 
@@ -81,9 +80,7 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
 
     }
 
-
   }
-
 
   public void setEmpty() {
 
@@ -91,37 +88,32 @@ public class AlHandlerHMM1SG extends AlHandlerHMM1 {
 
   }
 
-
-
   /*
    * Increment the appropriate probabilities
-   *
    */
 
   @Override
-	public void incCount(int i, int j, int[] alignment, double val) {
+  public void incCount(int i, int j, int[] alignment, double val) {
     if (val == 0) {
       return;
     }
-    //System.out.println("Incrementing "+i+" "+alignment[j-1]+" with "+val);
-
+    // System.out.println("Incrementing "+i+" "+alignment[j-1]+" with "+val);
 
     if ((i > l) && (i < 2 * l + 1)) {
       return;
     }
 
     if ((i <= l) && ((i == alignment[j - 1]) || (i == alignment[j - 1] - l))) {
-      //stay
+      // stay
       cacheS[i].incCount(val);
 
     } else {
-      //go
+      // go
       int i_p = alignment[j - 1];
       cacheG[i_p > l ? i_p - l : i_p].incCount(val);
       subHandler.incCount(i, j, alignment, val);
     }
 
   }
-
 
 }

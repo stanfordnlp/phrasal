@@ -17,34 +17,36 @@ public class MatchedFilesReader {
 
   protected String[] ids, lines;
 
-  protected MatchedFilesReader() {}
+  protected MatchedFilesReader() {
+  }
 
   public static MatchedFilesReader getMatchedFilesByRootName(String rootName) {
 
-    final String rootName2 = rootName.endsWith(".") ? rootName : rootName+".";
+    final String rootName2 = rootName.endsWith(".") ? rootName : rootName + ".";
     File directory = new File(rootName2).getParentFile();
 
     FilenameFilter filter = new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-          if(!name.startsWith(rootName2))
-            return false;
-          name = name.replaceFirst(rootName2,"");
-          return !name.contains("."); 
-        }
+      public boolean accept(File dir, String name) {
+        if (!name.startsWith(rootName2))
+          return false;
+        name = name.replaceFirst(rootName2, "");
+        return !name.contains(".");
+      }
     };
 
     File[] files = directory.listFiles(filter);
     return getMatchedFiles(files);
   }
 
-  public static MatchedFilesReader getMatchedFilesByEnum(String rootName, EnumSet<?> es) {
+  public static MatchedFilesReader getMatchedFilesByEnum(String rootName,
+      EnumSet<?> es) {
 
-    String rootName2 = rootName.endsWith(".") ? rootName : rootName+".";
+    String rootName2 = rootName.endsWith(".") ? rootName : rootName + ".";
 
     File[] files = new File[es.size()];
-    int i=-1;
+    int i = -1;
     for (Object e : es)
-      files[++i] = new File(rootName2+e.toString());
+      files[++i] = new File(rootName2 + e.toString());
 
     return getMatchedFiles(files);
   }
@@ -56,30 +58,30 @@ public class MatchedFilesReader {
     }
     return getMatchedFiles(files);
   }
-  
+
   public static MatchedFilesReader getMatchedFiles(File[] files) {
     MatchedFilesReader mf = new MatchedFilesReader();
     mf.contents = new LineNumberReader[files.length];
 
     for (int i = 0; i < files.length; i++)
       mf.contents[i] = IOTools.getReaderFromFile(files[i].getName());
-    
+
     return mf;
   }
 
   public boolean nextLine() {
 
-    boolean done=true;
+    boolean done = true;
 
     for (int i = 0; i < contents.length; i++) {
       try {
-        if((lines[i] = contents[i].readLine()) != null)
+        if ((lines[i] = contents[i].readLine()) != null)
           done = false;
-      } catch(IOException ioe) {
+      } catch (IOException ioe) {
         return false;
       }
     }
-    
+
     return done;
   }
 

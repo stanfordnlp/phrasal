@@ -20,14 +20,13 @@ package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import java.io.Serializable;
 
-
 /**
  * Interface for Objects which can be inserted into a TLinkedList.
  * <p/>
  * <p>
  * Created: Sat Nov 10 15:23:41 2001
  * </p>
- *
+ * 
  * @author Eric D. Friedman
  * @version $Id: TLinkable.java,v 1.2 2001/12/03 00:16:25 ericdf Exp $
  * @see gnu.trove.TLinkedList
@@ -37,29 +36,31 @@ public interface TLinkable<T extends TLinkable<T>> extends Serializable {
 
   /**
    * Returns the linked list node after this one.
-   *
+   * 
    * @return a <code>TLinkable</code> value
    */
   public T getNext();
 
   /**
    * Returns the linked list node before this one.
-   *
+   * 
    * @return a <code>TLinkable</code> value
    */
   public T getPrevious();
 
   /**
    * Sets the linked list node after this one.
-   *
-   * @param linkable a <code>TLinkable</code> value
+   * 
+   * @param linkable
+   *          a <code>TLinkable</code> value
    */
   public void setNext(T linkable);
 
   /**
    * Sets the linked list node before this one.
-   *
-   * @param linkable a <code>TLinkable</code> value
+   * 
+   * @param linkable
+   *          a <code>TLinkable</code> value
    */
   public void setPrevious(T linkable);
 }// TLinkable

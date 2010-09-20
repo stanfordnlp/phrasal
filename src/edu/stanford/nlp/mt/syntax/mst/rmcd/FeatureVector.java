@@ -22,20 +22,19 @@ import edu.stanford.nlp.util.MapFactory;
 import edu.stanford.nlp.util.MutableDouble;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
-
 /**
- * A <tt>FeatureVector</tt> that can hold up to two
- * <tt>FeatureVector</tt> instances inside it, which allows for a very
- * quick concatenation operation.
+ * A <tt>FeatureVector</tt> that can hold up to two <tt>FeatureVector</tt>
+ * instances inside it, which allows for a very quick concatenation operation.
  * <p/>
- * <p>Also, in order to avoid copies, the second of these internal
- * <tt>FeatureVector</tt> instances can be negated, so that it has the
- * effect of subtracting any values rather than adding them.
+ * <p>
+ * Also, in order to avoid copies, the second of these internal
+ * <tt>FeatureVector</tt> instances can be negated, so that it has the effect of
+ * subtracting any values rather than adding them.
  * <p/>
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Jason Baldridge
  * @version $Id: FeatureVector.java 90 2007-01-17 07:42:20Z jasonbaldridge $
  * @see edu.stanford.nlp.mt.syntax.mst.rmcd.Feature
@@ -72,7 +71,6 @@ public final class FeatureVector extends TLinkedList<Feature> {
   public void add(int index, double value) {
     add(new Feature(index, value));
   }
-
 
   public int[] keys() {
     TIntArrayList keys = new TIntArrayList();
@@ -132,7 +130,7 @@ public final class FeatureVector extends TLinkedList<Feature> {
     } else {
       while (it.hasNext()) {
         Feature f = it.next();
-        if(f.index < parameters.length) {
+        if (f.index < parameters.length) {
           score += parameters[f.index] * f.value;
         }
       }
@@ -141,12 +139,13 @@ public final class FeatureVector extends TLinkedList<Feature> {
     return score;
   }
 
-  public void update(double[] parameters, double[] total, double alpha_k, double upd) {
+  public void update(double[] parameters, double[] total, double alpha_k,
+      double upd) {
     update(parameters, total, alpha_k, upd, false);
   }
 
-  private void update(double[] parameters, double[] total,
-                            double alpha_k, double upd, boolean negate) {
+  private void update(double[] parameters, double[] total, double alpha_k,
+      double upd, boolean negate) {
 
     if (null != subfv1) {
       subfv1.update(parameters, total, alpha_k, upd, negate);
@@ -183,10 +182,11 @@ public final class FeatureVector extends TLinkedList<Feature> {
     addFeaturesToMap(hm, false);
     int[] keys = hm.keys();
 
-    Counter<Integer> counter = new ClassicCounter<Integer>(MapFactory.<Integer, MutableDouble>arrayMapFactory());
-    for(int key : keys) {
+    Counter<Integer> counter = new ClassicCounter<Integer>(
+        MapFactory.<Integer, MutableDouble> arrayMapFactory());
+    for (int key : keys) {
       double d = hm.get(key);
-      if(d != 0.0) {
+      if (d != 0.0) {
         counter.setCount(key, d);
       }
     }
@@ -257,7 +257,7 @@ public final class FeatureVector extends TLinkedList<Feature> {
     ListIterator<Feature> it = listIterator();
     while (it.hasNext()) {
       Feature f = it.next();
-      if(f.value > 0.0)
+      if (f.value > 0.0)
         list.add(f.index);
     }
   }

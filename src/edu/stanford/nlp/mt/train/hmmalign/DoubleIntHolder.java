@@ -1,10 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
- * Used as a wrapper for values in a HashMap which hold
- * double values and integer counts.
- * Should really use a nice utility function in javanlp.util.
- *
+ * Used as a wrapper for values in a HashMap which hold double values and
+ * integer counts. Should really use a nice utility function in javanlp.util.
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 
@@ -45,4 +44,4 @@ public class DoubleIntHolder {
     return cnt;
   }
 
-} 
+}

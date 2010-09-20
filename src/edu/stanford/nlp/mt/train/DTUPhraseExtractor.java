@@ -22,9 +22,14 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public final String MAX_SIZE_E_OPT = "maxDTUSizeE";
   static public final String MAX_SIZE_F_OPT = "maxDTUSizeF";
 
-  static public final String NO_TARGET_GAPS_OPT  = "noTargetGaps";
+  static public final String NO_TARGET_GAPS_OPT = "noTargetGaps";
   static public final String GAPS_BOTH_SIDES_OPT = "gapsBothSides";
-  static public final String ALLOW_UNALIGNED_GAPS_OPT = "allowUnalignedGaps"; // extract "w X w" if X is unaligned
+  static public final String ALLOW_UNALIGNED_GAPS_OPT = "allowUnalignedGaps"; // extract
+                                                                              // "w X w"
+                                                                              // if
+                                                                              // X
+                                                                              // is
+                                                                              // unaligned
   static public final String ALLOW_LOOSE_GAPS_OPT = "allowLooseGaps";
   static public final String ALLOW_LOOSE_GAPS_E_OPT = "allowLooseGapsE";
   static public final String ALLOW_LOOSE_GAPS_F_OPT = "allowLooseGapsF";
@@ -43,16 +48,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   static final boolean DEBUG = System.getProperty("DebugDTU") != null;
 
-  static boolean looseDTU=true, looseOutsideDTU=true, growSource=false;
-  static boolean
-      withGaps, gapsBothSides, noTargetGaps, noUnalignedSubphrase, 
+  static boolean looseDTU = true, looseOutsideDTU = true, growSource = false;
+  static boolean withGaps, gapsBothSides, noTargetGaps, noUnalignedSubphrase,
       allowLooseGapsE, allowLooseGapsF, allowUnalignedGaps;
 
   Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
 
   MosesPhraseExtractor substringExtractor;
 
-  public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps, List<AbstractFeatureExtractor> extractors) {
+  public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps,
+      List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
     substringExtractor = new MosesPhraseExtractor(prop, alTemps, extractors);
     substringExtractor.alGrid = alGrid;
@@ -73,7 +78,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     int oldI = -1;
     for (int i : bitset) {
       if (oldI != -1) {
-        if (i > oldI+1) {
+        if (i > oldI + 1) {
           sb.append(" ").append(DTUTable.GAP_STR).append(" ");
         } else {
           sb.append(" ");
@@ -88,7 +93,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static public void setDTUExtractionProperties(Properties prop) {
 
     String optStr;
-    withGaps = true; // withGaps normally set to true. (withGaps = false only useful for debugging)
+    withGaps = true; // withGaps normally set to true. (withGaps = false only
+                     // useful for debugging)
 
     // No gaps on the target:
     optStr = prop.getProperty(NO_TARGET_GAPS_OPT);
@@ -100,7 +106,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     // Don't Ignore DTU if first or last word of X is unaligned:
     optStr = prop.getProperty(ALLOW_LOOSE_GAPS_OPT);
-    boolean allowLooseGaps = optStr == null || optStr.equals("true"); // on by default
+    boolean allowLooseGaps = optStr == null || optStr.equals("true"); // on by
+                                                                      // default
     if (allowLooseGaps) {
       allowLooseGapsE = allowLooseGapsF = true;
     } else {
@@ -122,34 +129,32 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     String s;
     if ((s = prop.getProperty(MAX_SPAN_F_OPT)) != null) {
       maxSpanF = Integer.parseInt(s);
-    } else if((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
+    } else if ((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
       maxSpanF = Integer.parseInt(s);
     }
 
     if ((s = prop.getProperty(MAX_SPAN_E_OPT)) != null) {
       maxSpanE = Integer.parseInt(s);
-    } else if((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
+    } else if ((s = prop.getProperty(MAX_SPAN_OPT)) != null) {
       maxSpanE = Integer.parseInt(s);
     }
     maxSpan = Math.max(maxSpanF, maxSpanE);
 
     if ((s = prop.getProperty(MAX_SIZE_F_OPT)) != null) {
       maxSizeF = Integer.parseInt(s);
-    } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
+    } else if ((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
       maxSizeF = Integer.parseInt(s);
     }
 
     if ((s = prop.getProperty(MAX_SIZE_E_OPT)) != null) {
       maxSizeE = Integer.parseInt(s);
-    } else if((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
+    } else if ((s = prop.getProperty(MAX_SIZE_OPT)) != null) {
       maxSizeE = Integer.parseInt(s);
     }
     maxSize = Math.max(maxSizeF, maxSizeE);
-    System.err.printf
-     ("Discontinuous phrase constraints:\n"+
-      "Size: max=%d,maxE=%d,maxF=%d\nSpan: max=%d,maxE=%d,maxF=%d\n",
-        maxSize, maxSizeE, maxSizeF,
-        maxSpan, maxSpanE, maxSpanF);
+    System.err.printf("Discontinuous phrase constraints:\n"
+        + "Size: max=%d,maxE=%d,maxF=%d\nSpan: max=%d,maxE=%d,maxF=%d\n",
+        maxSize, maxSizeE, maxSizeF, maxSpan, maxSpanE, maxSpanF);
 
     if (DEBUG)
       AlignmentTemplateInstance.lazy = false;
@@ -165,29 +170,63 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     boolean isContiguous(BitSet bitset) {
       int i = bitset.nextSetBit(0);
-      int j = bitset.nextClearBit(i+1);
-      return (bitset.nextSetBit(j+1) == -1);
+      int j = bitset.nextClearBit(i + 1);
+      return (bitset.nextSetBit(j + 1) == -1);
     }
 
-    CoverageSet e() { return e; }
-    CoverageSet f() { return f; }
+    CoverageSet e() {
+      return e;
+    }
 
-    boolean fContiguous() { return isContiguous(f); }
-    boolean eContiguous() { return isContiguous(e); }
+    CoverageSet f() {
+      return f;
+    }
 
-    DTUPhrase expandF(int fi) { f.set(fi); return consistencize(fi, true) ? this : null; }
-    DTUPhrase expandE(int ei) { e.set(ei); return consistencize(ei, false) ? this : null; }
+    boolean fContiguous() {
+      return isContiguous(f);
+    }
 
-    boolean sane() { return f.equals(consistencizedF) && e.equals(consistencizedE); }
+    boolean eContiguous() {
+      return isContiguous(e);
+    }
 
-    int sizeE() { return e.cardinality(); }
-    int sizeF() { return f.cardinality(); }
+    DTUPhrase expandF(int fi) {
+      f.set(fi);
+      return consistencize(fi, true) ? this : null;
+    }
 
-    int spanE() { return e.length()-e.nextSetBit(0); }
-    int spanF() { return f.length()-f.nextSetBit(0); }
+    DTUPhrase expandE(int ei) {
+      e.set(ei);
+      return consistencize(ei, false) ? this : null;
+    }
 
-    void addE(int ei) { e.set(ei); }
-    void addF(int fi) { f.set(fi); }
+    boolean sane() {
+      return f.equals(consistencizedF) && e.equals(consistencizedE);
+    }
+
+    int sizeE() {
+      return e.cardinality();
+    }
+
+    int sizeF() {
+      return f.cardinality();
+    }
+
+    int spanE() {
+      return e.length() - e.nextSetBit(0);
+    }
+
+    int spanF() {
+      return f.length() - f.nextSetBit(0);
+    }
+
+    void addE(int ei) {
+      e.set(ei);
+    }
+
+    void addF(int fi) {
+      f.set(fi);
+    }
 
     CoverageSet toConsistencizeInF() {
       CoverageSet newF = f.clone();
@@ -208,10 +247,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     String toString(boolean sanityCheck) {
       if (sanityCheck && !sane()) {
-        System.err.println("f: "+f);
-        System.err.println("cf: "+consistencizedF);
-        System.err.println("e: "+e);
-        System.err.println("ce: "+consistencizedE);
+        System.err.println("f: " + f);
+        System.err.println("cf: " + consistencizedF);
+        System.err.println("e: " + e);
+        System.err.println("ce: " + consistencizedE);
       }
       String fp = stringWithGaps(sent.f(), f);
       String ep = stringWithGaps(sent.e(), e);
@@ -261,31 +300,49 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       consistencizedE = new CoverageSet();
     }
 
-    boolean isConsistencizedE(int ei) { return consistencizedE.get(ei); }
-    boolean isConsistencizedF(int fi) { return consistencizedF.get(fi); }
+    boolean isConsistencizedE(int ei) {
+      return consistencizedE.get(ei);
+    }
 
-    void setConsistencizedE(int ei) { consistencizedE.set(ei); }
-    void setConsistencizedF(int fi) { consistencizedF.set(fi); }
+    boolean isConsistencizedF(int fi) {
+      return consistencizedF.get(fi);
+    }
+
+    void setConsistencizedE(int ei) {
+      consistencizedE.set(ei);
+    }
+
+    void setConsistencizedF(int fi) {
+      consistencizedF.set(fi);
+    }
 
     boolean consistencize(int i, boolean source) {
       if (!consistencize(i, source, true))
         return false;
 
-      //Drop phrase if too large:
-      if (sizeF() > maxSize) return false;
-      if (sizeE() > maxSize) return false;
+      // Drop phrase if too large:
+      if (sizeF() > maxSize)
+        return false;
+      if (sizeE() > maxSize)
+        return false;
       if (!fContiguous() || !eContiguous()) {
-        if(sizeF() > maxSize) return false;
-        if(sizeE() > maxSize) return false;
-        if(spanF() > maxSpan) return false;
-        if(spanE() > maxSpan) return false;
+        if (sizeF() > maxSize)
+          return false;
+        if (sizeE() > maxSize)
+          return false;
+        if (spanF() > maxSpan)
+          return false;
+        if (spanE() > maxSpan)
+          return false;
       }
       return true;
     }
 
     boolean consistencize(int i, boolean source, boolean topLevel) {
-      if (sizeF() > maxSize) return false;
-      if (sizeE() > maxSize) return false;
+      if (sizeF() > maxSize)
+        return false;
+      if (sizeE() > maxSize)
+        return false;
 
       if (source) {
         setConsistencizedF(i);
@@ -307,7 +364,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         }
       }
 
-      // Consistencize words that have been added, but that may not be consistent:
+      // Consistencize words that have been added, but that may not be
+      // consistent:
       if (topLevel) {
         for (int fi : toConsistencizeInF()) {
           if (!consistencize(fi, true, true))
@@ -322,14 +380,15 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
 
     boolean hasUnalignedGap() {
-      boolean unalignedGap = hasUnalignedGap(sent, f, true) || hasUnalignedGap(sent, e, false);
+      boolean unalignedGap = hasUnalignedGap(sent, f, true)
+          || hasUnalignedGap(sent, e, false);
       if (DEBUG) {
-        System.err.println("f: "+sent.f());
-        System.err.println("e: "+sent.e());
-        System.err.println("fs: "+f);
-        System.err.println("es: "+e);
-        System.err.println("gap: "+hasUnalignedGap(sent, f, true));
-        System.err.println("gap: "+hasUnalignedGap(sent, e, false));
+        System.err.println("f: " + sent.f());
+        System.err.println("e: " + sent.e());
+        System.err.println("fs: " + f);
+        System.err.println("es: " + e);
+        System.err.println("gap: " + hasUnalignedGap(sent, f, true));
+        System.err.println("gap: " + hasUnalignedGap(sent, e, false));
       }
       return unalignedGap;
     }
@@ -340,18 +399,18 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       int startIdx, endIdx = 0;
       while (true) {
         startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
-        endIdx = fs.nextSetBit(startIdx)-1;
+        endIdx = fs.nextSetBit(startIdx) - 1;
         if (startIdx > endIdx)
           break;
         boolean unalignedGap = true;
-        for (int i=startIdx; i <= endIdx; ++i) {
+        for (int i = startIdx; i <= endIdx; ++i) {
           assert (!fs.get(i));
           if (source) {
             if (!sent.f2e(i).isEmpty()) {
               unalignedGap = false;
               break;
             }
-          }  else {
+          } else {
             if (!sent.e2f(i).isEmpty()) {
               unalignedGap = false;
               break;
@@ -359,30 +418,31 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
           }
         }
         if (unalignedGap)
-         return true;
+          return true;
       }
       return false;
     }
 
     boolean hasUnalignedSubphrase() {
-      return hasUnalignedSubphrase(sent, f, true) || hasUnalignedSubphrase(sent, e, false);
+      return hasUnalignedSubphrase(sent, f, true)
+          || hasUnalignedSubphrase(sent, e, false);
     }
 
     boolean hasUnalignedSubphrase(WordAlignment sent, BitSet fs, boolean source) {
-      int startIdx, endIdx=0;
+      int startIdx, endIdx = 0;
       while (true) {
         startIdx = fs.nextSetBit(endIdx);
         if (startIdx < 0)
           break;
-        endIdx = fs.nextClearBit(startIdx)-1;
+        endIdx = fs.nextClearBit(startIdx) - 1;
         boolean unalignedSP = true;
-        for (int i=startIdx; i <= endIdx; ++i) {
+        for (int i = startIdx; i <= endIdx; ++i) {
           if (source) {
             if (!sent.f2e(i).isEmpty()) {
               unalignedSP = false;
               break;
             }
-          }  else {
+          } else {
             if (!sent.e2f(i).isEmpty()) {
               unalignedSP = false;
               break;
@@ -391,14 +451,20 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         }
         ++endIdx;
         if (unalignedSP)
-         return true;
+          return true;
       }
       return false;
     }
 
-    //boolean hasLooseGaps() { return hasLooseGap(sent, f, true) || hasLooseGap(sent, e, false); }
-    boolean hasLooseGapsE() { return hasLooseGap(sent, e, false); }
-    boolean hasLooseGapsF() { return hasLooseGap(sent, f, true); }
+    // boolean hasLooseGaps() { return hasLooseGap(sent, f, true) ||
+    // hasLooseGap(sent, e, false); }
+    boolean hasLooseGapsE() {
+      return hasLooseGap(sent, e, false);
+    }
+
+    boolean hasLooseGapsF() {
+      return hasLooseGap(sent, f, true);
+    }
 
     boolean hasLooseGap(WordAlignment sent, BitSet fs, boolean source) {
       if (fs.isEmpty())
@@ -407,16 +473,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       while (true) {
         // Position of the gap:
         startIdx = fs.nextClearBit(fs.nextSetBit(endIdx));
-        endIdx = fs.nextSetBit(startIdx)-1;
+        endIdx = fs.nextSetBit(startIdx) - 1;
         if (startIdx > endIdx)
           break;
         if (source) {
-          //if (sent.f2e(startIdx).isEmpty() || sent.f2e(startIdx).isEmpty()) {
+          // if (sent.f2e(startIdx).isEmpty() || sent.f2e(startIdx).isEmpty()) {
           if (sent.f2e(startIdx).isEmpty() || sent.f2e(endIdx).isEmpty()) {
             return true;
           }
-        }  else {
-          //if (sent.e2f(endIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
+        } else {
+          // if (sent.e2f(endIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
           if (sent.e2f(startIdx).isEmpty() || sent.e2f(endIdx).isEmpty()) {
             return true;
           }
@@ -428,13 +494,13 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     boolean consistencize() {
       boolean done = false;
       while (!done) {
-        boolean doneF=false, doneE=false;
+        boolean doneF = false, doneE = false;
         if (f.equals(consistencizedF)) {
           doneF = true;
         } else {
           for (int fi : f)
             if (!consistencizedF.get(fi))
-              if (!consistencize(fi,true))
+              if (!consistencize(fi, true))
                 return false;
           if (e.isEmpty())
             return false;
@@ -444,7 +510,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
         } else {
           for (int ei : e)
             if (!consistencizedE.get(ei))
-              if (!consistencize(ei,false))
+              if (!consistencize(ei, false))
                 return false;
           if (f.isEmpty())
             return false;
@@ -457,15 +523,16 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     BitSet adjacentWords(BitSet bitset, boolean growOutside) {
       BitSet adjWords = new BitSet();
       int firstI = bitset.nextSetBit(0);
-      int lastI = bitset.length()-1;
+      int lastI = bitset.length() - 1;
       int si = 0;
       while (true) {
         si = bitset.nextSetBit(si);
         if (si > 0) {
           if (growOutside || si > firstI)
-            adjWords.set(si-1);
+            adjWords.set(si - 1);
         }
-        if (si == -1) break;
+        if (si == -1)
+          break;
         int ei = bitset.nextClearBit(++si);
         if (growOutside || ei <= lastI)
           adjWords.set(ei);
@@ -477,34 +544,39 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     BitSet candidateIdx(BitSet currentSet, boolean growOutside) {
       BitSet successors = adjacentWords(currentSet, growOutside);
       if (DEBUG) {
-        System.err.printf("sent: %s\n",sent);
-        System.err.println("dtu to expand: "+this);
-        System.err.printf("in: %s\n",currentSet);
-        System.err.printf("out: %s\n",successors);
+        System.err.printf("sent: %s\n", sent);
+        System.err.println("dtu to expand: " + this);
+        System.err.printf("in: %s\n", currentSet);
+        System.err.printf("out: %s\n", successors);
       }
       return successors;
     }
 
-    Collection<DTUPhrase> growDTU(boolean growSource, boolean growInside, boolean growInsideAndOutside) {
+    Collection<DTUPhrase> growDTU(boolean growSource, boolean growInside,
+        boolean growInsideAndOutside) {
       List<DTUPhrase> list = new LinkedList<DTUPhrase>();
       if (growSource) {
-        int s=-1;
+        int s = -1;
         if (growInside && sizeF() < maxSize) {
-          BitSet successors = candidateIdx(f, growInsideAndOutside && spanF() < maxSpan);
+          BitSet successors = candidateIdx(f, growInsideAndOutside
+              && spanF() < maxSpan);
           while (true) {
-            s = successors.nextSetBit(s+1);
-            if (s < 0 || s >= sent.f().size()) break;
+            s = successors.nextSetBit(s + 1);
+            if (s < 0 || s >= sent.f().size())
+              break;
             list.add(new DTUPhrase(this).expandF(s));
           }
         }
       }
       {
-        int s=-1;
+        int s = -1;
         if (growInside && sizeE() < maxSize) {
-          BitSet successors = candidateIdx(e, growInsideAndOutside && spanE() < maxSpan);
+          BitSet successors = candidateIdx(e, growInsideAndOutside
+              && spanE() < maxSpan);
           while (true) {
-            s = successors.nextSetBit(s+1);
-            if (s < 0 || s >= sent.e().size()) break;
+            s = successors.nextSetBit(s + 1);
+            if (s < 0 || s >= sent.e().size())
+              break;
             list.add(new DTUPhrase(this).expandE(s));
           }
         }
@@ -513,10 +585,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     }
   }
 
-  void growDTUs(Deque<DTUPhrase> q, boolean growSource, boolean growInside, boolean growInsideAndOutside) {
+  void growDTUs(Deque<DTUPhrase> q, boolean growSource, boolean growInside,
+      boolean growInsideAndOutside) {
     while (!q.isEmpty()) {
       DTUPhrase dtu = q.pollFirst();
-      for (DTUPhrase sp : dtu.growDTU(growSource, growInside, growInsideAndOutside)) {
+      for (DTUPhrase sp : dtu.growDTU(growSource, growInside,
+          growInsideAndOutside)) {
         if (sp != null && !seen.contains(sp)) {
           q.offerLast(sp);
           seen.add(sp);
@@ -530,44 +604,52 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     SourceFilter sourceFilter = alTemps.getSourceFilter();
     assert (sourceFilter instanceof DTUSourceFilter);
-    TrieIntegerArrayIndex fTrieIndex = ((DTUSourceFilter)sourceFilter).getSourceTrie();
-    assert(fTrieIndex != null);
+    TrieIntegerArrayIndex fTrieIndex = ((DTUSourceFilter) sourceFilter)
+        .getSourceTrie();
+    assert (fTrieIndex != null);
 
-    Deque<Triple<Integer,Integer, CoverageSet>> q = new LinkedList<Triple<Integer,Integer, CoverageSet>>();
+    Deque<Triple<Integer, Integer, CoverageSet>> q = new LinkedList<Triple<Integer, Integer, CoverageSet>>();
     Set<CoverageSet> bitsets = new HashSet<CoverageSet>();
-    for (int i=0; i < sent.f().size(); ++i) {
-      //System.err.println("i: "+i);
+    for (int i = 0; i < sent.f().size(); ++i) {
+      // System.err.println("i: "+i);
       q.clear();
       int startState = TrieIntegerArrayIndex.IDX_ROOT;
-      q.offerFirst(new Triple<Integer,Integer, CoverageSet>(i, startState, new CoverageSet()));
+      q.offerFirst(new Triple<Integer, Integer, CoverageSet>(i, startState,
+          new CoverageSet()));
       while (!q.isEmpty()) {
-        Triple<Integer,Integer, CoverageSet> el = q.pollLast();
+        Triple<Integer, Integer, CoverageSet> el = q.pollLast();
         int pos = el.first();
         int curState = el.second();
         CoverageSet bitset = el.third();
         if (!bitset.isEmpty()) {
           bitsets.add(bitset);
-          //System.err.printf("bs=%s %s\n",bitset,stringWithGaps(sent.f(),bitset));
+          // System.err.printf("bs=%s %s\n",bitset,stringWithGaps(sent.f(),bitset));
         }
-        if (pos >= sent.f().size()) continue;
+        if (pos >= sent.f().size())
+          continue;
         // Try to match a terminal:
         int nextState = fTrieIndex.getSuccessor(curState, sent.f().get(pos).id);
         if (nextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
           CoverageSet newBitset = bitset.clone();
           newBitset.set(pos);
-          q.offerFirst(new Triple<Integer,Integer, CoverageSet>(pos+1,nextState,newBitset));
+          q.offerFirst(new Triple<Integer, Integer, CoverageSet>(pos + 1,
+              nextState, newBitset));
         }
         // Try to match non terminals:
-        int ntNextState = fTrieIndex.getSuccessor(curState, DTUTable.GAP_STR.id);
+        int ntNextState = fTrieIndex
+            .getSuccessor(curState, DTUTable.GAP_STR.id);
         if (ntNextState != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
-          int lastPos = i+maxSpan;
-          for (int pos2=pos+1; pos2<=lastPos; ++pos2) {
-            if (pos2 >= sent.f().size()) break;
-            int next2State = fTrieIndex.getSuccessor(ntNextState, sent.f().get(pos2).id);
+          int lastPos = i + maxSpan;
+          for (int pos2 = pos + 1; pos2 <= lastPos; ++pos2) {
+            if (pos2 >= sent.f().size())
+              break;
+            int next2State = fTrieIndex.getSuccessor(ntNextState,
+                sent.f().get(pos2).id);
             if (next2State != TrieIntegerArrayIndex.IDX_NOSUCCESSOR) {
               CoverageSet newBitset = bitset.clone();
               newBitset.set(pos2);
-              q.offerFirst(new Triple<Integer,Integer, CoverageSet>(pos2+1,next2State,newBitset));
+              q.offerFirst(new Triple<Integer, Integer, CoverageSet>(pos2 + 1,
+                  next2State, newBitset));
             }
           }
         }
@@ -576,8 +658,8 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     return bitsets;
   }
 
-  protected AlignmentTemplateInstance addPhraseToIndex
-      (WordAlignment sent, DTUPhrase dtu, boolean isConsistent) {
+  protected AlignmentTemplateInstance addPhraseToIndex(WordAlignment sent,
+      DTUPhrase dtu, boolean isConsistent) {
 
     CoverageSet fs = dtu.f();
     CoverageSet es = dtu.e();
@@ -588,18 +670,25 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
     // Filter phrases:
 
     // Ignore if DTU is continuous on both sides (already extracted):
-    if (fContiguous && eContiguous) return null;
+    if (fContiguous && eContiguous)
+      return null;
 
     // Ignore if DTU is discontinuous on both sides:
-    if (!gapsBothSides && !fContiguous && !eContiguous) return null;
+    if (!gapsBothSides && !fContiguous && !eContiguous)
+      return null;
 
     // If gap on only one side, use span and size limits that may not
     // be the same for each side:
-    if (!fContiguous) if (maxSpanF < dtu.spanF() || maxSizeF < dtu.sizeF()) return null;
-    if (!eContiguous) if (maxSpanE < dtu.spanE() || maxSizeE < dtu.sizeE()) return null;
+    if (!fContiguous)
+      if (maxSpanF < dtu.spanF() || maxSizeF < dtu.sizeF())
+        return null;
+    if (!eContiguous)
+      if (maxSpanE < dtu.spanE() || maxSizeE < dtu.sizeE())
+        return null;
 
     // Create dtuTemp:
-    DTUInstance dtuTemp = new DTUInstance(sent, fs, es, fContiguous, eContiguous);
+    DTUInstance dtuTemp = new DTUInstance(sent, fs, es, fContiguous,
+        eContiguous);
     alGrid.addAlTemp(dtuTemp, isConsistent);
 
     alTemps.addToIndex(dtuTemp);
@@ -612,9 +701,9 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   public void extractPhrases(WordAlignment sent) {
 
     if (DEBUG) {
-      System.err.println("f: "+sent.f());
-      System.err.println("e: "+sent.e());
-      System.err.println("a: "+sent.toString());
+      System.err.println("f: " + sent.f());
+      System.err.println("e: " + sent.e());
+      System.err.println("a: " + sent.toString());
     }
 
     int fSize = sent.f().size();
@@ -622,10 +711,10 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
     alGrid.init(sent);
     if (fSize < PRINT_GRID_MAX_LEN && eSize < PRINT_GRID_MAX_LEN)
-      alGrid.printAlTempInGrid("line: "+sent.getId(),null,System.err);
+      alGrid.printAlTempInGrid("line: " + sent.getId(), null, System.err);
 
-    //unalignedWordsF = sent.unalignedF();
-    //unalignedWordsE = sent.unalignedE();
+    // unalignedWordsF = sent.unalignedF();
+    // unalignedWordsE = sent.unalignedE();
 
     seen.clear();
 

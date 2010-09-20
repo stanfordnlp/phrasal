@@ -18,12 +18,16 @@ public class srilm {
     srilmJNI.delete_unsigned_array(SWIGTYPE_p_unsigned_int.getCPtr(ary));
   }
 
-  public static long unsigned_array_getitem(SWIGTYPE_p_unsigned_int ary, int index) {
-    return srilmJNI.unsigned_array_getitem(SWIGTYPE_p_unsigned_int.getCPtr(ary), index);
+  public static long unsigned_array_getitem(SWIGTYPE_p_unsigned_int ary,
+      int index) {
+    return srilmJNI.unsigned_array_getitem(
+        SWIGTYPE_p_unsigned_int.getCPtr(ary), index);
   }
 
-  public static void unsigned_array_setitem(SWIGTYPE_p_unsigned_int ary, int index, long value) {
-    srilmJNI.unsigned_array_setitem(SWIGTYPE_p_unsigned_int.getCPtr(ary), index, value);
+  public static void unsigned_array_setitem(SWIGTYPE_p_unsigned_int ary,
+      int index, long value) {
+    srilmJNI.unsigned_array_setitem(SWIGTYPE_p_unsigned_int.getCPtr(ary),
+        index, value);
   }
 
   public static SWIGTYPE_p_Ngram initLM(int order, int start_id, int end_id) {
@@ -48,20 +52,28 @@ public class srilm {
     return srilmJNI.readLM(SWIGTYPE_p_Ngram.getCPtr(ngram), filename);
   }
 
-  public static float getWordProb(SWIGTYPE_p_Ngram ngram, long word, SWIGTYPE_p_unsigned_int context) {
-    return srilmJNI.getWordProb(SWIGTYPE_p_Ngram.getCPtr(ngram), word, SWIGTYPE_p_unsigned_int.getCPtr(context));
+  public static float getWordProb(SWIGTYPE_p_Ngram ngram, long word,
+      SWIGTYPE_p_unsigned_int context) {
+    return srilmJNI.getWordProb(SWIGTYPE_p_Ngram.getCPtr(ngram), word,
+        SWIGTYPE_p_unsigned_int.getCPtr(context));
   }
 
-  public static float getProb_lzf(SWIGTYPE_p_Ngram ngram, SWIGTYPE_p_unsigned_int context, int hist_size, long cur_wrd) {
-    return srilmJNI.getProb_lzf(SWIGTYPE_p_Ngram.getCPtr(ngram), SWIGTYPE_p_unsigned_int.getCPtr(context), hist_size, cur_wrd);
+  public static float getProb_lzf(SWIGTYPE_p_Ngram ngram,
+      SWIGTYPE_p_unsigned_int context, int hist_size, long cur_wrd) {
+    return srilmJNI.getProb_lzf(SWIGTYPE_p_Ngram.getCPtr(ngram),
+        SWIGTYPE_p_unsigned_int.getCPtr(context), hist_size, cur_wrd);
   }
 
-  public static long getBOW_depth(SWIGTYPE_p_Ngram ngram, SWIGTYPE_p_unsigned_int context, int hist_size) {
-    return srilmJNI.getBOW_depth(SWIGTYPE_p_Ngram.getCPtr(ngram), SWIGTYPE_p_unsigned_int.getCPtr(context), hist_size);
+  public static long getBOW_depth(SWIGTYPE_p_Ngram ngram,
+      SWIGTYPE_p_unsigned_int context, int hist_size) {
+    return srilmJNI.getBOW_depth(SWIGTYPE_p_Ngram.getCPtr(ngram),
+        SWIGTYPE_p_unsigned_int.getCPtr(context), hist_size);
   }
 
-  public static float get_backoff_weight_sum(SWIGTYPE_p_Ngram ngram, SWIGTYPE_p_unsigned_int context, int hist_size, int min_len) {
-    return srilmJNI.get_backoff_weight_sum(SWIGTYPE_p_Ngram.getCPtr(ngram), SWIGTYPE_p_unsigned_int.getCPtr(context), hist_size, min_len);
+  public static float get_backoff_weight_sum(SWIGTYPE_p_Ngram ngram,
+      SWIGTYPE_p_unsigned_int context, int hist_size, int min_len) {
+    return srilmJNI.get_backoff_weight_sum(SWIGTYPE_p_Ngram.getCPtr(ngram),
+        SWIGTYPE_p_unsigned_int.getCPtr(context), hist_size, min_len);
   }
 
   public static int getVocab_None() {

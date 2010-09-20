@@ -24,7 +24,7 @@ import java.util.zip.GZIPInputStream;
 
 public class DependencyParser {
 
-  //private static final boolean DEBUG = false;
+  // private static final boolean DEBUG = false;
 
   public ParserOptions options;
 
@@ -44,9 +44,10 @@ public class DependencyParser {
 
   public void trainME(double l1reg) throws IOException {
 
-    if(options.labeled)
-      throw new RuntimeException("ME training currently not available with typed dependencies.");
-    
+    if (options.labeled)
+      throw new RuntimeException(
+          "ME training currently not available with typed dependencies.");
+
     initTrainReader();
 
     long start = System.currentTimeMillis();
@@ -55,69 +56,70 @@ public class DependencyParser {
     System.err.println("types: " + Arrays.toString(pipe.getTypes()));
 
     boolean binary = (options.mixModelNames == null);
-    System.err.println("Assuming binary features only: "+binary);
+    System.err.println("Assuming binary features only: " + binary);
 
     // Count # of positives/negatives:
     int[] counts = new int[2];
 
     // Create dataset:
     int cnt = 0;
-    GeneralDataset<Boolean,Integer> dataset = binary ?
-       new Dataset<Boolean,Integer>() :
-       new RVFDataset<Boolean,Integer>();
+    GeneralDataset<Boolean, Integer> dataset = binary ? new Dataset<Boolean, Integer>()
+        : new RVFDataset<Boolean, Integer>();
     while (instance != null) {
-      if(cnt++ == options.sents)
+      if (cnt++ == options.sents)
         break;
       System.out.print(cnt + " ");
-      if(options.debug) System.err.println("sentence: "+Arrays.toString(instance.getForms()));
+      if (options.debug)
+        System.err.println("sentence: " + Arrays.toString(instance.getForms()));
 
       int sz = instance.length();
-      assert(instance != null);
-      assert(pipe.getTypes() != null);
+      assert (instance != null);
+      assert (pipe.getTypes() != null);
 
-      for(int psz=(options.predictRight ? 3:sz); psz<=sz; ++psz) {
+      for (int psz = (options.predictRight ? 3 : sz); psz <= sz; ++psz) {
 
-        DependencyInstance pinstance = (psz < sz) ? instance.getPrefixInstance(psz) : instance;
+        DependencyInstance pinstance = (psz < sz) ? instance
+            .getPrefixInstance(psz) : instance;
 
         // Feature extraction:
-        DependencyInstanceFeatures f =
-         new DependencyInstanceFeatures(pinstance.length(), pipe.getTypes().length);
+        DependencyInstanceFeatures f = new DependencyInstanceFeatures(
+            pinstance.length(), pipe.getTypes().length);
         pipe.fillFeatureVectors(pinstance, f, null);
 
         int len = f.length();
-        assert(len == sz);
+        assert (len == sz);
 
-        if(binary) {
+        if (binary) {
           final Set<Integer> empty = new TreeSet<Integer>();
-          dataset.add(new BasicDatum<Boolean,Integer>(empty, false));
-          dataset.add(new BasicDatum<Boolean,Integer>(empty, true));
+          dataset.add(new BasicDatum<Boolean, Integer>(empty, false));
+          dataset.add(new BasicDatum<Boolean, Integer>(empty, true));
         } else {
           final Counter<Integer> empty = new ClassicCounter<Integer>();
-          dataset.add(new RVFDatum<Boolean,Integer>(empty, false));
-          dataset.add(new RVFDatum<Boolean,Integer>(empty, true));
+          dataset.add(new RVFDatum<Boolean, Integer>(empty, false));
+          dataset.add(new RVFDatum<Boolean, Integer>(empty, true));
         }
 
         // Generate Datum instances:
-        for(int i=0; i<len; ++i) {
+        for (int i = 0; i < len; ++i) {
           int headi = pinstance.getHead(i);
-          for(int j=i+1; j<len; ++j) {
+          for (int j = i + 1; j < len; ++j) {
             int headj = pinstance.getHead(j);
-            for(int k=0; k<2; ++k) {
-              boolean attR = (k==0);
+            for (int k = 0; k < 2; ++k) {
+              boolean attR = (k == 0);
               boolean att = attR ? (headj == i) : (headi == j);
-              Datum<Boolean,Integer> datum;
-              if(binary) {
+              Datum<Boolean, Integer> datum;
+              if (binary) {
                 Collection<Integer> features = f.getCollection(i, j, attR);
-                datum = new BasicDatum<Boolean,Integer>(features, att);
+                datum = new BasicDatum<Boolean, Integer>(features, att);
               } else {
                 Counter<Integer> features = f.getCounter(i, j, attR);
-                datum = new RVFDatum<Boolean,Integer>(features,att);
+                datum = new RVFDatum<Boolean, Integer>(features, att);
               }
               dataset.add(datum);
-              ++counts[att?1:0];
-              if(options.debug) {
-                System.err.printf("i(%d)->j(%d) %s->%s attR=%s label=%s\n",
-                  i, j, pinstance.getForm(i), pinstance.getForm(j), attR, att);
+              ++counts[att ? 1 : 0];
+              if (options.debug) {
+                System.err.printf("i(%d)->j(%d) %s->%s attR=%s label=%s\n", i,
+                    j, pinstance.getForm(i), pinstance.getForm(j), attR, att);
               }
             }
           }
@@ -133,12 +135,12 @@ public class DependencyParser {
     System.err.printf("\nNegative instances: %d\n", counts[0]);
 
     // Training:
-    LogisticClassifier<Boolean,Integer> me = new LogisticClassifier<Boolean,Integer>();
+    LogisticClassifier<Boolean, Integer> me = new LogisticClassifier<Boolean, Integer>();
     me.train(dataset, l1reg, 1e-4);
     params.setWeights(me.getFeatureIndex(), me.getWeights());
 
     long end = System.currentTimeMillis();
-    System.out.printf("Took %d milliseconds\n",end - start);
+    System.out.printf("Took %d milliseconds\n", end - start);
   }
 
   /**
@@ -151,7 +153,7 @@ public class DependencyParser {
     System.err.printf("reindexing...\n");
 
     da.reindex(params, pipe.getMixParameters());
-    
+
     System.err.printf("Data alphabet size: %d\n", da.size());
   }
 
@@ -165,7 +167,8 @@ public class DependencyParser {
 
     double[] w = params.parameters;
 
-    for(Map.Entry<String,Parameters> entry : pipe.getMixParameters().entrySet()) {
+    for (Map.Entry<String, Parameters> entry : pipe.getMixParameters()
+        .entrySet()) {
       String id = entry.getKey();
       key.clear().add("MX=").add(id).stop();
       int mixId = key.id();
@@ -173,12 +176,13 @@ public class DependencyParser {
       System.err.printf("Mixture model = %s, w = %f.\n", id, wi);
       w[mixId] = 0.0;
       ArrayMath.addMultInPlace(w, entry.getValue().parameters, wi);
-      assert(w[mixId] == 0.0);
+      assert (w[mixId] == 0.0);
     }
     pipe.getMixParameters().clear();
   }
 
-  public void train(int[] instanceLengths, File train_forest) throws IOException {
+  public void train(int[] instanceLengths, File train_forest)
+      throws IOException {
     int i;
     for (i = 0; i < options.numIters; i++) {
       System.out.print(" Iteration " + i);
@@ -192,35 +196,38 @@ public class DependencyParser {
   }
 
   private void trainingIter(int[] instanceLengths, File train_forest, int iter)
-       throws IOException {
+      throws IOException {
 
-    ObjectInputStream in = new ObjectInputStream(new GZIPInputStream(new FileInputStream(train_forest)));
+    ObjectInputStream in = new ObjectInputStream(new GZIPInputStream(
+        new FileInputStream(train_forest)));
     int numInstances = instanceLengths.length;
 
     for (int i = 0; i < numInstances; i++) {
       if ((i + 1) % 500 == 0)
         System.out.print((i + 1) + ",");
       int length = instanceLengths[i];
-      DependencyInstanceFeatures f = new DependencyInstanceFeatures(length, pipe.getTypes().length);
+      DependencyInstanceFeatures f = new DependencyInstanceFeatures(length,
+          pipe.getTypes().length);
       DependencyInstance inst = pipe.readInstance(in, f, params);
-      double upd = (double) (options.numIters * numInstances - (numInstances * (iter - 1) + (i + 1)) + 1);
+      double upd = (double) (options.numIters * numInstances
+          - (numInstances * (iter - 1) + (i + 1)) + 1);
       int K = options.trainK;
-      Object[][] d = options.proj ?
-           decoder.decodeProjective(inst, f, K) :
-           decoder.decodeNonProjective(inst, f, K, true);
+      Object[][] d = options.proj ? decoder.decodeProjective(inst, f, K)
+          : decoder.decodeNonProjective(inst, f, K, true);
       params.updateParamsMIRA(inst, d, upd);
     }
     System.out.print(numInstances);
     in.close();
   }
 
-  ///////////////////////////////////////////////////////
+  // /////////////////////////////////////////////////////
   // Saving and loading models
-  ///////////////////////////////////////////////////////
-  
+  // /////////////////////////////////////////////////////
+
   public void saveModel(String file) throws IOException {
     boolean gz = file.endsWith("gz");
-    OutputStream os = gz ? new GZIPOutputStream(new FileOutputStream(file)) : new FileOutputStream(file);
+    OutputStream os = gz ? new GZIPOutputStream(new FileOutputStream(file))
+        : new FileOutputStream(file);
     ObjectOutputStream out = new ObjectOutputStream(os);
     out.writeObject(params.parameters);
     out.writeObject(pipe.getDataAlphabet());
@@ -230,11 +237,12 @@ public class DependencyParser {
 
   public void loadModel(String file) throws Exception {
     boolean gz = file.endsWith("gz");
-    InputStream is = gz ? new GZIPInputStream(new FileInputStream(file)) : new FileInputStream(file);
+    InputStream is = gz ? new GZIPInputStream(new FileInputStream(file))
+        : new FileInputStream(file);
     ObjectInputStream in = new ObjectInputStream(is);
     params.parameters = (double[]) in.readObject();
     pipe.setDataAlphabet((TrieAlphabet) in.readObject());
-    if(options.trim)
+    if (options.trim)
       pipe.getDataAlphabet().trim();
     pipe.setTypeAlphabet((Alphabet) in.readObject());
     in.close();
@@ -242,32 +250,34 @@ public class DependencyParser {
   }
 
   public void dumpModel() throws IOException {
-    System.err.println("parameters: "+params.parameters.length);
-    System.err.println("dataAlphabel: "+pipe.getDataAlphabet().size());
-    System.err.println("typeAlphabel: "+pipe.getTypeAlphabet().size());
-    Writer writer = new BufferedWriter
-      (new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(options.txtModelName))));
-    for(Map.Entry<Integer, List<String>> e : pipe.getDataAlphabet().toMap().entrySet()) {
+    System.err.println("parameters: " + params.parameters.length);
+    System.err.println("dataAlphabel: " + pipe.getDataAlphabet().size());
+    System.err.println("typeAlphabel: " + pipe.getTypeAlphabet().size());
+    Writer writer = new BufferedWriter(new OutputStreamWriter(
+        new GZIPOutputStream(new FileOutputStream(options.txtModelName))));
+    for (Map.Entry<Integer, List<String>> e : pipe.getDataAlphabet().toMap()
+        .entrySet()) {
       int idx = e.getKey();
-      if(idx >= 0) {
+      if (idx >= 0) {
         double v = params.parameters[e.getKey()];
-        if(v != 0.0) {
+        if (v != 0.0) {
           List<String> f = e.getValue();
-          writer.append(Double.toString(v)).append("\t").append(StringUtils.join(f,"")).append("\n");
+          writer.append(Double.toString(v)).append("\t")
+              .append(StringUtils.join(f, "")).append("\n");
         }
       }
     }
     writer.close();
   }
 
-  //////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////
   // Input and output //////////////////////////////////
-  //////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////
 
   void initTrainReader() throws IOException {
     String tFile = options.trainfile;
 
-    if(tFile == null || tFile.equals("")) {
+    if (tFile == null || tFile.equals("")) {
       pipe.setDepReader(new BufferedReader(new InputStreamReader(System.in)));
       System.err.println("Reading from stdin...");
     } else {
@@ -286,59 +296,62 @@ public class DependencyParser {
     String taFile = options.atestfile;
     String file = options.outfile;
 
-    if(tFile == null || tFile.equals("")) {
+    if (tFile == null || tFile.equals("")) {
       pipe.setDepReader(new BufferedReader(new InputStreamReader(System.in)));
       System.err.println("Reading from stdin...");
     } else {
       pipe.initInputFile(tFile, tfFile, taFile);
     }
 
-    if(file == null || file.equals("")) {
+    if (file == null || file.equals("")) {
       pipe.setDepWriter(new BufferedWriter(new OutputStreamWriter(System.out)));
       System.err.println("Writing to stdout...");
     } else {
       pipe.initOutputFile(file);
     }
-    
+
   }
 
   void closeTestReaderAndWriter() throws IOException {
     pipe.close();
   }
 
-  //////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////
   // Get Best Parses ///////////////////////////////////
-  //////////////////////////////////////////////////////
+  // ////////////////////////////////////////////////////
 
   public DependencyInstance parse(String input) throws IOException {
     return parse(pipe.readInstance(input));
   }
 
-  public DependencyInstance parse(String input, boolean score) throws IOException {
+  public DependencyInstance parse(String input, boolean score)
+      throws IOException {
     return parse(pipe.readInstance(input), score);
   }
 
-  public DependencyInstance parse(DependencyInstance instance) throws IOException {
+  public DependencyInstance parse(DependencyInstance instance)
+      throws IOException {
     return parse(instance, false);
   }
 
-  public DependencyInstance parse(DependencyInstance instance, boolean score) throws IOException {
-    DependencyInstanceFeatures f =
-     new DependencyInstanceFeatures(instance.length(), pipe.getTypes().length);
+  public DependencyInstance parse(DependencyInstance instance, boolean score)
+      throws IOException {
+    DependencyInstanceFeatures f = new DependencyInstanceFeatures(
+        instance.length(), pipe.getTypes().length);
     pipe.fillFeatureVectors(instance, f, params);
 
     int K = options.testK;
-    assert(K == 1); // n-best output currently not supported
-    if(options.debug) debugHeadScores(instance);
-    Object[][] d = options.proj ?
-         decoder.decodeProjective(instance, f, K) :
-         decoder.decodeNonProjective(instance, f, K, options.debug || score);
+    assert (K == 1); // n-best output currently not supported
+    if (options.debug)
+      debugHeadScores(instance);
+    Object[][] d = options.proj ? decoder.decodeProjective(instance, f, K)
+        : decoder.decodeNonProjective(instance, f, K, options.debug || score);
     // d is a Kx2 matrix:
     // [k][0]: features
     // [k][1]: dependencies
 
     String[] res = ((String) d[0][1]).split(" ");
-    this.fv = (FeatureVector)d[0][0];
+    this.fv = (FeatureVector) d[0][0];
 
     int[] heads = new int[instance.length()];
     String[] labels = new String[heads.length];
@@ -347,34 +360,33 @@ public class DependencyParser {
     heads[0] = -1;
     for (int j = 1; j < heads.length; j++) {
 
-      String[] trip = res[j-1].split("[\\|:]");
+      String[] trip = res[j - 1].split("[\\|:]");
       labels[j] = pipe.getTypes()[Integer.parseInt(trip[2])];
       heads[j] = Integer.parseInt(trip[0]);
     }
-    
+
     instance.setHeads(heads);
     instance.setDepRels(labels);
 
-    if(options.debug) {
-      //double score = getScore(); // params.getScore((FeatureVector) d[0][0]);
-      System.err.println("parse: "+instance.prettyPrint());
-      System.err.println("score: "+getScore());
+    if (options.debug) {
+      // double score = getScore(); // params.getScore((FeatureVector) d[0][0]);
+      System.err.println("parse: " + instance.prettyPrint());
+      System.err.println("score: " + getScore());
     }
-
 
     return instance;
   }
 
   public double getScore() {
-    assert(fv != null);
+    assert (fv != null);
     return params.getScore(fv);
   }
 
   public void outputParses() throws IOException {
 
     initTestReaderAndWriter();
-    
-    if(options.debugFeatures)
+
+    if (options.debugFeatures)
       pipe.initReverseAlphabet();
 
     long start = System.currentTimeMillis();
@@ -390,16 +402,16 @@ public class DependencyParser {
       pipe.outputInstance(parse(instance));
       instance = pipe.nextInstance();
     }
-    
+
     closeTestReaderAndWriter();
 
     long end = System.currentTimeMillis();
-    System.out.printf("Took %d milliseconds\n",end - start);
+    System.out.printf("Took %d milliseconds\n", end - start);
   }
 
-  /////////////////////////////////////////////////////
+  // ///////////////////////////////////////////////////
   // RUNNING THE PARSER
-  ////////////////////////////////////////////////////
+  // //////////////////////////////////////////////////
   public static void main(String[] args) throws Exception {
 
     ParserOptions options = new ParserOptions(args);
@@ -409,17 +421,18 @@ public class DependencyParser {
       DependencyPipe pipe = new DependencyPipe(options);
       long start = System.currentTimeMillis();
       if (options.trainME) {
-        pipe.createAlphabet(options.trainfile, options.ftrainfile, options.atrainfile);
+        pipe.createAlphabet(options.trainfile, options.ftrainfile,
+            options.atrainfile);
         dp = new DependencyParser(pipe, options);
         dp.trainME(options.l1reg);
-        if(!options.noreindex)
+        if (!options.noreindex)
           dp.reindex();
       } else {
-        int[] instanceLengths =
-             pipe.createInstances(options.trainfile, options.ftrainfile, options.atrainfile, options.trainforest);
+        int[] instanceLengths = pipe.createInstances(options.trainfile,
+            options.ftrainfile, options.atrainfile, options.trainforest);
         dp = new DependencyParser(pipe, options);
         long end = System.currentTimeMillis();
-        System.out.printf("Took %d milliseconds\n",end - start);
+        System.out.printf("Took %d milliseconds\n", end - start);
         int numFeats = pipe.getDataAlphabet().size();
         int numTypes = pipe.getTypeAlphabet().size();
         System.out.print("Num Feats: " + numFeats);
@@ -429,7 +442,7 @@ public class DependencyParser {
       System.out.print("Saving model...");
       dp.mergeMixtures();
       dp.saveModel(options.modelName);
-      if(options.txtModelName != null) {
+      if (options.txtModelName != null) {
         dp.dumpModel();
       }
       System.out.print("done.");
@@ -445,7 +458,8 @@ public class DependencyParser {
       dp.outputParses();
     }
 
-    if (options.txtModelName != null && !options.train && options.genTextModel && new File(options.modelName).exists()) {
+    if (options.txtModelName != null && !options.train && options.genTextModel
+        && new File(options.modelName).exists()) {
       DependencyPipe pipe = new DependencyPipe(options);
       DependencyParser dp = new DependencyParser(pipe, options);
       dp.loadModel(options.modelName);
@@ -455,51 +469,56 @@ public class DependencyParser {
     System.out.println();
     if (options.eval) {
       System.out.println("\nEVALUATION PERFORMANCE:");
-      DependencyEvaluator.evaluate(options.goldfile,
-           options.outfile,
-           options.goldformat,
-           options.outputformat);
+      DependencyEvaluator.evaluate(options.goldfile, options.outfile,
+          options.goldformat, options.outputformat);
     }
   }
 
-  public Parameters getParams() { return params; }
+  public Parameters getParams() {
+    return params;
+  }
 
   public void debugHeadScores(DependencyInstance dep) {
-    debugHeadScores(dep, 20); 
+    debugHeadScores(dep, 20);
   }
 
   public void debugHeadScores(DependencyInstance dep, int maxLen) {
 
-    //pipe.initReverseAlphabet();
-    //boolean debugFeatures = options.debugFeatures;
-    //options.debugFeatures = true;
+    // pipe.initReverseAlphabet();
+    // boolean debugFeatures = options.debugFeatures;
+    // options.debugFeatures = true;
 
     Parameters par = getParams();
     int len = dep.length();
     if (len > maxLen)
       return;
     double[][] scores = new double[len][len];
-    for(int i=0; i<len; ++i) {
-      for(int j=0; j<len; ++j) {
-        int small=i, large=j;
-        if(small>large) { small=j; large=i; }
-				if(options.debugFeatures)
-					System.err.printf("\nsmall: %d/%s large: %d/%s\n", small, dep.getForm(small), large, dep.getForm(large));
-        scores[i][j] = (i==j) ? 0 : pipe.getScore(dep, small, large, i<j, par);
+    for (int i = 0; i < len; ++i) {
+      for (int j = 0; j < len; ++j) {
+        int small = i, large = j;
+        if (small > large) {
+          small = j;
+          large = i;
+        }
+        if (options.debugFeatures)
+          System.err.printf("\nsmall: %d/%s large: %d/%s\n", small,
+              dep.getForm(small), large, dep.getForm(large));
+        scores[i][j] = (i == j) ? 0 : pipe.getScore(dep, small, large, i < j,
+            par);
       }
     }
     System.err.println("\nDebug head scores(parser): ");
     for (int j = 0; j < len; ++j)
       System.err.printf("\t%s[%d]", dep.getForm(j), j);
     System.err.println();
-    for(int i=0; i<len; ++i) {
+    for (int i = 0; i < len; ++i) {
       System.err.printf("[%d]", i);
-      for(int j=0; j<len; ++j) {
+      for (int j = 0; j < len; ++j) {
         System.err.printf("\t%.2f", scores[i][j]);
       }
       System.err.println();
     }
 
-    //options.debugFeatures = debugFeatures;
+    // options.debugFeatures = debugFeatures;
   }
 }

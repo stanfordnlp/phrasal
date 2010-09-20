@@ -10,27 +10,26 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 /**
- *
+ * 
  * @author Pi-Chuan Chang
- *
+ * 
  */
-public class VPRotationalFeaturizer implements IncrementalFeaturizer<IString, String>{
+public class VPRotationalFeaturizer implements
+    IncrementalFeaturizer<IString, String> {
   static final String FEATURE_PREFIX = "VPRot:";
-  
+
   static final boolean DEBUG = true;
 
   public VPRotationalFeaturizer() {
-    if (DEBUG) System.err.printf("Debug Mode\n");
+    if (DEBUG)
+      System.err.printf("Debug Mode\n");
   }
 
   static final IString START_SEQ = new IString("<s>");
 
   /**
-   *
-   * T B   T A
-   *    \ /
-   *    / \
-   * F A   F B
+   * 
+   * T B T A \ / / \ F A F B
    */
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
@@ -38,13 +37,13 @@ public class VPRotationalFeaturizer implements IncrementalFeaturizer<IString, St
     if (beg_foreignSwapPos != -1) {
       // we have a swap
       int end_foreignSwapPos = Featurizables.endLocationOfSwappedPhrase(f);
-      
+
       IString fBInitialWord = f.foreignSentence.get(beg_foreignSwapPos);
       IString fBFinalWord = f.foreignSentence.get(end_foreignSwapPos);
-      
-      IString fAFinalWord = f.foreignSentence.get(beg_foreignSwapPos-1);
+
+      IString fAFinalWord = f.foreignSentence.get(beg_foreignSwapPos - 1);
       IString fAInitialWord = f.foreignSentence.get(f.foreignPosition);
-      
+
       if (DEBUG) {
         System.err.printf("t: %s\n", f.partialTranslation);
         System.err.printf("f: %s\n", f.foreignSentence);
@@ -54,8 +53,8 @@ public class VPRotationalFeaturizer implements IncrementalFeaturizer<IString, St
         System.err.printf("f pos: %d\n", f.foreignPosition);
         System.err.printf("t pos: %d\n", f.translationPosition);
         System.err.printf(
-          "foreignSwap -- Translated: (%s-%s); Untrans: (%s-%s)\n",
-          fBInitialWord, fBFinalWord, fAInitialWord, fAFinalWord);
+            "foreignSwap -- Translated: (%s-%s); Untrans: (%s-%s)\n",
+            fBInitialWord, fBFinalWord, fAInitialWord, fAFinalWord);
       }
     }
     return null;
@@ -63,17 +62,18 @@ public class VPRotationalFeaturizer implements IncrementalFeaturizer<IString, St
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-                         Sequence<IString> foreign) { }
-
+      Sequence<IString> foreign) {
+  }
 
   @Override
   public List<FeatureValue<String>> listFeaturize(
-    Featurizable<IString, String> f) {
+      Featurizable<IString, String> f) {
 
     return null;
   }
 
   @Override
-  public void reset() { }
+  public void reset() {
+  }
 
 }

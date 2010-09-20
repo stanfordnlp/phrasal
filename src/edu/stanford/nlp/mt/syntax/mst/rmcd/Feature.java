@@ -13,13 +13,13 @@
 package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 /**
- * A simple class holding a feature index and value that can be used
- * in a TLinkedList.
+ * A simple class holding a feature index and value that can be used in a
+ * TLinkedList.
  * <p/>
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Jason Baldridge
  * @version $Id: TLinkedList.java,v 1.5 2005/03/26 17:52:56 ericdf Exp $
  * @see edu.stanford.nlp.mt.syntax.mst.rmcd.FeatureVector

@@ -6,40 +6,42 @@ import java.util.ArrayList;
 import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
 /**
- * Class that associates one sparse vector to each alignment template.
- * Note: not thread safe.
+ * Class that associates one sparse vector to each alignment template. Note: not
+ * thread safe.
  * 
  * @author Michel Galley
  */
-public abstract class SparseVectorFeatureExtractor extends AbstractFeatureExtractor {
+public abstract class SparseVectorFeatureExtractor extends
+    AbstractFeatureExtractor {
 
-  private final List<Int2IntLinkedOpenHashMap> featureMaps
-     = new ArrayList<Int2IntLinkedOpenHashMap>();
+  private final List<Int2IntLinkedOpenHashMap> featureMaps = new ArrayList<Int2IntLinkedOpenHashMap>();
   Int2IntLinkedOpenHashMap currentFeatureMap;
 
-  abstract void addFeatureCountsToSparseVector(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid);
+  abstract void addFeatureCountsToSparseVector(
+      AlignmentTemplateInstance alTemp, AlignmentGrid alGrid);
 
   void addFeatureCountToSparseVector(String name, int count) {
-    int idx = featureIndex.indexOf(name,true);
-    currentFeatureMap.put(idx, currentFeatureMap.get(idx)+count);
+    int idx = featureIndex.indexOf(name, true);
+    currentFeatureMap.put(idx, currentFeatureMap.get(idx) + count);
   }
 
   @Override
-	public void featurizePhrase(AlignmentTemplateInstance alTemp, AlignmentGrid alGrid) {
+  public void featurizePhrase(AlignmentTemplateInstance alTemp,
+      AlignmentGrid alGrid) {
     int idx = alTemp.getKey();
-    if(idx < 0)
+    if (idx < 0)
       return;
-    while(idx >= featureMaps.size())
+    while (idx >= featureMaps.size())
       featureMaps.add(new Int2IntLinkedOpenHashMap());
     currentFeatureMap = featureMaps.get(idx);
     addFeatureCountsToSparseVector(alTemp, alGrid);
   }
 
   @Override
-	public Object score(AlignmentTemplate alTemp) {
+  public Object score(AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
-    assert(idx >= 0);
-    assert(idx < featureMaps.size());
+    assert (idx >= 0);
+    assert (idx < featureMaps.size());
     return featureMaps.get(idx);
   }
 }

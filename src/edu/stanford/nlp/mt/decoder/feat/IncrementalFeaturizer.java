@@ -10,22 +10,23 @@ import edu.stanford.nlp.mt.base.Sequence;
 /**
  * 
  * @author danielcer
- *
+ * 
  * @param <TK>
  * @param <FV>
  */
-public interface IncrementalFeaturizer<TK,FV> {
-	void initialize(List<ConcreteTranslationOption<TK>> options, Sequence<TK> foreign);
-	
-	void reset();
-	
-	/**
+public interface IncrementalFeaturizer<TK, FV> {
+  void initialize(List<ConcreteTranslationOption<TK>> options,
+      Sequence<TK> foreign);
+
+  void reset();
+
+  /**
 	 * 
 	 */
-	List<FeatureValue<FV>> listFeaturize(Featurizable<TK,FV> f);
-	
-	/**
+  List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f);
+
+  /**
 	 * 
 	 */
-	FeatureValue<FV> featurize(Featurizable<TK,FV> f); 
+  FeatureValue<FV> featurize(Featurizable<TK, FV> f);
 }

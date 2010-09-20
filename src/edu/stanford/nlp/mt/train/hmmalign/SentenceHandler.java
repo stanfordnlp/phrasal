@@ -4,7 +4,7 @@ import java.util.StringTokenizer;
 
 /**
  * Reads in the corpus both training and test and stores them in buffers
- *
+ * 
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
 public class SentenceHandler {
@@ -16,7 +16,7 @@ public class SentenceHandler {
   private int numPairsTest;
   private int currentPairTrain;
   private int currentPairTest;
-  private boolean fTags; //are there tags in the target strings, by default no
+  private boolean fTags; // are there tags in the target strings, by default no
   private boolean eTags; // are there tags in the source string, by default no
   private boolean useETags = false;
   private boolean useFTags = false;
@@ -32,8 +32,8 @@ public class SentenceHandler {
     init();
   }
 
-
-  public SentenceHandler(String trainFilename, String testFilename, boolean eTags, boolean fTags, boolean useETags, boolean useFTags) {
+  public SentenceHandler(String trainFilename, String testFilename,
+      boolean eTags, boolean fTags, boolean useETags, boolean useFTags) {
     this.trainFilename = trainFilename;
     this.testFilename = testFilename;
     this.useETags = useETags;
@@ -43,7 +43,7 @@ public class SentenceHandler {
     init();
   }
 
-  /*Read the sentences from the corpus into the Buffer*/
+  /* Read the sentences from the corpus into the Buffer */
 
   public void init() {
 
@@ -51,7 +51,8 @@ public class SentenceHandler {
     sTableF = new SymbolTable();
     try {
 
-      //count how many pairs are there first in the training set, to make the buffer
+      // count how many pairs are there first in the training set, to make the
+      // buffer
       InFile in = new InFile(trainFilename);
       while (in.readLine() != null) {
         numPairsTrain++;
@@ -63,7 +64,8 @@ public class SentenceHandler {
       bufferTrain = new SentencePair[numPairsTrain];
       read(true);
 
-      // count how many pairs are there first in the test set, to make the buffer
+      // count how many pairs are there first in the test set, to make the
+      // buffer
       in = new InFile(testFilename);
       while (in.readLine() != null) {
         numPairsTest++;
@@ -78,11 +80,19 @@ public class SentenceHandler {
       sTableE.reorganizeTable();
       sTableF.reorganizeTable();
       if (!GlobalParams.windows) {
-        sTableE.readDictionary(trainFilename.substring(0, trainFilename.lastIndexOf('/') + 1) + "e.vcb");
-        sTableF.readDictionary(trainFilename.substring(0, trainFilename.lastIndexOf('/') + 1) + "f.vcb");
+        sTableE.readDictionary(trainFilename.substring(0,
+            trainFilename.lastIndexOf('/') + 1)
+            + "e.vcb");
+        sTableF.readDictionary(trainFilename.substring(0,
+            trainFilename.lastIndexOf('/') + 1)
+            + "f.vcb");
       } else {
-        sTableE.readDictionary(trainFilename.substring(0, trainFilename.lastIndexOf('\\') + 1) + "e.vcb");
-        sTableF.readDictionary(trainFilename.substring(0, trainFilename.lastIndexOf('\\') + 1) + "f.vcb");
+        sTableE.readDictionary(trainFilename.substring(0,
+            trainFilename.lastIndexOf('\\') + 1)
+            + "e.vcb");
+        sTableF.readDictionary(trainFilename.substring(0,
+            trainFilename.lastIndexOf('\\') + 1)
+            + "f.vcb");
 
       }
 
@@ -92,7 +102,6 @@ public class SentenceHandler {
 
   }
 
-
   public boolean eHasTags() {
     return useETags;
   }
@@ -100,7 +109,6 @@ public class SentenceHandler {
   public boolean fHasTags() {
     return useFTags;
   }
-
 
   private void read(boolean train) {
     try {
@@ -110,7 +118,8 @@ public class SentenceHandler {
       if (train) {
         filename = this.trainFilename;
       }
-      String cLine, eLine, fLine, token; //count, english sentence, french sentence, next token
+      String cLine, eLine, fLine, token; // count, english sentence, french
+                                         // sentence, next token
       InFile in = new InFile(filename);
       currentPair = 0;
       Sentence e, f;
@@ -120,7 +129,7 @@ public class SentenceHandler {
       int wordId, tagId, index, numWE, numWF, count;
       StringTokenizer stF, stE;
       while ((cLine = in.readLine()) != null) {
-        //System.out.println(currentPair);
+        // System.out.println(currentPair);
         eLine = in.readLine();
         fLine = in.readLine();
         count = Integer.parseInt(cLine);
@@ -157,7 +166,8 @@ public class SentenceHandler {
             wordTmp.incCount(count);
           }
           wordsE[i] = wordTmp;
-          // if this was a word with a tag, make sure we create an entry for the word only and increment its count
+          // if this was a word with a tag, make sure we create an entry for the
+          // word only and increment its count
 
           if (!wordTmp.isSimple()) {
             wordTmp = new WordEx(wordId, 0);
@@ -166,7 +176,7 @@ public class SentenceHandler {
               wordTmp.incCount(count);
             }
 
-            //now create an entry for the tag only, if the word was not simple
+            // now create an entry for the tag only, if the word was not simple
             wordTmp = new WordEx(0, tagId);
             wordTmp = sTableE.getEntry(wordTmp);
             if (train) {
@@ -174,7 +184,7 @@ public class SentenceHandler {
             }
           }// if not simple
 
-        }//end for i
+        }// end for i
 
         wordsF = new WordEx[numWF + 1];
         wordsF[0] = sTableF.empty;
@@ -200,7 +210,8 @@ public class SentenceHandler {
             wordTmp.incCount(count);
           }
           wordsF[i] = wordTmp;
-          // if this was a word with a tag, make sure we create an entry for the word only and increment its count
+          // if this was a word with a tag, make sure we create an entry for the
+          // word only and increment its count
 
           if (!wordTmp.isSimple()) {
             wordTmp = new WordEx(wordId, 0);
@@ -209,7 +220,7 @@ public class SentenceHandler {
               wordTmp.incCount(count);
             }
 
-            //now create an entry for the tag only, if the word was not simple
+            // now create an entry for the tag only, if the word was not simple
             wordTmp = new WordEx(0, tagId);
             wordTmp = sTableF.getEntry(wordTmp);
             if (train) {
@@ -232,13 +243,11 @@ public class SentenceHandler {
 
       rewind(train);
 
-
     } catch (Exception e) {
       e.printStackTrace();
     }
 
   }
-
 
   public void rewind(boolean train) {
     if (train) {
@@ -247,7 +256,6 @@ public class SentenceHandler {
       currentPairTest = 0;
     }
   }
-
 
   public SentencePair getNextPair(boolean train) {
     if (train) {
@@ -269,7 +277,6 @@ public class SentenceHandler {
 
   }
 
-
   public SentencePair getNextPairTest() {
     if (currentPairTest == (numPairsTest)) {
       rewind(false);
@@ -281,11 +288,9 @@ public class SentenceHandler {
 
   }
 
-
   public int getNumPairs(boolean train) {
     return (train ? numPairsTrain : numPairsTest);
   }
-
 
   public void print(boolean train) {
     rewind(train);
@@ -302,15 +307,13 @@ public class SentenceHandler {
     }
   }
 
-
   public int getMaxLength() {
     return MAX_LENGTH;
   }
 
-
   public static void main(String[] args) {
 
-    //parse the arguments
+    // parse the arguments
     String train = null, test = null;
     boolean fTags = false, eTags = false;
     int MODEL1_ITERS = 4, HMM_ITERS = 5;
@@ -392,11 +395,10 @@ public class SentenceHandler {
         continue;
       }
 
-
     }
 
-
-    SentenceHandler sH = new SentenceHandler(train, test, eTags, fTags, useETags, useFTags);
+    SentenceHandler sH = new SentenceHandler(train, test, eTags, fTags,
+        useETags, useFTags);
     sH.mask = mask;
     startTTable = new TTable(true);
     if (ttFile != null) {
@@ -416,28 +418,26 @@ public class SentenceHandler {
           startATable = new ATableHMM2();
           ((ATableHMM2) startATable).read(atFile);
         }
-      }//trigram
+      }// trigram
       else {
         startATable = new ATableHMM();
         ((ATableHMM) startATable).read(atFile);
-
 
       }
 
     }
 
-
     if (atFile != null) {
-      modelHMM = new HMM(sH, HMM_ITERS, model1.getTTable(), model1.getFTable(), startATable, mask, 0);
+      modelHMM = new HMM(sH, HMM_ITERS, model1.getTTable(), model1.getFTable(),
+          startATable, mask, 0);
 
     } else {
-      modelHMM = new HMM(sH, HMM_ITERS, model1.getTTable(), model1.getFTable(), mask, 0);
+      modelHMM = new HMM(sH, HMM_ITERS, model1.getTTable(), model1.getFTable(),
+          mask, 0);
 
     }
 
-
     new Model1(sH, model1.getTTable(), 1);
-
 
     String transprobsFile = GlobalParams.resultPath + "tt.final";
     model1.getTTable().save(transprobsFile);
@@ -448,6 +448,5 @@ public class SentenceHandler {
     }
 
   }
-
 
 }

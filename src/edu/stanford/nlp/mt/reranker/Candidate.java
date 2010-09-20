@@ -7,9 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 public class Candidate {
-  List<TaggedWord> words; 
+  List<TaggedWord> words;
   Tree tree;
   Map<Integer, Map<Integer, String>> deps;
   double bleu;
@@ -28,7 +27,7 @@ public class Candidate {
 
   public List<TaggedWord> getWords() {
     return tree.taggedYield(new ArrayList<TaggedWord>());
-    //return words;
+    // return words;
   }
 
   public Candidate(Tree tree, List<TaggedWord> tws) {
@@ -37,7 +36,7 @@ public class Candidate {
   }
 
   @Override
-	public String toString() {
+  public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append(bleu);
     sb.append("\t");
@@ -45,8 +44,8 @@ public class Candidate {
       sb.append(w.toString());
       sb.append(" ");
     }
-    //sb.append("\n");
-    //sb.append(tree.pennString());
+    // sb.append("\n");
+    // sb.append(tree.pennString());
     return sb.toString();
   }
 }

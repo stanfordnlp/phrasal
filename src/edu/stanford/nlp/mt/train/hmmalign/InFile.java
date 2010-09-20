@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-
 /* This serves for input from files. Copied from Bruce Eckel
  *@author Kristina Toutanova (kristina@cs.stanford.edu)
  */

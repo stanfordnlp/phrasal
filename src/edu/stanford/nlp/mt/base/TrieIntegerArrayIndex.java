@@ -9,25 +9,28 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implementation of IntegerArrayIndex as a trie. This trie implementation 
- * is optimized for space, by instantiating only one object: an open-address hash table. 
- * Keys stored into the trie are arrays of int primitive types.
- *
+ * Implementation of IntegerArrayIndex as a trie. This trie implementation is
+ * optimized for space, by instantiating only one object: an open-address hash
+ * table. Keys stored into the trie are arrays of int primitive types.
+ * 
  * @author Michel Galley
  */
-public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRawIndex {
+public class TrieIntegerArrayIndex implements IntegerArrayIndex,
+    IntegerArrayRawIndex {
 
-  private static final int GROWTH_FACTOR = 4; // slow growth, we want to save space
+  private static final int GROWTH_FACTOR = 4; // slow growth, we want to save
+                                              // space
 
   public static final int IDX_ROOT = 0;
   public static final int IDX_NOSUCCESSOR = Integer.MIN_VALUE;
 
   private boolean locked = false;
-  
-  private Function<Integer,Integer> transitionNormalizer;
+
+  private Function<Integer, Integer> transitionNormalizer;
 
   public final Long2IntOpenHashMap map;
-  // maps transitions to next state. Each transition is a long, whose 32 first bits
+  // maps transitions to next state. Each transition is a long, whose 32 first
+  // bits
   // identify an input symbol, and 32 last bits identify the current state.
 
   private int lastStateIdx = IDX_ROOT;
@@ -37,23 +40,25 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   }
 
   public TrieIntegerArrayIndex(int sz) {
-    if(sz > 0)
+    if (sz > 0)
       map = new Long2IntOpenHashMap(sz);
     else
       map = new Long2IntOpenHashMap();
     map.growthFactor(GROWTH_FACTOR);
     map.defaultReturnValue(IDX_NOSUCCESSOR);
-    //System.err.println("TrieIntegerArrayIndex: constructor.");
-    this.transitionNormalizer = new Function<Integer,Integer>() {
+    // System.err.println("TrieIntegerArrayIndex: constructor.");
+    this.transitionNormalizer = new Function<Integer, Integer>() {
       @Override
-      public Integer apply(Integer x) { return x; }
+      public Integer apply(Integer x) {
+        return x;
+      }
     };
   }
 
   @Override
   public int[] get(int idx) {
-		throw new UnsupportedOperationException();
-	}
+    throw new UnsupportedOperationException();
+  }
 
   @Override
   public int indexOf(int[] input) {
@@ -80,7 +85,9 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   }
 
   @Override
-  public int size() { return lastStateIdx+1; }
+  public int size() {
+    return lastStateIdx + 1;
+  }
 
   @Override
   public void lock() {
@@ -120,14 +127,17 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   }
 
   private int indexOf_unsync(int[] input, boolean add) {
-    //System.err.println("Adding to index: "+ Arrays.toString(IStrings.toStringArray(input)));
+    // System.err.println("Adding to index: "+
+    // Arrays.toString(IStrings.toStringArray(input)));
     int curState = IDX_ROOT;
     for (int anInput : input) {
-      long transition = getTransition(curState, transitionNormalizer.apply(anInput));
+      long transition = getTransition(curState,
+          transitionNormalizer.apply(anInput));
       assert (map != null);
       int nextState = map.get(transition);
       if (nextState == IDX_NOSUCCESSOR) {
-        if (!add) return -1;
+        if (!add)
+          return -1;
         if (lastStateIdx == Integer.MAX_VALUE)
           throw new RuntimeException("Running out of state indices!");
         nextState = ++lastStateIdx;
@@ -144,10 +154,11 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
   }
 
   private static long getTransition_unsync(int curState, int input) {
-    // Perform some bit manipulations because Long's hashCode is not particularly clever.
+    // Perform some bit manipulations because Long's hashCode is not
+    // particularly clever.
     int input2 = supplementalHash(input);
     int curState2 = supplementalHash(curState);
-    return (((long)input2) << 32) | (((long)curState2) & 0xffffffffL);
+    return (((long) input2) << 32) | (((long) curState2) & 0xffffffffL);
   }
 
   private int getSuccessor_unsync(int curState, int input) {
@@ -155,18 +166,22 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex, IntegerArrayRaw
     return map.get(t);
   }
 
-  private static void test(IntegerArrayIndex index) { 
-    System.out.println("idx(123): " + index.indexOf(new int[] {1, 2, 3}, true));
-    System.out.println("idx(456): " + index.indexOf(new int[] {4, 5, 6}, true));
-    System.out.println("idx(123): " + index.indexOf(new int[] {1, 2, 3}, true));
-    System.out.println("idx(127): " + index.indexOf(new int[] {1, 2, 7}, true));
-    System.out.println("idx(12): " + index.indexOf(new int[] {1, 2}, true));
+  private static void test(IntegerArrayIndex index) {
+    System.out.println("idx(123): "
+        + index.indexOf(new int[] { 1, 2, 3 }, true));
+    System.out.println("idx(456): "
+        + index.indexOf(new int[] { 4, 5, 6 }, true));
+    System.out.println("idx(123): "
+        + index.indexOf(new int[] { 1, 2, 3 }, true));
+    System.out.println("idx(127): "
+        + index.indexOf(new int[] { 1, 2, 7 }, true));
+    System.out.println("idx(12): " + index.indexOf(new int[] { 1, 2 }, true));
   }
 
   @Override
   public String toString() {
     List<String> vals = new LinkedList<String>();
-    for (Map.Entry<Long,Integer> e : map.entrySet()) {
+    for (Map.Entry<Long, Integer> e : map.entrySet()) {
       int v = e.getValue();
       vals.add(IString.getString(v));
     }

@@ -11,7 +11,7 @@ public interface IntegerArrayIndex {
 
   public int indexOf(int[] key);
 
-	public int indexOf(int[] key, boolean add);
+  public int indexOf(int[] key, boolean add);
 
   public void lock();
 }

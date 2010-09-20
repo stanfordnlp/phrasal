@@ -8,24 +8,25 @@ import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
- *
+ * 
  * @author danielcer
- *
+ * 
  */
-abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<TK, FV> {
+abstract public class AbstractInfererBuilder<TK, FV> implements
+    InfererBuilder<TK, FV> {
 
   CombinedFeaturizer<TK, FV> incrementalFeaturizer;
   PhraseGenerator<TK> phraseGenerator;
   Scorer<FV> scorer;
-  SearchHeuristic<TK,FV> heuristic;
-  RecombinationFilter<Hypothesis<TK,FV>> filter;
+  SearchHeuristic<TK, FV> heuristic;
+  RecombinationFilter<Hypothesis<TK, FV>> filter;
 
   @Override
   abstract public Inferer<TK, FV> build();
 
   @Override
   public InfererBuilder<TK, FV> setIncrementalFeaturizer(
-          CombinedFeaturizer<TK, FV> featurizer) {
+      CombinedFeaturizer<TK, FV> featurizer) {
     this.incrementalFeaturizer = featurizer;
 
     return this;
@@ -33,7 +34,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
 
   @Override
   public InfererBuilder<TK, FV> setPhraseGenerator(
-          PhraseGenerator<TK> phraseGenerator) {
+      PhraseGenerator<TK> phraseGenerator) {
     this.phraseGenerator = phraseGenerator;
     return this;
   }
@@ -46,14 +47,14 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
 
   @Override
   public InfererBuilder<TK, FV> setSearchHeuristic(
-          SearchHeuristic<TK,FV> heuristic) {
+      SearchHeuristic<TK, FV> heuristic) {
     this.heuristic = heuristic;
     return this;
   }
 
   @Override
   public InfererBuilder<TK, FV> setRecombinationFilter(
-          RecombinationFilter<Hypothesis<TK, FV>> recombinationFilter) {
+      RecombinationFilter<Hypothesis<TK, FV>> recombinationFilter) {
     this.filter = recombinationFilter;
     return this;
   }

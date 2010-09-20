@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
-
 /* This class does Model1 training with EM
  * Reports perplexity on training and test data
  *@author Kristina Toutanova (kristina@cs.stanford.edu)
@@ -26,7 +25,6 @@ public class Model1 {
   String fileAlignment;
   boolean useFNull; // = false;
 
-  
   public Model1() {
   }
 
@@ -48,7 +46,6 @@ public class Model1 {
 
   }
 
-
   public Model1(SentenceHandler corpus, TTable tTable, int numIterations) {
     this.corpus = corpus;
     eTags = corpus.eHasTags();
@@ -67,7 +64,6 @@ public class Model1 {
 
   }
 
-
   public void init() {
 
     if (useFNull) {
@@ -76,9 +72,7 @@ public class Model1 {
       }
     }
 
-
   }
-
 
   public TTable getTTable() {
     return tTable;
@@ -89,9 +83,9 @@ public class Model1 {
   }
 
   public void train_test_loop(int numIterations) {
-    //tTable.print();
+    // tTable.print();
     for (int it = 0; it < numIterations; it++) {
-      //First iterate on the training set
+      // First iterate on the training set
       System.out.println("Model 1 iteration " + (it + 1));
       if (GlobalParams.dumpAlignments) {
         this.fileAlignment = GlobalParams.resultPath + "A.m1." + (it + 1);
@@ -106,7 +100,7 @@ public class Model1 {
 
       alStream.close();
 
-      //tTable.print();
+      // tTable.print();
       tTable.normalizeTable(2);
       if (fTable != null) {
         fTable.normalizeTable(2);
@@ -117,10 +111,11 @@ public class Model1 {
       }
       if (verbose) {
 
-        System.out.println("Average English word entropy " + tTable.getCondEntropy());
+        System.out.println("Average English word entropy "
+            + tTable.getCondEntropy());
       }
 
-      //Iterate on the test set
+      // Iterate on the test set
       if (GlobalParams.dumpAlignments) {
         this.fileAlignment = GlobalParams.resultPath + "At.m1." + (it + 1);
         try {
@@ -132,21 +127,21 @@ public class Model1 {
       em_loop(false, alStream);
       alStream.close();
 
-
       if ((it + 1) % GlobalParams.saveFreq == 0) {
         // tTable.save(GlobalParams.resultPath+"tt.m1."+(it+1));
       } else {
-        System.out.println(" didn't save b/e res is " + ((it + 1) % GlobalParams.saveFreq));
+        System.out.println(" didn't save b/e res is "
+            + ((it + 1) % GlobalParams.saveFreq));
       }
 
     }
 
     tTable.save(GlobalParams.resultPath + "tt.m1.final");
-    //tTable.print();
-    System.out.println("Average English word entropy " + tTable.getCondEntropy());
+    // tTable.print();
+    System.out.println("Average English word entropy "
+        + tTable.getCondEntropy());
 
   }
-
 
   public void initializeTable() {
     tTable = new TTable(true);
@@ -165,18 +160,17 @@ public class Model1 {
           int word_f = sentPair.getTarget().getWord(j).getWordId();
           tTable.insert(word_e, word_f, 0, uniform);
           if (eTags && useETagsT) {
-            tTable.insert(sentPair.getSource().getWord(i).getTagId(), word_f, 0, uniform);
+            tTable.insert(sentPair.getSource().getWord(i).getTagId(), word_f,
+                0, uniform);
           }
 
-        } //j
-      }//i
+        } // j
+      }// i
 
-
-    }//while
+    }// while
 
     tTable.normalizeTable(2);
   }
-
 
   public void em_loop(boolean inTrain, PrintStream alStream) {
     double cross_entropy = 0, viterbi_cross_entropy = 0;
@@ -185,7 +179,6 @@ public class Model1 {
     int pair_no = 0;
     TPHandler tpHandler = null;
     AlHandler aHandler;
-
 
     if (useFNull) {
 
@@ -228,7 +221,6 @@ public class Model1 {
 
     }
 
-
     while ((sentPair = corpus.getNextPair(inTrain)) != null) {
       int count = sentPair.getCount();
       int l = sentPair.e.getLength() - 1;
@@ -261,7 +253,7 @@ public class Model1 {
         }
         viterbi_alignment[j] = max_i;
 
-        //now again, this time incrementing counts and computing perplexity
+        // now again, this time incrementing counts and computing perplexity
         double val = count / denom;
 
         if (inTrain) {
@@ -276,16 +268,17 @@ public class Model1 {
         cross_entropy_sent += Math.log(denom);
         viterbi_cross_entropy_sent += Math.log(max_prob);
         max_prob_total *= max_prob;
-        //max_prob_total/=(l+1);
-      } //j
+        // max_prob_total/=(l+1);
+      } // j
       double pml = Perplexity.getProb(m, l);
       numWords += count * m;
       cross_entropy += count * (pml + cross_entropy_sent);
       viterbi_cross_entropy += count * (pml + viterbi_cross_entropy_sent);
-      //save the alignment to file if appropriate flag set
+      // save the alignment to file if appropriate flag set
       if (GlobalParams.dumpAlignments && (!inTrain)) {
 
-        Reports.printAlignToFile(sentPair, alStream, viterbi_alignment, pair_no, max_prob_total);
+        Reports.printAlignToFile(sentPair, alStream, viterbi_alignment,
+            pair_no, max_prob_total);
 
       }
 
@@ -301,6 +294,5 @@ public class Model1 {
     System.out.println("Perplexity " + perplexity);
     System.out.println("Viterbi perplexity " + viterbi_perplexity);
   }
-
 
 }

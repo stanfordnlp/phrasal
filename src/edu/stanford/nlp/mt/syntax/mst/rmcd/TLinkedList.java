@@ -26,38 +26,41 @@ import java.util.NoSuchElementException;
 import edu.stanford.nlp.util.ErasureUtils;
 
 /**
- * A LinkedList implementation which holds instances of type
- * <tt>TLinkable</tt>.
+ * A LinkedList implementation which holds instances of type <tt>TLinkable</tt>.
  * <p/>
- * <p>Using this implementation allows you to get java.util.LinkedList
- * behavior (a doubly linked list, with Iterators that support insert
- * and delete operations) without incurring the overhead of creating
- * <tt>Node</tt> wrapper objects for every element in your list.</p>
+ * <p>
+ * Using this implementation allows you to get java.util.LinkedList behavior (a
+ * doubly linked list, with Iterators that support insert and delete operations)
+ * without incurring the overhead of creating <tt>Node</tt> wrapper objects for
+ * every element in your list.
+ * </p>
  * <p/>
- * <p>The requirement to achieve this time/space gain is that the
- * Objects stored in the List implement the <tt>TLinkable</tt>
- * interface.</p>
+ * <p>
+ * The requirement to achieve this time/space gain is that the Objects stored in
+ * the List implement the <tt>TLinkable</tt> interface.
+ * </p>
  * <p/>
- * <p>The limitations are that you cannot put the same object into
- * more than one list or more than once in the same list.  You must
- * also ensure that you only remove objects that are actually in the
- * list.  That is, if you have an object A and lists l1 and l2, you
- * must ensure that you invoke List.remove(A) on the correct list.  It
- * is also forbidden to invoke List.remove() with an unaffiliated
- * TLinkable (one that belongs to no list): this will destroy the list
- * you invoke it on.</p>
+ * <p>
+ * The limitations are that you cannot put the same object into more than one
+ * list or more than once in the same list. You must also ensure that you only
+ * remove objects that are actually in the list. That is, if you have an object
+ * A and lists l1 and l2, you must ensure that you invoke List.remove(A) on the
+ * correct list. It is also forbidden to invoke List.remove() with an
+ * unaffiliated TLinkable (one that belongs to no list): this will destroy the
+ * list you invoke it on.
+ * </p>
  * <p/>
  * <p>
  * Created: Sat Nov 10 15:25:10 2001
  * </p>
- *
+ * 
  * @author Eric D. Friedman
  * @version $Id: TLinkedList.java,v 1.5 2005/03/26 17:52:56 ericdf Exp $
  * @see gnu.trove.TLinkable
  */
 
-public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<T>
-     implements Serializable {
+public class TLinkedList<T extends TLinkable<T>> extends
+    AbstractSequentialList<T> implements Serializable {
 
   private static final long serialVersionUID = 8255356362445153793L;
 
@@ -82,15 +85,15 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
   }
 
   /**
-   * Returns an iterator positioned at <tt>index</tt>.  Assuming
-   * that the list has a value at that index, calling next() will
-   * retrieve and advance the iterator.  Assuming that there is a
-   * value before <tt>index</tt> in the list, calling previous()
-   * will retrieve it (the value at index - 1) and move the iterator
-   * to that position.  So, iterating from front to back starts at
-   * 0; iterating from back to front starts at <tt>size()</tt>.
-   *
-   * @param index an <code>int</code> value
+   * Returns an iterator positioned at <tt>index</tt>. Assuming that the list
+   * has a value at that index, calling next() will retrieve and advance the
+   * iterator. Assuming that there is a value before <tt>index</tt> in the list,
+   * calling previous() will retrieve it (the value at index - 1) and move the
+   * iterator to that position. So, iterating from front to back starts at 0;
+   * iterating from back to front starts at <tt>size()</tt>.
+   * 
+   * @param index
+   *          an <code>int</code> value
    * @return a <code>ListIterator</code> value
    */
   @Override
@@ -100,7 +103,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Returns the number of elements in the list.
-   *
+   * 
    * @return an <code>int</code> value
    */
   @Override
@@ -109,12 +112,13 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
   }
 
   /**
-   * Inserts <tt>linkable</tt> at index <tt>index</tt> in the list.
-   * All values > index are shifted over one position to accomodate
-   * the new addition.
-   *
-   * @param index    an <code>int</code> value
-   * @param linkable an object of type TLinkable
+   * Inserts <tt>linkable</tt> at index <tt>index</tt> in the list. All values >
+   * index are shifted over one position to accomodate the new addition.
+   * 
+   * @param index
+   *          an <code>int</code> value
+   * @param linkable
+   *          an object of type TLinkable
    */
   @Override
   public void add(int index, T linkable) {
@@ -126,8 +130,9 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Appends <tt>linkable</tt> to the end of the list.
-   *
-   * @param linkable an object of type TLinkable
+   * 
+   * @param linkable
+   *          an object of type TLinkable
    * @return always true
    */
   @Override
@@ -138,8 +143,9 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Inserts <tt>linkable</tt> at the head of the list.
-   *
-   * @param linkable an object of type TLinkable
+   * 
+   * @param linkable
+   *          an object of type TLinkable
    */
   public void addFirst(Object linkable) {
     insert(0, linkable);
@@ -147,8 +153,9 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Adds <tt>linkable</tt> to the end of the list.
-   *
-   * @param linkable an object of type TLinkable
+   * 
+   * @param linkable
+   *          an object of type TLinkable
    */
   public void addLast(Object linkable) {
     insert(size(), linkable);
@@ -160,9 +167,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
   @Override
   public void clear() {
     if (null != _head) {
-      for (T link = _head.getNext();
-           link != null;
-           link = link.getNext()) {
+      for (T link = _head.getNext(); link != null; link = link.getNext()) {
         T prev = link.getPrevious();
         prev.setNext(null);
         link.setPrevious(null);
@@ -173,14 +178,13 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
   }
 
   /**
-   * Copies the list's contents into a native array.  This will be a
-   * shallow copy: the Tlinkable instances in the Object[] array
-   * have links to one another: changing those will put this list
-   * into an unpredictable state.  Holding a reference to one
-   * element in the list will prevent the others from being garbage
-   * collected unless you clear the next/previous links.  <b>Caveat
+   * Copies the list's contents into a native array. This will be a shallow
+   * copy: the Tlinkable instances in the Object[] array have links to one
+   * another: changing those will put this list into an unpredictable state.
+   * Holding a reference to one element in the list will prevent the others from
+   * being garbage collected unless you clear the next/previous links. <b>Caveat
    * programmer!</b>
-   *
+   * 
    * @return an <code>Object[]</code> value
    */
   @Override
@@ -194,13 +198,12 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
   }
 
   /**
-   * Copies the list to a native array, destroying the next/previous
-   * links as the copy is made.  This list will be emptied after the
-   * copy (as if clear() had been invoked).  The Object[] array
-   * returned will contain TLinkables that do <b>not</b> hold
-   * references to one another and so are less likely to be the
-   * cause of memory leaks.
-   *
+   * Copies the list to a native array, destroying the next/previous links as
+   * the copy is made. This list will be emptied after the copy (as if clear()
+   * had been invoked). The Object[] array returned will contain TLinkables that
+   * do <b>not</b> hold references to one another and so are less likely to be
+   * the cause of memory leaks.
+   * 
    * @return an <code>Object[]</code> value
    */
   public Object[] toUnlinkedArray() {
@@ -213,15 +216,16 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
       tmp.setNext(null); // clear the links
       tmp.setPrevious(null);
     }
-    _size = 0;              // clear the list
+    _size = 0; // clear the list
     _head = _tail = null;
     return o;
   }
 
   /**
    * A linear search for <tt>o</tt> in the list.
-   *
-   * @param o an <code>Object</code> value
+   * 
+   * @param o
+   *          an <code>Object</code> value
    * @return a <code>boolean</code> value
    */
   @Override
@@ -236,7 +240,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Returns the head of the list
-   *
+   * 
    * @return an <code>Object</code> value
    */
   public Object getFirst() {
@@ -245,7 +249,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Returns the tail of the list.
-   *
+   * 
    * @return an <code>Object</code> value
    */
   public Object getLast() {
@@ -254,7 +258,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Remove and return the first element in the list.
-   *
+   * 
    * @return an <code>Object</code> value
    */
   public Object removeFirst() {
@@ -275,7 +279,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Remove and return the last element in the list.
-   *
+   * 
    * @return an <code>Object</code> value
    */
   public Object removeLast() {
@@ -295,12 +299,14 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
   /**
    * Implementation of index-based list insertions.
-   *
-   * @param index    an <code>int</code> value
-   * @param linkable an object of type TLinkable
+   * 
+   * @param index
+   *          an <code>int</code> value
+   * @param linkable
+   *          an object of type TLinkable
    */
   protected void insert(int index, Object linkable) {
-    T newLink = ErasureUtils.<T>uncheckedCast(linkable);
+    T newLink = ErasureUtils.<T> uncheckedCast(linkable);
 
     if (_size == 0) {
       _head = _tail = newLink; // first insertion
@@ -324,7 +330,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
         for (prior = _tail; pos > index; pos--) {
           prior = prior.getPrevious();
         }
-      } else {                // insert in 1st half
+      } else { // insert in 1st half
         // work from the head
         int pos = 0;
         for (prior = _head; pos < index; pos++) {
@@ -343,19 +349,19 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
   }
 
   /**
-   * Removes the specified element from the list.  Note that
-   * it is the caller's responsibility to ensure that the
-   * element does, in fact, belong to this list and not another
-   * instance of TLinkedList.
-   *
-   * @param o a TLinkable element already inserted in this list.
+   * Removes the specified element from the list. Note that it is the caller's
+   * responsibility to ensure that the element does, in fact, belong to this
+   * list and not another instance of TLinkedList.
+   * 
+   * @param o
+   *          a TLinkable element already inserted in this list.
    * @return true if the element was a TLinkable and removed
    */
   @Override
   public boolean remove(Object o) {
     if (o instanceof TLinkable) {
       T p, n;
-      T link = ErasureUtils.<T>uncheckedCast(o);
+      T link = ErasureUtils.<T> uncheckedCast(o);
 
       p = link.getPrevious();
       n = link.getNext();
@@ -372,14 +378,14 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
         link.setNext(null);
         n.setPrevious(null);
         _head = n;
-      } else {            // somewhere in the middle
+      } else { // somewhere in the middle
         p.setNext(n);
         n.setPrevious(p);
         link.setNext(null);
         link.setPrevious(null);
       }
 
-      _size--;            // reduce size of list
+      _size--; // reduce size of list
       return true;
     } else {
       return false;
@@ -387,13 +393,13 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
   }
 
   /**
-   * Inserts newElement into the list immediately before current.
-   * All elements to the right of and including current are shifted
-   * over.
-   *
-   * @param current    a <code>TLinkable</code> value currently in the list.
-   * @param newElement a <code>TLinkable</code> value to be added to
-   *                   the list.
+   * Inserts newElement into the list immediately before current. All elements
+   * to the right of and including current are shifted over.
+   * 
+   * @param current
+   *          a <code>TLinkable</code> value currently in the list.
+   * @param newElement
+   *          a <code>TLinkable</code> value to be added to the list.
    */
   public void addBefore(T current, T newElement) {
     if (current == _head) {
@@ -419,10 +425,11 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
     private T _lastReturned;
 
     /**
-     * Creates a new <code>Iterator</code> instance positioned at
-     * <tt>index</tt>.
-     *
-     * @param position an <code>int</code> value
+     * Creates a new <code>Iterator</code> instance positioned at <tt>index</tt>
+     * .
+     * 
+     * @param position
+     *          an <code>int</code> value
      */
     IteratorImpl(int position) {
       if (position < 0 || position > _size) {
@@ -448,10 +455,11 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
     }
 
     /**
-     * Insert <tt>linkable</tt> at the current position of the iterator.
-     * Calling next() after add() will return the added object.
-     *
-     * @param linkable an object of type TLinkable
+     * Insert <tt>linkable</tt> at the current position of the iterator. Calling
+     * next() after add() will return the added object.
+     * 
+     * @param linkable
+     *          an object of type TLinkable
      */
     public final void add(T linkable) {
       _lastReturned = null;
@@ -466,7 +474,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
     /**
      * True if a call to next() will return an object.
-     *
+     * 
      * @return a <code>boolean</code> value
      */
     public final boolean hasNext() {
@@ -475,7 +483,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
     /**
      * True if a call to previous() will return a value.
-     *
+     * 
      * @return a <code>boolean</code> value
      */
     public final boolean hasPrevious() {
@@ -483,11 +491,11 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
     }
 
     /**
-     * Returns the value at the Iterator's index and advances the
-     * iterator.
-     *
+     * Returns the value at the Iterator's index and advances the iterator.
+     * 
      * @return an <code>Object</code> value
-     * @throws NoSuchElementException if there is no next element
+     * @throws NoSuchElementException
+     *           if there is no next element
      */
     public final T next() {
       if (_nextIndex == _size) {
@@ -501,9 +509,9 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
     }
 
     /**
-     * returns the index of the next node in the list (the
-     * one that would be returned by a call to next()).
-     *
+     * returns the index of the next node in the list (the one that would be
+     * returned by a call to next()).
+     * 
      * @return an <code>int</code> value
      */
     public final int nextIndex() {
@@ -511,11 +519,12 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
     }
 
     /**
-     * Returns the value before the Iterator's index and moves the
-     * iterator back one index.
-     *
+     * Returns the value before the Iterator's index and moves the iterator back
+     * one index.
+     * 
      * @return an <code>Object</code> value
-     * @throws NoSuchElementException if there is no previous element.
+     * @throws NoSuchElementException
+     *           if there is no previous element.
      */
     public final T previous() {
       if (_nextIndex == 0) {
@@ -534,7 +543,7 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
     /**
      * Returns the previous element's index.
-     *
+     * 
      * @return an <code>int</code> value
      */
     public final int previousIndex() {
@@ -542,16 +551,17 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
     }
 
     /**
-     * Removes the current element in the list and shrinks its
-     * size accordingly.
-     *
-     * @throws IllegalStateException neither next nor previous
-     *                               have been invoked, or remove or add have been invoked after
-     *                               the last invocation of next or previous.
+     * Removes the current element in the list and shrinks its size accordingly.
+     * 
+     * @throws IllegalStateException
+     *           neither next nor previous have been invoked, or remove or add
+     *           have been invoked after the last invocation of next or
+     *           previous.
      */
     public final void remove() {
       if (_lastReturned == null) {
-        throw new IllegalStateException("must invoke next or previous before invoking remove");
+        throw new IllegalStateException(
+            "must invoke next or previous before invoking remove");
       }
 
       if (_lastReturned != _next) {
@@ -563,10 +573,10 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
     }
 
     /**
-     * Replaces the current element in the list with
-     * <tt>linkable</tt>
-     *
-     * @param linkable an object of type TLinkable
+     * Replaces the current element in the list with <tt>linkable</tt>
+     * 
+     * @param linkable
+     *          an object of type TLinkable
      */
     public final void set(T linkable) {
       if (_lastReturned == null) {
@@ -590,9 +600,11 @@ public class TLinkedList<T extends TLinkable<T>> extends AbstractSequentialList<
 
     /**
      * Replace from with to in the list.
-     *
-     * @param from a <code>TLinkable</code> value
-     * @param to   a <code>TLinkable</code> value
+     * 
+     * @param from
+     *          a <code>TLinkable</code> value
+     * @param to
+     *          a <code>TLinkable</code> value
      */
     private void swap(T from, T to) {
       T p = from.getPrevious();

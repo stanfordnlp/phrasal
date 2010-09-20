@@ -39,13 +39,15 @@ public final class PhraseController {
   }
 
   public static PhraseController getInstance() {
-    if(thisInstance == null)
+    if (thisInstance == null)
       thisInstance = new PhraseController();
     return thisInstance;
   }
 
   public void setVerbose(boolean b) {
-    if(b) System.err.printf("%s: Setting verbose mode to %s\n", this.getClass().getName(), Boolean.toString(b));
+    if (b)
+      System.err.printf("%s: Setting verbose mode to %s\n", this.getClass()
+          .getName(), Boolean.toString(b));
     VERBOSE = b;
   }
 
@@ -53,9 +55,9 @@ public final class PhraseController {
     optsFilePath = new File(path);
     return optsFilePath.exists();
   }
-  
+
   public boolean setRange(int firstId, int lastId) {
-    if(firstId >= 0 && lastId >= 0) {
+    if (firstId >= 0 && lastId >= 0) {
       firstTranslationId = firstId;
       lastTranslationId = lastId;
       return true;
@@ -64,7 +66,7 @@ public final class PhraseController {
   }
 
   public boolean setSourceFile(String path) {
-    sourceFilePath = new File(path);    
+    sourceFilePath = new File(path);
     return sourceFilePath.exists();
   }
 
@@ -96,27 +98,31 @@ public final class PhraseController {
     phraseModel.normalizePhraseScores(NORM_SCORES);
     phraseModel.setNumberOfOptionRows(NUM_OPTION_ROWS);
 
-    boolean success = phraseModel.load(firstTranslationId, lastTranslationId, SCORE_HALF_RANGE);
-    if(!success) {
-      if(VERBOSE)
-        System.err.printf("%s: Failed to load model from source and options files\n", this.getClass().getName());
+    boolean success = phraseModel.load(firstTranslationId, lastTranslationId,
+        SCORE_HALF_RANGE);
+    if (!success) {
+      if (VERBOSE)
+        System.err.printf(
+            "%s: Failed to load model from source and options files\n", this
+                .getClass().getName());
       return success;
     }
 
-    if(pathModel != null)
+    if (pathModel != null)
       pathModel.freeResources();
-    
+
     pathModel = new PathModel();
     pathModelIsBuilt = success;
 
     success &= phraseModel.buildLayouts(RIGHT_TO_LEFT);
-    if(!success) {
-      if(VERBOSE)
-        System.err.printf("%s: Failed to construct translation layouts\n", this.getClass().getName());
+    if (!success) {
+      if (VERBOSE)
+        System.err.printf("%s: Failed to construct translation layouts\n", this
+            .getClass().getName());
       return success;
     }
 
-    //Set last for thread safety in AnalysisDialog
+    // Set last for thread safety in AnalysisDialog
     phraseModelIsBuilt = success;
 
     return phraseModelIsBuilt;
@@ -127,11 +133,13 @@ public final class PhraseController {
   }
 
   public String getTranslationFromPath(int translationId, String name) {
-    return (pathModelIsBuilt) ? pathModel.getTranslationFromPath(translationId, name) : null;
+    return (pathModelIsBuilt) ? pathModel.getTranslationFromPath(translationId,
+        name) : null;
   }
 
-  public void setTranslationForPath(int translationId, String name, String translation) {
-    if(pathModelIsBuilt)
+  public void setTranslationForPath(int translationId, String name,
+      String translation) {
+    if (pathModelIsBuilt)
       pathModel.setTranslation(translationId, name, translation);
   }
 
@@ -139,20 +147,21 @@ public final class PhraseController {
     return (pathModelIsBuilt) ? pathModel.getPathNames(translationId) : null;
   }
 
-  public Map<String,List<VisualPhrase>> getPaths(int translationId) {
+  public Map<String, List<VisualPhrase>> getPaths(int translationId) {
     return (pathModelIsBuilt) ? pathModel.getPaths(translationId) : null;
   }
 
   public boolean isEnabled(int translationId, String name) {
-    return (pathModelIsBuilt) ? pathModel.isEnabled(translationId, name) : false;
+    return (pathModelIsBuilt) ? pathModel.isEnabled(translationId, name)
+        : false;
   }
 
   public boolean addPath(int translationId, String name) {
-    return (pathModelIsBuilt) ? pathModel.addPath(translationId,name) : false;
+    return (pathModelIsBuilt) ? pathModel.addPath(translationId, name) : false;
   }
 
   public void deletePath(int translationId, String name) {
-    if(pathModelIsBuilt)
+    if (pathModelIsBuilt)
       pathModel.deletePath(translationId, name);
   }
 
@@ -173,12 +182,13 @@ public final class PhraseController {
   }
 
   public void setPathState(boolean isOn, int translationId, String name) {
-    if(pathModelIsBuilt)
-      pathModel.setPathState(isOn,translationId,name);
+    if (pathModelIsBuilt)
+      pathModel.setPathState(isOn, translationId, name);
   }
 
   public boolean finishPath(int translationId, String name) {
-    return (pathModelIsBuilt) ? pathModel.finishPath(translationId, name) : false;
+    return (pathModelIsBuilt) ? pathModel.finishPath(translationId, name)
+        : false;
   }
 
   public int getMaxPaths() {
@@ -190,8 +200,8 @@ public final class PhraseController {
   }
 
   public int getNumTranslationLayouts() {
-    //Just check to see if phraseModel is non-null
-    //So that AnalysisDialog can get interim results
+    // Just check to see if phraseModel is non-null
+    // So that AnalysisDialog can get interim results
     return (phraseModel != null) ? phraseModel.getNumTranslations() : 0;
   }
 
@@ -200,7 +210,7 @@ public final class PhraseController {
   }
 
   public boolean setScoreHalfRange(int range) {
-    if(range > 0 && range < 600) {
+    if (range > 0 && range < 600) {
       SCORE_HALF_RANGE = range;
       return true;
     }
@@ -210,7 +220,7 @@ public final class PhraseController {
   public int getScoreRank(double score) {
     return (phraseModel != null) ? phraseModel.getScoreRank(score) : 0;
   }
-  
+
   public int getMinTranslationId() {
     return (phraseModel != null) ? phraseModel.getMinTranslationId() : 0;
   }
@@ -220,20 +230,24 @@ public final class PhraseController {
   }
 
   public TranslationLayout getTranslationLayout(int translationId) {
-    return (phraseModel != null) ? phraseModel.getTranslationLayout(translationId) : null;
+    return (phraseModel != null) ? phraseModel
+        .getTranslationLayout(translationId) : null;
   }
 
   public String getTranslationSource(int translationId) {
-    return (phraseModelIsBuilt) ? phraseModel.getTranslationSource(translationId) : null;
+    return (phraseModelIsBuilt) ? phraseModel
+        .getTranslationSource(translationId) : null;
   }
 
   public VisualPhrase lookupVisualPhrase(int translationId, Phrase p) {
-    if(phraseModelIsBuilt) {
-      TranslationLayout layout = phraseModel.getTranslationLayout(translationId);
-      if(layout != null)
+    if (phraseModelIsBuilt) {
+      TranslationLayout layout = phraseModel
+          .getTranslationLayout(translationId);
+      if (layout != null)
         return layout.lookupVisualPhrase(p);
-      else if(VERBOSE)
-        System.err.printf("%s: Could not get a layout for translation id %d\n", this.getClass().getName(),translationId);
+      else if (VERBOSE)
+        System.err.printf("%s: Could not get a layout for translation id %d\n",
+            this.getClass().getName(), translationId);
     }
     return null;
   }
@@ -243,7 +257,7 @@ public final class PhraseController {
   }
 
   public boolean setNumOptionRows(int rows) {
-    if(rows > 0 && rows < 40) {
+    if (rows > 0 && rows < 40) {
       NUM_OPTION_ROWS = rows;
       return true;
     }
@@ -260,17 +274,18 @@ public final class PhraseController {
 
   private void notifyClickListeners(VisualPhrase vp) {
     Object[] listeners = listenerList.getListenerList();
-    for (int i=0; i < listeners.length; i += 2)
-      if (listeners[i]==ClickEventListener.class)
-        ((ClickEventListener)listeners[i+1]).handleClickEvent(new ClickEvent(vp));
+    for (int i = 0; i < listeners.length; i += 2)
+      if (listeners[i] == ClickEventListener.class)
+        ((ClickEventListener) listeners[i + 1])
+            .handleClickEvent(new ClickEvent(vp));
   }
 
-  //No synchronization needed with EventListenerList class
+  // No synchronization needed with EventListenerList class
   public void addClickEventListener(ClickEventListener listener) {
     listenerList.add(ClickEventListener.class, listener);
   }
 
-  //No synchronization needed with EventListenerList class
+  // No synchronization needed with EventListenerList class
   public void removeClickEventListener(ClickEventListener listener) {
     listenerList.remove(ClickEventListener.class, listener);
   }

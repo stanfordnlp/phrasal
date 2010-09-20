@@ -24,4 +24,3 @@ public class SWIGTYPE_p_Vocab {
     return (obj == null) ? 0 : obj.swigCPtr;
   }
 }
-

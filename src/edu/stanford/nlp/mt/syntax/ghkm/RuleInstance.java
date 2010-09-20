@@ -13,7 +13,8 @@ import edu.stanford.nlp.mt.train.WordAlignment;
 public class RuleInstance {
 
   public static final String DEBUG_PROPERTY = "DebugGHKM";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
 
   Rule rule;
   StringNumberer stringNumberer;
@@ -21,21 +22,23 @@ public class RuleInstance {
   List<AlignmentTreeNode> childrenNodes;
   Map<Integer, AlignmentTreeNode> idx2lhs;
   Set<Integer> unalignedRHS = new HashSet<Integer>();
-  int possibleCompositions=0;
+  int possibleCompositions = 0;
 
-  public RuleInstance(AlignmentTreeNode extractionNode, BitSet compositions, WordAlignment sent, int lowFSpan, int highFSpan, StringNumberer num) {
+  public RuleInstance(AlignmentTreeNode extractionNode, BitSet compositions,
+      WordAlignment sent, int lowFSpan, int highFSpan, StringNumberer num) {
     init(extractionNode, compositions, sent, lowFSpan, highFSpan, num);
   }
 
-  protected void init(AlignmentTreeNode extractionNode, BitSet compositions, WordAlignment sent, int lowFSpan, int highFSpan, StringNumberer num) {
-		assert(extractionNode.getLowFSpan() >= lowFSpan);
-		assert(extractionNode.getHighFSpan() <= highFSpan);
+  protected void init(AlignmentTreeNode extractionNode, BitSet compositions,
+      WordAlignment sent, int lowFSpan, int highFSpan, StringNumberer num) {
+    assert (extractionNode.getLowFSpan() >= lowFSpan);
+    assert (extractionNode.getHighFSpan() <= highFSpan);
     this.stringNumberer = num;
-		if (DEBUG) {
-			System.err.printf("RuleInstance: init: cat=%s span=%d-%d\n",
-           extractionNode.label(),lowFSpan,highFSpan);
-		}
-    assert(rule == null);
+    if (DEBUG) {
+      System.err.printf("RuleInstance: init: cat=%s span=%d-%d\n",
+          extractionNode.label(), lowFSpan, highFSpan);
+    }
+    assert (rule == null);
     rule = new Rule(null, null, null, null);
     initLHS(extractionNode, compositions);
     initRHS(sent, lowFSpan, highFSpan);
@@ -46,19 +49,22 @@ public class RuleInstance {
   }
 
   @Override
-	public String toString() { return rule.toString(); }
+  public String toString() {
+    return rule.toString();
+  }
 
   /**
    * Create LHS of a minimal rule from node of an AlignmentGraph.
    */
   private void initLHS(AlignmentTreeNode extractionNode, BitSet compositions) {
 
-		if (DEBUG)
-			System.err.printf("RuleInstance: initLHS: generate LHS from node: %s\n", extractionNode.label());
+    if (DEBUG)
+      System.err.printf("RuleInstance: initLHS: generate LHS from node: %s\n",
+          extractionNode.label());
 
     this.extractionNode = extractionNode;
     this.childrenNodes = new ArrayList<AlignmentTreeNode>();
-    this.idx2lhs = new TreeMap<Integer,AlignmentTreeNode>();
+    this.idx2lhs = new TreeMap<Integer, AlignmentTreeNode>();
     this.possibleCompositions = 0;
 
     Stack<AlignmentTreeNode> s = new Stack<AlignmentTreeNode>();
@@ -72,7 +78,8 @@ public class RuleInstance {
 
       AlignmentTreeNode curNode = s.pop();
       int numChildren = 0;
-      boolean canStop = curNode.isFrontierNode() && curNode != extractionNode && !curNode.isLeaf();
+      boolean canStop = curNode.isFrontierNode() && curNode != extractionNode
+          && !curNode.isLeaf();
       boolean doStop = canStop;
 
       if (canStop)
@@ -80,113 +87,122 @@ public class RuleInstance {
 
       if (doStop) {
         childrenNodes.add(curNode);
-        idx2lhs.put(lhsLabelsList.size(),curNode);
+        idx2lhs.put(lhsLabelsList.size(), curNode);
         isFrontierNode = true;
-			} else {
+      } else {
         numChildren = curNode.numChildren();
-        assert(numChildren <= Character.MAX_VALUE);
+        assert (numChildren <= Character.MAX_VALUE);
         List<Tree> children = curNode.getChildrenAsList();
-        for (int i=children.size()-1; i>=0; --i)
-          s.push((AlignmentTreeNode)children.get(i));
+        for (int i = children.size() - 1; i >= 0; --i)
+          s.push((AlignmentTreeNode) children.get(i));
       }
 
-      lhsStructList.add((char)numChildren);
+      lhsStructList.add((char) numChildren);
       lhsLabelsList.add(stringNumberer.getId(curNode.getNodeString()));
 
-			if (DEBUG && !curNode.emptySpan())
-				System.err.printf("RuleInstance: initLHS: new node: cat=%s span=%d-%d is-frontier=%s\n",
-					curNode.label(), curNode.getLowFSpan(), curNode.getHighFSpan(), isFrontierNode);
+      if (DEBUG && !curNode.emptySpan())
+        System.err
+            .printf(
+                "RuleInstance: initLHS: new node: cat=%s span=%d-%d is-frontier=%s\n",
+                curNode.label(), curNode.getLowFSpan(), curNode.getHighFSpan(),
+                isFrontierNode);
 
     }
 
-    rule.lhsStruct = ArrayUtils.toPrimitive(lhsStructList.toArray(new Character[lhsStructList.size()]));
-    rule.lhsLabels = ArrayUtils.toPrimitive(lhsLabelsList.toArray(new Integer[lhsLabelsList.size()]));
+    rule.lhsStruct = ArrayUtils.toPrimitive(lhsStructList
+        .toArray(new Character[lhsStructList.size()]));
+    rule.lhsLabels = ArrayUtils.toPrimitive(lhsLabelsList
+        .toArray(new Integer[lhsLabelsList.size()]));
   }
-
 
   /**
    * Create RHS of a minimal rule from node of an AlignmentGraph.
    */
-	@SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")
   private void initRHS(WordAlignment sent, int lowFSpan, int highFSpan) {
 
     if (DEBUG)
-			System.err.printf("RuleInstance: initRHS: generate RHS from span %d-%d\n", lowFSpan, highFSpan);
+      System.err.printf(
+          "RuleInstance: initRHS: generate RHS from span %d-%d\n", lowFSpan,
+          highFSpan);
 
-    List<Pair<AlignmentTreeNode,Integer>> orderingList = new ArrayList<Pair<AlignmentTreeNode,Integer>>();
+    List<Pair<AlignmentTreeNode, Integer>> orderingList = new ArrayList<Pair<AlignmentTreeNode, Integer>>();
     for (int idx : idx2lhs.keySet())
-      orderingList.add(new Pair(idx2lhs.get(idx),idx));
+      orderingList.add(new Pair(idx2lhs.get(idx), idx));
 
     Collections.sort(orderingList, new Comparator() {
-      @Override public int compare(Object o1, Object o2) {
-        AlignmentTreeNode n1 = (AlignmentTreeNode) ((Pair)o1).first(),
-            n2 = (AlignmentTreeNode) ((Pair)o2).first();
-			  if(n1.emptySpan()) return -1;
-			  if(n2.emptySpan()) return 1;
+      @Override
+      public int compare(Object o1, Object o2) {
+        AlignmentTreeNode n1 = (AlignmentTreeNode) ((Pair) o1).first(), n2 = (AlignmentTreeNode) ((Pair) o2)
+            .first();
+        if (n1.emptySpan())
+          return -1;
+        if (n2.emptySpan())
+          return 1;
         return (Integer.valueOf(n1.getLowFSpan())).compareTo(n2.getLowFSpan());
       }
     });
 
     List<Integer> rhsLabelsList = new ArrayList<Integer>();
-		BitSet lexical = new BitSet();
+    BitSet lexical = new BitSet();
     int sz = orderingList.size();
     boolean firstNonNull = true;
-		int prevH = lowFSpan-1;
+    int prevH = lowFSpan - 1;
 
-    List<Integer>
-        lhsVars = new LinkedList<Integer>(),
-        rhsVars = new LinkedList<Integer>();
+    List<Integer> lhsVars = new LinkedList<Integer>(), rhsVars = new LinkedList<Integer>();
     int maxRhsIdx = -1;
 
-    for (int i=0; i<sz; ++i) {
+    for (int i = 0; i < sz; ++i) {
 
       AlignmentTreeNode curNode = orderingList.get(i).first();
-			if (curNode.emptySpan())
-			  continue;
+      if (curNode.emptySpan())
+        continue;
       int curL = curNode.getLowFSpan(), curH = curNode.getHighFSpan();
 
       // Add terminals located between RHS constituents:
-			int first_fi = (firstNonNull) ? lowFSpan : prevH+1;
-			for (int fi=first_fi; fi<curL; ++fi) {
-				if (sent.f2e(fi).isEmpty())
-					unalignedRHS.add(rhsLabelsList.size());
-				rhsLabelsList.add(sent.f().get(fi).getId());
-				lexical.set(fi);
-			}
+      int first_fi = (firstNonNull) ? lowFSpan : prevH + 1;
+      for (int fi = first_fi; fi < curL; ++fi) {
+        if (sent.f2e(fi).isEmpty())
+          unalignedRHS.add(rhsLabelsList.size());
+        rhsLabelsList.add(sent.f().get(fi).getId());
+        lexical.set(fi);
+      }
       firstNonNull = false;
 
-			// Add non-terminal to RHS:
+      // Add non-terminal to RHS:
       rhsLabelsList.add(stringNumberer.getId(curNode.getNodeString()));
-			int lhsIdx = orderingList.get(i).second();
-			int rhsIdx = rhsLabelsList.size()-1;
+      int lhsIdx = orderingList.get(i).second();
+      int rhsIdx = rhsLabelsList.size() - 1;
       lhsVars.add(lhsIdx);
       rhsVars.add(rhsIdx);
       if (maxRhsIdx < rhsIdx)
         maxRhsIdx = rhsIdx;
 
-      if(DEBUG) {
-				System.err.printf("RuleInstance: initRHS: new RHS non-terminal: "+
-				 "cat=%s rhs-pos=%d lhs-pos=%d span=%d-%d",
-				  curNode.label(),rhsIdx,lhsIdx,curL,curH);
-				if(prevH >= 0) System.err.printf(" prev-span-end=%d",prevH);
-				System.err.println();
-			}
- 			prevH = curH;
+      if (DEBUG) {
+        System.err.printf("RuleInstance: initRHS: new RHS non-terminal: "
+            + "cat=%s rhs-pos=%d lhs-pos=%d span=%d-%d", curNode.label(),
+            rhsIdx, lhsIdx, curL, curH);
+        if (prevH >= 0)
+          System.err.printf(" prev-span-end=%d", prevH);
+        System.err.println();
+      }
+      prevH = curH;
     }
 
     // Initialize variables:
-    rule.clear_non_terminals(maxRhsIdx+1);
-    for (int i=0; i<lhsVars.size(); ++i)
-      rule.add_non_terminal(rhsVars.get(i),lhsVars.get(i));
+    rule.clear_non_terminals(maxRhsIdx + 1);
+    for (int i = 0; i < lhsVars.size(); ++i)
+      rule.add_non_terminal(rhsVars.get(i), lhsVars.get(i));
 
-	 	// Add unaligned words at end of RHS:
-		for (int fi=prevH+1; fi<=highFSpan; ++fi) {
-			if (sent.f2e(fi).isEmpty())
-				unalignedRHS.add(rhsLabelsList.size());
-			rhsLabelsList.add(sent.f().get(fi).getId());
-			lexical.set(fi);
-		}
-    rule.rhsLabels = ArrayUtils.toPrimitive(rhsLabelsList.toArray(new Integer[rhsLabelsList.size()]));
+    // Add unaligned words at end of RHS:
+    for (int fi = prevH + 1; fi <= highFSpan; ++fi) {
+      if (sent.f2e(fi).isEmpty())
+        unalignedRHS.add(rhsLabelsList.size());
+      rhsLabelsList.add(sent.f().get(fi).getId());
+      lexical.set(fi);
+    }
+    rule.rhsLabels = ArrayUtils.toPrimitive(rhsLabelsList
+        .toArray(new Integer[rhsLabelsList.size()]));
   }
 
   public List<Rule> getAllRHSVariants() {
