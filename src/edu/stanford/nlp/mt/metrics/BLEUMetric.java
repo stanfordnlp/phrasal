@@ -691,12 +691,13 @@ class BLEUIncrementalMetricRecombinationFilter<TK, FV> implements
     throw new RuntimeException();
   }
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public boolean combinable(IncrementalEvaluationMetric<TK, FV> oA,
       IncrementalEvaluationMetric<TK, FV> oB) {
 
-    BLEUMetric<TK, ?>.BLEUIncrementalMetric hypA = (BLEUMetric<TK, ?>.BLEUIncrementalMetric) oA;
-    BLEUMetric<TK, ?>.BLEUIncrementalMetric hypB = (BLEUMetric<TK, ?>.BLEUIncrementalMetric) oB;
+    BLEUMetric<TK, FV>.BLEUIncrementalMetric hypA = (BLEUMetric.BLEUIncrementalMetric) oA;    
+    BLEUMetric<TK, FV>.BLEUIncrementalMetric hypB = (BLEUMetric.BLEUIncrementalMetric) oB;
 
     if (hypA.r != hypB.r)
       return false;
@@ -717,7 +718,8 @@ class BLEUIncrementalMetricRecombinationFilter<TK, FV> implements
 
   @Override
   public long recombinationHashCode(IncrementalEvaluationMetric<TK, FV> o) {
-    BLEUMetric<TK, ?>.BLEUIncrementalMetric hyp = (BLEUMetric<TK, ?>.BLEUIncrementalMetric) o;
+    @SuppressWarnings("rawtypes")
+    BLEUMetric.BLEUIncrementalMetric hyp = (BLEUMetric.BLEUIncrementalMetric) o;
 
     int hashCode = hyp.r + 31 * hyp.c;
 

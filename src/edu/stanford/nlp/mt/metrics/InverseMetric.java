@@ -74,10 +74,11 @@ public class InverseMetric<TK, FV> extends AbstractMetric<TK, FV> {
       return imetric.size();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public int compareTo(IncrementalEvaluationMetric<TK, FV> o) {
       if (o instanceof InverseMetric.IncrementalMetric) {
-        return ((InverseMetric<TK, FV>.IncrementalMetric) o).imetric
+        return ((InverseMetric.IncrementalMetric) o).imetric
             .compareTo(imetric);
       }
       throw new UnsupportedOperationException();
