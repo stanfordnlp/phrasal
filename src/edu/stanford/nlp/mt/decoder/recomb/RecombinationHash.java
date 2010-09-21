@@ -85,6 +85,7 @@ public class RecombinationHash<S extends State<S>> {
   /**
 	 * 
 	 */
+  @SuppressWarnings("rawtypes")
   public Status queryStatus(S hypothesis, boolean update) {
     if (filter instanceof NoRecombination) {
       if (update)
@@ -99,8 +100,9 @@ public class RecombinationHash<S extends State<S>> {
 
     if (DETAILED_DEBUG) {
       if (filterEquivWrappedHyp != null) {
-        Hypothesis<?, ?> h1 = (Hypothesis<?, ?>) hypothesis;
-        Hypothesis<?, ?> h2 = (Hypothesis<?, ?>) filterEquivWrappedHyp.hypothesis;
+        
+        Hypothesis h1 = (Hypothesis) hypothesis;
+        Hypothesis h2 = (Hypothesis) filterEquivWrappedHyp.hypothesis;
         System.err.printf("Recombining: %d with %d scores %.3f %.3f\n",
             Math.min(h1.id, h2.id), Math.max(h1.id, h2.id),
             Math.min(h1.score(), h2.score()), Math.max(h1.score(), h2.score()));
