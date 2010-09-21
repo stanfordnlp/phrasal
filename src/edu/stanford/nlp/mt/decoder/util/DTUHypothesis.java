@@ -30,7 +30,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
   private static int MAX_TARGET_PHRASE_SPAN = -1; // to make sure it is
                                                   // overridden (an assert will
                                                   // fail otherwise)
-  private static int MAX_PENDING_PHRASES = 2;
+  private static int MAX_PENDING_PHRASES = Integer.parseInt(System.getProperty("maxPendingPhrases","2"));
 
   /**
    * This class represents a phrase with one or more discontinuities in its
@@ -581,5 +581,4 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     }
 
   }
-
 }

@@ -31,6 +31,11 @@ public class DTURecombinationFilter<TK, FV> implements
   public static final boolean SIMPLE_RECOMBINATION = Boolean
       .parseBoolean(System.getProperty(SIMPLE_RECOMBINATION_PROPERTY, "false"));
 
+  static {
+    System.err.printf("DTU recombination: phrase_count=%s word_count=%s simple=%s\n",
+        EQ_NUM_PHRASES_RECOMBINATION, EQ_NUM_WORDS_RECOMBINATION, SIMPLE_RECOMBINATION );
+  }
+
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
@@ -109,9 +114,9 @@ public class DTURecombinationFilter<TK, FV> implements
       int[] hashes = new int[pendingPhrases + 1];
       hashes[0] = isDTUn;
       int i = 0;
-      for (DTUHypothesis.PendingPhrase pp : dtu.pendingPhrases) {
-        hashes[++i] = pp.concreteOpt.abstractOption.hashCode();
-      }
+      if (dtu != null)
+        for (DTUHypothesis.PendingPhrase pp : dtu.pendingPhrases)
+          hashes[++i] = pp.concreteOpt.abstractOption.hashCode();
       return Arrays.hashCode(hashes);
     }
   }

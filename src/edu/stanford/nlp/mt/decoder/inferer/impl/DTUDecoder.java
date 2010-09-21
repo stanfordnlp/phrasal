@@ -29,9 +29,6 @@ package edu.stanford.nlp.mt.decoder.inferer.impl;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.inferer.*;
@@ -76,8 +73,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
-  ExecutorService threadPool;
-
   static public <TK, FV> DTUDecoderBuilder<TK, FV> builder() {
     return new DTUDecoderBuilder<TK, FV>();
   }
@@ -93,7 +88,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     } else {
       numProcs = 1;
     }
-    threadPool = Executors.newFixedThreadPool(numProcs);
 
     if (maxDistortion != -1) {
       System.err.printf(
@@ -212,8 +206,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     allOptions.add(optionsWithoutGaps);
     if (gapsInFutureCost)
       allOptions.add(optionsWithGaps);
-    // System.err.printf("Translation options (use for future cost estimation): %d\n",
-    // allOptions.size());
 
     if (OPTIONS_DUMP || DETAILED_DEBUG) {
       int sentId = translationId + ((Phrasal.local_procs > 1) ? 2 : 0);
@@ -258,9 +250,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     long decodeLoopTime = -System.currentTimeMillis();
     for (int i = 0; i < beams.length; i++) {
 
-      // List<ConcreteTranslationOption<TK>> applicableOptions =
-      // ConcreteTranslationOptions.filterOptions(HypothesisBeams.coverageIntersection(beams[i]),
-      // foreign.size(), options);
       if (DEBUG) {
         System.err
             .printf("--\nDoing Beam %d Entries: %d\n", i, beams[i].size());
@@ -275,17 +264,10 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (DEBUG)
         System.err.println();
 
-      CountDownLatch cdl = new CountDownLatch(numProcs);
       for (int threadId = 0; threadId < numProcs; threadId++) {
         BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz,
-            optionGrid, constrainedOutputSpace, translationId, threadId,
-            numProcs, cdl);
-        threadPool.execute(beamExpander);
-      }
-      try {
-        cdl.await();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
+            optionGrid, constrainedOutputSpace, translationId);
+        beamExpander.expandBeam();
       }
 
       if (DEBUG) {
@@ -372,7 +354,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         TranslationOption abstractOption = (hyp.translationOpt != null) ? hyp.translationOpt.abstractOption
             : null;
         if (hyp.translationOpt != null) {
-          // final String translation;
           boolean noSource = false;
           if (hyp instanceof DTUHypothesis) {
             abstractOption = ((DTUHypothesis) hyp).getAbstractOption();
@@ -416,9 +397,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.printf("true score: %.3f h: %.3f\n", bestHyp.score, bestHyp.h);
       System.err.println();
 
-      // if (featurizer instanceof RichIncrementalFeaturizer)
-      // ((RichIncrementalFeaturizer)featurizer).dump(bestHyp.featurizable);
-
       double score = scorer.getIncrementalScore(allfeatures);
       System.err.printf("Recalculated score: %.3f\n", score);
     } else {
@@ -426,66 +404,47 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
-  class BeamExpander implements Runnable {
+  class BeamExpander {
     Beam<Hypothesis<TK, FV>>[] beams;
     int beamId;
     int foreignSz;
     DTUOptionGrid<TK> optionGrid;
     ConstrainedOutputSpace<TK, FV> constrainedOutputSpace;
     int translationId;
-    int threadId;
-    int threadCount;
-    CountDownLatch cdl;
 
     public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
         int foreignSz, DTUOptionGrid<TK> optionGrid,
         ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-        int translationId, int threadId, int threadCount, CountDownLatch cdl) {
+        int translationId) {
       this.beams = beams;
       this.beamId = beamId;
       this.foreignSz = foreignSz;
       this.optionGrid = optionGrid;
       this.constrainedOutputSpace = constrainedOutputSpace;
       this.translationId = translationId;
-      this.threadId = threadId;
-      this.threadCount = threadCount;
-      this.cdl = cdl;
     }
 
-    @Override
-    public void run() {
-      if (DETAILED_DEBUG)
-        System.err.printf("starting beam expander: %s thread pool: %s\n", this,
-            threadPool);
-      expandBeam(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace,
-          translationId, threadId, threadCount, cdl);
-      if (DETAILED_DEBUG)
-        System.err.printf("ending beam expander: %s thread pool: %s\n", this,
-            threadPool);
+    private void expandBeam() {
+      expandBeam(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace, translationId);
     }
 
     @SuppressWarnings("unchecked")
     public int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
         int foreignSz, DTUOptionGrid<TK> optionGrid,
-        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-        int translationId, int threadId, int threadCount, CountDownLatch cdl) {
+        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, int translationId) {
 
       int optionsApplied = 0;
       int hypPos = -1;
       int totalHypothesesGenerated = 0;
-      // System.err.printf("\nBeam id: %d\n", beamId);
+      //System.err.printf("\nBeam id: %d\n", beamId);
 
-      List<Hypothesis<TK, FV>> hyps;
-
-      synchronized (beams[beamId]) {
-        hyps = new LinkedList<Hypothesis<TK, FV>>();
-        for (Hypothesis<TK, FV> hyp : beams[beamId]) {
-          hyps.add(hyp);
-        }
+      List<Hypothesis<TK, FV>> hypsL = new LinkedList<Hypothesis<TK, FV>>();
+      for (Hypothesis<TK, FV> hyp : beams[beamId]) {
+        hypsL.add(hyp);
       }
 
-      List<Hypothesis<TK, FV>> newHyps = new LinkedList<Hypothesis<TK, FV>>();
-      for (Hypothesis<TK, FV> hyp : hyps) {
+      Set<Hypothesis<TK, FV>> mergedHyps = new HashSet<Hypothesis<TK, FV>>();
+      for (Hypothesis<TK, FV> hyp : hypsL) {
         if (hyp instanceof DTUHypothesis) {
           DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) hyp;
           Deque<DTUHypothesis<TK, FV>> currentHyps = new LinkedList<DTUHypothesis<TK, FV>>();
@@ -493,31 +452,28 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           while (!currentHyps.isEmpty()) {
             final DTUHypothesis<TK, FV> currentHyp = currentHyps.poll();
             assert (currentHyp != null);
-            if (!currentHyp.hasExpired())
-              newHyps.add(currentHyp);
+            if (!currentHyp.hasExpired()) {
+              mergedHyps.add(currentHyp);
+            }
             for (DTUHypothesis<TK, FV> nextHyp : currentHyp
                 .mergeHypothesisAndPendingPhrase(translationId, featurizer,
                     scorer, heuristic)) {
-              if (!nextHyp.hasExpired())
+              if (!nextHyp.hasExpired()) {
                 currentHyps.add(nextHyp);
+              }
             }
           }
         }
       }
-      hyps.addAll(newHyps);
+      mergedHyps.addAll(hypsL);
 
-      for (Hypothesis<TK, FV> hyp : hyps) {
+      for (Hypothesis<TK, FV> hyp : mergedHyps) {
         hypPos++;
-        if (hypPos % threadCount != threadId)
-          continue;
         if (hyp == null)
           continue;
         // System.err.printf("\nExpanding hyp: %s\n", hyp);
         // System.err.printf("\nCoverage: %s\n", hyp.foreignCoverage);
         int localOptionsApplied = 0;
-        // System.err.printf("Start position: %d\n",
-        // hyp.foreignCoverage.nextClearBit(0));
-        // System.err.printf("foreignSz: %d\n", foreignSz);
         int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
         assert (firstCoverageGap <= foreignSz);
 
@@ -530,10 +486,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         }
 
         for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
-          int endPosMax = -1; // hyp.foreignCoverage.nextSetBit(startPos);
+          int endPosMax = -1;
 
-          // System.err.printf("  s=%s endPosMax = %d -> ", startPos,
-          // endPosMax);
           // check distortion limit
           if (endPosMax < 0) {
             if (maxDistortion >= 0 && startPos != firstCoverageGap) {
@@ -550,15 +504,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 .get(startPos, endPos);
             if (applicableOptions == null)
               continue;
-            // System.err.printf("    startPos=%d endPos=%d options=%s\n",
-            // startPos, endPos, applicableOptions == null ? "0" :
-            // applicableOptions.size());
-            // System.err.printf("options for (%d to %d): %d\n", startPos,
-            // endPos, applicableOptions.size());
 
             for (ConcreteTranslationOption<TK> option : applicableOptions) {
-              // System.err.printf("option: %s\n",
-              // option.abstractOption.foreign);
               if (hyp.foreignCoverage.intersects(option.foreignCoverage)) {
                 continue;
               }
@@ -610,13 +557,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                     continue;
                   }
                 } else {
-                  // System.err.printf("checking final %s\n",
-                  // newHyp.featurizable.partialTranslation);
                   if (constrainedOutputSpace != null
                       && !constrainedOutputSpace
                           .allowableFinal(newHyp.featurizable)) {
-                    // System.err.printf("bad final: %s\n",
-                    // newHyp.featurizable.partialTranslation);
                     continue;
                   }
                 }
@@ -657,7 +600,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.printf("Options applied: %d\n", optionsApplied);
       }
 
-      cdl.countDown();
       return totalHypothesesGenerated;
     }
   }
@@ -701,7 +643,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       for (ConcreteTranslationOption<TK> opt : options) {
         int startPos = opt.foreignPos;
         int endPos = opt.foreignCoverage.length() - 1;
-        // int endPos = opt.foreignCoverage.nextClearBit(opt.foreignPos) - 1;
         grid[getIndex(startPos, endPos)].add(opt);
       }
     }

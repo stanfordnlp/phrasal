@@ -250,8 +250,8 @@ public class Phrasal {
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
           GAPS_IN_FUTURE_COST_OPT).get(0));
     if (config.containsKey(DISTINCT_NBEST_LIST_OPT))
-      if (!AbstractBeamInferer.DISTINCT_NBEST)
-        AbstractBeamInferer.DISTINCT_NBEST = Boolean.parseBoolean(config.get(
+      if (!AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS)
+        AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = Boolean.parseBoolean(config.get(
             DISTINCT_NBEST_LIST_OPT).get(0));
     if (config.containsKey(LINEAR_DISTORTION_TYPE))
       ConcreteTranslationOption.setLinearDistortionType(config.get(
@@ -823,6 +823,7 @@ public class Phrasal {
       if (gapT == FeaturizerFactory.GapType.target
           || gapT == FeaturizerFactory.GapType.both) {
         DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
+        //AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = true; // TODO: restore?
       }
 
       // Support for floating phrases:

@@ -19,7 +19,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   static public final String DEBUG_OPT = "AbstractBeamInfererDebug";
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_OPT, "false"));
-  static public boolean DISTINCT_NBEST = false;
+  static public boolean DISTINCT_SURFACE_TRANSLATIONS = false;
   public final int beamCapacity;
   public final HypothesisBeamFactory.BeamType beamType;
 
@@ -66,10 +66,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
     long nbestStartTime = System.currentTimeMillis();
 
-    Set<Sequence<TK>> distinctTranslations = DISTINCT_NBEST ? new HashSet<Sequence<TK>>()
-        : null;
-    if (DISTINCT_NBEST)
-      System.err.println("Distinct n-best list: " + DISTINCT_NBEST);
+    Set<Sequence<TK>> distinctSurfaceTranslations = new HashSet<Sequence<TK>>();
+    if (DISTINCT_SURFACE_TRANSLATIONS)
+      System.err.println("N-best list with distinct surface strings: " + DISTINCT_SURFACE_TRANSLATIONS);
 
     featurizer.rerankingMode(true);
 
@@ -109,14 +108,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
               translations.size(), dtuHyp.hasExpired(), hyp);
       }
 
-      if (distinctTranslations != null) {
+      if (DISTINCT_SURFACE_TRANSLATIONS) {
 
         // Get surface string:
         assert (hyp != null);
         AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
 
         // If seen this string before and not among the top-k, skip it:
-        if (hypCount > SAFE_LIST && distinctTranslations.contains(seq)) {
+        if (hypCount > SAFE_LIST && distinctSurfaceTranslations.contains(seq)) {
           continue;
         }
 
@@ -125,8 +124,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
             hyp.score, collectFeatureValues(hyp), collectAlignments(hyp),
             beamGoalHyp.id));
-        distinctTranslations.add(seq);
-        if (distinctTranslations.size() >= size
+        distinctSurfaceTranslations.add(seq);
+        if (distinctSurfaceTranslations.size() >= size
             || hypCount >= maxDuplicateCount)
           break;
 
@@ -171,14 +170,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
     featurizer.rerankingMode(false);
 
-    if (distinctTranslations != null) {
+    if (DISTINCT_SURFACE_TRANSLATIONS) {
       List<RichTranslation<TK, FV>> dtranslations = new LinkedList<RichTranslation<TK, FV>>();
-      distinctTranslations.clear();
+      distinctSurfaceTranslations.clear();
       for (RichTranslation<TK, FV> rt : translations) {
-        if (distinctTranslations.contains(rt.translation)) {
+        if (distinctSurfaceTranslations.contains(rt.translation)) {
           continue;
         }
-        distinctTranslations.add(rt.translation);
+        distinctSurfaceTranslations.add(rt.translation);
         dtranslations.add(rt);
       }
       return dtranslations;
