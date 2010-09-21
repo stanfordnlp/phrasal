@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
+import edu.stanford.nlp.mt.Phrasal;
+
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.io.*;
@@ -200,6 +202,7 @@ public class ExtendedLexicalReorderingTable {
 
   private String init(String filename, String type) throws IOException {
     System.gc();
+    boolean withGaps = Phrasal.withGaps;
     Runtime rt = Runtime.getRuntime();
     long preTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
@@ -297,12 +300,12 @@ public class ExtendedLexicalReorderingTable {
       if (conditionType == ConditionTypes.e
           || conditionType == ConditionTypes.f) {
         IString[] tokens = IStrings.toIStringArray(phrase1TokenList);
-        indexInts = DTUTable.toWordIndexArray(tokens); // IStrings.toIntArray(tokens);
+        indexInts = withGaps ? DTUTable.toWordIndexArray(tokens) : IStrings.toIntArray(tokens);
       } else {
         IString[] fTokens = IStrings.toIStringArray(phrase1TokenList);
-        int[] fIndexInts = DTUTable.toWordIndexArray(fTokens); // IStrings.toIntArray(fTokens);
+        int[] fIndexInts = withGaps ? DTUTable.toWordIndexArray(fTokens) : IStrings.toIntArray(fTokens);
         IString[] eTokens = IStrings.toIStringArray(phrase2TokenList);
-        int[] eIndexInts = DTUTable.toWordIndexArray(eTokens); // IStrings.toIntArray(eTokens);
+        int[] eIndexInts = withGaps ? DTUTable.toWordIndexArray(eTokens) : IStrings.toIntArray(eTokens);
         indexInts = mergeInts(fIndexInts, eIndexInts);
       }
 

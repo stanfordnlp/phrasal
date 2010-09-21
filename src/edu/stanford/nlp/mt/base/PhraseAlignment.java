@@ -57,6 +57,15 @@ public class PhraseAlignment {
     return (e2f != null) ? e2f[i] : new int[] { i };
   }
 
+  /*
+  public String e2fStr() {
+    StringBuilder sb = new StringBuilder();
+    for (int i=0; i<e2f.length; ++i) {
+      sb.append("");
+    }
+  }
+  */
+
   public static final Map<String, PhraseAlignment> map = new Object2ObjectOpenHashMap<String, PhraseAlignment>();
 
   public static PhraseAlignment getPhraseAlignment(String string) {

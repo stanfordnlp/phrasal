@@ -20,7 +20,7 @@ public class DTURecombinationFilter<TK, FV> implements
   public static final String EQ_NUM_PHRASES_RECOMBINATION_PROPERTY = "phraseCountDTURecombination";
   public static final boolean EQ_NUM_PHRASES_RECOMBINATION = Boolean
       .parseBoolean(System.getProperty(EQ_NUM_PHRASES_RECOMBINATION_PROPERTY,
-          "false"));
+          "true"));
 
   public static final String EQ_NUM_WORDS_RECOMBINATION_PROPERTY = "wordCountDTURecombination";
   public static final boolean EQ_NUM_WORDS_RECOMBINATION = Boolean

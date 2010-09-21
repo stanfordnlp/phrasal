@@ -91,7 +91,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   int longestForeignPhrase;
 
-  protected static class IntArrayTranslationOption implements
+  static class IntArrayTranslationOption implements
       Comparable<IntArrayTranslationOption> {
     final int[] translation;
     final float[] scores;
