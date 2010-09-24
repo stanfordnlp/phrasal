@@ -91,7 +91,7 @@ make google.3gram.kn.lm.bin
 make train
 
 ### Copy test sets locally:
-cp -r /scr/gale/P5-arabic/00-references/P5/source P5
+cp -rL /scr/gale/P5-arabic/00-references/P5/source P5
 
 ### Run system on test data, which involves creating a phrase table:
 ### (in order to decode testid.sgm, simply set TESTID=testid)
