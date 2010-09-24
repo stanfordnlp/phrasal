@@ -95,10 +95,12 @@ cp -r /scr/gale/P5-arabic/00-references/P5/source P5
 
 ### Run system on test data, which involves creating a phrase table:
 ### (in order to decode testid.sgm, simply set TESTID=testid)
+make sgml TESTID=P5/MT08/nw/MT08 GENRE=nw
 make sgml TESTID=P5/MT09-unseq/nw/MT09-unseq GENRE=nw
 make sgml TESTID=P5/GALE-DEV09-syscomb/nw/GALE-DEV09-syscomb GENRE=nw
 make sgml TESTID=P5/GALE-DEV09-test/nw/GALE-DEV09-test GENRE=nw
 
+make sgml TESTID=P5/MT08/wb/MT08 GENRE=wb
 make sgml TESTID=P5/GALE-DEV08/wb/GALE-DEV08-wb GENRE=wb
 make sgml TESTID=P5/GALE-DEV09-syscomb/wb/GALE-DEV09-syscomb GENRE=wb
 make sgml TESTID=P5/GALE-DEV09-test/wb/GALE-DEV09-test GENRE=wb
@@ -108,10 +110,12 @@ ln -fs GALE/Makefile.local.P5-audio Makefile.local
 make train
 
 ### Run system on test data, which involves creating a phrase table:
+make sgml TESTID=P5/GALE-DEV07/bc/GALE-DEV07 GENRE=bc
 make sgml TESTID=P5/GALE-DEV08/bc/GALE-DEV08 GENRE=bc
 make sgml TESTID=P5/GALE-DEV09-syscomb/bc/GALE-DEV09-syscomb GENRE=bc
 make sgml TESTID=P5/GALE-DEV09-test/bc/GALE-DEV09-test GENRE=bc
 
+make sgml TESTID=P5/GALE-DEV07/bn/GALE-DEV07 GENRE=bn
 make sgml TESTID=P5/GALE-DEV08/bn/GALE-DEV08 GENRE=bn
 make sgml TESTID=P5/GALE-DEV09-syscomb/bn/GALE-DEV09-syscomb GENRE=bn
 make sgml TESTID=P5/GALE-DEV09-test/bn/GALE-DEV09-test GENRE=bn
