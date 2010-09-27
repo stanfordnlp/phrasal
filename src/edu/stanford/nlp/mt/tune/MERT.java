@@ -71,7 +71,7 @@ public class MERT extends Thread {
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
   static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
-  static final Set<String> generativeFeatures = SSVMScorer
+  static public final Set<String> generativeFeatures = SSVMScorer
       .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
 
   public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.metrics.METEORMetric";
@@ -84,23 +84,23 @@ public class MERT extends Thread {
       DEBUG_PROPERTY, "false"));
 
   static final double DEFAULT_C = 100;
-  static double C = DEFAULT_C;
+  public static double C = DEFAULT_C;
   static final double DEFAULT_T = 1;
-  static double T = DEFAULT_T;
+  public static double T = DEFAULT_T;
   static final double DEFAULT_UNSCALED_L_RATE = 0.1;
-  static double lrate = DEFAULT_UNSCALED_L_RATE;
-  static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-5;
-  static final int NO_PROGRESS_LIMIT = 20;
+  public static double lrate = DEFAULT_UNSCALED_L_RATE;
+  public static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-5;
+  static public final int NO_PROGRESS_LIMIT = 20;
   static final double NO_PROGRESS_MCMC_TIGHT_DIFF = 1e-6;
-  static final double NO_PROGRESS_MCMC_COSINE = 0.95;
-  static final int MCMC_BATCH_SAMPLES = 10;
-  static final int MCMC_MIN_BATCHES = 0;
-  static final int MCMC_MAX_BATCHES = 20;
+  public static final double NO_PROGRESS_MCMC_COSINE = 0.95;
+  public static final int MCMC_BATCH_SAMPLES = 10;
+  public static final int MCMC_MIN_BATCHES = 0;
+  public static final int MCMC_MAX_BATCHES = 20;
   static final int MCMC_MAX_BATCHES_TIGHT = 50;
 
-  static final double NO_PROGRESS_SSD = 1e-6;
+  public static final double NO_PROGRESS_SSD = 1e-6;
 
-  static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
+  public static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
 
   static public double MIN_PLATEAU_DIFF = 0.0;
   static public final double MIN_OBJECTIVE_DIFF = 1e-5;
@@ -108,7 +108,7 @@ public class MERT extends Thread {
   private static long SEED = 8682522807148012L;
   private static Random globalRandom;
 
-  final static OAIndex<String> featureIndex = new OAIndex<String>();
+  public final static OAIndex<String> featureIndex = new OAIndex<String>();
 
   private static int nThreads = 4;
 
@@ -689,13 +689,13 @@ public class MERT extends Thread {
   static int nInitialStartingPoints;
   final static Queue<Counter<String>> startingPoints = new LinkedList<Counter<String>>();
 
-  static MosesNBestList nbest;
+  public static MosesNBestList nbest;
   static long startTime;
 
   static Counter<String> initialWts;
   static List<Counter<String>> previousWts;
 
-  static Counter<String> fixedWts = new ClassicCounter<String>();
+  public static Counter<String> fixedWts = new ClassicCounter<String>();
   static Counter<String> bestWts;
   static double bestObj = Double.POSITIVE_INFINITY;
 
@@ -888,11 +888,11 @@ public class MERT extends Thread {
     displayWeights(initialWts);
   }
 
-  final EvaluationMetric<IString, String> emetric;
+  public final EvaluationMetric<IString, String> emetric;
   final String optStr;
   final String seedStr;
 
-  Random random;
+  public Random random;
 
   @SuppressWarnings("unchecked")
   public MERT(String evalMetric, String referenceList, String optStr,
@@ -1050,7 +1050,7 @@ public class MERT extends Thread {
     return updateBest(newWts, obj, false);
   }
 
-  static boolean updateBest(Counter<String> newWts, double obj, boolean force) {
+  public static boolean updateBest(Counter<String> newWts, double obj, boolean force) {
     boolean nonZero = Counters.L2Norm(newWts) > 0.0;
     synchronized (MERT.class) {
       boolean better = false;

@@ -1,6 +1,8 @@
-package edu.stanford.nlp.mt.tune;
+package edu.stanford.nlp.mt.tune.optimizers;
 
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.tune.MERT;
+import edu.stanford.nlp.mt.tune.NBestOptimizer;
 import edu.stanford.nlp.mt.base.MosesNBestList;
 import edu.stanford.nlp.mt.base.IString;
 
@@ -9,7 +11,7 @@ import java.util.Random;
 /**
  * @author Michel Galley, Daniel Cer
  */
-abstract class AbstractNBestOptimizer implements NBestOptimizer {
+public abstract class AbstractNBestOptimizer implements NBestOptimizer {
 
   protected final MosesNBestList nbest;
 
@@ -21,7 +23,7 @@ abstract class AbstractNBestOptimizer implements NBestOptimizer {
     return true;
   }
 
-  AbstractNBestOptimizer(MERT mert) {
+  public AbstractNBestOptimizer(MERT mert) {
     this.mert = mert;
     this.emetric = mert.emetric;
     this.random = mert.random;
