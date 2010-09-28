@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -53,6 +55,40 @@ public class OptimizerUtils {
       }
     }
     return deltaScores;
+  }
+  
+  public static <TK, FV> int[][] deltaMetricToSortedIndicies(final double[][] deltaMetric) {
+    class DeltaIndex implements Comparable<DeltaIndex>{
+       public int i, j;
+       
+       public DeltaIndex(int i, int j) {
+         this.i = i; this.j = j;
+       }
+       
+      @Override
+      public int compareTo(DeltaIndex o) {
+        double diff = deltaMetric[i][j] - deltaMetric[o.i][o.j];
+        if (diff < 0) return -1; 
+        else if (diff > 0) return 1;
+        else return 0;
+      }
+      
+      
+       
+    };
+    int[][] indices = new int[deltaMetric.length][];
+    for (int i = 0; i < indices.length; i++) {      
+      indices[i] = new int[deltaMetric[i].length];
+      List<DeltaIndex> sortList = new ArrayList<DeltaIndex>(indices[i].length);
+      for (int j = 0; j < indices[i].length; j++) {
+        sortList.add(new DeltaIndex(i,j));
+      }
+      Collections.sort(sortList);
+      for (int j = 0; j< indices[i].length; j++) {
+        indices[i][j] = sortList.get(j).j;
+      }
+    }
+    return indices;
   }
 
   public static Counter<String> getWeightCounterFromArray(String[] weightNames,
