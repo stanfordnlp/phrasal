@@ -5,6 +5,7 @@
   <property name="project.more"   value="${basedir}/../more" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
+  <property name="source-research.path"    value="${basedir}/src-research" />
   <property name="tests.path"     value="${basedir}/test/src" />
   <property name="itests.path"     value="${basedir}/itest/src" />
   
@@ -51,7 +52,7 @@
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
-    <javac srcdir="${source.path}:${tests.path}:${itests.path}"
+    <javac srcdir="${source.path}:${source-research.path}:${tests.path}:${itests.path}"
           destdir="${build.path}"
             debug="${compile.debug}"
          encoding="utf-8"   
@@ -68,6 +69,9 @@ includeantruntime="false">
     <!-- Copy application resources -->
     <copy  todir="${build.path}">
       <fileset dir="${source.path}" excludes="**/*.java,**/*.html"/>
+    </copy>
+    <copy  todir="${build.path}">
+      <fileset dir="${source-research.path}" excludes="**/*.java,**/*.html"/>
     </copy>
   </target>
  
