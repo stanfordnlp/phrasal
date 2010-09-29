@@ -1,8 +1,7 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.List;
-
-import scala.actors.threadpool.Arrays;
+import java.util.TreeSet;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
@@ -27,6 +26,11 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
   @Override
   public boolean doNormalization() {
     return false;
+  }
+  
+  @Override 
+  public boolean selfWeightUpdate() {
+    return true;
   }
 
   public LogLinearMultiTarget(MERT mert, String... args) {
@@ -83,7 +87,7 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
     double[] initialWtsArr = new double[wts.size()];
 
     int nameIdx = 0;
-    for (String feature : wts.keySet()) {
+    for (String feature : new TreeSet<String>(wts.keySet())) {
       initialWtsArr[nameIdx] = wts.getCount(feature);
       weightNames[nameIdx++] = feature;
     }
@@ -121,13 +125,28 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
         .norm2DoubleArray(llmt.derivativeAt(newX));
     double finalXNorm = OptimizerUtils.norm2DoubleArray(newX);
     double metricEval = MERT.evalAtPoint(nbest, newWts, emetric);
-    System.err.println(">>>[Converge Info] ObjInit(" + initialObjValue
+    System.err.println(">>>[Run Info] ObjInit(" + initialObjValue
         + ") - ObjFinal(" + finalObjValue + ") = ObjDiff(" + objDiff
         + ") L2DInit(" + initalDNorm + ") L2DFinal(" + finalDNorm
         + ") L2XInit(" + initalXNorm + ") L2XFinal(" + finalXNorm + ")");
 
-    MERT.updateBest(newWts, metricEval, true);
-
+    
+    synchronized (MERT.bestWts) {
+      double[] bestWts = OptimizerUtils.getWeightArrayFromCounter(weightNames, MERT.bestWts);
+      double bestWtsObj = llmt.valueAt(bestWts);
+      if (finalObjValue < bestWtsObj) {
+        System.err.println("\nNew best obj: "+finalObjValue+"(Eval: "+metricEval+") old best obj: "+bestWtsObj + " size wt: " + newX.length);
+        System.err.println(">>>[Converge Info] ObjInit(" + initialObjValue
+            + ") - ObjFinal(" + finalObjValue + ") = ObjDiff(" + objDiff
+            + ") L2DInit(" + initalDNorm + ") L2DFinal(" + finalDNorm
+            + ") L2XInit(" + initalXNorm + ") L2XFinal(" + finalXNorm + ")");
+        MERT.updateBest(newWts, metricEval, true);
+        double[] newBestWts = OptimizerUtils.getWeightArrayFromCounter(weightNames, MERT.bestWts);
+        double newBestWtsObj = llmt.valueAt(newBestWts);
+        System.err.println("New best wts obj: "+newBestWtsObj);
+      }
+    }
+    
     return newWts;
   }
 
@@ -178,8 +197,9 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
         for (int j = 0; j < targetScores.length; j++) {
           targetScores[j] = scores[sortIndices[i][j]];
         }
+        /*
         System.err.println("Target scores: " + Arrays.toString(targetScores));
-        System.err.println("Scores: " + Arrays.toString(scores));
+        System.err.println("Scores: " + Arrays.toString(scores)); */
         
         double targetSoftMax = OptimizerUtils
         .softMaxFromDoubleArray(targetScores);
@@ -187,8 +207,8 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
         double Z = OptimizerUtils
             .softMaxFromDoubleArray(scores);
         
-        System.err.println("Target softmax(len "+targetScores.length+"): "+targetSoftMax);
-        System.err.println("All softmax(len "+scores.length+"): "+Z);
+        //System.err.println("Target softmax(len "+targetScores.length+"): "+targetSoftMax);
+        //System.err.println("All softmax(len "+scores.length+"): "+Z);
         sumLogP += targetSoftMax - Z;
       }
 

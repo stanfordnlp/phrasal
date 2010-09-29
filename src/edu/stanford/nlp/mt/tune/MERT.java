@@ -604,7 +604,6 @@ public class MERT extends Thread {
         incEval.add(highestScoreTrans);
     }
     double score = incEval.score();
-    updateBest(wts, -score);
     return score;
   }
 
@@ -696,7 +695,7 @@ public class MERT extends Thread {
   static List<Counter<String>> previousWts;
 
   public static Counter<String> fixedWts = new ClassicCounter<String>();
-  static Counter<String> bestWts;
+  public static Counter<String> bestWts;
   static double bestObj = Double.POSITIVE_INFINITY;
 
   static double initialObjValue;
@@ -727,21 +726,7 @@ public class MERT extends Thread {
           fixedWts));
     initialWts = previousWts.get(0);
 
-    for (int i = 0; i < nStartingPoints; i++) {
-      Counter<String> wts;
-      if (i == 0) {
-        wts = initialWts;
-      } else {
-        if (i < previousWts.size()) {
-          wts = previousWts.get(i);
-        } else {
-          wts = randomWts(initialWts.keySet());
-        }
-      }
-      startingPoints.add(wts);
-    }
-    nInitialStartingPoints = startingPoints.size();
-
+    
     StaticScorer scorer = new StaticScorer(initialWts, featureIndex);
 
     // Load nbest list:
@@ -859,6 +844,21 @@ public class MERT extends Thread {
         }
       }
     }
+    
+    for (int i = 0; i < nStartingPoints; i++) {
+      Counter<String> wts;
+      if (i == 0) {
+        wts = initialWts;
+      } else {
+        if (i < previousWts.size()) {
+          wts = previousWts.get(i);
+        } else {
+          wts = randomWts(initialWts.keySet());
+        }
+      }
+      startingPoints.add(wts);
+    }
+    nInitialStartingPoints = startingPoints.size();
 
     if (System.getProperty("C") != null) {
       C = Double.parseDouble(System.getProperty("C"));
@@ -883,6 +883,7 @@ public class MERT extends Thread {
 
     removeWts(initialWts, fixedWts);
     initialEval = evalAtPoint(nbest, initialWts, emetric);
+    updateBest(initialWts, -initialEval);
     System.out.printf("Initial Eval Score: %e\n", initialEval);
     System.out.printf("Initial Weights:\n==================\n");
     displayWeights(initialWts);
@@ -1139,7 +1140,10 @@ public class MERT extends Thread {
       double mcmcEval2 = mcmcTightExpectedEval(nbest, bestWts, emetric, false);
 
       double obj = (mcmcObj ? mcmcEval : -evalAt);
-
+      if (!opt.selfWeightUpdate()) {
+        System.err.println("Non-self weight update");
+        updateBest(newWts, -evalAt);
+      }
       System.out.printf("\npoint %d - final wts: %s", ptI, newWts.toString());
       System.out
           .printf(
