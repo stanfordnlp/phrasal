@@ -56,15 +56,20 @@ dev_extract: $(DEVID).tables/phrase-table.gz
 train: dev_extract $(DEVID).$(SYSID).$N.pmert/phrasal.final.ini
 
 ### Decode test data:
-nbest: train test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest.1best.post
+nbest: train test_extract $(TESTID).$(DEVID).$(SYSID).$N.$Nbest_ibm
 mbr: $(TESTID).$(DEVID).$(SYSID).$N.mbr.$Nbest.s1.post
 sgml: $(TESTID).$(DEVID).$(SYSID).$N.mbr.$Nbest.s1.final.xml
 
 ### Generate nbest in format expected for GALE:
+gale: nbest sgml
 
 #############################################
 # Post-processing:
 #############################################
+
+### Generate uniq'ed nbest list:
+%best_ibm: %best
+	(cat $+ | nbest_sort | nbest2uniq | nbest2ibm > $@) 2> $@.log
 
 ### Truecase and generate xml:
 %.final.xml: %.post.xml
