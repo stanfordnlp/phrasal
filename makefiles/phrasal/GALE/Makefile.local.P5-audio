@@ -104,7 +104,7 @@ SPLIT=-split 1
 #########################################
 
 PRE=perl $(SCRIPTS)/remove_unk_before_decode $(maxPLen) 
-POST=sed  | GALE/post-$(GENRE).sh
+POST=GALE/post-$(GENRE).sh
 TC=en_truecaser 
 NTC=en_detokenizer
 POSTTC=cat
