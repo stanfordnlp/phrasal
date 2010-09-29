@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.CoverageSet;
@@ -24,7 +25,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     State<Hypothesis<TK, FV>> {
 
-  public static long nextId;
+  public static AtomicLong nextId = new AtomicLong();
 
   // primitives
   public final long id;
@@ -81,9 +82,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
   public Hypothesis(int translationId, Sequence<TK> foreignSequence,
       SearchHeuristic<TK, FV> heuristic,
       List<List<ConcreteTranslationOption<TK>>> options) {
-    synchronized (Hypothesis.class) {
-      id = nextId++;
-    }
+    this.id = nextId.incrementAndGet();
     score = 0;
     h = heuristic.getInitialHeuristic(foreignSequence, options, translationId);
     insertionPosition = 0;
@@ -106,9 +105,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
       ConcreteTranslationOption<TK> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
-    synchronized (Hypothesis.class) {
-      this.id = nextId++;
-    }
+    this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
     this.translationOpt = translationOpt;
     this.preceedingHyp = baseHyp;
@@ -142,9 +139,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       RawSequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx) {
-    synchronized (Hypothesis.class) {
-      this.id = nextId++;
-    }
+    this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
     this.translationOpt = translationOpt;
     this.preceedingHyp = baseHyp;
@@ -245,5 +240,9 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
   }
 
   public void debug() { /* nothing relevant to debug; meant to be overridden */
+  }
+
+  public boolean hasPendingPhrases() {
+    return false;
   }
 }

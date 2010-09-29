@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -57,14 +59,47 @@ public class PhraseAlignment {
     return (e2f != null) ? e2f[i] : new int[] { i };
   }
 
-  /*
-  public String e2fStr() {
+  private static String toStr(int[][] e2f) {
     StringBuilder sb = new StringBuilder();
-    for (int i=0; i<e2f.length; ++i) {
-      sb.append("");
+    for (int ei=0; ei<e2f.length; ++ei) {
+      if (ei>0) sb.append(" ");
+      sb.append("(");
+      if (e2f[ei] != null) {
+        int i=0;
+        for (int fi : e2f[ei]) {
+          if (i++ > 0) sb.append(",");
+          sb.append(fi);
+        }
+      }
+      sb.append(")");
     }
+    return sb.toString();
   }
-  */
+
+  public String e2fStr() {
+    return toStr(e2f);
+  }
+
+  public String f2eStr() {
+    List<List<Integer>> f2eL = new LinkedList<List<Integer>>(); 
+    for (int ei=0; ei<e2f.length; ++ei) {
+      if (e2f[ei] != null) {
+        for (int fi : e2f[ei]) {
+          while (f2eL.size() <= fi)
+            f2eL.add(new LinkedList<Integer>());
+          f2eL.get(fi).add(ei);
+        }
+      }
+    }
+    int[][] f2e = new int[f2eL.size()][];
+    for (int fi=0; fi<f2eL.size(); ++fi) {
+      f2e[fi] = new int[f2eL.get(fi).size()];
+      for (int ei=0; ei<f2eL.get(fi).size(); ++ei) {
+        f2e[fi][ei] = f2eL.get(fi).get(ei);
+      }
+    }
+    return toStr(f2e);
+  }
 
   public static final Map<String, PhraseAlignment> map = new Object2ObjectOpenHashMap<String, PhraseAlignment>();
 

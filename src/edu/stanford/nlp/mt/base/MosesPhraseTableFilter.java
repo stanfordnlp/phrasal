@@ -19,11 +19,15 @@ public class MosesPhraseTableFilter {
   private static final int N_VARIABLE_MOSES_FEATURES = MosesPhraseTable.CANONICAL_FIVESCORE_SCORE_TYPES.length - 1;
 
   static class ScoredOpt implements Comparable<ScoredOpt> {
-    TranslationOption<IString> opt;
-    float score;
+
+    final TranslationOption<IString> opt;
+    final float score;
+
     ScoredOpt(TranslationOption<IString> opt, float score) {
-      this.opt = opt; this.score = score;
+      this.opt = opt;
+      this.score = score;
     }
+
     @Override
     public int compareTo(ScoredOpt o) {
       return Double.compare(o.score, score);
@@ -42,11 +46,11 @@ public class MosesPhraseTableFilter {
     String outTable = args[2];
 
     System.out.printf("Loading phrase table: %s\n", inTable);
-    MosesPhraseTable<String> ppt = new MosesPhraseTable<String>(null, null, inTable);
+    MosesPhraseTable<String> ppt = new MosesPhraseTable<String>(null, null, inTable, false);
 
     // Create Scorers:
-    int nBits = N_VARIABLE_MOSES_FEATURES; // 3 -> 2
-    int nScorers = (1 << nBits) - 1; // << 124 -1  = 3
+    int nBits = N_VARIABLE_MOSES_FEATURES;
+    int nScorers = (1 << nBits) - 1;
     float[][] ws = new float[nScorers][];
 
     for (int mask=1; mask<=nScorers; ++mask) {
@@ -63,15 +67,14 @@ public class MosesPhraseTableFilter {
     // Open output file:
     PrintStream oStream = IOTools.getWriterFromFile(outTable);
 
-    for (int i=0; i<ppt.translations.size(); ++i) { // For each input phrase:
+    for (int pi=0; pi<ppt.translations.size(); ++pi) { // For each input phrase:
 
       keptOptions.clear(); 
 
       // Get foreign phrase:
-      List<IntArrayTranslationOption> opts = ppt.translations.get(i);
-      int[] foreignInts = MosesPhraseTable.foreignIndex.get(i);
+      List<IntArrayTranslationOption> opts = ppt.translations.get(pi);
+      int[] foreignInts = MosesPhraseTable.foreignIndex.get(pi);
       RawSequence<IString> rawForeign = new RawSequence<IString>(IStrings.toIStringArray(foreignInts));
-      //System.err.printf("phrases for: %s\n", rawForeign);
 
       // Generate translation options:
       List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(opts.size());
@@ -82,17 +85,23 @@ public class MosesPhraseTableFilter {
             ppt.scoreNames, translation, rawForeign, intTransOpt.alignment));
       }
 
-      for (float[] w : ws) {
-        //System.err.printf("w=%s\n", Arrays.toString(w));
-        // Score and sort:
-        List<ScoredOpt> scoredTransOpts = new ArrayList<ScoredOpt>(transOpts.size());
+      // Score translation options:
+      if (transOpts.size() <= nOpts) {
         for (TranslationOption<IString> transOpt : transOpts)
-          scoredTransOpts.add(new ScoredOpt(transOpt, (float) ArrayMath.innerProduct(transOpt.scores,w)));
-        Collections.sort(scoredTransOpts);
-        // Keep n-best:
-        for (int j=0; j<scoredTransOpts.size() && j<nOpts; ++j) {
-          //System.err.printf("keeping: %.3f %s\n", scoredTransOpts.get(j).score, scoredTransOpts.get(j).opt);
-          keptOptions.add(scoredTransOpts.get(j).opt);
+          keptOptions.add(transOpt);
+      } else {
+        for (float[] w : ws) {
+          // Score and sort:
+          List<ScoredOpt> scoredTransOpts = new ArrayList<ScoredOpt>(transOpts.size());
+          for (TranslationOption<IString> transOpt : transOpts)
+            scoredTransOpts.add(new ScoredOpt(transOpt, (float) ArrayMath.innerProduct(w, transOpt.scores)));
+          Collections.sort(scoredTransOpts);
+          // Keep n-best:
+          //System.err.println("sorting with: "+ Arrays.toString(w));
+          for (int j=0; j<scoredTransOpts.size() && j<nOpts; ++j) {
+            //System.err.printf("keep: %.3f %s", scoredTransOpts.get(j).score, scoredTransOpts.get(j).opt);
+            keptOptions.add(scoredTransOpts.get(j).opt);
+          }
         }
       }
 
@@ -103,11 +112,15 @@ public class MosesPhraseTableFilter {
         oStream.print(" ||| ");
         oStream.print(opt.translation);
         oStream.print(" ||| ");
-        oStream.print(opt.alignment.str);
+        oStream.print(opt.alignment.f2eStr());
         oStream.print(" ||| ");
-        for (int j=0; j<opt.scores.length; ++j)
+        oStream.print(opt.alignment.e2fStr());
+        oStream.print(" ||| ");
+        for (int j=0; j<opt.scores.length; ++j) {
+          if (j>0) oStream.print(" ");
           oStream.print(opt.scores[j]);
-        oStream.print("\n");
+        }
+        oStream.print(" \n");
       }
     }
     oStream.close();

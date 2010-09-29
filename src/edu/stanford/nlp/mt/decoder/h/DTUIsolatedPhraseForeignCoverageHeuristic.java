@@ -118,12 +118,18 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   @SuppressWarnings("unchecked")
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
       List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
+    return getInitialHeuristic(foreignSequence, options, translationId, DEBUG);
+  }
+
+  @SuppressWarnings("unchecked")
+  public double getInitialHeuristic(Sequence<TK> foreignSequence,
+      List<List<ConcreteTranslationOption<TK>>> options, int translationId, boolean debug) {
 
     int foreignSequenceSize = foreignSequence.size();
 
     SpanScores viterbiSpanScores = new SpanScores(foreignSequenceSize);
 
-    if (DEBUG) {
+    if (debug) {
       System.err.println("IsolatedPhraseForeignCoverageHeuristic");
       System.err.printf("Foreign Sentence: %s\n", foreignSequence);
 
@@ -163,7 +169,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
               throw new RuntimeException();
             }
           }
-          if (DEBUG) {
+          if (debug) {
             System.err.printf("\t%d:%d:%d %s->%s score: %.3f %.3f\n",
                 option.foreignPos, terminalPos, i,
                 option.abstractOption.foreign,
@@ -182,9 +188,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         }
       }
     }
-    dumpScores(viterbiSpanScores, foreignSequence, "InitialMinimums");
+    dumpScores(viterbiSpanScores, foreignSequence, "InitialMinimums", debug);
 
-    if (DEBUG) {
+    if (debug) {
       System.err.println();
       System.err.println("Merging span scores");
       System.err.println("-------------------");
@@ -192,7 +198,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
     // Viterbi combination of spans
     for (int spanSize = 2; spanSize <= foreignSequenceSize; spanSize++) {
-      if (DEBUG) {
+      if (debug) {
         System.err.printf("\n* Merging span size: %d\n", spanSize);
       }
       for (int startPos = 0; startPos <= foreignSequenceSize - spanSize; startPos++) {
@@ -205,7 +211,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
                 centerEdge - 1)
                 + viterbiSpanScores.getScore(centerEdge, terminalPos);
             if (combinedScore > bestScore) {
-              if (DEBUG) {
+              if (debug) {
                 System.err.printf("\t%d:%d updating to %.3f from %.3f\n",
                     startPos, terminalPos, combinedScore, bestScore);
               }
@@ -242,7 +248,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
               }
               viterbiSpanScores.setScore(option.foreignPos, terminalPos,
                   totalScore);
-              if (DEBUG)
+              if (debug)
                 System.err
                     .printf(
                         "Improved score with a DTU %s at [%d,%d]: %.3f -> %.3f (childScore=%.3f)\n",
@@ -253,26 +259,25 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         }
       }
     }
-    dumpScores(viterbiSpanScores, foreignSequence, "Final Scores");
+    dumpScores(viterbiSpanScores, foreignSequence, "Final Scores", debug);
 
     hSpanScores = viterbiSpanScores;
 
     double hCompleteSequence = hSpanScores.getScore(0, foreignSequenceSize - 1);
-    if (DEBUG) {
-      System.err.println("Done IsolatedForeignCoverageHeuristic");
-    }
 
     if (Double.isInfinite(hCompleteSequence) || Double.isNaN(hCompleteSequence)) {
-      System.err.println("Warning: h is either NaN or infinite: "
-          + hCompleteSequence);
-      return MINUS_INF;
+      //hCompleteSequence = MINUS_INF;
+      getInitialHeuristic(foreignSequence, options, translationId, true);
+      throw new RuntimeException("Error: h is either NaN or infinite: " + hCompleteSequence);
     }
+
+    if (debug) System.err.println("Done IsolatedForeignCoverageHeuristic");
     return hCompleteSequence;
   }
 
   void dumpScores(SpanScores viterbiSpanScores, Sequence<TK> foreignSequence,
-      String infoString) {
-    if (DEBUG) {
+      String infoString, boolean debug) {
+    if (debug) {
       int foreignSequenceSize = foreignSequence.size();
       System.err.println();
       System.err.println(infoString);

@@ -114,16 +114,16 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   final ArrayList<List<IntArrayTranslationOption>> translations;
 
-  private static float[] stringProbListToFloatLogProbArray(List<String> sList) {
+  private static float[] stringProbListToFloatProbArray(List<String> sList, boolean doLog) {
     float[] fArray = new float[sList.size()];
     int i = 0;
     for (String s : sList) {
-      float f = (float) Math.log(Float.parseFloat(s));
+      float f = Float.parseFloat(s);
       if (f != f) {
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, f));
       }
-      fArray[i++] = f;
+      fArray[i++] = doLog ? (float) Math.log(f) : f;
     }
     return fArray;
   }
@@ -155,20 +155,27 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         .get(eIndex), scores, alignment));
   }
 
+
+  public MosesPhraseTable(
+      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      Scorer<FV> scorer, String filename) throws IOException {
+    this(phraseFeaturizer, scorer, filename, true);
+  }
+
   /**
    * 
    * @throws IOException
    */
   public MosesPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String filename) throws IOException {
+      Scorer<FV> scorer, String filename, boolean doLog) throws IOException {
     super(phraseFeaturizer, scorer);
     File f = new File(filename);
     name = String.format("Pharaoh(%s)", f.getName());
     // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
     // DynamicIntegerArrayIndex();
     translations = new ArrayList<List<IntArrayTranslationOption>>();
-    int countScores = init(f);
+    int countScores = init(f, doLog);
     scoreNames = getScoreNames(countScores);
   }
 
@@ -201,7 +208,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     return scoreNames;
   }
 
-  private int init(File f) throws IOException {
+  private int init(File f, boolean doLog) throws IOException {
     System.gc();
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
@@ -217,6 +224,9 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
     int countScores = -1;
     for (String line; (line = reader.readLine()) != null;) {
+      if (line.startsWith("Java HotSpot(TM) 64-Bit"))
+        // Skip JVM debug messages sent to stdout instead of stderr
+        continue;
       // System.err.println("line: "+line);
       StringTokenizer toker = new StringTokenizer(line);
       Collection<String> foreignTokenList = new LinkedList<String>();
@@ -280,9 +290,9 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
           foreignTokens);
       Sequence<IString> translation = new SimpleSequence<IString>(true,
           translationTokens);
-      float[] scores; // = null;
+      float[] scores;
       try {
-        scores = stringProbListToFloatLogProbArray(scoreList);
+        scores = stringProbListToFloatProbArray(scoreList, doLog);
       } catch (NumberFormatException e) {
         throw new RuntimeException(String.format(
             "Error on line %d: '%s' not a list of numbers",

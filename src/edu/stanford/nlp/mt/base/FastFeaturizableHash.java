@@ -18,7 +18,7 @@ public class FastFeaturizableHash<V> {
 	 * 
 	 */
   public FastFeaturizableHash() {
-    offset = Hypothesis.nextId;
+    offset = Hypothesis.nextId.get();
     values = new ArrayList<V>(500000);
   }
 

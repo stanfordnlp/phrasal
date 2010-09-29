@@ -23,10 +23,10 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     System.err.println("Minimum target gap size: " + MIN_GAP_SIZE);
   }
 
-  private static final double EXPIRATION_PENALTY = 1000.0; // When a
-                                                           // DTUHypothesis
-                                                           // expires, it
-                                                           // suffers this cost
+  private static final double EXPIRATION_PENALTY = 11111.11; // When a
+                                                             // DTUHypothesis
+                                                             // expires, it
+                                                             // suffers this cost
   private static int MAX_TARGET_PHRASE_SPAN = -1; // to make sure it is
                                                   // overridden (an assert will
                                                   // fail otherwise)
@@ -181,6 +181,11 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     }
     return sz;
+  }
+
+  @Override
+  public boolean hasPendingPhrases() {
+    return !pendingPhrases.isEmpty();
   }
 
   /**

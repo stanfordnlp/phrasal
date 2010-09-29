@@ -233,8 +233,12 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
       IString el = seq.get(i);
       char c0 = el.word().charAt(0);
       if (Character.isUpperCase(c0)) {
-        assert (el.word().startsWith(GAP_STR.word()));
-        arr[i] = GAP_STR.id;
+        if (el.word().startsWith(GAP_STR.word())) {
+          arr[i] = GAP_STR.id;
+        } else {
+          System.err.println("Ill-formed symbol: "+el.word());
+          arr[i] = el.id;
+        }
       } else {
         arr[i] = el.id;
       }
@@ -255,16 +259,17 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
       IString el = seq.get(i);
       char c0 = el.word().charAt(0);
       if (Character.isUpperCase(c0)) {
-        assert (el.word().startsWith(GAP_STR.word()));
-        if (el.id != GAP_STR.id) {
-          String[] strs = pattern.split(el.word());
-          assert (strs.length == 5);
-          float[] scores = new float[strs.length - 1];
-          for (int j = 1; j < strs.length; ++j) {
-            float score = Float.parseFloat(strs[j]);
-            scores[j - 1] = (float) Math.log(score);
+        if (el.word().startsWith(GAP_STR.word())) {
+          if (el.id != GAP_STR.id) {
+            String[] strs = pattern.split(el.word());
+            assert (strs.length == 5);
+            float[] scores = new float[strs.length - 1];
+            for (int j = 1; j < strs.length; ++j) {
+              float score = Float.parseFloat(strs[j]);
+              scores[j - 1] = (float) Math.log(score);
+            }
+            list.add(scores);
           }
-          list.add(scores);
         }
       }
     }
