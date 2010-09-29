@@ -24,7 +24,7 @@ A: Read /u/nlp/data/gale/ldc-scp/README. If you upload anything, you
    (/u/nlp/data/gale/manifests/manifest.stanford.xml) and commit it to scp:
 	 
 	 $ scp -oIdentityFile=~/.ssh/ldc-scp-id /u/nlp/data/gale/manifests/manifest.stanford.xml \
-	    wtm@scp.ldc.upenn.edu:group-files/manifests/manifest.stanford.xml
+			wtm@scp.ldc.upenn.edu:group-files/manifests/manifest.stanford.xml
 
    Then log into QuickPlace and copy and paste the last item -- e.g.,
 	 

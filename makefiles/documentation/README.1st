@@ -26,23 +26,23 @@ Then follow instructions in STEPS.txt, which will create subdirectories:
 	 directory: 01-lm
    requires: SRILM and $JAVANLP_HOME/projects/mt/makefiles/lm/train/Makefile
 	 documentation: 
-	 	 STEPS.txt
-	   $JAVANLP_HOME/projects/mt/makefiles/lm/README (LM makefile)
-	   http://www-speech.sri.com/projects/srilm/ (general doc)
+		 STEPS.txt
+		 $JAVANLP_HOME/projects/mt/makefiles/lm/README (LM makefile)
+		 http://www-speech.sri.com/projects/srilm/ (general doc)
 		 http://www.speech.sri.com/projects/srilm/manpages/srilm-faq.7.html (faq)
 
 2) align words
 	 directory: 02-align
    requires: Berkeley aligner and Moses symmetrization resources
 	 documentation: 
-	 	 STEPS.txt
-	   http://code.google.com/p/berkeleyaligner/
+		 STEPS.txt
+		 http://code.google.com/p/berkeleyaligner/
 
 3) run Phrasal (phrase extraction, MERT, and final decoding), automated with a makefile:
    directory: 03-phrasal
 	 requires: JavaNLP
 	 documentation:
-	 	 STEPS.txt
+		 STEPS.txt
 		 http://nlp.stanford.edu/nlpwiki/MTPipelineJavaNLP
 
 ###########################################

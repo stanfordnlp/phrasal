@@ -29,7 +29,11 @@ worse in the two cases where I happened to use both aligners on
 relatively small datasets, but it would be hard to conclude anything
 from such experiments).
 
-TODO: split alignment data (ref to BBN's slide)
+It is generally helpful to split alignment data into 5-7 splits, and run
+the UCB aligner independently on each split. There are two benefits of 
+doing this: First, we don't have to worry about fitting all the data into
+memory. Second, MT performance improves (see BBN's presentation at 
+NIST 08:  /scr/gale/NIST_EVAL08/presentations/pdf/mt08_bbn_A2E_C2E.pdf).
 
 ###################################
 ALIGNMENT SYMMETRIZATION
@@ -117,4 +121,18 @@ Using N-best list of 1000
 TUNING SET
 ###################################
 
-TODO
+We experimented with several NIST data sets as tuning sets, and MT06
+generally seemed to work best. What to take into consideration:
+
+1) You want to select a tuning that is neither too verbose nor too concise.
+Tuning sets to avoid in that respects are: MT03 and MT08 (e.g., if you tune on 
+MT03, you will get translations that are generally too short on other test sets.
+With MT08, the tendency is inverse).
+
+2) The tuning set should ideally contain a variety of genres, e.g., news, web,
+and audio. MT06 and MT04 are good choices (I haven't tried MT04 much, but it is 
+Google's default tuning sets for their NIST experiments; see their papers).
+
+Attempts to create custom tuning sets for specific genres didn't provide
+significant gains (the only exception was for speech, which worked slightly
+better than MT06: /scr/nlp/data/gale4/P4-arabic/refs/tune-speech). 
