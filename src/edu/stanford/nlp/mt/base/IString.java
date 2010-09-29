@@ -16,9 +16,9 @@ import java.util.Set;
 /**
  * Represents a String with a corresponding integer ID. Keeps a static index of
  * all the Strings, indexed by ID.
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     HasWord, Comparable<IString> {
@@ -36,11 +36,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   public static Set<String> keySet() {
     return index.keySet();
-  }
-
-  public IString() {
-    id = -1;
-    stringRep = "";
   }
 
   /**
@@ -141,9 +136,9 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     throw new UnsupportedOperationException();
   }
 
-  static private WrapperIndex wrapperIndex; // = null;
+  private static WrapperIndex wrapperIndex; // = null;
 
-  static public Index<IString> identityIndex() {
+  public static Index<IString> identityIndex() {
     if (wrapperIndex == null) {
       wrapperIndex = new WrapperIndex();
     }
@@ -153,13 +148,13 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
   public static void load(String fileName) {
     for (String line : ObjectBank.getLineIterator(fileName)) {
       for (String word : line.split("\\s+")) {
-        System.err.println("adding: " + word);
+        // System.err.println("adding: " + word);
         new IString(word);
       }
     }
   }
 
-  static private class WrapperIndex implements Index<IString> {
+  private static class WrapperIndex implements Index<IString> {
 
     /**
      *
@@ -241,11 +236,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
     @Override
     public boolean add(IString iString) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean remove(Object o) {
       throw new UnsupportedOperationException();
     }
 
