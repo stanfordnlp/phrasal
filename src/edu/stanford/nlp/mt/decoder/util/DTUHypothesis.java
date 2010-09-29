@@ -83,12 +83,15 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     };
 
-    private static class SegId extends Pair<DTUOption, Integer> {
-      SegId(DTUOption o, Integer i) {
+    private static class SegId<TK> extends Pair<DTUOption<TK>, Integer> {
+      private static final long serialVersionUID = 1L;
+
+      SegId(DTUOption<TK> o, Integer i) {
         super(o, i);
       }
     }
 
+    @SuppressWarnings("rawtypes")
     private static final ThreadLocal<Map<SegId, Double>> tlCache = new ThreadLocal<Map<SegId, Double>>() {
       @Override
       protected Map<SegId, Double> initialValue() {
@@ -96,24 +99,24 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     };
 
-    @SuppressWarnings("unchecked")
     private double[] setFutureCosts(int translationId, Hypothesis<TK, FV> hyp,
         CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer) {
 
       // Do we clear the cache of future cost?
       MutableInteger lastId = tlTranslationId.get();
+      @SuppressWarnings("rawtypes")
       Map<SegId, Double> fcCache = tlCache.get();
       if (lastId.intValue() != translationId) {
         fcCache.clear();
         lastId.set(translationId);
       }
 
-      DTUOption opt = (DTUOption) concreteOpt.abstractOption;
+      DTUOption<TK> opt = (DTUOption<TK>) concreteOpt.abstractOption;
       double[] fc = new double[opt.dtus.length];
 
       assert (segmentIdx == 0);
       for (int i = segmentIdx + 1; i < opt.dtus.length; ++i) {
-        SegId id = new SegId(opt, i);
+        SegId<TK> id = new SegId<TK>(opt, i);
         Double score = fcCache.get(id);
         if (score == null) {
           Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(
@@ -171,11 +174,10 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     MAX_PENDING_PHRASES = m;
   }
 
-  @SuppressWarnings("unused")
   public int pendingWords() {
     int sz = 0;
     for (DTUHypothesis.PendingPhrase<TK, FV> elA : pendingPhrases) {
-      DTUOption dtuOpt = (DTUOption) elA.concreteOpt.abstractOption;
+      DTUOption<TK> dtuOpt = (DTUOption<TK>) elA.concreteOpt.abstractOption;
       for (int segId = elA.segmentIdx + 1; segId < dtuOpt.dtus.length; ++segId) {
         sz += dtuOpt.dtus[segId].size();
       }
@@ -483,7 +485,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
 
     // Will any pending phrase be applicable at the next step of decoding?
     int nextPosition = this.length + 1;
-    for (PendingPhrase pp : this.pendingPhrases) {
+    for (PendingPhrase<TK,FV> pp : this.pendingPhrases) {
       if (pp.firstPosition <= nextPosition && nextPosition <= pp.lastPosition) // Answer:
                                                                                // yes
         return;

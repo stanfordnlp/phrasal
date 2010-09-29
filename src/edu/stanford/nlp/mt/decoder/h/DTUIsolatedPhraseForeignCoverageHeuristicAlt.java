@@ -12,7 +12,6 @@ import java.util.Iterator;
 /**
  * @author Michel Galley
  */
-@SuppressWarnings("unused")
 public class DTUIsolatedPhraseForeignCoverageHeuristicAlt<TK, FV> extends
     DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> {
 

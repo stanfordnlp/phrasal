@@ -35,14 +35,12 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
     maxPhraseSpan = m;
   }
 
-  @SuppressWarnings("unused")
   public static float getSourceGapScore(int fIndex, int gapId, int binId) {
     if (gapSizeScoresF == null)
       return 0.0f;
     return gapSizeScoresF.get(fIndex)[gapId][binId];
   }
 
-  @SuppressWarnings("unused")
   public static float getTargetGapScore(int fIndex, int gapId, int binId) {
     if (gapSizeScoresE == null)
       return 0.0f;
@@ -145,7 +143,7 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
                       IString.identityIndex());
                 }
                 transOpts.add(new DTUOption<IString>(intTransOpt.id,
-                    intTransOpt.scores, scoreNames, dtus, new RawSequence(
+                    intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
                         s.foreign), intTransOpt.alignment));
               } else {
                 // No gaps in target:
@@ -153,7 +151,7 @@ public class DTUTable<FV> extends MosesPhraseTable<FV> {
                     intTransOpt.translation, IString.identityIndex());
                 transOpts.add(new TranslationOption<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
-                    new RawSequence(s.foreign), intTransOpt.alignment));
+                    new RawSequence<IString>(s.foreign), intTransOpt.alignment));
               }
             }
 

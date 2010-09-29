@@ -89,12 +89,10 @@ public class DTUInstance extends AlignmentTemplateInstance {
     return true;
   }
 
-  @SuppressWarnings("unused")
   public BitSet getFAlignment() {
     return fSet;
   }
 
-  @SuppressWarnings("unused")
   public BitSet getEAlignment() {
     return eSet;
   }

@@ -184,7 +184,6 @@ public class DTUFeatureExtractor extends MosesFeatureExtractor {
     return p;
   }
 
-  @SuppressWarnings("unused")
   private static float[] addOneSmoothing(int[] counts) {
     float[] p = new float[counts.length];
     float n = ArrayMath.sum(counts) + counts.length * DELTA;

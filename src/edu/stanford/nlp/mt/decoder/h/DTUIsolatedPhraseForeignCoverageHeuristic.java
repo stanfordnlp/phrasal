@@ -115,7 +115,6 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
       List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
     return getInitialHeuristic(foreignSequence, options, translationId, DEBUG);

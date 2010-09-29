@@ -12,7 +12,7 @@ public class DTUOption<T> extends TranslationOption<T> {
 
   public final RawSequence<T>[] dtus;
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   private final static RawSequence emptySeq = new RawSequence(new Object[0]);
 
   @SuppressWarnings("unchecked")
@@ -22,7 +22,6 @@ public class DTUOption<T> extends TranslationOption<T> {
     this.dtus = dtus;
   }
 
-  @SuppressWarnings("unused")
   public DTUOption(int id, float[] scores, String[] phraseScoreNames,
       RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment,
       boolean forceAdd) {

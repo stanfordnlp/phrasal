@@ -153,7 +153,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> foreign, int translationId,
       RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
@@ -227,7 +226,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               options.size());
     }
 
-    DTUOptionGrid<TK> optionGrid = new DTUOptionGrid<TK>(options, foreign);
+    DTUOptionGrid optionGrid = new DTUOptionGrid(options, foreign);
 
     // insert initial hypothesis
     Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, foreign,
@@ -333,6 +332,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     return null;
   }
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void dump(Hypothesis<TK, FV> bestHyp) {
 
@@ -351,7 +351,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
       for (Hypothesis<TK, FV> hyp : trace) {
         System.err.printf("%d:\n", hyp.id);
-        TranslationOption abstractOption = (hyp.translationOpt != null) ? hyp.translationOpt.abstractOption
+        TranslationOption<TK> abstractOption = (hyp.translationOpt != null) ? hyp.translationOpt.abstractOption
             : null;
         if (hyp.translationOpt != null) {
           boolean noSource = false;
@@ -408,12 +408,12 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     Beam<Hypothesis<TK, FV>>[] beams;
     int beamId;
     int foreignSz;
-    DTUOptionGrid<TK> optionGrid;
+    DTUOptionGrid optionGrid;
     ConstrainedOutputSpace<TK, FV> constrainedOutputSpace;
     int translationId;
 
     public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
-        int foreignSz, DTUOptionGrid<TK> optionGrid,
+        int foreignSz, DTUOptionGrid optionGrid,
         ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
         int translationId) {
       this.beams = beams;
@@ -428,9 +428,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       expandBeam(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace, translationId);
     }
 
-    @SuppressWarnings("unchecked")
     public int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
-        int foreignSz, DTUOptionGrid<TK> optionGrid,
+        int foreignSz, DTUOptionGrid optionGrid,
         ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, int translationId) {
 
       int optionsApplied = 0;
@@ -622,9 +621,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     alignmentDump.append("\n");
   }
 
-  public class DTUOptionGrid<TK> {
-    @SuppressWarnings("unchecked")
-    private final List[] grid;
+  public class DTUOptionGrid {
+    private final List<ConcreteTranslationOption<TK>>[] grid;
     private final int foreignSz;
 
     /**
@@ -637,7 +635,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       grid = new List[foreignSz * foreignSz];
       for (int startIdx = 0; startIdx < foreignSz; startIdx++) {
         for (int endIdx = startIdx; endIdx < foreignSz; endIdx++) {
-          grid[getIndex(startIdx, endIdx)] = new LinkedList();
+          grid[getIndex(startIdx, endIdx)] = new LinkedList<ConcreteTranslationOption<TK>>();
         }
       }
       for (ConcreteTranslationOption<TK> opt : options) {
@@ -650,7 +648,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     /**
      *
      */
-    @SuppressWarnings("unchecked")
     public List<ConcreteTranslationOption<TK>> get(int startPos, int endPos) {
       return grid[getIndex(startPos, endPos)];
     }

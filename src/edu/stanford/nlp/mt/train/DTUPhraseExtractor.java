@@ -279,7 +279,6 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
       consistencizedE = dtu.consistencizedE.clone();
     }
 
-    @SuppressWarnings("unused")
     DTUPhrase(WordAlignment sent, int fi, int ei) {
       super();
       this.sent = sent;

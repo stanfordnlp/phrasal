@@ -54,10 +54,10 @@ public class DTURecombinationFilter<TK, FV> implements
     if (!isDTU_A && !isDTU_B) {
       return true;
     } else if (isDTU_A && !isDTU_B) {
-      DTUHypothesis dtuA = (DTUHypothesis<TK, FV>) hypA;
+      DTUHypothesis<TK,FV> dtuA = (DTUHypothesis<TK, FV>) hypA;
       return (dtuA.pendingPhrases.isEmpty());
     } else if (!isDTU_A) {
-      DTUHypothesis dtuB = (DTUHypothesis<TK, FV>) hypB;
+      DTUHypothesis<TK,FV> dtuB = (DTUHypothesis<TK, FV>) hypB;
       return (dtuB.pendingPhrases.isEmpty());
     } else {
       DTUHypothesis<TK, FV> dtuA = (DTUHypothesis<TK, FV>) hypA;
@@ -115,7 +115,7 @@ public class DTURecombinationFilter<TK, FV> implements
       hashes[0] = isDTUn;
       int i = 0;
       if (dtu != null)
-        for (DTUHypothesis.PendingPhrase pp : dtu.pendingPhrases)
+        for (DTUHypothesis.PendingPhrase<TK,FV> pp : dtu.pendingPhrases)
           hashes[++i] = pp.concreteOpt.abstractOption.hashCode();
       return Arrays.hashCode(hashes);
     }
