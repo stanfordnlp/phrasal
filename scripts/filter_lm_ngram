@@ -4,8 +4,7 @@ BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 #####################################################
 # Filter LM based on phrase table.
 #
-# Created by Michel Galley (mgalley@stanford.edu)
-# on Sun 18 May 2008 06:09:43 PM PDT
+# author: Michel Galley
 #####################################################
 
 use strict;

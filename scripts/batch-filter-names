@@ -5,9 +5,7 @@
 # Put a XXX in the command line, and it be replaced by the
 # name of a temporary file containin stdin of this script.
 #
-# Created by Michel Galley (mgalley@stanford.edu)
-# on Tue 18 Dec 2007 10:52:08 PM PST
-# $Id$
+# author: Michel Galley
 #####################################################
 
 use strict;

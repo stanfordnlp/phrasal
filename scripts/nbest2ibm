@@ -1,6 +1,9 @@
 #!/bin/bash
 
+###############################################################
 # Convert Moses n-best into format adopted by IBM GALE (2010):
 # <sent id> ||| <sent> ||| <score>
+# Author: Michel Galley
+###############################################################
 
 sed 's/ ||| /\t/g' | cut -f 1,2,4 | sed 's/\t/ ||| /g'

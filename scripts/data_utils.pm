@@ -7,9 +7,7 @@
 # that have the same number of lines. i-th line of foo.txt corresponds
 # to i-th line of foo.parsed.
 # 
-# Created by Michel Galley (galley@cs.columbia.edu)
-# at Thu Mar  3 14:42:36 2005
-# $Id: data.pm 232 2009-01-09 21:28:37Z galley $
+# author: Michel Galley
 ###################################################
 
 package data_utils;

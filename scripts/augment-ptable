@@ -8,8 +8,7 @@ BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
 # added discriminate between original phrase pairs and
 # those taken from the 'noisy' phrase table.
 #
-# Created by Michel Galley (mgalley@stanford.edu)
-# on Mon 15 Jun 2009 03:32:13 AM PDT
+# author: Michel Galley
 ###########################################################
 
 use strict;

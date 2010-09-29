@@ -2,9 +2,7 @@
 
 #####################################################
 # Removes duplicates from Moses n-best lists.
-#
-# Created by Michel Galley (mgalley@stanford.edu)
-# on Sun 15 Jun 2008 01:13:43 PM PDT
+# author: Michel Galley
 #####################################################
 
 use strict;

@@ -3,11 +3,8 @@
 package arg_utils; 
 
 #####################################################
-# Powerful command-line handler. 
-#
-# Created by Michel Galley (galley@cs.columbia.edu)
-# on Wed Nov 30 07:20:24 2005
-# $Id: opt.pm 232 2009-01-09 21:28:37Z galley $
+# Handle mandatory and optional command-line arguments.
+# author: Michel Galley
 #####################################################
 
 use strict;

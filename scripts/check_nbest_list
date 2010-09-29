@@ -3,9 +3,7 @@
 #####################################################
 # Add missing features to Moses n-best lists.  
 #
-# Created by Michel Galley (mgalley@stanford.edu)
-# on Mon 16 Jun 2008 02:07:48 PM PDT
-# $Id$
+# author: Michel Galley
 #####################################################
 
 use strict;

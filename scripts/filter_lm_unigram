@@ -15,7 +15,7 @@
 # zcat phrase-table.gz | sed 's/ ||| /\t/g' | cut -f 2 | \
 # filter_lm_unigram giga3.lm.gz | gzip > out.gz
 # 
-# Author: Michel Galley (mgalley@stanford.edu)
+# Author: Michel Galley
 #################################################################
 
 usage() {

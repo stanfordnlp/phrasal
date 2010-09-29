@@ -1,5 +1,18 @@
 #!/usr/bin/perl
 
+#####################################################
+# Sort the stdout of multi-threaded Phrasal, e.g., 
+# transform:
+#   2:sentence 2
+#   0:sentence 0
+#   1:sentence 1
+# into:
+#   sentence 0
+#   sentence 1
+#   sentence 2
+# author: Michel Galley
+#####################################################
+
 my %sents;
 
 my $mThreaded = 1;
@@ -16,5 +29,3 @@ for(my $i=0;;++$i) {
 	last if(!defined $sents{$i});
 	print "$sents{$i}\n";
 }
-
-#print STDERR "IN: $i\n"

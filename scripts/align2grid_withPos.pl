@@ -1,10 +1,13 @@
 #!/usr/bin/perl -w
 
-## Draws an alignment grid, given files that are sets of 4 lines:
+##########################################
+## Draws an alignment grid, given files 
+## that are sets of 4 lines:
 ##   chinese
 ##   english
 ##   giza alignment
 ##   blank (ignored)
+##########################################
 
 while(<>) {
     chomp;

@@ -2,7 +2,7 @@
 
 ##########################################
 # Fix mistakes that the AE MT system makes
-# when run on 
+# when run on classed data.
 ##########################################
 
 s/^/ /g;
