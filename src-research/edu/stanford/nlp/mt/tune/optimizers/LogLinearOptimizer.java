@@ -1,7 +1,9 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
@@ -24,7 +26,14 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
 
   final double l2sigma;
   final double l1b;
-
+  final int minFeatureCount;
+  final Set<String> validFeature;
+  
+  static final int DEFAULT_MIN_FEATURE_COUNT = 0;
+  static final double DEFAULT_L2_SIGMA = 10;
+  static final double DEFAULT_L1_B = 0;
+  
+  
   @Override
   public boolean doNormalization() {
     return false;
@@ -33,13 +42,19 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
   public LogLinearOptimizer(MERT mert, String... fields) {
     super(mert);
     
-    double l2sigma = 10.0, l1b = 0.0;
+    double l2sigma = DEFAULT_MIN_FEATURE_COUNT, l1b = DEFAULT_L1_B;
+    int minFeatureCount = DEFAULT_MIN_FEATURE_COUNT;
+    
     if (fields.length >= 1) {
-      l2sigma = Double.parseDouble(fields[0]);
-      if (fields.length >= 2) {
-        l1b = Double.parseDouble(fields[1]);
-      }
+      l2sigma = Double.parseDouble(fields[0]);      
     }
+    if (fields.length >= 2) {
+      l1b = Double.parseDouble(fields[1]);
+    }
+    if (fields.length >= 3) {
+      minFeatureCount = Integer.parseInt(fields[2]);
+    }
+    
     System.err.println("Log-Linear training:");
 
     if (l2sigma == 0) {
@@ -58,10 +73,37 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
       int N = nbest.nbestLists().size();
       System.err.printf(
           "   - Laplace prior / L1 regularization with b: %.2f\n", l1b);
-      System.err.printf("     OWLQNMinimizer C = N*1/b: %.2f\n", N * 1. / l1b);
+      System.err.printf("     OWLQNMinimizer C = N*1/b: %.2f\n", N * 1. / l1b);    
     }
+    
+    
+    Counter<String> featureCounts = new ClassicCounter<String>();
+    for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : MERT.nbest.nbestLists()) {
+      Set<String> sentenceFeatures = new HashSet<String>();
+      for (ScoredFeaturizedTranslation<IString,String> trans : nbestlist) {
+          for (FeatureValue<String> fv: trans.features) {
+            sentenceFeatures.add(fv.name);
+          }
+      }
+      for (String feature : sentenceFeatures) {
+        featureCounts.incrementCount(feature);
+      }
+    }
+    validFeature = new HashSet<String>();
+    for (String feature : featureCounts.keySet()) {
+      if (featureCounts.getCount(feature) >= minFeatureCount) {
+        validFeature.add(feature);
+      }
+    }
+    
+    System.err.printf("n-best list contains %d features\n", featureCounts.size());
+    System.err.printf("Filtered to %d features for training ", validFeature.size());
+    System.err.printf("since model features must occur in +%d segments\n", minFeatureCount);
+    
     this.l2sigma = l2sigma;
     this.l1b = l1b;
+    this.minFeatureCount = minFeatureCount;
+    
   }
 
   @SuppressWarnings("unchecked")
@@ -105,11 +147,12 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
 
     // create a mapping between weight names and optimization
     // weight vector positions
-    String[] weightNames = new String[wts.size()];
-    double[] initialWtsArr = new double[wts.size()];
+    String[] weightNames = new String[validFeature.size()];
+    double[] initialWtsArr = new double[validFeature.size()];
 
     int nameIdx = 0;
     for (String feature : wts.keySet()) {
+      if (!validFeature.contains(feature)) continue;
       initialWtsArr[nameIdx] = wts.getCount(feature);
       weightNames[nameIdx++] = feature;
     }
