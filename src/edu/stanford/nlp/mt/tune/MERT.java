@@ -839,8 +839,12 @@ public class MERT extends Thread {
         .nbestLists()) {
       for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
         for (FeatureValue<String> f : trans.features) {
-          if (f != null)
+          if (f != null) { // QUES(frm:danc): Why is this here? is there a bug where null features are sometimes included in the features collection
             initialWts.incrementCount(f.name, 0);
+            for (Counter<String> prevWt : previousWts) {
+            	prevWt.incrementCount(f.name, 0);
+            }
+          }
         }
       }
     }
@@ -858,6 +862,7 @@ public class MERT extends Thread {
       }
       startingPoints.add(wts);
     }
+    
     nInitialStartingPoints = startingPoints.size();
 
     if (System.getProperty("C") != null) {
