@@ -13,6 +13,7 @@ import java.util.Arrays;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.mt.tune.MERT;
 
 public class CompareWeights {
   // TODO find a good permanent home for this method
@@ -76,6 +77,8 @@ public class CompareWeights {
 
     if (compareType == CompareType.MAX_COOR_ABS) {
       double maxDiff = Double.NEGATIVE_INFINITY;
+      MERT.normalize(wts1);
+      MERT.normalize(wts2);
       for (String wt : allWeights) {
         double absDiff = Math.abs(wts1.getCount(wt) - wts2.getCount(wt));
         if (absDiff > maxDiff)

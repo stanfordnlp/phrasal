@@ -50,6 +50,8 @@ if ($SCRIPTS_DIR eq $0) {
   $SCRIPTS_DIR =~ s/\/[^\/]*$//;
 }
 
+$OBJ_DIFF_STOP = 0.01;
+
 $SCRIPTS_DIR =~ s/ /\\ /g;
 
 $EXTERNAL_SCRIPTS_DIR="$SCRIPTS_DIR/../external_scripts";
@@ -341,6 +343,7 @@ if ($ENV{"RECOVER"}) {
 
 
 $lastTotalNbestListSize = "N/A";
+$LastObj = "null";
 
 for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr "Iter: $iter\n"; 
@@ -678,7 +681,16 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       $convTest2 = $L2DInit/max(1,$L2XEffective);
       print stderr "Test1 ObjDiff:$ObjDiff/ObjFinal:$ObjFinal = $convTest1\n";
       print stderr "Test2 L2DInit:$L2DInit/max(1,L2XEffective:$L2XEffective) = $convTest2\n";
-       
+      if ($LastObj ne "null") {
+        $v = abs($ObjFinal - $LastObj);
+        $v_frac = $v/$ObjFinal;
+        print stderr "Objective difference from last iteration: $v frac: $v_frac\n";
+        if ($v_frac < $OBJ_DIFF_STOP) {
+          print stderr "Done as objective fractional diff:$v_frac < $OBJ_DIFF_STOP \n";
+          last;
+        } 
+      } 
+      $LastObj = $ObjFinal;
    } else {
    print stderr "Can't find converge info - falling back to weight delta test\n";
 	 my $cmd = "java edu.stanford.nlp.mt.tools.CompareWeights $iter_weights $next_iter_weights  2>&1";
