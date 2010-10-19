@@ -1052,7 +1052,7 @@ public class MERT extends Thread {
     }
   }
 
-  static boolean updateBest(Counter<String> newWts, double obj) {
+  public static boolean updateBest(Counter<String> newWts, double obj) {
     return updateBest(newWts, obj, false);
   }
 
@@ -1208,7 +1208,7 @@ public class MERT extends Thread {
 
     String optStr = "cer";
     String seedStr = "mert";
-    int nStartingPoints = 5;
+    int nStartingPoints = 20;
     String optTransFile = null;
 
     int argi = 0;

@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.metrics.ter.TERcost;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.optimization.Function;
-import edu.stanford.nlp.optimization.extern.DownhillSimplexMinimizer;
+import edu.stanford.nlp.optimization.extern.BadLicenseDownhillSimplexMinimizer;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.math.SloppyMath;
 import edu.stanford.nlp.math.ArrayMath;
@@ -182,7 +182,7 @@ public class LinearCombinationMetricOptimizer implements Function {
   }
 
   public void maximize() {
-    DownhillSimplexMinimizer m = new DownhillSimplexMinimizer(simplexSize);
+    BadLicenseDownhillSimplexMinimizer m = new BadLicenseDownhillSimplexMinimizer(simplexSize);
     System.err.println("minimizer: " + m.toString());
     // Set initial weights:
     if (w == null) {
