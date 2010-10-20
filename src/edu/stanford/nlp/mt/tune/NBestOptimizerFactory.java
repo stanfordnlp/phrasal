@@ -66,6 +66,7 @@ public class NBestOptimizerFactory {
       String[] pathsToCheck = new String[]{"edu.stanford.nlp.mt.tune.optimizers." + fields[0], "edu.stanford.nlp.mt.tune.optimizers."+fields[0]+"Optimizer", fields[0]};
       for (String path : pathsToCheck) {
         try {
+          System.err.printf("Trying: %s\n", path);
           NBestOptimizer nbo = (NBestOptimizer) Class.forName(path).getConstructor(MERT.class, args.getClass()).newInstance(new Object[]{mert, args});
           System.err.println("Loaded optimizer "+nbo.getClass().toString());
           return nbo;

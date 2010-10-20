@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -140,6 +141,7 @@ public class OptimizerUtils {
     for (int j = 0; j < scores.length; j++) {
       scores[j] = OptimizerUtils.scoreTranslation(wts, translations.get(j));
     }
+    
     return scores;
   }
 
@@ -159,5 +161,15 @@ public class OptimizerUtils {
       sum += Math.exp(d - B);
     }
     return B + Math.log(sum);
+  }
+  
+  public static <T> Counter<T> featureValueCollectionToCounter(Collection<FeatureValue<T>> c) {
+    Counter<T> counter = new ClassicCounter<T>();
+    
+    for (FeatureValue<T> fv : c) {
+      counter.incrementCount(fv.name, fv.value);
+    }
+    
+    return counter;
   }
 }

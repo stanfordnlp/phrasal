@@ -16,12 +16,6 @@ import edu.stanford.nlp.stats.Counters;
  */
 public class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
 
-  
-  
-  @Override
-  public boolean doNormalization() {
-    return false;
-  }
 
   public DownhillSimplexOptimizer(MERT mert, String... fields) {
     super(mert);
