@@ -68,39 +68,33 @@ public class MIRAOptimizer extends AbstractNBestOptimizer {
     WeightUpdater<String, String> weightUpdater = new MIRAWeightUpdater<String, String>(C/nbest.nbestLists().size());
     //WeightUpdater<String, String> weightUpdater = new BadLicenseMIRAWeightUpdater<String, String>();
     
-    for (int epoch = 0; ; epoch++) {
-      System.err.printf("MIRA epochs: %d\n", epoch);      
-      weightsLastIter = new ClassicCounter<String>(newWeights);
-      for (int i = 0; i < nbest.nbestLists().size(); i++) {
-        List<ScoredFeaturizedTranslation<IString, String>> nbestlist = nbest.nbestLists().get(i);
+    System.err.println("Running one MIRA epoch\n");
+    weightsLastIter = new ClassicCounter<String>(newWeights);
+    for (int i = 0; i < nbest.nbestLists().size(); i++) {
+      List<ScoredFeaturizedTranslation<IString, String>> nbestlist = nbest.nbestLists().get(i);
         
-        List<Counter<String>> targetVectors = new ArrayList<Counter<String>>(nbestlist.size());        
-        List<Counter<String>> guessedVectors = new ArrayList<Counter<String>>(nbestlist.size());
+      List<Counter<String>> targetVectors = new ArrayList<Counter<String>>(nbestlist.size());        
+      List<Counter<String>> guessedVectors = new ArrayList<Counter<String>>(nbestlist.size());
         
         
-        for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
-           guessedVectors.add(OptimizerUtils.featureValueCollectionToCounter(trans.features));  
-        }
+      for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+        guessedVectors.add(OptimizerUtils.featureValueCollectionToCounter(trans.features));  
+      }
         
-        Counter<String> targetVector = OptimizerUtils.featureValueCollectionToCounter(target.get(i).features);
-        for (int j = 0; j < guessedVectors.size(); j++) {
-          targetVectors.add(targetVector);
-        }
+      Counter<String> targetVector = OptimizerUtils.featureValueCollectionToCounter(target.get(i).features);
+      for (int j = 0; j < guessedVectors.size(); j++) {
+        targetVectors.add(targetVector);
+      }
                 
-        ClassicCounter<String> weightDiff = weightUpdater.getUpdate(newWeights, targetVectors.toArray(new ClassicCounter[0]), guessedVectors.toArray(new ClassicCounter[0]), 
+      ClassicCounter<String> weightDiff = weightUpdater.getUpdate(newWeights, targetVectors.toArray(new ClassicCounter[0]), guessedVectors.toArray(new ClassicCounter[0]), 
             lossMatrix[i], new String[0], nbest.nbestLists().size());        
-        Counters.addInPlace(newWeights, weightDiff);
-      }
+      Counters.addInPlace(newWeights, weightDiff);
+    }
       
-      double weightsDiff = Counters.L1Norm(Counters.diff(newWeights, weightsLastIter));
-      System.err.printf("Eval Score: %e Weights diff: %e\n", MERT.evalAtPoint(nbest, newWeights, emetric), weightsDiff);
-      if (weightsDiff < weightsConvergenceTol) {
-        System.err.printf("Coverged wt delta: %e < tol: %e\n", weightsDiff, weightsConvergenceTol);
-        break;
-      }
-    } 
-    
-    
+    double weightsDiff = Counters.L1Norm(Counters.diff(newWeights, weightsLastIter));
+    double metricEval = MERT.evalAtPoint(nbest, newWeights, emetric);
+    System.err.printf("Eval Score: %e Weights diff: %e\n", metricEval, weightsDiff);
+    MERT.updateBest(newWeights, metricEval, true);
     return newWeights;
   }
 
