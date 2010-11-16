@@ -86,7 +86,7 @@ public class MIRAOptimizer extends AbstractNBestOptimizer {
         targetVectors.add(targetVector);
       }
                 
-      ClassicCounter<String> weightDiff = weightUpdater.getUpdate(newWeights, targetVectors.toArray(new ClassicCounter[0]), guessedVectors.toArray(new ClassicCounter[0]), 
+      Counter<String> weightDiff = weightUpdater.getUpdate(newWeights, targetVectors.toArray(new ClassicCounter[0]), guessedVectors.toArray(new ClassicCounter[0]), 
             lossMatrix[i], new String[0], nbest.nbestLists().size());        
       Counters.addInPlace(newWeights, weightDiff);
     }
