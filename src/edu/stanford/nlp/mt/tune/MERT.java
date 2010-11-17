@@ -40,7 +40,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.NISTMetric;
@@ -657,7 +657,7 @@ public class MERT extends Thread {
   }
 
   static void displayWeights(Counter<String> wts) {
-    for (Pair<String, Double> p : Counters
+    for (MutablePair<String, Double> p : Counters
         .toDescendingMagnitudeSortedListWithCounts(wts)) {
       System.out.printf("%s %g\n", p.first, p.second);
     }

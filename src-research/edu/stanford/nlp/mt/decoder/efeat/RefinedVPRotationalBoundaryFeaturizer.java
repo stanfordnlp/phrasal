@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 
 import java.util.*;
 import java.io.LineNumberReader;
@@ -28,7 +28,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
 
   static final boolean DEBUG = false;
 
-  List<Map<Integer, Pair<Integer, String>>> rotBs = null;
+  List<Map<Integer, MutablePair<Integer, String>>> rotBs = null;
 
   public RefinedVPRotationalBoundaryFeaturizer(String... args) {
     String filename = args[0];
@@ -37,12 +37,12 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
     LineNumberReader reader = null;
     try {
       reader = new LineNumberReader(new FileReader(filename));
-      rotBs = new ArrayList<Map<Integer, Pair<Integer, String>>>();
+      rotBs = new ArrayList<Map<Integer, MutablePair<Integer, String>>>();
       String line = null;
       while ((line = reader.readLine()) != null) {
         System.err.println("---------------------------");
         System.err.printf("calling parseLine for rotBs[%d]\n", rotBs.size());
-        Map<Integer, Pair<Integer, String>> m = parseLine(line);
+        Map<Integer, MutablePair<Integer, String>> m = parseLine(line);
         rotBs.add(m);
       }
     } catch (Exception e) {
@@ -58,8 +58,8 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
   static Pattern phrasePat = Pattern
       .compile("(\\d+),(\\d+),(\\d+),(\\d+),([^,]+),(VP),(VP)");
 
-  Map<Integer, Pair<Integer, String>> parseLine(String line) {
-    Map<Integer, Pair<Integer, String>> map = new HashMap<Integer, Pair<Integer, String>>();
+  Map<Integer, MutablePair<Integer, String>> parseLine(String line) {
+    Map<Integer, MutablePair<Integer, String>> map = new HashMap<Integer, MutablePair<Integer, String>>();
     System.err.println("debug: " + line);
     String[] phrases = line.split(";");
     for (String phrase : phrases) {
@@ -100,7 +100,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
           if (map.get(p1idx2) != null) {
             throw new RuntimeException(p1idx2 + " has more than one boundary");
           }
-          Pair<Integer, String> p = new Pair<Integer, String>();
+          MutablePair<Integer, String> p = new MutablePair<Integer, String>();
           p.setFirst(p1idx1);
           p.setSecond(sb.toString());
           map.put(p1idx2, p);
@@ -124,7 +124,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     // System.err.printf("Getting sentId=%d from rotB\n", sentId);
-    Map<Integer, Pair<Integer, String>> map = rotBs.get(sentId);
+    Map<Integer, MutablePair<Integer, String>> map = rotBs.get(sentId);
 
     int foreignSwapPos = Featurizables.locationOfSwappedPhrase(f);
     int firstUntranslatedFword = f.foreignPosition;
@@ -137,7 +137,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
 
     if (foreignSwapPos != -1) {
       // we have a swap
-      Pair<Integer, String> p = map.get(foreignSwapPos - 1);
+      MutablePair<Integer, String> p = map.get(foreignSwapPos - 1);
       if (p != null) {
         label = p.second();
         startp1 = p.first();
@@ -222,7 +222,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
       }
     } else {
       int foreignSentEnd = f.foreignPosition + f.foreignPhrase.size() - 1;
-      Pair<Integer, String> p = map.get(foreignSentEnd);
+      MutablePair<Integer, String> p = map.get(foreignSentEnd);
       if (p != null) {
         label = p.second();
         startp1 = p.first();

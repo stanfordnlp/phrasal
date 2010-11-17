@@ -12,7 +12,7 @@ class DisplayTreePairs {
 
     for (AnnotatedTreePair validSent : atreepairs) {
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> npRange = validSent.NPwithDEs_deIdx
+        MutablePair<Integer, Integer> npRange = validSent.NPwithDEs_deIdx
             .get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();

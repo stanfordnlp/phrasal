@@ -13,7 +13,7 @@ class OutputAllNPs {
         .readAnnotatedTreePairs(reducedCategory, nonOracleTree);
     for (AnnotatedTreePair validSent : atreepairs) {
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx
+        MutablePair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx
             .get(deIdxInSent);
         Tree chTree = validSent.chTrees().get(0);
         Tree chNPTree = AlignmentUtils.getTreeWithEdges(chTree,
@@ -21,7 +21,7 @@ class OutputAllNPs {
         chNPTree.pennPrint(System.out);
         System.out.println();
 
-        Pair<Integer, Integer> parsed_chNPrange = validSent.parsedNPwithDEs_deIdx
+        MutablePair<Integer, Integer> parsed_chNPrange = validSent.parsedNPwithDEs_deIdx
             .get(deIdxInSent);
         Tree parsed_chTree = validSent.chParsedTrees().get(0);
         Tree parsed_chNPTree = AlignmentUtils.getTreeWithEdges(parsed_chTree,

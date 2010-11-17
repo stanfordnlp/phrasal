@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.regex.*;
 
 import edu.stanford.nlp.io.IOUtils;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
@@ -214,12 +214,12 @@ public class DiscrimDistortionFeaturizer extends
     final int lastSIdx = (f.prior == null) ? -1 : (Integer) f.prior
         .getState(this);
 
-    final Pair<Integer, Double> inBoundScore = inFeaturize(f, lastSIdx);
+    final MutablePair<Integer, Double> inBoundScore = inFeaturize(f, lastSIdx);
     features.add(new FeatureValue<String>("In:" + FEATURE_NAME, inBoundScore
         .second()));
 
     if (useTwoModels) {
-      final Pair<Integer, Double> outBoundScore = outFeaturize(f, lastSIdx);
+      final MutablePair<Integer, Double> outBoundScore = outFeaturize(f, lastSIdx);
       // TODO: mg2009: check if assert really needed since fails in some
       // extremely rare cases (i.e., MERT may
       // run several iterations without problems then suddenly crash).
@@ -234,7 +234,7 @@ public class DiscrimDistortionFeaturizer extends
     return features;
   }
 
-  public Pair<Integer, Double> outFeaturize(Featurizable<IString, String> f,
+  public MutablePair<Integer, Double> outFeaturize(Featurizable<IString, String> f,
       int lastSIdx) {
 
     final int sOffset = f.foreignPosition;
@@ -277,10 +277,10 @@ public class DiscrimDistortionFeaturizer extends
       optScore += getScoreFromCache(outLogProbCache, cacheIndex, distortion);
     }
 
-    return new Pair<Integer, Double>(lastSIdx, optScore);
+    return new MutablePair<Integer, Double>(lastSIdx, optScore);
   }
 
-  public Pair<Integer, Double> inFeaturize(Featurizable<IString, String> f,
+  public MutablePair<Integer, Double> inFeaturize(Featurizable<IString, String> f,
       int lastSIdx) {
 
     // final int translationId = f.translationId + (Phrasal.local_procs > 1 ? 2
@@ -318,7 +318,7 @@ public class DiscrimDistortionFeaturizer extends
       optScore += getScoreFromCache(inLogProbCache, cacheIndex, distortion);
     }
 
-    return new Pair<Integer, Double>(lastSIdx, optScore);
+    return new MutablePair<Integer, Double>(lastSIdx, optScore);
   }
 
   private double getScoreFromCache(double[][] cache, int cacheIndex,

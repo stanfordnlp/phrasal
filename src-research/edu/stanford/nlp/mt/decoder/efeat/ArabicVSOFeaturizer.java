@@ -12,7 +12,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.util.Triple;
 
 public class ArabicVSOFeaturizer implements
@@ -80,7 +80,7 @@ public class ArabicVSOFeaturizer implements
    * Indicates when the feature should fire dependent on the scoring mode.
    * 
    */
-  private boolean fireFeature(final Pair<Integer, Integer> subject,
+  private boolean fireFeature(final MutablePair<Integer, Integer> subject,
       final int verbIdx, Featurizable<IString, String> f, boolean VERBOSE) {
 
     final int length = subject.second() - subject.first() + 1;
@@ -91,9 +91,9 @@ public class ArabicVSOFeaturizer implements
 
     final int eSubjRightBound = getRightTargetSideBoundary(subject, f);
     final int eVerbRightBound = getRightTargetSideBoundary(
-        new Pair<Integer, Integer>(verbIdx, verbIdx), f);
+        new MutablePair<Integer, Integer>(verbIdx, verbIdx), f);
     final int eVerbLeftBound = getLeftTargetSideBoundary(
-        new Pair<Integer, Integer>(verbIdx, verbIdx), f);
+        new MutablePair<Integer, Integer>(verbIdx, verbIdx), f);
 
     if (VERBOSE) {
       System.err.println("=== Feature Values ===");
@@ -118,7 +118,7 @@ public class ArabicVSOFeaturizer implements
     return false;
   }
 
-  private int getLeftTargetSideBoundary(Pair<Integer, Integer> span,
+  private int getLeftTargetSideBoundary(MutablePair<Integer, Integer> span,
       Featurizable<IString, String> f) {
     int minLeftIndex = Integer.MAX_VALUE;
     for (int i = span.first(); i <= span.second(); i++) {
@@ -134,7 +134,7 @@ public class ArabicVSOFeaturizer implements
         : minLeftIndex;
   }
 
-  private int getRightTargetSideBoundary(Pair<Integer, Integer> span,
+  private int getRightTargetSideBoundary(MutablePair<Integer, Integer> span,
       Featurizable<IString, String> f) {
     int maxRightIndex = Integer.MIN_VALUE;
     for (int i = span.first(); i <= span.second(); i++) {
@@ -176,7 +176,7 @@ public class ArabicVSOFeaturizer implements
       Triple<Integer, Integer, Integer> activeSubjectGroup = subjectSpans
           .get(currentSubject);
       final int verbIdx = activeSubjectGroup.first();
-      Pair<Integer, Integer> subject = new Pair<Integer, Integer>(
+      MutablePair<Integer, Integer> subject = new MutablePair<Integer, Integer>(
           activeSubjectGroup.second(), activeSubjectGroup.third());
 
       if (VERBOSE) {

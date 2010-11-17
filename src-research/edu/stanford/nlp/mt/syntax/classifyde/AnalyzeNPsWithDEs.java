@@ -15,9 +15,9 @@ class AnalyzeNPsWithDEs {
   private static String analyzeNPwithDE(int deIdxInSent, AnnotatedTreePair atp,
       PrintWriter pw) throws IOException {
 
-    List<Pair<Integer, Integer>> englishNP = atp
+    List<MutablePair<Integer, Integer>> englishNP = atp
         .getNPEnglishTranslation(deIdxInSent);
-    Pair<Integer, Integer> np = atp.NPwithDEs_deIdx.get(deIdxInSent);
+    MutablePair<Integer, Integer> np = atp.NPwithDEs_deIdx.get(deIdxInSent);
 
     // List<Pair<Integer,Integer>> englishNP = atp.NPwithDEs.get(np);
     if (englishNP.size() != 1) {
@@ -42,7 +42,7 @@ class AnalyzeNPsWithDEs {
 
     // if there's only one chunk of English, get the submatrix and subsource &
     // subtranslation
-    Pair<Integer, Integer> ennp = englishNP.get(0);
+    MutablePair<Integer, Integer> ennp = englishNP.get(0);
     int nplength = np.second - np.first + 1;
     int ennplength = ennp.second - ennp.first + 1;
     String[] subsource = new String[nplength];
@@ -88,9 +88,9 @@ class AnalyzeNPsWithDEs {
 
     // for "A de B"
     // get the translation range of A
-    Pair<Integer, Integer> rangeA = getRangeA(subtranslation, subsource,
+    MutablePair<Integer, Integer> rangeA = getRangeA(subtranslation, subsource,
         submatrix, deIdx);
-    Pair<Integer, Integer> rangeB = getRangeB(subtranslation, subsource,
+    MutablePair<Integer, Integer> rangeB = getRangeB(subtranslation, subsource,
         submatrix, deIdx);
     int deEidx = getDEeidx(subtranslation, subsource, submatrix, deIdx);
     // based one the range, fix 'which' clause, and update rangeA & rangeB
@@ -374,7 +374,7 @@ class AnalyzeNPsWithDEs {
         for (int deIdxInSent : atp.NPwithDEs_deIdx_set) {
           // List<Pair<Integer,Integer>> englishNP =
           // atp.NPwithDEs.get(NPwithDE);
-          List<Pair<Integer, Integer>> englishNP = atp
+          List<MutablePair<Integer, Integer>> englishNP = atp
               .getNPEnglishTranslation(deIdxInSent);
           if (englishNP.size() == 1) {
             numNPwithDE_contiguous++;
@@ -422,7 +422,7 @@ class AnalyzeNPsWithDEs {
     System.err.println(typeCounter);
   }
 
-  private static Pair<Integer, Integer> getRangeA(String[] subtranslation,
+  private static MutablePair<Integer, Integer> getRangeA(String[] subtranslation,
       String[] subsource, int[][] submatrix, int deIdx) {
     int min = subtranslation.length;
     int max = -1;
@@ -444,10 +444,10 @@ class AnalyzeNPsWithDEs {
     if (!setMin || !setMax) {
       min = max = -1;
     }
-    return new Pair<Integer, Integer>(min, max);
+    return new MutablePair<Integer, Integer>(min, max);
   }
 
-  private static Pair<Integer, Integer> getRangeB(String[] subtranslation,
+  private static MutablePair<Integer, Integer> getRangeB(String[] subtranslation,
       String[] subsource, int[][] submatrix, int deIdx) {
     int min = subtranslation.length;
     int max = -1;
@@ -469,7 +469,7 @@ class AnalyzeNPsWithDEs {
     if (!setMin || !setMax) {
       min = max = -1;
     }
-    return new Pair<Integer, Integer>(min, max);
+    return new MutablePair<Integer, Integer>(min, max);
   }
 
   private static int getDEeidx(String[] subtranslation, String[] subsource,
@@ -491,7 +491,7 @@ class AnalyzeNPsWithDEs {
     return -1;
   }
 
-  private static boolean onRangeEdge(int i, Pair<Integer, Integer> range) {
+  private static boolean onRangeEdge(int i, MutablePair<Integer, Integer> range) {
     if (i == -1)
       return false;
     if (range.second == -1)
@@ -501,7 +501,7 @@ class AnalyzeNPsWithDEs {
     return false;
   }
 
-  private static boolean inRange(int i, Pair<Integer, Integer> range) {
+  private static boolean inRange(int i, MutablePair<Integer, Integer> range) {
     if (i == -1)
       return false;
     if (range.second == -1)
@@ -511,8 +511,8 @@ class AnalyzeNPsWithDEs {
     return false;
   }
 
-  private static boolean checkOrderedAdverb(Pair<Integer, Integer> rangeA,
-      Pair<Integer, Integer> rangeB, Tree enTree) {
+  private static boolean checkOrderedAdverb(MutablePair<Integer, Integer> rangeA,
+      MutablePair<Integer, Integer> rangeB, Tree enTree) {
     if (enTree == null)
       return false;
 
@@ -525,8 +525,8 @@ class AnalyzeNPsWithDEs {
     return false;
   }
 
-  private static boolean checkOrderedAdjective(Pair<Integer, Integer> rangeA,
-      Pair<Integer, Integer> rangeB, Tree enTree) {
+  private static boolean checkOrderedAdjective(MutablePair<Integer, Integer> rangeA,
+      MutablePair<Integer, Integer> rangeB, Tree enTree) {
     if (enTree == null)
       return false;
 
@@ -560,7 +560,7 @@ class AnalyzeNPsWithDEs {
   }
 
   private static String checkOrderedOtherModifier(
-      Pair<Integer, Integer> rangeA, Pair<Integer, Integer> rangeB, Tree enTree) {
+      MutablePair<Integer, Integer> rangeA, MutablePair<Integer, Integer> rangeB, Tree enTree) {
     if (enTree == null)
       return null;
     Tree adj = ExperimentUtils.getTreeWithEdges(enTree, rangeA.first,
@@ -573,8 +573,8 @@ class AnalyzeNPsWithDEs {
     return null;
   }
 
-  private static boolean checkOrderedNoun(Pair<Integer, Integer> rangeA,
-      Pair<Integer, Integer> rangeB, Tree enTree) {
+  private static boolean checkOrderedNoun(MutablePair<Integer, Integer> rangeA,
+      MutablePair<Integer, Integer> rangeB, Tree enTree) {
     if (enTree == null)
       return false;
 
@@ -637,8 +637,8 @@ class AnalyzeNPsWithDEs {
     return false;
   }
 
-  private static boolean checkSecondVP(Pair<Integer, Integer> rangeA,
-      Pair<Integer, Integer> rangeB, Tree enTree) {
+  private static boolean checkSecondVP(MutablePair<Integer, Integer> rangeA,
+      MutablePair<Integer, Integer> rangeB, Tree enTree) {
     if (enTree == null)
       return false;
 
@@ -652,7 +652,7 @@ class AnalyzeNPsWithDEs {
   }
 
   private static boolean checkFlippedRelativeClause(
-      Pair<Integer, Integer> rangeA, Pair<Integer, Integer> rangeB, Tree enTree) {
+      MutablePair<Integer, Integer> rangeA, MutablePair<Integer, Integer> rangeB, Tree enTree) {
     if (enTree == null)
       return false;
     Tree relc = ExperimentUtils.getTreeWithEdges(enTree, rangeA.first,
@@ -677,8 +677,8 @@ class AnalyzeNPsWithDEs {
   private static void printNPwithDEtoFile(int fileidx, int npidx,
       PrintWriter npPW, int deIdx, AnnotatedTreePair atp, String type) {
     // List<Pair<Integer,Integer>> englishNP = tp.NPwithDEs.get(np);
-    Pair<Integer, Integer> np = atp.NPwithDEs_deIdx.get(deIdx);
-    List<Pair<Integer, Integer>> englishNP = atp.getNPEnglishTranslation(deIdx);
+    MutablePair<Integer, Integer> np = atp.NPwithDEs_deIdx.get(deIdx);
+    List<MutablePair<Integer, Integer>> englishNP = atp.getNPEnglishTranslation(deIdx);
     List<String> ch = new ArrayList<String>();
     for (int i = np.first; i <= np.second; i++) {
       ch.add(atp.alignment().source_[i]);
@@ -686,7 +686,7 @@ class AnalyzeNPsWithDEs {
     String chStr = StringUtils.join(ch, " ");
 
     List<String> en = new ArrayList<String>();
-    for (Pair<Integer, Integer> enNP : englishNP) {
+    for (MutablePair<Integer, Integer> enNP : englishNP) {
       StringBuilder ensb = new StringBuilder();
       for (int i = enNP.first; i <= enNP.second; i++) {
         ensb.append(atp.alignment().translation_[i]).append(" ");
@@ -740,8 +740,8 @@ class AnalyzeNPsWithDEs {
   }
 
   private static void fixWhichWhere(String[] translation, String[] source,
-      int[][] matrix, Pair<Integer, Integer> rangeA,
-      Pair<Integer, Integer> rangeB, List<Integer> deIndices) {
+      int[][] matrix, MutablePair<Integer, Integer> rangeA,
+      MutablePair<Integer, Integer> rangeB, List<Integer> deIndices) {
     boolean err = false;
     if (translation.length != matrix.length || translation.length == 0) {
       err = true;

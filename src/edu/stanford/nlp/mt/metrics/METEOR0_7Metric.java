@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.StreamGobbler;
 import edu.stanford.nlp.io.FileUtils;
@@ -26,7 +26,7 @@ public class METEOR0_7Metric {
    * 
    */
   public static Map<String, Double> score(
-      List<Pair<String, String>> refsAndHyps, String modules) {
+      List<MutablePair<String, String>> refsAndHyps, String modules) {
 
     Map<String, Double> scores = new HashMap<String, Double>();
 
@@ -117,7 +117,7 @@ public class METEOR0_7Metric {
   /**
    * Create NIST SGML file with dummy values for setid, docid, etc.
    */
-  private static void createSGML(List<Pair<String, String>> refsAndHyps,
+  private static void createSGML(List<MutablePair<String, String>> refsAndHyps,
       String outputFile, boolean refset) {
     PrintStream out = IOTools.getWriterFromFile(outputFile);
     out.append("<");
@@ -127,7 +127,7 @@ public class METEOR0_7Metric {
     out.append(refset ? "human1" : "machine1");
     out.append("\">\n");
     int segid = 0;
-    for (Pair<String, String> sent : refsAndHyps) {
+    for (MutablePair<String, String> sent : refsAndHyps) {
       out.append("<seg id=");
       out.append(Integer.toString(++segid));
       out.append("> ");
@@ -154,7 +154,7 @@ public class METEOR0_7Metric {
           .println("Usage: java edu.stanford.nlp.mt.metrics.METEORMetric <ref> <hyp>");
     }
 
-    List<Pair<String, String>> data = new ArrayList<Pair<String, String>>();
+    List<MutablePair<String, String>> data = new ArrayList<MutablePair<String, String>>();
     List<String> ref = FileUtils.linesFromFile(args[0]);
     List<String> hyp = FileUtils.linesFromFile(args[1]);
 
@@ -163,7 +163,7 @@ public class METEOR0_7Metric {
           "Different number of lines: %d != %d\n", ref.size(), hyp.size()));
 
     for (int i = 0; i < ref.size(); ++i) {
-      data.add(new Pair<String, String>(ref.get(i), hyp.get(i)));
+      data.add(new MutablePair<String, String>(ref.get(i), hyp.get(i)));
     }
 
     for (Map.Entry<String, Double> datum : score(data, "exact").entrySet()) {

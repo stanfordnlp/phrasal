@@ -26,13 +26,13 @@ public class TranslationAlignment {
     return wellformed_;
   }
 
-  private Pair<String[], int[][]> fixTranslationWithMatrix(String[] t, int[][] m) {
+  private MutablePair<String[], int[][]> fixTranslationWithMatrix(String[] t, int[][] m) {
     /* fix errors in translation_ : all 'Ltd.' become 'Lt.'. */
     t = fixTranslationWords(t);
     if (m.length != t.length + 1) {
       m = trimMatrixRow(m, t.length + 1);
     }
-    return new Pair<String[], int[][]>(t, m);
+    return new MutablePair<String[], int[][]>(t, m);
   }
 
   private String[] fixTranslationWords(String[] t) {
@@ -96,7 +96,7 @@ public class TranslationAlignment {
     return newSent;
   }
 
-  public TreeSet<Integer> mapChineseToEnglish(Pair<Integer, Integer> ip) {
+  public TreeSet<Integer> mapChineseToEnglish(MutablePair<Integer, Integer> ip) {
     TreeSet<Integer> english = new TreeSet<Integer>();
     for (int i = ip.first; i <= ip.second; i++) {
       int matrixSource = i + 1;
@@ -112,13 +112,13 @@ public class TranslationAlignment {
   public TreeSet<Integer> mapChineseToEnglish_FillGap(TreeSet<Integer> enRange) {
     int prevI = -1;
     TreeSet<Integer> nullgaps = new TreeSet<Integer>();
-    List<Pair<Integer, Integer>> gaps = new ArrayList<Pair<Integer, Integer>>();
+    List<MutablePair<Integer, Integer>> gaps = new ArrayList<MutablePair<Integer, Integer>>();
 
     for (Integer i : enRange) {
       // System.out.println("eni = "+i+"<br>");
       if (prevI != -1) {
         if (i > prevI + 1) {
-          Pair<Integer, Integer> gap = new Pair<Integer, Integer>(prevI + 1,
+          MutablePair<Integer, Integer> gap = new MutablePair<Integer, Integer>(prevI + 1,
               i - 1);
           // System.out.println("Add = "+gap+"<br>");
           gaps.add(gap);
@@ -127,7 +127,7 @@ public class TranslationAlignment {
       prevI = i;
     }
 
-    for (Pair<Integer, Integer> gap : gaps) {
+    for (MutablePair<Integer, Integer> gap : gaps) {
       for (int eni = gap.first; eni <= gap.second; eni++) {
         // Note: eni is 0-based, so we need to add 1
         boolean add = true;
@@ -257,7 +257,7 @@ public class TranslationAlignment {
       // this fixes translation_ and matrix_ at the same time,
       // because sometimes some changes in translation_ might
       // need to adjust matrix_ as well
-      Pair<String[], int[][]> tm = fixTranslationWithMatrix(translation_,
+      MutablePair<String[], int[][]> tm = fixTranslationWithMatrix(translation_,
           matrix_);
       translation_ = tm.first;
       matrix_ = tm.second;

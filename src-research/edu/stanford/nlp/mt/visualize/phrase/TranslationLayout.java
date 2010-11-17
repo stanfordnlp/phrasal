@@ -18,7 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 
 public class TranslationLayout {
 
@@ -36,7 +36,7 @@ public class TranslationLayout {
 
   private int numFullTranslationRows;
   private final LinkedList<Integer> unusedRows;
-  private final Map<String, Pair<Integer, JLabel>> fullTranslations;
+  private final Map<String, MutablePair<Integer, JLabel>> fullTranslations;
 
   public TranslationLayout(Translation t, boolean rightToLeft) {
     translation = t;
@@ -47,7 +47,7 @@ public class TranslationLayout {
     vPhrases = new ArrayList<VisualPhrase>();
     vPhraseLookup = new HashMap<Phrase, VisualPhrase>();
     unusedRows = new LinkedList<Integer>();
-    fullTranslations = new HashMap<String, Pair<Integer, JLabel>>();
+    fullTranslations = new HashMap<String, MutablePair<Integer, JLabel>>();
   }
 
   public boolean createLayout(int numOptionRows) {
@@ -192,19 +192,19 @@ public class TranslationLayout {
 
     if (panel != null)
       panel.add(label, c);
-    fullTranslations.put(name, new Pair<Integer, JLabel>(c.gridy, label));
+    fullTranslations.put(name, new MutablePair<Integer, JLabel>(c.gridy, label));
 
     return true;
   }
 
   public void updateTranslationRow(String name, String trans) {
-    Pair<Integer, JLabel> labelPair = fullTranslations.get(name);
+    MutablePair<Integer, JLabel> labelPair = fullTranslations.get(name);
     if (labelPair != null)
       labelPair.second().setText(trans);
   }
 
   public boolean removeTranslationRow(String name) {
-    Pair<Integer, JLabel> labelPair = fullTranslations.get(name);
+    MutablePair<Integer, JLabel> labelPair = fullTranslations.get(name);
     if (labelPair != null) {
       unusedRows.addFirst(labelPair.first());
       if (panel != null)

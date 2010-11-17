@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.util.Triple;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
@@ -254,7 +254,7 @@ public class ArabicVSOkbestFeaturizer extends
           allVerbs.size());
 
       for (int verbIdx : allVerbs) {
-        Map<Pair<Integer, Integer>, Double> subjects = new HashMap<Pair<Integer, Integer>, Double>();
+        Map<MutablePair<Integer, Integer>, Double> subjects = new HashMap<MutablePair<Integer, Integer>, Double>();
 
         // Iterate over the analyses and compute the real-valued numerator(s)
         // and
@@ -269,7 +269,7 @@ public class ArabicVSOkbestFeaturizer extends
             if (anal.subjects.containsKey(verbIdx + gap)) {
               denom += Math.exp(anal.logCRFScore);
               noAnalysis = true;
-              Pair<Integer, Integer> thisSubj = new Pair<Integer, Integer>(
+              MutablePair<Integer, Integer> thisSubj = new MutablePair<Integer, Integer>(
                   verbIdx + gap, anal.subjects.get(verbIdx + gap));
 
               if (subjects.containsKey(thisSubj)) {
@@ -300,10 +300,10 @@ public class ArabicVSOkbestFeaturizer extends
         }
 
         // Iterate over the other analyses
-        for (Map.Entry<Pair<Integer, Integer>, Double> subject : subjects
+        for (Map.Entry<MutablePair<Integer, Integer>, Double> subject : subjects
             .entrySet()) {
           double logProb = Math.log(subject.getValue()) - Math.log(denom);
-          Pair<Integer, Integer> span = subject.getKey();
+          MutablePair<Integer, Integer> span = subject.getKey();
           Triple<Integer, Integer, Double> finalSubj = new Triple<Integer, Integer, Double>(
               span.first(), span.second(), logProb);
           probList.add(finalSubj);

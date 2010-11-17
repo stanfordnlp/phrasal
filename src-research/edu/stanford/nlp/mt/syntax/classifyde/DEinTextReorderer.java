@@ -37,7 +37,7 @@ public class DEinTextReorderer {
         if (!yield.get(deIdx).startsWith("的_"))
           throw new RuntimeException(yield.get(deIdx) + "(" + deIdx + ") in "
               + StringUtils.join(yield, " ") + " is not a valid DE");
-        Pair<Integer, Integer> r;
+        MutablePair<Integer, Integer> r;
         if (betterRange)
           r = ExperimentUtils
               .getNPwithDERangeFromIdx_DNPorCP(parsedSent, deIdx);

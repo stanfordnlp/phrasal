@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.train;
 import java.util.*;
 import java.io.IOException;
 
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.Constituent;
 
@@ -23,7 +23,7 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
     System.err.println("Constituent phrase extractor.");
   }
 
-  final Set<Pair<Integer, Integer>> spans = new HashSet<Pair<Integer, Integer>>();
+  final Set<MutablePair<Integer, Integer>> spans = new HashSet<MutablePair<Integer, Integer>>();
 
   @Override
   public void setSentenceInfo(WordAlignment sent, String infoStr) {
@@ -33,7 +33,7 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
     try {
       Tree t = Tree.valueOf(infoStr);
       for (Constituent c : t.constituents())
-        spans.add(new Pair<Integer, Integer>(c.start(), c.end()));
+        spans.add(new MutablePair<Integer, Integer>(c.start(), c.end()));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -55,7 +55,7 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
       return false;
     }
 
-    return !spans.contains(new Pair<Integer, Integer>(e1, e2));
+    return !spans.contains(new MutablePair<Integer, Integer>(e1, e2));
   }
 
   @Override

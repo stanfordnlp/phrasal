@@ -24,7 +24,7 @@ class FullInformationWangRevisedExperiment {
       // for(Map.Entry<Pair<Integer,Integer>, String> labeledNPs :
       // validSent.NPwithDEs_categories.entrySet()) {
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx
+        MutablePair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx
             .get(deIdxInSent);
         // String np = validSent.oracleChNPwithDE(deIdxInSent);
         // np = np.trim();

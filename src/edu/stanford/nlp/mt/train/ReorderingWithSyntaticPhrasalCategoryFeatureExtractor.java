@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.util.IntQuadruple;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
@@ -29,7 +29,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends
   // mg2009: probably not thread safe
 
   Map<AlignmentTemplateInstance, Set<Integer>> labelsForAlTemp = new HashMap<AlignmentTemplateInstance, Set<Integer>>();
-  Index<Pair<String, Integer>> phraseNamesIndex = new HashIndex<Pair<String, Integer>>();
+  Index<MutablePair<String, Integer>> phraseNamesIndex = new HashIndex<MutablePair<String, Integer>>();
 
   enum ReorderingTypes {
     ordered, distorted
@@ -91,7 +91,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends
     for (AlignmentTemplateInstance t : list) {
       Set<Integer> labels = labelsForAlTemp.get(t);
       for (Integer l : labels) {
-        Pair<String, Integer> p = phraseNamesIndex.get(l);
+        MutablePair<String, Integer> p = phraseNamesIndex.get(l);
         if (phraseStr.equals(p.first()) && p.second() != num) { // if this can
                                                                 // be labeled as
                                                                 // the same
@@ -136,7 +136,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends
           e1, e2, t.toString(true));
 
       for (Integer l : labels) {
-        Pair<String, Integer> p = phraseNamesIndex.get(l);
+        MutablePair<String, Integer> p = phraseNamesIndex.get(l);
         String phraseStr = p.first();
 
         String[] phraseAndRange = phraseStr.split("\\(");
@@ -171,7 +171,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends
 
           // for displaying only
           for (Integer pl : possibleLabels) {
-            Pair<String, Integer> p2 = phraseNamesIndex.get(pl);
+            MutablePair<String, Integer> p2 = phraseNamesIndex.get(pl);
             if (phraseStr.equals(p2.first()) && num != p2.second()) {
               System.err.printf("      (label2) %s - %d\n", p2.first(),
                   p2.second());
@@ -204,7 +204,7 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends
                   t.toString(true));
 
               for (Integer l : labels) {
-                Pair<String, Integer> p = phraseNamesIndex.get(l);
+                MutablePair<String, Integer> p = phraseNamesIndex.get(l);
                 System.err.println(" ---> --->" + p);
               }
             }
@@ -257,9 +257,9 @@ public class ReorderingWithSyntaticPhrasalCategoryFeatureExtractor extends
             .append("-").append(ranges.getTarget2()).append(")");
 
         int idx_ph1 = phraseNamesIndex.indexOf(
-            new Pair<String, Integer>(sb.toString(), 1), true);
+            new MutablePair<String, Integer>(sb.toString(), 1), true);
         int idx_ph2 = phraseNamesIndex.indexOf(
-            new Pair<String, Integer>(sb.toString(), 2), true);
+            new MutablePair<String, Integer>(sb.toString(), 2), true);
 
         if (f1 >= ranges.getSource() && f2 <= ranges.getMiddle()) {
           System.err.printf("alTemp (%d-%d)(%d-%d) %s inside %s - 1\n", f1, f2,

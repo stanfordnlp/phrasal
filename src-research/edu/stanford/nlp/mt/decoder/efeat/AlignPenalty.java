@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
 
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -22,7 +22,7 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
 
   public static final String FEATURE_NAME = "AlignPenalty";
 
-  private static Pair<Integer, Integer> internalFeaturize(
+  private static MutablePair<Integer, Integer> internalFeaturize(
       Featurizable<IString, String> f) {
     final int tOptLen = f.translatedPhrase.size();
 
@@ -46,13 +46,13 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
     } else
       numNullAlignments += f.translatedPhrase.size();
 
-    return new Pair<Integer, Integer>(numAlignments, numNullAlignments);
+    return new MutablePair<Integer, Integer>(numAlignments, numNullAlignments);
   }
 
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
-    Pair<Integer, Integer> featVals = internalFeaturize(f);
+    MutablePair<Integer, Integer> featVals = internalFeaturize(f);
 
     return new FeatureValue<String>(FEATURE_NAME, -1.0 * featVals.first());
   }

@@ -27,7 +27,7 @@ public class WangDEinTextReorderer {
       Map<SortByEndPair<Integer, Integer>, Integer> toOperate = new TreeMap<SortByEndPair<Integer, Integer>, Integer>();
 
       for (int deIdx : deIndices) {
-        Pair<Integer, Integer> r = ExperimentUtils.getNPwithDERangeFromIdx(
+        MutablePair<Integer, Integer> r = ExperimentUtils.getNPwithDERangeFromIdx(
             parsedSent, deIdx);
         SortByEndPair<Integer, Integer> range = new SortByEndPair<Integer, Integer>(
             r.first, r.second);

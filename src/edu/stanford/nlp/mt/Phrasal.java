@@ -47,7 +47,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.OAIndex;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -1409,7 +1409,7 @@ public class Phrasal {
     public void saveWeights(String filename) throws IOException {
       BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 
-      for (Pair<String, Double> p : Counters
+      for (MutablePair<String, Double> p : Counters
           .toDescendingMagnitudeSortedListWithCounts(wtsSum)) {
         writer.append(p.first).append(" ")
             .append((new Double(p.second / updateCount)).toString())
@@ -1465,7 +1465,7 @@ public class Phrasal {
     public void saveWeights(String filename) throws IOException {
       BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 
-      for (Pair<String, Double> p : Counters
+      for (MutablePair<String, Double> p : Counters
           .toDescendingMagnitudeSortedListWithCounts(wts)) {
         writer.append(p.first).append(" ").append(p.second.toString())
             .append("\n");
@@ -1536,7 +1536,7 @@ public class Phrasal {
     public void saveWeights(String filename) throws IOException {
       BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 
-      for (Pair<String, Double> p : Counters
+      for (MutablePair<String, Double> p : Counters
           .toDescendingMagnitudeSortedListWithCounts(wts)) {
         writer.append(p.first).append(" ").append(p.second.toString())
             .append("\n");
@@ -1595,7 +1595,7 @@ public class Phrasal {
     public void saveWeights(String filename) throws IOException {
       BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
 
-      for (Pair<String, Double> p : Counters
+      for (MutablePair<String, Double> p : Counters
           .toDescendingMagnitudeSortedListWithCounts(wts)) {
         writer.append(p.first).append(" ").append(p.second.toString())
             .append("\n");

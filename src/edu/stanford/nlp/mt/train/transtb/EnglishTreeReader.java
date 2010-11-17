@@ -117,8 +117,8 @@ class NMLandPOSTreeTransformer implements TreeTransformer {
       // NML --> NX
       TregexPattern matchPattern = TregexPattern.compile("NML=nml");
       TsurgeonPattern p = Tsurgeon.parseOperation("relabel nml NX");
-      List<Pair<TregexPattern, TsurgeonPattern>> ops = new ArrayList<Pair<TregexPattern, TsurgeonPattern>>();
-      Pair<TregexPattern, TsurgeonPattern> op = new Pair<TregexPattern, TsurgeonPattern>(
+      List<MutablePair<TregexPattern, TsurgeonPattern>> ops = new ArrayList<MutablePair<TregexPattern, TsurgeonPattern>>();
+      MutablePair<TregexPattern, TsurgeonPattern> op = new MutablePair<TregexPattern, TsurgeonPattern>(
           matchPattern, p);
       ops.add(op);
       tree = Tsurgeon.processPatternsOnTree(ops, tree);

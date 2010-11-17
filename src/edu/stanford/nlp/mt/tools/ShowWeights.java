@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 
 public class ShowWeights {
   static public void main(String[] args) throws Exception {
@@ -12,7 +12,7 @@ public class ShowWeights {
     }
     Counter<String> wts = CompareWeights.readWeights(args[0]);
 
-    for (Pair<String, Double> p : Counters
+    for (MutablePair<String, Double> p : Counters
         .toDescendingMagnitudeSortedListWithCounts(wts)) {
       System.out.printf("%s %g\n", p.first, p.second);
     }

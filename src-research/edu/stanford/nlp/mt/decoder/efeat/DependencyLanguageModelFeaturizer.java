@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
@@ -112,7 +112,7 @@ public class DependencyLanguageModelFeaturizer extends
 
   // Caches:
   Map<String, DependencyScores> partialParseCache = new THashMap<String, DependencyScores>();
-  Map<String, Pair<String, Double>> fullParseCache = new THashMap<String, Pair<String, Double>>();
+  Map<String, MutablePair<String, Double>> fullParseCache = new THashMap<String, MutablePair<String, Double>>();
   private Map<String, String> long2short = new THashMap<String, String>();
 
   // Source instances:
@@ -233,7 +233,7 @@ public class DependencyLanguageModelFeaturizer extends
     if (this.reranking && this.mstScore) {
       // Get mstScore dependency score (with loop removal):
       String sentence = StringUtils.join(instance.getForms());
-      Pair<String, Double> cached = fullParseCache.get(sentence);
+      MutablePair<String, Double> cached = fullParseCache.get(sentence);
 
       double exactDepScore;
       if (cached == null) {
@@ -246,7 +246,7 @@ public class DependencyLanguageModelFeaturizer extends
         if (mstLenNorm)
           exactDepScore /= instance.length();
         String parse = (String) d[0][1];
-        fullParseCache.put(sentence, new Pair<String, Double>(parse,
+        fullParseCache.put(sentence, new MutablePair<String, Double>(parse,
             exactDepScore));
         System.err.printf("sent: %s\nscore: %.3f parse: %s\n", sentence,
             exactDepScore, parse);
@@ -357,7 +357,7 @@ public class DependencyLanguageModelFeaturizer extends
 
     // POS tagging:
     float tagScore = 0.0f;
-    Pair<IString, Float>[] tags = new Pair[sz];
+    MutablePair<IString, Float>[] tags = new MutablePair[sz];
     if (TAG_WITH_RIGHT_CONTEXT) {
       // faster, better POS accuracy, lower BLEU
       int sp = Math.max(0, loc - prefixTagger.getOrder());
@@ -636,7 +636,7 @@ public class DependencyLanguageModelFeaturizer extends
         .clone();
     featurizer.pipe = (DependencyPipe) pipe.clone();
     featurizer.decoder = new DependencyDecoder(featurizer.pipe);
-    featurizer.fullParseCache = new THashMap<String, Pair<String, Double>>();
+    featurizer.fullParseCache = new THashMap<String, MutablePair<String, Double>>();
     featurizer.partialParseCache = new THashMap<String, DependencyScores>();
     featurizer.long2short = new THashMap<String, String>();
     featurizer.srcInstances = new ArrayList<DependencyInstance>(

@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.MutablePair;
 
 /**
  * Compare two system outputs (baseline and contrastive), and display sentences
@@ -75,7 +75,7 @@ public class BLEUSorter {
       List<Sequence<IString>> hyps2,
       BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric1,
       BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric2) {
-    List<Pair<Double, Integer>> scores = new ArrayList<Pair<Double, Integer>>();
+    List<MutablePair<Double, Integer>> scores = new ArrayList<MutablePair<Double, Integer>>();
 
     for (int sentId = 0; sentId < hyps1.size(); ++sentId) {
       double score1 = incMetric1.computeLocalSmoothScore(hyps1.get(sentId),
@@ -90,16 +90,16 @@ public class BLEUSorter {
       }
       if (add)
         // Only print sentence if difference is significant enough:
-        scores.add(new Pair<Double, Integer>(score2 - score1, sentId));
+        scores.add(new MutablePair<Double, Integer>(score2 - score1, sentId));
     }
-    Collections.sort(scores, new Comparator<Pair<Double, Integer>>() {
+    Collections.sort(scores, new Comparator<MutablePair<Double, Integer>>() {
       @Override
-      public int compare(Pair<Double, Integer> el1, Pair<Double, Integer> el2) {
+      public int compare(MutablePair<Double, Integer> el1, MutablePair<Double, Integer> el2) {
         return el1.first().compareTo(el2.first());
       }
     });
     List<Integer> sentIds = new ArrayList<Integer>();
-    for (Pair<Double, Integer> el : scores) {
+    for (MutablePair<Double, Integer> el : scores) {
       sentIds.add(el.second());
     }
     return sentIds;
