@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
 import java.util.*;
-import java.io.IOException;
 
 import edu.stanford.nlp.util.MutablePair;
 import edu.stanford.nlp.trees.Tree;
@@ -9,8 +8,8 @@ import edu.stanford.nlp.trees.Constituent;
 
 /**
  * Same as MosesPhraseExtractor, but restricts phrases according to
- * consituencies read from a parse tree.
- * 
+ * constituencies read from a parse tree.
+ *
  * @author Michel Galley
  */
 public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
@@ -30,13 +29,9 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
 
     spans.clear();
 
-    try {
-      Tree t = Tree.valueOf(infoStr);
-      for (Constituent c : t.constituents())
-        spans.add(new MutablePair<Integer, Integer>(c.start(), c.end()));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    Tree t = Tree.valueOf(infoStr);
+    for (Constituent c : t.constituents())
+      spans.add(new MutablePair<Integer, Integer>(c.start(), c.end()));
   }
 
   @Override
@@ -62,4 +57,5 @@ public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
   }
+
 }
