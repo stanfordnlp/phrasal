@@ -13,7 +13,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 
 /**
  * Implementation of ExternalMTScorer for MetricsMATR.
- * 
+ *
  * @author Michel Galley
  */
 public class MTScorer implements ExternalMTScorer {
@@ -31,7 +31,7 @@ public class MTScorer implements ExternalMTScorer {
   Map<Sequence<IString>, Double> ngramInfo;
   Map<String, Double> scoresMETEOR;
 
-  static public void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {
 
     MTScorer scorer = new MTScorer();
 
@@ -69,11 +69,12 @@ public class MTScorer implements ExternalMTScorer {
   /**
    * Initialize MTScorer with properties read from configuration file. Contract:
    * this function is called immediately after construction.
-   * 
+   *
    * @param configFile
    *          Configuraiton file name. String may be null, in which case init()
    *          loads default properties.
    */
+  @Override
   public void init(String configFile) {
 
     prop = new Properties();
@@ -104,10 +105,11 @@ public class MTScorer implements ExternalMTScorer {
    * first sentence pair is computed. Some metrics, e.g., NIST, need to
    * precompute statistics over the whole set before it can compute the first
    * score.
-   * 
+   *
    * @param data
-   *          List of all (reference,hypothese) pairs that need to be scored.
+   *          List of all (reference,hypothesis) pairs that need to be scored.
    */
+  @Override
   @SuppressWarnings("deprecation")
   public void readAllReferencesAndHypotheses(List<MutablePair<String, String>> data) {
 
@@ -127,6 +129,7 @@ public class MTScorer implements ExternalMTScorer {
       scoresMETEOR = METEOR0_7Metric.score(data, null);
   }
 
+  @Override
   public Counter<String> scoreMTOutput(String ref, String hyp) {
 
     Counter<String> c = new ClassicCounter<String>();
@@ -183,8 +186,9 @@ public class MTScorer implements ExternalMTScorer {
 
   /**
    * Returns the list of features.
-   * 
+   *
    */
+  @Override
   public Set<String> scoresProvided() {
     Counter<String> c = scoreMTOutput("", "");
     return c.keySet();
