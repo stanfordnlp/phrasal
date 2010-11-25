@@ -149,7 +149,7 @@ public class DependencyAnalyzer {
     }
   }
 
-  String getPath(int n1, int n2, List<IndexedWord> iw, SemanticGraph g) {
+  private static String getPath(int n1, int n2, List<IndexedWord> iw, SemanticGraph g) {
     List<SemanticGraphEdge> paths = g.getShortestPathEdges(iw.get(n1),
         iw.get(n2));
     int curI = n1;
@@ -175,14 +175,14 @@ public class DependencyAnalyzer {
   }
 
   @SuppressWarnings("unchecked")
-  private Map<Integer, Set<String>>[] initDeps(int len) {
+  private static Map<Integer, Set<String>>[] initDeps(int len) {
     Map<Integer, Set<String>>[] deps = new TreeMap[len];
     for (int i = 0; i < len; ++i)
       deps[i] = new TreeMap<Integer, Set<String>>();
     return deps;
   }
 
-  private void addDep(Map<Integer, Set<String>> deps, int i, String l) {
+  private static void addDep(Map<Integer, Set<String>> deps, int i, String l) {
     Set<String> ls = deps.get(i);
     if (ls == null) {
       ls = new TreeSet<String>();
@@ -191,7 +191,7 @@ public class DependencyAnalyzer {
     ls.add(l);
   }
 
-  private void addDeps(Map<Integer, Set<String>>[] tgt,
+  private static void addDeps(Map<Integer, Set<String>>[] tgt,
       Map<Integer, Set<String>>[] src) {
     int len = src.length;
     for (int i = 0; i < len; ++i) {
