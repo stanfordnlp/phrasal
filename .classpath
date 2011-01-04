@@ -4,7 +4,7 @@
 	<classpathentry kind="src" path="src-research"/>
 	<classpathentry kind="src" path="itest/src"/>
 	<classpathentry kind="src" path="test/src"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-more"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/JavaNLP-more"/>
 	<classpathentry kind="lib" path="lib/bsh.jar" sourcepath="libsrc/bsh-2.0b4-src.zip"/>
 	<classpathentry kind="lib" path="lib/tokyocabinet.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

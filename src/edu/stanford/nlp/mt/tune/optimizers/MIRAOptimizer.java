@@ -5,7 +5,7 @@ import java.util.List;
 
 import edu.stanford.nlp.classify.BadLicenseMIRAWeightUpdater;
 import edu.stanford.nlp.classify.MIRAWeightUpdater;
-import edu.stanford.nlp.classify.WeightUpdater;
+import edu.stanford.nlp.classify.CounterWeightUpdater;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.tune.HillClimbingMultiTranslationMetricMax;
@@ -65,7 +65,7 @@ public class MIRAOptimizer extends AbstractNBestOptimizer {
     ClassicCounter<String> newWeights = new ClassicCounter<String>(initialWts);
     Counter<String> weightsLastIter;
     
-    WeightUpdater<String, String> weightUpdater = new MIRAWeightUpdater<String, String>(C/nbest.nbestLists().size());
+    CounterWeightUpdater<String, String> weightUpdater = new MIRAWeightUpdater<String, String>(C/nbest.nbestLists().size());
     //WeightUpdater<String, String> weightUpdater = new BadLicenseMIRAWeightUpdater<String, String>();
     
     System.err.println("Running one MIRA epoch\n");
