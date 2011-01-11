@@ -62,10 +62,10 @@ public class MIRAOptimizer extends AbstractNBestOptimizer {
       }
     }
     
-    ClassicCounter<String> newWeights = new ClassicCounter<String>(initialWts);
+    ClassicCounter<String> newWeights = new ClassicCounter<String>();
     Counter<String> weightsLastIter;
     
-    CounterWeightUpdater<String, String> weightUpdater = new MIRAWeightUpdater<String, String>(C/nbest.nbestLists().size());
+    CounterWeightUpdater<String, String> weightUpdater = new MIRAWeightUpdater<String, String>(C);
     //WeightUpdater<String, String> weightUpdater = new BadLicenseMIRAWeightUpdater<String, String>();
     
     System.err.println("Running one MIRA epoch\n");
