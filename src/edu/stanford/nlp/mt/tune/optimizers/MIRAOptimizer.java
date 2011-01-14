@@ -62,7 +62,7 @@ public class MIRAOptimizer extends AbstractNBestOptimizer {
       }
     }
     
-    ClassicCounter<String> newWeights = new ClassicCounter<String>();
+    ClassicCounter<String> newWeights = new ClassicCounter<String>(initialWts);
     Counter<String> weightsLastIter;
     
     CounterWeightUpdater<String, String> weightUpdater = new MIRAWeightUpdater<String, String>(C);
