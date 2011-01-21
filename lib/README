@@ -18,9 +18,11 @@ include copies of the current .jar files in this directory, but with
 version numbers in the name.  Example: colt1.0.3.jar.
 
 If you're adding a new .jar to the repository, please add the jar
-itself and its source zip and update this file with information about
-the jar.  Any .jar files which appear in this directory should also be
-listed in this file, together with the following information:
+itself and its source zip AND update the Eclipse .classpath file to 
+include the jar and a path to its source.  Please also update this
+file with information about the jar.  Any .jar files which appear in
+this directory should be listed in this file, with the following
+information: 
 
 
 ORIGINAL JAR NAME: original name of the .jar file when downloaded
