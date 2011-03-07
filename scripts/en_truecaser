@@ -24,5 +24,6 @@ cat $tmp | $java -Xmx2g edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm > $
 
 # CRF+LM combination:
 /scr/nlp/data/gale3/NIST09/truecaser/postprocess/combine_crf_hmm $tmp.crf $tmp.lm $*
+#echo "XXXX" /scr/nlp/data/gale3/NIST09/truecaser/postprocess/combine_crf_hmm $tmp.crf $tmp.lm $*
 
-rm -f $tmp $tmp.crf $tmp.lm
+#rm -f $tmp $tmp.crf $tmp.lm

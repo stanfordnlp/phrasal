@@ -47,7 +47,7 @@ public class FlatNBestListTest extends TestCase {
   }
 
   public void testToString() throws IOException {
-    assertTrue(nbestList.toString().length() == 168160);
+    assertTrue(nbestList.toString().length() == 168159);
     assertTrue(nbestList.toString().trim()
         .endsWith("LexR::swapWithPrevious:-3.874500"));
     assertTrue(nbestList.toString().startsWith("Flat N-Best List"));
