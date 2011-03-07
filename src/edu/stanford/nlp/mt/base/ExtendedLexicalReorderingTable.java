@@ -151,8 +151,8 @@ public class ExtendedLexicalReorderingTable {
   public final ConditionTypes conditionType;
 
   private static int[] mergeInts(int[] array1, int[] array2) {
-    return new int[] { MosesPhraseTable.foreignIndex.indexOf(array1, true),
-        MosesPhraseTable.translationIndex.indexOf(array2, true) };
+    return new int[] { FlatPhraseTable.foreignIndex.indexOf(array1, true),
+        FlatPhraseTable.translationIndex.indexOf(array2, true) };
   }
 
   public float[] getReorderingScores(int phraseId) {
@@ -160,9 +160,9 @@ public class ExtendedLexicalReorderingTable {
     int reorderingId = -1;
 
     if (conditionType == ConditionTypes.f) {
-      reorderingId = MosesPhraseTable.translationIndex.get(phraseId)[0];
+      reorderingId = FlatPhraseTable.translationIndex.get(phraseId)[0];
     } else if (conditionType == ConditionTypes.e) {
-      reorderingId = MosesPhraseTable.translationIndex.get(phraseId)[1];
+      reorderingId = FlatPhraseTable.translationIndex.get(phraseId)[1];
     } else if (conditionType == ConditionTypes.fe) {
       reorderingId = phraseId;
     }
@@ -321,7 +321,7 @@ public class ExtendedLexicalReorderingTable {
         }
       }
 
-      int idx = MosesPhraseTable.translationIndex.indexOf(indexInts, true);
+      int idx = FlatPhraseTable.translationIndex.indexOf(indexInts, true);
       while (idx >= reorderingScores.size())
         reorderingScores.add(null);
       assert (reorderingScores.get(idx) == null);
@@ -358,7 +358,7 @@ public class ExtendedLexicalReorderingTable {
       int[] translation = IStrings.toIntArray(IStrings.toIStringArray(fields[1]
           .split("\\s+")));
       int[] merged = mergeInts(foreign, translation);
-      int id = MosesPhraseTable.translationIndex.indexOf(merged);
+      int id = FlatPhraseTable.translationIndex.indexOf(merged);
       float[] scores = mlrt.getReorderingScores(id);
       for (int i = 0; i < scores.length; i++) {
         System.out.printf("%s: %e\n", mlrt.positionalMapping[i], scores[i]);

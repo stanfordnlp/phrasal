@@ -9,17 +9,17 @@ import java.util.*;
  * 
  * @author Michel Galley
  */
-public class MosesPhraseExtractor extends AbstractPhraseExtractor {
+public class FlatPhraseExtractor extends AbstractPhraseExtractor {
 
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
   }
 
-  public MosesPhraseExtractor(Properties prop, AlignmentTemplates alTemps,
+  public FlatPhraseExtractor(Properties prop, AlignmentTemplates alTemps,
       List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    System.err.println("Using Moses phrase extractor (fast version).");
+    System.err.println("Using flat phrase extractor (fast version).");
   }
 
   @Override

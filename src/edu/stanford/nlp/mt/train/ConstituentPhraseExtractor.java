@@ -12,7 +12,7 @@ import edu.stanford.nlp.trees.Constituent;
  *
  * @author Michel Galley
  */
-public class ConstituentPhraseExtractor extends MosesPhraseExtractor {
+public class ConstituentPhraseExtractor extends FlatPhraseExtractor {
 
   // NOTE: unfinished
 

@@ -96,7 +96,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       numProcs = 1;
     }
     threadPool = Executors.newFixedThreadPool(numProcs);
-
+    
+    System.err.printf("Beam expansion threads: %d\n", numProcs);
     /*
      * if (useITGConstraints) { System.err.printf("Using ITG Constraints\n"); }
      * else { System.err.printf("Not using ITG Constraints\n"); }

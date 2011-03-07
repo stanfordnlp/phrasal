@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.mt.tune.NBestOptimizer;
-import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 
 import java.util.Random;
@@ -13,7 +13,7 @@ import java.util.Random;
  */
 public abstract class AbstractNBestOptimizer implements NBestOptimizer {
 
-  protected final MosesNBestList nbest;
+  protected final FlatNBestList nbest;
 
   protected final MERT mert;
   protected final Random random;

@@ -6,7 +6,7 @@ import java.io.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 
 public class NBestSourceHistogram {
@@ -21,7 +21,7 @@ public class NBestSourceHistogram {
     }
 
     String nbestFilename = args[0];
-    MosesNBestList nbestListContainer = new MosesNBestList(nbestFilename);
+    FlatNBestList nbestListContainer = new FlatNBestList(nbestFilename);
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbestListContainer
         .nbestLists();
 

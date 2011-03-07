@@ -6,7 +6,7 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.LanguageModel;
-import edu.stanford.nlp.mt.base.MosesPhraseTable;
+import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 
 /**
@@ -45,16 +45,16 @@ public class FeaturizerFactory {
   static {
     Map<String, Double> m = DEFAULT_TM_FEATURE_WEIGHTS_MAP;
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + MosesPhraseTable.FIVESCORE_PHI_t_f, 0.2);
+        + FlatPhraseTable.FIVESCORE_PHI_t_f, 0.2);
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + MosesPhraseTable.FIVESCORE_LEX_t_f, 1.0);
+        + FlatPhraseTable.FIVESCORE_LEX_t_f, 1.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + MosesPhraseTable.FIVESCORE_PHI_f_t, 2.0);
+        + FlatPhraseTable.FIVESCORE_PHI_f_t, 2.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + MosesPhraseTable.FIVESCORE_LEX_f_t, 1.0);
+        + FlatPhraseTable.FIVESCORE_LEX_f_t, 1.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + MosesPhraseTable.FIVESCORE_PHRASE_PENALTY, -1.0);
-    m.put(PhraseTableScoresFeaturizer.PREFIX + MosesPhraseTable.ONESCORE_P_t_f,
+        + FlatPhraseTable.FIVESCORE_PHRASE_PENALTY, -1.0);
+    m.put(PhraseTableScoresFeaturizer.PREFIX + FlatPhraseTable.ONESCORE_P_t_f,
         4.0);
 
     DEFAULT_BASELINE_WTS = new double[] { DEFAULT_LINEAR_DISTORTION_WT,

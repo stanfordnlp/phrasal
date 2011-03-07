@@ -54,12 +54,12 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
 
   Set<DTUPhrase> seen = new HashSet<DTUPhrase>(QUEUE_SZ);
 
-  MosesPhraseExtractor substringExtractor;
+  FlatPhraseExtractor substringExtractor;
 
   public DTUPhraseExtractor(Properties prop, AlignmentTemplates alTemps,
       List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    substringExtractor = new MosesPhraseExtractor(prop, alTemps, extractors);
+    substringExtractor = new FlatPhraseExtractor(prop, alTemps, extractors);
     substringExtractor.alGrid = alGrid;
     System.err.println("Using DTU phrase extractor.");
   }
@@ -67,7 +67,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   @Override
   public Object clone() throws CloneNotSupportedException {
     DTUPhraseExtractor c = (DTUPhraseExtractor) super.clone();
-    c.substringExtractor = (MosesPhraseExtractor) substringExtractor.clone();
+    c.substringExtractor = (FlatPhraseExtractor) substringExtractor.clone();
     c.substringExtractor.alGrid = c.alGrid;
     c.seen = new HashSet<DTUPhrase>(QUEUE_SZ);
     return c;

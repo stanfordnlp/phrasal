@@ -9,7 +9,7 @@ import java.io.*;
  * @author danielcer
  * 
  */
-public class MosesLexicalReorderingTable {
+public class LexicalReorderingTable {
   final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
 
   /**
@@ -156,7 +156,7 @@ public class MosesLexicalReorderingTable {
    * 
    * @throws IOException
    */
-  public MosesLexicalReorderingTable(String filename) throws IOException {
+  public LexicalReorderingTable(String filename) throws IOException {
     String filetype = init(filename, null);
     this.filetype = filetype;
     this.positionalMapping = (ReorderingTypes[]) fileTypeToReorderingType
@@ -165,7 +165,7 @@ public class MosesLexicalReorderingTable {
 
   }
 
-  public MosesLexicalReorderingTable(String filename, String desiredFileType)
+  public LexicalReorderingTable(String filename, String desiredFileType)
       throws IOException {
     String filetype = init(filename, desiredFileType);
     if (!desiredFileType.equals(filetype)) {
@@ -184,7 +184,7 @@ public class MosesLexicalReorderingTable {
     Runtime rt = Runtime.getRuntime();
     long preTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
-    System.err.printf("Loading Moses Lexical Reordering Table: %s\n", filename);
+    System.err.printf("Loading Lexical Reordering Table: %s\n", filename);
     ReorderingTypes[] positionalMapping = null;
     ConditionTypes conditionType = null;
     String selectedFiletype = null;
@@ -325,11 +325,11 @@ public class MosesLexicalReorderingTable {
   public static void main(String[] args) throws IOException {
     if (args.length != 1) {
       System.err
-          .printf("Usage:\n\tjava MosesLexicalReorderingTable (lexical reordering filename)\n");
+          .printf("Usage:\n\tjava LexicalReorderingTable (lexical reordering filename)\n");
       System.exit(-1);
     }
 
-    MosesLexicalReorderingTable mlrt = new MosesLexicalReorderingTable(args[0]);
+    LexicalReorderingTable mlrt = new LexicalReorderingTable(args[0]);
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     System.out.print("\n>");

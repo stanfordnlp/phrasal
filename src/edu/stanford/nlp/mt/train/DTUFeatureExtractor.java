@@ -17,7 +17,7 @@ import java.util.List;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class DTUFeatureExtractor extends MosesFeatureExtractor {
+public class DTUFeatureExtractor extends MosesPharoahFeatureExtractor {
 
   private static final String DEBUG_PROPERTY = "DebugDTUFeatureExtractor";
   private static final int DEBUG = Integer.parseInt(System.getProperty(

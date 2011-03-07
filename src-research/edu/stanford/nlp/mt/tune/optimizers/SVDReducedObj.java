@@ -12,7 +12,7 @@ import no.uib.cipr.matrix.Vector;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.SparseFeatureValueCollection;
 import edu.stanford.nlp.mt.tune.MERT;
@@ -130,7 +130,7 @@ public class SVDReducedObj extends AbstractNBestOptimizer {
     return reducedWts;
   }
 
-  static public void nbestListToFeatureDocumentMatrix(MosesNBestList nbest,
+  static public void nbestListToFeatureDocumentMatrix(FlatNBestList nbest,
       Ptr<Matrix> pFeatDocMat, Ptr<Map<String, Integer>> pFeatureIdMap) {
 
     // build map from feature names to consecutive unique integer ids
@@ -213,8 +213,8 @@ public class SVDReducedObj extends AbstractNBestOptimizer {
     return wts;
   }
 
-  static public MosesNBestList nbestListToDimReducedNbestList(
-      MosesNBestList nbest, Matrix reducedRepV) {
+  static public FlatNBestList nbestListToDimReducedNbestList(
+      FlatNBestList nbest, Matrix reducedRepV) {
 
     List<List<ScoredFeaturizedTranslation<IString, String>>> oldNbestLists = nbest
         .nbestLists();
@@ -247,6 +247,6 @@ public class SVDReducedObj extends AbstractNBestOptimizer {
       }
     }
 
-    return new MosesNBestList(newNbestLists, false);
+    return new FlatNBestList(newNbestLists, false);
   }
 }

@@ -245,7 +245,7 @@ public class Phrasal {
     if (withGaps)
       gapOpts = config.containsKey(MAX_GAP_SPAN_OPT) ? config
           .get(MAX_GAP_SPAN_OPT) : config.get(GAPS_OPT);
-    MosesPhraseTable.createIndex(withGaps);
+    FlatPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
           GAPS_IN_FUTURE_COST_OPT).get(0));
@@ -455,7 +455,7 @@ public class Phrasal {
                     DISTORTION_FILE));
       }
       lexReorderFeaturizer = mosesMode || stdDistFile ? new LexicalReorderingFeaturizer(
-          new MosesLexicalReorderingTable(modelFilename, modelType))
+          new LexicalReorderingTable(modelFilename, modelType))
           : new HierarchicalReorderingFeaturizer(modelFilename, modelType);
     }
     int discriminativeLMOrder;
@@ -692,28 +692,28 @@ public class Phrasal {
       if (tmodelWtsStr.size() == 5) {
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                MosesPhraseTable.FIVESCORE_PHI_t_f), Double
+                FlatPhraseTable.FIVESCORE_PHI_t_f), Double
                 .parseDouble(tmodelWtsStr.get(0)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                MosesPhraseTable.FIVESCORE_LEX_t_f), Double
+                FlatPhraseTable.FIVESCORE_LEX_t_f), Double
                 .parseDouble(tmodelWtsStr.get(1)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                MosesPhraseTable.FIVESCORE_PHI_f_t), Double
+                FlatPhraseTable.FIVESCORE_PHI_f_t), Double
                 .parseDouble(tmodelWtsStr.get(2)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                MosesPhraseTable.FIVESCORE_LEX_f_t), Double
+                FlatPhraseTable.FIVESCORE_LEX_f_t), Double
                 .parseDouble(tmodelWtsStr.get(3)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                MosesPhraseTable.FIVESCORE_PHRASE_PENALTY), Double
+                FlatPhraseTable.FIVESCORE_PHRASE_PENALTY), Double
                 .parseDouble(tmodelWtsStr.get(4)));
       } else if (tmodelWtsStr.size() == 1) {
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                MosesPhraseTable.ONESCORE_P_t_f), Double
+                FlatPhraseTable.ONESCORE_P_t_f), Double
                 .parseDouble(tmodelWtsStr.get(0)));
       } else {
         throw new RuntimeException(String.format(
@@ -743,7 +743,7 @@ public class Phrasal {
     }
 
     if (config.containsKey(PREFERED_REF_INTERNAL_STATE)) {
-      preferedInternalState = new MosesNBestList(config.get(
+      preferedInternalState = new FlatNBestList(config.get(
           PREFERED_REF_INTERNAL_STATE).get(0));
     }
 
@@ -2150,7 +2150,7 @@ public class Phrasal {
         : readArgs(args);
     initStaticMembers(config);
     Phrasal p = new Phrasal(config);
-    MosesPhraseTable.lockIndex();
+    FlatPhraseTable.lockIndex();
     p.executiveLoop();
     System.exit(0);
   }

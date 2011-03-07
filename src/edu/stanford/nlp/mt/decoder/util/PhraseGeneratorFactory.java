@@ -5,7 +5,7 @@ import java.io.*;
 
 import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.base.IdentityPhraseGenerator;
-import edu.stanford.nlp.mt.base.MosesPhraseTable;
+import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SymbolFilter;
 import edu.stanford.nlp.mt.base.DTUTable;
@@ -57,7 +57,7 @@ public class PhraseGeneratorFactory {
         String filename = fields[1];
         if (type.equals(PHAROAH_PHRASE_TABLE)
             || type.equals(PHAROAH_PHRASE_TABLE_ALT)) {
-          phraseTables.add((new MosesPhraseTable<FV>(phraseFeaturizer, scorer,
+          phraseTables.add((new FlatPhraseTable<FV>(phraseFeaturizer, scorer,
               filename)));
         } else if (type.equals(DTU_GENERATOR)) {
           phraseTables
@@ -133,7 +133,7 @@ public class PhraseGeneratorFactory {
         if (withGaps)
           pharoahList.add(new DTUTable<FV>(phraseFeaturizer, scorer, filename));
         else
-          pharoahList.add(new MosesPhraseTable<FV>(phraseFeaturizer, scorer,
+          pharoahList.add(new FlatPhraseTable<FV>(phraseFeaturizer, scorer,
               filename));
       }
 

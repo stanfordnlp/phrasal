@@ -76,7 +76,7 @@ public class ParaphraseExtractor extends PhraseExtract {
   public boolean write(PrintStream oStream, boolean noAlign) {
 
     assert (extractors.size() == 1);
-    MosesFeatureExtractor e = (MosesFeatureExtractor) extractors.get(0);
+    MosesPharoahFeatureExtractor e = (MosesPharoahFeatureExtractor) extractors.get(0);
 
     Map<Integer, Beam<PhraseHyp>> kbest_ef = getKBest(BEAM_SZ, false);
     Map<Integer, Beam<PhraseHyp>> kbest_fe = getKBest(BEAM_SZ, true);
@@ -150,7 +150,7 @@ public class ParaphraseExtractor extends PhraseExtract {
     Map<Integer, Beam<PhraseHyp>> m = new Int2ObjectOpenHashMap<Beam<PhraseHyp>>();
 
     assert (extractors.size() == 1);
-    MosesFeatureExtractor e = (MosesFeatureExtractor) extractors.get(0);
+    MosesPharoahFeatureExtractor e = (MosesPharoahFeatureExtractor) extractors.get(0);
 
     for (int idx = 0; idx < alTemps.size(); ++idx) {
 
@@ -180,7 +180,7 @@ public class ParaphraseExtractor extends PhraseExtract {
 
   private int totalFCount() {
     assert (extractors.size() == 1);
-    MosesFeatureExtractor e = (MosesFeatureExtractor) extractors.get(0);
+    MosesPharoahFeatureExtractor e = (MosesPharoahFeatureExtractor) extractors.get(0);
     int total = 0;
     for (int c : e.fCounts)
       total += c;

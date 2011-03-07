@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  * 
  * @author Daniel Cer
  */
-public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
+public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     implements PhraseTable<IString> {
 
   public static final String FIVESCORE_PHI_t_f = "phi(t|f)";
@@ -156,7 +156,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
 
 
-  public MosesPhraseTable(
+  public FlatPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
       Scorer<FV> scorer, String filename) throws IOException {
     this(phraseFeaturizer, scorer, filename, true);
@@ -166,7 +166,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * 
    * @throws IOException
    */
-  public MosesPhraseTable(
+  public FlatPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
       Scorer<FV> scorer, String filename, boolean doLog) throws IOException {
     super(phraseFeaturizer, scorer);
@@ -382,7 +382,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   static public void main(String[] args) throws Exception {
     if (args.length != 2) {
       System.out
-          .println("Usage:\n\tjava ...MosesPhraseTable (phrasetable file) (entry to look up)");
+          .println("Usage:\n\tjava ...FlatPhraseTable (phrasetable file) (entry to look up)");
       System.exit(-1);
     }
 
@@ -390,7 +390,7 @@ public class MosesPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     String phrase = args[1];
     long startTimeMillis = System.currentTimeMillis();
     System.out.printf("Loading phrase table: %s\n", model);
-    MosesPhraseTable<String> ppt = new MosesPhraseTable<String>(null, null,
+    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null, null,
         model);
     long totalMemory = Runtime.getRuntime().totalMemory() / (1 << 20);
     long freeMemory = Runtime.getRuntime().freeMemory() / (1 << 20);

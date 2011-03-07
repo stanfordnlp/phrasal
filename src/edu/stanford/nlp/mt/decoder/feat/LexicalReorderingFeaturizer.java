@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.MosesLexicalReorderingTable;
+import edu.stanford.nlp.mt.base.LexicalReorderingTable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
@@ -20,9 +20,9 @@ public class LexicalReorderingFeaturizer implements
 
   static final String FEATURE_PREFIX = "LexR:";
   public final String[] featureTags;
-  public final MosesLexicalReorderingTable mlrt;
+  public final LexicalReorderingTable mlrt;
   final boolean DETAILED_DEBUG = false;
-  final MosesLexicalReorderingTable.ReorderingTypes[] discriminativeSet;
+  final LexicalReorderingTable.ReorderingTypes[] discriminativeSet;
   public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(
       ARPALanguageModel.START_TOKEN);
   final boolean useAlignmentConstellations;
@@ -33,7 +33,7 @@ public class LexicalReorderingFeaturizer implements
    */
   public LexicalReorderingFeaturizer() {
     // by default include everything
-    discriminativeSet = MosesLexicalReorderingTable.ReorderingTypes.values();
+    discriminativeSet = LexicalReorderingTable.ReorderingTypes.values();
     mlrt = null;
     featureTags = null;
     useAlignmentConstellations = false;
@@ -44,7 +44,7 @@ public class LexicalReorderingFeaturizer implements
    * 
    */
   public LexicalReorderingFeaturizer(String... strTypes) {
-    discriminativeSet = MosesLexicalReorderingTable.ReorderingTypes.values();
+    discriminativeSet = LexicalReorderingTable.ReorderingTypes.values();
     boolean useAlignmentConstellations = false;
     for (String strType : strTypes) {
       if (strType.equals("conditionOnConstellations")) {
@@ -59,7 +59,7 @@ public class LexicalReorderingFeaturizer implements
     featureTags = null;
   }
 
-  public LexicalReorderingFeaturizer(MosesLexicalReorderingTable mlrt) {
+  public LexicalReorderingFeaturizer(LexicalReorderingTable mlrt) {
     this.mlrt = mlrt;
     useAlignmentConstellations = false;
     featureTags = new String[mlrt.positionalMapping.length];
@@ -85,7 +85,7 @@ public class LexicalReorderingFeaturizer implements
         + f.foreignPhrase.size() == f.prior.foreignPosition);
 
     if (discriminativeSet != null) {
-      for (MosesLexicalReorderingTable.ReorderingTypes mrt : discriminativeSet) {
+      for (LexicalReorderingTable.ReorderingTypes mrt : discriminativeSet) {
         if (!featureFunction(monotone, swap, mrt))
           continue;
         if (usePrior(mrt)) {
@@ -180,7 +180,7 @@ public class LexicalReorderingFeaturizer implements
     return values;
   }
 
-  private boolean usePrior(MosesLexicalReorderingTable.ReorderingTypes type) {
+  private boolean usePrior(LexicalReorderingTable.ReorderingTypes type) {
     switch (type) {
     case monotoneWithNext:
     case swapWithNext:
@@ -192,7 +192,7 @@ public class LexicalReorderingFeaturizer implements
   }
 
   private boolean featureFunction(boolean monotone, boolean swap,
-      MosesLexicalReorderingTable.ReorderingTypes type) {
+      LexicalReorderingTable.ReorderingTypes type) {
     switch (type) {
     case monotoneWithPrevious:
     case monotoneWithNext:

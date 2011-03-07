@@ -310,7 +310,7 @@ public class PhraseExtract {
 
     String exsString = prop.getProperty(EXTRACTORS_OPT);
     if (exsString == null || exsString.equals("") || exsString.equals("moses"))
-      exsString = MosesFeatureExtractor.class.getName() + ":"
+      exsString = MosesPharoahFeatureExtractor.class.getName() + ":"
           + LexicalReorderingFeatureExtractor.class.getName();
 
     alTemps = new AlignmentTemplates(prop, sourceFilter);
@@ -397,7 +397,7 @@ public class PhraseExtract {
       }
     } else {
       phraseExtractor = withGaps ? new DTUPhraseExtractor(prop, alTemps,
-          extractors) : new MosesPhraseExtractor(prop, alTemps, extractors);
+          extractors) : new FlatPhraseExtractor(prop, alTemps, extractors);
     }
 
     setTotalPassNumber();

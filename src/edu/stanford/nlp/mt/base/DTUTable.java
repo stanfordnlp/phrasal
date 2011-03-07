@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
-public class DTUTable<FV> extends MosesPhraseTable<FV> {
+public class DTUTable<FV> extends FlatPhraseTable<FV> {
 
   static public final IString GAP_STR = new IString("X");
   static public final boolean DEBUG = true;

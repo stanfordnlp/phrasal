@@ -9,13 +9,13 @@ import junit.framework.TestCase;
  * @author Karthik Raghunathan
  * @author Michel Galley (conversion from testng to junit)
  */
-public class MosesNBestListTest extends TestCase {
+public class FlatNBestListTest extends TestCase {
 
-  static MosesNBestList nbestList;
+  static FlatNBestList nbestList;
 
   static {
     try {
-      nbestList = new MosesNBestList(
+      nbestList = new FlatNBestList(
           "projects/mt/test/inputs/properSample.test");
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -50,7 +50,7 @@ public class MosesNBestListTest extends TestCase {
     assertTrue(nbestList.toString().length() == 168160);
     assertTrue(nbestList.toString().trim()
         .endsWith("LexR::swapWithPrevious:-3.874500"));
-    assertTrue(nbestList.toString().startsWith("Moses N-Best List"));
+    assertTrue(nbestList.toString().startsWith("Flat N-Best List"));
   }
 
   public void testRuntimeException() throws IOException {
@@ -61,7 +61,7 @@ public class MosesNBestListTest extends TestCase {
     for (String fileName : fileNames) {
       boolean goodFile = false;
       try {
-        new MosesNBestList(fileName);
+        new FlatNBestList(fileName);
         goodFile = true;
       } catch (Exception e) {
       }

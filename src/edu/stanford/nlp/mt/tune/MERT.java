@@ -116,14 +116,14 @@ public class MERT extends Thread {
     breakTiesWithLastBest = true;
   }
 
-  public double mcmcTightExpectedEval(MosesNBestList nbest,
+  public double mcmcTightExpectedEval(FlatNBestList nbest,
       Counter<String> wts, EvaluationMetric<IString, String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
   }
 
   static boolean alwaysSkipMCMC = true;
 
-  public double mcmcTightExpectedEval(MosesNBestList nbest,
+  public double mcmcTightExpectedEval(FlatNBestList nbest,
       Counter<String> wts, EvaluationMetric<IString, String> emetric,
       boolean regularize) {
     if (alwaysSkipMCMC)
@@ -226,20 +226,20 @@ public class MERT extends Thread {
   }
 
   static public List<ScoredFeaturizedTranslation<IString, String>> transEvalArgmax(
-      MosesNBestList nbest, EvaluationMetric<IString, String> emetric) {
+      FlatNBestList nbest, EvaluationMetric<IString, String> emetric) {
     MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
         emetric);
     return oneBestSearch.maximize(nbest);
   }
 
   public List<ScoredFeaturizedTranslation<IString, String>> randomBetterTranslations(
-      MosesNBestList nbest, Counter<String> wts,
+      FlatNBestList nbest, Counter<String> wts,
       EvaluationMetric<IString, String> emetric) {
     return randomBetterTranslations(nbest, transArgmax(nbest, wts), emetric);
   }
 
   public List<ScoredFeaturizedTranslation<IString, String>> randomBetterTranslations(
-      MosesNBestList nbest,
+      FlatNBestList nbest,
       List<ScoredFeaturizedTranslation<IString, String>> current,
       EvaluationMetric<IString, String> emetric) {
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest
@@ -284,7 +284,7 @@ public class MERT extends Thread {
     }
   }
 
-  public Counter<String> lineSearch(MosesNBestList nbest,
+  public Counter<String> lineSearch(FlatNBestList nbest,
       Counter<String> optWts, Counter<String> direction,
       EvaluationMetric<IString, String> emetric) {
 
@@ -484,7 +484,7 @@ public class MERT extends Thread {
   }
 
   static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(
-      MosesNBestList nbest, Counter<String> wts) {
+      FlatNBestList nbest, Counter<String> wts) {
     Scorer<String> scorer = new StaticScorer(wts, featureIndex);
     MultiTranslationMetricMax<IString, String> oneBestSearch = new GreedyMultiTranslationMetricMax<IString, String>(
         new ScorerWrapperEvaluationMetric<IString, String>(scorer));
@@ -492,7 +492,7 @@ public class MERT extends Thread {
   }
 
   public List<ScoredFeaturizedTranslation<IString, String>> randomTranslations(
-      MosesNBestList nbest) {
+      FlatNBestList nbest) {
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest
         .nbestLists();
     List<ScoredFeaturizedTranslation<IString, String>> trans = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
@@ -532,7 +532,7 @@ public class MERT extends Thread {
   IncrementalEvaluationMetric<IString, String> quickIncEval;
 
   private void resetQuickEval(EvaluationMetric<IString, String> emetric,
-      MosesNBestList nbest) {
+      FlatNBestList nbest) {
     quickIncEval = emetric.getIncrementalMetric();
     int sz = nbest.nbestLists().size();
     for (int i = 0; i < sz; i++) {
@@ -546,7 +546,7 @@ public class MERT extends Thread {
    * Previously, profiling revealed that this was a serious hotspot
    * 
    */
-  private double quickEvalAtPoint(MosesNBestList nbest, Set<InterceptIDs> s) {
+  private double quickEvalAtPoint(FlatNBestList nbest, Set<InterceptIDs> s) {
     if (DEBUG)
       System.out.printf("replacing %d points\n", s.size());
     for (InterceptIDs iId : s) {
@@ -563,7 +563,7 @@ public class MERT extends Thread {
     System.err.println("fast static scorer: " + FAST_STATIC_SCORER);
   }
 
-  static public double evalAtPoint(MosesNBestList nbest,
+  static public double evalAtPoint(FlatNBestList nbest,
       Counter<String> optWts, EvaluationMetric<IString, String> emetric) {
     Counter<String> wts = optWts;
     if (fixedWts != null) {
@@ -688,7 +688,7 @@ public class MERT extends Thread {
   static int nInitialStartingPoints;
   final static Queue<Counter<String>> startingPoints = new LinkedList<Counter<String>>();
 
-  public static MosesNBestList nbest;
+  public static FlatNBestList nbest;
   static long startTime;
 
   static Counter<String> initialWts;
@@ -731,9 +731,9 @@ public class MERT extends Thread {
 
     // Load nbest list:
     System.err.printf("Loading nbest list: %s\n", nbestListFile);
-    nbest = new MosesNBestList(nbestListFile, featureIndex, tokenizeNIST);
+    nbest = new FlatNBestList(nbestListFile, featureIndex, tokenizeNIST);
     System.err.printf("Loading local nbest list: %s\n", localNbestListFile);
-    MosesNBestList localNbest = new MosesNBestList(localNbestListFile,
+    FlatNBestList localNbest = new FlatNBestList(localNbestListFile,
         nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
 
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null

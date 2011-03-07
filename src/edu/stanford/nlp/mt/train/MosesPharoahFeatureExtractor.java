@@ -21,7 +21,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * 
  * @author Michel Galley
  */
-public class MosesFeatureExtractor extends AbstractFeatureExtractor implements
+public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor implements
     PhrasePrinter {
 
   public static final double MIN_LEX_PROB = 1e-5;

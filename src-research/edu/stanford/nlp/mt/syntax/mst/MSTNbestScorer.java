@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.syntax.mst;
 
-import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
@@ -41,7 +41,7 @@ public class MSTNbestScorer {
     for (int i = 3; i < args.length; ++i) {
       String nbestListFile = args[i];
       System.err.println("Loading nbest list: " + nbestListFile);
-      final MosesNBestList nbestList = new MosesNBestList(nbestListFile, true);
+      final FlatNBestList nbestList = new FlatNBestList(nbestListFile, true);
 
       doneThreads.set(0);
       curSent.set(0);
@@ -94,7 +94,7 @@ public class MSTNbestScorer {
     return null;
   }
 
-  private static void addMSTFeatures(DependencyParser dp, MosesNBestList nbest,
+  private static void addMSTFeatures(DependencyParser dp, FlatNBestList nbest,
       int i) throws IOException {
     // Add dependency parsing score:
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLL = nbest

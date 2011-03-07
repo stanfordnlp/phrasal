@@ -7,7 +7,7 @@ import java.util.Set;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.tune.MERT;
@@ -82,7 +82,7 @@ public class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
   static class ObjELossDiffFunction implements DiffFunction, HasInitial {
 
     final MERT mert;
-    final MosesNBestList nbest;
+    final FlatNBestList nbest;
     final Counter<String> initialWts;
     final EvaluationMetric<IString, String> emetric;
     final int domainDimension;

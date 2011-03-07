@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -20,7 +20,7 @@ import edu.stanford.nlp.util.ErasureUtils;
  */
 public class FullKMeans extends AbstractNBestOptimizer {
 
-  static MosesNBestList lastNbest;
+  static FlatNBestList lastNbest;
   static List<Counter<String>> lastKMeans;
   static Counter<String> lastWts;
 

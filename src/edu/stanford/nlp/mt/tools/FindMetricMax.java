@@ -91,7 +91,7 @@ public class FindMetricMax {
           "Unrecognized search algorithm: '%s'", searchAlgorithmStr));
     }
 
-    NBestListContainer<IString, String> nbestLists = new MosesNBestList(
+    NBestListContainer<IString, String> nbestLists = new FlatNBestList(
         nbestListFilename);
     List<ScoredFeaturizedTranslation<IString, String>> maxFeaturizedTranslations = searchAlgorithm
         .maximize(nbestLists);

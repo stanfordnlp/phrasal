@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.mt.base.MosesPhraseTable.IntArrayTranslationOption;
+import edu.stanford.nlp.mt.base.FlatPhraseTable.IntArrayTranslationOption;
 
 /**
  * @author Michel Galley
  */
-public class MosesPhraseTableFilter {
+public class PhraseTableFilter {
 
-  private static final int N_VARIABLE_MOSES_FEATURES = MosesPhraseTable.CANONICAL_FIVESCORE_SCORE_TYPES.length - 1;
+  private static final int N_VARIABLE_MOSES_FEATURES = FlatPhraseTable.CANONICAL_FIVESCORE_SCORE_TYPES.length - 1;
 
   static class ScoredOpt implements Comparable<ScoredOpt> {
 
@@ -37,7 +37,7 @@ public class MosesPhraseTableFilter {
   public static void main(String[] args) throws IOException {
     if (args.length != 3) {
       System.out
-          .println("Usage:\n\tjava ...MosesPhraseTableFilter (options per input phrase) (input phrase table file) (output phrase table file)");
+          .println("Usage:\n\tjava ...PhraseTableFilter (options per input phrase) (input phrase table file) (output phrase table file)");
       System.exit(-1);
     }
 
@@ -46,7 +46,7 @@ public class MosesPhraseTableFilter {
     String outTable = args[2];
 
     System.out.printf("Loading phrase table: %s\n", inTable);
-    MosesPhraseTable<String> ppt = new MosesPhraseTable<String>(null, null, inTable, false);
+    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null, null, inTable, false);
 
     // Create Scorers:
     int nBits = N_VARIABLE_MOSES_FEATURES;
@@ -73,7 +73,7 @@ public class MosesPhraseTableFilter {
 
       // Get foreign phrase:
       List<IntArrayTranslationOption> opts = ppt.translations.get(pi);
-      int[] foreignInts = MosesPhraseTable.foreignIndex.get(pi);
+      int[] foreignInts = FlatPhraseTable.foreignIndex.get(pi);
       RawSequence<IString> rawForeign = new RawSequence<IString>(IStrings.toIStringArray(foreignInts));
 
       // Generate translation options:

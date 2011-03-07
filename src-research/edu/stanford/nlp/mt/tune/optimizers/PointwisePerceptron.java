@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.MosesNBestList;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StaticScorer;
@@ -45,7 +45,7 @@ public class PointwisePerceptron extends AbstractNBestOptimizer {
         List<List<ScoredFeaturizedTranslation<IString, String>>> nbestSlice = Arrays
             .asList(nbest.nbestLists().get(i));
         List<ScoredFeaturizedTranslation<IString, String>> current = argmaxByScore
-            .maximize(new MosesNBestList(nbestSlice, false));
+            .maximize(new FlatNBestList(nbestSlice, false));
         Counter<String> dir = MERT.summarizedAllFeaturesVector(Arrays
             .asList(targets.get(i)));
         Counters

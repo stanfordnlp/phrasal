@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.MosesPhraseTable;
+import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.PhraseTable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
@@ -27,7 +27,7 @@ public class DumpPossibleWordCoOccurrences {
 
     String phraseTableFilename = args[0];
     String sourceTextFilename = args[1];
-    PhraseTable<IString> ppt = new MosesPhraseTable<String>(null, null,
+    PhraseTable<IString> ppt = new FlatPhraseTable<String>(null, null,
         phraseTableFilename);
 
     LineNumberReader reader = new LineNumberReader(new FileReader(
