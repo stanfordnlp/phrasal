@@ -20,12 +20,16 @@ http://nlp.stanford.edu/software/corenlp.shtml
 
 Contributors:
 =============
-Daniel Cer
-Michel Galley
-Chris Manning
-Pichuan Chang
-Spence Green
-Karthik Raghunathan
+
+    * Daniel Cer (original author and current maintainer)
+    * Michel Galley
+    * Spence Green
+    * Pi-Chuan Chang
+    * Heeyoung Lee
+    * John Bauer
+    * Karthik Raghunathan
+    * Chris Manning
+
 
 Quick Start Guide:
 ==================
