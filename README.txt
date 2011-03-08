@@ -8,6 +8,9 @@ License:
 
 Phrasal is licensed under the GPL. For details, please see the file LICENSE.txt in the root directory of this software package.
 
+Copyright (c) 2007-2010 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
+
+
 Dependencies:
 =============
 
@@ -15,6 +18,14 @@ The Phrasal decoder requires that you also install the Stanford CoreNLP software
 
 http://nlp.stanford.edu/software/corenlp.shtml
 
+Contributors:
+=============
+Daniel Cer
+Michel Galley
+Chris Manning
+Pichuan Chang
+Spence Green
+Karthik Raghunathan
 
 Quick Start Guide:
 ==================
