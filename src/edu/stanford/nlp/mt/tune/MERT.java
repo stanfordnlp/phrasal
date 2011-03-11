@@ -657,8 +657,13 @@ public class MERT extends Thread {
   }
 
   static void displayWeights(Counter<String> wts) {
-    for (MutablePair<String, Double> p : Counters
-        .toDescendingMagnitudeSortedListWithCounts(wts)) {
+      
+    List<MutablePair<String,Double>> wtsList = Counters.toDescendingMagnitudeSortedListWithCounts(wts);
+    if (wtsList.size() > 100) {
+      wtsList = wtsList.subList(0, 100);
+    }
+           
+    for (MutablePair<String, Double> p : wtsList) {
       System.out.printf("%s %g\n", p.first, p.second);
     }
   }
