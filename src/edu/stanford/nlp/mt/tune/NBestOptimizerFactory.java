@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.tune.optimizers.PowellOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.SequenceOptimizer;
 import edu.stanford.nlp.optimization.DownhillSimplexMinimizer;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -64,16 +65,29 @@ public class NBestOptimizerFactory {
       String[] fields = name.split(":");      
       String[] args = Arrays.copyOfRange(fields, 1, fields.length);
       String[] pathsToCheck = new String[]{"edu.stanford.nlp.mt.tune.optimizers." + fields[0], "edu.stanford.nlp.mt.tune.optimizers."+fields[0]+"Optimizer", fields[0]};
+      String loadPath = null;
+      
       for (String path : pathsToCheck) {
         try {
-          System.err.printf("Trying: %s\n", path);
-          NBestOptimizer nbo = (NBestOptimizer) Class.forName(path).getConstructor(MERT.class, args.getClass()).newInstance(new Object[]{mert, args});
+          Class.forName(path);
+          loadPath = path;
+        } catch(ClassNotFoundException e) { }
+      }
+      
+      if (loadPath == null) {
+        throw new UnsupportedOperationException("Unknown optimizer: " + name);
+      }
+      
+      System.err.printf("Loading %s", loadPath);
+      try {
+          System.err.printf("Trying: %s\n", loadPath);
+          NBestOptimizer nbo = (NBestOptimizer) Class.forName(loadPath).getConstructor(MERT.class, args.getClass()).newInstance(new Object[]{mert, args});
           System.err.println("Loaded optimizer "+nbo.getClass().toString());
           return nbo;
-        } catch (Exception e) { }
-      }      
-      
-      throw new UnsupportedOperationException("Unknown optimizer: " + name);
+      } catch (Exception e) { 
+            throw new RuntimeException(e);            
+      }                     
+
     }
   }
 }
