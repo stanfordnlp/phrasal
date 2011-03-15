@@ -78,17 +78,19 @@ public class StaticScorer implements Scorer<String> {
 
   public StaticScorer(Counter<String> featureWts) {
     this.sharedFeatureIndex = false;
-    featureIndex = new OAIndex<String>();
+    featureIndex = new OAIndex<String>();    
     for (String key : featureWts.keySet()) {
+      // todo - find out what is generating 'null' model weights
+      // for now, we'll just have the decoding model ignore them
+      if (key == null) continue;
       featureIndex.indexOf(key, true);
-      // System.err.printf("---inserting: '%s' index: %d\n", key,
-      // featureIndex.indexOf(key));
     }
 
     weights = new double[featureIndex.size()];
     // weights = new double[featureIndex.boundOnMaxIndex()];
 
     for (String key : featureWts.keySet()) {
+      if (key == null) continue;
       weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
     }
   }
