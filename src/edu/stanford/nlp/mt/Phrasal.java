@@ -783,7 +783,8 @@ public class Phrasal {
       saveWeights = config.get(SAVE_WEIGHTS).get(0);
     }
 
-    System.err.printf("WeightConfig: '%s'\n", weightConfig);
+    
+    System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightConfig, 100), (weightConfig.size() > 100 ? "..." : ""));
     scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig);
 
     // Create phrase generator
