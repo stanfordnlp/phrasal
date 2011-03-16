@@ -39,10 +39,6 @@ import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.*;
 import edu.stanford.nlp.mt.decoder.feat.*;
-
-import edu.stanford.nlp.classify.km.StructuredSVM;
-import edu.stanford.nlp.classify.km.kernels.Kernel;
-import edu.stanford.nlp.classify.km.sparselinearalgebra.SparseVector;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -1518,69 +1514,6 @@ public class Phrasal {
 
   }
 
-  private static class SSVMLearner implements Learner {
-    final StructuredSVM ssvm;
-    final OAIndex<String> featureIndex = new OAIndex<String>();
-    final ClassicCounter<String> wts = new ClassicCounter<String>();
-
-    public SSVMLearner(double C, boolean subgradient) {
-      if (subgradient) {
-        ssvm = StructuredSVM.trainableMCSVM(Kernel.factory("linear"), C,
-            StructuredSVM.StructLoss.MarginRescalePrimal, 1000000);
-      } else {
-        ssvm = StructuredSVM.trainableMCSVM(Kernel.factory("linear"), C,
-            StructuredSVM.StructLoss.MarginRescale, 1000000);
-      }
-    }
-
-    @Override
-    public void saveWeights(String filename) throws IOException {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
-      for (MutablePair<String, Double> p : Counters
-          .toDescendingMagnitudeSortedListWithCounts(wts)) {
-        writer.append(p.first).append(" ").append(p.second.toString())
-            .append("\n");
-      }
-      writer.close();
-    }
-
-    @Override
-    public void weightUpdate(int epoch, int id,
-        RichTranslation<IString, String> target,
-        RichTranslation<IString, String> argmax, double loss) {
-      Map<Integer, Double> trueMap = new HashMap<Integer, Double>();
-      Map<Integer, Double> riskyMap = new HashMap<Integer, Double>();
-      for (FeatureValue<String> feature : target.features) {
-        trueMap.put(featureIndex.indexOf(feature.name, true), feature.value);
-      }
-
-      for (FeatureValue<String> feature : argmax.features) {
-        riskyMap.put(featureIndex.indexOf(feature.name, true), feature.value);
-      }
-
-      SparseVector truePsi = new SparseVector(trueMap);
-      SparseVector riskyPsi = new SparseVector(riskyMap);
-
-      ssvm.expandSubProblem(epoch, id, truePsi, riskyPsi, loss);
-
-      double[] ssvmWts = ssvm.getWeights();
-      for (String featureName : featureIndex.keySet()) {
-        wts.setCount(featureName, ssvmWts[featureIndex.indexOf(featureName)]);
-      }
-    }
-
-    @Override
-    public double getIncrementalScore(Collection<FeatureValue<String>> features) {
-      double sum = 0;
-
-      for (FeatureValue<String> feature : features) {
-        sum += feature.value * wts.getCount(feature.name);
-      }
-
-      return sum;
-    }
-  }
 
   private static class SGDLogLinearLearner implements Learner {
     ClassicCounter<String> wts = new ClassicCounter<String>();
@@ -2107,12 +2040,6 @@ public class Phrasal {
         learningLoop(learner, inputFilename, maxEpochs, saveWeights);
       } else if (learningAlgorithm.equals(MIRA_LEARNING)) {
         Learner learner = new MiraLearner(maxMarginC);
-        learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-      } else if (learningAlgorithm.equals(SSVM_LEARNING)) {
-        Learner learner = new SSVMLearner(maxMarginC, false);
-        learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-      } else if (learningAlgorithm.equals(MMSG_LEARNING)) {
-        Learner learner = new SSVMLearner(maxMarginC, true);
         learningLoop(learner, inputFilename, maxEpochs, saveWeights);
       } else if (learningAlgorithm.equals(COST_MARGIN_LEARNING)) {
         Learner learner = new PerceptronLearner(learningRate);
