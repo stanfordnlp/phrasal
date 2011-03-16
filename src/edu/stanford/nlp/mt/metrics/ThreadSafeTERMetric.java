@@ -16,10 +16,10 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
-import com.bbn.mt.ter.TERcalc;
-import com.bbn.mt.ter.TERalignment;
+import edu.stanford.nlp.mt.metrics.ter.TERcalc;
+import edu.stanford.nlp.mt.metrics.ter.TERalignment;
 
-public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
+public class ThreadSafeTERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   final List<List<Sequence<TK>>> referencesList;
 
@@ -33,12 +33,12 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   boolean countEdits = false;
 
-  public TERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
+  public ThreadSafeTERMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
     this.referencesList = referencesList;
     this.countEdits = countEdits;
   }
 
-  public TERMetric(List<List<Sequence<TK>>> referencesList) {
+  public ThreadSafeTERMetric(List<List<Sequence<TK>>> referencesList) {
     this.referencesList = referencesList;
   }
 
