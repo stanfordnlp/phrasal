@@ -70,9 +70,10 @@ public class MERT extends Thread {
   static boolean breakTiesWithLastBest = false;
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
-  static final String GENERATIVE_FEATURES_LIST_RESOURCE = "mt/resources/generative.features";
+  public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "edu/stanford/nlp/mt/resources/generative.features";
+  
   static public final Set<String> generativeFeatures = SSVMScorer
-      .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
+      .readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 
   public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.metrics.METEORMetric";
   public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERMetric";

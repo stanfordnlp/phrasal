@@ -9,6 +9,7 @@ import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.classify.km.*;
 import edu.stanford.nlp.classify.km.kernels.*;
 import edu.stanford.nlp.classify.km.sparselinearalgebra.SparseVector;
+import edu.stanford.nlp.mt.tune.MERT;
 
 public class SSVMScorer implements Scorer<String> {
   public static final double DEFAULT_C = 100.0;
@@ -16,8 +17,7 @@ public class SSVMScorer implements Scorer<String> {
   public static final double DEFAULT_BIAS_C = Double.POSITIVE_INFINITY;
   public static final double DEFAULT_BIAS_MARGIN = Double.MIN_NORMAL;
 
-  public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "edu/stanford/nlp/mt/resources/generative.features";
-  public static final Set<String> generativeFeatures = readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
+  public static final Set<String> generativeFeatures = readGenerativeFeatureList(MERT.GENERATIVE_FEATURES_LIST_RESOURCE);
 
   public static Set<String> readGenerativeFeatureList(String resourceName) {
     return readGenerativeFeatureList(resourceName, false);

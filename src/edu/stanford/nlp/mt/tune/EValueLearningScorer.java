@@ -12,7 +12,7 @@ import edu.stanford.nlp.util.OAIndex;
 
 public class EValueLearningScorer implements Scorer<String> {
   public static final Set<String> generativeFeatures = SSVMScorer
-      .readGenerativeFeatureList(SSVMScorer.GENERATIVE_FEATURES_LIST_RESOURCE);
+      .readGenerativeFeatureList(MERT.GENERATIVE_FEATURES_LIST_RESOURCE);
 
   final double[] manualWeights;
   private double[] wts;
