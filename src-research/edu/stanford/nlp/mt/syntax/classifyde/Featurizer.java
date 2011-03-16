@@ -13,6 +13,6 @@ interface Featurizer {
       AnnotatedTreePair validSent, Properties props, Set<String> cachedWords);
 
   public Counter<String> extractFeatures(int deIdxInSent,
-      MutablePair<Integer, Integer> chNPrange, Tree chTree, Properties props,
+      Pair<Integer, Integer> chNPrange, Tree chTree, Properties props,
       Set<String> cachedWords);
 }

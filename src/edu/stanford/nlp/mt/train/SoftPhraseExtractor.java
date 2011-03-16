@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 
 import java.util.*;
 
@@ -12,7 +12,7 @@ import java.util.*;
 public class SoftPhraseExtractor extends AbstractPhraseExtractor {
 
   private int maxCrossings;
-  private final Set<MutablePair<Integer, Integer>> cache = new HashSet<MutablePair<Integer, Integer>>();
+  private final Set<Pair<Integer, Integer>> cache = new HashSet<Pair<Integer, Integer>>();
 
   private static final boolean DISABLE_GROW = System.getProperty("disableGrow") != null;
   private static final boolean DISABLE_SHRINK = System
@@ -190,7 +190,7 @@ public class SoftPhraseExtractor extends AbstractPhraseExtractor {
   }
 
   private boolean newPair(int i, int j) {
-    MutablePair<Integer, Integer> p = new MutablePair<Integer, Integer>(i, j);
+    Pair<Integer, Integer> p = new Pair<Integer, Integer>(i, j);
     return cache.add(p);
   }
 }

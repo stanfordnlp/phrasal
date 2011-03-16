@@ -12,7 +12,7 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * @author danielcer
@@ -144,7 +144,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
                                                          // with gaps
     System.err.println("size: " + options.size());
 
-    List<MutablePair<ConcreteTranslationOption<TK>, Double>>[][] dtuLists = new LinkedList[foreignSequenceSize][foreignSequenceSize];
+    List<Pair<ConcreteTranslationOption<TK>, Double>>[][] dtuLists = new LinkedList[foreignSequenceSize][foreignSequenceSize];
 
     for (int i = 0; i < options.size(); ++i) {
       for (ConcreteTranslationOption<TK> option : options.get(i)) {
@@ -180,9 +180,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
           int startPos = option.foreignCoverage.nextSetBit(0);
           terminalPos = option.foreignCoverage.length() - 1;
           if (dtuLists[startPos][terminalPos] == null)
-            dtuLists[startPos][terminalPos] = new LinkedList<MutablePair<ConcreteTranslationOption<TK>, Double>>();
+            dtuLists[startPos][terminalPos] = new LinkedList<Pair<ConcreteTranslationOption<TK>, Double>>();
           dtuLists[startPos][terminalPos]
-              .add(new MutablePair<ConcreteTranslationOption<TK>, Double>(option,
+              .add(new Pair<ConcreteTranslationOption<TK>, Double>(option,
                   score));
         }
       }
@@ -221,7 +221,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         }
         // Merge discontinuous phrase with other phrases:
         if (dtuLists[startPos][terminalPos] != null) {
-          for (MutablePair<ConcreteTranslationOption<TK>, Double> dtu : dtuLists[startPos][terminalPos]) {
+          for (Pair<ConcreteTranslationOption<TK>, Double> dtu : dtuLists[startPos][terminalPos]) {
             ConcreteTranslationOption<TK> option = dtu.first;
             assert (option.foreignPos == startPos);
             double dtuScore = dtu.second;

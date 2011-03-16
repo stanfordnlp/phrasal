@@ -5,7 +5,7 @@ import java.util.Map;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 
 public class DistortionModel implements Serializable {
   private static final long serialVersionUID = 8119388926319744131L;
@@ -62,7 +62,7 @@ public class DistortionModel implements Serializable {
     return logScores[thisC.ordinal()] - denom; // Division in real space
   }
 
-  public MutablePair<Double, DistortionModel.Class> argmax(Datum datum) {
+  public Pair<Double, DistortionModel.Class> argmax(Datum datum) {
     DistortionModel.Class maxClass = null;
     double maxScore = -1.0;
     for (DistortionModel.Class c : DistortionModel.Class.values()) {
@@ -73,7 +73,7 @@ public class DistortionModel implements Serializable {
       }
     }
 
-    return new MutablePair<Double, DistortionModel.Class>(maxScore, maxClass);
+    return new Pair<Double, DistortionModel.Class>(maxScore, maxClass);
   }
 
   private double modelScore(Datum datum, DistortionModel.Class c) {

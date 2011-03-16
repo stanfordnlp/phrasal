@@ -4,7 +4,7 @@ import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.objectbank.IteratorFromReaderFactory;
 import edu.stanford.nlp.objectbank.ReaderIteratorFactory;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.io.FileSequentialCollection;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -48,7 +48,7 @@ public class TextCat {
       data.put("wl", wl);
       data.put("ng", ng);
 
-      MutablePair<GeneralDataset<String, String>, float[]> p = getDataset(data);
+      Pair<GeneralDataset<String, String>, float[]> p = getDataset(data);
       GeneralDataset<String, String> dataset = p.first();
       dataset.summaryStatistics();
       float[] dataWeights = p.second();
@@ -116,13 +116,13 @@ public class TextCat {
         List<String> doc = Arrays.asList(IOUtils.slurpFile(
             file.getAbsolutePath(), "utf-8").split("\\s+"));
         // EncodingPrintWriter.err.println(doc);
-        MutablePair<String, Counter<String>> probs = label(doc, classifier);
+        Pair<String, Counter<String>> probs = label(doc, classifier);
         System.out.println(file + "\t" + probs.first() + "\t" + probs.second());
       }
     }
   }
 
-  private static MutablePair<String, Counter<String>> label(List<String> doc,
+  private static Pair<String, Counter<String>> label(List<String> doc,
       LinearClassifier<String, String> classifier) {
     ClassicCounter<String> features = getFeatures(doc);
     RVFDatum<String, String> datum = new RVFDatum<String, String>(features);
@@ -132,7 +132,7 @@ public class TextCat {
     if (!guess.equals("nw")) {
       guess = "web";
     }
-    return new MutablePair<String, Counter<String>>(guess, probs);
+    return new Pair<String, Counter<String>>(guess, probs);
   }
 
   private static ObjectBank<List<String>> getWebData(Collection<String> dirPath) {
@@ -158,7 +158,7 @@ public class TextCat {
     return new ObjectBank<List<String>>(rif, ifrf);
   }
 
-  private static MutablePair<GeneralDataset<String, String>, float[]> getDataset(
+  private static Pair<GeneralDataset<String, String>, float[]> getDataset(
       Map<String, ObjectBank<List<String>>> data) {
 
     List<Float> dataWeights = new ArrayList<Float>();
@@ -185,7 +185,7 @@ public class TextCat {
       dataWeightsArray[i] = dataWeights.get(i);
     }
 
-    return new MutablePair<GeneralDataset<String, String>, float[]>(dataset,
+    return new Pair<GeneralDataset<String, String>, float[]>(dataset,
         dataWeightsArray);
   }
 

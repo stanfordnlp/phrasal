@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * 
@@ -31,7 +31,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       .getProperty("printLocalScores") != null);
 
   static boolean enableCache = true;
-  private final Map<MutablePair<Integer, Integer>, Double> smoothScoreCache = new HashMap<MutablePair<Integer, Integer>, Double>();
+  private final Map<Pair<Integer, Integer>, Double> smoothScoreCache = new HashMap<Pair<Integer, Integer>, Double>();
 
   /**
 	 * 
@@ -337,7 +337,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     private double getLocalSmoothScore(Sequence<TK> seq, int pos, int nbestId) {
       if (!enableCache || nbestId < 0)
         return computeLocalSmoothScore(seq, pos);
-      MutablePair<Integer, Integer> pair = new MutablePair<Integer, Integer>(pos, nbestId);
+      Pair<Integer, Integer> pair = new Pair<Integer, Integer>(pos, nbestId);
       Double cached = smoothScoreCache.get(pair);
       if (cached == null) {
         cached = computeLocalSmoothScore(seq, pos);

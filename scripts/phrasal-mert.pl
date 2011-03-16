@@ -50,7 +50,7 @@ if ($SCRIPTS_DIR eq $0) {
   $SCRIPTS_DIR =~ s/\/[^\/]*$//;
 }
 
-$OBJ_DIFF_STOP = 0.01;
+$OBJ_DIFF_STOP = 0.001;
 
 $SCRIPTS_DIR =~ s/ /\\ /g;
 
@@ -117,6 +117,7 @@ sub handle_arg {
   } elsif ($arg =~ /^--java-flags=.*/) {
      $java_flags = $arg;
      $java_flags =~ s/^--java-flags=//g;
+     $mert_java_flags = $java_flags;
 		 print STDERR "JAVA FLAGS: $java_flags\n";
   } elsif ($arg =~ /^--mert-java-flags=.*/) {
      $mert_java_flags = $arg;

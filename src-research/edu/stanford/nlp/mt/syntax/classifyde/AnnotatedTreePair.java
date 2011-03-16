@@ -11,7 +11,7 @@ import edu.stanford.nlp.trees.tregex.TreeMatcher;
 import edu.stanford.nlp.trees.tregex.TreePattern;
 import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.ArrayUtils;
 import edu.stanford.nlp.mt.train.transtb.AlignmentUtils;
 import edu.stanford.nlp.mt.train.transtb.TranslationAlignment;
@@ -26,10 +26,10 @@ import edu.stanford.nlp.mt.train.transtb.TreePair;
 public class AnnotatedTreePair {
   private TreePair treepair_;
   public Map<Integer, String> NPwithDEs_categories;
-  public Map<Integer, MutablePair<Integer, Integer>> NPwithDEs_deIdx;
+  public Map<Integer, Pair<Integer, Integer>> NPwithDEs_deIdx;
   public TreeSet<Integer> NPwithDEs_deIdx_set;
-  public Map<Integer, MutablePair<Integer, Integer>> parsedNPwithDEs_deIdx;
-  private Map<MutablePair<Integer, Integer>, List<MutablePair<Integer, Integer>>> NPwithDEs;
+  public Map<Integer, Pair<Integer, Integer>> parsedNPwithDEs_deIdx;
+  private Map<Pair<Integer, Integer>, List<Pair<Integer, Integer>>> NPwithDEs;
 
   public AnnotatedTreePair(TreePair tp) {
     this.treepair_ = tp;
@@ -38,8 +38,8 @@ public class AnnotatedTreePair {
     computeParsedNPwithDEs();
   }
 
-  public List<MutablePair<Integer, Integer>> getNPEnglishTranslation(int deIdx) {
-    MutablePair<Integer, Integer> chNPrange = NPwithDEs_deIdx.get(deIdx);
+  public List<Pair<Integer, Integer>> getNPEnglishTranslation(int deIdx) {
+    Pair<Integer, Integer> chNPrange = NPwithDEs_deIdx.get(deIdx);
     return NPwithDEs.get(chNPrange);
   }
 
@@ -72,17 +72,17 @@ public class AnnotatedTreePair {
     }
 
     if (parsedNPwithDEs_deIdx == null) {
-      parsedNPwithDEs_deIdx = new TreeMap<Integer, MutablePair<Integer, Integer>>();
+      parsedNPwithDEs_deIdx = new TreeMap<Integer, Pair<Integer, Integer>>();
       Tree parsedTree = parsedChineseTrees.get(0);
       for (int i : NPwithDEs_deIdx_set) {
-        MutablePair<Integer, Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(
+        Pair<Integer, Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(
             parsedTree, i);
         parsedNPwithDEs_deIdx.put(i, range);
       }
     }
   }
 
-  public static void annotateNPwithDEs(List<MutablePair<String, String>> categories,
+  public static void annotateNPwithDEs(List<Pair<String, String>> categories,
       AnnotatedTreePair atp) {
     int[] deIndices = ArrayUtils.asPrimitiveIntArray(atp.NPwithDEs_deIdx_set);
     int offset = -1;
@@ -98,7 +98,7 @@ public class AnnotatedTreePair {
     // we go through all the categories for the file (which contains this
     // TreePair)
     for (int i = 0; i < categories.size(); i++) {
-      MutablePair<String, String> category = categories.get(i);
+      Pair<String, String> category = categories.get(i);
       // if the "offset" (means the position of first NP in this TreePair
       // relatively
       // in the categories for categories of this whole file.
@@ -137,7 +137,7 @@ public class AnnotatedTreePair {
         throw new RuntimeException();
       }
       int deIdxInSent = deIndices[idx];
-      MutablePair<String, String> category = categories.get(idx + offset);
+      Pair<String, String> category = categories.get(idx + offset);
       String np = atp.oracleChNPwithDE(deIdxInSent).trim();
       if (category.second.trim().equals(np)) {
         // System.err.println("Put in to atp.NPwithDEs_categories!");
@@ -149,7 +149,7 @@ public class AnnotatedTreePair {
   }
 
   public String oracleChNPwithDE(int idx) {
-    MutablePair<Integer, Integer> ip = NPwithDEs_deIdx.get(idx);
+    Pair<Integer, Integer> ip = NPwithDEs_deIdx.get(idx);
     StringBuilder sb = new StringBuilder();
     if (NPwithDEs.keySet().contains(ip)) {
       for (int i = ip.first; i <= ip.second; i++)
@@ -166,7 +166,7 @@ public class AnnotatedTreePair {
     for (int i = 0; i < chSent.length; i++) {
       int markBegin = 0;
       int markEnd = 0;
-      for (MutablePair<Integer, Integer> ip : NPwithDEs.keySet()) {
+      for (Pair<Integer, Integer> ip : NPwithDEs.keySet()) {
         if (ip.first == i)
           markBegin++;
         if (ip.second == i)
@@ -189,9 +189,9 @@ public class AnnotatedTreePair {
   private void printMarkedEnglishSentence() {
     String[] enSent = treepair_.alignment().translation_;
     Set<Integer> markedwords = new TreeSet<Integer>();
-    for (MutablePair<Integer, Integer> key : NPwithDEs.keySet()) {
-      List<MutablePair<Integer, Integer>> ips = NPwithDEs.get(key);
-      for (MutablePair<Integer, Integer> ip : ips) {
+    for (Pair<Integer, Integer> key : NPwithDEs.keySet()) {
+      List<Pair<Integer, Integer>> ips = NPwithDEs.get(key);
+      for (Pair<Integer, Integer> ip : ips) {
         for (int i = ip.first; i <= ip.second; i++) {
           markedwords.add(i);
         }
@@ -213,15 +213,15 @@ public class AnnotatedTreePair {
 
   public void computeNPwithDEs() {
     if (NPwithDEs == null) {
-      NPwithDEs = new TreeMap<MutablePair<Integer, Integer>, List<MutablePair<Integer, Integer>>>();
-      NPwithDEs_deIdx = new TreeMap<Integer, MutablePair<Integer, Integer>>();
+      NPwithDEs = new TreeMap<Pair<Integer, Integer>, List<Pair<Integer, Integer>>>();
+      NPwithDEs_deIdx = new TreeMap<Integer, Pair<Integer, Integer>>();
       NPwithDEs_deIdx_set = new TreeSet<Integer>();
       Tree chTree = treepair_.chTrees().get(0);
 
       Set<Tree> deTrees = getNPwithDESubTrees(chTree);
-      Set<MutablePair<Integer, Integer>> deSpans = getSpans(deTrees, chTree);
+      Set<Pair<Integer, Integer>> deSpans = getSpans(deTrees, chTree);
 
-      for (MutablePair<Integer, Integer> deSpan : deSpans) {
+      for (Pair<Integer, Integer> deSpan : deSpans) {
         TreeSet<Integer> enSpan = treepair_.alignment().mapChineseToEnglish(
             deSpan);
         TreeSet<Integer> nullSpan = treepair_.alignment()
@@ -250,14 +250,14 @@ public class AnnotatedTreePair {
         // compute Pair<Integer,Integer>
         int prevI = -1;
         int start = -1;
-        List<MutablePair<Integer, Integer>> enTranslation = new ArrayList<MutablePair<Integer, Integer>>();
+        List<Pair<Integer, Integer>> enTranslation = new ArrayList<Pair<Integer, Integer>>();
         int last = -1;
         for (int en : enSpan) {
           if (start == -1) {
             start = en;
           }
           if (prevI != -1 && en > prevI + 1) {
-            enTranslation.add(new MutablePair<Integer, Integer>(start, prevI));
+            enTranslation.add(new Pair<Integer, Integer>(start, prevI));
             start = en;
           }
           prevI = en;
@@ -265,7 +265,7 @@ public class AnnotatedTreePair {
         }
         // add last one
         if (start != -1) {
-          enTranslation.add(new MutablePair<Integer, Integer>(start, last));
+          enTranslation.add(new Pair<Integer, Integer>(start, last));
         }
 
         NPwithDEs.put(deSpan, enTranslation);
@@ -346,8 +346,8 @@ public class AnnotatedTreePair {
   public void printNPwithDEs() {
     // print out NPs
     int npcount = 1;
-    for (MutablePair<Integer, Integer> NPwithDE : NPwithDEs.keySet()) {
-      List<MutablePair<Integer, Integer>> englishNP = NPwithDEs.get(NPwithDE);
+    for (Pair<Integer, Integer> NPwithDE : NPwithDEs.keySet()) {
+      List<Pair<Integer, Integer>> englishNP = NPwithDEs.get(NPwithDE);
       System.out.printf("NP #%d:\t", npcount++);
       if (englishNP.size() == 1) {
         System.out.printf("<font color=\"blue\">[Contiguous]</font>\t");
@@ -362,15 +362,15 @@ public class AnnotatedTreePair {
     }
   }
 
-  static MutablePair<Integer, Integer> getSpan(Tree subT, Tree allT) {
-    MutablePair<Integer, Integer> ip = new MutablePair<Integer, Integer>(Trees.leftEdge(subT,
+  static Pair<Integer, Integer> getSpan(Tree subT, Tree allT) {
+    Pair<Integer, Integer> ip = new Pair<Integer, Integer>(Trees.leftEdge(subT,
         allT), Trees.rightEdge(subT, allT) - 1);
     return ip;
   }
 
-  public static Set<MutablePair<Integer, Integer>> getSpans(Set<Tree> deTrees,
+  public static Set<Pair<Integer, Integer>> getSpans(Set<Tree> deTrees,
       Tree mainT) {
-    Set<MutablePair<Integer, Integer>> ips = new HashSet<MutablePair<Integer, Integer>>();
+    Set<Pair<Integer, Integer>> ips = new HashSet<Pair<Integer, Integer>>();
     for (Tree deT : deTrees) {
       ips.add(getSpan(deT, mainT));
     }

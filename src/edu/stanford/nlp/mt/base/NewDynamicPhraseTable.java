@@ -12,7 +12,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 
 public class NewDynamicPhraseTable extends
     AbstractPhraseGenerator<IString, String> {
@@ -188,7 +188,7 @@ public class NewDynamicPhraseTable extends
 
     RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 
-    List<MutablePair<RawSequence<IString>, Double>> sortedTrans; // = null;
+    List<Pair<RawSequence<IString>, Double>> sortedTrans; // = null;
     double cntNormalizer; // = Double.NaN;
 
     long startCacheCheckTime = System.currentTimeMillis();
@@ -241,7 +241,7 @@ public class NewDynamicPhraseTable extends
       long totalTime = System.currentTimeMillis() - startTime;
       if (cntNormalizer > 20000) {
         // ptCache.put(rawSequence, cacheEntry);
-        for (MutablePair<RawSequence<IString>, Double> trans : sortedTrans) {
+        for (Pair<RawSequence<IString>, Double> trans : sortedTrans) {
           commonDB.putdup(rawSequence.toString(), trans.first.toString()
               + "|||" + trans.second / transSet.totalCount());
           // System.err.printf("%s=>%s %f\n", rawSequence.toString(),
@@ -253,7 +253,7 @@ public class NewDynamicPhraseTable extends
             totalTime / 1000.0);
       }
     } else {
-      sortedTrans = new ArrayList<MutablePair<RawSequence<IString>, Double>>(
+      sortedTrans = new ArrayList<Pair<RawSequence<IString>, Double>>(
           commonTrans.size());
       for (String transStr : commonTrans) {
 
@@ -266,7 +266,7 @@ public class NewDynamicPhraseTable extends
         for (int ti = 0; ti < words.length; ti++) {
           words[ti] = strToker.nextToken();
         }
-        sortedTrans.add(new MutablePair<RawSequence<IString>, Double>(
+        sortedTrans.add(new Pair<RawSequence<IString>, Double>(
             new RawSequence<IString>(IStrings.toIStringArray(words)),
             new Double(fields[1])));
       }
@@ -278,7 +278,7 @@ public class NewDynamicPhraseTable extends
 
     System.err.printf("%s %f\n", sequence, cntNormalizer);
 
-    for (MutablePair<RawSequence<IString>, Double> entry : sortedTrans) {
+    for (Pair<RawSequence<IString>, Double> entry : sortedTrans) {
       RawSequence<IString> transSeq = entry.first;
       float PcEgF = (float) (Math.log(entry.second / cntNormalizer));
       String mappingKey = sequence + "=:=>" + transSeq.toString();

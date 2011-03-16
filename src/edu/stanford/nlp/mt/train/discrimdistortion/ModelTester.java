@@ -10,7 +10,7 @@ import joptsimple.OptionSet;
 
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.io.IOUtils;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 
 public class ModelTester {
 
@@ -126,7 +126,7 @@ public class ModelTester {
       }
 
       // What the model predicts
-      MutablePair<Double, DistortionModel.Class> predClassPair = m.argmax(d);
+      Pair<Double, DistortionModel.Class> predClassPair = m.argmax(d);
       DistortionModel.Class predClass = predClassPair.second();
       double predProb = m.logProb(d, predClass);
 

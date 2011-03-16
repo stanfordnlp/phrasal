@@ -32,7 +32,7 @@ import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 
 import java.io.*;
@@ -163,7 +163,7 @@ public class PhraseExtract {
   protected Index<String> featureIndex = new HashIndex<String>();
 
   private final List<Thread> threads = new LinkedList<Thread>();
-  private final LinkedBlockingQueue<MutablePair<Integer, String[]>> dataQueue = new LinkedBlockingQueue<MutablePair<Integer, String[]>>(
+  private final LinkedBlockingQueue<Pair<Integer, String[]>> dataQueue = new LinkedBlockingQueue<Pair<Integer, String[]>>(
       1000);
   boolean doneReadingData;
   boolean verbose;
@@ -407,10 +407,10 @@ public class PhraseExtract {
 
     final PhraseExtract ex;
     final AbstractPhraseExtractor phraseEx;
-    final LinkedBlockingQueue<MutablePair<Integer, String[]>> dataQueue;
+    final LinkedBlockingQueue<Pair<Integer, String[]>> dataQueue;
     final SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
 
-    Extractor(PhraseExtract ex, LinkedBlockingQueue<MutablePair<Integer, String[]>> q) {
+    Extractor(PhraseExtract ex, LinkedBlockingQueue<Pair<Integer, String[]>> q) {
       this.ex = ex;
       try {
         this.phraseEx = (AbstractPhraseExtractor) phraseExtractor.clone();
@@ -424,7 +424,7 @@ public class PhraseExtract {
     public void run() {
       try {
         while (!dataQueue.isEmpty() || !ex.doneReadingData) {
-          MutablePair<Integer, String[]> p = dataQueue.poll();
+          Pair<Integer, String[]> p = dataQueue.poll();
           if (p != null) {
             String[] lines = p.second();
             ex.processLine(phraseEx, p.first(), sent, lines[0], lines[1],
@@ -583,7 +583,7 @@ public class PhraseExtract {
             processLine(phraseExtractor, lineNb, sent, fLine, eLine, aLine,
                 pLine);
           } else {
-            dataQueue.put(new MutablePair<Integer, String[]>(lineNb, new String[] {
+            dataQueue.put(new Pair<Integer, String[]>(lineNb, new String[] {
                 fLine, eLine, aLine, pLine }));
           }
         }

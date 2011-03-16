@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.metrics.ter.TERcost;
 
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.extern.BadLicenseDownhillSimplexMinimizer;
 import edu.stanford.nlp.io.IOUtils;
@@ -422,16 +422,16 @@ public class LinearCombinationMetricOptimizer implements Function {
     double[] humanScoresStd = humanScores.clone();
     ArrayMath.standardize(combinedScoresStd);
     ArrayMath.standardize(humanScoresStd);
-    List<MutablePair<Double, Integer>> l = new ArrayList<MutablePair<Double, Integer>>();
+    List<Pair<Double, Integer>> l = new ArrayList<Pair<Double, Integer>>();
     for (int i = 0; i < combinedScores.length; ++i)
-      l.add(new MutablePair<Double, Integer>(humanScoresStd[i] - combinedScoresStd[i],
+      l.add(new Pair<Double, Integer>(humanScoresStd[i] - combinedScoresStd[i],
           i));
-    Collections.sort(l, new Comparator<MutablePair<Double, Integer>>() {
-      public int compare(MutablePair<Double, Integer> p1, MutablePair<Double, Integer> p2) {
+    Collections.sort(l, new Comparator<Pair<Double, Integer>>() {
+      public int compare(Pair<Double, Integer> p1, Pair<Double, Integer> p2) {
         return p1.first().compareTo(p2.first());
       }
     });
-    for (MutablePair<Double, Integer> aL : l) {
+    for (Pair<Double, Integer> aL : l) {
       int ii = aL.second();
       System.err.printf("===============================================\n");
       System.err

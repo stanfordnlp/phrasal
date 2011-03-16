@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.train;
 
 import java.util.*;
 
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.Constituent;
 
@@ -22,7 +22,7 @@ public class ConstituentPhraseExtractor extends FlatPhraseExtractor {
     System.err.println("Constituent phrase extractor.");
   }
 
-  final Set<MutablePair<Integer, Integer>> spans = new HashSet<MutablePair<Integer, Integer>>();
+  final Set<Pair<Integer, Integer>> spans = new HashSet<Pair<Integer, Integer>>();
 
   @Override
   public void setSentenceInfo(WordAlignment sent, String infoStr) {
@@ -31,7 +31,7 @@ public class ConstituentPhraseExtractor extends FlatPhraseExtractor {
 
     Tree t = Tree.valueOf(infoStr);
     for (Constituent c : t.constituents())
-      spans.add(new MutablePair<Integer, Integer>(c.start(), c.end()));
+      spans.add(new Pair<Integer, Integer>(c.start(), c.end()));
   }
 
   @Override
@@ -50,7 +50,7 @@ public class ConstituentPhraseExtractor extends FlatPhraseExtractor {
       return false;
     }
 
-    return !spans.contains(new MutablePair<Integer, Integer>(e1, e2));
+    return !spans.contains(new Pair<Integer, Integer>(e1, e2));
   }
 
   @Override

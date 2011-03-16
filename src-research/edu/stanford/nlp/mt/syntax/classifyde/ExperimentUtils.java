@@ -62,20 +62,20 @@ public class ExperimentUtils {
     return sow;
   }
 
-  public static MutablePair<Integer, Integer> getNPwithDERangeFromIdx(Tree tree,
+  public static Pair<Integer, Integer> getNPwithDERangeFromIdx(Tree tree,
       int deIdx) {
     Tree preT = Trees.getPreTerminal(tree, deIdx);
     if (preT == null)
-      return new MutablePair<Integer, Integer>(-1, -1);
+      return new Pair<Integer, Integer>(-1, -1);
     Tree DNPorCP = preT.parent(tree);
     if (DNPorCP == null)
-      return new MutablePair<Integer, Integer>(-1, -1);
+      return new Pair<Integer, Integer>(-1, -1);
     Tree theNP = DNPorCP.parent(tree);
     if (theNP == null)
-      return new MutablePair<Integer, Integer>(-1, -1);
+      return new Pair<Integer, Integer>(-1, -1);
     int leftE = Trees.leftEdge(theNP, tree);
     int rightE = Trees.rightEdge(theNP, tree) - 1;
-    MutablePair<Integer, Integer> range = new MutablePair<Integer, Integer>(leftE, rightE);
+    Pair<Integer, Integer> range = new Pair<Integer, Integer>(leftE, rightE);
     return range;
   }
 
@@ -83,7 +83,7 @@ public class ExperimentUtils {
    * this is supposed to be a better reordering range. instead of everything
    * before NP, only take DNP or CP
    */
-  public static MutablePair<Integer, Integer> getNPwithDERangeFromIdx_DNPorCP(
+  public static Pair<Integer, Integer> getNPwithDERangeFromIdx_DNPorCP(
       Tree tree, int deIdx) {
     Tree preT = Trees.getPreTerminal(tree, deIdx);
     Tree DNPorCP = preT.parent(tree);
@@ -99,7 +99,7 @@ public class ExperimentUtils {
       // System.err.println("NOT");
       leftE = Trees.leftEdge(theNP, tree);
     }
-    MutablePair<Integer, Integer> range = new MutablePair<Integer, Integer>(leftE, rightE);
+    Pair<Integer, Integer> range = new Pair<Integer, Integer>(leftE, rightE);
     return range;
   }
 
@@ -310,7 +310,7 @@ public class ExperimentUtils {
     return deCount;
   }
 
-  static List<MutablePair<String, String>>[] readFinalCategories(String categoryFile,
+  static List<Pair<String, String>>[] readFinalCategories(String categoryFile,
       String npFile, String fileidFile, String npidFile) throws IOException {
     String content = IOUtils.slurpFileNoExceptions(categoryFile);
     String[] categories = content.split("\\n");
@@ -326,7 +326,7 @@ public class ExperimentUtils {
 
     // List<Pair<String, String>>[][] result = new List[326][];
     @SuppressWarnings("unchecked")
-    List<MutablePair<String, String>>[] result = new List[326];
+    List<Pair<String, String>>[] result = new List[326];
 
     if (categories.length != nps.length || nps.length != fileids.length
         || fileids.length != npids.length)
@@ -342,11 +342,11 @@ public class ExperimentUtils {
      * String>>(); }
      */
     for (int i = 1; i <= 325; i++) {
-      result[i] = new ArrayList<MutablePair<String, String>>();
+      result[i] = new ArrayList<Pair<String, String>>();
     }
 
     for (int i = 0; i < categories.length; i++) {
-      MutablePair<String, String> pair = new MutablePair<String, String>(categories[i],
+      Pair<String, String> pair = new Pair<String, String>(categories[i],
           nps[i]);
       int fileid = Integer.parseInt(fileids[i]);
       // result[fileid][npid].add(pair);
@@ -355,20 +355,20 @@ public class ExperimentUtils {
     return result;
   }
 
-  static List<MutablePair<String, String>>[] readFinalCategories(String allFile) {
+  static List<Pair<String, String>>[] readFinalCategories(String allFile) {
     return readFinalCategories(allFile, true);
   }
 
-  public static List<MutablePair<String, String>>[] readFinalCategories(
+  public static List<Pair<String, String>>[] readFinalCategories(
       String allFile, Boolean useReducedCategories) {
     String content = IOUtils.slurpFileNoExceptions(allFile);
     String[] lines = content.split("\\n");
 
     @SuppressWarnings("unchecked")
-    List<MutablePair<String, String>>[] result = new List[326];
+    List<Pair<String, String>>[] result = new List[326];
 
     for (int i = 1; i <= 325; i++) {
-      result[i] = new ArrayList<MutablePair<String, String>>();
+      result[i] = new ArrayList<Pair<String, String>>();
     }
 
     for (int i = 0; i < lines.length; i++) {
@@ -385,7 +385,7 @@ public class ExperimentUtils {
         categoriesStr = normCategory(categoriesStr);
       }
 
-      MutablePair<String, String> pair = new MutablePair<String, String>(categoriesStr, npStr);
+      Pair<String, String> pair = new Pair<String, String>(categoriesStr, npStr);
       fileidStr = fileidStr.replaceAll("[^\\d]", "");
       int fileid = Integer.parseInt(fileidStr);
       // result[fileid][npid].add(pair);
@@ -532,7 +532,7 @@ public class ExperimentUtils {
     String finalCategoriesFile = System.getenv("JAVANLP_HOME")
         + "/projects/mt/src/mt/classifyde/data/finalCategories_all.txt";
 
-    List<MutablePair<String, String>>[] finalCategories = ExperimentUtils
+    List<Pair<String, String>>[] finalCategories = ExperimentUtils
         .readFinalCategories(finalCategoriesFile, useReducedCategories);
 
     for (TreePair tp : treepairs) {

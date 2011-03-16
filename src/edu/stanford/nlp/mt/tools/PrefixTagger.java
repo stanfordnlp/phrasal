@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.tagger.maxent.TestSentence;
@@ -31,7 +31,7 @@ public class PrefixTagger extends TestSentence {
     System.err.println("cache POS: " + CACHE_POS);
   }
 
-  private final Map<IStringArrayWrapper, MutablePair<IString, Float>> cache = new HashMap<IStringArrayWrapper, MutablePair<IString, Float>>();
+  private final Map<IStringArrayWrapper, Pair<IString, Float>> cache = new HashMap<IStringArrayWrapper, Pair<IString, Float>>();
   private final int offset;
   // How many words of left context for POS tagging:
   private int leftWindow = 3;
@@ -75,7 +75,7 @@ public class PrefixTagger extends TestSentence {
     return leftWindow;
   }
 
-  public MutablePair<IString, Float> getBestTag(IString[] s) {
+  public Pair<IString, Float> getBestTag(IString[] s) {
     return getBestTag(s, this.offset);
   }
 
@@ -88,11 +88,11 @@ public class PrefixTagger extends TestSentence {
    *          Offset with respect to last position.
    * @return Best tag and its probability.
    */
-  public MutablePair<IString, Float> getBestTag(IString[] s, int o) {
+  public Pair<IString, Float> getBestTag(IString[] s, int o) {
     int loc = s.length - 1 + o;
 
     IStringArrayWrapper aw = null;
-    MutablePair<IString, Float> tag;
+    Pair<IString, Float> tag;
 
     if (CACHE_POS) {
       aw = new IStringArrayWrapper(s);
@@ -114,7 +114,7 @@ public class PrefixTagger extends TestSentence {
     bestTags[loc] = vals[am];
     cleanUpScorer();
 
-    tag = new MutablePair<IString, Float>(new IString(maxentTagger.getTags().getTag(
+    tag = new Pair<IString, Float>(new IString(maxentTagger.getTags().getTag(
         bestTags[loc])), (float) scores[am]);
     if (CACHE_POS)
       cache.put(aw, tag);
@@ -142,7 +142,7 @@ public class PrefixTagger extends TestSentence {
         IString[] seq = new IString[to - from];
         System.arraycopy(in, from, seq, 0, seq.length);
         // System.err.printf("tagging(%d,%d,%d): %s\n",from,to,offset,Arrays.toString(seq));
-        MutablePair<IString, Float> tag = getBestTag(seq);
+        Pair<IString, Float> tag = getBestTag(seq);
         if (i > 0)
           System.out.print(" ");
         int loc = seq.length - 1 + offset;

@@ -22,7 +22,7 @@ class FullInformationWangExperiment {
 
     for (AnnotatedTreePair validSent : atreepairs) {
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        MutablePair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx
+        Pair<Integer, Integer> chNPrange = validSent.parsedNPwithDEs_deIdx
             .get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();

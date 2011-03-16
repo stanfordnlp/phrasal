@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.syntax.ghkm;
 import java.util.*;
 
 import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.ArrayUtils;
 import edu.stanford.nlp.mt.train.WordAlignment;
 
@@ -126,14 +126,14 @@ public class RuleInstance {
           "RuleInstance: initRHS: generate RHS from span %d-%d\n", lowFSpan,
           highFSpan);
 
-    List<MutablePair<AlignmentTreeNode, Integer>> orderingList = new ArrayList<MutablePair<AlignmentTreeNode, Integer>>();
+    List<Pair<AlignmentTreeNode, Integer>> orderingList = new ArrayList<Pair<AlignmentTreeNode, Integer>>();
     for (int idx : idx2lhs.keySet())
-      orderingList.add(new MutablePair(idx2lhs.get(idx), idx));
+      orderingList.add(new Pair(idx2lhs.get(idx), idx));
 
     Collections.sort(orderingList, new Comparator() {
       @Override
       public int compare(Object o1, Object o2) {
-        AlignmentTreeNode n1 = (AlignmentTreeNode) ((MutablePair) o1).first(), n2 = (AlignmentTreeNode) ((MutablePair) o2)
+        AlignmentTreeNode n1 = (AlignmentTreeNode) ((Pair) o1).first(), n2 = (AlignmentTreeNode) ((Pair) o2)
             .first();
         if (n1.emptySpan())
           return -1;

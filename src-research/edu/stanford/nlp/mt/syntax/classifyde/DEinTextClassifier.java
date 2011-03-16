@@ -63,7 +63,7 @@ public class DEinTextClassifier {
        * System.err.println("==================================");
        */
       for (int deIdx : deIdxs) {
-        MutablePair<Integer, Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(
+        Pair<Integer, Integer> range = ExperimentUtils.getNPwithDERangeFromIdx(
             parsedSent, deIdx);
         if (range.first == -1) {
           System.err.println("WARNING: Flat tree. Don't mark");

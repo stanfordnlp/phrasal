@@ -47,9 +47,9 @@ public class MTScorer implements ExternalMTScorer {
     String[] hyps = IOUtils.slurpFile(args[1]).split("[\r\n]+");
     assert (refs.length == hyps.length);
 
-    List<MutablePair<String, String>> data = new ArrayList<MutablePair<String, String>>();
+    List<Pair<String, String>> data = new ArrayList<Pair<String, String>>();
     for (int i = 0; i < refs.length; ++i) {
-      data.add(new MutablePair<String, String>(refs[i], hyps[i]));
+      data.add(new Pair<String, String>(refs[i], hyps[i]));
     }
     scorer.readAllReferencesAndHypotheses(data);
 
@@ -111,11 +111,11 @@ public class MTScorer implements ExternalMTScorer {
    */
   @Override
   @SuppressWarnings("deprecation")
-  public void readAllReferencesAndHypotheses(List<MutablePair<String, String>> data) {
+  public void readAllReferencesAndHypotheses(List<Pair<String, String>> data) {
 
     if (withNIST) {
       List<List<Sequence<IString>>> refs = new ArrayList<List<Sequence<IString>>>();
-      for (MutablePair<String, String> pair : data) {
+      for (Pair<String, String> pair : data) {
         List<Sequence<IString>> r = new ArrayList<Sequence<IString>>();
         r.add(str2seq(pair.first()));
         refs.add(r);
@@ -165,7 +165,7 @@ public class MTScorer implements ExternalMTScorer {
 
     // Add METEOR features:
     if (withMETEOR) {
-      MutablePair<String, String> pair = new MutablePair<String, String>(ref, hyp);
+      Pair<String, String> pair = new Pair<String, String>(ref, hyp);
       Double score = scoresMETEOR.get(pair.toString());
       double dscore = 0.0;
       // we get an empty pair when we query scoresProvided()...

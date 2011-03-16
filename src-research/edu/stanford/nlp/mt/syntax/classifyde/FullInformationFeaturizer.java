@@ -16,7 +16,7 @@ class FullInformationFeaturizer extends AbstractFeaturizer {
   Map<String, Set<String>> cilin_multipleEntry;
 
   public Counter<String> extractFeatures(int deIdxInSent,
-      MutablePair<Integer, Integer> chNPrange, Tree chTree, Properties props,
+      Pair<Integer, Integer> chNPrange, Tree chTree, Properties props,
       Set<String> cachedWords) {
 
     String twofeatStr = props.getProperty("2feat", "false");

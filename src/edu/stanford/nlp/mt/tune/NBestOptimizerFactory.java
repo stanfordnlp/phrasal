@@ -85,7 +85,8 @@ public class NBestOptimizerFactory {
           System.err.println("Loaded optimizer "+nbo.getClass().toString());
           return nbo;
       } catch (Exception e) { 
-            throw new RuntimeException(e);            
+         e.printStackTrace(System.err);
+         throw new RuntimeException(e);            
       }                     
 
     }

@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.util.MutableInteger;
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Hypothesis with words that still need to be added to the partial translation
@@ -83,7 +83,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     };
 
-    private static class SegId<TK> extends MutablePair<DTUOption<TK>, Integer> {
+    private static class SegId<TK> extends Pair<DTUOption<TK>, Integer> {
       private static final long serialVersionUID = 1L;
 
       SegId(DTUOption<TK> o, Integer i) {

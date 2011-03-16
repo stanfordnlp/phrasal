@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.util.MutablePair;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.Triple;
 
 public class ArabicSubjectBank {
@@ -43,7 +43,7 @@ public class ArabicSubjectBank {
       int numVerbs = 0;
       int transId = 0;
       while (reader.ready()) {
-        final List<MutablePair<Integer, Integer>> subjSpans = new ArrayList<MutablePair<Integer, Integer>>();
+        final List<Pair<Integer, Integer>> subjSpans = new ArrayList<Pair<Integer, Integer>>();
         final Set<Integer> verbs = new HashSet<Integer>();
 
         final StringTokenizer st = new StringTokenizer(reader.readLine(), DELIM);
@@ -68,7 +68,7 @@ public class ArabicSubjectBank {
             final int start = Integer.parseInt(indices[0].trim());
             final int end = Integer.parseInt(indices[1].trim());
             if (end - start < maxSubjLen)
-              subjSpans.add(new MutablePair<Integer, Integer>(start, end));
+              subjSpans.add(new Pair<Integer, Integer>(start, end));
           }
         }
 
@@ -77,7 +77,7 @@ public class ArabicSubjectBank {
         if (subjSpans.size() == 0) {
           nullSubjects++;
         } else {
-          for (MutablePair<Integer, Integer> subject : subjSpans) {
+          for (Pair<Integer, Integer> subject : subjSpans) {
             int start = subject.first();
             for (int i = 1; i <= verbGap; i++) {
               if (verbs.contains(start - i)) {

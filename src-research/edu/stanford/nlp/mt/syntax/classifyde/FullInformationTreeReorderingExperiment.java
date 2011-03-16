@@ -31,7 +31,7 @@ class FullInformationTreeReorderingExperiment {
 
       tpCount++;
       for (int deIdxInSent : validSent.NPwithDEs_deIdx_set) {
-        MutablePair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx
+        Pair<Integer, Integer> chNPrange = validSent.NPwithDEs_deIdx
             .get(deIdxInSent);
         String np = validSent.oracleChNPwithDE(deIdxInSent);
         np = np.trim();
