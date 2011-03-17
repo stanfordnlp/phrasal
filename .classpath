@@ -8,7 +8,7 @@
 	<classpathentry kind="lib" path="lib/bsh.jar" sourcepath="libsrc/bsh-2.0b4-src.zip"/>
 	<classpathentry kind="lib" path="lib/tokyocabinet.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/create_phrasedb.jar" sourcepath="lib/tercom.jar"/>
+	<classpathentry kind="lib" path="lib/create_phrasedb.jar" sourcepath="C:/cygwin/home/daniel/terp.v1/src"/>
 	<classpathentry kind="lib" path="lib/meteor.jar"/>
 	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="lib" path="lib/terp.jar"/>

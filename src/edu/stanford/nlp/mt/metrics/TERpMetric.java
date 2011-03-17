@@ -16,10 +16,9 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
+import com.bbn.mt.terp.PhraseTable;
 import com.bbn.mt.terp.TERcalc;
-import com.bbn.mt.terp.TERinput;
 import com.bbn.mt.terp.TERcost;
-import com.bbn.mt.terp.TERplus;
 import com.bbn.mt.terp.TERalignment;
 import com.bbn.mt.terp.phrasedb.PhraseDB;
 import com.bbn.mt.terp.WordNet;
@@ -60,8 +59,9 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     String phrasedbFn = TERpara.para().get_string(TERpara.OPTIONS.PHRASE_DB);
     if (phrasedbFn != null && !(phrasedbFn.equals(""))) {
       // System.err.printf("loading phrasedb\n");
-      phrasedb = new PhraseDB(phrasedbFn);
+      PhraseDB phrasedb = new PhraseDB(phrasedbFn);
       phrasedb.openDB();
+      this.phrasetable = new PhraseTable(phrasedb);      
     }
     NormalizeText.init();
   }
@@ -103,11 +103,11 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     return 1.0;
   }
 
-  PhraseDB phrasedb;
+  PhraseTable phrasetable;
 
   Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
 
-  TERcost costfunc = TERplus.terCostFactory();
+  TERcost costfunc = new TERcost();
 
   public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans,
       int idx, double[] editCounts) {
@@ -121,11 +121,11 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
       String hyp = trans.translation.toString();
       for (int i = 0; i < refs.length; i++) {
         refs[i] = refsSeq.get(i).toString();
-      }
-      TERinput terinput = new TERinput(hyp, refs);
-      TERcalc calc = TERplus.terCalcFactory(phrasedb, terinput, costfunc);
+      }      
+      TERcalc calc = new TERcalc(costfunc);
+      costfunc.setPhraseTable(phrasetable);     
       calc.BEAM_WIDTH = beamWidth;
-      calc.MAX_SHIFT_DIST = maxShiftDist;
+      calc.setShiftSize(maxShiftDist);
       // System.err.println(calc.get_info());
       // System.err.printf("Hyp: %s\n", hyp);
 
