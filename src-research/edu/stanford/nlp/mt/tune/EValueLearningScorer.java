@@ -11,7 +11,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.OAIndex;
 
 public class EValueLearningScorer implements Scorer<String> {
-  public static final Set<String> generativeFeatures = SSVMScorer
+  public static final Set<String> generativeFeatures = MERT
       .readGenerativeFeatureList(MERT.GENERATIVE_FEATURES_LIST_RESOURCE);
 
   final double[] manualWeights;

@@ -17,38 +17,9 @@ public class SSVMScorer implements Scorer<String> {
   public static final double DEFAULT_BIAS_C = Double.POSITIVE_INFINITY;
   public static final double DEFAULT_BIAS_MARGIN = Double.MIN_NORMAL;
 
-  public static final Set<String> generativeFeatures = readGenerativeFeatureList(MERT.GENERATIVE_FEATURES_LIST_RESOURCE);
+  public static final Set<String> generativeFeatures = MERT.readGenerativeFeatureList(MERT.GENERATIVE_FEATURES_LIST_RESOURCE);
 
-  public static Set<String> readGenerativeFeatureList(String resourceName) {
-    return readGenerativeFeatureList(resourceName, false);
-  }
-
-  public static Set<String> readGenerativeFeatureList(String resourceName,
-      boolean verbose) {
-    Set<String> gF = new HashSet<String>();
-    try {
-      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-          ClassLoader.getSystemClassLoader().getResource(resourceName)
-              .openStream()));
-      if (verbose)
-        System.err.printf("known generative features:\n");
-      for (String line = reader.readLine(); line != null; line = reader
-          .readLine()) {
-        String featureName = line.replaceAll("\\s*#.*$", "")
-            .replaceAll("\\s+$", "").replaceAll("^\\s+", "");
-        if (featureName.equals(""))
-          continue;
-        gF.add(featureName);
-        if (verbose)
-          System.err.printf("\t'%s'\n", featureName);
-      }
-    } catch (IOException e) {
-      System.err.printf("Unable to load resource: %s\n", resourceName);
-      System.exit(-1);
-    }
-    return gF;
-  }
-
+  
   final OAIndex<String> featureIndex;
   final double[] manualWeights;
   private boolean[] generativeWts = new boolean[0];

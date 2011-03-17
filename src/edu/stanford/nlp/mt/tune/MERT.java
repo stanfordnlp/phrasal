@@ -72,9 +72,40 @@ public class MERT extends Thread {
 
   public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "edu/stanford/nlp/mt/resources/generative.features";
   
-  static public final Set<String> generativeFeatures = SSVMScorer
-      .readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
+  static public final Set<String> generativeFeatures = 
+      readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 
+  public static Set<String> readGenerativeFeatureList(String resourceName) {
+    return readGenerativeFeatureList(resourceName, false);
+  }
+
+  public static Set<String> readGenerativeFeatureList(String resourceName,
+      boolean verbose) {
+    Set<String> gF = new HashSet<String>();
+    try {
+      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
+          ClassLoader.getSystemClassLoader().getResource(resourceName)
+              .openStream()));
+      if (verbose)
+        System.err.printf("known generative features:\n");
+      for (String line = reader.readLine(); line != null; line = reader
+          .readLine()) {
+        String featureName = line.replaceAll("\\s*#.*$", "")
+            .replaceAll("\\s+$", "").replaceAll("^\\s+", "");
+        if (featureName.equals(""))
+          continue;
+        gF.add(featureName);
+        if (verbose)
+          System.err.printf("\t'%s'\n", featureName);
+      }
+    } catch (IOException e) {
+      System.err.printf("Unable to load resource: %s\n", resourceName);
+      System.exit(-1);
+    }
+    return gF;
+  }
+
+  
   public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.metrics.METEORMetric";
   public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERMetric";
   public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERpMetric";
