@@ -1,0 +1,28 @@
+<project name="Phrasal" default="compile" basedir=".">
+    <description>
+        Phrasal machine translation system.
+    </description>
+  <property name="src" location="src"/>
+  <property name="classes" location="classes"/>
+  <property environment="env"/>
+
+
+  <target name="init">
+    <mkdir dir="${classes}"/>
+  </target>
+			
+  <target name="compile" depends="init"
+        description="compile the source">
+    <echo message="${env.CLASSPATH}"/>
+    <javac srcdir="${src}" destdir="${classes}"
+        includeantruntime="false" classpath="${env.CLASSPATH}">
+    </javac>
+  </target>
+
+  <target name="clean"
+        description="clean up" >
+    <delete dir="${classes}"/>
+  </target>
+  <target name="all" depends="clean,compile"
+          description="Clean and re-compile." />
+</project>

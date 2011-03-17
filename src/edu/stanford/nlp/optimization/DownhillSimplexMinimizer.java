@@ -1,6 +1,6 @@
 package edu.stanford.nlp.optimization;
 
-import cern.colt.Arrays;
+import java.util.Arrays;
 
 /**
  * Downhill Simplex (Nelder-Mead)
