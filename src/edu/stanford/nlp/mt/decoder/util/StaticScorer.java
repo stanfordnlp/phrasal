@@ -99,7 +99,9 @@ public class StaticScorer implements Scorer<String> {
     this.sharedFeatureIndex = true;
     this.featureIndex = featureIndex;
     for (String key : featureWts.keySet()) {
-      featureIndex.indexOf(key, true);
+      if (key != null) {
+        featureIndex.indexOf(key, true);
+      }
       // System.err.printf("---inserting: '%s' index: %d\n", key,
       // featureIndex.indexOf(key));
     }
@@ -108,7 +110,9 @@ public class StaticScorer implements Scorer<String> {
     // weights = new double[featureIndex.boundOnMaxIndex()];
 
     for (String key : featureWts.keySet()) {
-      weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
+      if (key != null) {
+        weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
+      }
     }
   }
 
