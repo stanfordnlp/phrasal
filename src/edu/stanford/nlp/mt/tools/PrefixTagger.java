@@ -60,6 +60,7 @@ public class PrefixTagger extends TestSentence {
 
   private void init(IString[] s) {
     size = s.length;
+    this.origWords = null;
     this.sent = new ArrayList<String>(size);
     for (int j = 0; j < size; j++)
       this.sent.add(s[j].word());
@@ -106,7 +107,7 @@ public class PrefixTagger extends TestSentence {
     int[] bestTags = new int[len];
     int[] vals = getPossibleValues(loc);
     bestTags[loc] = vals[0];
-    this.initializeScorer(sent);
+    this.initializeScorer();
     double[] scores = scoresOf(bestTags, loc);
 
     int am = ArrayMath.argmax(scores);
