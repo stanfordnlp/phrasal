@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.parser;
 
+import java.io.Serializable;
+
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 
@@ -8,7 +10,7 @@ public class Actions {
   public static enum ActionType {SHIFT, REDUCE, LEFT_ARC, RIGHT_ARC};
   private static final double EDGE_WEIGHT = 1.0;  // TODO: correct?
   
-  public static class Action {
+  public static class Action implements Serializable{
     ActionType action;
     GrammaticalRelation relation;
     
