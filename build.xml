@@ -3,6 +3,7 @@
 <project name="mt" default="compile" basedir=".">
   <property name="project.core"   value="${basedir}/../core" />
   <property name="project.more"   value="${basedir}/../more" />
+  <property name="project.rte"   value="${basedir}/../rte" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
   <property name="source-research.path"    value="${basedir}/src-research" />
@@ -32,6 +33,13 @@
         <exclude name="javanlp*"/>
       </fileset>
       <pathelement path="${project.more}/classes" />
+
+      <!-- for the time being let rte depend on rte -->
+      <fileset dir="${project.rte}/lib">
+        <include name="*.jar"/>
+        <exclude name="javanlp*"/>
+      </fileset>
+      <pathelement path="${project.rte}/classes" />
       
       <!-- depends on local libs -->
       <fileset dir="${basedir}/lib">
