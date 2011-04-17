@@ -2,26 +2,27 @@ package edu.stanford.nlp.mt.tools;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.ling.WordTag;
-import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.objectbank.TokenizerFactory;
 import edu.stanford.nlp.parser.maltparser.MaltParserInterface;
 import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.process.PTBTokenizer;
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.Dependencies;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
+import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Filter;
 
@@ -65,10 +66,32 @@ public class InteractiveDependencyChains {
       System.out.println("Type Deps:\n");
       System.out.println(filteredDeps);
       
-      System.out.printf("Chains:\n");
-      Set<List<TypedDependency>> chains = Dependencies.getTypedDependencyChains(typeDeps, 4);
-      for (List<TypedDependency> chain : chains) {
-        System.out.println(chain);
+      System.out.printf("\nGov To Dep Map:\n");
+      Map<TreeGraphNode,List<TypedDependency>> govToDepMap = Dependencies.govToDepMap(typeDeps);
+      for (Map.Entry<TreeGraphNode, List<TypedDependency>> e : govToDepMap.entrySet()) {
+        System.out.println(e);
+      }
+      
+      System.out.printf("\nChains:\n");
+      Counter<List<TypedDependency>> chains = Dependencies.getTypedDependencyChains(typeDeps, 2);
+      for (List<TypedDependency> chain : chains.keySet()) {      
+        System.out.println(chain + ": " + chains.getCount(chain));
+      }
+      
+      Counter<List<String>> wordDepOnlyStringChains = new ClassicCounter<List<String>>();
+      
+      
+      for (List<TypedDependency> chain : chains.keySet()) {
+        List<String> deps = new ArrayList<String>(chain.size());
+        for (TypedDependency dep : chain) {
+          deps.add(dep.toString(true));
+        }
+        wordDepOnlyStringChains.incrementCount(deps, chains.getCount(chain));
+      }
+      
+      System.out.printf("\nWord dep only chains:\n");
+      for (List<String> wdoChain : wordDepOnlyStringChains.keySet()) {
+        System.out.println(wdoChain + ": " + wordDepOnlyStringChains.getCount(wdoChain));
       }
     }    
   }
