@@ -14,5 +14,7 @@
 	<classpathentry kind="lib" path="lib/terp.jar"/>
 	<classpathentry kind="lib" path="lib/jopt-simple.jar" sourcepath="libsrc/jopt-simple-3.1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/tercom.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
+	<classpathentry kind="lib" path="/JavaNLP-core/lib/malt.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
