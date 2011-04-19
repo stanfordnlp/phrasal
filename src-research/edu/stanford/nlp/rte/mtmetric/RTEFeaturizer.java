@@ -111,6 +111,7 @@ class RTEFeaturizer {
     List<Double>  scores = new ArrayList<Double>();
     Index<String> featureIndex = new OAIndex<String>();
     
+    int row = 0;    
     for (String line = reader.readLine(); line != null; 
          line = reader.readLine()) {
       String[] fields = line.split(" \\|\\|\\| ");
@@ -123,10 +124,11 @@ class RTEFeaturizer {
       dataPts.add(results);
       scores.add(score);
       for (String feature : results.keySet()) {
-        featureIndex.add(feature);
+        featureIndex.indexOf(feature,true);
       }
       System.err.printf("Results: %s\n", results);
-      pstrm.printf("%s ||| %s ||| %f\n", id, results, score); 
+      pstrm.printf("%d ||| %s ||| %s ||| %f\n", row, id, results, score);
+      row++;
     } 
     // long term - this really shouldn't be here
     
@@ -136,7 +138,6 @@ class RTEFeaturizer {
     RealMatrix A = new Array2DRowRealMatrix(dataPts.size(), featureIndex.size());
     RealVector b = new ArrayRealVector(dataPts.size());
     
-    int row = 0;
     for (Counter<String> datum : dataPts) {
        for (Map.Entry<String, Double> entry : datum.entrySet()) {
          int idx = featureIndex.indexOf(entry.getKey());
