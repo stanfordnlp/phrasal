@@ -19,17 +19,18 @@ public class InteractiveMTRTE {
      String ref = null;
      String mt = null;
       
+     System.out.print("\n\nref: ");
      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
        int id = reader.getLineNumber()-1;
        if (id % 2 == 0) {
-         System.out.print("ref: ");
          ref = line;
-       } else {            
          System.out.print("mt: ");
+       } else {            
          mt = line;
+         double score = featurizer.mtScore(new String[]{ref}, mt);
+         System.out.printf("MT RTE Score is: %e\n", score);
+         System.out.print("\n\nref: ");
        }
-       double score = featurizer.mtScore(new String[]{ref}, mt);
-       System.out.printf("MT RTE Score is: %e\n", score);
      }
    }
 }

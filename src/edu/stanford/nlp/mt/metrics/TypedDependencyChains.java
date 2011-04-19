@@ -35,7 +35,9 @@ public class TypedDependencyChains {
       morpha = new Morphology();
       puncFilter = new PennTreebankLanguagePack().punctuationWordRejectFilter();
      } catch (Exception e) {
-        throw new RuntimeException(e);
+        e.printStackTrace();
+        System.exit(-1);
+        // throw new RuntimeException(e); herp derp zmert
      }
    }
 
