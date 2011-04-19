@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.ArrayRealVector;
 import org.apache.commons.math.linear.DecompositionSolver;
-import org.apache.commons.math.linear.LUDecompositionImpl;
+import org.apache.commons.math.linear.SingularValueDecompositionImpl;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
 
@@ -57,6 +57,24 @@ class RTEFeaturizer {
 
   static RTEFeaturizer featurizer = null;
   public static synchronized RTEFeaturizer initialize(String[] args) {
+    Global.setProperty("requireInfo", "false");
+    Global.setProperty("calculateResults", "false");
+    Global.setProperty("aligner.numIterations", "10");
+    Global.setProperty("aligner", "stochastic");
+    Global.setProperty("parse.malt", "true");
+    Global.setProperty("rsrc.malt", "engmalt.linear.mco");
+    Global.setProperty("lex.Nominalization", "off");
+    Global.setProperty("lex.InfoMap", "off");
+    Global.setProperty("lex.WNHypernymy", "off"); 
+    Global.setProperty("lex.JiangConrathWN", "off");
+    Global.setProperty("lex.WNHyponymy", "off");
+    Global.setProperty("lex.DekangLin", "off");
+    Global.setProperty("lex.Country", "off");
+    Global.setProperty("lex.WNSynonymy", "off");
+    Global.setProperty("lex.Ordinal", "off");
+    Global.setProperty("lex.LinWN", "off");
+    Global.setProperty("lex.WNAntonymy", "off");
+
     if (featurizer != null) {
       throw new RuntimeException("Attempted to initialize the RTEFeaturizer " +
                                  "when it was already built");
@@ -94,14 +112,18 @@ class RTEFeaturizer {
     } catch (Exception e) {
       results = new ClassicCounter<String>();
     }
-    results.incrementCount("SmoothBLEU", BLEUMetric.computeLocalSmoothScore(translation, Arrays.asList(reference), 4));
+    double smoothBLEU = BLEUMetric.computeLocalSmoothScore(translation, Arrays.asList(reference), 4);
+    results.incrementCount("SmoothBLEU", smoothBLEU);
+    if (smoothBLEU != 0) {
+      results.incrementCount("logSmoothBLEU", Math.log(smoothBLEU));
+    } else {
+      results.incrementCount("SmoothBLEUIsZero");
+    }
     results.incrementCount("biasFeature");
     return results;
   }
   
   public static void main(String[] args) throws Exception {
-    Global.setProperty("requireInfo", "false");
-    Global.setProperty("calculateResults", "false");
     RTEFeaturizer featurizer = initialize(args);
     long startTime = System.currentTimeMillis();
     BufferedReader reader = 
@@ -135,7 +157,8 @@ class RTEFeaturizer {
     long dur = System.currentTimeMillis() - startTime;
     System.err.printf("RTE Time: %.3f s\n", dur/1000.);
     
-    RealMatrix A = new Array2DRowRealMatrix(dataPts.size(), featureIndex.size());
+    //RealMatrix A = new Array2DRowRealMatrix(dataPts.size(), featureIndex.size());
+    RealMatrix A = new Array2DRowRealMatrix(dataPts.size(), dataPts.size());
     RealVector b = new ArrayRealVector(dataPts.size());
     
     row = 0;
@@ -145,11 +168,14 @@ class RTEFeaturizer {
          double val = entry.getValue();
          A.setEntry(row, idx, val);
          b.setEntry(row, scores.get(row));
-         row++;
        }
+       row++;
     }
-    DecompositionSolver s = new LUDecompositionImpl(A).getSolver();
+
+    DecompositionSolver s = new SingularValueDecompositionImpl(A).getSolver();
     RealVector x = s.solve(b);
+
+
     RealVector p = A.operate(x);
     
     System.err.println("Linear regression");
@@ -170,7 +196,7 @@ class RTEFeaturizer {
         hypScore += wts.getCount(entry.getKey()) * entry.getValue();
       }
       double error = hypScore - scores.get(row);
-      System.err.printf("%d: predicted: %d actual: %d\n error: %d\n", hypScore, scores.get(row), error);
+      System.err.printf("%d: predicted: %.3f actual: %.3f\n error: %.3f\n", row, hypScore, scores.get(row), error);
       sse += error*error;
       correctSSE += (p.getEntry(row) - b.getEntry(row))*(p.getEntry(row) - b.getEntry(row));
       row++;
