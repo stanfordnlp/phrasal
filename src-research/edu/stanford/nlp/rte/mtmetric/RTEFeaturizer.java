@@ -86,7 +86,19 @@ class RTEFeaturizer {
       counter.incrementCount(prefix + "-" + name, feature.value);
     }
   }
-
+  
+  public Counter<String> mtFeaturizer(String reference, String translation) {
+    Counter<String> results;
+    try {
+      results = featurizer.featurize(reference, translation);
+    } catch (Exception e) {
+      results = new ClassicCounter<String>();
+    }
+    results.incrementCount("SmoothBLEU", BLEUMetric.computeLocalSmoothScore(translation, Arrays.asList(reference), 4));
+    results.incrementCount("biasFeature");
+    return results;
+  }
+  
   public static void main(String[] args) throws Exception {
     Global.setProperty("requireInfo", "false");
     Global.setProperty("calculateResults", "false");
@@ -107,15 +119,7 @@ class RTEFeaturizer {
       String mt  = fields[2];
       double score = Double.parseDouble(fields[3]);
       System.err.printf("Scoring: \n\tref: %s hyp: %s\n", ref, mt);
-      Counter<String> results;
-      try {
-        results = featurizer.featurize(ref, fields[1]);
-      } catch (Exception e) {
-        results = new ClassicCounter<String>();
-      }
-      results.incrementCount("SmoothBLEU", BLEUMetric.computeLocalSmoothScore(mt, Arrays.asList(ref), 4));
-      results.incrementCount("biasFeature");
-      
+      Counter<String> results = featurizer.mtFeaturizer(ref, mt);      
       dataPts.add(results);
       scores.add(score);
       for (String feature : results.keySet()) {
