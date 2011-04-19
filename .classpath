@@ -16,5 +16,6 @@
 	<classpathentry kind="lib" path="lib/tercom.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
 	<classpathentry kind="lib" path="/JavaNLP-core/lib/malt.jar"/>
+	<classpathentry kind="lib" path="/JavaNLP-core/lib/commons-math-2.1.jar" sourcepath="/JavaNLP-core/libsrc/commons-math-2.1-sources.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
