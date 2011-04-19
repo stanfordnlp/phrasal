@@ -33,6 +33,94 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   static boolean enableCache = true;
   private final Map<Pair<Integer, Integer>, Double> smoothScoreCache = new HashMap<Pair<Integer, Integer>, Double>();
 
+  private static int possibleMatchCounts(int order, int length) {
+    int d = length - order;
+    return d >= 0 ? d : 0;
+  }
+
+  private static <TK> int[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts, int order) {
+    int[] counts = new int[order];
+    for (Map.Entry<Sequence<TK>, Integer> entry : clippedCounts.entrySet()) {
+      int cnt = entry.getValue();
+      if (cnt > 0) {
+        int len = entry.getKey().size();
+        counts[len - 1] += cnt;
+      }
+    }
+
+    return counts;
+  }
+  
+  private static int bestMatchLength(int refLengths[], int candidateLength) {
+    int best = refLengths[0];
+    for (int i = 1; i < refLengths.length; i++) {
+      if (Math.abs(candidateLength - best) > Math.abs(candidateLength
+          - refLengths[i])) {
+        best = refLengths[i];
+      }
+    }
+    return (int) (LENGTH_BIAS * best);
+  }
+
+  public static double computeLocalSmoothScore(String strSeq, List<String> strRefs, int order) {
+    Sequence<String> seq = new SimpleSequence<String>(strSeq.split("\\s+"));
+    List<Sequence<String>> refs = new ArrayList<Sequence<String>>(strRefs.size());
+    for (int i = 0; i < strRefs.size(); i++) {
+      refs.add(new SimpleSequence<String>(strRefs.get(i).split("\\s+")));
+    }
+    return computeLocalSmoothScore(seq, refs, order);
+  }
+  
+  public static <TK> double computeLocalSmoothScore(Sequence<TK> seq, List<Sequence<TK>> refs, int order) {
+    Map<Sequence<TK>, Integer> canidateCounts = Metrics.getNGramCounts(seq,
+        order);
+    Map<Sequence<TK>, Integer> maxReferenceCount = Metrics.getMaxNGramCounts(refs, order);
+    
+    Metrics.clipCounts(canidateCounts, maxReferenceCount);
+    int seqSz = seq.size();
+    int[] localPossibleMatchCounts = new int[order];
+    for (int i = 0; i < order; i++) {
+      localPossibleMatchCounts[i] = possibleMatchCounts(i, seqSz);
+    }
+
+    int[] localCounts = localMatchCounts(canidateCounts,order);
+    int localC = seq.size();
+    int[] refLengths = new int[refs.size()];
+    for (int i = 0; i < refLengths.length; i++) {
+      refLengths[i] = refs.get(i).size();
+    }
+    int localR = bestMatchLength(refLengths, seq.size());
+
+    double localLogBP;
+    if (localC < localR) {
+      localLogBP = 1 - localR / (1.0 * localC);
+    } else {
+      localLogBP = 0.0;
+    }
+
+    double localPrecisions[] = new double[order];
+    for (int i = 0; i < order; i++) {
+      if (i == 0) {
+        localPrecisions[i] = (1.0 * localCounts[i])
+            / localPossibleMatchCounts[i];
+      } else {
+        localPrecisions[i] = (localCounts[i] + 1.0)
+            / (localPossibleMatchCounts[i] + 1.0);
+      }
+    }
+    double localNgramPrecisionScore = 0;
+    for (int i = 0; i < order; i++) {
+      localNgramPrecisionScore += (1.0 / order)
+          * Math.log(localPrecisions[i]);
+    }
+
+    // System.err.printf("BLEUS: %e logbp %e logPrec %e Prec %e\n",
+    // Math.exp(localLogBP + localNgramPrecisionScore), localLogBP,
+    // localNgramPrecisionScore, Math.exp(localNgramPrecisionScore));
+    final double localScore = Math.exp(localLogBP + localNgramPrecisionScore);    
+    return localScore;
+  }
+
   /**
 	 * 
 	 */
@@ -142,17 +230,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   /**
 	 * 
 	 */
-  private int bestMatchLength(int index, int candidateLength) {
-    int best = refLengths[index][0];
-    for (int i = 1; i < refLengths[index].length; i++) {
-      if (Math.abs(candidateLength - best) > Math.abs(candidateLength
-          - refLengths[index][i])) {
-        best = refLengths[index][i];
-      }
-    }
-    return (int) (LENGTH_BIAS * best);
-  }
-
+  
   @Override
   public RecombinationFilter<IncrementalEvaluationMetric<TK, FV>> getIncrementalMetricRecombinationFilter() {
     return new BLEUIncrementalMetricRecombinationFilter<TK, FV>();
@@ -221,7 +299,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
           Map<Sequence<TK>, Integer> canidateCounts = Metrics.getNGramCounts(
               tran.translation, order);
           Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(i));
-          int[] localCounts = localMatchCounts(canidateCounts);
+          int[] localCounts = localMatchCounts(canidateCounts,order);
           for (int j = 0; j < order; j++) {
             if (futureMatchCounts[i][j] < localCounts[j]) {
               futureMatchCounts[i][j] = localCounts[j];
@@ -291,25 +369,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
       return id - ((BLEUIncrementalMetric) o).id;
     }
-
-    private int possibleMatchCounts(int order, int length) {
-      int d = length - order;
-      return d >= 0 ? d : 0;
-    }
-
-    private int[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts) {
-      int[] counts = new int[order];
-      for (Map.Entry<Sequence<TK>, Integer> entry : clippedCounts.entrySet()) {
-        int cnt = entry.getValue();
-        if (cnt > 0) {
-          int len = entry.getKey().size();
-          counts[len - 1] += cnt;
-        }
-      }
-
-      return counts;
-    }
-
+    
     private void incCounts(Map<Sequence<TK>, Integer> clippedCounts,
         Sequence<TK> sequence, int mul) {
       int seqSz = sequence.size();
@@ -317,7 +377,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
         possibleMatchCounts[i] += mul * possibleMatchCounts(i, seqSz);
       }
 
-      int[] localCounts = localMatchCounts(clippedCounts);
+      int[] localCounts = localMatchCounts(clippedCounts,order);
       for (int i = 0; i < order; i++) {
         // System.err.printf("local Counts[%d]: %d\n", i, localCounts[i]);
         matchCounts[i] += mul * localCounts[i];
@@ -356,9 +416,9 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
         localPossibleMatchCounts[i] = possibleMatchCounts(i, seqSz);
       }
 
-      int[] localCounts = localMatchCounts(canidateCounts);
+      int[] localCounts = localMatchCounts(canidateCounts,order);
       int localC = seq.size();
-      int localR = bestMatchLength(pos, seq.size());
+      int localR = bestMatchLength(refLengths[pos], seq.size());
 
       double localLogBP;
       if (localC < localR) {
@@ -424,7 +484,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
           sequences.add(tran.translation);
           incCounts(canidateCounts, tran.translation);
           c += tran.translation.size();
-          r += bestMatchLength(pos, tran.translation.size());
+          r += bestMatchLength(refLengths[pos], tran.translation.size());
         } else {
           sequences.add(null);
         }
@@ -462,7 +522,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
           Metrics.clipCounts(oldCanidateCounts, maxReferenceCounts.get(index));
           decCounts(oldCanidateCounts, sequences.get(index));
           c -= sequences.get(index).size();
-          r -= bestMatchLength(index, sequences.get(index).size());
+          r -= bestMatchLength(refLengths[index], sequences.get(index).size());
         }
       }
 
@@ -477,7 +537,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
         if (trans != null) {
           incCounts(canidateCounts, trans.translation);
           c += sequences.get(index).size();
-          r += bestMatchLength(index, sequences.get(index).size());
+          r += bestMatchLength(refLengths[index], sequences.get(index).size());
         }
       }
 
