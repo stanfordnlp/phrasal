@@ -1,11 +1,10 @@
 package edu.stanford.nlp.rte.mtmetric;
 
+import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.rte.FeatureOccurrence;
 import edu.stanford.nlp.rte.Global;
-import edu.stanford.nlp.rte.InfoFile;
 import edu.stanford.nlp.rte.MockProblem;
 import edu.stanford.nlp.rte.NoLearningExperiment;
-import edu.stanford.nlp.rte.Problem;
 import edu.stanford.nlp.rte.RTEPipeline;
 import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -14,7 +13,13 @@ import edu.stanford.nlp.stats.Counter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.Arrays;
 
+/**
+ * 
+ * @author John Bauer, Daniel Cer
+ *
+ */
 class RTEFeaturizer {
   RTEPipeline pipeline;
   NoLearningExperiment kbeTester;
@@ -64,9 +69,7 @@ class RTEFeaturizer {
 
     counter.incrementCount(prefix + "-alignment", problem.getAlignmentScore());
     for (FeatureOccurrence feature : problem.getFeatureOccurrences()) {
-      String name = feature.feature.name();
-      // TODO: if there are duplicate feature names, is adding the
-      // values acceptable?
+      String name = feature.feature.name();     
       counter.incrementCount(prefix + "-" + name, feature.value);
     }
   }
@@ -76,7 +79,6 @@ class RTEFeaturizer {
     Global.setProperty("calculateResults", "false");
     RTEFeaturizer featurizer = initialize(args);
     long startTime = System.currentTimeMillis();
-    int cnt = 0;
     BufferedReader reader = 
       new BufferedReader(new InputStreamReader(System.in));
     PrintStream pstrm = new PrintStream("rte.featurized");
@@ -94,6 +96,7 @@ class RTEFeaturizer {
       } catch (Exception e) {
         results = new ClassicCounter<String>();
       }
+      results.incrementCount("SmoothBLEU", BLEUMetric.computeLocalSmoothScore(mt, Arrays.asList(ref), 4));
       System.err.printf("Results: %s\n", results);
       pstrm.printf("%s ||| %s ||| %f\n", id, results, score); 
     } 
