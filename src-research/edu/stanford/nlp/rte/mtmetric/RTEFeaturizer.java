@@ -138,6 +138,7 @@ class RTEFeaturizer {
     RealMatrix A = new Array2DRowRealMatrix(dataPts.size(), featureIndex.size());
     RealVector b = new ArrayRealVector(dataPts.size());
     
+    row = 0;
     for (Counter<String> datum : dataPts) {
        for (Map.Entry<String, Double> entry : datum.entrySet()) {
          int idx = featureIndex.indexOf(entry.getKey());
