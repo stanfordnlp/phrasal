@@ -11,9 +11,11 @@ import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.CountersRealVectors;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -33,10 +35,11 @@ import org.apache.commons.math.linear.RealVector;
  * @author John Bauer, Daniel Cer
  *
  */
-class RTEFeaturizer {
+public class RTEFeaturizer {
   RTEPipeline pipeline;
   NoLearningExperiment kbeTester;
-
+  public static final String DEFAULT_WTS = Global.getRTEResourcesDir()+"/MT08Urdu.wts";
+  
   /**
    * Since the RTE system is not re-entrant, and there is no
    * realistic way to create two of them because of the Global state,
@@ -103,6 +106,42 @@ class RTEFeaturizer {
       String name = feature.feature.name();     
       counter.incrementCount(prefix + "-" + name, feature.value);
     }
+  }
+  
+  Counter<String> defaultWts;
+  
+  public double mtScore(String[] refs, String translation) {
+     if (defaultWts == null) {
+       defaultWts = new ClassicCounter<String>();
+       try{
+         BufferedReader reader = new BufferedReader(new FileReader(DEFAULT_WTS));
+         for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+           String[] fields = line.split(": ");
+           defaultWts.incrementCount(fields[0], Double.parseDouble(fields[1]));
+         }
+       } catch (Exception e) {
+         e.printStackTrace();
+         System.exit(-1); // Z-Mert ignores some runtime exceptions and just hangs
+       }
+     }
+     return mtScore(refs, translation, defaultWts);
+  }
+  
+  public double mtScore(String[] refs, String translation, Counter<String> wts) {
+     int bestRef = 0;
+     double bestRefScore = Double.NEGATIVE_INFINITY;
+     
+     // only call RTE on one reference
+     for (int i=0; i < refs.length; i++) {
+       double refScore = BLEUMetric.computeLocalSmoothScore(translation, Arrays.asList(refs[i]), 4);
+       if (refScore > bestRefScore) {
+         bestRefScore = refScore;
+         bestRef = i;
+       }
+     }
+     
+     Counter<String> features = mtFeaturizer(refs[bestRef],translation);
+     return Counters.dotProduct(wts, features);
   }
   
   public Counter<String> mtFeaturizer(String reference, String translation) {
