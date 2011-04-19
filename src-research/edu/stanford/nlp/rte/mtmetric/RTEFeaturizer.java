@@ -38,7 +38,7 @@ import org.apache.commons.math.linear.RealVector;
 public class RTEFeaturizer {
   RTEPipeline pipeline;
   NoLearningExperiment kbeTester;
-  public static final String DEFAULT_WTS = Global.getRTEResourcesDir()+"/MT08Urdu.wts";
+  public static final String DEFAULT_WTS = "MT08Urdu.wts";
   
   /**
    * Since the RTE system is not re-entrant, and there is no
@@ -114,7 +114,7 @@ public class RTEFeaturizer {
      if (defaultWts == null) {
        defaultWts = new ClassicCounter<String>();
        try{
-         BufferedReader reader = new BufferedReader(new FileReader(DEFAULT_WTS));
+         BufferedReader reader = new BufferedReader(new FileReader(Global.getRTEResourcesDir()+"/"+DEFAULT_WTS));
          for (String line = reader.readLine(); line != null; line = reader.readLine()) {
            String[] fields = line.split(": ");
            defaultWts.incrementCount(fields[0], Double.parseDouble(fields[1]));
