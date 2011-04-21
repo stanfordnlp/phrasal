@@ -8,8 +8,6 @@ import java.util.logging.Logger;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
-import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.Pair;
 
 public class DAGFeatureExtractor {
   
@@ -76,8 +74,8 @@ public class DAGFeatureExtractor {
   // TODO : add flags for new features  
 
 
-  public static List<List<Integer>> extractFeatures(Structure struc, Index<String> strIndex) {
-    List<List<Integer>> features = new ArrayList<List<Integer>>();
+  public static List<List<String>> extractFeatures(Structure struc) {
+    List<List<String>> features = new ArrayList<List<String>>();
     Stack<IndexedWord> stack = struc.getStack();
     List<IndexedWord> inputQueue = struc.getInput();
     if(stack.size()==0) return features;   // empty stack: always SHIFT
@@ -119,109 +117,94 @@ public class DAGFeatureExtractor {
     
     if(s1!=null && struc.getDependencyGraph().vertexSet().contains(s1)) s1Children = struc.getDependencyGraph().getChildList(s1);
     if(s2!=null && struc.getDependencyGraph().vertexSet().contains(s2)) s2Children = struc.getDependencyGraph().getChildList(s2);
-    
-    // add strings to strIndex
-    strIndex.addAll(Arrays.asList(s1Word, s2Word, s3Word, q1Word, q2Word, q3Word, s1POS, s2POS, s3POS, q1POS, q2POS, q3POS, 
-        s1Lemma, s2Lemma, s3Lemma, q1Lemma, q2Lemma, q3Lemma, preActionStr
-    ));
 
-    if(usePreAction) features.add(Arrays.asList(strIndex.indexOf(preActionStr), strIndex.indexOf("preAct")));
+    if(usePreAction) features.add(Arrays.asList(preActionStr, "preAct"));
     
-    if(useS1Word && s1!=null) features.add(Arrays.asList(strIndex.indexOf(s1Word), strIndex.indexOf("S1Word")));
-    if(useS2Word && s2!=null) features.add(Arrays.asList(strIndex.indexOf(s2Word), strIndex.indexOf("S2Word")));
-    if(useS3Word && s3!=null) features.add(Arrays.asList(strIndex.indexOf(s3Word), strIndex.indexOf("S3Word")));
-    if(useQ1Word && q1!=null) features.add(Arrays.asList(strIndex.indexOf(q1Word), strIndex.indexOf("Q1Word")));
-    if(useQ2Word && q2!=null) features.add(Arrays.asList(strIndex.indexOf(q2Word), strIndex.indexOf("Q2Word")));
-    if(useQ3Word && q3!=null) features.add(Arrays.asList(strIndex.indexOf(q3Word), strIndex.indexOf("Q3Word")));
+    if(useS1Word && s1!=null) features.add(Arrays.asList(s1Word, "S1Word"));
+    if(useS2Word && s2!=null) features.add(Arrays.asList(s2Word, "S2Word"));
+    if(useS3Word && s3!=null) features.add(Arrays.asList(s3Word, "S3Word"));
+    if(useQ1Word && q1!=null) features.add(Arrays.asList(q1Word, "Q1Word"));
+    if(useQ2Word && q2!=null) features.add(Arrays.asList(q2Word, "Q2Word"));
+    if(useQ3Word && q3!=null) features.add(Arrays.asList(q3Word, "Q3Word"));
 
-    if(useS1POS && s1!=null) features.add(Arrays.asList(strIndex.indexOf(s1POS), strIndex.indexOf("S1POS")));
-    if(useS2POS && s2!=null) features.add(Arrays.asList(strIndex.indexOf(s2POS), strIndex.indexOf("S2POS")));
-    if(useS3POS && s3!=null) features.add(Arrays.asList(strIndex.indexOf(s3POS), strIndex.indexOf("S3POS")));
-    if(useQ1POS && q1!=null) features.add(Arrays.asList(strIndex.indexOf(q1POS), strIndex.indexOf("Q1POS")));
-    if(useQ2POS && q2!=null) features.add(Arrays.asList(strIndex.indexOf(q2POS), strIndex.indexOf("Q2POS")));
-    if(useQ3POS && q3!=null) features.add(Arrays.asList(strIndex.indexOf(q3POS), strIndex.indexOf("Q3POS")));
+    if(useS1POS && s1!=null) features.add(Arrays.asList(s1POS, "S1POS"));
+    if(useS2POS && s2!=null) features.add(Arrays.asList(s2POS, "S2POS"));
+    if(useS3POS && s3!=null) features.add(Arrays.asList(s3POS, "S3POS"));
+    if(useQ1POS && q1!=null) features.add(Arrays.asList(q1POS, "Q1POS"));
+    if(useQ2POS && q2!=null) features.add(Arrays.asList(q2POS, "Q2POS"));
+    if(useQ3POS && q3!=null) features.add(Arrays.asList(q3POS, "Q3POS"));
     
-    if(useS1WordPOS && s1!=null) features.add(Arrays.asList(strIndex.indexOf(s1Word), strIndex.indexOf(s1POS), strIndex.indexOf("S1WordPOS")));
-    if(useS2WordPOS && s2!=null) features.add(Arrays.asList(strIndex.indexOf(s2Word), strIndex.indexOf(s2POS), strIndex.indexOf("S2WordPOS")));
-    if(useS3WordPOS && s3!=null) features.add(Arrays.asList(strIndex.indexOf(s3Word), strIndex.indexOf(s3POS), strIndex.indexOf("S3WordPOS")));
-    if(useQ1WordPOS && q1!=null) features.add(Arrays.asList(strIndex.indexOf(q1Word), strIndex.indexOf(q1POS), strIndex.indexOf("Q1WordPOS")));
-    if(useQ2WordPOS && q2!=null) features.add(Arrays.asList(strIndex.indexOf(q2Word), strIndex.indexOf(q2POS), strIndex.indexOf("Q2WordPOS")));
-    if(useQ3WordPOS && q3!=null) features.add(Arrays.asList(strIndex.indexOf(q3Word), strIndex.indexOf(q3POS), strIndex.indexOf("Q3WordPOS")));   
+    if(useS1WordPOS && s1!=null) features.add(Arrays.asList(s1Word, s1POS, "S1WordPOS"));
+    if(useS2WordPOS && s2!=null) features.add(Arrays.asList(s2Word, s2POS, "S2WordPOS"));
+    if(useS3WordPOS && s3!=null) features.add(Arrays.asList(s3Word, s3POS, "S3WordPOS"));
+    if(useQ1WordPOS && q1!=null) features.add(Arrays.asList(q1Word, q1POS, "Q1WordPOS"));
+    if(useQ2WordPOS && q2!=null) features.add(Arrays.asList(q2Word, q2POS, "Q2WordPOS"));
+    if(useQ3WordPOS && q3!=null) features.add(Arrays.asList(q3Word, q3POS, "Q3WordPOS"));   
     
-    if(useS1Lemma && s1!=null) features.add(Arrays.asList(strIndex.indexOf(s1Lemma), strIndex.indexOf("S1Lemma")));
-    if(useS2Lemma && s2!=null) features.add(Arrays.asList(strIndex.indexOf(s2Lemma), strIndex.indexOf("S2Lemma")));
-    if(useS3Lemma && s3!=null) features.add(Arrays.asList(strIndex.indexOf(s3Lemma), strIndex.indexOf("S3Lemma")));
-    if(useQ1Lemma && q1!=null) features.add(Arrays.asList(strIndex.indexOf(q1Lemma), strIndex.indexOf("Q1Lemma")));
-    if(useQ2Lemma && q2!=null) features.add(Arrays.asList(strIndex.indexOf(q2Lemma), strIndex.indexOf("Q2Lemma")));
-    if(useQ3Lemma && q3!=null) features.add(Arrays.asList(strIndex.indexOf(q3Lemma), strIndex.indexOf("Q3Lemma")));
+    if(useS1Lemma && s1!=null) features.add(Arrays.asList(s1Lemma, "S1Lemma"));
+    if(useS2Lemma && s2!=null) features.add(Arrays.asList(s2Lemma, "S2Lemma"));
+    if(useS3Lemma && s3!=null) features.add(Arrays.asList(s3Lemma, "S3Lemma"));
+    if(useQ1Lemma && q1!=null) features.add(Arrays.asList(q1Lemma, "Q1Lemma"));
+    if(useQ2Lemma && q2!=null) features.add(Arrays.asList(q2Lemma, "Q2Lemma"));
+    if(useQ3Lemma && q3!=null) features.add(Arrays.asList(q3Lemma, "Q3Lemma"));
     
-    if(useS1Q1word && s1!=null && q1!=null) features.add(Arrays.asList(strIndex.indexOf(s1Word), strIndex.indexOf(q1Word), strIndex.indexOf("S1Q1Word")));
-    if(useQ1Q2word && q1!=null && q2!=null) features.add(Arrays.asList(strIndex.indexOf(q1Word), strIndex.indexOf(q2Word), strIndex.indexOf("Q1Q2Word")));
-    if(useS1S2word && s1!=null && s2!=null) features.add(Arrays.asList(strIndex.indexOf(s1Word), strIndex.indexOf(s2Word), strIndex.indexOf("S1S2Word")));
+    if(useS1Q1word && s1!=null && q1!=null) features.add(Arrays.asList(s1Word, q1Word, "S1Q1Word"));
+    if(useQ1Q2word && q1!=null && q2!=null) features.add(Arrays.asList(q1Word, q2Word, "Q1Q2Word"));
+    if(useS1S2word && s1!=null && s2!=null) features.add(Arrays.asList(s1Word, s2Word, "S1S2Word"));
     
-    if(useS1Q1POS && s1!=null && q1!=null) features.add(Arrays.asList(strIndex.indexOf(s1POS), strIndex.indexOf(q1POS), strIndex.indexOf("S1Q1POS")));
-    if(useQ1Q2POS && q1!=null && q2!=null) features.add(Arrays.asList(strIndex.indexOf(q1POS), strIndex.indexOf(q2POS), strIndex.indexOf("Q1Q2POS")));
-    if(useS1S2POS && s1!=null && s2!=null) features.add(Arrays.asList(strIndex.indexOf(s1POS), strIndex.indexOf(s2POS), strIndex.indexOf("S1S2POS")));
+    if(useS1Q1POS && s1!=null && q1!=null) features.add(Arrays.asList(s1POS, q1POS, "S1Q1POS"));
+    if(useQ1Q2POS && q1!=null && q2!=null) features.add(Arrays.asList(q1POS, q2POS, "Q1Q2POS"));
+    if(useS1S2POS && s1!=null && s2!=null) features.add(Arrays.asList(s1POS, s2POS, "S1S2POS"));
     
-    if(useS1Q1WordPOS && s1!=null && q1!=null) features.add(Arrays.asList(strIndex.indexOf(s1Word), strIndex.indexOf(s1POS), strIndex.indexOf(q1Word), strIndex.indexOf(q1POS), strIndex.indexOf("S1Q1WordPOS")));
-    if(useQ1Q2WordPOS && q1!=null && q2!=null) features.add(Arrays.asList(strIndex.indexOf(q1Word), strIndex.indexOf(q1POS), strIndex.indexOf(q2Word), strIndex.indexOf(q2POS), strIndex.indexOf("Q1Q2WordPOS")));
-    if(useS1S2WordPOS && s1!=null && s2!=null) features.add(Arrays.asList(strIndex.indexOf(s1Word), strIndex.indexOf(s1POS), strIndex.indexOf(s2Word), strIndex.indexOf(s2POS), strIndex.indexOf("S1S2WordPOS")));
+    if(useS1Q1WordPOS && s1!=null && q1!=null) features.add(Arrays.asList(s1Word, s1POS, q1Word, q1POS, "S1Q1WordPOS"));
+    if(useQ1Q2WordPOS && q1!=null && q2!=null) features.add(Arrays.asList(q1Word, q1POS, q2Word, q2POS, "Q1Q2WordPOS"));
+    if(useS1S2WordPOS && s1!=null && s2!=null) features.add(Arrays.asList(s1Word, s1POS, s2Word, s2POS, "S1S2WordPOS"));
     
     if(useS1NumChild && s1Children!=null) {
       String childrenSize = "#"+s1Children.size(); 
-      strIndex.add(childrenSize);
-      features.add(Arrays.asList(strIndex.indexOf(childrenSize), strIndex.indexOf("S1ChildNum")));
+      features.add(Arrays.asList(childrenSize, "S1ChildNum"));
     }
     if(useS2NumChild && s2Children!=null) {
       String childrenSize = "#"+s2Children.size(); 
-      strIndex.add(childrenSize);
-      features.add(Arrays.asList(strIndex.indexOf(childrenSize), strIndex.indexOf("S2ChildNum")));
+      features.add(Arrays.asList(childrenSize, "S2ChildNum"));
     }
     
     if(s1Children!=null) {
       int s1ChildNum = s1Children.size();
       if(useS1LeftChildPOS && s1ChildNum > 0) {
         String leftChildPOS = s1Children.get(0).get(PartOfSpeechAnnotation.class);
-        strIndex.add(leftChildPOS);
-        features.add(Arrays.asList(strIndex.indexOf(leftChildPOS), strIndex.indexOf("S1LeftChildPOS")));
+        features.add(Arrays.asList(leftChildPOS, "S1LeftChildPOS"));
       }
       if(useS1LeftChildRel && s1ChildNum > 0) {
         String leftChildRel = struc.getDependencyGraph().reln(s1, s1Children.get(0)).toString();
-        strIndex.add(leftChildRel);
-        features.add(Arrays.asList(strIndex.indexOf(leftChildRel), strIndex.indexOf("S1LeftChildRel")));
+        features.add(Arrays.asList(leftChildRel, "S1LeftChildRel"));
       }
       if(useS1RightChildPOS && s1ChildNum>1) {
         String rightChildPOS = s1Children.get(s1ChildNum-1).get(PartOfSpeechAnnotation.class);
-        strIndex.add(rightChildPOS);
-        features.add(Arrays.asList(strIndex.indexOf(rightChildPOS), strIndex.indexOf("S1RightChildPOS")));
+        features.add(Arrays.asList(rightChildPOS, "S1RightChildPOS"));
       }
       if(useS1RightChildRel && s1ChildNum>1) {
         String rightChildRel = struc.getDependencyGraph().reln(s1, s1Children.get(s1ChildNum-1)).toString();
-        strIndex.add(rightChildRel);
-        features.add(Arrays.asList(strIndex.indexOf(rightChildRel), strIndex.indexOf("S1RightChildRel")));
+        features.add(Arrays.asList(rightChildRel, "S1RightChildRel"));
       }
     }
     if(s2Children!=null) {
       int s2ChildNum = s2Children.size();
       if(useS2LeftChildPOS && s2ChildNum > 0) {
         String leftChildPOS = s2Children.get(0).get(PartOfSpeechAnnotation.class);
-        strIndex.add(leftChildPOS);
-        features.add(Arrays.asList(strIndex.indexOf(leftChildPOS), strIndex.indexOf("S2LeftChildPOS")));
+        features.add(Arrays.asList(leftChildPOS, "S2LeftChildPOS"));
       }
       if(useS2LeftChildRel && s2ChildNum > 0) {
         String leftChildRel = struc.getDependencyGraph().reln(s2, s2Children.get(0)).toString();
-        strIndex.add(leftChildRel);
-        features.add(Arrays.asList(strIndex.indexOf(leftChildRel), strIndex.indexOf("S2LeftChildRel")));
+        features.add(Arrays.asList(leftChildRel, "S2LeftChildRel"));
       }
       if(useS2RightChildPOS && s2ChildNum>1) {
         String rightChildPOS = s2Children.get(s2ChildNum-1).get(PartOfSpeechAnnotation.class);
-        strIndex.add(rightChildPOS);
-        features.add(Arrays.asList(strIndex.indexOf(rightChildPOS), strIndex.indexOf("S2RightChildPOS")));
+        features.add(Arrays.asList(rightChildPOS, "S2RightChildPOS"));
       }
       if(useS2RightChildRel && s2ChildNum>1) {
         String rightChildRel = struc.getDependencyGraph().reln(s2, s2Children.get(s2ChildNum-1)).toString();
-        strIndex.add(rightChildRel);
-        features.add(Arrays.asList(strIndex.indexOf(rightChildRel), strIndex.indexOf("S2RightChildRel")));
+        features.add(Arrays.asList(rightChildRel, "S2RightChildRel"));
       }
     }
 
@@ -229,43 +212,20 @@ public class DAGFeatureExtractor {
       int preTokenIdx = s1.get(IndexAnnotation.class) - 2;
       if(preTokenIdx >= 0) {
         String preTokenPOS = struc.getInput().get(preTokenIdx).get(PartOfSpeechAnnotation.class);
-        strIndex.add(preTokenPOS);
-        features.add(Arrays.asList(strIndex.indexOf(preTokenPOS), strIndex.indexOf("S1PreTokenPOS")));
+        features.add(Arrays.asList(preTokenPOS, "S1PreTokenPOS"));
       }
     }
     if(useS2NextTokenPOS && s2!=null) {
       int nextTokenIdx = s2.get(IndexAnnotation.class);
       String nextTokenPOS = struc.getInput().get(nextTokenIdx).get(PartOfSpeechAnnotation.class);
-      strIndex.add(nextTokenPOS);
-      features.add(Arrays.asList(strIndex.indexOf(nextTokenPOS), strIndex.indexOf("S2NextTokenPOS")));
+      features.add(Arrays.asList(nextTokenPOS, "S2NextTokenPOS"));
     }
     
     
     // TODO add features
     
+    
     return features;
-  }
-
-
-  public static void setStrIndex(Index<String> strIndex) {
-    strIndex.addAll(Arrays.asList(
-        "preAct",
-        "S1ChildNum", "S2ChildNum",
-        "S1LeftChildPOS", "S1LeftChildRel", "S1RightChildPOS", "S1RightChildRel",
-        "S2LeftChildPOS", "S2LeftChildRel", "S2RightChildPOS", "S2RightChildRel",
-        "S1PreTokenPOS", "S2NextTokenPOS",
-        "S1Word", "S2Word", "S3Word",
-        "Q1Word", "Q2Word", "Q3Word",
-        "S1POS", "S2POS", "S3POS",
-        "Q1POS", "Q2POS", "Q3POS",
-        "S1Lemma", "S2Lemma", "S3Lemma",
-        "Q1Lemma", "Q2Lemma", "Q3Lemma",
-        "S1WordPOS", "S2WordPOS", "S3WordPOS",
-        "Q1WordPOS", "Q2WordPOS", "Q3WordPOS",
-        "S1Q1Word", "Q1Q2Word", "S1S2Word",
-        "S1Q1POS", "Q1Q2POS", "S1S2POS",
-        "S1Q1WordPOS", "Q1Q2WordPOS", "S1S2WordPOS"
-        ));
   }
 
 
