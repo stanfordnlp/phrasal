@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Stack;
 import java.util.logging.Logger;
 
+import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
+import edu.stanford.nlp.mt.parser.Actions.ActionType;
 
 public class DAGFeatureExtractor {
   
@@ -57,6 +59,7 @@ public class DAGFeatureExtractor {
   private static final boolean useQ3WordPOS = true;
   
   private static final boolean usePreAction = true;
+  private static final boolean useActionType = true;  // the current action type (for labeling)
 
   private static final boolean useS1Q1word = true;
   private static final boolean useS1Q1POS = true;
@@ -70,11 +73,10 @@ public class DAGFeatureExtractor {
   private static final boolean useS1S2POS = true;
   private static final boolean useS1S2WordPOS = true;
   
-  
   // TODO : add flags for new features  
 
 
-  public static List<List<String>> extractFeatures(Structure struc) {
+  public static List<List<String>> extractActFeatures(Structure struc) {
     List<List<String>> features = new ArrayList<List<String>>();
     Stack<IndexedWord> stack = struc.getStack();
     List<IndexedWord> inputQueue = struc.getInput();
@@ -228,6 +230,17 @@ public class DAGFeatureExtractor {
     return features;
   }
 
+  /** Extracting features for labelClassifier: 
+   *    use all features of actClassifier and one additional feature, arcDirection 
+   *    */
+  public static List<List<String>> extractLabelFeatures(
+      ActionType action, Datum<ActionType, List<String>> actDatum, Structure s) {
+    List<List<String>> features = new ArrayList<List<String>>();
+    features.addAll(actDatum.asFeatures());
+    features.add(Arrays.asList("##"+action.toString(), "actionType"));
+
+    return features;
+  }
 
   public static void printFeatureFlags(Logger logger) {
     if(useS1Word) logger.fine("useS1Word on"); else logger.fine("useS1Word off");
@@ -267,6 +280,7 @@ public class DAGFeatureExtractor {
     if(useQ3POS) logger.fine("useQ3POS on"); else logger.fine("useQ3POS off");
     if(useQ3WordPOS) logger.fine("useQ3WordPOS on"); else logger.fine("useQ3WordPOS off");
     if(usePreAction) logger.fine("usePreAction on"); else logger.fine("usePreAction off");
+    if(useActionType) logger.fine("useActionType on"); else logger.fine("useActionType off");
     if(useS1Q1word) logger.fine("useS1Q1word on"); else logger.fine("useS1Q1word off");
     if(useS1Q1POS) logger.fine("useS1Q1POS on"); else logger.fine("useS1Q1POS off");
     if(useS1Q1WordPOS) logger.fine("useS1Q1WordPOS on"); else logger.fine("useS1Q1WordPOS off");
