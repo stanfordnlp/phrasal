@@ -140,8 +140,11 @@ public class RTEFeaturizer {
        }
      }
      
+     System.out.printf("Scoring:\n\tref: %s\n\thyp: %s\n", refs[bestRef],translation);
      Counter<String> features = mtFeaturizer(refs[bestRef],translation);
-     return Counters.dotProduct(wts, features);
+     double score = Counters.dotProduct(wts, features);
+     System.out.printf("Score: %e\n", score);
+     return score;
   }
   
   public Counter<String> mtFeaturizer(String reference, String translation) {

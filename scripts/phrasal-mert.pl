@@ -158,11 +158,10 @@ if (@POSITIONAL_ARGS == 5) {
 	my $dirname = `dirname $0`;
 	chomp $dirname;
 	my $memsize = shift(@POSITIONAL_ARGS);
-	my $cp = "-cp $dirname/../phrasal.jar:$dirname/../lib/fastutil.jar:$dirname/../lib/mtj.jar -Djava.library.path=$dirname/../cpp";
 	$java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
 	$mert_java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
-	$java_flags .= " -Xmx$memsize $cp";
-	$mert_java_flags .= "-Xmx$memsize $cp";
+	$java_flags .= " -Xmx$memsize ";
+	$mert_java_flags .= "-Xmx$memsize ";
 }
 
 $input_text   = $POSITIONAL_ARGS[0];
