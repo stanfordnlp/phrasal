@@ -5,48 +5,48 @@ import java.util.zip.GZIPInputStream;
 import java.io.*;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class LexicalReorderingTable {
   final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
 
   /**
    * Reordering types
-   * 
+   *
    * <pre>
    * Monotone with Previous      Monotone with Next
-   * 
+   *
    *   e:  E_0 E_1 E_2            e:  E_0 E_1 E_2
-   * f:                         f:         
-   *  F_0  PPP                   F_0  
+   * f:                         f:
+   *  F_0  PPP                   F_0
    *  F_1     PPP                F_1      PPP
    *  F_2                        F_2         PPP
-   * 
-   * 
+   *
+   *
    * Swap with Previous      Swap with Next
-   * 
+   *
    *   e:  E_0 E_1 E_2            e:  E_0 E_1 E_2
-   * f:                         f:         
-   *  F_0      PPP               F_0  
-   *  F_1  PPP                   F_1         PPP      
-   *  F_2                        F_2      PPP   
-   *  
+   * f:                         f:
+   *  F_0      PPP               F_0
+   *  F_1  PPP                   F_1         PPP
+   *  F_2                        F_2      PPP
+   *
    * Discontinuous with Prev  Discontinuous with Next
-   * 
+   *
    *   e:  E_0 E_1 E_2            e:  E_0 E_1 E_2
-   * f:                         f:         
+   * f:                         f:
    *  F_0      PPP               F_0          PPP
-   *  F_1                        F_1               
+   *  F_1                        F_1
    *  F_2  PPP                   F_2      PPP
-   * 
+   *
    * </pre>
-   * 
+   *
    * NonMonotone: Swap <em>or</em> Discontinuous.
-   * 
+   *
    * @author danielcer
-   * 
+   *
    */
 
   public enum ReorderingTypes {
@@ -128,7 +128,7 @@ public class LexicalReorderingTable {
   }
 
   /**
-	 * 
+	 *
 	 */
   public double[] getReorderingScores(Sequence<IString> foreign,
       Sequence<IString> translation) {
@@ -153,7 +153,7 @@ public class LexicalReorderingTable {
   }
 
   /**
-   * 
+   *
    * @throws IOException
    */
   public LexicalReorderingTable(String filename) throws IOException {
@@ -221,8 +221,7 @@ public class LexicalReorderingTable {
           filename), "UTF-8"));
     }
 
-    for (String line = reader.readLine(); line != null; line = reader
-        .readLine()) {
+    for (String line; (line = reader.readLine()) != null; ) {
       StringTokenizer toker = new StringTokenizer(line);
       List<String> phrase1TokenList = new LinkedList<String>();
       do {
@@ -304,19 +303,19 @@ public class LexicalReorderingTable {
         throw new RuntimeException(
             String
                 .format(
-                    "Somehow indicies have outpaced/underpaced the size of the reorderingScore list (%d != %d).\n",
+                    "Somehow indices have outpaced/underpaced the size of the reorderingScore list (%d != %d).\n",
                     idx, reorderingScores.size()));
       }
 
       reorderingScores.add(scores);
     }
+    reader.close();
     long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
     System.err.printf(
         "Done loading reordering table: %s (mem used: %d MiB time: %.3f s)\n",
         filename, (postTableLoadMemUsed - preTableLoadMemUsed) / (1024 * 1024),
         loadTimeMillis / 1000.0);
-
     System.err.printf("Done loading %s\n", filename);
 
     return selectedFiletype;
@@ -333,8 +332,7 @@ public class LexicalReorderingTable {
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     System.out.print("\n>");
-    for (String query = reader.readLine(); query != null; query = reader
-        .readLine()) {
+    for (String query; (query = reader.readLine()) != null; ) {
       String[] fields = query.split("\\s*\\|\\|\\|\\s*");
       Sequence<IString> foreign = new RawSequence<IString>(
           IStrings.toIStringArray(fields[0].split("\\s+")));
@@ -346,6 +344,7 @@ public class LexicalReorderingTable {
       }
       System.out.print("\n>");
     }
+    reader.close();
   }
 
 }

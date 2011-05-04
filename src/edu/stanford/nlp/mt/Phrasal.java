@@ -47,9 +47,9 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class Phrasal {
 
@@ -304,6 +304,7 @@ public class Phrasal {
           config.put(key, entries);
       }
     }
+    reader.close();
     return config;
   }
 
@@ -779,7 +780,7 @@ public class Phrasal {
       saveWeights = config.get(SAVE_WEIGHTS).get(0);
     }
 
-    
+
     System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightConfig, 100), (weightConfig.size() > 100 ? "..." : ""));
     scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig);
 
@@ -1646,17 +1647,15 @@ public class Phrasal {
 
   private void learningLoop(Learner learner, String inputFilename,
       int maxEpoch, String saveWeights) throws IOException {
-    LineNumberReader reader; // = null;
 
     for (int epoch = 0; epoch < maxEpoch; epoch++) {
-      reader = new LineNumberReader(new InputStreamReader(new FileInputStream(
-          inputFilename), "UTF-8"));
+      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
+              new FileInputStream(inputFilename), "UTF-8")); // = null;
       int translationId = -1;
 
       IncrementalEvaluationMetric<IString, String> incEval = evalMetric
           .getIncrementalMetric();
-      for (String line = reader.readLine(); line != null; line = reader
-          .readLine()) {
+      for (String line; (line = reader.readLine()) != null; ) {
         translationId++;
         String[] tokens = line.split("\\s+");
         Sequence<IString> foreign = new SimpleSequence<IString>(true,
@@ -1738,6 +1737,7 @@ public class Phrasal {
               + translationId + ".wts");
         }
       }
+      reader.close();
       learner.saveWeights(saveWeights + ".epoch." + epoch);
       System.err.printf("--> epoch %d score: %f\n", epoch, incEval.score());
     }
@@ -1771,67 +1771,67 @@ public class Phrasal {
   /*
    * @SuppressWarnings("unchecked") private void learnWeights(String
    * inputFilename) throws IOException {
-   * 
+   *
    * double maxEvalScore = Double.NaN; NBestListContainer<IString, String>
    * nbestLists = null;
-   * 
+   *
    * int chunkSize = (learningAlgorithm.equals(EVALUE_LEARNING)? 1 : 5);
-   * 
+   *
    * LineNumberReader reader = null; int translationId = 0; for (int nbestIter =
    * 0; nbestIter < MAX_LEARN_NBEST_ITER; nbestIter++) {
    * IncrementalEvaluationMetric<IString, String> actualPostIncEval =
    * evalMetric.getIncrementalMetric(); IncrementalEvaluationMetric<IString,
    * String> actualPreIncEval = evalMetric.getIncrementalMetric();
-   * 
+   *
    * double initialEvalSum = 0; double postEvalSum = 0; int evalCount = 0;
    * boolean doneStream = false; reader = new LineNumberReader(new
    * InputStreamReader(new FileInputStream(inputFilename), "UTF-8"));
    * translationId = 0;
-   * 
+   *
    * double initialCScore = 0; for (int chunk = 0; !doneStream; chunk++) {
-   * 
+   *
    * String nbestFilename; if (!learningAlgorithm.equals(EVALUE_LEARNING)) {
    * nbestFilename = String.format("%s.nbest.c%d.%d", saveWeights, chunk,
    * nbestIter); } else { nbestFilename = String.format("/tmp/%s.nbest.c%d.%d",
    * saveWeights.replaceAll("[^A-Za-z0-9]","_"), chunk, nbestIter); }
-   * 
+   *
    * System.err.printf("Generating n-best list to: %s\n", nbestFilename); //
    * Generate new nbest list System.err.printf("n-best list iter: %d\n",
    * nbestIter); System.err.printf("Generating n-best list: %s\n",
    * nbestFilename);
-   * 
+   *
    * // if (nbestIter < -1) { BufferedWriter nbestListWriter = new
    * BufferedWriter(new FileWriter(nbestFilename));
-   * 
+   *
    * int skipped = 0; int included = 0;
-   * 
+   *
    * long decodingTime = -System.currentTimeMillis(); int
    * foreignTokensTranslated = 0; for (String line; included < chunkSize;
    * translationId++, included++) { line = reader.readLine(); if (line == null)
    * { reader.close(); doneStream = true; break; }
-   * 
+   *
    * String[] tokens = line.split("\\s+"); foreignTokensTranslated +=
    * tokens.length; if (tokens.length > maxSentenceSize) {
    * System.err.printf("Skipping: %s\n", line);
    * System.err.printf("Tokens: %d (Max: %d)\n", tokens.length,
    * maxSentenceSize); skipped++; continue; }
-   * 
+   *
    * if (tokens.length < minSentenceSize) { System.err.printf("Skipping: %s\n",
    * line); System.err.printf("Tokens: %d (Min: %d)\n", tokens.length,
    * minSentenceSize); skipped++; continue; }
-   * 
+   *
    * Sequence<IString> foreign = new SimpleSequence<IString>(true,
    * IStrings.toIStringArray(tokens));
-   * 
+   *
    * // log foreign sentence System.err.printf("Translating(%d): %s\n",
    * reader.getLineNumber(), foreign); long translationTime =
    * -System.currentTimeMillis(); // scorer.setRandomizeTag(nbestIter == 0);
-   * 
+   *
    * List<RichTranslation<IString, String>> translations = new
    * ArrayList(LEARNING_NBEST_LIST_SIZE); List<List<RichTranslation<IString,
    * String>>> nbestNBad = null;
-   * 
-   * 
+   *
+   *
    * if (nbestIter == 0 && !learningAlgorithm.equals(EVALUE_LEARNING)) {
    * scorer.setWeightMultipliers(1.0, 0.0);
    * System.err.printf("Doing Manual Weight Decode.\n"); nbestNBad =
@@ -1840,15 +1840,15 @@ public class Phrasal {
    * translations.addAll(nbestNBad.get(0));
    * translations.addAll(nbestNBad.get(1)); scorer.setWeightMultipliers(0.0,
    * 1.0); }
-   * 
+   *
    * if (!(nbestIter == 0 && chunk == 0) ||
    * learningAlgorithm.equals(EVALUE_LEARNING)) { nbestNBad =
    * ((AbstractBeamInferer) inferers.get(0)) .nbestNBad(foreign,
    * reader.getLineNumber() - 1, null, LEARNING_NBEST_LIST_SIZE, 0); }
-   * 
+   *
    * translations.addAll(nbestNBad.get(0));
    * translations.addAll(nbestNBad.get(1));
-   * 
+   *
    * translationTime += System.currentTimeMillis(); System.err.printf(
    * "Foreign length: %d Argmax Translation length: %s Translation time: %.3f s\n"
    * , foreign.size(), (translations == null ? "NA" : translations
@@ -1859,15 +1859,15 @@ public class Phrasal {
    * nbestListWriter.append(tran.nbestToString(translationId)).append( "\n"); }
    * } else { System.err.printf("<<<decoder failure>>>\n"); } } decodingTime +=
    * System.currentTimeMillis();
-   * 
+   *
    * if (included == 0) continue; nbestListWriter.close();
-   * 
+   *
    * if (skipped == translationId) { throw new RuntimeException(String
    * .format("Error: all foreign sentences skipped")); } // } // perform loss
    * augmented inference over n-best list until convergence
    * System.err.printf("Loading n-best list\n"); nbestLists = new
    * MosesNBestList(nbestFilename);
-   * 
+   *
    * int maxNbestListSize = 0; int minNbestListSize = Integer.MAX_VALUE; for
    * (List a : nbestLists.nbestLists()) { if (a.size() == 0) continue; if (a ==
    * null) continue; int aSz = a.size(); if (aSz > maxNbestListSize)
@@ -1876,13 +1876,13 @@ public class Phrasal {
    * maxNbestListSize);
    * System.err.printf("Smallest cummalative n-best list size: %d\n",
    * minNbestListSize);
-   * 
+   *
    * int translations = 0; for (List<? extends
    * ScoredFeaturizedTranslation<IString, String>> transList : nbestLists
    * .nbestLists()) { if (transList.size() > 0) translations++; }
-   * 
+   *
    * System.err.printf("Translations in chunk: %d\n", translations);
-   * 
+   *
    * double l2Of1Best = 0; double scoreSum1Best = 0; double scoreSum1Worst = 0;
    * int outOf = 0; for (List<? extends ScoredFeaturizedTranslation<IString,
    * String>> nbestlist : nbestLists .nbestLists()) { if (nbestlist.size() == 0)
@@ -1891,59 +1891,59 @@ public class Phrasal {
    * nbestlist.get(0).score; scoreSum1Worst += nbestlist.get(nbestlist.size() -
    * 1).score; } l2Of1Best = Math.sqrt(l2Of1Best); double scoreSumDiff =
    * scoreSum1Best - scoreSum1Worst;
-   * 
+   *
    * System.err.printf(
    * "Argmax cScore: %e N-best argmin cScore: %e (diff %f)\n", scoreSum1Best,
    * scoreSum1Worst, scoreSumDiff);
-   * 
+   *
    * EvaluationMetric<IString, String> bestScoreMetric = new
    * MarginRescaleEvaluationMetric( null, scorer);
-   * 
+   *
    * MultiTranslationMetricMax<IString, String> bestScoreSearch = new
    * HillClimbingMultiTranslationMetricMax<IString, String>( bestScoreMetric);
    * MultiTranslationMetricMax<IString, String> oracleEvalSearch = new
    * HillClimbingMultiTranslationMetricMax<IString, String>( evalMetric);
-   * 
+   *
    * System.err.printf(
    * "Finding best scoring translations over cummulative n-best list...\n");
    * List<ScoredFeaturizedTranslation<IString, String>>
    * bestScoreTranslationsInit = bestScoreSearch.maximize(nbestLists);
    * System.err.printf("Done.\n");
-   * 
+   *
    * IncrementalEvaluationMetric<IString, String> initialEvalMetric =
    * evalMetric.getIncrementalMetric(); { int tI = 0; initialCScore = 0.0; int
    * posT = -1; for (ScoredFeaturizedTranslation<IString, String> trans :
    * bestScoreTranslationsInit) { posT++; if (actualPreIncEval.size() <= posT) {
    * actualPreIncEval.add(trans); } else { if (trans != null)
    * actualPreIncEval.replace(posT, trans); }
-   * 
+   *
    * initialEvalMetric.add(trans); if (trans != null) initialCScore +=
    * scorer.getIncrementalScore(trans.features); tI++; } }
-   * 
+   *
    * System.err.printf(
    * "Finding oracle translations over cummulative n-best list....\n");
    * List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations =
    * oracleEvalSearch.maximize(nbestLists); System.err.printf("Done.\n");
    * IncrementalEvaluationMetric<IString, String> oracleEvalMetric =
    * evalMetric.getIncrementalMetric();
-   * 
+   *
    * for (ScoredFeaturizedTranslation<IString, String> trans :
    * oracleEvalTranslations) { //System.err.printf("%s\n", (trans == null ?
    * trans : trans.translation)); oracleEvalMetric.add(trans); } double
    * oracleScore = oracleEvalMetric.score();
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * initialEvalSum += initialEvalMetric.score(); evalCount++;
    * System.err.printf(
    * "> Init eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n",
    * nbestIter, chunk, 100 initialEvalMetric.score(), initialCScore, 100 *
    * oracleScore, 100*initialEvalSum/evalCount, actualPreIncEval.score()*100);
-   * 
+   *
    * scorer.setWeightMultipliers(0.0, 1.0);
-   * 
+   *
    * long learningTime = -System.currentTimeMillis();
-   * 
+   *
    * if (learningAlgorithm.equals(EVALUE_LEARNING)) { EValueLearningScorer
    * eScorer = (EValueLearningScorer)scorer; int transIdx = -1;
    * IncrementalEvaluationMetric<IString, String> incEvalMetric =
@@ -1951,12 +1951,12 @@ public class Phrasal {
    * nbestLists.nbestLists().size(); i++) { if
    * (nbestLists.nbestLists().get(i).size() != 0) { if (transIdx == -1) transIdx
    * = i; else throw new RuntimeException(); } incEvalMetric.add(null); }
-   * 
+   *
    * //nbestLists.nbestLists(); List<? extends
    * ScoredFeaturizedTranslation<IString, String>> sfTrans =
    * nbestLists.nbestLists().get(transIdx); List<List<FeatureValue<String>>>
    * featureVectors = new ArrayList<List<FeatureValue<String>>>(sfTrans.size());
-   * 
+   *
    * /* { int tI = -1; for (ScoredFeaturizedTranslation<IString, String> sfTran
    * : sfTrans) { tI++; double score =
    * -((TERMetric)learningMetric).calcTER(sfTran, transIdx); if (score >
@@ -1975,28 +1975,28 @@ public class Phrasal {
    * eScorer.objectiveValue(featureVectors, us);
    * System.err.printf("Obj Delta: %e (%e-%e)\n", objPost - objInit, objPost,
    * objInit);
-   * 
+   *
    * if (DEBUG_LEVEL >= 2) { System.err.printf("New Weights\n");
    * eScorer.displayWts(); } }
-   * 
+   *
    * learningTime += System.currentTimeMillis();
-   * 
+   *
    * List<ScoredFeaturizedTranslation<IString, String>> bestScoreTranslations =
    * bestScoreSearch .maximize(nbestLists);
-   * 
+   *
    * IncrementalEvaluationMetric<IString, String> bestScoringEvalMetric =
    * evalMetric.getIncrementalMetric();
-   * 
+   *
    * List<FeatureValue<String>> allSelectedFeatures = new
    * LinkedList<FeatureValue<String>>(); double finalCScore = 0; int posBT = -1;
    * for (ScoredFeaturizedTranslation<IString, String> trans :
    * bestScoreTranslations) { posBT++;
-   * 
+   *
    * if (actualPostIncEval.size() <= posBT) { actualPostIncEval.add(trans); }
    * else { if (trans != null) actualPostIncEval.replace(posBT, trans); }
    * bestScoringEvalMetric.add(trans); if (trans != null) {
    * allSelectedFeatures.addAll(trans.features); } }
-   * 
+   *
    * postEvalSum += bestScoringEvalMetric.score(); System.err.printf(
    * "> Post eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n",
    * nbestIter, chunk, 100 bestScoringEvalMetric.score(), finalCScore, 100
@@ -2009,7 +2009,7 @@ public class Phrasal {
    * saveWeights, nbestIter, chunk)); if (DEBUG_LEVEL >= 2) {
    * System.err.printf("Final Weights for nbestitr: %d chunk: %d", nbestIter,
    * chunk); scorer.displayWeights(); }
-   * 
+   *
    * } scorer.saveWeights(String.format("%s.nbestitr_%d.final.wts", saveWeights,
    * nbestIter)); System.err.printf(
    * ">> %d: Avg eS: %.2f~>%.2f  Actl eS: %.2f~>%.2f (diff: %.3f)\n", nbestIter,

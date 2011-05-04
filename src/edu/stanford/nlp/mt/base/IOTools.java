@@ -7,9 +7,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class IOTools {
   public static List<Sequence<IString>> slurpIStringSequences(String filename)
@@ -110,5 +110,7 @@ public class IOTools {
         prop.setProperty(matcher.group(0), matcher.group(1));
       }
     }
+    reader.close();
   }
+  
 }
