@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.decoder.util.SSVMScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;

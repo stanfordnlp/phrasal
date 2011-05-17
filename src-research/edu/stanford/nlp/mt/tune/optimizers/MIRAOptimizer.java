@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.classify.BadLicenseMIRAWeightUpdater;
 import edu.stanford.nlp.classify.MIRAWeightUpdater;
 import edu.stanford.nlp.classify.CounterWeightUpdater;
 import edu.stanford.nlp.mt.base.IString;

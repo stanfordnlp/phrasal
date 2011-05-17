@@ -171,7 +171,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       Scorer<FV> scorer, String filename, boolean doLog) throws IOException {
     super(phraseFeaturizer, scorer);
     File f = new File(filename);
-    name = String.format("Pharaoh(%s)", f.getName());
+    name = String.format("FlatPhraseTable(%s)", f.getName());
     // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
     // DynamicIntegerArrayIndex();
     translations = new ArrayList<List<IntArrayTranslationOption>>();
