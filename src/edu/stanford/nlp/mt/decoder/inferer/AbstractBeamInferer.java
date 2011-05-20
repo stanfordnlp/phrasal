@@ -48,8 +48,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
     try {
-      this.parser = IOUtils.readObjectFromFile(dagParser);
-      parser.history = new HashMap<Collection<List<String>>, Action>();
+      if(DO_PARSE) this.parser = IOUtils.readObjectFromFile(dagParser);
+      if(DO_PARSE) parser.history = new HashMap<Collection<List<String>>, Action>();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
