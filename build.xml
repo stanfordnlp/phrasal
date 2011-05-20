@@ -86,7 +86,7 @@ includeantruntime="false">
   <target name="test" depends="classpath"
           description="Run mt unit tests">
     <echo message="${ant.project.name}" />
-    <junit fork="true" maxmemory="1g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
+    <junit fork="true" maxmemory="4g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
