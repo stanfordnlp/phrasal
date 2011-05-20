@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
+import edu.stanford.nlp.trees.semgraph.SemanticGraph;
+
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -20,6 +22,8 @@ public class RichTranslation<TK, FV> extends
   // public final int[][] f2tAlignmentIndex;
   public final List<String> alignmentIndex;
   public final Featurizable<TK, FV> featurizable;
+  
+  public SemanticGraph dependency;
 
   /*
    * // no longer used: public RichTranslation(Sequence<TK> foreign,
@@ -78,6 +82,12 @@ public class RichTranslation<TK, FV> extends
         : null;
     // this.t2fAlignmentIndex = f.t2fAlignmentIndex;
     // this.f2tAlignmentIndex = f.f2tAlignmentIndex;
+  }
+  public RichTranslation(Featurizable<TK, FV> f, double score,
+      FeatureValueCollection<FV> features, List<String> alignmentIndex,
+      long latticeSourceId, SemanticGraph dep) {
+    this(f, score, features, alignmentIndex, latticeSourceId);
+    dependency = dep;
   }
 
   private static CoverageSet constructCoverageSet(int[][] t2fAlignmentIndex) {

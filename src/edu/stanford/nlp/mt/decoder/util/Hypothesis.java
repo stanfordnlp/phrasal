@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.trees.semgraph.SemanticGraph;
 
 /**
  * 
@@ -53,6 +54,8 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
   public final Featurizable<TK, FV> featurizable;
 
   public final List<FeatureValue<FV>> localFeatures;
+  
+  public SemanticGraph dependency;
 
   /**
 	 * 

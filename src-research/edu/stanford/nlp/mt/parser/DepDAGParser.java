@@ -14,11 +14,16 @@ import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.parser.Parser;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.trees.DependencyScoring;
@@ -26,6 +31,7 @@ import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.semgraph.SemanticGraph;
+import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
@@ -40,6 +46,8 @@ public class DepDAGParser implements Parser, Serializable {
   
 //to reduce the total number of features for training, remove features appear less than 3 times
   private static final boolean REDUCE_FEATURES = true;
+  
+  public Map<Collection<List<String>>, Action> history = new HashMap<Collection<List<String>>, Action>();
 
   @Override
   public boolean parse(List<? extends HasWord> sentence) {
@@ -161,19 +169,31 @@ public class DepDAGParser implements Parser, Serializable {
     while((d=extractActFeature(s))!=null){
       Action nextAction;
       if(s.getStack().size()==0) nextAction = new Action(ActionType.SHIFT); 
-      else {
+      else if(history.containsKey(d.asFeatures())){
+        nextAction = history.get(d.asFeatures());
+      } else {
         nextAction = new Action(actClassifier.classOf(d));
         if(nextAction.action == ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC) {
           nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d));
         }
+        history.put(d.asFeatures(), nextAction);
+      }
+      if(s.actionTrace.size() > 0 && s.actionTrace.get(s.actionTrace.size()-1).equals(nextAction)
+          && nextAction.relation != null) {
+        nextAction = new Action(ActionType.SHIFT);
       }
       Actions.doAction(nextAction, s);
     }
     return s.dependencies;    
   }
+  public SemanticGraph getDependencyGraph(List<CoreLabel> sentence){
+    Structure s = new Structure(sentence);
+    return getDependencyGraph(s);
+  }
   
   public static void main(String[] args) throws IOException, ClassNotFoundException{
-    boolean doTrain = true;
+
+    boolean doTrain = false;
     boolean doTest = true;
     boolean storeTrainedModel = true;
     
@@ -237,7 +257,7 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
       
       if(storeTrainedModel) {
-        String defaultStore = "/scr/heeyoung/mtdata/DAGparserModel.ser";
+        String defaultStore = "/scr/heeyoung/mt/mtdata/DAGparserModel.ser";
         if(!props.containsKey("storeModel")) logger.info("no option -storeModel : trained model will be stored at "+defaultStore); 
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
         IOUtils.writeObjectToFile(parser, trainedModelFile);
@@ -249,7 +269,7 @@ public class DepDAGParser implements Parser, Serializable {
     if(doTest) {
       String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll");
 //      String defaultLoadModel = "/scr/heeyoung/mtdata/DAGparserModel.reducedFeat_mem5_dataset.ser";
-      String defaultLoadModel = "/scr/heeyoung/mtdata/DAGparserModel.ser";
+      String defaultLoadModel = "/scr/heeyoung/mt/scr61/DAGparserModel.ser";
 
       if(!props.containsKey("loadModel")) logger.info("no option -loadModel : trained model will be loaded from "+defaultLoadModel); 
       String trainedModelFile = props.getProperty("loadModel", defaultLoadModel);
@@ -286,6 +306,18 @@ public class DepDAGParser implements Parser, Serializable {
       Score score = goldScorer.score(DependencyScoring.convertStringEquality(systemDeps));
       logger.info(score.toString(false));
       logger.info("done");
+      
+      // parse sentence. (List<CoreLabel>)
+      String sent = "My dog also likes eating sausage.";
+      Properties pp = new Properties();
+      pp.put("annotators", "tokenize, ssplit, pos, lemma");
+      StanfordCoreNLP pipeline = new StanfordCoreNLP(pp);
+      Annotation document = new Annotation(sent);
+      pipeline.annotate(document);
+      List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+
+      List<CoreLabel> l = sentences.get(0).get(TokensAnnotation.class);
+      SemanticGraph g = parser.getDependencyGraph(l);
     }
   }
 

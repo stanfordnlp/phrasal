@@ -1,10 +1,22 @@
 package edu.stanford.nlp.mt.decoder.inferer;
 
+import java.io.IOException;
 import java.util.*;
 
+import edu.stanford.nlp.io.IOUtils;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.parser.DepDAGParser;
+import edu.stanford.nlp.mt.parser.Structure;
+import edu.stanford.nlp.mt.parser.Actions.Action;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.trees.semgraph.SemanticGraph;
+import edu.stanford.nlp.util.CoreMap;
 
 /**
  * 
@@ -25,11 +37,25 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
   public static final int MAX_DUPLICATE_FACTOR = 10;
   public static final int SAFE_LIST = 500;
+  
+  public StanfordCoreNLP pipeline;
+  public DepDAGParser parser;
+  private static final String dagParser = "/scr/heeyoung/mt/scr61/DAGparserModel.ser";
+  public static final boolean DO_PARSE = false;
 
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
+    try {
+      this.parser = IOUtils.readObjectFromFile(dagParser);
+      parser.history = new HashMap<Collection<List<String>>, Action>();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    Properties pp = new Properties();
+    pp.put("annotators", "tokenize, ssplit, pos, lemma");
+    pipeline = new StanfordCoreNLP(pp);
   }
 
   @Override
@@ -58,8 +84,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       return null;
     List<RichTranslation<TK, FV>> translations = new LinkedList<RichTranslation<TK, FV>>();
 
+    System.err.println(beam.size());
     List<Hypothesis<TK, FV>> goalStates = new ArrayList<Hypothesis<TK, FV>>(
         beam.size());
+
     for (Hypothesis<TK, FV> hyp : beam) {
       goalStates.add(hyp);
     }
@@ -76,7 +104,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         goalStates, recombinationHistory);
 
     int hypCount = 0, maxDuplicateCount = size * MAX_DUPLICATE_FACTOR;
-
+    Map<Structure, SemanticGraph> history = new HashMap<Structure, SemanticGraph>();
     for (List<Hypothesis<TK, FV>> hypList : latticeDecoder) {
 
       boolean withDTUs = false;
@@ -133,9 +161,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
         Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         assert (hyp != null);
+        
+        // parsing hypothesis
+        if(DO_PARSE) parseHyp(hyp, history);
+        
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
             hyp.score, collectFeatureValues(hyp), collectAlignments(hyp),
-            beamGoalHyp.id));
+            beamGoalHyp.id, hyp.dependency));
         if (translations.size() >= size)
           break;
 
@@ -297,4 +329,29 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
   abstract public void dump(Hypothesis<TK, FV> hyp);
 
+  private void parseHyp(Hypothesis<TK, FV> hyp, Map<Structure, SemanticGraph> history) {
+//    Date startTime = new Date();
+    Structure s = buildStructure(hyp);
+//    Date stopTime = new Date();
+//    System.out.printf("build structure Elapsed time: %.3f seconds\n", ((stopTime.getTime() - startTime.getTime()) / 1000F));
+
+
+//    Date startTime2 = new Date();
+    hyp.dependency = parser.getDependencyGraph(s);   
+//    Date stopTime2 = new Date();
+//    System.out.printf("parsing Elapsed time: %.3f seconds\n", ((stopTime2.getTime() - startTime2.getTime()) / 1000F));
+  }
+
+  private Structure buildStructure(Hypothesis<TK, FV> hyp) {
+    StringBuilder sent = new StringBuilder();
+    for(TK s : hyp.featurizable.partialTranslation){
+      sent.append(s);
+      sent.append(" ");
+    }
+    Annotation annotation = new Annotation(sent.toString().trim());
+    pipeline.annotate(annotation);
+    List<CoreMap> sentences = annotation.get(SentencesAnnotation.class);
+    List<CoreLabel> l = sentences.get(0).get(TokensAnnotation.class);
+    return new Structure(l);
+  }
 }

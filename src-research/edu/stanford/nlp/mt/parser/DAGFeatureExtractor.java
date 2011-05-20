@@ -78,7 +78,7 @@ public class DAGFeatureExtractor {
 
   public static List<List<String>> extractActFeatures(Structure struc) {
     List<List<String>> features = new ArrayList<List<String>>();
-    Stack<IndexedWord> stack = struc.getStack();
+    LinkedStack<IndexedWord> stack = struc.getStack();
     List<IndexedWord> inputQueue = struc.getInput();
     if(stack.size()==0) return features;   // empty stack: always SHIFT
     int curQueue = struc.getCurrentInputIndex();

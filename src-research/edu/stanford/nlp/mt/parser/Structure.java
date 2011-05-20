@@ -8,6 +8,7 @@ import java.util.Stack;
 
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.TreeGraphNode;
@@ -16,7 +17,7 @@ import edu.stanford.nlp.trees.semgraph.SemanticGraph;
 
 public class Structure {
 
-  protected Stack<IndexedWord> stack;
+  protected LinkedStack<IndexedWord> stack;
   protected List<IndexedWord> input;
   protected SemanticGraph dependencies;
   protected int inputIndex;
@@ -24,7 +25,7 @@ public class Structure {
   
   public Structure() {
     inputIndex = 0;
-    stack = new Stack<IndexedWord>();
+    stack = new LinkedStack<IndexedWord>();
     actionTrace = new ArrayList<Action>();
   }
   public Structure(GrammaticalStructure gs) {
@@ -37,7 +38,19 @@ public class Structure {
     }
   }
   
-  public Stack<IndexedWord> getStack() { return stack; }
+  public Structure(List<CoreLabel> sentence){
+    this();
+    input = new ArrayList<IndexedWord>();
+    dependencies = new SemanticGraph();
+    int index = 0;
+    for(CoreLabel l : sentence){
+      IndexedWord w = new IndexedWord(l);
+      w.set(IndexAnnotation.class, index++);
+      input.add(w);
+    }
+  }
+  
+  public LinkedStack<IndexedWord> getStack() { return stack; }
   public List<IndexedWord> getInput() { return input; }
   public SemanticGraph getDependencyGraph() { return dependencies; }
   public List<Action> getActionTrace() { return actionTrace; }
@@ -53,7 +66,7 @@ public class Structure {
   
   public void resetIndex() {
     inputIndex = 0;
-    stack = new Stack<IndexedWord>();
+    stack = new LinkedStack<IndexedWord>();
     dependencies = new SemanticGraph();
     actionTrace = new ArrayList<Action>();
   }
