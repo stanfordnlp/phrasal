@@ -55,4 +55,16 @@ public class Sequences {
     }
     return true;
   }
+  
+  public static <T> Sequence<T> concatenate(Sequence<T> a, Sequence<T> b) {
+    Object[] abArr = new Object[a.size() + b.size()];
+    for (int i = 0; i < a.size(); i++) {
+      abArr[i] = a.get(i);
+    }
+    for (int i = 0; i < b.size(); i++) {
+      abArr[i+a.size()] = b.get(i);
+    }
+    RawSequence<T> ab = new RawSequence<T>((T[])abArr);
+    return ab;
+  }
 }

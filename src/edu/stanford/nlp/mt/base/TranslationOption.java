@@ -8,7 +8,7 @@ import java.util.*;
  * 
  * @param <T>
  */
-public class TranslationOption<T> {
+public class TranslationOption<T> implements Comparable<TranslationOption>{
 
   public final int id;
   public final float[] scores;
@@ -75,6 +75,16 @@ public class TranslationOption<T> {
 
   public boolean hasTargetGap() {
     return false;
+  }
+
+  @Override
+  public int compareTo(TranslationOption o) {
+    for (int i = 0; i < Math.min(o.scores.length, scores.length); i++) {
+      if (o.scores[i] != scores[i]) {
+        return (int)Math.signum(scores[i] - o.scores[i]);
+      }
+    }
+    return scores.length - o.scores.length;  
   }
 
 }

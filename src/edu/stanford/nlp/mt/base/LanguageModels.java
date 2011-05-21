@@ -6,7 +6,7 @@ package edu.stanford.nlp.mt.base;
  * 
  */
 public class LanguageModels {
-  static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {
+  public static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {
     double logP = 0;
     Sequence<T> s = new InsertedStartEndToken<T>(s2, lm.getStartToken(),
         lm.getEndToken());
