@@ -53,9 +53,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    Properties pp = new Properties();
-    pp.put("annotators", "tokenize, ssplit, pos, lemma");
-    pipeline = new StanfordCoreNLP(pp);
+    if (DO_PARSE) {
+      Properties pp = new Properties();
+      pp.put("annotators", "tokenize, ssplit, pos, lemma");
+      pipeline = new StanfordCoreNLP(pp);
+    }
   }
 
   @Override
