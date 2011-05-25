@@ -38,7 +38,7 @@ public class NGramLanguageModelFeaturizer<TK> implements
     if (args.length < 2 || args.length > 3)
       throw new RuntimeException(
           "Two arguments are needed: LM file name and LM ID");
-    LanguageModel<IString> lm = args.length == 3 ? ARPALanguageModel.load(
+    LanguageModel<IString> lm = args.length == 3 ? LanguageModels.load(
         args[0], args[2]) : ARPALanguageModel.load(args[0]);
     return new NGramLanguageModelFeaturizer<IString>(lm, args[1], false);
   }
@@ -102,7 +102,7 @@ public class NGramLanguageModelFeaturizer<TK> implements
         this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
         this.lengthNorm = Boolean.parseBoolean(args[2]);
       } else {
-        this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0], args[2]);
+        this.lm = (LanguageModel<TK>) LanguageModels.load(args[0], args[2]);
         this.lengthNorm = false;
       }
     } else {

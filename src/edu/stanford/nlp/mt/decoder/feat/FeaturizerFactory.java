@@ -3,11 +3,11 @@ package edu.stanford.nlp.mt.decoder.feat;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.LanguageModels;
 
 /**
  * @author danielcer
@@ -189,10 +189,10 @@ public class FeaturizerFactory {
       // System.err.println("LM vocabulary file: "+lmVoc);
       if (lmVoc == null || lmVoc.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
-            ARPALanguageModel.load(lm));
+            LanguageModels.load(lm));
       } else {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
-            ARPALanguageModel.load(lm, lmVoc));
+            LanguageModels.load(lm, lmVoc));
       }
       baselineFeaturizers.add(arpaLmFeaturizer);
 
@@ -226,10 +226,10 @@ public class FeaturizerFactory {
       // System.err.println("LM vocabulary file: "+lmVoc);
       if (lmVoc == null || lmVoc.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
-            ARPALanguageModel.load(lm));
+            LanguageModels.load(lm));
       } else {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
-            ARPALanguageModel.load(lm, lmVoc));
+            LanguageModels.load(lm, lmVoc));
       }
       pharaohFeaturizers.add(arpaLmFeaturizer);
 

@@ -56,43 +56,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   protected static final WeakHashMap<String, ARPALanguageModel> lmStore = new WeakHashMap<String, ARPALanguageModel>();
 
   public static LanguageModel<IString> load(String filename) throws IOException {
-    return load(filename, null);
-  }
-
-  public static LanguageModel<IString> load(String filename,
-      String vocabFilename) throws IOException {
-    File f = new File(filename);
-    String filepath = f.getAbsolutePath();
-    if (lmStore.containsKey(filepath))
-      return lmStore.get(filepath);
-
-    boolean useSRILM = true;
-    LanguageModel<IString> alm;
-
-    try {
-      alm = new SRILanguageModel(filename, vocabFilename);
-    } catch (UnsatisfiedLinkError e) {
-      // e.printStackTrace();
-      System.err
-          .println("Unable to load SRILM library. Default to Java ARPA implementation.");
-      alm = new ARPALanguageModel(filename);
-      useSRILM = false;
-    } catch (NoClassDefFoundError e) {
-      // e.printStackTrace();
-      System.err
-          .println("Unable to load SRILM library. Default to Java ARPA implementation.");
-      alm = new ARPALanguageModel(filename);
-      useSRILM = false;
-    }
-
-    if (vocabFilename != null && !useSRILM)
-      System.err.printf("Warning: vocabulary file %s is ignored.\n",
-          vocabFilename);
-
-    if (alm instanceof ARPALanguageModel)
-      lmStore.put(filepath, (ARPALanguageModel) alm);
-
-    return alm;
+    return LanguageModels.load(filename, null);
   }
 
   protected ARPALanguageModel(String filename) throws IOException {
