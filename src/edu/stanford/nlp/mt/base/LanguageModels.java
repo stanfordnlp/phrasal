@@ -51,7 +51,7 @@ public class LanguageModels {
      String realFilename = filename.substring(BERKELEY_LM_TAG.length());
      alm = new BerkeleyLM(realFilename, MAX_NGRAM_ORDER);
     } else if (vocabFilename == null) {
-      return ARPALanguageModel.load(filename);
+      return new ARPALanguageModel(filename);
     } else {
       try {
         alm = new SRILanguageModel(filename, vocabFilename);
