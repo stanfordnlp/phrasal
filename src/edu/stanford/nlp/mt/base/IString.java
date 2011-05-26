@@ -25,7 +25,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   public static final OAIndex<String> index = new OAIndex<String>();
 
-  private String stringRep;
   public final int id;
 
   private enum Classing {
@@ -45,7 +44,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     if (classing == Classing.BACKSLASH) { // e.g., on december 4\\num
       int doubleBackSlashPos = string.indexOf("\\\\");
       if (doubleBackSlashPos != -1) {
-        stringRep = string.substring(0, doubleBackSlashPos); // .intern();
         id = index.indexOf(string.substring(doubleBackSlashPos), true);
         return;
       }
@@ -53,13 +51,11 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
       if (string.length() > 2 && string.startsWith("$")) {
         int delim = string.indexOf("_(");
         if (delim != -1 && string.endsWith(")")) {
-          stringRep = string.substring(delim + 2, string.length() - 1); // .intern();
           id = index.indexOf(string.substring(0, delim), true);
           return;
         }
       }
     }
-    stringRep = null; // string;
     id = index.indexOf(string, true);
   }
 
@@ -68,13 +64,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
    */
   public IString(int id) {
     this.id = id;
-    stringRep = null; // index.get(id);
-  }
-
-  private String lazyStringRep() {
-    if (stringRep == null)
-      stringRep = index.get(id);
-    return stringRep;
+    
   }
 
   /**
@@ -83,18 +73,18 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
   private static final long serialVersionUID = 2718L;
 
   @Override
-  public char charAt(int index) {
-    return lazyStringRep().charAt(index);
+  public char charAt(int charIndex) {
+    return index.get(id).charAt(charIndex);
   }
 
   @Override
   public int length() {
-    return lazyStringRep().length();
+    return index.get(id).length();
   }
 
   @Override
   public CharSequence subSequence(int start, int end) {
-    return lazyStringRep().subSequence(start, end);
+    return index.get(id).subSequence(start, end);
   }
 
   @Override
@@ -114,7 +104,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   @Override
   public String toString() {
-    return lazyStringRep();
+    return index.get(id);
   }
 
   @Override
@@ -165,8 +155,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     public boolean contains(Object o) {
       if (!(o instanceof IString))
         return false;
-      IString istring = (IString) o;
-      return index.contains(istring.lazyStringRep());
+      return true; // all IStrings are in the index;
     }
 
     @Override
@@ -176,12 +165,12 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
     @Override
     public int indexOf(IString o) {
-      return index.indexOf(o.lazyStringRep());
+      return o.id;
     }
 
     @Override
     public int indexOf(IString o, boolean add) {
-      return index.indexOf(o.lazyStringRep(), add);
+      return o.id;
     }
 
     @Override
@@ -252,7 +241,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   @Override
   public int compareTo(IString o) {
-    return lazyStringRep().compareTo(o.lazyStringRep());
+    return index.get(id).compareTo(index.get(o.id));
   }
 
 }

@@ -1,7 +1,10 @@
 package edu.stanford.nlp.mt.base;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import edu.stanford.nlp.objectbank.ObjectBank;
 
 /**
  * 
@@ -78,4 +81,44 @@ public class LanguageModels {
     } 
     return alm;
   }
+
+  static public void main(String[] args) throws Exception {
+    if (args.length != 2) {
+      System.err
+          .printf("Usage:\n\tjava ...LanguageModels [berkeleylm:](arpa format model) \"sentence or file to score\"\n");
+      System.exit(-1);
+    }
+  
+    // verbose = true;
+    String model = args[0];
+    String fileOrSentence = args[1];
+    System.out.printf("Loading lm: %s...\n", model);    
+    LanguageModel<IString> lm = load(model);
+      
+    long startTimeMillis = System.currentTimeMillis();
+    try {
+      double logSum = 0;
+      for (String sent : ObjectBank.getLineIterator(fileOrSentence)) {
+        sent = sent.toLowerCase();
+        System.out.printf("Sentence: %s\n", sent);
+        Sequence<IString> seq = new SimpleSequence<IString>(
+            IStrings.toIStringArray(sent.split("\\s")));
+        double score = scoreSequence(lm, seq);
+        System.out.printf("Sequence score: %f score_log10: %f\n", score, score
+            / Math.log(10));
+        logSum += Math.log(score);        
+      }
+      System.out.printf("Log sum score: %e\n", logSum);
+    } catch (RuntimeException e) {
+      if (!e.getMessage().contains("FileNotFoundException")) throw e;
+      Sequence<IString> seq = new SimpleSequence<IString>(
+          IStrings.toIStringArray(fileOrSentence.split("\\s")));
+      double score = scoreSequence(lm, seq);
+      System.out.printf("Sequence score: %f score_log10: %f\n", score, score
+          / Math.log(10));
+    }
+    double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
+    System.err.printf("secs = %.3f\n", totalSecs);
+  }
 }
+  

@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.base;
 
-import edu.stanford.nlp.objectbank.ObjectBank;
 
 import java.io.*;
 import java.util.*;
@@ -21,7 +20,8 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   protected final String name;
   public static final IString START_TOKEN = new IString("<s>");
   public static final IString END_TOKEN = new IString("</s>");
-
+  public static final IString UNK_TOKEN = new IString("<unk>");
+  
   @Override
   public String getName() {
     return name;
@@ -265,33 +265,5 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       return false;
     double bow = bows[prefixInts.length - 1][index];
     return !Double.isNaN(bow);
-  }
-
-  static public void main(String[] args) throws Exception {
-    if (args.length != 2) {
-      System.err
-          .printf("Usage:\n\tjava ...ARPALanguageModel (arpa model) \"sentence or file to score\"\n");
-      System.exit(-1);
-    }
-
-    // verbose = true;
-    String model = args[0];
-    String file = args[1];
-    System.out.printf("Loading lm: %s...\n", model);
-    LanguageModel<IString> lm = ARPALanguageModel.load(model);
-    System.out.printf("done loading lm.\n");
-
-    long startTimeMillis = System.currentTimeMillis();
-    for (String sent : ObjectBank.getLineIterator(file)) {
-      sent = sent.toLowerCase();
-      System.out.printf("Sentence: %s\n", sent);
-      Sequence<IString> seq = new SimpleSequence<IString>(
-          IStrings.toIStringArray(sent.split("\\s")));
-      double score = LanguageModels.scoreSequence(lm, seq);
-      System.out.printf("Sequence score: %f score_log10: %f\n", score, score
-          / Math.log(10));
-    }
-    double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
-    System.err.printf("secs = %.3f\n", totalSecs);
   }
 }
