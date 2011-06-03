@@ -4,7 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 
-import scala.actors.threadpool.Arrays;
+import java.util.Arrays;
 
 /**
  * Interactive smooth BLEU utility
@@ -13,7 +13,6 @@ import scala.actors.threadpool.Arrays;
  *
  */
 public class SmoothBLEU {
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) {
     if (args.length != 3) {
       System.out.println("Usage:\n\tjava ...SmoothBLEU \"this is ref1|||this is ref2\" \"translation\" (order)\n");

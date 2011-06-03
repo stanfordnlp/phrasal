@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.base;
 
-import scala.actors.threadpool.Arrays;
+import java.util.Arrays;
+
 import edu.berkeley.nlp.lm.BackoffLm;
 import edu.berkeley.nlp.lm.WordIndexer;
-import edu.berkeley.nlp.lm.collections.Indexer;
 import edu.berkeley.nlp.lm.io.LmReaders;
 import edu.berkeley.nlp.lm.map.ConfigOptions;
 
