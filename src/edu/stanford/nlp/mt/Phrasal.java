@@ -38,10 +38,12 @@ import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.tools.PrefixTagger;
 import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
@@ -1025,6 +1027,8 @@ public class Phrasal {
   private void decodeFromConsole() throws IOException {
 
     System.err.println("Entering main translation loop");
+    System.err.println("220 added: Phrasal.java: read source text: /scr/heeyoung/mt/mtwrk/resources/mt02.grow-diag-final.psrc.txt");
+    System.setIn(new FileInputStream("/scr/heeyoung/mt/mtwrk/resources/mt02.grow-diag-final.psrc.txt"));
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in, "UTF-8"));

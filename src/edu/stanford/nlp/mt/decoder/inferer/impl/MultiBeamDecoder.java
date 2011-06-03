@@ -27,18 +27,39 @@
 
 package edu.stanford.nlp.mt.decoder.inferer.impl;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.inferer.*;
-import edu.stanford.nlp.mt.decoder.recomb.*;
-import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.mt.Phrasal;
-
+import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInferer;
+import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInfererBuilder;
+import edu.stanford.nlp.mt.decoder.inferer.Inferer;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
+import edu.stanford.nlp.mt.decoder.util.Beam;
+import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.util.OptionGrid;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.parser.DepDAGParser;
+import edu.stanford.nlp.mt.parser.Actions.Action;
+import edu.stanford.nlp.mt.tools.MajorityTagger;
+import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.stats.ClassicCounter;
 
 /**
@@ -70,6 +91,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   final int maxDistortion;
   final int numProcs;
 
+  private DepDAGParser parser;
+  private MajorityTagger tagger;
+  private Morphology lemmatizer;
+  private static final String dagParser = "/scr/heeyoung/mt/scr61/DAGparserModel.ser";
+  public static final boolean DO_PARSE = true;
+
   static {
     if (ALIGNMENT_DUMP != null) {
       if ((new File(ALIGNMENT_DUMP)).delete()) {
@@ -96,7 +123,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       numProcs = 1;
     }
     threadPool = Executors.newFixedThreadPool(numProcs);
-    
+
     System.err.printf("Beam expansion threads: %d\n", numProcs);
     /*
      * if (useITGConstraints) { System.err.printf("Using ITG Constraints\n"); }
@@ -107,6 +134,17 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           maxDistortion);
     } else {
       System.err.printf("Multi-beam decoder. No hard distortion limit.\n");
+    }
+
+    try {
+      if (DO_PARSE) {
+        this.tagger = new MajorityTagger();
+        this.lemmatizer = new Morphology();
+        this.parser = IOUtils.readObjectFromFile(dagParser);
+        parser.history = new HashMap<Collection<List<String>>, Action>();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -180,8 +218,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // create beams
     if (DEBUG)
       System.err.println("Creating beams");
-    Beam<Hypothesis<TK, FV>>[] beams = createBeamsForCoverageCounts(
-        foreign.size() + 1, beamCapacity, filter, recombinationHistory);
+    Beam<Hypothesis<TK, FV>>[] beams = createBeamsForCoverageCounts(foreign
+        .size() + 1, beamCapacity, filter, recombinationHistory);
 
     // retrieve translation options
     if (DEBUG)
@@ -243,8 +281,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (DEBUG) {
         System.err
             .printf("--\nDoing Beam %d Entries: %d\n", i, beams[i].size());
-        System.err.printf("Total Memory Usage: %d MiB",
-            (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024));
+        System.err.printf("Total Memory Usage: %d MiB", (rt.totalMemory() - rt
+            .freeMemory())
+            / (1024 * 1024));
       }
       /*
        * System.err.printf("Hypotheses:\n---------------\n"); for
@@ -258,7 +297,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       for (int threadId = 0; threadId < numProcs; threadId++) {
         BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz,
             optionGrid, constrainedOutputSpace, translationId, threadId,
-            numProcs, cdl);
+            numProcs, cdl, parser, tagger, lemmatizer);
         threadPool.execute(beamExpander);
       }
       try {
@@ -391,6 +430,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     int threadId;
     int threadCount;
     CountDownLatch cdl;
+    DepDAGParser parser;
+    MajorityTagger tagger;
+    Morphology lemmatizer;
 
     public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
         int foreignSz, OptionGrid<TK> optionGrid,
@@ -405,6 +447,18 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       this.threadId = threadId;
       this.threadCount = threadCount;
       this.cdl = cdl;
+    }
+
+    public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
+        int foreignSz, OptionGrid<TK> optionGrid,
+        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+        int translationId, int threadId, int threadCount, CountDownLatch cdl,
+        DepDAGParser parser, MajorityTagger tagger, Morphology lemmatizer) {
+      this(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace,
+          translationId, threadId, threadCount, cdl);
+      this.parser = parser;
+      this.tagger = tagger;
+      this.lemmatizer = lemmatizer;
     }
 
     @Override
@@ -524,7 +578,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                */
 
               Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
-                  option, hyp.length, hyp, featurizer, scorer, heuristic);
+                  option, hyp.length, hyp, featurizer, scorer, heuristic,
+                  parser, tagger, lemmatizer);
 
               if (DETAILED_DEBUG) {
                 System.err.printf("creating hypothesis %d from %d\n",

@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.tools;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.objectbank.ObjectBank;
+import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.tagger.maxent.TestSentence;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 
@@ -55,7 +56,12 @@ public class PrefixTagger extends TestSentence {
       throw new UnsupportedOperationException();
     this.leftWindow = leftWindow;
     this.rightWindow = rightWindow;
-    this.offset = -rightWindow;
+//    this.offset = -rightWindow;
+    
+    // TODO
+    this.leftWindow = leftWindow();
+    this.rightWindow = rightWindow();
+    this.offset = leftWindow();
   }
 
   private void init(IString[] s) {
@@ -65,7 +71,7 @@ public class PrefixTagger extends TestSentence {
     for (int j = 0; j < size; j++)
       this.sent.add(s[j].word());
     localContextScores = new double[size][];
-    len = size + leftWindow();
+    len = size + leftWindow;
   }
 
   public void release() {
@@ -105,14 +111,19 @@ public class PrefixTagger extends TestSentence {
     init(s);
 
     int[] bestTags = new int[len];
-    int[] vals = getPossibleValues(loc);
-    bestTags[loc] = vals[0];
+    int[][] vals = new int[len][];
+    for(int pos = 0 ; pos < len ; pos++) {
+      vals[pos] = getPossibleValues(pos);
+      bestTags[pos] = vals[pos][0];
+    }
+
     this.initializeScorer();
     double[] scores = scoresOf(bestTags, loc);
 
     int am = ArrayMath.argmax(scores);
 
-    bestTags[loc] = vals[am];
+    // TODO
+    bestTags[loc] = vals[loc][am];
     cleanUpScorer();
 
     tag = new Pair<IString, Float>(new IString(maxentTagger.getTags().getTag(
@@ -132,7 +143,8 @@ public class PrefixTagger extends TestSentence {
 
     for (String line : ObjectBank.getLineIterator(new File(textFile))) {
 
-      line = line.replaceAll("$", " EOS");
+      line = line.replaceAll("$", " ");
+      line = line + TaggerConstants.EOS_WORD;
       IString[] in = IStrings.toIStringArray(line.split("\\s+"));
 
       // System.err.println("sent: "+Arrays.toString(in));
@@ -178,8 +190,7 @@ public class PrefixTagger extends TestSentence {
     }
   }
 
-  public static void main(String[] args) throws Exception {
-
+  public static void main(String[] args) throws Exception {    
     if (args.length != 4) {
       System.err
           .println("Usage: java edu.stanford.nlp.tagger.maxent.PrefixTagger (model) (input-file) (left-window) (right-window)");
