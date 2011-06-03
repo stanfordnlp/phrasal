@@ -61,8 +61,9 @@ public class ActionRecoverer {
     
     // recover actions
     Set<IndexedWord> dependents = new HashSet<IndexedWord>();
-    while(s.inputIndex < s.input.size()) {
-      IndexedWord w = s.input.get(s.inputIndex);
+    // TODO:FIX while(s.inputIndex < s.input.size()) {
+    while (dependents != null) { //TODO:FIX
+      IndexedWord w = null;  // TODO:FIX  s.input.get(s.inputIndex);
       if(leftsideEdgeCounter.getCount(w) > 0) {
         IndexedWord topStack = s.stack.peek();
         
@@ -87,7 +88,7 @@ public class ActionRecoverer {
         }        
       } else {
         s.stack.push(w);
-        s.inputIndex++;
+        // TODO:FIX  s.inputIndex++;
         s.actionTrace.add(new Action(ActionType.SHIFT));
       }
     }
@@ -97,7 +98,7 @@ public class ActionRecoverer {
   private static void checkRecoveredActionTrace(Structure s){
     SemanticGraph gold = s.dependencies;
     List<Action> recoveredActions = s.actionTrace;
-    s.resetIndex();
+    // TODO:FIX s.resetIndex();
     
     for(Action a : recoveredActions) {
       Actions.doAction(a, s);

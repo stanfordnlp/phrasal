@@ -252,7 +252,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     for (TK str : this.translationOpt.abstractOption.translation) {
       IndexedWord w = new IndexedWord();
       w.set(TextAnnotation.class, (String) str);
-      structure.getInput().add(w);
+      // TODO:FIX  structure.getInput().add(w);
     }
   }
 
@@ -262,8 +262,8 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
   }
 
   private void doIncrementalTag(MajorityTagger tagger) {
-    List<IndexedWord> input = structure.getInput();
-    tagger.tagWord(input.get(input.size() - 1), input.size() == 1);
+    // TODO:FIX  List<IndexedWord> input = structure.getInput();
+    // TODO:FIX tagger.tagWord(input.get(input.size() - 1), input.size() == 1);
 
     System.err.println();
   }

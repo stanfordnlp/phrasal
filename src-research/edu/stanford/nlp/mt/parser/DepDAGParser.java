@@ -17,6 +17,7 @@ import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.mt.parser.Actions.Action;
@@ -34,6 +35,7 @@ import edu.stanford.nlp.trees.semgraph.SemanticGraph;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 public class DepDAGParser implements Parser, Serializable {
@@ -60,7 +62,7 @@ public class DepDAGParser implements Parser, Serializable {
     
     // to reduce the total number of features for training, remove features appear less than 3 times
     Counter<List<String>> featureCounter = null;
-    if(REDUCE_FEATURES) featureCounter = countFeatures(rawTrainData);
+    // TODO:FIX  if(REDUCE_FEATURES) featureCounter = countFeatures(rawTrainData);
 
     GeneralDataset<ActionType, List<String>> actTrainData = new Dataset<ActionType, List<String>>();
     GeneralDataset<GrammaticalRelation, List<String>> labelTrainData = new Dataset<GrammaticalRelation, List<String>>(); 
@@ -83,12 +85,17 @@ public class DepDAGParser implements Parser, Serializable {
     return parser;
   }
 
-  private static Counter<List<String>> countFeatures(List<Structure> rawTrainData) {
+  private static Counter<List<String>> countFeatures(List<Pair<Structure,List<IndexedWord>>> rawTrainData) {
     Counter<List<String>> counter = new OpenAddressCounter<List<String>>();
-    for(Structure struc : rawTrainData) {
+    for(Pair<Structure,List<IndexedWord>> datum : rawTrainData) {
+      Structure struc = datum.first;
+      LinkedList<IndexedWord> sentence = new LinkedList<IndexedWord>(datum.second);
+      
       List<Action> actions = struc.getActionTrace();
-      struc.resetIndex();
       for(Action act : actions) {
+        if (act.incrQueue) {
+          struc.input.push(sentence.removeFirst());
+        }
         Datum<ActionType, List<String>> actDatum = extractActFeature(act.action, struc, null);
         Datum<GrammaticalRelation, List<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, null); 
 
@@ -110,7 +117,7 @@ public class DepDAGParser implements Parser, Serializable {
 
     for(Structure struc : rawTrainData) {
       List<Action> actions = struc.getActionTrace();
-      struc.resetIndex();
+      // TODO:FIX struc.resetIndex();
       for(Action act : actions) {
         Datum<ActionType, List<String>> actDatum = extractActFeature(act.action, struc, featureCounter);
         Datum<GrammaticalRelation, List<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, featureCounter);
@@ -127,7 +134,6 @@ public class DepDAGParser implements Parser, Serializable {
 
   private static Datum<ActionType, List<String>> extractActFeature(ActionType act, Structure s, Counter<List<String>> featureCounter){
     // if act == null, test data
-    if(s.getCurrentInputIndex() >= s.getInput().size()) return null;  // end of sentence
     List<List<String>> features = DAGFeatureExtractor.extractActFeatures(s);
     if(featureCounter!=null) {
       Set<List<String>> rareFeatures = new HashSet<List<String>>(); 
@@ -143,7 +149,6 @@ public class DepDAGParser implements Parser, Serializable {
       Datum<ActionType, List<String>> actDatum, Structure s, 
       Counter<List<String>> featureCounter){
     // if act == null, test data
-    if(s.getCurrentInputIndex() >= s.getInput().size()) return null;  // end of sentence
     List<List<String>> features = DAGFeatureExtractor.extractLabelFeatures(action, actDatum, s);
     if(featureCounter!=null) {
       Set<List<String>> rareFeatures = new HashSet<List<String>>();
@@ -291,7 +296,7 @@ public class DepDAGParser implements Parser, Serializable {
       for(Structure s : testData){
         count++;
         goldDeps.add(s.getDependencyGraph().typedDependencies());
-        s.resetIndex();
+        // TODO:FIX s.resetIndex();
         Date startTime = new Date();
         SemanticGraph graph = parser.getDependencyGraph(s);
         elapsedTime += (new Date()).getTime() - startTime.getTime();

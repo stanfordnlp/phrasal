@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
 import java.util.logging.Logger;
 
 import edu.stanford.nlp.ling.Datum;
@@ -79,17 +78,18 @@ public class DAGFeatureExtractor {
   public static List<List<String>> extractActFeatures(Structure struc) {
     List<List<String>> features = new ArrayList<List<String>>();
     LinkedStack<IndexedWord> stack = struc.getStack();
-    List<IndexedWord> inputQueue = struc.getInput();
+    LinkedStack<IndexedWord> inputQueue = struc.getInput();
     if(stack.size()==0) return features;   // empty stack: always SHIFT
-    int curQueue = struc.getCurrentInputIndex();
     int stackSize = stack.size();
     
-    IndexedWord s1 = struc.getStack().peek();
-    IndexedWord s2 = (stackSize > 1)? struc.getStack().get(stackSize-2) : null;
-    IndexedWord s3 = (stackSize > 2)? struc.getStack().get(stackSize-3) : null;
-    IndexedWord q1 = (inputQueue.size() > curQueue)? inputQueue.get(curQueue) : null;
-    IndexedWord q2 = (inputQueue.size() > curQueue+1)? inputQueue.get(curQueue+1) : null;
-    IndexedWord q3 = (inputQueue.size() > curQueue+2)? inputQueue.get(curQueue+2) : null;
+    IndexedWord[] stackTopN = struc.getStack().peekN(3);
+    IndexedWord s1 = stackTopN[0];    
+    IndexedWord s2 = (stackSize > 1)? stackTopN[1] : null;
+    IndexedWord s3 = (stackSize > 2)? stackTopN[2] : null;
+    IndexedWord[] queueNWords = struc.getInput().peekN(3);
+    IndexedWord q1 = (queueNWords.length > 0)? queueNWords[0] : null;
+    IndexedWord q2 = (queueNWords.length > 1)? queueNWords[1] : null;
+    IndexedWord q3 = (queueNWords.length > 2)? queueNWords[2] : null;
     
     String s1Word = (s1==null)? null : s1.get(TextAnnotation.class);
     String s2Word = (s2==null)? null : s2.get(TextAnnotation.class);
@@ -210,16 +210,23 @@ public class DAGFeatureExtractor {
       }
     }
 
-    if(useS1PreviousTokenPOS && s1!=null) {
-      int preTokenIdx = s1.get(IndexAnnotation.class) - 2;
-      if(preTokenIdx >= 0) {
-        String preTokenPOS = struc.getInput().get(preTokenIdx).get(PartOfSpeechAnnotation.class);
+    if(useS1PreviousTokenPOS && s1!=null) {      
+      if(queueNWords.length > 1) {
+        String preTokenPOS = stackTopN[1].get(PartOfSpeechAnnotation.class);
         features.add(Arrays.asList(preTokenPOS, "S1PreTokenPOS"));
       }
     }
     if(useS2NextTokenPOS && s2!=null) {
+      // TODO: fix this to make it more efficient      
       int nextTokenIdx = s2.get(IndexAnnotation.class);
-      String nextTokenPOS = struc.getInput().get(nextTokenIdx).get(PartOfSpeechAnnotation.class);
+      String nextTokenPOS;
+      int inputSz = struc.getInput().size();
+      if (inputSz-nextTokenIdx < queueNWords.length) {
+        nextTokenPOS = queueNWords[inputSz-nextTokenIdx].get(PartOfSpeechAnnotation.class);
+      } else {
+        IndexedWord[] inputArr = struc.getInput().peekN(inputSz-nextTokenIdx);
+        nextTokenPOS = inputArr[inputArr.length-1].get(PartOfSpeechAnnotation.class);  
+      }      
       features.add(Arrays.asList(nextTokenPOS, "S2NextTokenPOS"));
     }
     
