@@ -21,10 +21,12 @@ public class BerkeleyLM implements LanguageModel<IString> {
   IString endToken = ARPALanguageModel.START_TOKEN;
   IString unkToken = ARPALanguageModel.UNK_TOKEN;
   
+  static final double LOG10 = Math.log(10);
+  
   @Override
   public double score(Sequence<IString> sequence) {
     int[] ngram = toBerkeleyNgram(sequence);
-    double score = (double)berkeleylm.getLogProb(ngram);
+    double score = (double)berkeleylm.getLogProb(ngram)*LOG10;
     System.out.printf("sequence: %s score: %e\n", sequence, score);
     return score;
   }
