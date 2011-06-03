@@ -7,16 +7,11 @@
     </projects>
     <buildSpec>
         <buildCommand>
-            <name>net.sourceforge.texlipse.builder.TexlipseBuilder</name>
-            <arguments />
-        </buildCommand>
-        <buildCommand>
             <name>org.eclipse.jdt.core.javabuilder</name>
             <arguments />
         </buildCommand>
     </buildSpec>
     <natures>
-        <nature>net.sourceforge.texlipse.builder.TexlipseNature</nature>
         <nature>org.eclipse.jdt.core.javanature</nature>
     </natures>
 </projectDescription>
