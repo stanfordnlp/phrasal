@@ -56,10 +56,6 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
 import edu.stanford.nlp.mt.decoder.util.OptionGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.parser.DepDAGParser;
-import edu.stanford.nlp.mt.parser.Actions.Action;
-import edu.stanford.nlp.mt.tools.MajorityTagger;
-import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.stats.ClassicCounter;
 
 /**
@@ -91,9 +87,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   final int maxDistortion;
   final int numProcs;
 
-  private DepDAGParser parser;
-  private MajorityTagger tagger;
-  private Morphology lemmatizer;
   private static final String dagParser = "/scr/heeyoung/mt/scr61/DAGparserModel.ser";
   public static final boolean DO_PARSE = true;
 
@@ -134,18 +127,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           maxDistortion);
     } else {
       System.err.printf("Multi-beam decoder. No hard distortion limit.\n");
-    }
-
-    try {
-      if (DO_PARSE) {
-        this.tagger = new MajorityTagger();
-        this.lemmatizer = new Morphology();
-        this.parser = IOUtils.readObjectFromFile(dagParser);
-        parser.history = new HashMap<Collection<List<String>>, Action>();
-      }
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    }    
   }
 
   public static class MultiBeamDecoderBuilder<TK, FV> extends
@@ -297,7 +279,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       for (int threadId = 0; threadId < numProcs; threadId++) {
         BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz,
             optionGrid, constrainedOutputSpace, translationId, threadId,
-            numProcs, cdl, parser, tagger, lemmatizer);
+            numProcs, cdl);
         threadPool.execute(beamExpander);
       }
       try {
@@ -430,9 +412,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     int threadId;
     int threadCount;
     CountDownLatch cdl;
-    DepDAGParser parser;
-    MajorityTagger tagger;
-    Morphology lemmatizer;
+    
 
     public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
         int foreignSz, OptionGrid<TK> optionGrid,
@@ -449,18 +429,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       this.cdl = cdl;
     }
 
-    public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
-        int foreignSz, OptionGrid<TK> optionGrid,
-        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-        int translationId, int threadId, int threadCount, CountDownLatch cdl,
-        DepDAGParser parser, MajorityTagger tagger, Morphology lemmatizer) {
-      this(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace,
-          translationId, threadId, threadCount, cdl);
-      this.parser = parser;
-      this.tagger = tagger;
-      this.lemmatizer = lemmatizer;
-    }
-
+    
     @Override
     public void run() {
       if (DETAILED_DEBUG)
@@ -578,8 +547,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                */
 
               Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
-                  option, hyp.length, hyp, featurizer, scorer, heuristic,
-                  parser, tagger, lemmatizer);
+                  option, hyp.length, hyp, featurizer, scorer, heuristic);
 
               if (DETAILED_DEBUG) {
                 System.err.printf("creating hypothesis %d from %d\n",

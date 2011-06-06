@@ -1,22 +1,10 @@
 package edu.stanford.nlp.mt.decoder.inferer;
 
-import java.io.IOException;
 import java.util.*;
 
-import edu.stanford.nlp.io.IOUtils;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
-import edu.stanford.nlp.mt.parser.DepDAGParser;
-import edu.stanford.nlp.mt.parser.Structure;
-import edu.stanford.nlp.mt.parser.Actions.Action;
-import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.trees.semgraph.SemanticGraph;
-import edu.stanford.nlp.util.CoreMap;
 
 /**
  * 
@@ -149,7 +137,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
             hyp.score, collectFeatureValues(hyp), collectAlignments(hyp),
-            beamGoalHyp.id, hyp.dependency));
+            beamGoalHyp.id));
         if (translations.size() >= size)
           break;
 

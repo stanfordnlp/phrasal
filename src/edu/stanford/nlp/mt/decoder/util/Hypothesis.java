@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
@@ -17,11 +15,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
-import edu.stanford.nlp.mt.parser.DepDAGParser;
-import edu.stanford.nlp.mt.parser.Structure;
-import edu.stanford.nlp.mt.tools.MajorityTagger;
-import edu.stanford.nlp.process.Morphology;
-import edu.stanford.nlp.trees.semgraph.SemanticGraph;
+
 
 /**
  * 
@@ -63,10 +57,8 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
 
   public final List<FeatureValue<FV>> localFeatures;
 
-  public SemanticGraph dependency;
+  
   public IString[] posTags;
-  public Structure structure;
-  private static final boolean DO_TARGET_PARSE = true;
 
   /**
 	 * 
@@ -147,40 +139,6 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     depth = baseHyp.depth + 1;
   }
 
-  public Hypothesis(int translationId,
-      ConcreteTranslationOption<TK> translationOpt, int insertionPosition,
-      Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
-      Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
-      DepDAGParser parser, MajorityTagger tagger, Morphology lemmatizer) {
-    this.id = nextId.incrementAndGet();
-    this.insertionPosition = insertionPosition;
-    this.translationOpt = translationOpt;
-    this.preceedingHyp = baseHyp;
-    this.foreignCoverage = baseHyp.foreignCoverage.clone();
-    this.foreignCoverage.or(translationOpt.foreignCoverage);
-    this.length = (insertionPosition < baseHyp.length ? baseHyp.length : // internal
-        // insertion
-        insertionPosition + translationOpt.abstractOption.translation.size()); // edge
-    // insertion
-    if (DO_TARGET_PARSE)
-      incrementalDepParse(parser, tagger, lemmatizer);
-    foreignSequence = baseHyp.foreignSequence;
-    untranslatedTokens = this.foreignSequence.size()
-        - this.foreignCoverage.cardinality();
-    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos
-        : baseHyp.translationOpt.linearDistortion(translationOpt));
-    featurizable = new Featurizable<TK, FV>(this, translationId, featurizer
-        .getNumberStatefulFeaturizers());
-    localFeatures = featurizer.listFeaturize(featurizable);
-    score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
-    h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
-        + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
-    // System.err.printf("h: %f %f %d %s\n", baseHyp.h,
-    // heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage),
-    // untranslatedTokens, foreignCoverage);
-    assert (!Double.isNaN(h));
-    depth = baseHyp.depth + 1;
-  }
 
   protected Hypothesis(int translationId,
       ConcreteTranslationOption<TK> translationOpt,
@@ -226,48 +184,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     sbuf.append("\n");
   }
 
-  private void incrementalDepParse(DepDAGParser parser, MajorityTagger tagger,
-      Morphology lemmatizer) {
-
-    // TODO
-    buildStructure();
-
-    // add new tokens
-    doIncrementalTag(tagger);
-    lemmatize();
-
-    // do incremental parse
-    doIncrementalParse(parser);
-
-    System.err.println();
-  }
-
-  private void doIncrementalParse(DepDAGParser parser) {
-    // TODO Auto-generated method stub
-
-  }
-
-  private void buildStructure() {
-    structure = new Structure(this.preceedingHyp.structure);
-    for (TK str : this.translationOpt.abstractOption.translation) {
-      IndexedWord w = new IndexedWord();
-      w.set(TextAnnotation.class, (String) str);
-      // TODO:FIX  structure.getInput().add(w);
-    }
-  }
-
-  private void lemmatize() {
-    // TODO Auto-generated method stub
-
-  }
-
-  private void doIncrementalTag(MajorityTagger tagger) {
-    // TODO:FIX  List<IndexedWord> input = structure.getInput();
-    // TODO:FIX tagger.tagWord(input.get(input.size() - 1), input.size() == 1);
-
-    System.err.println();
-  }
-
+ 
   /**
 	 * 
 	 */

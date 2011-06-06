@@ -19,10 +19,7 @@ mkdir `pwd`/phrasal.$1/classes
 mkdir `pwd`/phrasal.$1/lib-nodistrib
 
 export CLASSPATH=.
-CORENLP_DIR=`ls -dt /u/nlp/distrib/stanford-corenlp-2011-0*[0-9] | head -1`
-for f in $CORENLP_DIR/*.jar; do
-  export CLASSPATH=$CLASSPATH:$f
-done 
+CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-2011-0*[0-9] | head -1`
 
 (cd  phrasal.$1/; ./scripts/first-build.sh all)
 jar -cf phrasal.$1/phrasal.$1.jar -C phrasal.$1/classes edu

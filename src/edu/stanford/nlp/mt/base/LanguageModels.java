@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.base;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
 
@@ -52,7 +52,14 @@ public class LanguageModels {
     LanguageModel<IString> alm;
     if (filename.startsWith(BERKELEY_LM_TAG)) {
      String realFilename = filename.substring(BERKELEY_LM_TAG.length());
-     alm = new BerkeleyLM(realFilename, MAX_NGRAM_ORDER);
+     try {
+       @SuppressWarnings("unchecked")
+      Class<LanguageModel<IString>> blmClass = (Class<LanguageModel<IString>>)Class.forName("edu.stanford.nlp.mt.base.BerkeleyLM");
+       Constructor<LanguageModel<IString>> c = blmClass.getConstructor(String.class, int.class);
+       alm = c.newInstance(realFilename, MAX_NGRAM_ORDER);  
+     } catch (Exception e) {
+       throw new RuntimeException(e);
+     }     
     } else if (vocabFilename == null) {
       return new ARPALanguageModel(filename);
     } else {
