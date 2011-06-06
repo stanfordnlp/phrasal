@@ -1027,8 +1027,6 @@ public class Phrasal {
   private void decodeFromConsole() throws IOException {
 
     System.err.println("Entering main translation loop");
-    System.err.println("220 added: Phrasal.java: read source text: /scr/heeyoung/mt/mtwrk/resources/mt02.grow-diag-final.psrc.txt");
-    System.setIn(new FileInputStream("/scr/heeyoung/mt/mtwrk/resources/mt02.grow-diag-final.psrc.txt"));
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in, "UTF-8"));
