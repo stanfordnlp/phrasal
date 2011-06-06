@@ -1,46 +1,57 @@
 package edu.stanford.nlp.mt.parser;
 
-public class LinkedStack<T> {
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+
+public class LinkedStack<T> implements Iterable<T> {
   StackNode current = null;
   private int size = 0;
-  
-  public LinkedStack() {    
+
+  public LinkedStack() {
   }
-  
+
   public LinkedStack(LinkedStack<T> parent) {
     size = parent.size;
     current = parent.current;
   }
-  
+  public LinkedStack(List<T> list){
+    size = list.size();
+    for(T t : list){
+      push(t);
+    }
+  }
+
   int size() {
     return size;
   }
-  
-  
+
+
   void push(T value) {
-     StackNode newNode = new StackNode(value, current);
-     current = newNode;
-     size++;
+    StackNode newNode = new StackNode(value, current);
+    current = newNode;
+    size++;
   }
 
   T pop() {
-     if (current == null) {
-        throw new RuntimeException("Stack is empty!");
-     }
+    if (current == null) {
+      throw new RuntimeException("Stack is empty!");
+    }
 
-     T currentValue = current.value;
-     current = current.parent;
-     size--;
-     return currentValue;
+    T currentValue = current.value;
+    current = current.parent;
+    size--;
+    return currentValue;
   }
-  
+
   T peek() {
     if (current == null) {
       throw new RuntimeException("Stack is empty!");
-   }
-   return current.value;
+    }
+    return current.value;
   }
-  
+
   /**
    * Get the top N elements off of the top of the stack
    * 
@@ -51,19 +62,51 @@ public class LinkedStack<T> {
     @SuppressWarnings("unchecked")
     T[] elements = (T[]) new Object[n];
     int i;
-    StackNode cursor;    
+    StackNode cursor;
     for (i = 0, cursor = current; i < n && cursor != null; i++, cursor = cursor.parent) {
       elements[i] = cursor.value;
     }
     return elements;
   }
 
+  /** O(n) */
+  public Collection<T> getAll() {
+    Collection<T> col = new HashSet<T>();
+    StackNode cursor;
+    for(cursor = current ; cursor != null ; cursor = cursor.parent){
+      col.add(cursor.value);
+    }
+    return col;
+  }
+
   class StackNode {
     final T value;
     final StackNode parent;
     public StackNode(T value, StackNode parent) {
-         this.value = value;
-         this.parent = parent;
+      this.value = value;
+      this.parent = parent;
     }
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return new Iterator<T>() {
+      StackNode pointer = current;
+      public boolean hasNext(){
+        return pointer!=null;
+      }
+
+      @Override
+      public T next() {
+        StackNode ret = pointer;
+        pointer = pointer.parent;
+        return ret.value;
+      }
+
+      @Override
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
   }
 }
