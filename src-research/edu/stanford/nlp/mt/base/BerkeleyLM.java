@@ -20,16 +20,14 @@ public class BerkeleyLM implements LanguageModel<IString> {
   IString startToken = ARPALanguageModel.START_TOKEN;
   IString endToken = ARPALanguageModel.START_TOKEN;
   IString unkToken = ARPALanguageModel.UNK_TOKEN;
-  static final boolean VERBOSE = false;
+  
   static final double LOG10 = Math.log(10);
   
   @Override
   public double score(Sequence<IString> sequence) {
     int[] ngram = toBerkeleyNgram(sequence);
     double score = (double)berkeleylm.getLogProb(ngram)*LOG10;
-    if (VERBOSE) {
-      System.out.printf("sequence: %s score: %e\n", sequence, score);
-    }
+    System.out.printf("sequence: %s score: %e\n", sequence, score);
     return score;
   }
   
@@ -40,9 +38,7 @@ public class BerkeleyLM implements LanguageModel<IString> {
       IString token = sequence.get(sz-1-i);
       ngram[ngram.length-1-i] = token.id;      
     }
-    if (VERBOSE) {
-      System.out.printf("sequence: %s int arr: %s\n", sequence, Arrays.toString(ngram));
-    }
+    System.out.printf("sequence: %s int arr: %s\n", sequence, Arrays.toString(ngram));
     return ngram;
   }
               

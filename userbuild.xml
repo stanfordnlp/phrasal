@@ -10,12 +10,31 @@
   <target name="init">
     <mkdir dir="${classes}"/>
   </target>
+
+   <target name="classpath" description="Sets the classpath">
+    <echo message="${ant.project.name}" />
+    <path id="classpath">
+      <!-- depends on local libs -->
+      <fileset dir="${basedir}/lib">
+        <include name="*.jar"/>
+      </fileset>
+
+      <fileset dir="${basedir}/lib-nodistrib">
+        <include name="*.jar"/>
+      </fileset>
+      <fileset dir="${env.CORENLP}">
+        <include name="*.jar"/>
+      </fileset>
+    </path>
+  </target>
+
 			
-  <target name="compile" depends="init"
+  <target name="compile" depends="init,classpath"
         description="compile the source">
     <echo message="${env.CLASSPATH}"/>
     <javac srcdir="${src}" destdir="${classes}"
-        includeantruntime="false" classpath="${env.CLASSPATH}">
+        includeantruntime="false">
+        <classpath refid="classpath" />
     </javac>
   </target>
 
