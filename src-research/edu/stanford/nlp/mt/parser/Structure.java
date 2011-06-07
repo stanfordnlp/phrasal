@@ -6,6 +6,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.trees.GrammaticalStructure;
+import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 
@@ -22,11 +23,12 @@ public class Structure {
   }
 
   public Structure(GrammaticalStructure gs) {
-    this();
+    this();    
     dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(true));
     input = new LinkedStack<CoreLabel>();
 
-    for (TreeGraphNode node : gs.getNodes()) {
+    for (Tree treeNode : gs.root().getLeaves()) {
+      TreeGraphNode node = (TreeGraphNode)treeNode;
       input.push(node.label());
     }
   }
