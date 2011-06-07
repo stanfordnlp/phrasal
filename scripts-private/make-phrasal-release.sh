@@ -23,6 +23,18 @@ CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-2011-0*[0-9] | head -1`
 
 (cd  phrasal.$1/; ./scripts/first-build.sh all)
 jar -cf phrasal.$1/phrasal.$1.jar -C phrasal.$1/classes edu
+export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$1/classes
+
+echo "Running phrasal integration test" 
+/user/cerd/scr/dev/javanlp/projects/mt/scripts/standard_mert_test.pl
+
+if [ $? != 0 ]; then
+  echo "Phrasal integration test failed!\n\n"
+  echo "Log file in /u/nlp/data/mt_test/mert:\n\n"
+  cat `ls -t  /u/nlp/data/mt_test/mert/*.log | head -1`
+  exit -1;
+fi
+
 rm -rf phrasal.$1/classes/*
 rm -rf phrasal.$1/lib-nodistrib/*
 
