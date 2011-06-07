@@ -13,15 +13,22 @@ import edu.stanford.nlp.util.ErasureUtils;
 public class CerStyleOptimizer extends AbstractNBestOptimizer {
 
   static public final boolean DEBUG = true;
-
-  public CerStyleOptimizer(MERT mert) {
+  final int point;
+  public CerStyleOptimizer(MERT mert, int point) {
     super(mert);
+    this.point = point;
   }
 
-  Random random = new Random(1);
+  
   
   @Override
   public Counter<String> optimize(Counter<String> initialWts) {
+    long pointSeed = MERT.getSeed()+point*33;
+    System.out.printf("MERT SEED: %s point: %d\n", MERT.getSeed(), point);
+    System.out.printf("Point SEED: %s\n", pointSeed);
+    
+    Random random = new Random(MERT.getSeed()+point*33);
+    
     Counter<String> wts = new ClassicCounter<String>(initialWts);
     double oldEval = Double.NEGATIVE_INFINITY;
     double finalEval;

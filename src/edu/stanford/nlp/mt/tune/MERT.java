@@ -138,6 +138,7 @@ public class MERT extends Thread {
   static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 
   private static long SEED = 8682522807148012L;
+  
   private static Random globalRandom;
 
   public final static OAIndex<String> featureIndex = new OAIndex<String>();
@@ -148,6 +149,10 @@ public class MERT extends Thread {
     breakTiesWithLastBest = true;
   }
 
+  static public long getSeed() {
+    return SEED;
+  }
+  
   public double mcmcTightExpectedEval(FlatNBestList nbest,
       Counter<String> wts, EvaluationMetric<IString, String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
@@ -1157,7 +1162,7 @@ public class MERT extends Thread {
       System.out.printf("\npoint %d - initial wts: %s", ptI, wts.toString());
       System.out.printf("\npoint %d - seed: %d\n", ptI, threadSeed);
 
-      NBestOptimizer opt = NBestOptimizerFactory.factory(optStr, this);
+      NBestOptimizer opt = NBestOptimizerFactory.factory(optStr, ptI, this);
       System.err.println("using: " + opt.toString());
 
       // Make sure weights that shouldn't be optimized are not in wts:

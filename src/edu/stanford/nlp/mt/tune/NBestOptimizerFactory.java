@@ -28,7 +28,7 @@ public class NBestOptimizerFactory {
   private NBestOptimizerFactory() {
   }
 
-  public static NBestOptimizer factory(String name, MERT mert) {
+  public static NBestOptimizer factory(String name, int point, MERT mert) {
 
     if (name.contains("+") || name.endsWith("~")) {
       boolean loop = name.endsWith("~");
@@ -36,12 +36,12 @@ public class NBestOptimizerFactory {
       System.err.println("seq: loop: " + loop);
       List<NBestOptimizer> opts = new ArrayList<NBestOptimizer>();
       for (String el : name.split("\\+")) {
-        opts.add(factory(el, mert));
+        opts.add(factory(el, point, mert));
         System.err.println("seq: adding " + el);
       }
       return new SequenceOptimizer(mert, opts, loop);
     } else if (name.equalsIgnoreCase("cer")) {
-      return new CerStyleOptimizer(mert);
+      return new CerStyleOptimizer(mert, point);
     } else if (name.equalsIgnoreCase("koehn")) {
       return new KoehnStyleOptimizer(mert);
     } else if (name.equalsIgnoreCase("basicPowell")) {
