@@ -1,13 +1,10 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.ErasureUtils;
 
 /**
@@ -21,7 +18,7 @@ public class CerStyleOptimizer extends AbstractNBestOptimizer {
     super(mert);
   }
 
-  Random random = new Random();
+  Random random = new Random(1);
   
   @Override
   public Counter<String> optimize(Counter<String> initialWts) {
@@ -41,7 +38,7 @@ public class CerStyleOptimizer extends AbstractNBestOptimizer {
       Counter<String> nextWts = wts;
       //List<Counter<String>> priorSearchDirs = new ArrayList<Counter<String>>();
       // priorSearchDirs.add(wts);      
-      for (int noProgressCnt = 0; noProgressCnt < 15; ) {
+      for (int noProgressCnt = 0; noProgressCnt < 30; ) {
         synchronized (random) {
           for (String wt : wts.keySet()) {                   
             dEl.setCount(wt, random.nextDouble()-0.5);
