@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -13,16 +15,14 @@ import edu.stanford.nlp.util.ErasureUtils;
  */
 public class CerStyleOptimizer extends AbstractNBestOptimizer {
 
-  static public final boolean DEBUG = false;
-
- 
-  private Counter<String> featureVars;
-  private Counter<String> featureNbestOccurances;
+  static public final boolean DEBUG = true;
 
   public CerStyleOptimizer(MERT mert) {
     super(mert);
   }
 
+  Random random = new Random();
+  
   @Override
   public Counter<String> optimize(Counter<String> initialWts) {
     Counter<String> wts = new ClassicCounter<String>(initialWts);
@@ -31,42 +31,25 @@ public class CerStyleOptimizer extends AbstractNBestOptimizer {
     int iter = 0;
 
     double initialEval = MERT.evalAtPoint(nbest, wts, emetric);
-    System.out.printf("Initial (Pre-optimization) Score: %f\n", initialEval);
+    System.out.printf("Initial (pre-optimization) Score: %f\n", initialEval);
 
-    for (String w : wts.keySet()) {
-      if (featureNbestOccurances.getCount(w) < MERT.MIN_NBEST_OCCURRENCES) {
-        wts.setCount(w, 0);
-      }
-    }
     MERT.normalize(wts);
 
     for (;; iter++) {
       Counter<String> dEl = new ClassicCounter<String>();
       double bestEval = Double.NEGATIVE_INFINITY;
       Counter<String> nextWts = wts;
-      List<Counter<String>> priorSearchDirs = new ArrayList<Counter<String>>();
-      // priorSearchDirs.add(wts);
-      for (int i = 0, noProgressCnt = 0; noProgressCnt < 15; i++) {
-        ErasureUtils.noop(i);
-        boolean atLeastOneParameter = false;
-        for (String w : initialWts.keySet()) {
-          if (featureNbestOccurances.getCount(w) >= MERT.MIN_NBEST_OCCURRENCES) {
-            dEl.setCount(w,
-                random.nextGaussian() * Math.sqrt(featureVars.getCount(w)));
-            atLeastOneParameter = true;
+      //List<Counter<String>> priorSearchDirs = new ArrayList<Counter<String>>();
+      // priorSearchDirs.add(wts);      
+      for (int noProgressCnt = 0; noProgressCnt < 15; ) {
+        synchronized (random) {
+          for (String wt : wts.keySet()) {                   
+            dEl.setCount(wt, random.nextDouble()-0.5);
           }
-        }
-        if (!atLeastOneParameter) {
-          System.err
-              .printf(
-                  "Error: no feature occurs on %d or more n-best lists - can't optimization.\n",
-                  MERT.MIN_NBEST_OCCURRENCES);
-          System.err
-              .printf("(This probably means your n-best lists are too small)\n");
-          System.exit(-1);
         }
         MERT.normalize(dEl);
         Counter<String> searchDir = new ClassicCounter<String>(dEl);
+        /*
         for (Counter<String> priorDir : priorSearchDirs) {
           Counter<String> projOnPrior = new ClassicCounter<String>(priorDir);
           Counters.multiplyInPlace(
@@ -80,10 +63,15 @@ public class CerStyleOptimizer extends AbstractNBestOptimizer {
           continue;
         }
         priorSearchDirs.add(searchDir);
-        if (DEBUG)
+        */        
+        if (DEBUG) {
           System.out.printf("Searching %s\n", searchDir);
+        }
         nextWts = mert.lineSearch(nbest, nextWts, searchDir, emetric);
         double eval = MERT.evalAtPoint(nbest, nextWts, emetric);
+        if (DEBUG) {
+          System.out.printf("  evalAtNew point: %e\n", eval); 
+        }
         if (Math.abs(eval - bestEval) < 1e-9) {
           noProgressCnt++;
         } else {
