@@ -13,15 +13,22 @@ if [ $# -lt 2 ]; then
 fi
 
 MEM=$1
-DIR=$2
+INDIR=$2
+if [ $# -ge 2 ]; then
+OUTDIR=$3
+shift
+else
+OUTDIR=$2
+fi
+
 shift
 shift
 
 JAVA_OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM"
-EXTRACT_OPTS="-inputDir $DIR -outputFile $DIR/phrases.gz"
+EXTRACT_OPTS="-inputDir $INDIR -outputFile $OUTDIR/phrases.gz"
 
 # Generate phrase table:
-java $JAVA_OPTS edu.stanford.nlp.mt.train.PhraseExtract $EXTRACT_OPTS $@ 2> $DIR/phrases.log
+java $JAVA_OPTS edu.stanford.nlp.mt.train.PhraseExtract $EXTRACT_OPTS $@ 2> $OUTDIR/phrases.log
 
 # Split model into two: translation and reordering models:
-zcat $DIR/phrases.gz | $BASEDIR/../scripts/split-table $DIR/phrases-tm.gz $DIR/phrases-om.gz
+zcat $OUTDIR/phrases.gz | $BASEDIR/../scripts/split-table $OUTDIR/phrases-tm.gz $OUTDIR/phrases-om.gz
