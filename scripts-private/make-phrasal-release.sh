@@ -48,6 +48,7 @@ svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phra
 
 rm -rf phrasal.$1
 mkdir phrasal.$1
+mkdir -p src/edu/stanford/nlp/lm
 cp ../more/src/edu/stanford/nlp/lm/* src/edu/stanford/nlp/lm
 
 cp -r src scripts README.txt LICENSE.txt phrasal.$1
@@ -98,3 +99,5 @@ tar --exclude .svn -czf phrasal.$1.tar.gz phrasal.$1
 if [ $? = 0]; then
   echo "SUCCESS: Stanford Phrasal distribution phrasal.$1.tar.gz successfully built"
 fi
+
+rm -rf  src/edu/stanford/nlp/lm
