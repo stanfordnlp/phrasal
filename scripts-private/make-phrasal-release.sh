@@ -40,7 +40,7 @@ cd -
 svn info  file:///u/nlp/svnroot/branches/phrasal-releases/$1 >/dev/null 2>&1
 if [ $? = 0 ]; then
 echo "Removing old $1 distribution branch from svn/branches/phrasal-releases"
-svn delete file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m 'remaking Stanford Phrasal distribution $1 (this happens when something went wrong the first time around)'
+svn delete file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "remaking Stanford Phrasal distribution $1 (this happens when something went wrong the first time around)"
 fi
 
 echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
