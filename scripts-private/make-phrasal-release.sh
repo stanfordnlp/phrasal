@@ -44,7 +44,7 @@ svn delete file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m 'remaking Stanf
 fi
 
 echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
-svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m 'release branch for Stanford Phrasal distribution $1'
+svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "release branch for Stanford Phrasal distribution $1"
 
 rm -rf phrasal.$1
 mkdir phrasal.$1
