@@ -36,6 +36,10 @@
         includeantruntime="false">
         <classpath refid="classpath" />
     </javac>
+    <!-- copy application resources -->
+     <copy todir="${classes}">
+      <fileset dir="${src}" excludes="**/*.java,**/*.html"/>
+    </copy>
   </target>
 
   <target name="clean"
