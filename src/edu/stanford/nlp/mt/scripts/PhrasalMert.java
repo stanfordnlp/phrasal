@@ -201,6 +201,8 @@ public class PhrasalMert {
       // TODO: run mert here
 
       // TODO: test for convergence here
+
+      ++iteration;
     }
   }
 }
