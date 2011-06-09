@@ -36,7 +36,7 @@ public class LinkedStack<T> implements Iterable<T> {
 
   T pop() {
     if (current == null) {
-      throw new RuntimeException("Stack is empty!");
+      throw new RuntimeException("LinkedStack is empty");
     }
 
     T currentValue = current.value;
@@ -47,7 +47,7 @@ public class LinkedStack<T> implements Iterable<T> {
 
   T peek() {
     if (current == null) {
-      throw new RuntimeException("Stack is empty!");
+      throw new RuntimeException("LinkedStack is empty");
     }
     return current.value;
   }
@@ -58,8 +58,8 @@ public class LinkedStack<T> implements Iterable<T> {
    * @param count
    * @return
    */
+  @SuppressWarnings("unchecked")
   T[] peekN(int n){
-    @SuppressWarnings("unchecked")
     T[] elements = (T[]) new Object[n];
     int i;
     StackNode cursor;

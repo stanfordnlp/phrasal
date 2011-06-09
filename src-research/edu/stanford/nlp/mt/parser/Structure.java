@@ -20,10 +20,12 @@ public class Structure {
   public Structure() {
     stack = new LinkedStack<CoreLabel>();
     actionTrace = new LinkedStack<Action>();
+    input = new LinkedStack<CoreLabel>();
+    dependencies = new LinkedStack<TypedDependency>();
   }
 
   public Structure(GrammaticalStructure gs) {
-    this();    
+    this();
     dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(true));
     input = new LinkedStack<CoreLabel>();
 
@@ -53,11 +55,18 @@ public class Structure {
     return input;
   }
 
-  public LinkedStack<TypedDependency> getDependencyGraph() {
+  public LinkedStack<TypedDependency> getDependencies() {
     return dependencies;
   }
 
   public LinkedStack<Action> getActionTrace() {
     return actionTrace;
+  }
+
+  public void reset() {
+    stack = new LinkedStack<CoreLabel>();
+    actionTrace = new LinkedStack<Action>();
+    dependencies = new LinkedStack<TypedDependency>();
+    input = new LinkedStack<CoreLabel>();
   }
 }

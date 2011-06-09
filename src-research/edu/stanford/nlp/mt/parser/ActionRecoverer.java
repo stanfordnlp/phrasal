@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.parser;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +51,9 @@ public class ActionRecoverer {
 
     // recover actions
     Set<CoreLabel> dependents = new HashSet<CoreLabel>();
-    for(CoreLabel w : s.input.peekN(s.input.size())){
+    Object[] inputs = s.input.peekN(s.input.size());
+    for(int i = inputs.length-1 ; i >= 0 ;){
+      CoreLabel w = (CoreLabel)inputs[i];
       if(leftsideEdgeCounter.getCount(w) > 0) {
         CoreLabel topStack = s.stack.peek();
 
@@ -74,6 +77,7 @@ public class ActionRecoverer {
           s.actionTrace.push(new Action(ActionType.REDUCE));
         }
       } else {
+        i--;
         s.stack.push(w);
         s.actionTrace.push(new Action(ActionType.SHIFT));
 
@@ -83,20 +87,25 @@ public class ActionRecoverer {
 
   /** check the correctness of recovered action trace */
   private static void checkRecoveredActionTrace(Structure s){
-    // TODO
+    Collection<TypedDependency> gold = s.dependencies.getAll();
+    LinkedStack<Action> recoveredActions = s.actionTrace;
+    LinkedStack<CoreLabel> input = s.input;
 
-    //    LinkedStack<TypedDependency> gold = s.dependencies;
-    //    LinkedStack<Action> recoveredActions = s.actionTrace;
-    //    s.resetIndex();
-    //
-    //    for(Action a : recoveredActions) {
+    s.reset();
+
+    // TODO
+    //    Object[] inputs = input.peekN(input.size());
+    //    Object[] actions = recoveredActions.peekN(recoveredActions.size());
+    //    int inputIndex = inputs.length-1;
+    //    s.stack.push((CoreLabel)inputs[inputIndex--]);
+    //    CoreLabel curInput = (CoreLabel) inputs[inputIndex];
+    //    for(int i = actions.length-1 ; i >= 0 ; i--){
+    //      Action a = (Action)actions[i];
     //      Actions.doAction(a, s);
     //    }
-    //    Set<SemanticGraphEdge> goldEdges = gold.edgeSet();
-    //    for(SemanticGraphEdge e : s.dependencies.edgeList()) {
-    //      if(!goldEdges.contains(e)) {
-    //        throw new RuntimeException("Error in recovered actions");
-    //      }
+    //    Collection<TypedDependency> recoveredDeps = s.dependencies.getAll();
+    //    if(!recoveredDeps.containsAll(gold) || !gold.containsAll(recoveredDeps)) {
+    //      throw new RuntimeException("Error in recovered actions");
     //    }
   }
 

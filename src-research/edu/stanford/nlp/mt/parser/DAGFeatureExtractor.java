@@ -78,21 +78,21 @@ public class DAGFeatureExtractor {
   // TODO : add flags for new features
 
 
-  public static List<List<String>> extractActFeatures(Structure struc) {
+  public static List<List<String>> extractActFeatures(Structure struc, int offset) {
     List<List<String>> features = new ArrayList<List<String>>();
     LinkedStack<CoreLabel> stack = struc.getStack();
     LinkedStack<CoreLabel> inputQueue = struc.getInput();
     if(stack.size()==0) return features;   // empty stack: always SHIFT
     int stackSize = stack.size();
 
-    CoreLabel[] stackTopN = struc.getStack().peekN(3);
-    CoreLabel s1 = stackTopN[0];
-    CoreLabel s2 = (stackSize > 1)? stackTopN[1] : null;
-    CoreLabel s3 = (stackSize > 2)? stackTopN[2] : null;
-    CoreLabel[] queueNWords = struc.getInput().peekN(3);
-    CoreLabel q1 = (queueNWords.length > 0)? queueNWords[0] : null;
-    CoreLabel q2 = (queueNWords.length > 1)? queueNWords[1] : null;
-    CoreLabel q3 = (queueNWords.length > 2)? queueNWords[2] : null;
+    Object[] stackTopN = struc.getStack().peekN(3);
+    CoreLabel s1 = (CoreLabel) stackTopN[0];
+    CoreLabel s2 = (stackSize > 1)? (CoreLabel) stackTopN[1] : null;
+    CoreLabel s3 = (stackSize > 2)? (CoreLabel) stackTopN[2] : null;
+    Object[] queueNWords = struc.getInput().peekN(3+offset-1);
+    CoreLabel q1 = (queueNWords.length > 0)? (CoreLabel) queueNWords[offset-1] : null;
+    CoreLabel q2 = (queueNWords.length > 1)? (CoreLabel) queueNWords[offset] : null;
+    CoreLabel q3 = (queueNWords.length > 2)? (CoreLabel) queueNWords[offset+1] : null;
 
     String s1Word = (s1==null)? null : s1.get(TextAnnotation.class);
     String s2Word = (s2==null)? null : s2.get(TextAnnotation.class);
@@ -216,7 +216,7 @@ public class DAGFeatureExtractor {
 
     if(useS1PreviousTokenPOS && s1!=null) {
       if(queueNWords.length > 1) {
-        String preTokenPOS = stackTopN[1].get(PartOfSpeechAnnotation.class);
+        String preTokenPOS = s1.get(PartOfSpeechAnnotation.class);
         features.add(Arrays.asList(preTokenPOS, "S1PreTokenPOS"));
       }
     }
@@ -226,10 +226,10 @@ public class DAGFeatureExtractor {
       String nextTokenPOS;
       int inputSz = struc.getInput().size();
       if (inputSz-nextTokenIdx < queueNWords.length) {
-        nextTokenPOS = queueNWords[inputSz-nextTokenIdx].get(PartOfSpeechAnnotation.class);
+        nextTokenPOS = ((CoreLabel)queueNWords[inputSz-nextTokenIdx]).get(PartOfSpeechAnnotation.class);
       } else {
-        CoreLabel[] inputArr = struc.getInput().peekN(inputSz-nextTokenIdx);
-        nextTokenPOS = inputArr[inputArr.length-1].get(PartOfSpeechAnnotation.class);
+        Object[] inputArr = struc.getInput().peekN(inputSz-nextTokenIdx);
+        nextTokenPOS = ((CoreLabel)inputArr[inputArr.length-1]).get(PartOfSpeechAnnotation.class);
       }
       features.add(Arrays.asList(nextTokenPOS, "S2NextTokenPOS"));
     }
@@ -245,7 +245,7 @@ public class DAGFeatureExtractor {
    *    use all features of actClassifier and one additional feature, arcDirection
    *    */
   public static List<List<String>> extractLabelFeatures(
-      ActionType action, Datum<ActionType, List<String>> actDatum, Structure s) {
+      ActionType action, Datum<ActionType, List<String>> actDatum, Structure s, int offset) {
     List<List<String>> features = new ArrayList<List<String>>();
     features.addAll(actDatum.asFeatures());
     features.add(Arrays.asList("##"+action.toString(), "actionType"));
