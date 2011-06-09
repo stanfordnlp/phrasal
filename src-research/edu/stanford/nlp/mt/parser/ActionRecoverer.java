@@ -22,13 +22,14 @@ import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
 public class ActionRecoverer {
-
+ 
   // check the correctness of recovered action trace
   private static final boolean checkCorrectness = false;
 
   /** recover the list of actions for constructing s.dependencies
    *  the actions are stored in s.actionTrace */
   private static void recoverActionTrace(Structure s) {
+    s.stack = new LinkedStack<CoreLabel>();
     // extract arc & relation
     Counter<CoreLabel> leftsideEdgeCounter = new OpenAddressCounter<CoreLabel>();
     Set<Pair<CoreLabel, CoreLabel>> arcs = new HashSet<Pair<CoreLabel, CoreLabel>>();
@@ -83,6 +84,7 @@ public class ActionRecoverer {
 
       }
     }
+    s.stack = new LinkedStack<CoreLabel>();
   }
 
   /** check the correctness of recovered action trace */
@@ -114,7 +116,7 @@ public class ActionRecoverer {
       EnglishGrammaticalStructure.readCoNLLXGrammaticStructureCollection(filename);
     List<Structure> structures = new ArrayList<Structure>();
     for(GrammaticalStructure gs : gsList){
-      Structure s = new Structure(gs);
+      Structure s = new Structure(gs);      
       recoverActionTrace(s);
       structures.add(s);
       if(checkCorrectness) checkRecoveredActionTrace(s);
@@ -124,7 +126,8 @@ public class ActionRecoverer {
 
   public static void main(String[] args) throws IOException{
     //    String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
-    String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    //String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    String filename = "C:\\cygwin\\home\\daniel\\temp.conll";
     List<Structure> structures = readTrainingData(filename);
 
     for(Structure s : structures) {

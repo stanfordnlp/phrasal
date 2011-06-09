@@ -109,4 +109,21 @@ public class LinkedStack<T> implements Iterable<T> {
       }
     };
   }
+  
+  @Override
+  public String toString() {
+    StringBuilder sbuild = new StringBuilder();
+    sbuild.append("[");
+    boolean first = true;
+    for (T node : this) {
+      if (!first) {
+        sbuild.append(", ");
+      } else {
+        first = false;
+      }
+      sbuild.append(node.toString());      
+    }
+    sbuild.append("]");
+    return sbuild.toString();
+  }
 }

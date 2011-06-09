@@ -44,7 +44,8 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 public class DepDAGParser implements Parser, Serializable {
-
+  public static final boolean DEBUG = true;
+  
   private static final long serialVersionUID = -5534972476741917367L;
 
   private LinearClassifier<ActionType,List<String>> actClassifier;
@@ -121,7 +122,11 @@ public class DepDAGParser implements Parser, Serializable {
 
     for(Structure struc : rawTrainData) {
       LinkedStack<Action> actions = struc.getActionTrace();
-      int offset = struc.input.size();
+      int offset = struc.input.size()+1;
+      int successfulActionCnt = 0;
+      if (DEBUG) {
+        System.err.printf("Input: %s\n", struc.input);
+      }
       for(Action act : actions) {
         Datum<ActionType, List<String>> actDatum = extractActFeature(act.action, struc, featureCounter, offset);
         Datum<GrammaticalRelation, List<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, featureCounter, offset);
@@ -130,9 +135,27 @@ public class DepDAGParser implements Parser, Serializable {
             && labelDatum.asFeatures().size() > 0) {
           labelTrainData.add(labelDatum);
         }
+        
+        if (DEBUG) {
+          System.err.printf("State:\n\tAction: %s\n", act);
+          System.err.printf("\tPre-stack: %s\n", struc.stack);
+        }
         if(act.action==ActionType.SHIFT) offset--;
         if(offset < 1) throw new RuntimeException("input offset is smaller than 1!!");
-        Actions.doAction(act, struc, offset);
+        try {
+          Actions.doAction(act, struc, offset);
+        } catch (RuntimeException e) {
+          System.err.printf("Runtime exception: %s\n", e);
+          System.err.printf("Actions: %s\n", actions);
+          System.err.printf("Bad action: %s\n", act);
+          System.err.printf("Stack state: %s\n", struc.stack);
+          System.err.printf("Successful action cnt: %d\n", successfulActionCnt);
+          throw e;
+        }
+        if (DEBUG) {
+          System.err.printf("\tPost-stack: %s\n", struc.stack);
+        }
+        successfulActionCnt++;
       }
     }
   }
@@ -272,7 +295,8 @@ public class DepDAGParser implements Parser, Serializable {
     //    props.put("train", tempTrain);
     //    props.put("test", tempTest);
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
-    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    //String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
     props.put("train", tempTrain);
     //    props.put("test", tempTest);
 
