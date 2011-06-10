@@ -11,6 +11,8 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,8 +58,21 @@ public class PhrasalMert {
       throws IOException
     {
       FileWriter fout = new FileWriter(filename);
-      BufferedWriter output = new BufferedWriter(fout);
+      outputFile(fout);
+      fout.close();
+    }
 
+    public void outputFile(Writer output) 
+      throws IOException
+    {
+      BufferedWriter buffered = new BufferedWriter(output);
+      outputFile(buffered);
+      buffered.flush();
+    }
+
+    public void outputFile(BufferedWriter output)
+      throws IOException
+    {
       for (ConfigSection section : sections) {
         section.output(output);
       }
@@ -83,12 +98,23 @@ public class PhrasalMert {
   public static ConfigFile readConfigFile(String filename) 
     throws IOException
   {
+    return readConfigFile(new FileReader(filename));
+  }
+
+  public static ConfigFile readConfigFile(Reader input) 
+    throws IOException
+  {
+    return readConfigFile(new BufferedReader(input));
+  }
+
+  public static ConfigFile readConfigFile(BufferedReader input) 
+    throws IOException
+  {
     List<ConfigSection> sections = new ArrayList<ConfigSection>();
     
     String lastKey = "";
     List<String> lines = new ArrayList<String>();
     
-    BufferedReader input = new BufferedReader(new FileReader(filename));
     String line;
     while ((line = input.readLine()) != null) {
       String trimmed = line.trim();
@@ -105,6 +131,7 @@ public class PhrasalMert {
         lines.add(line);
       }
     }
+    sections.add(new ConfigSection(lastKey, lines));
     return new ConfigFile(sections);
   }
 
@@ -142,6 +169,7 @@ public class PhrasalMert {
       OutputStream procStdin = proc.getOutputStream();
       FileInputStream fin = new FileInputStream(stdinFile);
       connectStreams(fin, procStdin);
+      procStdin.close();
     }
 
     proc.waitFor();
