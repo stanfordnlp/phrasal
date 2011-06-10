@@ -113,16 +113,18 @@ public class PhrasalMert {
   /**
    * Takes all of the data available in input and redirects it to output.
    */
-  public static void connectStreams(BufferedInputStream input,
-                                    BufferedOutputStream output) 
+  public static void connectStreams(InputStream input,
+                                    OutputStream output) 
     throws IOException
   {
+    BufferedInputStream bufInput = new BufferedInputStream(input);
+    BufferedOutputStream bufOutput = new BufferedOutputStream(output);
     byte[] buffer = new byte[1024];
     int bytesRead;
-    while ((bytesRead = input.read(buffer)) != -1) {
-      output.write(buffer, 0, bytesRead);
+    while ((bytesRead = bufInput.read(buffer)) != -1) {
+      bufOutput.write(buffer, 0, bytesRead);
     }
-    output.flush();
+    bufOutput.flush();
   }
 
   /**
@@ -139,8 +141,7 @@ public class PhrasalMert {
     if (stdinFile != null) {
       OutputStream procStdin = proc.getOutputStream();
       FileInputStream fin = new FileInputStream(stdinFile);
-      connectStreams(new BufferedInputStream(fin), 
-                     new BufferedOutputStream(procStdin));
+      connectStreams(fin, procStdin);
     }
 
     proc.waitFor();
@@ -148,16 +149,14 @@ public class PhrasalMert {
     if (stdoutFile != null) {
       InputStream procStdout = proc.getInputStream();
       FileOutputStream fout = new FileOutputStream(stdoutFile);
-      connectStreams(new BufferedInputStream(procStdout),
-                     new BufferedOutputStream(fout));
+      connectStreams(procStdout, fout);
       fout.close();
     }
 
     if (stderrFile != null) {
       InputStream procStderr = proc.getErrorStream();
       FileOutputStream fout = new FileOutputStream(stderrFile);
-      connectStreams(new BufferedInputStream(procStderr),
-                     new BufferedOutputStream(fout));
+      connectStreams(procStderr, fout);
       fout.close();
     }
   }
