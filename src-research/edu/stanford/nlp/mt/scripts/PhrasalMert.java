@@ -135,8 +135,6 @@ public class PhrasalMert {
     return new ConfigFile(sections);
   }
 
-  public static final String PHRASAL_CLASS = "edu.stanford.nlp.mt.Phrasal";
-
   /**
    * Takes all of the data available in input and redirects it to output.
    */
@@ -160,10 +158,17 @@ public class PhrasalMert {
    * process.  A null argument for a filename means to not use that pipe.
    */
   public static void runCommand(String command, String stdinFile, 
-                                String stdoutFile, String stderrFile) 
+                                String stdoutFile, String stderrFile,
+                                boolean combineErrorStream) 
     throws IOException, InterruptedException
   {
-    Process proc = Runtime.getRuntime().exec(command);
+    // TODO: perhaps a list of args would be better to account for
+    // args that might have whitespace in them
+    ProcessBuilder procBuilder = new ProcessBuilder(command.split("\\s+"));
+    if (combineErrorStream)
+      procBuilder.redirectErrorStream(combineErrorStream);
+    Process proc = procBuilder.start();
+    //Process proc = Runtime.getRuntime().exec(command);
 
     if (stdinFile != null) {
       OutputStream procStdin = proc.getOutputStream();
@@ -188,6 +193,9 @@ public class PhrasalMert {
       fout.close();
     }
   }
+
+  public static final String PHRASAL_CLASS = "edu.stanford.nlp.mt.Phrasal";
+  public static final String MERT_CLASS = "edu.stanford.nlp.mt.tune.MERT";
 
   // Implements the most basic form of PhrasalMert
   // goal: reproduce the effects of 
@@ -217,15 +225,28 @@ public class PhrasalMert {
       String transName = baseName + ".trans";
       String dlogName = baseName + ".dlog";
 
+      // TODO: include library path?
+      // -Djava.library.path=../scripts/../cpp
+
       StringBuilder phrasalCommand = new StringBuilder();
       phrasalCommand.append("java -mx" + memory + " ");
       phrasalCommand.append(PHRASAL_CLASS + " ");
       phrasalCommand.append("-configFile " + configFile);
-      runCommand(phrasalCommand.toString(), inputFile, transName, dlogName);
+      runCommand(phrasalCommand.toString(), inputFile, 
+                 transName, dlogName, false);
 
       // TODO: build combined nbest list here
 
+      // TODO: include library path?
+      // -Djava.library.path=../scripts/../cpp
+
       // TODO: run mert here
+      // MERT command: java  -Xmx4g -cp ../scripts/../phrasal.jar:../scripts/../lib/fastutil.jar:../scripts/../lib/mtj.jar -Djava.library.path=../scripts/../cpp edu.stanford.nlp.mt.tune.MERT -N -o cer -t 1 -p 5 -s /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts bleu /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.combined.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts data/dev/nc-dev2007.tok.en /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.3.wts > /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/jmert.2.log 2>&1
+      StringBuilder mertCommand = new StringBuilder();
+      mertCommand.append("java -mx" + memory + " ");
+      mertCommand.append(MERT_CLASS + " ");
+      // no idea what this actually is, just go with it
+      mertCommand.append(" -N -o cer -t 1 -p 5 -s ");
 
       // TODO: test for convergence here
 

@@ -98,11 +98,12 @@ public class PhrasalMertTest extends TestCase {
     File iniFile = createTempFile();
     String command = "cat " + iniFile.getAbsolutePath();
     System.out.println(command);
-    PhrasalMert.runCommand(command, null, null, null);
+    PhrasalMert.runCommand(command, null, null, null, false);
 
     // test stdout
     File copyFile = File.createTempFile("PhrasalMertTest.", ".ini");
-    PhrasalMert.runCommand(command, null, copyFile.getAbsolutePath(), null);
+    PhrasalMert.runCommand(command, null, copyFile.getAbsolutePath(), 
+                           null, false);
     System.out.println("File copied to: " + copyFile);
     compareFiles(iniFile, copyFile);
 
@@ -114,11 +115,18 @@ public class PhrasalMertTest extends TestCase {
                copyFile.getAbsolutePath());
     System.out.println(command);
     PhrasalMert.runCommand(command, null, outFile.getAbsolutePath(),
-                           errFile.getAbsolutePath());
+                           errFile.getAbsolutePath(), false);
     String expectedError = ("ls: " + copyFile.getAbsolutePath() + 
                             ": No such file or directory");
     compareFileContents(outFile, iniFile.getAbsolutePath());
     compareFileContents(errFile, expectedError);
+
+    PhrasalMert.runCommand(command, null, outFile.getAbsolutePath(),
+                           errFile.getAbsolutePath(), true);
+    compareFileContents(outFile, (expectedError + "\n" + 
+                                  iniFile.getAbsolutePath()));
+    compareFileContents(errFile, "");
+
 
     // test piping in a file
     // test overwriting of output files
@@ -126,7 +134,7 @@ public class PhrasalMertTest extends TestCase {
     command = "grep comment";
     PhrasalMert.runCommand(command, iniFile.getAbsolutePath(),
                            outFile.getAbsolutePath(), 
-                           errFile.getAbsolutePath());
+                           errFile.getAbsolutePath(), false);
     compareFileContents(outFile, "#This is another comment");
     compareFileContents(errFile, "");
   }
