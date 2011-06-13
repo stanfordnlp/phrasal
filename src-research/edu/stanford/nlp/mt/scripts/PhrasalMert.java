@@ -162,8 +162,7 @@ public class PhrasalMert {
                                 boolean combineErrorStream) 
     throws IOException, InterruptedException
   {
-    // TODO: perhaps a list of args would be better to account for
-    // args that might have whitespace in them
+    // TODO: use a List<String> instead (as args might have whitespace)
     ProcessBuilder procBuilder = new ProcessBuilder(command.split("\\s+"));
     if (combineErrorStream)
       procBuilder.redirectErrorStream(combineErrorStream);
@@ -196,6 +195,22 @@ public class PhrasalMert {
 
   public static final String PHRASAL_CLASS = "edu.stanford.nlp.mt.Phrasal";
   public static final String MERT_CLASS = "edu.stanford.nlp.mt.tune.MERT";
+
+  public static String getWeightsName(int iteration) {
+    return new String("phrasal." + iteration + ".wts");
+  }
+
+  public static String getNBestName(int iteration) {
+    return new String("phrasal." + iteration + ".nbest.gz");
+  }
+
+  public static String getCombinedNBestName(int iteration) {
+    return new String("phrasal." + iteration + ".combined.nbest.gz");
+  }
+
+  public static String getMertLogName(int iteration) {
+    return new String("phrasal." + iteration + ".mertlog");
+  }
 
   // Implements the most basic form of PhrasalMert
   // goal: reproduce the effects of 
@@ -247,6 +262,25 @@ public class PhrasalMert {
       mertCommand.append(MERT_CLASS + " ");
       // no idea what this actually is, just go with it
       mertCommand.append(" -N -o cer -t 1 -p 5 -s ");
+      StringBuilder wtsString = new StringBuilder();
+      for (int j = iteration; j >= 0; --iteration) {
+        wtsString.append(getWeightsName(j));
+        if (j > 0) {
+          wtsString.append(",");
+        }
+      }
+      mertCommand.append(wtsString.toString() + " ");
+      mertCommand.append(metric + " ");
+      mertCommand.append(getCombinedNBestName(iteration) + " ");
+      mertCommand.append(getNBestName(iteration) + " ");
+      mertCommand.append(wtsString.toString() + " ");
+      mertCommand.append(referenceFile + " ");
+      mertCommand.append(getWeightsName(iteration + 1));
+
+      runCommand(mertCommand.toString(), null, 
+                 getMertLogName(iteration), null, true);
+      
+      
 
       // TODO: test for convergence here
 
