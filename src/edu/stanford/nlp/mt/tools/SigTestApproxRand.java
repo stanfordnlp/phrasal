@@ -6,10 +6,11 @@ import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.metrics.*;
 
 /**
- * Approximate Randomization Test for Statistical Significance Testing
+ * Approximate Randomization Test for Statistical Significance Testing.
  * 
- * See Reizler & Maxwell ACL 2005 Workshop on Intrinsic and Extrinsic Evaluation
- * Measures for Machine Translation
+ * See Riezler &amp; Maxwell's 2005 paper: On Some Pitfalls in Automatic 
+ * Evaluation and Significance Testing for MT, in the Workshop on Intrinsic 
+ * and Extrinsic Evaluation Measures for Machine Translation
  * 
  * @author danielcer
  * 
