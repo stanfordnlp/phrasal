@@ -96,13 +96,13 @@ public class PhrasalMertTest extends TestCase {
     throws IOException, InterruptedException
   {
     File iniFile = createTempFile();
-    String command = "cat " + iniFile.getAbsolutePath();
-    System.out.println(command);
-    PhrasalMert.runCommand(command, null, null, null, false);
+    String[] catCommand = {"cat", iniFile.getAbsolutePath()};
+    System.out.println(Arrays.asList(catCommand));
+    PhrasalMert.runCommand(catCommand, null, null, null, false);
 
     // test stdout
     File copyFile = File.createTempFile("PhrasalMertTest.", ".ini");
-    PhrasalMert.runCommand(command, null, copyFile.getAbsolutePath(), 
+    PhrasalMert.runCommand(catCommand, null, copyFile.getAbsolutePath(), 
                            null, false);
     System.out.println("File copied to: " + copyFile);
     compareFiles(iniFile, copyFile);
@@ -111,17 +111,18 @@ public class PhrasalMertTest extends TestCase {
     File outFile = File.createTempFile("PhrassalMertTest.", ".ini");
     File errFile = File.createTempFile("PhrassalMertTest.", ".ini");
     copyFile.delete();
-    command = ("ls " + iniFile.getAbsolutePath() + " " +
-               copyFile.getAbsolutePath());
-    System.out.println(command);
-    PhrasalMert.runCommand(command, null, outFile.getAbsolutePath(),
+    String[] lsCommand = {"ls", iniFile.getAbsolutePath(), 
+                          copyFile.getAbsolutePath()};
+    System.out.println(Arrays.asList(lsCommand));
+    PhrasalMert.runCommand(lsCommand, null, outFile.getAbsolutePath(),
                            errFile.getAbsolutePath(), false);
     String expectedError = ("ls: " + copyFile.getAbsolutePath() + 
                             ": No such file or directory");
     compareFileContents(outFile, iniFile.getAbsolutePath());
     compareFileContents(errFile, expectedError);
 
-    PhrasalMert.runCommand(command, null, outFile.getAbsolutePath(),
+    // test combining stdout and stderr
+    PhrasalMert.runCommand(lsCommand, null, outFile.getAbsolutePath(),
                            errFile.getAbsolutePath(), true);
     compareFileContents(outFile, (expectedError + "\n" + 
                                   iniFile.getAbsolutePath()));
@@ -131,8 +132,9 @@ public class PhrasalMertTest extends TestCase {
     // test piping in a file
     // test overwriting of output files
     // also, test what happens on an empty stderr
-    command = "grep comment";
-    PhrasalMert.runCommand(command, iniFile.getAbsolutePath(),
+    String[] grepCommand = {"grep", "comment"};
+    System.out.println(Arrays.asList(grepCommand));
+    PhrasalMert.runCommand(grepCommand, iniFile.getAbsolutePath(),
                            outFile.getAbsolutePath(), 
                            errFile.getAbsolutePath(), false);
     compareFileContents(outFile, "#This is another comment");

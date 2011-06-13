@@ -157,13 +157,13 @@ public class PhrasalMert {
    * and stderr that are specified, pipes that file to or from the
    * process.  A null argument for a filename means to not use that pipe.
    */
-  public static void runCommand(String command, String stdinFile, 
+  public static void runCommand(List<String> command, String stdinFile, 
                                 String stdoutFile, String stderrFile,
                                 boolean combineErrorStream) 
     throws IOException, InterruptedException
   {
     // TODO: use a List<String> instead (as args might have whitespace)
-    ProcessBuilder procBuilder = new ProcessBuilder(command.split("\\s+"));
+    ProcessBuilder procBuilder = new ProcessBuilder(command);
     if (combineErrorStream)
       procBuilder.redirectErrorStream(combineErrorStream);
     Process proc = procBuilder.start();
@@ -191,6 +191,15 @@ public class PhrasalMert {
       connectStreams(procStderr, fout);
       fout.close();
     }
+  }
+
+  public static void runCommand(String[] command, String stdinFile,
+                                String stdoutFile, String stderrFile,
+                                boolean combineErrorStream) 
+    throws IOException, InterruptedException
+  {
+    runCommand(Arrays.asList(command), stdinFile,
+               stdoutFile, stderrFile, combineErrorStream);
   }
 
   public static final String PHRASAL_CLASS = "edu.stanford.nlp.mt.Phrasal";
@@ -243,12 +252,13 @@ public class PhrasalMert {
       // TODO: include library path?
       // -Djava.library.path=../scripts/../cpp
 
-      StringBuilder phrasalCommand = new StringBuilder();
-      phrasalCommand.append("java -mx" + memory + " ");
-      phrasalCommand.append(PHRASAL_CLASS + " ");
-      phrasalCommand.append("-configFile " + configFile);
-      runCommand(phrasalCommand.toString(), inputFile, 
-                 transName, dlogName, false);
+      List<String> phrasalCommand = new ArrayList<String>();
+      phrasalCommand.add("java");
+      phrasalCommand.add("-mx" + memory);
+      phrasalCommand.add(PHRASAL_CLASS);
+      phrasalCommand.add("-configFile"); 
+      phrasalCommand.add(configName);
+      runCommand(phrasalCommand, inputFile, transName, dlogName, false);
 
       // TODO: build combined nbest list here
 
@@ -257,11 +267,12 @@ public class PhrasalMert {
 
       // TODO: run mert here
       // MERT command: java  -Xmx4g -cp ../scripts/../phrasal.jar:../scripts/../lib/fastutil.jar:../scripts/../lib/mtj.jar -Djava.library.path=../scripts/../cpp edu.stanford.nlp.mt.tune.MERT -N -o cer -t 1 -p 5 -s /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts bleu /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.combined.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts data/dev/nc-dev2007.tok.en /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.3.wts > /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/jmert.2.log 2>&1
-      StringBuilder mertCommand = new StringBuilder();
-      mertCommand.append("java -mx" + memory + " ");
-      mertCommand.append(MERT_CLASS + " ");
+      List<String> mertCommand = new ArrayList<String>();
+      mertCommand.add("java");
+      mertCommand.add("-mx" + memory);
+      mertCommand.add(MERT_CLASS);
       // no idea what this actually is, just go with it
-      mertCommand.append(" -N -o cer -t 1 -p 5 -s ");
+      mertCommand.addAll(Arrays.asList("-N -o cer -t 1 -p 5 -s".split(" ")));
       StringBuilder wtsString = new StringBuilder();
       for (int j = iteration; j >= 0; --iteration) {
         wtsString.append(getWeightsName(j));
@@ -269,16 +280,15 @@ public class PhrasalMert {
           wtsString.append(",");
         }
       }
-      mertCommand.append(wtsString.toString() + " ");
-      mertCommand.append(metric + " ");
-      mertCommand.append(getCombinedNBestName(iteration) + " ");
-      mertCommand.append(getNBestName(iteration) + " ");
-      mertCommand.append(wtsString.toString() + " ");
-      mertCommand.append(referenceFile + " ");
-      mertCommand.append(getWeightsName(iteration + 1));
+      mertCommand.add(wtsString.toString());
+      mertCommand.add(metric);
+      mertCommand.add(getCombinedNBestName(iteration));
+      mertCommand.add(getNBestName(iteration));
+      mertCommand.add(wtsString.toString());
+      mertCommand.add(referenceFile);
+      mertCommand.add(getWeightsName(iteration + 1));
 
-      runCommand(mertCommand.toString(), null, 
-                 getMertLogName(iteration), null, true);
+      runCommand(mertCommand, null, getMertLogName(iteration), null, true);
       
       
 
