@@ -19,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.stanford.nlp.mt.tools.CompareWeights;
+import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
+
 public class PhrasalMert {
   static public class ConfigSection {
     public ConfigSection(String sectionName, List<String> lines) {
@@ -290,9 +294,13 @@ public class PhrasalMert {
 
       runCommand(mertCommand, null, getMertLogName(iteration), null, true);
       
-      
-
-      // TODO: test for convergence here
+      Counter<String> oldWeights = 
+        CompareWeights.readTextWeights(getWeightsName(iteration));
+      Counter<String> newWeights = 
+        CompareWeights.readTextWeights(getWeightsName(iteration + 1));
+      Counter<String> difference = 
+        Counters.absoluteDifference(oldWeights, newWeights);
+      double maxDiff = Counters.max(difference);
 
       ++iteration;
     }
