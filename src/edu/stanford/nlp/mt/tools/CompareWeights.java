@@ -15,6 +15,19 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
 public class CompareWeights {
+  static public Counter<String> readTextWeights(String filename)
+    throws IOException 
+  {
+    Counter<String> wts = new ClassicCounter<String>();
+    BufferedReader reader = new BufferedReader(new FileReader(filename));
+    for (String line; (line = reader.readLine()) != null;) {
+      String[] fields = line.split("\\s+");
+      wts.setCount(fields[0], Double.valueOf(fields[1]));
+    }
+    reader.close();
+    return wts;
+  }
+
   // TODO find a good permanent home for this method
   @SuppressWarnings("unchecked")
   static public Counter<String> readWeights(String filename)
@@ -27,13 +40,7 @@ public class CompareWeights {
       wts = (Counter<String>) ois.readObject();
       ois.close();
     } else {
-      wts = new ClassicCounter<String>();
-      BufferedReader reader = new BufferedReader(new FileReader(filename));
-      for (String line; (line = reader.readLine()) != null;) {
-        String[] fields = line.split("\\s+");
-        wts.setCount(fields[0], Double.valueOf(fields[1]));
-      }
-      reader.close();
+      return readTextWeights(filename);
     }
     return wts;
   }
