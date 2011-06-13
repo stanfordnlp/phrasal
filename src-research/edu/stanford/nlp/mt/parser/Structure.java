@@ -2,8 +2,11 @@ package edu.stanford.nlp.mt.parser;
 
 import java.util.List;
 
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.ValueAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.Tree;
@@ -31,7 +34,11 @@ public class Structure {
 
     for (Tree treeNode : gs.root().getLeaves()) {
       TreeGraphNode node = (TreeGraphNode)treeNode;
-      input.push(node.label());
+      CoreLabel cl = node.label();
+      Tree p = treeNode.parent();
+      cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
+      cl.set(PartOfSpeechAnnotation.class, ((TreeGraphNode)p).label().get(ValueAnnotation.class));
+      input.push(cl);
     }
   }
 

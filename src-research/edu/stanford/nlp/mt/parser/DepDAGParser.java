@@ -22,12 +22,12 @@ import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.parser.Parser;
@@ -36,16 +36,16 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.trees.DependencyScoring;
+import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 public class DepDAGParser implements Parser, Serializable {
-  public static final boolean DEBUG = true;
-  
+  public static final boolean DEBUG = false;
+
   private static final long serialVersionUID = -5534972476741917367L;
 
   private LinearClassifier<ActionType,List<String>> actClassifier;
@@ -122,12 +122,14 @@ public class DepDAGParser implements Parser, Serializable {
 
     for(Structure struc : rawTrainData) {
       LinkedStack<Action> actions = struc.getActionTrace();
-      int offset = struc.input.size()+1;
+      int offset = struc.input.size();
       int successfulActionCnt = 0;
       if (DEBUG) {
         System.err.printf("Input: %s\n", struc.input);
       }
-      for(Action act : actions) {
+      Object[] acts = actions.peekN(actions.size());
+      for(int i = acts.length-1 ; i >= 0 ; i--){
+        Action act = (Action)acts[i];
         Datum<ActionType, List<String>> actDatum = extractActFeature(act.action, struc, featureCounter, offset);
         Datum<GrammaticalRelation, List<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, featureCounter, offset);
         if(actDatum.asFeatures().size() > 0) actTrainData.add(actDatum);
@@ -135,15 +137,15 @@ public class DepDAGParser implements Parser, Serializable {
             && labelDatum.asFeatures().size() > 0) {
           labelTrainData.add(labelDatum);
         }
-        
+
         if (DEBUG) {
           System.err.printf("State:\n\tAction: %s\n", act);
           System.err.printf("\tPre-stack: %s\n", struc.stack);
         }
-        if(act.action==ActionType.SHIFT) offset--;
         if(offset < 1) throw new RuntimeException("input offset is smaller than 1!!");
         try {
           Actions.doAction(act, struc, offset);
+          if(act.action==ActionType.SHIFT) offset--;
         } catch (RuntimeException e) {
           System.err.printf("Runtime exception: %s\n", e);
           System.err.printf("Actions: %s\n", actions);
@@ -233,9 +235,9 @@ public class DepDAGParser implements Parser, Serializable {
       if(s.actionTrace.size() > 0 && s.actionTrace.peek().equals(nextAction)
           && nextAction.relation != null) {
         nextAction = new Action(ActionType.SHIFT);
-        offset--;
       }
       Actions.doAction(nextAction, s, offset);
+      if(nextAction.action==ActionType.SHIFT) offset--;
     }
   }
   public void parsePhrase(Structure s, List<CoreLabel> phrase){
@@ -290,13 +292,13 @@ public class DepDAGParser implements Parser, Serializable {
 
     // temporary for debug
 
-    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
+    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/small_train.conll";
     //    props.put("train", tempTrain);
     //    props.put("test", tempTest);
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
-    //String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
-    String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
+    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
     props.put("train", tempTrain);
     //    props.put("test", tempTest);
 
@@ -324,6 +326,7 @@ public class DepDAGParser implements Parser, Serializable {
 
     if(doTest) {
       String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll");
+      //      String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll");
       //      String defaultLoadModel = "/scr/heeyoung/mtdata/DAGparserModel.reducedFeat_mem5_dataset.ser";
 
       if(parser==null) {
@@ -350,6 +353,7 @@ public class DepDAGParser implements Parser, Serializable {
       for(Structure s : testData){
         count++;
         goldDeps.add(s.getDependencies().getAll());
+        s.dependencies = new LinkedStack<TypedDependency>();
         Date startTime = new Date();
         LinkedStack<TypedDependency> graph = parser.getDependencyGraph(s);
         elapsedTime += (new Date()).getTime() - startTime.getTime();
@@ -376,6 +380,9 @@ public class DepDAGParser implements Parser, Serializable {
 
       List<CoreLabel> l = sentences.get(0).get(TokensAnnotation.class);
       LinkedStack<TypedDependency> g = parser.getDependencyGraph(l);
+
+      System.err.println(g);
+      System.err.println();
     }
   }
 

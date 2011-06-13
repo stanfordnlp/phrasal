@@ -5,6 +5,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * First element of the iteration is top element!
+ * @author heeyoung
+ *
+ * @param <T>
+ */
 public class LinkedStack<T> implements Iterable<T> {
   StackNode current = null;
   private int size = 0;
@@ -92,6 +98,7 @@ public class LinkedStack<T> implements Iterable<T> {
   public Iterator<T> iterator() {
     return new Iterator<T>() {
       StackNode pointer = current;
+      @Override
       public boolean hasNext(){
         return pointer!=null;
       }
@@ -109,7 +116,7 @@ public class LinkedStack<T> implements Iterable<T> {
       }
     };
   }
-  
+
   @Override
   public String toString() {
     StringBuilder sbuild = new StringBuilder();
@@ -121,7 +128,7 @@ public class LinkedStack<T> implements Iterable<T> {
       } else {
         first = false;
       }
-      sbuild.append(node.toString());      
+      sbuild.append(node.toString());
     }
     sbuild.append("]");
     return sbuild.toString();

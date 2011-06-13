@@ -5,12 +5,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 
 public class DAGFeatureExtractor {
@@ -89,7 +89,7 @@ public class DAGFeatureExtractor {
     CoreLabel s1 = (CoreLabel) stackTopN[0];
     CoreLabel s2 = (stackSize > 1)? (CoreLabel) stackTopN[1] : null;
     CoreLabel s3 = (stackSize > 2)? (CoreLabel) stackTopN[2] : null;
-    Object[] queueNWords = struc.getInput().peekN(3+offset-1);
+    Object[] queueNWords = struc.getInput().peekN(offset+2);
     CoreLabel q1 = (queueNWords.length > 0)? (CoreLabel) queueNWords[offset-1] : null;
     CoreLabel q2 = (queueNWords.length > 1)? (CoreLabel) queueNWords[offset] : null;
     CoreLabel q3 = (queueNWords.length > 2)? (CoreLabel) queueNWords[offset+1] : null;
