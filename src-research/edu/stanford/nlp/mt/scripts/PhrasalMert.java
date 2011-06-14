@@ -306,7 +306,7 @@ public class PhrasalMert {
   // ../scripts/phrasal-mert.pl 4g data/dev/nc-dev2007.tok.fr 
   //   data/dev/nc-dev2007.tok.en bleu phrasal.conf
   public static void main(String[] args) 
-    throws IOException, InterruptedException
+    throws IOException, InterruptedException, ClassNotFoundException
   {
     if (args.length != 5) {
       System.err.println("Expected args in the format:");
@@ -377,9 +377,9 @@ public class PhrasalMert {
       runCommand(mertCommand, null, getMertLogName(iteration), null, true);
       
       Counter<String> oldWeights = 
-        CompareWeights.readTextWeights(getWeightsName(iteration));
+        CompareWeights.readWeights(findWeightsFilename(iteration));
       Counter<String> newWeights = 
-        CompareWeights.readTextWeights(getWeightsName(iteration + 1));
+        CompareWeights.readWeights(findWeightsFilename(iteration + 1));
       Counter<String> difference = 
         Counters.absoluteDifference(oldWeights, newWeights);
       double maxDiff = Counters.max(difference);
