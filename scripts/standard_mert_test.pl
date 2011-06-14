@@ -20,11 +20,11 @@ if (compare("/u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag/phrasal.10.trans", 
   $exitStatus = -1;
 }
 
-$log = `cat phrasal-mert.$proc_tag.$date_tag.log`;
+$log = `cat /u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag.$date_tag.log`;
 $from_addr = "javanlp-mt-no-reply\@mailman.stanford.edu";
 foreach $emailAddr (@ARGV) {
   if ($exitStatus == 0) {
-     $subject = "MT daily integration test ($data_tag) was successful!";
+     $subject = "MT daily integration test ($date_tag) was successful!";
      $body    = "Hello $emailAddr,\n\n".
                 "The $data_tag MT daily integration test was sucessful!\n\n";
   } else {
