@@ -22,12 +22,13 @@ import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.parser.Parser;
@@ -36,9 +37,9 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.trees.DependencyScoring;
-import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
@@ -212,7 +213,7 @@ public class DepDAGParser implements Parser, Serializable {
     Structure s = new Structure();
     for(CoreLabel w : sentence){
       s.input.push(w);
-      parsePhrase(s, 0);
+      parsePhrase(s, 1);
     }
     return s.dependencies;
   }
@@ -249,9 +250,9 @@ public class DepDAGParser implements Parser, Serializable {
 
   public static void main(String[] args) throws IOException, ClassNotFoundException{
 
-    boolean doTrain = true;
+    boolean doTrain = false;
     boolean doTest = true;
-    boolean storeTrainedModel = false;
+    boolean storeTrainedModel = true;
 
     // temporary code for scorer test
     boolean testScorer = false;
@@ -292,14 +293,14 @@ public class DepDAGParser implements Parser, Serializable {
 
     // temporary for debug
 
-    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
+    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/small_train.conll";
     //    props.put("train", tempTrain);
     //    props.put("test", tempTest);
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
     //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
-    props.put("train", tempTrain);
+    //    props.put("train", tempTrain);
     //    props.put("test", tempTest);
 
     if(doTrain) {
@@ -320,17 +321,16 @@ public class DepDAGParser implements Parser, Serializable {
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
         IOUtils.writeObjectToFile(parser, trainedModelFile);
       }
-
       logger.info("training is done");
     }
 
     if(doTest) {
-      String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll");
+      String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-train-2011-01-13.conll");
       //      String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll");
       //      String defaultLoadModel = "/scr/heeyoung/mtdata/DAGparserModel.reducedFeat_mem5_dataset.ser";
 
       if(parser==null) {
-        String defaultLoadModel = "/scr/heeyoung/mt/scr61/DAGparserModel.ser";
+        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/DAGparserModel.ser";
 
         if(!props.containsKey("loadModel")) logger.info("no option -loadModel : trained model will be loaded from "+defaultLoadModel);
         String trainedModelFile = props.getProperty("loadModel", defaultLoadModel);
@@ -379,6 +379,10 @@ public class DepDAGParser implements Parser, Serializable {
       List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 
       List<CoreLabel> l = sentences.get(0).get(TokensAnnotation.class);
+      int index = 1;
+      for(CoreLabel t : l){
+        t.set(IndexAnnotation.class, index++);
+      }
       LinkedStack<TypedDependency> g = parser.getDependencyGraph(l);
 
       System.err.println(g);
