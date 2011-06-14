@@ -1,0 +1,100 @@
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DepDAGParser main
+FINE: REDUCE_FEATURES on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DepDAGParser main
+INFO: read training data from C:\cygwin\home\daniel\temp.conll ...
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DepDAGParser main
+INFO: train model...
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1Word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1Lemma on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1NumChild on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1LeftChildPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1LeftChildRel on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1RightChildPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1RightChildRel on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1PreviousTokenPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2Word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2Lemma on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2NumChild on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2LeftChildPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2LeftChildRel on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2RightChildPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2RightChildRel on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS2NextTokenPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS3Word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS3Lemma on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS3POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS3WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ1Word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ1Lemma on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ1POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ1WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ2Word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ2Lemma on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ2POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ2WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ3Word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ3Lemma on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ3POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ3WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: usePreAction on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useActionType on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1Q1word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1Q1POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1Q1WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ1Q2word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ1Q2POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useQ1Q2WordPOS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1S2word on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1S2POS on
+Jun 9, 2011 4:01:43 PM edu.stanford.nlp.mt.parser.DAGFeatureExtractor printFeatureFlags
+FINE: useS1S2WordPOS on
