@@ -304,6 +304,46 @@ public class PhrasalMert {
     runCommand(phrasalCommand, inputFilename, transName, dlogName, false);
   }
 
+  public static List<String> buildMertCommand(String referenceFile,
+                                              String memory, String metric,
+                                              String libraryPath,
+                                              int iteration) {
+    List<String> mertCommand = new ArrayList<String>();
+    mertCommand.add("java");
+    mertCommand.add("-mx" + memory);
+    mertCommand.add("-Djava.library.path=" + libraryPath);
+    mertCommand.add(MERT_CLASS);
+    // no idea what this actually is, just go with it
+    mertCommand.addAll(Arrays.asList("-N -o cer -t 1 -p 5 -s".split(" ")));
+    StringBuilder wtsString = new StringBuilder();
+    for (int j = iteration; j >= 0; --iteration) {
+      wtsString.append(getWeightsName(j));
+      if (j > 0) {
+        wtsString.append(",");
+      }
+    }
+    mertCommand.add(wtsString.toString());
+    mertCommand.add(metric);
+    mertCommand.add(getCombinedNBestName(iteration));
+    mertCommand.add(getNBestName(iteration));
+    mertCommand.add(wtsString.toString());
+    mertCommand.add(referenceFile);
+    mertCommand.add(getWeightsName(iteration + 1));
+    return mertCommand;
+  }
+
+  public static void runMertCommand(String referenceFile,
+                                    String memory, String metric,
+                                    String libraryPath, int iteration)
+    throws IOException, InterruptedException
+  {
+    // MERT command: java  -Xmx4g -cp ../scripts/../phrasal.jar:../scripts/../lib/fastutil.jar:../scripts/../lib/mtj.jar -Djava.library.path=../scripts/../cpp edu.stanford.nlp.mt.tune.MERT -N -o cer -t 1 -p 5 -s /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts bleu /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.combined.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts data/dev/nc-dev2007.tok.en /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.3.wts > /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/jmert.2.log 2>&1
+    List<String> mertCommand = 
+      buildMertCommand(referenceFile, memory, metric, libraryPath, iteration);
+    
+    runCommand(mertCommand, null, getMertLogName(iteration), null, true);
+  }
+
   // Implements the most basic form of PhrasalMert
   // goal: reproduce the effects of 
   // ../scripts/phrasal-mert.pl 4g data/dev/nc-dev2007.tok.fr 
@@ -349,34 +389,7 @@ public class PhrasalMert {
 
       // TODO: build combined nbest list here
 
-      // TODO: include library path in the mert command?
-      // -Djava.library.path=../scripts/../cpp
-
-      // TODO: run mert here
-      // MERT command: java  -Xmx4g -cp ../scripts/../phrasal.jar:../scripts/../lib/fastutil.jar:../scripts/../lib/mtj.jar -Djava.library.path=../scripts/../cpp edu.stanford.nlp.mt.tune.MERT -N -o cer -t 1 -p 5 -s /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts bleu /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.combined.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts data/dev/nc-dev2007.tok.en /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.3.wts > /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/jmert.2.log 2>&1
-      List<String> mertCommand = new ArrayList<String>();
-      mertCommand.add("java");
-      mertCommand.add("-mx" + memory);
-      mertCommand.add("-Djava.library.path=" + libraryPath);
-      mertCommand.add(MERT_CLASS);
-      // no idea what this actually is, just go with it
-      mertCommand.addAll(Arrays.asList("-N -o cer -t 1 -p 5 -s".split(" ")));
-      StringBuilder wtsString = new StringBuilder();
-      for (int j = iteration; j >= 0; --iteration) {
-        wtsString.append(getWeightsName(j));
-        if (j > 0) {
-          wtsString.append(",");
-        }
-      }
-      mertCommand.add(wtsString.toString());
-      mertCommand.add(metric);
-      mertCommand.add(getCombinedNBestName(iteration));
-      mertCommand.add(getNBestName(iteration));
-      mertCommand.add(wtsString.toString());
-      mertCommand.add(referenceFile);
-      mertCommand.add(getWeightsName(iteration + 1));
-
-      runCommand(mertCommand, null, getMertLogName(iteration), null, true);
+      runMertCommand(referenceFile, memory, metric, libraryPath, iteration);
       
       Counter<String> oldWeights = 
         CompareWeights.readWeights(findWeightsFilename(iteration));
