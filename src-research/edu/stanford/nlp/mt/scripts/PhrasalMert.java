@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -50,6 +51,8 @@ public class PhrasalMert {
     final String sectionName;
     public String getSectionName() { return sectionName; }
 
+    public List<String> getLines() { return lines; }
+
     List<String> lines;
   }
 
@@ -94,6 +97,15 @@ public class PhrasalMert {
         }
       }
       sections.add(new ConfigSection(sectionName, lines));
+    }
+
+    public List<String> getSection(String sectionName) {
+      for (ConfigSection section : sections) {
+        if (sectionName.equals(section.getSectionName())) {
+          return section.getLines();
+        }
+      }
+      return null;
     }
 
     List<ConfigSection> sections;
@@ -209,8 +221,39 @@ public class PhrasalMert {
   public static final String PHRASAL_CLASS = "edu.stanford.nlp.mt.Phrasal";
   public static final String MERT_CLASS = "edu.stanford.nlp.mt.tune.MERT";
 
+  // if the weights don't change more than this, we'll end the iterations
+  public static final double TOL = 0.001;
+
+  public static final String DEFAULT_NBEST_SIZE = "100";
+  public static final String NBEST_SECTION = "n-best-list";
+  public static final String WEIGHTS_SECTION = "weights-file";
+
+  public static String getBinWeightsName(int iteration) {
+    return new String("phrasal." + iteration + ".binwts");
+  }
+
   public static String getWeightsName(int iteration) {
     return new String("phrasal." + iteration + ".wts");
+  }
+
+  public static String findWeightsFilename(int iteration) {
+    String binWeightsName = getBinWeightsName(iteration);
+    File binWeights = new File(binWeightsName);
+    if (binWeights.exists()) {
+      return binWeightsName;
+    }
+
+    String textWeightsName = getWeightsName(iteration);
+    File textWeights = new File(textWeightsName);
+    if (textWeights.exists()) {
+      return textWeightsName;
+    }
+
+    return null;
+  }
+
+  public static String getNBestBaseName(int iteration) {
+    return new String("phrasal." + iteration + ".nbest");
   }
 
   public static String getNBestName(int iteration) {
@@ -223,6 +266,39 @@ public class PhrasalMert {
 
   public static String getMertLogName(int iteration) {
     return new String("phrasal." + iteration + ".mertlog");
+  }
+
+  public static String getTransName(int iteration) {
+    return new String("phrasal." + iteration + ".trans");
+  }
+
+  public static String getPhrasalLogName(int iteration) {
+    return new String("phrasal." + iteration + ".dlog");
+  }
+
+  public static List<String> buildPhrasalCommand(String memory, 
+                                                 int iteration) {
+    List<String> phrasalCommand = new ArrayList<String>();
+    phrasalCommand.add("java");
+    phrasalCommand.add("-mx" + memory);
+    phrasalCommand.add(PHRASAL_CLASS);
+    phrasalCommand.add("-configFile"); 
+    phrasalCommand.add(getConfigName(iteration));
+    return phrasalCommand;
+  }
+
+  public static String getConfigName(int iteration) {
+    return new String("phrasal." + iteration + ".ini");
+  }
+
+  public static void runPhrasalCommand(String inputFilename, String memory,
+                                       int iteration) 
+    throws IOException, InterruptedException
+  {
+    String transName = getTransName(iteration);
+    String dlogName = getPhrasalLogName(iteration);
+    List<String> phrasalCommand = buildPhrasalCommand(memory, iteration);
+    runCommand(phrasalCommand, inputFilename, transName, dlogName, false);
   }
 
   // Implements the most basic form of PhrasalMert
@@ -239,34 +315,40 @@ public class PhrasalMert {
     }
     
     String memory = args[0];
-    String inputFile = args[1];
+    String inputFilename = args[1];
     String referenceFile = args[2];
     String metric = args[3];
     String phrasalConfigFilename = args[4];
     ConfigFile configFile = readConfigFile(phrasalConfigFilename);
 
+    String nbestSize = DEFAULT_NBEST_SIZE;
+    List<String> nbestDescription = configFile.getSection(NBEST_SECTION);
+    if (nbestDescription != null) {
+      for (String line : nbestDescription) {
+        if (line.trim().matches("[0-9]+")) {
+          nbestSize = line.trim();
+        }
+      }
+    }
+
     int iteration = 0;
     while (true) {
-      String baseName  = "phrasal." + iteration;
-      String configName = baseName + ".ini";
+      // update the 
+      String configName = getConfigName(iteration);
+      String weightsName = findWeightsFilename(iteration);
+      configFile.updateSection(NBEST_SECTION, getNBestBaseName(iteration),
+                               nbestSize);
+      configFile.updateSection(WEIGHTS_SECTION, weightsName);
       configFile.outputFile(configName);
-      String transName = baseName + ".trans";
-      String dlogName = baseName + ".dlog";
 
-      // TODO: include library path?
+      // TODO: include library path in the phrasal command?
       // -Djava.library.path=../scripts/../cpp
 
-      List<String> phrasalCommand = new ArrayList<String>();
-      phrasalCommand.add("java");
-      phrasalCommand.add("-mx" + memory);
-      phrasalCommand.add(PHRASAL_CLASS);
-      phrasalCommand.add("-configFile"); 
-      phrasalCommand.add(configName);
-      runCommand(phrasalCommand, inputFile, transName, dlogName, false);
+      runPhrasalCommand(inputFilename, memory, iteration);
 
       // TODO: build combined nbest list here
 
-      // TODO: include library path?
+      // TODO: include library path in the mert command?
       // -Djava.library.path=../scripts/../cpp
 
       // TODO: run mert here
@@ -301,6 +383,8 @@ public class PhrasalMert {
       Counter<String> difference = 
         Counters.absoluteDifference(oldWeights, newWeights);
       double maxDiff = Counters.max(difference);
+      if (maxDiff < TOL)
+        break;
 
       ++iteration;
     }
