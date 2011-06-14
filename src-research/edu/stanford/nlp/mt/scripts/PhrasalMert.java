@@ -85,6 +85,15 @@ public class PhrasalMert {
       }
     }
 
+    public void removeSection(String sectionName) {
+      for (ConfigSection section : sections) {
+        if (sectionName.equals(sectionName)) {
+          sections.remove(section);
+          break;
+        }
+      }
+    }
+
     public void updateSection(String sectionName, String ... lines) {
       updateSection(sectionName, Arrays.asList(lines));
     }
@@ -302,6 +311,7 @@ public class PhrasalMert {
     String dlogName = getPhrasalLogName(iteration);
     List<String> phrasalCommand = buildPhrasalCommand(memory, libraryPath,
                                                       iteration);
+    System.out.println("Running Phrasal command: " + phrasalCommand);
     runCommand(phrasalCommand, inputFilename, transName, dlogName, false);
   }
 
@@ -319,7 +329,7 @@ public class PhrasalMert {
     // no idea what this actually is, just go with it
     mertCommand.addAll(Arrays.asList("-N -o cer -t 1 -p 5 -s".split(" ")));
     StringBuilder wtsString = new StringBuilder();
-    for (int j = iteration; j >= 0; --iteration) {
+    for (int j = iteration; j >= 0; --j) {
       wtsString.append(getWeightsName(j));
       if (j > 0) {
         wtsString.append(",");
@@ -344,6 +354,8 @@ public class PhrasalMert {
     List<String> mertCommand = 
       buildMertCommand(referenceFile, memory, metric, libraryPath, iteration);
     
+    System.out.println("Running MERT command: " + mertCommand);
+
     runCommand(mertCommand, null, getMertLogName(iteration), null, true);
   }
 
@@ -382,8 +394,6 @@ public class PhrasalMert {
       }
     }
 
-    
-
     int iteration = 0;
     while (true) {
       // update the 
@@ -391,7 +401,12 @@ public class PhrasalMert {
       String weightsName = findWeightsFilename(iteration);
       configFile.updateSection(NBEST_SECTION, getNBestBaseName(iteration),
                                nbestSize);
-      configFile.updateSection(WEIGHTS_SECTION, weightsName);
+      if (weightsName == null) {
+        // will read from the .ini file...
+        configFile.removeSection(WEIGHTS_SECTION);
+      } else {
+        configFile.updateSection(WEIGHTS_SECTION, weightsName);
+      }
       configFile.outputFile(configName);
 
       runPhrasalCommand(inputFilename, memory, libraryPath, iteration);
