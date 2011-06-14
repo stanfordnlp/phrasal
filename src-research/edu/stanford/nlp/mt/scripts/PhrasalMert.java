@@ -277,10 +277,12 @@ public class PhrasalMert {
   }
 
   public static List<String> buildPhrasalCommand(String memory, 
+                                                 String libraryPath,
                                                  int iteration) {
     List<String> phrasalCommand = new ArrayList<String>();
     phrasalCommand.add("java");
     phrasalCommand.add("-mx" + memory);
+    phrasalCommand.add("-Djava.library.path=" + libraryPath);
     phrasalCommand.add(PHRASAL_CLASS);
     phrasalCommand.add("-configFile"); 
     phrasalCommand.add(getConfigName(iteration));
@@ -292,12 +294,13 @@ public class PhrasalMert {
   }
 
   public static void runPhrasalCommand(String inputFilename, String memory,
-                                       int iteration) 
+                                       String libraryPath, int iteration) 
     throws IOException, InterruptedException
   {
     String transName = getTransName(iteration);
     String dlogName = getPhrasalLogName(iteration);
-    List<String> phrasalCommand = buildPhrasalCommand(memory, iteration);
+    List<String> phrasalCommand = buildPhrasalCommand(memory, libraryPath,
+                                                      iteration);
     runCommand(phrasalCommand, inputFilename, transName, dlogName, false);
   }
 
@@ -308,9 +311,9 @@ public class PhrasalMert {
   public static void main(String[] args) 
     throws IOException, InterruptedException, ClassNotFoundException
   {
-    if (args.length != 5) {
+    if (args.length != 6) {
       System.err.println("Expected args in the format:");
-      System.err.println("  memory input reference metric config");
+      System.err.println("  mem input reference metric config librarypath");
       System.exit(2);
     }
     
@@ -319,6 +322,7 @@ public class PhrasalMert {
     String referenceFile = args[2];
     String metric = args[3];
     String phrasalConfigFilename = args[4];
+    String libraryPath = args[5];
     ConfigFile configFile = readConfigFile(phrasalConfigFilename);
 
     String nbestSize = DEFAULT_NBEST_SIZE;
@@ -341,10 +345,7 @@ public class PhrasalMert {
       configFile.updateSection(WEIGHTS_SECTION, weightsName);
       configFile.outputFile(configName);
 
-      // TODO: include library path in the phrasal command?
-      // -Djava.library.path=../scripts/../cpp
-
-      runPhrasalCommand(inputFilename, memory, iteration);
+      runPhrasalCommand(inputFilename, memory, libraryPath, iteration);
 
       // TODO: build combined nbest list here
 
@@ -356,6 +357,7 @@ public class PhrasalMert {
       List<String> mertCommand = new ArrayList<String>();
       mertCommand.add("java");
       mertCommand.add("-mx" + memory);
+      mertCommand.add("-Djava.library.path=" + libraryPath);
       mertCommand.add(MERT_CLASS);
       // no idea what this actually is, just go with it
       mertCommand.addAll(Arrays.asList("-N -o cer -t 1 -p 5 -s".split(" ")));
