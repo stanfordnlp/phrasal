@@ -178,7 +178,6 @@ public class PhrasalMert {
                                 boolean combineErrorStream) 
     throws IOException, InterruptedException
   {
-    // TODO: use a List<String> instead (as args might have whitespace)
     ProcessBuilder procBuilder = new ProcessBuilder(command);
     if (combineErrorStream)
       procBuilder.redirectErrorStream(combineErrorStream);
@@ -282,7 +281,9 @@ public class PhrasalMert {
     List<String> phrasalCommand = new ArrayList<String>();
     phrasalCommand.add("java");
     phrasalCommand.add("-mx" + memory);
-    phrasalCommand.add("-Djava.library.path=" + libraryPath);
+    if (libraryPath != null) {
+      phrasalCommand.add("-Djava.library.path=" + libraryPath);
+    }
     phrasalCommand.add(PHRASAL_CLASS);
     phrasalCommand.add("-configFile"); 
     phrasalCommand.add(getConfigName(iteration));
@@ -311,7 +312,9 @@ public class PhrasalMert {
     List<String> mertCommand = new ArrayList<String>();
     mertCommand.add("java");
     mertCommand.add("-mx" + memory);
-    mertCommand.add("-Djava.library.path=" + libraryPath);
+    if (libraryPath != null) {
+      mertCommand.add("-Djava.library.path=" + libraryPath);
+    }
     mertCommand.add(MERT_CLASS);
     // no idea what this actually is, just go with it
     mertCommand.addAll(Arrays.asList("-N -o cer -t 1 -p 5 -s".split(" ")));
@@ -351,18 +354,22 @@ public class PhrasalMert {
   public static void main(String[] args) 
     throws IOException, InterruptedException, ClassNotFoundException
   {
-    if (args.length != 6) {
+    if (args.length != 6 && args.length != 5) {
       System.err.println("Expected args in the format:");
-      System.err.println("  mem input reference metric config librarypath");
+      System.err.println("  mem input reference metric config [librarypath]");
       System.exit(2);
     }
     
+    // TODO: use properties instead of a set number of command args
     String memory = args[0];
     String inputFilename = args[1];
     String referenceFile = args[2];
     String metric = args[3];
     String phrasalConfigFilename = args[4];
-    String libraryPath = args[5];
+    String libraryPath = null;
+    if (args.length == 6) {
+      libraryPath = args[5];
+    }
     ConfigFile configFile = readConfigFile(phrasalConfigFilename);
 
     String nbestSize = DEFAULT_NBEST_SIZE;
@@ -374,6 +381,8 @@ public class PhrasalMert {
         }
       }
     }
+
+    
 
     int iteration = 0;
     while (true) {
