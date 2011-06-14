@@ -294,7 +294,7 @@ public class PhrasalMert {
       phrasalCommand.add("-Djava.library.path=" + libraryPath);
     }
     phrasalCommand.add(PHRASAL_CLASS);
-    phrasalCommand.add("-configFile"); 
+    phrasalCommand.add("-config-file"); 
     phrasalCommand.add(getConfigName(iteration));
     return phrasalCommand;
   }
@@ -337,8 +337,11 @@ public class PhrasalMert {
     }
     mertCommand.add(wtsString.toString());
     mertCommand.add(metric);
-    mertCommand.add(getCombinedNBestName(iteration));
-    mertCommand.add(getNBestName(iteration));
+    // TODO: use this once we build the combined list
+    //mertCommand.add(getCombinedNBestName(iteration));
+    mertCommand.add(getNBestBaseName(iteration));
+    // TODO: gzip the nbest list?
+    mertCommand.add(getNBestBaseName(iteration));
     mertCommand.add(wtsString.toString());
     mertCommand.add(referenceFile);
     mertCommand.add(getWeightsName(iteration + 1));
@@ -402,8 +405,15 @@ public class PhrasalMert {
       configFile.updateSection(NBEST_SECTION, getNBestBaseName(iteration),
                                nbestSize);
       if (weightsName == null) {
-        // will read from the .ini file...
-        configFile.removeSection(WEIGHTS_SECTION);
+        if (iteration == 0) {
+          throw new IllegalArgumentException("Initial weights file " +
+                                             getWeightsName(iteration) +
+                                             " expected");
+        } else {
+          throw new AssertionError("Expected mert to produce weights " +
+                                   getWeightsName(iteration) + " or " +
+                                   getBinWeightsName(iteration));
+        }
       } else {
         configFile.updateSection(WEIGHTS_SECTION, weightsName);
       }
