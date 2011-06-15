@@ -114,6 +114,8 @@ public class PhrasalMertTest extends TestCase {
     String[] lsCommand = {"ls", iniFile.getAbsolutePath(), 
                           copyFile.getAbsolutePath()};
     System.out.println(Arrays.asList(lsCommand));
+    System.out.println(" > " + outFile.getAbsolutePath() + 
+                       " 2> " + errFile.getAbsolutePath());
     PhrasalMert.runCommand(lsCommand, null, outFile.getAbsolutePath(),
                            errFile.getAbsolutePath(), false);
     String expectedError = ("ls: " + copyFile.getAbsolutePath() + 
