@@ -505,5 +505,6 @@ public class PhrasalMert {
 
       ++iteration;
     }
+    System.out.println("Done after " + (iteration + 1) + " iterations.");
   }
 }
