@@ -16,6 +16,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,6 +162,39 @@ public class PhrasalMert {
     return new ConfigFile(sections);
   }
 
+  public static void mergeIntegerIndexedFiles(String outputFile,
+                                              String ... inputFiles) 
+    throws IOException
+  {
+    List<String> lines = new ArrayList<String>();
+    for (String inputFile : inputFiles) {
+      // TODO: do we care about input encoding?
+      BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (line.trim().equals(""))
+          continue;
+        lines.add(line);
+      }
+    }
+    Collections.sort(lines, new Comparator<String>() {
+        public int compare(String l1, String l2) {
+          String[] pieces1 = l1.trim().split("\\s+");
+          String[] pieces2 = l2.trim().split("\\s+");
+          return Integer.valueOf(pieces1[0]) - Integer.valueOf(pieces2[0]);
+        }
+      });
+    FileWriter fout = new FileWriter(outputFile);
+    BufferedWriter writer = new BufferedWriter(fout);
+    for (String line : lines) {
+      writer.write(line, 0, line.length());
+      writer.newLine();
+    }
+    writer.flush();
+    fout.close();
+  }
+                                              
+
   /**
    * Takes all of the data available in input and redirects it to output.
    */
@@ -286,16 +321,20 @@ public class PhrasalMert {
     return null;
   }
 
-  public static String getNBestBaseName(int iteration) {
+  public static String getBaseNBestName(int iteration) {
     return new String("phrasal." + iteration + ".nbest");
   }
 
-  public static String getNBestName(int iteration) {
-    return new String("phrasal." + iteration + ".nbest.gz");
+  public static String getCombinedNBestName(int iteration) {
+    return new String("phrasal." + iteration + ".combined.nbest");
   }
 
-  public static String getCombinedNBestName(int iteration) {
-    return new String("phrasal." + iteration + ".combined.nbest.gz");
+  public static String getNBestName(int iteration) {
+    if (iteration == 0) {
+      return getBaseNBestName(iteration);
+    } else {
+      return getCombinedNBestName(iteration);
+    }
   }
 
   public static String getMertLogName(int iteration) {
@@ -363,11 +402,9 @@ public class PhrasalMert {
     }
     mertCommand.add(wtsString.toString());
     mertCommand.add(metric);
-    // TODO: use this once we build the combined list
-    //mertCommand.add(getCombinedNBestName(iteration));
-    mertCommand.add(getNBestBaseName(iteration));
     // TODO: gzip the nbest list?
-    mertCommand.add(getNBestBaseName(iteration));
+    mertCommand.add(getNBestName(iteration));
+    mertCommand.add(getNBestName(iteration));
     mertCommand.add(wtsString.toString());
     mertCommand.add(referenceFile);
     mertCommand.add(getWeightsName(iteration + 1));
@@ -428,7 +465,7 @@ public class PhrasalMert {
       // update the 
       String configName = getConfigName(iteration);
       String weightsName = findWeightsFilename(iteration);
-      configFile.updateSection(NBEST_SECTION, getNBestBaseName(iteration),
+      configFile.updateSection(NBEST_SECTION, getBaseNBestName(iteration),
                                nbestSize);
       if (weightsName == null) {
         if (iteration == 0) {
@@ -448,6 +485,11 @@ public class PhrasalMert {
       runPhrasalCommand(inputFilename, memory, libraryPath, iteration);
 
       // TODO: build combined nbest list here
+      if (iteration > 0) {
+        mergeIntegerIndexedFiles(getNBestName(iteration),
+                                 getNBestName(iteration - 1),
+                                 getBaseNBestName(iteration));
+      }
 
       runMertCommand(referenceFile, memory, metric, libraryPath, iteration);
       

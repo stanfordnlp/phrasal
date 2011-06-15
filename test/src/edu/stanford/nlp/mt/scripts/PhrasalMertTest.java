@@ -164,4 +164,35 @@ public class PhrasalMertTest extends TestCase {
     config.outputFile(sout);
     assertEquals(extraSectionText.trim(), sout.toString().trim());
   }
+
+  public void testMergeNBest() 
+    throws IOException
+  {
+    File f1 = File.createTempFile("PhrassalMertTest.", ".txt");
+    FileWriter fout = new FileWriter(f1);
+    BufferedWriter bout = new BufferedWriter(fout);
+    bout.write("0 aaaa\n0 bbbb\n0 cccc\n1 dddd\n2 eeee\n2 ffff\n");
+    bout.flush();
+    fout.close();
+
+    File f2 = File.createTempFile("PhrassalMertTest.", ".txt");
+    fout = new FileWriter(f2);
+    bout = new BufferedWriter(fout);
+    bout.write("0 gggg\n1 hhhh\n2 iiii\n3 jjjj\n");
+    bout.flush();
+    fout.close();
+
+    File f3 = File.createTempFile("PhrassalMertTest.", ".txt");
+    PhrasalMert.mergeIntegerIndexedFiles(f3.getAbsolutePath(),
+                                         f1.getAbsolutePath(),
+                                         f2.getAbsolutePath());
+
+    System.out.println(f1);
+    System.out.println(f2);
+    System.out.println(f3);
+
+    compareFileContents(f3,
+                        "0 aaaa\n0 bbbb\n0 cccc\n0 gggg\n1 dddd\n1 hhhh\n" + 
+                        "2 eeee\n2 ffff\n2 iiii\n3 jjjj");
+  }
 }
