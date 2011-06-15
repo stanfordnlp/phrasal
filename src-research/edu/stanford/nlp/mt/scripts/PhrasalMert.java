@@ -177,6 +177,25 @@ public class PhrasalMert {
     bufOutput.flush();
   }
 
+  static public class StreamConnectorThread extends Thread {
+    public StreamConnectorThread(InputStream input, OutputStream output) {
+      super();
+      this.input = input;
+      this.output = output;
+    }
+
+    final InputStream input;
+    final OutputStream output;
+
+    public void run() {
+      try {
+        connectStreams(input, output);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
   /**
    * Runs the given command.  For each of the filenames stdin, stdout,
    * and stderr that are specified, pipes that file to or from the
@@ -193,6 +212,18 @@ public class PhrasalMert {
     Process proc = procBuilder.start();
     //Process proc = Runtime.getRuntime().exec(command);
 
+    OutputStream stdoutStream = ((stdoutFile == null) ? System.out :
+                                 new FileOutputStream(stdoutFile));
+    Thread stdoutThread = new StreamConnectorThread(proc.getInputStream(), 
+                                                    stdoutStream);
+    stdoutThread.start();
+
+    OutputStream stderrStream = ((stderrFile == null) ? System.err :
+                                 new FileOutputStream(stderrFile));
+    Thread stderrThread = new StreamConnectorThread(proc.getErrorStream(), 
+                                                    stderrStream);
+    stderrThread.start();
+
     if (stdinFile != null) {
       OutputStream procStdin = proc.getOutputStream();
       FileInputStream fin = new FileInputStream(stdinFile);
@@ -202,18 +233,13 @@ public class PhrasalMert {
 
     proc.waitFor();
 
+    stdoutThread.join();
+    stderrThread.join();
     if (stdoutFile != null) {
-      InputStream procStdout = proc.getInputStream();
-      FileOutputStream fout = new FileOutputStream(stdoutFile);
-      connectStreams(procStdout, fout);
-      fout.close();
+      stdoutStream.close();
     }
-
     if (stderrFile != null) {
-      InputStream procStderr = proc.getErrorStream();
-      FileOutputStream fout = new FileOutputStream(stderrFile);
-      connectStreams(procStderr, fout);
-      fout.close();
+      stderrStream.close();
     }
   }
 
