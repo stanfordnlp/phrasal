@@ -3,15 +3,18 @@ package edu.stanford.nlp.mt.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.logging.Logger;
 
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.LeftChildrenNodeAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
+import edu.stanford.nlp.util.Pair;
 
 public class DAGFeatureExtractor {
 
@@ -89,7 +92,8 @@ public class DAGFeatureExtractor {
     CoreLabel s1 = (CoreLabel) stackTopN[0];
     CoreLabel s2 = (stackSize > 1)? (CoreLabel) stackTopN[1] : null;
     CoreLabel s3 = (stackSize > 2)? (CoreLabel) stackTopN[2] : null;
-    Object[] queueNWords = struc.getInput().peekN(offset+2);
+    int peekLen = inputQueue.size() - s1.get(IndexAnnotation.class) + 2;
+    Object[] queueNWords = struc.getInput().peekN(peekLen);
     CoreLabel q1 = (queueNWords.length > 0)? (CoreLabel) queueNWords[offset-1] : null;
     CoreLabel q2 = (queueNWords.length > 1)? (CoreLabel) queueNWords[offset] : null;
     CoreLabel q3 = (queueNWords.length > 2)? (CoreLabel) queueNWords[offset+1] : null;
@@ -117,12 +121,11 @@ public class DAGFeatureExtractor {
 
     String preActionStr = "##"+struc.getActionTrace().peek().toString();
 
-    List<CoreLabel> s1Children = null;
-    List<CoreLabel> s2Children = null;
+    SortedSet<Pair<CoreLabel, String>> s1Children = null;
+    SortedSet<Pair<CoreLabel, String>> s2Children = null;
 
-    // TODO: linear scan???
-    //    if(s1!=null && struc.getDependencyGraph().vertexSet().contains(s1)) s1Children = struc.getDependencyGraph().getChildList(s1);
-    //    if(s2!=null && struc.getDependencyGraph().vertexSet().contains(s2)) s2Children = struc.getDependencyGraph().getChildList(s2);
+    if(s1 != null) s1Children = s1.get(LeftChildrenNodeAnnotation.class);
+    if(s2 != null) s2Children = s2.get(LeftChildrenNodeAnnotation.class);
 
     if(usePreAction) features.add(Arrays.asList(preActionStr, "preAct"));
 
@@ -174,51 +177,50 @@ public class DAGFeatureExtractor {
       String childrenSize = "#"+s2Children.size();
       features.add(Arrays.asList(childrenSize, "S2ChildNum"));
     }
-    // TODO: FIX
-    //    if(s1Children!=null) {
-    //      int s1ChildNum = s1Children.size();
-    //      if(useS1LeftChildPOS && s1ChildNum > 0) {
-    //        String leftChildPOS = s1Children.get(0).get(PartOfSpeechAnnotation.class);
-    //        features.add(Arrays.asList(leftChildPOS, "S1LeftChildPOS"));
-    //      }
-    //      if(useS1LeftChildRel && s1ChildNum > 0) {
-    //        String leftChildRel = struc.getDependencyGraph().reln(s1, s1Children.get(0)).toString();
-    //        features.add(Arrays.asList(leftChildRel, "S1LeftChildRel"));
-    //      }
-    //      if(useS1RightChildPOS && s1ChildNum>1) {
-    //        String rightChildPOS = s1Children.get(s1ChildNum-1).get(PartOfSpeechAnnotation.class);
-    //        features.add(Arrays.asList(rightChildPOS, "S1RightChildPOS"));
-    //      }
-    //      if(useS1RightChildRel && s1ChildNum>1) {
-    //        String rightChildRel = struc.getDependencyGraph().reln(s1, s1Children.get(s1ChildNum-1)).toString();
-    //        features.add(Arrays.asList(rightChildRel, "S1RightChildRel"));
-    //      }
-    //    }
-    //    if(s2Children!=null) {
-    //      int s2ChildNum = s2Children.size();
-    //      if(useS2LeftChildPOS && s2ChildNum > 0) {
-    //        String leftChildPOS = s2Children.get(0).get(PartOfSpeechAnnotation.class);
-    //        features.add(Arrays.asList(leftChildPOS, "S2LeftChildPOS"));
-    //      }
-    //      if(useS2LeftChildRel && s2ChildNum > 0) {
-    //        String leftChildRel = struc.getDependencyGraph().reln(s2, s2Children.get(0)).toString();
-    //        features.add(Arrays.asList(leftChildRel, "S2LeftChildRel"));
-    //      }
-    //      if(useS2RightChildPOS && s2ChildNum>1) {
-    //        String rightChildPOS = s2Children.get(s2ChildNum-1).get(PartOfSpeechAnnotation.class);
-    //        features.add(Arrays.asList(rightChildPOS, "S2RightChildPOS"));
-    //      }
-    //      if(useS2RightChildRel && s2ChildNum>1) {
-    //        String rightChildRel = struc.getDependencyGraph().reln(s2, s2Children.get(s2ChildNum-1)).toString();
-    //        features.add(Arrays.asList(rightChildRel, "S2RightChildRel"));
-    //      }
-    //    }
 
-    if(useS1PreviousTokenPOS && s1!=null) {
-      if(queueNWords.length > 1) {
-        String preTokenPOS = s1.get(PartOfSpeechAnnotation.class);
-        features.add(Arrays.asList(preTokenPOS, "S1PreTokenPOS"));
+    if(s1Children!=null) {
+      int s1ChildNum = s1Children.size();
+      if(useS1LeftChildPOS && s1ChildNum > 0) {
+        String leftChildPOS = s1Children.first().first().get(PartOfSpeechAnnotation.class);
+        features.add(Arrays.asList(leftChildPOS, "S1LeftChildPOS"));
       }
+      if(useS1LeftChildRel && s1ChildNum > 0) {
+        String leftChildRel = s1Children.first().second();
+        features.add(Arrays.asList(leftChildRel, "S1LeftChildRel"));
+      }
+      if(useS1RightChildPOS && s1ChildNum>1) {
+        String rightChildPOS = s1Children.last().first().get(PartOfSpeechAnnotation.class);
+        features.add(Arrays.asList(rightChildPOS, "S1RightChildPOS"));
+      }
+      if(useS1RightChildRel && s1ChildNum>1) {
+        String rightChildRel = s1Children.last().second();
+        features.add(Arrays.asList(rightChildRel, "S1RightChildRel"));
+      }
+    }
+    if(s2Children!=null) {
+      int s2ChildNum = s2Children.size();
+      if(useS2LeftChildPOS && s2ChildNum > 0) {
+        String leftChildPOS = s2Children.first().first().get(PartOfSpeechAnnotation.class);
+        features.add(Arrays.asList(leftChildPOS, "S2LeftChildPOS"));
+      }
+      if(useS2LeftChildRel && s2ChildNum > 0) {
+        String leftChildRel = s2Children.first().second();
+        features.add(Arrays.asList(leftChildRel, "S2LeftChildRel"));
+      }
+      if(useS2RightChildPOS && s2ChildNum>1) {
+        String rightChildPOS = s2Children.last().first().get(PartOfSpeechAnnotation.class);
+        features.add(Arrays.asList(rightChildPOS, "S2RightChildPOS"));
+      }
+      if(useS2RightChildRel && s2ChildNum>1) {
+        String rightChildRel = s2Children.last().second();
+        features.add(Arrays.asList(rightChildRel, "S2RightChildRel"));
+      }
+    }
+
+    if(useS1PreviousTokenPOS && s1!=null && queueNWords[peekLen-1] != null) {
+      CoreLabel sn = (CoreLabel) queueNWords[peekLen-1];
+      String preTokenPOS = sn.get(PartOfSpeechAnnotation.class);
+      features.add(Arrays.asList(preTokenPOS, "S1PreTokenPOS"));
     }
     if(useS2NextTokenPOS && s2!=null) {
       // TODO: fix this to make it more efficient

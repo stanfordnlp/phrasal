@@ -1,15 +1,20 @@
 package edu.stanford.nlp.mt.parser;
 
 import java.io.Serializable;
+import java.util.Comparator;
+import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.LeftChildrenNodeAnnotation;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.util.Pair;
 
 public class Actions {
 
-  public static enum ActionType {SHIFT, REDUCE, LEFT_ARC, RIGHT_ARC};
+  public static enum ActionType {SHIFT, REDUCE, LEFT_ARC, RIGHT_ARC}
 
   public static class Action implements Serializable{
     /**
@@ -48,6 +53,17 @@ public class Actions {
       return toString().hashCode();
     }
   }
+  public static class IndexComparator implements Comparator<Pair<CoreLabel,String>> {
+    public int compare (Pair<CoreLabel, String> l1, Pair<CoreLabel, String> l2) {
+      int idx1 = l1.first().get(IndexAnnotation.class);
+      int idx2 = l2.first().get(IndexAnnotation.class);
+      if(idx1 < idx2) return -1;
+      else if (idx1 == idx2) return 0;
+      else if (idx1 > idx2) return 1;
+      else throw new RuntimeException("Index comparator error");
+    }
+  }
+
 
   /** the word we're looking at might not be the last element in input.
    *  if offset = 2, we're using the 2nd last word.
@@ -99,6 +115,11 @@ public class Actions {
     TreeGraphNode dep = new TreeGraphNode(topStack);
     TypedDependency dependency = new TypedDependency(relation, gov, dep);
     s.dependencies.push(dependency);
+
+    if(!w.containsKey(LeftChildrenNodeAnnotation.class)) {
+      w.set(LeftChildrenNodeAnnotation.class, new TreeSet<Pair<CoreLabel, String>>(new IndexComparator()));
+    }
+    w.get(LeftChildrenNodeAnnotation.class).add(new Pair<CoreLabel, String>(topStack, relation.toString()));
   }
 
   private static void rightArc(Structure s, GrammaticalRelation relation, int offset) {
