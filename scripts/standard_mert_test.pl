@@ -8,8 +8,8 @@ $date_tag=`date +%Y-%m-%d`; chomp $date_tag;
 $proc_tag=$ARGV[0];
 shift @ARGV;
 
-`rm -rf /u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag`;
-`(cd  /u/nlp/data/mt_test/mert/; $ENV{"JAVANLP_HOME"}/projects/mt/scripts/phrasal-mert.pl --nbest=500 --working-dir=phrasal-mert.$proc_tag dev2006.fr.lowercase.h10 dev2006.en.lowercase.h10 bleu base.ini > phrasal-mert.$proc_tag.$date_tag.log 2>&1)`;
+#`rm -rf /u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag`;
+#`(cd  /u/nlp/data/mt_test/mert/; $ENV{"JAVANLP_HOME"}/projects/mt/scripts/phrasal-mert.pl --nbest=500 --working-dir=phrasal-mert.$proc_tag dev2006.fr.lowercase.h10 dev2006.en.lowercase.h10 bleu base.ini > phrasal-mert.$proc_tag.$date_tag.log 2>&1)`;
 #`touch phrasal-mert.$proc_tag.$date_tag.log`;
 $total_time = time - $start_time;
 if (compare("/u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag/phrasal.10.trans", "/u/nlp/data/mt_test/mert/expected-pmert-dir/phrasal.10.trans") == 0) {
@@ -20,6 +20,13 @@ if (compare("/u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag/phrasal.10.trans", 
   $exitStatus = -1;
 }
 
+
+$emails = join ', ', @ARGV;
+if ($emails ne "") {
+  print "Emailing: $emails\n";
+} else {
+  print "No alert e-mail addresses specified\n";
+}
 $log = `cat /u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag.$date_tag.log`;
 $from_addr = "javanlp-mt-no-reply\@mailman.stanford.edu";
 foreach $emailAddr (@ARGV) {
@@ -33,9 +40,10 @@ foreach $emailAddr (@ARGV) {
             "The $data_tag MT daily integration test FAILED!\n\n";
   }
   $body .= "Log File:\n\n$log\n";
-  # print "| mail -s \"$subject\" $emailAddr -- -f $from_addr < $body";
-  open(fh, "| mail -s \"$subject\" $emailAddr -- -f $from_addr");
+  print "$body | mail -s \"$subject\" $emailAddr -- -f $from_addr";
+  open(fh, "| mail -s \"$subject\" $emailAddr -- -f $from_addr > /u/nlp/data/mt_test/mert/e-mail.$proc_tag.$date_tag.log 2>&1");
   print fh $body;
+  
   close(fh); 
 }
 
