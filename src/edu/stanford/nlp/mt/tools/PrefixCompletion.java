@@ -92,6 +92,7 @@ public class PrefixCompletion extends AbstractHandler {
      System.err.printf("Source: %s Prefix: %s\n", preq.source, preq.prefix);
      try {
        List<Completion> completions = getCompletions(preq.source, preq.prefix);
+       System.err.printf("Completion count: %d", completions.size());
        Type t = new TypeToken<List<Completion>>() {}.getType();
        String jsonOut = gson.toJson(completions, t);
        
@@ -151,7 +152,9 @@ public class PrefixCompletion extends AbstractHandler {
       }
     });
     System.err.println(scoredOpts);
-    System.err.println("Best guess: " + scoredOpts.get(0));
+    if (scoredOpts.size() >= 1) {
+      System.err.println("Best guess: " + scoredOpts.get(0));
+    }
     return scoredOpts;    
   }
   
