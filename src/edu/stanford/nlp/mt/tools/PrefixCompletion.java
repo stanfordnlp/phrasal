@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -90,8 +91,8 @@ public class PrefixCompletion extends AbstractHandler {
      }
      System.err.printf("Source: %s Prefix: %s\n", preq.source, preq.prefix);
      try {
-       List<Pair<Double, TranslationOption<IString>>> completions = getCompletions(preq.source, preq.prefix);
-       Type t = new TypeToken<List<Pair<Double, TranslationOption<IString>>>>() {}.getType();
+       List<Completion> completions = getCompletions(preq.source, preq.prefix);
+       Type t = new TypeToken<List<Completion>>() {}.getType();
        String jsonOut = gson.toJson(completions, t);
        
        response.setContentType("application/json;charset=utf-8");     
@@ -113,7 +114,7 @@ public class PrefixCompletion extends AbstractHandler {
     this.phrTableWts = Arrays.copyOf(phrTableWts, phrTableWts.length);
   }
   
-  List<Pair<Double, TranslationOption<IString>>> getCompletions(String sourceStr, String prefixStr) {
+  List<Completion> getCompletions(String sourceStr, String prefixStr) {
     RawSequence<IString> source = new RawSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
     RawSequence<IString> prefix = new RawSequence<IString>(IStrings.toIStringArray(prefixStr.split("\\s+")));
     List<TranslationOption<IString>> possibleCompletions = new LinkedList<TranslationOption<IString>>();
@@ -125,7 +126,7 @@ public class PrefixCompletion extends AbstractHandler {
         }
       }
     }        
-    List<Pair<Double, TranslationOption<IString>>> scoredOpts = new ArrayList<Pair<Double, TranslationOption<IString>>>();
+    List<Completion> scoredOpts = new ArrayList<Completion>();
     for (TranslationOption<IString> opt : possibleCompletions) {
       if (opt.translation.size() == 1 && !opt.translation.get(0).toString().matches("\\w") ) {
         continue;
@@ -138,10 +139,19 @@ public class PrefixCompletion extends AbstractHandler {
         System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
         modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
       }
-      scoredOpts.add(new Pair<Double,TranslationOption<IString>>(modelScore, opt));        
+      Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), modelScore);
+      scoredOpts.add(completion);        
     }
-    Collections.sort(scoredOpts);
+    Collections.sort(scoredOpts, new Comparator<Completion>() {
+      public int compare(Completion o1, Completion o2) {
+        return (int)Math.signum(o2.score-o1.score); 
+      }
+      public boolean equals(Object obj) {
+        return obj == this;
+      }
+    });
     System.err.println(scoredOpts);
+    System.err.println("Best guess: " + scoredOpts.get(0));
     return scoredOpts;    
   }
   
@@ -183,5 +193,21 @@ public class PrefixCompletion extends AbstractHandler {
       
     }
     */
+  }
+}
+
+class Completion {
+  public final String sourcePhrase;
+  public final String targetPhrase;
+  public final double score;
+  
+  public Completion(String sourcePhrase, String targetPhrase, double score) {
+    this.sourcePhrase = sourcePhrase;
+    this.targetPhrase = targetPhrase;
+    this.score = score;
+  }
+  
+  public String toString() {
+    return String.format("Source material: %s, Translation: %s, Model Score: %e", sourcePhrase,targetPhrase,score);
   }
 }
