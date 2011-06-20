@@ -15,8 +15,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 
-//import java.io.BufferedReader;
-//import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,6 +43,7 @@ import edu.stanford.nlp.util.Pair;
  */
 
 public class PrefixCompletion extends AbstractHandler {
+  public static final String DEFAULT_WEB_PAGE = "edu/stanford/nlp/mt/resources/prefix_default.html";
   LanguageModel<IString> lm;
   FlatPhraseTable<String> phr;
   double lmWt;
@@ -68,11 +69,24 @@ public class PrefixCompletion extends AbstractHandler {
      Gson gson = new Gson();
      if (requestJSON != null) {
        preq = gson.fromJson(requestJSON, PrefixRequest.class);
-     } else {
+     } else if (baseRequest.getParameter(PREFIX_GET_NAME) != null &&
+                baseRequest.getParameter(SOURCE_GET_NAME) != null) {
        // try to use get parameters
        String prefix = baseRequest.getParameter(PREFIX_GET_NAME);
        String source = baseRequest.getParameter(SOURCE_GET_NAME);
        preq = new PrefixRequest(prefix, source);
+     } else {
+       BufferedReader reader = new BufferedReader(new InputStreamReader(
+        ClassLoader.getSystemClassLoader()
+        .getResource(DEFAULT_WEB_PAGE).openStream()));
+       response.setContentType("text/html;charset=utf-8");     
+       response.setStatus(HttpServletResponse.SC_OK);
+       baseRequest.setHandled(true);
+       for (String line = reader.readLine(); line != null; 
+            line = reader.readLine()) {
+          response.getWriter().println(line);
+       }
+       return;
      }
      System.err.printf("Source: %s Prefix: %s\n", preq.source, preq.prefix);
      try {

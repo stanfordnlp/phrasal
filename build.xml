@@ -78,16 +78,16 @@ includeantruntime="false">
     </javac>
     <!-- Copy application resources -->
     <copy  todir="${build.path}">
-      <fileset dir="${source.path}" excludes="**/*.java,**/*.html"/>
+      <fileset dir="${source.path}" excludes="**/*.java"/>
     </copy>
     <copy  todir="${build.path}">
-      <fileset dir="${source-research.path}" excludes="**/*.java,**/*.html"/>
+      <fileset dir="${source-research.path}" excludes="**/*.java"/>
     </copy>
     <copy todir="${build.path}">
-      <fileset dir="${source-external.path}" excludes="**/*.java,**/*.html"/>
+      <fileset dir="${source-external.path}" excludes="**/*.java"/>
     </copy>
     <copy todir="${build.path}">
-      <fileset dir="${source-exploratory.path}" excludes="**/*.java,**/*.html"/>
+      <fileset dir="${source-exploratory.path}" excludes="**/*.java"/>
     </copy>
   </target>
  
