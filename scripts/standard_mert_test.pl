@@ -40,11 +40,12 @@ foreach $emailAddr (@ARGV) {
             "The $data_tag MT daily integration test FAILED!\n\n";
   }
   $body .= "Log File:\n\n$log\n";
-  print "$body | mail -s \"$subject\" $emailAddr -- -f $from_addr";
-  open(fh, "| mail -s \"$subject\" $emailAddr -- -f $from_addr > /u/nlp/data/mt_test/mert/e-mail.$proc_tag.$date_tag.log 2>&1");
+  open(fh, "/u/nlp/data/mt_test/mert/email.$date_tag.body");
   print fh $body;
-  
-  close(fh); 
+  close(fh);
+
+  print "ssh jacob 'mail -s \"$subject\" $emailAddr -- -f $from_addr < body'";
+  `ssh jacob 'mail -s \"$subject\" $emailAddr -- -f $from_addr < /u/nlp/data/mt_test/mert/email.$date_tag.body > /u/nlp/data/mt_test/mert/e-mail.$proc_tag.$date_tag.log 2>&1'`;
 }
 
 exit $exitStatus;
