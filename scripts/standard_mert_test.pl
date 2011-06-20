@@ -40,7 +40,7 @@ foreach $emailAddr (@ARGV) {
             "The $data_tag MT daily integration test FAILED!\n\n";
   }
   $body .= "Log File:\n\n$log\n";
-  open(fh, "/u/nlp/data/mt_test/mert/email.$date_tag.body");
+  open(fh, ">/u/nlp/data/mt_test/mert/email.$date_tag.body");
   print fh $body;
   close(fh);
 
