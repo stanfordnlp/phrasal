@@ -48,6 +48,10 @@
         <include name="*.jar"/>
         <exclude name="javanlp*"/>
       </fileset>
+      <fileset dir="${basedir}/lib-research">
+        <include name="*.jar"/>
+        <exclude name="javanlp*"/>
+      </fileset>
     </path>
   </target>
   
