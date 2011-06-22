@@ -6,7 +6,7 @@
 #PBS -o /u/nlp/data/mt_test/mert/dailytest.log
 #PBS -m a
 #PBS -q verylong
-
+EMAIL_LIST=$EMAIL_LIST $*
 TEST_DIR=/u/nlp/data/mt_test/mert/
 
 cd /u/nlp/data/mt_test/mert/
@@ -26,4 +26,5 @@ done
 
 echo classpath $CLASSPATH
 echo path $PATH
-standard_mert_test.pl dailytest cerd@stanford.edu stanford-mt@lists.stanford.edu
+#standard_mert_test.pl dailytest cerd@stanford.edu stanford-mt@lists.stanford.edu
+standard_mert_test.pl dailytest $EMAIL_LIST 
