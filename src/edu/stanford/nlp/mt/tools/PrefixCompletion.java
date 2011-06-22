@@ -34,7 +34,6 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.TranslationOption;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Prefix completion prototype
@@ -158,26 +157,40 @@ public class PrefixCompletion extends AbstractHandler {
     return scoredOpts;    
   }
   
+  public static void usage() {
+    System.err.println("Usage:\n\tjava ...PrefixCompletion -simple (lm) (phrase table) (lm wt) (phr table wt1) (phr table wt2) ...");
+    System.err.println("\nOr:\n\tjava ...PrefixCompletion -phrasal phrasal_ini");
+  }
+  
   public static void main(String[] args) throws Exception {
+    PrefixCompletion pc = null;
+    
     if (args.length < 2) {
-      System.err.println("Usage:\n\tjava ...PrefixCompletion (lm) (phrase table) (lm wt) (phr table wt1) (phr table wt2) ...");
+      usage();
       System.exit(-1);
-    }
-    double lmWt = 1;
-    double phrTableWts[] = new double[0]; 
-    
-    if (args.length > 2) {
-      lmWt = Double.parseDouble(args[2]);
-    }
-    if (args.length > 3) {
-      phrTableWts = new double[args.length-3];
-      for (int i = 3; i < args.length; i++) {
-        phrTableWts[i-3] = Double.parseDouble(args[i]);
+    } else if ("-simple".equals(args[0])) {  
+      double lmWt = 1;
+      double phrTableWts[] = new double[0]; 
+      
+      if (args.length > 3) {
+        lmWt = Double.parseDouble(args[3]);
       }
-    }
-    
-    
-    PrefixCompletion pc = new PrefixCompletion(args[0],args[1], lmWt, phrTableWts);       
+      if (args.length > 4) {
+        phrTableWts = new double[args.length-4];
+        for (int i = 4; i < args.length; i++) {
+          phrTableWts[i-4] = Double.parseDouble(args[i]);
+        }
+      }      
+      pc = new PrefixCompletion(args[1],args[2], lmWt, phrTableWts);  
+    } else if ("-phrasal".equals(args[0])) {
+        
+    } else {
+      usage();
+      System.exit(-1);
+    } 
+  
+        
+          
     Server server = new Server(8080);
     server.setHandler(pc);
     server.start();
