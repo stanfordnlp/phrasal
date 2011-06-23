@@ -19,6 +19,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Hypothesis<TK, FV>> filter;
 
+  
   @Override
   abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign,
       int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
@@ -35,6 +36,14 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     scorer = builder.scorer;
     heuristic = builder.heuristic;
     filter = builder.filter;
+  }
+
+  protected AbstractInferer(AbstractInferer<TK, FV> inferer) {
+    featurizer = inferer.featurizer;
+    phraseGenerator = inferer.phraseGenerator;
+    scorer = inferer.scorer;
+    heuristic = inferer.heuristic;
+    filter = inferer.filter;
   }
 
   /**

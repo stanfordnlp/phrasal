@@ -38,12 +38,10 @@ import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.*;
-import edu.stanford.nlp.mt.tools.PrefixTagger;
 import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
@@ -186,7 +184,7 @@ public class Phrasal {
 
   static List<String> gapOpts = null;
 
-  List<Inferer<IString, String>> inferers;
+  public List<Inferer<IString, String>> inferers;
   // Inferer<IString, String> refInferer;
   PhraseGenerator<IString> phraseGenerator;
 
@@ -233,7 +231,7 @@ public class Phrasal {
     configToLearningTarget.put("reference", LearningTarget.REFERENCE);
   }
 
-  static void initStaticMembers(Map<String, List<String>> config) {
+  public static void initStaticMembers(Map<String, List<String>> config) {
 
     if (config.containsKey(ISTRING_VOC_OPT))
       IString.load(config.get(ISTRING_VOC_OPT).get(0));
@@ -265,10 +263,15 @@ public class Phrasal {
       recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
   }
 
-  static Map<String, List<String>> readConfig(String filename)
+  static public Map<String, List<String>> readConfig(String filename)
       throws IOException {
     Map<String, List<String>> config = new HashMap<String, List<String>>();
-    LineNumberReader reader = new LineNumberReader(new FileReader(filename));
+    LineNumberReader reader;
+    try {
+      reader = new LineNumberReader(new FileReader(filename));
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(String.format("Can't open configuration file %s\n", filename));
+    }
     for (String line; (line = reader.readLine()) != null;) {
       if (line.matches("^\\s*$"))
         continue;

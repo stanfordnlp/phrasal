@@ -43,7 +43,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
 	 * 
 	 */
   public EnumeratedConstrainedOutputSpace(
-      Collection<Sequence<TK>> allowableSequences, int longestPhrase) {
+      Collection<? extends Sequence<TK>> allowableSequences, int longestPhrase) {
     this.allowableSequences = new ArrayList<Sequence<TK>>(allowableSequences);
     this.longestPhrase = longestPhrase;
   }

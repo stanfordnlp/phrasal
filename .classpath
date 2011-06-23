@@ -19,9 +19,29 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
 	<classpathentry kind="lib" path="/JavaNLP-core/lib/malt.jar"/>
 	<classpathentry kind="lib" path="/JavaNLP-core/lib/commons-math-2.1.jar" sourcepath="/JavaNLP-core/libsrc/commons-math-2.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib/jetty-server-7.4.2.v20110526.jar"/>
 	<classpathentry kind="lib" path="lib/start.jetty-7.4.2.jar"/>
-	<classpathentry kind="lib" path="lib/jetty-util-7.4.2.v20110526.jar"/>
 	<classpathentry kind="lib" path="lib/gson-1.7.1.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-ajp-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-annotations-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-client-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-continuation-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-deploy-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-http-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-io-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jmx-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jndi-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-overlay-deployer-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-plus-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-policy-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-rewrite-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-security-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-server-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-servlet-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-servlets-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-util-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-webapp-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-websocket-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-xml-7.4.2.v20110526.jar"/>
+	<classpathentry kind="lib" path="lib-research/servlet-api-2.5.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

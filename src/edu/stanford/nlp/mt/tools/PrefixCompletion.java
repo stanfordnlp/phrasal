@@ -23,7 +23,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
@@ -31,9 +33,13 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.LanguageModels;
 import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
+import edu.stanford.nlp.mt.decoder.inferer.impl.PrefixDecoder;
+import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
 
 /**
  * Prefix completion prototype
@@ -44,6 +50,7 @@ import edu.stanford.nlp.mt.base.TranslationOption;
 
 public class PrefixCompletion extends AbstractHandler {
   public static final String DEFAULT_WEB_PAGE = "edu/stanford/nlp/mt/resources/prefix_default.html";
+  PrefixDecoder<IString,String> prefixDecoder;
   LanguageModel<IString> lm;
   FlatPhraseTable<String> phr;
   double lmWt;
@@ -114,34 +121,52 @@ public class PrefixCompletion extends AbstractHandler {
     this.phrTableWts = Arrays.copyOf(phrTableWts, phrTableWts.length);
   }
   
+  public PrefixCompletion(PrefixDecoder<IString,String> prefixDecoder) {
+    this.prefixDecoder = prefixDecoder;
+  }
+  
+  @SuppressWarnings("unchecked")
   List<Completion> getCompletions(String sourceStr, String prefixStr) {
     RawSequence<IString> source = new RawSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
     RawSequence<IString> prefix = new RawSequence<IString>(IStrings.toIStringArray(prefixStr.split("\\s+")));
-    List<TranslationOption<IString>> possibleCompletions = new LinkedList<TranslationOption<IString>>();
-    for (int i = 0; i < source.size(); i++) {      
-      for (int j = i+1; j < Math.min(phr.longestForeignPhrase()+i,source.size()); j++) {
-        List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(source.subsequence(i, j));
-        if (phraseTranslations != null) {
-           possibleCompletions.addAll(phraseTranslations);
+    
+    List<Completion> scoredOpts = new ArrayList<Completion>();
+    if (prefixDecoder != null) {
+      EnumeratedConstrainedOutputSpace<IString, String> prefixConstraints = 
+        new EnumeratedConstrainedOutputSpace<IString, String>(Arrays.asList(prefix), prefixDecoder.getPhraseGenerator().longestForeignPhrase());
+      List<RichTranslation<IString, String>> translations = prefixDecoder.nbest(source, 0, prefixConstraints, null, -1);
+      System.err.printf("n-best list: %s\n", translations);
+      for (RichTranslation<IString,String> translation : translations) {
+        scoredOpts.add(new Completion("TODO", translation.translation.toString(), translation.score));
+      }
+    } else {
+      List<TranslationOption<IString>> possibleCompletions = new LinkedList<TranslationOption<IString>>();
+      for (int i = 0; i < source.size(); i++) {      
+        for (int j = i+1; j < Math.min(phr.longestForeignPhrase()+i,source.size()); j++) {
+          List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(source.subsequence(i, j));
+          if (phraseTranslations != null) {
+             possibleCompletions.addAll(phraseTranslations);
+          }
         }
       }
-    }        
-    List<Completion> scoredOpts = new ArrayList<Completion>();
-    for (TranslationOption<IString> opt : possibleCompletions) {
-      if (opt.translation.size() == 1 && !opt.translation.get(0).toString().matches("\\w") ) {
-        continue;
-      }
-      Sequence<IString> prefixPlus = Sequences.concatenate(prefix, opt.translation);
-      double lmScore = LanguageModels.scoreSequence(lm,prefixPlus);
-      double modelScore = lmScore*lmWt;
-      System.err.printf("%s lmScore: %e\n", prefixPlus, lmScore);        
-      for (int i = 0; i < opt.scores.length; i++) {
-        System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
-        modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
-      }
-      Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), modelScore);
-      scoredOpts.add(completion);        
-    }
+      
+      for (TranslationOption<IString> opt : possibleCompletions) {
+        if (opt.translation.size() == 1 && !opt.translation.get(0).toString().matches("\\w") ) {
+          continue;
+        }
+        Sequence<IString> prefixPlus = Sequences.concatenate(prefix, opt.translation);
+        double lmScore = LanguageModels.scoreSequence(lm,prefixPlus);
+        double modelScore = lmScore*lmWt;
+        System.err.printf("%s lmScore: %e\n", prefixPlus, lmScore);        
+        for (int i = 0; i < opt.scores.length; i++) {
+          System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
+          modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
+        }
+        Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), modelScore);
+        scoredOpts.add(completion);        
+      }  
+    }            
+        
     Collections.sort(scoredOpts, new Comparator<Completion>() {
       public int compare(Completion o1, Completion o2) {
         return (int)Math.signum(o2.score-o1.score); 
@@ -175,6 +200,7 @@ public class PrefixCompletion extends AbstractHandler {
       if (args.length > 3) {
         lmWt = Double.parseDouble(args[3]);
       }
+
       if (args.length > 4) {
         phrTableWts = new double[args.length-4];
         for (int i = 4; i < args.length; i++) {
@@ -183,14 +209,20 @@ public class PrefixCompletion extends AbstractHandler {
       }      
       pc = new PrefixCompletion(args[1],args[2], lmWt, phrTableWts);  
     } else if ("-phrasal".equals(args[0])) {
-        
+      Map<String, List<String>> config = Phrasal.readConfig(args[1]);      
+      Phrasal.initStaticMembers(config);
+      Phrasal p = new Phrasal(config);
+      FlatPhraseTable.lockIndex();
+      @SuppressWarnings("rawtypes")
+      AbstractInferer infererModel = (AbstractInferer)p.inferers.get(0);
+      @SuppressWarnings("unchecked")
+      PrefixDecoder<IString,String> prefixDecoder = new PrefixDecoder<IString,String>(infererModel);      
+      pc = new PrefixCompletion(prefixDecoder);            
     } else {
       usage();
       System.exit(-1);
     } 
   
-        
-          
     Server server = new Server(8080);
     server.setHandler(pc);
     server.start();
