@@ -74,6 +74,8 @@
          optimize="${compile.optimize}"
            source="${compile.source}"
            target="${compile.target}"
+           fork="true"
+           memorymaximumsize="2g"
 includeantruntime="false">
         <classpath refid="classpath" />
       <!-- <compilerarg value="-Xmaxerrs"/>
