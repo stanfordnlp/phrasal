@@ -29,6 +29,7 @@ import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
+import edu.stanford.nlp.mt.parser.DAGFeatureExtractor.RightSideFeatures;
 import edu.stanford.nlp.parser.Parser;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -52,6 +53,8 @@ public class DepDAGParser implements Parser, Serializable {
 
   //to reduce the total number of features for training, remove features appear less than 3 times
   private static final boolean REDUCE_FEATURES = true;
+
+  private static RightSideFeatures rightFeatures;
 
   @Override
   public boolean parse(List<? extends HasWord> sentence) {
@@ -170,7 +173,7 @@ public class DepDAGParser implements Parser, Serializable {
       ActionType act, Structure s, Counter<List<String>> featureCounter, int offset){
     // if act == null, test data
     if(offset < 1) return null;
-    List<List<String>> features = DAGFeatureExtractor.extractActFeatures(s, offset);
+    List<List<String>> features = DAGFeatureExtractor.extractActFeatures(s, offset, rightFeatures);
     if(featureCounter!=null) {
       Set<List<String>> rareFeatures = new HashSet<List<String>>();
       for(List<String> feature : features) {
@@ -293,6 +296,7 @@ public class DepDAGParser implements Parser, Serializable {
 
     if(REDUCE_FEATURES) logger.fine("REDUCE_FEATURES on");
     else logger.fine("REDUCE_FEATURES off");
+    rightFeatures = new RightSideFeatures(props);
 
     // temporary for debug
 
@@ -311,13 +315,13 @@ public class DepDAGParser implements Parser, Serializable {
       List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile);
 
       logger.info("train model...");
-      DAGFeatureExtractor.printFeatureFlags(logger);
+      DAGFeatureExtractor.printFeatureFlags(logger, rightFeatures);
       Date s1 = new Date();
       parser = trainModel(trainData);
       logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
 
       if(storeTrainedModel) {
-        String defaultStore = "/scr/heeyoung/mt/mtdata/DAGparserModel.ser";
+        String defaultStore = "/scr/heeyoung/mt/mtdata/DAGparserModel_"+timeStamp+".ser";
         if(!props.containsKey("storeModel")) logger.info("no option -storeModel : trained model will be stored at "+defaultStore);
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
         IOUtils.writeObjectToFile(parser, trainedModelFile);
@@ -331,7 +335,7 @@ public class DepDAGParser implements Parser, Serializable {
       //      String defaultLoadModel = "/scr/heeyoung/mtdata/DAGparserModel.reducedFeat_mem5_dataset.ser";
 
       if(parser==null) {
-        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/DAGparserModel.ser";
+        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/DAGparserModel_"+timeStamp+".ser";
 
         if(!props.containsKey("loadModel")) logger.info("no option -loadModel : trained model will be loaded from "+defaultLoadModel);
         String trainedModelFile = props.getProperty("loadModel", defaultLoadModel);
