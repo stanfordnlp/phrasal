@@ -102,10 +102,12 @@ public class PrefixCompletion extends AbstractHandler {
        Type t = new TypeToken<List<Completion>>() {}.getType();
        String jsonOut = gson.toJson(completions, t);
        
-       response.setContentType("application/json;charset=utf-8");     
+       //response.setContentType("application/json;charset=utf-8");     
+       response.setContentType("application/x-javascript;charset=utf-8");     
        response.setStatus(HttpServletResponse.SC_OK);
        baseRequest.setHandled(true);
-       response.getWriter().println(jsonOut);
+       //response.getWriter().println("someFunc({foo: 'bar'})");
+       response.getWriter().println("someFunc("+jsonOut+");");
      } catch (Exception e) {
        response.setContentType("text/text;charset=utf-8");
        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
