@@ -11,6 +11,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import scala.collection.mutable.HashMap;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -69,11 +71,73 @@ public class PrefixCompletion extends AbstractHandler {
     }
   }
   
+  private boolean hasParameter(Request baseRequest, String paramName) {
+    String param = baseRequest.getParameter(paramName);
+    return param != null & !"".equals(param);
+  }
+  
+  private String wrapResponse(String functionName, String json) {
+    return String.format("%s(%s);",functionName,json);
+  }
+  
   public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
   {
+     String responseString = null;
+     
+     Gson gson = new Gson();
+     if (hasParameter(baseRequest, "ptmInit")) {
+       List<String> OOVs = new ArrayList<String>();
+       // TODO get OOVs
+       // for now just add some random oovs
+       String[] oovStrings = {"xyx", "qzy", "alw", "idj"};
+       for (String oov : oovStrings) {
+         OOVs.add(oov);
+       }
+       PTMOOVResponse ptmResponse = new PTMOOVResponse(OOVs);
+       Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
+       responseString = wrapResponse("ptmInitResponse", gson.toJson(ptmResponse, t));
+     } else if (hasParameter(baseRequest, "ptmOOV")) {
+       responseString = wrapResponse("ptmOOVResponse", gson.toJson(new PTMStatusOk()));       
+     } else if (hasParameter(baseRequest, "ptmPredict")) {       
+       // TODO
+       List<PTMPrediction> predictions = new ArrayList<PTMPrediction>();
+       // for now just add some random predictions
+       String[] predictionStrings = {"The", "red", "cat", "eat", "the", "blue", "ball", "and", "the", "orange", "banana"};
+       for (String pred : predictionStrings) {
+         predictions.add(new PTMPrediction("This is a prefix", pred));
+       }
+       PTMPredictionResponse ptmResponse = new PTMPredictionResponse(predictions);
+       Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
+       responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
+     } else if (hasParameter(baseRequest, "ptmUserSelection")) {
+       responseString = wrapResponse("ptmUserSelectionResponse", gson.toJson(new PTMStatusOk()));
+     } else if (hasParameter(baseRequest, "ptmDone")) {
+       responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
+     } 
+     
+     if (responseString != null) {
+       response.setContentType("application/x-javascript;charset=utf-8");     
+       response.setStatus(HttpServletResponse.SC_OK);
+       baseRequest.setHandled(true);
+       response.getWriter().println(responseString);
+     } else {
+       BufferedReader reader = new BufferedReader(new InputStreamReader(
+       ClassLoader.getSystemClassLoader()
+         .getResource(DEFAULT_WEB_PAGE).openStream()));
+       response.setContentType("text/html;charset=utf-8");     
+       response.setStatus(HttpServletResponse.SC_OK);
+       baseRequest.setHandled(true);
+       for (String line = reader.readLine(); line != null; 
+          line = reader.readLine()) {
+          response.getWriter().println(line);
+       }
+       return;
+     }
+     
+     /*
      String requestJSON = baseRequest.getParameter("requestJSON");
      PrefixRequest preq;
-     Gson gson = new Gson();
+     
      if (requestJSON != null) {
        preq = gson.fromJson(requestJSON, PrefixRequest.class);
      } else if (baseRequest.getParameter(PREFIX_GET_NAME) != null &&
@@ -114,6 +178,8 @@ public class PrefixCompletion extends AbstractHandler {
        baseRequest.setHandled(true);
        response.getWriter().println(e);
      }
+            */
+
   }
   
   public PrefixCompletion(String lmFn, String phrasetableFn, double lmWt, double[] phrTableWts) throws IOException {
@@ -259,5 +325,40 @@ class Completion {
   
   public String toString() {
     return String.format("Source material: %s, Translation: %s, Model Score: %e", sourcePhrase,targetPhrase,score);
+  }
+}
+
+class PTMStatusOk {
+  public final String status = "ok";
+}
+
+class PTMOOVResponse {
+  final List<String> OOVs;
+  public PTMOOVResponse(List<String> OOVs) {
+    this.OOVs = new ArrayList<String>(OOVs);
+  }
+}
+
+class PTMPrediction {
+  final String prefix;
+  final String completion;
+  
+  public PTMPrediction(String prefix, String completion) {
+    this.prefix = prefix;
+    this.completion = completion;
+  }
+}
+
+class PTMPredictionResponse {
+  final List<PTMPrediction> predictions;
+  public PTMPredictionResponse(List<PTMPrediction> predictions) {
+    this.predictions = new ArrayList<PTMPrediction>(predictions);
+  }
+}
+
+class PTMError {
+  public final String errorMsg;
+  public PTMError(String errorMsg) {
+    this.errorMsg = errorMsg;
   }
 }
