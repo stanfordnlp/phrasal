@@ -6,20 +6,21 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LeftChildrenNodeAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.util.Pair;
 
 public class DAGFeatureExtractor {
 
   // sk : k-th item in the stack from the top (s1, s2, ...)
-  // qk : k-th item in the queue (q1, q2, ...)
+  // qk : k-th item from the first element of queue (q1, q2, ...) q1: first item in the queue, q2: previous word of q1, q3: previous word of q2
+  // tk : k-th item in the queue (t1, t2, ...) : q1 == t1 -> don't use t1
   // flags
   private static final boolean useS1Word = true;
   private static final boolean useS1Lemma = true;
@@ -78,6 +79,27 @@ public class DAGFeatureExtractor {
   private static final boolean useS1S2POS = true;
   private static final boolean useS1S2WordPOS = true;
 
+  // temporary features for analysis - begin
+
+  private static final boolean useRightFeature = true;
+
+  private static final boolean useT2Word = true;
+  private static final boolean useT2Lemma = true;
+  private static final boolean useT2POS = true;
+  private static final boolean useT2WordPOS = true;
+
+  private static final boolean useT3Word = true;
+  private static final boolean useT3Lemma = true;
+  private static final boolean useT3POS = true;
+  private static final boolean useT3WordPOS = true;
+
+  private static final boolean useT1T2word = true;
+  private static final boolean useT1T2POS = true;
+  private static final boolean useT1T2WordPOS = true;
+
+  // temporary features for analysis - end
+
+
   // TODO : add flags for new features
 
 
@@ -118,6 +140,38 @@ public class DAGFeatureExtractor {
     String q1Lemma = (q1==null)? null : q1.get(LemmaAnnotation.class);
     String q2Lemma = (q2==null)? null : q2.get(LemmaAnnotation.class);
     String q3Lemma = (q3==null)? null : q3.get(LemmaAnnotation.class);
+
+    // temporary features for analysis - begin
+
+    if(useRightFeature){
+      CoreLabel t2 = null;
+      CoreLabel t3 = null;
+
+      if(offset > 1) {
+        t2 = (CoreLabel) queueNWords[offset-2];
+        if(offset > 2) t3 = (CoreLabel) queueNWords[offset-3];
+      }
+      String t2Word = (t2==null)? null : t2.get(TextAnnotation.class);
+      String t3Word = (t3==null)? null : t3.get(TextAnnotation.class);
+      String t2POS = (t2==null)? null : t2.get(PartOfSpeechAnnotation.class);
+      String t3POS = (t3==null)? null : t3.get(PartOfSpeechAnnotation.class);
+      String t2Lemma = (t2==null)? null : t2.get(LemmaAnnotation.class);
+      String t3Lemma = (t3==null)? null : t3.get(LemmaAnnotation.class);
+
+      if(useT2Word && t2!=null) features.add(Arrays.asList(t2Word, "T2Word"));
+      if(useT3Word && t3!=null) features.add(Arrays.asList(t3Word, "T3Word"));
+
+      if(useT2POS && t2!=null) features.add(Arrays.asList(t2POS, "T2POS"));
+      if(useT3POS && t3!=null) features.add(Arrays.asList(t3POS, "T3POS"));
+
+      if(useT2Lemma && t2!=null) features.add(Arrays.asList(t2Lemma, "T2Lemma"));
+      if(useT3Lemma && t3!=null) features.add(Arrays.asList(t3Lemma, "T3Lemma"));
+
+      if(useT1T2word && q1!=null && t2!=null) features.add(Arrays.asList(q1Word, t2Word, "T1T2Word"));
+      if(useT1T2POS && q1!=null && t2!=null) features.add(Arrays.asList(q1POS, t2POS, "T1T2POS"));
+      if(useT1T2WordPOS && q1!=null && t2!=null) features.add(Arrays.asList(q1Word, q1POS, t2Word, t2POS, "T1T2WordPOS"));
+    }
+    // temporary features for analysis - end
 
     String preActionStr = "##"+struc.getActionTrace().peek().toString();
 
