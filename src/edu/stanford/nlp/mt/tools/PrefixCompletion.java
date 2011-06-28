@@ -11,11 +11,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-import scala.collection.mutable.HashMap;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
