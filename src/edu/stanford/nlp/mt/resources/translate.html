@@ -1,0 +1,94 @@
+<html>
+<head>
+  <title>PTM Demo</title>
+  
+  <link type="text/css" href="{{ STATIC_URL }}ptm.css" rel="stylesheet" />
+  
+  <!-- jQuery/jQueryUI stuff -->
+  <link type="text/css" href="{{ STATIC_URL }}css/ui-lightness/jquery-ui-1.8.13.custom.css" rel="stylesheet" /> 
+  
+  <script type="text/javascript" src="{{ STATIC_URL }}json2.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.5.1.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-ui-1.8.13.custom.min.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}ptm.js"></script>
+
+</head>
+<body>
+
+
+<div id="container_">
+<div id="lang-select_">
+<p>PTM Demo (29 June 2011)</p>
+
+<form name="lang-form" id="lang-form_">
+<label for="src-list" class="lang-select-lbl_">Source:</label>
+<select name="src-list" id="src-list_">
+<option value="ar">Arabic</option>
+<option value="en">English</option>
+</select>
+
+<br />
+<label for="tgt-list" class="lang-select-lbl_">Target:</label>
+<select name="tgt-list" id="tgt-list_">
+<option value="ar">Arabic</option>
+<option value="en">English</option>
+</select>
+
+<br />
+<br />
+Enter Source Text:
+<br />
+<textarea name="src-input" id="src-input_">
+</textarea>
+<br />
+<input type="submit" value="Translate" name="src-input-submit" id="src-input-submit_" />
+</form>
+
+<br />
+
+<div id="ptm_">
+<label for="form-ptm-input">Enter Translation:</label>
+<form name="form-ptm-input" id="form-ptm-input_">
+<textarea name="ptm-input" id="ptm-input_">
+</textarea>
+
+<br />
+<input type="submit" value="Done!" name="ptm-input-submit" id="ptm-input-submit_" />
+</form>
+</div>
+
+</div>
+
+
+<div id="oov-input_">
+<div class="oov-pair">
+<span id="form-oov-1-src_" class="oov-src-text">Source</span>
+<form name="form-oov-1" class="form-oov">
+<input type="text" class="oov-tgt" />
+<input type="submit" value="X" />
+</form>
+</div>
+
+<div class="oov-pair">
+<span id="form-oov-2-src_" class="oov-src-text">Source</span>
+<form name="form-oov-2" class="form-oov">
+<input type="text" class="oov-tgt" />
+<input type="submit" value="X" />
+</form>
+</div>
+
+<br />
+</div>
+
+</div>
+
+
+<!-- 
+<div class="ui-widget">
+  <label for="tags">Tags: </label>
+  <input id="tags">
+</div>
+-->
+
+</body>
+</html>
