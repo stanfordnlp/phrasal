@@ -87,6 +87,10 @@ public class PrefixCompletion extends AbstractHandler {
      
      Gson gson = new Gson();
      if (hasParameter(baseRequest, "ptmInit")) {
+       PTMInitRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmInit"), PTMInitRequest.class);
+       if (DEBUG) {
+    	   System.err.println("PTMInitRequest: " + gson.toJson(ptmRequest));
+       }
        List<String> OOVs = new ArrayList<String>();
        // TODO get OOVs
        // for now just add some random oovs
@@ -98,21 +102,36 @@ public class PrefixCompletion extends AbstractHandler {
        Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
        responseString = wrapResponse("ptmInitResponse", gson.toJson(ptmResponse, t));
      } else if (hasParameter(baseRequest, "ptmOOV")) {
+       PTMOOVRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmOOV"), 
+    		   PTMOOVRequest.class);
+       if (DEBUG) {
+    	   System.err.println("PTMOOVRequest: " + gson.toJson(ptmRequest));
+       }
        responseString = wrapResponse("ptmOOVResponse", gson.toJson(new PTMStatusOk()));       
      } else if (hasParameter(baseRequest, "ptmPredict")) {       
-       // TODO
-       List<PTMPrediction> predictions = new ArrayList<PTMPrediction>();
-       // for now just add some random predictions
-       String[] predictionStrings = {"The", "red", "cat", "eat", "the", "blue", "ball", "and", "the", "orange", "banana"};
-       for (String pred : predictionStrings) {
-         predictions.add(new PTMPrediction("This is a prefix", pred));
+       PTMPredictionRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmPredict"), PTMPredictionRequest.class);
+       if (DEBUG) {
+    	   System.err.println("PTMPredictionRequest: " + gson.toJson(ptmRequest)); 
        }
-       PTMPredictionResponse ptmResponse = new PTMPredictionResponse(predictions);
+    	 // TODO
+       String prefix = ptmRequest.prefix;
+       List<String> predictions = Arrays.asList("The", "red", "cat", "eat", "the", "blue", 
+    		   "ball", "and", "the", "orange", "banana");
+       
+       PTMPredictionResponse ptmResponse = new PTMPredictionResponse(prefix, predictions);
        Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
        responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
      } else if (hasParameter(baseRequest, "ptmUserSelection")) {
+       PTMCompletionSelectionRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmUserSelection"), PTMCompletionSelectionRequest.class);
+       if (DEBUG) {
+    	   System.err.println("PTMCompletionSelectonRequest: " + gson.toJson(ptmRequest));
+       }
        responseString = wrapResponse("ptmUserSelectionResponse", gson.toJson(new PTMStatusOk()));
      } else if (hasParameter(baseRequest, "ptmDone")) {
+       PTMDoneRequest ptmRequest = gson.fromJson(request.getParameter("ptmDone"), PTMDoneRequest.class);
+       if (DEBUG) {
+    	   System.err.println("PTMDoneRequest: " + gson.toJson(ptmRequest));
+       }
        responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
      } 
      
@@ -329,6 +348,71 @@ class Completion {
   }
 }
 
+abstract class PTMBaseRequest {
+	public final String sourceLang;
+	public final String targetLang;
+	public final String source;
+	public PTMBaseRequest(String sourceLang, String targetLang, String source) {
+		this.sourceLang = sourceLang;
+		this.targetLang = targetLang;
+		this.source = source;
+	}
+}
+class PTMInitRequest extends PTMBaseRequest {
+   public PTMInitRequest(String sourceLang, String targetLang, String source) {
+	  super(sourceLang, targetLang, source);
+   }
+}
+
+
+class PTMOOVPhrasePair {
+	public final String sourcePhrase;
+	public final String targetPhrase;
+	public PTMOOVPhrasePair(String sourcePhrase, String targetPhrase) {
+	  this.sourcePhrase = sourcePhrase;
+	  this.targetPhrase = targetPhrase;
+	}
+}
+
+class PTMOOVRequest extends PTMBaseRequest {
+	final List<PTMOOVPhrasePair> OOVPhrasePairs;
+	public PTMOOVRequest(String sourceLang, String targetLang, String source, 
+			List<PTMOOVPhrasePair> OOVPhrasePairs) {
+      super(sourceLang, targetLang, source);
+      this.OOVPhrasePairs = new ArrayList<PTMOOVPhrasePair>(OOVPhrasePairs);
+	}
+}
+
+class PTMPredictionRequest extends PTMBaseRequest {
+    public final String prefix;
+	public PTMPredictionRequest(String sourceLang, String targetLang,
+			String source, String prefix) {
+		super(sourceLang, targetLang, source);
+		this.prefix = prefix;
+	}
+  	
+}
+
+class PTMCompletionSelectionRequest extends PTMBaseRequest {
+    public final String prefix;
+    public final String completion;
+	public PTMCompletionSelectionRequest(String sourceLang, String targetLang,
+			String source, String prefix, String completion) {
+		super(sourceLang, targetLang, source);
+		this.prefix = prefix;
+		this.completion = completion;
+	}
+	
+}
+
+class PTMDoneRequest extends PTMBaseRequest {
+	public final String finishedTarget;
+	public PTMDoneRequest(String sourceLang, String targetLang, String source, String finishedTarget) {
+		super(sourceLang, targetLang, source);
+		this.finishedTarget = finishedTarget;
+	}
+}
+
 class PTMStatusOk {
   public final String status = "ok";
 }
@@ -340,20 +424,12 @@ class PTMOOVResponse {
   }
 }
 
-class PTMPrediction {
-  final String prefix;
-  final String completion;
-  
-  public PTMPrediction(String prefix, String completion) {
-    this.prefix = prefix;
-    this.completion = completion;
-  }
-}
-
 class PTMPredictionResponse {
-  final List<PTMPrediction> predictions;
-  public PTMPredictionResponse(List<PTMPrediction> predictions) {
-    this.predictions = new ArrayList<PTMPrediction>(predictions);
+  final String prefix;
+  final List<String> predictions;
+  public PTMPredictionResponse(String prefix, List<String> predictions) {
+    this.prefix = prefix;
+    this.predictions = new ArrayList<String>(predictions);
   }
 }
 
