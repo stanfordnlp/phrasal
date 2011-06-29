@@ -1,0 +1,51 @@
+
+body,html 
+{
+font-family: Helvetica, Arial, sans-serif;
+margin:0;
+padding:0;
+color:#000;
+background:#FFF;
+}
+
+#container_ {
+width:50em;
+margin:0 auto;
+background:#99c;
+}
+
+#lang-select_
+{
+float: left;
+width: 37.5em;
+}
+
+#oov-input_
+{
+float: right;
+width: 12.5em;
+}
+
+
+.oov-src-txt
+{
+font-size: 50%;
+}
+
+.oov-tgt
+{
+width: 6em;
+}
+
+
+#src-input_
+{
+width: 37em;
+height: 12.5em;
+}
+
+#ptm-input_
+{
+width: 37em;
+height: 12.5em;
+}
