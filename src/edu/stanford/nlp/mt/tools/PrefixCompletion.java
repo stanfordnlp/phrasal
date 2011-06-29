@@ -91,14 +91,10 @@ public class PrefixCompletion extends AbstractHandler {
        if (DEBUG) {
     	   System.err.println("PTMInitRequest: " + gson.toJson(ptmRequest));
        }
-       List<String> OOVs = new ArrayList<String>();
-       // TODO get OOVs
-       // for now just add some random oovs
-       String[] oovStrings = {"xyx", "qzy", "alw", "idj"};
-       for (String oov : oovStrings) {
-         OOVs.add(oov);
-       }
-       PTMOOVResponse ptmResponse = new PTMOOVResponse(OOVs);
+ 
+       List<String> oovStringsList = getOOVs(ptmRequest.source);
+      
+       PTMOOVResponse ptmResponse = new PTMOOVResponse(oovStringsList);
        Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
        responseString = wrapResponse("ptmInitResponse", gson.toJson(ptmResponse, t));
      } else if (hasParameter(baseRequest, "ptmOOV")) {
@@ -113,11 +109,13 @@ public class PrefixCompletion extends AbstractHandler {
        if (DEBUG) {
     	   System.err.println("PTMPredictionRequest: " + gson.toJson(ptmRequest)); 
        }
-    	 // TODO
+   
        String prefix = ptmRequest.prefix;
-       List<String> predictions = Arrays.asList("The", "red", "cat", "eat", "the", "blue", 
-    		   "ball", "and", "the", "orange", "banana");
-       
+       List<String> predictions = new ArrayList<String>();
+       List<Completion> completions = getCompletions(ptmRequest.prefix, ptmRequest.source);
+       for (Completion c : completions) {
+    	   predictions.add(c.targetPhrase);
+       }
        PTMPredictionResponse ptmResponse = new PTMPredictionResponse(prefix, predictions);
        Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
        responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
@@ -211,6 +209,38 @@ public class PrefixCompletion extends AbstractHandler {
   
   public PrefixCompletion(PrefixDecoder<IString,String> prefixDecoder) {
     this.prefixDecoder = prefixDecoder;
+  }
+  
+  List<String> getOOVs(String sourceStr) {
+	 List<String> OOVs = new ArrayList<String>();
+	 RawSequence<IString> source = new RawSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
+	 String OOV = "";
+	 for (IString token : source) {
+		 List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(new RawSequence<IString>(new IString[]{token}));
+		 if (phraseTranslations == null || phraseTranslations.size() == 0) {
+			 if (!"".equals(OOV)) {
+				 OOV = OOV + " ";
+			 }
+			 OOV = OOV + token.toString();
+			 if (DEBUG) {
+				 System.err.printf("%s is an OOV\n", token);
+			 }
+		 } else if (!"".equals(OOV)){
+			 OOVs.add(OOV);
+			 OOV = "";
+			 if (DEBUG) {
+				 System.err.printf("Final OOV phrase %s\n", OOV);
+			 }
+		 }
+		 if (DEBUG && phraseTranslations != null) {
+			 System.err.printf("%d translations for %s\n", phraseTranslations.size(), token);
+		 }
+		 
+	 }
+     if (!"".equals(OOV)) {
+    	 OOVs.add(OOV);
+     }
+	 return OOVs;
   }
   
   @SuppressWarnings("unchecked")
