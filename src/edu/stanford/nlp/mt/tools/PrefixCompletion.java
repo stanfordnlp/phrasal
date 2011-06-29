@@ -48,6 +48,7 @@ import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
  */
 
 public class PrefixCompletion extends AbstractHandler {
+  public static final boolean DEBUG = true;
   public static final String DEFAULT_WEB_PAGE = "edu/stanford/nlp/mt/resources/prefix_default.html";
   PrefixDecoder<IString,String> prefixDecoder;
   LanguageModel<IString> lm;
@@ -70,7 +71,10 @@ public class PrefixCompletion extends AbstractHandler {
   
   private boolean hasParameter(Request baseRequest, String paramName) {
     String param = baseRequest.getParameter(paramName);
-    return param != null & !"".equals(param);
+    if (DEBUG && param != null && !"".equals(param)) {
+      System.err.printf("%s: %s\n", paramName, param);
+    }
+    return param != null && !"".equals(param);
   }
   
   private String wrapResponse(String functionName, String json) {
