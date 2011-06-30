@@ -8,11 +8,12 @@ import java.util.List;
 import java.util.Properties;
 
 import edu.stanford.nlp.io.IOUtils;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.tools.MajorityTagger;
-import edu.stanford.nlp.process.Morphology;
+import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -35,7 +36,6 @@ public class InteractiveLinearParser {
     String defaultDictionary = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tag_dict.txt";
     String dict = props.getProperty("dictionary", defaultDictionary);
     MajorityTagger tagger = new MajorityTagger(dict);
-    Morphology lemmatizer = new Morphology();
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     System.out.print("> ");
@@ -45,7 +45,16 @@ public class InteractiveLinearParser {
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
       if ("</s>".equals(line)) {
         // finalize parse for the current prefix/sentence
+        List<CoreLabel> phrase = new ArrayList<CoreLabel>();
+        CoreLabel w = new CoreLabel();
+        w.set(TextAnnotation.class, TaggerConstants.EOS_WORD);
+        w.set(PartOfSpeechAnnotation.class, TaggerConstants.EOS_TAG);
+        w.set(IndexAnnotation.class, idx++);
+        phrase.add(w);
+        parser.parsePhrase(struc, phrase);
+
         deps = struc.getDependencies();
+        System.out.println(deps);
         struc = new Structure();
         idx = 1;
       } else {
@@ -58,7 +67,6 @@ public class InteractiveLinearParser {
           w.set(TextAnnotation.class, tok);
           tagger.tagWord(w, false);
           w.set(IndexAnnotation.class, idx++);
-          lemmatizer.stem(w);
           phrase.add(w);
         }
         parser.parsePhrase(struc, phrase);
