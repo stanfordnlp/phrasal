@@ -24,7 +24,7 @@ public class DAGFeatureExtractor {
   // tk : k-th item in the queue (t1, t2, ...) : q1 == t1
   // flags
   private static final boolean useS1Word = true;
-  private static final boolean useS1Lemma = true;
+  private static final boolean useS1Lemma = false;
   private static final boolean useS1POS = true;
   private static final boolean useS1WordPOS = true;
   private static final boolean useS1NumChild = true;
@@ -35,7 +35,7 @@ public class DAGFeatureExtractor {
   private static final boolean useS1PreviousTokenPOS = true;
 
   private static final boolean useS2Word = true;
-  private static final boolean useS2Lemma = true;
+  private static final boolean useS2Lemma = false;
   private static final boolean useS2POS = true;
   private static final boolean useS2WordPOS = true;
   private static final boolean useS2NumChild = true;
@@ -46,22 +46,22 @@ public class DAGFeatureExtractor {
   private static final boolean useS2NextTokenPOS = true;
 
   private static final boolean useS3Word = true;
-  private static final boolean useS3Lemma = true;
+  private static final boolean useS3Lemma = false;
   private static final boolean useS3POS = true;
   private static final boolean useS3WordPOS = true;
 
   private static final boolean useQ1Word = true;
-  private static final boolean useQ1Lemma = true;
+  private static final boolean useQ1Lemma = false;
   private static final boolean useQ1POS = true;
   private static final boolean useQ1WordPOS = true;
 
   private static final boolean useQ2Word = true;
-  private static final boolean useQ2Lemma = true;
+  private static final boolean useQ2Lemma = false;
   private static final boolean useQ2POS = true;
   private static final boolean useQ2WordPOS = true;
 
   private static final boolean useQ3Word = true;
-  private static final boolean useQ3Lemma = true;
+  private static final boolean useQ3Lemma = false;
   private static final boolean useQ3POS = true;
   private static final boolean useQ3WordPOS = true;
 
@@ -104,7 +104,7 @@ public class DAGFeatureExtractor {
 
     public RightSideFeatures(Properties props){
       useT2Word = Boolean.parseBoolean(props.getProperty("useT2Word", "true"));
-      useT2Lemma = Boolean.parseBoolean(props.getProperty("useT2Lemma", "true"));
+      useT2Lemma = Boolean.parseBoolean(props.getProperty("useT2Lemma", "false"));
       useT2POS = Boolean.parseBoolean(props.getProperty("useT2POS", "true"));
       useT2WordPOS = Boolean.parseBoolean(props.getProperty("useT2WordPOS", "true"));
 
