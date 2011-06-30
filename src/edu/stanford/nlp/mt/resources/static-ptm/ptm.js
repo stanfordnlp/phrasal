@@ -174,18 +174,38 @@ var usrHandler = {
 function ptmInitResponse(data){
   console.log(data);
   
-  //TODO: Dynamically populate the list of OOVs
-  $('#form-oov-1-src_').html(data.OOVs[0]);
-  $('#form-oov-2-src_').html(data.OOVs[1]);  
+  //Clear what's in there now.
+  $("#oov-input_").html('');
+  
+  //Populate the OOV list dynamically
+  for(var i in data.OOVs){
+    var htmlStr = '<div class=\"oov-pair\">';
+    htmlStr = htmlStr + '<form class="form-oov" name="form-oov-' + i + '">';
+    htmlStr = htmlStr + '<span class="oov-src-text" id="form-oov-src-' + i +  '">' + data.OOVs[i] + '</span>';
+    htmlStr = htmlStr + '<input type="text" class="oov-tgt" />';
+    htmlStr = htmlStr + '<input type="submit" value="X" />'
+    htmlStr = htmlStr + '</form></div>';
+    
+    console.log(htmlStr);
+    $("#oov-input_").append(htmlStr);
+  }
   
   $('.form-oov').submit(function(event){
     event.preventDefault();
-    console.log(this);
+    $(this).slideUp();
+    
+    //TODO: Send the OOV messages
+    
+    //Open the PTM pane when ready
+    //TODO: Weird...this should be 0?
+    console.log($('.form-oov:visible').length);
+    if ($('.form-oov:visible').length === 1){
+      console.log('In here');
+      $('#ptm_').show();
+    }
+    
     return false;
   });
-
-  //Process the list of OOVs
-  //Create the list of forms for submission of OOV translations
 };
 
 //
@@ -203,11 +223,11 @@ function ptmPredictResponse(data){
   var sourceArr = [];
   for(var i in data.predictions){
     var item = {
-      label: data.prefix + data.predictions[i],
+      label: data.prefix + ' ' + data.predictions[i],
       value: data.prefix,
     };
     sourceArr.push(item);
-//    console.log(item);
+    console.log(item);
   }
   
 //  console.log(sourceArr);

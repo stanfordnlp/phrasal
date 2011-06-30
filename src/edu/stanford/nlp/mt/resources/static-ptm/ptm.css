@@ -22,6 +22,7 @@ width: 37.5em;
 
 #oov-input_
 {
+padding-top:3em;
 float: right;
 width: 12.5em;
 }
@@ -29,6 +30,9 @@ width: 12.5em;
 
 .oov-src-txt
 {
+width: 10em;
+display: inline-block;
+float: left;
 font-size: 50%;
 }
 
@@ -48,4 +52,9 @@ height: 12.5em;
 {
 width: 37em;
 height: 12.5em;
+}
+
+#ptm_
+{
+display:none;
 }
