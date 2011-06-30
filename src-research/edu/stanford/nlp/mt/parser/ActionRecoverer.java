@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.stats.Counter;
@@ -22,7 +22,7 @@ import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
 public class ActionRecoverer {
- 
+
   // check the correctness of recovered action trace
   private static final boolean checkCorrectness = false;
 
@@ -53,7 +53,7 @@ public class ActionRecoverer {
     // recover actions
     Set<CoreLabel> dependents = new HashSet<CoreLabel>();
     Object[] inputs = s.input.peekN(s.input.size());
-    for(int i = inputs.length-1 ; i >= 0 ;){
+    for(int i = inputs.length-1 ; i > 0 ;){
       CoreLabel w = (CoreLabel)inputs[i];
       if(leftsideEdgeCounter.getCount(w) > 0) {
         CoreLabel topStack = s.stack.peek();
@@ -116,7 +116,7 @@ public class ActionRecoverer {
       EnglishGrammaticalStructure.readCoNLLXGrammaticStructureCollection(filename);
     List<Structure> structures = new ArrayList<Structure>();
     for(GrammaticalStructure gs : gsList){
-      Structure s = new Structure(gs);      
+      Structure s = new Structure(gs);
       recoverActionTrace(s);
       structures.add(s);
       if(checkCorrectness) checkRecoveredActionTrace(s);
