@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,14 @@ public class PrefixCompletion extends AbstractHandler {
      String responseString = null;
      
      Gson gson = new Gson();
+     Enumeration<String> e = baseRequest.getParameterNames();
+     List<String> parameters = new ArrayList<String>();
+     while (e.hasMoreElements()) {
+    	 parameters.add(e.nextElement());
+     }
+     
+     System.err.println("Received request wiht parameters "+
+         parameters);
      if (hasParameter(baseRequest, "ptmInit")) {
        PTMInitRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmInit"), PTMInitRequest.class);
        if (DEBUG) {
@@ -96,14 +105,16 @@ public class PrefixCompletion extends AbstractHandler {
       
        PTMOOVResponse ptmResponse = new PTMOOVResponse(oovStringsList);
        Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
-       responseString = wrapResponse("ptmInitResponse", gson.toJson(ptmResponse, t));
+        //responseString = wrapResponse("ptmInitResponse", gson.toJson(ptmResponse, t));
+        responseString = gson.toJson(ptmResponse, t);
      } else if (hasParameter(baseRequest, "ptmOOV")) {
        PTMOOVRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmOOV"), 
     		   PTMOOVRequest.class);
        if (DEBUG) {
     	   System.err.println("PTMOOVRequest: " + gson.toJson(ptmRequest));
        }
-       responseString = wrapResponse("ptmOOVResponse", gson.toJson(new PTMStatusOk()));       
+       // responseString = wrapResponse("ptmOOVResponse", gson.toJson(new PTMStatusOk()));  
+       responseString = gson.toJson(new PTMStatusOk());  
      } else if (hasParameter(baseRequest, "ptmPredict")) {       
        PTMPredictionRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmPredict"), PTMPredictionRequest.class);
        if (DEBUG) {
@@ -118,19 +129,22 @@ public class PrefixCompletion extends AbstractHandler {
        }
        PTMPredictionResponse ptmResponse = new PTMPredictionResponse(prefix, predictions);
        Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
-       responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
+       //responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
+       responseString = gson.toJson(ptmResponse, t);
      } else if (hasParameter(baseRequest, "ptmUserSelection")) {
        PTMCompletionSelectionRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmUserSelection"), PTMCompletionSelectionRequest.class);
        if (DEBUG) {
     	   System.err.println("PTMCompletionSelectonRequest: " + gson.toJson(ptmRequest));
        }
-       responseString = wrapResponse("ptmUserSelectionResponse", gson.toJson(new PTMStatusOk()));
+       //responseString = wrapResponse("ptmUserSelectionResponse", gson.toJson(new PTMStatusOk()));
+       responseString = gson.toJson(new PTMStatusOk());      
      } else if (hasParameter(baseRequest, "ptmDone")) {
        PTMDoneRequest ptmRequest = gson.fromJson(request.getParameter("ptmDone"), PTMDoneRequest.class);
        if (DEBUG) {
     	   System.err.println("PTMDoneRequest: " + gson.toJson(ptmRequest));
        }
-       responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
+       //responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
+       responseString = gson.toJson(new PTMStatusOk());       
      } 
      
      if (responseString != null) {
@@ -223,7 +237,7 @@ public class PrefixCompletion extends AbstractHandler {
 			 }
 			 OOV = OOV + token.toString();
 			 if (DEBUG) {
-				 System.err.printf("%s is an OOV\n", token);
+				 System.err.printf("'%s' is an OOV\n", token);
 			 }
 		 } else if (!"".equals(OOV)){
 			 OOVs.add(OOV);
@@ -232,6 +246,7 @@ public class PrefixCompletion extends AbstractHandler {
 				 System.err.printf("Final OOV phrase %s\n", OOV);
 			 }
 		 }
+		
 		 if (DEBUG && phraseTranslations != null) {
 			 System.err.printf("%d translations for %s\n", phraseTranslations.size(), token);
 		 }
@@ -277,7 +292,7 @@ public class PrefixCompletion extends AbstractHandler {
         double modelScore = lmScore*lmWt;
         System.err.printf("%s lmScore: %e\n", prefixPlus, lmScore);        
         for (int i = 0; i < opt.scores.length; i++) {
-          System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
+//          System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
           modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
         }
         Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), modelScore);
