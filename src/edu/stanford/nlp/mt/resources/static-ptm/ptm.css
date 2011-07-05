@@ -9,7 +9,7 @@ background:#FFF;
 }
 
 #container_ {
-width:50em;
+width:72.5em;
 margin:0 auto;
 background:#99c;
 }
@@ -24,13 +24,13 @@ width: 37.5em;
 {
 padding-top:3em;
 float: right;
-width: 12.5em;
+width: 35em;
 }
 
 
 .oov-src-txt
 {
-width: 10em;
+width: 14.5em;
 display: inline-block;
 float: left;
 font-size: 50%;
@@ -38,7 +38,7 @@ font-size: 50%;
 
 .oov-tgt
 {
-width: 6em;
+width: 5em;
 }
 
 

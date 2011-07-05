@@ -56,12 +56,23 @@ var ptm = (function() {
   
   var serverURL = "http://jack.stanford.edu:8080";
   
+  //Top-k completion results that will appear in the autocomplete box
+  var numResultsToDisplay = 10;
+  
   //Initialize any variables here
-  var ui = {
+  var ptmUI = {
     srcLang: function(){ return $("select#src-list_ option:selected").val(); },
     tgtLang: function(){ return $("select#tgt-list_").val(); },
     src: function(){     return $("textarea#src-input_").val(); },
     tgt: function(){     return $("textarea#ptm-input_").val(); },
+    srcOOV: function(context){ return $(context).find(".oov-src-text").html(); },
+    tgtOOV: function(context){ return $(context).find(".oov-tgt").val(); },
+    
+    showPTM: function(){
+      if ($('.form-oov:visible').length === 1){
+        $('#ptm_').show();
+      }
+    },
   };
   
   //Callbacks from the server to render data to the interface
@@ -87,19 +98,7 @@ var ptm = (function() {
         $("#oov-input_").append(htmlStr);
       }
       
-      $('.form-oov').submit(function(event){
-        event.preventDefault();
-        $(this).slideUp();
-        
-        //TODO: Send the OOV messages
-        
-        //TODO: Move this into the UI functionality
-        console.log($('.form-oov:visible').length);
-        if ($('.form-oov:visible').length === 1){
-          console.log('In here');
-          $('#ptm_').show();
-        }
-      });
+      $('.form-oov').submit(fn.sendOOV);
     },
   };
   
@@ -112,14 +111,13 @@ var ptm = (function() {
     initTranslation: function(){
 
       var ptmMsg = {
-        sourceLang: ui.srcLang(),
-        targetLang: ui.tgtLang(),
-        source: ui.src(),
+        sourceLang: ptmUI.srcLang(),
+        targetLang: ptmUI.tgtLang(),
+        source: ptmUI.src(),
       };
       
       console.log("POST: ptmInit");
       console.log(ptmMsg);
-      console.log(serverURL);
       
       $.ajax({
             url: serverURL,
@@ -129,13 +127,35 @@ var ptm = (function() {
       });     
     },
     
+    sendOOV: function(event){
+      event.preventDefault();
+      $(this).slideUp();
+      
+      var ptmMsg = {
+        sourcePhrase: ptmUI.srcOOV(this),
+        targetPhrase: ptmUI.tgtOOV(this),
+      };
+      
+      console.log("POST: sendOOV");
+      console.log(ptmMsg);
+      
+      $.ajax({
+            url: serverURL,
+            dataType: "json",
+            data: {ptmOOVPhrasePair: JSON.stringify(ptmMsg), },
+      });   
+      
+      ptmUI.showPTM();
+    },
+    
     //User request for an autocomplete
     autoCompleteReq: function(request,response){
   
       var ptmMsg = {
-        sourceLang: ui.srcLang(),
-        targetLang: ui.tgtLang(),
-        source: ui.src(),
+        sourceLang: ptmUI.srcLang(),
+        targetLang: ptmUI.tgtLang(),
+        source: ptmUI.src(),
+        prefix: ptmUI.tgt(),
       };
       console.log("POST: ptmPredict");
       console.log(ptmMsg);
@@ -147,8 +167,12 @@ var ptm = (function() {
             dataType: "json",
             data: { ptmPredict: JSON.stringify(ptmMsg), },
             success: function(data){
-              response( $.map( data, function( item ) {
-                return { label: item.name, value: item.name }
+              console.log("Autocomplete response:");
+              console.log(data);
+              var predictions = data.predictions.slice(0,numResultsToDisplay);
+              response( $.map( predictions, function( item ) {
+                console.log(item);
+                return { label: item, value: data.prefix + item }
               }));
             },
       });
@@ -162,9 +186,11 @@ var ptm = (function() {
       $("textarea#ptm-input_").val(completion);
       
       var ptmMsg = {
-        sourceLang: ui.srcLang(),
-        targetLang: ui.tgtLang(),
-        source: ui.src(),
+        sourceLang: ptmUI.srcLang(),
+        targetLang: ptmUI.tgtLang(),
+        source: ptmUI.src(),
+        prefix: ptmUI.tgt(),
+        completion: ptmUI.tgt(),
       };
       console.log("POST: ptmUserSelection");
       console.log(ptmMsg);
@@ -181,10 +207,10 @@ var ptm = (function() {
     doneWithTranslation: function(){
       
       var ptmMsg = {
-        sourceLang: ui.srcLang(),
-        targetLang: ui.tgtLang(),
-        source: ui.src(),
-        finishedTarget: ui.tgt(),
+        sourceLang: ptmUI.srcLang(),
+        targetLang: ptmUI.tgtLang(),
+        source: ptmUI.src(),
+        finishedTarget: ptmUI.tgt(),
       };
       console.log("POST: ptmDone");
       console.log(ptmMsg);
