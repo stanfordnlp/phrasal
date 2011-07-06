@@ -1,30 +1,36 @@
 // Predictive Translation Memory 
 //
-// Setup using the module pattern:
+// Uses the module pattern:
 // http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjavascript
+
+//Key bindings (http://www.cambiaresearch.com/c4/702b8cd1-e5b0-42e6-83ac-25f0306e3e25/Javascript-Char-Codes-Key-Codes.aspx):
+// 32 - spacebar
+// 9 - tab
+// 40 - down arrow
+// 13 - enter
+// 39 - right arrow
 
 (function(window){
 
   //Register ptm callbacks with the UI when it is ready
   $(document).ready(function(){
 
-    //Configure the autocomplete box, even though it is initially hidden
+    //Autocomplete box configuration
     $( "#ptm-input_" ).autocomplete({
-      minLength: 2,
+      minLength: 1,
+      delay: 50,
+      
+      //keyCode(32) == spacebar, which triggers autocomplete        
       search: function(event,ui){
-        var source = $("textarea#ptm-input_").val();
-        var endsWithWhitespace=new RegExp("\\s$");
-        console.log("Ends with whitespace:" + endsWithWhitespace.test(source));  
-        return endsWithWhitespace.test(source);
+        return (event.which === 32);
       },
       
       source: function(request,response){
         ptm.autoCompleteReq(request,response);
       },
       
-      select: function( event, ui ) {
-        
-        console.log( "Selected:" + ui.item);
+      select: function( event, ui ) {  
+//        console.log( "Selected:" + ui.item);
         if(ui.item){
           ptm.autoCompleteSelect(ui.item.label);
         }
@@ -54,12 +60,13 @@
 //
 var ptm = (function() {
   
+  //URL of PTM server (must be same-domain for json calls to work)
   var serverURL = "http://jack.stanford.edu:8080";
   
   //Top-k completion results that will appear in the autocomplete box
   var numResultsToDisplay = 10;
   
-  //Initialize any variables here
+  //
   var ptmUI = {
     srcLang: function(){ return $("select#src-list_ option:selected").val(); },
     tgtLang: function(){ return $("select#tgt-list_").val(); },
@@ -76,8 +83,9 @@ var ptm = (function() {
   };
   
   //Callbacks from the server to render data to the interface
+  //
+  //TODO: Remove the nested HTML here? Or at least specify the ids.
   var serveData = {
-    //TODO: Want to remove the CSS/HTML from here...but how?
     oovResponse: function(data) {
       console.log("oovResponse");
       console.log(data);
@@ -86,19 +94,60 @@ var ptm = (function() {
       $("#oov-input_").html('');
       
       //Populate the OOV list dynamically
+      var htmlStr = "";
       for(var i in data.OOVs){
-        var htmlStr = '<div class=\"oov-pair\">';
+        htmlStr = htmlStr + '<div class=\"oov-pair\">';
         htmlStr = htmlStr + '<form class="form-oov" name="form-oov-' + i + '">';
         htmlStr = htmlStr + '<span class="oov-src-text" id="form-oov-src-' + i +  '">' + data.OOVs[i] + '</span>';
         htmlStr = htmlStr + '<input type="text" class="oov-tgt" />';
         htmlStr = htmlStr + '<input type="submit" value="X" />'
-        htmlStr = htmlStr + '</form></div>';
-        
-        console.log(htmlStr);
-        $("#oov-input_").append(htmlStr);
+        htmlStr = htmlStr + '</form></div>';        
       }
-      
+      console.log(htmlStr);
+      $("#oov-input_").append(htmlStr);
       $('.form-oov').submit(fn.sendOOV);
+    },
+    
+    predictResponse: function(data,response){
+      console.log("Autocomplete response:");
+      //console.log(data);
+      
+      var fontSize = $( "#ptm-input_" ).css("font-size");
+      fontSize = parseInt(fontSize);
+      console.log("fontSize: " + fontSize);
+      
+      var boxWidth = $( "#ptm-input_" ).css("width");
+      boxWidth = parseInt(boxWidth);
+      console.log("boxWidth: " + boxWidth);
+      
+      var charPos = $( "#ptm-input_" ).getSelection().end;
+      charPos = parseInt(charPos);
+      console.log("charPos: " + charPos);
+      
+      var vOffset = Math.floor((charPos * fontSize) / boxWidth);
+      vOffset = (vOffset+1) * fontSize;
+      
+      var hOffset = (charPos * fontSize) % boxWidth;
+      
+      //my = Alignment position on the autocomplete box
+      //at = Alignment position on the target element
+      var newPos = {
+        my: "left top",
+        at: "left top",
+        collision: "none",
+        offset: hOffset.toString() + " " + vOffset.toString(),
+      };
+      console.log(newPos);
+      
+      $( "#ptm-input_" ).autocomplete( "option", "position", newPos );
+      
+      //TODO: Sanity check...should do this on the server side
+      var predictions = data.predictions.slice(0,numResultsToDisplay);
+      
+      response( $.map( predictions, function( item ) {
+      //  console.log(item);
+        return { label: item, value: data.prefix + item }
+      }));
     },
   };
   
@@ -167,30 +216,29 @@ var ptm = (function() {
             dataType: "json",
             data: { ptmPredict: JSON.stringify(ptmMsg), },
             success: function(data){
-              console.log("Autocomplete response:");
-              console.log(data);
-              var predictions = data.predictions.slice(0,numResultsToDisplay);
-              response( $.map( predictions, function( item ) {
-                console.log(item);
-                return { label: item, value: data.prefix + item }
-              }));
+              serveData.predictResponse(data,response);
             },
       });
     },
         
     //When the user selects a completion
     autoCompleteSelect: function(completion){
-
+      console.log("autoCompleteSelect:");
+      console.log(completion);
+      console.log(ptmUI.tgt());
+      
+      var oldPrefix = ptmUI.tgt();
+      
       //Set the autocomplete box on the interface
       //TODO: Move this into a separate interface component      
-      $("textarea#ptm-input_").val(completion);
+      $("textarea#ptm-input_").val(oldPrefix + completion);
       
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
         source: ptmUI.src(),
-        prefix: ptmUI.tgt(),
-        completion: ptmUI.tgt(),
+        prefix: oldPrefix,
+        completion: completion,
       };
       console.log("POST: ptmUserSelection");
       console.log(ptmMsg);

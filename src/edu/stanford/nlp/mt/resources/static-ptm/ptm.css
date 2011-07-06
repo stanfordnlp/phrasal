@@ -9,9 +9,9 @@ background:#FFF;
 }
 
 #container_ {
+min-width:72.5em;
 width:72.5em;
 margin:0 auto;
-background:#99c;
 }
 
 #lang-select_
