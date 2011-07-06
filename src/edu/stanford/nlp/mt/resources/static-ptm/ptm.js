@@ -68,10 +68,10 @@
 var ptm = (function() {
   
   //Address of the translation UI (for redirect after translation completion)
-  var _uiURL = "http://jack.stanford.edu:8080";
+  var _uiURL = window.location.protocal + "//" + window.location.host;
   
   //URL of PTM server (must be same-domain for json calls to work)
-  var _serverURL = "http://jack.stanford.edu:8080";
+  var _serverURL = window.location.protocal + "//" + window.location.host;
   
   //Top-k completion results that will appear in the autocomplete box
   var _numResultsToDisplay = 10;
