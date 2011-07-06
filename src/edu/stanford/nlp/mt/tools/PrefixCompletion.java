@@ -50,7 +50,7 @@ import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
 
 public class PrefixCompletion extends AbstractHandler {
   public static final boolean DEBUG = true;
-  public static final String DEFAULT_WEB_PAGE = "edu/stanford/nlp/mt/resources/prefix_default.html";
+  public static final String DEFAULT_WEB_PAGE = "edu/stanford/nlp/mt/resources/translate.html";
   PrefixDecoder<IString,String> prefixDecoder;
   LanguageModel<IString> lm;
   FlatPhraseTable<String> phr;
@@ -123,10 +123,18 @@ public class PrefixCompletion extends AbstractHandler {
    
        String prefix = ptmRequest.prefix;
        List<String> predictions = new ArrayList<String>();
-       List<Completion> completions = getCompletions(ptmRequest.prefix, ptmRequest.source);
+       List<Completion> completions = getCompletions(
+         ptmRequest.source, ptmRequest.prefix);
+       if (DEBUG) {
+          System.err.printf("Predictions\n");
+       }
        for (Completion c : completions) {
     	   predictions.add(c.targetPhrase);
+         if (DEBUG) {
+           System.err.printf("- '%s'\n", c.targetPhrase);
+         }
        }
+       predictions = predictions.subList(0, ptmRequest.maxPredictions);
        PTMPredictionResponse ptmResponse = new PTMPredictionResponse(prefix, predictions);
        Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
        //responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
@@ -260,11 +268,21 @@ public class PrefixCompletion extends AbstractHandler {
   
   @SuppressWarnings("unchecked")
   List<Completion> getCompletions(String sourceStr, String prefixStr) {
+   if (DEBUG) {
+      System.err.printf("Source str: %s\n", sourceStr);
+      System.err.printf("Prefix str: %s\n", prefixStr);
+   } 
     RawSequence<IString> source = new RawSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
     RawSequence<IString> prefix = new RawSequence<IString>(IStrings.toIStringArray(prefixStr.split("\\s+")));
-    
-    List<Completion> scoredOpts = new ArrayList<Completion>();
-    if (prefixDecoder != null) {
+   if (DEBUG) {
+      System.err.printf("Source seq: %s\n", source);
+      System.err.printf("Prefix seq: %s\n", prefix);
+   } 
+   List<Completion> scoredOpts = new ArrayList<Completion>();
+   if (prefixDecoder != null) {
+      if (DEBUG) {
+         System.err.println("Prefix decoder");
+      }
       EnumeratedConstrainedOutputSpace<IString, String> prefixConstraints = 
         new EnumeratedConstrainedOutputSpace<IString, String>(Arrays.asList(prefix), prefixDecoder.getPhraseGenerator().longestForeignPhrase());
       List<RichTranslation<IString, String>> translations = prefixDecoder.nbest(source, 0, prefixConstraints, null, -1);
@@ -273,21 +291,40 @@ public class PrefixCompletion extends AbstractHandler {
         scoredOpts.add(new Completion("TODO", translation.translation.toString(), translation.score));
       }
     } else {
+      if (DEBUG) {
+         System.err.println("Simple model");
+      }
       List<TranslationOption<IString>> possibleCompletions = new LinkedList<TranslationOption<IString>>();
+      if (DEBUG) {
+         System.err.printf("Source: %s\n", source);
+         System.err.printf("source size: %s\n", source.size());
+      }
       for (int i = 0; i < source.size(); i++) {      
-        for (int j = i+1; j < Math.min(phr.longestForeignPhrase()+i,source.size()); j++) {
+        for (int j = i+1; j < Math.min(5+i,source.size()); j++) {
           List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(source.subsequence(i, j));
+          if (DEBUG) {
+             if (phraseTranslations == null) {
+                System.err.printf("%s: none\n", source.subsequence(i, j));
+             } else {
+                System.err.printf("%s: %d\n", source.subsequence(i,j), phraseTranslations.size());
+             }
+          }
           if (phraseTranslations != null) {
              possibleCompletions.addAll(phraseTranslations);
           }
         }
       }
-      
+      if (DEBUG) {
+         System.err.printf("possibleCompletions: %s\n", possibleCompletions.size());
+      } 
       for (TranslationOption<IString> opt : possibleCompletions) {
         if (opt.translation.size() == 1 && !opt.translation.get(0).toString().matches("\\w") ) {
           continue;
         }
         Sequence<IString> prefixPlus = Sequences.concatenate(prefix, opt.translation);
+        if (DEBUG) {
+           System.err.printf("PrefixPlus: %s\n", prefixPlus);
+        }
         double lmScore = LanguageModels.scoreSequence(lm,prefixPlus);
         double modelScore = lmScore*lmWt;
         System.err.printf("%s lmScore: %e\n", prefixPlus, lmScore);        
@@ -430,12 +467,13 @@ class PTMOOVRequest extends PTMBaseRequest {
 
 class PTMPredictionRequest extends PTMBaseRequest {
     public final String prefix;
+    public int maxPredictions;
 	public PTMPredictionRequest(String sourceLang, String targetLang,
-			String source, String prefix) {
+			String source, String prefix, int maxPredictions) {
 		super(sourceLang, targetLang, source);
 		this.prefix = prefix;
+    this.maxPredictions = maxPredictions;
 	}
-  	
 }
 
 class PTMCompletionSelectionRequest extends PTMBaseRequest {
