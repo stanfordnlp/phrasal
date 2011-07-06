@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,8 +51,9 @@ import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
 
 public class PrefixCompletion extends AbstractHandler {
   public static final boolean DEBUG = true;
-  public static final String DEFAULT_WEB_PAGE = "edu/stanford/nlp/mt/resources/translate.html";
-  PrefixDecoder<IString,String> prefixDecoder;
+  public static final String HTML_RESOURCES_PATH = "edu/stanford/nlp/mt/resources";
+  public static final String DEFAULT_WEB_PAGE = "/translate.html";
+  PrefixDecoder<IString,String> prefixDecoder; 
   LanguageModel<IString> lm;
   FlatPhraseTable<String> phr;
   double lmWt;
@@ -78,16 +80,13 @@ public class PrefixCompletion extends AbstractHandler {
     return param != null && !"".equals(param);
   }
   
-  private String wrapResponse(String functionName, String json) {
-    return String.format("%s(%s);",functionName,json);
-  }
-  
   public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
   {
      String responseString = null;
      
      Gson gson = new Gson();
-     Enumeration<String> e = baseRequest.getParameterNames();
+     @SuppressWarnings("unchecked")
+	Enumeration<String> e = baseRequest.getParameterNames();
      List<String> parameters = new ArrayList<String>();
      while (e.hasMoreElements()) {
     	 parameters.add(e.nextElement());
@@ -134,7 +133,7 @@ public class PrefixCompletion extends AbstractHandler {
            System.err.printf("- '%s'\n", c.targetPhrase);
          }
        }
-       predictions = predictions.subList(0, ptmRequest.maxPredictions);
+       predictions = predictions.subList(0, Math.min(predictions.size(), ptmRequest.maxPredictions));
        PTMPredictionResponse ptmResponse = new PTMPredictionResponse(prefix, predictions);
        Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
        //responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
@@ -161,9 +160,27 @@ public class PrefixCompletion extends AbstractHandler {
        baseRequest.setHandled(true);
        response.getWriter().println(responseString);
      } else {
-       BufferedReader reader = new BufferedReader(new InputStreamReader(
-       ClassLoader.getSystemClassLoader()
-         .getResource(DEFAULT_WEB_PAGE).openStream()));
+       if (DEBUG) {
+      	  System.err.printf("Attempting to serve resource with path: %s\n", request.getPathInfo());
+       }
+       String path = request.getPathInfo();
+       if ("/".equals(path)) {
+    	 path = DEFAULT_WEB_PAGE;    
+       }
+       String resourcePath = HTML_RESOURCES_PATH + path;
+       InputStream istream;
+       
+       try {
+    	 istream = ClassLoader.getSystemClassLoader().getResource(resourcePath).openStream();
+       } catch (NullPointerException npe) {
+    	   response.setContentType("text/html;charset=utf-8");     
+           response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+           baseRequest.setHandled(true);
+           response.getWriter().println("404");
+           return;
+       }
+       
+       BufferedReader reader = new BufferedReader(new InputStreamReader(istream));
        response.setContentType("text/html;charset=utf-8");     
        response.setStatus(HttpServletResponse.SC_OK);
        baseRequest.setHandled(true);
