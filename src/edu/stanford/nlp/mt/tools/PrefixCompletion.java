@@ -22,12 +22,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -80,6 +81,10 @@ public class PrefixCompletion extends AbstractHandler {
     return param != null && !"".equals(param);
   }
   
+  private boolean isJustPunct(String c) {
+	 return c.replaceAll("[\\p{Punct} ]", "").equals("");
+  }
+  
   public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
   {
      String responseString = null;
@@ -127,11 +132,18 @@ public class PrefixCompletion extends AbstractHandler {
        if (DEBUG) {
           System.err.printf("Predictions\n");
        }
+       Set<String> previouslyListedCompletions = new HashSet<String>();
        for (Completion c : completions) {
+    	   if (previouslyListedCompletions.contains(c.targetPhrase) ||
+    		   isJustPunct(c.targetPhrase)) {
+    		   continue;
+    	   }
+    	  
     	   predictions.add(c.targetPhrase);
-         if (DEBUG) {
-           System.err.printf("- '%s'\n", c.targetPhrase);
-         }
+    	   previouslyListedCompletions.add(c.targetPhrase);
+           if (DEBUG) {
+             System.err.printf("- '%s'\n", c.targetPhrase);
+           }
        }
        predictions = predictions.subList(0, Math.min(predictions.size(), ptmRequest.maxPredictions));
        PTMPredictionResponse ptmResponse = new PTMPredictionResponse(prefix, predictions);
@@ -240,7 +252,7 @@ public class PrefixCompletion extends AbstractHandler {
   }
   
   public PrefixCompletion(String lmFn, String phrasetableFn, double lmWt, double[] phrTableWts) throws IOException {
-    lm = ARPALanguageModel.load(lmFn);
+    lm = LanguageModels.load(lmFn);
     phr = new FlatPhraseTable<String>(null, null, phrasetableFn, false);
     this.lmWt = lmWt;
     this.phrTableWts = Arrays.copyOf(phrTableWts, phrTableWts.length);
@@ -334,6 +346,7 @@ public class PrefixCompletion extends AbstractHandler {
       if (DEBUG) {
          System.err.printf("possibleCompletions: %s\n", possibleCompletions.size());
       } 
+      System.out.printf("Prefix lm in isolation: %e\n", LanguageModels.scoreSequence(lm, prefix));
       for (TranslationOption<IString> opt : possibleCompletions) {
         if (opt.translation.size() == 1 && !opt.translation.get(0).toString().matches("\\w") ) {
           continue;
@@ -349,7 +362,7 @@ public class PrefixCompletion extends AbstractHandler {
 //          System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
           modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
         }
-        Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), modelScore);
+        Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), modelScore/prefixPlus.size());
         scoredOpts.add(completion);        
       }  
     }            
