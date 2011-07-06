@@ -8,6 +8,8 @@ import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.ValueAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.parser.Actions.Action;
+import edu.stanford.nlp.mt.tools.MajorityTagger;
+import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.Tree;
@@ -15,6 +17,9 @@ import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 
 public class Structure {
+
+  private static final boolean useGoldTag = false;
+  private static final boolean useLemma = true;
 
   protected LinkedStack<CoreLabel> stack;
   protected LinkedStack<CoreLabel> input;
@@ -28,7 +33,7 @@ public class Structure {
     dependencies = new LinkedStack<TypedDependency>();
   }
 
-  public Structure(GrammaticalStructure gs) {
+  public Structure(GrammaticalStructure gs, MajorityTagger tagger, Morphology lemmatizer) {
     this();
     dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(true));
     input = new LinkedStack<CoreLabel>();
@@ -38,7 +43,11 @@ public class Structure {
       CoreLabel cl = node.label();
       Tree p = treeNode.parent();
       cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
-      cl.set(PartOfSpeechAnnotation.class, ((TreeGraphNode)p).label().get(ValueAnnotation.class));
+      if(useGoldTag) cl.set(PartOfSpeechAnnotation.class, ((TreeGraphNode)p).label().get(ValueAnnotation.class));
+      else {  // use majority tagger
+        tagger.tagWord(cl, (input.size()==0));
+      }
+      if(useLemma) lemmatizer.stem(cl);
       input.push(cl);
     }
 

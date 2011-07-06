@@ -13,6 +13,8 @@ import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
+import edu.stanford.nlp.mt.tools.MajorityTagger;
+import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.trees.EnglishGrammaticalStructure;
@@ -25,6 +27,9 @@ public class ActionRecoverer {
 
   // check the correctness of recovered action trace
   private static final boolean checkCorrectness = false;
+  private static final String defaultDictionary = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tag_dict.txt";
+  private static final MajorityTagger tagger = new MajorityTagger(defaultDictionary);
+  private static final Morphology lemmatizer = new Morphology();
 
   /** recover the list of actions for constructing s.dependencies
    *  the actions are stored in s.actionTrace */
@@ -116,7 +121,7 @@ public class ActionRecoverer {
       EnglishGrammaticalStructure.readCoNLLXGrammaticStructureCollection(filename);
     List<Structure> structures = new ArrayList<Structure>();
     for(GrammaticalStructure gs : gsList){
-      Structure s = new Structure(gs);
+      Structure s = new Structure(gs, tagger, lemmatizer);
       recoverActionTrace(s);
       structures.add(s);
       if(checkCorrectness) checkRecoveredActionTrace(s);

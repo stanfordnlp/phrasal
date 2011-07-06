@@ -70,6 +70,8 @@ public class InteractiveLinearParser {
           phrase.add(w);
         }
         parser.parsePhrase(struc, phrase);
+        deps = struc.getDependencies();
+        System.out.println(deps);
       }
       // System.out.printf("Current partial parse: %s\n", );
       // System.out.printf("Current stack contents: %s\n", );
