@@ -335,6 +335,9 @@ public class DAGFeatureExtractor {
   }
 
   public static void printFeatureFlags(Logger logger, RightSideFeatures rightFeatures) {
+
+    if(Structure.useGoldTag) logger.fine("use gold tags"); else logger.fine("use majority tagger");
+
     if(useS1Word) logger.fine("useS1Word on"); else logger.fine("useS1Word off");
     if(useS1Lemma) logger.fine("useS1Lemma on"); else logger.fine("useS1Lemma off");
     if(useS1POS) logger.fine("useS1POS on"); else logger.fine("useS1POS off");

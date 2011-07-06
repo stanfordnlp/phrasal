@@ -18,7 +18,7 @@ import edu.stanford.nlp.trees.TypedDependency;
 
 public class Structure {
 
-  private static final boolean useGoldTag = false;
+  protected static final boolean useGoldTag = false;
   private static final boolean useLemma = true;
 
   protected LinkedStack<CoreLabel> stack;
