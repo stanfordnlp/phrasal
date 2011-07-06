@@ -52,7 +52,14 @@
       ptm.doneWithTranslation();
       return false;
     });
-
+    
+    //Blank out all forms
+    //This is needed when we redirect to the same page after a done event
+    $(':input' )
+      .not(':button, :submit, :reset')
+      .val('')
+      .removeAttr('checked')
+      .removeAttr('selected');
   });
 
 
@@ -60,11 +67,14 @@
 //
 var ptm = (function() {
   
+  //Address of the translation UI (for redirect after translation completion)
+  var _uiURL = "http://jack.stanford.edu:8080";
+  
   //URL of PTM server (must be same-domain for json calls to work)
-  var serverURL = "http://jack.stanford.edu:8080";
+  var _serverURL = "http://jack.stanford.edu:8080";
   
   //Top-k completion results that will appear in the autocomplete box
-  var numResultsToDisplay = 10;
+  var _numResultsToDisplay = 10;
   
   //
   var ptmUI = {
@@ -76,9 +86,14 @@ var ptm = (function() {
     tgtOOV: function(context){ return $(context).find(".oov-tgt").val(); },
     
     showPTM: function(){
-      if ($('.form-oov:visible').length === 1){
+      if ($('.form-oov:visible').length <= 1){
         $('#ptm_').show();
       }
+    },
+    
+    cleanUp: function(myStr){
+      var fmtString = new String(myStr);
+      return $.trim(fmtString.toLowerCase());
     },
   };
   
@@ -92,6 +107,12 @@ var ptm = (function() {
   
       //Clear what's in there now.
       $("#oov-input_").html('');
+      
+      if(data.OOVs.length === 0){
+        console.log("No OOVs. Opening PTM window.");
+        ptmUI.showPTM();
+        return;
+      }
       
       //Populate the OOV list dynamically
       var htmlStr = "";
@@ -110,43 +131,52 @@ var ptm = (function() {
     
     predictResponse: function(data,response){
       console.log("Autocomplete response:");
-      //console.log(data);
-      
-      var fontSize = $( "#ptm-input_" ).css("font-size");
-      fontSize = parseInt(fontSize);
-      console.log("fontSize: " + fontSize);
-      
-      var boxWidth = $( "#ptm-input_" ).css("width");
-      boxWidth = parseInt(boxWidth);
-      console.log("boxWidth: " + boxWidth);
+      console.log(data);
       
       var charPos = $( "#ptm-input_" ).getSelection().end;
-      charPos = parseInt(charPos);
-      console.log("charPos: " + charPos);
+      var prefix = ptmUI.tgt();
+      if(charPos < prefix.length){
+        console.log("Prefix length: " + prefix.length);
+        console.log("Caret pos: " + charPos);
+        return;
+      }
+
+      $( '#ptm-renderbox_' ).html(prefix);
+      console.log($( '#ptm-renderbox_' ));
+      var textHeight = $( '#ptm-renderbox_' ).height();
+      console.log("textHeight: " + textHeight);
+      var textWidth = $( '#ptm-renderbox_' ).width();
+      console.log("textWidth: " + textWidth);
+            
+      var boxWidth = $( "#ptm-input_" ).width();
+      console.log("boxWidth: " + boxWidth);
+            
+      var vOffset = Math.floor(textWidth / boxWidth);
+      vOffset = (vOffset+1) * textHeight;
       
-      var vOffset = Math.floor((charPos * fontSize) / boxWidth);
-      vOffset = (vOffset+1) * fontSize;
-      
-      var hOffset = (charPos * fontSize) % boxWidth;
+      var hOffset = textWidth % boxWidth;
       
       //my = Alignment position on the autocomplete box
       //at = Alignment position on the target element
+      //offset = horizontal, vertical (pixel) offset values
       var newPos = {
         my: "left top",
         at: "left top",
         collision: "none",
         offset: hOffset.toString() + " " + vOffset.toString(),
       };
+      console.log("New autocomplete position in textArea: ");
       console.log(newPos);
-      
+       
       $( "#ptm-input_" ).autocomplete( "option", "position", newPos );
       
-      //TODO: Sanity check...should do this on the server side
-      var predictions = data.predictions.slice(0,numResultsToDisplay);
-      
-      response( $.map( predictions, function( item ) {
-      //  console.log(item);
-        return { label: item, value: data.prefix + item }
+      if(data.predictions.length > _numResultsToDisplay){
+        console.log("# returned results exceeds max results: " + data.predictions.length);
+      }
+
+      //Setup the autocomplete box source      
+      response( $.map( data.predictions, function( item ) {
+        return { label: item, value: ptmUI.tgt() + item }
       }));
     },
   };
@@ -162,36 +192,45 @@ var ptm = (function() {
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
-        source: ptmUI.src(),
+        source: ptmUI.cleanUp(ptmUI.src()),
       };
       
       console.log("POST: ptmInit");
       console.log(ptmMsg);
       
       $.ajax({
-            url: serverURL,
+            url: _serverURL,
             dataType: "json",
             data: {ptmInit: JSON.stringify(ptmMsg), },
             success: serveData.oovResponse,
+            error: function(jqXHR, textStatus, errorThrown){
+              console.log("ptmInit failed: " + textStatus);
+              console.log(errorThrown);
+            },
       });     
     },
     
     sendOOV: function(event){
       event.preventDefault();
+      
       $(this).slideUp();
       
       var ptmMsg = {
-        sourcePhrase: ptmUI.srcOOV(this),
-        targetPhrase: ptmUI.tgtOOV(this),
+        sourcePhrase: ptmUI.cleanUp(ptmUI.srcOOV(this)),
+        targetPhrase: ptmUI.cleanUp(ptmUI.tgtOOV(this)),
       };
       
       console.log("POST: sendOOV");
       console.log(ptmMsg);
       
       $.ajax({
-            url: serverURL,
+            url: _serverURL,
             dataType: "json",
             data: {ptmOOVPhrasePair: JSON.stringify(ptmMsg), },
+            error: function(jqXHR, textStatus, errorThrown){
+              console.log("ptmOOVPhrasePair failed: " + textStatus);
+              console.log(errorThrown);
+            },
       });   
       
       ptmUI.showPTM();
@@ -199,24 +238,32 @@ var ptm = (function() {
     
     //User request for an autocomplete
     autoCompleteReq: function(request,response){
-  
+      console.log("autoCompleteRequest");
+      
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
-        source: ptmUI.src(),
-        prefix: ptmUI.tgt(),
+        source: ptmUI.cleanUp(ptmUI.src()),
+        prefix: ptmUI.cleanUp(ptmUI.tgt()),
+        maxPredictions: _numResultsToDisplay,
       };
       console.log("POST: ptmPredict");
       console.log(ptmMsg);
+      console.log(ptmUI.tgt());
     
       //Register the callback here since we'll send it directly
       //to the autocomplete box
       $.ajax({
-            url: serverURL,
+            url: _serverURL,
             dataType: "json",
             data: { ptmPredict: JSON.stringify(ptmMsg), },
             success: function(data){
+              //response is a callback
               serveData.predictResponse(data,response);
+            },
+            error: function(jqXHR, textStatus, errorThrown){
+              console.log("ptmPredict failed: " + textStatus);
+              console.log(errorThrown);
             },
       });
     },
@@ -224,29 +271,35 @@ var ptm = (function() {
     //When the user selects a completion
     autoCompleteSelect: function(completion){
       console.log("autoCompleteSelect:");
-      console.log(completion);
-      console.log(ptmUI.tgt());
+      console.log("Completion: " + completion);
       
-      var oldPrefix = ptmUI.tgt();
-      
-      //Set the autocomplete box on the interface
-      //TODO: Move this into a separate interface component      
-      $("textarea#ptm-input_").val(oldPrefix + completion);
+      var newTarget = new String(ptmUI.tgt() + " " + completion);
       
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
-        source: ptmUI.src(),
-        prefix: oldPrefix,
-        completion: completion,
+        source: ptmUI.cleanUp(ptmUI.src()),
+        prefix: ptmUI.cleanUp(ptmUI.tgt()),
+        completion: ptmUI.cleanUp(completion),
       };
       console.log("POST: ptmUserSelection");
       console.log(ptmMsg);
       
+      //Set the autocomplete box on the interface
+      //TODO(wsg2011) Bug in current version of jQueryUI whereby this
+      //update is ignored. This is contrary to the documentation, which
+      //states that an override of the select() callback will cancel an
+      //automatic update to the textbox.
+      $("textarea#ptm-input_").val(newTarget);
+      
       $.ajax({
-            url: serverURL,
+            url: _serverURL,
             dataType: "json",
             data: {ptmUserSelection: JSON.stringify(ptmMsg),},
+            error: function(jqXHR, textStatus, errorThrown){
+              console.log("ptmUserSelection failed: " + textStatus);
+              console.log(errorThrown);
+            },
       });
     },
     
@@ -257,16 +310,25 @@ var ptm = (function() {
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
-        source: ptmUI.src(),
-        finishedTarget: ptmUI.tgt(),
+        source: ptmUI.cleanUp(ptmUI.src()),
+        finishedTarget: ptmUI.cleanUp(ptmUI.tgt()),
       };
       console.log("POST: ptmDone");
       console.log(ptmMsg);
       
       $.ajax({
-            url: serverURL,
+            url: _serverURL,
             dataType: "json",
             data: { ptmDone: JSON.stringify(ptmMsg), },
+            success: function(data, textStatus, jqXHR){
+              console.log("ptmDone response: " + textStatus);
+              window.location.replace(_uiURL);
+            },
+            error: function(jqXHR, textStatus, errorThrown){
+              console.log("ptmDone failed: " + textStatus);
+              console.log(errorThrown);
+//              window.location.replace(_uiURL);
+            },
       });
     },
     
