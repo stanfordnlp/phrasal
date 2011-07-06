@@ -58,3 +58,11 @@ height: 12.5em;
 {
 display:none;
 }
+
+#ptm-renderbox_
+{
+position: absolute;
+display: none;
+height: auto;
+width: auto;
+}
