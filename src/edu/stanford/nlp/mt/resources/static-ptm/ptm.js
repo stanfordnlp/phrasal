@@ -71,7 +71,7 @@ var ptm = (function() {
   var _uiURL = window.location.protocal + "//" + window.location.host;
   
   //URL of PTM server (must be same-domain for json calls to work)
-  var _serverURL = window.location.protocal + "//" + window.location.host;
+  var _serverURL = window.location.protocol + "//" + window.location.host;
   
   //Top-k completion results that will appear in the autocomplete box
   var _numResultsToDisplay = 10;
