@@ -51,7 +51,11 @@ import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
  */
 
 public class PrefixCompletion extends AbstractHandler {
-  public static final boolean DEBUG = true;
+
+  public static final String DEBUG_PROPERTY = "DebugPrefixCompletion";
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
+  
   public static final String HTML_RESOURCES_PATH = "edu/stanford/nlp/mt/resources";
   public static final String DEFAULT_WEB_PAGE = "/translate.html";
   PrefixDecoder<IString,String> prefixDecoder; 
