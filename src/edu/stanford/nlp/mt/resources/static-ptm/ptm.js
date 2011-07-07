@@ -37,6 +37,11 @@
       },
     });
     
+    //Setup the clear button
+    $( '#ptm-clear_' ).click(function(){
+      ptm.reset();
+    });
+    
     //Configure the form that will initiate translation
     //Suppress the form POST
     $('#lang-form_').submit(function(event){
@@ -51,6 +56,17 @@
       event.preventDefault();
       ptm.doneWithTranslation();
       return false;
+    });
+    
+    //Setup the source language list
+    $( '#src-list_' ).append('<option value="NULL" selected="selected"></option>');
+    var srcLangs = ptm.getSourceLanguages();
+    for(var key in srcLangs){
+      var selString = '<option value=\"' + key + '\">' + srcLangs[key] + '</option>';
+      $( '#src-list_' ).append(selString);
+    }
+    $( '#src-list_' ).change(function(){
+      ptm.selectSource($(this).val());
     });
     
     //Blank out all forms
@@ -76,7 +92,26 @@ var ptm = (function() {
   //Top-k completion results that will appear in the autocomplete box
   var _numResultsToDisplay = 10;
   
-  //
+  //Translation directions supported by the system
+  //Languages are represented with ISO 639-1 (two-letter) language codes
+  var _translationDirections = {
+    ar: {
+      source: "Arabic",
+      en: "English",
+    },
+    en: {
+      source: "English",
+      ar: "Arabic",
+    },
+  };
+  
+  //Rendering directions for the supported languages
+  var _langOrientations = {
+    en: "left",
+    ar: "right",
+  };
+    
+  //TODO(spence): All css names should be factored out into constants
   var ptmUI = {
     srcLang: function(){ return $("select#src-list_ option:selected").val(); },
     tgtLang: function(){ return $("select#tgt-list_").val(); },
@@ -94,6 +129,48 @@ var ptm = (function() {
     cleanUp: function(myStr){
       var fmtString = new String(myStr);
       return $.trim(fmtString.toLowerCase());
+    },
+    
+    toggleTgtSelect: function(isEnabled,langId){
+      console.log("toggleTgtSelect: " + isEnabled + " " + langId);
+      $( '#tgt-list_' ).html('<option value="NULL" selected="selected"></option>');
+      var directions = _translationDirections[langId];
+      for(var id in directions){
+        if( id != "source" ){
+          var selString = '<option value=\"' + id + '\">' + directions[id] + '</option>';
+          $( '#tgt-list_' ).append(selString);
+        }
+      }
+      
+      $('#tgt-list_').change(function(){
+        var langId = $(this).val();
+        var orientation = _langOrientations[langId];
+        
+        console.log("setupTgtBox: " + langId);
+        console.log("tgtOrientation: " + orientation);
+        
+        if(orientation == "right"){
+          $( '#ptm-input_' ).css("direction","rtl");
+          $( '#ptm-input_' ).css("text-align","right");
+        } else {
+          $( '#ptm-input_' ).css("direction","ltr");
+          $( '#ptm-input_' ).css("text-align","left");
+        }
+      });
+    },
+    
+    //Configure the orientation of the source box
+    setupSrcBox: function(langId){
+      console.log("setupSrcBox: " + langId);
+      var orientation = _langOrientations[langId];
+      console.log("srcOrientation: " + orientation);
+      if(orientation == "right"){
+        $( '#src-input_' ).css("direction","rtl");
+        $( '#src-input_' ).css("text-align","right");
+      } else {
+        $( '#src-input_' ).css("direction","ltr");
+        $( '#src-input_' ).css("text-align","left");
+      }
     },
   };
   
@@ -186,6 +263,36 @@ var ptm = (function() {
   //
   //
   var fn = {
+    
+    //Reset the UI
+    reset: function(){
+      window.location.replace(_uiURL);
+    },
+    
+    //Returns all source languages supported by the system
+    getSourceLanguages: function() {
+      var langs = {};
+      for(var i in _translationDirections){
+        langs[i] = _translationDirections[i].source;
+      }
+      
+      console.log("getSourceLanguages:");
+      console.log(langs);
+      
+      return langs;
+    },
+    
+    //Select the source language for translation
+    selectSource: function(langId) {
+      console.log("selectSource: " + langId);
+      if(langId === "NULL"){
+        ptmUI.toggleTgtSelect(false,langId);
+      } else {
+        ptmUI.setupSrcBox(langId);
+        ptmUI.toggleTgtSelect(true,langId);
+      }
+    },
+  
     //Initializes translation from the interface
     initTranslation: function(){
 
@@ -210,6 +317,7 @@ var ptm = (function() {
       });     
     },
     
+    //Send an OOV phrase pair to the server
     sendOOV: function(event){
       event.preventDefault();
       
