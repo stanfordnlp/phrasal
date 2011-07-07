@@ -68,7 +68,7 @@
 var ptm = (function() {
   
   //Address of the translation UI (for redirect after translation completion)
-  var _uiURL = window.location.protocal + "//" + window.location.host;
+  var _uiURL = window.location.protocol + "//" + window.location.host;
   
   //URL of PTM server (must be same-domain for json calls to work)
   var _serverURL = window.location.protocol + "//" + window.location.host;
