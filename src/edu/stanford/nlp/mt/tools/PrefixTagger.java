@@ -1,20 +1,19 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.tagger.common.TaggerConstants;
-import edu.stanford.nlp.tagger.maxent.TestSentence;
-import edu.stanford.nlp.tagger.maxent.MaxentTagger;
-
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Arrays;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.objectbank.ObjectBank;
+import edu.stanford.nlp.tagger.common.TaggerConstants;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
+import edu.stanford.nlp.tagger.maxent.TestSentence;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Greedy prefix tagger. Its search is exact iff the tagging model is
@@ -40,6 +39,22 @@ public class PrefixTagger extends TestSentence {
   private int len;
 
   /**
+   * Creates a new PrefixTagger.
+   * 
+   * @param maxentTagger
+   *          general information on the tagger (this parameter will soon
+   *          change)
+   */
+  public PrefixTagger(MaxentTagger maxentTagger) {
+    super(maxentTagger);
+
+    // window sizes are set as same as those in maxentTagger
+    this.leftWindow = leftWindow();
+    this.rightWindow = rightWindow();
+    this.offset = leftWindow();
+  }
+
+  /**
    * Creates a new PrefixTagger. Since PrefixTagger can't determine how many
    * words of context are needed by the tagging model, <i>leftWindow</i> must be
    * manually specified.
@@ -56,12 +71,7 @@ public class PrefixTagger extends TestSentence {
       throw new UnsupportedOperationException();
     this.leftWindow = leftWindow;
     this.rightWindow = rightWindow;
-//    this.offset = -rightWindow;
-    
-    // TODO
-    this.leftWindow = leftWindow();
-    this.rightWindow = rightWindow();
-    this.offset = leftWindow();
+    this.offset = -rightWindow;
   }
 
   private void init(IString[] s) {
@@ -190,20 +200,18 @@ public class PrefixTagger extends TestSentence {
     }
   }
 
-  public static void main(String[] args) throws Exception {    
-    if (args.length != 4) {
+  public static void main(String[] args) throws Exception {
+    if (args.length < 1) {
       System.err
-          .println("Usage: java edu.stanford.nlp.tagger.maxent.PrefixTagger (model) (input-file) (left-window) (right-window)");
+      .println("Usage: java edu.stanford.nlp.tagger.maxent.PrefixTagger (input-file) (model - optional) ");
       System.exit(1);
     }
-
-    String modelFile = args[0];
-    String inputFile = args[1];
-    int leftWindow = Integer.parseInt(args[2]);
-    int rightWindow = Integer.parseInt(args[3]);
+    String inputFile = args[0];
+    String modelFile = MaxentTagger.DEFAULT_NLP_GROUP_MODEL_PATH;
+    if(args.length > 1) modelFile = args[1];
 
     MaxentTagger tagger = new MaxentTagger(modelFile);
-    PrefixTagger ts = new PrefixTagger(tagger, leftWindow, rightWindow);
+    PrefixTagger ts = new PrefixTagger(tagger);
     ts.tagFile(inputFile);
   }
 }
