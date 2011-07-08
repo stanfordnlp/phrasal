@@ -267,6 +267,11 @@ public class DepDAGParser implements Parser, Serializable {
     }
     parsePhrase(s, phrase.size()+fromPreviousPhrase);
   }
+  public void parseToken(Structure s, CoreLabel lastToken){
+    int fromPreviousPhrase = (s.input.size()==0)? 0 : 1;
+    s.input.push(lastToken);
+    parsePhrase(s, 1+fromPreviousPhrase);
+  }
 
   public static void main(String[] args) throws IOException, ClassNotFoundException{
 

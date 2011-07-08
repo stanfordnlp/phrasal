@@ -7,8 +7,8 @@ import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.ValueAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.parser.Actions.Action;
-import edu.stanford.nlp.mt.tools.MajorityTagger;
 import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.GrammaticalStructure;
@@ -33,22 +33,32 @@ public class Structure {
     dependencies = new LinkedStack<TypedDependency>();
   }
 
-  public Structure(GrammaticalStructure gs, MajorityTagger tagger, Morphology lemmatizer) {
+  public Structure(GrammaticalStructure gs, IncrementalTagger tagger, Morphology lemmatizer) {
     this();
     dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(true));
     input = new LinkedStack<CoreLabel>();
+    int seqLen = tagger.ts.leftWindow() + 1;
 
     for (Tree treeNode : gs.root().getLeaves()) {
       TreeGraphNode node = (TreeGraphNode)treeNode;
       CoreLabel cl = node.label();
       Tree p = treeNode.parent();
       cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
+      input.push(cl);
+
       if(useGoldTag) cl.set(PartOfSpeechAnnotation.class, ((TreeGraphNode)p).label().get(ValueAnnotation.class));
-      else {  // use majority tagger
-        tagger.tagWord(cl, (input.size()==0));
+      else {  // use incremental tagger
+        int len = Math.min(seqLen, input.size());
+        IString[] sequence = new IString[len];
+        int i = sequence.length-1;
+        for(Object c : input.peekN(len)) {
+          CoreLabel w = (CoreLabel) c;
+          sequence[i--] = new IString(w.get(TextAnnotation.class));
+        }
+        tagger.tagWord(cl, sequence);
       }
       if(useLemma) lemmatizer.stem(cl);
-      input.push(cl);
+
     }
 
     // padding EOS token to guarantee every word has the right word
