@@ -231,6 +231,9 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
           List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid
               .get(startPos, endPos);
           for (ConcreteTranslationOption<TK> option : applicableOptions) {
+        	if (option.abstractOption.foreign.equals(option.abstractOption.translation)) {
+        		continue;
+        	}
             Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
             if (DEBUG) {
