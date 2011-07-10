@@ -124,8 +124,25 @@ public class PrefixCompletion extends AbstractHandler {
       }
       // responseString = wrapResponse("ptmOOVResponse", gson.toJson(new PTMStatusOk()));  
       responseString = gson.toJson(new PTMStatusOk());  
-    } else if (hasParameter(baseRequest, "ptmPredict")) {       
-      PTMPredictionRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmPredict"), PTMPredictionRequest.class);
+    } else if (hasParameter(baseRequest, "ptmPredict") ||
+    		   (hasParameter(baseRequest, "prefix"))) {       
+      PTMPredictionRequest ptmRequest;
+      if (hasParameter(baseRequest, "ptmPredict")) {
+    	  ptmRequest = gson.fromJson(baseRequest.getParameter("ptmPredict"), PTMPredictionRequest.class);
+      } else {
+    	 String sourceLang = baseRequest.getParameter("sourceLang");
+    	 String targetLang = baseRequest.getParameter("targetLang");
+    	 String source = baseRequest.getParameter("source");
+    	 String prefix = baseRequest.getParameter("prefix");
+    	 int maxPredictions;
+    	 if (hasParameter(baseRequest, "maxPredictions")) {
+    		 maxPredictions = Integer.parseInt(baseRequest.getParameter("maxPredictions"));
+    	 } else {
+    		 maxPredictions = Integer.MAX_VALUE;
+    	 }
+         ptmRequest = new PTMPredictionRequest(sourceLang, targetLang, source, prefix, maxPredictions);
+      }
+      
       if (DEBUG) {
         System.err.println("PTMPredictionRequest: " + gson.toJson(ptmRequest)); 
       }
@@ -271,33 +288,35 @@ public class PrefixCompletion extends AbstractHandler {
     List<String> OOVs = new ArrayList<String>();
     RawSequence<IString> source = new RawSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
     String OOV = "";
-    for (IString token : source) {
-      List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(new RawSequence<IString>(new IString[]{token}));
-      if (phraseTranslations == null || phraseTranslations.size() == 0) {
-        if (!"".equals(OOV)) {
-          OOV = OOV + " ";
-        }
-        OOV = OOV + token.toString();
-        if (DEBUG) {
-          System.err.printf("'%s' is an OOV\n", token);
-        }
-      } else if (!"".equals(OOV)){
-        OOVs.add(OOV);
-        OOV = "";
-        if (DEBUG) {
-          System.err.printf("Final OOV phrase %s\n", OOV);
-        }
-      }
-
-      if (DEBUG && phraseTranslations != null) {
-        System.err.printf("%d translations for %s\n", phraseTranslations.size(), token);
-      }
-
+    if (phr != null) {
+	    for (IString token : source) {
+	      List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(new RawSequence<IString>(new IString[]{token}));
+	      if (phraseTranslations == null || phraseTranslations.size() == 0) {
+	        if (!"".equals(OOV)) {
+	          OOV = OOV + " ";
+	        }
+	        OOV = OOV + token.toString();
+	        if (DEBUG) {
+	          System.err.printf("'%s' is an OOV\n", token);
+	        }
+	      } else if (!"".equals(OOV)){
+	        OOVs.add(OOV);
+	        OOV = "";
+	        if (DEBUG) {
+	          System.err.printf("Final OOV phrase %s\n", OOV);
+	        }
+	      }
+	
+	      if (DEBUG && phraseTranslations != null) {
+	        System.err.printf("%d translations for %s\n", phraseTranslations.size(), token);
+	      }
+	
+	    }
+	    if (!"".equals(OOV)) {
+	      OOVs.add(OOV);
+	    }
     }
-    if (!"".equals(OOV)) {
-      OOVs.add(OOV);
-    }
-    return OOVs;
+	return OOVs;
   }
 
   @SuppressWarnings("unchecked")
@@ -324,7 +343,8 @@ public class PrefixCompletion extends AbstractHandler {
       if(DEBUG)
         System.err.printf("n-best list: %s\n", translations);
       for (RichTranslation<IString,String> translation : translations) {
-        scoredOpts.add(new Completion("TODO", translation.translation.toString(), translation.score));
+    	Sequence<IString> suffix = translation.translation.subsequence(prefix.size(), translation.translation.size());
+        scoredOpts.add(new Completion("TODO", suffix.toString(), translation.score));
       }
     } else {
       if (DEBUG) {
