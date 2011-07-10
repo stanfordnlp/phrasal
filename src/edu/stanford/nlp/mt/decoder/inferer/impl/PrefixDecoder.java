@@ -75,6 +75,20 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
     String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
     
+    if (DEBUG) {
+    	System.err.println("filtered options (for prefix)");
+    	System.err.println("========================================");
+    	for (ConcreteTranslationOption<TK> cto : filteredOptions) {
+    	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
+    	}
+    	
+    	System.err.println("unfiltered options (for suffix)");
+    	System.err.println("========================================");
+    	for (ConcreteTranslationOption<TK> cto : options) {
+    	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
+    	}
+    }
+    
     Arrays.fill(autoInsertScores, -100);
     OptionGrid<TK> optionGrid = new OptionGrid<TK>(options, foreign);
     OptionGrid<TK> filteredOptionGrid = new OptionGrid<TK>(filteredOptions, foreign);
@@ -93,7 +107,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     do {
       Hypothesis<TK, FV> hyp = agenda.remove();
       if (DEBUG) {
-    	  System.err.printf("Expanding hypothesis: %s\n", hyp);
+    	  System.err.printf("[Prefix] Expanding hypothesis: %s\n", hyp);
       }
       int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
       for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
@@ -211,7 +225,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     do {
       Hypothesis<TK, FV> hyp = agenda.remove();
       if (DEBUG) {
-        System.err.printf("Removing hyp from agenda: %s\n", hyp);
+        System.err.printf("[pred loop] Removing hyp from agenda: %s\n", hyp);
       }
       int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);     
       for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
@@ -232,12 +246,16 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
               .get(startPos, endPos);
           for (ConcreteTranslationOption<TK> option : applicableOptions) {
         	if (option.abstractOption.foreign.equals(option.abstractOption.translation)) {
+        		if (DEBUG) {
+        			System.err.println("ignoring option since source phrase == target phrase");
+        			System.err.printf("'%s'='%s'\n", option.abstractOption.foreign, option.abstractOption.translation);
+        		}
         		continue;
         	}
             Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
             if (DEBUG) {
-            	System.out.printf("construction new hyp: \n", newHyp);
+            	System.out.printf("constructed new hyp: %s\n", newHyp);
             }
             predictions.add(newHyp);                      
             agenda.add(newHyp);
