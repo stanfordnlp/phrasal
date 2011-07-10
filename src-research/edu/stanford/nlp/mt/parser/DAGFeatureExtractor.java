@@ -303,16 +303,17 @@ public class DAGFeatureExtractor {
     }
     if(useS2NextTokenPOS && s2!=null) {
       // TODO: fix this to make it more efficient
-      int nextTokenIdx = s2.get(IndexAnnotation.class);
+      int nextTokenIdx = s2.get(IndexAnnotation.class) + 1;
       String nextTokenPOS;
       int inputSz = struc.getInput().size();
       if (inputSz-nextTokenIdx < queueNWords.length) {
         nextTokenPOS = ((CoreLabel)queueNWords[inputSz-nextTokenIdx]).get(PartOfSpeechAnnotation.class);
       } else {
-        Object[] inputArr = struc.getInput().peekN(inputSz-nextTokenIdx);
+        Object[] inputArr = struc.getInput().peekN(inputSz-nextTokenIdx+1);
         nextTokenPOS = ((CoreLabel)inputArr[inputArr.length-1]).get(PartOfSpeechAnnotation.class);
       }
       features.add(Arrays.asList(nextTokenPOS, "S2NextTokenPOS"));
+
     }
 
 
