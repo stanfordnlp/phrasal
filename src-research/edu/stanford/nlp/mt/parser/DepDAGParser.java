@@ -34,6 +34,7 @@ import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.mt.parser.DAGFeatureExtractor.RightSideFeatures;
 import edu.stanford.nlp.parser.Parser;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -327,11 +328,20 @@ public class DepDAGParser implements Parser, Serializable {
     //    props.put("train", tempTrain);
     //        props.put("test", tempTest);
 
+    POSTaggerAnnotator posTagger = null;
+    try {
+      posTagger = new POSTaggerAnnotator(false);
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      System.exit(0);
+    }
+
     if(doTrain) {
       String trainingFile = props.getProperty("train", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-train-2011-01-13.conll");
 
       logger.info("read training data from "+trainingFile + " ...");
-      List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile);
+      List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile, posTagger);
 
       logger.info("train model...");
       DAGFeatureExtractor.printFeatureFlags(logger, rightFeatures);
@@ -340,7 +350,7 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
 
       if(storeTrainedModel) {
-        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.incrementaltagger.noLemma.ser";
+        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.stanfordtagger.noLemma.ser";
         if(!props.containsKey("storeModel")) logger.info("no option -storeModel : trained model will be stored at "+defaultStore);
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
         IOUtils.writeObjectToFile(parser, trainedModelFile);
@@ -354,7 +364,7 @@ public class DepDAGParser implements Parser, Serializable {
       //      String defaultLoadModel = "/scr/heeyoung/mtdata/parser/DAGparserModel.reducedFeat_mem5_dataset.ser";
 
       if(parser==null) {
-        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.incrementaltagger.noLemma.ser";
+        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.stanfordtagger.noLemma.ser";
 
         if(!props.containsKey("loadModel")) logger.info("no option -loadModel : trained model will be loaded from "+defaultLoadModel);
         String trainedModelFile = props.getProperty("loadModel", defaultLoadModel);
@@ -366,7 +376,7 @@ public class DepDAGParser implements Parser, Serializable {
       }
       //      if(true) return;
       logger.info("read test data from "+testFile + " ...");
-      List<Structure> testData = ActionRecoverer.readTrainingData(testFile);
+      List<Structure> testData = ActionRecoverer.readTrainingData(testFile, posTagger);
 
       List<Collection<TypedDependency>> goldDeps = new ArrayList<Collection<TypedDependency>>();
       List<Collection<TypedDependency>> systemDeps = new ArrayList<Collection<TypedDependency>>();
@@ -417,7 +427,7 @@ public class DepDAGParser implements Parser, Serializable {
   private static void testScorer() throws IOException {
     String trainingFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     String devFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
-    List<Structure> devData = ActionRecoverer.readTrainingData(devFile);
+    List<Structure> devData = ActionRecoverer.readTrainingData(devFile, null);
     //    List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile);
 
     List<Collection<TypedDependency>> goldDeps = new ArrayList<Collection<TypedDependency>>();

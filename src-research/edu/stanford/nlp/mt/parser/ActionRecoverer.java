@@ -13,6 +13,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
+import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -114,12 +115,12 @@ public class ActionRecoverer {
     //    }
   }
 
-  public static List<Structure> readTrainingData(String filename) throws IOException{
+  public static List<Structure> readTrainingData(String filename, POSTaggerAnnotator posTagger) throws IOException{
     List<GrammaticalStructure> gsList =
       EnglishGrammaticalStructure.readCoNLLXGrammaticStructureCollection(filename);
     List<Structure> structures = new ArrayList<Structure>();
     for(GrammaticalStructure gs : gsList){
-      Structure s = new Structure(gs, tagger, lemmatizer);
+      Structure s = new Structure(gs, tagger, lemmatizer, posTagger);
       recoverActionTrace(s);
       structures.add(s);
       if(checkCorrectness) checkRecoveredActionTrace(s);
@@ -131,7 +132,7 @@ public class ActionRecoverer {
     //    String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     String filename = "C:\\cygwin\\home\\daniel\\temp.conll";
-    List<Structure> structures = readTrainingData(filename);
+    List<Structure> structures = readTrainingData(filename, null);
 
     for(Structure s : structures) {
       checkRecoveredActionTrace(s);

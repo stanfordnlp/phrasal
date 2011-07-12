@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
@@ -9,6 +10,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.ValueAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.parser.Actions.Action;
+import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.GrammaticalStructure;
@@ -33,12 +35,24 @@ public class Structure {
     dependencies = new LinkedStack<TypedDependency>();
   }
 
-  public Structure(GrammaticalStructure gs, IncrementalTagger tagger, Morphology lemmatizer) {
+  public Structure(GrammaticalStructure gs, IncrementalTagger tagger, Morphology lemmatizer, POSTaggerAnnotator posTagger) {
     this();
     dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(true));
     input = new LinkedStack<CoreLabel>();
     int seqLen = tagger.ts.leftWindow() + 1;
 
+    // to check the performance of POS tagger
+    boolean useStanfordTagger = true;
+    List<CoreLabel> sent = new ArrayList<CoreLabel>();
+    for (Tree treeNode : gs.root().getLeaves()) {
+      TreeGraphNode node = (TreeGraphNode)treeNode;
+      CoreLabel cl = node.label();
+      cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
+      sent.add(cl);
+    }
+    posTagger.processText(sent);
+
+    int idx = 0;
     for (Tree treeNode : gs.root().getLeaves()) {
       TreeGraphNode node = (TreeGraphNode)treeNode;
       CoreLabel cl = node.label();
@@ -47,6 +61,9 @@ public class Structure {
       input.push(cl);
 
       if(useGoldTag) cl.set(PartOfSpeechAnnotation.class, ((TreeGraphNode)p).label().get(ValueAnnotation.class));
+      else if(useStanfordTagger) {
+        // do nothing
+      }
       else {  // use incremental tagger
         int len = Math.min(seqLen, input.size());
         IString[] sequence = new IString[len];
