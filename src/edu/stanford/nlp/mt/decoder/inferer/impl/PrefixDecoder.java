@@ -70,6 +70,10 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
       List<Sequence<TK>> targets, int size) {
     
     PriorityQueue<Hypothesis<TK, FV>> agenda = new PriorityQueue<Hypothesis<TK,FV>>();
+    PriorityQueue<Hypothesis<TK, FV>> paused = new PriorityQueue<Hypothesis<TK,FV>>();
+    int windowSize = 0;
+    int maxPrefixCompletion = 0;
+    
     List<ConcreteTranslationOption<TK>> options = phraseGenerator.translationOptions(foreign, targets, translationId);
     List<ConcreteTranslationOption<TK>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
@@ -93,7 +97,6 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     OptionGrid<TK> optionGrid = new OptionGrid<TK>(options, foreign);
     OptionGrid<TK> filteredOptionGrid = new OptionGrid<TK>(filteredOptions, foreign);
     
-    @SuppressWarnings("unchecked")  
     
     // use *UNFILTERED* options for heuristic calculation
     Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, foreign, heuristic, Arrays.asList(options));
@@ -104,8 +107,29 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     agenda.add(nullHyp);
     List<Hypothesis<TK, FV>> completePrefixes = new ArrayList<Hypothesis<TK,FV>>();
     int foreignSz = foreign.size();
+    long startTime = System.currentTimeMillis();
+    
     do {
+      long time = System.currentTimeMillis() - startTime;
+      if (completePrefixes.size() != 0 && time > 250) {
+          System.out.printf("Time limit exceeded: %s > %d\n", time, 250);
+    	  break;
+      }
+      if (agenda.size() == 0) {
+    	  agenda.addAll(paused);
+    	  paused.clear();
+    	  windowSize++;
+    	  System.err.printf("Doing window size: %d\n", windowSize);
+      }
       Hypothesis<TK, FV> hyp = agenda.remove();
+      
+      if (hyp.featurizable != null && maxPrefixCompletion - hyp.featurizable.partialTranslation.size() > windowSize) {
+    	  System.err.printf("pausing off agenda %d > %d\n", maxPrefixCompletion - 
+    			  hyp.featurizable.partialTranslation.size(), 
+    			  windowSize);
+    	  paused.add(hyp);
+    	  continue;
+      }
       if (DEBUG) {
     	  System.err.printf("[Prefix] Expanding hypothesis: %s\n", hyp);
       }
@@ -152,6 +176,12 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
             
             expansions++;    
             
+            int completion = newHyp.featurizable.partialTranslation.size();   
+            if (completion > maxPrefixCompletion) {
+            	maxPrefixCompletion = completion;
+            	System.err.printf("new max completion: %d\n", maxPrefixCompletion);
+            }
+            
             if (constrainedOutputSpace != null
                 && constrainedOutputSpace
                     .allowableFinal(newHyp.featurizable)) {
@@ -165,7 +195,13 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
             if (DEBUG) {
             	System.out.printf(" - adding hyp to agenda\n");
             }
-            agenda.add(newHyp);
+            if (maxPrefixCompletion - completion <= windowSize) {
+               System.err.printf("Within window %d <= %d\n", maxPrefixCompletion - completion, windowSize);
+               agenda.add(newHyp);
+            } else {
+            	System.err.printf("Pausing - not within window %d !<= %d\n", maxPrefixCompletion - completion, windowSize);
+               paused.add(newHyp);
+            }
           }
         }
         if (expansions == 0) {
@@ -204,18 +240,30 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
 	                    && constrainedOutputSpace
 	                        .allowableFinal(newHyp.featurizable)) {
 	                  if (DEBUG) {
-	                	  System.out.printf(" - allowable fina;\n");
+	                	  System.out.printf(" - allowable final\n");
 	                  }
 	                  completePrefixes.add(newHyp);
 	                  continue;
 	            }
-	        	
-	        	agenda.add(newHyp);
+	        		        	
+	        	int completion = newHyp.featurizable.partialTranslation.size();
+	        	if (completion > maxPrefixCompletion) {
+	            	maxPrefixCompletion = completion;
+	            	System.err.printf("new max completion (faked): %d\n", maxPrefixCompletion);
+	            }
+	        	if (maxPrefixCompletion - completion <= windowSize) {
+	                System.err.printf("Within window %d <= %d\n", maxPrefixCompletion - completion, windowSize);
+	                agenda.add(newHyp);
+	             } else {
+	             	System.err.printf("Pausing - not within window %d !<= %d\n", maxPrefixCompletion - completion, windowSize);
+	                paused.add(newHyp);
+	             }
         	}
         }
         
       }
-    } while (completePrefixes.size() < PREFIX_ALIGNMENTS && agenda.size() > 0);
+    } while (agenda.size() > 0 || paused.size() > 0);
+    
     agenda.clear();
     if (DEBUG) {
       System.err.printf("Doing prediction stage with prefix hypotheses: %s\n", completePrefixes.size());
