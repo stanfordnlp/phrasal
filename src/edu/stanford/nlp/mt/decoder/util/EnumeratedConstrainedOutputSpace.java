@@ -22,8 +22,16 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   public static final int DEBUG_LEVEL_COMPUTATION = 2;
   public final int longestPhrase;
 
-  private final List<Sequence<TK>> allowableSequences;
-
+  public final List<Sequence<TK>> allowableSequences;
+  @Override 
+  public boolean equals(Object o) {
+	  if (o instanceof EnumeratedConstrainedOutputSpace) {
+		  EnumeratedConstrainedOutputSpace ecos = (EnumeratedConstrainedOutputSpace)o;
+		  return ecos.allowableSequences.equals(allowableSequences);
+	  }
+	  return false;
+  }
+  
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();

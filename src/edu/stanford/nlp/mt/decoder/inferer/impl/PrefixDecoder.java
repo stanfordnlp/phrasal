@@ -2,7 +2,9 @@ package edu.stanford.nlp.mt.decoder.inferer.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
@@ -14,10 +16,12 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.OptionGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Prefix decoder 
@@ -61,6 +65,8 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     throw new UnsupportedOperationException();
   }
 
+  public Map<Pair<Sequence<TK>,Sequence<TK>>,PriorityQueue<Hypothesis<TK, FV>>> hypCache = new
+		  HashMap<Pair<Sequence<TK>,Sequence<TK>>,PriorityQueue<Hypothesis<TK, FV>>>();
   
   @SuppressWarnings({ "rawtypes", "unchecked" })
 @Override
@@ -104,15 +110,32 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     if (DEBUG) {
     	System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
     }
-    agenda.add(nullHyp);
+    EnumeratedConstrainedOutputSpace<TK, FV> ecos = (EnumeratedConstrainedOutputSpace<TK, FV>)constrainedOutputSpace;
+    Sequence<TK> prefix = ecos.allowableSequences.get(0);
+    for (int i = prefix.size(); i > 0; i--) {
+    	Sequence<TK> subSeq = prefix.subsequence(0, i);
+    	PriorityQueue<Hypothesis<TK, FV>> savedHyps = hypCache.get(
+    			new Pair<Sequence<TK>,Sequence<TK>>(foreign, subSeq));
+    	if (savedHyps != null) {
+    		System.err.printf("Recovering saved hyps for prefix: %s\n", subSeq);
+    		agenda.addAll(savedHyps);
+    		break;
+    	}
+    }
+    if (agenda.size() == 0) {
+      System.err.printf("Could not recover saved hyps for prefix: %s\n", prefix);
+      //System.err.println("Only have saved hyps for prefixes:");
+      //for (Sequence<TK> prefix )
+      agenda.add(nullHyp);
+    }
     List<Hypothesis<TK, FV>> completePrefixes = new ArrayList<Hypothesis<TK,FV>>();
     int foreignSz = foreign.size();
     long startTime = System.currentTimeMillis();
     
     do {
       long time = System.currentTimeMillis() - startTime;
-      if (completePrefixes.size() != 0 && time > 250) {
-          System.out.printf("Time limit exceeded: %s > %d\n", time, 250);
+      if (completePrefixes.size() != 0 && time > 300) {
+          System.out.printf("Time limit exceeded: %s > %d\n", time, 300);
     	  break;
       }
       if (agenda.size() == 0) {
@@ -263,6 +286,14 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
         
       }
     } while (agenda.size() > 0 || paused.size() > 0);
+    PriorityQueue<Hypothesis<TK, FV>> allHyps = new PriorityQueue<Hypothesis<TK,FV>>();
+    allHyps.addAll(agenda);
+    allHyps.addAll(paused);
+    allHyps.addAll(completePrefixes);
+    
+    Pair<Sequence<TK>,Sequence<TK>> cacheKey =
+    		new Pair<Sequence<TK>,Sequence<TK>>(foreign,completePrefixes.get(0).featurizable.partialTranslation);
+    hypCache.put(cacheKey, allHyps);
     
     agenda.clear();
     if (DEBUG) {
@@ -328,3 +359,4 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     return nbest(scorer, foreign, translationId, constrainedOutputSpace, targets, size);
   }
 }
+
