@@ -80,7 +80,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     
     PriorityQueue<Hypothesis<TK, FV>> agenda = new PriorityQueue<Hypothesis<TK,FV>>();
     PriorityQueue<Hypothesis<TK, FV>> paused = new PriorityQueue<Hypothesis<TK,FV>>();
-    int windowSize = 0;
+    int windowSize = 100;
     int maxPrefixCompletion = 0;
     
     List<ConcreteTranslationOption<TK>> options = phraseGenerator.translationOptions(foreign, targets, translationId);
@@ -113,6 +113,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     if (DEBUG) {
     	System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
     }
+    /*
     EnumeratedConstrainedOutputSpace<TK, FV> ecos = (EnumeratedConstrainedOutputSpace<TK, FV>)constrainedOutputSpace;
     Sequence<TK> prefix = ecos.allowableSequences.get(0);
     for (int i = prefix.size(); i > 0; i--) {
@@ -130,7 +131,9 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
       //System.err.println("Only have saved hyps for prefixes:");
       //for (Sequence<TK> prefix )
       agenda.add(nullHyp);
-    }
+    } */
+    agenda.add(nullHyp);
+    
     List<Hypothesis<TK, FV>> completePrefixes = new ArrayList<Hypothesis<TK,FV>>();
     int foreignSz = foreign.size();
     long startTime = System.currentTimeMillis();
@@ -161,6 +164,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     	  System.err.printf("[Prefix] Expanding hypothesis: %s\n", hyp);
       }
       int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
+      int expansions = 0;     
       for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
         int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
 
@@ -174,24 +178,40 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
           }
         }
         
-        int expansions = 0;
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
        // use *FILTERED* options for prefix hypothesis expansion
           List<ConcreteTranslationOption<TK>> applicableOptions = filteredOptionGrid
               .get(startPos, endPos);
+          System.err.printf("%d-%d: option count: %d\n", startPos, endPos, applicableOptions.size());
           for (ConcreteTranslationOption<TK> option : applicableOptions) {
             if (constrainedOutputSpace != null
                 && !constrainedOutputSpace.allowableContinuation(
                     hyp.featurizable, option)) {
-              continue;
+              EnumeratedConstrainedOutputSpace<TK, FV> ecos = (EnumeratedConstrainedOutputSpace<TK, FV>)constrainedOutputSpace;
+              Sequence<TK> prefix = ecos.allowableSequences.get(0);   
+              System.err.printf("not allowed: '%s'+'%s'\n", (hyp.featurizable == null ? "" : hyp.featurizable.partialTranslation), option.abstractOption.translation);
+              System.err.printf("doesn't match prefix: '%s'\n", prefix);
+              String wilcoTango = (hyp.featurizable == null ? "" : hyp.featurizable.partialTranslation.toString()) +
+            		              " " + option.abstractOption.translation.toString();
+              if (!prefix.toString().startsWith(wilcoTango)) {
+                 continue;
+              } else {
+            	  System.err.println("wilco Tango");
+              }
             }
             Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
             RecombinationHash.Status status = recombinationHash.queryStatus(newHyp,
                     true);
             if (status == RecombinationHash.Status.COMBINABLE) {
+            	System.err.printf("Recombining hyp: %s\n", newHyp.featurizable.partialTranslation);
             	continue;
             }
+            System.err.println("New hyp:");
+            for (Hypothesis<TK, FV> h = newHyp; h.featurizable != null; h = h.preceedingHyp) {
+            	System.err.printf("  f: '%s' => e: '%s'\n", h.featurizable.foreignPhrase, h.featurizable.translatedPhrase);
+            }
+            System.err.println();
             if (newHyp.featurizable.untranslatedTokens != 0) {
               if (constrainedOutputSpace != null
                   && !constrainedOutputSpace
@@ -227,8 +247,9 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
             			completion, windowSize);
             	paused.add(newHyp);
             }
-          }
-        }
+          }      
+        } 
+      }
         if (expansions == 0) {
         	List<Sequence<TK>> allowableSequences = constrainedOutputSpace.getAllowableSequences();
         	for (Sequence<TK> allowableSequence : allowableSequences) {
@@ -288,8 +309,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
 	             }
         	}
         }
-        
-      }
+       
     } while (agenda.size() > 0 || paused.size() > 0);
     PriorityQueue<Hypothesis<TK, FV>> allHyps = new PriorityQueue<Hypothesis<TK,FV>>();
     allHyps.addAll(agenda);
