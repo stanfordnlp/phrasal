@@ -2,7 +2,9 @@ package edu.stanford.nlp.mt.decoder.inferer.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -347,6 +349,21 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     for (Hypothesis<TK,FV> hyp : predictions) {
       nbest.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.finalScoreEstimate(), null));
     }
+    
+    System.err.println("Alignments\n==========");
+    for (int i = 0; i < Math.min(10, predictions.size()); i++) {
+    	System.err.printf("Hypothesis: %d\n", i);
+    	List<String> alignments = new LinkedList<String>();
+    	for (Hypothesis<TK, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
+    		alignments.add(String.format("f:'%s' => e: '%s'", hyp.featurizable.foreignPhrase, hyp.featurizable.translatedPhrase));
+    	}
+        Collections.reverse(alignments);
+    	for (String alignment : alignments) {
+    	   System.err.print("   ");
+    	   System.err.println(alignment);
+    	}
+    }
+    
     return nbest;
   }
 
