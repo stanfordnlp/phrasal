@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
@@ -101,7 +102,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     	}
     }
     
-    Arrays.fill(autoInsertScores, -100);
+    Arrays.fill(autoInsertScores, -10000);
     OptionGrid<TK> optionGrid = new OptionGrid<TK>(options, foreign);
     OptionGrid<TK> filteredOptionGrid = new OptionGrid<TK>(filteredOptions, foreign);
     
@@ -133,13 +134,13 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     List<Hypothesis<TK, FV>> completePrefixes = new ArrayList<Hypothesis<TK,FV>>();
     int foreignSz = foreign.size();
     long startTime = System.currentTimeMillis();
-    
+    RecombinationHash<Hypothesis<TK,FV>> recombinationHash = new RecombinationHash<Hypothesis<TK,FV>>(filter);   
     do {
-      long time = System.currentTimeMillis() - startTime;
-      if (completePrefixes.size() != 0 && time > 300) {
+     /* long time = System.currentTimeMillis() - startTime;
+      if (completePrefixes.size() != 0 && time > 20000) {
           System.out.printf("Time limit exceeded: %s > %d\n", time, 300);
     	  break;
-      }
+      } */
       if (agenda.size() == 0) {
     	  agenda.addAll(paused);
     	  paused.clear();
@@ -152,6 +153,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     	  System.err.printf("pausing off agenda %d > %d\n", maxPrefixCompletion - 
     			  hyp.featurizable.partialTranslation.size(), 
     			  windowSize);
+    	  System.err.printf("adding to paused (max: %d size: %d window %d)",maxPrefixCompletion, hyp.featurizable.partialTranslation.size(), windowSize);
     	  paused.add(hyp);
     	  continue;
       }
@@ -185,16 +187,15 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
             }
             Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
-            if (DEBUG) {
-            	System.out.printf("Contructed new hypothesis: %s\n", newHyp);
+            RecombinationHash.Status status = recombinationHash.queryStatus(newHyp,
+                    true);
+            if (status == RecombinationHash.Status.COMBINABLE) {
+            	continue;
             }
             if (newHyp.featurizable.untranslatedTokens != 0) {
               if (constrainedOutputSpace != null
                   && !constrainedOutputSpace
                       .allowablePartial(newHyp.featurizable)) {
-                 if (DEBUG) {
-                    System.out.printf(" - hypothesis is not allowed by contrained output space\n");	
-                 }
             	 continue;
               }
             }
@@ -211,21 +212,20 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
                 && constrainedOutputSpace
                     .allowableFinal(newHyp.featurizable)) {
               if (DEBUG) {
-            	  System.out.printf(" - allowable fina;\n");
+            	  System.out.printf(" - allowable final\n");
               }
               completePrefixes.add(newHyp);
               continue;
             }
             
-            if (DEBUG) {
-            	System.out.printf(" - adding hyp to agenda\n");
-            }
+            
             if (maxPrefixCompletion - completion <= windowSize) {
-               System.err.printf("Within window %d <= %d\n", maxPrefixCompletion - completion, windowSize);
                agenda.add(newHyp);
             } else {
             	System.err.printf("Pausing - not within window %d !<= %d\n", maxPrefixCompletion - completion, windowSize);
-               paused.add(newHyp);
+            	System.err.printf("[adding to paused (max: %d size: %d window %d)]",maxPrefixCompletion, 
+            			completion, windowSize);
+            	paused.add(newHyp);
             }
           }
         }
@@ -245,10 +245,7 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
         		if (hypSz >= allowableSequence.size()) {
         			continue;
         		}
-        		if (DEBUG) {
-        		   System.err.printf("uncompletable hypothesis of size: %d\n", hypSz);
-        		   System.err.printf("attempting to complete with allowableSequnece %s\n", allowableSequence);
-        		}
+        		
         		IString nextWord = (IString)allowableSequence.get(hypSz);
 	        	TranslationOption<IString> abstractOption = new TranslationOption<IString>(autoInsertScores, scoreNames, 
 	        	   new RawSequence<IString>(new IString[]{nextWord}), new RawSequence<IString>(new IString[0]), null);
@@ -260,7 +257,13 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
 	        	if (DEBUG) {
 	        		System.err.printf("Autogenerated hyp: %s\n", newHyp);
 	        	}
-	        	
+	        
+	        	RecombinationHash.Status status = recombinationHash.queryStatus(newHyp,
+	                    true);
+	            if (status == RecombinationHash.Status.COMBINABLE) {
+	            	continue;
+	            }
+	            
 	        	if (constrainedOutputSpace != null
 	                    && constrainedOutputSpace
 	                        .allowableFinal(newHyp.featurizable)) {
@@ -352,10 +355,11 @@ public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
     
     System.err.println("Alignments\n==========");
     for (int i = 0; i < Math.min(10, predictions.size()); i++) {
-    	System.err.printf("Hypothesis: %d\n", i);
+    	System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
     	List<String> alignments = new LinkedList<String>();
     	for (Hypothesis<TK, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
-    		alignments.add(String.format("f:'%s' => e: '%s'", hyp.featurizable.foreignPhrase, hyp.featurizable.translatedPhrase));
+    		alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.foreignPhrase, 
+    				hyp.featurizable.translatedPhrase, Arrays.toString(hyp.translationOpt.abstractOption.scores)));
     	}
         Collections.reverse(alignments);
     	for (String alignment : alignments) {
