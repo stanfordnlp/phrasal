@@ -181,12 +181,50 @@ var ptm = (function() {
         $( '#src-input_' ).css("text-align","left");
       }
     },
+    
+    //Position the autocomplete div
+    positionAutocomplete: function() {
+      var prefix = ptmUI.tgt();
+      $( '#ptm-renderbox_' ).html(prefix);
+//      console.log("prefix: " + prefix);
+      var textHeight = $( '#ptm-renderbox_' ).height();
+      console.log("textHeight: " + textHeight);
+      var textWidth = $( '#ptm-renderbox_' ).width();
+      console.log("textWidth: " + textWidth);
+            
+      var boxWidth = $( "#ptm-input_" ).width();
+      console.log("boxWidth: " + boxWidth);
+            
+      var vOffset = Math.floor(textWidth / boxWidth);
+      console.log("vOffset1: " + vOffset);
+      vOffset = (vOffset+1) * textHeight;
+      console.log("vOffset2: " + vOffset);
+      
+      var hOffset = textWidth % boxWidth;
+      console.log("hOffset: " + hOffset);
+      
+      //my = Alignment position on the autocomplete box
+      //at = Alignment position on the target element
+      //offset = horizontal, vertical (pixel) offset values
+      var newPos = {
+        my: "left top",
+        at: "left top",
+        collision: "none",
+        offset: hOffset.toString() + " " + vOffset.toString(),
+      };
+      console.log("New autocomplete position in textArea: ");
+      console.log(newPos);
+       
+      $( "#ptm-input_" ).autocomplete( "option", "position", newPos );
+    },
   };
   
   //Callbacks from the server to render data to the interface
   //
   //TODO: Remove the nested HTML here? Or at least specify the ids.
   var serveData = {
+    
+    //Acknowledgement received after sending a new OOV pair
     oovResponse: function(data) {
       console.log("oovResponse");
       console.log(data);
@@ -215,45 +253,18 @@ var ptm = (function() {
       $('.form-oov').submit(fn.sendOOV);
     },
     
+    //Predicted completions for the sent prefix
     predictResponse: function(data,response){
       console.log("Autocomplete response:");
       console.log(data);
       
-      var prefix = ptmUI.tgt();
-      $( '#ptm-renderbox_' ).html(prefix);
-      console.log($( '#ptm-renderbox_' ));
-      var textHeight = $( '#ptm-renderbox_' ).height();
-      console.log("textHeight: " + textHeight);
-      var textWidth = $( '#ptm-renderbox_' ).width();
-      console.log("textWidth: " + textWidth);
-            
-      var boxWidth = $( "#ptm-input_" ).width();
-      console.log("boxWidth: " + boxWidth);
-            
-      var vOffset = Math.floor(textWidth / boxWidth);
-      vOffset = (vOffset+1) * textHeight;
+      ptmUI.positionAutocomplete();
       
-      var hOffset = textWidth % boxWidth;
-      
-      //my = Alignment position on the autocomplete box
-      //at = Alignment position on the target element
-      //offset = horizontal, vertical (pixel) offset values
-      var newPos = {
-        my: "left top",
-        at: "left top",
-        collision: "none",
-        offset: hOffset.toString() + " " + vOffset.toString(),
-      };
-      console.log("New autocomplete position in textArea: ");
-      console.log(newPos);
-       
-      $( "#ptm-input_" ).autocomplete( "option", "position", newPos );
-      
-		_predictionsCache = new SimpleTrie();
-		$.map(data.predictions, function(item,index) {
-			console.log("Caching: " + item);
-			_predictionsCache.Add(item,index);		
-		});
+		  _predictionsCache = new SimpleTrie();
+		  $.map(data.predictions, function(item,index) {
+			  console.log("Caching: " + item);
+			  _predictionsCache.Add(item,index);		
+		  });
 
       //Setup the autocomplete box source      
       response( $.map( data.predictions.slice(0,_numResultsToDisplay), function( item ) {
@@ -261,12 +272,15 @@ var ptm = (function() {
       }));
     },
     
+    //Fetch completions from the cache saved from the last server request
     predictResponseFromCache: function(response){
-		console.log("predictResponseFromCache");
-		var tgt_toks = ptmUI.tgt().split(" ");
-		var completions = _predictionsCache.FindAll(tgt_toks[tgt_toks.length-1]);
+		  console.log("predictResponseFromCache");
+		  var tgt_toks = ptmUI.tgt().split(" ");
+		  var completions = _predictionsCache.FindAll(tgt_toks[tgt_toks.length-1]);
 		
-		response( $.map( completions, function( item ) {
+		  ptmUI.positionAutocomplete();
+		
+		  response( $.map( completions, function( item ) {
         return { label: item, value: ptmUI.tgt() + item }
       }));
     },

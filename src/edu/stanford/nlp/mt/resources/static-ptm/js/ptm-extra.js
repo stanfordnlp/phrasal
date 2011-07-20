@@ -42,8 +42,10 @@ SimpleTrie.prototype.Insert = function(node,prefix){
 				}
 			};
 			
-			// Return all strings beginning with this prefix
-			// sorted by their values
+// Return all strings beginning with this prefix
+// sorted by their values
+//TODO(spenceg) Currently this returns an unordered array. It should return
+// a map with the values as the keys.
 SimpleTrie.prototype.FindAll = function(prefix){
 				var fromNode = this.ContainsPrefix(prefix);
 				if(fromNode){
