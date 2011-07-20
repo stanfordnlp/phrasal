@@ -47,7 +47,7 @@ SimpleTrie.prototype.Insert = function(node,prefix){
 SimpleTrie.prototype.FindAll = function(prefix){
 				var fromNode = this.ContainsPrefix(prefix);
 				if(fromNode){
-					console.log(fromNode.ToString());
+//					console.log(fromNode.ToString());
 					var strCache = [];
 					this.FindAllHelper(fromNode,"",strCache);
 					return strCache;

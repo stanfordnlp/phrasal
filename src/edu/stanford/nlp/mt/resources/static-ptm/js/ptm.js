@@ -22,7 +22,10 @@
       
       //keyCode(32) == spacebar, which triggers autocomplete        
       search: function(event,ui){
-        return (event.which === 32);
+        if(event.which === 32){
+          ptm.clearCache();
+        }
+        return ptm.shouldFireAutocomplete();
       },
       
       source: function(request,response){
@@ -89,8 +92,14 @@ var ptm = (function() {
   //URL of PTM server (must be same-domain for json calls to work)
   var _serverURL = window.location.protocol + "//" + window.location.host;
   
+  //Number of autocomplete results to fetch from the MT system
+  var _numResultsToFetch = 100;  
+  
   //Top-k completion results that will appear in the autocomplete box
   var _numResultsToDisplay = 10;
+  
+  //Cache of last set of predictions
+  var _predictionsCache = "";
   
   //Translation directions supported by the system
   //Languages are represented with ISO 639-1 (two-letter) language codes
@@ -210,14 +219,7 @@ var ptm = (function() {
       console.log("Autocomplete response:");
       console.log(data);
       
-      var charPos = $( "#ptm-input_" ).getSelection().end;
       var prefix = ptmUI.tgt();
-      if(charPos < prefix.length){
-        console.log("Prefix length: " + prefix.length);
-        console.log("Caret pos: " + charPos);
-        return;
-      }
-
       $( '#ptm-renderbox_' ).html(prefix);
       console.log($( '#ptm-renderbox_' ));
       var textHeight = $( '#ptm-renderbox_' ).height();
@@ -247,12 +249,24 @@ var ptm = (function() {
        
       $( "#ptm-input_" ).autocomplete( "option", "position", newPos );
       
-      if(data.predictions.length > _numResultsToDisplay){
-        console.log("# returned results exceeds max results: " + data.predictions.length);
-      }
+		_predictionsCache = new SimpleTrie();
+		$.map(data.predictions, function(item,index) {
+			console.log("Caching: " + item);
+			_predictionsCache.Add(item,index);		
+		});
 
       //Setup the autocomplete box source      
-      response( $.map( data.predictions, function( item ) {
+      response( $.map( data.predictions.slice(0,_numResultsToDisplay), function( item ) {
+        return { label: item, value: ptmUI.tgt() + item }
+      }));
+    },
+    
+    predictResponseFromCache: function(response){
+		console.log("predictResponseFromCache");
+		var tgt_toks = ptmUI.tgt().split(" ");
+		var completions = _predictionsCache.FindAll(tgt_toks[tgt_toks.length-1]);
+		
+		response( $.map( completions, function( item ) {
         return { label: item, value: ptmUI.tgt() + item }
       }));
     },
@@ -266,7 +280,22 @@ var ptm = (function() {
     
     //Reset the UI
     reset: function(){
+      console.log("reset:");
       window.location.replace(_uiURL);
+    },
+    
+    //Clear the predictions cache
+    clearCache: function(){
+      console.log("clearCache");
+      _predictionsCache = "";
+    },
+    
+    // If we should fire the autocomplete function
+    shouldFireAutocomplete: function(){
+      console.log("shouldFireAutocomplete");
+      var charPos = $( "#ptm-input_" ).getSelection().end;
+      var prefix = ptmUI.tgt();
+      return (charPos >= prefix.length);
     },
     
     //Returns all source languages supported by the system
@@ -348,32 +377,36 @@ var ptm = (function() {
     autoCompleteReq: function(request,response){
       console.log("autoCompleteRequest");
       
-      var ptmMsg = {
-        sourceLang: ptmUI.srcLang(),
-        targetLang: ptmUI.tgtLang(),
-        source: ptmUI.cleanUp(ptmUI.src()),
-        prefix: ptmUI.cleanUp(ptmUI.tgt()),
-        maxPredictions: _numResultsToDisplay,
-      };
-      console.log("POST: ptmPredict");
-      console.log(ptmMsg);
-      console.log(ptmUI.tgt());
-    
-      //Register the callback here since we'll send it directly
-      //to the autocomplete box
-      $.ajax({
-            url: _serverURL,
-            dataType: "json",
-            data: { ptmPredict: JSON.stringify(ptmMsg), },
-            success: function(data){
-              //response is a callback
-              serveData.predictResponse(data,response);
-            },
-            error: function(jqXHR, textStatus, errorThrown){
-              console.log("ptmPredict failed: " + textStatus);
-              console.log(errorThrown);
-            },
-      });
+      if(_predictionsCache == false){
+	      var ptmMsg = {
+	        sourceLang: ptmUI.srcLang(),
+	        targetLang: ptmUI.tgtLang(),
+	        source: ptmUI.cleanUp(ptmUI.src()),
+	        prefix: ptmUI.cleanUp(ptmUI.tgt()),
+	        maxPredictions: _numResultsToDisplay,
+	      };
+	      console.log("POST: ptmPredict");
+	      console.log(ptmMsg);
+	      console.log(ptmUI.tgt());
+	    
+	      //Register the callback here since we'll send it directly
+	      //to the autocomplete box
+	      $.ajax({
+	            url: _serverURL,
+	            dataType: "json",
+	            data: { ptmPredict: JSON.stringify(ptmMsg), },
+	            success: function(data){
+	              //response is a callback
+	              serveData.predictResponse(data,response);
+	            },
+	            error: function(jqXHR, textStatus, errorThrown){
+	              console.log("ptmPredict failed: " + textStatus);
+	              console.log(errorThrown);
+	            },
+	      });
+      } else {
+			serveData.predictResponseFromCache(response);      
+      }
     },
         
     //When the user selects a completion
