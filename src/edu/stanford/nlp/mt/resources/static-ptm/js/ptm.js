@@ -144,8 +144,18 @@ var ptm = (function() {
     srcOOV: function(context){ return $(context).find(".oov-src-text").html(); },
     tgtOOV: function(context){ return $(context).find(".oov-tgt").val(); },
     
+    showStatus: function(message){
+      console.log("Status: " + message);
+      $( "#status-box_" ).html(message).show();   
+    },
+    
+    hideStatus: function() {
+      $( "#status-box_" ).slideUp();
+    },
+    
     showPTM: function(){
       if ($('.form-oov:visible').length <= 1){
+        ptmUI.showStatus("Done with OOV input.");
         $('#ptm_').show();
       }
     },
@@ -248,7 +258,7 @@ var ptm = (function() {
       $("#oov-input_").html('');
       
       if(data.OOVs.length === 0){
-        console.log("No OOVs. Opening PTM window.");
+        console.log("No OOVs! Opening PTM window.");
         ptmUI.showPTM();
         return;
       }
@@ -370,6 +380,7 @@ var ptm = (function() {
   
     //Initializes translation from the interface
     initTranslation: function(){
+      ptmUI.hideStatus();
 
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
@@ -423,6 +434,8 @@ var ptm = (function() {
     autoCompleteReq: function(request,response){
       console.log("autoCompleteRequest");
       
+      ptmUI.hideStatus();
+      
       if(_predictionsCache == false){
 	      var ptmMsg = {
 	        sourceLang: ptmUI.srcLang(),
@@ -460,6 +473,8 @@ var ptm = (function() {
       console.log("autoCompleteSelect:");
       console.log("Completion: " + completion);
       
+      ptmUI.hideStatus();
+      
       var newTarget = new String(ptmUI.tgt() + " " + completion);
       
       var ptmMsg = {
@@ -493,13 +508,15 @@ var ptm = (function() {
     //User has finished the translation.
     //Submit to server
     doneWithTranslation: function(){
+    
+      ptmUI.hideStatus();
       
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
         source: ptmUI.cleanUp(ptmUI.src()),
         finishedTarget: ptmUI.cleanUp(ptmUI.tgt()),
-        numKeyStrokes: _numKeyStrokes;
+        numKeyStrokes: _numKeyStrokes,
       };
       console.log("POST: ptmDone");
       console.log(ptmMsg);

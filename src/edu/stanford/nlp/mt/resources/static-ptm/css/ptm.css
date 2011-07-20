@@ -18,6 +18,11 @@ font-family: Helvetica, Arial, sans-serif;
 font-size: 100%;
 }
 
+#status-box_ {
+background: #6666FF;
+display: none;
+}
+
 #container_ {
 min-width:72.5em;
 width:72.5em;
