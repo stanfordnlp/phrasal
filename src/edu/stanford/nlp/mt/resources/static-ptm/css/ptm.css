@@ -1,4 +1,8 @@
 
+/* TODO(spenceg) Need to generalize font styling so that
+ autocomplete box placement works correctly independently
+ of how the HTML is styled
+*/
 body,html 
 {
 font-family: Helvetica, Arial, sans-serif;
@@ -65,10 +69,16 @@ height: 12.5em;
 display:none;
 }
 
+/* wsg: This hidden box must have the same styling as ptm-input_
+     so that autocomplete box placement works properly.
+*/
 #ptm-renderbox_
 {
-position: absolute;
+font-family: Helvetica, Arial, sans-serif;
+font-size:100%;
+white-space: nowrap;
 display: none;
+position: absolute;
 height: auto;
 width: auto;
 }

@@ -32,13 +32,25 @@
         ptm.autoCompleteReq(request,response);
       },
       
+      focus: function( event, ui ) {
+        ptm.addKeyStroke();      
+      },
+      
       select: function( event, ui ) {  
 //        console.log( "Selected:" + ui.item);
+        //Log user actions in the autocomplete box
+        ptm.addKeyStroke();
+        
         if(ui.item){
           ptm.autoCompleteSelect(ui.item.label);
         }
       },
     });
+    
+    //Setup keystroke counting (for typing)
+    $( "#ptm-input_" ).keypress(function(event){
+      ptm.addKeyStroke();    
+    });    
     
     //Setup the clear button
     $( '#ptm-clear_' ).click(function(){
@@ -100,6 +112,9 @@ var ptm = (function() {
   
   //Cache of last set of predictions
   var _predictionsCache = "";
+  
+  //How many keystrokes the user has entered during the translation session
+  var _numKeyStrokes = 0;
   
   //Translation directions supported by the system
   //Languages are represented with ISO 639-1 (two-letter) language codes
@@ -188,20 +203,20 @@ var ptm = (function() {
       $( '#ptm-renderbox_' ).html(prefix);
 //      console.log("prefix: " + prefix);
       var textHeight = $( '#ptm-renderbox_' ).height();
-      console.log("textHeight: " + textHeight);
+//      console.log("textHeight: " + textHeight);
       var textWidth = $( '#ptm-renderbox_' ).width();
-      console.log("textWidth: " + textWidth);
+//      console.log("textWidth: " + textWidth);
             
       var boxWidth = $( "#ptm-input_" ).width();
-      console.log("boxWidth: " + boxWidth);
+//      console.log("boxWidth: " + boxWidth);
             
       var vOffset = Math.floor(textWidth / boxWidth);
-      console.log("vOffset1: " + vOffset);
+//      console.log("vOffset1: " + vOffset);
       vOffset = (vOffset+1) * textHeight;
-      console.log("vOffset2: " + vOffset);
+//      console.log("vOffset2: " + vOffset);
       
       var hOffset = textWidth % boxWidth;
-      console.log("hOffset: " + hOffset);
+//      console.log("hOffset: " + hOffset);
       
       //my = Alignment position on the autocomplete box
       //at = Alignment position on the target element
@@ -262,7 +277,7 @@ var ptm = (function() {
       
 		  _predictionsCache = new SimpleTrie();
 		  $.map(data.predictions, function(item,index) {
-			  console.log("Caching: " + item);
+//			  console.log("Caching: " + item);
 			  _predictionsCache.Add(item,index);		
 		  });
 
@@ -274,15 +289,24 @@ var ptm = (function() {
     
     //Fetch completions from the cache saved from the last server request
     predictResponseFromCache: function(response){
-		  console.log("predictResponseFromCache");
-		  var tgt_toks = ptmUI.tgt().split(" ");
-		  var completions = _predictionsCache.FindAll(tgt_toks[tgt_toks.length-1]);
-		
-		  ptmUI.positionAutocomplete();
-		
-		  response( $.map( completions, function( item ) {
-        return { label: item, value: ptmUI.tgt() + item }
-      }));
+  	  console.log("predictResponseFromCache");
+  	  var tgt_toks = ptmUI.tgt().split(" ");
+  	  var completions = _predictionsCache.FindAll(tgt_toks[tgt_toks.length-1]);
+  		
+//  	  console.log(completions);		
+  	
+  	  if(completions != false){
+  	 	  ptmUI.positionAutocomplete();
+  		
+  		 //Completions should be sorted by value in the iteration
+  		 //i.e., we don't need to explicitly sort.		
+        response( $.map( completions, function( item ) {
+       	   return { label: item, value: ptmUI.tgt() + item }
+     	  }));
+      } else {
+        completions = [];
+        response( completions );      
+      }
     },
   };
   
@@ -296,7 +320,15 @@ var ptm = (function() {
     reset: function(){
       console.log("reset:");
       window.location.replace(_uiURL);
+      _predictionsCache = "";
+      _numKeyStrokes = 0;
     },
+    
+    //Keep track of number 
+    addKeyStroke: function() {
+      _numKeyStrokes++;
+      console.log("addKeyStroke: " + _numKeyStrokes);
+    },    
     
     //Clear the predictions cache
     clearCache: function(){
@@ -467,6 +499,7 @@ var ptm = (function() {
         targetLang: ptmUI.tgtLang(),
         source: ptmUI.cleanUp(ptmUI.src()),
         finishedTarget: ptmUI.cleanUp(ptmUI.tgt()),
+        numKeyStrokes: _numKeyStrokes;
       };
       console.log("POST: ptmDone");
       console.log(ptmMsg);

@@ -1,7 +1,10 @@
 
 // Register in global namespace
 
-		// A simple (unoptimized) Trie for prefix-lookups
+// A simple (unoptimized) Trie for prefix-lookups
+//TODO(spenceg) Right now it assumes that the values in the nodes
+// are numerical, unique, and ascending in value. Make this a more general
+// implementation.
 var SimpleTrie = function(){
 			//TODO(wsg) Make this value field more general
 			this.defValue = Number.MAX_VALUE;
@@ -35,6 +38,7 @@ SimpleTrie.prototype.Insert = function(node,prefix){
 					
 				// Add a terminal				
 				} else {
+//					console.log("Inserting: " + newKey);
 					if(node.kids.hasOwnProperty(newKey) === false){
 						node.kids[newKey] = new TrieNode(this.defValue);
 					}
@@ -47,32 +51,32 @@ SimpleTrie.prototype.Insert = function(node,prefix){
 //TODO(spenceg) Currently this returns an unordered array. It should return
 // a map with the values as the keys.
 SimpleTrie.prototype.FindAll = function(prefix){
+//				console.log("FindAll for: " + prefix);
 				var fromNode = this.ContainsPrefix(prefix);
 				if(fromNode){
 //					console.log(fromNode.ToString());
-					var strCache = [];
+					var strCache = {};
 					this.FindAllHelper(fromNode,"",strCache);
 					return strCache;
 				}			
 				return "";			
 			};
 		
-			// O(n) extraction of suffixes from the trie
+// O(n) extraction of suffixes from the trie
+// Post-order DFS through the child properties
 SimpleTrie.prototype.FindAllHelper = function(fromNode,context,strCache){
-				// DFS through the child properties
 				var noKids = true;
 				for(var kid in fromNode.kids){
 //					console.log("Kid: " + kid);
 					noKids = false;
-					if(fromNode.kids[kid].value != this.defValue){
-//						console.log("Appending1: " + context);
-						strCache.push(context + kid);			
-					}
 					this.FindAllHelper(fromNode.kids[kid],context + kid,strCache);
 				}
-				if(noKids && strCache[strCache.length-1] != context){
-//					console.log("Appending2: " + context);
-					strCache.push(context);			
+
+				//Process the root				
+				if(noKids || fromNode.value != this.defValue){
+					var new_key = fromNode.value;
+//					console.log("Appending: " + new_key + " || " + context);
+					strCache[new_key] = context;			
 				}
 			};		
 			
@@ -97,12 +101,19 @@ SimpleTrie.prototype.ContainsPrefix = function(prefix){
 					return "";
 				}
 			};
-			
+
+//Do an O(logn) search through the tree
+//and return the value if it exists
 SimpleTrie.prototype.GetValue = function(prefix){
-				//TODO(spenceg) 
-				return "";			
+				var fromNode = this.ContainsPrefix(prefix);
+				if(fromNode){
+					return fromNode.value;
+				} else {
+					return "";
+				}			
 			};
-		
+
+//TrieNode objects are nodes in the SimpleTrie
 var TrieNode = function(value){
 			this.value = value;		
 			this.kids = {};
@@ -110,5 +121,4 @@ var TrieNode = function(value){
 TrieNode.prototype.ToString = function(){
 		return this.value.toString() + " " + this.kids.toString();
 };
- //ptmData in global namespace
 
