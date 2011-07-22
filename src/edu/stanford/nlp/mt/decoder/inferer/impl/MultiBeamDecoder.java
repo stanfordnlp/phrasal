@@ -46,6 +46,7 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.inferer.Inferer;
@@ -107,7 +108,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     super(builder);
     maxDistortion = builder.maxDistortion;
     useITGConstraints = builder.useITGConstraints;
-
+    
+    
     if (builder.internalMultiThread) {
       numProcs = (System.getProperty("numProcs") != null ? Integer
           .parseInt(System.getProperty("numProcs")) : Runtime.getRuntime()
@@ -238,7 +240,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     List<List<ConcreteTranslationOption<TK>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK>>>();
     allOptions.add(options);
     Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, foreign,
-        heuristic, allOptions);
+        heuristic, annotators, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {
       System.err.printf("Estimated Future Cost: %e\n", nullHyp.h);
@@ -327,6 +329,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           && (constrainedOutputSpace == null || constrainedOutputSpace
               .allowableFinal(beams[i].iterator().next().featurizable))) {
         Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
+        System.err.printf("Annotator output for best hypothesis (%d vs %d)\n", bestHyp.annotators.size(), annotators.size());
+        System.err.println("===========================================");
+        for (Annotator<TK> annotator: bestHyp.annotators) {
+        	System.err.println(annotator);
+        }
         try {
           writeAlignments(alignmentDump, bestHyp);
         } catch (Exception e) { /* not an issue */

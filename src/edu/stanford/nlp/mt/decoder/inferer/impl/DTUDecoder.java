@@ -230,7 +230,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     // insert initial hypothesis
     Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, foreign,
-        heuristic, allOptions);
+        heuristic, annotators, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {
       System.err.printf("Estimated Future Cost: %e\n", nullHyp.h);

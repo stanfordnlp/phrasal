@@ -6,6 +6,7 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import java.util.Arrays;
 
@@ -61,8 +62,13 @@ public class BLEURanker {
         }
         Collections.sort(scoreList);
         Collections.reverse(scoreList);
+        Collections.shuffle(scoreList, new Random(1));
         for (Pair<Double,Pair<Sequence<IString>,Sequence<IString>>> scoreTuple : scoreList) {
-        	System.out.println(scoreTuple);
+        	if (scoreTuple.second.first.size() <= 15 && scoreTuple.second.second.size() <= 15) {
+        	   //System.out.printf("%s ||| %s ||| %.3f\n", scoreTuple.second.first, scoreTuple.second.second, scoreTuple.first);
+        	   System.out.printf("%s ||| %s \n", scoreTuple.second.first, scoreTuple.second.second, scoreTuple.first);
+        	}
+        	// System.out.println(scoreTuple);
         }	
     }
 }

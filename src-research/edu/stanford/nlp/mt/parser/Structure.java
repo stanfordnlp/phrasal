@@ -28,6 +28,19 @@ public class Structure {
   protected LinkedStack<TypedDependency> dependencies;
   protected LinkedStack<Action> actionTrace;
 
+  @Override
+  public Structure clone() {
+	  return new Structure(stack.clone(), input.clone(), dependencies.clone(), actionTrace.clone());
+  }
+  
+  private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies, 
+		  LinkedStack<Action> actionTrace) {
+    this.stack = stack;
+    this.actionTrace = actionTrace;
+    this.input = input;
+    this.dependencies = dependencies;  
+  }
+
   public Structure() {
     stack = new LinkedStack<CoreLabel>();
     actionTrace = new LinkedStack<Action>();

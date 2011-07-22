@@ -30,7 +30,6 @@ package edu.stanford.nlp.mt;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.h.*;
 import edu.stanford.nlp.mt.decoder.inferer.*;
@@ -38,6 +37,8 @@ import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.decoder.annotators.Annotator;
+import edu.stanford.nlp.mt.decoder.annotators.AnnotatorFactory;
 import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -85,6 +86,7 @@ public class Phrasal {
   public static final String FORCE_DECODE_ONLY = "force-decode-only";
   public static final String DISTORTION_LIMIT = "distortion-limit";
   public static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
+  public static final String ADDITIONAL_ANNOTATORS = "additional-annotators";
   public static final String DISABLED_FEATURIZERS = "disabled-featurizers";
   public static final String INLINE_WEIGHTS = "inline-weights";
   public static final String LEARNING_RATE = "lrate";
@@ -139,7 +141,7 @@ public class Phrasal {
         USE_ITG_CONSTRAINTS, LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS,
         GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
-        MOSES_COMPATIBILITY_OPT));
+        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -474,6 +476,82 @@ public class Phrasal {
       discriminativeLMOrder = DEFAULT_DISCRIMINATIVE_LM_ORDER;
     }
 
+    List<Annotator<IString>> additionalAnnotators = new ArrayList<Annotator<IString>>();    
+    if (config.containsKey(ADDITIONAL_ANNOTATORS)) {
+    	// todo make some general method that can parse both additional annotators 
+    	// and additional featurizers
+    	List<String> tokens = config.get(ADDITIONAL_ANNOTATORS);
+        String annotatorName = null;
+        String args = null;
+        for (String token : tokens) {
+          Annotator<IString> annotator = null;
+          if (annotatorName == null) {
+            if (token.endsWith("()")) {
+              String name = token.replaceFirst("\\(\\)$", "");
+              Class<Annotator<IString>> annotatorClass = AnnotatorFactory
+                  .loadAnnotator(name);
+              annotator = (Annotator<IString>) annotatorClass
+                  .newInstance();
+              additionalAnnotators.add(annotator);
+            } else if (token.contains("(")) {
+              if (token.endsWith(")")) {
+                annotatorName = token.replaceFirst("\\(.*", "");
+                args = token.replaceFirst("^.*\\(", "");
+                args = args.substring(0, args.length() - 1);
+                args = args.replaceAll("\\s*,\\s*", ",");
+                args = args.replaceAll("^\\s+", "");
+                args = args.replaceAll("\\s+$", "");
+                String[] argsList = args.split(",");
+                System.err.printf("Additional annotators: %s.\nArgs: %s\n",
+                    annotatorName, Arrays.toString(argsList));
+                Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+                    .loadFeaturizer(annotatorName);
+                annotator = (Annotator<IString>) featurizerClass
+                    .getConstructor(argsList.getClass()).newInstance(
+                        new Object[] { argsList });
+                additionalAnnotators.add(annotator);
+                annotatorName = null;
+                args = null;
+              } else {
+                annotatorName = token.replaceFirst("\\(.*", "");
+                args = token.replaceFirst(".*\\(", "");
+              }
+            } else {
+              System.err.printf(
+                  "Error: '(' expected immediately after annotator name %s", token);
+              System.err
+                  .printf("Note that no whitespace between '(' and the associated annotator name is allowed\n");
+              System.exit(-1);
+            }
+          } else {
+            if (token.endsWith(")")) {
+              args += " " + token.substring(0, token.length() - 1);
+              args = args.replaceAll("\\s*,\\s*", ",");
+              args = args.replaceAll("^\\s+", "");
+              args = args.replaceAll("\\s+$", "");
+              String[] argsList = args.split(",");
+              System.err.printf("args: %s\n", Arrays.toString(argsList));
+              Class<Annotator<IString>> annotatorClass = AnnotatorFactory
+                  .loadAnnotator(annotatorName);
+              annotator = (Annotator<IString>) annotatorClass
+                  .getConstructor(argsList.getClass()).newInstance(
+                      (Object) argsList);
+              additionalAnnotators.add(annotator);
+              annotatorName = null;
+              args = null;
+            } else {
+              args += " " + token;
+            }
+          }
+        }
+        if (annotatorName != null) {
+          System.err.printf("Error: no ')' found for annotator %s\n",
+              annotatorName);
+          System.exit(-1);
+        }     	
+    }
+    System.err.printf("Number of additional annotators loaded: %d\n", additionalAnnotators.size());
+    
     List<IncrementalFeaturizer<IString, String>> additionalFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
@@ -891,6 +969,7 @@ public class Phrasal {
           .factory(dtuDecoder ? InfererBuilderFactory.DTU_DECODER
               : InfererBuilderFactory.MULTIBEAM_DECODER);
       try {
+    	infererBuilder.setAnnotators(additionalAnnotators);
         infererBuilder
             .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
                 .clone());
@@ -1425,7 +1504,6 @@ public class Phrasal {
     public void weightUpdate(int epoch, int id,
         RichTranslation<IString, String> target,
         RichTranslation<IString, String> argmax, double loss) {
-      // TODO Auto-generated method stub
       for (FeatureValue<String> feature : target.features) {
         if (!wts.containsKey(feature.name))
           wts.setCount(feature.name, 0.1);

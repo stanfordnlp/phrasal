@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -13,6 +14,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 
@@ -56,7 +58,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
   public final Featurizable<TK, FV> featurizable;
 
   public final List<FeatureValue<FV>> localFeatures;
-
+  public final List<Annotator<TK>> annotators;
   
   public IString[] posTags;
 
@@ -87,6 +89,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
 	 */
   public Hypothesis(int translationId, Sequence<TK> foreignSequence,
       SearchHeuristic<TK, FV> heuristic,
+      List<Annotator<TK>> annotators,
       List<List<ConcreteTranslationOption<TK>>> options) {
     this.id = nextId.incrementAndGet();
     score = 0;
@@ -102,6 +105,10 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
+    this.annotators = new ArrayList<Annotator<TK>>(annotators.size());
+    for (Annotator<TK> annotator : annotators) {
+       this.annotators.add(annotator.initalize(foreignSequence));
+    }
   }
 
   /**
@@ -137,6 +144,10 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     // untranslatedTokens, foreignCoverage);
     assert (!Double.isNaN(h));
     depth = baseHyp.depth + 1;
+    annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
+    for (Annotator<TK> annotator : baseHyp.annotators) {
+    	annotators.add(annotator.extend(translationOpt));
+    }
   }
 
 
@@ -168,6 +179,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
         + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
     assert (!Double.isNaN(h));
+    this.annotators = null;
   }
 
   /**

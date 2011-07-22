@@ -17,6 +17,14 @@ public class LinkedStack<T> implements Iterable<T> {
 
   public LinkedStack() {
   }
+  
+  @Override
+  public LinkedStack<T> clone() {
+	  LinkedStack<T> ls = new LinkedStack<T>();
+	  ls.current = current;
+	  ls.size = size;
+	  return ls;
+  }
 
   public LinkedStack(LinkedStack<T> parent) {
     size = parent.size;

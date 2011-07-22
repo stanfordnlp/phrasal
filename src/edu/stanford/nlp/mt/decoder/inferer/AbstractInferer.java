@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
@@ -18,6 +19,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Hypothesis<TK, FV>> filter;
+  protected final List<Annotator<TK>> annotators;
 
   
   @Override
@@ -29,13 +31,14 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   abstract public RichTranslation<TK, FV> translate(Sequence<TK> foreign,
       int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets);
-
+  
   protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
     featurizer = builder.incrementalFeaturizer;
     phraseGenerator = builder.phraseGenerator;
     scorer = builder.scorer;
     heuristic = builder.heuristic;
     filter = builder.filter;
+    annotators = builder.annotators;
   }
 
   protected AbstractInferer(AbstractInferer<TK, FV> inferer) {
@@ -44,6 +47,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     scorer = inferer.scorer;
     heuristic = inferer.heuristic;
     filter = inferer.filter;
+    annotators = inferer.annotators;
   }
 
   /**

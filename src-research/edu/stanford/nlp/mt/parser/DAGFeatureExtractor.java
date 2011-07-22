@@ -138,9 +138,9 @@ public class DAGFeatureExtractor {
     CoreLabel s3 = (stackSize > 2)? (CoreLabel) stackTopN[2] : null;
     int peekLen = inputQueue.size() - s1.get(IndexAnnotation.class) + 2;
     Object[] queueNWords = struc.getInput().peekN(peekLen);
-    CoreLabel q1 = (queueNWords.length > 0)? (CoreLabel) queueNWords[offset-1] : null;
-    CoreLabel q2 = (queueNWords.length > 1)? (CoreLabel) queueNWords[offset] : null;
-    CoreLabel q3 = (queueNWords.length > 2)? (CoreLabel) queueNWords[offset+1] : null;
+    CoreLabel q1 = (queueNWords.length > offset - 1 && offset -1 >= 0)? (CoreLabel) queueNWords[offset-1] : null;
+    CoreLabel q2 = (queueNWords.length > offset)? (CoreLabel) queueNWords[offset] : null;
+    CoreLabel q3 = (queueNWords.length > offset+1)? (CoreLabel) queueNWords[offset+1] : null;
 
     String s1Word = (s1==null)? null : s1.get(TextAnnotation.class);
     String s2Word = (s2==null)? null : s2.get(TextAnnotation.class);

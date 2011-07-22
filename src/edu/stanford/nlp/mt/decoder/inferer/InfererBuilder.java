@@ -1,5 +1,8 @@
 package edu.stanford.nlp.mt.decoder.inferer;
 
+import java.util.List;
+
+import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
@@ -42,6 +45,12 @@ public interface InfererBuilder<TK, FV> {
   InfererBuilder<TK, FV> setRecombinationFilter(
       RecombinationFilter<Hypothesis<TK, FV>> recombinationFilter);
 
+  /**
+   * 
+   * @param annotators
+   * @return
+   */
+  InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK>> annotators);
   /**
 	 * 
 	 */
