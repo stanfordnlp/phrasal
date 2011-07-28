@@ -13,9 +13,17 @@ import edu.stanford.nlp.trees.Tree;
 
 /** Source = Chinese for now  */
 public class SourceDependencyAnnotator<TK> implements Annotator<TK> {
-  final ChineseDepParser parser;
-  GrammaticalStructure gs;
+  public final ChineseDepParser parser;
+  public GrammaticalStructure gs;
 
+  public SourceDependencyAnnotator() {
+    try {
+      this.parser = new ChineseDepParser();
+      this.gs = null;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
   private SourceDependencyAnnotator(ChineseDepParser parser, GrammaticalStructure gs) {
     this.parser = parser;
     this.gs = gs;
