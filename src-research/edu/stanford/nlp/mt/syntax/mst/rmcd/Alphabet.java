@@ -5,9 +5,6 @@
    version 1.0, as published by http://www.opensource.org.  For further
    information, see the file `LICENSE' included with this distribution. */
 
-/**
- @author Andrew McCallum <a href="mailto:mccallum@cs.umass.edu">mccallum@cs.umass.edu</a>
- */
 
 package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
@@ -16,6 +13,9 @@ import edu.stanford.nlp.util.HashIndex;
 
 import java.io.*;
 
+/**
+ @author Andrew McCallum <a href="mailto:mccallum@cs.umass.edu">mccallum@cs.umass.edu</a>
+ */
 public class Alphabet implements Serializable {
 
   private Index<Object> index;

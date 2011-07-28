@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;

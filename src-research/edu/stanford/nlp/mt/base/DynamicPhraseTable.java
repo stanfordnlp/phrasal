@@ -1,6 +1,3 @@
-/**
- *
- */
 package edu.stanford.nlp.mt.base;
 
 import java.io.*;

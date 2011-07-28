@@ -1,10 +1,5 @@
 package edu.stanford.nlp.mt.exploratory;
 
-/**
-* Simplest possible invocation of BerkeleyLM
-*
-* @author Daniel Cer (http://dmcer.net)
-*/
 
 
 import java.util.List;
@@ -23,6 +18,11 @@ import static java.lang.System.out;
 import static java.lang.System.err;
 import static java.lang.System.exit;
 
+/**
+* Simplest possible invocation of BerkeleyLM
+*
+* @author Daniel Cer (http://dmcer.net)
+*/
 public class BerkeleyLMSimple {
   static public void main(String[] args) throws Exception {
     if (args.length != 2) {

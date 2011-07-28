@@ -1,5 +1,9 @@
 package edu.stanford.nlp.mt.train.hmmalign;
 
+
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+
 /**
  * Serves to keep the stay and go probabilities for words.
  * I am keeping it as an array.
@@ -7,10 +11,6 @@ package edu.stanford.nlp.mt.train.hmmalign;
  *
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
-
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-
 public class StayGoTable {
 
   private ProbCountHolder[] table;
