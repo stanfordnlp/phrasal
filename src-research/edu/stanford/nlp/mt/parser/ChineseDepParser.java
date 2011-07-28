@@ -22,10 +22,10 @@ import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;
 
 public class ChineseDepParser {
-  private final String defaultModel = "/home/heeyoung/temp/parser/WEB-INF/data/xinhuaFactored.ser.gz";
-  private final String defaultDataDir = "/home/heeyoung/temp/parser/WEB-INF/data/chinesesegmenter";
-  private final String defaultSegmenter = "/home/heeyoung/temp/parser/WEB-INF/data/chinesesegmenter/05202008-ctb6.processed-chris6.lex.gz";
-  private final String defaultNormalizationTable = "/home/heeyoung/temp/parser/WEB-INF/data/chinesesegmenter/list_err.utf8";
+  private final String defaultModel = "/u/nlp/apache-tomcat-7.0.12/webapps/parser/WEB-INF/data/xinhuaFactored.ser.gz";
+  private final String defaultDataDir = "/u/nlp/apache-tomcat-7.0.12/webapps/parser/WEB-INF/data/chinesesegmenter";
+  private final String defaultSegmenter = "/u/nlp/apache-tomcat-7.0.12/webapps/parser/WEB-INF/data/chinesesegmenter/05202008-ctb6.processed-chris6.lex.gz";
+  private final String defaultNormalizationTable = "/u/nlp/apache-tomcat-7.0.12/webapps/parser/WEB-INF/data/chinesesegmenter/list_err.utf8";
 
   public static class ParserPack {
     public CRFClassifier segmenter;
