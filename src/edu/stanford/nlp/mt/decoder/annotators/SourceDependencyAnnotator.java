@@ -46,7 +46,7 @@ public class SourceDependencyAnnotator<TK> implements Annotator<TK> {
 
   @Override
   public Annotator<TK> extend(ConcreteTranslationOption<TK> option) {
-    SourceDependencyAnnotator<TK> pa = new SourceDependencyAnnotator<TK>(parser, null);
+    SourceDependencyAnnotator<TK> pa = new SourceDependencyAnnotator<TK>(parser, this.gs);
     return pa;
   }
 }
