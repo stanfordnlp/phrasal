@@ -32,9 +32,21 @@ public class Structure {
   public Structure clone() {
     return new Structure(stack.clone(), input.clone(), dependencies.clone(), actionTrace.clone());
   }
-
-  private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies,
-      LinkedStack<Action> actionTrace) {
+  
+  @Override
+  public String toString() {
+	StringBuilder sbuilder = new StringBuilder();
+	sbuilder.append("Input:\n");
+	sbuilder.append(input);
+	sbuilder.append("Stack:\n");
+	sbuilder.append(stack.toString());
+    sbuilder.append("deps:\n");
+	sbuilder.append(dependencies);
+	return sbuilder.toString();
+  }
+  
+  private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies, 
+		  LinkedStack<Action> actionTrace) {
     this.stack = stack;
     this.actionTrace = actionTrace;
     this.input = input;

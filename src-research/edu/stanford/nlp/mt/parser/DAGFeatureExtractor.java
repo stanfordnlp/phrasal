@@ -131,7 +131,10 @@ public class DAGFeatureExtractor {
     LinkedStack<CoreLabel> inputQueue = struc.getInput();
     if(stack.size()==0) return features;   // empty stack: always SHIFT
     int stackSize = stack.size();
-
+    /*System.out.println("===============");
+    System.out.println("struct: "+struc);
+    System.out.println("offset: "+offset); */
+    
     Object[] stackTopN = struc.getStack().peekN(3);
     CoreLabel s1 = (CoreLabel) stackTopN[0];
     CoreLabel s2 = (stackSize > 1)? (CoreLabel) stackTopN[1] : null;
@@ -199,7 +202,7 @@ public class DAGFeatureExtractor {
     // temporary features for analysis - end
 
     String preActionStr = "##"+struc.getActionTrace().peek().toString();
-
+    /*System.out.printf("preActionStr: %s\n", preActionStr);*/
     SortedSet<Pair<CoreLabel, String>> s1Children = null;
     SortedSet<Pair<CoreLabel, String>> s2Children = null;
 
