@@ -146,7 +146,14 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     depth = baseHyp.depth + 1;
     annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
     for (Annotator<TK> annotator : baseHyp.annotators) {
+    	/*if (baseHyp.featurizable != null) {
+    	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
+    	} else {
+    		System.out.println("Extend null hypothesis");
+    	}
+    	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
     	annotators.add(annotator.extend(translationOpt));
+    	// System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
   }
 

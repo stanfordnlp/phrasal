@@ -52,15 +52,17 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
 	
 	@Override
 	public Annotator<TK> extend(ConcreteTranslationOption<TK> option) {
+		//System.out.println("Extend Called!");
 		int localIndex = index;
 		Structure localStruct = struct.clone();
-		
+        //System.out.println("Cloned structure: "+localStruct);
+		//System.out.println("Extension: " + option.abstractOption.translation);
 		for (TK word : option.abstractOption.translation) {
 			CoreLabel w = new CoreLabel();
 	        w.set(TextAnnotation.class, word.toString());
 	        w.set(IndexAnnotation.class, localIndex++);
 	        w.set(PartOfSpeechAnnotation.class, "FIXME");
-            parser.parseToken(struct, w);
+            parser.parseToken(localStruct, w);
 		}
 		TargetDependencyAnnotator<TK> pa = new TargetDependencyAnnotator<TK>(parser, localStruct, localIndex);
 				
