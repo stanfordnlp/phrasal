@@ -21,7 +21,7 @@ import edu.stanford.nlp.trees.TypedDependency;
 public class Structure {
 
   protected static final boolean useGoldTag = false;
-  private static final boolean useLemma = true;
+  private static final boolean useLemma = false;
 
   protected LinkedStack<CoreLabel> stack;
   protected LinkedStack<CoreLabel> input;
@@ -30,15 +30,15 @@ public class Structure {
 
   @Override
   public Structure clone() {
-	  return new Structure(stack.clone(), input.clone(), dependencies.clone(), actionTrace.clone());
+    return new Structure(stack.clone(), input.clone(), dependencies.clone(), actionTrace.clone());
   }
-  
-  private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies, 
-		  LinkedStack<Action> actionTrace) {
+
+  private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies,
+      LinkedStack<Action> actionTrace) {
     this.stack = stack;
     this.actionTrace = actionTrace;
     this.input = input;
-    this.dependencies = dependencies;  
+    this.dependencies = dependencies;
   }
 
   public Structure() {
@@ -55,7 +55,6 @@ public class Structure {
     int seqLen = tagger.ts.leftWindow() + 1;
 
     // to check the performance of POS tagger
-    boolean useStanfordTagger = true;
     List<CoreLabel> sent = new ArrayList<CoreLabel>();
     for (Tree treeNode : gs.root().getLeaves()) {
       TreeGraphNode node = (TreeGraphNode)treeNode;
@@ -65,7 +64,6 @@ public class Structure {
     }
     posTagger.processText(sent);
 
-    int idx = 0;
     for (Tree treeNode : gs.root().getLeaves()) {
       TreeGraphNode node = (TreeGraphNode)treeNode;
       CoreLabel cl = node.label();
@@ -74,14 +72,12 @@ public class Structure {
       input.push(cl);
 
       if(useGoldTag) cl.set(PartOfSpeechAnnotation.class, ((TreeGraphNode)p).label().get(ValueAnnotation.class));
-      else if(useStanfordTagger) {
-        // do nothing
-      }
       else {  // use incremental tagger
         int len = Math.min(seqLen, input.size());
         IString[] sequence = new IString[len];
         int i = sequence.length-1;
-        for(Object c : input.peekN(len)) {
+        Object[] toks = input.peekN(len);
+        for(Object c : toks) {
           CoreLabel w = (CoreLabel) c;
           sequence[i--] = new IString(w.get(TextAnnotation.class));
         }
