@@ -11,6 +11,7 @@ $(document).ready(function(){
       if(event.which === 32){
         ptm.clearCache();
       }
+      console.log("here");
       return ptm.shouldFireAutocomplete();
     },
     
@@ -36,8 +37,7 @@ $(document).ready(function(){
   //Trigger an autocomplete on the onfocus event for the
   //ptm box.
   $( "#ptm-input_" ).focusin(function(event){
-    $( "#ptm-input_" ).autocomplete("search","");
-    console.log("hello");
+    //TODO: Run autocomplete here
   });
   
   //Setup keystroke counting (for typing)
