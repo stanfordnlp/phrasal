@@ -248,9 +248,10 @@ public class DepDAGParser implements Parser, Serializable {
       Action nextAction;
       if(s.getStack().size()==0) nextAction = new Action(ActionType.SHIFT);
       else {
-        nextAction = new Action(actClassifier.classOf(d));
-        if(nextAction.action == ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC) {
-          nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
+        nextAction = new Action(actClassifier.experimentalClassOf(d));
+          
+    	if(nextAction.action == ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC) {
+          nextAction.relation = labelClassifier.experimentalClassOf(extractLabelFeature(nextAction.action, s, d, offset));
         }
       }
       if(s.actionTrace.size() > 0 && s.actionTrace.peek().equals(nextAction)
