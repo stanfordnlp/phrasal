@@ -12,88 +12,6 @@
 
 (function(window){
 
-  //Register ptm callbacks with the UI when it is ready
-  $(document).ready(function(){
-
-    //Autocomplete box configuration
-    $( "#ptm-input_" ).autocomplete({
-      minLength: 1,
-      delay: 50,
-      
-      //keyCode(32) == spacebar, which triggers autocomplete        
-      search: function(event,ui){
-        if(event.which === 32){
-          ptm.clearCache();
-        }
-        return ptm.shouldFireAutocomplete();
-      },
-      
-      source: function(request,response){
-        ptm.autoCompleteReq(request,response);
-      },
-      
-      focus: function( event, ui ) {
-        ptm.addKeyStroke();      
-      },
-      
-      select: function( event, ui ) {  
-//        console.log( "Selected:" + ui.item);
-        //Log user actions in the autocomplete box
-        ptm.addKeyStroke();
-        
-        if(ui.item){
-          ptm.autoCompleteSelect(ui.item.label);
-        }
-      },
-    });
-    
-    //Setup keystroke counting (for typing)
-    $( "#ptm-input_" ).keypress(function(event){
-      ptm.addKeyStroke();    
-    });    
-    
-    //Setup the clear button
-    $( '#ptm-clear_' ).click(function(){
-      ptm.reset();
-    });
-    
-    //Configure the form that will initiate translation
-    //Suppress the form POST
-    $('#lang-form_').submit(function(event){
-      event.preventDefault();
-      ptm.initTranslation();
-      return false;
-    });   
-
-    //Configure the handler for completing translation
-    //Suppress the form POST
-    $( '#form-ptm-input_' ).submit(function(event){
-      event.preventDefault();
-      ptm.doneWithTranslation();
-      return false;
-    });
-    
-    //Setup the source language list
-    $( '#src-list_' ).append('<option value="NULL" selected="selected"></option>');
-    var srcLangs = ptm.getSourceLanguages();
-    for(var key in srcLangs){
-      var selString = '<option value=\"' + key + '\">' + srcLangs[key] + '</option>';
-      $( '#src-list_' ).append(selString);
-    }
-    $( '#src-list_' ).change(function(){
-      ptm.selectSource($(this).val());
-    });
-    
-    //Blank out all forms
-    //This is needed when we redirect to the same page after a done event
-    $(':input' )
-      .not(':button, :submit, :reset')
-      .val('')
-      .removeAttr('checked')
-      .removeAttr('selected');
-  });
-
-
 // The main ptm namespace
 //
 var ptm = (function() {
@@ -145,7 +63,7 @@ var ptm = (function() {
     tgtOOV: function(context){ return $(context).find(".oov-tgt").val(); },
     
     showStatus: function(message){
-      console.log("Status: " + message);
+//      console.log("Status: " + message);
       $( "#status-box_" ).html(message).show();   
     },
     
@@ -160,13 +78,23 @@ var ptm = (function() {
       }
     },
     
+    disableSourceBox: function() {
+      $("textarea#src-input_").attr("disabled",true);
+    },
+    
+    enableSourceBox: function() {
+      $("textarea#src-input_").attr("disabled",false);          
+    },
+    
+    //Prepares a string for transmission to the server. Presently
+    //just trim trailing whitespace and lowercase.
     cleanUp: function(myStr){
       var fmtString = new String(myStr);
       return $.trim(fmtString.toLowerCase());
     },
     
     toggleTgtSelect: function(isEnabled,langId){
-      console.log("toggleTgtSelect: " + isEnabled + " " + langId);
+//      console.log("toggleTgtSelect: " + isEnabled + " " + langId);
       $( '#tgt-list_' ).html('<option value="NULL" selected="selected"></option>');
       var directions = _translationDirections[langId];
       for(var id in directions){
@@ -180,8 +108,8 @@ var ptm = (function() {
         var langId = $(this).val();
         var orientation = _langOrientations[langId];
         
-        console.log("setupTgtBox: " + langId);
-        console.log("tgtOrientation: " + orientation);
+//        console.log("setupTgtBox: " + langId);
+//        console.log("tgtOrientation: " + orientation);
         
         if(orientation == "right"){
           $( '#ptm-input_' ).css("direction","rtl");
@@ -237,8 +165,8 @@ var ptm = (function() {
         collision: "none",
         offset: hOffset.toString() + " " + vOffset.toString(),
       };
-      console.log("New autocomplete position in textArea: ");
-      console.log(newPos);
+//      console.log("New autocomplete position in textArea: ");
+//      console.log(newPos);
        
       $( "#ptm-input_" ).autocomplete( "option", "position", newPos );
     },
@@ -253,6 +181,9 @@ var ptm = (function() {
     oovResponse: function(data) {
       console.log("oovResponse");
       console.log(data);
+  
+      //Translation succeeded; disable source input
+      ptmUI.disableSourceBox();  
   
       //Clear what's in there now.
       $("#oov-input_").html('');
@@ -273,7 +204,7 @@ var ptm = (function() {
         htmlStr = htmlStr + '<input type="submit" value="X" />'
         htmlStr = htmlStr + '</form></div>';        
       }
-      console.log(htmlStr);
+//      console.log(htmlStr);
       $("#oov-input_").append(htmlStr);
       $('.form-oov').submit(fn.sendOOV);
     },
@@ -285,15 +216,21 @@ var ptm = (function() {
       
       ptmUI.positionAutocomplete();
       
+      var tgt_prefix = ptmUI.tgt();   
 		  _predictionsCache = new SimpleTrie();
+		  _predictionsCache.prefix = tgt_prefix;
+		  
+      //Cache all of the predictions
 		  $.map(data.predictions, function(item,index) {
-//			  console.log("Caching: " + item);
 			  _predictionsCache.Add(item,index);		
 		  });
 
-      //Setup the autocomplete box source      
-      response( $.map( data.predictions.slice(0,_numResultsToDisplay), function( item ) {
-        return { label: item, value: ptmUI.tgt() + item }
+      //Setup the autocomplete box source
+      //with the top-k predictions
+      var top_predictions = data.predictions.slice(0,_numResultsToDisplay);    
+      response( $.map( top_predictions, function( item ) {
+        return { label: item, 
+                 value: tgt_prefix + item }
       }));
     },
     
@@ -301,18 +238,20 @@ var ptm = (function() {
     predictResponseFromCache: function(response){
   	  console.log("predictResponseFromCache");
   	  var tgt_toks = ptmUI.tgt().split(" ");
-  	  var completions = _predictionsCache.FindAll(tgt_toks[tgt_toks.length-1]);
+  	  var word_prefix = tgt_toks[tgt_toks.length-1]; //Last partial word
+  	  var completions = _predictionsCache.FindAll(word_prefix);
   		
-//  	  console.log(completions);		
-  	
   	  if(completions != false){
   	 	  ptmUI.positionAutocomplete();
   		
-  		 //Completions should be sorted by value in the iteration
-  		 //i.e., we don't need to explicitly sort.		
+  		  //Completions should be sorted by value in the iteration
+  		  //i.e., we don't need to explicitly sort.		
+        var tgt_prefix = ptmUI.tgt();
         response( $.map( completions, function( item ) {
-       	   return { label: item, value: ptmUI.tgt() + item }
+       	   return { label: word_prefix + item, 
+       	            value: tgt_prefix + item }
      	  }));
+      
       } else {
         completions = [];
         response( completions );      
@@ -329,9 +268,10 @@ var ptm = (function() {
     //Reset the UI
     reset: function(){
       console.log("reset:");
-      window.location.replace(_uiURL);
+      ptmUI.enableSourceBox();
       _predictionsCache = "";
       _numKeyStrokes = 0;
+      window.location.replace(_uiURL);
     },
     
     //Keep track of number 
@@ -362,7 +302,7 @@ var ptm = (function() {
       }
       
       console.log("getSourceLanguages:");
-      console.log(langs);
+//      console.log(langs);
       
       return langs;
     },
@@ -397,6 +337,7 @@ var ptm = (function() {
             data: {ptmInit: JSON.stringify(ptmMsg), },
             success: serveData.oovResponse,
             error: function(jqXHR, textStatus, errorThrown){
+              ptmUI.showStatus("Communication with server failed. Unable to translate source.");              
               console.log("ptmInit failed: " + textStatus);
               console.log(errorThrown);
             },
@@ -463,8 +404,9 @@ var ptm = (function() {
 	              console.log(errorThrown);
 	            },
 	      });
+      
       } else {
-			serveData.predictResponseFromCache(response);      
+			  serveData.predictResponseFromCache(response);      
       }
     },
         
@@ -475,13 +417,16 @@ var ptm = (function() {
       
       ptmUI.hideStatus();
       
-      var newTarget = new String(ptmUI.tgt() + " " + completion);
+      var tgt_prefix = ptmUI.tgt();
+      if(_predictionsCache != false){
+        tgt_prefix = _predictionsCache.prefix;      
+      }
       
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
         source: ptmUI.cleanUp(ptmUI.src()),
-        prefix: ptmUI.cleanUp(ptmUI.tgt()),
+        prefix: ptmUI.cleanUp(tgt_prefix),
         completion: ptmUI.cleanUp(completion),
       };
       console.log("POST: ptmUserSelection");
@@ -492,7 +437,8 @@ var ptm = (function() {
       //update is ignored. This is contrary to the documentation, which
       //states that an override of the select() callback will cancel an
       //automatic update to the textbox.
-      $("textarea#ptm-input_").val(newTarget);
+//      var newTarget = new String(ptmUI.tgt() + " " + completion);
+//      $("textarea#ptm-input_").val(newTarget);
       
       $.ajax({
             url: _serverURL,
