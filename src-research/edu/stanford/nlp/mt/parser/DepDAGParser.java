@@ -21,14 +21,14 @@ import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Datum;
+import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Datum;
-import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.mt.parser.DAGFeatureExtractor.RightSideFeatures;
@@ -40,9 +40,9 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.DependencyScoring;
-import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -264,7 +264,7 @@ public class DepDAGParser implements Parser, Serializable {
         }
       }
       if(s.actionTrace.size() > 0 && s.actionTrace.peek().equals(nextAction)
-          && nextAction.relation != null) {
+          && (nextAction.action==ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC)) {
         nextAction = new Action(ActionType.SHIFT);
       }
       Actions.doAction(nextAction, s, offset);
@@ -292,7 +292,7 @@ public class DepDAGParser implements Parser, Serializable {
 
   public static void main(String[] args) throws IOException, ClassNotFoundException{
 
-    boolean doTrain = true;
+    boolean doTrain = false;
     boolean doTest = true;
     boolean storeTrainedModel = true;
 
@@ -342,7 +342,7 @@ public class DepDAGParser implements Parser, Serializable {
     //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
     //    props.put("train", tempTrain);
-    //        props.put("test", tempTest);
+    //    props.put("test", tempTest);
 
     POSTaggerAnnotator posTagger = null;
     try {
@@ -366,7 +366,7 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
 
       if(storeTrainedModel) {
-        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.stanfordtagger.noLemma.ser";
+        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.small.ser";
         if(!props.containsKey("storeModel")) logger.info("no option -storeModel : trained model will be stored at "+defaultStore);
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
         IOUtils.writeObjectToFile(parser, trainedModelFile);
@@ -380,7 +380,7 @@ public class DepDAGParser implements Parser, Serializable {
       //      String defaultLoadModel = "/scr/heeyoung/mtdata/parser/DAGparserModel.reducedFeat_mem5_dataset.ser";
 
       if(parser==null) {
-        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.stanfordtagger.noLemma.ser";
+        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.small.ser";
 
         if(!props.containsKey("loadModel")) logger.info("no option -loadModel : trained model will be loaded from "+defaultLoadModel);
         String trainedModelFile = props.getProperty("loadModel", defaultLoadModel);
@@ -390,6 +390,7 @@ public class DepDAGParser implements Parser, Serializable {
         parser = IOUtils.readObjectFromFile(trainedModelFile);
         logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
       }
+      parser.labelRelation = false;
       //      if(true) return;
       logger.info("read test data from "+testFile + " ...");
       List<Structure> testData = ActionRecoverer.readTrainingData(testFile, posTagger);
