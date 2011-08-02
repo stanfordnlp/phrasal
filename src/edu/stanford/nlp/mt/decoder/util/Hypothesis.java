@@ -28,7 +28,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
  * @param <TK>
  */
 public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
-    State<Hypothesis<TK, FV>> {
+State<Hypothesis<TK, FV>> {
 
   public static AtomicLong nextId = new AtomicLong();
 
@@ -59,34 +59,34 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
 
   public final List<FeatureValue<FV>> localFeatures;
   public final List<Annotator<TK>> annotators;
-  
+
   public IString[] posTags;
 
   /**
-	 * 
-	 */
+   * 
+   */
   public boolean isDone() {
     return untranslatedTokens == 0;
   }
 
   /**
-	 * 
-	 */
+   * 
+   */
   public double finalScoreEstimate() {
     return score + h;
   }
 
   /**
-	 * 
-	 */
+   * 
+   */
   @Override
   public double score() {
     return score + h;
   }
 
   /**
-	 * 
-	 */
+   * 
+   */
   public Hypothesis(int translationId, Sequence<TK> foreignSequence,
       SearchHeuristic<TK, FV> heuristic,
       List<Annotator<TK>> annotators,
@@ -107,13 +107,13 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     linearDistortion = 0;
     this.annotators = new ArrayList<Annotator<TK>>(annotators.size());
     for (Annotator<TK> annotator : annotators) {
-       this.annotators.add(annotator.initalize(foreignSequence));
+      this.annotators.add(annotator.initialize(foreignSequence));
     }
   }
 
   /**
-	 * 
-	 */
+   * 
+   */
   public Hypothesis(int translationId,
       ConcreteTranslationOption<TK> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
@@ -125,12 +125,12 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     this.foreignCoverage = baseHyp.foreignCoverage.clone();
     this.foreignCoverage.or(translationOpt.foreignCoverage);
     this.length = (insertionPosition < baseHyp.length ? baseHyp.length : // internal
-        // insertion
-        insertionPosition + translationOpt.abstractOption.translation.size()); // edge
+      // insertion
+      insertionPosition + translationOpt.abstractOption.translation.size()); // edge
     // insertion
     foreignSequence = baseHyp.foreignSequence;
     untranslatedTokens = this.foreignSequence.size()
-        - this.foreignCoverage.cardinality();
+    - this.foreignCoverage.cardinality();
     linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos
         : baseHyp.translationOpt.linearDistortion(translationOpt));
     featurizable = new Featurizable<TK, FV>(this, translationId, featurizer
@@ -146,14 +146,14 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
     depth = baseHyp.depth + 1;
     annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
     for (Annotator<TK> annotator : baseHyp.annotators) {
-    	/*if (baseHyp.featurizable != null) {
+      /*if (baseHyp.featurizable != null) {
     	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
     	} else {
     		System.out.println("Extend null hypothesis");
     	}
     	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-    	annotators.add(annotator.extend(translationOpt));
-    	// System.out.println("done with extension "+translationOpt.abstractOption.translation);
+      annotators.add(annotator.extend(translationOpt));
+      // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
   }
 
@@ -174,7 +174,7 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
         : insertionPosition + targetPhrase.size();
     foreignSequence = baseHyp.foreignSequence;
     untranslatedTokens = this.foreignSequence.size()
-        - this.foreignCoverage.cardinality();
+    - this.foreignCoverage.cardinality();
     linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos
         : baseHyp.translationOpt.linearDistortion(translationOpt));
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractOption,
@@ -190,23 +190,23 @@ public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
   }
 
   /**
-	 * 
-	 */
+   * 
+   */
   private void injectSegmentationBuffer(StringBuffer sbuf,
       Hypothesis<TK, FV> hyp) {
     if (hyp.preceedingHyp != null)
       injectSegmentationBuffer(sbuf, hyp.preceedingHyp);
     sbuf.append("\t").append(hyp.translationOpt.abstractOption.translation)
-        .append(" ");
+    .append(" ");
     sbuf.append(hyp.translationOpt.foreignCoverage).append(" ");
     sbuf.append(Arrays.toString(hyp.translationOpt.abstractOption.scores));
     sbuf.append("\n");
   }
 
- 
+
   /**
-	 * 
-	 */
+   * 
+   */
   public String toString(int verbosity) {
     StringBuffer sbuf = new StringBuffer();
     if (featurizable != null) {

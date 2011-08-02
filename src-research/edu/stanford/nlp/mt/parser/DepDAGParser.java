@@ -58,8 +58,17 @@ public class DepDAGParser implements Parser, Serializable {
   //to reduce the total number of features for training, remove features appear less than 3 times
   private static final boolean REDUCE_FEATURES = true;
 
+  public boolean labelRelation = true;
+
   // use the default setting
   private static RightSideFeatures rightFeatures = new RightSideFeatures(new Properties());
+
+  public DepDAGParser() {
+    this.labelRelation = true;
+  }
+  public DepDAGParser(boolean labelRelation) {
+    this.labelRelation = labelRelation;
+  }
 
   @Override
   public boolean parse(List<? extends HasWord> sentence) {
@@ -241,16 +250,16 @@ public class DepDAGParser implements Parser, Serializable {
    * Parse phrase
    * @param s - previous structure + new input phrase
    * @param offset - the length of new input phrase
+   * @param labelRelation - label relation of dependency if true
    */
-  public void parsePhrase(Structure s, int offset){
+  public void parsePhrase(Structure s, int offset, boolean labelRelation){
     Datum<ActionType, List<String>> d;
     while((d=extractActFeature(s, offset))!=null){
       Action nextAction;
       if(s.getStack().size()==0) nextAction = new Action(ActionType.SHIFT);
       else {
         nextAction = new Action(actClassifier.experimentalClassOf(d));
-          
-    	if(nextAction.action == ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC) {
+        if(labelRelation && (nextAction.action == ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC)) {
           nextAction.relation = labelClassifier.experimentalClassOf(extractLabelFeature(nextAction.action, s, d, offset));
         }
       }
@@ -262,17 +271,23 @@ public class DepDAGParser implements Parser, Serializable {
       if(nextAction.action==ActionType.SHIFT) offset--;
     }
   }
-  public void parsePhrase(Structure s, List<CoreLabel> phrase){
+  public void parsePhrase(Structure s, int offset){
+    parsePhrase(s, offset, this.labelRelation);
+  }
+  public void parsePhrase(Structure s, List<CoreLabel> phrase, boolean labelRelation){
     int fromPreviousPhrase = (s.input.size()==0)? 0 : 1;
     for(CoreLabel w : phrase){
       s.input.push(w);
     }
-    parsePhrase(s, phrase.size()+fromPreviousPhrase);
+    parsePhrase(s, phrase.size()+fromPreviousPhrase, labelRelation);
   }
-  public void parseToken(Structure s, CoreLabel lastToken){
+  public void parseToken(Structure s, CoreLabel lastToken, boolean labelRelation){
     int fromPreviousPhrase = (s.input.size()==0)? 0 : 1;
     s.input.push(lastToken);
-    parsePhrase(s, 1+fromPreviousPhrase);
+    parsePhrase(s, 1+fromPreviousPhrase, labelRelation);
+  }
+  public void parseToken(Structure s, CoreLabel lastToken) {
+    parseToken(s, lastToken, this.labelRelation);
   }
 
   public static void main(String[] args) throws IOException, ClassNotFoundException{

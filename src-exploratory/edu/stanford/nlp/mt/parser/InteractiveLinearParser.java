@@ -21,6 +21,8 @@ import edu.stanford.nlp.trees.TypedDependency;
  * @author daniel cer (http://dmcer.net) and Heeyoung Lee
  */
 public class InteractiveLinearParser {
+  private static final boolean labelRelation = true;
+
   static public void main(String[] args) throws IOException, ClassNotFoundException {
     if (args.length != 1) {
       System.out.println("Usage:\n\tjava ...InteractiveLinearParser (parsing model)");
@@ -48,7 +50,7 @@ public class InteractiveLinearParser {
         w.set(PartOfSpeechAnnotation.class, TaggerConstants.EOS_TAG);
         w.set(IndexAnnotation.class, idx++);
         phrase.add(w);
-        parser.parsePhrase(struc, phrase);
+        parser.parsePhrase(struc, phrase, labelRelation);
 
         deps = struc.getDependencies();
         System.out.println(deps);
@@ -73,7 +75,7 @@ public class InteractiveLinearParser {
             sequence[i--] = new IString(t.get(TextAnnotation.class));
           }
           tagger.tagWord(w, sequence);
-          parser.parseToken(struc, w);
+          parser.parseToken(struc, w, labelRelation);
         }
         deps = struc.getDependencies();
         System.out.println(deps);

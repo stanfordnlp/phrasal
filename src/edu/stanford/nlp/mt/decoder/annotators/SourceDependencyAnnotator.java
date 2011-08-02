@@ -30,7 +30,7 @@ public class SourceDependencyAnnotator<TK> implements Annotator<TK> {
   }
 
   @Override
-  public Annotator<TK> initalize(Sequence<TK> source) {
+  public Annotator<TK> initialize(Sequence<TK> source) {
 
     List<HasWord> sentence = new ArrayList<HasWord>();
     for (TK s : source) {
