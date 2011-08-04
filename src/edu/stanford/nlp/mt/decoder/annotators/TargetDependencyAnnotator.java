@@ -21,7 +21,7 @@ import edu.stanford.nlp.trees.TypedDependency;
 public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
   final DepDAGParser parser;
   final int index;
-  final Structure struct;
+  public final Structure struct;
   static IncrementalTagger tagger = new IncrementalTagger();
 
   private TargetDependencyAnnotator(DepDAGParser parser, Structure struct, int index) {

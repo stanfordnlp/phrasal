@@ -135,15 +135,7 @@ State<Hypothesis<TK, FV>> {
         : baseHyp.translationOpt.linearDistortion(translationOpt));
     featurizable = new Featurizable<TK, FV>(this, translationId, featurizer
         .getNumberStatefulFeaturizers());
-    localFeatures = featurizer.listFeaturize(featurizable);
-    score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
-    h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
-        + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
-    // System.err.printf("h: %f %f %d %s\n", baseHyp.h,
-    // heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage),
-    // untranslatedTokens, foreignCoverage);
-    assert (!Double.isNaN(h));
-    depth = baseHyp.depth + 1;
+
     annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
     for (Annotator<TK> annotator : baseHyp.annotators) {
       /*if (baseHyp.featurizable != null) {
@@ -155,6 +147,16 @@ State<Hypothesis<TK, FV>> {
       annotators.add(annotator.extend(translationOpt));
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
+    
+    localFeatures = featurizer.listFeaturize(featurizable);
+    score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
+    h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
+        + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
+    // System.err.printf("h: %f %f %d %s\n", baseHyp.h,
+    // heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage),
+    // untranslatedTokens, foreignCoverage);
+    assert (!Double.isNaN(h));
+    depth = baseHyp.depth + 1;
   }
 
 
@@ -180,14 +182,28 @@ State<Hypothesis<TK, FV>> {
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractOption,
         translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
+    
+    annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
+    for (Annotator<TK> annotator : baseHyp.annotators) {
+        /*if (baseHyp.featurizable != null) {
+      	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
+      	} else {
+      		System.out.println("Extend null hypothesis");
+      	}
+      	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
+        annotators.add(annotator.extend(translationOpt));
+        // System.out.println("done with extension "+translationOpt.abstractOption.translation);
+    }
+    
+    
     localFeatures = featurizer.listFeaturize(featurizable);
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     depth = baseHyp.depth + 1;
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
         + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
     assert (!Double.isNaN(h));
-    this.annotators = null;
   }
+  
 
   /**
    * 
