@@ -1,19 +1,13 @@
 // Predictive Translation Memory 
 //
-// Uses the module pattern:
-// http://addyosmani.com/resources/essentialjsdesignpatterns/book/#designpatternsjavascript
-
-//Key bindings (http://www.cambiaresearch.com/c4/702b8cd1-e5b0-42e6-83ac-25f0306e3e25/Javascript-Char-Codes-Key-Codes.aspx):
-// 32 - spacebar
-// 9 - tab
-// 40 - down arrow
-// 13 - enter
-// 39 - right arrow
+//  Attaches a variable called 'ptm' to the global namespace
+//  that exposes functions for controlling the PTM autocomplete
+//  box.
+//
 
 (function(window){
 
 // The main ptm namespace
-//
 var ptm = (function() {
   
   //Address of the translation UI (for redirect after translation completion)
@@ -57,13 +51,12 @@ var ptm = (function() {
   var ptmUI = {
     srcLang: function(){ return $("select#src-list_ option:selected").val(); },
     tgtLang: function(){ return $("select#tgt-list_").val(); },
-    src: function(){     return $("textarea#src-input_").val(); },
-    tgt: function(){     return $("textarea#ptm-input_").val(); },
+    src: function(){ return $("textarea#src-input_").val(); },
+    tgt: function(){ return $("textarea#ptm-input_").val(); },
     srcOOV: function(context){ return $(context).find(".oov-src-text").html(); },
     tgtOOV: function(context){ return $(context).find(".oov-tgt").val(); },
     
     showStatus: function(message){
-//      console.log("Status: " + message);
       $( "#status-box_" ).html(message).show();   
     },
     
@@ -71,11 +64,23 @@ var ptm = (function() {
       $( "#status-box_" ).slideUp();
     },
     
-    showPTM: function(){
+    // Dependent on jQueryUI
+    enablePTM: function() {
+      $( "#ptm-input_" ).autocomplete("enable");    
+    },
+    
+    // Dependent on jQueryUI
+    disablePTM: function(){
+      $( "#ptm-input_" ).autocomplete("disable");    
+    },
+    
+    showTargetBox: function(){
       if ($('.form-oov:visible').length <= 1){
         ptmUI.showStatus("Done with OOV input.");
         $('#ptm_').show();
+        return true;
       }
+      return false;
     },
     
     disableSourceBox: function() {
@@ -174,10 +179,10 @@ var ptm = (function() {
   
   //Callbacks from the server to render data to the interface
   //
-  //TODO: Remove the nested HTML here? Or at least specify the ids.
   var serveData = {
     
     //Acknowledgement received after sending a new OOV pair
+    //TODO(spenceg) Remove the embedded HTML here? Or at least specify the ids.
     oovResponse: function(data) {
       console.log("oovResponse");
       console.log(data);
@@ -190,7 +195,7 @@ var ptm = (function() {
       
       if(data.OOVs.length === 0){
         console.log("No OOVs! Opening PTM window.");
-        ptmUI.showPTM();
+        ptmUI.showTargetBox();
         return;
       }
       
@@ -261,8 +266,7 @@ var ptm = (function() {
   
   
   //Callbacks to be registered with the UI/client
-  //
-  //
+  //This is the main PTM API
   var fn = {
     
     //Reset the UI
@@ -348,11 +352,15 @@ var ptm = (function() {
     sendOOV: function(event){
       event.preventDefault();
       
+      // Clear this OOV regardless of whether the transmission
+      // below succeeds
       $(this).slideUp();
       
+      var srcOOVStr = ptmUI.srcOOV(this);
+      var tgtOOVStr = ptmUI.tgtOOV(this);
       var ptmMsg = {
-        sourcePhrase: ptmUI.cleanUp(ptmUI.srcOOV(this)),
-        targetPhrase: ptmUI.cleanUp(ptmUI.tgtOOV(this)),
+        sourcePhrase: ptmUI.cleanUp(srcOOVStr),
+        targetPhrase: ptmUI.cleanUp(tgtOOVStr),
       };
       
       console.log("POST: sendOOV");
@@ -368,7 +376,7 @@ var ptm = (function() {
             },
       });   
       
-      ptmUI.showPTM();
+      ptmUI.showTargetBox();
     },
     
     //User request for an autocomplete
@@ -433,7 +441,7 @@ var ptm = (function() {
       console.log(ptmMsg);
       
       //Set the autocomplete box on the interface
-      //TODO(wsg2011) Bug in current version of jQueryUI whereby this
+      //TODO(spenceg) Bug in current version of jQueryUI whereby this
       //update is ignored. This is contrary to the documentation, which
       //states that an override of the select() callback will cancel an
       //automatic update to the textbox.
@@ -486,6 +494,7 @@ var ptm = (function() {
   };
   
   return fn;
+  
 })();
 
 //Map ptm to the global namespace

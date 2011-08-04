@@ -1,17 +1,22 @@
 //Register ptm callbacks with the UI when it is ready
 $(document).ready(function(){
 
-  //Autocomplete box configuration
+  // jQueryUI autocomplete box configuration
   $( "#ptm-input_" ).autocomplete({
-    minLength: 1,
+    // Every keystroke potentially triggers an autocomplete event    
+    minLength: 0,
+    
+    // ms delay after keystroke for lookup
     delay: 50,
+    
+    // Focus the 1-best when the autocomplete box appears
+    autoFocus: true,
     
     //keyCode(32) == spacebar, which triggers autocomplete        
     search: function(event,ui){
       if(event.which === 32){
         ptm.clearCache();
       }
-      console.log("here");
       return ptm.shouldFireAutocomplete();
     },
     
@@ -20,11 +25,11 @@ $(document).ready(function(){
     },
     
     focus: function( event, ui ) {
-      ptm.addKeyStroke();      
+      ptm.addKeyStroke();
+      return false;//Cancel the update of the box value
     },
     
     select: function( event, ui ) {  
-//        console.log( "Selected:" + ui.item);
       //Log user actions in the autocomplete box
       ptm.addKeyStroke();
       
@@ -34,10 +39,14 @@ $(document).ready(function(){
     },
   });
   
+  //TODO(spenceg) Need to add hook to disable/enablePTM functions
+  //
+  //
+  
   //Trigger an autocomplete on the onfocus event for the
   //ptm box.
   $( "#ptm-input_" ).focusin(function(event){
-    //TODO: Run autocomplete here
+    $( "#ptm-input_" ).autocomplete("search");
   });
   
   //Setup keystroke counting (for typing)
