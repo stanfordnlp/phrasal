@@ -33,10 +33,13 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
   public TargetDependencyAnnotator(String... args) {
     String modelFile = args[0];
     boolean labelRelation = true;
-    try {
-      labelRelation = Boolean.parseBoolean(args[1]);
-    } catch (Exception e) {
-      // do nothing (default is labelRelation = true)
+    if (args.length >= 2) {
+	    try {
+	      labelRelation = Boolean.parseBoolean(args[1]);
+	    } catch (Exception e) {
+	      // do nothing (default is labelRelation = true)
+	      throw new RuntimeException(String.format("Can't parse %s as a boolean value", args[1]));
+	    }
     }
     try {
       parser = IOUtils.readObjectFromFile(modelFile);
@@ -44,6 +47,7 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+    System.err.printf("Finished loading %s (Labeled: %s)\n", modelFile, labelRelation);
     struct = null;
     index = -1;
   }

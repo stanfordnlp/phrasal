@@ -494,7 +494,7 @@ public class Phrasal {
                   .newInstance();
               additionalAnnotators.add(annotator);
             } else if (token.contains("(")) {
-              if (token.endsWith(")")) {
+              if (token.endsWith(")")) {  
                 annotatorName = token.replaceFirst("\\(.*", "");
                 args = token.replaceFirst("^.*\\(", "");
                 args = args.substring(0, args.length() - 1);
