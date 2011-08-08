@@ -1,18 +1,12 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.HasIntegerIdentity;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.SimpleSequence;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-
+import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.objectbank.ObjectBank;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Michel Galley
