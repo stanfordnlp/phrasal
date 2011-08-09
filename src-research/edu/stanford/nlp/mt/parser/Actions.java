@@ -119,7 +119,7 @@ public class Actions {
     if(!w.containsKey(LeftChildrenNodeAnnotation.class)) {
       w.set(LeftChildrenNodeAnnotation.class, new TreeSet<Pair<CoreLabel, String>>(new IndexComparator()));
     }
-    w.get(LeftChildrenNodeAnnotation.class).add(new Pair<CoreLabel, String>(topStack, relation.toString()));
+    w.get(LeftChildrenNodeAnnotation.class).add(new Pair<CoreLabel, String>(topStack, relation == null ? "dep" : relation.toString()));
   }
 
   private static void rightArc(Structure s, GrammaticalRelation relation, int offset) {
