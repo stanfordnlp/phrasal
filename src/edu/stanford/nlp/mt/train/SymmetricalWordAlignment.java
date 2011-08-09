@@ -4,7 +4,7 @@ import java.util.TreeSet;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.io.FileUtils;
+import edu.stanford.nlp.io.IOUtils;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -260,8 +260,8 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public static void main(String[] args) throws IOException {
-    List<String> fLines = FileUtils.linesFromFile(args[0]), eLines = FileUtils
-        .linesFromFile(args[1]), aLines = FileUtils.linesFromFile(args[2]);
+    List<String> fLines = IOUtils.linesFromFile(args[0]), eLines = IOUtils
+        .linesFromFile(args[1]), aLines = IOUtils.linesFromFile(args[2]);
     for (int i = 0; i < eLines.size(); ++i) {
       System.err.printf("Line %d\n", i);
       System.out.printf("f-sent: %s\n", fLines.get(i));

@@ -6,7 +6,6 @@ import java.io.*;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.StreamGobbler;
-import edu.stanford.nlp.io.FileUtils;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.mt.base.IOTools;
 
@@ -155,8 +154,8 @@ public class METEOR0_7Metric {
     }
 
     List<Pair<String, String>> data = new ArrayList<Pair<String, String>>();
-    List<String> ref = FileUtils.linesFromFile(args[0]);
-    List<String> hyp = FileUtils.linesFromFile(args[1]);
+    List<String> ref = IOUtils.linesFromFile(args[0]);
+    List<String> hyp = IOUtils.linesFromFile(args[1]);
 
     if (ref.size() != hyp.size())
       throw new RuntimeException(String.format(

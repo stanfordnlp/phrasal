@@ -5,7 +5,7 @@ import java.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
 import edu.stanford.nlp.util.*;
-import edu.stanford.nlp.io.FileUtils;
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader;
@@ -87,10 +87,10 @@ public class AnnotateCoNLL2007 {
     // DependencyAnalyzer.setActiveTypes(types.split(":+"));
 
     // Read all source-language sentences:
-    List<String> eText = FileUtils.linesFromFile(eTextFile);
-    List<String> fText = FileUtils.linesFromFile(fTextFile);
-    List<String> fParses = FileUtils.linesFromFile(fParseFile);
-    List<String> align = FileUtils.linesFromFile(alignFile);
+    List<String> eText = IOUtils.linesFromFile(eTextFile);
+    List<String> fText = IOUtils.linesFromFile(fTextFile);
+    List<String> fParses = IOUtils.linesFromFile(fParseFile);
+    List<String> align = IOUtils.linesFromFile(alignFile);
     final int totSent = fText.size();
     assert (totSent == fParses.size());
     assert (totSent == align.size());
