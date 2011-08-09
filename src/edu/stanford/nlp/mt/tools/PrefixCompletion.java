@@ -184,6 +184,7 @@ public class PrefixCompletion extends AbstractHandler {
       if (DEBUG) {
         System.err.println("PTMDoneRequest: " + gson.toJson(ptmRequest));
       }
+      System.out.printf("LOG: %s\n", ptmRequest);
       //responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
       responseString = gson.toJson(new PTMStatusOk());       
     } 
@@ -550,9 +551,18 @@ class PTMCompletionSelectionRequest extends PTMBaseRequest {
 
 class PTMDoneRequest extends PTMBaseRequest {
   public final String finishedTarget;
-  public PTMDoneRequest(String sourceLang, String targetLang, String source, String finishedTarget) {
+  public final int numKeyStrokes;
+  
+  public PTMDoneRequest(String sourceLang, String targetLang, String source, String finishedTarget, int numKeyStrokes) {
     super(sourceLang, targetLang, source);
     this.finishedTarget = finishedTarget;
+    this.numKeyStrokes  = numKeyStrokes;
+  }
+  
+  @Override 
+  public String toString() {
+	 return String.format("ptmDone: sourceLang: %s targetLang: %s source: %s finishedTarget: %s numKeyStrokes: %d",
+			 sourceLang, targetLang, source, finishedTarget, numKeyStrokes);
   }
 }
 
