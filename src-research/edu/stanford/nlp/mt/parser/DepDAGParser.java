@@ -21,14 +21,14 @@ import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Datum;
-import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Datum;
+import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.mt.parser.DAGFeatureExtractor.RightSideFeatures;
@@ -40,9 +40,9 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.DependencyScoring;
+import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -292,7 +292,7 @@ public class DepDAGParser implements Parser, Serializable {
 
   public static void main(String[] args) throws IOException, ClassNotFoundException{
 
-    boolean doTrain = false;
+    boolean doTrain = true;
     boolean doTest = true;
     boolean storeTrainedModel = true;
 
@@ -338,11 +338,11 @@ public class DepDAGParser implements Parser, Serializable {
 
     //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/small_train.conll";
-    //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
-    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
+    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
-    //    props.put("train", tempTrain);
-    //    props.put("test", tempTest);
+    props.put("train", tempTrain);
+    props.put("test", tempTest);
 
     POSTaggerAnnotator posTagger = null;
     try {
@@ -390,7 +390,7 @@ public class DepDAGParser implements Parser, Serializable {
         parser = IOUtils.readObjectFromFile(trainedModelFile);
         logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
       }
-      parser.labelRelation = false;
+      parser.labelRelation = true;
       //      if(true) return;
       logger.info("read test data from "+testFile + " ...");
       List<Structure> testData = ActionRecoverer.readTrainingData(testFile, posTagger);

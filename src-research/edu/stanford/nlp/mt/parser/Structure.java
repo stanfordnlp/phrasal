@@ -32,21 +32,21 @@ public class Structure {
   public Structure clone() {
     return new Structure(stack.clone(), input.clone(), dependencies.clone(), actionTrace.clone());
   }
-  
+
   @Override
   public String toString() {
-	StringBuilder sbuilder = new StringBuilder();
-	sbuilder.append("Input:\n");
-	sbuilder.append(input);
-	sbuilder.append("Stack:\n");
-	sbuilder.append(stack.toString());
+    StringBuilder sbuilder = new StringBuilder();
+    sbuilder.append("Input:\n");
+    sbuilder.append(input);
+    sbuilder.append("Stack:\n");
+    sbuilder.append(stack.toString());
     sbuilder.append("deps:\n");
-	sbuilder.append(dependencies);
-	return sbuilder.toString();
+    sbuilder.append(dependencies);
+    return sbuilder.toString();
   }
-  
-  private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies, 
-		  LinkedStack<Action> actionTrace) {
+
+  private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies,
+      LinkedStack<Action> actionTrace) {
     this.stack = stack;
     this.actionTrace = actionTrace;
     this.input = input;
@@ -67,14 +67,16 @@ public class Structure {
     int seqLen = tagger.ts.leftWindow() + 1;
 
     // to check the performance of POS tagger
-    List<CoreLabel> sent = new ArrayList<CoreLabel>();
-    for (Tree treeNode : gs.root().getLeaves()) {
-      TreeGraphNode node = (TreeGraphNode)treeNode;
-      CoreLabel cl = node.label();
-      cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
-      sent.add(cl);
+    if(posTagger!=null) {
+      List<CoreLabel> sent = new ArrayList<CoreLabel>();
+      for (Tree treeNode : gs.root().getLeaves()) {
+        TreeGraphNode node = (TreeGraphNode)treeNode;
+        CoreLabel cl = node.label();
+        cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
+        sent.add(cl);
+      }
+      posTagger.processText(sent);
     }
-    posTagger.processText(sent);
 
     for (Tree treeNode : gs.root().getLeaves()) {
       TreeGraphNode node = (TreeGraphNode)treeNode;

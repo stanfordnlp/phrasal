@@ -17,13 +17,13 @@ public class LinkedStack<T> implements Iterable<T> {
 
   public LinkedStack() {
   }
-  
+
   @Override
   public LinkedStack<T> clone() {
-	  LinkedStack<T> ls = new LinkedStack<T>();
-	  ls.current = current;
-	  ls.size = size;
-	  return ls;
+    LinkedStack<T> ls = new LinkedStack<T>();
+    ls.current = current;
+    ls.size = size;
+    return ls;
   }
 
   public LinkedStack(LinkedStack<T> parent) {
@@ -37,7 +37,7 @@ public class LinkedStack<T> implements Iterable<T> {
     }
   }
 
-  int size() {
+  public int size() {
     return size;
   }
 
@@ -73,7 +73,7 @@ public class LinkedStack<T> implements Iterable<T> {
    * @return
    */
   @SuppressWarnings("unchecked")
-  T[] peekN(int n){
+  public T[] peekN(int n){
     T[] elements = (T[]) new Object[n];
     int i;
     StackNode cursor;
