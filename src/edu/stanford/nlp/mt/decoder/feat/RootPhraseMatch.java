@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -13,7 +15,8 @@ import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.trees.TypedDependency;
 
 public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, AlignmentFeaturizer {
-    static public final String FEATURE_NAME = "RootPhraseMatch";
+    static public final String FEATURE_NAME_MATCH = "RootPhraseMatch";
+    static public final String FEATURE_NAME_MISMATCH = "RootPhraseMisMatch";
     static public final boolean DEBUG = true;
     
 	@Override
@@ -57,27 +60,43 @@ public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, 
 	      } 
 	    }
 	    
-	    int sourceRoot = srcDepAnnotator.gs.root().index();
-	    int targetRoot = -1;
-	    for (TypedDependency dep: trgDepAnnotator.struct.getDependencies()) {
-	       System.out.printf("\t%s\n", dep);
-	       if (dep.gov().index() == 0) {
-		      targetRoot = dep.dep().index();
-		   }
+	    int sourceRoot = -1;
+	    for (TypedDependency dep: srcDepAnnotator.gs.typedDependencies()) {
+	    	System.out.printf("\t%s: gov().index(): %d\n", dep, dep.gov().index());
+	    	if (dep.gov().index() == 0) {
+	        	sourceRoot = dep.dep().index();
+	        }
 	    }
+	    
+	    Set<Integer> possibleRoots = new HashSet<Integer>();
+	    
+	    for (TypedDependency dep: trgDepAnnotator.struct.getDependencies()) {
+	       possibleRoots.add(dep.gov().index());
+	    }
+	    
+	    for (TypedDependency dep: trgDepAnnotator.struct.getDependencies()) {
+		   possibleRoots.remove(dep.dep().index());
+		}
+	    
 	    if (DEBUG) {
 	    	System.out.println("Source Root: "+sourceRoot);
-	    	System.out.println("Target Root: "+targetRoot);
+	    	System.out.println("Target Root: "+possibleRoots);
 	    }
-	    if (DEBUG) {
-	       System.out.printf("Source root aligned to: (%d,%d)\n", f.f2tAlignmentIndex[sourceRoot-1][0],  f.f2tAlignmentIndex[sourceRoot-1][1]);
-	       System.out.printf("Target root aligned to: (%d,%d)\n", f.t2fAlignmentIndex[targetRoot-1][0],  f.f2tAlignmentIndex[targetRoot-1][1]);
+	    
+	    /*if (DEBUG) {
+	       System.out.printf("Source root aligned to: (%d,%d)\n", 
+	    		   f.f2tAlignmentIndex[sourceRoot-1][0],  f.f2tAlignmentIndex[sourceRoot-1][1]);
+	       System.out.printf("Target root aligned to: (%d,%d)\n", 
+	    		   f.t2fAlignmentIndex[targetRoot-1][0],  f.f2tAlignmentIndex[targetRoot-1][1]);
 	    }
-	    if (f.f2tAlignmentIndex[sourceRoot-1][0] <= targetRoot && f.f2tAlignmentIndex[sourceRoot-1][1] >= targetRoot)  {
-	    	return new FeatureValue<String>(FEATURE_NAME, 1.0);
-		} else {	
-	        return new FeatureValue<String>(FEATURE_NAME, 0.0);
-		}
+	    */
+	    for (Integer possibleRoot : possibleRoots) {
+	       int targetRoot = possibleRoot;
+	       if (f.f2tAlignmentIndex[sourceRoot-1][0] <= targetRoot && f.f2tAlignmentIndex[sourceRoot-1][1] >= targetRoot)  {
+	    	   return new FeatureValue<String>(FEATURE_NAME_MATCH, 1.0);
+	       }    
+	    }
+	    return new FeatureValue<String>(FEATURE_NAME_MISMATCH, 1.0);
 	}
 
 }
