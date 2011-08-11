@@ -2167,23 +2167,3 @@ public class Phrasal {
   }
 
 }
-
-class IdScorePair implements Comparable<IdScorePair> {
-  public final int id;
-  public final double score;
-  public final double evalScore;
-
-  public IdScorePair(int id, double score, double evalScore) {
-    this.id = id;
-    this.score = score;
-    this.evalScore = evalScore;
-  }
-
-  @Override
-  public int compareTo(IdScorePair o) {
-    int scoreSigNum = (int) Math.signum(o.score - score);
-    if (scoreSigNum != 0)
-      return scoreSigNum;
-    return id - o.id;
-  }
-}
