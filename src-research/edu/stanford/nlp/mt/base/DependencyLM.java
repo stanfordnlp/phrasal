@@ -87,7 +87,7 @@ public class DependencyLM implements LanguageModel<IString> {
 
   public static void main(String[] args) throws IOException {
 
-    LanguageModel<IString> lm = new DependencyLM();
+    //    LanguageModel<IString> lm = new DependencyLM();
 
     String trainingFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-train-2011-01-13.conll";
     //    String trainingFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp3.conll";

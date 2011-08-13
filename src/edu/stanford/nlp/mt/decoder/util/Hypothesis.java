@@ -15,6 +15,7 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
+import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 
@@ -144,10 +145,14 @@ State<Hypothesis<TK, FV>> {
     		System.out.println("Extend null hypothesis");
     	}
     	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-      annotators.add(annotator.extend(translationOpt));
+      Annotator<TK> extendedAnnotator = annotator.extend(translationOpt);
+      annotators.add(extendedAnnotator);
+      if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
+        ((TargetDependencyAnnotator<TK>) extendedAnnotator).addRoot();
+      }
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
-    
+
     localFeatures = featurizer.listFeaturize(featurizable);
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
@@ -182,20 +187,20 @@ State<Hypothesis<TK, FV>> {
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractOption,
         translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
-    
+
     annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
     for (Annotator<TK> annotator : baseHyp.annotators) {
-        /*if (baseHyp.featurizable != null) {
+      /*if (baseHyp.featurizable != null) {
       	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
       	} else {
       		System.out.println("Extend null hypothesis");
       	}
       	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-        annotators.add(annotator.extend(translationOpt));
-        // System.out.println("done with extension "+translationOpt.abstractOption.translation);
+      annotators.add(annotator.extend(translationOpt));
+      // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
-    
-    
+
+
     localFeatures = featurizer.listFeaturize(featurizable);
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     depth = baseHyp.depth + 1;
@@ -203,7 +208,7 @@ State<Hypothesis<TK, FV>> {
         + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
     assert (!Double.isNaN(h));
   }
-  
+
 
   /**
    * 

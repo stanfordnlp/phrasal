@@ -111,8 +111,20 @@ public class Actions {
     }
     CoreLabel topStack = s.stack.peek();
 
-    TreeGraphNode gov = new TreeGraphNode(w);
-    TreeGraphNode dep = new TreeGraphNode(topStack);
+    TreeGraphNode gov;
+    if(s.getInputToNode().containsKey(w)) {
+      gov = s.getInputToNode().get(w);
+    } else {
+      gov = new TreeGraphNode(w);
+      s.getInputToNode().put(w, gov);
+    }
+    TreeGraphNode dep;
+    if(s.getInputToNode().containsKey(topStack)) {
+      dep = s.getInputToNode().get(topStack);
+    } else {
+      dep = new TreeGraphNode(topStack);
+      s.getInputToNode().put(topStack, dep);
+    }
     TypedDependency dependency = new TypedDependency(relation, gov, dep);
     s.dependencies.push(dependency);
 
@@ -131,8 +143,20 @@ public class Actions {
       w = (CoreLabel) o[offset-1];
     }
     CoreLabel topStack = s.stack.peek();
-    TreeGraphNode gov = new TreeGraphNode(topStack);
-    TreeGraphNode dep = new TreeGraphNode(w);
+    TreeGraphNode gov;
+    if(s.getInputToNode().containsKey(topStack)) {
+      gov = s.getInputToNode().get(topStack);
+    } else {
+      gov = new TreeGraphNode(topStack);
+      s.getInputToNode().put(topStack, gov);
+    }
+    TreeGraphNode dep;
+    if(s.getInputToNode().containsKey(w)) {
+      dep = s.getInputToNode().get(w);
+    } else {
+      dep = new TreeGraphNode(w);
+      s.getInputToNode().put(w, dep);
+    }
     TypedDependency dependency = new TypedDependency(relation, gov, dep);
     s.dependencies.push(dependency);
   }

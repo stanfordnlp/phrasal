@@ -29,7 +29,7 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
   public static final String DEBUG_PROPERTY = "DepLMFeaturizerDebug";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
   public static final String FEATURE_NAME = "DepLM";
-  private final HashMap<Featurizable<IString, String>, Double> depLMScoreHistory = new HashMap<Featurizable<IString, String>, Double>();
+  private final HashMap<LinkedStack<TypedDependency>, Double> depLMScoreHistory = new HashMap<LinkedStack<TypedDependency>, Double>();
   public final LanguageModel<IString> lm;
 
   public DepLMFeaturizer(){
@@ -46,7 +46,15 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
     double previousScore = getPreviousScore(featurizable);
     double additionalScore = getAdditionalScore(featurizable);
     double depLMSumScore = previousScore + additionalScore;
-    depLMScoreHistory.put(featurizable, depLMSumScore);
+
+    LinkedStack<TypedDependency> currentDeps = null;
+    for(Annotator<IString> annotator : featurizable.hyp.annotators){
+      if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
+        currentDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
+      }
+    }
+
+    depLMScoreHistory.put(currentDeps, depLMSumScore);
     return depLMSumScore;
   }
 

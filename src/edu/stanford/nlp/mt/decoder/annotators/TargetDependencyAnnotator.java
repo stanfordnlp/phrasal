@@ -1,10 +1,10 @@
 package edu.stanford.nlp.mt.decoder.annotators;
 
 import edu.stanford.nlp.io.IOUtils;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.parser.DepDAGParser;
@@ -34,12 +34,12 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
     String modelFile = args[0];
     boolean labelRelation = true;
     if (args.length >= 2) {
-	    try {
-	      labelRelation = Boolean.parseBoolean(args[1]);
-	    } catch (Exception e) {
-	      // do nothing (default is labelRelation = true)
-	      throw new RuntimeException(String.format("Can't parse %s as a boolean value", args[1]));
-	    }
+      try {
+        labelRelation = Boolean.parseBoolean(args[1]);
+      } catch (Exception e) {
+        // do nothing (default is labelRelation = true)
+        throw new RuntimeException(String.format("Can't parse %s as a boolean value", args[1]));
+      }
     }
     try {
       parser = IOUtils.readObjectFromFile(modelFile);
@@ -54,7 +54,7 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
 
   @Override
   public Annotator<TK> initialize(Sequence<TK> source) {
-    TargetDependencyAnnotator<TK> pa = new TargetDependencyAnnotator<TK>(parser, new Structure(), 0);
+    TargetDependencyAnnotator<TK> pa = new TargetDependencyAnnotator<TK>(parser, new Structure(), 1);
     return pa;
   }
 
@@ -86,5 +86,9 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
       builder.append(dep.toString());
     }
     return builder.toString();
+  }
+
+  public void addRoot() {
+    struct.addRoot();
   }
 }

@@ -14,8 +14,14 @@ import java.util.List;
 public class LinkedStack<T> implements Iterable<T> {
   StackNode current = null;
   private int size = 0;
+  private int hashCode = 17;
 
   public LinkedStack() {
+  }
+
+  @Override
+  public int hashCode() {
+    return hashCode;
   }
 
   @Override
@@ -23,12 +29,14 @@ public class LinkedStack<T> implements Iterable<T> {
     LinkedStack<T> ls = new LinkedStack<T>();
     ls.current = current;
     ls.size = size;
+    ls.hashCode = hashCode;
     return ls;
   }
 
   public LinkedStack(LinkedStack<T> parent) {
     size = parent.size;
     current = parent.current;
+    hashCode = parent.hashCode;
   }
   public LinkedStack(List<T> list){
     size = list.size();
@@ -46,6 +54,7 @@ public class LinkedStack<T> implements Iterable<T> {
     StackNode newNode = new StackNode(value, current);
     current = newNode;
     size++;
+    hashCode = 29*hashCode + value.hashCode();
   }
 
   T pop() {
@@ -56,6 +65,7 @@ public class LinkedStack<T> implements Iterable<T> {
     T currentValue = current.value;
     current = current.parent;
     size--;
+    hashCode = (hashCode - currentValue.hashCode())/29;
     return currentValue;
   }
 
