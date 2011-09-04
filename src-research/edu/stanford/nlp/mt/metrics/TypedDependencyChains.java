@@ -43,24 +43,23 @@ public class TypedDependencyChains {
 
    public static String wordOnly(String wordIndx) {
      return wordIndx.substring(0,wordIndx.lastIndexOf("-"));
-   } 
+   }
 
    public Counter<List<TypedDependency>> getChains(String sentence, int maxChain) {
       try {
-      List<CoreLabel> words = ptbtokf.getTokenizer(new StringReader(sentence)).tokenize();      
+      List<CoreLabel> words = ptbtokf.getTokenizer(new StringReader(sentence)).tokenize();
       tagger.tagCoreLabels(words);
       for (CoreLabel word : words) {
         String text = word.get(CoreAnnotations.TextAnnotation.class);
         //System.err.println("Token #" + i + ": " + token);
         String posTag = word.get(PartOfSpeechAnnotation.class);
-        WordTag wt = morpha.stem(text, posTag);
-        word.setLemma(wt.word());
+        word.setLemma(morpha.lemma(text, posTag));
       }
-    
+
       List<TypedDependency> typeDeps;
         typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(true);
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
-      
+
       for (TypedDependency tdep : typeDeps) {
         if (puncFilter.accept(wordOnly(tdep.gov().label().toString())) && puncFilter.accept(wordOnly(tdep.dep().label().toString()))) {
           filteredDeps.add(tdep);
@@ -85,12 +84,12 @@ public class TypedDependencyChains {
          String depString = dep.toString(true);
          if (untyped) {
            int firstPar = depString.indexOf("(");
-           depString = depString.substring(firstPar); 
+           depString = depString.substring(firstPar);
          }
          deps.add(depString);
        }
        wordDepOnlyStringChains.incrementCount(deps, chains.getCount(chain));
      }
-     return wordDepOnlyStringChains; 
+     return wordDepOnlyStringChains;
    }
 }

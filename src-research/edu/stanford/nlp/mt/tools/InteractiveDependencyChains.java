@@ -27,8 +27,8 @@ import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Filter;
 
 /**
- * Tool for interactively inspecting dependency chains 
- * 
+ * Tool for interactively inspecting dependency chains
+ *
  * @author danc
  *
  */
@@ -43,21 +43,20 @@ public class InteractiveDependencyChains {
     TokenizerFactory<CoreLabel> ptbtokf = PTBTokenizer.factory(false, false);
     Morphology morpha = new Morphology();
     Filter<String> puncFilter = new PennTreebankLanguagePack().punctuationWordRejectFilter();
-    
+
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-      List<CoreLabel> words = ptbtokf.getTokenizer(new StringReader(line)).tokenize();      
+      List<CoreLabel> words = ptbtokf.getTokenizer(new StringReader(line)).tokenize();
       tagger.tagCoreLabels(words);
       for (CoreLabel word : words) {
         String text = word.get(CoreAnnotations.TextAnnotation.class);
         //System.err.println("Token #" + i + ": " + token);
         String posTag = word.get(PartOfSpeechAnnotation.class);
-        WordTag wt = morpha.stem(text, posTag);
-        word.setLemma(wt.word());
+        word.setLemma(morpha.lemma(text, posTag));
       }
       System.out.printf("Procesing: %s\n", words);
       List<TypedDependency> typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(true);
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
-      
+
       for (TypedDependency tdep : typeDeps) {
         if (puncFilter.accept(wordOnly(tdep.gov().label().toString())) && puncFilter.accept(wordOnly(tdep.dep().label().toString()))) {
           filteredDeps.add(tdep);
@@ -65,22 +64,22 @@ public class InteractiveDependencyChains {
       }
       System.out.println("Type Deps:\n");
       System.out.println(filteredDeps);
-      
+
       System.out.printf("\nGov To Dep Map:\n");
       Map<TreeGraphNode,List<TypedDependency>> govToDepMap = Dependencies.govToDepMap(typeDeps);
       for (Map.Entry<TreeGraphNode, List<TypedDependency>> e : govToDepMap.entrySet()) {
         System.out.println(e);
       }
-      
+
       System.out.printf("\nChains:\n");
       Counter<List<TypedDependency>> chains = Dependencies.getTypedDependencyChains(typeDeps, 2);
-      for (List<TypedDependency> chain : chains.keySet()) {      
+      for (List<TypedDependency> chain : chains.keySet()) {
         System.out.println(chain + ": " + chains.getCount(chain));
       }
-      
+
       Counter<List<String>> wordDepOnlyStringChains = new ClassicCounter<List<String>>();
-      
-      
+
+
       for (List<TypedDependency> chain : chains.keySet()) {
         List<String> deps = new ArrayList<String>(chain.size());
         for (TypedDependency dep : chain) {
@@ -88,11 +87,11 @@ public class InteractiveDependencyChains {
         }
         wordDepOnlyStringChains.incrementCount(deps, chains.getCount(chain));
       }
-      
+
       System.out.printf("\nWord dep only chains:\n");
       for (List<String> wdoChain : wordDepOnlyStringChains.keySet()) {
         System.out.println(wdoChain + ": " + wordDepOnlyStringChains.getCount(wdoChain));
       }
-    }    
+    }
   }
 }
