@@ -17,8 +17,6 @@
 	<classpathentry kind="lib" path="lib/jopt-simple.jar" sourcepath="libsrc/jopt-simple-3.1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/tercom.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
-	<classpathentry kind="lib" path="/JavaNLP-core/lib/malt.jar"/>
-	<classpathentry kind="lib" path="/JavaNLP-core/lib/commons-math-2.1.jar" sourcepath="/JavaNLP-core/libsrc/commons-math-2.1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/start.jetty-7.4.2.jar"/>
 	<classpathentry kind="lib" path="lib/gson-1.7.1.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-ajp-7.4.2.v20110526.jar"/>
