@@ -33,7 +33,7 @@ public class TypedDepFeatureExtractor implements FeatureExtractor {
         StringBuilder path = new StringBuilder("PATH:");
         if (matrix.chGraph != null) {
           SemanticGraph chGraph = matrix.chGraph;
-          List<IndexedWord> list = chGraph.vertexList();
+          List<IndexedWord> list = chGraph.vertexListSorted();
           path.append(DepUtils.getPathName(example.src_j - 1,
               example.src_jprime - 1, list, chGraph));
         } else if (matrix.pathMap != null) {

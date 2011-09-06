@@ -37,7 +37,7 @@ public class TreesToPaths {
       GrammaticalStructure gs = new ChineseGrammaticalStructure(t,
           puncWordFilter);
       SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(gs, "doc1", 0);
-      List<IndexedWord> list = chGraph.vertexList();
+      List<IndexedWord> list = chGraph.vertexListSorted();
       for (int i = 0; i < list.size(); i++) {
         for (int j = 0; j < list.size(); j++) {
           if (i != j) {

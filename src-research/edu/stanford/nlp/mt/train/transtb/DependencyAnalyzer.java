@@ -137,7 +137,7 @@ public class DependencyAnalyzer {
   public void addTypedPaths(GrammaticalStructure gs) {
     SemanticGraph g = SemanticGraphFactory.makeFromTree(gs, "doc1", 0);
     System.err.println("Semantic graph: " + g.toFormattedString());
-    List<IndexedWord> list = g.vertexList();
+    List<IndexedWord> list = g.vertexListSorted();
     for (int i = 0; i < list.size(); i++) {
       for (int j = 0; j < list.size(); j++) {
         if (i != j) {
@@ -150,8 +150,8 @@ public class DependencyAnalyzer {
   }
 
   private static String getPath(int n1, int n2, List<IndexedWord> iw, SemanticGraph g) {
-    List<SemanticGraphEdge> paths = g.getShortestPathEdges(iw.get(n1),
-        iw.get(n2));
+    List<SemanticGraphEdge> paths = g.getShortestUndirectedPathEdges(
+        iw.get(n1), iw.get(n2));
     int curI = n1;
     List<String> p = new ArrayList<String>();
     if (paths != null) {

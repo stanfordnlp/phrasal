@@ -46,7 +46,7 @@ public class DepUtils {
         node2 = tmp;
       }
     }
-    List<SemanticGraphEdge> paths = chGraph.getShortestPathEdges(
+    List<SemanticGraphEdge> paths = chGraph.getShortestUndirectedPathEdges(
         list.get(node1), list.get(node2));
     int startI = node1;
     StringBuilder sb = new StringBuilder();

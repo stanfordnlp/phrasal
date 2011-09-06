@@ -96,10 +96,9 @@ public class DependencyUtils {
     SemanticGraph graph = SemanticGraphFactory.makeFromTree(enGs, "doc1", 0);
     SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(chGs, "doc1", 0);
 
-    List<SemanticGraphEdge> edges = graph.edgeList();
-    List<IndexedWord> list = chGraph.vertexList();
+    List<IndexedWord> list = chGraph.vertexListSorted();
 
-    for (SemanticGraphEdge edge : edges) {
+    for (SemanticGraphEdge edge : graph.edgeListSorted()) {
       // System.err.println("EDGE:"+edge);
       int govIdx = edge.getGovernor().index();
       // System.err.println("govIdx:"+govIdx);
@@ -126,7 +125,8 @@ public class DependencyUtils {
           if (chDepI >= list.size()) {
             break;
           }
-          List<SemanticGraphEdge> paths = chGraph.getShortestPathEdges(
+          List<SemanticGraphEdge> paths = 
+            chGraph.getShortestUndirectedPathEdges(
               list.get(chGovI), list.get(chDepI));
           int startI = chGovI;
           StringBuilder sb = new StringBuilder();
@@ -194,18 +194,15 @@ public class DependencyUtils {
     SemanticGraph enGraph = SemanticGraphFactory.makeFromTree(enGs, "doc1", 0);
     SemanticGraph chGraph = SemanticGraphFactory.makeFromTree(chGs, "doc1", 0);
 
-    List<IndexedWord> enlist = enGraph.vertexList();
-    List<IndexedWord> chlist = chGraph.vertexList();
+    List<IndexedWord> enlist = enGraph.vertexListSorted();
+    List<IndexedWord> chlist = chGraph.vertexListSorted();
 
     for (int i = 0; i < chlist.size(); i++) {
-      for (int j = i; j < chlist.size(); j++) { // Note: we actually consider
-                                                // j==i as well --
-                                                // in the case that English
-                                                // words are reduced (aligned)
-                                                // to one Chinese word, we can
-                                                // see what kind of
-                                                // dependencies are reduced most
-        List<SemanticGraphEdge> chPaths = chGraph.getShortestPathEdges(
+      for (int j = i; j < chlist.size(); j++) { 
+        // Note: we actually consider j==i as well -- in the case that
+        // English words are reduced (aligned) to one Chinese word, we
+        // can see what kind of dependencies are reduced most
+        List<SemanticGraphEdge> chPaths = chGraph.getShortestUndirectedPathEdges(
             chlist.get(i), chlist.get(j));
         // skip if chPaths doesn't exist or is too long
         if (chPaths == null)
@@ -247,7 +244,7 @@ public class DependencyUtils {
               if (enI >= enJ)
                 continue;
             }
-            List<SemanticGraphEdge> enPaths = enGraph.getShortestPathEdges(
+            List<SemanticGraphEdge> enPaths = enGraph.getShortestUndirectedPathEdges(
                 enlist.get(enI), enlist.get(enJ));
             if (enPaths == null)
               continue;
