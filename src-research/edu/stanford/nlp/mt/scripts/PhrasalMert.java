@@ -21,10 +21,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.tools.CompareWeights;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.StringUtils;
 
 public class PhrasalMert {
   static public class ConfigSection {
@@ -432,19 +434,24 @@ public class PhrasalMert {
   public static void main(String[] args) 
     throws IOException, InterruptedException, ClassNotFoundException
   {
-    if (args.length != 6 && args.length != 5) {
-      System.err.println("Expected args in the format:");
-      System.err.println("  mem input reference metric config [librarypath]");
+    Properties props = StringUtils.argsToProperties(args);
+    String missing = 
+      StringUtils.checkRequiredProperties(props, "memory", "inputFile",
+                                          "referenceFile", "metric",
+                                          "phrasalConfigFile");
+    if (missing != null) {
+      System.err.println("Required property " + missing + " missing");
+      System.err.println("Expected properties are: memory, inputFile, " +
+                         " referenceFile, metric, phrasalConfigFile");
+      System.err.println("Optional properties are: libraryPath"); 
       System.exit(2);
     }
-    
-    // TODO: use properties instead of a set number of command args
-    String memory = args[0];
-    String inputFilename = args[1];
-    String referenceFile = args[2];
-    String metric = args[3];
-    String phrasalConfigFilename = args[4];
-    String libraryPath = null;
+    String memory = props.getProperty("memory");
+    String inputFilename = props.getProperty("inputFile");
+    String referenceFile = props.getProperty("referenceFile");
+    String metric = props.getProperty("metric");
+    String phrasalConfigFilename = props.getProperty("phrasalConfigFile");
+    String libraryPath = props.getProperty("libraryPath");
     if (args.length == 6) {
       libraryPath = args[5];
     }
