@@ -147,7 +147,7 @@ public class PhrasalMertTest extends TestCase {
     throws IOException
   {
     StringReader sin = new StringReader(iniText);
-    PhrasalMert.ConfigFile config = PhrasalMert.readConfigFile(sin);
+    ConfigFile config = ConfigFile.readConfigFile(sin);
     StringWriter sout = new StringWriter();
     config.outputFile(sout);
     assertEquals(iniText.trim(), sout.toString().trim());
