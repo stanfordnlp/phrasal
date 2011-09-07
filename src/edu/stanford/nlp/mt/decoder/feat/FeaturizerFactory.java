@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.base.LanguageModels;
 
 /**
  * @author danielcer
- * 
+ *
  */
 public class FeaturizerFactory {
 
@@ -30,6 +30,10 @@ public class FeaturizerFactory {
 
   public static final String FEATURE_ALIASES_RESOURCE = "edu/stanford/nlp/mt/resources/feature.aliases";
   public static final Map<String, List<String>> featureAliases = readFeatureAliases(FEATURE_ALIASES_RESOURCE);
+
+
+  private FeaturizerFactory() { } // static class
+
 
   public enum GapType {
     none, source, target, both
@@ -61,7 +65,7 @@ public class FeaturizerFactory {
         DEFAULT_ARPALM_WT, DEFAULT_COLLAPSE_TM_WT };
   }
 
-  static private Map<String, List<String>> readFeatureAliases(
+  private static Map<String, List<String>> readFeatureAliases(
       String aliasResource) {
     if (ClassLoader.getSystemClassLoader().getResource(aliasResource) == null) {
       System.err
@@ -75,8 +79,7 @@ public class FeaturizerFactory {
       LineNumberReader reader = new LineNumberReader(new InputStreamReader(
           ClassLoader.getSystemClassLoader().getResource(aliasResource)
               .openStream()));
-      for (String line = reader.readLine(); line != null; line = reader
-          .readLine()) {
+      for (String line; (line = reader.readLine()) != null; ) {
         String lineOrig = line;
         line = line.replaceAll("#.*", "").replaceAll("\\s+$", "");
         if (line.matches("^\\s*$"))
@@ -107,8 +110,9 @@ public class FeaturizerFactory {
         }
         aliases.put(alias, names);
       }
+      reader.close();
     } catch (IOException e) {
-      System.err.printf("Unable to load resouce: %s\n", aliasResource);
+      System.err.printf("Unable to load resource: %s\n", aliasResource);
       System.exit(-1);
     }
 
@@ -116,7 +120,7 @@ public class FeaturizerFactory {
   }
 
   @SuppressWarnings("unchecked")
-  static public <TK, FV> Class<IncrementalFeaturizer<TK, FV>> loadFeaturizer(
+  public static <TK, FV> Class<IncrementalFeaturizer<TK, FV>> loadFeaturizer(
       String name) {
     String trueName = (featureAliases.containsKey(name) ? featureAliases.get(
         name).get(0) : name);

@@ -3,20 +3,18 @@ package edu.stanford.nlp.mt.decoder.feat;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 
 /**
  * Assign large cost to phrase if sentence boundaries are not at the right
  * place.
- * 
+ *
  * @author Michel Galley
  */
 public class SentenceBoundaryFeaturizer implements
     IncrementalFeaturizer<IString, String>,
     IsolatedPhraseFeaturizer<IString, String> {
-  static public String FEATURE_NAME = "SentenceBoundary";
-  static public final double BAD_SENTENCE_BOUNDARY_PENALTY = -100.0;
+  public static final String FEATURE_NAME = "SentenceBoundary";
+  public static final double BAD_SENTENCE_BOUNDARY_PENALTY = -100.0;
 
   private static final IString startToken = new IString("<s>");
   private static final IString endToken = new IString("</s>");
@@ -67,6 +65,7 @@ public class SentenceBoundaryFeaturizer implements
       Sequence<IString> foreign) {
   }
 
+  @Override
   public void reset() {
   }
 }
