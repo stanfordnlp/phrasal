@@ -34,6 +34,7 @@ public class LanguageModels {
   }
 
   public static final String BERKELEY_LM_TAG = "berkeleylm:";
+  public static final String SRI_LM_TAG = "srilm:";
   
   public static int MAX_NGRAM_ORDER = 10;
   
@@ -43,10 +44,8 @@ public class LanguageModels {
   
   public static LanguageModel<IString> load(String filename,
       String vocabFilename) throws IOException {
-    File f = new File(filename);
-    String filepath = f.getAbsolutePath();
-    if (ARPALanguageModel.lmStore.containsKey(filepath))
-      return ARPALanguageModel.lmStore.get(filepath);
+    if (ARPALanguageModel.lmStore.containsKey(filename))
+      return ARPALanguageModel.lmStore.get(filename);
   
     boolean useSRILM = true;
     LanguageModel<IString> alm;
@@ -60,22 +59,22 @@ public class LanguageModels {
      } catch (Exception e) {
        throw new RuntimeException(e);
      }     
-    } else if (vocabFilename == null) {
-      return new ARPALanguageModel(filename);
-    } else {
+    } else if (filename.startsWith(SRI_LM_TAG)) {
+    	String realFilename = filename.substring(SRI_LM_TAG.length());
+        
       try {
-        alm = new SRILanguageModel(filename, vocabFilename);
+        alm = new SRILanguageModel(realFilename, vocabFilename);
       } catch (UnsatisfiedLinkError e) {
         // e.printStackTrace();
         System.err
             .println("Unable to load SRILM library. Default to Java ARPA implementation.");
-        alm = new ARPALanguageModel(filename);
+        alm = new ARPALanguageModel(realFilename);
         useSRILM = false;
       } catch (NoClassDefFoundError e) {
         // e.printStackTrace();
         System.err
             .println("Unable to load SRILM library. Default to Java ARPA implementation.");
-        alm = new ARPALanguageModel(filename);
+        alm = new ARPALanguageModel(realFilename);
         useSRILM = false;
       }
     
@@ -84,8 +83,10 @@ public class LanguageModels {
             vocabFilename);
     
       if (alm instanceof ARPALanguageModel)
-        ARPALanguageModel.lmStore.put(filepath, (ARPALanguageModel) alm);
-    } 
+        ARPALanguageModel.lmStore.put(filename, (ARPALanguageModel) alm);
+    } else {
+       return new ARPALanguageModel(filename);
+    }
     return alm;
   }
 
