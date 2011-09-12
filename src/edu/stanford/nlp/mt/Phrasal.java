@@ -106,7 +106,8 @@ public class Phrasal {
   public static final String ISTRING_VOC_OPT = "istring-vocabulary";
   public static final String MOSES_COMPATIBILITY_OPT = "moses-compatibility";
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
-
+  public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
+  
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   public static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
 
@@ -121,7 +122,7 @@ public class Phrasal {
   static final int DEFAULT_MAX_EPOCHS = 5;
   static final int DEFAULT_DISTORTION_LIMIT = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
-
+  public static boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
   static final boolean VERBOSE_LEARNER = true;
 
   static {
@@ -141,7 +142,7 @@ public class Phrasal {
         USE_ITG_CONSTRAINTS, LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS,
         GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
-        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS));
+        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -150,6 +151,7 @@ public class Phrasal {
   }
 
   public static final Map<String, Double> IDEALIZED_TARGETS = new HashMap<String, Double>();
+
   static {
     IDEALIZED_TARGETS.put("TM:lex(f|t)", 0.0);
     IDEALIZED_TARGETS.put("TM:lex(t|f)", 0.0);
@@ -189,7 +191,7 @@ public class Phrasal {
   public List<Inferer<IString, String>> inferers;
   // Inferer<IString, String> refInferer;
   PhraseGenerator<IString> phraseGenerator;
-
+  boolean dropUnknownWords = DROP_UNKNOWN_WORDS_DEFAULT;
   final BufferedWriter nbestListWriter;
   int nbestListSize;
   String saveWeights = "saved.wts";
@@ -917,28 +919,33 @@ public class Phrasal {
       }
     }
 
+    
+    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
+    	dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));    
+    }
+    
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
-    System.err.printf("Phrase table: %s\n", phraseTable);
+    System.err.printf("Phrase table: %s Unknown words policy: %s\n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
 
     if (phraseTable.startsWith("bitext:")) {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer,
+          featurizer, scorer, dropUnknownWords, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
+          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, dropUnknownWords,
           PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
           phraseTable.replaceFirst("^bitext:", ""), optionLimit));
     } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
 
       System.err.println("Dyanamic pt\n========================");
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer,
+          featurizer, scorer, dropUnknownWords, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
+          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, dropUnknownWords,
           PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable, optionLimit));
     } else {
       String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
           : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, generatorName, phraseTable)
-          : PhraseGeneratorFactory.factory(featurizer, scorer, generatorName,
+          featurizer, scorer, dropUnknownWords, generatorName, phraseTable)
+          : PhraseGeneratorFactory.factory(featurizer, scorer, dropUnknownWords, generatorName,
               phraseTable, optionLimit));
     }
 

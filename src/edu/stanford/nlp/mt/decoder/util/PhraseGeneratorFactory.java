@@ -4,7 +4,7 @@ import java.util.*;
 import java.io.*;
 
 import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.base.IdentityPhraseGenerator;
+import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SymbolFilter;
@@ -32,7 +32,7 @@ public class PhraseGeneratorFactory {
 
   static public <FV> PhraseGenerator<IString> factory(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String... pgSpecs) throws IOException {
+      Scorer<FV> scorer, Boolean dropUnknownWords, String... pgSpecs) throws IOException {
 
     if (pgSpecs.length == 0) {
       throw new RuntimeException(
@@ -74,16 +74,16 @@ public class PhraseGeneratorFactory {
         List<PhraseGenerator<IString>> augmentedList = new LinkedList<PhraseGenerator<IString>>();
 
         // special purpose numeric identity phrase translator
-        augmentedList.add(new IdentityPhraseGenerator<IString, FV>(
-            phraseFeaturizer, scorer, new NumericFilter<IString>()));
+        augmentedList.add(new UnknownWordPhraseGenerator<IString, FV>(
+            phraseFeaturizer, dropUnknownWords, scorer, new NumericFilter<IString>()));
 
         // user specified translation tables and equal in ranking special
         // purpose phrase generators
         List<PhraseGenerator<IString>> userEquivList = new LinkedList<PhraseGenerator<IString>>(
             phraseTables); // user phrase tables
 
-        userEquivList.add(new IdentityPhraseGenerator<IString, FV>(
-            phraseFeaturizer, scorer, new SymbolFilter<IString>())); // symbol
+        userEquivList.add(new UnknownWordPhraseGenerator<IString, FV>(
+            phraseFeaturizer, dropUnknownWords, scorer, new SymbolFilter<IString>())); // symbol
                                                                      // identity
                                                                      // phrase
                                                                      // generator
@@ -93,8 +93,9 @@ public class PhraseGeneratorFactory {
         augmentedList.add(equivUserRanking);
 
         // catch all foreign phrase identity generator
-        augmentedList.add(new IdentityPhraseGenerator<IString, FV>(
-            phraseFeaturizer, scorer));
+        
+        augmentedList.add(new UnknownWordPhraseGenerator<IString, FV>(
+            phraseFeaturizer, dropUnknownWords, scorer));
 
         return new CombinedPhraseGenerator<IString>(augmentedList,
             CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
@@ -139,10 +140,10 @@ public class PhraseGeneratorFactory {
 
       finalList.add(new CombinedPhraseGenerator<IString>(pharoahList,
           CombinedPhraseGenerator.Type.CONCATENATIVE));
-
-      finalList.add(new IdentityPhraseGenerator<IString, FV>(phraseFeaturizer,
-          scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
-
+      
+      finalList.add(new UnknownWordPhraseGenerator<IString, FV>(phraseFeaturizer, dropUnknownWords,
+              scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
+      
       CombinedPhraseGenerator.Type combinationType = withGaps ? CombinedPhraseGenerator.Type.CONCATENATIVE
           : CombinedPhraseGenerator.Type.STRICT_DOMINANCE;
       if (phraseLimit == -1) {

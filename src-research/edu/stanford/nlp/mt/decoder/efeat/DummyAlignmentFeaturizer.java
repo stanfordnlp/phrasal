@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IdentityPhraseGenerator;
+import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
@@ -23,7 +23,7 @@ public class DummyAlignmentFeaturizer implements
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     if (f.option.phraseTableName
-        .equals(IdentityPhraseGenerator.PHRASE_TABLE_NAMES))
+        .equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAMES))
       // Skip f.option if not in the phrase table (i.e., unknown input words)
       return null;
     // Check if phrase internal alignment is available:

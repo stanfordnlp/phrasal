@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  * 
  * @param <TK>
  */
-public class IdentityPhraseGenerator<TK, FV> extends
+public class UnknownWordPhraseGenerator<TK, FV> extends
     AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK> {
   static public final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
   static public final String DEFAULT_SCORE_NAMES[] = { "p_i(t|f)" };
@@ -23,45 +23,51 @@ public class IdentityPhraseGenerator<TK, FV> extends
 
   private final String[] scoreNames;
   private final SequenceFilter<TK> filter;
-
+  final boolean dropUnknownWords;
+  private RawSequence<TK> empty = new RawSequence<TK>();
+  
   /**
 	 * 
 	 */
-  public IdentityPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+  public UnknownWordPhraseGenerator(
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer,
       SequenceFilter<TK> filter) {
     super(phraseFeaturizer, scorer);
     this.filter = filter;
     scoreNames = DEFAULT_SCORE_NAMES;
+    this.dropUnknownWords = dropUnknownWords;
   }
 
   /**
 	 * 
 	 */
-  public IdentityPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+  public UnknownWordPhraseGenerator(
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer,
       SequenceFilter<TK> filter, String scoreName) {
     super(phraseFeaturizer, scorer);
     this.filter = filter;
     scoreNames = new String[] { scoreName };
+    this.dropUnknownWords = dropUnknownWords;
   }
 
   /**
 	 * 
 	 */
-  public IdentityPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
+  public UnknownWordPhraseGenerator(
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer) {
     super(phraseFeaturizer, scorer);
     this.filter = null;
     scoreNames = DEFAULT_SCORE_NAMES;
+    this.dropUnknownWords = dropUnknownWords;
   }
 
-  public IdentityPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+  public UnknownWordPhraseGenerator(
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer,
       String scoreName) {
     super(phraseFeaturizer, scorer);
     this.filter = null;
     scoreNames = new String[] { scoreName };
+    this.dropUnknownWords = dropUnknownWords;
   }
 
   @Override
@@ -74,7 +80,8 @@ public class IdentityPhraseGenerator<TK, FV> extends
     List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter == null || filter.accepts(raw)) {
-      list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, raw, raw,
+      list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, 
+    		  dropUnknownWords ? empty : raw, raw,
           DEFAULT_ALIGNMENT));
     }
     return list;

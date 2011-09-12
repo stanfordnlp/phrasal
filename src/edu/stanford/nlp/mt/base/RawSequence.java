@@ -11,6 +11,10 @@ import edu.stanford.nlp.util.Index;
 public class RawSequence<TK> extends AbstractSequence<TK> {
   public final Object[] elements;
 
+  public RawSequence() {
+	  this.elements = new Object[0];
+  }
+  
   public RawSequence(TK[] elements) {
     this.elements = elements;
   }

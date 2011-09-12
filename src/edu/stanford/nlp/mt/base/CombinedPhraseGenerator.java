@@ -190,7 +190,7 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
     conf[0] = PhraseGeneratorFactory.CONCATENATIVE_LIST_GENERATOR;
     System.arraycopy(args, 0, conf, 1, args.length);
 
-    PhraseGenerator<IString> ptGen = PhraseGeneratorFactory.factory(null, null,
+    PhraseGenerator<IString> ptGen = PhraseGeneratorFactory.factory(null, null, true,
         conf);
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
