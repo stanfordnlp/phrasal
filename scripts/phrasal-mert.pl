@@ -39,7 +39,7 @@ $MIN_OBJ_DIFF = 1e-7;
 $DEFAULT_WORK_DIR = "phrasal-mert";
 $DEFAULT_NBEST_SIZE = 100;
 $DEFAULT_JAVA_FLAGS = "-Xmx7g";
-$DEFAULT_OPT_FLAGS = "-o cer -t 4 -p 4"; # 4 starting points, 4 thread, Cer algorithm
+$DEFAULT_OPT_FLAGS = "-o koehn -t 4 -p 20"; # 4 starting points, 4 thread, Cer algorithm
 $MIN_WEIGHT_DELTA = 1e-5;
 $DELETE_COMBINED_NBEST = 0;
 $NBEST_HISTORY_WINDOW = 1000000;
@@ -183,12 +183,23 @@ while (<fhdi>) { chomp;
 close fhdi;
 
 if (-e $references."0") {
+  #print stderr "references are 0 base";
   $referenceList = "";
   for ($i = 0; -e "$references$i"; $i++) {
      $referenceList .= " " if ($referenceList);
      $referenceList .= "$references$i";
   }
+} elsif (-e $references."1") {
+  #print stderr "references are 1 base";
+  $referenceList = "";
+  for ($i = 1; -e "$references$i"; $i++) {
+     $referenceList .= " " if ($referenceList);
+     $referenceList .= "$references$i";
+  }
+} else {
+  #print stderr "references are ? base";
 }
+
 
 if (not $referenceList) {
   $referenceList = $references;
@@ -232,7 +243,7 @@ $work_dir =~ s/\/$//g;
 print stderr "MERT - Phrasal\n";
 print stderr "\tdecoder_ini: $decoder_ini\n";
 print stderr "\tinput text: $input_text\n";
-print stderr "\treferences: $references\n";
+print stderr "\treferences: $references ($referenceList)\n";
 print stderr "\topt_type: $opt_type\n";
 print stderr "\tcmert_dir: $cmert_dir\n";
 print stderr "\twork dir: $work_dir\n";
