@@ -80,13 +80,28 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
     List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter == null || filter.accepts(raw)) {
-      list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, 
-    		  dropUnknownWords ? empty : raw, raw,
+     String word = raw.toString();
+     
+      if (dropUnknownWords && !isNumeric(word) && !isASCII(word)) {
+          list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, empty, raw,
           DEFAULT_ALIGNMENT));
+      } else {
+    	  list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, raw, raw,
+              DEFAULT_ALIGNMENT));
+      }
     }
     return list;
   }
 
+  // TODO make this more general in the future by matching to unicode pages of the target language
+  private boolean isASCII(String word) { 
+	return word.matches("^\\p{ASCII}*$");  
+  }
+  
+  private boolean isNumeric(String word) {
+	return word.matches("^.*[0-9\\.\\\\/,:-]+[%A-Za-z]*$");  
+  }
+  
   @Override
   public int longestForeignPhrase() {
     return -Integer.MAX_VALUE;
