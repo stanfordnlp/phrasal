@@ -313,28 +313,28 @@ while (!eof(difh)) {
 }
 close difh; 
 
-if($init_weight_file) {
-	open(W,$init_weight_file);
-	while(<W>) {
-		chomp;
-		/(\S+)\s+(\S+)/;
-		$init_wts{$1} = $2;
-	}
-}
-
 if($ORACLE) {
 	$init_wts{BLEU} = $ORACLE;
 	 $opt_flags .= " -D BLEU";
 }
 
-$ini_weight_file = "$work_dir/phrasal.0.wts\n";
-print stderr "Writing initial weights file:\n$ini_weight_file\n";
-open wtfh, ">$ini_weight_file" or die;
-foreach $key (keys %init_wts) {
-	 print "$key => $init_wts{$key}\n";
-	 print wtfh "$key $init_wts{$key}\n"
+if ($init_weight_file =~ /\.binwts$/) {
+  $ini_weight_file = "$work_dir/phrasal.0.binwts\n";
+} else {
+  $ini_weight_file = "$work_dir/phrasal.0.wts\n";
 }
-close wtfh;
+
+print stderr "Writing initial weights file:\n$ini_weight_file\n";
+if ($init_weight_file ne '') {
+  `cp $init_weight_file $ini_weight_file`;
+} else {
+  open wtfh, ">$ini_weight_file" or die;
+  foreach $key (keys %init_wts) {
+	  print "$key => $init_wts{$key}\n";
+ 	  print wtfh "$key $init_wts{$key}\n"
+  }
+  close wtfh;
+}
 
 $first_active_iter = 0;
 
@@ -366,7 +366,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr "Preparing to produce nbest list:\n$iter_nbest_list\n";
    print stderr 
    "------------------------------------------------------------------------\n\n";
-   if ($iter == 0) {
+   if ($iter == 0 && !($init_weight_file =~ /\.binwts$/)) {
      $iter_weights = "$work_dir/phrasal.$iter.wts";
    } else {
      $iter_weights = "$work_dir/phrasal.$iter$WEIGHTS_SUFF";

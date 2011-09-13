@@ -712,6 +712,7 @@ public class Phrasal {
     Counter<String> weightConfig = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
+      System.err.printf("Weights file: %s\n", config.get(WEIGHTS_FILE).get(0));
       if (config.get(WEIGHTS_FILE).get(0).endsWith(".binwts")) {
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
             config.get(WEIGHTS_FILE).get(0)));
