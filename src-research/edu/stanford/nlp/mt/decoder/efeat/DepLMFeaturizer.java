@@ -29,7 +29,6 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
   public static final String DEBUG_PROPERTY = "DepLMFeaturizerDebug";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
   public static final String FEATURE_NAME = "DepLM";
-  private final HashMap<LinkedStack<TypedDependency>, Double> depLMScoreHistory = new HashMap<LinkedStack<TypedDependency>, Double>();
   public final LanguageModel<IString> lm;
 
   public DepLMFeaturizer(){
@@ -38,34 +37,12 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
 
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> featurizable) {
-    double depLMScore = getScore(featurizable);
+    double depLMScore = getAdditionalDepScore(featurizable);
     return new FeatureValue<String>(FEATURE_NAME, depLMScore);
   }
 
-  private double getScore(Featurizable<IString, String> featurizable) {
-    double previousScore = getPreviousScore(featurizable);
-    double additionalScore = getAdditionalScore(featurizable);
-    double depLMSumScore = previousScore + additionalScore;
-
-    LinkedStack<TypedDependency> currentDeps = null;
-    for(Annotator<IString> annotator : featurizable.hyp.annotators){
-      if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
-        currentDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
-      }
-    }
-
-    depLMScoreHistory.put(currentDeps, depLMSumScore);
-    return depLMSumScore;
-  }
-
-  private double getPreviousScore(Featurizable<IString, String> featurizable) {
-    Double previous = depLMScoreHistory.get(featurizable.prior);
-    if(previous==null) return 0;
-    else return previous;
-  }
-
   @SuppressWarnings("unchecked")
-  private double getAdditionalScore(Featurizable<IString, String> featurizable) {
+  private double getAdditionalDepScore(Featurizable<IString, String> featurizable) {
     double additionalScore = 0;
     LinkedStack<TypedDependency> previousDeps = null;
     LinkedStack<TypedDependency> currentDeps = null;

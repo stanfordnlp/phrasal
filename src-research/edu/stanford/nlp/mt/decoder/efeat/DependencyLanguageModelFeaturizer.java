@@ -378,7 +378,8 @@ public class DependencyLanguageModelFeaturizer extends
         IString[] context = new IString[seq.size()];
         for (int j = 0; j < context.length; ++j)
           context[j] = seq.get(j);
-        tags[i] = prefixTagger.getBestTag(context, 0);
+//        tags[i] = prefixTagger.getBestTag(context, 0);
+        tags[i] = prefixTagger.getBestTag(context);
         tagScore += tags[i].second;
       }
     }
@@ -608,8 +609,13 @@ public class DependencyLanguageModelFeaturizer extends
 
   @Override
   public void reset() {
-    if (prefixTagger == null)
-      prefixTagger = new PrefixTagger(maxentTagger, 3, 0); // TODO: 3,1
+    // Michel's code
+//        if (prefixTagger == null)
+//          prefixTagger = new PrefixTagger(maxentTagger, 3, 0); // TODO: 3,1
+
+    // heeyoung
+    if(prefixTagger == null) 
+      prefixTagger = new PrefixTagger(maxentTagger);
     prefixTagger.release();
     pipe.clearCache();
     System.err.printf("Emptying %d keys of partial parse cache.\n",
