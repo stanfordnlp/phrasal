@@ -54,7 +54,7 @@ public class DependencyLM implements LanguageModel<IString> {
     if(countParent!=0 && countChildAndParent!=0) {
       return Math.log(countChildAndParent/countParent);
     } else {
-      return 0;   // TODO
+      return 0;   // Unknown dependency
     }
   }
 

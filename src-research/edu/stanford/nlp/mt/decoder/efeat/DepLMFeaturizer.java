@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
@@ -29,6 +29,7 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
   public static final String DEBUG_PROPERTY = "DepLMFeaturizerDebug";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
   public static final String FEATURE_NAME = "DepLM";
+  public static final String FEATURE_NAME_UNK = "UnkDepCnt";
   public final LanguageModel<IString> lm;
 
   public DepLMFeaturizer(){
@@ -37,31 +38,7 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
 
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> featurizable) {
-    double depLMScore = getAdditionalDepScore(featurizable);
-    return new FeatureValue<String>(FEATURE_NAME, depLMScore);
-  }
-
-  @SuppressWarnings("unchecked")
-  private double getAdditionalDepScore(Featurizable<IString, String> featurizable) {
-    double additionalScore = 0;
-    LinkedStack<TypedDependency> previousDeps = null;
-    LinkedStack<TypedDependency> currentDeps = null;
-    for(Annotator<IString> annotator : featurizable.hyp.preceedingHyp.annotators){
-      if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
-        previousDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
-      }
-    }
-    for(Annotator<IString> annotator : featurizable.hyp.annotators){
-      if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
-        currentDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
-      }
-    }
-    Object[] newDeps = currentDeps.peekN(currentDeps.size() - previousDeps.size());
-    for(Object dep : newDeps){
-      TypedDependency dependency = (TypedDependency) dep;
-      additionalScore += getDepScore(dependency);
-    }
-    return additionalScore;
+    return null;
   }
 
   private double getDepScore(TypedDependency dependency) {
@@ -76,7 +53,34 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
 
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
-    return null;
+    List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>();
+
+    double additionalScore = 0;
+    int unkCnt = 0;
+    LinkedStack<TypedDependency> previousDeps = null;
+    LinkedStack<TypedDependency> currentDeps = null;
+    for(Annotator<IString> annotator : f.hyp.preceedingHyp.annotators){
+      if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
+        previousDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
+      }
+    }
+    for(Annotator<IString> annotator : f.hyp.annotators){
+      if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
+        currentDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
+      }
+    }
+    Object[] newDeps = currentDeps.peekN(currentDeps.size() - previousDeps.size());
+    for(Object dep : newDeps){
+      TypedDependency dependency = (TypedDependency) dep;
+      double score = getDepScore(dependency);
+      additionalScore += score;
+      if(score==0) unkCnt++;
+    }
+
+    feats.add(new FeatureValue<String>(FEATURE_NAME, additionalScore));
+    feats.add(new FeatureValue<String>(FEATURE_NAME_UNK, unkCnt));
+
+    return feats;
   }
 
   @Override
