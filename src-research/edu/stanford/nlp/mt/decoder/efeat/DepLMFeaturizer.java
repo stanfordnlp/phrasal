@@ -3,13 +3,13 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.DependencyLM;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
@@ -30,10 +30,20 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(DEBUG_PROPERTY, "false"));
   public static final String FEATURE_NAME = "DepLM";
   public static final String FEATURE_NAME_UNK = "UnkDepCnt";
-  public final LanguageModel<IString> lm;
+  public static final String FEATURE_NAME_POSTAGLM = "DepPOSTagLM";
 
-  public DepLMFeaturizer(){
+  public final boolean USE_WORDLM;
+  public final boolean USE_UNK_DEP;
+  public final boolean USE_POSTAGLM;
+
+  public final DependencyLM lm;
+
+  public DepLMFeaturizer(String... args){
     lm = new DependencyLM();
+    if(args.length < 3) throw new RuntimeException("Wrong number of arguments: "+args.length);
+    USE_WORDLM = true;
+    USE_UNK_DEP = true;
+    USE_POSTAGLM = true;
   }
 
   @Override
@@ -41,7 +51,7 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
     return null;
   }
 
-  private double getDepScore(TypedDependency dependency) {
+  private double getDepWordsLMScore(TypedDependency dependency) {
     IString[] str = new IString[2];
     str[0] = new IString(dependency.gov().label().get(TextAnnotation.class));
     str[1] = new IString(dependency.dep().label().get(TextAnnotation.class));
@@ -50,12 +60,22 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
 
     return lm.score(depNgram);
   }
+  private double getDepPOSTagsLMScore(TypedDependency dependency) {
+    IString[] str = new IString[2];
+    str[0] = new IString(dependency.gov().label().get(PartOfSpeechAnnotation.class));
+    str[1] = new IString(dependency.dep().label().get(PartOfSpeechAnnotation.class));
+
+    Sequence<IString> depNgram = new RawSequence<IString>(str);
+
+    return lm.scorePOSLM(depNgram);
+  }
 
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>();
 
-    double additionalScore = 0;
+    double wordLMScore = 0;
+    double posTagLMScore = 0;
     int unkCnt = 0;
     LinkedStack<TypedDependency> previousDeps = null;
     LinkedStack<TypedDependency> currentDeps = null;
@@ -72,13 +92,15 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
     Object[] newDeps = currentDeps.peekN(currentDeps.size() - previousDeps.size());
     for(Object dep : newDeps){
       TypedDependency dependency = (TypedDependency) dep;
-      double score = getDepScore(dependency);
-      additionalScore += score;
+      double score = getDepWordsLMScore(dependency);
+      wordLMScore += score;
+      posTagLMScore += getDepPOSTagsLMScore(dependency);
       if(score==0) unkCnt++;
     }
 
-    feats.add(new FeatureValue<String>(FEATURE_NAME, additionalScore));
-    feats.add(new FeatureValue<String>(FEATURE_NAME_UNK, unkCnt));
+    if(USE_WORDLM) feats.add(new FeatureValue<String>(FEATURE_NAME, wordLMScore));
+    if(USE_POSTAGLM) feats.add(new FeatureValue<String>(FEATURE_NAME_POSTAGLM, posTagLMScore));
+    if(USE_UNK_DEP) feats.add(new FeatureValue<String>(FEATURE_NAME_UNK, unkCnt));
 
     return feats;
   }
