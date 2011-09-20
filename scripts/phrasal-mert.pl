@@ -540,11 +540,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	      unlink($next_iter_weights);
 				my $all_iter_weights = $iter_weights;
 				for(my $i = $iter-1; $i>=0; --$i) {
-                                        if ($i != 0) {
-					$all_iter_weights .= ",$work_dir/phrasal.$i$WEIGHTS_SUFF";
+          if ($i != 0 || $init_weight_file =~ /\.binwts$/) {
+					  $all_iter_weights .= ",$work_dir/phrasal.$i$WEIGHTS_SUFF";
 					} else {
-					$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
-                                        }
+				  	$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
+          }
 				}
 				my $optOut = "$work_dir/jmert.$iter.opt";
         $RANDOM_SEED = ($iter<<16) + 33*$iter;
