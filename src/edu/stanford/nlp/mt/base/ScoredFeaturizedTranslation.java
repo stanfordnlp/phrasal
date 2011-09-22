@@ -45,11 +45,21 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append(translation).append(" |||");
-    for (FeatureValue<FV> fv : features)
-      sb.append(" ").append(fv.name).append(": ").append(fv.value);
+    if (features == null) {
+    	sb.append(" NoFeatures: 0");
+    } else {
+	    for (FeatureValue<FV> fv : features) {
+	      if (fv == null) {
+	    	  sb.append(" ").append("NullFeature: 0");
+	      } else {
+	    	  sb.append(" ").append(fv.name).append(": ").append(fv.value);
+	      }
+	    }
+    }
     sb.append(" ||| ").append(score);
     if (latticeSourceId >= 0)
       sb.append(" ||| ").append(latticeSourceId);
+
     return sb.toString();
   }
 }
