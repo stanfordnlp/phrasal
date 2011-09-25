@@ -21,9 +21,9 @@ class FullInformationTreeReorderingExperiment {
     PrintWriter degPW = new PrintWriter(new BufferedWriter(new FileWriter(
         "DEG.txt")));
 
-    TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- DEG");
-    TreePattern qpdeg = TreePattern.compile("DNP <, QP <- DEG");
-    TreePattern nppndeg = TreePattern.compile("DNP <, (NP < PN) <- DEG");
+    TregexPattern adjpdeg = TregexPattern.compile("DNP <, ADJP <- DEG");
+    TregexPattern qpdeg = TregexPattern.compile("DNP <, QP <- DEG");
+    TregexPattern nppndeg = TregexPattern.compile("DNP <, (NP < PN) <- DEG");
 
     int tpCount = 0;
     for (AnnotatedTreePair validSent : atreepairs) {
@@ -74,9 +74,9 @@ class FullInformationTreeReorderingExperiment {
         }
 
         if (deType.equals("DEG")) {
-          TreeMatcher adjpdegM = adjpdeg.matcher(chNPTree);
-          TreeMatcher qpdegM = qpdeg.matcher(chNPTree);
-          TreeMatcher nppndegM = nppndeg.matcher(chNPTree);
+          TregexMatcher adjpdegM = adjpdeg.matcher(chNPTree);
+          TregexMatcher qpdegM = qpdeg.matcher(chNPTree);
+          TregexMatcher nppndegM = nppndeg.matcher(chNPTree);
           if (adjpdegM.find() || nppndegM.find()) {
             deType = "DEG-noreorder";
             chNPTree.pennPrint(degPW);

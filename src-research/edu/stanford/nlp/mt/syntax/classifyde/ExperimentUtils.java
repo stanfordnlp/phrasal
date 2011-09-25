@@ -13,16 +13,16 @@ import java.util.*;
 public class ExperimentUtils {
   static int TOPICALITY_SENT_WINDOW_SIZE = 2;
 
-  static TreePattern dec = TreePattern.compile("DEC < 的");
-  static TreePattern deg = TreePattern.compile("DEG < 的");
-  static TreePattern de = TreePattern.compile("DEG|DEC < 的");
-  static TreePattern va1 = TreePattern
+  static TregexPattern dec = TregexPattern.compile("DEC < 的");
+  static TregexPattern deg = TregexPattern.compile("DEG < 的");
+  static TregexPattern de = TregexPattern.compile("DEG|DEC < 的");
+  static TregexPattern va1 = TregexPattern
       .compile("CP <, (IP <- (VP <: VA)) <- (DEC < 的)");
-  static TreePattern va2 = TreePattern
+  static TregexPattern va2 = TregexPattern
       .compile("CP <, (IP <- (VP <, (ADVP $+ (VP <: VA)))) <- (DEC < 的)");
-  static TreePattern adjpdeg = TreePattern.compile("DNP <, ADJP <- (DEG < 的)");
-  static TreePattern qpdeg = TreePattern.compile("DNP <, QP <- (DEG < 的)");
-  static TreePattern nppndeg = TreePattern
+  static TregexPattern adjpdeg = TregexPattern.compile("DNP <, ADJP <- (DEG < 的)");
+  static TregexPattern qpdeg = TregexPattern.compile("DNP <, QP <- (DEG < 的)");
+  static TregexPattern nppndeg = TregexPattern
       .compile("DNP <, (NP < PN) <- (DEG < 的)");
 
   static void ReverseSublist(List<String> list, int start, int end) {
@@ -259,23 +259,23 @@ public class ExperimentUtils {
   }
 
   static boolean hasVApattern(Tree t) {
-    TreeMatcher va1M = va1.matcher(t);
-    TreeMatcher va2M = va2.matcher(t);
+    TregexMatcher va1M = va1.matcher(t);
+    TregexMatcher va2M = va2.matcher(t);
     return (va1M.find() || va2M.find());
   }
 
   static boolean hasADJPpattern(Tree t) {
-    TreeMatcher adjpdegM = adjpdeg.matcher(t);
+    TregexMatcher adjpdegM = adjpdeg.matcher(t);
     return adjpdegM.find();
   }
 
   static boolean hasQPpattern(Tree t) {
-    TreeMatcher qpdegM = qpdeg.matcher(t);
+    TregexMatcher qpdegM = qpdeg.matcher(t);
     return qpdegM.find();
   }
 
   static boolean hasNPPNpattern(Tree t) {
-    TreeMatcher nppndegM = nppndeg.matcher(t);
+    TregexMatcher nppndegM = nppndeg.matcher(t);
     return nppndegM.find();
   }
 
@@ -302,7 +302,7 @@ public class ExperimentUtils {
   }
 
   static int countDE(Tree t) {
-    TreeMatcher deM = de.matcher(t);
+    TregexMatcher deM = de.matcher(t);
     int deCount = 0;
     while (deM.find()) {
       deCount++;

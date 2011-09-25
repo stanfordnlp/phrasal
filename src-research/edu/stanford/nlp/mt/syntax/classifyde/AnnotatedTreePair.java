@@ -7,8 +7,8 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.Trees;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.trees.international.pennchinese.ChineseGrammaticalStructure;
-import edu.stanford.nlp.trees.tregex.TreeMatcher;
-import edu.stanford.nlp.trees.tregex.TreePattern;
+import edu.stanford.nlp.trees.tregex.TregexMatcher;
+import edu.stanford.nlp.trees.tregex.TregexPattern;
 import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;
 import edu.stanford.nlp.util.Pair;
@@ -334,8 +334,8 @@ public class AnnotatedTreePair {
   }
 
   public static Set<Tree> getNPwithDESubTrees(Tree t) {
-    TreePattern p = TreePattern.compile("NP < (/P$/ < (DEG|DEC < 的))");
-    TreeMatcher match = p.matcher(t);
+    TregexPattern p = TregexPattern.compile("NP < (/P$/ < (DEG|DEC < 的))");
+    TregexMatcher match = p.matcher(t);
     Set<Tree> matchedTrees = new HashSet<Tree>();
     while (match.find()) {
       matchedTrees.add(match.getMatch());
