@@ -40,6 +40,7 @@ $DEFAULT_WORK_DIR = "phrasal-mert";
 $DEFAULT_NBEST_SIZE = 100;
 $DEFAULT_JAVA_FLAGS = "-Xmx7g";
 $DEFAULT_OPT_FLAGS = "-o koehn -t 4 -p 20"; # 4 starting points, 4 thread, Cer algorithm
+$DEFAULT_RSEED_PREFIX = "DEFAULT_RSEED";
 $MIN_WEIGHT_DELTA = 1e-5;
 $DELETE_COMBINED_NBEST = 0;
 $NBEST_HISTORY_WINDOW = 1000000;
@@ -66,6 +67,7 @@ $nbest_size=$DEFAULT_NBEST_SIZE;
 $java_flags=$DEFAULT_JAVA_FLAGS;
 $mert_java_flags=$DEFAULT_JAVA_FLAGS;
 $opt_flags=$DEFAULT_OPT_FLAGS;
+$rseed_prefix = $DEFAULT_RSEED_PREFIX; 
 $phrasal_flags="";
 
 if (not ($work_dir =~ /^\//)) {
@@ -131,6 +133,9 @@ sub handle_arg {
      $opt_flags = $arg;
      $opt_flags =~ s/^--opt-flags=//g;
 		 print STDERR "OPT FLAGS: $opt_flags\n";
+  } elsif ($arg =~ /^--rseed=.*/) {
+     $rseed_prefix = $arg;
+     $rseed_prefix =~ s/^--rseed=//g;
   } else {
      print stderr "Unrecognized flag $arg\n";
      exit -1;
@@ -250,6 +255,7 @@ print stderr "\twork dir: $work_dir\n";
 print stderr "\tnbest size: $nbest_size\n";
 print stderr "\tjava flags: $java_flags\n";
 print stderr "\tMERT java flags: $mert_java_flags\n";
+print stderr "\tRandom seed prefix: $rseed_prefix\n";
 print stderr "\n";
 
 if (!$ENV{"RECOVER"}) {
@@ -547,9 +553,9 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
           }
 				}
 				my $optOut = "$work_dir/jmert.$iter.opt";
-        $RANDOM_SEED = ($iter<<16) + 33*$iter;
+        $RANDOM_SEED = "$rseed_prefix.$iter";
         print "Random Seed: $RANDOM_SEED\n";
-				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $iter $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $RANDOM_SEED $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
 	      print stderr "MERT command: $mertCMD\n";
 	      `$mertCMD`;
 				`cat $optOut.feats | sed 's/ |||.*//' > $optOut.trans`;
