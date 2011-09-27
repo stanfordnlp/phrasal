@@ -23,7 +23,7 @@ $java -mx5g edu.stanford.nlp.ie.crf.CRFBiasedClassifier -loadClassifier $crf_mod
 cat $tmp | $java -Xmx2g edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm > $tmp.lm
 
 # CRF+LM combination:
-/scr/nlp/data/gale3/NIST09/truecaser/postprocess/combine_crf_hmm $tmp.crf $tmp.lm $*
+combine_crf_hmm $tmp.crf $tmp.lm $*
 #echo "XXXX" /scr/nlp/data/gale3/NIST09/truecaser/postprocess/combine_crf_hmm $tmp.crf $tmp.lm $*
 
 #rm -f $tmp $tmp.crf $tmp.lm
