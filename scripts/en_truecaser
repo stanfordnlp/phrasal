@@ -15,14 +15,20 @@ java="java -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$host"
 cat | perl -pe 's/^\s+$/null\n/'> $tmp
 
 # CRF truecaser:
+echo running: 1>&2
+echo "$java -mx5g edu.stanford.nlp.ie.crf.CRFBiasedClassifier -loadClassifier $crf_model -testFile $tmp" 1>&2
 $java -mx5g edu.stanford.nlp.ie.crf.CRFBiasedClassifier -loadClassifier $crf_model -testFile $tmp \
 	-mixedCaseMapFile $mixed -classBias INIT_UPPER:-0.7,UPPER:-0.7,O:0 \
   -readerAndWriter edu.stanford.nlp.sequences.TrueCasingForNIST09DocumentReaderAndWriter > $tmp.crf
 
 # LM truecaser:
-cat $tmp | $java -Xmx2g edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm > $tmp.lm
+echo running: 1>&2
+echo "cat $tmp | $java -Xmx40g edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm > $tmp.lm" 1>&2
+cat $tmp | $java -Xmx40g edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm > $tmp.lm
 
 # CRF+LM combination:
+echo running: 1>&2
+echo "combine_crf_hmm $tmp.crf $tmp.lm $*" 1>&2
 combine_crf_hmm $tmp.crf $tmp.lm $*
 #echo "XXXX" /scr/nlp/data/gale3/NIST09/truecaser/postprocess/combine_crf_hmm $tmp.crf $tmp.lm $*
 

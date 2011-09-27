@@ -110,50 +110,16 @@ if($sgm ne '') {
 	open(S,$sgm);
 	binmode(S,":utf8");
 	while(<S>) {
-		s/<\/DOC>/<\/doc>/g;
-		s/<DOC /<doc /g;
-		if(/<hl>/i) {
-			$headline = 1;
-		} elsif(/<\/hl>/i) {
-			$headline = 0;
-		} elsif(/srclang="(\S).*" trglang="(\S)/) {
-			my $lang = lc($1)."2".lc($2);
-			s/<srcset (.*) srclang="(\S+)" trglang="(\S+)">/<tstset $1 srclang="$2" trglang="$3" sysid="stanford_${lang}_cn_primary">/;
-		} elsif(/srclang="(\S)/) {
-			my $lang = lc($1)."2e";
-			s/<srcset (.*) srclang="(\S+)">/<tstset $1 srclang="$2" trglang="English" sysid="stanford_${lang}_cn_primary">/;
-		} elsif(/<doc (.*) genre="text" sysid="source">/) {
-			s/<doc (.*) genre="(.*)" sysid="source">/<doc $1 genre="$2">/gi;
-		} elsif(/<seg id=(\S+)(?: type=(?:\S+))?>(.*)<\/?seg\/?>\s+/g) {
-           # /<seg id=(\S+)>(.*)<\/?seg\/?>/
-			my ($id,$src) = ($1,$2);
+    if (/<seg[^>]*>.*<\/seg>/) {
 			my $sent = $out[$senti++];
-			$sent = capitalize_title($sent) if $headline;
-			#$sent = capitalize_title($sent) if $id eq '1' || $headline;
-			if($src =~ /^[[:ascii:]]+$/) {
-				$sent = $src;
-				# Fix spacing:
-				$sent =~ s/  +/ /g;
-				$sent =~ s/^ +//;
-				$sent =~ s/ +$//;
-				# Remove IBM classing if still there:
-				$sent =~ s/\$[^ ][^ ]*_\(([^ ][^ ]*)\|\|[^ ][^ ]*\)/$1/g;
-				$sent =~ s/\$[^ ][^ ]*_\(([^ ][^ ]*)\)/$1/g;
-				$sent =~ s/@@/ /g;
-				$sent =~ s/ *empty *_ *line */ /gi;
-				print STDERR "Preserve input: $sent ($src)\n";
-			}
-			$sent = '.' unless $sent =~ /\S/;
-			s/<seg id=(\S+?)(| type=(\S+))>.*<\/?seg\/?>/<seg id=$1$2> $sent <\/seg>/g;
-		} elsif(/<\/srcset>/) {
-			s/<\/srcset>/<\/tstset>/;
-		} elsif(/<\/?doc.*>/) {
-    } elsif(/<\/?p>/) {
+		  # Fix spacing:
+			$sent =~ s/  +/ /g;
+			$sent =~ s/^ +//;
+      s/^(<seg[^>]*>)(.*)<\/seg>$/\1 $sent <\/seg>/;
+      print;
     } else {
-      print STDERR "warning no match: '$_'\n";
-      #exit -1;
-    }
-		print;
+      print;
+    } 
 	}
 	close(S);
 } else {
