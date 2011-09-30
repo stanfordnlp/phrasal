@@ -345,8 +345,8 @@ public class DepDAGParser implements Parser, Serializable {
     String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
     String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
-    props.put("train", tempTrain);
-    props.put("test", tempTest);
+    //props.put("train", tempTrain);
+    //props.put("test", tempTest);
 
     POSTaggerAnnotator posTagger = null;
     try {
