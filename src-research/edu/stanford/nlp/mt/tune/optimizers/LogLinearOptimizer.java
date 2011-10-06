@@ -144,15 +144,16 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
         + currentCounts.getCount("LinearDistortion"));
     System.err
         .println("Target LD " + targetCounts.getCount("LinearDistortion"));
-
+    System.err.printf("Target Features: %s...\n", Counters.toBiggestValuesFirstString(targetCounts, 100));
     // create a mapping between weight names and optimization
     // weight vector positions
     String[] weightNames = new String[validFeature.size()];
+    System.err.printf("Model feautures: %s...\n", validFeature);
+    
     double[] initialWtsArr = new double[validFeature.size()];
-
+    
     int nameIdx = 0;
-    for (String feature : wts.keySet()) {
-      if (!validFeature.contains(feature)) continue;
+    for (String feature : validFeature) {
       initialWtsArr[nameIdx] = wts.getCount(feature);
       weightNames[nameIdx++] = feature;
     }
@@ -163,8 +164,7 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
         : new QNMinimizer(15, true);
     LogLinearObjective llo = new LogLinearObjective(weightNames, target);
     double initialValueAt = llo.valueAt(initialWtsArr);
-    if (initialValueAt == Double.POSITIVE_INFINITY
-        || initialValueAt != initialValueAt) {
+    if (initialValueAt == Double.POSITIVE_INFINITY  || initialValueAt != initialValueAt) {
       System.err
           .printf("Initial Objective is infinite/NaN - normalizing weight vector");
       double normTerm = Counters.L2Norm(wts);
@@ -232,6 +232,12 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
 
     @Override
     public double[] derivativeAt(double[] x) {
+    	System.err.println("DerivativeAt");        
+    	for (int i = 0; i < weightNames.length; i++) {
+    	  System.err.printf("%s: %e\n", weightNames[i], x[i]);
+      }
+      System.err.println();
+      
       Counter<String> wts = vectorToWeights(x);
       Counter<String> dOplus = new ClassicCounter<String>();
       Counter<String> dOminus = new ClassicCounter<String>();
