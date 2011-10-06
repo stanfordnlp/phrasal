@@ -22,6 +22,7 @@ import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.CyclicCoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
@@ -37,6 +38,7 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.DependencyScoring;
@@ -59,15 +61,19 @@ public class DepDAGParser implements Parser, Serializable {
   private static final boolean REDUCE_FEATURES = true;
 
   public boolean labelRelation = true;
+  
+  public boolean extractTree;  // ensure parsed dependencies is tree (not DAG)
 
   // use the default setting
   private static RightSideFeatures rightFeatures = new RightSideFeatures(new Properties());
 
   public DepDAGParser() {
     this.labelRelation = true;
+    this.extractTree = true;
   }
-  public DepDAGParser(boolean labelRelation) {
+  public DepDAGParser(boolean labelRelation, boolean extractTree) {
     this.labelRelation = labelRelation;
+    this.extractTree = extractTree;
   }
 
   @Override
@@ -227,6 +233,7 @@ public class DepDAGParser implements Parser, Serializable {
   }
   public LinkedStack<TypedDependency> getDependencyGraph(Structure s, int offset){
     parsePhrase(s, offset);
+//    s.addRoot();
     return s.dependencies;
   }
   public LinkedStack<TypedDependency> getDependencyGraph(List<CoreLabel> sentence){
@@ -258,21 +265,52 @@ public class DepDAGParser implements Parser, Serializable {
       Action nextAction;
       if(s.getStack().size()==0) nextAction = new Action(ActionType.SHIFT);
       else {
-        nextAction = new Action(actClassifier.classOf(d));
-        //nextAction = new Action(actClassifier.experimentalClassOf(d));
-        if(labelRelation && (nextAction.action == ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC)) {
-          nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
-          //nextAction.relation = labelClassifier.experimentalClassOf(extractLabelFeature(nextAction.action, s, d, offset));
-        }
-      }
-      if(s.actionTrace.size() > 0 && ((s.actionTrace.peek().equals(nextAction)
-          && (nextAction.action==ActionType.LEFT_ARC || nextAction.action == ActionType.RIGHT_ARC))
-          || (s.actionTrace.peek().action == ActionType.LEFT_ARC && nextAction.action == ActionType.RIGHT_ARC)
-          || (s.actionTrace.peek().action == ActionType.RIGHT_ARC && nextAction.action == ActionType.LEFT_ARC))) {
-        nextAction = new Action(ActionType.SHIFT);
+        Counter<ActionType> actionScores = actClassifier.scoresOf(d);
+        nextAction = getNextAction(actionScores, d, s, offset, labelRelation);
       }
       Actions.doAction(nextAction, s, offset);
       if(nextAction.action==ActionType.SHIFT) offset--;
+    }
+  }
+  private Action getNextAction(Counter<ActionType> actionScores, Datum<ActionType, List<String>> d, Structure s, int offset, boolean labelRelation) {
+    ActionType bestActionType = Counters.argmax(actionScores);
+    Action nextAction;
+    
+    switch(bestActionType) {
+      case SHIFT:
+        return new Action(bestActionType);
+      case REDUCE:
+        return new Action(bestActionType);
+      case LEFT_ARC:
+        if(s.actionTrace.size() > 0 && 
+            (s.actionTrace.peek().action == ActionType.LEFT_ARC || s.actionTrace.peek().action == ActionType.RIGHT_ARC)
+            || (extractTree && s.dependentsIdx.contains(s.stack.peek().get(IndexAnnotation.class)))) {
+          actionScores.setCount(ActionType.LEFT_ARC, Double.NEGATIVE_INFINITY);
+          return getNextAction(actionScores, d, s, offset, labelRelation);
+        }
+        nextAction = new Action(ActionType.LEFT_ARC);
+        nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
+        return nextAction;
+      case RIGHT_ARC:
+        CoreLabel q;
+        if(offset == 1) q = s.input.peek();
+        else {
+          Object[] o = s.input.peekN(offset);
+          q = (CoreLabel) o[offset-1];
+        }
+        
+        if(s.actionTrace.size() > 0 && 
+            (s.actionTrace.peek().action == ActionType.LEFT_ARC || s.actionTrace.peek().action == ActionType.RIGHT_ARC)
+            || (extractTree && s.dependentsIdx.contains(q.get(IndexAnnotation.class)))) {
+          actionScores.setCount(ActionType.RIGHT_ARC, Double.NEGATIVE_INFINITY);
+          return getNextAction(actionScores, d, s, offset, labelRelation);
+        }
+        
+        nextAction = new Action(ActionType.RIGHT_ARC);
+        nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
+        return nextAction;
+      default:
+        throw new RuntimeException("wrong action type: should not occur");
     }
   }
   public void parsePhrase(Structure s, int offset){
@@ -295,7 +333,7 @@ public class DepDAGParser implements Parser, Serializable {
   }
 
   public static void main(String[] args) throws IOException, ClassNotFoundException{
-
+    
     boolean doTrain = false;
     boolean doTest = true;
     boolean storeTrainedModel = true;
@@ -342,11 +380,11 @@ public class DepDAGParser implements Parser, Serializable {
 
     //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/small_train.conll";
-    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
-    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+//    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
+//    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
-    //props.put("train", tempTrain);
-    //props.put("test", tempTest);
+//    props.put("train", tempTrain);
+//    props.put("test", tempTest);
 
     POSTaggerAnnotator posTagger = null;
     try {
@@ -395,9 +433,12 @@ public class DepDAGParser implements Parser, Serializable {
         logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
       }
       parser.labelRelation = true;
+      parser.extractTree = true;
       //      if(true) return;
       logger.info("read test data from "+testFile + " ...");
-      List<Structure> testData = ActionRecoverer.readTrainingData(testFile, posTagger);
+      // TODO
+      List<Structure> testData = ActionRecoverer.readTrainingData(testFile, null);
+      //List<Structure> testData = ActionRecoverer.readTrainingData(testFile, posTagger);
 
       List<Collection<TypedDependency>> goldDeps = new ArrayList<Collection<TypedDependency>>();
       List<Collection<TypedDependency>> systemDeps = new ArrayList<Collection<TypedDependency>>();
@@ -413,6 +454,30 @@ public class DepDAGParser implements Parser, Serializable {
         LinkedStack<TypedDependency> graph = parser.getDependencyGraph(s);
         elapsedTime += (new Date()).getTime() - startTime.getTime();
         systemDeps.add(graph.getAll());
+        
+//        Object[] input = s.input.peekN(s.input.size());
+//        StringBuilder sb = new StringBuilder("\nSentence: ");
+//        for(int i = input.length-1 ; i >= 0 ; i--) {
+//          String word = ((CoreLabel)input[i]).get(TextAnnotation.class);
+//          sb.append(word).append(" ");
+//        }
+//        logger.fine(sb.toString());
+//        
+//        sb = new StringBuilder();
+//        Object[] ts = s.getInput().peekN(s.getInput().size());
+//        for(int i = ts.length-1 ; i >= 0 ; i--) {
+//          CoreLabel cl = (CoreLabel) ts[i];
+//          sb.append("\t").append(cl.get(IndexAnnotation.class)).append("\t").append(cl.get(TextAnnotation.class)).append("\t").append(cl.get(PartOfSpeechAnnotation.class)).append("\n");
+//        }
+//        System.err.println(sb.toString()+"\n");
+//        
+//        
+//        Object[] deps = graph.peekN(graph.size());
+//        sb = new StringBuilder("Dependencies: \n");
+//        for(int i = deps.length-1 ; i >= 0 ; i--) {
+//          sb.append("\t").append(deps[i]).append("\n");
+//        }
+//        logger.fine(sb.toString()+"\n");
       }
       System.out.println("The number of sentences = "+count);
       System.out.printf("avg time per sentence: %.3f seconds\n", (elapsedTime / (count*1000F)));

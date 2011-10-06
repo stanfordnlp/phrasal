@@ -186,12 +186,14 @@ public class PrefixTagger extends TestSentence {
       this.arr = arr;
     }
 
+    @Override
     public boolean equals(Object o) {
       assert (o instanceof IStringArrayWrapper);
       IStringArrayWrapper aw = (IStringArrayWrapper) o;
       return Arrays.equals(arr, aw.arr);
     }
 
+    @Override
     public int hashCode() {
       int result = 1;
       for (IString s : arr)

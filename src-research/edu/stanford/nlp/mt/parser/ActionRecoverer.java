@@ -76,9 +76,10 @@ public class ActionRecoverer {
           leftsideEdgeCounter.decrementCount(w);
           arcs.remove(depPair);
         } else {
-          if(!dependents.contains(s.stack.pop())) {
-            throw new RuntimeException();
-          }
+//          if(!dependents.contains(s.stack.pop())) {
+//            throw new RuntimeException();
+//          }
+          s.stack.pop();
           s.actionTrace.push(new Action(ActionType.REDUCE));
         }
       } else {
@@ -99,20 +100,20 @@ public class ActionRecoverer {
 
     s.reset();
 
-    // TODO
-    //    Object[] inputs = input.peekN(input.size());
-    //    Object[] actions = recoveredActions.peekN(recoveredActions.size());
-    //    int inputIndex = inputs.length-1;
-    //    s.stack.push((CoreLabel)inputs[inputIndex--]);
-    //    CoreLabel curInput = (CoreLabel) inputs[inputIndex];
-    //    for(int i = actions.length-1 ; i >= 0 ; i--){
-    //      Action a = (Action)actions[i];
-    //      Actions.doAction(a, s);
-    //    }
-    //    Collection<TypedDependency> recoveredDeps = s.dependencies.getAll();
-    //    if(!recoveredDeps.containsAll(gold) || !gold.containsAll(recoveredDeps)) {
-    //      throw new RuntimeException("Error in recovered actions");
-    //    }
+    // TODO    
+//        Object[] inputs = input.peekN(input.size());
+//        Object[] actions = recoveredActions.peekN(recoveredActions.size());
+//        int inputIndex = inputs.length-1;
+//        s.stack.push((CoreLabel)inputs[inputIndex--]);
+//        CoreLabel curInput = (CoreLabel) inputs[inputIndex];
+//        for(int i = actions.length-1 ; i >= 0 ; i--){
+//          Action a = (Action)actions[i];
+//          Actions.doAction(a, s);
+//        }
+//        Collection<TypedDependency> recoveredDeps = s.dependencies.getAll();
+//        if(!recoveredDeps.containsAll(gold) || !gold.containsAll(recoveredDeps)) {
+//          throw new RuntimeException("Error in recovered actions");
+//        }
   }
 
   public static List<Structure> readTrainingData(String filename, POSTaggerAnnotator posTagger) throws IOException{
@@ -131,7 +132,7 @@ public class ActionRecoverer {
   public static void main(String[] args) throws IOException{
     //    String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
-    String filename = "C:\\cygwin\\home\\daniel\\temp.conll";
+    String filename = "/scr/heeyoung/mt/scr61/parser/debug/small.txt";
     List<Structure> structures = readTrainingData(filename, null);
 
     for(Structure s : structures) {

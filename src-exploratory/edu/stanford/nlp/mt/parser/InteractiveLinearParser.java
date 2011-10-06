@@ -31,6 +31,7 @@ public class InteractiveLinearParser {
     String modelFile = args[0];
     System.err.print("loading parser model...");
     DepDAGParser parser = IOUtils.readObjectFromFile(modelFile);
+    parser.extractTree = true;
     System.err.println("done");
     IncrementalTagger tagger = new IncrementalTagger();
 
@@ -78,6 +79,22 @@ public class InteractiveLinearParser {
           parser.parseToken(struc, w, labelRelation);
         }
         deps = struc.getDependencies();
+        
+        StringBuilder sb = new StringBuilder();
+        
+        Object[] ts = struc.getInput().peekN(struc.getInput().size());
+        for(int i = ts.length-1 ; i >= 0 ; i--) {
+          CoreLabel cl = (CoreLabel) ts[i];
+          sb.append("\t").append(cl.get(IndexAnnotation.class)).append("\t").append(cl.get(TextAnnotation.class)).append("\t").append(cl.get(PartOfSpeechAnnotation.class)).append("\n");
+        }
+        System.err.println(sb.toString()+"\n");
+        
+        Object[] ds = deps.peekN(deps.size());
+        sb = new StringBuilder("Dependencies: \n");
+        for(int i = ds.length-1 ; i >= 0 ; i--) {
+          sb.append("\t").append(ds[i]).append("\n");
+        }
+        System.out.println(sb.toString()+"\n");
         System.out.println(deps);
       }
       // System.out.printf("Current partial parse: %s\n", );

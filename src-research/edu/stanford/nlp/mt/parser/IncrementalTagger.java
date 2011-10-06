@@ -11,6 +11,8 @@ public class IncrementalTagger {
 
   protected final MaxentTagger tagger;
   protected final PrefixTagger ts;
+  
+  public PrefixTagger getPrefixTagger() { return ts; }
 
   /** load default MaxentTagger model */
   public IncrementalTagger() {

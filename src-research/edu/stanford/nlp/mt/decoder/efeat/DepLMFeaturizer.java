@@ -32,18 +32,24 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
   public static final String FEATURE_NAME_UNK = "UnkDepCnt";
   public static final String FEATURE_NAME_POSTAGLM = "DepPOSTagLM";
 
-  public final boolean USE_WORDLM;
-  public final boolean USE_UNK_DEP;
-  public final boolean USE_POSTAGLM;
+  public boolean USE_WORDLM;
+  public boolean USE_UNK_DEP;
+  public boolean USE_POSTAGLM;
 
   public final DependencyLM lm;
 
   public DepLMFeaturizer(String... args){
     lm = new DependencyLM();
     if(args.length < 3) throw new RuntimeException("Wrong number of arguments: "+args.length);
-    USE_WORDLM = true;
-    USE_UNK_DEP = true;
-    USE_POSTAGLM = true;
+    for(String arg : args) {
+      if(arg.startsWith("useWordLM")) {
+        USE_WORDLM = Boolean.parseBoolean(arg.substring(10));
+      } else if (arg.startsWith("usePOSTagLM")) {
+        USE_POSTAGLM = Boolean.parseBoolean(arg.substring(12));
+      } else if (arg.startsWith("useUNK_DEP")) {
+        USE_UNK_DEP = Boolean.parseBoolean(arg.substring(11));
+      }
+    }
   }
 
   @Override
@@ -62,12 +68,25 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
   }
   private double getDepPOSTagsLMScore(TypedDependency dependency) {
     IString[] str = new IString[2];
-    str[0] = new IString(dependency.gov().label().get(PartOfSpeechAnnotation.class));
-    str[1] = new IString(dependency.dep().label().get(PartOfSpeechAnnotation.class));
+    
+    String govPOS = (dependency.gov().label().containsKey(PartOfSpeechAnnotation.class))? 
+        dependency.gov().label().get(PartOfSpeechAnnotation.class) : "Null";
+    String depPOS = (dependency.dep().label().containsKey(PartOfSpeechAnnotation.class))? 
+        dependency.dep().label().get(PartOfSpeechAnnotation.class) : "Null";
+    str[0] = new IString(govPOS);
+    str[1] = new IString(depPOS);
 
     Sequence<IString> depNgram = new RawSequence<IString>(str);
 
     return lm.scorePOSLM(depNgram);
+  }
+  private boolean isUnseen(TypedDependency dependency) {
+    IString[] str = new IString[2];
+    str[0] = new IString(dependency.gov().label().get(TextAnnotation.class));
+    str[1] = new IString(dependency.dep().label().get(TextAnnotation.class));
+
+    Sequence<IString> depNgram = new RawSequence<IString>(str);
+    return lm.isUnseen(depNgram);
   }
 
   @Override
@@ -92,10 +111,9 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
     Object[] newDeps = currentDeps.peekN(currentDeps.size() - previousDeps.size());
     for(Object dep : newDeps){
       TypedDependency dependency = (TypedDependency) dep;
-      double score = getDepWordsLMScore(dependency);
-      wordLMScore += score;
+      wordLMScore += getDepWordsLMScore(dependency);
       posTagLMScore += getDepPOSTagsLMScore(dependency);
-      if(score==0) unkCnt++;
+      if(isUnseen(dependency)) unkCnt++;
     }
 
     if(USE_WORDLM) feats.add(new FeatureValue<String>(FEATURE_NAME, wordLMScore));

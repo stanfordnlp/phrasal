@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.parser;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.CoreLabel;
@@ -112,21 +114,23 @@ public class Actions {
     CoreLabel topStack = s.stack.peek();
 
     TreeGraphNode gov;
-    if(s.getInputToNode().containsKey(w)) {
-      gov = s.getInputToNode().get(w);
-    } else {
+    if(s.getInputIdxToNode().containsKey(w.get(IndexAnnotation.class))) {
+      gov = s.getInputIdxToNode().get(w.get(IndexAnnotation.class));
+    } else {      
       gov = new TreeGraphNode(w);
-      s.getInputToNode().put(w, gov);
+      s.getInputIdxToNode().put(w.get(IndexAnnotation.class), gov);
     }
     TreeGraphNode dep;
-    if(s.getInputToNode().containsKey(topStack)) {
-      dep = s.getInputToNode().get(topStack);
+
+    if(s.getInputIdxToNode().containsKey(topStack.get(IndexAnnotation.class))) {
+      dep = s.getInputIdxToNode().get(topStack.get(IndexAnnotation.class));
     } else {
       dep = new TreeGraphNode(topStack);
-      s.getInputToNode().put(topStack, dep);
+      s.getInputIdxToNode().put(topStack.get(IndexAnnotation.class), dep);
     }
     TypedDependency dependency = new TypedDependency(relation, gov, dep);
     s.dependencies.push(dependency);
+    s.dependentsIdx.add(topStack.get(IndexAnnotation.class));
 
     if(!w.containsKey(LeftChildrenNodeAnnotation.class)) {
       w.set(LeftChildrenNodeAnnotation.class, new TreeSet<Pair<CoreLabel, String>>(new IndexComparator()));
@@ -144,20 +148,21 @@ public class Actions {
     }
     CoreLabel topStack = s.stack.peek();
     TreeGraphNode gov;
-    if(s.getInputToNode().containsKey(topStack)) {
-      gov = s.getInputToNode().get(topStack);
+    if(s.getInputIdxToNode().containsKey(topStack.get(IndexAnnotation.class))) {
+      gov = s.getInputIdxToNode().get(topStack.get(IndexAnnotation.class));
     } else {
       gov = new TreeGraphNode(topStack);
-      s.getInputToNode().put(topStack, gov);
+      s.getInputIdxToNode().put(topStack.get(IndexAnnotation.class), gov);
     }
     TreeGraphNode dep;
-    if(s.getInputToNode().containsKey(w)) {
-      dep = s.getInputToNode().get(w);
+    if(s.getInputIdxToNode().containsKey(w.get(IndexAnnotation.class))) {
+      dep = s.getInputIdxToNode().get(w.get(IndexAnnotation.class));
     } else {
       dep = new TreeGraphNode(w);
-      s.getInputToNode().put(w, dep);
+      s.getInputIdxToNode().put(w.get(IndexAnnotation.class), dep);
     }
     TypedDependency dependency = new TypedDependency(relation, gov, dep);
     s.dependencies.push(dependency);
+    s.dependentsIdx.add(w.get(IndexAnnotation.class));
   }
 }

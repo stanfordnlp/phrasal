@@ -6,6 +6,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.parser.DepDAGParser;
 import edu.stanford.nlp.mt.parser.IncrementalTagger;
@@ -33,17 +34,20 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
   public TargetDependencyAnnotator(String... args) {
     String modelFile = args[0];
     boolean labelRelation = true;
+    boolean extractTree = true;
     if (args.length >= 2) {
       try {
         labelRelation = Boolean.parseBoolean(args[1]);
+        if(args.length > 2) extractTree = Boolean.parseBoolean(args[2]);
       } catch (Exception e) {
-        // do nothing (default is labelRelation = true)
+//         do nothing (default is labelRelation = true)
         throw new RuntimeException(String.format("Can't parse %s as a boolean value", args[1]));
       }
     }
     try {
       parser = IOUtils.readObjectFromFile(modelFile);
       parser.labelRelation = labelRelation;
+      parser.extractTree = extractTree;
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -70,7 +74,17 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
       CoreLabel w = new CoreLabel();
       w.set(TextAnnotation.class, word.toString());
       w.set(IndexAnnotation.class, localIndex++);
-      w.set(PartOfSpeechAnnotation.class, "FIXME");
+      
+      int len = Math.min(localStruct.getInput().size(), tagger.getPrefixTagger().leftWindow()) + 1;
+      IString[] seq = new IString[len];
+      int i = seq.length-1;
+      seq[i--] = new IString(word.toString());
+      Object[] toks = localStruct.getInput().peekN(len-1);
+      for(Object c : toks) {
+        CoreLabel cl = (CoreLabel) c;
+        seq[i--] = new IString(cl.get(TextAnnotation.class));
+      }
+      tagger.tagWord(w, seq);
       parser.parseToken(localStruct, w);
     }
     TargetDependencyAnnotator<TK> pa = new TargetDependencyAnnotator<TK>(parser, localStruct, localIndex);

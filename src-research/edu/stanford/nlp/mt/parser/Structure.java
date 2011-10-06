@@ -33,13 +33,14 @@ public class Structure {
   protected LinkedStack<CoreLabel> input;
   protected LinkedStack<TypedDependency> dependencies;
   protected LinkedStack<Action> actionTrace;
-  protected HashMap<CoreLabel, TreeGraphNode> inputToNode;
+  protected HashMap<Integer, TreeGraphNode> inputIdxToNode;
   protected final TreeGraphNode root;
+  protected HashSet<Integer> dependentsIdx;
 
   @SuppressWarnings("unchecked")
   @Override
   public Structure clone() {
-    return new Structure(stack.clone(), input.clone(), dependencies.clone(), actionTrace.clone(), (HashMap<CoreLabel, TreeGraphNode>)inputToNode.clone());
+    return new Structure(stack.clone(), input.clone(), dependencies.clone(), actionTrace.clone(), (HashMap<Integer, TreeGraphNode>)inputIdxToNode.clone(), (HashSet<Integer>) dependentsIdx.clone());
   }
 
   @Override
@@ -55,14 +56,15 @@ public class Structure {
   }
 
   private Structure(LinkedStack<CoreLabel> stack, LinkedStack<CoreLabel> input, LinkedStack<TypedDependency> dependencies,
-      LinkedStack<Action> actionTrace, HashMap<CoreLabel, TreeGraphNode> inputToNode) {
+      LinkedStack<Action> actionTrace, HashMap<Integer, TreeGraphNode> inputIdxToNode, HashSet<Integer> dependentsIdx) {
     this.stack = stack;
     this.actionTrace = actionTrace;
     this.input = input;
     this.dependencies = dependencies;
-    this.inputToNode = inputToNode;
+    this.inputIdxToNode = inputIdxToNode;
     root = new TreeGraphNode(new CategoryWordTag("ROOT", Lexicon.BOUNDARY, Lexicon.BOUNDARY_TAG));
     root.label().set(TextAnnotation.class, "ROOT");
+    this.dependentsIdx = dependentsIdx;
   }
 
   public Structure() {
@@ -70,9 +72,10 @@ public class Structure {
     actionTrace = new LinkedStack<Action>();
     input = new LinkedStack<CoreLabel>();
     dependencies = new LinkedStack<TypedDependency>();
-    this.inputToNode = new HashMap<CoreLabel, TreeGraphNode>();
+    this.inputIdxToNode = new HashMap<Integer, TreeGraphNode>();
     root = new TreeGraphNode(new CategoryWordTag("ROOT", Lexicon.BOUNDARY, Lexicon.BOUNDARY_TAG));
     root.label().set(TextAnnotation.class, "ROOT");
+    dependentsIdx = new HashSet<Integer>();
   }
 
   public Structure(GrammaticalStructure gs, IncrementalTagger tagger, Morphology lemmatizer, POSTaggerAnnotator posTagger) {
@@ -99,7 +102,7 @@ public class Structure {
       Tree p = treeNode.parent();
       cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
       input.push(cl);
-      inputToNode.put(cl, node);
+      inputIdxToNode.put(cl.get(IndexAnnotation.class), node);
 
       if(useGoldTag) cl.set(PartOfSpeechAnnotation.class, ((TreeGraphNode)p).label().get(ValueAnnotation.class));
       else {  // use incremental tagger
@@ -153,8 +156,8 @@ public class Structure {
     return actionTrace;
   }
 
-  public HashMap<CoreLabel, TreeGraphNode> getInputToNode() {
-    return inputToNode;
+  public HashMap<Integer, TreeGraphNode> getInputIdxToNode() {
+    return inputIdxToNode;
   }
 
   public void reset() {
@@ -162,9 +165,9 @@ public class Structure {
     actionTrace = new LinkedStack<Action>();
     dependencies = new LinkedStack<TypedDependency>();
     input = new LinkedStack<CoreLabel>();
+    inputIdxToNode = new HashMap<Integer, TreeGraphNode>();
   }
   public void addRoot() {
-
     for(TreeGraphNode dep : findNonDependentNode(dependencies)) {
       TypedDependency dependency = new TypedDependency(GrammaticalRelation.ROOT, root, dep);
       dependencies.push(dependency);
