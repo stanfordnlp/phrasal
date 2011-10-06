@@ -43,6 +43,7 @@ public class ActionRecoverer {
     for(TypedDependency e : s.dependencies) {
       CoreLabel gov = e.gov().label();
       CoreLabel dependent = e.dep().label();
+      if(gov==dependent) continue;
       Pair<CoreLabel, CoreLabel> pair = new Pair<CoreLabel, CoreLabel>(gov, dependent);
       arcs.add(pair);
       arcRelation.put(pair, e.reln());
@@ -132,7 +133,7 @@ public class ActionRecoverer {
   public static void main(String[] args) throws IOException{
     //    String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
-    String filename = "/scr/heeyoung/mt/scr61/parser/debug/small.txt";
+    String filename = "/scr/heeyoung/mt/scr61/parser/debug/phrasal.8.trans.parse.basic.conllx";
     List<Structure> structures = readTrainingData(filename, null);
 
     for(Structure s : structures) {
