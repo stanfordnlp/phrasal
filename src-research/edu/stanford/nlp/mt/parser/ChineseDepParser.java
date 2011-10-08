@@ -76,8 +76,7 @@ public class ChineseDepParser {
     for (String s : defaultQueryPieces) {
       defaultQueryWords.add(new Word(s));
     }
-    cParser.pp.parser.parse(defaultQueryWords);
-    Tree t = cParser.pp.parser.getBestParse();
+    Tree t = cParser.pp.parser.parseTree(defaultQueryWords);
 
     GrammaticalStructure gs = cParser.pp.gsf.newGrammaticalStructure(t);
     System.err.println(gs.typedDependencies());

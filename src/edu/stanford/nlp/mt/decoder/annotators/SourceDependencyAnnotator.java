@@ -36,8 +36,7 @@ public class SourceDependencyAnnotator<TK> implements Annotator<TK> {
     for (TK s : source) {
       sentence.add(new Word(s.toString()));
     }
-    parser.pp.parser.parse(sentence);
-    Tree t = parser.pp.parser.getBestParse();
+    Tree t = parser.pp.parser.parseTree(sentence);
     GrammaticalStructure grammaticalStruc = parser.pp.gsf.newGrammaticalStructure(t);
     SourceDependencyAnnotator<TK> annotator = new SourceDependencyAnnotator<TK>(parser, grammaticalStruc);
 
