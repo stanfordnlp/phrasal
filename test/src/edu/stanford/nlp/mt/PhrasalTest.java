@@ -73,13 +73,13 @@ public class PhrasalTest extends TestCase {
     String[] tokens = line.split("\\s+");
     RichTranslation<IString, String> translation = p
         .decodeOnly(tokens, 1, 1, 0);
-    assertTrue(translation.score == -1.3398349461093697);
+    assertTrue(translation.score == -1.4399656087921855);
     assertTrue(translation.translation.toString().equals(
-        "representatives of the"));
+        "representatives"));
     assertTrue(translation.foreign.toString().equals("代表"));
     assertTrue(translation
         .nbestToString(1)
         .equals(
-            "1 ||| representatives of the ||| LM: -1.8078E1 LinearDistortion: 0 TM:lex(f|t): -7.485E0 TM:lex(t|f): -9.3295E-1 TM:phi(f|t): -4.6372E0 TM:phi(t|f): -1.5041E0 TM:phrasePenalty: 9.999E-1 WordPenalty: -3 ||| -1.3398E0"));
+            "1 ||| representatives ||| LM: -1.6832E1 LinearDistortion: 0 TM:lex(e|f): -2.581E0 TM:lex(f|e): -9.3295E-1 TM:phi(e|f): -2.6391E0 TM:phi(f|e): -1.3849E0 TM:phrasePenalty: 9.999E-1 WordPenalty: -1 ||| -1.44E0"));
   }
 }
