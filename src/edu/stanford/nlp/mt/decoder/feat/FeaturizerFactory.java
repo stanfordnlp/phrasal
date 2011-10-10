@@ -49,13 +49,13 @@ public class FeaturizerFactory {
   static {
     Map<String, Double> m = DEFAULT_TM_FEATURE_WEIGHTS_MAP;
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + FlatPhraseTable.FIVESCORE_PHI_t_f, 0.2);
+        + FlatPhraseTable.FIVESCORE_PHI_e_f, 0.2);
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + FlatPhraseTable.FIVESCORE_LEX_t_f, 1.0);
+        + FlatPhraseTable.FIVESCORE_LEX_e_f, 1.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + FlatPhraseTable.FIVESCORE_PHI_f_t, 2.0);
+        + FlatPhraseTable.FIVESCORE_PHI_f_e, 2.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX
-        + FlatPhraseTable.FIVESCORE_LEX_f_t, 1.0);
+        + FlatPhraseTable.FIVESCORE_LEX_f_e, 1.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX
         + FlatPhraseTable.FIVESCORE_PHRASE_PENALTY, -1.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX + FlatPhraseTable.ONESCORE_P_t_f,

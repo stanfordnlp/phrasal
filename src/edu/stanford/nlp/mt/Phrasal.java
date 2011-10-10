@@ -775,19 +775,19 @@ public class Phrasal {
       if (tmodelWtsStr.size() == 5) {
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_PHI_t_f), Double
+                FlatPhraseTable.FIVESCORE_PHI_e_f), Double
                 .parseDouble(tmodelWtsStr.get(0)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_LEX_t_f), Double
+                FlatPhraseTable.FIVESCORE_LEX_e_f), Double
                 .parseDouble(tmodelWtsStr.get(1)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_PHI_f_t), Double
+                FlatPhraseTable.FIVESCORE_PHI_f_e), Double
                 .parseDouble(tmodelWtsStr.get(2)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_LEX_f_t), Double
+                FlatPhraseTable.FIVESCORE_LEX_f_e), Double
                 .parseDouble(tmodelWtsStr.get(3)));
         weightConfig.setCount(
             makePair(PhraseTableScoresFeaturizer.PREFIX,

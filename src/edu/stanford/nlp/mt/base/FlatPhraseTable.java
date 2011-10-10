@@ -14,15 +14,18 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     implements PhraseTable<IString> {
 
-  public static final String FIVESCORE_PHI_t_f = "phi(t|f)";
-  public static final String FIVESCORE_LEX_t_f = "lex(t|f)";
-  public static final String FIVESCORE_PHI_f_t = "phi(f|t)";
-  public static final String FIVESCORE_LEX_f_t = "lex(f|t)";
+  public static final String FIVESCORE_PHI_e_f = "phi(e|f)";
+  public static final String FIVESCORE_LEX_e_f = "lex(e|f)";
+  public static final String FIVESCORE_PHI_f_e = "phi(f|e)";
+  public static final String FIVESCORE_LEX_f_e = "lex(f|e)";
   public static final String ONESCORE_P_t_f = "p(t|f)";
   public static final String FIVESCORE_PHRASE_PENALTY = "phrasePenalty";
+  
+  //  matching ordering in MosesPharoahFeatureExtractor 
+  //  line 172 return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen };
   public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES = {
-      FIVESCORE_PHI_t_f, FIVESCORE_LEX_t_f, FIVESCORE_PHI_f_t,
-      FIVESCORE_LEX_f_t, FIVESCORE_PHRASE_PENALTY };
+	  FIVESCORE_PHI_f_e, FIVESCORE_LEX_f_e, 
+      FIVESCORE_PHI_e_f, FIVESCORE_LEX_e_f, FIVESCORE_PHRASE_PENALTY };
   public static final String[] CANONICAL_ONESCORE_SCORE_TYPES = { ONESCORE_P_t_f };
 
   public static final String TRIE_INDEX_PROPERTY = "TriePhraseTable";
@@ -50,13 +53,13 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     if (CUSTOM_SCORES != null) {
       for (String el : CUSTOM_SCORES.split(",")) {
         if (el.equals("phi_tf")) {
-          l.add(FIVESCORE_PHI_t_f);
+          l.add(FIVESCORE_PHI_e_f);
         } else if (el.equals("phi_ft")) {
-          l.add(FIVESCORE_PHI_f_t);
+          l.add(FIVESCORE_PHI_f_e);
         } else if (el.equals("lex_tf")) {
-          l.add(FIVESCORE_LEX_t_f);
+          l.add(FIVESCORE_LEX_e_f);
         } else if (el.equals("lex_ft")) {
-          l.add(FIVESCORE_LEX_f_t);
+          l.add(FIVESCORE_LEX_f_e);
         } else if (el.equals("p_tf")) {
           l.add(ONESCORE_P_t_f);
         } else
@@ -119,7 +122,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     int i = 0;
     for (String s : sList) {
       float f = Float.parseFloat(s);
-      if (f != f) {
+      
+      if (Float.isNaN(f)) {
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, f));
       }
