@@ -318,18 +318,23 @@ public class Phrasal {
   }
 
   static Map<String, List<String>> readArgs(String[] args) throws IOException {
-    Map<String, List<String>> config = new HashMap<String, List<String>>();
+    Map<String, List<String>> configArgs = new HashMap<String, List<String>>();
+    Map<String, List<String>> configFile = new HashMap<String, List<String>>();
+    Map<String, List<String>> configFinal = new HashMap<String, List<String>>();
+        
     for (Map.Entry<Object, Object> e : StringUtils.argsToProperties(args)
         .entrySet()) {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
       if (CONFIG_FILE.equals(key)) {
-        config.putAll(readConfig(value));
+        configFile.putAll(readConfig(value));
       } else {
-        config.put(key, Arrays.asList(value));
+        configArgs.put(key, Arrays.asList(value));
       }
     }
-    return config;
+    configFinal.putAll(configFile);
+    configFinal.putAll(configArgs); // command line args overwrite config file options
+    return configFinal;
   }
 
   @SuppressWarnings("unchecked")
@@ -2149,7 +2154,7 @@ public class Phrasal {
   public static void main(String[] args) throws Exception {
 
     if (args.length < 1) {
-      System.err.println("Usage:\n\tjava ...Phrasal (pharaoh.ini)");
+      System.err.println("Usage:\n\tjava ...Phrasal (model.ini)");
       System.exit(-1);
     }
 
