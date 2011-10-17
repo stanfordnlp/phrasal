@@ -30,7 +30,7 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
   final Set<String> validFeature;
   
   static final int DEFAULT_MIN_FEATURE_COUNT = 0;
-  static final double DEFAULT_L2_SIGMA = 10;
+  static final double DEFAULT_L2_SIGMA = 100;
   static final double DEFAULT_L1_B = 0;
   
   
@@ -164,7 +164,7 @@ public class LogLinearOptimizer extends AbstractNBestOptimizer {
         : new QNMinimizer(15, true);
     LogLinearObjective llo = new LogLinearObjective(weightNames, target);
     double initialValueAt = llo.valueAt(initialWtsArr);
-    if (initialValueAt == Double.POSITIVE_INFINITY  || initialValueAt != initialValueAt) {
+    if (initialValueAt == Double.POSITIVE_INFINITY  || Double.isNaN(initialValueAt)) {
       System.err
           .printf("Initial Objective is infinite/NaN - normalizing weight vector");
       double normTerm = Counters.L2Norm(wts);
