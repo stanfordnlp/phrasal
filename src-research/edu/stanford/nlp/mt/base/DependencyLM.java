@@ -2,13 +2,13 @@ package edu.stanford.nlp.mt.base;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.List;
 
 import edu.stanford.nlp.io.IOUtils;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.mt.parser.ActionRecoverer;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.mt.parser.DepDAGParser;
+import edu.stanford.nlp.mt.parser.IncrementalTagger;
 import edu.stanford.nlp.mt.parser.Structure;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -95,7 +95,7 @@ public class DependencyLM implements LanguageModel<IString> {
     // TODO Auto-generated method stub
     return false;
   }
-  
+
   public boolean isUnseen(Sequence<IString> sequence) {
     return (wordSeqCounter.getCount(sequence)==0);
   }
@@ -122,111 +122,108 @@ public class DependencyLM implements LanguageModel<IString> {
   }
 
   /** to build dependency LM  */
-  public static Counter<String> countDepLM(List<Structure> trainData) {
-    Counter<String> counter = new OpenAddressCounter<String>();
-    for(Structure s : trainData) {
-      for (TypedDependency dep : s.getDependencies()) {
-        String unigram = dep.gov().label().get(TextAnnotation.class).toLowerCase();
-        String bigram = unigram + " " + dep.dep().label().get(TextAnnotation.class).toLowerCase();
-
-        counter.incrementCount(bigram);
-        counter.incrementCount(unigram);
-      }
+  public void countDepLM(Structure s) {
+    for (TypedDependency dep : s.getDependencies()) {
+      String unigram = dep.gov().label().get(TextAnnotation.class).toLowerCase();
+      String bigram = unigram + " " + dep.dep().label().get(TextAnnotation.class).toLowerCase();
+      wordSeqCounter.incrementCount(new RawSequence(new String[]{unigram, dep.dep().label().get(TextAnnotation.class).toLowerCase()}));
+      wordSeqCounter.incrementCount(new RawSequence(new String[]{unigram}));
     }
-    return counter;
-  }
-  
-  public static Counter<String> countDepPOSTagLM(List<Structure> trainData) {
-    Counter<String> counter = new OpenAddressCounter<String>();
-    for(Structure s : trainData) {
-      for (TypedDependency dep : s.getDependencies()) {
-        String unigram = dep.gov().label().get(PartOfSpeechAnnotation.class);
-        String bigram = unigram + " " + dep.dep().label().get(PartOfSpeechAnnotation.class);
-
-        counter.incrementCount(bigram);
-        counter.incrementCount(unigram);
-      }
-    }
-    return counter;
-  }
-  public static Counter<String> countWordUnigram(List<Structure> trainData) {
-    Counter<String> counter = new OpenAddressCounter<String>();
-    for(Structure s : trainData) {
-      for(CoreLabel c : s.getInput()) {
-        counter.incrementCount(c.get(TextAnnotation.class).toLowerCase());
-      }
-    }
-    return counter;
   }
 
-  private static Counter<String> countPOSTagUnigram(List<Structure> trainData) {
-    Counter<String> counter = new OpenAddressCounter<String>();
-    for(Structure s : trainData) {
-      for(CoreLabel c : s.getInput()) {
-        counter.incrementCount(c.get(PartOfSpeechAnnotation.class));
-      }
-    }
-    return counter;
-  }
-  
-  public static void main(String[] args) throws IOException {
-    
-//    LanguageModel<IString> lm = new DependencyLM();
-//    if(true) return;
-    
-    String trainingFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-train-2011-01-13.conll.transformed";
-//    String trainingFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
+  public void countDepPOSTagLM(Structure s) {
+    for (TypedDependency dep : s.getDependencies()) {
+      String unigram = dep.gov().label().get(PartOfSpeechAnnotation.class);
+      String bigram = unigram + " " + dep.dep().label().get(PartOfSpeechAnnotation.class);
 
-    List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile, null);
-    
+      posTagSeqCounter.incrementCount(new RawSequence(new String[]{unigram, dep.dep().label().get(PartOfSpeechAnnotation.class)}));
+      posTagSeqCounter.incrementCount(new RawSequence(new String[]{unigram}));
+    }
+  }
+  public void countWordUnigram(Structure s) {
+    for(CoreLabel c : s.getInput()) {
+      wordCounter.incrementCount(c.get(TextAnnotation.class).toLowerCase());
+    }
+  }
+
+  private void countPOSTagUnigram(Structure s) {
+    for(CoreLabel c : s.getInput()) {
+      posTagCounter.incrementCount(c.get(PartOfSpeechAnnotation.class));
+    }
+  }
+
+  public static void main(String[] args) throws IOException, ClassNotFoundException {
+
+    //    LanguageModel<IString> lm = new DependencyLM();
+    //    if(true) return;
+
+    //    String trainingFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-train-2011-01-13.conll.transformed";
+    //    List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile, null);
+
+    String trainingFile = "/scr/heeyoung/mt/scr61/mt06.for_heeyoung/bitext/aligned.en";
+    DependencyLM lm = new DependencyLM();
+
+    DepDAGParser parser;
+    String defaultParserModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
+    parser = IOUtils.readObjectFromFile(defaultParserModel);
+    parser.labelRelation = true;
+    parser.extractTree = true;
+    IncrementalTagger tagger = new IncrementalTagger();
+
+    for(String sent : IOUtils.readLines(trainingFile)){
+
+      Structure s = parser.parseSentence(sent, tagger);
+
+      lm.countDepLM(s);
+      lm.countDepPOSTagLM(s);
+      lm.countWordUnigram(s);
+      lm.countPOSTagUnigram(s);
+    }
+
     //
-    // build word LM
+    // write word LM
     //
-    Counter<String> wordLMCounter = countDepLM(trainData);
     PrintWriter wordSeqWriter = IOUtils.getPrintWriter(defaultDepWordLMFile);
 
-    for(String ngram : wordLMCounter.keySet()) {
+    for(Sequence<String> ngram : lm.wordSeqCounter.keySet()) {
       StringBuilder sb = new StringBuilder();
-      sb.append(ngram).append("\t").append(wordLMCounter.getCount(ngram));
+      sb.append(ngram).append("\t").append(lm.wordSeqCounter.getCount(ngram));
       wordSeqWriter.println(sb.toString());
     }
     wordSeqWriter.close();
-    
+
     //
-    // build POS tag LM
+    // write POS tag LM
     //
-    Counter<String> posTagLMCounter = countDepPOSTagLM(trainData);
     PrintWriter posTagSeqWriter = IOUtils.getPrintWriter(defaultDepPOSTagLMFile);
 
-    for(String ngram : posTagLMCounter.keySet()) {
+    for(Sequence<String> ngram : lm.posTagSeqCounter.keySet()) {
       StringBuilder sb = new StringBuilder();
-      sb.append(ngram).append("\t").append(posTagLMCounter.getCount(ngram));
+      sb.append(ngram).append("\t").append(lm.posTagSeqCounter.getCount(ngram));
       posTagSeqWriter.println(sb.toString());
     }
     posTagSeqWriter.close();
-    
+
     //
-    // build word unigram
+    // write word unigram
     //
-    Counter<String> wordUnigramCounter = countWordUnigram(trainData);
     PrintWriter wordUnigramWriter = IOUtils.getPrintWriter(defaultWordUnigramFile);
 
-    for(String ngram : wordUnigramCounter.keySet()) {
+    for(String unigram : lm.wordCounter.keySet()) {
       StringBuilder sb = new StringBuilder();
-      sb.append(ngram).append("\t").append(wordUnigramCounter.getCount(ngram));
+      sb.append(unigram).append("\t").append(lm.wordCounter.getCount(unigram));
       wordUnigramWriter.println(sb.toString());
     }
     wordUnigramWriter.close();
-    
+
     //
-    // build pos tag unigram
+    // write pos tag unigram
     //
-    Counter<String> posTagUnigramCounter = countPOSTagUnigram(trainData);
     PrintWriter posTagUnigramWriter = IOUtils.getPrintWriter(defaultPOSTagUnigramFile);
 
-    for(String ngram : posTagUnigramCounter.keySet()) {
+    for(String tag : lm.posTagCounter.keySet()) {
       StringBuilder sb = new StringBuilder();
-      sb.append(ngram).append("\t").append(posTagUnigramCounter.getCount(ngram));
+      sb.append(tag).append("\t").append(lm.posTagCounter.getCount(tag));
       posTagUnigramWriter.println(sb.toString());
     }
     posTagUnigramWriter.close();
