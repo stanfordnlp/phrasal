@@ -243,7 +243,7 @@ public class MERT extends Thread {
         sumExpL += eval;
       }
 
-      dEEval = (oldExpL != oldExpL ? Double.POSITIVE_INFINITY : oldExpL
+      dEEval = (Double.isInfinite(oldExpL) ? Double.POSITIVE_INFINITY : oldExpL
           - sumExpL / cnt);
 
       System.err.printf("TBatch: %d dEEval: %e cnt: %d\n", batch, dEEval, cnt);
@@ -616,7 +616,7 @@ public class MERT extends Thread {
         .getIncrementalMetric();
     IncrementalNBestEvaluationMetric<IString, String> incNBestEval = null;
     boolean isNBestEval = false;
-    if (incEval instanceof IncrementalNBestEvaluationMetric) {
+    if (incEval instanceof IncrementalNBestEvaluationMetric<?,?>) {
       incNBestEval = (IncrementalNBestEvaluationMetric<IString, String>) incEval;
       isNBestEval = true;
     }

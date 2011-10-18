@@ -35,7 +35,7 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
 
   public LogLinearMultiTarget(MERT mert, String... args) {
     super(mert);
-    double l2sigma = 10.0;
+    double l2sigma = 100.0;
     double topFrac = 0.05;
     
     if (args.length >= 1) {
@@ -100,7 +100,7 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
         weightNames, lossMatrix);
     double initialValueAt = llmt.valueAt(initialWtsArr);
     if (initialValueAt == Double.POSITIVE_INFINITY
-        || initialValueAt != initialValueAt) {
+        || Double.isNaN(initialValueAt)) {
       System.err
           .printf("Initial Objective is infinite/NaN - normalizing weight vector");
       double normTerm = Counters.L2Norm(wts);
