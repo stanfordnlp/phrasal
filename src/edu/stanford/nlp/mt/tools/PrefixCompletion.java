@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -42,6 +44,7 @@ import edu.stanford.nlp.mt.base.TranslationOption;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.inferer.impl.PrefixDecoder;
 import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Prefix completion prototype
@@ -148,7 +151,7 @@ public class PrefixCompletion extends AbstractHandler {
       }
 
       String prefix = ptmRequest.prefix;
-      List<String> predictions = new ArrayList<String>();
+      List<Pair<String,String>> predictions = new ArrayList<Pair<String,String>>();
       List<Completion> completions = getCompletions(
           ptmRequest.source, ptmRequest.prefix);
       if (DEBUG) {
@@ -161,7 +164,7 @@ public class PrefixCompletion extends AbstractHandler {
           continue;
         }
 
-        predictions.add(c.targetPhrase);
+        predictions.add(new Pair<String,String>(c.targetPhrase,c.srcCoverage));
         previouslyListedCompletions.add(c.targetPhrase);
         if (DEBUG) {
           System.err.printf("- '%s'\n", c.targetPhrase);
@@ -333,6 +336,8 @@ public class PrefixCompletion extends AbstractHandler {
       System.err.printf("Prefix seq: %s\n", prefix);
     } 
     List<Completion> scoredOpts = new ArrayList<Completion>();
+    
+    // Agenda-based prefix decoder, which considers the coverage set.
     if (prefixDecoder != null) {
       if (DEBUG) {
         System.err.println("Prefix decoder");
@@ -344,10 +349,14 @@ public class PrefixCompletion extends AbstractHandler {
       if(DEBUG)
         System.err.printf("n-best list: %s\n", translations);
       for (RichTranslation<IString,String> translation : translations) {
-    	Sequence<IString> suffix = translation.translation.subsequence(prefix.size(), translation.translation.size());
-        scoredOpts.add(new Completion("TODO", suffix.toString(), translation.score));
+        Sequence<IString> suffix = translation.translation.subsequence(prefix.size(), translation.translation.size());
+        // Find the source positions covered by this completion.
+        String coverageString = getCoverage(translation);
+        scoredOpts.add(new Completion("DEADBEEF", suffix.toString(), coverageString, translation.score));
       }
+    
     } else {
+      // Stupid decoder that generates completions independent of the coverage set.
       if (DEBUG) {
         System.err.println("Simple model");
       }
@@ -391,7 +400,7 @@ public class PrefixCompletion extends AbstractHandler {
           //          System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
           modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
         }
-        Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), modelScore/prefixPlus.size());
+        Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), "", modelScore);
         scoredOpts.add(completion);        
       }  
     }            
@@ -411,6 +420,39 @@ public class PrefixCompletion extends AbstractHandler {
       }
     }
     return scoredOpts;    
+  }
+
+  /**
+   * Returns a string representing the source positions covered by the most
+   * recent translation option in this hypothesis. For example, if the most
+   * recent option covered 2,3,4,10 then this method would return "2-3-4-10".
+   * 
+   * @param opt The rich hypothesis object
+   * @return
+   */
+  private String getCoverage(RichTranslation<IString, String> opt) {
+    Featurizable<IString,String> prior = opt.featurizable.prior;
+    CoverageSet coverage = opt.foreignCoverage;
+    
+    // TODO(spenceg): opt does not contain a coverage set
+    if (coverage == null) {
+      System.err.println(opt.toString());
+      throw new RuntimeException(opt.foreign.toString());
+    }
+    if (prior != null) {
+      coverage = coverage.clone();
+      coverage.xor(prior.option.foreignCoverage);
+    }
+    StringBuilder sb = null;
+    for (int coveredBit : coverage) {
+      if (sb == null) {
+        sb = new StringBuilder();
+        sb.append(coveredBit);
+      } else {
+        sb.append("-").append(coveredBit);
+      }
+    }
+    return sb.toString();
   }
 
   public static void usage() {
@@ -478,16 +520,20 @@ public class PrefixCompletion extends AbstractHandler {
 class Completion {
   public final String sourcePhrase;
   public final String targetPhrase;
+  
+  // Source coverage is of the form "0-1-3-4-15-6" and so on
+  public final String srcCoverage;
   public final double score;
 
-  public Completion(String sourcePhrase, String targetPhrase, double score) {
+  public Completion(String sourcePhrase, String targetPhrase, String s2tAlignment, double score) {
     this.sourcePhrase = sourcePhrase;
     this.targetPhrase = targetPhrase;
+    this.srcCoverage = s2tAlignment;
     this.score = score;
   }
 
   public String toString() {
-    return String.format("Source material: %s, Translation: %s, Model Score: %e", sourcePhrase,targetPhrase,score);
+    return String.format("Source: %s, Target: %s, Coverage: %s, Model Score: %e", sourcePhrase, targetPhrase, srcCoverage, score);
   }
 }
 
@@ -579,10 +625,10 @@ class PTMOOVResponse {
 
 class PTMPredictionResponse {
   final String prefix;
-  final List<String> predictions;
-  public PTMPredictionResponse(String prefix, List<String> predictions) {
+  final List<Pair<String,String>> predictions;
+  public PTMPredictionResponse(String prefix, List<Pair<String,String>> predictions) {
     this.prefix = prefix;
-    this.predictions = new ArrayList<String>(predictions);
+    this.predictions = new ArrayList<Pair<String,String>>(predictions);
   }
 }
 
