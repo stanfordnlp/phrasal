@@ -431,18 +431,8 @@ public class PrefixCompletion extends AbstractHandler {
    * @return
    */
   private String getCoverage(RichTranslation<IString, String> opt) {
-    Featurizable<IString,String> prior = opt.featurizable.prior;
-    CoverageSet coverage = opt.foreignCoverage;
-    
-    // TODO(spenceg): opt does not contain a coverage set
-    if (coverage == null) {
-      System.err.println(opt.toString());
-      throw new RuntimeException(opt.foreign.toString());
-    }
-    if (prior != null) {
-      coverage = coverage.clone();
-      coverage.xor(prior.option.foreignCoverage);
-    }
+    CoverageSet coverage = opt.featurizable.option.foreignCoverage;
+        
     StringBuilder sb = null;
     for (int coveredBit : coverage) {
       if (sb == null) {
