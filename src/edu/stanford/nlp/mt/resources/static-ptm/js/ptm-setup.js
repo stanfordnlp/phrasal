@@ -1,57 +1,10 @@
 //Register ptm callbacks with the UI when it is ready
 $(document).ready(function(){
 
-  // jQueryUI autocomplete box configuration
-  $( "#ptm-input_" ).autocomplete({
-    // Every keystroke potentially triggers an autocomplete event    
-    minLength: 0,
-    
-    // ms delay after keystroke for lookup
-    delay: 50,
-    
-    // Focus the 1-best when the autocomplete box appears
-    autoFocus: true,
-    
-    //keyCode(32) == spacebar, which triggers autocomplete        
-    search: function(event,ui){
-      if(event.which === 32){
-        ptm.clearCache();
-      }
-      return ptm.shouldFireAutocomplete();
-    },
-    
-    source: function(request,response){
-      ptm.autoCompleteReq(request,response);
-    },
-    
-    focus: function( event, ui ) {
-      ptm.addKeyStroke();
-      return false;//Cancel the update of the box value
-    },
-    
-    select: function( event, ui ) {  
-      //Log user actions in the autocomplete box
-      ptm.addKeyStroke();
-      
-      if(ui.item){
-        ptm.autoCompleteSelect(ui.item.label);
-      }
-    },
-  });
-  
-  //TODO(spenceg) Need to add hook to disable/enablePTM functions
-  //
-  //
-  
-  //Trigger an autocomplete on the onfocus event for the
-  //ptm box.
-  $( "#ptm-input_" ).focusin(function(event){
-    $( "#ptm-input_" ).autocomplete("search");
-  });
-  
-  //Setup keystroke counting (for typing)
+  //Log a keystroke in the translation box. Start the timers
+  //for the PTM box.
   $( "#ptm-input_" ).keypress(function(event){
-    ptm.addKeyStroke();    
+    ptm.addKeyStroke(event);    
   });    
   
   //Setup the clear button

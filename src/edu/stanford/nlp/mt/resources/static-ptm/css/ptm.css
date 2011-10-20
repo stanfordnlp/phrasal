@@ -56,11 +56,24 @@ font-size: 50%;
 width: 5em;
 }
 
+.src-token
+{
+float:right;
+margin:2px;
+}
 
 #src-input_
 {
 width: 37em;
 height: 12.5em;
+}
+
+#src-display_
+{
+width: 37em;
+height: 12.5em;
+display: none;
+margin-top: 4em;
 }
 
 #ptm-input_
@@ -74,16 +87,3 @@ height: 12.5em;
 display:none;
 }
 
-/* wsg: This hidden box must have the same styling as ptm-input_
-     so that autocomplete box placement works properly.
-*/
-#ptm-renderbox_
-{
-font-family: Helvetica, Arial, sans-serif;
-font-size:100%;
-white-space: nowrap;
-display: none;
-position: absolute;
-height: auto;
-width: auto;
-}

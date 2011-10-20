@@ -4,21 +4,16 @@
   
   <link type="text/css" href="/static-ptm/css/ptm.css" rel="stylesheet" />
   
-  <!-- jQuery/jQueryUI stuff -->
-  <link type="text/css" href="/static-ptm/css/ui-lightness/jquery-ui-1.8.13.custom.css" rel="stylesheet" /> 
-
+  <!-- jQuery stuff -->
   <script type="text/javascript" src="/static-ptm/js/jquery-latest.js"></script>
 
-<!-- jQuery plugins -->
-  <script type="text/javascript" src="/static-ptm/js/jquery-ui-1.8.13.custom.min.js"></script>
-  <script type="text/javascript" src="/static-ptm/js/jquery-fieldselection.js"></script>
-
-<!-- External libraries -->  
+  <!-- PTM libraries -->  
+  <script type="text/javascript" src="/static-ptm/js/sprintf-0.7-beta1.js"></script>
   <script type="text/javascript" src="/static-ptm/js/json2.js"></script>
-
   <script type="text/javascript" src="/static-ptm/js/ptm-setup.js"></script>
   <script type="text/javascript" src="/static-ptm/js/ptm-extra.js"></script>
-  <script type="text/javascript" src="/static-ptm/js/ptm.js"></script>
+  <script type="text/javascript" src="/static-ptm/js/ptm-widget.js"></script>
+  <script type="text/javascript" src="/static-ptm/js/ptm2.js"></script>
 
 </head>
 <body>
@@ -27,10 +22,11 @@
 <div id="container_">
 
 <div id="lang-select_">
-<p>PTM // (22 July 2011)</p>
+<p>PTM2 (20 October 2011)</p>
 
 <div id="status-box_"></div>
 
+<div id="src-form-container_">
 <form name="lang-form" id="lang-form_">
 <label for="src-list" class="lang-select-lbl_">Source:</label>
 <select name="src-list" id="src-list_">
@@ -51,6 +47,9 @@ Enter Source Text:
 <input type="submit" value="Translate" name="src-input-submit" id="src-input-submit_" />
 <input type="button" value="Clear" name="ptm-clear" id="ptm-clear_" />
 </form>
+</div>
+<!-- This div is initially hidden, and will contain the ptm source. -->
+<div id="src-display_"></div>
 
 <br />
 
@@ -71,11 +70,6 @@ Enter Source Text:
 <div id="oov-input_"></div>
 
 </div>
-
-<!-- wsg: This is a dummy div needed for laying out the autocomplete box 
-         Needs to be down here so that it doesn't wrap.
--->
-<div id="ptm-renderbox_"></div>
 
 </body>
 </html>
