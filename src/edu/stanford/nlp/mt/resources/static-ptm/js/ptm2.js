@@ -79,6 +79,7 @@ var ptm = (function() {
 
     showTargetBox: function(){
       $( '#ptm_' ).show();
+      $( '#ptm-input_' ).focus();
       return true;
     },
 
@@ -253,6 +254,13 @@ var ptm = (function() {
       _numKeyStrokes++;
       console.log("addKeyStroke: " + _numKeyStrokes);
 
+      // Spacebar triggers a server request. We would
+      // obviously need to change this for Chinese ;)
+      var doServerReq = (event.keyCode == 32);
+      ptm.togglePTMTimer(doServerReq);
+    },
+
+    togglePTMTimer: function(doServerReq) {
       // Disable the ptm window timer if it is running
       if (_ptmTimer) {
         window.clearTimeout(_ptmTimer);
@@ -262,10 +270,10 @@ var ptm = (function() {
       ptmUI.closePTMWindow();
 
       // Get the next set of predictions when the user hits spacebar
-      if (event.keyCode == 32){
+      if (doServerReq){
         ptm.autoCompleteReq();
       }
-    },    
+    },
     
     //Clear the predictions cache
     clearCache: function(){
@@ -399,6 +407,11 @@ var ptm = (function() {
 //        tgt_prefix = _predictionsCache.prefix;      
 //      }
       
+      var newTarget = sprintf('%s %s ', ptmUI.tgt(), completion);
+      $("textarea#ptm-input_").val(newTarget);
+
+      ptm.togglePTMTimer(true);
+      
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
@@ -408,9 +421,6 @@ var ptm = (function() {
       };
       console.log("POST: ptmUserSelection");
       console.log(ptmMsg);
-      
-      var newTarget = new String(ptmUI.tgt() + " " + completion);
-      $("textarea#ptm-input_").val(newTarget);
       
       $.ajax({
             url: _serverURL,

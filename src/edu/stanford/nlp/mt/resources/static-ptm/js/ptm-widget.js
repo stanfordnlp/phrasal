@@ -37,6 +37,7 @@ var PTMWidget = function(completions, divContainerId) {
   //CSS theming
   this.defaultBackground = '#FFFFFF';
   this.tgtBorder = '#E80000';
+  this.tgtBackground = '#FF0000';
   this.tgtSelectBackground = '#E80000';
   this.srcBorder = '#6699FF';
 };
@@ -58,7 +59,7 @@ PTMWidget.prototype.Show = function(selectCallback, completions) {
   var left = boundBox.left;
   var styleString = "position:absolute;top:" + top + ";left:" + left + ";";
   styleString += "border-width:2px;border-style:solid;border-color:"+this.tgtBorder+";";
-  styleString += "padding:0.2em;opacity:1.0;";
+  styleString += "padding:0.2em;opacity:1.0;background-color:"+this.tgtBackground;
   
   // Setup the div string
   var divString = sprintf("<div style=\"%s\" id=\"%s\">",styleString,this.domId);
@@ -104,7 +105,7 @@ PTMWidget.prototype.Hide = function(doFade) {
   console.log("ptmWidget: Hide");
   $( document ).unbind('keydown', this.fnProxy);
   if (doFade) {
-    $( '#'+this.domId ).css('background-color', this.tgtSelectBackground);
+    console.log('doFade');
     var remProxy = $.proxy(this.Remove, this);
     $( '#'+this.domId ).fadeOut('slow', remProxy);
   } else {
