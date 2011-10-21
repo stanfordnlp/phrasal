@@ -20,11 +20,17 @@ var PTMWidget = function(completions, divContainerId) {
   this.selectCB = 0;
 
   // Keyboard id for scroll event
-  this.scrollKeyId = 40;
+  this.scrollKeys = {
+    38:'prev',
+    40:'next'
+  };
   
   // Keyboard id for select event
-  this.selectKeyId = 39;
-
+  this.selectKeys = {
+    13:'select-enter',
+    39:'select-right-arrow',
+  };
+  
   // Handler proxy function
   this.handlerProxy = 0;
 
@@ -52,7 +58,7 @@ PTMWidget.prototype.Show = function(selectCallback, completions) {
   var left = boundBox.left;
   var styleString = "position:absolute;top:" + top + ";left:" + left + ";";
   styleString += "border-width:2px;border-style:solid;border-color:"+this.tgtBorder+";";
-  styleString += "padding:0.2em;";
+  styleString += "padding:0.2em;opacity:1.0;";
   
   // Setup the div string
   var divString = sprintf("<div style=\"%s\" id=\"%s\">",styleString,this.domId);
@@ -112,17 +118,17 @@ PTMWidget.prototype.Remove = function() {
 };
 
 PTMWidget.prototype.KeyHandler = function(event) {
-//  console.log("ptmWidget:Handler");
-  if (event.keyCode == this.scrollKeyId ){
-//    console.log("Scroll event");
+  console.log("ptmWidget:Handler " + event.keyCode);
+  if (this.scrollKeys[event.keyCode]){
+    console.log("Scroll event");
     event.preventDefault();
-    this.ScrollText();
+    this.ScrollText(this.scrollKeys[event.keyCode]);
 
   } else {
     var completion = this.nbestList[this.nbestId];
     this.HighlightTokens(completion.coverage, false);
-    if (event.keyCode == this.selectKeyId ){
-//      console.log("Select event");
+    if (this.selectKeys[event.keyCode]){
+      console.log("Select event");
       event.preventDefault();
       this.selectCB(completion.tgt);
       this.Hide(true);
@@ -132,13 +138,20 @@ PTMWidget.prototype.KeyHandler = function(event) {
   }
 };
 
-PTMWidget.prototype.ScrollText = function() {
+PTMWidget.prototype.ScrollText = function(cmd) {
+  console.log('scroll: ' + cmd);
   var lastOption = this.nbestList[this.nbestId];
-//  console.log('lastOption:');
-//  console.log(lastOption);
-  this.nbestId++;
-  if (this.nbestId == this.nbestList.length) {
-    this.nbestId = 0;
+
+  if (cmd == 'next') {
+    this.nbestId++;
+    if (this.nbestId == this.nbestList.length) {
+      this.nbestId = 0;
+    }
+  } else {
+    this.nbestId--;
+    if (this.nbestId < 0) {
+      this.nbestId = this.nbestList.length - 1;
+    }
   }
   this.HighlightTokens(lastOption.coverage, false);
 

@@ -29,7 +29,7 @@ var ptm = (function() {
   var _ptmTimer = 0;
 
   // Timeout for displaying the ptm window (ms)
-  var _ptmTimeout = 1000;
+  var _ptmTimeout = 750;
   
   //Translation directions supported by the system
   //Languages are represented with ISO 639-1 (two-letter) language codes
@@ -67,12 +67,12 @@ var ptm = (function() {
       $( '#status-box_' ).slideUp();
     },
     
-    // Dependent on jQueryUI
+    // TODO(spenceg): Add an option on the interface
     enablePTM: function() {
       console.log('TODO(spenceg): Toggle ptm on.');
     },
     
-    // Dependent on jQueryUI
+    // TODO(spenceg): Add an option on the interface
     disablePTM: function(){
       console.log('TODO(spenceg): Toggle ptm off.');    
     },
