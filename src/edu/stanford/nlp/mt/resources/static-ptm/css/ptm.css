@@ -1,8 +1,4 @@
 
-/* TODO(spenceg) Need to generalize font styling so that
- autocomplete box placement works correctly independently
- of how the HTML is styled
-*/
 body,html 
 {
 font-family: Helvetica, Arial, sans-serif;
@@ -18,16 +14,19 @@ font-family: Helvetica, Arial, sans-serif;
 font-size: 100%;
 }
 
+/* Status info box that appears about the source input */
 #status-box_ {
 background: #6666FF;
 display: none;
 }
 
+/* Bounding container for the whole app */
 #container_ {
 min-width:72.5em;
 width:72.5em;
 margin:0 auto;
 }
+
 
 #lang-select_
 {
@@ -42,7 +41,7 @@ float: right;
 width: 35em;
 }
 
-
+/* Automatically generated div for the source side of OOV pairs */
 .oov-src-txt
 {
 width: 14.5em;
@@ -51,15 +50,30 @@ float: left;
 font-size: 50%;
 }
 
+/* Automatically generated div for the target side of OOV pairs */
 .oov-tgt
 {
 width: 5em;
 }
 
-.src-token
+/* Automatically generated div for the static source tokens */
+.src-tok
 {
 float:right;
 margin:2px;
+border-width:1px;
+border-style:solid;
+border-color:#FFFFFF;
+}
+
+/* Automatically inserted div that contains translation suggestions */
+#ptm-widget_
+{
+position:absolute;
+border-width:2px;
+border-style:solid;
+padding:0.2em;
+opacity:1.0;
 }
 
 #src-input_

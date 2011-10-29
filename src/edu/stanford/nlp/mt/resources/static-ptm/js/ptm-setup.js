@@ -1,6 +1,10 @@
 //Register ptm callbacks with the UI when it is ready
+
 $(document).ready(function(){
 
+  // DEBUG: Uncomment this to disable logging
+  //console.log = function() {}
+  
   //Log a keystroke in the translation box. Start the timers
   //for the PTM box.
   $( "#ptm-input_" ).keypress(function(event){
@@ -29,12 +33,8 @@ $(document).ready(function(){
   });
   
   //Setup the source language list
-  $( '#src-list_' ).append('<option value="NULL" selected="selected"></option>');
-  var srcLangs = ptm.getSourceLanguages();
-  for(var key in srcLangs){
-    var selString = '<option value=\"' + key + '\">' + srcLangs[key] + '</option>';
-    $( '#src-list_' ).append(selString);
-  }
+  ptm.setupSourceLanguages();
+  // Register a select event handler.
   $( '#src-list_' ).change(function(){
     ptm.selectSource($(this).val());
   });

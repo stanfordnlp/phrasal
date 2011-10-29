@@ -20,8 +20,8 @@ var ptm = (function() {
   var _numResultsToFetch = 100;  
   
   // Cache of last set of predictions
-  var _predictionsCache = "";
-  
+  var _predictionsCache = 0;
+
   // How many keystrokes the user has entered during the translation session
   var _numKeyStrokes = 0;
 
@@ -30,9 +30,18 @@ var ptm = (function() {
 
   // Timeout for displaying the ptm window (ms)
   var _ptmTimeout = 750;
+
+  // CSS class for the source token CSS class
+  var _srcTokStyleClass = "src-tok";
+
+  // CSS id for div around the source text in which the PTM widget will
+  // be dynamically positioned.
+  var _widgetContainerStyleId = "container_";
   
-  //Translation directions supported by the system
-  //Languages are represented with ISO 639-1 (two-letter) language codes
+  // Translation directions supported by the system
+  // Languages are represented with ISO 639-1 (two-letter) language codes
+  // The "source" property contains the display name of the source language
+  // Available targets should be entered by their language codes
   var _translationDirections = {
     ar: {
       source: "Arabic",
@@ -50,10 +59,10 @@ var ptm = (function() {
     ar: "right",
   };
     
-  //TODO(spence): All css names should be factored out into constants
+  // Convenience functions for controlling DOM elements
   var ptmUI = {
     srcLang: function(){ return $( 'select#src-list_ option:selected' ).val(); },
-    tgtLang: function(){ return $( 'select#tgt-list_' ).val(); },
+    tgtLang: function(){ return $( 'select#tgt-list_ option:selected' ).val(); },
     src: function(){ return $( 'textarea#src-input_' ).val(); },
     tgt: function(){ return $( 'textarea#ptm-input_' ).val(); },
     srcOOV: function(context){ return $(context).find( '.oov-src-text' ).html(); },
@@ -83,7 +92,8 @@ var ptm = (function() {
       return true;
     },
 
-    // Disables the textarea and enables a div containing the source
+    // Disables the source textarea and enables a div that displays
+    // the whitespace-tokenized source
     disableSourceBox: function() {
       console.log('ptmUI: disableSourceBox()');
       
@@ -91,45 +101,50 @@ var ptm = (function() {
       srcToks = $.trim(srcToks.replace(/\s+/g, ' ')).split(' ');
       var tokId = 0;
       var divStr = '';
-      var divClass = "src-token"
       $( '#src-display_' ).html('');
-      var divStyle = 'border-width:1px;border-style:solid;border-color:#FFFFFF;';
       for (var tok in srcToks){
-        var tokDiv = sprintf('<div style=\"%s\" class=\"%s\" id=\"srctok-%d\">%s</div>', divStyle, divClass, tokId++, srcToks[tok]);
+        var tokDiv = sprintf('<div class=\"%s\" id=\"%s-%d\">%s</div>', _srcTokStyleClass, _srcTokStyleClass, tokId++, srcToks[tok]);
         $( '#src-display_' ).append(tokDiv);
       }
 
       // Setup CSS orientation for the token divs
       var textAlign = $( '#src-input_' ).css('direction');
+      var classSel = 'div.'+_srcTokStyleClass;
       if (textAlign == 'rtl') {
-        $( divClass ).css('float', 'right');
+        $( classSel ).css('float', 'right');
       } else {
-        $( divClass ).css('float', 'left');
+        $( classSel ).css('float', 'left');
       }
-      $( divClass ).css('direction', $( '#src-input_' ).css('direction'));
-      $( divClass ).css('text-align', $( '#src-input_' ).css('text-align'));
+      $( classSel ).css('direction', $( '#src-input_' ).css('direction'));
+      $( classSel ).css('text-align', $( '#src-input_' ).css('text-align'));
 
       $( '#src-form-container_' ).hide();
       $( '#src-display_' ).show();
  
       return true;
     },
-    
+
+    // Enable the source input text area.
     enableSourceBox: function() {
       $( '#src-display_' ).hide();
       $( '#src-form-container_').show();
       return true;
     },
 
-    openPTMWindow: function() {
+    // Open the PTM div over the source tokens. The PTM widget assumes
+    // control of certain key bindings
+    openPTMWindow: function(filterIds) {
       console.log('ptmUI: openPTMWindow()');
       _ptmTimer = 0;
-
-      // Open the PTM widget with the given set of completions
-      // TODO(spenceg): Add the cache here as the second parameter
-      _ptmWidget.Show(ptm.autoCompleteSelect);
+      if(filterIds){
+        _ptmWidget.Show(ptm.autoCompleteSelect, filterIds);
+      } else {
+        _ptmWidget.Show(ptm.autoCompleteSelect);
+      }
     },
 
+    // Close the PTM div over the source tokens. Unbind the div
+    // from all keys.
     closePTMWindow: function() {
       console.log('ptmUI: closePTMWindow()');
       if (_ptmWidget) {
@@ -142,6 +157,20 @@ var ptm = (function() {
     cleanUp: function(myStr){
       var fmtString = new String(myStr);
       return $.trim(fmtString.toLowerCase());
+    },
+
+    setupSourceSelect: function() {
+      console.log("setupSourceSelect: ");
+      $( '#src-list_' ).append('<option value="NULL"></option>');
+      for(var key in _translationDirections){
+        var displayName = _translationDirections[key].source;
+        var selString = sprintf('<option value=\"%s\">%s</options>', key, displayName);
+//        console.log(selString);
+        $( '#src-list_' ).append(selString);
+      }
+        
+      // TODO(spenceg): Assume Arabic is default source for development
+      $( '#src-list_' ).val('ar');
     },
     
     toggleTgtSelect: function(isEnabled,langId){
@@ -190,40 +219,46 @@ var ptm = (function() {
   
   //Callbacks from the server to render data to the interface
   var serveData = {
-    
+
+    // OOV list for a full source input string
     oovResponse: function(data) {
       console.log('handler: oovResponse');
-      console.log(data);
-      // TODO(spenceg): Do something with the OOVs on the interface?
+//      console.log(data);
 
+      // Discard OOV data on the current interface. Move on to
+      // translation.
       ptmUI.disableSourceBox();
       ptmUI.showTargetBox();
-      window.ptm.autoCompleteReq();
+      ptm.autoCompleteReq();
     },
 
-    //Predicted completions for the sent prefix
+    // Completions for a transmitted target-side prefix.
     predictResponse: function(data){
       console.log("handler: predictResponse:");
-      console.log(data);
+//      console.log(data);
 
       // Map the predictResponse message to a set of completions
       // data := Array[{first: completion, second: src-coverage},...]
+      _predictionsCache = new SimpleTrie();
+      _predictionsCache.prefix = ptmUI.tgt();
       var predictions = data.predictions;
       var completions = new Array(predictions.length);
       for (var idx in predictions) {
+        var tgtText = predictions[idx].first;
+        _predictionsCache.Add(tgtText, idx);
         var srcToks = predictions[idx].second.split("-");
         var srcCoverage = $.map(srcToks, function(val, i){
-          return "#srctok-" + val;
+          return _srcTokStyleClass + "-" + val;
         });
         var option = {
-          tgt: predictions[idx].first,
+          tgt: tgtText,
           coverage: srcCoverage,
         };
         completions[idx] = option;
       }
 
-      // TODO(spenceg): Move the CSS id to a constant
-      _ptmWidget = new PTMWidget(completions, "container_");
+      // Create the PTM widget and start the timer
+      _ptmWidget = new PTMWidget(completions, _widgetContainerStyleId);
       _ptmTimer = window.setTimeout("ptm.timerHandler()", _ptmTimeout);
     },
     
@@ -234,62 +269,90 @@ var ptm = (function() {
   //This is the main PTM API
   var fn = {
 
+    // Handler for the timer that opens the PTM widget
     timerHandler: function(){
-      console.log("timerHandler:");
-      ptmUI.openPTMWindow();
+      console.log('timerHandler:');
+
+      // Two conditions on trying the cache:
+      //  1) The length of the translation prefix is > 0
+      //  2) The last character is not a space
+      // Otherwise, we allow the widget to display all prefixes.
+      var prefix = ptmUI.tgt();
+      var tryCache = ($.trim(prefix).length > 0) &&
+        prefix[prefix.length-1] != " ";
+
+      if(_predictionsCache && tryCache){
+        console.log('timerHandler: predictFromCache');
+        // Create a set of filter ids
+        var tgt_toks = prefix.split(" ");
+  	    var word_prefix = tgt_toks[tgt_toks.length-1]; //Last partial word
+  	    var completions = _predictionsCache.FindAll(word_prefix);
+        var keyMap = {};
+        for (var prop in completions){
+//          console.log(prop + ':' + completions[prop]);
+          keyMap[prop] = 1;
+        }
+
+        console.log(keyMap);
+        ptmUI.openPTMWindow(keyMap);
+
+      } else {
+        // Don't filter the completions list
+        ptmUI.openPTMWindow();
+      }
     },
 
-    //Reset the UI
+    //Reset the UI for another translation session
     reset: function(){
       console.log("reset:");
       ptmUI.enableSourceBox();
       ptmUI.closePTMWindow();
-      _predictionsCache = "";
+      _predictionsCache = 0;
       _numKeyStrokes = 0;
       window.location.replace(_uiURL);
     },
     
-    //TODO(spenceg): This is now the main entry point into PTM. 
+    // Perform action every time the user presses a key inside the
+    // translation (target) window.
     addKeyStroke: function(event) {
       _numKeyStrokes++;
       console.log("addKeyStroke: " + _numKeyStrokes);
 
       // Spacebar triggers a server request. We would
       // obviously need to change this for Chinese ;)
-      var doServerReq = (event.keyCode == 32);
-      ptm.togglePTMTimer(doServerReq);
+      var doServerRequest = (event.keyCode == 32);
+      ptm.togglePTMTimer(doServerRequest);
     },
 
-    togglePTMTimer: function(doServerReq) {
-      // Disable the ptm window timer if it is running
+    togglePTMTimer: function(doServerRequest) {
+      // Disable the current ptm timer if it exists
       if (_ptmTimer) {
         window.clearTimeout(_ptmTimer);
         _ptmTimer = 0;
       }
+      
       // Close the ptmWindow if it is open
       ptmUI.closePTMWindow();
 
-      // Get the next set of predictions when the user hits spacebar
-      if (doServerReq){
+      // Get the next completions from either the server or the cache
+      if (doServerRequest){
         ptm.autoCompleteReq();
+      } else if(_predictionsCache){
+        // We have some stored completions
+        _ptmTimer = window.setTimeout("ptm.timerHandler()", _ptmTimeout);
+      } else {
+        console.log('WARN: timer fired, but could not fetch completions.');
       }
     },
-    
-    //Clear the predictions cache
-    clearCache: function(){
-      console.log("clearCache");
-      _predictionsCache = "";
+
+    // Set the duration (in ms) after which the PTM box will appear
+    setPTMTimeout: function(value){
+
     },
-        
-    //Returns all source languages supported by the system
-    getSourceLanguages: function() {
-      var langs = {};
-      for(var i in _translationDirections){
-        langs[i] = _translationDirections[i].source;
-      }      
-      console.log("getSourceLanguages: " + langs);
-      
-      return langs;
+    
+    // Setup the selector with the available source languages
+    setupSourceLanguages: function() {
+      ptmUI.setupSourceSelect();
     },
     
     //Select the source language for translation
@@ -375,7 +438,6 @@ var ptm = (function() {
         };
         console.log("POST: ptmPredict");
         console.log(ptmMsg);
-        console.log(ptmUI.tgt());
       
         //Register the callback here since we'll send it directly
         //to the autocomplete box
@@ -401,22 +463,28 @@ var ptm = (function() {
       
       ptmUI.hideStatus();
       
-      var tgt_prefix = ptmUI.tgt();
-// TODO(spenceg): Re-enable the cache.
-//      if(_predictionsCache != false){
-//        tgt_prefix = _predictionsCache.prefix;      
-//      }
-      
-      var newTarget = sprintf('%s %s ', ptmUI.tgt(), completion);
+      var tgtPrefix = ptmUI.tgt();
+      // If the cache is enabled, then we want to get the target
+      // prefix associated with this cache. That way, we can discard
+      // the partially completed word if the user selected a completion
+      // mid-word.
+      if(_predictionsCache){
+        tgtPrefix = _predictionsCache.prefix;      
+      }
+
+      // Update the translation box.
+      var newTarget = tgtPrefix + completion;
+      newTarget = newTarget.replace(/\s+/g, ' ') + ' ';
       $("textarea#ptm-input_").val(newTarget);
 
+      // Get completions for this new translation prefix
       ptm.togglePTMTimer(true);
       
       var ptmMsg = {
         sourceLang: ptmUI.srcLang(),
         targetLang: ptmUI.tgtLang(),
         source: ptmUI.cleanUp(ptmUI.src()),
-        prefix: ptmUI.cleanUp(tgt_prefix),
+        prefix: ptmUI.cleanUp(tgtPrefix),
         completion: ptmUI.cleanUp(completion),
       };
       console.log("POST: ptmUserSelection");
