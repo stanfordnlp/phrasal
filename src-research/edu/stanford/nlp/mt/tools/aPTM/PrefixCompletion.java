@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools;
+package edu.stanford.nlp.mt.tools.aPTM;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,7 +30,6 @@ import java.util.Set;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -450,7 +449,8 @@ public class PrefixCompletion extends AbstractHandler {
     System.err.println("\nOr:\n\tjava ...PrefixCompletion -phrasal phrasal_ini");
   }
 
-  public static void main(String[] args) throws Exception {
+  @SuppressWarnings("unchecked")
+public static void main(String[] args) throws Exception {
     PrefixCompletion pc = null;
 
     if (args.length < 2) {
@@ -475,10 +475,8 @@ public class PrefixCompletion extends AbstractHandler {
       Map<String, List<String>> config = Phrasal.readConfig(args[1]);      
       Phrasal.initStaticMembers(config);
       Phrasal p = new Phrasal(config);
-      FlatPhraseTable.lockIndex();
-      @SuppressWarnings("rawtypes")
-      AbstractInferer infererModel = (AbstractInferer)p.inferers.get(0);
-      @SuppressWarnings("unchecked")
+      FlatPhraseTable.lockIndex();      
+      AbstractInferer infererModel = (AbstractInferer)p.inferers.get(0);      
       PrefixDecoder<IString,String> prefixDecoder = new PrefixDecoder<IString,String>(infererModel);      
       pc = new PrefixCompletion(prefixDecoder);            
     } else {
