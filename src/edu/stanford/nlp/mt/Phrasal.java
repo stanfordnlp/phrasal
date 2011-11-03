@@ -200,7 +200,7 @@ public class Phrasal {
 
   boolean learnWeights;
   boolean constrainManualWeights;
-  boolean generateMosesNBestList;
+  boolean generateMosesNBestList = true;
   List<List<Sequence<IString>>> learnFromReferences;
   String learningAlgorithm;
   List<String> learningAlgorithmConfig;
