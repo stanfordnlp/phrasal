@@ -124,8 +124,8 @@ public class DAGFeatureExtractor {
   // TODO : add flags for new features
 
 
-  public static List<List<String>> extractActFeatures(Structure struc, int offset, RightSideFeatures rightFeatures) {
-    List<List<String>> features = new ArrayList<List<String>>();
+  public static List<ObjectTuple<String>> extractActFeatures(Structure struc, int offset, RightSideFeatures rightFeatures, boolean labelRelation) {
+    List<ObjectTuple<String>> features = new ArrayList<ObjectTuple<String>>();
     LinkedStack<CoreLabel> stack = struc.getStack();
     LinkedStack<CoreLabel> inputQueue = struc.getInput();
     if(stack.size()==0) return features;   // empty stack: always SHIFT
@@ -185,22 +185,22 @@ public class DAGFeatureExtractor {
       //      String t2Lemma = (t2==null)? null : t2.get(LemmaAnnotation.class);
       //      String t3Lemma = (t3==null)? null : t3.get(LemmaAnnotation.class);
 
-      if(rightFeatures.useT2Word && t2!=null) features.add(Arrays.asList(t2Word, "T2Word"));
+      if(rightFeatures.useT2Word && t2!=null) features.add(new ObjectTuple<String>(new String[]{t2Word, "T2Word"}));
       //      if(rightFeatures.useT3Word && t3!=null) features.add(Arrays.asList(t3Word, "T3Word"));
 
-      if(rightFeatures.useT2POS && t2!=null) features.add(Arrays.asList(t2POS, "T2POS"));
+      if(rightFeatures.useT2POS && t2!=null) features.add(new ObjectTuple<String>(new String[]{t2POS, "T2POS"}));
       //      if(rightFeatures.useT3POS && t3!=null) features.add(Arrays.asList(t3POS, "T3POS"));
 
       //      if(rightFeatures.useT2Lemma && t2!=null) features.add(Arrays.asList(t2Lemma, "T2Lemma"));
       //      if(rightFeatures.useT3Lemma && t3!=null) features.add(Arrays.asList(t3Lemma, "T3Lemma"));
 
-      if(rightFeatures.useT1T2Word && t1!=null && t2!=null) features.add(Arrays.asList(t1Word, t2Word, "T1T2Word"));
-      if(rightFeatures.useT1T2POS && t1!=null && t2!=null) features.add(Arrays.asList(t1POS, t2POS, "T1T2POS"));
-      if(rightFeatures.useT1T2WordPOS && t1!=null && t2!=null) features.add(Arrays.asList(t1Word, t1POS, t2Word, t2POS, "T1T2WordPOS"));
+      if(rightFeatures.useT1T2Word && t1!=null && t2!=null) features.add(new ObjectTuple<String>(new String[]{t1Word, t2Word, "T1T2Word"}));
+      if(rightFeatures.useT1T2POS && t1!=null && t2!=null) features.add(new ObjectTuple<String>(new String[]{t1POS, t2POS, "T1T2POS"}));
+      if(rightFeatures.useT1T2WordPOS && t1!=null && t2!=null) features.add(new ObjectTuple<String>(new String[]{t1Word, t1POS, t2Word, t2POS, "T1T2WordPOS"}));
     }
     // temporary features for analysis - end
 
-    String preActionStr = "##"+struc.getActionTrace().peek().toString();
+    String preActionStr = (labelRelation)? "##"+struc.getActionTrace().peek().toString() : "##"+struc.getActionTrace().peek().action.toString();
     /*System.out.printf("preActionStr: %s\n", preActionStr);*/
     SortedSet<Pair<CoreLabel, String>> s1Children = null;
     SortedSet<Pair<CoreLabel, String>> s2Children = null;
@@ -208,100 +208,100 @@ public class DAGFeatureExtractor {
     if(s1 != null) s1Children = s1.get(LeftChildrenNodeAnnotation.class);
     if(s2 != null) s2Children = s2.get(LeftChildrenNodeAnnotation.class);
 
-    if(usePreAction) features.add(Arrays.asList(preActionStr, "preAct"));
+    if(usePreAction) features.add(new ObjectTuple<String>(new String[]{preActionStr, "preAct"}));
 
-    if(useS1Word && s1!=null) features.add(Arrays.asList(s1Word, "S1Word"));
-    if(useS2Word && s2!=null) features.add(Arrays.asList(s2Word, "S2Word"));
-    if(useS3Word && s3!=null) features.add(Arrays.asList(s3Word, "S3Word"));
-    if(useQ1Word && q1!=null) features.add(Arrays.asList(q1Word, "Q1Word"));
-    if(useQ2Word && q2!=null) features.add(Arrays.asList(q2Word, "Q2Word"));
-    if(useQ3Word && q3!=null) features.add(Arrays.asList(q3Word, "Q3Word"));
+    if(useS1Word && s1!=null) features.add(new ObjectTuple<String>(new String[]{s1Word, "S1Word"}));
+    if(useS2Word && s2!=null) features.add(new ObjectTuple<String>(new String[]{s2Word, "S2Word"}));
+    if(useS3Word && s3!=null) features.add(new ObjectTuple<String>(new String[]{s3Word, "S3Word"}));
+    if(useQ1Word && q1!=null) features.add(new ObjectTuple<String>(new String[]{q1Word, "Q1Word"}));
+    if(useQ2Word && q2!=null) features.add(new ObjectTuple<String>(new String[]{q2Word, "Q2Word"}));
+    if(useQ3Word && q3!=null) features.add(new ObjectTuple<String>(new String[]{q3Word, "Q3Word"}));
 
-    if(useS1POS && s1!=null) features.add(Arrays.asList(s1POS, "S1POS"));
-    if(useS2POS && s2!=null) features.add(Arrays.asList(s2POS, "S2POS"));
-    if(useS3POS && s3!=null) features.add(Arrays.asList(s3POS, "S3POS"));
-    if(useQ1POS && q1!=null) features.add(Arrays.asList(q1POS, "Q1POS"));
-    if(useQ2POS && q2!=null) features.add(Arrays.asList(q2POS, "Q2POS"));
-    if(useQ3POS && q3!=null) features.add(Arrays.asList(q3POS, "Q3POS"));
+    if(useS1POS && s1!=null) features.add(new ObjectTuple<String>(new String[]{s1POS, "S1POS"}));
+    if(useS2POS && s2!=null) features.add(new ObjectTuple<String>(new String[]{s2POS, "S2POS"}));
+    if(useS3POS && s3!=null) features.add(new ObjectTuple<String>(new String[]{s3POS, "S3POS"}));
+    if(useQ1POS && q1!=null) features.add(new ObjectTuple<String>(new String[]{q1POS, "Q1POS"}));
+    if(useQ2POS && q2!=null) features.add(new ObjectTuple<String>(new String[]{q2POS, "Q2POS"}));
+    if(useQ3POS && q3!=null) features.add(new ObjectTuple<String>(new String[]{q3POS, "Q3POS"}));
 
-    if(useS1WordPOS && s1!=null) features.add(Arrays.asList(s1Word, s1POS, "S1WordPOS"));
-    if(useS2WordPOS && s2!=null) features.add(Arrays.asList(s2Word, s2POS, "S2WordPOS"));
-    if(useS3WordPOS && s3!=null) features.add(Arrays.asList(s3Word, s3POS, "S3WordPOS"));
-    if(useQ1WordPOS && q1!=null) features.add(Arrays.asList(q1Word, q1POS, "Q1WordPOS"));
-    if(useQ2WordPOS && q2!=null) features.add(Arrays.asList(q2Word, q2POS, "Q2WordPOS"));
-    if(useQ3WordPOS && q3!=null) features.add(Arrays.asList(q3Word, q3POS, "Q3WordPOS"));
+    if(useS1WordPOS && s1!=null) features.add(new ObjectTuple<String>(new String[]{s1Word, s1POS, "S1WordPOS"}));
+    if(useS2WordPOS && s2!=null) features.add(new ObjectTuple<String>(new String[]{s2Word, s2POS, "S2WordPOS"}));
+    if(useS3WordPOS && s3!=null) features.add(new ObjectTuple<String>(new String[]{s3Word, s3POS, "S3WordPOS"}));
+    if(useQ1WordPOS && q1!=null) features.add(new ObjectTuple<String>(new String[]{q1Word, q1POS, "Q1WordPOS"}));
+    if(useQ2WordPOS && q2!=null) features.add(new ObjectTuple<String>(new String[]{q2Word, q2POS, "Q2WordPOS"}));
+    if(useQ3WordPOS && q3!=null) features.add(new ObjectTuple<String>(new String[]{q3Word, q3POS, "Q3WordPOS"}));
 
-    //    if(useS1Lemma && s1!=null) features.add(Arrays.asList(s1Lemma, "S1Lemma"));
-    //    if(useS2Lemma && s2!=null) features.add(Arrays.asList(s2Lemma, "S2Lemma"));
-    //    if(useS3Lemma && s3!=null) features.add(Arrays.asList(s3Lemma, "S3Lemma"));
-    //    if(useQ1Lemma && q1!=null) features.add(Arrays.asList(q1Lemma, "Q1Lemma"));
-    //    if(useQ2Lemma && q2!=null) features.add(Arrays.asList(q2Lemma, "Q2Lemma"));
-    //    if(useQ3Lemma && q3!=null) features.add(Arrays.asList(q3Lemma, "Q3Lemma"));
+    //    if(useS1Lemma && s1!=null) features.add(new ObjectTuple<String>(new String[]{s1Lemma, "S1Lemma"}));
+    //    if(useS2Lemma && s2!=null) features.add(new ObjectTuple<String>(new String[]{s2Lemma, "S2Lemma"}));
+    //    if(useS3Lemma && s3!=null) features.add(new ObjectTuple<String>(new String[]{s3Lemma, "S3Lemma"}));
+    //    if(useQ1Lemma && q1!=null) features.add(new ObjectTuple<String>(new String[]{q1Lemma, "Q1Lemma"}));
+    //    if(useQ2Lemma && q2!=null) features.add(new ObjectTuple<String>(new String[]{q2Lemma, "Q2Lemma"}));
+    //    if(useQ3Lemma && q3!=null) features.add(new ObjectTuple<String>(new String[]{q3Lemma, "Q3Lemma"}));
 
-    if(useS1Q1word && s1!=null && q1!=null) features.add(Arrays.asList(s1Word, q1Word, "S1Q1Word"));
-    if(useQ1Q2word && q1!=null && q2!=null) features.add(Arrays.asList(q1Word, q2Word, "Q1Q2Word"));
-    if(useS1S2word && s1!=null && s2!=null) features.add(Arrays.asList(s1Word, s2Word, "S1S2Word"));
+    if(useS1Q1word && s1!=null && q1!=null) features.add(new ObjectTuple<String>(new String[]{s1Word, q1Word, "S1Q1Word"}));
+    if(useQ1Q2word && q1!=null && q2!=null) features.add(new ObjectTuple<String>(new String[]{q1Word, q2Word, "Q1Q2Word"}));
+    if(useS1S2word && s1!=null && s2!=null) features.add(new ObjectTuple<String>(new String[]{s1Word, s2Word, "S1S2Word"}));
 
-    if(useS1Q1POS && s1!=null && q1!=null) features.add(Arrays.asList(s1POS, q1POS, "S1Q1POS"));
-    if(useQ1Q2POS && q1!=null && q2!=null) features.add(Arrays.asList(q1POS, q2POS, "Q1Q2POS"));
-    if(useS1S2POS && s1!=null && s2!=null) features.add(Arrays.asList(s1POS, s2POS, "S1S2POS"));
+    if(useS1Q1POS && s1!=null && q1!=null) features.add(new ObjectTuple<String>(new String[]{s1POS, q1POS, "S1Q1POS"}));
+    if(useQ1Q2POS && q1!=null && q2!=null) features.add(new ObjectTuple<String>(new String[]{q1POS, q2POS, "Q1Q2POS"}));
+    if(useS1S2POS && s1!=null && s2!=null) features.add(new ObjectTuple<String>(new String[]{s1POS, s2POS, "S1S2POS"}));
 
-    if(useS1Q1WordPOS && s1!=null && q1!=null) features.add(Arrays.asList(s1Word, s1POS, q1Word, q1POS, "S1Q1WordPOS"));
-    if(useQ1Q2WordPOS && q1!=null && q2!=null) features.add(Arrays.asList(q1Word, q1POS, q2Word, q2POS, "Q1Q2WordPOS"));
-    if(useS1S2WordPOS && s1!=null && s2!=null) features.add(Arrays.asList(s1Word, s1POS, s2Word, s2POS, "S1S2WordPOS"));
+    if(useS1Q1WordPOS && s1!=null && q1!=null) features.add(new ObjectTuple<String>(new String[]{s1Word, s1POS, q1Word, q1POS, "S1Q1WordPOS"}));
+    if(useQ1Q2WordPOS && q1!=null && q2!=null) features.add(new ObjectTuple<String>(new String[]{q1Word, q1POS, q2Word, q2POS, "Q1Q2WordPOS"}));
+    if(useS1S2WordPOS && s1!=null && s2!=null) features.add(new ObjectTuple<String>(new String[]{s1Word, s1POS, s2Word, s2POS, "S1S2WordPOS"}));
 
     if(useS1NumChild && s1Children!=null) {
       String childrenSize = "#"+s1Children.size();
-      features.add(Arrays.asList(childrenSize, "S1ChildNum"));
+      features.add(new ObjectTuple<String>(new String[]{childrenSize, "S1ChildNum"}));
     }
     if(useS2NumChild && s2Children!=null) {
       String childrenSize = "#"+s2Children.size();
-      features.add(Arrays.asList(childrenSize, "S2ChildNum"));
+      features.add(new ObjectTuple<String>(new String[]{childrenSize, "S2ChildNum"}));
     }
 
     if(s1Children!=null) {
       int s1ChildNum = s1Children.size();
       if(useS1LeftChildPOS && s1ChildNum > 0) {
         String leftChildPOS = s1Children.first().first().get(PartOfSpeechAnnotation.class);
-        features.add(Arrays.asList(leftChildPOS, "S1LeftChildPOS"));
+        features.add(new ObjectTuple<String>(new String[]{leftChildPOS, "S1LeftChildPOS"}));
       }
       if(useS1LeftChildRel && s1ChildNum > 0) {
         String leftChildRel = s1Children.first().second();
-        features.add(Arrays.asList(leftChildRel, "S1LeftChildRel"));
+        features.add(new ObjectTuple<String>(new String[]{leftChildRel, "S1LeftChildRel"}));
       }
       if(useS1RightChildPOS && s1ChildNum>1) {
         String rightChildPOS = s1Children.last().first().get(PartOfSpeechAnnotation.class);
-        features.add(Arrays.asList(rightChildPOS, "S1RightChildPOS"));
+        features.add(new ObjectTuple<String>(new String[]{rightChildPOS, "S1RightChildPOS"}));
       }
       if(useS1RightChildRel && s1ChildNum>1) {
         String rightChildRel = s1Children.last().second();
-        features.add(Arrays.asList(rightChildRel, "S1RightChildRel"));
+        features.add(new ObjectTuple<String>(new String[]{rightChildRel, "S1RightChildRel"}));
       }
     }
     if(s2Children!=null) {
       int s2ChildNum = s2Children.size();
       if(useS2LeftChildPOS && s2ChildNum > 0) {
         String leftChildPOS = s2Children.first().first().get(PartOfSpeechAnnotation.class);
-        features.add(Arrays.asList(leftChildPOS, "S2LeftChildPOS"));
+        features.add(new ObjectTuple<String>(new String[]{leftChildPOS, "S2LeftChildPOS"}));
       }
       if(useS2LeftChildRel && s2ChildNum > 0) {
         String leftChildRel = s2Children.first().second();
-        features.add(Arrays.asList(leftChildRel, "S2LeftChildRel"));
+        features.add(new ObjectTuple<String>(new String[]{leftChildRel, "S2LeftChildRel"}));
       }
       if(useS2RightChildPOS && s2ChildNum>1) {
         String rightChildPOS = s2Children.last().first().get(PartOfSpeechAnnotation.class);
-        features.add(Arrays.asList(rightChildPOS, "S2RightChildPOS"));
+        features.add(new ObjectTuple<String>(new String[]{rightChildPOS, "S2RightChildPOS"}));
       }
       if(useS2RightChildRel && s2ChildNum>1) {
         String rightChildRel = s2Children.last().second();
-        features.add(Arrays.asList(rightChildRel, "S2RightChildRel"));
+        features.add(new ObjectTuple<String>(new String[]{rightChildRel, "S2RightChildRel"}));
       }
     }
 
     if(useS1PreviousTokenPOS && s1!=null && queueNWords[peekLen-1] != null) {
       CoreLabel sn = (CoreLabel) queueNWords[peekLen-1];
       String preTokenPOS = sn.get(PartOfSpeechAnnotation.class);
-      features.add(Arrays.asList(preTokenPOS, "S1PreTokenPOS"));
+      features.add(new ObjectTuple<String>(new String[]{preTokenPOS, "S1PreTokenPOS"}));
     }
     if(useS2NextTokenPOS && s2!=null) {
       // TODO: fix this to make it more efficient
@@ -314,7 +314,7 @@ public class DAGFeatureExtractor {
         Object[] inputArr = struc.getInput().peekN(inputSz-nextTokenIdx+1);
         nextTokenPOS = ((CoreLabel)inputArr[inputArr.length-1]).get(PartOfSpeechAnnotation.class);
       }
-      features.add(Arrays.asList(nextTokenPOS, "S2NextTokenPOS"));
+      features.add(new ObjectTuple<String>(new String[]{nextTokenPOS, "S2NextTokenPOS"}));
 
     }
 
@@ -328,11 +328,11 @@ public class DAGFeatureExtractor {
   /** Extracting features for labelClassifier:
    *    use all features of actClassifier and one additional feature, arcDirection
    *    */
-  public static List<List<String>> extractLabelFeatures(
-      ActionType action, Datum<ActionType, List<String>> actDatum, Structure s, int offset) {
-    List<List<String>> features = new ArrayList<List<String>>();
+  public static List<ObjectTuple<String>> extractLabelFeatures(
+      ActionType action, Datum<ActionType, ObjectTuple<String>> actDatum, Structure s, int offset) {
+    List<ObjectTuple<String>> features = new ArrayList<ObjectTuple<String>>();
     features.addAll(actDatum.asFeatures());
-    features.add(Arrays.asList("##"+action.toString(), "actionType"));
+    features.add(new ObjectTuple<String>(new String[]{"##"+action.toString(), "actionType"}));
 
     return features;
   }

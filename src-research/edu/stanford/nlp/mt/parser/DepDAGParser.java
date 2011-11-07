@@ -1,13 +1,18 @@
 package edu.stanford.nlp.mt.parser;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.FileHandler;
@@ -21,14 +26,14 @@ import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Datum;
+import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Datum;
-import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
@@ -42,9 +47,9 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.DependencyScoring;
-import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -53,8 +58,8 @@ public class DepDAGParser implements Parser, Serializable {
 
   private static final long serialVersionUID = -5534972476741917367L;
 
-  private LinearClassifier<ActionType,List<String>> actClassifier;
-  private LinearClassifier<GrammaticalRelation,List<String>> labelClassifier;
+  private LinearClassifier<ActionType, ObjectTuple<String>> actClassifier;
+  private LinearClassifier<GrammaticalRelation, ObjectTuple<String>> labelClassifier;
   private static final boolean VERBOSE = false;
 
   //to reduce the total number of features for training, remove features appear less than 3 times
@@ -62,7 +67,7 @@ public class DepDAGParser implements Parser, Serializable {
 
   public boolean labelRelation = true;
 
-  public boolean extractTree;  // ensure parsed dependencies is tree (not DAG)
+  public boolean extractTree = true;  // ensure parsed dependencies is tree (not DAG)
 
   // use the default setting
   private static RightSideFeatures rightFeatures = new RightSideFeatures(new Properties());
@@ -82,25 +87,25 @@ public class DepDAGParser implements Parser, Serializable {
   }
 
   public static DepDAGParser trainModel(
-      List<Structure> rawTrainData) {
-    DepDAGParser parser = new DepDAGParser();
+      List<Structure> rawTrainData, boolean labelRelation, boolean extractTree) {
+    DepDAGParser parser = new DepDAGParser(labelRelation, extractTree);
 
     // to reduce the total number of features for training, remove features appear less than 3 times
-    Counter<List<String>> featureCounter = null;
-    if(REDUCE_FEATURES) featureCounter = countFeatures(rawTrainData);
+    Counter<ObjectTuple<String>> featureCounter = null;
+    if(REDUCE_FEATURES) featureCounter = countFeatures(rawTrainData, labelRelation);
 
-    GeneralDataset<ActionType, List<String>> actTrainData = new Dataset<ActionType, List<String>>();
-    GeneralDataset<GrammaticalRelation, List<String>> labelTrainData = new Dataset<GrammaticalRelation, List<String>>();
-    extractTrainingData(rawTrainData, actTrainData, labelTrainData, featureCounter);
+    GeneralDataset<ActionType, ObjectTuple<String>> actTrainData = new Dataset<ActionType, ObjectTuple<String>>();
+    GeneralDataset<GrammaticalRelation, ObjectTuple<String>> labelTrainData = new Dataset<GrammaticalRelation, ObjectTuple<String>>();
+    extractTrainingData(rawTrainData, actTrainData, labelTrainData, featureCounter, labelRelation);
 
-    LinearClassifierFactory<ActionType,List<String>> actFactory = new LinearClassifierFactory<ActionType,List<String>>();
-    LinearClassifierFactory<GrammaticalRelation,List<String>> labelFactory = new LinearClassifierFactory<GrammaticalRelation,List<String>>();
+    LinearClassifierFactory<ActionType, ObjectTuple<String>> actFactory = new LinearClassifierFactory<ActionType, ObjectTuple<String>>();
+    LinearClassifierFactory<GrammaticalRelation, ObjectTuple<String>> labelFactory = new LinearClassifierFactory<GrammaticalRelation, ObjectTuple<String>>();
     // TODO: check options
 
     featureCounter = null;
 
     // Build a classifier
-    parser.labelClassifier = labelFactory.trainClassifier(labelTrainData);
+    if(labelRelation) parser.labelClassifier = labelFactory.trainClassifier(labelTrainData);
     parser.actClassifier = actFactory.trainClassifier(actTrainData);
     if(VERBOSE) {
       parser.actClassifier.dump();
@@ -110,9 +115,8 @@ public class DepDAGParser implements Parser, Serializable {
     return parser;
   }
 
-  private static Counter<List<String>> countFeatures(List<Structure> rawTrainData) {
-    // TODO fix this!!
-    Counter<List<String>> counter = new OpenAddressCounter<List<String>>();
+  private static Counter<ObjectTuple<String>> countFeatures(List<Structure> rawTrainData, boolean labelRelation) {
+    Counter<ObjectTuple<String>> counter = new OpenAddressCounter<ObjectTuple<String>>();
 
     for(Structure struc : rawTrainData) {
       LinkedStack<Action> actions = struc.getActionTrace();
@@ -122,10 +126,10 @@ public class DepDAGParser implements Parser, Serializable {
       Object[] acts = actions.peekN(actions.size());
       for(int i = acts.length-1 ; i >= 0 ; i--){
         Action act = (Action)acts[i];
-        Datum<ActionType, List<String>> actDatum = extractActFeature(act.action, struc, null, offset);
-        Datum<GrammaticalRelation, List<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, null, offset);
+        Datum<ActionType, ObjectTuple<String>> actDatum = extractActFeature(act.action, struc, null, offset, labelRelation);
+        Datum<GrammaticalRelation, ObjectTuple<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, null, offset);
 
-        for(List<String> feature : labelDatum.asFeatures()) {
+        for(ObjectTuple<String> feature : labelDatum.asFeatures()) {
           counter.incrementCount(feature);
         }
         try {
@@ -143,9 +147,9 @@ public class DepDAGParser implements Parser, Serializable {
 
   private static void extractTrainingData(
       List<Structure> rawTrainData,
-      GeneralDataset<ActionType, List<String>> actTrainData,
-      GeneralDataset<GrammaticalRelation, List<String>> labelTrainData,
-      Counter<List<String>> featureCounter) {
+      GeneralDataset<ActionType, ObjectTuple<String>> actTrainData,
+      GeneralDataset<GrammaticalRelation, ObjectTuple<String>> labelTrainData,
+      Counter<ObjectTuple<String>> featureCounter, boolean labelRelation) {
 
     for(Structure struc : rawTrainData) {
       LinkedStack<Action> actions = struc.getActionTrace();
@@ -157,8 +161,8 @@ public class DepDAGParser implements Parser, Serializable {
       Object[] acts = actions.peekN(actions.size());
       for(int i = acts.length-1 ; i >= 0 ; i--){
         Action act = (Action)acts[i];
-        Datum<ActionType, List<String>> actDatum = extractActFeature(act.action, struc, featureCounter, offset);
-        Datum<GrammaticalRelation, List<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, featureCounter, offset);
+        Datum<ActionType, ObjectTuple<String>> actDatum = extractActFeature(act.action, struc, featureCounter, offset, labelRelation);
+        Datum<GrammaticalRelation, ObjectTuple<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, featureCounter, offset);
         if(actDatum.asFeatures().size() > 0) actTrainData.add(actDatum);
         if((act.action==ActionType.LEFT_ARC || act.action==ActionType.RIGHT_ARC)
             && labelDatum.asFeatures().size() > 0) {
@@ -189,42 +193,42 @@ public class DepDAGParser implements Parser, Serializable {
     }
   }
 
-  private static Datum<ActionType, List<String>> extractActFeature(
-      ActionType act, Structure s, Counter<List<String>> featureCounter, int offset){
+  private static Datum<ActionType, ObjectTuple<String>> extractActFeature(
+      ActionType act, Structure s, Counter<ObjectTuple<String>> featureCounter, int offset, boolean labelRelation){
     // if act == null, test data
     if(offset < 2) return null;
-    List<List<String>> features = DAGFeatureExtractor.extractActFeatures(s, offset, rightFeatures);
+    List<ObjectTuple<String>> features = DAGFeatureExtractor.extractActFeatures(s, offset, rightFeatures, labelRelation);
     if(featureCounter!=null) {
-      Set<List<String>> rareFeatures = new HashSet<List<String>>();
-      for(List<String> feature : features) {
+      Set<ObjectTuple<String>> rareFeatures = new HashSet<ObjectTuple<String>>();
+      for(ObjectTuple<String> feature : features) {
         if(featureCounter.getCount(feature) < 3) rareFeatures.add(feature);
       }
       features.removeAll(rareFeatures);
     }
-    return new BasicDatum<ActionType, List<String>>(features, act);
+    return new BasicDatum<ActionType, ObjectTuple<String>>(features, act);
   }
-  private static Datum<GrammaticalRelation, List<String>> extractLabelFeature(
+  private static Datum<GrammaticalRelation, ObjectTuple<String>> extractLabelFeature(
       GrammaticalRelation rel, ActionType action,
-      Datum<ActionType, List<String>> actDatum, Structure s,
-      Counter<List<String>> featureCounter, int offset){
+      Datum<ActionType, ObjectTuple<String>> actDatum, Structure s,
+      Counter<ObjectTuple<String>> featureCounter, int offset){
     // if act == null, test data
-    List<List<String>> features = DAGFeatureExtractor.extractLabelFeatures(action, actDatum, s, offset);
+    List<ObjectTuple<String>> features = DAGFeatureExtractor.extractLabelFeatures(action, actDatum, s, offset);
     if(featureCounter!=null) {
-      Set<List<String>> rareFeatures = new HashSet<List<String>>();
-      for(List<String> feature : features) {
+      Set<ObjectTuple<String>> rareFeatures = new HashSet<ObjectTuple<String>>();
+      for(ObjectTuple<String> feature : features) {
         if(featureCounter.getCount(feature) < 3) rareFeatures.add(feature);
       }
       features.removeAll(rareFeatures);
     }
-    return new BasicDatum<GrammaticalRelation, List<String>>(features, rel);
+    return new BasicDatum<GrammaticalRelation, ObjectTuple<String>>(features, rel);
   }
 
   // for extracting features from test data (no gold Action given)
-  private static Datum<ActionType, List<String>> extractActFeature(Structure s, int offset){
-    return extractActFeature(null, s, null, offset);
+  private static Datum<ActionType, ObjectTuple<String>> extractActFeature(Structure s, int offset, boolean labelRelation){
+    return extractActFeature(null, s, null, offset, labelRelation);
   }
-  private static Datum<GrammaticalRelation, List<String>> extractLabelFeature(
-      ActionType action, Structure s, Datum<ActionType, List<String>> actDatum, int offset){
+  private static Datum<GrammaticalRelation, ObjectTuple<String>> extractLabelFeature(
+      ActionType action, Structure s, Datum<ActionType, ObjectTuple<String>> actDatum, int offset){
     return extractLabelFeature(null, action, actDatum, s, null, offset);
   }
 
@@ -260,8 +264,8 @@ public class DepDAGParser implements Parser, Serializable {
    * @param labelRelation - label relation of dependency if true
    */
   public void parsePhrase(Structure s, int offset, boolean labelRelation){
-    Datum<ActionType, List<String>> d;
-    while((d=extractActFeature(s, offset))!=null){
+    Datum<ActionType, ObjectTuple<String>> d;
+    while((d=extractActFeature(s, offset, labelRelation))!=null){
       Action nextAction;
       if(s.getStack().size()==0) nextAction = new Action(ActionType.SHIFT);
       else {
@@ -272,7 +276,7 @@ public class DepDAGParser implements Parser, Serializable {
       if(nextAction.action==ActionType.SHIFT) offset--;
     }
   }
-  private Action getNextAction(Counter<ActionType> actionScores, Datum<ActionType, List<String>> d, Structure s, int offset, boolean labelRelation) {
+  private Action getNextAction(Counter<ActionType> actionScores, Datum<ActionType, ObjectTuple<String>> d, Structure s, int offset, boolean labelRelation) {
     ActionType bestActionType = Counters.argmax(actionScores);
     Action nextAction;
 
@@ -289,7 +293,7 @@ public class DepDAGParser implements Parser, Serializable {
           return getNextAction(actionScores, d, s, offset, labelRelation);
         }
         nextAction = new Action(ActionType.LEFT_ARC);
-        nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
+        if(labelRelation) nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
         return nextAction;
       case RIGHT_ARC:
         CoreLabel q;
@@ -307,7 +311,7 @@ public class DepDAGParser implements Parser, Serializable {
         }
 
         nextAction = new Action(ActionType.RIGHT_ARC);
-        nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
+        if(labelRelation) nextAction.relation = labelClassifier.classOf(extractLabelFeature(nextAction.action, s, d, offset));
         return nextAction;
       default:
         throw new RuntimeException("wrong action type: should not occur");
@@ -347,9 +351,11 @@ public class DepDAGParser implements Parser, Serializable {
       IString[] sequence = new IString[len];
       int i = sequence.length-1;
       sequence[i--] = new IString(tok);
-      for(Object c : struc.input.peekN(len-1)) {
-        CoreLabel t = (CoreLabel) c;
-        sequence[i--] = new IString(t.get(TextAnnotation.class));
+      if(len > 1) {
+        for(Object c : struc.input.peekN(len-1)) {
+          CoreLabel t = (CoreLabel) c;
+          sequence[i--] = new IString(t.get(TextAnnotation.class));
+        }
       }
       tagger.tagWord(w, sequence);
       this.parseToken(struc, w, labelRelation);
@@ -360,34 +366,37 @@ public class DepDAGParser implements Parser, Serializable {
     w.set(IndexAnnotation.class, idx++);
     this.parseToken(struc, w, labelRelation);
 
-    LinkedStack<TypedDependency> deps = struc.getDependencies();
-
-    StringBuilder sb = new StringBuilder();
-
-    Object[] ts = struc.getInput().peekN(struc.getInput().size());
-    for(int i = ts.length-1 ; i >= 0 ; i--) {
-      CoreLabel cl = (CoreLabel) ts[i];
-      sb.append("\t").append(cl.get(IndexAnnotation.class)).append("\t").append(cl.get(TextAnnotation.class)).append("\t").append(cl.get(PartOfSpeechAnnotation.class)).append("\n");
-    }
-    System.err.println(sb.toString()+"\n");
-
-    Object[] ds = deps.peekN(deps.size());
-    sb = new StringBuilder("Dependencies: \n");
-    for(int i = ds.length-1 ; i >= 0 ; i--) {
-      sb.append("\t").append(ds[i]).append("\n");
-    }
-    System.out.println(sb.toString()+"\n");
-    System.out.println(deps);
+    // print dependencies
+//    LinkedStack<TypedDependency> deps = struc.getDependencies();
+//
+//    StringBuilder sb = new StringBuilder();
+//
+//    Object[] ts = struc.getInput().peekN(struc.getInput().size());
+//    for(int i = ts.length-1 ; i >= 0 ; i--) {
+//      CoreLabel cl = (CoreLabel) ts[i];
+//      sb.append("\t").append(cl.get(IndexAnnotation.class)).append("\t").append(cl.get(TextAnnotation.class)).append("\t").append(cl.get(PartOfSpeechAnnotation.class)).append("\n");
+//    }
+//    System.err.println(sb.toString()+"\n");
+//
+//    Object[] ds = deps.peekN(deps.size());
+//    sb = new StringBuilder("Dependencies: \n");
+//    for(int i = ds.length-1 ; i >= 0 ; i--) {
+//      sb.append("\t").append(ds[i]).append("\n");
+//    }
+//    System.out.println(sb.toString()+"\n");
+//    System.out.println(deps);
 
 
     return struc;
   }
 
-  public static void main(String[] args) throws IOException, ClassNotFoundException{
-
-    boolean doTrain = false;
+  public static void main(String[] args) throws Exception{
+    boolean doTrain = true;
     boolean doTest = true;
     boolean storeTrainedModel = true;
+    
+    boolean labelRelation = false;
+    boolean extractTree = true;    
 
     Properties props = StringUtils.argsToProperties(args);
     DepDAGParser parser = null;
@@ -415,6 +424,8 @@ public class DepDAGParser implements Parser, Serializable {
 
     if(props.containsKey("train")) doTrain = true;
     if(props.containsKey("test")) doTest = true;
+    if(props.containsKey("labelRelation")) labelRelation = true;
+    if(props.containsKey("extractTree")) extractTree = true;
 
     if(REDUCE_FEATURES) logger.fine("REDUCE_FEATURES on");
     else logger.fine("REDUCE_FEATURES off");
@@ -422,12 +433,12 @@ public class DepDAGParser implements Parser, Serializable {
 
     // temporary for debug
 
-    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
+        String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/small_train.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
-    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+//        String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
-    //    props.put("train", tempTrain);
+        props.put("train", tempTrain);
     //    props.put("test", tempTest);
 
     POSTaggerAnnotator posTagger = null;
@@ -448,11 +459,12 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info("train model...");
       DAGFeatureExtractor.printFeatureFlags(logger, rightFeatures);
       Date s1 = new Date();
-      parser = trainModel(trainData);
+      parser = trainModel(trainData, labelRelation, extractTree);
       logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
 
       if(storeTrainedModel) {
-        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
+//        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
+        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.norelation.treeonly.objecttuple.ser.tmp";
         if(!props.containsKey("storeModel")) logger.info("no option -storeModel : trained model will be stored at "+defaultStore);
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
         IOUtils.writeObjectToFile(parser, trainedModelFile);
@@ -466,7 +478,8 @@ public class DepDAGParser implements Parser, Serializable {
       //      String defaultLoadModel = "/scr/heeyoung/mtdata/parser/DAGparserModel.reducedFeat_mem5_dataset.ser";
 
       if(parser==null) {
-        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
+//        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
+        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.norelation.treeonly.objecttuple.ser";
 
         if(!props.containsKey("loadModel")) logger.info("no option -loadModel : trained model will be loaded from "+defaultLoadModel);
         String trainedModelFile = props.getProperty("loadModel", defaultLoadModel);
@@ -476,8 +489,6 @@ public class DepDAGParser implements Parser, Serializable {
         parser = IOUtils.readObjectFromFile(trainedModelFile);
         logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
       }
-      parser.labelRelation = true;
-      parser.extractTree = true;
       //      if(true) return;
       logger.info("read test data from "+testFile + " ...");
       // TODO
