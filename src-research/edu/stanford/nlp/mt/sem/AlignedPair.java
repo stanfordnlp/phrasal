@@ -9,15 +9,17 @@ import java.util.List;
 import java.util.Set;
 
 
+import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.TreeGraphNode;
+import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
 /**
  * AlignedPair contains partially a word aligned
  * mt semantic graph.
  * 
- * @author daniel
+ * @author daniel cer
  *
  */
 public class AlignedPair {
@@ -27,6 +29,9 @@ public class AlignedPair {
    public TreeGraphNode f2e[];
    public TreeGraphNode[] fLeaves;
    public TreeGraphNode[] eLeaves;
+   public TypedDependency[][] eParents;
+   public TypedDependency[][] fParents;
+   
    
    public AlignedPair(GrammaticalStructure f, GrammaticalStructure e, Set<Pair<Integer,Integer>> alignmentsF2E) {
       fLeaves = f.root().getLeaves().toArray(new TreeGraphNode[0]);
@@ -42,38 +47,81 @@ public class AlignedPair {
 	   }
 	   this.f = f;
 	   this.e = e;
+	   eParents = buildParentsArray(e, eLeaves);
+	   fParents = buildParentsArray(f, fLeaves);
+   }
+   
+   static private TypedDependency[][] buildParentsArray(GrammaticalStructure gs, TreeGraphNode[] leaves) {
+     TypedDependency[][] parents = new TypedDependency[leaves.length][];
+     for (TypedDependency td : gs.allTypedDependencies()) {
+       int childIdx = td.dep().index()-1;
+       if (parents[childIdx] == null) {
+          parents[childIdx] = new TypedDependency[1];
+       } else {
+          parents[childIdx] = Arrays.copyOf(parents[childIdx], 
+               parents[childIdx].length+1);
+       }
+       parents[childIdx][parents[childIdx].length-1] = td;
+     }
+     return parents;
    }
    
    public String toString() {
       StringBuilder sbuilder = new StringBuilder();
-      sbuilder.append("F: ");
-      sbuilder.append(f);
-      sbuilder.append("\nE: ");
-      sbuilder.append(e);
-      sbuilder.append("\nA:");
-      for (int i = 0; i < f2e.length; i++) {
-         if (f2e[i] == null) {
+      for (TreeGraphNode n : eLeaves) {
+         sbuilder.append(n.label().word());
+         sbuilder.append(" ");
+      }
+      sbuilder.setLength(sbuilder.length() - 1);
+      sbuilder.append("\t");
+      for (TreeGraphNode n : fLeaves) {
+         sbuilder.append(n.label().word());
+         sbuilder.append(" ");
+      }
+      sbuilder.setLength(sbuilder.length() - 1);
+      sbuilder.append("\t");
+      for (int i = 0; i < e2f.length; i++) {
+         if (e2f[i] == null) {
             continue;
          }
-         if (i != 0) sbuilder.append(", ");
-         sbuilder.append(String.format("%s:%d->%s:%d",fLeaves[i],i,f2e[i], f2e[i].index()));
+         sbuilder.append(e2f[i].index());
+         sbuilder.append("-");
+         sbuilder.append(i);
+         sbuilder.append(" ");
       }
+      sbuilder.setLength(sbuilder.length() - 1);
+      
+      sbuilder.append("\t");
+      for (TypedDependency dep : e.allTypedDependencies()) {
+         sbuilder.append(dep.toString());
+         sbuilder.append("|||");
+      }
+      sbuilder.setLength(sbuilder.length()-3);
+      
+      sbuilder.append("\t");
+      for (TypedDependency dep : f.allTypedDependencies()) {
+         sbuilder.append(dep.toString());
+         sbuilder.append("|||");
+      }
+      sbuilder.setLength(sbuilder.length()-3);
+      
       return sbuilder.toString();
    }
    
-   public static void main(String[] args) throws IOException {
-      LineNumberReader reader = new LineNumberReader(new FileReader(args[0]));
-      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-         String[] fields = line.split("\t");
+   public static AlignedPair fromString(String s) {
+      try {
+         String[] fields = s.split("\t");
          // fromStringReps(List<String> tokens,
          //      List<String> posTags, List<String> deps)
          List<String> ewords = Arrays.asList(fields[1].split("\\s"));
          List<String> fwords = Arrays.asList(fields[2].split("\\s"));
-         Set<Pair<Integer,Integer>> alignmentsF2E = new HashSet<Pair<Integer,Integer>>();        
-         for (String aF2Estr : fields[3].split("\\s")) {
-            String[] aFields = aF2Estr.split("-");
-            Pair<Integer,Integer> aF2E = new Pair<Integer,Integer>(new Integer(aFields[0]), new Integer(aFields[1]));
-            alignmentsF2E.add(aF2E);
+         Set<Pair<Integer,Integer>> alignmentsF2E = new HashSet<Pair<Integer,Integer>>();
+         if (!"".equals(fields[3])) {
+            for (String aF2Estr : fields[3].split("\\s")) {
+               String[] aFields = aF2Estr.split("-");
+               Pair<Integer,Integer> aF2E = new Pair<Integer,Integer>(new Integer(aFields[0]), new Integer(aFields[1]));
+               alignmentsF2E.add(aF2E);
+            }
          }
          List<String> edeps = Arrays.asList(fields[4].split("\\|\\|\\|"));
          List<String> fdeps = Arrays.asList(fields[5].split("\\|\\|\\|"));
@@ -81,7 +129,17 @@ public class AlignedPair {
          GrammaticalStructure gsE = GrammaticalStructure.fromStringReps(ewords, ewords, edeps);
          GrammaticalStructure gsF = GrammaticalStructure.fromStringReps(fwords, fwords, fdeps);
          AlignedPair alignedPair = new AlignedPair(gsF, gsE, alignmentsF2E);
-         System.out.println(alignedPair);
+         return alignedPair;
+      } catch (RuntimeException e) {
+         throw new RuntimeException(String.format("Error parsing aligned pair: '%s'\n",s),e);
+      }
+   }
+   
+   public static void main(String[] args) throws IOException {
+      LineNumberReader reader = new LineNumberReader(new FileReader(args[0]));
+      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+         AlignedPair aPair = AlignedPair.fromString(line);
+         System.out.println(aPair);
          System.out.println();
       }
    }
