@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.Pair;
  * @author daniel cer
  *
  */
-public class ExtractRelationTranslerRules {
+public class ExtractRelationTransferRules {
    public static List<RelationTransferRule> extractRules(AlignedPair aPair) {
       // public RelationTransferRule(PhrasalRelationCF eDep, PhrasalRelationCF fDep) {
       // PhrasalRelationCF(String type, String[] gov, String[] children, boolean rightChildren) 
@@ -37,12 +37,9 @@ public class ExtractRelationTranslerRules {
          for (TypedDependency etd : aPair.eParents[i]) {
             int eGov = etd.gov().index() -1;
             if (eGov == -1) continue;
-            //System.err.printf("etd: %s\n", etd);
             for (TypedDependency ftd : aPair.fParents[aPair.e2f[i].index()-1]) {
                int fGov = ftd.gov().index() -1;
                if (fGov == -1) continue;
-               //System.err.printf("e2f: %s", Arrays.toString(aPair.e2f));               
-               //System.err.printf("eGov: %d\n", eGov);
                if (aPair.e2f[eGov] == null) continue;
                if (aPair.e2f[eGov].index()-1 == fGov) {                  
                   PhrasalRelationCF eDep = new PhrasalRelationCF(etd.reln().getShortName(), new String[]{aPair.eLeaves[eGov].label().word().toString()}, 

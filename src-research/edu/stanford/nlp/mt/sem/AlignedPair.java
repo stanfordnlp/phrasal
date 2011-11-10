@@ -84,7 +84,7 @@ public class AlignedPair {
          if (e2f[i] == null) {
             continue;
          }
-         sbuilder.append(e2f[i].index());
+         sbuilder.append(e2f[i].index()-1);
          sbuilder.append("-");
          sbuilder.append(i);
          sbuilder.append(" ");
