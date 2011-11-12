@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.syntax.mst.rmcd;
 
 import edu.stanford.nlp.classify.LogisticClassifier;
+import edu.stanford.nlp.classify.LogisticClassifierFactory;
 import edu.stanford.nlp.classify.RVFDataset;
 import edu.stanford.nlp.classify.Dataset;
 import edu.stanford.nlp.classify.GeneralDataset;
@@ -135,8 +136,7 @@ public class DependencyParser {
     System.err.printf("\nNegative instances: %d\n", counts[0]);
 
     // Training:
-    LogisticClassifier<Boolean, Integer> me = new LogisticClassifier<Boolean, Integer>();
-    me.train(dataset, l1reg, 1e-4);
+    LogisticClassifier<Boolean, Integer> me = new LogisticClassifierFactory<Boolean, Integer>().trainClassifier(dataset, l1reg, 1e-4);
     params.setWeights(me.getFeatureIndex(), me.getWeights());
 
     long end = System.currentTimeMillis();
