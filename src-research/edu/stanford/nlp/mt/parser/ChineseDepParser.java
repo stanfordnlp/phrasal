@@ -12,7 +12,7 @@ import java.util.zip.GZIPInputStream;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.Word;
-import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
+import edu.stanford.nlp.parser.lexparser.LexicalizedParserGrammar;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.GrammaticalStructureFactory;
@@ -29,7 +29,7 @@ public class ChineseDepParser {
 
   public static class ParserPack {
     public CRFClassifier segmenter;
-    public LexicalizedParser parser;
+    public LexicalizedParserGrammar parser;
     public TreebankLanguagePack tLP;
     public GrammaticalStructureFactory gsf;
   }
@@ -38,7 +38,7 @@ public class ChineseDepParser {
 
   public ChineseDepParser() throws Exception {
     pp = new ParserPack();
-    pp.parser = new LexicalizedParser(defaultModel);
+    pp.parser = new LexicalizedParserGrammar(defaultModel);
     pp.tLP = pp.parser.getOp().tlpParams.treebankLanguagePack();
 
     Filter<String> puncWordFilter;
