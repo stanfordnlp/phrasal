@@ -154,14 +154,19 @@ public class DependencyLM implements LanguageModel<IString> {
 
   public static void main(String[] args) throws IOException, ClassNotFoundException {
 
-    //    LanguageModel<IString> lm = new DependencyLM();
-    //    if(true) return;
+    DependencyLM lm2 = new DependencyLM();
+    if(true) {
+      System.err.println(lm2.wordCounter.getCount(",")/10000);
+      System.err.println(lm2.posTagCounter);
+      return;
+    }
 
     //    String trainingFile = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-train-2011-01-13.conll.transformed";
     //    List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile, null);
 
     String trainingFile = "/scr/heeyoung/mt/scr61/mt06.for_heeyoung/bitext/aligned.en";
-    DependencyLM lm = new DependencyLM();
+//    String trainingFile = "/scr/heeyoung/mt/scr61/temp.txt";
+    DependencyLM lm = new DependencyLM(null, null, null, null);
 
     DepDAGParser parser;
     String defaultParserModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
@@ -170,8 +175,13 @@ public class DependencyLM implements LanguageModel<IString> {
     parser.extractTree = true;
     IncrementalTagger tagger = new IncrementalTagger();
 
+    int sentCount = 0;
     for(String sent : IOUtils.readLines(trainingFile)){
 
+      if(sentCount++ % 10000 == 0) {
+        System.err.println(sentCount+" sentences parsed.");
+      }
+      
       Structure s = parser.parseSentence(sent, tagger);
 
       lm.countDepLM(s);

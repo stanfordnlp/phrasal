@@ -391,7 +391,7 @@ public class DepDAGParser implements Parser, Serializable {
   }
 
   public static void main(String[] args) throws Exception{
-    boolean doTrain = true;
+    boolean doTrain = false;
     boolean doTest = true;
     boolean storeTrainedModel = true;
     
@@ -433,12 +433,12 @@ public class DepDAGParser implements Parser, Serializable {
 
     // temporary for debug
 
-        String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
+//        String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/small_train.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
 //        String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
-        props.put("train", tempTrain);
+//        props.put("train", tempTrain);
     //    props.put("test", tempTest);
 
     POSTaggerAnnotator posTagger = null;
@@ -455,7 +455,10 @@ public class DepDAGParser implements Parser, Serializable {
 
       logger.info("read training data from "+trainingFile + " ...");
       List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile, posTagger);
-
+      
+      // temp
+//      SubHashMap<ObjectTuple<String>,Integer> map = buildFeatureHashMap(trainData, false); map.dumpBuckets(); if(true) return;
+      
       logger.info("train model...");
       DAGFeatureExtractor.printFeatureFlags(logger, rightFeatures);
       Date s1 = new Date();
@@ -464,7 +467,7 @@ public class DepDAGParser implements Parser, Serializable {
 
       if(storeTrainedModel) {
 //        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
-        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.norelation.treeonly.objecttuple.ser.tmp";
+        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.withrelation.treeonly.objecttuple.ser";
         if(!props.containsKey("storeModel")) logger.info("no option -storeModel : trained model will be stored at "+defaultStore);
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
         IOUtils.writeObjectToFile(parser, trainedModelFile);
@@ -584,5 +587,71 @@ public class DepDAGParser implements Parser, Serializable {
     DependencyScoring goldScorer = DependencyScoring.newInstanceStringEquality(goldDeps);
     Score score = goldScorer.score(DependencyScoring.convertStringEquality(systemDeps));
     System.out.println(score.toString(true));
+  }
+
+  public static class SubHashMap<K, V> extends HashMap<K, V> {
+  
+    public void dumpBuckets() throws Exception {
+      FileOutputStream out = new FileOutputStream("/scr/heeyoung/temp.txt");
+      PrintWriter pw = new PrintWriter(out);
+      
+    
+        Field f = HashMap.class.getDeclaredField("table");
+        f.setAccessible(true);
+    
+        Map.Entry<K, V>[] table = (Map.Entry<K, V>[]) f.get(this);
+    
+        Class<?> hashMapEntryClass = null;
+        for (Class<?> c : HashMap.class.getDeclaredClasses())
+            if ("java.util.HashMap.Entry".equals(c.getCanonicalName()))
+                hashMapEntryClass = c;
+    
+        Field nextField = hashMapEntryClass.getDeclaredField("next");
+        nextField.setAccessible(true);
+    
+        for (int i = 0; i < table.length; i++) {
+    
+            pw.print("Bucket " + i + ": ");
+            Map.Entry<K, V> entry = table[i];
+    
+            while (entry != null) {
+              pw.print(entry.getKey() + " ");
+                entry = (Map.Entry<K, V>) nextField.get(entry);
+            }
+    
+            pw.println();
+        }
+        pw.close();
+    }
+  }
+  private static SubHashMap<ObjectTuple<String>,Integer> buildFeatureHashMap(List<Structure> rawTrainData, boolean labelRelation) {
+    SubHashMap<ObjectTuple<String>,Integer> counter = new SubHashMap<ObjectTuple<String>,Integer>();
+    int id = 0;
+    
+    for(Structure struc : rawTrainData) {
+      LinkedStack<Action> actions = struc.getActionTrace();
+      struc.actionTrace = new LinkedStack<Action>();
+    
+      int offset = struc.input.size();
+      Object[] acts = actions.peekN(actions.size());
+      for(int i = acts.length-1 ; i >= 0 ; i--){
+        Action act = (Action)acts[i];
+        Datum<ActionType, ObjectTuple<String>> actDatum = extractActFeature(act.action, struc, null, offset, labelRelation);
+        Datum<GrammaticalRelation, ObjectTuple<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, null, offset);
+    
+        for(ObjectTuple<String> feature : labelDatum.asFeatures()) {
+          counter.put(feature, id++);
+        }
+        try {
+          Actions.doAction(act, struc, offset);
+          if(act.action==ActionType.SHIFT) offset--;
+        } catch (RuntimeException e) {
+          throw e;
+        }
+      }
+      struc.dependencies = new LinkedStack<TypedDependency>();
+      struc.stack = new LinkedStack<CoreLabel>();
+    }
+    return counter;
   }
 }

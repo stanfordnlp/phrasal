@@ -32,6 +32,19 @@ public class ObjectTuple<E> implements Serializable{
   public E[] elems() {
     return elements;
   }
+  
+  @Override
+  public boolean equals(Object o) {
+    if(o==this) return true;
+    if(o==null || !(o instanceof ObjectTuple<?>)) return false;
+    ObjectTuple<?> ot = (ObjectTuple<?>) o;
+    int len = this.elements.length;
+    if(ot.elements.length != len) return false;
+    for(int idx = 0 ; idx < len ; idx++) {
+      if(!this.elements[idx].equals(ot.elements[idx])) return false;
+    }
+    return true;
+  }
 
   @Override
   public int hashCode() {
@@ -45,12 +58,14 @@ public class ObjectTuple<E> implements Serializable{
   @Override
   public String toString() {
     StringBuilder name = new StringBuilder();
+    name.append("[");
     for (int i = 0; i < elements.length; i++) {
       name.append(get(i));
       if (i < elements.length - 1) {
         name.append(' ');
       }
     }
+    name.append("]");
     return name.toString();
   }
 
