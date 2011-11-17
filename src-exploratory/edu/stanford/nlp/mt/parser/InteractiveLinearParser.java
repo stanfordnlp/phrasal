@@ -4,16 +4,27 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import edu.stanford.nlp.io.IOUtils;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.trees.semgraph.SemanticGraph;
+import edu.stanford.nlp.trees.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
+import edu.stanford.nlp.trees.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
+import edu.stanford.nlp.util.CoreMap;
 
 /**
  * Interactive (/commandline) interface to the linear time parser
@@ -36,13 +47,39 @@ public class InteractiveLinearParser {
     IncrementalTagger tagger = new IncrementalTagger();
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    System.out.print("> ");
     Structure struc = new Structure();
     LinkedStack<TypedDependency> deps;
     int seqLen = tagger.ts.leftWindow() + 1;
+    
+    // for comparison, use Stanford parser
+    Properties props = new Properties();
+    props.put("annotators", "tokenize, ssplit, pos, parse");
+    StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+    
 
+    System.out.print("> ");
     int idx = 1;
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+      Set<String> depStrings = new HashSet<String>();
+      Set<String> systemDepStrings = new HashSet<String>();
+      // stanford dependencies
+      Annotation document = new Annotation(line);
+      pipeline.annotate(document);
+      List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+      System.out.println("====================================================================");
+
+      System.out.println("Sentence: "+line);
+      Collection<TypedDependency> stanfordDeps = new HashSet<TypedDependency>();
+
+      for(CoreMap sentence: sentences) {
+        SemanticGraph dependencies = sentence.get(BasicDependenciesAnnotation.class);
+        for(TypedDependency dep : dependencies.typedDependencies()) {
+          depStrings.add(dep.toString());
+        }
+      }
+      System.out.println("----------------------------------");
+      
+      
       if ("</s>".equals(line)) {
         // finalize parse for the current prefix/sentence
         List<CoreLabel> phrase = new ArrayList<CoreLabel>();
@@ -71,31 +108,63 @@ public class InteractiveLinearParser {
           IString[] sequence = new IString[len];
           int i = sequence.length-1;
           sequence[i--] = new IString(tok);
-          for(Object c : struc.input.peekN(len-1)) {
-            CoreLabel t = (CoreLabel) c;
-            sequence[i--] = new IString(t.get(TextAnnotation.class));
+          if(len > 1) {
+            for(Object c : struc.input.peekN(len-1)) {
+              CoreLabel t = (CoreLabel) c;
+              sequence[i--] = new IString(t.get(TextAnnotation.class));
+            }
           }
           tagger.tagWord(w, sequence);
           parser.parseToken(struc, w, labelRelation);
         }
+        struc.addRoot();
         deps = struc.getDependencies();
         
         StringBuilder sb = new StringBuilder();
+        
+        int countMatch = 0;
+        int countRedundant = 0;
+        int countMiss = 0;
+        
+        Object[] ds = deps.peekN(deps.size());
+
+        sb = new StringBuilder("Dependencies: \n");
+        for(int i = ds.length-1 ; i >= 0 ; i--) {
+          String flag = "";
+          systemDepStrings.add(ds[i].toString());
+          if(depStrings.contains(ds[i].toString())) {
+            countMatch++;
+          } else {
+            countRedundant++;
+            flag = "\t-> redundant";
+          }
+          sb.append("\t").append(ds[i]).append(flag).append("\n");
+        }
+        System.out.println(sb.toString()+"\n");
+                
+        System.out.println("Stanford dependencies: ");
+        for(String dep : depStrings) {
+          String flag = "";
+          if(!systemDepStrings.contains(dep)) {
+            flag = "\t-> missed";
+          }
+          System.out.println("\t"+dep+flag);
+        }
+        
+        countMiss = depStrings.size()-countMatch;
+
+        System.out.println("count match: "+countMatch);
+        System.out.println("count redundant: "+countRedundant);
+        System.out.println("count miss: "+countMiss);
+        
+        sb = new StringBuilder();
         
         Object[] ts = struc.getInput().peekN(struc.getInput().size());
         for(int i = ts.length-1 ; i >= 0 ; i--) {
           CoreLabel cl = (CoreLabel) ts[i];
           sb.append("\t").append(cl.get(IndexAnnotation.class)).append("\t").append(cl.get(TextAnnotation.class)).append("\t").append(cl.get(PartOfSpeechAnnotation.class)).append("\n");
         }
-        System.err.println(sb.toString()+"\n");
-        
-        Object[] ds = deps.peekN(deps.size());
-        sb = new StringBuilder("Dependencies: \n");
-        for(int i = ds.length-1 ; i >= 0 ; i--) {
-          sb.append("\t").append(ds[i]).append("\n");
-        }
         System.out.println(sb.toString()+"\n");
-        System.out.println(deps);
       }
       // System.out.printf("Current partial parse: %s\n", );
       // System.out.printf("Current stack contents: %s\n", );
