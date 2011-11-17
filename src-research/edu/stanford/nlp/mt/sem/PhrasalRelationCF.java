@@ -2,6 +2,10 @@ package edu.stanford.nlp.mt.sem;
 
 import java.util.Arrays;
 
+import edu.stanford.nlp.trees.GrammaticalRelation;
+import edu.stanford.nlp.trees.TreeGraphNode;
+import edu.stanford.nlp.trees.TypedDependency;
+
 
 /**
  * 
@@ -13,6 +17,21 @@ public class PhrasalRelationCF {
    final String[] children;
    final String[] gov;
    final boolean rightChildren;
+   
+   public static PhrasalRelationCF fromPoints(GrammaticalRelation reln, int childStart, int childEnd, int parentStart, int parentEnd, TreeGraphNode[] leaves) {
+      if (childStart >= parentStart && childStart <= parentEnd) return null;
+      if (childEnd >=   parentStart && childEnd <= parentEnd) return null;
+      boolean rightChild = childStart > parentEnd;
+      String[] eChildren = new String[1+childEnd-childStart];
+      for (int i = 0; i < eChildren.length; i++) {
+        eChildren[i] = leaves[i+childStart].label().word();
+      }
+      String[] eGov = new String[1+parentEnd-parentStart];
+      for (int i = 0; i < eGov.length; i++) {
+        eGov[i] = leaves[i+parentStart].label().word();                     
+      }
+      return new PhrasalRelationCF(reln.getShortName(), eGov, eChildren, rightChild);
+   }
    
    public PhrasalRelationCF(String type, String[] gov, String[] children, boolean rightChildren) {
       this.type = type;

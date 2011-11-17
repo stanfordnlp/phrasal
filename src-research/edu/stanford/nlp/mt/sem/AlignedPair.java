@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 
-import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
@@ -30,7 +29,9 @@ public class AlignedPair {
    public TreeGraphNode[] fLeaves;
    public TreeGraphNode[] eLeaves;
    public TypedDependency[][] eParents;
-   public TypedDependency[][] fParents;
+   public TypedDependency[][] fParents;   
+   public TypedDependency[][] eChildren;
+   public TypedDependency[][] fChildren;
    
    
    public AlignedPair(GrammaticalStructure f, GrammaticalStructure e, Set<Pair<Integer,Integer>> alignmentsF2E) {
@@ -49,7 +50,25 @@ public class AlignedPair {
 	   this.e = e;
 	   eParents = buildParentsArray(e, eLeaves);
 	   fParents = buildParentsArray(f, fLeaves);
+	   eChildren = buildChildrenArray(e, eLeaves);
+	   fChildren = buildChildrenArray(f, fLeaves);
    }
+   
+   static private TypedDependency[][] buildChildrenArray(GrammaticalStructure gs, TreeGraphNode[] leaves) {
+      TypedDependency[][] children = new TypedDependency[leaves.length][];      
+      for (TypedDependency td : gs.allTypedDependencies()) {
+        int parentIdx = td.gov().index()-1;
+        if (parentIdx == -1) continue;
+        if (children[parentIdx] == null) {
+           children[parentIdx] = new TypedDependency[1];
+        } else {
+           children[parentIdx] = Arrays.copyOf(children[parentIdx], 
+                children[parentIdx].length+1);
+        }
+        children[parentIdx][children[parentIdx].length-1] = td;
+      }
+      return children;
+    }
    
    static private TypedDependency[][] buildParentsArray(GrammaticalStructure gs, TreeGraphNode[] leaves) {
      TypedDependency[][] parents = new TypedDependency[leaves.length][];
