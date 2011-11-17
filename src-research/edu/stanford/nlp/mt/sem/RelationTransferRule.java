@@ -8,7 +8,7 @@ package edu.stanford.nlp.mt.sem;
 public class RelationTransferRule {
    final PhrasalRelationCF eDep;
    final PhrasalRelationCF fDep;
-   private int hashCode;
+   private int hashCode = -1;
    
    public RelationTransferRule(PhrasalRelationCF eDep, PhrasalRelationCF fDep) {
       this.eDep = eDep;
@@ -32,23 +32,21 @@ public class RelationTransferRule {
       return new RelationTransferRule(eDep, fDep);
    }
    
-   private int lenStrRep;
-
    public boolean equals(Object o) {
       if (o instanceof RelationTransferRule) {
          RelationTransferRule r = (RelationTransferRule)o;
          if (r.hashCode() != hashCode()) return false;
-         if (r.lenStrRep  != lenStrRep)  return false;
-         return toString().equals(r.toString());
+         if (!r.eDep.equals(eDep)) return false;
+         if (!r.fDep.equals(fDep)) return false;
+         return true; 
       } 
       return false;
    }
    
    public int hashCode() {
-      if (hashCode == 0) {
-        String rep = toString();
-        hashCode = rep.hashCode();
-        lenStrRep = rep.length();
+      if (hashCode == -1) {
+        hashCode  = eDep.hashCode; hashCode *= 31;
+        hashCode += fDep.hashCode;
       }
       return hashCode;
    }

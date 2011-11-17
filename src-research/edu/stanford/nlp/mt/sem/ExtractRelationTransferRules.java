@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.sem;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -229,8 +230,10 @@ public class ExtractRelationTransferRules {
       List<PhraseIndices> allPhraseIndices = new ArrayList<PhraseIndices>();
       for (int eStart = ePoint; eStart >= 0 && eStart > ePoint - maxPhraseOffset; eStart--) {
          for (int eEnd = ePoint; eEnd < pair.e2f.length && eEnd < ePoint + maxPhraseOffset; eEnd++) {
+            if (eEnd-eStart > maxPhraseOffset) continue;
             for (int fStart = fPoint;  fStart >= 0 && fStart > fPoint - maxPhraseOffset; fStart--) {
                for (int fEnd = fPoint; fEnd < pair.f2e.length && fEnd < fPoint + maxPhraseOffset; fEnd++) {
+                  if (fEnd-fStart > maxPhraseOffset) continue;
                   //System.out.printf("(%d,%d), %d,%d - %d,%d : %s\n", ePoint, fPoint, eStart, eEnd, fStart, fEnd, checkAlignment(eStart, eEnd, fStart, fEnd, pair));
                   if (checkAlignment(eStart, eEnd, fStart, fEnd, pair))
                      allPhraseIndices.add(new PhraseIndices(eStart, eEnd, fStart, fEnd));
@@ -319,15 +322,26 @@ public class ExtractRelationTransferRules {
    }
    
    public static void main(String[] args) throws IOException {
-      BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-      ClassicCounter<String> ruleCounts = new ClassicCounter<String>();      
+      LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in));
+      ClassicCounter<String> ruleCounts = new ClassicCounter<String>();
+      long startTime = System.currentTimeMillis();
       for (String line = reader.readLine(); line != null; line = reader.readLine()) {
          AlignedPair aPair = AlignedPair.fromString(line);
          List<RelationTransferRule> rules = extractPhrToPhrRule(aPair);
          for (RelationTransferRule r : rules) {
             ruleCounts.incrementCount(r.toString());
          }
+         if (reader.getLineNumber() % 100 == 0) {
+            System.err.printf("Lines processed >= %d (%.2f lines/second)\n", reader.getLineNumber(),
+                  reader.getLineNumber()/((System.currentTimeMillis()-startTime)/1000.0));
+         }
       }
+      long endTime = System.currentTimeMillis();
+      double seconds = (endTime-startTime)/1000.0;
+      double linesPerSecond = reader.getLineNumber()/(seconds);
+      System.err.println("Done.");
+      System.err.printf("Lines processed %d in %.2f seconds (%.2f lines/second)\n", reader.getLineNumber(), seconds, linesPerSecond);
+      System.err.printf("Sorting by count\n");
       for (Pair<String, Double> p : Counters.toSortedListWithCounts(ruleCounts)) {
          System.out.printf("%s\t%d\n", p.first, (int)(double)p.second);
       }

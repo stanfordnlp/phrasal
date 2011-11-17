@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TreeGraphNode;
-import edu.stanford.nlp.trees.TypedDependency;
 
 
 /**
@@ -92,5 +91,44 @@ public class PhrasalRelationCF {
       type = fields[1];
       
       return new PhrasalRelationCF(type, gov, children, rightChildren);
+   }
+   
+   @Override
+   public boolean equals(Object o) {
+      if (!(o instanceof PhrasalRelationCF)) {
+         return false;
+      }
+      
+      PhrasalRelationCF prcf = (PhrasalRelationCF)o;
+      
+      if (hashCode() != prcf.hashCode()) {
+         return false;
+      }
+      
+      if (!Arrays.equals(children, prcf.children)) {
+         return false;
+      }
+      
+      if (!Arrays.equals(gov, prcf.gov)){
+         return false;        
+      }
+      
+      if (!type.equals(prcf.type)) {
+         return false;
+      }
+            
+      return true;
+   }
+   
+   int hashCode = -1;
+   
+   @Override 
+   public int hashCode() {
+      if (hashCode == -1) {
+         hashCode  = type.hashCode(); hashCode *= 31;
+         hashCode += Arrays.hashCode(children); hashCode *= 31;
+         hashCode += Arrays.hashCode(gov);
+      }
+      return hashCode;
    }
 }
