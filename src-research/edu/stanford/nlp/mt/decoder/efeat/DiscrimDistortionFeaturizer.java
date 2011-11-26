@@ -190,7 +190,6 @@ public class DiscrimDistortionFeaturizer extends
    * 
    * @param fromIdx
    * @param toIdx
-   * @return
    */
   private int getDistortion(int fromIdx, int toIdx) {
     int distortion = 0;

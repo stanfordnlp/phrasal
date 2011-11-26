@@ -47,7 +47,6 @@ public class DownhillSimplexMinimizer implements Minimizer<Function>{
    * point[0] + lambda+unit_vector_(i-1]
    *   
    * @param initial
-   * @return
    */
   private double[][] createInitialSimplex(double[] initial) {
     double[][] points = new double[initial.length+1][];
@@ -67,7 +66,6 @@ public class DownhillSimplexMinimizer implements Minimizer<Function>{
    * 
    * @param function
    * @param points
-   * @return
    */
   private double[] calculateValues(Function function, double[][] points) {
     double values[] = new double[points.length];
@@ -82,7 +80,6 @@ public class DownhillSimplexMinimizer implements Minimizer<Function>{
    * Find the minimum and maximum positions in values
    * 
    * @param values
-   * @return
    */
   private int[] findMinAndMax(double[] values) {
     int minIdx = 0, maxIdx = 0;
@@ -101,7 +98,6 @@ public class DownhillSimplexMinimizer implements Minimizer<Function>{
    * 
    * @param points
    * @param worstIdx
-   * @return
    */
   private double[] calcCenter(double[][] points, int worstIdx) {
     double[] center = new double[points[0].length];
@@ -125,7 +121,6 @@ public class DownhillSimplexMinimizer implements Minimizer<Function>{
    * @param b
    * @param m1
    * @param m2
-   * @return
    */
   private double[] scaledMixture(double[] b, double scale, double[] m1, double[] m2) {
     double[] y = new double[b.length];

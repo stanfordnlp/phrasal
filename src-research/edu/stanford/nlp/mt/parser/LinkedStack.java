@@ -80,7 +80,6 @@ public class LinkedStack<T> implements Iterable<T> {
    * Get the top N elements off of the top of the stack
    * 
    * @param count
-   * @return
    */
   @SuppressWarnings("unchecked")
   public T[] peekN(int n){

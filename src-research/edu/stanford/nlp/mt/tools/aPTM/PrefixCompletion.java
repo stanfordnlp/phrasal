@@ -427,7 +427,6 @@ public class PrefixCompletion extends AbstractHandler {
    * recent option covered 2,3,4,10 then this method would return "2-3-4-10".
    * 
    * @param opt The rich hypothesis object
-   * @return
    */
   private String getCoverage(RichTranslation<IString, String> opt) {
     CoverageSet coverage = opt.featurizable.option.foreignCoverage;

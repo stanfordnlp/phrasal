@@ -48,7 +48,6 @@ public interface InfererBuilder<TK, FV> {
   /**
    * 
    * @param annotators
-   * @return
    */
   InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK>> annotators);
   /**
