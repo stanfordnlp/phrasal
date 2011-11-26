@@ -52,7 +52,6 @@ public interface LmReaderCallback<V>
 	 * Whether this call back is interested in the n-grams or not. If not, then
 	 * parsing can be speed up.
 	 * 
-	 * @return
 	 */
 	public boolean ignoreNgrams();
 

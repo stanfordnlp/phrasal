@@ -77,7 +77,6 @@ final class HashMap implements Serializable
 	 * @param numNgramsForEachWord
 	 * @param maxLoadFactor
 	 * @param numWords
-	 * @return
 	 */
 	private long setWordRanges(final LongArray numNgramsForEachWord, final double maxLoadFactor, final long numWords) {
 		long currStart = 0;

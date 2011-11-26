@@ -125,7 +125,6 @@ public final class LargeLongArray implements Serializable, LongArray
 
 	/**
 	 * @param pos
-	 * @return
 	 */
 	private long getHelp(final long pos) {
 		return data[o(pos)][i(pos)];

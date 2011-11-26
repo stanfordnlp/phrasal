@@ -230,7 +230,6 @@ public class IOUtils
 
 	/**
 	 * @param reader
-	 * @return
 	 */
 	public static Iterator<String> lineIterator(final BufferedReader reader) {
 		return new Iterator<String>()

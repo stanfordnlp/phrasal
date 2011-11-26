@@ -46,7 +46,6 @@ public interface ValueContainer<V>
 	/**
 	 * Creates a fresh value container for copying purposes.
 	 * 
-	 * @return
 	 */
 	public ValueContainer<V> createFreshValues();
 
@@ -55,7 +54,6 @@ public interface ValueContainer<V>
 	 * 
 	 * @param offset
 	 * @param ngramOrder
-	 * @return
 	 */
 	public V getFromOffset(long offset, int ngramOrder);
 
@@ -71,7 +69,6 @@ public interface ValueContainer<V>
 	 * 
 	 * @param offset
 	 * @param ngramOrder
-	 * @return
 	 */
 	public BitList getCompressed(long offset, int ngramOrder);
 
@@ -84,7 +81,6 @@ public interface ValueContainer<V>
 	 *            If true, nothing is returned, and the function simply consumes
 	 *            the appropriate number of bits from the BitStream.
 	 * 
-	 * @return
 	 */
 	public V decompress(BitStream bits, int ngramOrder, boolean justConsume);
 
@@ -108,7 +104,6 @@ public interface ValueContainer<V>
 	 * 
 	 * @param offset
 	 * @param ngramOrder
-	 * @return
 	 */
 	public long getContextOffset(long offset, int ngramOrder);
 

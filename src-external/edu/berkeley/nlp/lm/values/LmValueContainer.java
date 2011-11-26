@@ -138,7 +138,6 @@ abstract class LmValueContainer<V extends Comparable<V>> implements ValueContain
 	/**
 	 * @param bits
 	 * @param huffmanEncoder
-	 * @return
 	 */
 	private long doDecode(final BitStream bits) {
 		return nonHuffmanCoder.decompress(bits);

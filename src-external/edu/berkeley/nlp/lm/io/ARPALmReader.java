@@ -45,7 +45,6 @@ public class ARPALmReader<W>
 
 	/**
 	 * 
-	 * @return
 	 * @throws IOException
 	 */
 	protected String readLine() throws IOException {
@@ -190,7 +189,6 @@ public class ARPALmReader<W>
 	/**
 	 * 
 	 * @param string
-	 * @return
 	 */
 	private int[] parseNGram(final String string, final int numWords) {
 		final int[] retVal = new int[numWords];

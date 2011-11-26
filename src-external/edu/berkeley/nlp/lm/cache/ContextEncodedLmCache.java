@@ -15,7 +15,6 @@ public interface ContextEncodedLmCache extends Serializable
 	 * @param word
 	 * @param hash
 	 * @param outputPrefix
-	 * @return
 	 */
 	public float getCached(long contextOffset, int contextOrder, int word, int hash, @OutputParameter LmContextInfo outputPrefix);
 

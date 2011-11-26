@@ -21,7 +21,6 @@ public class LmReaders
 	 * @param lmFile
 	 * @param lmOrder
 	 * @param wordIndexer
-	 * @return
 	 */
 	public static <W> BackoffLm<W> readArpaLmFile(final ConfigOptions opts, final String lmFile, final int lmOrder, final WordIndexer<W> wordIndexer) {
 
@@ -40,7 +39,6 @@ public class LmReaders
 	 * @param wordIndexer
 	 * @param valueAddingCallback
 	 * @param numNgramsForEachWord
-	 * @return
 	 */
 	private static <W> BackoffLm<W> secondPass(final ConfigOptions opts, final String lmFile, final int lmOrder, final WordIndexer<W> wordIndexer,
 		final FirstPassCallback<ProbBackoffPair> valueAddingCallback, final LongArray[] numNgramsForEachWord) {
@@ -62,7 +60,6 @@ public class LmReaders
 	 * @param lmFile
 	 * @param lmOrder
 	 * @param wordIndexer
-	 * @return
 	 */
 	private static <W> FirstPassCallback<ProbBackoffPair> firstPass(final ConfigOptions opts, final String lmFile, final int lmOrder,
 		final WordIndexer<W> wordIndexer) {

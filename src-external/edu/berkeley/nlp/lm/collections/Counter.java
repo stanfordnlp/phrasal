@@ -90,7 +90,6 @@ public class Counter<E> implements Serializable
 	 * counter.
 	 * 
 	 * @param key
-	 * @return
 	 */
 	public double getCount(final E key) {
 		final Double value = entries.get(key);
@@ -159,7 +158,6 @@ public class Counter<E> implements Serializable
 	 * Will return a sample from the counter, will throw exception if any of the
 	 * counts are < 0.0 or if the totalCount() <= 0.0
 	 * 
-	 * @return
 	 * 
 	 * @author aria42
 	 */
@@ -181,7 +179,6 @@ public class Counter<E> implements Serializable
 	 * Will return a sample from the counter, will throw exception if any of the
 	 * counts are < 0.0 or if the totalCount() <= 0.0
 	 * 
-	 * @return
 	 * 
 	 * @author aria42
 	 */

@@ -113,7 +113,6 @@ public class GoogleLmReader<W>
 					 * @param callback
 					 * @param ngramOrder
 					 * @param line
-					 * @return
 					 */
 					private void parseLine(final String line) {
 						final int tabIndex = line.indexOf('\t');

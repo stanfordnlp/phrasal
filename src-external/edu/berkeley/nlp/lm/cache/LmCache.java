@@ -12,7 +12,6 @@ public interface LmCache extends Serializable
 	 * @param startPos
 	 * @param endPos
 	 * @param shortHash
-	 * @return
 	 */
 	public float getCached(int[] ngram, int startPos, int endPos, int hash);
 
@@ -23,7 +22,6 @@ public interface LmCache extends Serializable
 	/**
 	 * How n-grams can be cached (at most).
 	 * 
-	 * @return
 	 */
 	public int capacity();
 

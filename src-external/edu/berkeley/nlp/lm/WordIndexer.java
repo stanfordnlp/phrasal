@@ -20,7 +20,6 @@ public interface WordIndexer<W> extends Serializable
 	 * Gets the index for a word, adding if necessary.
 	 * 
 	 * @param word
-	 * @return
 	 */
 	public int getOrAddIndex(W word);
 
@@ -31,7 +30,6 @@ public interface WordIndexer<W> extends Serializable
 	 * word is not in the vocabulary.
 	 * 
 	 * @param word
-	 * @return
 	 */
 	public int getIndexPossiblyUnk(W word);
 
@@ -40,14 +38,12 @@ public interface WordIndexer<W> extends Serializable
 	/**
 	 * Number of words that have been added so far
 	 * 
-	 * @return
 	 */
 	public int numWords();
 
 	/**
 	 * Returns the start symbol (usually something like {@literal <s>}
 	 * 
-	 * @return
 	 */
 	public W getStartSymbol();
 
@@ -56,7 +52,6 @@ public interface WordIndexer<W> extends Serializable
 	/**
 	 * Returns the start symbol (usually something like {@literal </s>}
 	 * 
-	 * @return
 	 */
 	public W getEndSymbol();
 
@@ -65,7 +60,6 @@ public interface WordIndexer<W> extends Serializable
 	/**
 	 * Returns the unk symbol (usually something like {@literal <unk>}
 	 * 
-	 * @return
 	 */
 	public W getUnkSymbol();
 
@@ -90,7 +84,6 @@ public interface WordIndexer<W> extends Serializable
 		 * @param intNgram
 		 * @param startPos
 		 * @param endPos
-		 * @return
 		 */
 		public static <T> List<T> toList(final WordIndexer<T> wordIndexer, final int[] intNgram, final int startPos, final int endPos) {
 			final List<T> l = new ArrayList<T>(endPos - startPos);

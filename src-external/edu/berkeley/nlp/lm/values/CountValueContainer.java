@@ -28,7 +28,6 @@ public final class CountValueContainer extends LmValueContainer<Long>
 	 * @param ngramOrder
 	 * @param index
 	 * @param uncompressProbs2
-	 * @return
 	 */
 	private long getCount(final int ngramOrder, final long index, final long[] array) {
 		final int countIndex = (int) valueRanksCompressed[ngramOrder].get(index);

@@ -55,7 +55,6 @@ public interface ContextEncodedNgramLanguageModel<W> extends NgramLanguageModelB
 	 * @param outputContext
 	 *            Offset of the suffix of the input n-gram. If the parameter is
 	 *            <code>null</code> it will be ignored.
-	 * @return
 	 */
 	public float getLogProb(long contextOffset, int contextOrder, int word, @OutputParameter LmContextInfo outputContext);
 

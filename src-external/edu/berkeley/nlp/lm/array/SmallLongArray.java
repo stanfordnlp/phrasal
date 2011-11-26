@@ -113,7 +113,6 @@ public final class SmallLongArray implements Serializable, LongArray
 
 	/**
 	 * @param pos
-	 * @return
 	 */
 	private long getHelp(final long pos) {
 		return data[i(pos)];

@@ -18,7 +18,6 @@ public interface NgramLanguageModelBase<W>
 	/**
 	 * Maximum size of n-grams stored by the model.
 	 * 
-	 * @return
 	 */
 	public int getLmOrder();
 
@@ -26,7 +25,6 @@ public interface NgramLanguageModelBase<W>
 	 * Each LM must have a WordIndexer which assigns integer IDs to each word W
 	 * in the language.
 	 * 
-	 * @return
 	 */
 	public WordIndexer<W> getWordIndexer();
 
@@ -34,7 +32,6 @@ public interface NgramLanguageModelBase<W>
 	 * Scores a complete sentence, taking appropriate care with the start- and
 	 * end-of-sentence symbols.
 	 * 
-	 * @return
 	 */
 	public float scoreSentence(List<W> sentence);
 

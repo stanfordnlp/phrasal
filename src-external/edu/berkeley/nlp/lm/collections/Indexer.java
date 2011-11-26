@@ -51,7 +51,6 @@ public class Indexer<E extends Comparable> implements Serializable
 	 * in the indexer.
 	 * 
 	 * @param o
-	 * @return
 	 */
 	public int indexOf(final E o) {
 		final int index = indexes.get(o, -1);

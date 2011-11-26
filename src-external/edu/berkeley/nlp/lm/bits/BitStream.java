@@ -80,7 +80,6 @@ public final class BitStream
 	 * Read and return next n bits.
 	 * 
 	 * @param n
-	 * @return
 	 */
 	public long next(final int n) {
 		assert n <= Long.SIZE;

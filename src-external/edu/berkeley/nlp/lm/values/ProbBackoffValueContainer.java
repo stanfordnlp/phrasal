@@ -31,7 +31,6 @@ public final class ProbBackoffValueContainer extends LmValueContainer<ProbBackof
 	 * @param ngramOrder
 	 * @param index
 	 * @param uncompressProbs2
-	 * @return
 	 */
 	private float getCount(final int ngramOrder, final long index, final float[] array) {
 		final int countIndex = (int) valueRanksCompressed[ngramOrder].get(index);

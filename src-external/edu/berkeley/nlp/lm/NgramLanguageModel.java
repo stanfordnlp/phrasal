@@ -24,7 +24,6 @@ public interface NgramLanguageModel<W> extends NgramLanguageModelBase<W>
 	 *            start of the portion of the array to be read
 	 * @param endPos
 	 *            end of the portion of the array to be read.
-	 * @return
 	 */
 	public float getLogProb(int[] ngram, int startPos, int endPos);
 
@@ -42,7 +41,6 @@ public interface NgramLanguageModel<W> extends NgramLanguageModelBase<W>
 	 * 
 	 * @see #getLogProb(int[], int, int)
 	 * @param ngram
-	 * @return
 	 */
 	public float getLogProb(List<W> ngram);
 
@@ -50,7 +48,6 @@ public interface NgramLanguageModel<W> extends NgramLanguageModelBase<W>
 	 * Scores sequence possibly containing multiple n-grams, but not a complete
 	 * sentence.
 	 * 
-	 * @return
 	 */
 	public float scoreSequence(List<W> sequence);
 

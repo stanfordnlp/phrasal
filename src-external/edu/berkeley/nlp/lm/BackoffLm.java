@@ -60,7 +60,6 @@ public class BackoffLm<W> extends AbstractContextEncodedNgramLanguageModel<W> im
 	 * @param ngram
 	 * @param startPos_
 	 * @param endPos_
-	 * @return
 	 */
 	private float getLogProbDirectly(final int[] ngram, final int startPos_, final int endPos_) {
 		int startPos = startPos_;
@@ -87,7 +86,6 @@ public class BackoffLm<W> extends AbstractContextEncodedNgramLanguageModel<W> im
 	 * @param ngram
 	 * @param startPos_
 	 * @param endPos_
-	 * @return
 	 */
 	private float getLogProbWithOffsets(final int[] ngram, final int startPos_, final int endPos_) {
 		int startPos = startPos_;

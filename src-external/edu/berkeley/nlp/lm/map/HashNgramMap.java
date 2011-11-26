@@ -132,7 +132,6 @@ public class HashNgramMap<T> extends AbstractNgramMap<T> implements ContextEncod
 	/**
 	 * @param ngram
 	 * @param endPos
-	 * @return
 	 */
 	private long getSuffixOffset(final int[] ngram, final int startPos, final int endPos) {
 		long suffixIndex = -1;
@@ -179,7 +178,6 @@ public class HashNgramMap<T> extends AbstractNgramMap<T> implements ContextEncod
 	 * @param ngramOrder
 	 * @param currEndPos
 	 * @param hash
-	 * @return
 	 */
 	private long getIndexHelp(final int[] ngram, final int startPos, final int ngramOrder, final int endPos, final long hash) {
 		final long index = maps[ngramOrder - 1].getIndexImplicitly(ngram, hash, startPos, endPos, maps);
@@ -190,7 +188,6 @@ public class HashNgramMap<T> extends AbstractNgramMap<T> implements ContextEncod
 	 * @param ngram
 	 * @param endPos
 	 * @param startPos
-	 * @return
 	 */
 	private long hash(final int[] ngram, final int startPos, final int endPos, final HashMap currMap) {
 		final int firstWord = firstWord(ngram, startPos, endPos);
@@ -208,7 +205,6 @@ public class HashNgramMap<T> extends AbstractNgramMap<T> implements ContextEncod
 	 * @param ngram
 	 * @param startPos
 	 * @param endPos
-	 * @return
 	 */
 	private int firstWord(final int[] ngram, final int startPos, final int endPos) {
 		return reversed ? ngram[startPos] : ngram[endPos - 1];

@@ -27,7 +27,6 @@ public class CompressionUtils
 
 	/**
 	 * @param input
-	 * @return
 	 */
 	private static int readUnary(final BitStream input) {
 		return input.nextConsecutiveZeros();
@@ -48,7 +47,6 @@ public class CompressionUtils
 
 	/**
 	 * @param numDigits
-	 * @return
 	 */
 	private static BitList writeUnary(final int numDigits) {
 		final BitList bits = new BitList();
@@ -60,7 +58,6 @@ public class CompressionUtils
 
 	/**
 	 * @param delta
-	 * @return
 	 */
 	private static int getNumBits(final long delta) {
 		return Long.SIZE - Long.numberOfLeadingZeros(delta);
@@ -69,7 +66,6 @@ public class CompressionUtils
 	/**
 	 * @param numBits
 	 * @param bitsPerDigit
-	 * @return
 	 */
 	private static int getNumDigits(final int numBits, final int bitsPerDigit) {
 		int numDigits = (numBits / bitsPerDigit) + ((numBits % bitsPerDigit) == 0 ? 0 : 1);
