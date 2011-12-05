@@ -22,8 +22,8 @@ import edu.stanford.nlp.util.Pair;
  *
  */
 public class AlignedPair {
-   private GrammaticalStructure f;
-   private GrammaticalStructure e;
+   public GrammaticalStructure f;
+   public GrammaticalStructure e;
    public TreeGraphNode e2f[];
    public TreeGraphNode f2e[];
    public TreeGraphNode[] fLeaves;
