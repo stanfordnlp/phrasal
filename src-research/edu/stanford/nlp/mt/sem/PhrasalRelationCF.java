@@ -101,6 +101,10 @@ public class PhrasalRelationCF {
       
       PhrasalRelationCF prcf = (PhrasalRelationCF)o;
       
+      if (children.length != prcf.children.length || gov.length != prcf.gov.length) {
+         return false;
+      }
+      
       if (hashCode() != prcf.hashCode()) {
          return false;
       }
