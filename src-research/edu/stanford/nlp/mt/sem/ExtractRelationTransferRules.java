@@ -1,12 +1,9 @@
 package edu.stanford.nlp.mt.sem;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -17,8 +14,6 @@ import java.util.Set;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.trees.GrammaticalRelation;
-import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
@@ -63,7 +58,7 @@ public class ExtractRelationTransferRules {
       }
    }
    
-   static private class ExtendedExtractionFrame extends ExtractionFrame {
+   static class ExtendedExtractionFrame extends ExtractionFrame {
       public final TypedDependency eLinkedDep;
       public final TypedDependency fLinkedDep;
       
@@ -260,7 +255,7 @@ public class ExtractRelationTransferRules {
       return true;
    }
    
-   private static List<TypedDependency> findAll(TypedDependency startDep, TypedDependency[][] links, boolean parents) {
+   static List<TypedDependency> findAll(TypedDependency startDep, TypedDependency[][] links, boolean parents) {
       List<TypedDependency> discoveredDeps = new ArrayList<TypedDependency>();      
       boolean[] reachableNodes = new boolean[links.length];
       reachableNodes[startDep.gov().index()-1] = true;
