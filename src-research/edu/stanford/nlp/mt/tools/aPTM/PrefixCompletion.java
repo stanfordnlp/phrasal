@@ -58,7 +58,7 @@ public class PrefixCompletion extends AbstractHandler {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  public static final String HTML_RESOURCES_PATH = "edu/stanford/nlp/mt/resources";
+  public static final String HTML_RESOURCES_PATH = "edu/stanford/nlp/mt/tools/aPTM/ui";
   public static final String DEFAULT_WEB_PAGE = "/translate.html";
   PrefixDecoder<IString,String> prefixDecoder; 
   LanguageModel<IString> lm;
