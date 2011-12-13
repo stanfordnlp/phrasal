@@ -235,7 +235,7 @@ var ptm = (function() {
     // Completions for a transmitted target-side prefix.
     predictResponse: function(data){
       console.log("handler: predictResponse:");
-      console.log(data);
+      // console.log(data);
 
       // Map the predictResponse message to a set of completions
       // data := Array[{first: completion, second: src-coverage},...]
@@ -307,7 +307,7 @@ var ptm = (function() {
           keyMap[prop] = 1;
         }
 
-        console.log(keyMap);
+        // console.log(keyMap);
         ptmUI.openPTMWindow(keyMap);
 
       } else {
@@ -391,7 +391,7 @@ var ptm = (function() {
       };
       
       console.log("POST: ptmInit");
-      console.log(ptmMsg);
+      // console.log(ptmMsg);
       
       $.ajax({
             url: _serverURL,
@@ -422,7 +422,7 @@ var ptm = (function() {
       };
       
       console.log("POST: sendOOV");
-      console.log(ptmMsg);
+      // console.log(ptmMsg);
       
       $.ajax({
             url: _serverURL,
@@ -451,7 +451,7 @@ var ptm = (function() {
           maxPredictions: _numResultsToFetch,
         };
         console.log("POST: ptmPredict");
-        console.log(ptmMsg);
+        // console.log(ptmMsg);
       
         //Register the callback here since we'll send it directly
         //to the autocomplete box
@@ -473,7 +473,7 @@ var ptm = (function() {
     //When the user selects a completion
     autoCompleteSelect: function(completion){
       console.log("autoCompleteSelect:");
-      console.log("Completion: " + completion);
+      // console.log("Completion: " + completion);
       
       ptmUI.hideStatus();
       
@@ -502,7 +502,7 @@ var ptm = (function() {
         completion: ptmUI.cleanUp(completion),
       };
       console.log("POST: ptmUserSelection");
-      console.log(ptmMsg);
+      // console.log(ptmMsg);
       
       $.ajax({
             url: _serverURL,
@@ -529,7 +529,7 @@ var ptm = (function() {
         numKeyStrokes: _numKeyStrokes,
       };
       console.log("POST: ptmDone");
-      console.log(ptmMsg);
+      // console.log(ptmMsg);
       
       $.ajax({
             url: _serverURL,
