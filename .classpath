@@ -42,5 +42,6 @@
 	<classpathentry kind="lib" path="lib-research/servlet-api-2.5.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
+	<classpathentry kind="lib" path="lib/berkeleyaligner.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
