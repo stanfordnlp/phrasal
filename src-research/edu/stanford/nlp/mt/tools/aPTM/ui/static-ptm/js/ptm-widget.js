@@ -41,11 +41,13 @@ var PTMWidget = function(completions, divContainerId) {
   this.handlerProxy = 0;
 
   //CSS theming
-  this.defaultBackground = '#FFFFFF';
+  this.defaultBackground = 'White';
   this.tgtBorder = '#E80000';
-  this.tgtBackground = '#FF0000';
+  this.tgtBackground = 'Red';
   this.tgtSelectBackground = '#E80000';
   this.srcBorder = '#6699FF';
+  this.srcFontColor = 'Black';
+  this.srcFontShaded = 'DarkGrey';
 };
 
 // selectCallback: function to call when an option is selected
@@ -78,7 +80,8 @@ PTMWidget.prototype.Show = function(selectCallback, filterIds) {
   $( this.widgetSel ).css('left', boundBox.left);
   $( this.widgetSel ).css('border-color', this.tgtBorder);
   $( this.widgetSel ).css('background-color', this.tgtBackground);
-  
+
+  this.HighlightPrefix(option.pref, true);
   this.HighlightTokens(option.coverage, true);
   
   // Map the keyboard handler
@@ -150,6 +153,7 @@ PTMWidget.prototype.KeyHandler = function(event) {
 
   } else {
     var completion = this.nbestList[this.nbestId];
+    this.HighlightPrefix(completion.pref, false);
     this.HighlightTokens(completion.coverage, false);
     if (this.selectKeys[event.keyCode]){
 //      console.log("Select event");
@@ -177,6 +181,7 @@ PTMWidget.prototype.ScrollText = function(cmd) {
       this.nbestId = this.nbestList.length - 1;
     }
   }
+  this.HighlightPrefix(lastOption.pref, false);
   this.HighlightTokens(lastOption.coverage, false);
 
   var option = this.nbestList[this.nbestId];
@@ -216,11 +221,12 @@ PTMWidget.prototype.ScrollText = function(cmd) {
         easing:'easeInOutCubic'
     });
   }
+  this.HighlightPrefix(option.pref, true);  
   this.HighlightTokens(option.coverage, true);  
 };
 
 PTMWidget.prototype.HighlightTokens = function(divIdArray, doHighlight) {
-//  console.log('Highlight: ' + doHighlight);
+  //console.log('Highlight: ' + doHighlight);
   var backgroundColor = 0;
   var textStyle = 0;
   if (doHighlight){
@@ -236,5 +242,21 @@ PTMWidget.prototype.HighlightTokens = function(divIdArray, doHighlight) {
 //    $( divId ).css( 'background-color', backgroundColor);
     $( divId ).css('border-color', backgroundColor);
 //    $( divId ).css('font-weight', textStyle);
+  }
+};
+
+PTMWidget.prototype.HighlightPrefix = function(divIdArray, doShading) {
+  //console.log('HighlightPref:' + divIdArray);
+  if (divIdArray) {
+    var textColor = 0;
+    if (doShading){
+      textColor = this.srcFontShaded;
+    } else {
+      textColor = this.srcFontColor;
+    }
+    for (var i in divIdArray) {
+      var divId = 'div#'+divIdArray[i];
+      $( divId ).css('color', textColor);
+    }
   }
 };

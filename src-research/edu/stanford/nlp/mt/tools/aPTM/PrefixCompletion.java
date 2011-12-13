@@ -27,9 +27,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -43,7 +45,6 @@ import edu.stanford.nlp.mt.base.TranslationOption;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.inferer.impl.PrefixDecoder;
 import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Prefix completion prototype
@@ -69,26 +70,12 @@ public class PrefixCompletion extends AbstractHandler {
   public static final String PREFIX_GET_NAME = "prefix";
   public static final String SOURCE_GET_NAME = "source";
 
-  class PrefixRequest {
-    String prefix;
-    String source;
-
-    public PrefixRequest(String prefix, String source) {
-      this.prefix = prefix;
-      this.source = source;
-    }
-  }
-
-  private boolean hasParameter(Request baseRequest, String paramName) {
+  private static boolean hasParameter(Request baseRequest, String paramName) {
     String param = baseRequest.getParameter(paramName);
-    if (DEBUG && param != null && !"".equals(param)) {
+    if (DEBUG && param != null && param.length() > 0) {
       System.err.printf("%s: %s\n", paramName, param);
     }
-    return param != null && !"".equals(param);
-  }
-
-  private boolean isJustPunct(String c) {
-    return c.replaceAll("[\\p{Punct} ]", "").equals("");
+    return param != null && param.length() > 0;
   }
 
   public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
@@ -103,9 +90,10 @@ public class PrefixCompletion extends AbstractHandler {
       parameters.add(e.nextElement());
     }
 
-    if(DEBUG)
+    if(DEBUG) {
       System.err.println("Received request wiht parameters " + parameters);
-
+    }
+    
     if (hasParameter(baseRequest, "ptmInit")) {
       PTMInitRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmInit"), PTMInitRequest.class);
       if (DEBUG) {
@@ -118,6 +106,7 @@ public class PrefixCompletion extends AbstractHandler {
       Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
       //responseString = wrapResponse("ptmInitResponse", gson.toJson(ptmResponse, t));
       responseString = gson.toJson(ptmResponse, t);
+
     } else if (hasParameter(baseRequest, "ptmOOV")) {
       PTMOOVRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmOOV"), 
           PTMOOVRequest.class);
@@ -126,54 +115,36 @@ public class PrefixCompletion extends AbstractHandler {
       }
       // responseString = wrapResponse("ptmOOVResponse", gson.toJson(new PTMStatusOk()));  
       responseString = gson.toJson(new PTMStatusOk());  
+    
     } else if (hasParameter(baseRequest, "ptmPredict") ||
-    		   (hasParameter(baseRequest, "prefix"))) {       
+        (hasParameter(baseRequest, "prefix"))) {       
       PTMPredictionRequest ptmRequest;
       if (hasParameter(baseRequest, "ptmPredict")) {
-    	  ptmRequest = gson.fromJson(baseRequest.getParameter("ptmPredict"), PTMPredictionRequest.class);
+        ptmRequest = gson.fromJson(baseRequest.getParameter("ptmPredict"), PTMPredictionRequest.class);
       } else {
-    	 String sourceLang = baseRequest.getParameter("sourceLang");
-    	 String targetLang = baseRequest.getParameter("targetLang");
-    	 String source = baseRequest.getParameter("source");
-    	 String prefix = baseRequest.getParameter("prefix");
-    	 int maxPredictions;
-    	 if (hasParameter(baseRequest, "maxPredictions")) {
-    		 maxPredictions = Integer.parseInt(baseRequest.getParameter("maxPredictions"));
-    	 } else {
-    		 maxPredictions = Integer.MAX_VALUE;
-    	 }
-         ptmRequest = new PTMPredictionRequest(sourceLang, targetLang, source, prefix, maxPredictions);
+        String sourceLang = baseRequest.getParameter("sourceLang");
+        String targetLang = baseRequest.getParameter("targetLang");
+        String source = baseRequest.getParameter("source");
+        String prefix = baseRequest.getParameter("prefix");
+        int maxPredictions;
+        if (hasParameter(baseRequest, "maxPredictions")) {
+          maxPredictions = Integer.parseInt(baseRequest.getParameter("maxPredictions"));
+        } else {
+          maxPredictions = Integer.MAX_VALUE;
+        }
+        ptmRequest = new PTMPredictionRequest(sourceLang, targetLang, source, prefix, maxPredictions);
       }
-      
+
       if (DEBUG) {
         System.err.println("PTMPredictionRequest: " + gson.toJson(ptmRequest)); 
       }
 
-      String prefix = ptmRequest.prefix;
-      List<Pair<String,String>> predictions = new ArrayList<Pair<String,String>>();
-      List<Completion> completions = getCompletions(
-          ptmRequest.source, ptmRequest.prefix);
-      if (DEBUG) {
-        System.err.printf("Predictions\n");
-      }
-      Set<String> previouslyListedCompletions = new HashSet<String>();
-      for (Completion c : completions) {
-        if (previouslyListedCompletions.contains(c.targetPhrase) ||
-            isJustPunct(c.targetPhrase)) {
-          continue;
-        }
-
-        predictions.add(new Pair<String,String>(c.targetPhrase,c.srcCoverage));
-        previouslyListedCompletions.add(c.targetPhrase);
-        if (DEBUG) {
-          System.err.printf("- '%s'\n", c.targetPhrase);
-        }
-      }
-      predictions = predictions.subList(0, Math.min(predictions.size(), ptmRequest.maxPredictions));
-      PTMPredictionResponse ptmResponse = new PTMPredictionResponse(prefix, predictions);
+      List<ScoredCompletion> completions = getCompletions(ptmRequest.source, ptmRequest.prefix);
+      List<Prediction> predictions = filterCompletions(completions, ptmRequest.maxPredictions);
+      PTMPredictionResponse ptmResponse = new PTMPredictionResponse(ptmRequest.prefix, predictions);
       Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
-      //responseString = wrapResponse("ptmPredictResponse", gson.toJson(ptmResponse, t));
       responseString = gson.toJson(ptmResponse, t);
+    
     } else if (hasParameter(baseRequest, "ptmUserSelection")) {
       PTMCompletionSelectionRequest ptmRequest = gson.fromJson(baseRequest.getParameter("ptmUserSelection"), PTMCompletionSelectionRequest.class);
       if (DEBUG) {
@@ -181,6 +152,7 @@ public class PrefixCompletion extends AbstractHandler {
       }
       //responseString = wrapResponse("ptmUserSelectionResponse", gson.toJson(new PTMStatusOk()));
       responseString = gson.toJson(new PTMStatusOk());      
+    
     } else if (hasParameter(baseRequest, "ptmDone")) {
       PTMDoneRequest ptmRequest = gson.fromJson(request.getParameter("ptmDone"), PTMDoneRequest.class);
       if (DEBUG) {
@@ -292,38 +264,38 @@ public class PrefixCompletion extends AbstractHandler {
     RawSequence<IString> source = new RawSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
     String OOV = "";
     if (phr != null) {
-	    for (IString token : source) {
-	      List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(new RawSequence<IString>(new IString[]{token}));
-	      if (phraseTranslations == null || phraseTranslations.size() == 0) {
-	        if (!"".equals(OOV)) {
-	          OOV = OOV + " ";
-	        }
-	        OOV = OOV + token.toString();
-	        if (DEBUG) {
-	          System.err.printf("'%s' is an OOV\n", token);
-	        }
-	      } else if (!"".equals(OOV)){
-	        OOVs.add(OOV);
-	        OOV = "";
-	        if (DEBUG) {
-	          System.err.printf("Final OOV phrase %s\n", OOV);
-	        }
-	      }
-	
-	      if (DEBUG && phraseTranslations != null) {
-	        System.err.printf("%d translations for %s\n", phraseTranslations.size(), token);
-	      }
-	
-	    }
-	    if (!"".equals(OOV)) {
-	      OOVs.add(OOV);
-	    }
+      for (IString token : source) {
+        List<TranslationOption<IString>> phraseTranslations = phr.getTranslationOptions(new RawSequence<IString>(new IString[]{token}));
+        if (phraseTranslations == null || phraseTranslations.size() == 0) {
+          if (!"".equals(OOV)) {
+            OOV = OOV + " ";
+          }
+          OOV = OOV + token.toString();
+          if (DEBUG) {
+            System.err.printf("'%s' is an OOV\n", token);
+          }
+        } else if (!"".equals(OOV)){
+          OOVs.add(OOV);
+          OOV = "";
+          if (DEBUG) {
+            System.err.printf("Final OOV phrase %s\n", OOV);
+          }
+        }
+
+        if (DEBUG && phraseTranslations != null) {
+          System.err.printf("%d translations for %s\n", phraseTranslations.size(), token);
+        }
+
+      }
+      if (!"".equals(OOV)) {
+        OOVs.add(OOV);
+      }
     }
-	return OOVs;
+    return OOVs;
   }
 
   @SuppressWarnings("unchecked")
-  List<Completion> getCompletions(String sourceStr, String prefixStr) {
+  List<ScoredCompletion> getCompletions(String sourceStr, String prefixStr) {
     if (DEBUG) {
       System.err.printf("Source str: %s\n", sourceStr);
       System.err.printf("Prefix str: %s\n", prefixStr);
@@ -333,9 +305,10 @@ public class PrefixCompletion extends AbstractHandler {
     if (DEBUG) {
       System.err.printf("Source seq: %s\n", source);
       System.err.printf("Prefix seq: %s\n", prefix);
-    } 
-    List<Completion> scoredOpts = new ArrayList<Completion>();
+    }
     
+    List<ScoredCompletion> scoredOpts = null;
+
     // Agenda-based prefix decoder, which considers the coverage set.
     if (prefixDecoder != null) {
       if (DEBUG) {
@@ -344,17 +317,23 @@ public class PrefixCompletion extends AbstractHandler {
       EnumeratedConstrainedOutputSpace<IString, String> prefixConstraints = 
         new EnumeratedConstrainedOutputSpace<IString, String>(Arrays.asList(prefix), prefixDecoder.getPhraseGenerator().longestForeignPhrase());
       List<RichTranslation<IString, String>> translations = prefixDecoder.nbest(source, 0, prefixConstraints, null, -1);
-
-      if(DEBUG)
+      if(DEBUG) {
         System.err.printf("n-best list: %s\n", translations);
-      for (RichTranslation<IString,String> translation : translations) {
-        Sequence<IString> suffix = translation.translation.subsequence(prefix.size(), translation.translation.size());
-        // Find the source positions covered by this completion.
-        String coverageString = getCoverage(translation);
-        scoredOpts.add(new Completion("DEADBEEF", suffix.toString(), coverageString, translation.score));
       }
-    
+      
+      scoredOpts = new ArrayList<ScoredCompletion>(translations.size());
+      String prefixCoverage = null;
+      for (RichTranslation<IString,String> translation : translations) {
+        if (prefixCoverage == null) {
+          prefixCoverage = getPrefixSourceCoverage(translation);
+        }
+        Sequence<IString> suffix = translation.translation.subsequence(prefix.size(), translation.translation.size());
+        String completionCoverage = getCompletionSourceCoverage(translation);
+        scoredOpts.add(new ScoredCompletion(prefixCoverage, suffix.toString(), completionCoverage, translation.score));
+      }
+
     } else {
+      scoredOpts = new ArrayList<ScoredCompletion>();
       // Stupid decoder that generates completions independent of the coverage set.
       if (DEBUG) {
         System.err.println("Simple model");
@@ -393,25 +372,21 @@ public class PrefixCompletion extends AbstractHandler {
         }
         double lmScore = LanguageModels.scoreSequence(lm,prefixPlus);
         double modelScore = lmScore*lmWt;
-        if(DEBUG)
-          System.err.printf("%s lmScore: %e\n", prefixPlus, lmScore);        
+        if(DEBUG) {
+          System.err.printf("%s lmScore: %e\n", prefixPlus, lmScore); 
+        }
         for (int i = 0; i < opt.scores.length; i++) {
           //          System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
           modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
         }
-        Completion completion = new Completion(opt.foreign.toString(), opt.translation.toString(), "", modelScore);
+        ScoredCompletion completion = new ScoredCompletion(opt.foreign.toString(), opt.translation.toString(), "", modelScore);
         scoredOpts.add(completion);        
       }  
-    }            
+    } // End of completion generation
 
-    Collections.sort(scoredOpts, new Comparator<Completion>() {
-      public int compare(Completion o1, Completion o2) {
-        return (int)Math.signum(o2.score-o1.score); 
-      }
-      public boolean equals(Object obj) {
-        return obj == this;
-      }
-    });
+    // Sort the completions according to their scores
+    Collections.sort(scoredOpts, completionComparator);
+    
     if(DEBUG) {
       System.err.println(scoredOpts);
       if (scoredOpts.size() >= 1) {
@@ -420,7 +395,18 @@ public class PrefixCompletion extends AbstractHandler {
     }
     return scoredOpts;    
   }
-
+  
+  private static class ScoredCompletionComparator implements Comparator<ScoredCompletion> {
+    public int compare(ScoredCompletion o1, ScoredCompletion o2) {
+      return (int)Math.signum(o2.score-o1.score); 
+    }
+    public boolean equals(Object obj) {
+      return obj == this;
+    }
+  }
+  private static final ScoredCompletionComparator completionComparator = new ScoredCompletionComparator();
+  
+  
   /**
    * Returns a string representing the source positions covered by the most
    * recent translation option in this hypothesis. For example, if the most
@@ -428,28 +414,59 @@ public class PrefixCompletion extends AbstractHandler {
    * 
    * @param opt The rich hypothesis object
    */
-  private String getCoverage(RichTranslation<IString, String> opt) {
+  private static String getCompletionSourceCoverage(RichTranslation<IString, String> opt) {
     CoverageSet coverage = opt.featurizable.option.foreignCoverage;
-        
-    StringBuilder sb = null;
+    StringBuilder sb = new StringBuilder();
     for (int coveredBit : coverage) {
-      if (sb == null) {
-        sb = new StringBuilder();
-        sb.append(coveredBit);
-      } else {
-        sb.append("-").append(coveredBit);
+      if (sb.length() > 0) sb.append("-");
+      sb.append(coveredBit);
+    }
+    return sb.toString();
+  }
+
+  private static String getPrefixSourceCoverage(RichTranslation<IString, String> opt) {
+    StringBuilder sb = new StringBuilder();
+    for (Featurizable<IString, String> featurizer = opt.featurizable.prior; 
+          featurizer != null; 
+          featurizer = featurizer.prior) {
+      int offset = featurizer.foreignPosition;
+      System.err.printf("Pos: %d len %d%n", offset, featurizer.foreignPhrase.size());
+      for (int i = 0; i < featurizer.foreignPhrase.size(); ++i) {
+        if (sb.length() > 0) sb.append("-");
+        sb.append(String.valueOf(i + offset));
       }
     }
     return sb.toString();
   }
 
+  private static final Pattern discardCompletion = Pattern.compile("[\\p{Punct}|\\s]$");
+  private static List<Prediction> filterCompletions(List<ScoredCompletion> completions, int maxPredictions) {
+    List<Prediction> predictionList = new ArrayList<Prediction>(completions.size());
+    Set<String> uniqueCompletions = new HashSet<String>(completions.size());
+    
+    for (ScoredCompletion completion : completions) {
+      if (predictionList.size() == maxPredictions) {
+        break;
+      }
+      if (uniqueCompletions.contains(completion.tgtPhrase) ||
+          discardCompletion.matcher(completion.tgtPhrase).matches()) {
+        continue;
+      }
+      uniqueCompletions.add(completion.tgtPhrase);
+      Prediction prediction = new Prediction(completion.srcPrefCoverage,
+          completion.tgtPhrase, completion.srcCoverage);
+      predictionList.add(prediction);
+    }
+    return predictionList;
+  }
+  
   public static void usage() {
     System.err.println("Usage:\n\tjava ...PrefixCompletion -simple (lm) (phrase table) (lm wt) (phr table wt1) (phr table wt2) ...");
     System.err.println("\nOr:\n\tjava ...PrefixCompletion -phrasal phrasal_ini");
   }
 
   @SuppressWarnings("unchecked")
-public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {
     PrefixCompletion pc = null;
 
     if (args.length < 2) {
@@ -504,25 +521,6 @@ public static void main(String[] args) throws Exception {
   }
 }
 
-class Completion {
-  public final String sourcePhrase;
-  public final String targetPhrase;
-  
-  // Source coverage is of the form "0-1-3-4-15-6" and so on
-  public final String srcCoverage;
-  public final double score;
-
-  public Completion(String sourcePhrase, String targetPhrase, String s2tAlignment, double score) {
-    this.sourcePhrase = sourcePhrase;
-    this.targetPhrase = targetPhrase;
-    this.srcCoverage = s2tAlignment;
-    this.score = score;
-  }
-
-  public String toString() {
-    return String.format("Source: %s, Target: %s, Coverage: %s, Model Score: %e", sourcePhrase, targetPhrase, srcCoverage, score);
-  }
-}
 
 abstract class PTMBaseRequest {
   public final String sourceLang;
@@ -534,12 +532,12 @@ abstract class PTMBaseRequest {
     this.source = source;
   }
 }
+
 class PTMInitRequest extends PTMBaseRequest {
   public PTMInitRequest(String sourceLang, String targetLang, String source) {
     super(sourceLang, targetLang, source);
   }
 }
-
 
 class PTMOOVPhrasePair {
   public final String sourcePhrase;
@@ -585,17 +583,17 @@ class PTMCompletionSelectionRequest extends PTMBaseRequest {
 class PTMDoneRequest extends PTMBaseRequest {
   public final String finishedTarget;
   public final int numKeyStrokes;
-  
+
   public PTMDoneRequest(String sourceLang, String targetLang, String source, String finishedTarget, int numKeyStrokes) {
     super(sourceLang, targetLang, source);
     this.finishedTarget = finishedTarget;
     this.numKeyStrokes  = numKeyStrokes;
   }
-  
+
   @Override 
   public String toString() {
-	 return String.format("ptmDone: sourceLang: %s targetLang: %s source: %s finishedTarget: %s numKeyStrokes: %d",
-			 sourceLang, targetLang, source, finishedTarget, numKeyStrokes);
+    return String.format("ptmDone: sourceLang: %s targetLang: %s source: %s finishedTarget: %s numKeyStrokes: %d",
+        sourceLang, targetLang, source, finishedTarget, numKeyStrokes);
   }
 }
 
@@ -612,10 +610,10 @@ class PTMOOVResponse {
 
 class PTMPredictionResponse {
   final String prefix;
-  final List<Pair<String,String>> predictions;
-  public PTMPredictionResponse(String prefix, List<Pair<String,String>> predictions) {
+  final List<Prediction> predictions;
+  public PTMPredictionResponse(String prefix, List<Prediction> predictions) {
     this.prefix = prefix;
-    this.predictions = new ArrayList<Pair<String,String>>(predictions);
+    this.predictions = predictions;
   }
 }
 

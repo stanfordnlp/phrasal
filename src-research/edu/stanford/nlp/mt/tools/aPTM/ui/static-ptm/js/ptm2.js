@@ -235,7 +235,7 @@ var ptm = (function() {
     // Completions for a transmitted target-side prefix.
     predictResponse: function(data){
       console.log("handler: predictResponse:");
-//      console.log(data);
+      console.log(data);
 
       // Map the predictResponse message to a set of completions
       // data := Array[{first: completion, second: src-coverage},...]
@@ -244,14 +244,28 @@ var ptm = (function() {
       var predictions = data.predictions;
       var completions = new Array(predictions.length);
       for (var idx in predictions) {
-        var tgtText = predictions[idx].first;
+        // The target completion text
+        var tgtText = predictions[idx].tgtPhrase;
         _predictionsCache.Add(tgtText, idx);
-        var srcToks = predictions[idx].second.split("-");
+
+        // Source coverage of the completion
+        var srcToks = predictions[idx].srcCoverage.split("-");
         var srcCoverage = $.map(srcToks, function(val, i){
           return _srcTokStyleClass + "-" + val;
         });
+
+        // Source coverage of the prefix
+        var srcPrefCoverage = 0;
+        if (predictions[idx].srcPrefCoverage){ 
+          var prefToks = predictions[idx].srcPrefCoverage.split("-");
+          srcPrefCoverage = $.map(prefToks, function(val, i){
+            return _srcTokStyleClass + "-" + val;
+          });
+        }
+
         var option = {
           tgt: tgtText,
+          pref: srcPrefCoverage,
           coverage: srcCoverage,
         };
         completions[idx] = option;
