@@ -307,6 +307,8 @@ public class PrefixCompletion extends AbstractHandler {
       System.err.printf("Prefix seq: %s\n", prefix);
     }
     
+    // TODO(spenceg): This should just return the list of translations, which will be turned into
+    // Prediction objects for transmission over the wire.
     List<ScoredCompletion> scoredOpts = null;
 
     // Agenda-based prefix decoder, which considers the coverage set.
@@ -327,9 +329,10 @@ public class PrefixCompletion extends AbstractHandler {
         if (prefixCoverage == null) {
           prefixCoverage = getPrefixSourceCoverage(translation);
         }
-        Sequence<IString> suffix = translation.translation.subsequence(prefix.size(), translation.translation.size());
+        String srcPhrase = translation.featurizable.foreignPhrase.toString();
+        String tgtPhrase = translation.translation.subsequence(prefix.size(), translation.translation.size()).toString();
         String completionCoverage = getCompletionSourceCoverage(translation);
-        scoredOpts.add(new ScoredCompletion(prefixCoverage, suffix.toString(), completionCoverage, translation.score));
+        scoredOpts.add(new ScoredCompletion(prefixCoverage, srcPhrase, tgtPhrase, completionCoverage, translation.score));
       }
 
     } else {
@@ -379,7 +382,7 @@ public class PrefixCompletion extends AbstractHandler {
           //          System.err.printf(" modelScore[%d]: %e\n", i, opt.scores.length);
           modelScore += opt.scores[i]*(phrTableWts.length > i ? phrTableWts[i] : phrTableWts.length == 0 ? 1 : 0.0);          
         }
-        ScoredCompletion completion = new ScoredCompletion(opt.foreign.toString(), opt.translation.toString(), "", modelScore);
+        ScoredCompletion completion = new ScoredCompletion(opt.foreign.toString(), opt.foreign.toString(), opt.translation.toString(), "", modelScore);
         scoredOpts.add(completion);        
       }  
     } // End of completion generation
@@ -430,7 +433,6 @@ public class PrefixCompletion extends AbstractHandler {
           featurizer != null; 
           featurizer = featurizer.prior) {
       int offset = featurizer.foreignPosition;
-      System.err.printf("Pos: %d len %d%n", offset, featurizer.foreignPhrase.size());
       for (int i = 0; i < featurizer.foreignPhrase.size(); ++i) {
         if (sb.length() > 0) sb.append("-");
         sb.append(String.valueOf(i + offset));
@@ -442,17 +444,18 @@ public class PrefixCompletion extends AbstractHandler {
   private static final Pattern discardCompletion = Pattern.compile("[\\p{Punct}|\\s]$");
   private static List<Prediction> filterCompletions(List<ScoredCompletion> completions, int maxPredictions) {
     List<Prediction> predictionList = new ArrayList<Prediction>(completions.size());
-    Set<String> uniqueCompletions = new HashSet<String>(completions.size());
+    Set<String> uniqueTargetCompletions = new HashSet<String>(completions.size());
     
     for (ScoredCompletion completion : completions) {
       if (predictionList.size() == maxPredictions) {
         break;
       }
-      if (uniqueCompletions.contains(completion.tgtPhrase) ||
-          discardCompletion.matcher(completion.tgtPhrase).matches()) {
+      if (uniqueTargetCompletions.contains(completion.tgtPhrase) ||
+          discardCompletion.matcher(completion.tgtPhrase).matches() ||
+          discardCompletion.matcher(completion.srcPhrase).matches()) {
         continue;
       }
-      uniqueCompletions.add(completion.tgtPhrase);
+      uniqueTargetCompletions.add(completion.tgtPhrase);
       Prediction prediction = new Prediction(completion.srcPrefCoverage,
           completion.tgtPhrase, completion.srcCoverage);
       predictionList.add(prediction);
