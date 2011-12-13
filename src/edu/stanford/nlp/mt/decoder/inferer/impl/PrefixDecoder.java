@@ -36,7 +36,9 @@ import edu.berkeley.nlp.wordAlignment.distortion.StateMapper.EndsStateMapper;
 import edu.berkeley.nlp.wordAlignment.distortion.StateMapper;
 import edu.berkeley.nlp.wordAlignment.SentencePairState;
 import edu.berkeley.nlp.wa.mt.SentencePair;
+//import edu.berkeley.nlp.mt.SentencePair;
 import edu.berkeley.nlp.wa.mt.Alignment;
+//import edu.berkeley.nlp.mt.Alignment;
 
 /**
  * Prefix decoder 
@@ -61,6 +63,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       throw new UnsupportedOperationException();
     }
     Model paramsRv = Model.load(reverseWAModel);
+    System.err.printf("paramsRv: %s\n", paramsRv);
+    System.err.printf("paramsRv.transProbs: %s\n", paramsRv.transProbs);
+
     paramsRv.transProbs.lock();
     StateMapper mapper = new EndsStateMapper();
     DistortionModel distModel = new StringDistanceModel(mapper);
@@ -181,30 +186,43 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     SentencePair sp = new SentencePair(0, "none", eWords, fWords);
     if (targets != null && targets.size() > 0 && !targets.get(0).toString().equals("")) {
 	    Alignment aRv = alignerRv.alignSentencePair(sp);
-	    if (DEBUG) {
-	    	System.out.println("Alignment:");
-	    	System.out.println(aRv);
-	    }
+	    System.out.println("Alignment:");
+	    System.out.println(aRv);
+      int lastF = 0;
 	    for (int i = 0; i < targets.get(0).size(); i++) {
 	    	List<Integer> e2fA = aRv.getAlignmentsToEnglish(i);
 	    	int sureAlignment = -1;
 	    	for (Integer a : e2fA) {
-	    	    if (aRv.containsSureAlignment(i, a)) {
+            if (sureAlignment == -1 || 
+                (Math.abs(sureAlignment - lastF)  > Math.abs(a - lastF) && 
+                waHyp.foreignCoverage.get(a) == false)) {
+                sureAlignment = a;
+            }
+	    	    /* if (aRv.containsSureAlignment(i, a)) {
 	    	      sureAlignment = a;
 	    	      break;
-	    	    }
+	    	    } */
 	    	}
 	    	if (DEBUG) {
 	    		System.out.printf("e.%d -> f.%d\n", i, sureAlignment);
 	    	}
-	    	if (sureAlignment == -1) continue;
-	    	TranslationOption<IString> fakeOpt = new TranslationOption<IString>(
+	      CoverageSet foreignCoverage = new CoverageSet();
+    	  TranslationOption<IString> fakeOpt;
+	    	if (sureAlignment == -1) {
+    	    	fakeOpt = 
+            new TranslationOption<IString>(
+	    			new float[0], new String[0], 
+	    			new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
+	    			new RawSequence<IString>(new IString[]{new IString("")}), null);
+        } else { 
+            lastF = sureAlignment;
+    	    	fakeOpt = 
+            new TranslationOption<IString>(
 	    			new float[0], new String[0], 
 	    			new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
 	    			new RawSequence<IString>(new IString[]{foreign.get(sureAlignment)}), null);
-	    	
-	    	CoverageSet foreignCoverage = new CoverageSet();
-	    	foreignCoverage.set(sureAlignment);
+	        	foreignCoverage.set(sureAlignment);
+        }
 	    	ConcreteTranslationOption<IString> fakeConcreteOpt = 
 	    			new ConcreteTranslationOption<IString>(
 	    			  fakeOpt,
@@ -280,19 +298,19 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       nbest.add(new RichTranslation<IString, FV>(hyp.featurizable, hyp.finalScoreEstimate(), null));
     }
     
-    System.err.println("Alignments\n==========");
+    ///System.err.println("Alignments\n==========");
     for (int i = 0; i < Math.min(10, predictions.size()); i++) {
-    	System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
+    	//System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
     	List<String> alignments = new LinkedList<String>();
     	for (Hypothesis<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
     		alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.foreignPhrase, 
     				hyp.featurizable.translatedPhrase, Arrays.toString(hyp.translationOpt.abstractOption.scores)));
     	}
         Collections.reverse(alignments);
-    	for (String alignment : alignments) {
+    /*	for (String alignment : alignments) {
     	   System.err.print("   ");
     	   System.err.println(alignment);
-    	}
+    	} */
     }
     
     return nbest;

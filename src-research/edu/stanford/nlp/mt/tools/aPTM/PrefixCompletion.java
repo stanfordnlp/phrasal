@@ -507,7 +507,7 @@ public class PrefixCompletion extends AbstractHandler {
       System.exit(-1);
     } 
 
-    Server server = new Server(8080);
+    Server server = new Server(8081);
     server.setHandler(pc);
     server.start();
     server.join();

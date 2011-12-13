@@ -67,9 +67,9 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       if (allowableSequence.equals(translation)) {
         return true;
       }
-      System.err.printf("%s\n%s\n", allowableSequence, translation);
-      System.err.printf("left %d\n",
-          allowableSequence.size() - translation.size());
+      //System.err.printf("%s\n%s\n", allowableSequence, translation);
+      //System.err.printf("left %d\n",
+      //    allowableSequence.size() - translation.size());
     }
 
     return false;
