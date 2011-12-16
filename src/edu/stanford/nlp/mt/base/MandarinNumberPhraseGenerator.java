@@ -27,7 +27,9 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
 
    static Map<String,Integer> basicMandarinNumberCharacters = new HashMap<String,Integer>();
    static {
-      basicMandarinNumberCharacters.put("一", 1);  // yi
+      basicMandarinNumberCharacters.put("零", 0);  // ling
+      basicMandarinNumberCharacters.put("〇", 0);
+      basicMandarinNumberCharacters.put("一", 1);  // yi      
       basicMandarinNumberCharacters.put("二", 2);  // er      
       basicMandarinNumberCharacters.put("三", 3);  // sān
       basicMandarinNumberCharacters.put("四", 4);  // sì 
