@@ -384,8 +384,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               // decimal handling
               if (specialNumberChars.containsKey(firstWord.substring(firstWord.length()-1))) {
                   long num = 0;
-                  if (firstWord.endsWith("亿")) num = (long)(Double.parseDouble(firstWord.substring(0, firstWord.length()-2)) * 100000000L);
-                  else if (firstWord.endsWith("万")) num = (long)(Double.parseDouble(firstWord.substring(0, firstWord.length()-2)) * 10000);
+                  if (firstWord.endsWith("亿")) num = (long)(Double.parseDouble(firstWord.substring(0, firstWord.length()-1)) * 100000000L);                  
+                  else if (firstWord.endsWith("万")) num = (long)(Double.parseDouble(firstWord.substring(0, firstWord.length()-1)) * 10000);
                   englishNumber.append(addCommas(num));
                   altTrans.append(numToWord(num, false));
               } else { // direct decimal with no chinese characters
