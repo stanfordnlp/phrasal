@@ -160,7 +160,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                    prev = (int)getRawNumber(chStr.substring(0, i), usesArabic);
                    i = 0;
                }
-               enNum += (prev * 100000000);
+               enNum += ((long)prev * 100000000);
            } else {
                if (usesArabic) {
                    int j = i;
