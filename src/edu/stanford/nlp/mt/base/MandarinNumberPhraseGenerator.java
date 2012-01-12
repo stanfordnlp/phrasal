@@ -64,16 +64,18 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
    
    public String getOrdinal(int full) {
        int num = full % 10;
-       if (num == 1) {
-           return "st";
+       if (full % 100 > 20 || full % 100 < 4) {
+           if (num == 1) {
+               return "st";
+           }
+           if (num == 2) {
+               return "nd";
+           }
+           if (num == 3) {
+               return "rd";
+           }
        }
-       if (num == 2) {
-           return "nd";
-       }
-       if (num == 3) {
-           return "rd";
-       }
-       else return "th";
+       return "th";
    }
    
    public String numToWord(long num, boolean addSpace) {
@@ -319,7 +321,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       StringBuffer firstTrans = new StringBuffer();
       StringBuffer secondTrans = new StringBuffer();
       StringBuffer thirdTrans = new StringBuffer();
-
+ 
+      boolean moreThan = false;
       // minor preprocessing - check for certain specific auxillary characters and remove them
       if (firstWord.contains("多") || firstWord.contains("余")) { // this is crude at the moment
           String temp = "";
@@ -329,7 +332,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
           temp += firstWord.substring(0, auxIndex);
           if (auxIndex+1 != firstWord.length()) temp += firstWord.substring(auxIndex+1);
           firstWord = temp;
-          firstTrans.append("more than ");          
+          moreThan = true;
       }
       
       boolean usesArabic = usesArabicNumbers(firstWord);
@@ -498,6 +501,14 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
           } 
       }
       
+      // re-insert pre-processed items
+      if (moreThan) {
+          if (!firstTrans.toString().equals("")) firstTrans.insert(0, "more than ");
+          if (!secondTrans.toString().equals("")) secondTrans.insert(0, "more than ");
+          if (!thirdTrans.toString().equals("")) thirdTrans.insert(0, "more than ");
+      }
+      
+      // add results to translation options
       if (!firstTrans.toString().equals("")) {
           RawSequence<IString> firstTransAsSequence =
                new RawSequence<IString>(new IString[] { new IString(firstTrans.toString()) });
