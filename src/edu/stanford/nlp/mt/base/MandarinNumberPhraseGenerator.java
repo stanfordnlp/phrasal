@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.DataInputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -61,7 +62,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        }               
    }
    
-   public String getOrdinal(int num) {
+   public String getOrdinal(int full) {
+       int num = full % 10;
        if (num == 1) {
            return "st";
        }
@@ -70,18 +72,6 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        }
        if (num == 3) {
            return "rd";
-       }
-       if (num == 21) {
-           return "st";
-       }
-       if (num == 22) {
-           return "nd";
-       }
-       if (num == 23) {
-           return "rd";
-       }
-       if (num == 31) {
-           return "st";
        }
        else return "th";
    }
@@ -176,7 +166,17 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                    else enNum += Long.parseLong(chStr.substring(++j, i+1)); // we're still somewhere in the number
                    i = j;
                } else {
-                   enNum += basicNumberChars.get(chStr.substring(i, i+1));
+                   if (i > 0 && basicNumberChars.containsKey(chStr.substring(i-1,i))) {
+                       // if both this character and the one to the left are basicNumberChars
+                       // we'll assume it's a written-out number in Chinese (relatively rare)
+                       int j = 0;
+                       while(basicNumberChars.containsKey(charAtI) && i >= 0) {
+                           charAtI = chStr.substring(i, i+1);
+                           enNum += basicNumberChars.get(charAtI) * (Math.pow(10,j));
+                           i--;
+                           j++;
+                       }
+                   } else enNum += basicNumberChars.get(chStr.substring(i, i+1));
                }
            }
        }
@@ -278,14 +278,47 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
         tensPlace.put(8, "eighty");
         tensPlace.put(9, "ninety");
     }
+    
+    static Map<Integer,String> wordOrdinal = new HashMap<Integer,String>();
+    static {
+        wordOrdinal.put(0, "");
+        wordOrdinal.put(1, "first");
+        wordOrdinal.put(2, "second");
+        wordOrdinal.put(3, "third");
+        wordOrdinal.put(4, "fourth");
+        wordOrdinal.put(5, "fifth");
+        wordOrdinal.put(6, "sixth");
+        wordOrdinal.put(7, "seventh");
+        wordOrdinal.put(8, "eighth");
+        wordOrdinal.put(9, "ninth");
+        wordOrdinal.put(10, "tenth");
+        wordOrdinal.put(11, "eleventh");
+        wordOrdinal.put(12, "twelfth");
+        wordOrdinal.put(13, "thirteenth");
+        wordOrdinal.put(14, "fourteenth");
+        wordOrdinal.put(15, "fifteenth");
+        wordOrdinal.put(16, "sixteenth");
+        wordOrdinal.put(17, "seventeenth");
+        wordOrdinal.put(18, "eighteenth");
+        wordOrdinal.put(19, "nineteenth");
+        wordOrdinal.put(20, "twentieth");
+        wordOrdinal.put(30, "thirieth");
+        wordOrdinal.put(40, "fortieth");
+        wordOrdinal.put(50, "fiftieth");
+        wordOrdinal.put(60, "sixtieth");
+        wordOrdinal.put(70, "seventieth");
+        wordOrdinal.put(80, "eightieth");
+        wordOrdinal.put(90, "nintieth");
+    }
    
    @Override
    public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> chinesePhrase) {
       String firstWord = chinesePhrase.get(0).word();
       int size = firstWord.length();
       List<TranslationOption<IString>> candidateTranslations = new LinkedList<TranslationOption<IString>>();
-      StringBuffer englishNumber = new StringBuffer();
-      StringBuffer altTrans = new StringBuffer();
+      StringBuffer firstTrans = new StringBuffer();
+      StringBuffer secondTrans = new StringBuffer();
+      StringBuffer thirdTrans = new StringBuffer();
 
       // minor preprocessing - check for certain specific auxillary characters and remove them
       if (firstWord.contains("多") || firstWord.contains("余")) { // this is crude at the moment
@@ -296,7 +329,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
           temp += firstWord.substring(0, auxIndex);
           if (auxIndex+1 != firstWord.length()) temp += firstWord.substring(auxIndex+1);
           firstWord = temp;
-          englishNumber.append("more than ");          
+          firstTrans.append("more than ");          
       }
       
       boolean usesArabic = usesArabicNumbers(firstWord);
@@ -304,40 +337,39 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       if (firstWord.contains("分")) {
           if (firstWord.contains("百")) { // currently will accidentally catch fractions that otherwise have hundreds in them - needs fixing, but quite uncommon
               // percentage
-              if (firstWord.contains("之")) englishNumber.append(getRawNumber(firstWord.substring(3, size), usesArabic));
-              else englishNumber.append(getRawNumber(firstWord.substring(2, size), usesArabic));
-              englishNumber.append("%");              
+              if (firstWord.contains("之")) firstTrans.append(getRawNumber(firstWord.substring(3, size), usesArabic));
+              else firstTrans.append(getRawNumber(firstWord.substring(2, size), usesArabic));
+              firstTrans.append("%");              
           } else {
               // fraction - note: prints exactly as given, does not simplify fractions
-              if (firstWord.contains("之")) englishNumber.append(getRawNumber(firstWord.substring(firstWord.indexOf("之") + 1, size), usesArabic));
-              else englishNumber.append(getRawNumber(firstWord.substring(firstWord.indexOf("分") + 1, size), usesArabic));
-              englishNumber.append("/");
-              englishNumber.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("分")), usesArabic)); 
+              if (firstWord.contains("之")) firstTrans.append(getRawNumber(firstWord.substring(firstWord.indexOf("之") + 1, size), usesArabic));
+              else firstTrans.append(getRawNumber(firstWord.substring(firstWord.indexOf("分") + 1, size), usesArabic));
+              firstTrans.append("/");
+              firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("分")), usesArabic)); 
           }
       } else if (firstWord.contains("％") || firstWord.contains("%")) {
           // percentages with percent signs - parse arabic numbers directly to avoid decimal problems
           if (usesArabic) {
               double num = Double.parseDouble(firstWord.substring(0, firstWord.length()-1));
-              if (num % 1 == 0) englishNumber.append(Integer.parseInt(firstWord.substring(0, firstWord.length()-1))); // avoid dangling .0s if it's an integer
-              else englishNumber.append(num);
-          } else englishNumber.append(getRawNumber(firstWord.substring(0, firstWord.length()-1), usesArabic));
-          englishNumber.append("%");    
+              if (num % 1 == 0) firstTrans.append(Integer.parseInt(firstWord.substring(0, firstWord.length()-1))); // avoid dangling .0s if it's an integer
+              else firstTrans.append(num);
+          } else firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.length()-1), usesArabic));
+          firstTrans.append("%");    
       } else if (firstWord.contains("／") || firstWord.contains("/")) {
           // fractions with slashes
           int slashIndex = 0;
           if (firstWord.contains("／")) slashIndex = firstWord.indexOf("／"); // chinese slash
           else slashIndex = firstWord.indexOf("/"); // english slash
-          englishNumber.append(getRawNumber(firstWord.substring(0, slashIndex), usesArabic));
-          englishNumber.append("/");
-          englishNumber.append(getRawNumber(firstWord.substring(slashIndex+1), usesArabic));
-          
+          firstTrans.append(getRawNumber(firstWord.substring(0, slashIndex), usesArabic));
+          firstTrans.append("/");
+          firstTrans.append(getRawNumber(firstWord.substring(slashIndex+1), usesArabic));
       } else if (firstWord.contains("年") || firstWord.contains("月") || firstWord.contains("日") || firstWord.contains("号")) {
           // dates
           if (firstWord.contains("代")) {
               // decade
-              englishNumber.append("the ");
-              englishNumber.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("年")), usesArabic));
-              englishNumber.append("s");
+              firstTrans.append("the ");
+              firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("年")), usesArabic));
+              firstTrans.append("s");
           } else {
               boolean hasDay = false;
               boolean hasMonth = false;
@@ -347,74 +379,150 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                   int startIndex = 0;
                   if (firstWord.contains("年")) startIndex = firstWord.indexOf("年") + 1;
                   int endIndex = firstWord.indexOf("月");
-                  englishNumber.append(monthNames.get((int)getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic)));
+                  firstTrans.append(monthNames.get((int)getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic)));
               }
               if (firstWord.contains("日") || firstWord.contains("号")) {
                   // day
                   hasDay = true;
-                  if (hasMonth) englishNumber.append(" ");
+                  if (hasMonth) firstTrans.append(" ");
                   int startIndex = 0;
                   if (firstWord.contains("月")) startIndex = firstWord.indexOf("月") + 1;
                   int endIndex = 0;
                   if (firstWord.contains("日")) endIndex = firstWord.indexOf("日");
                   else endIndex = firstWord.indexOf("号");
-                  englishNumber.append(getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic));
-                  englishNumber.append(getOrdinal((int)getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic)));
+                  firstTrans.append(getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic));
+                  firstTrans.append(getOrdinal((int)getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic)));
               }
               if (firstWord.contains("年")) {
                   // year
-                  if (hasDay || hasMonth) englishNumber.append(", ");                      
-                  if (usesArabic) englishNumber.append(firstWord.substring(0, firstWord.indexOf("年")));
+                  if (hasDay || hasMonth) firstTrans.append(", ");                      
+                  if (usesArabic) firstTrans.append(firstWord.substring(0, firstWord.indexOf("年")));
                   else {
                       for (int i = 0; i < firstWord.indexOf("年"); i++) {
                           String charAtI = firstWord.substring(i, i+1);
-                          englishNumber.append(basicNumberChars.get(charAtI));
+                          firstTrans.append(basicNumberChars.get(charAtI));
                       }
                   }
               }
           }
       } else if (firstWord.contains("第")) {
           // ordinal
-          int num = (int)getRawNumber(firstWord.substring(firstWord.indexOf("第")+1), usesArabic);
-          englishNumber.append(num);
-          englishNumber.append(getOrdinal(num));
+          long num = getRawNumber(firstWord.substring(firstWord.indexOf("第")+1), usesArabic);
+          String word = numToWord(num, false);
+          if (num % 100 == 0) { // hundredth, thousandth, millionth, etc
+              firstTrans.append(word);
+              firstTrans.append("th");
+          } else {
+              if (word.contains(" ")) { // more than one word
+                  firstTrans.append(word.substring(0, word.lastIndexOf(" ")+1));
+                  firstTrans.append(wordOrdinal.get((int)num % 100));
+              } else if (word.contains("-")) { // 
+                  firstTrans.append(word.substring(0, word.lastIndexOf("-")+1));
+                  firstTrans.append(wordOrdinal.get((int)num % 10));
+              } else firstTrans.append(wordOrdinal.get((int)num));
+          }
+          secondTrans.append(num);
+          secondTrans.append(getOrdinal((int)num));
+          if (num >= 10) { // make word the priority trans for n < 10, number priority otherwise
+              String temp = firstTrans.toString();
+              firstTrans.replace(0, firstTrans.length(), secondTrans.toString());
+              secondTrans.replace(0, secondTrans.length(), temp);
+          }
+      } else if (firstWord.contains(":") || firstWord.contains("：")) {
+          // ratios
+          int index = 0;
+          if (firstWord.contains("：")) index = firstWord.indexOf("："); // chinese colon
+          else index = firstWord.indexOf(":");
+          firstTrans.append(getRawNumber(firstWord.substring(0, index), usesArabic));
+          firstTrans.append(":");
+          firstTrans.append(getRawNumber(firstWord.substring(index+1), usesArabic));
+      } else if (firstWord.contains("-")){
+          // dashes, crude, presumes dashes must mean it's in arabic nums
+          firstTrans.append(firstWord);      
       } else {
           // cardinal or money
           if (usesArabic && firstWord.contains(".")) { 
               // decimal handling
               if (specialNumberChars.containsKey(firstWord.substring(firstWord.length()-1))) {
                   long num = 0;
-                  if (firstWord.endsWith("亿")) num = (long)(Double.parseDouble(firstWord.substring(0, firstWord.length()-1)) * 100000000L);                  
-                  else if (firstWord.endsWith("万")) num = (long)(Double.parseDouble(firstWord.substring(0, firstWord.length()-1)) * 10000);
-                  englishNumber.append(addCommas(num));
-                  altTrans.append(numToWord(num, false));
+                  BigDecimal bd = new BigDecimal(firstWord.substring(0, firstWord.length()-1));
+                  if (firstWord.endsWith("亿")) {
+                      if (bd.doubleValue() >= 10000.0) thirdTrans.append(bd.divide(new BigDecimal("10000"))).append(" trillion");
+                      else if (bd.doubleValue() >= 10.0) thirdTrans.append(bd.divide(new BigDecimal("10"))).append(" billion");
+                      else thirdTrans.append(bd.multiply(new BigDecimal("100")).intValue()).append(" million");
+                      num = (bd.multiply(new BigDecimal(100000000L))).longValue();
+                  } else if (firstWord.endsWith("万")) {
+                      if (bd.doubleValue() >= 100.0) thirdTrans.append(bd.divide(new BigDecimal("100"))).append(" million");
+                      num = (bd.multiply(new BigDecimal(10000))).longValue();
+                  }
+                  firstTrans.append(addCommas(num));
+                  secondTrans.append(numToWord(num, false));
+                  if (!thirdTrans.toString().equals("")) { // if the third translation exists it should be the priority one
+                      String temp = firstTrans.toString();
+                      firstTrans.replace(0, firstTrans.length(), thirdTrans.toString());
+                      thirdTrans.replace(0, thirdTrans.length(), temp);
+                  }
               } else { // direct decimal with no chinese characters
-                  englishNumber.append(firstWord);
+                  firstTrans.append(firstWord);
               }
           } else { 
               long num = getRawNumber(firstWord, usesArabic);
-              if (num > 999) englishNumber.append(addCommas(num));
-              else englishNumber.append(num);
-              altTrans.append(numToWord(num, false)); 
-          }
+              if (num > 999) firstTrans.append(addCommas(num));
+              else firstTrans.append(num);
+              secondTrans.append(numToWord(num, false)); 
+              
+              // special case to add third mixed number/word translation for certain large numbers without decimals
+              if (specialNumberChars.containsKey(firstWord.substring(firstWord.length()-1))) {
+                  long prev = getRawNumber(firstWord.substring(0, firstWord.length()-1), usesArabic);
+                  if (firstWord.endsWith("亿") && prev >= 10000) {
+                      boolean dec = !((prev/10000d) % 1 == 0); // checks if we're creating decimals or not
+                      if (dec) thirdTrans.append(prev/10000d).append(" trillion");
+                      else thirdTrans.append(prev/10000).append(" trillion");
+                  }
+                  else if (firstWord.endsWith("亿") && prev >= 10) {
+                      boolean dec = !((prev/10d) % 1 == 0);
+                      if (dec) thirdTrans.append(prev/10d).append(" billion");
+                      else thirdTrans.append(prev/10).append(" billion");
+                  } else if (firstWord.endsWith("亿")) thirdTrans.append(prev * 100).append(" million");
+                  if (firstWord.endsWith("万") && prev >= 100) {
+                      boolean dec = !((prev/100d) % 1 == 0);
+                      if (dec) thirdTrans.append(prev/100d).append(" million");
+                      else thirdTrans.append(prev/100).append(" million");
+                  }
+                  if (!thirdTrans.toString().equals("")) { // if this translation exists it should be the priority one
+                      String temp = firstTrans.toString();
+                      firstTrans.replace(0, firstTrans.length(), thirdTrans.toString());
+                      thirdTrans.replace(0, thirdTrans.length(), temp);
+                  }
+              }
+          } 
       }
       
-      if (!englishNumber.toString().equals("")) {
-          RawSequence<IString> englishNumberAsSequence =
-               new RawSequence<IString>(new IString[] { new IString(englishNumber.toString()) });
+      if (!firstTrans.toString().equals("")) {
+          RawSequence<IString> firstTransAsSequence =
+               new RawSequence<IString>(new IString[] { new IString(firstTrans.toString()) });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
-                  englishNumberAsSequence,
+                  firstTransAsSequence,
                   new RawSequence<IString>(chinesePhrase), null));    
       }
-      if (!altTrans.toString().equals("")) {
-          RawSequence<IString> altTransAsSequence =
-               new RawSequence<IString>(new IString[] { new IString(altTrans.toString()) });
+      if (!secondTrans.toString().equals("")) {
+          RawSequence<IString> secondTransAsSequence =
+               new RawSequence<IString>(new IString[] { new IString(secondTrans.toString()) });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
-                  altTransAsSequence,
+                  secondTransAsSequence,
+                  new RawSequence<IString>(chinesePhrase), null));    
+      }
+      if (!thirdTrans.toString().equals("")) {
+          RawSequence<IString> thirdTransAsSequence =
+               new RawSequence<IString>(new IString[] { new IString(thirdTrans.toString()) });
+          candidateTranslations.add(new TranslationOption<IString>(
+                  new float[]{(float)1.0}, // whatever scores you want to assign to this translation
+                  new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
+                  thirdTransAsSequence,
                   new RawSequence<IString>(chinesePhrase), null));    
       }
       return candidateTranslations;
@@ -453,7 +561,6 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       String line;
       
       while ((line = fileIn.readLine()) != null) {
-          System.out.println(line);
           String[] tokens = line.split("\\s+");
           Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
           try {
