@@ -400,13 +400,20 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               if (firstWord.contains("年")) {
                   // year
                   if (hasDay || hasMonth) firstTrans.append(", ");                      
-                  if (usesArabic) firstTrans.append(firstWord.substring(0, firstWord.indexOf("年")));
+                  if (usesArabic) {
+                      firstTrans.append(firstWord.substring(0, firstWord.indexOf("年")));
+                      secondTrans.append("the year ");
+                      secondTrans.append(firstWord.substring(0, firstWord.indexOf("年")));
+                  }
                   else {
                       for (int i = 0; i < firstWord.indexOf("年"); i++) {
                           String charAtI = firstWord.substring(i, i+1);
                           firstTrans.append(basicNumberChars.get(charAtI));
                       }
+                      secondTrans.append("the year ");
+                      secondTrans.append(firstTrans.toString());
                   }
+                  
               }
           }
       } else if (firstWord.contains("第")) {
