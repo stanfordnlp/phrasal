@@ -189,6 +189,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
    static {
       basicNumberChars.put("零", 0);  // ling
       basicNumberChars.put("〇", 0);
+      basicNumberChars.put("0", 0);   // for cases where chinese numbers use an arabic 0
       basicNumberChars.put("一", 1);  // yi      
       basicNumberChars.put("二", 2);  // er
       basicNumberChars.put("两", 2);  // liang
