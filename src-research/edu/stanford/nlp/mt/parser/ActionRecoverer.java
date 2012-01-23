@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.parser;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,10 +22,14 @@ import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
+/**
+ * Action recoverer for building training data for shift-reduce dependency parser
+ * Given gold dependencies, it recovers the list of actions.
+ * 
+ * @author heeyoung
+ */
 public class ActionRecoverer {
 
-  // check the correctness of recovered action trace
-  private static final boolean checkCorrectness = false;
   private static final IncrementalTagger tagger = new IncrementalTagger();
   private static final Morphology lemmatizer = new Morphology();
 
@@ -77,9 +80,6 @@ public class ActionRecoverer {
           leftsideEdgeCounter.decrementCount(w);
           arcs.remove(depPair);
         } else {
-//          if(!dependents.contains(s.stack.pop())) {
-//            throw new RuntimeException();
-//          }
           s.stack.pop();
           s.actionTrace.push(new Action(ActionType.REDUCE));
         }
@@ -93,30 +93,6 @@ public class ActionRecoverer {
     s.stack = new LinkedStack<CoreLabel>();
   }
 
-  /** check the correctness of recovered action trace */
-  private static void checkRecoveredActionTrace(Structure s){
-    Collection<TypedDependency> gold = s.dependencies.getAll();
-    LinkedStack<Action> recoveredActions = s.actionTrace;
-    LinkedStack<CoreLabel> input = s.input;
-
-    s.reset();
-
-    // TODO    
-//        Object[] inputs = input.peekN(input.size());
-//        Object[] actions = recoveredActions.peekN(recoveredActions.size());
-//        int inputIndex = inputs.length-1;
-//        s.stack.push((CoreLabel)inputs[inputIndex--]);
-//        CoreLabel curInput = (CoreLabel) inputs[inputIndex];
-//        for(int i = actions.length-1 ; i >= 0 ; i--){
-//          Action a = (Action)actions[i];
-//          Actions.doAction(a, s);
-//        }
-//        Collection<TypedDependency> recoveredDeps = s.dependencies.getAll();
-//        if(!recoveredDeps.containsAll(gold) || !gold.containsAll(recoveredDeps)) {
-//          throw new RuntimeException("Error in recovered actions");
-//        }
-  }
-
   public static List<Structure> readTrainingData(String filename, POSTaggerAnnotator posTagger) throws IOException{
     List<GrammaticalStructure> gsList =
       EnglishGrammaticalStructure.readCoNLLXGrammaticStructureCollection(filename);
@@ -125,7 +101,6 @@ public class ActionRecoverer {
       Structure s = new Structure(gs, tagger, lemmatizer, posTagger);
       recoverActionTrace(s);
       structures.add(s);
-      if(checkCorrectness) checkRecoveredActionTrace(s);
     }
     return structures;
   }
@@ -135,9 +110,5 @@ public class ActionRecoverer {
     //String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
     String filename = "/scr/heeyoung/mt/scr61/parser/debug/phrasal.8.trans.parse.basic.conllx";
     List<Structure> structures = readTrainingData(filename, null);
-
-    for(Structure s : structures) {
-      checkRecoveredActionTrace(s);
-    }
   }
 }

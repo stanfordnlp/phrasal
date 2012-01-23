@@ -2,18 +2,21 @@ package edu.stanford.nlp.mt.parser;
 
 import java.io.Serializable;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.TreeSet;
 
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LeftChildrenNodeAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
+/**
+ * Actions (e.g., shift or left_arc) for shift-reduce dependency parser
+ * 
+ * @author heeyoung
+ */
 public class Actions {
 
   public static enum ActionType {SHIFT, REDUCE, LEFT_ARC, RIGHT_ARC}
@@ -116,7 +119,7 @@ public class Actions {
     TreeGraphNode gov;
     if(s.getInputIdxToNode().containsKey(w.get(IndexAnnotation.class))) {
       gov = s.getInputIdxToNode().get(w.get(IndexAnnotation.class));
-    } else {      
+    } else {
       gov = new TreeGraphNode(w);
       s.getInputIdxToNode().put(w.get(IndexAnnotation.class), gov);
     }

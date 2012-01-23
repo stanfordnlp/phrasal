@@ -1,18 +1,13 @@
 package edu.stanford.nlp.mt.parser;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.FileHandler;
@@ -26,14 +21,14 @@ import edu.stanford.nlp.classify.LinearClassifier;
 import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.BasicDatum;
-import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.Datum;
-import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Datum;
+import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
@@ -47,17 +42,24 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.DependencyScoring;
+import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.StringUtils;
 
+/**
+ * Linear time Shift-Reduce dependency parser. Incrementally parses a sentence
+ * 
+ * @author heeyoung
+ *
+ */
 public class DepDAGParser implements Parser, Serializable {
   public static final boolean DEBUG = false;
 
   private static final long serialVersionUID = -5534972476741917367L;
 
+  // separate classifier for action and label for speed
   private LinearClassifier<ActionType, ObjectTuple<String>> actClassifier;
   private LinearClassifier<GrammaticalRelation, ObjectTuple<String>> labelClassifier;
   private static final boolean VERBOSE = false;
@@ -100,7 +102,6 @@ public class DepDAGParser implements Parser, Serializable {
 
     LinearClassifierFactory<ActionType, ObjectTuple<String>> actFactory = new LinearClassifierFactory<ActionType, ObjectTuple<String>>();
     LinearClassifierFactory<GrammaticalRelation, ObjectTuple<String>> labelFactory = new LinearClassifierFactory<GrammaticalRelation, ObjectTuple<String>>();
-    // TODO: check options
 
     featureCounter = null;
 
@@ -366,43 +367,28 @@ public class DepDAGParser implements Parser, Serializable {
     w.set(IndexAnnotation.class, idx++);
     this.parseToken(struc, w, labelRelation);
 
-    // print dependencies
-//    LinkedStack<TypedDependency> deps = struc.getDependencies();
-//
-//    StringBuilder sb = new StringBuilder();
-//
-//    Object[] ts = struc.getInput().peekN(struc.getInput().size());
-//    for(int i = ts.length-1 ; i >= 0 ; i--) {
-//      CoreLabel cl = (CoreLabel) ts[i];
-//      sb.append("\t").append(cl.get(IndexAnnotation.class)).append("\t").append(cl.get(TextAnnotation.class)).append("\t").append(cl.get(PartOfSpeechAnnotation.class)).append("\n");
-//    }
-//    System.err.println(sb.toString()+"\n");
-//
-//    Object[] ds = deps.peekN(deps.size());
-//    sb = new StringBuilder("Dependencies: \n");
-//    for(int i = ds.length-1 ; i >= 0 ; i--) {
-//      sb.append("\t").append(ds[i]).append("\n");
-//    }
-//    System.out.println(sb.toString()+"\n");
-//    System.out.println(deps);
-
-
     return struc;
   }
 
+  /**
+   * To train or test parser, use this.
+   * options: -train TrainingFile, -test TestFile, -loadModel ModelFile, -storeModel fileToStoreModel, -log LogFile, -labelRelation, -extractTree
+   * 
+   */
   public static void main(String[] args) throws Exception{
     boolean doTrain = false;
     boolean doTest = true;
     boolean storeTrainedModel = true;
-    
+
     boolean labelRelation = false;
-    boolean extractTree = true;    
+    boolean extractTree = true;
 
     Properties props = StringUtils.argsToProperties(args);
     DepDAGParser parser = null;
 
+    //
     // set logger
-
+    //
     String timeStamp = Calendar.getInstance().getTime().toString().replaceAll("\\s", "-");
     Logger logger = Logger.getLogger(DepDAGParser.class.getName());
 
@@ -433,12 +419,11 @@ public class DepDAGParser implements Parser, Serializable {
 
     // temporary for debug
 
-//        String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
+    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/small_train.conll";
     //    String tempTest = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp2.conll";
-//        String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
-    // String tempTrain = "C:\\cygwin\\home\\daniel\\temp.conll";
-//        props.put("train", tempTrain);
+    //    String tempTrain = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    //    props.put("train", tempTrain);
     //    props.put("test", tempTest);
 
     POSTaggerAnnotator posTagger = null;
@@ -450,15 +435,15 @@ public class DepDAGParser implements Parser, Serializable {
       System.exit(0);
     }
 
+    //
+    //  train model
+    //
     if(doTrain) {
       String trainingFile = props.getProperty("train", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-train-2011-01-13.conll");
 
       logger.info("read training data from "+trainingFile + " ...");
       List<Structure> trainData = ActionRecoverer.readTrainingData(trainingFile, posTagger);
-      
-      // temp
-//      SubHashMap<ObjectTuple<String>,Integer> map = buildFeatureHashMap(trainData, false); map.dumpBuckets(); if(true) return;
-      
+
       logger.info("train model...");
       DAGFeatureExtractor.printFeatureFlags(logger, rightFeatures);
       Date s1 = new Date();
@@ -466,7 +451,7 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info((((new Date()).getTime() - s1.getTime())/ 1000F) + "seconds\n");
 
       if(storeTrainedModel) {
-//        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
+        //        String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
         String defaultStore = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.withrelation.treeonly.objecttuple.ser";
         if(!props.containsKey("storeModel")) logger.info("no option -storeModel : trained model will be stored at "+defaultStore);
         String trainedModelFile = props.getProperty("storeModel", defaultStore);
@@ -475,13 +460,16 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info("training is done");
     }
 
+    //
+    //  test model
+    //
     if(doTest) {
       String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll");
       //      String testFile = props.getProperty("test", "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll");
       //      String defaultLoadModel = "/scr/heeyoung/mtdata/parser/DAGparserModel.reducedFeat_mem5_dataset.ser";
 
       if(parser==null) {
-//        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
+        //        String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.wolemma_lowercase_withQ2Q3.ser";
         String defaultLoadModel = "/scr/heeyoung/mt/mtdata/parser/DAGparserModel.norelation.treeonly.objecttuple.ser";
 
         if(!props.containsKey("loadModel")) logger.info("no option -loadModel : trained model will be loaded from "+defaultLoadModel);
@@ -494,7 +482,6 @@ public class DepDAGParser implements Parser, Serializable {
       }
       //      if(true) return;
       logger.info("read test data from "+testFile + " ...");
-      // TODO
       List<Structure> testData = ActionRecoverer.readTrainingData(testFile, null);
       //List<Structure> testData = ActionRecoverer.readTrainingData(testFile, posTagger);
 
@@ -512,30 +499,6 @@ public class DepDAGParser implements Parser, Serializable {
         LinkedStack<TypedDependency> graph = parser.getDependencyGraph(s);
         elapsedTime += (new Date()).getTime() - startTime.getTime();
         systemDeps.add(graph.getAll());
-
-        //        Object[] input = s.input.peekN(s.input.size());
-        //        StringBuilder sb = new StringBuilder("\nSentence: ");
-        //        for(int i = input.length-1 ; i >= 0 ; i--) {
-        //          String word = ((CoreLabel)input[i]).get(TextAnnotation.class);
-        //          sb.append(word).append(" ");
-        //        }
-        //        logger.fine(sb.toString());
-        //
-        //        sb = new StringBuilder();
-        //        Object[] ts = s.getInput().peekN(s.getInput().size());
-        //        for(int i = ts.length-1 ; i >= 0 ; i--) {
-        //          CoreLabel cl = (CoreLabel) ts[i];
-        //          sb.append("\t").append(cl.get(IndexAnnotation.class)).append("\t").append(cl.get(TextAnnotation.class)).append("\t").append(cl.get(PartOfSpeechAnnotation.class)).append("\n");
-        //        }
-        //        System.err.println(sb.toString()+"\n");
-        //
-        //
-        //        Object[] deps = graph.peekN(graph.size());
-        //        sb = new StringBuilder("Dependencies: \n");
-        //        for(int i = deps.length-1 ; i >= 0 ; i--) {
-        //          sb.append("\t").append(deps[i]).append("\n");
-        //        }
-        //        logger.fine(sb.toString()+"\n");
       }
       System.out.println("The number of sentences = "+count);
       System.out.printf("avg time per sentence: %.3f seconds\n", (elapsedTime / (count*1000F)));
@@ -547,6 +510,7 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info(score.toString(false));
       logger.info("done");
 
+      // example
       // parse sentence. (List<CoreLabel>)
       String sent = "My dog also likes eating sausage.";
       Properties pp = new Properties();
@@ -587,71 +551,5 @@ public class DepDAGParser implements Parser, Serializable {
     DependencyScoring goldScorer = DependencyScoring.newInstanceStringEquality(goldDeps);
     Score score = goldScorer.score(DependencyScoring.convertStringEquality(systemDeps));
     System.out.println(score.toString(true));
-  }
-
-  public static class SubHashMap<K, V> extends HashMap<K, V> {
-  
-    public void dumpBuckets() throws Exception {
-      FileOutputStream out = new FileOutputStream("/scr/heeyoung/temp.txt");
-      PrintWriter pw = new PrintWriter(out);
-      
-    
-        Field f = HashMap.class.getDeclaredField("table");
-        f.setAccessible(true);
-    
-        Map.Entry<K, V>[] table = (Map.Entry<K, V>[]) f.get(this);
-    
-        Class<?> hashMapEntryClass = null;
-        for (Class<?> c : HashMap.class.getDeclaredClasses())
-            if ("java.util.HashMap.Entry".equals(c.getCanonicalName()))
-                hashMapEntryClass = c;
-    
-        Field nextField = hashMapEntryClass.getDeclaredField("next");
-        nextField.setAccessible(true);
-    
-        for (int i = 0; i < table.length; i++) {
-    
-            pw.print("Bucket " + i + ": ");
-            Map.Entry<K, V> entry = table[i];
-    
-            while (entry != null) {
-              pw.print(entry.getKey() + " ");
-                entry = (Map.Entry<K, V>) nextField.get(entry);
-            }
-    
-            pw.println();
-        }
-        pw.close();
-    }
-  }
-  private static SubHashMap<ObjectTuple<String>,Integer> buildFeatureHashMap(List<Structure> rawTrainData, boolean labelRelation) {
-    SubHashMap<ObjectTuple<String>,Integer> counter = new SubHashMap<ObjectTuple<String>,Integer>();
-    int id = 0;
-    
-    for(Structure struc : rawTrainData) {
-      LinkedStack<Action> actions = struc.getActionTrace();
-      struc.actionTrace = new LinkedStack<Action>();
-    
-      int offset = struc.input.size();
-      Object[] acts = actions.peekN(actions.size());
-      for(int i = acts.length-1 ; i >= 0 ; i--){
-        Action act = (Action)acts[i];
-        Datum<ActionType, ObjectTuple<String>> actDatum = extractActFeature(act.action, struc, null, offset, labelRelation);
-        Datum<GrammaticalRelation, ObjectTuple<String>> labelDatum = extractLabelFeature(act.relation, act.action, actDatum, struc, null, offset);
-    
-        for(ObjectTuple<String> feature : labelDatum.asFeatures()) {
-          counter.put(feature, id++);
-        }
-        try {
-          Actions.doAction(act, struc, offset);
-          if(act.action==ActionType.SHIFT) offset--;
-        } catch (RuntimeException e) {
-          throw e;
-        }
-      }
-      struc.dependencies = new LinkedStack<TypedDependency>();
-      struc.stack = new LinkedStack<CoreLabel>();
-    }
-    return counter;
   }
 }

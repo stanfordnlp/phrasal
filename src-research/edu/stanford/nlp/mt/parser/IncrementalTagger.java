@@ -7,11 +7,16 @@ import edu.stanford.nlp.mt.tools.PrefixTagger;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.Pair;
 
+/**
+ * Wrapper class for PrefixTagger
+ * 
+ * @author heeyoung
+ */
 public class IncrementalTagger {
 
   protected final MaxentTagger tagger;
   protected final PrefixTagger ts;
-  
+
   public PrefixTagger getPrefixTagger() { return ts; }
 
   /** load default MaxentTagger model */

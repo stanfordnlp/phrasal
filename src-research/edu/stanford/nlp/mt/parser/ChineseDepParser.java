@@ -21,6 +21,11 @@ import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;
 
+/**
+ * Chinese Dependency Parser (not linear time)
+ * 
+ * @author heeyoung
+ */
 public class ChineseDepParser {
   private final String defaultModel = "/u/nlp/apache-tomcat-7.0.12/webapps/parser/WEB-INF/data/xinhuaFactored.ser.gz";
   private final String defaultDataDir = "/u/nlp/apache-tomcat-7.0.12/webapps/parser/WEB-INF/data/chinesesegmenter";

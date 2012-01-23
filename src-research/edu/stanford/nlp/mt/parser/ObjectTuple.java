@@ -2,6 +2,13 @@ package edu.stanford.nlp.mt.parser;
 
 import java.io.Serializable;
 
+/**
+ * Tuple of object
+ * 
+ * @author heeyoung
+ *
+ * @param <E>
+ */
 public class ObjectTuple<E> implements Serializable{
 
   private static final long serialVersionUID = -2097343525404385444L;
@@ -25,14 +32,14 @@ public class ObjectTuple<E> implements Serializable{
 
   private void calculateHashCode() {
     for(E e : elements){
-      hashcode = 31 * hashcode + ((e==null)? 0 : e.hashCode()); 
+      hashcode = 31 * hashcode + ((e==null)? 0 : e.hashCode());
     }
   }
 
   public E[] elems() {
     return elements;
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if(o==this) return true;

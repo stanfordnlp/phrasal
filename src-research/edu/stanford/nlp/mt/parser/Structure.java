@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.ling.CategoryWordTag;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.ValueAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.parser.lexparser.Lexicon;
@@ -24,6 +24,11 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 
+/**
+ * Structure used in shift-reduce dependency parser
+ * 
+ * @author heeyoung
+ */
 public class Structure {
 
   protected static final boolean useGoldTag = false;

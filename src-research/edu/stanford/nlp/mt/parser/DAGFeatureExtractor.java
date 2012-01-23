@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.parser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -16,14 +15,19 @@ import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.util.Pair;
 
+/**
+ * Feature extractor for linear time shift-reduce parser
+ * Edit this to add more features.
+ * 
+ * @author heeyoung
+ */
 public class DAGFeatureExtractor {
 
-  // sk : k-th item in the stack from the top (s1, s2, ...)
-  // qk : k-th item from the first element of queue (q1, q2, ...) q1: first item in the queue, q2: previous word of q1, q3: previous word of q2
-  // tk : k-th item in the queue (t1, t2, ...) : q1 == t1
+  // Sk : k-th item in the stack from the top (S1, S2, ...)
+  // Qk : k-th item from the first element of queue (Q1, Q2, ...) Q1: first item in the queue, Q2: previous word of Q1, Q3: previous word of Q2
+  // tk : k-th item in the queue (t1, t2, ...) : q1 == t1 -> this is right side feature. T3 seems not helping
   // flags
   private static final boolean useS1Word = true;
-  //  private static final boolean useS1Lemma = false;
   private static final boolean useS1POS = true;
   private static final boolean useS1WordPOS = true;
   private static final boolean useS1NumChild = true;
@@ -34,7 +38,6 @@ public class DAGFeatureExtractor {
   private static final boolean useS1PreviousTokenPOS = true;
 
   private static final boolean useS2Word = true;
-  //  private static final boolean useS2Lemma = false;
   private static final boolean useS2POS = true;
   private static final boolean useS2WordPOS = true;
   private static final boolean useS2NumChild = true;
@@ -45,22 +48,18 @@ public class DAGFeatureExtractor {
   private static final boolean useS2NextTokenPOS = true;
 
   private static final boolean useS3Word = true;
-  //  private static final boolean useS3Lemma = false;
   private static final boolean useS3POS = true;
   private static final boolean useS3WordPOS = true;
 
   private static final boolean useQ1Word = true;
-  //  private static final boolean useQ1Lemma = false;
   private static final boolean useQ1POS = true;
   private static final boolean useQ1WordPOS = true;
 
   private static final boolean useQ2Word = true;
-  //  private static final boolean useQ2Lemma = false;
   private static final boolean useQ2POS = true;
   private static final boolean useQ2WordPOS = true;
 
   private static final boolean useQ3Word = true;
-  //  private static final boolean useQ3Lemma = false;
   private static final boolean useQ3POS = true;
   private static final boolean useQ3WordPOS = true;
 
@@ -79,8 +78,6 @@ public class DAGFeatureExtractor {
   private static final boolean useS1S2POS = true;
   private static final boolean useS1S2WordPOS = true;
 
-  // temporary features for analysis - begin
-
   private static final boolean useRightFeature = true;
 
   public static class RightSideFeatures {
@@ -88,14 +85,8 @@ public class DAGFeatureExtractor {
     // T1 is same as Q1
 
     private final boolean useT2Word;
-    //    private final boolean useT2Lemma;
     private final boolean useT2POS;
     private final boolean useT2WordPOS;
-
-    //    private final boolean useT3Word;
-    //    private final boolean useT3Lemma;
-    //    private final boolean useT3POS;
-    //    private final boolean useT3WordPOS;
 
     private final boolean useT1T2Word;
     private final boolean useT1T2POS;
@@ -103,14 +94,8 @@ public class DAGFeatureExtractor {
 
     public RightSideFeatures(Properties props){
       useT2Word = Boolean.parseBoolean(props.getProperty("useT2Word", "true"));
-      //      useT2Lemma = Boolean.parseBoolean(props.getProperty("useT2Lemma", "false"));
       useT2POS = Boolean.parseBoolean(props.getProperty("useT2POS", "true"));
       useT2WordPOS = Boolean.parseBoolean(props.getProperty("useT2WordPOS", "true"));
-
-      //      useT3Word = Boolean.parseBoolean(props.getProperty("useT3Word", "false"));
-      //      useT3Lemma = Boolean.parseBoolean(props.getProperty("useT3Lemma", "false"));
-      //      useT3POS = Boolean.parseBoolean(props.getProperty("useT3POS", "false"));
-      //      useT3WordPOS = Boolean.parseBoolean(props.getProperty("useT3WordPOS", "false"));
 
       useT1T2Word = Boolean.parseBoolean(props.getProperty("useT1T2Word", "true"));
       useT1T2POS = Boolean.parseBoolean(props.getProperty("useT1T2POS", "true"));
@@ -118,10 +103,7 @@ public class DAGFeatureExtractor {
     }
   }
 
-  // temporary features for analysis - end
-
-
-  // TODO : add flags for new features
+  // TODO : add more flags for new features
 
 
   public static List<ObjectTuple<String>> extractActFeatures(Structure struc, int offset, RightSideFeatures rightFeatures, boolean labelRelation) {
@@ -130,9 +112,6 @@ public class DAGFeatureExtractor {
     LinkedStack<CoreLabel> inputQueue = struc.getInput();
     if(stack.size()==0) return features;   // empty stack: always SHIFT
     int stackSize = stack.size();
-    /*System.out.println("===============");
-    System.out.println("struct: "+struc);
-    System.out.println("offset: "+offset); */
 
     Object[] stackTopN = struc.getStack().peekN(3);
     CoreLabel s1 = (CoreLabel) stackTopN[0];
@@ -158,50 +137,28 @@ public class DAGFeatureExtractor {
     String q2POS = (q2==null)? null : q2.get(PartOfSpeechAnnotation.class);
     String q3POS = (q3==null)? null : q3.get(PartOfSpeechAnnotation.class);
 
-    //    String s1Lemma = (s1==null)? null : s1.get(LemmaAnnotation.class);
-    //    String s2Lemma = (s2==null)? null : s2.get(LemmaAnnotation.class);
-    //    String s3Lemma = (s3==null)? null : s3.get(LemmaAnnotation.class);
-    //    String q1Lemma = (q1==null)? null : q1.get(LemmaAnnotation.class);
-    //    String q2Lemma = (q2==null)? null : q2.get(LemmaAnnotation.class);
-    //    String q3Lemma = (q3==null)? null : q3.get(LemmaAnnotation.class);
-
-    // temporary features for analysis - begin
-
     if(useRightFeature){
       CoreLabel t1 = q1;
       CoreLabel t2 = null;
-      CoreLabel t3 = null;
 
       if(offset > 1) {
         t2 = (CoreLabel) queueNWords[offset-2];
-        if(offset > 2) t3 = (CoreLabel) queueNWords[offset-3];
       }
       String t1Word = q1Word;
       String t2Word = (t2==null)? null : t2.get(TextAnnotation.class).toLowerCase();
-      String t3Word = (t3==null)? null : t3.get(TextAnnotation.class).toLowerCase();
       String t1POS = q1POS;
       String t2POS = (t2==null)? null : t2.get(PartOfSpeechAnnotation.class);
-      String t3POS = (t3==null)? null : t3.get(PartOfSpeechAnnotation.class);
-      //      String t2Lemma = (t2==null)? null : t2.get(LemmaAnnotation.class);
-      //      String t3Lemma = (t3==null)? null : t3.get(LemmaAnnotation.class);
 
       if(rightFeatures.useT2Word && t2!=null) features.add(new ObjectTuple<String>(new String[]{t2Word, "T2Word"}));
-      //      if(rightFeatures.useT3Word && t3!=null) features.add(Arrays.asList(t3Word, "T3Word"));
-
       if(rightFeatures.useT2POS && t2!=null) features.add(new ObjectTuple<String>(new String[]{t2POS, "T2POS"}));
-      //      if(rightFeatures.useT3POS && t3!=null) features.add(Arrays.asList(t3POS, "T3POS"));
-
-      //      if(rightFeatures.useT2Lemma && t2!=null) features.add(Arrays.asList(t2Lemma, "T2Lemma"));
-      //      if(rightFeatures.useT3Lemma && t3!=null) features.add(Arrays.asList(t3Lemma, "T3Lemma"));
 
       if(rightFeatures.useT1T2Word && t1!=null && t2!=null) features.add(new ObjectTuple<String>(new String[]{t1Word, t2Word, "T1T2Word"}));
       if(rightFeatures.useT1T2POS && t1!=null && t2!=null) features.add(new ObjectTuple<String>(new String[]{t1POS, t2POS, "T1T2POS"}));
       if(rightFeatures.useT1T2WordPOS && t1!=null && t2!=null) features.add(new ObjectTuple<String>(new String[]{t1Word, t1POS, t2Word, t2POS, "T1T2WordPOS"}));
     }
-    // temporary features for analysis - end
 
     String preActionStr = (labelRelation)? "##"+struc.getActionTrace().peek().toString() : "##"+struc.getActionTrace().peek().action.toString();
-    /*System.out.printf("preActionStr: %s\n", preActionStr);*/
+
     SortedSet<Pair<CoreLabel, String>> s1Children = null;
     SortedSet<Pair<CoreLabel, String>> s2Children = null;
 
@@ -230,13 +187,6 @@ public class DAGFeatureExtractor {
     if(useQ1WordPOS && q1!=null) features.add(new ObjectTuple<String>(new String[]{q1Word, q1POS, "Q1WordPOS"}));
     if(useQ2WordPOS && q2!=null) features.add(new ObjectTuple<String>(new String[]{q2Word, q2POS, "Q2WordPOS"}));
     if(useQ3WordPOS && q3!=null) features.add(new ObjectTuple<String>(new String[]{q3Word, q3POS, "Q3WordPOS"}));
-
-    //    if(useS1Lemma && s1!=null) features.add(new ObjectTuple<String>(new String[]{s1Lemma, "S1Lemma"}));
-    //    if(useS2Lemma && s2!=null) features.add(new ObjectTuple<String>(new String[]{s2Lemma, "S2Lemma"}));
-    //    if(useS3Lemma && s3!=null) features.add(new ObjectTuple<String>(new String[]{s3Lemma, "S3Lemma"}));
-    //    if(useQ1Lemma && q1!=null) features.add(new ObjectTuple<String>(new String[]{q1Lemma, "Q1Lemma"}));
-    //    if(useQ2Lemma && q2!=null) features.add(new ObjectTuple<String>(new String[]{q2Lemma, "Q2Lemma"}));
-    //    if(useQ3Lemma && q3!=null) features.add(new ObjectTuple<String>(new String[]{q3Lemma, "Q3Lemma"}));
 
     if(useS1Q1word && s1!=null && q1!=null) features.add(new ObjectTuple<String>(new String[]{s1Word, q1Word, "S1Q1Word"}));
     if(useQ1Q2word && q1!=null && q2!=null) features.add(new ObjectTuple<String>(new String[]{q1Word, q2Word, "Q1Q2Word"}));
@@ -318,9 +268,7 @@ public class DAGFeatureExtractor {
 
     }
 
-
-    // TODO add features
-
+    // TODO add more features here
 
     return features;
   }
@@ -342,7 +290,6 @@ public class DAGFeatureExtractor {
     if(Structure.useGoldTag) logger.fine("use gold tags"); else logger.fine("use majority tagger");
 
     if(useS1Word) logger.fine("useS1Word on"); else logger.fine("useS1Word off");
-    //    if(useS1Lemma) logger.fine("useS1Lemma on"); else logger.fine("useS1Lemma off");
     if(useS1POS) logger.fine("useS1POS on"); else logger.fine("useS1POS off");
     if(useS1WordPOS) logger.fine("useS1WordPOS on"); else logger.fine("useS1WordPOS off");
     if(useS1NumChild) logger.fine("useS1NumChild on"); else logger.fine("useS1NumChild off");
@@ -352,7 +299,6 @@ public class DAGFeatureExtractor {
     if(useS1RightChildRel) logger.fine("useS1RightChildRel on"); else logger.fine("useS1RightChildRel off");
     if(useS1PreviousTokenPOS) logger.fine("useS1PreviousTokenPOS on"); else logger.fine("useS1PreviousTokenPOS off");
     if(useS2Word) logger.fine("useS2Word on"); else logger.fine("useS2Word off");
-    //    if(useS2Lemma) logger.fine("useS2Lemma on"); else logger.fine("useS2Lemma off");
     if(useS2POS) logger.fine("useS2POS on"); else logger.fine("useS2POS off");
     if(useS2WordPOS) logger.fine("useS2WordPOS on"); else logger.fine("useS2WordPOS off");
     if(useS2NumChild) logger.fine("useS2NumChild on"); else logger.fine("useS2NumChild off");
@@ -362,19 +308,15 @@ public class DAGFeatureExtractor {
     if(useS2RightChildRel) logger.fine("useS2RightChildRel on"); else logger.fine("useS2RightChildRel off");
     if(useS2NextTokenPOS) logger.fine("useS2NextTokenPOS on"); else logger.fine("useS2NextTokenPOS off");
     if(useS3Word) logger.fine("useS3Word on"); else logger.fine("useS3Word off");
-    //    if(useS3Lemma) logger.fine("useS3Lemma on"); else logger.fine("useS3Lemma off");
     if(useS3POS) logger.fine("useS3POS on"); else logger.fine("useS3POS off");
     if(useS3WordPOS) logger.fine("useS3WordPOS on"); else logger.fine("useS3WordPOS off");
     if(useQ1Word) logger.fine("useQ1Word on"); else logger.fine("useQ1Word off");
-    //    if(useQ1Lemma) logger.fine("useQ1Lemma on"); else logger.fine("useQ1Lemma off");
     if(useQ1POS) logger.fine("useQ1POS on"); else logger.fine("useQ1POS off");
     if(useQ1WordPOS) logger.fine("useQ1WordPOS on"); else logger.fine("useQ1WordPOS off");
     if(useQ2Word) logger.fine("useQ2Word on"); else logger.fine("useQ2Word off");
-    //    if(useQ2Lemma) logger.fine("useQ2Lemma on"); else logger.fine("useQ2Lemma off");
     if(useQ2POS) logger.fine("useQ2POS on"); else logger.fine("useQ2POS off");
     if(useQ2WordPOS) logger.fine("useQ2WordPOS on"); else logger.fine("useQ2WordPOS off");
     if(useQ3Word) logger.fine("useQ3Word on"); else logger.fine("useQ3Word off");
-    //    if(useQ3Lemma) logger.fine("useQ3Lemma on"); else logger.fine("useQ3Lemma off");
     if(useQ3POS) logger.fine("useQ3POS on"); else logger.fine("useQ3POS off");
     if(useQ3WordPOS) logger.fine("useQ3WordPOS on"); else logger.fine("useQ3WordPOS off");
     if(usePreAction) logger.fine("usePreAction on"); else logger.fine("usePreAction off");
@@ -389,16 +331,10 @@ public class DAGFeatureExtractor {
     if(useS1S2POS) logger.fine("useS1S2POS on"); else logger.fine("useS1S2POS off");
     if(useS1S2WordPOS) logger.fine("useS1S2WordPOS on"); else logger.fine("useS1S2WordPOS off");
 
-
     if(useRightFeature) logger.fine("useRightFeature on"); else logger.fine("useRightFeature off");
     if(rightFeatures.useT2Word) logger.fine("useT2Word on"); else logger.fine("useT2Word off");
-    //    if(rightFeatures.useT2Lemma) logger.fine("useT2Lemma on"); else logger.fine("useT2Lemma off");
     if(rightFeatures.useT2POS) logger.fine("useT2POS on"); else logger.fine("useT2POS off");
     if(rightFeatures.useT2WordPOS) logger.fine("useT2WordPOS on"); else logger.fine("useT2WordPOS off");
-    //    if(rightFeatures.useT3Word) logger.fine("useT3Word on"); else logger.fine("useT3Word off");
-    //    if(rightFeatures.useT3Lemma) logger.fine("useT3Lemma on"); else logger.fine("useT3Lemma off");
-    //    if(rightFeatures.useT3POS) logger.fine("useT3POS on"); else logger.fine("useT3POS off");
-    //    if(rightFeatures.useT3WordPOS) logger.fine("useT3WordPOS on"); else logger.fine("useT3WordPOS off");
     if(rightFeatures.useT1T2Word) logger.fine("useT1T2Word on"); else logger.fine("useT1T2Word off");
     if(rightFeatures.useT1T2POS) logger.fine("useT1T2POS on"); else logger.fine("useT1T2POS off");
     if(rightFeatures.useT1T2WordPOS) logger.fine("useT1T2WordPOS on"); else logger.fine("useT1T2WordPOS off");
