@@ -61,7 +61,7 @@ mkdir `pwd`/phrasal.$1/classes
 mkdir `pwd`/phrasal.$1/lib-nodistrib
 
 export CLASSPATH=.
-export CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-2011-0*[0-9] | head -1`
+export CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-201*-0*[0-9] | head -1`
 
 (cd  phrasal.$1/; ./scripts/first-build.sh all)
 if [ $? = 0 ]; then
