@@ -1,20 +1,20 @@
-Phrasal machine translation package - beta release 0 
+Phrasal machine translation package
 ====================================================
 
-Welcome to the Phrasal machine translation package beta release 0! 
+Welcome to the Phrasal machine translation package! 
 
 License:
 ========
 
 Phrasal is licensed under the GPL. For details, please see the file LICENSE.txt in the root directory of this software package.
 
-Copyright (c) 2007-2010 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
+Copyright (c) 2007-2012 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
 
 
 Dependencies:
 =============
 
-The Phrasal decoder requires that you also install the Stanford CoreNLP software package. This beta release is compatible with CoreNLP version 1.0.2, which can be downloaded from:
+The Phrasal decoder requires that you also install the latest Stanford CoreNLP software package, which can be downloaded from:
 
 http://nlp.stanford.edu/software/corenlp.shtml
 
