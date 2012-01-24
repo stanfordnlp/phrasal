@@ -14,6 +14,7 @@ import java.util.Set;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
@@ -96,110 +97,99 @@ public class ExtractRelationTransferRules {
       }
    }
    
-   public static List<RelationTransferRule> extractPhrToPhrRule(AlignedPair aPair) {
+   public static final int MAX_PHRASE_LENGTH = 5;
+   
+   static private int getPhraseBoundry(TypedDependency[][] children, TreeGraphNode node, boolean left) {
+     int b = node.index()-1;
+     if (children[b] != null) for (TypedDependency child : children[b]) {
+        if (left) {
+          b = Math.min(b, getPhraseBoundry(children, child.dep(), left));
+        } else {
+          b = Math.max(b, getPhraseBoundry(children, child.dep(), left));
+        }
+     }
+     return b;
+   }
+   
+   public static String getPhrase(TreeGraphNode[] nodes, int l, int r) {
+      StringBuilder sb = new StringBuilder();
+      for (int i = l; i<=r;i++) {
+         sb.append(nodes[i].label().word());
+         if (i != r) sb.append(" ");
+      }
+      return sb.toString();
+   }
+   
+   public static List<String> extractPhrToPhrRule(AlignedPair aPair) {
       // public RelationTransferRule(PhrasalRelationCF eDep, PhrasalRelationCF fDep) {
       // PhrasalRelationCF(String type, String[] gov, String[] children, boolean rightChildren) 
-      List<RelationTransferRule> rules = new LinkedList<RelationTransferRule>();
+      List<String> rules = new LinkedList<String>();
       //System.err.printf("aPair:\n\n%s\n\n", aPair);
       
       Map<List<Integer>, Set<RelationTransferRule>> ruleClip = new HashMap<List<Integer>, Set<RelationTransferRule>>();
       
       List<ExtractionFrame> eFrames = new ArrayList<ExtractionFrame>();
       
+      
       for (int eChildI = 0; eChildI < aPair.eLeaves.length; eChildI++) {         
+         Set<String> rulesAtI = new HashSet<String>();
          if (aPair.e2f[eChildI] == null) {
             continue;
-         }         
-         if (aPair.eParents[eChildI] == null) {
-            continue;
          }
-
-         int fChildI = aPair.e2f[eChildI].index()-1;
+         int ePhrL = getPhraseBoundry(aPair.eChildren, aPair.eLeaves[eChildI], true);
+         int ePhrR = getPhraseBoundry(aPair.eChildren, aPair.eLeaves[eChildI], false);         
+         int fPhrL = getPhraseBoundry(aPair.fChildren, aPair.fLeaves[aPair.e2f[eChildI].index()-1], true);
+         int fPhrR = getPhraseBoundry(aPair.fChildren, aPair.fLeaves[aPair.e2f[eChildI].index()-1], false);
          
-         if (aPair.fParents[fChildI] == null) {
-            continue;
-         }   
-                  
-         for (TypedDependency etd : aPair.eParents[eChildI]) {            
-            int eGovI = etd.gov().index() -1;
-            if (eGovI == -1) continue;
-            for (TypedDependency ftd : aPair.fParents[fChildI]) {
-               int fGovI = ftd.gov().index() -1;
-               if (fGovI == -1) continue;               
-               
-               if ((aPair.e2f[eGovI] == null || aPair.f2e[fGovI] == null || aPair.e2f[eGovI] == ftd.gov())) {
-                  ExtractionFrame ef = new ExtractionFrame(etd, ftd);
-                  eFrames.add(ef);
-               }
+         System.err.println("e head: "+aPair.eLeaves[eChildI]); 
+         System.err.println("f head: "+aPair.e2f[eChildI]);
+         System.err.println("ePhrL: "+ePhrL+" ePhrR: "+ePhrR);
+         System.err.println("fPhrL: "+fPhrL+" fPhrR: "+fPhrR);
+         
+         String headAloneRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(), 
+               aPair.e2f[eChildI].label().word(), aPair.eLeaves[eChildI].label().word());
+         
+         rulesAtI.add(headAloneRule);
+         
+         String headWholePhraseRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(), 
+               getPhrase(aPair.fLeaves, fPhrL, fPhrR),
+               getPhrase(aPair.eLeaves, ePhrL, ePhrR));
+         
+         rulesAtI.add(headWholePhraseRule);
+         
+         if (aPair.eChildren[eChildI] != null) for (TypedDependency child : aPair.eChildren[eChildI]) {
+            int eCCI = child.dep().index()-1;
+            if (aPair.e2f[eCCI] == null) {
+               continue;
             }
-         }
-         /*
-         Set<ExtendedExtractionFrame> extParentFrames = new HashSet<ExtendedExtractionFrame>();
-         
-         for (ExtractionFrame eFrame : eFrames) {
-            extParentFrames.add(new ExtendedExtractionFrame(eFrame.eDep, eFrame.fDep, eFrame.eDep, eFrame.fDep));
-           / * System.err.printf("eFindAllParnt: %s\n",   findAll(eFrame.eDep, aPair.eParents, true));
-            System.err.printf("eFindAllChild: %s\n", findAll(eFrame.eDep, aPair.eChildren, false));
-            System.err.printf("fFindAllParnt: %s\n",   findAll(eFrame.fDep, aPair.fParents, true));
-            System.err.printf("fFindAllChild: %s\n\n", findAll(eFrame.fDep, aPair.fChildren, false)); * /
-            Set<TypedDependency> eCanidateDeps = new HashSet<TypedDependency>();
-            eCanidateDeps.addAll(findAll(eFrame.eDep, aPair.eParents, true));
-            eCanidateDeps.addAll(findAll(eFrame.eDep, aPair.eChildren, false));
-            
-            Set<TypedDependency> fCanidateDeps = new HashSet<TypedDependency>();
-            fCanidateDeps.addAll(findAll(eFrame.fDep, aPair.fParents, true));
-            fCanidateDeps.addAll(findAll(eFrame.fDep, aPair.fChildren, false));
-            
-            for (TypedDependency eCanidate : eCanidateDeps) {            
-               for (TypedDependency fCanidate : fCanidateDeps) {
-                  extParentFrames.add(new ExtendedExtractionFrame(eFrame.eDep, eFrame.fDep, eCanidate, fCanidate));
-               }
-            }            
-         }
-          
-         List<ExtractionFrame> sortedFrames = new ArrayList<ExtractionFrame>(extParentFrames);
-         Collections.sort(sortedFrames, new Comparator<ExtractionFrame>() {
-
-            @Override
-            public int compare(ExtractionFrame o1, ExtractionFrame o2) {
-               return o1.toString().compareTo(o2.toString());
+            String relRuleE;
+            if (eCCI < eChildI) {
+               relRuleE = String.format("[%s,1] [%s,2]", aPair.e2f[eCCI].label().word(), aPair.e2f[eChildI].label().word());
+            } else {
+               relRuleE = String.format("[%s,2] [%s,1]", aPair.e2f[eChildI].label().word(), aPair.e2f[eCCI].label().word());
             }
-         });
-         for (ExtractionFrame frame : sortedFrames) {
-            //System.err.printf("frame: %s\n", frame);
+            String relRuleF;
+            if (aPair.e2f[eCCI].index() < aPair.e2f[eCCI].index()) {
+               relRuleF = String.format("[%s,1] [%s,2]", aPair.e2f[eCCI].label().word(), aPair.e2f[eChildI].label().word());
+            } else {
+               relRuleF = String.format("[%s,2] [%s,1]", aPair.e2f[eChildI].label().word(), aPair.e2f[eCCI].label().word());
+            }
+            String headDepRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(),
+                  relRuleF,
+                  relRuleE);
+            rulesAtI.add(headDepRule);            
          }
-         */
          
-         //System.out.println("Extraction:\n======================");
-        
-         for (ExtractionFrame frame : eFrames) {
-             //System.out.printf("frame: %s\n", frame);
-             List<PhraseIndices> childPhrases = extractPhrasesAroundPoint(frame.eDep.dep().index()-1, frame.fDep.dep().index()-1, aPair);         
-             List<PhraseIndices> parentPhrases = extractPhrasesAroundPoint(frame.eDep.gov().index()-1, frame.fDep.gov().index()-1, aPair);
-             for (PhraseIndices childPhraseIndex : childPhrases) {
-                for (PhraseIndices parentPhraseIndex : parentPhrases) {                   
-                   PhrasalRelationCF epr = PhrasalRelationCF.fromPoints(frame.eDep.reln(), childPhraseIndex.eStart, childPhraseIndex.eEnd, parentPhraseIndex.eStart, parentPhraseIndex.eEnd, aPair.eLeaves);
-                   PhrasalRelationCF fpr = PhrasalRelationCF.fromPoints(frame.fDep.reln(), childPhraseIndex.fStart, childPhraseIndex.fEnd, parentPhraseIndex.fStart, parentPhraseIndex.fEnd, aPair.fLeaves);
-                  // System.out.printf("epr: %s\n", epr);
-                  // System.out.printf("fpr: %s\n", epr);
-                   if (epr != null && fpr != null) {
-                      //System.out.println(new RelationTransferRule(epr, fpr));
-                      //rules.add(new RelationTransferRule(epr, fpr));
-                      List<Integer> clipKey = Arrays.asList(childPhraseIndex.eStart, childPhraseIndex.eEnd, childPhraseIndex.fStart, childPhraseIndex.fEnd);
-                      Set<RelationTransferRule> ruleSet = ruleClip.get(clipKey);
-                      if (ruleSet == null) {
-                         ruleSet = new HashSet<RelationTransferRule>();
-                         ruleClip.put(clipKey, ruleSet);
-                      }
-                      ruleSet.add(new RelationTransferRule(epr, fpr));
-                   }                   
-                }
-             }
-         }
+       /* if (ePhrR-ePhrL < MAX_PHRASE_LENGTH && fPhrR-fPhrL < MAX_PHRASE_LENGTH) {                
+         
+           //System.err.println("added rule "+headRule);
+         } */
+         
+         
+         
+         rules.addAll(rulesAtI);         
       }
-      for (Map.Entry<List<Integer>, Set<RelationTransferRule>> entry : ruleClip.entrySet()) {
-         rules.addAll(entry.getValue());
-      }
+      
       return rules;      
    }
    
@@ -322,8 +312,8 @@ public class ExtractRelationTransferRules {
       long startTime = System.currentTimeMillis();
       for (String line = reader.readLine(); line != null; line = reader.readLine()) {
          AlignedPair aPair = AlignedPair.fromString(line);
-         List<RelationTransferRule> rules = extractPhrToPhrRule(aPair);
-         for (RelationTransferRule r : rules) {
+         List<String> rules = extractPhrToPhrRule(aPair);
+         for (String r : rules) {
             ruleCounts.incrementCount(r.toString());
          }
          if (reader.getLineNumber() % 100 == 0) {
