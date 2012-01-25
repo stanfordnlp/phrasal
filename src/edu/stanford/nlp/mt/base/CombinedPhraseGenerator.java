@@ -53,7 +53,7 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
   public List<ConcreteTranslationOption<TK>> translationOptions(
       Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId) {
     Map<CoverageSet, List<ConcreteTranslationOption<TK>>> optsMap = new HashMap<CoverageSet, List<ConcreteTranslationOption<TK>>>();
-
+    
     if (DEBUG) {
       System.err.printf(
           "CombinedPhraseGenerator#translationOptions type: %s\n", type);
@@ -65,10 +65,22 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
 
     if (type.equals(Type.CONCATENATIVE)) {
       for (PhraseGenerator<TK> phraseGenerator : phraseGenerators) {
-        for (ConcreteTranslationOption<TK> opt : phraseGenerator
-            .translationOptions(sequence, targets, translationId)) {
-          addToMap(opt, optsMap);
-        }
+         if (DEBUG) {
+            System.err.println("PhraseGenerator: "+phraseGenerator.getClass().getCanonicalName());
+         }
+         try {
+           for (ConcreteTranslationOption<TK> opt : phraseGenerator
+              .translationOptions(sequence, targets, translationId)) {
+             if (DEBUG) {
+               System.err.println("  opt: " + opt);
+             }
+                      
+             addToMap(opt, optsMap);
+           }
+         } catch (Exception e) {
+            System.err.printf("Warning %s threw exception %s", phraseGenerator.getClass().getCanonicalName(), e);
+            e.printStackTrace();
+         }
       }
     } else if (type.equals(Type.STRICT_DOMINANCE)) {
       CoverageSet coverage = new CoverageSet(sequence.size());
@@ -99,6 +111,14 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
           "Unsupported combination type: %s", type));
     }
 
+    if (DEBUG) { 
+       System.err.println("All preCutOpts:");
+       System.err.println("===============");
+       for (List<ConcreteTranslationOption<TK>> preCutOpts : optsMap.values()) {       
+             System.err.println(preCutOpts);
+       }   
+    }
+    
     List<ConcreteTranslationOption<TK>> cutoffOpts = new LinkedList<ConcreteTranslationOption<TK>>();
     for (List<ConcreteTranslationOption<TK>> preCutOpts : optsMap.values()) {
       int sz = preCutOpts.size();

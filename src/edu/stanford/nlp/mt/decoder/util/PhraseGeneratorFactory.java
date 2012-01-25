@@ -73,30 +73,16 @@ public class PhraseGeneratorFactory {
       } else if (pgName.equals(BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR)) {
         List<PhraseGenerator<IString>> augmentedList = new LinkedList<PhraseGenerator<IString>>();
 
-        // special purpose numeric identity phrase translator
-        augmentedList.add(new UnknownWordPhraseGenerator<IString, FV>(
-            phraseFeaturizer, dropUnknownWords, scorer, new NumericFilter<IString>()));
-
         // user specified translation tables and equal in ranking special
         // purpose phrase generators
         List<PhraseGenerator<IString>> userEquivList = new LinkedList<PhraseGenerator<IString>>(
             phraseTables); // user phrase tables
 
-        userEquivList.add(new UnknownWordPhraseGenerator<IString, FV>(
-            phraseFeaturizer, dropUnknownWords, scorer, new SymbolFilter<IString>())); // symbol
-                                                                     // identity
-                                                                     // phrase
-                                                                     // generator
-
         CombinedPhraseGenerator<IString> equivUserRanking = new CombinedPhraseGenerator<IString>(
             userEquivList);
         augmentedList.add(equivUserRanking);
 
-        // catch all foreign phrase identity generator
-        
-        augmentedList.add(new UnknownWordPhraseGenerator<IString, FV>(
-            phraseFeaturizer, dropUnknownWords, scorer));
-
+       
         return new CombinedPhraseGenerator<IString>(augmentedList,
             CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
       }
@@ -140,9 +126,6 @@ public class PhraseGeneratorFactory {
 
       finalList.add(new CombinedPhraseGenerator<IString>(pharoahList,
           CombinedPhraseGenerator.Type.CONCATENATIVE));
-      
-      finalList.add(new UnknownWordPhraseGenerator<IString, FV>(phraseFeaturizer, dropUnknownWords,
-              scorer, UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG));
       
       CombinedPhraseGenerator.Type combinationType = withGaps ? CombinedPhraseGenerator.Type.CONCATENATIVE
           : CombinedPhraseGenerator.Type.STRICT_DOMINANCE;

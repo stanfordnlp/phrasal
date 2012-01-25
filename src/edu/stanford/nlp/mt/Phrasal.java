@@ -30,6 +30,9 @@ package edu.stanford.nlp.mt;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+
+import javax.management.RuntimeErrorException;
+
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.h.*;
 import edu.stanford.nlp.mt.decoder.inferer.*;
@@ -107,6 +110,7 @@ public class Phrasal {
   public static final String MOSES_COMPATIBILITY_OPT = "moses-compatibility";
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
+  public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
   
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   public static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
@@ -142,7 +146,7 @@ public class Phrasal {
         USE_ITG_CONSTRAINTS, LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS,
         GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
-        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS));
+        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -935,26 +939,44 @@ public class Phrasal {
 
     if (phraseTable.startsWith("bitext:")) {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, dropUnknownWords, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, dropUnknownWords,
+          featurizer, scorer, false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
+          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, false,
           PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
           phraseTable.replaceFirst("^bitext:", ""), optionLimit));
     } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
 
       System.err.println("Dyanamic pt\n========================");
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, dropUnknownWords, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, dropUnknownWords,
+          featurizer, scorer, false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
+          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, false,
           PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable, optionLimit));
     } else {
       String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
           : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, dropUnknownWords, generatorName, phraseTable)
-          : PhraseGeneratorFactory.factory(featurizer, scorer, dropUnknownWords, generatorName,
+          featurizer, scorer, false, generatorName, phraseTable)
+          : PhraseGeneratorFactory.factory(featurizer, scorer, false, generatorName,
               phraseTable, optionLimit));
     }
-
+    
+    if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
+       List<PhraseGenerator<IString>> pgens = new LinkedList<PhraseGenerator<IString>>();
+       pgens.add(phraseGenerator);
+       for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
+          PhraseGenerator pgen; 
+          try {
+             pgen = (PhraseGenerator)Class.forName(pgenClasspath).
+                getConstructor(IsolatedPhraseFeaturizer.class, Scorer.class).newInstance(featurizer, scorer);
+          } catch (ClassNotFoundException e) {
+             throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
+          }
+          pgens.add(pgen);
+       }
+       phraseGenerator = new CombinedPhraseGenerator<IString>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
+       phraseGenerator = new CombinedPhraseGenerator<IString>(
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(featurizer, dropUnknownWords, scorer)), 
+             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));   
+    }
     System.err.printf("Phrase Limit: %d\n",
         ((CombinedPhraseGenerator<IString>) phraseGenerator).getPhraseLimit());
 
