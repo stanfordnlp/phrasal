@@ -120,6 +120,36 @@ public class ExtractRelationTransferRules {
       return sb.toString();
    }
    
+   public static final boolean DEBUG = true;
+   
+   public static boolean checkAlignment(AlignedPair ap, int eR, int eL, int fR, int fL) {
+      if (DEBUG) {
+         System.err.println("\nChecking ("+eL+","+eR+"=>"+fL+","+fR+")"+getPhrase(ap.eLeaves, eL, eR) + " to "+getPhrase(ap.fLeaves, fL, fR));
+      }
+      for (int i = eL; i <= eR; i++) {
+         if (ap.e2f[i] == null) continue;
+         if (ap.e2f[i].index()-1 < fL || ap.e2f[i].index()-1 > fR) {
+            if (DEBUG) {
+               System.err.println("Violation "+ap.eLeaves[i].label() + " => " + ap.e2f[i].label()); 
+            }
+            return false;
+         }
+      }
+      for (int i = fL; i <= fR; i++) {
+         if (ap.f2e[i] == null) continue;
+         if (ap.f2e[i].index()-1 < eL || ap.f2e[i].index()-1 > eR) { 
+            if (DEBUG) {
+               System.err.println("Violation "+ap.fLeaves[i].label() + " => " + ap.f2e[i].label()); 
+            }
+            return false;
+         }
+      }
+      if (DEBUG) {
+        System.err.println("Okay!");
+      }
+      return true;
+   }
+   
    public static List<String> extractPhrToPhrRule(AlignedPair aPair) {
       // public RelationTransferRule(PhrasalRelationCF eDep, PhrasalRelationCF fDep) {
       // PhrasalRelationCF(String type, String[] gov, String[] children, boolean rightChildren) 
@@ -141,38 +171,89 @@ public class ExtractRelationTransferRules {
          int fPhrL = getPhraseBoundry(aPair.fChildren, aPair.fLeaves[aPair.e2f[eChildI].index()-1], true);
          int fPhrR = getPhraseBoundry(aPair.fChildren, aPair.fLeaves[aPair.e2f[eChildI].index()-1], false);
          
-         System.err.println("e head: "+aPair.eLeaves[eChildI]); 
+         /* System.err.println("e head: "+aPair.eLeaves[eChildI]); 
          System.err.println("f head: "+aPair.e2f[eChildI]);
          System.err.println("ePhrL: "+ePhrL+" ePhrR: "+ePhrR);
          System.err.println("fPhrL: "+fPhrL+" fPhrR: "+fPhrR);
+         */
+         
          
          String headAloneRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(), 
                aPair.e2f[eChildI].label().word(), aPair.eLeaves[eChildI].label().word());
-         
+         if (DEBUG) {
+            System.err.println("headAloneRule: " + headAloneRule);
+         }
          rulesAtI.add(headAloneRule);
          
-         String headWholePhraseRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(), 
+         // String headXRule = String.format("[X] ||| [%s,1] ||| [%s,1] ", aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word());
+         // rulesAtI.add(headXRule);
+         
+         
+         if (aPair.eParents[aPair.e2f[eChildI].index() -1] != null) {
+           for (TypedDependency p : aPair.fParents[aPair.e2f[eChildI].index() -1]) {
+             if (DEBUG) {
+                System.err.printf("Parent: %s\n", p.gov());
+             }
+             if (p.gov().index() == 0) {
+                String headRootRule = String.format("[ROOT] ||| [%s,1] ||| [%s,1] ", aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word());
+                rulesAtI.add(headRootRule);                
+             }
+           }
+         }
+        
+         /*String headWholePhraseRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(), 
                getPhrase(aPair.fLeaves, fPhrL, fPhrR),
                getPhrase(aPair.eLeaves, ePhrL, ePhrR));
+               System.err.println("headWholePhraseRule: " + headWholePhraseRule); 
+               rulesAtI.add(headWholePhraseRule);
+               */
+          
+         for (int eL = ePhrL; eL <= ePhrR; eL++) {
+            for (int eR = ePhrR; eR >= eL; eR--) {
+               for (int fL = fPhrL; fL <= fPhrR; fL++) {
+                  for (int fR = fPhrR; fR >= fL; fR--) {
+                     if (checkAlignment(aPair, eR, eL, fR, fL)) {
+                        String headPhraseRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(), 
+                              getPhrase(aPair.fLeaves, fL, fR),
+                              getPhrase(aPair.eLeaves, eL, eR));
+                        rulesAtI.add(headPhraseRule);         
+                        if (DEBUG) {
+                           System.err.println("Adding: " + headPhraseRule);
+                        }
+                     }
+                  }
+               }
+            }
+         }
          
-         rulesAtI.add(headWholePhraseRule);
-         
+        
          if (aPair.eChildren[eChildI] != null) for (TypedDependency child : aPair.eChildren[eChildI]) {
             int eCCI = child.dep().index()-1;
             if (aPair.e2f[eCCI] == null) {
                continue;
             }
             String relRuleE;
-            if (eCCI < eChildI) {
-               relRuleE = String.format("[%s,1] [%s,2]", aPair.e2f[eCCI].label().word(), aPair.e2f[eChildI].label().word());
-            } else {
-               relRuleE = String.format("[%s,2] [%s,1]", aPair.e2f[eChildI].label().word(), aPair.e2f[eCCI].label().word());
-            }
             String relRuleF;
-            if (aPair.e2f[eCCI].index() < aPair.e2f[eCCI].index()) {
-               relRuleF = String.format("[%s,1] [%s,2]", aPair.e2f[eCCI].label().word(), aPair.e2f[eChildI].label().word());
+
+            
+            if (eCCI < eChildI) {
+               if (aPair.e2f[eCCI].index() < aPair.e2f[eChildI].index()) {
+                 relRuleE = String.format("[%s,1] [%s,2]", aPair.e2f[eCCI].label().word(), aPair.e2f[eChildI].label().word());
+               } else {
+                 relRuleE = String.format("[%s,2] [%s,1]", aPair.e2f[eCCI].label().word(), aPair.e2f[eChildI].label().word());
+               }
             } else {
-               relRuleF = String.format("[%s,2] [%s,1]", aPair.e2f[eChildI].label().word(), aPair.e2f[eCCI].label().word());
+               if (aPair.e2f[eCCI].index() >= aPair.e2f[eChildI].index()) { 
+                 relRuleE = String.format("[%s,1] [%s,2]", aPair.e2f[eChildI].label().word(), aPair.e2f[eCCI].label().word());
+               } else {
+                 relRuleE = String.format("[%s,2] [%s,1]", aPair.e2f[eChildI].label().word(), aPair.e2f[eCCI].label().word());
+               }
+            }
+            
+            if (aPair.e2f[eCCI].index() < aPair.e2f[eChildI].index()) {
+               relRuleF = String.format("[%s,1] [%s,2]", aPair.e2f[eCCI].label().word(), aPair.e2f[eChildI].label().word());               
+            } else {
+               relRuleF = String.format("[%s,1] [%s,2]", aPair.e2f[eChildI].label().word(), aPair.e2f[eCCI].label().word());               
             }
             String headDepRule = String.format("[%s] ||| %s ||| %s ", aPair.e2f[eChildI].label().word(),
                   relRuleF,
@@ -327,8 +408,13 @@ public class ExtractRelationTransferRules {
       System.err.println("Done.");
       System.err.printf("Lines processed %d in %.2f seconds (%.2f lines/second)\n", reader.getLineNumber(), seconds, linesPerSecond);
       System.err.printf("Sorting by count\n");
+      double total = ruleCounts.totalCount();
       for (Pair<String, Double> p : Counters.toSortedListWithCounts(ruleCounts)) {
-         System.out.printf("%s\t%d\n", p.first, (int)(double)p.second);
+         if (p.first.contains("[X]")) {
+            System.out.printf("%s ||| %d\n", p.first, -100);
+         } else {
+            System.out.printf("%s ||| %f %f 2.718\n", p.first, p.second/total, p.second/total);
+         }
       }
    }
 }
