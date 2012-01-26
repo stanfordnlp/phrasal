@@ -236,13 +236,14 @@ public class DepDAGParser implements Parser, Serializable {
   public LinkedStack<TypedDependency> getDependencyGraph(Structure s){
     return getDependencyGraph(s, s.input.size());
   }
-  public LinkedStack<TypedDependency> getDependencyGraph(Structure s, int offset){
+
+  private LinkedStack<TypedDependency> getDependencyGraph(Structure s, int offset){
     parsePhrase(s, offset);
     //    s.addRoot();
     return s.dependencies;
   }
-  
-  /** 
+
+  /**
    * Get dependencies when a sentence(List<CoreLabel>) is given.
    */
   public LinkedStack<TypedDependency> getDependencyGraph(List<CoreLabel> sentence){
