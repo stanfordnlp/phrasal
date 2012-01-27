@@ -11,7 +11,7 @@ cd -
 if [ "$revHead" = "$revCheckout" ]; then
    echo "PASS: Repository checkout is current"
    echo "$revCheckout"
-   `date`
+   echo "Current time: " `date`
 else
    echo "FAIL: Repository checkout is NOT current"
    echo "$revCheckout != $revHead"
@@ -48,14 +48,28 @@ svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phra
 
 rm -rf phrasal.$1
 mkdir phrasal.$1
-mkdir -p src/edu/stanford/nlp/lm
-cp ../more/src/edu/stanford/nlp/lm/* src/edu/stanford/nlp/lm
 
 cp -r src scripts README.txt LICENSE.txt phrasal.$1
 cp userbuild.xml  phrasal.$1/build.xml
 
+# TODO: if these dependencies start getting more complicated, find an
+# automatic way to solve them
+mkdir -p phrasal.$1/src/edu/stanford/nlp/lm
+cp ../more/src/edu/stanford/nlp/lm/* phrasal.$1/src/edu/stanford/nlp/lm
+
+mkdir -p phrasal.$1/src/edu/stanford/nlp/stats
+cp ../core/src/edu/stanford/nlp/stats/OpenAddressCounter.java phrasal.$1/src/edu/stanford/nlp/stats/OpenAddressCounter.java
+
+mkdir -p phrasal.$1/src/edu/stanford/nlp/trees
+cp ../core/src/edu/stanford/nlp/trees/DependencyScoring.java phrasal.$1/src/edu/stanford/nlp/trees/DependencyScoring.java
+
+mkdir -p phrasal.$1/src/edu/stanford/nlp/util/logging
+cp ../core/src/edu/stanford/nlp/util/logging/* phrasal.$1/src/edu/stanford/nlp/util/logging
+
+
 mkdir -p phrasal.$1/lib
 cp lib/berkeleyaligner.jar phrasal.$1/lib
+cp ../core/lib/fastutil.jar phrasal.$1/lib
 
 mkdir `pwd`/phrasal.$1/classes
 mkdir `pwd`/phrasal.$1/lib-nodistrib
@@ -78,8 +92,10 @@ export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$1/classes
 for jarFile in $CORENLP/*.jar; do
   export CLASSPATH=$CLASSPATH:$jarFile
 done
+export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$1/lib/fastutil.jar
+echo $CLASSPATH
 
-/user/cerd/scr/dev/javanlp/projects/mt/scripts/standard_mert_test.pl distro.$1
+scripts/standard_mert_test.pl distro.$1
 
 if [ $? = 0 ]; then
   echo "PASS: Phrasal integration test"
