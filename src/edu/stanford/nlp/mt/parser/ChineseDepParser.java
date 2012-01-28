@@ -43,7 +43,7 @@ public class ChineseDepParser {
 
   public ChineseDepParser() throws Exception {
     pp = new ParserPack();
-    pp.parser = new LexicalizedParser(defaultModel);
+    pp.parser = LexicalizedParser.loadModel(defaultModel);
     pp.tLP = pp.parser.getOp().tlpParams.treebankLanguagePack();
 
     Filter<String> puncWordFilter;
