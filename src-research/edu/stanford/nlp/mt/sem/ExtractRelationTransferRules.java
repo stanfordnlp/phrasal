@@ -157,7 +157,124 @@ public class ExtractRelationTransferRules {
       return true;
    }
    
+   public static int findInternalPhraseHead(
+		   TypedDependency[][] children,
+		   TreeGraphNode[] leaves,
+		   int L, int R){
+	   if (L == R) return L;
+	   for (int i = L; i <= R; i++) {
+		   int phrLRaw = getPhraseBoundry(children, leaves[i], true);
+	       int phrRRaw = getPhraseBoundry(children, leaves[i], false);
+	       if (phrLRaw == L && phrRRaw == R) {
+	    	   return i;
+	       }
+	       
+	   }
+	   return -1;	   
+   }
+   
    public static List<String> extractPhrToPhrRule(AlignedPair aPair) {
+      List<String> rules = new LinkedList<String>();
+      List<Set<String>> headRules = new ArrayList<Set<String>>(aPair.fLeaves.length);
+      for (int i = 0; i < aPair.fLeaves.length; i++) {
+    	  headRules.add(new HashSet<String>());
+      }
+      for (int eL = 0; eL < aPair.eChildren.length; eL++) {
+    	  for (int eR = eL; eR < aPair.eChildren.length; eR++) {
+    		  if (eR - eL > MAX_PHRASE_LENGTH) continue;
+    		  for (int fL = 0; fL < aPair.fChildren.length; fL++) {
+    	    	  for (int fR = fL; fR < aPair.fChildren.length; fR++) {
+    	    		  if (fR - fL > MAX_PHRASE_LENGTH) continue;
+    	              if (!checkAlignment(aPair, eR, eL, fR, fL)) continue;    	              
+    	              String zhPhrase = getPhrase(aPair.fLeaves, fL, fR);
+                      String enPhrase = getPhrase(aPair.eLeaves, eL, eR);
+                      String xRule = 
+    	            	  String.format("[X] ||| %s ||| %s ", 
+    	            			  zhPhrase,
+    	            			  enPhrase);
+    	              rules.add(xRule);
+    	              
+    	              int internalHead = findInternalPhraseHead(
+    	           		   aPair.fChildren, aPair.fLeaves, fL, fR);
+    	              if (internalHead != -1) {
+    	            	  String iheadRule = 
+        	            	  String.format("[%s] ||| %s ||| %s ",
+        	            			  aPair.fLeaves[internalHead].label().word(),
+        	            			  zhPhrase,
+        	            			  enPhrase);
+    	            	  rules.add(iheadRule);
+    	            	  if (aPair.fChildren[internalHead] != null) {
+    	            		  for (TypedDependency dep : aPair.fChildren[internalHead]) {
+    	            			  
+    	            			  String zhRHS;
+    	            			  if (dep.dep().index() > dep.gov().index()) {
+    	            				  zhRHS = String.format("[%s,1] [%s,2]", 
+    	            						  dep.gov().label().word(),
+    	            						  dep.dep().label().word());
+    	            			  } else {
+    	            				  zhRHS = String.format("[%s,1] [%s,2]", 
+    	            						  dep.dep().label().word(),    	            						  
+    	            						  dep.gov().label().word());
+    	            			  }
+    	            			  String enRHS; 
+    	            			  // todo check all children
+    	            			  TreeGraphNode enDep = aPair.f2e[dep.dep().index()-1];
+    	            			  TreeGraphNode enGov = aPair.f2e[dep.gov().index()-1];
+    	            			  /*System.err.println("head: " + dep.gov() + " child: "+dep.dep());
+    	            			  System.err.println("=enHead: " + enGov + " child: "+enDep);
+    	            			  System.err.println(); */
+    	            			  if (enDep == null || enGov == null) {
+    	            				  enRHS = zhRHS;
+    	            			  } else if (enDep.index() > enGov.index()) {
+    	            				  if (dep.dep().index() > dep.gov().index()) {
+    	            				  enRHS = String.format("[%s,1] [%s,2]", 
+    	            						  dep.gov().label().word(),
+    	            						  dep.dep().label().word());
+    	            				  } else {
+    	            					  enRHS = String.format("[%s,2] [%s,1]", 
+        	            						  dep.gov().label().word(),
+        	            						  dep.dep().label().word());
+    	            				  }
+    	            			  } else {
+    	            				  if (dep.dep().index() <= dep.gov().index()) {
+    	            				  enRHS = String.format("[%s,1] [%s,2]", 
+    	            						  dep.dep().label().word(),    	            						  
+    	            						  dep.gov().label().word());
+    	            				  } else {
+    	            					  enRHS = String.format("[%s,2] [%s,1]", 
+        	            						  dep.dep().label().word(),    	            						  
+        	            						  dep.gov().label().word());
+    	            				  }
+    	            			  }
+    	            			  String iheadToChildRule = 
+    	        	            	  String.format("[%s] ||| %s ||| %s ",
+    	        	            			  aPair.fLeaves[internalHead].label().word(),
+    	        	            			  zhRHS,
+    	        	            			  enRHS);
+    	            			  headRules.get(internalHead).add(iheadToChildRule);
+    	            			  System.err.println("internal gov: " + 
+    	            					  aPair.fLeaves[internalHead].label().word() + " head: " +
+    	            					  aPair.fParents[internalHead][0].gov());
+    	            			  
+    	            			  if (aPair.fParents[internalHead][0].gov().index() == 0) {
+    	            				  String iheadToRoot = String.format("[ROOT] ||| [%s,1] ||| [%s,1] ",
+    	        	            			  aPair.fLeaves[internalHead].label().word(),
+    	        	            			  aPair.fLeaves[internalHead].label().word());
+    	            				  headRules.get(internalHead).add(iheadToRoot);
+    	            			  }
+    	            	      }	            		  
+    	            	  }
+    	              }
+    	    	  }
+    		  }
+    	  }     
+      }
+      for (int i = 0; i < aPair.fLeaves.length; i++) {
+    	  rules.addAll(headRules.get(i));
+      }
+      return rules; 
+   }
+   public static List<String> extractPhrToPhrRuleOld(AlignedPair aPair) {
       // public RelationTransferRule(PhrasalRelationCF eDep, PhrasalRelationCF fDep) {
       // PhrasalRelationCF(String type, String[] gov, String[] children, boolean rightChildren) 
       List<String> rules = new LinkedList<String>();
@@ -495,15 +612,10 @@ public class ExtractRelationTransferRules {
       System.err.printf("Lines processed %d in %.2f seconds (%.2f lines/second)\n", reader.getLineNumber(), seconds, linesPerSecond);
       System.err.printf("Sorting by count\n");
       double total = ruleCounts.totalCount();
-      System.out.printf("[ROOT] ||| [X,1] ||| [X,1] ||| %e 2.718\n",  Math.exp(-100));
-      System.out.printf("[X] ||| [X,1] [X,2] ||| [X,1] [X,2] ||| %e 2.718\n",  Math.exp(-100));
-      for (Pair<String, Double> p : Counters.toSortedListWithCounts(ruleCounts)) {        
-         //System.out.printf("%s ||| %f\n", p.first.replace("[,", "[<comma>"), p.second);
-         if (p.first.contains("[X]")) {
-            System.out.printf("%s ||| %e 2.718\n", p.first.replace("[,", "[<comma>"), Math.exp(-100));
-         } else {
-            System.out.printf("%s ||| %f 2.718\n", p.first.replace("[,", "[<comma>"), p.second/total);
-         }
+      System.out.printf("[ROOT] ||| [X,1] ||| [X,1] ||| 2.718 1 1\n");
+      System.out.printf("[X] ||| [X,1] [X,2] ||| [X,1] [X,2] ||| 2.718 1 1\n");
+      for (Pair<String, Double> p : Counters.toSortedListWithCounts(ruleCounts)) {                 
+         System.out.printf("%s ||| 1 2.718 %f\n", p.first.replace("[,", "[<comma>"), p.second);
       }
    }
 }
