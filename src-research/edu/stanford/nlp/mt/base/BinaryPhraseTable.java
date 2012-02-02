@@ -47,13 +47,15 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     Database meta = dbEnv.openDatabase(null, "meta", dbConfig);
     DatabaseEntry metaKey = new DatabaseEntry("longestForeignPhrase".getBytes());
     DatabaseEntry metaValue = new DatabaseEntry();
-    db.get(null, metaKey, metaValue, LockMode.DEFAULT);
+    meta.get(null, metaKey, metaValue, LockMode.DEFAULT);
+    System.err.printf("metaValue: "+metaValue);
     longestForeignPhrase = IntegerBinding.entryToInt(metaValue);
     metaKey = new DatabaseEntry("scoreNames".getBytes());
-    db.get(null, metaKey, metaValue, LockMode.DEFAULT);
+    meta.get(null, metaKey, metaValue, LockMode.DEFAULT);
     ByteArrayInputStream mbistrm = new ByteArrayInputStream(metaValue.getData());
     DataInputStream mdistrm = new DataInputStream(mbistrm);
     int scoreNamesLength = mdistrm.readInt();
+    
     scoreNames = new String[scoreNamesLength];
     for (int i = 0; i < scoreNames.length; i++) {
       scoreNames[i] = mdistrm.readUTF(); 
@@ -67,7 +69,14 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   }
   
   static public void convertToBinaryPhraseTable(String flatPhraseTableName, String binaryPhraseTableName) throws IOException {
-    EnvironmentConfig envConfig = new EnvironmentConfig();
+     File bf = new File(binaryPhraseTableName);
+     if (bf.exists()) {
+        bf.delete();
+     }
+     
+     bf.mkdir();
+
+     EnvironmentConfig envConfig = new EnvironmentConfig();
     envConfig.setTransactional(false);
     envConfig.setAllowCreate(true);
     Environment dbEnv = new Environment(new File(binaryPhraseTableName), envConfig);
@@ -75,7 +84,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     DatabaseConfig dbConfig = new DatabaseConfig();
     dbConfig.setTransactional(false);
     dbConfig.setSortedDuplicates(true);
-    dbConfig.setAllowCreate(false);
+    dbConfig.setAllowCreate(true);
     dbConfig.setDeferredWrite(true);
     FlatPhraseTable<String> flatPhraseTable = new FlatPhraseTable<String>(null, null, flatPhraseTableName); 
     
@@ -85,6 +94,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     DatabaseEntry metaValue = new DatabaseEntry();
     IntegerBinding.intToEntry(flatPhraseTable.longestForeignPhrase(), metaValue);
     meta.put(null, metaKey, metaValue);
+    System.err.println("metavalue: "+metaValue);
     
     metaKey = new DatabaseEntry("scoreNames".getBytes());    
     ByteArrayOutputStream mbostrm = new ByteArrayOutputStream();

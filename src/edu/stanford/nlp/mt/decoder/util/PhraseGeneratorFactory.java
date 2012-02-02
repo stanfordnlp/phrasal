@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.*;
 import java.io.*;
 
+import edu.stanford.nlp.mt.base.BinaryPhraseTable;
 import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
@@ -120,8 +121,13 @@ public class PhraseGeneratorFactory {
         if (withGaps)
           pharoahList.add(new DTUTable<FV>(phraseFeaturizer, scorer, filename));
         else
-          pharoahList.add(new FlatPhraseTable<FV>(phraseFeaturizer, scorer,
+          if (new File(filename).isDirectory()) {
+             pharoahList.add(new BinaryPhraseTable<FV>(phraseFeaturizer, scorer,
+                   filename)); 
+          } else {
+            pharoahList.add(new FlatPhraseTable<FV>(phraseFeaturizer, scorer,
               filename));
+          }
       }
 
       finalList.add(new CombinedPhraseGenerator<IString>(pharoahList,
