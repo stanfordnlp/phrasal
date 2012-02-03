@@ -5,8 +5,11 @@ echo "Making Phrasal release tar ball"
 cd $JAVANLP_HOME
 revHead=`svn info -r HEAD | grep -i "Last Changed Rev"`
 revCheckout=`svn info | grep -i "Last Changed Rev"`
-svnStatus=`svn status`
+svnStatus=`svn status | grep -v "scripts-private/make-phrasal-release.sh"`
+#svnStatus=`svn status | grep -v "^\?" | grep -v "scripts-private/make-phrasal-release.sh"`
 cd -
+
+echo "SVN status: " $svnStatus
 
 if [ "$revHead" = "$revCheckout" ]; then
    echo "PASS: Repository checkout is current"
@@ -100,11 +103,13 @@ scripts/standard_mert_test.pl distro.$1
 if [ $? = 0 ]; then
   echo "PASS: Phrasal integration test"
 else
-  echo "FAIL: Phrasal integration test\n\n"
-  echo "Log file in /u/nlp/data/mt_test/mert:\n\n"
-  cat `ls -t  /u/nlp/data/mt_test/mert/*.log | head -1`
-  exit -1;
+  echo "FAIL: Phrasal integration test"
+  echo "Log file in /u/nlp/data/mt_test/mert:"
+  echo `ls -t  /u/nlp/data/mt_test/mert/*.log | head -1`
   echo "End of log dump for FAIL: Phrasal integration test"
+  cat `ls -t  /u/nlp/data/mt_test/mert/*.log | head -1`
+  echo "FAIL: Phrasal integration test"
+  exit -1
 fi
 
 #rm -rf phrasal.$1/classes/*
@@ -114,6 +119,7 @@ tar --exclude .svn -czf phrasal.$1.tar.gz phrasal.$1
 
 if [ $? = 0]; then
   echo "SUCCESS: Stanford Phrasal distribution phrasal.$1.tar.gz successfully built"
+else
+  echo "FAIL: Tar went wrong somehow"
+  exit -1
 fi
-
-rm -rf  src/edu/stanford/nlp/lm
