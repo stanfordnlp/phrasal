@@ -16,7 +16,7 @@ body,
 #sidebar-wrapper {
    float:left;
    width:150px;
-   background:Gray;
+/*   background:Gray; */
    border-right:1px solid DimGray;
 }
 
@@ -25,5 +25,5 @@ body,
    float:left;
 /*   margin-left:150px;*/
    background:White;
-   border: 1px solid Red;
+/*   border: 1px solid Red; */
 }

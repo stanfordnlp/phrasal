@@ -1,7 +1,4 @@
-// Widget that displays translation options
-// Absolute positioning is used to position the div.
-
-// Dependencies: jquery
+// Interface #2 WIDGET!!!
 
 var PTMWidget = function(completions, divContainerId) {
   // CSS id for the widget (see ptm.css)
@@ -41,13 +38,23 @@ var PTMWidget = function(completions, divContainerId) {
   this.handlerProxy = 0;
 
   //CSS theming
-  this.defaultBackground = 'White';
-  this.tgtBorder = '#E80000';
   this.tgtBackground = 'White';
-  this.tgtSelectBackground = '#E80000';
-  this.srcBorder = '#6699FF';
+  this.tgtBorder = 'WhiteSmoke';
+  this.tgtSelectBackground = 'Gainsboro';
+  this.tgtBackground = 'White';
+
+  this.srcBackground = 'White';
+  this.srcSelectBorder = 'WhiteSmoke';
+  this.srcSelectBackground = 'WhiteSmoke';
   this.srcFontColor = 'Black';
   this.srcFontShaded = 'DarkGrey';
+
+  // nbest size has a fixed dimension of 3
+  this.nbestShadings = new Array(3);
+  this.nbestShadings[0] = 'Blue';
+  this.nbestShadings[1] = 'Red';
+  this.nbestShadings[2] = 'Green';
+  
 };
 
 // selectCallback: function to call when an option is selected
@@ -68,21 +75,34 @@ PTMWidget.prototype.Show = function(selectCallback, filterIds) {
   // Calculate the position
   var option = this.nbestList[this.nbestId];
 
-  var divString = sprintf("<div id=\"%s\">%s</div>", this.domId, option.tgt);
+  var divString = sprintf("<div id=\"%s\">", this.domId);
+  for (var i=0; i < this.nbestShadings.length; i++) {
+    var nbestOption = this.nbestList[this.nbestId + i]
+    var tgtDiv = sprintf("<div class=\"%sitem\" id=\"%s%d\">%s</div>",this.domId,this.domId,i,nbestOption.tgt);
+    divString = divString + tgtDiv;
+  }
+  divString = divString + "</div>";
+  console.log(divString);
 
   // Insert the div into the dom and style the CSS.
   $( this.containerSel ).append(divString);
+  // See: http://stackoverflow.com/questions/1909648/stacking-divs-in-top-of-each-other
+  $( '#'+this.domId+'item').css('position','absolute');
+  for (var i in this.nbestShadings) {
+    var color = this.nbestShadings[i];
+    $( '#'+this.domId+i ).css('color',color);
+  }
+  
   var width = $( this.widgetSel ).width();
   var height = $( this.widgetSel ).height();
   var boundBox = this.GetBoundingBox(option, width, height);
-  
+
   $( this.widgetSel ).css('top', boundBox.top);
   $( this.widgetSel ).css('left', boundBox.left);
   $( this.widgetSel ).css('border-color', this.tgtBorder);
   $( this.widgetSel ).css('background-color', this.tgtBackground);
 
-  this.HighlightPrefix(option.pref, true);
-  this.HighlightTokens(option.coverage, true);
+  this.Highlight(this.nbestId, true);
   
   // Map the keyboard handler
   var fnProxy = $.proxy(this.KeyHandler, this);
@@ -118,12 +138,8 @@ PTMWidget.prototype.GetBoundingBox = function(option, width, height) {
     boundBox.left = 0;
   }
 
-  if (height < 30){
-    boundBox.top -= 30;
-  } else {
-    boundBox.top -= height;
-  }
-
+  boundBox.top += 30;
+  
   return boundBox;
 };
 
@@ -153,8 +169,7 @@ PTMWidget.prototype.KeyHandler = function(event) {
 
   } else {
     var completion = this.nbestList[this.nbestId];
-    this.HighlightPrefix(completion.pref, false);
-    this.HighlightTokens(completion.coverage, false);
+    this.Highlight(this.nbestId, false);
     if (this.selectKeys[event.keyCode]){
 //      console.log("Select event");
       event.preventDefault();
@@ -168,7 +183,7 @@ PTMWidget.prototype.KeyHandler = function(event) {
 
 PTMWidget.prototype.ScrollText = function(cmd) {
 //  console.log('scroll: ' + cmd);
-  var lastOption = this.nbestList[this.nbestId];
+  var lastOption = this.nbestId;
 
   if (cmd == 'next') {
     this.nbestId++;
@@ -181,82 +196,52 @@ PTMWidget.prototype.ScrollText = function(cmd) {
       this.nbestId = this.nbestList.length - 1;
     }
   }
-  this.HighlightPrefix(lastOption.pref, false);
-  this.HighlightTokens(lastOption.coverage, false);
-
-  var option = this.nbestList[this.nbestId];
-  $( this.widgetSel ).text(option.tgt);
-  var width = $( this.widgetSel ).width();
-  var height = $( this.widgetSel ).height();
-  var boundBox = this.GetBoundingBox(option, width, height);
-  var curPosition = $( this.widgetSel ).offset();
-
-  if (boundBox.top != curPosition.top ||
-      boundBox.left != curPosition.left){
-  //  console.log(boundBox);
-  //  console.log(curPosition);
-    var topParam = {
-      true:'+='+Math.abs(curPosition.top-boundBox.top),
-      false:'-='+Math.abs(curPosition.top-boundBox.top)
-      };
-    var topPos = topParam[curPosition.top-boundBox.top < 0];
-//  console.log('top: '+topPos);
-  
-    var leftParam = {
-      true:'+='+Math.abs(curPosition.left-boundBox.left),
-      false:'-='+Math.abs(curPosition.left-boundBox.left)
-      };
-    var leftPos = leftParam[curPosition.left-boundBox.left < 0];
-//  console.log('left: ' + leftPos);
-
-    // See here for different easing functions:
-    // http://jqueryui.com/demos/effect/easing.html
-    $( this.widgetSel ).animate(
-      {
-        top:topPos,
-        left:leftPos
-      },
-      {
-        duration:'fast',
-        easing:'easeInOutCubic'
-    });
-  }
-  this.HighlightPrefix(option.pref, true);  
-  this.HighlightTokens(option.coverage, true);  
+  this.Highlight(lastOption, false);
+  this.Highlight(this.nbestId, true);
 };
 
-PTMWidget.prototype.HighlightTokens = function(divIdArray, doHighlight) {
-  //console.log('Highlight: ' + doHighlight);
-  var backgroundColor = 0;
-  var textStyle = 0;
-  if (doHighlight){
-    backgroundColor = this.srcBorder;
-    textStyle = 'bold';
+PTMWidget.prototype.Highlight = function(optionId, doHighlight) {
+  // console.log('Highlight: ' + optionId + ' ' + doHighlight);
+  var option = this.nbestList[optionId];
+  var prefDivIdArray = option.pref;
+  var compDivIdArray = option.coverage;
+  var menuSel = '#'+this.domId+optionId;
+  var shading = this.nbestShadings[optionId];
+  if (doHighlight) {
+    // Fix the tgt menu
+    $( menuSel ).css('background-color',this.tgtSelectBackground);
+
+    // Fix the source tokens
+    for (var i in compDivIdArray) {
+      var divId = 'div#'+compDivIdArray[i];
+      $( divId ).css('background-color',this.srcSelectBackground);
+      $( divId ).css('color',shading);
+      $( divId ).css('border-color',this.srcSelectBorder);
+    }
+
+    // Fix the prefix
+    for (var i in prefDivIdArray) {
+      var divId = 'div#'+prefDivIdArray[i];
+      $( divId ).css('color',this.srcFontShaded);
+    }
   } else {
-    backgroundColor = this.defaultBackground;
-    textStyle = 'normal';
-  }
-  for (var i in divIdArray) {
-    var divId = 'div#'+divIdArray[i];
-    
-//    $( divId ).css( 'background-color', backgroundColor);
-    $( divId ).css('border-color', backgroundColor);
-//    $( divId ).css('font-weight', textStyle);
+    // Fix the tgt menu
+    $( menuSel ).css('background-color',this.tgtBackground);
+
+    // Fix the source tokens
+    for (var i in compDivIdArray) {
+      var divId = 'div#'+compDivIdArray[i];
+      $( divId ).css('background-color',this.srcBackground);
+      $( divId ).css('color',this.srcFontColor);
+      $( divId ).css('border-color',this.srcBackground);
+    }
+
+    // Fix the prefix
+    for (var i in prefDivIdArray) {
+      var divId = 'div#'+prefDivIdArray[i];
+      $( divId ).css('color',this.srcFontColor);
+    }
   }
 };
 
-PTMWidget.prototype.HighlightPrefix = function(divIdArray, doShading) {
-  //console.log('HighlightPref:' + divIdArray);
-  if (divIdArray) {
-    var textColor = 0;
-    if (doShading){
-      textColor = this.srcFontShaded;
-    } else {
-      textColor = this.srcFontColor;
-    }
-    for (var i in divIdArray) {
-      var divId = 'div#'+divIdArray[i];
-      $( divId ).css('color', textColor);
-    }
-  }
-};
+

@@ -84,6 +84,8 @@ public class PhrasalUnifiedServletMock extends HttpServlet
       predictions.add(pred1);
       Prediction pred2 = new Prediction("0-1","debug debug2","3-4");
       predictions.add(pred2);
+      Prediction pred3 = new Prediction("1-2", "hello", "5");
+      predictions.add(pred3);
       
       PTMPredictionResponse ptmResponse = new PTMPredictionResponse(ptmRequest.prefix, predictions);
       Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           

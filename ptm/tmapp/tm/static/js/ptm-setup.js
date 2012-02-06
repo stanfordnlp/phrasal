@@ -20,6 +20,9 @@ $(document).ready(function(){
   };
   ptm.setCSSElements(cssArray);
 
+  // Set the focus on the translation input box
+  $( 'textarea#form-tgt-txt' ).focus();
+  
   // Set the source language
   var srcLang = $('div#src-lang').html();
   ptm.setSrcLang(srcLang);

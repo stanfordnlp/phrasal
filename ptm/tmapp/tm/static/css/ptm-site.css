@@ -7,7 +7,7 @@
 /* Navigation sidebar */
 #sidebar {
    margin:1em;
-   background:Gray;
+/*   background:Gray; */
    font-size:80%;
 }
 
@@ -74,21 +74,21 @@
    margin:1em;
    width:50em;
    min-width:40em;
-   border:2px solid Black;
+   overflow:hidden;
+/*   border:2px solid Black; */
    }
 
 .src-tok
 {
 float:right;
-margin:1em 0.3em;
+margin:1.7em 0.3em;
 border-width:1px;
 border-style:solid;
 border-color:#FFFFFF;
 }
 
 #form-tgt-container {
-   clear:both;
-   margin:3em 1em;
+   position:absolute;
    }
 
 .form-lbl {
@@ -117,7 +117,14 @@ padding:0.2em;
 opacity:1.0;
 }
 
-
+/* Test div */
+#ptm-widget-fixed_ {
+   position:absolute;
+   border:1px solid WhiteSmoke;
+   min-width:60em;
+   heigth:40em;
+ 
+}
 
 
 

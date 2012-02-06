@@ -29,6 +29,36 @@ def tr(request, src_id):
                               {'src':src, 'src_toks':src_toks, 'lang_list':lang_list},
                               context_instance=RequestContext(request))
 
+# 6 Feb 2012: Prototype view #2
+@login_required
+def tr2(request, src_id):
+    try:
+        src = SourceTxt.objects.select_related().get(pk=src_id)
+    except SourceTxt.DoesNotExist:
+        raise Http404
+
+    src_toks = src.txt.split()
+    lang_list = LanguageSpec.objects.all()
+    
+    return render_to_response('tm/translate2.html',
+                              {'src':src, 'src_toks':src_toks, 'lang_list':lang_list},
+                              context_instance=RequestContext(request))
+
+# 6 Feb 2012: Prototype view #3
+@login_required
+def tr3(request, src_id):
+    try:
+        src = SourceTxt.objects.select_related().get(pk=src_id)
+    except SourceTxt.DoesNotExist:
+        raise Http404
+
+    src_toks = src.txt.split()
+    lang_list = LanguageSpec.objects.all()
+    
+    return render_to_response('tm/translate3.html',
+                              {'src':src, 'src_toks':src_toks, 'lang_list':lang_list},
+                              context_instance=RequestContext(request))
+
 @login_required
 def trdone(request, src_id):
     src = get_object_or_404(SourceTxt,pk=src_id)

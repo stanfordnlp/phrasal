@@ -79,13 +79,9 @@ var ptm = (function() {
       }
     },
 
-    addTgtCompletion: function(completion) {
-      var tgtPrefix = $.trim($( _tgtTxtSel ).val());
-      if (tgtPrefix.length > 0) {
-        tgtPrefix = tgtPrefix + ' ';
-      }
-      var newTarget = tgtPrefix + completion + ' ';
-      $( _tgtTxtSel ).val(newTarget);
+    addTgtCompletion: function(prefix, completion) {
+      var newTarget = $.trim(prefix + completion);
+      $( _tgtTxtSel ).val(newTarget + ' ');
     },
     
     showStatus: function(message){
@@ -410,11 +406,11 @@ var ptm = (function() {
       // the partially completed word if the user selected a completion
       // mid-word.
       if(_predictionsCache){
-        tgtPrefix = _predictionsCache.prefix;      
+        tgtPrefix = _predictionsCache.prefix;
       }
 
       // Update the translation box.
-      ptmUI.addTgtCompletion(completion);
+      ptmUI.addTgtCompletion(tgtPrefix, completion);
 
       // Get completions for this new translation prefix
       ptm.togglePTMTimer(true);
