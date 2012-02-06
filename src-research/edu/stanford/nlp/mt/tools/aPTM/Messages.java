@@ -53,7 +53,7 @@ public final class Messages {
     PTMBaseRequest message = null;
     if (type != MessageType.UNKNOWN) {
       Gson gson = new Gson();
-      message = gson.fromJson(request.getParameter(type.keyName()), type.msgClass());
+      message = (PTMBaseRequest) gson.fromJson(request.getParameter(type.keyName()), type.msgClass());
     }
     return new Pair<MessageType,PTMBaseRequest>(type, message);
   }
