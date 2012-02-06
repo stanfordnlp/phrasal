@@ -1,0 +1,24 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}base.css" />
+    {% block user_static %}
+    {% endblock %}
+    <title>Predictive Translation Memory{% block title %}{% endblock %}</title>
+</head>
+
+<body>
+  <div id="container">
+    <div id="sidebar-wrapper">
+      {% block user_sidebar %}
+      {% endblock %}
+    </div>
+    
+    <div id="content-wrapper">
+        {% block content %}
+	{% endblock %}
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block user_static %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ptm-site.css" />
+{% endblock %}
+
+{% block user_sidebar %}
+<div id="sidebar">
+<ul>
+ <li><a href="/bye/">Logout</a></li>
+</ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<p> Work queue for {{ first_name }} {{ last_name }}</p>
+
+{% if src_list %}
+    <table id="queue-table">
+    {% for src in src_list %}
+        <tr>
+        <td class="queue-td"><a href="/tm/{{ src.id }}/">History</a></td>
+	<td class="queue-td"><a href="/tm/{{ src.id }}/tr">Translate</a></td>
+	{% if src.lang.css_direction == "rtl" %}
+	<td class="queue-td-rl">{{ src.txt|truncatewords:10 }}</td>
+	{% else %}
+	<td class="queue-td">{{ src.txt|truncatewords:10 }}</td>
+	{% endif %}
+	</tr>
+    {% endfor %}
+    </ul>
+    </table>
+{% else %}
+    <p>No inputs are available.</p>
+{% endif %}
+
+{% endblock %}
+
+

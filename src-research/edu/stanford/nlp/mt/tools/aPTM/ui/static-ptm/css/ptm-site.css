@@ -1,0 +1,123 @@
+
+/* Helper ids and classes */
+.div-hidden {
+   display:none;
+   }
+
+/* Navigation sidebar */
+#sidebar {
+   margin:1em;
+   background:Gray;
+   font-size:80%;
+}
+
+/* view: Work Queue */
+#queue-table {
+   border:0px;
+   width:40em;
+}
+
+.queue-td {
+   padding:0.2em;
+   text-align:left;
+}
+
+.queue-td-rl {
+   text-align:right;
+   direction:rtl;
+   padding:0.2em;
+}
+
+/* view: History */
+#history-container {
+   min-width:40em;
+   width:50em;
+   border:1px solid Yellow;
+   }
+
+#history-table {
+   border:0px;
+   width:40em;
+}
+
+.history-td {
+   padding:0.2em;
+   text-align:left;
+}
+
+.history-td-rl {
+   text-align:right;
+   direction:rtl;
+   padding:0.2em;
+}
+
+#history-td-src-title {
+   font-weight:bold;
+}
+
+.history-td-tgt-title {
+   padding:3em 0.2em 0.2em 0.2em;
+   text-align:left;
+   font-size:small;
+}
+
+#history-td-none {
+   padding:0.2em;
+   text-align:left;
+   font-size:medium;
+   margin-top:5em;
+}
+
+/* view: translate.html */
+/* also includes ptm divs */
+#src-display {
+   margin:1em;
+   width:50em;
+   min-width:40em;
+   border:2px solid Black;
+   }
+
+.src-tok
+{
+float:right;
+margin:1em 0.3em;
+border-width:1px;
+border-style:solid;
+border-color:#FFFFFF;
+}
+
+#form-tgt-container {
+   clear:both;
+   margin:3em 1em;
+   }
+
+.form-lbl {
+   }
+
+#form-tgt-txt {
+   width:50em;
+   height:10em;
+   }
+
+#form-tgt-lang {
+   }
+
+#form-tgt-submit {
+   }
+
+
+
+/* Automatically inserted div that contains translation suggestions */
+#ptm-widget_
+{
+position:absolute;
+border-width:2px;
+border-style:solid;
+padding:0.2em;
+opacity:1.0;
+}
+
+
+
+
+

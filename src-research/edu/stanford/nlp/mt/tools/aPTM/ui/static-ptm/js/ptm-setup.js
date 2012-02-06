@@ -1,49 +1,53 @@
-//Register ptm callbacks with the UI when it is ready
+// ptm-setup.js
+// Register ptm callbacks with the translation manager interface
 
 $(document).ready(function(){
-
   // DEBUG: Uncomment this to disable logging
-  //console.log = function() {}
-  
-  //Log a keystroke in the translation box. Start the timers
-  //for the PTM box.
-  $( "#ptm-input_" ).keypress(function(event){
-    ptm.addKeyStroke(event);    
-  });    
-  
-  //Setup the clear button
-  $( '#ptm-clear_' ).click(function(){
-    ptm.reset();
-  });
-  
-  //Configure the form that will initiate translation
-  //Suppress the form POST
-  $('#lang-form_').submit(function(event){
-    event.preventDefault();
-    ptm.initTranslation();
-    return false;
-  });   
+  // console.log = function() {}
 
-  //Configure the handler for completing translation
-  //Suppress the form POST
-  $( '#form-ptm-input_' ).submit(function(event){
-    event.preventDefault();
+  // PTM parameters
+  var hostPort = '8017';
+  var hostString = window.location.protocol + "//0.0.0.0" + ':' + hostPort;
+  ptm.setHostString(hostString);
+  console.log('host:' + hostString);
+
+  // Set required CSS elements in the document template
+  var cssArray = {
+    tgtTxtArea: 'form-tgt-txt',
+    srcTokClassPrefix: 'src-tok',
+    statusBox: 'status-box',
+    widgetContainerStyleId: 'container',
+  };
+  ptm.setCSSElements(cssArray);
+
+  // Set the source language
+  var srcLang = $('div#src-lang').html();
+  ptm.setSrcLang(srcLang);
+
+  // Set the target language, and a callback for
+  // further changes to the dropdown
+  var tgtLang = $( 'select[name=form-tgt-lang]').val();
+  ptm.setTgtLang(tgtLang);
+  $( 'select[name=form-tgt-lang]' ).change(function() {
+    ptm.setTgtLang(this.value);
+  });
+
+  // Set the source input
+  var srcTxt = $('div#src-txt').html();
+  ptm.setSrcTxt(srcTxt);
+
+  // Attach the keystroke listener to the textarea
+  $( 'textarea#form-tgt-txt' ).keypress(function(event){
+    ptm.addKeyStroke(event);
+  });
+  
+  // Attach to the form submit event, but don't prevent the default
+  // action (POST)
+  $( '#form-tgt-input' ).submit(function(event){
     ptm.doneWithTranslation();
-    return false;
   });
-  
-  //Setup the source language list
-  ptm.setupSourceLanguages();
-  // Register a select event handler.
-  $( '#src-list_' ).change(function(){
-    ptm.selectSource($(this).val());
-  });
-  
-  //Blank out all forms
-  //This is needed when we redirect to the same page after a done event
-  $(':input' )
-    .not(':button, :submit, :reset')
-    .val('')
-    .removeAttr('checked')
-    .removeAttr('selected');
+
+  // Here we go...
+  ptm.initTranslation();
+
 });

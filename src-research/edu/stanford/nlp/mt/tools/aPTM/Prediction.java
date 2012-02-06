@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tools.aPTM;
 
+// TODO(spenceg): Merge this with ScoredCompletion into the same type hierarchy
 public class Prediction {
   final String srcPrefCoverage;
   final String tgtPhrase;

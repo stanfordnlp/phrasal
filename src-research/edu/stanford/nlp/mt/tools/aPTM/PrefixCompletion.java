@@ -57,11 +57,11 @@ public class PrefixCompletion extends AbstractHandler {
 
   public static final String DEBUG_PROPERTY = "DebugPrefixCompletion";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_PROPERTY, "true"));
+      DEBUG_PROPERTY, "false"));
 
   public static final String HTML_RESOURCES_PATH = "edu/stanford/nlp/mt/tools/aPTM/ui";
   public static final String DEFAULT_WEB_PAGE = "/translate.html";
-  PrefixDecoder<String> prefixDecoder; 
+  PrefixDecoder<IString,String> prefixDecoder; 
   LanguageModel<IString> lm;
   FlatPhraseTable<String> phr;
   double lmWt;
@@ -255,7 +255,7 @@ public class PrefixCompletion extends AbstractHandler {
     this.phrTableWts = Arrays.copyOf(phrTableWts, phrTableWts.length);
   }
 
-  public PrefixCompletion(PrefixDecoder<String> prefixDecoder) {
+  public PrefixCompletion(PrefixDecoder<IString,String> prefixDecoder) {
     this.prefixDecoder = prefixDecoder;
   }
 
@@ -318,8 +318,7 @@ public class PrefixCompletion extends AbstractHandler {
       }
       EnumeratedConstrainedOutputSpace<IString, String> prefixConstraints = 
         new EnumeratedConstrainedOutputSpace<IString, String>(Arrays.asList(prefix), prefixDecoder.getPhraseGenerator().longestForeignPhrase());
-      List<RichTranslation<IString, String>> translations = prefixDecoder.nbest(source, 0, prefixConstraints, 
-    		  Arrays.asList((Sequence<IString>)prefix), -1);
+      List<RichTranslation<IString, String>> translations = prefixDecoder.nbest(source, 0, prefixConstraints, null, -1);
       if(DEBUG) {
         System.err.printf("n-best list: %s\n", translations);
       }
@@ -492,22 +491,19 @@ public class PrefixCompletion extends AbstractHandler {
       }      
       pc = new PrefixCompletion(args[1],args[2], lmWt, phrTableWts);  
     } else if ("-phrasal".equals(args[0])) {
-      String[] fields = args[1].split(":");
-      String phrasalModel = fields[0];
-      String berkeleyModel = fields[1];
-      Map<String, List<String>> config = Phrasal.readConfig(phrasalModel);      
+      Map<String, List<String>> config = Phrasal.readConfig(args[1]);      
       Phrasal.initStaticMembers(config);
       Phrasal p = new Phrasal(config);
       FlatPhraseTable.lockIndex();      
       AbstractInferer infererModel = (AbstractInferer)p.inferers.get(0);      
-      PrefixDecoder<String> prefixDecoder = new PrefixDecoder<String>(infererModel,berkeleyModel);      
+      PrefixDecoder<IString,String> prefixDecoder = new PrefixDecoder<IString,String>(infererModel);      
       pc = new PrefixCompletion(prefixDecoder);            
     } else {
       usage();
       System.exit(-1);
     } 
 
-    Server server = new Server(8081);
+    Server server = new Server(8080);
     server.setHandler(pc);
     server.start();
     server.join();

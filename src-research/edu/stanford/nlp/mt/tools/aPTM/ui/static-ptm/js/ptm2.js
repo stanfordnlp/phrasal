@@ -22,58 +22,78 @@ var ptm = (function() {
   // Cache of last set of predictions
   var _predictionsCache = 0;
 
-  // How many keystrokes the user has entered during the translation session
-  var _numKeyStrokes = 0;
-
   // Timer for opening the ptm window
   var _ptmTimer = 0;
+
+  // The autosuggest div
+  var _ptmWidget = 0;
 
   // Timeout for displaying the ptm window (ms)
   var _ptmTimeout = 750;
 
-  // CSS class for the source token CSS class
-  var _srcTokStyleClass = "src-tok";
+  // ISO 639-1 language code for source text
+  var _srcLang = 'en';
 
-  // CSS id for div around the source text in which the PTM widget will
-  // be dynamically positioned.
+  // ISO 639-1 language code for target text
+  var _tgtLang = 'ar';
+
+  // Source text (unprocessed)
+  var _srcRaw = '';
+  
+  // CSS classes
+  var _tgtTxtSel = '';
+  var _srcTokStyleClass = "src-tok";
+  var _statusBoxSel = 'div#status-box';
   var _widgetContainerStyleId = "container_";
   
-  // Translation directions supported by the system
-  // Languages are represented with ISO 639-1 (two-letter) language codes
-  // The "source" property contains the display name of the source language
-  // Available targets should be entered by their language codes
-  var _translationDirections = {
-    ar: {
-      source: "Arabic",
-      en: "English",
-    },
-    en: {
-      source: "English",
-      ar: "Arabic",
-    },
-  };
-  
-  //Rendering directions for the supported languages
-  var _langOrientations = {
-    en: "left",
-    ar: "right",
-  };
-    
-  // Convenience functions for controlling DOM elements
+  // ###############################
+  // Functions for manipulating the DOM / UI
   var ptmUI = {
-    srcLang: function(){ return $( 'select#src-list_ option:selected' ).val(); },
-    tgtLang: function(){ return $( 'select#tgt-list_ option:selected' ).val(); },
-    src: function(){ return $( 'textarea#src-input_' ).val(); },
-    tgt: function(){ return $( 'textarea#ptm-input_' ).val(); },
-    srcOOV: function(context){ return $(context).find( '.oov-src-text' ).html(); },
-    tgtOOV: function(context){ return $(context).find( '.oov-tgt' ).val(); },
+    tgt: function(){ return $( _tgtTxtSel ).val(); },
+
+    // Parse the custom array of CSS Ids and Classes (comes in via the setup
+    // script
+    processCSSArray: function(cssArray) {
+      if (cssArray.tgtTxtArea) {
+        _tgtTxtSel = 'textarea#' + cssArray.tgtTxtArea;
+      } else {
+        console.log('ptmUI: tgtTxtArea undefined!');
+      }
+
+      if (cssArray.srcTokClassPrefix) {
+        _srcTokStyleClass = cssArray.srcTokClassPrefix;
+      } else {
+        console.log('ptmUI: srcTokClassPrefix undefined!');
+      }
+
+      if (cssArray.statusBox) {
+        _statusBoxSel = 'div#'+cssArray.statusBox;
+      } else {
+        console.log('ptmUI: statusBox id undefined!');
+      }
+      
+      if (cssArray.widgetContainerStyleId) {
+        _widgetContainerStyleId = cssArray.widgetContainerStyleId;
+      } else {
+        console.log('ptmUI: widgetContainerStyleId undefined!');
+      }
+    },
+
+    addTgtCompletion: function(completion) {
+      var tgtPrefix = $.trim($( _tgtTxtSel ).val());
+      if (tgtPrefix.length > 0) {
+        tgtPrefix = tgtPrefix + ' ';
+      }
+      var newTarget = tgtPrefix + completion + ' ';
+      $( _tgtTxtSel ).val(newTarget);
+    },
     
     showStatus: function(message){
-      $( '#status-box_' ).html(message).show();   
+      $( _statusBoxSel ).html(message).show();   
     },
     
     hideStatus: function() {
-      $( '#status-box_' ).slideUp();
+      $( _statusBoxSel ).slideUp();
     },
     
     // TODO(spenceg): Add an option on the interface
@@ -84,51 +104,6 @@ var ptm = (function() {
     // TODO(spenceg): Add an option on the interface
     disablePTM: function(){
       console.log('TODO(spenceg): Toggle ptm off.');    
-    },
-
-    showTargetBox: function(){
-      $( '#ptm_' ).show();
-      $( '#ptm-input_' ).focus();
-      return true;
-    },
-
-    // Disables the source textarea and enables a div that displays
-    // the whitespace-tokenized source
-    disableSourceBox: function() {
-      console.log('ptmUI: disableSourceBox()');
-      
-      var srcToks = ptmUI.src();
-      srcToks = $.trim(srcToks.replace(/\s+/g, ' ')).split(' ');
-      var tokId = 0;
-      var divStr = '';
-      $( '#src-display_' ).html('');
-      for (var tok in srcToks){
-        var tokDiv = sprintf('<div class=\"%s\" id=\"%s-%d\">%s</div>', _srcTokStyleClass, _srcTokStyleClass, tokId++, srcToks[tok]);
-        $( '#src-display_' ).append(tokDiv);
-      }
-
-      // Setup CSS orientation for the token divs
-      var textAlign = $( '#src-input_' ).css('direction');
-      var classSel = 'div.'+_srcTokStyleClass;
-      if (textAlign == 'rtl') {
-        $( classSel ).css('float', 'right');
-      } else {
-        $( classSel ).css('float', 'left');
-      }
-      $( classSel ).css('direction', $( '#src-input_' ).css('direction'));
-      $( classSel ).css('text-align', $( '#src-input_' ).css('text-align'));
-
-      $( '#src-form-container_' ).hide();
-      $( '#src-display_' ).show();
- 
-      return true;
-    },
-
-    // Enable the source input text area.
-    enableSourceBox: function() {
-      $( '#src-display_' ).hide();
-      $( '#src-form-container_').show();
-      return true;
     },
 
     // Open the PTM div over the source tokens. The PTM widget assumes
@@ -152,90 +127,36 @@ var ptm = (function() {
       }
     },
     
+  }; // End of ptmUI functions
+
+  var ptmUtil = {
     //Prepares a string for transmission to the server. Presently
     //just trim trailing whitespace and lowercase.
     cleanUp: function(myStr){
       var fmtString = new String(myStr);
       return $.trim(fmtString.toLowerCase());
     },
-
-    setupSourceSelect: function() {
-      console.log("setupSourceSelect: ");
-      $( '#src-list_' ).append('<option value="NULL"></option>');
-      for(var key in _translationDirections){
-        var displayName = _translationDirections[key].source;
-        var selString = sprintf('<option value=\"%s\">%s</options>', key, displayName);
-//        console.log(selString);
-        $( '#src-list_' ).append(selString);
-      }
-        
-      // TODO(spenceg): Assume Arabic is default source for development
-      $( '#src-list_' ).val('ar');
-    },
     
-    toggleTgtSelect: function(isEnabled,langId){
-//      console.log("toggleTgtSelect: " + isEnabled + " " + langId);
-      $( '#tgt-list_' ).html('<option value="NULL" selected="selected"></option>');
-      var directions = _translationDirections[langId];
-      for(var id in directions){
-        if( id != "source" ){
-          var selString = '<option value=\"' + id + '\">' + directions[id] + '</option>';
-          $( '#tgt-list_' ).append(selString);
-        }
-      }
-      
-      $('#tgt-list_').change(function(){
-        var langId = $(this).val();
-        var orientation = _langOrientations[langId];
-        
-//        console.log("setupTgtBox: " + langId);
-//        console.log("tgtOrientation: " + orientation);
-        
-        if(orientation == "right"){
-          $( '#ptm-input_' ).css("direction","rtl");
-          $( '#ptm-input_' ).css("text-align","right");
-        } else {
-          $( '#ptm-input_' ).css("direction","ltr");
-          $( '#ptm-input_' ).css("text-align","left");
-        }
-      });
-    },
-    
-    //Configure the orientation of the source box
-    setupSrcBox: function(langId){
-      console.log("setupSrcBox: " + langId);
-      var orientation = _langOrientations[langId];
-      console.log("srcOrientation: " + orientation);
-      if(orientation == "right"){
-        $( '#src-input_' ).css("direction","rtl");
-        $( '#src-input_' ).css("text-align","right");
-      } else {
-        $( '#src-input_' ).css("direction","ltr");
-        $( '#src-input_' ).css("text-align","left");
-      }
-    },
-
-  }; // End of ptmUI functions
+  }; // End of ptmUtil functions
   
-  //Callbacks from the server to render data to the interface
+  // ########################
+  // Callbacks from the server to render data to the interface
   var serveData = {
 
     // OOV list for a full source input string
     oovResponse: function(data) {
       console.log('handler: oovResponse');
-//      console.log(data);
+      console.log(data);
 
-      // Discard OOV data on the current interface. Move on to
-      // translation.
-      ptmUI.disableSourceBox();
-      ptmUI.showTargetBox();
+      // TODO(spenceg): Highlight the OOVs
+
       ptm.autoCompleteReq();
     },
 
     // Completions for a transmitted target-side prefix.
     predictResponse: function(data){
       console.log("handler: predictResponse:");
-      // console.log(data);
+      console.log(data);
 
       // Map the predictResponse message to a set of completions
       // data := Array[{first: completion, second: src-coverage},...]
@@ -316,22 +237,9 @@ var ptm = (function() {
       }
     },
 
-    //Reset the UI for another translation session
-    reset: function(){
-      console.log("reset:");
-      ptmUI.enableSourceBox();
-      ptmUI.closePTMWindow();
-      _predictionsCache = 0;
-      _numKeyStrokes = 0;
-      window.location.replace(_uiURL);
-    },
-    
     // Perform action every time the user presses a key inside the
     // translation (target) window.
     addKeyStroke: function(event) {
-      _numKeyStrokes++;
-      console.log("addKeyStroke: " + _numKeyStrokes);
-
       // Spacebar triggers a server request. We would
       // obviously need to change this for Chinese ;)
       var doServerRequest = (event.keyCode == 32);
@@ -361,43 +269,56 @@ var ptm = (function() {
 
     // Set the duration (in ms) after which the PTM box will appear
     setPTMTimeout: function(value){
+      _ptmTimeout = value;
+    },
 
+    // Full URL of the translation host
+    setHostString: function(value) {
+      _uiURL = value;
+      _serverURL = value;
     },
-    
-    // Setup the selector with the available source languages
-    setupSourceLanguages: function() {
-      ptmUI.setupSourceSelect();
+
+    // Set the CSS elements in the interface
+    setCSSElements: function(cssArray) {
+      ptmUI.processCSSArray(cssArray);
     },
-    
-    //Select the source language for translation
-    selectSource: function(langId) {
-      console.log("selectSource: " + langId);
-      if(langId === "NULL"){
-        ptmUI.toggleTgtSelect(false,langId);
-      } else {
-        ptmUI.setupSrcBox(langId);
-        ptmUI.toggleTgtSelect(true,langId);
-      }
+
+    // Set the source language
+    setSrcLang: function(langCode) {
+      _srcLang = langCode;
+    },
+
+    // Set the target language
+    setTgtLang: function(langCode) {
+      _tgtLang = langCode;
+    },
+
+    setSrcTxt: function(srcTxt) {
+      _srcRaw = ptmUtil.cleanUp(srcTxt);
     },
   
     //Initializes translation from the interface
     initTranslation: function(){
       ptmUI.hideStatus();
+      console.log(_serverURL);
 
       var ptmMsg = {
-        sourceLang: ptmUI.srcLang(),
-        targetLang: ptmUI.tgtLang(),
-        source: ptmUI.cleanUp(ptmUI.src()),
+        sourceLang: _srcLang,
+        targetLang: _tgtLang,
+        source: _srcRaw,
       };
       
       console.log("POST: ptmInit");
-      // console.log(ptmMsg);
+      console.log(ptmMsg);
       
       $.ajax({
             url: _serverURL,
             dataType: "json",
             data: {ptmInit: JSON.stringify(ptmMsg), },
             success: serveData.oovResponse,
+            xhrFields: {
+              withCredentials: true
+            },
             error: function(jqXHR, textStatus, errorThrown){
               ptmUI.showStatus("Communication with server failed. Unable to translate source.");              
               console.log("ptmInit failed: " + textStatus);
@@ -417,8 +338,8 @@ var ptm = (function() {
       var srcOOVStr = ptmUI.srcOOV(this);
       var tgtOOVStr = ptmUI.tgtOOV(this);
       var ptmMsg = {
-        sourcePhrase: ptmUI.cleanUp(srcOOVStr),
-        targetPhrase: ptmUI.cleanUp(tgtOOVStr),
+        sourcePhrase: ptmUtil.cleanUp(srcOOVStr),
+        targetPhrase: ptmUtil.cleanUp(tgtOOVStr),
       };
       
       console.log("POST: sendOOV");
@@ -428,6 +349,9 @@ var ptm = (function() {
             url: _serverURL,
             dataType: "json",
             data: {ptmOOVPhrasePair: JSON.stringify(ptmMsg), },
+            xhrFields: {
+              withCredentials: true
+            },
             error: function(jqXHR, textStatus, errorThrown){
               console.log("ptmOOVPhrasePair failed: " + textStatus);
               console.log(errorThrown);
@@ -444,10 +368,10 @@ var ptm = (function() {
       ptmUI.hideStatus();
       
         var ptmMsg = {
-          sourceLang: ptmUI.srcLang(),
-          targetLang: ptmUI.tgtLang(),
-          source: ptmUI.cleanUp(ptmUI.src()),
-          prefix: ptmUI.cleanUp(ptmUI.tgt()),
+          sourceLang: _srcLang,
+          targetLang: _tgtLang,
+          source: _srcRaw,
+          prefix: ptmUtil.cleanUp(ptmUI.tgt()),
           maxPredictions: _numResultsToFetch,
         };
         console.log("POST: ptmPredict");
@@ -459,6 +383,9 @@ var ptm = (function() {
               url: _serverURL,
               dataType: "json",
               data: { ptmPredict: JSON.stringify(ptmMsg), },
+              xhrFields: {
+                withCredentials: true
+              },
               success: function(data){
                 //response is a callback
                 serveData.predictResponse(data);
@@ -473,7 +400,7 @@ var ptm = (function() {
     //When the user selects a completion
     autoCompleteSelect: function(completion){
       console.log("autoCompleteSelect:");
-      // console.log("Completion: " + completion);
+      console.log("Completion: " + completion);
       
       ptmUI.hideStatus();
       
@@ -487,32 +414,35 @@ var ptm = (function() {
       }
 
       // Update the translation box.
-      var newTarget = tgtPrefix + completion;
-      newTarget = newTarget.replace(/\s+/g, ' ') + ' ';
-      $("textarea#ptm-input_").val(newTarget);
+      ptmUI.addTgtCompletion(completion);
 
       // Get completions for this new translation prefix
       ptm.togglePTMTimer(true);
       
       var ptmMsg = {
-        sourceLang: ptmUI.srcLang(),
-        targetLang: ptmUI.tgtLang(),
-        source: ptmUI.cleanUp(ptmUI.src()),
-        prefix: ptmUI.cleanUp(tgtPrefix),
-        completion: ptmUI.cleanUp(completion),
+        sourceLang: _srcLang,
+        targetLang: _tgtLang,
+        source: _srcRaw,
+        prefix: ptmUtil.cleanUp(tgtPrefix),
+        completion: ptmUtil.cleanUp(completion),
       };
       console.log("POST: ptmUserSelection");
       // console.log(ptmMsg);
-      
-      $.ajax({
-            url: _serverURL,
-            dataType: "json",
-            data: {ptmUserSelection: JSON.stringify(ptmMsg),},
-            error: function(jqXHR, textStatus, errorThrown){
-              console.log("ptmUserSelection failed: " + textStatus);
-              console.log(errorThrown);
-            },
-      });
+
+// TODO(spenceg): This should be an ajax call to tmapp with the
+// the new rule.
+//      $.ajax({
+//            url: _serverURL,
+//            dataType: "json",
+//            data: {ptmUserSelection: JSON.stringify(ptmMsg),},
+//            xhrFields: {
+//              withCredentials: true
+//            },
+//            error: function(jqXHR, textStatus, errorThrown){
+//              console.log("ptmUserSelection failed: " + textStatus);
+//              console.log(errorThrown);
+//            },
+//      });
     },
     
     //User has finished the translation.
@@ -522,11 +452,10 @@ var ptm = (function() {
       ptmUI.hideStatus();
       
       var ptmMsg = {
-        sourceLang: ptmUI.srcLang(),
-        targetLang: ptmUI.tgtLang(),
-        source: ptmUI.cleanUp(ptmUI.src()),
-        finishedTarget: ptmUI.cleanUp(ptmUI.tgt()),
-        numKeyStrokes: _numKeyStrokes,
+        sourceLang: _srcLang,
+        targetLang: _tgtLang,
+        source: _srcRaw,
+        finishedTarget: ptmUtil.cleanUp(ptmUI.tgt()),
       };
       console.log("POST: ptmDone");
       // console.log(ptmMsg);
@@ -535,6 +464,9 @@ var ptm = (function() {
             url: _serverURL,
             dataType: "json",
             data: { ptmDone: JSON.stringify(ptmMsg), },
+            xhrFields: {
+              withCredentials: true
+            },
             success: function(data, textStatus, jqXHR){
               console.log("ptmDone response: " + textStatus);
               window.location.replace(_uiURL);

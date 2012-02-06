@@ -1,0 +1,29 @@
+body,
+   html {
+      margin:0;
+      padding:0;
+      color:Black;
+      background:White;
+}
+
+#container {
+   width:100%;
+   float:left;
+   clear:both;
+   font-family:Verdana, sans-serif;
+}
+
+#sidebar-wrapper {
+   float:left;
+   width:150px;
+   background:Gray;
+   border-right:1px solid DimGray;
+}
+
+#content-wrapper {
+/*   float:right; */
+   float:left;
+/*   margin-left:150px;*/
+   background:White;
+   border: 1px solid Red;
+}

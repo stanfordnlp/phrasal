@@ -16,7 +16,6 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
@@ -27,126 +26,100 @@ import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.Pair;
 
-import edu.berkeley.nlp.wordAlignment.EMWordAligner;
-import edu.berkeley.nlp.wordAlignment.Model;
-import edu.berkeley.nlp.wordAlignment.distortion.DistortionModel;
-import edu.berkeley.nlp.wordAlignment.distortion.IBMModel1;
-import edu.berkeley.nlp.wordAlignment.distortion.StringDistanceModel;
-import edu.berkeley.nlp.wordAlignment.distortion.StateMapper.EndsStateMapper;
-import edu.berkeley.nlp.wordAlignment.distortion.StateMapper;
-import edu.berkeley.nlp.wordAlignment.SentencePairState;
-import edu.berkeley.nlp.wa.mt.SentencePair;
-//import edu.berkeley.nlp.mt.SentencePair;
-import edu.berkeley.nlp.wa.mt.Alignment;
-//import edu.berkeley.nlp.mt.Alignment;
-
 /**
  * Prefix decoder 
  * 
  * @author daniel
  *
- * @param <IString>
+ * @param <TK>
  * @param <FV>
  */
-public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
+public class PrefixDecoder<TK, FV> extends AbstractInferer<TK, FV> {
   public static boolean DEBUG = true;
   
   int maxDistortion = -1;
-  EMWordAligner alignerRv;
-  
-  public PrefixDecoder(AbstractInferer<IString, FV> inferer, String reverseWAModel) {
+  public PrefixDecoder(AbstractInferer<TK, FV> inferer) {
     super(inferer);
     if (inferer instanceof MultiBeamDecoder) {
-      MultiBeamDecoder<IString, FV> mbd = (MultiBeamDecoder<IString, FV>)inferer;
+      MultiBeamDecoder<TK, FV> mbd = (MultiBeamDecoder<TK, FV>)inferer;
       maxDistortion = mbd.maxDistortion;
     } else if (inferer instanceof DTUDecoder) {
       throw new UnsupportedOperationException();
     }
-    Model paramsRv = Model.load(reverseWAModel);
-    System.err.printf("paramsRv: %s\n", paramsRv);
-    System.err.printf("paramsRv.transProbs: %s\n", paramsRv.transProbs);
-
-    paramsRv.transProbs.lock();
-    StateMapper mapper = new EndsStateMapper();
-    DistortionModel distModel = new StringDistanceModel(mapper);
-    SentencePairState.Factory spsFactory = distModel.getSpsFactory();
-    alignerRv = new EMWordAligner(spsFactory, null, true);
-    alignerRv.trainingCache = distModel.getTrainingCache();
-    alignerRv.params = paramsRv;
   }
   
-  public PhraseGenerator<IString> getPhraseGenerator() {
+  public PhraseGenerator<TK> getPhraseGenerator() {
     return phraseGenerator;
   }
   
   @Override
-  public RichTranslation<IString, FV> translate(Sequence<IString> foreign,
-      int translationId, ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
-      List<Sequence<IString>> targets) {
+  public RichTranslation<TK, FV> translate(Sequence<TK> foreign,
+      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      List<Sequence<TK>> targets) {
     throw new UnsupportedOperationException();
   }
 
 
   @Override
-  public RichTranslation<IString, FV> translate(Scorer<FV> scorer,
-      Sequence<IString> foreign, int translationId,
-      ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
-      List<Sequence<IString>> targets) {
+  public RichTranslation<TK, FV> translate(Scorer<FV> scorer,
+      Sequence<TK> foreign, int translationId,
+      ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      List<Sequence<TK>> targets) {
     throw new UnsupportedOperationException();
   }
 
-  public Map<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Hypothesis<IString, FV>>> hypCache = new
-		  HashMap<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Hypothesis<IString, FV>>>();
+  public Map<Pair<Sequence<TK>,Sequence<TK>>,PriorityQueue<Hypothesis<TK, FV>>> hypCache = new
+		  HashMap<Pair<Sequence<TK>,Sequence<TK>>,PriorityQueue<Hypothesis<TK, FV>>>();
   
   @SuppressWarnings({ "rawtypes", "unchecked" })
 @Override
-  public List<RichTranslation<IString, FV>> nbest(Scorer<FV> scorer,
-      Sequence<IString> foreign, int translationId,
-      ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
-      List<Sequence<IString>> targets, int size) {
+  public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
+      Sequence<TK> foreign, int translationId,
+      ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      List<Sequence<TK>> targets, int size) {
     
-    PriorityQueue<Hypothesis<IString, FV>> agenda = new PriorityQueue<Hypothesis<IString,FV>>();
-    PriorityQueue<Hypothesis<IString, FV>> paused = new PriorityQueue<Hypothesis<IString,FV>>();
+    PriorityQueue<Hypothesis<TK, FV>> agenda = new PriorityQueue<Hypothesis<TK,FV>>();
+    PriorityQueue<Hypothesis<TK, FV>> paused = new PriorityQueue<Hypothesis<TK,FV>>();
     int windowSize = 100;
     int maxPrefixCompletion = 0;
     
-    List<ConcreteTranslationOption<IString>> options = phraseGenerator.translationOptions(foreign, targets, translationId);
-    List<ConcreteTranslationOption<IString>> filteredOptions = constrainedOutputSpace.filterOptions(options);
+    List<ConcreteTranslationOption<TK>> options = phraseGenerator.translationOptions(foreign, targets, translationId);
+    List<ConcreteTranslationOption<TK>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
     String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
     
     if (DEBUG) {
     	System.err.println("filtered options (for prefix)");
     	System.err.println("========================================");
-    	for (ConcreteTranslationOption<IString> cto : filteredOptions) {
+    	for (ConcreteTranslationOption<TK> cto : filteredOptions) {
     	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
     	}
     	
     	System.err.println("unfiltered options (for suffix)");
     	System.err.println("========================================");
-    	for (ConcreteTranslationOption<IString> cto : options) {
+    	for (ConcreteTranslationOption<TK> cto : options) {
     	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
     	}
     }
     
     Arrays.fill(autoInsertScores, -10000);
-    OptionGrid<IString> optionGrid = new OptionGrid<IString>(options, foreign);
-    OptionGrid<IString> filteredOptionGrid = new OptionGrid<IString>(filteredOptions, foreign);
+    OptionGrid<TK> optionGrid = new OptionGrid<TK>(options, foreign);
+    OptionGrid<TK> filteredOptionGrid = new OptionGrid<TK>(filteredOptions, foreign);
     
     
     // use *UNFILTERED* options for heuristic calculation
-    Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(translationId, foreign, heuristic, annotators, Arrays.asList(options));
+    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, foreign, heuristic, annotators, Arrays.asList(options));
     featurizer.initialize(options, foreign);
     if (DEBUG) {
     	System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
     }
     /*
-    EnumeratedConstrainedOutputSpace<IString, FV> ecos = (EnumeratedConstrainedOutputSpace<IString, FV>)constrainedOutputSpace;
-    Sequence<IString> prefix = ecos.allowableSequences.get(0);
+    EnumeratedConstrainedOutputSpace<TK, FV> ecos = (EnumeratedConstrainedOutputSpace<TK, FV>)constrainedOutputSpace;
+    Sequence<TK> prefix = ecos.allowableSequences.get(0);
     for (int i = prefix.size(); i > 0; i--) {
-    	Sequence<IString> subSeq = prefix.subsequence(0, i);
-    	PriorityQueue<Hypothesis<IString, FV>> savedHyps = hypCache.get(
-    			new Pair<Sequence<IString>,Sequence<IString>>(foreign, subSeq));
+    	Sequence<TK> subSeq = prefix.subsequence(0, i);
+    	PriorityQueue<Hypothesis<TK, FV>> savedHyps = hypCache.get(
+    			new Pair<Sequence<TK>,Sequence<TK>>(foreign, subSeq));
     	if (savedHyps != null) {
     		System.err.printf("Recovering saved hyps for prefix: %s\n", subSeq);
     		agenda.addAll(savedHyps);
@@ -156,103 +129,205 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     if (agenda.size() == 0) {
       System.err.printf("Could not recover saved hyps for prefix: %s\n", prefix);
       //System.err.println("Only have saved hyps for prefixes:");
-      //for (Sequence<IString> prefix )
+      //for (Sequence<TK> prefix )
       agenda.add(nullHyp);
     } */
-    Hypothesis waHyp = nullHyp;
+    agenda.add(nullHyp);
+    
+    List<Hypothesis<TK, FV>> completePrefixes = new ArrayList<Hypothesis<TK,FV>>();
     int foreignSz = foreign.size();
-    
+    long startTime = System.currentTimeMillis();
+    RecombinationHash<Hypothesis<TK,FV>> recombinationHash = new RecombinationHash<Hypothesis<TK,FV>>(filter);   
+    do {
+     /* long time = System.currentTimeMillis() - startTime;
+      if (completePrefixes.size() != 0 && time > 20000) {
+          System.out.printf("Time limit exceeded: %s > %d\n", time, 300);
+    	  break;
+      } */
+      if (agenda.size() == 0) {
+    	  agenda.addAll(paused);
+    	  paused.clear();
+    	  windowSize++;
+    	  System.err.printf("Doing window size: %d\n", windowSize);
+      }
+      Hypothesis<TK, FV> hyp = agenda.remove();
+      
+      if (hyp.featurizable != null && maxPrefixCompletion - hyp.featurizable.partialTranslation.size() > windowSize) {
+    	  System.err.printf("pausing off agenda %d > %d\n", maxPrefixCompletion - 
+    			  hyp.featurizable.partialTranslation.size(), 
+    			  windowSize);
+    	  System.err.printf("adding to paused (max: %d size: %d window %d)",maxPrefixCompletion, hyp.featurizable.partialTranslation.size(), windowSize);
+    	  paused.add(hyp);
+    	  continue;
+      }
+      if (DEBUG) {
+    	  System.err.printf("[Prefix] Expanding hypothesis: %s\n", hyp);
+      }
+      int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
+      int expansions = 0;     
+      for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
+        int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
 
-    List<String> fWords = new ArrayList<String>(foreign.size());
-    List<String> eWords;
-    if (targets == null || targets.size() == 0) {
-    	eWords = new ArrayList<String>(0);
-    } else {
-    	eWords = new ArrayList<String>(targets.get(0).size());
-    }
-    
-    for (int i = 0; i < foreign.size(); i++) {
-       fWords.add(foreign.get(i).toString());
-    }
-    
-    for (int i = 0; targets != null && i < targets.get(0).size(); i++) {
-    	eWords.add(targets.get(0).get(i).toString());
-    }
-    
-    if (DEBUG) {
-    	System.err.println("Targets:\n"+targets);
-    }
-    
-    SentencePair sp = new SentencePair(0, "none", eWords, fWords);
-    if (targets != null && targets.size() > 0 && !targets.get(0).toString().equals("")) {
-	    Alignment aRv = alignerRv.alignSentencePair(sp);
-	    System.out.println("Alignment:");
-	    System.out.println(aRv);
-      int lastF = 0;
-	    for (int i = 0; i < targets.get(0).size(); i++) {
-	    	List<Integer> e2fA = aRv.getAlignmentsToEnglish(i);
-	    	int sureAlignment = -1;
-	    	for (Integer a : e2fA) {
-            if (sureAlignment == -1 || 
-                (Math.abs(sureAlignment - lastF)  > Math.abs(a - lastF) && 
-                waHyp.foreignCoverage.get(a) == false)) {
-                sureAlignment = a;
-            }
-	    	    /* if (aRv.containsSureAlignment(i, a)) {
-	    	      sureAlignment = a;
-	    	      break;
-	    	    } */
-	    	}
-	    	if (DEBUG) {
-	    		System.out.printf("e.%d -> f.%d\n", i, sureAlignment);
-	    	}
-	      CoverageSet foreignCoverage = new CoverageSet();
-    	  TranslationOption<IString> fakeOpt;
-	    	if (sureAlignment == -1) {
-    	    	fakeOpt = 
-            new TranslationOption<IString>(
-	    			new float[0], new String[0], 
-	    			new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
-	    			new RawSequence<IString>(new IString[]{new IString("")}), null);
-        } else { 
-            lastF = sureAlignment;
-    	    	fakeOpt = 
-            new TranslationOption<IString>(
-	    			new float[0], new String[0], 
-	    			new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
-	    			new RawSequence<IString>(new IString[]{foreign.get(sureAlignment)}), null);
-	        	foreignCoverage.set(sureAlignment);
+        // check distortion limit
+        if (endPosMax < 0) {
+          if (maxDistortion >= 0 && startPos != firstCoverageGap) {
+            endPosMax = Math.min(firstCoverageGap + maxDistortion + 1,
+                foreignSz);
+          } else {
+            endPosMax = foreignSz;
+          }
         }
-	    	ConcreteTranslationOption<IString> fakeConcreteOpt = 
-	    			new ConcreteTranslationOption<IString>(
-	    			  fakeOpt,
-	    		      foreignCoverage,
-	    		      featurizer, scorer,
-	    		      foreign, "forcedAlignment", 0);
-	    
-	    	waHyp = new Hypothesis<IString, FV>(translationId,
-	                fakeConcreteOpt, waHyp.length, waHyp, featurizer, scorer, heuristic);    
-	    	if (DEBUG) {
-	        	   System.out.printf("new waHyp: %s\n", waHyp.featurizable.partialTranslation);
-	        	   System.out.printf("Coverage: %s\n", waHyp.foreignCoverage);
-	    	}
+        
+        for (int endPos = startPos; endPos < endPosMax; endPos++) {
+       // use *FILTERED* options for prefix hypothesis expansion
+          List<ConcreteTranslationOption<TK>> applicableOptions = filteredOptionGrid
+              .get(startPos, endPos);
+          System.err.printf("%d-%d: option count: %d\n", startPos, endPos, applicableOptions.size());
+          for (ConcreteTranslationOption<TK> option : applicableOptions) {
+            if (constrainedOutputSpace != null
+                && !constrainedOutputSpace.allowableContinuation(
+                    hyp.featurizable, option)) {
+              EnumeratedConstrainedOutputSpace<TK, FV> ecos = (EnumeratedConstrainedOutputSpace<TK, FV>)constrainedOutputSpace;
+              Sequence<TK> prefix = ecos.allowableSequences.get(0);   
+              System.err.printf("not allowed: '%s'+'%s'\n", (hyp.featurizable == null ? "" : hyp.featurizable.partialTranslation), option.abstractOption.translation);
+              System.err.printf("doesn't match prefix: '%s'\n", prefix);
+              String wilcoTango = (hyp.featurizable == null ? "" : hyp.featurizable.partialTranslation.toString()) +
+            		              " " + option.abstractOption.translation.toString();
+              if (!prefix.toString().startsWith(wilcoTango)) {
+                 continue;
+              } else {
+            	  System.err.println("wilco Tango");
+              }
+            }
+            Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
+                option, hyp.length, hyp, featurizer, scorer, heuristic);
+            RecombinationHash.Status status = recombinationHash.queryStatus(newHyp,
+                    true);
+            if (status == RecombinationHash.Status.COMBINABLE) {
+            	System.err.printf("Recombining hyp: %s\n", newHyp.featurizable.partialTranslation);
+            	continue;
+            }
+            System.err.println("New hyp:");
+            for (Hypothesis<TK, FV> h = newHyp; h.featurizable != null; h = h.preceedingHyp) {
+            	System.err.printf("  f: '%s' => e: '%s'\n", h.featurizable.foreignPhrase, h.featurizable.translatedPhrase);
+            }
+            System.err.println();
+            if (newHyp.featurizable.untranslatedTokens != 0) {
+              if (constrainedOutputSpace != null
+                  && !constrainedOutputSpace
+                      .allowablePartial(newHyp.featurizable)) {
+            	 continue;
+              }
+            }
+            
+            expansions++;    
+            
+            int completion = newHyp.featurizable.partialTranslation.size();   
+            if (completion > maxPrefixCompletion) {
+            	maxPrefixCompletion = completion;
+            	System.err.printf("new max completion: %d\n", maxPrefixCompletion);
+            }
+            
+            if (constrainedOutputSpace != null
+                && constrainedOutputSpace
+                    .allowableFinal(newHyp.featurizable)) {
+              if (DEBUG) {
+            	  System.out.printf(" - allowable final\n");
+              }
+              completePrefixes.add(newHyp);
+              continue;
+            }
+            
+            
+            if (maxPrefixCompletion - completion <= windowSize) {
+               agenda.add(newHyp);
+            } else {
+            	System.err.printf("Pausing - not within window %d !<= %d\n", maxPrefixCompletion - completion, windowSize);
+            	System.err.printf("[adding to paused (max: %d size: %d window %d)]",maxPrefixCompletion, 
+            			completion, windowSize);
+            	paused.add(newHyp);
+            }
+          }      
+        } 
+      }
+        if (expansions == 0) {
+        	List<Sequence<TK>> allowableSequences = constrainedOutputSpace.getAllowableSequences();
+        	for (Sequence<TK> allowableSequence : allowableSequences) {
+        		if (hyp.featurizable != null &&
+        		    !allowableSequence.startsWith(hyp.featurizable.partialTranslation)) {
+        			continue;
+        		}
+        		int hypSz;
+        		if (hyp.featurizable == null) {
+        		  hypSz = 0;
+        		} else {
+        		  hypSz = hyp.featurizable.partialTranslation.size();	
+        		}
+        		if (hypSz >= allowableSequence.size()) {
+        			continue;
+        		}
+        		
+        		IString nextWord = (IString)allowableSequence.get(hypSz);
+	        	TranslationOption<IString> abstractOption = new TranslationOption<IString>(autoInsertScores, scoreNames, 
+	        	   new RawSequence<IString>(new IString[]{nextWord}), new RawSequence<IString>(new IString[0]), null);
+	        	
+	        	ConcreteTranslationOption option = new ConcreteTranslationOption(
+	        			abstractOption, new CoverageSet(), 0, "autogenerated", -100);
+	        	Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
+	                    option, hyp.length, hyp, featurizer, scorer, heuristic);
+	        	if (DEBUG) {
+	        		System.err.printf("Autogenerated hyp: %s\n", newHyp);
+	        	}
 	        
-	    }
-    }
+	        	RecombinationHash.Status status = recombinationHash.queryStatus(newHyp,
+	                    true);
+	            if (status == RecombinationHash.Status.COMBINABLE) {
+	            	continue;
+	            }
+	            
+	        	if (constrainedOutputSpace != null
+	                    && constrainedOutputSpace
+	                        .allowableFinal(newHyp.featurizable)) {
+	                  if (DEBUG) {
+	                	  System.out.printf(" - allowable final\n");
+	                  }
+	                  completePrefixes.add(newHyp);
+	                  continue;
+	            }
+	        		        	
+	        	int completion = newHyp.featurizable.partialTranslation.size();
+	        	if (completion > maxPrefixCompletion) {
+	            	maxPrefixCompletion = completion;
+	            	System.err.printf("new max completion (faked): %d\n", maxPrefixCompletion);
+	            }
+	        	if (maxPrefixCompletion - completion <= windowSize) {
+	                System.err.printf("Within window %d <= %d\n", maxPrefixCompletion - completion, windowSize);
+	                agenda.add(newHyp);
+	             } else {
+	             	System.err.printf("Pausing - not within window %d !<= %d\n", maxPrefixCompletion - completion, windowSize);
+	                paused.add(newHyp);
+	             }
+        	}
+        }
+       
+    } while (agenda.size() > 0 || paused.size() > 0);
+    PriorityQueue<Hypothesis<TK, FV>> allHyps = new PriorityQueue<Hypothesis<TK,FV>>();
+    allHyps.addAll(agenda);
+    allHyps.addAll(paused);
+    allHyps.addAll(completePrefixes);
+    
+    Pair<Sequence<TK>,Sequence<TK>> cacheKey =
+    		new Pair<Sequence<TK>,Sequence<TK>>(foreign,completePrefixes.get(0).featurizable.partialTranslation);
+    hypCache.put(cacheKey, allHyps);
+    
     agenda.clear();
     if (DEBUG) {
-    	if (waHyp.featurizable != null) {
-    	   System.out.printf("waHyp: %s\n", waHyp.featurizable.partialTranslation);
-    	   System.out.printf("Coverage: %s\n", waHyp.foreignCoverage);
-    	} else {
-    		System.out.printf("waHyp: null hyp\n");
-    	}
+      System.err.printf("Doing prediction stage with prefix hypotheses: %s\n", completePrefixes.size());
     }
-   
-    agenda.add(waHyp);
-    List<Hypothesis<IString, FV>> predictions = new ArrayList<Hypothesis<IString,FV>>(PREDICTIONS);
+    agenda.addAll(completePrefixes);
+    List<Hypothesis<TK, FV>> predictions = new ArrayList<Hypothesis<TK,FV>>(PREDICTIONS);
     do {
-      Hypothesis<IString, FV> hyp = agenda.remove();
+      Hypothesis<TK, FV> hyp = agenda.remove();
       if (DEBUG) {
         System.err.printf("[pred loop] Removing hyp from agenda: %s\n", hyp);
       }
@@ -271,9 +346,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
         }
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
           // use *UNFILTERED* options for prefix hypothesis expansion predictions
-          List<ConcreteTranslationOption<IString>> applicableOptions = optionGrid
+          List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid
               .get(startPos, endPos);
-          for (ConcreteTranslationOption<IString> option : applicableOptions) {
+          for (ConcreteTranslationOption<TK> option : applicableOptions) {
         	if (option.abstractOption.foreign.equals(option.abstractOption.translation)) {
         		if (DEBUG) {
         			System.err.println("ignoring option since source phrase == target phrase");
@@ -281,7 +356,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
         		}
         		continue;
         	}
-            Hypothesis<IString, FV> newHyp = new Hypothesis<IString, FV>(translationId,
+            Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
             if (DEBUG) {
             	System.out.printf("constructed new hyp: %s\n", newHyp);
@@ -293,24 +368,24 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       }      
     } while (predictions.size() < PREDICTIONS && agenda.size() > 0);
     
-    List<RichTranslation<IString, FV>> nbest = new ArrayList<RichTranslation<IString,FV>>(predictions.size());
-    for (Hypothesis<IString,FV> hyp : predictions) {
-      nbest.add(new RichTranslation<IString, FV>(hyp.featurizable, hyp.finalScoreEstimate(), null));
+    List<RichTranslation<TK, FV>> nbest = new ArrayList<RichTranslation<TK,FV>>(predictions.size());
+    for (Hypothesis<TK,FV> hyp : predictions) {
+      nbest.add(new RichTranslation<TK, FV>(hyp.featurizable, hyp.finalScoreEstimate(), null));
     }
     
-    ///System.err.println("Alignments\n==========");
+    System.err.println("Alignments\n==========");
     for (int i = 0; i < Math.min(10, predictions.size()); i++) {
-    	//System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
+    	System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
     	List<String> alignments = new LinkedList<String>();
-    	for (Hypothesis<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
+    	for (Hypothesis<TK, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
     		alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.foreignPhrase, 
     				hyp.featurizable.translatedPhrase, Arrays.toString(hyp.translationOpt.abstractOption.scores)));
     	}
         Collections.reverse(alignments);
-    /*	for (String alignment : alignments) {
+    	for (String alignment : alignments) {
     	   System.err.print("   ");
     	   System.err.println(alignment);
-    	} */
+    	}
     }
     
     return nbest;
@@ -319,9 +394,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   static public final int PREFIX_ALIGNMENTS = 100;
   static public final int PREDICTIONS = 100;
   @Override
-  public List<RichTranslation<IString, FV>> nbest(Sequence<IString> foreign,
-      int translationId, ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
-      List<Sequence<IString>> targets, int size) {
+  public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign,
+      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      List<Sequence<TK>> targets, int size) {
     return nbest(scorer, foreign, translationId, constrainedOutputSpace, targets, size);
   }
 }
