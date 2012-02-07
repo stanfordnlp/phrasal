@@ -32,10 +32,14 @@ public class AlignedPair {
    public TypedDependency[][] fParents;   
    public TypedDependency[][] eChildren;
    public TypedDependency[][] fChildren;
+   public List<String> ewords;
+   public List<String> fwords;
    
    
-   public AlignedPair(GrammaticalStructure f, GrammaticalStructure e, Set<Pair<Integer,Integer>> alignmentsF2E) {
-      fLeaves = f.root().getLeaves().toArray(new TreeGraphNode[0]);
+   public AlignedPair(List<String> ewords, List<String> fwords, GrammaticalStructure f, GrammaticalStructure e, Set<Pair<Integer,Integer>> alignmentsF2E) {
+      this.ewords = ewords;
+      this.fwords = fwords;
+	   fLeaves = f.root().getLeaves().toArray(new TreeGraphNode[0]);
       eLeaves = e.root().getLeaves().toArray(new TreeGraphNode[0]);
       
 	   e2f = new TreeGraphNode[eLeaves.length];
@@ -147,7 +151,7 @@ public class AlignedPair {
          // TODO Include POS Tags in format
          GrammaticalStructure gsE = GrammaticalStructure.fromStringReps(ewords, ewords, edeps);
          GrammaticalStructure gsF = GrammaticalStructure.fromStringReps(fwords, fwords, fdeps);
-         AlignedPair alignedPair = new AlignedPair(gsF, gsE, alignmentsF2E);
+         AlignedPair alignedPair = new AlignedPair(ewords, fwords, gsF, gsE, alignmentsF2E);
          return alignedPair;
       } catch (RuntimeException e) {
          throw new RuntimeException(String.format("Error parsing aligned pair: '%s'\n",s),e);

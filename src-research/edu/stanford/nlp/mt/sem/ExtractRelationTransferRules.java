@@ -24,6 +24,9 @@ import edu.stanford.nlp.util.Pair;
  *
  */
 public class ExtractRelationTransferRules {
+	   
+   public static final boolean DEBUG = true;
+   
    static private class ExtractionFrame {
       public final TypedDependency eDep;
       public final TypedDependency fDep;
@@ -108,7 +111,9 @@ public class ExtractRelationTransferRules {
      if (children[b] != null) for (TypedDependency child : children[b]) {
         if (touched.contains(child.dep())) continue;
         touched.add(child.dep());
-        System.err.println("node: "+node+" child: "+child.dep());
+        if (DEBUG) { 
+           System.err.println("node: "+node+" child: "+child.dep());
+        }
         if (left) {          
             b = Math.min(b, getPhraseBoundry(children, child.dep(), left, touched));
         } else {
@@ -126,9 +131,7 @@ public class ExtractRelationTransferRules {
       }
       return sb.toString();
    }
-   
-   public static final boolean DEBUG = false;
-   
+
    public static boolean checkAlignment(AlignedPair ap, int eR, int eL, int fR, int fL) {
       if (DEBUG) {
          System.err.println("\tChecking ("+eL+","+eR+"=>"+fL+","+fR+")"+getPhrase(ap.eLeaves, eL, eR) + " to "+getPhrase(ap.fLeaves, fL, fR));
@@ -174,6 +177,25 @@ public class ExtractRelationTransferRules {
    }
    
    public static List<String> extractPhrToPhrRule(AlignedPair aPair) {
+	  if (DEBUG) {
+		  System.err.println("Target:");
+		  for (TreeGraphNode node: aPair.eLeaves) {
+			  System.err.printf("\t%s", node);
+			  if (aPair.e2f[node.index()-1] != null) {
+				  System.err.printf(" -> %s", aPair.e2f[node.index()-1]);
+			  } 
+			  System.err.println(); 
+		  }
+		  System.err.println("\nSource:");
+		  for (TreeGraphNode node: aPair.fLeaves) {
+			  System.err.printf("\t%s", node);
+			  if (aPair.f2e[node.index()-1] != null) {
+				  System.err.printf(" -> %s", aPair.f2e[node.index()-1]);
+			  } 
+			  System.err.println(); 
+		  }
+		  
+	  }
       List<String> rules = new LinkedList<String>();
       List<Set<String>> headRules = new ArrayList<Set<String>>(aPair.fLeaves.length);
       for (int i = 0; i < aPair.fLeaves.length; i++) {
@@ -188,86 +210,154 @@ public class ExtractRelationTransferRules {
     	              if (!checkAlignment(aPair, eR, eL, fR, fL)) continue;    	              
     	              String zhPhrase = getPhrase(aPair.fLeaves, fL, fR);
                       String enPhrase = getPhrase(aPair.eLeaves, eL, eR);
-                      String xRule = 
-    	            	  String.format("[X] ||| %s ||| %s ", 
+                      /*String xRule = 
+    	            	  String.format("[U] ||| %s ||| %s ", 
     	            			  zhPhrase,
     	            			  enPhrase);
-    	              rules.add(xRule);
-    	              
+    	              rules.add(xRule); 
+    	              */
     	              int internalHead = findInternalPhraseHead(
     	           		   aPair.fChildren, aPair.fLeaves, fL, fR);
+    	              if (DEBUG) {    	            	  
+    	            	  System.err.printf("Alignment okay for '%s' -> '%s'\n",zhPhrase, enPhrase);
+    	            	  if (internalHead == -1) {
+    	            		 System.err.printf("  - internal head: None\n");
+    	            	  } else {
+    	            	     System.err.printf("  - internal head: %s(%d)\n", aPair.fLeaves[internalHead], internalHead);
+    	            	  }
+    	              }
+    	              for (int i = fL; i <= fR; i++) {
+    	            	  String fakeHeadRule = 
+        	            	  String.format("[%s] ||| %s ||| %s ",
+        	            			  aPair.fLeaves[fL].label().word(),
+        	            			  //aPair.fwords.get(internalHead),
+        	            			  zhPhrase,
+        	            			  enPhrase);
+    	            	  rules.add(fakeHeadRule);
+    	            	  
+    	              }
+    	              
     	              if (internalHead != -1) {
     	            	  String iheadRule = 
         	            	  String.format("[%s] ||| %s ||| %s ",
         	            			  aPair.fLeaves[internalHead].label().word(),
+        	            			  //aPair.fwords.get(internalHead),
         	            			  zhPhrase,
         	            			  enPhrase);
     	            	  rules.add(iheadRule);
-    	            	  if (aPair.fChildren[internalHead] != null) {
-    	            		  for (TypedDependency dep : aPair.fChildren[internalHead]) {
-    	            			  
-    	            			  String zhRHS;
-    	            			  if (dep.dep().index() > dep.gov().index()) {
-    	            				  zhRHS = String.format("[%s,1] [%s,2]", 
-    	            						  dep.gov().label().word(),
-    	            						  dep.dep().label().word());
-    	            			  } else {
-    	            				  zhRHS = String.format("[%s,1] [%s,2]", 
-    	            						  dep.dep().label().word(),    	            						  
-    	            						  dep.gov().label().word());
-    	            			  }
-    	            			  String enRHS; 
-    	            			  // todo check all children
-    	            			  TreeGraphNode enDep = aPair.f2e[dep.dep().index()-1];
-    	            			  TreeGraphNode enGov = aPair.f2e[dep.gov().index()-1];
-    	            			  /*System.err.println("head: " + dep.gov() + " child: "+dep.dep());
-    	            			  System.err.println("=enHead: " + enGov + " child: "+enDep);
-    	            			  System.err.println(); */
-    	            			  if (enDep == null || enGov == null) {
-    	            				  enRHS = zhRHS;
-    	            			  } else if (enDep.index() > enGov.index()) {
-    	            				  if (dep.dep().index() > dep.gov().index()) {
-    	            				  enRHS = String.format("[%s,1] [%s,2]", 
-    	            						  dep.gov().label().word(),
-    	            						  dep.dep().label().word());
-    	            				  } else {
-    	            					  enRHS = String.format("[%s,2] [%s,1]", 
-        	            						  dep.gov().label().word(),
-        	            						  dep.dep().label().word());
-    	            				  }
-    	            			  } else {
-    	            				  if (dep.dep().index() <= dep.gov().index()) {
-    	            				  enRHS = String.format("[%s,1] [%s,2]", 
-    	            						  dep.dep().label().word(),    	            						  
-    	            						  dep.gov().label().word());
-    	            				  } else {
-    	            					  enRHS = String.format("[%s,2] [%s,1]", 
-        	            						  dep.dep().label().word(),    	            						  
-        	            						  dep.gov().label().word());
-    	            				  }
-    	            			  }
-    	            			  String iheadToChildRule = 
-    	        	            	  String.format("[%s] ||| %s ||| %s ",
-    	        	            			  aPair.fLeaves[internalHead].label().word(),
-    	        	            			  zhRHS,
-    	        	            			  enRHS);
-    	            			  headRules.get(internalHead).add(iheadToChildRule);
-    	            			  System.err.println("internal gov: " + 
-    	            					  aPair.fLeaves[internalHead].label().word() + " head: " +
-    	            					  aPair.fParents[internalHead][0].gov());
-    	            			  
-    	            			  if (aPair.fParents[internalHead][0].gov().index() == 0) {
-    	            				  String iheadToRoot = String.format("[ROOT] ||| [%s,1] ||| [%s,1] ",
-    	        	            			  aPair.fLeaves[internalHead].label().word(),
-    	        	            			  aPair.fLeaves[internalHead].label().word());
-    	            				  headRules.get(internalHead).add(iheadToRoot);
-    	            			  }
-    	            	      }	            		  
-    	            	  }
     	              }
     	    	  }
     		  }
-    	  }     
+    	  }
+      }
+      
+      for (int fI = 0; fI < aPair.fChildren.length; fI++) {
+    	  if (aPair.f2e[fI] != null) {
+    		  String word2Head = String.format("[%s] ||| %s ||| %s ",
+        			 aPair.fLeaves[fI].label().word(),
+        			 aPair.fLeaves[fI].label().word(),
+    		         aPair.f2e[fI].label().word());
+    		  System.err.printf("word2Head: %s\n", word2Head);
+        	  rules.add(word2Head);
+        	  String head2U = String.format("[U] ||| [%s,1] ||| [%s,1] ",
+         			 aPair.fLeaves[fI].label().word(),
+         			 aPair.fLeaves[fI].label().word());
+        	  rules.add(head2U);
+        	  String head2Root = String.format("[ROOT] ||| [%s,1] ||| [%s,1] ",
+   			  aPair.fLeaves[fI].label().word(),
+   			  aPair.fLeaves[fI].label().word());  
+        	  rules.add(head2Root);
+    	  }
+    	  
+          if (aPair.fChildren[fI] != null) {
+    		  for (TypedDependency dep : aPair.fChildren[fI]) {
+    			  
+    			  String zhRHS;
+    			  String zhURHS;
+    			  if (dep.dep().index() > dep.gov().index()) {
+    				  zhRHS = String.format("[%s,1] [%s,2]", 
+    						  dep.gov().label().word(),
+    						  dep.dep().label().word());
+    				  zhURHS = String.format("[%s,1] [%s,2]", 
+    						  dep.gov().label().word(),
+    						  "U");
+    			  } else {
+    				  zhRHS = String.format("[%s,1] [%s,2]", 
+    						  dep.dep().label().word(),    	            						  
+    						  dep.gov().label().word());
+    				  zhURHS = String.format("[%s,1] [%s,2]", 
+    						  "U",    	            						  
+    						  dep.gov().label().word());
+    			  }
+    			  String enRHS; 
+    			  String enURHS;
+    			  // todo check all children
+    			  TreeGraphNode enDep = aPair.f2e[dep.dep().index()-1];
+    			  TreeGraphNode enGov = aPair.f2e[dep.gov().index()-1];
+    			  /*System.err.println("head: " + dep.gov() + " child: "+dep.dep());
+    			  System.err.println("=enHead: " + enGov + " child: "+enDep);
+    			  System.err.println(); */
+    			  if (enDep == null || enGov == null) {
+    				  enRHS = zhRHS;
+    				  enURHS = zhURHS;
+    			  } else if (enDep.index() > enGov.index()) {
+    				  if (dep.dep().index() > dep.gov().index()) {
+    				      enRHS = String.format("[%s,1] [%s,2]", 
+    						  dep.gov().label().word(),
+    						  dep.dep().label().word());
+    				      enURHS = String.format("[%s,1] [%s,2]", 
+        						  dep.gov().label().word(),
+        						  "U");
+    				  } else {
+    					  enRHS = String.format("[%s,2] [%s,1]", 
+        						  dep.gov().label().word(),
+        						  dep.dep().label().word());
+    					  enURHS = String.format("[%s,2] [%s,1]", 
+        						  dep.gov().label().word(),
+        						  "U");
+    				  }
+    			  } else {
+    				  if (dep.dep().index() <= dep.gov().index()) {
+    				  enRHS = String.format("[%s,1] [%s,2]", 
+    						  dep.dep().label().word(),    	            						  
+    						  dep.gov().label().word());
+    				  enURHS = String.format("[%s,1] [%s,2]", 
+    						  "U",    	            						  
+    						  dep.gov().label().word());
+    				  } else {
+    					  enRHS = String.format("[%s,2] [%s,1]", 
+        						  dep.dep().label().word(),    	            						  
+        						  dep.gov().label().word());
+    					  enURHS = String.format("[%s,2] [%s,1]", 
+        						  "U",    	            						  
+        						  dep.gov().label().word());
+    				  }
+    			  }
+    			  String iheadToChildRule = 
+	            	  String.format("[%s] ||| %s ||| %s ",
+	            			  aPair.fLeaves[fI].label().word(),
+	            			  zhRHS,
+	            			  enRHS);
+    			  headRules.get(fI).add(iheadToChildRule);
+    			  String iheadToUChildRule = 
+	            	  String.format("[%s] ||| %s ||| %s ",
+	            			  aPair.fLeaves[fI].label().word(),
+	            			  zhURHS,
+	            			  enURHS);
+    			  headRules.get(fI).add(iheadToUChildRule);
+    			  if (DEBUG) {
+    			    System.err.println("internal gov: " + 
+    				  	    aPair.fLeaves[fI].label().word() + " head: " +
+    					    aPair.fParents[fI][0].gov());
+    			  }
+    			  if (aPair.fParents[fI][0].gov().index() == 0) {
+    				  String iheadToRoot = String.format("[ROOT] ||| [%s,1] ||| [%s,1] ",
+	            			  aPair.fLeaves[fI].label().word(),
+	            			  aPair.fLeaves[fI].label().word());
+    				  headRules.get(fI).add(iheadToRoot);
+    			  }
+    		  }     
+          }
       }
       for (int i = 0; i < aPair.fLeaves.length; i++) {
     	  rules.addAll(headRules.get(i));
@@ -330,7 +420,7 @@ public class ExtractRelationTransferRules {
          }
          rulesAtI.add(headAloneRule);
          
-         String headXRule = String.format("[X] ||| [%s,1] ||| [%s,1] ", aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word());
+         String headXRule = String.format("[U] ||| [%s,1] ||| [%s,1] ", aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word(),  aPair.e2f[eChildI].label().word());
          rulesAtI.add(headXRule);         
          
          if (aPair.fParents[aPair.e2f[eChildI].index() -1] != null) {
@@ -612,10 +702,16 @@ public class ExtractRelationTransferRules {
       System.err.printf("Lines processed %d in %.2f seconds (%.2f lines/second)\n", reader.getLineNumber(), seconds, linesPerSecond);
       System.err.printf("Sorting by count\n");
       double total = ruleCounts.totalCount();
-      System.out.printf("[ROOT] ||| [X,1] ||| [X,1] ||| 2.718 1 1\n");
-      System.out.printf("[X] ||| [X,1] [X,2] ||| [X,1] [X,2] ||| 2.718 1 1\n");
-      for (Pair<String, Double> p : Counters.toSortedListWithCounts(ruleCounts)) {                 
-         System.out.printf("%s ||| 1 2.718 %f\n", p.first.replace("[,", "[<comma>"), p.second);
+      System.out.printf("[ROOT] ||| [U,1] ||| [U,1] ||| 2.718 1.0 1.0 1.0\n");
+      System.out.printf("[U] ||| [U,1] [U,2] ||| [U,1] [U,2] ||| 2.718 1.0 1.0 1.0\n");
+      for (Pair<String, Double> p : Counters.toSortedListWithCounts(ruleCounts)) {
+          if (p.first.startsWith("[U] |||")) {
+        	 System.out.printf("%s ||| 1.0 2.718 1.0 1.0\n", p.first.replace("[,", "[<comma>"));
+          } else { 
+    	     //System.out.printf("%s ||| 1.0 1.0   2.718 %f\n", p.first.replace("[,", "[<comma>"), p.second);
+     	     System.out.printf("%s ||| 1.0 1.0   2.718 %f\n", p.first.replace("[,", "[<comma>"), 2.718);
+          }
+         
       }
    }
 }
