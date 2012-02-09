@@ -44,8 +44,10 @@ foreach $emailAddr (@ARGV) {
   print fh $body;
   close(fh);
 
-  print "ssh jacob 'mail -s \"$subject\" $emailAddr -- -f $from_addr < body'";
-  `ssh jacob 'mail -s \"$subject\" $emailAddr -- -f $from_addr < /u/nlp/data/mt_test/mert/email.$date_tag.body > /u/nlp/data/mt_test/mert/e-mail.$proc_tag.$date_tag.log 2>&1'`;
+  if ($emailAddr =~ /cerd/ or $exitStatus) {
+    print "ssh jacob 'mail -s \"$subject\" $emailAddr -- -f $from_addr < body'";
+    `ssh jacob 'mail -s \"$subject\" $emailAddr -- -f $from_addr < /u/nlp/data/mt_test/mert/email.$date_tag.body > /u/nlp/data/mt_test/mert/e-mail.$proc_tag.$date_tag.log 2>&1'`;
+  }
 }
 
 exit $exitStatus;
