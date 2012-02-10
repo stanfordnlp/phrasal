@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block content %}
-<p> Work queue for {{ first_name }} {{ last_name }}</p>
+<p> Hello {{ first_name }}! You have {{ src_list|length }} sentences to translate. I'm showing at most 10 of those tasks.</p>
 
 {% if src_list %}
     <table id="queue-table">
@@ -28,6 +28,8 @@
 	<td class="queue-td">{{ src.txt|truncatewords:10 }}</td>
 	{% endif %}
 	</tr>
+    {% empty %}
+	<p> No tasks left! Thanks for your help! </p>
     {% endfor %}
     </ul>
     </table>

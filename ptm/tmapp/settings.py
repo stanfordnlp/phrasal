@@ -131,25 +131,49 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/tm/'
 LOGOUT_URL = '/bye/'
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
+# Logging configuration
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         }
     },
+    'handlers': {
+        'null': {
+            'level':'DEBUG',
+            'class':'django.utils.log.NullHandler',
+        },
+        'default': {
+            'level':'DEBUG',
+            'class':'logging.FileHandler',
+            'filename': 'logs/server.log',
+            'formatter':'verbose',
+        },  
+        'request_handler': {
+            'level':'DEBUG',
+            'class':'logging.FileHandler',
+            'filename': 'logs/request.log',
+            'formatter':'verbose',
+        },
+    },
     'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        '': { # Catch-all logger that handles all events
+            'handlers': ['default'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'django.request': { # Logs all requests to the server
+            'handlers': ['request_handler'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'django.db.backends': { # Stop SQL debug from logging to main logger
+            'handlers': ['null'],
+            'level': 'DEBUG',
+            'propagate': False
         },
     }
 }
+
