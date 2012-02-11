@@ -1,6 +1,11 @@
 // ptm-setup.js
 // Register ptm callbacks with the translation manager interface
-
+//
+// Requires:
+//   ptm2.js
+//   jquery-latest.js
+//   translog2.js
+//
 $(document).ready(function(){
   // DEBUG: Uncomment this to disable logging
   // console.log = function() {}
@@ -9,7 +14,6 @@ $(document).ready(function(){
   var hostPort = '8017';
   var hostString = window.location.protocol + "//0.0.0.0" + ':' + hostPort;
   ptm.setHostString(hostString);
-  console.log('host:' + hostString);
 
   // Set required CSS elements in the document template
   var cssArray = {
@@ -42,6 +46,12 @@ $(document).ready(function(){
   // Attach the keystroke listener to the textarea
   $( 'textarea#form-tgt-txt' ).keypress(function(event){
     ptm.addKeyStroke(event);
+  });
+
+  // Translog2 --- User action logging
+  tlog2.init();
+  $( '#form-tgt-submit' ).click(function(){
+    tlog2.flushForm('form-action-log');
   });
   
   // Attach to the form submit event, but don't prevent the default

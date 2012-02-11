@@ -45,11 +45,14 @@ def tr(request, src_id):
     lang_list = LanguageSpec.objects.all()
     
     if ui_name == 'meedan':
-        return render_to_response('tm/translate.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
+        return render_to_response('tm/tr_meedan.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
     elif ui_name == 'trados':
-        return render_to_response('tm/translate2.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
+        return render_to_response('tm/tr_trados.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
     elif ui_name == 'sjc':
-        return render_to_response('tm/translate3.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
+        return render_to_response('tm/tr_sjc.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
+    elif ui_name == 'none':
+        # Default interface (no machine assistance)
+        return render_to_response('tm/tr.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
     else:
         raise Http404
 

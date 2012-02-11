@@ -463,18 +463,14 @@ var ptm = (function() {
             xhrFields: {
               withCredentials: true
             },
-            success: function(data, textStatus, jqXHR){
-              console.log("ptmDone response: " + textStatus);
-              window.location.replace(_uiURL);
-            },
             error: function(jqXHR, textStatus, errorThrown){
               console.log("ptmDone failed: " + textStatus);
               console.log(errorThrown);
-//              window.location.replace(_uiURL);
             },
       });
-    },
-    
+
+      return true;
+    },    
   };
   
   return fn;
