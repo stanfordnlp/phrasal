@@ -42,11 +42,10 @@ class UserConf(models.Model):
     uis_enabled = models.CharField(max_length=500,blank=True)
     total_time = models.IntegerField()
     is_machine = models.BooleanField()
-
-# TODO(spenceg) Need to enable this data on next db update
-#    lang_native = models.ForeignKey(LanguageSpec)
+    # Assumes user has only one native language
+    lang_native = models.ForeignKey(LanguageSpec)
     # Comma-separated list of ISO-659-1 language codes
-#    lang_other = models.CharField(max_length=500)
+    lang_other = models.CharField(max_length=500)
     
     def __unicode__(self):
         return '%s: time:%ds uis:%s' % (self.user.username, self.total_time,self.uis_enabled)

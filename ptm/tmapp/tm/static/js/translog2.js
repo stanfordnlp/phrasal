@@ -8,9 +8,10 @@
   var tlog2 = (function(){
 
     // Default js event list
-    // TODO(spenceg): Do we need to log the MouseMove events?
-    // add: mousemove
-    var _jsEvents = 'blur focus focusin focusout load resize scroll unload click dblclick mousedown mouseup mouseover mouseout mouseenter mouseleave change select submit keydown keypress keyup error';
+    // TODO(spenceg): Removed the following events, which seem to be
+    // redundant for our purposes
+    //     mousemove keyup
+    var _jsEvents = 'blur focus focusin focusout load resize scroll unload click dblclick mousedown mouseup mouseover mouseout mouseenter mouseleave change select submit keydown keypress error';
 
     // Initial capacity of the event log
     var _initCapacity = 5000;

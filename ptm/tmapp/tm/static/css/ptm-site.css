@@ -68,44 +68,7 @@
    margin-top:5em;
 }
 
-/* view: translate.html */
-/* also includes ptm divs */
-#src-display {
-   margin:1em;
-   width:50em;
-   min-width:40em;
-   overflow:hidden;
-/*   border:2px solid Black; */
-   }
-
-.src-tok
-{
-float:right;
-margin:1.7em 0.3em;
-border-width:1px;
-border-style:solid;
-border-color:#FFFFFF;
-}
-
-#form-tgt-container {
-   position:absolute;
-   }
-
-.form-lbl {
-   }
-
-#form-tgt-txt {
-   width:50em;
-   height:10em;
-   }
-
-#form-tgt-lang {
-   }
-
-#form-tgt-submit {
-   }
-
-
+/* TODO(spenceg): Re-factor the location of these styles */
 
 /* Automatically inserted div that contains translation suggestions */
 #ptm-widget_

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, Http404, HttpResponseRedirect
@@ -6,8 +7,10 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats,UISpec
 
+logger = logging.getLogger(__name__)
+
 # Generates a work queue for the user
-from tm_workqueue import get_work_list, select_ui_for_user
+from tm_workqueue import get_work_list, select_ui_for_user, select_tgt_lang
 
 @login_required
 def index(request):
@@ -32,29 +35,27 @@ def tr(request, src_id):
     """
     try:
         src = SourceTxt.objects.select_related().get(pk=src_id)
-    except SourceTxt.DoesNotExist:
+        (ui_name,ui_id) = select_ui_for_user(request.user)
+        tgt_lang = select_tgt_lang(src.lang, request.user)
+
+    except SourceTxt.DoesNotExist, RuntimeError:
         raise Http404
 
-    # Select an interface for this user
-    try:
-        (ui_name,ui_id) = select_ui_for_user(request.user)
-    except RuntimeError:
-        raise Http404
-    
     src_toks = src.txt.split()
-    lang_list = LanguageSpec.objects.all()
-    
-    if ui_name == 'meedan':
-        return render_to_response('tm/tr_meedan.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
+    ui_template = ''
+    if ui_name == 'tr':
+        ui_template = 'tm/tr.html'
+    elif ui_name == 'meedan':
+        ui_template = 'tm/tr_meedan.html'
     elif ui_name == 'trados':
-        return render_to_response('tm/tr_trados.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
+        ui_template = 'tm/tr_trados.html'
     elif ui_name == 'sjc':
-        return render_to_response('tm/tr_sjc.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
-    elif ui_name == 'none':
-        # Default interface (no machine assistance)
-        return render_to_response('tm/tr.html', {'src':src, 'src_toks':src_toks, 'lang_list':lang_list, 'ui_id':ui_id}, context_instance=RequestContext(request))
+        ui_template = 'tm/tr_sjc.html'
     else:
         raise Http404
+    
+    return render_to_response(ui_template, {'src':src, 'src_toks':src_toks, 'tgt_lang':tgt_lang, 'ui_id':ui_id}, context_instance=RequestContext(request))
+    
 
 @login_required
 def trdone(request, src_id):
