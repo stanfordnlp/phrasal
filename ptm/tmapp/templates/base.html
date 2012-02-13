@@ -9,16 +9,38 @@
 </head>
 
 <body>
-  <div id="container">
-    <div id="sidebar-wrapper">
-      {% block user_sidebar %}
+
+<div id="header">
+{% block header %}
+{% endblock %}
+</div>
+
+<div id="wrapper1">	
+  <div id="wrapper2">	
+
+    <div id="maincol">				
+      <div id="leftcol">
+	{% block leftcol %}
+	{% endblock %}
+      </div>
+				
+      <div id="rightcol">
+	{% block rightcol %}
+	{% endblock %}
+      </div>
+		  
+      <div id="centercol">
+	{% block content %}
+	{% endblock %}
+      </div>
+    </div>				
+
+    <div id="footer">
+      {% block footer %}
       {% endblock %}
     </div>
-    
-    <div id="content-wrapper">
-        {% block content %}
-	{% endblock %}
-    </div>
+
   </div>
+</div>
 </body>
 </html>

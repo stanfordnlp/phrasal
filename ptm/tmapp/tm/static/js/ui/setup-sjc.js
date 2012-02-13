@@ -20,7 +20,7 @@ $(document).ready(function(){
     tgtTxtArea: 'form-tgt-txt',
     srcTokClassPrefix: 'src-tok',
     statusBox: 'status-box',
-    widgetContainerStyleId: 'container',
+    widgetContainerStyleId: 'wrapper1',
   };
   ptm.setCSSElements(cssArray);
 
@@ -53,7 +53,16 @@ $(document).ready(function(){
   $( '#form-tgt-submit' ).click(function(){
     tlog2.flushForm('form-action-log');
   });
-  
+
+      // Setup the timer
+  // TODO(spenceg): Set the timeout based on the amount
+  // of text to translate
+  countdown.init(600);
+  countdown.addCallback(function(){
+    alert('hello');
+  });
+  countdown.show();
+
   // Attach to the form submit event, but don't prevent the default
   // action (POST)
   $( '#form-tgt-input' ).submit(function(event){

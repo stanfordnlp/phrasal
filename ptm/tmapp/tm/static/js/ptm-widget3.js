@@ -93,12 +93,6 @@ PTMWidget.prototype.Show = function(selectCallback, filterIds) {
     $( '#'+this.domId+i ).css('color',color);
   }
   
-  var width = $( this.widgetSel ).width();
-  var height = $( this.widgetSel ).height();
-  var boundBox = this.GetBoundingBox(option, width, height);
-
-  $( this.widgetSel ).css('top', boundBox.top);
-  $( this.widgetSel ).css('left', boundBox.left);
   $( this.widgetSel ).css('border-color', this.tgtBorder);
   $( this.widgetSel ).css('background-color', this.tgtBackground);
 

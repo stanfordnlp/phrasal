@@ -10,8 +10,8 @@
     // Default js event list
     // TODO(spenceg): Removed the following events, which seem to be
     // redundant for our purposes
-    //     mousemove keyup keydown
-    var _jsEvents = 'blur focus focusin focusout load resize scroll unload click dblclick mousedown mouseup mouseover mouseout mouseenter mouseleave change select submit keypress error';
+    //     mousemove keyup
+    var _jsEvents = 'blur focus focusin focusout load resize scroll unload click dblclick keydown mousedown mouseup mouseover mouseout mouseenter mouseleave change select submit keypress error';
 
     // Initial capacity of the event log
     var _initCapacity = 5000;

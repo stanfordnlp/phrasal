@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% load url from future %}
 
+{% block title %}
+ -- {{ first_name }} {{ last_name }}
+{% endblock %}
+
 {% block user_static %}
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ptm-site.css" />
 {% endblock %}
 
-{% block user_sidebar %}
-<div id="sidebar">
-<ul>
- <li><a href="/bye/">Logout</a></li>
-</ul>
-</div>
-{% endblock %}
+{% block header %}
+<h1> Hello {{ first_name }}!</h1>
+<p>You have {{ src_list|length }} sentences to translate. I'm showing at most 10 of those tasks.</p>
+{% endblock%}
 
 {% block content %}
-<p> Hello {{ first_name }}! You have {{ src_list|length }} sentences to translate. I'm showing at most 10 of those tasks.</p>
 
 {% if src_list %}
     <table id="queue-table">

@@ -22,7 +22,7 @@ $(document).ready(function(){
   // Setup the timer
   // TODO(spenceg): Set the timeout based on the amount
   // of text to translate
-  countdown.init(10);
+  countdown.init(600);
   countdown.addCallback(function(){
     alert('hello');
   });

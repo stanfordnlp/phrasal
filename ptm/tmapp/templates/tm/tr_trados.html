@@ -3,6 +3,7 @@
 
 {% block user_static %}
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ptm-site.css" />
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ui-trados.css" />
 
   <!-- jQuery stuff -->
   <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-latest.js"></script>
@@ -11,24 +12,28 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.easing.1.3.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/sprintf-0.7-beta1.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/json2.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}js/ptm-setup.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/ui/setup-trados.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/ptm-extra.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/ptm-widget2.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/translog2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/timer-widget.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/ptm2.js"></script>
 {% endblock %}
 
-{% block user_sidebar %}
-<div id="sidebar">
-<ul>
- <li><a href="/tm/">Work Queue</a></li>
- <li><a href="/bye/">Logout</a></li>
-</ul>
-</div>
+{% block title %}
+ -- Translate sentence {{ src.id }}  
+{% endblock %}
+
+{% block header %}
+<h1>Translate from {{ src.lang.name }} to {{ tgt_lang.name }}:</h1>
+{% endblock %}
+
+{% block leftcol %}
+<p><a href="/tm/">Work Queue</a></p>
+<p><a href="/bye/">Logout</a></p>
 {% endblock %}
 
 {% block content %}
-
-<p>Translate this {{ src.lang.name }} text:</p>
 <div class="div-hidden" id="src-lang">{{ src.lang.code }}</div>
 <div class="div-hidden" id="src-txt">{{ src.txt }}</div>
 <div id="src-display">
@@ -42,20 +47,12 @@
 <div id="form-tgt-container">
 <form action="/tm/{{ src.id }}/trdone/" method="post" name="form-tgt-input" id="form-tgt-input">
 {% csrf_token %}
-<label for="form-tgt-lang" class="form-lbl">to:</label>
-<select name="form-tgt-lang">
-{% for lang in lang_list %}
-{% if not lang.code == src.lang.code %}
-<option value="{{ lang.id }}">{{ lang.name }}</option>
-{% endif %}
-{% endfor %}
-</select>
-<br />
 <textarea name="form-tgt-txt" id="form-tgt-txt"></textarea>
 <br />
 
 <!-- Translation session statistics -->
-<input type="hidden" name="form-action-log" value="333" />
+<input type="hidden" name="form-tgt-lang" value="{{ tgt_lang.code }}" />
+<input type="hidden" name="form-action-log" value="ERROR" />
 <input type="hidden" name="form-ui-id" value="{{ ui_id }}" />
 <input type="submit" value="Submit" name="form-tgt-submit" id="form-tgt-submit" />
 </form>

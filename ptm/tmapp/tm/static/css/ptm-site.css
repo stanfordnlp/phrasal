@@ -4,17 +4,10 @@
    display:none;
    }
 
-/* Navigation sidebar */
-#sidebar {
-   margin:1em;
-/*   background:Gray; */
-   font-size:80%;
-}
-
 /* view: Work Queue */
 #queue-table {
    border:0px;
-   width:40em;
+   width:460px;
 }
 
 .queue-td {
@@ -30,14 +23,13 @@
 
 /* view: History */
 #history-container {
-   min-width:40em;
-   width:50em;
+   width:460px;
    border:1px solid Yellow;
-   }
+}
 
 #history-table {
    border:0px;
-   width:40em;
+   width:460px;
 }
 
 .history-td {
@@ -82,12 +74,6 @@ opacity:1.0;
 
 /* Test div */
 #ptm-widget-fixed_ {
-   position:absolute;
-   border:1px solid WhiteSmoke;
-   min-width:60em;
-   heigth:40em;
- 
+   clear:both;
 }
-
-
 

@@ -1,29 +1,118 @@
-body,
-   html {
-      margin:0;
-      padding:0;
-      color:Black;
-      background:White;
+/* Inspired by: http://www.manisheriar.com/holygrail/fixed.htm */
+
+body {
+   background:#999999;
+   text-align:center;
+   margin:20px;
+   padding:0;
+   font:normal 90% palatino,serif;
+   color:#000;
 }
 
-#container {
-   width:100%;
-   float:left;
-   clear:both;
-   font-family:Verdana, sans-serif;
+a {
+   color:#336699;
+   text-decoration:none;
 }
 
-#sidebar-wrapper {
-   float:left;
-   width:150px;
-/*   background:Gray; */
-   border-right:1px solid DimGray;
+a:hover {
+   border-bottom:1px solid;
 }
 
-#content-wrapper {
-/*   float:right; */
+#wrapper1 {
+   position:relative;
+   text-align:left;
+   width:960px;
+   margin:0 auto;
+   background:#FFF url("/static/background.png") repeat-y top right;
+}
+
+#wrapper2 {
+   position:relative;
+   text-align:left;
+   width:960px;
+   margin:0 auto;
+   background:url("/static/background.png") repeat-y top left;
+}
+
+#header {
+   background:WhiteSmoke;
+   padding:10px;
+   margin:0;
+   text-align:center;
+   width:940px;
+   margin:0 auto;
+}
+
+#header h1 {
+   font-size:125%;
+}
+
+#header a:hover {
+   color:#7A2875;
+}
+
+#maincol {
+   position:relative;
+   margin:0;
+   padding:10px;
+}
+
+#leftcol { 
+   position:relative;
+   top:-10px;
+   left:-10px;
    float:left;
-/*   margin-left:150px;*/
+   width:220px;  /* for IE5/WIN */
+   voice-family: "\"}\"";
+   voice-family:inherit;
+   width:200px; /* actual value */
+   margin:0 0 -10px 0;
+   padding:10px;
    background:White;
-/*   border: 1px solid Red; */
+   z-index:100;
+}
+
+#rightcol {
+   position:relative;
+   top:-10px;
+   right:-10px;
+   float:right;
+   width:220px;  /* for IE5/WIN */
+   voice-family: "\"}\"";
+   voice-family:inherit;
+   width:200px; /* actual value */
+   margin:0 0 -10px 0;
+   padding:10px;
+   background:White;
+   z-index:99;
+}
+
+#centercol {
+   background:White;
+   position:relative;
+   padding:0 240px;
+}
+
+/* 
+#centercol a {
+   color:#666;
+}
+
+#centercol a:hover {
+   border-bottom:1px solid;
+   color:#9343B9;
+}
+*/
+
+#footer {
+   font-size:120%;
+   position:relative;
+   top:1px;
+   background:WhiteSmoke;
+   width:100%;
+   clear:both;
+   margin:0;
+   padding:1% 0;
+   text-align:center;
+   color:#000;
 }

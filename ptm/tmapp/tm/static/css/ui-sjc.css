@@ -2,38 +2,29 @@
 /* view: translate.html */
 /* also includes ptm divs */
 #src-display {
-   margin:1em;
-   width:50em;
-   min-width:40em;
    overflow:hidden;
+   font-size:110%;
 /*   border:2px solid Black; */
-   }
+}
 
-.src-tok
-{
-float:right;
-margin:1.7em 0.3em;
-border-width:1px;
-border-style:solid;
-border-color:#FFFFFF;
+.src-tok {
+   float:right;
+   margin:1.2em 0.3em;
+   border-width:1px;
+   border-style:solid;
+   border-color:White;
 }
 
 #form-tgt-container {
-   position:absolute;
-   }
-
-.form-lbl {
-   }
+   clear:both;
+}
 
 #form-tgt-txt {
-   width:50em;
-   height:10em;
-   }
-
-#form-tgt-lang {
-   }
+   height:100px;
+   width:450px;
+}
 
 #form-tgt-submit {
-   }
+}
 
 

@@ -44,9 +44,9 @@
         $( '#'+_cssTextWrapper ).css('padding','0.2em');
 
         _timer = window.setTimeout("countdown.timerHandler()", 1000);
-        window.scroll(function() {
-          var scrollBottom = $(window).scrollTop() + $(window).height();
+        $(window).scroll(function() {
           var elemHeight = $(elemSel).outerHeight(true);
+          var scrollBottom = $(window).height();
           var margin = scrollBottom - elemHeight;
           var loc = {"marginTop" : margin + 'px'}
 				  $('#'+_cssId).stop().animate(loc, 10);
