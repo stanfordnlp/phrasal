@@ -62,15 +62,16 @@ public class PhrasalUnifiedServlet extends HttpServlet {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
   
-  private final PrefixDecoder<IString,String> decoder;
+  private final PrefixDecoder<String> decoder;
   
   private final Gson gson = new Gson();
   
-  public PhrasalUnifiedServlet(String iniFileName) {
-    decoder = initializePhrasal(iniFileName);
+  public PhrasalUnifiedServlet(String iniFileName, String wordAlignmentModel) {
+    decoder = initializePhrasal(iniFileName, wordAlignmentModel);
   }
 
-  private static PrefixDecoder<IString,String> initializePhrasal(String iniFileName) {
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private static PrefixDecoder<String> initializePhrasal(String iniFileName, String wordAlignmentModel) {
     Map<String, List<String>> config = null;
     try {
       config = Phrasal.readConfig(iniFileName);
@@ -78,7 +79,7 @@ public class PhrasalUnifiedServlet extends HttpServlet {
       Phrasal p = new Phrasal(config);
       FlatPhraseTable.lockIndex();      
       AbstractInferer infererModel = (AbstractInferer) p.inferers.get(0);      
-      PrefixDecoder<IString,String> prefixDecoder = new PrefixDecoder<IString,String>(infererModel);
+      PrefixDecoder<String> prefixDecoder = new PrefixDecoder<String>(infererModel, wordAlignmentModel);
       return prefixDecoder;
       
     } catch (IOException e) {

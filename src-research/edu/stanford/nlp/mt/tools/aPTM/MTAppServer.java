@@ -38,6 +38,7 @@ public class MTAppServer {
   
   // MT System ini file
   private static String MT_INI = null;
+  private static String MT_WA_MODEL = null;
 
   private static final Map<String,Integer> optionArgDefs = new HashMap<String,Integer>();
   static {
@@ -45,6 +46,7 @@ public class MTAppServer {
     optionArgDefs.put("-u", 1);
     optionArgDefs.put("-i", 1);
     optionArgDefs.put("-d", 0);
+    optionArgDefs.put("-w", 1);
   }
   
   private static void setOptions(String[] args) {
@@ -59,6 +61,8 @@ public class MTAppServer {
         ALLOWED_URIS = opts.get(key)[0];
       } else if (key.equals("-i")) { 
         MT_INI = opts.get(key)[0];
+      } else if (key.equals("-w")) {
+        MT_WA_MODEL = opts.get(key)[0];
       } else if (key.equals("-d")) {
         MOCK_SERVER = true;
       } else {
@@ -109,7 +113,7 @@ public class MTAppServer {
       // Add mock servlets here
       context.addServlet(new ServletHolder(new PhrasalUnifiedServletMock()),"/*");          
     } else {
-      context.addServlet(new ServletHolder(new PhrasalUnifiedServlet(MT_INI)),"/*");          
+      context.addServlet(new ServletHolder(new PhrasalUnifiedServlet(MT_INI, MT_WA_MODEL)),"/*");          
     }
 
     try {
