@@ -1,9 +1,0 @@
-#!/bin/bash
-
-D=/scr/mgalley/research/arabic-segmenter
-TMP=`mktemp $D/.tmp.XXXXXX`
-
-cat > $TMP
-java -cp $D/javanlp/projects/core/classes -mx2g edu.stanford.nlp.wordseg.ArabicSegmenter -prop $D/segment.prop -textFile $TMP -loadClassifier $D/segmenters/new.obj
-$D/bin/segmented2ibm $TMP $TMP.seg
-/bin/rm -f $TMP $TMP.seg
