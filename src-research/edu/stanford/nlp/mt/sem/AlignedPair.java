@@ -34,7 +34,7 @@ public class AlignedPair {
    public TypedDependency[][] fChildren;
    public List<String> ewords;
    public List<String> fwords;
-   
+   public Set<Pair<Integer,Integer>> alignmentsF2E;
    
    public AlignedPair(List<String> ewords, List<String> fwords, GrammaticalStructure f, GrammaticalStructure e, Set<Pair<Integer,Integer>> alignmentsF2E) {
       this.ewords = ewords;
@@ -44,6 +44,7 @@ public class AlignedPair {
       
 	   e2f = new TreeGraphNode[eLeaves.length];
 	   f2e = new TreeGraphNode[fLeaves.length];
+	   this.alignmentsF2E = alignmentsF2E;
 	   for (Pair<Integer,Integer> aF2E : alignmentsF2E) {
 	      int fI = aF2E.first;
 	      int eI = aF2E.second;
@@ -139,6 +140,7 @@ public class AlignedPair {
          List<String> ewords = Arrays.asList(fields[1].split("\\s"));
          List<String> fwords = Arrays.asList(fields[2].split("\\s"));
          Set<Pair<Integer,Integer>> alignmentsF2E = new HashSet<Pair<Integer,Integer>>();
+         
          if (!"".equals(fields[3])) {
             for (String aF2Estr : fields[3].split("\\s")) {
                String[] aFields = aF2Estr.split("-");

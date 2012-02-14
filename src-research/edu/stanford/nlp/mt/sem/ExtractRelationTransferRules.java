@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.alg.DijkstraShortestPath;
+
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.trees.TreeGraphNode;
@@ -177,6 +180,43 @@ public class ExtractRelationTransferRules {
    }
    
    public static List<String> extractPhrToPhrRule(AlignedPair aPair) {
+      List<String> rules = new LinkedList<String>();
+      UndirectedGraph<TreeGraphNode, TypedDependency> ugE = GrammaticalStructures.toGraph(aPair.e);
+      UndirectedGraph<TreeGraphNode, TypedDependency> ugF = GrammaticalStructures.toGraph(aPair.f);
+      for (Pair<Integer,Integer> a1 : aPair.alignmentsF2E) {
+         for (Pair<Integer,Integer> a2 : aPair.alignmentsF2E) {
+            int fA1 = a1.first();
+            int fA2 = a2.first();
+            int eA1 = a1.second();
+            int eA2 = a2.second();
+            /* 
+            System.err.println("Alignment a1: " + a1);
+            System.err.println("Alignment a2: " + a2);
+            System.err.printf("path: %s to %s\n", aPair.eLeaves[eA1], aPair.eLeaves[eA2]);
+            */
+            
+            // attach unattached words to the left
+            for ( ; eA1 >= 0 && !ugE.containsVertex(aPair.eLeaves[eA1]); eA1--)  if (eA1 == -1) { System.err.println("eA1"); continue; }            
+            for ( ; eA2 >= 0 && !ugE.containsVertex(aPair.eLeaves[eA2]); eA2--); if (eA2 == -1) { System.err.println("eA2"); continue; }
+            for ( ; fA1 >= 0 && !ugF.containsVertex(aPair.fLeaves[fA1]); fA1--); if (fA1 == -1) { System.err.println("fA1"); continue; }
+            for ( ; fA2 >= 0 && !ugF.containsVertex(aPair.fLeaves[fA2]); fA2--); if (fA2 == -1) { System.err.println("fA2"); continue; }
+            
+            List<TypedDependency> eDeps = (new DijkstraShortestPath<TreeGraphNode, TypedDependency>(ugE, aPair.eLeaves[eA1], aPair.eLeaves[eA2])).getPathEdgeList();
+            
+            
+            //System.err.printf("path: %s to %s\n", aPair.fLeaves[fA1], aPair.fLeaves[fA2]);
+            
+            List<TypedDependency> fDeps = (new DijkstraShortestPath<TreeGraphNode, TypedDependency>(ugF, aPair.fLeaves[fA1], aPair.fLeaves[fA2])).getPathEdgeList();
+            if (eDeps.size() > 3) continue;
+            if (fDeps.size() > 3) continue;
+            System.err.printf("ePair(%s:%s) <=> fPair(%s:%s)\n", aPair.eLeaves[eA1], aPair.eLeaves[eA2], aPair.fLeaves[fA1], aPair.fLeaves[fA2]);
+            System.err.printf("\t%s\n", eDeps);
+            System.err.printf("\t%s\n", fDeps);
+         }
+      }
+      return rules;
+   }
+   public static List<String> extractPhrToPhrRuleOld2(AlignedPair aPair) {
 	  if (DEBUG) {
 		  System.err.println("Target:");
 		  for (TreeGraphNode node: aPair.eLeaves) {
