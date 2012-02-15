@@ -12,4 +12,4 @@ ALIGN=grow-diag
 echo $TRAIN
 
 # Extract ptable:
-perl $TRAIN --root-dir . --f ar --e en --corpus corpus --factor-delimiter="|||" --alignment $ALIGN --alignment-file corpus --first-step 4 --last-step 7 --reordering=distance,msd-bidirectional-fe 
+perl $TRAIN --root-dir . --model-dir . --f ar --e en --corpus corpus --factor-delimiter="|||" --alignment $ALIGN --alignment-file corpus --first-step 4 --last-step 7 --reordering=distance,msd-bidirectional-fe 

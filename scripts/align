@@ -1,4 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
+#
+# Align a bitext with the Berkeley Aligner
+#
+# Authors: Michel Galley, Spence Green
+#
 
 ##########################################
 # Word alignment with Berkeley aligner:
@@ -15,6 +20,9 @@ CONF=$2
 shift
 shift
 
+#VERSION=/u/nlp/packages/berkeleyaligner2.0
+VERSION=/u/nlp/packages/berkeleyaligner2.1
+
 OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM -XX:MaxPermSize=2g"
 
-java $OPTS -jar /u/nlp/packages/berkeleyaligner2.1/berkeleyaligner.jar ++$CONF $@ 
+java $OPTS -jar "$VERSION"/berkeleyaligner.jar ++$CONF $@ 
