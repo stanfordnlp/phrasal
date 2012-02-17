@@ -28,7 +28,7 @@ def get_template_for_ui(ui_name):
     else:
         return None
 
-def save_tgt(user,src_id,tgt_lang_id,tgt_txt,action_log):
+def save_tgt(user,src_id,tgt_lang_id,tgt_txt,action_log,is_complete):
     """ Save a user translation along with translation stats.
     
     Args:
@@ -54,7 +54,8 @@ def save_tgt(user,src_id,tgt_lang_id,tgt_txt,action_log):
         tgt_stats = TranslationStats.objects.create(tgt=tgt,
                                                     ui=src.ui,
                                                     user=user,
-                                                    action_log=action_log)
+                                                    action_log=action_log,
+                                                    complete=is_complete)
         tgt.save()
         tgt_stats.save()
     except IntegrityError:

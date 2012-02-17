@@ -1,10 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# Helper functions
-def truncate(txt):
+def truncate(txt, max_len=10):
+    """ Truncates a whitespace-tokenized string after max_len
+        tokens.
+
+    Args:
+    Returns:
+    Raises:
+    """
     toks = txt.split()
-    if len(toks) > 10:
+    if len(toks) > max_len:
         return ' '.join(toks[:10]) + ' ...'
     else:
         return txt
@@ -27,7 +33,7 @@ class LanguageSpec(models.Model):
     css_direction = models.CharField(max_length=3)
 
     def __unicode__(self):
-        return '%s: %s %s' % (self.name,self.code,self.css_direction)
+        return '%s: %s %s' % (self.name, self.code, self.css_direction)
 
 class UISpec(models.Model):
     """ A textname and integer id for each 
@@ -92,13 +98,13 @@ class UserConf(models.Model):
     srcs = models.ManyToManyField(SourceTxt,blank=True,related_name='+')
 
     # Has the user passed the training module?
-    has_trained = models.BooleanField()
+    has_trained = models.BooleanField(default=False)
 
     # User has completed all translation tasks
     done_with_tasks = models.BooleanField(default=False)
     
     # Is the user a machine?
-    is_machine = models.BooleanField()
+    is_machine = models.BooleanField(default=False)
     
     def __unicode__(self):
         return '%s: native:%s trained:%s' % (self.user.username,
@@ -141,11 +147,15 @@ class TranslationStats(models.Model):
     user = models.ForeignKey(User,related_name='+')
 
     action_log = models.TextField()
+
+    # Did the user finish this translation?
+    complete = models.BooleanField(default=True)
     
     def __unicode__(self):
-        return '%s (%d): ui:%s ' % (self.user.username,
-                                    self.tgt.id,
-                                    self.ui.name)
+        return '%s (%d): ui:%s complete:%s' % (self.user.username,
+                                               self.tgt.id,
+                                               self.ui.name,
+                                               str(self.complete))
 
 #class TranslationRule(models.Model):
 #    """ A new translation rule. This is entered by the MT system / JDBC

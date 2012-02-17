@@ -82,13 +82,15 @@ def tr(request):
             return HttpResponseRedirect('/tm/')
 
     elif request.method == 'POST':
+        # Get the metadata out of the form POST
         tgt_lang_id = int(request.POST['form-tgt-lang'].strip())
         tgt_txt = request.POST['form-tgt-txt'].strip()
         action_log = request.POST['form-action-log'].strip()
         src_id = int(request.POST['form-src-id'].strip())
-
+        is_complete = bool(int(request.POST['form-complete'].strip()))
+        
         tm_view_utils.save_tgt(request.user, src_id, tgt_lang_id,
-                               tgt_txt, action_log)
+                               tgt_txt, action_log, is_complete)
 
         # Send the user to the next translation
         return HttpResponseRedirect('/tm/tr/')

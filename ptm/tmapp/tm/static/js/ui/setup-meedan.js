@@ -18,7 +18,7 @@ $(document).ready(function(){
   
   // Translog2 --- User action logging
   tlog2.init();
-  $( '#form-tgt-submit' ).click(function(){
+  $( 'input[name="form-tgt-submit"]' ).click(function(){
     tlog2.flushForm('form-action-log');
   });
 
@@ -28,7 +28,9 @@ $(document).ready(function(){
   var max_secs = Math.round(n_tokens / tok_per_sec);
   countdown.init(max_secs);
   countdown.addCallback(function(){
-    alert('hello');
+    alert('You exceeded the maximum translation time for this sentence. It will be submitted. Click OK to continue to the next sentence.');
+    $( 'input[name="form-complete"]' ).val('0');
+    $( 'input[name="form-tgt-submit"]' ).trigger('click');
   });
   countdown.show();
   

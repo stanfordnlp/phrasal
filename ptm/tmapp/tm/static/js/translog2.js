@@ -23,7 +23,7 @@
     var _eventLogPtr = 0;
 
     // Delimiter between events in the output
-    var _eventDelim = '|||';
+    var _eventDelim = '|';
 
     // Signals begin of user actions
     var _startEventName = 'start';
@@ -50,7 +50,6 @@
         if (event.which){
           eventStr += ' k:' + event.which;
         }
-        // WSGDEBUG
         console.log(eventStr);
         _eventLog[_eventLogPtr++] = eventStr;
       },
@@ -75,6 +74,9 @@
       // Supposedly, string appends are the fastest way to build a string
       // in javascript.
       toStr: function() {
+        // Add the END event
+        util.addCustom(_endEventName);
+        
         // Copy _eventLogPtr so that additional events aren't collected
         // while the string is constructed.
         var lastEventIdx = _eventLogPtr;
@@ -84,9 +86,6 @@
           logStr += _eventDelim;
         }
 
-        // Add the END event
-        util.addCustom(_endEventName);
-        
         return logStr;
       },
     };
