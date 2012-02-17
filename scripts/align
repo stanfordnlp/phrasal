@@ -9,19 +9,23 @@
 # Word alignment with Berkeley aligner:
 ##########################################
 
-if [ $# -lt 1 ] 	
-	then
-  		echo "Usage: $0 <memory> <configuration file>"
-  		exit 1
+#VERSION=/u/nlp/packages/berkeleyaligner2.0
+VERSION=/u/nlp/packages/berkeleyaligner2.1
+
+if [ $# -ne 2 ]; then
+	echo Usage: `basename $0` memory conf_file
+	echo
+	echo Berkeley aligner: "$VERSION"
+	echo
+	echo Edit the VERSION variable in the script to switch
+	echo between Berkeley 2.0 and 2.1.
+ 	exit -1
 fi
 
 MEM=$1
 CONF=$2
 shift
 shift
-
-#VERSION=/u/nlp/packages/berkeleyaligner2.0
-VERSION=/u/nlp/packages/berkeleyaligner2.1
 
 OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM -XX:MaxPermSize=2g"
 
