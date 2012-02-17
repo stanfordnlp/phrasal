@@ -12,6 +12,9 @@ $(document).ready(function(){
 
   // Set the focus on the translation input box
   $( 'textarea#form-tgt-txt' ).focus();
+
+  // Clear the text area if the user hits back!
+  $( 'textarea' ).val('');
   
   // Translog2 --- User action logging
   tlog2.init();

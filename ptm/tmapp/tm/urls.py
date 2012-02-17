@@ -4,6 +4,6 @@ urlpatterns = patterns('tm.views',
     # PTM translation manager (TM) app
     url(r'^$', 'index'),
     url(r'^(?P<src_id>\d+)/$', 'history'),
-    url(r'^(?P<src_id>\d+)/tr/$', 'tr'),
-    url(r'^(?P<src_id>\d+)/trdone/$', 'trdone'), 
+    url(r'^training/$', 'training'),
+    url(r'^tr/$', 'tr'),
 )

@@ -42,7 +42,7 @@
 <br />
 
 <div id="form-tgt-container">
-<form action="/tm/{{ src.id }}/trdone/" method="post" name="form-tgt-input" id="form-tgt-input">
+<form action="/tm/tr/" method="post" name="form-tgt-input" id="form-tgt-input">
 {% csrf_token %}
 <textarea name="form-tgt-txt" id="form-tgt-txt"></textarea>
 <br />
@@ -50,7 +50,7 @@
 <!-- Translation session statistics -->
 <input type="hidden" name="form-tgt-lang" value="{{ tgt_lang.code }}" />
 <input type="hidden" name="form-action-log" value="ERROR" />
-<input type="hidden" name="form-ui-id" value="{{ ui_id }}" />
+<input type="hidden" name="form-src-id" value="{{ src.id }}" />
 <input type="submit" value="Submit" name="form-tgt-submit" id="form-tgt-submit" />
 </form>
 

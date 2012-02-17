@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}
+ -- Training
+{% endblock %}
+
+{% block user_static %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ptm-site.css" />
+{% endblock %}
+
+{% block header %}
+<h1>Please Read This Page Carefully...Then Click the Button to Begin!</h1>
+{% endblock%}
+
+{% block content %}
+
+<div id="queue-text">
+<p>Lorem ipsum sit dolor amit...</p>
+<div id="form-train-done">
+<form action="/tm/training/" method="post" name="form-train-done" id="form-train-done">
+{% csrf_token %}
+<input type="submit" value="I'm Ready To Start" name="form-submit" id="form-submit" />
+</form>
+</div>
+
+{% endblock %}

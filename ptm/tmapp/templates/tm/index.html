@@ -10,32 +10,20 @@
 {% endblock %}
 
 {% block header %}
-<h1> Hello {{ first_name }}!</h1>
-<p>You have {{ src_list|length }} sentences to translate. I'm showing at most 10 of those tasks.</p>
+<h1> Hello {{ first_name }}! Why don't you tell me about your feelings, and what's bothering you, and all of the stuff on your mind. Let's hug.</h1>
 {% endblock%}
 
 {% block content %}
 
-{% if src_list %}
-    <table id="queue-table">
-    {% for src in src_list %}
-        <tr>
-        <td class="queue-td"><a href="/tm/{{ src.id }}/">History</a></td>
-	<td class="queue-td"><a href="/tm/{{ src.id }}/tr">Translate</a></td>
-	{% if src.lang.css_direction == "rtl" %}
-	<td class="queue-td-rl">{{ src.txt|truncatewords:10 }}</td>
-	{% else %}
-	<td class="queue-td">{{ src.txt|truncatewords:10 }}</td>
-	{% endif %}
-	</tr>
-    {% empty %}
-	<p> No tasks left! Thanks for your help! </p>
-    {% endfor %}
-    </ul>
-    </table>
+<div id="queue-text">
+{% if module_name == "none" %}
+<p> You're done! Thanks for your work!</p>
+{% else %}{% if module_name == "train" %}
+<p> Please complete the <a href="/tm/training/">training</a> before you start the translation job. You'll see two different translation interfaces, and we want you to understand the differences before you get to work.</p>
 {% else %}
-    <p>No inputs are available.</p>
-{% endif %}
+<p>Start translating the <a href="/tm/tr/">{{ module_name }} module</a>.</p>
+{% endif %}{% endif %}
+</div>
 
 {% endblock %}
 

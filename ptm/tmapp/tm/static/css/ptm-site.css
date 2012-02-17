@@ -5,26 +5,14 @@
    }
 
 /* view: Work Queue */
-#queue-table {
-   border:0px;
-   width:460px;
-}
+#queue-text {
 
-.queue-td {
-   padding:0.2em;
-   text-align:left;
-}
-
-.queue-td-rl {
-   text-align:right;
-   direction:rtl;
-   padding:0.2em;
 }
 
 /* view: History */
 #history-container {
    width:460px;
-   border:1px solid Yellow;
+/*   border:1px solid Yellow; */
 }
 
 #history-table {

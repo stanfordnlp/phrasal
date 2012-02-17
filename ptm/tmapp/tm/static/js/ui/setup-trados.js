@@ -26,6 +26,9 @@ $(document).ready(function(){
 
   // Set the focus on the translation input box
   $( 'textarea#form-tgt-txt' ).focus();
+
+  // Clear the textarea if the user hits back
+  $( 'textarea' ).val('');
   
   // Set the source language
   var srcLang = $('div#src-lang').html();
