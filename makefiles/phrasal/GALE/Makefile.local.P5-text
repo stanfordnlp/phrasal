@@ -2,7 +2,7 @@
 # Size of nbest lists:
 #########################################
 
-N=500
+N=200
 
 #########################################
 # Java command (must have MT stuff in class
@@ -16,15 +16,15 @@ SYSID=P5-ae-text-hier2-d5
 #########################################
 
 ### MT word-aligned training data:
-TRAIN=../02-align/model
+TRAIN=/scr/nlp/data/gale3/P5-arabic/02-align/model
 
 ### Directory containing reference translations:
-#REFS=/scr/nlp/data/gale/AE-MT-eval-data
-REFS=/scr/nlp/data/gale4/P4-arabic/refs
+REFS=/scr/nlp/data/gale/AE-MT-eval-data
+#REFS=/scr/nlp/data/gale4/P4-arabic/refs
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
-TESTID=mt08
+TESTID=mt05
 
 ### References:
 DEV_REF=$(REFS)/$(DEVID)/tune
@@ -69,7 +69,7 @@ LO_ARGS=-hierarchicalOrientationModel true -orientationModelType msd2-bidirectio
 LO_SZ=8
 
 ### Other options:
-XOPTS=-extractors edu.stanford.nlp.mt.train.MosesFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor
+XOPTS=-extractors edu.stanford.nlp.mt.train.MosesPharoahFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor
 
 #########################################
 # Memory and extraction duration:
@@ -81,6 +81,7 @@ MEMSIZE=45000m
 # Phrasal decoding:
 PMEMSIZE=13800m
 # MERT:
+PMEMSIZE_BM=45000m
 MMEMSIZE=45000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
@@ -114,7 +115,7 @@ POSTTC=cat
 
 ### Uncomment this to debug Phrasal decoder:
 HOST=`hostname -s`
-DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -DcustomScores=phi_tf,lex_tf,phi_ft,lex_ft,phrasePenalty,count,uniq -DsmoothBLEU=true -XX:+UseCompressedOops
+DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -server -XX:PermSize=256m -XX:MaxPermSize=256m -DcustomScores=phi_tf,lex_tf,phi_ft,lex_ft,phrasePenalty,count,uniq -DsmoothBLEU=true
 #Add this to remove count-based features: -DdisableScores=5,6
 
 #########################################
@@ -122,8 +123,8 @@ DEBUG_PHRASAL=$(CP) $(DEBUG) -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djav
 # (in case you run a customized version)
 #########################################
 
-PROC=8
-PM=phrasal-mert.pl --opt-flags="-o koehn+cer -T -t $(PROC) -p 8"
+PROC=6
+PM=phrasal-mert.pl --opt-flags="-o koehn+cer -T -t $(PROC) -p 6"
 
 #########################################
 # Extension of input files:
@@ -146,7 +147,10 @@ LM_FILTER_SCRIPT=filter_lm_unigram
 #########################################
 
 JAVA=java
-OPT_METRIC=bleu-ter
+
+OPT_METRIC=bleu
+#Gale systems use BLEU-TER. Use BLEU for this eval.
+#OPT_METRIC=bleu-ter
 CLASS=ibm2noclass
 
 #########################################

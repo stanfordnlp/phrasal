@@ -4,9 +4,9 @@
 #########################################
 
 # By default, no lexicalized reordering:
-SYSID=ae-none-d4
+#SYSID=ae-none-d4
 # Add Moses-style lexicalized reordering:
-#SYSID=ae-word-d4
+SYSID=ae-word-d5
 
 #########################################
 # Language/data specific variables:
@@ -24,10 +24,7 @@ E=en
 LINES=90000000
 
 ### MT word-aligned training data:
-TRAIN=/scr/nlp/data/gale/MichelMTsystem/mt-experiments/ar-en.reorder
-
-### Unfiltered LMs:
-GIGA=/scr/nlp/data/gale2/ARABIC_LM/releases/mt_giga3_afp_xin.1233.unk.lm.gz
+TRAIN=/scr/nlp/data/gale3/NIST09/align/merged
 
 ### Dev/test corpus and genre identifiers:
 DEVID=mt06
@@ -48,16 +45,16 @@ TEST_REF=$(REFS)/$(TESTID)$(TYPE)
 ALIGN=grow-diag
 
 ### Lexicalized re-ordering model identifier:
-LO_ID=msd-bidirectional-fe
+LO_ID=lo-hier.msd2-bidirectional-fe
 
 ### Parameters for lexicalized reordering model:
-LO_ARGS=
+LO_ARGS=-hierarchicalOrientationModel true -orientationModelType msd2-bidirectional-fe
 
 ### Number of columns produced by lexicalized re-ordering extractor:
-LO_SZ=6
+LO_SZ=8
 
 ### Other options:
-XOPTS=
+XOPTS=-extractors edu.stanford.nlp.mt.train.MosesPharoahFeatureExtractor:edu.stanford.nlp.mt.train.CountFeatureExtractor:edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor
 
 #########################################
 # Pruning:
@@ -76,9 +73,10 @@ MINP=1e-4
 #########################################
 
 ### How much memory for Java:
-MEMSIZE=15000m
-MMEMSIZE=15000m
-PMEMSIZE=15000m
+MEMSIZE=30000m
+MMEMSIZE=30000m
+PMEMSIZE=30000m
+PMEMSIZE_BM=30000m
 
 ### Whether to compute exact relative frequencies p(f|e). 
 ### If so, requires two passes over training data. 
@@ -99,7 +97,8 @@ SPLIT=-split 2
 # Debug levels
 #########################################
 
-DEBUG_PHRASAL=-DMultiBeamDecoderDebug=true -server
+HOST=`hostname -s`
+DEBUG_PHRASAL=-server -ea -DMultiBeamDecoderDebug=true -DSRILM=true -Djava.library.path=/scr/nlp/data/gale3/SRILM-JNI/$(HOST) -XX:+UseParallelGC -XX:PermSize=256m -XX:MaxPermSize=256m -DcustomScores=phi_tf,lex_tf,phi_ft,lex_ft,phrasePenalty,count,uniq -DsmoothBLEU=true
 
 #########################################
 # Pre- and post-processing:
@@ -113,8 +112,8 @@ POST=perl $(SCRIPTS)/remove_unk
 # (in case you run a customized version)
 #########################################
 
-PROC=8
-PM=phrasal-mert.pl --opt-flags="-o simplex+koehn+cer -F -t $(PROC) -p 8"
+PROC=7
+PM=phrasal-mert.pl --opt-flags="-o koehn+cer -F -t $(PROC) -p 7"
 
 #########################################
 # Extension of input files:
