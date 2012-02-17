@@ -3,6 +3,7 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats
 from django.db import IntegrityError
+from tm_workqueue import get_user_conf
 
 logger = logging.getLogger(__name__)
 
@@ -60,3 +61,8 @@ def save_tgt(user,src_id,tgt_lang_id,tgt_txt,action_log):
         logger.error('Could not save new translation to database src:' +
                      str(src_id) + 'tgt_txt:' + tgt_txt) 
         raise RuntimeError
+
+    # Now indicate that the user has translated this sentence
+    conf = get_user_conf(user)
+    conf.srcs.add(src)
+    conf.save()

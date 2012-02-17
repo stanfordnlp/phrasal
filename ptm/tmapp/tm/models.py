@@ -95,13 +95,15 @@ class UserConf(models.Model):
     has_trained = models.BooleanField()
 
     # User has completed all translation tasks
-#    done_with_tasks = models.BooleanField(default=False)
+    done_with_tasks = models.BooleanField(default=False)
     
     # Is the user a machine?
     is_machine = models.BooleanField()
     
     def __unicode__(self):
-        return '%s: native:%s trained:%s' % (self.user.username, self.lang_native.name, str(self.has_trained))
+        return '%s: native:%s trained:%s' % (self.user.username,
+                                             self.lang_native.name,
+                                             str(self.has_trained))
                         
 class TargetTxt(models.Model):
     """A unique translation for a given source input.
@@ -119,7 +121,9 @@ class TargetTxt(models.Model):
     date = models.DateTimeField()
 
     def __unicode__(self):
-        return '%s (%s): %s' % (self.user.username,self.date,truncate(self.txt))
+        return '%s (%s): %s' % (self.user.username,
+                                self.date,
+                                truncate(self.txt))
 
 # Metadata about a translation submitted by a user
 # We should use this metadata to quantify translator productivity
@@ -139,7 +143,9 @@ class TranslationStats(models.Model):
     action_log = models.TextField()
     
     def __unicode__(self):
-        return '%s (%d): ui:%s ' % (self.user.username,self.tgt.id,self.ui.name)
+        return '%s (%d): ui:%s ' % (self.user.username,
+                                    self.tgt.id,
+                                    self.ui.name)
 
 #class TranslationRule(models.Model):
 #    """ A new translation rule. This is entered by the MT system / JDBC

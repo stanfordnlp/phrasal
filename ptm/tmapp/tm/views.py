@@ -19,14 +19,18 @@ def index(request):
     """
     user_took_training = tm_workqueue.done_training(request.user)
     module = 'train'
+    last_module = None
     if user_took_training:
         # Module is None if the user has completed all modules
-        module = tm_workqueue.select_module(request.user)
+        (module,last_module) = tm_workqueue.select_module(request.user)
         if module == None:
             module = 'none'
 
     return render_to_response('tm/index.html',
-                              {'module_name':module, 'first_name' : request.user.first_name, 'last_name' : request.user.last_name},
+                              {'module_name':module,
+                               'first_name' : request.user.first_name,
+                               'last_name' : request.user.last_name,
+                               'last_module_name' : last_module},
                               context_instance=RequestContext(request))
 
 @login_required
@@ -75,16 +79,16 @@ def tr(request):
         else:
             # User has completed the module...
             # go back to the index
-            logger.info('%s completed translation module.' % (request.user.username))
             return HttpResponseRedirect('/tm/')
 
     elif request.method == 'POST':
-        tgt_lang_id = int(request.POST['form-tgt-lang'])
+        tgt_lang_id = int(request.POST['form-tgt-lang'].strip())
         tgt_txt = request.POST['form-tgt-txt'].strip()
         action_log = request.POST['form-action-log'].strip()
-        src_id = int(request.POST['form-src-id'])
+        src_id = int(request.POST['form-src-id'].strip())
 
-        tm_view_utils.save_tgt(request.user, src_id, tgt_lang_id, tgt_txt, action_log)
+        tm_view_utils.save_tgt(request.user, src_id, tgt_lang_id,
+                               tgt_txt, action_log)
 
         # Send the user to the next translation
         return HttpResponseRedirect('/tm/tr/')

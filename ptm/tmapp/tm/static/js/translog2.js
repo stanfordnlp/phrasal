@@ -111,16 +111,18 @@
         util.addCustom(name,text);
       },
       
-      // Flush the log to input element
-      // This should be bound to an event handler
-      flushForm: function(input_id) {
-        console.log('tlog2: Flush to input: ' + input_id);
+      // Flush the log to a named input element
+      // That is, the element is of type input and has
+      // its name field set.
+      flushForm: function(input_name) {
+        console.log('tlog2: Flush to input: ' + input_name);
         var eventStr = util.toStr();
-        $( '#'+input_id ).val(eventStr);
+        $( 'input[name='+input_name+']' ).val(eventStr);
         return true;
       },
 
-      // Flush the input log to <tag_id>
+      // Append the input log to the innerHTML or
+      // the element named with this CSS id.
       // This should be bound to an event handler
       flushTag: function(tag_id){
         console.log('tlog2: Flush to tag: ' + tag_id);

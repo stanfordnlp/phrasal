@@ -25,7 +25,10 @@ $(document).ready(function(){
   // Setup the timer
   // TODO(spenceg): Set the timeout based on the amount
   // of text to translate
-  countdown.init(600);
+  var n_tokens = $( '[id^="src-tok"]' ).length;
+  var tok_per_sec = .0625;
+  var max_secs = Math.round(n_tokens / tok_per_sec);
+  countdown.init(max_secs);
   countdown.addCallback(function(){
     alert('hello');
   });

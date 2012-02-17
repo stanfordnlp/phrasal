@@ -43,7 +43,7 @@ def select_src(user):
     """
     user_conf = get_user_conf(user)
     if not user_conf.active_module:
-        logger.info('Selecting source for inactive user profile: ' + repr(user_conf))
+        logger.info('Selecting source for inactive user profile: ' + repr(user))
         return None
 
     # TODO(spenceg): Random ordering evidently kills MySQL and SQLite, but
@@ -53,9 +53,7 @@ def select_src(user):
     if src_list:
         return src_list[0]
     else:
-        logger.error('User has active module, but could not find any sources ' + repr(user_conf))
-        user_conf.active_module = None
-        user_conf.save()             
+        logger.info(user.username + ' has completed module ' + user_conf.active_module.name)
         return None
 
 def select_tgt_language(user,src_id):
@@ -86,29 +84,38 @@ def select_module(user):
 
     Args:
     Returns:
-       UI name -- if a module is available
-       None -- if the user has completed all modules
+       Tuple containing (new_module,last_module)
+       new_module (string) -- Current active module
+       last_module (string) -- Last active module
     Raises:
     """
     user_conf = get_user_conf(user)
+    if user_conf.done_with_tasks:
+        return (None, None)
+
+    # Now select the new module (if any)
+    enabled = None
+    last_module_name = None
     if user_conf.active_module:
+        last_module_name = user_conf.active_module.name
         src = select_src(user)
         if src:
             # The user still has work to do on this module
-            return user_conf.active_module.name
-        
-    # Now select the new module (if any)
-    enabled = None
-    if user_conf.active_module:
-        enabled = user_conf.uis_enabled.filter(id__gt=user_conf.active_module.id)
+            return (user_conf.active_module.name, last_module_name)
+        else:
+            enabled = user_conf.uis_enabled.filter(id__gt=user_conf.active_module.id).order_by('id')
     else:
         enabled = user_conf.uis_enabled.all().order_by('id')
 
+    current_module_name = None
     if enabled:
-        name = enabled[0].name
+        current_module_name = enabled[0].name
         user_conf.active_module = enabled[0]
         user_conf.save()
-        return name
+    else:
+        user_conf.active_module = None
+        user_conf.done_with_tasks = True
+        user_conf.save()
 
-    return None
+    return (current_module_name, last_module_name)
         
