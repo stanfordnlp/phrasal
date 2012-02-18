@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# Symmetrize word alignments (either GIZA or UCB) using
+# a symmetrization heuristic.
+#
+# Author: Spence Green
+#
+if [ $# -ne 3 ]; then
+    echo Usage: `basename $0` e-f.A3 f-e.A3 heuristic
+    echo
+    echo Heuristics:
+    echo "  none"
+    echo "  intersection"
+    echo "  grow"
+    echo "  grow_diag"
+    echo "  grow_diag_final"
+    echo "  grow_diag_final_and"
+    echo "  union"
+    echo "  srctotgt"
+    echo "  tgttosrc"
+    exit
+fi
+
+JAVA_OPTS="-server -XX:+UseCompressedOops -Xmx500m -Xms500m"
+
+java $JAVA_OPTS edu.stanford.nlp.mt.train.AlignmentSymmetrizer $@
