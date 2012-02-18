@@ -229,7 +229,7 @@ public class AlignmentSymmetrizer {
   public static void main(String[] args) {
     if (args.length != 3) {
       System.err.printf(
-          "Usage: java %s (en-fr.A3) (fr-en.A3) (symmetrization heuristic)\n",
+          "Usage: java %s (f-e.A3) (e-f.A3) (symmetrization heuristic)\n",
           AlignmentSymmetrizer.class.getName());
       System.exit(-1);
     }
