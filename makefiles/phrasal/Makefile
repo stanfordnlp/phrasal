@@ -22,9 +22,11 @@ LM_FILTER_SCRIPT=filter_lm_unigram
 N=200
 OPT_METRIC=bleu
 FILTER=fast
-THREADS=-threads 4
 IE=prep
 FE=unk
+# Feature extractor threads. Mert and decoding threads set
+# separately
+THREADS=-threads 4
 
 ### Corpus/genre/language specific stuff here:
 include Makefile.local
