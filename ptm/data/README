@@ -1,0 +1,7 @@
+Data format for proc files (tab-separated):
+
+docId 
+segId -- sentence number (for these documents)
+text -- (unescaped) and sentence-split text
+
+

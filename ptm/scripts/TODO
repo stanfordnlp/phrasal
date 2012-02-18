@@ -4,6 +4,7 @@ Automate the following database actions:
  2) Loading source texts
  3) Loading MT (Google Translate?) target texts for each source text.
 
+Translation Experiment #2:
 Exact pre-processing for each language:
  1) Tokenization
  2) Segmentation (if any)
