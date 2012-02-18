@@ -6,7 +6,7 @@
 # Author: Spence Green
 #
 if [ $# -ne 3 ]; then
-    echo Usage: `basename $0` e-f.A3 f-e.A3 heuristic
+    echo Usage: `basename $0` f-e.A3 e-f.A3 heuristic
     echo
     echo Heuristics:
     echo "  none"
@@ -21,6 +21,6 @@ if [ $# -ne 3 ]; then
     exit
 fi
 
-JAVA_OPTS="-server -XX:+UseCompressedOops -Xmx500m -Xms500m"
+JAVA_OPTS="-server -XX:+UseCompressedOops -Xmx100m -Xms100m"
 
 java $JAVA_OPTS edu.stanford.nlp.mt.train.AlignmentSymmetrizer $@
