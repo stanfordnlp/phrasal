@@ -28,6 +28,21 @@ def get_template_for_ui(ui_name):
     else:
         return None
 
+def get_src(src_id):
+    """ Gets a SourceTxt object from a src_id
+
+    Args:
+    Returns:
+    Raises:
+    """
+    try:
+        src = SourceTxt.objects.select_related().get(pk=src_id)
+    except SourceTxt.DoesNotExist:
+        logger.error('No SourceTxt object for id: ' + str(src_id))
+        return None
+    
+    return src.id
+
 def save_tgt(user,src_id,tgt_lang_id,tgt_txt,action_log,is_complete):
     """ Save a user translation along with translation stats.
     

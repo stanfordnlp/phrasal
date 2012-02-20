@@ -20,15 +20,18 @@ from os.path import basename
 from csv_unicode import UnicodeWriter
 from argparse import ArgumentParser
 
-def generate_sql(pk,lpk,upk,tsv_file):
+def generate_csv(pk,lpk,upk,tsv_file):
+    """ Convert tsv to csv. Column order is:
+        header_row = ['id','lang_id','ui_id','txt','seg','doc']
+
+    Args:
+    Returns:
+    Raises:
+    """
     in_file = codecs.open(tsv_file,encoding='utf-8')
     out_file_name = basename(tsv_file) + '.csv'
     out_file = open(out_file_name,'w')
     csv_out = UnicodeWriter(out_file, quoting=csv.QUOTE_ALL)
-
-    # Write the table header to match this table
-    header_row = ['id','lang_id','ui_id','txt','seg','doc']
-    csv_out.writerow(header_row)
     n_lines = 0
     for line in in_file:
         n_lines += 1
@@ -61,7 +64,7 @@ def main():
                         help='Tab-separated file to convert')
     args = parser.parse_args()
 
-    n_lines = generate_sql(args.first_id,args.lpk,args.upk,args.tsv_file)
+    n_lines = generate_csv(args.first_id,args.lpk,args.upk,args.tsv_file)
 
     sys.stderr.write('Done! Read and wrote %d lines.\n' % (n_lines))
 
