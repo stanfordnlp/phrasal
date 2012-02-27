@@ -937,7 +937,6 @@ public class Phrasal {
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
     System.err.printf("Phrase table: %s Unknown words policy: %s\n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
 
-    File ptf = new File(phraseTable);
     if (phraseTable.startsWith("bitext:")) {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
           featurizer, scorer, false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
@@ -974,10 +973,13 @@ public class Phrasal {
           pgens.add(pgen);
        }
        phraseGenerator = new CombinedPhraseGenerator<IString>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
-       phraseGenerator = new CombinedPhraseGenerator<IString>(
+       
+    }
+    
+    phraseGenerator = new CombinedPhraseGenerator<IString>(
              Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(featurizer, dropUnknownWords, scorer)), 
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));   
-    }
+ 
     System.err.printf("Phrase Limit: %d\n",
         ((CombinedPhraseGenerator<IString>) phraseGenerator).getPhraseLimit());
 
