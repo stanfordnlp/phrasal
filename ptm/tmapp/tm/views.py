@@ -19,6 +19,10 @@ def index(request):
     Raises:
     """
     user_took_training = tm_workqueue.done_training(request.user)
+    if user_took_training == None:
+        # TODO(spenceg): Do something fancier here.
+        # User lookup failed
+        raise Http404
     module = 'train'
     last_module = None
     if user_took_training:
