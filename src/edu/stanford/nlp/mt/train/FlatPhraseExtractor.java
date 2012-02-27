@@ -28,6 +28,10 @@ public class FlatPhraseExtractor extends AbstractPhraseExtractor {
       featurize(sent);
   }
 
+  public static final String DEBUG_PROPERTY = "DebugFlatPhraseExtractor";
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
+
   protected boolean addPhrasesToIndex(WordAlignment sent) {
 
     int fsize = sent.f().size();

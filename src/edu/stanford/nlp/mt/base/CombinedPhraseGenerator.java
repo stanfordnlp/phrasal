@@ -93,6 +93,9 @@ public class CombinedPhraseGenerator<TK> implements PhraseGenerator<TK> {
             .translationOptions(sequence, targets, translationId);
         BitSet novelCoverage = new CoverageSet(sequence.size());
         for (ConcreteTranslationOption<TK> option : potentialOptions) {
+          if (DEBUG) {
+            System.err.println("  opt: " + option);
+          }
           if (coverage.intersects(option.foreignCoverage)) {
             if (DEBUG) {
               System.err.printf("Skipping %s intersects %s\n", coverage,

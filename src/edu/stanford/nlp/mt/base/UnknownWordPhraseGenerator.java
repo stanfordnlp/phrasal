@@ -16,6 +16,9 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   static public final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
   static public final String DEFAULT_SCORE_NAMES[] = { "p_i(t|f)" };
   static public final float SCORE_VALUES[] = { (float) 1.0 };
+  public static final String DEBUG_PROPERTY = "UnknownWordPhraseGeneratorDebug";
+  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
+      DEBUG_PROPERTY, "false"));
 
   // do we need to account for "(0) (1)", etc?
   static public final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
@@ -80,7 +83,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
     List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter == null || filter.accepts(raw)) {
-     String word = raw.toString();
+      String word = raw.toString();
      
       if (dropUnknownWords && !isNumeric(word) && !isASCII(word)) {
           list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, empty, raw,

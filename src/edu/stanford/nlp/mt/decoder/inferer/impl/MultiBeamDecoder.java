@@ -120,10 +120,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     threadPool = Executors.newFixedThreadPool(numProcs);
 
     System.err.printf("Beam expansion threads: %d\n", numProcs);
-    /*
-     * if (useITGConstraints) { System.err.printf("Using ITG Constraints\n"); }
-     * else { System.err.printf("Not using ITG Constraints\n"); }
-     */
+    
+    if (DEBUG) {
+      if (useITGConstraints) { System.err.printf("Using ITG Constraints\n"); }
+      else { System.err.printf("Not using ITG Constraints\n"); }
+    }
+    
     if (maxDistortion != -1) {
       System.err.printf("Multi-beam decoder. Distortion limit: %d\n",
           maxDistortion);
@@ -214,7 +216,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     System.err.printf("Translation options: %d\n", options.size());
 
-    if (OPTIONS_DUMP || DETAILED_DEBUG) {
+    if (OPTIONS_DUMP && DETAILED_DEBUG) {
       int sentId = translationId + ((Phrasal.local_procs > 1) ? 2 : 0);
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
@@ -474,19 +476,24 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           continue;
         if (hyp == null)
           continue;
-        // System.err.printf("\nExpanding hyp: %s\n", hyp);
+        if (DEBUG)
+          System.err.printf("\nExpanding hyp: %s\n", hyp);
         int localOptionsApplied = 0;
-        // System.err.printf("Start position: %d\n",
-        // hyp.foreignCoverage.nextClearBit(0));
         int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
+        if (DEBUG)
+          System.err.printf("Start position: %d\n", firstCoverageGap);
         int priorStartPos = (hyp.featurizable == null ? 0
             : hyp.featurizable.foreignPosition);
         int priorEndPos = (hyp.featurizable == null ? 0
             : hyp.featurizable.foreignPosition
                 + hyp.featurizable.foreignPhrase.size());
 
+        if (DETAILED_DEBUG)
+          System.err.printf("ForeignSz is: %d\n", foreignSz);
         for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
           int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
+          if (DETAILED_DEBUG)
+            System.err.printf("Current startPos: %d, endPosMax: %d\n", startPos, endPosMax);
 
           // check distortion limit
           if (endPosMax < 0) {
@@ -496,6 +503,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             } else {
               endPosMax = foreignSz;
             }
+            if (DETAILED_DEBUG)
+              System.err.printf("after checking distortion limit, endPosMax: %d\n", endPosMax);
           }
           if (useITGConstraints) {
             boolean ITGOK = true;
@@ -524,6 +533,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 }
               }
             }
+            if (DETAILED_DEBUG)
+              System.err.printf("after ITG constraints check, ITGOK=%b\n", ITGOK);
             if (!ITGOK)
               continue;
             // System.err.printf("okay\n");
@@ -533,8 +544,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 .get(startPos, endPos);
             if (applicableOptions == null)
               continue;
-            // System.err.printf("options for (%d to %d): %d\n", startPos,
-            // endPos, applicableOptions.size());
+            if (DEBUG)
+              System.err.printf("options for (%d to %d): %d\n", startPos,
+                endPos, applicableOptions.size());
 
             for (ConcreteTranslationOption<TK> option : applicableOptions) {
               // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
