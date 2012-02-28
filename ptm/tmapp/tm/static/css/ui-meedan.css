@@ -8,6 +8,14 @@
 }
 
 .src-tok {
+   float:left;
+   margin:1.2em 0.3em;
+   border-width:1px;
+   border-style:solid;
+   border-color:White;
+}
+
+.src-tok-rtl {
    float:right;
    margin:1.2em 0.3em;
    border-width:1px;

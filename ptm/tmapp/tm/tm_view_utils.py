@@ -3,7 +3,7 @@ from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats
 from django.db import IntegrityError
-from tm_workqueue import get_user_conf
+from tm_user_utils import get_user_conf
 
 logger = logging.getLogger(__name__)
 

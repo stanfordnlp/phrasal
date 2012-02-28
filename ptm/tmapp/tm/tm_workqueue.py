@@ -1,46 +1,9 @@
 import logging
 from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec
+from tm_user_utils import get_user_conf
 
 logger = logging.getLogger(__name__)
 
-
-def get_user_conf(user):
-    """ Returns the configuration for a user
-    
-    Args:
-      user -- django.contrib.auth.models.User object
-    Returns:
-      UserConf object if the user exists in the database.
-      None otherwise.
-    Raises:
-    """
-    try:
-        user_conf = UserConf.objects.get(user=user)
-    except UserConf.MultipleObjectsReturned, UserConf.DoesNotExist:
-        logger.error('Could not retrieve credentials for ' + repr(user))
-        return None
-
-    return user_conf
-
-def done_training(user,set_done=False):
-    """ Determines whether or not a user has completed training.
-
-    Args:
-    Returns:
-      True -- if the user has completed training.
-      False -- if the user has not completed training.
-      None -- if the user does not exist 
-    Raises:
-    """
-    user_conf = get_user_conf(user)
-    if not user_conf:
-        return None
-    elif set_done:
-        user_conf.has_trained = True
-        user_conf.save()
-        return True
-    else:
-        return user_conf.has_trained
 
 def select_src(user):
     """ Selects a source sentence for the user to translate.

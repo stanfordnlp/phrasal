@@ -10,17 +10,79 @@
 {% endblock %}
 
 {% block header %}
-<h1>Please Read This Page Carefully...Then Click the Button to Begin!</h1>
+<h1>Please Read These Instructions. Then Click the Button Below to Start!</h1>
 {% endblock%}
 
 {% block content %}
 
-<div id="queue-text">
-<p>Lorem ipsum sit dolor amit...</p>
-<div id="form-train-done">
+<div id="main-content">
+<p>Thank you for agreeing to help us with this job! You will be asked to translate two sets of sentences from {{ src_lang }} to {{ tgt_lang }}. You should translate the sentences as quickly and as accurately as you can. Each translation must be completed in a fixed amount of time, and the job will not exceed 60 minutes of actual translation work. If you finish the job in less than 60 minutes, you will still be paid the full price.</p>
+
+<p>This website will administer the translation job. Once you finish this tutorial, the website will guide you through the following tasks:</p>
+
+<ul>
+<li>Translation Job #1 (30min., timed) </li>
+<li>Break (untimed) </li>
+<li>Translation Job #2 (30min., timed) </li>
+<li>Survey (less than 1min., untimed) </li>
+</ul>
+
+<p>We ask that you complete each of the translation jobs in a single session. Once you complete job #1, the website will prompt you to take a break, and the timer will be disabled. Get up, go to the bathroom, get some coffee: whatever you need to stay productive. We expect that you'll take about 15 minutes, and no more than an hour. We require that you complete both jobs on the same day.</p>
+
+<p>The text that you will be asked to translate comes from several unrelated documents. We selected paragraphs from these documents, the sentences of which you will see in the order in which they appeared in the document.</p>
+
+<p>When creating your translation, please do not use:
+<ul>
+<li>Machine translation systems (for example, Google Translate, Trados, etc.)</li>
+<li>Browser plugins or extensions</li>
+</ul> </p>
+
+<h1>Translation Job #1</h1>
+<p>You will be presented with a sentence and an empty textbox. Please enter a translation as quickly and as accurately as you can. A timer at the bottom left of the screen will indicate how much time you have to complete the job. If you do not complete the translation before the timer expires, then the incomplete translation will be submitted for you. The site will then redirect you to the next translation task.</p>
+
+<p><a href="/tm/module_train/1" target="_blank">Click here</a> to view the interface for translation job #1.</a></p>
+
+<h1>Translation Job #2</h1>
+<p>You will be presented with a sentence and a suggested translation. You may use the suggested translation as a starting point. However, the objective remains the same: translate the sentence as quickly and as accurately as you can. If you believe that it would be faster to type a new translation than the fix the suggestion, then feel free to delete the suggestion and start from the beginning.</p>
+
+<p><a href="/tm/module_train/2" target="_blank">Click here</a> to view the interface for translation job #2.</a></p>
+
+<h1>Moving Forward</h1>
+<p>This job is the first in a series of translation studies that we are running over the next few months. If you submit good translations, then we will ask you to join us for future studies.</p>
+</div>
+
+<p>We're almost there. Complete this survey, and then we can get started.</p>
+
+<div style="clear:both" id="form-train-done">
 <form action="/tm/training/" method="post" name="form-train-done" id="form-train-done">
 {% csrf_token %}
-<input type="submit" value="I'm Ready To Start" name="form-submit" id="form-submit" />
+<table>
+  <tr>
+    <td> Where were you born? </td>
+    <td>
+      <select name="form-birth-country">
+	{% for country in country_list %}
+	<option value="{{ country.code }}">{{ country.name }}</option>
+	{% endfor %}
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td> Where do you currently live? </td>
+    <td>
+      <select name="form-resident-country">
+	{% for country in country_list %}
+	<option value="{{ country.code }}">{{ country.name }}</option>
+	{% endfor %}
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td> On average, how many hours per week do you work as a translator?</td>
+    <td> <input type="text" name="form-num-hours" style="width:50px" /></td>
+  </tr>
+</table>
+<input type="submit" value="I'm Done With Training. Let's Start!" name="form-submit" id="form-submit" />
 </form>
 </div>
 

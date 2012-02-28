@@ -23,8 +23,6 @@
 {% endblock %}
 
 {% block leftcol %}
-<p><a href="/tm/">Work Queue</a></p>
-<p><a href="/bye/">Logout</a></p>
 {% endblock %}
 
 {% block footer %}
@@ -35,7 +33,11 @@
 <div class="div-hidden" id="src-txt">{{ src.txt }}</div>
 <div id="src-display">
 {% for tok in src_toks %}
+{% if src.lang.css_direction == "ltr" %}
 <div class="src-tok" id="src-tok-{{ forloop.counter0 }}">{{ tok }}</div>
+{% else %}
+<div class="src-tok-rtl" id="src-tok-{{ forloop.counter0 }}">{{ tok }}</div>
+{% endif %}
 {% endfor %}
 </div>
 

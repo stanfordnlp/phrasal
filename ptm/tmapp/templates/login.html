@@ -16,7 +16,7 @@
 {% if form.errors %}
 <p>Your username and password didn't match. Please try again.</p>
 {% else %}
-<p>Login to access the work queue:</p>
+<p>Please login using the credentials that were emailed to you:</p>
 {% endif %}
 
 <form method="post" action="{% url 'django.contrib.auth.views.login' %}">

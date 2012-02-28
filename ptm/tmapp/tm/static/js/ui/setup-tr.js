@@ -8,7 +8,7 @@
 //
 $(document).ready(function(){
   // DEBUG: Uncomment this to disable logging
-  // console.log = function() {}
+  console.log = function() {}
 
   // Set the focus on the translation input box
   $( 'textarea#form-tgt-txt' ).focus();
@@ -23,9 +23,7 @@ $(document).ready(function(){
   });
 
   // Setup the timer
-  var n_tokens = $( '[id^="src-tok"]' ).length;
-  var tok_per_sec = .0625;
-  var max_secs = Math.round(n_tokens / tok_per_sec);
+  var max_secs = 600;
   countdown.init(max_secs);
   countdown.addCallback(function(){
     alert('You exceeded the maximum translation time for this sentence. It will be submitted. Click OK to continue to the next sentence.');

@@ -16,4 +16,4 @@ user=django_admin
 
 cmd='COPY '"$1"' FROM STDIN DELIMITERS '\'','\'' CSV';
 
-psql -h "$host" -f $1 "$db_name" "$user" -c "$cmd"
+psql -h "$host" "$db_name" "$user" -c "$cmd"

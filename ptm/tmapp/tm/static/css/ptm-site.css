@@ -2,11 +2,13 @@
 /* Helper ids and classes */
 .div-hidden {
    display:none;
-   }
+}
 
-/* view: Work Queue */
-#queue-text {
-
+/* view: Center column wrapper */
+#main-content {
+   float:left;
+   text-align:justify;
+   text-justify:auto;
 }
 
 /* view: History */

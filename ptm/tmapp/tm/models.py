@@ -15,6 +15,18 @@ def truncate(txt, max_len=10):
     else:
         return txt
 
+class Country(models.Model):
+    """ What it says.
+    Args:
+    Returns:
+    Raises:
+    """
+    code = models.CharField(max_length=2)
+    name = models.CharField(max_length=100)
+
+    def __unicode__(self):
+        return '%s: %s' % (self.code, self.name)
+    
 class LanguageSpec(models.Model):
     """ Specification of a (human) language. Mostly contains
     details for rendering the language in the browser.
@@ -105,6 +117,19 @@ class UserConf(models.Model):
     
     # Is the user a machine?
     is_machine = models.BooleanField(default=False)
+
+    # Demographic information entered by user
+    birth_country = models.ForeignKey(Country,
+                                      related_name='+',
+                                      blank=True,
+                                      null=True)
+    home_country = models.ForeignKey(Country,
+                                     related_name='+',
+                                     blank=True,
+                                     null=True)
+    # Number of hours that this user spends on translation
+    # work each week (user reported)
+    #hours_per_week = models.IntegerField()
     
     def __unicode__(self):
         return '%s: native:%s trained:%s' % (self.user.username,

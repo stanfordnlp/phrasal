@@ -2,7 +2,7 @@
 {% load url from future %}
 
 {% block title %}
- -- {{ first_name }} {{ last_name }}
+ -- {{ name }}
 {% endblock %}
 
 {% block user_static %}
@@ -14,8 +14,8 @@
 
 {% block content %}
 
-<div id="queue-text">
-<p> Hi {{ first_name }}!</p>
+<div id="main-content">
+<p> Hi {{ name }}!</p>
 {% if last_module_name %}
 <p>Thanks for completing the {{ last_module_name }} translation module.</p>
 {% endif %}

@@ -22,12 +22,10 @@
 {% endblock %}
 
 {% block leftcol %}
-<p><a href="/tm/">Work Queue</a></p>
-<p><a href="/bye/">Logout</a></p>
 {% endblock %}
 
 {% block footer %}
-<p> Google Translate output here! Could pre-populate the textarea with the 1-best translation.</p>
+<p> Feel free to delete the suggested translation if you think that it would be quicker to type your own translation.</p>
 {% endblock %}
 
 {% block content %}
@@ -35,7 +33,11 @@
 <div class="div-hidden" id="src-txt">{{ src.txt }}</div>
 <div id="src-display">
 {% for tok in src_toks %}
+{% if src.lang.css_direction == "ltr" %}
 <div class="src-tok" id="src-tok-{{ forloop.counter0 }}">{{ tok }}</div>
+{% else %}
+<div class="src-tok-rtl" id="src-tok-{{ forloop.counter0 }}">{{ tok }}</div>
+{% endif %}
 {% endfor %}
 </div>
 
