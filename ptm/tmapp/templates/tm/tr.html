@@ -44,7 +44,7 @@
 <br />
 
 <div id="form-tgt-container">
-<form action="/tm/tr/" method="post" name="form-tgt-input" id="form-tgt-input">
+<form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input">
 {% csrf_token %}
 <textarea name="form-tgt-txt" id="form-tgt-txt"></textarea>
 <br />

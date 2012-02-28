@@ -4,6 +4,23 @@ from tm_user_utils import get_user_conf
 
 logger = logging.getLogger(__name__)
 
+# TODO(spenceg): Hard-coded for the first experiment
+def next_training_ui_id(last_id):
+    """ Returns the next training ui to present to the
+        user based on the last ui.
+    Args:
+      last_id -- pk of the ui. Pass None to get the first training ui id
+    Returns:
+      id -- pk of the ui to display.
+      None -- if the user has completed the training.
+    Raises:
+    """
+    if not last_id:
+        return 1
+    if last_id == 1:
+        return 2
+    return None
+
 def done_training(user,set_done=False,form_data=None):
     """ Determines whether or not a user has completed training.
 

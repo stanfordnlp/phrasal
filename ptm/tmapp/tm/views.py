@@ -22,7 +22,7 @@ def index(request):
     user_took_training = tm_train_module.done_training(request.user)
     if user_took_training == None:
         # TODO(spenceg): Do something fancier here.
-        # User lookup failed
+        # User lookup failed --> No UserConf for this user
         raise Http404
     module = 'train'
     last_module = None
@@ -41,25 +41,33 @@ def index(request):
                               context_instance=RequestContext(request))
 
 @login_required
-def module_train(request,ui_id):
+def module_train(request, ui_id):
     """ Shows this users enabled interfaces in order
 
     Args:
     Returns:
     Raises:
     """
-    src = tm_train_module.get_src(request.user, int(ui_id))
-    if src:
-        template = tm_view_utils.get_template_for_ui(src.ui.name)
-        if template:
-            tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
-            src_toks = src.txt.split()
-            return render_to_response(template,
-                                      {'src':src, 'src_toks':src_toks,
-                                       'tgt_lang':tgt_lang},
-                                      context_instance=RequestContext(request))
-    logger.error('Could not find a training instance for: (user: %s) (ui: %d)' % (str(request.user),ui_id))
-    raise Http404
+    ui_id = int(ui_id)
+    if request.method == 'POST':
+        ui_id = tm_train_module.next_training_ui_id(ui_id)
+        
+    if ui_id:
+        src = tm_train_module.get_src(request.user, ui_id)
+        if src:
+            template = tm_view_utils.get_template_for_ui(src.ui.name)
+            if template:
+                tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
+                src_toks = src.txt.split()
+                action = '/tm/module_train/%d/' % (ui_id)
+                return render_to_response(template,
+                                          {'src':src, 'src_toks':src_toks,
+                                           'form_action':action,
+                                           'tgt_lang':tgt_lang},
+                                          context_instance=RequestContext(request))
+            
+    else:
+        return HttpResponseRedirect('/tm/')
     
 @login_required
 def training(request):
@@ -97,7 +105,7 @@ def training(request):
         tm_train_module.done_training(request.user,
                                       set_done=True,
                                       form_data=form_data)
-        return HttpResponseRedirect('/tm/')
+        return HttpResponseRedirect('/tm/module_train/1')
 
 @login_required
 def tr(request):
@@ -121,6 +129,7 @@ def tr(request):
                 src_toks = src.txt.split()
                 return render_to_response(template,
                                           {'src':src, 'src_toks':src_toks,
+                                           'form_action':'/tm/tr/',
                                            'tgt_lang':tgt_lang},
                                           context_instance=RequestContext(request))
             else:
