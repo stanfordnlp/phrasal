@@ -21,13 +21,13 @@ def next_training_ui_id(last_id):
         return 2
     return None
 
-def done_training(user,set_done=False,form_data=None):
+def done_training(user,set_done=False,form=None):
     """ Determines whether or not a user has completed training.
 
     Args:
       user -- a django.contrib.auth.User object
       set_done -- true if this user has finished training
-      form_data -- data that the user submitted during training
+      form -- an instance of tm_forms.UserTrainingForm
     Returns:
       True -- if the user has completed training.
       False -- if the user has not completed training.
@@ -38,21 +38,11 @@ def done_training(user,set_done=False,form_data=None):
     if not user_conf:
         return None
     elif set_done:
-        try:
-            native_name = form_data['native_country']
-            native_country = Country.objects.get(code=native_name)
-            home_name = form_data['home_country']
-            home_country = Country.objects.get(code=home_name)
-        except Country.DoesNotExist:
-            logger.error('Could not lookup user country selection: %s' % (str(form_data)))
-            return None
-        
-        user_conf.birth_country = native_country
-        user_conf.home_country = home_country
-        user_conf.hours_per_week = form_data['hours']
+        user_conf.birth_country = form.cleaned_data['birth_country']
+        user_conf.home_country = form.cleaned_data['home_country']
+        user_conf.hours_per_week = form.cleaned_data['hours_per_week']
         user_conf.has_trained = True
         user_conf.save()
-
         return True
     else:
         return user_conf.has_trained

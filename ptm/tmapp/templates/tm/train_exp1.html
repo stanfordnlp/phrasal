@@ -16,10 +16,13 @@
 {% block content %}
 
 <div id="main-content">
-<p>Thank you for agreeing to help us with this translation job! We are a group of researchers in <a href="http://cs.stanford.edu" target="_blank">Computer Science Department at Stanford University</a> working on translator productivity. While you work, this website will record your keystrokes and mouse actions. <b>No other information will be recorded, except for the survey data below.</b> We will study the method that you and other translators like you used to translate sentences.</p>
+<p>Thank you for agreeing to help us with this translation job! We are a group of researchers in <a href="http://cs.stanford.edu" target="_blank">Computer Science Department at Stanford University</a> working on interfaces for translation. While you work, this website will record your keystrokes and mouse actions. <b>No other information will be recorded, except for the survey data below.</b> We will study the method that you and other translators like you used to translate sentences.</p>
 
 <p>You will be asked to translate two sets of sentences from {{ src_lang }} to {{ tgt_lang }}. Translate the sentences as quickly and as accurately as you can. Each translation must be completed in at least 10 minutes, but we expect that you will require significantly less time. We estimate that you will need no more than an hour to complete the job. If you finish the job in less than an hour, you will still be paid the full price.</p>
 
+<p>This job is the first in a series of translation studies that we are running over the next few months. If you submit good translations, then we will ask you to join us for future studies.</p>
+
+<h2>Overview of the Job</h2>
 <p>This website will administer the translation job, which is organized into two blocks separated by a break:</p>
 
 <ul>
@@ -50,42 +53,17 @@ You <b>may</b> use dictionaries, either online (for example, <a href="http://www
 <h2>Translation Interface B</h2>
 <p>You will be presented with a sentence and a suggested translation. You may use the suggested translation as a starting point. However, the objective remains the same: translate the sentence as quickly and as accurately as you can. If you believe that it would be faster to type a new translation than to fix the suggestion, then feel free to delete the suggestion and start from the beginning.</p>
 
-<h2>Moving Forward</h2>
-<p>This job is the first in a series of translation studies that we are running over the next few months. If you submit good translations, then we will ask you to join us for future studies.</p>
+<p>We're almost there. Please complete this survey. When you click the button below, you will see Interface A, followed by Interface B. Take your time to familiarize yourself with the interfaces. When you click "OK" on Interface B, you will be re-directed to the first Block.</p>
 </div>
 
-<p>We're almost there. Please complete this survey. When you click the button below, you will see Interface A, followed by Interface B. Take your time to familiarize yourself with the interfaces. When you click "OK" on Interface B, you will be re-directed to the first Block.</p>
-
 <div style="clear:both" id="form-train-done">
+<h2>Survey</h2>
 <form action="/tm/training/" method="post" name="form-train-done" id="form-train-done">
 {% csrf_token %}
 <table>
-  <tr>
-    <td> Where were you born? </td>
-    <td>
-      <select name="form-birth-country">
-	{% for country in country_list %}
-	<option value="{{ country.code }}">{{ country.name }}</option>
-	{% endfor %}
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <td> Where do you currently live? </td>
-    <td>
-      <select name="form-resident-country">
-	{% for country in country_list %}
-	<option value="{{ country.code }}">{{ country.name }}</option>
-	{% endfor %}
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <td> On average, how many hours per week do you work as a translator?</td>
-    <td> <input type="text" name="form-num-hours" style="width:50px" /></td>
-  </tr>
+{{ survey_form.as_table }}
 </table>
-<input type="submit" value="I'm Done With Training. Let's Start!" name="form-submit" id="form-submit" />
+<input type="submit" value="I Understand the Job. Show Me The Interfaces!" name="form-submit" id="form-submit" />
 </form>
 </div>
 

@@ -24,8 +24,10 @@ class Country(models.Model):
     code = models.CharField(max_length=2)
     name = models.CharField(max_length=100)
 
+    # Should just return the display name, since this object
+    # will be used in forms
     def __unicode__(self):
-        return '%s: %s' % (self.code, self.name)
+        return self.name
     
 class LanguageSpec(models.Model):
     """ Specification of a (human) language. Mostly contains

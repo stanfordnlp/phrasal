@@ -9,6 +9,7 @@ import tm_workqueue
 import tm_view_utils
 import tm_user_utils
 import tm_train_module
+import tm_forms
 
 logger = logging.getLogger(__name__)
 
@@ -87,26 +88,30 @@ def training(request):
         raise Http404
 
     if request.method == 'GET':
-        country_list = Country.objects.all()
+        # Blank form
+        survey_form = tm_forms.UserTrainingForm()
         return render_to_response('tm/train_exp1.html',
                                   {'src_lang':src_name,
-                                   'country_list':country_list,
+                                   'survey_form':survey_form,
                                    'tgt_lang':tgt_name},
                                   context_instance=RequestContext(request))
     
     elif request.method == 'POST':
-        native_country = request.POST['form-birth-country'].strip()
-        home_country = request.POST['form-resident-country'].strip()
-        num_hours = int(request.POST['form-num-hours'].strip())
-        form_data = {'native_country':native_country,
-                     'home_country':home_country,
-                     'hours':num_hours}
+        # User has submitted the form. Validate it.
+        form = tm_forms.UserTrainingForm(request.POST)
+        if form.is_valid():
+            tm_train_module.done_training(request.user,
+                                          set_done=True,
+                                          form=form)
+            return HttpResponseRedirect('/tm/module_train/1')
+        else:
+            # Form was invalid
+            return render_to_response('tm/train_exp1.html',
+                                      {'src_lang':src_name,
+                                       'survey_form':form,
+                                       'tgt_lang':tgt_name},
+                                      context_instance=RequestContext(request))
         
-        tm_train_module.done_training(request.user,
-                                      set_done=True,
-                                      form_data=form_data)
-        return HttpResponseRedirect('/tm/module_train/1')
-
 @login_required
 def tr(request):
     """

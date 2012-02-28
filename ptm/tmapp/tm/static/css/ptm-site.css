@@ -4,6 +4,13 @@
    display:none;
 }
 
+/* Django generated ids and classes */
+
+/* Form validation errors */
+.errorlist {
+   color:red;
+}
+
 /* view: Center column wrapper */
 #main-content {
    float:left;
