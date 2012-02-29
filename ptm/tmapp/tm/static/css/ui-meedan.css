@@ -27,9 +27,9 @@
    clear:both;
 }
 
-#form-tgt-txt {
-   height:100px;
-   width:450px;
+#id_txt {
+   height:150px;
+   width:100%;
 }
 
 #form-tgt-submit {

@@ -9,6 +9,8 @@
 /* Form validation errors */
 .errorlist {
    color:red;
+   font-size:x-small;
+   font-style:italic;
 }
 
 /* view: Center column wrapper */

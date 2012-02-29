@@ -43,26 +43,32 @@ def get_src(src_id):
     
     return src.id
 
-def save_tgt(user,src_id,tgt_lang_id,tgt_txt,action_log,is_complete):
+def save_tgt(user, form):
     """ Save a user translation along with translation stats.
     
     Args:
+      user -- A django.contrib.auth.User object
+      form -- A validated tm_forms.TranslationInputForm object.
     Raises:
      RuntimeError -- If the src or tgt can't be retrieved.
     Returns:
     """
     # Save the actual target translation
     try:
-        src = SourceTxt.objects.get(id=src_id)
-        tgt_lang = LanguageSpec.objects.get(id=tgt_lang_id)
-    except ObjectDoesNotExist:
-        logger.error('Could not lookup src (%d) or tgt_lang (%d)'
-                     % (src_id,tgt_lang_id))
+        src_id = form.cleaned_data['src_id']
+        src = SourceTxt.objects.get(id=form.src_id)
+    except SourceTxt.DoesNotExist:
+        logger.error('Could not lookup src (%d)' % (form.src_id))
         raise RuntimeError
 
     # Save translation session stats
     try:
         tgt_date = datetime.now()
+        tgt_lang = form.cleaned_data['tgt_lang']
+        tgt_txt = form.cleaned_data['txt']
+        action_log = form.cleaned_data['action_log']
+        is_valid = form.cleaned_data['is_valid']
+        
         tgt = TargetTxt.objects.create(src=src, user=user,
                                    date=tgt_date, txt=tgt_txt,
                                    lang=tgt_lang)
@@ -70,7 +76,7 @@ def save_tgt(user,src_id,tgt_lang_id,tgt_txt,action_log,is_complete):
                                                     ui=src.ui,
                                                     user=user,
                                                     action_log=action_log,
-                                                    complete=is_complete)
+                                                    is_valid=is_valid)
         tgt.save()
         tgt_stats.save()
     except IntegrityError:

@@ -8,32 +8,23 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-latest.js"></script>
 
   <!-- PTM libraries -->
-  <script type="text/javascript" src="{{ STATIC_URL }}js/ui/setup-meedan.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/ui/setup-tr.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/translog2.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/timer-widget.js"></script>
-{% endblock %}
-
-{% block title %}
- -- Translate sentence {{ src.id }}  
-{% endblock %}
-
-{% block header %}
-<h1>Translate from {{ src.lang.name }} to {{ tgt_lang.name }}:</h1>
-{% endblock %}
-
-{% block leftcol %}
 {% endblock %}
 
 {% block footer %}
 <p> Feel free to delete the suggested translation if you think that it would be quicker to type your own translation.</p>
 {% endblock %}
 
+{% block header %}
+<h2>Translate to {{ tgt_lang_name }}:</h2>
+{% endblock %}
+
 {% block content %}
-<div class="div-hidden" id="src-lang">{{ src.lang.code }}</div>
-<div class="div-hidden" id="src-txt">{{ src.txt }}</div>
 <div id="src-display">
 {% for tok in src_toks %}
-{% if src.lang.css_direction == "ltr" %}
+{% if src_css_dir == "ltr" %}
 <div class="src-tok" id="src-tok-{{ forloop.counter0 }}">{{ tok }}</div>
 {% else %}
 <div class="src-tok-rtl" id="src-tok-{{ forloop.counter0 }}">{{ tok }}</div>
@@ -41,22 +32,11 @@
 {% endfor %}
 </div>
 
-<br />
-
 <div id="form-tgt-container">
 <form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input">
 {% csrf_token %}
-<textarea name="form-tgt-txt" id="form-tgt-txt"></textarea>
-<br />
-
-<!-- Translation session statistics -->
-<input type="hidden" style="display:none" name="form-tgt-lang" value="{{ tgt_lang.id }}" />
-<input type="hidden" style="display:none" name="form-action-log" value="ERROR" />
-<input type="hidden" style="display:none" name="form-src-id" value="{{ src.id }}" />
-<input type="hidden" style="display:none" name="form-complete" value="1" />
+{{ form.as_p }}
 <input type="submit" value="Submit" name="form-tgt-submit" id="form-tgt-submit" />
 </form>
-
 </div>
-
 {% endblock %}

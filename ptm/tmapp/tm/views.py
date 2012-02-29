@@ -42,7 +42,7 @@ def index(request):
                               context_instance=RequestContext(request))
 
 @login_required
-def module_train(request, ui_id):
+def tutorial(request, ui_id):
     """ Shows this users enabled interfaces in order
 
     Args:
@@ -59,12 +59,18 @@ def module_train(request, ui_id):
             template = tm_view_utils.get_template_for_ui(src.ui.name)
             if template:
                 tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
+                initial={'src_id':src.id,
+                         'tgt_lang':tgt_lang,
+                         'action_log':'ERROR'}
+                form = tm_forms.TranslationInputForm(initial=initial)
                 src_toks = src.txt.split()
-                action = '/tm/module_train/%d/' % (ui_id)
+                action = '/tm/tutorial/%d/' % (ui_id)
                 return render_to_response(template,
-                                          {'src':src, 'src_toks':src_toks,
+                                          {'tgt_lang_name':tgt_lang.name,
+                                           'src_css_dir':src.lang.css_direction,
+                                           'src_toks':src_toks,
                                            'form_action':action,
-                                           'tgt_lang':tgt_lang},
+                                           'form':form },
                                           context_instance=RequestContext(request))
             
     else:
@@ -81,19 +87,16 @@ def training(request):
     (src_lang,tgt_lang) = tm_user_utils.get_user_langs(request.user)
     src_name = None
     tgt_name = None
-    if src_lang and tgt_lang:
-        src_name = src_lang.name
-        tgt_name = tgt_lang.name
-    else:
+    if not (src_lang and tgt_lang):
         raise Http404
 
     if request.method == 'GET':
         # Blank form
         survey_form = tm_forms.UserTrainingForm()
         return render_to_response('tm/train_exp1.html',
-                                  {'src_lang':src_name,
+                                  {'src_lang':src_lang.name,
                                    'survey_form':survey_form,
-                                   'tgt_lang':tgt_name},
+                                   'tgt_lang':tgt_lang.name},
                                   context_instance=RequestContext(request))
     
     elif request.method == 'POST':
@@ -103,13 +106,14 @@ def training(request):
             tm_train_module.done_training(request.user,
                                           set_done=True,
                                           form=form)
-            return HttpResponseRedirect('/tm/module_train/1')
+            return HttpResponseRedirect('/tm/tutorial/1')
         else:
             # Form was invalid
+            logger.debug('Form validation error')
             return render_to_response('tm/train_exp1.html',
-                                      {'src_lang':src_name,
+                                      {'src_lang':src_lang.name,
                                        'survey_form':form,
-                                       'tgt_lang':tgt_name},
+                                       'tgt_lang':tgt_lang.name},
                                       context_instance=RequestContext(request))
         
 @login_required
@@ -125,40 +129,57 @@ def tr(request):
       Http404 on server error.
     """
     if request.method == 'GET':
-        # Return a new sentence for translation
+        # Select a new source sentence for translation
         src = tm_workqueue.select_src(request.user)
         if src:
             template = tm_view_utils.get_template_for_ui(src.ui.name)
             if template:
                 tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
+                initial={'src_id':src.id,
+                         'tgt_lang':tgt_lang,
+                         'action_log':'ERROR'}
+                form = tm_forms.TranslationInputForm(initial=initial)
                 src_toks = src.txt.split()
                 return render_to_response(template,
-                                          {'src':src, 'src_toks':src_toks,
+                                          {'tgt_lang_name':tgt_lang.name,
+                                           'src_css_dir':src.lang.css_direction,
+                                           'src_toks':src_toks,
                                            'form_action':'/tm/tr/',
-                                           'tgt_lang':tgt_lang},
+                                           'form':form },
                                           context_instance=RequestContext(request))
             else:
                 logger.error('Could not select a template for src: '
                              + repr(src))
                 raise Http404
         else:
-            # User has completed the module...
-            # go back to the index
+            # User has completed this block. Go back to the index.
             return HttpResponseRedirect('/tm/')
 
     elif request.method == 'POST':
-        # Get the metadata out of the form POST
-        tgt_lang_id = int(request.POST['form-tgt-lang'].strip())
-        tgt_txt = request.POST['form-tgt-txt'].strip()
-        action_log = request.POST['form-action-log'].strip()
-        src_id = int(request.POST['form-src-id'].strip())
-        is_complete = bool(int(request.POST['form-complete'].strip()))
-        
-        tm_view_utils.save_tgt(request.user, src_id, tgt_lang_id,
-                               tgt_txt, action_log, is_complete)
-
-        # Send the user to the next translation
-        return HttpResponseRedirect('/tm/tr/')
+        form = tm_forms.TranslationInputForm(request.POST)
+        if form.is_valid():
+            tm_view_utils.save_tgt(request.user, form)
+            # Send the user to the next translation
+            return HttpResponseRedirect('/tm/tr/')
+        else:
+            logger.warn('User %s entered an empty translation' % (request.user.username))
+            # The workqueue algorithm is deterministic
+            # at least once the active_document field is set,
+            # so we should get the same source sentence back here.
+            src = tm_workqueue.select_src(request.user)
+            if not src:
+                logger.error('Could not re-retrieve source sentence for user %s' % (request.user.username))
+                raise Http404
+            tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
+            template = tm_view_utils.get_template_for_ui(src.ui.name)
+            src_toks = src.txt.split()
+            return render_to_response(template,
+                                          {'tgt_lang_name':tgt_lang.name,
+                                           'src_css_dir':src.lang.css_direction,
+                                           'src_toks':src_toks,
+                                           'form_action':'/tm/tr/',
+                                           'form':form },
+                                          context_instance=RequestContext(request))
     
 @login_required
 def history(request, src_id):

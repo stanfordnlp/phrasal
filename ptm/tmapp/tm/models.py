@@ -46,8 +46,9 @@ class LanguageSpec(models.Model):
     # rtl or ltr
     css_direction = models.CharField(max_length=3)
 
+    # This object will be used in forms, so just return the id
     def __unicode__(self):
-        return '%s: %s %s' % (self.name, self.code, self.css_direction)
+        return str(self.id)
 
 class UISpec(models.Model):
     """ A textname and integer id for each 
@@ -100,6 +101,9 @@ class UserConf(models.Model):
 
     # Currently active UI
     active_module = models.ForeignKey(UISpec,blank=True,null=True)
+
+    # TODO(spenceg): Add current segment in current document
+    # Then the query can be doc=active_doc and not in srcs order_by id
 
     # Native language: assumes a person has only one native language
     lang_native = models.ForeignKey(LanguageSpec,related_name='+')
@@ -175,30 +179,13 @@ class TranslationStats(models.Model):
 
     action_log = models.TextField()
 
-    # Did the user finish this translation?
-    complete = models.BooleanField(default=True)
+    # Did this translation session result in a valid
+    # translation according to the rules of the experiment?
+    is_valid = models.BooleanField(default=True)
     
     def __unicode__(self):
-        return '%s (%d): ui:%s complete:%s' % (self.user.username,
-                                               self.tgt.id,
-                                               self.ui.name,
-                                               str(self.complete))
-
-#class TranslationRule(models.Model):
-#    """ A new translation rule. This is entered by the MT system / JDBC
-#
-#    Args:
-#    Returns:
-#    Raises:
-#    """
-#    instances = models.ManyToManyField(TargetTxt)
-#    src_txt = models.CharField(max_length=1000)
-#    tgt_txt = models.CharField(max_length=1000)
-#    s_to_t = models.CharField(max_length=200)
-#    n_selected = models.IntegerField()
-#    n_pruned = models.IntegerField()
-#    is_automatic = models.BooleanField()
-
-#    def __unicode__(self):
-#        return '%s ||| %s ||| (%s)' % (self.src_txt,self.tgt_txt,self.s_to_t)
+        return '%s (%d): ui:%s valid:%s' % (self.user.username,
+                                            self.tgt.id,
+                                            self.ui.name,
+                                            str(self.is_valid))
     

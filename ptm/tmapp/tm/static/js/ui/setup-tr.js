@@ -11,7 +11,7 @@ $(document).ready(function(){
   console.log = function() {}
 
   // Set the focus on the translation input box
-  $( 'textarea#form-tgt-txt' ).focus();
+  $( 'textarea#id_txt' ).focus();
 
   // Clear the text area if the user hits back!
   $( 'textarea' ).val('');
@@ -19,15 +19,15 @@ $(document).ready(function(){
   // Translog2 --- User action logging
   tlog2.init();
   $( 'input[name="form-tgt-submit"]' ).click(function(){
-    tlog2.flushForm('form-action-log');
+    tlog2.flushForm('action_log');
   });
 
   // Setup the timer
-  var max_secs = 600;
+  var max_secs = 10;
   countdown.init(max_secs);
   countdown.addCallback(function(){
     alert('You exceeded the maximum translation time for this sentence. It will be submitted. Click OK to continue to the next sentence.');
-    $( 'input[name="form-complete"]' ).val('0');
+    $( 'input[name="is_valid"]' ).val('False');
     $( 'input[name="form-tgt-submit"]' ).trigger('click');
   });
   countdown.show();

@@ -4,14 +4,15 @@
 #
 # Author: Spence
 #
-if [ $# -ne 1 ]; then
-    echo Usage: `basename $0` sql_file
+if [ $# -ne 4 ]; then
+    echo Usage: `basename $0` host dbname dbadmin sql_file
     exit -1
 fi
 
-host=localhost
-db_name=ptm_django
-user=django_admin
+host=$1
+db_name=$2
+user=$3
+sql_file=$4
 
-psql -h "$host" -f $1 "$db_name" "$user"
+psql -h "$host" -f "$sql_file" "$db_name" "$user"
 

@@ -3,13 +3,11 @@
 # List of the scripts that need to be executed
 # to configure a (Postgres) database from scratch.
 #
-# TODO: You might need to change the paths depending
-# on your working copy.
-#
 
 # Database parameters
+# TODO: Change as needed.
 dbhost=localhost
-dbname=ptm_django
+dbname=djangodb
 dbadmin=django_admin
 
 # Paths to various files
@@ -18,22 +16,31 @@ data_dir=/home/rayder441/sandbox/javanlp/projects/mt/ptm/data
 script_dir=/home/rayder441/sandbox/javanlp/projects/mt/ptm/scripts
 
 # Setup the default tables
-./run_sql_script.sh "$script_dir"/sql/default_db.sql
+echo Installing default tables with SQL script...
+./run_sql_script.sh "$dbhost" "$dbname" "$dbadmin" "$script_dir"/sql/default_db.sql
 
 # Load the country list
+echo Installing the list of countries...
 country_file="$data_dir"/country-list.csv
-./csv_to_postgres.sh tm_country < "$country_file"
+./csv_to_postgres.sh "$dbhost" "$dbname" "$dbadmin" tm_country < "$country_file"
+
+echo Loading the training documents...
 
 # Load the training documents
 # tr interface (src: en)
 ./tsv_to_sql_csv.py 1 1 1 "$data_dir"/en/proc/training.tsv
-./csv_to_postgres.sh tm_sourcetxt < training.tsv.csv
+./csv_to_postgres.sh  "$dbhost" "$dbname" "$dbadmin" tm_sourcetxt < training.tsv.csv
+seq_start=`wc -l training.tsv.csv | awk '{print $1}'`
 
 # meedan interface (src: en)
 ./tsv_to_sql_csv.py 4 1 2 "$data_dir"/en/proc/training.tsv
-./csv_to_postgres.sh tm_sourcetxt < training.tsv.csv
+./csv_to_postgres.sh  "$dbhost" "$dbname" "$dbadmin" tm_sourcetxt < training.tsv.csv
+n=`wc -l training.tsv.csv | awk '{print $1}'`
+let seq_start="$seq_start + $n"
 
+echo Altering the SourceTxt table sequence counter for the training docs...
 # This statement should re-start the sourcetxt counter after
 # the number of sentences that have been incremented
-cmd='ALTER SEQUENCE tm_sourcetxt_id_seq RESTART WITH 7;'
-psql -h "$host" "$dbname" "$dbadmin" -c "$cmd"
+let seq_start="$seq_start + 1"
+cmd='ALTER SEQUENCE tm_sourcetxt_id_seq RESTART WITH '"$seq_start"';'
+psql -h "$dbhost" "$dbname" "$dbadmin" -c "$cmd"
