@@ -22,14 +22,17 @@ $(document).ready(function(){
     tlog2.flushForm('action_log');
   });
 
-  // Setup the timer
-  var max_secs = 10;
-  countdown.init(max_secs);
-  countdown.addCallback(function(){
-    alert('You exceeded the maximum translation time for this sentence. It will be submitted. Click OK to continue to the next sentence.');
+  // Setup the idle timer
+  var max_secs = 180;
+  idletimer.init(max_secs);
+  idletimer.addCallback(function(){
+    alert('You exceeded the maximum idle time for this sentence. It will be submitted. Click OK to continue to the next sentence.');
     $( 'input[name="is_valid"]' ).val('False');
     $( 'input[name="form-tgt-submit"]' ).trigger('click');
   });
-  countdown.show();
+  $( 'textarea#id_txt' ).keydown(function(){
+    idletimer.reset();
+  });
+  idletimer.show();
   
 });

@@ -1,6 +1,8 @@
-// Implements a countdown timer that
-// appears as an absolutely positioned div
-// in the lower right of the screen
+// Implements an idle timer that expires after
+// and interval has elapsed. It appears as an
+// absolutely positioned div at the lower left
+// of the screen.
+// When it expires, a chain of callbacks are called.
 //
 // Requires:
 //  jquery
@@ -12,14 +14,17 @@
     // No arguments are returned
     var _callbacks = new Array();
 
-    // Value to countdown from
+    // Value to idletimer from or to
     var _secs = 0;
 
+    // Idle timeout value
+    var _timeout = 1;
+    
     // CSS id of the widget div
-    var _cssId = 'countdown-timer';
+    var _cssId = 'idletimer-timer';
 
     // CSS id of the wrapper around the div text;
-    var _cssTextWrapper = 'countdown-timer-text';
+    var _cssTextWrapper = 'idletimer-timer-text';
 
     // Handle for the window timer
     var _timer = 0;
@@ -43,7 +48,7 @@
                        });
         $( '#'+_cssTextWrapper ).css('padding','0.2em');
 
-        _timer = window.setTimeout("countdown.timerHandler()", 1000);
+        _timer = window.setTimeout("idletimer.timerHandler()", 1000);
         $(window).scroll(function() {
           var elemHeight = $(elemSel).outerHeight(true);
           var scrollBottom = $(window).height();
@@ -65,14 +70,14 @@
     var fn = {
       timerHandler : function(){
         // console.log('timer: time = ' + _secs.toString());
-        _secs--;
+        _secs++;
 
-        if (_secs == 0){
+        if (_secs == _timeout){
           window.clearTimeout(_timer);
           _timer = 0;
           util.done();
         } else {
-          _timer = window.setTimeout("countdown.timerHandler()", 1000);
+          _timer = window.setTimeout("idletimer.timerHandler()", 1000);
         }
 
         var mins = parseInt(_secs / 60);
@@ -89,16 +94,21 @@
         $( '#'+_cssTextWrapper ).html(timeStr);
       },
       
-      // Initialize the countdown widget
+      // Initialize the idletimer widget
       init : function(secs){
         console.log('timer: init ' + secs.toString() + 's');
-        _secs = secs;
+        _timeout = secs;
       },
 
-      // Display the countdown widget
+      // Display the idletimer widget
       show : function(){
         console.log('timer: show');
         util.go();
+      },
+
+      // Reset the idletimer
+      reset : function(){
+        _secs = 0;
       },
 
       // Add a callback that will be called when the timer
@@ -113,6 +123,6 @@
 
   })();
 
-  window.countdown = timer;
+  window.idletimer = timer;
 
 })(window);
