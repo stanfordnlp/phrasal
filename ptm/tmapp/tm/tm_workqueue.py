@@ -1,6 +1,6 @@
 import logging
 import random
-from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule
+from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule,ExperimentSample
 from tm_user_utils import get_user_conf
 
 logger = logging.getLogger(__name__)
@@ -23,68 +23,54 @@ def get_experiment_module(module_id):
 
     return module
 
-# TODO(spenceg): active_doc needs to be properly initialized by select_new_module, which is a precondition for this method.
+def purge_samples(user):
+    """ Purges all stored ExperimentSamples for a user. This can be done
+    as a sanity check before a new module is loaded.
+
+    Args:
+    Returns:
+      cnt -- The number of samples that were purged.
+    Raises:
+    """
+
+    sample_list = ExperimentSample.objects.filter(user=user)
+    n_samples = sample_list.count()
+    sample_list.delete()
+    return n_samples
+
 def select_src(user):
     """ Selects a source sentence for the user to translate.
 
     Args:
       user -- a django.contrib.auth.models.User object
     Returns:
-      src -- A SourceTxt object
-      None -- if no SourceTxt exists for user
+      (src, module) -- A tuple
+        src -- A SourceTxt object
+        module -- An ExperimentModule object
     Raises:
-    """
-    user_conf = get_user_conf(user)
-    if not user_conf.active_module:
-        logger.info('Selecting source for inactive user profile: ' + repr(user))
-        return None
-
-    # TODO(spenceg): Iterate through documents instead of randomly
-    # through sentences
-    # TODO(spenceg): Random ordering evidently kills MySQL and SQLite, but
-    # we are using Postgres currently, so try it until something breaks
-    src_list = SourceTxt.objects.filter(ui=user_conf.active_module).exclude(id__in=user_conf.srcs.all).order_by('?')
-    
-    if src_list:
-        return src_list[0]
-    else:
-        logger.info(user.username + ' has completed module ' + user_conf.active_module.name)
-        return None
-
-def select_tgt_language(user, src_id):
-    """ Selects a translation target for this user and source text.
-
-    Args:
-    Returns:
-     A LanguageSpec object on success, None on failure.
-    Raises:
-     RuntimeError -- if src_id does not exist
     """
     user_conf = get_user_conf(user)
     if not user_conf:
-        logger.error('UserConf does not exist for user: ' + request.user.username)
-        return None
-     
-    try:
-        src = SourceTxt.objects.get(id=src_id)
-    except SourceTxt.DoesNotExist:
-        logger.error('Source id %d does not exist!' % (src_id))
-        raise RuntimeError
-
-    # TODO(spenceg): Data model only supports bilingual proficiency
-    # Add support for multiple translation targets
-    if user_conf.lang_native == src.lang:
-        return user_conf.lang_other
-    else:
-        return user_conf.lang_native
+        logger.error('Could not retrieve UserConf for user: ' + user.username)
+        return (None, None)
     
+    sample_list = ExperimentSample.objects.filter(user=user).order_by('order')
+    if len(sample_list) > 0:
+        sample = sample_list[0]
+        src = sample.src
+        module = sample.module
+        # User can only see this sample once
+        sample.delete()
+        return (src, module)
+    return (None, None)
+
 def select_new_module(user):
-    """ Randomizes the order of the ExperimentModule objects that
-    the user sees.
+    """ Selects a new ExperimentModule for a user, and specifies the order
+    of the samples that the user will see.
 
     Args:
     Returns:
-      next_module -- an ExperimentModule QuerySet
+      next_module -- ExperimentModule.name (string)
       None -- user has completed all modules
     Raises:
     """
@@ -92,8 +78,7 @@ def select_new_module(user):
     if not user_conf:
         logger.error('UserConf does not exist for user: ' + request.user.username)
         return None
-    
-    user_conf.active_doc = None
+
     modules = user_conf.active_modules.all()
     n_active_modules = len(modules)
     next_module = None
@@ -104,5 +89,27 @@ def select_new_module(user):
         user_conf.active_modules.remove(next_module)
 
     user_conf.save()
-    return next_module
+    
+    # Now create the samples for this ExperimentModule
+    if next_module:
+        purged = purge_samples(user)
+        if purged > 0:
+            logger.warn('Purged %d samples for user %s before starting module %s' % (purged,user.username,next_module.name))
+                        
+        docs = next_module.docs
+        docs = docs.split(',')
+        random.shuffle(docs)
+        i_sample = 0
+        for doc in docs:
+            src_list = SourceTxt.objects.filter(doc=doc).order_by('seg')
+            for src in src_list:
+                sample = ExperimentSample(user=user,
+                                          src=src,
+                                          order=i_sample,
+                                          module=next_module)
+                sample.save()
+                i_sample += 1
+        return next_module.name
+
+    return None
         

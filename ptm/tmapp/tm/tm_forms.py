@@ -35,7 +35,13 @@ class TranslationInputForm(forms.Form):
     """
     # Store an integer (pk) instead of using the Django infrastructure
     # We don't want to tie this form to a queryset.
-    src_id = forms.IntegerField(widget=forms.HiddenInput())
+    src_id = forms.IntegerField(widget=forms.HiddenInput(),
+                                required=True)
+
+    # a pk for UISpec. Mainly for re-rendering the form in the event that
+    # it does not validate
+    ui_id = forms.IntegerField(widget=forms.HiddenInput(),
+                               required=True)
     
     tgt_lang = forms.ModelChoiceField(queryset=LanguageSpec.objects.all(),
                                       widget=forms.HiddenInput())

@@ -28,11 +28,10 @@ def index(request):
 
     module_name = 'train'
     if user_took_training:
-        module = tm_workqueue.select_new_module(request.user)
-        if module == None:
+        module_name = tm_workqueue.select_new_module(request.user)
+        if module_name == None:
             module_name = 'none'
-        else:
-            module_name = module.name
+
     user_name = request.user.first_name
     if not user_name:
         user_name = request.user.username
@@ -71,6 +70,7 @@ def tutorial(request, module_id):
                 raise Http404
             else:
                 initial={'src_id':src.id,
+                         'ui_id':ui_id,
                          'tgt_lang':tgt_lang,
                          'action_log':'ERROR'}
                 form = tm_forms.TranslationInputForm(initial=initial)
@@ -137,14 +137,16 @@ def tr(request):
     Raises:
       Http404 on server error.
     """
+    (src_lang,tgt_lang) = tm_user_utils.get_user_langs(request.user)
+    
     if request.method == 'GET':
         # Select a new source sentence for translation
-        src = tm_workqueue.select_src(request.user)
-        if src:
-            template = tm_view_utils.get_template_for_ui(src.ui.name)
+        (src,module) = tm_workqueue.select_src(request.user)
+        if src and module:
+            template = tm_view_utils.get_template_for_ui(module.ui.id)
             if template:
-                tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
                 initial={'src_id':src.id,
+                         'ui_id':module.ui.id,
                          'tgt_lang':tgt_lang,
                          'action_log':'ERROR'}
                 form = tm_forms.TranslationInputForm(initial=initial)
@@ -161,7 +163,7 @@ def tr(request):
                              + repr(src))
                 raise Http404
         else:
-            # User has completed this block. Go back to the index.
+            # User has completed this module. Go back to the index.
             return HttpResponseRedirect('/tm/')
 
     elif request.method == 'POST':
@@ -172,23 +174,21 @@ def tr(request):
             return HttpResponseRedirect('/tm/tr/')
         else:
             logger.warn('User %s entered an empty translation' % (request.user.username))
-            # The workqueue algorithm is deterministic
-            # at least once the active_document field is set,
-            # so we should get the same source sentence back here.
-            src = tm_workqueue.select_src(request.user)
+            src_id = int(form['src_id'].value().strip())
+            src = tm_view_utils.get_src(src_id)
             if not src:
-                logger.error('Could not re-retrieve source sentence for user %s' % (request.user.username))
+                logger.error('Could not retrieve SourceTxt for id: ' + str(src_id))
                 raise Http404
-            tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
-            template = tm_view_utils.get_template_for_ui(src.ui.name)
+            ui_id = int(form['ui_id'].value().strip())
+            template = tm_view_utils.get_template_for_ui(ui_id)
             src_toks = src.txt.split()
             return render_to_response(template,
-                                          {'tgt_lang_name':tgt_lang.name,
-                                           'src_css_dir':src.lang.css_direction,
-                                           'src_toks':src_toks,
-                                           'form_action':'/tm/tr/',
-                                           'form':form },
-                                          context_instance=RequestContext(request))
+                                      {'tgt_lang_name':tgt_lang.name,
+                                       'src_css_dir':src.lang.css_direction,
+                                       'src_toks':src_toks,
+                                       'form_action':'/tm/tr/',
+                                       'form':form },
+                                      context_instance=RequestContext(request))
     
 @login_required
 def history(request, src_id):

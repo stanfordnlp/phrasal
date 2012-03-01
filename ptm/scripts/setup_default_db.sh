@@ -25,16 +25,8 @@ country_file="$data_dir"/country-list.csv
 ./csv_to_postgres.sh "$dbhost" "$dbname" "$dbadmin" tm_country < "$country_file"
 
 echo Loading the training documents...
+# En documents
+./load_source_doc.sh "$data_dir"/en/proc/training.txt 1 1
 
-# Load the training documents
-# tr interface (src: en)
-./tsv_to_sql_csv.py 1 1 "$data_dir"/en/proc/training.tsv
-./csv_to_postgres.sh  "$dbhost" "$dbname" "$dbadmin" tm_sourcetxt < training.tsv.csv
-seq_start=`wc -l training.tsv.csv | awk '{print $1}'`
+echo Done with default database setup!
 
-echo Altering the SourceTxt table sequence counter for the training docs...
-# This statement should re-start the sourcetxt counter after
-# the number of sentences that have been incremented
-let seq_start="$seq_start + 1"
-cmd='ALTER SEQUENCE tm_sourcetxt_id_seq RESTART WITH '"$seq_start"';'
-psql -h "$dbhost" "$dbname" "$dbadmin" -c "$cmd"

@@ -111,28 +111,36 @@ class SourceTxt(models.Model):
     def __unicode__(self):
         return '%s-%d: %s' % (self.doc,self.seg,truncate(self.txt))
 
+class ExperimentSample(models.Model):
+    """ Basically a through table linking Users with samples that
+    are specified by ExperimentModule. This table needs to populated
+    with samples for each user when they start an ExperimentModule.
+
+    Args:
+    Returns:
+    Raises:
+    """
+    user = models.ForeignKey(User)
+    src = models.ForeignKey(SourceTxt,related_name='+')
+    order = models.IntegerField()
+    module = models.ForeignKey(ExperimentModule)
+
 class UserConf(models.Model):
-    """ Extended user properties for this app.
+    """ Contains details of an experimental subject.
 
     Args:
     Returns:
     Raises:
     """
     # Each user has only one configuration
-    user = models.ForeignKey(User)
+    user = models.OneToOneField(User)
 
-    # UIs that this user can see
-    # These will be decremented as the user completes each
-    # module successfully
+    # ExperimentModules that will be applied to this user /
+    # subject. Each ExperimentModule defines a treatment
     active_modules = models.ManyToManyField(ExperimentModule,
                                             related_name='+',
                                             blank=True,
                                             null=True)
-
-    # Currently active document within that module
-    active_doc = models.CharField(max_length=200,
-                                  blank=True,
-                                  null=True)
 
     # Native language: assumes a person has only one native language
     lang_native = models.ForeignKey(LanguageSpec,related_name='+')
@@ -140,12 +148,6 @@ class UserConf(models.Model):
     # TODO(spenceg): Assume all users are bilingual. This isn't true
     # but simplifies the work queue logic for now
     lang_other = models.ForeignKey(LanguageSpec,related_name='+')
-
-    # Research: Users are *only* permitted to see sentences once
-    srcs = models.ManyToManyField(SourceTxt,
-                                  blank=True,
-                                  null=True,
-                                  related_name='+')
 
     # Has the user passed the training module?
     has_trained = models.BooleanField(default=False)
@@ -177,11 +179,16 @@ class TargetTxt(models.Model):
     Returns:
     Raises:
     """
+    # Each SourceTxt object can have multiple translations
     src = models.ForeignKey(SourceTxt)
+
+    
     lang = models.ForeignKey(LanguageSpec,related_name='+')
 
     # User who created this translation
     # May be empty if this is an automatic translation
+    # Also, create the reverse relation so that we can get all
+    # translations for a given user
     user = models.ForeignKey(User,
                              blank=True,
                              null=True)
@@ -189,7 +196,10 @@ class TargetTxt(models.Model):
     # True if this is a machine generated translation
     is_machine = models.BooleanField(default=False)
 
+    # The actual text
     txt = models.TextField()
+
+    # Date when the translation was generated
     date = models.DateTimeField()
 
     def __unicode__(self):
@@ -205,12 +215,16 @@ class TranslationStats(models.Model):
     Returns:
     Raises:
     """
-    tgt = models.ForeignKey(TargetTxt)
+    # Each translation was generated in a single session
+    tgt = models.OneToOneField(TargetTxt)
+    
     ui = models.ForeignKey(UISpec,related_name='+')
+
     user = models.ForeignKey(User,related_name='+')
 
     # Action log created by the interface
     # Usually, we use the translog2.js widget
+    # This field cannot be empty
     action_log = models.TextField()
 
     # Did this translation session result in a valid

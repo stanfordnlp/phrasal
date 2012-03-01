@@ -1,4 +1,5 @@
 import logging
+import random
 from tm.models import SourceTxt,Country
 from tm_user_utils import get_user_conf, get_active_modules
 
@@ -64,8 +65,10 @@ def get_src(src_lang):
     Raises:
     """
     srcs = SourceTxt.objects.filter(lang=src_lang,doc__startswith='train')
-    if len(srcs) > 0:
-        return srcs[0]
+    n_srcs = len(srcs)
+    if n_srcs > 0:
+        r_idx = random.randint(0,n_srcs-1)
+        return srcs[r_idx]
     
     logger.error('No training documents loaded for src language ' + src_lang.name)
     return None

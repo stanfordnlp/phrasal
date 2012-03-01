@@ -1,0 +1,1425 @@
+html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"Schizophrenia - Wikipedia, the free encyclopediaa:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}a.new,#quickbar a.new{color:#ba0000}
+
+/* cache key: enwiki:resourceloader:filter:minify-css:4:c88e2bcd56513749bec09a7e29cb3ffa */if ( window.mediaWiki ) {
+	mw.config.set({"wgCanonicalNamespace": "", "wgCanonicalSpecialPageName": false, "wgNamespaceNumber": 0, "wgPageName": "Schizophrenia", "wgTitle": "Schizophrenia", "wgCurRevisionId": 476742596, "wgArticleId": 27790, "wgIsArticle": true, "wgAction": "view", "wgUserName": null, "wgUserGroups": ["*"], "wgCategories": ["Wikipedia semi-protected pages", "Wikipedia indefinitely move-protected pages", "Featured articles", "Schizophrenia", "Article Feedback 5 Additional Articles", "Greek loanwords", "Psychosis", "Psychopathology"], "wgBreakFrames": false, "wgRestrictionEdit": ["autoconfirmed"], "wgRestrictionMove": ["sysop"], "wgSearchNamespaces": [0], "wgFlaggedRevsParams": {"tags": {"status": {"levels": 1, "quality": 2, "pristine": 3}}}, "wgStableRevisionId": null, "wgVectorEnabledModules": {"collapsiblenav": true, "collapsibletabs": true, "editwarning": true, "expandablesearch": false, "footercleanup": false, "sectioneditlinks": false, "simplesearch": true, "experiments": true}, "wgWikiEditorEnabledModules": {"toolbar": true, "dialogs": true, "hidesig": true, "templateEditor": false, "templates": false, "preview": false, "previewDialog": false, "publish": false, "toc": false}, "wgTrackingToken": "67583640c87dde10078c8b304572923e", "wikilove-recipient": "", "wikilove-edittoken": "+\\", "wikilove-anon": 0, "mbEmailEnabled": true, "mbUserEmail": false, "mbIsEmailConfirmationPending": false, "Geo": {"city": "", "country": ""}, "wgNoticeProject": "wikipedia"});
+}
+if ( window.mediaWiki ) {
+	mw.loader.load(["mediawiki.page.startup"]);
+}
+[if lt IE 7]><style type="text/css">body{behavior:url("/w/skins-1.18/vector/csshover.min.htc")}</style><![endif]
+
+
+ content 
+
+
+
+ sitenotice 
+ centralNotice loads here 
+ /sitenotice 
+ firstHeading 
+Schizophrenia
+ /firstHeading 
+ bodyContent 
+
+ tagline 
+From Wikipedia, the free encyclopedia
+ /tagline 
+ subtitle 
+
+ /subtitle 
+ jumpto 
+
+					Jump to: navigation,
+					search
+
+ /jumpto 
+ bodycontent 
+Not to be confused with Schizoid personality disorder, Schizotypal personality disorder, Schizoaffective disorder, or Schizophasia.
+For other uses, see Schizophrenia (disambiguation).
+
+
+
+Schizophrenia
+
+
+Classification and external resources
+
+
+
+Cloth embroidered by a patient diagnosed with schizophrenia
+
+
+ICD-10
+F20
+
+
+ICD-9
+295
+
+
+OMIM
+181500
+
+
+DiseasesDB
+11890
+
+
+MedlinePlus
+000928
+
+
+eMedicine
+med/2072 emerg/520
+
+
+MeSH
+F03.700.750
+
+
+Schizophrenia (/ˌskɪtsɵˈfrɛniə/ or /ˌskɪtsɵˈfriːniə/) is a mental disorder characterized by a breakdown of thought processes and by poor emotional responsiveness.[1] It most commonly manifests itself as auditory hallucinations, paranoid or bizarre delusions, or disorganized speech and thinking, and it is accompanied by significant social or occupational dysfunction. The onset of symptoms typically occurs in young adulthood, with a global lifetime prevalence of about 0.3–0.7%.[2] Diagnosis is based on observed behavior and the patient's reported experiences.
+Genetics, early environment, neurobiology, and psychological and social processes appear to be important contributory factors; some recreational and prescription drugs appear to cause or worsen symptoms. Current research is focused on the role of neurobiology, although no single isolated organic cause has been found. The many possible combinations of symptoms have triggered debate about whether the diagnosis represents a single disorder or a number of discrete syndromes. Despite the etymology of the term from the Greek roots skhizein (σχίζειν, "to split") and phrēn, phren- (φρήν, φρεν-; "mind"), schizophrenia does not imply a "split mind" and it is not the same as dissociative identity disorder—also known as "multiple personality disorder" or "split personality"—a condition with which it is often confused in public perception.[3]
+The mainstay of treatment is antipsychotic medication, which primarily suppresses dopamine (and sometimes serotonin) receptor activity. Psychotherapy and vocational and social rehabilitation are also important in treatment. In more serious cases—where there is risk to self and others—involuntary hospitalization may be necessary, although hospital stays are now shorter and less frequent than they once were.[4]
+The disorder is thought mainly to affect cognition, but it also usually contributes to chronic problems with behavior and emotion. People with schizophrenia are likely to have additional (comorbid) conditions, including major depression and anxiety disorders; the lifetime occurrence of substance abuse is almost 50%.[5] Social problems, such as long-term unemployment, poverty and homelessness, are common. The average life expectancy of people with the disorder is 12 to 15 years less than those without, the result of increased physical health problems and a higher suicide rate (about 5%).[2]
+
+
+
+
+
+Contents
+
+
+1 Symptoms
+
+1.1 Schneiderian classification
+1.2 Positive and negative symptoms
+
+
+2 Causes
+
+2.1 Genetic
+2.2 Environment
+
+2.2.1 Substance misuse
+2.2.2 Prenatal
+
+
+
+
+3 Mechanisms
+
+3.1 Psychological
+3.2 Neurological
+
+
+4 Diagnosis
+
+4.1 Criteria
+4.2 Subtypes
+4.3 Differential
+
+
+5 Prevention
+6 Management
+
+6.1 Medication
+6.2 Psychosocial
+
+
+7 Prognosis
+8 Epidemiology
+9 History
+10 Society and culture
+
+10.1 Violence
+
+
+11 References
+12 External links
+
+
+
+
+
+ Symptoms
+A person diagnosed with schizophrenia may experience hallucinations (most reported are hearing voices), delusions (often bizarre or persecutory in nature), and disorganized thinking and speech. The latter may range from loss of train of thought, to sentences only loosely connected in meaning, to incoherence known as word salad in severe cases. Social withdrawal, sloppiness of dress and hygiene, and loss of motivation and judgment are all common in schizophrenia.[6] There is often an observable pattern of emotional difficulty, for example lack of responsiveness.[7] Impairment in social cognition is associated with schizophrenia,[8] as are symptoms of paranoia; social isolation commonly occurs.[9] In one uncommon subtype, the person may be largely mute, remain motionless in bizarre postures, or exhibit purposeless agitation, all signs of catatonia.[10]
+Late adolescence and early adulthood are peak periods for the onset of schizophrenia,[2] critical years in a young adult's social and vocational development.[11] In 40% of men and 23% of women diagnosed with schizophrenia, the condition manifested itself before the age of 19.[12] To minimize the developmental disruption associated with schizophrenia, much work has recently been done to identify and treat the prodromal (pre-onset) phase of the illness, which has been detected up to 30 months before the onset of symptoms.[11] Those who go on to develop schizophrenia may experience transient or self-limiting psychotic symptoms[13] and the non-specific symptoms of social withdrawal, irritability, dysphoria,[14] and clumsiness[15] during the prodromal phase.
+ Schneiderian classification
+The psychiatrist Kurt Schneider (1887–1967) listed the forms of psychotic symptoms that he thought distinguished schizophrenia from other psychotic disorders. These are called first-rank symptoms or Schneider's first-rank symptoms. They include delusions of being controlled by an external force; the belief that thoughts are being inserted into or withdrawn from one's conscious mind; the belief that one's thoughts are being broadcast to other people; and hearing hallucinatory voices that comment on one's thoughts or actions or that have a conversation with other hallucinated voices.[16] Although they have significantly contributed to the current diagnostic criteria, the specificity of first-rank symptoms has been questioned. A review of the diagnostic studies conducted between 1970 and 2005 found that they allow neither a reconfirmation nor a rejection of Schneider's claims, and suggested that first-rank symptoms be de-emphasized in future revisions of diagnostic systems.[17]
+ Positive and negative symptoms
+Schizophrenia is often described in terms of positive and negative (or deficit) symptoms.[18] Positive symptoms are those that most individuals do not normally experience but are present in people with schizophrenia. They can include delusions, disordered thoughts and speech, and tactile, auditory, visual, olfactory and gustatory hallucinations, typically regarded as manifestations of psychosis.[19] Hallucinations are also typically related to the content of the delusional theme.[20] Positive symptoms generally respond well to medication.[20] Negative symptoms are deficits of normal emotional responses or of other thought processes, and respond less well to medication.[6] They commonly include flat or blunted affect and emotion, poverty of speech (alogia), inability to experience pleasure (anhedonia), lack of desire to form relationships (asociality), and lack of motivation (avolition). Research suggests that negative symptoms contribute more to poor quality of life, functional disability, and the burden on others than do positive symptoms.[21] People with prominent negative symptoms often have a history of poor adjustment before the onset of illness, and response to medication is often limited.[6][22]
+ Causes
+Main article: Causes of schizophrenia
+A combination of genetic and environmental factors play a role in the development of schizophrenia.[2][3] People with a family history of schizophrenia who suffer a transient or self-limiting psychosis have a 20–40% chance of being diagnosed one year later.[23]
+ Genetic
+Estimates of heritability vary because of the difficulty in separating the effects of genetics and the environment.[24] The greatest risk for developing schizophrenia is having a first-degree relative with the disease (risk is 6.5%); more than 40% of monozygotic twins of those with schizophrenia are also affected.[3] It is likely that many genes are involved, each of small effect.[3] Many possible candidates have been proposed, including specific copy number variations, NOTCH4 and histone protein loci.[25] A number of genome-wide associations such as zinc finger protein 804A have also been linked.[26] There appears to be significant overlap in the genetics of schizophrenia and bipolar disorder.[27]
+Assuming a hereditary basis, one question from evolutionary psychology is why genes that increase the likelihood of psychosis evolved, assuming the condition would have been maladaptive from an evolutionary point of view. One theory implicates genes involved in the evolution of language and human nature, but to date such ideas remain little more than theoretical in nature. [28][29]
+ Environment
+Environmental factors associated with the development of schizophrenia include the living environment, drug use and prenatal stressors.[2] Parenting style seems to have no major effect, although people with supportive parents do better than those with critical or hostile parents.[3] Living in an urban environment during childhood or as an adult has consistently been found to increase the risk of schizophrenia by a factor of two,[2][3] even after taking into account drug use, ethnic group, and size of social group.[30] Other factors that play an important role include social isolation and immigration related to social adversity, racial discrimination, family dysfunction, unemployment, and poor housing conditions.[3][31] There is evidence that childhood experiences of abuse or trauma are risk factors for a diagnosis of schizophrenia later in life.[32]
+ Substance misuse
+A number of drugs have been associated with the development of schizophrenia, including cannabis, cocaine, and amphetamines.[3] About half of those with schizophrenia use drugs and/or alcohol excessively.[33] The role of cannabis could be causal,[34] but other drugs may be used only as coping mechanisms to deal with depression, anxiety, boredom, and loneliness.[33][35]
+Cannabis is associated with a dose-dependent increase in the risk of developing a psychotic disorder[36] with frequent use being correlated with twice the risk of psychosis and schizophrenia.[35][37] While cannabis use is accepted as a contributory cause of schizophrenia by many,[38] it remains controversial.[25][39] Amphetamine, cocaine, and to a lesser extent alcohol, can result in psychosis that presents very similarly to schizophrenia.[3][40] Although not generally believed to be a cause of the illness, people with schizophrenia use nicotine at much greater rates than the general population.[41]
+ Prenatal
+Factors such as hypoxia and infection, or stress and malnutrition in the mother during fetal development, may result in a slight increase in the risk of schizophrenia later in life.[2] People diagnosed with schizophrenia are more likely to have been born in winter or spring (at least in the northern hemisphere), which may be a result of increased rates of viral exposures in utero.[3] This difference is about 5 to 8%.[42]
+ Mechanisms
+Main article: Mechanisms of schizophrenia
+A number of attempts have been made to explain the link between altered brain function and schizophrenia.[2] One of the most common is the dopamine hypothesis, which attributes psychosis to the mind's faulty interpretation of the misfiring of dopaminergic neurons.[2]
+ Psychological
+Many psychological mechanisms have been implicated in the development and maintenance of schizophrenia. Cognitive biases have been identified in those with the diagnosis or those at risk, especially when under stress or in confusing situations.[43] Some cognitive features may reflect global neurocognitive deficits such as memory loss, while others may be related to particular issues and experiences.[44][45]
+Despite a demonstrated appearance of "blunted affect", recent findings indicate that many individuals diagnosed with schizophrenia are emotionally responsive, particularly to stressful or negative stimuli, and that such sensitivity may cause vulnerability to symptoms or to the disorder.[46][47] Some evidence suggests that the content of delusional beliefs and psychotic experiences can reflect emotional causes of the disorder, and that how a person interprets such experiences can influence symptomatology.[48][49][50] The use of "safety behaviors" to avoid imagined threats may contribute to the chronicity of delusions.[51] Further evidence for the role of psychological mechanisms comes from the effects of psychotherapies on symptoms of schizophrenia.[52]
+ Neurological
+
+
+
+
+Functional magnetic resonance imaging (fMRI), and other brain imaging technologies, allow for the study of differences in brain activity in people diagnosed with schizophrenia. The image shows two levels of the brain, with areas that were more active in healthy controls than in schizophrenia patients shown in red, during an fMRI study of working memory.
+
+
+Schizophrenia is associated with subtle differences in brain structures, found in 40 to 50% of cases, and in brain chemistry during acute psychotic states.[2] Studies using neuropsychological tests and brain imaging technologies such as fMRI and PET to examine functional differences in brain activity have shown that differences seem to most commonly occur in the frontal lobes, hippocampus and temporal lobes.[53] Reductions in brain volume, smaller than those found in Alzheimer's disease, have been reported in areas of the frontal cortex and temporal lobes. It is uncertain whether these volumetric changes are progressive or preexist prior to the onset of the disease.[54] These differences have been linked to the neurocognitive deficits often associated with schizophrenia.[55] Because neural circuits are altered, it has alternatively been suggested that schizophrenia should be thought of as a collection of neurodevelopmental disorders.[56]
+Particular attention has been paid to the function of dopamine in the mesolimbic pathway of the brain. This focus largely resulted from the accidental finding that phenothiazine drugs, which block dopamine function, could reduce psychotic symptoms. It is also supported by the fact that amphetamines, which trigger the release of dopamine, may exacerbate the psychotic symptoms in schizophrenia.[57] The influential dopamine hypothesis of schizophrenia proposed that excessive activation of D2 receptors was the cause of (the positive symptoms of) schizophrenia. Although postulated for about 20 years based on the D2 blockade effect common to all antipsychotics, it was not until the mid-1990s that PET and SPET imaging studies provided supporting evidence. The dopamine hypothesis is now thought to be simplistic, partly because newer antipsychotic medication (atypical antipsychotic medication) can be just as effective as older medication (typical antipsychotic medication), but also affects serotonin function and may have slightly less of a dopamine blocking effect.[58]
+Interest has also focused on the neurotransmitter glutamate and the reduced function of the NMDA glutamate receptor in schizophrenia, largely because of the abnormally low levels of glutamate receptors found in the postmortem brains of those diagnosed with schizophrenia,[59] and the discovery that glutamate-blocking drugs such as phencyclidine and ketamine can mimic the symptoms and cognitive problems associated with the condition.[60] Reduced glutamate function is linked to poor performance on tests requiring frontal lobe and hippocampal function, and glutamate can affect dopamine function, both of which have been implicated in schizophrenia, have suggested an important mediating (and possibly causal) role of glutamate pathways in the condition.[61] But positive symptoms fail to respond to glutamatergic medication.[62]
+
+ Diagnosis
+Main article: Diagnosis of schizophrenia
+
+
+
+
+John Nash, a U.S. mathematician and joint winner of the 1994 Nobel Prize for Economics, suffered from schizophrenia. His life has been the subject of the 2001 Academy Award-winning film A Beautiful Mind.
+
+
+Schizophrenia is diagnosed based on criteria in either the American Psychiatric Association's Diagnostic and Statistical Manual of Mental Disorders, version DSM-IV-TR, or the World Health Organization's International Statistical Classification of Diseases and Related Health Problems, the ICD-10.[2] These criteria use the self-reported experiences of the person and reported abnormalities in behavior, followed by a clinical assessment by a mental health professional. Symptoms associated with schizophrenia occur along a continuum in the population and must reach a certain severity before a diagnosis is made.[3] As of 2009 there is no objective test.[2]
+ Criteria
+The ICD-10 criteria are typically used in European countries, while the DSM-IV-TR criteria are used in the United States and the rest of the world, and are prevailing in research studies. The ICD-10 criteria put more emphasis on Schneiderian first-rank symptoms. In practice, agreement between the two systems is high.[63]
+According to the revised fourth edition of the Diagnostic and Statistical Manual of Mental Disorders (DSM-IV-TR), to be diagnosed with schizophrenia, three diagnostic criteria must be met:[64]
+
+Characteristic symptoms: Two or more of the following, each present for much of the time during a one-month period (or less, if symptoms remitted with treatment).
+
+Delusions
+Hallucinations
+Disorganized speech, which is a manifestation of formal thought disorder
+Grossly disorganized behavior (e.g. dressing inappropriately, crying frequently) or catatonic behavior
+Negative symptoms: Blunted affect (lack or decline in emotional response), alogia (lack or decline in speech), or avolition (lack or decline in motivation)
+
+
+If the delusions are judged to be bizarre, or hallucinations consist of hearing one voice participating in a running commentary of the patient's actions or of hearing two or more voices conversing with each other, only that symptom is required above. The speech disorganization criterion is only met if it is severe enough to substantially impair communication.
+
+
+Social or occupational dysfunction: For a significant portion of the time since the onset of the disturbance, one or more major areas of functioning such as work, interpersonal relations, or self-care, are markedly below the level achieved prior to the onset.
+Significant duration: Continuous signs of the disturbance persist for at least six months. This six-month period must include at least one month of symptoms (or less, if symptoms remitted with treatment).
+
+If signs of disturbance are present for more than a month but less than six months, the diagnosis of schizophreniform disorder is applied.[64] Psychotic symptoms lasting less than a month may be diagnosed as brief psychotic disorder, and various conditions may be classed as psychotic disorder not otherwise specified. Schizophrenia cannot be diagnosed if symptoms of mood disorder are substantially present (although schizoaffective disorder could be diagnosed), or if symptoms of pervasive developmental disorder are present unless prominent delusions or hallucinations are also present, or if the symptoms are the direct physiological result of a general medical condition or a substance, such as abuse of a drug or medication.
+ Subtypes
+The DSM-IV-TR contains five sub-classifications of schizophrenia, although the developers of DSM-5 are recommending they be dropped from the new classification:[65][66]
+
+Paranoid type: Delusions or auditory hallucinations are present, but thought disorder, disorganized behavior, or affective flattening are not. Delusions are persecutory and/or grandiose, but in addition to these, other themes such as jealousy, religiosity, or somatization may also be present. (DSM code 295.3/ICD code F20.0)
+Disorganized type: Named hebephrenic schizophrenia in the ICD. Where thought disorder and flat affect are present together. (DSM code 295.1/ICD code F20.1)
+Catatonic type: The subject may be almost immobile or exhibit agitated, purposeless movement. Symptoms can include catatonic stupor and waxy flexibility. (DSM code 295.2/ICD code F20.2)
+Undifferentiated type: Psychotic symptoms are present but the criteria for paranoid, disorganized, or catatonic types have not been met. (DSM code 295.9/ICD code F20.3)
+Residual type: Where positive symptoms are present at a low intensity only. (DSM code 295.6/ICD code F20.5)
+
+The ICD-10 defines two additional subtypes:[66]
+
+Post-schizophrenic depression: A depressive episode arising in the aftermath of a schizophrenic illness where some low-level schizophrenic symptoms may still be present. (ICD code F20.4)
+Simple schizophrenia: Insidious and progressive development of prominent negative symptoms with no history of psychotic episodes. (ICD code F20.6)
+
+ Differential
+See also: Dual diagnosis
+Psychotic symptoms may be present in several other mental disorders, including bipolar disorder,[67] borderline personality disorder,[68] drug intoxication and drug-induced psychosis. Delusions ("non-bizarre") are also present in delusional disorder, and social withdrawal in social anxiety disorder, avoidant personality disorder and schizotypal personality disorder. Schizophrenia is comorbid with obsessive-compulsive disorder (OCD) considerably more often than could be explained by pure chance, although it can be difficult to distinguish obsessions that occur in OCD from the delusions of schizophrenia.[69]
+A more general medical and neurological examination may be needed to rule out medical illnesses which may rarely produce psychotic schizophrenia-like symptoms,[64] such as metabolic disturbance, systemic infection, syphilis, HIV infection, epilepsy, and brain lesions. It may be necessary to rule out a delirium, which can be distinguished by visual hallucinations, acute onset and fluctuating level of consciousness, and indicates an underlying medical illness. Investigations are not generally repeated for relapse unless there is a specific medical indication or possible adverse effects from antipsychotic medication.
+ Prevention
+Currently the evidence for the effectiveness of early interventions to prevent schizophrenia is inconclusive.[70] While there is some evidence that early intervention in those with a psychotic episode may improve short term outcomes, there is little benefit from these measures after five years.[2] Attempting to prevent schizophrenia in the prodrome phase is of uncertain benefit and therefore as of 2009 is not recommended.[71] Prevention is difficult as there are no reliable markers for the later development of the disease.[72] However, some cases of schizophrenia could be delayed or possibly prevented by discouraging cannabis use, particularly among youths.[73] Individuals with a family history of schizophrenia may be more vulnerable to cannabis induced psychosis.[38] And, one study found that cannabis induced psychotic disorders are followed by development of persistent psychotic conditions in approximately half of the cases.[74]
+Theoretical research continues into strategies that might lower the incidence of schizophrenia. One approach seeks to understand what happens on a genetic and neurological level to account for the illness, so that biomedical interventions can be developed. However, multiple and varied genetic effects each of small size, interacting with the environment, makes this difficult. Alternatively, public health strategies could selectively address socioeconomic factors that have been linked to higher rates of schizophrenia in certain groups, for example in relation to immigration, ethnicity or poverty. Population-wide strategies could promote services to ensure safe pregnancies and healthy growth, including in areas of psychological development such as social cognition. However, there is not enough evidence to implement such ideas at the current time, and a number of the broader issues are not specific to schizophrenia.[75][76]
+ Management
+Main article: Management of schizophrenia
+The primary treatment of schizophrenia is antipsychotic medications, often in combination with psychological and social supports.[2] Hospitalization may occur for severe episodes either voluntarily or (if mental health legislation allows it) involuntarily. Long-term hospitalization is uncommon since deinstitutionalization beginning in the 1950s, although still occurs.[4] Community support services including drop-in centers, visits by members of a community mental health team, supported employment[77] and support groups are common. Some evidence indicates that regular exercise has a positive effect on the physical and mental health of those with schizophrenia.[78]
+ Medication
+
+
+
+
+Risperidone (trade name Risperdal) is a common atypical antipsychotic medication.
+
+
+The first-line psychiatric treatment for schizophrenia is antipsychotic medication,[79] which can reduce the positive symptoms of psychosis in about 7–14 days. Antipsychotics, however, fail to significantly ameliorate the negative symptoms and cognitive dysfunction.[22][80]
+The choice of which antipsychotic to use is based on benefits, risks, and costs.[2] It is debatable whether, as a class, typical or atypical antipsychotics are better.[81] Both have equal drop-out and symptom relapse rates when typicals are used at low to moderate dosages.[82] There is a good response in 40–50%, a partial response in 30–40%, and treatment resistance (failure of symptoms to respond satisfactorily after six weeks to two or three different antipsychotics) in 20% of people.[22] Clozapine is an effective treatment for those who respond poorly to other drugs, but it has the potentially serious side effect of agranulocytosis (lowered white blood cell count) in 1–4%.[2][3][83]
+With respect to side effects typical antipsychotics are associated with a higher rate of extrapyramidal side effects while atypicals are associated with considerable weight gain, diabetes and risk of metabolic syndrome.[82] While atypicals have fewer extrapyramidal side effects these differences are modest.[84] Some atypicals such as quetiapine and risperidone are associated with a higher risk of death compared to the typical antipsychotic perphenazine, while clozapine is associated with the lowest risk of death.[85] It remains unclear whether the newer antipsychotics reduce the chances of developing neuroleptic malignant syndrome, a rare but serious neurological disorder.[86]
+For people who are unwilling or unable to take medication regularly, long-acting depot preparations of antipsychotics may be used to achieve control.[87] When used in combination with psychosocial interventions they may improve long-term adherence to treatment.[87]
+ Psychosocial
+A number of psychosocial interventions may be useful in the treatment of schizophrenia including: family therapy,[88] assertive community treatment, supported employment, cognitive remediation,[89] skills training, cognitive behavioral therapy (CBT), token economic interventions, and psychosocial interventions for substance use and weight management.[90] Family therapy or education, which addresses the whole family system of an individual, may reduce relapses and hospitalizations.[88] The evidence for CBT's effectiveness in either reducing symptoms or preventing relapse is minimal.[91][92] Art or drama therapy have not been well-researched.[93][94]
+ Prognosis
+Main article: Prognosis of schizophrenia
+Schizophrenia has great human and economic costs.[2] It results in a decreased life expectancy of 12–15 years, primarily because of its association with obesity, sedentary lifestyles, and smoking, with an increased rate of suicide playing a lesser role.[2] These differences in life expectancy increased between the 1970s and 1990s,[95] and between the 1990s and first decade of the 21st century did not change substantially in a health system with open access to care (Finland).[85]
+Schizophrenia is a major cause of disability, with active psychosis ranked as the third-most-disabling condition after quadriplegia and dementia and ahead of paraplegia and blindness.[96] Approximately three-fourths of people with schizophrenia have ongoing disability with relapses.[22] Some people do recover completely and others function well in society.[97] Most people with schizophrenia live independently with community support.[2] In people with a first episode of psychosis a good long-term outcome occurs in 42%, an intermediate outcome in 35% and a poor outcome in 27%.[98] Outcomes for schizophrenia appear better in the developing than the developed world.[99] These conclusions, however, have been questioned.[100][101]
+There is a higher than average suicide rate associated with schizophrenia. This has been cited at 10%, but a more recent analysis of studies and statistics revises the estimate to 4.9%, most often occurring in the period following onset or first hospital admission.[102] Several times more (20 to 40%) attempt suicide at least once.[103][104] There are a variety of risk factors, including male gender, depression, and a high intelligence quotient.[103]
+Schizophrenia and smoking have shown a strong association in studies world-wide.[105][106] Use of cigarettes is especially high in individuals diagnosed with schizophrenia, with estimates ranging from 80% to 90% being regular smokers, as compared to 20% of the general population.[106] Those who smoke tend to smoke heavily, and additionally smoke cigarettes with high nicotine content.[104] Some evidence suggests that paranoid schizophrenia may have a better prospect than other types of schizophrenia for independent living and occupational functioning.[107]
+ Epidemiology
+
+
+
+
+Disability-adjusted life year for schizophrenia per 100,000 inhabitants in 2004.
+
+
+
+
+
+  no data
+  ≤ 185
+  185–197
+  197–207
+  207–218
+  218–229
+  229–240
+
+
+
+
+  240–251
+  251–262
+  262–273
+  273–284
+  284–295
+  ≥ 295
+
+
+
+
+
+
+
+
+Main article: Epidemiology of schizophrenia
+Schizophrenia affects around 0.3–0.7% of people at some point in their life,[2] or 24 million people worldwide as of 2011.[108] It occurs 1.4 times more frequently in males than females and typically appears earlier in men[3]—the peak ages of onset are 20–28 years for males and 26–32 years for females.[109] Onset in childhood is much rarer,[110] as is onset in middle- or old age.[111] Despite the received wisdom that schizophrenia occurs at similar rates worldwide, its prevalence varies across the world,[112] within countries,[113] and at the local and neighborhood level.[114] It causes approximately 1% of worldwide disability adjusted life years.[3] The rate of schizophrenia varies up to threefold depending on how it is defined.[2]
+ History
+Main article: History of schizophrenia
+Accounts of a schizophrenia-like syndrome are thought to be rare in the historical record before the 19th century, although reports of irrational, unintelligible, or uncontrolled behavior were common. A detailed case report in 1797 concerning James Tilly Matthews, and accounts by Phillipe Pinel published in 1809, are often regarded as the earliest cases of the illness in the medical and psychiatric literature.[115] Schizophrenia was first described as a distinct syndrome affecting teenagers and young adults by Bénédict Morel in 1853, termed démence précoce (literally 'early dementia'). The term dementia praecox was used in 1891 by Arnold Pick in a case report of a psychotic disorder. In 1893 Emil Kraepelin introduced a broad new distinction in the classification of mental disorders between dementia praecox and mood disorder (termed manic depression and including both unipolar and bipolar depression). Kraepelin believed that dementia praecox was primarily a disease of the brain,[116] and particularly a form of dementia, distinguished from other forms of dementia such as Alzheimer's disease which typically occur later in life.[117]
+
+
+
+
+Molecule of chlorpromazine (trade name Thorazine), which revolutionized treatment of schizophrenia in the 1950s
+
+
+The word schizophrenia—which translates roughly as "splitting of the mind" and comes from the Greek roots schizein (σχίζειν, "to split") and phrēn, phren- (φρήν, φρεν-, "mind")[118]—was coined by Eugen Bleuler in 1908 and was intended to describe the separation of function between personality, thinking, memory, and perception. Bleuler described the main symptoms as 4 A's: flattened Affect, Autism, impaired Association of ideas and Ambivalence.[119] Bleuler realized that the illness was not a dementia, as some of his patients improved rather than deteriorated, and thus proposed the term schizophrenia instead. Treatment was revolutionized in the mid-1950s with the development and introduction of chlorpromazine.[120]
+In the early 1970s, the diagnostic criteria for schizophrenia was the subject of a number of controversies which eventually led to the operational criteria used today. It became clear after the 1971 US-UK Diagnostic Study that schizophrenia was diagnosed to a far greater extent in America than in Europe.[121] This was partly due to looser diagnostic criteria in the US, which used the DSM-II manual, contrasting with Europe and its ICD-9. David Rosenhan's 1972 study, published in the journal Science under the title "On being sane in insane places", concluded that the diagnosis of schizophrenia in the US was often subjective and unreliable.[122] These were some of the factors leading to the revision not only of the diagnosis of schizophrenia, but the revision of the whole DSM manual, resulting in the publication of the DSM-III in 1980.[123] The term schizophrenia is commonly misunderstood to mean that affected persons have a "split personality". Although some people diagnosed with schizophrenia may hear voices and may experience the voices as distinct personalities, schizophrenia does not involve a person changing among distinct multiple personalities. The confusion arises in part due to the literal interpretation of Bleuler's term schizophrenia (Bleuler originally associated Schizophrenia with dissociation and included split personality in his category of Schizophrenia[124][125]). Dissociative identity disorder (having a "split personality") was also often misdiagnosed as Schizophrenia based on the loose criteria in the DSM-II [126][127]. The first known misuse of the term to mean "split personality" was in an article by the poet T. S. Eliot in 1933.[128]
+ Society and culture
+
+
+
+
+The term schizophrenia was coined by Eugen Bleuler.
+
+
+In 2002 the term for schizophrenia in Japan was changed from Seishin-Bunretsu-Byō　精神分裂病 (mind-split-disease) to Tōgō-shitchō-shō　統合失調症 (integration disorder) to reduce stigma.[129] The new name was inspired by the biopsychosocial model; it increased the percentage of patients who were informed of the diagnosis from 37% to 70% over three years.[130]
+In the United States, the cost of schizophrenia—including direct costs (outpatient, inpatient, drugs, and long-term care) and non-health care costs (law enforcement, reduced workplace productivity, and unemployment)—was estimated to be $62.7 billion in 2002.[131] The book and film A Beautiful Mind chronicles the life of John Forbes Nash, a Nobel Prize-winning mathematician who was diagnosed with schizophrenia.
+Social stigma has been identified as a major obstacle in the recovery of patients with schizophrenia.[132]
+ Violence
+Individuals with severe mental illness including schizophrenia are at a significantly greater risk of being victims of both violent and non violent crime.[133] On the other hand, schizophrenia has sometimes been associated with a higher rate of violent acts, although this is primarily due to higher rates of drug use.[134] Rates of homicide linked to psychosis are similar to those linked to substance misuse, and parallel the overall rate in a region.[135] What role schizophrenia has on violence independent of drug misuse is controversial, but certain aspects of individual histories or mental states may be factors.[136]
+Media coverage relating to schizophrenia tends to revolve around rare but unusual acts of violence. Furthermore, in a large, representative sample from a 1999 study, 12.8% of Americans believed that individuals with schizophrenia were "very likely" to do something violent against others, and 48.1% said that they were "somewhat likely" to. Over 74% said that people with schizophrenia were either "not very able" or "not able at all" to make decisions concerning their treatment, and 70.2% said the same of money management decisions.[137] The perception of individuals with psychosis as violent has more than doubled in prevalence since the 1950s, according to one meta-analysis.[138]
+ References
+
+
+^ "Schizophrenia" Concise Medical Dictionary. Oxford University Press, 2010. Oxford Reference Online. Maastricht University Library. 29 June 2010 prepaid subscription only
+^ a b c d e f g h i j k l m n o p q r s t u van Os J, Kapur S.  Schizophrenia. Lancet. 2009;374(9690):635–45. doi:10.1016/S0140-6736(09)60995-8. PMID 19700006.
+^ a b c d e f g h i j k l m n Picchioni MM, Murray RM.  Schizophrenia. BMJ. 2007;335(7610):91–5. doi:10.1136/bmj.39227.616447.BE. PMID 17626963.
+^ a b Becker T, Kilian R.  Psychiatric services for people with severe mental illness across western Europe: what can be generalized from current knowledge about differences in provision, costs and outcomes of mental health care?. Acta Psychiatrica Scandinavica Supplement. 2006;429(429):9–16. doi:10.1111/j.1600-0447.2005.00711.x. PMID 16445476.
+^ Buckley PF, Miller BJ, Lehrer DS, Castle DJ.  Psychiatric comorbidities and schizophrenia. Schizophr Bull. 2009;35(2):383–402. doi:10.1093/schbul/sbn135. PMID 19011234.
+^ a b c Carson VB (2000). Mental health nursing: the nurse-patient journey W.B. Saunders. ISBN 9780721680538. p. 638.
+^ Schizophrenia. Wiley-Blackwell; 2003. ISBN 9780632063888. p. 21.
+^ Brunet-Gouet E, Decety J.  Social brain dysfunctions in schizophrenia: a review of neuroimaging studies. Psychiatry Res. 2006;148(2–3):75–92. doi:10.1016/j.pscychresns.2006.05.001. PMID 17088049.
+^ Schizophrenia. Wiley-Blackwell; 2003. ISBN 9780632063888. p. 481.
+^ Ungvari GS, Caroff SN, Gerevich J.  The catatonia conundrum: evidence of psychomotor phenomena as a symptom dimension in psychotic disorders. Schizophr Bull. 2010;36(2):231–8. doi:10.1093/schbul/sbp105. PMID 19776208.
+^ a b Addington J, Cadenhead KS, Cannon TD, et al..  North American prodrome longitudinal study: a collaborative multisite approach to prodromal schizophrenia research. Schizophrenia Bulletin. 2007;33(3):665–72. doi:10.1093/schbul/sbl075. PMID 17255119.
+^ Cullen KR, Kumra S, Regan J et al..  Atypical Antipsychotics for Treatment of Schizophrenia Spectrum Disorders. Psychiatric Times. 2008;25(3).
+^ Amminger GP, Leicester S, Yung AR, et al..  Early onset of symptoms predicts conversion to non-affective psychosis in ultra-high risk individuals. Schizophrenia Research. 2006;84(1):67–76. doi:10.1016/j.schres.2006.02.018. PMID 16677803.
+^ Parnas J, Jorgensen A.  Pre-morbid psychopathology in schizophrenia spectrum. British Journal of Psychiatry. 1989;115:623–7. PMID 2611591.
+^ Coyle, Joseph (2006). "Chapter 54: The Neurochemistry of Schizophrenia". In Siegal, George J; Albers, R. Wayne; Brady, Scott T et al (Textbook). Basic Neurochemistry: Molecular, Cellular and Medical Aspects (7th ed.). Burlington, MA: Elsevier Academic Press. p. 876. ISBN 0-12-088397-X. 
+^ Clinical Psychopathology. 5 ed. New York: Grune & Stratton; 1959.
+^ Nordgaard J, Arnfred SM, Handest P, Parnas J.  The diagnostic status of first-rank symptoms. Schizophrenia Bulletin. 2008;34(1):137–54. doi:10.1093/schbul/sbm044. PMID 17562695.
+^ Sims A. Symptoms in the mind: an introduction to descriptive psychopathology. Philadelphia: W. B. Saunders; 2002. ISBN 0-7020-2627-1.
+^ Kneisl C. and Trigoboff E.(2009). Contemporary Psychiatric- Mental Health Nursing. 2nd edition. London: Pearson Prentice Ltd. p. 371
+^ a b American Psychiatric Association. Task Force on DSM-IV. (2000). Diagnostic and statistical manual of mental disorders: DSM-IV-TR. American Psychiatric Pub. ISBN 9780890420256. p. 299
+^ Velligan DI and Alphs LD.  Negative Symptoms in Schizophrenia: The Importance of Identification and Treatment. Psychiatric Times. March 1, 2008;25(3).
+^ a b c d Smith T, Weston C, Lieberman J.  Schizophrenia (maintenance treatment). Am Fam Physician. 2010;82(4):338–9. PMID 20704164.
+^ Drake RJ, Lewis SW.  Early detection of schizophrenia. Current Opinion in Psychiatry. 2005;18(2):147–50. doi:10.1097/00001504-200503000-00007. PMID 16639167.
+^ O'Donovan MC, Williams NM, Owen MJ.  Recent advances in the genetics of schizophrenia. Hum. Mol. Genet.. 2003;12 Spec No 2:R125–33. doi:10.1093/hmg/ddg302. PMID 12952866.
+^ a b McLaren JA, Silins E, Hutchinson D, Mattick RP, Hall W.  Assessing evidence for a causal link between cannabis and psychosis: a review of cohort studies. Int. J. Drug Policy. 2010;21(1):10–9. doi:10.1016/j.drugpo.2009.09.001. PMID 19783132.
+^ O'Donovan MC, Craddock NJ, Owen MJ.  Genetics of psychosis; insights from views across the genome. Hum. Genet.. 2009;126(1):3–12. doi:10.1007/s00439-009-0703-0. PMID 19521722.
+^ Craddock N, Owen MJ.  The Kraepelinian dichotomy - going, going... But still not gone. The British Journal of Psychiatry. 2010;196:92–95. doi:10.1192/bjp.bp.109.073429. PMID 20118450.
+^ Crow TJ.  The 'big bang' theory of the origin of psychosis and the faculty of language. Schizophrenia Research. 2008;102(1–3):31–52. doi:10.1016/j.schres.2008.03.010. PMID 18502103.
+^ Mueser KT, Jeste DV. Clinical Handbook of Schizophrenia. New York: Guilford Press; 2008. ISBN 1593856520. p. 22–23.
+^ Van Os J.  Does the urban environment cause psychosis?. British Journal of Psychiatry. 2004;184(4):287–288. doi:10.1192/bjp.184.4.287. PMID 15056569.
+^ Selten JP, Cantor-Graae E, Kahn RS.  Migration and schizophrenia. Current Opinion in Psychiatry. 2007;20(2):111–115. doi:10.1097/YCO.0b013e328017f68e. PMID 17278906.
+^ Larkin W, Read J.  Childhood trauma and psychosis: evidence, pathways, and implications. J Postgrad Med. 2008;54:287–293. PMID 18953148.
+^ a b Gregg L, Barrowclough C, Haddock G.  Reasons for increased substance use in psychosis. Clin Psychol Rev. 2007;27(4):494–510. doi:10.1016/j.cpr.2006.09.004. PMID 17240501.
+^ Cannabis Use and Earlier Onset of Psychosis: A Systematic Meta-analysis.. Archives of general psychiatry. 2011 Feb 7. PMID 21300939.
+^ a b Leweke FM, Koethe D.  Cannabis and psychiatric disorders: it is not only addiction. Addict Biol. 2008;13(2):264–75. doi:10.1111/j.1369-1600.2008.00106.x. PMID 18482435.
+^ Moore THM, Zammit S, Lingford-Hughes A et al..  Cannabis use and risk of psychotic or affective mental health outcomes: a systematic review. Lancet. 2007;370(9584):319–328. doi:10.1016/S0140-6736(07)61162-3. PMID 17662880.
+^ Sewell, RA; Ranganathan, M, D'Souza, DC (2009 Apr). "Cannabinoids and psychosis". International review of psychiatry (Abingdon, England) 21 (2): 152–62. doi:10.1080/09540260902782802. PMID 19367509. 
+^ a b Henquet, C; Di Forti, M, Morrison, P, Kuepper, R, Murray, RM (2008 Nov). "Gene-Environment Interplay Between Cannabis and Psychosis". Schizophrenia bulletin 34 (6): 1111–21. doi:10.1093/schbul/sbn108. PMC 2632498. PMID 18723841. http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=2632498. 
+^ Ben Amar, M; Potvin, S (2007 Jun). "Cannabis and psychosis: what is the link?". Journal of psychoactive drugs 39 (2): 131–42. doi:10.1080/02791072.2007.10399871. PMID 17703707. 
+^ Larson, Michael. WebMD. Alcohol-Related Psychosis; 2006-03-30 [cited September 27, 2006].
+^ Sagud, M; Mihaljević-Peles, A, Mück-Seler, D, Pivac, N, Vuksan-Cusa, B, Brataljenović, T, Jakovljević, M (2009 Sep). "Smoking and schizophrenia". Psychiatria Danubina 21 (3): 371–5. PMID 19794359. 
+^ Yolken R..  Viruses and schizophrenia: a focus on herpes simplex virus.. Herpes. 2004;11(Suppl 2):83A–88A. PMID 15319094.
+^ Broome MR, Woolley JB, Tabraham P, et al..  What causes the onset of psychosis?. Schizophr. Res.. 2005;79(1):23–34. doi:10.1016/j.schres.2005.02.007. PMID 16198238.
+^ Bentall RP, Fernyhough C, Morrison AP, Lewis S, Corcoran R.  Prospects for a cognitive-developmental account of psychotic experiences. Br J Clin Psychol. 2007;46(Pt 2):155–73. doi:10.1348/014466506X123011. PMID 17524210.
+^ Kurtz MM.  Neurocognitive impairment across the lifespan in schizophrenia: an update. Schizophrenia Research. 2005;74(1):15–26. doi:10.1016/j.schres.2004.07.005. PMID 15694750.
+^ Cohen AS, Docherty NM.  Affective reactivity of speech and emotional experience in patients with schizophrenia. Schizophrenia Research. 2004;69(1):7–14. doi:10.1016/S0920-9964(03)00069-0. PMID 15145465.
+^ Horan WP, Blanchard JJ.  Emotional responses to psychosocial stress in schizophrenia: the role of individual differences in affective traits and coping. Schizophrenia Research. 2003;60(2–3):271–83. doi:10.1016/S0920-9964(02)00227-X. PMID 12591589.
+^ Smith B, Fowler DG, Freeman D, et al..  Emotion and psychosis: links between depression, self-esteem, negative schematic beliefs and delusions and hallucinations. Schizophr. Res.. 2006;86(1–3):181–8. doi:10.1016/j.schres.2006.06.018. PMID 16857346.
+^ Beck, AT.  A Cognitive Model of Schizophrenia. Journal of Cognitive Psychotherapy. 2004;18(3):281–88. doi:10.1891/jcop.18.3.281.65649.
+^ Bell V, Halligan PW, Ellis HD.  Explaining delusions: a cognitive perspective. Trends in Cognitive Science. 2006;10(5):219–26. doi:10.1016/j.tics.2006.03.004. PMID 16600666.
+^ Freeman D, Garety PA, Kuipers E, Fowler D, Bebbington PE, Dunn G.  Acting on persecutory delusions: the importance of safety seeking. Behav Res Ther. 2007;45(1):89–99. doi:10.1016/j.brat.2006.01.014. PMID 16530161.
+^ Kuipers E, Garety P, Fowler D, Freeman D, Dunn G, Bebbington P.  Cognitive, emotional, and social processes in psychosis: refining cognitive behavioral therapy for persistent positive symptoms. Schizophr Bull. 2006;32 Suppl 1:S24–31. doi:10.1093/schbul/sbl014. PMID 16885206.
+^ Kircher, Tilo and Renate Thienel. The Boundaries of Consciousness. Amsterdam: Elsevier; 2006. ISBN 0444528768. Functional brain imaging of symptoms and cognition in schizophrenia. p. 302.
+^ Coyle 2006, p. 878
+^ Green MF.  Cognitive impairment and functional outcome in schizophrenia and bipolar disorder. Journal of Clinical Psychiatry. 2006;67(Suppl 9):3–8. PMID 16965182.
+^ Insel TR.  Rethinking schizophrenia. Nature. 2010;468(7321):187–93. doi:10.1038/nature09552. PMID 21068826.
+^ Laruelle M, Abi-Dargham A, van Dyck CH, et al..  Single photon emission computerized tomography imaging of amphetamine-induced dopamine release in drug-free schizophrenic subjects. Proc. Natl. Acad. Sci. U.S.A.. 1996;93(17):9235–40. doi:10.1073/pnas.93.17.9235. PMID 8799184.
+^ Jones HM, Pilowsky LS.  Dopamine and antipsychotic drug action revisited. British Journal of Psychiatry. 2002;181:271–275. doi:10.1192/bjp.181.4.271. PMID 12356650.
+^ Konradi C, Heckers S.  Molecular aspects of glutamate dysregulation: implications for schizophrenia and its treatment. Pharmacology and Therapeutics. 2003;97(2):153–79. doi:10.1016/S0163-7258(02)00328-5. PMID 12559388.
+^ Lahti AC, Weiler MA, Tamara Michaelidis BA, Parwani A, Tamminga CA.  Effects of ketamine in normal and schizophrenic volunteers. Neuropsychopharmacology. 2001;25(4):455–67. doi:10.1016/S0893-133X(01)00243-3. PMID 11557159.
+^ Coyle JT, Tsai G, Goff D.  Converging evidence of NMDA receptor hypofunction in the pathophysiology of schizophrenia. Annals of the New York Academy of Sciences. 2003;1003:318–27. doi:10.1196/annals.1300.020. PMID 14684455.
+^ Tuominen HJ, Tiihonen J, Wahlbeck K.  Glutamatergic drugs for schizophrenia: a systematic review and meta-analysis. Schizophrenia Research. 2005;72(2–3):225–34. doi:10.1016/j.schres.2004.05.005. PMID 15560967.
+^ Jakobsen KD, Frederiksen JN, Hansen T, et al..  Reliability of clinical ICD-10 schizophrenia diagnoses. Nordic Journal of Psychiatry. 2005;59(3):209–12. doi:10.1080/08039480510027698. PMID 16195122.
+^ a b c American Psychiatric Association. Diagnostic and statistical manual of mental disorders: DSM-IV. Washington, DC: American Psychiatric Publishing, Inc.; 2000 [cited 2008-07-04]. ISBN 0-89042-024-6. Schizophrenia.
+^ American Psychiatric Association DSM-5 Work Groups (2010) Proposed Revisions – Schizophrenia and Other Psychotic Disorders. Retrieved 17 February 2010.
+^ a b The ICD-10 Classification of Mental and Behavioural Disorders [pdf]; p. 26.
+^ Pope HG.  Distinguishing bipolar disorder from schizophrenia in clinical practice: guidelines and case reports. Hospital and Community Psychiatry. 1983 [cited 2008-02-24];34:322–28.
+^ McGlashan TH.  Testing DSM-III symptom criteria for schizotypal and borderline personality disorders. Archives of General Psychiatry. 1987;44(2):143–8. PMID 3813809.
+^ Bottas A.  Comorbidity: Schizophrenia With Obsessive-Compulsive Disorder. Psychiatric Times. April 15, 2009;26(4).
+^ Marshall M, Rathbone J.  Early intervention for psychosis. Cochrane Database Syst Rev. 2006;(4):CD004718. doi:10.1002/14651858.CD004718.pub2. PMID 17054213.
+^ de Koning MB, Bloemen OJ, van Amelsvoort TA, et al..  Early intervention in patients at ultra high risk of psychosis: benefits and risks. Acta Psychiatr Scand. 2009;119(6):426–42. doi:10.1111/j.1600-0447.2009.01372.x. PMID 19392813.
+^ Cannon TD, Cornblatt B, McGorry P.  The empirical status of the ultra high-risk (prodromal) research paradigm. Schizophrenia Bulletin. 2007;33(3):661–4. doi:10.1093/schbul/sbm031. PMID 17470445.
+^ Arseneault L, Cannon M, Witton J, Murray RM (February 2004). "Causal association between cannabis and psychosis: examination of the evidence". Br J Psychiatry 184 (2): 110–7. doi:10.1192/bjp.184.2.110. PMID 14754822. http://bjp.rcpsych.org/cgi/content/full/184/2/110. 
+^ Arendt, M; Rosenberg, R, Foldager, L, Perto, G, Munk-Jørgensen, P (2005 Dec). "Cannabis-induced psychosis and subsequent schizophrenia-spectrum disorders: follow-up study of 535 incident cases". The British journal of psychiatry : the journal of mental science 187 (6): 510–5. doi:10.1192/bjp.187.6.510. PMID 16319402. 
+^ Kirkbride, JB; Jones, PB (2011 Mar). "The Prevention of Schizophrenia—What Can We Learn From Eco-Epidemiology?". Schizophrenia bulletin 37 (2): 262–71. doi:10.1093/schbul/sbq120. PMC 3044619. PMID 20974748. http://cambridge.academia.edu/JamesKirkbride/Papers/530034/The_Prevention_of_Schizophrenia_What_Can_We_Learn_From_Eco-Epidemiology. 
+^ McGrath, JJ; Lawlor, DA (2011 Dec 1). "The search for modifiable risk factors for schizophrenia". The American journal of psychiatry 168 (12): 1235–8. doi:10.1176/appi.ajp.2011.11081300. PMID 22193665. http://ajp.psychiatryonline.org/article.aspx?volume=168&page=1235. 
+^ McGurk SR, Mueser KT, Feldman K, Wolfe R, Pascaris A.  Cognitive training for supported employment: 2–3 year outcomes of a randomized controlled trial.. American Journal of Psychiatry. 2007;164(3):437–41. doi:10.1176/appi.ajp.164.3.437. PMID 17329468.
+^ Gorczynski P, Faulkner G.  Exercise therapy for schizophrenia. Cochrane Database Syst Rev. 2010;(5):CD004412. doi:10.1002/14651858.CD004412.pub2. PMID 20464730.
+^ National Collaborating Centre for Mental Health. Gaskell and the British Psychological Society. Schizophrenia: Full national clinical guideline on core interventions in primary and secondary care [PDF]; 2009-03-25 [cited 2009-11-25].
+^ Tandon R, Keshavan MS, Nasrallah HA.  Schizophrenia, "Just the Facts": what we know in 2008 part 1: overview. Schizophrenia Research. 2008;100(1–3):4–19. doi:10.1016/j.schres.2008.01.022. PMID 18291627.
+^ Kane JM, Correll CU.  Pharmacologic treatment of schizophrenia. Dialogues Clin Neurosci. 2010;12(3):345–57. PMID 20954430.
+^ a b Schultz SH, North SW, Shields CG.  Schizophrenia: a review. Am Fam Physician. 2007;75(12):1821–9. PMID 17619525.
+^ Wahlbeck K, Cheine MV, Essali A.  Clozapine versus typical neuroleptic medication for schizophrenia. The Cochrane Database of Systematic Reviews. 2007;(2):CD000059. doi:10.1002/14651858.CD000059. PMID 10796289.
+^ Tandon R, Belmaker RH, Gattaz WF, et al..  World Psychiatric Association Pharmacopsychiatry Section statement on comparative effectiveness of antipsychotics in the treatment of schizophrenia. Schizophr. Res.. 2008;100(1–3):20–38. doi:10.1016/j.schres.2007.11.033. PMID 18243663.
+^ a b Chwastiak LA, Tek C.  The unchanging mortality gap for people with schizophrenia. Lancet. 2009;374(9690):590–2. doi:10.1016/S0140-6736(09)61072-2. PMID 19595448.
+^ Ananth J, Parameswaran S, Gunatilake S, Burgoyne K, Sidhom T.  Neuroleptic malignant syndrome and atypical antipsychotic drugs. Journal of Clinical Psychiatry. 2004;65(4):464–70. doi:10.4088/JCP.v65n0403. PMID 15119907.
+^ a b McEvoy JP.  Risks versus benefits of different types of long-acting injectable antipsychotics. J Clin Psychiatry. 2006;67 Suppl 5:15–8. PMID 16822092.
+^ a b Pharoah F, Mari J, Rathbone J, Wong W.  Family intervention for schizophrenia. Cochrane Database Syst Rev. 2010;12:CD000088. doi:10.1002/14651858.CD000088.pub3. PMID 21154340.
+^ Medalia A, Choi J.  Cognitive remediation in schizophrenia.. Neuropsychology Rev. 2009;19(3):353–364. doi:10.1007/s11065-009-9097-y. PMID 19444614.
+^ Dixon LB, Dickerson F, Bellack AS, et al..  The 2009 schizophrenia PORT psychosocial treatment recommendations and summary statements. Schizophr Bull. 2010;36(1):48–70. doi:10.1093/schbul/sbp115. PMID 19955389.
+^ Lynch D, Laws KR, McKenna PJ.  Cognitive behavioural therapy for major psychiatric disorder: does it really work? A meta-analytical review of well-controlled trials. Psychol Med. 2010;40(1):9–24. doi:10.1017/S003329170900590X. PMID 19476688.
+^ Jones C, Cormac I, Silveira da Mota Neto JI, Campbell C.  Cognitive behaviour therapy for schizophrenia. Cochrane Database Syst Rev. 2004;(4):CD000524. doi:10.1002/14651858.CD000524.pub2. PMID 15495000.
+^ Ruddy R, Milnes D.  Art therapy for schizophrenia or schizophrenia-like illnesses.. Cochrane Database Syst Rev. 2005;(4):CD003728. doi:10.1002/14651858.CD003728.pub2. PMID 16235338.
+^ Ruddy RA, Dent-Brown K.  Drama therapy for schizophrenia or schizophrenia-like illnesses.. Cochrane Database Syst Rev. 2007;(1):CD005378. doi:10.1002/14651858.CD005378.pub2. PMID 17253555.
+^ Saha S, Chant D, McGrath J.  A systematic review of mortality in schizophrenia: is the differential mortality gap worsening over time?. Arch. Gen. Psychiatry. 2007;64(10):1123–31. doi:10.1001/archpsyc.64.10.1123. PMID 17909124.
+^ Ustun TB.  Multiple-informant ranking of the disabling effects of different health conditions in 14 countries. The Lancet. 1999;354(9173):111–15. doi:10.1016/S0140-6736(98)07507-2. PMID 10408486.
+^ Warner R.  Recovery from schizophrenia and the recovery model. Curr Opin Psychiatry. 2009;22(4):374–80. doi:10.1097/YCO.0b013e32832c920b. PMID 19417668.
+^ Menezes NM, Arenovich T, Zipursky RB.  A systematic review of longitudinal outcome studies of first-episode psychosis. Psychol Med. 2006;36(10):1349–62. doi:10.1017/S0033291706007951. PMID 16756689.
+^ Isaac M, Chand P, Murthy P.  Schizophrenia outcome measures in the wider international community. Br J Psychiatry Suppl. 2007;50:s71–7. PMID 18019048.
+^ Cohen A, Patel V, Thara R, Gureje O.  Questioning an axiom: better prognosis for schizophrenia in the developing world?. Schizophr Bull. 2008;34(2):229–44. doi:10.1093/schbul/sbm105. PMID 17905787.
+^ Burns J.  Dispelling a myth: developing world poverty, inequality, violence and social fragmentation are not good for outcome in schizophrenia. Afr J Psychiatry (Johannesbg). 2009;12(3):200–5. PMID 19894340.
+^ Palmer BA, Pankratz VS, Bostwick JM.  The lifetime risk of suicide in schizophrenia: a reexamination. Archives of General Psychiatry. 2005;62(3):247–53. doi:10.1001/archpsyc.62.3.247. PMID 15753237.
+^ a b Carlborg A, Winnerbäck K, Jönsson EG, Jokinen J, Nordström P.  Suicide in schizophrenia. Expert Rev Neurother. 2010;10(7):1153–64. doi:10.1586/ern.10.82. PMID 20586695.
+^ a b American Psychiatric Association. Task Force on DSM-IV. (2000). Diagnostic and statistical manual of mental disorders: DSM-IV-TR. American Psychiatric Pub. ISBN 9780890420256. p. 304
+^ De Leon J, Diaz FJ.  A meta-analysis of worldwide studies demonstrates an association between schizophrenia and tobacco smoking behaviors. Schizophrenia research. 2005;76(2-3):135–57. doi:10.1016/j.schres.2005.02.010. PMID 15949648.
+^ a b Keltner NL, Grant JS.  Smoke, Smoke, Smoke That Cigarette. Perspectives in Psychiatric Care. 2006;42(4):256. doi:10.1111/j.1744-6163.2006.00085.x. PMID 17107571.
+^ American Psychiatric Association. Task Force on DSM-IV. (2000). Diagnostic and statistical manual of mental disorders: DSM-IV-TR. American Psychiatric Pub. ISBN 9780890420256. p. 314
+^ World Health Organization. Schizophrenia; 2011 [cited February 27, 2011].
+^ Castle D, Wessely S, Der G, Murray RM.  The incidence of operationally defined schizophrenia in Camberwell, 1965–84. The British Journal of Psychiatry. 1991;159:790–4. doi:10.1192/bjp.159.6.790. PMID 1790446.
+^ Kumra S, Shaw M, Merka P, Nakayama E, Augustin R.  Childhood-onset schizophrenia: research update. Canadian Journal of Psychiatry. 2001;46(10):923–30. PMID 11816313.
+^ Hassett Anne, et al. (eds). Psychosis in the Elderly. London: Taylor and Francis.; 2005. ISBN 1841843946. p. 6.
+^ Jablensky A, Sartorius N, Ernberg G, et al..  Schizophrenia: manifestations, incidence and course in different cultures. A World Health Organization ten-country study. Psychological Medicine Monograph Supplement. 1992;20:1–97. doi:10.1017/S0264180100000904. PMID 1565705.
+^ Kirkbride JB, Fearon P, Morgan C, et al..  Heterogeneity in incidence rates of schizophrenia and other psychotic syndromes: findings from the 3-center AeSOP study. Archives of General Psychiatry. 2006;63(3):250–8. doi:10.1001/archpsyc.63.3.250. PMID 16520429.
+^ Kirkbride JB, Fearon P, Morgan C, et al..  Neighbourhood variation in the incidence of psychotic disorders in Southeast London. Social Psychiatry and Psychiatric Epidemiology. 2007;42(6):438–45. doi:10.1007/s00127-007-0193-0. PMID 17473901.
+^ Heinrichs RW.  Historical origins of schizophrenia: two early madmen and their illness. Journal of the History of the Behavioral Sciences. 2003;39(4):349–63. doi:10.1002/jhbs.10152. PMID 14601041.
+^ Kraepelin E, Diefendorf AR. Text book of psychiatry. 7 ed. London: Macmillan; 1907.
+^ Hansen RA, Atchison B. Conditions in occupational therapy: effect on occupational performance. Hagerstown, MD: Lippincott Williams & Wilkins; 2000. ISBN 0-683-30417-8.
+^ Kuhn R.  Eugen Bleuler's concepts of psychopathology. History of Psychiatry. 2004;15(3):361–6. doi:10.1177/0957154X04044603. PMID 15386868.
+^ Stotz-Ingenlath G.  Epistemological aspects of Eugen Bleuler's conception of schizophrenia in 1911 [PDF]. Medicine, Health Care and Philosophy. 2000;3(2):153–9. doi:10.1023/A:1009919309015. PMID 11079343.
+^ Turner T.  Unlocking psychosis. British Medical Journal. 2007;334(suppl):s7. doi:10.1136/bmj.39034.609074.94. PMID 17204765.
+^ Wing JK.  International comparisons in the study of the functional psychoses. British Medical Bulletin. 1971;27(1):77–81. PMID 4926366.
+^ Rosenhan D.  On being sane in insane places. Science. 1973;179(4070):250–8. doi:10.1126/science.179.4070.250. PMID 4683124.
+^ Wilson M.  DSM-III and the transformation of American psychiatry: a history. American Journal of Psychiatry. 1993;150(3):399–410. PMID 8434655.
+^ Stotz-Ingenlath G: Epistemological aspects of Eugen Bleuler’s conception of schizophrenia in 1911. Med Health Care Philos 2000; 3:153—159
+^ Hayes, J. A., & Mitchell, J. C. (1994). Mental health professionals' skepticism about multiple personality disorder. Professional Psychology: Research and Practice, 25, 410-415
+^ Hayes, J. A., & Mitchell, J. C. (1994). Mental health professionals' skepticism about multiple personality disorder. Professional Psychology: Research and Practice, 25, 410-415
+^ Putnam, Frank W. (1989). Diagnosis and Treatment of Multiple Personality Disorder. New York: The Guilford Press. pp. 351. ISBN 0-89862-177-1
+^ Berrios, G. E.; Porter, Roy. A history of clinical psychiatry: the origin and history of psychiatric disorders. London: Athlone Press; 1995. ISBN 0-485-24211-7.
+^ Kim Y, Berrios GE.  Impact of the term schizophrenia on the culture of ideograph: the Japanese experience. Schizophr Bull. 2001;27(2):181–5. PMID 11354585.
+^ Sato M.  Renaming schizophrenia: a Japanese perspective. World Psychiatry. 2004;5(1):53–55. PMID 16757998.
+^ Wu EQ.  The economic burden of schizophrenia in the United States in 2002. J Clin Psychiatry. 2005;66(9):1122–9. PMID 16187769.
+^ Maj, Mario and Sartorius N.. Schizophrenia. Chichester: Wiley; 15 September 1999. ISBN 978-0-471-99906-5. p. 292.
+^ Maniglio, R (2009 Mar). "Severe mental illness and criminal victimization: a systematic review". Acta psychiatrica Scandinavica 119 (3): 180–91. doi:10.1111/j.1600-0447.2008.01300.x. PMID 19016668. 
+^ Fazel, S; Gulati, G, Linsell, L, Geddes, JR, Grann, M (2009 Aug). McGrath, John. ed. "Schizophrenia and Violence: Systematic Review and Meta-Analysis". PLoS medicine 6 (8): e1000120. doi:10.1371/journal.pmed.1000120. PMC 2718581. PMID 19668362. http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=2718581. 
+^ Large, M; Smith, G, Nielssen, O (2009 Jul). "The relationship between the rate of homicide by those with schizophrenia and the overall homicide rate: a systematic review and meta-analysis". Schizophrenia research 112 (1–3): 123–9. doi:10.1016/j.schres.2009.04.004. PMID 19457644. 
+^ Bo, S; Abu-Akel, A, Kongerslev, M, Haahr, UH, Simonsen, E (2011 Jul). "Risk factors for violence among patients with schizophrenia". Clinical psychology review 31 (5): 711–26. doi:10.1016/j.cpr.2011.03.002. PMID 21497585. 
+^ Pescosolido BA, Monahan J, Link BG, Stueve A, Kikuzawa S.  The public's view of the competence, dangerousness, and need for legal coercion of persons with mental health problems. American Journal of Public Health. 1999;89(9):1339–45. doi:10.2105/AJPH.89.9.1339. PMID 10474550.
+^ Phelan JC, Link BG, Stueve A, Pescosolido BA.  Public Conceptions of Mental Illness in 1950 and 1996: What Is Mental Illness and Is It to be Feared?. Journal of Health and Social Behavior. 2000;41(2):188–207. doi:10.2307/2676305.
+
+
+ External links
+
+Schizophrenia at the Open Directory Project
+
+
+
+
+
+
+
+
+
+
+v
+d
+e
+
+
+Mental and behavioral disorders (F 290–319)
+
+
+
+
+
+
+
+
+
+
+ 
+Neurological/symptomatic
+
+
+
+
+
+
+
+
+
+
+
+Dementia
+
+
+
+
+Mild cognitive impairment
+Alzheimer's disease
+Multi-infarct dementia
+Pick's disease
+Creutzfeldt–Jakob disease
+Huntington's disease
+Parkinson's disease
+AIDS dementia complex
+Frontotemporal dementia
+Sundowning
+Wandering
+
+
+
+
+
+
+
+
+
+Autism spectrum
+
+
+
+
+Autism
+Asperger syndrome
+PDD-NOS
+High-functioning autism
+
+
+
+
+
+
+
+
+
+Other
+
+
+
+
+Delirium
+Post-concussion syndrome
+Organic brain syndrome
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Psychoactive substances, substance abuse, drug abuse and substance-related disorders
+
+
+
+
+
+
+
+
+
+Intoxication/Drug overdose
+Physical dependence
+Substance dependence
+Rebound effect
+Double rebound
+Withdrawal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Schizophrenia, schizotypal and delusional
+
+
+
+
+
+
+
+
+
+
+Psychosis
+
+
+
+Schizoaffective disorder
+Schizophreniform disorder
+Brief reactive psychosis
+
+
+
+
+
+
+
+
+Schizophrenia
+
+
+
+Disorganized schizophrenia
+Delusional disorder
+Folie à deux
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Mood (affective)
+
+
+
+
+
+
+
+
+
+Mania
+Bipolar disorder
+(Bipolar I
+Bipolar II
+Cyclothymia
+Bipolar NOS)
+Depression
+(Major depressive disorder
+Dysthymia
+Seasonal affective disorder
+Atypical depression
+Melancholic depression)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Neurotic, stress-related and somatoform
+
+
+
+
+
+
+
+
+
+
+
+Anxiety disorder
+
+
+
+
+
+
+Phobia
+
+
+
+
+Agoraphobia
+Social anxiety
+Social phobia
+(Anthropophobia)
+Specific phobia
+(Claustrophobia)
+Specific social phobia
+
+
+
+
+
+
+
+
+
+Other
+
+
+
+
+Panic disorder
+Panic attack
+Generalized anxiety disorder
+OCD
+stress
+(Acute stress reaction
+PTSD)
+
+
+
+
+
+
+
+
+
+
+
+
+Adjustment disorder
+
+
+
+
+Adjustment disorder with depressed mood
+
+
+
+
+
+
+
+
+
+Somatoform disorder
+
+
+
+
+Somatization disorder
+Body dysmorphic disorder
+Hypochondriasis
+Nosophobia
+Da Costa's syndrome
+Psychalgia
+Conversion disorder
+(Ganser syndrome
+Globus pharyngis)
+Neurasthenia
+Mass Psychogenic Illness
+
+
+
+
+
+
+
+
+
+Dissociative disorder
+
+
+
+
+Dissociative identity disorder
+Psychogenic amnesia
+Fugue state
+Depersonalization disorder
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Physiological/physical behavioral
+
+
+
+
+
+
+
+
+
+
+
+Eating disorder
+
+
+
+
+Anorexia nervosa
+Bulimia nervosa
+Rumination syndrome
+NOS
+
+
+
+
+
+
+
+
+
+Nonorganic
+sleep disorders
+
+
+
+
+(Nonorganic hypersomnia
+Nonorganic insomnia)
+Parasomnia
+(REM behavior disorder
+Night terror
+Nightmare)
+
+
+
+
+
+
+
+
+
+Sexual
+dysfunction
+
+
+
+
+sexual desire
+(Hypoactive sexual desire disorder
+Hypersexuality)
+
+
+sexual arousal
+(Female sexual arousal disorder)
+Erectile dysfunction
+
+
+orgasm
+(Anorgasmia
+Delayed ejaculation
+Premature ejaculation
+Sexual anhedonia)
+
+
+pain
+(Vaginismus
+Dyspareunia)
+
+
+
+
+
+
+
+
+
+Postnatal
+
+
+
+
+Postpartum depression
+Postnatal psychosis
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Adult personality and behavior
+
+
+
+
+
+
+
+
+
+
+
+Sexual and
+gender identity
+
+
+
+
+Sexual maturation disorder
+Ego-dystonic sexual orientation
+Sexual relationship disorder
+Paraphilia
+(Voyeurism
+Fetishism)
+
+
+
+
+
+
+
+
+
+Other
+
+
+
+
+Personality disorder
+Impulse control disorder
+(Kleptomania
+Trichotillomania
+Pyromania
+Dermatillomania)
+Body-focused repetitive behavior
+Factitious disorder
+(Münchausen syndrome)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Mental disorders diagnosed in childhood
+
+
+
+
+
+
+
+
+
+
+
+Mental retardation
+
+
+
+
+X-Linked mental retardation
+(Lujan-Fryns syndrome)
+
+
+
+
+
+
+
+
+
+Psychological development
+(developmental disorder)
+
+
+
+
+Specific
+Pervasive
+
+
+
+
+
+
+
+
+
+Emotional and behavioral
+
+
+
+
+ADHD
+Conduct disorder
+(ODD)
+emotional disorder
+(Separation anxiety disorder)
+social functioning
+(Selective mutism
+RAD
+DAD)
+Tic disorder
+(Tourette syndrome)
+Speech
+(Stuttering
+Cluttering)
+Movement disorder
+(Stereotypic)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+Symptoms and uncategorized
+
+
+
+
+
+
+
+
+
+Catatonia
+False pregnancy
+Intermittent explosive disorder
+Psychomotor agitation
+Sexual addiction
+Stereotypy
+Psychogenic non-epileptic seizures
+Klüver-Bucy syndrome
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+M: PSO/PSI
+
+
+
+
+mepr
+
+
+
+
+dsrd (o, p, m, p, a, d, s), sysi/epon, spvo
+
+
+
+
+proc(eval/thrp), drug(N5A/5B/5C/6A/6B/6D)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         
+ 
+NewPP limit report
+Preprocessor node count: 45665/1000000
+Post-expand include size: 462983/2048000 bytes
+Template argument size: 202847/2048000 bytes
+Expensive parser function count: 0/500
+
+ Saved in parser cache with key enwiki:pcache:idhash:27790-0!*!0!!en!4!* and timestamp 20120223163441 generated by srv190 
+  /bodycontent 
+ printfooter 
+
+				Retrieved from "http://en.wikipedia.org/w/index.php?title=Schizophrenia&oldid=476742596"				
+ /printfooter 
+ catlinks 
+Categories: SchizophreniaGreek loanwordsPsychosisPsychopathologyHidden categories: Wikipedia semi-protected pagesWikipedia indefinitely move-protected pagesFeatured articlesArticle Feedback 5 Additional Articles  /catlinks 
+
+ debughtml 
+ /debughtml 
+
+ /bodyContent 
+
+ /content 
+ header 
+
+ 0 
+
+Personal tools
+
+Log in / create account
+
+
+ /0 
+
+ 0 
+
+Namespaces
+
+Article
+Talk
+
+
+ /0 
+ 1 
+
+Variants
+
+
+
+
+
+ /1 
+
+
+ 0 
+
+Views
+
+Read
+View source
+View history
+
+
+ /0 
+ 1 
+
+Actions
+
+
+
+
+
+ /1 
+ 2 
+
+Search
+
+
+
+  
+
+
+ /2 
+
+
+ /header 
+ panel 
+
+ logo 
+
+ /logo 
+ navigation 
+
+Navigation
+
+
+Main page
+Contents
+Featured content
+Current events
+Random article
+Donate to Wikipedia
+
+
+
+ /navigation 
+ SEARCH 
+ /SEARCH 
+ interaction 
+
+Interaction
+
+
+Help
+About Wikipedia
+Community portal
+Recent changes
+Contact Wikipedia
+
+
+
+ /interaction 
+ TOOLBOX 
+
+Toolbox
+
+
+What links here
+Related changes
+Upload file
+Special pages
+Permanent link
+Cite this page 
+
+
+ /TOOLBOX 
+ coll-print_export 
+
+Print/export
+
+Create a bookDownload as PDFPrintable version 
+
+ /coll-print_export 
+ LANGUAGES 
+
+Languages
+
+
+العربية
+Aragonés
+Azərbaycanca
+বাংলা
+Беларуская
+‪Беларуская (тарашкевіца)‬
+Български
+Bosanski
+Català
+Česky
+Dansk
+Deutsch
+Eesti
+Ελληνικά
+Español
+Esperanto
+Euskara
+فارسی
+Français
+Gaeilge
+Galego
+한국어
+हिन्दी
+Hrvatski
+Ido
+Bahasa Indonesia
+Interlingua
+Íslenska
+Italiano
+עברית
+Basa Jawa
+Kalaallisut
+ಕನ್ನಡ
+Kirundi
+Kurdî
+Latina
+Latviešu
+Lietuvių
+Magyar
+Македонски
+مصرى
+مازِرونی
+Bahasa Melayu
+မြန်မာဘာသာ
+Nederlands
+日本語
+‪Norsk (bokmål)‬
+‪Norsk (nynorsk)‬
+Polski
+Português
+Română
+Runa Simi
+Русский
+Sicilianu
+Simple English
+Slovenčina
+Slovenščina
+Српски / Srpski
+Srpskohrvatski / Српскохрватски
+Suomi
+Svenska
+Tagalog
+தமிழ்
+ไทย
+Türkçe
+Українська
+اردو
+中文
+
+
+
+ /LANGUAGES 
+
+ /panel 
+ footer 
+
+
+ This page was last modified on 14 February 2012 at 00:06.
+Text is available under the Creative Commons Attribution-ShareAlike License;
+additional terms may apply.
+See Terms of use for details.
+Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc., a non-profit organization.Contact us
+
+
+Privacy policy
+About Wikipedia
+Disclaimers
+Mobile view
+
+
+
+
+
+
+
+
+
+
+
+ /footer 
+ fixalpha 
+ if ( window.isMSIE55 ) fixalpha(); 
+ /fixalpha 
+
+if ( window.mediaWiki ) {
+	mw.loader.load(["mediawiki.user", "mediawiki.util", "mediawiki.page.ready", "mediawiki.legacy.wikibits", "mediawiki.legacy.ajax", "mediawiki.legacy.mwsuggest", "ext.gadget.teahouse", "ext.gadget.wmfFR2011Style", "ext.vector.collapsibleNav", "ext.vector.collapsibleTabs", "ext.vector.editWarning", "ext.vector.simpleSearch", "ext.UserBuckets", "ext.articleFeedback.startup", "ext.articleFeedbackv5.startup", "ext.markAsHelpful"]);
+}
+
+
+
+if ( window.mediaWiki ) {
+	mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":1,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":false,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":4,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":1,"watchdefault":0,"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,
+	"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"flaggedrevssimpleui":1,"flaggedrevsstable":0,"flaggedrevseditdiffs":true,"flaggedrevsviewdiffs":false,"vector-simplesearch":1,"useeditwarning":1,"vector-collapsiblenav":1,"usebetatoolbar":1,"usebetatoolbar-cgd":1,"wikilove-enabled":1,"variant":"en","language":"en","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"searchNs100":false,"searchNs101":false,"searchNs108":false,"searchNs109":false,"gadget-teahouse":1,"gadget-mySandbox":1,"gadget-wmfFR2011Style":1});;mw.user.tokens.set({"editToken":"+\\","watchToken":false});;mw.loader.state({"user.options":"ready","user.tokens":"ready"});
+	
+	/* cache key: enwiki:resourceloader:filter:minify-js:4:592424c258259744d97ac0a8c844c34b */
+}
+ Served by mw18 in 0.066 secs. 
+
