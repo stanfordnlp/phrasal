@@ -69,15 +69,17 @@ def tutorial(request, module_id):
                 logger.error('Could not find a template for ui id: ' + str(ui_id))
                 raise Http404
             else:
+                header_txt = 'Example of  ' + module.ui.display_name
                 initial={'src_id':src.id,
                          'ui_id':ui_id,
                          'tgt_lang':tgt_lang,
-                         'action_log':'ERROR'}
+                         'action_log':'ERROR',
+                         'css_direction':tgt_lang.css_direction}
                 form = tm_forms.TranslationInputForm(initial=initial)
                 src_toks = src.txt.split()
                 action = '/tm/tutorial/%d/' % (ui_id)
                 return render_to_response(template,
-                                          {'tgt_lang_name':tgt_lang.name,
+                                          {'header_txt':header_txt,
                                            'src_css_dir':src.lang.css_direction,
                                            'src_toks':src_toks,
                                            'form_action':action,
@@ -145,15 +147,18 @@ def tr(request):
         if src and module:
             template = tm_view_utils.get_template_for_ui(module.ui.id)
             if template:
+                header_txt = 'Translate to ' + tgt_lang.name
                 initial={'src_id':src.id,
                          'ui_id':module.ui.id,
                          'tgt_lang':tgt_lang,
-                         'action_log':'ERROR'}
+                         'action_log':'ERROR',
+                         'css_direction':tgt_lang.css_direction}
                 form = tm_forms.TranslationInputForm(initial=initial)
                 src_toks = src.txt.split()
                 return render_to_response(template,
-                                          {'tgt_lang_name':tgt_lang.name,
+                                          {'header_txt':header_txt,
                                            'src_css_dir':src.lang.css_direction,
+                                           
                                            'src_toks':src_toks,
                                            'form_action':'/tm/tr/',
                                            'form':form },
@@ -181,9 +186,10 @@ def tr(request):
                 raise Http404
             ui_id = int(form['ui_id'].value().strip())
             template = tm_view_utils.get_template_for_ui(ui_id)
+            header_txt = 'Translate to ' + tgt_lang.name
             src_toks = src.txt.split()
             return render_to_response(template,
-                                      {'tgt_lang_name':tgt_lang.name,
+                                      {'header_txt':header_txt,
                                        'src_css_dir':src.lang.css_direction,
                                        'src_toks':src_toks,
                                        'form_action':'/tm/tr/',

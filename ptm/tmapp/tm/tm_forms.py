@@ -45,6 +45,9 @@ class TranslationInputForm(forms.Form):
     
     tgt_lang = forms.ModelChoiceField(queryset=LanguageSpec.objects.all(),
                                       widget=forms.HiddenInput())
+    css_direction = forms.CharField(widget=forms.HiddenInput(),
+                                    required=True)
+    
     action_log = forms.CharField(widget=forms.HiddenInput())
     is_valid = forms.BooleanField(widget=forms.HiddenInput(),
                                   initial=True)

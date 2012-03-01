@@ -51,18 +51,18 @@ class LanguageSpec(models.Model):
         return str(self.id)
 
 class UISpec(models.Model):
-    """ A textname and integer id for each 
-
-    ui1 := (meedan) Show 1-best MT and no other assistance
-    ui2 := (trados) Show suggestions in context
-    ui3 := (sjc) Our best interface.
+    """ 
     
     Args:
     Raises:
     Returns:
     """
-    name = models.CharField(max_length=10)
+    # A short name for the interface for internal use
+    name = models.CharField(max_length=100)
 
+    # A generic name to show to experimental subjects
+    display_name = models.CharField(max_length=100)
+    
     def __unicode__(self):
         return self.name
 
