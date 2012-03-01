@@ -65,6 +65,27 @@ class UISpec(models.Model):
 
     def __unicode__(self):
         return self.name
+
+class ExperimentModule(models.Model):
+    """ Encodes a treatment to be applied to an experimental unit. This
+    table should contain all factor levels for an experiment.
+
+    Args:
+    Raises:
+    Returns:
+    """
+    ui = models.ForeignKey(UISpec)
+
+    name = models.CharField(max_length=100)
+    
+    # CSV list of documents in this module
+    docs = models.TextField()
+
+    # Freeform metadata about this experiment
+    description = models.TextField()
+
+    def __unicode__(self):
+        return '%s: ui %s' % (self.name,self.ui.name)
     
 class SourceTxt(models.Model):
     """ The source input to be translated.
@@ -77,14 +98,18 @@ class SourceTxt(models.Model):
     Raises:
     """
     lang = models.ForeignKey(LanguageSpec)
-    ui = models.ForeignKey(UISpec)
 
+    # Source text
     txt = models.TextField()
-    seg = models.CharField(max_length=100)
-    doc = models.CharField(max_length=200)
+
+    # Document name
+    doc = models.CharField(max_length=300)
+
+    # Segment id (sentence) in the document
+    seg = models.IntegerField()
     
     def __unicode__(self):
-        return '%s-%s: %s' % (self.doc,self.seg,truncate(self.txt))
+        return '%s-%d: %s' % (self.doc,self.seg,truncate(self.txt))
 
 class UserConf(models.Model):
     """ Extended user properties for this app.
@@ -97,13 +122,17 @@ class UserConf(models.Model):
     user = models.ForeignKey(User)
 
     # UIs that this user can see
-    uis_enabled = models.ManyToManyField(UISpec,related_name='+')
+    # These will be decremented as the user completes each
+    # module successfully
+    active_modules = models.ManyToManyField(ExperimentModule,
+                                            related_name='+',
+                                            blank=True,
+                                            null=True)
 
-    # Currently active UI
-    active_module = models.ForeignKey(UISpec,blank=True,null=True)
-
-    # TODO(spenceg): Add current segment in current document
-    # Then the query can be doc=active_doc and not in srcs order_by id
+    # Currently active document within that module
+    active_doc = models.CharField(max_length=200,
+                                  blank=True,
+                                  null=True)
 
     # Native language: assumes a person has only one native language
     lang_native = models.ForeignKey(LanguageSpec,related_name='+')
@@ -113,18 +142,16 @@ class UserConf(models.Model):
     lang_other = models.ForeignKey(LanguageSpec,related_name='+')
 
     # Research: Users are *only* permitted to see sentences once
-    srcs = models.ManyToManyField(SourceTxt,blank=True,related_name='+')
+    srcs = models.ManyToManyField(SourceTxt,
+                                  blank=True,
+                                  null=True,
+                                  related_name='+')
 
     # Has the user passed the training module?
     has_trained = models.BooleanField(default=False)
-
-    # User has completed all translation tasks
-    done_with_tasks = models.BooleanField(default=False)
     
-    # Is the user a machine?
-    is_machine = models.BooleanField(default=False)
-
-    # Demographic information entered by user
+    # Demographic information entered by user during
+    # training
     birth_country = models.ForeignKey(Country,
                                       related_name='+',
                                       blank=True,
@@ -135,7 +162,7 @@ class UserConf(models.Model):
                                      null=True)
     # Number of hours that this user spends on translation
     # work each week (user reported)
-    #hours_per_week = models.IntegerField()
+    hours_per_week = models.IntegerField(blank=True, null=True)
     
     def __unicode__(self):
         return '%s: native:%s trained:%s' % (self.user.username,
@@ -152,22 +179,27 @@ class TargetTxt(models.Model):
     """
     src = models.ForeignKey(SourceTxt)
     lang = models.ForeignKey(LanguageSpec,related_name='+')
-    user = models.ForeignKey(User,related_name='+')
+
+    # User who created this translation
+    # May be empty if this is an automatic translation
+    user = models.ForeignKey(User,
+                             blank=True,
+                             null=True)
+
+    # True if this is a machine generated translation
+    is_machine = models.BooleanField(default=False)
 
     txt = models.TextField()
     date = models.DateTimeField()
 
     def __unicode__(self):
-        return '%s (%s): %s' % (self.user.username,
-                                self.date,
-                                truncate(self.txt))
+        return '%s: %s' % (str(self.date),
+                           truncate(self.txt))
 
-# Metadata about a translation submitted by a user
-# We should use this metadata to quantify translator productivity
-# improvements
 class TranslationStats(models.Model):
-    """ Statistics about a user translation that resulted in a new
-    translation for a source text.
+    """ Metadata associated with each translation submitted by
+    a user. These fields usually are not created for machine-generated
+    translations, i.e., the "is_machine" field in TargetTxt is True.
 
     Args:
     Returns:
@@ -177,6 +209,8 @@ class TranslationStats(models.Model):
     ui = models.ForeignKey(UISpec,related_name='+')
     user = models.ForeignKey(User,related_name='+')
 
+    # Action log created by the interface
+    # Usually, we use the translog2.js widget
     action_log = models.TextField()
 
     # Did this translation session result in a valid

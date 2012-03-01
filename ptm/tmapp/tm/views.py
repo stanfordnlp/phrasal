@@ -20,45 +20,56 @@ def index(request):
     Returns:
     Raises:
     """
+    # Check to see if this user has finished training
     user_took_training = tm_train_module.done_training(request.user)
     if user_took_training == None:
-        # TODO(spenceg): Do something fancier here.
-        # User lookup failed --> No UserConf for this user
+        logger.error('Missing conf file for user: ' + request.user.username)
         raise Http404
-    module = 'train'
-    last_module = None
+
+    module_name = 'train'
     if user_took_training:
-        # Module is None if the user has completed all modules
-        (module,last_module) = tm_workqueue.select_module(request.user)
+        module = tm_workqueue.select_new_module(request.user)
         if module == None:
-            module = 'none'
-    name = request.user.first_name
-    if not name:
-        name = request.user.username
+            module_name = 'none'
+        else:
+            module_name = module.name
+    user_name = request.user.first_name
+    if not user_name:
+        user_name = request.user.username
+
     return render_to_response('tm/index.html',
-                              {'module_name':module,
-                               'name' : name,
-                               'last_module_name' : last_module},
+                              {'module_name':module_name,
+                               'name' : user_name},
                               context_instance=RequestContext(request))
 
 @login_required
-def tutorial(request, ui_id):
-    """ Shows this users enabled interfaces in order
+def tutorial(request, module_id):
+    """ Guides the user through a tutorial
 
     Args:
     Returns:
     Raises:
     """
-    ui_id = int(ui_id)
+    last_module = None
     if request.method == 'POST':
-        ui_id = tm_train_module.next_training_ui_id(ui_id)
+        # Select the next ExperimentModule
+        last_module = tm_workqueue.get_experiment_module(int(module_id))
+
+    module = tm_train_module.next_training_module(request.user,last_module)
         
-    if ui_id:
-        src = tm_train_module.get_src(request.user, ui_id)
+    if not module:
+        # User has completed training. Redirect to the workqueue
+        return HttpResponseRedirect('/tm/')
+    else:
+        ui_id = module.ui.id
+        (src_lang,tgt_lang) = tm_user_utils.get_user_langs(request.user)
+        src = tm_train_module.get_src(src_lang)
         if src:
-            template = tm_view_utils.get_template_for_ui(src.ui.name)
-            if template:
-                tgt_lang = tm_workqueue.select_tgt_language(request.user, src.id)
+            template = tm_view_utils.get_template_for_ui(ui_id)
+            if not template:
+                logger.error('Could not find a template for ui id: ' + str(ui_id))
+                raise Http404
+            else:
                 initial={'src_id':src.id,
                          'tgt_lang':tgt_lang,
                          'action_log':'ERROR'}
@@ -73,8 +84,6 @@ def tutorial(request, ui_id):
                                            'form':form },
                                           context_instance=RequestContext(request))
             
-    else:
-        return HttpResponseRedirect('/tm/')
     
 @login_required
 def training(request):
@@ -85,13 +94,9 @@ def training(request):
     Raises:
     """
     (src_lang,tgt_lang) = tm_user_utils.get_user_langs(request.user)
-    src_name = None
-    tgt_name = None
-    if not (src_lang and tgt_lang):
-        raise Http404
 
     if request.method == 'GET':
-        # Blank form
+        # Create an unbound survey form.
         survey_form = tm_forms.UserTrainingForm()
         return render_to_response('tm/train_exp1.html',
                                   {'src_lang':src_lang.name,
@@ -106,10 +111,14 @@ def training(request):
             tm_train_module.done_training(request.user,
                                           set_done=True,
                                           form=form)
-            return HttpResponseRedirect('/tm/tutorial/1')
+            module = tm_train_module.next_training_module(request.user,None)
+            if module:
+                return HttpResponseRedirect('/tm/tutorial/%d' % (module.id))
+            else:
+                logger.error('No active modules for user ' + request.user.username)
+                raise Http404
         else:
-            # Form was invalid
-            logger.debug('Form validation error')
+            # Form was invalid. Return the bound form for correction.
             return render_to_response('tm/train_exp1.html',
                                       {'src_lang':src_lang.name,
                                        'survey_form':form,
@@ -183,7 +192,9 @@ def tr(request):
     
 @login_required
 def history(request, src_id):
-    """
+    """ TODO(spenceg): This needs to be re-written for the current state
+    of the backend.
+    
     Args:
     Returns:
     Raises:
@@ -192,7 +203,7 @@ def history(request, src_id):
     if not src:
         raise Http404
 
-    tgt_list = TargetTxt.objects.select_related().filter(src=src.id).order_by('-date')
+    tgt_list = TargetTxt.objects.select_related().filter(src=src).order_by('-date')
     return render_to_response('tm/history.html',
                               {'src':src, 'tgt_list':tgt_list},
                               context_instance=RequestContext(request))

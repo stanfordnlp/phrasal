@@ -24,7 +24,9 @@ def get_user_conf(user):
     return user_conf
 
 def get_user_langs(user):
-    """ Get the user's assigned source language
+    """ Get the user's assigned source and target languages.
+    TODO(spenceg): This code assumes that the user is bilingual (e.g.,
+    cannot have trilingual proficiencies)
     
     Args:
     Returns:
@@ -34,8 +36,25 @@ def get_user_langs(user):
     """
     conf = get_user_conf(user)
     if conf == None:
+        logger.error('Could not retrieve UserConf for user: ' + user.username)
         return None
 
     return (conf.lang_native, conf.lang_other)
     
+def get_active_modules(user):
+    """ Gets the users active experiment modules. The active modules
+    are sorted by primary key.
+
+    Args:
+      modules -- A QuerySet of ExperimentModules
+      None -- The user no longer has any active modules.
+    Returns:
+    Raises:
+    """
+    conf = get_user_conf(user)
+    if conf == None:
+        logger.error('Could not retrieve UserConf for user: ' + user.username)
+        return None
+
+    return conf.active_modules.all().order_by('id')
 

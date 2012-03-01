@@ -1,16 +1,37 @@
 import logging
-from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec
+import random
+from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule
 from tm_user_utils import get_user_conf
 
 logger = logging.getLogger(__name__)
 
+def get_experiment_module(module_id):
+    """ Retrieves and ExperimentModule based on an id.
 
+    Args:
+      module_id -- a pk for ExperimentModule
+    Returns:
+      module -- an ExperimentModule
+      None -- if there is no ExperimentModule for module_id
+    Raises:
+    """
+    try:
+        module = ExperimentModule.objects.get(id=module_id)
+    except ExperimentModule.DoesNotExist:
+        logger.error('No ExperimentModule for id ' + str(module_id))
+        return None
+
+    return module
+
+# TODO(spenceg): active_doc needs to be properly initialized by select_new_module, which is a precondition for this method.
 def select_src(user):
     """ Selects a source sentence for the user to translate.
 
     Args:
+      user -- a django.contrib.auth.models.User object
     Returns:
-     A SourceTxt object on success, None on failure
+      src -- A SourceTxt object
+      None -- if no SourceTxt exists for user
     Raises:
     """
     user_conf = get_user_conf(user)
@@ -18,6 +39,8 @@ def select_src(user):
         logger.info('Selecting source for inactive user profile: ' + repr(user))
         return None
 
+    # TODO(spenceg): Iterate through documents instead of randomly
+    # through sentences
     # TODO(spenceg): Random ordering evidently kills MySQL and SQLite, but
     # we are using Postgres currently, so try it until something breaks
     src_list = SourceTxt.objects.filter(ui=user_conf.active_module).exclude(id__in=user_conf.srcs.all).order_by('?')
@@ -28,7 +51,7 @@ def select_src(user):
         logger.info(user.username + ' has completed module ' + user_conf.active_module.name)
         return None
 
-def select_tgt_language(user,src_id):
+def select_tgt_language(user, src_id):
     """ Selects a translation target for this user and source text.
 
     Args:
@@ -38,9 +61,13 @@ def select_tgt_language(user,src_id):
      RuntimeError -- if src_id does not exist
     """
     user_conf = get_user_conf(user)
+    if not user_conf:
+        logger.error('UserConf does not exist for user: ' + request.user.username)
+        return None
+     
     try:
         src = SourceTxt.objects.get(id=src_id)
-    except DoesNotExist:
+    except SourceTxt.DoesNotExist:
         logger.error('Source id %d does not exist!' % (src_id))
         raise RuntimeError
 
@@ -51,43 +78,31 @@ def select_tgt_language(user,src_id):
     else:
         return user_conf.lang_native
     
-def select_module(user):
-    """ Implements the per-user work queue policy.
+def select_new_module(user):
+    """ Randomizes the order of the ExperimentModule objects that
+    the user sees.
 
     Args:
     Returns:
-       Tuple containing (new_module,last_module)
-       new_module (string) -- Current active module
-       last_module (string) -- Last active module
+      next_module -- an ExperimentModule QuerySet
+      None -- user has completed all modules
     Raises:
     """
     user_conf = get_user_conf(user)
-    if user_conf.done_with_tasks:
-        return (None, None)
+    if not user_conf:
+        logger.error('UserConf does not exist for user: ' + request.user.username)
+        return None
+    
+    user_conf.active_doc = None
+    modules = user_conf.active_modules.all()
+    n_active_modules = len(modules)
+    next_module = None
+    if n_active_modules > 0:
+        # Ordering of the active modules is randomized.
+        n_idx = random.randint(0,n_active_modules-1)
+        next_module = modules[n_idx]
+        user_conf.active_modules.remove(next_module)
 
-    # Now select the new module (if any)
-    enabled = None
-    last_module_name = None
-    if user_conf.active_module:
-        last_module_name = user_conf.active_module.name
-        src = select_src(user)
-        if src:
-            # The user still has work to do on this module
-            return (user_conf.active_module.name, last_module_name)
-        else:
-            enabled = user_conf.uis_enabled.filter(id__gt=user_conf.active_module.id).order_by('id')
-    else:
-        enabled = user_conf.uis_enabled.all().order_by('id')
-
-    current_module_name = None
-    if enabled:
-        current_module_name = enabled[0].name
-        user_conf.active_module = enabled[0]
-        user_conf.save()
-    else:
-        user_conf.active_module = None
-        user_conf.done_with_tasks = True
-        user_conf.save()
-
-    return (current_module_name, last_module_name)
+    user_conf.save()
+    return next_module
         

@@ -1,22 +1,30 @@
 import logging
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
-from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats
+from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats,UISpec
 from django.db import IntegrityError
 from tm_user_utils import get_user_conf
 
 logger = logging.getLogger(__name__)
 
-def get_template_for_ui(ui_name):
+def get_template_for_ui(ui_id):
     """ Returns a Django template for a given UISpec
 
     Args:
-     ui_name -- String corresponding to UISpec.name field
-     
-    Raises:
+      ui_id -- pk for a UISpec object
+      None -- If a template could not be found
     Returns:
-     A string containing the template 
+      template_str -- A string containing the template name for this UI
+      None -- if a template could not be found.
+    Raises:
     """
+    try:
+        uispec = UISpec.objects.get(id=ui_id)
+    except UISpec.DoesNotExist:
+        logger.error('Could not retrieve UISpec for id: ' + str(ui_id))
+        return None
+
+    ui_name = uispec.name
     if ui_name == 'tr':
         return 'tm/tr.html'
     elif ui_name == 'meedan':
@@ -41,7 +49,7 @@ def get_src(src_id):
         logger.error('No SourceTxt object for id: ' + str(src_id))
         return None
     
-    return src.id
+    return src
 
 def save_tgt(user, form):
     """ Save a user translation along with translation stats.
