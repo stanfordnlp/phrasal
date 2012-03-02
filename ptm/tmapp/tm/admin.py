@@ -9,4 +9,3 @@ admin.site.register(TranslationStats)
 admin.site.register(ExperimentModule)
 admin.site.register(ExperimentSample)
 admin.site.register(UISpec)
-

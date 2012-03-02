@@ -217,10 +217,10 @@ class TranslationStats(models.Model):
     tgt = models.OneToOneField(TargetTxt)
 
     # UI used to generate this translation
-    ui = models.ForeignKey(UISpec)
+    ui = models.ForeignKey(UISpec,related_name='+')
 
     # User who created the translation
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User,related_name='+')
 
     # Action log created by the interface
     # Usually, we use the translog2.js widget

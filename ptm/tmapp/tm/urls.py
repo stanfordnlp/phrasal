@@ -6,5 +6,5 @@ urlpatterns = patterns('tm.views',
     url(r'^(?P<src_id>\d+)/$', 'history'),
     url(r'^training/$', 'training'),
     url(r'^tutorial/(?P<module_id>\d+)/$','tutorial'),
-    url(r'^tr/$', 'tr'),
+    url(r'^tr/(?P<sample_id>\d+)/$', 'tr'),
 )

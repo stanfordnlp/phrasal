@@ -20,25 +20,39 @@ def index(request):
     Returns:
     Raises:
     """
+    user_name = request.user.first_name
+    if not user_name:
+        user_name = request.user.username
+            
     # Check to see if this user has finished training
     user_took_training = tm_train_module.done_training(request.user)
     if user_took_training == None:
         logger.error('Missing conf file for user: ' + request.user.username)
         raise Http404
 
+    # Select the user's current module
     module_name = 'train'
+    tr_url = ''
     if user_took_training:
-        module_name = tm_workqueue.select_new_module(request.user)
-        if module_name == None:
-            module_name = 'none'
-
-    user_name = request.user.first_name
-    if not user_name:
-        user_name = request.user.username
+        (module_name, sample_id) = tm_workqueue.has_samples(request.user)
+        if module_name:
+            logger.info('Module %s still active for %s' % (module_name,str(request.user)))
+            tr_url = '/tm/tr/%d/' % (sample_id)
+        else:
+            # Select a new module
+            module_name = tm_workqueue.select_new_module(request.user)
+            if module_name == None:
+                logger.info('%s has finished all modules' % (str(request.user)))
+                module_name = 'none'
+            else:
+                (module_name, sample_id) = tm_workqueue.has_samples(request.user)
+                logger.info('Selected module %s for user %s' % (module_name,str(request.user.username)))
+                tr_url = '/tm/tr/%d/' % (sample_id)
 
     return render_to_response('tm/index.html',
                               {'module_name':module_name,
-                               'name' : user_name},
+                               'name' : user_name,
+                               'tr_url' : tr_url},
                               context_instance=RequestContext(request))
 
 @login_required
@@ -119,7 +133,7 @@ def training(request):
                                           form=form)
             module = tm_train_module.next_training_module(request.user,None)
             if module:
-                return HttpResponseRedirect('/tm/tutorial/%d' % (module.id))
+                return HttpResponseRedirect('/tm/tutorial/%d/' % (module.id))
             else:
                 logger.error('No active modules for user ' + request.user.username)
                 raise Http404
@@ -132,7 +146,7 @@ def training(request):
                                       context_instance=RequestContext(request))
         
 @login_required
-def tr(request):
+def tr(request,sample_id):
     """
      On GET: selects a translation interface and source sentence for this
      user.
@@ -144,64 +158,70 @@ def tr(request):
       Http404 on server error.
     """
     (src_lang,tgt_lang) = tm_user_utils.get_user_langs(request.user)
+    sample_id = int(sample_id)
     
     if request.method == 'GET':
         # Select a new source sentence for translation
-        (src,module) = tm_workqueue.select_src(request.user)
-        if src and module:
-            template = tm_view_utils.get_template_for_ui(module.ui.id)
+        sample = tm_workqueue.get_sample(request.user, sample_id)
+        if not sample:
+            logger.error('Invalid user sample request: %s %d' % (str(request.user), sample_id))
+            raise Http404
+        else:
+            src = sample.src
+            ui_id = sample.module.ui.id
+            template = tm_view_utils.get_template_for_ui(ui_id)
             if template:
                 txt_suggest = tm_view_utils.get_suggestion(src,
                                                            tgt_lang,
-                                                           module.ui.id)
+                                                           ui_id)
                 logger.debug('%d suggestion: %s' % (src.id,txt_suggest))
                 header_txt = 'Translate to ' + tgt_lang.name
                 initial={'src_id':src.id,
                          'txt':txt_suggest,
-                         'ui_id':module.ui.id,
+                         'ui_id':ui_id,
                          'tgt_lang':tgt_lang,
                          'action_log':'ERROR',
                          'css_direction':tgt_lang.css_direction}
                 form = tm_forms.TranslationInputForm(initial=initial)
                 src_toks = src.txt.split()
+                action = '/tm/tr/%d/' % (sample_id)
                 return render_to_response(template,
                                           {'header_txt':header_txt,
                                            'src_css_dir':src.lang.css_direction,
                                            
                                            'src_toks':src_toks,
-                                           'form_action':'/tm/tr/',
+                                           'form_action':action,
                                            'form':form },
                                           context_instance=RequestContext(request))
             else:
                 logger.error('Could not select a template for src: '
                              + repr(src))
                 raise Http404
-        else:
-            # User has completed this module. Go back to the index.
-            return HttpResponseRedirect('/tm/')
 
     elif request.method == 'POST':
         form = tm_forms.TranslationInputForm(request.POST)
         if form.is_valid():
             tm_view_utils.save_tgt(request.user, form)
-            # Send the user to the next translation
-            return HttpResponseRedirect('/tm/tr/')
+            tm_workqueue.delete_sample(sample_id)
+            sample_id = tm_workqueue.poll_next_sample_id(request.user)
+            if sample_id:
+                return HttpResponseRedirect('/tm/tr/%d/' % (sample_id))
+            else:
+                # User has completed this module. Go back to the index.
+                return HttpResponseRedirect('/tm/')
         else:
             logger.warn('User %s entered an empty translation' % (request.user.username))
-            src_id = int(form['src_id'].value().strip())
-            src = tm_view_utils.get_src(src_id)
-            if not src:
-                logger.error('Could not retrieve SourceTxt for id: ' + str(src_id))
-                raise Http404
+            sample = tm_workqueue.get_sample(request.user, sample_id)
             ui_id = int(form['ui_id'].value().strip())
             template = tm_view_utils.get_template_for_ui(ui_id)
             header_txt = 'Translate to ' + tgt_lang.name
-            src_toks = src.txt.split()
+            src_toks = sample.src.txt.split()
+            action = '/tm/tr/%d/' % (sample_id)
             return render_to_response(template,
                                       {'header_txt':header_txt,
                                        'src_css_dir':src.lang.css_direction,
                                        'src_toks':src_toks,
-                                       'form_action':'/tm/tr/',
+                                       'form_action':action,
                                        'form':form },
                                       context_instance=RequestContext(request))
     

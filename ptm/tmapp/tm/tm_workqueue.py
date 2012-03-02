@@ -38,31 +38,77 @@ def purge_samples(user):
     sample_list.delete()
     return n_samples
 
-def select_src(user):
+def get_sample(user, sample_id):
     """ Selects a source sentence for the user to translate.
 
     Args:
       user -- a django.contrib.auth.models.User object
     Returns:
-      (src, module) -- A tuple
-        src -- A SourceTxt object
-        module -- An ExperimentModule object
+      sample -- an ExperimentSample object
+      None -- if the sample could not be selected
+    Raises:
+      RuntimeError -- if the sample does not exist
+    """
+    try:
+        sample = ExperimentSample.objects.get(id=sample_id)
+    except ExperimentSample.DoesNotExist:
+        logger.error('Sample %d for user %s does not exist!' % (sample_id,str(user)))
+        raise RuntimeError
+
+    # Prevent non-authenticated requests for samples
+    if not sample.user == user:
+        return None
+
+    return sample
+
+def delete_sample(sample_id):
+    """ Deletes a sample.
+
+    Args:
+    Returns:
     Raises:
     """
-    user_conf = get_user_conf(user)
-    if not user_conf:
-        logger.error('Could not retrieve UserConf for user: ' + user.username)
-        return (None, None)
-    
+    try:
+        sample = ExperimentSample.objects.get(id=sample_id)
+    except ExperimentSample.DoesNotExist:
+        logger.warn('Sample %d does not exist!' % (sample_id))
+        # Silently return
+        return True
+
+    sample.delete()
+    return True
+
+def has_samples(user):
+    """ Returns the name of the module for which the user has samples.
+
+    Args:
+      user -- a django.contrib.auth.models.User object
+    Returns:
+      (name,id) tuple, where:
+        name -- (str) ExperimentModule.name if it exists. Otherwise, None.
+        id -- (int) ExperimentModule.id if it exists. Otherwise, None.
+    Raises:
+    """
     sample_list = ExperimentSample.objects.filter(user=user).order_by('order')
     if len(sample_list) > 0:
         sample = sample_list[0]
-        src = sample.src
-        module = sample.module
-        # User can only see this sample once
-        sample.delete()
-        return (src, module)
-    return (None, None)
+        return (sample.module.name, sample.id)
+    return (None,None)
+
+def poll_next_sample_id(user):
+    """ Returns the sample id of this user's next sample
+    Args:
+      user -- a django.contrib.auth.models.User object
+    Returns:
+      id -- (int) a pk of an ExperimentSample object
+      None -- no more samples to process
+    Raises:
+    """
+    sample_list = ExperimentSample.objects.filter(user=user).order_by('order')
+    if len(sample_list) > 0:
+        sample = sample_list[0]
+        return sample.id
+    return None
 
 def select_new_module(user):
     """ Selects a new ExperimentModule for a user, and specifies the order
