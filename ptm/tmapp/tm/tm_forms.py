@@ -22,7 +22,7 @@ class UserTrainingForm(forms.Form):
                                           error_messages={'required': 'Required field'})
 
     hours_per_week = forms.IntegerField(required=True,
-                                        label='On average, how many hours do you work as a translator each week?',
+                                        label='On average, how many hours per week do you work as a translator?',
                                         error_messages={'required': 'Required field'})
 
 class TranslationInputForm(forms.Form):

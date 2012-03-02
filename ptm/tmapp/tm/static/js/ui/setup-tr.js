@@ -15,7 +15,6 @@ $(document).ready(function(){
   var _textAreaId = 'id_txt';
   var _textAreaSel = 'textarea#' + _textAreaId;
   $( _textAreaSel ).focus();
-  $( _textAreaSel ).val('');
 
   var _cssDir = $( 'input[name="css_direction"]' ).val();
   if (_cssDir == 'rtl'){
@@ -39,6 +38,7 @@ $(document).ready(function(){
   idletimer.addCallback(function(){
     alert('You exceeded the maximum idle time for this sentence. It will be submitted. Click OK to continue to the next sentence.');
     $( 'input[name="is_valid"]' ).val('False');
+    $( 'input[name="txt"]' ).val('INCOMPLETE');
     $( 'input[name="form-tgt-submit"]' ).trigger('click');
   });
   $( _textAreaSel ).keydown(function(){

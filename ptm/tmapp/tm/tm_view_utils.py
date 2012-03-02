@@ -11,12 +11,13 @@ def get_uispec(ui_id):
     Args:
     Returns:
     Raises:
+      RuntimeError -- if the query fails
     """
     try:
         uispec = UISpec.objects.get(id=ui_id)
     except UISpec.DoesNotExist:
         logger.error('Could not retrieve UISpec for id: ' + str(ui_id))
-        return None
+        raise RuntimeError
     return uispec
 
 def get_template_for_ui(ui_id):
@@ -49,15 +50,68 @@ def get_src(src_id):
 
     Args:
     Returns:
+      src -- a SourceTxt object
     Raises:
+      RuntimeError -- if the query fails
     """
     try:
         src = SourceTxt.objects.select_related().get(pk=src_id)
     except SourceTxt.DoesNotExist:
         logger.error('No SourceTxt object for id: ' + str(src_id))
-        return None
+        raise RuntimeError
     
     return src
+
+def get_machine_hypothesis(src, tgt_lang):
+    """ Gets a machine-generated hypothesis for this input.
+
+    Args:
+      src -- a SourceTxt object
+      tgt_lang -- a LanguageSpec object
+    Returns:
+      tgt -- a TargetTxt object
+      None -- if no machine hypothesis can be found
+    Raises:
+      RuntimeError -- if the query fails
+    """
+    try:
+        tgt_list = TargetTxt.objects.filter(src=src,
+                                            lang=tgt_lang,
+                                            is_machine=True)
+        n_results = len(tgt_list)
+        if n_results > 0:
+            if n_results > 1:
+                logger.warn('More than 1 machine hypothesis for src: %d' % (src.id))
+            return tgt_list[0]
+
+    except TargetTxt.DoesNotExist:
+        logger.error('Could not lookup hypothesis for src: %d' % (src.id))
+        raise RuntimeError
+
+    return None
+    
+def get_suggestion(src, tgt_lang, ui_id):
+    """ Gets a machine-generated suggestion for this src_id. Note that
+    the type of suggestion is dependent on the ui
+
+    Args:
+    Returns:
+      suggest -- (string) representation of the suggestion. Possibly empty
+                 if there is no machine suggestion.
+    Raises:
+    """
+    uispec = get_uispec(ui_id)
+
+    # Show a machine-generated complete suggestion 
+    if uispec.best_suggestion:
+        tgt = get_machine_hypothesis(src, tgt_lang)
+        if tgt:
+            return tgt.txt
+        else:
+            logger.error('No machine hypothesis for src: ' + str(src_id))
+
+    # This interface does not show a 1-best hypothesis
+    return ''
 
 def save_tgt(user, form):
     """ Save a user translation along with translation stats.
@@ -82,9 +136,11 @@ def save_tgt(user, form):
         action_log = form.cleaned_data['action_log'].strip()
         is_valid = form.cleaned_data['is_valid']
         
-        tgt = TargetTxt.objects.create(src=src, user=user,
-                                       date=tgt_date, txt=tgt_txt,
-                                       lang=tgt_lang)
+        tgt = TargetTxt.objects.create(src=src,
+                                       date=tgt_date,
+                                       txt=tgt_txt,
+                                       lang=tgt_lang,
+                                       is_machine=False)
         tgt_stats = TranslationStats.objects.create(tgt=tgt,
                                                     ui=uispec,
                                                     user=user,

@@ -70,7 +70,11 @@ def tutorial(request, module_id):
                 raise Http404
             else:
                 header_txt = 'Example of  ' + module.ui.display_name
+                txt_suggest = tm_view_utils.get_suggestion(src,
+                                                           tgt_lang,
+                                                           ui_id)
                 initial={'src_id':src.id,
+                         'txt':txt_suggest,
                          'ui_id':ui_id,
                          'tgt_lang':tgt_lang,
                          'action_log':'ERROR',
@@ -147,8 +151,13 @@ def tr(request):
         if src and module:
             template = tm_view_utils.get_template_for_ui(module.ui.id)
             if template:
+                txt_suggest = tm_view_utils.get_suggestion(src,
+                                                           tgt_lang,
+                                                           module.ui.id)
+                logger.debug('%d suggestion: %s' % (src.id,txt_suggest))
                 header_txt = 'Translate to ' + tgt_lang.name
                 initial={'src_id':src.id,
+                         'txt':txt_suggest,
                          'ui_id':module.ui.id,
                          'tgt_lang':tgt_lang,
                          'action_log':'ERROR',

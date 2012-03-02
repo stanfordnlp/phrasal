@@ -16,7 +16,7 @@
 {% block content %}
 
 <div id="main-content">
-<p>Thank you for agreeing to help us with this translation job! We are a group of researchers in <a href="http://cs.stanford.edu" target="_blank">Computer Science Department at Stanford University</a> working on interfaces for translation. While you work, this website will record your keystrokes and mouse actions. <b>No other information will be recorded, except for the survey data below.</b> We will study the method that you and other translators like you used to translate sentences.</p>
+<p>Thank you for agreeing to help us with this translation job! We are a group of researchers in the <a href="http://cs.stanford.edu" target="_blank">Computer Science Department at Stanford University</a> working on translation interfaces. Our goal is to create interfaces that will improve both translator productivity and translation quality. While you work, this website will record your keystrokes and mouse actions. <b>No other information will be recorded, except for the survey data below.</b> We will study the method that you and other translators like you used to translate sentences.</p>
 
 <p>You will be asked to translate two sets of sentences from {{ src_lang }} to {{ tgt_lang }}. Translate the sentences as quickly and as accurately as you can. Once you start a translation, you may pause for no longer than 3 minutes during the session. If you pause for longer than 3 minutes, then your current translation will be automatically submitted. For each sentence that you exceed the "idle timer," we will deduct that many words from the final price that you are paid.</p>
 
@@ -26,14 +26,14 @@
 <p>This website will administer the translation job, which is organized into two modules separated by a break:</p>
 
 <ul>
-<li>Translation Module #1 (about 30min.) </li>
+<li>Translation Module #1 (about 250 words) </li>
 <li>Break (untimed) </li>
-<li>Translation Module #2 (about 30min.) </li>
+<li>Translation Module #2 (about 250 words) </li>
 </ul>
 
 <p>We ask that you complete the whole job in a single session. Once you complete Block #1, the website will prompt you to take a break, and the timer will be disabled. Get up, go to the bathroom, get some coffee: whatever you need to stay productive. We expect that you'll take about 15 minutes, and no more than an hour. We require that you complete both blocks on the same day.</p>
 
-<p>The text that you will be asked to translate comes from several unrelated documents. We selected paragraphs from these documents, the sentences of which you will see in the order in which they appeared in the document.</p>
+<p>The text that you will be asked to translate comes from several unrelated documents. We selected paragraphs from these documents, the sentences of which you will see in the order in which they appeared in the document. We expect that the sentences will challenge you. </p>
 
 <p>When creating your translation, please do not use:
 <ul>
@@ -43,27 +43,27 @@
 You <b>may</b> use dictionaries, either online (for example, <a href="http://www.wordreference.com" target="_blank">WordReference</a>) or offline.
 </p>
 
-<p>We will check the translations you submit against those produced by various machine translation systems. We will also review the screenshots of your work on odesk to verify that you did not use any other form of machine assistance. We're curious to know how humans work. We already know a lot about machines ;-) Please help us by not using machine assistance.</p>
+<p>We will check the translations you submit against those produced by various machine translation systems. We will also review the screenshots of your work on odesk to verify that you did not use any other form of machine assistance. We're curious to know how humans work (we already know a lot about machines!). Please help us by not using machine assistance.</p>
 
 <p>Each translation Block has a different interface. The website will randomly choose which interface to show you in each of the translation Blocks.</p>
 
 <h2>Translation Interface A</h2>
-<p>You will be presented with a sentence and an empty textbox. Please enter a translation as quickly and as accurately as you can. A timer at the bottom left of the screen will indicate how much time you have to complete the job. If you do not complete the translation before the timer expires, then the incomplete translation will be submitted for you. The site will then redirect you to the next translation task.</p>
+<p>You will be presented with a sentence and an empty textbox. Please enter a translation as quickly and as accurately as you can. The "idle timer," which limits your pauses to 3 minutes, is located at the bottom left of your browser window. If you do not complete the translation before the idle timer expires, then the incomplete translation will be submitted for you. The site will then redirect you to the next sentence.</p>
 
 <h2>Translation Interface B</h2>
-<p>You will be presented with a sentence and a suggested translation. You may use the suggested translation as a starting point. However, the objective remains the same: translate the sentence as quickly and as accurately as you can. If you believe that it would be faster to type a new translation than to fix the suggestion, then feel free to delete the suggestion and start from the beginning.</p>
+<p>You will be presented with a sentence and a suggested translation. You may use the suggested translation as a starting point. However, the objective remains the same: translate the sentence as quickly and as accurately as you can. If you believe that it would be faster to type a new translation than to fix the suggestion, then feel free to delete the suggestion and start from the beginning. As before, the "idle timer" will appear at the bottom left of your browser window.</p>
 
-<p>We're almost there. Please complete this survey. When you click the button below, you will see Interface A, followed by Interface B. Take your time to familiarize yourself with the interfaces. When you click "OK" on Interface B, you will be re-directed to the first Block.</p>
+<h2>Survey</h2>
+<p>We're almost there. We just need you to complete this short survey. When you click the button below, you will start a tutorial in which you will see Interface A and Interface B. You don't need to submit complete translations. Simply use these examples to familiarize yourself with the interfaces. When you click "Submit" on Interface B, you will be re-directed to a page with a link to the first translation Block. Once you click that link, start translating as quickly as you can.</p>
 </div>
 
 <div style="clear:both" id="form-train-done">
-<h2>Survey</h2>
 <form action="/tm/training/" method="post" name="form-train-done" id="form-train-done">
 {% csrf_token %}
 <table>
 {{ survey_form.as_table }}
 </table>
-<input type="submit" value="I Understand the Job. Show Me The Interfaces!" name="form-submit" id="form-submit" />
+<input type="submit" value="I Understand the Job. Show Me the Interface Tutorial!" name="form-submit" id="form-submit" />
 </form>
 </div>
 

@@ -1,0 +1,1238 @@
+html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"Free will - Wikipedia, the free encyclopediaa:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}a.new,#quickbar a.new{color:#ba0000}
+
+/* cache key: enwiki:resourceloader:filter:minify-css:7:c88e2bcd56513749bec09a7e29cb3ffa */if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Free_will","wgTitle":"Free will","wgCurRevisionId":478963430,"wgArticleId":47921,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Articles to be expanded from December 2011","All articles to be expanded","Spoken articles","Articles with hAudio microformats","Featured articles","Free will","Causality","Concepts in ethics","Metaphysics","Philosophical problems","Philosophy of life","Philosophy of religion","Theology","Christian philosophy"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRestrictionEdit":[],"wgRestrictionMove":[],"wgSearchNamespaces":[0],"wgVectorEnabledModules":{"collapsiblenav":true,"collapsibletabs":true,"editwarning":true,"expandablesearch":false,"footercleanup":false,"sectioneditlinks":false,"simplesearch":true,"experiments":true},"wgWikiEditorEnabledModules":{"toolbar":true,"dialogs":true,"hidesig":true,"templateEditor":false,"templates":false,"preview":false,"previewDialog":false,"publish":false,"toc":false},"wgTrackingToken":"79e03963a5f2eb3985e731ad8dd8f8f9","wikilove-recipient":"","wikilove-edittoken":"+\\","wikilove-anon":0,"mbEmailEnabled":true,"mbUserEmail":false,"mbIsEmailConfirmationPending":false,"wgFlaggedRevsParams":{"tags":{"status":{"levels":1,"quality":2,"pristine":3}}},"wgStableRevisionId":null,"wgCategoryTreePageCategoryOptions":"{\"mode\":0,\"hideprefix\":20,\"showcount\":true,\"namespaces\":false}","Geo":{"city":"","country":""},"wgNoticeProject":"wikipedia"});
+}if(window.mw){
+mw.loader.implement("user.options",function($){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":0,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":false,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":4,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":1,"watchdefault":0,
+"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"flaggedrevssimpleui":1,"flaggedrevsstable":0,"flaggedrevseditdiffs":true,"flaggedrevsviewdiffs":false,"vector-simplesearch":1,"useeditwarning":1,"vector-collapsiblenav":1,"usebetatoolbar":1,"usebetatoolbar-cgd":1,"wikilove-enabled":1,"variant":"en","language":"en","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"searchNs100":false,"searchNs101":false,"searchNs108":false,"searchNs109":false,"gadget-teahouse":1,"gadget-mySandbox":1});;},{},{});mw.loader.implement("user.tokens",function($){mw.user.tokens.set({"editToken":"+\\","watchToken":false});;
+},{},{});
+
+/* cache key: enwiki:resourceloader:filter:minify-js:7:ecf8688ef3caaee08a2939104d260ddb */
+}if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}
+wgOggPlayer.msg = {"ogg-play":"Play","ogg-pause":"Pause","ogg-stop":"Stop","ogg-no-player":"Sorry, your system does not appear to have any supported player software.\nPlease \x3ca href=\"http://www.mediawiki.org/wiki/Extension:OggHandler/Client_download\"\x3edownload a player\x3c/a\x3e.","ogg-player-videoElement":"Native browser support","ogg-player-oggPlugin":"Browser plugin","ogg-player-cortado":"Cortado (Java)","ogg-player-vlc-mozilla":"VLC","ogg-player-vlc-activex":"VLC (ActiveX)","ogg-player-quicktime-mozilla":"QuickTime","ogg-player-quicktime-activex":"QuickTime (ActiveX)","ogg-player-totem":"Totem","ogg-player-kaffeine":"Kaffeine","ogg-player-kmplayer":"KMPlayer","ogg-player-mplayerplug-in":"mplayerplug-in","ogg-player-thumbnail":"Still image only","ogg-player-selected":"(selected)","ogg-use-player":"Use player:","ogg-more":"More…","ogg-download":"Download file","ogg-desc-link":"About this file","ogg-dismiss":"Close","ogg-player-soundthumb":"No player","ogg-no-xiphqt":"You do not appear to have the XiphQT component for QuickTime.\nQuickTime cannot play Ogg files without this component.\nPlease \x3ca href=\"http://www.mediawiki.org/wiki/Extension:OggHandler/Client_download\"\x3edownload XiphQT\x3c/a\x3e or choose another player."};
+wgOggPlayer.cortadoUrl = "//upload.wikimedia.org/jars/cortado.jar";
+wgOggPlayer.extPathUrl = "//bits.wikimedia.org/w/extensions-1.19/OggHandler";
+
+.ogg-player-options {
+	border: solid 1px #ccc;
+	padding: 2pt;
+	text-align: left;
+	font-size: 10pt;
+}
+
+.center .ogg-player-options ul {
+	margin: 0.3em 0px 0px 1.5em;
+}
+[if lt IE 7]><style type="text/css">body{behavior:url("/w/skins-1.19/vector/csshover.min.htc")}</style><![endif]
+
+
+ content 
+
+
+
+ sitenotice 
+ centralNotice loads here 
+ /sitenotice 
+ firstHeading 
+
+Free will
+
+ /firstHeading 
+ bodyContent 
+
+ tagline 
+From Wikipedia, the free encyclopedia
+ /tagline 
+ subtitle 
+
+ /subtitle 
+ jumpto 
+
+					Jump to: navigation,
+					search
+
+ /jumpto 
+ bodycontent 
+This article is about the philosophical questions of free will.  For other uses, see Free will (disambiguation).
+
+
+
+
+A domino's movement is determined completely by laws of physics. Incompatibilists say that this is a threat to free will, but compatibilists argue that, even if we are similar to dominoes, we can have a form of free will.
+
+
+
+
+Part of a series on
+
+
+Freedom
+
+
+Concepts
+
+
+
+Liberty
+(positive · negative · social)
+Rights
+Free will
+Moral responsibility
+
+
+By type
+
+
+Academic · Civil
+Economic · Intellectual
+Political · Scientific
+
+
+By right
+
+
+Assembly · Association
+Education · Information
+Movement · Press
+Religion · Speech (public)
+Speech (schools) · Thought
+
+
+
+
+
+v
+t
+e
+
+
+
+
+
+
+
+
+
+A simplified taxonomy of the most important philosophical positions regarding free will.
+
+
+Free will is the ability of agents to make choices free from certain kinds of constraints. The existence of free will and its exact nature and definition have long been debated in philosophy. Historically, the constraint of dominant concern has been the metaphysical constraint of determinism. Two prominent opposing positions within that debate are metaphysical libertarianism, the claim that determinism is false and thus that free will exists (or is at least possible); and hard determinism, the claim that determinism is true and thus that free will does not exist.
+Both of these positions, which agree that causal determination is the relevant factor in the question of free will, are classed as incompatibilists. Those who deny that determinism is relevant are classified as compatibilists, and offer various alternative explanations of what constraints are relevant, such as physical constraints (e.g. chains or imprisonment), social constraints (e.g. threat of punishment or censure), or psychological constraints (e.g. compulsions or phobias).
+The principle of free will has religious, ethical, and scientific implications. For example, in the religious realm, free will implies that individual will and choices can coexist with an omnipotent divinity. In ethics, it may hold implications for whether individuals can be held morally accountable for their actions. In science, neuroscientific findings regarding free will may suggest different ways of predicting human behavior.
+
+
+
+
+Contents
+
+
+1 In western philosophy
+
+1.1 Incompatibilism
+
+1.1.1 Hard determinism
+1.1.2 Metaphysical libertarianism
+1.1.3 Two-stage models
+1.1.4 Hard incompatibilism
+
+
+1.2 Compatibilism
+
+1.2.1 Free will as lack of physical restraint
+1.2.2 Free will as a psychological state
+1.2.3 Free will as unpredictability
+
+
+1.3 Other views
+
+1.3.1 Free will as an illusion
+1.3.2 Free will as a pragmatically useful concept
+
+
+
+
+2 In science
+
+2.1 Physics
+2.2 Genetics
+2.3 Neuroscience
+2.4 Neurology and psychiatry
+2.5 Determinism and emergent behavior
+2.6 Experimental psychology
+
+
+3 In Eastern philosophy
+
+3.1 In Hindu philosophy
+3.2 In Buddhist philosophy
+
+
+4 In other theology
+5 Believing in free will
+
+5.1 What people believe
+5.2 Effects of the belief itself
+
+
+6 See also
+7 References
+8 Further reading
+9 External links
+
+
+
+
+[edit] In western philosophy
+[edit] Incompatibilism
+Main article: Incompatibilism
+
+
+
+
+Baron d'Holbach was a hard determinist.
+
+
+Incompatibilism is the position that free will and determinism are logically incompatible, and that the major question regarding whether or not people have free will is thus whether or not their actions are determined. "Hard determinists", such as Martin Luther and d'Holbach, are those incompatibilists who accept determinism and reject free will. "Metaphysical libertarians", such as Thomas Reid, Peter van Inwagen, and Robert Kane, are those incompatibilists who accept free will and deny determinism, holding the view that some form of indeterminism is true.[1] Another view is that of hard incompatibilists, which state that free will is incompatible with both determinism and indeterminism. This view is defended by Derk Pereboom.[2]
+Traditional arguments for incompatibilism are based on an "intuition pump": if a person is like other mechanical things that are determined in their behavior such as a wind-up toy, a billiard ball, a puppet, or a robot, then people must not have free will.[1][3] This argument has been rejected by compatibilists such as Daniel Dennett on the grounds that, even if humans have something in common with these things, it remains possible and plausible that we are different from such objects in important ways.[4]
+Another argument for incompatibilism is that of the "causal chain." Incompatibilism is key to the idealist theory of free will. Most incompatibilists reject the idea that freedom of action consists simply in "voluntary" behavior. They insist, rather, that free will means that man must be the "ultimate" or "originating" cause of his actions. He must be a causa sui, in the traditional phrase. To be responsible for one's choices is to be the first cause of those choices, where first cause means that there is no antecedent cause of that cause. The argument, then, is that if man has free will, then man is the ultimate cause of his actions. If determinism is true, then all of man's choices are caused by events and facts outside his control. So, if everything man does is caused by events and facts outside his control, then he cannot be the ultimate cause of his actions. Therefore, he cannot have free will.[5][6][7] This argument has also been challenged by various compatibilist philosophers.[8][9]
+A third argument for incompatibilism was formulated by Carl Ginet in the 1960s and has received much attention in the modern literature. The simplified argument runs along these lines: if determinism is true, then we have no control over the events of the past that determined our present state and no control over the laws of nature. Since we can have no control over these matters, we also can have no control over the consequences of them. Since our present choices and acts, under determinism, are the necessary consequences of the past and the laws of nature, then we have no control over them and, hence, no free will. This is called the consequence argument.[10][11] Peter van Inwagen remarks that C.D. Broad had a version of the consequence argument as early as the 1930s.[12]
+The difficulty of this argument for compatibilists lies in the fact that it entails the impossibility that one could have chosen other than one has. For example, if Jane is a compatibilist and she has just sat down on the sofa, then she is committed to the claim that she could have remained standing, if she had so desired. But it follows from the consequence argument that, if Jane had remained standing, she would have either generated a contradiction, violated the laws of nature or changed the past. Hence, compatibilists are committed to the existence of "incredible abilities", according to Ginet and van Inwagen. One response to this argument is that it equivocates on the notions of abilities and necessities, or that the free will evoked to make any given choice is really an illusion and the choice had been made all along, oblivious to its "decider".[11] David Lewis suggests that compatibilists are only committed to the ability to do something otherwise if different circumstances had actually obtained in the past.[13]
+[edit] Hard determinism
+
+
+
+This section requires expansion.
+
+
+Main article: Hard determinism
+Determinism is a broad term with a variety of meanings. Corresponding to each of these different meanings, there arises a different problem of free will.[14] Hard determinism is a view on free will which holds that that some form of determinism is true, and that it is incompatible with free will, and therefore that free will does not exist. Forms of determinism can include:-
+
+Causal determinism states that future events are necessitated by past and present events combined with the laws of nature. Such determinism is sometimes illustrated by the thought experiment of Laplace's demon. Imagine an entity that knows all facts about the past and the present, and knows all natural laws that govern the universe. If the laws of nature were determinate, then such an entity would be able to use this knowledge to foresee the future, down to the smallest detail.[15]
+Logical determinism is the notion that all propositions, whether about the past, present or future, are either true or false. The problem of free will, in this context, is the problem of how choices can be free, given that what one does in the future is already determined as true or false in the present.[14]
+Theological determinism is the idea that God determines all that humans will do, either by knowing their actions in advance, via some form of omniscience[16] or by decreeing their actions in advance.[17] The problem of free will, in this context, is the problem of how our actions can be free if there is a being who has determined them for us in advance.
+Biological determinism is the idea that all behaviors, beliefs, and desires are fixed by our genetic endowment and our biochemical makeup, the latter of which is affected by both genes and environment.
+Other forms of determinism include: cultural determinism and psychological determinism.[14] Combinations and syntheses of determinist theses, e.g. bio-environmental determinism, are even more common.
+
+[edit] Metaphysical libertarianism
+Main article: Libertarianism (metaphysics)
+
+
+
+
+Various definitions of free will that have been proposed, for both Compatibilism,[18] and Incompatibilism (Hard Determinism,[19] Hard Incompatibilism,[2] Libertarianism Traditional,[20] and Libertarianism Volition[21]). Red circles represent mental states; blue circles represent physical states; arrows describe causal interaction.
+
+
+Metaphysical libertarianism is one philosophical position of incompatibilism. Libertarianism holds onto a concept of free will that implies the individual may be able to take more than one possible course of action under a set of circumstances.
+Accounts of libertarianism subdivide into non-physical theories and physical or naturalistic theories. Non-physical theories hold that the events in the brain that lead to the performance of actions do not have an entirely physical explanation, which requires that the world is not closed under physics. Such interactionist dualists believe that some non-physical mind, will, or soul overrides physical causality.
+Explanations of libertarianism that do not involve dispensing with physicalism require physical indeterminism, such as probabilistic subatomic particle behavior – theory unknown to many of the early writers on free will. Physical determinism, under the assumption of physicalism, implies there is only one possible future and is therefore not compatible with libertarian free will. Some libertarian explanations involve invoking panpsychism, the theory that a quality of mind is associated with all particles, and pervades the entire universe, in both animate and inanimate entities. Other approaches do not require free will to be a fundamental constituent of the universe; ordinary randomness is appealed to as supplying the "elbow room" believed to be necessary by libertarians.
+Free volition is regarded as a particular kind of complex, high-level process with an element of indeterminism. An example of this kind of approach has been developed by Robert Kane,[21] where he hypothesises that,
+
+In each case, the indeterminism is functioning as a hindrance or obstacle to her realizing one of her purposes—a hindrance or obstacle in the form of resistance within her will which has to be overcome by effort.
+
+Although at the time C. S. Lewis wrote Miracles,[22] Quantum Mechanics (and physical indeterminism) was only in the initial stages of acceptance, he stated the logical possibility that if the physical world was proved to be indeterministic this would provide an entry (interaction) point into the traditionally viewed closed system, where a scientifically described physically probable/improbable event could be philosophically described as an action of a non-physical entity on physical reality.
+Some metaphysical libertarians, such as William of Ockham and Thomas Reid, propose that the existence of a nonphysical agent responsible for our freedom cannot be established by empirical or philosophical evidence: otherwise a paradox would ensue, as evidence forces a conclusion, destroying the freedom necessary in reaching a belief about the agent. Before form there exists the freedom of all possibilities. Thought is the first stage of form so to clarify ends the freedom of all possibilities. The decisions and alternatives are taken to be matters of fact, but the agent is considered a matter of free belief.
+[edit] Two-stage models
+In 1884 William James described a two-stage model of free will: in the first stage the mind develops random alternative possibilities for action, and in the second an adequately determined will selects one option. A number of other thinkers have since refined this idea, including Henri Poincaré, Arthur Holly Compton, Karl Popper, Henry Margenau, Daniel Dennett, Robert Kane, Alfred Mele, and Martin Heisenberg.
+Each of these models tries to reconcile libertarian free will with the existence of irreducible chance (today in the form of quantum indeterminacy), which threatens to make an agent's decision random, thus denying the control needed for responsibility.
+If a single event is caused by chance, then logically indeterminism would be "true." For centuries, philosophers have said this would undermine the very possibility of certain knowledge. Some go to the extreme of saying that real chance would make the whole state of the world totally independent of any earlier states.
+The Stoic Chrysippus said that a single uncaused cause could destroy the universe (cosmos),
+
+"Everything that happens is followed by something else which depends on it by causal necessity. Likewise, everything that happens is preceded by something with which it is causally connected. For nothing exists or has come into being in the cosmos without a cause. The universe will be disrupted and disintegrate into pieces and cease to be a unity functioning as a single system, if any uncaused movement is introduced into it."
+
+James said most philosophers have an "antipathy to chance."[23] His contemporary John Fiske described the absurd decisions that would be made if chance were real,
+
+"If volitions arise without cause, it necessarily follows that we cannot infer from them the character of the antecedent states of feeling. .. . The mother may strangle her first-born child, the miser may cast his long-treasured gold into the sea, the sculptor may break in pieces his lately-finished statue, in the presence of no other feelings than those which before led them to cherish, to hoard, and to create."[24]
+
+In modern times, J. J. C. Smart has described the problem of admitting indeterminism,
+
+"Indeterminism does not confer freedom on us: I would feel that my freedom was impaired if I thought that a quantum mechanical trigger in my brain might cause me to leap into the garden and eat a slug."[25]
+
+The challenge for two-stage models is to admit some indeterminism but not permit it to produce random actions, as determinists fear. And of course a model must limit determinism but not eliminate it as some libertarians think necessary.
+Two-stage models limit the contribution of random chance to the generation of alternative possibilities for action. But note that, in recent years, compatibilist analytic philosophers following Harry Frankfurt have denied the existence of alternative possibilities. They develop "Frankfurt-type examples" (thought experiments) in which they argue an agent is free even though no alternative possibilities exist, or the agent is prevented at the last moment by neuroscientific demons from "doing otherwise."[26]
+[edit] Hard incompatibilism
+John Locke denied that the phrase "free will" made any sense (compare with theological noncognitivism, a similar stance on the existence of God). He also took the view that the truth of determinism was irrelevant. He believed that the defining feature of voluntary behavior was that individuals have the ability to postpone a decision long enough to reflect or deliberate upon the consequences of a choice: "...the will in truth, signifies nothing but a power, or ability, to prefer or choose".[27]
+The contemporary philosopher Galen Strawson agrees with Locke that the truth or falsity of determinism is irrelevant to the problem.[28] He argues that the notion of free will leads to an infinite regress and is therefore senseless. According to Strawson, if one is responsible for what one does in a given situation, then one must be responsible for the way one is in certain mental respects. But it is impossible for one to be responsible for the way one is in any respect. This is because to be responsible in some situation "S", one must have been responsible for the way one was at "S−1". To be responsible for the way one was at "S−1", one must have been responsible for the way one was at "S−2", and so on. At some point in the chain, there must have been an act of origination of a new causal chain. But this is impossible. Man cannot create himself or his mental states ex nihilo. This argument entails that free will itself is absurd, but not that it is incompatible with determinism. Strawson calls his own view "pessimism" but it can be classified as hard incompatibilism.[28]
+[edit] Compatibilism
+Main article: Compatibilism
+
+
+
+
+Thomas Hobbes was a classical compatibilist.
+
+
+Compatibilists maintain that determinism is compatible with free will. It may, however, be more accurate to say that compatibilists define "free will" in a way that allows it to co-exist with determinism (in the same way that incompatibilists define "free will" such that it cannot). Compatibilists believe freedom can be present or absent in situation for reasons that have nothing to do with metaphysics. For instance, courts of law make judgments about whether individuals are acting under the own free will under certain circumstances without bringing in metaphysics. Similarly, political liberty is a non-metaphysical concept. Likewise, compatibilists define free will as freedom to act according to one's determined motives without hindrance from other individuals. In contrast, the incompatibilist positions are concerned with a sort of "metaphysically free will," which compatibilists claim has never been coherently defined. Compatibilists argue that determinism does not matter; what matters is that individuals' wills are the result of their own desires and are not overridden by some external force.[18][29] To be a compatibilist, one need not endorse any particular conception of free will, but only deny that determinism is at odds with free will.[30]
+[edit] Free will as lack of physical restraint
+Most "classical compatibilists", such as Thomas Hobbes, claim that a person acts on their own only when the person wanted to do the act and the person could have done otherwise, if the person had decided to. Hobbes sometimes attributes such compatibilist freedom to each individual and not to some abstract notion of will, asserting, for example, that "no liberty can be inferred to the will, desire, or inclination, but the liberty of the man; which consisteth in this, that he finds no stop, in doing what he has the will, desire, or inclination to do."[29] In articulating this crucial proviso, David Hume writes, "this hypothetical liberty is universally allowed to belong to every one who is not a prisoner and in chains".[18]
+[edit] Free will as a psychological state
+"Modern compatibilists", such as Harry Frankfurt and Daniel Dennett, argue that there are cases where a coerced agent's choices are still free because such coercion coincides with the agent's personal intentions and desires.[4][31] Frankfurt, in particular, argues for a version of compatibilism called the "hierarchical mesh". The idea is that an individual can have conflicting desires at a first-order level and also have a desire about the various first-order desires (a second-order desire) to the effect that one of the desires prevails over the others. A person's will is to be identified with their effective first-order desire, i.e., the one that they act on. So, for example, there are "wanton addicts", "unwilling addicts" and "willing addicts." All three groups may have the conflicting first-order desires to want to take the drug to which they are addicted and to not want to take it.
+The first group, "wanton addicts", have no second-order desire not to take the drug. The second group, "unwilling addicts", have a second-order desire not to take the drug, while the third group, "willing addicts", have a second-order desire to take it. According to Frankfurt, the members of the first group are to be considered devoid of will and therefore no longer persons. The members of the second group freely desire not to take the drug, but their will is overcome by the addiction. Finally, the members of the third group willingly take the drug to which they are addicted. Frankfurt's theory can ramify to any number of levels. Critics of the theory point out that there is no certainty that conflicts will not arise even at the higher-order levels of desire and preference.[32] Others argue that Frankfurt offers no adequate explanation of how the various levels in the hierarchy mesh together.[33]
+[edit] Free will as unpredictability
+In Elbow Room, Dennett presents an argument for a compatibilist theory of free will, which he further elaborated in the book Freedom Evolves.[34] The basic reasoning is that, if one excludes God, an infinitely powerful demon, and other such possibilities, then because of chaos and epistemic limits on the precision of our knowledge of the current state of the world, the future is ill-defined for all finite beings. The only well-defined things are "expectations". The ability to do "otherwise" only makes sense when dealing with these expectations, and not with some unknown and unknowable future.
+According to Dennett, because individuals have the ability to act differently from what anyone expects, free will can exist.[34] Incompatibilists claim the problem with this idea is that we may be mere "automata responding in predictable ways to stimuli in our environment". Therefore, all of our actions are controlled by forces outside ourselves, or by random chance.[35] More sophisticated analyses of compatibilist free will have been offered, as have other critiques.[30]
+In the philosophy of decision theory, a fundamental question is: From the standpoint of statistical outcomes, to what extent do the choices of a conscious being have the ability to influence the future? Newcomb's paradox and other philosophical problems pose questions about free will and predictable outcomes of choices.
+[edit] Other views
+Some philosophers' views are difficult to categorize as either compatibilist or incompatibilist, hard determinist or libertarian. For example, Ted Honderich holds the view that "determinism is true, compatibilism and incompatibilism are both false" and the real problem lies elsewhere. Honderich maintains that determinism is true because quantum phenomena are not events or things that can be located in space and time, but are abstract entities. Further, even if they were micro-level events, they do not seem to have any relevance to how the world is at the macroscopic level. He maintains that incompatibilism is false because, even if determinism is true, incompatibilists have not, and cannot, provide an adequate account of origination. He rejects compatibilism because it, like incompatibilism, assumes a single, fundamental notion of freedom. There are really two notions of freedom: voluntary action and origination. Both notions are required to explain freedom of will and responsibility. Both determinism and indeterminism are threats to such freedom. To abandon these notions of freedom would be to abandon moral responsibility. On the one side, we have our intuitions; on the other, the scientific facts. The "new" problem is how to resolve this conflict.[36]
+[edit] Free will as an illusion
+David Hume discussed the possibility that the entire debate about free will is nothing more than a merely "verbal" issue. He suggested that it might be accounted for by "a false sensation or seeming experience" (a velleity), which is associated with many of our actions when we perform them. On reflection, we realize that they were necessary and determined all along.[37]
+
+
+
+
+Much of Arthur Schopenhauer's writing is focused on the notion of will and its relation to freedom.
+
+
+Arthur Schopenhauer put the puzzle of free will and moral responsibility in these terms:
+
+Everyone believes himself a priori to be perfectly free, even in his individual actions, and thinks that at every moment he can commence another manner of life. ... But a posteriori, through experience, he finds to his astonishment that he is not free, but subjected to necessity, that in spite of all his resolutions and reflections he does not change his conduct, and that from the beginning of his life to the end of it, he must carry out the very character which he himself condemns...[38]
+
+In his On the Freedom of the Will, Schopenhauer stated, "You can do what you will, but in any given moment of your life you can will only one definite thing and absolutely nothing other than that one thing."[39]
+Rudolf Steiner, who collaborated in a complete edition of Arthur Schopenhauer's work,[40] wrote The Philosophy of Freedom, which focuses on the problem of free will. Steiner (1861–1925) initially divides this into the two aspects of freedom: freedom of thought and freedom of action. He argues that inner freedom is achieved when we bridge the gap between our sensory impressions, which reflect the outer appearance of the world, and our thoughts, which give us access to the inner nature of the world. Acknowledging the many influences on our choice, he points to the impact of our becoming aware of just these determinants. Outer freedom is attained by permeating our deeds with moral imagination. Steiner aims to show that these two aspects of inner and outer freedom are integral to one another, and that true freedom is only achieved when they are united.[41]
+[edit] Free will as a pragmatically useful concept
+William James' views were ambivalent. While he believed in free will on "ethical grounds," he did not believe that there was evidence for it on scientific grounds, nor did his own introspections support it.[42] Moreover, he did not accept incompatibilism as formulated below; he did not believe that the indeterminism of human actions was a prerequisite of moral responsibility. In his work Pragmatism, he wrote that "instinct and utility between them can safely be trusted to carry on the social business of punishment and praise" regardless of metaphysical theories.[43] He did believe that indeterminism is important as a "doctrine of relief"—it allows for the view that, although the world may be in many respects a bad place, it may, through individuals' actions, become a better one. Determinism, he argued, undermines meliorism—the idea that progress is a real concept leading to improvement in the world.[43]
+[edit] In science
+[edit] Physics
+Early scientific thought often portrayed the universe as deterministic,[44] and some thinkers claimed that the simple process of gathering sufficient information would allow them to predict future events with perfect accuracy. Modern science, on the other hand, is a mixture of deterministic and stochastic theories.[45] Quantum mechanics predicts events only in terms of probabilities, casting doubt on whether the universe is deterministic at all. Current physical theories cannot resolve the question of whether determinism is true of the world, being very far from a potential Theory of Everything, and open to many different interpretations.[46][47]
+
+
+
+
+Quantum mechanics defines probabilities to predict the behavior of particles, "rather than determining the future and past with certainty". Because the human brain is composed of particles, and their behavior is governed by the laws of nature, Stephen Hawking says that free will is "just an illusion".[48]
+
+
+Assuming that an indeterministic interpretation of quantum mechanics is correct, one may still object that such indeterminism is for all practical purposes confined to microscopic phenomena.[49] This is not always the case: many macroscopic phenomena are based on quantum effects. For instance, some hardware random number generators work by amplifying quantum effects into practically usable signals. A more significant question is whether the indeterminism of quantum mechanics allows for the traditional idea of free will (based on a perception of free will — see Experimental Psychology below for distinction). If a person's action is the result of complete quantum randomness, however, this in itself would mean that such traditional free will does not exist (because the action was not controllable by the physical being who claims to possess the free will).[50]
+Under the assumption of physicalism it has been argued that the laws of quantum mechanics provide a complete probabilistic account of the motion of particles, regardless of whether or not free will exists.[51] Physicist Stephen Hawking describes such ideas in his 2010 book The Grand Design. According to Hawking, these findings from quantum mechanics suggest that humans are sorts of complicated biological machines; although our behavior is impossible to predict perfectly in practice, "free will is just an illusion."[48] In other words, he thinks that only compatibilistic (deterministic) free will is possible based on the data.
+Erwin Schrödinger, a nobel laureate in physics and one of the founders of quantum mechanics, came to a different conclusion than Hawking. Near the end of his 1944 essay titled "What Is Life?" he says that there is "incontrovertible direct experience" that we have free will. He also states that the human body is wholly or at least partially determined, leading him to conclude that "...'I' -am the person, if any, who controls the 'motion of the atoms' according to the Laws of Nature." He explains this position on free will by appealing to a notion of self that is emergent from the entire collection of atoms in his body, and other convictions about conscious experience. However, he also qualifies the conclusion as "necessarily subjective" in its "philosophical implications." Contrasting the views of Hawking and Schrödinger, it is clear that even among eminent physicists there is not unanimity regarding free will.
+[edit] Genetics
+Like physicists, biologists have frequently addressed questions related to free will. One of the most heated debates in biology is that of "nature versus nurture", concerning the relative importance of genetics and biology as compared to culture and environment in human behavior.[52] The view of many researchers is that many human behaviors can be explained in terms of humans' brains, genes, and evolutionary histories.[53][54][55] This point of view raises the fear that such attribution makes it impossible to hold others responsible for their actions. Steven Pinker's view is that fear of determinism in the context of "genetics" and "evolution" is a mistake, that it is "a confusion of explanation with exculpation". Responsibility doesn't require behavior to be uncaused, as long as behavior responds to praise and blame.[56] Moreover, it is not certain that environmental determination is any less threatening to free will than genetic determination.[57]
+[edit] Neuroscience
+Main article: Neuroscience of free will
+See also: Neurostimulation
+It has become possible to study the living brain, and researchers can now watch the brain's decision-making process at work. A seminal experiment in this field was conducted by Benjamin Libet in the 1980s, in which he asked each subject to choose a random moment to flick her wrist while he measured the associated activity in her brain; in particular, the build-up of electrical signal called the readiness potential (after German Bereitschaftspotential). Although it was well known that the readiness potential caused and preceded the physical action, Libet asked whether it could be recorded before the conscious intention to move. To determine when subjects felt the intention to move, he asked them to watch the second hand of a clock. After making a movement, the volunteer reported the time on the clock when they first felt the conscious intention to move; this became known as Libet's W time.[58]
+Libet found that the unconscious brain activity of the readiness potential leading up to subjects' movements began approximately half a second before the subject was aware of a conscious intention to move.[58][59]
+More studies have since been conducted, including some that try to:
+
+support Libet's original findings
+suggest that the cancelling or "veto" of an action may first arise subconsciously as well
+explain the underlying brain structures involved
+suggest models that explain the relationship between conscious intention and action
+
+[edit] Neurology and psychiatry
+There are several brain-related conditions in which an individual's actions are not felt to be entirely under his or her control. Although the existence of such conditions does not directly refute the existence of free will, the study of such conditions, like the neuroscientific studies above, is valuable in developing models of how the brain may construct our experience of free will.
+For example, people with Tourette syndrome and related tic disorders make involuntary movements and utterances, called tics, despite the fact that they would prefer not to do so when it is socially inappropriate. Tics are described as semi-voluntary or "unvoluntary",[60] because they are not strictly involuntary: they may be experienced as a voluntary response to an unwanted, premonitory urge. Tics are experienced as irresistible and must eventually be expressed.[60] People with Tourette syndrome are sometimes able to suppress their tics for limited periods, but doing so often results in an explosion of tics afterward. The control exerted (from seconds to hours at a time) may merely postpone and exacerbate the ultimate expression of the tic.[61]
+In alien hand syndrome, the afflicted individual's limb will produce meaningful behaviors without the intention of the subject. The affected limb effectively demonstrates 'a will of its own.' The sense of agency does not emerge in conjunction with the overt appearance of the purposeful act even though the sense of ownership in relationship to the body part is maintained. This phenomenon corresponds with an impairment in the premotor mechanism manifested temporally by the appearance of the readiness potential (see section on the Neuroscience of Free Will above) recordable on the scalp several hundred milliseconds before the overt appearance of a spontaneous willed movement. Using functional magnetic resonance imaging with specialized multivariate analyses to study the temporal dimension in the activation of the cortical network associated with voluntary movement in human subjects, an anterior-to-posterior sequential activation process beginning in the supplementary motor area on the medial surface of the frontal lobe and progressing to the primary motor cortex and then to parietal cortex has been observed.[62] The sense of agency thus appears to normally emerge in conjunction with this orderly sequential network activation incorporating premotor association cortices together with primary motor cortex. In particular, the supplementary motor complex on the medial surface of the frontal lobe appears to activate prior to primary motor cortex presumably in associated with a preparatory pre-movement process. In a recent study using functional magnetic resonance imaging, alien movements were characterized by a relatively isolated activation of the primary motor cortex contralateral to the alien hand, while voluntary movements of the same body part included the concomitant activation of motor association cortex associated with the premotor process.[63] The clinical definition requires "feeling that one limb is foreign or has a will of its own, together with observable involuntary motor activity" (emphasis in original).[64] This syndrome is often a result of damage to the corpus callosum, either when it is severed to treat intractable epilepsy or due to a stroke. The standard neurological explanation is that the felt will reported by the speaking left hemisphere does not correspond with the actions performed by the non-speaking right hemisphere, thus suggesting that the two hemispheres may have independent senses of will.[65][66]
+Similarly, one of the most important ("first rank") diagnostic symptoms of schizophrenia is the delusion of being controlled by an external force.[67] People with schizophrenia will sometimes report that, although they are acting in the world, they did not initiate, or will, the particular actions they performed. This is sometimes likened to being a robot controlled by someone else. Although the neural mechanisms of schizophrenia are not yet clear, one influential hypothesis is that there is a breakdown in brain systems that compare motor commands with the feedback received from the body (known as proprioception), leading to attendant hallucinations and delusions of control.[68]
+[edit] Determinism and emergent behavior
+Main article: Emergence
+In some generative philosophies of cognitive sciences and evolutionary psychology, free will is assumed not to exist.[69][70] However, an illusion of free will is created, within this theoretical context, due to the generation of infinite or computationally complex behavior from the interaction of a finite set of rules and parameters. Thus, the unpredictability of the emerging behavior from deterministic processes leads to a perception of free will, even though free will as an ontological entity is assumed not to exist.[69][70] In this picture, even if the behavior could be computed ahead of time, no way of doing so will be simpler than just observing the outcome of the brain's own computations.[71]
+As an illustration, some strategy board games have rigorous rules in which no information (such as cards' face values) is hidden from either player and no random events (such as dice rolling) occur in the game. Nevertheless, strategy games like chess and especially Go, with its simple deterministic rules, can have an extremely large number of unpredictable moves. By analogy, "emergentists" suggest that the experience of free will emerges from the interaction of finite rules and deterministic parameters that generate infinite and unpredictable behavior. Yet, if all these events were accounted for, and there were a known way to evaluate these events, the seemingly unpredictable behavior would become predictable.[69][70][72] Cellular automata and the generative sciences can model emergent processes of social behavior on this philosophy.[69]
+[edit] Experimental psychology
+Experimental psychology's contributions to the free will debate have come primarily through social psychologist Daniel Wegner's work on conscious will. In his book, The Illusion of Conscious Will[73] Wegner summarizes what he believes is empirical evidence supporting the view that human perception of conscious control is an illusion. Wegner summarizes some empirical evidence that may suggest that the perception of conscious control is open to modification (or even manipulation). Wegner observes that one event is inferred to have caused a second event when two requirements are met:
+
+The first event immediately precedes the second event, and
+The first event is consistent with having caused the second event.
+
+For example, if a person hears an explosion and sees a tree fall down that person is likely to infer that the explosion caused the tree to fall over. However, if the explosion occurs after the tree falls down (i.e., the first requirement is not met), or rather than an explosion, the person hears the ring of a telephone (i.e., the second requirement is not met), then that person is not likely to infer that either noise caused the tree to fall down.
+Wegner has applied this principle to the inferences people make about their own conscious will. People typically experience a thought that is consistent with a behavior, and then they observe themselves performing this behavior. As a result, people infer that their thoughts must have caused the observed behavior. However, Wegner has been able to manipulate people's thoughts and behaviors so as to conform to or violate the two requirements for causal inference.[73][74] Through such work, Wegner has been able to show that people will often experience conscious will over behaviors that they have in fact not caused, and conversely, that people can be led to experience a lack of will over behaviors that they did cause. For instance, priming subjects with information about an effect increases the probability that a person falsely believes to be the cause of it.[75] The implication for such work is that the perception of conscious will (which he says might be more accurately labelled as 'the emotion of authorship') is not tethered to the execution of actual behaviors, but is inferred from various cues through an intricate mental process, authorship processing. Although many interpret this work as a blow against the argument for free will, both psychologists[76][77] and philosophers[78][79] have criticized Wegner's theories.
+Emily Pronin has argued that the subjective experience of free will is supported by the introspection illusion. This is the tendency for people to trust the reliability of their own introspections while distrusting the introspections of other people. The theory implies that people will more readily attribute free will to themselves rather than others. This prediction has been confirmed by three of Pronin and Kugler's experiments. When college students were asked about personal decisions in their own and their roommate's lives, they regarded their own choices as less predictable. Staff at a restaurant described their co-workers' lives as more determined (having fewer future possibilities) than their own lives. When weighing up the influence of different factors on behavior, students gave desires and intentions the strongest weight for their own behavior, but rated personality traits as most predictive of other people.[80]
+Psychologists have shown that reducing a person's belief in free will makes them less helpful and more aggressive.[81] This may occur because the subject loses a sense of Self-efficacy.
+[edit] In Eastern philosophy
+[edit] In Hindu philosophy
+The six orthodox (astika) schools of thought in Hindu philosophy do not agree with each other entirely on the question of free will. For the Samkhya, for instance, matter is without any freedom, and soul lacks any ability to control the unfolding of matter. The only real freedom (kaivalya) consists in realizing the ultimate separateness of matter and self.[82] For the Yoga school, only Ishvara is truly free, and its freedom is also distinct from all feelings, thoughts, actions, or wills, and is thus not at all a freedom of will. The metaphysics of the Nyaya and Vaisheshika schools strongly suggest a belief in determinism, but do not seem to make explicit claims about determinism or free will.[83]
+A quotation from Swami Vivekananda, a Vedantist, offers a good example of the worry about free will in the Hindu tradition.
+
+Therefore we see at once that there cannot be any such thing as free-will; the very words are a contradiction, because will is what we know, and everything that we know is within our universe, and everything within our universe is moulded by conditions of time, space and causality. ... To acquire freedom we have to get beyond the limitations of this universe; it cannot be found here.[84]
+
+However, the preceding quote has often been misinterpreted as Vivekananda implying that everything is predetermined. What Vivekananda actually meant by lack of free will was that the will was not "free" because it was heavily influenced by the law of cause and effect—"The will is not free, it is a phenomenon bound by cause and effect, but there is something behind the will which is free."[84] Vivekananda never said things were absolutely determined and placed emphasis on the power of conscious choice to alter one's past karma: "It is the coward and the fool who says this is his fate. But it is the strong man who stands up and says I will make my own fate."[84]
+Similarly, Vivekananda's teacher Ramakrishna Paramahansa, using an analogy said that man is like a cow tied to a pole with a rope—the karmic debts and human nature bind him and the amount of free will he has is analogous to the amount of freedom the rope allows; as one progresses spiritually, the rope becomes longer.
+Mimamsa, Vedanta, and the more theistic versions of Hinduism such as Shaivism and Vaishnavism, have often emphasized the importance of free will. The doctrine of karma requires both that we pay for our actions in the past, and that our actions in the present be free enough to allow us to deserve the future reward or punishment that we will receive for our present actions.
+[edit] In Buddhist philosophy
+Buddhism accepts both freedom and determinism (or something similar to it), but rejects the idea of an agent, and thus the idea that freedom is a free will belonging to an agent.[85] According to the Buddha, "There is free action, there is retribution, but I see no agent that passes out from one set of momentary elements into another one, except the [connection] of those elements."[85] Buddhists believe in neither absolute free will, nor determinism. It preaches a middle doctrine, named pratitya-samutpada in Sanskrit, which is often translated as "inter-dependent arising". It is part of the theory of karma in Buddhism. The concept of karma in Buddhism is different from the notion of karma in Hinduism. In Buddhism, the idea of karma is much less deterministic. The Buddhist notion of karma is primarily focused on the cause and effect of moral actions in this life, while in Hinduism the concept of karma is more often connected with determining one's destiny in future lives.
+In Buddhism it is taught that the idea of absolute freedom of choice (i.e. that any human being could be completely free to make any choice) is foolish, because it denies the reality of one's physical needs and circumstances. Equally incorrect is the idea that we have no choice in life or that our lives are pre-determined. To deny freedom would be to deny the efforts of Buddhists to make moral progress (through our capacity to freely choose compassionate action). Pubbekatahetuvada, the belief that all happiness and suffering arise from previous actions, is considered a wrong view according to Buddhist doctrines. Because Buddhists also reject agenthood, the traditional compatibilist strategies are closed to them as well. Instead, the Buddhist philosophical strategy is to examine the metaphysics of causality. Ancient India had many heated arguments about the nature of causality with Jains, Nyayists, Samkhyists, Cārvākans, and Buddhists all taking slightly different lines. In many ways, the Buddhist position is closer to a theory of "conditionality" than a theory of "causality", especially as it is expounded by Nagarjuna in the Mūlamadhyamakakārikā.[85]
+Significant also is the concept of skillful (kusula) and unskillful (akusula) action(karma), where skillful actions tend to happier results, giving the actor more freedom in choosing subsequent actions. Unskillful actions have the reverse effect. This is depicted cosmologically in the 6 realms of rebirth, where a human who acts unskillfully could become an animal or lower being with relatively little ability to choose his or her actions, and thus to cultivate desirable results. To this end, Buddhists may reflect on the preciousness of human life (for the relative freedom from compulsiveness that it offers), and the limitations and compulsiveness of other forms of life. The Buddhist is urged then to use his or her life to enhance the ability to chose wisely.
+In late Indian and Tibetan Buddhism, the enlightened state may be depicted by a dakini, or sky-goer, who is depicted as dancing in open space, free to move in any direction, without obstruction.
+[edit] In other theology
+Further information: Free will in theology
+The theological doctrine of divine foreknowledge is often alleged to be in conflict with free will, particularly in Reformed circles. For if God knows exactly what will happen, right down to every choice one makes, the status of choices as free is called into question. If God had timelessly true knowledge about one's choices, this would seem to constrain one's freedom.[86] This problem is related to the Aristotelian problem of the sea battle: tomorrow there will or will not be a sea battle. If there will be one, then it seems that it was true yesterday that there would be one. Then it would be necessary that the sea battle will occur. If there won't be one, then by similar reasoning, it is necessary that it won't occur.[87] This means that the future, whatever it is, is completely fixed by past truths—true propositions about the future.
+However, some philosophers follow William of Ockham in holding that necessity and possibility are defined with respect to a given point in time and a given matrix of empirical circumstances, and so something that is merely possible from the perspective of one observer may be necessary from the perspective of an omniscient.[88] Some philosophers follow Philo of Alexandria, a philosopher known for his homocentrism, in holding that free will is a feature of a human's soul, and thus that non-human animals lack free will.[89]
+Some views in Jewish philosophy stress that free will is a product of the intrinsic human soul, using the word neshama (from the Hebrew root n.sh.m. or .נ.ש.מ meaning "breath"), but the ability to make a free choice is through Yechida (from Hebrew word "yachid", יחיד, singular), the part of the soul that is united with God, the only being that is not hindered by or dependent on cause and effect (thus, freedom of will does not belong to the realm of the physical reality, and inability of natural philosophy to account for it is expected). While there are other views of free will in Judaism, most share the same basic Kabbalah principles.
+In Islam the theological issue is not usually how to reconcile free will with God's foreknowledge, but with God's jabr, or divine commanding power. al-Ash'ari developed an "acquisition" or "dual-agency" form of compatibilism, in which human free will and divine jabr were both asserted, and which became a cornerstone of the dominant Ash'ari position.[90] In Shia Islam, Ash'aris understanding of a higher balance toward predestination is challenged by most theologians.[91] Free will, according to Islamic doctrine is the main factor for man's accountability in his/her actions throughout life. All actions taken by man's free will are said to be counted on the Day of Judgement because they are his/her own and not God's.
+The philosopher Søren Kierkegaard claimed that divine omnipotence cannot be separated from divine goodness.[92] As a truly omnipotent and good being, God could create beings with true freedom over God. Furthermore, God would voluntarily do so because "the greatest good ... which can be done for a being, greater than anything else that one can do for it, is to be truly free."[93] Alvin Plantinga's "free will defense" is a contemporary expansion of this theme, adding how God, free will, and evil are consistent.[94]
+[edit] Believing in free will
+In recent years, free will belief in individuals has been analysed with respect to traits in social behaviour. In general the concept of free will researched to date in this context has been that of the incompatabilist, or more specifically, the libertarian, i.e. freedom from determinism.
+[edit] What people believe
+Whether people naturally adhere to an incompatibilist model of free will has been questioned in the research. Eddy Nahmias has found that incompatibilism is not intuitive - it was not adhered to, in that determinism does not negate belief in moral responsibility (based on an empirical study of people's responses to moral dilemmas under a deterministic model of reality).[95] Edward Cokely has found that incompatibilism is intuitive - it was naturally adhered to, in that determinism does indeed negate belief in moral responsibility in general.[96] Joshua Knobe and Shaun Nichols have proposed that incompatibilism may or may not be intuitive, and that it is dependent to some large degree upon the circumstances; whether or not the crime incites an emotional response - i.e. if it involves harming another human being.[97] They found that belief in free will is a cultural universal, and that the majority of participants said that (a) our universe is indeterministic and (b) moral responsibility is not compatible with determinism.[98]
+Studies have been conducted indicating that peoples' belief in free will appears to be inconsistent. Emily Pronin and Matthew Kugler have found that people believe they have more free will than others.[99]
+Studies have also been conducting indicating there exists a correlation between one's likelihood of accepting a deterministic model of mind, and their personality type. For example, Adam Feltz and Edward Cokely have found that people of an extrovert personality type are more likely to dissociate belief in determinism from belief in moral responsibility.[100]
+Roy Baumeister and colleagues reviewed literature on the psychological effects of a belief (or disbelief) in free will. The first part of their analysis (which is all that we are concerned with here) was not meant to discover which types of free will actually exist. The researchers instead sought to identify what other people believe, how many people believed it, and the effects of those beliefs. Baumeister found that most people tend to believe in a sort of "naive compatibilistic free will".[101][102]
+The researchers also found that people consider acts more "free" when they involve a person opposing external forces, planning, or making random actions.[103] Notably, the last behaviour, "random" actions, may not be possible; when participants attempt to perform tasks in a random manner (such as generating random numbers), their behaviour betrays many patterns.[104][105]
+[edit] Effects of the belief itself
+See also: self-efficacy
+
+
+
+An alternative explanation builds on the idea that subjects tend to confuse determinism with fatalism... What happens then when agents’ self-efficacy is undermined? It is not that their basic desires and drives are defeated. It is rather, I suggest, that they become skeptical that they will be able to control those desires; and in the face of that skepticism, they fail to apply the effort that is needed even to try. If they were tempted to behave badly, then coming to believe in fatalism makes them less likely to resist that temptation.
+
+“
+”
+
+—Richard Holton[106]
+
+Baumeister and colleagues found that provoking disbelief in free will seems to cause various negative effects. The authors concluded, in their paper, that it is belief in determinism that causes those negative effects.[101] This may not be a very justified conclusion, however.[106] First of all, free will can at least refer to either libertarian (indeterministic) free will or compatibilistic (deterministic) free will. Having participants read articles that simply "disprove free will" is unlikely to increase their understanding of determinism, or the compatibilistic free will that it still permits.[106]
+In other words, "provoking disbelief in free will" probably causes a belief in fatalism. As discussed earlier in this article, compatibilistic free will is illustrated by statements like "my choices have causes, and an effect – so I affect my future", whereas fatalism is more like "my choices have causes, but no effect – I am powerless". Fatalism, then, may be what threatens people's sense of self-efficacy. Lay people should not confuse fatalism with determinism, and yet even professional philosophers occasionally confuse the two. It is thus likely that the negative consequences below can be accounted for by participants developing a belief in fatalism when experiments attack belief in "free will".[106] To test the effects of belief in determinism, future studies would need to provide articles that do not simply "attack free will", but instead focus on explaining determinism and compatibilism. Some studies have been conducted indicating that people react strongly to the way in which mental determinism is described, when reconciling it with moral responsibility. Eddy Nahmias has noted that when peoples actions are framed with respect to their beliefs and desires (rather than their neurological underpinnings) they are more likely to dissociate determinism from moral responsibility.[107]
+Various social behavioural traits have been correlated with the belief in deterministic models of mind, some of which involved the experimental subjection of individuals to libertarian and deterministic perspectives.
+After researchers provoked volunteers to disbelieve in free will, participants lied, cheated, and stole more. Kathleen Vohs has found that those whose belief in free will had been eroded were more likely to cheat.[108] In a study conducted by Roy Baumeister, after participants read an article disproving free will, they were more likely to lie about their performance on a test where they would be rewarded with cash.[109] Provoking a rejection of free will has also been associated with increased aggression and less helpful behaviour[110][111] as well as mindless conformity.[112] Disbelief in free will can even cause people to feel less guilt about transgressions against others.[113]
+Baumeister and colleagues also note that volunteers disbelieving in free will are less capable of counterfactual thinking.[101][114] This is worrying because counterfactual thinking ("If I had done something different...") is an important part of learning from one's choices, including those that harmed others.[115] Again, this cannot be taken to mean that belief in determinism is to blame; these are the results we would expect from increasing people's belief in fatalism.[106]
+Along similar lines, Tyler Stillman has found that belief in free will predicts better job performance.[116]
+[edit] See also
+
+
+
+
+Philosophy  portal
+
+
+
+Ethics  portal
+
+
+
+Metaphysics  portal
+
+
+
+
+
+Argument from free will (the argument that free will and an omniscient God are incompatible)
+Autonomy
+Best of all possible worlds
+Buridan's ass
+De libero arbitrio – early treatise about the freedom of will of Augustine of Hippo
+Dilemma of determinism
+Existentialism
+Fatalism
+Free will in antiquity
+Free will in theology
+Free will theorem
+Freethought
+Indeterminism
+Morality
+Prevenient grace
+Ilya Prigogine and the End of Certainty.
+Problem of evil (for which human free will is offered as one explanation)
+Problem of future contingents
+Responsibility assumption
+Voluntarism (metaphysics)
+
+
+[edit] References
+
+
+^ a b van Invagen, P. (1983) An Essay on Free Will. Oxford: Clarendon Press. ISBN 0-19-824924-1
+^ a b Pereboom, D. (2003) Living without Free Will. Cambridge University Press.
+^ Fischer, J.M. (1983). "Incompatibilism". Philosophical Studies 43: 121–37. 
+^ a b Dennett, D., (1984) Elbow Room: The Varieties of Free Will Worth Wanting. Bradford Books. ISBN 0-262-54042-8
+^ Kane, R. (1996) The Significance of Free Will, Oxford: Oxford University Press. ISBN 0-19-512656-4
+^ Campbell, C.A. (1957) On Selfhood and Godhood, London: George Allen and Unwin. ISBN 0-415-29624-2
+^ Sartre, J.P. (1943) Being and Nothingness, reprint 1993. New York: Washington Square Press. Sartre also provides a psychological version of the argument by claiming that if man's actions are not his own, he would be in bad faith.
+^ Fischer, R.M. (1994) The Metaphysics of Free Will, Oxford:Blackwell
+^ Bok, H. (1998) Freedom and Responsibility, Princeton:Princeton University Press. ISBN 0-691-01566-X
+^ Ginet, C. (1966) "Might We Have No Choice?" In Lehrer, 1966: 87–104.
+^ a b Van Inwagen, P. and Zimmerman, D. (1998) Metaphysics: The Big Questions. Oxford:Blackwell
+^ Inwagen, P. (n.d.) "How to think about free will", p. 15.
+^ Lewis, D. (2008). "Are We Free to Break the Laws?". Theoria 47 (3): 113–21. doi:10.1111/j.1755-2567.1981.tb00473.x. 
+^ a b c Vihvelin, Kadri, "Arguments for Incompatibilism", The Stanford Encyclopedia of Philosophy (Winter 2003 Edition), Edward N. Zalta (ed.), ((online))
+^ Suppes, P. (1993). "The Transcendental Character of Determinism". Midwest Studies in Philosophy 18: 242–257. doi:10.1111/j.1475-4975.1993.tb00266.x. 
+^ Fischer, John Martin (1989) God, Foreknowledge and Freedom. Stanford, CA: Stanford University Press. ISBN 1-55786-857-3
+^ Watt, Montgomery (1948) Free-Will and Predestination in Early Islam. London: Luzac & Co.
+^ a b c Hume, D. (1740). A Treatise of Human Nature SECTION VIII.: "Of liberty and necessity" (1967 edition). Oxford University Press, Oxford. ISBN 0-87220-230-5
+^ Paul Henri Thiry, Baron d'Holbach, System of Nature; or, the Laws of the Moral and Physical World (London, 1797), Vol. 1, p. 92
+^ Descartes, René (1649). Passions of the Soul. ISBN 0-87220-035-3. 
+^ a b Kane, Robert; John Martin Fischer, Derk Pereboom, Manuel Vargas (2007). Four Views on Free Will (Libertarianism). Oxford UK: Blackwell Publishing. p. 39. ISBN 1-4051-3486-0. 
+^ Lewis, C.S. (1947). Miracles. p. 24. ISBN 0-688-17369-1. 
+^ "The Dilemma of Determinism, in The Will to Believe, Dover (1956), p.153; first delivered as an address to Harvard Divinity Students in Lowell Lecture Hall, and published in the Unitarian Review for September 1884
+^ John Fiske, Outline of Cosmic Philosophy, part. H. chap. xvii, cited by William James, Principles of Psychology, Vol. 2. Dover (1950) p. 577
+^ Atheism and Theism, Wiley-Blackwell (2003) p.63
+^ Frankfurt, Harry (1969). "Alternate possibilities and moral responsibility". Journal of Philosophy 66 (23): 829–39. doi:10.2307/2023833. JSTOR 2023833. 
+^ Locke, J. (1689). An Essay Concerning Human Understanding (1998, ed). Book II, Chap. XXI, Sec. 17. Penguin Classics, Toronto.
+^ a b Strawson, G. (1998, 2004). "Free will". In E. Craig (Ed.), Routledge Encyclopedia of Philosophy. London: Routledge. Retrieved August 17, 2006, ((online))
+^ a b Hobbes, T. (1651) Leviathan CHAPTER XXI.: "Of the liberty of subjects" (1968 edition). London: Penguin Books.
+^ a b McKenna, Michael, "Compatibilism", The Stanford Encyclopedia of Philosophy (Summer 2004 Edition), Edward N. Zalta (ed.),((online))
+^ Frankfurt, H. (1971). "Freedom of the Will and the Concept of the Person". Journal of Philosophy 68 (1): 5–20. doi:10.2307/2024717. JSTOR 2024717. 
+^ Watson, D. 1982. Free Will. New York: Oxford University Press.
+^ Fischer, John Martin, and Mark Ravizza. 1998. Responsibility and Control: An Essay on Moral Responsibility. Cambridge: Cambridge University Press.
+^ a b Dennett, D. (2003) Freedom Evolves. Viking Books. ISBN 0-670-03186-0
+^ Kane, R. The Oxford Handbook to Free Will. Oxford University Press. ISBN 0-19-513336-6.
+^ Honderich, T. "Determinism as True, Compatibilism and Incompatibilism as Both False and the Real Problem" in The Free Will Handbook , edited by Robert Kane of the University of Texas, published by Oxford University Press in 2001.
+^ Hume, D. (1765)An Enquiry Concerning Human Understanding, Indianapolis: Hacket Publishing Co. Second edition. 1993. ISBN 0-87220-230-5
+^ Schopenhauer, Arthur, The Wisdom of Life, p 147
+^ Schopenhauer, Arthur, On the Freedom of the Will, Oxford: Basil Blackwell ISBN 0-631-14552-4
+^ Rudolf Steiner. "Arthur Schopenhauers sämtliche Werke in zwölf Bänden. Mit Einleitung von Dr. Rudolf Steiner, Stuttgart: Verlag der J.G. Cotta'schen Buchhandlung Nachfolger, o.J. (1894–96)". http://www.pitt.edu/~kafka/k_s_bibII.html. 
+^ Steiner, R. (1964). Rudolf Steiner Press, London, 1964, 1970, 1972, 1979, 230 pp., translated from the 12th German edition of 1962 by Michael Wilson. ((online))
+^ See Bricklin, Jonathan, "A Variety of Religious Experience: William James and the Non-Reality of Free Will", in Libet (1999), The Volitional Brain: Toward a Neuroscience of Free Will (Thorverton UK: Imprint Academic).
+^ a b James, W. (1907) Pragmatism (1979 edition). Cambridge, MA: Harvard University Press
+^ for example in the thought of Democritus or the Cārvākans
+^ Boniolo, G. and Vidali, P. (1999) Filosofia della Scienza, Milan: Mondadori. ISBN 88-424-9359-7
+^ Hoefer, Carl (2008-04-01). "Causal Determinism". Stanford Encyclopedia of Philosophy. http://plato.stanford.edu/entries/determinism-causal/. Retrieved 2008-11-01. 
+^ Vedral, Vlatko (2006-11-18). "Is the Universe Deterministic?". New Scientist 192 (2578). "Physics is simply unable to resolve the question of free will, although, if anything, it probably leans towards determinism." 
+^ a b Grand Design (2010), page 32: "the molecular basis of biology shows that biological processes are governed by the laws of physics and chemistry and therefore are as determined as the orbits of the planets...so it seems that we are no more than biological machines and that free will is just an illusion", and page 72: "Quantum physics might seem to undermine the idea that nature is governed by laws, but that is not the case. Instead it leads us to accept a new form of determinism: Given the state of a system at some time, the laws of nature determine the probabilities of various futures and pasts rather than determining the future and past with certainty." (emphasis in original, discussing a Many worlds interpretation)
+^ "Honderich, E. ''Determinism as True, Compatibilism and Incompatibilism as Both False, and the Real Problem''". Ucl.ac.uk. http://www.ucl.ac.uk/~uctytho/dfwVariousHonderichKanebook.htm. Retrieved 2010-11-21. 
+^ "Infidels. "Metaphysical Freedom"". Infidels.org. http://www.infidels.org/library/modern/features/2000/lujan1.html. Retrieved 2010-11-21. 
+^ Loewer, Barry (1996). "Freedom from Physics: Quantum Mechanics and Free Will". Philosophical Topics 24: 91–112. 
+^ Pinel, P.J. (1990) Biopsychology. Prentice Hall Inc. ISBN 88-15-07174-1
+^ DeFries, J. C., McGuffin, P., McClearn, G. E., Plomin, R. (2000) Behavioral Genetics 4th ED. W H Freeman & Co.
+^ Morris, D. (1967) The Naked Ape. New York:McGraw-Hill. ISBN 0-385-33430-3
+^ Dawkins, R. (1976) The Selfish Gene. Oxford: Oxford University Press. ISBN 88-04-39318-1
+^ Pinker, S.(2002) The Blank Slate: The Modern Denial of Human Nature. London:Penguin. p.179 ISBN 0-14-200334-4
+^ Lewontin, R. (2000)It Ain't Necessarily So: The Dream of the Human Genome and other Illusions. New York: NYREV Inc. ISBN 88-420-6418-1
+^ a b Libet, B.; Gleason, C.A.; Wright, E.W.; Pearl, D.K. (1983). "Time of conscious intention to act in relation to onset of cerebral activity (readiness-potential). The unconscious initiation of a freely voluntary act". Brain 106 (3): 623–642. doi:10.1093/brain/106.3.623. PMID 6640273. 
+^ Libet, B. (1985). "Unconscious cerebral initiative and the role of conscious will in voluntary action". Behavioral and Brain Sciences 8 (4): 529–566. doi:10.1017/S0140525X00044903. 
+^ a b Tourette Syndrome Association. Definitions and Classification of Tic Disorders.. Retrieved 19 August 2006.
+^ Zinner, S.H. (2000). "Tourette disorder". Pediatric Review 21 (11): 372–83. PMID 11077021. 
+^ Kayser, A.S.; Sun, F.T.; D'Esposito, M. (2009). "A comparison of Granger causality and coherency in fMRI-based analysis of the motor system". Human Brain Mapping 30 (11): 3475–3494. doi:10.1002/hbm.20771. PMC 2767459. PMID 19387980. http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=2767459. 
+^ Assal, F.; Schwartz, S.; Vuilleumier, P. (2007). "Moving with or without will: Functional neural correlates of alien hand syndrome". Annals of Neurology 62 (3): 301–306. doi:10.1002/ana.21173. PMID 17638304. 
+^ Doody, RS; Jankovic, J. (1992). "The alien hand and related signs". Journal of Neurology, Neurosurgery and Psychiatry 55 (9): 806–810. doi:10.1136/jnnp.55.9.806. PMC 1015106. PMID 1402972. http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=1015106. 
+^ Scepkowski, L.A.; Cronin-Golomb, A. (2003). "The alien hand: cases, categorizations, and anatomical correlates". Behavioral and Cognitive Neuroscience Reviews 2 (4): 261–277. doi:10.1177/1534582303260119. PMID 15006289. 
+^ Bundick, T.; Spinella, M. (2000). "Subjective experience, involuntary movement, and posterior alien hand syndrome". Journal of Neurology, Neurosurgery and Psychiatry 68 (1): 83–85. doi:10.1136/jnnp.68.1.83. PMC 1760620. PMID 10601408. http://www.pubmedcentral.nih.gov/articlerender.fcgi?tool=pmcentrez&artid=1760620. 
+^ Schneider, K. (1959). Clinical Psychopathology. New York: Grune and Stratton.
+^ Frith, CD; Blakemore, S; Wolpert, DM (2000). "Explaining the symptoms of schizophrenia: abnormalities in the awareness of action". Brain research. Brain research reviews 31 (2–3): 357–63. doi:10.1016/S0165-0173(99)00052-1. PMID 10719163. 
+^ a b c d Kenrick, DT; Li, NP; Butner, J (2003). "Dynamical evolutionary psychology: individual decision rules and emergent social norms". Psychological review 110 (1): 3–28. doi:10.1037/0033-295X.110.1.3. PMID 12529056. 
+^ a b c Epstein, Joshua M.; Axtell, Robert L. (1996). Growing Artificial Societies: Social Science From the Bottom Up. Cambridge MA: MIT/Brookings Institution. p. 224. ISBN 978-0-262-55025-3. 
+^ Wolfram, Stephen, A New Kind of Science. Wolfram Media, Inc., May 14, 2002. ISBN 1-57955-008-8
+^ Epstein, J.M. (1999). "Agent Based Models and Generative Social Science". Complexity IV (5). 
+^ a b Wegner, D.M. (2002). The illusion of conscious will. Cambridge, MA: MIT Press.
+^ Wegner, D.M.; Wheatley, T. (1999). "Apparent mental causation: sources of the experience of will". American Psychologist 54 (7): 480–491. doi:10.1037/0003-066X.54.7.480. PMID 10424155. 
+^ Aarts, H.; Custers, R.; Wegner, D. (2005). "On the inference of personal authorship: enhancing experienced agency by priming effect information.". Consciousness and cognition 14 (3): 439–458. doi:10.1016/j.concog.2004.11.001. PMID 16091264.  edit
+^ Kihlstrom, John (2004). "An unwarrantable impertinence". Behavioral and Brain Sciences 27 (5): 666–667. doi:10.1017/S0140525X04300154. http://journals.cambridge.org/action/displayAbstract;jsessionid=296A64B183C6566E52D74D437D1169D2.tomcat1?fromPage=online&aid=287753#. 
+^ John Baer, James C. Kaufman and Roy F. Baumeister (2008). Are We Free? Psychology and Free Will. New York: Oxford University Press.. pp. 155–180. ISBN 0195189639. http://socrates.berkeley.edu/~kihlstrm/AutomaticityJuggernaut.htm. 
+^ Nahmias, Eddy (2002). "When consciousness matters: a critical review of Daniel Wegner's The illusion of conscious will". Philosophical Psychology 15 (4): 527. doi:10.1080/0951508021000042049. http://www2.gsu.edu/~phlean/papers/When_Consciousness_Matters.pdf. 
+^ Mele, Alfred R. (2009). Effective Intentions: The Power of Conscious Will. USA: Oxford University Press,. ISBN 9780195384260. http://ukcatalogue.oup.com/product/academic/pn/9780199764686.do?sortby=bookTitleAscend. 
+^ Pronin, Emily (2009). "The Introspection Illusion". In Mark P. Zanna. Advances in Experimental Social Psychology, Vol. 41. 41. Academic Press. pp. 42–43. doi:10.1016/S0065-2601(08)00401-2. ISBN 978-0-12-374472-2 
+^ Baumeister RF, Masicampo EJ, Dewall CN. (2009). Prosocial benefits of feeling free: disbelief in free will increases aggression and reduces helpfulness. Pers Soc Psychol Bull. 35(2):260-8. PMID 19141628 doi:10.1177/0146167208327217
+^ Flood, Gavin (2004). The ascetic self: subjectivity, memory and tradition. Cambridge University Press. p. 73. ISBN 978-0-521-60401-7. http://books.google.com/books?id=fapXqp-JSL0C&printsec=frontcover&dq=The+ascetic+self:+subjectivity,+memory+and+tradition&hl=en&sa=X&ei=BU0wT_GFJeXi0QG55Jn4Cg&ved=0CDIQ6AEwAA#v=onepage&q=kaivalya&f=false. 
+^ Koller, J. (2007) Asian Philosophies. 5th ed. Prentice Hall. ISBN 0-13-092385-0
+^ a b c Swami Vivekananda (1907) "Sayings and utterances". ramakrishnavivekananda.info. http://www.ramakrishnavivekananda.info/vivekananda/volume_5/sayings_and_utterances.htm. 
+^ a b c Gier, Nicholas and Kjellberg, Paul. "Buddhism and the Freedom of the Will: Pali and Mahayanist Responses" in Freedom and Determinism. Campbell, Joseph Keim; O'Rourke, Michael; and Shier, David. 2004. MIT Press
+^ Alston, William P. (1985). "Divine Foreknowledge and Alternative Conceptions of Human Freedom". International Journal for Philosophy of Religion 18 (1): 19–32. doi:10.1007/BF00142277. 
+^ Aristotle. "De Interpretatione" in The Complete Works of Aristotle, vol. I, ed. Jonathan Barnes. Princeton University Press, Princeton, New Jersey, 1984.
+^ Ockham, William. Predestination, God's Knowledge, and Future Contingents, early 14th century, trans. Marilyn McCord Adams and Norman Kretzmann 1982, Hackett, esp p. 46–7
+^ H. A. Wolfson, Philo, 1947 Harvard University Press; Religious Philosophy, 1961 Harvard University Press; and "St. Augustine and the Pelagian Controversy" in Religious Philosophy
+^ Watt, Montgomery. Free-Will and Predestination in Early Islam. Luzac & Co.: London 1948; Wolfson, Harry. The Philosophy of Kalam, Harvard University Press 1976
+^ "Man and His Destiny". Al-islam.org. http://www.al-islam.org/mananddestiny/3.htm. Retrieved 2010-11-21. 
+^ Jackson, Timothy P. (1998) "Arminian edification: Kierkegaard on grace and free will" in Cambridge Companion to Kierkegaard, Cambridge University Press, Cambridge, 1998.
+^ Kierkegaard, Søren. (1848) Journals and Papers, vol. III. Reprinted in Indiana University Press, Bloomington, 1967–78.
+^ Mackie, J.L. (1955) "Evil and Omnipotence," Mind, new series, vol. 64, pp. 200–212.
+^ NAHMIAS, Eddy; STEPHEN G MORRIS, Thomas NADELHOFFER, Jason TURNER (2006-07-01). "Is Incompatibilism Intuitive?". Philosophy and Phenomenological Research 73 (1): 28–53. doi:10.1111/j.1933-1592.2006.tb00603.x. ISSN 1933-1592. http://onlinelibrary.wiley.com/doi/10.1111/j.1933-1592.2006.tb00603.x/abstract. Retrieved 2011-04-29. 
+^ FELTZ, ADAM; EDWARD T COKELY, THOMAS NADELHOFFER (2009-02-01). "Natural Compatibilism versus Natural Incompatibilism: Back to the Drawing Board". Mind & Language 24 (1): 1–23. doi:10.1111/j.1468-0017.2008.01351.x. ISSN 1468-0017. http://onlinelibrary.wiley.com/doi/10.1111/j.1468-0017.2008.01351.x/abstract. Retrieved 2011-04-29. 
+^ Nichols, Shaun; Joshua Knobe (2007-12-01). "Moral Responsibility and Determinism: The Cognitive Science of Folk Intuitions". NoÃ"s 41 (4): 663–685. doi:10.1111/j.1468-0068.2007.00666.x. ISSN 1468-0068. http://onlinelibrary.wiley.com/doi/10.1111/j.1468-0068.2007.00666.x/abstract. Retrieved 2011-04-29. 
+^ Sarkissian, HAGOP; AMITA CHATTERJEE, FELIPE DE BRIGARD, JOSHUA KNOBE, SHAUN NICHOLS, SMITA SIRKER (2010-06-01). "Is Belief in Free Will a Cultural Universal?". Mind & Language 25 (3): 346–358. doi:10.1111/j.1468-0017.2010.01393.x. ISSN 1468-0017. http://onlinelibrary.wiley.com/doi/10.1111/j.1468-0017.2010.01393.x/abstract. Retrieved 2011-04-29. 
+^ Pronin, Emily; Matthew B. Kugler (2010-12-28). "People believe they have more free will than others". Proceedings of the National Academy of Sciences 107 (52): 22469–22474. doi:10.1073/pnas.1012046108. http://www.pnas.org/content/107/52/22469.abstract. Retrieved 2011-04-29. 
+^ Feltz, Adam; Edward T. Cokely (2009-03). "Do judgments about freedom and responsibility depend on who you are? Personality differences in intuitions about compatibilism and incompatibilism". Consciousness and Cognition 18 (1): 342–350. doi:10.1016/j.concog.2008.08.001. ISSN 1053-8100. PMID 18805023. http://www.sciencedirect.com/science/article/B6WD0-4TGGCRP-1/2/49d6f7959d2e37c9d864d0151cac8575. Retrieved 2011-04-29. 
+^ a b c Baumeister, R., A. W. Crescioni, and J. Alquist. 2009. Free will as advanced action control for human social life and culture. Neuroethics. doi:10.1007/s12152-009-9047-7.
+^ Paulhus, D.L., and A. Margesson. 1994. Free Will and Determinism (FAD) scale. Unpublished manuscript, University of British Columbia,Vancouver, British Columbia, Canada.
+^ Stillman, T.F., R.F. Baumeister, F.D. Fincham, T.E. Joiner, N.M. Lambert, A.R. Mele, and D.M. Tice. 2008. Guilty, free, and wise. Belief in free will promotes learning from negative emotions. Manuscript in preparation.
+^ Bar-Hillel, M. 2007. Randomness is too important to be trusted to chance. Presented at the 2007 Summer Institute in Informed Patient Choice, Dartmouth Medical School, NH
+^ Wagenaar, W.A. (1972). "Generation of random sequences by human subjects: A critical survey of literature". Psychological Bulletin 77: 65–72. doi:10.1037/h0032060. 
+^ a b c d e Holton, Richard. (2011). Response to ‘Free Will as Advanced Action Control for Human Social Life and Culture’ by Roy F. Baumeister, A. William Crescioni and Jessica L. Alquist. Neuroethics 4:13–16. DOI 10.1007/s12152-009-9046-8
+^ NAHMIAS, EDDY; D. JUSTIN COATES, TREVOR KVARAN (2007-09-01). "Free Will, Moral Responsibility, and Mechanism: Experiments on Folk Intuitions". Midwest Studies in Philosophy 31 (1): 214–242. doi:10.1111/j.1475-4975.2007.00158.x. ISSN 1475-4975. http://onlinelibrary.wiley.com/doi/10.1111/j.1475-4975.2007.00158.x/abstract. Retrieved 2011-04-29. 
+^ Vohs, Kathleen D.; Jonathan W. Schooler (2008-01-01). "The Value of Believing in Free Will". Psychological Science 19 (1): 49–54. doi:10.1111/j.1467-9280.2008.02045.x. PMID 18181791. http://pss.sagepub.com/content/19/1/49.abstract. Retrieved 2011-04-29. 
+^ Vohs, K.D.; Schooler, J.W. (2008). "The value of believing in free will: Encouraging a belief in determinism increases cheating". Psychological Science 19 (1): 49–54. doi:10.1111/j.1467-9280.2008.02045.x. PMID 18181791. 
+^ Baumeister, R.F.; Masicampo, E.J.; DeWall, C.N. (2009). "Prosocial benefits of feeling free: Disbelief in free will increases aggression and reduces helpfulness". Personality and Social Psychology Bulletin 35 (2): 260–268. doi:10.1177/0146167208327217. PMID 19141628. 
+^ Baumeister, Roy F.; E.J. Masicampo, C. Nathan DeWall (2009-02-01). "Prosocial Benefits of Feeling Free: Disbelief in Free Will Increases Aggression and Reduces Helpfulness". Personality and Social Psychology Bulletin 35 (2): 260–268. doi:10.1177/0146167208327217. PMID 19141628. http://psp.sagepub.com/content/35/2/260.abstract. Retrieved 2011-04-29. 
+^ Alquist, J.L., and R.F. Baumeister. 2008. [Free will and conformity]. Unpublished raw data / manuscript in preparation, Florida State University.
+^ Stillman, T.F. and Baumeister, R.F. 2008. Belief in free will supports guilt over personal misdeeds. Unpublished findings. Florida State University, Tallahassee, FL.
+^ Alquist, J.L., M. Daly, T. Stillman, and R.F. Baumeister. 2009. [Belief in determinism decreases counterfactual thinking]. Unpublished raw data.
+^ Epstude, K., and N.J. Roese. 2008. The functional theory of counterfactual thinking. Personality and Social Psychology 12: 168–192.
+^ Stillman, Tyler F.; Roy F. Baumeister, Kathleen D. Vohs, Nathaniel M. Lambert, Frank D. Fincham, Lauren E. Brewer (2010-01-01). "Personal Philosophy and Personnel Achievement: Belief in Free Will Predicts Better Job Performance". Social Psychological and Personality Science 1 (1): 43–50. doi:10.1177/1948550609351600. http://spp.sagepub.com/content/1/1/43.abstract. Retrieved 2011-04-29. 
+
+
+[edit] Further reading
+
+
+Bischof, Michael H. (2004). Kann ein Konzept der Willensfreiheit auf das Prinzip der alternativen Möglichkeiten verzichten? Harry G. Frankfurts Kritik am Prinzip der alternativen Möglichkeiten (PAP). In: Zeitschrift für philosophische Forschung (ZphF), Heft 4.
+Dennett, Daniel C. (2003). Freedom Evolves. New York: Viking Press ISBN 0-670-03186-0
+Epstein J.M. (1999). Agent Based Models and Generative Social Science. Complexity, IV (5).
+Gazzaniga, M. & Steven, M.S. (2004) Free Will in the 21st Century: A Discussion of Neuroscience and Law, in Garland, B. (ed.) Neuroscience and the Law: Brain, Mind and the Scales of Justice, New York: Dana Press, ISBN 1-932594-04-3, pp51–70.
+Goodenough, O.R. (2004). "Responsibility and punishment". Philosophical Transactions of the Royal Society: Biological Sciences 359 (1451): 1805–1809. doi:10.1098/rstb.2004.1548. 
+Harnad, Stevan (2009) The Explanatory Gap PhilPapers
+Harnad, Stevan (2001). "No Easy Way Out". The Sciences 41 (2): 36–42. http://cogprints.org/1624/. 
+Harnad, Stevan (1982). "Consciousness: An Afterthought". Cognition and Brain Theory 5: 29–47. http://cogprints.org/1570/. 
+Hofstadter, Douglas. (2007) I Am A Strange Loop. Basic Books. ISBN 978-0-465-03078-1
+Kane, Robert (1998). The Significance of Free Will. New York: Oxford University Press ISBN 0-19-512656-4
+Lawhead, William F. (2005). The Philosophical Journey: An Interactive Approach. McGraw-Hill Humanities/Social Sciences/Languages ISBN 0-07-296355-7.
+Libet, Benjamin; Anthony Freeman; and Keith Sutherland, eds. (1999). The Volitional Brain: Towards a Neuroscience of Free Will. Exeter, UK: Imprint Academic. Collected essays by scientists and philosophers.
+Morris, Tom Philosophy for Dummies. IDG Books ISBN 0-7645-5153-1.
+Muhm, Myriam (2004). Abolito il libero arbitrio — Colloquio con Wolf Singer. L'Espresso 19.08.2004 larchivio.org
+Nowak A., Vallacher R.R., Tesser A., Borkowski W. (2000). Society of Self: The emergence of collective properties in self-structure. Psychological Review. 107
+Schopenhauer, Arthur (1839). On the Freedom of the Will., Oxford: Basil Blackwell ISBN 0-631-14552-4.
+Van Inwagen, Peter (1986). An Essay on Free Will. New York: Oxford University Press ISBN 0-19-824924-1.
+Velmans, Max (2003) How Could Conscious Experiences Affect Brains? Exeter: Imprint Academic ISBN 0-907845-39-8.
+Wegner, D. (2002). The Illusion of Conscious Will. Cambridge: Bradford Books
+Williams, Clifford (1980). Free Will and Determinism: A Dialogue. Indianapolis: Hackett Publishing Co.
+John Baer, James C. Kaufman, Roy F. Baumeister (2008). Are We Free? Psychology and Free Will. Oxford University Press, New York ISBN 0-195-18963-9
+
+
+
+Horst, Steven (2011), Laws, Mind, and Free Will. (MIT Press) ISBN 02-620-1525-0
+
+[edit] External links
+
+Listen to this article (info/dl)
+
+
+
+
+
+
+
+
+
+
+
+This audio file was created from a revision of the "Free will" article dated 2006-09-15, and does not reflect subsequent edits to the article. (Audio help)
+More spoken articles
+
+
+
+Free Will and Determinism at the Open Directory Project
+Stanford Encyclopedia of Philosophy entries:
+
+"Free Will"
+"Incompatibilism"
+"Divine Foreknowledge and Free Will"
+
+
+Internet Encyclopedia of Philosophy "Foreknowledge and Free Will" by Norman Swartz.
+"Free Will" by Galen Strawson in Routledge Encyclopedia of Philosophy
+"Free Will" in Catholic Encyclopedia
+The Determinism and Freedom Philosophy Website edited by Ted Honderich
+"Freedom and the Laws of Nature" by Steven Horst (The Montréal Review)
+History of the Free Will Problem by Bob Doyle (inventor)
+MSNBC article on recent Free will research
+The Skeptics Dictionary on 'free will' *[http://www.earlymoderntexts.com/ Jonathan Edwards's Freedom of the Will, slightly modified for easier reading] * http://www.time.com/time/printout/0,8816,2000994,00.html Think You're Operating on Free Will? Think Again by Time magazine
+Is Free Will an Illusion?
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Metaphysics
+
+
+
+
+
+
+Metaphysicians
+
+
+
+Parmenides
+Plato
+Aristotle
+Kapila
+Plotinus
+Duns Scotus
+Thomas Aquinas
+René Descartes
+John Locke
+David Hume
+Immanuel Kant
+Isaac Newton
+Arthur Schopenhauer
+Baruch Spinoza
+Georg W. F. Hegel
+George Berkeley
+Gottfried Leibniz
+Henri Bergson
+Friedrich Nietzsche
+Charles Sanders Peirce
+Ludwig Wittgenstein
+Martin Heidegger
+Alfred N. Whitehead
+Bertrand Russell
+Dorothy Emmet
+G. E. Moore
+Jean-Paul Sartre
+Gilbert Ryle
+Hilary Putnam
+P. F. Strawson
+R. G. Collingwood
+Adolph Stöhr
+Rudolf Carnap
+Saul Kripke
+Willard V. O. Quine
+Donald Davidson
+more ...
+
+
+
+
+
+
+
+
+Theories
+
+
+
+Anti-realism
+Cartesian dualism
+Enactivism
+Free will
+Liberty
+Materialism
+Meaning of life
+Idealism
+Existentialism
+Essentialism
+Libertarianism
+Determinism
+Naturalism
+Monism
+Platonic idealism
+Hindu idealism
+Phenomenalism
+Nihilism
+Realism
+Physicalism
+MOQ
+Relativism
+Scientific realism
+Solipsism
+Subjectivism
+Substance theory
+Type theory
+Sankhya
+
+
+
+
+
+
+
+
+Concepts
+
+
+
+Action
+Abstract object
+Being
+Category of being
+Causality
+Change
+Choice
+Concept
+Cogito ergo sum
+Embodied cognition
+Entity
+Essence
+Existence
+Experience
+Form
+Idea
+Identity
+Information
+Insight
+Intelligence
+Intention
+Matter
+Memetics
+Mind
+Meaning
+Mental representation
+Modality
+Motion
+Necessity
+Notion
+Object
+Pattern
+Physical object
+Perception
+Principle
+Properties
+Qualia
+Quality
+Reality
+Subject
+Soul
+Substance
+Thought
+Time
+Truth
+Type
+Universal
+Unobservable
+Value
+World soul
+more ...
+
+
+
+
+
+
+
+
+Related articles
+
+
+
+Cosmology
+Epistemology
+Ontology
+Teleology
+Philosophy of psychology
+Philosophy of mind
+Philosophy of self
+Philosophy of space and time
+Axiology
+Theoretical physics
+meta-
+
+
+
+
+
+
+
+
+
+
+
+Portal
+Category
+Task Force
+Stubs
+Discussion
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Ethics
+
+
+
+
+
+
+Philosophers
+
+
+
+Plato
+Aristotle
+Confucius
+Mencius
+Mozi
+Augustine of Hippo
+Thomas Aquinas
+Baruch Spinoza
+David Hume
+Immanuel Kant
+Georg W. F. Hegel
+Arthur Schopenhauer
+Jeremy Bentham
+John Stuart Mill
+Søren Kierkegaard
+Henry Sidgwick
+Friedrich Nietzsche
+G. E. Moore
+Karl Barth
+Paul Tillich
+Philippa Foot
+John Rawls
+Bernard Williams
+J. L. Mackie
+Alasdair MacIntyre
+Peter Singer
+Derek Parfit
+Thomas Nagel
+more...
+
+
+
+
+
+
+
+
+Theories
+
+
+
+Consequentialism
+Deontology
+Virtue ethics
+Ethics of care
+
+
+
+
+
+
+
+
+Concepts
+
+
+
+Freedom
+Autonomy
+Conscience
+Good
+Evil
+Value
+Morality
+Care
+Justice
+Principles
+Virtue
+Happiness
+Norm
+Suffering or Pain
+Equality
+Trust
+Free will
+Consent
+Right
+Wrong
+Just War
+Axiology
+more...
+
+
+
+
+
+
+
+
+Related articles
+
+
+
+Applied ethics
+Descriptive ethics
+Evolutionary ethics
+Religious ethics
+Christian ethics
+Jewish ethics
+Islamic ethics
+Legal ethics
+Medical ethics
+Meta-ethics
+Normative ethics
+Professional ethics
+Sexual ethics
+
+
+
+
+
+
+
+
+
+
+
+Portal
+Category
+Task Force
+Stubs
+Discussion
+
+
+
+
+
+
+
+
+  
+ 
+NewPP limit report
+Preprocessor node count: 43715/1000000
+Post-expand include size: 349737/2048000 bytes
+Template argument size: 110629/2048000 bytes
+Expensive parser function count: 5/500
+
+ Saved in parser cache with key enwiki:pcache:idhash:47921-0!*!0!!en!4!* and timestamp 20120301185017 
+  /bodycontent 
+ printfooter 
+
+				Retrieved from "http://en.wikipedia.org/w/index.php?title=Free_will&oldid=478963430"				
+ /printfooter 
+ catlinks 
+Categories: Free willCausalityConcepts in ethicsMetaphysicsPhilosophical problemsPhilosophy of lifePhilosophy of religionTheologyChristian philosophyHidden categories: Articles to be expanded from December 2011All articles to be expandedSpoken articlesArticles with hAudio microformatsFeatured articles  /catlinks 
+
+ debughtml 
+ /debughtml 
+
+ /bodyContent 
+
+ /content 
+ header 
+
+ 0 
+
+Personal tools
+
+Log in / create account
+
+
+ /0 
+
+ 0 
+
+Namespaces
+
+Article
+Talk
+
+
+ /0 
+ 1 
+
+
+
+Variants
+
+
+
+
+
+ /1 
+
+
+ 0 
+
+Views
+
+Read
+Edit
+View history
+
+
+ /0 
+ 1 
+
+Actions
+
+
+
+
+
+ /1 
+ 2 
+
+Search
+
+
+  
+
+
+
+ /2 
+
+
+ /header 
+ panel 
+
+ logo 
+
+ /logo 
+ navigation 
+
+Navigation
+
+
+Main page
+Contents
+Featured content
+Current events
+Random article
+Donate to Wikipedia
+
+
+
+ /navigation 
+ SEARCH 
+ /SEARCH 
+ interaction 
+
+Interaction
+
+
+Help
+About Wikipedia
+Community portal
+Recent changes
+Contact Wikipedia
+
+
+
+ /interaction 
+ TOOLBOX 
+
+Toolbox
+
+
+What links here
+Related changes
+Upload file
+Special pages
+Permanent link
+Cite this page 
+
+
+ /TOOLBOX 
+ coll-print_export 
+
+Print/export
+
+Create a bookDownload as PDFPrintable version 
+
+ /coll-print_export 
+ LANGUAGES 
+
+Languages
+
+
+العربية
+Aragonés
+Bân-lâm-gú
+Беларуская
+‪Беларуская (тарашкевіца)‬
+Български
+Bosanski
+Català
+Česky
+Cymraeg
+Dansk
+Deutsch
+Eesti
+Español
+Esperanto
+Euskara
+فارسی
+Français
+Galego
+贛語
+Қазақша
+한국어
+हिन्दी
+Hrvatski
+Ido
+Bahasa Indonesia
+Íslenska
+Italiano
+עברית
+Kiswahili
+Kurdî
+Latina
+Latviešu
+Lietuvių
+Magyar
+മലയാളം
+Bahasa Melayu
+Nederlands
+नेपाली
+日本語
+‪Norsk (bokmål)‬
+‪Norsk (nynorsk)‬
+Occitan
+پنجابی
+Polski
+Português
+Română
+Русиньскый
+Русский
+Саха тыла
+Shqip
+Simple English
+Slovenčina
+Slovenščina
+Српски / Srpski
+Srpskohrvatski / Српскохрватски
+Suomi
+Svenska
+தமிழ்
+Türkçe
+Українська
+اردو
+Tiếng Việt
+Winaray
+ייִדיש
+Žemaitėška
+中文
+
+
+
+ /LANGUAGES 
+
+ /panel 
+ footer 
+
+
+ This page was last modified on 26 February 2012 at 16:02.
+Text is available under the Creative Commons Attribution-ShareAlike License;
+additional terms may apply.
+See Terms of use for details.
+Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc., a non-profit organization.Contact us
+
+
+Privacy policy
+About Wikipedia
+Disclaimers
+Mobile view
+
+
+
+
+
+
+
+
+
+
+
+ /footer 
+
+if(window.mw){
+mw.loader.load(["mediawiki.user","mediawiki.page.ready","mediawiki.legacy.mwsuggest","ext.gadget.teahouse","ext.vector.collapsibleNav","ext.vector.collapsibleTabs","ext.vector.editWarning","ext.vector.simpleSearch","ext.UserBuckets","ext.articleFeedback.startup","ext.articleFeedbackv5.startup","ext.markAsHelpful"], null, true);
+}
+
+
+ Served by srv263 in 0.128 secs. 
+

@@ -1,0 +1,2460 @@
+html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"Atheism - Wikipedia, the free encyclopediaa:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}a.new,#quickbar a.new{color:#ba0000}
+
+/* cache key: enwiki:resourceloader:filter:minify-css:7:c88e2bcd56513749bec09a7e29cb3ffa */if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Atheism","wgTitle":"Atheism","wgCurRevisionId":479664348,"wgArticleId":15247542,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Articles containing Ancient Greek language text","Wikipedia pages semi-protected against vandalism","Featured articles","Articles containing Latin language text","Articles containing French language text","All articles with unsourced statements","Articles with unsourced statements from August 2011","Articles with unsourced statements from October 2011","Atheism","Criticism of religion","Disengagement from religion","Philosophical movements","Philosophy of religion","Secularism","Greek loanwords"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRestrictionEdit":["autoconfirmed"],"wgRestrictionMove":[],"wgSearchNamespaces":[0],"wgVectorEnabledModules":{"collapsiblenav":true,"collapsibletabs":true,"editwarning":true,"expandablesearch":false,"footercleanup":false,"sectioneditlinks":false,"simplesearch":true,"experiments":true},"wgWikiEditorEnabledModules":{"toolbar":true,"dialogs":true,"hidesig":true,"templateEditor":false,"templates":false,"preview":false,"previewDialog":false,"publish":false,"toc":false},"wgTrackingToken":"a86014728bb7d276b9c290e19099bb7e","wikilove-recipient":"","wikilove-edittoken":"+\\","wikilove-anon":0,"mbEmailEnabled":true,"mbUserEmail":false,"mbIsEmailConfirmationPending":false,"wgFlaggedRevsParams":{"tags":{"status":{"levels":1,"quality":2,"pristine":3}}},"wgStableRevisionId":null,"wgCategoryTreePageCategoryOptions":"{\"mode\":0,\"hideprefix\":20,\"showcount\":true,\"namespaces\":false}","Geo":{"city":"","country":""},"wgNoticeProject":"wikipedia"});
+}if(window.mw){
+mw.loader.implement("user.options",function($){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":0,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":false,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":4,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":1,"watchdefault":0,
+"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"flaggedrevssimpleui":1,"flaggedrevsstable":0,"flaggedrevseditdiffs":true,"flaggedrevsviewdiffs":false,"vector-simplesearch":1,"useeditwarning":1,"vector-collapsiblenav":1,"usebetatoolbar":1,"usebetatoolbar-cgd":1,"wikilove-enabled":1,"variant":"en","language":"en","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"searchNs100":false,"searchNs101":false,"searchNs108":false,"searchNs109":false,"gadget-teahouse":1,"gadget-mySandbox":1});;},{},{});mw.loader.implement("user.tokens",function($){mw.user.tokens.set({"editToken":"+\\","watchToken":false});;
+},{},{});
+
+/* cache key: enwiki:resourceloader:filter:minify-js:7:ecf8688ef3caaee08a2939104d260ddb */
+}if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}[if lt IE 7]><style type="text/css">body{behavior:url("/w/skins-1.19/vector/csshover.min.htc")}</style><![endif]
+
+
+ content 
+
+
+
+ sitenotice 
+ centralNotice loads here 
+ /sitenotice 
+ firstHeading 
+
+Atheism
+
+ /firstHeading 
+ bodyContent 
+
+ tagline 
+From Wikipedia, the free encyclopedia
+ /tagline 
+ subtitle 
+
+ /subtitle 
+ jumpto 
+
+					Jump to: navigation,
+					search
+
+ /jumpto 
+ bodycontent 
+
+"Atheist" redirects here. For the band, see Atheist (band).
+
+
+
+Part of a series on
+
+
+Atheism
+
+
+
+
+
+Concepts
+
+
+Antitheism · Atheism and religion
+Criticism of atheism
+Implicit and explicit atheism
+Negative and positive atheism
+
+
+History
+
+
+History of atheism
+New Atheism · State atheism
+
+
+Arguments for atheism
+
+
+Arguments against God's existence
+Argument from free will
+Argument from inconsistent revelations
+Argument from nonbelief
+Argument from poor design
+Atheist's Wager
+Fate of the unlearned
+God of the gaps
+Incompatible-properties argument
+Omnipotence paradox
+Problem of evil · Problem of Hell
+Russell's teapot
+Theological noncognitivism
+Ultimate Boeing 747 gambit
+
+
+People
+
+
+Demographics
+Discrimination / persecution of atheists
+Notable atheists
+
+
+Related concepts
+
+
+
+
+Agnosticism 
+Agnostic theism · Agnostic atheism
+Ignosticism · Apatheism
+Weak agnosticism · Strong agnosticism
+List of agnostics
+
+
+Irreligion 
+Criticism of religion · Freethought
+Freedom From Religion Foundation
+Anti-clericalism · Antireligion
+Parody religion · Post-theism
+
+
+Naturalism 
+Humanistic · Metaphysical · Methodological · Religious
+
+
+Secularism 
+Secularity · Secular Humanism
+Secularist organizations
+
+
+
+
+Portal · WikiProject
+
+
+
+
+
+v
+t
+e
+
+
+
+
+
+Atheism is, in a broad sense, the rejection of belief in the existence of deities.[1] In a narrower sense, atheism is specifically the position that there are no deities.[2][3] Most inclusively, atheism is simply the absence of belief that any deities exist.[3][4] Atheism is contrasted with theism,[5][6] which in its most general form is the belief that at least one deity exists.[6][7]
+The term atheism originated from the Greek ἄθεος (atheos), meaning "without god", used as a pejorative term applied to those thought to reject the gods worshipped by the larger society. With the spread of freethought, skeptical inquiry, and subsequent increase in criticism of religion, application of the term narrowed in scope. The first individuals to identify themselves as "atheist" lived in the 18th century.[8]
+Atheists tend to be skeptical of supernatural claims, citing a lack of empirical evidence. Rationales for not believing in any deity include the problem of evil, the argument from inconsistent revelations, and the argument from nonbelief. Other arguments for atheism range from the philosophical to the social to the historical. Although some atheists have adopted secular philosophies,[9][10] there is no one ideology or set of behaviors to which all atheists adhere.[11] Many atheists hold that atheism is a more parsimonious worldview than theism, and therefore the burden of proof lies not on the atheist to disprove the existence of God, but on the theist to provide a rationale for theism.[12]
+Although in Western culture atheists are often irreligious, many consider themselves spiritual.[13][14] Philosophers such as Georges Bataille, Slavoj Žižek[15], Alain de Botton[16], and Alexander Bard & Jan Söderqvist[17] have all argued that atheists should reclaim religion as an act of defiance against theism, precisely not to leave religion as an unwarranted monopoly to theists. Bataille set out to do this with his Atheology project in 1952-53 and de Botton returns to the idea in his work Religion for Atheists (2012). Such projects are often referred to as atheological rather than atheist to differentiate them from secular atheism. de Botton even calls his philosophy Atheism 2.0[18] to underline the difference between Atheology and Secular Atheism.
+The American First Church of Atheism[19] and the Scandinavian Church of Atheology[20] are examples of atheologist social experiments. Bard & Söderqvist refer to the countercultural Burning Man festival as a contemporary atheological manifestation. Atheism also figures in many religious and spiritual belief systems within Jainism, Buddhism, Hinduism, and Neopagan movements[21] such as Wicca.[22] Jainism and some forms of Buddhism do not advocate belief in gods,[23] whereas Hinduism holds atheism to be valid, but difficult to follow spiritually.[24]
+Since conceptions of atheism vary, determining how many atheists exist in the world today is difficult.[25] According to one estimate, about 2.3% of the world's population are atheists, while a further 11.9% are nonreligious.[26] According to another, rates of self-reported atheism are among the highest in Western nations, again to varying degrees: United States (4%), Italy (7%), Spain (11%), Great Britain (17%), Germany (20%), and France (32%).[27]
+
+
+
+
+Contents
+
+
+1 Etymology and usage
+2 Definitions and distinctions
+
+2.1 Range
+2.2 Implicit vs. explicit
+2.3 Positive vs. negative
+2.4 Definition as impossible or impermanent
+
+
+3 Philosophical concepts
+
+3.1 Practical atheism
+3.2 Theoretical atheism
+
+3.2.1 Ontological arguments
+3.2.2 Epistemological arguments
+3.2.3 Metaphysical arguments
+3.2.4 Logical arguments
+
+
+3.3 Reductionary accounts of religion
+3.4 Alternatives
+
+3.4.1 Atheist existentialism
+
+
+
+
+4 History
+
+4.1 Early Indic religion
+4.2 Classical antiquity
+4.3 Early Middle Ages to the Renaissance
+4.4 Early modern period
+4.5 Since 1900
+
+4.5.1 New Atheism
+
+
+
+
+5 Demographics
+6 Atheism, religion, and morality
+
+6.1 Association with world views and social behaviors
+6.2 Atheism and irreligion
+6.3 Divine command vs. ethics
+6.4 Dangers of religions
+
+
+7 See also
+8 Notes
+9 References
+10 Further reading
+11 External links
+
+
+
+
+ Etymology and usage
+
+
+
+
+The Greek word αθεοι (atheoi), as it appears in the Epistle to the Ephesians (2:12) on the early 3rd-century Papyrus 46. It is usually translated into English as "[those who are] without God".[28]
+
+
+In early ancient Greek, the adjective atheos (ἄθεος, from the privative ἀ- + θεός "god") meant "godless". It was first used as a term of censure roughly meaning "ungodly" or "impious". In the 5th century BCE, the word began to indicate more deliberate and active godlessness in the sense of "severing relations with the gods" or "denying the gods". The term ἀσεβής (asebēs) then came to be applied against those who impiously denied or disrespected the local gods, even if they believed in other gods. Modern translations of classical texts sometimes render atheos as "atheistic". As an abstract noun, there was also ἀθεότης (atheotēs), "atheism". Cicero transliterated the Greek word into the Latin atheos. The term found frequent use in the debate between early Christians and Hellenists, with each side attributing it, in the pejorative sense, to the other.[29]
+The term atheist (from Fr. athée), in the sense of "one who denies or disbelieves the existence of God",[30] predates atheism in English, being first found as early as 1566,[31] and again in 1571.[32] Atheist as a label of practical godlessness was used at least as early as 1577.[33] The term atheism was derived from the French athéisme, and appears in English about 1587.[34] An earlier work, from about 1534, used the term atheonism.[35][36] Related words emerged later: deist in 1621,[37] theist in 1662,[38] deism in 1675,[39] and theism in 1678.[40] At that time "deist" and "deism" already carried their modern meaning. The term theism came to be contrasted with deism.
+Karen Armstrong writes that "During the sixteenth and seventeenth centuries, the word 'atheist' was still reserved exclusively for polemic ... The term 'atheist' was an insult. Nobody would have dreamed of calling himself an atheist."[8] In the middle of the seventeenth century it was still assumed that it was impossible not to believe in God;[41] atheist meant not accepting the current conception of the divine.[42]
+Atheism was first used to describe a self-avowed belief in late 18th-century Europe, specifically denoting disbelief in the monotheistic Abrahamic god.[43] In the 20th century, globalization contributed to the expansion of the term to refer to disbelief in all deities, though it remains common in Western society to describe atheism as simply "disbelief in God".[44]
+Some atheists have doubted the very need for the term "atheism". In his book Letter to a Christian Nation, Sam Harris wrote:
+
+In fact, "atheism" is a term that should not even exist. No one ever needs to identify himself as a "non-astrologer" or a "non-alchemist." We do not have words for people who doubt that Elvis is still alive or that aliens have traversed the galaxy only to molest ranchers and their cattle. Atheism is nothing more than the noises reasonable people make in the presence of unjustified religious beliefs.[45]
+
+ Definitions and distinctions
+
+
+
+
+A diagram showing the relationship between the definitions of weak/strong and implicit/explicit atheism. Explicit strong/positive/hard atheists (in purple on the right) assert that "at least one deity exists" is a false statement. Explicit weak/negative/soft atheists (in blue on the right) reject or eschew belief that any deities exist without actually asserting that "at least one deity exists" is a false statement. Implicit weak/negative atheists (in blue on the left) would include people (such as young children and some agnostics) who do not believe in a deity, but have not explicitly rejected such belief. (Sizes in the diagram are not meant to indicate relative sizes within a population.)
+
+
+Writers disagree how best to define and classify atheism,[46] contesting what supernatural entities it applies to, whether it is an assertion in its own right or merely the absence of one, and whether it requires a conscious, explicit rejection. However, it is generally contrasted with agnosticism.[47] A variety of categories have been proposed to try to distinguish the different forms of atheism.
+ Range
+Some of the ambiguity and controversy involved in defining atheism arises from difficulty in reaching a consensus for the definitions of words like deity and god. The plurality of wildly different conceptions of god and deities leads to differing ideas regarding atheism's applicability. The ancient Romans accused Christians of being atheists for not worshiping the pagan deities. Gradually, this view fell into disfavor as theism came to be understood as encompassing belief in any divinity.[44]
+With respect to the range of phenomena being rejected, atheism may counter anything from the existence of a deity, to the existence of any spiritual, supernatural, or transcendental concepts, such as those of Buddhism, Hinduism, Jainism and Taoism.[48]
+ Implicit vs. explicit
+Main article: Implicit and explicit atheism
+Definitions of atheism also vary in the degree of consideration a person must put to the idea of gods to be considered an atheist. Atheism has sometimes been defined to include the simple absence of belief that any deities exist. This broad definition would include newborns and other people who have not been exposed to theistic ideas. As far back as 1772, Baron d'Holbach said that "All children are born Atheists; they have no idea of God."[49] Similarly, George H. Smith (1979) suggested that: "The man who is unacquainted with theism is an atheist because he does not believe in a god. This category would also include the child with the conceptual capacity to grasp the issues involved, but who is still unaware of those issues. The fact that this child does not believe in god qualifies him as an atheist."[50] Smith coined the term implicit atheism to refer to "the absence of theistic belief without a conscious rejection of it" and explicit atheism to refer to the more common definition of conscious disbelief. Ernest Nagel contradicts Smith's definition of atheism as merely "absence of theism", acknowledging only explicit atheism as true "atheism".[51]
+ Positive vs. negative
+Main article: Negative and positive atheism
+Philosophers such as Antony Flew,[52] and Michael Martin,[44] have contrasted positive (strong/hard) atheism with negative (weak/soft) atheism. Positive atheism is the explicit affirmation that gods do not exist. Negative atheism includes all other forms of non-theism. According to this categorization, anyone who is not a theist is either a negative or a positive atheist. The terms weak and strong are relatively recent, while the terms negative and positive atheism are of older origin, having been used (in slightly different ways) in the philosophical literature[52] and in Catholic apologetics.[53] Under this demarcation of atheism, most agnostics qualify as negative atheists.
+While Martin, for example, asserts that agnosticism entails negative atheism,[44] most agnostics see their view as distinct from atheism, which they may consider no more justified than theism or requiring an equal conviction.[54] The assertion of unattainability of knowledge for or against the existence of gods is sometimes seen as indication that atheism requires a leap of faith.[55] Common atheist responses to this argument include that unproven religious propositions deserve as much disbelief as all other unproven propositions,[56] and that the unprovability of a god's existence does not imply equal probability of either possibility.[57] Scottish philosopher J. J. C. Smart even argues that "sometimes a person who is really an atheist may describe herself, even passionately, as an agnostic because of unreasonable generalised philosophical skepticism which would preclude us from saying that we know anything whatever, except perhaps the truths of mathematics and formal logic."[58] Consequently, some atheist authors such as Richard Dawkins prefer distinguishing theist, agnostic and atheist positions along a spectrum of theistic probability—the likelihood that each assigns to the statement "God exists".[59]
+ Definition as impossible or impermanent
+Before the 18th century, the existence of God was so universally accepted in the western world that even the possibility of true atheism was questioned. This is called theistic innatism—the notion that all people believe in God from birth; within this view was the connotation that atheists are simply in denial.[60]
+There is also a position claiming that atheists are quick to believe in God in times of crisis, that atheists make deathbed conversions, or that "there are no atheists in foxholes."[61] There have however been examples to the contrary, among them examples of literal "atheists in foxholes."[62]
+ Philosophical concepts
+
+
+
+
+Paul Henri Thiry, Baron d'Holbach, an 18th century advocate of atheism.
+
+The source of man's unhappiness is his ignorance of Nature. The pertinacity with which he clings to blind opinions imbibed in his infancy, which interweave themselves with his existence, the consequent prejudice that warps his mind, that prevents its expansion, that renders him the slave of fiction, appears to doom him to continual error.
+—d'Holbach, The System of Nature[63]
+
+
+
+
+The broadest demarcation of atheistic rationale is between practical and theoretical atheism.
+ Practical atheism
+Main article: Apatheism
+In practical or pragmatic atheism, also known as apatheism, individuals live as if there are no gods and explain natural phenomena without resorting to the divine. The existence of gods is not rejected, but may be designated unnecessary or useless; gods neither provide purpose to life, nor influence everyday life, according to this view.[64] A form of practical atheism with implications for the scientific community is methodological naturalism—the "tacit adoption or assumption of philosophical naturalism within scientific method with or without fully accepting or believing it."[65]
+Practical atheism can take various forms:
+
+Absence of religious motivation—belief in gods does not motivate moral action, religious action, or any other form of action;
+Active exclusion of the problem of gods and religion from intellectual pursuit and practical action;
+Indifference—the absence of any interest in the problems of gods and religion; or
+Unawareness of the concept of a deity.[66]
+
+ Theoretical atheism
+ Ontological arguments
+Further information: Agnostic atheism and Theological noncognitivism
+Theoretical (or theoric) atheism explicitly posits arguments against the existence of gods, responding to common theistic arguments such as the argument from design or Pascal's Wager. Theoretical atheism is mainly an ontology, precisely a physical ontology.
+ Epistemological arguments
+Further information: Agnostic atheism and Theological noncognitivism
+Epistemological atheism argues that people cannot know a God or determine the existence of a God. The foundation of epistemological atheism is agnosticism, which takes a variety of forms. In the philosophy of immanence, divinity is inseparable from the world itself, including a person's mind, and each person's consciousness is locked in the subject. According to this form of agnosticism, this limitation in perspective prevents any objective inference from belief in a god to assertions of its existence. The rationalistic agnosticism of Kant and the Enlightenment only accepts knowledge deduced with human rationality; this form of atheism holds that gods are not discernible as a matter of principle, and therefore cannot be known to exist. Skepticism, based on the ideas of Hume, asserts that certainty about anything is impossible, so one can never know the existence of a God. The allocation of agnosticism to atheism is disputed; it can also be regarded as an independent, basic worldview.[64]
+Other arguments for atheism that can be classified as epistemological or ontological, including logical positivism and ignosticism, assert the meaninglessness or unintelligibility of basic terms such as "God" and statements such as "God is all-powerful." Theological noncognitivism holds that the statement "God exists" does not express a proposition, but is nonsensical or cognitively meaningless. It has been argued both ways as to whether such individuals can be classified into some form of atheism or agnosticism. Philosophers A. J. Ayer and Theodore M. Drange reject both categories, stating that both camps accept "God exists" as a proposition; they instead place noncognitivism in its own category.[67][68]
+ Metaphysical arguments
+Further information: Monism and Physicalism
+One author writes:
+
+"Metaphysical atheism... includes all doctrines that hold to metaphysical monism (the homogeneity of reality). Metaphysical atheism may be either: a) absolute — an explicit denial of God's existence associated with materialistic monism (all materialistic trends, both in ancient and modern times); b) relative — the implicit denial of God in all philosophies that, while they accept the existence of an absolute, conceive of the absolute as not possessing any of the attributes proper to God: transcendence, a personal character or unity. Relative atheism is associated with idealistic monism (pantheism, panentheism, deism)."[69]
+
+
+
+
+
+Epicurus is credited with first expounding the problem of evil. David Hume in his Dialogues concerning Natural Religion (1779) cited Epicurus in stating the argument as a series of questions:[70] "Is God willing to prevent evil, but not able? Then he is impotent. Is he able, but not willing? Then he is malevolent. Is he both able and willing? Then whence cometh evil? Is he neither able nor willing? Then why call him God?"
+
+
+ Logical arguments
+Further information: Deductive arguments against the existence of God, Problem of evil, Divine hiddenness
+Logical atheism holds that the various conceptions of gods, such as the personal god of Christianity, are ascribed logically inconsistent qualities. Such atheists present deductive arguments against the existence of God, which assert the incompatibility between certain traits, such as perfection, creator-status, immutability, omniscience, omnipresence, omnipotence, omnibenevolence, transcendence, personhood (a personal being), nonphysicality, justice, and mercy.[71]
+Theodicean atheists believe that the world as they experience it cannot be reconciled with the qualities commonly ascribed to God and gods by theologians. They argue that an omniscient, omnipotent, and omnibenevolent God is not compatible with a world where there is evil and suffering, and where divine love is hidden from many people.[72] A similar argument is attributed to Siddhartha Gautama, the founder of Buddhism.[73]
+ Reductionary accounts of religion
+Further information: Evolutionary origin of religions, Evolutionary psychology of religion, and Psychology of religion
+Philosophers such as Ludwig Feuerbach[74] and Sigmund Freud argued that God and other religious beliefs are human inventions, created to fulfill various psychological and emotional wants or needs. This is also a view of many Buddhists.[75] Karl Marx and Friedrich Engels, influenced by the work of Feuerbach, argued that belief in God and religion are social functions, used by those in power to oppress the working class. According to Mikhail Bakunin, "the idea of God implies the abdication of human reason and justice; it is the most decisive negation of human liberty, and necessarily ends in the enslavement of mankind, in theory and practice." He reversed Voltaire's famous aphorism that if God did not exist, it would be necessary to invent him, writing instead that "if God really existed, it would be necessary to abolish him."[76]
+ Alternatives
+Further information: Philosophical anthropology and Humanism
+Axiological, or constructive, atheism rejects the existence of gods in favor of a "higher absolute", such as humanity. This form of atheism favors humanity as the absolute source of ethics and values, and permits individuals to resolve moral problems without resorting to God. Marx and Freud used this argument to convey messages of liberation, full-development, and unfettered happiness.[64]
+One of the most common criticisms of atheism has been to the contrary—that denying the existence of a god leads to moral relativism, leaving one with no moral or ethical foundation,[77] or renders life meaningless and miserable.[78] Blaise Pascal argued this view in his Pensées.[79]
+ Atheist existentialism
+French philosopher Jean-Paul Sartre identified himself as a representative of an "atheist existentialism"[80] concerned less with denying the existence of God than with establishing that "man needs ... to find himself again and to understand that nothing can save him from himself, not even a valid proof of the existence of God."[81] Sartre said a corollary of his atheism was that "if God does not exist, there is at least one being in whom existence precedes essence, a being who exists before he can be defined by any concept, and ... this being is man."[80] The practical consequence of this atheism was described by Sartre as meaning that there are no a priori rules or absolute values that can be invoked to govern human conduct, and that humans are "condemned" to invent these for themselves, making "man" absolutely "responsible for everything he does".[82]
+Academic Rhiannon Goldthorpe suggested that some of Sartre's writing was "pervaded by a 'Christian atheism' in which ancient beliefs still feed the imagination and the sensibility of the most hardened skeptic".[83] Academic Stephen Priest described Sartre's perspective as "an atheistic metaphysics".[84] Sartre translator Hazel Barnes wrote of Sartre: "The God he rejects is not some vague power, an unknown X which would account for the origin of the universe, nor is it an ideal or a mythus to symbolize man's quest for the Good. It is specifically the God of the Scholastics or at least any idea of God as a specific, all powerful, absolute, existing Creator."[85]
+ History
+Main article: History of atheism
+Although the term atheism originated in 16th-century France,[34] ideas that would be recognized today as atheistic are documented from the Vedic period and the classical antiquity.
+ Early Indic religion
+Main article: Atheism in Hinduism
+Atheistic schools are found in early Indian thought and have existed from the times of the historical Vedic religion.[86] Among the six orthodox schools of Hindu philosophy; Samkhya, the oldest philosophical system do not accept God and the early Mimamsa also rejected the notion of God.[87] The early Mimamsa not only did not accept God but asserted that human action itself was enough to create the necessary circumstances for the enjoyment of its fruits.[88] The thoroughly materialistic and anti-theistic philosophical Cārvāka (also called Nastika or Lokaiata) school that originated in India around the 6th century BCE is probably the most explicitly atheistic school of philosophy in India, similar to the Greek Cyrenaic school. This branch of Indian philosophy is classified as heterodox due to its rejection of the authority of Vedas and hence is not considered part of the six orthodox schools of Hinduism, but it is noteworthy as evidence of a materialistic movement within Hinduism.[89] Chatterjee and Datta explain that our understanding of Cārvāka philosophy is fragmentary, based largely on criticism of the ideas by other schools, and that it is not a living tradition:
+
+"Though materialism in some form or other has always been present in India, and occasional references are found in the Vedas, the Buddhistic literature, the Epics, as well as in the later philosophical works we do not find any systematic work on materialism, nor any organized school of followers as the other philosophical schools possess. But almost every work of the other schools states, for refutation, the materialistic views. Our knowledge of Indian materialism is chiefly based on these."[90]
+
+Other Indian philosophies generally regarded as atheistic include Classical Samkhya and Purva Mimamsa. The rejection of a personal creator God is also seen in Jainism and Buddhism in India.[91]
+ Classical antiquity
+
+
+
+
+In Plato's Apology, Socrates (pictured) was accused by Meletus of not believing in the gods.
+
+
+Western atheism has its roots in pre-Socratic Greek philosophy, but did not emerge as a distinct world-view until the late Enlightenment.[92] The 5th-century BCE Greek philosopher Diagoras is known as the "first atheist",[93] and is cited as such by Cicero in his De Natura Deorum.[94] Critias viewed religion as a human invention used to frighten people into following moral order.[95] Atomists such as Democritus attempted to explain the world in a purely materialistic way, without reference to the spiritual or mystical. Other pre-Socratic philosophers who probably had atheistic views included Prodicus and Protagoras. In the 3rd-century BCE the Greek philosophers Theodorus Cyrenaicus[94][96] and Strato of Lampsacus[97] also did not believe gods exist.
+Socrates (c. 471–399 BCE), was accused of impiety (see Euthyphro dilemma) on the basis that he inspired questioning of the state gods.[98] Although he disputed the accusation that he was a "complete atheist",[99] saying that he could not be an atheist as he believed in spirits,[100] he was ultimately sentenced to death. Socrates also prays to various gods in Plato's dialogue Phaedrus[101] and says "By Zeus" in the dialogue The Republic.[102]
+Euhemerus (c. 330–260 BCE) published his view that the gods were only the deified rulers, conquerors and founders of the past, and that their cults and religions were in essence the continuation of vanished kingdoms and earlier political structures.[103] Although not strictly an atheist, Euhemerus was later criticized for having "spread atheism over the whole inhabited earth by obliterating the gods".[104]
+Atomic materialist Epicurus (c. 341–270 BCE) disputed many religious doctrines, including the existence of an afterlife or a personal deity; he considered the soul purely material and mortal. While Epicureanism did not rule out the existence of gods, he believed that if they did exist, they were unconcerned with humanity.[105]
+The Roman poet Lucretius (c. 99–55 BCE) agreed that, if there were gods, they were unconcerned with humanity and unable to affect the natural world. For this reason, he believed humanity should have no fear of the supernatural. He expounds his Epicurean views of the cosmos, atoms, the soul, mortality, and religion in De rerum natura ("On the nature of things"),[106] which popularized Epicurus' philosophy in Rome.[107]
+The Roman philosopher Sextus Empiricus held that one should suspend judgment about virtually all beliefs—a form of skepticism known as Pyrrhonism—that nothing was inherently evil, and that ataraxia ("peace of mind") is attainable by withholding one's judgment. His relatively large volume of surviving works had a lasting influence on later philosophers.[108]
+The meaning of "atheist" changed over the course of classical antiquity. The early Christians were labeled atheists by non-Christians because of their disbelief in pagan gods.[109] During the Roman Empire, Christians were executed for their rejection of the Roman gods in general and Emperor-worship in particular. When Christianity became the state religion of Rome under Theodosius I in 381, heresy became a punishable offense.[110]
+ Early Middle Ages to the Renaissance
+The espousal of atheistic views was rare in Europe during the Early Middle Ages and Middle Ages (see Medieval Inquisition); metaphysics, religion and theology were the dominant interests.[111] There were, however, movements within this period that forwarded heterodox conceptions of the Christian God, including differing views of the nature, transcendence, and knowability of God. Individuals and groups such as Johannes Scotus Eriugena, David of Dinant, Amalric of Bena, and the Brethren of the Free Spirit maintained Christian viewpoints with pantheistic tendencies. Nicholas of Cusa held to a form of fideism he called docta ignorantia ("learned ignorance"), asserting that God is beyond human categorization, and our knowledge of God is limited to conjecture. William of Ockham inspired anti-metaphysical tendencies with his nominalistic limitation of human knowledge to singular objects, and asserted that the divine essence could not be intuitively or rationally apprehended by human intellect. Followers of Ockham, such as John of Mirecourt and Nicholas of Autrecourt furthered this view. The resulting division between faith and reason influenced later theologians such as John Wycliffe, Jan Hus, and Martin Luther.[111]
+The Renaissance did much to expand the scope of freethought and skeptical inquiry. Individuals such as Leonardo da Vinci sought experimentation as a means of explanation, and opposed arguments from religious authority. Other critics of religion and the Church during this time included Niccolò Machiavelli, Bonaventure des Périers, and François Rabelais.[108]
+ Early modern period
+The Renaissance and Reformation eras witnessed a resurgence in religious fervor, as evidenced by the proliferation of new religious orders, confraternities, and popular devotions in the Catholic world, and the appearance of increasingly austere Protestant sects such as the Calvinists. This era of interconfessional rivalry permitted an even wider scope of theological and philosophical speculation, much of which would later be used to advance a religiously skeptical world-view.
+Criticism of Christianity became increasingly frequent in the 17th and 18th centuries, especially in France and England, where there appears to have been a religious malaise, according to contemporary sources. Some Protestant thinkers, such as Thomas Hobbes, espoused a materialist philosophy and skepticism toward supernatural occurrences, while the Jewish-Dutch philosopher Baruch Spinoza rejected divine providence in favour of a panentheistic naturalism. By the late 17th century, deism came to be openly espoused by intellectuals such as John Toland who coined the term "pantheist". Despite their ridicule of Christianity, many deists held atheism in scorn.[citation needed] The first known explicit atheist was the German critic of religion Matthias Knutzen in his three writings of 1674.[112] He was followed a half century later by another explicit atheist writer, the French priest Jean Meslier.[113]
+Knutzen and Meslier were in turn followed by other openly atheistic thinkers, such as Baron d'Holbach and Jacques-André Naigeon.[114] The philosopher David Hume developed a skeptical epistemology grounded in empiricism, undermining the metaphysical basis of natural theology.
+
+
+
+
+Ludwig Feuerbach's The Essence of Christianity (1841) would greatly influence philosophers such as Engels, Marx, David Strauss, Nietzsche, and Max Stirner. He considered God to be a human invention and religious activities to be wish-fulfillment. For this he is considered the founding father of modern anthropology of religion.
+
+
+The French Revolution took atheism and anti-clerical deism outside the salons and into the public sphere. A major goal of the French revolution was a restructuring and subordination of the clergy with respect to the state through the Civil Constitution of the Clergy. Attempts to enforce it led to anti-clerical violence and the expulsion of many clergy from France. The chaotic political events in revolutionary Paris eventually enabled the more radical Jacobins to seize power in 1793, ushering in the Reign of Terror. The Jacobins were deists and introduced the Cult of the Supreme Being as a new French state religion. Some atheists surrounding Jacques Hébert instead sought to establish a Cult of Reason, a form of atheistic pseudo-religion with a goddess personifying reason. Both movements in part contributed to attempts to forcibly de-Christianize France. The Cult of Reason ended after three years when its leadership, including Jacques Hébert was guillotined by the Jacobins. The anti-clerical persecutions ended with the Thermidorian Reaction.
+The Napoleonic era institutionalized the secularization of French society, and exported the revolution to northern Italy, in the hopes of creating pliable republics. In the 19th century, atheists contributed to political and social revolution, facilitating the upheavals of 1848, the Risorgimento in Italy, and the growth of an international socialist movement.
+In the latter half of the 19th century, atheism rose to prominence under the influence of rationalistic and freethinking philosophers. Many prominent German philosophers of this era denied the existence of deities and were critical of religion, including Ludwig Feuerbach, Arthur Schopenhauer, Max Stirner, Karl Marx, and Friedrich Nietzsche.[115]
+ Since 1900
+See also: State atheism
+Atheism in the 20th century, particularly in the form of practical atheism, advanced in many societies. Atheistic thought found recognition in a wide variety of other, broader philosophies, such as existentialism, objectivism, secular humanism, nihilism, anarchism, logical positivism, Marxism, feminism,[116] and the general scientific and rationalist movement.
+Logical positivism and scientism paved the way for neopositivism, analytical philosophy, structuralism, and naturalism. Neopositivism and analytical philosophy discarded classical rationalism and metaphysics in favor of strict empiricism and epistemological nominalism. Proponents such as Bertrand Russell emphatically rejected belief in God. In his early work, Ludwig Wittgenstein attempted to separate metaphysical and supernatural language from rational discourse. A. J. Ayer asserted the unverifiability and meaninglessness of religious statements, citing his adherence to the empirical sciences. Relatedly the applied structuralism of Lévi-Strauss sourced religious language to the human subconscious in denying its transcendental meaning. J. N. Findlay and J. J. C. Smart argued that the existence of God is not logically necessary. Naturalists and materialistic monists such as John Dewey considered the natural world to be the basis of everything, denying the existence of God or immortality.[58][117]
+The 20th century also saw the political advancement of atheism, spurred on by interpretation of the works of Marx and Engels. After the Russian Revolution of 1917, religious instruction was banned by the State. While the Soviet Constitution of 1936 guaranteed freedom to hold religious services, the Soviet state under Stalin's policy of state atheism did not consider education a private matter; it outlawed religious instruction and waged campaigns to persuade people, at times violently, to abandon religion.[118][119][120][121][122] Several other communist states also opposed religion and mandated state atheism,[123] including the former governments of Albania,[124][125][126] and currently, China,[127][128] North Korea,[128][129] and Cuba.[128][130]
+Other leaders like E. V. Ramasami Naicker (Periyar), a prominent atheist leader of India, fought against Hinduism and Brahmins for discriminating and dividing people in the name of caste and religion.[131] This was highlighted in 1956 when he arranged for the erection of a statue depicting a Hindu god in a humble representation and made antitheistic statements.[132]
+In 1966, Time magazine asked "Is God Dead?"[133] in response to the Death of God theological movement, citing the estimation that nearly half of all people in the world lived under an anti-religious power, and millions more in Africa, Asia, and South America seemed to lack knowledge of the one God.[134]
+In 1967, the Albanian government under Enver Hoxha announced the closure of all religious institutions in the country, declaring Albania the world's first officially atheist state,[135] although religious practice in Albania was restored in 1991. These regimes enhanced the negative associations of atheism, especially where anti-communist sentiment was strong in the United States, despite the fact that prominent atheists were anti-communist.[136]
+Since the fall of the Berlin Wall, the number of actively anti-religious regimes has reduced considerably. In 2006, Timothy Shah of the Pew Forum noted "a worldwide trend across all major religious groups, in which God-based and faith-based movements in general are experiencing increasing confidence and influence vis-à-vis secular movements and ideologies."[137] However, Gregory S. Paul and Phil Zuckerman consider this a myth and suggest that the actual situation is much more complex and nuanced.[138]
+The religiously motivated terrorist events of 9/11 and the partially successful attempts of the Discovery institute to change the American science curriculum to include creationist ideas, together with support for those ideas from George W. Bush in 2005, all triggered the noted atheist authors Sam Harris, Daniel C. Dennett, Richard Dawkins, Victor J. Stenger and Christopher Hitchens to publish books that were best sellers in America and worldwide.[139]
+A 2010 survey found that those identifying themselves as atheists or agnostics are on average more knowledgeable about religion than followers of major faiths. Nonbelievers scored better on questions about tenets central to Protestant and Catholic faiths. Only Mormon and Jewish faithful scored as well as atheists and agnostics.[140]
+ New Atheism
+Main article: New Atheism
+New Atheism is the name given to a movement among some early-21st-century atheist writers who have advocated the view that "religion should not simply be tolerated but should be countered, criticized, and exposed by rational argument wherever its influence arises."[141] New atheists argue that recent scientific advancements demand a less accommodating attitude toward religion, superstition, and religious fanaticism than had traditionally been extended by many secularists.[citation needed] The movement is commonly associated with Richard Dawkins, Daniel C. Dennett, Sam Harris, Christopher Hitchens, and Victor J. Stenger. Several best-selling books by these authors, published between 2004 and 2007, form the basis for much of the discussion of New Atheism.[142]
+ Demographics
+Main article: Demographics of atheism
+
+
+
+
+Percentage of people in various European countries who said: "I don't believe there is any sort of spirit, God or life force." (2005)[143]
+
+
+It is difficult to quantify the number of atheists in the world. Respondents to religious-belief polls may define "atheism" differently or draw different distinctions between atheism, non-religious beliefs, and non-theistic religious and spiritual beliefs.[144] A Hindu atheist would declare oneself as a Hindu, although also being an atheist at the same time.[145] A 2005 survey published in Encyclopædia Britannica found that the non-religious made up about 11.9% of the world's population, and atheists about 2.3%. This figure did not include those who follow atheistic religions, such as some Buddhists.[26]
+A November–December 2006 poll published in the Financial Times gives rates for the United States and five European countries. The lowest rates of atheism were in the United States at only 4%, while the rates of atheism in the European countries surveyed were considerably higher: Italy (7%), Spain (11%), Great Britain (17%), Germany (20%), and France (32%).[27][146] The European figures are similar to those of an official European Union survey, which reported that 18% of the EU population do not believe in a god.[147] Other studies have placed the estimated percentage of atheists, agnostics, and other nonbelievers in a personal god as low as single digits in Poland, Romania, Cyprus, and some other European countries,[148] and up to 85% in Sweden, 80% in Denmark, 72% in Norway, and 60% in Finland.[25] According to the Australian Bureau of Statistics, 19% of Australians have "no religion", a category that includes atheists.[146] Between 64% and 65% of Japanese are atheists, agnostics, or do not believe in a god.[25]
+
+
+
+
+Proportion of atheists and agnostics around the world.
+
+
+An international study has reported positive correlations between levels of education and not believing in a deity,[149] and the EU survey finds a positive correlation between leaving school early and believing in a God.[147] A letter published in Nature in 1998 reported a survey suggesting that belief in a personal god or afterlife was at an all-time low among the members of the U.S. National Academy of Science, 7.0% of whom believed in a personal god as compared with more than 85% of the general U.S. population,[150] although this study has been criticized for its stringent definition of belief in God.[151][152] An article published by The University of Chicago Chronicle that discussed the above study, stated that 76% of physicians believe in God, more than the 7% of scientists above, but still less than the 85% of the general population.[153] Another study assessing religiosity among scientists who are members of the American Association for the Advancement of Science found that "just over half of scientists (51%) believe in some form of deity or higher power; specifically, 33% of scientists say they believe in God, while 18% believe in a universal spirit or higher power."[154] Frank Sulloway of the Massachusetts Institute of Technology and Michael Shermer of California State University conducted a study which found in their polling sample of "credentialed" U.S. adults (12% had Ph.Ds and 62% were college graduates) 64% believed in God, and there was a correlation indicating that religious conviction diminished with education level.[155] An inverse correlation between religiosity and intelligence has been found by 39 studies carried out between 1927 and 2002, according to an article in Mensa Magazine.[156] These findings broadly agree with a 1958 statistical meta-analysis by Professor Michael Argyle of the University of Oxford. He analyzed seven research studies that had investigated correlation between attitude to religion and measured intelligence among school and college students from the U.S. Although a clear negative correlation was found, the analysis did not identify causality but noted that factors such as authoritarian family background and social class may also have played a part.[157]
+ Atheism, religion, and morality
+See also: Atheism and religion, Criticism of atheism, and Secular ethics
+ Association with world views and social behaviors
+Sociologist Phil Zuckerman analyzed previous social science research on secularity and non-belief, and concluded that societal well-being is positively correlated with irreligion. His findings relating specifically to atheism include:[149][158]
+
+Compared to religious people, "atheists and secular people" are less nationalistic, prejudiced, antisemitic, racist, dogmatic, ethnocentric, close-minded, and authoritarian.
+In the US, in states with the highest percentages of atheists, the murder rate is lower than average. In the most religious US states, the murder rate is higher than average.
+
+ Atheism and irreligion
+
+
+
+
+Because of its absence of a creator god, Buddhism is commonly described as nontheistic.
+
+
+People who self-identify as atheists are often assumed to be irreligious, but some sects within major religions reject the existence of a personal, creator deity.[159] In recent years, certain religious denominations have accumulated a number of openly atheistic followers, such as atheistic or humanistic Judaism[160][161] and Christian atheists.[162][163][164]
+The strictest sense of positive atheism does not entail any specific beliefs outside of disbelief in any deity; as such, atheists can hold any number of spiritual beliefs. For the same reason, atheists can hold a wide variety of ethical beliefs, ranging from the moral universalism of humanism, which holds that a moral code should be applied consistently to all humans, to moral nihilism, which holds that morality is meaningless.[165]
+ Divine command vs. ethics
+Although it is a philosophical truism, encapsulated in Plato's Euthyphro dilemma, that the role of the gods in determining right from wrong is either unnecessary or arbitrary, the argument that morality must be derived from God and cannot exist without a wise creator has been a persistent feature of political if not so much philosophical debate.[166][167][168] Moral precepts such as "murder is wrong" are seen as divine laws, requiring a divine lawmaker and judge. However, many atheists argue that treating morality legalistically involves a false analogy, and that morality does not depend on a lawmaker in the same way that laws do.[169] Other atheists, such as Friedrich Nietzsche, have disagreed with this view and have stated that morality "has truth only if God is truth—it stands or falls with faith in God."[170][171][172]
+There exist normative ethical systems that do not require principles and rules to be given by a deity. Some include virtue ethics, social contract, Kantian ethics, utilitarianism, and Objectivism. Sam Harris has proposed that moral prescription (ethical rule making) is not just an issue to be explored by philosophy, but that we can meaningfully practice a science of morality. Any such scientific system must, nevertheless, respond to the criticism embodied in the naturalistic fallacy.[173]
+Philosophers Susan Neiman[174] and Julian Baggini[175] (among others) assert that behaving ethically only because of divine mandate is not true ethical behavior but merely blind obedience. Baggini argues that atheism is a superior basis for ethics, claiming that a moral basis external to religious imperatives is necessary to evaluate the morality of the imperatives themselves—to be able to discern, for example, that "thou shalt steal" is immoral even if one's religion instructs it—and that atheists, therefore, have the advantage of being more inclined to make such evaluations.[176] The contemporary British political philosopher Martin Cohen has offered the more historically telling example of Biblical injunctions in favour of torture and slavery as evidence of how religious injunctions follow political and social customs, rather than vice versa, but also noted that the same tendency seems to be true of supposedly dispassionate and objective philosophers.[177] Cohen extends this argument in more detail in Political Philosophy from Plato to Mao, where he argues that the Qur'an played a role in perpetuating social codes from the early 7th century despite changes in secular society.[178]
+ Dangers of religions
+See also: Criticism of religion
+Some prominent atheists—such as Bertrand Russell, Christopher Hitchens, Daniel Dennett, Sam Harris, and Richard Dawkins—have criticized religions, citing harmful aspects of religious practices and doctrines.[179] Atheists have often engaged in debate with religious advocates, and the debates sometimes address the issue of whether religions provide a net benefit to individuals and society.
+One argument that religions can be harmful, made by atheists such as Sam Harris, is that Western religions' reliance on divine authority lends itself to authoritarianism and dogmatism.[180] Atheists have also cited data showing that there is a correlation between religious fundamentalism and extrinsic religion (when religion is held because it serves ulterior interests)[181] and authoritarianism, dogmatism, and prejudice.[182] These arguments—combined with historical events that are argued to demonstrate the dangers of religion, such as the Crusades, inquisitions, witch trials, and terrorist attacks—have been used in response to claims of beneficial effects of belief in religion.[183] Believers counter-argue that some regimes that espouse atheism, such as in Soviet Russia, have also been guilty of mass murder.[184][185]
+ See also
+
+
+
+
+Atheism  portal
+
+
+
+Philosophy  portal
+
+
+
+Religion  portal
+
+
+
+
+
+
+Book: Atheism
+
+
+Wikipedia books are collections of articles that can be downloaded or ordered in print.
+
+
+
+
+Adevism
+Apostasy
+Atheist existentialism
+Atheist feminism
+Brights movement
+Discrimination against atheists
+Dysteleology
+Empiricism
+Irreligion by country
+Jewish atheism
+List of atheists
+List of secularist organizations
+Out Campaign
+Secular religion
+Tabula rasa
+Wealth and religion
+
+
+
+ Notes
+
+
+^
+
+Nielsen, Kai (2011). "Atheism". Encyclopædia Britannica. http://www.britannica.com/EBchecked/topic/40634/atheism. Retrieved 2011-12-06. "Instead of saying that an atheist is someone who believes that it is false or probably false that there is a God, a more adequate characterization of atheism consists in the more complex claim that to be an atheist is to be someone who rejects belief in God for the following reasons...: for an anthropomorphic God, the atheist rejects belief in God because it is false or probably false that there is a God; for a nonanthropomorphic God... because the concept of such a God is either meaningless, unintelligible, contradictory, incomprehensible, or incoherent; for the God portrayed by some modern or contemporary theologians or philosophers... because the concept of God in question is such that it merely masks an atheistic substance—e.g., “God” is just another name for love, or ... a symbolic term for moral ideals." 
+Edwards, Paul (2005) [1967]. "Atheism". In Donald M. Borchert. The Encyclopedia of Philosophy. Vol. 1 (2nd ed.). MacMillan Reference USA (Gale). p. 359. ISBN 9780028657806. "On our definition, an 'atheist' is a person who rejects belief in God, regardless of whether or not his reason for the rejection is the claim that 'God exists' expresses a false proposition. People frequently adopt an attitude of rejection toward a position for reasons other than that it is a false proposition. It is common among contemporary philosophers, and indeed it was not uncommon in earlier centuries, to reject positions on the ground that they are meaningless. Sometimes, too, a theory is rejected on such grounds as that it is sterile or redundant or capricious, and there are many other considerations which in certain contexts are generally agreed to constitute good grounds for rejecting an assertion." (page 175 in 1967 edition)
+
+
+^ Rowe, William L. (1998). "Atheism". In Edward Craig. Routledge Encyclopedia of Philosophy. Taylor & Francis. ISBN 9780415073103. http://books.google.com/?id=lnuwFH_M5o0C&pg=PA530&lpg=PA530&dq=atheism+routledge#v=onepage&q=atheism%20routledge&f=false. Retrieved 2011-04-09. "As commonly understood, atheism is the position that affirms the nonexistence of God. So an atheist is someone who disbelieves in God, whereas a theist is someone who believes in God. Another meaning of "atheism" is simply nonbelief in the existence of God, rather than positive belief in the nonexistence of God. ...an atheist, in the broader sense of the term, is someone who disbelieves in every form of deity, not just the God of traditional Western theology." 
+^ a b Simon Blackburn, ed. (2008). "atheism". The Oxford Dictionary of Philosophy (2008 ed.). Oxford: Oxford University Press. http://www.oxfordreference.com/views/ENTRY.html?subview=Main&entry=t98.e278. Retrieved 2011-12-05. "Either the lack of belief that there exists a god, or the belief that there exists none. Sometimes thought itself to be more dogmatic than mere agnosticism, although atheists retort that everyone is an atheist about most gods, so they merely advance one step further." 
+^ Religioustolerance.org's short article on Definitions of the term "Atheism" suggests that there is no consensus on the definition of the term. Most dictionaries (see the OneLook query for "atheism") first list one of the more narrow definitions.
+
+Runes, Dagobert D.(editor) (1942 edition). Dictionary of Philosophy. New Jersey: Littlefield, Adams & Co. Philosophical Library. ISBN 0-06-463461-2. http://www.ditext.com/runes/a.html. Retrieved 2011-04-09. "(a) the belief that there is no God; (b) Some philosophers have been called "atheistic" because they have not held to a belief in a personal God. Atheism in this sense means "not theistic". The former meaning of the term is a literal rendering. The latter meaning is a less rigorous use of the term though widely current in the history of thought"  – entry by Vergilius Ferm
+
+
+^ "Definitions: Atheism". Department of Religious Studies, University of Alabama. http://www.as.ua.edu/rel/aboutreldefinitions.html. Retrieved 2011-04-09. 
+^ a b Oxford English Dictionary (2nd ed.). 1989. "Belief in a deity, or deities, as opposed to atheism" 
+^ "Merriam-Webster Online Dictionary". http://www.merriam-webster.com/dictionary/theism. Retrieved 2011-04-09. "belief in the existence of a god or gods" 
+^ a b Armstrong, Karen (1999). A History of God. London: Vintage. ISBN 0-09-927367-5. 
+^ Honderich, Ted (Ed.) (1995). "Humanism". The Oxford Companion to Philosophy. Oxford University Press. p 376. ISBN 0-19-866132-0.
+^ Fales, Evan. "Naturalism and Physicalism", in Martin 2007, pp. 122–131.
+^ Baggini 2003, pp. 3–4.
+^ Stenger 2007, pp. 17–18, citing Parsons, Keith M. (1989). God and the Burden of Proof: Plantinga, Swinburne, and the Analytical Defense of Theism. Amherst, New York: Prometheus Books. ISBN 978-0879755515. 
+^ Heather Wax (19 October 2009). "Can Atheists be Spiritual? Scientists Say ‘Yes’". John Templeton Foundation. http://www.templeton.org/templeton_report/20110601/index.html. "Now Ecklund returns with more analysis from her study—and this time, she finds that a significant number of scientists who don’t believe in God at all nevertheless affirm a personal spiritual sense. According to a new paper co-authored with fellow sociologist Elizabeth Long and published in the journal Sociology of Religion, of the 60 percent of scientists who describe themselves as either atheist or agnostic, a startling 22 percent of the atheist scientists say they have a spirituality. What’s more, these atheist scientists see their spirituality as more congruent with science than with religion." 
+^ Heather Wax (19 October 2009). "Can Atheists be Spiritual? Scientists Say ‘Yes’". John Templeton Foundation. http://www.templeton.org/templeton_report/20110601/index.html. "While Rees says he has no religious beliefs, the John Templeton Foundation feels the “big questions” raised by his work on the emergence of the cosmos, the size of physical reality, and the idea of the multiverse are, according to a statement released by the Foundation, “reshaping the philosophical and theological considerations that strike at the core of life.” Yet many can’t help wondering: Can you be an atheist and still affirm life’s spiritual dimension? According to research by Rice University sociologist Elaine Howard Ecklund, the answer is yes." 
+^ Slavoj Žižek: Less Than Nothing (2012)
+^ Alain de Botton: Religion for Atheists (2012)
+^ Alexander Bard & Jan Söderqvist: The Global Empire (2012)
+^ http://www.ted.com/talks/alain_de_botton_atheism_2_0.html
+^ http://www.facebook.com/pages/First-Church-of-Atheism/7712156427
+^ http://www.facebook.com/groups/109834425805191/
+^ Carol S. Matthews (19 October 2009). A New Vision A New Heart A Renewed Call - Volume Two. William Carey Library. ISBN 9780878083640. http://books.google.com/?id=RfGhUW8RdUIC&pg=PA194&dq=neopaganism+atheism#v=onepage&q&f=false. "Although Neo-Pagans share common commitments to nature and spirit there is a diversity of beliefs and practices. Some are atheists, others are polytheists (several gods exists), some are pantheists (all is God) and others are panentheists (all is in God)." 
+^ Carol S. Matthews (19 October 2009). New Religions. Chelsea House Publishers. ISBN 9780791080962. http://books.google.com/?id=stQQJlV9FT8C&pg=PA115&dq=neopaganism+atheism#v=onepage&q&f=false. "There is no universal worldview that all Neo-Pagans/Wiccans hold. One online information source indicates that depending on how the term God is defined, Neo-Pagans might be classified as monotheists, duotheists (two gods), polytheists, pantheists, or atheists." 
+^ Kedar, Nath Tiwari (1997). Comparative Religion. Motilal Banarsidass. p. 50. ISBN 81-208-0293-4. http://books.google.com.vc/books?id=Jb0rCQD9NcoC&printsec=frontcover#v=onepage&q=atheism&f=false. 
+^ Chakravarti, Sitansu (1991). Hinduism, a way of life. Motilal Banarsidass Publ.. p. 71. ISBN 978-81-208-0899-7. http://books.google.com/?id=J_-rASTgw8wC&pg=PA71. Retrieved 2011-04-09. "According to Hinduism, the path of the atheist is very difficult to follow in matters of spirituality, though it is a valid one." 
+^ a b c Zuckerman, Phil (2007). Martin, Michael T. ed. The Cambridge companion to atheism. Cambridge, England: Cambridge University Press. p. 56. ISBN 0-521-84270-0. http://books.google.com/books?id=tAeFipOVx4MC&pg=PA56. Retrieved 2011-04-09. 
+^ a b "Worldwide Adherents of All Religions by Six Continental Areas, Mid-2005". Encyclopædia Britannica. 2005. http://search.eb.com/eb/article-9432620. Retrieved 2007-04-15. 
+
+2.3% Atheists: Persons professing atheism, skepticism, disbelief, or irreligion, including the militantly antireligious (opposed to all religion).
+11.9% Nonreligious: Persons professing no religion, nonbelievers, agnostics, freethinkers, uninterested, or dereligionized secularists indifferent to all religion but not militantly so.
+
+
+^ a b "Religious Views and Beliefs Vary Greatly by Country, According to the Latest Financial Times/Harris Poll". Financial Times/Harris Interactive. 2006-12-20. http://www.harrisinteractive.com/news/allnewsbydate.asp?NewsID=1131. Retrieved 2011-04-09. 
+^ The word αθεοι—in any of its forms—appears nowhere else in the Septuagint or the New Testament. Robertson, A.T. (1960) [1932]. "Ephesians: Chapter 2". Word Pictures in the New Testament. Broadman Press. http://www.ccel.org/r/robertson_at/wordpictures/htm/EPH2.RWP.html. Retrieved 2011-04-09. "Old Greek word, not in LXX, only here in N.T. Atheists in the original sense of being without God and also in the sense of hostility to God from failure to worship him. See Paul's words in Ro 1:18–32." 
+^ Drachmann, A. B. (1977 ("an unchanged reprint of the 1922 edition")). Atheism in Pagan Antiquity. Chicago: Ares Publishers. ISBN 0-89005-201-8. http://books.google.com/?id=cguq-yNii_QC&dq=Atheism+in+Pagan+Antiquity&printsec=frontcover&q=. "Atheism and atheist are words formed from Greek roots and with Greek derivative endings. Nevertheless they are not Greek; their formation is not consonant with Greek usage. In Greek they said atheos and atheotēs; to these the English words ungodly and ungodliness correspond rather closely. In exactly the same way as ungodly, atheos was used as an expression of severe censure and moral condemnation; this use is an old one, and the oldest that can be traced. Not till later do we find it employed to denote a certain philosophical creed." 
+^ OED, Atheist
+^ Martiall, John (1566). A Replie to Mr Calfhills Blasphemous Answer Made Against the Treatise of the Cross. English recusant literature, 1558–1640. 203. Louvain. p. 51. http://books.google.com/books?id=20snAQAAIAAJ&q=%22to%20entre#v=snippet&q=atheist&f=false. Retrieved 2011-04-09. 
+^ Rendered as Atheistes: Golding, Arthur (1571). The Psalmes of David and others, with J. Calvin's commentaries. pp. Ep. Ded. 3. "The Atheistes which say..there is no God."  Translated from Latin.
+^ Hanmer, Meredith (1577). The auncient ecclesiasticall histories of the first six hundred years after Christ, written by Eusebius, Socrates, and Evagrius. London. p. 63. OCLC 55193813. "The opinion which they conceaue of you, to be Atheists, or godlesse men." 
+^ a b Rendered as Athisme: de Mornay, Philippe (1587). A Woorke Concerning the Trewnesse of the Christian Religion: Against Atheists, Epicures, Paynims, Iewes, Mahumetists, and other infidels [De la vérite de la religion chréstienne (1581)]. Translated from French by Arthur Golding & Philip Sidney. London. pp. xx. 310. "Athisme, that is to say, vtter godlesnes." 
+^ Vergil, Polydore (c1534). English history. http://books.google.com/?id=gW-gAAAAMAAJ&printsec=frontcover&dq=vergil+english+history#v=onepage&q=Godd%20would%20not&f=false. Retrieved 2011-04-09. "Godd would not longe suffer this impietie, or rather atheonisme." 
+^ The Oxford English Dictionary also records an earlier, irregular formation, atheonism, dated from about 1534. The later and now obsolete words athean and atheal are dated to 1611 and 1612 respectively. prep. by J. A. Simpson ... (1989). The Oxford English Dictionary (Second ed.). Oxford University Press, USA. ISBN 0-19-861186-2. 
+^ Burton, Robert (1621). deist. Part III, section IV. II. i. http://books.google.com/?id=cPgveWnCdRcC&printsec=frontcover&dq=anatomy+of+melancholy#v=onepage&q=deists&f=false. Retrieved 2011-04-09. "Cousin-germans to these men are many of our great Philosophers and Deists" 
+^ Martin, Edward (1662). "Five Letters". His opinion concerning the difference between the Church of England and Geneva [etc.]. London. p. 45. "To have said my office..twice a day..among Rebels, Theists, Atheists, Philologers, Wits, Masters of Reason, Puritanes [etc.]." 
+^ Bailey, Nathan (1675). An universal etymological English dictionary. http://books.google.com/?id=CFBGAAAAYAAJ&pg=PT255&dq=deism#v=onepage&q=deism&f=false. Retrieved 2011-04-09. 
+^ "Secondly, that nothing out of nothing, in the sense of the atheistic objectors, viz. that nothing, which once was not, could by any power whatsoever be brought into being, is absolutely false; and that, if it were true, it would make no more against theism than it does against atheism.." Cudworth, Ralph. The true intellectual system of the universe. 1678. Chapter V Section II p.73
+^ "17th Century History – Investigating Atheism". Investigatingatheism.info. http://www.investigatingatheism.info/historyseventeenth.html. Retrieved 2011-04-09. 
+^ http://www.foothill.edu/attach/bss/schaefers.ch9.pt2.ppt
+^ In part because of its wide use in monotheistic Western society, atheism is usually described as "disbelief in God", rather than more generally as "disbelief in deities". A clear distinction is rarely drawn in modern writings between these two definitions, but some archaic uses of atheism encompassed only disbelief in the singular God, not in polytheistic deities. It is on this basis that the obsolete term adevism was coined in the late 19th century to describe an absence of belief in plural deities. Britannica (1911). "Atheonism". Encyclopædia Britannica. 
+^ a b c d Martin, Michael. The Cambridge Companion to Atheism. Cambridge University Press. 2006. ISBN 0-521-84270-0.
+^ Harris, Sam (2008). Letter to a Christian Nation. Random House, Vintage Books. p. 51. ISBN 978-0-307-27877-7. http://books.google.com/?id=ypyMZlkgHGIC&pg=PA51&dq=In+fact,+%22atheism%22+is+a+term+that+should+not+even+exist.+No+one+ever+needs+to+identify+himself+as+a+%22non-astrologer%22+or+a+%22non-alchemist.%22+We+do+not+have+words+for+people+who+doubt+that+Elvis+is+still+alive+or+that+aliens+have+traversed+the+galaxy+only+to#v=onepage&q=In%20fact%2C%20%22atheism%22%20is%20a%20term%20that%20should%20not%20even%20exist.%20No%20one%20ever%20needs%20to%20identify%20himself%20as%20a%20%22non-astrologer%22%20or%20a%20%22non-alchemist.%22%20We%20do%20not%20have%20words%20for%20people%20who%20doubt%20that%20Elvis%20is%20still%20alive%20or%20that%20aliens%20have%20traversed%20the%20galaxy%20only%20to&f=false. Retrieved 2011-04-09. 
+^ "Atheism". Encyclopædia Britannica. 1911. http://www.1911encyclopedia.org/Atheism. Retrieved 2011-04-09. 
+^
+
+"Atheism". Encyclopædia Britannica Concise. Merriam Webster. http://www.merriam-webster.com/concise/atheism?show=0&t=1323944845. Retrieved 15 December 2011. "Critique and denial of metaphysical beliefs in God or divine beings. Unlike agnosticism, which leaves open the question of whether there is a God, atheism is a positive denial. It is rooted in an array of philosophical systems." 
+Zuckerman, edited by Phil (2010). Atheism and secularity. Santa Barbara, Calif. [u.a.]: Praeger. ISBN 9780313351839. "A major source of these biases is the lack of clear definitions. Atheism and secularity are defined in opposition to religion, with atheism (the rejection of theism) often perceived as an extreme form of secularism (the decline of religious influence over society). But atheism is a narrow term referring to a specific belief (that there is no god), whereas secularism has various meanings, including a range of attitudes (such as religious indifference, doubt, agnosticism, and atheism) as as behaviors (such as lack of regular church attendance or disregard for traditional religious morality)." 
+Nielsen, Kai (2011). "Atheism". Encyclopædia Britannica. http://www.britannica.com/EBchecked/topic/40634/atheism. Retrieved 2011-12-06. "atheism, in general, the critique and denial of metaphysical beliefs in God or spiritual beings. As such, it is usually distinguished from theism, which affirms the reality of the divine and often seeks to demonstrate its existence. Atheism is also distinguished from agnosticism, which leaves open the question whether there is a god or not, professing to find the questions unanswered or unanswerable." 
+
+
+"Atheism". Encyclopædia Britannica. 1911. http://www.1911encyclopedia.org/Atheism. Retrieved 2011-04-09. "But dogmatic atheism is rare compared with the sceptical type, which is identical with agnosticism in so far as it denies the capacity of the mind of man to form any conception of God, but is different from it in so far as the agnostic merely holds his judgment in suspense, though, in practice, agnosticism is apt to result in an attitude towards religion which is hardly distinguishable from a passive and unaggressive atheism." 
+
+
+^ Britannica (2011). "Atheism as rejection of religious beliefs". Encyclopædia Britannica. 1 (15th ed.). p. 666. 0852294735. http://www.britannica.com/EBchecked/topic/40634/atheism. Retrieved 2011-04-09. 
+^ d'Holbach, P. H. T. (1772). Good Sense. http://www.gutenberg.org/ebooks/7319. Retrieved 2011-04-07. 
+^ Smith 1979, p. 14.
+^ Nagel, Ernest (1959). "Philosophical Concepts of Atheism". Basic Beliefs: The Religious Philosophies of Mankind. Sheridan House. "I shall understand by "atheism" a critique and a denial of the major claims of all varieties of theism... atheism is not to be identified with sheer unbelief... Thus, a child who has received no religious instruction and has never heard about God, is not an atheist – for he is not denying any theistic claims. Similarly in the case of an adult who, if he has withdrawn from the faith of his father without reflection or because of frank indifference to any theological issue, is also not an atheist – for such an adult is not challenging theism and not professing any views on the subject." 
+reprinted in Critiques of God, edited by Peter A. Angeles, Prometheus Books, 1997.
+^ a b Flew, Antony (1976). The Presumption of Atheism, and other Philosophical Essays on God, Freedom, and Immortality. New York: Barnes and Noble. pp. 14ff. "In this interpretation an atheist becomes: not someone who positively asserts the non-existence of God; but someone who is simply not a theist. Let us, for future ready reference, introduce the labels 'positive atheist' for the former and 'negative atheist' for the latter." 
+^ Maritain, Jacques (July 1949). "On the Meaning of Contemporary Atheism". The Review of Politics 11 (3): 267–280. doi:10.1017/S0034670500044168. http://www.nd.edu/Departments/Maritain/jm3303.htm. 
+^ Kenny, Anthony (2006). "Why I Am Not an Atheist". What I believe. Continuum. ISBN 0-8264-8971-0. "The true default position is neither theism nor atheism, but agnosticism ... a claim to knowledge needs to be substantiated; ignorance need only be confessed." 
+^ "Many atheists I know would be certain of a high place in heaven". Irish Times. 2009-07-07. http://www.irishtimes.com/newspaper/opinion/2009/0725/1224251303564.html. Retrieved 2011-04-09. 
+^ Baggini 2003, pp. 30–34. "Who seriously claims we should say 'I neither believe nor disbelieve that the Pope is a robot', or 'As to whether or not eating this piece of chocolate will turn me into an elephant I am completely agnostic'. In the absence of any good reasons to believe these outlandish claims, we rightly disbelieve them, we don't just suspend judgement."
+^ Baggini 2003, p. 22. "A lack of proof is no grounds for the suspension of belief. This is because when we have a lack of absolute proof we can still have overwhelming evidence or one explanation which is far superior to the alternatives."
+^ a b Smart, J.C.C. (2004-03-09). "Atheism and Agnosticism". Stanford Encyclopedia of Philosophy. http://plato.stanford.edu/entries/atheism-agnosticism/. Retrieved 2011-04-09. 
+^ Dawkins, Richard (2006). The God Delusion. Houghton Mifflin Co. p. 50. ISBN 0-618-68000-4. 
+^ Cudworth, Ralph (1678). The True Intellectual System of the Universe: the first part, wherein all the reason and philosophy of atheism is confuted and its impossibility demonstrated. 
+^ See, for instance, "Atheists call for church head to retract slur". 1996-09-03. http://www.lds-mormon.com/atheist.shtml. Retrieved 2011-04-09. 
+^ Lowder, Jeffery Jay (1997). "Atheism and Society". http://www.infidels.org/library/modern/jeff_lowder/society.html. Retrieved 2011-04-09. 
+^ Paul Henri Thiry, Baron d'Holbach, System of Nature; or, the Laws of the Moral and Physical World (London, 1797), Vol. 1, p. 25
+^ a b c Zdybicka 2005, p. 20.
+^ Schafersman, Steven D. (February 1997). "Naturalism is an Essential Part of Science and Critical Inquiry". Conference on Naturalism, Theism and the Scientific Enterprise. Department of Philosophy, The University of Texas. http://docs.google.com/viewer?a=v&q=cache:NSuw6hjn_w0J:www.tcnj.edu/~scholars/111%2520Evolution%2520FSP/NATURALISM%2520IS%2520AN%2520ESSENTIAL%2520PART%2520OF%2520SCIENCE%2520AND%2520CRITICAL%2520INQUIRY.doc+Naturalism+is+an+Essential+Part+of+Science+and+Critical+Inquiry&hl=en&gl=ca&pid=bl&srcid=ADGEESiOoQ0c8zeA-NUM5qRN7EZqXoJs8b3hGUyuOedNRD9OheY2WLJHpdgNCsxwDJ0iJVdxIhSyytGXR-RXodM3cV8JYd6mEmBRuSQhAsvgFyIDPrw2HT3KXZTEoujo4lXsMckPLn-U&sig=AHIEtbS7vrl9TTdgC7ZY94opxblINuXYMw&pli=1. Retrieved 2011-04-07.  Revised May 2007
+^ Zdybicka 2005, p. 21.
+^ Drange, Theodore M. (1998). "Atheism, Agnosticism, Noncognitivism". Internet Infidels, Secular Web Library. Retrieved 2007-APR-07.
+^ Ayer, A. J. (1946). Language, Truth and Logic. Dover. pp. 115–116. In a footnote, Ayer attributes this view to "Professor H. H. Price".
+^ Zdybicka 2005, p. 19.
+^ David Hume. Dialogues Concerning Natural Religion. Project Gutenberg (e-text). http://www.gutenberg.org/ebooks/4583. Retrieved 2011-04-08. 
+^ Various authors. "Logical Arguments for Atheism". Internet Infidels, The Secular Web Library. Retrieved 2007-APR-09.
+^ Drange, Theodore M. (1996). "The Arguments From Evil and Nonbelief". Internet Infidels, Secular Web Library. Retrieved 2007-04-18.
+^ V.A. Gunasekara, "The Buddhist Attitude to God.". Archived from the original on 2008-01-02. http://web.archive.org/web/20080102053643/http://www.buddhistinformation.com/buddhist_attitude_to_god.htm.  In the Bhuridatta Jataka, "The Buddha argues that the three most commonly given attributes of God, viz. omnipotence, omniscience and benevolence towards humanity cannot all be mutually compatible with the existential fact of dukkha."
+^ Feuerbach, Ludwig (1841) The Essence of Christianity
+^ Walpola Rahula, What the Buddha Taught. Grove Press, 1974. Pages 51–52.
+^ Bakunin, Michael (1916). "God and the State". New York: Mother Earth Publishing Association. http://dwardmac.pitzer.edu/anarchist_archives/bakunin/godandstate/godandstate_ch1.html. Retrieved 2011-04-09. 
+^ Gleeson, David (August 10, 2006). "Common Misconceptions About Atheists and Atheism". American Chronicle. http://www.americanchronicle.com/articles/view/12346. Retrieved 2011-04-07. 
+^ Smith 1979, p. 275. "Perhaps the most common criticism of atheism is the claim that it leads inevitably to moral bankruptcy."
+^ Pascal, Blaise (1669). Pensées, II: "The Misery of Man Without God".
+^ a b Sartre, Jean-Paul (2004). "An existentialist ethics". In Gensler, Harry J.; Spurgin, Earl W.; Swindal, James C.. Ethics: Contemporary Readings. London: Routledge. p. 127. ISBN 0-415-25680-1. 
+^ Sartre, Jean-Paul (2001). "Existentialism and Humanism". In Priest, Stephen. Jean-Paul Sartre: Basic Writings. London: Routledge. p. 45. ISBN 0-415-21367-3. 
+^ Sartre, Jean-Paul (2001). "Existentialism and Humanism". In Priest, Stephen. Jean-Paul Sartre: Basic Writings. London: Routledge. p. 32. ISBN 0-415-21367-3. 
+^ Goldthorpe, Rhiannon (1992). "Understanding the committed writer". The Cambridge Companion to Sartre. Cambridge, UK: Cambridge University Press. p. 172. 
+^ Priest, Stephen (2001). "Sartre in the world". In Priest, Stephen. Jean-Paul Sartre: Basic Writings. London: Routledge. p. 13. ISBN 0-415-21367-3. 
+^ Barnes, Hazel (1957). "Translator's Introduction". (Sartre, Jean-Paul) Being and Nothingness: An Essay on Phenomenological Ontology. New York: Philosophical Library. p. xxvii. 
+^ Pandian (1996). India, that is, sidd. Allied Publishers. p. 64. ISBN 978-81-7023-561-3. http://books.google.com/?id=B90uj14NHjMC&pg=PA64. Retrieved 2011-04-09. 
+^ Dasgupta, Surendranath (1992). A history of Indian philosophy, Volume 1. Motilal Banarsidass Publ.. p. 258. ISBN 978-81-208-0412-8. http://books.google.com/?id=PoaMFmS1_lEC&pg=PA258. Retrieved 2011-04-09. 
+^ Tripathi (2001). Psycho-Religious Studies of Man, Mind and Nature. Global Vision Publishing House. p. 81. ISBN 978-81-87746-04-1. http://books.google.com/?id=zWFM_SaX24AC&pg=PA81. Retrieved 2011-04-09. 
+^ Sarvepalli Radhakrishnan and Charles A. Moore. A Sourcebook in Indian Philosophy. (Princeton University Press: 1957, Twelfth Princeton Paperback printing 1989) pp. 227–249. ISBN 0-691-01958-4.
+^ Satischandra Chatterjee and Dhirendramohan Datta. An Introduction to Indian Philosophy. Eighth Reprint Edition. (University of Calcutta: 1984). p. 55.
+^ Joshi, L.R. (1966). "A New Interpretation of Indian Atheism". Philosophy East and West 16 (3/4): 189–206. doi:10.2307/1397540. JSTOR 1397540. 
+^ Baggini 2003, pp. 73–74. "Atheism had its origins in Ancient Greece but did not emerge as an overt and avowed belief system until late in the Enlightenment."
+^ Solmsen, Friedrich (1942). Plato's Theology. Cornell University Press. p 25.
+^ a b ...nullos esse omnino Diagoras et Theodorus Cyrenaicus... Cicero, Marcus Tullius: De natura deorum. Comments and English text by Richard D. McKirahan. Thomas Library, Bryn Mawr College, 1997, page 3. ISBN 0-929524-89-6
+^ "religion, study of". (2007). In Encyclopædia Britannica. Retrieved 2007-04-02.
+^ Diogenes Laërtius, The Lives and Opinions of Eminent Philosophers, ii
+^ Cicero, Lucullus, 121. in Reale, G., A History of Ancient Philosophy. SUNY Press. (1985).
+^ "Atheism". The Columbia Encyclopedia, Sixth Edition. Columbia University Press. 2005. Archived from the original on 2006-11-04. http://web.archive.org/web/20061104032305/http://www.bartleby.com/65/at/atheism.html. Retrieved 2011-04-09. 
+^ Brickhouse, Thomas C.; Nicholas D. Smith (2004). Routledge Philosophy Guidebook to Plato and the Trial of Socrates. Routledge. p. 112. ISBN 0-415-15681-5.  In particular, he argues that the claim he is a complete atheist contradicts the other part of the indictment, that he introduced "new divinities".
+^ "Apology". Classics.mit.edu. http://classics.mit.edu/Plato/apology.html. Retrieved 2011-04-09. 
+^ "The Dialogues of Plato, vol. 1". Oll.libertyfund.org. http://oll.libertyfund.org/index.php?option=com_staticxt&staticfile=show.php&title=111. Retrieved 2011-04-09. 
+^ "The Republic". Classics.mit.edu. http://classics.mit.edu/Plato/republic.html. Retrieved 2011-04-09. 
+^ Fragments of Euhemerus' work in Ennius' Latin translation have been preserved in Patristic writings (e.g. by Lactantius and Eusebius of Caesarea), which all rely on earlier fragments in Diodorus 5,41–46 & 6.1. Testimonies, especially in the context of polemical criticism, are found e.g. in Callimachus, Hymn to Zeus 8.
+^ Plutarch, Moralia—Isis and Osiris 23
+^ BBC. "Ethics and Religion—Atheism". bbc.co.uk. http://www.bbc.co.uk/religion/religions/atheism/. Retrieved 2011-04-09. 
+^
+
+On the Nature of Things by Lucretius at Project Gutenberg Book I, "Substance is Eternal". Translated by W.E. Leonard. 1997. Retrieved 2007-APR-12.
+
+
+^ Julius Caesar (100–44 BCE), who leaned considerably toward Epicureanism, also rejected the idea of an afterlife, which e.g. lead to his plea against the death sentence during the trial against Catiline, where he spoke out against the Stoicist Cato (cf. Sallust, The War With Catiline, Caesar's speech: 51.29 & Cato's reply: 52.13).
+^ a b Stein, Gordon (Ed.) (1980). "The History of Freethought and Atheism". An Anthology of Atheism and Rationalism. New York: Prometheus. Retrieved 2007-APR-03.
+^  "Atheism" in the 1913 Catholic Encyclopedia.
+^ Maycock, A. L. and Ronald Knox (2003). Inquisition from Its Establishment to the Great Schism: An Introductory Study. ISBN 0-7661-7290-2.
+^ a b Zdybicka 2005, p. 4
+^ Winfried Schröder, in: Matthias Knutzen: Schriften und Materialien (2010), p. 8. See also Rececca Moore, The Heritage of Western Humanism, Scepticism and Freethought (2011), calling Knutzen "the first open advocate of a modern atheist perspective" online here
+^ "Michel Onfray on Jean Meslier". William Paterson University. http://nova.wpunj.edu/newpolitics/issue40/Onfray40.htm. Retrieved 2011-11-04. 
+^ d'Holbach, P. H. T. (1770). The System of Nature. 2. http://fulltextarchive.com/page/The-System-of-Nature-Vol-21/. Retrieved 2011-04-07. 
+^ Ray, Matthew Alun (2003). Subjectivity and Irreligion: Atheism and Agnosticism in Kant, Schopenhauer, and Nietzsche. Ashgate Publishing, Ltd.. ISBN 978-0-7546-3456-0. http://books.google.com/?id=BKz2FcDrFy0C&pg=PA1&dq=nietzsche+schopenhauer+marx+feuerbach. Retrieved 2011-04-09. 
+^ Overall, Christine (2007). Feminism and Atheism. ISBN 978-0-521-84270-9. http://books.google.com/?id=tAeFipOVx4MC&pg=PA233&lpg=PA233&dq=%22Feminism+and+Atheism%22&q=%22Feminism%20and%20Atheism%22. Retrieved 2011-04-09.  in Martin 2007, pp. 233–246
+^ Zdybicka 2005, p. 16
+^ Gerhard Simon (19 October 2009). Church, State, and Opposition in the U.S.S.R.. University of California Press. ISBN 9780520026124. http://books.google.com/?id=sTLc8H3b4vUC&pg=PA64. "On the other hand the Communist Party has never made any secret of the fact, either before or after 1917, that it regards 'militant atheism' as an integral part of its ideology and will regard 'religion as by no means a private matter'. It therefore uses 'the means of ideological influence to educate people in the spirit of scientific materialism and to overcome religious prejudices..' Thus it is the goal of the C.P.S.U. and thereby also of the Soviet state, for which it is after all the 'guiding cell', gradually to liquidate the religious communities." 
+^ Dimitry Pospielovsky (19 October 2009). The Orthodox Church in the History of Russia. St Vladimir's Seminary Press. ISBN 9780881411799. http://books.google.com/?id=2cP0wc_E6yEC&pg=PA395&dq=liquidation+of+religion+militant+atheism#v=onepage&q=liquidation%20of%20religion%20militant%20atheism&f=false. "It might be expected that as a Christian leader, he would at least declare that a Christian could not vote for a party that preached and practiced genocide, whether racial or class-based , nor for a party whose ideology included a militant atheism aiming at liquidation of religion." 
+^ Simon Richmond (19 October 2009). Russia & Belarus. BBC Worldwide. ISBN 9781741042917. http://books.google.com/?id=jcNZUzdd-ukC&pg=PA79&dq=liquidation+of+religion+militant+atheism#v=onepage&q=liquidation%20of%20religion%20militant%20atheism&f=false. "Soviet 'militant atheism' led to the closure and destruction of nearly all the mosques and madrasahs (Muslim religious schools) in Russia, although some remained in the Central Asian states. Under Stalin there were mass deportations and liquidation of the Muslim elite." 
+^ Tʻinatʻin Bočorišvili, William Sweet, Daniel R. Ahern (2005-06-30). Politics, ethics and challenges to democracy in 'new independent states'. Berghahn Books. ISBN 9781565182240. http://books.google.com/?id=qzkttrhVe9gC&pg=PA125&dq=soviet+union+state+atheism#v=onepage&q=soviet%20union%20state%20atheism&f=false. Retrieved 2011-03-05. "During the past 150 years in Azerbaijan, Islam has experienced an ascendancy over the official Orthodoxy of the Russian Empire and, then, the state atheism of the Soviet Union." 
+^ Russian postmodernism: new perspectives on post-Soviet culture. Berghahn Books. 1999. ISBN 9781571810281. http://books.google.com/?id=8pciFcaGXR0C&pg=PA379&dq=soviet+union+state+atheism#v=onepage&q=soviet%20union%20state%20atheism&f=false. Retrieved 2011-03-05. "The seven decades of Soviet atheism, whether one calls it "mass atheism," "scientific atheism," "state atheism," was unquestionably a new phenomenon in world history." 
+^ Baggini, Julian (Summer 2003). The Perils of Atheism. 118. New Humanist. http://newhumanist.org.uk/627/the-perils-of-atheism. Retrieved 2011-04-07.  Extract from his book Atheism: A Very Short Introduction (2003), Oxford University Press
+^ William B. Simons, Rijksuniversiteit te Leiden (2001). The Constitutions of the Communist World. Springer. ISBN 9780814722145. http://books.google.com/?id=aAtQZ0vjf5gC&pg=PA18&dq=The+State+recognizes+no+religion,+and+supports+and+carries+out+atheistic+propaganda+in+order+to+implant+a+scientific+materialistic+world+outlook+in+people#v=onepage&q&f=false. Retrieved 2011-03-05. "Article 37. The State recognizes no religion and supports and carries out atheist propaganda in order to implant a scientific materialist world outlook in people." 
+^ Robert Elsie (2001). A Dictionary of Albanian Religion, Mythology, and Folk culture. New York University Press. ISBN 9780814722145. http://books.google.com/?id=aAtQZ0vjf5gC&pg=PA18&dq=The+State+recognizes+no+religion,+and+supports+and+carries+out+atheistic+propaganda+in+order+to+implant+a+scientific+materialistic+world+outlook+in+people#v=onepage&q&f=false. Retrieved 2011-03-05. "Article 37 of the Albanian constitution of 1976 stipulated, "The State recognizes no religion and supports and carries out atheist propaganda in order to implant a scientific materialist world outlook in people."" 
+^ Richard Felix Staar (1982). Communist Regimes in Eastern Europe. The Hoover Institution on War, Revolution and Peace, Stanford University. ISBN 9780817976927. http://books.google.com/?id=ugeMgomY7hAC&pg=PA13&dq=The+State+recognizes+no+religion,+and+supports+and+carries+out+atheistic+propaganda+in+order+to+implant+a+scientific+materialistic+world+outlook+in+people#v=onepage&q=The%20State%20recognizes%20no%20religion%2C%20and%20supports%20and%20carries%20out%20atheistic%20propaganda%20in%20order%20to%20implant%20a%20scientific%20materialistic%20world%20outlook%20in%20people&f=false. Retrieved 2011-03-05. "By 1976 all places of worship had been closed. However, the regime has had to admit that religion still maintains a following among Albanians. In order to suppress religious life, the following article has been included in the 1976 constitution: "The state recognizes no religion and supports and carries out atheistic propaganda to implant the scientific materialistic world outlook in people" (Article 37). In its antireligious moves, the regime has gone so far as to order persons to change their names if they are of a religious origin." 
+^ China in the 21st century. Oxford University Press. 2010-04-16. ISBN 9780195394474. http://books.google.com/?id=X49uEF5XUX0C&pg=PA108&dq=state+atheism+china#v=onepage&q&f=false. Retrieved 2011-03-05. "China is still officially an atheist country, but many religions are growing rapidly, including evangelical Christianity (estimates of how many Chinese have converted to some form of Protestantism range widely, but at least tens of millions have done so) and various hybrid sects that combine elements of traditional creeds and belief systems (Buddhism mixed with local folk cults, for example)." 
+^ a b c The State of Religion Atlas. Simon & Schuster. 1993-12. http://books.google.com/?id=BY4YAQAAMAAJ&q=north+korea+atheist+state&dq=north+korea+atheist+state. Retrieved 2011-03-05. "Atheism continues to be the official position of the governments of China, North Korea and Cuba." 
+^ World and Its Peoples: Eastern and Southern Asia. Marshall Cavendish. 2007-09. ISBN 9780761476313. http://books.google.com/?id=YG2AFyFppJQC&pg=PA933&dq=north+korea+atheist+state#v=onepage&q=north%20korea%20atheist%20state&f=false. Retrieved 2011-03-05. "North Korea is officially an atheist state in which almost the entire population is nonreligious." 
+^ Freeing God's Children: The Unlikely Alliance for Global Human Rights. Rowman & Littlefield. 2006-09. ISBN 9780742547322. http://books.google.com/?id=EkIvbxefBNsC&pg=PA43&dq=cuba+state+atheism#v=onepage&q=cuba%20state%20atheism&f=false. Retrieved 2011-03-05. "Cuba is the only country in the Americas that has attempted to impose state atheism, and since the 1960s onward its jails have been filled with pastors and other believers." 
+^ Michael, S. M. (1999). "Dalit Visions of a Just Society". In S. M. Michael (ed.). Untouchable: Dalits in Modern India. Lynne Rienner Publishers. pp. 31–33. ISBN 1-55587-697-8. 
+^ "He who created god was a fool, he who spreads his name is a scoundrel, and he who worships him is a barbarian." Hiorth, Finngeir (1996). "Atheism in South India". International Humanist and Ethical Union, International Humanist News. Retrieved 2007-05-30
+^ TIME Magazine cover online. Apr 8, 1966. Retrieved 2007-04-17.
+^ "Toward a Hidden God". Time Magazine online. Apr 8, 1966. Retrieved 2007-04-17.
+^ Majeska, George P.; Bociurkiw, Bohdan R.; Strong, John W. (1976). "Religion and Atheism in the U.S.S.R. and Eastern Europe, Review". The Slavic and East European Journal 20 (2): 204–206. doi:10.2307/305838. JSTOR 305838. 
+^ Rafford, R.L. (1987). "Atheophobia—an introduction". Religious Humanism 21 (1): 32–37. 
+^ "Timothy Samuel Shah Explains 'Why God is Winning'." 2006-07-18. The Pew Forum on Religion and Public Life. Retrieved 2011-04-07.
+^ Paul, Gregory; Phil Zuckerman (2007). "Why the Gods Are Not Winning". Edge 209. http://www.edge.org/documents/archive/edge209.html#gp. Retrieved 2011-04-09. 
+^ Vermont Law Review Vol. 33:225 2008, Finding Shared Values in a Diverse Society: Lessons From the Intelligent Design Controversy by Alan E. Garfield (page 231).
+^ Landsberg, Mitchell (September 28, 2010). "Atheists, agnostics most knowledgeable about religion, survey says". Los Angeles Times. http://articles.latimes.com/2010/sep/28/nation/la-na-religion-survey-20100928. Retrieved 2011-04-08. 
+^ Hooper, Simon. "The rise of the New Atheists". CNN. http://www.cnn.com/2006/WORLD/europe/11/08/atheism.feature/index.html. Retrieved 2010-03-16. 
+^ Stenger, Victor J. "The New Atheism". Colorado University. http://www.colorado.edu/philosophy/vstenger/battle.html. Retrieved 2009-07-23. 
+^ "ReportDGResearchSocialValuesEN2.PDF" (PDF). http://ec.europa.eu/public_opinion/archives/ebs/ebs_225_report_en.pdf. Retrieved 2011-04-09. 
+^ "Major Religions of the World Ranked by Number of Adherents, Section on accuracy of non-Religious Demographic Data". http://www.adherents.com/Religions_By_Adherents.html#Nonreligious. Retrieved 2011-04-09. 
+^ Huxley, Andrew (2002). Religion, law and tradition: comparative studies in religious law. Routledge. p. 120. ISBN 978-0-7007-1689-0. http://books.google.com/?id=YsUMTA4MebwC. Retrieved 2011-04-09. 
+^ a b "Characteristics of the Population". Australian Bureau of Statistics. 2006. http://www.abs.gov.au/AUSSTATS/abs@.nsf/Lookup/1301.0Feature+Article7012009%E2%80%9310. Retrieved 2011-04-09. 
+^ a b (PDF) Social values, Science and Technology. Directorate General Research, European Union. 2005. pp. 7–11. http://ec.europa.eu/public_opinion/archives/ebs/ebs_225_report_en.pdf. Retrieved 2011-04-09. 
+^ Zuckerman, Phil (2007). Martin, Michael T. ed. The Cambridge companion to atheism. Cambridge, England: Cambridge University Press. p. 51. ISBN 0-521-84270-0. http://books.google.com/books?id=tAeFipOVx4MC&pg=PA51. Retrieved 2011-04-09. 
+^ a b Zuckerman, Phil (2009). "Atheism, Secularity, and Well-Being: How the Findings of Social Science Counter Negative Stereotypes and Assumptions". Sociology Compass 3 (6): 949–971. doi:10.1111/j.1751-9020.2009.00247.x. http://www.pitzer.edu/academics/faculty/zuckerman/Zuckerman_on_Atheism.pdf. 
+^ Larson, Edward J.; Larry Witham (1998). "Correspondence: Leading scientists still reject God". Nature 394 (6691): 313–4. doi:10.1038/28478. PMID 9690462.  Available at StephenJayGould.org, Stephen Jay Gould archive. Retrieved 2006-12-17
+^ William H. Swatos; Daniel V. A. Olson. "The Secularization Debate". Rowman & Littlefield. http://chronicle.uchicago.edu/050714/doctorsfaith.shtml. Retrieved 2011-08-19. "Recently, quite amazing time series data on the beliefs of scientists were published in Nature. Leuba's standard for belief in God is so stringent it would exlude a substantial portion of "mainline" clergy. It obviously was an intentional ploy on his part. He wanted to show that men of science were irreligious." 
+^ Rodney Stark; Roger Finke. Acts of Faith: Explaining the Human Side of Religion. University of California Press. http://books.google.com/books?id=N4p9eiXV6dMC&pg=PA73&dq=Leuba's+standard+for+belief+in+God+is+so+stringent&hl=en&ei=3QNPTpHhDITKsQK65NzRBg&sa=X&oi=book_result&ct=result&resnum=1&ved=0CCoQ6AEwAA#v=onepage&q=Leuba's%20standard%20for%20belief%20in%20God%20is%20so%20stringent&f=falsel. Retrieved 2011-08-19. "Recently, quite amazing time series data on the beliefs of scientists were published in Nature. Leuba's standard for belief in God is so stringent it would exlude a substantial portion of "mainline" clergy. It obviously was an intentional ploy on his part. He wanted to show that men of science were irreligious." 
+^ "Survey on physicians’ religious beliefs shows majority faithful". The University of Chicago. http://chronicle.uchicago.edu/050714/doctorsfaith.shtml. Retrieved 2011–04-08. "The first study of physician religious beliefs has found that 76 percent of doctors believe in God and 59 percent believe in some sort of afterlife. The survey, performed by researchers at the University and published in the July issue of the Journal of General Internal Medicine, found that 90 percent of doctors in the United States attend religious services at least occasionally compared to 81 percent of all adults." 
+^ "Scientists and Belief". Pew Research Center. http://pewforum.org/Science-and-Bioethics/Scientists-and-Belief.aspx. Retrieved 2011–04-08. "A survey of scientists who are members of the American Association for the Advancement of Science, conducted by the Pew Research Center for the People & the Press in May and June 2009, finds that members of this group are, on the whole, much less religious than the general public.1 Indeed, the survey shows that scientists are roughly half as likely as the general public to believe in God or a higher power. According to the poll, just over half of scientists (51%) believe in some form of deity or higher power; specifically, 33% of scientists say they believe in God, while 18% believe in a universal spirit or higher power." 
+^ Shermer, Michael (1999). How We Believe: Science, Skepticism, and the Search for God. New York: William H Freeman. pp. pp76–79. ISBN 0-7167-3561-X. 
+^ According to Dawkins (2006), p. 103. Dawkins cites Bell, Paul. "Would you believe it?" Mensa Magazine, UK Edition, Feb. 2002, pp. 12–13. Analyzing 43 studies carried out since 1927, Bell found that all but four reported such a connection, and he concluded that "the higher one's intelligence or education level, the less one is likely to be religious or hold 'beliefs' of any kind."
+^ Argyle, Michael (1958). Religious Behaviour. London: Routledge and Kegan Paul. pp. 93–96. ISBN 0-415-17589-5. 
+^ Societies without God are more benevolent, The Guardian, September 2, 2010
+^ Winston, Robert (Ed.) (2004). Human. New York: DK Publishing, Inc. p. 299. ISBN 0-7566-1901-7. "Nonbelief has existed for centuries. For example, Buddhism and Jainism have been called atheistic religions because they do not advocate belief in gods." 
+^ "Humanistic Judaism". BBC. 2006-07-20. http://www.bbc.co.uk/religion/religions/judaism/subdivisions/humanistic.shtml. Retrieved 2011-04-09. 
+^ Levin, S. (May 1995). "Jewish Atheism". New Humanist 110 (2): 13–15. 
+^ "Christian Atheism". BBC. 2006-05-17. http://www.bbc.co.uk/religion/religions/atheism/types/christianatheism.shtml. Retrieved 2011-04-09. 
+^ Altizer, Thomas J. J. (1967). The Gospel of Christian Atheism. London: Collins. pp. 102–103. http://www.religion-online.org/showbook.asp?title=523. Retrieved 2011-04-09. 
+^ Lyas, Colin (January 1970). "On the Coherence of Christian Atheism". Philosophy: the Journal of the Royal Institute of Philosophy 45 (171): 1–19. doi:10.1017/S0031819100009578. 
+^ Smith 1979, pp. 21–22
+^ Smith 1979, p. 275. "Among the many myths associated with religion, none is more widespread -or more disastrous in its effects—than the myth that moral values cannot be divorced from the belief in a god."
+^ In Dostoevsky's The Brothers Karamazov (Book Eleven: Brother Ivan Fyodorovich, Chapter 4) there is the famous argument that If there is no God, all things are permitted.: "'But what will become of men then?' I asked him, 'without God and immortal life? All things are lawful then, they can do what they like?'"
+^ For Kant, the presupposition of God, soul, and freedom was a practical concern, for "Morality, by itself, constitutes a system, but happiness does not, unless it is distributed in exact proportion to morality. This, however, is possible in an intelligible world only under a wise author and ruler. Reason compels us to admit such a ruler, together with life in such a world, which we must consider as future life, or else all moral laws are to be considered as idle dreams..." (Critique of Pure Reason, A811).
+^ Baggini 2003, p. 38
+^ Human Rights, Virtue, and the Common Good. Rowman & Littlefield. 1996. ISBN 9780847682799. http://books.google.com/?id=19ccmx1W58IC&pg=PA16&dq=has+truth+only+if+God+is+truth%E2%80%93it+stands+or+falls+with+faith+in+God#v=onepage&q=has%20truth%20only%20if%20God%20is%20truth%E2%80%93it%20stands%20or%20falls%20with%20faith%20in%20God&f=false. Retrieved 2011-04-09. "That problem was brought home to us with dazzling clarity by Nietzsche, who had reflected more deeply than any of his contemporaries on the implications of godlessness and come to the conclusion that a fatal contradiction lay at the heart of modern theological enterprise: it thought that Christian morality, which it wished to preserve, was independent of Christian dogma, which it rejected. This, in Nietzsche's mind, was an absurdity. It amounted to nothing less than dismissing the architect while trying to keep the building or getting rid of the lawgiver while claiming the protection of the law." 
+^ The Blackwell Companion to Natural Theology. Wiley-Blackwell. 2009-05-11. ISBN 9781405176576. http://books.google.com/?id=g8bHRrVu3SsC&pg=PA392&dq=there+is+no+God+there+is+no+morality+Nietzsche#v=onepage&q=there%20is%20no%20God%20there%20is%20no%20morality%20Nietzsche&f=false. Retrieved 2011-04-09. "Morality "has truth only if God is truth–it stands or falls with faith in God" (Nietzche 1968, p. 70). The moral argument for the existence of God essentially takes Nietzche's assertion as one of its premises: if there is no God, then "there are altogether no moral facts."" 
+^ Victorian Subjects. Duke University Press. 1991. ISBN 9780822311102. http://books.google.com/?id=VgMB9-tMSMoC&pg=PA85&dq=has+truth+only+if+God+is+truth%E2%80%93it+stands+of+falls+with+faith+in+God#v=onepage&q=has%20truth%20only%20if%20God%20is%20truth%E2%80%93it%20stands%20of%20falls%20with%20faith%20in%20God&f=false. Retrieved 2011-04-09. "Like other mid-nineteenth-century writers, George Eliot was not fully aware of the implications of her humanism, and, as Nietzsche saw, attempted the difficult task of upholding the Christian morality of altruism without faith in the Christian God." 
+^ Moore, G. E. (1903). Principia Ethica. http://fair-use.org/g-e-moore/principia-ethica/s.13. Retrieved 2011-04-09. 
+^ Susan Neiman (November 6, 2006). Beyond Belief Session 6 (Conference). Salk Institute, La Jolla, CA: The Science Network. 
+^ Baggini 2003, p. 40
+^ Baggini 2003, p. 43
+^ 101 Ethical Dilemmas, 2nd edition, by Cohen, M., Routledge 2007, pp184-5. (Cohen notes particularly that Plato and Aristotle produced arguments in favour of slavery.)
+^ Political Philosophy from Plato to Mao, by Cohen, M, Second edition 2008
+^
+
+Harris, Sam, The end of faith: religion, terror, and the future of reason, W. W. Norton & Company, 2005
+Harris, Sam, Letter to a Christian Nation, Random House, Inc., 2008
+Dawkins, Richard, The God Delusion, Houghton Mifflin Harcourt, 2008
+Hitchens, Christopher, God Is Not Great: How Religion Poisons Everything, Random House, Inc., 2007
+Russell, Bertrand, Why I am not a Christian, and other essays on religion and related subjects, Simon and Schuster, 1957
+
+
+^ Harris, Sam (2006a). "The Myth of Secular Moral Chaos". Free Inquiry. http://www.secularhumanism.org/index.php?section=library&page=sharris_26_3. Retrieved 2011-04-09. 
+^ Moreira-almeida, A.; Lotufo Neto, F.; Koenig, H.G. (2006). "Religiousness and mental health: a review". Revista Brasileira de Psiquiatria 28 (3): 242–250. doi:10.1590/S1516-44462006005000006. PMID 16924349. http://www.scielo.br/scielo.php?pid=S1516-44462006000300018&script=sci_arttext. Retrieved 2007-07-12. 
+^ See for example: Kahoe, R.D. (June 1977). "Intrinsic Religion and Authoritarianism: A Differentiated Relationship". Journal for the Scientific Study of Religion 16 (2): 179–182. doi:10.2307/1385749. JSTOR 1385749.  Also see: Altemeyer, Bob; Hunsberger, Bruce (1992). "Authoritarianism, Religious Fundamentalism, Quest, and Prejudice". International Journal for the Psychology of Religion 2 (2): 113–133. doi:10.1207/s15327582ijpr0202_5. http://www.informaworld.com/smpp/content~content=a785040926~db=all. Retrieved 2011-04-09. 
+^ Harris, Sam (2005). "An Atheist Manifesto". Truthdig. http://www.truthdig.com/dig/print/200512_an_atheist_manifesto. Retrieved 2011-04-09. "In a world riven by ignorance, only the atheist refuses to deny the obvious: Religious faith promotes human violence to an astonishing degree." 
+^ John S. Feinberg, Paul D. Feinberg (2010-11-04). Ethics for a Brave New World. Stand To Reason. ISBN 9781581347128. http://books.google.com/?id=Nl-f5SKq9mgC&pg=PA697&dq=Aleksandr+Solzhenitsyn+But+if+I+were+asked+today+to+formulate+as+concisely+as+possible+the+main+cause+of+the+ruinous+revolution+that+swallowed+up+some+60+million+of+our+people,+I+could+not+put+it+more+accurately+than+to+repeat:+'Men+have+forgotten+God;+that's+why#v=onepage&q&f=false. Retrieved 2007–10–18. "Over a half century ago, while I was still a child, I recall hearing a number of old people offer the following explanation for the great disasters that had befallen Russia: 'Men have forgotten God; that's why all this has happened.' Since then I have spend well-nigh 50 years working on the history of our revolution; in the process I have read hundreds of books, collected hundreds of personal testimonies, and have already contributed eight volumes of my own toward the effort of clearing away the rubble left by that upheaval. But if I were asked today to formulate as concisely as possible the main cause of the ruinous revolution that swallowed up some 60 million of our people, I could not put it more accurately than to repeat: 'Men have forgotten God; that's why all this has happened.'" 
+^ Dinesh D'Souza. "Answering Atheist’s Arguments". Catholic Education Resource Center. http://catholiceducation.org/articles/apologetics/ap0214.htm. Retrieved 2011-04-09. 
+
+
+ References
+
+
+Baggini, Julian (2003). Atheism: A Very Short Introduction. Oxford: Oxford University Press. ISBN 0-19-280424-3. 
+Martin, Michael, ed. (2007). The Cambridge Companion to Atheism. Cambridge: Cambridge University Press. ISBN 0-521-60367-6. http://books.google.ca/books?id=tAeFipOVx4MC&pg=PA8#v=onepage&q&f=true. Retrieved 2011-04-09. 
+Smith, George H. (1979). Atheism: The Case Against God. Buffalo, New York: Prometheus Books. ISBN 0-87975-124-X. 
+Stenger, Victor J. (2007). God: The Failed Hypothesis—How Science Shows That God Does Not Exist. Amherst, New York: Prometheus Books. ISBN 9781591026525. 
+Zdybicka, Zofia J. (2005). "Atheism". In Maryniarczyk, Andrzej. Universal Encyclopedia of Philosophy. 1. Polish Thomas Aquinas Association. http://ptta.pl/pef/haslaen/a/atheism.pdf. Retrieved 2011-04-09 
+
+
+ Further reading
+
+
+Berman, David (1990). A History of Atheism in Britain: From Hobbes to Russell. London: Routledge. ISBN 0-415-04727-7. http://books.google.ca/books?id=Li4OAAAAQAAJ&lpg=PP1&dq=A%20History%20of%20Atheism%20in%20Britain%3A%20From%20Hobbes%20to%20Russell&pg=PP1#v=onepage&q&f=true. 
+Buckley, M. J. (1990). At the Origins of Modern Atheism. New Haven, CT: Yale University Press. ISBN 0-300-04897-1. 
+Dawkins, Richard (2006). The God Delusion. Bantam Press. ISBN 0-593-05548-9. http://books.google.ca/books?id=yq1xDpicghkC&lpg=PP1&dq=The%20God%20Delusion&pg=PP1#v=onepage&q&f=true. 
+Flew, Antony (2005). God and Philosophy. Prometheus Books. ISBN 1-59102-330-0. 
+Tom Flynn, ed. (2007). The New Encyclopedia of Unbelief. Buffalo, NY: Prometheus Books. ISBN 1-59102-391-2. 
+Gaskin, J.C.A., ed. (1989). Varieties of Unbelief: From Epicurus to Sartre. •New York: Macmillan. ISBN 0-02-340681-X. 
+Germani, Alan (2008-09-15). "The Mystical Ethics of the New Atheists". The Objective Standard (Glen Allen Press) 3 (3). http://www.theobjectivestandard.com/issues/2008-fall/mystical-ethics-new-atheists.asp. Retrieved 2011-04-09. 
+Harbour, Daniel (2003). An Intelligent Person's Guide to Atheism. London: Duckworth. ISBN 0-7156-3229-9. 
+Harris, Sam (2006). Letter to a Christian Nation. Knopf. ISBN 978-0-307-26577-7. http://books.google.ca/books?id=RlZATs3xD0gC&lpg=PP1&dq=Letter%20to%20a%20Christian%20Nation&pg=PP1#v=onepage&q&f=true. 
+Harris, Sam (October 2, 2007). "The Problem with Atheism". The Washington Post. http://newsweek.washingtonpost.com/onfaith/panelists/sam_harris/2007/10/the_problem_with_atheism.html. Retrieved 2011-04-09. 
+Hitchens, Christopher (2007). God Is Not Great: How Religion Poisons Everything. Twelve. ISBN 978-0-446-57980-3. http://books.google.ca/books?id=sGgoYfGyqSMC&lpg=PP1&dq=God%20Is%20Not%20Great%3A%20How%20Religion%20Poisons%20Everything&pg=PP1#v=onepage&q&f=true. 
+Howson, Colin (2011). Objecting to God. Cambridge: Cambridge University Press. ISBN 978-0521186650
+Jacoby, Susan (2004). Freethinkers: A History of American Secularism. Metropolitan Books. ISBN 978-0-8050-7442-0. 
+Krueger, D. E. (1998). What is Atheism?: A Short Introduction. New York: Prometheus. ISBN 1-57392-214-5. 
+Le Poidevin, R. (1996). Arguing for Atheism: An Introduction to the Philosophy of Religion. London: Routledge. ISBN 0-415-09338-4. http://books.google.ca/books?id=M4YlYZi_cMUC&lpg=PP1&dq=Arguing%20for%20Atheism%3A%20An%20Introduction%20to%20the%20Philosophy%20of%20Religion&pg=PP1#v=onepage&q&f=true. 
+Mackie, J. L. (1982). The Miracle of Theism: Arguments For and Against the Existence of God. Oxford: Oxford University Press. ISBN 0-19-824682-X. 
+Maritain, Jacques (1953). The Range of Reason. London: Geoffrey Bles. ISBN B0007DKP00. http://www.nd.edu/Departments/Maritain/etext/range.htm. Retrieved 2011-04-09. 
+Martin, Michael (1990). Atheism: A Philosophical Justification. Philadelphia, PA: Temple University Press. ISBN 0-87722-943-0. http://books.google.ca/books?id=MNZqCoor4eoC&lpg=PP1&dq=Atheism%3A%20A%20Philosophical%20Justification&pg=PP1#v=onepage&q&f=true. Retrieved 2011-04-09. 
+Michael Martin & Ricki Monnier, ed. (2003). The Impossibility of God. Buffalo, NY: Prometheus Books. ISBN 1-59102-120-0. 
+Michael Martin & Ricki Monnier, ed. (2006). The Improbability of God. Buffalo, NY: Prometheus Books. ISBN 1-59102-381-5. 
+McTaggart, John; McTaggart, Ellis (1930) [1906]. Some Dogmas of Religion (New ed.). London: Edward Arnold & Co.. ISBN 0-548-14955-0. 
+Nielsen, Kai (1985). Philosophy and Atheism. New York: Prometheus. ISBN 0-87975-289-0. 
+Nielsen, Kai (2001). Naturalism and Religion. New York: Prometheus. ISBN 1-57392-853-4. 
+Onfray, Michel (2007). Atheist Manifesto. New York: Arcade Publishing. ISBN 978-1-55970-820-3. http://books.google.ca/books?id=QpEAYMo7pFkC&lpg=PP1&dq=Atheist%20Manifesto&pg=PP1#v=onepage&q&f=true. Retrieved 2011-04-09. 
+Oppy, Graham (2006). Arguing about Gods. Cambridge University Press. ISBN 0-521-86386-4. http://books.google.ca/books?id=DlVtfUxPD14C&lpg=PP1&dq=Arguing%20about%20Gods&pg=PP1#v=onepage&q&f=true. Retrieved 2011-04-09. 
+Robinson, Richard (1964). An Atheist's Values. Oxford: Clarendon Press. ISBN 0-19-824191-7. http://www.positiveatheism.org/hist/athval0.htm. Retrieved 2011-04-09. 
+Rosenberg, Alex (2011). The Atheist's Guide to Reality: Enjoying Life Without Illusions. New York: W. W. Norton & Co. ISBN 978-0393080230
+Russell, Paul (October 4, 2005). "Hume on Religion". In Edward N. Zalta. Stanford Encyclopedia of Philosophy (Winter 2008 ed.). Metaphysics Research Lab. http://plato.stanford.edu/entries/hume-religion/. Retrieved 2011-04-09. 
+Sharpe, R.A. (1997). The Moral Case Against Religious Belief. London: SCM Press. ISBN 0-334-02680-6. 
+Thrower, James (1971). A Short History of Western Atheism. London: Pemberton. ISBN 0-301-71101-1. 
+Walters, Kerry (2010). Atheism: A Guide for the Perplexed. New York: Continuum. ISBN 978-0-8264-2493-8
+
+
+ External links
+
+
+Find more about Atheism on Wikipedia's sister projects:
+
+
+
+Definitions and translations from Wiktionary
+
+
+
+Images and media from Commons
+
+
+
+Learning resources from Wikiversity
+
+
+
+News stories from Wikinews
+
+
+
+Quotations from Wikiquote
+
+
+
+Source texts from Wikisource
+
+
+
+Textbooks from Wikibooks
+
+
+
+Atheism in The Internet Encyclopedia of Philosophy
+The New Atheists in The Internet Encyclopedia of Philosophy
+Atheism at the Open Directory Project – Includes links to organizations and websites.
+Positive atheism: Great Historical Writings Historical writing sorted by authors.
+Religion & Ethics—Atheism at bbc.co.uk.
+Secular Web library – Library of both historical and modern writings, a comprehensive online resource for freely available material on atheism.
+The Demand for Religion – A study on the demographics of Atheism by Wolfgang Jagodzinski (University of Cologne) and Andrew Greeley (University of Chicago and University of Arizona).
+Atheism at enotes.com
+Kai Nielsen (July 1963). "Can Faith Validate God-Talk?". Theology Today 20. http://theologytoday.ptsem.edu/jul1963/v20-2-article2.htm. Retrieved 2011-12-05. 
+
+
+
+
+
+
+ 
+Links to related articles
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Irreligion
+
+
+
+
+
+
+Atheism
+
+
+
+List of atheists
+Demographics
+Religion
+History
+Anti-clericalism
+State atheism
+Criticism
+Discrimination
+Negative and positive
+Implicit and explicit
+Antitheism
+Antireligion
+Christian atheism
+Atheism in Hinduism
+Jewish atheism
+
+
+
+
+
+
+
+
+Agnosticism
+
+
+
+List of agnostics
+Agnostic atheism
+Agnostic theism
+Apatheism
+Ignosticism
+Strong agnosticism
+Weak agnosticism
+
+
+
+
+
+
+
+
+Nontheism
+
+
+
+Criticism of religion
+Freethought
+Flying Spaghetti Monster
+Inconsistent revelations
+Invisible Pink Unicorn
+Parody religion
+Post-theism
+Russell's teapot
+Secular humanism
+Secularism
+Secularity
+Theological noncognitivism
+Transtheism
+
+
+
+
+
+
+
+
+Naturalism
+
+
+
+Metaphysical
+Religious
+Humanistic
+
+
+
+
+
+
+
+
+Related topics
+
+
+
+Irreligion by country
+Unaffiliated
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Theological thought
+
+
+
+
+
+
+
+
+
+Abrahamism · Acosmism · Agnosticism · Animism · Antireligion · Atheism · Deism · Dharmism · Discordianism - Dualism · Esotericism · Feminist theology · Gnosticism · Henotheism · Immanence · Monism · Monotheism · Mysticism · New Age · New Thought · Nondualism · Pandeism · Pantheism · Polytheism · Process theology · Rastafari movement - Religious naturalism · Shamanism · Shramanism · Taoic · Theism · Thelema - Transcendence · more
+
+
+
+
+
+
+
+
+
+Religion  portal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Philosophy of religion
+
+
+
+
+
+
+Concepts in religion
+
+
+
+Afterlife
+Euthyphro dilemma
+Faith
+Intelligent design
+Miracle
+Problem of evil
+Religious belief
+Soul
+Spirit
+Theodicy
+Theological veto
+
+
+
+
+
+
+
+
+Theories of religion
+
+
+
+Acosmism
+Agnosticism
+Animism
+Antireligion
+Atheism
+Dharmism
+Deism
+Divine command theory
+Dualism
+Esotericism
+Exclusivism
+Existentialism
+
+Christian
+Agnostic
+Atheist
+
+
+Feminist theology
+Fundamentalism
+Gnosticism
+Henotheism
+Humanism
+
+Religious
+Secular
+Christian
+
+
+Inclusivism
+Monism
+Monotheism
+Mysticism
+Naturalism
+
+Metaphysical
+Religious
+Humanistic
+
+
+New Age
+Nondualism
+Nontheism
+Pandeism
+Pantheism
+Perennialism
+Polytheism
+Process theology
+Spiritualism
+Shamanism
+Taoic
+Theism
+Transcendentalism
+more...
+
+
+
+
+
+
+
+
+Philosophers
+of religion
+
+
+
+Albrecht Ritschl
+Alvin Plantinga
+Anselm of Canterbury
+Antony Flew
+Anthony Kenny
+Augustine of Hippo
+Averroes
+Baron d'Holbach
+Baruch Spinoza
+Blaise Pascal
+Bertrand Russell
+Boethius
+D.Z. Phillips
+David Hume
+Desiderius Erasmus
+Emil Brunner
+Ernst Cassirer
+Ernst Haeckel
+Ernst Troeltsch
+Friedrich Schleiermacher
+Friedrich Nietzsche
+Gaunilo of Marmoutiers
+Georg Wilhelm Friedrich Hegel
+George Santayana
+Harald Høffding
+Heraclitus
+Immanuel Kant
+J. L. Mackie
+Jean-Luc Marion
+Johann Gottfried Herder
+Karl Barth
+Karl Marx
+Lev Shestov
+Loyal Rue
+Ludwig Feuerbach
+Maimonides
+Martin Buber
+Martin Lings
+Mircea Eliade
+Paul Tillich
+Pavel Florensky
+Peter Geach
+Pico della Mirandola
+Reinhold Niebuhr
+René Descartes
+René Guénon
+Richard Swinburne
+Robert Merrihew Adams
+Rudolf Otto
+Søren Kierkegaard
+Sergei Bulgakov
+Thomas Aquinas
+Thomas Chubb
+Vladimir Solovyov
+Walter Kaufmann
+William Alston
+William James
+William Lane Craig
+W.K. Clifford
+William L. Rowe
+William Whewell
+William Wollaston
+more...
+
+
+
+
+
+
+
+
+Existence of God
+
+
+
+
+For
+
+
+
+Beauty
+Christological
+Consciousness
+Cosmological
+Degree
+Desire
+Experience
+Love
+Miracles
+Morality
+Ontological
+Pascal's Wager
+Proper basis
+Reason
+Teleological
+
+Natural law
+
+
+Transcendental
+
+
+
+
+
+
+
+
+Against
+
+
+
+747 Gambit
+Atheist's Wager
+Evil
+Free will
+Hell
+Inconsistent revelations
+Nonbelief
+Noncognitivism
+Occam's razor
+Omnipotence
+Poor design
+Russell's teapot
+
+
+
+
+
+
+
+
+
+
+
+Related topics
+
+
+
+Criticism of religion
+Ethics in religion
+Exegesis
+History of religions
+Religion
+Religious philosophy
+Theology
+Relationship between religion and science
+Political science of religion
+Faith and rationality
+more...
+
+
+
+
+
+
+
+
+
+
+
+Portal
+Category
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Religion
+
+
+
+
+
+
+Major groups
+
+
+
+
+Abrahamic
+
+
+
+Bahá'í Faith
+Christianity
+
+Anglicanism
+Catholicism
+Orthodoxy
+Protestanism
+
+
+Druze
+Islam
+
+Sunni
+Shia
+Sufi
+
+
+Judaism
+
+Conservative
+Karaite
+Orthodox
+Reform
+
+
+Samaritanism
+Mandaeism
+
+
+
+
+
+
+
+
+Indian
+
+
+
+Ayyavazhi
+Buddhism
+
+Theravada
+Mahayana
+Vajrayana
+
+
+Hinduism
+
+Shaktism
+Shaivism
+Smartism
+Vaishnavism
+
+
+Jainism
+Sikhism
+
+
+
+
+
+
+
+
+Iranian
+
+
+
+Ahl-e Haqq
+Bahá'í Faith
+Manichaeism
+Mazdak
+Mithraism
+Yazidi
+Zoroastrianism
+
+Zurvanism
+
+
+
+
+
+
+
+
+
+
+East Asian
+
+
+
+Confucianism
+Shinto
+Taoism
+Zen
+Hoa Hao
+Cao Dai
+
+
+
+
+
+
+
+
+Central Asian
+
+
+
+Tengriism
+
+
+
+
+
+
+
+
+Yoruba
+
+
+
+Aladura
+Candomblé
+Santería
+Umbanda
+
+
+
+
+
+
+
+
+Recent
+
+
+
+Cheondoism
+Discordianism
+Eckankar
+I-Kuan Tao
+Neopaganism
+New Age
+New Thought
+Raëlism
+Rastafari
+Scientology
+Seicho-no-Ie
+Tenrikyo
+Thelema
+Unification Church
+Unitarian Universalism
+Wicca
+
+
+
+
+
+
+
+
+Indigenous
+
+
+
+African
+Afro-American
+Indigenous Australian
+Chinese
+Finnish-Estonian
+Gurung
+Javanese
+Malagasy
+Native American
+Odinani
+Philippine
+Tibetan (Bön)
+Polynesian
+Vodou
+
+
+
+
+
+
+
+
+
+
+
+Ancient religions
+
+
+
+
+Prehistoric
+
+
+
+Paleolithic
+
+
+
+
+
+
+
+
+Near East
+
+
+
+Egyptian
+Mesopotamian
+Semitic
+
+
+
+
+
+
+
+
+Indo-European
+
+
+
+Celtic
+Germanic
+Greek
+
+Gnosticism
+Neoplatonism
+
+
+Illyro-thracian
+Mithraism
+Roman
+Slavic
+Vedic Hinduism
+
+
+
+
+
+
+
+
+
+
+
+Aspects
+
+
+
+Apostasy / Disaffiliation
+Behaviour
+Beliefs
+Clergy
+Conversion
+Deities
+Denomination
+Faith
+Fire‎
+God
+Meditation
+Monasticism
+
+monk
+nun
+
+
+Mysticism
+Mythology
+Nature‎
+Ordination
+Orthodoxy
+Orthopraxy
+Prayer
+Ritual
+
+liturgy
+sacrifice
+
+
+Spirituality
+Supernatural
+Symbols
+Truth
+Water
+Worship
+
+
+
+
+
+
+
+
+Theism
+
+
+
+Animism
+Deism
+Monotheism
+Nontheism
+Panentheism
+Pantheism
+Polytheism
+Transtheism
+
+
+
+
+
+
+
+
+Religious studies
+
+
+
+Anthropology
+Comparative
+Development
+Evolutionary origin
+Evolutionary psychology
+History
+Philosophy
+Neurotheology‎
+Psychology
+Sociology
+Theology
+Theories
+Women
+
+
+
+
+
+
+
+
+Religion and
+society
+
+
+
+Agriculture
+Business
+Clergy
+
+Monasticism
+Ordination
+
+
+Conversion
+
+Evangelism
+Missionary
+Proselytism
+
+
+Education
+Fanaticism
+Freedom
+
+Pluralism
+Syncretism
+Toleration
+Universalism
+
+
+Fundamentalism
+Growth
+Happiness
+Homosexuality
+Minorities
+National church
+Neo-fascism
+Political science
+Populations
+Schism
+Science
+State
+Theocracy
+Vegetarianism
+Violence
+
+Persecution
+Terrorism
+War
+
+
+Wealth
+
+
+
+
+
+
+
+
+Secularism
+and irreligion
+
+
+
+Deism
+Agnosticism
+Atheism
+Criticism
+Church of Satan
+Deconstruction
+Irreligion by country
+Objectivism
+Secular theology
+Secularization
+Separation of church and state
+Unaffiliated
+
+
+
+
+
+
+
+
+Lists
+
+
+
+Index
+Outline
+Timeline
+Abrahamic prophets
+Deification
+Deities
+Founders
+Mass gatherings
+New religious movements
+Organizations
+Religions and spiritual traditions
+Scholars
+
+
+
+
+
+
+
+
+
+
+
+Category
+Portal
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Philosophy
+
+
+
+
+
+
+Branches
+
+
+
+
+
+
+
+Metaphysics
+Epistemology
+Logic
+Ethics
+Aesthetics
+
+
+
+
+
+
+
+
+Philosophy of
+
+
+
+Action
+Art
+Being
+Biology
+Business
+Chemistry
+Computer science
+Culture
+Design
+Dialogue
+Education
+Economics
+Engineering
+Environment
+Film
+Futility
+Geography
+Information
+Healthcare
+History
+Human nature
+Humor
+Language
+Law
+Literature
+Mathematics
+Mind
+Music
+Pain
+Philosophy
+Physics
+Politics
+Psychology
+Religion
+
+Hermeneutics
+
+
+Science
+Sexuality
+Social science
+Technology
+War
+
+
+
+
+
+
+
+
+
+
+
+Schools of
+thought
+
+
+
+
+By historical era
+
+
+
+Ancient
+Western
+
+Medieval
+Renaissance
+Modern
+Contemporary
+
+
+
+
+
+
+
+
+
+
+Ancient
+
+
+
+Chinese
+
+Agriculturalism
+Confucianism
+Legalism
+Logicians
+Mohism
+Chinese naturalism
+Neotaoism
+Taoism
+Yangism
+Zen
+
+
+Greek & Greco-Roman
+
+Aristotelianism
+Cynicism
+Epicureanism
+Neoplatonism
+Peripatetic
+Platonism
+Presocratic
+Pythagoreanism
+Sophism
+Stoicism
+
+
+Indian
+
+Buddhist
+Cārvāka
+Hindu
+Jain
+
+
+Persian
+
+Mazdakism
+Zoroastrianism
+Zurvanism
+
+
+
+
+
+
+
+
+
+
+9th–16th centuries
+
+
+
+Christian Europe
+
+Scholasticism
+Renaissance humanism
+Thomism
+
+
+East Asian
+
+Korean Confucianism
+Rigaku
+Neo-Confucianism
+
+
+Islamic
+
+Averroism
+Avicennism
+Persian Illuminationism
+Kalam
+Sufi
+
+
+Jewish
+
+Judeo-Islamic
+
+
+
+
+
+
+
+
+
+
+17th–21st centuries
+
+
+
+Absolute idealism
+Anarchism
+Behaviorism
+Cartesianism
+Classical liberalism
+Deconstruction
+Dialectical materialism
+Eliminativism
+Epiphenomenalism
+Egoism
+Existentialism
+Feminist
+Frankfurt School
+Functionalism
+Hegelianism
+Kantianism
+Kokugaku
+Kyoto school
+Legal positivism
+Logical positivism
+Marxism
+Modernism
+Neo-Kantianism
+New Confucianism
+Ordinary language
+Phenomenology
+Postmodernism
+Post-structuralism
+Pragmatism
+Reformed epistemology
+Structuralism
+Transcendentalism
+Utilitarianism
+Vienna Circle
+more...
+
+
+
+
+
+
+
+
+
+
+
+Positions
+
+
+
+Certainty
+
+Skepticism
+Solipsism
+Nihilism
+
+
+Ethics
+
+Consequentialism
+Deontology
+Virtue
+
+
+Free will
+
+Compatibilism
+Determinism
+Libertarianism
+
+
+Metaphysics
+
+Atomism
+Dualism
+Monism
+Naturalism
+
+
+Epistemology
+
+Constructivism
+Empiricism
+Idealism
+Particularism
+Rationalism
+
+
+Naturalism
+Normativity
+
+Absolutism
+Particularism
+Relativism
+Universalism
+
+
+Ontology
+
+Action
+Event
+Process
+
+
+Reality
+
+Anti-realism
+Idealism
+Materialism
+Realism
+
+
+
+
+
+
+
+
+
+
+By region
+
+
+
+African
+American
+Aztec
+British
+Chinese
+Danish
+French
+German
+Greek
+Indian
+Indonesian
+Iranian
+Italian
+Japanese
+Korean
+Polish
+Romanian
+
+
+
+
+
+
+
+
+Lists
+
+
+
+Outline
+Index
+Schools
+Glossary
+Philosophers
+Movements
+Publications
+
+
+
+
+
+
+
+
+
+
+
+Portal
+Category
+WikiProject
+changes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
+ 
+NewPP limit report
+Preprocessor node count: 121005/1000000
+Post-expand include size: 1102618/2048000 bytes
+Template argument size: 526413/2048000 bytes
+Expensive parser function count: 7/500
+
+ Saved in parser cache with key enwiki:pcache:idhash:15247542-0!*!0!!en!4!* and timestamp 20120301184103 
+  /bodycontent 
+ printfooter 
+
+				Retrieved from "http://en.wikipedia.org/w/index.php?title=Atheism&oldid=479664348"				
+ /printfooter 
+ catlinks 
+Categories: AtheismCriticism of religionDisengagement from religionPhilosophical movementsPhilosophy of religionSecularismGreek loanwordsHidden categories: Articles containing Ancient Greek language textWikipedia pages semi-protected against vandalismFeatured articlesArticles containing Latin language textArticles containing French language textAll articles with unsourced statementsArticles with unsourced statements from August 2011Articles with unsourced statements from October 2011  /catlinks 
+
+ debughtml 
+ /debughtml 
+
+ /bodyContent 
+
+ /content 
+ header 
+
+ 0 
+
+Personal tools
+
+Log in / create account
+
+
+ /0 
+
+ 0 
+
+Namespaces
+
+Article
+Talk
+
+
+ /0 
+ 1 
+
+
+
+Variants
+
+
+
+
+
+ /1 
+
+
+ 0 
+
+Views
+
+Read
+View source
+View history
+
+
+ /0 
+ 1 
+
+Actions
+
+
+
+
+
+ /1 
+ 2 
+
+Search
+
+
+  
+
+
+
+ /2 
+
+
+ /header 
+ panel 
+
+ logo 
+
+ /logo 
+ navigation 
+
+Navigation
+
+
+Main page
+Contents
+Featured content
+Current events
+Random article
+Donate to Wikipedia
+
+
+
+ /navigation 
+ SEARCH 
+ /SEARCH 
+ interaction 
+
+Interaction
+
+
+Help
+About Wikipedia
+Community portal
+Recent changes
+Contact Wikipedia
+
+
+
+ /interaction 
+ TOOLBOX 
+
+Toolbox
+
+
+What links here
+Related changes
+Upload file
+Special pages
+Permanent link
+Cite this page 
+
+
+ /TOOLBOX 
+ coll-print_export 
+
+Print/export
+
+Create a bookDownload as PDFPrintable version 
+
+ /coll-print_export 
+ LANGUAGES 
+
+Languages
+
+
+Afrikaans
+Alemannisch
+Ænglisc
+العربية
+Aragonés
+Azərbaycanca
+বাংলা
+Bahasa Banjar
+Башҡортса
+Беларуская
+‪Беларуская (тарашкевіца)‬
+Български
+Boarisch
+བོད་ཡིག
+Bosanski
+Brezhoneg
+Català
+Česky
+Cymraeg
+Dansk
+Deutsch
+Eesti
+Ελληνικά
+Español
+Esperanto
+Euskara
+فارسی
+Fiji Hindi
+Føroyskt
+Français
+Frysk
+Furlan
+Gaeilge
+Gàidhlig
+Galego
+한국어
+Hawai`i
+Հայերեն
+हिन्दी
+Hrvatski
+Ido
+Bahasa Indonesia
+Interlingua
+Interlingue
+Íslenska
+Italiano
+עברית
+Basa Jawa
+ქართული
+Қазақша
+Kiswahili
+Kreyòl ayisyen
+Kurdî
+Latina
+Latviešu
+Lëtzebuergesch
+Lietuvių
+Limburgs
+Lojban
+Lumbaart
+Magyar
+Македонски
+മലയാളം
+Malti
+मराठी
+مصرى
+Bahasa Melayu
+Mirandés
+Монгол
+မြန်မာဘာသာ
+Nederlands
+नेपाली
+नेपाल भाषा
+日本語
+‪Norsk (bokmål)‬
+‪Norsk (nynorsk)‬
+Occitan
+O'zbek
+پنجابی
+Papiamentu
+پښتو
+Plattdüütsch
+Polski
+Português
+Română
+Runa Simi
+Русиньскый
+Русский
+Саха тыла
+Scots
+Shqip
+Sicilianu
+Simple English
+Slovenčina
+Slovenščina
+Ślůnski
+کوردی
+Српски / Srpski
+Srpskohrvatski / Српскохрватски
+Suomi
+Svenska
+Tagalog
+தமிழ்
+తెలుగు
+ไทย
+Türkçe
+Українська
+اردو
+ئۇيغۇرچە / Uyghurche‎
+Tiếng Việt
+Võro
+Winaray
+ייִדיש
+粵語
+Zazaki
+Žemaitėška
+中文
+
+
+
+ /LANGUAGES 
+
+ /panel 
+ footer 
+
+
+ This page was last modified on 1 March 2012 at 15:32.
+Text is available under the Creative Commons Attribution-ShareAlike License;
+additional terms may apply.
+See Terms of use for details.
+Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc., a non-profit organization.Contact us
+
+
+Privacy policy
+About Wikipedia
+Disclaimers
+Mobile view
+
+
+
+
+
+
+
+
+
+
+
+ /footer 
+
+if(window.mw){
+mw.loader.load(["mediawiki.user","mediawiki.page.ready","mediawiki.legacy.mwsuggest","ext.gadget.teahouse","ext.vector.collapsibleNav","ext.vector.collapsibleTabs","ext.vector.editWarning","ext.vector.simpleSearch","ext.UserBuckets","ext.articleFeedback.startup","ext.articleFeedbackv5.startup","ext.markAsHelpful"], null, true);
+}
+
+
+ Served by mw45 in 0.111 secs. 
+

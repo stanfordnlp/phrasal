@@ -1,14 +1,17 @@
 # Django settings for ptm_tm project.
 #
 # To deploy tmapp:
+#  * Setup ~/.pgpass
 #  * Change INSTALL_DIR
 #  * Change 'DATABASES' for the deployment database
 #  * python manage.py syncdb
 #  * Run ptm/scripts/setup_default_db.sh
-#  * Set 'DEBUG' to False
+#  * Set 'DEBUG' to False in settings.py
+#  * Change logger debug level to WARN in settings.py
 #  * Run python manage.py collectstatic
-#  * Login and setup some UserConfs
-#
+#  * Login to admin and setup (in this order):
+#    * ExperimentModules
+#    * UserConfs
 #
 
 # The directory where 'django-admin.py startproject' was executed

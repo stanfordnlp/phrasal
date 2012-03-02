@@ -62,7 +62,11 @@ class UISpec(models.Model):
 
     # A generic name to show to experimental subjects
     display_name = models.CharField(max_length=100)
-    
+
+    # A 1-best machine suggestion should be displayed with
+    # this UI.
+    best_suggestion = models.BooleanField(default=False)
+
     def __unicode__(self):
         return self.name
 
@@ -182,25 +186,19 @@ class TargetTxt(models.Model):
     # Each SourceTxt object can have multiple translations
     src = models.ForeignKey(SourceTxt)
 
-    
     lang = models.ForeignKey(LanguageSpec,related_name='+')
-
-    # User who created this translation
-    # May be empty if this is an automatic translation
-    # Also, create the reverse relation so that we can get all
-    # translations for a given user
-    user = models.ForeignKey(User,
-                             blank=True,
-                             null=True)
 
     # True if this is a machine generated translation
     is_machine = models.BooleanField(default=False)
 
+    # Date when the translation was generated
+    # Only blank if it was machine-generated, in which case we have
+    # provenance information for the file from which we loaded the
+    # translation
+    date = models.DateTimeField()
+
     # The actual text
     txt = models.TextField()
-
-    # Date when the translation was generated
-    date = models.DateTimeField()
 
     def __unicode__(self):
         return '%s: %s' % (str(self.date),
@@ -217,10 +215,12 @@ class TranslationStats(models.Model):
     """
     # Each translation was generated in a single session
     tgt = models.OneToOneField(TargetTxt)
-    
-    ui = models.ForeignKey(UISpec,related_name='+')
 
-    user = models.ForeignKey(User,related_name='+')
+    # UI used to generate this translation
+    ui = models.ForeignKey(UISpec)
+
+    # User who created the translation
+    user = models.ForeignKey(User)
 
     # Action log created by the interface
     # Usually, we use the translog2.js widget
