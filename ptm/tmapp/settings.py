@@ -165,13 +165,13 @@ LOGGING = {
         'default': {
             'level':'DEBUG',
             'class':'logging.FileHandler',
-            'filename': 'logs/server.log',
+            'filename': '%s/logs/server.log' % (INSTALL_DIR),
             'formatter':'verbose',
         },  
         'request_handler': {
             'level':'DEBUG',
             'class':'logging.FileHandler',
-            'filename': 'logs/request.log',
+            'filename': '%s/logs/request.log' % (INSTALL_DIR),
             'formatter':'verbose',
         },
     },
