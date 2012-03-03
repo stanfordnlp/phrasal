@@ -41,10 +41,7 @@ def done_training(user,set_done=False,form=None):
     Raises:
     """
     user_conf = get_user_conf(user)
-    if not user_conf:
-        logger.error('No UserConf for user ' + user.username)
-        return None
-    elif set_done and form:
+    if set_done and form:
         user_conf.birth_country = form.cleaned_data['birth_country']
         user_conf.home_country = form.cleaned_data['home_country']
         user_conf.hours_per_week = form.cleaned_data['hours_per_week']

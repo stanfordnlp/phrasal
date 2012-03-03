@@ -8,7 +8,7 @@
 # TODO: Change as needed.
 dbhost=localhost
 dbname=djangodb
-dbadmin=django_admin
+dbadmin=django
 
 # Paths to various files
 # TODO: Change these paths as needed

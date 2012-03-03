@@ -12,7 +12,7 @@ fi
 # TODO: Change as needed.
 dbhost=localhost
 dbname=djangodb
-dbadmin=django_admin
+dbadmin=django
 
 fname=$1
 start_pk=$2

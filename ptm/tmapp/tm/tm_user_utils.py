@@ -12,6 +12,7 @@ def get_user_conf(user):
       UserConf object if the user exists in the database.
       None otherwise.
     Raises:
+      RuntimeError -- if the UserConf could not be found
     """
     if not user:
         return None
@@ -19,7 +20,7 @@ def get_user_conf(user):
         user_conf = UserConf.objects.get(user=user)
     except UserConf.MultipleObjectsReturned,UserConf.DoesNotExist:
         logger.error('Could not retrieve credentials for ' + repr(user))
-        return None
+        raise RuntimeError
 
     return user_conf
 
@@ -35,10 +36,6 @@ def get_user_langs(user):
     Raises:
     """
     conf = get_user_conf(user)
-    if conf == None:
-        logger.error('Could not retrieve UserConf for user: ' + user.username)
-        return None
-
     return (conf.lang_native, conf.lang_other)
     
 def get_active_modules(user):
@@ -52,9 +49,5 @@ def get_active_modules(user):
     Raises:
     """
     conf = get_user_conf(user)
-    if conf == None:
-        logger.error('Could not retrieve UserConf for user: ' + user.username)
-        return None
-
     return conf.active_modules.all().order_by('id')
 

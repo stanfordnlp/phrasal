@@ -20,10 +20,6 @@ def index(request):
     Returns:
     Raises:
     """
-    user_name = request.user.first_name
-    if not user_name:
-        user_name = request.user.username
-            
     # Check to see if this user has finished training
     user_took_training = tm_train_module.done_training(request.user)
     if user_took_training == None:
@@ -48,10 +44,19 @@ def index(request):
                 (module_name, sample_id) = tm_workqueue.has_samples(request.user)
                 logger.info('Selected module %s for user %s' % (module_name,str(request.user.username)))
                 tr_url = '/tm/tr/%d/' % (sample_id)
+    else:
+        # Sanity check -- purge the experimental samples
+        n_samples = tm_workqueue.purge_samples(request.user)
+        if n_samples:
+            logger.warn('User %s has not completed traning, but purged %d samples' % (request.user.username, n_samples))
+
+    display_name = request.user.first_name
+    if not display_name:
+        display_name = request.user.username
 
     return render_to_response('tm/index.html',
                               {'module_name':module_name,
-                               'name' : user_name,
+                               'name' : display_name,
                                'tr_url' : tr_url},
                               context_instance=RequestContext(request))
 
@@ -83,7 +88,7 @@ def tutorial(request, module_id):
                 logger.error('Could not find a template for ui id: ' + str(ui_id))
                 raise Http404
             else:
-                header_txt = 'Example of  ' + module.ui.display_name
+                header_txt = 'Example of %s (Translate to %s)' % (module.ui.display_name,tgt_lang.name)
                 txt_suggest = tm_view_utils.get_suggestion(src,
                                                            tgt_lang,
                                                            ui_id)
@@ -216,10 +221,11 @@ def tr(request,sample_id):
             template = tm_view_utils.get_template_for_ui(ui_id)
             header_txt = 'Translate to ' + tgt_lang.name
             src_toks = sample.src.txt.split()
+            css_dir = sample.src.lang.css_direction
             action = '/tm/tr/%d/' % (sample_id)
             return render_to_response(template,
                                       {'header_txt':header_txt,
-                                       'src_css_dir':src.lang.css_direction,
+                                       'src_css_dir':css_dir,
                                        'src_toks':src_toks,
                                        'form_action':action,
                                        'form':form },

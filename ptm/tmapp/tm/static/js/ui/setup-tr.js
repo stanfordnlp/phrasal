@@ -16,7 +16,7 @@ $(document).ready(function(){
   var _textAreaSel = 'textarea#' + _textAreaId;
   $( _textAreaSel ).focus();
 
-  var _cssDir = $( 'input[name="css_direction"]' ).val();
+  var _cssDir = $( 'input[name=css_direction]' ).val();
   if (_cssDir == 'rtl'){
     console.log('rtl language');
     $( _textAreaSel ).css('direction','rtl');
@@ -28,7 +28,7 @@ $(document).ready(function(){
   
   // Translog2 --- User action logging
   tlog2.init();
-  $( 'input[name="form-tgt-submit"]' ).click(function(){
+  $( 'input[name=form-tgt-submit]' ).click(function(){
     tlog2.flushForm('action_log');
   });
 
@@ -36,10 +36,10 @@ $(document).ready(function(){
   var max_secs = 180;
   idletimer.init(max_secs);
   idletimer.addCallback(function(){
-    alert('You exceeded the maximum idle time for this sentence. It will be submitted. Click OK to continue to the next sentence.');
-    $( 'input[name="is_valid"]' ).val('False');
-    $( 'input[name="txt"]' ).val('INCOMPLETE');
-    $( 'input[name="form-tgt-submit"]' ).trigger('click');
+    alert('You exceeded the maximum idle time! Your partial translation has been submitted. Click OK to continue to the next sentence.');
+    $( 'input[name=is_valid]' ).val('False');
+    $( 'input[name=txt]' ).val('INCOMPLETE');
+    $( 'input[name=form-tgt-submit]' ).trigger('click');
   });
   $( _textAreaSel ).keydown(function(){
     idletimer.reset();
