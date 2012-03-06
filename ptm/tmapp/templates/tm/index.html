@@ -18,12 +18,20 @@
 <div id="main-content">
 <p> Hi {{ name }}!</p>
 {% if module_name == "none" %}
-<p> Thanks! You're completed all of the modules. Please <a href="/bye/">click here</a> to logout.</p>
+<p>You've completed the job. Thanks so much! Please send us a short note on odesk and let us know that you've finished. We'll review your work and make the payment.</p>
+<p>If you have any additional questions, feel free to contact us on odesk.</p>
+<p>Please <a href="/tm/bye/">click here</a> to logout.</p>
+
 {% else %}{% if module_name == "train" %}
 <p> Please complete the <a href="/tm/training/">training</a> before you start the translation job. You'll see several different translation interfaces, and we want you to understand the differences before you get to work.</p>
+
+{% else %}{% if module_name == "survey" %}
+<p> You've completed all of the translation modules. The hard part is over! Please fill out this <a href="/tm/survey/">short survey</a> about your experience. Once you submit it, we'll tell you how to get paid.
+
 {% else %}
 <p>Take a quick break! When you are ready, <a href="{{ tr_url }}">click here</a> to start the next module.</p>
-{% endif %}{% endif %}
+{% endif %}{% endif %}{% endif %}
+
 </div>
 
 {% endblock %}

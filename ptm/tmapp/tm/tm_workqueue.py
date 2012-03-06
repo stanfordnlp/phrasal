@@ -1,7 +1,8 @@
 import logging
 import random
-from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule,ExperimentSample
+from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule,ExperimentSample,SurveyResponse
 from tm_user_utils import get_user_conf
+from tm_train_module import done_training
 
 logger = logging.getLogger(__name__)
 
@@ -159,3 +160,41 @@ def select_new_module(user):
 
     return None
         
+def get_next_module(user):
+    """ Select the next module for this user based on the the data model.
+
+    Args:
+      user -- a django.contrib.auth.models.User object
+    Returns:
+      module_name -- short name for module in tm/index.html
+      tr_url -- if this is a tr module, contains the POST action
+    Raises:
+    """
+    user_took_training = done_training(user)
+    do_survey = True if SurveyResponse.objects.filter(user=user).count() == 0 else False
+    
+    module_name = 'train'
+    tr_url = ''
+    if user_took_training:
+        (module_name, sample_id) = has_samples(user)
+        if module_name:
+            logger.info('Module %s still active for %s' % (module_name, user.username))
+            tr_url = '/tm/tr/%d/' % (sample_id)
+        else:
+            # Select a new module
+            module_name = select_new_module(user)
+            if module_name == None:
+                logger.info('%s has finished all modules' % (user.username))
+                module_name = 'survey' if do_survey else 'none'
+            else:
+                (module_name, sample_id) = has_samples(user)
+                logger.info('Selected module %s for user %s' % (module_name,user.username))
+                tr_url = '/tm/tr/%d/' % (sample_id)
+    else:
+        # User has not completed training, so as a sanity check
+        # purge any experiment samples
+        n_samples = purge_samples(user)
+        if n_samples:
+            logger.warn('User %s has not completed traning, but purged %d samples' % (request.user.username, n_samples))
+
+    return (module_name,tr_url)

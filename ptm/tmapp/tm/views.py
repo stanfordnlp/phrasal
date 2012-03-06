@@ -1,9 +1,10 @@
 import logging
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponse, Http404
 from django.template import RequestContext
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats,UISpec,Country
 import tm_workqueue
 import tm_view_utils
@@ -14,41 +15,53 @@ import tm_forms
 logger = logging.getLogger(__name__)
 
 @login_required
+def bye(request):
+    """ Logout the user and ridrect to the login page
+
+    Args:
+    Returns:
+    Raises:
+    """
+    logout(request)
+    return redirect('/login/')
+
+@login_required
+def survey(request):
+    """ A user survey to be completed after the task.
+
+    Args:
+    Returns:
+    Raises:
+      Http404 -- on an invalid request type
+    """
+    if request.method == 'GET':
+        form = tm_forms.UserStudySurveyForm()
+        return render_to_response('tm/survey_exp1.html',
+                                  { 'form':form },
+                                  context_instance=RequestContext(request))
+    elif request.method == 'POST':
+        form = tm_forms.UserStudySurveyForm(request.POST)
+        if form.is_valid():
+            tm_user_utils.save_survey_form(request.user, form)
+            return redirect('/tm/')
+        else:
+            return render_to_response('tm/survey_exp1.html',
+                                      { 'form':form },
+                                      context_instance=RequestContext(request))
+    else:
+        logger.error('Invalid request type for survey: ' + request.method)
+        raise Http404
+
+@login_required
 def index(request):
     """ Shows the work queue for each user.
     Args:
     Returns:
     Raises:
+      Http404 -- on any type of server side error
     """
-    # Check to see if this user has finished training
-    user_took_training = tm_train_module.done_training(request.user)
-    if user_took_training == None:
-        logger.error('Missing conf file for user: ' + request.user.username)
-        raise Http404
-
     # Select the user's current module
-    module_name = 'train'
-    tr_url = ''
-    if user_took_training:
-        (module_name, sample_id) = tm_workqueue.has_samples(request.user)
-        if module_name:
-            logger.info('Module %s still active for %s' % (module_name,str(request.user)))
-            tr_url = '/tm/tr/%d/' % (sample_id)
-        else:
-            # Select a new module
-            module_name = tm_workqueue.select_new_module(request.user)
-            if module_name == None:
-                logger.info('%s has finished all modules' % (str(request.user)))
-                module_name = 'none'
-            else:
-                (module_name, sample_id) = tm_workqueue.has_samples(request.user)
-                logger.info('Selected module %s for user %s' % (module_name,str(request.user.username)))
-                tr_url = '/tm/tr/%d/' % (sample_id)
-    else:
-        # Sanity check -- purge the experimental samples
-        n_samples = tm_workqueue.purge_samples(request.user)
-        if n_samples:
-            logger.warn('User %s has not completed traning, but purged %d samples' % (request.user.username, n_samples))
+    (module_name, tr_url) = tm_workqueue.get_next_module(request.user)
 
     display_name = request.user.first_name
     if not display_name:
@@ -77,7 +90,7 @@ def tutorial(request, module_id):
         
     if not module:
         # User has completed training. Redirect to the workqueue
-        return HttpResponseRedirect('/tm/')
+        return redirect('/tm/')
     else:
         ui_id = module.ui.id
         (src_lang,tgt_lang) = tm_user_utils.get_user_langs(request.user)
@@ -138,7 +151,7 @@ def training(request):
                                           form=form)
             module = tm_train_module.next_training_module(request.user,None)
             if module:
-                return HttpResponseRedirect('/tm/tutorial/%d/' % (module.id))
+                return redirect('/tm/tr/%d/' % (module.id))
             else:
                 logger.error('No active modules for user ' + request.user.username)
                 raise Http404
@@ -149,6 +162,9 @@ def training(request):
                                        'survey_form':form,
                                        'tgt_lang':tgt_lang.name},
                                       context_instance=RequestContext(request))
+    else:
+        logger.error('Invalid training view request type: ' + request.method)
+        raise Http404
         
 @login_required
 def tr(request,sample_id):
@@ -210,10 +226,10 @@ def tr(request,sample_id):
             tm_workqueue.delete_sample(sample_id)
             sample_id = tm_workqueue.poll_next_sample_id(request.user)
             if sample_id:
-                return HttpResponseRedirect('/tm/tr/%d/' % (sample_id))
+                return redirect('/tm/tr/%d/' % (sample_id))
             else:
                 # User has completed this module. Go back to the index.
-                return HttpResponseRedirect('/tm/')
+                return redirect('/tm/')
         else:
             logger.warn('User %s entered an empty translation' % (request.user.username))
             sample = tm_workqueue.get_sample(request.user, sample_id)
@@ -230,6 +246,9 @@ def tr(request,sample_id):
                                        'form_action':action,
                                        'form':form },
                                       context_instance=RequestContext(request))
+    else:
+        logger.error('Invalid tr view request type: ' + request.method)
+        raise Http404
     
 @login_required
 def history(request, src_id):

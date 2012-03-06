@@ -5,12 +5,24 @@
 }
 
 /* Django generated ids and classes */
+#form-wrapper {
+   clear:both;
+}
 
-/* Form validation errors */
+#form-wrapper ul {
+   list-style-type:none;
+}
+
+#id_txt {
+   width:100%;
+   height:150px;
+}
+
 .errorlist {
    color:red;
    font-size:x-small;
    font-style:italic;
+   list-style-type:none;
 }
 
 /* view: Center column wrapper */

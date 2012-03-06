@@ -9,10 +9,10 @@
 #  * Set 'DEBUG' to False in settings.py
 #  * Change logger debug level to WARN in settings.py
 #  * Run python manage.py collectstatic
+#  * Disable static_patterns in urls.py
 #  * Login to admin and setup (in this order):
 #    * ExperimentModules
 #    * UserConfs
-#
 
 # The directory where 'django-admin.py startproject' was executed
 INSTALL_DIR = '/home/rayder441/sandbox/javanlp/projects/mt/ptm/tmapp'

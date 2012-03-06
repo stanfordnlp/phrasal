@@ -15,6 +15,9 @@
 
     // Initial capacity of the event log
     var _initCapacity = 5000;
+
+    // Start time (in ms) of the log
+    var _startTime = 0;
     
     // The log of string events
     var _eventLog = 0;
@@ -40,7 +43,7 @@
         }
 
         // TODO(spenceg) Add more to the event format
-        var eventStr = event.type + ' ' + event.timeStamp;
+        var eventStr = event.type + ' ' + (event.timeStamp - _startTime);
         if (event.target.id) {
           eventStr += ' id:' + event.target.id;
         }
@@ -54,19 +57,15 @@
         _eventLog[_eventLogPtr++] = eventStr;
       },
 
-      addCustom: function(name,text){
-        var d = new Date();
-        var eventStr = name + ' ' + d.getTime();
-        if (text){
-          eventStr += ' ' + text;
-        }
-        _eventLog[_eventLogPtr++] = eventStr;
-      },
-
       // Create the event log and add the START event
       start: function(){
+        var d = new Date();
         _eventLog = new Array(_initCapacity);
-        util.addCustom(_startEventName);
+
+        // Add the START event
+        _startTime = d.getTime();
+        var eventStr = _startEventName + ' 0 ' + _startTime.toString();
+        _eventLog[_eventLogPtr++] = eventStr;
       },
 
       // Converts the event log to a string representation. Also adds the
@@ -74,9 +73,6 @@
       // Supposedly, string appends are the fastest way to build a string
       // in javascript.
       toStr: function() {
-        // Add the END event
-        util.addCustom(_endEventName);
-        
         // Copy _eventLogPtr so that additional events aren't collected
         // while the string is constructed.
         var lastEventIdx = _eventLogPtr;
@@ -86,6 +82,11 @@
           logStr += _eventDelim;
         }
 
+        // Add the END event
+        var d = new Date();
+        var eventStr = _endEventName + ' ' + (d.getTime() - _startTime);
+        logStr += _eventDelim + eventStr;
+       
         return logStr;
       },
     };
@@ -105,11 +106,6 @@
         return true;
       },
 
-      // Fire a custom, named event with optional extra arguments
-      customEvent: function(name,text){
-        util.addCustom(name,text);
-      },
-      
       // Flush the log to a named input element
       // That is, the element is of type input and has
       // its name field set.

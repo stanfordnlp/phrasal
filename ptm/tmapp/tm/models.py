@@ -237,3 +237,25 @@ class TranslationStats(models.Model):
                                             self.ui.name,
                                             str(self.is_valid))
     
+class SurveyResponse(models.Model):
+    """ Response to user survey at the end of each experiment. Currently,
+    this is configured for the user study.
+
+    Args:
+    Returns:
+    Raises:
+    """
+    user = models.ForeignKey(User)
+    
+    # CSV list of hardest POS categories for translation
+    pos = models.CharField(max_length=100)
+
+    # Most efficient UI for translation.
+    best_ui = models.ForeignKey(UISpec)
+
+    # Free-form user feedback
+    txt_response = models.TextField()
+
+    def __unicode__(self):
+        return '%s: %s' % (self.user.username, self.best_ui.name)
+    

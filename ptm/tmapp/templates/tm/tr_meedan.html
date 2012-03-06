@@ -32,7 +32,7 @@
 {% endfor %}
 </div>
 
-<div id="form-tgt-container">
+<div id="form-wrapper">
 <form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input">
 {% csrf_token %}
 {{ form.as_p }}
