@@ -499,7 +499,7 @@ public class DepDAGParser implements Parser, Serializable {
       logger.info("scoring...");
       DependencyScoring goldScorer = DependencyScoring.newInstanceStringEquality(goldDeps);
       Score score = goldScorer.score(DependencyScoring.convertStringEquality(systemDeps));
-      logger.info(score.toString(false));
+      logger.info(score.toString());
       logger.info("done");
 
       //
