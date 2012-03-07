@@ -254,8 +254,14 @@ class SurveyResponse(models.Model):
     # Most efficient UI for translation.
     best_ui = models.ForeignKey(UISpec)
 
-    # Free-form user feedback
+    # Were the machine suggestions useful?
+    hyp_good = models.BooleanField(default=False)
+    
+    # Free-form user feedback about source text
     txt_response = models.TextField()
+
+    # Free-form user feedback about target text
+    tgt_response = models.TextField()
 
     def __unicode__(self):
         return '%s: %s' % (self.user.username, self.best_ui.name)

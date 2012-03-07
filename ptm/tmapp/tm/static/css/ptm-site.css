@@ -7,13 +7,14 @@
 /* Django generated ids and classes */
 #form-wrapper {
    clear:both;
+   text-align:left;
 }
 
 #form-wrapper ul {
    list-style-type:none;
 }
 
-#id_txt {
+#form-wrapper textarea {
    width:100%;
    height:150px;
 }
@@ -88,7 +89,6 @@
 #_popup{
    display:none;
    position:absolute;
-   height:384px;
    width:408px;
    background:#FFFFFF;
    border:2px solid #cecece;

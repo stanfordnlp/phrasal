@@ -74,11 +74,16 @@ def save_survey_form(user,form):
     pos_select = form.cleaned_data['pos_select']
     pos_str = ','.join(pos_select)
     txt_response = form.cleaned_data['txt']
+    tgt_response = form.cleaned_data['txt_tgt']
+    hyp_good = form.cleaned_data['machine_hyp_good']
+    
     try:
         response = SurveyResponse.objects.create(user=user,
                                                  pos=pos_str,
                                                  best_ui=uispec,
-                                                 txt_response=txt_response)
+                                                 hyp_good=hyp_good,
+                                                 txt_response=txt_response,
+                                                 tgt_response=tgt_response)
         response.save()
     except IntegrityError:
         logger.error('Could not save response form: user:%s form:%s' % (user.username,repr(form)))

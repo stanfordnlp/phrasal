@@ -14,15 +14,11 @@
 {% endblock%}
 
 {% block content %}
-
-<div id="main-content">
-  <div id="form-wrapper">
+<div id="form-wrapper">
 <form action="/tm/survey/" method="post" name="form-user-survey" id="form-user-survey">
 {% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Submit" name="form-submit" id="form-submit" />
 </form>
-</form>
 </div>
-
 {% endblock %}

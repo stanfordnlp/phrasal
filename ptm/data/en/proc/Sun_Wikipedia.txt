@@ -1,8 +1,7 @@
 Earth's ultimate fate is precarious. 
-As a red giant, the Sun will have a maximum radius beyond the Earth's current orbit, 1 AU (1.5×1011 m), 250 times the present radius of the Sun.
+As a red giant, the Sun will have a maximum radius beyond the Earth's current orbit, 1 AU (1.5×1011 m), 250 times the present radius of the Sun.
 However, by the time it is an asymptotic giant branch star, the Sun will have lost roughly 30% of its present mass due to a stellar wind, so the orbits of the planets will move outward.
 If it were only for this, Earth would probably be spared, but new research suggests that Earth will be swallowed by the Sun owing to tidal interactions.
 Even if Earth should escape incineration in the Sun, still all its water will be boiled away and most of its atmosphere will escape into space.
 Even during its current life in the main sequence, the Sun is gradually becoming more luminous (about 10% every 1 billion years), and its surface temperature is slowly rising.
 The Sun used to be fainter in the past, which is possibly the reason life on Earth has only existed for about 1 billion years on land.
-The increase in solar temperatures is such that in about another billion years the surface of the Earth will likely become too hot for liquid water to exist, ending all terrestrial life.

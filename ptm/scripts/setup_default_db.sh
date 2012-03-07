@@ -55,20 +55,20 @@ let tgt_seq_pk="$tgt_seq_pk + $n_lines"
 
 let src_seq_pk="$src_seq_pk + $n_lines"
 
-doc="$data_dir"/en/proc/Free_will_Wikipedia.txt
+doc="$data_dir"/en/proc/Autism_Wikipedia.txt
 n_lines=`wc -l "$doc" | awk '{ print $1 }'`
 echo Loading "$doc"
 ./load_source_doc.sh "$doc" "$src_seq_pk" 1
-./load_target_doc.sh "$data_dir"/en/proc/trans/Free_will_Wikipedia.ar "$tgt_seq_pk" 2 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Autism_Wikipedia.ar "$tgt_seq_pk" 2 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
-./load_target_doc.sh "$data_dir"/en/proc/trans/Free_will_Wikipedia.fr "$tgt_seq_pk" 3 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Autism_Wikipedia.fr "$tgt_seq_pk" 3 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
-./load_target_doc.sh "$data_dir"/en/proc/trans/Free_will_Wikipedia.de "$tgt_seq_pk" 4 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Autism_Wikipedia.de "$tgt_seq_pk" 4 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
 
 let src_seq_pk="$src_seq_pk + $n_lines"
 
-doc="$data_dir"/en/proc/Tornado_Wikipedia.txt
+doc="$data_dir"/en/proc/Infinite_monkey_theorem_Wikipedia.txt
 n_lines=`wc -l "$doc" | awk '{ print $1 }'`
 echo Loading "$doc"
 ./load_source_doc.sh "$doc" "$src_seq_pk" 1

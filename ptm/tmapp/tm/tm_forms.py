@@ -5,16 +5,16 @@ from tm.models import Country,LanguageSpec
 logger = logging.getLogger(__name__)
 
 # Basic POS categories that may be difficult to translate
-POS_CHOICES = (('N','Noun'),
-               ('A','Adjective'),
-               ('V','Verb'),
-               ('P','Preposition'),
-               ('ADV','Adverb'),
+POS_CHOICES = (('N','Nouns'),
+               ('A','Adjectives'),
+               ('V','Verbs'),
+               ('P','Prepositions'),
+               ('ADV','Adverbs'),
                ('O','Other'))
 
 # First dimension should correspond to the "name" field in UISpec
-UI_CHOICES = (('tr','Blank text form'),
-              ('meedan','Editing of suggested translation'))
+UI_CHOICES = (('tr','Blank textbox (Interface A)'),
+              ('meedan','Editing suggested translation (Interface B)'))
 
 class UserStudySurveyForm(forms.Form):
     """ Final user survey form for experiment #1 (user study).
@@ -26,7 +26,12 @@ class UserStudySurveyForm(forms.Form):
     # Radio buttons for type vs. post-edit
     ui_select = forms.ChoiceField(widget=forms.RadioSelect,
                                   choices=UI_CHOICES,
-                                  label='Which translation method was most efficient?')
+                                  label='Which translation interface/method was most efficient?')
+
+    machine_hyp_good = forms.TypedChoiceField(widget=forms.RadioSelect,
+                                              choices=((True, 'Yes'), (False, 'No')),
+                                              coerce=bool,
+                                              label='Were the suggested translations useful?')
 
     # Select box for
     pos_select = forms.MultipleChoiceField(required=False,
@@ -36,7 +41,12 @@ class UserStudySurveyForm(forms.Form):
     
     txt = forms.CharField(widget=forms.Textarea,
                           min_length=1,
-                          label='Please describe (in English) the material that you found most difficult to translate:',
+                          label='Please describe (in English) the English text that you found most difficult to translate:',
+                          error_messages={'required': 'You must enter at least one word!'})
+
+    txt_tgt = forms.CharField(widget=forms.Textarea,
+                              min_length=1,
+                              label='Please describe (in English) the target text that you found most difficult to generate:',
                           error_messages={'required': 'You must enter at least one word!'})
 
 class UserTrainingForm(forms.Form):
