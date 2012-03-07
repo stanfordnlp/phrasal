@@ -114,6 +114,7 @@ def tutorial(request, module_id):
                 form = tm_forms.TranslationInputForm(initial=initial)
                 src_toks = src.txt.split()
                 action = '/tm/tutorial/%d/' % (ui_id)
+                logger.debug('Tutorial popup text: ' + module.description)
                 return render_to_response(template,
                                           {'popup_msg':module.description,
                                            'header_txt':header_txt,
