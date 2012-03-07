@@ -2,7 +2,7 @@
 {% load url from future %}
 
 {% block title %}
- -- Stanford Translation Study
+ -- {{ name }}
 {% endblock %}
 
 {% block user_static %}
@@ -14,7 +14,6 @@
 {% endblock%}
 
 {% block content %}
-
 <div id="main-content">
 <p> Hi {{ name }}!</p>
 {% if module_name == "none" %}
@@ -31,7 +30,5 @@
 {% else %}
 <p>Take a quick break! When you are ready, <a href="{{ tr_url }}">click here</a> to start the next module.</p>
 {% endif %}{% endif %}{% endif %}
-
 </div>
-
 {% endblock %}

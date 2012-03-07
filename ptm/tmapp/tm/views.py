@@ -115,7 +115,8 @@ def tutorial(request, module_id):
                 src_toks = src.txt.split()
                 action = '/tm/tutorial/%d/' % (ui_id)
                 return render_to_response(template,
-                                          {'header_txt':header_txt,
+                                          {'popup_msg':module.description,
+                                           'header_txt':header_txt,
                                            'src_css_dir':src.lang.css_direction,
                                            'src_toks':src_toks,
                                            'form_action':action,
@@ -151,10 +152,10 @@ def training(request):
                                           form=form)
             module = tm_train_module.next_training_module(request.user,None)
             if module:
-                return redirect('/tm/tr/%d/' % (module.id))
+                return redirect('/tm/tutorial/%d/' % (module.id))
             else:
-                logger.error('No active modules for user ' + request.user.username)
-                raise Http404
+                logger.warn('No active modules for user ' + request.user.username)
+                return redirect('/tm/')
         else:
             # Form was invalid. Return the bound form for correction.
             return render_to_response('tm/train_exp1.html',

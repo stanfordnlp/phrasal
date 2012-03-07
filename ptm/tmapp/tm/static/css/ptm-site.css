@@ -25,7 +25,7 @@
    list-style-type:none;
 }
 
-/* view: Center column wrapper */
+/* view: Center column wrapper (if needed) */
 #main-content {
    float:left;
    text-align:justify;
@@ -69,6 +69,63 @@
    text-align:left;
    font-size:medium;
    margin-top:5em;
+}
+
+/* Styles for css-popup.js */
+#_popupBackground{
+   display:none;
+   position:absolute;
+   height:100%;
+   width:100%;
+   top:0px;
+   left:0px;
+   background-color:#000000;
+   opacity:0.65;
+   filter:alpha(opacity=65);
+   z-index:9001;
+}
+
+#_popup{
+   display:none;
+   position:absolute;
+   height:384px;
+   width:408px;
+   background:#FFFFFF;
+   border:2px solid #cecece;
+   z-index:9002;
+   padding:12px;
+   font-size:13px;
+}
+
+#_popup h1{
+   clear:both;
+   text-align:left;
+   color:#6FA5FD;
+   font-size:22px;
+   font-weight:700;
+   border-bottom:1px dotted #D3D3D3;
+   padding-bottom:2px;
+   margin-bottom:20px;
+}
+
+#_popupClose {
+   font-size:16px;
+   line-height:16px;
+   margin:4px;
+   float:right;
+   color:#6fa5fd;
+   font-weight:700;
+   display:block;
+}
+
+#_popupClose:hover {
+   cursor:pointer;
+}
+
+#_popupContent {
+   clear:both;
+   text-align:justify;
+   text-justify:auto;
 }
 
 /* TODO(spenceg): Re-factor the location of these styles */

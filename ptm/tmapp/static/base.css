@@ -10,7 +10,7 @@ body {
 }
 
 a {
-   color:#336699;
+   color:#537bbd;
    text-decoration:none;
 }
 
@@ -35,7 +35,7 @@ a:hover {
 }
 
 #header {
-   background:WhiteSmoke;
+   background:#dbe8fe;
    padding:10px;
    margin:0;
    text-align:center;
@@ -108,7 +108,7 @@ a:hover {
    font-size:120%;
    position:relative;
    top:1px;
-   background:WhiteSmoke;
+   background:#dbe8fe;
    width:100%;
    clear:both;
    margin:0;

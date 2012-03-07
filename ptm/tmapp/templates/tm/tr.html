@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load url from future %}
 
+{% block title %}
+ -- {{ name }}
+{% endblock %}
+
 {% block user_static %}
   <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ptm-site.css" />
   <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ui-tr.css" />
@@ -12,8 +16,18 @@
   <script type="text/javascript" src="{{ STATIC_URL }}js/ui/setup-tr.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/translog2.js"></script>
   <script type="text/javascript" src="{{ STATIC_URL }}js/timer-widget.js"></script>
-{% endblock %}
 
+{% if popup_msg %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/css-popup.js"></script>
+<script>
+  window.onload = function() {
+    var popup = new CssPopup("Interface A", "{{ popup_msg }}");
+    popup.Show();
+  }
+</script>
+{% endif %}
+{% endblock %}
+  
 {% block header %}
 <h2>{{ header_txt }}</h2>
 {% endblock %}

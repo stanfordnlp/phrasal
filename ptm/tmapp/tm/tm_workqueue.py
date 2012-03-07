@@ -122,10 +122,6 @@ def select_new_module(user):
     Raises:
     """
     user_conf = get_user_conf(user)
-    if not user_conf:
-        logger.error('UserConf does not exist for user: ' + request.user.username)
-        return None
-
     modules = user_conf.active_modules.all()
     n_active_modules = len(modules)
     next_module = None
@@ -195,6 +191,6 @@ def get_next_module(user):
         # purge any experiment samples
         n_samples = purge_samples(user)
         if n_samples:
-            logger.warn('User %s has not completed traning, but purged %d samples' % (request.user.username, n_samples))
+            logger.warn('User %s has not completed traning, but purged %d samples' % (user.username, n_samples))
 
     return (module_name,tr_url)

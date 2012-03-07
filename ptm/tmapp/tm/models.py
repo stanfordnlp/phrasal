@@ -85,7 +85,8 @@ class ExperimentModule(models.Model):
     # CSV list of documents in this module
     docs = models.TextField()
 
-    # Freeform metadata about this experiment
+    # Instructions for the experiment. These will be shown to the
+    # user before the first treatment is applied to an experiment unit.
     description = models.TextField()
 
     def __unicode__(self):
