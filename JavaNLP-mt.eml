@@ -30,7 +30,6 @@
 	</lib>
 	<lib name="jopt-simple.jar" scope="COMPILE">
 		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-3.1-sources.jar!/"/>
-		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-3.1-sources.jar!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/jopt-simple.jar!/"/>
 	</lib>
 	<lib name="tercom.jar" scope="COMPILE">
@@ -107,5 +106,8 @@
 	</lib>
 	<lib name="servlet-api-2.5.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/servlet-api-2.5.jar!/"/>
+	</lib>
+	<lib name="berkeleyaligner.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/berkeleyaligner.jar!/"/>
 	</lib>
 </component>
