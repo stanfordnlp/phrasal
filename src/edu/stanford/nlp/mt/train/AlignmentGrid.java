@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 /**
  * A representation of an AlignmentTemplate collection as a matrix. Note that
  * rows correspond to e, and columns correspond to f.
- * 
+ *
  * @author Michel Galley
  */
 public class AlignmentGrid {
@@ -21,7 +21,7 @@ public class AlignmentGrid {
   private int fSize, eSize; // , maxSizeF, maxSizeE;
 
   private WordAlignment sent;
-  Integer sentId;
+  private Integer sentId;
 
   public enum RelativePos {
     N, NW, W, SW, S, SE, E, NE, I
