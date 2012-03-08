@@ -39,8 +39,8 @@
         var elemSel = '#'+_cssId;
         $(elemSel).css({'position':'absolute',
                         'display':'block',
-                        'bottom':'0',
-                        'left':'0',
+                        'bottom':'0px',
+                        'left':'0px',
                         'border':'1px solid #000',
                         'color':'Red',
                         'font-size':'150%',
@@ -50,12 +50,13 @@
 
         _timer = window.setTimeout("idletimer.timerHandler()", 1000);
         $(window).scroll(function() {
-          var elemHeight = $(elemSel).outerHeight(true);
-          var scrollBottom = $(window).height();
+          var elemHeight = $('#idletimer-timer').outerHeight(true);
+          var scrollBottom = $(window).scrollTop() + $(window).height();
+	  console.log(scrollBottom);
           var margin = scrollBottom - elemHeight;
-          var loc = {"marginTop" : margin + 'px'}
-				  $('#'+_cssId).stop().animate(loc, 10);
-			  });
+          var loc = {marginTop: margin + 'px'}
+	  $('#idletimer-timer').stop().animate(loc, 10);
+	});
       },
 
       done : function(){

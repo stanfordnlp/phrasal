@@ -36,14 +36,20 @@
     
     var util = {
       add: function(event) {
+	// event.timeStamp is not reliable across browsers
+	var d = new Date();
+	var _now = d.getTime();
+
+	// Extend the event log size if necessary
         if (_eventLogPtr >= _eventLog.length) {
           _eventLogPtr = _eventLog.length;
           var newLog = new Array(_initCapacity);
           _eventLog = _eventLog.concat(newLog);
         }
 
+
         // TODO(spenceg) Add more to the event format
-        var eventStr = event.type + ' ' + (event.timeStamp - _startTime);
+        var eventStr = event.type + ' ' + (_now - _startTime);
         if (event.target.id) {
           eventStr += ' id:' + event.target.id;
         }

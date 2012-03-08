@@ -25,8 +25,8 @@ var CssPopup = function(title,message) {
 
 CssPopup.prototype.Show = function() {
   //request data for centering
-  var windowWidth = document.documentElement.clientWidth;
-  var windowHeight = document.documentElement.clientHeight;
+  var windowWidth = $(document).width();
+  var windowHeight = $(document).height();
   var popupHeight = $("#_popup").height();
   var popupWidth = $("#_popup").width();
   //centering
