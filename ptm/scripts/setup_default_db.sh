@@ -24,7 +24,9 @@ echo Installing the list of countries...
 country_file="$data_dir"/country-list.csv
 ./csv_to_postgres.sh "$dbhost" "$dbname" "$dbadmin" tm_country < "$country_file"
 
-echo Loading the documents...
+
+# Documents for exp1 (user study)
+echo Loading the exp1 documents...
 # En documents
 tgt_seq_pk=1
 src_seq_pk=1
@@ -82,5 +84,7 @@ echo Loading "$doc"
 
 let src_seq_pk="$src_seq_pk + $n_lines"
 
-echo Done with default database setup!
+echo Installing the exp1 document descriptions...
+./run_sql_script.sh "$dbhost" "$dbname" "$dbadmin" "$script_dir"/sql/exp1_docs.sql
 
+echo Done with default database setup!

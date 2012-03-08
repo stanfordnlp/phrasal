@@ -91,7 +91,23 @@ class ExperimentModule(models.Model):
 
     def __unicode__(self):
         return '%s: ui %s' % (self.name,self.ui.name)
-    
+
+class SourceDocumentSpec(models.Model):
+    """ Describes characteristics of a source document. The 'name'
+    field of this table should correspond to SourceTxt.doc. However,
+    since this information is not required for all experiments, a
+    ForeignKey relationship does not currently exist between the two
+    tables.
+
+    Args:
+    Returns:
+    Raises:
+    """
+    name = models.CharField(max_length=300)
+
+    # Description of the documents contents. Should be human-readable.
+    desc = models.CharField(max_length=300)
+
 class SourceTxt(models.Model):
     """ The source input to be translated.
 

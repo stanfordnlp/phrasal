@@ -1,10 +1,25 @@
 import logging
 import random
-from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule,ExperimentSample,SurveyResponse
+from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule,ExperimentSample,SurveyResponse,SourceDocumentSpec
 from tm_user_utils import get_user_conf
 from tm_train_module import done_training
 
 logger = logging.getLogger(__name__)
+
+def get_doc_description(doc_name):
+    """ Returns a human readable description of a document.
+
+    Args:
+      doc_name -- a SourceTxt.name field
+    Returns:
+      desc -- (string) a human readable description of a document.
+      None -- if the document could not be retrieved
+    Raises:
+    """
+    doc_list = SourceDocumentSpec.objects.filter(name=doc_name)
+    if len(doc_list) > 0:
+        return doc_list[0].desc
+    return None
 
 def get_experiment_module(module_id):
     """ Retrieves and ExperimentModule based on an id.
@@ -40,7 +55,9 @@ def purge_samples(user):
     return n_samples
 
 def get_sample(user, sample_id):
-    """ Selects a source sentence for the user to translate.
+    """ Selects an experiment sample for a user. This method enforces the
+    constraint that the user can only access the next ExperimentSample list
+    ordered by the 'order_by' column.
 
     Args:
       user -- a django.contrib.auth.models.User object
@@ -48,19 +65,19 @@ def get_sample(user, sample_id):
       sample -- an ExperimentSample object
       None -- if the sample could not be selected
     Raises:
-      RuntimeError -- if the sample does not exist
+      RuntimeError -- if the user tries to access the sample out of order
     """
-    try:
-        sample = ExperimentSample.objects.get(id=sample_id)
-    except ExperimentSample.DoesNotExist:
-        logger.error('Sample %d for user %s does not exist!' % (sample_id,str(user)))
-        raise RuntimeError
+    sample_list = ExperimentSample.objects.filter(user=user).order_by('order')
+    if len(sample_list) > 0:
+        sample = sample_list[0]
+        if sample.id == sample_id and sample.user == user:
+            return sample
+        else:
+            logger.error('%s tried to access sample %d out of order!' % (user.username, sample_id))
+            raise RuntimeError
 
-    # Prevent non-authenticated requests for samples
-    if not sample.user == user:
-        return None
-
-    return sample
+    logger.error('Sample %d for user %s does not exist!' % (sample_id, user.username))
+    return None
 
 def delete_sample(sample_id):
     """ Deletes a sample.
@@ -94,22 +111,8 @@ def has_samples(user):
     if len(sample_list) > 0:
         sample = sample_list[0]
         return (sample.module.name, sample.id)
+    
     return (None,None)
-
-def poll_next_sample_id(user):
-    """ Returns the sample id of this user's next sample
-    Args:
-      user -- a django.contrib.auth.models.User object
-    Returns:
-      id -- (int) a pk of an ExperimentSample object
-      None -- no more samples to process
-    Raises:
-    """
-    sample_list = ExperimentSample.objects.filter(user=user).order_by('order')
-    if len(sample_list) > 0:
-        sample = sample_list[0]
-        return sample.id
-    return None
 
 def select_new_module(user):
     """ Selects a new ExperimentModule for a user, and specifies the order
@@ -169,8 +172,11 @@ def get_next_module(user):
     user_took_training = done_training(user)
     do_survey = True if SurveyResponse.objects.filter(user=user).count() == 0 else False
     
+    # Return values. The goal of the gnarly conditionals below is to
+    # set these two values.
     module_name = 'train'
     tr_url = ''
+    
     if user_took_training:
         (module_name, sample_id) = has_samples(user)
         if module_name:
@@ -191,6 +197,6 @@ def get_next_module(user):
         # purge any experiment samples
         n_samples = purge_samples(user)
         if n_samples:
-            logger.warn('User %s has not completed traning, but purged %d samples' % (user.username, n_samples))
+            logger.warn('User %s has not completed training, but purged %d samples' % (user.username, n_samples))
 
     return (module_name,tr_url)

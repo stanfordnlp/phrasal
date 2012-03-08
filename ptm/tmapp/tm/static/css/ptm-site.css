@@ -33,6 +33,12 @@
    text-justify:auto;
 }
 
+/* span around the document description */
+#doc-description {
+   font-weight:bold;
+   font-size:110%;
+}
+
 /* view: History */
 #history-container {
    width:460px;

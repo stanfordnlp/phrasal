@@ -32,6 +32,12 @@
 <h2>{{ header_txt }}</h2>
 {% endblock %}
 
+{% block leftcol %}
+{% if doc_description %}
+<p> Text from a document about: <span id="doc-description">{{ doc_description }}</span>.</p>
+{% endif %}
+{% endblock %}
+
 {% block content %}
 <div id="src-display">
 {% for tok in src_toks %}
