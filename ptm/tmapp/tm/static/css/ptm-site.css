@@ -116,19 +116,13 @@
 
 #_popupClose {
    font-size:16px;
-   line-height:16px;
-   margin:4px;
-   float:right;
-   color:#6fa5fd;
-   font-weight:700;
-   display:block;
 }
 
 #_popupClose:hover {
    cursor:pointer;
 }
 
-#_popupContent {
+#_popup p {
    clear:both;
    text-align:justify;
    text-justify:auto;

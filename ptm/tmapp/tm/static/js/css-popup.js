@@ -9,11 +9,11 @@
 var CssPopup = function(title,message) {
 
   // Create the divString
-  var divString = "<div id=\"_popup\"><span id=\"_popupClose\">x</span><h1>"
+  var divString = "<div id=\"_popup\"><h1>"
   divString += title;
-  divString += "</h1><p id=\"_popupContent\">";
+  divString += "</h1><p>";
   divString += message;
-  divString += "</p></div><div id=\"_popupBackground\"></div>";
+  divString += "</p><form><input id=\"_popupClose\" type=\"button\" value=\"Close\" /></form></div><div id=\"_popupBackground\"></div>";
 
   $(document.body).append(divString);
 
