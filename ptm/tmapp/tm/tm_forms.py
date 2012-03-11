@@ -16,6 +16,12 @@ POS_CHOICES = (('N','Nouns'),
 UI_CHOICES = (('tr','Blank textbox (Interface A)'),
               ('meedan','Editing suggested translation (Interface B)'))
 
+LIKERT_CHOICES = (('1','Strongly disagree'),
+                  ('2','Disagree'),
+                  ('3','Neutral'),
+                  ('4','Agree'),
+                  ('5','Strongly Agree'))
+
 class UserStudySurveyForm(forms.Form):
     """ Final user survey form for experiment #1 (user study).
 
@@ -28,12 +34,13 @@ class UserStudySurveyForm(forms.Form):
                                   choices=UI_CHOICES,
                                   label='Which translation interface/method was most efficient?')
 
-    machine_hyp_good = forms.TypedChoiceField(widget=forms.RadioSelect,
-                                              choices=((True, 'Yes'), (False, 'No')),
-                                              coerce=bool,
-                                              label='Were the suggested translations useful?')
+    # Select box for hardest POS tags
+    hyp_likert = forms.MultipleChoiceField(required=False,
+                                           widget=forms.CheckboxSelectMultiple,
+                                           choices=POS_CHOICES,
+                                           label='The machine-generated translation suggestions were useful:')
 
-    # Select box for
+    # Select box for hardest POS tags
     pos_select = forms.MultipleChoiceField(required=False,
                                            widget=forms.CheckboxSelectMultiple,
                                            choices=POS_CHOICES,
@@ -64,6 +71,11 @@ class UserTrainingForm(forms.Form):
                                           label='Where do you currently live?',
                                           error_messages={'required': 'Required field'})
 
+    is_pro_translator = forms.TypedChoiceField(widget=forms.RadioSelect,
+                                               choices=((True, 'Yes'), (False, 'No')),
+                                               coerce=bool,
+                                               label='Do you consider yourself a professional translator?')
+    
     hours_per_week = forms.IntegerField(label='On average, how many hours per week do you work as a translator?',
                                         error_messages={'required': 'Required field'})
 

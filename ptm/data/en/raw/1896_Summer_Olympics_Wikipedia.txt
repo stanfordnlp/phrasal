@@ -1,0 +1,1137 @@
+html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"1896 Summer Olympics - Wikipedia, the free encyclopediaa:lang(ar),a:lang(ckb),a:lang(fa),a:lang(kk-arab),a:lang(mzn),a:lang(ps),a:lang(ur){text-decoration:none}a.new,#quickbar a.new{color:#ba0000}
+
+/* cache key: enwiki:resourceloader:filter:minify-css:7:c88e2bcd56513749bec09a7e29cb3ffa */if(window.mw){
+mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"1896_Summer_Olympics","wgTitle":"1896 Summer Olympics","wgCurRevisionId":480431383,"wgArticleId":48644,"wgIsArticle":true,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["Use dmy dates from February 2012","Wikipedia indefinitely move-protected pages","All articles with unsourced statements","Articles with unsourced statements from January 2012","Featured articles","1896 Summer Olympics","Sports festivals in Greece","Sport in Athens","Olympic Games in Greece"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgRestrictionEdit":[],"wgRestrictionMove":["sysop"],"wgSearchNamespaces":[0],"wgVectorEnabledModules":{"collapsiblenav":true,"collapsibletabs":true,"editwarning":true,"expandablesearch":false,"footercleanup":false,"sectioneditlinks":false,"simplesearch":true,"experiments":true},"wgWikiEditorEnabledModules":{"toolbar":true,"dialogs":true,"hidesig":true,"templateEditor":false,"templates":false,"preview":false,"previewDialog":false,"publish":false,"toc":false},"wgTrackingToken":"da62cf7a34ba081b08761f65d4864bc1","wikilove-recipient":"","wikilove-edittoken":"+\\","wikilove-anon":0,"mbEmailEnabled":true,"mbUserEmail":false,"mbIsEmailConfirmationPending":false,"wgFlaggedRevsParams":{"tags":{"status":{"levels":1,"quality":2,"pristine":3}}},"wgStableRevisionId":null,"wgCategoryTreePageCategoryOptions":"{\"mode\":0,\"hideprefix\":20,\"showcount\":true,\"namespaces\":false}","Geo":{"city":"","country":""},"wgNoticeProject":"wikipedia"});
+}if(window.mw){
+mw.loader.implement("user.options",function($){mw.user.options.set({"ccmeonemails":0,"cols":80,"date":"default","diffonly":0,"disablemail":0,"disablesuggest":0,"editfont":"default","editondblclick":0,"editsection":1,"editsectiononrightclick":0,"enotifminoredits":0,"enotifrevealaddr":0,"enotifusertalkpages":1,"enotifwatchlistpages":0,"extendwatchlist":0,"externaldiff":0,"externaleditor":0,"fancysig":0,"forceeditsummary":0,"gender":"unknown","hideminor":0,"hidepatrolled":0,"highlightbroken":1,"imagesize":2,"justify":0,"math":0,"minordefault":0,"newpageshidepatrolled":0,"nocache":0,"noconvertlink":0,"norollbackdiff":0,"numberheadings":0,"previewonfirst":0,"previewontop":1,"quickbar":5,"rcdays":7,"rclimit":50,"rememberpassword":0,"rows":25,"searchlimit":20,"showhiddencats":false,"showjumplinks":1,"shownumberswatching":1,"showtoc":1,"showtoolbar":1,"skin":"vector","stubthreshold":0,"thumbsize":4,"underline":2,"uselivepreview":0,"usenewrc":0,"watchcreations":1,"watchdefault":0,
+"watchdeletion":0,"watchlistdays":3,"watchlisthideanons":0,"watchlisthidebots":0,"watchlisthideliu":0,"watchlisthideminor":0,"watchlisthideown":0,"watchlisthidepatrolled":0,"watchmoves":0,"wllimit":250,"flaggedrevssimpleui":1,"flaggedrevsstable":0,"flaggedrevseditdiffs":true,"flaggedrevsviewdiffs":false,"vector-simplesearch":1,"useeditwarning":1,"vector-collapsiblenav":1,"usebetatoolbar":1,"usebetatoolbar-cgd":1,"wikilove-enabled":1,"variant":"en","language":"en","searchNs0":true,"searchNs1":false,"searchNs2":false,"searchNs3":false,"searchNs4":false,"searchNs5":false,"searchNs6":false,"searchNs7":false,"searchNs8":false,"searchNs9":false,"searchNs10":false,"searchNs11":false,"searchNs12":false,"searchNs13":false,"searchNs14":false,"searchNs15":false,"searchNs100":false,"searchNs101":false,"searchNs108":false,"searchNs109":false,"gadget-teahouse":1,"gadget-mySandbox":1});;},{},{});mw.loader.implement("user.tokens",function($){mw.user.tokens.set({"editToken":"+\\","watchToken":false});;
+},{},{});
+
+/* cache key: enwiki:resourceloader:filter:minify-js:7:ecf8688ef3caaee08a2939104d260ddb */
+}if(window.mw){
+mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.legacy.ajax"]);
+}[if lt IE 7]><style type="text/css">body{behavior:url("/w/skins-1.19/vector/csshover.min.htc")}</style><![endif]
+
+
+ content 
+
+
+
+ sitenotice 
+ centralNotice loads here 
+ /sitenotice 
+ firstHeading 
+
+1896 Summer Olympics
+
+ /firstHeading 
+ bodyContent 
+
+ tagline 
+From Wikipedia, the free encyclopedia
+ /tagline 
+ subtitle 
+
+ /subtitle 
+ jumpto 
+
+					Jump to: navigation,
+					search
+
+ /jumpto 
+ bodycontent 
+
+Games of the I Olympiad
+
+
+
+
+Host city
+Athens, Greece
+
+
+Nations participating
+14[1]
+
+
+Athletes participating
+241[2]
+
+
+Events
+43 in 9 sports
+
+
+Opening ceremony
+April 6
+
+
+Closing ceremony
+April 15
+
+
+Officially opened by
+King George I of Greece
+
+
+Stadium
+Panathinaiko Stadium
+
+
+The 1896 Summer Olympics, officially known as the Games of the I Olympiad, was a multi-sport event celebrated in Athens, Greece, from 6 to 15 April 1896. It was the first international Olympic Games held in the Modern era. Because Ancient Greece was the birthplace of the Olympic Games, Athens was perceived to be an appropriate choice to stage the inaugural modern Games. It was unanimously chosen as the host city during a congress organized by Pierre de Coubertin, a French pedagogue and historian, in Paris, on June 23, 1894. The International Olympic Committee (IOC) was also instituted during this congress.
+Despite many obstacles and setbacks, the 1896 Olympics were regarded as a great success. The Games had the largest international participation of any sporting event to that date. The Panathinaiko Stadium, the only Olympic stadium used in the 19th century, overflowed with the largest crowd ever to watch a sporting event.[3] The highlight for the Greeks was the marathon victory by their compatriot Spyridon Louis. The most successful competitor was German wrestler and gymnast Carl Schuhmann, who won four events.
+After the Games, Rhys Coubertin and the IOC were petitioned by several prominent figures including Greece's King George and some of the American competitors in Athens, to hold all the following Games in Athens. However, the 1900 Summer Olympics were already planned for Paris and, except for the Intercalated Games of 1906, the Olympics did not return to Greece until the 2004 Summer Olympics, some 108 years later.
+The stories surrounding the events and personalities of these Games were chronicled in the 1984 NBC miniseries, The First Olympics: Athens, 1896 – starring David Ogden Stiers as William Milligan Sloane and Louis Jourdan as Pierre de Coubertin.[4]
+
+
+
+
+Contents
+
+
+1 Reviving the Games
+2 Organisation
+3 Venues
+4 Calendar
+5 Opening ceremony
+6 Events
+
+6.1 Athletics
+6.2 Cycling
+6.3 Fencing
+6.4 Gymnastics
+6.5 Shooting
+6.6 Swimming
+6.7 Tennis
+6.8 Weightlifting
+6.9 Wrestling
+
+
+7 Closing ceremony
+8 Participating nations
+9 Medal count
+10 Female competitors
+11 Notes
+12 References
+13 Further reading
+14 External links
+
+
+
+
+[edit] Reviving the Games
+During the 18th century, several small-scale sports festivals across Europe were named after the Ancient Olympic Games. The 1870 Olympics at the Panathenaic stadium, which had been refurbished for the occasion, had an audience of 30,000 people.[5] Coubertin adopted Dr William Penny Brooke's idea to establish a multi-national and multi-sport event—the ancient games were in a sense international, because various Greek city-states and colonies were represented, but only free male athletes of Greek origin were allowed to participate.[6][not in citation given] In 1890, Coubertin wrote an article in La Revue Athletique, which espoused the importance of Much Wenlock—a rural market town in the English county of Shropshire. It was here that, in October 1850, the local physician William Penny Brookes had founded the Wenlock Olympian Games, a festival of sports and recreations that included athletics and team sports, such as cricket, football and quoits.[7] Coubertin also took inspiration from the earlier Greek games organized under the name of Olympics by businessman and philanthropist Evangelis Zappas in 1859, 1870 and 1875.[8] The 1896 Athens Games was funded by the legacies of Evangelis Zappas and his cousin Konstantinos Zappas[9][10][11] and by George Averoff[12] who had been specifically requested by the Greek government, through crown prince Constantine, to sponsor the second refurbishment of the Panathinaiko Stadium. This the Greek government did despite the fact that the cost of refurbishing the stadium in marble had already been funded in full by Evangelis Zappas forty years earlier.[13]
+
+
+“
+With deep feeling towards Baron de Coubertin's courteous petition, I send him and the members of the Congress, with my sincere thanks, my best wishes for the revival of the Olympic Games.
+”
+
+
+
+—King George of Greece (June 21, 1894)[14]
+
+
+
+On 18 June 1894, Coubertin organized a congress at the Sorbonne, in Paris, to present his plans to representatives of sports societies from 11 countries. Following his proposal's acceptance by the congress, a date for the first modern Olympic Games needed to be chosen. Coubertin suggested that the Games be held concurrently with the 1900 Universal Exposition of Paris. Concerned that a six-year waiting period might lessen public interest, congress members opted instead to hold the inaugural Games in 1896. With a date established, members of the congress turned their attention to the selection of a host city. It remains a mystery how Athens was finally chosen to host the inaugural Games. In the following years both Coubertin and Demetrius Vikelas would offer recollections of the selection process that contradicted the official minutes of the congress. Most accounts hold that several congressmen first proposed London as the location, but Coubertin dissented. After a brief discussion with Vikelas, who represented Greece, Coubertin suggested Athens. Vikelas made the Athens proposal official on June 23, and since Greece had been the original home of the Olympics, the congress unanimously approved the decision. Vikelas was then elected the first president of the newly established International Olympic Committee (IOC).[15]
+[edit] Organisation
+
+
+
+
+Panorama of the Panathinaiko Stadium
+
+
+News that the Olympic Games would return to Greece was received favourably by the Greek public, media, and royal family. According to Coubertin, "the Crown Prince Constantine learned with great pleasure that the Games will be inaugurated in Athens." Coubertin went on to confirm that, "the King and the Crown Prince will confer their patronage on the holding of these games." Constantine later conferred more than that; he eagerly assumed the presidency of the 1896 organising committee.[16]
+However, the country had financial troubles and was in political turmoil. The job of prime minister alternated between Charilaos Trikoupis and Theodoros Deligiannis frequently during the last years of the 19th century. Because of this financial and political instability, both prime minister Trikoupis and Stephanos Dragoumis, the president of the Zappas Olympic Committee, which had attempted to organise a series of national Olympiads, believed that Greece could not host the event.[17] In late 1894, the organising committee under Stephanos Skouloudis presented a report that the cost of the Games would be three times higher than originally estimated by Coubertin. They concluded the Games could not be held, and offered their resignation. The total cost of the Games was 3,740,000 gold drachmas.[18]
+
+
+
+
+Demetrius Vikelas, the first president of the International Olympic Committee, was credited with the successful organisation of the 1896 Games.
+
+
+With the prospect of reviving the Olympic games very much in doubt, Coubertin and Vikelas commenced a campaign to keep the Olympic movement alive. Their efforts culminated on January 7, 1895 when Vikelas announced that crown prince Constantine would assume the presidency of the organising committee. His first responsibility was to raise the funds necessary to host the Games. He relied on the patriotism of the Greek people to motivate them to provide the required finances.[19] Constantine's enthusiasm sparked a wave of contributions from the Greek public. This grassroots effort raised 330,000 drachmas. A special set of postage stamps were commissioned; the sale of which raised 400,000 drachmas. Ticket sales added an additional 200,000 drachmas. At the request of Constantine, businessman George Averoff agreed to pay for the restoration of the Panathinaiko Stadium. Averoff would donate 920,000 drachmas[12] to this project.[20] As a tribute to his generosity, a statue of Averoff was constructed and unveiled on April 5, 1896 outside the stadium. It stands there to this day.[21]
+Some of the athletes would take part in the Games because they happened to be in Athens at the time the Games were held, either on holiday or for work (e.g., some of the British competitors worked for the British embassy). A designated Olympic Village for the athletes did not appear until the 1932 Summer Olympics. Consequently the athletes had to provide their own lodging.
+
+
+
+
+Stamp from the first Olympic stamp set
+
+
+The first regulation voted on by the new IOC in 1894 was to allow only amateur athletes to participate in the Olympic Games.[22] The various contests were thus held under amateur regulations with the exception of fencing matches.[23] The rules and regulations were not uniform, so the Organising Committee had to choose among the codes of the various national athletic associations. The jury, the referees and the game director bore the same names as in antiquity (Ephor, Helanodic and Alitarc). Prince George acted as final referee; according to Coubertin, "his presence gave weight and authority to the decisions of the ephors."[24]
+[edit] Venues
+Main article: Venues of the 1896 Summer Olympics
+
+
+Venue
+Sports
+Capacity
+
+
+Panathinaiko Stadium
+Athletics, Gymnastics, Weightlifting and Wrestling
+80,000
+
+
+Bay of Zea
+Swimming
+
+
+
+Athens Lawn Tennis Club
+Tennis
+
+
+
+Kallithea
+Shooting
+
+
+
+Neo Phaliron Velodrome
+Cycling
+
+
+
+Zappeion
+Fencing
+
+
+
+[edit] Calendar
+
+
+
+   ●   
+Opening ceremony
+   ●   
+Event competitions
+   ●   
+Event finals
+   ●   
+Closing ceremony
+
+
+
+
+April
+6th
+7th
+8th
+9th
+10th
+11th
+12th
+13th
+14th
+15th
+
+
+Ceremonies
+●
+
+
+
+
+
+
+
+
+●
+
+
+Athletics
+● ● ● ● ●
+● ● ● ● ●
+
+●
+● ● ● ● ●
+
+
+
+
+
+
+
+Cycling
+
+
+●
+
+
+● ● ●
+●
+●
+
+
+
+
+Fencing
+
+● ●
+
+●
+
+
+
+
+
+
+
+
+Gymnastics
+
+
+
+● ● ● ● ● ●
+● ●
+
+
+
+
+
+
+
+Shooting
+
+
+●
+●
+●
+● ● ●
+●
+
+
+
+
+
+Swimming
+
+
+
+
+
+● ● ● ●
+
+
+
+
+
+
+Tennis
+
+
+●
+●
+
+● ●
+
+
+
+
+
+
+Weightlifting
+
+● ●
+
+
+
+
+
+
+
+
+
+
+Wrestling
+
+
+
+
+●
+●
+
+
+
+
+
+
+April
+6th
+7th
+8th
+9th
+10th
+11th
+12th
+13th
+14th
+15th
+
+
+
+[edit] Opening ceremony
+
+
+
+
+The opening ceremony in the Panathinaiko Stadium
+
+
+On April 6 (March 25 according to the Julian calendar then in use in Greece), the games of the First Olympiad were officially opened; it was Easter Monday for both the Western and Eastern Christian Churches and the anniversary of Greece's independence.[25] The Panathinaiko Stadium was filled with an estimated 80,000 spectators, including King George I of Greece, his wife Olga, and their sons. Most of the competing athletes were aligned on the infield, grouped by nation. After a speech by the president of the organizing committee, Crown Prince Constantine, his father officially opened the Games:[26]
+
+"I declare the opening of the first international Olympic Games in Athens. Long live the Nation. Long live the Greek people."
+
+Afterwards, nine bands and 150 choir singers performed an Olympic Hymn, composed by Spyridon Samaras, with words by poet Kostis Palamas. Thereafter, a variety of musical offerings provided the backgrounds to the Opening Ceremonies until 1960, since which time the Samaras/Palamas composition has become the official Olympic Anthem (decision taken by the IOC Session in 1958). Other elements of current Olympic opening ceremonies were initiated later: the Olympic flame was first lit in 1928, the first athletes' oath was sworn at the 1920 Summer Olympics, and the first officials' oath was taken at the 1972 Olympic Games.[26]
+[edit] Events
+At the 1894 Sorbonne congress, a large roster of sports were suggested for the program in Athens. The first official announcements regarding the sporting events to be held featured sports such as football and cricket, but these plans were never finalized, and these sports did not make the final list for the Games. Rowing and yachting were scheduled, but had to be canceled due to poor weather on the planned day of competition.[27]
+[edit] Athletics
+Main article: Athletics at the 1896 Summer Olympics
+The athletics events had the most international field of any of the sports. The major highlight was the marathon, held for the first time in international competition. Spyridon Louis, a previously unrecognized water carrier, won the event to become the only Greek athletics champion and a national hero. Although Greece had been favored to win the discus and the shot put, the best Greek athletes finished just behind the American Robert Garrett in both events.[3]
+No world records were set, as few top international competitors had elected to compete. In addition, the curves of the track were very tight, making fast times in the running events virtually impossible. Despite this, Thomas Burke, of the United States, won the 100 meter race in 12.0 seconds and the 400 meter race in 54.2 seconds. Burke was the only one who used the "crouch start" (putting his knee on soil), confusing the jury. Eventually, he was allowed to start from this "uncomfortable position".[28]
+[edit] Cycling
+Main article: Cycling at the 1896 Summer Olympics
+
+
+
+
+Frenchmen Léon Flameng (left) and Paul Masson won four cycling events.
+
+
+The rules of the International Cycling Association were used for the cycling competitions.[29] The track cycling events were held at the newly built Neo Phaliron Velodrome. Only one road event was held, a race from Athens to Marathon and back (87 kilometers).
+In the track events, the best cyclist was Frenchman Paul Masson, who won the one lap time trial, the sprint event, and the 10,000 meters. In the 100 kilometers event, Masson entered as a pacemaker for his compatriot Léon Flameng. Flameng won the event, after a fall, and after stopping to wait for his Greek opponent Georgios Kolettis to fix a mechanical problem. The Austrian fencer Adolf Schmal won the 12-hour race, which was completed by only two cyclists, while the road race event was won by Aristidis Konstantinidis.[30]
+[edit] Fencing
+Main article: Fencing at the 1896 Summer Olympics
+
+
+
+
+Fencer Leonidas Pyrgos became the first Greek modern Olympic champion by winning the masters foil competition.
+
+
+The fencing events were held in the Zappeion, which, built with money Evangelis Zappas had given to revive the ancient Olympic Games, had never seen any athletic contests before.[31] Unlike other sports (in which only amateurs were allowed to take part at the Olympics), professionals were allowed to compete in fencing, though in a separate event. These professionals were considered gentlemen athletes, just as the amateurs.[24]
+Four events were scheduled, but the épée event was cancelled for unknown reasons. The foil event was won by a Frenchman, Eugène-Henri Gravelotte, who beat his countryman, Henri Callot, in the final.[31] The other two events, the sabre and the masters foil, were won by Greek fencers. Leonidas Pyrgos, who won the latter event, became the first Greek Olympic champion in the modern era.
+[edit] Gymnastics
+Main article: Gymnastics at the 1896 Summer Olympics
+
+
+
+
+The German individual gymnastics champions: Schuhmann, Flatow, and Weingärtner
+
+
+The gymnastics competition was carried out on the infield of the Panathinaiko Stadium. Germany had sent an 11-man team, which won five of the eight events, including both team events. In the team event on the horizontal bar, the German team was unopposed. Three Germans added individual titles: Hermann Weingärtner won the horizontal bar event, Alfred Flatow won the parallel bars; and Carl Schuhmann, who also competed successfully in wrestling, won the vault. Louis Zutter, a Swiss gymnast, won the pommel horse, while Greeks Ioannis Mitropoulos and Nikolaos Andriakopoulos were victorious in the rings and rope climbing events, respectively.[32]
+[edit] Shooting
+Main article: Shooting at the 1896 Summer Olympics
+Held at a range at Kallithea, the shooting competition consisted of five events—two using a rifle and three with the pistol. The first event, the military rifle, was won by Pantelis Karasevdas, the only competitor to hit the target with all of his shots. The second event, for military pistols, was dominated by two American brothers: John and Sumner Paine became the first siblings to finish first and second in the same event. In order to avoid embarrassing their hosts, the brothers decided that only one of them would compete in the next pistol event, the free pistol. Sumner Paine won that event, thereby becoming the first relative of an Olympic champion to become Olympic champion himself.[33]
+The Paine brothers did not compete in the 25 meter pistol event, as the event judges determined that their weapons were not of the required caliber. In their absence, Ioannis Phrangoudis won. The final event, the free rifle, began on the same day. However, the event could not be completed due to darkness and was finalized the next morning, when Georgios Orphanidis was crowned the champion.[33]
+[edit] Swimming
+Main article: Swimming at the 1896 Summer Olympics
+
+
+
+
+Alfréd Hajós, the first Olympic champion in swimming, is one of only two Olympians to have won medals in both sport and art competitions.
+
+
+The swimming competition was held in the open sea because the organizers had refused to spend the money necessary for a specially constructed stadium. Nearly 20,000 spectators lined the Bay of Zea off the Piraeus coast to watch the events. The water in the bay was cold, and the competitors suffered during their races. There were three open events (men's 100 metre freestyle, men's 500 metre freestyle, and men's 1200 metre freestyle), in addition to a special event open only to Greek sailors, all of which were held on the same day (April 11).[30]
+For Alfréd Hajós of Hungary, this meant he could only compete in two of the events, as they were held too close together, which made it impossible for him to adequately recuperate. Nevertheless, he won the two events in which he swam, the 100 and 1200 meter freestyle. Hajós later became one of only two Olympians to win a medal in both the athletic and artistic competitions, when he won a silver medal for architecture in 1924. The 500 meter freestyle was won by Austrian swimmer Paul Neumann, who defeated his opponents by more than a minute and a half.
+[edit] Tennis
+Main article: Tennis at the 1896 Summer Olympics
+Although tennis was already a major sport by the end of the 19th century, none of the top players turned up for the tournament in Athens. The competition was held at the courts of the Athens Lawn Tennis Club, and the infield of the velodrome used for the cycling events. John Pius Boland, who won the event, had been entered in the competition by a fellow-student of his at Oxford; the Greek, Konstantinos Manos. As a member of the Athens Lawn Tennis sub-committee, Manos had been trying, with the assistance of Boland, to recruit competitors for the Athens Games from among the sporting circles of Oxford University. In the first round, Boland defeated Friedrich Traun, a promising tennis player from Hamburg, who had been eliminated in the 100 meter sprint competition. Boland and Traun decided to team up for the doubles event, in which they reached the final and defeated their Greek and Egyptian opponents after losing the first set.[34]
+[edit] Weightlifting
+Main article: Weightlifting at the 1896 Summer Olympics
+
+
+
+
+Launceston Elliot, winner of the one-armed weightlifting event, was popular with the Greek audience, who found him very handsome.
+
+
+The sport of weightlifting was still young in 1896, and the rules differed from those in use today. Competitions were held outdoors, in the infield of the main stadium, and there were no weight limits. The first event was held in a style now known as the "clean and jerk". Two competitors stood out: Scotsman Launceston Elliot and Viggo Jensen of Denmark. Both of them lifted the same weight; but the jury, with Prince George as the chairman, ruled that Jensen had done so in a better style. The British delegation, unfamiliar with this tie-breaking rule, lodged a protest. The lifters were eventually allowed to make further attempts, but neither lifter improved, and Jensen was declared the champion.[35]
+Elliot got his revenge in the one hand lift event, which was held immediately after the two-handed one. Jensen had been slightly injured during his last two-handed attempt, and was no match for Elliot, who won the competition easily. The Greek audience was charmed by the Scottish victor, whom they considered very attractive. A curious incident occurred during the weightlifting event: a servant was ordered to remove the weights, which appeared to be a difficult task for him. Prince George came to his assistance; he picked up the weight and threw it a considerable distance with ease, to the delight of the crowd.[35]
+[edit] Wrestling
+Main article: Wrestling at the 1896 Summer Olympics
+
+
+
+
+Carl Schuhmann (left) and Georgios Tsitas shake hands before the final match of the wrestling competition.
+
+
+No weight classes existed for the wrestling competition, held in the Panathinaiko Stadium, which meant that there would only be one winner among competitors of all sizes. The rules used were similar to modern Greco-Roman wrestling, although there was no time limit, and not all leg holds were forbidden (in contrast to current rules).
+Apart from the two Greek contestants, all the competitors had previously been active in other sports. Weightlifting champion Launceston Elliot faced gymnastics champion Carl Schuhmann. The latter won and advanced into the final, where he met Georgios Tsitas, who had previously defeated Stephanos Christopoulos. Darkness forced the final match to be suspended after 40 minutes; it was continued the following day, when Schuhmann needed only a quarter of an hour to finish the bout.[36]
+
+[edit] Closing ceremony
+On the morning of Sunday April 12, King George organized a banquet for officials and athletes (even though some competitions had not yet been held). During his speech, he made clear that, as far as he was concerned, the Olympics should be held in Athens permanently. The official closing ceremony was held the following Wednesday, after being postponed from Tuesday due to rain. Again the royal family attended the ceremony, which was opened by the national anthem of Greece and an ode composed in ancient Greek by George S. Robertson, a British athlete and scholar.[37]
+Afterwards, the king awarded prizes to the winners. Unlike today, the first place winners received silver medals, an olive branch and a diploma. Athletes who placed second received copper medals, a branch of laurel and a diploma. Third place winners did not receive a medal. Some winners also received additional prizes, such as Spyridon Louis, who received a cup from Michel Bréal, a friend of Coubertin, who had conceived the marathon event. Louis then led the medalists on a lap of honor around the stadium, while the Olympic Hymn was played again. The King then formally announced that the first Olympiad was at an end, and left the Stadium, while the band played the Greek national hymn and the crowd cheered.[37]
+Like the Greek king, many others supported the idea of holding the next Games in Athens; most of the American competitors signed a letter to the Crown Prince expressing this wish. Coubertin, however, was heavily opposed to this idea, as he envisioned international rotation as one of the cornerstones of the modern Olympics. According to his wish, the next Games were held in Paris, although they would be somewhat over-shadowed by the concurrently held Universal Exposition.[38]
+[edit] Participating nations
+
+
+
+
+Participating countries
+
+
+The concept of national teams was not a major part of the Olympic movement until the Intercalated Games 10 years later, though many sources list the nationality of competitors in 1896 and give medal counts. There are significant conflicts with regard to which nations competed. The International Olympic Committee gives a figure of 14, but does not list them.[26] The following 14 are most likely the ones recognized by the IOC. Some sources list 12, excluding Chile and Bulgaria; others list 13, including those two but excluding Italy. Egypt is also sometimes included because of Dionysios Kasdaglis' participation. Belgium and Russia had entered the names of competitors, but withdrew.
+
+ Australia – Australia was not an independent nation until 1901, but the results of Edwin Flack are typically given with him listed as Australian.
+ Austria – Austria was part of Austria–Hungary at the time, though the results of Austrian athletes are typically reported separately.
+ Bulgaria – The Bulgarian Olympic Committee claims that gymnast Charles Champaud was competing as a Bulgarian.[39] Champaud was a Swiss national living in Bulgaria. Mallon and de Wael both list Champaud as Swiss.[40]
+ Chile – The Chilean Olympic Committee claims to have had one athlete, Luis Subercaseaux, compete in the 100, 400, and 800 meter races in the athletics programme.[41][42][43][44] No further details are given, and no mention is made of Subercaseaux in de Wael, or the Official Report.
+ Denmark
+ France
+ Germany
+ Great Britain – The United Kingdom of Great Britain and Ireland has historically maintained separate athletic organisations for each of its constituent countries. The major exception to this has been the Olympic Games, in which the country is considered as a single entity. However, it has conventionally used the name "Great Britain" at the Olympics rather than the more common shortening of the name to "the United Kingdom".
+ Greece – Greek results typically include the results of competitors from Cyprus, Smyrna and Egypt.[45] Some sources give Cypriot results separately, though most count Anastasios Andreou, a Greek-Cypriot and the only athlete from Cyprus, as Greek (Cyprus was a protectorate of the United Kingdom at the time). Kasdaglis, an athlete of Greek origins living in Alexandria, Egypt, is listed by the IOC as Greek during his competition in the singles tennis competition but Kasdaglis and his doubles tennis teammate, Greek athlete Demetrios Petrokokkinos, are listed as a mixed team.[46]
+ Hungary – Hungary is usually listed separately from Austria, despite the two being formally joined as Austria–Hungary at the time. However, Hungarian results are considered to include those of athletes from Vojvodina (now part of Serbia)
+ Italy – The most prominent Italian involved with the games, Carlo Airoldi, was deemed a professional and excluded from competition. However, the shooter listed by name simply as Rivabella was also Italian and did compete.[47]
+ Sweden
+ Switzerland
+ United States
+
+[edit] Medal count
+For more details on this topic, see 1896 Summer Olympics medal table.
+
+
+
+
+A silver medal was awarded to the winner of each event during the 1896 Summer Olympics.
+
+
+Ten of the 14 participating nations earned medals, in addition to three medals won by mixed teams, i.e. teams made up of athletes from multiple nations. The United States won the most gold medals (11), while host nation Greece won the most medals overall (46) as well as the most silver (17) and bronze (19) medals, finishing with one fewer gold medal than the United States.[46]
+During these inaugural Olympics, winners were given a silver medal, an olive branch, and a diploma, while runners-up received a copper medal a laurel branch, and diploma.[48][49] The IOC has retroactively assigned gold, silver and bronze medals to the three best placed athletes in each event to comport with more recent traditions.[46]
+
+
+Medals of the Games
+
+
+
+
+
+
+
+
+
+
+
+
+
+Silver (first place) medal with the face of Zeus, his hand holding a globe surmounted by winged Victory.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+A copper medal was given those in second place. The reverse features the Acropolis and, in Greek, "International Olympic Games in Athens in 1896".  
+
+
+
+
+
+
+
+
+
+
+
+
+
+Obverse of the silver (first place) medal at a different angle, showing further detail  
+
+
+
+
+
+
+[edit] Female competitors
+Women were not allowed to compete at the 1896 Summer Olympics. One, named Stamata Revithi, the mother of a 17-month-old boy, ran the marathon course on April 11, the day after the men had run the official race. Although she was not allowed to enter the stadium at the end of her race, Revithi finished the marathon in about five hours and 30 minutes, and found witnesses to sign their names and verify the running time. Revithi intended to present this documentation to the Hellenic Olympic Committee, hoping that they would recognize her achievement. Neither her reports nor documents from the Hellenic Olympic Committee have been discovered to provide corroboration.[50]
+[edit] Notes
+
+
+^ The number, given by the International Olympic Committee, is open to interpretation and could be as few as 10 and as many as 15. There are numerous reasons for the disparity: National teams hardly existed at the time, and most athletes represented themselves or their clubs. In addition, countries were not always as well-defined as they are today. The number of countries here reflects the number used by most modern sources. See the relevant section for further details.
+^ This number of competitors is according to the International Olympic Committee. The identities of 179 competitors are known. Mallon & Widlund calculate 245 athletes, while De Wael finds 246.
+^ a b Young (1996), 153
+^ "IMDb Pro : The First Olympics: Athens 1896 Business Details". Pro.imdb.com. http://pro.imdb.com/title/tt0086713. Retrieved 16 March 2011. 
+^ The Modern Olympics, A Struggle for Revival by David C. Young, Chapter 4
+^ According to Donald G. Kyle, systematic excavations of Olympia had begun only in 1875, and Coubertin's perceptions were loosely based on ancient sources (Kyle [2007], 96).
+^ Mullins, Pierre de Coubertin and the Wenlock Olympian Games
+^ Matthews (2005), 66; Young (1996), 81
+^ Young (1996), p.117
+^ Memoire sure le conflit entre la Grece et la Roumanie concernant l'affaire Zappa – Athens 1893, by F. Martens
+^ L'affaire Zappa – Paris 1894, by G. Streit
+^ a b Young (1996), p.128
+^ Young (1996), p.14
+^ Young (1996), 102
+^ Young (1996), 100–105
+^ Young (1996), 108
+^ Young (1996), 111–118
+^ Zarnowski (1992), 16–32
+^ Young (1996), 118. According to Young (2004), 153, "Vikelas and the other Greeks did most of the work. Coubertin did very little."
+^ Darling (2004), 135
+^ George Averoff Dead, New York Times
+^ Some scholars allege that during the Sorbonne congress Coubertin was led by tactical considerations, and used the amateur requirement only as a bait in order to realize his actual aim—namely the reintroduction of the Olympic Games—more quickly (Lennartz–Wassong [2004]), 20.
+^ Professionalism vs amateurism was one of the dominant themes of the 19th century regarding athletics. In Greece the amateurism of athletes debate was taken a step further to encompass the question of the participation of the lower classes in the Games. In 1870, during the Zappian Olympic Games, Philippos Ioannou, a classical scholar and professor, criticised the games, and attacked the ideal of amateurism. His contention was that they were a parody, because people from the working class had taken part in the games. Ioannou suggested that only young people from the upper class should be accepted in the following Olympiad (Professionals and Amateurs, Foundation of the Hellenic World).
+^ a b Coubertin (1896), 46–47
+^ Coubertin (1896), 42
+*Martin–Gynn (2000), 7–8
+^ a b c Athens 1896 – Games of the I Olympiad, International Olympic Committee
+^ Coubertin–Philemon–Politis–Anninos (1897), 98–99, 108–109
+^ Sears (2001), 159
+^ Coubertin (1896), 46–47; Lennartz–Wassong (2004), 23
+^ a b Lennartz-Wassong (2004), 23
+^ a b Young (1996), 148
+^ Young (1996), 151
+^ a b Coubertin–Philemon–Politis–Anninos (1897), 76, 83–84
+^ Gillmeister (1995), 23–24
+^ a b Coubertin–Philemon–Politis–Anninos (1897), 70–71
+^ Coubertin–Philemon–Politis–Anninos (1897), 93–94
+^ a b Coubertin (1896), 50
+^ Young (1996), 156
+^ Athens 1896, Bulgarian Olympic Committee
+^ De Wael, KONRAD Gymnastics 1896
+^ Guttmann (1994), 128; La Presencia de Chile en los Juegos Olimpicos, Olympic Committee of Chile; McGehee (2000), 107
+^ aboutolympics.co.uk (s/f). "1896 Athens Olympics". http://www.aboutolympics.co.uk/athens-olympics.html. Retrieved 21 February 2011. 
+^ Mallon, Bill, and Ture Widlund (1988). The 1896 Olympic Games. Results for All Competitors in All Events, with Commentary. Jefferson: McFarland. p. 39. ISBN 0-7864-0379-9. http://www.aafla.org/6oic/OfficialReports/Mallon/1896.pdf. Retrieved 21 February 2011. 
+^ Olympic Games Museum (2011). "Participating Countries — Olympic Games Athens 1896". olympic-museum.de. http://olympic-museum.de/part_count/1896.htm. Retrieved 22 May 2011. 
+^ Gillmeister (1998), 364
+^ a b c Athens 1896–Medal Table, International Olympic Committee
+^ De Wael, Shooting 1896
+^ Coubertin–Philemon–Politis–Anninos (1897), 232–234
+^ IOC Olympic Museum exhibition panel, 2010
+^ Martin–Gynn (2000), 22
+
+
+[edit] References
+
+"Athens 1896". Olympic.org. International Olympic Committee. http://www.olympic.org/en/content/Olympic-Games/All-Past-Olympic-Games/Summer/Athens-1896. 
+"All the Medallists since 1896". Olympic.org. International Olympic Committee. http://www.olympic.org/en/content/All-Olympic-results-since-1896/?AthleteName=&Games=1333702&Country=&Sport=&TargetResults=true&resultsPageIPP=30. 
+"Almanac of the 18 June". Almanac of the Day. International Olympic Committee. http://www.olympic.org/uk/news/almanach_uk.asp. Retrieved 16 June 2008. 
+"Athens 1896". Bulgarian Olympic Committee. http://www.bgolympic.org/fce/index.shtml?s=001&p=0039&n=000001. Retrieved 7 July 2008. 
+Coubertin, Pierre De; Hambidge, Jay (November 1896). The Olympic Games of 1896. LIII. The Century Magazine. http://cdl.library.cornell.edu/cgi-bin/moa/pageviewer?frames=1&cite=&coll=moa&view=50&root=%2Fmoa%2Fcent%2Fcent0053%2F&tif=00055.TIF&pagenum=39. Retrieved 28 June 2008. 
+Coubertin, Pierre De; Timoleon J. Philemon, N.G. Politis and Charalambos Anninos (1897) (PDF). The Olympic Games: BC 776 – AD 1896. Athens: Charles Beck. http://www.aafla.org/6oic/OfficialReports/1896/1896.pdf. Retrieved 25 July 2008. 
+Darling, Janina K. (2004). "Panathenaic Stadium, Athens". Architecture of Greece. Greenwood Publishing Group. ISBN 0-313-32152-3. OCLC 54500822. http://books.google.com/?id=4F-v35--l_gC&dq=Panathenaic+Stadium,+Averoff,+Constantine. 
+De Wael, Herman. "Herman's Top Athina 1896 Olympians". http://users.skynet.be/hermandw/olymp/topath96.html. Retrieved 3 July 2008. 
+"George Averoff Dead" (PDF). The New York Times. 4 August 1899. http://query.nytimes.com/mem/archive-free/pdf?_r=1&res=9901EEDB1431E733A25757C0A96E9C94689ED7CF&oref=slogin. Retrieved 31 July 2008. 
+Gillmeister, Heiner (1998) (PDF). Tennis: a Cultural History. Continuum International Publishing Group. ISBN 0-7185-0195-0. OCLC 67496016. http://books.google.com/?id=hftxBcXOQxsC&dq=1896,+Egypt,++Kasdaglis. 
+Gillmeister, Heiner (Winter 1995). "Olympic Tennis: Some Afterthoughts" (PDF). Citius, Altius, Fortius 3 (1): 23–25. http://www.la84foundation.org/SportsLibrary/JOH/JOHv3n1/JOHv3n1g.pdf. Retrieved 25 July 2008. 
+Guttmann, Allen (1994). Games and Empires: Modern Sports and Cultural Imperialism. Columbia University Press. ISBN 0-231-10042-6. OCLC 231638134. http://books.google.com/?id=eJn8paCwgJYC&dq=Subercaseaux,+1896,+games. 
+Kyle, Donald G. (2007). "In Search of the Ancient Olympics". Sport and Spectacle in the Ancient World: Early Sport and Spectacle. Blackwell Publishing. ISBN 0-631-22970-1. OCLC 191858172. http://books.google.com/?id=tEbcu-sDkFEC&dq=ancient+Olympics,+athletes,+Greek,+only. 
+"La Presencia de Chile en los Juegos Olimpicos" (in Spanish). Olympic Committee of Chile. Archived from the original on 2 July 2008. http://web.archive.org/web/20080702073204/http://www.coch.cl/museo.htm. Retrieved 3 July 2008. 
+Lennartz, Karl; Wassong, Stephen (2004). "Athens 1896". In John E. Findling, Kimberly D. Pelle. Encyclopedia of the Modern Olympic Movement. Greenwood Publishing Group. ISBN 0-313-32278-3. OCLC 52418065. http://books.google.com/?id=QmXi_-Jujj0C&dq=1896+games,+cycling. 
+Martin, David E.; Gynn, Roger W. H. (2000). "The Olympic Marathon". Running through the Ages. Human Kinetics. ISBN 0-88011-969-1. OCLC 42823784. http://books.google.com/?id=Qb125O62NVQC&dq=Stamata+Revithi. 
+Matthews, George R. (2005). "The Ghost of Plato". America's First Olympics: The St. Louis Games Of 1904. University of Missouri Press. ISBN 0-8262-1588-2. OCLC 58468164. http://books.google.com/?id=WKRUmep515oC&dq=Wenlock,+Brookes,+Coubertin. 
+McGehee, Richard V. (2000). "The Impact of Imported Sports on the Popular Culture of Nineteenth- and Early Twentieth-Century Mexico and Central America". In Ingrid Elizabeth Fey, Karen Racine (PDF). Strange Pilgrimages: Exile, Travel, and National Identity in Latin America. Rowman & Littlefield. ISBN 0-8420-2694-0. OCLC 237382448. http://www.aafla.org/6oic/OfficialReports/1896/1896.pdf. Retrieved 25 July 2008. 
+Mullins, Samuel P.. "Pierre de Coubertin and the Wenlock Olympian Games". Proceedings of the International Olympic Academy–Selected 1980s Proceedings. University of Leeds. http://www.ioa.leeds.ac.uk/1980s/84099.htm. Retrieved 11 July 2008. 
+"Professionals and Amateurs". From Ancient Olympia to Athens of 1896. Foundation of the Hellenic World. http://www.fhw.gr/olympics/ancient/en/304b.html. Retrieved 18 July 2008. 
+Sears, Edward S. (2001). "The Revival of the Olympic Games". Running through the Ages. McFarland. ISBN 0-7864-0971-1. OCLC 46650949. http://books.google.com/?id=vxxOw3FvOgwC&dq=Burke,++crouch+start. 
+Young, David C. (2004). "The Modern Olympic Games". A Brief History of the Olympic Games. Oxford: Blackwell. ISBN 1-4051-1130-5. OCLC 54111254. http://books.google.com/?id=hCNtwn24iK8C&dq=Zappas+Olympic+Committee. 
+Young, David C. (1996). The Modern Olympics: A Struggle for Revival. Baltimore: Johns Hopkins University Press. ISBN 0-8018-7207-3. 
+Zarnowski, C. Frank (Summer 1992). "A Look at Olympic Costs" (PDF). Citius, Altius, Fortius 1 (1): 16–32. http://www.aafla.org/SportsLibrary/JOH/JOHv1n1/JOHv1n1f.pdf. Retrieved 24 March 2007. 
+
+[edit] Further reading
+
+Greenberg, Stan (1996). The Guinness Book of Olympic Facts and Feats. Enfield: Guinness. ISBN 0-85112-639-1. OCLC 35921786. 
+Kluge, Volker (1997). Olympische Sommerspiele: die Chronik I. Berlin: Sportverlag. ISBN 3-328-00715-6. OCLC 38258227. 
+Lennartz, Karl (ed.) (1996). Die olympischen Spiele 1896 in Athen: Erläuterungen zum Neudruck des Offiziellen Berichtes. Kassel: Agon. 
+MacAloon, John J (1982). This Great Symbol: Pierre de Coubertin and the Origins of the Modern Olympic Games. Chicago: The University of Chicago Press. 
+Mallon, Bill; & Widlund, Ture (1998) (PDF). The 1896 Olympic Games. Results for All Competitors in All Events, with Commentary. Jefferson: McFarland. ISBN 0-7864-0379-9. OCLC 37213664. http://www.aafla.org/6oic/OfficialReports/Mallon/1896.pdf. Retrieved 26 May 2008. 
+Smith, Michael Llewellyn (2004). Olympics in Athens 1896. The Invention of the Modern Olympic Games. London: Profile Books. ISBN 1-86197-342-X. OCLC 186174794. 
+Wallechinsky, David (2000). The Complete Book of the Summer Olympics. Woodstock: Overlook Press. ISBN 1-58567-033-2. OCLC 43561597. 
+Randall, David (2011) (ebook). 1896 The first Modern Olympics. London: Blacktoad Publishing. ISBN 978-0-9570591-0-8. http://www.1896olympics.com/. 
+
+[edit] External links
+
+
+
+Wikimedia Commons has media related to: 1896 Summer Olympics
+
+
+
+"Athens 1896". Olympic.org. International Olympic Committee. http://www.olympic.org/en/content/Olympic-Games/All-Past-Olympic-Games/Summer/Athens-1896. 
+
+
+
+Preceded by
+Ancient Olympic Games
+Summer Olympic Games
+Athens
+I Olympiad (1896)
+Succeeded by
+Paris
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Olympic Games
+
+
+
+
+
+
+
+
+
+Sports
+Venues
+Ceremonies
+Medals
+Medal tables
+Medalists
+IOC
+NOCs
+Symbols
+
+
+
+
+
+
+
+
+Summer Games
+
+
+
+1896
+1900
+1904
+19061
+1908
+1912
+19162
+1920
+1924
+1928
+1932
+1936
+19403
+19443
+1948
+1952
+1956
+1960
+1964
+1968
+1972
+1976
+1980
+1984
+1988
+1992
+1996
+2000
+2004
+2008
+2012
+2016
+2020
+2024
+2028
+
+
+
+
+
+
+
+
+Winter Games
+
+
+
+1924
+1928
+1932
+1936
+19403
+19443
+1948
+1952
+1956
+1960
+1964
+1968
+1972
+1976
+1980
+1984
+1988
+1992
+1994
+1998
+2002
+2006
+2010
+2014
+2018
+2022
+
+
+
+
+
+
+
+
+
+1 Discounted ex post facto by the IOC. 2 Cancelled due to World War I. 3 Cancelled due to World War II.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Events at the 1896 Summer Olympics (Athens)
+
+
+
+
+
+
+
+Athletics • Cycling • Fencing • Gymnastics • Shooting • Swimming • Tennis • Weightlifting • Wrestling
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+v
+t
+e
+
+
+Venues of the 1896 Summer Olympics
+
+
+
+
+
+
+
+
+
+Athens Lawn Tennis Club
+Bay of Zea
+Kallithea
+Marathon (city)
+Neo Phaliron Velodrome
+Panathinaiko Stadium
+Zappeion
+
+
+
+
+
+
+
+
+
+           
+ 
+NewPP limit report
+Preprocessor node count: 31921/1000000
+Post-expand include size: 238978/2048000 bytes
+Template argument size: 80047/2048000 bytes
+Expensive parser function count: 2/500
+
+ Saved in parser cache with key enwiki:pcache:idhash:48644-0!*!0!!en!4!* and timestamp 20120306201041 
+  /bodycontent 
+ printfooter 
+
+				Retrieved from "http://en.wikipedia.org/w/index.php?title=1896_Summer_Olympics&oldid=480431383"				
+ /printfooter 
+ catlinks 
+Categories: 1896 Summer OlympicsSports festivals in GreeceSport in AthensOlympic Games in GreeceHidden categories: Use dmy dates from February 2012Wikipedia indefinitely move-protected pagesAll articles with unsourced statementsArticles with unsourced statements from January 2012Featured articles  /catlinks 
+
+ debughtml 
+ /debughtml 
+
+ /bodyContent 
+
+ /content 
+ header 
+
+ 0 
+
+Personal tools
+
+Log in / create account
+
+
+ /0 
+
+ 0 
+
+Namespaces
+
+Article
+Talk
+
+
+ /0 
+ 1 
+
+
+
+Variants
+
+
+
+
+
+ /1 
+
+
+ 0 
+
+Views
+
+Read
+Edit
+View history
+
+
+ /0 
+ 1 
+
+Actions
+
+
+
+
+
+ /1 
+ 2 
+
+Search
+
+
+  
+
+
+
+ /2 
+
+
+ /header 
+ panel 
+
+ logo 
+
+ /logo 
+ navigation 
+
+Navigation
+
+
+Main page
+Contents
+Featured content
+Current events
+Random article
+Donate to Wikipedia
+
+
+
+ /navigation 
+ SEARCH 
+ /SEARCH 
+ interaction 
+
+Interaction
+
+
+Help
+About Wikipedia
+Community portal
+Recent changes
+Contact Wikipedia
+
+
+
+ /interaction 
+ TOOLBOX 
+
+Toolbox
+
+
+What links here
+Related changes
+Upload file
+Special pages
+Permanent link
+Cite this page 
+
+
+ /TOOLBOX 
+ coll-print_export 
+
+Print/export
+
+Create a bookDownload as PDFPrintable version 
+
+ /coll-print_export 
+ LANGUAGES 
+
+Languages
+
+
+Afrikaans
+Аҧсуа
+العربية
+Aragonés
+Azərbaycanca
+বাংলা
+Беларуская
+‪Беларуская (тарашкевіца)‬
+Bikol Central
+Bosanski
+Български
+Català
+Česky
+Dansk
+Deutsch
+Eesti
+Ελληνικά
+Español
+Esperanto
+Euskara
+فارسی
+Français
+Frysk
+Galego
+한국어
+Հայերեն
+हिन्दी
+Hrvatski
+Ido
+Bahasa Indonesia
+Íslenska
+Italiano
+עברית
+Basa Jawa
+Қазақша
+Кыргызча
+Latina
+Latviešu
+Lietuvių
+Magyar
+Македонски
+मराठी
+Bahasa Melayu
+Монгол
+Nāhuatl
+Nederlands
+日本語
+‪Norsk (bokmål)‬
+‪Norsk (nynorsk)‬
+Occitan
+Олык Марий
+Polski
+Português
+Română
+Русский
+Саха тыла
+Simple English
+Slovenčina
+Slovenščina
+Српски / Srpski
+Srpskohrvatski / Српскохрватски
+Suomi
+Svenska
+Татарча/Tatarça
+తెలుగు
+ไทย
+Türkçe
+Українська
+Tiếng Việt
+Walon
+中文
+
+
+
+ /LANGUAGES 
+
+ /panel 
+ footer 
+
+
+ This page was last modified on 6 March 2012 at 02:46.
+Text is available under the Creative Commons Attribution-ShareAlike License;
+additional terms may apply.
+See Terms of use for details.
+Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc., a non-profit organization.Contact us
+
+
+Privacy policy
+About Wikipedia
+Disclaimers
+Mobile view
+
+
+
+
+
+
+
+
+
+
+
+ /footer 
+
+if(window.mw){
+mw.loader.load(["mediawiki.user","mediawiki.page.ready","mediawiki.legacy.mwsuggest","ext.gadget.teahouse","ext.vector.collapsibleNav","ext.vector.collapsibleTabs","ext.vector.editWarning","ext.vector.simpleSearch","ext.UserBuckets","ext.articleFeedback.startup","ext.articleFeedbackv5.startup","ext.markAsHelpful"], null, true);
+}
+
+
+ Served by mw53 in 0.116 secs. 
+

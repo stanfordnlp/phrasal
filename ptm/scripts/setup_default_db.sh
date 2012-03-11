@@ -44,28 +44,28 @@ let tgt_seq_pk="$tgt_seq_pk + $n_lines"
 let src_seq_pk="$src_seq_pk + $n_lines"
 
 
-doc="$data_dir"/en/proc/Sun_Wikipedia.txt
+doc="$data_dir"/en/proc/Flag_of_Japan_Wikipedia.txt
 n_lines=`wc -l "$doc" | awk '{ print $1 }'`
 echo Loading "$doc"
 ./load_source_doc.sh "$doc" "$src_seq_pk" 1
-./load_target_doc.sh "$data_dir"/en/proc/trans/Sun_Wikipedia.ar "$tgt_seq_pk" 2 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Flag_of_Japan_Wikipedia.ar "$tgt_seq_pk" 2 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
-./load_target_doc.sh "$data_dir"/en/proc/trans/Sun_Wikipedia.fr "$tgt_seq_pk" 3 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Flag_of_Japan_Wikipedia.fr "$tgt_seq_pk" 3 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
-./load_target_doc.sh "$data_dir"/en/proc/trans/Sun_Wikipedia.de "$tgt_seq_pk" 4 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Flag_of_Japan_Wikipedia.de "$tgt_seq_pk" 4 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
 
 let src_seq_pk="$src_seq_pk + $n_lines"
 
-doc="$data_dir"/en/proc/Autism_Wikipedia.txt
+doc="$data_dir"/en/proc/Schizophrenia_Wikipedia.txt
 n_lines=`wc -l "$doc" | awk '{ print $1 }'`
 echo Loading "$doc"
 ./load_source_doc.sh "$doc" "$src_seq_pk" 1
-./load_target_doc.sh "$data_dir"/en/proc/trans/Autism_Wikipedia.ar "$tgt_seq_pk" 2 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Schizophrenia_Wikipedia.ar "$tgt_seq_pk" 2 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
-./load_target_doc.sh "$data_dir"/en/proc/trans/Autism_Wikipedia.fr "$tgt_seq_pk" 3 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Schizophrenia_Wikipedia.fr "$tgt_seq_pk" 3 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
-./load_target_doc.sh "$data_dir"/en/proc/trans/Autism_Wikipedia.de "$tgt_seq_pk" 4 "$src_seq_pk"
+./load_target_doc.sh "$data_dir"/en/proc/trans/Schizophrenia_Wikipedia.de "$tgt_seq_pk" 4 "$src_seq_pk"
 let tgt_seq_pk="$tgt_seq_pk + $n_lines"
 
 let src_seq_pk="$src_seq_pk + $n_lines"
@@ -77,7 +77,7 @@ echo Loading "$doc"
 
 let src_seq_pk="$src_seq_pk + $n_lines"
 
-doc="$data_dir"/en/proc/Schizophrenia_Wikipedia.txt
+doc="$data_dir"/en/proc/1896_Summer_Olympics_Wikipedia.txt
 n_lines=`wc -l "$doc" | awk '{ print $1 }'`
 echo Loading "$doc"
 ./load_source_doc.sh "$doc" "$src_seq_pk" 1

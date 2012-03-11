@@ -26,33 +26,6 @@ def bye(request):
     return redirect('/login/')
 
 @login_required
-def survey(request):
-    """ A user survey to be completed after the task.
-
-    Args:
-    Returns:
-    Raises:
-      Http404 -- on an invalid request type
-    """
-    if request.method == 'GET':
-        form = tm_forms.UserStudySurveyForm()
-        return render_to_response('tm/survey_exp1.html',
-                                  { 'form':form },
-                                  context_instance=RequestContext(request))
-    elif request.method == 'POST':
-        form = tm_forms.UserStudySurveyForm(request.POST)
-        if form.is_valid():
-            tm_user_utils.save_survey_form(request.user, form)
-            return redirect('/tm/')
-
-        return render_to_response('tm/survey_exp1.html',
-                                  { 'form':form },
-                                  context_instance=RequestContext(request))
-
-    logger.error('Invalid request type for views.survey: ' + request.method)
-    raise Http404
-
-@login_required
 def index(request):
     """ Shows the work queue for each user.
     Args:

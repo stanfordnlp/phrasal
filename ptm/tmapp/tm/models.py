@@ -186,6 +186,9 @@ class UserConf(models.Model):
     # Number of hours that this user spends on translation
     # work each week (user reported)
     hours_per_week = models.IntegerField(blank=True, null=True)
+
+    # Does the user consider himself a professional translator?
+    is_pro_translator = models.BooleanField(default=False)
     
     def __unicode__(self):
         return '%s: native:%s trained:%s' % (self.user.username,
@@ -254,31 +257,31 @@ class TranslationStats(models.Model):
                                             self.ui.name,
                                             str(self.is_valid))
     
-class SurveyResponse(models.Model):
-    """ Response to user survey at the end of each experiment. Currently,
-    this is configured for the user study.
+#class SurveyResponse(models.Model):
+#    """ Response to user survey at the end of each experiment. Currently,
+#    this is configured for the user study.
 
-    Args:
-    Returns:
-    Raises:
-    """
-    user = models.ForeignKey(User)
+#    Args:
+#    Returns:
+#    Raises:
+#    """
+#    user = models.ForeignKey(User)
     
-    # CSV list of hardest POS categories for translation
-    pos = models.CharField(max_length=100)
+#    # CSV list of hardest POS categories for translation
+#    pos = models.CharField(max_length=100)
 
-    # Most efficient UI for translation.
-    best_ui = models.ForeignKey(UISpec)
+#    # Most efficient UI for translation.
+#    best_ui = models.ForeignKey(UISpec)
 
-    # Were the machine suggestions useful?
-    hyp_good = models.BooleanField(default=False)
+#    # Were the machine suggestions useful?
+#    hyp_goodness = models.IntegerField()
     
-    # Free-form user feedback about source text
-    txt_response = models.TextField()
+#    # Free-form user feedback about source text
+#    txt_response = models.TextField()
 
-    # Free-form user feedback about target text
-    tgt_response = models.TextField()
+#    # Free-form user feedback about target text
+#    tgt_response = models.TextField()
 
-    def __unicode__(self):
-        return '%s: %s' % (self.user.username, self.best_ui.name)
+#    def __unicode__(self):
+#        return '%s: %s' % (self.user.username, self.best_ui.name)
     

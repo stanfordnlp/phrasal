@@ -1,6 +1,6 @@
 import logging
 import random
-from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule,ExperimentSample,SurveyResponse,SourceDocumentSpec
+from tm.models import SourceTxt,UISpec,UserConf,LanguageSpec,ExperimentModule,ExperimentSample,SourceDocumentSpec
 from tm_user_utils import get_user_conf
 from tm_train_module import done_training
 
@@ -170,8 +170,6 @@ def get_next_module(user):
     Raises:
     """
     user_took_training = done_training(user)
-    do_survey = True if SurveyResponse.objects.filter(user=user).count() == 0 else False
-    
     # Return values. The goal of the gnarly conditionals below is to
     # set these two values.
     module_name = 'train'
@@ -187,7 +185,7 @@ def get_next_module(user):
             module_name = select_new_module(user)
             if module_name == None:
                 logger.info('%s has finished all modules' % (user.username))
-                module_name = 'survey' if do_survey else 'none'
+                module_name = 'none'
             else:
                 (module_name, sample_id) = has_samples(user)
                 logger.info('Selected module %s for user %s' % (module_name,user.username))

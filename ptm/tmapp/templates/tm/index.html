@@ -17,7 +17,12 @@
 <div id="main-content">
 <p> Hi {{ name }}!</p>
 {% if module_name == "none" %}
-<p>You've completed the job. Thanks so much! Please send us a short note on odesk and let us know that you've finished. We'll review your work and make the payment.</p>
+<p>You've completed the translation job. Thanks so much! Now we need you to fill out a short survey about your experience (less than 5 minutes):</p>
+
+<p><a href="https://docs.google.com/spreadsheet/viewform?formkey=dHlhSkU0ZURrMUFtQ0Q0Z3IwTWFsUEE6MQ" target="_blank">Fill out survey!</a></p>
+
+If you finished the survey, then you're done! Please send us a short note on odesk to let us know that you have completed the job. We'll check your translations and survey response. Then we'll make the payment.</p>
+
 <p>If you have any additional questions, feel free to contact us on odesk.</p>
 
 <form method="LINK" action="/tm/bye/">
@@ -27,15 +32,12 @@
 {% else %}{% if module_name == "train" %}
 <p> Please complete the <a href="/tm/training/">training</a> before you start the translation job. You'll see several different translation interfaces, and we want you to understand the differences before you get to work.</p>
 
-{% else %}{% if module_name == "survey" %}
-<p> You've completed all of the translation modules. The hard part is over! Please fill out this <a href="/tm/survey/">short survey</a> about your experience. Once you submit it, we'll tell you how to get paid.
-
 {% else %}
 <p>You're ready to start a new translation module! If necessary, take a break before you start. The timer will not start until you click the link below. Then you should translate all of the sentences in a single sitting.</p>
 
 <form method="LINK" action="{{ tr_url }}">
   <input type="submit" value="Start Translating!" />
 </form>
-{% endif %}{% endif %}{% endif %}
+{% endif %}{% endif %}
 </div>
 {% endblock %}

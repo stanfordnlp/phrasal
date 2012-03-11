@@ -45,6 +45,7 @@ def done_training(user,set_done=False,form=None):
         user_conf.birth_country = form.cleaned_data['birth_country']
         user_conf.home_country = form.cleaned_data['home_country']
         user_conf.hours_per_week = form.cleaned_data['hours_per_week']
+        user_conf.is_pro_translator = form.cleaned_data['is_pro_translator']
         user_conf.has_trained = True
         user_conf.save()
         return True
