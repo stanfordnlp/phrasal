@@ -36,19 +36,18 @@
     
     var util = {
       add: function(event) {
-	// event.timeStamp is not reliable across browsers
-	var d = new Date();
-	var _now = d.getTime();
+	      // event.timeStamp is not reliable across browsers
+	      var d = new Date();
+	      var _now = d.getTime();
 
-	// Extend the event log size if necessary
+	      // Extend the event log size if necessary
         if (_eventLogPtr >= _eventLog.length) {
           _eventLogPtr = _eventLog.length;
           var newLog = new Array(_initCapacity);
           _eventLog = _eventLog.concat(newLog);
         }
 
-
-        // TODO(spenceg) Add more to the event format
+        // Format is <type>:<value>
         var eventStr = event.type + ' ' + (_now - _startTime);
         if (event.target.id) {
           eventStr += ' id:' + event.target.id;
@@ -70,7 +69,7 @@
 
         // Add the START event
         _startTime = d.getTime();
-        var eventStr = _startEventName + ' 0 ' + _startTime.toString();
+        var eventStr = _startEventName + ' 0 ' + _startTime;
         _eventLog[_eventLogPtr++] = eventStr;
       },
 
@@ -88,10 +87,10 @@
           logStr += _eventDelim;
         }
 
-        // Add the END event
+        // Add the END event to the string (not to the event log)
         var d = new Date();
         var eventStr = _endEventName + ' ' + (d.getTime() - _startTime);
-        logStr += _eventDelim + eventStr;
+        logStr += eventStr;
        
         return logStr;
       },
