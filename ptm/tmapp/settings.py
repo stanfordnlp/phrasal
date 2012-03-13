@@ -10,8 +10,8 @@
 #  * Change logger debug level to WARN in settings.py
 #  * Run python manage.py collectstatic
 #  * Disable static_patterns in urls.py
+#  * Change permissions to 777 of logs directory
 #  * Login to admin and setup (in this order):
-#    * ExperimentModules
 #    * UserConfs
 
 # The directory where 'django-admin.py startproject' was executed
