@@ -38,7 +38,10 @@ $(document).ready(function(){
   idletimer.addCallback(function(){
     alert('You exceeded the maximum idle time! Your partial translation has been submitted. Click OK to continue to the next sentence.');
     $( 'input[name=is_valid]' ).val('False');
-    $( 'input[name=txt]' ).val('INCOMPLETE');
+    var partialHypothesis = $( _textAreaSel ).val();
+    if (partialHypothesis.length == 0){
+      $( _textAreaSel ).val('INCOMPLETE');
+    }
     $( 'input[name=form-tgt-submit]' ).trigger('click');
   });
   $( _textAreaSel ).keydown(function(){

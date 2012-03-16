@@ -19,6 +19,9 @@
 
     // Idle timeout value
     var _timeout = 1;
+
+    // Formatted (display) value of _timeout (set at initialization)
+    var _timeoutStr = 0;
     
     // CSS id of the widget div
     var _cssId = 'idletimer-timer';
@@ -33,7 +36,7 @@
       go : function() {
         console.log('timer: go');
         var divString = '<div id="' + _cssId + '">';
-        divString += '<div id="' + _cssTextWrapper + '">00:00</div></div>';
+        divString += '<div id="' + _cssTextWrapper + '"></div></div>';
 
         $('body').append(divString);
         var elemSel = '#'+_cssId;
@@ -66,6 +69,23 @@
           func();
         }
       },
+
+      // Converts an integer in seconds to a
+      // mins:secs formatted string
+      secsToTimeString : function(secs) {
+        var mins = parseInt(secs / 60);
+        var secs = secs % 60;
+        var timeStr = '';
+        if (mins < 10){
+          timeStr += '0';
+        }
+        timeStr += mins.toString() + ':';
+        if (secs < 10) {
+          timeStr += '0';
+        }
+        timeStr += secs.toString();
+        return timeStr;
+      },
     };
     
     var fn = {
@@ -81,24 +101,16 @@
           _timer = window.setTimeout("idletimer.timerHandler()", 1000);
         }
 
-        var mins = parseInt(_secs / 60);
-        var secs = _secs % 60;
-        var timeStr = '';
-        if (mins < 10){
-          timeStr += '0';
-        }
-        timeStr += mins.toString() + ':';
-        if (secs < 10) {
-          timeStr += '0';
-        }
-        timeStr += secs.toString();
-        $( '#'+_cssTextWrapper ).html(timeStr);
+        var timerNowStr = util.secsToTimeString(_secs);
+        var msg = 'Idle: ' + timerNowStr + ' (maximum: ' + _timeoutStr + ')';
+        $( '#'+_cssTextWrapper ).html(msg);
       },
       
       // Initialize the idletimer widget
       init : function(secs){
         console.log('timer: init ' + secs.toString() + 's');
         _timeout = secs;
+        _timeoutStr = util.secsToTimeString(secs);
       },
 
       // Display the idletimer widget

@@ -58,7 +58,7 @@
         if (event.which){
           eventStr += ' k:' + event.which;
         }
-        console.log(eventStr);
+        // console.log(eventStr);
         _eventLog[_eventLogPtr++] = eventStr;
       },
 
