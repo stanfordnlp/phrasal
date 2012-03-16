@@ -46,7 +46,7 @@
                         'left':'0px',
                         'border':'1px solid #000',
                         'color':'Red',
-                        'font-size':'150%',
+                        'font-size':'110%',
                         'background-color':'WhiteSmoke',
                        });
         $( '#'+_cssTextWrapper ).css('padding','0.2em');
