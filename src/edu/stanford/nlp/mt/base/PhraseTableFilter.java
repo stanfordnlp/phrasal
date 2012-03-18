@@ -16,7 +16,7 @@ import edu.stanford.nlp.mt.base.FlatPhraseTable.IntArrayTranslationOption;
  */
 public class PhraseTableFilter {
 
-  private static final int N_VARIABLE_MOSES_FEATURES = FlatPhraseTable.CANONICAL_FIVESCORE_SCORE_TYPES.length - 1;
+  private static final int N_VARIABLE_MOSES_FEATURES = 4;
 
   static class ScoredOpt implements Comparable<ScoredOpt> {
 

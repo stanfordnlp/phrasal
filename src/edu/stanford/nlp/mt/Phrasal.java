@@ -31,8 +31,6 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
-import javax.management.RuntimeErrorException;
-
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.h.*;
 import edu.stanford.nlp.mt.decoder.inferer.*;
@@ -130,9 +128,7 @@ public class Phrasal {
   static final boolean VERBOSE_LEARNER = true;
 
   static {
-    REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,
-        LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
-        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT));
+    REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,WEIGHTS_FILE));
     OPTIONAL_FIELDS.addAll(Arrays.asList(INLINE_WEIGHTS, ITER_LIMIT,
         DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
         DISABLED_FEATURIZERS, USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY,
@@ -146,7 +142,9 @@ public class Phrasal {
         USE_ITG_CONSTRAINTS, LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS,
         GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
-        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR));
+        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
+        LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
+        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -649,24 +647,27 @@ public class Phrasal {
     }
 
     // Create Featurizer
-    String lgModel, lgModelVoc = "";
-    if (config.get(LANGUAGE_MODEL_OPT).size() == 1) {
-      lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-    } else if (config.get(LANGUAGE_MODEL_OPT).size() == 2) {
-      lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-      lgModelVoc = config.get(LANGUAGE_MODEL_OPT).get(1);
-    } else if (config.get(LANGUAGE_MODEL_OPT).size() == 4) {
-      List<String> lmOpts = config.get(LANGUAGE_MODEL_OPT);
-      System.err.printf(
-          "Ignoring Moses factor & model order information: %s, %s, %s\n",
-          lmOpts.get(0), lmOpts.get(1), lmOpts.get(2));
-      lgModel = lmOpts.get(3);
-    } else {
-      throw new RuntimeException("Unsupported configuration "
-          + config.get(LANGUAGE_MODEL_OPT));
+    String lgModel = null, lgModelVoc = "";
+    if (config.containsKey(LANGUAGE_MODEL_OPT)) {
+      if (config.get(LANGUAGE_MODEL_OPT).size() == 1) {
+        lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
+      } else if (config.get(LANGUAGE_MODEL_OPT).size() == 2) {
+        lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
+        lgModelVoc = config.get(LANGUAGE_MODEL_OPT).get(1);
+      } else if (config.get(LANGUAGE_MODEL_OPT).size() == 4) {
+        List<String> lmOpts = config.get(LANGUAGE_MODEL_OPT);
+        System.err.printf(
+            "Ignoring Moses factor & model order information: %s, %s, %s\n",
+            lmOpts.get(0), lmOpts.get(1), lmOpts.get(2));
+        lgModel = lmOpts.get(3);
+      } else {
+        throw new RuntimeException("Unsupported configuration "
+            + config.get(LANGUAGE_MODEL_OPT));
+      }
+    
+      System.err.printf("Language model: %s\n", lgModel);
     }
-
-    System.err.printf("Language model: %s\n", lgModel);
+    
     if (discriminativeLMOrder != 0) {
       System.err.printf("Discriminative LM order: %d\n", discriminativeLMOrder);
     }
@@ -687,17 +688,21 @@ public class Phrasal {
     String gapType = gapT.name();
     System.err.println("Gap type: " + gapType);
 
-    featurizer = FeaturizerFactory.factory(
+    if (lgModel != null) {
+      featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
             linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
         makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
-        makePair(FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc),
-        makePair(FeaturizerFactory.DISCRIMINATIVE_LM_PARAMETER, ""
-            + discriminativeLMOrder),
-        makePair(FeaturizerFactory.DISCRIMINATIVE_TM_PARAMETER, ""
-            + discriminativeTMParameter));
+        makePair(FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc));
+    } else {
+      featurizer = FeaturizerFactory.factory(
+          FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
+          makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
+              linearDistortion),
+          makePair(FeaturizerFactory.GAP_PARAMETER, gapType));
+    }
 
     if (config.containsKey(DISABLED_FEATURIZERS)) {
       Set<String> disabledFeaturizers = new HashSet<String>();
@@ -745,75 +750,56 @@ public class Phrasal {
           weightConfig.setCount(fields[0], Double.parseDouble(fields[1]));
         }
       }
-      weightConfig.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
+      
+      if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
+        weightConfig.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
-      weightConfig.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
+      }
+      if (config.containsKey(DISTORTION_WT_OPT)) {
+        weightConfig.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
-
-      if (config.get(DISTORTION_WT_OPT).size() > 1) {
-        int numAdditionalWts = config.get(DISTORTION_WT_OPT).size() - 1;
-        if (lexReorderFeaturizer == null) {
-          throw new RuntimeException(
-              String
-                  .format(
-                      "Additional weights given for parameter %s but no lexical reordering file was specified",
-                      DISTORTION_WT_OPT));
-        }
-        if (lexReorderFeaturizer instanceof LexicalReorderingFeaturizer) {
-          LexicalReorderingFeaturizer mosesLexReorderFeaturizer = (LexicalReorderingFeaturizer) lexReorderFeaturizer;
-          if (numAdditionalWts != mosesLexReorderFeaturizer.mlrt.positionalMapping.length) {
+      
+      
+        if (config.get(DISTORTION_WT_OPT).size() > 1) {
+          int numAdditionalWts = config.get(DISTORTION_WT_OPT).size() - 1;
+          if (lexReorderFeaturizer == null) {
             throw new RuntimeException(
                 String
                     .format(
-                        "%d re-ordering weights given with parameter %s, but %d expected",
-                        numAdditionalWts, DISTORTION_WT_OPT,
-                        mosesLexReorderFeaturizer.mlrt.positionalMapping.length));
+                        "Additional weights given for parameter %s but no lexical reordering file was specified",
+                        DISTORTION_WT_OPT));
           }
-          for (int i = 0; i < mosesLexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
-            weightConfig.setCount(mosesLexReorderFeaturizer.featureTags[i],
-                Double.parseDouble(config.get(DISTORTION_WT_OPT).get(i + 1)));
+          if (lexReorderFeaturizer instanceof LexicalReorderingFeaturizer) {
+            LexicalReorderingFeaturizer mosesLexReorderFeaturizer = (LexicalReorderingFeaturizer) lexReorderFeaturizer;
+            if (numAdditionalWts != mosesLexReorderFeaturizer.mlrt.positionalMapping.length) {
+              throw new RuntimeException(
+                  String
+                      .format(
+                          "%d re-ordering weights given with parameter %s, but %d expected",
+                          numAdditionalWts, DISTORTION_WT_OPT,
+                          mosesLexReorderFeaturizer.mlrt.positionalMapping.length));
+            }
+            for (int i = 0; i < mosesLexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
+              weightConfig.setCount(mosesLexReorderFeaturizer.featureTags[i],
+                  Double.parseDouble(config.get(DISTORTION_WT_OPT).get(i + 1)));
+            }
           }
         }
       }
-      weightConfig.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
-          Double.parseDouble(config.get(WORD_PENALTY_WT_OPT).get(0)));
+      
+      if (config.containsKey(WORD_PENALTY_WT_OPT)) {
+        weightConfig.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
+            Double.parseDouble(config.get(WORD_PENALTY_WT_OPT).get(0)));
+      }
+      
       weightConfig.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
       weightConfig.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME, 1.0);
 
-      List<String> tmodelWtsStr = config.get(TRANSLATION_MODEL_WT_OPT);
-      if (tmodelWtsStr.size() == 5) {
-        weightConfig.setCount(
-            makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_PHI_e_f), Double
-                .parseDouble(tmodelWtsStr.get(0)));
-        weightConfig.setCount(
-            makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_LEX_e_f), Double
-                .parseDouble(tmodelWtsStr.get(1)));
-        weightConfig.setCount(
-            makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_PHI_f_e), Double
-                .parseDouble(tmodelWtsStr.get(2)));
-        weightConfig.setCount(
-            makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_LEX_f_e), Double
-                .parseDouble(tmodelWtsStr.get(3)));
-        weightConfig.setCount(
-            makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.FIVESCORE_PHRASE_PENALTY), Double
-                .parseDouble(tmodelWtsStr.get(4)));
-      } else if (tmodelWtsStr.size() == 1) {
-        weightConfig.setCount(
-            makePair(PhraseTableScoresFeaturizer.PREFIX,
-                FlatPhraseTable.ONESCORE_P_t_f), Double
-                .parseDouble(tmodelWtsStr.get(0)));
-      } else {
-        throw new RuntimeException(String.format(
-            "Unsupported weight count for translation model: %d",
-            tmodelWtsStr.size()));
+      if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
+        System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
       }
     }
-
+    
     if (learnWeights = config.containsKey(LEARN_WEIGHTS_USING_REFS)
         && !config.containsKey(FORCE_DECODE_ONLY)) {
       if (config.containsKey(LEARNING_ALGORITHM)) {

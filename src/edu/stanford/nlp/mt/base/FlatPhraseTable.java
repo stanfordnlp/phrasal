@@ -13,21 +13,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  */
 public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     implements PhraseTable<IString> {
-
-  public static final String FIVESCORE_PHI_e_f = "phi(e|f)";
-  public static final String FIVESCORE_LEX_e_f = "lex(e|f)";
-  public static final String FIVESCORE_PHI_f_e = "phi(f|e)";
-  public static final String FIVESCORE_LEX_f_e = "lex(f|e)";
-  public static final String ONESCORE_P_t_f = "p(t|f)";
-  public static final String FIVESCORE_PHRASE_PENALTY = "phrasePenalty";
   
-  //  matching ordering in MosesPharoahFeatureExtractor 
-  //  line 172 return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen };
-  public static final String[] CANONICAL_FIVESCORE_SCORE_TYPES = {
-	  FIVESCORE_PHI_f_e, FIVESCORE_LEX_f_e, 
-      FIVESCORE_PHI_e_f, FIVESCORE_LEX_e_f, FIVESCORE_PHRASE_PENALTY };
-  public static final String[] CANONICAL_ONESCORE_SCORE_TYPES = { ONESCORE_P_t_f };
-
   public static final String TRIE_INDEX_PROPERTY = "TriePhraseTable";
   public static final boolean TRIE_INDEX = Boolean.parseBoolean(System
       .getProperty(TRIE_INDEX_PROPERTY, "false"));
@@ -36,39 +22,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static final String DISABLED_SCORES = System
       .getProperty(DISABLED_SCORES_PROPERTY);
 
-  public static final String CUSTOM_SCORES_PROPERTY = "customScores";
-  public static final String CUSTOM_SCORES = System
-      .getProperty(CUSTOM_SCORES_PROPERTY);
-
   static IntegerArrayIndex foreignIndex, translationIndex;
 
   static String[] customScores;
 
   final String[] scoreNames;
   String name;
-
-  static {
-    List<String> l = new ArrayList<String>();
-    // Custom score names:
-    if (CUSTOM_SCORES != null) {
-      for (String el : CUSTOM_SCORES.split(",")) {
-        if (el.equals("phi_tf")) {
-          l.add(FIVESCORE_PHI_e_f);
-        } else if (el.equals("phi_ft")) {
-          l.add(FIVESCORE_PHI_f_e);
-        } else if (el.equals("lex_tf")) {
-          l.add(FIVESCORE_LEX_e_f);
-        } else if (el.equals("lex_ft")) {
-          l.add(FIVESCORE_LEX_f_e);
-        } else if (el.equals("p_tf")) {
-          l.add(ONESCORE_P_t_f);
-        } else
-          l.add(el);
-      }
-      customScores = l.toArray(new String[l.size()]);
-    }
-    createIndex(false);
-  }
 
   // Originally, PharaohPhraseTables were backed by a nice simple
   // HashMap from a foreign sequence to a list of translations.
@@ -185,28 +144,10 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   private static String[] getScoreNames(int countScores) {
     String[] scoreNames;
-    if (customScores != null) {
-      scoreNames = customScores;
-    } else if (countScores == 5) {
-      scoreNames = CANONICAL_FIVESCORE_SCORE_TYPES;
-    } else if (countScores == 1) {
-      scoreNames = CANONICAL_ONESCORE_SCORE_TYPES;
-    } else {
-      scoreNames = new String[countScores];
-      for (int i = 0; i < countScores; i++) {
-        scoreNames[i] = String.format("%d.UnkTScore", i);
-      }
-    }
-
-    if (DISABLED_SCORES != null) {
-      System.err.println("Disabled features: " + DISABLED_SCORES);
-      for (String istr : DISABLED_SCORES.split(",")) {
-        int i = Integer.parseInt(istr);
-        if (i < scoreNames.length) {
-          System.err.printf("Feature %s disabled.\n", scoreNames[i]);
-          scoreNames[i] = null;
-        }
-      }
+    
+    scoreNames = new String[countScores];
+    for (int i = 0; i < countScores; i++) {
+        scoreNames[i] = String.format("FPT.%d", i);
     }
 
     return scoreNames;

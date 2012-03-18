@@ -47,6 +47,7 @@ public class FeaturizerFactory {
   public static final double DEFAULT_COLLAPSE_TM_WT = 1.0;
 
   static {
+    /*
     Map<String, Double> m = DEFAULT_TM_FEATURE_WEIGHTS_MAP;
     m.put(PhraseTableScoresFeaturizer.PREFIX
         + FlatPhraseTable.FIVESCORE_PHI_e_f, 0.2);
@@ -60,7 +61,7 @@ public class FeaturizerFactory {
         + FlatPhraseTable.FIVESCORE_PHRASE_PENALTY, -1.0);
     m.put(PhraseTableScoresFeaturizer.PREFIX + FlatPhraseTable.ONESCORE_P_t_f,
         4.0);
-
+  */
     DEFAULT_BASELINE_WTS = new double[] { DEFAULT_LINEAR_DISTORTION_WT,
         DEFAULT_ARPALM_WT, DEFAULT_COLLAPSE_TM_WT };
   }
@@ -228,14 +229,16 @@ public class FeaturizerFactory {
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
       // System.err.println("LM vocabulary file: "+lmVoc);
-      if (lmVoc == null || lmVoc.equals("")) {
-        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
-            LanguageModels.load(lm));
-      } else {
-        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
-            LanguageModels.load(lm, lmVoc));
+      if (lm != null) {
+        if (lmVoc == null || lmVoc.equals("")) {
+          arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
+              LanguageModels.load(lm));
+        } else {
+          arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
+              LanguageModels.load(lm, lmVoc));
+        }
+        pharaohFeaturizers.add(arpaLmFeaturizer);
       }
-      pharaohFeaturizers.add(arpaLmFeaturizer);
 
       String discriminativeLMOrderStr = paramPairs
           .get(DISCRIMINATIVE_LM_PARAMETER);
