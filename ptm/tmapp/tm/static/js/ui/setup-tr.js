@@ -30,13 +30,15 @@ $(document).ready(function(){
   tlog2.init();
 
   // Actions on form submit
-  $( 'input[name=form-tgt-submit]' ).click(function(event){
+  $( 'input[name=form-tgt-submit]' ).click(function(){
     // Disable the submit button
-    $(this).attr('disabled', true);
-    $(this).val('Please wait...');
-    
-    // Flush the user action log
-    tlog2.flushForm('action_log');
+    if (this.beenSubmitted){
+      console.log('here');
+      return false;
+    } else {
+      this.beenSubmitted = true;
+      tlog2.flushForm('action_log');
+    }
   });
 
   // Setup the idle timer
