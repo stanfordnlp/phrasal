@@ -26,9 +26,16 @@ $(document).ready(function(){
     $( _textAreaSel ).css('text-align','left');
   }
   
-  // Translog2 --- User action logging
+  // Translog2 setup
   tlog2.init();
-  $( 'input[name=form-tgt-submit]' ).click(function(){
+
+  // Actions on form submit
+  $( 'input[name=form-tgt-submit]' ).click(function(event){
+    // Disable the submit button
+    $(this).attr('disabled', true);
+    $(this).val('Please wait...');
+    
+    // Flush the user action log
     tlog2.flushForm('action_log');
   });
 
