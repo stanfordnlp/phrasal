@@ -1,9 +1,9 @@
-Hi XXX,
-Thanks for your willingness to participate in our study! Here is the website, along with your login credentials:
+Hi team,
+Thanks for your willingness to participate in our study! Here is the website:
 
-http://ptm.stanford.edu
-username:
-password:
+  http://ptm.stanford.edu
+
+I will send your login credentials in a separate odesk message sometime over the next 12 hours.
 
 A tutorial will explain the experiment to you. Read the tutorial carefully, and if you have any questions, please send me a note on odesk *before* you start the translation job.
 
@@ -16,4 +16,5 @@ Payment:
 I'll review your work during the week and make the payment this weekend.
 
 Thanks again, and feel free to contact me with *any* questions!
+
 Spence
