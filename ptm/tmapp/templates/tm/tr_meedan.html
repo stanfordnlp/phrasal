@@ -20,7 +20,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/css-popup.js"></script>
 <script>
   window.onload = function() {
-    var popup = new CssPopup("Interface B", "{{ popup_msg }}");
+    var popup = new CssPopup("Interface B", "{{ popup_msg }}<p>This is only a tutorial. You do not need to enter an actual translation.</p>");
     popup.Show();
   }
 </script>

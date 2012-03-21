@@ -119,32 +119,29 @@ def select_new_module(user):
     of the samples that the user will see.
 
     Args:
+      user -- a django.contrib.auth.models.User object
     Returns:
       next_module -- ExperimentModule.name (string)
       None -- user has completed all modules
     Raises:
     """
     user_conf = get_user_conf(user)
-    modules = user_conf.active_modules.all()
-    n_active_modules = len(modules)
-    next_module = None
-    if n_active_modules > 0:
-        # Ordering of the active modules is randomized.
-        n_idx = random.randint(0,n_active_modules-1)
-        next_module = modules[n_idx]
+    # TODO(spenceg): This is a bad dependency. Modules are presented
+    # in order of primary key. Clean this up.
+    modules = user_conf.active_modules.all().order_by('id')
+    if len(modules) > 0:
+        # Next active module is the first module in the list
+        next_module = modules[0]
         user_conf.active_modules.remove(next_module)
+        user_conf.save()
 
-    user_conf.save()
-    
-    # Now create the samples for this ExperimentModule
-    if next_module:
+        # Now create the user samples
         purged = purge_samples(user)
         if purged > 0:
-            logger.warn('Purged %d samples for user %s before starting module %s' % (purged,user.username,next_module.name))
+            logger.warn('Purged %d samples for user %s before starting module %s' % (purged, user.username, next_module.name))
                         
         docs = next_module.docs
         docs = docs.split(',')
-        random.shuffle(docs)
         i_sample = 0
         for doc in docs:
             src_list = SourceTxt.objects.filter(doc=doc).order_by('seg')

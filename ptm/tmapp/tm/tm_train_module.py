@@ -18,11 +18,12 @@ def next_training_module(user,last_module):
     modules = get_active_modules(user)
     if not modules or len(modules) == 0:
         return None
-    
+    logger.debug(str(last_module))
     if last_module:
         modules = modules.filter(id__gt=last_module.id).order_by('id')
 
     if len(modules) > 0:
+        logger.debug(str(modules[0]))
         return modules[0]
 
     return None

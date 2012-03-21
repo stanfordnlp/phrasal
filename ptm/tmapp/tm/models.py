@@ -11,7 +11,7 @@ def truncate(txt, max_len=10):
     """
     toks = txt.split()
     if len(toks) > max_len:
-        return ' '.join(toks[:10]) + ' ...'
+        return ' '.join(toks[:max_len]) + ' ...'
     else:
         return txt
 
@@ -70,6 +70,22 @@ class UISpec(models.Model):
     def __unicode__(self):
         return self.name
 
+class UIDescription(models.Model):
+    """ TODO(spenceg): Merge with UISpec. Added as an extra table to
+    minimize disruption to model. Also remove the description field from
+    experiment module, and update scripts (extra_experiments.sql)
+
+    Args:
+    Raises:
+    Returns:
+    """
+    ui = models.ForeignKey(UISpec)
+
+    description = models.TextField()
+
+    def __unicode(self):
+        return '%s: %s' % (self.ui.name, self.ui.display_name)
+    
 class ExperimentModule(models.Model):
     """ Encodes a treatment to be applied to an experimental unit. This
     table should contain all factor levels for an experiment.
@@ -90,7 +106,7 @@ class ExperimentModule(models.Model):
     description = models.TextField()
 
     def __unicode__(self):
-        return '%s: ui %s' % (self.name,self.ui.name)
+        return '%d (%s): ui %s' % (self.id, self.name, self.ui.name)
 
 class SourceDocumentSpec(models.Model):
     """ Describes characteristics of a source document. The 'name'
@@ -130,7 +146,7 @@ class SourceTxt(models.Model):
     seg = models.IntegerField()
     
     def __unicode__(self):
-        return '%s-%d: %s' % (self.doc,self.seg,truncate(self.txt))
+        return '%s-%d: %s' % (self.doc, self.seg, truncate(self.txt, 6))
 
 class ExperimentSample(models.Model):
     """ Basically a through table linking Users with samples that
@@ -146,6 +162,13 @@ class ExperimentSample(models.Model):
     order = models.IntegerField()
     module = models.ForeignKey(ExperimentModule)
 
+    def __unicode__(self):
+        return '%s: %d %s %s-%d' % (self.user.username,
+                                    self.order,
+                                    self.module.name,
+                                    self.src.doc,
+                                    self.src.seg)
+    
 class UserConf(models.Model):
     """ Contains details of an experimental subject.
 
@@ -221,8 +244,11 @@ class TargetTxt(models.Model):
     txt = models.TextField()
 
     def __unicode__(self):
-        return '%s: %s' % (str(self.date),
-                           truncate(self.txt))
+        return '%d: %s-%d (%s): %s' % (self.id,
+                                       self.src.doc,
+                                       self.src.seg,
+                                       self.lang.code,
+                                       truncate(self.txt, 4))
 
 class TranslationStats(models.Model):
     """ Metadata associated with each translation submitted by

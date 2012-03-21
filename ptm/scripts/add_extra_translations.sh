@@ -19,7 +19,7 @@ echo Loading the exp1 documents...
 # En documents
 
 # TODO(spenceg): Set this....
-tgt_seq_pk=154
+tgt_seq_pk=58
 src_seq_pk=1
 doc="$data_dir"/en/proc/training.txt
 n_lines=`wc -l "$doc" | awk '{ print $1 }'`

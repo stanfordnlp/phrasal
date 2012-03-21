@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats,UISpec
+from tm.models import SourceTxt,TargetTxt,LanguageSpec,TranslationStats,UISpec,UIDescription
 from django.db import IntegrityError
 
 logger = logging.getLogger(__name__)
@@ -19,6 +19,25 @@ def get_uispec(ui_id):
         logger.error('Could not retrieve UISpec for id: ' + str(ui_id))
         raise RuntimeError
     return uispec
+
+def get_ui_description(ui):
+    """ Gets a description for a UI.
+
+    TODO(spenceg): Deprecate when we add description to the UISpec object.
+    
+    Args:
+      ui -- A UISpec object
+    Returns:
+      desc -- (string) A description of this UI.
+    Raises:
+      RuntimeError -- on query failure
+    """
+    try:
+        ui_desc = UIDescription.objects.get(ui=ui)
+    except UIDescription.DoesNotExist:
+        logger.error('Could not retrieve description for UI: ' + ui.name)
+        raise RuntimeError
+    return ui_desc.description
 
 def get_template_for_ui(ui_id):
     """ Returns a Django template for a given UISpec
@@ -95,10 +114,15 @@ def get_suggestion(src, tgt_lang, ui_id):
     the type of suggestion is dependent on the ui
 
     Args:
+      src -- A SourceTxt object
+      tgt_lang -- A LanguageSpec object
+      ui_id -- (int) pk for a UISpec object
     Returns:
       suggest -- (string) representation of the suggestion. Possibly empty
                  if there is no machine suggestion.
     Raises:
+      RuntimeError -- if the UI is supposed to return a suggestion, but no
+                      suitable machine suggestions can be found
     """
     uispec = get_uispec(ui_id)
 
@@ -107,8 +131,8 @@ def get_suggestion(src, tgt_lang, ui_id):
         tgt = get_machine_hypothesis(src, tgt_lang)
         if tgt:
             return tgt.txt
-        else:
-            logger.error('No machine hypothesis for src: ' + str(src_id))
+        logger.error('No machine hypothesis for src id: ' + str(src.id))
+        raise RuntimeError
 
     # This interface does not show a 1-best hypothesis
     return ''

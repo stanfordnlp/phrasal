@@ -89,10 +89,11 @@ def tutorial(request, module_id):
              'css_direction':tgt_lang.css_direction}
     form = tm_forms.TranslationInputForm(initial=initial)
     src_toks = src.txt.split()
-    action = '/tm/tutorial/%d/' % (ui_id)
-
+    action = '/tm/tutorial/%d/' % (module.id)
+    ui_description = tm_view_utils.get_ui_description(module.ui)
+    
     return render_to_response(template,
-                              {'popup_msg':module.description,
+                              {'popup_msg':ui_description,
                                'header_txt':header_txt,
                                'src_css_dir':src.lang.css_direction,
                                'src_toks':src_toks,
