@@ -186,7 +186,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     if (index >= 0) { // found a match
       double p = probs[ngramInts.length - 1][index];
       if (verbose)
-        System.err.printf("scoreR: seq: %s logp: %f\n", sequence.toString(), p);
+        System.err.printf("EM: scoreR: seq: %s logp: %f\n", sequence.toString(), p);
       return p;
     }
     if (ngramInts.length == 1) {
@@ -213,14 +213,14 @@ public class ARPALanguageModel implements LanguageModel<IString> {
    * only useful if the translation hypothesis contains explicit <s> and </s>,
    * and always returns false otherwise.
    */
-  boolean isBoundaryWord(Sequence<IString> sequence) {
-    if (sequence.size() == 2 && sequence.get(0).equals(getStartToken())
-        && sequence.get(1).equals(getStartToken())) {
+  static boolean isBoundaryWord(Sequence<IString> sequence) {
+    if (sequence.size() == 2 && sequence.get(0).equals(START_TOKEN)
+        && sequence.get(1).equals(START_TOKEN)) {
       return true;
     }
     if (sequence.size() > 1) {
       int last = sequence.size() - 1;
-      IString endTok = getEndToken();
+      IString endTok = END_TOKEN;
       if (sequence.get(last).equals(endTok)
           && sequence.get(last - 1).equals(endTok)) {
         return true;

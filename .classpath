@@ -43,5 +43,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
 	<classpathentry kind="lib" path="lib/berkeleyaligner.jar"/>
+	<classpathentry kind="lib" path="lib/JDBM-3.0-alpha2.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

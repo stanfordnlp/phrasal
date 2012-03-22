@@ -49,7 +49,9 @@ public class LanguageModels {
   
     boolean useSRILM = true;
     LanguageModel<IString> alm;
-    if (filename.startsWith(BERKELEY_LM_TAG)) {
+    if (filename.endsWith(".disklm")) { 
+      return new DiskLM(filename);
+    } else if (filename.startsWith(BERKELEY_LM_TAG)) {
      String realFilename = filename.substring(BERKELEY_LM_TAG.length());
      try {
        @SuppressWarnings("unchecked")
