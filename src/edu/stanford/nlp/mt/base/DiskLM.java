@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.base;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -8,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.BitSet;
@@ -26,11 +24,29 @@ public class DiskLM implements LanguageModel<IString> {
   //protected final Map<String, ProbBowPair> ngramProbBows;
   protected final RandomAccessFile lmfh;
   protected final long entries;
+  protected final int buckets;
   protected final int order;
   static public final boolean verbose = false;
     
-  protected final BitSet usedPositions;
+  protected final BitSet[] usedPositions;
+  MappedByteBuffer[] tablebb;
+  MappedByteBuffer[] symbolbb;
+  final float[] prob;
+  @SuppressWarnings("rawtypes")
+  final Sequence[] entry;
+  
+  long calls = 0;
+  long hits = 0;
+  long lineHits = 0;
+  
+  
   public static final long MAGIC_NUMBER = 0xDA11CE4111L;
+  
+  public static final int ENTRY_SIZE = 24;
+  public static final int HEADER_SIZE = 24;
+  public static final int ENTRIES_PER_BUCKET = Integer.MAX_VALUE/ENTRY_SIZE;
+  public static final double CACHE_FRACTION = 0.10;
+  public static final int MAX_CACHE_SIZE    = 100000; // 100,000 n-grams 
   
   // Header: 
   //   magic number (long)  (8)
@@ -59,31 +75,69 @@ public class DiskLM implements LanguageModel<IString> {
     if (version != 1) throw new RuntimeException(String.format("Unknown version: %d != 1\n", version));
     order = lmfh.readInt();
     entries = lmfh.readLong();
-
-    usedPositions = new BitSet((int)entries); // todo - this will break on LMs with more than 2 billion entries
+    int cachePositions = (int)(entries * CACHE_FRACTION);
+    if (cachePositions > MAX_CACHE_SIZE) cachePositions = MAX_CACHE_SIZE;
+    
+    prob = new float[cachePositions];
+    entry = new Sequence[cachePositions];
+    
+    // each bucket describes no more than Integer.MAX_VALUE / ENTRY_SIZE entries
+    buckets = (int)(entries/ENTRIES_PER_BUCKET)+1;
+    usedPositions = new BitSet[buckets];
+    tablebb = new MappedByteBuffer[buckets];
+    FileChannel fc = lmfh.getChannel();
+    for (int i = 0; i < usedPositions.length; i++) {
+      if (i + 1 < usedPositions.length) {
+        usedPositions[i] = new BitSet(ENTRIES_PER_BUCKET);
+        tablebb[i] = fc.map(FileChannel.MapMode.READ_ONLY, HEADER_SIZE + i * Integer.MAX_VALUE, Integer.MAX_VALUE);
+      } else {
+        int lastBucketPositions = (int)(entries - (buckets-1L)*ENTRIES_PER_BUCKET);
+        usedPositions[i] = new BitSet(lastBucketPositions);
+        tablebb[i] = fc.map(FileChannel.MapMode.READ_ONLY, HEADER_SIZE  + i * Integer.MAX_VALUE, lastBucketPositions * ENTRY_SIZE);
+      }
+    }
+    
+    long symbolTableStart = HEADER_SIZE + entries * ENTRY_SIZE;
+    long symbolTableSize = lmfh.length() - symbolTableStart;
+    
+    symbolbb = new MappedByteBuffer[1+(int)(symbolTableSize/Integer.MAX_VALUE)];
+    for (int i = 0; i < symbolbb.length; i++) {
+      if (i + 1 < symbolbb.length) {
+        symbolbb[i] = fc.map(FileChannel.MapMode.READ_ONLY, symbolTableStart + i * Integer.MAX_VALUE, Integer.MAX_VALUE);
+      } else {
+        symbolbb[i] = fc.map(FileChannel.MapMode.READ_ONLY, symbolTableStart + i * Integer.MAX_VALUE, 
+            lmfh.length() - symbolTableStart - (i*1L)*Integer.MAX_VALUE);
+      }
+    }
+    
     this.name = String.format("DiskLM(%s)", filename);
     
     System.err.printf("Initializing %s\n", filename);
-    long setPositions = 0;
-    FileChannel fc = lmfh.getChannel();
-    tablebb = fc.map(FileChannel.MapMode.READ_ONLY, 24, 24*entries);
     
-    for (int i = 0; i < entries; i++) {
+    long setPositions = 0;
+    for (long i = 0; i < entries; i++) {
       //lmfh.seek(24L*i + 24);
       //long extendedHashCode = lmfh.readLong();
-      tablebb.position(24*i);
-      long extendedHashCode = tablebb.getLong();
+      long entryPos = i * ENTRY_SIZE;
+      int bucket = getBucket(entryPos);
+      int bucketPos = getBucketPos(entryPos);
+      tablebb[bucket].position(bucketPos);
+      long extendedHashCode = tablebb[bucket].getLong();
       if (extendedHashCode > 0) {
-        usedPositions.set(i);
+        usedPositions[bucket].set((int)(i % ENTRIES_PER_BUCKET));
         setPositions++;
       }
     }
-    symbolbb = fc.map(FileChannel.MapMode.READ_ONLY, 24+24*entries, lmfh.length()-(24+24*entries));
     System.err.printf("Done (%s, non-zero entries: %d).\n", filename, setPositions);
   }
   
-  MappedByteBuffer tablebb;
-  MappedByteBuffer symbolbb;
+  private final int getBucket(long pos) {
+    return (int)(pos>>31);
+  }
+  
+  private final int getBucketPos(long pos) {
+    return (int)(pos & (long)Integer.MAX_VALUE);
+  }
   
   @Override
   public IString getStartToken() {
@@ -116,12 +170,6 @@ public class DiskLM implements LanguageModel<IString> {
     return (hashCode >= 0 ? hashCode : -hashCode);
   }
   
-  float[] prob = new float[1<<25];
-  String[] entry = new String[1<<25];
-  
-  long calls = 0;
-  long hits = 0;
-  long lineHits = 0;
   
   @Override
   synchronized public double score(Sequence<IString> sequence) {
@@ -137,26 +185,28 @@ public class DiskLM implements LanguageModel<IString> {
       ngramSeq = sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
     }
 
-    String ngram = ngramSeq.toString(" ");
-    if (calls % 10000 == 0) {
-      System.err.printf("Calls %d Hits: %d Frac: %f Line Hits: %d Frac: %f\n", calls, hits, hits*1.0/calls, lineHits, lineHits*1.0/calls);
+    if (verbose) {
+      if (calls % 10000 == 0)
+          System.err.printf("Calls %d Hits: %d Frac: %f Line Hits: %d Frac: %f\n", 
+              calls, hits, hits*1.0/calls, lineHits, lineHits*1.0/calls);
     }
     calls++;
     
-    int h = ngram.hashCode();
+    int h = ngramSeq.hashCode();
     int pos = h % prob.length;
     if (pos < 0) pos = -pos;
     if (entry[pos] != null) {
       lineHits++;
     }
-    if (ngram.equals(entry[pos])) {
+    if (ngramSeq.equals(entry[pos])) {
       //System.err.println("cache hit!");
       hits++;
       return prob[pos];
     }
-     
+    
+    String ngram = ngramSeq.toString(" ");
     float score = scoreR(ngram);
-    entry[pos] = ngram;
+    entry[pos] = new RawSequence<IString>(ngramSeq);
     prob[pos] = score;
     
     if (verbose)
@@ -186,30 +236,36 @@ public class DiskLM implements LanguageModel<IString> {
     long startIdx = extendedHashCode % entries;
     
     for (long i = 0; i < entries; i++) {
-       long checkPosition = (i+startIdx) % entries;
-       if (!usedPositions.get((int)checkPosition)) return null;
-       tablebb.position((int)checkPosition * 24);
-       long entryHash = tablebb.getLong();
+       long checkIndex = (i+startIdx) % entries;
+       long checkPosition = checkIndex*ENTRY_SIZE;
+       int bucket = getBucket(checkPosition);
+       int bucketPos = getBucketPos(checkPosition);
+       if (!usedPositions[bucket].get((int)(checkIndex % ENTRIES_PER_BUCKET))) return null;
+       tablebb[bucket].position(bucketPos);
+       long entryHash = tablebb[bucket].getLong();
        
        if (entryHash == 0) throw new RuntimeException();
        if (entryHash != extendedHashCode) continue;
        
        if (verbose) {
-         System.err.printf("hash entry(%b:%s): %s (%s)\n", usedPositions.get((int)checkPosition), checkPosition, entryHash, extendedHashCode);
+         System.err.printf("hash entry(%b:%s): %s (%s)\n", 
+             usedPositions[bucket].get((int)(checkIndex / ENTRIES_PER_BUCKET)), checkPosition, entryHash, extendedHashCode);
        }
-       long symbolPosition = tablebb.getLong();
+       long symbolPosition = tablebb[bucket].getLong();
        
-       float prob = tablebb.getFloat();
-       float bow  = tablebb.getFloat();
+       float prob = tablebb[bucket].getFloat();
+       float bow  = tablebb[bucket].getFloat();
        
        if (verbose) {
          System.err.printf("symbol pos: %d\n", symbolPosition);
        }
        // lmfh.seek(symbolPosition);
-       symbolbb.position((int)(symbolPosition - (24*entries+24)));
-       int bsize = symbolbb.getShort();
+       long relSymPosition = symbolPosition - HEADER_SIZE - ENTRY_SIZE*entries;
+       int symbolBucket = getBucket(relSymPosition);
+       symbolbb[symbolBucket].position(getBucketPos(relSymPosition));
+       int bsize = symbolbb[symbolBucket].getShort();
        byte[] bytes = new byte[bsize];
-       symbolbb.get(bytes);
+       symbolbb[symbolBucket].get(bytes);
        String s = new String(bytes);
        if (verbose) {
          System.err.printf("found %s  (%s)", s, entry);
