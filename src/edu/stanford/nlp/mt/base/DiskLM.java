@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -7,7 +8,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.RandomAccessFile;
-import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,9 +41,9 @@ public class DiskLM implements LanguageModel<IString> {
   // Array of []
   //    extended hashCode  : long  (8)
   //    ptrSymbol : long (8)
-  //   float : prob     (4)
-  //   float : bow      (4)
-  //                    24
+  //    float : prob     (4)
+  //    float : bow      (4)
+  //                     24
   // Symbols
   //
   // UTF-8 encoded strings
@@ -62,17 +65,25 @@ public class DiskLM implements LanguageModel<IString> {
     
     System.err.printf("Initializing %s\n", filename);
     long setPositions = 0;
+    FileChannel fc = lmfh.getChannel();
+    tablebb = fc.map(FileChannel.MapMode.READ_ONLY, 24, 24*entries);
+    
     for (int i = 0; i < entries; i++) {
-      lmfh.seek(24L*i + 24);
-      long extendedHashCode = lmfh.readLong();
+      //lmfh.seek(24L*i + 24);
+      //long extendedHashCode = lmfh.readLong();
+      tablebb.position(24*i);
+      long extendedHashCode = tablebb.getLong();
       if (extendedHashCode > 0) {
         usedPositions.set(i);
         setPositions++;
       }
     }
-
+    symbolbb = fc.map(FileChannel.MapMode.READ_ONLY, 24+24*entries, lmfh.length()-(24+24*entries));
     System.err.printf("Done (%s, non-zero entries: %d).\n", filename, setPositions);
   }
+  
+  MappedByteBuffer tablebb;
+  MappedByteBuffer symbolbb;
   
   @Override
   public IString getStartToken() {
@@ -105,8 +116,15 @@ public class DiskLM implements LanguageModel<IString> {
     return (hashCode >= 0 ? hashCode : -hashCode);
   }
   
+  float[] prob = new float[1<<25];
+  String[] entry = new String[1<<25];
+  
+  long calls = 0;
+  long hits = 0;
+  long lineHits = 0;
+  
   @Override
-  public double score(Sequence<IString> sequence) {
+  synchronized public double score(Sequence<IString> sequence) {
     if (ARPALanguageModel.isBoundaryWord(sequence))
       return 0.0;
     Sequence<IString> ngramSeq;
@@ -119,13 +137,34 @@ public class DiskLM implements LanguageModel<IString> {
       ngramSeq = sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
     }
 
-    double score = scoreR(ngramSeq.toString(" "));
+    String ngram = ngramSeq.toString(" ");
+    if (calls % 10000 == 0) {
+      System.err.printf("Calls %d Hits: %d Frac: %f Line Hits: %d Frac: %f\n", calls, hits, hits*1.0/calls, lineHits, lineHits*1.0/calls);
+    }
+    calls++;
+    
+    int h = ngram.hashCode();
+    int pos = h % prob.length;
+    if (pos < 0) pos = -pos;
+    if (entry[pos] != null) {
+      lineHits++;
+    }
+    if (ngram.equals(entry[pos])) {
+      //System.err.println("cache hit!");
+      hits++;
+      return prob[pos];
+    }
+     
+    float score = scoreR(ngram);
+    entry[pos] = ngram;
+    prob[pos] = score;
+    
     if (verbose)
       System.err.printf("score: seq: %s logp: %f [%f]\n", sequence.toString(),
           score, score / Math.log(10));
     return score;
   }
-
+  
   public static long getPutPosition(RandomAccessFile rfh, String entry, long entries) throws IOException {
     long extendedHashCode = extendedHashCode(entry);
     long startIdx = extendedHashCode % entries;
@@ -140,7 +179,8 @@ public class DiskLM implements LanguageModel<IString> {
     return -1;
   }
   
-  synchronized public ProbBowPair getProbBow(String entry)  {
+  
+  public ProbBowPair getProbBow(String entry)  {
     try {
     long extendedHashCode = extendedHashCode(entry);
     long startIdx = extendedHashCode % entries;
@@ -148,8 +188,8 @@ public class DiskLM implements LanguageModel<IString> {
     for (long i = 0; i < entries; i++) {
        long checkPosition = (i+startIdx) % entries;
        if (!usedPositions.get((int)checkPosition)) return null;
-       lmfh.seek(24*checkPosition+24);
-       long entryHash = lmfh.readLong();
+       tablebb.position((int)checkPosition * 24);
+       long entryHash = tablebb.getLong();
        
        if (entryHash == 0) throw new RuntimeException();
        if (entryHash != extendedHashCode) continue;
@@ -157,16 +197,20 @@ public class DiskLM implements LanguageModel<IString> {
        if (verbose) {
          System.err.printf("hash entry(%b:%s): %s (%s)\n", usedPositions.get((int)checkPosition), checkPosition, entryHash, extendedHashCode);
        }
-       long symbolPosition = lmfh.readLong();
+       long symbolPosition = tablebb.getLong();
        
-       float prob = lmfh.readFloat();
-       float bow = lmfh.readFloat();
+       float prob = tablebb.getFloat();
+       float bow  = tablebb.getFloat();
        
        if (verbose) {
          System.err.printf("symbol pos: %d\n", symbolPosition);
        }
-       lmfh.seek(symbolPosition);
-       String s = lmfh.readUTF();
+       // lmfh.seek(symbolPosition);
+       symbolbb.position((int)(symbolPosition - (24*entries+24)));
+       int bsize = symbolbb.getShort();
+       byte[] bytes = new byte[bsize];
+       symbolbb.get(bytes);
+       String s = new String(bytes);
        if (verbose) {
          System.err.printf("found %s  (%s)", s, entry);
        }
@@ -175,7 +219,7 @@ public class DiskLM implements LanguageModel<IString> {
        }
     }
     return null;
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
@@ -192,7 +236,7 @@ public class DiskLM implements LanguageModel<IString> {
    * p(wd2|wd1)= if(bigram exists) p_2(wd1,wd2) else bo_wt_1(wd1)*p_1(wd2)
    * 
    */
-  protected double scoreR(String ngram) {
+  protected float scoreR(String ngram) {
     if (verbose) {
       System.err.printf("Looking up %s\n", ngram);
     }
@@ -207,7 +251,7 @@ public class DiskLM implements LanguageModel<IString> {
     
     int nxtSpace = ngram.indexOf(" ");
     if (nxtSpace < 0) {
-      return Double.NEGATIVE_INFINITY; // OOV
+      return Float.NEGATIVE_INFINITY; // OOV
     }
     int rnxtSpace = ngram.lastIndexOf(" ");
     String prefix = ngram.substring(0, rnxtSpace);
@@ -225,7 +269,7 @@ public class DiskLM implements LanguageModel<IString> {
       System.err.printf("scoreR: seq: %s logp: %f [%f] bow: %f\n",
          ngram, p, p / Math.log(10), bow);
   
-    return p;
+    return (float)p;
   }
   
   @Override
