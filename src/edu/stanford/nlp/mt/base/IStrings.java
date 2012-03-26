@@ -15,6 +15,12 @@ public class IStrings {
     super();
   }
 
+  static public Sequence<IString> splitToIStrings(String str) {
+    String[] strings = str.split("\\s+");
+    IString[] istrs = toIStringArray(strings);
+    return new RawIStringSequence(istrs);
+  }
+  
   static public IString[] toIStringArray(String[] strings) {
     IString[] istrs = new IString[strings.length];
     for (int i = 0; i < istrs.length; i++) {

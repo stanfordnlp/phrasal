@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.base;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 
