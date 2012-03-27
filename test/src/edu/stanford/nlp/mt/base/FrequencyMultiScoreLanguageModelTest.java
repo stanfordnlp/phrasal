@@ -36,9 +36,9 @@ public class FrequencyMultiScoreLanguageModelTest {
   public void testMassiveLMCreation()  {
     Set<Pair<String, Long>> ngrams = new TreeSet<Pair<String,Long>>();
     ngrams.add(new Pair<String,Long>("This is the test", 1L));
-    ngrams.add(new Pair<String,Long>("is the test", 10L));
-    ngrams.add(new Pair<String,Long>("the test", 100L));
-    ngrams.add(new Pair<String,Long>("test", 1000L));
+    ngrams.add(new Pair<String,Long>("is the test",     10L));
+    ngrams.add(new Pair<String,Long>("the test",       100L));
+    ngrams.add(new Pair<String,Long>("test",          1000L));
     
     FrequencyMultiScoreLanguageModel fmslm = new FrequencyMultiScoreLanguageModel("test lm", 
         1<<36, 10, 4, ngrams);

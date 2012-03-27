@@ -17,6 +17,7 @@ public class NGramLanguageModelFeaturizer<TK> implements
   public static final String FEATURE_NAME = "LM";
   public static final String DEBUG_PROPERTY = "ngramLMFeaturizerDebug";
   final String featureName;
+  final String[][] featureNames;
   final String featureNameWithColen;
   final boolean ngramReweighting;
   final boolean lengthNorm;
@@ -50,6 +51,13 @@ public class NGramLanguageModelFeaturizer<TK> implements
     this.ngramReweighting = false;
     this.lmOrder = lm.order();
     this.lengthNorm = false;
+    featureNames = new String[2][];
+    featureNames[0] = new String[lmOrder];
+    featureNames[1] = new String[lmOrder];
+    for (int i = 0; i < lmOrder; i++) {
+      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
+      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
+    }
   }
 
   /**
@@ -67,6 +75,13 @@ public class NGramLanguageModelFeaturizer<TK> implements
     this.ngramReweighting = ngramReweighting;
     this.lmOrder = lm.order();
     this.lengthNorm = false;
+    featureNames = new String[2][];
+    featureNames[0] = new String[lmOrder];
+    featureNames[1] = new String[lmOrder];
+    for (int i = 0; i < lmOrder; i++) {
+      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
+      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
+    }
   }
 
   /**
@@ -83,6 +98,13 @@ public class NGramLanguageModelFeaturizer<TK> implements
     }
     featureNameWithColen = featureName + ":";
     this.lengthNorm = false;
+    featureNames = new String[2][];
+    featureNames[0] = new String[lmOrder];
+    featureNames[1] = new String[lmOrder];
+    for (int i = 0; i < lmOrder; i++) {
+      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
+      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
+    }
   }
 
   /**
@@ -99,17 +121,24 @@ public class NGramLanguageModelFeaturizer<TK> implements
     this.ngramReweighting = false;
     if (args.length == 3) {
       if (args[2].equals("true") || args[2].equals("false")) {
-        this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
+        this.lm = (LanguageModel<TK>) LanguageModels.load(args[0]);
         this.lengthNorm = Boolean.parseBoolean(args[2]);
       } else {
         this.lm = (LanguageModel<TK>) LanguageModels.load(args[0], args[2]);
         this.lengthNorm = false;
       }
     } else {
-      this.lm = (LanguageModel<TK>) ARPALanguageModel.load(args[0]);
+      this.lm = (LanguageModel<TK>) LanguageModels.load(args[0]);
       this.lengthNorm = false;
     }
     this.lmOrder = lm.order();
+    featureNames = new String[2][];
+    featureNames[0] = new String[lmOrder];
+    featureNames[1] = new String[lmOrder];
+    for (int i = 0; i < lmOrder; i++) {
+      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
+      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
+    }
   }
 
   /**
@@ -118,9 +147,10 @@ public class NGramLanguageModelFeaturizer<TK> implements
 	 */
   @Override
   public FeatureValue<String> featurize(Featurizable<TK, String> featurizable) {
-    if (ngramReweighting)
+    if (ngramReweighting || lm instanceof MultiScoreLanguageModel) {
       return null;
-
+    }
+    
     if (DEBUG) {
       System.out.printf("Sequence: %s\n\tNovel Phrase: %s\n",
           featurizable.partialTranslation, featurizable.translatedPhrase);
@@ -170,6 +200,30 @@ public class NGramLanguageModelFeaturizer<TK> implements
     }
   }
 
+  private double[][] getMultiScore(int startPos, int limit, Sequence<TK> translation) {
+    double[][] multiScore;
+    int order = lmOrder;
+    MultiScoreLanguageModel<TK> mlm = (MultiScoreLanguageModel<TK>)lm;
+    multiScore = new double[2][];
+    multiScore[0] = new double[order];
+    multiScore[1] = new double[order];
+    
+    for (int pos = startPos; pos < limit; pos++) {
+      int seqStart = pos - order + 1;
+      if (seqStart < 0)
+        seqStart = 0;
+      Sequence<TK> ngram = translation.subsequence(seqStart, pos + 1);
+      double[] ngramScore = mlm.multiScore(ngram);
+      for (int i = 0; i < order; i++)  {
+        if (ngramScore[i] == Double.NEGATIVE_INFINITY) {
+          multiScore[1][i] ++;
+        } else {
+          multiScore[0][i] += ngramScore[i];
+        }
+      }
+    }
+    return multiScore;
+  }
   /**
 	 * 
 	 */
@@ -197,24 +251,47 @@ public class NGramLanguageModelFeaturizer<TK> implements
 
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<TK, String> f) {
-    if (!ngramReweighting)
-      return null;
+    if (ngramReweighting) {
+      TK startToken = lm.getStartToken();
+      TK endToken = lm.getEndToken();
+  
+      Sequence<TK> partialTranslation;
+      int startPos = f.translationPosition + 1;
+      if (f.done) {
+        partialTranslation = new InsertedStartEndToken<TK>(f.partialTranslation,
+            startToken, endToken);
+      } else {
+        partialTranslation = new InsertedStartToken<TK>(f.partialTranslation,
+            startToken);
+      }
+      int limit = partialTranslation.size();
+      return getFeatureList(startPos, limit, partialTranslation);
+    } else if (lm instanceof MultiScoreLanguageModel) {
+      TK startToken = lm.getStartToken();
+      TK endToken = lm.getEndToken();
 
-    TK startToken = lm.getStartToken();
-    TK endToken = lm.getEndToken();
+      Sequence<TK> partialTranslation;
+      int startPos = f.translationPosition + 1;
+      if (f.done) {
+        partialTranslation = new InsertedStartEndToken<TK>(
+            f.partialTranslation, startToken, endToken);
+      } else {
+        partialTranslation = new InsertedStartToken<TK>(
+            f.partialTranslation, startToken);
+      }
+      int limit = partialTranslation.size();
 
-    Sequence<TK> partialTranslation;
-    int startPos = f.translationPosition + 1;
-    if (f.done) {
-      partialTranslation = new InsertedStartEndToken<TK>(f.partialTranslation,
-          startToken, endToken);
+      double[][] lmScore = getMultiScore(startPos, limit, partialTranslation);
+      List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>(
+          2*lmOrder);
+      for (int i = 0; i < lmOrder; i++) {
+        feats.add(new FeatureValue<String>(featureNames[0][i], lmScore[0][i]));
+        feats.add(new FeatureValue<String>(featureNames[1][i], lmScore[1][i]));
+      }
+      return feats;
     } else {
-      partialTranslation = new InsertedStartToken<TK>(f.partialTranslation,
-          startToken);
+      return null;
     }
-    int limit = partialTranslation.size();
-
-    return getFeatureList(startPos, limit, partialTranslation);
   }
 
   /**
@@ -252,9 +329,10 @@ public class NGramLanguageModelFeaturizer<TK> implements
 
   @Override
   public FeatureValue<String> phraseFeaturize(Featurizable<TK, String> f) {
-    if (ngramReweighting)
+    if (ngramReweighting || (lm instanceof MultiScoreLanguageModel)) {
       return null;
-
+    }
+    
     assert (f.translatedPhrase != null);
     double lmScore = getScore(0, f.translatedPhrase.size(), f.translatedPhrase);
     if (SVMNORM) {
@@ -270,9 +348,21 @@ public class NGramLanguageModelFeaturizer<TK> implements
   @Override
   public List<FeatureValue<String>> phraseListFeaturize(
       Featurizable<TK, String> f) {
-    if (!ngramReweighting)
+    if (ngramReweighting) {
+      return getFeatureList(0, f.translatedPhrase.size(), f.translatedPhrase);
+    } else if (lm instanceof MultiScoreLanguageModel) {
+      int limit = f.translatedPhrase.size();
+      double[][] lmScore = getMultiScore(0, limit, f.translatedPhrase);
+      List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>(
+          2*lmOrder);
+      for (int i = 0; i < lmOrder; i++) {
+        feats.add(new FeatureValue<String>(featureNames[0][i], lmScore[0][i]));
+        feats.add(new FeatureValue<String>(featureNames[1][i], lmScore[1][i]));
+      }
+      return feats;
+    } else {
       return null;
-    return getFeatureList(0, f.translatedPhrase.size(), f.translatedPhrase);
+    }
   }
 
   @Override

@@ -48,7 +48,10 @@ public class LanguageModels {
   
     boolean useSRILM = true;
     LanguageModel<IString> alm;
-    if (filename.endsWith(".disklm")) { 
+    
+    if (filename.endsWith("bloomlm")) {
+      return FrequencyMultiScoreLanguageModel.load(filename);
+    } else if (filename.endsWith(".disklm")) {
       return new DiskLM(filename);
     } else if (filename.startsWith(BERKELEY_LM_TAG)) {
      String realFilename = filename.substring(BERKELEY_LM_TAG.length());
