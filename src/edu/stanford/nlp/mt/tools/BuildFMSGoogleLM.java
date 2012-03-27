@@ -29,8 +29,7 @@ import edu.stanford.nlp.util.Pair;
  */
 public class BuildFMSGoogleLM {
    static public final String GoogleLMNamePrefix = "GLM";
-   
-   @SuppressWarnings("unused") 
+    
    public static void main(String[] args) throws IOException {
       if (args.length != 4 && args.length != 5) {
          System.err.println("Usage:\n\tjava ...BuildFMSGoogleLM (Corpus Directory) (Order) (logBase) (save-to) [sampling]");
@@ -53,28 +52,34 @@ public class BuildFMSGoogleLM {
       }
       
       List<String> files = new LinkedList<String>();
-      files.add(corpusPath + File.separator + "1gms" + File.separator + "vocab");
-      for (int i = 2; i <= order; i++) {
-        File dir = new File(corpusPath + File.separator + i +"gms");
-        for (String file : dir.list()) {
-          if (file.startsWith(String.format("%dgm-", i))) {
-            files.add(dir.getAbsolutePath() + File.separator + file);
+      if (corpusPath.startsWith("FILE:")) {
+        files.add(corpusPath.substring("FILE:".length()));  
+      } else {
+        files.add(corpusPath + File.separator + "1gms" + File.separator + "vocab");
+        for (int i = 2; i <= order; i++) {
+          File dir = new File(corpusPath + File.separator + i +"gms");
+          for (String file : dir.list()) {
+            if (file.startsWith(String.format("%dgm-", i))) {
+              files.add(dir.getAbsolutePath() + File.separator + file);
+            }
           }
         }
-      }
-      
+      }      
       String name = String.format("%s.%d.%e.s=%e", GoogleLMNamePrefix, order, logBase, sampling);
       long expectedInstances = 0;
       
       System.err.printf("Counting types at sampling level %e", sampling);
+      long freqSum = 0; 
       for (Pair<String,Long> ngram : new FileListNgramCounts(files, true,  sampling)) {
         expectedInstances++;
+        freqSum += ngram.second;
       }
-      
-      System.err.printf("\nTypes found: %d\n", expectedInstances);
-      
+      double avgFreq = freqSum/expectedInstances;
+      System.err.printf("\nTypes found: %d Total Freq: %d AvgFreq: %.2f\n", expectedInstances, freqSum, avgFreq);
+      long insertEstimate = (long)(expectedInstances*Math.log(avgFreq)/Math.log(logBase));
+      System.err.printf("Insert Estimate: %d (%d * %.3f / %.3f)\n", insertEstimate, expectedInstances, Math.log(avgFreq), Math.log(logBase));
       FrequencyMultiScoreLanguageModel fmslm = new 
-          FrequencyMultiScoreLanguageModel(name, expectedInstances, (int) logBase, order, 
+          FrequencyMultiScoreLanguageModel(name, insertEstimate, (int) logBase, order, 
              new FileListNgramCounts(files, true,  sampling));
       
       fmslm.save(saveTo);
