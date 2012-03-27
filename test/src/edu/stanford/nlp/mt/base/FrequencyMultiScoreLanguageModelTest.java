@@ -31,4 +31,24 @@ public class FrequencyMultiScoreLanguageModelTest {
       assertEquals(expectedLog10[i]*Math.log(10), actual[i], Double.MIN_NORMAL);
     }
   }
+  
+  @Test
+  public void testMassiveLMCreation()  {
+    Set<Pair<String, Long>> ngrams = new TreeSet<Pair<String,Long>>();
+    ngrams.add(new Pair<String,Long>("This is the test", 1L));
+    ngrams.add(new Pair<String,Long>("is the test", 10L));
+    ngrams.add(new Pair<String,Long>("the test", 100L));
+    ngrams.add(new Pair<String,Long>("test", 1000L));
+    
+    FrequencyMultiScoreLanguageModel fmslm = new FrequencyMultiScoreLanguageModel("test lm", 
+        1<<36, 10, 4, ngrams);
+    
+    double[] expectedLog10 = new double[]{3,2,1,0};
+    double[] actual = fmslm.multiScore(IStrings.splitToIStrings("This is the test"));
+    System.err.println(Arrays.toString(expectedLog10));
+    System.err.println(Arrays.toString(actual));
+    for (int i = 0; i < actual.length; i++) {
+      assertEquals(expectedLog10[i]*Math.log(10), actual[i], Double.MIN_NORMAL);
+    }
+  }
 }

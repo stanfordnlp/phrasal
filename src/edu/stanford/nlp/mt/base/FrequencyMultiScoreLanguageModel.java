@@ -5,8 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-import com.google.common.hash.BloomFilter;
+import edu.stanford.nlp.mt.misc.BloomFilter;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.Sink;
 
@@ -21,9 +22,12 @@ import edu.stanford.nlp.util.Pair;
  *
  * @param <T>
  */
-public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel<IString> {
+public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel<IString>, Serializable {
+   
+    private static final long serialVersionUID = 1L;
+    
     final BloomFilter<Pair<String,Integer>> bloomFilter;
-    final int logBase;
+    final double logBase;
     final int order;
    
     public static final boolean VERBOSE = false;
@@ -67,8 +71,8 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
       return Integer.MAX_VALUE;
     }
     
-    public FrequencyMultiScoreLanguageModel(String name, int expectedInstances, int logBase, int order, Iterable<Pair<String,Long>> ngrams) {
-      bloomFilter = BloomFilter.create(new StringIntegerPairFunnel(), expectedInstances);
+    public FrequencyMultiScoreLanguageModel(String name, long expectedInstances, double logBase, int order, Iterable<Pair<String,Long>> ngrams) {
+      bloomFilter = BloomFilter.create(new StringIntegerPairFunnel(), (int)expectedInstances);
       this.logBase = logBase;
       this.order = order;
       this.name = name;
@@ -149,11 +153,12 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
     
 }
 
-class StringIntegerPairFunnel implements Funnel<Pair<String,Integer>> {
+class StringIntegerPairFunnel implements Funnel<Pair<String,Integer>>, Serializable {
+
+  private static final long serialVersionUID = 1L;
 
   @Override
   public void funnel(Pair<String, Integer> from, Sink into) {
-    // TODO Auto-generated method stub
     into.putString(from.first);
     into.putInt(from.second);
   }
