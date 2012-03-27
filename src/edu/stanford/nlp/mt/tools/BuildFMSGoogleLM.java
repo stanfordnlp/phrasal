@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,9 +69,11 @@ public class BuildFMSGoogleLM {
       String name = String.format("%s.%d.%e.s=%e", GoogleLMNamePrefix, order, logBase, sampling);
       long expectedInstances = 0;
       
+      List<String> sortedFiles = new ArrayList<String>(files);
+      Collections.sort(sortedFiles);
       System.err.printf("Counting types at sampling level %e", sampling);
       long freqSum = 0; 
-      for (Pair<String,Long> ngram : new FileListNgramCounts(files, true,  sampling)) {
+      for (Pair<String,Long> ngram : new FileListNgramCounts(sortedFiles, true,  sampling)) {
         expectedInstances++;
         freqSum += ngram.second;
       }
@@ -80,7 +83,7 @@ public class BuildFMSGoogleLM {
       System.err.printf("Insert Estimate: %d (%d * %.3f / %.3f)\n", insertEstimate, expectedInstances, Math.log(avgFreq), Math.log(logBase));
       FrequencyMultiScoreLanguageModel fmslm = new 
           FrequencyMultiScoreLanguageModel(name, insertEstimate, (int) logBase, order, 
-             new FileListNgramCounts(files, true,  sampling));
+             new FileListNgramCounts(sortedFiles, true,  sampling));
       
       fmslm.save(saveTo);
    }
