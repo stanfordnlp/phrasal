@@ -208,7 +208,7 @@ public final class BloomFilter<T> implements Serializable {
   public static <T> BloomFilter<T> create(Funnel<T> funnel, long expectedInsertions /* n */,
       double falsePositiveProbability) {
     checkNotNull(funnel);
-    checkArgument(expectedInsertions > 0, "Expected insertions must be positive");
+    checkArgument(expectedInsertions > 0, String.format("Expected insertions must be positive (expectedInsertions: %d)", expectedInsertions));
     checkArgument(falsePositiveProbability > 0.0 & falsePositiveProbability < 1.0,
         "False positive probability in (0.0, 1.0)");
     /*
