@@ -33,15 +33,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -88,7 +84,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   final int maxDistortion;
   final int numProcs;
 
-  private static final String dagParser = "/scr/heeyoung/mt/scr61/DAGparserModel.ser";
   public static final boolean DO_PARSE = true;
 
   static {
