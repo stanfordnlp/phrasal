@@ -33,7 +33,7 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
     public static final boolean VERBOSE = false;
     
     protected final String name;
-    
+    public static final double EXPECTED_COLLISIONS = 0.0001;
     public static final IString START_TOKEN = new IString("<s>");
     public static final IString END_TOKEN = new IString("</s>");
     public static final IString UNK_TOKEN = new IString("<unk>");
@@ -72,7 +72,7 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
     }
     
     public FrequencyMultiScoreLanguageModel(String name, long expectedInstances, double logBase, int order, Iterable<Pair<String,Long>> ngrams) {
-      bloomFilter = BloomFilter.create(new StringIntegerPairFunnel(), (int)expectedInstances);
+      bloomFilter = BloomFilter.create(new StringIntegerPairFunnel(), (int)expectedInstances, EXPECTED_COLLISIONS); 
       this.logBase = logBase;
       this.order = order;
       this.name = name;
