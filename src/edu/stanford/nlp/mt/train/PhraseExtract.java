@@ -68,8 +68,10 @@ public class PhraseExtract {
 
   static public final String PHRASE_EXTRACTOR_OPT = "phraseExtractor";
   static public final String FILTER_CORPUS_OPT = "fFilterCorpus";
+  static public final String WITH_POS_OPT = "withPos";
   static public final String EMPTY_FILTER_LIST_OPT = "fEmptyFilterList";
   static public final String FILTER_LIST_OPT = "fFilterList";
+  static public final String FILTER_CENTERDOT_OPT = "filterCenterDot";
   static public final String REF_PTABLE_OPT = "refFile";
   static public final String SPLIT_SIZE_OPT = "split";
   static public final String OUTPUT_FILE_OPT = "outputFile";
@@ -89,6 +91,7 @@ public class PhraseExtract {
   // phrase translation probs:
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
   static public final String IBM_LEX_MODEL_OPT = "ibmLexModel";
+  static public final String USE_PMI = "usePmi";
   static public final String ONLY_ML_OPT = "onlyML";
   static public final String PTABLE_PHI_FILTER_OPT = "phiFilter"; // p_phi(e|f)
                                                                   // filtering
@@ -137,7 +140,11 @@ public class PhraseExtract {
         DTUPhraseExtractor.ALLOW_LOOSE_GAPS_OPT,
         DTUPhraseExtractor.ALLOW_LOOSE_GAPS_E_OPT,
         DTUPhraseExtractor.ALLOW_LOOSE_GAPS_F_OPT,
-        DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT));
+        DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
+        DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
+        USE_PMI,
+        FILTER_CENTERDOT_OPT,
+        WITH_POS_OPT));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
@@ -189,6 +196,8 @@ public class PhraseExtract {
     this.prop = prop;
 
     boolean withGaps = Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT,
+        "false"));
+    boolean withPos = Boolean.parseBoolean(prop.getProperty(WITH_POS_OPT,
         "false"));
 
     // Possibly load properties from config file:
@@ -260,6 +269,8 @@ public class PhraseExtract {
     // Phrase filtering arguments:
     String fFilterCorpus = prop.getProperty(FILTER_CORPUS_OPT);
     String fFilterList = prop.getProperty(FILTER_LIST_OPT);
+    boolean filterCenterDot = Boolean.parseBoolean(prop.getProperty(
+        FILTER_CENTERDOT_OPT, "false"));
     boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(
         SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT, "false"));
     boolean emptyFilterList = Boolean.parseBoolean(prop.getProperty(
@@ -270,14 +281,27 @@ public class PhraseExtract {
 
     int maxSpanF = DTUPhraseExtractor.maxSpanF;
     int maxPhraseLenF = AbstractPhraseExtractor.maxPhraseLenF;
+    List<String> centerDot = Arrays.asList("·");
     if (withGaps) {
       assert (!addBoundaryMarkers);
       DTUSourceFilter f = new DTUSourceFilter(maxPhraseLenF, maxSpanF);
+      if (filterCenterDot)
+        f.excludeInList(centerDot);
       f.filterAgainstCorpus(fFilterCorpus);
       sourceFilter = f;
+    } else if (withPos) {
+      assert (!addBoundaryMarkers);
+      PosTaggedSourceFilter f = new PosTaggedSourceFilter(maxPhraseLenF);
+      if (filterCenterDot)
+        f.excludeInList(centerDot);
+      if (fFilterCorpus != null)
+        f.filterAgainstCorpus(fFilterCorpus);
+      sourceFilter = f;
     } else {
-      PhrasalSourceFilter f = new PhrasalSourceFilter(maxSpanF,
+      PhrasalSourceFilter f = new PhrasalSourceFilter(maxPhraseLenF,
           addBoundaryMarkers);
+      if (filterCenterDot)
+        f.excludeInList(centerDot);
       if (fFilterList != null) {
         f.filterAgainstList(fFilterList);
       } else if (fFilterCorpus != null) {

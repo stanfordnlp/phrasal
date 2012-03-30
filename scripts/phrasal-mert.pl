@@ -84,8 +84,8 @@ if (not ($work_dir =~ /^\//)) {
                "LexR:swapWithNext", 
                "LexR:discontinuousWithNext"],
   "weight-l"=>["LM"],
-  "weight-t"=>["TM:phi(t|f)", "TM:lex(t|f)", "TM:phi(f|t)", "TM:lex(f|t)", 
-               "TM:phrasePenalty"],
+  "weight-t"=>[ "TM:phi(t|f)", "TM:lex(t|f)", "TM:phi(f|t)", "TM:lex(f|t)", 
+                "TM:phrasePenalty", "TM:pmi", "TM:lex_pmi" ],
   "weight-w"=>["WordPenalty"]
 );
 
@@ -238,6 +238,8 @@ $commaRefList =~ s/ /,/g;
   "TM:lex(t|f)"=>0.2,
   "TM:phi(f|t)"=>0.3,
   "TM:phi(t|f)"=>0.2,
+  "TM:pmi"=>0.3,
+  "TM:lex_pmi"=>0.3,
   "TM:phrasePenalty"=>0.0,
   "UnknownWord"=>1.0,
   "WordPenalty"=>0.0);

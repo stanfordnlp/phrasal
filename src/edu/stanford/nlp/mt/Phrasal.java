@@ -152,25 +152,6 @@ public class Phrasal {
     ALL_RECOGNIZED_FIELDS.addAll(IGNORED_FIELDS);
   }
 
-  public static final Map<String, Double> IDEALIZED_TARGETS = new HashMap<String, Double>();
-
-  static {
-    IDEALIZED_TARGETS.put("TM:lex(f|t)", 0.0);
-    IDEALIZED_TARGETS.put("TM:lex(t|f)", 0.0);
-    IDEALIZED_TARGETS.put("TM:phi(f|t)", 0.0);
-    IDEALIZED_TARGETS.put("TM:phi(t|f)", 0.0);
-    IDEALIZED_TARGETS.put("LM", 0.0);
-    IDEALIZED_TARGETS.put("LinearDistortion", 0.0);
-    IDEALIZED_TARGETS.put("LexR:discontinuousWithNext", 0.0);
-    IDEALIZED_TARGETS.put("LexR:discontinuousWithPrevious", 0.0);
-    IDEALIZED_TARGETS.put("LexR:monotoneWithNext", 0.0);
-    IDEALIZED_TARGETS.put("LexR:monotoneWithPrevious", 0.0);
-    IDEALIZED_TARGETS.put("LexR:swapWithNext", 0.0);
-    IDEALIZED_TARGETS.put("LexR:swapWithPrevious", 0.0);
-    IDEALIZED_TARGETS.put("UnknownWord", 0.0);
-    IDEALIZED_TARGETS.put("SentenceBoundary", 0.0);
-  }
-
   public static final String PERCEPTRON_LEARNING = "perceptron";
   public static final String AVG_PERCEPTRON_LEARNING = "avgperceptron";
   public static final String MIRA_LEARNING = "mira";

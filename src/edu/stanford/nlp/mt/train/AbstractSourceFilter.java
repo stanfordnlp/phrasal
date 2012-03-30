@@ -1,11 +1,14 @@
 package edu.stanford.nlp.mt.train;
 
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IntegerArrayIndex;
+import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequences;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.List;
 
 /**
  * @author Michel Galley
@@ -22,6 +25,7 @@ public abstract class AbstractSourceFilter implements SourceFilter {
 
   protected boolean isEnabled = false;
   protected int startId, endId;
+  protected IntegerArrayIndex excludePhraseTable;
 
   public AbstractSourceFilter(int maxPhraseLenF,
       IntegerArrayIndex sourcePhraseTable) {
@@ -37,6 +41,7 @@ public abstract class AbstractSourceFilter implements SourceFilter {
    */
   @Override
   public void filterAgainstCorpus(String sourceLanguageCorpus) {
+
     System.err.println("Enumerating phrases in: " + sourceLanguageCorpus);
     System.err.print("Line");
     try {
@@ -57,11 +62,32 @@ public abstract class AbstractSourceFilter implements SourceFilter {
     isEnabled = true;
   }
 
+  /**
+   * Exclude phrases in a pre-defined list from phrase extraction
+   */
+  public void excludeInList(List<String> phrasesToExclude) {
+    if (phrasesToExclude.size() == 0)
+      return;
+    System.err.println("Excluding " + phrasesToExclude.size() + " phrases before extraction.\nfirst phrase is:" +
+      phrasesToExclude.get(0));
+    if (excludePhraseTable == null)
+      excludePhraseTable = new DynamicIntegerArrayIndex();
+    for (String fLine: phrasesToExclude) {
+      int[] f = IStrings.toIntArray(IStrings.toIStringArray(fLine
+          .split("\\s+")));
+      if (SHOW_PHRASE_RESTRICTION)
+        System.err.printf("Exclude phrase: %s\n", f.toString());
+      excludePhraseTable.indexOf(f, true);
+    }
+  }
+
   @Override
   public boolean allows(AlignmentTemplate alTemp) {
-    int fKey = sourcePhraseTable.indexOf(Sequences.toIntArray(alTemp.f()),
-        false);
-    return fKey >= 0 && fKey >= startId && fKey < endId;
+    int[] fIntArray = Sequences.toIntArray(alTemp.f());
+    int fKey = sourcePhraseTable.indexOf(fIntArray, false);
+    return fKey >= 0 && fKey >= startId && fKey < endId && 
+      (excludePhraseTable == null || 
+       excludePhraseTable.indexOf(fIntArray) < 0);
   }
 
   @Override
@@ -72,6 +98,7 @@ public abstract class AbstractSourceFilter implements SourceFilter {
   @Override
   public void lock() {
     this.sourcePhraseTable.lock();
+    this.excludePhraseTable.lock();
   }
 
   @Override
