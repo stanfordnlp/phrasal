@@ -98,7 +98,7 @@ enum BloomFilterStrategies implements BloomFilter.Strategy {
       for (int i = 0; i < data.length-1; i++) {
          data[i] = new long[1<<30];
       }
-      data[data.length-1] = new long[(int)(bits & ((1<<30)-1))];
+      data[data.length-1] = new long[(int)((bits>>6) & ((1<<30)-1))];
     }
 
     // Used by serialization
