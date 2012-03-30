@@ -1,6 +1,10 @@
 To create the database dump, make sure that the .pgpass file is correct. Then run:
 
-pg_dump -h localhost -U django djangodb > djangodb.dump
+$ pg_dump -h localhost -U django djangodb > djangodb.dump
+
+To load the dump, create a new empty database (e.g., 'ptm') and run:
+
+$ psql -h locahost ptm postgres < djangodb.dump
 
 For more info on dump and restore, see:
 
