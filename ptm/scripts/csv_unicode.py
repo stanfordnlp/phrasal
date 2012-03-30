@@ -25,6 +25,9 @@ class UnicodeReader:
     """
 
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+        # Handle huge csv files
+        csv.field_size_limit(1000000000)
+
         f = UTF8Recoder(f, encoding)
         self.reader = csv.reader(f, dialect=dialect, **kwds)
 

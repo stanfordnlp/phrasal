@@ -31,30 +31,29 @@ def process_src(src_file, lang_dict, out_path):
     Returns:
     Raises:
     """
-    file_desc = open(src_file)
-    in_file = UnicodeReader(file_desc)
-    n_cols = 0
-    for row in in_file:
-        if n_cols:
-            assert len(row) == n_cols
-            lang_code = lang_dict[row[1]]
+    with open(src_file) as file_desc:
+        in_file = UnicodeReader(file_desc)
+        n_cols = 0
+        for row in in_file:
+            if n_cols:
+                assert len(row) == n_cols
+                lang_code = lang_dict[row[1]]
 
-            # Write source text ordered by id
-            file_name = '%s/src.%s.txt' % (out_path, lang_code)
-            out_file = codecs.open(file_name,'a',encoding='utf-8')
-            out_file.write(row[2].strip() + '\n')
-            out_file.close()
+                # Write source text ordered by id
+                file_name = '%s/src.%s.txt' % (out_path, lang_code)
+                out_file = codecs.open(file_name,'a',encoding='utf-8')
+                out_file.write(row[2].strip() + '\n')
+                out_file.close()
 
-            # Write source text metadata ordered by id
-            meta_file_name = '%s/src.%s.meta.txt' % (out_path, lang_code)
-            out_file = codecs.open(meta_file_name,'a',encoding='utf-8')
-            out_file.write('%s\t%s\n' % (row[3],row[4]))
-            out_file.close()
-        else:
-            sys.stderr.write('%s header:\n  %s\n' % (basename(src_file),
+                # Write source text metadata ordered by id
+                meta_file_name = '%s/src.%s.meta.txt' % (out_path, lang_code)
+                out_file = codecs.open(meta_file_name,'a',encoding='utf-8')
+                out_file.write('%s\t%s\n' % (row[3],row[4]))
+                out_file.close()
+            else:
+                sys.stderr.write('%s header:\n  %s\n' % (basename(src_file),
                                                      ' '.join(row)))
-            n_cols = len(row)
-    file_desc.close()
+                n_cols = len(row)
 
 def get_lang_dict(lang_file):
     """
@@ -64,16 +63,16 @@ def get_lang_dict(lang_file):
       lang_dict -- str(id) --> str(lang_code)
     Raises:
     """
-    file_desc = open(lang_file)
-    in_file = UnicodeReader(file_desc)
-    seen_header = False
-    lang_dict = {}
-    for row in in_file:
-        if seen_header:
-            lang_dict[row[0]] = row[1]
-        seen_header = True
-    file_desc.close()
-    return lang_dict
+    with open(lang_file) as file_desc:
+        in_file = UnicodeReader(file_desc)
+        seen_header = False
+        lang_dict = {}
+        for row in in_file:
+            if seen_header:
+                lang_dict[row[0]] = row[1]
+            seen_header = True
+
+        return lang_dict
 
 def process_tgt(tgt_file, lang_dict, out_path):
     """ Processes user submitted translations. Emits them into three files:
