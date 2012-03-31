@@ -166,7 +166,7 @@ public class RTEFeaturizer {
         }
         String resultStr = results.toString();
         resultStr = resultStr.substring(1, resultStr.length()-1).replaceAll(", ", " ");
-        System.out.printf("\nFeature List ||| %d ||| %s\n", id, resultStr);
+        System.out.printf("\nFeature List ||| %s ||| %s\n", id, resultStr);
         row++;
       } catch (Exception e) {
         if (interactive) {
