@@ -291,15 +291,14 @@ public class PhraseExtract {
       sourceFilter = f;
     } else if (withPos) {
       assert (!addBoundaryMarkers);
-      PosTaggedSourceFilter f = new PosTaggedSourceFilter(maxPhraseLenF);
+      PosTaggedSourceFilter f = new PosTaggedSourceFilter(maxSpanF);
       if (filterCenterDot)
         f.excludeInList(centerDot);
       if (fFilterCorpus != null)
         f.filterAgainstCorpus(fFilterCorpus);
       sourceFilter = f;
     } else {
-      PhrasalSourceFilter f = new PhrasalSourceFilter(maxPhraseLenF,
-          addBoundaryMarkers);
+      PhrasalSourceFilter f = new PhrasalSourceFilter(maxSpanF, addBoundaryMarkers);
       if (filterCenterDot)
         f.excludeInList(centerDot);
       if (fFilterList != null) {
