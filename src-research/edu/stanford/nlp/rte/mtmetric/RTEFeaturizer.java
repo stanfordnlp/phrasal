@@ -12,23 +12,13 @@ import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.stats.CountersRealVectors;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.ArrayRealVector;
-import org.apache.commons.math.linear.DecompositionSolver;
-import org.apache.commons.math.linear.SingularValueDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.RealVector;
 
 /**
  * 
@@ -38,7 +28,6 @@ import org.apache.commons.math.linear.RealVector;
 public class RTEFeaturizer {
   RTEPipeline pipeline;
   NoLearningExperiment kbeTester;
-  public static final String DEFAULT_WTS = "MT08Urdu.wts";
   
   /**
    * Since the RTE system is not re-entrant, and there is no
@@ -64,19 +53,19 @@ public class RTEFeaturizer {
     Global.setProperty("calculateResults", "false");
     Global.setProperty("aligner.numIterations", "10");
     Global.setProperty("aligner", "stochastic");
-    Global.setProperty("parse.malt", "true");
+    Global.setProperty("parse.malt", "false");
     Global.setProperty("rsrc.malt", "engmalt.linear.mco");
-    Global.setProperty("lex.Nominalization", "off");
-    Global.setProperty("lex.InfoMap", "off");
-    Global.setProperty("lex.WNHypernymy", "off"); 
-    Global.setProperty("lex.JiangConrathWN", "off");
-    Global.setProperty("lex.WNHyponymy", "off");
-    Global.setProperty("lex.DekangLin", "off");
-    Global.setProperty("lex.Country", "off");
-    Global.setProperty("lex.WNSynonymy", "off");
-    Global.setProperty("lex.Ordinal", "off");
-    Global.setProperty("lex.LinWN", "off");
-    Global.setProperty("lex.WNAntonymy", "off");
+    Global.setProperty("lex.Nominalization", "on");
+    Global.setProperty("lex.InfoMap", "on");
+    Global.setProperty("lex.WNHypernymy", "on"); 
+    Global.setProperty("lex.JiangConrathWN", "on");
+    Global.setProperty("lex.WNHyponymy", "on");
+    Global.setProperty("lex.DekangLin", "on");
+    Global.setProperty("lex.Country", "on");
+    Global.setProperty("lex.WNSynonymy", "on");
+    Global.setProperty("lex.Ordinal", "on");
+    Global.setProperty("lex.LinWN", "on");
+    Global.setProperty("lex.WNAntonymy", "on");
 
     if (featurizer != null) {
       throw new RuntimeException("Attempted to initialize the RTEFeaturizer " +
@@ -109,23 +98,6 @@ public class RTEFeaturizer {
   }
   
   Counter<String> defaultWts;
-  
-  public double mtScore(String[] refs, String translation) {
-     if (defaultWts == null) {
-       defaultWts = new ClassicCounter<String>();
-       try{
-         BufferedReader reader = new BufferedReader(new FileReader(Global.getRTEResourcesDir()+"/"+DEFAULT_WTS));
-         for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-           String[] fields = line.split(": ");
-           defaultWts.incrementCount(fields[0], Double.parseDouble(fields[1]));
-         }
-       } catch (Exception e) {
-         e.printStackTrace();
-         System.exit(-1); // Z-Mert ignores some runtime exceptions and just hangs
-       }
-     }
-     return mtScore(refs, translation, defaultWts);
-  }
   
   public double mtScore(String[] refs, String translation, Counter<String> wts) {
      int bestRef = 0;
@@ -170,80 +142,44 @@ public class RTEFeaturizer {
     long startTime = System.currentTimeMillis();
     BufferedReader reader = 
       new BufferedReader(new InputStreamReader(System.in));
-    PrintStream pstrm = new PrintStream("rte.featurized");
     List<Counter<String>> dataPts = new ArrayList<Counter<String>>(); 
     List<Double>  scores = new ArrayList<Double>();
     Index<String> featureIndex = new OAIndex<String>();
-    
+    boolean interactive = System.console() != null;
     int row = 0;    
+
+    if (interactive) System.out.print("\nRTE Eval>");
     for (String line = reader.readLine(); line != null; 
          line = reader.readLine()) {
-      String[] fields = line.split(" \\|\\|\\| ");
-      String id = fields[0];
-      String ref = fields[1];
-      String mt  = fields[2];
-      double score = Double.parseDouble(fields[3]);
-      System.err.printf("Scoring: \n\tref: %s hyp: %s\n", ref, mt);
-      Counter<String> results = featurizer.mtFeaturizer(ref, mt);      
-      dataPts.add(results);
-      scores.add(score);
-      for (String feature : results.keySet()) {
-        featureIndex.indexOf(feature,true);
+      try {
+        String[] fields = line.split(" \\|\\|\\| ");
+        String id = fields[0];
+        String ref = fields[1];
+        String mt  = fields[2];
+        double score = Double.parseDouble(fields[3]);
+        System.err.printf("Scoring: \n\tref: %s hyp: %s\n", ref, mt);
+        Counter<String> results = featurizer.mtFeaturizer(ref, mt);      
+        dataPts.add(results);
+        scores.add(score);
+        for (String feature : results.keySet()) {
+          featureIndex.indexOf(feature,true);
+        }
+        String resultStr = results.toString();
+        resultStr = resultStr.substring(1, resultStr.length()-1).replaceAll(", ", " ");
+        System.out.printf("\nFeature List ||| %d ||| %s\n", id, resultStr);
+        row++;
+      } catch (Exception e) {
+        if (interactive) {
+          e.printStackTrace();
+        } else {
+          throw e;
+        }
       }
-      System.err.printf("Results: %s\n", results);
-      pstrm.printf("%d ||| %s ||| %s ||| %f\n", row, id, results, score);
-      row++;
-    } 
-    // long term - this really shouldn't be here
-    
+      if (interactive) System.out.print("\nRTE Eval>");
+    }
+
     long dur = System.currentTimeMillis() - startTime;
     System.err.printf("RTE Time: %.3f s\n", dur/1000.);
-    
-    //RealMatrix A = new Array2DRowRealMatrix(dataPts.size(), featureIndex.size());
-    RealMatrix A = new Array2DRowRealMatrix(dataPts.size(), dataPts.size());
-    RealVector b = new ArrayRealVector(dataPts.size());
-    
-    row = 0;
-    for (Counter<String> datum : dataPts) {
-       for (Map.Entry<String, Double> entry : datum.entrySet()) {
-         int idx = featureIndex.indexOf(entry.getKey());
-         double val = entry.getValue();
-         A.setEntry(row, idx, val);
-         b.setEntry(row, scores.get(row));
-       }
-       row++;
-    }
-
-    DecompositionSolver s = new SingularValueDecompositionImpl(A).getSolver();
-    RealVector x = s.solve(b);
-
-
-    RealVector p = A.operate(x);
-    
-    System.err.println("Linear regression");
-    System.err.println("=================");
-    Counter<String> wts = CountersRealVectors.fromRealVector(x, featureIndex);
-    
-    for (Map.Entry<String, Double> entry : wts.entrySet()) {
-      System.err.printf("%s: %e\n", entry.getKey(), entry.getValue());
-    }
-    System.err.println("=================");
-    
-    row = 0;
-    double sse = 0;
-    double correctSSE = 0;
-    for (Counter<String> datum : dataPts) {
-      double hypScore = 0; 
-      for (Map.Entry<String, Double> entry : datum.entrySet()) {
-        hypScore += wts.getCount(entry.getKey()) * entry.getValue();
-      }
-      double error = hypScore - scores.get(row);
-      System.err.printf("%d: predicted: %.3f actual: %.3f\n error: %.3f\n", row, hypScore, scores.get(row), error);
-      sse += error*error;
-      correctSSE += (p.getEntry(row) - b.getEntry(row))*(p.getEntry(row) - b.getEntry(row));
-      row++;
-    } 
-    System.err.printf("MSE: %e (MSSE amc: %e)\n", sse/row, correctSSE/row);
   }
 }
 
