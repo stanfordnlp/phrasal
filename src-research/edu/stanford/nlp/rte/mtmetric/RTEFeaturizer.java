@@ -55,15 +55,18 @@ public class RTEFeaturizer {
     Global.setProperty("aligner", "stochastic");
     Global.setProperty("parse.malt", "false");
     Global.setProperty("rsrc.malt", "engmalt.linear.mco");
-    Global.setProperty("lex.Nominalization", "on");
+    // this was turned off for the Ontonotes/WordNet dataset
+    Global.setProperty("lex.Nominalization", "on"); 
     Global.setProperty("lex.InfoMap", "on");
     Global.setProperty("lex.WNHypernymy", "on"); 
+    // this was turned off for the Ontonotes/WordNet dataset
     Global.setProperty("lex.JiangConrathWN", "on");
     Global.setProperty("lex.WNHyponymy", "on");
     Global.setProperty("lex.DekangLin", "on");
     Global.setProperty("lex.Country", "on");
     Global.setProperty("lex.WNSynonymy", "on");
     Global.setProperty("lex.Ordinal", "on");
+    // this was turned off for the Ontonotes/WordNet dataset
     Global.setProperty("lex.LinWN", "on");
     Global.setProperty("lex.WNAntonymy", "on");
 
