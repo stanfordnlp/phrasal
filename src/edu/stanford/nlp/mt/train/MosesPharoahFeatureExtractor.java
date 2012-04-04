@@ -36,11 +36,11 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   public static final String PRINT_COUNTS_PROPERTY = "DebugPrintCounts";
   public static final boolean PRINT_COUNTS = Boolean.parseBoolean(System
       .getProperty(PRINT_COUNTS_PROPERTY, "false"));
-
   protected double phiFilter = DEFAULT_PHI_FILTER,
       lexFilter = DEFAULT_LEX_FILTER;
   protected boolean ibmLexModel = false, onlyPhi = false;
   protected boolean usePmi = false;
+  protected boolean doLog = true;
   protected int numPasses = 1;
 
   protected final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
@@ -85,6 +85,8 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     onlyPhi = prop.getProperty(PhraseExtract.ONLY_ML_OPT, "false").equals(
         "true");
     usePmi = prop.getProperty(PhraseExtract.USE_PMI, "false").equals(
+        "true");
+    doLog = prop.getProperty(PhraseExtract.DO_LOG_PHAROAH_SCORES, "true").equals(
         "true");
     // Filtering:
     phiFilter = Double.parseDouble(prop.getProperty(
@@ -201,7 +203,9 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
 
     if (phiFilter > phi_e_f)
       return null;
-    double pmi = Math.log((pairCount/totalFECount) / ((eCount/totalECount) * (fCount/totalFCount)));
+    double pTF = pairCount/totalFECount;
+    double unnormalized_pmi = Math.log(pTF / ((eCount/totalECount) * (fCount/totalFCount)));
+    double pmi = unnormalized_pmi / (-1 * Math.log(pTF));
     // Compute lexical weighting features:
     double lex_f_e;
     double lex_e_f;
@@ -212,12 +216,19 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
       lex_f_e = getLexScore(alTemp);
       lex_e_f = getLexScoreInv(alTemp);
     }
-    double lexPMI = getLexPmiScore(alTemp);
+    double lexPMI = getLexPmiScore(alTemp, true);
     // Set phrase penalty:
     double phrasePen = 2.718;
     // Determine if need to filter phrase:
     if (lexFilter > lex_e_f)
       return null;
+
+    if (doLog) {
+      phi_f_e = Math.log(phi_f_e);
+      phi_e_f = Math.log(phi_e_f);
+      lex_f_e = Math.log(lex_f_e);
+      lex_e_f = Math.log(lex_e_f);
+    }
     if (PRINT_COUNTS) {
       // -- Additional info for debugging purposes:
       return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen,
@@ -324,7 +335,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
    * Lexically-weighted PMI as the sum of alTemp.f() given alTemp.e() 
    * word-level PMI normalized by the number of words in alTemp.f()
    */
-  private double getLexPmiScore(AlignmentTemplate alTemp) {
+  private double getLexPmiScore(AlignmentTemplate alTemp, boolean doNormalize) {
     if (DEBUG_LEVEL >= 1)
       System.err.println("Computing word-level PMI(f|e) for alignment template: "
           + alTemp.toString(true));
@@ -334,16 +345,16 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     for (int fi = 0; fi < alTemp.f().size(); ++fi) {
       if (alTemp.f().get(fi).equals(DTUTable.GAP_STR))
         continue;
-      double wSum = 0.0;
+      double wPMI = 0.0;
       int alCount = alTemp.f2e(fi).size();
       if (alCount != 0) {
         for (int ei : alTemp.f2e(fi)) {
           assert (!alTemp.e().get(ei).equals(DTUTable.GAP_STR));
-          wSum += getLexPmi(alTemp.f().get(fi), alTemp.e().get(ei));
+          wPMI += getLexPmi(alTemp.f().get(fi), alTemp.e().get(ei), doNormalize);
         }
-        wSum /= alCount;
+        wPMI /= alCount;
       }
-      pmiSum += wSum;
+      pmiSum += wPMI;
     }
     //normalize the sum of pmi by the length of the French phrase
     double pmiAvg = pmiSum / alTemp.f().size();
@@ -484,7 +495,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
    * Point-wise Mutual Information of f and e. Note that getLexPmi(f,e)
    * should equal to getLexPmi(e,f)
    */
-  private double getLexPmi(IString f, IString e) {
+  private double getLexPmi(IString f, IString e, boolean doNormalize) {
     if (DEBUG_LEVEL >= 1) {
       System.err.print("pmi(f = \"" + f + "\" | e = \"" + e + "\") = ");
       System.err.print(feLexCounts.get(indexOfLex(f, e, false)));
@@ -499,8 +510,13 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     int fi = indexOfFLex(f, false);
     if (fei < 0 || ei < 0 | fi < 0) // this is a not very well defined case
       return 0.0;
-    return Math.log((feLexCounts.get(fei) * 1.0 / totalFELexCount) / 
-      ((eLexCounts.get(ei) * 1.0 / totalELexCount) * (fLexCounts.get(fi) * 1.0 / totalFLexCount)));
+    double pFE = feLexCounts.get(fei) * 1.0 / totalFELexCount;
+    double pF = eLexCounts.get(ei) * 1.0 / totalELexCount;
+    double pE = fLexCounts.get(fi) * 1.0 / totalFLexCount;
+    double lexPMI = Math.log( pFE / (pF * pE));
+    if (doNormalize)
+      lexPMI = lexPMI / (-1 * Math.log(pFE));
+    return lexPMI;
   }
 
   /**

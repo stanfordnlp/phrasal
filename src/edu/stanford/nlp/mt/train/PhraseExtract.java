@@ -92,6 +92,7 @@ public class PhraseExtract {
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
   static public final String IBM_LEX_MODEL_OPT = "ibmLexModel";
   static public final String USE_PMI = "usePmi";
+  static public final String DO_LOG_PHAROAH_SCORES = "DoLogPharoahScores";
   static public final String ONLY_ML_OPT = "onlyML";
   static public final String PTABLE_PHI_FILTER_OPT = "phiFilter"; // p_phi(e|f)
                                                                   // filtering
@@ -143,6 +144,7 @@ public class PhraseExtract {
         DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
         DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
         USE_PMI,
+        DO_LOG_PHAROAH_SCORES,
         FILTER_CENTERDOT_OPT,
         WITH_POS_OPT));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);

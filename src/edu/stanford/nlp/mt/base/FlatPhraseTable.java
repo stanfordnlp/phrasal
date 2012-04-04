@@ -86,7 +86,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, f));
       }
-      fArray[i++] = doLog ? (float) Math.log(f) : f;
+      float newF = doLog ? (float) Math.log(f) : f;
+      if (Float.isNaN(newF)) {
+        throw new RuntimeException(String.format(
+            "Bad phrase table. after doLog=%s, %s parses as (float) %f", doLog, s, newF));
+      }
+      fArray[i++] = newF;
     }
     return fArray;
   }
@@ -122,7 +127,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public FlatPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
       Scorer<FV> scorer, String filename) throws IOException {
-    this(phraseFeaturizer, scorer, filename, true);
+    // default is not to do log rithm on the scores
+    this(phraseFeaturizer, scorer, filename, false);
   }
 
   /**
