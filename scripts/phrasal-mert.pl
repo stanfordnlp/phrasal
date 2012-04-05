@@ -84,8 +84,8 @@ if (not ($work_dir =~ /^\//)) {
                "LexR:swapWithNext", 
                "LexR:discontinuousWithNext"],
   "weight-l"=>["LM"],
-  "weight-t"=>[ "TM:phi(t|f)", "TM:lex(t|f)", "TM:phi(f|t)", "TM:lex(f|t)", 
-                "TM:phrasePenalty", "TM:pmi", "TM:lex_pmi" ],
+  "weight-t"=>[ "TM:FPT.0", "TM:FPT.1", "TM:FPT.2", "TM:FPT.3", 
+                "TM:FPT.4", "TM:FPT.5", "TM:FPT.6" ],
   "weight-w"=>["WordPenalty"]
 );
 
@@ -218,10 +218,6 @@ $commaRefList =~ s/ /,/g;
 %POSITIVE_WT_ONLY_FEATURES = (
   "LM"=>1,
   "LinearDistortion"=>1,
-  "TM:lex(f|t)"=>1,
-  "TM:lex(t|f)"=>1,
-  "TM:phi(f|t)"=>1,
-  "TM:phi(t|f)"=>1,
   "LexR:discontinuousWithNext"=>1, 
   "LexR:discontinuousWithPrevious"=>1,
   "LexR:monotoneWithNext"=>1,
@@ -234,13 +230,13 @@ $commaRefList =~ s/ /,/g;
 
 %DEFAULT_WEIGHTS = (
   "LM"=>1.0, "LinearDistortion"=>"1.0",
-  "TM:lex(f|t)"=>0.3, 
-  "TM:lex(t|f)"=>0.2,
-  "TM:phi(f|t)"=>0.3,
-  "TM:phi(t|f)"=>0.2,
-  "TM:pmi"=>0.3,
-  "TM:lex_pmi"=>0.3,
-  "TM:phrasePenalty"=>0.0,
+  "TM:FPT.0"=>0.3, 
+  "TM:FPT.1"=>0.2,
+  "TM:FPT.2"=>0.3,
+  "TM:FPT.3"=>0.2,
+  "TM:FPT.4"=>0.0,
+  "TM:FPT.5"=>0.3,
+  "TM:FPT.6"=>0.3,
   "UnknownWord"=>1.0,
   "WordPenalty"=>0.0);
 
