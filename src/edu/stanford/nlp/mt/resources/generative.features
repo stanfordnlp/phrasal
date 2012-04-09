@@ -5,10 +5,10 @@
 # of these to be >= 0
 #
 ##################################################################### 
-TM:lex(f|t)
-TM:lex(t|f)
-TM:phi(f|t)
-TM:phi(t|f)
+#TM:lex(f|t)
+#TM:lex(t|f)
+#TM:phi(f|t)
+#TM:phi(t|f)
 TM:count
 TM:uniq
 SG:CrossingCount

@@ -39,7 +39,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   protected double phiFilter = DEFAULT_PHI_FILTER,
       lexFilter = DEFAULT_LEX_FILTER;
   protected boolean ibmLexModel = false, onlyPhi = false;
-  protected boolean usePmi = false;
+  protected boolean usePmi, normalizePmi = false;
   protected boolean doLog = true;
   protected int numPasses = 1;
 
@@ -85,6 +85,8 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     onlyPhi = prop.getProperty(PhraseExtract.ONLY_ML_OPT, "false").equals(
         "true");
     usePmi = prop.getProperty(PhraseExtract.USE_PMI, "false").equals(
+        "true");
+    normalizePmi = prop.getProperty(PhraseExtract.NORMALIZE_PMI, "false").equals(
         "true");
     doLog = prop.getProperty(PhraseExtract.DO_LOG_PHAROAH_SCORES, "true").equals(
         "true");
@@ -204,8 +206,9 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     if (phiFilter > phi_e_f)
       return null;
     double pTF = pairCount/totalFECount;
-    double unnormalized_pmi = Math.log(pTF / ((eCount/totalECount) * (fCount/totalFCount)));
-    double pmi = unnormalized_pmi / (-1 * Math.log(pTF));
+    double pmi = Math.log(pTF / ((eCount/totalECount) * (fCount/totalFCount)));
+    if (normalizePmi)
+      pmi = pmi / (-1 * Math.log(pTF));
     // Compute lexical weighting features:
     double lex_f_e;
     double lex_e_f;
@@ -216,7 +219,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
       lex_f_e = getLexScore(alTemp);
       lex_e_f = getLexScoreInv(alTemp);
     }
-    double lexPMI = getLexPmiScore(alTemp, true);
+    double lexPMI = getLexPmiScore(alTemp, normalizePmi);
     // Set phrase penalty:
     double phrasePen = 2.718;
     // Determine if need to filter phrase:
