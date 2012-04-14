@@ -18,7 +18,9 @@ Event = namedtuple('Event', 'sourceid userid time event_name event_class target 
 control_keycode_to_str = None
 
 # Maps js events to a type classification
-event_to_class = {'blur': 'view',
+event_to_class = {'start':'start',
+                  'end':'end',
+                  'blur': 'view',
                   'focus':'view',
                   'focusin':'view',
                   'focusout':'view',
@@ -146,10 +148,13 @@ def filter_events(event_list, user_id, line_id):
     # Event list is already sorted by time
     filtered_events = []
     for i,e in enumerate(event_list):
+        if e == 'ERROR':
+            continue
         if i == 0:
             filtered_events.append(e)
             continue
         e_toks = e.split()
+        assert len(e_toks) > 1
         e_type = e_toks[0]
         e_time = int(e_toks[1])
 
@@ -168,30 +173,27 @@ def filter_events(event_list, user_id, line_id):
         e_toks = e.split()
         e_type = e_toks[0]
         e_time = int(e_toks[1])
-        if e_type == 'start' or e_type == 'end':
-            pass
-        else:
-            # Process the payload
-            payload = create_payload(e_toks[2:], line_id)
-            e_keycode = payload.get('k','')
-            e_id = payload.get('id','')
-            e_x = payload.get('x','')
-            e_y = payload.get('y','')
-            eclass= event_to_class[e_type]
-            event = Event(sourceid=str(line_id),
-                          userid=str(user_id),
-                          time=str(e_time),
-                          event_name=e_type,
-                          event_class=eclass,
-                          target=e_id,
-                          x=e_x,
-                          y=e_y,
-                          key=e_keycode)
-            tuple_list.append(event)
+        # Process the payload
+        payload = create_payload(e_toks[2:], line_id)
+        e_keycode = payload.get('k','')
+        e_id = payload.get('id','')
+        e_x = payload.get('x','')
+        e_y = payload.get('y','')
+        eclass= event_to_class[e_type]
+        event = Event(sourceid=str(line_id),
+                      userid=str(user_id),
+                      time=str(e_time),
+                      event_name=e_type,
+                      event_class=eclass,
+                      target=e_id,
+                      x=e_x,
+                      y=e_y,
+                      key=e_keycode)
+        tuple_list.append(event)
 
     return tuple_list
     
-def parse_actionlogs(logfile):
+def parse_actionlogs(logfile, output_dir):
     """ Convert actionlog to CSV format
 
     Args:
@@ -201,7 +203,7 @@ def parse_actionlogs(logfile):
     user_id = int(re.search('^(\d+)\.', basename(logfile)).group(1))
     sys.stderr.write('User id: %d%s' % (user_id, os.linesep))
     with open(logfile) as in_file:
-        with open(basename(logfile)+'.csv','w') as out_file:
+        with open('%s/%s.csv' % (output_dir,basename(logfile)),'w') as out_file:
             out_csv = UnicodeWriter(out_file, quoting=csv.QUOTE_ALL)
             for i,line in enumerate(in_file):
                 events = line.strip().split('|')
@@ -219,9 +221,10 @@ def main():
     
     desc='Convert and actionlog file to CSV for Tableau import'
     parser=ArgumentParser(description=desc)
-    parser.add_argument('logfile',
+    parser.add_argument('files',
                         metavar='action_log',
                         type=str,
+                        nargs='+',
                         help='Action log file.')
     parser.add_argument('-c', '--js_codes',
                         dest='js_codefile',
@@ -233,14 +236,22 @@ def main():
                         default=None,
                         type=str,
                         help='Source document.')
+    parser.add_argument('-o', '--output_dir',
+                        dest='out_dir',
+                        default=None,
+                        type=str,
+                        help='Output directory for files.')
     args = parser.parse_args()
 
     if args.js_codefile:
         control_keycode_to_str = get_codes_dict(args.js_codefile)
     if args.src_docfile:
         src_doc = read_srcdoc(args.src_docfile)
+
+    output_dir = args.out_dir if args.out_dir else './'
         
-    parse_actionlogs(args.logfile)
+    for logfile in args.files:
+        parse_actionlogs(logfile, output_dir)
 
 if __name__ == '__main__':
     main()
