@@ -60,9 +60,9 @@ def tuples_to_rows(file_list):
                 if end_time_dict.has_key(src_id):
                     time = end_time_dict[src_id]
                     ui_id = toks[2]
-                    rows.append(Row(sourceid=src_id,
-                                    userid=user_id_1,
-                                    ui_id=ui_id,
+                    rows.append(Row(sourceid='s'+src_id,
+                                    userid='usr'+user_id_1,
+                                    ui_id='ui'+ui_id,
                                     time=time))
                 else:
                     sys.stderr.write('No translation time for %s (line %d)%s' % (metafile, i, os.linesep))

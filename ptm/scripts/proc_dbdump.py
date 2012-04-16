@@ -6,11 +6,18 @@
 import sys
 import codecs
 import csv
-from collections import defaultdict
+import os
+from collections import defaultdict,namedtuple
 from os import mkdir
 from os.path import basename
 from csv_unicode import UnicodeReader
 from argparse import ArgumentParser
+
+# Row in the source dump file
+SrcInputRow = namedtuple('SrcRow','id,lang_id,txt,doc,seg')
+
+# Row in the target dump file
+TgtInputRow = namedtuple('TgtRow','id,src_id,lang_id,is_machine,date,txt,ui_id,user_id,action_log,is_valid')
 
 def mkdir_safe(path, print_error=False):
     """
@@ -23,7 +30,7 @@ def mkdir_safe(path, print_error=False):
         mkdir(path)
     except OSError:
         if print_error:
-            sys.stderr.write('Warning: directory %s already exists!\n' % (path))        
+            sys.stderr.write('Warning: directory %s already exists!%s' % (path,os.linesep))        
 
 def process_src(src_file, lang_dict, out_path):
     """
@@ -32,28 +39,21 @@ def process_src(src_file, lang_dict, out_path):
     Raises:
     """
     with open(src_file) as file_desc:
-        in_file = UnicodeReader(file_desc)
-        n_cols = 0
-        for row in in_file:
-            if n_cols:
-                assert len(row) == n_cols
-                lang_code = lang_dict[row[1]]
+        for i,row in enumerate(map(SrcInputRow._make, UnicodeReader(file_desc))):
+            if i == 0:
+                continue
+            
+            lang_code = lang_dict[row.lang_id]
 
-                # Write source text ordered by id
-                file_name = '%s/src.%s.txt' % (out_path, lang_code)
-                out_file = codecs.open(file_name,'a',encoding='utf-8')
-                out_file.write(row[2].strip() + '\n')
-                out_file.close()
+            # Write source text ordered by id
+            file_name = '%s/src.%s.txt' % (out_path, lang_code)
+            with codecs.open(file_name,'a',encoding='utf-8') as out_file:
+                out_file.write(row.txt.strip() + os.linesep)
 
-                # Write source text metadata ordered by id
-                meta_file_name = '%s/src.%s.meta.txt' % (out_path, lang_code)
-                out_file = codecs.open(meta_file_name,'a',encoding='utf-8')
-                out_file.write('%s\t%s\n' % (row[3],row[4]))
-                out_file.close()
-            else:
-                sys.stderr.write('%s header:\n  %s\n' % (basename(src_file),
-                                                     ' '.join(row)))
-                n_cols = len(row)
+            # Write source text metadata ordered by id
+            meta_file_name = '%s/src.%s.meta.txt' % (out_path, lang_code)
+            with codecs.open(meta_file_name,'a',encoding='utf-8') as out_file:
+                out_file.write('%s\t%s%s' % (row.doc,row.seg,os.linesep))
 
 def get_lang_dict(lang_file):
     """
@@ -87,62 +87,55 @@ def process_tgt(tgt_file, lang_dict, out_path):
     Returns:
     Raises:
     """
-    file_desc = open(tgt_file)
-    in_file = UnicodeReader(file_desc)
-    user_src_ids = defaultdict(dict)
-    col_headers = None
-    for row in in_file:
-        if col_headers:
-            assert len(row) == len(col_headers)
-            src_id = row[1]
-            user_id = row[7]
-            if user_src_ids[user_id].has_key(src_id):
-                sys.stderr.write('Discarding duplicate: user: %s src: %s\n' % (user_id, src_id))
+    with open(tgt_file) as file_desc:
+        user_src_ids = defaultdict(dict)
+        for i,row in enumerate(map(TgtInputRow._make, UnicodeReader(file_desc))):
+            if i == 0:
+                # Headers
+                continue
+            if user_src_ids[row.user_id].has_key(row.src_id):
+                sys.stderr.write('Discarding duplicate: user: %s src: %s%s' % (row.user_id, row.src_id, os.linesep))
                 continue
 
             # Haven't seen this src_id yet
-            lang_code = lang_dict[row[2]]
+            lang_code = lang_dict[row.lang_id]
             file_path = '%s/%s' % (out_path, lang_code)
             mkdir_safe(file_path)
             
             # Write translations ordered by id for this user
-            file_name = '%s/%s/%s.tgt.txt' % (out_path, lang_code, user_id)
-            out_file = codecs.open(file_name, 'a', encoding='utf-8')
-            out_file.write(row[5].strip() + '\n')
-            out_file.close()
+            file_name = '%s/%s/%s.tgt.txt' % (out_path,
+                                              lang_code,
+                                              row.user_id)
+            with codecs.open(file_name, 'a', encoding='utf-8') as out_file:
+                out_file.write(row.txt.strip() + os.linesep)
             
             # Write translation metadata
-            file_name = '%s/%s/%s.tgt.meta.txt' % (out_path,
+            meta_name = '%s/%s/%s.tgt.meta.txt' % (out_path,
                                                    lang_code,
-                                                   user_id)
-            out_file = codecs.open(file_name, 'a', encoding='utf-8')
-            if len(user_src_ids[user_id].keys()) == 0:
-                out_file.write('%s\t%s\t%s\t%s\n' % (col_headers[3],
-                                                     col_headers[4],
-                                                     col_headers[6],
-                                                     col_headers[9]))
-            out_file.write('%s\t%s\t%s\t%s\n' % (row[3],
-                                                 row[4],
-                                                 row[6],
-                                                 row[9]))
-            out_file.close()
+                                                   row.user_id)
+            with codecs.open(meta_name, 'a', encoding='utf-8') as meta_file:
+                if len(user_src_ids[row.user_id].keys()) == 0:
+                    # Write the column headers
+                    meta_file.write('%s\t%s\t%s\t%s%s' % (TgtInputRow._fields[3],
+                                                          TgtInputRow._fields[4],
+                                                          TgtInputRow._fields[6],
+                                                          TgtInputRow._fields[9],
+                                                          os.linesep))
+                meta_file.write('%s\t%s\t%s\t%s%s' % (row.is_machine,
+                                                      row.date,
+                                                      row.ui_id,
+                                                      row.is_valid,
+                                                      os.linesep))
             
             # Write action log for this translation
-            file_name = '%s/%s/%s.tgt.actionlog.txt' % (out_path,
-                                                        lang_code,
-                                                        user_id)
-            out_file = codecs.open(file_name, 'a', encoding='utf-8')
-            out_file.write(row[8].strip() + '\n')
-            out_file.close()
-
+            log_name = '%s/%s/%s.tgt.actionlog.txt' % (out_path,
+                                                       lang_code,
+                                                       row.user_id)
+            with codecs.open(log_name, 'a', encoding='utf-8') as log_file:
+                log_file.write(row.action_log.strip() + os.linesep)
+                
             # Finished processing this src_id
-            user_src_ids[user_id][src_id] = 1
-        else:
-            sys.stderr.write('%s header:\n  %s\n' % (basename(tgt_file),
-                                                     ' '.join(row)))
-            col_headers = row
-    file_desc.close()
-    
+            user_src_ids[row.user_id][row.src_id] = 1
 
 def process_dump(src_file, tgt_file, lang_file, out_path):
     """ Convert the dump to the following format:
@@ -200,4 +193,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-
