@@ -12,7 +12,9 @@ from collections import defaultdict,namedtuple
 from csv_unicode import UnicodeReader,UnicodeWriter
 from argparse import ArgumentParser
 
-# Action log event
+# Action log event (from actionlog_to_csv.py)
+Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button src_len time_norm ui_id')
+
 Event = namedtuple('Event', 'sourceid userid time event_name event_class target x y key')
 
 # anova row

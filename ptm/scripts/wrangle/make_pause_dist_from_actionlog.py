@@ -14,7 +14,7 @@ from csv_unicode import UnicodeReader,UnicodeWriter
 from argparse import ArgumentParser
 
 # Action log event
-Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button')
+Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button src_len time_norm ui_id')
 
 # Pause
 Row = namedtuple('Row', 'sourceid userid duration event_before event_after')

@@ -12,7 +12,7 @@ from collections import defaultdict,namedtuple
 from csv_unicode import UnicodeWriter
 from argparse import ArgumentParser
 
-Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button')
+Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button src_len time_norm ui_id')
 
 # Maps control keycodes to human readable names
 control_keycode_to_str = None
@@ -155,7 +155,7 @@ def create_payload(payload_list, src_line_id):
                 payload_dict[item_key] = item_toks[1]
     return payload_dict
 
-def filter_events(event_list, user_id, line_id):
+def filter_events(event_list, user_id, line_id, ui_id):
     """ Converts a list of events to a list named tuples. Filters out
     duplicate events (e.g., keypress/keydown).
 
@@ -163,9 +163,13 @@ def filter_events(event_list, user_id, line_id):
     Returns:
     Raises:
     """
+    global src_doc
+    
     # Convert to a dictionary and filter duplicate events
     # Event list is already sorted by time
     filtered_events = []
+    end_time = None
+    num_discarded = 0
     for i,e in enumerate(event_list):
         if e == 'ERROR':
             continue
@@ -177,19 +181,27 @@ def filter_events(event_list, user_id, line_id):
         e_type = e_toks[0]
         e_time = int(e_toks[1])
 
+        if e_type == 'end':
+            end_time = e_time
+        
         e_prev = event_list[i-1].split()
         e_prev_type = e_prev[0]
         e_prev_time = int(e_prev[1])
 
         # Sub 3ms response time associated with duplicate keyboard events
-        if e_prev_type == 'keydown' and e_type == 'keypress' and (e_time-e_prev_time) < 3:
+        if (e_time - e_prev_time) <= 1:
+            num_discarded += 1
             filtered_events[-1] = e
         else:
             filtered_events.append(e)
 
+    sys.stderr.write('Discard %d duplicate events.%s' % (num_discarded,os.linesep))
+                     
     # Events --> Named tuples. Also apply field-specific mapping
     tuple_list = []
     for e in filtered_events:
+        # We must have seen the end event
+        assert end_time
         e_toks = e.split()
         e_type = e_toks[0]
         e_time = int(e_toks[1])
@@ -201,9 +213,13 @@ def filter_events(event_list, user_id, line_id):
         e_y = payload.get('y','')
         eclass = event_to_class[e_type]
         device = get_device_for_event_class(eclass)
+        src_len = len(src_doc[line_id])
         event = Event(sourceid=str(line_id),
+                      ui_id=ui_id,
                       userid=str(user_id),
                       time=str(e_time),
+                      src_len=str(src_len),
+                      time_norm=str(float(e_time) / float(end_time)),
                       event_name=e_type,
                       event_class=eclass,
                       device=device,
@@ -217,8 +233,25 @@ def filter_events(event_list, user_id, line_id):
         tuple_list.append(event)
 
     return tuple_list
-    
-def parse_actionlogs(logfile, output_dir):
+
+def get_ui_dict_from_meta(metafile):
+    """ Associates sourceids with uis from metafiles.
+
+    Args:
+    Returns:
+    Raises:
+    """
+    with open(metafile) as in_file:
+        ui_dict = {}
+        for i,line in enumerate(in_file):
+            if i == 0:
+                # Skip header
+                continue
+            line_toks = line.strip().split('\t')
+            ui_dict[i-1] = line_toks[2]
+    return ui_dict
+
+def parse_actionlogs(logfile, metafile, output_dir):
     """ Convert actionlog to CSV format
 
     Args:
@@ -228,12 +261,14 @@ def parse_actionlogs(logfile, output_dir):
     logfile_name = basename(logfile)
     user_id = int(re.search('^(\d+)\.', logfile_name).group(1))
     sys.stderr.write('User id: %d%s' % (user_id, os.linesep))
+    ui_dict = get_ui_dict_from_meta(metafile)
     with open(logfile) as in_file:
         with open('%s/%s.csv' % (output_dir,logfile_name),'w') as out_file:
             out_csv = UnicodeWriter(out_file, quoting=csv.QUOTE_ALL)
             for i,line in enumerate(in_file):
                 events = line.strip().split('|')
-                filtered_events = filter_events(events, user_id, i)
+                ui_id = ui_dict[i]
+                filtered_events = filter_events(events, user_id, i, ui_id)
                 wrote_header = False
                 for e in filtered_events:
                     if i == 0 and not wrote_header:
@@ -245,11 +280,16 @@ def parse_actionlogs(logfile, output_dir):
 def main():
     desc='Convert and actionlog file to CSV for Tableau import'
     parser=ArgumentParser(description=desc)
-    parser.add_argument('files',
-                        metavar='action_log',
-                        type=str,
+    parser.add_argument('-l','--log_files',
+                        dest='logfiles',
                         nargs='+',
+                        required=True,
                         help='Action log file.')
+    parser.add_argument('-m','--meta',
+                        dest='metafiles',
+                        nargs='+',
+                        required=True,
+                        help='Meta file for each target translation.')
     parser.add_argument('-c', '--js_codes',
                         dest='js_codefile',
                         default=None,
@@ -274,10 +314,11 @@ def main():
     if args.src_docfile:
         src_doc = read_srcdoc(args.src_docfile)
 
+    # Setup output directory
     output_dir = args.out_dir if args.out_dir else './'
         
-    for logfile in args.files:
-        parse_actionlogs(logfile, output_dir)
+    for logfile,metafile in zip(args.logfiles,args.metafiles):
+        parse_actionlogs(logfile, metafile, output_dir)
 
 if __name__ == '__main__':
     main()
