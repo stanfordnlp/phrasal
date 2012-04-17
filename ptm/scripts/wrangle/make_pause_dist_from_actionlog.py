@@ -14,7 +14,7 @@ from csv_unicode import UnicodeReader,UnicodeWriter
 from argparse import ArgumentParser
 
 # Action log event
-Event = namedtuple('Event', 'sourceid userid time event_name event_class target x y key')
+Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button')
 
 # Pause
 Row = namedtuple('Row', 'sourceid userid duration event_before event_after')
@@ -39,17 +39,16 @@ def make_pause_file(actionlog, output_dir):
                     continue
                 duration = int(event.time) - int(last_event.time)
                 # Should probably discard below a set typing speed
-                # What is the min pause between keystrokes
-                if duration > 50:
-                    row = Row(sourceid=event.sourceid,
-                              userid=event.userid,
-                              duration=str(duration),
-                              event_before=last_event.event_class,
-                              event_after=event.event_class)
-                    if write_headers:
-                        out_csv.writerow(list(row._fields))
-                        write_headers = False
-                    out_csv.writerow([x for x in row._asdict().itervalues()])
+                # What is the min pause between keystrokes?
+                row = Row(sourceid=event.sourceid,
+                          userid=event.userid,
+                          duration=str(duration),
+                          event_before=last_event.event_class,
+                          event_after=event.event_class)
+                if write_headers:
+                    out_csv.writerow(list(row._fields))
+                    write_headers = False
+                out_csv.writerow([x for x in row._asdict().itervalues()])
                 last_event = event
                 
 def main():
