@@ -39,6 +39,7 @@ def process_src(src_file, lang_dict, out_path):
     Raises:
     """
     with open(src_file) as file_desc:
+        src_lens = {}
         for i,row in enumerate(map(SrcInputRow._make, UnicodeReader(file_desc))):
             if i == 0:
                 continue
@@ -48,12 +49,14 @@ def process_src(src_file, lang_dict, out_path):
             # Write source text ordered by id
             file_name = '%s/src.%s.txt' % (out_path, lang_code)
             with codecs.open(file_name,'a',encoding='utf-8') as out_file:
+                src_lens[row.id] = str(len(row.txt.split()))
                 out_file.write(row.txt.strip() + os.linesep)
 
             # Write source text metadata ordered by id
             meta_file_name = '%s/src.%s.meta.txt' % (out_path, lang_code)
             with codecs.open(meta_file_name,'a',encoding='utf-8') as out_file:
                 out_file.write('%s\t%s%s' % (row.doc,row.seg,os.linesep))
+    return src_lens
 
 def get_lang_dict(lang_file):
     """
@@ -74,7 +77,7 @@ def get_lang_dict(lang_file):
 
         return lang_dict
 
-def process_tgt(tgt_file, lang_dict, out_path):
+def process_tgt(tgt_file, lang_dict, src_lens, out_path):
     """ Processes user submitted translations. Emits them into three files:
 
       user_id.tgt.txt -- the target segments
@@ -114,18 +117,24 @@ def process_tgt(tgt_file, lang_dict, out_path):
                                                    lang_code,
                                                    row.user_id)
             with codecs.open(meta_name, 'a', encoding='utf-8') as meta_file:
+                src_len = src_lens[row.src_id]
+                tgt_len = str(len(row.txt.split()))
                 if len(user_src_ids[row.user_id].keys()) == 0:
                     # Write the column headers
-                    meta_file.write('%s\t%s\t%s\t%s%s' % (TgtInputRow._fields[3],
+                    meta_file.write('%s\t%s\t%s\t%s\t%s\t%s%s' % (TgtInputRow._fields[3],
                                                           TgtInputRow._fields[4],
                                                           TgtInputRow._fields[6],
                                                           TgtInputRow._fields[9],
+                                                                  'src_len',
+                                                                  'tgt_len',
                                                           os.linesep))
-                meta_file.write('%s\t%s\t%s\t%s%s' % (row.is_machine,
-                                                      row.date,
-                                                      row.ui_id,
-                                                      row.is_valid,
-                                                      os.linesep))
+                meta_file.write('%s\t%s\t%s\t%s\t%s\t%s%s' % (row.is_machine,
+                                                              row.date,
+                                                              row.ui_id,
+                                                              row.is_valid,
+                                                              src_len,
+                                                              tgt_len,
+                                                              os.linesep))
             
             # Write action log for this translation
             log_name = '%s/%s/%s.tgt.actionlog.txt' % (out_path,
@@ -157,8 +166,8 @@ def process_dump(src_file, tgt_file, lang_file, out_path):
     """
     mkdir_safe(out_path, True)
     lang_dict = get_lang_dict(lang_file)
-    process_src(src_file, lang_dict, out_path)
-    process_tgt(tgt_file, lang_dict, out_path)
+    src_lens = process_src(src_file, lang_dict, out_path)
+    process_tgt(tgt_file, lang_dict, src_lens, out_path)
 
 def main():
     """ Process command-line arguments.

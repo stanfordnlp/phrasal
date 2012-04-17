@@ -12,7 +12,7 @@ from collections import defaultdict,namedtuple
 from csv_unicode import UnicodeWriter
 from argparse import ArgumentParser
 
-Event = namedtuple('Event', 'sourceid userid time event_name event_class target x y key')
+Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button')
 
 # Maps control keycodes to human readable names
 control_keycode_to_str = None
@@ -20,17 +20,19 @@ control_keycode_to_str = None
 # Maps js events to a type classification
 event_to_class = {'start':'start',
                   'end':'end',
-                  'blur': 'view',
-                  'focus':'view',
-                  'focusin':'view',
-                  'focusout':'view',
+                  # Focus events can be controlled by mouse or tabbing
+                  'blur': 'focus',
+                  'focus':'focus',
+                  'focusin':'focus',
+                  'focusout':'focus',
+                  # Browser events based on modification of the viewport
                   'load':'browser',
-                  'resize':'view',
-                  'scroll':'view',
+                  'resize':'browser',
+                  'scroll':'browser',
                   'unload':'browser',
                   'click':'mouse',
                   'dblclick':'mouse',
-                  'keydown':'keyboard-control',
+                  'keydown':'keyboard',
                   'mousedown':'mouse',
                   'mouseup':'mouse',
                   'mouseover':'mouse',
@@ -40,13 +42,13 @@ event_to_class = {'start':'start',
                   'change':'mouse',
                   'select':'mouse',
                   'submit':'mouse',
-                  'keypress':'keyboard-input',
+                  'keypress':'keyboard',
                   'error':'browser'}
 
 # Convert CSS ids from the UI to human readable names
-css_id_to_str = {'id_txt':'Target Textbox',
-                 'src-display':'Source Textbox',
-                 'form-tgt-submit':'Submit Button'}
+css_id_to_str = {'id_txt':'target_textbox',
+                 'src-display':'source_textbox',
+                 'form-tgt-submit':'form_submit'}
 
 # The whitespace tokenized source document
 # src_doc[0][1] -> second token for the first sentence in the document
@@ -59,12 +61,11 @@ def read_srcdoc(filename):
     Returns:
     Raises:
     """
-    global src_doc
     src_doc = []
     with codecs.open(filename,encoding='utf-8') as in_file:
-        for line in in_file:
-            src_doc.append(line.strip().split())
-
+        src_doc = [x.strip().split() for x in in_file.readlines()]
+    return src_doc
+        
 def map_css_id(css_id, src_id):
     """ Map a CSS ui id to a source token.
 
@@ -75,12 +76,25 @@ def map_css_id(css_id, src_id):
     if css_id.startswith('src-tok'):
         src_tok_id = re.search('(\d+)', css_id)
         src_tok_id = int(src_tok_id.group(1))
-        return 'tok-'+src_doc[src_id][src_tok_id]
+        return ('token',src_doc[src_id][src_tok_id])
     elif css_id_to_str.has_key(css_id):
-        return css_id_to_str[css_id]
+        return (css_id_to_str[css_id],'')
     else:
-        return 'Layout'
+        return (css_id,'')
 
+def get_device_for_event_class(event_class):
+    """
+    Args:
+    Returns:
+    Raises:
+    """
+    if event_class.startswith('mouse'):
+        return 'mouse'
+    elif event_class.startswith('keyboard'):
+        return 'keyboard'
+    else:
+        return ''
+    
 def map_keycode(keycode):
     """ Maps a js input keycode to either a character
     or a string representing a control character.
@@ -91,8 +105,9 @@ def map_keycode(keycode):
     """
     keycode = int(keycode)
     if control_keycode_to_str.has_key(keycode):
-        return control_keycode_to_str[keycode]
-    return unichr(keycode)
+        keystr = control_keycode_to_str[keycode]
+        return (keystr, 'control')
+    return (unichr(keycode), 'input')
 
 def get_codes_dict(filename):
     """ Convert a js keycode TSV file to a dictionary. The file
@@ -113,7 +128,9 @@ def get_codes_dict(filename):
     return keycode_dict
 
 def create_payload(payload_list, src_line_id):
-    """ Converts a payload list to a dictionary and maps payload elements
+    """ Converts a raw event payload to a dictionary.
+    Maps some of the payload elements to interpretable values.
+    Payload keys are invariant.
 
     Args:
     Returns:
@@ -132,13 +149,15 @@ def create_payload(payload_list, src_line_id):
                 if int(item_value) > 7:
                     payload_dict[item_key] = map_keycode(item_value)
                 else:
-                    payload_dict[item_key] = item_value
+                    # k is indicates a mouse button
+                    payload_dict[item_key] = (item_value, 'mouse')
             elif item_key == 'x' or item_key == 'y':
                 payload_dict[item_key] = item_toks[1]
     return payload_dict
 
 def filter_events(event_list, user_id, line_id):
-    """ Converts a list of events to a list named tuples 
+    """ Converts a list of events to a list named tuples. Filters out
+    duplicate events (e.g., keypress/keydown).
 
     Args:
     Returns:
@@ -162,6 +181,7 @@ def filter_events(event_list, user_id, line_id):
         e_prev_type = e_prev[0]
         e_prev_time = int(e_prev[1])
 
+        # Sub 3ms response time associated with duplicate keyboard events
         if e_prev_type == 'keydown' and e_type == 'keypress' and (e_time-e_prev_time) < 3:
             filtered_events[-1] = e
         else:
@@ -175,20 +195,25 @@ def filter_events(event_list, user_id, line_id):
         e_time = int(e_toks[1])
         # Process the payload
         payload = create_payload(e_toks[2:], line_id)
-        e_keycode = payload.get('k','')
-        e_id = payload.get('id','')
+        (e_keycode,e_keytype) = payload.get('k', ('',''))
+        (e_id,e_token) = payload.get('id', ('',''))
         e_x = payload.get('x','')
         e_y = payload.get('y','')
-        eclass= event_to_class[e_type]
+        eclass = event_to_class[e_type]
+        device = get_device_for_event_class(eclass)
         event = Event(sourceid=str(line_id),
                       userid=str(user_id),
                       time=str(e_time),
                       event_name=e_type,
                       event_class=eclass,
+                      device=device,
                       target=e_id,
                       x=e_x,
                       y=e_y,
-                      key=e_keycode)
+                      src_tok=e_token,
+                      keytype=e_keytype,
+                      key=e_keycode if device == 'keyboard' else '',
+                      button=e_keycode if device == 'mouse' else '')
         tuple_list.append(event)
 
     return tuple_list
@@ -200,10 +225,11 @@ def parse_actionlogs(logfile, output_dir):
     Returns:
     Raises:
     """
-    user_id = int(re.search('^(\d+)\.', basename(logfile)).group(1))
+    logfile_name = basename(logfile)
+    user_id = int(re.search('^(\d+)\.', logfile_name).group(1))
     sys.stderr.write('User id: %d%s' % (user_id, os.linesep))
     with open(logfile) as in_file:
-        with open('%s/%s.csv' % (output_dir,basename(logfile)),'w') as out_file:
+        with open('%s/%s.csv' % (output_dir,logfile_name),'w') as out_file:
             out_csv = UnicodeWriter(out_file, quoting=csv.QUOTE_ALL)
             for i,line in enumerate(in_file):
                 events = line.strip().split('|')
@@ -217,8 +243,6 @@ def parse_actionlogs(logfile, output_dir):
     sys.stderr.write('Parsed %d event logs%s' % (i+1, os.linesep))
 
 def main():
-    global control_keycode_to_str
-    
     desc='Convert and actionlog file to CSV for Tableau import'
     parser=ArgumentParser(description=desc)
     parser.add_argument('files',
@@ -243,6 +267,8 @@ def main():
                         help='Output directory for files.')
     args = parser.parse_args()
 
+    # Load global variables
+    global control_keycode_to_str,src_doc
     if args.js_codefile:
         control_keycode_to_str = get_codes_dict(args.js_codefile)
     if args.src_docfile:
