@@ -10,8 +10,10 @@ A tutorial will explain the experiment to you. Read the tutorial carefully, and 
 Browser issues:
 We would prefer that you use a recent version of Chrome, Safari, or Firefox. If you use Internet Explorer, please ensure that you are using version 8 or later. If you absolutely cannot use any of these browsers, please send me a note before you begin. We have only tested the software with these browsers.
 
+***Please ensure that Javascript is enabled on your browser!***
+
 Payment:
-I'll review your work during the week and make the payment this weekend.
+I'll review your work during the week and make the payment within 24 hours of completion.
 
 Thanks again, and feel free to contact me with *any* questions!
 
