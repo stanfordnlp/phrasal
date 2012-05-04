@@ -22,7 +22,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static final String DISABLED_SCORES = System
       .getProperty(DISABLED_SCORES_PROPERTY);
 
-  static IntegerArrayIndex foreignIndex, translationIndex;
+  public static IntegerArrayIndex foreignIndex;
+  static IntegerArrayIndex translationIndex;
 
   static String[] customScores;
 
@@ -53,9 +54,9 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   int longestForeignPhrase;
 
-  static class IntArrayTranslationOption implements
+  public static class IntArrayTranslationOption implements
       Comparable<IntArrayTranslationOption> {
-    final int[] translation;
+    public final int[] translation;
     final float[] scores;
     final PhraseAlignment alignment;
     final int id;
@@ -74,9 +75,9 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
   }
 
-  final ArrayList<List<IntArrayTranslationOption>> translations;
+  public final ArrayList<List<IntArrayTranslationOption>> translations;
 
-  private static float[] stringProbListToFloatProbArray(List<String> sList, boolean doLog) {
+  private static float[] stringProbListToFloatProbArray(List<String> sList) {
     float[] fArray = new float[sList.size()];
     int i = 0;
     for (String s : sList) {
@@ -86,10 +87,10 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, f));
       }
-      float newF = doLog ? (float) Math.log(f) : f;
+      float newF =  (float) Math.log(f);
       if (Float.isNaN(newF)) {
         throw new RuntimeException(String.format(
-            "Bad phrase table. after doLog=%s, %s parses as (float) %f", doLog, s, newF));
+            "Bad phrase table. %s parses as (float) %f", s, newF));
       }
       fArray[i++] = newF;
     }
@@ -130,6 +131,14 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     // default is not to do log rithm on the scores
     this(phraseFeaturizer, scorer, filename, false);
   }
+  
+  public FlatPhraseTable(String filename) throws IOException {
+    this(null, null, filename, false);
+  }
+  
+  public FlatPhraseTable(String filename, boolean reverse) throws IOException {
+    this(null, null, filename, reverse);
+  }
 
   /**
    * 
@@ -137,14 +146,14 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    */
   public FlatPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String filename, boolean doLog) throws IOException {
+      Scorer<FV> scorer, String filename, boolean reverse) throws IOException {
     super(phraseFeaturizer, scorer);
     File f = new File(filename);
     name = String.format("FlatPhraseTable(%s)", f.getName());
     // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
     // DynamicIntegerArrayIndex();
     translations = new ArrayList<List<IntArrayTranslationOption>>();
-    int countScores = init(f, doLog);
+    int countScores = init(f, reverse);
     scoreNames = getScoreNames(countScores);
   }
 
@@ -159,8 +168,9 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     return scoreNames;
   }
 
-  private int init(File f, boolean doLog) throws IOException {
+  private int init(File f, boolean reverse) throws IOException {
     System.gc();
+    
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
@@ -204,6 +214,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         translationTokenList.add(token);
       } while (toker.hasMoreTokens());
 
+      if (reverse) {
+         Collection<String> tmp = translationTokenList;
+         translationTokenList = foreignTokenList;
+         foreignTokenList = tmp;
+      }
+      
       if (!toker.hasMoreTokens()) {
         throw new RuntimeException(String.format(
             "Additional fields expected (line %d)", reader.getLineNumber()));
@@ -243,7 +259,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
           translationTokens);
       float[] scores;
       try {
-        scores = stringProbListToFloatProbArray(scoreList, doLog);
+        scores = stringProbListToFloatProbArray(scoreList);
       } catch (NumberFormatException e) {
         throw new RuntimeException(String.format(
             "Error on line %d: '%s' not a list of numbers",
