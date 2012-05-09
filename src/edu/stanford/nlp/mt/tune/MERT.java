@@ -1256,7 +1256,7 @@ public class MERT extends Thread {
     int argi = 0;
     String arg;
 
-    while ((arg = args[argi]).startsWith("-")) {
+    while (argi < args.length && (arg = args[argi]).startsWith("-")) {
       if (arg.equals("-S")) {
         smoothBLEU = true;
       } else if (arg.equals("-D")) {
