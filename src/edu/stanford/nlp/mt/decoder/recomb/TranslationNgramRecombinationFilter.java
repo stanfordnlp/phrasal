@@ -128,7 +128,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
         System.err.printf("\tn-gram: %s\n", ngramB);
       }
     }
-    return (ngramA.equals(ngramB));
+    return (ngramA != null && ngramA.equals(ngramB));
   }
 
   @Override
