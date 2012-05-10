@@ -775,8 +775,11 @@ public class MERT extends Thread {
     System.err.printf("Loading nbest list: %s\n", nbestListFile);
     nbest = new FlatNBestList(nbestListFile, featureIndex, tokenizeNIST);
     System.err.printf("Loading local nbest list: %s\n", localNbestListFile);
-    FlatNBestList localNbest = new FlatNBestList(localNbestListFile,
+    FlatNBestList localNbest = null;
+    if (!"none".equals(localNbestListFile)) {
+      localNbest = new FlatNBestList(localNbestListFile,
         nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
+    }
 
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null
         || System.getProperty("mcmcELossSGD") != null || System
@@ -789,93 +792,95 @@ public class MERT extends Thread {
       initialObjValue = nbestEval;
     }
 
-    List<ScoredFeaturizedTranslation<IString, String>> localNbestArgmax = transArgmax(
-        localNbest, initialWts);
-    List<ScoredFeaturizedTranslation<IString, String>> nbestArgmax = transArgmax(
-        nbest, initialWts);
-    double localNbestEval = emetric.score(localNbestArgmax);
-    nbestEval = emetric.score(nbestArgmax);
-    reuseWeights = Math.abs(localNbestEval - nbestEval) < MAX_LOCAL_ALL_GAP_WTS_REUSE;
-    System.err.printf("Eval: %f Local eval: %f\n", nbestEval, localNbestEval);
-    System.err.printf("Rescoring entries\n");
-    // rescore all entries by weights
-    System.err.printf("n-best list sizes %d, %d\n", localNbest.nbestLists()
-        .size(), nbest.nbestLists().size());
-    if (localNbest.nbestLists().size() != nbest.nbestLists().size()) {
-      System.err
-          .printf(
-              "Error incompatible local and cummulative n-best lists, sizes %d != %d\n",
-              localNbest.nbestLists().size(), nbest.nbestLists().size());
-      System.exit(-1);
-    }
-    {
-      int lI = -1;
-      for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
-          .nbestLists()) {
-        lI++;
-        List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest
-            .nbestLists().get(lI);
-        // If we wanted, we could get the value of minReachableScore by just
-        // checking the bottom of the n-best list.
-        // However, lets make things robust to the order of the entries in the
-        // n-best list being mangled as well as
-        // score rounding.
-        double minReachableScore = Double.POSITIVE_INFINITY;
-        double maxReachableScore = Double.NEGATIVE_INFINITY;
-        for (ScoredFeaturizedTranslation<IString, String> trans : lNbestList) {
-          double score = scorer.getIncrementalScore(trans.features);
-          if (score < minReachableScore)
-            minReachableScore = score;
-          if (score > maxReachableScore)
-            maxReachableScore = score;
-        }
-        if (nbestlist.isEmpty())
-          throw new RuntimeException(
-              String
-                  .format(
-                      "Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n",
-                      lI));
-        System.err.printf("l %d - min reachable score: %f (orig size: %d)\n",
-            lI, minReachableScore, nbestlist.size());
-        for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
-          trans.score = scorer.getIncrementalScore(trans.features);
-          if (trans.score > minReachableScore && filterUnreachable) // mark for
-                                                                    // deletion
-                                                                    // (potentially
-                                                                    // unreachable)
-            trans.score = Double.NaN;
-          if (trans.score > maxReachableScore && filterStrictlyUnreachable) { // mark
-                                                                              // for
-                                                                              // deletion
-                                                                              // (unreachable)
-            trans.score = Double.NaN;
+    if (localNbest != null) {
+      List<ScoredFeaturizedTranslation<IString, String>> localNbestArgmax = transArgmax(
+          localNbest, initialWts);
+      List<ScoredFeaturizedTranslation<IString, String>> nbestArgmax = transArgmax(
+          nbest, initialWts);
+      double localNbestEval = emetric.score(localNbestArgmax);
+      nbestEval = emetric.score(nbestArgmax);
+      reuseWeights = Math.abs(localNbestEval - nbestEval) < MAX_LOCAL_ALL_GAP_WTS_REUSE;
+      System.err.printf("Eval: %f Local eval: %f\n", nbestEval, localNbestEval);
+      System.err.printf("Rescoring entries\n");
+      // rescore all entries by weights
+      System.err.printf("n-best list sizes %d, %d\n", localNbest.nbestLists()
+          .size(), nbest.nbestLists().size());
+      if (localNbest.nbestLists().size() != nbest.nbestLists().size()) {
+        System.err
+            .printf(
+                "Error incompatible local and cummulative n-best lists, sizes %d != %d\n",
+                localNbest.nbestLists().size(), nbest.nbestLists().size());
+        System.exit(-1);
+      }
+      {
+        int lI = -1;
+        for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
+            .nbestLists()) {
+          lI++;
+          List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest
+              .nbestLists().get(lI);
+          // If we wanted, we could get the value of minReachableScore by just
+          // checking the bottom of the n-best list.
+          // However, lets make things robust to the order of the entries in the
+          // n-best list being mangled as well as
+          // score rounding.
+          double minReachableScore = Double.POSITIVE_INFINITY;
+          double maxReachableScore = Double.NEGATIVE_INFINITY;
+          for (ScoredFeaturizedTranslation<IString, String> trans : lNbestList) {
+            double score = scorer.getIncrementalScore(trans.features);
+            if (score < minReachableScore)
+              minReachableScore = score;
+            if (score > maxReachableScore)
+              maxReachableScore = score;
+          }
+          if (nbestlist.isEmpty())
+            throw new RuntimeException(
+                String
+                    .format(
+                        "Nbest list of size zero at %d. Perhaps Phrasal ran out of memory?\n",
+                        lI));
+          System.err.printf("l %d - min reachable score: %f (orig size: %d)\n",
+              lI, minReachableScore, nbestlist.size());
+          for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+            trans.score = scorer.getIncrementalScore(trans.features);
+            if (trans.score > minReachableScore && filterUnreachable) // mark for
+                                                                      // deletion
+                                                                      // (potentially
+                                                                      // unreachable)
+              trans.score = Double.NaN;
+            if (trans.score > maxReachableScore && filterStrictlyUnreachable) { // mark
+                                                                                // for
+                                                                                // deletion
+                                                                                // (unreachable)
+              trans.score = Double.NaN;
+            }
           }
         }
       }
-    }
-
-    System.err.printf("removing anything that might not be reachable\n");
-    // remove everything that might not be reachable
-    for (int lI = 0; lI < nbest.nbestLists().size(); lI++) {
-      List<ScoredFeaturizedTranslation<IString, String>> newList = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
-          nbest.nbestLists().get(lI).size());
-      List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest
-          .nbestLists().get(lI);
-
-      for (ScoredFeaturizedTranslation<IString, String> trans : nbest
-          .nbestLists().get(lI)) {
-        if (!Double.isNaN(trans.score))
-          newList.add(trans);
+  
+      System.err.printf("removing anything that might not be reachable\n");
+      // remove everything that might not be reachable
+      for (int lI = 0; lI < nbest.nbestLists().size(); lI++) {
+        List<ScoredFeaturizedTranslation<IString, String>> newList = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
+            nbest.nbestLists().get(lI).size());
+        List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest
+            .nbestLists().get(lI);
+  
+        for (ScoredFeaturizedTranslation<IString, String> trans : nbest
+            .nbestLists().get(lI)) {
+          if (!Double.isNaN(trans.score))
+            newList.add(trans);
+        }
+        if (filterUnreachable)
+          newList.addAll(lNbestList); // otherwise entries are already on the
+                                      // n-best list
+        nbest.nbestLists().set(lI, newList);
+        System.err.printf(
+            "l %d - final (filtered) combined n-best list size: %d\n", lI,
+            newList.size());
       }
-      if (filterUnreachable)
-        newList.addAll(lNbestList); // otherwise entries are already on the
-                                    // n-best list
-      nbest.nbestLists().set(lI, newList);
-      System.err.printf(
-          "l %d - final (filtered) combined n-best list size: %d\n", lI,
-          newList.size());
     }
-
+    
     // add entries for all wts in n-best list
     for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
         .nbestLists()) {
@@ -920,12 +925,11 @@ public class MERT extends Thread {
     lrate = (C != 0 ? DEFAULT_UNSCALED_L_RATE / C : DEFAULT_UNSCALED_L_RATE);
     System.out.printf("sgd lrate: %e\n", lrate);
 
+    
     if (reuseWeights) {
-      System.err.printf("Re-using initial wts, gap: %e",
-          Math.abs(localNbestEval - nbestEval));
+      System.err.println("Re-using initial wts");
     } else {
-      System.err.printf("*NOT* Re-using initial wts, gap: %e max gap: %e",
-          Math.abs(localNbestEval - nbestEval), MAX_LOCAL_ALL_GAP_WTS_REUSE);
+      System.err.println("*NOT* Re-using initial wts");
     }
 
     removeWts(initialWts, fixedWts);
