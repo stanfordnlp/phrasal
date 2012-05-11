@@ -17,9 +17,17 @@ import edu.stanford.nlp.stats.Counters;
  * @author danielcer
  */
 public class RandomAltPairs extends AbstractNBestOptimizer {
+  static final boolean FORCE_BETTER_DEFAULT = true;
+  final boolean forceBetter;
 
-  boolean forceBetter;
-
+  public RandomAltPairs(MERT mert, String[] args) {
+    super(mert);
+    if (args.length == 0) {
+      forceBetter = FORCE_BETTER_DEFAULT;
+    } else {
+      forceBetter = Boolean.parseBoolean(args[0]);
+    }
+  }
   public RandomAltPairs(MERT mert, boolean forceBetter) {
     super(mert);
     this.forceBetter = forceBetter;
@@ -27,7 +35,7 @@ public class RandomAltPairs extends AbstractNBestOptimizer {
 
   @Override
   public Counter<String> optimize(Counter<String> initialWts) {
-
+    System.err.printf("RandomAltPairs forceBetter = %b\n", forceBetter);
     Counter<String> wts = initialWts;
 
     for (int noProgress = 0; noProgress < MERT.NO_PROGRESS_LIMIT;) {
@@ -38,16 +46,19 @@ public class RandomAltPairs extends AbstractNBestOptimizer {
       dir = MERT.summarizedAllFeaturesVector(rTrans = (forceBetter ? mert
           .randomBetterTranslations(nbest, wts, emetric) : mert
           .randomTranslations(nbest)));
+      Counter<String> newWts1 = mert.lineSearch(nbest, wts, dir, emetric); // search toward random better translation
+            
       MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
           new ScorerWrapperEvaluationMetric<IString, String>(scorer));
       List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch
           .maximize(nbest);
-      Counters.subtractInPlace(dir, MERT.summarizedAllFeaturesVector(oneBest));
+      
+      Counters.subtractInPlace(dir, wts);
 
       System.err.printf("Random alternate score: %.5f \n",
           emetric.score(rTrans));
 
-      Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
+      Counter<String> newWts = mert.lineSearch(nbest, newWts1, dir, emetric);
       double eval = MERT.evalAtPoint(nbest, newWts, emetric);
 
       double ssd = 0;
