@@ -33,7 +33,7 @@ public class FeatureValues {
     return featureList;
   }
 
-  public static <T> Counter<T> toCounter(List<FeatureValue<T>> featureValues) {
+  public static <T> Counter<T> toCounter(Collection<FeatureValue<T>> featureValues) {
     ClassicCounter<T> counter = new ClassicCounter<T>();
     for (FeatureValue<T> fv : featureValues) {
       counter.incrementCount(fv.name, fv.value);
