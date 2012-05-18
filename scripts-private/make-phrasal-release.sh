@@ -73,7 +73,9 @@ cp ../core/src/edu/stanford/nlp/util/logging/* phrasal.$1/src/edu/stanford/nlp/u
 mkdir -p phrasal.$1/lib
 cp lib/berkeleyaligner.jar phrasal.$1/lib
 cp ../core/lib/fastutil.jar phrasal.$1/lib
+cp ../core/lib/junit.jar phrasal.$1/lib
 cp lib/je-4.1.10.jar phrasal.$1/lib
+cp lib/guava-11.0.2.jar phrasal.$1/lib
 
 mkdir `pwd`/phrasal.$1/classes
 mkdir `pwd`/phrasal.$1/lib-nodistrib
