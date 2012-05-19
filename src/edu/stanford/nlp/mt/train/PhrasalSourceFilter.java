@@ -16,6 +16,7 @@ public class PhrasalSourceFilter extends AbstractSourceFilter {
 
   public PhrasalSourceFilter(int maxPhraseLenF, boolean addBoundaryMarkers) {
     super(maxPhraseLenF, new DynamicIntegerArrayIndex());
+    System.err.println("creating PhrasalSourceFilter with maxPhraseLenF=" + maxPhraseLenF);
     this.addBoundaryMarkers = addBoundaryMarkers;
   }
 

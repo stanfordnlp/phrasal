@@ -23,6 +23,7 @@ public class DTUSourceFilter extends AbstractSourceFilter {
 
   public DTUSourceFilter(int maxPhraseLenF, int maxSpanF) {
     super(maxPhraseLenF, new TrieIntegerArrayIndex(0));
+    System.err.println("Creating DTUSourceFilter with maxPhraseLenF="+maxPhraseLenF+", maxSpanF="+maxSpanF);
     this.maxSpanF = maxSpanF;
   }
 
