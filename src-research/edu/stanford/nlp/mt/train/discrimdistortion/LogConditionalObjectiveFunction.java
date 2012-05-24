@@ -16,7 +16,7 @@ public class LogConditionalObjectiveFunction extends
   private final int numFeatures;
   private final Map<DistortionModel.Feature, Integer> featureOffsets;
 
-  protected double[] derivativeNumerator = null;
+  private final double[] derivativeNumerator;
   private final double[] sums;
   private final double[] probs;
 
@@ -31,6 +31,24 @@ public class LogConditionalObjectiveFunction extends
 
     sums = new double[numClasses];
     probs = new double[numClasses];
+    
+    // Cache the empirical "counts" term
+    // This only needs to be computed once and does not depend on current parameters.
+    derivativeNumerator = new double[numClasses*numFeatures];
+
+    for (Datum datum : trainingSet) {
+      DistortionModel.Class c = DistortionModel
+          .discretizeDistortion((int) datum.getTarget());
+
+      for (int i = 0; i < datum.numFeatures(); i++) {
+        DistortionModel.Feature feat = trainingSet.featureIndex.get(i);
+        DistortionModel.FeatureType type = trainingSet.getFeatureType(feat);
+
+        int j = indexOf(feat, datum.get(i), c.ordinal());
+        derivativeNumerator[j] -= (type == DistortionModel.FeatureType.Binary) ? 1
+            : datum.get(i);
+      }
+    }
   }
 
   // Replace to locate the appropriate weight for the feature and class
@@ -54,8 +72,7 @@ public class LogConditionalObjectiveFunction extends
   }
 
   /**
-   * Calculate the conditional likelihood of this data by multiplying
-   * conditional estimates.
+   * Calculate the negative log-likelihood
    * 
    */
   @Override
@@ -63,25 +80,8 @@ public class LogConditionalObjectiveFunction extends
 
     value = 0.0;
 
-    // Cache the "counts" term
-    if (derivativeNumerator == null) {
-      derivativeNumerator = new double[x.length];
-
-      for (Datum datum : trainingSet) {
-        DistortionModel.Class c = DistortionModel
-            .discretizeDistortion((int) datum.getTarget());
-
-        for (int i = 0; i < datum.numFeatures(); i++) {
-          DistortionModel.Feature feat = trainingSet.featureIndex.get(i);
-          DistortionModel.FeatureType type = trainingSet.getFeatureType(feat);
-
-          int j = indexOf(feat, datum.get(i), c.ordinal());
-          derivativeNumerator[j] -= (type == DistortionModel.FeatureType.Binary) ? 1
-              : datum.get(i);
-        }
-      }
-    }
-
+    // Wipe out the current derivative
+    // Copy in the empirical counts
     System.arraycopy(derivativeNumerator, 0, derivative, 0,
         derivativeNumerator.length);
 
