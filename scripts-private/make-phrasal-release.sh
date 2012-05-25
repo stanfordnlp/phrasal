@@ -120,7 +120,7 @@ rm -rf phrasal.$1/lib-nodistrib/*
 
 tar --exclude .svn -czf phrasal.$1.tar.gz phrasal.$1
 
-if [ $? = 0]; then
+if [ $? = 0 ]; then
   echo "SUCCESS: Stanford Phrasal distribution phrasal.$1.tar.gz successfully built"
 else
   echo "FAIL: Tar went wrong somehow"
