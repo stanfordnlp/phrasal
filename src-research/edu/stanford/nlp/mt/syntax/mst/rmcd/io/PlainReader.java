@@ -44,7 +44,7 @@ public class PlainReader extends DependencyReader {
 
     List<TaggedWord> taggedSent = null;
     if (!tagged) {
-      taggedSent = ts.tagSentence(sent);
+      taggedSent = ts.tagSentence(sent, false);
       assert (length == taggedSent.size());
     }
 

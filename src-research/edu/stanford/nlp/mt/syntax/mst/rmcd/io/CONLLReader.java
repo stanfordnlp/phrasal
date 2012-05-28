@@ -124,7 +124,7 @@ public class CONLLReader extends DependencyReader {
 
     if (pretag) {
       ArrayList<Word> sent = Sentence.toUntaggedList(toTag);
-      List<TaggedWord> tagged = ts.tagSentence(sent);
+      List<TaggedWord> tagged = ts.tagSentence(sent, false);
       for (int i = 1; i <= tagged.size(); ++i) {
         String tag = tagged.get(i - 1).tag();
         pos[i] = tag;
