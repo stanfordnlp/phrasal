@@ -159,7 +159,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     assert (!translations.isEmpty());
     Iterator<RichTranslation<TK, FV>> listIterator = translations.iterator();
     Featurizable<TK, FV> featurizable = listIterator.next().featurizable;
-    if (featurizable.done)
+    if (featurizable != null && featurizable.done && featurizer != null)
       featurizer.dump(featurizable);
     else
       System.err.println("Warning: 1-best not complete!");

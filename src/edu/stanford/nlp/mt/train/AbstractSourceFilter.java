@@ -98,7 +98,8 @@ public abstract class AbstractSourceFilter implements SourceFilter {
   @Override
   public void lock() {
     this.sourcePhraseTable.lock();
-    this.excludePhraseTable.lock();
+    if (excludePhraseTable != null)
+       excludePhraseTable.lock();
   }
 
   @Override
