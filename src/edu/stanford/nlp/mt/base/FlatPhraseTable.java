@@ -87,7 +87,9 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, f));
       }
+
       float newF =  (f <= 0 ? f : (float) Math.log(f));
+
       if (Float.isNaN(newF)) {
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, newF));
