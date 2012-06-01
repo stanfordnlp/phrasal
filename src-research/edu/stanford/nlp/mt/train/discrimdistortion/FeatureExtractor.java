@@ -12,6 +12,7 @@ import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.mt.base.IOTools;
 
+/** @author Spence Green */
 public class FeatureExtractor {
 
   private final File sourceFile;
@@ -32,9 +33,9 @@ public class FeatureExtractor {
   private boolean OUTBOUND = false;
 
   private boolean USE_DELIMS = false;
-  private final String START_OF_SENTENCE = "<S>";
-  private final String END_OF_SENTENCE = "</S>";
-  private final String DELIM_POS = "SS";
+  private static final String START_OF_SENTENCE = "<S>";
+  private static final String END_OF_SENTENCE = "</S>";
+  private static final String DELIM_POS = "SS";
 
   private float trainingThreshold = Integer.MAX_VALUE;
 
