@@ -19,8 +19,6 @@ import edu.stanford.nlp.util.Pair;
  * Tera-Scale LMs on the Cheap (EMNLP 2007).
  * 
  * @author daniel cer
- *
- * @param <T>
  */
 public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel<IString>, Serializable {
    

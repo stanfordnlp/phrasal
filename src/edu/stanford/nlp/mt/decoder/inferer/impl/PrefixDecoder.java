@@ -40,9 +40,6 @@ import edu.berkeley.nlp.wa.mt.Alignment;
  * Prefix decoder 
  * 
  * @author daniel
- *
- * @param <IString>
- * @param <FV>
  */
 public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   public static boolean DEBUG = true;
