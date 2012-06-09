@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.Pair;
  * @param <TK>
  */
 public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
-  
+
   public static final int DEFAULT_MAX_NGRAM_ORDER = 4;
 
   public static final double LENGTH_BIAS = Double.parseDouble(System
@@ -64,7 +64,12 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
 
-  /** Compute a smoothed BLEU score in the standard way.
+  /** Compute a sentence-level smoothed BLEU score in the standard way.
+   *  This method follows:
+   *  Lin, Chin-Yew and Franz J. Och. 2004. ORANGE: A Method for Evaluating
+   *  Automatic Evaluation Metrics for Machine Translation.
+   *  COLING 2004, Proceedings of the 20th International Conference on
+   *  Computational Linguistics, Geneva, Switzerland. 501–507.
    *
    * @param strSeq The candidate translation
    * @param strRefs A list of reference translations
@@ -131,8 +136,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
   /**
-	 *
-	 */
+   *
+   */
   public BLEUMetric(double multiplier, List<List<Sequence<TK>>> referencesList) {
     this.order = DEFAULT_MAX_NGRAM_ORDER;
     maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(
@@ -148,8 +153,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
   /**
-	 *
-	 */
+   *
+   */
   public BLEUMetric(List<List<Sequence<TK>>> referencesList, boolean smooth) {
     this.order = DEFAULT_MAX_NGRAM_ORDER;
     maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(
@@ -162,8 +167,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
   /**
-	 *
-	 */
+   *
+   */
   public BLEUMetric(List<List<Sequence<TK>>> referencesList, int order,
       boolean smooth) {
     this.order = order;
@@ -237,8 +242,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
   /**
-	 *
-	 */
+   *
+   */
 
   @Override
   public RecombinationFilter<IncrementalEvaluationMetric<TK, FV>> getIncrementalMetricRecombinationFilter() {
@@ -336,8 +341,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     /**
-		 *
-		 */
+     *
+     */
     private BLEUIncrementalMetric(BLEUIncrementalMetric m) {
       this.futureMatchCounts = m.futureMatchCounts;
       this.futurePossibleCounts = m.futurePossibleCounts;
@@ -566,8 +571,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     /**
-		 *
-		 */
+     *
+     */
     public double logScore() {
       return logScore(matchCounts.length);
     }
@@ -584,8 +589,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     /**
-		 *
-		 */
+     *
+     */
     private int maxNonZeroPrecision() {
       double[] precisions = ngramPrecisions();
       for (int i = precisions.length - 1; i >= 0; i--) {
@@ -596,8 +601,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     /**
-		 *
-		 */
+     *
+     */
     public double[] ngramPrecisions() {
       double[] p = new double[matchCounts.length];
       for (int i = 0; i < matchCounts.length; i++) {
@@ -616,8 +621,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     /**
-		 *
-		 */
+     *
+     */
     public int[][] ngramPrecisionCounts() {
       int[][] counts = new int[matchCounts.length][];
       for (int i = 0; i < matchCounts.length; i++) {
@@ -629,8 +634,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     /**
-		 *
-		 */
+     *
+     */
     public double logBrevityPenalty() {
       if (c < r) {
         return 1 - r / (1.0 * c);
@@ -644,15 +649,15 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     /**
-		 *
-		 */
+     *
+     */
     public int candidateLength() {
       return c;
     }
 
     /**
-		 *
-		 */
+     *
+     */
     public int effectiveReferenceLength() {
       return r;
     }
@@ -713,7 +718,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in));
 
-    for (String line; (line = reader.readLine()) != null;) {
+    for (String line; (line = reader.readLine()) != null; ) {
       line = NISTTokenizer.tokenize(line);
       line = line.replaceAll("\\s+$", "");
       line = line.replaceAll("^\\s+", "");
@@ -805,5 +810,5 @@ class BLEUIncrementalMetricRecombinationFilter<TK, FV> implements
 
     return hashCode;
   }
-  
+
 }
