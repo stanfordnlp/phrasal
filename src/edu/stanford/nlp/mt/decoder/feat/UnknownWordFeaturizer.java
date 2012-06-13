@@ -8,17 +8,18 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  * @param <TK>
  */
 public class UnknownWordFeaturizer<TK> implements
     IncrementalFeaturizer<TK, String>, IsolatedPhraseFeaturizer<TK, String> {
-  static public String FEATURE_NAME = "UnknownWord";
-  static public String UNKNOWN_PHRASE_TAG = "unknownphrase";
-  static public String UNKNOWN_PHRASE_TABLE_NAME = "IdentityPhraseGenerator(Dyn)";
-  static public final double MOSES_UNKNOWN_WORD_MUL = -100;
+
+  public static final String FEATURE_NAME = "UnknownWord";
+  public static final String UNKNOWN_PHRASE_TAG = "unknownphrase";
+  public static final String UNKNOWN_PHRASE_TABLE_NAME = "IdentityPhraseGenerator(Dyn)";
+  public static final double MOSES_UNKNOWN_WORD_MUL = -100.0;
 
   @Override
   public FeatureValue<String> featurize(Featurizable<TK, String> f) {
@@ -56,6 +57,8 @@ public class UnknownWordFeaturizer<TK> implements
       Sequence<TK> foreign) {
   }
 
+  @Override
   public void reset() {
   }
+  
 }

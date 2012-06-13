@@ -109,7 +109,7 @@ public class Phrasal {
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
   public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
-  
+
   public static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   public static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
 
@@ -118,13 +118,13 @@ public class Phrasal {
   static final Set<String> IGNORED_FIELDS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
 
-  public static double DEFAULT_LEARNING_RATE = 0.01;
-  public static double DEFAULT_MOMENTUM_TERM = 0.9;
+  public static final double DEFAULT_LEARNING_RATE = 0.01;
+  public static final double DEFAULT_MOMENTUM_TERM = 0.9;
   static final int DEFAULT_LOCAL_PROCS = 1;
   static final int DEFAULT_MAX_EPOCHS = 5;
   static final int DEFAULT_DISTORTION_LIMIT = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
-  public static boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
+  public static final boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
   static final boolean VERBOSE_LEARNER = true;
 
   static {
@@ -205,7 +205,7 @@ public class Phrasal {
     REFERENCE, BEST_ON_N_BEST_LIST
   }
 
-  public static LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.BEST_ON_N_BEST_LIST;
+  public static final LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.BEST_ON_N_BEST_LIST;
   LearningTarget learningTarget = DEFAULT_LEARNING_TARGET;
 
   EvaluationMetric<IString, String> learningMetric = null;
@@ -304,7 +304,7 @@ public class Phrasal {
     Map<String, List<String>> configArgs = new HashMap<String, List<String>>();
     Map<String, List<String>> configFile = new HashMap<String, List<String>>();
     Map<String, List<String>> configFinal = new HashMap<String, List<String>>();
-        
+
     for (Map.Entry<Object, Object> e : StringUtils.argsToProperties(args)
         .entrySet()) {
       String key = e.getKey().toString();
@@ -466,9 +466,9 @@ public class Phrasal {
       discriminativeLMOrder = DEFAULT_DISCRIMINATIVE_LM_ORDER;
     }
 
-    List<Annotator<IString>> additionalAnnotators = new ArrayList<Annotator<IString>>();    
+    List<Annotator<IString>> additionalAnnotators = new ArrayList<Annotator<IString>>();
     if (config.containsKey(ADDITIONAL_ANNOTATORS)) {
-    	// todo make some general method that can parse both additional annotators 
+    	// todo make some general method that can parse both additional annotators
     	// and additional featurizers
     	List<String> tokens = config.get(ADDITIONAL_ANNOTATORS);
         String annotatorName = null;
@@ -484,7 +484,7 @@ public class Phrasal {
                   .newInstance();
               additionalAnnotators.add(annotator);
             } else if (token.contains("(")) {
-              if (token.endsWith(")")) {  
+              if (token.endsWith(")")) {
                 annotatorName = token.replaceFirst("\\(.*", "");
                 args = token.replaceFirst("^.*\\(", "");
                 args = args.substring(0, args.length() - 1);
@@ -538,10 +538,10 @@ public class Phrasal {
           System.err.printf("Error: no ')' found for annotator %s\n",
               annotatorName);
           System.exit(-1);
-        }     	
+        }
     }
     System.err.printf("Number of additional annotators loaded: %d\n", additionalAnnotators.size());
-    
+
     List<IncrementalFeaturizer<IString, String>> additionalFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
@@ -645,10 +645,10 @@ public class Phrasal {
         throw new RuntimeException("Unsupported configuration "
             + config.get(LANGUAGE_MODEL_OPT));
       }
-    
+
       System.err.printf("Language model: %s\n", lgModel);
     }
-    
+
     if (discriminativeLMOrder != 0) {
       System.err.printf("Discriminative LM order: %d\n", discriminativeLMOrder);
     }
@@ -731,7 +731,7 @@ public class Phrasal {
           weightConfig.setCount(fields[0], Double.parseDouble(fields[1]));
         }
       }
-      
+
       if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
         weightConfig.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
@@ -739,8 +739,8 @@ public class Phrasal {
       if (config.containsKey(DISTORTION_WT_OPT)) {
         weightConfig.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
-      
-      
+
+
         if (config.get(DISTORTION_WT_OPT).size() > 1) {
           int numAdditionalWts = config.get(DISTORTION_WT_OPT).size() - 1;
           if (lexReorderFeaturizer == null) {
@@ -767,12 +767,12 @@ public class Phrasal {
           }
         }
       }
-      
+
       if (config.containsKey(WORD_PENALTY_WT_OPT)) {
         weightConfig.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
             Double.parseDouble(config.get(WORD_PENALTY_WT_OPT).get(0)));
       }
-      
+
       weightConfig.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
       weightConfig.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME, 1.0);
 
@@ -780,7 +780,7 @@ public class Phrasal {
         System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
       }
     }
-    
+
     if (learnWeights = config.containsKey(LEARN_WEIGHTS_USING_REFS)
         && !config.containsKey(FORCE_DECODE_ONLY)) {
       if (config.containsKey(LEARNING_ALGORITHM)) {
@@ -896,11 +896,11 @@ public class Phrasal {
       }
     }
 
-    
+
     if (config.containsKey(DROP_UNKNOWN_WORDS)) {
-    	dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));    
+    	dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
     }
-    
+
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
     System.err.printf("Phrase table: %s Unknown words policy: %s\n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
 
@@ -925,12 +925,12 @@ public class Phrasal {
           : PhraseGeneratorFactory.factory(featurizer, scorer, false, generatorName,
               phraseTable, optionLimit));
     }
-    
+
     if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
        List<PhraseGenerator<IString>> pgens = new LinkedList<PhraseGenerator<IString>>();
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-          PhraseGenerator pgen; 
+          PhraseGenerator pgen;
           try {
              pgen = (PhraseGenerator)Class.forName(pgenClasspath).
                 getConstructor(IsolatedPhraseFeaturizer.class, Scorer.class).newInstance(featurizer, scorer);
@@ -941,11 +941,11 @@ public class Phrasal {
        }
        phraseGenerator = new CombinedPhraseGenerator<IString>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
     }
-    
+
     phraseGenerator = new CombinedPhraseGenerator<IString>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(featurizer, dropUnknownWords, scorer)), 
-             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));   
- 
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(featurizer, dropUnknownWords, scorer)),
+             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
+
     System.err.printf("Phrase Limit: %d\n",
         ((CombinedPhraseGenerator<IString>) phraseGenerator).getPhraseLimit());
 
@@ -1363,11 +1363,11 @@ public class Phrasal {
 
   private static class PerceptronLearner implements Learner {
     private final double[] lrate;
-    OAIndex<String> featureIndex = new OAIndex<String>();
-    double[] weights = new double[0];
-    static final double DEFAULT_WT = 0.001;
+    private final OAIndex<String> featureIndex = new OAIndex<String>();
+    private double[] weights = new double[0];
+    private static final double DEFAULT_WT = 0.001;
 
-    public PerceptronLearner(double lrate[]) {
+    public PerceptronLearner(double[] lrate) {
       this.lrate = lrate;
     }
 
@@ -1486,7 +1486,7 @@ public class Phrasal {
     ClassicCounter<String> wtsSum = new ClassicCounter<String>();
     int updateCount = 0;
 
-    public AvgPerceptronLearner(double lrate[]) {
+    public AvgPerceptronLearner(double[] lrate) {
       this.lrate = lrate;
       wts.setDefaultReturnValue(0.1);
     }
@@ -1498,7 +1498,7 @@ public class Phrasal {
       for (Pair<String, Double> p : Counters
           .toDescendingMagnitudeSortedListWithCounts(wtsSum)) {
         writer.append(p.first).append(" ")
-            .append((new Double(p.second / updateCount)).toString())
+            .append(Double.toString(p.second / updateCount))
             .append("\n");
       }
       writer.close();

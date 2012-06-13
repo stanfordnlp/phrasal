@@ -57,9 +57,9 @@ import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 
 /**
  * Minimum Error Rate Training (MERT).
- * 
+ *
  * Optimization for non smooth error surfaces.
- * 
+ *
  * @author danielcer
  * @author Michel Galley
  */
@@ -71,8 +71,8 @@ public class MERT extends Thread {
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
   public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "edu/stanford/nlp/mt/resources/generative.features";
-  
-  static public final Set<String> generativeFeatures = 
+
+  static public final Set<String> generativeFeatures =
       readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
 
   public static Set<String> readGenerativeFeatureList(String resourceName) {
@@ -105,7 +105,7 @@ public class MERT extends Thread {
     return gF;
   }
 
-  
+
   public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.metrics.METEORMetric";
   public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERMetric";
   public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERpMetric";
@@ -119,6 +119,7 @@ public class MERT extends Thread {
   public static double C = DEFAULT_C;
   static final double DEFAULT_T = 1;
   public static double T = DEFAULT_T;
+  
   static final double DEFAULT_UNSCALED_L_RATE = 0.1;
   public static double lrate = DEFAULT_UNSCALED_L_RATE;
   public static final double MIN_OBJECTIVE_CHANGE_SGD = 1e-5;
@@ -134,11 +135,11 @@ public class MERT extends Thread {
 
   public static final double MAX_LOCAL_ALL_GAP_WTS_REUSE = 0.035;
 
-  static public double MIN_PLATEAU_DIFF = 0.0;
+  public static final double MIN_PLATEAU_DIFF = 0.0;
   static public final double MIN_OBJECTIVE_DIFF = 1e-5;
 
   private static long SEED = 8682522807148012L;
-  
+
   private static Random globalRandom;
 
   public final static OAIndex<String> featureIndex = new OAIndex<String>();
@@ -152,7 +153,7 @@ public class MERT extends Thread {
   static public long getSeed() {
     return SEED;
   }
-  
+
   public double mcmcTightExpectedEval(FlatNBestList nbest,
       Counter<String> wts, EvaluationMetric<IString, String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
@@ -468,7 +469,7 @@ public class MERT extends Thread {
 
   static final int SEARCH_WINDOW = Integer.parseInt(System.getProperty(
       "SEARCH_WINDOW", "1"));
-  static public int MIN_NBEST_OCCURRENCES = Integer.parseInt(System
+  public static final int MIN_NBEST_OCCURRENCES = Integer.parseInt(System
       .getProperty("MIN_NBEST_OCCURRENCES", "5"));
   static final SmoothingType smoothingType = SmoothingType.valueOf(System
       .getProperty("SMOOTHING_TYPE", "min"));
@@ -579,9 +580,9 @@ public class MERT extends Thread {
 
   /**
    * Specialized evalAt point just for line search
-   * 
+   *
    * Previously, profiling revealed that this was a serious hotspot
-   * 
+   *
    */
   private double quickEvalAtPoint(FlatNBestList nbest, Set<InterceptIDs> s) {
     if (DEBUG)
@@ -694,12 +695,12 @@ public class MERT extends Thread {
   }
 
   static void displayWeights(Counter<String> wts) {
-      
+
     List<Pair<String,Double>> wtsList = Counters.toDescendingMagnitudeSortedListWithCounts(wts);
     if (wtsList.size() > 100) {
       wtsList = wtsList.subList(0, 100);
     }
-           
+
     for (Pair<String, Double> p : wtsList) {
       System.out.printf("%s %g\n", p.first, p.second);
     }
@@ -749,7 +750,7 @@ public class MERT extends Thread {
 
   /**
    * Initialize everything that is read only, i.e., nbest list, starting points.
-   * 
+   *
    * @throws IOException
    * @throws ClassNotFoundException
    */
@@ -768,7 +769,7 @@ public class MERT extends Thread {
           fixedWts));
     initialWts = previousWts.get(0);
 
-    
+
     StaticScorer scorer = new StaticScorer(initialWts, featureIndex);
 
     // Load nbest list:
@@ -857,7 +858,7 @@ public class MERT extends Thread {
           }
         }
       }
-  
+
       System.err.printf("removing anything that might not be reachable\n");
       // remove everything that might not be reachable
       for (int lI = 0; lI < nbest.nbestLists().size(); lI++) {
@@ -865,7 +866,7 @@ public class MERT extends Thread {
             nbest.nbestLists().get(lI).size());
         List<ScoredFeaturizedTranslation<IString, String>> lNbestList = localNbest
             .nbestLists().get(lI);
-  
+
         for (ScoredFeaturizedTranslation<IString, String> trans : nbest
             .nbestLists().get(lI)) {
           if (!Double.isNaN(trans.score))
@@ -880,7 +881,7 @@ public class MERT extends Thread {
             newList.size());
       }
     }
-    
+
     // add entries for all wts in n-best list
     for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbest
         .nbestLists()) {
@@ -895,7 +896,7 @@ public class MERT extends Thread {
         }
       }
     }
-    
+
     for (int i = 0; i < nStartingPoints; i++) {
       Counter<String> wts;
       if (i == 0) {
@@ -909,7 +910,7 @@ public class MERT extends Thread {
       }
       startingPoints.add(wts);
     }
-    
+
     nInitialStartingPoints = startingPoints.size();
 
     if (System.getProperty("C") != null) {
@@ -925,7 +926,7 @@ public class MERT extends Thread {
     lrate = (C != 0 ? DEFAULT_UNSCALED_L_RATE / C : DEFAULT_UNSCALED_L_RATE);
     System.out.printf("sgd lrate: %e\n", lrate);
 
-    
+
     if (reuseWeights) {
       System.err.println("Re-using initial wts");
     } else {
