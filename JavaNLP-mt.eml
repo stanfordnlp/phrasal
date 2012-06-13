@@ -110,4 +110,15 @@
 	<lib name="berkeleyaligner.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/berkeleyaligner.jar!/"/>
 	</lib>
+	<lib name="JDBM-3.0-alpha2.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/JDBM-3.0-alpha2.jar!/"/>
+	</lib>
+	<lib name="guava-11.0.2.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/guava-11.0.2.jar!/"/>
+	</lib>
+	<lib name="pinyin4j-2.5.0.jar" scope="COMPILE">
+		<srcroot url="jar://$MODULE_DIR$/libsrc/pinyin4j-2.5.0.zip!/src"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/pinyin4j-2.5.0.zip!/src"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/pinyin4j-2.5.0.jar!/"/>
+	</lib>
 </component>
