@@ -29,7 +29,7 @@ import edu.stanford.nlp.util.Pair;
  *
  */
 public class BuildFMSGoogleLM {
-   static public final String GoogleLMNamePrefix = "GLM";
+   static public final String GoogleLMNamePrefix = "FMSGLM";
     
    public static void main(String[] args) throws IOException {
       if (args.length != 4 && args.length != 5) {
