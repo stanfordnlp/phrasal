@@ -28,10 +28,10 @@ public class MemoryMappedMassiveIntegerArray {
       FileChannel fc = fh.getChannel();
       for (int i = 0; i < buffers.length; i++) {
         if (i + 1 == buffers.length) {
-           buffers[i] = fc.map(FileChannel.MapMode.READ_WRITE, i * CHUNK_SIZE * LONG_SIZE_BYTES, 
+           buffers[i] = fc.map(FileChannel.MapMode.READ_WRITE, (i*1L) * CHUNK_SIZE * LONG_SIZE_BYTES, 
                (size & CHUNK_POS_MASK) * LONG_SIZE_BYTES);
         } else {
-          buffers[i] = fc.map(FileChannel.MapMode.READ_WRITE, ((long)i) * CHUNK_SIZE * LONG_SIZE_BYTES, 
+          buffers[i] = fc.map(FileChannel.MapMode.READ_WRITE, (i*1L) * CHUNK_SIZE * LONG_SIZE_BYTES, 
               ((long)CHUNK_SIZE) * LONG_SIZE_BYTES);
         }
      }

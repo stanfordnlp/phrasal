@@ -89,11 +89,11 @@ public class DiskLM implements LanguageModel<IString> {
     for (int i = 0; i < usedPositions.length; i++) {
       if (i + 1 < usedPositions.length) {
         usedPositions[i] = new BitSet(ENTRIES_PER_BUCKET);
-        tablebb[i] = fc.map(FileChannel.MapMode.READ_ONLY, HEADER_SIZE + i * Integer.MAX_VALUE, Integer.MAX_VALUE);
+        tablebb[i] = fc.map(FileChannel.MapMode.READ_ONLY, HEADER_SIZE +  (i*1L) * Integer.MAX_VALUE, Integer.MAX_VALUE);
       } else {
         int lastBucketPositions = (int)(entries - (buckets-1L)*ENTRIES_PER_BUCKET);
         usedPositions[i] = new BitSet(lastBucketPositions);
-        tablebb[i] = fc.map(FileChannel.MapMode.READ_ONLY, HEADER_SIZE  + i * Integer.MAX_VALUE, lastBucketPositions * ENTRY_SIZE);
+        tablebb[i] = fc.map(FileChannel.MapMode.READ_ONLY, HEADER_SIZE  + (i*1L) * Integer.MAX_VALUE, lastBucketPositions * ENTRY_SIZE);
       }
     }
     
@@ -103,9 +103,9 @@ public class DiskLM implements LanguageModel<IString> {
     symbolbb = new MappedByteBuffer[1+(int)(symbolTableSize/Integer.MAX_VALUE)];
     for (int i = 0; i < symbolbb.length; i++) {
       if (i + 1 < symbolbb.length) {
-        symbolbb[i] = fc.map(FileChannel.MapMode.READ_ONLY, symbolTableStart + i * Integer.MAX_VALUE, Integer.MAX_VALUE);
+        symbolbb[i] = fc.map(FileChannel.MapMode.READ_ONLY, symbolTableStart + (i*1L) * Integer.MAX_VALUE, Integer.MAX_VALUE);
       } else {
-        symbolbb[i] = fc.map(FileChannel.MapMode.READ_ONLY, symbolTableStart + i * Integer.MAX_VALUE, 
+        symbolbb[i] = fc.map(FileChannel.MapMode.READ_ONLY, symbolTableStart + (i*1L) * Integer.MAX_VALUE, 
             lmfh.length() - symbolTableStart - (i*1L)*Integer.MAX_VALUE);
       }
     }
