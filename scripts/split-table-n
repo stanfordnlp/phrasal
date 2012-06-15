@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+######################################################
+# Create a phrase-table and lexical re-ordering tables
+# from the output of 'extract-phrases'.
+######################################################
+
+use strict;
+use POSIX;
+use Fatal qw(open close);
+use utf8;
+binmode(STDIN,":utf8");
+binmode(STDOUT,":utf8");
+binmode(STDERR,":utf8");
+
+my $ptableN = $ARGV[0];
+my $ptable  = $ARGV[1];
+my $otable  = $ARGV[2];
+
+if($ptable =~ /\.gz$/) { open(P,"| gzip > $ptable"); }
+else { open(P,"> $ptable"); }
+binmode(P,":utf8");
+if($otable =~ /\.gz$/) { open(O,"| gzip > $otable"); }
+else { open(O,"> $otable"); }
+binmode(O,":utf8");
+
+print "$ptableN\n";
+
+while(<STDIN>) {
+	chomp;
+	if (/^([^\|]+ \|\|\| [^\|]+) \|\|\| ([^\|]+ \|\|\| [^\|]+) \|\|\|((\s+\S+){$ptableN})((\s+\S+)+)\s*$/) {
+		print P "$1 ||| $2 |||$3\n";
+		print O "$1 |||$5\n";
+	} else {
+		print STDERR "BAD PHRASE: $_\n";
+	}
+}
+
+close(P);
+close(O);
