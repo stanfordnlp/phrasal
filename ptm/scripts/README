@@ -1,0 +1,22 @@
+Helpful tools and command-line fu for working with the database dump.
+
+Make sure that .pgpass is properly configured in the user's root directory.
+
+
+Loading a dump:
+
+ psql -h localhost djangodb django < mydb.dump
+
+Dumping the database to CSV:
+
+ ./run_sql_script.sh localhost djangodb postgres sql/dumpdb.sql
+
+POSTGRESQL commands
+
+List all tables:
+
+ SELECT * from information_schema.tables
+
+List all users:
+
+ SELECT * from information_schema.tables
