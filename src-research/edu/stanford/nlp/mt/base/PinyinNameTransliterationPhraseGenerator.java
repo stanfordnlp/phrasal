@@ -85,7 +85,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
     for (int i = 0; i < input.length(); i++) {
       String candidate = "";
       try {
-        String[] opts =PinyinHelper.toHanyuPinyinStringArray(input.charAt(i), format);
+        String[] opts = PinyinHelper.toHanyuPinyinStringArray(input.charAt(i), format);
         if (opts.length > 0) {
           candidate = opts[0];  // always just take first
         }
@@ -93,8 +93,9 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
         // do nothing
       }
       if (i <= 1) {
-        output.append(Character.toUpperCase(candidate.charAt(0)));
-        output.append(candidate.substring(1));
+        // captalizing the first char of the 1st and 2nd words
+        // output.append(Character.toUpperCase(candidate.charAt(0)));
+        // output.append(candidate.substring(1));
         if (i == 0) {
           output.append(' ');
         }
