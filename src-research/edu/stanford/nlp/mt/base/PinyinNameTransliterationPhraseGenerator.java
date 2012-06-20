@@ -45,6 +45,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   private final String[] scoreNames;
   private final SequenceFilter<TK> filter;
   private final HanyuPinyinOutputFormat format;
+  private static final boolean capitalize = false;
 
 
   public PinyinNameTransliterationPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer,
@@ -93,11 +94,15 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
         // do nothing
       }
       if (i <= 1) {
-        // captalizing the first char of the 1st and 2nd words
-        // output.append(Character.toUpperCase(candidate.charAt(0)));
-        // output.append(candidate.substring(1));
+        if (capitalize) {
+          // captalizing the first char of the 1st and 2nd words
+          // output.append(Character.toUpperCase(candidate.charAt(0)));
+          // output.append(candidate.substring(1));
+        } else {
+          output.append(candidate);
+        }
         if (i == 0) {
-          output.append(' ');
+          output.append(' '); // space after family name
         }
       } else {
         output.append(candidate);
@@ -123,7 +128,6 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, "utf-8"));
     PrintWriter writer = new PrintWriter(new OutputStreamWriter(System.out, "utf-8"));
-    // BufferedReader reader = new BufferedReader(new java.io.StringReader("桑兰\n余艳\n连战\n苏东坡\n陈淑仪\n桑兰\n彭远文"));
     writer.println("PinyinNameTransliterationPhraseGenerator Interactive REPL");
     writer.println("(ctrl-c to quit)");
     writer.print("> ");
