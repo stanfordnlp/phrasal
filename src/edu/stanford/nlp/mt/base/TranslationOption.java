@@ -3,9 +3,9 @@ package edu.stanford.nlp.mt.base;
 import java.util.*;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  * @param <T>
  */
 public class TranslationOption<T> implements Comparable<TranslationOption>{
@@ -32,7 +32,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
   }
 
   /**
-	 * 
+	 *
 	 */
   public TranslationOption(int id, float[] scores, String[] phraseScoreNames,
       RawSequence<T> translation, RawSequence<T> foreign,
@@ -60,7 +60,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
 
   @Override
   public String toString() {
-    StringBuffer sbuf = new StringBuffer();
+    StringBuilder sbuf = new StringBuilder();
     sbuf.append(String.format("TranslationOption: \"%s\" scores: %s\n",
         translation, Arrays.toString(scores)));
     return sbuf.toString();
@@ -84,7 +84,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
         return (int)Math.signum(scores[i] - o.scores[i]);
       }
     }
-    return scores.length - o.scores.length;  
+    return scores.length - o.scores.length;
   }
 
 }
