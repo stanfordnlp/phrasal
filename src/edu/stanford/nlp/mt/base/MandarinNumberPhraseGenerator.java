@@ -529,9 +529,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
           if (!thirdTrans.toString().equals("")) thirdTrans.insert(0, "more than ");
       }
       }
-      catch (Exception e) {
-	  firstTrans.append(rawWord);
-      }
+      catch (Exception e) {}
       // add results to translation options
       if (!firstTrans.toString().equals("")) {
           RawSequence<IString> firstTransAsSequence =
