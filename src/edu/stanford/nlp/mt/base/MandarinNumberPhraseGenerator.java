@@ -533,7 +533,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       // add results to translation options
       if (!firstTrans.toString().equals("")) {
           RawSequence<IString> firstTransAsSequence =
-               new RawSequence<IString>(new IString[] { new IString("$num(" + firstTrans.toString() + "||" + rawWord + ")") });
+               new RawSequence<IString>(new IString[] { new IString("$num(" + rawWord + "||" + firstTrans.toString() + ")") });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
@@ -542,7 +542,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       }
       if (!secondTrans.toString().equals("")) {
           RawSequence<IString> secondTransAsSequence =
-               new RawSequence<IString>(new IString[] { new IString("$num(" + secondTrans.toString() + "||" + rawWord + ")") });
+               new RawSequence<IString>(new IString[] { new IString("$num(" + rawWord + "||" + secondTrans.toString() + ")") });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
@@ -551,7 +551,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       }
       if (!thirdTrans.toString().equals("")) {
           RawSequence<IString> thirdTransAsSequence =
-               new RawSequence<IString>(new IString[] { new IString("$num(" + thirdTrans.toString() + "||" + rawWord + ")") });
+               new RawSequence<IString>(new IString[] { new IString("$num(" + rawWord + "||" + thirdTrans.toString() + ")") });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
