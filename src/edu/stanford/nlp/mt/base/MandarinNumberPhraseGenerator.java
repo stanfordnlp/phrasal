@@ -226,23 +226,24 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
         auxChars.add("/");
         auxChars.add("／");
         auxChars.add("第"); // di, used for ordinal numbers
+	auxChars.add("岁"); // sui, used for ages
         
     }
    
     static Map<Integer,String> monthNames = new HashMap<Integer, String>();
     static {
-        monthNames.put(1, "January");
-        monthNames.put(2, "February");
-        monthNames.put(3, "March");
-        monthNames.put(4, "April");
-        monthNames.put(5, "May");
-        monthNames.put(6, "June");
-        monthNames.put(7, "July");
-        monthNames.put(8, "August");
-        monthNames.put(9, "September");
-        monthNames.put(10, "October");
-        monthNames.put(11, "November");
-        monthNames.put(12, "December");
+        monthNames.put(1, "january");
+        monthNames.put(2, "february");
+        monthNames.put(3, "march");
+        monthNames.put(4, "april");
+        monthNames.put(5, "may");
+        monthNames.put(6, "june");
+        monthNames.put(7, "july");
+        monthNames.put(8, "august");
+        monthNames.put(9, "september");
+        monthNames.put(10, "october");
+        monthNames.put(11, "november");
+        monthNames.put(12, "december");
     }
     
     static Map<Integer,String> smallNumberWords = new HashMap<Integer, String>();
@@ -316,7 +317,14 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
    
    @Override
    public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> chinesePhrase) {
-      String firstWord = chinesePhrase.get(0).word();
+      
+      String firstWord = "";
+      String rawWord = "";
+      for (IString w : chinesePhrase) {
+	  firstWord += w.word();
+	  rawWord += w.word() + " ";
+      }
+      rawWord = rawWord.substring(0,rawWord.length()-1);
       int size = firstWord.length();
       List<TranslationOption<IString>> candidateTranslations = new LinkedList<TranslationOption<IString>>();
       StringBuffer firstTrans = new StringBuffer();
@@ -337,7 +345,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       }
       
       boolean usesArabic = usesArabicNumbers(firstWord);
-
+      try {
       if (firstWord.contains("分")) {
           if (firstWord.contains("百")) { // currently will accidentally catch fractions that otherwise have hundreds in them - needs fixing, but quite uncommon
               // percentage
@@ -408,7 +416,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                   else {
                       for (int i = 0; i < firstWord.indexOf("年"); i++) {
                           String charAtI = firstWord.substring(i, i+1);
-                          firstTrans.append(basicNumberChars.get(charAtI));
+			  if (basicNumberChars.containsKey(charAtI)) firstTrans.append(basicNumberChars.get(charAtI));
+			  else firstTrans.append(charAtI);
                       }
                       secondTrans.append("the year ");
                       secondTrans.append(firstTrans.toString());
@@ -450,6 +459,10 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       } else if (firstWord.contains("-")){
           // dashes, crude, presumes dashes must mean it's in arabic nums
           firstTrans.append(firstWord);      
+      } else if (firstWord.contains("岁")){
+	  // ages
+	  firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("岁")), usesArabic));
+	  firstTrans.append(" years old");
       } else {
           // cardinal or money
           if (usesArabic && firstWord.contains(".")) { 
@@ -466,7 +479,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                       if (bd.doubleValue() >= 100.0) thirdTrans.append(bd.divide(new BigDecimal("100"))).append(" million");
                       num = (bd.multiply(new BigDecimal(10000))).longValue();
                   }
-                  firstTrans.append(addCommas(num));
+		  firstTrans.append(addCommas(num));
                   secondTrans.append(numToWord(num, false));
                   if (!thirdTrans.toString().equals("")) { // if the third translation exists it should be the priority one
                       String temp = firstTrans.toString();
@@ -478,7 +491,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               }
           } else { 
               long num = getRawNumber(firstWord, usesArabic);
-              if (num > 999) firstTrans.append(addCommas(num));
+              if (num > 999 && (firstWord.length() < 10 || firstWord.length() > 15)) firstTrans.append(addCommas(num));
               else firstTrans.append(num);
               secondTrans.append(numToWord(num, false)); 
               
@@ -515,11 +528,14 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
           if (!secondTrans.toString().equals("")) secondTrans.insert(0, "more than ");
           if (!thirdTrans.toString().equals("")) thirdTrans.insert(0, "more than ");
       }
-      
+      }
+      catch (Exception e) {
+	  firstTrans.append(rawWord);
+      }
       // add results to translation options
       if (!firstTrans.toString().equals("")) {
           RawSequence<IString> firstTransAsSequence =
-               new RawSequence<IString>(new IString[] { new IString(firstTrans.toString()) });
+               new RawSequence<IString>(new IString[] { new IString("$num(" + firstTrans.toString() + "||" + rawWord + ")") });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
@@ -528,7 +544,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       }
       if (!secondTrans.toString().equals("")) {
           RawSequence<IString> secondTransAsSequence =
-               new RawSequence<IString>(new IString[] { new IString(secondTrans.toString()) });
+               new RawSequence<IString>(new IString[] { new IString("$num(" + secondTrans.toString() + "||" + rawWord + ")") });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
@@ -537,7 +553,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       }
       if (!thirdTrans.toString().equals("")) {
           RawSequence<IString> thirdTransAsSequence =
-               new RawSequence<IString>(new IString[] { new IString(thirdTrans.toString()) });
+               new RawSequence<IString>(new IString[] { new IString("$num(" + thirdTrans.toString() + "||" + rawWord + ")") });
           candidateTranslations.add(new TranslationOption<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
@@ -549,7 +565,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
 
    @Override
    public int longestForeignPhrase() {     
-      return 2; // change to the longest Mandarin phrase this phrase generator can reasonably process 
+      return 4; // change to the longest Mandarin phrase this phrase generator can reasonably process 
    }
 
    @Override
