@@ -40,7 +40,7 @@ public class PinyinNameTransliterationPhraseGeneratorTest extends TestCase {
             new PinyinNameTransliterationPhraseGenerator<IString,String>(null, null);
     for (String str : inputs) {
       Sequence<IString> phrase = new RawSequence<IString>(
-              IStrings.toIStringArray(new String[] { str}));
+              IStrings.toIStringArray(new String[] { str }));
       try {
         List<TranslationOption<IString>> opts = pnpg.getTranslationOptions(phrase);
         if ( ! opts.isEmpty()) {

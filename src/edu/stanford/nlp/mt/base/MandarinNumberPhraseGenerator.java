@@ -9,10 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
-import java.io.FileInputStream;
-import java.io.DataInputStream;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.math.BigDecimal;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
@@ -21,7 +17,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IString,String> {
    public static final String NUMBER_PHRASE_GENERATOR_NAME = "NumberPhraseGenerator";
    public static boolean DEBUG = true;
-   
+
    public MandarinNumberPhraseGenerator(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer,
          Scorer<String> scorer) {
       super(phraseFeaturizer, scorer);
@@ -29,10 +25,10 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
 
    @Override
    public String getName() {
-      return NUMBER_PHRASE_GENERATOR_NAME;     
+      return NUMBER_PHRASE_GENERATOR_NAME;
    }
-   
-   public String addCommas(long num) {
+
+   public static String addCommas(long num) {
        Long inNum = new Long(num);
        String numStr = inNum.toString();
        int count = 0;
@@ -46,9 +42,9 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        return numStr;
    }
 
-   public boolean usesArabicNumbers(String inString) {
+   public static boolean usesArabicNumbers(String inString) {
        String newString = ""; // new string without auxillary characters
-       for (int i = 0; i < inString.length(); i++) { 
+       for (int i = 0; i < inString.length(); i++) {
            String charAtI = inString.substring(i, i+1);
            if (!basicNumberChars.containsKey(charAtI) &&
                !specialNumberChars.containsKey(charAtI) &&
@@ -59,10 +55,10 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
            return true;
        } catch (NumberFormatException nfe) {
            return false;
-       }               
+       }
    }
-   
-   public String getOrdinal(int full) {
+
+   public static String getOrdinal(int full) {
        int num = full % 10;
        if (full % 100 > 20 || full % 100 < 4) {
            if (num == 1) {
@@ -77,8 +73,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        }
        return "th";
    }
-   
-   public String numToWord(long num, boolean addSpace) {
+
+   public static String numToWord(long num, boolean addSpace) {
        String word = "";
        if (num >= 1000000000000L) {
            word += numToWord(num / 1000000000000L, true) + "trillion";
@@ -102,8 +98,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        if (addSpace) word += " ";
        return word;
    }
-   
-   public long getRawNumber(String chStr, boolean usesArabic) {
+
+   public static long getRawNumber(String chStr, boolean usesArabic) {
        // takes a string that is assumed to be a well-formed raw counting number in Chinese, using Chinese or Arabic numerals
        // returns its English equivalent as a long
        String enStr = "";
@@ -185,24 +181,24 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        return enNum;
    }
 
-   static Map<String,Integer> basicNumberChars = new HashMap<String,Integer>();
+   static final Map<String,Integer> basicNumberChars = new HashMap<String,Integer>();
    static {
       basicNumberChars.put("零", 0);  // ling
       basicNumberChars.put("〇", 0);
       basicNumberChars.put("0", 0);   // for cases where chinese numbers use an arabic 0
-      basicNumberChars.put("一", 1);  // yi      
+      basicNumberChars.put("一", 1);  // yi
       basicNumberChars.put("二", 2);  // er
       basicNumberChars.put("两", 2);  // liang
       basicNumberChars.put("三", 3);  // sān
-      basicNumberChars.put("四", 4);  // sì 
+      basicNumberChars.put("四", 4);  // sì
       basicNumberChars.put("五", 5);  // wǔ
       basicNumberChars.put("六", 6);  // liù
       basicNumberChars.put("七", 7);  // qī
       basicNumberChars.put("八", 8);  // bā
       basicNumberChars.put("九", 9);  // jiǔ
    }
-   
-   static Map<String, Integer> specialNumberChars = new HashMap<String,Integer>();
+
+   static final Map<String, Integer> specialNumberChars = new HashMap<String,Integer>();
    static {
       specialNumberChars.put("十", 10); // shí
       specialNumberChars.put("百", 100); // bai
@@ -210,8 +206,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       specialNumberChars.put("万", 10000); // wan
       specialNumberChars.put("亿", 100000000); // yi (100 million)
     }
-   
-    static Set<String> auxChars = new HashSet<String>();
+
+    static final Set<String> auxChars = new HashSet<String>();
     static {
         auxChars.add("日"); // ri, day
         auxChars.add("号"); // hao, day
@@ -229,8 +225,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
 	auxChars.add("岁"); // sui, used for ages
 	auxChars.add("个"); // ge, measure word for months
     }
-   
-    static Map<Integer,String> monthNames = new HashMap<Integer, String>();
+
+    static final Map<Integer,String> monthNames = new HashMap<Integer, String>();
     static {
         monthNames.put(1, "january");
         monthNames.put(2, "february");
@@ -245,8 +241,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
         monthNames.put(11, "november");
         monthNames.put(12, "december");
     }
-    
-    static Map<Integer,String> smallNumberWords = new HashMap<Integer, String>();
+
+    static final Map<Integer,String> smallNumberWords = new HashMap<Integer, String>();
     static {
         smallNumberWords.put(0, "zero");
         smallNumberWords.put(1, "one");
@@ -270,8 +266,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
         smallNumberWords.put(19, "nineteen");
         smallNumberWords.put(20, "twenty");
     }
-    
-    static Map<Integer,String> tensPlace = new HashMap<Integer,String>();
+
+    static final Map<Integer,String> tensPlace = new HashMap<Integer,String>();
     static {
         tensPlace.put(2, "twenty");
         tensPlace.put(3, "thirty");
@@ -282,8 +278,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
         tensPlace.put(8, "eighty");
         tensPlace.put(9, "ninety");
     }
-    
-    static Map<Integer,String> wordOrdinal = new HashMap<Integer,String>();
+
+    static final Map<Integer,String> wordOrdinal = new HashMap<Integer,String>();
     static {
         wordOrdinal.put(0, "");
         wordOrdinal.put(1, "first");
@@ -314,10 +310,10 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
         wordOrdinal.put(80, "eightieth");
         wordOrdinal.put(90, "nintieth");
     }
-   
+
    @Override
    public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> chinesePhrase) {
-      
+
       String firstWord = "";
       String rawWord = "";
       for (IString w : chinesePhrase) {
@@ -330,7 +326,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       StringBuffer firstTrans = new StringBuffer();
       StringBuffer secondTrans = new StringBuffer();
       StringBuffer thirdTrans = new StringBuffer();
- 
+
       boolean moreThan = false;
       // minor preprocessing - check for certain specific auxillary characters and remove them
       if (firstWord.contains("多") || firstWord.contains("余")) { // this is crude at the moment
@@ -343,7 +339,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
           firstWord = temp;
           moreThan = true;
       }
-      
+
       boolean usesArabic = usesArabicNumbers(firstWord);
       try {
       if (firstWord.contains("分")) {
@@ -351,13 +347,13 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               // percentage
               if (firstWord.contains("之")) firstTrans.append(getRawNumber(firstWord.substring(3, size), usesArabic));
               else firstTrans.append(getRawNumber(firstWord.substring(2, size), usesArabic));
-              firstTrans.append("%");              
+              firstTrans.append("%");
           } else {
               // fraction - note: prints exactly as given, does not simplify fractions
               if (firstWord.contains("之")) firstTrans.append(getRawNumber(firstWord.substring(firstWord.indexOf("之") + 1, size), usesArabic));
               else firstTrans.append(getRawNumber(firstWord.substring(firstWord.indexOf("分") + 1, size), usesArabic));
               firstTrans.append("/");
-              firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("分")), usesArabic)); 
+              firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("分")), usesArabic));
           }
       } else if (firstWord.contains("％") || firstWord.contains("%")) {
           // percentages with percent signs - parse arabic numbers directly to avoid decimal problems
@@ -366,7 +362,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               if (num % 1 == 0) firstTrans.append(Integer.parseInt(firstWord.substring(0, firstWord.length()-1))); // avoid dangling .0s if it's an integer
               else firstTrans.append(num);
           } else firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.length()-1), usesArabic));
-          firstTrans.append("%");    
+          firstTrans.append("%");
       } else if (firstWord.contains("／") || firstWord.contains("/")) {
           // fractions with slashes
           int slashIndex = 0;
@@ -414,7 +410,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               }
               if (firstWord.contains("年")) {
                   // year
-                  if (hasDay || hasMonth) firstTrans.append(", ");                      
+                  if (hasDay || hasMonth) firstTrans.append(", ");
                   if (usesArabic) {
                       firstTrans.append(firstWord.substring(0, firstWord.indexOf("年")));
                       secondTrans.append("the year ");
@@ -429,7 +425,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                       secondTrans.append("the year ");
                       secondTrans.append(firstTrans.toString());
                   }
-                  
+
               }
           }
       } else if (firstWord.contains("第")) {
@@ -443,7 +439,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               if (word.contains(" ")) { // more than one word
                   firstTrans.append(word.substring(0, word.lastIndexOf(" ")+1));
                   firstTrans.append(wordOrdinal.get((int)num % 100));
-              } else if (word.contains("-")) { // 
+              } else if (word.contains("-")) { //
                   firstTrans.append(word.substring(0, word.lastIndexOf("-")+1));
                   firstTrans.append(wordOrdinal.get((int)num % 10));
               } else firstTrans.append(wordOrdinal.get((int)num));
@@ -465,14 +461,14 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
           firstTrans.append(getRawNumber(firstWord.substring(index+1), usesArabic));
       } else if (firstWord.contains("-")){
           // dashes, crude, presumes dashes must mean it's in arabic nums
-          firstTrans.append(firstWord);      
+          firstTrans.append(firstWord);
       } else if (firstWord.contains("岁")){
 	  // ages
 	  firstTrans.append(getRawNumber(firstWord.substring(0, firstWord.indexOf("岁")), usesArabic));
 	  firstTrans.append(" years old");
       } else {
           // cardinal or money
-          if (usesArabic && firstWord.contains(".")) { 
+          if (usesArabic && firstWord.contains(".")) {
               // decimal handling
               if (specialNumberChars.containsKey(firstWord.substring(firstWord.length()-1))) {
                   long num = 0;
@@ -486,7 +482,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                       if (bd.doubleValue() >= 100.0) thirdTrans.append(bd.divide(new BigDecimal("100"))).append(" million");
                       num = (bd.multiply(new BigDecimal(10000))).longValue();
                   }
-		  firstTrans.append(addCommas(num));
+                  firstTrans.append(addCommas(num));
                   secondTrans.append(numToWord(num, false));
                   if (!thirdTrans.toString().equals("")) { // if the third translation exists it should be the priority one
                       String temp = firstTrans.toString();
@@ -496,12 +492,12 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
               } else { // direct decimal with no chinese characters
                   firstTrans.append(firstWord);
               }
-          } else { 
+          } else {
               long num = getRawNumber(firstWord, usesArabic);
               if (num > 999 && (firstWord.length() < 10 || firstWord.length() > 15)) firstTrans.append(addCommas(num));
               else firstTrans.append(num);
-              secondTrans.append(numToWord(num, false)); 
-              
+              secondTrans.append(numToWord(num, false));
+
               // special case to add third mixed number/word translation for certain large numbers without decimals
               if (specialNumberChars.containsKey(firstWord.substring(firstWord.length()-1))) {
                   long prev = getRawNumber(firstWord.substring(0, firstWord.length()-1), usesArabic);
@@ -526,9 +522,9 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                       thirdTrans.replace(0, thirdTrans.length(), temp);
                   }
               }
-          } 
+          }
       }
-      
+
       // re-insert pre-processed items
       if (moreThan) {
           if (!firstTrans.toString().equals("")) firstTrans.insert(0, "more than ");
@@ -545,7 +541,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
                   firstTransAsSequence,
-                  new RawSequence<IString>(chinesePhrase), null));    
+                  new RawSequence<IString>(chinesePhrase), null));
       }
       if (!secondTrans.toString().equals("")) {
           RawSequence<IString> secondTransAsSequence =
@@ -554,7 +550,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
                   secondTransAsSequence,
-                  new RawSequence<IString>(chinesePhrase), null));    
+                  new RawSequence<IString>(chinesePhrase), null));
       }
       if (!thirdTrans.toString().equals("")) {
           RawSequence<IString> thirdTransAsSequence =
@@ -563,26 +559,26 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
                   thirdTransAsSequence,
-                  new RawSequence<IString>(chinesePhrase), null));    
+                  new RawSequence<IString>(chinesePhrase), null));
       }
       return candidateTranslations;
    }
 
    @Override
-   public int longestForeignPhrase() {     
-      return 4; // change to the longest Mandarin phrase this phrase generator can reasonably process 
+   public int longestForeignPhrase() {
+      return 4; // change to the longest Mandarin phrase this phrase generator can reasonably process
    }
 
    @Override
    public void setCurrentSequence(Sequence<IString> foreign,
          List<Sequence<IString>> tranList) {
-      // do nothing      
+      // do nothing
    }
-   
+
    static public void main(String[] args) throws IOException {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       MandarinNumberPhraseGenerator mnpg = new MandarinNumberPhraseGenerator(null, null);
-      
+
       // file reader error checker
       /*
       System.out.println("MandarinNumberPhraseGenerator Error Checker");
@@ -593,13 +589,13 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       System.out.print("> ");
       String outputFile = reader.readLine();
 
-      
+
       FileWriter fstream = new FileWriter(outputFile);
       PrintWriter out = new PrintWriter(fstream);
       DataInputStream in = new DataInputStream(new FileInputStream(file));
       BufferedReader fileIn = new BufferedReader(new InputStreamReader(in));
       String line;
-      
+
       while ((line = fileIn.readLine()) != null) {
           String[] tokens = line.split("\\s+");
           Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
@@ -614,22 +610,22 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       }
       fileIn.close();
       in.close();
-      
+
       out.close();
       fstream.close();
-     
-      // end of file reader error checker 
+
+      // end of file reader error checker
       */
-      
+
       // Dan's original REPL
-      
+
       System.out.println("MandarinNumberPhraseGenerator Interactive REPL");
       System.out.println("(ctrl-c to quit)");
       System.out.print("> ");
       for (String line = reader.readLine(); line != null; line = reader.readLine()) {
          String[] tokens = line.split("\\s+");
          Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
-         
+
          try {
              List<TranslationOption<IString>> opts = mnpg.getTranslationOptions(phrase);
              if (opts.isEmpty()) {
