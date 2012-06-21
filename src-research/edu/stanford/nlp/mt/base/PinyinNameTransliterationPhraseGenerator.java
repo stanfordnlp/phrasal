@@ -96,8 +96,8 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
       if (i <= 1) {
         if (capitalize) {
           // captalizing the first char of the 1st and 2nd words
-          // output.append(Character.toUpperCase(candidate.charAt(0)));
-          // output.append(candidate.substring(1));
+          output.append(Character.toUpperCase(candidate.charAt(0)));
+          output.append(candidate.substring(1));
         } else {
           output.append(candidate);
         }
