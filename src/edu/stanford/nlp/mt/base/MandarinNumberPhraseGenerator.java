@@ -227,7 +227,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
         auxChars.add("／");
         auxChars.add("第"); // di, used for ordinal numbers
 	auxChars.add("岁"); // sui, used for ages
-        
+	auxChars.add("个"); // ge, measure word for months
     }
    
     static Map<Integer,String> monthNames = new HashMap<Integer, String>();
@@ -391,7 +391,14 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                   int startIndex = 0;
                   if (firstWord.contains("年")) startIndex = firstWord.indexOf("年") + 1;
                   int endIndex = firstWord.indexOf("月");
-                  firstTrans.append(monthNames.get((int)getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic)));
+		  if (firstWord.contains("个")) {
+		      int monthNum = (int)getRawNumber(firstWord.substring(0,firstWord.indexOf("个")),usesArabic);
+		      firstTrans.append(smallNumberWords.get(monthNum));
+		      if (monthNum > 1) {firstTrans.append(" months");}
+		      else firstTrans.append(" month");
+		  } else {
+		      firstTrans.append(monthNames.get((int)getRawNumber(firstWord.substring(startIndex, endIndex), usesArabic)));
+		  }
               }
               if (firstWord.contains("日") || firstWord.contains("号")) {
                   // day
