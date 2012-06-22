@@ -61,6 +61,13 @@ s/([\d]+)% /$1 % /g;
 # BLEU = 17.575, 53.766/23.579/12.375/6.866 (BP=0.970, ration=0.971 44227/45570)
 # weird, clearly matches ref1 better, but no BLEU improvements
 
+# north korea
+s/ dprk / north korea /g;
+s/ the un / kim jong-un /g;
+
+# ibm number error
+s/([\d]+),([\d]+)/$1$2/g;
+
 s=  += =g;
 s=^ +==g;
 s= +$==g;
