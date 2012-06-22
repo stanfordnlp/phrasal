@@ -36,7 +36,7 @@ s/(\:|\?)\s*\.\s*$/$1 \n/;
 s/ - /-/g;
 # BLEU = 17.541, 53.582/23.485/12.329/6.839 (BP=0.972, ration=0.972 44308/45570)
 
-s/ , [ea]h / /; 
+s/ , [ea]h / /g;
 # BLEU = 17.545, 53.636/23.520/12.346/6.850 (BP=0.971, ration=0.971 44258/45570)
 
 s/^\s*1 , /1 . /;
@@ -49,7 +49,7 @@ s/^six , /6 . /;
 
 s/tantamount /the same as /;
 s/ wimp / coward /;
-s/viet nam /vietnam /;
+s/viet nam /vietnam /g;
 s/chief executive officer /ceo /;
 # BLEU = 17.575, 53.766/23.579/12.375/6.866 (BP=0.970, ration=0.971 44227/45570)
 
@@ -67,9 +67,17 @@ s/ dprk / north korea /g;
 # s/ the un / kim jong-un /g;
 # BLEU = 17.613, 53.872/23.663/12.387/6.864 (BP=0.971, ration=0.971 44255/45570)
 
-# ibm number error
-s/([\d]+),([\d]+)/$1$2/g;
+# ibm number error (often -- not if plain number, yes if zip code or telephone
+s/(\d+),(\d+)/$1$2/g;
 # BLEU = 17.614, 53.874/23.660/12.387/6.866 (BP=0.971, ration=0.971 44255/45570)
+
+# [cdm] Don't have a comma initially, and if it is followed by a date, make it a preposition
+s/^ *, +((?:january|february|march|april|may|june|july|august|september|october|november|december) +\d)/on $1/g;
+s/^ *, +(january|february|march|april|may|june|july|august|september|october|november|december)/in $1/g;
+s/^ *,//;
+
+# [cdm] ruijie
+s/ rui jie / ruijie /g;
 
 s=  += =g;
 s=^ +==g;
