@@ -63,7 +63,8 @@ s/([\d]+)% /$1 % /g;
 
 # north korea
 s/ dprk / north korea /g;
-s/ the un / kim jong-un /g;
+# BLEU = 17.607, 53.843/23.639/12.384/6.866 (BP=0.971, ration=0.971 44255/45570)
+# s/ the un / kim jong-un /g;
 # BLEU = 17.613, 53.872/23.663/12.387/6.864 (BP=0.971, ration=0.971 44255/45570)
 
 # ibm number error
