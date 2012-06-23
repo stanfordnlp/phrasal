@@ -10,8 +10,7 @@ import junit.framework.TestCase;
 public class MandarinNumberPhraseGeneratorTest extends TestCase {
 
   public void testAddCommas() {
-    MandarinNumberPhraseGenerator mnpg = new MandarinNumberPhraseGenerator(null, null);
-    assertEquals("Didn't add commas", "3,124,123,890,789", mnpg.addCommas(3124123890789L));
+    assertEquals("Didn't add commas", "3,124,123,890,789", MandarinNumberPhraseGenerator.addCommas(3124123890789L));
   }
 
   public void testPhraseGeneration() {
@@ -35,14 +34,16 @@ public class MandarinNumberPhraseGeneratorTest extends TestCase {
         } else {
           boolean good = false;
           for (TranslationOption<IString> opt : opts) {
-            if (("$num_(" + inputs[i] + "||" + outputs[i] + ")").equals(opt.translation.toString())) {
+            // if (("$num_(" + inputs[i] + "||" + outputs[i] + ")").equals(opt.translation.toString())) {
+            if ((outputs[i]).equals(opt.translation.toString())) {
               good = true;
               break;
             }
           }
           if ( ! good ) {
-            assertEquals("Wrong number/date translation(s), showing 1st of " + opts.size(),
-                  "$num_(" + inputs[i] + "||" + outputs[i] + ")",
+            assertEquals("Wrong number/date translation(s), choices were " + opts,
+                  // "$num_(" + inputs[i] + "||" + outputs[i] + ")",
+                  outputs[i],
                   opts.get(0).translation.toString());
           }
         }
