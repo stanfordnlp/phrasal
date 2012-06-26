@@ -819,6 +819,7 @@ public class PhraseExtract {
             + " -endAtLine <n> : end at line <n> (<0 : all)\n"
             + " -noAlign : do not specify alignment in phrase table\n"
             + " -verbose : enable verbose mode\n");
+    //throw new RuntimeException();
   }
 
   public static void main(String[] args) throws IOException {
