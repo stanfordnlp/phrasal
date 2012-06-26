@@ -11,6 +11,7 @@
 # BLEU = 17.575, 53.766/23.579/12.375/6.866 (BP=0.970, ration=0.971 44227/45570) (best on Dev12_wb tune)
 # BLEU = 15.479, 52.424/21.839/10.852/5.588 (BP=0.954, ration=0.955 45647/47814) (best on Dev10_wb dev)
 
+# add a space at the beginning and end of lines, so we can always match with space on both sides
 s=^= =g;
 s=$= =g;
 
@@ -82,6 +83,7 @@ s/ rui jie / ruijie /g;
 # [cdm] south korea
 s/ rok / south korea /g;
 
+# subtract the space at the beginning and end of lines, and any other additional spaces
 s=  += =g;
 s=^ +==g;
 s= +$==g;

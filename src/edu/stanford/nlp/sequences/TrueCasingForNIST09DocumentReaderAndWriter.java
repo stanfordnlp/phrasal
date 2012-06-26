@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 
 /**
  * Adapted from Pichuan's TrueCasingForNISTDocumentReaderAndWriter.java
- * 
+ *
  * @author Michel Galley
  */
 public class TrueCasingForNIST09DocumentReaderAndWriter implements DocumentReaderAndWriter<CoreLabel> {
@@ -72,9 +72,8 @@ public class TrueCasingForNIST09DocumentReaderAndWriter implements DocumentReade
         if(els[0].equals("lm")) {
           System.err.printf("Loading LM file %s...\n",els[1]);
           auxModelNames.add("lm"+i);
-          TrueCaser lmTC;
           try {
-            lmTC = (TrueCaser) Class.forName("mt.tools.LanguageModelTrueCaser").newInstance();
+            TrueCaser lmTC = (TrueCaser) Class.forName("mt.tools.LanguageModelTrueCaser").newInstance();
             lmTC.init(els[1]);
             auxModels.add(lmTC);
           } catch(ClassNotFoundException e) {
@@ -89,12 +88,12 @@ public class TrueCasingForNIST09DocumentReaderAndWriter implements DocumentReade
           auxModelNames.add("crf"+i);
           TrueCaser crfTC = new TrueCaser() {
 
-            CRFBiasedClassifier crf;
+            CRFBiasedClassifier<CoreLabel> crf;
 
             public void init(String crfModelFile) {
               Properties props = new Properties();
               props.put("classBias","INIT_UPPER:-0.7,UPPER:-0.7,O:0");
-              crf = new CRFBiasedClassifier(props);
+              crf = new CRFBiasedClassifier<CoreLabel>(props);
               crf.loadClassifierNoExceptions(crfModelFile, props);
             }
 
@@ -147,9 +146,9 @@ public class TrueCasingForNIST09DocumentReaderAndWriter implements DocumentReade
 
   public void printAnswers(List<CoreLabel> doc, PrintWriter out) {
     List<String> sentence = new ArrayList<String>();
-    
+
     int wrong = 0;
-    
+
     for (CoreLabel wi : doc) {
       StringBuilder sb = new StringBuilder();
       if (! wi.get(AnswerAnnotation.class).equals(wi.get(GoldAnswerAnnotation.class))) {
@@ -212,7 +211,7 @@ public class TrueCasingForNIST09DocumentReaderAndWriter implements DocumentReade
         wi.set(GoldAnswerAnnotation.class, caseType);
 
         wi.setWord(word.toLowerCase());
-        wi.set(PositionAnnotation.class, pos + "");
+        wi.set(PositionAnnotation.class, String.valueOf(pos));
         doc.add(wi);
         pos++;
       }
@@ -239,7 +238,7 @@ public class TrueCasingForNIST09DocumentReaderAndWriter implements DocumentReade
       return doc;
     }
 
-    private String caseType(String word) {
+    private static String caseType(String word) {
 
       Matcher lowerMatcher = allLower.matcher(word);
 
@@ -269,7 +268,7 @@ public class TrueCasingForNIST09DocumentReaderAndWriter implements DocumentReade
         }
       }
     }
-    
+
   }
 
 }

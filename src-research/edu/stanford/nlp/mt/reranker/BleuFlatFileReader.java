@@ -11,9 +11,10 @@ import java.util.ArrayList;
  * reference filenames as arguments, calculates the BLEU score of the input file
  * against the references, interpreting each line as a sentence and each
  * whitespace-separated item as a word.
- * 
+ *
  **/
 public class BleuFlatFileReader {
+
   static Stats[] read(String corpusFilename, String[] refFilenames)
       throws IOException {
     BufferedReader cin = new BufferedReader(new FileReader(corpusFilename));
@@ -47,7 +48,7 @@ public class BleuFlatFileReader {
       corpus.add(sf.newStats(s, r));
     }
 
-    return corpus.toArray(new Stats[0]);
+    return corpus.toArray(new Stats[corpus.size()]);
   }
 
   public static void main(String[] args) throws IOException {
@@ -61,10 +62,11 @@ public class BleuFlatFileReader {
     Stats[] corpus = BleuFlatFileReader.read(new BufferedReader(
         new InputStreamReader(System.in)), rin);
     Bleu bleu = new Bleu();
-    for (int i = 0; i < corpus.length; i++)
-      bleu.add(corpus[i]);
+    for (Stats ref : corpus) {
+      bleu.add(ref);
+    }
 
-    double ngramScores[] = bleu.rawNGramScores();
+    double[] ngramScores = bleu.rawNGramScores();
     System.out.printf("BLEU = %.2f, %.1f/%.1f/%.1f/%.1f (BP=%.3f)\n",
         bleu.score() * 100.0, Math.exp(ngramScores[0]) * 100.0,
         Math.exp(ngramScores[1]) * 100.0, Math.exp(ngramScores[2]) * 100.0,

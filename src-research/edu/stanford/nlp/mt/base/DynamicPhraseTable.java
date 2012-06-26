@@ -15,14 +15,14 @@ import tokyocabinet.*;
 
 /**
  * @author danielcer
- * 
+ *
  */
 public class DynamicPhraseTable<FV> extends
     AbstractPhraseGenerator<IString, FV> {
   static final boolean DEBUG = false;
   static final int MAX_ABSOLUTE_DISTORTION = 12;
 
-  BDB bdb;
+  private BDB bdb;
 
   Set<String> currentSequence;
 
@@ -35,10 +35,6 @@ public class DynamicPhraseTable<FV> extends
     super(phraseFeaturizer, scorer);
     currentSequence = new HashSet<String>();
     initdb(phraseTableName);
-    try {
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
   }
 
   public DynamicPhraseTable(
@@ -65,14 +61,14 @@ public class DynamicPhraseTable<FV> extends
     }
   }
 
-  static public final int phraseLengthLimit = 5;
+  public static final int phraseLengthLimit = 5;
 
   @Override
   public String getName() {
     return "DynaPhraseTable";
   }
 
-  public static final String[] labs = new String[] { "pc(e|f)", "pc(f|e)",
+  public static final String[] labs = { "pc(e|f)", "pc(f|e)",
       "lex(e|f)", "lex(f|e)" };
 
   @Override
@@ -160,7 +156,9 @@ public class DynamicPhraseTable<FV> extends
     }
   }
 
-  static private int extractFromSequence(BDB tmpF2E, BDB tmpE2F,
+  private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
+  private static int extractFromSequence(BDB tmpF2E, BDB tmpE2F,
       BDB tmpFPhrases, Sequence<IString> foreign, Sequence<IString> trans)
       throws Exception {
     int pairSpecificPhrases = 0;
@@ -182,7 +180,7 @@ public class DynamicPhraseTable<FV> extends
             byte[] tBytes = tPhrase.toString().getBytes("UTF-8");
             tmpF2E.putdup(fBytes, tBytes);
             tmpE2F.putdup(tBytes, fBytes);
-            tmpFPhrases.put(fBytes, new byte[0]);
+            tmpFPhrases.put(fBytes, EMPTY_BYTE_ARRAY);
             // System.err.printf("putting '%s=:=>%s'\n", fPhrase, tPhrase);
             pairSpecificPhrases++;
             phraseSpecificTranslations++;
@@ -320,8 +318,8 @@ public class DynamicPhraseTable<FV> extends
         String probStr = tmpProbE2F.get(fphrase + ":::" + trans);
         if (probStr == null) {
           @SuppressWarnings("rawtypes")
-          List<byte[]> forByteList = (List) tmpE2F.getlist(trans
-              .getBytes("UTF-8"));
+          List<byte[]> forByteList = (List) tmpE2F.getlist(
+                  trans.getBytes("UTF-8"));
           ClassicCounter<String> allE2F = new ClassicCounter<String>();
           for (byte[] forByte : forByteList) {
             String eForeign = new String(forByte, "UTF-8");
@@ -331,8 +329,8 @@ public class DynamicPhraseTable<FV> extends
           for (Map.Entry<String, Double> entry : allE2F.entrySet()) {
             if (entry.getValue() < 3)
               continue;
-            tmpProbE2F.put(entry.getKey(), (new Double(entry.getValue()
-                / allE2Ftc)).toString());
+            tmpProbE2F.put(entry.getKey(), Double.toString(entry.getValue()
+                    / allE2Ftc));
           }
           probStr = tmpProbE2F.get(fphrase + ":::" + trans);
         } else {

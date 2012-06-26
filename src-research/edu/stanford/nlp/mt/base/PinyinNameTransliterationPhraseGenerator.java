@@ -172,15 +172,28 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
             '段', '郝', '孔', '邵', '史', '毛', '常', '万', '顾', '赖',
             '武', '康', '贺', '严', '尹', '钱', '施', '牛', '洪', '龚',
             // Additional ones from Wikipedia English Common Chinese Names list top 100 in 2007
-            '肖', '于', '余', '付', '闫', '陶', '黎', '覃', '莫', '向', '汤'
+            '肖', '于', '余', '付', '闫', '陶', '黎', '覃', '莫', '向', '汤',
+            // Additional ones from mingba list; not yet added
+            // '盛', '章', '易', '乔', '文',
     };
 
+//    From:
 //    private static final String wikiCommon =
 //            "王李张刘陈杨黄赵吴周徐孙马朱胡郭何高林罗" +
 //            "郑梁谢宋唐许韩冯邓曹彭曾肖田董袁潘于蒋蔡" +
 //            "余杜叶程苏魏吕丁任沈姚卢姜崔钟谭陆汪范金" +
 //            "石廖贾夏韦付方白邹孟熊秦邱江尹薛闫段雷侯" +
 //            "龙史陶黎贺顾毛郝龚邵万钱严覃武戴莫孔向汤";
+//
+//    From: http://www.sinosplice.com/learn-chinese/chinese-vocabulary-lists/the-top-100-chinese-surnames
+//    in turn from: http://bjx.mingba.cn/
+//    private static final String mingbaCommon =
+//            "李王张刘陈杨赵黄周吴徐孙胡朱高林何" +
+//                    "郭马罗梁宋郑谢韩唐冯于董萧程曹袁邓" +
+//                    "许傅沈曾彭吕苏卢蒋蔡贾丁魏薛叶阎余" +
+//                    "潘杜戴夏钟汪田任姜范方石姚谭盛邹熊" +
+//                    "金陆郝孔白崔康毛邱秦江史顾侯邵孟龙" +
+//                    "万段章钱汤尹黎易常武乔贺赖龚文";
 
     private static final HashSet<Character> commonNames = new HashSet<Character>();
 
@@ -191,6 +204,11 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
 //      for (int i = 0; i < wikiCommon.length(); i++) {
 //        if ( ! commonNames.contains(wikiCommon.charAt(i))) {
 //          EncodingPrintWriter.out.println("New names: " + wikiCommon.charAt(i), "utf-8");
+//        }
+//      }
+//      for (int i = 0; i < mingbaCommon.length(); i++) {
+//        if ( ! commonNames.contains(mingbaCommon.charAt(i))) {
+//          EncodingPrintWriter.out.println("New names: " + mingbaCommon.charAt(i), "utf-8");
 //        }
 //      }
     }
