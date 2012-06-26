@@ -322,6 +322,8 @@ if($ORACLE) {
 	 $opt_flags .= " -D BLEU";
 }
 
+
+print "Weight file model: $init_weight_file\n";
 if ($init_weight_file =~ /\.binwts$/) {
   $ini_weight_file = "$work_dir/phrasal.0.binwts\n";
 } else {
