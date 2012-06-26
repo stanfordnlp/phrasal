@@ -13,7 +13,7 @@ from csv_unicode import UnicodeReader,UnicodeWriter
 from argparse import ArgumentParser
 
 # Data frame definition
-Row = namedtuple('Row', 'time norm_time src_id ui_id len_tgt len_src user_id')
+Row = namedtuple('Row', 'time norm_time src_id ui_id tgt_len user_id')
 
 def get_rows(directory, meta_file, action_file):
     """
@@ -60,10 +60,9 @@ def get_rows(directory, meta_file, action_file):
             norm_time = str(int(end_times[src_id] / int(src_len)))
             row_list.append(Row(time=str(end_times[src_id]),
                                 norm_time=norm_time,
-                                src_id='s%d'%(src_id),
+                                src_id=str(src_id),
                                 ui_id='ui'+ui_id,
-                                len_src=src_len,
-                                len_tgt=tgt_len,
+                                tgt_len=tgt_len,
                                 user_id=user_id))
     return row_list
             
