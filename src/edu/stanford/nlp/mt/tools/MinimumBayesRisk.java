@@ -15,13 +15,16 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetric;
  *
  */
 public class MinimumBayesRisk {
+
+   public static final boolean VERBOSE = false;
+
    public static void main(String[] argv) throws Exception {
       if (argv.length != 4) {
          err.println(
              "Usage:\n\tjava ...MinimumBayesRisk (scale) (risk/utility) (metric) (n-best list)");
          exit(-1);
       }
-      double score = Double.parseDouble(argv[0]);
+      double scale = Double.parseDouble(argv[0]);
       boolean risk;
       if ("risk".equals(argv[1])) {
          risk = true;
@@ -48,8 +51,17 @@ public class MinimumBayesRisk {
            for (ScoredFeaturizedTranslation<IString,String> hyp : nbestlist) 
            { hypI++;
              double metricScore = metric.score(Arrays.asList(hyp)); 
-             double fracHypScore = metricScore * Math.exp(refTrans.score);
+           
+             double fracHypScore = metricScore * Math.exp(scale*refTrans.score);
              nbestScores[hypI] += fracHypScore; 
+             if (VERBOSE) {
+               System.err.printf("hyp(%d): %s\n", hypI, hyp);
+               System.err.printf("scale: %f\n", scale);
+               System.err.printf("score: %f\n", hyp.score);
+               System.err.printf("metricScore: %f\n", metricScore);
+               System.err.printf("fracHypScore: %f\n", fracHypScore);
+               System.err.printf("nbestScores[%d]: %f\n", hypI, nbestScores[hypI]);
+             }
            }
          }
          int hypI = -1;

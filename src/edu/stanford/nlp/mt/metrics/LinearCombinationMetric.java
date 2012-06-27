@@ -31,12 +31,15 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final EvaluationMetric<TK, FV>[] metrics;
   final MetricType[] metricTypes;
   final Map<TK, FV>[] metricProperties;
+  static final boolean VERBOSE = false;
 
   @SuppressWarnings("unchecked")
   public LinearCombinationMetric(double[] weights,
       EvaluationMetric<TK, FV>... metrics) {
-    System.err.printf("LinearCombinationMetric: weights=%s metrics=%s\n",
-        Arrays.toString(weights), Arrays.toString(metrics));
+    if (VERBOSE) {
+      System.err.printf("LinearCombinationMetric: weights=%s metrics=%s\n",
+          Arrays.toString(weights), Arrays.toString(metrics));
+    }
     if (weights.length != metrics.length)
       throw new IllegalArgumentException();
     this.weights = weights;

@@ -14,6 +14,8 @@ public class EvaluationMetricFactory {
   public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERpMetric";
   public static final String OTER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.OriginalTERMetric";
 
+  public static boolean VERBOSE = false;
+
   private static AbstractMetric<IString, String> createMetric(
       String metricName, Class<AbstractMetric<IString, String>>[] argClasses,
       Object[] args) {
@@ -36,6 +38,7 @@ public class EvaluationMetricFactory {
     List<List<Sequence<IString>>> references) { 
     return newMetric(evalMetric, references, SMOOTH_BLEU_DEFAULT);
   }
+
 
   public static AbstractMetric<IString,String> newMetric(String evalMetric,  
     List<List<Sequence<IString>>> references, boolean smoothBLEU) { 
@@ -67,8 +70,10 @@ public class EvaluationMetricFactory {
           smoothBLEU), createMetric(TERP_CLASS_NAME, new Class[] { List.class,
           int.class, int.class }, new Object[] { references, 5, 10 }));
       // new TERpMetric<IString, String>(references, 5, 10));
-      System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n",
+      if (VERBOSE) {
+        System.err.printf("Maximizing %s: BLEU:3 minus 2*TERp (terW=%f)\n",
           evalMetric, terW);
+      }
     } else if (evalMetric.equals("bleu:3-terp")) {
       int BLEUOrder = 3;
       double terW = 1.0;
@@ -77,8 +82,10 @@ public class EvaluationMetricFactory {
           smoothBLEU), createMetric(TERP_CLASS_NAME,
           new Class[] { List.class }, new Object[] { references }));
       // new TERpMetric<IString, String>(references));
-      System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n",
+      if (VERBOSE) {
+        System.err.printf("Maximizing %s: BLEU:3 minus 1*TERp (terW=%f)\n",
           evalMetric, terW);
+      }
     } else if (evalMetric.equals("terp")) {
       emetric = createMetric(TERP_CLASS_NAME, new Class[] { List.class },
           new Object[] { references });
@@ -131,14 +138,18 @@ public class EvaluationMetricFactory {
           createMetric(TERP_CLASS_NAME, new Class[] { List.class },
               new Object[] { references }));
       // new TERpMetric<IString, String>(references));
-      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n",
+      if (VERBOSE) {
+        System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n",
           evalMetric, terW);
+      }
     } else if (evalMetric.startsWith("bleu+2meteor")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, 2.0 }, new BLEUMetric<IString, String>(references, smoothBLEU),
           meteorMetric);
-      System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n",
+      if (VERBOSE) {
+        System.err.printf("Maximizing %s: BLEU + 2*METEORTERpA (meteorW=%f)\n",
           evalMetric, 2.0);
+      }
     } else if (evalMetric.startsWith("bleu-2terpa")) {
       double terW = 2.0;
       if (fields.length > 1) {
@@ -151,8 +162,10 @@ public class EvaluationMetricFactory {
               boolean.class, boolean.class }, new Object[] { references, false,
               true }));
       // new TERpMetric<IString, String>(references, false, true));
-      System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n",
+      if (VERBOSE) {
+        System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n",
           evalMetric, terW);
+      }
     } else if (evalMetric.startsWith("bleu-ter")) {
       double terW = 1.0;
       if (fields.length > 1) {
@@ -168,8 +181,10 @@ public class EvaluationMetricFactory {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, terW }, new BLEUMetric<IString, String>(references, smoothBLEU),
           termetric);
-      System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n",
+      if (VERBOSE) {
+        System.err.printf("Maximizing %s: BLEU minus TER (terW=%f)\n",
           evalMetric, terW);
+      }
     } else if (evalMetric.equals("wer")) {
       emetric = new WERMetric<IString, String>(references);
     } else if (evalMetric.equals("per")) {
