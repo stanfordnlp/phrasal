@@ -939,7 +939,7 @@ public class Phrasal {
           }
           pgens.add(pgen);
        }
-       phraseGenerator = new CombinedPhraseGenerator<IString>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
+       phraseGenerator = new CombinedPhraseGenerator<IString>(pgens, CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
     }
 
     phraseGenerator = new CombinedPhraseGenerator<IString>(
