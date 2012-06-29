@@ -2,6 +2,8 @@
 
 while (<>) {
   chomp;
+  s/[\n\r]/ /g;
+  s/ +/ /g;
   @f = split / \|\|\| /;
   $_ = $f[1];
 
@@ -95,7 +97,8 @@ s= +$==g;
 
 # # Prevent empty lines, which make the official NIST scoring script crash:
 # s=^\s*$=.\n=g;
+  chomp;
   $f[1] = $_;
-  $l = join @f, " ||| ";
+  $l = join " ||| ", @f;
   print "$l\n";
 }
