@@ -1,0 +1,39 @@
+BUILDING BASELINE MT SYSTEMS
+for Arabic, French, and German
+
+In the text below, SCRIPTDIR=$JAVANLP/projects/mt/ptm/scripts/mt
+
+// Corpora //
+Corpora were extracted from the following sources:
+  * NIST Ar-En 2009
+	* WMT2012
+	* JRC-Acquis
+	* Opus -- OpenSubtitles-2011
+	* LDC -- French Gigaword (LDC2011T10)
+	* LDC -- Arabic Gigaword (LDC2011T11)
+
+
+// Tokenization //
+Tokenize monolingual and bilingual sources as follows:
+
+  Arabic: Stanford word segmenter (ATB clitic segmentation w/ markers)
+	French: Google tokenizer (from Web 1T corpus LDC2009T25)
+	German: Google tokenizer (from Web 1T corpus LDC2009T25)
+  English: Stanford tokenizer with PTB tokenization
+	
+For French and German, run the script $SCRIPTDIR/tok_google.sh. For Arabic and English, run the script $SCRIPTDIR/tok_stanford.sh.
+
+
+// LM Training //
+4-gram language models were constructed with $SCRIPTDIR/train-srilm.sh.
+
+// Alignment //
+TBD
+
+// Tuning //
+
+// Detokenization //
+
+
+
+
