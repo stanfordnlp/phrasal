@@ -798,7 +798,7 @@ public class TERcalc {
       } else if (P[i][j] == 'I') {
         j--;
       } else {
-        System.out.println("Invalid path: " + P[i][j]);
+        System.out.printf("Invalid path: '%s'",  P[i][j]);
         // System.exit(-1);
         throw new RuntimeException();
       }

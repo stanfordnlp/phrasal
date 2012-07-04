@@ -50,6 +50,7 @@ import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.AbstractMetric;
 import edu.stanford.nlp.mt.metrics.AbstractTERMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalNBestEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.LinearCombinationMetric;

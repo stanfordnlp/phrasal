@@ -7,6 +7,7 @@ import static java.lang.System.*;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
 
 /**
  * Minimum Bayes Risk decoding

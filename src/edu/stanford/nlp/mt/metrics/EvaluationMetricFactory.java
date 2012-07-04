@@ -1,18 +1,18 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.metrics;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.base.*;
 
 public class EvaluationMetricFactory {
 
   public static final boolean SMOOTH_BLEU_DEFAULT = false;
 
   public static final String METEOR_CLASS_NAME = "edu.stanford.nlp.mt.metrics.METEORMetric";
-  public static final String TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERMetric";
+  public static final String GOOD_TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.ThreadSafeTERMetric";
+  public static final String BAD_TER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERMetric";
   public static final String TERP_CLASS_NAME = "edu.stanford.nlp.mt.metrics.TERpMetric";
-  public static final String OTER_CLASS_NAME = "edu.stanford.nlp.mt.metrics.OriginalTERMetric";
 
   public static boolean VERBOSE = false;
 
@@ -33,6 +33,24 @@ public class EvaluationMetricFactory {
     return metric;
   }
 
+  public static AbstractTERMetric<IString, String> goodOrBadTER(List<List<Sequence<IString>>> references) { 
+      AbstractTERMetric<IString, String> termetric;
+      try {
+         termetric = (AbstractTERMetric<IString, String>) createMetric(
+          GOOD_TER_CLASS_NAME, new Class[] { List.class },
+          new Object[] { references });
+      } catch (Exception e) {
+          System.err.printf("Warning: Can't load thread safe TER (%s)\n",
+          GOOD_TER_CLASS_NAME);
+          System.err.printf(
+            "Loading Matthew Snoover's non-thread safe TER (%s)\n", 
+             BAD_TER_CLASS_NAME);
+          termetric = (AbstractTERMetric<IString, String>) 
+            createMetric(BAD_TER_CLASS_NAME, new Class[] { List.class }, 
+            new Object[] { references });
+      }
+      return termetric;
+  }
 
   public static AbstractMetric<IString,String> newMetric(String evalMetric,  
     List<List<Sequence<IString>>> references) { 
@@ -98,8 +116,7 @@ public class EvaluationMetricFactory {
     } else if (evalMetric.equals("meteor") || evalMetric.startsWith("meteor:")) {
       emetric = meteorMetric;
     } else if (evalMetric.equals("ter") || evalMetric.startsWith("ter:")) {
-      AbstractTERMetric<IString, String> termetric = (AbstractTERMetric<IString, String>) createMetric(TER_CLASS_NAME, new Class[] { List.class },
-          new Object[] { references });
+      AbstractTERMetric<IString, String> termetric = goodOrBadTER(references);
       // new TERMetric<IString, String>(references) :
       // new OriginalTERMetric<IString, String>(references);
       termetric.enableFastTER();
@@ -172,9 +189,9 @@ public class EvaluationMetricFactory {
         assert (fields.length == 2);
         terW = Double.parseDouble(fields[1]);
       }
-      AbstractTERMetric<IString, String> termetric = (AbstractTERMetric<IString, String>) createMetric(
-          TER_CLASS_NAME, new Class[] { List.class },
-          new Object[] { references });
+
+      AbstractTERMetric<IString, String> termetric = goodOrBadTER(references);
+
       // new TERMetric<IString, String>(references) :
       // new OriginalTERMetric<IString, String>(references);
       termetric.enableFastTER();
