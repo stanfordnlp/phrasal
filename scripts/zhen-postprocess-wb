@@ -37,6 +37,7 @@ s/(\:|\?)\s*\.\s*$/$1 \n/;
 s/ - /-/g;
 # BLEU = 17.541, 53.582/23.485/12.329/6.839 (BP=0.972, ration=0.972 44308/45570)
 
+# ah, uh, or eh
 s/ , [eua]h / /g;
 # BLEU = 17.545, 53.636/23.520/12.346/6.850 (BP=0.971, ration=0.971 44258/45570)
 
@@ -48,7 +49,9 @@ s/^five , /5 . /;
 s/^six , /6 . /;
 # BLEU = 17.552, 53.640/23.529/12.351/6.855 (BP=0.971, ration=0.971 44258/45570)
 
-s/tantamount /the same as /;
+s/ tantamount to / the same as /;
+s/ tantamount / the same as /;
+
 s/ wimp / coward /;
 s/viet nam /vietnam /g;
 s/chief executive officer /ceo /;
@@ -63,6 +66,7 @@ s/([\d]+)% /$1 % /g;
 # weird, clearly matches ref1 better, but no BLEU improvements
 
 # north korea
+s/ the dprk / north korea /g;
 s/ dprk / north korea /g;
 # BLEU = 17.607, 53.843/23.639/12.384/6.866 (BP=0.971, ration=0.971 44255/45570)
 # s/ the un / kim jong-un /g;
