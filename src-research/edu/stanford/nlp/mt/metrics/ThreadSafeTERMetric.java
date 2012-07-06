@@ -142,6 +142,10 @@ public class ThreadSafeTERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
       nulls = p.nulls;
     }
 
+    public String scoreDetails() {
+      return "None";
+    }
+    
     @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
@@ -263,8 +267,8 @@ public class ThreadSafeTERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     if (System.getProperty("fastTER") != null) {
       System.err.println("beam width: " + DEFAULT_TER_BEAM_WIDTH);
       System.err.println("ter shift dist: " + DEFAULT_TER_SHIFT_DIST);
-      ter.calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
-      ter.calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
+      com.bbn.mt.ter.TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
+      com.bbn.mt.ter.TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
     }
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(

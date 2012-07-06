@@ -30,6 +30,11 @@ public class ScorerWrapperEvaluationMetric<TK, FV> implements
     List<Double> scores = new ArrayList<Double>();
 
     @Override
+    public String scoreDetails() {
+      return "None";
+    }
+    
+    @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
       double tscore;

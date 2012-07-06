@@ -42,7 +42,7 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   @Override
   public double maxScore() {
-    return 1.0;
+    return 0.0;
   }
 
   // //////////////////////////
@@ -53,7 +53,12 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     PositionIndependentDistance positionIndependentDistance = new PositionIndependentDistance();
     double editSum = 0;
     double lengthSum = 0;
-
+    
+    @Override
+    public String scoreDetails() {
+      return "None";
+    }
+    
     private double[] minimumPositionIndependentDistance(int id, Sequence<TK> seq) {
 
       Object[] outArr = (new RawSequence<TK>(seq)).elements;
@@ -96,7 +101,7 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     @Override
     public double maxScore() {
-      return 1.0;
+      return 0.0;
     }
 
     @Override
@@ -119,7 +124,7 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
         return 0;
       System.err.printf("(edits:%f)/(ref length: %f)=%f\n", editSum, lengthSum,
           (editSum / lengthSum));
-      return (editSum / lengthSum);
+      return -(editSum / lengthSum);
     }
 
     @Override

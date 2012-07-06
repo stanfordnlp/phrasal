@@ -58,6 +58,7 @@ public class EvaluationMetricFactory {
   }
 
 
+  @SuppressWarnings("unchecked")
   public static AbstractMetric<IString,String> newMetric(String evalMetric,  
     List<List<Sequence<IString>>> references, boolean smoothBLEU) { 
 
@@ -183,6 +184,24 @@ public class EvaluationMetricFactory {
         System.err.printf("Maximizing %s: BLEU minus TERpA (terW=%f)\n",
           evalMetric, terW);
       }
+    } else if (evalMetric.equals("sqrt((1-ter)*bleu)")) {
+      AbstractTERMetric<IString, String> termetric = goodOrBadTER(references);
+
+      // new TERMetric<IString, String>(references) :
+      // new OriginalTERMetric<IString, String>(references);
+      termetric.enableFastTER();
+      emetric = new GeometricMeanCombinationMetric<IString, String>(new double[] {
+          0.5, 0.5 }, termetric, new BLEUMetric<IString, String>(references, smoothBLEU));
+      
+    } else if (evalMetric.equals("(ter-bleu)/2")) {
+      AbstractTERMetric<IString, String> termetric = goodOrBadTER(references);
+
+      // new TERMetric<IString, String>(references) :
+      // new OriginalTERMetric<IString, String>(references);
+      termetric.enableFastTER();
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          0.5, 0.5 }, termetric, new BLEUMetric<IString, String>(references, smoothBLEU));
+      
     } else if (evalMetric.startsWith("bleu-ter")) {
       double terW = 1.0;
       if (fields.length > 1) {

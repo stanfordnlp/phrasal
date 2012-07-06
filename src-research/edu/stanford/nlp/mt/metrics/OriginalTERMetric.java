@@ -131,6 +131,10 @@ public class OriginalTERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
         editCounts = new double[EditType.values().length];
     }
 
+    public String scoreDetails() {
+      return "None";
+    }
+    
     public TERIncrementalMetric(TERIncrementalMetric p) {
       aligns = p.aligns.clone();
       cnt = p.cnt;

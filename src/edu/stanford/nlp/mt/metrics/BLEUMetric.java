@@ -686,6 +686,11 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public int depth() {
       return sequences.size();
     }
+    
+    @Override
+    public String scoreDetails() {
+      return "None";
+    }
   }
 
   public static void main(String[] args) throws IOException {
@@ -751,6 +756,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
   }
 
+  
   @Override
   public double maxScore() {
     return 1.0;

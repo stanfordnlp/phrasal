@@ -44,7 +44,7 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   @Override
   public double maxScore() {
-    return 1.0;
+    return 0.0;
   }
 
   // Map editDistanceCache = new HashMap();
@@ -130,7 +130,7 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     @Override
     public double maxScore() {
-      return 1.0;
+      return 0.0;
     }
 
     @Override
@@ -184,6 +184,11 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public Object clone() throws CloneNotSupportedException {
       super.clone();
       return new WERIncrementalMetric();
+    }
+    
+    @Override
+    public String scoreDetails() {
+      return "None";
     }
   }
 

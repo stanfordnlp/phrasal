@@ -106,6 +106,10 @@ public class MarginRescaleEvaluationMetric implements
       }
     }
 
+    public String scoreDetails() {
+      return "None";
+    }
+    
     @Override
     public IncrementalEvaluationMetric<IString, String> add(
         ScoredFeaturizedTranslation<IString, String> trans) {

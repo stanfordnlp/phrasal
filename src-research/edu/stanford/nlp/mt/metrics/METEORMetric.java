@@ -106,6 +106,10 @@ public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public METEORIncrementalMetric() {
     }
 
+    public String scoreDetails() {
+      return "None";
+    }
+    
     public METEORIncrementalMetric(METEORIncrementalMetric p) {
       scores = p.scores.clone();
       cnt = p.cnt;

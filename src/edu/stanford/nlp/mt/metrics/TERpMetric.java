@@ -100,7 +100,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   @Override
   public double maxScore() {
-    return 1.0;
+    return 0.0;
   }
 
   PhraseTable phrasetable;
@@ -200,7 +200,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     @Override
     public double maxScore() {
-      return 1.0;
+      return 0.0;
     }
 
     @Override
@@ -268,6 +268,11 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
       return new TERpIncrementalMetric(this);
     }
 
+    @Override
+    public String scoreDetails() {
+      return "None";
+    }
+    
     // public double insCount() { return editCounts[EditType.ins.ordinal()]; }
     // public double delCount() { return editCounts[EditType.del.ordinal()]; }
     // public double subCount() { return editCounts[EditType.sub.ordinal()]; }

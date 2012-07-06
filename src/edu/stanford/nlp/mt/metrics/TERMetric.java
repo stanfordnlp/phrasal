@@ -60,7 +60,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   @Override
   public double maxScore() {
-    return 1.0;
+    return 0.0;
   }
 
   Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
@@ -82,7 +82,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
       int totalWords = 0;
       for (Sequence<TK> ref : refsSeq) {
-        TERalignment terAl = calc.TER(hyp, ref.toString());
+        TERalignment terAl = TERcalc.TER(hyp, ref.toString());
         totalWords += terAl.numWords;
         // System.err.printf("ter: %f\n", ter);
         // System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits,
@@ -159,7 +159,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
     @Override
     public double maxScore() {
-      return 1.0;
+      return 0.0;
     }
 
     @Override
@@ -243,6 +243,11 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     public double sftCount() {
       return editCounts[EditType.sft.ordinal()];
     }
+    
+    @Override
+    public String scoreDetails() {
+      return "None";
+    }
   }
 
   public static void main(String[] args) throws IOException {
@@ -263,8 +268,8 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     if (System.getProperty("fastTER") != null) {
       System.err.println("beam width: " + DEFAULT_TER_BEAM_WIDTH);
       System.err.println("ter shift dist: " + DEFAULT_TER_SHIFT_DIST);
-      ter.calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
-      ter.calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
+      TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
+      TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
     }
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
@@ -291,19 +296,19 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     if (System.getProperty("fastTER") != null) {
       System.err.println("beam width: " + DEFAULT_TER_BEAM_WIDTH);
       System.err.println("ter shift dist: " + DEFAULT_TER_SHIFT_DIST);
-      calc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
-      calc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
+      TERcalc.setBeamWidth(DEFAULT_TER_BEAM_WIDTH);
+      TERcalc.setShiftDist(DEFAULT_TER_SHIFT_DIST);
     }
   }
 
   @Override
   public void setBeamWidth(int beamWidth) {
-    calc.setBeamWidth(beamWidth);
+    TERcalc.setBeamWidth(beamWidth);
   }
 
   @Override
   public void setShiftDist(int maxShiftDist) {
-    calc.setShiftDist(maxShiftDist);
+    TERcalc.setShiftDist(maxShiftDist);
   }
 
 }

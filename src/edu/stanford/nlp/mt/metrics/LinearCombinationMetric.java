@@ -208,6 +208,18 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
       super.clone();
       return new LCIncrementalMetric(this);
     }
+    
+    public String scoreDetails() {
+      StringBuilder sbuilder = new StringBuilder();
+      
+      for (int i = 0; i < weights.length; ++i) {
+        double score = score(i);
+        sbuilder.append(String.format("\t%.3f <= %.3f * %s (%.3f)\n", weights[i]*score, weights[i], 
+            metrics[i].getClass().toString().replaceAll("^.*metrics\\.", ""), score));
+      }
+      
+      return sbuilder.toString();
+    }
   }
 
   @SuppressWarnings("unchecked")

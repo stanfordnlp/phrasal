@@ -38,6 +38,10 @@ public class InverseMetric<TK, FV> extends AbstractMetric<TK, FV> {
     IncrementalEvaluationMetric<TK, FV> imetric = emetric
         .getIncrementalMetric();
 
+    public String scoreDetails() {
+      return "None";
+    }
+    
     @Override
     public Object clone() throws CloneNotSupportedException {
       super.clone();

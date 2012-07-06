@@ -434,6 +434,11 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public int depth() {
       return sequences.size();
     }
+
+    @Override
+    public String scoreDetails() {
+      return "None";
+    }
   }
 
   static public void main(String args[]) throws IOException {

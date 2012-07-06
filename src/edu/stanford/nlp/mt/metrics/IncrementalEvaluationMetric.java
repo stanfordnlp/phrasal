@@ -28,6 +28,8 @@ public interface IncrementalEvaluationMetric<TK, FV> extends
 	 */
   double score();
 
+  String scoreDetails();
+  
   /**
 	 * 
 	 */
