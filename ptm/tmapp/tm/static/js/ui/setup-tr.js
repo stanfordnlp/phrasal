@@ -33,7 +33,6 @@ $(document).ready(function(){
   $( 'input[name=form-tgt-submit]' ).click(function(){
     // Disable the submit button
     if (this.beenSubmitted){
-      console.log('here');
       return false;
     } else {
       this.beenSubmitted = true;

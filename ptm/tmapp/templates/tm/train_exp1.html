@@ -7,6 +7,13 @@
 
 {% block user_static %}
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/ptm-site.css" />
+
+<!-- JS files for action logger !-->
+  <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-latest.js"></script>
+
+  <!-- PTM libraries -->
+  <script type="text/javascript" src="{{ STATIC_URL }}js/translog2.js"></script>
+
 {% endblock %}
 
 {% block header %}
@@ -23,6 +30,17 @@
 <p>Once you submit a translation, you will not have another opportunity to edit or proofread it. Make sure that your translation is in good shape before you press the submit button!</p>
 
 <p>This job is the first in a series of translation studies that we are running over the next few months. If you submit good translations, then we will ask you to join us for future studies.</p>
+
+<h2>Browser Test</h2>
+<p>Your browser must support JavaScript for you to participate in this job. To test your browser, please begin typing in the box below. You should see activity in the second (larger) text box.</p>
+
+<form>
+<textarea id="form-debug" name="form-debug" style="margin:15px;width:100%;height:75px;padding:6px"></textarea>
+
+<br/>
+
+<textarea id="form-output" name="form-output" style="margin:15px;width:100%;height:125px;padding:6px"></textarea>
+</form>
 
 <h2>Job Description and Requirements</h2>
 <p><b>Please enable the odesk Team Tracker software while you work.</b> Our website will administer the translation job, which is organized into two modules separated by a break:</p>
@@ -77,4 +95,11 @@ You <b>may</b> use dictionaries, either online (for example, <a href="http://www
 </form>
 </div>
 
+<script>
+  // Setup translog2
+  tlog2.init();
+  $( 'textarea[name=form-debug]' ).keydown(function(){
+     tlog2.flushTag('form-output');
+    });
+</script>
 {% endblock %}
