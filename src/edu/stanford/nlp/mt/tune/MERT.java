@@ -28,7 +28,6 @@
 package edu.stanford.nlp.mt.tune;
 
 import java.io.*;
-import java.lang.reflect.Constructor;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
@@ -42,18 +41,11 @@ import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Pair;
 
-import edu.stanford.nlp.mt.metrics.BLEUMetric;
-import edu.stanford.nlp.mt.metrics.NISTMetric;
-import edu.stanford.nlp.mt.metrics.PERMetric;
-import edu.stanford.nlp.mt.metrics.WERMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
-import edu.stanford.nlp.mt.metrics.AbstractMetric;
-import edu.stanford.nlp.mt.metrics.AbstractTERMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalNBestEvaluationMetric;
-import edu.stanford.nlp.mt.metrics.LinearCombinationMetric;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 
 /**
@@ -943,7 +935,6 @@ public class MERT extends Thread {
 
   public Random random;
 
-  @SuppressWarnings("unchecked")
   public MERT(String evalMetric, String referenceList, String optStr,
       String seedStr) throws IOException {
 
@@ -1048,10 +1039,7 @@ public class MERT extends Thread {
       double mcmcEval2 = mcmcTightExpectedEval(nbest, bestWts, emetric, false);
 
       double obj = (mcmcObj ? mcmcEval : -evalAt);
-      if (!opt.selfWeightUpdate()) {
-        System.err.println("Non-self weight update");
-        updateBest(newWts, -evalAt);
-      }
+      updateBest(newWts, -evalAt);
       System.out.printf("\npoint %d - final wts: %s", ptI, newWts.toString());
       System.out
           .printf(

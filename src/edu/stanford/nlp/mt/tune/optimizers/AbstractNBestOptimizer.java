@@ -29,9 +29,5 @@ public abstract class AbstractNBestOptimizer implements NBestOptimizer {
     this.random = mert.random;
     this.nbest = MERT.nbest;
   }
-  
-  @Override 
-  public boolean selfWeightUpdate() {
-    return false;
-  }
+ 
 }

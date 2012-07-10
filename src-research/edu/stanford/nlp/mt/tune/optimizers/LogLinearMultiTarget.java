@@ -28,10 +28,7 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
     return false;
   }
   
-  @Override 
-  public boolean selfWeightUpdate() {
-    return true;
-  }
+  
 
   public LogLinearMultiTarget(MERT mert, String... args) {
     super(mert);
