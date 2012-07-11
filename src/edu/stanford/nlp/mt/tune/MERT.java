@@ -932,7 +932,8 @@ public class MERT extends Thread {
   public final EvaluationMetric<IString, String> emetric;
   final String optStr;
   final String seedStr;
-
+  public final List<List<Sequence<IString>>> references;
+  public final String evalMetric;
   public Random random;
 
   public MERT(String evalMetric, String referenceList, String optStr,
@@ -941,8 +942,9 @@ public class MERT extends Thread {
     this.optStr = optStr;
     this.seedStr = seedStr;
 
-    List<List<Sequence<IString>>> references = Metrics.readReferences(
+    references = Metrics.readReferences(
         referenceList.split(","), tokenizeNIST);
+    this.evalMetric = evalMetric;
     this.emetric = EvaluationMetricFactory.newMetric(evalMetric, references);
   }
 
