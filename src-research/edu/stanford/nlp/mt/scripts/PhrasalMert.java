@@ -12,15 +12,11 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.tools.CompareWeights;
@@ -29,8 +25,11 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.StringUtils;
 
 public class PhrasalMert {
+
+  private PhrasalMert() {} // static class
+
   public static void mergeIntegerIndexedFiles(String outputFile,
-                                              String ... inputFiles) 
+                                              String ... inputFiles)
     throws IOException
   {
     List<String> lines = new ArrayList<String>();
@@ -45,6 +44,7 @@ public class PhrasalMert {
       }
     }
     Collections.sort(lines, new Comparator<String>() {
+        @Override
         public int compare(String l1, String l2) {
           String[] pieces1 = l1.trim().split("\\s+");
           String[] pieces2 = l2.trim().split("\\s+");
@@ -60,13 +60,13 @@ public class PhrasalMert {
     writer.flush();
     fout.close();
   }
-                                              
+
 
   /**
    * Takes all of the data available in input and redirects it to output.
    */
   public static void connectStreams(InputStream input,
-                                    OutputStream output) 
+                                    OutputStream output)
     throws IOException
   {
     BufferedInputStream bufInput = new BufferedInputStream(input);
@@ -79,7 +79,7 @@ public class PhrasalMert {
     bufOutput.flush();
   }
 
-  static public class StreamConnectorThread extends Thread {
+  public static class StreamConnectorThread extends Thread {
     public StreamConnectorThread(InputStream input, OutputStream output) {
       super();
       this.input = input;
@@ -89,6 +89,7 @@ public class PhrasalMert {
     final InputStream input;
     final OutputStream output;
 
+    @Override
     public void run() {
       try {
         connectStreams(input, output);
@@ -103,9 +104,9 @@ public class PhrasalMert {
    * and stderr that are specified, pipes that file to or from the
    * process.  A null argument for a filename means to not use that pipe.
    */
-  public static void runCommand(List<String> command, String stdinFile, 
+  public static void runCommand(List<String> command, String stdinFile,
                                 String stdoutFile, String stderrFile,
-                                boolean combineErrorStream) 
+                                boolean combineErrorStream)
     throws IOException, InterruptedException
   {
     ProcessBuilder procBuilder = new ProcessBuilder(command);
@@ -116,13 +117,13 @@ public class PhrasalMert {
 
     OutputStream stdoutStream = ((stdoutFile == null) ? System.out :
                                  new FileOutputStream(stdoutFile));
-    Thread stdoutThread = new StreamConnectorThread(proc.getInputStream(), 
+    Thread stdoutThread = new StreamConnectorThread(proc.getInputStream(),
                                                     stdoutStream);
     stdoutThread.start();
 
     OutputStream stderrStream = ((stderrFile == null) ? System.err :
                                  new FileOutputStream(stderrFile));
-    Thread stderrThread = new StreamConnectorThread(proc.getErrorStream(), 
+    Thread stderrThread = new StreamConnectorThread(proc.getErrorStream(),
                                                     stderrStream);
     stderrThread.start();
 
@@ -147,7 +148,7 @@ public class PhrasalMert {
 
   public static void runCommand(String[] command, String stdinFile,
                                 String stdoutFile, String stderrFile,
-                                boolean combineErrorStream) 
+                                boolean combineErrorStream)
     throws IOException, InterruptedException
   {
     runCommand(Arrays.asList(command), stdinFile,
@@ -165,11 +166,11 @@ public class PhrasalMert {
   public static final String WEIGHTS_SECTION = "weights-file";
 
   public static String getBinWeightsName(int iteration) {
-    return new String("phrasal." + iteration + ".binwts");
+    return "phrasal." + iteration + ".binwts";
   }
 
   public static String getWeightsName(int iteration) {
-    return new String("phrasal." + iteration + ".wts");
+    return "phrasal." + iteration + ".wts";
   }
 
   public static String findWeightsFilename(int iteration) {
@@ -189,11 +190,11 @@ public class PhrasalMert {
   }
 
   public static String getBaseNBestName(int iteration) {
-    return new String("phrasal." + iteration + ".nbest");
+    return "phrasal." + iteration + ".nbest";
   }
 
   public static String getCombinedNBestName(int iteration) {
-    return new String("phrasal." + iteration + ".combined.nbest");
+    return "phrasal." + iteration + ".combined.nbest";
   }
 
   public static String getNBestName(int iteration) {
@@ -205,18 +206,18 @@ public class PhrasalMert {
   }
 
   public static String getMertLogName(int iteration) {
-    return new String("phrasal." + iteration + ".mertlog");
+    return "phrasal." + iteration + ".mertlog";
   }
 
   public static String getTransName(int iteration) {
-    return new String("phrasal." + iteration + ".trans");
+    return "phrasal." + iteration + ".trans";
   }
 
   public static String getPhrasalLogName(int iteration) {
-    return new String("phrasal." + iteration + ".dlog");
+    return "phrasal." + iteration + ".dlog";
   }
 
-  public static List<String> buildPhrasalCommand(String memory, 
+  public static List<String> buildPhrasalCommand(String memory,
                                                  String libraryPath,
                                                  int iteration) {
     List<String> phrasalCommand = new ArrayList<String>();
@@ -226,17 +227,17 @@ public class PhrasalMert {
       phrasalCommand.add("-Djava.library.path=" + libraryPath);
     }
     phrasalCommand.add(PHRASAL_CLASS);
-    phrasalCommand.add("-config-file"); 
+    phrasalCommand.add("-config-file");
     phrasalCommand.add(getConfigName(iteration));
     return phrasalCommand;
   }
 
   public static String getConfigName(int iteration) {
-    return new String("phrasal." + iteration + ".ini");
+    return "phrasal." + iteration + ".ini";
   }
 
   public static void runPhrasalCommand(String inputFilename, String memory,
-                                       String libraryPath, int iteration) 
+                                       String libraryPath, int iteration)
     throws IOException, InterruptedException
   {
     String transName = getTransName(iteration);
@@ -284,23 +285,23 @@ public class PhrasalMert {
     throws IOException, InterruptedException
   {
     // MERT command: java  -Xmx4g -cp ../scripts/../phrasal.jar:../scripts/../lib/fastutil.jar:../scripts/../lib/mtj.jar -Djava.library.path=../scripts/../cpp edu.stanford.nlp.mt.tune.MERT -N -o cer -t 1 -p 5 -s /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts bleu /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.combined.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.nbest.gz /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.2.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.1.wts,/juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.0.wts data/dev/nc-dev2007.tok.en /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/phrasal.3.wts > /juicy/u61/u/horatio/stanford-phrasal-2010-08-24/work/phrasal-mert/jmert.2.log 2>&1
-    List<String> mertCommand = 
+    List<String> mertCommand =
       buildMertCommand(referenceFile, memory, metric, libraryPath, iteration);
-    
+
     System.out.println("Running MERT command: " + mertCommand);
 
     runCommand(mertCommand, null, getMertLogName(iteration), null, true);
   }
 
   // Implements the most basic form of PhrasalMert
-  // goal: reproduce the effects of 
-  // ../scripts/phrasal-mert.pl 4g data/dev/nc-dev2007.tok.fr 
+  // goal: reproduce the effects of
+  // ../scripts/phrasal-mert.pl 4g data/dev/nc-dev2007.tok.fr
   //   data/dev/nc-dev2007.tok.en bleu phrasal.conf
-  public static void main(String[] args) 
+  public static void main(String[] args)
     throws IOException, InterruptedException, ClassNotFoundException
   {
     Properties props = StringUtils.argsToProperties(args);
-    String missing = 
+    String missing =
       StringUtils.checkRequiredProperties(props, "memory", "inputFile",
                                           "referenceFile", "metric",
                                           "phrasalConfigFile");
@@ -308,7 +309,7 @@ public class PhrasalMert {
       System.err.println("Required property " + missing + " missing");
       System.err.println("Expected properties are: memory, inputFile, " +
                          " referenceFile, metric, phrasalConfigFile");
-      System.err.println("Optional properties are: libraryPath"); 
+      System.err.println("Optional properties are: libraryPath");
       System.exit(2);
     }
     String memory = props.getProperty("memory");
@@ -334,7 +335,7 @@ public class PhrasalMert {
 
     int iteration = 0;
     while (true) {
-      // update the 
+      // update the
       String configName = getConfigName(iteration);
       String weightsName = findWeightsFilename(iteration);
       configFile.updateSection(NBEST_SECTION, getBaseNBestName(iteration),
@@ -364,12 +365,12 @@ public class PhrasalMert {
       }
 
       runMertCommand(referenceFile, memory, metric, libraryPath, iteration);
-      
-      Counter<String> oldWeights = 
+
+      Counter<String> oldWeights =
         CompareWeights.readWeights(findWeightsFilename(iteration));
-      Counter<String> newWeights = 
+      Counter<String> newWeights =
         CompareWeights.readWeights(findWeightsFilename(iteration + 1));
-      Counter<String> difference = 
+      Counter<String> difference =
         Counters.absoluteDifference(oldWeights, newWeights);
       double maxDiff = Counters.max(difference);
       if (maxDiff < TOL)
