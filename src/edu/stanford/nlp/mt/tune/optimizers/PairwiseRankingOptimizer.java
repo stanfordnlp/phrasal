@@ -32,7 +32,8 @@ public class PairwiseRankingOptimizer extends AbstractNBestOptimizer {
   static public final int DEFAULT_XI = 50;
   static public final double DEFAULT_N_THRESHOLD = 0.05;
   static public final double DEFAULT_L2SIGMA = 1.0;
-  
+ 
+  static private boolean updatedBestOnce = false;
   
   final int gamma;
   final int xi;
@@ -158,6 +159,15 @@ public class PairwiseRankingOptimizer extends AbstractNBestOptimizer {
       }
       String decoderKey = key.replaceFirst("^[10] / ", "");
       decoderWeights.incrementCount(decoderKey, mul*lcWeights.getCount(key));
+    }
+
+    synchronized (MERT.bestWts) {
+      if (!updatedBestOnce) {
+        System.err.println("Force updating weights (once)");
+        double metricEval = MERT.evalAtPoint(nbest, decoderWeights, emetric);
+        MERT.updateBest(decoderWeights, metricEval, true);
+        updatedBestOnce = true;
+      }
     }
     return decoderWeights;
   }

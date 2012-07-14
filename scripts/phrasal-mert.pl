@@ -474,6 +474,12 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	 $trans_eval =~ s/\n/\n# /g; # comment $trans_eval, since printed inside ini file
    
    print stderr "$trans_eval\n";
+
+   $trans_eval2 = `java $java_flags edu.stanford.nlp.mt.tools.Evaluate '$opt_type' $referenceList < $iter_trans 2>&1`;
+   chomp $trans_eval2;
+	 $trans_eval2 =~ s/\n/\n# /g; # comment $trans_eval, since printed inside ini file
+   print stderr "$trans_eval2\n";
+   $trans_eval .= "\n#$trans_eval2\n";
   
    # Update decoder.ini file with actual Eval score that it acheived 
    open difh, "$iter_decoder_ini" or die;
@@ -555,7 +561,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 				my $optOut = "$work_dir/jmert.$iter.opt";
         $RANDOM_SEED = "$rseed_prefix.$iter";
         print "Random Seed: $RANDOM_SEED\n";
-				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $RANDOM_SEED $opt_type $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $RANDOM_SEED '$opt_type' $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
 	      print stderr "MERT command: $mertCMD\n";
 	      `$mertCMD`;
 				`cat $optOut.feats | sed 's/ |||.*//' > $optOut.trans`;
