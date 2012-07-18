@@ -93,8 +93,8 @@ public class ARPALanguageModel implements LanguageModel<IString> {
         throw new RuntimeException(String.format("Max n-gram order: %d\n",
             MAX_GRAM));
       }
-      ngramCounts[ngramOrder - 1] = Integer.parseInt(fields[1].replaceFirst(
-          "[^0-9].*$", ""));
+      ngramCounts[ngramOrder - 1] = Integer.parseInt(fields[1].replaceAll(
+          "[^0-9]", ""));
       if (maxOrder < ngramOrder)
         maxOrder = ngramOrder;
     }
@@ -127,7 +127,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       }
 
       // read in table
-      while (!(inline = readLineNonNull(reader)).equals("")) {
+      while (!(inline = readLineNonNull(reader)).equals("") && !(inline.equals("\\end\\"))) {
         // during profiling, 'split' turned out to be a bottle neck
         // and using StringTokenizer is about twice as fast
         StringTokenizer tok = new StringTokenizer(inline);
