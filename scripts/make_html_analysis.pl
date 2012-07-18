@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# usage: make_html_analysis.pl [unzipped nbest list] [chinese source file] [references] [output prefix]
 
 
 open "alignment info: $ARGV[0]\n";
