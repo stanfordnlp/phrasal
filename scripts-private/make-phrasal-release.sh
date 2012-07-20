@@ -5,8 +5,8 @@ echo "Making Phrasal release tar ball"
 cd $JAVANLP_HOME
 revHead=`svn info -r HEAD | grep -i "Last Changed Rev"`
 revCheckout=`svn info | grep -i "Last Changed Rev"`
-svnStatus=`svn status | grep -v "scripts-private/make-phrasal-release.sh"`
-#svnStatus=`svn status | grep -v "^\?" | grep -v "scripts-private/make-phrasal-release.sh"`
+#svnStatus=`svn status | grep -v "scripts-private/make-phrasal-release.sh"`
+svnStatus=`svn status | grep -v "^\?" | grep -v "scripts-private/make-phrasal-release.sh"`
 cd -
 
 echo "SVN status: " $svnStatus
@@ -40,35 +40,28 @@ else
 fi 
 cd -
 
-svn info  file:///u/nlp/svnroot/branches/phrasal-releases/$1 >/dev/null 2>&1
-if [ $? = 0 ]; then
-echo "Removing old $1 distribution branch from svn/branches/phrasal-releases"
-svn delete file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "remaking Stanford Phrasal distribution $1 (this happens when something went wrong the first time around)"
-fi
-
-echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
-svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "release branch for Stanford Phrasal distribution $1"
-
 rm -rf phrasal.$1
 mkdir phrasal.$1
 
 cp -r src scripts README.txt LICENSE.txt phrasal.$1
 cp userbuild.xml  phrasal.$1/build.xml
 
+perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
+    edu.stanford.nlp.classify.LogisticClassifier \
+    edu.stanford.nlp.classify.LogisticClassifierFactory \
+    edu.stanford.nlp.stats.OpenAddressCounter \
+    edu.stanford.nlp.trees.DependencyScoring \
+    
+mkdir -p phrasal.$1/src
+cd phrasal.$1/src
+jar xf ../../src.jar edu
+cd -
+
 # TODO: if these dependencies start getting more complicated, find an
-# automatic way to solve them
+# automatic way to solve them (would need to make gen-dependencies
+# work across multiple directories)
 mkdir -p phrasal.$1/src/edu/stanford/nlp/lm
 cp ../more/src/edu/stanford/nlp/lm/* phrasal.$1/src/edu/stanford/nlp/lm
-
-mkdir -p phrasal.$1/src/edu/stanford/nlp/stats
-cp ../core/src/edu/stanford/nlp/stats/OpenAddressCounter.java phrasal.$1/src/edu/stanford/nlp/stats/OpenAddressCounter.java
-
-mkdir -p phrasal.$1/src/edu/stanford/nlp/trees
-cp ../core/src/edu/stanford/nlp/trees/DependencyScoring.java phrasal.$1/src/edu/stanford/nlp/trees/DependencyScoring.java
-
-mkdir -p phrasal.$1/src/edu/stanford/nlp/util/logging
-cp ../core/src/edu/stanford/nlp/util/logging/* phrasal.$1/src/edu/stanford/nlp/util/logging
-
 
 mkdir -p phrasal.$1/lib
 cp lib/berkeleyaligner.jar phrasal.$1/lib
@@ -117,6 +110,15 @@ fi
 
 #rm -rf phrasal.$1/classes/*
 rm -rf phrasal.$1/lib-nodistrib/*
+
+svn info  file:///u/nlp/svnroot/branches/phrasal-releases/$1 >/dev/null 2>&1
+if [ $? = 0 ]; then
+echo "Removing old $1 distribution branch from svn/branches/phrasal-releases"
+svn delete file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "remaking Stanford Phrasal distribution $1 (this happens when something went wrong the first time around)"
+fi
+
+echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
+svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "release branch for Stanford Phrasal distribution $1"
 
 tar --exclude .svn -czf phrasal.$1.tar.gz phrasal.$1
 
