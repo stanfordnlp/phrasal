@@ -27,6 +27,6 @@ CONF=$2
 shift
 shift
 
-OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM -XX:MaxPermSize=2g"
+OPTS="-server -XX:+UseCompressedOops -Xmx$MEM -Xms$MEM -XX:MaxPermSize=2g"
 
 java $OPTS -jar "$VERSION"/berkeleyaligner.jar ++$CONF $@ 
