@@ -3,30 +3,37 @@
 # Tokenize English and Arabic using appropriate
 # packages from JavaNLP
 #
-# TODO: update AR_MODEL this with the new segmenter model
-#
 
-if [ $# -ne 2 ]; then
-	echo Usage: `basename $0` language file
+if [ $# -lt 2 ]; then
+	echo Usage: `basename $0` language file [files]
 	echo
 	echo lang = Arabic,English
 	exit -1
 fi
 
 lang=$1
-textfile=$2
+shift
+
+# Concatenate and lowercase
+MERGED=merged."$lang"
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
-AR_TOK="java -Xmx3g -Xms3g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker +" 
+AR_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g -Xmx3g -Xms3g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker +" 
 
 # English tokenizer setup
-EN_TOK="java edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
+EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
+
 
 if [ $lang == "Arabic" ]; then
-	$AR_TOK < $textfile
+	cat $@ | $AR_TOK > "$MERGED".tok 
 
 elif [ $lang == "English" ]; then
-  $EN_TOK $textfile
+	cat $@ > | tr A-Z a-z > $MERGED 
+	$EN_TOK $MERGED > "$MERGED".tok
 fi
+
+# Cleanup...
+gzip -c "$MERGED".tok > corpus.preproc."$lang".gz
+rm -f "$MERGED"*
 
