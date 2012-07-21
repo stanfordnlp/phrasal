@@ -17,9 +17,8 @@ lang=$1
 textfile=$2
 
 # Arabic word segmenter setup
-AR_MODEL=/scr/spenceg/arsegmenter/model.ser.gz
-
-AR_TOK="java edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier=$AR_MODEL -prefixMarker='#' -suffixMarker='+'" 
+AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
+AR_TOK="java -Xmx3g -Xms3g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker +" 
 
 # English tokenizer setup
 EN_TOK="java edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
