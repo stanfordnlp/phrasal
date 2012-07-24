@@ -10,9 +10,12 @@ fi
 lang=$1
 shift
 
-scriptdir=/scr/spenceg/phrasal/google/
+#scriptdir=/scr/spenceg/phrasal/google
+scriptdir=.
+fixnl="$scriptdir"/fix_cr.py
 tokenizer="$scriptdir/tokenizer.pl --datafile=$scriptdir/tokenizer.data"
 
-cat $* | $tokenizer --language="$lang" | tr A-Z a-z > corpus.tok
-
+# Normalize newlines for the current platform, tokenize,
+# and lowercase.
+cat $* | $fixnl | $tokenizer --language="$lang" | tr A-Z a-z > corpus.tok
 
