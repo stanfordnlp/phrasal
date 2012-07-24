@@ -47,7 +47,7 @@ my $MAX_WORD_LEN = 32;
 my $MAX_NUMBER_LEN = 16;
 
 # these characters represent potential sentence breaks
-my $EOS_CHARS = "[.!?;]";
+my $EOS_CHARS = "[\n]";
 
 
 #----------------------------------------------------------------------
@@ -420,13 +420,14 @@ sub tokenize($) {
       }
     }
 
-    if ($input =~ /^(\s*)$/) {
-      if ($g_debug) {
-        print("Found an empty line; starting new sentence: $1\n");
-      }
-      found_word("\n", $language, \$output);
-      next LINE;
-    }
+# WSGDEBUG: Do not skip lines.
+#    if ($input =~ /^(\s*)$/) {
+#      if ($g_debug) {
+#        print("Found an empty line; starting new sentence: $1\n");
+#      }
+#      found_word("\n", $language, \$output);
+#      next LINE;
+#    }
 
     # reset \G to the initial position of the line
     pos($input) = 0;
@@ -861,11 +862,11 @@ sub found_number( $$ ) {
       # end-of-sentence token - emit space if necessary, emit token,
       # start new sentence
       # (ellipsis does not start a new sentence)
-      if ($emit_space) {
-        $$output = $$output . " $token";
-      } else {
-        $$output = $$output . $token;
-      }
+#      if ($emit_space) {
+#        $$output = $$output . " $token";
+#      } else {
+#        $$output = $$output . $token;
+#      }
       $emit_space = 1;
       $start_new_sentence = 1;
 
@@ -880,7 +881,7 @@ sub found_number( $$ ) {
 
     } elsif ($token =~ /^\s*[\n\r]$/) {
       # empty line - start a new sentence
-      $start_new_sentence = 1;
+#      $start_new_sentence = 1;
 
     } elsif ($token =~ /^\s+$/s) {
       # whitespace character(s) - ignore
