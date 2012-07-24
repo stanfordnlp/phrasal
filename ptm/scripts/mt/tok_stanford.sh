@@ -13,27 +13,22 @@ fi
 
 lang=$1
 shift
-
-# Concatenate and lowercase
-MERGED=merged."$lang"
+outfile=corpus.tok
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
-AR_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g -Xmx3g -Xms3g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker +" 
+AR_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker + -nthreads 4" 
 
 # English tokenizer setup
-EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
+EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -lowerCase -options ptb3Escaping=false,asciiQuotes=true"
 
-
+# Choose language-specific tokenizer
+# These tokenizers perform newline normalization internally.
 if [ $lang == "Arabic" ]; then
-	cat $@ | $AR_TOK > "$MERGED".tok 
+	# Lowercase ASCII text that appears in the Arabic data.
+	cat $* | $AR_TOK | tr A-Z a-z > "$outfile" 
 
 elif [ $lang == "English" ]; then
-	cat $@ > | tr A-Z a-z > $MERGED 
-	$EN_TOK $MERGED > "$MERGED".tok
+	cat $* | $EN_TOK > "$outfile"
 fi
-
-# Cleanup...
-gzip -c "$MERGED".tok > corpus.preproc."$lang".gz
-rm -f "$MERGED"*
 
