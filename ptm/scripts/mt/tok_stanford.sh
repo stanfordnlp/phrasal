@@ -13,7 +13,7 @@ fi
 
 lang=$1
 shift
-outfile=corpus.tok
+outfile=corpus."$lang".tok
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz

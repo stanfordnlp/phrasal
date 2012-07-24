@@ -9,13 +9,13 @@ fi
 
 lang=$1
 shift
+outfile=corpus."$lang".tok
 
-#scriptdir=/scr/spenceg/phrasal/google
-scriptdir=.
+scriptdir=/u/spenceg/javanlp/projects/mt/ptm/scripts/mt
 fixnl="$scriptdir"/fix_cr.py
 tokenizer="$scriptdir/tokenizer.pl --datafile=$scriptdir/tokenizer.data"
 
 # Normalize newlines for the current platform, tokenize,
 # and lowercase.
-cat $* | $fixnl | $tokenizer --language="$lang" | tr A-Z a-z > corpus.tok
+cat $* | $fixnl | $tokenizer --language="$lang" | tr A-Z a-z > $outfile
 
