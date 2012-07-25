@@ -17,7 +17,7 @@ public class EvaluationMetricFactory {
   public static boolean VERBOSE = false;
 
   private static AbstractMetric<IString, String> createMetric(
-      String metricName, Class<AbstractMetric<IString, String>>[] argClasses,
+      String metricName, Class<?>[] argClasses,
       Object[] args) {
     AbstractMetric<IString, String> metric;
     try {
