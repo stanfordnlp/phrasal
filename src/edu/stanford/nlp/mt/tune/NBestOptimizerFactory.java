@@ -4,15 +4,12 @@ package edu.stanford.nlp.mt.tune;
 
 import edu.stanford.nlp.mt.tune.optimizers.BasicPowellOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.CerStyleOptimizer;
-import edu.stanford.nlp.mt.tune.optimizers.BadLicenseDownhillSimplexOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.DownhillSimplexOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.KoehnStyleOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.LineSearchOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.PowellOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.SequenceOptimizer;
-import edu.stanford.nlp.optimization.DownhillSimplexMinimizer;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -50,14 +47,6 @@ public class NBestOptimizerFactory {
       return new PowellOptimizer(mert);
     } else if (name.startsWith("simplex")) {
       return new DownhillSimplexOptimizer(mert);
-    } else if (name.startsWith("deprecatedSimplex")) {
-      String[] els = name.split(":");
-      int iter = els.length == 2 ? Integer.parseInt(els[1]) : 1;
-      return new BadLicenseDownhillSimplexOptimizer(mert, iter, false);
-    } else if (name.startsWith("deprecatedRandomSimplex")) {
-      String[] els = name.split(":");
-      int iter = els.length == 2 ? Integer.parseInt(els[1]) : 1;
-      return new BadLicenseDownhillSimplexOptimizer(mert, iter, true);
     } else if (name.equalsIgnoreCase("length")) {
       return new LineSearchOptimizer(mert);
     } else {

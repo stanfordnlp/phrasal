@@ -518,15 +518,15 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	     for ($prior_iter = max(0, $iter-$NBEST_HISTORY_WINDOW);
 	          $prior_iter < $iter; $prior_iter++) {
 	          $prioriter_nbest_list = "$work_dir/phrasal.$prior_iter.nbest";
-	          `zcat $prioriter_nbest_list.gz | sed 's/|||[^|]*|||[^|]*\$//' >> $local_iter_pcumulative_nbest`;    
+	          `gunzip -c $prioriter_nbest_list.gz | sed 's/|||[^|]*|||[^|]*\$//' >> $local_iter_pcumulative_nbest`;    
 	      }
-	      `zcat $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $local_iter_pcumulative_nbest`; 
+	      `gunzip -c $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $local_iter_pcumulative_nbest`; 
    
    
 	     $temp_unsorted_uniq = "$TMP/temp_unsorted.uniq.gz";
 	     `$SORT $local_iter_pcumulative_nbest -u | gzip > $temp_unsorted_uniq`; 
 			 unlink("$local_iter_pcumulative_nbest");
-	     $totalNbestListSize = `zcat $temp_unsorted_uniq | wc -l`;
+	     $totalNbestListSize = `gunzip -c $temp_unsorted_uniq | wc -l`;
 	     chomp $totalNbestListSize;
 	     print stderr "Total unique entries on cumulative nbest list $totalNbestListSize\n";
 	     print stderr "Total unique entries on last cumulative nbest list $lastTotalNbestListSize\n";
@@ -538,7 +538,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	     }
 	     
 	     $lastTotalNbestListSize = $totalNbestListSize;  
-	     `zcat $temp_unsorted_uniq | $SORT -n -k 1 -s | gzip > $iter_pcumulative_nbest`;
+	     `gunzip -c $temp_unsorted_uniq | $SORT -n -k 1 -s | gzip > $iter_pcumulative_nbest`;
 			 unlink("$temp_unsorted_uniq");
 	   }
    } else {
@@ -615,7 +615,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       print stderr 
        "Converting nbest list to cmert nbest list:\n$iter_cumulative_nbest\n\n";
       print "$SCRIPTS_DIR/phrasal_nbest_to_cmert_nbest.pl < $iter_pcumulative_nbest 2>&1 > $iter_cumulative_nbest";
-      `zcat $iter_pcumulative_nbest.gz | $SCRIPTS_DIR/phrasal_nbest_to_cmert_nbest.pl 2>&1 > $iter_cumulative_nbest`;
+      `gunzip -c $iter_pcumulative_nbest.gz | $SCRIPTS_DIR/phrasal_nbest_to_cmert_nbest.pl 2>&1 > $iter_cumulative_nbest`;
    
       
       print "cmd: $SORT -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1\n";
