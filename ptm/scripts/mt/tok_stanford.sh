@@ -13,6 +13,7 @@ fi
 
 lang=$1
 shift
+outfile=corpus."$lang".tok
 
 # Whitespace and newline normalizer
 # Do this externally to guard against any differences between
@@ -29,17 +30,9 @@ EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.
 
 # Lowercase ASCII text that appears in the Arabic data.
 if [ $lang == "Arabic" ]; then
-    for infile in $*
-    do
-	outfile=`basename "$infile"`
-	cat $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | tr A-Z a-z > ${outfile}.tok 
-    done
+    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | tr A-Z a-z > ${outfile}.tok 
     
 elif [ $lang == "English" ]; then
-    for infile in $*
-    do
-	outfile=`basename "$infile"`
-	cat $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK > ${outfile}.tok
-    done
+    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK > ${outfile}.tok
 fi
 
