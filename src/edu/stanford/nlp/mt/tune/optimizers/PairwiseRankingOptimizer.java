@@ -31,7 +31,7 @@ public class PairwiseRankingOptimizer extends AbstractNBestOptimizer {
   static public final int DEFAULT_GAMMA = 5000;
   static public final int DEFAULT_XI = 50;
   static public final double DEFAULT_N_THRESHOLD = 0.05;
-  static public final double DEFAULT_L2SIGMA = 1.0;
+  static public final double DEFAULT_L2SIGMA = 0.1;
  
   static private boolean updatedBestOnce = false;
   
