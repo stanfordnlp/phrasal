@@ -25,7 +25,6 @@ public class DiscriminativePhraseIdentity implements
   public static final String SOURCE_AND_TARGET = ":s+t";
   public static final boolean DEFAULT_DO_SOURCE = true;
   public static final boolean DEFAULT_DO_TARGET = true;
-  final Map<TranslationOption<IString>, List<FeatureValue<String>>> featureCache = new HashMap<TranslationOption<IString>, List<FeatureValue<String>>>();
 
   final boolean doSource;
   final boolean doTarget;
@@ -54,12 +53,7 @@ public class DiscriminativePhraseIdentity implements
   public List<FeatureValue<String>> listFeaturize(
       Featurizable<IString, String> f) {
 
-    List<FeatureValue<String>> fvalues = featureCache
-        .get(f.option.abstractOption);
-    if (fvalues != null)
-      return fvalues;
-
-    fvalues = new LinkedList<FeatureValue<String>>();
+    List<FeatureValue<String>> fvalues = new LinkedList<FeatureValue<String>>();
 
     if (doSource && doTarget) {
       fvalues.add(new FeatureValue<String>(FEATURE_PREFIX + SOURCE_AND_TARGET
@@ -73,7 +67,6 @@ public class DiscriminativePhraseIdentity implements
           + f.translatedPhrase.toString("_"), 1.0));
     }
 
-    featureCache.put(f.option.abstractOption, fvalues);
     return fvalues;
   }
 
@@ -89,6 +82,5 @@ public class DiscriminativePhraseIdentity implements
   }
 
   public void reset() {
-    featureCache.clear();
   }
 }
