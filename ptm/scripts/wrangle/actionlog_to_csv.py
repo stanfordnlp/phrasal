@@ -278,7 +278,7 @@ def parse_actionlogs(logfile, metafile, output_dir):
     sys.stderr.write('Parsed %d event logs%s' % (i+1, os.linesep))
 
 def main():
-    desc='Convert and actionlog file to CSV for Tableau import'
+    desc='Convert an actionlog file to CSV for Tableau import'
     parser=ArgumentParser(description=desc)
     parser.add_argument('-l','--log_files',
                         dest='logfiles',
