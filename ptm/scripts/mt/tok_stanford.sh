@@ -7,7 +7,7 @@
 if [ $# -lt 2 ]; then
     echo Usage: `basename $0` language file [files]
     echo
-    echo lang = Arabic,English
+    echo lang = Arabic,English,German,French
     exit -1
 fi
 
@@ -18,8 +18,8 @@ outfile=corpus."$lang".tok
 # Whitespace and newline normalizer
 # Do this externally to guard against any differences between
 # the underlying Flex tokenizers.
-scriptdir=/u/spenceg/javanlp/projects/mt/ptm/scripts/mt
-fixnl="$scriptdir"/fix_cr.py
+scriptdir=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
+fixnl=${scriptdir}/fix_cr.py
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
@@ -30,9 +30,9 @@ EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.
 
 # Lowercase ASCII text that appears in the Arabic data.
 if [ $lang == "Arabic" ]; then
-    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | tr A-Z a-z > ${outfile}.tok 
+    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | tr A-Z a-z | gzip -c > ${outfile}.gz
     
-elif [ $lang == "English" ]; then
-    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK > ${outfile}.tok
+elif [[ $lang == "English" || $lang == "French" || $lang == "German" ]]; then
+    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
 fi
 

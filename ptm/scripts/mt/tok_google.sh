@@ -14,8 +14,7 @@ fi
 lang=$1
 shift
 
-#scriptdir=/u/spenceg/javanlp/projects/mt/ptm/scripts/mt
-scriptdir=/home/rayder441/sandbox/javanlp/projects/mt/ptm/scripts/mt
+scriptdir=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
 fixnl="$scriptdir"/fix_cr.py
 tokenizer="$scriptdir/tokenizer.pl --datafile=$scriptdir/tokenizer.data"
 

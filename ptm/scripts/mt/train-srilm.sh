@@ -18,7 +18,6 @@ mkdir -p logs
 mkdir -p counts
 
 # Package directories
-scriptdir=../../scripts
 srilmdir=/u/nlp/packages/SRILM
 
 # Put SRILM on the PATH
