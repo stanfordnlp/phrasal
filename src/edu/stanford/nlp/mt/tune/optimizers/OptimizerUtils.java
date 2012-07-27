@@ -3,9 +3,12 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.NBestListContainer;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
@@ -13,7 +16,13 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
 
+/**
+ * 
+ * @author daniel cer
+ *
+ */
 public class OptimizerUtils {
   public static <TK, FV> double[][] incontextMetricScores(
       NBestListContainer<TK, FV> nbest,
@@ -171,5 +180,22 @@ public class OptimizerUtils {
     }
     
     return counter;
+  }
+  
+  public static Set<String> featureWhiteList(FlatNBestList nbest, int minSegmentCount) {
+    List<List<ScoredFeaturizedTranslation<IString, String>>> nbestlists = nbest.nbestLists();
+    Counter<String> featureSegmentCounts = new ClassicCounter<String>();
+    for (List<ScoredFeaturizedTranslation<IString, String>> nbestlist : nbestlists) {
+        Set<String> segmentFeatureSet = new HashSet<String>();
+        for (ScoredFeaturizedTranslation<IString, String> trans : nbestlist) {
+           for (FeatureValue<String> feature : trans.features) {
+             segmentFeatureSet.add(feature.name);
+           }
+        }
+        for (String featureName : segmentFeatureSet) {
+          featureSegmentCounts.incrementCount(featureName);
+        }
+    }
+    return Counters.keysAbove(featureSegmentCounts, minSegmentCount -1);
   }
 }

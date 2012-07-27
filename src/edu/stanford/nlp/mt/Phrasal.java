@@ -930,9 +930,9 @@ public class Phrasal {
        List<PhraseGenerator<IString>> pgens = new LinkedList<PhraseGenerator<IString>>();
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-          PhraseGenerator pgen;
+          PhraseGenerator<IString> pgen;
           try {
-             pgen = (PhraseGenerator)Class.forName(pgenClasspath).
+             pgen = (PhraseGenerator<IString>)Class.forName(pgenClasspath).
                 getConstructor(IsolatedPhraseFeaturizer.class, Scorer.class).newInstance(featurizer, scorer);
           } catch (ClassNotFoundException e) {
              throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
