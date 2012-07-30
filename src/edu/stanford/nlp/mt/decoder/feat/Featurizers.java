@@ -28,8 +28,8 @@ public class Featurizers {
     for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
       if (!(featurizer instanceof NGramLanguageModelFeaturizer))
         continue;
-      NGramLanguageModelFeaturizer<TK> lmFeaturizer = (NGramLanguageModelFeaturizer<TK>) featurizer;
-      lgModels.add(lmFeaturizer.lm);
+      NGramLanguageModelFeaturizer lmFeaturizer = (NGramLanguageModelFeaturizer) featurizer;
+      lgModels.add((LanguageModel<TK>)lmFeaturizer.lm);
       int order = lmFeaturizer.order();
       if (order > highestOrder) {
         highestOrder = order;

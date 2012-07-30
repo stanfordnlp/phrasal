@@ -61,7 +61,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
 
     // Read in LM & create LM featurizer
     try {
-      NGramLanguageModelFeaturizer<IString> lmFeaturizer = NGramLanguageModelFeaturizer
+      NGramLanguageModelFeaturizer lmFeaturizer = NGramLanguageModelFeaturizer
           .fromFile(lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
       List<IncrementalFeaturizer<IString, String>> listFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
       listFeaturizers.add(lmFeaturizer);

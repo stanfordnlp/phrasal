@@ -18,13 +18,13 @@ import junit.framework.TestCase;
 public class NGramLanguageModelFeaturizerTest extends TestCase {
 
   static ARPALanguageModel lm;
-  static NGramLanguageModelFeaturizer<IString> featurizer;
+  static NGramLanguageModelFeaturizer featurizer;
 
   static {
     try {
       lm = (ARPALanguageModel) ARPALanguageModel
           .load("projects/mt/test/inputs/sampleLM.gz");
-      featurizer = new NGramLanguageModelFeaturizer<IString>(
+      featurizer = new NGramLanguageModelFeaturizer(
           edu.stanford.nlp.mt.base.ARPALanguageModel
               .load("projects/mt/test/inputs/tinyLM.test"));
     } catch (IOException e) {
@@ -33,8 +33,8 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
   }
 
   public void testConstructor1() {
-    NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(
-        lm);
+    NGramLanguageModelFeaturizer featurizer = 
+        new NGramLanguageModelFeaturizer(lm);
     assertTrue(featurizer.order() == 3);
     assertTrue(featurizer.lmOrder == 3);
 
@@ -46,7 +46,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
   }
 
   public void testConstructor2() throws IOException {
-    NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(
+    NGramLanguageModelFeaturizer featurizer = new NGramLanguageModelFeaturizer(
         lm, "sampleLM", false);
     assertTrue(featurizer.order() == 3);
     assertTrue(featurizer.lmOrder == 3);
@@ -60,7 +60,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
   }
 
   public void testConstructor3WithLabel() {
-    NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(
+    NGramLanguageModelFeaturizer featurizer = new NGramLanguageModelFeaturizer(
         lm, true);
     assertTrue(featurizer.order() == 3);
     assertTrue(featurizer.lmOrder == 3);
@@ -73,7 +73,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
   }
 
   public void testConstructor3WithoutLabel() {
-    NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(
+    NGramLanguageModelFeaturizer featurizer = new NGramLanguageModelFeaturizer(
         lm, false);
     assertTrue(featurizer.order() == 3);
     assertTrue(featurizer.lmOrder == 3);
@@ -86,7 +86,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
   }
 
   public void testConstructor4() throws IOException {
-    NGramLanguageModelFeaturizer<IString> featurizer = new NGramLanguageModelFeaturizer<IString>(
+    NGramLanguageModelFeaturizer featurizer = new NGramLanguageModelFeaturizer(
         "projects/mt/test/inputs/sampleLM.gz", "sampleLM");
     assertTrue(featurizer.order() == 3);
     assertTrue(featurizer.lmOrder == 3);
@@ -112,12 +112,12 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
   }
 
   public void testExceptionInConstructor4(String lmFile) throws IOException {
-    new NGramLanguageModelFeaturizer<IString>(
+    new NGramLanguageModelFeaturizer(
         "projects/mt/test/inputs/sampleLM.gz");
   }
 
   public void testExceptionInFromFile(
-      NGramLanguageModelFeaturizer<IString> featurizer) throws IOException {
+      NGramLanguageModelFeaturizer featurizer) throws IOException {
     featurizer = NGramLanguageModelFeaturizer
         .fromFile("projects/mt/test/inputs/sampleLM.gz");
   }

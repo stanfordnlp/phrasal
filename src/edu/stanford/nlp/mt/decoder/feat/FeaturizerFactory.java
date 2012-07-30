@@ -5,7 +5,6 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.LanguageModel;
-import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.LanguageModels;
 
@@ -193,10 +192,10 @@ public class FeaturizerFactory {
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
       // System.err.println("LM vocabulary file: "+lmVoc);
       if (lmVoc == null || lmVoc.equals("")) {
-        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
             LanguageModels.load(lm));
       } else {
-        arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
             LanguageModels.load(lm, lmVoc));
       }
       baselineFeaturizers.add(arpaLmFeaturizer);
@@ -231,10 +230,10 @@ public class FeaturizerFactory {
       // System.err.println("LM vocabulary file: "+lmVoc);
       if (lm != null) {
         if (lmVoc == null || lmVoc.equals("")) {
-          arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
+          arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
               LanguageModels.load(lm));
         } else {
-          arpaLmFeaturizer = new NGramLanguageModelFeaturizer<IString>(
+          arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
               LanguageModels.load(lm, lmVoc));
         }
         pharaohFeaturizers.add(arpaLmFeaturizer);
@@ -252,7 +251,7 @@ public class FeaturizerFactory {
       if (discriminativeLMOrder != 0) {
         LanguageModel<IString> dLM = new IndicatorFunctionLM(
             discriminativeLMOrder);
-        NGramLanguageModelFeaturizer<IString> dLMFeaturizer = new NGramLanguageModelFeaturizer<IString>(
+        NGramLanguageModelFeaturizer dLMFeaturizer = new NGramLanguageModelFeaturizer(
             dLM, "DLM", true);
         pharaohFeaturizers.add(dLMFeaturizer);
       }
