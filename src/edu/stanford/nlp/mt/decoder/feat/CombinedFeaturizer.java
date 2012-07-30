@@ -106,7 +106,6 @@ public class CombinedFeaturizer<TK, FV> implements
   public List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f) {
 
     List<Object> featureValueLists = new ArrayList<Object>(featurizers.size());
-    int featureCount = 0;
     for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
 
       // if a single feature value is available from the method
@@ -115,7 +114,6 @@ public class CombinedFeaturizer<TK, FV> implements
       FeatureValue<FV> singleFeatureValue = featurizer.featurize(f);
       if (singleFeatureValue != null) {
         featureValueLists.add(singleFeatureValue);
-        featureCount++;
       }
 
       // if a list of feature values are available from the method
@@ -124,11 +122,10 @@ public class CombinedFeaturizer<TK, FV> implements
       List<FeatureValue<FV>> listFeatureValues = featurizer.listFeaturize(f);
       if (listFeatureValues != null) {
         featureValueLists.add(listFeatureValues);
-        featureCount += listFeatureValues.size();
       }
     }
     ArrayList<FeatureValue<FV>> featureValues = new ArrayList<FeatureValue<FV>>(
-        featureCount);
+        featureValueLists.size());
     for (Object o : featureValueLists) {
       if (o instanceof FeatureValue) {
         featureValues.add((FeatureValue<FV>) o);
