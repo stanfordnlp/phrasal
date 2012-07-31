@@ -312,7 +312,7 @@ public class Phrasal {
       if (CONFIG_FILE.equals(key)) {
         configFile.putAll(readConfig(value));
       } else {
-        configArgs.put(key, Arrays.asList(value));
+        configArgs.put(key, Arrays.asList(value.split(" ")));
       }
     }
     configFinal.putAll(configFile);
