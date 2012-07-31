@@ -15,7 +15,7 @@ lang=$1
 shift
 
 scriptdir=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
-fixnl="$scriptdir"/fix_cr.py
+fixnl="$scriptdir"/cleanup_txt.py
 tokenizer="$scriptdir/tokenizer.pl --datafile=$scriptdir/tokenizer.data"
 
 # Normalize newlines and whitespace for the current platform,

@@ -19,7 +19,7 @@ outfile=corpus."$lang".tok
 # Do this externally to guard against any differences between
 # the underlying Flex tokenizers.
 scriptdir=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
-fixnl=${scriptdir}/fix_cr.py
+fixnl=${scriptdir}/cleanup_txt.py
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
