@@ -1,15 +1,15 @@
 package edu.stanford.nlp.util;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import edu.stanford.nlp.mt.base.IOTools;
 
 /**
  * Generic data structure for a weighted lattice. The lattice must be read from a string in
@@ -263,12 +263,13 @@ public class Lattice<T> {
    * @param args
    */
   public static void main(String[] args) {
-    if ((args.length > 0 && args[0].equals("-help")) || args.length > 2) {
-      System.err.printf("Usage: java %s [-help] plf_file%n", Lattice.class.getName());
+    if (args.length > 0 && args[0].equals("-help")) {
+      System.err.printf("Usage: java %s [-help] < plf_file%n", Lattice.class.getName());
       System.exit(-1);
     }
-    
-    LineNumberReader reader = IOTools.getReaderFromFile(args[0]);
+
+    BufferedReader reader = new BufferedReader(new InputStreamReader(
+        new BufferedInputStream(System.in)));
     try {
       for (String line; (line = reader.readLine()) != null; ) {
         Lattice<String> lattice = Lattice.plfStringToLattice(line, true);
@@ -284,7 +285,6 @@ public class Lattice<T> {
         }
         System.out.println();
       }
-      reader.close();
       
     } catch (IOException e) {
       e.printStackTrace();
