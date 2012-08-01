@@ -28,11 +28,25 @@ AR_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g -Xmx6g -Xms6g edu
 # English tokenizer setup
 EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -lowerCase -options ptb3Escaping=false,asciiQuotes=true"
 
+# French tokenizer setup
+FR_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.international.french.process.FrenchTokenizer -lowerCase -noSGML"
+
+# German segmentation and tokenization setup
+DE_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
+DE_SEG="/home/rayder441/sandbox/cdec/compound-split/compound-split.pl"
+DE_PP="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.util.Lattice"
+
 # Lowercase ASCII text that appears in the Arabic data.
 if [ $lang == "Arabic" ]; then
     cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | tr A-Z a-z | gzip -c > ${outfile}.gz
+
+elif [ $lang == "French" ]; then
+    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $FR_TOK | gzip -c > ${outfile}.gz
+
+elif [ $lang == "German" ]; then
+    cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | gzip -c > ${outfile}.gz
     
-elif [[ $lang == "English" || $lang == "French" || $lang == "German" ]]; then
+elif [ $lang == "English" ]; then
     cat $* | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
 fi
 

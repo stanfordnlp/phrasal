@@ -30,7 +30,7 @@ tgt_ext="${filename##*.}"
 
 # Step 1: Split the bitext
 zcat ${src_file} | split -l "$split_size" -d - split."$src_ext".
-zcat ${src_file} | split -l "$split_size" -d - split."$tgt_ext".
+zcat ${tgt_file} | split -l "$split_size" -d - split."$tgt_ext".
 
 # Step 2: Align each split
 for src_split in `ls split."$src_ext".*`
