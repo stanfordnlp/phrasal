@@ -268,20 +268,27 @@ public class Lattice<T> {
       System.exit(-1);
     }
 
+    // TODO(spenceg): Make configurable
+    final String segmentationMarker = "#";
+    
     BufferedReader reader = new BufferedReader(new InputStreamReader(
         new BufferedInputStream(System.in)));
     try {
       for (String line; (line = reader.readLine()) != null; ) {
+        if (line.trim().length() == 0) {
+          // Don't parse empty lines
+          System.out.println();
+          continue;
+        }
+        
         Lattice<String> lattice = Lattice.plfStringToLattice(line, true);
         List<Edge<String>> bestPath = lattice.viterbiPath();
-        
-        // Print segmentation markers
-        boolean isStart = true;
+        boolean printSpace = false;
         for (Edge<String> edge : bestPath) {
-          if (! isStart) System.out.print(" ");
-          isStart = false;
-          if (! edge.start().isPinchPoint()) System.out.print("#");
+          if (printSpace) System.out.print(" ");
+          if (! edge.start().isPinchPoint()) System.out.print(segmentationMarker);
           System.out.print(edge.item());
+          printSpace = true;
         }
         System.out.println();
       }
