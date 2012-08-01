@@ -523,7 +523,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 	      `gunzip -c $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $local_iter_pcumulative_nbest`; 
    
    
-	     $temp_unsorted_uniq = "$TMP/temp_unsorted.uniq.gz";
+	     $temp_unsorted_uniq = "$TMP/temp_unsorted.$$.uniq.gz";
 	     `$SORT $local_iter_pcumulative_nbest -u | gzip > $temp_unsorted_uniq`; 
 			 unlink("$local_iter_pcumulative_nbest");
 	     $totalNbestListSize = `gunzip -c $temp_unsorted_uniq | wc -l`;
