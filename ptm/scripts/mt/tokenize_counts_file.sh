@@ -11,7 +11,7 @@
 #
 
 # Maximum number of lines per split of the input file
-SPLIT_SIZE=100000
+SPLIT_SIZE=1000000
 
 if [ $# -ne 2 ]; then
     echo Usage: `basename $0` lang counts_file
