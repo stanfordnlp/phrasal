@@ -275,12 +275,12 @@ public class Lattice<T> {
         new BufferedInputStream(System.in)));
     try {
       for (String line; (line = reader.readLine()) != null; ) {
-        if (line.trim().length() == 0) {
+        if (line.length() == 0 || line.equals("()")) {
           // Don't parse empty lines
           System.out.println();
           continue;
         }
-        
+
         Lattice<String> lattice = Lattice.plfStringToLattice(line, true);
         List<Edge<String>> bestPath = lattice.viterbiPath();
         boolean printSpace = false;
