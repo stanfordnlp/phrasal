@@ -23,11 +23,37 @@ shift
 # Directories for logs and intermediate files
 mkdir -p logs
 
+# Configure the LM locally
 source lm.local
 
-(time $MAKE_LM -read $* -lm "$lm_name".gz $LMOPTS $LMFILTER -debug 2 -name counts/"$lm_name") 2> logs/"$lm_name".log
+# Step 2: build LM and binarize
+# See: http://www.speech.sri.com/projects/srilm/manpages/training-scripts.1.html
+#
+#  -read := list of counts files
+#  -name := prefix for intermediate files
+#  -lm   := name of new LM file
+#
+MAKE_LM=make-big-lm
+BINARIZE=ngram
+
+counts_cmd=
+for txtfile in $*
+do
+    counts_cmd="-read ${txtfile} ${counts_cmd}"
+done
+
+echo Counts: ${counts_cmd}
+
+# Closed vocabulary
+(time $MAKE_LM ${counts_cmd} $LMOPTS -name "$lm_name".gz) 2> logs/"$lm_name".log
 
 (time $BINARIZE -order $ORDER -lm "$lm_name".gz -write-bin-lm "$lm_name".bin) 2> logs/"$lm_name".bin.log
 
 gzip "$lm_name".bin
 
+# Open vocabulary
+(time $MAKE_LM ${counts_cmd} $LMOPTS -unk -name "$lm_name".unk.gz) 2> logs/"$lm_name".unk.log
+
+(time $BINARIZE -order $ORDER -lm "$lm_name".unk.gz -write-bin-lm "$lm_name".unk.bin) 2> logs/"$lm_name".unk.bin.log
+
+gzip "$lm_name".unk.bin

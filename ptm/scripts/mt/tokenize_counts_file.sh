@@ -11,7 +11,7 @@
 #
 
 # Maximum number of lines per split of the input file
-SPLIT_SIZE=1000000
+SPLIT_SIZE=10000000
 
 if [ $# -ne 2 ]; then
     echo Usage: `basename $0` lang counts_file
@@ -20,6 +20,8 @@ fi
 
 lang=$1
 counts_file=$2
+outfile=`basename $counts_file`
+outfile_pref="${outfile%.*}"
 
 SCRIPT_DIR=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
 TOK=${SCRIPT_DIR}/tok_stanford.sh
@@ -36,12 +38,12 @@ fi
 # Split the input file into smaller chunks
 file_sz=`$CAT $counts_file | wc -l`
 if [ $file_sz -gt $SPLIT_SIZE ]; then
-    $CAT $counts_file | cut -f1 - | split -d -l $SPLIT_SIZE - split.cnt.
+    $CAT $counts_file | cut -f1 - | split -d -l $SPLIT_SIZE - "$outfile_pref".
 else
-    $CAT $counts_file | cut -f1 > split.cnt.1
+    $CAT $counts_file | cut -f1 > "$outfile_pref".00
 fi
 
-for txtfile in `ls split.cnt.*`
+for txtfile in `ls ${outfile_pref}.*`
 do
-    echo nlpsub -m1g $TOK $lang $txtfile
+    nlpsub -m1g $TOK $lang $txtfile
 done

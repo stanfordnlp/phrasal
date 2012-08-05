@@ -16,9 +16,11 @@ fi
 COUNTS_DIR=counts
 mkdir -p ${COUNTS_DIR}
 
+# Configure ngram-counts in the local file
 source lm.local
 
 for txtfile in $*
 do
-    nlpsub -m15g $COUNT $LMOPTS -text "$txtfile" -write ${COUNTS_DIR}/"$txtfile".counts.gz -sort
+	outprefix=`basename $txtfile`
+	echo nlpsub -m15g $COUNT $LMOPTS -text "$txtfile" -write ${COUNTS_DIR}/"$outprefix".counts.gz -sort
 done
