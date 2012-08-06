@@ -6,11 +6,14 @@ import java.lang.reflect.Constructor;
 import edu.stanford.nlp.objectbank.ObjectBank;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class LanguageModels {
+
+  private LanguageModels() {}
+
   public static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {
     double logP = 0;
     Sequence<T> s = new InsertedStartEndToken<T>(s2, lm.getStartToken(),
@@ -34,21 +37,20 @@ public class LanguageModels {
 
   public static final String BERKELEY_LM_TAG = "berkeleylm:";
   public static final String SRI_LM_TAG = "srilm:";
-  
-  public static int MAX_NGRAM_ORDER = 10;
-  
+
+  public static final int MAX_NGRAM_ORDER = 10;
+
   public static LanguageModel<IString> load(String filename) throws IOException {
     return load(filename, null);
   }
-  
+
   public static LanguageModel<IString> load(String filename,
       String vocabFilename) throws IOException {
     if (ARPALanguageModel.lmStore.containsKey(filename))
       return ARPALanguageModel.lmStore.get(filename);
-  
-    boolean useSRILM = true;
+
     LanguageModel<IString> alm;
-    
+
     if (filename.endsWith("bloomlm")) {
       return FrequencyMultiScoreLanguageModel.load(filename);
     } else if (filename.endsWith(".disklm")) {
@@ -59,13 +61,13 @@ public class LanguageModels {
        @SuppressWarnings("unchecked")
       Class<LanguageModel<IString>> blmClass = (Class<LanguageModel<IString>>)Class.forName("edu.stanford.nlp.mt.base.BerkeleyLM");
        Constructor<LanguageModel<IString>> c = blmClass.getConstructor(String.class, int.class);
-       alm = c.newInstance(realFilename, MAX_NGRAM_ORDER);  
+       alm = c.newInstance(realFilename, MAX_NGRAM_ORDER);
      } catch (Exception e) {
        throw new RuntimeException(e);
-     }     
+     }
     } else if (filename.startsWith(SRI_LM_TAG)) {
-    	String realFilename = filename.substring(SRI_LM_TAG.length());
-        
+      String realFilename = filename.substring(SRI_LM_TAG.length());
+      boolean useSRILM = true;
       try {
         alm = new SRILanguageModel(realFilename, vocabFilename);
       } catch (UnsatisfiedLinkError e) {
@@ -81,11 +83,11 @@ public class LanguageModels {
         alm = new ARPALanguageModel(realFilename);
         useSRILM = false;
       }
-    
+
       if (vocabFilename != null && !useSRILM)
         System.err.printf("Warning: vocabulary file %s is ignored.\n",
             vocabFilename);
-    
+
       if (alm instanceof ARPALanguageModel)
         ARPALanguageModel.lmStore.put(filename, (ARPALanguageModel) alm);
     } else {
@@ -94,19 +96,19 @@ public class LanguageModels {
     return alm;
   }
 
-  static public void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {
     if (args.length != 2) {
       System.err
           .printf("Usage:\n\tjava ...LanguageModels [berkeleylm:](arpa format model) \"sentence or file to score\"\n");
       System.exit(-1);
     }
-  
+
     // verbose = true;
     String model = args[0];
     String fileOrSentence = args[1];
-    System.out.printf("Loading lm: %s...\n", model);    
+    System.out.printf("Loading lm: %s...\n", model);
     LanguageModel<IString> lm = load(model);
-      
+
     long startTimeMillis = System.currentTimeMillis();
     try {
       double logSum = 0;
@@ -118,7 +120,7 @@ public class LanguageModels {
         double score = scoreSequence(lm, seq);
         System.out.printf("Sequence score: %f score_log10: %f\n", score, score
             / Math.log(10));
-        logSum += Math.log(score);        
+        logSum += Math.log(score);
       }
       System.out.printf("Log sum score: %e\n", logSum);
     } catch (RuntimeException e) {
@@ -133,4 +135,3 @@ public class LanguageModels {
     System.err.printf("secs = %.3f\n", totalSecs);
   }
 }
-  

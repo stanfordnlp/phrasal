@@ -6,10 +6,8 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.*;
 
 /**
- * 
+ *
  * @author danielcer
- * 
- * @param <IString>
  */
 public class NGramLanguageModelFeaturizer implements
     IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString, String> {
@@ -18,7 +16,7 @@ public class NGramLanguageModelFeaturizer implements
   public static final String DEBUG_PROPERTY = "ngramLMFeaturizerDebug";
   final String featureName;
   final String[][] featureNames;
-  final String featureNameWithColen;
+  private final String featureNameWithColon;
   final boolean ngramReweighting;
   final boolean lengthNorm;
   final WeakHashMap<Featurizable<IString, String>, Double> rawLMScoreHistory = new WeakHashMap<Featurizable<IString, String>, Double>();
@@ -30,11 +28,11 @@ public class NGramLanguageModelFeaturizer implements
   public final LanguageModel<IString> lm;
   final int lmOrder;
 
-  static public final double MOSES_LM_UNKNOWN_WORD_SCORE = -100; // in sri lm
+  public static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100; // in sri lm
                                                                  // -99 is
                                                                  // -infinity
 
-  static public NGramLanguageModelFeaturizer fromFile(String... args)
+  public static NGramLanguageModelFeaturizer fromFile(String... args)
       throws IOException {
     if (args.length < 2 || args.length > 3)
       throw new RuntimeException(
@@ -47,7 +45,7 @@ public class NGramLanguageModelFeaturizer implements
   public NGramLanguageModelFeaturizer(LanguageModel<IString> lm) {
     this.lm = lm;
     featureName = FEATURE_NAME;
-    featureNameWithColen = featureName + ":";
+    featureNameWithColon = featureName + ":";
     this.ngramReweighting = false;
     this.lmOrder = lm.order();
     this.lengthNorm = false;
@@ -61,8 +59,8 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   /**
-	 * 
-	 */
+   *
+   */
   public int order() {
     return lm.order();
   }
@@ -71,7 +69,7 @@ public class NGramLanguageModelFeaturizer implements
       boolean ngramReweighting) {
     this.lm = lm;
     this.featureName = featureName;
-    featureNameWithColen = featureName + ":";
+    featureNameWithColon = featureName + ":";
     this.ngramReweighting = ngramReweighting;
     this.lmOrder = lm.order();
     this.lengthNorm = false;
@@ -85,8 +83,8 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   /**
-	 * 
-	 */
+   *
+   */
   public NGramLanguageModelFeaturizer(LanguageModel<IString> lm, boolean lmLabeled) {
     this.lm = lm;
     this.ngramReweighting = false;
@@ -96,7 +94,7 @@ public class NGramLanguageModelFeaturizer implements
     } else {
       featureName = FEATURE_NAME;
     }
-    featureNameWithColen = featureName + ":";
+    featureNameWithColon = featureName + ":";
     this.lengthNorm = false;
     featureNames = new String[2][];
     featureNames[0] = new String[lmOrder];
@@ -107,8 +105,8 @@ public class NGramLanguageModelFeaturizer implements
     }
   }
 
-  static final String NGRAM_REWEIGHTING_PREFIX = "dnr";
-  
+  private static final String NGRAM_REWEIGHTING_PREFIX = "dnr";
+
   /**
    * Constructor called by Phrasal when NGramLanguageModelFeaturizer appears in
    * [additional-featurizers].
@@ -118,8 +116,8 @@ public class NGramLanguageModelFeaturizer implements
       this.lmOrder = Integer.parseInt(args[0]);
       this.ngramReweighting = true;
       featureName = NGRAM_REWEIGHTING_PREFIX;
-      featureNameWithColen = featureName + ":";
-      this.featureNames = null; 
+      featureNameWithColon = featureName + ":";
+      this.featureNames = null;
       this.lm = new IndicatorFunctionLM(lmOrder);
       this.lengthNorm = false;
       return;
@@ -128,18 +126,18 @@ public class NGramLanguageModelFeaturizer implements
       throw new RuntimeException(
           "Two arguments are needed: LM file name and LM ID");
     featureName = args[1];
-    featureNameWithColen = featureName + ":";
+    featureNameWithColon = featureName + ":";
     this.ngramReweighting = false;
     if (args.length == 3) {
       if (args[2].equals("true") || args[2].equals("false")) {
-        this.lm = (LanguageModel<IString>) LanguageModels.load(args[0]);
+        this.lm = LanguageModels.load(args[0]);
         this.lengthNorm = Boolean.parseBoolean(args[2]);
       } else {
-        this.lm = (LanguageModel<IString>) LanguageModels.load(args[0], args[2]);
+        this.lm = LanguageModels.load(args[0], args[2]);
         this.lengthNorm = false;
       }
     } else {
-      this.lm = (LanguageModel<IString>) LanguageModels.load(args[0]);
+      this.lm = LanguageModels.load(args[0]);
       this.lengthNorm = false;
     }
     this.lmOrder = lm.order();
@@ -153,15 +151,15 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   /**
-	 * 
-	 * 
-	 */
+   *
+   *
+   */
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> featurizable) {
     if (ngramReweighting || lm instanceof MultiScoreLanguageModel) {
       return null;
     }
-    
+
     if (DEBUG) {
       System.out.printf("Sequence: %s\n\tNovel Phrase: %s\n",
           featurizable.partialTranslation, featurizable.translatedPhrase);
@@ -218,7 +216,7 @@ public class NGramLanguageModelFeaturizer implements
     multiScore = new double[2][];
     multiScore[0] = new double[order];
     multiScore[1] = new double[order];
-    
+
     for (int pos = startPos; pos < limit; pos++) {
       int seqStart = pos - order + 1;
       if (seqStart < 0)
@@ -236,7 +234,7 @@ public class NGramLanguageModelFeaturizer implements
     return multiScore;
   }
   /**
-	 * 
+	 *
 	 */
   private double getScore(int startPos, int limit, Sequence<IString> translation) {
     double lmSumScore = 0;
@@ -265,7 +263,7 @@ public class NGramLanguageModelFeaturizer implements
     if (ngramReweighting) {
       IString startToken = lm.getStartToken();
       IString endToken = lm.getEndToken();
-  
+
       Sequence<IString> partialTranslation;
       int startPos = f.translationPosition + 1;
       if (f.done) {
@@ -306,8 +304,8 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   /**
-	 * 
-	 */
+   *
+   */
   private List<FeatureValue<String>> getFeatureList(int startPos, int limit,
       Sequence<IString> translation) {
     int maxOrder = lmOrder;
@@ -326,7 +324,7 @@ public class NGramLanguageModelFeaturizer implements
           break;
         Sequence<IString> ngram = translation.subsequence(beginWordPos,
             endWordPos + 1);
-        String featName = ngram.toString(featureNameWithColen, "_");
+        String featName = ngram.toString(featureNameWithColon, "_");
         if (DEBUG) {
           System.err.printf("dlm(%d,%d): %s\n", beginWordPos, endWordPos + 1,
               featName);
@@ -343,7 +341,7 @@ public class NGramLanguageModelFeaturizer implements
     if (ngramReweighting || (lm instanceof MultiScoreLanguageModel)) {
       return null;
     }
-    
+
     assert (f.translatedPhrase != null);
     double lmScore = getScore(0, f.translatedPhrase.size(), f.translatedPhrase);
     if (SVMNORM) {
@@ -382,6 +380,8 @@ public class NGramLanguageModelFeaturizer implements
     rawLMScoreHistory.clear();
   }
 
+  @Override
   public void reset() {
   }
+
 }
