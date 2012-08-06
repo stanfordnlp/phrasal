@@ -18,6 +18,11 @@ if [ $# -ne 2 ]; then
     exit -1
 fi
 
+# Uncomment the line below to run on the cluster
+MEM=1g
+EXEC=
+#EXEC="nlpsub -m${MEM}"
+
 lang=$1
 counts_file=$2
 outfile=`basename $counts_file`
@@ -45,5 +50,5 @@ fi
 
 for txtfile in `ls ${outfile_pref}.*`
 do
-    nlpsub -m1g $TOK $lang $txtfile noclean
+    $EXEC $TOK $lang $txtfile noclean
 done

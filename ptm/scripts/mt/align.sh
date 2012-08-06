@@ -11,6 +11,11 @@ if [ $# -ne 3 ]; then
     exit -1
 fi
 
+# Uncomment the line below to run on the cluster
+MEM=15g
+EXEC=
+#EXEC="nlpsub -m${MEM} -c4"
+
 src_file=$1
 tgt_file=$2
 split_size=$3
@@ -44,7 +49,7 @@ do
     ln -s ../../split."$tgt_ext"."$splitnum" split."$tgt_ext"
     cd ../../
     $mkconf $modeldir ${modeldir}/data $src_ext $tgt_ext < $conf_template > ${modeldir}.conf
-    nlpsub -m15g -c4 $align 15g ${modeldir}.conf 
+    $EXEC $align $MEM ${modeldir}.conf 
 done
 
 # Don't need to do symmetrization because the Phrasal phrase extractor now does symmetrization on the fly.

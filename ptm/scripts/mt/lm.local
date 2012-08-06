@@ -6,12 +6,12 @@
 # These options specify thresholds below which we discard n-grams.
 # Reducing the higher order terms will obviously make the LMs dramatically
 # larger. These parameters are for a 5-gram model.
-ORDER=4
+ORDER=2
 LMFILTER="-gt2min 1 -gt3min 2 -gt4min 3 -gt5min 3"
 
 # Step 1: Count extraction
 COUNT=ngram-count
-LMOPTS="-order $ORDER -kndiscount -interpolate -debug 2 $LMFILTER"
+LMOPTS="-order $ORDER -kndiscount -interpolate -debug 2 $LMFILTER -tolower"
 
 
 

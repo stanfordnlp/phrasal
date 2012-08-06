@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
-#
+# Computes t-tests for various subsets of events
+# from the action logs. 
 #
 import sys
 import codecs
@@ -13,20 +14,24 @@ from actionlog_to_csv import Event
 
 from scipy import stats
 
+
 def paired_difference_test(e_counts, e_nums):
-    """
+    """ Run a paired difference t-test on the event counts
+    represented by the two input parameters.
 
     Args:
     Returns:
     Raises:
     """
     means = []
+    n_events = 0
     print 'MEANS:'
     for src_id in sorted(e_counts.keys()):
         mean_pair = []
         num_pair = []
         for i,ui_id in enumerate(sorted(e_counts[src_id].keys())):
             num = float(e_counts[src_id][ui_id])
+            n_events += int(num)
             denom = float(e_nums[src_id][ui_id])
             mean = num / denom
             mean_pair.append(num / denom)
@@ -47,12 +52,13 @@ def paired_difference_test(e_counts, e_nums):
     pval = stats.t.sf(abs(t_d), dof)
 
     print
+    print '# events:\t%d' % (n_events)
     print 't-statistic:\t%.4f' % (t_d)
     print 'dof:\t%d' % (dof)
     print 'p-value:\t%.4f' % (pval)
 
 def inc_counts(e_counts, e_nums, n_events, src_id, ui_id):
-    """
+    """ Convenience function for incrementing the event counters.
 
     Args:
     Returns:
@@ -62,7 +68,8 @@ def inc_counts(e_counts, e_nums, n_events, src_id, ui_id):
     e_nums[src_id][ui_id] = e_nums[src_id].get(ui_id, 0) + 1
     
 def run_test(log_files, uid_set, class_to_evaluate):
-    """
+    """ Reads action logs that have been parsed with
+    actionlog_to_csv.py. Counts events.
 
     Args:
     Returns:
@@ -71,6 +78,9 @@ def run_test(log_files, uid_set, class_to_evaluate):
     # 2D counters
     e_counts = defaultdict(dict)
     e_nums = defaultdict(dict)
+
+    # Look for those nasty scroll events
+    n_scroll_events = 0
     
     # Open the log files and count events
     n_users = 0
@@ -90,6 +100,7 @@ def run_test(log_files, uid_set, class_to_evaluate):
                 e_src_id = int(row.sourceid)
                 e_class = row.event_class
                 e_ui_id = int(row.ui_id)
+                e_name = row.event_name
                 if e_src_id != last_src_id:
                     # Dump counts to the counters
 #                    print fname_uid,last_src_id,last_ui_id
@@ -99,15 +110,17 @@ def run_test(log_files, uid_set, class_to_evaluate):
                 last_src_id = e_src_id
                 if class_to_evaluate == 'all' or e_class == class_to_evaluate:
                     n_events += 1
- #           print fname_uid,last_src_id,last_ui_id
+                if e_name == 'scroll':
+                    n_scroll_events += 1
             inc_counts(e_counts, e_nums, n_events, last_src_id, last_ui_id)
 
     print '# users:',n_users
+    print '# scroll events:',n_scroll_events
     if n_users > 0:
         paired_difference_test(e_counts, e_nums)
     
 def main():
-    desc='Perform various paired difference tests on action logs'
+    desc='Perform various paired difference t-test on parsed action logs'
     parser=ArgumentParser(description=desc)
     parser.add_argument('log_files',
                         nargs='+',
@@ -115,7 +128,7 @@ def main():
     parser.add_argument('-u', '--uid',
                         dest='uid_list',
                         type=str,
-                        help='CSV list of user ids to sample')
+                        help='CSV list of user ids to sample.')
     parser.add_argument('-c', '--class',
                         dest='event_class',
                         default='all',
@@ -125,7 +138,7 @@ def main():
 
     uid_set = set(args.uid_list.split(','))
     
-    print 'Computing paired t-test for event class:', args.event_class
+    print 'Computing two-sided paired t-test for event class:', args.event_class
     run_test(args.log_files, uid_set, args.event_class)
     print
     print 'Done!'

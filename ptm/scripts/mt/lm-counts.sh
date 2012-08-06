@@ -12,6 +12,10 @@ if [ $# -lt 1 ]; then
     exit -1
 fi
 
+# Uncomment below to run on the cluster
+EXEC=
+#EXEC="nlpsub -m19g"
+
 # Directories for logs and intermediate files
 COUNTS_DIR=counts
 mkdir -p ${COUNTS_DIR}
@@ -22,5 +26,5 @@ source lm.local
 for txtfile in $*
 do
 	outprefix=`basename $txtfile`
-	echo nlpsub -m15g $COUNT $LMOPTS -text "$txtfile" -write ${COUNTS_DIR}/"$outprefix".counts.gz -sort
+	$EXEC $COUNT $LMOPTS -text "$txtfile" -write ${COUNTS_DIR}/"$outprefix".counts.gz -sort
 done

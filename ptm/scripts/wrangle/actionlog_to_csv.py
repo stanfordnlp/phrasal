@@ -12,6 +12,7 @@ from collections import defaultdict,namedtuple
 from csv_unicode import UnicodeWriter
 from argparse import ArgumentParser
 
+# Output format
 Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button src_len time_norm ui_id')
 
 # Maps control keycodes to human readable names
@@ -76,11 +77,15 @@ def map_css_id(css_id, src_id):
     if css_id.startswith('src-tok'):
         src_tok_id = re.search('(\d+)', css_id)
         src_tok_id = int(src_tok_id.group(1))
-        return ('token',src_doc[src_id][src_tok_id])
+        if src_tok_id < len(src_doc[src_id]):
+            return ('token', src_doc[src_id][src_tok_id])
+        else:
+            sys.stderr.write('WARNING: src-tok out of bounds src: %d tok-id: %d%s' % (src_id, src_tok_id, os.linesep))
+            return (css_id, '')
     elif css_id_to_str.has_key(css_id):
-        return (css_id_to_str[css_id],'')
+        return (css_id_to_str[css_id], '')
     else:
-        return (css_id,'')
+        return (css_id, '')
 
 def get_device_for_event_class(event_class):
     """

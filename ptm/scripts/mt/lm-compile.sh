@@ -36,24 +36,24 @@ source lm.local
 MAKE_LM=make-big-lm
 BINARIZE=ngram
 
-counts_cmd=
+read_counts=
 for txtfile in $*
 do
-    counts_cmd="-read ${txtfile} ${counts_cmd}"
+    read_counts="-read ${txtfile} ${read_counts}"
 done
 
-echo Counts: ${counts_cmd}
+echo Counts: ${read_counts}
 
 # Closed vocabulary
-(time $MAKE_LM ${counts_cmd} $LMOPTS -name "$lm_name".gz) 2> logs/"$lm_name".log
+(time $MAKE_LM ${read_counts} $LMOPTS -name "$lm_name" -lm "$lm_name".model) 2> logs/"$lm_name".log
 
-(time $BINARIZE -order $ORDER -lm "$lm_name".gz -write-bin-lm "$lm_name".bin) 2> logs/"$lm_name".bin.log
+(time $BINARIZE -order $ORDER -debug 2 -lm "$lm_name".model -write-bin-lm "$lm_name".bin) 2> logs/"$lm_name".bin.log
 
 gzip "$lm_name".bin
 
 # Open vocabulary
-(time $MAKE_LM ${counts_cmd} $LMOPTS -unk -name "$lm_name".unk.gz) 2> logs/"$lm_name".unk.log
+(time $MAKE_LM ${read_counts} $LMOPTS -unk -name "$lm_name".unk -lm "$lm_name".unk.model) 2> logs/"$lm_name".unk.log
 
-(time $BINARIZE -order $ORDER -lm "$lm_name".unk.gz -write-bin-lm "$lm_name".unk.bin) 2> logs/"$lm_name".unk.bin.log
+(time $BINARIZE -order $ORDER -debug 2 -lm "$lm_name".unk.model -write-bin-lm "$lm_name".unk.bin) 2> logs/"$lm_name".unk.bin.log
 
 gzip "$lm_name".unk.bin
