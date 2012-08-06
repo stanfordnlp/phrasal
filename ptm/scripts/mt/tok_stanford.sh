@@ -7,8 +7,8 @@
 # Author: Spence Green
 #
 #
-if [ $# -ne 2 ]; then
-    echo Usage: `basename $0` language file
+if [ $# -lt 2 ]; then
+    echo "Usage: `basename $0` language file [clean|noclean]"
     echo
     echo lang = Arabic,English,German,French
     exit -1
@@ -16,6 +16,7 @@ fi
 
 lang=$1
 infile=$2
+filter=$3
 outfile=`basename $infile`.tok
 
 # Detect file encoding
@@ -34,7 +35,12 @@ CDEC_PATH=/home/rayder441/sandbox/cdec/
 # Do this externally to guard against any differences between
 # the underlying tokenizers.
 SCRIPT_DIR=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
-fixnl=${SCRIPT_DIR}/cleanup_txt.py
+
+if [ $filter -eq "clean" ]; then
+    fixnl=${SCRIPT_DIR}/cleanup_txt.py
+else
+    fixnl=tee
+fi
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz

@@ -45,5 +45,5 @@ fi
 
 for txtfile in `ls ${outfile_pref}.*`
 do
-    nlpsub -m1g $TOK $lang $txtfile
+    nlpsub -m1g $TOK $lang $txtfile noclean
 done
