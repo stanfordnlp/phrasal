@@ -43,7 +43,8 @@ public class MinimumBayesRisk {
          
          for (ScoredFeaturizedTranslation<IString,String> refTrans : nbestlist) 
          { 
-           List<List<Sequence<IString>>> fakeRef = Arrays.asList(
+          @SuppressWarnings("unchecked")
+          List<List<Sequence<IString>>> fakeRef = Arrays.asList(
                Arrays.asList(refTrans.translation));
            EvaluationMetric<IString,String> metric =
               EvaluationMetricFactory.newMetric(metricName,fakeRef);
@@ -51,7 +52,8 @@ public class MinimumBayesRisk {
            int hypI = -1;
            for (ScoredFeaturizedTranslation<IString,String> hyp : nbestlist) 
            { hypI++;
-             double metricScore = metric.score(Arrays.asList(hyp)); 
+            @SuppressWarnings("unchecked")
+            double metricScore = metric.score(Arrays.asList(hyp)); 
            
              double fracHypScore = metricScore * Math.exp(scale*refTrans.score);
              nbestScores[hypI] += fracHypScore; 
