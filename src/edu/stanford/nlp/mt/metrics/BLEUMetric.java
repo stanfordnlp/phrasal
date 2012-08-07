@@ -145,11 +145,14 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     refLengths = new int[referencesList.size()][];
     init(referencesList);
     this.multiplier = multiplier;
-    smooth = false;
+    smooth = referencesList.size() == 1;
+    if (referencesList.size() == 1) {
+      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
+    }
   }
 
   public BLEUMetric(List<List<Sequence<TK>>> referencesList) {
-    this(referencesList, false);
+    this(referencesList, referencesList.size() == 1);
   }
 
   /**
@@ -162,8 +165,10 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     refLengths = new int[referencesList.size()][];
     multiplier = 1;
     init(referencesList);
-    this.smooth = smooth;
-    // System.err.println("smoothed BLEU: "+smooth);
+    this.smooth = referencesList.size() == 1 || smooth;
+    if (referencesList.size() == 1) {
+      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
+    }
   }
 
   /**
@@ -177,7 +182,10 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     refLengths = new int[referencesList.size()][];
     multiplier = 1;
     init(referencesList);
-    this.smooth = smooth;
+    this.smooth = referencesList.size() == 1 || smooth;
+    if (referencesList.size() == 1) {
+      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
+    }
     // System.err.println("smoothed BLEU: "+smooth);
   }
 
@@ -188,7 +196,10 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     refLengths = new int[referencesList.size()][];
     multiplier = 1;
     init(referencesList);
-    smooth = false;
+    smooth = referencesList.size() == 1;
+    if (referencesList.size() == 1) {
+      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
+    }
   }
 
   private void init(List<List<Sequence<TK>>> referencesList) {
