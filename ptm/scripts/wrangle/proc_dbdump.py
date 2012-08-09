@@ -4,6 +4,7 @@
 # a format appropriate for analysis.
 #
 import sys
+import re
 import codecs
 import csv
 import os
@@ -110,13 +111,15 @@ def process_tgt(tgt_file, lang_dict, src_lens, out_path):
                                               lang_code,
                                               row.user_id)
             with codecs.open(file_name, 'a', encoding='utf-8') as out_file:
-                out_file.write(row.txt.strip() + os.linesep)
+                # Normalize whitespace
+                tgt_txt = re.sub('\s+', ' ', row.txt.strip())
+                out_file.write(tgt_txt + os.linesep)
             
             # Write translation metadata
-            meta_name = '%s/%s/%s.tgt.meta.txt' % (out_path,
+            meta_fname = '%s/%s/%s.tgt.meta.txt' % (out_path,
                                                    lang_code,
                                                    row.user_id)
-            with codecs.open(meta_name, 'a', encoding='utf-8') as meta_file:
+            with codecs.open(meta_fname, 'a', encoding='utf-8') as meta_file:
                 src_len = src_lens[row.src_id]
                 tgt_len = str(len(row.txt.split()))
                 if len(user_src_ids[row.user_id].keys()) == 0:
