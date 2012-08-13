@@ -6,10 +6,9 @@
 #
 import sys
 import codecs
-from collections import defaultdict,Counter
+from collections import Counter
 from argparse import ArgumentParser
 import ptm_file_io
-from ptm_file_io import MetaRow
 from ptm_stats import paired_diff_t_test
 from edit_distance import levenshtein,dameraulevenshtein
 

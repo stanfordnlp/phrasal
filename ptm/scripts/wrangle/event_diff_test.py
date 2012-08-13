@@ -10,7 +10,7 @@ from csv_unicode import UnicodeReader
 from argparse import ArgumentParser
 
 # Format of the CSV log files
-from actionlog_to_csv import Event
+from ptm_file_io import Event
 
 from scipy import stats
 

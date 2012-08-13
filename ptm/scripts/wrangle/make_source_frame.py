@@ -15,7 +15,7 @@ from csv_unicode import UnicodeReader,UnicodeWriter
 from argparse import ArgumentParser
 
 # Sentence-level data
-SentenceData = namedtuple('SentenceData', 'src_id syn_complexity n_entity_tokens')
+SentenceData = namedtuple('SentenceData', 'src_id syn_complexity n_entity_tokens pos_str')
 
 # Token-level data
 TokenData = namedtuple('TokenData', 'src_id token_id token pos')
@@ -36,7 +36,7 @@ def get_annotated_src_doc(token_data_file):
     with open(token_data_file) as in_file:
         labeled_line = []
         last_src_id = 0
-        for row in map(TokenData._make, UnicodeReader(in_file, delimiter='\t')):
+        for row in map(TokenData._make, UnicodeReader(in_file)):
             if last_src_id == int(row.src_id):
                 labeled_line.append((row.token, row.pos))
             else:
@@ -57,7 +57,7 @@ def make_frame(token_data, sentence_data_file, output_file):
     with open(sentence_data_file) as in_file:
         with open(output_file,'w') as out_file:
             csv_writer = csv.writer(out_file)
-            for i,row in enumerate(map(SentenceData._make, csv.reader(in_file, delimiter='\t'))):
+            for i,row in enumerate(map(SentenceData._make, csv.reader(in_file))):
                 src_id = int(row.src_id)
                 n_tokens = len(src_doc[src_id])
                 norm_complexity = float(row.syn_complexity) / float(n_tokens)

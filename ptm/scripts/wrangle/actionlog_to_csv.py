@@ -12,8 +12,7 @@ from collections import defaultdict,namedtuple
 from csv_unicode import UnicodeWriter
 from argparse import ArgumentParser
 
-# Output format
-Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button src_len time_norm ui_id')
+from ptm_file_io import Event
 
 # Maps control keycodes to human readable names
 control_keycode_to_str = None

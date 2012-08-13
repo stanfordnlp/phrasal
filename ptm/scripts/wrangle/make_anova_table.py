@@ -13,7 +13,7 @@ from csv_unicode import UnicodeReader,UnicodeWriter
 from argparse import ArgumentParser
 
 # Action log event (from actionlog_to_csv.py)
-from actionlog_to_csv import Event
+from ptm_file_io import Event
 
 # anova row
 Row = namedtuple('Row', 'sourceid userid ui_id time')
