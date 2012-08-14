@@ -7,35 +7,31 @@ Code: http://www.cs.jhu.edu/~ozaidan/maise/
   cd lib/
   javac *.java
 
-0.5) Add user details (access key and secret key)
+1) Add user details (access key and secret key)
 
   cd MTurkSDKCode
   vim mturk.properties
 
-0.7) Set the target for the tasks, either sandbox or the live service:
+2) Set the target for the tasks, either sandbox or the live service:
 
   cd MTurkSDKCode
   vim mturk.properties
 
-0.9) Modify the HTML/JS template for the task. Also need to update the homeurl() function
+3) Modify the HTML/JS template for the task. Also need to update the homeurl() function
 
   vim maintaskfiles/RNK.shtml
   
-1) Create the task (in our case the ranking task, so we will only run this once:
+4) Create the task (in our case the ranking task, so we will only run this once:
 
-  java -cp lib/ CreateServerInfo maisetutorial/maisetutorial_task-specs.txt
+  mk_task.sh
 
-2) Create batches of HITs for the task:
+5) Create batches of HITs for the task:
 
-  java -Xmx300m -cp lib/ CreateBatches serverInfo=maisetutorial/maisetutorial_output/maisetutorial_server_info.txt batchInfo=maisetutorial/maisetutorial_batch-specs.txt templateLoc=maintaskfiles/
+  mk_batch.sh
 
-2.1) Change the URL in the question file. Upload RNK.shtml and the context-html directory to nlp.stanford.edu/~spenceg/html/
+6) Upload to turk (set the appropriate target in mturk.properties):
 
-  vim maisetutorial/maisetutorial_output/*.question
-
-3) Upload to turk (set the appropriate target in mturk.properties):
-
-  ant uploader -Dfile=maisetutorial-c01.uploadinfo
+  mk_hits.sh
 
 ============
 Turkers complete the HITs....
@@ -43,11 +39,11 @@ Turkers complete the HITs....
   
 4) Retrieve results for an existing batch:
 
-  ant retriever -Danswers=maisetutorial-c01.answers.log -Dfield=keywords -Dquery=maisetutorial-c01
+   mk_hits.sh
 
 5) Remove HITS for an existing batch:
 
-  ant cleaner -DdelAssignable=true -DdelCompleted=true -Dfield=keywords -Dquery=maisetutorial-c01
+   mk_hits.sh
 
 6) Analyze results of the task (generates a CSV file):
 
