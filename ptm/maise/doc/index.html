@@ -1,0 +1,584 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:st1="urn:schemas-microsoft-com:office:smarttags"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 10">
+<meta name=Originator content="Microsoft Word 10">
+<link rel=File-List href="index_files/filelist.xml">
+<title>MAISE: A Flexible, Configurable, Extensible Open Source Package for Mass
+AI System Evaluation</title>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="date"/>
+<o:SmartTagType namespaceuri="urn:schemas-microsoft-com:office:smarttags"
+ name="stockticker"/>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Omar F. Zaidan</o:Author>
+  <o:LastAuthor>Omar F. Zaidan</o:LastAuthor>
+  <o:Revision>258</o:Revision>
+  <o:TotalTime>407</o:TotalTime>
+  <o:Created>2009-02-02T18:38:00Z</o:Created>
+  <o:LastSaved>2011-08-23T14:15:00Z</o:LastSaved>
+  <o:Pages>1</o:Pages>
+  <o:Words>1293</o:Words>
+  <o:Characters>7372</o:Characters>
+  <o:Company>Johns Hopkins University</o:Company>
+  <o:Lines>61</o:Lines>
+  <o:Paragraphs>17</o:Paragraphs>
+  <o:CharactersWithSpaces>8648</o:CharactersWithSpaces>
+  <o:Version>10.6870</o:Version>
+ </o:DocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:View>Print</w:View>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:ApplyBreakingRules/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if !mso]><object
+ classid="clsid:38481807-CA0E-42D2-BF39-B33AF135CC4D" id=ieooui></object>
+<style>
+st1\:*{behavior:url(#ieooui) }
+</style>
+<![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:SimSun;
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-alt:\5B8B\4F53;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+@font-face
+	{font-family:"\@SimSun";
+	panose-1:2 1 6 0 3 1 1 1 1 1;
+	mso-font-charset:134;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:3 135135232 16 0 262145 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:SimSun;}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+span.GramE
+	{mso-style-name:"";
+	mso-gram-e:yes;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:1423573094;
+	mso-list-template-ids:227051166;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	mso-ansi-font-size:10.0pt;
+	font-family:Symbol;}
+@list l1
+	{mso-list-id:1803769027;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-894554610 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l1:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l1:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="7170"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in'>
+
+<div class=Section1>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:48.0pt'>MAISE </span><span style='font-size:28.0pt'>(MT)</span><span
+style='font-size:48.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:8.5pt'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:16.0pt'>A Flexible, Configurable, Extensible Open Source
+Package for<o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><span
+style='font-size:20.0pt'>M</span></b><span style='font-size:18.0pt'>ass </span><b><span
+style='font-size:20.0pt'>AI</span></b><span style='font-size:18.0pt'> </span><b><span
+style='font-size:20.0pt'>S</span></b><span style='font-size:18.0pt'>ystem </span><b><span
+style='font-size:20.0pt'>E</span></b><span style='font-size:18.0pt'>valuation </span><span
+style='font-size:10.0pt'>(currently for </span><b>M</b><span style='font-size:
+10.0pt'>achine </span><b>T</b><span style='font-size:10.0pt'>ranslation)</span><span
+style='font-size:18.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal align=center style='text-align:center'><b><span
+style='font-size:14.0pt'><a href="http://www.cs.jhu.edu/~ozaidan/">Omar F.
+Zaidan</a><o:p></o:p></span></b></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:14.0pt'><a href="http://www.jhu.edu/">Johns Hopkins University</a><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:8.0pt'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:10.0pt'><a href="http://www.cs.jhu.edu/">Department of
+Computer Science</a><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span class=GramE><span
+style='font-size:10.0pt'>and</span></span><span style='font-size:10.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:10.0pt'><a href="http://www.clsp.jhu.edu/">The Center for
+Language and Speech Processing</a><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:10.0pt'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><u><span
+style='font-size:10.0pt'>Latest Release</span></u><span style='font-size:10.0pt'>:
+</span><st1:date Year="2011" Day="23" Month="8"><span style='font-size:10.0pt'>August
+ 23<sup>rd</sup>, 2011</span></st1:date><span style='font-size:10.0pt'> (<b>v0.20</b>).<o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><u><span
+style='font-size:10.0pt'>Latest Webpage Update</span></u><span
+style='font-size:10.0pt'>: </span><st1:date Year="2011" Day="23" Month="8"><span
+ style='font-size:10.0pt'>August 23<sup>rd</sup>, 2011</span></st1:date><span
+style='font-size:10.0pt'>.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:200%'><b><span style='font-size:16.0pt;
+line-height:200%'>1. Overview<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>MAISE is a package that allows researchers to evaluate <b>the
+output of their AI system(s) using <i>human</i> judgments</b> collected via
+Amazon Mechanical Turk (<a href="http://www.mturk.com/">www.mturk.com</a>).
+MAISE is open source, easy to run, and platform-independent. </span><span
+style='font-size:6.0pt;line-height:150%;color:blue'>Most importantly, it has
+been proven to be completely bug-free. :-)</span><span style='font-size:6.0pt;
+line-height:150%'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:200%'><b><span style='font-size:16.0pt;
+line-height:200%'>2. Description<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>Amazon's <b>Mechanical Turk (MTurk)</b> is a virtual
+marketplace that allows anyone to create and post tasks to be completed by
+human workers around the globe. Each instance of those tasks, called a <b>Human
+Intelligence Task (</b></span><st1:stockticker><b><span style='font-size:10.0pt;
+ line-height:150%'>HIT</span></b></st1:stockticker><b><span style='font-size:
+10.0pt;line-height:150%'>)</span></b><span style='font-size:10.0pt;line-height:
+150%'> in MTurk lingo, typically requires human understanding and perception
+that machines are yet to achieve, hence making MTurk an example of &quot;<i>artificial</i>
+<span class=SpellE>artificial</span> intelligence,&quot; as the developers of
+MTurk aptly put it. Arguably, the most attractive feature of MTurk is the low
+cost associated with completing <span class=SpellE>HITs</span> and the speed at
+which they are completed. Having discovered this venue, many researchers in the
+fields of artificial intelligence and machine learning (and other fields such
+as psychology), are using MTurk as a valuable and effective source of
+annotations, labels, and data, namely the kind requiring human input.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>One such kind of data is <b>human evaluation of systems that <i>are</i>
+attempting to do what humans are good at</b>. For instance, if you construct
+several systems that perform automatic speech transcription (i.e. converting
+speech to text), and would like to know how well each of the systems performs,
+you could create <span class=SpellE>HITs</span> on MTurk that 'showcase' the
+transcriptions obtained by the different systems, and ask workers to tell you
+which ones they like and which ones they find inferior. Such human feedback
+would also be valuable because it would help identify systematic errors and
+guide future development of your system(s).<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>The same can be applied to a variety of tasks besides speech
+transcription, such as machine translation, object recognition, emotion
+detection, etc.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>The aim of the <b>MAISE</b> package is to streamline the
+process of creating those evaluation tasks and uploading the relevant content
+to MTurk to be judged, without having to familiarize and involve oneself with
+the mechanics, if you will, of Mechanical Turk. This would allow you to spend
+more time worrying about improving your system rather than dealing with file
+input and output and <span class=SpellE>MTurk's</span> sometimes finicky
+interface.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><u><span style='font-size:10.0pt;
+line-height:150%'>Note</span></u><span style='font-size:10.0pt;line-height:
+150%'>: At the moment, MAISE is designed to aid the evaluation of machine
+translation (MT) systems. However, it <b>can</b> be used for other AI/ML tasks
+as well. Please see the FAQ.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:200%'><a name=Download></a><b><span
+style='font-size:16.0pt;line-height:200%'>3. Download, Licensing, and Citation<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='line-height:150%'><span class=SpellE><span
+style='font-size:10.0pt;line-height:150%'>MAISE's</span></span><span
+style='font-size:10.0pt;line-height:150%'> source code, instructions,
+documentation, and a tutorial are all included in the distribution.<o:p></o:p></span></p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='line-height:150%;mso-list:l1 level1 lfo3;
+     tab-stops:list .5in'><span style='font-size:10.0pt;line-height:150%'>MAISE
+     <a href="maise_v0.20.zip"><b>v0.20</b></a>, released </span><st1:date
+     Year="2011" Day="23" Month="8"><span style='font-size:10.0pt;line-height:
+      150%'>August 23<sup>rd</sup>, 2011</span></st1:date><span
+     style='font-size:10.0pt;line-height:150%'>.<o:p></o:p></span></li>
+ <li class=MsoNormal style='line-height:150%;mso-list:l1 level1 lfo3;
+     tab-stops:list .5in'><span style='font-size:10.0pt;line-height:150%'>MAISE
+     <a href="maise_v0.10.zip"><b>v0.10</b></a>, released </span><st1:date
+     Year="2010" Day="1" Month="11"><span style='font-size:10.0pt;line-height:
+      150%'>November 1<sup>st</sup>, 2010</span></st1:date><span
+     style='font-size:10.0pt;line-height:150%'>.<o:p></o:p></span></li>
+</ul>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>MAISE is an open-source tool, licensed under the terms of the
+GNU Lesser General Public License (LGPL). Therefore, it is free for personal
+and scientific use by individuals and/or research groups. It may not be
+modified or redistributed, publicly or privately, unless the licensing terms
+are observed. If in doubt, contact the author for clarification and/or an
+explicit permission.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>If you use MAISE in your work, please cite the software package
+and include the URL in your paper.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:200%'><b><span style='font-size:16.0pt;
+line-height:200%'>4. The Mechanics of MAISE (<span style='color:#99CC00'>Abbreviated
+Version</span>)<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>MAISE is quite easy to use. There are a couple of Java
+programs to compile, but there is no need to install anything, mess with
+environment variables, etc. Whenever MAISE needs to communicate with MTurk, it
+will rely on <span class=SpellE>MTurk's</span> Java </span><st1:stockticker><span
+ style='font-size:10.0pt;line-height:150%'>API</span></st1:stockticker><span
+style='font-size:10.0pt;line-height:150%'>, which you can download for free (it
+too requires no installation, as you will read in <span class=SpellE>MAISE's</span>
+documentation). Once you create your evaluation tasks and upload the necessary
+content to MTurk, workers will begin to complete the corresponding <span
+class=SpellE>HITs</span>. On a regular (e.g. daily) basis, you will tell MAISE
+to retrieve the new judgments that workers provided since the last time MAISE
+checked. The process continues until either all your tasks are completed, or
+you decide you have enough judgments.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:6.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>You can use MAISE with any evaluation setup you like, as long
+as you design the user interface for it. Currently, MAISE comes with existing
+support for a particular evaluation setup that asks annotators <b>to rank the
+outputs of different systems relative to each other</b>. When we say
+&quot;existing support&quot; we mean the user interface is included, and so is
+an analysis tool that can make sense of the judgments. This way, and you don't
+need to do anything extra to obtain rankings of the systems. You can read more
+about this evaluation setup in the overview papers of the Workshop on
+Statistical Machine Translation (</span><st1:stockticker><span
+ style='font-size:10.0pt;line-height:150%'>WMT</span></st1:stockticker><span
+style='font-size:10.0pt;line-height:150%'>) for the past two years.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:200%'><b><span style='font-size:16.0pt;
+line-height:200%'>5. FAQ<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>Q</span></b><span style='font-size:10.0pt;line-height:150%'>:
+It looks like MAISE was written for machine translation, not general ML/AI
+tasks. Can I really use MAISE for my task?<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>A</span></b><span style='font-size:10.0pt;line-height:150%'>:
+True, when MAISE was being written (before it was even named MAISE)<span
+class=GramE>,</span> it was meant to aid evaluating MT systems. However, it <b>can</b>
+be used for other ML/AI tasks as well, but some of the supported features may
+not make sense for your task, and you'll have to pretend they're not there.
+Basically, you'll also have to trick MAISE, telling it silly things like which
+languages you're translating to and from, only because it expects you to tell
+it. It's fairly simple to do so, but I would be more than willing to help you
+get started if you're not sure how. (This is the main reason why MAISE is not
+in version 1.0 yet...I promise you MAISE v1.0 will not need to be tricked into
+thinking it's doing MT!)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>Q</span></b><span style='font-size:10.0pt;line-height:150%'>:
+Why did you develop MAISE?<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>A</span></b><span style='font-size:10.0pt;line-height:150%'>:
+My advisor at JHU, Chris Callison-Burch, recruited me to help him run the
+manual evaluation component of </span><st1:stockticker><span style='font-size:
+ 10.0pt;line-height:150%'>WMT</span></st1:stockticker><span style='font-size:
+10.0pt;line-height:150%'>10. The data processing components of MAISE mirror a
+previous Perl implementation by Josh Schroeder, who helped with the manual
+before I got on board. I then extended the code so it can communicate with
+MTurk, hence allowing us to utilize workers from around the globe, rather than
+having to personally recruit annotators to use an internal evaluation setup,
+which was previously the case. Following </span><st1:stockticker><span
+ style='font-size:10.0pt;line-height:150%'>WMT</span></st1:stockticker><span
+style='font-size:10.0pt;line-height:150%'>10, I cleaned up my code, added a
+couple of features, made it (much) more user friendly, and wrote documentation
+for it, to aid whoever runs future </span><st1:stockticker><span
+ style='font-size:10.0pt;line-height:150%'>WMT</span></st1:stockticker><span
+style='font-size:10.0pt;line-height:150%'> manual evaluations, and so that
+other ML/AI researchers can use it to obtain human judgments.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>Q</span></b><span style='font-size:10.0pt;line-height:150%'>:
+The </span><st1:stockticker><span style='font-size:10.0pt;line-height:150%'>WMT</span></st1:stockticker><span
+style='font-size:10.0pt;line-height:150%'> manual evaluation involved a couple
+of other tasks. Are they supported in MAISE?<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>A</span></b><span style='font-size:10.0pt;line-height:150%'>:
+Not yet. I first focused on getting the ranking task supported, since it's the
+main evaluation setup we used in </span><st1:stockticker><span
+ style='font-size:10.0pt;line-height:150%'>WMT</span></st1:stockticker><span
+style='font-size:10.0pt;line-height:150%'>, and in all likelihood is the
+evaluation setup other researchers would be most interested in, out of the
+tasks we had in </span><st1:stockticker><span style='font-size:10.0pt;
+ line-height:150%'>WMT</span></st1:stockticker><span style='font-size:10.0pt;
+line-height:150%'>. I hope to get the other tasks supported in the future,
+though I don't have a particular idea of when that might happen.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>Q</span></b><span style='font-size:10.0pt;line-height:150%'>:
+I have a feeling that you'd like to thank some people. So I'm going to let
+you...<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>A</span></b><span style='font-size:10.0pt;line-height:150%'>:
+Thanks for letting me thank some people. (See what I did there?) For starters,
+I developed MAISE while I was funded by <span class=SpellE>DARPA's</span> GALE
+Program, and in part by the <span class=SpellE>EuroMatrixPlus</span> Project. I
+would like to thank Chris Callison-Burch, <span class=SpellE>Ondrej</span> <span
+class=SpellE>Bojar</span>, and everybody who gave feedback during the </span><st1:stockticker><span
+ style='font-size:10.0pt;line-height:150%'>WMT</span></st1:stockticker><span
+style='font-size:10.0pt;line-height:150%'>10 evaluation campaign. More
+importantly, <span class=GramE>much</span> thanks goes to Josh Schroeder, who
+helped me navigate his code when I first started <span class=SpellE>reimplementing</span>
+the data processing components.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>Q</span></b><span style='font-size:10.0pt;line-height:150%'>:
+I'd like to offer you a job. Are you interested?<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>A</span></b><span style='font-size:10.0pt;line-height:150%'>:
+Yes! Check my website for my CV and publications, and drop me a line: <a
+href="mailto:ozaidan@cs.jhu.edu">ozaidan@cs.jhu.edu</a><o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>Q</span></b><span style='font-size:10.0pt;line-height:150%'>:
+But you didn't ask me what kind of job it is...<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>A</span></b><span style='font-size:10.0pt;line-height:150%'>:
+I have questionable morals.<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:200%'><b><span style='font-size:16.0pt;
+line-height:200%'>6. History<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>Note: Version changes in the first decimal place (e.g. <b>v1.05</b>
+to <b>v1.10</b>) reflect significant changes, such as changes in functionality
+or use. Changes in the second decimal place (e.g. <b>v1.23</b> to <b>v1.24</b>)
+reflect minor changes in the documentation, instructions, output, etc. <o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-fareast-font-family:"Times New Roman"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>v0.20</span></b><span style='font-size:10.0pt;line-height:
+150%'> (</span><st1:date Year="2011" Day="23" Month="8"><span style='font-size:
+ 10.0pt;line-height:150%'>8/23/11</span></st1:date><span style='font-size:10.0pt;
+line-height:150%'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=GramE>Added
+more MTurk functions.</span><o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class=GramE>Added
+more options to existing functions, particularly the <span style='font-size:
+9.5pt;line-height:150%;font-family:"Courier New"'>Retriever</span> module.</span><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-fareast-font-family:"Times New Roman"'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><b><span style='font-size:10.0pt;
+line-height:150%'>v0.10</span></b><span style='font-size:10.0pt;line-height:
+150%'> (</span><st1:date Month="11" Day="1" Year="2010"><span style='font-size:
+ 10.0pt;line-height:150%'>11/1/10</span></st1:date><span style='font-size:10.0pt;
+line-height:150%'>)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Initial release!<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='line-height:200%'><a name=References></a><b><span
+style='font-size:16.0pt;line-height:200%'>7. References<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%;color:blue'>(coming soon)<o:p></o:p></span></p>
+
+<p class=MsoNormal style='line-height:150%'><span style='font-size:10.0pt;
+line-height:150%'><o:p>&nbsp;</o:p></span></p>
+
+</div>
+
+</body>
+
+</html>

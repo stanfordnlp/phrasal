@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/AnswerKey.xsd" elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xs:element name="AnswerKey">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Question" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="QuestionIdentifier" type="xs:string"/>
+                            <xs:element name="AnswerOption" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="SelectionIdentifier" type="xs:string" maxOccurs="unbounded"/>
+                                        <xs:element name="AnswerScore" type="xs:int"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="DefaultScore" type="xs:int" minOccurs="0"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="QualificationValueMapping" minOccurs="0">
+                    <xs:complexType>
+                        <xs:choice>
+                            <xs:element name="PercentageMapping">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="MaximumSummedScore" type="xs:int"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="ScaleMapping">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="SummedScoreMultiplier" type="xs:double"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="RangeMapping">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="SummedScoreRange" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="InclusiveLowerBound" type="xs:int"/>
+                                                    <xs:element name="InclusiveUpperBound" type="xs:int"/>
+                                                    <xs:element name="QualificationValue" type="xs:int"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="OutOfRangeQualificationValue" type="xs:int"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:choice>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

@@ -1,0 +1,524 @@
+<?xml version="1.0"?>
+<!--
+  Copyright 2007-2008 Amazon Technologies, Inc.
+ 
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at:
+ 
+  http://aws.amazon.com/apache2.0
+ 
+  This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+  OR CONDITIONS OF ANY KIND, either express or implied. See the
+  License for the specific language governing permissions and
+  limitations under the License.
+--> 
+<project name="MTurkJavaSDK" default="help" basedir=".">
+
+  <property file="build.properties" />
+  <property name="release.name" value="${sdk.name}-${major.version}.${minor.version}"/>
+
+  <property name="package.service.name" value="com.amazonaws.mturk.requester"/>
+  <property name="package.dataschema.name" value="com.amazonaws.mturk.dataschema"/>
+  <property name="output.dir" location="build"/>
+  <property name="lib.dir" location="${output.dir}/lib"/>
+  <property name="etc.dir" value="etc"/>
+  <property name="doc.dir" value="doc"/>
+  <property name="dist.dir" location="dist"/>
+  <property name="temp.dir" location="${dist.dir}/temp"/>
+
+  <property name="stub.classes.dir" location="${output.dir}/private/classes/${requester.service.name}"/>
+  <property name="stub.src.dir" location="${output.dir}/private/sources/${requester.service.name}"/>
+  <property name="stub.jar" value="${lib.dir}/${requester.service.name}.jar"/>
+  <property name="dataschema.classes.dir" location="${output.dir}/private/classes/${requester.dataschema.name}"/>
+  <property name="dataschema.src.dir" location="${output.dir}/private/sources/${requester.dataschema.name}"/>
+  <property name="dataschema.jar" value="${lib.dir}/${requester.dataschema.name}.jar"/>
+  <property name="sdk.classes.dir" location="${output.dir}/private/classes/${sdk.name}"/>
+  <property name="sdk.test.classes.dir" location="${output.dir}/private/classes/${sdk.name}/test"/>
+  <property name="sdk.src.dir" value="src"/>
+  <property name="sdk.test.dir" value="test"/>
+  <property name="sdk.jar" value="${lib.dir}/${sdk.name}.jar"/>
+  <property name="sdk.test.jar" value="${lib.dir}/${sdk.name}-test.jar"/>
+  <property name="sample.src.dir" value="samples"/>
+  <property name="sample.classes.dir" location="${output.dir}/private/classes/${sample.src.dir}"/>
+
+  <property name="wsdl.location" value="etc/wsdl/${wsdl.date}/AWSMechanicalTurkRequester.wsdl"/>
+
+  <property name="dataschema.location" value="${etc.dir}/schema/${dataschema.version}/QuestionFormAnswers.xsd"/>
+
+  <property name="third-party.lib.dir" value="lib/third-party"/>
+  
+  <path id="build.deps.classpath">
+    <!-- Make sure Xerces comes before jaxme. -->
+    <fileset dir="${third-party.lib.dir}" includes="xerces*/*.jar"/>
+    <fileset dir="${third-party.lib.dir}" includes="**/*.jar" excludes="xerces*/*.jar"/>
+  </path>
+
+  <path id="build.classpath">
+    <path refid="build.deps.classpath"/>
+    <path location="${dataschema.jar}"/>
+    <path location="${stub.jar}"/>
+  </path>
+
+  <path id="build.test.classpath">
+    <path refid="build.classpath"/>
+    <pathelement location="${sdk.jar}"/>
+  </path>
+
+  <path id="dist.classpath">
+    <fileset dir="lib">
+      <include name="${requester.service.name}.jar"/>
+      <include name="${requester.dataschema.name}.jar"/>
+      <include name="${sdk.name}.jar"/>
+    </fileset>
+  </path>
+
+  <path id="build.sample.classpath">
+    <path refid="build.classpath"/>
+    <pathelement location="${sdk.jar}"/>
+    <path refid="dist.classpath"/>
+  </path>
+
+  <path id="runtime.classpath">
+    <path refid="build.classpath"/>
+    <path location="${sdk.jar}"/>
+    <path refid="dist.classpath"/>
+    <path path="${sample.classes.dir}" />
+  </path>
+
+  <path id="test.classpath" >
+    <path refid="runtime.classpath"/>
+    <path location="${sdk.test.jar}"/>
+  </path>
+	
+  <taskdef name="xjc" classname="org.apache.ws.jaxme.generator.XJCTask">
+    <classpath>
+      <path refid="build.deps.classpath" />
+    </classpath>
+  </taskdef>
+
+  <target name="check-dataschema-jar">
+    <uptodate property="dataschema-uptodate" srcfile="${dataschema.location}" targetfile="${dataschema.jar}"/>
+  </target>
+
+  <target name="dataschema-jar"
+          description="Build Jar containing the jaxme generated classes"
+          depends="check-dataschema-jar"
+          unless="dataschema-uptodate">
+
+    <mkdir dir="${dataschema.src.dir}"/>
+    <mkdir dir="${dataschema.classes.dir}"/>
+
+    <echo message="generating dataschema sources" />
+    <xjc target="${dataschema.src.dir}"
+         package="${package.dataschema.name}"
+         schema="${dataschema.location}">
+      <produces dir="${dataschema.src.dir}" includes="**/*" />
+    </xjc>
+
+    <echo message="compiling dataschema generated sources" />
+    <javac srcdir="${dataschema.src.dir}" destdir="${dataschema.classes.dir}" source="1.5" target="1.5">
+      <classpath refid="build.deps.classpath"/>
+    </javac>
+
+    <copy toDir="${dataschema.classes.dir}">
+      <fileset dir="${dataschema.src.dir}">
+        <include name="**/jaxb.properties"/>
+        <include name="**/Configuration.xml"/>
+      </fileset>
+    </copy>
+
+    <mkdir dir="${lib.dir}"/>
+    <echo message="Creating dataschema jar"/>
+    <jar destfile="${dataschema.jar}">
+      <fileset dir="${dataschema.classes.dir}" includes="**/*"/>
+      <fileset dir="${dataschema.src.dir}" includes="**/*.java"/>
+      <!-- Note: The notice file is different for the jars than the distributable. -->
+      <fileset dir="${sdk.src.dir}" includes="NOTICE"/>
+      <fileset dir="." includes="LICENSE"/>
+    </jar>
+  </target>
+	
+  <target name="check-wsdl-jar">
+    <uptodate property="wsdl-uptodate" srcfile="${wsdl.location}" targetfile="${stub.jar}"/>
+  </target>
+
+  <target name="wsdl-jar"
+	  description="Creates the jar containing Axis generated stubs "
+	  depends="check-wsdl-jar"
+          unless="wsdl-uptodate">
+
+    <mkdir dir="${stub.src.dir}"/>
+    <mkdir dir="${stub.classes.dir}"/>
+
+    <echo message="Generating Axis stubs...." />
+    <java classname="org.apache.axis.wsdl.WSDL2Java" fork="true">
+      <arg line="-W '${wsdl.location}' --package ${package.service.name} --output '${stub.src.dir}'"/>
+      <classpath refid="build.deps.classpath"/>
+    </java>
+
+    <echo message="Compiling Axis generated stubs..." />
+    <javac srcdir="${stub.src.dir}" destdir="${stub.classes.dir}" source="1.5" target="1.5">
+      <classpath refid="build.deps.classpath"/>
+    </javac>
+
+    <mkdir dir="${lib.dir}"/>
+
+    <echo message="Creating axis jar " />
+    <jar destfile="${stub.jar}" >
+      <fileset dir="${stub.classes.dir}" includes="**/*.class"/>
+      <fileset dir="${stub.src.dir}" includes="**/*.java"/>
+      <!-- Note: The notice file is different for the jars than the distributable. -->
+      <fileset dir="${sdk.src.dir}" includes="NOTICE"/>
+      <fileset dir="." includes="LICENSE"/>
+    </jar>
+  </target>
+
+  <target name="compile-sdk" depends="wsdl-jar,dataschema-jar" description="Compiles SDK sources">
+    <mkdir dir="${sdk.classes.dir}"/>
+    <echo message="Compiling SDK source files..." />
+    <javac srcdir="${sdk.src.dir}" destdir="${sdk.classes.dir}" source="1.5" target="1.5" debug="on">
+      <classpath refid="build.classpath"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile-sdk" description="Creates SDK Jar" >
+
+    <echo message="Copying required resources..." />
+    <copy toDir="${sdk.classes.dir}/com/amazonaws/mturk/service/axis/">
+      <fileset dir="${etc.dir}">
+        <include name="previewHITHeader.xml"/>
+        <include name="previewHITFooter.xml"/>
+        <include name="mturk-client-config.wsdd"/>
+      </fileset>
+    </copy>
+
+    <copy toDir="${sdk.classes.dir}/com/amazonaws/mturk/addon">
+      <fileset dir="${etc.dir}/schema/2005-10-01">
+        <include name="QuestionForm.xsd"/>
+      </fileset>
+      <fileset dir="${etc.dir}/schema/2006-07-14">
+        <include name="FormattedContentXHTMLSubset.xsd"/>
+        <include name="ExternalQuestion.xsd"/>
+      </fileset>
+      <fileset dir="${etc.dir}/schema/2011-11-11">
+        <include name="HTMLQuestion.xsd"/>
+      </fileset>
+      <fileset dir="${etc.dir}/xform">
+        <include name="HIT.xsl"/>
+      </fileset>
+    </copy>
+
+    <echo message="Creating SDK jar..." />
+    <jar destfile="${sdk.jar}">
+      <fileset dir="${sdk.classes.dir}" includes="com/**" excludes="**/test/*.class"/>
+      <fileset dir="${sdk.src.dir}" includes="**/*.java"/>
+      <!-- Note: The notice file is different for the jars than the distributable. -->
+      <fileset dir="${sdk.src.dir}" includes="NOTICE"/>
+      <fileset dir="." includes="LICENSE"/>
+    </jar>
+
+  </target>
+
+  <target name="compile-test" depends="jar" description="Compile SDK Unit Tests">
+    <condition property="junit.available">
+      <available classname="junit.framework.TestCase" classpathref="build.test.classpath"/>
+    </condition>
+    <fail unless="junit.available">
+      JUnit not available.
+      
+      Tests can not be compiled without JUnit.
+      
+      You must download JUnit from http://www.junit.org/ and place the JUnit
+      jar under lib/third-party in order to compile and run tests.
+      
+    </fail>
+    <mkdir dir="${sdk.test.classes.dir}" />
+    <echo message="Compiling SDK Junit tests..." />
+    <javac srcdir="${sdk.test.dir}" destdir="${sdk.test.classes.dir}" source="1.5" target="1.5" debug="on">
+      <classpath refid="build.test.classpath"/>
+    </javac>
+  </target>
+
+  <target name="jar-test" depends="compile-test, copy-test-resources">
+    <jar destfile="${sdk.test.jar}">
+      <fileset dir="${sdk.test.classes.dir}" includes="**/*.class" />
+      <fileset dir="${sdk.test.dir}" includes="**/*.java" />
+      <!-- Note: The notice file is different for the jars than the distributable. -->
+      <fileset dir="${sdk.src.dir}" includes="NOTICE"/>
+      <fileset dir="." includes="LICENSE"/>
+    </jar>
+  </target>
+
+  <target name="compile-sample" description="Compile sample application source files">
+    <echo message="Compiling the sample java source files..." />
+    <mkdir dir="${sample.classes.dir}"/>
+    <javac destdir="${sample.classes.dir}" debug="on">
+      <src path="${sample.src.dir}" />
+      <classpath refid="build.sample.classpath"/>
+    </javac>
+  </target>
+
+  <target name="helloworld" depends="compile-sample" description="Run the hello world sample app">
+    <echo message="Running the Hello World sample application..." />
+    <java dir="${sample.src.dir}/helloworld/" classname="helloworld.MTurkHelloWorld" fork="true">
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="image" description="Run the image sample app">
+    <antcall target="imageWithoutPreview"/>
+    <antcall target="imageWithPreview"/>
+  </target>
+
+  <target name="imageWithoutPreview" depends="compile-sample" unless="preview">
+    <echo message="Running the Best Image sample application..." />
+    <java dir="${sample.src.dir}/best_image/" classname="best_image.BestImage" fork="true">
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="imageWithPreview" depends="compile-sample" if="preview">
+    <echo message="Running the Best Image sample application..." />
+    <java dir="${sample.src.dir}/best_image/" classname="best_image.BestImage" fork="true">
+      <arg value="${preview}"/>
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="survey" depends="compile-sample" description="Run the simple survey sample app">
+    <echo message="Running the Simple Survey sample application..." />
+    <java dir="${sample.src.dir}/simple_survey/" classname="simple_survey.SimpleSurvey" fork="true">
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="category" depends="compile-sample" description="Run the site category sample app">
+    <echo message="Running the Site Category sample application..." />
+    <java dir="${sample.src.dir}/site_category/" classname="site_category.SiteCategory" fork="true">
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="reviewerForHITFile" depends="compile-sample" description="Run the HIT reviewer sample app">
+    <echo message="Running the Reviewer sample application..." />
+    <java dir="." classname="reviewer.Reviewer" fork="true">
+      <arg line="${success_file}"/>
+      <arg line="${output_file}"/>
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="reviewerForHIT" depends="compile-sample" description="Run the HIT reviewer sample app">
+    <echo message="Running the Reviewer sample application..." />
+    <java dir="." classname="reviewer.Reviewer" fork="true">
+      <arg line="${hitID}"/>
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="filter" depends="compile-sample" description="Run the filter sample app">
+    <echo message="Running the Filter sample application..." />
+    <java dir="${sample.src.dir}/filter/" classname="filter.MyHIT" fork="true">
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+  
+  <target name="review-policy" depends="compile-sample" description="Run the review policy sample app">
+    <echo message="Running the review-policy sample application..." />
+    <java dir="${sample.src.dir}/review_policy/" classname="review_policy.ReviewPolicyExample" fork="true">
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="review-policy-results" depends="compile-sample" description="Run the review policy sample app">
+    <echo message="Running the review-policy sample application..." />
+    <java dir="${sample.src.dir}/review_policy/" classname="review_policy.ReviewPolicyExample" fork="true">
+      <arg line="${hitID}"/>
+      <classpath refid="runtime.classpath"/>
+    </java>
+  </target>
+
+  <target name="run-samples" depends="compile-sample" description="Runs the sample applications">
+    <antcall target="helloworld" />
+    <antcall target="image" />
+    <antcall target="survey" />
+    <antcall target="category" />
+    <antcall target="reviewerForHIT" />
+    <antcall target="filter" />
+    <antcall target="review-policy" />
+  </target>
+
+  <target name="copy-test-resources" description="Copies resources required by the tests">
+    <mkdir dir="${sdk.test.classes.dir}/etc"/>
+    <copy toDir="${sdk.test.classes.dir}/etc" >
+      <fileset dir="${etc.dir}" >
+        <include name="test/*.*" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="run-test" depends="jar-test" description="Run the tests">
+    <echo message="Running the TestRequesterServiceRaw test suite..." />
+    <java dir="${sdk.test.classes.dir}" classname="com.amazonaws.mturk.test.TestRequesterServiceRaw" fork="true">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="${lib.dir}/${sdk.name}-test.jar" />
+        <pathelement path="${sdk.test.classes.dir}" />
+      </classpath>
+    </java>
+    <echo message="Running the TestRequesterService test suite..." />
+    <java dir="${sdk.test.classes.dir}" classname="com.amazonaws.mturk.test.TestRequesterService" fork="true">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="${lib.dir}/${sdk.name}-test.jar" />
+        <pathelement path="${sdk.test.classes.dir}" />
+      </classpath>
+    </java>
+    <echo message="Running the TestFilter test suite..." />
+    <java dir="${sdk.test.classes.dir}" classname="com.amazonaws.mturk.test.TestFilter" fork="true">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="${lib.dir}/${sdk.name}-test.jar" />
+        <pathelement path="${sdk.test.classes.dir}" />
+      </classpath>
+    </java>
+    <echo message="Running the TestHITProperties test suite..." />
+    <java dir="${sdk.test.classes.dir}" classname="com.amazonaws.mturk.test.TestHITProperties" fork="true">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="${lib.dir}/${sdk.name}-test.jar" />
+        <pathelement path="${sdk.test.classes.dir}" />
+      </classpath>
+    </java>
+    <echo message="Running the TestHITQuestion test suite..." />
+    <java dir="${sdk.test.classes.dir}" classname="com.amazonaws.mturk.test.TestHITQuestion" fork="true">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="${lib.dir}/${sdk.name}-test.jar" />
+        <pathelement path="${sdk.test.classes.dir}" />
+      </classpath>
+    </java>
+    <echo message="Running the TestFileUtil test suite..." />
+    <java dir="${sdk.test.classes.dir}" classname="com.amazonaws.mturk.test.TestFileUtil" fork="true">
+      <classpath>
+        <path refid="test.classpath" />
+        <pathelement location="${lib.dir}/${sdk.name}-test.jar" />
+        <pathelement path="${sdk.test.classes.dir}" />
+      </classpath>
+    </java>
+  </target>
+
+  <target name="doc" depends="wsdl-jar,dataschema-jar" description="Generates Javadoc" >
+    <mkdir dir="${doc.dir}" />
+    <javadoc destdir="${doc.dir}" access="protected" classpathref="runtime.classpath">
+      <fileset dir="${sdk.src.dir}" includes="**/*.java" />
+      <fileset dir="${sample.src.dir}" includes="**/*.java" />
+      <fileset dir="${stub.src.dir}" includes="**/*.java" />
+      <fileset dir="${dataschema.src.dir}" includes="**/*.java" />
+    </javadoc>
+  </target>
+
+  <target name="createTempDist" depends="jar, doc" >
+
+    <delete dir="${temp.dir}"/>
+
+    <copy todir="${temp.dir}/${release.name}/etc">
+      <fileset dir= "etc" includes="*.*" />
+    </copy>
+    <copy file="ReadMe.html" todir="${temp.dir}/${release.name}"/>
+    <copy file="Overview.html" todir="${temp.dir}/${release.name}"/>
+    <copy file="LICENSE" todir="${temp.dir}/${release.name}"/>
+    <copy file="NOTICE" todir="${temp.dir}/${release.name}"/>
+    <copy file="build.xml" todir="${temp.dir}/${release.name}"/>
+    <copy file="build.properties" todir="${temp.dir}/${release.name}"/>
+
+    <!-- copy fileset to temp-->
+    <copy todir="${temp.dir}/${release.name}/${sdk.src.dir}">
+      <fileset dir="${sdk.src.dir}">
+        <include name="**/*.java"/>
+        <include name="NOTICE"/>
+      </fileset>
+    </copy>
+    <copy todir="${temp.dir}/${release.name}/${sdk.test.dir}">
+      <fileset dir="${sdk.test.dir}" includes="**/*.java"/>
+    </copy>
+    <copy todir="${temp.dir}/${release.name}/doc">
+      <fileset dir="${doc.dir}"/>
+    </copy>
+
+    <mkdir dir="${temp.dir}/${release.name}/lib"/>
+    <copy toDir="${temp.dir}/${release.name}/lib">
+      <fileset dir="${lib.dir}" />
+    </copy>
+
+    <copy todir="${temp.dir}/${release.name}/${sample.src.dir}">
+      <fileset dir="${sample.src.dir}" excludes="**/*.success,**/*.failure,**/*.log,**/preview.html"/>
+    </copy>
+    <copy todir="${temp.dir}/${release.name}/${etc.dir}">
+      <fileset dir="${etc.dir}">
+        <include name="schema/**/*"/>
+        <include name="wsdl/**/*"/>
+        <include name="xform/**/*"/>
+        <include name="test/**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${temp.dir}/${release.name}/${third-party.lib.dir}" >
+      <fileset dir="${third-party.lib.dir}">
+        <exclude name="junit*"/>
+        <exclude name="junit*/**"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="dist" depends="unix, windows"/>
+
+  <target name="unix">
+    <antcall target="createTempDist"/>
+    <property name="tar.filename" value="${dist.dir}/temp.tar"/>
+    <!-- convert crlfs to unix-->
+    <fixcrlf srcdir="${temp.dir}" eol="unix" excludes="**/*.jar"/>
+
+    <tar destfile="${tar.filename}">
+      <tarfileset dir="${temp.dir}" mode="777"/>
+    </tar>
+    <gzip destfile="${dist.dir}/${release.name}.tar.gz" src="${tar.filename}"/>
+    <delete file="${tar.filename}"/>
+    <delete dir="${temp.dir}"/>
+  </target>
+
+  <target name="windows">
+    <antcall target="createTempDist"/>
+    <!-- convert crlfs to dos-->
+    <fixcrlf srcdir="${temp.dir}" eol="dos" excludes="**/*.jar"/>
+    <zip destfile="${dist.dir}/${release.name}.zip" basedir="${temp.dir}"/>
+    <delete dir="${temp.dir}"/>
+  </target>
+
+  <target name="clean" description="Deletes all the generated artifacts.">
+    <delete dir="${output.dir}" />
+    <delete dir="${doc.dir}" />
+    <delete dir="${dist.dir}" />
+  </target>
+
+  <target name="help" description="Show ant targets">
+    <echo message="Run 'ant helloworld' to run the MTurkHelloWorld application." />
+    <echo message="Run 'ant survey' to run the Simple Survey application." />
+    <echo message="Run 'ant image' to run the Best Image application.  Use the optional ' -Dpreview=[preview file name]' parameter to preview." />
+    <echo message="Run 'ant category' to run the Site Category application." />
+    <echo message="Run 'ant reviewerForHIT -DhitID=[the HIT ID]' to run the Reviewer application." />
+    <echo message="Run 'ant reviewerForHITFile -Dsuccess_file=[filename of .success file]' -Doutput_file=[filename of output file] to run the Reviewer application." />
+    <echo message="Run 'ant filter' to run the MyHIT application which uses the AppendKeywordFilter." />
+    <echo message="Run 'ant review-policy' to run the ReviewPolicy application." />
+    <echo message="Run 'ant review-policy-results -DhitID=[the HIT ID]' to get review results." />
+    <echo message="Run 'ant compile-sample' to compile the sample code." />
+    <echo message="Run 'ant jar' to build the sdk sources and create jar." />
+    <echo message="Run 'ant run-test' to run the junit tests for the sdk." />
+    <echo message="Run 'ant doc' to create javadocs for the sdk and sample java sources." />
+    <echo message="Run 'ant dist' to create the all distributables of the sdk." />
+    <echo message="Run 'ant unix' to create the gzip distributable of the sdk for unix." />
+    <echo message="Run 'ant windows' to create the zip distributable of the sdk for windows." />
+  </target>
+
+</project>
+

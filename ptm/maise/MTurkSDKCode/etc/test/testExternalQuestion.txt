@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<ExternalQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd">
+	<ExternalURL>http://s3.amazonaws.com/mturk/samples/sitecategory/externalpage.htm?url=${helper.urlencode($urls)}</ExternalURL>	
+	<FrameHeight>400</FrameHeight>
+</ExternalQuestion>

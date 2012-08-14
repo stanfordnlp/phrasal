@@ -1,0 +1,269 @@
+<!-- This file needs to be hosted on an external server.  -->
+<!-- REFERENCE FILE -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script language="JavaScript" src="http://www.geoplugin.net/javascript.gp" type="text/javascript"></script>
+  </head>
+
+  <!-- Define Javascript helper functions -->
+  <script language="Javascript">
+
+    function homeURL() { return "http://nlp.stanford.edu/spenceg/"; }
+                                // this base URL must end with the "/"
+
+    function getSentenceCount() { return 2; }
+                                  // make sure this matches the RNK_sentences_per_page value (from the task specs file)
+
+    function getCandidateCount() { return 2; }
+                                  // make sure this matches the RNK_systems_per_sentence value (from the task specs file)
+
+    function contextWindowRadius() { return 0; }
+
+    function getNumParts() { return 4; }
+
+    function transWidth() { return 650; }
+
+    function contextURL()
+    {
+      return homeURL() + "html/context-html/plus-minus-" + contextWindowRadius() + "/"
+    }
+
+    // Get URL Parameter value
+    function gup(paramname)
+    {
+      var regexS = "[\\?&]"+paramname+"=([^&#]*)";
+      var regex = new RegExp(regexS);
+      var tmpURL = decodeURI(window.location.href); // decodeURI to preserve UTF
+      var results = regex.exec(tmpURL);
+      if (results == null)
+        return "";
+      else
+        return results[1];
+    }
+
+    // Decode a string that was previously encoded for URL purposes
+    function decode(strToDecode)
+    {
+      var encoded = strToDecode;
+      return unescape(encoded.replace(/\+/g, " ")); // replace +'s with spaces
+    }
+
+    // adjust the height of an iframe to the minimum height that requires no scrolling
+    function adjustIFrameHeight(id)
+    {
+      if (navigator.appName != 'Microsoft Internet Explorer') {
+        var frame = document.getElementById(id);
+        frame.style.height = 5; // we make it really small first so that the default size doesn't override the adjusted size
+        frame.style.height = frame.contentWindow.document.body.scrollHeight + "px";
+      } else {
+        var frame = document.getElementById(id);
+        frame.style.height = "100px";
+      }
+    }
+
+    // actions to perform when submit button is pressed
+    function actionsOnSubmit()
+    {
+    }
+
+  </script>
+
+
+  <body>
+    <form id="mturk_form" method="POST" action="http://www.mturk.com/mturk/externalSubmit" charset="UTF-8" onsubmit="actionsOnSubmit()">
+      <input type="hidden" id="assignmentId" name="assignmentId" value="">
+      <input type="hidden" id="HIT_info" name="HIT_info" value="">
+      <input type="hidden" id="AID" name="AID" value="">
+      <input type="hidden" id="WorkerCity" name="WorkerCity" value="">
+      <input type="hidden" id="WorkerCountry" name="WorkerCountry" value="">
+      <input type="hidden" id="WorkerIP" name="WorkerIP" value="">
+
+      <script language="Javascript">
+        for (sen_i = 1; sen_i <= getSentenceCount(); ++sen_i) {
+          document.write("      <input type=\"hidden\" id=\"SrcIndex"+sen_i+"\" name=\"SrcIndex"+sen_i+"\" value=\"\">");
+          for (cand_i = 1; cand_i <= getCandidateCount(); ++cand_i) {
+            document.write("      <input type=\"hidden\" id=\"System"+sen_i+"_"+cand_i+"\" name=\"System"+sen_i+"_"+cand_i+"\" value=\"\">");
+          }
+        }
+      </script>
+
+      <h1>Rank Alternate Translations</h1>
+
+      <p>
+        <b>Instructions:</b>
+        <ul>
+          <li> You are shown a <font color=crimson><b>source sentence</b></font> followed by two
+          <font style="BACKGROUND-COLOR: #f0f0ff" color=#000080><b>candidate translations</b></font>.<br>
+          <li> Your task is to <u>rank the translations</u> (ties are allowed).<br>
+          <li> To help you, we provide an acceptable <font color=#008000><b>reference translation</b></font>.<br>
+          <script language="Javascript">
+           document.write("<li> Fluency in " + decode(gup('FL_f')) + " <b>is</b> required.<br>");
+          </script>
+        </ul>
+          <b>Note</b>: Please ensure that you have JavaScript enabled in your browser.  (It's probably already enabled.)
+      </p>
+
+      <script language="Javascript">
+        if (navigator.appName == 'Microsoft Internet Explorer') {
+          document.write("<b><u>Note to IE users</u>: we detected you are using Internet Explorer.  Please be aware of a limitation in IE that causes problems with some (but not all) of our HITs.  Sometimes, after you accept the HIT, some of the candidate translations disappear from the tables below, especially translations for the third sentence.  If that happens, please return the HIT so someone else can do it.  We strongly recommend that you use either Firefox or Chrome.</b><br>");
+          document.write("<br>");
+        }
+      </script>
+
+
+      <hr>
+
+      <script language="Javascript">
+        if (gup('assignmentId') == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+          document.write("<br>");
+          document.write("You are viewing this HIT in preview mode.  You must click on the <img src=\"http://nlp.stanford.edu/spenceg/html/accept_hit.gif\" align=middle> button <b>above</b> before starting, or your work will not be saved.<br>");
+          document.write("<br>");
+          document.write("<hr>");
+        }
+
+        document.write("<br><u>First</u>, please tell us about your language abilities:<br>");
+        document.write("   (<i>Answer in one HIT only.  You do not have to answer these questions in every HIT; <b>one time is enough</b>.</i>)<br>");
+        document.write("  <table cellspacing=4 cellpadding=0 border=0>");
+        document.write("  <tbody>");
+        document.write("    <tr>");
+        document.write("      <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Is " + decode(gup('TL_f')) + " your native language?</td>");
+        document.write("      <td><input type=\"radio\" value=\"yes\" name=\"native\" id=\"native_yes\">Yes");
+        document.write("          <input type=\"radio\" value=\"no\" name=\"native\" id=\"native_no\">No</td>");
+        document.write("    </tr>");
+        document.write("    <tr>");
+        document.write("      <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How many years have you spoken " + decode(gup('TL_f')) + "?</td>");
+        document.write("      <td><input align=middle type=\"text\" size=4 name=\"yearsSpoken\" id =\"yearsSpoken\"></td>");
+        document.write("    </tr>");
+        document.write("  </tbody>");
+        document.write("  </table>");
+      </script>
+
+
+      <hr>
+
+
+      <script language="Javascript">
+
+        for (sen_i = 1; sen_i <= getSentenceCount(); ++sen_i) {
+          // *** Sentence #sen_i ***
+
+          document.write("<iframe id=\"src"+sen_i+"\" src=\"" + contextURL() + "src." + decode(gup('FL')) + "-" + decode(gup('TL')) + "/" + gup("SI"+sen_i) + ".html\" frameborder=0 scrolling=auto width=100% onload=\"adjustIFrameHeight('src"+sen_i+"')\"></iframe>");
+          document.write("<iframe id=\"ref"+sen_i+"\" src=\"" + contextURL() + "ref." + decode(gup('FL')) + "-" + decode(gup('TL')) + "/" + gup("SI"+sen_i) + ".html\" frameborder=0 scrolling=auto width=100% onload=\"adjustIFrameHeight('ref"+sen_i+"')\"></iframe>");
+
+
+          document.write("      <table border=1>");
+          document.write("      <tbody>");
+
+          document.write("        <tr>");
+	  document.write("          <td>#</td>");
+          document.write("          <td>");
+          document.write("            <b>Translation</b>");
+          document.write("          </td>");
+          document.write("          <td>");
+          document.write("            <b>Select Ranking</b>");
+          document.write("          </td>");
+          document.write("        </tr>");
+
+          for (cand_i = 1; cand_i <= getCandidateCount(); ++cand_i) {
+            // Sentence #sen_i, Translation #cand_i
+
+            if (decode(gup("s"+sen_i+"_"+cand_i)) != 0) { // 0 means the "blank" system; i.e. leave empty
+              document.write("        <tr bgColor=#f0f0ff>");
+	      document.write("          <td>"+cand_i+"</td>");
+              document.write("          <td width="+transWidth()+">");
+              document.write("            <font color=#000080><b>");
+
+              for (part = 1; part <= getNumParts(); ++part) {
+                document.write(decode(gup("sen"+sen_i+"_"+cand_i+"_p"+part)));
+              }
+
+              document.write("            </b></font>");
+              document.write("          </td>");
+	        document.write("          <td>");		
+ if( cand_i == 1) {
+
+	        document.write("          <select name=\"RANK"+sen_i+"\">");
+	        document.write("            <option value=\"1\">1 is better</option>");
+	        document.write("            <option value=\"2\">2 is better</option>");
+	        document.write("            <option value=\"11\">Translations are equally good</option></select>");
+}
+	      document.write("          </td>");
+	      
+              document.write("        </tr>");
+//            } else {
+//              document.write("<b>(Leave this radio button blank.)</b>");
+            }
+
+          } // for (cand_i)
+
+          document.write("      </tbody>");
+          document.write("      </table>");
+
+          document.write("      <p></p>");
+
+          document.write("      <hr>");
+
+        } // for (sen_i)
+
+      </script>
+
+
+
+      <p></p>
+
+      <input id="submitButton" type="submit" name="Submit" value="Submit">
+
+    </form>
+
+    <script language="Javascript">
+
+      document.getElementById('assignmentId').value = gup('assignmentId');
+      document.getElementById('HIT_info').value = gup('HIT_info');
+      document.getElementById('AID').value = gup('workerId');
+      document.getElementById('WorkerCity').value = geoplugin_city();
+      document.getElementById('WorkerCountry').value = geoplugin_countryName();
+      document.getElementById('WorkerIP').value = '<!--#echo var="REMOTE_ADDR"-->';
+
+      for (sen_i = 1; sen_i <= getSentenceCount(); ++sen_i) {
+        document.getElementById("SrcIndex"+sen_i).value = gup("SI"+sen_i);
+        for (cand_i = 1; cand_i <= getCandidateCount(); ++cand_i) {
+          document.getElementById("System"+sen_i+"_"+cand_i).value = gup("s"+sen_i+"_"+cand_i);
+        }
+      }
+
+//      document.write("<br>");
+//      document.write("Your worker ID is: ");
+//      document.write(decode(gup('workerId')));
+//      document.write("<br>");
+
+//      document.write("<br>");
+//      document.write(window.location.href);
+//      document.write("<br>");
+
+      // Check if the worker is PREVIEWING the HIT or if they've ACCEPTED the HIT
+      if (gup('assignmentId') == "ASSIGNMENT_ID_NOT_AVAILABLE") {
+        // If we're previewing, disable the button and give it a helpful message
+        document.getElementById('submitButton').disabled = true;
+        document.getElementById('submitButton').value = "You must ACCEPT the HIT before you can work on this HIT.";
+
+        document.getElementById("native_yes").disabled = true;
+        document.getElementById("native_no").disabled = true;
+        document.getElementById("yearsSpoken").disabled = true;
+
+      } else {
+        var form = document.getElementById('mturk_form');
+        if (document.referrer && ( document.referrer.indexOf('workersandbox') != -1) ) {
+          // override "http://www.mturk.com/mturk/externalSubmit"
+          form.action = "http://workersandbox.mturk.com/mturk/externalSubmit";
+        }
+      }
+
+    </script>
+
+  </body>
+
+</html>

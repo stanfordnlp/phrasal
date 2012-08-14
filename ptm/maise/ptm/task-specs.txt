@@ -1,0 +1,30 @@
+project_name "ptm"
+random_seed "41299274"
+
+# the following should be either absolute paths, or relative to the java launch path
+sources_file_path "ptm/sources"
+references_file_path "ptm/references"
+submissions_file_path "ptm/systems"
+output_file_path "ptm/output" # Important: this must be an existing directory
+
+task_names "Ranking" # a list of task names, separated by commas
+task_short_names "RNK" # short task names, also separated by commas
+
+
+lang_names "English" , "Arabic" , "French" , "German"
+lang_short_names "en","ar","fr","de" 
+
+
+# default settings (each setting can be set for each task separately)
+def_sentence_range_min 1 # usually just leave as 1
+def_sentence_range_max 27 # usually the size of your evaluation set
+def_task_set_size 27 # number of sentences devoted for the task
+def_sentences_per_page 5 # number of source sentences per HIT
+def_systems_per_sentence 2 # number of system outputs per source sentence
+def_constant_systems 0 # should the set of systems stay the same across source sentences within a page? if yes, choose 1, otherwise, choose 0
+
+# task-specific settings: any of the above default settings can be overriden for a specific task
+RNK_task_set_size 27
+RNK_sentences_per_page 2   # there will be 3 source sentences on each HIT screen...
+RNK_systems_per_sentence 2 # ...and each will have 5 outputs, to be ranked by the worker
+RNK_constant_systems 0

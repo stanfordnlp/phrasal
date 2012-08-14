@@ -1,0 +1,15 @@
+######################################
+## External HIT Properties
+######################################
+
+title: Rank Alternate Translations from %FROMLANG%-to-%TOLANG% (for speakers of %TOLANG%)
+description: Examine alternate translations from %FROMLANG%-to-%TOLANG%, and rank them by translation quality. Fluency in %FROMLANG% is required.
+keywords: translation, evaluation, %PROJECT%, %COLLECTION%, %TOLANG%, RNK, ranking
+
+# How long should the HIT be searchable on MTurk, in seconds? (5184000 = 60*60*24*60 = 60 days)
+hitlifetime:5184000
+# How much time should a worker be given to complete the HIT, in seconds? (1800 = 60 * 30 = 30 minutes)
+assignmentduration:1800
+# After how long should a worker's submission be automatically approved, in seconds? (604800 = 60*60*24*7 = 7 days)
+autoapprovaldelay:604800
+

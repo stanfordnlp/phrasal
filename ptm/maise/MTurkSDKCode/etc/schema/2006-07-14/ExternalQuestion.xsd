@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:tns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd">
+    <xs:element name="ExternalQuestion">
+        <xs:complexType>
+        <xs:sequence>
+            <xs:element name="ExternalURL" type="xs:anyURI"/>
+            <xs:element name="FrameHeight" type="xs:integer"/>
+        </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

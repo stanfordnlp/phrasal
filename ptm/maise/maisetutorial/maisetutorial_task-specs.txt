@@ -1,0 +1,35 @@
+project_name "maisetutorial"
+random_seed "12341234"
+
+# the following should be either absolute paths, or relative to the java launch path
+sources_file_path "maisetutorial/sources"
+references_file_path "maisetutorial/references"
+submissions_file_path "maisetutorial/systems"
+output_file_path "maisetutorial/maisetutorial_output" # Important: this must be an existing directory
+
+task_names "Ranking" # a list of task names, separated by commas
+task_short_names "RNK" # short task names, also separated by commas
+
+# note that we only have one task here, the "Ranking" task (which will have several subtasks,
+# one for each language pair), but you could also have other task types that you design
+
+lang_names "English" , "Czech" , "French" , "German" # list of language names that MAISE should be aware of
+lang_short_names "en","cz","fr","de" # used in names of files containing submissions
+
+# there really is nothing special about "English" vs. "Czech", etc.  As far as MAISE is concerned,
+# you can call the languages "Martian" and "Gibberish".  None of the data processing depends on
+# the name of the language, which is only used as a string whenever needed.
+
+# default settings (each setting can be set for each task separately)
+def_sentence_range_min 1 # usually just leave as 1
+def_sentence_range_max 250 # usually the size of your evaluation set
+def_task_set_size 100 # number of sentences devoted for the task
+def_sentences_per_page 1 # number of source sentences per HIT
+def_systems_per_sentence 5 # number of system outputs per source sentence
+def_constant_systems 0 # should the set of systems stay the same across source sentences within a page? if yes, choose 1, otherwise, choose 0
+
+# task-specific settings: any of the above default settings can be overriden for a specific task
+RNK_task_set_size 200
+RNK_sentences_per_page 3   # there will be 3 source sentences on each HIT screen...
+RNK_systems_per_sentence 5 # ...and each will have 5 outputs, to be ranked by the worker
+RNK_constant_systems 0

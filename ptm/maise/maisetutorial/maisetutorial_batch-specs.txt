@@ -1,0 +1,23 @@
+collection-ID maisetutorial-c01
+number-of-batches-in-collection 1 
+
+# default values for the five "executive decision" HIT settings
+# (the dafault values MUST be specified before any of the batch-specific values)
+def-batch-size-in-HITs 10
+def-assignments-per-HIT 3
+def-reward-per-assignment 0.05
+def-min-approval-rate 85
+def-min-approved-HITs 5
+
+# this batch is restricted to the US, and since we feel optimistic about
+# how many US-based workers there are, we create a large batch of 75 HITs,
+# and ask for 5 assignments for each HIT, and demand that a worker must
+# have at least TEN approved HITs in their work history
+batch 1
+language-pair cz-en
+task RNK
+location US
+min-approved-HITs 10
+batch-size-in-HITs 75
+assignments-per-HIT 5
+

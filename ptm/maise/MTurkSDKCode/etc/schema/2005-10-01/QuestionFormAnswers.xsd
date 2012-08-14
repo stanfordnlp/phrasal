@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2005-10-01/QuestionFormAnswers.xsd" elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xs:element name="QuestionFormAnswers">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Answer" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="QuestionIdentifier" type="xs:string"/>
+                            <xs:choice>
+                                <xs:sequence>
+                                    <xs:element name="SelectionIdentifier" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                                    <xs:element name="OtherSelectionText" type="xs:string" minOccurs="0"/>
+                                </xs:sequence>
+                                <xs:element name="FreeText" type="xs:string"/>
+                                <xs:sequence>
+                                    <xs:element name="UploadedFileSizeInBytes" type="xs:positiveInteger"/>
+                                    <xs:element name="UploadedFileKey" type="xs:string"/>
+                                </xs:sequence>
+                            </xs:choice>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

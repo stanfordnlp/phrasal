@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<HTMLQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2011-11-11/HTMLQuestion.xsd">
+  <!-- FrameHeight element is not a number -->
+  <HTMLContent><![CDATA[
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>
+    <script type='text/javascript' src='https://s3.amazonaws.com/mturk-public/externalHIT_v1.js'></script>
+  </head>
+  <body>
+    <form name='mturk_form' method='post' id='mturk_form' action='https://www.mturk.com/mturk/externalSubmit'>
+      <input type='hidden' value='' name='assignmentId' id='assignmentId'/>
+      <h1>What's up?</h1>
+      <p><textarea name='comment' cols='80' rows='3'></textarea></p>
+      <p><input type='submit' id='submitButton' value='Submit' /></p>
+    </form>
+  <script language='Javascript'>turkSetAssignmentID();</script>
+ </body>
+</html>
+]]>
+  </HTMLContent>
+  <FrameHeight>I am not a number; I am a free man!</FrameHeight>
+</HTMLQuestion>
