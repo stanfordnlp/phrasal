@@ -19,7 +19,7 @@ lang_short_names "en","ar","fr","de"
 def_sentence_range_min 1 # usually just leave as 1
 def_sentence_range_max 27 # usually the size of your evaluation set
 def_task_set_size 27 # number of sentences devoted for the task
-def_sentences_per_page 5 # number of source sentences per HIT
+def_sentences_per_page 2 # number of source sentences per HIT
 def_systems_per_sentence 2 # number of system outputs per source sentence
 def_constant_systems 0 # should the set of systems stay the same across source sentences within a page? if yes, choose 1, otherwise, choose 0
 

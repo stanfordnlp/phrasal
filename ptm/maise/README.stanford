@@ -1,1 +1,8 @@
 My hacked over version of MAISE
+
+To configure, go into the lib/ directory and execute:
+  
+	javac *.java
+
+Spence
+14 August 2012
