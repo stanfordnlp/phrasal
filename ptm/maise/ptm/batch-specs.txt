@@ -1,14 +1,13 @@
-collection-ID ptm-c03
+collection-ID ptm-c01
 number-of-batches-in-collection 1 
 
 # default values for the five "executive decision" HIT settings
 # (the dafault values MUST be specified before any of the batch-specific values)
 def-batch-size-in-HITs 10
-def-assignments-per-HIT 3
+def-assignments-per-HIT 1 # WMT uses 3
 def-reward-per-assignment 0.01
 def-min-approval-rate 0
 def-min-approved-HITs 0
-def-location !IN,!PK,!RU
 
 # this batch is restricted to the US, and since we feel optimistic about
 # how many US-based workers there are, we create a large batch of 75 HITs,
@@ -18,7 +17,4 @@ batch 1
 language-pair en-ar
 task RNK
 batch-size-in-HITs 14
-assignments-per-HIT 1
-reward-per-assignment 0.01
 location !IN,!PK,!RU
-

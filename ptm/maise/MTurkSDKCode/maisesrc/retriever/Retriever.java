@@ -106,19 +106,21 @@ static boolean showDetails = false;
 
     if (!rejectListFileName.equals("${rejectList}")) {
       if (!rejectListFileName.startsWith("/") && !rejectListFileName.startsWith("C:")) {
+	// TODO(spenceg): hardcoded path in the maise distro. Yuck.
         rejectListFileName = fullPath("../../../",rejectListFileName);
       }
 
       if (fileExists(rejectListFileName)) {
-        InputStream inStream = new FileInputStream(new File(rejectListFileName));
-        BufferedReader inFile = new BufferedReader(new InputStreamReader(inStream, "utf8"));
-        String line = inFile.readLine();
-        while (line != null) {
-          String AID = line.split("\t")[0];
-          String reason = line.split("\t")[1];
+        BufferedReader inFile = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rejectListFileName)), "utf8"));
+
+	for (String line; (line = inFile.readLine()) != null;) {
+	  String[] toks = line.split("\t");
+	  if (toks.length != 2) throw new RuntimeException("Malformed line in file: " + line);
+          String AID = toks[0];
+          String reason = toks[1];
           rejectList.put(AID,reason);
-          line = inFile.readLine();
         }
+	inFile.close();
 
         if (!relistRejected_str.equals("${relist}")) {
           if (relistRejected_str.toLowerCase().equals("true")) { relistRejected = true; }
@@ -499,19 +501,11 @@ if (showDetails)        println("Putting (" + key + "," + val + ")");
 
   static private void processAssignmentsInFile(String inFileName)
   {
-
     try {
-
-      InputStream inStream = new FileInputStream(new File(inFileName));
-      BufferedReader inFile = new BufferedReader(new InputStreamReader(inStream, "utf8"));
-
-      String line = inFile.readLine();
-
-      while (line != null) {
+      BufferedReader inFile = new BufferedReader(new InputStreamReader(new FileInputStream(new File(inFileName)), "utf8"));
+      for (String line; (line = inFile.readLine()) != null;) {
         TreeMap<String,String> ansMap = new TreeMap<String,String>();
-
         while (!line.equals(sepSetSet)) {
-
           // determine key
           String key = line;
           line = inFile.readLine(); // skip sepKeyVal
@@ -523,20 +517,13 @@ if (showDetails)        println("Putting (" + key + "," + val + ")");
             val += " " + line.trim();
             line = inFile.readLine(); // read next line of val (or possibly sepEntEnt)
           }
-          val = val.trim();
-
-          ansMap.put(key,val);
-
+          ansMap.put(key, val.trim());
           line = inFile.readLine(); // read next key (or possibly sepSetSet)
-
         } // while (line != sepSetSet)
 
-        processTaskAssignment(ansMap,null);
-          // null = don't write anything
-
-        line = inFile.readLine();
+        // null = don't write anything
+        processTaskAssignment(ansMap, null);
       }
-
       inFile.close();
 
     } catch (FileNotFoundException e) {
@@ -546,7 +533,6 @@ if (showDetails)        println("Putting (" + key + "," + val + ")");
       System.err.println("IOException in processAssignmentsInFile(String): " + e.getMessage());
       System.exit(99902);
     }
-
   }
 
   static private String fullPath(String dir, String fileName)
