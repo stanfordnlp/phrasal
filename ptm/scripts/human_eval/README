@@ -1,0 +1,43 @@
+Human Ranking of MT Output using MTurk
+Described by: Callison-Burch (2009)
+Code: http://www.cs.jhu.edu/~ozaidan/maise/
+
+The scripts in this directory simplify translation ranking with my hacked over version of Maise, which can be found in:
+
+MAISE_HOME=${JAVANLP_HOME}/projects/mt/ptm/maise.
+
+A typical usage scenario goes like this:
+
+  cd $MAISE_HOME
+
+  mk_taskdir.sh
+
+  // Copy translation data, ensuring that file prefix is the task name
+  copy_tgt_to_maise.py
+  
+  // Setup task_specs.txt
+  mk_task.sh
+
+  // Setup batch_specs.txt
+  mk_batch.sh
+  
+  // Test on sandbox
+  vim ${MAISE_HOME}/MTurkSDK/mturk.properties
+
+  aws.sh up
+
+  aws.sh get
+
+  aws.sh get -DdecisionPass=true
+  
+  aws.sh clean
+
+  // Run on production site
+  vim ${MAISE_HOME}/MTurkSDK/mturk.properties
+
+  aws.sh up/get/clean
+
+  ans2csv.sh
+
+  csv2ranking.py
+  

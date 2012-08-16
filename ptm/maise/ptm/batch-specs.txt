@@ -4,7 +4,7 @@ number-of-batches-in-collection 1
 # Default values that correspond to settings used in CCB's papers
 # and the WMTXX evaluation campaigns.
 def-batch-size-in-HITs 10
-def-assignments-per-HIT 3 
+def-assignments-per-HIT 3          # 5 is for CCB (2009) 
 def-reward-per-assignment 0.01
 def-min-approval-rate 85
 def-min-approved-HITs 5

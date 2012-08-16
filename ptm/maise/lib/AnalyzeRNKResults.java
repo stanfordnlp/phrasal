@@ -511,9 +511,9 @@ if (isContrastive) contrastiveAIDs.add(AID);
         outLine += sep + "system" + sys + "Id";
       }
 
-      for (int sys = 1; sys <= systemsPerQuestion; ++sys) {
-        outLine += sep + "system" + sys + "rank";
-      }
+      //      for (int sys = 1; sys <= systemsPerQuestion; ++sys) {
+        outLine += sep + "rank";
+	//      }
 
       outLine = outLine.substring(1); // remove initial comma
       writeLine(outLine,outFile);
@@ -674,23 +674,23 @@ if (isContrastive) contrastiveAIDs.add(AID);
                 }
               }
 
-              for (int sys = 1; sys <= systemsPerQuestion; ++sys) {
-                String sysRank_str = ans.get("RANK" + q + "_0" + sys);
+	      //              for (int sys = 1; sys <= systemsPerQuestion; ++sys) {
+                String sysRank_str = ans.get("RANK" + q);
                 int sysRank = -1;
                 if (sysRank_str != null) { sysRank = Integer.parseInt(sysRank_str); }
-                systemRanks[sys] = sysRank;
+		//                systemRanks[sys] = sysRank;
                 if (!isContrastive) {
                   outLine += sep + sysRank;
                 }
-              }
+		//              }
 
 
 
               for (int sys = 1; sys <= systemsPerQuestion; ++sys) {
                 String sysNumber = ans.get("System" + q + "_" + sys);
                 String subName = langPair + " " + systemAtNumber.get(sysNumber);
-                String sysRank_str = ans.get("RANK" + q + "_0" + sys);
-                int sysRank = -1;
+                sysRank_str = ans.get("RANK" + q);
+                sysRank = -1;
                 if (sysRank_str != null) { sysRank = Integer.parseInt(sysRank_str); }
 
                 if (!isContrastive) {

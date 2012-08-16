@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-
+#
+# Create a task from a task specification.
+#
 if [ $# -ne 1 ]; then
-	echo Usage: `basename $0` task_specs
-	exit -1
+    echo Usage: `basename $0` task_specs
+    exit -1
 fi
 
-java -cp lib/ CreateServerInfo $1
+classpath=${JAVANLP_HOME}/projects/mt/ptm/maise/lib
+
+java -cp "$classpath" CreateServerInfo $1
 

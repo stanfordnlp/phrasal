@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
-
+#
+# Make uploadinfo file from a batch specification.
+#
 if [ $# -ne 2 ]; then
-	echo Usage: `basename $0` batch_specs server_info
-	exit -1
+    echo Usage: `basename $0` batch_specs server_info
+    exit -1
 fi
 
-java -Xmx300m -cp lib/ CreateBatches serverInfo=$2 batchInfo=$1 templateLoc=maintaskfiles/
+classpath=${JAVANLP_HOME}/projects/mt/ptm/maise/lib
 
-# Update the question file.
+java -Xmx300m -cp $classpath CreateBatches serverInfo=$2 batchInfo=$1 templateLoc=maintaskfiles/
 
+# Update the URL in the generated question file.
 qpath=`dirname $2`
 for qfile in `ls ${qpath}/*.question`
 do
