@@ -2,6 +2,9 @@
 #
 # Converts the output of ans2csv.sh to a csv with a global ranking.
 #
+# The global ranking is computing according to the Minimum Feedback
+# Arc Set solver described by Lopez (2012).
+#
 #
 import sys
 import csv
@@ -9,49 +12,52 @@ import os
 from collections import namedtuple,defaultdict,Counter
 from argparse import ArgumentParser
 
+# pip install BitVector
+from BitVector import BitVector
+
 # Input format
 AnswerRow = namedtuple('AnswerRow', 'srclang,trglang,srcIndex,documentId,segmentId,judgeId,system1Number,system1Id,system2Number,system2Id,rank')
 
 # Output format
-RankRow = namedtuple('RankRow', 'src_id user_id rank')
+RankRow = namedtuple('RankRow', 'src_id sys_id rank')
 
 class Ranking:
+    """ Semantics are the relation sysA -> sysB with an associated weight. Positive indicates that A is better than B. 0 indicates that they are equal.
+    """
+    def rank_to_int(self, rank):
+        """ Ranking values come from ans2csv.sh
+        """
+        if rank == 1:
+            return -1
+        elif rank == 2:
+            return 1
+        elif rank == 11:
+            return 0
+        else:
+            raise RuntimeError('Invalid ranking: ' + str(rank))
+        
     def __init__(self, src_id, judge_id, sys1_id, sys2_id, rank):
         self.src_id = int(src_id)
         self.judge_id = judge_id
-        self.sys1_id = int(sys1_id)
-        self.sys2_id = int(sys2_id)
-        self.rank = int(rank)
-
-    def get_template_str(self):
-        if self.sys1_id < self.sys2_id:
-            return '%d-%d-%d' % (self.src_id,
-                                 self.sys1_id,
-                                 self. sys2_id)
+        sys1_id = int(sys1_id)
+        sys2_id = int(sys2_id)
+        self.rank = self.rank_to_int(int(rank))
+        if self.rank < 0:
+            # A is better than B
+            self.sysA = sys1_id
+            self.sysB = sys2_id
+            self.rank *= -1
         else:
-            return '%d-%d-%d' % (self.src_id,
-                                 self.sys2_id,
-                                 self.sys1_id)
-        
+            self.sysA = sys2_id
+            self.sysB = sys1_id
+
     def __str__(self):
         return '[%s: src:%d sys1:%d sys2:%d rank:%d]' % (self.judge_id,
                                                          self.src_id,
-                                                         self.sys1_id,
-                                                         self.sys2_id,
+                                                         self.sysA,
+                                                         self.sysB,
                                                          self.rank)
 
-# Ranking -> to an index
-g_rank_index = {}
-def get_ranking_id(ranking):
-    global g_rank_index
-    rank_str = ranking.get_template_str()
-    if g_rank_index.has_key(rank_str):
-        return g_rank_index[rank_str]
-    else:
-        g_rank_index[rank_str] = len(g_rank_index.keys())
-        return g_rank_index[rank_str]
-
-    
 def parse_answer_file(answer_file, src_lang, tgt_lang):
     """
     Returns the following data structures:
@@ -65,8 +71,6 @@ def parse_answer_file(answer_file, src_lang, tgt_lang):
     """
     src2rank = defaultdict(list)
     judge2rank = defaultdict(list)
-    rank_dict = defaultdict(list)
-    
     with open(answer_file) as infile:
         seen_header = False
         n_rows = 0
@@ -82,43 +86,84 @@ def parse_answer_file(answer_file, src_lang, tgt_lang):
                               row.system1Id,
                               row.system2Id,
                               row.rank)
-            ranking_id = get_ranking_id(ranking)
             src2rank[ranking.src_id].append(ranking)
             judge2rank[ranking.judge_id].append(ranking)
-            rank_dict[ranking_id].append(ranking)
+
     sys.stderr.write('Read: %d rows%s' % (n_rows, os.linesep))
-    return src2rank,judge2rank,rank_dict
+    return src2rank,judge2rank
 
 
-def weight_judges(judge2rank, rank_dict, do_non_expert):
+def weight_judges(judge2rank, do_non_expert):
+    """ TODO(spenceg): Add judge weighting.
+    """
     weights = {}
-    if do_non_expert:
-        sys.stderr.write('NOT YET IMPLEMENTED')
-    else:
-        for judge_id in judge2rank.keys():
-            weights[judge_id] = 1.0
+    for judge_id in judge2rank.keys():
+        weights[judge_id] = 1.0
     return weights
 
 
-def do_sort(n_tgts, tgt_cmp):
-    """ Performs a quicksort on the list of target ids
-    using the supplied comparison function.
+def neighbors(bv1, bv2):
+    """ Returns the set bits in the XOR
+    of two bit vectors.
+    """
+    x_bv = bv1^bv2
+    return [i for i in xrange(len(x_bv)) if x_bv[i] == 1]
+
+
+def run_lopez_mfas_solver(vertices, di_edges):
+    """ Ranks the targets according to the MFAS
+    algorithm of Lopez (2012).
 
     Args:
+      vertices -- a list of vertex labels
+      di_edges -- dictionary of weighted edges
     Returns:
+     Copy of vertices for convenience
     Raises:
     """
-    id_list = sorted(range(n_tgts), cmp=tgt_cmp)
+    goal = BitVector(bitlist=[1]*len(vertices))
+    hypothesis = namedtuple("hypothesis", "cost, state, predecessor, vertex")
+    initial_state = BitVector(bitlist=[0]*len(vertices))
+    initial_hypothesis = hypothesis(0, initial_state, None, None)
+    agenda = {}
+    agenda[initial_state] = initial_hypothesis
 
-    # Set ties by running over the sorted list
-    tie_with_prev = [False]*n_tgts
-    for i in xrange(len(id_list)):
-        if i < len(id_list)-1:
-            if tgt_cmp(id_list[i], id_list[i+1]) == 0:
-                # Two items are equal
-                tie_with_prev[i+1] = True
-            
-    return id_list,tie_with_prev
+    while len(agenda) > 0:
+        h = sorted(agenda.itervalues(), key=lambda h:h.cost)[0]
+        if h.state == goal:
+            break
+        del agenda[h.state]
+        for u in neighbors(goal, h.state):
+            # Append u to create new hypothesis
+            new_state = BitVector(intVal=int(h.state), size=len(vertices))
+            new_state[u] = 1
+            u_id = vertices[u]
+            added_cost = 0
+            # Sum up costs of outgoing edges from u
+            for v in neighbors(goal, new_state):
+                uv_edge = (u_id, vertices[v])
+                if uv_edge in di_edges:
+                    added_cost += di_edges[uv_edge]
+            new_cost = h.cost + added_cost
+            if new_state not in agenda or agenda[new_state].cost > new_cost:
+                agenda[new_state] = hypothesis(new_cost, new_state, h, u_id)
+
+    # h is the goal. Extract the 1-best ranking
+    ranking = []
+    while h.state != initial_state:
+        ranking.append(h.vertex)
+        h = h.predecessor
+    
+    # Setup the tie_with_prev vector according to the equality rankings
+    # in the graph
+    tie_with_prev = [False]*len(ranking)
+    for i in xrange(1,len(ranking)):
+        u = ranking[i-1]
+        v = ranking[i]
+        if ((u,v) in di_edges and di_edges[(u,v)] == 0) or ((v,u) in di_edges and di_edges[(v,u)] == 0) or (u,v) not in di_edges:
+            tie_with_prev[i] = True
+
+    return ranking,tie_with_prev
 
 
 def make_rows(id_list, tie_with_prev):
@@ -135,7 +180,7 @@ def make_rows(id_list, tie_with_prev):
         if not tie_with_prev[i]:
             rank = i + 1
         row_list.append(RankRow(src_id=0,
-                                user_id=sys_id,
+                                sys_id=sys_id,
                                 rank=rank))
     return row_list
 
@@ -148,78 +193,40 @@ def sort_tgts(ranking_list, judge_weights):
     Returns:
     Raises:
     """
-    # Get the list of unique translation ids
-    tgt_ids = []
+    # Build the weighted graph, which we will represent as
+    # a counter
+    di_edges = Counter()
+    eq_edges = Counter()
+    edge_counts = Counter()
+    vertices = set()
     for ranking in ranking_list:
-        tgt_ids.append(ranking.sys1_id)
-        tgt_ids.append(ranking.sys2_id)
-    tgt_ids = set(tgt_ids)
-
-    # Build integer -> tgt_id map
-    id2tgt_dict = {}
-    tgt2id_dict = {}
-    for i,tgt_id in enumerate(tgt_ids):
-        id2tgt_dict[i] = tgt_id
-        tgt2id_dict[tgt_id] = i
-
-    #print id2tgt_dict
-    
-    # Build the comparison chart
-    # TODO: This chart implements a mean,
-    # which means that an equality pairwise decision can
-    # be computed when no humans actually chose equality as
-    # the ranking. This probably isn't right. Implement other tie-breaking
-    # methods?
-    cmp_chart = []
-    eq_counter = Counter()
-    for i in xrange(len(tgt_ids)):
-        cmp_chart.append([0.0]*len(tgt_ids))
-    for ranking in ranking_list:
-        weight = judge_weights[ranking.judge_id]
-        id_sys1 = tgt2id_dict[ranking.sys1_id]
-        id_sys2 = tgt2id_dict[ranking.sys2_id]
-        id_tuple = tuple(sorted([id_sys1, id_sys2]))
-        if ranking.rank == 1:
-            cmp_chart[id_sys1][id_sys2] += -weight 
-            cmp_chart[id_sys2][id_sys1] += weight
-            eq_counter[id_tuple] -= weight
-        elif ranking.rank == 2:
-            cmp_chart[id_sys1][id_sys2] += weight
-            cmp_chart[id_sys2][id_sys1] += -weight
-            eq_counter[id_tuple] -= weight
-        elif ranking.rank == 11:
-            # Equality: special case
-            # If the majority chooses equality, then we
-            # say that the pairs are equal.
-            eq_counter[id_tuple] += weight
+        print str(ranking)
+        vertices.add(ranking.sysA)
+        vertices.add(ranking.sysB)
+        edge_counts[(ranking.sysA,ranking.sysB)] += 1
+        if ranking.rank == 0:
+            eq_edges[(ranking.sysA,ranking.sysB)] += 1
         else:
-            raise RuntimeError('Unknown ranking: ' + str(ranking.rank))
-    # Now set equality relations
-    for key in eq_counter.keys():
-        if eq_counter[key] > 0.0:
-            id_sys1 = key[0]
-            id_sys2 = key[1]
-            cmp_chart[id_sys1][id_sys2] = 0
-            cmp_chart[id_sys2][id_sys1] = 0
-    # Finally, convert all cells to int for comparison
-    for i in xrange(len(tgt_ids)):
-        for j in xrange(len(tgt_ids)):
-            if cmp_chart[i][j] > 0.0:
-                cmp_chart[i][j] = 1
-            elif cmp_chart[i][j] < 0.0:
-                cmp_chart[i][j] = -1
-            else:
-                cmp_chart[i][j] = 0
+            di_edges[(ranking.sysA,ranking.sysB)] += 1
 
-    #print cmp_chart
+    # SPECIAL CASE: Equality
+    # TODO(spenceg): A. Lopez discarded this data as a pre-processing
+    # step. That is clearly bad.
+    # Do naive approach and assert equality if that ranking is in
+    # the majority
+    for (a,b),n_eq in eq_edges.iteritems():
+        n_seen = edge_counts[(a,b)] + edge_counts[(b,a)]
+        perc_eq = float(n_eq) / float(n_seen)
+#        print perc_eq
+        if perc_eq >= 0.5:
+            di_edges[(a,b)] = 0
+            di_edges[(b,a)] = 0
     
-    # Now sort the indices using quicksort
-    id_list,tie_with_prev = do_sort(len(tgt_ids),
-                                    lambda x,y:cmp_chart[x][y])
-    # Map back to system ids
-    id_list = map(lambda x:id2tgt_dict[x], id_list)
+    # Generate the ranking
+    vertices,tie_with_prev = run_lopez_mfas_solver(list(vertices),
+                                                   di_edges)
 
-    return make_rows(id_list, tie_with_prev)
+    return make_rows(vertices, tie_with_prev)
 
 
 def rank(answer_file, src_lang, tgt_lang, do_non_expert):
@@ -231,11 +238,11 @@ def rank(answer_file, src_lang, tgt_lang, do_non_expert):
     Raises:
     """
     # Build data structures
-    src2rank, judge2rank, rank_dict = parse_answer_file(answer_file,
-                                                        src_lang,
-                                                        tgt_lang)
+    src2rank, judge2rank = parse_answer_file(answer_file,
+                                             src_lang,
+                                             tgt_lang)
     # Setup weighting of judges
-    judge_weights = weight_judges(judge2rank, rank_dict, do_non_expert)
+    judge_weights = weight_judges(judge2rank, do_non_expert)
     
     # Iterate over each source sentence and rank
     # Write to stdout
