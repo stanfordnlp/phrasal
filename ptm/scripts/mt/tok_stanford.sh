@@ -7,7 +7,7 @@
 # Author: Spence Green
 #
 #
-if [ $# -lt 2 ]; then
+if [ $# -ne 3 ]; then
     echo "Usage: `basename $0` language file [clean|noclean]"
     echo
     echo lang = Arabic,English,German,French
@@ -36,7 +36,7 @@ CDEC_PATH=/home/rayder441/sandbox/cdec/
 # the underlying tokenizers.
 SCRIPT_DIR=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
 
-if [ $filter -eq "clean" ]; then
+if [ $filter == "clean" ]; then
     fixnl=${SCRIPT_DIR}/cleanup_txt.py
 else
     fixnl=tee
