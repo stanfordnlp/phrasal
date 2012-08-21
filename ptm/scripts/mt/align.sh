@@ -13,8 +13,8 @@ fi
 
 # Uncomment the line below to run on the cluster
 MEM=15g
-EXEC=
-#EXEC="nlpsub -m${MEM} -c4"
+#EXEC=
+EXEC="nlpsub -m${MEM} -c4"
 
 src_file=$1
 tgt_file=$2
