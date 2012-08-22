@@ -11,17 +11,17 @@ fi
 mkdir -p counts
 
 #EXEC="bash -x"
-EXEC=nlpsub bash -x
+EXEC="nlpsub -pbackground -qshort -c2 bash -x"
 
 EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -lowerCase -options ptb3Escaping=false,asciiQuotes=true"
 
 SCRIPT_DIR=${JAVANLP_HOME}/projects/mt/ptm/scripts/
-fixnl=${SCRIPT_DIR}/mt/cleanup_txt.py
-count=${SCRIPT_DIR}/wrangle/token_counts.py
+fixnl="python2.7 ${SCRIPT_DIR}/mt/cleanup_txt.py"
+count="python2.7 ${SCRIPT_DIR}/wrangle/token_counts.py"
 
 throttle(){
 	qjobs=`qstat -u spenceg | grep spenceg | wc -l`
-	while [ $qjobs -gt 40 ]
+	while [ $qjobs -gt 20 ]
 	do
 		sleep 10
 		qjobs=`qstat -u spenceg | grep spenceg | wc -l`
@@ -32,7 +32,12 @@ for infile in $*
 do
     echo $infile
     outfile=$(basename "$infile")
-    echo "cat $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | $count > counts/"$outfile".counts" > "$outfile".sh
+		ext="${infile##*.}"
+		CAT=cat
+		if [ $ext == "gz" ]; then
+			CAT=zcat
+		fi
+    echo "$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | $count > counts/"$outfile".counts" > "$outfile".sh
     $EXEC "$outfile".sh
     throttle
 done
