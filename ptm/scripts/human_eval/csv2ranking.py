@@ -22,10 +22,12 @@ AnswerRow = namedtuple('AnswerRow', 'srclang,trglang,srcIndex,documentId,segment
 RankRow = namedtuple('RankRow', 'src_id sys_id rank')
 
 class Ranking:
-    """ Semantics are the relation sysA -> sysB with an associated weight. Positive indicates that A is better than B. 0 indicates that they are equal.
+    """ Semantics are the relation sysA -> sysB with an associated weight.
+        Positive indicates that A is better than B. 0 indicates that they
+        are equal.
     """
     def rank_to_int(self, rank):
-        """ Ranking values come from ans2csv.sh
+        """ Convert ans2csv.sh ranking values to __cmp__ values
         """
         if rank == 1:
             return -1
@@ -48,6 +50,7 @@ class Ranking:
             self.sysB = sys2_id
             self.rank *= -1
         else:
+            # B is better than or equal to A
             self.sysA = sys2_id
             self.sysB = sys1_id
 
@@ -112,13 +115,15 @@ def neighbors(bv1, bv2):
 
 def run_lopez_mfas_solver(vertices, di_edges):
     """ Ranks the targets according to the MFAS
-    algorithm of Lopez (2012).
+    algorithm of Lopez (2012). 
 
     Args:
       vertices -- a list of vertex labels
       di_edges -- dictionary of weighted edges
     Returns:
-     Copy of vertices for convenience
+      ranking -- ranking of vertices input list
+      tie_with_prev -- True if the corresponding index in ranking
+                       is equal to its predecessor.
     Raises:
     """
     goal = BitVector(bitlist=[1]*len(vertices))
@@ -148,11 +153,14 @@ def run_lopez_mfas_solver(vertices, di_edges):
             if new_state not in agenda or agenda[new_state].cost > new_cost:
                 agenda[new_state] = hypothesis(new_cost, new_state, h, u_id)
 
-    # h is the goal. Extract the 1-best ranking
+    # h is the goal. Extract the 1-best ranking.
     ranking = []
     while h.state != initial_state:
         ranking.append(h.vertex)
         h = h.predecessor
+
+    # Sanity check
+    assert len(ranking) == len(vertices)
     
     # Setup the tie_with_prev vector according to the equality rankings
     # in the graph
@@ -170,18 +178,20 @@ def make_rows(id_list, tie_with_prev):
     """ Converts the sorted id list to a list
     of RankedRow namedtuples for output.
 
+    Rankings are 1-indexed
+
     Args:
     Returns:
     Raises:
     """
     row_list = []
-    rank = 0
+    last_rank = 0
     for i,sys_id in enumerate(id_list):
-        if not tie_with_prev[i]:
-            rank = i + 1
-        row_list.append(RankRow(src_id=0,
+        rank = last_rank if tie_with_prev[i] else i + 1
+        row_list.append(RankRow(src_id=None,
                                 sys_id=sys_id,
                                 rank=rank))
+        last_rank = rank
     return row_list
 
 
@@ -200,14 +210,15 @@ def sort_tgts(ranking_list, judge_weights):
     edge_counts = Counter()
     vertices = set()
     for ranking in ranking_list:
-        print str(ranking)
+#        print str(ranking)
         vertices.add(ranking.sysA)
         vertices.add(ranking.sysB)
-        edge_counts[(ranking.sysA,ranking.sysB)] += 1
+        edge = (ranking.sysA,ranking.sysB)
+        edge_counts[edge] += 1
         if ranking.rank == 0:
-            eq_edges[(ranking.sysA,ranking.sysB)] += 1
+            eq_edges[edge] += 1
         else:
-            di_edges[(ranking.sysA,ranking.sysB)] += 1
+            di_edges[edge] += 1
 
     # SPECIAL CASE: Equality
     # TODO(spenceg): A. Lopez discarded this data as a pre-processing
@@ -215,8 +226,9 @@ def sort_tgts(ranking_list, judge_weights):
     # Do naive approach and assert equality if that ranking is in
     # the majority
     for (a,b),n_eq in eq_edges.iteritems():
-        n_seen = edge_counts[(a,b)] + edge_counts[(b,a)]
-        perc_eq = float(n_eq) / float(n_seen)
+        n_eq += eq_edges[(b,a)]
+        total = edge_counts[(a,b)] + edge_counts[(b,a)]
+        perc_eq = float(n_eq) / float(total)
 #        print perc_eq
         if perc_eq >= 0.5:
             di_edges[(a,b)] = 0
@@ -225,7 +237,6 @@ def sort_tgts(ranking_list, judge_weights):
     # Generate the ranking
     vertices,tie_with_prev = run_lopez_mfas_solver(list(vertices),
                                                    di_edges)
-
     return make_rows(vertices, tie_with_prev)
 
 

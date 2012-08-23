@@ -1,6 +1,48 @@
-from collections import namedtuple
 import csv
+from collections import namedtuple,defaultdict
 
+#
+# The raw user data from sql/dump_db.sql.
+#
+# User data collected from the survey
+UserDataRow = namedtuple('UserDataRow', 'user_id,lang_other_id,has_trained,birth_country_id,home_country_id,hours_per_week,is_pro_translator,username,first_name,last_name')
+def load_raw_user_data(filename):
+    """ Returns a username -> UserDataRow dictionary.
+    """
+    with open(filename) as infile:
+        user_dict = {}
+        r = csv.reader(infile)
+        # Skip header
+        r.next()
+        for row in map(UserDataRow._make, r):
+            user_dict[row.username] = row
+        return user_dict
+    
+#
+# Sentence data file produced by edu.stanford.nlp.ptm.SourceTextAnalysis.
+#
+SentenceData = namedtuple('SentenceData', 'src_id syn_complexity n_entity_tokens')
+def load_sentence_data(filename):
+    with open(filename) as infile:
+        r = csv.reader(infile, delimiter='\t')
+        return map(SentenceData._make, r)
+
+#
+# Token data file produced by edu.stanford.nlp.ptm.SourceTextAnalysis.
+#
+TokenData = namedtuple('TokenData', 'src_id token_id token pos')
+def load_token_data(filename):
+    """
+    Returns a defaultdict(list) where the first key is src_id
+    TODO(spenceg): Unicode support.
+    """
+    with open(filename) as infile:
+        r = csv.reader(infile, delimiter='\t')
+        rows = defaultdict(list)
+        for row in map(TokenData._make, r):
+            src_id = int(row.src_id)
+            rows[src_id].append(row)
+        return rows
 
 #
 # Meta file format
@@ -15,14 +57,11 @@ def load_meta_file(filename):
     Returns:
     Raises:
     """
-    rows = []
-    r = csv.reader(open(filename),delimiter='\t')
-    seen_header = False
-    for row in map(MetaRow._make, r):
-        if seen_header:
-            rows.append(row)
-        seen_header = True
-    return rows
+    with open(filename) as infile:
+        r = csv.reader(filename,delimiter='\t')
+        # Skip header
+        r.next()
+        return map(MetaRow._make, r)
 
 #
 # Action log event format
@@ -37,12 +76,9 @@ def load_actionlog_events(filename):
     Returns:
     Raises:
     """
-    rows = []
     with open(filename) as infile:
-        seen_header = False
-        for row in map(Event._make, csv.reader(infile)):
-            if seen_header:
-                rows.append(row)
-            seen_header = True
-    return rows
+        r = csv.reader(infile)
+        # Skip header
+        r.next()
+        return map(Event._make, r)
 

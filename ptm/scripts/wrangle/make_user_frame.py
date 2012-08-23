@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# Creates the user data frame from various sources.
-#
+# Creates the user data frame from the user survey (in CSV format)
+# and the odesk profile pages (raw HTML).
 #
 #
 import sys
@@ -15,60 +15,128 @@ from collections import namedtuple
 from csv_unicode import UnicodeReader,UnicodeWriter
 from argparse import ArgumentParser
 
-# User data collected from the survey
-UserDataRow = namedtuple('UserDataRow', 'user_id birth_country home_country hours_per_week is_pro')
+import ptm_file_io
 
 # Output data frame definition
-Row = namedtuple('Row', 'user_id user_name en_level hourly_rate en_spell en_vocab en_skills en_usage en_ar_trans fr_spell fr_vocab fr_usage en_fr_trans de_spell de_vocab en_de_trans birth_country home_country hours_per_week is_pro')
+Row = namedtuple('Row', 'user_id user_name tgt_lang en_level hourly_rate en_spell en_vocab en_skills en_usage en_ar_trans fr_spell fr_vocab fr_usage en_fr_trans de_spell de_vocab en_de_trans birth_country home_country hours_per_week is_pro')
 
 # Dictionary from raw text to structured fields in Row object
 # Format is text flag --> [text offset, Row field]
 TEXT_TO_ROW = {'English Skills':[1,'en_level'],
                'Permalink':[1,'hourly_rate'],
-               'English Spelling Test':[2,'en_spell'],
-               'English To Arabic Translation':[2,'en_ar_trans'],
-               'English Vocabulary Test':[2,'en_vocab'],
-               'U.S. Word Usage Test':[2,'en_usage'],
-               'U.S. English Basic Skills':[2,'en_skills'],
-               'English To German Translation Skills':[2,'en_de_trans'],
-               'German Vocabulary Skills Test':[2,'de_vocab'],
-               'German Spelling Test':[2,'de_spell'],
-               'French Spelling Skills Test':[2,'fr_spell'],
-               'French Vocabulary Skills Test':[2,'fr_vocab'],
-               'English To French Translation Skills Test':[2,'en_fr_trans'],
-               'French Word Usage Test':[2,'fr_usage']}
+               'English Spelling Test':[1,'en_spell'],
+               'English To Arabic Translation':[1,'en_ar_trans'],
+               'English Vocabulary':[1,'en_vocab'],
+               'U.S. Word Usage':[1,'en_usage'],
+               'U.S. English Basic Skills':[1,'en_skills'],
+               'English To German Translation Skills':[1,'en_de_trans'],
+               'German Vocabulary Skills':[1,'de_vocab'],
+               'German Spelling':[1,'de_spell'],
+               'French Spelling Skills':[1,'fr_spell'],
+               'French Vocabulary Skills':[1,'fr_vocab'],
+               'English To French Translation Skills':[1,'en_fr_trans'],
+               'French Word Usage':[1,'fr_usage']}
 
 
-def make_id_dict(id_list_file, user_data_file):
-    """ Creates a dictionary of the form:
+TEXT_TO_ROW_V2 = {'English Skills':[0,'en_level'],
+               'Contractor Profile':[1,'hourly_rate'],
+               'English Spelling':[1,'en_spell'],
+               'English To Arabic Translation':[1,'en_ar_trans'],
+               'English Vocabulary':[1,'en_vocab'],
+               'U.S. Word Usage':[1,'en_usage'],
+               'U.S. English Basic Skills':[1,'en_skills'],
+               'English To German Translation':[1,'en_de_trans'],
+               'German Vocabulary':[1,'de_vocab'],
+               'German Spelling':[1,'de_spell'],
+               'French Spelling':[1,'fr_spell'],
+               'French Vocabulary':[1,'fr_vocab'],
+               'English To French Translation Skills':[1,'en_fr_trans'],
+               'French Word Usage':[1,'fr_usage']}
 
-       username -> UserDataRow
 
-    Args:
-    Returns:
-    Raises:
+def wc(file):
+    with codecs.open(file,encoding='utf-8') as infile:
+        return len(infile.readlines())
+
+def read_odesk_version2(filename):
+    """ Oh no. Lots of nasty rules.
     """
-    # Read in userid -> username mapping
-    id_dict = {}
-    with open(id_list_file) as in_file:
-        csv_file = csv.reader(in_file)
-        for row in csv_file:
-            assert len(row) == 2
-            id_dict[row[0]] = row[1]
+    global TEXT_TO_ROW_V2
 
-    # Now create a dictionary of the form username -> UserDataRow
-    username_dict = {}
-    with open(user_data_file) as in_file:
-        csv_file = csv.reader(in_file)
-        csv_file.next() # Skip header
-        for row in map(UserDataRow._make, csv_file):
-            username = id_dict[row.user_id]
-            username_dict[username] = row
+    text_flags = TEXT_TO_ROW_V2.keys()
+    line_offset = -1
+    row_fields = {}
+    field_key = None
+    soup = BeautifulSoup(open(filename))
+    lines = [x.strip() for x in soup.get_text().split('  ') if len(x.strip()) > 0]
+    last_line = None
+    for line in lines:
+        active_flags = [x for x in text_flags if line.startswith(x)]
+        if len(active_flags) > 0:
+            field_data = TEXT_TO_ROW_V2[active_flags[0]]
+            line_offset = field_data[0]
+            field_key = field_data[1]
+        if line_offset == 0:
+            if field_key == 'en_level':
+                line_toks = line.split()
+                row_fields[field_key] = line_toks[2]
+            elif field_key == 'hourly_rate':
+                p = re.compile('\$(\d+\.\d+)\s*/\s*hr')
+                m = p.search(line)
+                rate = m.group(1)
+                if len(rate) == 0:
+                    raise RuntimeError(line)
+                row_fields[field_key] = rate
+            else:
+                # Odesk tests
+                score = None
+                if line.split()[1] == 'min':
+                    p = re.compile('(\d+\.\d+)')
+                    m = p.search(last_line)
+                    score = m.group(1)
+                else:
+                    line_toks = line.split()
+                    score = line_toks[0]
+                row_fields[field_key] = score
+        line_offset -= 1
+        last_line = line
+    return row_fields
 
-    return username_dict
 
+def read_odesk_version1(filename):
+    global TEXT_TO_ROW
+    # Else do original version
+    soup = BeautifulSoup(open(filename))
+    lines = [x.strip() for x in soup.get_text().split(os.linesep) if len(x.strip()) > 0]
+    text_flags = TEXT_TO_ROW.keys()
+    row_fields = {}
+    line_to_extract = -1
+    line_field = None
+    for i,line in enumerate(lines):
+        if i == line_to_extract:
+            line = re.sub('%|\$|/hr','',line)
+            row_fields[line_field] = line.strip()
 
-def get_user_row(root_dir, file_list, id_dict):
+        active_flags = [x for x in text_flags if line.startswith(x)]
+        if len(active_flags) > 0:
+            field_data = TEXT_TO_ROW[active_flags[0]]
+            line_to_extract = i + field_data[0]
+            line_field = field_data[1]
+    return row_fields
+
+def langid_to_str(lang_id):
+    if lang_id == 1:
+        return 'en'
+    elif lang_id == 2:
+        return 'ar'
+    elif lang_id == 3:
+        return 'fr'
+    elif lang_id == 4:
+        return 'de'
+    else:
+        raise RuntimeError('Unknown language id:' + str(lang_id))
+
+def get_user_row(root_dir, file_list, userdata):
     """ Extract user data from the HTML files
 
     Args:
@@ -76,35 +144,26 @@ def get_user_row(root_dir, file_list, id_dict):
      a Row object
     Raises:
     """
-    global TEXT_TO_ROW
-    
     for filename in file_list:
         basefile = splitext(filename)[0]
-        if id_dict.has_key(basefile):
-            soup = BeautifulSoup(open(root_dir+'/'+filename))
-            lines = [x.strip() for x in soup.get_text().split(os.linesep) if len(x.strip()) > 0]
-            # Pull relevant fields from the file
-            text_flags = TEXT_TO_ROW.keys()
-            row_fields = {}
-            line_to_extract = -1
-            line_field = None
-            for i,line in enumerate(lines):
-                if i == line_to_extract:
-                    line = re.sub('%|\$|/hr','',line)
-                    row_fields[line_field] = line.strip()
-
-                active_flags = [x for x in text_flags if line.startswith(x)]
-                if len(active_flags) > 0:
-                    field_data = TEXT_TO_ROW[active_flags[0]]
-                    line_to_extract = i + field_data[0]
-                    line_field = field_data[1]
+        # We only look at the master profile page
+        if basefile in userdata:
+            filename = '%s/%s' % (root_dir, filename)
+            n_lines = wc(filename)
+            row_fields = None
+            if n_lines == 1:
+                row_fields = read_odesk_version2(filename)
+            else:
+                row_fields = read_odesk_version1(filename)
 
             # Now turn row fields into a Row
-            print 'Extracting user data from:',root_dir
+            sys.stderr.write('Extracting user data from: %s%s' % (filename, os.linesep))
             
-            user_data = id_dict[basefile]
+            user_data = userdata[basefile]
+            tgt_lang = langid_to_str(int(user_data.lang_other_id))
             user_row = Row(user_id=user_data.user_id,
                            user_name=basefile,
+                           tgt_lang=tgt_lang,
                            en_level=row_fields.get('en_level',''),
                            hourly_rate=row_fields.get('hourly_rate',''),
                            en_spell=row_fields.get('en_spell',''),
@@ -119,17 +178,17 @@ def get_user_row(root_dir, file_list, id_dict):
                            de_spell=row_fields.get('de_spell',''),
                            de_vocab=row_fields.get('de_vocab',''),
                            en_de_trans=row_fields.get('en_de_trans',''),
-                           birth_country=user_data.birth_country,
-                           home_country=user_data.home_country,
+                           birth_country=user_data.birth_country_id,
+                           home_country=user_data.home_country_id,
                            hours_per_week=user_data.hours_per_week,
-                           is_pro=user_data.is_pro)
+                           is_pro=user_data.is_pro_translator)
             return user_row
 
     # Couldn't extract any user data? That shouldn't happen....
     raise Exception('No relevent files at path: ' + root_dir)        
-            
 
-def make_frame(profile_dir, id_list_file, user_data_file, outfile_name):
+
+def make_frame(profile_dir, user_data_file):
     """ Converts HTML in profile_dir, CSV in id_list_file, and
     CSV in user_data_file to an R data frame.
 
@@ -137,26 +196,26 @@ def make_frame(profile_dir, id_list_file, user_data_file, outfile_name):
     Returns:
     Raises:
     """
-    id_dict = make_id_dict(id_list_file, user_data_file)
+    userdata = ptm_file_io.load_raw_user_data(user_data_file)
 
     rows = []
     for root,dirs,files in os.walk(profile_dir):
         if len(files) > 0:
-            has_html = reduce(lambda x,y:x or y, map(lambda x:x.find('html')>0, files))
-            if has_html and root.find('svn')<0:
-                row = get_user_row(root, files, id_dict)
+            has_html = reduce(lambda x,y:x or y,
+                              map(lambda x:x.find('html') > 0, files))
+            if has_html and root.find('svn') < 0:
+                row = get_user_row(root, files, userdata)
                 rows.append(row)
 
     # Output the data frame
-    with open(outfile_name,'w') as out_file:
-        csv_file = UnicodeWriter(out_file, quoting=csv.QUOTE_ALL)
-        write_header = True
-        for row in rows:
-            if write_header:
-                write_header = False
-                csv_file.writerow(list(row._fields))
-            csv_file.writerow([x for x in row._asdict().itervalues()])
-                          
+    csv_file = UnicodeWriter(sys.stdout, quoting=csv.QUOTE_ALL)
+    write_header = True
+    for row in rows:
+        if write_header:
+            write_header = False
+            csv_file.writerow(list(row._fields))
+        csv_file.writerow([x for x in row._asdict().itervalues()])
+
 
 def main():
     desc='Makes user data frame from various data sources'
@@ -164,19 +223,13 @@ def main():
     parser.add_argument('profile_dir',
                         metavar='directory',
                         help='User profile directory.')
-    parser.add_argument('id_list',
-                        help='Mapping from user names to ids.')
     parser.add_argument('user_data',
                         help='SQL dump of tm_userconf.')
-    parser.add_argument('output_file',
-                        help='Name of R data frame output file.')
 
     args = parser.parse_args()
 
     make_frame(args.profile_dir,
-               args.id_list,
-               args.user_data,
-               args.output_file)
+               args.user_data)
 
 if __name__ == '__main__':
     main()

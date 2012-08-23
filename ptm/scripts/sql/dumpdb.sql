@@ -9,7 +9,7 @@ BEGIN;
 --- Languages
 COPY (SELECT lang.id,lang.code,lang.name FROM tm_languagespec AS lang ORDER BY lang.id) TO '/tmp/djangodb_lang.csv' WITH CSV HEADER FORCE QUOTE *;
 --- Users
-COPY (SELECT usr.id,usr.username FROM auth_user AS usr ORDER BY usr.id) TO '/tmp/djangodb_user.csv' WITH CSV HEADER FORCE QUOTE *;
+COPY (SELECT usr.user_id,usr.lang_other_id,usr.has_trained,usr.birth_country_id,usr.home_country_id,usr.hours_per_week,usr.is_pro_translator,auth.username,auth.first_name,auth.last_name FROM tm_userconf AS usr,auth_user AS auth WHERE usr.user_id = auth.id ORDER BY auth.id) TO '/tmp/djangodb_user.csv' WITH CSV HEADER FORCE QUOTE *;
 --- Source text
 COPY (SELECT * from tm_sourcetxt AS src WHERE src.doc != 'training') TO '/tmp/djangodb_src.csv' WITH CSV HEADER FORCE QUOTE *;
 --- Target text

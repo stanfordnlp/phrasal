@@ -32,10 +32,5 @@ Procedure for creating the linear modeling data:
  2) Execute: SCRIPTS/sql/dumpdb.sql as 'postgres' superuser
  3) Execute: SCRIPTS/wrangle/proc_dbdump.py
  4) Create a translation frame with SCRIPTS/wrangle/make_translation_frame.py
- 5) Be sure to update the user frame with SCRIPTS/wrangle/make_user_frame.py if any users were added in the new data. The script needs the output from the following two SQL commands:
- 
-    SELECT id,username FROM auth_user ORDER BY id
- 
-    SELECT user_id,birth_country_id,home_country_id,hours_per_week,is_pro_translator FROM tm_userconf ORDER BY user_id
- 
+ 5) Create a user frame with SCRIPTS/wrangle/make_user_frame.py:
  6) Run the appropriate language-specific R modeling script.
