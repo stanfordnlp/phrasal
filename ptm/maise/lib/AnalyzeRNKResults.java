@@ -309,14 +309,9 @@ public class AnalyzeRNKResults
 
       InputStream inStream = new FileInputStream(new File(fileName));
       BufferedReader inFile = new BufferedReader(new InputStreamReader(inStream, "utf8"));
-
-      String line = inFile.readLine();
-
-      while (line != null) {
-        filterList.add(line);
-        line = inFile.readLine();
+      for (String line; (line = inFile.readLine()) != null;) {
+        filterList.add(line.trim());
       }
-
       inFile.close();
 
     } catch (FileNotFoundException e) {
@@ -409,7 +404,6 @@ if (isContrastive) contrastiveAIDs.add(AID);
           userStats.put(AID,S);
 
         } else if ((ansMap.get("HIT_info")).contains("task:") && !filterList.contains(AID)) { // task HIT
-
           S.numHITs += 1;
           S.totalWorkTime += Integer.parseInt(ansMap.get("WorkTime"));
 
@@ -419,9 +413,8 @@ if (isContrastive) contrastiveAIDs.add(AID);
           userStats.put(AID,S);
 
         } else { // task HIT by a filtered AID
-
           // do nothing
-
+	  System.err.println("Filtering: " + AID);
         }
 
         line = inFile.readLine();

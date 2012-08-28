@@ -114,6 +114,7 @@ static boolean showDetails = false;
         BufferedReader inFile = new BufferedReader(new InputStreamReader(new FileInputStream(new File(rejectListFileName)), "utf8"));
 
 	for (String line; (line = inFile.readLine()) != null;) {
+	  if (line.trim().length() == 0) continue;
 	  String[] toks = line.split("\t");
 	  if (toks.length != 2) throw new RuntimeException("Malformed line in file: " + line);
           String AID = toks[0];

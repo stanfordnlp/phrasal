@@ -15,7 +15,7 @@
     function homeURL() { return "http://nlp.stanford.edu/spenceg/"; }
                                 // this base URL must end with the "/"
 
-    function getSentenceCount() { return 2; }
+    function getSentenceCount() { return 3; }
                                   // make sure this matches the RNK_sentences_per_page value (from the task specs file)
 
     function getCandidateCount() { return 2; }
@@ -183,15 +183,14 @@
 
               document.write("            </b></font>");
               document.write("          </td>");
-	        document.write("          <td>");		
  if( cand_i == 1) {
-
+	        document.write("          <td rowspan=\"2\">");		
 	        document.write("          <select name=\"RANK"+sen_i+"\">");
 	        document.write("            <option value=\"1\">1 is better</option>");
 	        document.write("            <option value=\"2\">2 is better</option>");
 	        document.write("            <option value=\"11\">Translations are equally good</option></select>");
+		document.write("          </td>");
 }
-	      document.write("          </td>");
 	      
               document.write("        </tr>");
 //            } else {
