@@ -2,6 +2,19 @@ import csv
 from collections import namedtuple,defaultdict
 
 #
+# Output format of csv2ranking.py for translation rankings.
+# 
+RankRow = namedtuple('RankRow', 'src_id sys_id rank')
+def load_ranking_file(filename):
+    with open(filename) as infile:
+        r = csv.reader(infile)
+        # Skip header
+        r.next()
+        rankings = defaultdict(dict)
+        for row in map(RankRow._make, r):
+            rankings[int(row.src_id)][int(row.sys_id)] = int(row.rank)
+        return rankings
+#
 # The raw user data from sql/dump_db.sql.
 #
 # User data collected from the survey
@@ -58,7 +71,7 @@ def load_meta_file(filename):
     Raises:
     """
     with open(filename) as infile:
-        r = csv.reader(filename,delimiter='\t')
+        r = csv.reader(infile,delimiter='\t')
         # Skip header
         r.next()
         return map(MetaRow._make, r)

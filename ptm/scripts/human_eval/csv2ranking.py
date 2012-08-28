@@ -15,6 +15,8 @@ from argparse import ArgumentParser
 # pip install BitVector
 from BitVector import BitVector
 
+import mfas_solver
+
 # Input format
 AnswerRow = namedtuple('AnswerRow', 'srclang,trglang,srcIndex,documentId,segmentId,judgeId,system1Number,system1Id,system2Number,system2Id,rank')
 
@@ -22,12 +24,12 @@ AnswerRow = namedtuple('AnswerRow', 'srclang,trglang,srcIndex,documentId,segment
 RankRow = namedtuple('RankRow', 'src_id sys_id rank')
 
 class Ranking:
-    """ Semantics are the relation sysA -> sysB with an associated weight.
-        Positive indicates that A is better than B. 0 indicates that they
-        are equal.
+    """ Semantics are the relation sysA "better than" sysB, except when
+        rank == 0, which indicates equality.
     """
     def rank_to_int(self, rank):
-        """ Convert ans2csv.sh ranking values to __cmp__ values
+        """ Convert ans2csv.sh ranking values to __cmp__ values.
+             a<b indicates that a is better than b.
         """
         if rank == 1:
             return -1
@@ -84,7 +86,8 @@ def parse_answer_file(answer_file, src_lang, tgt_lang):
             if not (row.srclang == src_lang and row.trglang == tgt_lang):
                 continue
             n_rows += 1
-            ranking = Ranking(row.srcIndex,
+            # This file is 1-indexed.
+            ranking = Ranking(int(row.srcIndex)-1,
                               row.judgeId,
                               row.system1Id,
                               row.system2Id,
@@ -105,15 +108,13 @@ def weight_judges(judge2rank, do_non_expert):
     return weights
 
 
-def neighbors(bv1, bv2):
-    """ Returns the set bits in the XOR
-    of two bit vectors.
+def uncovered(bv):
+    """ Uncovered bits in a coverage set.
     """
-    x_bv = bv1^bv2
-    return [i for i in xrange(len(x_bv)) if x_bv[i] == 1]
+    return [i for i in xrange(len(bv)) if bv[i] == 0]
 
 
-def run_lopez_mfas_solver(vertices, di_edges):
+def run_lopez_mfas_solver(di_edges, vertices):
     """ Ranks the targets according to the MFAS
     algorithm of Lopez (2012). 
 
@@ -127,8 +128,8 @@ def run_lopez_mfas_solver(vertices, di_edges):
     Raises:
     """
     goal = BitVector(bitlist=[1]*len(vertices))
+    initial_state = BitVector(intVal=0,size=len(vertices))
     hypothesis = namedtuple("hypothesis", "cost, state, predecessor, vertex")
-    initial_state = BitVector(bitlist=[0]*len(vertices))
     initial_hypothesis = hypothesis(0, initial_state, None, None)
     agenda = {}
     agenda[initial_state] = initial_hypothesis
@@ -138,40 +139,31 @@ def run_lopez_mfas_solver(vertices, di_edges):
         if h.state == goal:
             break
         del agenda[h.state]
-        for u in neighbors(goal, h.state):
+        print str(h.state),h.cost
+        print uncovered(h.state)
+        for u in uncovered(h.state):
             # Append u to create new hypothesis
             new_state = BitVector(intVal=int(h.state), size=len(vertices))
             new_state[u] = 1
             u_id = vertices[u]
             added_cost = 0
             # Sum up costs of outgoing edges from u
-            for v in neighbors(goal, new_state):
+            print ' ',uncovered(new_state)
+            for v in uncovered(new_state):
                 uv_edge = (u_id, vertices[v])
                 if uv_edge in di_edges:
                     added_cost += di_edges[uv_edge]
             new_cost = h.cost + added_cost
             if new_state not in agenda or agenda[new_state].cost > new_cost:
                 agenda[new_state] = hypothesis(new_cost, new_state, h, u_id)
-
+        
     # h is the goal. Extract the 1-best ranking.
     ranking = []
-    while h.state != initial_state:
+    while h.vertex:
         ranking.append(h.vertex)
         h = h.predecessor
 
-    # Sanity check
-    assert len(ranking) == len(vertices)
-    
-    # Setup the tie_with_prev vector according to the equality rankings
-    # in the graph
-    tie_with_prev = [False]*len(ranking)
-    for i in xrange(1,len(ranking)):
-        u = ranking[i-1]
-        v = ranking[i]
-        if ((u,v) in di_edges and di_edges[(u,v)] == 0) or ((v,u) in di_edges and di_edges[(v,u)] == 0) or (u,v) not in di_edges:
-            tie_with_prev[i] = True
-
-    return ranking,tie_with_prev
+    return ranking
 
 
 def make_rows(id_list, tie_with_prev):
@@ -195,6 +187,23 @@ def make_rows(id_list, tie_with_prev):
     return row_list
 
 
+def mark_ties(ranking, edges):
+    """ TODO(spenceg): This is naive! Transitivity
+    is not checked.
+
+    Args:
+    Returns:
+    Raises:
+    """
+    tie_with_prev = [False]*len(ranking)
+    for i in xrange(1,len(ranking)):
+        prev_v = ranking[i-1]
+        v = ranking[i]
+        if (prev_v,v) in edges and edges[(prev_v,v)] == 0:
+            tie_with_prev[i] = True
+    return tie_with_prev
+
+
 def sort_tgts(ranking_list, judge_weights):
     """ Use the ranking list to build a total ordering
     of the ranked translations (indicated by Ranking.sys{1,2}_id
@@ -203,8 +212,7 @@ def sort_tgts(ranking_list, judge_weights):
     Returns:
     Raises:
     """
-    # Build the weighted graph, which we will represent as
-    # a counter
+    # Aggregate ranking counts
     di_edges = Counter()
     eq_edges = Counter()
     edge_counts = Counter()
@@ -229,15 +237,41 @@ def sort_tgts(ranking_list, judge_weights):
         n_eq += eq_edges[(b,a)]
         total = edge_counts[(a,b)] + edge_counts[(b,a)]
         perc_eq = float(n_eq) / float(total)
-#        print perc_eq
         if perc_eq >= 0.5:
             di_edges[(a,b)] = 0
             di_edges[(b,a)] = 0
-    
+
+    # Filter edges by only allowing one directed edge between
+    # vertices. Edge weights are non-negative, and indicate
+    # victories.
+    tournament = Counter()
+    for (a,b) in di_edges.keys():
+        ab_cost = di_edges[(a,b)]
+        if (b,a) in di_edges:
+            ba_cost = di_edges[(b,a)]
+            cost_diff = ab_cost - ba_cost
+            if cost_diff > 0:
+                tournament[(a,b)] = cost_diff
+            elif cost_diff < 0:
+                tournament[(b,a)] = -1 * cost_diff
+        elif ab_cost > 0:
+            tournament[(a,b)] = ab_cost
+            
     # Generate the ranking
-    vertices,tie_with_prev = run_lopez_mfas_solver(list(vertices),
-                                                   di_edges)
-    return make_rows(vertices, tie_with_prev)
+    vertices = list(vertices)
+    #vertices = run_lopez_mfas_solver(tournament, vertices)
+    ranking = mfas_solver.lopez_solver(tournament, vertices)
+
+    # Sanity check
+    assert len(ranking) == len(vertices)
+
+    # Return a vector of Booleans identifying if
+    # the corresponding vertex is tied with the previous vertex.
+    # This is naive (and wrong) since transitivity cannot be asserted
+    # from the rankings.
+    tie_with_prev = mark_ties(ranking, di_edges)
+    
+    return make_rows(ranking, tie_with_prev)
 
 
 def rank(answer_file, src_lang, tgt_lang, do_non_expert):
@@ -269,7 +303,6 @@ def rank(answer_file, src_lang, tgt_lang, do_non_expert):
             row = row._replace(src_id=src_id)
             columns = [x for x in row._asdict().itervalues()]
             csv_out.writerow(columns)
-
 
 def main():
     desc='Converts the output of ans2csv.sh to a global ranking.'

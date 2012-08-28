@@ -17,7 +17,7 @@ import ptm_file_io
 from edit_distance import dameraulevenshtein
 
 # Output format
-TranslationAnovaRow = namedtuple('TranslationAnovaRow', 'time pause_mean pause_cnt event_cnt event_keyboard_cnt event_mouse_cnt event_focus_cnt event_browser_cnt src_id ui_id tgt_len user_id')
+TranslationAnovaRow = namedtuple('TranslationAnovaRow', 'time prev_time pause_mean pause_cnt event_cnt event_keyboard_cnt event_mouse_cnt event_focus_cnt event_browser_cnt src_id ui_id tgt_len user_id rank')
 
 # Event delay that indicates a pause (unit: ms)
 MAX_PAUSE_DURATION = 300
@@ -76,7 +76,7 @@ def get_edit_distances(tgt_segments, ref_segments):
     return edit_distances
 
 
-def get_rows(directory, user_id, ref_segments):
+def get_rows(directory, user_id, ref_segments, rankings):
     """
 
     Args:
@@ -109,7 +109,10 @@ def get_rows(directory, user_id, ref_segments):
         src_len = meta_rows[i].src_len
         tgt_len = meta_rows[i].tgt_len
         ui_id = meta_rows[i].ui_id
+        score = rankings[i][int(user_id)]
+        prev_time = time_list[i-1] if i>0 else 1
         row = TranslationAnovaRow(time=str(time_list[i]),
+                                  prev_time=str(prev_time),
                                   pause_mean=str(pause_means[i]),
                                   pause_cnt=str(pause_counts[i]),
                                   event_cnt=str(sum(event_counters[i].values())),
@@ -120,19 +123,22 @@ def get_rows(directory, user_id, ref_segments):
                                   src_id=str(i),
                                   ui_id=ui_id,
                                   tgt_len=tgt_len,
-                                  user_id=user_id)
+                                  user_id=user_id,
+                                  rank=str(score))
         output_row_list.append(row)
     
     return output_row_list
             
 
-def make_frame(directory, user_ids, out_prefix, ref_filename):
+def make_frame(directory, user_ids, out_prefix, ref_filename, ranking_file):
     """
 
     Args:
     Returns:
     Raises:
     """
+    rankings = ptm_file_io.load_ranking_file(ranking_file)
+    
     with codecs.open(ref_filename,encoding='utf-8') as ref_infile:
         ref_file = [x.strip() for x in ref_infile.readlines()]
     
@@ -142,7 +148,7 @@ def make_frame(directory, user_ids, out_prefix, ref_filename):
         csv_file = UnicodeWriter(out_file, quoting=csv.QUOTE_ALL)
         write_header = True
         for user_id in user_ids:
-            for row in get_rows(directory, user_id, ref_file):
+            for row in get_rows(directory, user_id, ref_file, rankings):
                 if write_header:
                     write_header = False
                     csv_file.writerow(list(row._fields))
@@ -155,6 +161,8 @@ def main():
                         help='Target reference for computing edit distance.')
     parser.add_argument('directory',
                         help='Language directory with translations')
+    parser.add_argument('ranking_file',
+                        help='Translations rankings from csv2ranking.py')
     parser.add_argument('-o', '--output_prefix',
                         dest='out_prefix',
                         default='trans_frame',
@@ -168,7 +176,10 @@ def main():
     args = parser.parse_args()
 
     user_ids = set(args.user_ids.split(',')) if args.user_ids else set()
-    make_frame(args.directory, user_ids, args.out_prefix,args.reference)
+    make_frame(args.directory, user_ids,
+               args.out_prefix,
+               args.reference,
+               args.ranking_file)
 
         
 if __name__ == '__main__':
