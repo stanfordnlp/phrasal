@@ -14,7 +14,7 @@ fi
 # Uncomment the line below to run locally 
 MEM=15g
 #EXEC=echo
-EXEC="nlpsub -m${MEM} -c4"
+EXEC="nlpsub -m${MEM} -c4 -pbackground"
 
 src_file=$1
 src_lang=$2
@@ -48,9 +48,7 @@ align=${JAVANLP_HOME}/projects/mt/scripts/align
 
 
 # Step 1: Split the bitext
-echo Counting the bitext and splitting if necessary...
-src_len=`$CAT1 ${src_file} | wc -l`
-echo Bitext size: $src_len lines
+echo Splitting the bitext...
 $CAT1 ${src_file} | split -l "$split_size" -d - split."$src_name".
 $CAT2 ${tgt_file} | split -l "$split_size" -d - split."$tgt_name".
 
