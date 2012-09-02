@@ -188,7 +188,7 @@ def get_user_row(root_dir, file_list, userdata):
     raise Exception('No relevent files at path: ' + root_dir)        
 
 
-def make_frame(profile_dir, user_data_file):
+def make_frame(profile_dir, user_data_file, user_id_list):
     """ Converts HTML in profile_dir, CSV in id_list_file, and
     CSV in user_data_file to an R data frame.
 
@@ -211,6 +211,8 @@ def make_frame(profile_dir, user_data_file):
     csv_file = UnicodeWriter(sys.stdout, quoting=csv.QUOTE_ALL)
     write_header = True
     for row in rows:
+        if user_id_list and row.user_id not in user_id_list:
+            continue
         if write_header:
             write_header = False
             csv_file.writerow(list(row._fields))
@@ -225,11 +227,18 @@ def main():
                         help='User profile directory.')
     parser.add_argument('user_data',
                         help='SQL dump of tm_userconf.')
+    parser.add_argument('-u','--uids',
+                        dest='user_ids',
+                        default=None,
+                        help='Comma-separated list of user ids to select.')
 
     args = parser.parse_args()
 
+    user_id_list = args.user_ids.split(',') if args.user_ids else []
+    
     make_frame(args.profile_dir,
-               args.user_data)
+               args.user_data,
+               user_id_list)
 
 if __name__ == '__main__':
     main()

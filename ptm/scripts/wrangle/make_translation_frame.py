@@ -17,10 +17,14 @@ import ptm_file_io
 from edit_distance import dameraulevenshtein
 
 # Output format
-TranslationAnovaRow = namedtuple('TranslationAnovaRow', 'time prev_time pause_mean pause_cnt event_cnt event_keyboard_cnt event_mouse_cnt event_focus_cnt event_browser_cnt src_id ui_id tgt_len user_id rank')
+TranslationAnovaRow = namedtuple('TranslationAnovaRow', 'time prev_time pause_mean pause_cnt pause_cnt1s event_cnt event_keyboard_cnt event_mouse_cnt event_focus_cnt event_browser_cnt src_id ui_id tgt_len user_id rank')
 
 # Event delay that indicates a pause (unit: ms)
-MAX_PAUSE_DURATION = 300
+# From Joort1996
+MIN_PAUSE_DURATION = 300
+
+# Duration used by Jakobsen1998 (Translog) and Krings2001
+MIN_PAUSE_DURATION2 = 1000
 
 def process_action_file(action_file):
     """
@@ -29,9 +33,10 @@ def process_action_file(action_file):
     Returns:
     Raises:
     """
-    global MAX_PAUSE_DURATION
+    global MIN_PAUSE_DURATION,MIN_PAUSE_DURATION2
     time_list = []
     pause_counts = Counter()
+    pause_counts2 = Counter()
     pause_means = []
     event_counters = defaultdict(Counter)
 
@@ -55,11 +60,13 @@ def process_action_file(action_file):
         else:
             event_counters[src_id][event_class] += 1
             pause_duration = event_time - last_event_time
-            if pause_duration > MAX_PAUSE_DURATION:
+            if pause_duration > MIN_PAUSE_DURATION:
                 pause_counts[src_id] += 1
                 durations += pause_duration
+            if pause_duration > MIN_PAUSE_DURATION2:
+                pause_counts2[src_id] += 1
             last_event_time = event_time
-    return time_list,pause_counts,pause_means,event_counters
+    return time_list,pause_counts,pause_counts2,pause_means,event_counters
 
 
 def get_edit_distances(tgt_segments, ref_segments):
@@ -98,7 +105,7 @@ def get_rows(directory, user_id, ref_segments, rankings):
     meta_rows = ptm_file_io.load_meta_file(meta_file)
 
     # Action log response variables
-    time_list,pause_counts,pause_means,event_counters = process_action_file(action_file)
+    time_list,pause_counts,pause_counts2,pause_means,event_counters = process_action_file(action_file)
 
     # Text clustering
     tgt_edist_list = get_edit_distances(tgt_segments, ref_segments)
@@ -115,6 +122,7 @@ def get_rows(directory, user_id, ref_segments, rankings):
                                   prev_time=str(prev_time),
                                   pause_mean=str(pause_means[i]),
                                   pause_cnt=str(pause_counts[i]),
+                                  pause_cnt1s=str(pause_counts2[i]),
                                   event_cnt=str(sum(event_counters[i].values())),
                                   event_keyboard_cnt=str(event_counters[i]['keyboard']),
                                   event_mouse_cnt=str(event_counters[i]['mouse']),

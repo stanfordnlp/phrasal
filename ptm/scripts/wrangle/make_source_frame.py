@@ -99,7 +99,7 @@ def main():
     parser.add_argument('sentence_data',
                         help='Sentence level data from SourceTextAnalysis.')
     parser.add_argument('vocab_counts',
-                        help='Directory counting counts files for computing lexical frequency.')
+                        help='Directory containing counts files for computing lexical frequency (generated with giga_vocab.sh).')
     args = parser.parse_args()
 
     make_frame(args.token_data, args.sentence_data,
