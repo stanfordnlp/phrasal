@@ -79,7 +79,7 @@ def load_meta_file(filename):
 #
 # Action log event format
 #
-Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok x y key keytype button src_len time_norm ui_id')
+Event = namedtuple('Event', 'sourceid userid time event_name event_class device target src_tok src_tok_id x y key keytype button src_len time_norm ui_id')
 
 def load_actionlog_events(filename):
     """

@@ -414,7 +414,7 @@ if (isContrastive) contrastiveAIDs.add(AID);
 
         } else { // task HIT by a filtered AID
           // do nothing
-	  System.err.println("Filtering: " + AID);
+	  // System.err.println("Filtering: " + AID);
         }
 
         line = inFile.readLine();

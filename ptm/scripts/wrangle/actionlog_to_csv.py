@@ -61,6 +61,7 @@ def read_srcdoc(filename):
     Returns:
     Raises:
     """
+    global src_doc
     src_doc = []
     with codecs.open(filename,encoding='utf-8') as in_file:
         src_doc = [x.strip().split() for x in in_file.readlines()]
@@ -73,18 +74,19 @@ def map_css_id(css_id, src_id):
     Returns:
     Raises:
     """
+    global src_doc
     if css_id.startswith('src-tok'):
         src_tok_id = re.search('(\d+)', css_id)
         src_tok_id = int(src_tok_id.group(1))
         if src_tok_id < len(src_doc[src_id]):
-            return ('token', src_doc[src_id][src_tok_id])
+            return ('token', src_doc[src_id][src_tok_id], src_tok_id)
         else:
             sys.stderr.write('WARNING: src-tok out of bounds src: %d tok-id: %d%s' % (src_id, src_tok_id, os.linesep))
-            return (css_id, '')
+            return (css_id, '', '')
     elif css_id_to_str.has_key(css_id):
-        return (css_id_to_str[css_id], '')
+        return (css_id_to_str[css_id], '', '')
     else:
-        return (css_id, '')
+        return (css_id, '', '')
 
 def get_device_for_event_class(event_class):
     """
@@ -212,7 +214,7 @@ def filter_events(event_list, user_id, line_id, ui_id):
         # Process the payload
         payload = create_payload(e_toks[2:], line_id)
         (e_keycode,e_keytype) = payload.get('k', ('',''))
-        (e_id,e_token) = payload.get('id', ('',''))
+        (e_id,e_token,e_src_id) = payload.get('id', ('','',''))
         e_x = payload.get('x','')
         e_y = payload.get('y','')
         eclass = event_to_class[e_type]
@@ -231,6 +233,7 @@ def filter_events(event_list, user_id, line_id, ui_id):
                       x=e_x,
                       y=e_y,
                       src_tok=e_token,
+                      src_tok_id=str(e_src_id),
                       keytype=e_keytype,
                       key=e_keycode if device == 'keyboard' else '',
                       button=e_keycode if device == 'mouse' else '')
@@ -285,11 +288,13 @@ def main():
     desc='Convert an actionlog file to CSV for Tableau import'
     parser=ArgumentParser(description=desc)
     parser.add_argument('-l','--log_files',
+                        metavar='filename',
                         dest='logfiles',
                         nargs='+',
                         required=True,
                         help='Action log file.')
     parser.add_argument('-m','--meta',
+                        metavar='filename',
                         dest='metafiles',
                         nargs='+',
                         required=True,

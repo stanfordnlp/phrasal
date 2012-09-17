@@ -38,6 +38,6 @@ with open(rank_file) as infile:
 
 print 'src_id\tsystems\tcount'
 for (u,v,src_id),count in rank_counter.iteritems():
-    if count != 3:
+    if count < 3:
         print '%d\t%d-%d\t%d' % (src_id,u,v,count)
 
