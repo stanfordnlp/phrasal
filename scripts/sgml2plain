@@ -1,3 +1,0 @@
-#!/bin/bash
-
-ruby -w /u/nlp/data/gale/bin/sgml-to-text.rb
