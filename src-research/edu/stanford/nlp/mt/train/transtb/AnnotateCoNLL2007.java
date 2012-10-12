@@ -17,24 +17,28 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 /**
  * Reads in a CoNLL2007 file and annotate it with features extracted from
  * parallel treebank.
- * 
+ *
  * The input CoNLL2007 file contains target-language dependency structure, and
- * source-langage structure is read from penn trees passed as argument. Word
+ * source-language structure is read from penn trees passed as argument. Word
  * alignments must also be passed as argument.
- * 
- * Current assumpution: source-language is Chinese; all input files besides the
+ *
+ * Current assumption: source-language is Chinese; all input files besides the
  * CoNLL file contain one sentence per line (no multi-line parses!).
- * 
+ *
  * @author Michel Galley
  */
 public class AnnotateCoNLL2007 {
 
   private static final boolean DEBUG = false;
 
+
+  private AnnotateCoNLL2007() {
+  }
+
   // public static final boolean FWORDS =
   // Boolean.parseBoolean(System.getProperty("fWords","false"));
 
-  static void usage() {
+  private static void usage() {
     System.err
         .println("Usage: AnnotateCoNLL2007 (conll file) (target-sentences) (source-sentences) (source-trees) (source-target alignments) (headfinder)");
     System.exit(1);
@@ -44,14 +48,14 @@ public class AnnotateCoNLL2007 {
    * Dumps aligned trees. If no argument is provided, dump to an HTML page. If
    * file base name is provided, dump source-language treebank to base_name.f,
    * target-language treebank to base_name.e, and alignment to base_name.a.
-   * 
+   *
    * @param args
    *          Optional argument
    * @throws Exception
    *           ??
    */
   @SuppressWarnings("unchecked")
-  public static void main(String args[]) throws Exception {
+  public static void main(String[] args) throws Exception {
 
     if (args.length != 8)
       usage();
