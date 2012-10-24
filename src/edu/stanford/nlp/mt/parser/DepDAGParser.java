@@ -497,7 +497,7 @@ public class DepDAGParser implements Parser, Serializable {
       System.out.printf("Total elapsed time: %.3f seconds\n", (elapsedTime / 1000F));
 
       logger.info("scoring...");
-      DependencyScoring goldScorer = DependencyScoring.newInstanceStringEquality(goldDeps);
+      DependencyScoring goldScorer = DependencyScoring.newInstanceStringEquality(goldDeps, false);
       Score score = goldScorer.score(DependencyScoring.convertStringEquality(systemDeps));
       logger.info(score.toString());
       logger.info("done");
