@@ -20,9 +20,9 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 /**
  * Implements the oracle smooth BLEU metric of Watanabe et al. (2007) with
  * extensions described in Chiang (2012).
- * 
+ *
  * The underlying incremental metric is thread-safe.
- *  
+ *
  * @author Spence Green
  *
  * @param <TK>
@@ -38,11 +38,11 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
   public BLEUOracleMetric(List<List<Sequence<TK>>> referencesList) {
     super(referencesList);
   }
-  
+
   public BLEUOracleMetric(List<List<Sequence<TK>>> referencesList, int order) {
     super(referencesList, order);
   }
-  
+
   @Override
   public BLEUIncrementalMetric getIncrementalMetric(
       NBestListContainer<TK, FV> nbestList) {
@@ -63,9 +63,9 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
    * This metric is intended to be used only for sentence-level, smoothed BLEU
    * scores. The document level methods such as add() and score() will throw
    * an exception.
-   * 
+   *
    * The method to use is smoothScore().
-   * 
+   *
    * @author Spence Green
    *
    */
@@ -77,10 +77,10 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
     private final double[] pseudoM;
     private final double[] pseudoN;
     private double pseudoRho;
-    
+
     // Convenience data structure for computing the loss
     private final double[] NULL_COUNTS;
-    
+
     public BLEUOracleIncrementalMetric(
         BLEUOracleIncrementalMetric otherMetric) {
       this(otherMetric.pseudoM.length);
@@ -99,7 +99,7 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
       pseudoN = new double[order];
       pseudoRho = 0.0;
       NULL_COUNTS = new double[order];
-      
+
       initializePseudoCounts();
     }
 
@@ -121,27 +121,27 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
     /**
      * Compute the sentence-level BLEU-based loss according to Chiang (2012).
      * This is a threadsafe call.
-     * 
+     *
      * Note that this score can be negative. In that case, it will be clamped to 0
      * by the hinge loss.
-     * 
+     *
      * @param trans
      * @param nbestId
      * @return
      */
     public double smoothScore(Sequence<TK> trans, int nbestId) {
       assert nbestId >= 0 && nbestId < maxReferenceCounts.size();
-      
+
       // Extract n-grams
       final Map<Sequence<TK>, Integer> maxRefCounts = maxReferenceCounts.get(nbestId);
       final Map<Sequence<TK>, Integer> hypCounts = Metrics.getNGramCounts(trans, order);
-      
+
       // Calculate the BLEU statistics for this example
       final double[] m = new double[order];
       final double[] n = new double[order];
       // Rho should be the minimum reference length
       final double rho = ArrayMath.min(refLengths[nbestId]);
-      
+
       for (Sequence<TK> ngram : hypCounts.keySet()) {
         double hypCount = hypCounts.get(ngram);
         double refCount = maxRefCounts.containsKey(ngram) ? maxRefCounts.get(ngram) : 0.0;
@@ -149,9 +149,9 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
         m[ngram.size()-1] += thisM;
         n[ngram.size()-1] += hypCount;
       }
-      
+
       // Compute BLEU
-      double score = 0.0;
+      double score;
       synchronized(this) {
         score = pseudoBLEU(m, n, rho) - pseudoBLEU(NULL_COUNTS, NULL_COUNTS, 0.0);
         score *= pseudoN[0];
@@ -159,10 +159,10 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
       }
       return score;
     }
-    
+
     /**
      * Update the pseudo counts according to an exponential moving average.
-     * 
+     *
      * @param m
      * @param n
      * @param rho
@@ -178,7 +178,7 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
 
     /**
      * Compute smoothed BLEU according to Lin and Och (2004).
-     * 
+     *
      * @param m
      * @param n
      * @param rho
@@ -197,13 +197,13 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
       score = Math.exp(score);
       return score;
     }
-    
+
     @Override
     public Object clone() throws CloneNotSupportedException {
       super.clone();
       return new BLEUOracleIncrementalMetric(this);
     }
-    
+
     @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
@@ -252,8 +252,8 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
     public double brevityPenalty() {
       throw new UnsupportedOperationException();
     }
-  }  
-  
+  }
+
   /**
    * @param args
    */
@@ -261,23 +261,23 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
   public static void main(String[] args) {
     if (args.length < 2) {
       System.err.printf("java %s order ref1 [ref] < translations%n", BLEUOracleMetric.class.getName());
-      System.exit(-1);
+      return;
     }
-    
+
     final int order = Integer.parseInt(args[0]);
     // WSGDEBUG
     String debugFilename = args[1];
     String[] newArgs = new String[args.length - 2];
     System.arraycopy(args, 2, newArgs, 0, args.length - 2);
-    
+
 //    String[] newArgs = new String[args.length - 1];
 //    System.arraycopy(args, 1, newArgs, 0, args.length - 1);
-    
-    
+
+
     try {
       List<List<Sequence<IString>>> referencesList = Metrics.readReferences(newArgs);
       BLEUOracleMetric<IString,String> metric = new BLEUOracleMetric<IString,String>(referencesList, order);
-      BLEUOracleMetric<IString,String>.BLEUOracleIncrementalMetric imetric = (BLEUOracleMetric<IString,String>.BLEUOracleIncrementalMetric) metric.getIncrementalMetric();
+      BLEUOracleMetric<IString,String>.BLEUOracleIncrementalMetric imetric = (BLEUOracleMetric.BLEUOracleIncrementalMetric) metric.getIncrementalMetric();
 //      BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       // WSGDEBUG
       BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(debugFilename)));
@@ -290,7 +290,7 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
         System.out.printf("%d\t%.4f%n", lineId, score);
       }
       reader.close();
-      
+
     } catch (IOException e) {
       e.printStackTrace();
     }
