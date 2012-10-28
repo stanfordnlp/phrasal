@@ -208,35 +208,15 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     for (int listI = 0; listI < listSz; listI++) {
       List<Sequence<TK>> references = referencesList.get(listI);
 
-      int refsSz = references.size();
-      if (refsSz == 0) {
-        throw new RuntimeException(String.format(
-            "No references found for data point: %d\n", listI));
-      }
-
-      refLengths[listI] = new int[refsSz];
-      // TODO
       Map<Sequence<TK>, Integer> maxReferenceCount = Metrics.getMaxNGramCounts(
           references, order);
-      /*
-       * for (Sequence<TK> ngram : maxReferenceCount.keySet()) {
-       * System.out.printf("%s : %d\n", ngram, maxReferenceCount.get(ngram)); }
-       */
       maxReferenceCounts.add(maxReferenceCount);
-      refLengths[listI][0] = references.get(0).size();
-
-      for (int refI = 1; refI < refsSz; refI++) {
-        refLengths[listI][refI] = references.get(refI).size();
-        Map<Sequence<TK>, Integer> altCounts = Metrics.getNGramCounts(
-            references.get(refI), order);
-        for (Sequence<TK> sequence : new HashSet<Sequence<TK>>(
-            altCounts.keySet())) {
-          Integer cnt = maxReferenceCount.get(sequence);
-          Integer altCnt = altCounts.get(sequence);
-          if (cnt == null || cnt.compareTo(altCnt) < 0) {
-            maxReferenceCount.put(sequence, altCnt);
-          }
-        }
+      
+      int refsSz = references.size();
+      assert refsSz > 0;
+      refLengths[listI] = new int[refsSz];
+      for (int j = 0; j < refsSz; ++j) {
+        refLengths[listI][j] = references.get(j).size();
       }
     }
   }
@@ -252,10 +232,6 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     return new BLEUIncrementalMetric(nbestList);
   }
 
-  /**
-   *
-   */
-
   @Override
   public RecombinationFilter<IncrementalEvaluationMetric<TK, FV>> getIncrementalMetricRecombinationFilter() {
     return new BLEUIncrementalMetricRecombinationFilter<TK, FV>();
@@ -267,7 +243,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       NgramPrecisionIncrementalMetric<TK, FV>,
       IncrementalNBestEvaluationMetric<TK, FV> {
     private final int id = maxIncrementalId++;
-    final List<Sequence<TK>> sequences;
+    protected List<Sequence<TK>> sequences;
     double smoothSum = 0;
     int smoothCnt = 0;
     final int[] matchCounts = new int[order];
@@ -735,9 +711,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
         System.in));
 
     for (String line; (line = reader.readLine()) != null; ) {
-      line = NISTTokenizer.tokenize(line);
-      line = line.replaceAll("\\s+$", "");
-      line = line.replaceAll("^\\s+", "");
+      line = NISTTokenizer.tokenize(line).trim();
       Sequence<IString> translation = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(

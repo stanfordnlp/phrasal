@@ -54,8 +54,11 @@ public class Metrics {
   }
 
   /**
+   * Compute maximum n-gram counts from one or more sequences.
    * 
-   * @param <TK>
+   * @param sequences - The list of sequences.
+   * @param maxOrder - The n-gram order.
+   * @return
    */
   static public <TK> Map<Sequence<TK>, Integer> getMaxNGramCounts(
       List<Sequence<TK>> sequences, int maxOrder) {
@@ -65,11 +68,10 @@ public class Metrics {
       Map<Sequence<TK>, Integer> counts = getNGramCounts(sequence, maxOrder);
       for (Map.Entry<Sequence<TK>, Integer> sequenceIntegerEntry : counts
           .entrySet()) {
-        Integer countValue = sequenceIntegerEntry.getValue();
-        Integer maxCountValue = maxCounts.get(sequenceIntegerEntry.getKey());
-        if (maxCountValue == null || maxCountValue.compareTo(countValue) < 0) {
-          maxCounts.put(sequenceIntegerEntry.getKey(), countValue);
-        }
+        Sequence<TK> ngram = sequenceIntegerEntry.getKey();
+        int countValue = sequenceIntegerEntry.getValue();
+        int currentMax = maxCounts.containsKey(ngram) ? maxCounts.get(ngram) : 0;
+        maxCounts.put(ngram, Math.max(countValue, currentMax));
       }
     }
     return maxCounts;

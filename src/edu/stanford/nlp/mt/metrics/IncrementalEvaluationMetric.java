@@ -4,6 +4,8 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.State;
 
 /**
+ * A metric that returns a score based on the current point in the evaluation
+ * set. score() will return the metric value based on the most recent add().
  * 
  * @author danielcer
  * 

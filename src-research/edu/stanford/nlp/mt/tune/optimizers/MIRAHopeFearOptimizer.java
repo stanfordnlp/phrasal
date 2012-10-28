@@ -83,13 +83,8 @@ public class MIRAHopeFearOptimizer extends AbstractNBestOptimizer {
       }
     }
     
-    double weightsDiff = Counters.L1Norm(Counters.diff(wts, initialWts));
-    double metricEval = MERT.evalAtPoint(nbest, wts, emetric);
-    System.err.printf("Eval Score: %e Weights diff: %e%n", metricEval, weightsDiff);
-    
     // TODO(spenceg): Implement IPM reporting here. Each shard should report back its weights
     // vector, and these should be averaged to obtain the next starting point.
-    MERT.updateBest(wts, metricEval, true);
     
     return wts;
   }
