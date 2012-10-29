@@ -1,20 +1,17 @@
 package edu.stanford.nlp.mt.tune;
 
-
+import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 import edu.stanford.nlp.mt.tune.optimizers.BasicPowellOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.CerStyleOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.DownhillSimplexOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.KoehnStyleOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.LineSearchOptimizer;
+import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.PowellOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.SequenceOptimizer;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-
-
 
 /**
  * @author Daniel Cer
@@ -47,6 +44,8 @@ public class NBestOptimizerFactory {
       return new PowellOptimizer(mert);
     } else if (name.startsWith("simplex")) {
       return new DownhillSimplexOptimizer(mert);
+    } else if (name.startsWith("pro")) {
+      return new PairwiseRankingOptimizer(mert);
     } else if (name.equalsIgnoreCase("length")) {
       return new LineSearchOptimizer(mert);
     } else {
