@@ -265,22 +265,14 @@ public class BLEUOracleMetric<TK,FV> extends BLEUMetric<TK, FV> {
     }
 
     final int order = Integer.parseInt(args[0]);
-    // WSGDEBUG
-    String debugFilename = args[1];
-    String[] newArgs = new String[args.length - 2];
-    System.arraycopy(args, 2, newArgs, 0, args.length - 2);
-
-//    String[] newArgs = new String[args.length - 1];
-//    System.arraycopy(args, 1, newArgs, 0, args.length - 1);
-
+    String[] newArgs = new String[args.length - 1];
+    System.arraycopy(args, 1, newArgs, 0, args.length - 1);
 
     try {
       List<List<Sequence<IString>>> referencesList = Metrics.readReferences(newArgs);
       BLEUOracleMetric<IString,String> metric = new BLEUOracleMetric<IString,String>(referencesList, order);
       BLEUOracleMetric<IString,String>.BLEUOracleIncrementalMetric imetric = (BLEUOracleMetric.BLEUOracleIncrementalMetric) metric.getIncrementalMetric();
-//      BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-      // WSGDEBUG
-      BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(debugFilename)));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       int lineId = 0;
       for (String line; (line = reader.readLine()) != null; ++lineId) {
         line = NISTTokenizer.tokenize(line).trim();
