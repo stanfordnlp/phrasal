@@ -539,9 +539,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 .get(startPos, endPos);
             if (applicableOptions == null)
               continue;
-            if (DEBUG)
-              System.err.printf("options for (%d to %d): %d\n", startPos,
-                endPos, applicableOptions.size());
 
             for (ConcreteTranslationOption<TK> option : applicableOptions) {
               // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
