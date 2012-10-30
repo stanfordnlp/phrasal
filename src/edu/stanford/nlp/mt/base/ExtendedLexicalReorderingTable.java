@@ -313,7 +313,7 @@ public class ExtendedLexicalReorderingTable {
       int scoreId = 0;
       for (String score : scoreList) {
         try {
-          scores[scoreId++] = (float) Math.log(Double.parseDouble(score));
+          scores[scoreId++] = (float) Double.parseDouble(score);
         } catch (NumberFormatException e) {
           throw new RuntimeException(String.format(
               "Can't parse %s as a number (line %d)\n", score,
