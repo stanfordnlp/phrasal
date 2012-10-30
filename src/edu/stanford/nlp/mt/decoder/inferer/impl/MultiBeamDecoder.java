@@ -471,12 +471,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           continue;
         if (hyp == null)
           continue;
-        if (DEBUG)
-          System.err.printf("\nExpanding hyp: %s\n", hyp);
         int localOptionsApplied = 0;
         int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
-        if (DEBUG)
-          System.err.printf("Start position: %d\n", firstCoverageGap);
         int priorStartPos = (hyp.featurizable == null ? 0
             : hyp.featurizable.foreignPosition);
         int priorEndPos = (hyp.featurizable == null ? 0
