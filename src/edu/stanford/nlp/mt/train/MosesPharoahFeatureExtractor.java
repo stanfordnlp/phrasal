@@ -40,7 +40,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
       lexFilter = DEFAULT_LEX_FILTER;
   protected boolean ibmLexModel = false, onlyPhi = false;
   protected boolean usePmi, normalizePmi = false;
-  protected boolean doLog = true;
   protected int numPasses = 1;
 
   protected final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
@@ -87,8 +86,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     usePmi = prop.getProperty(PhraseExtract.USE_PMI, "false").equals(
         "true");
     normalizePmi = prop.getProperty(PhraseExtract.NORMALIZE_PMI, "false").equals(
-        "true");
-    doLog = prop.getProperty(PhraseExtract.DO_LOG_PHAROAH_SCORES, "true").equals(
         "true");
     // Filtering:
     phiFilter = Double.parseDouble(prop.getProperty(
@@ -226,12 +223,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     if (lexFilter > lex_e_f)
       return null;
 
-    if (doLog) {
-      phi_f_e = Math.log(phi_f_e);
-      phi_e_f = Math.log(phi_e_f);
-      lex_f_e = Math.log(lex_f_e);
-      lex_e_f = Math.log(lex_e_f);
-    }
     if (PRINT_COUNTS) {
       // -- Additional info for debugging purposes:
       return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen,

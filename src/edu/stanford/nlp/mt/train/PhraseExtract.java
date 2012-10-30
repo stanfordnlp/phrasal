@@ -44,8 +44,6 @@ import java.text.SimpleDateFormat;
 
 import edu.stanford.nlp.mt.base.IOTools;
 
-import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
-
 /**
  * Combines multiple phrase-level feature extractors into one, and prints their
  * outputs to STDOUT.
@@ -93,7 +91,6 @@ public class PhraseExtract {
   static public final String IBM_LEX_MODEL_OPT = "ibmLexModel";
   static public final String USE_PMI = "usePmi";
   static public final String NORMALIZE_PMI = "normalizePmi";
-  static public final String DO_LOG_PHAROAH_SCORES = "DoLogPharoahScores";
   static public final String ONLY_ML_OPT = "onlyML";
   static public final String PTABLE_PHI_FILTER_OPT = "phiFilter"; // p_phi(e|f)
                                                                   // filtering
@@ -146,7 +143,6 @@ public class PhraseExtract {
         DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
         USE_PMI,
         NORMALIZE_PMI,
-        DO_LOG_PHAROAH_SCORES,
         FILTER_CENTERDOT_OPT,
         WITH_POS_OPT));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
@@ -714,24 +710,14 @@ public class PhraseExtract {
         if (scores instanceof float[]) { // as dense vector
           float[] scoreArray = (float[]) scores;
           for (float aScoreArray : scoreArray) {
+            aScoreArray = (aScoreArray > 0.0) ? (float) Math.log(aScoreArray) : aScoreArray;
             str.append(aScoreArray).append(" ");
           }
         } else if (scores instanceof double[]) {
           double[] scoreArray = (double[]) scores;
           for (double aScoreArray : scoreArray) {
+            aScoreArray = (aScoreArray > 0.0) ? Math.log(aScoreArray) : aScoreArray;
             str.append((float) aScoreArray).append(" ");
-          }
-        } else if (scores.getClass().equals(Int2IntLinkedOpenHashMap.class)) { // as
-                                                                               // sparse
-                                                                               // vector
-          Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;
-          for (int fIdx : counter.keySet()) {
-            int cnt = counter.get(fIdx);
-            int minCount = 1;
-            if (cnt >= minCount) {
-              str.append(printFeatureNames ? featureIndex.get(fIdx) : fIdx);
-              str.append("=").append(cnt).append(" ");
-            }
           }
         } else {
           throw new UnsupportedOperationException(
