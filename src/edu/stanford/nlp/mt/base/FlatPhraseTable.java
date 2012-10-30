@@ -77,6 +77,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   public final ArrayList<List<IntArrayTranslationOption>> translations;
 
+  /**
+   * Convert rule scores from string to a numeric array.
+   * 
+   * @param sList
+   * @return
+   */
   private static float[] stringProbListToFloatProbArray(List<String> sList) {
     float[] fArray = new float[sList.size()];
     int i = 0;
@@ -87,8 +93,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, f));
       }
-
-      float newF =  (f <= 0 ? f : (float) Math.log(f));
+      float newF = f;
+//      float newF =  (f <= 0 ? f : (float) Math.log(f));
 
       if (Float.isNaN(newF)) {
         throw new RuntimeException(String.format(
