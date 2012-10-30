@@ -330,7 +330,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements
 
     // path feature
     StringBuilder path = new StringBuilder("PATH:");
-    if (!pathMap.entrySet().isEmpty()) {
+    if (!pathMap.isEmpty()) {
       for (int J = j; J < j + lenC; J++) {
         for (int J2 = j2; J2 < j2 + lenC2; J2++) {
           path.append(DepUtils.getPathName(J, J2, pathMap));
