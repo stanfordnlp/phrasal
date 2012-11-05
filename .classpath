@@ -46,7 +46,5 @@
 	<classpathentry kind="lib" path="lib/guava-11.0.2.jar"/>
 	<classpathentry kind="lib" path="lib-research/pinyin4j-2.5.0.jar" sourcepath="libsrc/pinyin4j-2.5.0.zip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
-	<classpathentry kind="lib" path="lib-research/commons-cli-1.2.jar"/>
-	<classpathentry kind="lib" path="lib-research/commons-io-2.4.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
