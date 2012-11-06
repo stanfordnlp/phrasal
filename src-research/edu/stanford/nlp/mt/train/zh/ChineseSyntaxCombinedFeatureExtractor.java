@@ -584,18 +584,8 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         if (scores instanceof double[]) { // as dense vector
           double[] scoreArray = (double[]) scores;
           for (double aScoreArray : scoreArray) {
+            aScoreArray = (aScoreArray > 0.0) ? Math.log(aScoreArray) : aScoreArray;
             str.append(aScoreArray).append("\t");
-          }
-        } else if (scores instanceof Int2IntLinkedOpenHashMap) { // as sparse
-                                                                 // vector
-          Int2IntLinkedOpenHashMap counter = (Int2IntLinkedOpenHashMap) scores;
-          for (int fIdx : counter.keySet()) {
-            int cnt = counter.get(fIdx);
-            int minCount = 1;
-            if (cnt >= minCount) {
-              str.append(printFeatureNames ? featureIndex.get(fIdx) : fIdx);
-              str.append("=").append(cnt).append(" ");
-            }
           }
         } else {
           throw new UnsupportedOperationException(
