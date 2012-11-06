@@ -50,7 +50,7 @@ public class MarkovFeatureExtractor extends AbstractFeatureExtractor {
     // Find head:
     AlignmentTreeNode h = (AlignmentTreeNode) hf.determineHead(n);
     if (h != null && !h.emptySpan()) {
-      int hIdx = n.indexOf(h);
+      int hIdx = n.objectIndexOf(h);
       int h1 = h.getLowFSpan(), h2 = h.getHighFSpan();
       for (int i = hIdx - 1; i >= 0; --i) {
         AlignmentTreeNode l = children[i];
