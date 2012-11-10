@@ -34,7 +34,7 @@ CDEC_PATH=/home/rayder441/sandbox/cdec/
 # Whitespace and newline normalizer
 # Do this externally to guard against any differences between
 # the underlying tokenizers.
-SCRIPT_DIR=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
+SCRIPT_DIR=${JAVANLP_HOME}/projects/mt/scripts-private
 
 if [ $filter == "clean" ]; then
     fixnl=${SCRIPT_DIR}/cleanup_txt.py
