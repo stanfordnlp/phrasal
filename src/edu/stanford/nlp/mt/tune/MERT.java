@@ -37,7 +37,6 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Pair;
 
@@ -656,61 +655,6 @@ public class MERT extends Thread {
     return score;
   }
 
-  public static Counter<String> readWeights(String filename,
-      Index<String> featureIndex) throws IOException, ClassNotFoundException {
-    if (filename.endsWith(".binwts")) {
-      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
-          filename));
-      @SuppressWarnings("unchecked")
-      Counter<String> wts = (Counter<String>) ois.readObject();
-      ois.close();
-      return wts;
-    } else {
-      BufferedReader reader = new BufferedReader(new FileReader(filename));
-      Counter<String> wts = new ClassicCounter<String>();
-      for (String line = reader.readLine(); line != null; line = reader
-          .readLine()) {
-        String[] fields = line.split("\\s+");
-        if (featureIndex != null)
-          featureIndex.indexOf(fields[0], true);
-        wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
-      }
-      reader.close();
-      return wts;
-    }
-  }
-
-  static void writeWeights(String filename, Counter<String> wts) {
-    try {
-      if (filename.endsWith(".binwts")) {
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
-            filename));
-        oos.writeObject(wts);
-        oos.close();
-      } else {
-        Counters.saveCounter(wts, filename);
-//      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-//          new FileOutputStream(filename), "UTF8"));
-//      Counter<String> wtsMag = new ClassicCounter<String>();
-//      for (String w : wts.keySet()) {
-//        wtsMag.setCount(w, Math.abs(wts.getCount(w)));
-//      }
-//
-//      for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
-//        double cnt = wts.getCount(f);
-//        if (cnt != 0.0)
-//          writer.append(f).append(" ").append(Double.toString(cnt))
-//              .append("\n");
-//      }
-//      writer.close();
-      }
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
   static void displayWeights(Counter<String> wts) {
 
     List<Pair<String,Double>> wtsList = Counters.toDescendingMagnitudeSortedListWithCounts(wts);
@@ -782,7 +726,7 @@ public class MERT extends Thread {
     // Load weight files:
     previousWts = new ArrayList<Counter<String>>();
     for (String previousWtsFile : previousWtsFiles.split(","))
-      previousWts.add(removeWts(readWeights(previousWtsFile, featureIndex),
+      previousWts.add(removeWts(IOTools.readWeights(previousWtsFile, featureIndex),
           fixedWts));
     initialWts = previousWts.get(0);
 
@@ -1090,7 +1034,7 @@ public class MERT extends Thread {
 
     displayWeights(bestWts);
     System.out.printf("wts ssd: %e\n", wtSsd);
-    writeWeights(finalWtsFile, bestWts);
+    IOTools.writeWeights(finalWtsFile, bestWts);
   }
 
   public static void main(String[] args) throws Exception {
@@ -1127,7 +1071,7 @@ public class MERT extends Thread {
       } else if (arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
         try {
-          fixedWts.addAll(readWeights(fixedWtsFile, featureIndex));
+          fixedWts.addAll(IOTools.readWeights(fixedWtsFile, featureIndex));
         } catch (IOException e) {
           System.err.println("Fixed weight file missing: " + fixedWtsFile);
           fixedWts = null;

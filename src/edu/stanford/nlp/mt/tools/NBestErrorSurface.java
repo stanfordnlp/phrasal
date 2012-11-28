@@ -6,6 +6,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.Counter;
 
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
@@ -42,7 +43,7 @@ public class NBestErrorSurface {
     EvaluationMetric<IString, String> eval = MetricFactory.metric(evalMetricFn,
         refsFn);
     FlatNBestList nbest = new FlatNBestList(nbestFn, featureIndex);
-    Counter<String> wts = MERT.readWeights(weightsFn, featureIndex);
+    Counter<String> wts = IOTools.readWeights(weightsFn, featureIndex);
     String feature1Name = feature1Field.split("\\|\\|\\|")[0];
     String feature2Name = feature2Field.split("\\|\\|\\|")[0];
     double feature1Min = Double.parseDouble(feature1Field.split("\\|\\|\\|")[1]

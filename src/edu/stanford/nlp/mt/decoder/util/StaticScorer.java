@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
 import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.tune.MERT;
+import edu.stanford.nlp.mt.base.IOTools;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
@@ -29,7 +29,7 @@ public class StaticScorer implements Scorer<String> {
     this.sharedFeatureIndex = false;
     this.featureIndex = new OAIndex<String>();
     try {
-      Counter<String> wts = MERT.readWeights(filename, featureIndex);
+      Counter<String> wts = IOTools.readWeights(filename, featureIndex);
       updateWeights(wts);
     } catch (IOException e) {
       e.printStackTrace();

@@ -6,6 +6,11 @@ import java.util.regex.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.Index;
+
 /**
  *
  * @author danielcer
@@ -18,10 +23,8 @@ public class IOTools {
     List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
 
     for (String inline; (inline = reader.readLine()) != null;) {
-      inline = inline.replaceAll("\\s+$", "");
-      inline = inline.replaceAll("^\\s+", "");
       Sequence<IString> seq = new RawSequence<IString>(
-          IStrings.toIStringArray(inline.split("\\s+")));
+          IStrings.toIStringArray(inline.trim().split("\\s+")));
       sequences.add(seq);
     }
     reader.close();
@@ -38,9 +41,7 @@ public class IOTools {
     BufferedReader reader = new BufferedReader(new FileReader(filename));
 
     for (String inline; (inline = reader.readLine()) != null;) {
-      inline = inline.replaceAll("\\s+$", "");
-      inline = inline.replaceAll("^\\s+", "");
-      IString w = new IString(inline);
+      IString w = new IString(inline.trim());
       set.add(w);
     }
     reader.close();
@@ -112,5 +113,60 @@ public class IOTools {
     }
     reader.close();
   }
-  
+
+  /**
+   * Read weights from a file. Supports both binary and text formats.
+   * 
+   * @param filename
+   * @param featureIndex
+   * @return
+   * @throws IOException
+   * @throws ClassNotFoundException
+   */
+  public static Counter<String> readWeights(String filename,
+      Index<String> featureIndex) throws IOException, ClassNotFoundException {
+    if (filename.endsWith(".binwts")) {
+      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
+          filename));
+      @SuppressWarnings("unchecked")
+      Counter<String> wts = (Counter<String>) ois.readObject();
+      ois.close();
+      return wts;
+    } else {
+      BufferedReader reader = new BufferedReader(new FileReader(filename));
+      Counter<String> wts = new ClassicCounter<String>();
+      for (String line = reader.readLine(); line != null; line = reader
+          .readLine()) {
+        String[] fields = line.split("\\s+");
+        if (featureIndex != null)
+          featureIndex.indexOf(fields[0], true);
+        wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
+      }
+      reader.close();
+      return wts;
+    }
+  }
+
+  /**
+   * Write weights to a file. Supports both binary and text formats.
+   * 
+   * @param filename
+   * @param wts
+   */
+  public static void writeWeights(String filename, Counter<String> wts) {
+      try {
+        if (filename.endsWith(".binwts")) {
+          ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
+              filename));
+          oos.writeObject(wts);
+          oos.close();
+        } else {
+          Counters.saveCounter(wts, filename);
+        }
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
 }
