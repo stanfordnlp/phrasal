@@ -400,7 +400,7 @@ public class DependencyLanguageModelFeaturizer extends
       dep = new DependencyInstance(pipe);
       dep.add("<root>", "<root-LEMMA>", "<root-CPOS>", "<root-POS>", new int[0]);
       if (!srcInstances.isEmpty()) {
-        int transId = f.translationId + (Phrasal.local_procs > 1 ? 2 : 0);
+        int transId = f.translationId;
         assert (transId >= 0);
         assert (transId < srcInstances.size());
         DependencyInstance instance = srcInstances.get(transId);

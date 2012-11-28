@@ -41,7 +41,6 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
   private final String[][] lines;
   private final Trie[] refTries;
   private final int[][] refLengths;
-  private final int sentOffset;
 
   private boolean rerankingStage = false;
 
@@ -64,8 +63,6 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
     if (args.length < 3)
       throw new RuntimeException(
           "Usage: edu.stanford.nlp.mt.decoder.feat.oracle.BLEUFeaturizer (feature name) (featurize during decoding) (ref0) ... (refN)");
-
-    this.sentOffset = Phrasal.local_procs > 1 ? 2 : 0;
 
     this.featureName = args[0];
     this.featurizeDuringDecoding = Boolean.parseBoolean(args[1]);
@@ -149,7 +146,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
   }
 
   private int getId(Featurizable<IString, String> f) {
-    int sentId = f.translationId + sentOffset;
+    int sentId = f.translationId;
     assert (sentId >= 0);
     assert (sentId < refTries.length);
     return sentId;

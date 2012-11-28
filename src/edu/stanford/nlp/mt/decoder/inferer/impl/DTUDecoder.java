@@ -207,7 +207,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       allOptions.add(optionsWithGaps);
 
     if (OPTIONS_DUMP || DETAILED_DEBUG) {
-      int sentId = translationId + ((Phrasal.local_procs > 1) ? 2 : 0);
+      int sentId = translationId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteTranslationOption<TK> option : options)

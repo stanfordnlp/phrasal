@@ -501,8 +501,7 @@ public class DiscrimDistortionFeaturizer extends
     if (!DEBUG)
       return;
 
-    final int translationId = f.translationId
-        + (Phrasal.local_procs > 1 ? 2 : 0);
+    final int translationId = f.translationId;
 
     // Walk back through the priors so that the output
     // is in the correct translation order

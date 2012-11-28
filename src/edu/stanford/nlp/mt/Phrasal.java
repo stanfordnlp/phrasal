@@ -104,7 +104,7 @@ public class Phrasal {
   static final Set<String> IGNORED_FIELDS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
 
-  static final int DEFAULT_LOCAL_PROCS = 1;
+  static final int DEFAULT_NUM_THREADS = 1;
   static final int DEFAULT_DISTORTION_LIMIT = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
   public static final boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
@@ -132,9 +132,11 @@ public class Phrasal {
   }
 
   /**
-   * Number of decoding threads
+   * Number of decoding threads. Setting this parameter to 0 enables
+   * multithreading inside the main decoding loop. Generally, it is better
+   * to set the desired number of threads here (i.e., set this parameter >= 1).
    */
-  public static int local_procs = DEFAULT_LOCAL_PROCS;
+  private static int numThreads = DEFAULT_NUM_THREADS;
   
   /**
    * Hard distortion limit for phrase-based decoder
@@ -220,7 +222,7 @@ public class Phrasal {
           .setLinearDistortionType(ConcreteTranslationOption.LinearDistortionType.last_contiguous_segment
               .name());
     if (config.containsKey(LOCAL_PROCS))
-      local_procs = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
+      numThreads = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
 
     if (withGaps)
       recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
@@ -787,13 +789,13 @@ public class Phrasal {
         withGaps ? HeuristicFactory.ISOLATED_DTU_FOREIGN_COVERAGE
             : HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
     // Create Inferer
-    inferers = new ArrayList<Inferer<IString, String>>(local_procs == 0 ? 1
-        : local_procs);
+    inferers = new ArrayList<Inferer<IString, String>>(numThreads == 0 ? 1
+        : numThreads);
 
     boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
     // boolean dtuDecoder = (gapT == FeaturizerFactory.GapType.none || gapT ==
     // FeaturizerFactory.GapType.both);
-    for (int i = 0; i < (local_procs == 0 ? 1 : local_procs); i++) {
+    for (int i = 0; i < (numThreads == 0 ? 1 : numThreads); i++) {
       // Configure InfererBuilder
       AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) InfererBuilderFactory
           .factory(dtuDecoder ? InfererBuilderFactory.DTU_DECODER
@@ -818,7 +820,7 @@ public class Phrasal {
       }
 
       infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
-      if (local_procs == 0) {
+      if (numThreads == 0) {
         infererBuilder.setInternalMultiThread(true);
       }
 
@@ -847,8 +849,8 @@ public class Phrasal {
 
       inferers.add(infererBuilder.build());
     }
-    if (local_procs == 0)
-      local_procs = 1;
+    if (numThreads == 0)
+      numThreads = 1;
     System.err.printf("Inferer Count: %d\n", inferers.size());
 
     // determine if we need to generate n-best lists
@@ -908,7 +910,7 @@ public class Phrasal {
         for (int i = 0; i < len; i++) {
           String[] tokens = lines.get(i).split("\\s+");
           RichTranslation<IString, String> translation = decodeOnly(tokens,
-              ids.get(i), ids.get(i) - 1, infererid);
+              ids.get(i), infererid);
 
           if (translation != null) {
             // notice we reproduce the lameness of moses in that an extra space
@@ -944,25 +946,18 @@ public class Phrasal {
         System.in, "UTF-8"));
     int translationId = 0;
     long startTime = System.currentTimeMillis();
-    if (local_procs == 1) {
+    if (numThreads == 1) {
       for (String line; (line = reader.readLine()) != null; translationId++) {
-        String[] tokens = line.split("\\s+");
-        if (tokens.length > maxSentenceSize) {
-          System.err.printf("Skipping: %s\n", line);
-          System.err.printf("Tokens: %d (max: %d)\n", tokens.length,
+        String[] tokens = line.trim().split("\\s+");
+        if (tokens.length > maxSentenceSize || tokens.length < minSentenceSize) {
+          System.err.printf("Skipping: %s%n", line);
+          System.err.printf("Tokens: %d (min: %d max: %d)%n", tokens.length, minSentenceSize,
               maxSentenceSize);
           continue;
         }
-        if (tokens.length < minSentenceSize) {
-          System.err.printf("Skipping: %s\n", line);
-          System.err.printf("Tokens: %d (min: %d)\n", tokens.length,
-              minSentenceSize);
-          continue;
-        }
 
-        int lineNumber = reader.getLineNumber();
         RichTranslation<IString, String> translation = decodeOnly(tokens,
-            translationId, lineNumber, 0);
+            translationId, 0);
 
         // display results
         if (translation != null) {
@@ -980,23 +975,30 @@ public class Phrasal {
       List<List<String>> lines = new ArrayList<List<String>>();
       List<List<Integer>> ids = new ArrayList<List<Integer>>();
 
-      for (int i = 0; i < local_procs; i++) {
+      for (int i = 0; i < numThreads; i++) {
         lines.add(new ArrayList<String>());
         ids.add(new ArrayList<Integer>());
       }
 
       for (String line; (line = reader.readLine()) != null; translationId++) {
-        lines.get(translationId % local_procs).add(line);
-        ids.get(translationId % local_procs).add(translationId);
+        String[] tokens = line.trim().split("\\s+");
+        if (tokens.length > maxSentenceSize || tokens.length < minSentenceSize) {
+          System.err.printf("Skipping: %s%n", line);
+          System.err.printf("Tokens: %d (min: %d max: %d)%n", tokens.length, minSentenceSize,
+              maxSentenceSize);
+          continue;
+        }
+        lines.get(translationId % numThreads).add(line);
+        ids.get(translationId % numThreads).add(translationId);
       }
 
       List<Thread> threads = new ArrayList<Thread>();
-      for (int i = 0; i < local_procs; i++) {
+      for (int i = 0; i < numThreads; i++) {
         threads.add(new Thread(new ProcDecode(i, lines.get(i), ids.get(i))));
         threads.get(i).start();
       }
 
-      for (int i = 0; i < local_procs; i++) {
+      for (int i = 0; i < numThreads; i++) {
         try {
           threads.get(i).join();
         } catch (InterruptedException e) {
@@ -1015,7 +1017,7 @@ public class Phrasal {
   }
 
   public RichTranslation<IString, String> decodeOnly(String[] tokens,
-      int translationId, int lineNumber, int procid) throws IOException {
+      int translationId, int procid) throws IOException {
 
     Sequence<IString> foreign = new SimpleSequence<IString>(true,
         IStrings.toSyncIStringArray(tokens));
@@ -1036,7 +1038,7 @@ public class Phrasal {
     if (nbestListSize == -1) {
       translation = inferers.get(procid).translate(
           foreign,
-          lineNumber - 1,
+          translationId,
           constrainedOutputSpace,
           (constrainedOutputSpace == null ? null : constrainedOutputSpace
               .getAllowableSequences()));
@@ -1044,7 +1046,7 @@ public class Phrasal {
       List<RichTranslation<IString, String>> translations = inferers
           .get(procid).nbest(
               foreign,
-              lineNumber - 1,
+              translationId,
               constrainedOutputSpace,
               (constrainedOutputSpace == null ? null : constrainedOutputSpace
                   .getAllowableSequences()), nbestListSize);
