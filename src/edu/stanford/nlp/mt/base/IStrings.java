@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.*;
 
 /**
@@ -15,8 +17,28 @@ public class IStrings {
     super();
   }
 
+  /**
+   * Convert a file to a list of Sequences.
+   * 
+   * @param filename
+   * @return
+   */
+  static public List<Sequence<IString>> fileSplitToIStrings(String filename) {
+    List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
+    try {
+      for (String line; (line = reader.readLine()) != null;) {
+        sequences.add(IStrings.splitToIStrings(line));
+      }
+      reader.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return sequences;
+  }
+  
   static public Sequence<IString> splitToIStrings(String str) {
-    String[] strings = str.split("\\s+");
+    String[] strings = str.trim().split("\\s+");
     IString[] istrs = toIStringArray(strings);
     return new RawIStringSequence(istrs);
   }
