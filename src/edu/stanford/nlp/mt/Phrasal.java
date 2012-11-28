@@ -891,8 +891,10 @@ public class Phrasal {
     return String.format("%s:%s", label, value);
   }
 
+  /**
+   * Wrapper class for multithreaded decoding.
+   */
   private class ProcDecode implements Runnable {
-
     int infererid;
     private List<String> lines;
     private List<Integer> ids;
@@ -909,13 +911,14 @@ public class Phrasal {
       try {
         for (int i = 0; i < len; i++) {
           String[] tokens = lines.get(i).split("\\s+");
-          RichTranslation<IString, String> translation = decodeOnly(tokens,
+          List<RichTranslation<IString, String>> translations = decode(tokens,
               ids.get(i), infererid);
 
-          if (translation != null) {
+          if (translations.size() > 0) {
             // notice we reproduce the lameness of moses in that an extra space
             // is
             // inserted after each translation
+            RichTranslation<IString, String> translation = translations.get(0);
             synchronized (System.out) {
               System.out
                   .printf("%d:%s \n", ids.get(i), translation.translation);
@@ -925,6 +928,23 @@ public class Phrasal {
                   translation.translation);
               System.err.printf("Score: %f\n", translation.score);
             }
+            
+            // Output the n-best list if necessary
+            if (nbestListWriter != null) {
+              StringBuilder sb = new StringBuilder(translations.size() * 500);
+              for (RichTranslation<IString, String> tran : translations) {
+                if (generateMosesNBestList) {
+                  tran.nbestToMosesStringBuilder(ids.get(i), sb);
+                } else {
+                  tran.nbestToStringBuilder(ids.get(i), sb);
+                }
+                sb.append('\n');
+              }
+              synchronized (nbestListWriter) {
+                nbestListWriter.append(sb.toString());
+              }
+            }
+            
           } else {
             synchronized (System.out) {
               System.out.printf("<<<decoder failure %d>>>\n", ids.get(i));
@@ -938,10 +958,13 @@ public class Phrasal {
     }
   }
 
+  /**
+   * Decode input from stdin and write translations to stdout.
+   * 
+   * @throws IOException
+   */
   private void decodeFromConsole() throws IOException {
-
     System.err.println("Entering main translation loop");
-
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in, "UTF-8"));
     int translationId = 0;
@@ -956,22 +979,39 @@ public class Phrasal {
           continue;
         }
 
-        RichTranslation<IString, String> translation = decodeOnly(tokens,
+        List<RichTranslation<IString, String>> translations = decode(tokens,
             translationId, 0);
 
         // display results
-        if (translation != null) {
+        if (translations.size() > 0) {
           // notice we reproduce the lameness of moses in that an extra space is
           // inserted after each translation
-          System.out.printf("%s \n", translation.translation);
-          System.err.printf("Final Translation: %s\n", translation.translation);
-          System.err.printf("Score: %f\n", translation.score);
+          RichTranslation<IString, String> bestTranslation = translations.get(0);
+          System.out.printf("%s \n", bestTranslation.translation);
+          System.err.printf("Final Translation: %s\n", bestTranslation.translation);
+          System.err.printf("Score: %f\n", bestTranslation.score);
+          
+          // Output the n-best list if necessary
+          if (nbestListWriter != null) {
+            StringBuilder sb = new StringBuilder(translations.size() * 500);
+            for (RichTranslation<IString, String> tran : translations) {
+              if (generateMosesNBestList) {
+                tran.nbestToMosesStringBuilder(translationId, sb);
+              } else {
+                tran.nbestToStringBuilder(translationId, sb);
+              }
+              sb.append('\n');
+            }
+            nbestListWriter.append(sb.toString());
+          }
+          
         } else {
           System.out.println("<<<decoder failure>>>");
         }
       }
+      
     } else {
-
+      // Multithreaded execution
       List<List<String>> lines = new ArrayList<List<String>>();
       List<List<Integer>> ids = new ArrayList<List<Integer>>();
 
@@ -1016,8 +1056,17 @@ public class Phrasal {
     }
   }
 
-  public RichTranslation<IString, String> decodeOnly(String[] tokens,
-      int translationId, int procid) throws IOException {
+  /**
+   * Decode a tokenized input string. Returns an n-best list of translations.
+   * 
+   * @param tokens
+   * @param translationId
+   * @param procid
+   * @return
+   * @throws IOException
+   */
+  public List<RichTranslation<IString, String>> decode(String[] tokens,
+      int translationId, int procid) {
 
     Sequence<IString> foreign = new SimpleSequence<IString>(true,
         IStrings.toSyncIStringArray(tokens));
@@ -1028,65 +1077,51 @@ public class Phrasal {
 
     // do translation
     long startTime = System.currentTimeMillis();
-    RichTranslation<IString, String> translation;
-
     ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
         : new EnumeratedConstrainedOutputSpace<IString, String>(
             constrainedToRefs.get(translationId),
             phraseGenerator.longestForeignPhrase()));
 
-    if (nbestListSize == -1) {
-      translation = inferers.get(procid).translate(
-          foreign,
-          translationId,
-          constrainedOutputSpace,
-          (constrainedOutputSpace == null ? null : constrainedOutputSpace
-              .getAllowableSequences()));
-    } else {
-      List<RichTranslation<IString, String>> translations = inferers
+    List<RichTranslation<IString, String>> translations = 
+        new ArrayList<RichTranslation<IString, String>>(1);
+    if (nbestListSize > 1) {
+      translations = inferers
           .get(procid).nbest(
               foreign,
               translationId,
               constrainedOutputSpace,
               (constrainedOutputSpace == null ? null : constrainedOutputSpace
                   .getAllowableSequences()), nbestListSize);
-      if (translations != null) {
-        translation = translations.get(0);
-
-        StringBuilder sb = new StringBuilder(translations.size() * 500); // initialize
-                                                                         // it
-                                                                         // as
-                                                                         // reasonably
-                                                                         // large
-        for (RichTranslation<IString, String> tran : translations) {
-          if (generateMosesNBestList) {
-            tran.nbestToMosesStringBuilder(translationId, sb);
-          } else {
-            tran.nbestToStringBuilder(translationId, sb);
-          }
-          sb.append('\n');
-        }
-        synchronized (nbestListWriter) {
-          nbestListWriter.append(sb.toString());
-        }
-      } else {
-        translation = null;
+      
+      // Return an empty n-best list
+      if (translations == null) translations = new ArrayList<RichTranslation<IString,String>>(1);
+    
+    } else {
+      RichTranslation<IString, String> translation = inferers.get(procid).translate(
+          foreign,
+          translationId,
+          constrainedOutputSpace,
+          (constrainedOutputSpace == null ? null : constrainedOutputSpace
+              .getAllowableSequences()));
+      if (translation != null) {
+        translations.add(translation);
       }
     }
     long translationTime = System.currentTimeMillis() - startTime;
 
     // log additional information to stderr
     synchronized (System.err) {
-      if (translation != null) {
-        System.err.printf("Best Translation: %s\n", translation.translation);
-        System.err.printf("Final score: %.3f\n", (float) translation.score);
-        if (translation.foreignCoverage != null) {
-          System.err.printf("Coverage: %s\n", translation.foreignCoverage);
+      if (translations.size() > 0) {
+        final RichTranslation<IString, String> bestTranslation = translations.get(0);
+        System.err.printf("Best Translation: %s\n", bestTranslation.translation);
+        System.err.printf("Final score: %.3f\n", (float) bestTranslation.score);
+        if (bestTranslation.foreignCoverage != null) {
+          System.err.printf("Coverage: %s\n", bestTranslation.foreignCoverage);
           System.err.printf(
               "Foreign words covered: %d (/%d)  - %.3f %%\n",
-              translation.foreignCoverage.cardinality(),
+              bestTranslation.foreignCoverage.cardinality(),
               foreign.size(),
-              translation.foreignCoverage.cardinality() * 100.0
+              bestTranslation.foreignCoverage.cardinality() * 100.0
                   / foreign.size());
         } else {
           System.err.println("Coverage: {}");
@@ -1094,11 +1129,10 @@ public class Phrasal {
       } else {
         System.err.println("No best Translation: <<<decoder failure>>>");
       }
-
       System.err.printf("Time: %f seconds\n", translationTime / (1000.0));
     }
 
-    return translation;
+    return translations;
   }
 
   /**
@@ -1191,7 +1225,7 @@ public class Phrasal {
    */
   public static void main(String[] args) throws Exception {
     if (args.length < 1) {
-      System.err.println("Usage:\n\tjava ...Phrasal (model.ini)");
+      System.err.printf("Usage: java %s (model.ini) [OPTS]%n", Phrasal.class.getName());
       System.exit(-1);
     }
 
