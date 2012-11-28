@@ -30,14 +30,15 @@ import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
+ * Tunes a machine translation model with an online algorithm.
  * 
  * TODO(spenceg) Figure out format of alternative phrase table for human features.
- * TODO(spenceg) Restrict to one training epoch. We decode each source sentence under the current model,
- * then get the hope/fear derivations from the n-best list.
  *               
  * @author Spence Green
  *
@@ -62,8 +63,8 @@ public class OnlineTuner {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
   }
+  public static void attach(Logger logger) { logger.addHandler(logHandler); }
   
   // What it says
   private final Logger logger;
@@ -80,6 +81,7 @@ public class OnlineTuner {
    * Weight vector for Phrasal
    */
   private Counter<String> wts;
+  private Index<String> featureIndex;
   
   /**
    * Phrasal decoder instance.
@@ -91,8 +93,11 @@ public class OnlineTuner {
     logger = Logger.getLogger(OnlineTuner.class.getName());
     logger.addHandler(logHandler);
 
+    // Load initial weights
+    featureIndex = new OAIndex<String>();
     try {
-      wts = IOTools.readWeights(wtsInitialFile, MERT.featureIndex);
+      wts = IOTools.readWeights(wtsInitialFile, featureIndex);
+      logger.info("Initial weights: " + wts.toString());
     } catch (IOException e) {
       e.printStackTrace();
     } catch (ClassNotFoundException e) {
@@ -105,15 +110,14 @@ public class OnlineTuner {
     assert tuneSource.size() == tuneTarget.size();
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
     
-    // Load phrasal
+    // Load decoder (Phrasal)
     try {
       Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
       Phrasal.initStaticMembers(config);
       decoder = new Phrasal(config);
+      decoder.getScorer().updateWeights(wts);
       FlatPhraseTable.lockIndex();
       logger.info("Loaded Phrasal from: " + phrasalIniFile);
-      
-      // TODO(spenceg): Need to manipulate the weights
       
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
@@ -174,22 +178,24 @@ public class OnlineTuner {
         references.add(target);
         
         // Decode source (get n-best list)
-        List<RichTranslation<IString,String>> nbestList = null;
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(source.toString().split("\\s+"), i, 0);
         
         // Tune weights
         decoderWts = optimizer.update(source, i, nbestList, references, objective, decoderWts);
         logger.info(String.format("New weights (%d-%d): %s", epoch, i, decoderWts.toString()));
+        decoder.getScorer().updateWeights(decoderWts);
 
         // Accumulate new weights for final averaging
         wts.addAll(decoderWts);
         
         // TODO(spenceg): Extract rules and update phrase table for this example
-        
+        //
       }
     }
     
     // Average final weights
     Counters.divideInPlace(wts, NUM_EPOCHS*tuneSetSize);
+    logger.info("Final weights: " + wts.toString());
   }
 
   
@@ -224,6 +230,13 @@ public class OnlineTuner {
     }
     IOTools.writeWeights(wtsFinalFile, wts);
     logger.info("Wrote final weights to " + wtsFinalFile);
+  }
+  
+  /**
+   * Perform any necessary cleanup.
+   */
+  private void shutdown() {
+    logHandler.close();
   }
   
   /**
@@ -271,7 +284,7 @@ public class OnlineTuner {
     Properties opts = StringUtils.argsToProperties(args, optionArgDefs());
     NUM_EPOCHS = PropertiesUtils.getInt(opts, "e", NUM_EPOCHS);
     String optimizerAlg = opts.getProperty("o", "mira-1best");
-    String[] optimizerFlags = opts.getProperty("of","").split(",");
+    String[] optimizerFlags = opts.containsKey("of") ? opts.getProperty("of").split(",") : null;
     String objectiveMetric = opts.getProperty("m", "bleu-chiang");
     String altSourceFile = opts.getProperty("s");
     String altTargetFile = opts.getProperty("t");
@@ -288,7 +301,8 @@ public class OnlineTuner {
     String wtsFinalFile = parsedArgs[4];
    
     System.out.println("Phrasal Online Tuner");
-    System.err.printf("Executed at: %s%n", DateFormat.getDateInstance().format(new Date()));
+    Date now = new Date();
+    System.out.printf("Startup: %s%n", now);
     System.out.println("====================");
     for (Entry<String, String> option : PropertiesUtils.getSortedEntries(opts)) {
       System.out.printf(" %s\t%s%n", option.getKey(), option.getValue());
@@ -299,11 +313,14 @@ public class OnlineTuner {
     final OnlineOptimizer<IString,String> optimizer = loadOptimizer(optimizerAlg, optimizerFlags);
     final SentenceLevelMetric<IString,String> objective = loadObjective(objectiveMetric);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile);
-    tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
+    if (altSourceFile != null && altTargetFile != null) {
+      tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
+    }
     tuner.run(optimizer, objective, nThreads);
     tuner.save(wtsFinalFile);
+    tuner.shutdown();
     
-    System.err.printf("Finished at: %s%n", DateFormat.getDateInstance().format(new Date()));
+    now = new Date();
+    System.err.printf("Finished at: %s%n", now);
   }
-
 }
