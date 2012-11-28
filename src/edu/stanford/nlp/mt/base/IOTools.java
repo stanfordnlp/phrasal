@@ -1,22 +1,42 @@
 package edu.stanford.nlp.mt.base;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Index;
 
 /**
- *
+ * Various static methods for reading and writing files.
+ * 
  * @author danielcer
+ * @author Spence Green
  *
  */
-public class IOTools {
+public final class IOTools {
+  
   public static List<Sequence<IString>> slurpIStringSequences(String filename)
       throws IOException {
     BufferedReader reader = new BufferedReader(new FileReader(filename));
@@ -125,26 +145,23 @@ public class IOTools {
    */
   public static Counter<String> readWeights(String filename,
       Index<String> featureIndex) throws IOException, ClassNotFoundException {
+    Counter<String> wts;
     if (filename.endsWith(".binwts")) {
       ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
           filename));
-      @SuppressWarnings("unchecked")
-      Counter<String> wts = (Counter<String>) ois.readObject();
+      wts =  ErasureUtils.<Counter<String>>uncheckedCast(ois.readObject());
       ois.close();
-      return wts;
+    
     } else {
-      BufferedReader reader = new BufferedReader(new FileReader(filename));
-      Counter<String> wts = new ClassicCounter<String>();
-      for (String line = reader.readLine(); line != null; line = reader
-          .readLine()) {
-        String[] fields = line.split("\\s+");
-        if (featureIndex != null)
-          featureIndex.indexOf(fields[0], true);
-        wts.incrementCount(fields[0], Double.parseDouble(fields[1]));
-      }
-      reader.close();
-      return wts;
+      wts = Counters.loadCounter(filename, String.class);
     }
+    
+    if (featureIndex != null) {
+      for (String key : wts.keySet()) {
+        featureIndex.indexOf(key, true);
+      }
+    }
+    return wts;
   }
 
   /**
