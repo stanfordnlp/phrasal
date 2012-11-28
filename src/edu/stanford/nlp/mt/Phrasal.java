@@ -47,7 +47,8 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- *
+ * Phrasal: a phrase-based machine translation system.
+ * 
  * @author danielcer
  *
  */
@@ -146,7 +147,7 @@ public class Phrasal {
   /**
    * DTU options
    */
-  static List<String> gapOpts = null;
+  private static List<String> gapOpts = null;
   public static boolean withGaps = false;
 
   /**
@@ -173,7 +174,7 @@ public class Phrasal {
    * n-best list options
    */
   private boolean generateMosesNBestList = true;
-  private final BufferedWriter nbestListWriter;
+  private final PrintStream nbestListWriter;
   private int nbestListSize;
 
   /**
@@ -879,8 +880,7 @@ public class Phrasal {
       }
       System.err.printf("Generating n-best lists to: %s (size: %d)\n",
           nbestListFilename, nbestListSize);
-      nbestListWriter = new BufferedWriter(new OutputStreamWriter(
-          new FileOutputStream(nbestListFilename), "UTF8"));
+      nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
     } else {
       nbestListSize = -1;
       nbestListWriter = null;
