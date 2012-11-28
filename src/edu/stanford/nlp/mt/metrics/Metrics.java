@@ -9,6 +9,8 @@ import edu.stanford.nlp.mt.base.RawIStringSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
+ * Convenience methods for loading and collecting statistics from reference
+ * translations.
  * 
  * @author danielcer
  * 
@@ -168,9 +170,7 @@ public class Metrics {
           List<Sequence<IString>> list = new ArrayList<Sequence<IString>>(
               referenceFilenames.length);
           if (NISTTokenize)
-            line = NISTTokenizer.tokenize(line);
-          line = line.replaceAll("\\s+$", "");
-          line = line.replaceAll("^\\s+", "");
+            line = NISTTokenizer.tokenize(line).trim();
           list.add(new RawIStringSequence(IStrings.toIStringArray(line
               .split("\\s+"))));
           referencesList.add(list);
