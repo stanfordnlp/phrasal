@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 
 import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -21,13 +20,13 @@ import edu.stanford.nlp.math.ArrayMath;
  */
 public class StaticScorer implements Scorer<String> {
 
-  private OAIndex<String> featureIndex;
+  private final OAIndex<String> featureIndex;
   private double[] weights;
-  private boolean sharedFeatureIndex;
+  private final boolean sharedFeatureIndex;
 
   public StaticScorer(String filename) {
-    this.sharedFeatureIndex = false;
-    this.featureIndex = new OAIndex<String>();
+    sharedFeatureIndex = false;
+    featureIndex = new OAIndex<String>();
     try {
       Counter<String> wts = IOTools.readWeights(filename, featureIndex);
       updateWeights(wts);
@@ -39,14 +38,12 @@ public class StaticScorer implements Scorer<String> {
   }
 
   public StaticScorer(Counter<String> featureWts) {
-    this.sharedFeatureIndex = false;
-    featureIndex = new OAIndex<String>();    
-    updateWeights(featureWts);
+    this(featureWts, null);
   }
 
   public StaticScorer(Counter<String> featureWts, OAIndex<String> featureIndex) {
-    this.sharedFeatureIndex = true;
-    this.featureIndex = featureIndex;
+    sharedFeatureIndex = (featureIndex != null);
+    this.featureIndex = featureIndex == null ? new OAIndex<String>() : featureIndex;
     updateWeights(featureWts);
   }
 
@@ -70,22 +67,6 @@ public class StaticScorer implements Scorer<String> {
       int index = featureIndex.indexOf(feature.name);
       if (index >= 0 && index < weights.length) {
         score += weights[index] * feature.value;
-      }
-    }
-
-    return score;
-  }
-
-  public double getIncrementalScoreNoisy(List<FeatureValue<String>> features) {
-    double score = 0;
-
-    for (FeatureValue<String> feature : features) {
-      int index = featureIndex.indexOf(feature.name);
-      System.out.printf("feature: %s index: %d\n", feature.name, index);
-      if (index >= 0) {
-        score += weights[index] * feature.value;
-        System.out.printf("\tvalue: %f contrib: %f\n", feature.value,
-            weights[index] * feature.value);
       }
     }
 
