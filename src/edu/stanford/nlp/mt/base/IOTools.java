@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -100,16 +101,15 @@ public final class IOTools {
       if (fileName != null) {
         System.err.println("output file: " + fileName);
         if (fileName.endsWith(".gz")) {
-          output = new PrintStream(new GZIPOutputStream(new FileOutputStream(
-              fileName)));
+          output = new PrintStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
+              fileName))));
         } else {
-          output = new PrintStream(new FileOutputStream(fileName), false,
+          output = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileName)), false,
               "UTF-8");
         }
       }
     } catch (IOException e) {
       e.printStackTrace();
-      System.exit(1);
     }
     return output;
   }
