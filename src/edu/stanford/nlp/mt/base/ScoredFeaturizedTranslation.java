@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
 /**
+ * A hypothesis with associated feature values and score under the current model.
  * 
  * @author danielcer
  * 
@@ -10,7 +11,12 @@ package edu.stanford.nlp.mt.base;
 public class ScoredFeaturizedTranslation<TK, FV> extends
     FeaturizedTranslation<TK, FV> implements
     Comparable<ScoredFeaturizedTranslation<TK, FV>> {
+  
   public final long latticeSourceId;
+  
+  /**
+   * Hypothesis score
+   */
   public double score;
 
   /**
