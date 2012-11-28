@@ -217,6 +217,13 @@ public class Phrasal {
         LearningTarget.BEST_ON_N_BEST_LIST);
     configToLearningTarget.put("reference", LearningTarget.REFERENCE);
   }
+  
+  /**
+   * Access the decoder's scorer, which contains the model weights.
+   * 
+   * @return
+   */
+  public Scorer<String> getScorer() { return scorer; }
 
   public static void initStaticMembers(Map<String, List<String>> config) {
 
