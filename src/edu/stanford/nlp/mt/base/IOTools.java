@@ -171,19 +171,47 @@ public final class IOTools {
    * @param wts
    */
   public static void writeWeights(String filename, Counter<String> wts) {
-      try {
-        if (filename.endsWith(".binwts")) {
-          ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
-              filename));
-          oos.writeObject(wts);
-          oos.close();
-        } else {
-          Counters.saveCounter(wts, filename);
-        }
-      } catch (FileNotFoundException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
+    try {
+      if (filename.endsWith(".binwts")) {
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
+            filename));
+        oos.writeObject(wts);
+        oos.close();
+      } else {
+        Counters.saveCounter(wts, filename);
       }
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
+  
+  /**
+   * Read and write weights files.
+   * 
+   * @param args
+   */
+  public static void main(String[] args) {
+    if (args.length != 2) {
+      System.out.printf("Usage: java %s [print-wts|write-wts] file%n", IOTools.class.getName());
+      System.exit(-1);
+    }
+    String op = args[0];
+    String file = args[1];
+    
+    try {
+      if (op.equals("print-wts")) {
+        Counters.printCounterSortedByKeys(IOTools.readWeights(file, null));
+      } else if (op.equals("write-wts")) {
+        IOTools.writeWeights(file + ".txt", IOTools.readWeights(file, null));
+      } else {
+        System.err.println("Unsupported operation: " + op);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+  }
 }
