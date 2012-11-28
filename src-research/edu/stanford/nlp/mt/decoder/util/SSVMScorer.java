@@ -5,6 +5,7 @@ import java.io.*;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.classify.km.*;
 import edu.stanford.nlp.classify.km.kernels.*;
@@ -257,6 +258,7 @@ public class SSVMScorer implements Scorer<String> {
     return new SparseVector(vMap);
   }
 
+  @Override
   public void saveWeights(String filename) throws IOException {
     System.err.printf("Saving weights to: %s\n", filename);
     BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
@@ -330,6 +332,7 @@ public class SSVMScorer implements Scorer<String> {
     }
   }
 
+  @Override
   public boolean hasNonZeroWeight(String featureName) {
     int idx = featureIndex.indexOf(featureName);
     double[] weights = ssvm.getWeights();
@@ -348,5 +351,10 @@ public class SSVMScorer implements Scorer<String> {
 
   public void setRandomizeTag(boolean randomizeTag) {
     this.randomizeTag = randomizeTag;
+  }
+
+  @Override
+  public void updateWeights(Counter<String> weights) {
+    throw new UnsupportedOperationException();
   }
 }

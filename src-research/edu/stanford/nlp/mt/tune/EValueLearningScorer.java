@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
 
 public class EValueLearningScorer implements Scorer<String> {
@@ -272,6 +273,7 @@ public class EValueLearningScorer implements Scorer<String> {
     return fVector;
   }
 
+  @Override
   public void saveWeights(String filename) throws IOException {
     System.err.printf("Saving weights to: %s\n", filename);
     BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
@@ -333,6 +335,16 @@ public class EValueLearningScorer implements Scorer<String> {
         return signum;
       return this.featureName.compareTo(o.featureName);
     }
+  }
+
+  @Override
+  public void updateWeights(Counter<String> weights) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean hasNonZeroWeight(String featureName) {
+    return true;
   }
 
 }

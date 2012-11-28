@@ -1357,8 +1357,6 @@ public class Phrasal {
     void weightUpdate(int epoch, int id,
         RichTranslation<IString, String> target,
         RichTranslation<IString, String> argmax, double loss);
-
-    public void saveWeights(String filename) throws IOException;
   }
 
   private static class PerceptronLearner implements Learner {
@@ -1460,6 +1458,16 @@ public class Phrasal {
       }
       writer.close();
     }
+
+    @Override
+    public void updateWeights(Counter<String> weights) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasNonZeroWeight(String featureName) {
+      return false;
+    }
   }
 
   private static class ComparableWtPair implements Comparable<ComparableWtPair> {
@@ -1536,6 +1544,16 @@ public class Phrasal {
 
       return sum;
     }
+
+    @Override
+    public void updateWeights(Counter<String> weights) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasNonZeroWeight(String featureName) {
+      return false;
+    }
   }
 
   private static class MiraLearner implements Learner {
@@ -1600,6 +1618,15 @@ public class Phrasal {
       return sum;
     }
 
+    @Override
+    public void updateWeights(Counter<String> weights) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasNonZeroWeight(String featureName) {
+      return false;
+    }
   }
 
 
@@ -1729,6 +1756,16 @@ public class Phrasal {
       }
 
       return sum;
+    }
+
+    @Override
+    public void updateWeights(Counter<String> weights) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasNonZeroWeight(String featureName) {
+      return false;
     }
   }
 

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.stats.Counter;
 
 import static java.lang.System.*;
 
@@ -38,44 +39,27 @@ public class UniformScorer<T> implements Scorer<T> {
 
   @Override
   public double getIncrementalScore(Collection<FeatureValue<T>> features) {
-    double score = 0;
-
+    double score = 0.0;
     for (FeatureValue<T> feature : features) {
       if (feature == null)
         continue;
       score += feature.value;
     }
-
     return score;
-
   }
 
+  @Override
   public void saveWeights(String filename) throws IOException {
     throw new UnsupportedOperationException();
   }
 
-  public boolean hasNonZeroWeight(String featureName) {
+  @Override
+  public void updateWeights(Counter<T> weights) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean hasNonZeroWeight(T featureName) {
     return true;
-  }
-
-  public boolean randomizeTag() {
-    // TODO Auto-generated method stub
-    return false;
-  }
-
-  public void setRandomizeTag(boolean randomizeTag) {
-    // TODO Auto-generated method stub
-
-  }
-
-  public void setWeightMultipliers(double manualWeightMul,
-      double classifierWeightMul) {
-    // TODO Auto-generated method stub
-
-  }
-
-  public void displayWeights() {
-    // TODO Auto-generated method stub
-
   }
 }

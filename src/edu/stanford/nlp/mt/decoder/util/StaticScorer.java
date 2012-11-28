@@ -1,126 +1,60 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 
 import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
 import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.tune.MERT;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.math.ArrayMath;
 
 /**
+ * Score a set of features under a fixed set of weights.
+ * 
  * @author danielcer
+ * @author Spence Green
  * 
  */
 public class StaticScorer implements Scorer<String> {
 
-  final public OAIndex<String> featureIndex;
-  final protected double[] weights;
-  final private boolean sharedFeatureIndex;
+  private OAIndex<String> featureIndex;
+  private double[] weights;
+  private boolean sharedFeatureIndex;
 
-  /**
-   * @throws IOException
-   * @throws ClassNotFoundException
-   */
-  @SuppressWarnings("unchecked")
-  public StaticScorer(String filename) throws IOException,
-      ClassNotFoundException {
+  public StaticScorer(String filename) {
     this.sharedFeatureIndex = false;
     this.featureIndex = new OAIndex<String>();
-    Map<Integer, Double> wts = new HashMap<Integer, Double>();
-    if (filename.endsWith(".binwts")) {
-      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
-          filename));
-      Counter<String> weightCounter = (Counter<String>) ois.readObject();
-      ois.close();
-      for (String wtKey : weightCounter.keySet()) {
-        wts.put(featureIndex.indexOf(wtKey, true),
-            weightCounter.getCount(wtKey));
-      }
-    } else {
-
-      BufferedReader reader = new BufferedReader(new FileReader(filename));
-      for (String line; (line = reader.readLine()) != null;) {
-        String[] fields = line.split("\\s+");
-        wts.put(featureIndex.indexOf(fields[0], true),
-            Double.valueOf(fields[1]));
-      }
-      reader.close();
-    }
-
-    weights = new double[featureIndex.boundOnMaxIndex()];
-    for (Map.Entry<Integer, Double> e : wts.entrySet()) {
-      weights[e.getKey()] = e.getValue();
-    }
-  }
-
-  /**
-	 * 
-	 */
-  public StaticScorer(Map<String, Double> featureWts) {
-    this.sharedFeatureIndex = false;
-    featureIndex = new OAIndex<String>();
-    for (String key : featureWts.keySet()) {
-      featureIndex.indexOf(key, true);
-      // System.err.printf("---inserting: '%s' index: %d\n", key,
-      // featureIndex.indexOf(key));
-    }
-
-    weights = new double[featureIndex.boundOnMaxIndex()];
-
-    for (Map.Entry<String, Double> stringDoubleEntry : featureWts.entrySet()) {
-      weights[featureIndex.indexOf(stringDoubleEntry.getKey())] = stringDoubleEntry
-          .getValue(); // .doubleValue();
+    try {
+      Counter<String> wts = MERT.readWeights(filename, featureIndex);
+      updateWeights(wts);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
     }
   }
 
   public StaticScorer(Counter<String> featureWts) {
     this.sharedFeatureIndex = false;
     featureIndex = new OAIndex<String>();    
-    for (String key : featureWts.keySet()) {
-      // todo - find out what is generating 'null' model weights
-      // for now, we'll just have the decoding model ignore them
-      if (key == null) continue;
-      featureIndex.indexOf(key, true);
-    }
-
-    weights = new double[featureIndex.size()];
-    // weights = new double[featureIndex.boundOnMaxIndex()];
-
-    for (String key : featureWts.keySet()) {
-      if (key == null) continue;
-      weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
-    }
+    updateWeights(featureWts);
   }
 
   public StaticScorer(Counter<String> featureWts, OAIndex<String> featureIndex) {
     this.sharedFeatureIndex = true;
     this.featureIndex = featureIndex;
-    for (String key : featureWts.keySet()) {
-      if (key != null) {
-        featureIndex.indexOf(key, true);
-      }
-      // System.err.printf("---inserting: '%s' index: %d\n", key,
-      // featureIndex.indexOf(key));
-    }
-
-    weights = new double[featureIndex.size()];
-    // weights = new double[featureIndex.boundOnMaxIndex()];
-
-    for (String key : featureWts.keySet()) {
-      if (key != null) {
-        weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
-      }
-    }
+    updateWeights(featureWts);
   }
 
   @Override
   public double getIncrementalScore(Collection<FeatureValue<String>> features) {
-    if (sharedFeatureIndex && features instanceof DenseFeatureValueCollection)
-      return getIncrementalScoreInnerProduct((DenseFeatureValueCollection<String>) features);
-    return getIncrementalScoreHash(features);
+    return (sharedFeatureIndex && features instanceof DenseFeatureValueCollection) ?
+      getIncrementalScoreInnerProduct((DenseFeatureValueCollection<String>) features) :
+        getIncrementalScoreHash(features);
   }
 
   private double getIncrementalScoreInnerProduct(
@@ -158,33 +92,30 @@ public class StaticScorer implements Scorer<String> {
     return score;
   }
 
-  public static void saveWeights(String filename) {
-    throw new UnsupportedOperationException();
-  }
-
+  @Override
   public boolean hasNonZeroWeight(String featureName) {
     int idx = featureIndex.indexOf(featureName);
     return idx >= 0 && weights[idx] == weights[idx] && weights[idx] != 0;
   }
 
-  public static boolean randomizeTag() {
-    // TODO Auto-generated method stub
-    return false;
+  @Override
+  public void updateWeights(Counter<String> featureWts) {
+    for (String key : featureWts.keySet()) {
+      // TODO(spenceg) - find out what is generating 'null' model weights
+      // for now, we'll just have the decoding model ignore them
+      if (key == null) continue;
+      featureIndex.indexOf(key, true);
+    }
+
+    weights = new double[featureIndex.size()];
+    for (String key : featureWts.keySet()) {
+      if (key == null) continue;
+      weights[featureIndex.indexOf(key)] = featureWts.getCount(key);
+    }
   }
 
-  public void setRandomizeTag(boolean randomizeTag) {
-    // TODO Auto-generated method stub
+  @Override
+  public void saveWeights(String filename) throws IOException {
+    throw new UnsupportedOperationException();
   }
-
-  public void setWeightMultipliers(double manualWeightMul,
-      double classifierWeightMul) {
-    // TODO Auto-generated method stub
-
-  }
-
-  public void displayWeights() {
-    // TODO Auto-generated method stub
-
-  }
-
 }
