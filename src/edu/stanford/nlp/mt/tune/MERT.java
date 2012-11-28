@@ -142,12 +142,35 @@ public class MERT extends Thread {
     return SEED;
   }
 
+  static boolean alwaysSkipMCMC = true;
+
+  /**
+   * End static members.
+   */
+  
+  public final EvaluationMetric<IString, String> emetric;
+  final String optStr;
+  final String seedStr;
+  public final List<List<Sequence<IString>>> references;
+  public final String evalMetric;
+  public Random random;
+
+  public MERT(String evalMetric, String referenceList, String optStr,
+      String seedStr) throws IOException {
+
+    this.optStr = optStr;
+    this.seedStr = seedStr;
+
+    references = Metrics.readReferences(
+        referenceList.split(","), tokenizeNIST);
+    this.evalMetric = evalMetric;
+    this.emetric = EvaluationMetricFactory.newMetric(evalMetric, references);
+  }
+
   public double mcmcTightExpectedEval(FlatNBestList nbest,
       Counter<String> wts, EvaluationMetric<IString, String> emetric) {
     return mcmcTightExpectedEval(nbest, wts, emetric, true);
   }
-
-  static boolean alwaysSkipMCMC = true;
 
   public double mcmcTightExpectedEval(FlatNBestList nbest,
       Counter<String> wts, EvaluationMetric<IString, String> emetric,
@@ -657,28 +680,34 @@ public class MERT extends Thread {
     }
   }
 
-  static void writeWeights(String filename, Counter<String> wts)
-      throws IOException {
-    if (filename.endsWith(".binwts")) {
-      ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
-          filename));
-      oos.writeObject(wts);
-      oos.close();
-    } else {
-      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-          new FileOutputStream(filename), "UTF8"));
-      Counter<String> wtsMag = new ClassicCounter<String>();
-      for (String w : wts.keySet()) {
-        wtsMag.setCount(w, Math.abs(wts.getCount(w)));
+  static void writeWeights(String filename, Counter<String> wts) {
+    try {
+      if (filename.endsWith(".binwts")) {
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
+            filename));
+        oos.writeObject(wts);
+        oos.close();
+      } else {
+        Counters.saveCounter(wts, filename);
+//      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+//          new FileOutputStream(filename), "UTF8"));
+//      Counter<String> wtsMag = new ClassicCounter<String>();
+//      for (String w : wts.keySet()) {
+//        wtsMag.setCount(w, Math.abs(wts.getCount(w)));
+//      }
+//
+//      for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
+//        double cnt = wts.getCount(f);
+//        if (cnt != 0.0)
+//          writer.append(f).append(" ").append(Double.toString(cnt))
+//              .append("\n");
+//      }
+//      writer.close();
       }
-
-      for (String f : Counters.toPriorityQueue(wtsMag).toSortedList()) {
-        double cnt = wts.getCount(f);
-        if (cnt != 0.0)
-          writer.append(f).append(" ").append(Double.toString(cnt))
-              .append("\n");
-      }
-      writer.close();
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
@@ -929,25 +958,6 @@ public class MERT extends Thread {
     displayWeights(initialWts);
   }
 
-  public final EvaluationMetric<IString, String> emetric;
-  final String optStr;
-  final String seedStr;
-  public final List<List<Sequence<IString>>> references;
-  public final String evalMetric;
-  public Random random;
-
-  public MERT(String evalMetric, String referenceList, String optStr,
-      String seedStr) throws IOException {
-
-    this.optStr = optStr;
-    this.seedStr = seedStr;
-
-    references = Metrics.readReferences(
-        referenceList.split(","), tokenizeNIST);
-    this.evalMetric = evalMetric;
-    this.emetric = EvaluationMetricFactory.newMetric(evalMetric, references);
-  }
-
   public static boolean updateBest(Counter<String> newWts, double obj) {
     return updateBest(newWts, obj, false);
   }
@@ -985,6 +995,9 @@ public class MERT extends Thread {
     return wts;
   }
 
+  /**
+   * Run the tuning algorithm. Sets up random starting points, generates candidates, and optimizes weights.
+   */
   @Override
   public void run() {
 
