@@ -44,8 +44,6 @@ import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.OAIndex;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -69,12 +67,6 @@ public class Phrasal {
   public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   public static final String CONSTRAIN_TO_REFS = "constrain-to-refs";
-  public static final String PREFERED_REF_STRUCTURE = "use-prefered-ref-structure";
-  public static final String LEARN_WEIGHTS_USING_REFS = "learn-weights-using-refs";
-  public static final String PREFERED_REF_INTERNAL_STATE = "prefered-internal-state";
-  public static final String LEARNING_ALGORITHM = "learning-algorithm";
-  public static final String LEARNING_TARGET = "learning-target";
-  public static final String SAVE_WEIGHTS = "save-weights";
   public static final String BEAM_SIZE = "stack";
   public static final String DISTORTION_FILE = "distortion-file";
   public static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
@@ -90,15 +82,9 @@ public class Phrasal {
   public static final String ADDITIONAL_ANNOTATORS = "additional-annotators";
   public static final String DISABLED_FEATURIZERS = "disabled-featurizers";
   public static final String INLINE_WEIGHTS = "inline-weights";
-  public static final String LEARNING_RATE = "lrate";
-  public static final String MAX_EPOCHS = "max-epochs";
-  public static final String MOMENTUM = "momentum";
-  public static final String CONSTRAIN_MANUAL_WTS = "constrain-manual-wts";
   public static final String LOCAL_PROCS = "localprocs";
   public static final String ITER_LIMIT = "iter-limit";
   public static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
-  public static final String EVAL_METRIC = "eval-metric";
-  public static final String LEARNING_METRIC = "learning-metric";
   public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
   public static final String GAPS_OPT = "gaps";
   public static final String MAX_GAP_SPAN_OPT = "max-gap-span";
@@ -118,14 +104,10 @@ public class Phrasal {
   static final Set<String> IGNORED_FIELDS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
 
-  public static final double DEFAULT_LEARNING_RATE = 0.01;
-  public static final double DEFAULT_MOMENTUM_TERM = 0.9;
   static final int DEFAULT_LOCAL_PROCS = 1;
-  static final int DEFAULT_MAX_EPOCHS = 5;
   static final int DEFAULT_DISTORTION_LIMIT = 5;
   static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
   public static final boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
-  static final boolean VERBOSE_LEARNER = true;
 
   static {
     REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,WEIGHTS_FILE));
@@ -133,14 +115,11 @@ public class Phrasal {
         DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
         DISABLED_FEATURIZERS, USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
-        DISTINCT_NBEST_LIST_OPT, CONSTRAIN_TO_REFS, PREFERED_REF_STRUCTURE,
+        DISTINCT_NBEST_LIST_OPT, CONSTRAIN_TO_REFS, 
         RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE,
-        LEARN_WEIGHTS_USING_REFS, LEARNING_ALGORITHM,
-        PREFERED_REF_INTERNAL_STATE, SAVE_WEIGHTS, LEARNING_TARGET, BEAM_SIZE,
-        WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
-        MIN_SENTENCE_LENGTH, CONSTRAIN_MANUAL_WTS, LEARNING_RATE, MOMENTUM,
-        USE_ITG_CONSTRAINTS, LEARNING_METRIC, EVAL_METRIC, LOCAL_PROCS,
-        GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
+        BEAM_SIZE, WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
+        MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS, 
+        LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
         MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
@@ -152,72 +131,62 @@ public class Phrasal {
     ALL_RECOGNIZED_FIELDS.addAll(IGNORED_FIELDS);
   }
 
-  public static final String PERCEPTRON_LEARNING = "perceptron";
-  public static final String AVG_PERCEPTRON_LEARNING = "avgperceptron";
-  public static final String MIRA_LEARNING = "mira";
-  public static final String SSVM_LEARNING = "ssvm";
-  public static final String MMSG_LEARNING = "mmsg";
-  public static final String COST_MARGIN_LEARNING = "costmargin";
-  public static final String SGDLL = "sgdll";
-  public static final String MAXMARGIN_C = "C";
-
-  public static final String DEFAULT_LEARNING_ALGORITHM = PERCEPTRON_LEARNING;
-  // public static final String DEFAULT_SAVE_WEIGHTS = "unname_model_"
-  // + System.currentTimeMillis();
-
+  /**
+   * Number of decoding threads
+   */
   public static int local_procs = DEFAULT_LOCAL_PROCS;
-  public static boolean withGaps = false;
-  public static int distortionLimit = DEFAULT_DISTORTION_LIMIT;
+  
+  /**
+   * Hard distortion limit for phrase-based decoder
+   */
+  private int distortionLimit = DEFAULT_DISTORTION_LIMIT;
 
+  /**
+   * DTU options
+   */
   static List<String> gapOpts = null;
+  public static boolean withGaps = false;
 
+  /**
+   * Inference objects, one per thread
+   */
   public List<Inferer<IString, String>> inferers;
-  // Inferer<IString, String> refInferer;
-  PhraseGenerator<IString> phraseGenerator;
-  boolean dropUnknownWords = DROP_UNKNOWN_WORDS_DEFAULT;
-  final BufferedWriter nbestListWriter;
-  int nbestListSize;
-  String saveWeights = "saved.wts";
 
-  List<List<Sequence<IString>>> constrainedToRefs = null;
+  /**
+   * Holds the model weights
+   */
+  private Scorer<String> scorer;
 
-  boolean learnWeights;
-  boolean constrainManualWeights;
-  boolean generateMosesNBestList = true;
-  List<List<Sequence<IString>>> learnFromReferences;
-  String learningAlgorithm;
-  List<String> learningAlgorithmConfig;
-  Scorer<String> scorer;
-  double maxMarginC = 1.0;
-  NBestListContainer<IString, String> preferedInternalState;
-  int maxSentenceSize = Integer.MAX_VALUE;
-  int minSentenceSize = 0;
+  /**
+   * Phrase table type
+   */
+  private PhraseGenerator<IString> phraseGenerator;
+  
+  /**
+   * Whether to filter unknown words in the output
+   */
+  private boolean dropUnknownWords = DROP_UNKNOWN_WORDS_DEFAULT;
+  
+  /**
+   * n-best list options
+   */
+  private boolean generateMosesNBestList = true;
+  private final BufferedWriter nbestListWriter;
+  private int nbestListSize;
 
-  double[] learningRate = new double[0];
-  double momentumTerm = DEFAULT_MOMENTUM_TERM;
-  int maxEpochs = DEFAULT_MAX_EPOCHS;
+  /**
+   * References for force decoding
+   */
+  private List<List<Sequence<IString>>> constrainedToRefs = null;
 
-  // double cTarget = 0.001;
-  // double cRisky = 0.010;
+  /**
+   * Hard limits on inputs to be decoded
+   */
+  private int maxSentenceSize = Integer.MAX_VALUE;
+  private int minSentenceSize = 0;
+
   static String recombinationHeuristic = DEFAULT_RECOMBINATION_HEURISTIC;
 
-  public static enum LearningTarget {
-    REFERENCE, BEST_ON_N_BEST_LIST
-  }
-
-  public static final LearningTarget DEFAULT_LEARNING_TARGET = LearningTarget.BEST_ON_N_BEST_LIST;
-  LearningTarget learningTarget = DEFAULT_LEARNING_TARGET;
-
-  EvaluationMetric<IString, String> learningMetric = null;
-  EvaluationMetric<IString, String> evalMetric = null;
-
-  public static final Map<String, LearningTarget> configToLearningTarget = new HashMap<String, LearningTarget>();
-  static {
-    configToLearningTarget.put("best-on-n-best",
-        LearningTarget.BEST_ON_N_BEST_LIST);
-    configToLearningTarget.put("reference", LearningTarget.REFERENCE);
-  }
-  
   /**
    * Access the decoder's scorer, which contains the model weights.
    * 
@@ -257,76 +226,6 @@ public class Phrasal {
       recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
   }
 
-  static public Map<String, List<String>> readConfig(String filename)
-      throws IOException {
-    Map<String, List<String>> config = new HashMap<String, List<String>>();
-    LineNumberReader reader;
-    try {
-      reader = new LineNumberReader(new FileReader(filename));
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(String.format("Can't open configuration file %s\n", filename));
-    }
-    for (String line; (line = reader.readLine()) != null;) {
-      if (line.matches("^\\s*$"))
-        continue;
-      if (line.charAt(0) == '#')
-        continue;
-      line = line.replaceAll("#.*$", "");
-      if (line.charAt(0) != '[' || line.charAt(line.length() - 1) != ']') {
-        throw new RuntimeException(
-            String
-                .format(
-                    "Expected bracketing of option name by '[',']', line: %d label: %s",
-                    reader.getLineNumber(), line));
-      }
-      String nextArgLine = line;
-
-      while (nextArgLine != null) {
-        String key = line.substring(1, nextArgLine.length() - 1);
-        nextArgLine = null;
-        List<String> entries = new ArrayList<String>();
-        while ((line = reader.readLine()) != null) {
-          if (line.matches("^\\s*$"))
-            break;
-          if (line.startsWith("[")) {
-            nextArgLine = line;
-            break;
-          }
-          if (line.charAt(0) == '#')
-            break;
-          line = line.replaceAll("#.*$", "");
-          String[] fields = line.split("\\s+");
-          entries.addAll(Arrays.asList(fields));
-        }
-
-        if (!entries.isEmpty())
-          config.put(key, entries);
-      }
-    }
-    reader.close();
-    return config;
-  }
-
-  static Map<String, List<String>> readArgs(String[] args) throws IOException {
-    Map<String, List<String>> configArgs = new HashMap<String, List<String>>();
-    Map<String, List<String>> configFile = new HashMap<String, List<String>>();
-    Map<String, List<String>> configFinal = new HashMap<String, List<String>>();
-
-    for (Map.Entry<Object, Object> e : StringUtils.argsToProperties(args)
-        .entrySet()) {
-      String key = e.getKey().toString();
-      String value = e.getValue().toString();
-      if (CONFIG_FILE.equals(key)) {
-        configFile.putAll(readConfig(value));
-      } else {
-        configArgs.put(key, Arrays.asList(value.split(" ")));
-      }
-    }
-    configFinal.putAll(configFile);
-    configFinal.putAll(configArgs); // command line args overwrite config file options
-    return configFinal;
-  }
-
   @SuppressWarnings("unchecked")
   public Phrasal(Map<String, List<String>> config) throws IOException,
       InstantiationException, IllegalAccessException, IllegalArgumentException,
@@ -353,57 +252,15 @@ public class Phrasal {
       System.err.printf("Ignoring Moses field: %s\n", ignored);
     }
 
-    if (config.containsKey(ITER_LIMIT)) {
-      MAX_LEARN_NBEST_ITER = Integer.parseInt(config.get(ITER_LIMIT).get(0));
-    }
-
-    if (config.containsKey(CONSTRAIN_MANUAL_WTS)) {
-      constrainManualWeights = Boolean.parseBoolean(config.get(
-          CONSTRAIN_MANUAL_WTS).get(0));
-    }
-
-    if (config.containsKey(LEARNING_RATE)) {
-      learningRate = new double[config.get(LEARNING_RATE).size()];
-      for (int i = 0; i < learningRate.length; i++) {
-        learningRate[i] = Double.parseDouble(config.get(LEARNING_RATE).get(i));
-      }
-    } else {
-      learningRate = new double[1];
-      learningRate[0] = DEFAULT_LEARNING_RATE;
-    }
-
-    if (config.containsKey(MAXMARGIN_C)) {
-      maxMarginC = Double.parseDouble(config.get(MAXMARGIN_C).get(0));
-    }
-
-    if (config.containsKey(MAX_EPOCHS)) {
-      maxEpochs = Integer.parseInt(config.get(MAX_EPOCHS).get(0));
-    }
-
-    if (config.containsKey(MOMENTUM)) {
-      momentumTerm = Double.parseDouble(config.get(MOMENTUM).get(0));
-    }
-
     if (config.containsKey(RECOMBINATION_HEURISTIC)) {
       recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
 
     boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
 
-    // System.err.printf("C - Target: %e Risky: %e\n", cTarget, cRisky);
-
     if (config.containsKey(CONSTRAIN_TO_REFS)) {
       constrainedToRefs = Metrics.readReferences(config.get(CONSTRAIN_TO_REFS)
           .toArray(new String[config.get(CONSTRAIN_TO_REFS).size()]));
-    }
-
-    if (config.containsKey(LEARNING_TARGET)) {
-      List<String> strLearningTarget = config.get(LEARNING_TARGET);
-      if (strLearningTarget.size() != 1) {
-        throw new RuntimeException(String.format(
-            "Parameter '%s' takes one and only one argument", LEARNING_TARGET));
-      }
-      learningTarget = configToLearningTarget.get(strLearningTarget.get(0));
     }
 
     // int distortionLimit = -1;
@@ -788,31 +645,6 @@ public class Phrasal {
       }
     }
 
-    if (learnWeights = config.containsKey(LEARN_WEIGHTS_USING_REFS)
-        && !config.containsKey(FORCE_DECODE_ONLY)) {
-      if (config.containsKey(LEARNING_ALGORITHM)) {
-        learningAlgorithmConfig = config.get(LEARNING_ALGORITHM);
-        learningAlgorithm = learningAlgorithmConfig.get(0);
-      } else {
-        learningAlgorithm = DEFAULT_LEARNING_ALGORITHM;
-        learningAlgorithmConfig = null;
-      }
-      learnFromReferences = Metrics.readReferences(config.get(
-          LEARN_WEIGHTS_USING_REFS).toArray(
-          new String[config.get(LEARN_WEIGHTS_USING_REFS).size()]));
-      learningMetric = (config.containsKey(LEARNING_METRIC) ? MetricFactory
-          .metric(config.get(LEARNING_METRIC).get(0), learnFromReferences)
-          : MetricFactory.metric(learnFromReferences));
-      evalMetric = (config.containsKey(EVAL_METRIC) ? MetricFactory.metric(
-          config.get(EVAL_METRIC).get(0), learnFromReferences) : MetricFactory
-          .metric(learnFromReferences));
-    }
-
-    if (config.containsKey(PREFERED_REF_INTERNAL_STATE)) {
-      preferedInternalState = new FlatNBestList(config.get(
-          PREFERED_REF_INTERNAL_STATE).get(0));
-    }
-
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {
       try {
         maxSentenceSize = Integer.parseInt(config.get(MAX_SENTENCE_LENGTH).get(
@@ -836,19 +668,6 @@ public class Phrasal {
             config.get(MIN_SENTENCE_LENGTH), MIN_SENTENCE_LENGTH));
       }
     }
-
-    if (config.containsKey(SAVE_WEIGHTS)) {
-      int cntSaveWeights = config.get(SAVE_WEIGHTS).size();
-      if (cntSaveWeights != 1) {
-        throw new RuntimeException(
-            String
-                .format(
-                    "One and only one file must be specified for the parameter %s not %d",
-                    SAVE_WEIGHTS, cntSaveWeights));
-      }
-      saveWeights = config.get(SAVE_WEIGHTS).get(0);
-    }
-
 
     System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightConfig, 100), (weightConfig.size() > 100 ? "..." : ""));
     scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig);
@@ -1280,914 +1099,95 @@ public class Phrasal {
     return translation;
   }
 
-  public static int MAX_LEARN_NBEST_ITER = 100;
-
-  // public static int LEARNING_NBEST_LIST_SIZE = 1000;
-
-  static List<ScoredFeaturizedTranslation<IString, String>> filterLowScoring(
-      List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
-      double dropFrac) {
-    List<ScoredFeaturizedTranslation<IString, String>> filtered = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
-        oracleEvalTranslations.size());
-    double[] scores = new double[oracleEvalTranslations.size()];
-    int scoreI = 0;
-    int nullCount = 0;
-    for (ScoredFeaturizedTranslation<IString, String> tran : oracleEvalTranslations) {
-      scores[scoreI++] = (tran == null ? Double.NEGATIVE_INFINITY : tran.score);
-      if (tran == null)
-        nullCount++;
-    }
-    Arrays.sort(scores);
-    int effectiveLen = (scores.length - nullCount);
-    int cutPoint = scores.length - effectiveLen
-        + (int) (effectiveLen * dropFrac);
-    double cutValue = scores[cutPoint];
-    int filterCnt = 0;
-    System.err.printf("Cut Point: %d Cut Value: %f\n", cutPoint, cutValue);
-    for (ScoredFeaturizedTranslation<IString, String> tran : oracleEvalTranslations) {
-      if (tran == null) {
-        filtered.add(null);
-      } else if (tran.score >= cutValue) {
-        filtered.add(tran);
-      } else {
-        filtered.add(null);
-        filterCnt++;
-      }
-    }
-    System.err
-        .printf(
-            "Translation Filter (bottom %.3f %%) : original non-null: %d filter count: %d\n",
-            dropFrac * 100, scores.length - nullCount, filterCnt);
-    return filtered;
-  }
-
-  static List<ScoredFeaturizedTranslation<IString, String>> filterHighLowScoring(
-      List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations,
-      double dropFracTop, double dropFracBottom) {
-    List<ScoredFeaturizedTranslation<IString, String>> filtered = new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
-        oracleEvalTranslations.size());
-    double[] scores = new double[oracleEvalTranslations.size()];
-    int scoreI = 0;
-    int nullCount = 0;
-    for (ScoredFeaturizedTranslation<IString, String> tran : oracleEvalTranslations) {
-      scores[scoreI++] = (tran == null ? Double.POSITIVE_INFINITY : tran.score);
-      if (tran == null)
-        nullCount++;
-    }
-    Arrays.sort(scores);
-    int effectiveLen = (scores.length - nullCount);
-    int cutPointTop = effectiveLen - 1 - (int) (dropFracTop * effectiveLen);
-    int cutPointBottom = (int) (effectiveLen * dropFracBottom);
-    double cutValueBottom = scores[cutPointBottom];
-    double cutValueTop = scores[cutPointTop];
-    int filterCnt = 0;
-
-    for (ScoredFeaturizedTranslation<IString, String> tran : oracleEvalTranslations) {
-      if (tran == null) {
-        filtered.add(null);
-      } else if (tran.score >= cutValueBottom && tran.score <= cutValueTop) {
-        filtered.add(tran);
-      } else {
-        filtered.add(null);
-        filterCnt++;
-      }
-    }
-    System.err
-        .printf(
-            "Translation Filter (top: %.3f %% bottom %.3f %%) : original non-null: %d filter count: %d\ndr",
-            dropFracTop * 100, dropFracBottom * 100, scores.length - nullCount,
-            filterCnt);
-    return filtered;
-  }
-
-  private interface Learner extends Scorer<String> {
-    void weightUpdate(int epoch, int id,
-        RichTranslation<IString, String> target,
-        RichTranslation<IString, String> argmax, double loss);
-  }
-
-  private static class PerceptronLearner implements Learner {
-    private final double[] lrate;
-    private final OAIndex<String> featureIndex = new OAIndex<String>();
-    private double[] weights = new double[0];
-    private static final double DEFAULT_WT = 0.001;
-
-    public PerceptronLearner(double[] lrate) {
-      this.lrate = lrate;
-    }
-
-    void addMulWeight(String name, double m, double b) {
-      int idx = featureIndex.indexOf(name, true);
-      if (idx >= weights.length) {
-        double[] newWeights = new double[(idx + 1) * 2];
-        System.arraycopy(weights, 0, newWeights, 0, weights.length);
-
-        for (int i = weights.length; i < newWeights.length; i++) {
-          newWeights[i] = DEFAULT_WT;
-        }
-
-        weights = newWeights;
-      }
-      weights[idx] = m * weights[idx] + b;
-    }
-
-    @Override
-    public void weightUpdate(int epoch, int id,
-        RichTranslation<IString, String> target,
-        RichTranslation<IString, String> argmax, double loss) {
-      if (VERBOSE_LEARNER)
-        System.err.printf("Target features:\n");
-      ClassicCounter<String> tVec = new ClassicCounter<String>();
-      for (FeatureValue<String> feature : target.features) {
-        tVec.incrementCount(feature.name, feature.value);
-      }
-
-      for (Map.Entry<String, Double> e : tVec.entrySet()) {
-        addMulWeight(e.getKey(), 1.0, lrate[Math.min(epoch, lrate.length - 1)]
-            * e.getValue());
-        if (VERBOSE_LEARNER)
-          System.err.printf("\t%s +%f\n", e.getKey(), e.getValue());
-      }
-
-      if (VERBOSE_LEARNER)
-        System.err.printf("Argmax features\n");
-      ClassicCounter<String> aVec = new ClassicCounter<String>();
-      for (FeatureValue<String> feature : argmax.features) {
-        aVec.incrementCount(feature.name, feature.value);
-      }
-      for (Map.Entry<String, Double> e : aVec.entrySet()) {
-        addMulWeight(e.getKey(), 1.0, -lrate[Math.min(epoch, lrate.length - 1)]
-            * e.getValue());
-        if (VERBOSE_LEARNER)
-          System.err.printf("\t%s +%f\n", e.getKey(), e.getValue());
-      }
-      int ldIdx = featureIndex.indexOf("LinearDistortion");
-      if (weights[ldIdx] < 0)
-        weights[ldIdx] = 0;
-    }
-
-    @Override
-    public double getIncrementalScore(Collection<FeatureValue<String>> features) {
-      double score = 0;
-
-      for (FeatureValue<String> feature : features) {
-        int index = featureIndex.indexOf(feature.name);
-        if (index >= 0)
-          score += weights[index] * feature.value;
-        else
-          score += DEFAULT_WT * feature.value;
-      }
-
-      return score;
-    }
-
-    @Override
-    public void saveWeights(String filename) throws IOException {
-      System.err.printf("Saving weights to: %s\n", filename);
-      BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-      PriorityQueue<ComparableWtPair> q = new PriorityQueue<ComparableWtPair>();
-
-      for (String featureName : featureIndex.keySet()) {
-        int idx = featureIndex.indexOf(featureName);
-        double value;
-        if (idx < 0 || idx >= weights.length) {
-          value = 0;
-        } else {
-          value = weights[idx];
-        }
-        if (value == 0)
-          continue;
-        q.add(new ComparableWtPair(featureName, value));
-      }
-      for (ComparableWtPair cwp = q.poll(); cwp != null; cwp = q.poll()) {
-        writer.append(cwp.featureName).append(" ")
-            .append(String.format("%e", cwp.value)).append("\n");
-      }
-      writer.close();
-    }
-
-    @Override
-    public void updateWeights(Counter<String> weights) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasNonZeroWeight(String featureName) {
-      return false;
-    }
-  }
-
-  private static class ComparableWtPair implements Comparable<ComparableWtPair> {
-    String featureName;
-    double value;
-
-    public ComparableWtPair(String featureName, double value) {
-      this.featureName = featureName;
-      this.value = value;
-    }
-
-    @Override
-    public int compareTo(ComparableWtPair o) {
-      int signum = (int) Math.signum(Math.abs(o.value) - Math.abs(this.value));
-      if (signum != 0)
-        return signum;
-      return this.featureName.compareTo(o.featureName);
-    }
-  }
-
-  private static class AvgPerceptronLearner implements Learner {
-    double[] lrate;
-    ClassicCounter<String> wts = new ClassicCounter<String>();
-    ClassicCounter<String> wtsSum = new ClassicCounter<String>();
-    int updateCount = 0;
-
-    public AvgPerceptronLearner(double[] lrate) {
-      this.lrate = lrate;
-      wts.setDefaultReturnValue(0.1);
-    }
-
-    @Override
-    public void saveWeights(String filename) throws IOException {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
-      for (Pair<String, Double> p : Counters
-          .toDescendingMagnitudeSortedListWithCounts(wtsSum)) {
-        writer.append(p.first).append(" ")
-            .append(Double.toString(p.second / updateCount))
-            .append("\n");
-      }
-      writer.close();
-    }
-
-    @Override
-    public void weightUpdate(int epoch, int id,
-        RichTranslation<IString, String> target,
-        RichTranslation<IString, String> argmax, double loss) {
-      for (FeatureValue<String> feature : target.features) {
-        if (!wts.containsKey(feature.name))
-          wts.setCount(feature.name, 0.1);
-        wts.incrementCount(feature.name,
-            lrate[Math.min(epoch, lrate.length - 1)] * feature.value);
-      }
-
-      for (FeatureValue<String> feature : argmax.features) {
-        if (!wts.containsKey(feature.name))
-          wts.setCount(feature.name, 0.1);
-        wts.incrementCount(feature.name,
-            -lrate[Math.min(epoch, lrate.length - 1)] * feature.value);
-      }
-
-      wtsSum.addAll(wts);
-      updateCount++;
-    }
-
-    @Override
-    public double getIncrementalScore(Collection<FeatureValue<String>> features) {
-      double sum = 0;
-
-      for (FeatureValue<String> feature : features) {
-        sum += feature.value * wts.getCount(feature.name);
-      }
-
-      return sum;
-    }
-
-    @Override
-    public void updateWeights(Counter<String> weights) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasNonZeroWeight(String featureName) {
-      return false;
-    }
-  }
-
-  private static class MiraLearner implements Learner {
-    ClassicCounter<String> wts = new ClassicCounter<String>();
-    final double C;
-
-    public MiraLearner(double C) {
-      this.C = C;
-    }
-
-    @Override
-    public void saveWeights(String filename) throws IOException {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
-      for (Pair<String, Double> p : Counters
-          .toDescendingMagnitudeSortedListWithCounts(wts)) {
-        writer.append(p.first).append(" ").append(p.second.toString())
-            .append("\n");
-      }
-      writer.close();
-    }
-
-    @Override
-    public void weightUpdate(int epoch, int id,
-        RichTranslation<IString, String> target,
-        RichTranslation<IString, String> argmax, double loss) {
-      ClassicCounter<String> diffNorm = new ClassicCounter<String>();
-      for (FeatureValue<String> fv : target.features) {
-        diffNorm.incrementCount(fv.name, fv.value);
-      }
-
-      for (FeatureValue<String> fv : target.features) {
-        diffNorm.incrementCount(fv.name, -fv.value);
-      }
-
-      double diffNormL2 = Counters.L2Norm(diffNorm);
-      double scoreDiff = this.getIncrementalScore(target.features)
-          - this.getIncrementalScore(argmax.features);
-      double alpha = Math.max(0, Math.min(C, (loss - scoreDiff) / diffNormL2));
-
-      for (FeatureValue<String> feature : target.features) {
-        if (!wts.containsKey(feature.name))
-          wts.setCount(feature.name, 0.1);
-        wts.incrementCount(feature.name, alpha * feature.value);
-      }
-
-      for (FeatureValue<String> feature : argmax.features) {
-        if (!wts.containsKey(feature.name))
-          wts.setCount(feature.name, 0.1);
-        wts.incrementCount(feature.name, alpha * feature.value);
-      }
-    }
-
-    @Override
-    public double getIncrementalScore(Collection<FeatureValue<String>> features) {
-      double sum = 0;
-
-      for (FeatureValue<String> feature : features) {
-        sum += feature.value * wts.getCount(feature.name);
-      }
-
-      return sum;
-    }
-
-    @Override
-    public void updateWeights(Counter<String> weights) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasNonZeroWeight(String featureName) {
-      return false;
-    }
-  }
-
-
-  private static class SGDLogLinearLearner implements Learner {
-    ClassicCounter<String> wts = new ClassicCounter<String>();
-    final double R;
-    final double[] lrate;
-
-    public SGDLogLinearLearner(double r, double lrate[]) {
-      this.R = r;
-      this.lrate = lrate;
-    }
-
-    @Override
-    public void saveWeights(String filename) throws IOException {
-      BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
-      for (Pair<String, Double> p : Counters
-          .toDescendingMagnitudeSortedListWithCounts(wts)) {
-        writer.append(p.first).append(" ").append(p.second.toString())
-            .append("\n");
-      }
-      writer.close();
-    }
-
-    @Override
-    public void weightUpdate(int epoch, int id,
-        RichTranslation<IString, String> target,
-        RichTranslation<IString, String> argmax, double loss) {
-      throw new RuntimeException();
-    }
-
-    public void weightUpdate(
-        int epoch, // int id,
-        List<RichTranslation<IString, String>> target,
-        List<RichTranslation<IString, String>> argmax) {// , double loss) {
-      double tZ = 0;
-      double aZ = 0;
-      int tInfs = 0;
-      int aInfs = 0;
-
-      for (RichTranslation<IString, String> trans : target) {
-        double v;
-        tZ += v = Math.exp(getIncrementalScore(trans.features));
-        if (v == Double.POSITIVE_INFINITY) {
-          tInfs++;
-        }
-      }
-
-      for (RichTranslation<IString, String> trans : argmax) {
-        double v;
-        aZ += v = Math.exp(getIncrementalScore(trans.features));
-        if (v == Double.POSITIVE_INFINITY) {
-          aInfs++;
-        }
-      }
-
-      System.out.printf("tZ is approximated as (infs: %f): %d\n", tZ, tInfs);
-      System.out.printf("aZ is approximated as (infs: %f): %d\n", aZ, aInfs);
-
-      Set<String> featureNames = new HashSet<String>(wts.keySet());
-
-      // E_p(H|F,E) [f]
-      ClassicCounter<String> expectedCountsH_g_E_F = new ClassicCounter<String>();
-      for (RichTranslation<IString, String> trans : target) {
-        double n = Math.exp(getIncrementalScore(trans.features));
-        double p;
-        if (tZ == Double.POSITIVE_INFINITY) {
-          if (n == tZ)
-            p = 1.0 / tInfs;
-          else
-            p = 0.0;
-        } else {
-          p = n / tZ;
-        }
-        for (FeatureValue<String> fv : trans.features) {
-          expectedCountsH_g_E_F.incrementCount(fv.name, fv.value * p);
-          featureNames.add(fv.name);
-        }
-      }
-
-      // E_p(E, H|F) [f]
-      ClassicCounter<String> expectedCountsE_H_g_F = new ClassicCounter<String>();
-      for (RichTranslation<IString, String> trans : argmax) {
-        double n = Math.exp(getIncrementalScore(trans.features));
-        double p;
-        if (aZ == Double.POSITIVE_INFINITY) {
-          if (n == aZ)
-            p = 1.0 / aInfs;
-          else
-            p = 0.0;
-        } else {
-          p = n / aZ;
-        }
-        for (FeatureValue<String> fv : trans.features) {
-          expectedCountsE_H_g_F.incrementCount(fv.name, fv.value * p);
-          featureNames.add(fv.name);
-        }
-      }
-
-      // delta w
-      ClassicCounter<String> dW = new ClassicCounter<String>();
-      for (String featureName : featureNames) {
-        double dw = expectedCountsH_g_E_F.getCount(featureName)
-            - expectedCountsE_H_g_F.getCount(featureName) - R
-            * wts.getCount(featureName);
-        dW.incrementCount(featureName, dw);
-        System.err.printf(
-            "%s:\n   E_p(h|e,f):%e - E_p(e,h|f)%e - R*w:%e = %e\n",
-            featureName, expectedCountsH_g_E_F.getCount(featureName),
-            expectedCountsE_H_g_F.getCount(featureName),
-            R * wts.getCount(featureName), dw);
-      }
-
-      for (String featureName : featureNames) {
-        wts.incrementCount(featureName,
-            lrate[Math.min(epoch, lrate.length - 1)] * dW.getCount(featureName));
-      }
-    }
-
-    @Override
-    public double getIncrementalScore(Collection<FeatureValue<String>> features) {
-      double sum = 0;
-
-      for (FeatureValue<String> feature : features) {
-        sum += feature.value * wts.getCount(feature.name);
-      }
-
-      return sum;
-    }
-
-    @Override
-    public void updateWeights(Counter<String> weights) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean hasNonZeroWeight(String featureName) {
-      return false;
-    }
-  }
-
-  private void learningLoop(Learner learner, String inputFilename,
-      int maxEpoch, String saveWeights) throws IOException {
-
-    for (int epoch = 0; epoch < maxEpoch; epoch++) {
-      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-              new FileInputStream(inputFilename), "UTF-8")); // = null;
-      int translationId = -1;
-
-      IncrementalEvaluationMetric<IString, String> incEval = evalMetric
-          .getIncrementalMetric();
-      for (String line; (line = reader.readLine()) != null; ) {
-        translationId++;
-        String[] tokens = line.split("\\s+");
-        Sequence<IString> foreign = new SimpleSequence<IString>(true,
-            IStrings.toSyncIStringArray(tokens));
-        List<RichTranslation<IString, String>> targetNBest = null;
-        List<RichTranslation<IString, String>> argmaxNBest;
-
-        System.err.printf("Source: %s\n", foreign);
-        RichTranslation<IString, String> target;
-        if (learningTarget == LearningTarget.BEST_ON_N_BEST_LIST) {
-          argmaxNBest = inferers.get(0).nbest(learner, foreign, translationId,
-              null, null, 1000);
-          target = listArgMax(argmaxNBest, incEval, translationId);
-        } else {
-          System.err.println("Attempting to generate target");
-          System.err.println("==========================================");
-
-          ConstrainedOutputSpace<IString, String> constrainedOutputSpace = new EnumeratedConstrainedOutputSpace<IString, String>(
-              learnFromReferences.get(translationId),
-              phraseGenerator.longestForeignPhrase());
-          long goldTime = -System.currentTimeMillis();
-
-          if (learner instanceof SGDLogLinearLearner) {
-            targetNBest = inferers.get(0).nbest(learner, foreign,
-                translationId, constrainedOutputSpace,
-                learnFromReferences.get(translationId), 1000);
-            if (targetNBest == null) {
-              System.err.println("Can't generate reference, skipping....");
-              continue;
-            }
-            target = targetNBest.get(0);
-          } else {
-            target = inferers.get(0).translate(learner, foreign, translationId,
-                constrainedOutputSpace, learnFromReferences.get(translationId));
-
-            if (target == null) {
-              System.err.println("Can't generate reference, skipping....");
-              continue;
-            }
-          }
-          goldTime += System.currentTimeMillis();
-          System.err.printf("Forced decoding time: %f s\n", goldTime / 1000.0);
-
-          System.err.println("Generating model translation n-best list");
-          System.err.println("==========================================");
-          long argmaxTime = -System.currentTimeMillis();
-          argmaxNBest = inferers.get(0).nbest(learner, foreign, translationId,
-              null, null, 1000);
-          argmaxTime += System.currentTimeMillis();
-          System.err
-              .printf("Argmax decoding time: %f s\n", argmaxTime / 1000.0);
-        }
-
-        RichTranslation<IString, String> argmax = argmaxNBest.get(0);
-
-        incEval.replace(translationId, target);
-        double evalTarget = optionalSmoothScoring(incEval, translationId,
-            target);
-
-        System.err.printf("Target: %s\n", target.translation);
-        System.err.printf("Target Score: %f Smooth Score: %f\n",
-            incEval.score(), evalTarget);
-
-        double evalArgmax = optionalSmoothScoring(incEval, translationId,
-            argmax);
-        System.err.printf("Argmax: %s\n", argmax.translation);
-        System.err.printf("Argmax Score: %f Smooth Score: %f\n",
-            incEval.score(), evalArgmax);
-
-        double loss = evalTarget - evalArgmax;
-        if (learner instanceof SGDLogLinearLearner) {
-          ((SGDLogLinearLearner) learner).weightUpdate(epoch, /* translationId, */
-          targetNBest, argmaxNBest); // , loss);
-        } else {
-          learner.weightUpdate(epoch, translationId, target, argmax, loss);
-        }
-        if (translationId % 50 == 0) {
-          learner.saveWeights(saveWeights + ".epoch." + epoch + ".tran."
-              + translationId + ".wts");
-        }
-      }
-      reader.close();
-      learner.saveWeights(saveWeights + ".epoch." + epoch);
-      System.err.printf("--> epoch %d score: %f\n", epoch, incEval.score());
-    }
-    System.err.printf("Saving weights to %s\n", saveWeights);
-    learner.saveWeights(saveWeights);
-  }
-
-  private static double optionalSmoothScoring(
-      IncrementalEvaluationMetric<IString, String> incEval, int pos,
-      RichTranslation<IString, String> trans) {
-    return (incEval instanceof HasSmoothScore ? ((HasSmoothScore) incEval
-        .replace(pos, trans)).smoothScore() : incEval.replace(pos, trans)
-        .score());
-  }
-
-  private static RichTranslation<IString, String> listArgMax(
-      List<RichTranslation<IString, String>> list,
-      IncrementalEvaluationMetric<IString, String> incEval, int pos) {
-    double best = Double.NEGATIVE_INFINITY;
-    RichTranslation<IString, String> bestTrans = null;
-    for (RichTranslation<IString, String> trans : list) {
-      double score = optionalSmoothScoring(incEval, pos, trans);
-      if (score > best) {
-        best = score;
-        bestTrans = trans;
-      }
-    }
-    return bestTrans;
-  }
-
-  /*
-   * @SuppressWarnings("unchecked") private void learnWeights(String
-   * inputFilename) throws IOException {
-   *
-   * double maxEvalScore = Double.NaN; NBestListContainer<IString, String>
-   * nbestLists = null;
-   *
-   * int chunkSize = (learningAlgorithm.equals(EVALUE_LEARNING)? 1 : 5);
-   *
-   * LineNumberReader reader = null; int translationId = 0; for (int nbestIter =
-   * 0; nbestIter < MAX_LEARN_NBEST_ITER; nbestIter++) {
-   * IncrementalEvaluationMetric<IString, String> actualPostIncEval =
-   * evalMetric.getIncrementalMetric(); IncrementalEvaluationMetric<IString,
-   * String> actualPreIncEval = evalMetric.getIncrementalMetric();
-   *
-   * double initialEvalSum = 0; double postEvalSum = 0; int evalCount = 0;
-   * boolean doneStream = false; reader = new LineNumberReader(new
-   * InputStreamReader(new FileInputStream(inputFilename), "UTF-8"));
-   * translationId = 0;
-   *
-   * double initialCScore = 0; for (int chunk = 0; !doneStream; chunk++) {
-   *
-   * String nbestFilename; if (!learningAlgorithm.equals(EVALUE_LEARNING)) {
-   * nbestFilename = String.format("%s.nbest.c%d.%d", saveWeights, chunk,
-   * nbestIter); } else { nbestFilename = String.format("/tmp/%s.nbest.c%d.%d",
-   * saveWeights.replaceAll("[^A-Za-z0-9]","_"), chunk, nbestIter); }
-   *
-   * System.err.printf("Generating n-best list to: %s\n", nbestFilename); //
-   * Generate new nbest list System.err.printf("n-best list iter: %d\n",
-   * nbestIter); System.err.printf("Generating n-best list: %s\n",
-   * nbestFilename);
-   *
-   * // if (nbestIter < -1) { BufferedWriter nbestListWriter = new
-   * BufferedWriter(new FileWriter(nbestFilename));
-   *
-   * int skipped = 0; int included = 0;
-   *
-   * long decodingTime = -System.currentTimeMillis(); int
-   * foreignTokensTranslated = 0; for (String line; included < chunkSize;
-   * translationId++, included++) { line = reader.readLine(); if (line == null)
-   * { reader.close(); doneStream = true; break; }
-   *
-   * String[] tokens = line.split("\\s+"); foreignTokensTranslated +=
-   * tokens.length; if (tokens.length > maxSentenceSize) {
-   * System.err.printf("Skipping: %s\n", line);
-   * System.err.printf("Tokens: %d (Max: %d)\n", tokens.length,
-   * maxSentenceSize); skipped++; continue; }
-   *
-   * if (tokens.length < minSentenceSize) { System.err.printf("Skipping: %s\n",
-   * line); System.err.printf("Tokens: %d (Min: %d)\n", tokens.length,
-   * minSentenceSize); skipped++; continue; }
-   *
-   * Sequence<IString> foreign = new SimpleSequence<IString>(true,
-   * IStrings.toIStringArray(tokens));
-   *
-   * // log foreign sentence System.err.printf("Translating(%d): %s\n",
-   * reader.getLineNumber(), foreign); long translationTime =
-   * -System.currentTimeMillis(); // scorer.setRandomizeTag(nbestIter == 0);
-   *
-   * List<RichTranslation<IString, String>> translations = new
-   * ArrayList(LEARNING_NBEST_LIST_SIZE); List<List<RichTranslation<IString,
-   * String>>> nbestNBad = null;
-   *
-   *
-   * if (nbestIter == 0 && !learningAlgorithm.equals(EVALUE_LEARNING)) {
-   * scorer.setWeightMultipliers(1.0, 0.0);
-   * System.err.printf("Doing Manual Weight Decode.\n"); nbestNBad =
-   * ((AbstractBeamInferer) inferers.get(0)).nbestNBad(foreign,
-   * reader.getLineNumber() - 1, null, LEARNING_NBEST_LIST_SIZE, 0);
-   * translations.addAll(nbestNBad.get(0));
-   * translations.addAll(nbestNBad.get(1)); scorer.setWeightMultipliers(0.0,
-   * 1.0); }
-   *
-   * if (!(nbestIter == 0 && chunk == 0) ||
-   * learningAlgorithm.equals(EVALUE_LEARNING)) { nbestNBad =
-   * ((AbstractBeamInferer) inferers.get(0)) .nbestNBad(foreign,
-   * reader.getLineNumber() - 1, null, LEARNING_NBEST_LIST_SIZE, 0); }
-   *
-   * translations.addAll(nbestNBad.get(0));
-   * translations.addAll(nbestNBad.get(1));
-   *
-   * translationTime += System.currentTimeMillis(); System.err.printf(
-   * "Foreign length: %d Argmax Translation length: %s Translation time: %.3f s\n"
-   * , foreign.size(), (translations == null ? "NA" : translations
-   * .get(0).translation.size()), translationTime / (1000.0)); if (translations
-   * != null) { System.err.printf("Arg-max translation:%s\n\n",
-   * translations.get(0).translation); for (RichTranslation<IString, String>
-   * tran : translations) {
-   * nbestListWriter.append(tran.nbestToString(translationId)).append( "\n"); }
-   * } else { System.err.printf("<<<decoder failure>>>\n"); } } decodingTime +=
-   * System.currentTimeMillis();
-   *
-   * if (included == 0) continue; nbestListWriter.close();
-   *
-   * if (skipped == translationId) { throw new RuntimeException(String
-   * .format("Error: all foreign sentences skipped")); } // } // perform loss
-   * augmented inference over n-best list until convergence
-   * System.err.printf("Loading n-best list\n"); nbestLists = new
-   * MosesNBestList(nbestFilename);
-   *
-   * int maxNbestListSize = 0; int minNbestListSize = Integer.MAX_VALUE; for
-   * (List a : nbestLists.nbestLists()) { if (a.size() == 0) continue; if (a ==
-   * null) continue; int aSz = a.size(); if (aSz > maxNbestListSize)
-   * maxNbestListSize = aSz; if (aSz < minNbestListSize) minNbestListSize = aSz;
-   * } System.err.printf("Largest  cummalative n-best list size: %d\n",
-   * maxNbestListSize);
-   * System.err.printf("Smallest cummalative n-best list size: %d\n",
-   * minNbestListSize);
-   *
-   * int translations = 0; for (List<? extends
-   * ScoredFeaturizedTranslation<IString, String>> transList : nbestLists
-   * .nbestLists()) { if (transList.size() > 0) translations++; }
-   *
-   * System.err.printf("Translations in chunk: %d\n", translations);
-   *
-   * double l2Of1Best = 0; double scoreSum1Best = 0; double scoreSum1Worst = 0;
-   * int outOf = 0; for (List<? extends ScoredFeaturizedTranslation<IString,
-   * String>> nbestlist : nbestLists .nbestLists()) { if (nbestlist.size() == 0)
-   * continue; for (FeatureValue<String> fv : nbestlist.get(0).features) {
-   * l2Of1Best += fv.value * fv.value; } outOf++; scoreSum1Best +=
-   * nbestlist.get(0).score; scoreSum1Worst += nbestlist.get(nbestlist.size() -
-   * 1).score; } l2Of1Best = Math.sqrt(l2Of1Best); double scoreSumDiff =
-   * scoreSum1Best - scoreSum1Worst;
-   *
-   * System.err.printf(
-   * "Argmax cScore: %e N-best argmin cScore: %e (diff %f)\n", scoreSum1Best,
-   * scoreSum1Worst, scoreSumDiff);
-   *
-   * EvaluationMetric<IString, String> bestScoreMetric = new
-   * MarginRescaleEvaluationMetric( null, scorer);
-   *
-   * MultiTranslationMetricMax<IString, String> bestScoreSearch = new
-   * HillClimbingMultiTranslationMetricMax<IString, String>( bestScoreMetric);
-   * MultiTranslationMetricMax<IString, String> oracleEvalSearch = new
-   * HillClimbingMultiTranslationMetricMax<IString, String>( evalMetric);
-   *
-   * System.err.printf(
-   * "Finding best scoring translations over cummulative n-best list...\n");
-   * List<ScoredFeaturizedTranslation<IString, String>>
-   * bestScoreTranslationsInit = bestScoreSearch.maximize(nbestLists);
-   * System.err.printf("Done.\n");
-   *
-   * IncrementalEvaluationMetric<IString, String> initialEvalMetric =
-   * evalMetric.getIncrementalMetric(); { int tI = 0; initialCScore = 0.0; int
-   * posT = -1; for (ScoredFeaturizedTranslation<IString, String> trans :
-   * bestScoreTranslationsInit) { posT++; if (actualPreIncEval.size() <= posT) {
-   * actualPreIncEval.add(trans); } else { if (trans != null)
-   * actualPreIncEval.replace(posT, trans); }
-   *
-   * initialEvalMetric.add(trans); if (trans != null) initialCScore +=
-   * scorer.getIncrementalScore(trans.features); tI++; } }
-   *
-   * System.err.printf(
-   * "Finding oracle translations over cummulative n-best list....\n");
-   * List<ScoredFeaturizedTranslation<IString, String>> oracleEvalTranslations =
-   * oracleEvalSearch.maximize(nbestLists); System.err.printf("Done.\n");
-   * IncrementalEvaluationMetric<IString, String> oracleEvalMetric =
-   * evalMetric.getIncrementalMetric();
-   *
-   * for (ScoredFeaturizedTranslation<IString, String> trans :
-   * oracleEvalTranslations) { //System.err.printf("%s\n", (trans == null ?
-   * trans : trans.translation)); oracleEvalMetric.add(trans); } double
-   * oracleScore = oracleEvalMetric.score();
-   *
-   *
-   *
-   * initialEvalSum += initialEvalMetric.score(); evalCount++;
-   * System.err.printf(
-   * "> Init eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n",
-   * nbestIter, chunk, 100 initialEvalMetric.score(), initialCScore, 100 *
-   * oracleScore, 100*initialEvalSum/evalCount, actualPreIncEval.score()*100);
-   *
-   * scorer.setWeightMultipliers(0.0, 1.0);
-   *
-   * long learningTime = -System.currentTimeMillis();
-   *
-   * if (learningAlgorithm.equals(EVALUE_LEARNING)) { EValueLearningScorer
-   * eScorer = (EValueLearningScorer)scorer; int transIdx = -1;
-   * IncrementalEvaluationMetric<IString, String> incEvalMetric =
-   * learningMetric.getIncrementalMetric(); for (int i = 0; i <
-   * nbestLists.nbestLists().size(); i++) { if
-   * (nbestLists.nbestLists().get(i).size() != 0) { if (transIdx == -1) transIdx
-   * = i; else throw new RuntimeException(); } incEvalMetric.add(null); }
-   *
-   * //nbestLists.nbestLists(); List<? extends
-   * ScoredFeaturizedTranslation<IString, String>> sfTrans =
-   * nbestLists.nbestLists().get(transIdx); List<List<FeatureValue<String>>>
-   * featureVectors = new ArrayList<List<FeatureValue<String>>>(sfTrans.size());
-   *
-   * /* { int tI = -1; for (ScoredFeaturizedTranslation<IString, String> sfTran
-   * : sfTrans) { tI++; double score =
-   * -((TERMetric)learningMetric).calcTER(sfTran, transIdx); if (score >
-   * trueOracle) { trueOracle = score; loc = tI; } } }
-   * System.err.printf("true oracle: %f (%d)\n", trueOracle, loc); * / double[]
-   * us = new double[sfTrans.size()]; //System.err.printf("nbest\n");
-   * System.err.printf("eval scores (%d)\n", sfTrans.size()); for
-   * (ScoredFeaturizedTranslation<IString, String> sfTran : sfTrans) {
-   * incEvalMetric.replace(transIdx, sfTran); us[featureVectors.size()] =
-   * incEvalMetric.score(); //System.err.printf("%d: %f\n",
-   * featureVectors.size(), us[featureVectors.size()]);
-   * featureVectors.add(sfTran.features); } if (DEBUG_LEVEL >= 2) {
-   * System.err.printf("Old Weights\n"); eScorer.displayWts(); } double objInit
-   * = eScorer.objectiveValue(featureVectors, us);
-   * eScorer.wtUpdate(featureVectors, us, nbestIter+1); double objPost =
-   * eScorer.objectiveValue(featureVectors, us);
-   * System.err.printf("Obj Delta: %e (%e-%e)\n", objPost - objInit, objPost,
-   * objInit);
-   *
-   * if (DEBUG_LEVEL >= 2) { System.err.printf("New Weights\n");
-   * eScorer.displayWts(); } }
-   *
-   * learningTime += System.currentTimeMillis();
-   *
-   * List<ScoredFeaturizedTranslation<IString, String>> bestScoreTranslations =
-   * bestScoreSearch .maximize(nbestLists);
-   *
-   * IncrementalEvaluationMetric<IString, String> bestScoringEvalMetric =
-   * evalMetric.getIncrementalMetric();
-   *
-   * List<FeatureValue<String>> allSelectedFeatures = new
-   * LinkedList<FeatureValue<String>>(); double finalCScore = 0; int posBT = -1;
-   * for (ScoredFeaturizedTranslation<IString, String> trans :
-   * bestScoreTranslations) { posBT++;
-   *
-   * if (actualPostIncEval.size() <= posBT) { actualPostIncEval.add(trans); }
-   * else { if (trans != null) actualPostIncEval.replace(posBT, trans); }
-   * bestScoringEvalMetric.add(trans); if (trans != null) {
-   * allSelectedFeatures.addAll(trans.features); } }
-   *
-   * postEvalSum += bestScoringEvalMetric.score(); System.err.printf(
-   * "> Post eS (%d:%d): %.2f (c: %.2e) Orcl: %.2f Avg: %.2f Actl eS: %.2f\n",
-   * nbestIter, chunk, 100 bestScoringEvalMetric.score(), finalCScore, 100
-   * oracleEvalMetric.score(), 100*postEvalSum/evalCount,
-   * actualPostIncEval.score()*100); System.err.printf(
-   * "> Time Summary Decoding: %.3f s Learning (incl loss infer): %.3f s\n",
-   * decodingTime/1000.0, learningTime/1000.0);
-   * System.err.printf("Max eval score: %f\n", maxEvalScore); if (chunk % 250 ==
-   * 0) scorer.saveWeights(String.format("%s.nbestitr_%d.chunk_%d.wts",
-   * saveWeights, nbestIter, chunk)); if (DEBUG_LEVEL >= 2) {
-   * System.err.printf("Final Weights for nbestitr: %d chunk: %d", nbestIter,
-   * chunk); scorer.displayWeights(); }
-   *
-   * } scorer.saveWeights(String.format("%s.nbestitr_%d.final.wts", saveWeights,
-   * nbestIter)); System.err.printf(
-   * ">> %d: Avg eS: %.2f~>%.2f  Actl eS: %.2f~>%.2f (diff: %.3f)\n", nbestIter,
-   * 100*initialEvalSum/evalCount, 100*postEvalSum/evalCount,
-   * actualPreIncEval.score()*100, actualPostIncEval.score()*100,
-   * actualPostIncEval.score()*100 - actualPreIncEval.score()*100); } }
+  /**
+   * Load options from a Moses-style ini file.
+   * 
+   * @param filename
+   * @return
+   * @throws IOException
    */
-
-  public void executiveLoop() throws IOException {
-    if (learnWeights) {
-      String inputFilename = saveWeights + ".in";
-      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-          System.in, "UTF-8"));
-      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-          new FileOutputStream(inputFilename), "UTF-8"));
-      for (String line; (line = reader.readLine()) != null;) {
-        writer.write(line);
-        writer.write("\n");
-      }
-      reader.close();
-      writer.close();
-
-      if (learningAlgorithm.equals(PERCEPTRON_LEARNING)) {
-        Learner learner = new PerceptronLearner(learningRate);
-        learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-      } else if (learningAlgorithm.equals(AVG_PERCEPTRON_LEARNING)) {
-        Learner learner = new AvgPerceptronLearner(learningRate);
-        learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-      } else if (learningAlgorithm.equals(MIRA_LEARNING)) {
-        Learner learner = new MiraLearner(maxMarginC);
-        learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-      } else if (learningAlgorithm.equals(COST_MARGIN_LEARNING)) {
-        Learner learner = new PerceptronLearner(learningRate);
-        learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-      } else if (learningAlgorithm.equals(SGDLL)) {
-        Learner learner = new SGDLogLinearLearner(0.5, learningRate);
-        learningLoop(learner, inputFilename, maxEpochs, saveWeights);
-      } else {
-        throw new RuntimeException("Unrecognized learning algorithm");
-      }
-    } else {
-      decodeFromConsole();
+  public static Map<String, List<String>> readConfig(String filename)
+      throws IOException {
+    Map<String, List<String>> config = new HashMap<String, List<String>>();
+    LineNumberReader reader;
+    try {
+      reader = new LineNumberReader(new FileReader(filename));
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(String.format("Can't open configuration file %s\n", filename));
     }
+    for (String line; (line = reader.readLine()) != null;) {
+      line = line.trim().replaceAll("#.*$", "");
+      if (line.length() == 0)
+        continue;
+      if (line.charAt(0) != '[' || line.charAt(line.length() - 1) != ']') {
+        throw new RuntimeException(
+            String
+                .format(
+                    "Expected bracketing of option name by '[',']', line: %d label: %s",
+                    reader.getLineNumber(), line));
+      }
+      String nextArgLine = line;
+
+      while (nextArgLine != null) {
+        String key = line.substring(1, nextArgLine.length() - 1);
+        nextArgLine = null;
+        List<String> entries = new ArrayList<String>();
+        while ((line = reader.readLine()) != null) {
+          if (line.matches("^\\s*$"))
+            break;
+          if (line.startsWith("[")) {
+            nextArgLine = line;
+            break;
+          }
+          if (line.charAt(0) == '#')
+            break;
+          line = line.replaceAll("#.*$", "");
+          String[] fields = line.split("\\s+");
+          entries.addAll(Arrays.asList(fields));
+        }
+
+        if (!entries.isEmpty())
+          config.put(key, entries);
+      }
+    }
+    reader.close();
+    return config;
   }
 
-  public static void main(String[] args) throws Exception {
+  /**
+   * Read a combination of config file and other command line arguments.
+   * 
+   * @param args
+   * @return
+   * @throws IOException
+   */
+  private static Map<String, List<String>> readArgs(String[] args) throws IOException {
+    Map<String, List<String>> configArgs = new HashMap<String, List<String>>();
+    Map<String, List<String>> configFile = new HashMap<String, List<String>>();
+    Map<String, List<String>> configFinal = new HashMap<String, List<String>>();
 
+    for (Map.Entry<Object, Object> e : StringUtils.argsToProperties(args)
+        .entrySet()) {
+      String key = e.getKey().toString();
+      String value = e.getValue().toString();
+      if (CONFIG_FILE.equals(key)) {
+        configFile.putAll(readConfig(value));
+      } else {
+        configArgs.put(key, Arrays.asList(value.split(" ")));
+      }
+    }
+    configFinal.putAll(configFile);
+    configFinal.putAll(configArgs); // command line args overwrite config file options
+    return configFinal;
+  }
+  
+  /**
+   * Run Phrasal from the command line.
+   * 
+   * @param args
+   * @throws Exception
+   */
+  public static void main(String[] args) throws Exception {
     if (args.length < 1) {
       System.err.println("Usage:\n\tjava ...Phrasal (model.ini)");
       System.exit(-1);
@@ -2210,8 +1210,7 @@ public class Phrasal {
     initStaticMembers(config);
     Phrasal p = new Phrasal(config);
     FlatPhraseTable.lockIndex();
-    p.executiveLoop();
+    p.decodeFromConsole();
     System.exit(0);
   }
-
 }
