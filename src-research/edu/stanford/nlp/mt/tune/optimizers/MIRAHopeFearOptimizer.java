@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -61,7 +60,7 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
     logger.info("Hope derivation: " + dHope.toString());
     
     // The "max-loss" derivation (Crammer et al. (2006) fig.2)
-    Derivation dFear = getBestFearDerivation(objective, translations, references, dHope.hypothesis, sourceId);
+    Derivation dFear = getBestFearDerivation(objective, translations, references, dHope, sourceId);
     logger.info("Fear derivation: " + dFear.toString());
     
     double margin = dFear.score - dHope.score;
@@ -97,15 +96,17 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
    * @return
    */
   private Counter<String> getFeatureDiff(Derivation d1, Derivation d2) {
-    Counter<String> featureDiff = OptimizerUtils.featureValueCollectionToCounter(d1.hypothesis.features);
-    assert d2.hypothesis.features.size() == featureDiff.size();
-    for (FeatureValue<String> d2Feature : d2.hypothesis.features) {
-      assert featureDiff.containsKey(d2Feature.name);
-      double d1Value = featureDiff.getCount(d2Feature.name);
-      double diff = d1Value - d2Feature.value;
-      featureDiff.setCount(d2Feature.name, diff);
+    Counter<String> d1Feats = OptimizerUtils.featureValueCollectionToCounter(d1.hypothesis.features);
+    Counter<String> d2Feats = OptimizerUtils.featureValueCollectionToCounter(d2.hypothesis.features);
+    int d1sz = d1Feats.keySet().size();
+    int d2sz = d2Feats.keySet().size();
+    assert d1Feats.keySet().size() == d2Feats.keySet().size();
+    for (String key : d1Feats.keySet()) {
+      assert d2Feats.containsKey(key);
+      double value = d1Feats.getCount(key) - d2Feats.getCount(key);
+      d1Feats.setCount(key, value);
     }
-    return featureDiff;
+    return d1Feats;
   }
 
   /**
@@ -153,10 +154,10 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
    * @return
    */
   private Derivation getBestFearDerivation(SentenceLevelMetric<IString, String> objective, List<RichTranslation<IString,String>> translations, 
-      List<Sequence<IString>> references, RichTranslation<IString,String> hopeHypothesis,
+      List<Sequence<IString>> references, Derivation dHope,
       int translationId) {
     RichTranslation<IString,String> d = null;
-    final double hopeCost = objective.score(translationId, references, hopeHypothesis.translation);
+    final double hopeCost = objective.score(translationId, references, dHope.hypothesis.translation);
     double dScore = 0.0;
     double dLoss = 0.0;
     int dId = -1;
@@ -165,10 +166,10 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
     for (RichTranslation<IString,String> hypothesis : translations) {
       double cost = objective.score(translationId, references, hypothesis.translation);
       double loss = hopeCost - cost;
-      double modelScore = hopeHypothesis.score - hypothesis.score;
+      double modelScore = dHope.hypothesis.score - hypothesis.score;
       double score = loss - modelScore;
       // argmax
-      if (score > maxScore && score != 0.0) {
+      if (score > maxScore && nbestId != dHope.nbestId) {
         d = hypothesis;
         dScore = hypothesis.score;
         dLoss = cost;

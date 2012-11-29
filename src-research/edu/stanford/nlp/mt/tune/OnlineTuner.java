@@ -15,6 +15,7 @@ import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IOTools;
@@ -156,7 +157,13 @@ public class OnlineTuner {
   /**
    * Run an optimizer with a specified objective function.
    * 
-   * TODO(spenceg): Implement iterative parameter mixing for multicore
+   * TODO(spenceg): Implement iterative parameter mixing for multicore. We'll definitely need this to scale up to
+   * 3000+ examples. We'll need to instantiate multithreaded Phrasal, and then associate one procid per shard
+   * in OnlineTuner. Oh shit. We'll need to associate a separate scorer with each inferer. This will require some
+   * re-factoring of the phrase generators, which need scorers to create isolation scores. This shouldn't be a problem
+   * because ConcreteTranslationOptions, which have isolation scores, are only created inside the inferers. So the
+   * inferer should expose its scorer then, and the scorer shouldn't be permanently associated with the phrase
+   * generator.
    * 
    * @param objective 
    * @param optimizerAlg
@@ -166,12 +173,19 @@ public class OnlineTuner {
   private void run(OnlineOptimizer<IString, String> optimizer, 
       SentenceLevelMetric<IString, String> objective, int nThreads) {
     final int tuneSetSize = tuneSource.size();
+    // Run through the examples in random order
+    int[] indices = new int[tuneSetSize];
+    for (int i = 0; i < indices.length; ++i) indices[i] = i;
+    
+    // decoderWts will be used in every round; wts will accumulate weight vectors
     Counter<String> decoderWts = new ClassicCounter<String>(wts);
     wts.clear();
+    
     for (int epoch = 0; epoch < NUM_EPOCHS; ++epoch) {
       logger.info("Start of epoch: " + epoch);
-      // TODO(spenceg): Randomize order if we run more than one epoch.
-      for (int i = 0; i < tuneSetSize; ++i) {
+      ArrayMath.shuffle(indices);
+      for (int j = 0; j < indices.length; ++j) {
+        final int i = indices[j];
         Sequence<IString> source = tuneSource.get(i);
         Sequence<IString> target = tuneTarget.get(i);
         List<Sequence<IString>> references = new ArrayList<Sequence<IString>>();
