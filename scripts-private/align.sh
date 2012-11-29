@@ -7,7 +7,7 @@
 if [ $# -ne 5 ]; then
     echo Usage: `basename $0` src_file src_lang tgt_file tgt_lang lines_per_split
     echo
-		echo src_lang/tgt_lang should be two-letter ISO 639-1 language codes.
+    echo src_lang/tgt_lang should be two-letter ISO 639-1 language codes.
     exit -1
 fi
 
