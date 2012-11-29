@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.tune;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -171,6 +170,7 @@ public class OnlineTuner {
     wts.clear();
     for (int epoch = 0; epoch < NUM_EPOCHS; ++epoch) {
       logger.info("Start of epoch: " + epoch);
+      // TODO(spenceg): Randomize order if we run more than one epoch.
       for (int i = 0; i < tuneSetSize; ++i) {
         Sequence<IString> source = tuneSource.get(i);
         Sequence<IString> target = tuneTarget.get(i);
@@ -178,7 +178,7 @@ public class OnlineTuner {
         references.add(target);
         
         // Decode source (get n-best list)
-        List<RichTranslation<IString,String>> nbestList = decoder.decode(source.toString().split("\\s+"), i, 0);
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(source, i, 0);
         
         // Tune weights
         decoderWts = optimizer.update(source, i, nbestList, references, objective, decoderWts);
@@ -189,7 +189,7 @@ public class OnlineTuner {
         wts.addAll(decoderWts);
         
         // TODO(spenceg): Extract rules and update phrase table for this example
-        //
+        // 
       }
     }
     

@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineTuner;
@@ -118,14 +117,16 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
    * @return
    */
   private Derivation getBestHopeDerivation(SentenceLevelMetric<IString, String> objective, List<RichTranslation<IString,String>> translations,
-      List<Sequence<IString>> references, int nbestId) {
+      List<Sequence<IString>> references, int translationId) {
 
-    ScoredFeaturizedTranslation<IString,String> d = null;
+    RichTranslation<IString,String> d = null;
     double dScore = 0.0;
     double dLoss = 0.0;
+    int dId = 0;
     double maxScore = Double.NEGATIVE_INFINITY;
-    for (ScoredFeaturizedTranslation<IString,String> hypothesis : translations) {
-      double loss = objective.score(nbestId, references, hypothesis.translation);
+    int nbestId = 0;
+    for (RichTranslation<IString,String> hypothesis : translations) {
+      double loss = objective.score(translationId, references, hypothesis.translation);
       double modelScore = hypothesis.score;
       double score = modelScore + loss;
       // argmax
@@ -133,12 +134,14 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
         d = hypothesis;
         dScore = modelScore;
         dLoss = loss;
+        dId = nbestId;
         maxScore = score;
       }
+      ++nbestId;
     }
 
     assert d != null;
-    return new Derivation(d, dScore, dLoss);
+    return new Derivation(d, dScore, dLoss, dId);
   }
 
   /**
@@ -150,15 +153,17 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
    * @return
    */
   private Derivation getBestFearDerivation(SentenceLevelMetric<IString, String> objective, List<RichTranslation<IString,String>> translations, 
-      List<Sequence<IString>> references, ScoredFeaturizedTranslation<IString,String> hopeHypothesis,
-      int nbestId) {
-    ScoredFeaturizedTranslation<IString,String> d = null;
-    final double hopeCost = objective.score(nbestId, references, hopeHypothesis.translation);
+      List<Sequence<IString>> references, RichTranslation<IString,String> hopeHypothesis,
+      int translationId) {
+    RichTranslation<IString,String> d = null;
+    final double hopeCost = objective.score(translationId, references, hopeHypothesis.translation);
     double dScore = 0.0;
     double dLoss = 0.0;
+    int dId = -1;
     double maxScore = Double.NEGATIVE_INFINITY;
-    for (ScoredFeaturizedTranslation<IString,String> hypothesis : translations) {
-      double cost = objective.score(nbestId, references, hypothesis.translation);
+    int nbestId = 0;
+    for (RichTranslation<IString,String> hypothesis : translations) {
+      double cost = objective.score(translationId, references, hypothesis.translation);
       double loss = hopeCost - cost;
       double modelScore = hopeHypothesis.score - hypothesis.score;
       double score = loss - modelScore;
@@ -168,29 +173,33 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
         dScore = hypothesis.score;
         dLoss = cost;
         maxScore = score;
+        dId = nbestId;
       }
+      ++nbestId;
     }
 
     assert d != null;
-    return new Derivation(d, dScore, dLoss);
+    return new Derivation(d, dScore, dLoss, dId);
   }
 
 
   private static class Derivation {
-    public ScoredFeaturizedTranslation<IString,String> hypothesis;
+    public RichTranslation<IString,String> hypothesis;
     public double score;
     public double cost;
+    public int nbestId;
 
-    public Derivation(ScoredFeaturizedTranslation<IString,String> hypothesis, 
-        double score, double cost) {
+    public Derivation(RichTranslation<IString,String> hypothesis, 
+        double score, double cost, int nbestId) {
       this.hypothesis = hypothesis;
       this.score = score;
       this.cost = cost;
+      this.nbestId = nbestId;
     }
 
     @Override
     public String toString() {
-      return String.format("Cost: %.4f Score: %.4f%n%s", cost, score, hypothesis.toString());
+      return String.format("Cost: %.4f Score: %.4f || %s", cost, score, hypothesis.nbestToMosesString(nbestId));
     }
   }
 }
