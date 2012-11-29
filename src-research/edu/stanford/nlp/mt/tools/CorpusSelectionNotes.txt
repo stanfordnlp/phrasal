@@ -1,0 +1,275 @@
+IBM BOLT Phase 1 bitext (Zh-En.081611)
+======================================
+
+Coverage of MT03 source side n-grams
+
+Complete Corpus
+---------------
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 /u/work/alignments/berkeley2.1/Zh-En.081611.raw/model/aligned.zh mt03.src
+N-gram Coverage
+Order	% Tok	% Type
+1	98.981 (23906/24152)	96.431 (5026/5212)
+2	87.729 (20382/23233)	84.663 (14634/17285)
+3	57.932 (12927/22314)	56.035 (11672/20830)
+4	29.956 (6409/21395)		29.208 (6118/20946)
+5	16.185 (3314/20476)		15.986 (3247/20312)
+
+Pi-Chuan's Grammatical Subset
+=============================
+
+Coverage of MT03 source side n-grams
+
+Complete Corpus
+---------------
+
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 corpus.zh mt03.src    
+
+N-gram Coverage
+Order	% Tok	% Type
+1	96.621 (23336/24152)	90.771 (4731/5212)
+2	69.509 (16149/23233)	62.823 (10859/17285)
+3	30.407 (6785/22314)		27.873 (5806/20830)
+4	9.946 (2128/21395)		9.295 (1947/20946)
+5	3.609 (739/20476)		3.471 (705/20312)
+
+Feature Decay Algorithm (Bikiki and Yuret 2011) 
+Coverage at corpus size N
+-----------------------------------------------
+
+Replicating Bikiki and Yuret, sentence lengths normalization was turned off 
+for the results below and the feature set used for selection was just
+bi-grams and unigrams. Bikiki and Yuret tried using trigrams for selection,
+but they did not find them to be helpful. 
+
+N = 100k
+
+ java  edu.stanford.nlp.mt.tools.FDACorpusSelection 100000 corpus.en corpus.zh mt03.src gss100k.en gss100k.zh
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss100k.zh mt03.src    
+N-gram Coverage
+Order	% Tok	% Type
+1	96.621 (23336/24152)	90.771 (4731/5212)
+2	69.509 (16149/23233)	62.823 (10859/17285)
+3	29.981 (6690/22314)		27.436 (5715/20830)
+4	9.582 (2050/21395)		8.937 (1872/20946)
+5	3.438 (704/20476)		3.299 (670/20312)
+
+N = 10k
+
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss10k.zh mt03.src    
+N-gram Coverage
+Order	% Tok	% Type
+1	96.597 (23330/24152)	90.714 (4728/5212)
+2	69.509 (16149/23233)	62.823 (10859/17285)
+3	23.505 (5245/22314)		20.869 (4347/20830)
+4	6.548 (1401/21395)		5.939 (1244/20946)
+5	2.281 (467/20476)		2.156 (438/20312)
+
+N = 1k
+
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss1k.zh mt03.src    
+N-gram Coverage
+Order	% Tok	% Type
+1	90.022 (21742/24152)	69.455 (3620/5212)
+2	43.348 (10071/23233)	32.028 (5536/17285)
+3	10.711 (2390/22314)		8.469 (1764/20830)
+4	2.991 (640/21395)		2.588 (542/20946)
+5	1.231 (252/20476)		1.147 (233/20312)
+
+Without length normalization, we're biased toward very long difficult to parse sentences.
+
+$ wc -lw corpus.zh
+ 1560071 11061789 corpus.zh  # words per sentence 7.1 - note the grammatical subset has abnormally short sentences
+
+$ wc -lw gss1*k.zh
+  100000  3953668 gss100k.zh # words per sentence 39.5
+   10000   483675 gss10k.zh  # words per sentence 48.4
+    1000    65042 gss1k.zh   # words per sentence 65.0
+
+Data selection with length normalization
+----------------------------------------
+
+N = 100k
+
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss100k.ln.zh mt03.src    
+Opening: gss100k.ln.zh
+Opening: mt03.src
+N-gram Coverage
+Order	% Tok	% Type
+1	96.621 (23336/24152)	90.771 (4731/5212)
+2	69.509 (16149/23233)	62.823 (10859/17285)
+3	29.381 (6556/22314)		26.793 (5581/20830)
+4	9.226 (1974/21395)		8.584 (1798/20946)
+5	3.257 (667/20476)		3.121 (634/20312)
+
+N = 10k
+
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss10k.ln.zh mt03.src    
+Opening: gss10k.ln.zh
+Opening: mt03.src
+N-gram Coverage
+Order	% Tok	% Type
+1	95.574 (23083/24152)	86.589 (4513/5212)
+2	53.523 (12435/23233)	43.222 (7471/17285)
+3	12.611 (2814/22314)		10.197 (2124/20830)
+4	3.594 (769/21395)		3.103 (650/20946)
+5	1.519 (311/20476)		1.413 (287/20312)
+
+N = 1k
+
+java  edu.stanford.nlp.mt.tools.FDACorpusSelection 1000 corpus.en corpus.zh mt03.src gss1k.ln.en gss1k.ln.zh
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss1k.ln.zh mt03.src    
+Opening: gss1k.ln.zh
+Opening: mt03.src
+N-gram Coverage
+Order	% Tok	% Type
+1	53.432 (12905/24152)	25.441 (1326/5212)
+2	4.076 (947/23233)		2.274 (393/17285)
+3	1.147 (256/22314)		0.586 (122/20830)
+4	0.365 (78/21395)		0.310 (65/20946)
+5	0.234 (48/20476)		0.212 (43/20312)
+
+Length normalization hurts coverage significantly for smaller data sets (<= 10k), but it only modestly hurts
+coverage for larger ones (100k). 
+
+N = 100k Comparison of Length Normalization vs. No Length Normalization
+ 
+N-gram	% Tok					% Tok					% Delta
+Order  	Length Norm				No Length Norm			
+1		96.621 (23336/24152)	96.621 (23336/24152)	0
+2		69.509 (16149/23233)	69.509 (16149/23233)	0
+3		29.381 (6556/22314)		29.981 (6690/22314)		0
+4		9.226 (1974/21395)		9.582 (2050/21395)		0.6
+5		3.257 (667/20476)		3.438 (704/20476)		0.2
+
+However, length normalization results in far fewer words per sentence
+
+$ wc -lw gss1*ln.zh
+  100000  2211483 gss100k.ln.zh  # words per sentence 22.1 vs. 39.5 without length norm 
+   10000    56475 gss10k.ln.zh   # words per sentence 5.6 vs. 39.5 without length norm
+    1000     1459 gss1k.ln.zh    # words per sentence 1.5 vs. 39.5 without length norm
+
+Selection with <= 3-gram feature set w/length normalization
+-----------------------------------------------------------
+
+N = 100k
+
+java  edu.stanford.nlp.mt.tools.FDACorpusSelection 100000 corpus.en corpus.zh mt03.src gss100k.n3.ln.en gss100k.n3.ln.zh
+ java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss100k.n3.ln.zh mt03.src    
+Opening: gss100k.n3.ln.zh
+Opening: mt03.src
+N-gram Coverage
+Order		% Tok					% Type
+1			96.621 (23336/24152)	90.771 (4731/5212)
+2			69.509 (16149/23233)	62.823 (10859/17285)
+3			30.407 (6785/22314)		27.873 (5806/20830)
+4			9.923 (2123/21395)		9.271 (1942/20946)
+5			3.565 (730/20476)		3.427 (696/20312)
+
+$ wc -wl gss100k.n5.ln.zh
+100000  2391153 gss100k.n5.ln.zh # words per sentence 23.9
+
+N = 10k
+
+java  edu.stanford.nlp.mt.tools.FDACorpusSelection 10000 corpus.en corpus.zh mt03.src gss10k.n3.ln.en gss10k.n3.ln.zh 
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss10k.n3.ln.zh mt03.src
+Opening: gss10k.n3.ln.zh
+Opening: mt03.src
+train line processed > 0
+N-gram Coverage
+Order	% Tok					% Type
+1		95.388 (23038/24152)	86.167 (4491/5212)
+2		55.735 (12949/23233)	45.745 (7907/17285)
+3		21.327 (4759/22314)		18.637 (3882/20830)
+4		6.329 (1354/21395)		5.758 (1206/20946)
+5		2.422 (496/20476)		2.299 (467/20312)
+
+$ wc -wl gss100k.n5.ln.zh
+10000  86598 gss10k.n5.ln.zh # words per sentence 8.66
+
+N = 1k
+
+java  edu.stanford.nlp.mt.tools.FDACorpusSelection 1000 corpus.en corpus.zh mt03.src gss1k.n3.ln.en gss1k.n3.ln.zh
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss1k.n3.ln.zh mt03.src
+Opening: gss1k.n3.ln.zh
+Opening: mt03.src
+N-gram Coverage
+Order	% Tok					% Type
+1		63.345 (15299/24152)	29.969 (1562/5212)
+2		10.201 (2370/23233)		4.449 (769/17285)
+3		2.810 (627/22314)		1.810 (377/20830)
+4		1.122 (240/21395)		0.912 (191/20946)
+5		0.610 (125/20476)		0.566 (115/20312)
+
+
+Note that by using a feature set <= 3-grams and length normalization is actually better than 
+the results with <= bi-grams and no length normalization in terms of coverage and the resulting 
+training data set is much smaller in the number of words it contains
+
+N-gram		N = 100k				N = 100k
+Order		3-gram features 		bi-gram features
+			length norm				no length norm
+ 			% Tok					% Tok
+1			96.621 (23336/24152)	96.621 (23336/24152)	
+2			69.509 (16149/23233)	69.509 (16149/23233)	
+3			30.407 (6785/22314)		29.981 (6690/22314)		
+4			9.923 (2123/21395)		9.582 (2050/21395)		
+5			3.565 (730/20476)		3.438 (704/20476)		
+
+$ wc -lw gss100k.n3.ln.zh gss100k.zh 
+  100000  2369321 gss100k.n3.ln.zh  
+  100000  3953668 gss100k.zh
+  
+The length normalized 3-gram feature set selected data set is 59.9% (2369321/3953668) of the 
+size in words of the non-length normalized bi-gram feature set selected data set.
+
+
+Selection with <= 5-gram feature set w/length normalization
+-----------------------------------------------------------
+
+N = 100k
+$ java  edu.stanford.nlp.mt.tools.FDACorpusSelection 100000 corpus.en corpus.zh mt03.src gss100k.n5.ln.en gss100k.n5.ln.zh
+java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss100k.n5.ln.zh mt03.src    
+Opening: gss100k.n5.ln.zh
+Opening: mt03.src
+N-gram Coverage
+Order	% Tok	% Type
+1		96.621 (23336/24152)	90.771 (4731/5212)
+2		69.509 (16149/23233)	62.823 (10859/17285)
+3		30.407 (6785/22314)		27.873 (5806/20830)
+4		9.946 (2128/21395)		9.295 (1947/20946)
+5		3.609 (739/20476)		3.471 (705/20312)
+
+
+N = 10k
+$ java  edu.stanford.nlp.mt.tools.FDACorpusSelection 10000 corpus.en corpus.zh mt03.src gss10k.n5.ln.en gss10k.n5.ln.zh
+$ java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss10k.n5.ln.zh mt03.src    
+Opening: gss10k.n5.ln.zh
+Opening: mt03.src
+train line processed > 0
+N-gram Coverage
+Order	% Tok					% Type
+1		95.404 (23042/24152)	86.243 (4495/5212)
+2		55.688 (12938/23233)	45.716 (7902/17285)
+3		22.372 (4992/22314)		19.626 (4088/20830)
+4		8.268 (1769/21395)		7.639 (1600/20946)
+5		3.311 (678/20476)		3.180 (646/20312)
+
+N = 1k
+$ java  edu.stanford.nlp.mt.tools.FDACorpusSelection 1000 corpus.en corpus.zh mt03.src gss1k.n5.ln.en gss1k.n5.ln.zh
+$ java  edu.stanford.nlp.mt.tools.CoverageChecker 5 gss1k.n5.ln.zh mt03.src    
+Opening: gss1k.n5.ln.zh
+Opening: mt03.src
+train line processed > 0
+N-gram Coverage
+Order	% Tok	% Type
+1		68.197 (16471/24152)	33.576 (1750/5212)
+2		13.855 (3219/23233)		6.127 (1059/17285)
+3		4.437 (990/22314)		2.861 (596/20830)
+4		2.131 (456/21395)		1.771 (371/20946)
+5		1.197 (245/20476)		1.113 (226/20312)
+
+Using a 5-gram feature set for selection only very slightly improves the coverage of the larger 100k 
+data set over 100k data sets selected with lower order ngrams. However, it hurts bi-gram 
+coverage of the 10k data set (n-gram 5: 55.688 vs. n-gram 3: 55.735), while it slightly helps the same 
+data sets tri-gram (22.372 vs 21.327), 4-gram (8.268 vs. 6.329) and 5-gram coverage (3.311 vs 2.422).
+

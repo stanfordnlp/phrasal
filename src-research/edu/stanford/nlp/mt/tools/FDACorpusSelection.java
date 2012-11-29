@@ -6,13 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 
 import edu.stanford.nlp.mt.base.LineIndexedCorpus;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -29,8 +27,9 @@ import edu.stanford.nlp.util.Pair;
  *
  */
 public class FDACorpusSelection {
-   static final int NGRAM_ORDER = 2; // Bicici and Yuret found that using bi-grams was sufficient   
+   static final int NGRAM_ORDER = 5; // Bicici and Yuret found that using bi-grams was sufficient   
    static final boolean VERBOSE = false; 
+   static final boolean LENGTH_NORM = true;
 
    final Set<String> F;
    final Counter<String> cntfU;
@@ -45,19 +44,6 @@ public class FDACorpusSelection {
    static public void usage() {
       err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) (bitext.en) (bitext.fr) (test.fr) (selected.en) (selected.fr)");	   	
    }
-   
-   static public void countNgrams(String line, Counter<String> ngramCounts, Set<String> limitSet, int order) {
-	   String[] toks = line.split("\\s");
-	   for (int i = 0; i < toks.length; i++) {
-	      for (int j = 0; j < order && j+i < toks.length ; j++) {
-	         String[] ngramArr = Arrays.copyOfRange(toks, i, i+j);
-	         String ngram = StringUtils.join(ngramArr, " ");
-	         if (limitSet == null || limitSet.contains(ngram)) {
-	            ngramCounts.incrementCount(ngram);
-	         }
-	      }
-	   }	   
-	}	
    
    class SentenceScoreComparator implements Comparator<Integer> {
       @Override
@@ -79,13 +65,16 @@ public class FDACorpusSelection {
    }
    
    public FDACorpusSelection(LineIndexedCorpus bitextEn, LineIndexedCorpus bitextFr, LineIndexedCorpus testFr) {
-      this.bitextFr = bitextFr;
       this.bitextEn = bitextEn;
+      this.bitextFr = bitextFr;      
       
       // construct F
       Counter<String> testFrNgramCounts = new ClassicCounter<String>();
       for (String line : testFr) {
-         countNgrams(line, testFrNgramCounts, null, NGRAM_ORDER);
+         if (VERBOSE) {
+            err.println("test line:" + line);
+         }
+         CoverageChecker.countNgrams(line, testFrNgramCounts, null, NGRAM_ORDER);
       }
       F = new HashSet<String>(testFrNgramCounts.keySet());
       
@@ -93,15 +82,21 @@ public class FDACorpusSelection {
       cntfU = new ClassicCounter<String>();
       int sizeU = 0;
       for (String line : bitextFr) {
-         countNgrams(line, cntfU, F, NGRAM_ORDER);
+         CoverageChecker.countNgrams(line, cntfU, F, NGRAM_ORDER);
          sizeU += line.split("\\s+").length;
       }
       this.sizeU = sizeU;
       
       // initial feature weights
       fvalue = new ClassicCounter<String>();
+      if (VERBOSE) {
+         err.printf("Initial Feature Weights\n");
+      }
       for (String f : F) {         
          fvalue.setCount(f, init(f));
+         if (VERBOSE) {           
+            err.printf("\t%s: %f cnt(f,U): %f\n", f, fvalue.getCount(f), cntfU.getCount(f));
+         }
       }
       
       // score sentences using initial feature weights and place them in the PriorityQueue
@@ -110,10 +105,15 @@ public class FDACorpusSelection {
       for (int i = 0; i < score.length; i++) {
          Counter<String> lineNgramCounts = new ClassicCounter<String>();
          String line = bitextFr.get(i);
-         countNgrams(line, lineNgramCounts, F, NGRAM_ORDER);        
+         CoverageChecker.countNgrams(line, lineNgramCounts, F, NGRAM_ORDER);        
          for (String f : lineNgramCounts.keySet()) {
-            score[i] += fvalue.getCount(f);
+            score[i] += fvalue.getCount(f)*lineNgramCounts.getCount(f);
          }
+         
+         if (LENGTH_NORM) {
+            score[i] /= line.split("\\s+").length;
+         }
+         
          // err.printf("init score: %d %.3f\n", i, score[i]);
          Q.add(i);
       }
@@ -130,17 +130,24 @@ public class FDACorpusSelection {
          int id = Q.remove();
          if (VERBOSE) {
             err.printf("checking: %d %f\n", id, score[id]);
+            err.printf("  src: %s\n", bitextFr.get(id));
+            err.printf("  trg: %s\n", bitextEn.get(id));
          }
          Counter<String> lineNgramCounts = new ClassicCounter<String>();
          String line = bitextFr.get(id);
-         countNgrams(line, lineNgramCounts, F, NGRAM_ORDER);
+         CoverageChecker.countNgrams(line, lineNgramCounts, F, NGRAM_ORDER);
          
          // re-compute the score for the segment
          double priorScoreId = score[id];
          score[id] = 0;
          for (String f : lineNgramCounts.keySet()) {
-            score[id] += fvalue.getCount(f);
+            score[id] += fvalue.getCount(f)*lineNgramCounts.getCount(f);
          }
+         
+         if (LENGTH_NORM) {
+            score[id] /= line.split("\\s+").length;
+         }
+         
          
          // check to see if there is anything left in the queue after
          // the current item - if there is, we'll need to double check
