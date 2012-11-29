@@ -52,11 +52,12 @@ public class OnlineTuner {
   
   // Log to file
   public static Handler logHandler;
+  private static String logPrefix;
   static {
     try {
       SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-HH-mm-ss");
-      String filename = String.format("online-tuner.debug.%s.log", formatter.format(new Date()));
-      logHandler = new FileHandler(filename);
+      logPrefix = "online-tuner.debug." + formatter.format(new Date());
+      logHandler = new FileHandler(logPrefix + ".log");
       logHandler.setFormatter(new SimpleFormatter()); //Plain text
     } catch (SecurityException e) {
       e.printStackTrace();
@@ -205,6 +206,11 @@ public class OnlineTuner {
         // TODO(spenceg): Extract rules and update phrase table for this example
         // 
       }
+      
+      // Write out intermediate weights
+      Counter<String> iWts = new ClassicCounter<String>(wts);
+      Counters.divideInPlace(iWts, (epoch+1)*tuneSetSize);
+      IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), iWts);
     }
     
     // Average final weights
@@ -336,5 +342,8 @@ public class OnlineTuner {
     
     now = new Date();
     System.err.printf("Finished at: %s%n", now);
+    
+    // TODO(spenceg): Phrasal won't shutdown without this call. That's bad. Need to fix.
+    System.exit(0);
   }
 }
