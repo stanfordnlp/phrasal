@@ -1063,13 +1063,25 @@ public class Phrasal {
    * @param translationId
    * @param procid
    * @return
-   * @throws IOException
    */
   public List<RichTranslation<IString, String>> decode(String[] tokens,
       int translationId, int procid) {
-
     Sequence<IString> foreign = new SimpleSequence<IString>(true,
         IStrings.toSyncIStringArray(tokens));
+    return decode(foreign, translationId, procid);
+  }
+  
+  /**
+   * Decode a tokenized input string. Returns an n-best list of translations.
+   * 
+   * @param tokens
+   * @param translationId
+   * @param procid
+   * @return
+   */
+  public List<RichTranslation<IString, String>> decode(Sequence<IString> foreign,
+      int translationId, int procid) {
+
     // log foreign sentence
     synchronized (System.err) {
       System.err.printf("Translating(%d): %s\n", procid, foreign);
