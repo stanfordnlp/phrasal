@@ -101,7 +101,7 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
     // TODO(spenceg): This assertion fails. Check it.
 //    assert d1Feats.keySet().size() == d2Feats.keySet().size();
     for (String key : d1Feats.keySet()) {
-      assert d2Feats.containsKey(key);
+//      assert d2Feats.containsKey(key);
       double value = d1Feats.getCount(key) - d2Feats.getCount(key);
       d1Feats.setCount(key, value);
     }
@@ -178,8 +178,11 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
       ++nbestId;
     }
 
-    assert d != null;
-    return new Derivation(d, dScore, dLoss, dId);
+    if (d == null) {
+      logger.warning("No fear derivation for: " + translationId);
+    }
+    
+    return d == null ? dHope : new Derivation(d, dScore, dLoss, dId);
   }
 
 
