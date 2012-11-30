@@ -195,8 +195,11 @@ public class FDACorpusSelection {
       String selectedEnFn = args[4];
       String selectedFrFn = args[5];
       
+      err.printf("Opening %s\n", bitextEnFn);
       LineIndexedCorpus bitextEn = new LineIndexedCorpus(bitextEnFn);
+      err.printf("Opening %s\n", bitextFrFn);
       LineIndexedCorpus bitextFr = new LineIndexedCorpus(bitextFrFn);
+      err.printf("Opening %s\n", testFn);
       LineIndexedCorpus testFr = new LineIndexedCorpus(testFn);
       if (bitextEn.size() != bitextFr.size()) {
          err.printf("Bitext files %s and %s are of different lengths (%d vs %d)", 

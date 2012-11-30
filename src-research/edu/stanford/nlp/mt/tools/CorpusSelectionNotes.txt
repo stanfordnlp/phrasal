@@ -1,6 +1,57 @@
 IBM BOLT Phase 1 bitext (Zh-En.081611)
 ======================================
 
+Coverage of MT06 source side n-grams
+
+Complete Corpus
+---------------
+
+java edu.stanford.nlp.mt.tools.CoverageChecker 5 bolt_bitext.zh mt06/mt06.nist.transonly.norm.zh 
+N-gram Coverage
+Order	% Tok					% Type
+1		98.654 (38054/38573)	94.623 (6371/6733)
+2		86.819 (32044/36909)	83.188 (21202/25487)
+3		58.001 (20450/35258)	56.042 (18137/32363)
+4		29.772 (10009/33619)	29.098 (9485/32597)
+5		15.003 (4800/31994)		14.734 (4638/31478)
+
+From prior experiments, the full BOLT bitext gets a BLEU score of about 35 on MT06.
+
+Feature Decay Algorithm (Bikiki and Yuret 2011) 
+Coverage at corpus size N
+-----------------------------------------------
+
+N = 100k
+nohup java edu.stanford.nlp.mt.tools.FDACorpusSelection 100000 bolt_bitext.en bolt_bitext.zh mt06/mt06.nist.transonly.norm.zh bolt_bitext.fda100k.en bolt_bitext.fda100k.zh > bolt_bitext.fda100k.log 2>&1
+java edu.stanford.nlp.mt.tools.CoverageChecker 5 bolt_bitext.fda100k.zh mt06/mt06.nist.transonly.norm.zh 
+
+N-gram Coverage
+Order	% Tok					% Type
+1		98.654 (38054/38573)	94.623 (6371/6733)
+2		86.778 (32029/36909)	83.133 (21188/25487)
+3		57.987 (20445/35258)	56.027 (18132/32363)
+4		29.772 (10009/33619)	29.098 (9485/32597)
+5		15.003 (4800/31994)		14.734 (4638/31478)
+
+Note that for all n-gram sizes (unigram, bigram, trigram, 4-gram, and 5-gram), the FDA selected 100k bitext 
+from the full BOLT bitext has better coverage of MT06 than the grammatical subset.
+
+N = 10k
+
+java edu.stanford.nlp.mt.tools.CoverageChecker 5 bolt_bitext.fda10k.zh mt06/mt06.nist.transonly.norm.zhOpening: bolt_bitext.fda10k.zh
+Opening: mt06/mt06.nist.transonly.norm.zh
+train line processed > 0
+N-gram Coverage
+Order	% Tok					% Type
+1		96.249 (37126/38573)	86.722 (5839/6733)
+2		64.198 (23695/36909)	53.266 (13576/25487)
+3		35.717 (12593/35258)	32.859 (10634/32363)
+4		20.527 (6901/33619)		19.812 (6458/32597)
+5		12.377 (3960/31994)		12.116 (3814/31478)
+
+Note that for trigrams, 4-grams, and 5-grams, the FDA selected 10k bitext from the full BOLT bitext has better coverage of 
+MT06 than the grammatical subset.
+ 
 Coverage of MT03 source side n-grams
 
 Complete Corpus
@@ -16,6 +67,21 @@ Order	% Tok	% Type
 
 Pi-Chuan's Grammatical Subset
 =============================
+
+Coverage of MT06 source side n-grams
+
+Complete Corpus
+---------------
+java edu.stanford.nlp.mt.tools.CoverageChecker 5 ../toybox/corpus.zh mt06/mt06.nist.transonly.norm.zh
+N-gram Coverage
+Order		% Tok		% Type
+1			96.770 (37327/38573)	89.009 (5993/6733)
+2			70.977 (26197/36909)	63.177 (16102/25487)
+3			31.590 (11138/35258)	29.141 (9431/32363)
+4			9.962 (3349/33619)		9.464 (3085/32597)
+5			3.057 (978/31994)		2.923 (920/31478)
+
+From prior experiments, the grammatical subset gets a BLEU score of about 32 (+/- 1) on MT06.
 
 Coverage of MT03 source side n-grams
 
