@@ -1059,9 +1059,11 @@ public class Phrasal {
   /**
    * Decode a tokenized input string. Returns an n-best list of translations.
    * 
+   * NOTE: This call is threadsafe.
+   * 
    * @param tokens
    * @param translationId
-   * @param procid
+   * @param procid -- Inferer object to use (one per thread)
    * @return
    */
   public List<RichTranslation<IString, String>> decode(String[] tokens,
@@ -1074,13 +1076,17 @@ public class Phrasal {
   /**
    * Decode a tokenized input string. Returns an n-best list of translations.
    * 
+   * NOTE: This call is threadsafe.
+   * 
    * @param tokens
    * @param translationId
-   * @param procid
+   * @param procid -- Inferer object to use (one per thread)
    * @return
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> foreign,
       int translationId, int procid) {
+    assert procid < numThreads;
+    assert translationId >= 0;
 
     // log foreign sentence
     synchronized (System.err) {
@@ -1145,6 +1151,18 @@ public class Phrasal {
     }
 
     return translations;
+  }
+  
+  /**
+   * Free resources and cleanup.
+   */
+  public void shutdown() {
+    for(Inferer<IString, String> inferer : inferers) {
+      boolean failed = (! inferer.shutdown());
+      if (failed) {
+        System.err.println("Unable to shutdown inferer: " + inferer.getClass().getName());
+      }
+    }
   }
 
   /**
@@ -1259,6 +1277,6 @@ public class Phrasal {
     Phrasal p = new Phrasal(config);
     FlatPhraseTable.lockIndex();
     p.decodeFromConsole();
-    System.exit(0);
+    p.shutdown();
   }
 }

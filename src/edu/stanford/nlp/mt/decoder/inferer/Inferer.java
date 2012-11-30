@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.inferer;
 
-import java.util.*;
+import java.util.List;
 
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -8,31 +8,39 @@ import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
+ * Interface for decoding algorithms.
  * 
  * @author danielcer
+ * @author Spence Green
  */
 public interface Inferer<TK, FV> {
 
   /**
-   *
+   * Produce a 1-best translation.
    */
-  RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId,
+  public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets);
 
-  RichTranslation<TK, FV> translate(Scorer<FV> scorer, Sequence<TK> foreign,
+  public RichTranslation<TK, FV> translate(Scorer<FV> scorer, Sequence<TK> foreign,
       int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets);
 
   /**
-   *
+   * Produce an n-best list of translations.
    */
-  List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign, int translationId,
+  public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign, int translationId,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size);
 
-  List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> foreign,
+  public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> foreign,
       int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size);
 
+  /**
+   * Free resources and cleanup (if necessary).
+   * 
+   * @return True if successful, false otherwise.
+   */
+  public boolean shutdown();
 }

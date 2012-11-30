@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -82,7 +81,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   public final boolean useITGConstraints;
   final int maxDistortion;
+
+  /**
+   * Local multithreading support (inside the main decoding loop)
+   */
   final int numProcs;
+  private ExecutorService threadPool;
 
   public static final boolean DO_PARSE = true;
 
@@ -92,8 +96,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       }
     }
   }
-
-  ExecutorService threadPool;
 
   static public <TK, FV> MultiBeamDecoderBuilder<TK, FV> builder() {
     return new MultiBeamDecoderBuilder<TK, FV>();
@@ -165,6 +167,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
+  @Override
+  public boolean shutdown() {
+    threadPool.shutdown();
+    return true;
+  }
+  
   private void displayBeams(Beam<Hypothesis<TK, FV>>[] beams) {
     System.err.print("Stack sizes: ");
     for (int si = 0; si < beams.length; si++) {
@@ -174,8 +182,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
     System.err.println();
   }
-
-  private final Runtime rt = Runtime.getRuntime();
 
   @Override
   protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
@@ -260,6 +266,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       // ConcreteTranslationOptions.filterOptions(HypothesisBeams.coverageIntersection(beams[i]),
       // foreign.size(), options);
       if (DEBUG) {
+        Runtime rt = Runtime.getRuntime();
         System.err
             .printf("--\nDoing Beam %d Entries: %d\n", i, beams[i].size());
         System.err.printf("Total Memory Usage: %d MiB", (rt.totalMemory() - rt

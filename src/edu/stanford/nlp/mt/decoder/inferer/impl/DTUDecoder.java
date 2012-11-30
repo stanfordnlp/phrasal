@@ -34,13 +34,15 @@ import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.inferer.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
-import edu.stanford.nlp.mt.Phrasal;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 
 /**
  * Extension of MultiBeamDecoder that allows phrases with discontinuities in
  * them (source and target).
+ * 
+ * TODO(spenceg): Michel didn't finish implemented multithreading, so even though numProcs
+ * and other code is in place, multithreading does not actually work.
  * 
  * @author Michel Galley
  */
@@ -134,6 +136,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
+  @Override
+  public boolean shutdown() {
+    return true;
+  }
+  
   private void displayBeams(Beam<Hypothesis<TK, FV>>[] beams) {
     System.err.print("Stack sizes: ");
     for (int si = 0; si < beams.length; si++) {
@@ -263,6 +270,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (DEBUG)
         System.err.println();
 
+      // TODO(spenceg): This is sort of bad. If numProcs > 1, it will start these Runnables
+      // in the main thread....
       for (int threadId = 0; threadId < numProcs; threadId++) {
         BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz,
             optionGrid, constrainedOutputSpace, translationId);
