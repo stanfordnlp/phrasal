@@ -9,8 +9,11 @@
 # Word alignment with Berkeley aligner:
 ##########################################
 
-#VERSION=/u/nlp/packages/berkeleyaligner2.0
-VERSION=/u/nlp/packages/berkeleyaligner2.1
+if [ "$BERKELEY_ALIGNER" == "" ]; then
+  #PACKAGE=/u/nlp/packages/berkeleyaligner2.0
+  BERKELEY_ALIGNER=/u/nlp/packages/berkeleyaligner2.1
+fi
+
 
 if [ $# -ne 2 ]; then
 	echo Usage: `basename $0` memory conf_file
@@ -29,4 +32,4 @@ shift
 
 OPTS="-server -XX:+UseCompressedOops -Xmx$MEM -Xms$MEM -XX:MaxPermSize=2g"
 
-java $OPTS -jar "$VERSION"/berkeleyaligner.jar ++$CONF $@ 
+java $OPTS -jar "$BERKELEY_ALIGNER"/berkeleyaligner.jar ++$CONF $@ 
