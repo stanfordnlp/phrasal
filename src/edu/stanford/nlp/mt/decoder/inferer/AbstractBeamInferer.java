@@ -31,6 +31,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
   }
+  
+  @Override
+  public boolean shutdown() {
+    return true;
+  }
 
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign,

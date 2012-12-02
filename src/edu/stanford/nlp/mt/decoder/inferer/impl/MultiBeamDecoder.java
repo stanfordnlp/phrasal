@@ -35,9 +35,6 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -55,7 +52,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.stats.ClassicCounter;
 
 /**
- * 
+ * Stack-based, left-to-right phrase-based inference implemented as a beam search.
  * 
  * @author danielcer
  * 
@@ -82,12 +79,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   public final boolean useITGConstraints;
   final int maxDistortion;
 
-  /**
-   * Local multithreading support (inside the main decoding loop)
-   */
-  final int numProcs;
-  private ExecutorService threadPool;
-
   public static final boolean DO_PARSE = true;
 
   static {
@@ -106,18 +97,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     maxDistortion = builder.maxDistortion;
     useITGConstraints = builder.useITGConstraints;
     
-    
-    if (builder.internalMultiThread) {
-      numProcs = (System.getProperty("numProcs") != null ? Integer
-          .parseInt(System.getProperty("numProcs")) : Runtime.getRuntime()
-          .availableProcessors());
-    } else {
-      numProcs = 1;
-    }
-    threadPool = Executors.newFixedThreadPool(numProcs);
-
-    System.err.printf("Beam expansion threads: %d\n", numProcs);
-    
     if (DEBUG) {
       if (useITGConstraints) { System.err.printf("Using ITG Constraints\n"); }
       else { System.err.printf("Not using ITG Constraints\n"); }
@@ -135,14 +114,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       AbstractBeamInfererBuilder<TK, FV> {
     int maxDistortion = DEFAULT_MAX_DISTORTION;
     boolean useITGConstraints = DEFAULT_USE_ITG_CONSTRAINTS;
-    boolean internalMultiThread;
-
-    @Override
-    public AbstractBeamInfererBuilder<TK, FV> setInternalMultiThread(
-        boolean internalMultiThread) {
-      this.internalMultiThread = internalMultiThread;
-      return this;
-    }
 
     @Override
     public AbstractBeamInfererBuilder<TK, FV> setMaxDistortion(int maxDistortion) {
@@ -165,12 +136,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     public Inferer<TK, FV> build() {
       return new MultiBeamDecoder<TK, FV>(this);
     }
-  }
-
-  @Override
-  public boolean shutdown() {
-    threadPool.shutdown();
-    return true;
   }
   
   private void displayBeams(Beam<Hypothesis<TK, FV>>[] beams) {
@@ -257,8 +222,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     featurizer.initialize(options, foreign);
 
     // main translation loop
-    System.err.printf("Decoding with %d threads\n", numProcs);
-
     long decodeLoopTime = -System.currentTimeMillis();
     for (int i = 0; i < beams.length; i++) {
 
@@ -281,19 +244,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (DEBUG)
         System.err.println();
 
-      CountDownLatch cdl = new CountDownLatch(numProcs);
-      for (int threadId = 0; threadId < numProcs; threadId++) {
-        BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz,
-            optionGrid, constrainedOutputSpace, translationId, threadId,
-            numProcs, cdl);
-        threadPool.execute(beamExpander);
-      }
-      try {
-        cdl.await();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-
+      expandBeam(beams, i, foreignSz, optionGrid, 
+          constrainedOutputSpace, translationId);
+      
       if (DEBUG) {
         displayBeams(beams);
         System.err.printf("--------------------------------\n");
@@ -413,232 +366,174 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
-  class BeamExpander implements Runnable {
-    Beam<Hypothesis<TK, FV>>[] beams;
-    int beamId;
-    int foreignSz;
-    OptionGrid<TK> optionGrid;
-    ConstrainedOutputSpace<TK, FV> constrainedOutputSpace;
-    int translationId;
-    int threadId;
-    int threadCount;
-    CountDownLatch cdl;
-    
+  private int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
+      int foreignSz, OptionGrid<TK> optionGrid,
+      ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      int translationId) {
+    int optionsApplied = 0;
+    int hypPos = -1;
+    int totalHypothesesGenerated = 0;
 
-    public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
-        int foreignSz, OptionGrid<TK> optionGrid,
-        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-        int translationId, int threadId, int threadCount, CountDownLatch cdl) {
-      this.beams = beams;
-      this.beamId = beamId;
-      this.foreignSz = foreignSz;
-      this.optionGrid = optionGrid;
-      this.constrainedOutputSpace = constrainedOutputSpace;
-      this.translationId = translationId;
-      this.threadId = threadId;
-      this.threadCount = threadCount;
-      this.cdl = cdl;
-    }
+    for (Hypothesis<TK, FV> hyp : beams[beamId]) {
+      hypPos++;
+      if (hyp == null)
+        continue;
+      int localOptionsApplied = 0;
+      int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
+      int priorStartPos = (hyp.featurizable == null ? 0
+          : hyp.featurizable.foreignPosition);
+      int priorEndPos = (hyp.featurizable == null ? 0
+          : hyp.featurizable.foreignPosition
+          + hyp.featurizable.foreignPhrase.size());
 
-    
-    @Override
-    public void run() {
       if (DETAILED_DEBUG)
-        System.err.printf("starting beam expander: %s thread pool: %s\n", this,
-            threadPool);
-      expandBeam(beams, beamId, foreignSz, optionGrid, constrainedOutputSpace,
-          translationId, threadId, threadCount, cdl);
-      if (DETAILED_DEBUG)
-        System.err.printf("ending beam expander: %s thread pool: %s\n", this,
-            threadPool);
-    }
-
-    @SuppressWarnings("unchecked")
-    public int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
-        int foreignSz, OptionGrid<TK> optionGrid,
-        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-        int translationId, int threadId, int threadCount, CountDownLatch cdl) {
-      int optionsApplied = 0;
-      int hypPos = -1;
-      int totalHypothesesGenerated = 0;
-
-      Hypothesis<TK, FV>[] hyps;
-      synchronized (beams[beamId]) {
-        hyps = new Hypothesis[beams[beamId].size()];
-        int i = -1;
-        for (Hypothesis<TK, FV> hyp : beams[beamId]) {
-          i++;
-          hyps[i] = hyp;
-        }
-      }
-
-      for (Hypothesis<TK, FV> hyp : hyps) {
-        hypPos++;
-        if (hypPos % threadCount != threadId)
-          continue;
-        if (hyp == null)
-          continue;
-        int localOptionsApplied = 0;
-        int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
-        int priorStartPos = (hyp.featurizable == null ? 0
-            : hyp.featurizable.foreignPosition);
-        int priorEndPos = (hyp.featurizable == null ? 0
-            : hyp.featurizable.foreignPosition
-                + hyp.featurizable.foreignPhrase.size());
-
+        System.err.printf("ForeignSz is: %d\n", foreignSz);
+      for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
+        int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
         if (DETAILED_DEBUG)
-          System.err.printf("ForeignSz is: %d\n", foreignSz);
-        for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
-          int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
+          System.err.printf("Current startPos: %d, endPosMax: %d\n", startPos, endPosMax);
+
+        // check distortion limit
+        if (endPosMax < 0) {
+          if (maxDistortion >= 0 && startPos != firstCoverageGap) {
+            endPosMax = Math.min(firstCoverageGap + maxDistortion + 1,
+                foreignSz);
+          } else {
+            endPosMax = foreignSz;
+          }
           if (DETAILED_DEBUG)
-            System.err.printf("Current startPos: %d, endPosMax: %d\n", startPos, endPosMax);
-
-          // check distortion limit
-          if (endPosMax < 0) {
-            if (maxDistortion >= 0 && startPos != firstCoverageGap) {
-              endPosMax = Math.min(firstCoverageGap + maxDistortion + 1,
-                  foreignSz);
-            } else {
-              endPosMax = foreignSz;
-            }
-            if (DETAILED_DEBUG)
-              System.err.printf("after checking distortion limit, endPosMax: %d\n", endPosMax);
-          }
-          if (useITGConstraints) {
-            boolean ITGOK = true;
-            if (startPos > priorStartPos) {
-              // System.err.printf("startPos(%d) > priorStartPos(%d)\n",
-              // startPos, priorStartPos);
-              for (int pos = priorEndPos + 1; pos < startPos; pos++) {
-                if (hyp.foreignCoverage.get(pos)
-                    && !hyp.foreignCoverage.get(pos - 1)) {
-                  // System.err.printf("not okay-1 %d & %d - %s\n" ,pos, pos-1,
-                  // hyp.foreignCoverage);
-                  ITGOK = false;
-                  break;
-                }
-              }
-            } else {
-              // System.err.printf("startPos(%d) < priorStartPos(%d)\n",
-              // startPos, priorStartPos);
-              for (int pos = startPos; pos < priorStartPos; pos++) {
-                if (hyp.foreignCoverage.get(pos)
-                    && !hyp.foreignCoverage.get(pos + 1)) {
-                  // System.err.printf("not okay-2 %d & %d - %s\n" ,pos, pos+1,
-                  // hyp.foreignCoverage);
-                  ITGOK = false;
-                  break;
-                }
+            System.err.printf("after checking distortion limit, endPosMax: %d\n", endPosMax);
+        }
+        if (useITGConstraints) {
+          boolean ITGOK = true;
+          if (startPos > priorStartPos) {
+            // System.err.printf("startPos(%d) > priorStartPos(%d)\n",
+            // startPos, priorStartPos);
+            for (int pos = priorEndPos + 1; pos < startPos; pos++) {
+              if (hyp.foreignCoverage.get(pos)
+                  && !hyp.foreignCoverage.get(pos - 1)) {
+                // System.err.printf("not okay-1 %d & %d - %s\n" ,pos, pos-1,
+                // hyp.foreignCoverage);
+                ITGOK = false;
+                break;
               }
             }
-            if (DETAILED_DEBUG)
-              System.err.printf("after ITG constraints check, ITGOK=%b\n", ITGOK);
-            if (!ITGOK)
-              continue;
-            // System.err.printf("okay\n");
+          } else {
+            // System.err.printf("startPos(%d) < priorStartPos(%d)\n",
+            // startPos, priorStartPos);
+            for (int pos = startPos; pos < priorStartPos; pos++) {
+              if (hyp.foreignCoverage.get(pos)
+                  && !hyp.foreignCoverage.get(pos + 1)) {
+                // System.err.printf("not okay-2 %d & %d - %s\n" ,pos, pos+1,
+                // hyp.foreignCoverage);
+                ITGOK = false;
+                break;
+              }
+            }
           }
-          for (int endPos = startPos; endPos < endPosMax; endPos++) {
-            List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid
-                .get(startPos, endPos);
-            if (applicableOptions == null)
+          if (DETAILED_DEBUG)
+            System.err.printf("after ITG constraints check, ITGOK=%b\n", ITGOK);
+          if (!ITGOK)
+            continue;
+          // System.err.printf("okay\n");
+        }
+        for (int endPos = startPos; endPos < endPosMax; endPos++) {
+          List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid
+              .get(startPos, endPos);
+          if (applicableOptions == null)
+            continue;
+
+          for (ConcreteTranslationOption<TK> option : applicableOptions) {
+            // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
+            // // TODO: put back
+
+            if (constrainedOutputSpace != null
+                && !constrainedOutputSpace.allowableContinuation(
+                    hyp.featurizable, option)) {
               continue;
+            }
 
-            for (ConcreteTranslationOption<TK> option : applicableOptions) {
-              // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
-              // // TODO: put back
+            /*
+             * if (option.abstractOption.phraseScoreNames[0] ==
+             * UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG && hypNextForeignPos
+             * != startPos) { continue; // lets not allow untranslated foreign
+             * phrases to float around randomly }
+             */
 
+            Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
+                option, hyp.length, hyp, featurizer, scorer, heuristic);
+
+            if (DETAILED_DEBUG) {
+              System.err.printf("creating hypothesis %d from %d\n",
+                  newHyp.id, hyp.id);
+              System.err.printf("hyp: %s\n",
+                  newHyp.featurizable.partialTranslation);
+              System.err.printf("coverage: %s\n", newHyp.foreignCoverage);
+              if (hyp.featurizable != null) {
+                System.err.printf("par: %s\n",
+                    hyp.featurizable.partialTranslation);
+                System.err.printf("coverage: %s\n", hyp.foreignCoverage);
+              }
+              System.err.printf("\tbase score: %.3f\n", hyp.score);
+              System.err.printf("\tcovering: %s\n",
+                  newHyp.translationOpt.foreignCoverage);
+              System.err.printf("\tforeign: %s\n",
+                  newHyp.translationOpt.abstractOption.foreign);
+              System.err.printf("\ttranslated as: %s\n",
+                  newHyp.translationOpt.abstractOption.translation);
+              System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n",
+                  newHyp.score, newHyp.h, newHyp.score());
+
+            }
+            totalHypothesesGenerated++;
+
+            if (newHyp.featurizable.untranslatedTokens != 0) {
               if (constrainedOutputSpace != null
-                  && !constrainedOutputSpace.allowableContinuation(
-                      hyp.featurizable, option)) {
+                  && !constrainedOutputSpace
+                  .allowablePartial(newHyp.featurizable)) {
                 continue;
               }
-
-              /*
-               * if (option.abstractOption.phraseScoreNames[0] ==
-               * UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG && hypNextForeignPos
-               * != startPos) { continue; // lets not allow untranslated foreign
-               * phrases to float around randomly }
-               */
-
-              Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
-                  option, hyp.length, hyp, featurizer, scorer, heuristic);
-
-              if (DETAILED_DEBUG) {
-                System.err.printf("creating hypothesis %d from %d\n",
-                    newHyp.id, hyp.id);
-                System.err.printf("hyp: %s\n",
-                    newHyp.featurizable.partialTranslation);
-                System.err.printf("coverage: %s\n", newHyp.foreignCoverage);
-                if (hyp.featurizable != null) {
-                  System.err.printf("par: %s\n",
-                      hyp.featurizable.partialTranslation);
-                  System.err.printf("coverage: %s\n", hyp.foreignCoverage);
-                }
-                System.err.printf("\tbase score: %.3f\n", hyp.score);
-                System.err.printf("\tcovering: %s\n",
-                    newHyp.translationOpt.foreignCoverage);
-                System.err.printf("\tforeign: %s\n",
-                    newHyp.translationOpt.abstractOption.foreign);
-                System.err.printf("\ttranslated as: %s\n",
-                    newHyp.translationOpt.abstractOption.translation);
-                System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n",
-                    newHyp.score, newHyp.h, newHyp.score());
-
-              }
-              totalHypothesesGenerated++;
-
-              if (newHyp.featurizable.untranslatedTokens != 0) {
-                if (constrainedOutputSpace != null
-                    && !constrainedOutputSpace
-                        .allowablePartial(newHyp.featurizable)) {
-                  continue;
-                }
-              } else {
-                // System.err.printf("checking final %s\n",
+            } else {
+              // System.err.printf("checking final %s\n",
+              // newHyp.featurizable.partialTranslation);
+              if (constrainedOutputSpace != null
+                  && !constrainedOutputSpace
+                  .allowableFinal(newHyp.featurizable)) {
+                // System.err.printf("bad final: %s\n",
                 // newHyp.featurizable.partialTranslation);
-                if (constrainedOutputSpace != null
-                    && !constrainedOutputSpace
-                        .allowableFinal(newHyp.featurizable)) {
-                  // System.err.printf("bad final: %s\n",
-                  // newHyp.featurizable.partialTranslation);
-                  continue;
-                }
-              }
-
-              if (newHyp.score == Double.NEGATIVE_INFINITY
-                  || newHyp.score == Double.POSITIVE_INFINITY
-                  || newHyp.score != newHyp.score) {
-                // should we give a warning here?
-                //
-                // this normally happens when there's something brain dead about
-                // the user's baseline model/featurizers,
-                // like log(p) values that equal -inf for some featurizers.
                 continue;
               }
-
-              int foreignWordsCovered = newHyp.foreignCoverage.cardinality();
-              beams[foreignWordsCovered].put(newHyp);
-
-              optionsApplied++;
-              localOptionsApplied++;
             }
 
+            if (newHyp.score == Double.NEGATIVE_INFINITY
+                || newHyp.score == Double.POSITIVE_INFINITY
+                || newHyp.score != newHyp.score) {
+              // should we give a warning here?
+              //
+              // this normally happens when there's something brain dead about
+              // the user's baseline model/featurizers,
+              // like log(p) values that equal -inf for some featurizers.
+              continue;
+            }
+
+            int foreignWordsCovered = newHyp.foreignCoverage.cardinality();
+            beams[foreignWordsCovered].put(newHyp);
+
+            optionsApplied++;
+            localOptionsApplied++;
           }
         }
-        if (DETAILED_DEBUG) {
-          System.err.printf("local options applied(%d): %d\n", hypPos,
-              localOptionsApplied);
-        }
       }
-
-      if (DEBUG) {
-        System.err.printf("Options applied: %d\n", optionsApplied);
+      if (DETAILED_DEBUG) {
+        System.err.printf("local options applied(%d): %d\n", hypPos,
+            localOptionsApplied);
       }
-
-      cdl.countDown();
-      return totalHypothesesGenerated;
     }
 
+    if (DEBUG) {
+      System.err.printf("Options applied: %d\n", optionsApplied);
+    }
+    return totalHypothesesGenerated;
   }
 
   void writeAlignments(BufferedWriter alignmentDump, Hypothesis<TK, FV> bestHyp)

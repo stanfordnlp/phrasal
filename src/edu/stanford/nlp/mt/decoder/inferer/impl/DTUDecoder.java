@@ -64,7 +64,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
   final int maxDistortion;
-  final int numProcs;
 
   public static boolean gapsInFutureCost = true;
 
@@ -83,14 +82,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     super(builder);
     maxDistortion = builder.maxDistortion;
 
-    if (builder.internalMultiThread) {
-      numProcs = (System.getProperty("numProcs") != null ? Integer
-          .parseInt(System.getProperty("numProcs")) : Runtime.getRuntime()
-          .availableProcessors());
-    } else {
-      numProcs = 1;
-    }
-
     if (maxDistortion != -1) {
       System.err.printf(
           "Discontinuous phrase-based decoder. Using distortion limit: %d\n",
@@ -104,14 +95,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   public static class DTUDecoderBuilder<TK, FV> extends
       AbstractBeamInfererBuilder<TK, FV> {
     int maxDistortion = DEFAULT_MAX_DISTORTION;
-    boolean internalMultiThread;
-
-    @Override
-    public AbstractBeamInfererBuilder<TK, FV> setInternalMultiThread(
-        boolean internalMultiThread) {
-      this.internalMultiThread = internalMultiThread;
-      return this;
-    }
 
     @Override
     public AbstractBeamInfererBuilder<TK, FV> setMaxDistortion(int maxDistortion) {
@@ -134,11 +117,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     public Inferer<TK, FV> build() {
       return new DTUDecoder<TK, FV>(this);
     }
-  }
-
-  @Override
-  public boolean shutdown() {
-    return true;
   }
   
   private void displayBeams(Beam<Hypothesis<TK, FV>>[] beams) {
@@ -251,8 +229,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     featurizer.initialize(options, foreign);
 
     // main translation loop
-    System.err.printf("Decoding with %d threads\n", numProcs);
-
     long decodeLoopTime = -System.currentTimeMillis();
     for (int i = 0; i < beams.length; i++) {
 
@@ -270,13 +246,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (DEBUG)
         System.err.println();
 
-      // TODO(spenceg): This is sort of bad. If numProcs > 1, it will start these Runnables
-      // in the main thread....
-      for (int threadId = 0; threadId < numProcs; threadId++) {
-        BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz,
+      BeamExpander beamExpander = new BeamExpander(beams, i, foreignSz,
             optionGrid, constrainedOutputSpace, translationId);
-        beamExpander.expandBeam();
-      }
+      beamExpander.expandBeam();
 
       if (DEBUG) {
         displayBeams(beams);

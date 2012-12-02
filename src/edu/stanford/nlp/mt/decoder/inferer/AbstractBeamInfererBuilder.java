@@ -47,9 +47,6 @@ abstract public class AbstractBeamInfererBuilder<TK, FV> extends
   @Override
   abstract public Inferer<TK, FV> build();
 
-  abstract public AbstractBeamInfererBuilder<TK, FV> setInternalMultiThread(
-      boolean internalMultiThread);
-
   abstract public AbstractBeamInfererBuilder<TK, FV> setMaxDistortion(
       int distortionLimit);
 
