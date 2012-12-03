@@ -36,6 +36,38 @@ Order	% Tok					% Type
 Note that for all n-gram sizes (unigram, bigram, trigram, 4-gram, and 5-gram), the FDA selected 100k bitext 
 from the full BOLT bitext has better coverage of MT06 than the grammatical subset.
 
+Dev MT06 BLEU = 34.187, 76.270/44.386/26.271/15.769 (BP=0.993, ration=0.993 46629/46936)
+
+Using less than 1% of the BOLT phase 1 training data, we are able to get a BLEU
+score that is almost as good as what we get with the full BOLT system that 
+uses the complete bi-text and significantly more language modeling resources. 
+
+Specifically, we get 34.187 BLEU using 1% of the BOLT bi-text for training the 
+phrase-table and reordering model and one language model trained on the target
+side of the BOLT bi-text. Using a substantially larger system that uses the full
+BOLT bi-text for training the phrase-table and reordering model and *three* 
+language models, one trained on the target side of the BOLT bitext, one 
+trained on the BBN data released for GALE, and one trained on the Google 
+n-grams*, we get a BLEU score of 35.237, which is only about 1 BLEU point 
+higher than the much smaller model's BLEU score of 34.187. 
+
+If the smaller model trained on 1% of the bi-text had access to the two 
+additional language models, it is very likely that it would perform as well as
+or better than the model trained on the full bi-text. Specifically, it would be
+*very* surprising if the smaller model didn't get at least a 1 point boost in 
+BLEU score from using both the Google n-grams and BBN LM.  
+
+The Dev MT06 BLEU score achieve by using the small FDA 100k model is also 
+better than the Grammatical subset Dev MT06 BLEU score (34.2 vs. 32 +/-1 BLEU).
+The FDA 100k model achieves this better performance even though the FDA 100k 
+training set is only a fraction of the size of the grammatical subset with 
+100,000 segments and 1,975,913 source words for FDA 100k vs. 1,560,071 segments
+and 11,061,789 source words for the grammatical subset.
+
+* When the Google n-grams and BBN language model are used, experiments last
+summer suggested that it wasn't really beneficial to also use language 
+modeling data from Gigaword.
+
 N = 10k
 
 java edu.stanford.nlp.mt.tools.CoverageChecker 5 bolt_bitext.fda10k.zh mt06/mt06.nist.transonly.norm.zhOpening: bolt_bitext.fda10k.zh
@@ -51,6 +83,12 @@ Order	% Tok					% Type
 
 Note that for trigrams, 4-grams, and 5-grams, the FDA selected 10k bitext from the full BOLT bitext has better coverage of 
 MT06 than the grammatical subset.
+
+Dev MT06 BLEU = 26.307, 69.871/35.654/18.944/10.422 (BP=0.993, ration=0.993 46775/47087 
+
+Oddly, even though the 10k sample has better coverage than the grammatical subset, it actually gets a significantly worse 
+BLEU score. On Dev MT06, the grammatical subset gets a BLEU score of about 32 +/-1).
+
  
 Coverage of MT03 source side n-grams
 
