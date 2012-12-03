@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.base;
 import java.util.*;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  * 
@@ -12,7 +11,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  * @param <TK>
  */
 public class UnknownWordPhraseGenerator<TK, FV> extends
-    AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK> {
+    AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
   static public final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
   static public final String DEFAULT_SCORE_NAMES[] = { "p_i(t|f)" };
   static public final float SCORE_VALUES[] = { (float) 1.0 };
@@ -33,9 +32,9 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 	 * 
 	 */
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer,
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       SequenceFilter<TK> filter) {
-    super(phraseFeaturizer, scorer);
+    super(phraseFeaturizer);
     this.filter = filter;
     scoreNames = DEFAULT_SCORE_NAMES;
     this.dropUnknownWords = dropUnknownWords;
@@ -45,9 +44,9 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 	 * 
 	 */
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer,
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       SequenceFilter<TK> filter, String scoreName) {
-    super(phraseFeaturizer, scorer);
+    super(phraseFeaturizer);
     this.filter = filter;
     scoreNames = new String[] { scoreName };
     this.dropUnknownWords = dropUnknownWords;
@@ -57,17 +56,17 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 	 * 
 	 */
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer) {
-    super(phraseFeaturizer, scorer);
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords) {
+    super(phraseFeaturizer);
     this.filter = null;
     scoreNames = DEFAULT_SCORE_NAMES;
     this.dropUnknownWords = dropUnknownWords;
   }
 
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords, Scorer<FV> scorer,
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       String scoreName) {
-    super(phraseFeaturizer, scorer);
+    super(phraseFeaturizer);
     this.filter = null;
     scoreNames = new String[] { scoreName };
     this.dropUnknownWords = dropUnknownWords;

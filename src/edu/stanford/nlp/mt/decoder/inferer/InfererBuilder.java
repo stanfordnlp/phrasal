@@ -21,7 +21,7 @@ public interface InfererBuilder<TK, FV> {
   /**
 	 * 
 	 */
-  InfererBuilder<TK, FV> setPhraseGenerator(PhraseGenerator<TK> phraseGenerator);
+  InfererBuilder<TK, FV> setPhraseGenerator(PhraseGenerator<TK,FV> phraseGenerator);
 
   /**
 	 * 

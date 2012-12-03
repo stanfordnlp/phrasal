@@ -167,7 +167,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.println("Generating Translation Options");
 
     List<ConcreteTranslationOption<TK>> options = phraseGenerator
-        .translationOptions(foreign, targets, translationId);
+        .translationOptions(foreign, targets, translationId, scorer);
 
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:

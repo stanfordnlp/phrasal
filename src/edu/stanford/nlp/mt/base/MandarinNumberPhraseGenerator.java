@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.base;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,15 +12,13 @@ import java.util.HashSet;
 import java.math.BigDecimal;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IString,String> {
    public static final String NUMBER_PHRASE_GENERATOR_NAME = "NumberPhraseGenerator";
    public static boolean DEBUG = true;
 
-   public MandarinNumberPhraseGenerator(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer,
-         Scorer<String> scorer) {
-      super(phraseFeaturizer, scorer);
+   public MandarinNumberPhraseGenerator(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer) {
+      super(phraseFeaturizer);
    }
 
    @Override
@@ -622,7 +619,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
 
    static public void main(String[] args) throws IOException {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-      MandarinNumberPhraseGenerator mnpg = new MandarinNumberPhraseGenerator(null, null);
+      MandarinNumberPhraseGenerator mnpg = new MandarinNumberPhraseGenerator(null);
 
       // file reader error checker
       /*

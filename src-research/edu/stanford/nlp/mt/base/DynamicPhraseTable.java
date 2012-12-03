@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -30,17 +29,17 @@ public class DynamicPhraseTable<FV> extends
 
   public DynamicPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String phraseTableName, String model1S2T,
+      String phraseTableName, String model1S2T,
       String model1T2S) {
-    super(phraseFeaturizer, scorer);
+    super(phraseFeaturizer);
     currentSequence = new HashSet<String>();
     initdb(phraseTableName);
   }
 
   public DynamicPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String phraseTableName) {
-    super(phraseFeaturizer, scorer);
+      String phraseTableName) {
+    super(phraseFeaturizer);
     currentSequence = new HashSet<String>();
     initdb(phraseTableName);
   }

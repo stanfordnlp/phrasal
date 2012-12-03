@@ -19,7 +19,6 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> {
   private String name;
@@ -29,8 +28,8 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   final Database db;
   
   public BinaryPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String filename) throws IOException {
-    super(phraseFeaturizer, scorer);
+      String filename) throws IOException {
+    super(phraseFeaturizer);
     name = String.format("BinaryPhraseTable(%s)", filename);
     EnvironmentConfig envConfig = new EnvironmentConfig();
     envConfig.setTransactional(false);
@@ -86,7 +85,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     dbConfig.setSortedDuplicates(true);
     dbConfig.setAllowCreate(true);
     dbConfig.setDeferredWrite(true);
-    FlatPhraseTable<String> flatPhraseTable = new FlatPhraseTable<String>(null, null, flatPhraseTableName); 
+    FlatPhraseTable<String> flatPhraseTable = new FlatPhraseTable<String>(null, flatPhraseTableName); 
     
     Database db = dbEnv.openDatabase(null, "phrases", dbConfig);
     Database meta = dbEnv.openDatabase(null, "meta", dbConfig);

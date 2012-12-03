@@ -74,7 +74,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
 
       // Create truecasing phrase generator
       infererBuilder.setPhraseGenerator(new AllCasePhraseGenerator(
-          combinedFeaturizer, scorer));
+          combinedFeaturizer));
       infererBuilder
           .setSearchHeuristic(new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
               combinedFeaturizer, scorer));
@@ -123,9 +123,8 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
   Map<String, List<String>> caseMap = new HashMap<String, List<String>>();
 
   public AllCasePhraseGenerator(
-      IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer,
-      Scorer<String> scorer) {
-    super(phraseFeaturizer, scorer);
+      IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer) {
+    super(phraseFeaturizer);
 
     // TODO : caseMap should actually examine the language model(s) directly
     // rather than using a dump from IStrings.keySet()

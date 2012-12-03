@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
@@ -29,7 +28,7 @@ import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombi
  *  @param <FV>
  */
 public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> extends
-        AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK> {
+        AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
 
   public static final String PHRASE_TABLE_NAMES = "PinyinNameTransliterationPhraseGenerator(Dyn)";
   public static final String[] DEFAULT_SCORE_NAMES = { "p_py(t|f)" };
@@ -48,9 +47,8 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   private static final boolean capitalize = false;
 
 
-  public PinyinNameTransliterationPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer,
-                                                  Scorer<FV> scorer) {
-    super(phraseFeaturizer, scorer);
+  public PinyinNameTransliterationPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+    super(phraseFeaturizer);
     filter = new ProbableChineseNameFilter<TK>();
     scoreNames = DEFAULT_SCORE_NAMES;
     format = new HanyuPinyinOutputFormat();
@@ -124,7 +122,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
 
   public static void main(String[] args) throws IOException {
     PinyinNameTransliterationPhraseGenerator<IString,String> pnpg =
-            new PinyinNameTransliterationPhraseGenerator<IString,String>(null, null);
+            new PinyinNameTransliterationPhraseGenerator<IString,String>(null);
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, "utf-8"));
     PrintWriter writer = new PrintWriter(new OutputStreamWriter(System.out, "utf-8"));

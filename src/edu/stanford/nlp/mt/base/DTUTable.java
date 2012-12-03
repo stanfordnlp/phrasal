@@ -48,8 +48,8 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   }
 
   public DTUTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String filename) throws IOException {
-    super(phraseFeaturizer, scorer, filename);
+      String filename) throws IOException {
+    super(phraseFeaturizer, filename);
     System.err.println("DTU phrase table: " + filename);
     File f = new File(filename);
     name = String.format("DTU(%s)", f.getName());
@@ -104,7 +104,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   @SuppressWarnings("unchecked")
   public List<ConcreteTranslationOption<IString>> translationOptions(
       Sequence<IString> sequence, List<Sequence<IString>> targets,
-      int translationId) {
+      int translationId, Scorer<FV> scorer) {
 
     assert (targets == null);
     List<ConcreteTranslationOption<IString>> opts = new LinkedList<ConcreteTranslationOption<IString>>();

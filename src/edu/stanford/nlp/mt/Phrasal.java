@@ -164,7 +164,7 @@ public class Phrasal {
   /**
    * Phrase table type
    */
-  private PhraseGenerator<IString> phraseGenerator;
+  private PhraseGenerator<IString,String> phraseGenerator;
   
   /**
    * Whether to filter unknown words in the output
@@ -735,48 +735,48 @@ public class Phrasal {
 
     if (phraseTable.startsWith("bitext:")) {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, false,
+          featurizer, false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
+          phraseTable) : PhraseGeneratorFactory.factory(featurizer, false,
           PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
           phraseTable.replaceFirst("^bitext:", ""), optionLimit));
     } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
 
       System.err.println("Dyanamic pt\n========================");
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, scorer, false,
+          featurizer, false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
+          phraseTable) : PhraseGeneratorFactory.factory(featurizer, false,
           PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable, optionLimit));
     } else {
       String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
           : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, scorer, false, generatorName, phraseTable)
-          : PhraseGeneratorFactory.factory(featurizer, scorer, false, generatorName,
+          featurizer, false, generatorName, phraseTable)
+          : PhraseGeneratorFactory.factory(featurizer, false, generatorName,
               phraseTable, optionLimit));
     }
 
     if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
-       List<PhraseGenerator<IString>> pgens = new LinkedList<PhraseGenerator<IString>>();
+       List<PhraseGenerator<IString,String>> pgens = new LinkedList<PhraseGenerator<IString,String>>();
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-          PhraseGenerator<IString> pgen;
+          PhraseGenerator<IString,String> pgen;
           try {
-             pgen = (PhraseGenerator<IString>)Class.forName(pgenClasspath).
-                getConstructor(IsolatedPhraseFeaturizer.class, Scorer.class).newInstance(featurizer, scorer);
+             pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
+                getConstructor(IsolatedPhraseFeaturizer.class).newInstance(featurizer);
           } catch (ClassNotFoundException e) {
              throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
           }
           pgens.add(pgen);
        }
-       phraseGenerator = new CombinedPhraseGenerator<IString>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
+       phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
     }
 
-    phraseGenerator = new CombinedPhraseGenerator<IString>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(featurizer, dropUnknownWords, scorer)),
+    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(featurizer, dropUnknownWords)),
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
 
     System.err.printf("Phrase Limit: %d\n",
-        ((CombinedPhraseGenerator<IString>) phraseGenerator).getPhraseLimit());
+        ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Create Recombination Filter
     RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
@@ -794,6 +794,7 @@ public class Phrasal {
     if (config.containsKey(LOCAL_PROCS))
       numThreads = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
     if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
+    System.err.printf("Number of threads: %d%n", numThreads);
     
     inferers = new ArrayList<Inferer<IString, String>>(numThreads);
 
@@ -811,7 +812,7 @@ public class Phrasal {
             .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
                 .clone());
         infererBuilder
-            .setPhraseGenerator((PhraseGenerator<IString>) phraseGenerator
+            .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
                 .clone());
         infererBuilder.setScorer(scorer);
         infererBuilder

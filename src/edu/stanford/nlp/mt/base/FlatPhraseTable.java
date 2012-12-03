@@ -5,7 +5,6 @@ import java.util.zip.GZIPInputStream;
 import java.io.*;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  * 
@@ -135,17 +134,17 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   public FlatPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String filename) throws IOException {
+      String filename) throws IOException {
     // default is not to do log rithm on the scores
-    this(phraseFeaturizer, scorer, filename, false);
+    this(phraseFeaturizer, filename, false);
   }
   
   public FlatPhraseTable(String filename) throws IOException {
-    this(null, null, filename, false);
+    this(null, filename, false);
   }
   
   public FlatPhraseTable(String filename, boolean reverse) throws IOException {
-    this(null, null, filename, reverse);
+    this(null, filename, reverse);
   }
 
   /**
@@ -154,8 +153,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    */
   public FlatPhraseTable(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, String filename, boolean reverse) throws IOException {
-    super(phraseFeaturizer, scorer);
+      String filename, boolean reverse) throws IOException {
+    super(phraseFeaturizer);
     File f = new File(filename);
     name = String.format("FlatPhraseTable(%s)", f.getName());
     // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
@@ -365,7 +364,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     String phrase = args[1];
     long startTimeMillis = System.currentTimeMillis();
     System.out.printf("Loading phrase table: %s\n", model);
-    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null, null,
+    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null,
         model);
     long totalMemory = Runtime.getRuntime().totalMemory() / (1 << 20);
     long freeMemory = Runtime.getRuntime().freeMemory() / (1 << 20);

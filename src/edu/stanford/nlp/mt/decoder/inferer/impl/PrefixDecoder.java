@@ -73,7 +73,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     return true;
   }
   
-  public PhraseGenerator<IString> getPhraseGenerator() {
+  public PhraseGenerator<IString,FV> getPhraseGenerator() {
     return phraseGenerator;
   }
   
@@ -108,7 +108,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     int windowSize = 100;
     int maxPrefixCompletion = 0;
     
-    List<ConcreteTranslationOption<IString>> options = phraseGenerator.translationOptions(foreign, targets, translationId);
+    List<ConcreteTranslationOption<IString>> options = phraseGenerator.translationOptions(foreign, targets, translationId, scorer);
     List<ConcreteTranslationOption<IString>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
     String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;

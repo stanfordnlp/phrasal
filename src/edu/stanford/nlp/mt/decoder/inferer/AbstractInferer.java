@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final CombinedFeaturizer<TK, FV> featurizer;
-  protected final PhraseGenerator<TK> phraseGenerator;
+  protected final PhraseGenerator<TK,FV> phraseGenerator;
   protected final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Hypothesis<TK, FV>> filter;

@@ -5,16 +5,10 @@ import java.io.*;
 
 import edu.stanford.nlp.mt.base.BinaryPhraseTable;
 import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.SymbolFilter;
 import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.UnknownWordFeaturizer;
-import edu.stanford.nlp.mt.tools.NumericFilter;
-//import edu.stanford.nlp.mt.base.DynamicPhraseTable;
-//import edu.stanford.nlp.mt.base.NewDynamicPhraseTable;
 
 /**
  * 
@@ -31,9 +25,9 @@ public class PhraseGeneratorFactory {
   public static final String PHAROAH_PHRASE_TABLE_ALT = "ppt";
   public static final String NEW_DYNAMIC_GENERATOR = "newdg";
 
-  static public <FV> PhraseGenerator<IString> factory(
+  static public <FV> PhraseGenerator<IString,FV> factory(
       IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
-      Scorer<FV> scorer, Boolean dropUnknownWords, String... pgSpecs) throws IOException {
+      Boolean dropUnknownWords, String... pgSpecs) throws IOException {
 
     if (pgSpecs.length == 0) {
       throw new RuntimeException(
@@ -45,7 +39,7 @@ public class PhraseGeneratorFactory {
 
     if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)
         || pgName.equals(BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR)) {
-      List<PhraseGenerator<IString>> phraseTables = new LinkedList<PhraseGenerator<IString>>();
+      List<PhraseGenerator<IString,FV>> phraseTables = new LinkedList<PhraseGenerator<IString,FV>>();
 
       for (int i = 1; i < pgSpecs.length; i++) {
         String[] fields = pgSpecs[i].split(":");
@@ -58,33 +52,33 @@ public class PhraseGeneratorFactory {
         String filename = fields[1];
         if (type.equals(PHAROAH_PHRASE_TABLE)
             || type.equals(PHAROAH_PHRASE_TABLE_ALT)) {
-          phraseTables.add((new FlatPhraseTable<FV>(phraseFeaturizer, scorer,
+          phraseTables.add((new FlatPhraseTable<FV>(phraseFeaturizer,
               filename)));
         } else if (type.equals(DTU_GENERATOR)) {
           phraseTables
-              .add((new DTUTable<FV>(phraseFeaturizer, scorer, filename)));
+              .add((new DTUTable<FV>(phraseFeaturizer, filename)));
         } else {
           throw new RuntimeException(String.format(
               "Unknown phrase table type: '%s'\n", type));
         }
       }
       if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)) {
-        return new CombinedPhraseGenerator<IString>(phraseTables,
+        return new CombinedPhraseGenerator<IString,FV>(phraseTables,
             CombinedPhraseGenerator.Type.CONCATENATIVE);
       } else if (pgName.equals(BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR)) {
-        List<PhraseGenerator<IString>> augmentedList = new LinkedList<PhraseGenerator<IString>>();
+        List<PhraseGenerator<IString,FV>> augmentedList = new LinkedList<PhraseGenerator<IString,FV>>();
 
         // user specified translation tables and equal in ranking special
         // purpose phrase generators
-        List<PhraseGenerator<IString>> userEquivList = new LinkedList<PhraseGenerator<IString>>(
+        List<PhraseGenerator<IString,FV>> userEquivList = new LinkedList<PhraseGenerator<IString,FV>>(
             phraseTables); // user phrase tables
 
-        CombinedPhraseGenerator<IString> equivUserRanking = new CombinedPhraseGenerator<IString>(
+        CombinedPhraseGenerator<IString,FV> equivUserRanking = new CombinedPhraseGenerator<IString,FV>(
             userEquivList);
         augmentedList.add(equivUserRanking);
 
        
-        return new CombinedPhraseGenerator<IString>(augmentedList,
+        return new CombinedPhraseGenerator<IString,FV>(augmentedList,
             CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
       }
     } else if (pgName.equals(PSEUDO_PHARAOH_GENERATOR)
@@ -92,8 +86,8 @@ public class PhraseGeneratorFactory {
 
       boolean withGaps = pgName.equals(DTU_GENERATOR);
 
-      List<PhraseGenerator<IString>> pharoahList = new LinkedList<PhraseGenerator<IString>>();
-      List<PhraseGenerator<IString>> finalList = new LinkedList<PhraseGenerator<IString>>();
+      List<PhraseGenerator<IString,FV>> pharoahList = new LinkedList<PhraseGenerator<IString,FV>>();
+      List<PhraseGenerator<IString,FV>> finalList = new LinkedList<PhraseGenerator<IString,FV>>();
       if (pgSpecs.length < 2) {
         throw new RuntimeException("A phrase table filename must be specified.");
       }
@@ -119,26 +113,26 @@ public class PhraseGeneratorFactory {
       for (String filename : filenames) {
         // System.err.printf("loading pt: %s\n", filename);
         if (withGaps)
-          pharoahList.add(new DTUTable<FV>(phraseFeaturizer, scorer, filename));
+          pharoahList.add(new DTUTable<FV>(phraseFeaturizer, filename));
         else
           if (new File(filename).isDirectory()) {
-             pharoahList.add(new BinaryPhraseTable<FV>(phraseFeaturizer, scorer,
+             pharoahList.add(new BinaryPhraseTable<FV>(phraseFeaturizer,
                    filename)); 
           } else {
-            pharoahList.add(new FlatPhraseTable<FV>(phraseFeaturizer, scorer,
+            pharoahList.add(new FlatPhraseTable<FV>(phraseFeaturizer, 
               filename));
           }
       }
 
-      finalList.add(new CombinedPhraseGenerator<IString>(pharoahList,
+      finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList,
           CombinedPhraseGenerator.Type.CONCATENATIVE));
       
       CombinedPhraseGenerator.Type combinationType = withGaps ? CombinedPhraseGenerator.Type.CONCATENATIVE
           : CombinedPhraseGenerator.Type.STRICT_DOMINANCE;
       if (phraseLimit == -1) {
-        return new CombinedPhraseGenerator<IString>(finalList, combinationType);
+        return new CombinedPhraseGenerator<IString,FV>(finalList, combinationType);
       } else {
-        return new CombinedPhraseGenerator<IString>(finalList, combinationType,
+        return new CombinedPhraseGenerator<IString,FV>(finalList, combinationType,
             phraseLimit);
       }
     }

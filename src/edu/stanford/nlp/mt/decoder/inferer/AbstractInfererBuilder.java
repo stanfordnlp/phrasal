@@ -20,7 +20,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
     InfererBuilder<TK, FV> {
   public List<Annotator<TK>> annotators = new ArrayList<Annotator<TK>>();  
   CombinedFeaturizer<TK, FV> incrementalFeaturizer;
-  PhraseGenerator<TK> phraseGenerator;
+  PhraseGenerator<TK,FV> phraseGenerator;
   Scorer<FV> scorer;
   SearchHeuristic<TK, FV> heuristic;
   RecombinationFilter<Hypothesis<TK, FV>> filter;
@@ -44,7 +44,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
 
   @Override
   public InfererBuilder<TK, FV> setPhraseGenerator(
-      PhraseGenerator<TK> phraseGenerator) {
+      PhraseGenerator<TK,FV> phraseGenerator) {
     this.phraseGenerator = phraseGenerator;
     return this;
   }

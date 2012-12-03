@@ -27,7 +27,7 @@ public class DumpPossibleWordCoOccurrences {
 
     String phraseTableFilename = args[0];
     String sourceTextFilename = args[1];
-    PhraseTable<IString> ppt = new FlatPhraseTable<String>(null, null,
+    PhraseTable<IString> ppt = new FlatPhraseTable<String>(null,
         phraseTableFilename);
 
     LineNumberReader reader = new LineNumberReader(new FileReader(

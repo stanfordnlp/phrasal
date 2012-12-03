@@ -14,9 +14,8 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  * @param <TK>
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
-    PhraseGenerator<TK>, PhraseTable<TK> {
+    PhraseGenerator<TK,FV>, PhraseTable<TK> {
   protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
-  protected final Scorer<FV> scorer;
 
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -25,7 +24,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
 
   @Override
   public List<ConcreteTranslationOption<TK>> translationOptions(
-      Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId) {
+      Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId, Scorer<FV> scorer) {
     List<ConcreteTranslationOption<TK>> opts = new LinkedList<ConcreteTranslationOption<TK>>();
     int sequenceSz = sequence.size();
     int longestForeignPhrase = this.longestForeignPhrase();
@@ -54,9 +53,8 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   }
 
   public AbstractPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
-    this.scorer = scorer;
   }
 
   @Override

@@ -11,12 +11,12 @@ import edu.stanford.nlp.mt.base.Sequence;
  * 
  * @param <TK>
  */
-public interface PhraseGenerator<TK> extends Cloneable {
+public interface PhraseGenerator<TK,FV> extends Cloneable {
   /**
 	 * 
 	 */
   public List<ConcreteTranslationOption<TK>> translationOptions(
-      Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId);
+      Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId, Scorer<FV> scorer);
 
   public Object clone() throws CloneNotSupportedException;
 

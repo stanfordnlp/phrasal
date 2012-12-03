@@ -46,7 +46,7 @@ public class PhraseTableFilter {
     String outTable = args[2];
 
     System.out.printf("Loading phrase table: %s\n", inTable);
-    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null, null, inTable);
+    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null, inTable);
 
     // Create Scorers:
     int nBits = N_VARIABLE_MOSES_FEATURES;

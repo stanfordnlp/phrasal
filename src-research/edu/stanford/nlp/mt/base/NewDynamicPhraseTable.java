@@ -7,7 +7,6 @@ import java.util.*;
 import tokyocabinet.*;
 
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -31,9 +30,9 @@ public class NewDynamicPhraseTable extends
 
   public NewDynamicPhraseTable(
       IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer,
-      Scorer<String> scorer, BiText bitext, IBMModel1 model1F2E,
+      BiText bitext, IBMModel1 model1F2E,
       IBMModel1 model1E2F) {
-    super(phraseFeaturizer, scorer);
+    super(phraseFeaturizer);
     this.bitext = bitext;
     this.model1F2E = model1F2E;
     this.model1E2F = model1E2F;
@@ -132,10 +131,10 @@ public class NewDynamicPhraseTable extends
     BiText btext = new BiText(args[0], args[1]);
     NewDynamicPhraseTable ndpt;
     if (args.length == 4) {
-      ndpt = new NewDynamicPhraseTable(null, null, btext,
+      ndpt = new NewDynamicPhraseTable(null, btext,
           IBMModel1.load(args[2]), IBMModel1.load(args[3]));
     } else {
-      ndpt = new NewDynamicPhraseTable(null, null, btext, null, null);
+      ndpt = new NewDynamicPhraseTable(null, btext, null, null);
     }
 
     int pos = -1;

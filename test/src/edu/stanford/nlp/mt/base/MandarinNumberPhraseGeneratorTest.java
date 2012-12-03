@@ -22,7 +22,7 @@ public class MandarinNumberPhraseGeneratorTest extends TestCase {
             "103,315,100",
             "six months",
     };
-    MandarinNumberPhraseGenerator mnpg = new MandarinNumberPhraseGenerator(null, null);
+    MandarinNumberPhraseGenerator mnpg = new MandarinNumberPhraseGenerator(null);
     assertEquals(inputs.length, outputs.length);
     for (int i = 0; i < inputs.length; i++) {
       Sequence<IString> phrase = new RawSequence<IString>(
