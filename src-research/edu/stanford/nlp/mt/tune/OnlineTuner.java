@@ -116,7 +116,7 @@ public class OnlineTuner {
       Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
       Phrasal.initStaticMembers(config);
       decoder = new Phrasal(config);
-      decoder.getScorer().updateWeights(wts);
+//      decoder.getScorer().updateWeights(wts);
       FlatPhraseTable.lockIndex();
       logger.info("Loaded Phrasal from: " + phrasalIniFile);
       
@@ -174,10 +174,7 @@ public class OnlineTuner {
   private void run(OnlineOptimizer<IString, String> optimizer, 
       SentenceLevelMetric<IString, String> objective, int nThreads) {
     final int tuneSetSize = tuneSource.size();
-    // Run through the examples in random order
-    int[] indices = new int[tuneSetSize];
-    for (int i = 0; i < indices.length; ++i) indices[i] = i;
-    
+    int[] indices = ArrayMath.range(0, tuneSetSize);
     // decoderWts will be used in every round; wts will accumulate weight vectors
     Counter<String> decoderWts = new ClassicCounter<String>(wts);
     wts.clear();
@@ -185,20 +182,20 @@ public class OnlineTuner {
     for (int epoch = 0; epoch < NUM_EPOCHS; ++epoch) {
       logger.info("Start of epoch: " + epoch);
       ArrayMath.shuffle(indices);
-      for (int j = 0; j < indices.length; ++j) {
-        final int i = indices[j];
-        Sequence<IString> source = tuneSource.get(i);
-        Sequence<IString> target = tuneTarget.get(i);
+      for (int i = 0; i < indices.length; ++i) {
+        final int translationId = indices[i];
+        Sequence<IString> source = tuneSource.get(translationId);
+        Sequence<IString> target = tuneTarget.get(translationId);
         List<Sequence<IString>> references = new ArrayList<Sequence<IString>>();
         references.add(target);
         
         // Decode source (get n-best list)
-        List<RichTranslation<IString,String>> nbestList = decoder.decode(source, i, 0);
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 0);
         
         // Tune weights
-        decoderWts = optimizer.update(source, i, nbestList, references, objective, decoderWts);
-        logger.info(String.format("New weights (%d-%d): %s", epoch, i, decoderWts.toString()));
-        decoder.getScorer().updateWeights(decoderWts);
+        decoderWts = optimizer.update(source, translationId, nbestList, references, objective, decoderWts);
+        logger.info(String.format("New weights (%d-%d): %s", epoch, translationId, decoderWts.toString()));
+//        decoder.getScorer().updateWeights(decoderWts);
 
         // Accumulate new weights for final averaging
         wts.addAll(decoderWts);
@@ -257,6 +254,7 @@ public class OnlineTuner {
    */
   private void shutdown() {
     logHandler.close();
+    decoder.shutdown();
   }
   
   /**
@@ -342,8 +340,5 @@ public class OnlineTuner {
     
     now = new Date();
     System.err.printf("Finished at: %s%n", now);
-    
-    // TODO(spenceg): Phrasal won't shutdown without this call. That's bad. Need to fix.
-    System.exit(0);
   }
 }
