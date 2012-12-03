@@ -32,7 +32,6 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
       .getProperty(IGNORE_TGT_PROPERTY, "true"));
 
   protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
-  protected final Scorer<FV> scorer;
   protected SpanScores hSpanScores;
 
   static {
@@ -49,9 +48,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 	 * 
 	 */
   public DTUIsolatedPhraseForeignCoverageHeuristic(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
-    this.scorer = scorer;
     System.err.println("Heuristic: " + getClass());
   }
 
@@ -116,13 +114,13 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
-    return getInitialHeuristic(foreignSequence, options, translationId, DEBUG);
+      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId) {
+    return getInitialHeuristic(foreignSequence, options, scorer, translationId, DEBUG);
   }
 
   @SuppressWarnings("unchecked")
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK>>> options, int translationId, boolean debug) {
+      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId, boolean debug) {
 
     int foreignSequenceSize = foreignSequence.size();
 
@@ -266,7 +264,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
     if (Double.isInfinite(hCompleteSequence) || Double.isNaN(hCompleteSequence)) {
       //hCompleteSequence = MINUS_INF;
-      getInitialHeuristic(foreignSequence, options, translationId, true);
+      getInitialHeuristic(foreignSequence, options, scorer, translationId, true);
       throw new RuntimeException("Error: h is either NaN or infinite: " + hCompleteSequence);
     }
 

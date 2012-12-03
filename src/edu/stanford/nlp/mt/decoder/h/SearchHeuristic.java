@@ -1,11 +1,12 @@
 package edu.stanford.nlp.mt.decoder.h;
 
-import java.util.*;
+import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  * 
@@ -19,7 +20,7 @@ public interface SearchHeuristic<TK, FV> extends Cloneable {
    * Note reset semantics
    */
   double getInitialHeuristic(Sequence<TK> sequence,
-      List<List<ConcreteTranslationOption<TK>>> options, int translationId);
+      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId);
 
   /**
 	 * 

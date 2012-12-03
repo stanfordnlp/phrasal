@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.h;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  * 
@@ -19,7 +18,7 @@ public class HeuristicFactory {
 
   public static SearchHeuristic<IString, String> factory(
       IsolatedPhraseFeaturizer<IString, String> featurizer,
-      Scorer<String> scorer, String... hSpecs) {
+      String... hSpecs) {
     String hName;
     if (hSpecs.length == 0) {
       hName = DEFAULT_HEURISTIC;
@@ -31,10 +30,10 @@ public class HeuristicFactory {
       return new NullHeuristic<IString, String>();
     } else if (hName.equals(ISOLATED_PHRASE_FOREIGN_COVERAGE)) {
       return new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
-          featurizer, scorer);
+          featurizer);
     } else if (hName.equals(ISOLATED_DTU_FOREIGN_COVERAGE)) {
       return new DTUIsolatedPhraseForeignCoverageHeuristic<IString, String>(
-          featurizer, scorer);
+          featurizer);
     } else if (hName.equals(OPTIMISTIC_FOREIGN_COVERAGE)) {
       return new OptimisticForeignCoverageHeuristic<IString, String>();
     }

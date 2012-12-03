@@ -26,7 +26,6 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
       DEBUG_PROPERTY, "false"));
 
   final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
-  final Scorer<FV> scorer;
 
   protected SpanScores hSpanScores;
 
@@ -36,9 +35,8 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   }
 
   public IsolatedPhraseForeignCoverageHeuristic(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer) {
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
-    this.scorer = scorer;
   }
 
   @Override
@@ -72,7 +70,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
+      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId) {
 
     int foreignSequenceSize = foreignSequence.size();
 

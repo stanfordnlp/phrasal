@@ -19,7 +19,6 @@ import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 
-
 /**
  * 
  * Note: this class has a natural ordering that is inconsistent with equals
@@ -90,11 +89,12 @@ State<Hypothesis<TK, FV>> {
    */
   public Hypothesis(int translationId, Sequence<TK> foreignSequence,
       SearchHeuristic<TK, FV> heuristic,
+      Scorer<FV> scorer,
       List<Annotator<TK>> annotators,
       List<List<ConcreteTranslationOption<TK>>> options) {
     this.id = nextId.incrementAndGet();
     score = 0;
-    h = heuristic.getInitialHeuristic(foreignSequence, options, translationId);
+    h = heuristic.getInitialHeuristic(foreignSequence, options, scorer, translationId);
     insertionPosition = 0;
     length = 0;
     translationOpt = null;

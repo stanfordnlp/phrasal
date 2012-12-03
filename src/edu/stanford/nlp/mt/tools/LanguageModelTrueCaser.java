@@ -1,18 +1,43 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.mt.decoder.feat.*;
-import edu.stanford.nlp.mt.decoder.inferer.impl.*;
-import edu.stanford.nlp.mt.decoder.inferer.*;
-import edu.stanford.nlp.mt.decoder.util.*;
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.recomb.*;
-import edu.stanford.nlp.mt.decoder.h.*;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.stanford.nlp.mt.base.AbstractPhraseGenerator;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.LanguageModel;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.SRILanguageModel;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
+import edu.stanford.nlp.mt.decoder.inferer.Inferer;
+import edu.stanford.nlp.mt.decoder.inferer.InfererBuilderFactory;
+import edu.stanford.nlp.mt.decoder.inferer.impl.MultiBeamDecoder;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
+import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.UniformScorer;
+import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.process.TrueCaser;
 
-import java.util.*;
-import java.io.*;
 
 /**
  * Language Model based TrueCasing
@@ -77,7 +102,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
           combinedFeaturizer));
       infererBuilder
           .setSearchHeuristic(new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
-              combinedFeaturizer, scorer));
+              combinedFeaturizer));
       List<LanguageModel<IString>> lgModels = new LinkedList<LanguageModel<IString>>();
       lgModels.add(lmFeaturizer.lm);
 

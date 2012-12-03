@@ -157,9 +157,9 @@ public class Phrasal {
   public List<Inferer<IString, String>> inferers;
 
   /**
-   * Holds the model weights
+   * Holds the model weights, one per inferer
    */
-  private Scorer<String> scorer;
+  private List<Scorer<String>> scorers;
 
   /**
    * Phrase table type
@@ -193,11 +193,15 @@ public class Phrasal {
   static String recombinationHeuristic = DEFAULT_RECOMBINATION_HEURISTIC;
 
   /**
-   * Access the decoder's scorer, which contains the model weights.
+   * Access the decoder's scorer, which contains the model weights. THere is one scorer
+   * per thread.
    * 
    * @return
    */
-  public Scorer<String> getScorer() { return scorer; }
+  public Scorer<String> getScorer(int threadId) { 
+    assert threadId >= 0 && threadId < numThreads;
+    return scorers.get(threadId); 
+  }
 
   public static void initStaticMembers(Map<String, List<String>> config) {
 
@@ -673,7 +677,6 @@ public class Phrasal {
     }
 
     System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightConfig, 100), (weightConfig.size() > 100 ? "..." : ""));
-    scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig);
 
     // Create phrase generator
     String phraseTable;
@@ -786,17 +789,18 @@ public class Phrasal {
     // Create Search Heuristic
     IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
     SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
-        isolatedPhraseFeaturizer, scorer,
+        isolatedPhraseFeaturizer,
         withGaps ? HeuristicFactory.ISOLATED_DTU_FOREIGN_COVERAGE
             : HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
     
-    // Create Inferers
+    // Create Inferers and scorers
     if (config.containsKey(LOCAL_PROCS))
       numThreads = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
     if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
     System.err.printf("Number of threads: %d%n", numThreads);
-    
+
     inferers = new ArrayList<Inferer<IString, String>>(numThreads);
+    scorers = new ArrayList<Scorer<String>>(numThreads);
 
     boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
     // boolean dtuDecoder = (gapT == FeaturizerFactory.GapType.none || gapT ==
@@ -814,7 +818,9 @@ public class Phrasal {
         infererBuilder
             .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
                 .clone());
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig);
         infererBuilder.setScorer(scorer);
+        scorers.add(scorer);
         infererBuilder
             .setSearchHeuristic((SearchHeuristic<IString, String>) heuristic
                 .clone());

@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
  * 
@@ -26,8 +27,7 @@ public class NullHeuristic<TK, FV> implements SearchHeuristic<TK, FV> {
 
   @Override
   public double getInitialHeuristic(Sequence<TK> sequence,
-      List<List<ConcreteTranslationOption<TK>>> options, int translationId) {
+      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId) {
     return 0;
   }
-
 }
