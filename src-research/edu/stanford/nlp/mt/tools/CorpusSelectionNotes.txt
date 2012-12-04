@@ -21,6 +21,27 @@ Feature Decay Algorithm (Bikiki and Yuret 2011)
 Coverage at corpus size N
 -----------------------------------------------
 
+N = 250k
+nohup java edu.stanford.nlp.mt.tools.FDACorpusSelection 250000  bolt_bitext.en bolt_bitext.zh mt06/mt06.nist.transonly.norm.zh bolt_bitext.fda250k.en bolt_bitext.fda250k.zh > bolt_bitext.fda250k.log 2>&1 &
+java edu.stanford.nlp.mt.tools.CoverageChecker 5 bolt_bitext.fda250k.zh mt06/mt06.nist.transonly.norm.zh.norm.zh
+N-gram Coverage
+Order	% Tok	% Type
+1	98.654 (38054/38573)	94.623 (6371/6733)
+2	86.819 (32044/36909)	83.188 (21202/25487)
+3	58.001 (20450/35258)	56.042 (18137/32363)
+4	29.772 (10009/33619)	29.098 (9485/32597)
+5	15.003 (4800/31994)	14.734 (4638/31478)
+
+The coverage of the 250k FDA bi-text is much better than the grammatical subset and is equivalent to the 
+coverage of the full bi-text, at only a fraction of the size (2.33 % as many segments, and 2.14 % as many words).
+
+Dev MT06 BLEU = 35.488, 77.277/46.026/27.597/16.761 (BP=0.991, ration=0.991 46419/46844)
+
+The BLEU score achieved by the 250k FDA bi-text training model is slightly better than our prior best DEV MT06 BLEU score 
+using radically larger systems (35.488 vs. 35.237). The prior best score was achieved by system that takes ~70gb of RAM that 
+was built using the full bi-text and three large language models (bi-text, google n-gram, and BBN). The FDA bi-text trained model
+uses a fraction of the bi-text and only one language model (bi-text), and fits in about 8 GB of memory.
+
 N = 100k
 nohup java edu.stanford.nlp.mt.tools.FDACorpusSelection 100000 bolt_bitext.en bolt_bitext.zh mt06/mt06.nist.transonly.norm.zh bolt_bitext.fda100k.en bolt_bitext.fda100k.zh > bolt_bitext.fda100k.log 2>&1
 java edu.stanford.nlp.mt.tools.CoverageChecker 5 bolt_bitext.fda100k.zh mt06/mt06.nist.transonly.norm.zh 
@@ -33,8 +54,8 @@ Order	% Tok					% Type
 4		29.772 (10009/33619)	29.098 (9485/32597)
 5		15.003 (4800/31994)		14.734 (4638/31478)
 
-Note that for all n-gram sizes (unigram, bigram, trigram, 4-gram, and 5-gram), the FDA selected 100k bitext 
-from the full BOLT bitext has better coverage of MT06 than the grammatical subset.
+The coverage of the 100k FDA bi-text is much better than the grammatical subset and is nearly equivalent to the 
+coverage of the full bi-text, at only a fraction of the size ( <= 1 % as many segments - 0.933%, and <= 1% as many words - 0.73%).
 
 Dev MT06 BLEU = 34.187, 76.270/44.386/26.271/15.769 (BP=0.993, ration=0.993 46629/46936)
 
