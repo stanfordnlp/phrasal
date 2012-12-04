@@ -51,24 +51,17 @@ public class OnlineTuner {
   private static int NUM_EPOCHS = 1;
   
   // Log to file
-  public static Handler logHandler;
-  private static String logPrefix;
-  static {
-    try {
-      SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-HH-mm-ss");
-      logPrefix = "online-tuner.debug." + formatter.format(new Date());
-      logHandler = new FileHandler(logPrefix + ".log");
-      logHandler.setFormatter(new SimpleFormatter()); //Plain text
-    } catch (SecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
+  public static Handler logHandler = null;
+  
+  public static void attach(Logger logger) { 
+    if (logHandler != null) {
+      logger.addHandler(logHandler);
     }
   }
-  public static void attach(Logger logger) { logger.addHandler(logHandler); }
   
   // What it says
   private final Logger logger;
+  private final String logPrefix;
   
   // Intrinsic loss examples
   private List<Sequence<IString>> tuneSource;
@@ -88,10 +81,27 @@ public class OnlineTuner {
    */
   private Phrasal decoder;
   
-  public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, String wtsInitialFile) {
+  public OnlineTuner(String srcFile, 
+      String tgtFile, 
+      String phrasalIniFile, 
+      String wtsInitialFile,
+      String experimentName) {
+    // Setup the log file
+    SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-HH-mm-ss");
+    logPrefix = String.format("online-tuner.%s.%s", experimentName, formatter.format(new Date()));
+    try {
+      logHandler = new FileHandler(logPrefix + ".log");
+      logHandler.setFormatter(new SimpleFormatter()); //Plain text
+    } catch (SecurityException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    
     // Write the error log to file
     logger = Logger.getLogger(OnlineTuner.class.getName());
     logger.addHandler(logHandler);
+    logger.info("Experiment name: " + experimentName); 
 
     // Load initial weights
     try {
@@ -281,7 +291,7 @@ public class OnlineTuner {
     int[] indices = ArrayMath.range(0, tuneSetSize);
     
     // Online optimization with asynchronous updating
-    logger.info("Start of online tuning for epochs: " + NUM_EPOCHS);
+    logger.info("Start of online tuning; number of epochs: " + NUM_EPOCHS);
     for (int epoch = 0; epoch < NUM_EPOCHS; ++epoch) {
       final long startTime = System.nanoTime();
       logger.info("Start of epoch: " + epoch);
@@ -357,12 +367,10 @@ public class OnlineTuner {
    * 
    * @param wtsFinalFile
    */
-  private void save(String wtsFinalFile) {
-    if (!wtsFinalFile.endsWith(".binwts")) {
-      wtsFinalFile += ".binwts";
-    }
-    IOTools.writeWeights(wtsFinalFile, wts);
-    logger.info("Wrote final weights to " + wtsFinalFile);
+  private void saveFinalWeights() {
+    String filename = logPrefix + ".final.binwts";
+    IOTools.writeWeights(filename, wts);
+    logger.info("Wrote final weights to " + filename);
   }
   
   /**
@@ -390,8 +398,11 @@ public class OnlineTuner {
     optionMap.put("o", 1);
     optionMap.put("of", 1);
     optionMap.put("m", 1);
+    optionMap.put("n", 1);
     return optionMap;
   }
+  
+  // TODO(spenceg): Add experiment name parameter
   
   /**
    * Usage string for the main method.
@@ -401,7 +412,7 @@ public class OnlineTuner {
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
-    sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] src tgt phrasal_ini wts_initial wts_final ").append(nl);
+    sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] src tgt phrasal_ini wts_initial").append(nl);
     sb.append(nl);
     sb.append("Options:").append(nl);
     sb.append("   -s file    : Extrinsic loss: source file").append(nl);
@@ -410,6 +421,7 @@ public class OnlineTuner {
     sb.append("   -o str     : Optimizer: [arow,mira-1best]").append(nl);
     sb.append("   -of str    : Optimizer flags [comma-separated list]").append(nl);
     sb.append("   -m str     : Evaluation metric (loss function) for the tuning algorithm").append(nl);
+    sb.append("   -n str     : Experiment name.").append(nl);
     return sb.toString().trim();
   }
   
@@ -427,8 +439,10 @@ public class OnlineTuner {
     String lossFunctionStr = opts.getProperty("m", "bleu-chiang");
     String altSourceFile = opts.getProperty("s");
     String altTargetFile = opts.getProperty("t");
+    String experimentName = opts.getProperty("n", "debug");
+    
     String[] parsedArgs = opts.getProperty("").split("\\s+");
-    if (parsedArgs.length != 5) {
+    if (parsedArgs.length != 4) {
       System.err.println(usage());
       System.exit(-1);
     }
@@ -436,7 +450,6 @@ public class OnlineTuner {
     String tgtFile = parsedArgs[1];
     String phrasalIniFile = parsedArgs[2];
     String wtsInitialFile = parsedArgs[3];
-    String wtsFinalFile = parsedArgs[4];
    
     final long startTime = System.nanoTime();
 
@@ -452,12 +465,12 @@ public class OnlineTuner {
     // Run optimization
     final OnlineOptimizer<IString,String> optimizer = loadOptimizer(optimizerAlg, optimizerFlags);
     final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr);
-    OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile);
+    OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, experimentName);
     if (altSourceFile != null && altTargetFile != null) {
       tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
     }
     tuner.run(optimizer, lossFunction);
-    tuner.save(wtsFinalFile);
+    tuner.saveFinalWeights();
     tuner.shutdown();
     
     final long elapsedTime = System.nanoTime() - startTime;
