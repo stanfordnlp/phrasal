@@ -461,7 +461,7 @@ public class OnlineTuner {
     tuner.shutdown();
     
     final long elapsedTime = System.nanoTime() - startTime;
-    System.out.printf("Tuning run: %.2f seconds%n", elapsedTime / 1000000000.0);
+    System.out.printf("Elapsed time: %.2f seconds%n", elapsedTime / 1000000000.0);
     System.out.printf("Finished at: %s%n", new Date());
   }
 }
