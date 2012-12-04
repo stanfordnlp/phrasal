@@ -202,6 +202,12 @@ public class Phrasal {
     assert threadId >= 0 && threadId < numThreads;
     return scorers.get(threadId); 
   }
+  
+  /**
+   * Return the number of threads specified in the ini file.
+   * @return
+   */
+  public int getNumThreads() { return numThreads; }
 
   public static void initStaticMembers(Map<String, List<String>> config) {
 

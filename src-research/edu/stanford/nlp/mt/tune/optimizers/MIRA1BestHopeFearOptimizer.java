@@ -19,7 +19,7 @@ import edu.stanford.nlp.stats.Counters;
  * 
  * @author Spence Green
  */
-public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
+public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,String> {
 
   /**
    * Default aggressiveness parameter.
@@ -30,16 +30,16 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
   
   private final Logger logger;
 
-  public MIRAHopeFearOptimizer(double C) {
+  public MIRA1BestHopeFearOptimizer(double C) {
     this.C = C;
-    logger = Logger.getLogger(MIRAHopeFearOptimizer.class.getCanonicalName());
+    logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
     OnlineTuner.attach(logger);
     logger.info(String.format("1-best MIRA optimization with C: %e", C));
   }
 
-  public MIRAHopeFearOptimizer(String... args) {
+  public MIRA1BestHopeFearOptimizer(String... args) {
     C = (args == null || args.length != 1) ? DEFAULT_C : Double.parseDouble(args[0]);
-    logger = Logger.getLogger(MIRAHopeFearOptimizer.class.getCanonicalName());
+    logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
     OnlineTuner.attach(logger);
     logger.info(String.format("1-best MIRA optimization with C: %e", C));    
   }
@@ -53,7 +53,8 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
       List<Sequence<IString>> references,
       SentenceLevelMetric<IString, String> objective, Counter<String> weights) {
     
-    Counter<String> wts = new ClassicCounter<String>(weights);
+    // Weight vector that we will return
+    final Counter<String> wts = new ClassicCounter<String>(weights);
     
     // The "correct" derivation (Crammer et al. (2006) fig.2)
     Derivation dHope = getBestHopeDerivation(objective, translations, references, sourceId);
@@ -64,7 +65,7 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
     logger.info("Fear derivation: " + dFear.toString());
     
     double margin = dFear.score - dHope.score;
-    // TODO(spenceg): Crammer takes the square root of the cost
+    // TODO(spenceg): Crammer takes the square root of the cost. We should try that.
     double cost = dHope.cost - dFear.cost;
     final double loss = margin + cost;
     logger.info(String.format("Loss: %e", loss));
@@ -79,6 +80,7 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
       logger.info(String.format("tau: %e", tau));
       Counters.multiplyInPlace(featureDiff, tau);
       Counters.addInPlace(wts, featureDiff);
+    
     } else {
       logger.info(String.format("No update (loss: %e)", loss));
     }
@@ -95,7 +97,7 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
    * @param d2
    * @return
    */
-  private Counter<String> getFeatureDiff(Derivation d1, Derivation d2) {
+  private static Counter<String> getFeatureDiff(Derivation d1, Derivation d2) {
     Counter<String> d1Feats = OptimizerUtils.featureValueCollectionToCounter(d1.hypothesis.features);
     Counter<String> d2Feats = OptimizerUtils.featureValueCollectionToCounter(d2.hypothesis.features);
     // TODO(spenceg): This assertion fails. Check it.
@@ -116,7 +118,7 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
    * @param references 
    * @return
    */
-  private Derivation getBestHopeDerivation(SentenceLevelMetric<IString, String> objective, List<RichTranslation<IString,String>> translations,
+  private static Derivation getBestHopeDerivation(SentenceLevelMetric<IString, String> objective, List<RichTranslation<IString,String>> translations,
       List<Sequence<IString>> references, int translationId) {
 
     RichTranslation<IString,String> d = null;
@@ -179,6 +181,7 @@ public class MIRAHopeFearOptimizer implements OnlineOptimizer<IString,String> {
     }
 
     if (d == null) {
+      // Logger is threadsafe. No worries.
       logger.warning("No fear derivation for: " + translationId);
     }
     
