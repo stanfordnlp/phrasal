@@ -131,14 +131,14 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     double maxScore = Double.NEGATIVE_INFINITY;
     int nbestId = 0;
     for (RichTranslation<IString,String> hypothesis : translations) {
-      double cost = objective.score(translationId, references, hypothesis.translation);
+      double loss = objective.score(translationId, references, hypothesis.translation);
       double modelScore = hypothesis.score;
-      double score = modelScore - cost;
+      double score = modelScore + loss;
       // argmax
       if (score > maxScore) {
         d = hypothesis;
         dScore = modelScore;
-        dCost = cost;
+        dCost = loss;
         dId = nbestId;
         maxScore = score;
       }
