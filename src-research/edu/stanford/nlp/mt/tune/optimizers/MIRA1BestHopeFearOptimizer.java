@@ -51,17 +51,17 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
   public Counter<String> update(Sequence<IString> source, int sourceId,
       List<RichTranslation<IString, String>> translations,
       List<Sequence<IString>> references,
-      SentenceLevelMetric<IString, String> objective, Counter<String> weights) {
+      SentenceLevelMetric<IString, String> lossFunction, Counter<String> weights) {
     
     // Weight vector that we will return
     final Counter<String> wts = new ClassicCounter<String>(weights);
     
     // The "correct" derivation (Crammer et al. (2006) fig.2)
-    Derivation dHope = getBestHopeDerivation(objective, translations, references, sourceId);
+    Derivation dHope = getBestHopeDerivation(lossFunction, translations, references, sourceId);
     logger.info("Hope derivation: " + dHope.toString());
     
     // The "max-loss" derivation (Crammer et al. (2006) fig.2)
-    Derivation dFear = getBestFearDerivation(objective, translations, references, dHope, sourceId);
+    Derivation dFear = getBestFearDerivation(lossFunction, translations, references, dHope, sourceId);
     logger.info("Fear derivation: " + dFear.toString());
     
     double margin = dFear.score - dHope.score;
@@ -84,6 +84,9 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     } else {
       logger.info(String.format("No update (loss: %e)", loss));
     }
+    
+    // Update the loss function
+    lossFunction.update(sourceId, references, translations.get(0).translation);
     
     return wts;
   }
@@ -123,7 +126,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
 
     RichTranslation<IString,String> d = null;
     double dScore = 0.0;
-    double dLoss = 0.0;
+    double dCost = 0.0;
     int dId = 0;
     double maxScore = Double.NEGATIVE_INFINITY;
     int nbestId = 0;
@@ -135,7 +138,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       if (score > maxScore) {
         d = hypothesis;
         dScore = modelScore;
-        dLoss = loss;
+        dCost = loss;
         dId = nbestId;
         maxScore = score;
       }
@@ -143,7 +146,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     }
 
     assert d != null;
-    return new Derivation(d, dScore, dLoss, dId);
+    return new Derivation(d, dScore, dCost, dId);
   }
 
   /**
@@ -160,7 +163,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     RichTranslation<IString,String> d = null;
     final double hopeCost = objective.score(translationId, references, dHope.hypothesis.translation);
     double dScore = 0.0;
-    double dLoss = 0.0;
+    double dCost = 0.0;
     int dId = -1;
     double maxScore = Double.NEGATIVE_INFINITY;
     int nbestId = 0;
@@ -173,7 +176,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       if (score > maxScore && nbestId != dHope.nbestId) {
         d = hypothesis;
         dScore = hypothesis.score;
-        dLoss = cost;
+        dCost = cost;
         maxScore = score;
         dId = nbestId;
       }
@@ -185,7 +188,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       logger.warning("No fear derivation for: " + translationId);
     }
     
-    return d == null ? dHope : new Derivation(d, dScore, dLoss, dId);
+    return d == null ? dHope : new Derivation(d, dScore, dCost, dId);
   }
 
 

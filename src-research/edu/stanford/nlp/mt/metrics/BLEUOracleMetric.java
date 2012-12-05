@@ -170,12 +170,13 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
     // Compute BLEU
     double scoreWithExample = pseudoBLEU(m, n, rho);
-//    double scoreNoExample = pseudoBLEU(NULL_COUNTS, NULL_COUNTS, 0.0);
-    double scoreNoExample = 0.0;
+    double scoreNoExample = pseudoBLEU(NULL_COUNTS, NULL_COUNTS, 0.0);
     final double score = pseudoN[0] * (scoreWithExample - scoreNoExample);
     if (DEBUG) {
-      System.err.println("BLEUwith: " + scoreWithExample);
-      System.err.println("BLEUno:   " + scoreNoExample);
+      synchronized(System.err) {
+        System.err.println("BLEUwith: " + scoreWithExample);
+        System.err.println("BLEUno:   " + scoreNoExample);
+      }
     }
 
     // Only update the counts after computing the score for this example
@@ -203,12 +204,14 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
     pseudoRho = DECAY*(rho + pseudoRho);
     
     if (DEBUG) {
-      System.err.println("M: " + Arrays.toString(m));
-      System.err.println("M-hat: " + Arrays.toString(pseudoM));
-      System.err.println("N: " + Arrays.toString(n));
-      System.err.println("N-hat: " + Arrays.toString(pseudoN));
-      System.err.println("Rho-hat: " + pseudoRho);
-      System.err.println();
+      synchronized(System.err) {
+        System.err.println("M: " + Arrays.toString(m));
+        System.err.println("M-hat: " + Arrays.toString(pseudoM));
+        System.err.println("N: " + Arrays.toString(n));
+        System.err.println("N-hat: " + Arrays.toString(pseudoN));
+        System.err.println("Rho-hat: " + pseudoRho);
+        System.err.println();
+      }
     }
   }
 

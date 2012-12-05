@@ -50,19 +50,33 @@ public class OnlineTuner {
    */
   private static int NUM_EPOCHS = 1;
   
-  // Log to file
-  public static Handler logHandler = null;
+  // Static methods for setting up a global logger
+  // Other classes should attach() to this log handler
+  private static Handler logHandler = null;
+  private static String logPrefix;
+  
+  private static void initLogger(String tag) {
+    SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-HH-mm-ss");
+    logPrefix = String.format("online-tuner.%s.%s", tag, formatter.format(new Date()));
+    try {
+      logHandler = new FileHandler(logPrefix + ".log");
+      logHandler.setFormatter(new SimpleFormatter()); //Plain text
+    } catch (SecurityException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
   
   public static void attach(Logger logger) { 
     if (logHandler != null) {
       logger.addHandler(logHandler);
     }
   }
-  
+
   // What it says
   private final Logger logger;
-  private final String logPrefix;
-  
+
   // Intrinsic loss examples
   private List<Sequence<IString>> tuneSource;
   private List<Sequence<IString>> tuneTarget;
@@ -84,24 +98,10 @@ public class OnlineTuner {
   public OnlineTuner(String srcFile, 
       String tgtFile, 
       String phrasalIniFile, 
-      String wtsInitialFile,
-      String experimentName) {
-    // Setup the log file
-    SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-HH-mm-ss");
-    logPrefix = String.format("online-tuner.%s.%s", experimentName, formatter.format(new Date()));
-    try {
-      logHandler = new FileHandler(logPrefix + ".log");
-      logHandler.setFormatter(new SimpleFormatter()); //Plain text
-    } catch (SecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    
+      String wtsInitialFile) {
     // Write the error log to file
     logger = Logger.getLogger(OnlineTuner.class.getName());
-    logger.addHandler(logHandler);
-    logger.info("Experiment name: " + experimentName); 
+    OnlineTuner.attach(logger);
 
     // Load initial weights
     try {
@@ -353,8 +353,8 @@ public class OnlineTuner {
   
 
   private static SentenceLevelMetric<IString, String> loadLossFunction(
-      String objectiveMetric) {
-    if (objectiveMetric.equals("bleu-chiang")) {
+      String lossFunctionStr) {
+    if (lossFunctionStr.equals("bleu-chiang")) {
       return new BLEUOracleMetric<IString,String>();
     }
     // TODO(spenceg): We could try other metrics, but Chiang's seems to work best?
@@ -441,6 +441,7 @@ public class OnlineTuner {
     String altTargetFile = opts.getProperty("t");
     String experimentName = opts.getProperty("n", "debug");
     
+    // Parse arguments
     String[] parsedArgs = opts.getProperty("").split("\\s+");
     if (parsedArgs.length != 4) {
       System.err.println(usage());
@@ -452,7 +453,7 @@ public class OnlineTuner {
     String wtsInitialFile = parsedArgs[3];
    
     final long startTime = System.nanoTime();
-
+    OnlineTuner.initLogger(experimentName);
     System.out.println("Phrasal Online Tuner");
     System.out.printf("Startup: %s%n", new Date());
     System.out.println("====================");
@@ -465,7 +466,7 @@ public class OnlineTuner {
     // Run optimization
     final OnlineOptimizer<IString,String> optimizer = loadOptimizer(optimizerAlg, optimizerFlags);
     final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr);
-    OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, experimentName);
+    OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile);
     if (altSourceFile != null && altTargetFile != null) {
       tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
     }

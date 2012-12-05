@@ -21,7 +21,7 @@ public interface OnlineOptimizer<TK,FV> {
    * @param source
    * @param sourceId
    * @param translations
-   * @param objective
+   * @param lossFunction
    * @param weights
    * 
    * @return Updated weight vector.
@@ -30,6 +30,6 @@ public interface OnlineOptimizer<TK,FV> {
       int sourceId, 
       List<RichTranslation<TK, FV>> translations,
       List<Sequence<TK>> references,
-      SentenceLevelMetric<TK,FV> objective,
+      SentenceLevelMetric<TK,FV> lossFunction,
       Counter<FV> weights);
 }
