@@ -41,7 +41,7 @@ elif [ $tgt_ext == "bz2" ]; then
 fi
 
 
-scriptdir=${JAVANLP_HOME}/projects/mt/ptm/scripts/mt
+scriptdir=${JAVANLP_HOME}/projects/mt/scripts-private
 mkconf=${scriptdir}/mkconf.py
 conf_template=${scriptdir}/ucb-align.conf
 align=${JAVANLP_HOME}/projects/mt/scripts/align
