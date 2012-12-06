@@ -1022,9 +1022,9 @@ public class Phrasal {
         continue;
       }
       
-      threadpool.submit(new DecoderInput(tokens, translationId));
-      while(threadpool.hasNext()) {
-        DecoderOutput result = threadpool.next();
+      threadpool.put(new DecoderInput(tokens, translationId));
+      while(threadpool.peek()) {
+        DecoderOutput result = threadpool.poll();
         processConsoleResult(result.translations, result.translationId);
       }
     }
@@ -1032,8 +1032,8 @@ public class Phrasal {
     // Finished reading the input. Wait for threadpool to finish, then process
     // last few translations.
     threadpool.join();
-    while(threadpool.hasNext()) {
-      DecoderOutput result = threadpool.next();
+    while(threadpool.peek()) {
+      DecoderOutput result = threadpool.poll();
       processConsoleResult(result.translations, result.translationId);
     }
     
