@@ -255,8 +255,8 @@ public class OnlineTuner {
       Counter<String> currentWts) {
     int lastSubmittedId = Integer.MIN_VALUE;
     Counter<String> latestWts = currentWts;
-    while (threadpool.hasNext()) {
-      UpdaterOutput result = threadpool.next();
+    while (threadpool.peek()) {
+      UpdaterOutput result = threadpool.poll();
       wts.addAll(result.weights);
       if (result.inputId > lastSubmittedId) {
         // Use the most recent result as the weight vector for the next round
@@ -316,7 +316,7 @@ public class OnlineTuner {
         
         // Submit to threadpool, then look for updates.
         UpdaterInput input = new UpdaterInput(source, references, decoderWts, translationId, inputId++);
-        threadpool.submit(input);
+        threadpool.put(input);
         decoderWts = mergeResultsFrom(threadpool, decoderWts);
         
         // TODO(spenceg): Extract rules and update phrase table for this example
@@ -330,6 +330,8 @@ public class OnlineTuner {
       Counter<String> iWts = new ClassicCounter<String>(wts);
       Counters.divideInPlace(iWts, (epoch+1)*tuneSetSize);
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), iWts);
+      
+      // TODO(spenceg): iWts should be the starting point for the next epoch!
       
       long elapsedTime = System.nanoTime() - startTime;
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, elapsedTime / 1000000000.0));
