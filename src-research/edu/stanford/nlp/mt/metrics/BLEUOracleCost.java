@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -17,15 +16,18 @@ import edu.stanford.nlp.mt.base.Sequence;
 /**
  * Implements the oracle smooth BLEU metric of Watanabe et al. (2007) with
  * extensions described in Chiang (2012).
+ * 
+ * Also implements sentence-level smoothed BLEU according to Lin and Och (2004).
  *
- * The underlying incremental metric is thread-safe.
+ * NOTE: The underlying incremental metric is thread-safe. However, if calls to score() and update()
+ * are not coordinated by the caller, then this metric is unstable.
  *
  * @author Spence Green
  *
  * @param <TK>
  * @param <FV>
  */
-public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
+public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   private static final boolean DEBUG = false;
 
@@ -50,7 +52,7 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
   private final double[] pseudoM;
   private final double[] pseudoN;
   private double pseudoRho;
-
+  
   // Convenience data structure for computing the loss
   private final double[] NULL_COUNTS;
 
@@ -58,23 +60,20 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
   Map<Integer,Map<Sequence<TK>, Integer>> maxRefCounts;
   Map<Integer,Integer> maxRefLengths;
 
-  public BLEUOracleMetric() {
+  public BLEUOracleCost() {
     this(DEFAULT_ORDER);
   }
   
-  public BLEUOracleMetric(int order) {
+  public BLEUOracleCost(int order) {
     this.order = order;
+
     pseudoM = new double[order];
     pseudoN = new double[order];
     pseudoRho = 0.0;
+    initPseudoCounts();
+
     NULL_COUNTS = new double[order];
 
-    //      initializePseudoCounts();
-    // Uninformed prior on the pseudo counts
-    Arrays.fill(pseudoM, 1.0);
-    Arrays.fill(pseudoN, 1.0);
-    pseudoRho = 1.0;
-    
     // Initialize the caches
     maxRefCounts = new HashMap<Integer,Map<Sequence<TK>,Integer>>();
     maxRefLengths = new HashMap<Integer,Integer>();
@@ -109,18 +108,14 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
   }
   
   /**
-   * Randomly initialize the pseudocounts so that the smoothed score is defined
-   * for the first call to smoothScore;
+   * Initialize pseudo counts according to Lin and Och (2004).
    */
-  private void initializePseudoCounts() {
-    Random random = new Random();
-    int pseudoRefLength = 20;
-    pseudoRho = pseudoRefLength;
-    for (int i = 0; i < pseudoM.length; ++i) {
-      int numMatches = random.nextInt(pseudoRefLength) + 1;
-      pseudoM[i] = numMatches;
-      pseudoN[i] = numMatches + ((numMatches == pseudoRefLength) ? 0.0 : random.nextInt(pseudoRefLength - numMatches));
-    }
+  private void initPseudoCounts() {
+    Arrays.fill(pseudoM, 1.0);
+    pseudoM[0] = 0.0;
+    Arrays.fill(pseudoN, 1.0);
+    pseudoN[0] = 0.0;
+    pseudoRho = 0.0;
   }
 
   
@@ -148,7 +143,7 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
     score(sourceId, references, translation, true);
   }
   
-  public synchronized double score(int sourceId, List<Sequence<TK>> references,
+  private double score(int sourceId, List<Sequence<TK>> references,
         Sequence<TK> translation, boolean updateCounts) {
     // Extract n-grams
     final Map<Sequence<TK>, Integer> maxRefCounts = getMaxRefCounts(sourceId, references);
@@ -168,22 +163,26 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
       n[ngramIdx] += numProposed;
     }
 
-    // Compute BLEU
-    double scoreWithExample = pseudoBLEU(m, n, rho);
+    // Smoothed BLEU according to the current pseudocounts
+    final double smoothBLEU = pseudoBLEU(m, n, rho);
+    
+    // Chiang (2012) cost
     double scoreNoExample = pseudoBLEU(NULL_COUNTS, NULL_COUNTS, 0.0);
-    final double score = pseudoN[0] * (scoreWithExample - scoreNoExample);
-    if (DEBUG) {
-      synchronized(System.err) {
-        System.err.println("BLEUwith: " + scoreWithExample);
-        System.err.println("BLEUno:   " + scoreNoExample);
-      }
-    }
-
+    // This value is a *cost*
+    final double cost = pseudoN[0] * (smoothBLEU - scoreNoExample);
     // Only update the counts after computing the score for this example
     if (updateCounts) {
       updatePseudoCounts(m, n, rho);
     }
-    return score;
+    
+    if (DEBUG) {
+      synchronized(System.err) {
+        System.err.println("Smooth BLEU:\t" + smoothBLEU);
+        System.err.println("Cost correction:\t" + scoreNoExample);
+      }
+    }
+
+    return cost;
   }
 
   /**
@@ -216,7 +215,8 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
   }
 
   /**
-   * Compute smoothed BLEU according to Lin and Och (2004).
+   * Compute smoothed BLEU according to Lin and Och (2004). If any of the n-gram precisions are 0.0,
+   * then the method will return 0.0.
    *
    * @param m
    * @param n
@@ -235,7 +235,7 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
     score *= 1.0 / order;
     score += Math.min(0.0, 1.0-((rho + pseudoRho) / (n[0] + pseudoN[0])));
     score = Math.exp(score);
-    return score;
+    return (Double.isInfinite(score) || Double.isNaN(score)) ? 0.0 : score;
   }
 
 
@@ -244,7 +244,7 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
    */
   public static void main(String[] args) {
     if (args.length < 2) {
-      System.err.printf("java %s order ref1 [ref] < translations%n", BLEUOracleMetric.class.getName());
+      System.err.printf("java %s order ref1 [ref] < translations%n", BLEUOracleCost.class.getName());
       return;
     }
 
@@ -254,7 +254,7 @@ public class BLEUOracleMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
     try {
       List<List<Sequence<IString>>> referencesList = Metrics.readReferences(newArgs);
-      SentenceLevelMetric<IString,String> metric = new BLEUOracleMetric<IString,String>(order);
+      SentenceLevelMetric<IString,String> metric = new BLEUOracleCost<IString,String>(order);
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       int lineId = 0;
       for (String line; (line = reader.readLine()) != null; ++lineId) {

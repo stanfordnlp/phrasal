@@ -64,25 +64,33 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     Derivation dFear = getBestFearDerivation(lossFunction, translations, references, dHope, sourceId);
     logger.info("Fear derivation: " + dFear.toString());
     
-    double margin = dFear.score - dHope.score;
+    final double margin = dFear.modelScore - dHope.modelScore;
     // TODO(spenceg): Crammer takes the square root of the cost. We should try that.
-    double cost = dHope.cost - dFear.cost;
-    final double loss = margin + cost;
-    logger.info(String.format("Loss: %e", loss));
+    final double deltaCost = dHope.gain - dFear.gain;
+    final double loss = margin + deltaCost;
+    logger.info(String.format("Margin: %.5f dCost: %.5f Loss: %.5f", margin, deltaCost, loss));
+
+    // Hinge loss.
     if (loss > 0.0) {
       // Only do an update in this case.
       // Compute the PA-II update, which is the loss divided by the 
       // squared norm of the differences between the feature vectors
-      Counter<String> featureDiff = getFeatureDiff(dHope, dFear);
+      Counter<String> hopeFeatures = OptimizerUtils.featureValueCollectionToCounter(dHope.hypothesis.features);
+      Counter<String> fearFeatures = OptimizerUtils.featureValueCollectionToCounter(dFear.hypothesis.features);
+      Counter<String> featureDiff = Counters.diff(hopeFeatures, fearFeatures);
       logger.info("Feature difference: " + featureDiff.toString());
-      double normSq = Counters.sumSquares(featureDiff);
-      double tau = Math.min(C, loss / normSq);
+      
+      // Compute the update
+      double sumSquaredFeatureDiff = Counters.sumSquares(featureDiff);
+      double tau = Math.min(C, loss / sumSquaredFeatureDiff);
       logger.info(String.format("tau: %e", tau));
+      
+      // Update the weights
       Counters.multiplyInPlace(featureDiff, tau);
       Counters.addInPlace(wts, featureDiff);
     
     } else {
-      logger.info(String.format("No update (loss: %e)", loss));
+      logger.info(String.format("NO UPDATE (loss: %e)", loss));
     }
     
     // Update the loss function
@@ -92,53 +100,30 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
   }
 
   /**
-   * Compute a vector containing the differences in feature values of the hope and fear derivations.
-   * 
-   * Note: these features are in log space?
-   * 
-   * @param d1
-   * @param d2
-   * @return
-   */
-  private static Counter<String> getFeatureDiff(Derivation d1, Derivation d2) {
-    Counter<String> d1Feats = OptimizerUtils.featureValueCollectionToCounter(d1.hypothesis.features);
-    Counter<String> d2Feats = OptimizerUtils.featureValueCollectionToCounter(d2.hypothesis.features);
-    // TODO(spenceg): This assertion fails. Check it.
-//    assert d1Feats.keySet().size() == d2Feats.keySet().size();
-    for (String key : d1Feats.keySet()) {
-//      assert d2Feats.containsKey(key);
-      double value = d1Feats.getCount(key) - d2Feats.getCount(key);
-      d1Feats.setCount(key, value);
-    }
-    return d1Feats;
-  }
-
-  /**
    * Max model score - cost
-   * @param objective 
+   * @param lossFunction 
    * 
    * @param translations
    * @param references 
    * @return
    */
-  private static Derivation getBestHopeDerivation(SentenceLevelMetric<IString, String> objective, List<RichTranslation<IString,String>> translations,
+  private static Derivation getBestHopeDerivation(SentenceLevelMetric<IString, String> lossFunction, List<RichTranslation<IString,String>> translations,
       List<Sequence<IString>> references, int translationId) {
 
     RichTranslation<IString,String> d = null;
-    double dScore = 0.0;
     double dCost = 0.0;
     int dId = 0;
     double maxScore = Double.NEGATIVE_INFINITY;
     int nbestId = 0;
     for (RichTranslation<IString,String> hypothesis : translations) {
-      double loss = objective.score(translationId, references, hypothesis.translation);
+      double gain = lossFunction.score(translationId, references, hypothesis.translation);
       double modelScore = hypothesis.score;
-      double score = modelScore + loss;
+      double score = modelScore + gain;
+      
       // argmax
       if (score > maxScore) {
         d = hypothesis;
-        dScore = modelScore;
-        dCost = loss;
+        dCost = gain;
         dId = nbestId;
         maxScore = score;
       }
@@ -146,37 +131,40 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     }
 
     assert d != null;
-    return new Derivation(d, dScore, dCost, dId);
+    return new Derivation(d, dCost, dId);
   }
 
   /**
    * Max model score + cost
-   * @param objective 
+   * @param lossFunction 
    * 
    * @param translations
    * @param references 
    * @return
    */
-  private Derivation getBestFearDerivation(SentenceLevelMetric<IString, String> objective, List<RichTranslation<IString,String>> translations, 
+  private Derivation getBestFearDerivation(SentenceLevelMetric<IString, String> lossFunction, List<RichTranslation<IString,String>> translations, 
       List<Sequence<IString>> references, Derivation dHope,
       int translationId) {
     RichTranslation<IString,String> d = null;
-    final double hopeCost = objective.score(translationId, references, dHope.hypothesis.translation);
+//    final double hopeCost = lossFunction.score(translationId, references, dHope.hypothesis.translation);
     double dScore = 0.0;
     double dCost = 0.0;
     int dId = -1;
     double maxScore = Double.NEGATIVE_INFINITY;
     int nbestId = 0;
     for (RichTranslation<IString,String> hypothesis : translations) {
-      double cost = objective.score(translationId, references, hypothesis.translation);
-      double loss = hopeCost - cost;
-      double modelScore = dHope.hypothesis.score - hypothesis.score;
-      double score = loss - modelScore;
+      double gain = lossFunction.score(translationId, references, hypothesis.translation);
+      double modelScore = hypothesis.score;
+      double score = modelScore - gain;
+      
+      // Chiang (2012) calculation
+//      double loss = hopeCost - cost;
+//      double scoreDiff = dHope.hypothesis.score - hypothesis.score;
+//      double score = loss - scoreDiff;
       // argmax
       if (score > maxScore && nbestId != dHope.nbestId) {
         d = hypothesis;
-        dScore = hypothesis.score;
-        dCost = cost;
+        dCost = gain;
         maxScore = score;
         dId = nbestId;
       }
@@ -188,27 +176,34 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       logger.warning("No fear derivation for: " + translationId);
     }
     
-    return d == null ? dHope : new Derivation(d, dScore, dCost, dId);
+    return d == null ? dHope : new Derivation(d, dCost, dId);
   }
 
 
+  /**
+   * Convenience class for storing a hypothesis and relevant quantities.
+   * 
+   * @author Spence Green
+   *
+   */
   private static class Derivation {
     public RichTranslation<IString,String> hypothesis;
-    public double score;
-    public double cost;
+    public double modelScore;
+    public double gain;
     public int nbestId;
 
     public Derivation(RichTranslation<IString,String> hypothesis, 
-        double score, double cost, int nbestId) {
+        double cost, int nbestId) {
       this.hypothesis = hypothesis;
-      this.score = score;
-      this.cost = cost;
+      this.modelScore = hypothesis.score;
+      this.gain = cost;
       this.nbestId = nbestId;
     }
 
     @Override
     public String toString() {
-      return String.format("Cost: %.4f Score: %.4f || %s", cost, score, hypothesis.nbestToMosesString(nbestId));
+      return String.format("Cost: %.4f Score: %.4f id: %s", 
+          gain, modelScore, hypothesis.nbestToMosesString(nbestId));
     }
   }
 }
