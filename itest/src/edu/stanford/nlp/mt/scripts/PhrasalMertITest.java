@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 import java.io.*;
 import java.util.*;
 
-public class PhrasalMertTest extends TestCase {
+public class PhrasalMertITest extends TestCase {
   public final String iniText = 
     "#This is a test\n" +
     "#This is another comment\n" +
