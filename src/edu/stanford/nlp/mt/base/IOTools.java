@@ -188,6 +188,31 @@ public final class IOTools {
   }
   
   /**
+   * Write an n-best list to file.
+   * 
+   * @param translations
+   * @param translationId
+   */
+  public static void writeNbest(List<RichTranslation<IString, String>> translations, 
+      int translationId,
+      boolean generateMosesNBestList,
+      PrintStream nbestListWriter) {
+    assert translations != null;
+    assert nbestListWriter != null;
+    
+    StringBuilder sb = new StringBuilder(translations.size() * 500);
+    for (RichTranslation<IString, String> tran : translations) {
+      if (generateMosesNBestList) {
+        tran.nbestToMosesStringBuilder(translationId, sb);
+      } else {
+        tran.nbestToStringBuilder(translationId, sb);
+      }
+      sb.append('\n');
+    }
+    nbestListWriter.append(sb.toString());
+  }
+  
+  /**
    * Read and write weights files.
    * 
    * @param args
