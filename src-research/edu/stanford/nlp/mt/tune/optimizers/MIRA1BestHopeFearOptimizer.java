@@ -93,8 +93,12 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       logger.info(String.format("NO UPDATE (loss: %e)", loss));
     }
     
-    // Update the loss function
-    lossFunction.update(sourceId, references, translations.get(0).translation);
+    // Update the loss function with the hope derivation a la
+    // Cherry and Foster (2012). This follows the Moses implementation in
+    // mert/kbmira.cpp
+    if (dHope.nbestId != dFear.nbestId) {
+      lossFunction.update(sourceId, references, dHope.hypothesis.translation);
+    }
     
     return wts;
   }
@@ -187,22 +191,22 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
    *
    */
   private static class Derivation {
-    public RichTranslation<IString,String> hypothesis;
-    public double modelScore;
-    public double gain;
-    public int nbestId;
+    public final RichTranslation<IString,String> hypothesis;
+    public final double modelScore;
+    public final double gain;
+    public final int nbestId;
 
     public Derivation(RichTranslation<IString,String> hypothesis, 
-        double cost, int nbestId) {
+        double gain, int nbestId) {
       this.hypothesis = hypothesis;
       this.modelScore = hypothesis.score;
-      this.gain = cost;
+      this.gain = gain;
       this.nbestId = nbestId;
     }
 
     @Override
     public String toString() {
-      return String.format("Cost: %.4f Score: %.4f id: %s", 
+      return String.format("Score: %.4f Model: %.4f id: %s", 
           gain, modelScore, hypothesis.nbestToMosesString(nbestId));
     }
   }

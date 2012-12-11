@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RawSequence;
@@ -29,12 +30,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  */
 public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
-  private static final boolean DEBUG = false;
-
-  /**
-   * Exponentially weighted moving average decay parameter.
-   */
-  public static final double DECAY = 0.9;
+  private static final boolean DEBUG = true;
 
   /**
    * Default n-gram order
@@ -60,13 +56,23 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
   Map<Integer,Map<Sequence<TK>, Integer>> maxRefCounts;
   Map<Integer,Integer> maxRefLengths;
 
+  // Cherry and Foster (2012) oracle document
+  private final boolean doCherryScoring;
+  
+  /**
+   * Exponentially weighted moving average decay parameter.
+   */
+  private final double decay;
+
   public BLEUOracleCost() {
-    this(DEFAULT_ORDER);
+    this(DEFAULT_ORDER, false);
   }
   
-  public BLEUOracleCost(int order) {
+  public BLEUOracleCost(int order, boolean doCherryScoring) {
     this.order = order;
-
+    this.doCherryScoring = doCherryScoring;
+    this.decay = doCherryScoring ? 0.999 : 0.9;
+    
     pseudoM = new double[order];
     pseudoN = new double[order];
     pseudoRho = 0.0;
@@ -133,6 +139,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
   public synchronized double score(int sourceId, List<Sequence<TK>> references,
       Sequence<TK> translation) {
     assert sourceId >= 0;
+    assert references != null && translation != null;
     return score(sourceId, references, translation, false);
   }
 
@@ -140,6 +147,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
   public synchronized void update(int sourceId, List<Sequence<TK>> references,
       Sequence<TK> translation) {
     assert sourceId >= 0;
+    assert references != null && translation != null;
     score(sourceId, references, translation, true);
   }
   
@@ -165,24 +173,28 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
     // Smoothed BLEU according to the current pseudocounts
     final double smoothBLEU = pseudoBLEU(m, n, rho);
-    
-    // Chiang (2012) cost
-    double scoreNoExample = pseudoBLEU(NULL_COUNTS, NULL_COUNTS, 0.0);
-    // This value is a *cost*
-    final double cost = pseudoN[0] * (smoothBLEU - scoreNoExample);
-    // Only update the counts after computing the score for this example
-    if (updateCounts) {
-      updatePseudoCounts(m, n, rho);
+    double score = 0.0;
+    if (doCherryScoring) {
+      // This value is a *gain*
+      score = smoothBLEU * pseudoN[0];
+      
+    } else {
+      // Chiang (2012) cost  
+      double scoreNoExample = pseudoBLEU(NULL_COUNTS, NULL_COUNTS, 0.0);
+      // This value is a *cost*
+      score = pseudoN[0] * (smoothBLEU - scoreNoExample);
     }
     
-    if (DEBUG) {
+    if (updateCounts) {
+      updatePseudoCounts(m, n, rho);
+    } else if (DEBUG) {
       synchronized(System.err) {
         System.err.println("Smooth BLEU:\t" + smoothBLEU);
-        System.err.println("Cost correction:\t" + scoreNoExample);
+        System.err.println("Scaled score:\t" + score);
       }
     }
 
-    return cost;
+    return score;
   }
 
   /**
@@ -197,10 +209,10 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
   private void updatePseudoCounts(double[] m, double[] n, double rho) {
     assert m.length == n.length;
     for (int i = 0; i < m.length; ++i) {
-      pseudoM[i] = DECAY*(m[i]+pseudoM[i]);
-      pseudoN[i] = DECAY*(n[i]+pseudoN[i]);
+      pseudoM[i] = decay*pseudoM[i] + m[i];
+      pseudoN[i] = decay*pseudoN[i] + n[i];
     }
-    pseudoRho = DECAY*(rho + pseudoRho);
+    pseudoRho = (decay*pseudoRho) + rho;
     
     if (DEBUG) {
       synchronized(System.err) {
@@ -254,7 +266,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
     try {
       List<List<Sequence<IString>>> referencesList = Metrics.readReferences(newArgs);
-      SentenceLevelMetric<IString,String> metric = new BLEUOracleCost<IString,String>(order);
+      SentenceLevelMetric<IString,String> metric = new BLEUOracleCost<IString,String>(order,true);
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       int lineId = 0;
       for (String line; (line = reader.readLine()) != null; ++lineId) {
