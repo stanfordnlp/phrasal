@@ -26,10 +26,9 @@ public interface OnlineOptimizer<TK,FV> {
    * 
    * @return Updated weight vector.
    */
-  public Counter<FV> update(Sequence<TK> source, 
+  public Counter<FV> getGradient(Sequence<TK> source, 
       int sourceId, 
       List<RichTranslation<TK, FV>> translations,
       List<Sequence<TK>> references,
-      SentenceLevelMetric<TK,FV> lossFunction,
-      Counter<FV> weights);
+      SentenceLevelMetric<TK,FV> lossFunction);
 }

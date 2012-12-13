@@ -101,6 +101,9 @@ public class OnlineTuner {
   private Counter<String> wts;
   private OAIndex<String> featureIndex;
   
+  // Annealing rate.
+  private double rate;
+  
   // Phrasal decoder instance.
   private Phrasal decoder;
   
@@ -190,16 +193,16 @@ public class OnlineTuner {
     public final Sequence<IString> source;
     public final List<Sequence<IString>> references;
     public final int translationId;
-    public final Counter<String> initialWts;
+    public final Counter<String> weights;
     public final int inputId;
     public final PrintStream nbestListWriter;
     public UpdaterInput(Sequence<IString> input, 
         List<Sequence<IString>> references, 
-        Counter<String> wts, int translationId, PrintStream nbestListWriter, int inputId) {
+        Counter<String> weights, int translationId, PrintStream nbestListWriter, int inputId) {
       this.source = input;
       this.translationId = translationId;
       this.references = references;
-      this.initialWts = new ClassicCounter<String>(wts);
+      this.weights = new ClassicCounter<String>(weights);
       this.inputId = inputId;
       this.nbestListWriter = nbestListWriter;
     }
@@ -212,14 +215,14 @@ public class OnlineTuner {
    *
    */
   private class UpdaterOutput {
-    public final Counter<String> weights;
+    public final Counter<String> gradient;
     public final int inputId;
     public final List<RichTranslation<IString, String>> nbestList;
     public final int translationId;
-    public UpdaterOutput(Counter<String> weights, 
+    public UpdaterOutput(Counter<String> gradient, 
         int inputId, 
         List<RichTranslation<IString, String>> nbestList, int translationId) {
-      this.weights = weights;
+      this.gradient = gradient;
       this.inputId = inputId;
       this.nbestList = nbestList;
       this.translationId = translationId;
@@ -233,11 +236,11 @@ public class OnlineTuner {
    *
    */
   private class AsynchronousUpdater implements ThreadsafeProcessor<UpdaterInput,UpdaterOutput> {
-
     private final OnlineOptimizer<IString, String> optimizer; 
     private final SentenceLevelMetric<IString, String> lossFunction;
     private final int threadId;
     
+    // Counter for the newInstance() method
     private int childThreadId;
     
     public AsynchronousUpdater(OnlineOptimizer<IString, String> optimizer, 
@@ -250,14 +253,13 @@ public class OnlineTuner {
     
     @Override
     public UpdaterOutput process(UpdaterInput input) {
-      assert input.initialWts != null;
+      assert input.weights != null;
       // Set the decoder weights and decode
-      decoder.getScorer(threadId).updateWeights(input.initialWts);
+      decoder.getScorer(threadId).updateWeights(input.weights);
       List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source, input.translationId, threadId);
       
-      // Tune weights
-      Counter<String> newWeights = 
-          optimizer.update(input.source, input.translationId, nbestList, input.references, lossFunction, input.initialWts);
+      Counter<String> gradient = 
+          optimizer.getGradient(input.source, input.translationId, nbestList, input.references, lossFunction);
       
       if (input.nbestListWriter != null) {
         synchronized(input.nbestListWriter) {
@@ -265,7 +267,7 @@ public class OnlineTuner {
         }
       }
       
-      return new UpdaterOutput(newWeights, input.inputId, nbestList, input.translationId);
+      return new UpdaterOutput(gradient, input.inputId, nbestList, input.translationId);
     }
 
     @Override
@@ -275,36 +277,42 @@ public class OnlineTuner {
   }
   
   /**
-   * Get results from the threadpool. Return the "best" weight vector for the next round.
-   * 
-   * Policy: return the "least stale" vector, i.e., the one with the latest submission id.
-   * 
-   * TODO(spenceg): Experiment with this policy.
+   * Asynchronous template from Langford et al. (2009). Get gradients from the threadpool and update the weight vector.
    * 
    * @param threadpool
    * @param nbestLists 
+   * @param timeStep 
    * @param decoderWts 
    * @return
    */
-  private Counter<String> mergeResultsFrom(MulticoreWrapper<UpdaterInput,UpdaterOutput> threadpool, 
+  private Counter<String> update(MulticoreWrapper<UpdaterInput,UpdaterOutput> threadpool, 
       Counter<String> currentWts, 
-      Map<Integer, List<RichTranslation<IString, String>>> nbestLists) {
-    int lastSubmittedId = Integer.MIN_VALUE;
-    Counter<String> latestWts = new ClassicCounter<String>(currentWts);
+      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int timeStep) {
+    assert threadpool != null;
+    assert currentWts != null;
+    assert nbestLists != null;
+    
+    Counter<String> updatedWts = new ClassicCounter<String>(currentWts);
     while (threadpool.peek()) {
-      UpdaterOutput result = threadpool.poll();
-      // Accumulate weight updates
-      wts.addAll(result.weights);
-      if (result.inputId > lastSubmittedId) {
-        // Use the most recent result as the weight vector for the next round
-        latestWts = result.weights;
-        lastSubmittedId = result.inputId;
-      }
+      final UpdaterOutput result = threadpool.poll();
+
+      // Debugging only
+      logger.info(String.format("Update %d with gradient from step %d (diff: %d)", 
+          timeStep, result.inputId, timeStep - result.inputId));
+      ++timeStep;
+      
+      // Update
+      Counters.multiplyInPlace(result.gradient, rate);
+      Counters.subtractInPlace(updatedWts, result.gradient);
+      
+      // Accumulate
+      wts.addAll(updatedWts);
+      
       // Add n-best lists from this epoch
       assert ! nbestLists.containsKey(result.translationId);
       nbestLists.put(result.translationId, result.nbestList);
     }
-    return latestWts;
+    return updatedWts;
   }
   
   /**
@@ -323,6 +331,8 @@ public class OnlineTuner {
     final int numThreads = decoder.getNumThreads();
     Counter<String> currentWts = new ClassicCounter<String>(wts);
     for (int i = 0; i < numThreads; ++i) decoder.getScorer(i).updateWeights(currentWts);
+    
+    // Clear the global weight vector, which we will use for parameter averaging.
     wts.clear();
         
     // Create a vector for randomizing the order of training instances.
@@ -337,25 +347,24 @@ public class OnlineTuner {
       final long startTime = System.nanoTime();
       logger.info("Start of epoch: " + epoch);
 
+      // n-best lists. Purge for each epoch
       Map<Integer,List<RichTranslation<IString, String>>> nbestLists = 
           new HashMap<Integer,List<RichTranslation<IString, String>>>(tuneSetSize);
+      PrintStream nbestListWriter = writeNbestLists ? 
+          IOTools.getWriterFromFile(String.format("%s.%d.nbest", logPrefix, epoch)) : null;
       
       // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
       // to finish at the end of the epoch
-      // TODO(spenceg): Langford et al. do not order results. But it's cheap, so should we do it?
       boolean orderResults = false;
       final MulticoreWrapper<UpdaterInput,UpdaterOutput> wrapper = 
           new MulticoreWrapper<UpdaterInput,UpdaterOutput>(numThreads, 
               new AsynchronousUpdater(optimizer,lossFunction,0), orderResults);
-
-      PrintStream nbestListWriter = writeNbestLists ? 
-          IOTools.getWriterFromFile(String.format("%s.%d.nbest", logPrefix, epoch)) : null;
       
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       ArrayMath.shuffle(indices);
-      int inputId = 0;
-      for (final int translationId : indices) {
+      for (int i = 0; i < indices.length; ++i) {
         // Retrieve the training example
+        int translationId = indices[i];
         final Sequence<IString> source = tuneSource.get(translationId);
         final Sequence<IString> target = tuneTarget.get(translationId);
         final List<Sequence<IString>> references = new ArrayList<Sequence<IString>>();
@@ -363,26 +372,26 @@ public class OnlineTuner {
         
         // Submit to threadpool, then look for updates.
         UpdaterInput input = new UpdaterInput(source, references, currentWts, translationId, 
-            nbestListWriter, inputId++);
+            nbestListWriter, i);
         wrapper.put(input);
-        currentWts = mergeResultsFrom(wrapper, currentWts, nbestLists);
+        currentWts = update(wrapper, currentWts, nbestLists, i);
         
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
         //
       }
       
-      // Wait for threadpool shutdown for this epoch
+      // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
-      mergeResultsFrom(wrapper, currentWts, nbestLists);
-      
-      if (nbestListWriter != null) nbestListWriter.close();
+      currentWts = update(wrapper, currentWts, nbestLists, indices.length);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       currentWts = new ClassicCounter<String>(wts);
       Counters.divideInPlace(currentWts, (epoch+1)*tuneSetSize);
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
-      
+
+      if (nbestListWriter != null) nbestListWriter.close();
+
       // Debug info for this epoch
       long elapsedTime = System.nanoTime() - startTime;
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, elapsedTime / 1000000000.0));
@@ -404,13 +413,15 @@ public class OnlineTuner {
    */
   private double evaluate(Counter<String> currentWts,
       Map<Integer, List<RichTranslation<IString, String>>> nbestLists) {
+    assert currentWts != null && currentWts.size() > 0;
+    assert nbestLists.keySet().size() == references.size();
+    
     BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
     BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
         .getIncrementalMetric();
     Scorer<String> scorer = new StaticScorer(currentWts, featureIndex);
     Map<Integer, List<RichTranslation<IString, String>>> sortedMap = 
         new TreeMap<Integer, List<RichTranslation<IString, String>>>(nbestLists);
-//    int translationId = 0;
     for (Map.Entry<Integer, List<RichTranslation<IString, String>>> entry : sortedMap.entrySet()) {
       double bestScore = Double.NEGATIVE_INFINITY;
       int bestIndex = Integer.MIN_VALUE;
@@ -423,15 +434,54 @@ public class OnlineTuner {
         }
         ++nbestIndex;
       }
-//      RichTranslation<IString, String> bestTranslation = entry.getValue().get(bestIndex);
-//      Sequence<IString> ref = references.get(translationId).get(0);
-//      logger.info(String.format("%d %d %s ||| %s", translationId, bestIndex, ref.toString(), bestTranslation.translation.toString()));
       incMetric.add(entry.getValue().get(bestIndex));
-//      ++translationId;
     }
     return incMetric.score() * 100.0;
   }
 
+  /**
+   * Configure the learning rate for the various optimizers.
+   * 
+   * TODO(spenceg) We could experiment with an annealing schedule, especially for the SGD
+   * optimizers.
+   * 
+   * @param optimizerAlg
+   */
+  private void configureLearningRate(String optimizerAlg) {
+    if (optimizerAlg.equals("mira-1best")) {
+      rate = -1.0;
+      
+    } else if (optimizerAlg.equals("arow")) {
+      rate = -1.0;
+      
+    } else {
+      rate = 0.1;
+    }
+  }
+  
+  /**
+   * Load multiple references for accurate expected BLEU evaluation during
+   * tuning. Computing BLEU with a single reference is really unstable.
+   * 
+   * @param refStr
+   */
+  private void loadReferences(String refStr) {
+    assert refStr != null;
+    final int numSourceSentences = tuneSource.size();
+    references = new ArrayList<List<Sequence<IString>>>(numSourceSentences);
+    String[] filenames = refStr.split(",");
+    logger.info("Number of references for expected BLEU calculation: " + filenames.length);
+    for (String filename : filenames) {
+      List<Sequence<IString>> refList = IStrings.fileSplitToIStrings(filename);
+      assert refList.size() == numSourceSentences;
+      for (int i = 0; i < numSourceSentences; ++i) {
+        if (references.size() <= i) references.add(new ArrayList<Sequence<IString>>());
+        references.get(i).add(refList.get(i));
+      }
+    }
+    assert references.size() == numSourceSentences;
+  }
+  
   /**
    * Configure weights stored on file.
    * 
@@ -441,6 +491,8 @@ public class OnlineTuner {
    */
   private Counter<String> loadWeights(String wtsInitialFile,
       boolean uniformStartWeights) {
+    assert wtsInitialFile != null;
+    
     try {
       featureIndex = new OAIndex<String>();
       wts = IOTools.readWeights(wtsInitialFile, featureIndex);
@@ -458,10 +510,19 @@ public class OnlineTuner {
     throw new RuntimeException("Unable to load: " + wtsInitialFile);
   }
 
-  
+  /**
+   * Load an online optimizer for a string key.
+   * 
+   * @param optimizerAlg
+   * @param optimizerFlags
+   * @return
+   */
   private static OnlineOptimizer<IString, String> loadOptimizer(String optimizerAlg, String[] optimizerFlags) {
+    assert optimizerAlg != null;
+    
     if (optimizerAlg.equals("mira-1best")) {
       return new MIRA1BestHopeFearOptimizer(optimizerFlags);
+    
     } else if (optimizerAlg.equals("arow")) {
       // TODO(spenceg)
       throw new UnsupportedOperationException();
@@ -472,8 +533,16 @@ public class OnlineTuner {
   }
   
 
+  /**
+   * Load a loss function from a string key.
+   * 
+   * @param lossFunctionStr
+   * @return
+   */
   private static SentenceLevelMetric<IString, String> loadLossFunction(
       String lossFunctionStr) {
+    assert lossFunctionStr != null;
+    
     if (lossFunctionStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU
       return new BLEUSmoothGain<IString,String>();
@@ -531,6 +600,7 @@ public class OnlineTuner {
     optionMap.put("m", 1);
     optionMap.put("n", 1);
     optionMap.put("nb", 0);
+    optionMap.put("r", 1);
     return optionMap;
   }
   
@@ -556,6 +626,7 @@ public class OnlineTuner {
     sb.append("   -m str     : Evaluation metric (loss function) for the tuning algorithm (default: bleu-smooth)").append(nl);
     sb.append("   -n str     : Experiment name").append(nl);
     sb.append("   -nb        : Write n-best lists to file.").append(nl);
+    sb.append("   -r str     : References for expected BLEU evaluation (format: CSV list)").append(nl);
     return sb.toString().trim();
   }
   
@@ -576,9 +647,10 @@ public class OnlineTuner {
     String experimentName = opts.getProperty("n", "debug");
     boolean writeNbestFile = PropertiesUtils.getBool(opts, "nb", false);
     boolean uniformStartWeights = PropertiesUtils.getBool(opts, "uw");
+    String refStr = opts.getProperty("r", null);
     
     // Parse arguments
-    String[] parsedArgs = opts.getProperty("").split("\\s+");
+    String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {
       System.err.println(usage());
       System.exit(-1);
@@ -606,6 +678,10 @@ public class OnlineTuner {
     if (altSourceFile != null && altTargetFile != null) {
       tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
     }
+    if (refStr != null) {
+      tuner.loadReferences(refStr);
+    }
+    tuner.configureLearningRate(optimizerAlg);
     tuner.writeNbest(writeNbestFile);
     tuner.run(numEpochs, optimizer, lossFunction);
     tuner.saveFinalWeights();

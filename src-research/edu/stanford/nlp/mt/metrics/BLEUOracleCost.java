@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RawSequence;
@@ -30,7 +29,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  */
 public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
 
   /**
    * Default n-gram order
@@ -114,14 +113,12 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
   }
   
   /**
-   * Initialize pseudo counts according to Lin and Och (2004).
+   * Initialize pseudo counts uniformly.
    */
   private void initPseudoCounts() {
     Arrays.fill(pseudoM, 1.0);
-    pseudoM[0] = 0.0;
     Arrays.fill(pseudoN, 1.0);
-    pseudoN[0] = 0.0;
-    pseudoRho = 0.0;
+    pseudoRho = 1.0;
   }
 
   
@@ -175,8 +172,8 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
     final double smoothBLEU = pseudoBLEU(m, n, rho);
     double score = 0.0;
     if (doCherryScoring) {
-      // This value is a *gain*
-      score = smoothBLEU * pseudoN[0];
+      // This value is a *gain* scaled by the pseudo and real unigram counts
+      score = smoothBLEU * (pseudoN[0] + n[0]);
       
     } else {
       // Chiang (2012) cost  

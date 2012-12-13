@@ -48,27 +48,38 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
    * This is an implementation of Fig.2 from Crammer et al. (2006).
    */
   @Override
-  public Counter<String> update(Sequence<IString> source, int sourceId,
+  public Counter<String> getGradient(Sequence<IString> source, int sourceId,
       List<RichTranslation<IString, String>> translations,
       List<Sequence<IString>> references,
-      SentenceLevelMetric<IString, String> lossFunction, Counter<String> weights) {
+      SentenceLevelMetric<IString, String> lossFunction) {
     
-    // Weight vector that we will return
-    final Counter<String> wts = new ClassicCounter<String>(weights);
-    
-    // The "correct" derivation (Crammer et al. (2006) fig.2)
-    Derivation dHope = getBestHopeDerivation(lossFunction, translations, references, sourceId);
-    logger.info("Hope derivation: " + dHope.toString());
-    
-    // The "max-loss" derivation (Crammer et al. (2006) fig.2)
-    Derivation dFear = getBestFearDerivation(lossFunction, translations, references, dHope, sourceId);
-    logger.info("Fear derivation: " + dFear.toString());
+    // Lock the loss function since we don't want updates to its statistics while we are searching
+    // for the hope and fear derivations.
+    Derivation dHope, dFear;
+    synchronized(lossFunction) {
+      // The "correct" derivation (Crammer et al. (2006) fig.2)
+      dHope = getBestHopeDerivation(lossFunction, translations, references, sourceId);
+      logger.info("Hope derivation: " + dHope.toString());
+
+      // The "max-loss" derivation (Crammer et al. (2006) fig.2)
+      dFear = getBestFearDerivation(lossFunction, translations, references, dHope, sourceId);
+      logger.info("Fear derivation: " + dFear.toString());
+
+      // Update the loss function with the hope derivation a la
+      // Cherry and Foster (2012) (Chiang (2012) uses the 1-best translation).
+      // This follows the Moses implementation in mert/kbmira.cpp
+      if (dHope.nbestId != dFear.nbestId) {
+        lossFunction.update(sourceId, references, dHope.hypothesis.translation);
+      }
+    }
     
     final double margin = dFear.modelScore - dHope.modelScore;
     // TODO(spenceg): Crammer takes the square root of the cost. We should try that.
     final double deltaCost = dHope.gain - dFear.gain;
     final double loss = margin + deltaCost;
     logger.info(String.format("Margin: %.5f dCost: %.5f Loss: %.5f", margin, deltaCost, loss));
+
+    Counter<String> gradient = new ClassicCounter<String>();
 
     // Hinge loss.
     if (loss > 0.0) {
@@ -77,30 +88,22 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       // squared norm of the differences between the feature vectors
       Counter<String> hopeFeatures = OptimizerUtils.featureValueCollectionToCounter(dHope.hypothesis.features);
       Counter<String> fearFeatures = OptimizerUtils.featureValueCollectionToCounter(dFear.hypothesis.features);
-      Counter<String> featureDiff = Counters.diff(hopeFeatures, fearFeatures);
-      logger.info("Feature difference: " + featureDiff.toString());
+      gradient = Counters.diff(hopeFeatures, fearFeatures);
+      logger.info("Feature difference: " + gradient.toString());
       
       // Compute the update
-      double sumSquaredFeatureDiff = Counters.sumSquares(featureDiff);
+      double sumSquaredFeatureDiff = Counters.sumSquares(gradient);
       double tau = Math.min(C, loss / sumSquaredFeatureDiff);
       logger.info(String.format("tau: %e", tau));
       
       // Update the weights
-      Counters.multiplyInPlace(featureDiff, tau);
-      Counters.addInPlace(wts, featureDiff);
+      Counters.multiplyInPlace(gradient, tau);
     
     } else {
       logger.info(String.format("NO UPDATE (loss: %e)", loss));
     }
     
-    // Update the loss function with the hope derivation a la
-    // Cherry and Foster (2012). This follows the Moses implementation in
-    // mert/kbmira.cpp
-    if (dHope.nbestId != dFear.nbestId) {
-      lossFunction.update(sourceId, references, dHope.hypothesis.translation);
-    }
-    
-    return wts;
+    return gradient;
   }
 
   /**
