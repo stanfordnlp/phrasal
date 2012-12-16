@@ -81,7 +81,7 @@ gale: nbest sgml
 
 ### Language specific postprocessing:
 %.post: %
-	(cat $< | phrasal_sort | $(POST)) 2> $@.err > $@
+	(cat $< | $(POST)) 2> $@.err > $@
 
 #############################################
 # MBR:

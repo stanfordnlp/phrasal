@@ -106,7 +106,7 @@ PHRASAL_ARGS=-moses-n-best-list true
 #########################################
 
 PRE=perl -I$(ESCRIPTS) -I$(SCRIPTS) $(SCRIPTS)/pre_process_unk.pl -n -t
-POST=phrasal_sort | perl $(SCRIPTS)/remove_unk | java -cp /scr/nlp/data/gale3/NIST09/postprocess:$(CLASSPATH) AmericanizeInOut | aren-postprocess-text
+POST=perl $(SCRIPTS)/remove_unk | java -cp /scr/nlp/data/gale3/NIST09/postprocess:$(CLASSPATH) AmericanizeInOut | aren-postprocess-text
 
 #########################################
 # Phrasal MERT:

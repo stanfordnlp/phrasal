@@ -44,9 +44,9 @@ nbest_gale: test_extract_gale $(TESTID).$(DEVID).$(SYSID).$N.$Nbest
 
 ### BLEU:
 $(DEVID).%.bleu: $(DEVID).%
-	cat $< | phrasal_sort | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
+	cat $< | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(DEV_REF)/ref{0,1,2,3} > $@
 $(TESTID).%.bleu: $(TESTID).%
-	cat $< | phrasal_sort | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
+	cat $< | remove_unk | $(JAVA) edu.stanford.nlp.mt.metrics.BLEUMetric $(TEST_REF)/ref{0,1,2,3} > $@
 
 ### TER:
 $(DEVID).%.ter: $(DEVID).%
@@ -82,7 +82,7 @@ $(TESTID).%.gale.xml: $(TESTID).%.sorted $(TESTID).$(IE)
 %.post.xml.cbleu: %.post.xml
 	mteval-v13.pl -s $(TESTID)-src.sgm -r $(TESTID)-ref.sgm -t $< -c -b > $@ 
 %.lcpost.xml: %
-	(cat $< | phrasal_sort | $(POST) | en_detokenizer | plain2sgml $(TESTID).sgm stanford | perl -pe 's/<doc docid="(.*)">/<DOC docid="$$1">/ig') 2> logs/$@.err > $@
+	(cat $< | $(POST) | en_detokenizer | plain2sgml $(TESTID).sgm stanford | perl -pe 's/<doc docid="(.*)">/<DOC docid="$$1">/ig') 2> logs/$@.err > $@
 
 #############################################
 # Convert dev ini file into test:
