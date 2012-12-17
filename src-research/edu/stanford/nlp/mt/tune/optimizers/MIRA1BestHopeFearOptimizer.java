@@ -43,6 +43,11 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     OnlineTuner.attach(logger);
     logger.info(String.format("1-best MIRA optimization with C: %e", C));    
   }
+  
+  @Override
+  public OnlineUpdater<String> newUpdater() {
+    return new MiraUpdater();
+  }
 
   /**
    * This is an implementation of Fig.2 from Crammer et al. (2006).

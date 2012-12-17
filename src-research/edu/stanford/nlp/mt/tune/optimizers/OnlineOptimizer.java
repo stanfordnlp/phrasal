@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.stats.Counter;
 
 /**
- * Training algorithms that update the model with each training example.
+ * Training algorithms that update the model weights with each training example.
  * 
  * @author Spence Green
  *
@@ -16,7 +16,7 @@ import edu.stanford.nlp.stats.Counter;
 public interface OnlineOptimizer<TK,FV> {
 
   /**
-   * Update the model weights with a training example.
+   * Compute the gradient for a given training example.
    * 
    * @param source
    * @param sourceId
@@ -31,4 +31,12 @@ public interface OnlineOptimizer<TK,FV> {
       List<RichTranslation<TK, FV>> translations,
       List<Sequence<TK>> references,
       SentenceLevelMetric<TK,FV> lossFunction);
+  
+  /**
+   * Return a new updater object, which defines the online update rule. The updater
+   * should configure the gain schedule, if any.
+   * 
+   * @return
+   */
+  public OnlineUpdater<FV> newUpdater();
 }
