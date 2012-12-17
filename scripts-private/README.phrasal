@@ -1,0 +1,96 @@
+///////////////////////////
+Training Research MT Systems with Phrasal
+Updated: 16 December 2012
+Author: Spence Green
+
+This README enumerates the steps required to train a statistical phrase-based MT system from raw text using Phrasal. Many of the parameters that you would want to tweak during research are configurable with bash variables in the various scripts.
+
+This document assumes that you have a working copy of JavaNLP, and that Phrasal (the Stanford MT package in JavaNLP) is available at $JAVANLP_HOME/projects/mt.
+
+Further, assume that the following two directories have been added to the PATH of your shell:
+
+  $JAVANLP_HOME/projects/mt/scripts
+  $JAVANLP_HOME/projects/mt/scripts-private
+
+In the instructions that follow, assume that the first directories above are called $SCR and $SCRPR, respectively.
+  
+##
+## Data Cleaning
+##
+The first step is to prepare you bilingual and monolingual data. We have pre-processors for the following languages: Arabic, Chinese, English, French, and German.
+
+Start with the bilingual data. You should have two sentence-aligned text. Let's call them arabic.txt and english.txt. You need clean and tokenizer them:
+
+  $SCRPR/tokenize.sh English english.txt clean
+  $SCRPR/tokenize.sh Arabic arabic.txt clean
+
+These commands will produce the files english.txt.tok.gz and arabic.txt.tok.gz, respectively.
+
+The languages that use deterministic tokenization (e.g., English, French) are very fast. The other processors can be quite a bit slower, so you might want to use the "split" command-line program to partition the data. Then you can write a quick script to distribute the jobs to the cluster.
+
+Now for the monolingual data. If you are using the LDC Gigaword corpora, then you should use this command to extract the data from the gzip'd SGML files in the corpus:
+
+  zcat gigaword-file.gz | $SCRPR/giga_sgml2plain.py > gigaword-file.plain
+  $SCRPR/tokenize.sh English gigaword-file.plain
+  
+##
+## Word alignment
+##
+Next, you need to create word alignments. This is easy with the script $SCRPR/align.sh. This script splits the bitext into shards and sends an alignment job to the nlp cluster for each shard. A shard size of 1000000 works well.
+
+  $SCRPR/align.sh arabic.txt.tok.gz ar english.txt.tok.gz en 1000000
+
+Notice that you need to supply the ISO639-1 language codes for the source and target languages.
+
+##
+## Language Model
+##
+Build a language model from the monolingual target data and the target side of the bitext (you might want to filter out data from the same epoch as you dev/test sets). For this step you'll need SRILM on your PATH. On the cluster, the latest version of SRILM is installed in /u/nlp/packages/SRILM:
+
+  export PATH=/u/nlp/packages/SRILM/bin/i686-m64:/u/nlp/packages/SRILM/bin:"$PATH"
+
+Now copy the sample lm configuration file to your working directory:
+
+  cp $SCRPR/lm.local .
+
+This file specifies the LM order and various other SRILM options. See the SRILM documentation for all of the different options.
+
+Once you have set the options, you can create a language model in two steps: count extraction followed by compilation:
+
+  $SCRPR/lm-counts.sh gigaword-file.plain.tok.gz english.txt.tok.gz
+  $SCRPR/lm-compile.sh aren-4gram counts/file
+
+where "counts/file" indicates the file in the "counts" directory produced by the count extraction step. Assume that you now have an LM called "aren-4gram.lm.bin.gz".
+
+##
+## MT Training and Tuning
+##
+Now we can train Phrasal. First decide whether to use batch or online tuning. Copy the appropriate variables file:
+
+  cp $SCRPR/phrasal-train-tune.{batch,online}.vars .
+
+You can configure all aspects of training and tuning using the vars file. The actual train/tune script takes this file as input, along with a Phrasal ini file and a start step. The steps are:
+
+Steps:
+   1  Phrase extraction (tuning filtering)
+   2  Pre-process tuning set for OOVs
+   3  Run tuning
+   4  Phrase extraction (decoding filtering)
+   5  Pre-process decoding set for OOVs
+   6  Decode
+   7  Output results file
+
+You'll need to set the path to the bitext in the vars file, and the path to the LM in the ini file. Then run the train/tune script as follows:
+
+  $SCRPR/phrasal-train-tune.sh phrasal-train-tune.online.vars phrasal.ini my-unique-experiment-name
+
+##
+## Online Tuning Notes
+##
+For online tuning, several important parameters must be configured in the ini file:
+
+  # threads     -- use the [local-procs] option
+  n-best size   -- use the [n-best-list] option with only one integer
+                   parameter. This will cause the decoder to use the
+		   specified n-best size, but without printing the
+		   hypotheses

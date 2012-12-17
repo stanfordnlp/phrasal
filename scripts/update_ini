@@ -15,7 +15,8 @@ use arg_utils qw(&get_args &get_opts);
 
 my %opts = get_opts(['v',0,'program will be more verbose'],
                     ['f=s','','target nbest list'],
-                    ['n=s','','nbest list size']);
+                    ['n=s','','nbest list size'],
+                    ['w=s','','weights file']);
 my %args = get_args('old','new');
 my $oldid = $args{old};
 my $newid = $args{new};
@@ -47,12 +48,23 @@ while(<STDIN>) {
 			}
 		}
 	} elsif($field eq 'n-best-list' && $newfield) {
-		my $oldlist = <STDIN>;	
-		my $oldsize = <STDIN>;	
+    my $oldlist = <STDIN>;  
+    my $oldsize = <STDIN>;  
 		if($opts{n} && $opts{f}) {
 			print "[n-best-list]\n$opts{f}\n$opts{n}\n";
+		} elsif($opts{n}) {
+		  print "[n-best-list]\n$opts{n}\n";
 		}
 		next;
+	} elsif($field eq 'weights-file' && $newfield) {
+	  my $oldfile = <STDIN>;
+	  print "[weights-file]\n";
+	  if($opts{w}) {
+	    print "$opts{w}\n";
+	  } else {
+	    print "$oldfile\n";
+	  }
+	  next;
 	}
 	print;
 }

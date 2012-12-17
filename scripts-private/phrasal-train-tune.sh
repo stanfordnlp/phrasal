@@ -3,26 +3,44 @@
 # Train and tune Phrasal. Steps are configurable with the variables
 # at the top of this script.
 # 
-# Steps:
-#   1  Phrase extraction (tuning filtering)
-#   2  Pre-process tuning set for OOVs
-#   3  Run tuning
-#   4  Phrase extraction (decoding filtering)
-#   5  Pre-process decoding set for OOVs
-#   6  Decode
-#   7  Output results file
-#
-# 
 # Author: Spence Green
 #
 if [ $# -ne 4 ]; then
-    echo Usage: `basename $0` var_file start-step ini_file sys_name
+    echo Usage: `basename $0` var_file steps ini_file sys_name
+    echo
+    echo "Use dashes and commas in the steps specification e.g. 1-3,6,7"
+    echo
+    echo Step definitions:
+    echo "  1  Extract phrases from dev set"
+    echo "  2  Pre-process dev set for OOVs"
+    echo "  3  Run tuning"
+    echo "  4  Extract phrases from test set"
+    echo "  5  Pre-process dev set for OOVs"
+    echo "  6  Decode test set"
+    echo "  7  Output results file"
     exit 0
 fi
 VAR_FILE=$1
 START_STEP=$2
 INI_FILE=$3
 SYS_NAME=$4
+
+# Process steps
+let s=0
+IFS=',' read -ra ADDR <<< "$START_STEP"
+for i in "${ADDR[@]}"; do
+    IFS='-' read -ra SEQ <<< "$i"
+    if [ ${#SEQ[@]} -eq 1 ]; then
+	STEPS[s]=${SEQ[0]}
+	let s=s+1
+    else
+	for j in `seq ${SEQ[0]} ${SEQ[1]}`;
+	do
+	    STEPS[s]=$j
+	    let s=s+1
+	done
+    fi
+done
 
 echo ===========================
 echo Phrasal training and tuning
@@ -46,7 +64,7 @@ function extract {
 
     # Split the phrase table into rule scores and lex re-ordering
     # scores
-    zcat "$PTABLEDIR"/merged.gz | "$SCRIPTDIR"/filter_po_tables "$PTABLEDIR"/phrase-table.gz "$PTABLEDIR"/lo-hier.msd2-bidirectional-fe.gz -99999999 8 >& "$PTABLEDIR"/phrase-table.gz.log
+    zcat "$PTABLEDIR"/merged.gz | filter_po_tables "$PTABLEDIR"/phrase-table.gz "$PTABLEDIR"/lo-hier.msd2-bidirectional-fe.gz -99999999 8 >& "$PTABLEDIR"/phrase-table.gz.log
 }
 
 #
@@ -58,17 +76,19 @@ function prep_source {
     PTABLEDIR=$3
     NAME=$4
     rm -f $OUTFILE
-    perl "$SCRIPTDIR"/remove_unk_before_decode $MAX_PHRASE_LEN "$PTABLEDIR"/phrase-table.gz "$INFILE" "$OUTFILE".tmp >& "$OUTFILE".err 
+    remove_unk_before_decode $MAX_PHRASE_LEN "$PTABLEDIR"/phrase-table.gz \
+	"$INFILE" "$OUTFILE".tmp >& "$OUTFILE".err 
     cat "$OUTFILE".tmp | sed 's/^ *$/null/' > "$OUTFILE"
     rm -f "$OUTFILE".tmp
     cat "$OUTFILE" | ngram-count -text - -write-vocab "$NAME".f.vocab -order 1 -unk
 }
 
 #
-# Tune
+# Batch tuning (e.g., MERT, PRO)
 #
-function tune {
-    "$SCRIPTDIR"/update_ini SETID $TUNE_SET_NAME < $INI_FILE > $TUNE_INI_FILE
+function tune-batch {
+    # Setup the input ini file and run batch tuning
+    update_ini SETID $TUNE_SET_NAME < $INI_FILE > $TUNE_INI_FILE
     phrasal-mert.pl \
 	--opt-flags="$OPT_FLAGS" \
 	--working-dir="$TUNEDIR" \
@@ -78,18 +98,54 @@ function tune {
 	--nbest=$NBEST $TUNE_FILE "$REFDIR"/"$TUNE_SET_NAME"/ref \
 	$OBJECTIVE $TUNE_INI_FILE \
 	>& logs/"$TUNEDIR".log
+
+    # Setup the final weights and ini files
+    rm $TUNEDIR/phrasal.best.ini || true
+    eval `link-best-ini $TUNEDIR`
+    if [ \( -n $NBEST \) -a \( $NBEST -gt 1 \) ]; then
+	update_ini \
+	    -f "$RUNNAME"."$NBEST"best \
+	    -n $NBEST $TUNE_SET_NAME $DECODE_SET_NAME \
+	    < "$TUNEDIR"/phrasal.best.ini > "$RUNNAME".ini
+    else
+	update_ini $TUNE_SET_NAME $DECODE_SET_NAME \
+	    < "$TUNEDIR"/phrasal.best.ini > "$RUNNAME".ini
+    fi
 }
 
 #
-# Decode text
+# Online tuning (e.g., Mira, PRO+SGD)
+#
+function tune-online {
+    # Setup the ini file and run online tuning
+    update_ini -n $TUNE_NBEST SETID $TUNE_SET_NAME \
+	< $INI_FILE > $TUNE_INI_FILE    
+
+    java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.tune.OnlineTuner \
+	$TUNE_SET $TUNE_REF \
+	$TUNE_INI_FILE \
+	$INITIAL_WTS \
+	-n $TUNERUNNAME \
+	$ONLINE_OPTS
+    
+    # Setup the final weights and ini files
+    FINAL_WTS="$TUNERUNNAME".online.final.binwts
+    if [ \( -n $NBEST \) -a \( $NBEST -gt 1 \) ]; then
+	update_ini \
+	    -w $FINAL_WTS \
+	    -f "$RUNNAME"."$NBEST"best \
+	    -n $NBEST $TUNE_SET_NAME $DECODE_SET_NAME \
+	    < $TUNE_INI_FILE > "$RUNNAME".ini
+    else
+	update_ini -w $FINAL_WTS $TUNE_SET_NAME $DECODE_SET_NAME \
+	    < $TUNE_INI_FILE > "$RUNNAME".ini
+    fi
+}
+
+#
+# Decode an input file
 #
 function decode {
-    rm $TUNEDIR/phrasal.best.ini || true
-    eval `$SCRIPTDIR/link-best-ini $TUNEDIR`
-    "$SCRIPTDIR"/update_ini \
-	-f "$RUNNAME"."$NBEST"best \
-	-n $NBEST $TUNE_SET_NAME $DECODE_SET_NAME \
-	< "$TUNEDIR"/phrasal.best.ini > "$RUNNAME".ini
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
 	-config-file "$RUNNAME".ini -moses-n-best-list true \
 	< $DECODE_FILE > "$RUNNAME".out 2> logs/"$RUNNAME".log
@@ -98,56 +154,70 @@ function decode {
 #
 # Evaluate the target output
 #
+# TODO(spenceg): Add better post-processing and conversion to HTML
 function evaluate {
     if [ $NBEST -gt 1 ]; then
 	cat "$RUNNAME"."$NBEST"best \
-	    | "$SCRIPTDIR"/nbest_sort \
-	    | "$SCRIPTDIR"/nbest2uniq \
+	    | nbest_sort \
+	    | nbest2uniq \
 	    > "$RUNNAME"."$NBEST"best.uniq 2> /dev/null
     fi
-    cat "$RUNNAME".out | "$SCRIPTDIR"/phrasal_sort > "$RUNNAME".out.1best
-    cat "$RUNNAME".out.1best | "$SCRIPTDIR"/bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".out.bleu
+    cat "$RUNNAME".out | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".out.bleu
 }
 
 
 ######################################################################
 ######################################################################
 
+function step-status {
+    echo "### Running Step $1"
+}
+
 # Synthetic parameters and commands
 mkdir -p logs
 TUNE_PTABLE_DIR="$TUNE_SET_NAME".tables
 TUNE_FILE="$TUNE_SET_NAME".prep
-TUNE_INI_FILE="$TUNE_SET_NAME"."$SYS_NAME".ini
-TUNEDIR="$TUNE_SET_NAME"."$SYS_NAME"."$NBEST".tune
-DECODE_PTABLE_DIR="$DECODE_SET_NAME".tables
-DECODE_FILE="$TUNE_SET_NAME".prep
-RUNNAME="$DECODE_SET_NAME"."$TUNE_SET_NAME"."$SYS_NAME"
+TUNERUNNAME="$TUNE_SET_NAME"."$SYS_NAME"
+TUNEDIR="$TUNERUNNAME".tune
+TUNE_INI_FILE="$TUNERUNNAME".ini
 
-if [ $START_STEP -le 1 ]; then
-    echo "### Running Step 1 ###"
-    extract $TUNE_SET $TUNE_PTABLE_DIR
-fi
-if [ $START_STEP -le 2 ]; then
-    echo "### Running Step 2 ###"
-    prep_source $TUNE_SET $TUNE_FILE $TUNE_PTABLE_DIR $TUNE_SET_NAME
-fi
-if [ $START_STEP -le 3 ]; then
-    echo "### Running Step 3 ###"
-    tune
-fi
-if [ $START_STEP -le 4 ]; then
-    echo "### Running Step 4 ###"
-    extract $DECODE_SET $DECODE_PTABLE_DIR
-fi
-if [ $START_STEP -le 5 ]; then
-    echo "### Running Step 5 ###"
-    prep_source $DECODE_SET $DECODE_FILE $DECODE_PTABLE_DIR $DECODE_SET_NAME
-fi
-if [ $START_STEP -le 6 ]; then
-    echo "### Running Step 6 ###"
-    decode
-fi
-if [ $START_STEP -le 7 ]; then
-    echo "### Running Step 7 ###"
-    evaluate
-fi
+DECODE_PTABLE_DIR="$DECODE_SET_NAME".tables
+DECODE_FILE="$DECODE_SET_NAME".prep
+
+RUNNAME="$DECODE_SET_NAME"."$TUNERUNNAME"
+
+for step in ${STEPS[@]};
+do
+    if [ $step -eq 1 ]; then
+	step-status $step
+	extract $TUNE_SET $TUNE_PTABLE_DIR
+    fi
+    if [ $step -eq 2 ]; then
+	step-status $step
+	prep_source $TUNE_SET $TUNE_FILE $TUNE_PTABLE_DIR $TUNE_SET_NAME
+    fi
+    if [ $step -eq 3 ]; then
+	step-status $step
+	if [ $TUNE_MODE == "batch" ]; then
+	    tune-batch
+	else
+	    tune-online
+	fi
+    fi
+    if [ $step -eq 4 ]; then
+	step-status $step
+	extract $DECODE_SET $DECODE_PTABLE_DIR
+    fi
+    if [ $step -eq 5 ]; then
+	step-status $step
+	prep_source $DECODE_SET $DECODE_FILE $DECODE_PTABLE_DIR $DECODE_SET_NAME
+    fi
+    if [ $step -eq 6 ]; then
+	step-status $step
+	decode
+    fi
+    if [ $step -eq 7 ]; then
+	step-status $step
+	evaluate
+    fi
+done

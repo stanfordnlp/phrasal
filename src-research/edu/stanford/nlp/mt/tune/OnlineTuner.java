@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.tune;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -64,8 +63,7 @@ public class OnlineTuner {
   private static String logPrefix;
   
   private static void initLogger(String tag) {
-    SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-HH-mm-ss");
-    logPrefix = String.format("online-tuner.%s.%s", tag, formatter.format(new Date()));
+    logPrefix = tag + ".online";
     try {
       logHandler = new FileHandler(logPrefix + ".log");
       logHandler.setFormatter(new SimpleFormatter()); //Plain text
@@ -87,7 +85,6 @@ public class OnlineTuner {
 
   // Intrinsic loss examples
   private List<Sequence<IString>> tuneSource;
-  private List<Sequence<IString>> tuneTarget;
   private List<List<Sequence<IString>>> references;
   
   // Extrinsic loss examples
@@ -121,7 +118,8 @@ public class OnlineTuner {
     
     // Load the source and target files for the intrinsic loss.
     tuneSource = IStrings.fileSplitToIStrings(srcFile);
-    tuneTarget = IStrings.fileSplitToIStrings(tgtFile);
+    assert tuneSource.size() > 0;
+    List<Sequence<IString>> tuneTarget = IStrings.fileSplitToIStrings(tgtFile);
     assert tuneSource.size() == tuneTarget.size();
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
     references = new ArrayList<List<Sequence<IString>>>(tuneTarget.size());
@@ -343,6 +341,7 @@ public class OnlineTuner {
     logger.info("Start of online tuning");
     logger.info("Number of epochs: " + numEpochs);
     logger.info("Number of threads: " + numThreads);
+    logger.info("Number of references: " + references.get(0).size());
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
       logger.info("Start of epoch: " + epoch);
@@ -366,12 +365,10 @@ public class OnlineTuner {
         // Retrieve the training example
         int translationId = indices[i];
         final Sequence<IString> source = tuneSource.get(translationId);
-        final Sequence<IString> target = tuneTarget.get(translationId);
-        final List<Sequence<IString>> references = new ArrayList<Sequence<IString>>();
-        references.add(target);
+        final List<Sequence<IString>> refs = references.get(translationId);
         
         // Submit to threadpool, then look for updates.
-        UpdaterInput input = new UpdaterInput(source, references, currentWts, translationId, 
+        UpdaterInput input = new UpdaterInput(source, refs, currentWts, translationId, 
             nbestListWriter, i);
         wrapper.put(input);
         currentWts = update(wrapper, currentWts, nbestLists, i);
