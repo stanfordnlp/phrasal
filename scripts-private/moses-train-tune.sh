@@ -8,6 +8,13 @@
 #
 # LD_LIBRARY_PATH=/u/nlp/packages/boost_1_42_0/lib
 
+if [ $# -ne 1 ]; then
+	echo Usage: `basename $0` tune-dir-name
+	exit 0
+fi
+
+TUNEDIR=`basename $1`
+
 # Paths to stuff
 HOME=`pwd`
 MOSES=/u/nlp/packages/mosesdecoder
@@ -32,10 +39,11 @@ $MOSES/scripts/training/train-model.perl --max-phrase-length 7 \
 # Model tuning with MIRA
 # For MERT: remove the "--batch-mira" parameter
 # For PRO: replace mira with "--pairwise-ranked"
-mkdir -p $HOME/tune
+rm -rf $HOME/$TUNEDIR
+mkdir -p $HOME/$TUNEDIR
 $MOSES/scripts/training/mert-moses.pl \
 --working-dir $HOME/tune \
---decoder-flags="-distortion-limit 5" --mertdir $MOSES/bin/ --batch-mira \
---threads=8 \
+--decoder-flags="-distortion-limit 5 -threads 8" --mertdir $MOSES/bin/ \
+--batch-mira --return-best-dev \
 $TUNE_SET $REF_PREFIX \
 $MOSES/bin/moses $HOME/train/model/moses.ini
