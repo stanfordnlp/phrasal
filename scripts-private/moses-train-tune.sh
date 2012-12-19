@@ -43,7 +43,7 @@ rm -rf $HOME/$TUNEDIR
 mkdir -p $HOME/$TUNEDIR
 $MOSES/scripts/training/mert-moses.pl \
 --working-dir $HOME/tune \
---decoder-flags="-distortion-limit 5 -threads 8" --mertdir $MOSES/bin/ \
+--decoder-flags="-distortion-limit 5 -threads all" --mertdir $MOSES/bin/ \
 --batch-mira --return-best-dev \
 $TUNE_SET $REF_PREFIX \
 $MOSES/bin/moses $HOME/train/model/moses.ini
