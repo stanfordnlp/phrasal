@@ -9,7 +9,7 @@ import edu.stanford.nlp.stats.Counter;
  *
  * @param <FV>
  */
-public interface OnlineUpdater<FV> {
+public interface OnlineUpdateRule<FV> {
 
   /**
    * Take a weight vector and a gradient and return an updated weight vector.

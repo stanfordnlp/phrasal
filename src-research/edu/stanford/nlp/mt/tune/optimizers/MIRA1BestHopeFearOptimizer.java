@@ -45,7 +45,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
   }
   
   @Override
-  public OnlineUpdater<String> newUpdater() {
+  public OnlineUpdateRule<String> newUpdater() {
     return new MiraUpdater();
   }
 
@@ -53,10 +53,10 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
    * This is an implementation of Fig.2 from Crammer et al. (2006).
    */
   @Override
-  public Counter<String> getGradient(Sequence<IString> source, int sourceId,
+  public Counter<String> getGradient(Counter<String> weights, Sequence<IString> source,
+      int sourceId,
       List<RichTranslation<IString, String>> translations,
-      List<Sequence<IString>> references,
-      SentenceLevelMetric<IString, String> lossFunction) {
+      List<Sequence<IString>> references, SentenceLevelMetric<IString, String> lossFunction) {
     
     // Lock the loss function since we don't want updates to its statistics while we are searching
     // for the hope and fear derivations.

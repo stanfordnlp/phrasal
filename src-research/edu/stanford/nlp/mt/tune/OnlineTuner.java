@@ -32,7 +32,8 @@ import edu.stanford.nlp.mt.metrics.BLEUSmoothGain;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
-import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdater;
+import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
+import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -247,10 +248,12 @@ public class OnlineTuner {
       assert input.weights != null;
       // Set the decoder weights and decode
       decoder.getScorer(threadId).updateWeights(input.weights);
-      List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source, input.translationId, threadId);
+      List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source, input.translationId, 
+          threadId);
       
       Counter<String> gradient = 
-          optimizer.getGradient(input.source, input.translationId, nbestList, input.references, lossFunction);
+          optimizer.getGradient(input.weights, input.source, input.translationId, nbestList, 
+              input.references, lossFunction);
       
       return new ProcessorOutput(gradient, input.inputId, nbestList, input.translationId);
     }
@@ -272,7 +275,7 @@ public class OnlineTuner {
    * @return
    */
   private Counter<String> applyGradientUpdates(MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
-      Counter<String> currentWts, OnlineUpdater<String> updater, 
+      Counter<String> currentWts, OnlineUpdateRule<String> updater, 
       Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int timeStep) {
     assert threadpool != null;
     assert currentWts != null;
@@ -326,7 +329,7 @@ public class OnlineTuner {
     final int tuneSetSize = tuneSource.size();
     int[] indices = ArrayMath.range(0, tuneSetSize);
     
-    final OnlineUpdater<String> updater = optimizer.newUpdater();
+    final OnlineUpdateRule<String> updater = optimizer.newUpdater();
     
     // Online optimization with asynchronous updating
     logger.info("Start of online tuning");
@@ -442,6 +445,7 @@ public class OnlineTuner {
    */
   private void loadReferences(String refStr) {
     assert refStr != null;
+    
     final int numSourceSentences = tuneSource.size();
     references = new ArrayList<List<Sequence<IString>>>(numSourceSentences);
     String[] filenames = refStr.split(",");
@@ -472,8 +476,16 @@ public class OnlineTuner {
       featureIndex = new OAIndex<String>();
       wts = IOTools.readWeights(wtsInitialFile, featureIndex);
       if (uniformStartWeights) {
-        // Set to 0.1 a la Hasler et al. (2011)
-        for (String key : wts.keySet()) wts.setCount(key, 0.1);
+        // Initialize according to Moses heuristic
+        for (String key : wts.keySet()) {
+          if (key.startsWith("LM")) {
+            wts.setCount(key, 0.5);
+          } else if (key.startsWith("WordPenalty")) {
+            wts.setCount(key, -1.0);
+          } else {
+            wts.setCount(key, 0.2);
+          }
+        }
       }
       return wts;
       
@@ -498,10 +510,9 @@ public class OnlineTuner {
     if (optimizerAlg.equals("mira-1best")) {
       return new MIRA1BestHopeFearOptimizer(optimizerFlags);
     
-    } else if (optimizerAlg.equals("arow")) {
-      // TODO(spenceg)
-      throw new UnsupportedOperationException();
-    
+    } else if (optimizerAlg.equals("pro-sgd")) {
+      return new PairwiseRankingOptimizerSGD(optimizerFlags);
+      
     } else {
       throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);
     }
@@ -579,8 +590,6 @@ public class OnlineTuner {
     return optionMap;
   }
   
-  // TODO(spenceg): Add experiment name parameter
-  
   /**
    * Usage string for the main method.
    * 
@@ -620,7 +629,7 @@ public class OnlineTuner {
     String altSourceFile = opts.getProperty("s");
     String altTargetFile = opts.getProperty("t");
     String experimentName = opts.getProperty("n", "debug");
-    boolean writeNbestFile = PropertiesUtils.getBool(opts, "nb", false);
+    boolean doNbestOutput = PropertiesUtils.getBool(opts, "nb", false);
     boolean uniformStartWeights = PropertiesUtils.getBool(opts, "uw");
     String refStr = opts.getProperty("r", null);
     
@@ -656,7 +665,7 @@ public class OnlineTuner {
     if (refStr != null) {
       tuner.loadReferences(refStr);
     }
-    tuner.writeNbest(writeNbestFile);
+    tuner.writeNbest(doNbestOutput);
     tuner.run(numEpochs, optimizer, lossFunction);
     tuner.saveFinalWeights();
     tuner.shutdown();

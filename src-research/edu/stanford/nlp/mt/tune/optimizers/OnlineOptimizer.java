@@ -17,7 +17,7 @@ public interface OnlineOptimizer<TK,FV> {
 
   /**
    * Compute the gradient for a given training example.
-   * 
+   * @param weights TODO
    * @param source
    * @param sourceId
    * @param translations
@@ -26,11 +26,11 @@ public interface OnlineOptimizer<TK,FV> {
    * 
    * @return Updated weight vector.
    */
-  public Counter<FV> getGradient(Sequence<TK> source, 
-      int sourceId, 
+  public Counter<FV> getGradient(Counter<FV> weights, 
+      Sequence<TK> source, 
+      int sourceId,
       List<RichTranslation<TK, FV>> translations,
-      List<Sequence<TK>> references,
-      SentenceLevelMetric<TK,FV> lossFunction);
+      List<Sequence<TK>> references, SentenceLevelMetric<TK,FV> lossFunction);
   
   /**
    * Return a new updater object, which defines the online update rule. The updater
@@ -38,5 +38,5 @@ public interface OnlineOptimizer<TK,FV> {
    * 
    * @return
    */
-  public OnlineUpdater<FV> newUpdater();
+  public OnlineUpdateRule<FV> newUpdater();
 }

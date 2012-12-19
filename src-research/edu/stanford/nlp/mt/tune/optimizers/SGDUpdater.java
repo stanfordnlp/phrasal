@@ -5,18 +5,27 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
 /**
- * A basic Mira update rule.
+ * Basic Stochastic Gradient Descent update rule.
  * 
  * @author Spence Green
  *
  */
-public class MiraUpdater implements OnlineUpdateRule<String> {
+public class SGDUpdater implements OnlineUpdateRule<String> {
+
+  private final double rate;
+  
+  public SGDUpdater(double rate) {
+    this.rate = rate;
+  }
 
   @Override
   public Counter<String> update(Counter<String> weights,
       Counter<String> gradient) {
     Counter<String> newWeights = new ClassicCounter<String>(weights);
-    Counters.addInPlace(newWeights, gradient);
+    Counter<String> gradientCopy = new ClassicCounter<String>(gradient);
+    Counters.multiplyInPlace(gradientCopy, rate);
+    Counters.subtractInPlace(newWeights, gradientCopy);
     return newWeights;
   }
+
 }
