@@ -1,5 +1,5 @@
 /* Derived from com.google.common.hash.BloomFilter
- * 
+ *
  * Copyright (C) 2011 The Guava Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -209,7 +209,7 @@ public final class BloomFilter<T> implements Serializable {
       double falsePositiveProbability) {
     checkNotNull(funnel);
     checkArgument(expectedInsertions > 0, String.format("Expected insertions must be positive (expectedInsertions: %d)", expectedInsertions));
-    checkArgument(falsePositiveProbability > 0.0 & falsePositiveProbability < 1.0,
+    checkArgument(falsePositiveProbability > 0.0 && falsePositiveProbability < 1.0,
         "False positive probability in (0.0, 1.0)");
     /*
      * andreou: I wanted to put a warning in the javadoc about tiny fpp values,
@@ -303,7 +303,7 @@ public final class BloomFilter<T> implements Serializable {
       this.funnel = bf.funnel;
       this.strategy = bf.strategy;
     }
-    Object readResolve() {
+    protected Object readResolve() {
       return new BloomFilter<T>(new BitArray(data), numHashFunctions, funnel, strategy);
     }
     private static final long serialVersionUID = 1;
