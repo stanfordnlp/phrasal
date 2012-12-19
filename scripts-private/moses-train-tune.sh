@@ -42,8 +42,9 @@ $MOSES/scripts/training/train-model.perl --max-phrase-length 7 \
 rm -rf $HOME/$TUNEDIR
 mkdir -p $HOME/$TUNEDIR
 $MOSES/scripts/training/mert-moses.pl \
---working-dir $HOME/tune \
+--working-dir $HOME/$TUNEDIR \
 --decoder-flags="-distortion-limit 5 -threads all" --mertdir $MOSES/bin/ \
+--nbest=500 \
 --batch-mira --return-best-dev \
 $TUNE_SET $REF_PREFIX \
 $MOSES/bin/moses $HOME/train/model/moses.ini
