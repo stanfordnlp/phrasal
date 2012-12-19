@@ -122,7 +122,7 @@ public class PairwiseRankingOptimizer extends AbstractNBestOptimizer {
           double gJ = evalMetric.score(nbestlists.get(i).subList(j, j+1));
           double gJPrime = evalMetric.score(nbestlists.get(i).subList(jPrime, jPrime+1));
           double absDiff = Math.abs(gJ-gJPrime);
-          if (absDiff >= DEFAULT_N_THRESHOLD) {
+          if (absDiff >= nThreshold) {
             if (gJ > gJPrime) {
               v.add(new Pair<Double, Pair<Integer,Integer>>(absDiff, new Pair<Integer,Integer>(j, jPrime)));
             } else {
