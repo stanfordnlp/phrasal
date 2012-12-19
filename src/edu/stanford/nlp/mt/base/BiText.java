@@ -25,7 +25,7 @@ public class BiText {
       reader.close();
       return new int[] { lineCnt, wordCnt };
     } catch (Exception e) {
-      throw new RuntimeException();
+      throw new RuntimeException(e);
     }
   }
 
@@ -42,7 +42,7 @@ public class BiText {
       }
       reader.close();
     } catch (Exception e) {
-      throw new RuntimeException();
+      throw new RuntimeException(e);
     }
   }
 

@@ -41,7 +41,7 @@ public class DynamicByteArrayIndex implements Iterable<int[]>,
     mask = INIT_SZ - 1;
   }
 
-  private int supplementalHash(int h) {
+  private static int supplementalHash(int h) {
     // use the same supplemental hash function used by HashMap
     return ((h << 7) - h + (h >>> 9) + (h >>> 17));
   }

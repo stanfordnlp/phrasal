@@ -14,8 +14,8 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 public class DTUTable<FV> extends FlatPhraseTable<FV> {
 
-  static public final IString GAP_STR = new IString("X");
-  static public final boolean DEBUG = true;
+  public static final IString GAP_STR = new IString("X");
+  public static final boolean DEBUG = true;
 
   private static final String MIN_GAP_SIZE_PROPERTY = "minSourceGapSize";
   public static final int MIN_GAP_SIZE = Integer.parseInt(System.getProperty(

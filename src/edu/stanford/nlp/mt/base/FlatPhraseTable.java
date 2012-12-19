@@ -7,12 +7,12 @@ import java.io.*;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 
 /**
- * 
+ *
  * @author Daniel Cer
  */
 public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     implements PhraseTable<IString> {
-  
+
   public static final String TRIE_INDEX_PROPERTY = "TriePhraseTable";
   public static final boolean TRIE_INDEX = Boolean.parseBoolean(System
       .getProperty(TRIE_INDEX_PROPERTY, "false"));
@@ -27,7 +27,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   static String[] customScores;
 
   final String[] scoreNames;
-  String name;
+  protected String name;
 
   // Originally, PharaohPhraseTables were backed by a nice simple
   // HashMap from a foreign sequence to a list of translations.
@@ -78,7 +78,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   /**
    * Convert rule scores from string to a numeric array.
-   * 
+   *
    * @param sList
    * @return
    */
@@ -87,7 +87,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     int i = 0;
     for (String s : sList) {
       float f = Float.parseFloat(s);
-      
+
       if (Float.isNaN(f)) {
         throw new RuntimeException(String.format(
             "Bad phrase table. %s parses as (float) %f", s, f));
@@ -138,17 +138,17 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     // default is not to do log rithm on the scores
     this(phraseFeaturizer, filename, false);
   }
-  
+
   public FlatPhraseTable(String filename) throws IOException {
     this(null, filename, false);
   }
-  
+
   public FlatPhraseTable(String filename, boolean reverse) throws IOException {
     this(null, filename, reverse);
   }
 
   /**
-   * 
+   *
    * @throws IOException
    */
   public FlatPhraseTable(
@@ -166,7 +166,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   private static String[] getScoreNames(int countScores) {
     String[] scoreNames;
-    
+
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
         scoreNames[i] = String.format("FPT.%d", i);
@@ -177,7 +177,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   private int init(File f, boolean reverse) throws IOException {
     System.gc();
-    
+
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
@@ -226,7 +226,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
          translationTokenList = foreignTokenList;
          foreignTokenList = tmp;
       }
-      
+
       if (!toker.hasMoreTokens()) {
         throw new RuntimeException(String.format(
             "Additional fields expected (line %d)", reader.getLineNumber()));
@@ -353,7 +353,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     return transOpts;
   }
 
-  static public void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {
     if (args.length != 2) {
       System.out
           .println("Usage:\n\tjava ...FlatPhraseTable (phrasetable file) (entry to look up)");
@@ -366,8 +366,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     System.out.printf("Loading phrase table: %s\n", model);
     FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null,
         model);
-    long totalMemory = Runtime.getRuntime().totalMemory() / (1 << 20);
-    long freeMemory = Runtime.getRuntime().freeMemory() / (1 << 20);
+    long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
+    long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
     double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
     System.err.printf(
         "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n",

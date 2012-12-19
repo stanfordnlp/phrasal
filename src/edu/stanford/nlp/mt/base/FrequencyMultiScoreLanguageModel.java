@@ -14,28 +14,28 @@ import com.google.common.hash.Sink;
 import edu.stanford.nlp.util.Pair;
 
 /**
- * N-gram frequency feature function language model back by
- * a Bloom filter as seen in Talbot and Osborne's 
+ * N-gram frequency feature function language model backed by
+ * a Bloom filter. As seen in Talbot and Osborne's
  * Tera-Scale LMs on the Cheap (EMNLP 2007).
- * 
+ *
  * @author daniel cer
  */
 public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel<IString>, Serializable {
-   
+
     private static final long serialVersionUID = 1L;
-    
-    final BloomFilter<Pair<String,Integer>> bloomFilter;
-    final double logBase;
-    final int order;
-   
+
+    private final BloomFilter<Pair<String,Integer>> bloomFilter;
+    private final double logBase;
+    private final int order;
+
     public static final boolean VERBOSE = false;
-    
+
     protected final String name;
     public static final double EXPECTED_COLLISIONS = 0.0001;
     public static final IString START_TOKEN = new IString("<s>");
     public static final IString END_TOKEN = new IString("</s>");
-    public static final IString UNK_TOKEN = new IString("<unk>");
-    
+    // public static final IString UNK_TOKEN = new IString("<unk>");
+
     int logQuantize(long x) {
       return (int) Math.round(Math.log(x)/Math.log(logBase));
     }
@@ -54,7 +54,7 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
         }
       }
     }
-    
+
     private int getLQScore(String ngram) {
       if (VERBOSE) {
         System.err.printf("ngram: %s\n", ngram);
@@ -68,23 +68,22 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
       }
       return Integer.MAX_VALUE;
     }
-    
+
     public FrequencyMultiScoreLanguageModel(String name, long expectedInstances, double logBase, int order, Iterable<Pair<String,Long>> ngrams) {
-      bloomFilter = BloomFilter.create(new StringIntegerPairFunnel(), (int)expectedInstances, EXPECTED_COLLISIONS); 
+      bloomFilter = BloomFilter.create(new StringIntegerPairFunnel(), (int)expectedInstances, EXPECTED_COLLISIONS);
       this.logBase = logBase;
       this.order = order;
       this.name = name;
       for (Pair<String,Long> ngram : ngrams) {
-          put(ngram.first, ngram.second);      
+          put(ngram.first, ngram.second);
       }
     }
-    
+
     public void save(String filename) throws IOException  {
       ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename));
       oos.writeObject(this);
       oos.close();
     }
-    
 
 
     public static FrequencyMultiScoreLanguageModel load(String filename) throws IOException {
@@ -148,7 +147,7 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
       }
       return scores;
     }
-    
+
 }
 
 class StringIntegerPairFunnel implements Funnel<Pair<String,Integer>>, Serializable {

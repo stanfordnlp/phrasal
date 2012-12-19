@@ -6,6 +6,18 @@ import java.util.Map;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
+
+/** This class maintains and calculates the word alignments inside a phrase.
+ *  The static factory method maintains a set of known alignment patterns and
+ *  returns the same object for identical alignment patterns. Alignment
+ *  patterns in String form can either be "I-I" to indicate that the whole
+ *  phrase is aligned in a not further specified manner, or a sequence of
+ *  semicolon (";") separated items, each of which is a possibly empty
+ *  parenthesized list of integers, such as "()" or "(1,5,11)".
+ *
+ *  @author Dan Cer
+ *  @author Michel Galley
+ */
 public class PhraseAlignment {
 
   // This is a fairly large object, though it is instantiated only once for each
@@ -62,16 +74,16 @@ public class PhraseAlignment {
   private static String toStr(int[][] e2f) {
     StringBuilder sb = new StringBuilder();
     for (int ei=0; ei<e2f.length; ++ei) {
-      if (ei>0) sb.append(" ");
-      sb.append("(");
+      if (ei>0) sb.append(' ');
+      sb.append('(');
       if (e2f[ei] != null) {
         int i=0;
         for (int fi : e2f[ei]) {
-          if (i++ > 0) sb.append(",");
+          if (i++ > 0) sb.append(',');
           sb.append(fi);
         }
       }
-      sb.append(")");
+      sb.append(')');
     }
     return sb.toString();
   }
@@ -81,7 +93,7 @@ public class PhraseAlignment {
   }
 
   public String f2eStr() {
-    List<List<Integer>> f2eL = new LinkedList<List<Integer>>(); 
+    List<List<Integer>> f2eL = new LinkedList<List<Integer>>();
     for (int ei=0; ei<e2f.length; ++ei) {
       if (e2f[ei] != null) {
         for (int fi : e2f[ei]) {
@@ -101,7 +113,7 @@ public class PhraseAlignment {
     return toStr(f2e);
   }
 
-  public static final Map<String, PhraseAlignment> map = new Object2ObjectOpenHashMap<String, PhraseAlignment>();
+  private static final Map<String, PhraseAlignment> map = new Object2ObjectOpenHashMap<String, PhraseAlignment>();
 
   public static PhraseAlignment getPhraseAlignment(String string) {
     PhraseAlignment holder = map.get(string);
