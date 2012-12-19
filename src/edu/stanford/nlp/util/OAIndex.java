@@ -31,8 +31,8 @@ public class OAIndex<K> implements Index<K> {
 
   private static final long serialVersionUID = 127L;
 
-  static final int INIT_SZ = 1 << 10;
-  static final double MAX_LOAD = 0.60;
+  private static final int INIT_SZ = 1 << 10;
+  private static final double MAX_LOAD = 0.60;
 
   // Index<K> sanityIndex = new Index<K>();
 
@@ -42,8 +42,8 @@ public class OAIndex<K> implements Index<K> {
   private int mask;
   private int[] hashCodes;
   private int[] reverseIndex;
-  int maxIndex;
-  int load;
+  private int maxIndex;
+  private int load;
 
   public OAIndex() {
     identityHash = false;
