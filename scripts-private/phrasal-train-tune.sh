@@ -122,7 +122,7 @@ function tune-online {
 	< $INI_FILE > $TUNE_INI_FILE    
 
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.tune.OnlineTuner \
-	$TUNE_SET $TUNE_REF \
+	$TUNE_FILE $TUNE_REF \
 	$TUNE_INI_FILE \
 	$INITIAL_WTS \
 	-n $TUNERUNNAME \
