@@ -34,14 +34,12 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     this.C = C;
     logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
     OnlineTuner.attach(logger);
-    logger.info(String.format("1-best MIRA optimization with C: %e", C));
   }
 
   public MIRA1BestHopeFearOptimizer(String... args) {
     C = (args == null || args.length != 1) ? DEFAULT_C : Double.parseDouble(args[0]);
     logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
     OnlineTuner.attach(logger);
-    logger.info(String.format("1-best MIRA optimization with C: %e", C));    
   }
   
   @Override
@@ -53,10 +51,10 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
    * This is an implementation of Fig.2 from Crammer et al. (2006).
    */
   @Override
-  public Counter<String> getGradient(Counter<String> weights, Sequence<IString> source,
+  public Counter<String> getGradient(Counter<String> weights, 
+      Sequence<IString> source,
       int sourceId,
-      List<RichTranslation<IString, String>> translations,
-      List<Sequence<IString>> references, SentenceLevelMetric<IString, String> lossFunction) {
+      List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references, SentenceLevelMetric<IString, String> lossFunction) {
     
     // Lock the loss function since we don't want updates to its statistics while we are searching
     // for the hope and fear derivations.
@@ -190,7 +188,11 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     
     return d == null ? dHope : new Derivation(d, dCost, dId);
   }
-
+  
+  @Override
+  public String toString() {
+    return String.format("%s with C: %.4f", this.getClass().getSimpleName(), C);    
+  }
 
   /**
    * Convenience class for storing a hypothesis and relevant quantities.
