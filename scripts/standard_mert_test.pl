@@ -31,13 +31,13 @@ $log = `cat /u/nlp/data/mt_test/mert/phrasal-mert.$proc_tag.$date_tag.log`;
 $from_addr = "javanlp-mt-no-reply\@mailman.stanford.edu";
 foreach $emailAddr (@ARGV) {
   if ($exitStatus == 0) {
-     $subject = "MT daily integration test ($date_tag) was successful!";
+     $subject = "MT.git daily integration test ($date_tag) was successful!";
      $body    = "Hello $emailAddr,\n\n".
-                "The $data_tag MT daily integration test was sucessful!\n\n";
+                "The $data_tag MT.git daily integration test was sucessful!\n\n";
   } else {
-     $subject = "MT daily integration test ($date_tag) FAILED!";
+     $subject = "MT.git daily integration test ($date_tag) FAILED!";
      $body = "Hello $emailAddr,\n\n".
-            "The $data_tag MT daily integration test FAILED!\n\n";
+            "The $data_tag MT.git daily integration test FAILED!\n\n";
   }
   $body .= "Log File:\n\n$log\n";
   open(fh, ">/u/nlp/data/mt_test/mert/email.$date_tag.body");
