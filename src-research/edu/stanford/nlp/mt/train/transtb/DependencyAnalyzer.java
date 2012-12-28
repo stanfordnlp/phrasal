@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.train.transtb;
 
 import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.trees.semgraph.SemanticGraph;
-import edu.stanford.nlp.trees.semgraph.SemanticGraphFactory;
-import edu.stanford.nlp.trees.semgraph.SemanticGraphEdge;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphFactory;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CyclicCoreLabel;
 import edu.stanford.nlp.ling.Label;

@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.syntax.discrimreorder;
 
 import java.util.*;
-import edu.stanford.nlp.trees.semgraph.*;
+import edu.stanford.nlp.semgraph.*;
 import edu.stanford.nlp.ling.IndexedWord;
 
 public class TypedDepFeatureExtractor implements FeatureExtractor {
