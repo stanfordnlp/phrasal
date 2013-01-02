@@ -15,8 +15,6 @@
 	</lib>
 	<lib name="create_phrasedb.jar" scope="COMPILE">
 		<srcroot url="file://C:/cygwin/home/daniel/terp.v1/src"/>
-		<srcroot url="jar://$MODULE_DIR$/lib/tercom.jar!/"/>
-		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/lib/tercom.jar!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/create_phrasedb.jar!/"/>
 	</lib>
 	<lib name="meteor.jar" scope="COMPILE">
@@ -29,7 +27,7 @@
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/terp.jar!/"/>
 	</lib>
 	<lib name="jopt-simple.jar" scope="COMPILE">
-		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-3.1-sources.jar!/"/>
+		<srcroot url="file://$USER_HOME$/javanlp/projects/mt/libsrc/jopt-simple-3.1-sources.jar"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/jopt-simple.jar!/"/>
 	</lib>
 	<lib name="tercom.jar" scope="COMPILE">
