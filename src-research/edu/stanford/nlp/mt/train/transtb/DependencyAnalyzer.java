@@ -5,7 +5,7 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphFactory;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CyclicCoreLabel;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.util.CoreMap;
@@ -71,7 +71,7 @@ public class DependencyAnalyzer {
 
     Filter<Dependency<Label, Label, Object>> dependencyFilter = Filters
         .acceptFilter();
-    Tree indexedTree = t.deepCopy(t.treeFactory(), CyclicCoreLabel.factory());
+    Tree indexedTree = t.deepCopy(t.treeFactory(), CoreLabel.factory());
     indexedTree.indexLeaves();
     Set<Dependency<Label, Label, Object>> depsSet = indexedTree
         .mapDependencies(dependencyFilter, hf, "ROOT");
