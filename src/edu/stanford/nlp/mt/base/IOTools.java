@@ -139,7 +139,7 @@ public final class IOTools {
    * 
    * @param filename
    * @param featureIndex
-   * @return
+   * @return a counter of weights
    * @throws IOException
    * @throws ClassNotFoundException
    */

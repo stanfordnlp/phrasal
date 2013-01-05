@@ -196,7 +196,7 @@ public class Phrasal {
    * Access the decoder's scorer, which contains the model weights. THere is one scorer
    * per thread.
    * 
-   * @return
+   * @return the scorer
    */
   public Scorer<String> getScorer(int threadId) { 
     assert threadId >= 0 && threadId < numThreads;
@@ -204,8 +204,7 @@ public class Phrasal {
   }
   
   /**
-   * Return the number of threads specified in the ini file.
-   * @return
+   * @return the number of threads specified in the ini file.
    */
   public int getNumThreads() { return numThreads; }
 
@@ -1058,7 +1057,6 @@ public class Phrasal {
    * @param tokens
    * @param translationId
    * @param threadId -- Inferer object to use (one per thread)
-   * @return
    */
   public List<RichTranslation<IString, String>> decode(String[] tokens,
       int translationId, int threadId) {
@@ -1072,10 +1070,9 @@ public class Phrasal {
    * 
    * NOTE: This call is threadsafe.
    * 
-   * @param tokens
+   * @param foreign
    * @param translationId
    * @param threadId -- Inferer object to use (one per thread)
-   * @return
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> foreign,
       int translationId, int threadId) {
@@ -1142,7 +1139,6 @@ public class Phrasal {
    * Load options from a Moses-style ini file.
    * 
    * @param filename
-   * @return
    * @throws IOException
    */
   public static Map<String, List<String>> readConfig(String filename)

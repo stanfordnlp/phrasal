@@ -12,10 +12,8 @@ import edu.stanford.nlp.stats.Counter;
 public interface Scorer<FV> {
 
   /**
-   * Return a score under the current weights for the specified set of features.
-   * 
    * @param features
-   * @return
+   * @return a score under the current weights for the specified set of features.
    */
   public double getIncrementalScore(Collection<FeatureValue<FV>> features);
   
@@ -34,10 +32,8 @@ public interface Scorer<FV> {
   public void saveWeights(String filename) throws IOException;
   
   /**
-   * True if the scorer has any non-zero weights. False otherwise.
-   * 
    * @param featureName
-   * @return
+   * @return True if the scorer has any non-zero weights. False otherwise.
    */
   public boolean hasNonZeroWeight(FV featureName);
 }

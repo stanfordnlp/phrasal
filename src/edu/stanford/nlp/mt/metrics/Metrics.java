@@ -60,7 +60,6 @@ public class Metrics {
    * 
    * @param sequences - The list of sequences.
    * @param maxOrder - The n-gram order.
-   * @return
    */
   static public <TK> Map<Sequence<TK>, Integer> getMaxNGramCounts(
       List<Sequence<TK>> sequences, int maxOrder) {
