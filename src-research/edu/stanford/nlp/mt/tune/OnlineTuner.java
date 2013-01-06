@@ -121,15 +121,12 @@ public class OnlineTuner {
 
   public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, boolean uniformStartWeights, String optimizerAlg, String[] optimizerFlags) {
-    // Write the error log to file
     logger = Logger.getLogger(OnlineTuner.class.getName());
     OnlineTuner.attach(logger);
 
+    // Configure the initial weights
     loadWeights(initialWtsFile, uniformStartWeights);
     logger.info("Initial weights: " + wts.toString());
-
-    optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
-    logger.info("Loaded optimizer: " + optimizer.toString());
 
     // Load the source and target files for the intrinsic loss.
     tuneSource = IStrings.fileSplitToIStrings(srcFile);
@@ -145,14 +142,31 @@ public class OnlineTuner {
     }
     assert references.size() == tuneTarget.size();
 
-    // Load decoder (Phrasal)
+    // After loading weights and tuning set, load the optimizer
+    // SGD-based optimizers may need the tuning set size or
+    // fiddle with the initial weights.
+    optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
+    logger.info("Loaded optimizer: " + optimizer.toString());
+    
+    // Load Phrasal
+    decoder = loadDecoder(phrasalIniFile);
+    logger.info("Loaded Phrasal from: " + phrasalIniFile);
+  }
+  
+  /**
+   * Load an instance of phrasal from an ini file.
+   * 
+   * @param phrasalIniFile
+   * @return
+   */
+  private static Phrasal loadDecoder(String phrasalIniFile) {
     try {
       Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
       Phrasal.initStaticMembers(config);
-      decoder = new Phrasal(config);
+      Phrasal phrasal = new Phrasal(config);
       FlatPhraseTable.lockIndex();
-      logger.info("Loaded Phrasal from: " + phrasalIniFile);
-
+      return phrasal;
+      
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
     } catch (SecurityException e) {
@@ -170,6 +184,7 @@ public class OnlineTuner {
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
+    throw new RuntimeException("Could not load Phrasal from: " + phrasalIniFile);
   }
 
   /**
@@ -391,16 +406,16 @@ public class OnlineTuner {
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       ArrayMath.shuffle(indices);
-      for (int i = 0; i < indices.length; ++i) {
+      for (int t = 0; t < indices.length; ++t) {
         // Retrieve the training example
-        int translationId = indices[i];
+        int translationId = indices[t];
         final Sequence<IString> source = tuneSource.get(translationId);
         final List<Sequence<IString>> refs = references.get(translationId);
 
         // Submit to threadpool, then look for updates.
-        ProcessorInput input = new ProcessorInput(source, refs, currentWts, translationId, i);
+        ProcessorInput input = new ProcessorInput(source, refs, currentWts, translationId, t);
         wrapper.put(input);
-        currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, i);
+        currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, t);
 
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
@@ -428,7 +443,6 @@ public class OnlineTuner {
       epochResults.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new ClassicCounter<String>(currentWts)));
     }
 
-    // Average final weights
     saveFinalWeights(epochResults);
   }
 
@@ -551,9 +565,10 @@ public class OnlineTuner {
       return new MIRA1BestHopeFearOptimizer(optimizerFlags);
 
     } else if (optimizerAlg.equals("pro-sgd")) {
-      assert wts != null : "You must load the initial weights before loading the optimizer!";
+      assert wts != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
+      assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
       Counters.normalize(wts);
-      return new PairwiseRankingOptimizerSGD(featureIndex, optimizerFlags);
+      return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), optimizerFlags);
 
     } else {
       throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);

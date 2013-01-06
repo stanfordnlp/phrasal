@@ -21,7 +21,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.Triple;
 
 /**
  * Pairwise Ranking Optimization + SGD
@@ -42,6 +42,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   static public final double DEFAULT_N_THRESHOLD = 5.0;
   static public final int DEFAULT_MIN_FEATURE_SEGMENT_COUNT = 3;
 
+  // Logistic classifier labels
   private static final String POS_CLASS = "1";
   private static final String NEG_CLASS = "0";
 
@@ -49,31 +50,41 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final int xi;
   private final double nThreshold;
   private final int minFeatureSegmentCount;
+  private final int tuneSetSize;
 
-  private final LogPrior lprior;
+  // TODO(spenceg): Make this configurable
+  private final double learningRate = 0.1;
+  private final double priorSigma = 0.1;
+  
+  private final LogPrior l2prior;
+  private final LogPrior nullPrior;
+  
   private final Logger logger;
   private final Random random;
   private final Index<String> featureIndex;
   private final Index<String> labelIndex;
+  
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex) {
-    this(featureIndex, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD);
+  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize) {
+    this(featureIndex, tuneSetSize, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD);
   }
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, String... args) {
-    this(featureIndex,
+  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, String... args) {
+    this(featureIndex, tuneSetSize, 
         args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
             args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
                 args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
                     args != null && args.length > 3 ? Double.parseDouble(args[3]) : DEFAULT_N_THRESHOLD);
   }
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int minFeatureSegmentCount, int gamma, int xi, double nThreshold) {
+  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int minFeatureSegmentCount, 
+      int gamma, int xi, double nThreshold) {
     this.gamma = gamma;
     this.xi = xi;
     this.nThreshold = nThreshold;
     this.minFeatureSegmentCount = minFeatureSegmentCount;
     this.featureIndex = featureIndex;
+    this.tuneSetSize = tuneSetSize;
     labelIndex = new HashIndex<String>();
 
     // Careful! Order is important here for LogisticObjectiveFunction.
@@ -81,10 +92,10 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     labelIndex.add(POS_CLASS);
     labelIndex.lock();
 
-    // Uniform prior for stochastic optimization
-    // TODO(spenceg): MAP inference for SGD? I guess we could try that.
-    this.lprior = new LogPrior(LogPriorType.NULL);
-    this.lprior.setSigma(0.0);
+    // Default: Gaussian prior
+    this.l2prior = new LogPrior();
+    this.l2prior.setSigma(priorSigma);
+    this.nullPrior = new LogPrior(LogPriorType.NULL);
 
     random = new Random();
 
@@ -108,7 +119,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     //    System.err.printf("White List Features:\n%s\n", featureWhiteList);
 
     RVFDataset<String,String> dataset = new RVFDataset<String, String>(xi, featureIndex, labelIndex);
-    List<Pair<Double, Pair<Integer, Integer>>> v = new ArrayList<Pair<Double, Pair<Integer, Integer>>>();
+    List<Triple<Double, Integer, Integer>> v = new ArrayList<Triple<Double, Integer, Integer>>();
 
     // Loss function is not threadsafe
     synchronized(lossFunction) {
@@ -125,32 +136,32 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         double absDiff = Math.abs(gJ-gJPrime);
         if (absDiff >= nThreshold) {
           if (gJ > gJPrime) {
-            v.add(new Pair<Double, Pair<Integer,Integer>>(absDiff, new Pair<Integer,Integer>(j, jPrime)));
+            v.add(new Triple<Double, Integer,Integer>(absDiff, j, jPrime));
           } else {
-            v.add(new Pair<Double, Pair<Integer,Integer>>(absDiff, new Pair<Integer,Integer>(jPrime, j)));
+            v.add(new Triple<Double, Integer,Integer>(absDiff, jPrime, j));
           }
         }
       }
       Collections.sort(v);
       Collections.reverse(v);
-      List<Pair<Double, Pair<Integer, Integer>>> selectedV = v.subList(0, Math.min(xi, v.size()));
+      List<Triple<Double, Integer, Integer>> selectedV = v.subList(0, Math.min(xi, v.size()));
 
       logger.info(String.format("Accepted samples: %d / %d", selectedV.size(), v.size()));
       if (DEBUG) {
-        for (Pair<Double, Pair<Integer, Integer>> sampledV : selectedV) {
+        for (Triple<Double, Integer, Integer> sampledV : selectedV) {
           double margin = sampledV.first();
-          int i = sampledV.second().first();
-          int iPrime = sampledV.second().second();
+          int i = sampledV.second();
+          int iPrime = sampledV.third();
           logger.info(String.format("%.02f %d %d || %s || %s", margin, i, iPrime, 
               translations.get(i).translation.toString(), translations.get(iPrime).translation.toString()));
         }
       }
 
-      for (Pair<Double, Pair<Integer, Integer>> selectedPair : selectedV) {
+      for (Triple<Double, Integer, Integer> selectedPair : selectedV) {
         Counter<String> plusFeatures = OptimizerUtils.featureValueCollectionToCounter(
-            translations.get(selectedPair.second.first).features);
+            translations.get(selectedPair.second()).features);
         Counter<String> minusFeatures = OptimizerUtils.featureValueCollectionToCounter(
-            translations.get(selectedPair.second.second).features);
+            translations.get(selectedPair.third()).features);
         Counter<String> gtVector = new ClassicCounter<String>(plusFeatures);
         Counters.subtractInPlace(gtVector, minusFeatures);
         // TODO(spenceg): Feature filtering
@@ -175,10 +186,9 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
 
   @Override
-  public Counter<String> getGradient(Counter<String> weights, 
-      Sequence<IString> source,
-      int sourceId,
-      List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references, SentenceLevelMetric<IString, String> lossFunction) {
+  public Counter<String> getGradient(Counter<String> weights, Sequence<IString> source, int sourceId,
+      List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references, 
+      SentenceLevelMetric<IString, String> lossFunction) {
     // TODO(spenceg): Sanity checking. For public methods, replace with exceptions.
     assert weights != null;
     assert sourceId >= 0;
@@ -191,18 +201,13 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.size() == 0) {
       logger.warning("Null gradient. No PRO samples for sourceId: " + sourceId);
     } else {
-      Counters.normalize(weights);
-      double[] w;
-      LogisticObjectiveFunction lof;
-      synchronized(featureIndex) {
-        // This is a batch gradient objective function
-        // Lock the feature index so that it doesn't grow between the call to numFeatureTypes()
-        // and Counters.asArray()
-        lof = new LogisticObjectiveFunction(dataset.numFeatureTypes(), 
-            dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), lprior);
-        w = Counters.asArray(weights, featureIndex);
-      }
+      LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dataset.numFeatureTypes(), 
+            dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), nullPrior);
+      double[] w = Counters.asArray(weights, featureIndex);
       double[] g = lof.derivativeAt(w);
+      assert w.length == g.length;
+      double dataFraction = dataset.size() / ((double) xi*tuneSetSize);
+      l2prior.computeStochastic(w, g, dataFraction);
       gradient = Counters.toCounter(g, featureIndex);
       logger.info(String.format("Gradient (%d): %s", sourceId, gradient.toString()));
     }
@@ -212,7 +217,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   @Override
   public OnlineUpdateRule<String> newUpdater() {
-    return new SGDUpdater(0.1);
+    return new SGDUpdater(learningRate);
   }
 
   @Override

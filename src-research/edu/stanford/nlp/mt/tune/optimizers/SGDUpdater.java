@@ -25,6 +25,10 @@ public class SGDUpdater implements OnlineUpdateRule<String> {
     Counter<String> gradientCopy = new ClassicCounter<String>(gradient);
     Counters.multiplyInPlace(gradientCopy, rate);
     Counters.subtractInPlace(newWeights, gradientCopy);
+    
+    // WSGDEBUG
+    System.err.printf("Update: L2 norm %.4f", Counters.L2Norm(newWeights));
+    
     return newWeights;
   }
 
