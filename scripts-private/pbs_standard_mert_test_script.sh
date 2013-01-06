@@ -11,7 +11,8 @@ TEST_DIR=/u/nlp/data/mt_test/mert/
 
 cd /u/nlp/data/mt_test/mert/
 rm -rf javanlp
-svn checkout file:///u/nlp/svnroot/trunk/javanlp
+git clone /u/nlp/git/javanlp.git
+
 cd javanlp
 ant all
 export JAVANLP_HOME=`pwd`
@@ -27,4 +28,4 @@ done
 echo classpath $CLASSPATH
 echo path $PATH
 #standard_mert_test.pl dailytest cerd@stanford.edu stanford-mt@lists.stanford.edu
-standard_mert_test.pl dailytest $EMAIL_LIST 
+standard_mert_test.pl dailytest.git $EMAIL_LIST 

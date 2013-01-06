@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.train.AbstractWordAlignment;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
-import edu.stanford.nlp.trees.semgraph.*;
+import edu.stanford.nlp.semgraph.*;
 
 /**
  * This class is to represent the alignment in a 2d matrix form (Note that

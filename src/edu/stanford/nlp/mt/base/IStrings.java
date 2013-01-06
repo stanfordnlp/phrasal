@@ -21,7 +21,7 @@ public class IStrings {
    * Convert a file to a list of Sequences.
    * 
    * @param filename
-   * @return
+   * @return the list of Sequences represented by the file
    */
   static public List<Sequence<IString>> fileSplitToIStrings(String filename) {
     List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();

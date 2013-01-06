@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.syntax.discrimreorder;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.util.*;
 import edu.stanford.nlp.trees.international.pennchinese.*;
-import edu.stanford.nlp.trees.semgraph.*;
+import edu.stanford.nlp.semgraph.*;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.parser.lexparser.ChineseTreebankParserParams;
 import java.util.*;

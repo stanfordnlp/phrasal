@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
-import edu.stanford.nlp.trees.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraph;
 
 import java.text.DecimalFormat;
 import java.util.*;

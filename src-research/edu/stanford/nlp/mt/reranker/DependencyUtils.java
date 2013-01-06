@@ -4,9 +4,9 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.trees.*;
 import edu.stanford.nlp.trees.international.pennchinese.ChineseTreebankLanguagePack;
-import edu.stanford.nlp.trees.semgraph.SemanticGraph;
-import edu.stanford.nlp.trees.semgraph.SemanticGraphEdge;
-import edu.stanford.nlp.trees.semgraph.SemanticGraphFactory;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
+import edu.stanford.nlp.semgraph.SemanticGraphFactory;
 import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Filters;
 

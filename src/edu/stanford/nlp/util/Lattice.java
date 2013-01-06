@@ -56,7 +56,7 @@ public class Lattice<T> {
   /**
    * Returns the Viterbi path through the lattice.
    * 
-   * @return
+   * @return path
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public List<Edge<T>> viterbiPath() {
