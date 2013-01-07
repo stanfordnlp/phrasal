@@ -2,7 +2,7 @@
 
 use List::Util qw[min max];
 
-############################################################################
+##########################################################################
 # Tune Phrasal decoding model parameters using minimum error rate training.
 #
 # If you run into trouble:
