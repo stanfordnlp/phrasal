@@ -44,16 +44,22 @@ done
 
 echo Counts: ${read_counts}
 
-# Closed vocabulary
-(time $MAKE_LM ${read_counts} $LMOPTS -name "$lm_name" -lm "$lm_name".model) 2> logs/"$lm_name".log
-
-(time $BINARIZE -order $ORDER -debug 2 -lm "$lm_name".model -write-bin-lm "$lm_name".bin) 2> logs/"$lm_name".bin.log
-
-gzip "$lm_name".bin
-
 # Open vocabulary
+# NOTE: this differs from the version below by removal of the -unk flag.
+# Typically we have used closed vocabulary LMs for evaluations.
+#(time $MAKE_LM ${read_counts} $LMOPTS -name "$lm_name" -lm "$lm_name".model) 2> logs/"$lm_name".log
+
+#gzip "$lm_name".model
+
+#(time $BINARIZE -order $ORDER -debug 2 -lm "$lm_name".model.gz -write-bin-lm "$lm_name".bin) 2> logs/"$lm_name".bin.log
+
+#gzip "$lm_name".bin
+
+# Closed vocabulary
 (time $MAKE_LM ${read_counts} $LMOPTS -unk -name "$lm_name".unk -lm "$lm_name".unk.model) 2> logs/"$lm_name".unk.log
 
-(time $BINARIZE -order $ORDER -debug 2 -lm "$lm_name".unk.model -write-bin-lm "$lm_name".unk.bin) 2> logs/"$lm_name".unk.bin.log
+gzip "$lm_name".unk.model
+
+(time $BINARIZE -order $ORDER -debug 2 -lm "$lm_name".unk.model.gz -write-bin-lm "$lm_name".unk.bin) 2> logs/"$lm_name".unk.bin.log
 
 gzip "$lm_name".unk.bin
