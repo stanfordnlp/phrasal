@@ -209,6 +209,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       prior.setSigmaSquared(sigmaSq * dataFraction);
       LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dataset.numFeatureTypes(), 
             dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), prior);
+      
       double[] w = Counters.asArray(weights, featureIndex);
       double[] g = lof.derivativeAt(w);
       assert w.length == g.length;

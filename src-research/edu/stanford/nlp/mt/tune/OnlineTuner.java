@@ -487,12 +487,8 @@ public class OnlineTuner {
         }
         ++nbestIndex;
       }
-      
-      System.err.println("WSGDEBUG: " + entry.getValue().get(bestIndex).translation);
-      
       incMetric.add(entry.getValue().get(bestIndex));
     }
-    System.err.println("WSGDEBUG:");
     
     if (nbestListWriter != null) nbestListWriter.close();
 
@@ -594,17 +590,17 @@ public class OnlineTuner {
 
     if (lossFunctionStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU
-      int order = lossFunctionOpts.length == 1 ? Integer.parseInt(lossFunctionOpts[0]) : 4;
+      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
       return new BLEUSmoothGain<IString,String>(order);
 
     } else if (lossFunctionStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
-      int order = lossFunctionOpts.length == 1 ? Integer.parseInt(lossFunctionOpts[0]) : 4;
+      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
       return new BLEUOracleCost<IString,String>(order, false);
 
     } else if (lossFunctionStr.equals("bleu-cherry")) {
       // Cherry and Foster (2012)
-      int order = lossFunctionOpts.length == 1 ? Integer.parseInt(lossFunctionOpts[0]) : 4;
+      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
       return new BLEUOracleCost<IString,String>(order, true);
 
     } else {
