@@ -13,7 +13,7 @@ if [ $# -lt 2 ]; then
 fi
 
 MEM=$1
-INDIR=$2
+INPATH=$2
 if [ $# -ge 2 ]; then
 OUTDIR=$3
 shift
@@ -25,7 +25,11 @@ shift
 shift
 
 JAVA_OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM"
-EXTRACT_OPTS="-inputDir $INDIR -outputFile $OUTDIR/phrases.gz"
+if [ -d $INPATH ]; then
+  EXTRACT_OPTS="-inputDir $INPATH -outputFile $OUTDIR/phrases.gz"
+else 
+  EXTRACT_OPTS="-tripleFile $INPATH -outputFile $OUTDIR/phrases.gz"
+fi
 
 # Generate phrase table:
 java $JAVA_OPTS edu.stanford.nlp.mt.train.PhraseExtract $EXTRACT_OPTS $@ 2> $OUTDIR/phrases.log
