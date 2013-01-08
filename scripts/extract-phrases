@@ -8,7 +8,9 @@ if [ "$1" == "-help" ]; then
 fi
 
 if [ $# -lt 2 ]; then
-  		echo "Usage: $0 <memory> <model-directory> [options]"
+		bfn=${0##*/}
+  		echo -e "Usage:\n\t $bfn <memory> <model-directory> [options]\n"
+  		echo -e "Or:\n\t$bfn <memory> \\\\\n\t   <giza-dir or crf-align-triple-file> \\\\\n\t   <output model-directory> [options]"
   		exit 1
 fi
 
