@@ -343,10 +343,11 @@ public class OnlineTuner {
       // Debugging only
       logger.info(String.format("Update %d with gradient from step %d (diff: %d)", 
           timeStep, result.inputId, timeStep - result.inputId));
-      ++timeStep;
 
       // Apply update rule
       updatedWts = updater.update(updatedWts, result.gradient);
+      logger.info(String.format("Update %d L2 norm %.4f%n", timeStep, Counters.L2Norm(updatedWts)));
+      ++timeStep;
 
       // Accumulate for parameter averaging
       wts.addAll(updatedWts);
@@ -479,15 +480,20 @@ public class OnlineTuner {
       int nbestIndex = 0;
       for (RichTranslation<IString, String> translation : entry.getValue()) {
         double score = scorer.getIncrementalScore(translation.features);
+        System.err.println(score);
         if (score > bestScore) {
           bestScore = score;
           bestIndex = nbestIndex;
         }
         ++nbestIndex;
       }
+      
+      System.err.println("WSGDEBUG: " + entry.getValue().get(bestIndex).translation);
+      
       incMetric.add(entry.getValue().get(bestIndex));
     }
-
+    System.err.println("WSGDEBUG:");
+    
     if (nbestListWriter != null) nbestListWriter.close();
 
     return incMetric.score() * 100.0;
@@ -579,23 +585,27 @@ public class OnlineTuner {
    * Load a loss function from a string key.
    * 
    * @param lossFunctionStr
+   * @param lossFunctionOpts 
    * @return
    */
   public static SentenceLevelMetric<IString, String> loadLossFunction(
-      String lossFunctionStr) {
+      String lossFunctionStr, String[] lossFunctionOpts) {
     assert lossFunctionStr != null;
 
     if (lossFunctionStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU
-      return new BLEUSmoothGain<IString,String>();
+      int order = lossFunctionOpts.length == 1 ? Integer.parseInt(lossFunctionOpts[0]) : 4;
+      return new BLEUSmoothGain<IString,String>(order);
 
     } else if (lossFunctionStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
-      return new BLEUOracleCost<IString,String>();
+      int order = lossFunctionOpts.length == 1 ? Integer.parseInt(lossFunctionOpts[0]) : 4;
+      return new BLEUOracleCost<IString,String>(order, false);
 
     } else if (lossFunctionStr.equals("bleu-cherry")) {
       // Cherry and Foster (2012)
-      return new BLEUOracleCost<IString,String>(4, true);
+      int order = lossFunctionOpts.length == 1 ? Integer.parseInt(lossFunctionOpts[0]) : 4;
+      return new BLEUOracleCost<IString,String>(order, true);
 
     } else {
       throw new UnsupportedOperationException("Unsupported loss function: " + lossFunctionStr);
@@ -647,6 +657,7 @@ public class OnlineTuner {
     optionMap.put("o", 1);
     optionMap.put("of", 1);
     optionMap.put("m", 1);
+    optionMap.put("mf", 1);
     optionMap.put("n", 1);
     optionMap.put("nb", 0);
     optionMap.put("r", 1);
@@ -666,16 +677,17 @@ public class OnlineTuner {
     sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] src tgt phrasal_ini wts_initial").append(nl);
     sb.append(nl);
     sb.append("Options:").append(nl);
-    sb.append("   -s file    : Extrinsic loss: source file").append(nl);
-    sb.append("   -t file    : Extrinsic loss: target file").append(nl);
+    sb.append("   -s file    : Source file").append(nl);
+    sb.append("   -t file    : Target file").append(nl);
     sb.append("   -uw        : Uniform weight initialization").append(nl);
     sb.append("   -e num     : Number of online epochs").append(nl);
     sb.append("   -o str     : Optimizer: [arow,mira-1best]").append(nl);
-    sb.append("   -of str    : Optimizer flags [comma-separated list]").append(nl);
+    sb.append("   -of str    : Optimizer flags (format: CSV list)").append(nl);
     sb.append("   -m str     : Evaluation metric (loss function) for the tuning algorithm (default: bleu-smooth)").append(nl);
+    sb.append("   -mf str    : Evaluation metric flags (format: CSV list)").append(nl);
     sb.append("   -n str     : Experiment name").append(nl);
     sb.append("   -nb        : Write n-best lists to file.").append(nl);
-    sb.append("   -r str     : References for expected BLEU evaluation (format: CSV list)").append(nl);
+    sb.append("   -r str     : Use multiple references (format: CSV list)").append(nl);
     sb.append("   -b         : Set final weights to the best training epoch.").append(nl);
     sb.append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl);
     return sb.toString().trim();
@@ -693,6 +705,7 @@ public class OnlineTuner {
     String optimizerAlg = opts.getProperty("o", "mira-1best");
     String[] optimizerFlags = opts.containsKey("of") ? opts.getProperty("of").split(",") : null;
     String lossFunctionStr = opts.getProperty("m", "bleu-smooth");
+    String[] lossFunctionOpts = opts.containsKey("mf") ? opts.getProperty("mf").split(",") : null;
     String altSourceFile = opts.getProperty("s");
     String altTargetFile = opts.getProperty("t");
     String experimentName = opts.getProperty("n", "debug");
@@ -725,7 +738,7 @@ public class OnlineTuner {
     System.out.println();
 
     // Run optimization
-    final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr);
+    final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr, lossFunctionOpts);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, uniformStartWeights, optimizerAlg, optimizerFlags);
     if (altSourceFile != null && altTargetFile != null) {
       tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
