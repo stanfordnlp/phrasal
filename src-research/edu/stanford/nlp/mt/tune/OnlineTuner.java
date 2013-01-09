@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -233,16 +234,16 @@ public class OnlineTuner {
    *
    */
   private class ProcessorInput {
-    public final Sequence<IString> source;
-    public final List<Sequence<IString>> references;
-    public final int translationId;
+    public final List<Sequence<IString>> source;
+    public final List<List<Sequence<IString>>> references;
+    public final int[] translationIds;
     public final Counter<String> weights;
     public final int inputId;
-    public ProcessorInput(Sequence<IString> input, 
-        List<Sequence<IString>> references, 
-        Counter<String> weights, int translationId, int inputId) {
+    public ProcessorInput(List<Sequence<IString>> input, 
+        List<List<Sequence<IString>>> references, 
+        Counter<String> weights, int[] translationIds, int inputId) {
       this.source = input;
-      this.translationId = translationId;
+      this.translationIds = translationIds;
       this.references = references;
       this.weights = new ClassicCounter<String>(weights);
       this.inputId = inputId;
@@ -258,15 +259,15 @@ public class OnlineTuner {
   private class ProcessorOutput {
     public final Counter<String> gradient;
     public final int inputId;
-    public final List<RichTranslation<IString, String>> nbestList;
-    public final int translationId;
+    public final List<List<RichTranslation<IString, String>>> nbestLists;
+    public final int[] translationIds;
     public ProcessorOutput(Counter<String> gradient, 
         int inputId, 
-        List<RichTranslation<IString, String>> nbestList, int translationId) {
+        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds) {
       this.gradient = gradient;
       this.inputId = inputId;
-      this.nbestList = nbestList;
-      this.translationId = translationId;
+      this.nbestLists = nbestLists;
+      this.translationIds = translationIds;
     }
   }
 
@@ -297,18 +298,36 @@ public class OnlineTuner {
       assert input.weights != null;
       // Set the decoder weights and decode
       decoder.getScorer(threadId).updateWeights(input.weights);
-      List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source, input.translationId, 
-          threadId);
-
-      Counter<String> gradient = 
-          optimizer.getGradient(input.weights, input.source, input.translationId, 
-              nbestList, input.references, lossFunction);
-
+      
+      int batchSize = input.translationIds.length;
+      List<List<RichTranslation<IString,String>>> nbestLists = 
+          new ArrayList<List<RichTranslation<IString,String>>>(input.translationIds.length);
+      Counter<String> gradient;
+      if (batchSize == 1) {
+        // Online learning with gradient updates for each instance
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
+            threadId);
+        gradient = optimizer.getGradient(input.weights, input.source.get(0), 
+            input.translationIds[0], nbestList, input.references.get(0), lossFunction);
+        nbestLists.add(nbestList);
+        
+      } else {
+        // Mini-batch learning
+        for (int i = 0; i < input.translationIds.length; ++i) {
+          int translationId = input.translationIds[i];
+          Sequence<IString> source = input.source.get(i);
+          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
+              threadId);
+          nbestLists.add(nbestList);
+        }
+        gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
+                nbestLists, input.references, lossFunction);
+      }
       // Sparse features may turn up in the gradients (the decoder featurizers add the features). Make
       // sure to add those features to the index.
       featureIndex.addAll(gradient.keySet());
 
-      return new ProcessorOutput(gradient, input.inputId, nbestList, input.translationId);
+      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
     }
 
     @Override
@@ -353,8 +372,11 @@ public class OnlineTuner {
       wts.addAll(updatedWts);
 
       // Add n-best lists from this time step
-      assert ! nbestLists.containsKey(result.translationId);
-      nbestLists.put(result.translationId, result.nbestList);
+      for (int i = 0; i < result.translationIds.length; ++i) {
+        int translationId = result.translationIds[i];
+        assert ! nbestLists.containsKey(translationId);
+        nbestLists.put(translationId, result.nbestLists.get(i));
+      }
     }
     return updatedWts;
   }
@@ -362,13 +384,14 @@ public class OnlineTuner {
   /**
    * Run an optimization algorithm with a specified loss function. Implements asynchronous updating
    * per Langford et al. (2009).
+   * @param batchSize 
    * 
    * @param lossFunction 
    * @param optimizerAlg
    * @param optimizerFlags 
    * @param nThreads
    */
-  public void run(int numEpochs, SentenceLevelMetric<IString, String> lossFunction) {
+  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction) {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
@@ -406,15 +429,12 @@ public class OnlineTuner {
               new GradientProcessor(optimizer,lossFunction,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
+      // and prepare mini batches
       ArrayMath.shuffle(indices);
-      for (int t = 0; t < indices.length; ++t) {
-        // Retrieve the training example
-        int translationId = indices[t];
-        final Sequence<IString> source = tuneSource.get(translationId);
-        final List<Sequence<IString>> refs = references.get(translationId);
-
-        // Submit to threadpool, then look for updates.
-        ProcessorInput input = new ProcessorInput(source, refs, currentWts, translationId, t);
+      int[][] batches = makeBatches(indices, batchSize);
+      for (int t = 0; t < batches.length; ++t) {
+        int[] batch = batches[t];
+        ProcessorInput input = makeInput(batch, t, currentWts);
         wrapper.put(input);
         currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, t);
 
@@ -445,6 +465,56 @@ public class OnlineTuner {
     }
 
     saveFinalWeights(epochResults);
+  }
+
+  /**
+   * Make a ProcessorInput object for the thread pool from this mini batch.
+   * 
+   * @param batch
+   * @return
+   */
+  private ProcessorInput makeInput(int[] batch, int batchId, Counter<String> weights) {
+    List<Sequence<IString>> sourceList = new ArrayList<Sequence<IString>>(batch.length);
+    List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(batch.length);
+    for (int sourceId : batch) {
+      sourceList.add(tuneSource.get(sourceId));
+      referenceList.add(references.get(sourceId));
+    }
+    return new ProcessorInput(sourceList, referenceList, weights, batch, batchId);
+  }
+
+  /**
+   * Transform a list of example indices into a set of mini batches.
+   * 
+   * @param indices
+   * @param batchSize
+   * @return
+   */
+  private int[][] makeBatches(int[] indices, int batchSize) {
+    int numBatches = (int) Math.ceil((double) indices.length / batchSize);
+    int[][] batches = new int[numBatches][];
+    int j = 0;
+    batches[j] = new int[batchSize];
+    Arrays.fill(batches[j], -1);
+    for (int i = 0; i < indices.length; ++i) {
+      int k = i % batchSize;
+      if (k == 0 && i != 0) {
+        batches[++j] = new int[batchSize];
+        Arrays.fill(batches[j], -1);
+      }
+      batches[j][k] = indices[i];
+    }
+    
+    // The last batch is potentially jagged, so trim it.
+    int numIndices = 0;
+    int[] lastBatch = batches[numBatches-1];
+    for (int index : lastBatch) {
+      if (index >= 0) numIndices++;
+    }
+    batches[numBatches-1] = new int[numIndices];
+    System.arraycopy(lastBatch, 0, batches[numBatches-1], 0, numIndices);
+    
+    return batches;
   }
 
   /**
@@ -657,7 +727,7 @@ public class OnlineTuner {
     optionMap.put("n", 1);
     optionMap.put("nb", 0);
     optionMap.put("r", 1);
-    optionMap.put("b", 0);
+    optionMap.put("bw", 0);
     optionMap.put("a", 0);
     return optionMap;
   }
@@ -684,8 +754,9 @@ public class OnlineTuner {
     sb.append("   -n str     : Experiment name").append(nl);
     sb.append("   -nb        : Write n-best lists to file.").append(nl);
     sb.append("   -r str     : Use multiple references (format: CSV list)").append(nl);
-    sb.append("   -b         : Set final weights to the best training epoch.").append(nl);
+    sb.append("   -bw        : Set final weights to the best training epoch.").append(nl);
     sb.append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl);
+    sb.append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl);
     return sb.toString().trim();
   }
 
@@ -708,8 +779,9 @@ public class OnlineTuner {
     boolean doNbestOutput = PropertiesUtils.getBool(opts, "nb", false);
     boolean uniformStartWeights = PropertiesUtils.getBool(opts, "uw");
     String refStr = opts.getProperty("r", null);
-    boolean finalWeightsFromBestEpoch = PropertiesUtils.getBool(opts, "b", false);
+    boolean finalWeightsFromBestEpoch = PropertiesUtils.getBool(opts, "bw", false);
     boolean doParameterAveraging = PropertiesUtils.getBool(opts, "a", false);
+    int batchSize = PropertiesUtils.getInt(opts, "b", 1);
 
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -745,7 +817,7 @@ public class OnlineTuner {
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
     tuner.writeNbest(doNbestOutput);
-    tuner.run(numEpochs, lossFunction);
+    tuner.run(numEpochs, batchSize, lossFunction);
     tuner.shutdown();
 
     final long elapsedTime = System.nanoTime() - startTime;
