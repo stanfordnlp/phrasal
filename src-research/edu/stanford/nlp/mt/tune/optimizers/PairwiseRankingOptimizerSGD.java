@@ -22,7 +22,6 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Quadruple;
-import edu.stanford.nlp.util.Triple;
 
 /**
  * Pairwise Ranking Optimization + SGD
@@ -31,8 +30,6 @@ import edu.stanford.nlp.util.Triple;
  *
  */
 public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,String> {
-
-  private static final boolean DEBUG = true;
 
   // Batch defaults
   //  static public final int DEFAULT_GAMMA = 5000;
@@ -55,7 +52,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final int minFeatureSegmentCount;
   private final int tuneSetSize;
 
-  // TODO(spenceg): Make this configurable
   private final double learningRate;
   private final double sigmaSq;
 
@@ -63,7 +59,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final Random random;
   private final Index<String> featureIndex;
   private final Index<String> labelIndex;
-
 
   public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize) {
     this(featureIndex, tuneSetSize, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
@@ -90,21 +85,28 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     this.tuneSetSize = tuneSetSize;
     this.sigmaSq = sigma*sigma;
     this.learningRate = rate;
-    labelIndex = new HashIndex<String>();
+    random = new Random();
 
     // Careful! Order is important here for LogisticObjectiveFunction.
+    labelIndex = new HashIndex<String>();
     labelIndex.add(NEG_CLASS);
     labelIndex.add(POS_CLASS);
     labelIndex.lock();
-
-    random = new Random();
 
     // Setup the logger
     logger = Logger.getLogger(PairwiseRankingOptimizerSGD.class.getCanonicalName());
     OnlineTuner.attach(logger);
   }
 
-
+  /**
+   * Select PRO samples from a single instance.
+   * 
+   * @param sourceId
+   * @param lossFunction
+   * @param translations
+   * @param references
+   * @return
+   */
   private RVFDataset<String, String> sampleNbestList(int sourceId,
       SentenceLevelMetric<IString, String> lossFunction,
       List<RichTranslation<IString, String>> translations,
@@ -118,6 +120,15 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     return sampleNbestLists(sourceIds, lossFunction, translationList, referenceList);
   }
   
+  /**
+   * Select PRO samples from a batch.
+   * 
+   * @param sourceIds
+   * @param lossFunction
+   * @param translationList
+   * @param referenceList
+   * @return
+   */
   private RVFDataset<String, String> sampleNbestLists(int[] sourceIds, SentenceLevelMetric<IString, String> lossFunction, 
       List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList) {
     assert sourceIds != null;
@@ -171,16 +182,14 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     List<Quadruple<Double, Integer, Integer, Integer>> selectedV = v.subList(0, Math.min(xi, v.size()));
 
     logger.info(String.format("Accepted samples: %d / %d", selectedV.size(), v.size()));
-    if (DEBUG) {
-      for (Quadruple<Double, Integer, Integer, Integer> sampledV : selectedV) {
-        double margin = sampledV.first();
-        int j = sampledV.second();
-        int jPrime = sampledV.third();
-        int i = sampledV.fourth();
-        logger.info(String.format("%.02f %d %d || %s || %s", margin, j, jPrime, 
-            translationList.get(i).get(j).translation.toString(), 
-            translationList.get(i).get(jPrime).translation.toString()));
-      }
+    for (Quadruple<Double, Integer, Integer, Integer> sampledV : selectedV) {
+      double margin = sampledV.first();
+      int j = sampledV.second();
+      int jPrime = sampledV.third();
+      int i = sampledV.fourth();
+      logger.info(String.format("%.02f %d %d || %s || %s", margin, j, jPrime, 
+          translationList.get(i).get(j).translation.toString(), 
+          translationList.get(i).get(jPrime).translation.toString()));
     }
       
     // Convert to RVFDataset
@@ -225,11 +234,14 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
     // Sample from the n-best list
     RVFDataset<String, String> dataset = sampleNbestList(sourceId, lossFunction, translations, references);
-    if (dataset.size() == 0) {
-      logger.warning("Null gradient. No PRO samples for sourceId: " + sourceId);
-    }      
-    return dataset.size() == 0 ? new ClassicCounter<String>() :
+    Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
       computeGradient(dataset, weights, 1);
+    if (dataset.size() == 0) {
+      logger.warning("Null gradient. No samples for sourceId: " + sourceId);
+    } else {
+      logger.info("Gradient: " + gradient.toString());
+    }
+    return gradient;
   }
 
   /**
@@ -243,11 +255,14 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       SentenceLevelMetric<IString, String> lossFunction) {
 
     RVFDataset<String, String> dataset = sampleNbestLists(sourceIds, lossFunction, translations, references);
+    Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
+      computeGradient(dataset, weights, sourceIds.length);
     if (dataset.size() == 0) {
       logger.warning("Null gradient for mini-batch!");
-    } 
-    return dataset.size() == 0 ? new ClassicCounter<String>() :
-      computeGradient(dataset, weights, sourceIds.length);
+    } else {
+      logger.info("Gradient: " + gradient.toString());
+    }
+    return gradient;
   }
 
   /**
@@ -282,6 +297,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   @Override
   public String toString() {
-    return String.format("%s gamma: %d chi: %d thresh: %.2f", this.getClass().getSimpleName(), this.gamma, this.xi, this.nThreshold);
+    return String.format("%s gamma: %d chi: %d thresh: %.2f", this.getClass().getSimpleName(), this.gamma, 
+        this.xi, this.nThreshold);
   }
 }
