@@ -145,22 +145,22 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     //    System.err.printf("Min Feature Segment Count: %d Features Filterd to: %d from: %d\n", minFeatureSegmentCount, featureWhiteList.size(), totalFeatureCount);
     //    System.err.printf("White List Features:\n%s\n", featureWhiteList);
 
-    RVFDataset<String,String> dataset = new RVFDataset<String, String>(xi, featureIndex, labelIndex);
-    List<Quadruple<Double, Integer, Integer,Integer>> v = 
-        new ArrayList<Quadruple<Double, Integer, Integer, Integer>>();
+    RVFDataset<String,String> dataset = new RVFDataset<String, String>(2*xi, featureIndex, labelIndex);
 
-    // Loss function is not threadsafe
-    synchronized(lossFunction) {
-      for (int i = 0; i < sourceIds.length; ++i) {
-        int sourceId = sourceIds[i];
-        List<RichTranslation<IString, String>> translations = translationList.get(i);
-        List<Sequence<IString>> references = referenceList.get(i);
+    for (int i = 0; i < sourceIds.length; ++i) {
+      int sourceId = sourceIds[i];
+      List<RichTranslation<IString, String>> translations = translationList.get(i);
+      List<Sequence<IString>> references = referenceList.get(i);
 
+      // Sample from this n-best list
+      // Loss function is not threadsafe
+      List<Quadruple<Double, Integer, Integer,Integer>> v = 
+          new ArrayList<Quadruple<Double, Integer, Integer, Integer>>(gamma);
+      synchronized(lossFunction) {
         int jMax   = translations.size();  
         for (int g = 0; g < gamma; g++) {
           int j      = random.nextInt(jMax); 
           int jPrime = random.nextInt(jMax);
-
           double gJ = lossFunction.score(sourceId, references, translations.get(j).translation);
           double gJPrime = lossFunction.score(sourceId,  references, translations.get(jPrime).translation);
           double absDiff = Math.abs(gJ-gJPrime);
@@ -175,48 +175,41 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         // Update the loss function with the 1-best translation
         lossFunction.update(sourceId, references, translations.get(0).translation);
       }
+
+      // Get the max-margin pairs
+      Collections.sort(v);
+      Collections.reverse(v);
+      List<Quadruple<Double, Integer, Integer, Integer>> selectedV = v.subList(0, Math.min(xi, v.size()));
+
+      // Convert to RVFDataset
+      for (Quadruple<Double, Integer, Integer, Integer> selectedPair : selectedV) {
+        Counter<String> plusFeatures = OptimizerUtils.featureValueCollectionToCounter(
+            translations.get(selectedPair.second()).features);
+        Counter<String> minusFeatures = OptimizerUtils.featureValueCollectionToCounter(
+            translations.get(selectedPair.third()).features);
+        Counter<String> gtVector = new ClassicCounter<String>(plusFeatures);
+        Counters.subtractInPlace(gtVector, minusFeatures);
+        // TODO(spenceg): Feature filtering
+        //        Counters.retainKeys(gtVector, featureWhiteList);
+        RVFDatum<String, String> datumGt = new RVFDatum<String, String>(gtVector, POS_CLASS);
+
+        Counter<String> ltVector = new ClassicCounter<String>(minusFeatures);
+        Counters.subtractInPlace(ltVector, plusFeatures);
+        // TODO(spenceg): Feature filtering
+        //        Counters.retainKeys(ltVector, featureWhiteList);
+        RVFDatum<String, String> datumLt = new RVFDatum<String, String>(ltVector, NEG_CLASS);
+        dataset.add(datumGt);
+        dataset.add(datumLt);
+
+        // WSGDEBUG Debug info
+        double margin = selectedPair.first();
+        int j = selectedPair.second();
+        int jPrime = selectedPair.third();
+        logger.info(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
+            translationList.get(i).get(j).translation.toString(), 
+            translationList.get(i).get(jPrime).translation.toString()));
+      }
     }
-
-    // Get the max-margin pairs
-    Collections.sort(v);
-    Collections.reverse(v);
-
-    List<Quadruple<Double, Integer, Integer, Integer>> selectedV = v.subList(0, Math.min(xi, v.size()));
-
-    logger.info(String.format("Accepted samples: %d / %d", selectedV.size(), v.size()));
-    for (Quadruple<Double, Integer, Integer, Integer> sampledV : selectedV) {
-      double margin = sampledV.first();
-      int j = sampledV.second();
-      int jPrime = sampledV.third();
-      int i = sampledV.fourth();
-      logger.info(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
-          translationList.get(i).get(j).translation.toString(), 
-          translationList.get(i).get(jPrime).translation.toString()));
-    }
-      
-    // Convert to RVFDataset
-    for (Quadruple<Double, Integer, Integer, Integer> selectedPair : selectedV) {
-      int sourceId = selectedPair.fourth();
-      List<RichTranslation<IString,String>> translations = translationList.get(sourceId);
-      Counter<String> plusFeatures = OptimizerUtils.featureValueCollectionToCounter(
-          translations.get(selectedPair.second()).features);
-      Counter<String> minusFeatures = OptimizerUtils.featureValueCollectionToCounter(
-          translations.get(selectedPair.third()).features);
-      Counter<String> gtVector = new ClassicCounter<String>(plusFeatures);
-      Counters.subtractInPlace(gtVector, minusFeatures);
-      // TODO(spenceg): Feature filtering
-      //        Counters.retainKeys(gtVector, featureWhiteList);
-      RVFDatum<String, String> datumGt = new RVFDatum<String, String>(gtVector, POS_CLASS);
-
-      Counter<String> ltVector = new ClassicCounter<String>(minusFeatures);
-      Counters.subtractInPlace(ltVector, plusFeatures);
-      // TODO(spenceg): Feature filtering
-      //        Counters.retainKeys(ltVector, featureWhiteList);
-      RVFDatum<String, String> datumLt = new RVFDatum<String, String>(ltVector, NEG_CLASS);
-      dataset.add(datumGt);
-      dataset.add(datumLt);
-    }
-
     return dataset;
   }
 
@@ -277,8 +270,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    */
   private Counter<String> computeGradient(RVFDataset<String, String> dataset, Counter<String> weights, 
       int batchSize) {
-    double numBatches = Math.ceil((double) tuneSetSize / batchSize);
-    double dataFraction = dataset.size() / ((double) 2*xi*numBatches);
+    double dataFraction = dataset.size() / ((double) 2*xi*tuneSetSize);
     LogPrior prior = new LogPrior(LogPriorType.QUADRATIC); // Gaussian prior
     prior.setSigmaSquared(sigmaSq * dataFraction);
     LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dataset.numFeatureTypes(), 
