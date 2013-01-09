@@ -492,6 +492,7 @@ public class OnlineTuner {
    */
   private int[][] makeBatches(int[] indices, int batchSize) {
     int numBatches = (int) Math.ceil((double) indices.length / batchSize);
+    logger.info("Number of batches: " + numBatches);
     int[][] batches = new int[numBatches][];
     int j = 0;
     batches[j] = new int[batchSize];
@@ -499,6 +500,7 @@ public class OnlineTuner {
     for (int i = 0; i < indices.length; ++i) {
       int k = i % batchSize;
       if (k == 0 && i != 0) {
+        logger.info(String.format("Batch %d: %s", j, Arrays.toString(batches[j])));
         batches[++j] = new int[batchSize];
         Arrays.fill(batches[j], -1);
       }
