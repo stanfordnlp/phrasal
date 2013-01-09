@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import cern.colt.Arrays;
+
 import edu.stanford.nlp.classify.LogPrior;
 import edu.stanford.nlp.classify.LogisticObjectiveFunction;
 import edu.stanford.nlp.classify.RVFDataset;
@@ -237,7 +239,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
       computeGradient(dataset, weights, 1);
     if (dataset.size() == 0) {
-      logger.warning("Null gradient. No samples for sourceId: " + sourceId);
+      logger.warning("Null gradient for sourceId: " + sourceId);
     } else {
       logger.info("Gradient: " + gradient.toString());
     }
@@ -258,7 +260,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
       computeGradient(dataset, weights, sourceIds.length);
     if (dataset.size() == 0) {
-      logger.warning("Null gradient for mini-batch!");
+      logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
     } else {
       logger.info("Gradient: " + gradient.toString());
     }
