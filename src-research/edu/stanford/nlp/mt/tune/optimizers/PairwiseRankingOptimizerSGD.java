@@ -189,7 +189,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       int j = sampledV.second();
       int jPrime = sampledV.third();
       int i = sampledV.fourth();
-      logger.info(String.format("%.02f %d %d || %s || %s", margin, j, jPrime, 
+      logger.info(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
           translationList.get(i).get(j).translation.toString(), 
           translationList.get(i).get(jPrime).translation.toString()));
     }

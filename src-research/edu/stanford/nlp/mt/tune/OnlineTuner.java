@@ -360,12 +360,13 @@ public class OnlineTuner {
       final ProcessorOutput result = threadpool.poll();
 
       // Debugging only
-      logger.info(String.format("Update %d with gradient from step %d (diff: %d)", 
+      logger.info(String.format("Weight update %d with gradient from step %d (diff: %d)", 
           timeStep, result.inputId, timeStep - result.inputId));
 
       // Apply update rule
       updatedWts = updater.update(updatedWts, result.gradient);
-      logger.info(String.format("Update %d L2 norm %.4f%n", timeStep, Counters.L2Norm(updatedWts)));
+      logger.info(String.format("Weight update %d: %s", timeStep, updatedWts.toString()));
+      logger.info(String.format("Weight update %d L2 norm %.4f", timeStep, Counters.L2Norm(updatedWts)));
       ++timeStep;
 
       // Accumulate for parameter averaging
@@ -500,7 +501,7 @@ public class OnlineTuner {
     for (int i = 0; i < indices.length; ++i) {
       int k = i % batchSize;
       if (k == 0 && i != 0) {
-        logger.info(String.format("Batch %d: %s", j, Arrays.toString(batches[j])));
+        logger.info(String.format("Batch %d: %s", j+1, Arrays.toString(batches[j])));
         batches[++j] = new int[batchSize];
         Arrays.fill(batches[j], -1);
       }
@@ -515,6 +516,7 @@ public class OnlineTuner {
     }
     batches[numBatches-1] = new int[numIndices];
     System.arraycopy(lastBatch, 0, batches[numBatches-1], 0, numIndices);
+    logger.info(String.format("Batch %d: %s", numBatches, Arrays.toString(batches[numBatches-1])));
     
     return batches;
   }
