@@ -348,7 +348,7 @@ public class OnlineTuner {
    */
   private Counter<String> applyGradientUpdates(MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       Counter<String> currentWts, OnlineUpdateRule<String> updater, 
-      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int timeStep) {
+      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int timeStep, int epoch) {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
@@ -364,9 +364,13 @@ public class OnlineTuner {
           timeStep, result.inputId, timeStep - result.inputId));
 
       // Apply update rule
-      updatedWts = updater.update(updatedWts, result.gradient);
+      Counter<String> last = new ClassicCounter<String>(updatedWts);
+      updatedWts = updater.update(updatedWts, result.gradient, timeStep*(epoch+1));
+      
+      // Debug info
       logger.info(String.format("Weight update %d: %s", timeStep, updatedWts.toString()));
-      logger.info(String.format("Weight update %d L2 norm %.4f", timeStep, Counters.L2Norm(updatedWts)));
+      Counters.subtractInPlace(last, updatedWts);
+      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", timeStep, Counters.L2Norm(last)));
       ++timeStep;
 
       // Accumulate for parameter averaging
@@ -437,7 +441,7 @@ public class OnlineTuner {
         int[] batch = batches[t];
         ProcessorInput input = makeInput(batch, t, currentWts);
         wrapper.put(input);
-        currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, t);
+        currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, t, epoch);
 
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
@@ -448,12 +452,12 @@ public class OnlineTuner {
 
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
-      currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, indices.length);
+      currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, batches.length, epoch);
 
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
         currentWts = new ClassicCounter<String>(wts);
-        Counters.divideInPlace(currentWts, (epoch+1)*tuneSetSize);
+        Counters.divideInPlace(currentWts, (epoch+1)*batches.length);
       }
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
 

@@ -205,9 +205,9 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         double margin = selectedPair.first();
         int j = selectedPair.second();
         int jPrime = selectedPair.third();
-        logger.info(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
-            translationList.get(i).get(j).translation.toString(), 
-            translationList.get(i).get(jPrime).translation.toString()));
+//        logger.info(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
+//            translationList.get(i).get(j).translation.toString(), 
+//            translationList.get(i).get(jPrime).translation.toString()));
       }
     }
     return dataset;
@@ -272,7 +272,9 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       int batchSize) {
     double dataFraction = dataset.size() / ((double) 2*xi*tuneSetSize);
     LogPrior prior = new LogPrior(LogPriorType.QUADRATIC); // Gaussian prior
-    prior.setSigmaSquared(sigmaSq * dataFraction);
+    // Divide by the data fraction to get the same effect as scaling the regularization
+    // strength by the data fraction.
+    prior.setSigmaSquared(sigmaSq / dataFraction);
     LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dataset.numFeatureTypes(), 
         dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), prior);
 
@@ -280,7 +282,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     double[] g = lof.derivativeAt(w);
     assert w.length == g.length;
     Counter<String> gradient = Counters.toCounter(g, featureIndex);
-
     return gradient;
   }
 

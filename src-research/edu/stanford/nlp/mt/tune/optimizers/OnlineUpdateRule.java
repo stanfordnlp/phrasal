@@ -16,7 +16,8 @@ public interface OnlineUpdateRule<FV> {
    * 
    * @param weights
    * @param gradient
+   * @param timeStep
    * @return
    */
-  public Counter<FV> update(Counter<FV> weights, Counter<FV> gradient);
+  public Counter<FV> update(Counter<FV> weights, Counter<FV> gradient, int timeStep);
 }
