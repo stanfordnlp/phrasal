@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -233,16 +234,16 @@ public class OnlineTuner {
    *
    */
   private class ProcessorInput {
-    public final Sequence<IString> source;
-    public final List<Sequence<IString>> references;
-    public final int translationId;
+    public final List<Sequence<IString>> source;
+    public final List<List<Sequence<IString>>> references;
+    public final int[] translationIds;
     public final Counter<String> weights;
     public final int inputId;
-    public ProcessorInput(Sequence<IString> input, 
-        List<Sequence<IString>> references, 
-        Counter<String> weights, int translationId, int inputId) {
+    public ProcessorInput(List<Sequence<IString>> input, 
+        List<List<Sequence<IString>>> references, 
+        Counter<String> weights, int[] translationIds, int inputId) {
       this.source = input;
-      this.translationId = translationId;
+      this.translationIds = translationIds;
       this.references = references;
       this.weights = new ClassicCounter<String>(weights);
       this.inputId = inputId;
@@ -258,15 +259,15 @@ public class OnlineTuner {
   private class ProcessorOutput {
     public final Counter<String> gradient;
     public final int inputId;
-    public final List<RichTranslation<IString, String>> nbestList;
-    public final int translationId;
+    public final List<List<RichTranslation<IString, String>>> nbestLists;
+    public final int[] translationIds;
     public ProcessorOutput(Counter<String> gradient, 
         int inputId, 
-        List<RichTranslation<IString, String>> nbestList, int translationId) {
+        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds) {
       this.gradient = gradient;
       this.inputId = inputId;
-      this.nbestList = nbestList;
-      this.translationId = translationId;
+      this.nbestLists = nbestLists;
+      this.translationIds = translationIds;
     }
   }
 
@@ -297,18 +298,36 @@ public class OnlineTuner {
       assert input.weights != null;
       // Set the decoder weights and decode
       decoder.getScorer(threadId).updateWeights(input.weights);
-      List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source, input.translationId, 
-          threadId);
-
-      Counter<String> gradient = 
-          optimizer.getGradient(input.weights, input.source, input.translationId, 
-              nbestList, input.references, lossFunction);
-
+      
+      int batchSize = input.translationIds.length;
+      List<List<RichTranslation<IString,String>>> nbestLists = 
+          new ArrayList<List<RichTranslation<IString,String>>>(input.translationIds.length);
+      Counter<String> gradient;
+      if (batchSize == 1) {
+        // Online learning with gradient updates for each instance
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
+            threadId);
+        gradient = optimizer.getGradient(input.weights, input.source.get(0), 
+            input.translationIds[0], nbestList, input.references.get(0), lossFunction);
+        nbestLists.add(nbestList);
+        
+      } else {
+        // Mini-batch learning
+        for (int i = 0; i < input.translationIds.length; ++i) {
+          int translationId = input.translationIds[i];
+          Sequence<IString> source = input.source.get(i);
+          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
+              threadId);
+          nbestLists.add(nbestList);
+        }
+        gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
+                nbestLists, input.references, lossFunction);
+      }
       // Sparse features may turn up in the gradients (the decoder featurizers add the features). Make
       // sure to add those features to the index.
       featureIndex.addAll(gradient.keySet());
 
-      return new ProcessorOutput(gradient, input.inputId, nbestList, input.translationId);
+      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
     }
 
     @Override
@@ -329,7 +348,7 @@ public class OnlineTuner {
    */
   private Counter<String> applyGradientUpdates(MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       Counter<String> currentWts, OnlineUpdateRule<String> updater, 
-      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int timeStep) {
+      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int timeStep, int epoch) {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
@@ -341,19 +360,28 @@ public class OnlineTuner {
       final ProcessorOutput result = threadpool.poll();
 
       // Debugging only
-      logger.info(String.format("Update %d with gradient from step %d (diff: %d)", 
+      logger.info(String.format("Weight update %d with gradient from step %d (diff: %d)", 
           timeStep, result.inputId, timeStep - result.inputId));
-      ++timeStep;
 
       // Apply update rule
-      updatedWts = updater.update(updatedWts, result.gradient);
+      Counter<String> last = new ClassicCounter<String>(updatedWts);
+      updatedWts = updater.update(updatedWts, result.gradient, timeStep*(epoch+1));
+      
+      // Debug info
+      logger.info(String.format("Weight update %d: %s", timeStep, updatedWts.toString()));
+      Counters.subtractInPlace(last, updatedWts);
+      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", timeStep, Counters.L2Norm(last)));
+      ++timeStep;
 
       // Accumulate for parameter averaging
       wts.addAll(updatedWts);
 
       // Add n-best lists from this time step
-      assert ! nbestLists.containsKey(result.translationId);
-      nbestLists.put(result.translationId, result.nbestList);
+      for (int i = 0; i < result.translationIds.length; ++i) {
+        int translationId = result.translationIds[i];
+        assert ! nbestLists.containsKey(translationId);
+        nbestLists.put(translationId, result.nbestLists.get(i));
+      }
     }
     return updatedWts;
   }
@@ -361,13 +389,14 @@ public class OnlineTuner {
   /**
    * Run an optimization algorithm with a specified loss function. Implements asynchronous updating
    * per Langford et al. (2009).
+   * @param batchSize 
    * 
    * @param lossFunction 
    * @param optimizerAlg
    * @param optimizerFlags 
    * @param nThreads
    */
-  public void run(int numEpochs, SentenceLevelMetric<IString, String> lossFunction) {
+  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction) {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
@@ -405,17 +434,14 @@ public class OnlineTuner {
               new GradientProcessor(optimizer,lossFunction,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
+      // and prepare mini batches
       ArrayMath.shuffle(indices);
-      for (int t = 0; t < indices.length; ++t) {
-        // Retrieve the training example
-        int translationId = indices[t];
-        final Sequence<IString> source = tuneSource.get(translationId);
-        final List<Sequence<IString>> refs = references.get(translationId);
-
-        // Submit to threadpool, then look for updates.
-        ProcessorInput input = new ProcessorInput(source, refs, currentWts, translationId, t);
+      int[][] batches = makeBatches(indices, batchSize);
+      for (int t = 0; t < batches.length; ++t) {
+        int[] batch = batches[t];
+        ProcessorInput input = makeInput(batch, t, currentWts);
         wrapper.put(input);
-        currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, t);
+        currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, t, epoch);
 
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
@@ -426,12 +452,12 @@ public class OnlineTuner {
 
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
-      currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, indices.length);
+      currentWts = applyGradientUpdates(wrapper, currentWts, updater, nbestLists, batches.length, epoch);
 
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
         currentWts = new ClassicCounter<String>(wts);
-        Counters.divideInPlace(currentWts, (epoch+1)*tuneSetSize);
+        Counters.divideInPlace(currentWts, (epoch+1)*batches.length);
       }
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
 
@@ -444,6 +470,59 @@ public class OnlineTuner {
     }
 
     saveFinalWeights(epochResults);
+  }
+
+  /**
+   * Make a ProcessorInput object for the thread pool from this mini batch.
+   * 
+   * @param batch
+   * @return
+   */
+  private ProcessorInput makeInput(int[] batch, int batchId, Counter<String> weights) {
+    List<Sequence<IString>> sourceList = new ArrayList<Sequence<IString>>(batch.length);
+    List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(batch.length);
+    for (int sourceId : batch) {
+      sourceList.add(tuneSource.get(sourceId));
+      referenceList.add(references.get(sourceId));
+    }
+    return new ProcessorInput(sourceList, referenceList, weights, batch, batchId);
+  }
+
+  /**
+   * Transform a list of example indices into a set of mini batches.
+   * 
+   * @param indices
+   * @param batchSize
+   * @return
+   */
+  private int[][] makeBatches(int[] indices, int batchSize) {
+    int numBatches = (int) Math.ceil((double) indices.length / batchSize);
+    logger.info("Number of batches: " + numBatches);
+    int[][] batches = new int[numBatches][];
+    int j = 0;
+    batches[j] = new int[batchSize];
+    Arrays.fill(batches[j], -1);
+    for (int i = 0; i < indices.length; ++i) {
+      int k = i % batchSize;
+      if (k == 0 && i != 0) {
+        logger.info(String.format("Batch %d: %s", j+1, Arrays.toString(batches[j])));
+        batches[++j] = new int[batchSize];
+        Arrays.fill(batches[j], -1);
+      }
+      batches[j][k] = indices[i];
+    }
+    
+    // The last batch is potentially jagged, so trim it.
+    int numIndices = 0;
+    int[] lastBatch = batches[numBatches-1];
+    for (int index : lastBatch) {
+      if (index >= 0) numIndices++;
+    }
+    batches[numBatches-1] = new int[numIndices];
+    System.arraycopy(lastBatch, 0, batches[numBatches-1], 0, numIndices);
+    logger.info(String.format("Batch %d: %s", numBatches, Arrays.toString(batches[numBatches-1])));
+    
+    return batches;
   }
 
   /**
@@ -479,6 +558,7 @@ public class OnlineTuner {
       int nbestIndex = 0;
       for (RichTranslation<IString, String> translation : entry.getValue()) {
         double score = scorer.getIncrementalScore(translation.features);
+        System.err.println(score);
         if (score > bestScore) {
           bestScore = score;
           bestIndex = nbestIndex;
@@ -487,7 +567,7 @@ public class OnlineTuner {
       }
       incMetric.add(entry.getValue().get(bestIndex));
     }
-
+    
     if (nbestListWriter != null) nbestListWriter.close();
 
     return incMetric.score() * 100.0;
@@ -579,23 +659,27 @@ public class OnlineTuner {
    * Load a loss function from a string key.
    * 
    * @param lossFunctionStr
+   * @param lossFunctionOpts 
    * @return
    */
   public static SentenceLevelMetric<IString, String> loadLossFunction(
-      String lossFunctionStr) {
+      String lossFunctionStr, String[] lossFunctionOpts) {
     assert lossFunctionStr != null;
 
     if (lossFunctionStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU
-      return new BLEUSmoothGain<IString,String>();
+      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
+      return new BLEUSmoothGain<IString,String>(order);
 
     } else if (lossFunctionStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
-      return new BLEUOracleCost<IString,String>();
+      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
+      return new BLEUOracleCost<IString,String>(order, false);
 
     } else if (lossFunctionStr.equals("bleu-cherry")) {
       // Cherry and Foster (2012)
-      return new BLEUOracleCost<IString,String>(4, true);
+      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
+      return new BLEUOracleCost<IString,String>(order, true);
 
     } else {
       throw new UnsupportedOperationException("Unsupported loss function: " + lossFunctionStr);
@@ -647,10 +731,11 @@ public class OnlineTuner {
     optionMap.put("o", 1);
     optionMap.put("of", 1);
     optionMap.put("m", 1);
+    optionMap.put("mf", 1);
     optionMap.put("n", 1);
     optionMap.put("nb", 0);
     optionMap.put("r", 1);
-    optionMap.put("b", 0);
+    optionMap.put("bw", 0);
     optionMap.put("a", 0);
     return optionMap;
   }
@@ -666,18 +751,20 @@ public class OnlineTuner {
     sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] src tgt phrasal_ini wts_initial").append(nl);
     sb.append(nl);
     sb.append("Options:").append(nl);
-    sb.append("   -s file    : Extrinsic loss: source file").append(nl);
-    sb.append("   -t file    : Extrinsic loss: target file").append(nl);
+    sb.append("   -s file    : Source file").append(nl);
+    sb.append("   -t file    : Target file").append(nl);
     sb.append("   -uw        : Uniform weight initialization").append(nl);
     sb.append("   -e num     : Number of online epochs").append(nl);
     sb.append("   -o str     : Optimizer: [arow,mira-1best]").append(nl);
-    sb.append("   -of str    : Optimizer flags [comma-separated list]").append(nl);
+    sb.append("   -of str    : Optimizer flags (format: CSV list)").append(nl);
     sb.append("   -m str     : Evaluation metric (loss function) for the tuning algorithm (default: bleu-smooth)").append(nl);
+    sb.append("   -mf str    : Evaluation metric flags (format: CSV list)").append(nl);
     sb.append("   -n str     : Experiment name").append(nl);
     sb.append("   -nb        : Write n-best lists to file.").append(nl);
-    sb.append("   -r str     : References for expected BLEU evaluation (format: CSV list)").append(nl);
-    sb.append("   -b         : Set final weights to the best training epoch.").append(nl);
+    sb.append("   -r str     : Use multiple references (format: CSV list)").append(nl);
+    sb.append("   -bw        : Set final weights to the best training epoch.").append(nl);
     sb.append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl);
+    sb.append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl);
     return sb.toString().trim();
   }
 
@@ -693,14 +780,16 @@ public class OnlineTuner {
     String optimizerAlg = opts.getProperty("o", "mira-1best");
     String[] optimizerFlags = opts.containsKey("of") ? opts.getProperty("of").split(",") : null;
     String lossFunctionStr = opts.getProperty("m", "bleu-smooth");
+    String[] lossFunctionOpts = opts.containsKey("mf") ? opts.getProperty("mf").split(",") : null;
     String altSourceFile = opts.getProperty("s");
     String altTargetFile = opts.getProperty("t");
     String experimentName = opts.getProperty("n", "debug");
     boolean doNbestOutput = PropertiesUtils.getBool(opts, "nb", false);
     boolean uniformStartWeights = PropertiesUtils.getBool(opts, "uw");
     String refStr = opts.getProperty("r", null);
-    boolean finalWeightsFromBestEpoch = PropertiesUtils.getBool(opts, "b", false);
+    boolean finalWeightsFromBestEpoch = PropertiesUtils.getBool(opts, "bw", false);
     boolean doParameterAveraging = PropertiesUtils.getBool(opts, "a", false);
+    int batchSize = PropertiesUtils.getInt(opts, "b", 1);
 
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -725,7 +814,7 @@ public class OnlineTuner {
     System.out.println();
 
     // Run optimization
-    final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr);
+    final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr, lossFunctionOpts);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, uniformStartWeights, optimizerAlg, optimizerFlags);
     if (altSourceFile != null && altTargetFile != null) {
       tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
@@ -736,7 +825,7 @@ public class OnlineTuner {
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
     tuner.writeNbest(doNbestOutput);
-    tuner.run(numEpochs, lossFunction);
+    tuner.run(numEpochs, batchSize, lossFunction);
     tuner.shutdown();
 
     final long elapsedTime = System.nanoTime() - startTime;

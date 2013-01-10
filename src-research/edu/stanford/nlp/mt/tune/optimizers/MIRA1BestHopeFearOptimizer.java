@@ -220,4 +220,13 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
           gain, modelScore, hypothesis.nbestToMosesString(nbestId));
     }
   }
+
+  @Override
+  public Counter<String> getBatchGradient(Counter<String> weights,
+      List<Sequence<IString>> sources, int[] sourceIds,
+      List<List<RichTranslation<IString, String>>> translations,
+      List<List<Sequence<IString>>> references,
+      SentenceLevelMetric<IString, String> lossFunction) {
+    throw new UnsupportedOperationException("1-best MIRA does not support mini-batch learning");
+  }
 }

@@ -14,7 +14,7 @@ public class MiraUpdater implements OnlineUpdateRule<String> {
 
   @Override
   public Counter<String> update(Counter<String> weights,
-      Counter<String> gradient) {
+      Counter<String> gradient, int timeStep) {
     Counter<String> newWeights = new ClassicCounter<String>(weights);
     Counters.addInPlace(newWeights, gradient);
     return newWeights;
