@@ -181,7 +181,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       Collections.reverse(v);
       List<Quadruple<Double, Integer, Integer, Integer>> selectedV = v.subList(0, Math.min(xi, v.size()));
 
-      // Convert to RVFDataset
+      // Add selectedV to RVFDataset
       for (Quadruple<Double, Integer, Integer, Integer> selectedPair : selectedV) {
         Counter<String> plusFeatures = OptimizerUtils.featureValueCollectionToCounter(
             translations.get(selectedPair.second()).features);
@@ -192,13 +192,13 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         // TODO(spenceg): Feature filtering
         //        Counters.retainKeys(gtVector, featureWhiteList);
         RVFDatum<String, String> datumGt = new RVFDatum<String, String>(gtVector, POS_CLASS);
+        dataset.add(datumGt);
 
         Counter<String> ltVector = new ClassicCounter<String>(minusFeatures);
         Counters.subtractInPlace(ltVector, plusFeatures);
         // TODO(spenceg): Feature filtering
         //        Counters.retainKeys(ltVector, featureWhiteList);
         RVFDatum<String, String> datumLt = new RVFDatum<String, String>(ltVector, NEG_CLASS);
-        dataset.add(datumGt);
         dataset.add(datumLt);
 
         // WSGDEBUG Debug info
