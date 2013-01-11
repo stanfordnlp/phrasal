@@ -11,11 +11,10 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-
 import edu.stanford.nlp.mt.base.LineIndexedCorpus;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.Triple;
 
 /**
  * Feature Decay Algorithm (FDA) bi-text selection.
@@ -42,7 +41,7 @@ public class FDACorpusSelection {
    final LineIndexedCorpus bitextEn;
    
    static public void usage() {
-      err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) (bitext.en) (bitext.fr) (test.fr) (selected.en) (selected.fr)");	   	
+      err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) (bitext.en) (bitext.fr) (test.fr) (selected.en) (selected.fr) (selected.ln)");	   	
    }
    
    class SentenceScoreComparator implements Comparator<Integer> {
@@ -122,7 +121,7 @@ public class FDACorpusSelection {
       cntfL = new ClassicCounter<String>();
    }
    
-   public Pair<String,String> getNextBest() {
+   public Triple<String,String,Integer> getNextBest() {
       while (true) {
          if (Q.size() == 0) return null;
          
@@ -153,7 +152,7 @@ public class FDACorpusSelection {
          // the current item - if there is, we'll need to double check
          // that the current item is still the best choice         
          if (Q.size() == 0) {
-            return new Pair<String,String>(line,bitextEn.get(id));
+            return new Triple<String,String,Integer>(line,bitextEn.get(id),id);
          }
          
          // compare the re-computed score with the score
@@ -172,7 +171,7 @@ public class FDACorpusSelection {
             if (VERBOSE) {
                err.printf(" - accepting: %d %f\n", id, score[id]);
             }
-            return new Pair<String,String>(line,bitextEn.get(id));
+            return new Triple<String,String,Integer>(line,bitextEn.get(id),id);
          } else {
             if (VERBOSE) {
               err.printf(" - rejecting: %d %f < %f\n", id, score[id], score[nextId]);
@@ -183,7 +182,7 @@ public class FDACorpusSelection {
    }
    
    static public void main(String[] args) throws IOException {
-      if (args.length != 6) {
+      if (args.length != 7) {
          usage();
          System.exit(-1);
       }
@@ -194,6 +193,7 @@ public class FDACorpusSelection {
       String testFn = args[3];
       String selectedEnFn = args[4];
       String selectedFrFn = args[5];
+      String selectedLines = args[6];
       
       err.printf("Opening %s\n", bitextEnFn);
       LineIndexedCorpus bitextEn = new LineIndexedCorpus(bitextEnFn);
@@ -208,14 +208,17 @@ public class FDACorpusSelection {
       selectionSize = Math.min(selectionSize, bitextEn.size());
       PrintWriter selectedEn = new PrintWriter(new OutputStreamWriter(new FileOutputStream(selectedEnFn), "UTF-8"));
       PrintWriter selectedFr = new PrintWriter(new OutputStreamWriter(new FileOutputStream(selectedFrFn), "UTF-8"));
+      PrintWriter selectedLn = new PrintWriter(new OutputStreamWriter(new FileOutputStream(selectedLines), "UTF-8"));
       FDACorpusSelection fsacs = new FDACorpusSelection(bitextEn, bitextFr, testFr);
       for (int n = 0; n < selectionSize; n++) {
-         Pair<String,String> frEn = fsacs.getNextBest();
-         selectedFr.println(frEn.first);
-         selectedEn.println(frEn.second);
+         Triple<String,String,Integer> frEn = fsacs.getNextBest();
+         selectedFr.println(frEn.first());
+         selectedEn.println(frEn.second());
+         selectedLn.println(frEn.third());
       }
       selectedFr.close();
       selectedEn.close();      
+      selectedLn.close();
 	}
 
 }
