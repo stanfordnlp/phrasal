@@ -49,11 +49,8 @@ import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 /**
- * Tunes a machine translation model with an online algorithm.
+ * Online model tuning for machine translation.
  * 
- * TODO(spenceg) 
- *   * Aggregate n-best lists across epochs? Addendum to Gimpel and Smith (2012) says that this works.
- *   
  * @author Spence Green
  *
  */
@@ -100,10 +97,6 @@ public class OnlineTuner {
   // Intrinsic loss examples
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
-
-  // Extrinsic loss examples
-  private List<Sequence<IString>> altSource;
-  private List<Sequence<IString>> altTarget;
 
   // Various options
   private boolean writeNbestLists = false;
@@ -212,21 +205,6 @@ public class OnlineTuner {
    * @param b
    */
   private void doParameterAveraging(boolean b) { this.doParameterAveraging = b; }
-  
-  /**
-   * Load a source and target file that will be used for computing the extrinsic loss.
-   * We will sample from these files.
-   * 
-   * @param altSourceFile
-   * @param altTargetFile
-   */
-  public void sampleExtrinsicLossFrom(String altSourceFile,
-      String altTargetFile) {
-    altSource = IStrings.fileSplitToIStrings(altSourceFile);
-    altTarget = IStrings.fileSplitToIStrings(altTargetFile);
-    assert altSource.size() == altTarget.size();
-    logger.info(String.format("Extrinsic loss corpus contains %d examples", altSource.size()));
-  }
 
   /**
    * Input data to the gradient processor.
@@ -446,7 +424,6 @@ public class OnlineTuner {
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
-        logger.info(String.format("WSGDEBUG %d %d %d", numBatches, epoch, inputId));
         Pair<Counter<String>,Integer> update = 
             applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists);
         currentWts = update.first();
@@ -532,7 +509,7 @@ public class OnlineTuner {
     }
     batches[numBatches-1] = new int[numIndices];
     System.arraycopy(lastBatch, 0, batches[numBatches-1], 0, numIndices);
-    logger.info(String.format("Batch %d: %s", numBatches, Arrays.toString(batches[numBatches-1])));
+    logger.fine(String.format("Batch %d: %s", numBatches, Arrays.toString(batches[numBatches-1])));
     
     return batches;
   }
@@ -736,8 +713,6 @@ public class OnlineTuner {
    */
   private static Map<String,Integer> optionArgDefs() {
     Map<String,Integer> optionMap = new HashMap<String,Integer>();
-    optionMap.put("s", 1);
-    optionMap.put("t", 1);
     optionMap.put("uw", 0);
     optionMap.put("e", 1);
     optionMap.put("o", 1);
@@ -749,6 +724,7 @@ public class OnlineTuner {
     optionMap.put("r", 1);
     optionMap.put("bw", 0);
     optionMap.put("a", 0);
+    optionMap.put("b", 1);
     return optionMap;
   }
 
@@ -763,8 +739,6 @@ public class OnlineTuner {
     sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] src tgt phrasal_ini wts_initial").append(nl);
     sb.append(nl);
     sb.append("Options:").append(nl);
-    sb.append("   -s file    : Source file").append(nl);
-    sb.append("   -t file    : Target file").append(nl);
     sb.append("   -uw        : Uniform weight initialization").append(nl);
     sb.append("   -e num     : Number of online epochs").append(nl);
     sb.append("   -o str     : Optimizer: [arow,mira-1best]").append(nl);
@@ -793,8 +767,6 @@ public class OnlineTuner {
     String[] optimizerFlags = opts.containsKey("of") ? opts.getProperty("of").split(",") : null;
     String lossFunctionStr = opts.getProperty("m", "bleu-smooth");
     String[] lossFunctionOpts = opts.containsKey("mf") ? opts.getProperty("mf").split(",") : null;
-    String altSourceFile = opts.getProperty("s");
-    String altTargetFile = opts.getProperty("t");
     String experimentName = opts.getProperty("n", "debug");
     boolean doNbestOutput = PropertiesUtils.getBool(opts, "nb", false);
     boolean uniformStartWeights = PropertiesUtils.getBool(opts, "uw");
@@ -828,9 +800,6 @@ public class OnlineTuner {
     // Run optimization
     final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr, lossFunctionOpts);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, uniformStartWeights, optimizerAlg, optimizerFlags);
-    if (altSourceFile != null && altTargetFile != null) {
-      tuner.sampleExtrinsicLossFrom(altSourceFile, altTargetFile);
-    }
     if (refStr != null) {
       tuner.loadReferences(refStr);
     }
