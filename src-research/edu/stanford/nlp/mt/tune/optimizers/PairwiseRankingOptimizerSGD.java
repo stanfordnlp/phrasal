@@ -205,9 +205,9 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         double margin = selectedPair.first();
         int j = selectedPair.second();
         int jPrime = selectedPair.third();
-//        logger.info(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
-//            translationList.get(i).get(j).translation.toString(), 
-//            translationList.get(i).get(jPrime).translation.toString()));
+        logger.fine(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
+            translationList.get(i).get(j).translation.toString(), 
+            translationList.get(i).get(jPrime).translation.toString()));
       }
     }
     return dataset;
