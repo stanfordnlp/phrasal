@@ -547,7 +547,6 @@ public class OnlineTuner {
       int nbestIndex = 0;
       for (RichTranslation<IString, String> translation : entry.getValue()) {
         double score = scorer.getIncrementalScore(translation.features);
-        System.err.println(score);
         if (score > bestScore) {
           bestScore = score;
           bestIndex = nbestIndex;
@@ -778,7 +777,7 @@ public class OnlineTuner {
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {
-      System.err.println(usage());
+      System.out.println(usage());
       System.exit(-1);
     }
     String srcFile = parsedArgs[0];

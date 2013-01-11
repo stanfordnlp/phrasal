@@ -281,4 +281,9 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
       e.printStackTrace();
     }
   }
+
+  @Override
+  public boolean isThreadsafe() {
+    return false;
+  }
 }
