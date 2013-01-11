@@ -23,7 +23,7 @@ public class SGDUpdater implements OnlineUpdateRule<String> {
       Counter<String> gradient, int timeStep) {
     Counter<String> newWeights = new ClassicCounter<String>(weights);
     Counter<String> gradientCopy = new ClassicCounter<String>(gradient);
-    double nu = rate * (double) (1.0/(timeStep+1));
+    double nu = rate * (double) (1.0/((timeStep/100.0)+1.0));
     Counters.multiplyInPlace(gradientCopy, nu);
     Counters.subtractInPlace(newWeights, gradientCopy);    
     return newWeights;
