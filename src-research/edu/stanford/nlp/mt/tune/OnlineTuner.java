@@ -423,6 +423,10 @@ public class OnlineTuner {
       for (int t = 0; t < batches.length; ++t) {
         int[] batch = batches[t];
         int inputId = (epoch*numBatches) + t;
+        
+        // WSGDEBUG random restarts hack
+        if (t < numThreads && epoch != 0) OptimizerUtils.randomizeWeightsInPlace(currentWts, (double) epoch * 1e-3); 
+        
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
         Pair<Counter<String>,Integer> update = 
