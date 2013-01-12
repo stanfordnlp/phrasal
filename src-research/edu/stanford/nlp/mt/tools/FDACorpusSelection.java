@@ -20,13 +20,15 @@ import edu.stanford.nlp.util.Triple;
  * Feature Decay Algorithm (FDA) bi-text selection.
  * 
  * Based on the selection technique presented in Bicici and Yuret's 
- * "Instance Selection for Machine Translation using feature Decay Algorithms" (WMT2011)  
+ * "Instance Selection for Machine Translation using feature Decay Algorithms" 
+ * (WMT2011)  
  * 
  * @author daniel cer (http://dmcer.net)
  *
  */
 public class FDACorpusSelection {
-   static final int NGRAM_ORDER = 5; // Bicici and Yuret found that using bi-grams was sufficient   
+   static final int NGRAM_ORDER = 5; // Bicici and Yuret found that 
+                                     // using bi-grams was sufficient   
    static final boolean VERBOSE = false; 
    static final boolean LENGTH_NORM = true;
 
@@ -41,7 +43,9 @@ public class FDACorpusSelection {
    final LineIndexedCorpus bitextEn;
    
    static public void usage() {
-      err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) (bitext.en) (bitext.fr) (test.fr) (selected.en) (selected.fr) (selected.ln)");	   	
+      err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) " +
+          "(bitext.en) (bitext.fr) (test.fr) (selected.en) (selected.fr) " +
+          "[selected.ln]");
    }
    
    class SentenceScoreComparator implements Comparator<Integer> {
@@ -52,18 +56,20 @@ public class FDACorpusSelection {
    }
 
    // Bicici and Yuret found that log inverse initialization, log(|U|/cnt(f,U)),
-   // improved run time performance by decreasing the number of tied segment scores
+   // improved run time performance by decreasing the number of tied segment 
+   // scores
    private double init(String f) {
       return Math.log(sizeU) - Math.log(cntfU.getCount(f));  
    }
    
-   // Bicici and Yuret found that reducing the feature weights by 1/n produced the 
-   // best expected test set coverage
+   // Bicici and Yuret found that reducing the feature weights by 1/n produced 
+   // the best expected test set coverage
    private double decay(String f) {
       return init(f)/(1+cntfL.getCount(f));
    }
    
-   public FDACorpusSelection(LineIndexedCorpus bitextEn, LineIndexedCorpus bitextFr, LineIndexedCorpus testFr) {
+   public FDACorpusSelection(LineIndexedCorpus bitextEn, LineIndexedCorpus 
+     bitextFr, LineIndexedCorpus testFr) {
       this.bitextEn = bitextEn;
       this.bitextFr = bitextFr;      
       
@@ -182,7 +188,7 @@ public class FDACorpusSelection {
    }
    
    static public void main(String[] args) throws IOException {
-      if (args.length != 7) {
+      if (args.length != 7 && args.length != 6) {
          usage();
          System.exit(-1);
       }
@@ -193,7 +199,7 @@ public class FDACorpusSelection {
       String testFn = args[3];
       String selectedEnFn = args[4];
       String selectedFrFn = args[5];
-      String selectedLines = args[6];
+      String selectedLines = (args.length == 7 ? args[6] : null);
       
       err.printf("Opening %s\n", bitextEnFn);
       LineIndexedCorpus bitextEn = new LineIndexedCorpus(bitextEnFn);
@@ -206,19 +212,24 @@ public class FDACorpusSelection {
                bitextEnFn, bitextFrFn, bitextEn.size(), bitextFr.size());
       }
       selectionSize = Math.min(selectionSize, bitextEn.size());
-      PrintWriter selectedEn = new PrintWriter(new OutputStreamWriter(new FileOutputStream(selectedEnFn), "UTF-8"));
-      PrintWriter selectedFr = new PrintWriter(new OutputStreamWriter(new FileOutputStream(selectedFrFn), "UTF-8"));
-      PrintWriter selectedLn = new PrintWriter(new OutputStreamWriter(new FileOutputStream(selectedLines), "UTF-8"));
-      FDACorpusSelection fsacs = new FDACorpusSelection(bitextEn, bitextFr, testFr);
+      PrintWriter selectedEn = new PrintWriter(new OutputStreamWriter(
+        new FileOutputStream(selectedEnFn), "UTF-8"));
+      PrintWriter selectedFr = new PrintWriter(new OutputStreamWriter(
+        new FileOutputStream(selectedFrFn), "UTF-8"));
+      PrintWriter selectedLn = (selectedLines == null ? null : 
+        new PrintWriter(new OutputStreamWriter(new FileOutputStream(
+            selectedLines), "UTF-8")));
+      FDACorpusSelection fsacs = new FDACorpusSelection(bitextEn, bitextFr, 
+         testFr);
       for (int n = 0; n < selectionSize; n++) {
          Triple<String,String,Integer> frEn = fsacs.getNextBest();
          selectedFr.println(frEn.first());
          selectedEn.println(frEn.second());
-         selectedLn.println(frEn.third());
+         if (selectedLn != null) selectedLn.println(frEn.third());
       }
       selectedFr.close();
       selectedEn.close();      
       selectedLn.close();
-	}
+   }
 
 }
