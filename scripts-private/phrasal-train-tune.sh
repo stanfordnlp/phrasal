@@ -95,7 +95,7 @@ function tune-batch {
 	--phrasal-flags="" \
 	--java-flags="$JAVA_OPTS $DECODER_OPTS" \
 	--mert-java-flags="$JAVA_OPTS $MERT_OPTS" \
-	--nbest=$NBEST $TUNE_FILE "$REFDIR"/"$TUNE_SET_NAME"/ref \
+	--nbest=$NBEST $TUNE_FILE $TUNE_REF \
 	$OBJECTIVE $TUNE_INI_FILE \
 	>& logs/"$TUNEDIR".log
 
@@ -154,7 +154,6 @@ function decode {
 #
 # Evaluate the target output
 #
-# TODO(spenceg): Add better post-processing and conversion to HTML
 function evaluate {
     if [ $NBEST -gt 1 ]; then
 	cat "$RUNNAME"."$NBEST"best \
@@ -162,7 +161,13 @@ function evaluate {
 	    | nbest2uniq \
 	    > "$RUNNAME"."$NBEST"best.uniq 2> /dev/null
     fi
-    cat "$RUNNAME".out | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".out.bleu
+    cat "$RUNNAME".out | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
+
+    # TODO Output Tune BLEU
+
+    # TODO Convert eval data to Json
+
+    # TODO Copy over the html from JavaNLP (if necesary)
 }
 
 
@@ -185,6 +190,10 @@ DECODE_PTABLE_DIR="$DECODE_SET_NAME".tables
 DECODE_FILE="$DECODE_SET_NAME".prep
 
 RUNNAME="$DECODE_SET_NAME"."$TUNERUNNAME"
+
+# Log some info about this run
+cp $VAR_FILE "$RUNNAME".vars
+git log | head -n 1 | awk '{ print $2 }' > "$RUNNAME".version
 
 for step in ${STEPS[@]};
 do
