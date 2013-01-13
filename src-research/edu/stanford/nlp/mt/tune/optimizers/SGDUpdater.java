@@ -14,21 +14,18 @@ public class SGDUpdater implements OnlineUpdateRule<String> {
 
   private final double rate;
   
-  public SGDUpdater(double rate) {
-    this.rate = rate;
+  public SGDUpdater(double initialRate) {
+    this.rate = initialRate;
   }
 
   @Override
   public Counter<String> update(Counter<String> weights,
-      Counter<String> gradient) {
+      Counter<String> gradient, int timeStep) {
     Counter<String> newWeights = new ClassicCounter<String>(weights);
     Counter<String> gradientCopy = new ClassicCounter<String>(gradient);
-    Counters.multiplyInPlace(gradientCopy, rate);
-    Counters.subtractInPlace(newWeights, gradientCopy);
-    
-    // WSGDEBUG
-    System.err.printf("Update: L2 norm %.4f", Counters.L2Norm(newWeights));
-    
+    double nu = rate * (double) (1.0/(timeStep+1));
+    Counters.multiplyInPlace(gradientCopy, nu);
+    Counters.subtractInPlace(newWeights, gradientCopy);    
     return newWeights;
   }
 

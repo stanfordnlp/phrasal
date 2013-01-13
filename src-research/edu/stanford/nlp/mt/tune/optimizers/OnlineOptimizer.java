@@ -14,10 +14,10 @@ import edu.stanford.nlp.stats.Counter;
  *
  */
 public interface OnlineOptimizer<TK,FV> {
-
   /**
    * Compute the gradient for a given training example.
-   * @param weights TODO
+   * 
+   * @param weights 
    * @param source
    * @param sourceId
    * @param translations
@@ -31,6 +31,23 @@ public interface OnlineOptimizer<TK,FV> {
       int sourceId,
       List<RichTranslation<TK, FV>> translations,
       List<Sequence<TK>> references, SentenceLevelMetric<TK,FV> lossFunction);
+  
+  /**
+   * Compute the gradient for a mini-batch.
+   * 
+   * @param weights
+   * @param sources
+   * @param sourceIds
+   * @param translations
+   * @param references
+   * @param lossFunction
+   * @return
+   */
+  public Counter<FV> getBatchGradient(Counter<FV> weights, 
+      List<Sequence<TK>> sources, 
+      int[] sourceIds,
+      List<List<RichTranslation<TK, FV>>> translations,
+      List<List<Sequence<TK>>> references, SentenceLevelMetric<TK,FV> lossFunction);
   
   /**
    * Return a new updater object, which defines the online update rule. The updater

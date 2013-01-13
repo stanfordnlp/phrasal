@@ -85,8 +85,9 @@ public class PhraseExtract {
   static public final String MEM_USAGE_FREQ_OPT = "memUsageFreq";
   static public final String THREADS_OPT = "threads";
   static public final String WITH_GAPS_OPT = "withGaps";
-
-  // phrase translation probs:
+  static public final String TRIPLE_FILE = "tripleFile";
+  
+  // phrase translation probs:  
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
   static public final String IBM_LEX_MODEL_OPT = "ibmLexModel";
   static public final String USE_PMI = "usePmi";
@@ -144,7 +145,8 @@ public class PhraseExtract {
         USE_PMI,
         NORMALIZE_PMI,
         FILTER_CENTERDOT_OPT,
-        WITH_POS_OPT));
+        WITH_POS_OPT,
+        TRIPLE_FILE));
     ALL_RECOGNIZED_OPTS.addAll(REQUIRED_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
   }
@@ -183,6 +185,7 @@ public class PhraseExtract {
   private String alignCorpus, alignInvCorpus;
   private boolean filterFromDev = false, printFeatureNames = true, withAlign,
       lowercase;
+  boolean tripleFile = true;  // Single source ||| target ||| alignment triple file
   private SymmetrizationType symmetrizationType = null;
 
   private int totalPassNumber = 1;
@@ -230,6 +233,15 @@ public class PhraseExtract {
       prop.setProperty(F_CORPUS_OPT, inputDir + "/training." + fId);
       prop.setProperty(E_CORPUS_OPT, inputDir + "/training." + eId);
       prop.setProperty(A_CORPUS_OPT, inputDir + "/training.align");
+    }
+    
+    // Single source ||| target ||| alignment triple file
+    if (prop.containsKey(TRIPLE_FILE)) {
+      String tripleFileFn = prop.getProperty(TRIPLE_FILE);
+      tripleFile = true;
+      prop.setProperty(F_CORPUS_OPT, tripleFileFn);
+      prop.setProperty(E_CORPUS_OPT, tripleFileFn);
+      prop.setProperty(A_CORPUS_OPT, tripleFileFn);
     }
 
     // Check required, optional properties:
@@ -522,7 +534,12 @@ public class PhraseExtract {
         int lineNb = 0;
         for (String fLine;; ++lineNb) {
           fLine = fReader.readLine();
+
           boolean done = (fLine == null || lineNb == endAtLine);
+
+          if (tripleFile && !done) {
+            fLine = fLine.split(" \\|\\|\\| ")[0];
+          }
 
           if (lineNb % memUsageFreq == 0 || done) {
             // long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
@@ -545,6 +562,9 @@ public class PhraseExtract {
           }
 
           String eLine = eReader.readLine();
+          if (tripleFile) {
+            eLine = eLine.split(" \\|\\|\\| ")[1];
+          }
           if (eLine == null)
             throw new IOException("Target-language corpus is too short!");
           String pLine = pReader == null ? null : pReader.readLine();
@@ -570,6 +590,14 @@ public class PhraseExtract {
             }
           } else {
             aLine = aReader.readLine();
+            if (tripleFile) {
+              String[] toks = aLine.split(" \\|\\|\\| ");
+              if (toks.length >= 3) {
+                aLine = aLine.split(" \\|\\|\\| ")[2];
+              } else {
+                aLine = "";
+              }
+            }
             if (aLine == null)
               throw new IOException("Alignment file is too short!");
           }
@@ -788,6 +816,8 @@ public class PhraseExtract {
             + " -efAlign <file> : e-f alignment file (GIZA format)\n"
             + "Set 3:\n"
             + " -inputDir <directory> : alignment directory created by Berkeley aligner v2.1\n"
+            + "Set 4:\n"
+            + " -tripleFile <file> : source ||| target ||| alignment triple format\n"
             + "Optional arguments:\n"
             + " -outputFile <file> : phrases are written to this file\n"
             + " -symmetrization <type> : alignment symmetrization heuristic (expects -feAlign and -efAlign)\n"
@@ -809,7 +839,6 @@ public class PhraseExtract {
   }
 
   public static void main(String[] args) throws IOException {
-
     if (args.length == 1 && args[0].equals("-help")) {
       usage();
       return;
