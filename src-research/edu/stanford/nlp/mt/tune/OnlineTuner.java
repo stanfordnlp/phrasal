@@ -423,10 +423,6 @@ public class OnlineTuner {
       for (int t = 0; t < batches.length; ++t) {
         int[] batch = batches[t];
         int inputId = (epoch*numBatches) + t;
-        
-        // WSGDEBUG random restarts hack
-        if (t < numThreads && epoch != 0) OptimizerUtils.randomizeWeightsInPlace(currentWts, (double) epoch * 1e-3); 
-        
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
         Pair<Counter<String>,Integer> update = 
@@ -629,7 +625,7 @@ public class OnlineTuner {
       }
     }
     if (randomizeStartWeights) {
-      OptimizerUtils.randomizeWeightsInPlace(weights, 1e-3);
+      OptimizerUtils.randomizeWeightsInPlace(weights, 1e-4);
     }
     return weights;
   }
@@ -828,7 +824,7 @@ public class OnlineTuner {
     tuner.shutdown();
 
     final long elapsedTime = System.nanoTime() - startTime;
-    System.out.printf("Elapsed time: %.2f seconds%n", elapsedTime / 1000000000.0);
+    System.out.printf("Elapsed time: %.2f seconds%n", elapsedTime / 1e9);
     System.out.printf("Finished at: %s%n", new Date());
   }
 }
