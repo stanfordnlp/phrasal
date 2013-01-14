@@ -19,6 +19,8 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
 /**
+ * TODO(spenceg): Many methods in this class could be replaced with equivalent calls in
+ * ArrayMath.
  * 
  * @author daniel cer
  *
@@ -204,4 +206,19 @@ public class OptimizerUtils {
     }
     return Counters.keysAbove(featureSegmentCounts, minSegmentCount -1);
   }
+  
+  /**
+   * Add a scaled (positive) random vector to a weights vector.
+   * 
+   * @param wts
+   * @param scale
+   */
+  public static void randomizeWeightsInPlace(Counter<String> wts, double scale) {
+    for (String feature : wts.keySet()) {
+      double epsilon = Math.random() * scale;
+      double newValue = wts.getCount(feature) + epsilon;
+      wts.setCount(feature, newValue);
+    }
+  }
+  
 }

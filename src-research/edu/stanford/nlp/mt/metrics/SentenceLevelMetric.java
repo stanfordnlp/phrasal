@@ -32,4 +32,11 @@ public interface SentenceLevelMetric<TK,FV> {
    * @param translation
    */
   public void update(int sourceId, List<Sequence<TK>> references, Sequence<TK> translation);
+  
+  /**
+   * Is this metric threadsafe.
+   * 
+   * @return
+   */
+  public boolean isThreadsafe();
 }

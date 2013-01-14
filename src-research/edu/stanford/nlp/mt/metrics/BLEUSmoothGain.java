@@ -45,4 +45,8 @@ public class BLEUSmoothGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
   public void update(int sourceId, List<Sequence<TK>> references,
       Sequence<TK> translation) {}
 
+  @Override
+  public boolean isThreadsafe() {
+    return true;
+  }
 }
