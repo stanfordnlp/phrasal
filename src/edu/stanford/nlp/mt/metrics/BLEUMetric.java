@@ -16,7 +16,6 @@ import edu.stanford.nlp.util.Pair;
  * @param <TK>
  */
 public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
-
   public static final int DEFAULT_MAX_NGRAM_ORDER = 4;
 
   public static final double LENGTH_BIAS = Double.parseDouble(System
@@ -146,9 +145,6 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     init(referencesList);
     this.multiplier = multiplier;
     smooth = referencesList.size() == 1;
-    if (referencesList.size() == 1) {
-      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
-    }
   }
 
   public BLEUMetric(List<List<Sequence<TK>>> referencesList) {
@@ -166,9 +162,6 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     multiplier = 1;
     init(referencesList);
     this.smooth = referencesList.size() == 1 || smooth;
-    if (referencesList.size() == 1) {
-      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
-    }
   }
 
   /**
@@ -183,10 +176,6 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     multiplier = 1;
     init(referencesList);
     this.smooth = referencesList.size() == 1 || smooth;
-    if (referencesList.size() == 1) {
-      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
-    }
-    // System.err.println("smoothed BLEU: "+smooth);
   }
 
   public BLEUMetric(List<List<Sequence<TK>>> referencesList, int order) {
@@ -197,9 +186,6 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     multiplier = 1;
     init(referencesList);
     smooth = referencesList.size() == 1;
-    if (referencesList.size() == 1) {
-      System.err.println("Length 1 evaluation set - forcing smoothed BLEU");
-    }
   }
 
   private void init(List<List<Sequence<TK>>> referencesList) {
