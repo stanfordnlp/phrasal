@@ -63,7 +63,7 @@ public class NbestEvaluatationAnnotation {
             new ArrayList<ScoredFeaturizedTranslation<IString,String>>(1);
         trans.add(tran);
         double emetricScore = emetric.score(trans);
-        nbestOut.printf("%d ||| %s ||| %f\n", id, trans.toString(), emetricScore);
+        nbestOut.printf("%d ||| %s ||| %f\n", id, tran.toString(), emetricScore);
       }
     }
     nbestOut.close();
