@@ -206,10 +206,9 @@ public class AlignmentTreeNode extends Tree {
   }
 
   /**
-   * Sets the children of this <code>Tree</code>. If given <code>null</code>,
-   * this method prints a warning and sets the Tree's children to the canonical
-   * zero-length Tree[] array. Constructing a LabeledScoredTreeLeaf is
-   * preferable in this case.
+   * Sets the children of this <code>Tree</code>. If given
+   * <code>null</code>, this method sets the Tree's children to the
+   * canonical zero-length Tree[] array.
    * 
    * @param children
    *          An array of child trees
@@ -217,10 +216,6 @@ public class AlignmentTreeNode extends Tree {
   @Override
   public void setChildren(Tree[] children) {
     if (children == null) {
-      System.err
-          .println("Warning -- you tried to set the children of a LabeledScoredTreeNode to null.\n"
-              + "You really should be using a zero-length array instead.\n"
-              + "Consider building a LabeledScoredTreeLeaf instead.");
       this.children = ZERO_ATN_CHILDREN;
     } else {
       this.children = (AlignmentTreeNode[]) children;
