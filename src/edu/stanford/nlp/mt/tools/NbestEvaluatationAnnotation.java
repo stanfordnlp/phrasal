@@ -4,7 +4,7 @@ import static java.lang.System.*;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.FlatNBestList;
@@ -58,8 +58,11 @@ public class NbestEvaluatationAnnotation {
       List<ScoredFeaturizedTranslation<IString, String>> nbestList = nbestLists.get(id);
       
       EvaluationMetric<IString,String> emetric = EvaluationMetricFactory.newMetric(metricName, refs.subList(id, id+1));
-      for (ScoredFeaturizedTranslation<IString, String> trans : nbestList) {
-        double emetricScore = emetric.score(Arrays.asList(trans));
+      for (ScoredFeaturizedTranslation<IString, String> tran : nbestList) {
+        List<ScoredFeaturizedTranslation<IString,String>> trans = 
+            new ArrayList<ScoredFeaturizedTranslation<IString,String>>(1);
+        trans.add(tran);
+        double emetricScore = emetric.score(trans);
         nbestOut.printf("%d ||| %s ||| %f\n", id, trans.toString(), emetricScore);
       }
     }
