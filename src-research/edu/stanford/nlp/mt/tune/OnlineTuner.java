@@ -15,6 +15,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -42,7 +43,6 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Triple;
@@ -63,6 +63,7 @@ public class OnlineTuner {
   // Other classes should attach() to this log handler
   private static Handler logHandler = null;
   private static String logPrefix;
+  private static Level logLevel = Level.INFO;
 
   private static void initLogger(String tag) {
     // Disable default console logger
@@ -90,6 +91,7 @@ public class OnlineTuner {
     if (logHandler != null) {
       logger.addHandler(logHandler);
     }
+    logger.setLevel(logLevel);
   }
 
   // What it says
@@ -226,6 +228,7 @@ public class OnlineTuner {
       this.source = input;
       this.translationIds = translationIds;
       this.references = references;
+      // Copy the weights for the decoder
       this.weights = new ClassicCounter<String>(weights);
       this.inputId = inputId;
     }
@@ -304,9 +307,6 @@ public class OnlineTuner {
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, lossFunction);
       }
-      // Sparse features may turn up in the gradients (the decoder featurizers add the features). Make
-      // sure to add those features to the index.
-      featureIndex.addAll(gradient.keySet());
 
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
     }
@@ -327,7 +327,7 @@ public class OnlineTuner {
    * 
    * @return
    */
-  private Pair<Counter<String>,Integer> applyGradientUpdatesTo(Counter<String> currentWts, 
+  private int applyGradientUpdatesTo(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       OnlineUpdateRule<String> updater, Map<Integer, List<RichTranslation<IString, String>>> nbestLists) {
     assert threadpool != null;
@@ -339,22 +339,28 @@ public class OnlineTuner {
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
 
+      // Sparse features may turn up in the gradients (the decoder featurizers add the features). Make
+      // sure to add those features to the index.
+      featureIndex.addAll(result.gradient.keySet());
+      
       // Debugging only
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
 
       // Apply update rule
       Counter<String> last = new ClassicCounter<String>(currentWts);
-      currentWts = updater.update(currentWts, result.gradient, updateStep);
+      updater.update(currentWts, result.gradient, updateStep);
       
       // Debug info
-      logger.info(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
+      logger.fine(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
       Counters.subtractInPlace(last, currentWts);
       logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
       ++updateStep;
 
       // Accumulate for parameter averaging
-      wts.addAll(currentWts);
+      if (doParameterAveraging) {
+        wts.addAll(currentWts);
+      }
 
       // Add n-best lists from this update step
       for (int i = 0; i < result.translationIds.length; ++i) {
@@ -363,7 +369,7 @@ public class OnlineTuner {
         nbestLists.put(translationId, result.nbestLists.get(i));
       }
     }
-    return new Pair<Counter<String>,Integer>(currentWts, updateStep);
+    return updateStep;
   }
 
   /**
@@ -425,10 +431,7 @@ public class OnlineTuner {
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
-        Pair<Counter<String>,Integer> update = 
-            applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists);
-        currentWts = update.first();
-        updateId = update.second();
+        updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists);
         
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
@@ -439,10 +442,8 @@ public class OnlineTuner {
 
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
-      Pair<Counter<String>,Integer> update = 
+      updateId = 
           applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists);
-      currentWts = update.first();
-      updateId = update.second();
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
@@ -701,7 +702,7 @@ public class OnlineTuner {
     IOTools.writeWeights(filename, finalWeights);
     logger.info("Wrote final weights to " + filename);
     logger.info(String.format("Final weights from epoch %d: BLEU: %.2f", selectedEpoch.second(), selectedEpoch.first()));
-    logger.info(String.format("Non-zero final weights: %d / %d", wts.keySet().size(), featureIndex.size()));
+    logger.info(String.format("Non-zero final weights: %d / %d", finalWeights.keySet().size(), featureIndex.size()));
   }
 
   /**
@@ -736,6 +737,7 @@ public class OnlineTuner {
     optionMap.put("bw", 0);
     optionMap.put("a", 0);
     optionMap.put("b", 1);
+    optionMap.put("l", 1);
     return optionMap;
   }
 
@@ -763,6 +765,7 @@ public class OnlineTuner {
     sb.append("   -bw        : Set final weights to the best training epoch.").append(nl);
     sb.append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl);
     sb.append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl);
+    sb.append("   -l level   : Set java.logging level").append(nl);
     return sb.toString().trim();
   }
 
@@ -787,6 +790,7 @@ public class OnlineTuner {
     boolean doParameterAveraging = PropertiesUtils.getBool(opts, "a", false);
     int batchSize = PropertiesUtils.getInt(opts, "b", 1);
     boolean randomizeStartingWeights = PropertiesUtils.getBool(opts, "rw", false);
+    OnlineTuner.logLevel = Level.parse(opts.getProperty("l", "INFO"));
 
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
