@@ -10,7 +10,7 @@ if [ "$CORENLP" == "" ]; then
    exit -1;
 fi
 
-for jf in `ls $PHRASAL/*.jar $CORENLP/*.jar`; do
+for jf in `ls $PHRASAL/*.jar $PHRASAL/lib/*.jar $CORENLP/*.jar`; do
   export CLASSPATH=$jf:$CLASSPATH
 done
 

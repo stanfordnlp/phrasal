@@ -10,7 +10,7 @@ if ( "$CORENLP" == "" ) then
    exit -1;
 endif
 
-foreach jf ($PHRASAL/*.jar $CORENLP/*.jar)
+foreach jf ($PHRASAL/*.jar $PHRASAL/lib/*.jar $CORENLP/*.jar)
   setenv CLASSPATH "${jf}:${CLASSPATH}"
   #echo  "${jf}:${CLASSPATH}"
 end
