@@ -12,12 +12,12 @@ import edu.stanford.nlp.stats.Counter;
 public interface OnlineUpdateRule<FV> {
 
   /**
-   * Take a weight vector and a gradient and return an updated weight vector.
+   * Take a weight vector and a gradient and update the weight vector in place.
    * 
    * @param weights
    * @param gradient
    * @param timeStep
    * @return
    */
-  public Counter<FV> update(Counter<FV> weights, Counter<FV> gradient, int timeStep);
+  public void update(Counter<FV> weights, Counter<FV> gradient, int timeStep);
 }

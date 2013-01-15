@@ -246,7 +246,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.size() == 0) {
       logger.warning("Null gradient for sourceId: " + sourceId);
     } else {
-      logger.info("Gradient: " + gradient.toString());
+      logger.fine("Gradient: " + gradient.toString());
     }
     return gradient;
   }
@@ -267,7 +267,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.size() == 0) {
       logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
     } else {
-      logger.info("Gradient: " + gradient.toString());
+      logger.fine("Gradient: " + gradient.toString());
     }
     return gradient;
   }
