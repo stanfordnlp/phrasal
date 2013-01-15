@@ -185,7 +185,7 @@ public class PhraseExtract {
   private String alignCorpus, alignInvCorpus;
   private boolean filterFromDev = false, printFeatureNames = true, withAlign,
       lowercase;
-  boolean tripleFile = true;  // Single source ||| target ||| alignment triple file
+  boolean tripleFile = false;  // Single source ||| target ||| alignment triple file
   private SymmetrizationType symmetrizationType = null;
 
   private int totalPassNumber = 1;

@@ -178,6 +178,14 @@ function step-status {
     echo "### Running Step $1"
 }
 
+function bookmark {
+    cp $VAR_FILE "$RUNNAME".vars
+    WDIR=`pwd`
+    cd $JAVANLP_HOME
+    git log | head -n 1 | awk '{ print $2 }' > $WDIR/"$RUNNAME".version
+    cd $WDIR
+}
+
 # Synthetic parameters and commands
 mkdir -p logs
 TUNE_PTABLE_DIR="$TUNE_SET_NAME".tables
@@ -192,8 +200,7 @@ DECODE_FILE="$DECODE_SET_NAME".prep
 RUNNAME="$DECODE_SET_NAME"."$TUNERUNNAME"
 
 # Log some info about this run
-cp $VAR_FILE "$RUNNAME".vars
-git log | head -n 1 | awk '{ print $2 }' > "$RUNNAME".version
+bookmark
 
 for step in ${STEPS[@]};
 do

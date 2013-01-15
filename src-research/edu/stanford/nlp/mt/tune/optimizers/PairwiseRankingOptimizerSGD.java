@@ -23,7 +23,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.Quadruple;
+import edu.stanford.nlp.util.Triple;
 
 /**
  * Pairwise Ranking Optimization + SGD
@@ -154,35 +154,25 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
       // Sample from this n-best list
       // Loss function is not threadsafe
-      List<Quadruple<Double, Integer, Integer,Integer>> v = 
-          new ArrayList<Quadruple<Double, Integer, Integer, Integer>>(gamma);
-      synchronized(lossFunction) {
-        int jMax   = translations.size();  
-        for (int g = 0; g < gamma; g++) {
-          int j      = random.nextInt(jMax); 
-          int jPrime = random.nextInt(jMax);
-          double gJ = lossFunction.score(sourceId, references, translations.get(j).translation);
-          double gJPrime = lossFunction.score(sourceId,  references, translations.get(jPrime).translation);
-          double absDiff = Math.abs(gJ-gJPrime);
-          if (absDiff >= nThreshold) {
-            if (gJ > gJPrime) {
-              v.add(new Quadruple<Double, Integer,Integer,Integer>(absDiff, j, jPrime, i));
-            } else {
-              v.add(new Quadruple<Double, Integer,Integer,Integer>(absDiff, jPrime, j, i));
-            }
-          }
-        }
-        // Update the loss function with the 1-best translation
+      List<Triple<Double, Integer, Integer>> v;
+      if (lossFunction.isThreadsafe()) {
+        v = sample(translations, references, sourceId, lossFunction);
         lossFunction.update(sourceId, references, translations.get(0).translation);
+       
+      } else {
+        synchronized(lossFunction) {
+          v = sample(translations, references, sourceId, lossFunction);
+          lossFunction.update(sourceId, references, translations.get(0).translation);
+        }
       }
 
       // Get the max-margin pairs
       Collections.sort(v);
       Collections.reverse(v);
-      List<Quadruple<Double, Integer, Integer, Integer>> selectedV = v.subList(0, Math.min(xi, v.size()));
+      List<Triple<Double, Integer, Integer>> selectedV = v.subList(0, Math.min(xi, v.size()));
 
       // Add selectedV to RVFDataset
-      for (Quadruple<Double, Integer, Integer, Integer> selectedPair : selectedV) {
+      for (Triple<Double, Integer, Integer> selectedPair : selectedV) {
         Counter<String> plusFeatures = OptimizerUtils.featureValueCollectionToCounter(
             translations.get(selectedPair.second()).features);
         Counter<String> minusFeatures = OptimizerUtils.featureValueCollectionToCounter(
@@ -205,12 +195,34 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         double margin = selectedPair.first();
         int j = selectedPair.second();
         int jPrime = selectedPair.third();
-//        logger.info(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
-//            translationList.get(i).get(j).translation.toString(), 
-//            translationList.get(i).get(jPrime).translation.toString()));
+        logger.fine(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
+            translationList.get(i).get(j).translation.toString(), 
+            translationList.get(i).get(jPrime).translation.toString()));
       }
     }
     return dataset;
+  }
+
+  private List<Triple<Double, Integer, Integer>> sample(List<RichTranslation<IString, String>> translations,
+      List<Sequence<IString>> references, int sourceId, SentenceLevelMetric<IString, String> lossFunction) {
+    List<Triple<Double, Integer, Integer>> v = 
+        new ArrayList<Triple<Double, Integer, Integer>>(gamma);
+    int jMax   = translations.size();  
+    for (int g = 0; g < gamma; g++) {
+      int j      = random.nextInt(jMax); 
+      int jPrime = random.nextInt(jMax);
+      double gJ = lossFunction.score(sourceId, references, translations.get(j).translation);
+      double gJPrime = lossFunction.score(sourceId,  references, translations.get(jPrime).translation);
+      double absDiff = Math.abs(gJ-gJPrime);
+      if (absDiff >= nThreshold) {
+        if (gJ > gJPrime) {
+          v.add(new Triple<Double, Integer,Integer>(absDiff, j, jPrime));
+        } else {
+          v.add(new Triple<Double, Integer,Integer>(absDiff, jPrime, j));
+        }
+      }
+    }
+    return v;
   }
 
   /**
