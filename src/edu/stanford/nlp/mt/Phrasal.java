@@ -584,21 +584,8 @@ public class Phrasal {
 
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s\n", config.get(WEIGHTS_FILE).get(0));
-      if (config.get(WEIGHTS_FILE).get(0).endsWith(".binwts")) {
-        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
-            config.get(WEIGHTS_FILE).get(0)));
-        weightConfig = (Counter<String>) ois.readObject();
-        ois.close();
-      } else {
-
-        BufferedReader reader = new BufferedReader(new FileReader(config.get(
-            WEIGHTS_FILE).get(0)));
-        for (String line; (line = reader.readLine()) != null;) {
-          String[] fields = line.split("\\s+");
-          weightConfig.incrementCount(fields[0], Double.parseDouble(fields[1]));
-        }
-        reader.close();
-      }
+      
+      weightConfig = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));      
     } else {
       if (config.containsKey(INLINE_WEIGHTS)) {
         List<String> inlineWts = config.get(TRANSLATION_MODEL_WT_OPT);

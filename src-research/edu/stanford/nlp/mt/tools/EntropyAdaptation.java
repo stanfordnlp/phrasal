@@ -11,8 +11,8 @@ import java.util.Random;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.FlatNBestList;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.PhrasalUtil;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.StaticScorer;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
@@ -48,7 +48,7 @@ public class EntropyAdaptation {
     double C = Double.parseDouble(argv[2]);
     String newWeightsFn = (argv.length > 3 ? argv[3] : null);
     
-    Counter<String> weights = PhrasalUtil.readWeights(weightsfn);
+    Counter<String> weights = IOTools.readWeights(weightsfn);
     String[] weightNames = OptimizerUtils.getWeightNamesFromCounter(weights);
     
     FlatNBestList nbestlists = new FlatNBestList(nbestfn);

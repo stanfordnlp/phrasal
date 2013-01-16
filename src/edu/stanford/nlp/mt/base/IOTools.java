@@ -146,14 +146,15 @@ public final class IOTools {
   public static Counter<String> readWeights(String filename,
       Index<String> featureIndex) throws IOException, ClassNotFoundException {
     Counter<String> wts;
-    if (filename.endsWith(".binwts")) {
+    try {
       ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
           filename));
       wts =  ErasureUtils.<Counter<String>>uncheckedCast(ois.readObject());
-      ois.close();
-    
-    } else {
-      wts = Counters.loadCounter(filename, String.class);
+      ois.close();    
+    } catch (IOException e) {
+       wts = Counters.loadCounter(filename, String.class);
+    } catch (ClassNotFoundException e) {
+       wts = Counters.loadCounter(filename, String.class);
     }
     
     if (featureIndex != null) {
@@ -162,6 +163,11 @@ public final class IOTools {
       }
     }
     return wts;
+  }
+  
+  
+  public static Counter<String> readWeights(String filename) throws IOException, ClassNotFoundException {
+    return readWeights(filename, null);
   }
 
   /**

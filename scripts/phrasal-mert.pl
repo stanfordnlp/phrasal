@@ -20,7 +20,7 @@ use List::Util qw[min max];
 #
 # Usage:
 #
-#   mert-phrasal.pl input-text references cmert-dir decoder.ini
+#   phrasal-mert.pl input-text references cmert-dir decoder.ini
 #
 # Author: Daniel Cer (Daniel.Cer@gmail.com)
 #############################################################################
@@ -100,16 +100,16 @@ sub handle_arg {
   } elsif ($arg =~ /^--oracle=.*/) {
      $ORACLE = $arg;
      $ORACLE =~ s/^--oracle=//;
-		 chomp $SLEEP;
+       chomp $SLEEP;
   } elsif ($arg =~ /^--sleep=.*/) {
      $SLEEP = $arg;
      $SLEEP =~ s/^--sleep=//;
-		 chomp $SLEEP;
+       chomp $SLEEP;
   } elsif ($arg =~ /^--history-size=.*/) {
-		 $NBEST_HISTORY_WINDOW = $arg;
+       $NBEST_HISTORY_WINDOW = $arg;
      $NBEST_HISTORY_WINDOW =~ s/^--history-size=//;
-		 print STDERR "HISTORY SIZE: $NBEST_HISTORY_WINDOW\n";
-		 chomp $SLEEP;
+       print STDERR "HISTORY SIZE: $NBEST_HISTORY_WINDOW\n";
+       chomp $SLEEP;
   } elsif ($arg =~ /^--working-dir=.*/) {
      $work_dir = $arg;
      $work_dir =~ s/^--working-dir=//;
@@ -120,22 +120,25 @@ sub handle_arg {
      $java_flags = $arg;
      $java_flags =~ s/^--java-flags=//g;
      $mert_java_flags = $java_flags;
-		 print STDERR "JAVA FLAGS: $java_flags\n";
+       print STDERR "JAVA FLAGS: $java_flags\n";
   } elsif ($arg =~ /^--mert-java-flags=.*/) {
      $mert_java_flags = $arg;
      $mert_java_flags =~ s/^--mert-java-flags=//g;
-		 print STDERR "MERT JAVA FLAGS: $mert_java_flags\n";
+       print STDERR "MERT JAVA FLAGS: $mert_java_flags\n";
   } elsif ($arg =~ /^--phrasal-flags=.*/) {
      $phrasal_flags = $arg;
      $phrasal_flags =~ s/^--phrasal-flags=//g;
-		 print STDERR "PHRASAL FLAGS: $phrasal_flags\n";
+       print STDERR "PHRASAL FLAGS: $phrasal_flags\n";
   } elsif ($arg =~ /^--opt-flags=.*/) {
      $opt_flags = $arg;
      $opt_flags =~ s/^--opt-flags=//g;
-		 print STDERR "OPT FLAGS: $opt_flags\n";
+       print STDERR "OPT FLAGS: $opt_flags\n";
   } elsif ($arg =~ /^--rseed=.*/) {
      $rseed_prefix = $arg;
      $rseed_prefix =~ s/^--rseed=//g;
+  } elsif ($arg =~ /^--script-opt=/) {
+     $script_opt = $arg;
+     $script_opt =~ s/^--script-opt=//g;
   } else {
      print stderr "Unrecognized flag $arg\n";
      exit -1;
@@ -143,7 +146,7 @@ sub handle_arg {
 }
 
 foreach $arg (@ARGV) {
-	print STDERR "arg: $arg\n";
+   print STDERR "arg: $arg\n";
   if (not ($arg =~ /^--.*/)) {
      push @POSITIONAL_ARGS, $arg;
      next;
@@ -160,13 +163,13 @@ if (@POSITIONAL_ARGS != 4 && @POSITIONAL_ARGS != 5) {
 }
 
 if (@POSITIONAL_ARGS == 5) {
-	my $dirname = `dirname $0`;
-	chomp $dirname;
-	my $memsize = shift(@POSITIONAL_ARGS);
-	$java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
-	$mert_java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
-	$java_flags .= " -Xmx$memsize ";
-	$mert_java_flags .= "-Xmx$memsize ";
+   my $dirname = `dirname $0`;
+   chomp $dirname;
+   my $memsize = shift(@POSITIONAL_ARGS);
+   $java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
+   $mert_java_flags =~ s/(^| )-Xm[xs]\S+($| )/ /g;
+   $java_flags .= " -Xmx$memsize ";
+   $mert_java_flags .= "-Xmx$memsize ";
 }
 
 $input_text   = $POSITIONAL_ARGS[0];
@@ -181,9 +184,9 @@ $decoder_ini  = $POSITIONAL_ARGS[3];
 
 open fhdi, "$decoder_ini" or die "Can't open $decoder_ini\n";
 while (<fhdi>) { chomp;
-	next unless /^#PMERT/;
-	s/^#PMERT\s+//;
-	handle_arg($_);
+   next unless /^#PMERT/;
+   s/^#PMERT\s+//;
+   handle_arg($_);
 }
 close fhdi;
 
@@ -279,12 +282,12 @@ my $init_weight_file = '';
 while (!eof(difh)) {
   $line = <difh>; chomp $line;
   if ($line =~ /^\[weights-file\].*/) {
-		$init_weight_file = <difh>; chomp $init_weight_file;
-		next;
-	}
+      $init_weight_file = <difh>; chomp $init_weight_file;
+      next;
+   }
   if ($line =~ /^\s*$/ or $line =~ /^\s*#.*$/ or $line =~ /^\[.*/) { 
      $strip_line = 0;
-		 $wts_line = 0;
+       $wts_line = 0;
   }
   foreach $strip_field (keys %strip_fields) {
      if ($line =~ /\[$strip_field\].*/) {
@@ -318,8 +321,8 @@ while (!eof(difh)) {
 close difh; 
 
 if($ORACLE) {
-	$init_wts{BLEU} = $ORACLE;
-	 $opt_flags .= " -D BLEU";
+   $init_wts{BLEU} = $ORACLE;
+    $opt_flags .= " -D BLEU";
 }
 
 
@@ -336,8 +339,8 @@ if ($init_weight_file ne '') {
 } else {
   open wtfh, ">$ini_weight_file" or die;
   foreach $key (keys %init_wts) {
-	  print "$key => $init_wts{$key}\n";
- 	  print wtfh "$key $init_wts{$key}\n"
+     print "$key => $init_wts{$key}\n";
+      print wtfh "$key $init_wts{$key}\n"
   }
   close wtfh;
 }
@@ -345,17 +348,17 @@ if ($init_weight_file ne '') {
 $first_active_iter = 0;
 
 if ($ENV{"RECOVER"}) {
-	system stderr "Searching for work in progress....\n";
-	@trans_files = `ls $work_dir/phrasal.*$WEIGHTS_SUFF`; # we use a cue that is safe but, risks redoing some work
-	$max_weight_iter = 0;
-	foreach $trans_file (@trans_files) { chomp $trans_file;
-		$iter = $trans_file;
-		$iter =~ s/^.*phrasal\.//;
-		$iter =~ s/\.wts//;
-		$max_weight_iter = $iter if ($iter > $max_weight_iter);
-	}
-	$first_active_iter = $max_weight_iter;
-	print stderr "Restarting on iter: $first_active_iter\n";
+   system stderr "Searching for work in progress....\n";
+   @trans_files = `ls $work_dir/phrasal.*$WEIGHTS_SUFF`; # we use a cue that is safe but, risks redoing some work
+   $max_weight_iter = 0;
+   foreach $trans_file (@trans_files) { chomp $trans_file;
+      $iter = $trans_file;
+      $iter =~ s/^.*phrasal\.//;
+      $iter =~ s/\.wts//;
+      $max_weight_iter = $iter if ($iter > $max_weight_iter);
+   }
+   $first_active_iter = $max_weight_iter;
+   print stderr "Restarting on iter: $first_active_iter\n";
 } 
 
 
@@ -364,7 +367,7 @@ $LastObj = "null";
 
 for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr "Iter: $iter\n"; 
-	 print stderr "Date: ".`date`;
+    print stderr "Date: ".`date`;
    print stderr 
    "========================================================================".
    "\n\n";
@@ -404,11 +407,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    "------------------------------------------------------------------------\n\n";
    if (!$ENV{"SDI$iter"} && $iter >= $first_active_iter) { 
      my $cmd = "java $java_flags edu.stanford.nlp.mt.Phrasal $phrasal_flags -config-file $iter_decoder_ini < $input_text 2>$iter_dlog > $iter_trans";
-		 print "CMD:\n$cmd\n\n";
+       print "CMD:\n$cmd\n\n";
      my $now = localtime time;
      print "Start time: ",$now,"\n";
     `$cmd`;
-		 # Sort output:
+       # Sort output:
      open fh, $iter_trans or die;
      while (<fh>) {
        chomp;
@@ -436,7 +439,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
      print stderr "Success.\n";
      sleep $SLEEP; # nfs weirdness with slow writes?!?!
      print "gziping $iter_nbest_list\n";
-		 `$SORT -t '|' -n -s $iter_nbest_list | gzip > $iter_nbest_list.gz`;
+       `$SORT -t '|' -n -s $iter_nbest_list | gzip > $iter_nbest_list.gz`;
      unlink("$iter_nbest_list");
    } else {
      print "skipping decoding for iter $iter ($first_active_iter)\n";
@@ -444,11 +447,11 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
 
    if ($opt_type eq 'bleu-ter') {
      my $terStr = `java $java_flags edu.stanford.nlp.mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; chomp $terStr;
-		 $terStr =~ /TER = -(\S+)/; 
-		 my $terScore = $1;
-		 my $bleuStr = `java $java_flags edu.stanford.nlp.mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; chomp $bleuStr;
-		 $bleuStr =~ /BLEU = (\S+),/; 
-		 my $bleuScore = $1;
+       $terStr =~ /TER = -(\S+)/; 
+       my $terScore = $1;
+       my $bleuStr = `java $java_flags edu.stanford.nlp.mt.metrics.BLEUMetric $referenceList < $iter_trans 2>&1`; chomp $bleuStr;
+       $bleuStr =~ /BLEU = (\S+),/; 
+       my $bleuScore = $1;
      $trans_eval = "(TER-BLEU)/2 = ".(($terScore-$bleuScore)/2).", TER = $terScore, $bleuStr\n";
    } elsif ($opt_type eq 'ter') {
      $trans_eval = `java $java_flags edu.stanford.nlp.mt.metrics.TERMetric $referenceList < $iter_trans 2>&1`; 
@@ -471,13 +474,13 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    }
 
    chomp $trans_eval;
-	 $trans_eval =~ s/\n/\n# /g; # comment $trans_eval, since printed inside ini file
+    $trans_eval =~ s/\n/\n# /g; # comment $trans_eval, since printed inside ini file
    
    print stderr "$trans_eval\n";
 
    $trans_eval2 = `java $java_flags edu.stanford.nlp.mt.tools.Evaluate '$opt_type' $referenceList < $iter_trans 2>&1`;
    chomp $trans_eval2;
-	 $trans_eval2 =~ s/\n/\n# /g; # comment $trans_eval, since printed inside ini file
+    $trans_eval2 =~ s/\n/\n# /g; # comment $trans_eval, since printed inside ini file
    print stderr "$trans_eval2\n";
    $trans_eval .= "\n#$trans_eval2\n";
   
@@ -506,186 +509,116 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    $iter_pcumulative_nbest = "$work_dir/phrasal.$iter.combined.nbest.gz";
    
    if ($iter >= $first_active_iter) {
-	   print stderr "Building cummulative nbest list:\n$iter_pcumulative_nbest\n";
-	   
-	   if ($iter == 0) {
+      print stderr "Building cummulative nbest list:\n$iter_pcumulative_nbest\n";
+      
+      if ($iter == 0) {
         print "cp $iter_nbest_list.gz $iter_pcumulative_nbest\n";
-	      `cp $iter_nbest_list.gz $iter_pcumulative_nbest`;
-	   } else {
-	     # $prior_pcumulative_nbest = "$work_dir/phrasal.".($iter-1).".combined.nbest";
-	     unlink($local_iter_pcumulative_nbest);
-	     unlink($iter_pcumulative_nbest);
-	     for ($prior_iter = max(0, $iter-$NBEST_HISTORY_WINDOW);
-	          $prior_iter < $iter; $prior_iter++) {
-	          $prioriter_nbest_list = "$work_dir/phrasal.$prior_iter.nbest";
-	          `gunzip -c $prioriter_nbest_list.gz | sed 's/|||[^|]*|||[^|]*\$//' >> $local_iter_pcumulative_nbest`;    
-	      }
-	      `gunzip -c $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $local_iter_pcumulative_nbest`; 
+         `cp $iter_nbest_list.gz $iter_pcumulative_nbest`;
+      } else {
+        # $prior_pcumulative_nbest = "$work_dir/phrasal.".($iter-1).".combined.nbest";
+        unlink($local_iter_pcumulative_nbest);
+        unlink($iter_pcumulative_nbest);
+        for ($prior_iter = max(0, $iter-$NBEST_HISTORY_WINDOW);
+             $prior_iter < $iter; $prior_iter++) {
+             $prioriter_nbest_list = "$work_dir/phrasal.$prior_iter.nbest";
+             `gunzip -c $prioriter_nbest_list.gz | sed 's/|||[^|]*|||[^|]*\$//' >> $local_iter_pcumulative_nbest`;    
+         }
+         `gunzip -c $iter_nbest_list.gz  | sed 's/|||[^|]*|||[^|]*\$//'   >> $local_iter_pcumulative_nbest`; 
    
    
-	     $temp_unsorted_uniq = "$TMP/temp_unsorted.$$.uniq.gz";
-	     `$SORT $local_iter_pcumulative_nbest -u | gzip > $temp_unsorted_uniq`; 
-			 unlink("$local_iter_pcumulative_nbest");
-	     $totalNbestListSize = `gunzip -c $temp_unsorted_uniq | wc -l`;
-	     chomp $totalNbestListSize;
-	     print stderr "Total unique entries on cumulative nbest list $totalNbestListSize\n";
-	     print stderr "Total unique entries on last cumulative nbest list $lastTotalNbestListSize\n";
-	     
-	     
-	     if ($totalNbestListSize == $lastTotalNbestListSize) {
-	  		print stderr "Done as n-best list has not grown, $totalNbestListSize == $lastTotalNbestListSize\n";
-	  		last;   	
-	     }
-	     
-	     $lastTotalNbestListSize = $totalNbestListSize;  
-	     `gunzip -c $temp_unsorted_uniq | $SORT -n -k 1 -s | gzip > $iter_pcumulative_nbest`;
-			 unlink("$temp_unsorted_uniq");
-	   }
+        $temp_unsorted_uniq = "$TMP/temp_unsorted.$$.uniq.gz";
+        `$SORT $local_iter_pcumulative_nbest -u | gzip > $temp_unsorted_uniq`; 
+          unlink("$local_iter_pcumulative_nbest");
+        $totalNbestListSize = `gunzip -c $temp_unsorted_uniq | wc -l`;
+        chomp $totalNbestListSize;
+        print stderr "Total unique entries on cumulative nbest list $totalNbestListSize\n";
+        print stderr "Total unique entries on last cumulative nbest list $lastTotalNbestListSize\n";
+        
+        
+        if ($totalNbestListSize == $lastTotalNbestListSize) {
+           print stderr "Done as n-best list has not grown, $totalNbestListSize == $lastTotalNbestListSize\n";
+           last;      
+        }
+        
+        $lastTotalNbestListSize = $totalNbestListSize;  
+        `gunzip -c $temp_unsorted_uniq | $SORT -n -k 1 -s | gzip > $iter_pcumulative_nbest`;
+          unlink("$temp_unsorted_uniq");
+      }
    } else {
-   	 print stderr "Skipping building cummulative nbest list for iter $iter ($first_active_iter)\n";
+       print stderr "Skipping building cummulative nbest list for iter $iter ($first_active_iter)\n";
    }
    
    $next_iter_weights = "$work_dir/phrasal.".($iter+1)."$WEIGHTS_SUFF";
-   if (!$cmert_dir) {
-	    $jmert_log = "$work_dir/jmert.$iter.log";
-   	  if ($iter >= $first_active_iter) {
-	      unlink($next_iter_weights);
-				my $all_iter_weights = $iter_weights;
-				for(my $i = $iter-1; $i>=0; --$i) {
-          if ($i != 0 || $init_weight_file =~ /\.binwts$/) {
-					  $all_iter_weights .= ",$work_dir/phrasal.$i$WEIGHTS_SUFF";
-					} else {
-				  	$all_iter_weights .= ",$work_dir/phrasal.$i.wts";
-          }
-				}
-				my $optOut = "$work_dir/jmert.$iter.opt";
-        $RANDOM_SEED = "$rseed_prefix.$iter";
-        print "Random Seed: $RANDOM_SEED\n";
-				my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $RANDOM_SEED '$opt_type' $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
-	      print stderr "MERT command: $mertCMD\n";
-	      `$mertCMD`;
-				`cat $optOut.feats | sed 's/ |||.*//' > $optOut.trans`;
-	      if (not -e $next_iter_weights) {
-	        print stderr "Exiting, error running $opt_type MERT\n";
-	        exit -1;
-	      }
-				if($ORACLE) {
-					print STDERR `cat $next_iter_weights | grep -v BLEU > $next_iter_weights.tmp`;
-					print STDERR `echo "BLEU $ORACLE" | cat - $next_iter_weights.tmp > $next_iter_weights`;
-					unlink "$next_iter_weights.tmp"
-				}
-				unlink $iter_pcumulative_nbest if $DELETE_COMBINED_NBEST;
-   	  } else {
-   	  	print stderr "Skipping running JMERT for iter $iter ($first_active_iter)\n";
-   	  }
-   	  
-      open jmlfh, $jmert_log or die "can't open jmert log file $jmert_log";
-
-			my $obj_diff = 1;
-      $converge_info = "";
-      while (<jmlfh>) { chomp;
-         if (/>>>\[Converge Info\]/) {
-           $converge_info = $_;
-         }
-         if (/^Final Eval Score:/) {
-           $nbest_eval = $_;
-           $nbest_init_eval = $nbest_eval;
-           $nbest_eval =~ s/.*->\s*//;
-           $nbest_init_eval =~ s/->.*//g;
-           $nbest_init_eval =~ s/.*Score: //;
-         }
-         if (/^Obj diff:/) {
-         	$obj_diff = $_;
-         	$obj_diff =~ s/^Obj diff: *//g;
-         }
-      }
-      close jmlfh;
-      $out_nbest_eval = sprintf "%.3f", $nbest_eval;
-      $out_nbest_init_eval = sprintf "%.3f", $nbest_init_eval;
-      print stderr "Eval($opt_type) score on n-best list: $out_nbest_eval (up from $out_nbest_init_eval)\n\n";
-      
-      print "Objective diff: $obj_diff\n";
-      if ($obj_diff < $MIN_OBJ_DIFF) {
-   	    print stderr "Done as obj diff $obj_diff < $MIN_OBJ_DIFF\n";
-   	    last;
-      }   
+   $RANDOM_SEED = "$rseed_prefix.$iter";
+   $jmert_log = "$work_dir/jmert.$iter.log";
+   if ($script_opt) {
+     $cmd = "$script_opt $work_dir $iter '$opt_type' $commaRefList $RANDOM_SEED $opt_flags > $jmert_log 2>&1";
+     print "Running: $cmd\n";
+     `$cmd`;
    } else {
-   
-      $iter_cumulative_nbest = "$work_dir/cmert.$iter.combined.nbest";
-      print stderr 
-       "Converting nbest list to cmert nbest list:\n$iter_cumulative_nbest\n\n";
-      print "$SCRIPTS_DIR/phrasal_nbest_to_cmert_nbest.pl < $iter_pcumulative_nbest 2>&1 > $iter_cumulative_nbest";
-      `gunzip -c $iter_pcumulative_nbest.gz | $SCRIPTS_DIR/phrasal_nbest_to_cmert_nbest.pl 2>&1 > $iter_cumulative_nbest`;
-   
-      
-      print "cmd: $SORT -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1\n";
-      $log = `$SORT -mn -t\\| -k 1,1 $iter_cumulative_nbest | $cmert_dir/score-nbest.py $referenceList $work_dir/ 2>&1`;
-      
-      if ($? != 0) {
-        print stderr "Failure during the production of: feats.opt & cands.opts\n";
-        print stderr "Log:\n$log\n";
-        exit -1; 
-      }
-   
-      $init_opt_file = "$work_dir/init.$iter.opt";
-      $cmert_weights = "$work_dir/cmert.$iter$WEIGHTS_SUFF";
-      print stderr "\nProducing cmert init.opt:\n$init_opt_file\n\n";
-      $cmert_feature_names = `$SCRIPTS_DIR/phrasal_weights_to_cmert_weights.pl $iter_weights $iter_cumulative_nbest 2>&1 > $cmert_weights`;
-      chomp $cmert_feature_names;
-      $cmert_feature_names =~ s/: / /g;
-      @cmert_feature_names = split /\s+/, $cmert_feature_names;
-   
-      open cwts, "$cmert_weights" or die;
-      $line = <cwts>; close cwts; chomp $line;
-      @fields = split /\s+/, $line;
-   
-      open init_opt_fh, ">$init_opt_file" or die;
-      $fields = @fields;
-      for ($i = 0; $i < $fields; $i++) {
-        if ($POSITIVE_WT_ONLY_FEATURES{$cmert_feature_names[$i]} &&
-            $WEIGHT_MIN < 0) {
-           print init_opt_fh "0.0 ";
-        } else {
-           print init_opt_fh "$WEIGHT_MIN ";
-        }
-      } print init_opt_fh "\n"; 
-      for ($i = 0; $i < @fields; $i++) {
-        print init_opt_fh "$WEIGHT_MAX ";
-      } print init_opt_fh "\n"; 
-      for ($i = 0; $i < @fields; $i++) {
-        print init_opt_fh "$fields[$i] ";
-      } print init_opt_fh "\n"; 
-      close init_opt_fh;
-   
-      `cp $init_opt_file $work_dir/init.opt`;
-       
-      $cmert_log = "$work_dir/cmert.$iter.log";
-      print "cmd: (cd $work_dir; $cmert_dir/mert -d $fields )>$cmert_log 2>&1\n";
-      `(cd $work_dir; $cmert_dir/mert -d $fields )>$cmert_log 2>&1`;
-      if ($? != 0) {
-        print stderr "Failure running mert!\n";
-        exit -1;
-      }
-   
-      open cmlfh, "$cmert_log" or dir;
-      while (<cmlfh>) { chomp;
-         if (/^Best point:/) {
-           $nbest_eval = $_; 
-           $nbest_eval =~ s/.*=>\s*//;
+     if ($iter >= $first_active_iter) {
+       unlink($next_iter_weights);
+       my $all_iter_weights = $iter_weights;
+       for(my $i = $iter-1; $i>=0; --$i) {
+         if ($i != 0 || $init_weight_file =~ /\.binwts$/) {
+           $all_iter_weights .= ",$work_dir/phrasal.$i$WEIGHTS_SUFF";
+         } else {
+           $all_iter_weights .= ",$work_dir/phrasal.$i.wts";
          }
-      }
-      close cmlfh; 
-      
-      $out_nbest_eval = sprintf "%.3f", $nbest_eval;
-      print stderr "BLEU score on n-best list: $out_nbest_eval\n\n";
-     
-      $cmert_produced_wts = "$work_dir/weights.txt";
-      print stderr "Converting cmert produced weights:\n$cmert_produced_wts\n".
-            "to phrasal weights for next iteration.\n\n";
-      `$SCRIPTS_DIR/cmert_weights_phrasal_weights.pl $cmert_produced_wts  $iter_cumulative_nbest 2>&1 > $next_iter_weights`;
-      unlink($iter_cumulative_nbest);
+       }
+       my $optOut = "$work_dir/jmert.$iter.opt";
+       print "Random Seed: $RANDOM_SEED\n";
+       my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $RANDOM_SEED '$opt_type' $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+       print stderr "MERT command: $mertCMD\n";
+       `$mertCMD`;
+       `cat $optOut.feats | sed 's/ |||.*//' > $optOut.trans`;
+       if (not -e $next_iter_weights) {
+          print stderr "Exiting, error running $opt_type MERT\n";
+          exit -1;
+        }
+        if($ORACLE) {
+          print STDERR `cat $next_iter_weights | grep -v BLEU > $next_iter_weights.tmp`;
+          print STDERR `echo "BLEU $ORACLE" | cat - $next_iter_weights.tmp > $next_iter_weights`;
+          unlink "$next_iter_weights.tmp"
+        }
+          unlink $iter_pcumulative_nbest if $DELETE_COMBINED_NBEST;
+        } else {
+           print stderr "Skipping running JMERT for iter $iter ($first_active_iter)\n";
+        }
    }
+       
+   print stderr "Opening $jmert_log\n"; 
+   open jmlfh, $jmert_log or die "can't open jmert log file $jmert_log";
 
+   my $obj_diff = 1;
+   $converge_info = "";
+   while (<jmlfh>) { chomp;
+     print stderr "$jmert_log: $_\n";
+     if (/>>>\[Converge Info\]/) {
+       $converge_info = $_;
+     }
+     if (/^Final Eval Score:/) {
+       $nbest_eval = $_;
+       $nbest_init_eval = $nbest_eval;
+       $nbest_eval =~ s/.*->\s*//;
+       $nbest_init_eval =~ s/->.*//g;
+       $nbest_init_eval =~ s/.*Score: //;
+     }
+     if (/^Obj diff:/) {
+       $obj_diff = $_;
+       $obj_diff =~ s/^Obj diff: *//g;
+     }
+   }
+   close jmlfh;
+   $out_nbest_eval = sprintf "%.3f", $nbest_eval;
+   $out_nbest_init_eval = sprintf "%.3f", $nbest_init_eval;
+   print stderr "Eval($opt_type) score on n-best list: $out_nbest_eval (up from $out_nbest_init_eval)\n\n";
+      
+   print "Objective diff: $obj_diff\n";
+   if ($obj_diff < $MIN_OBJ_DIFF) {
+      print stderr "Done as obj diff $obj_diff < $MIN_OBJ_DIFF\n";
+      last;
+   }   
 
    #$max_weight_delta = `$SCRIPTS_DIR/phrasal_weight_delta.pl -max $iter_weights $next_iter_weights 2>&1`;
    if ($converge_info) {
@@ -717,16 +650,16 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
       } 
       $LastObj = $ObjFinal;
    } else {
-   print stderr "Can't find converge info - falling back to weight delta test\n";
-	 my $cmd = "java edu.stanford.nlp.mt.tools.CompareWeights $iter_weights $next_iter_weights  2>&1";
-   print stderr "cmd: $cmd\n";
-   $max_weight_delta = `$cmd`;
-   chomp $max_weight_delta; 
-   print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
-   if ($max_weight_delta < $MIN_WEIGHT_DELTA) {
-      print stderr "Done as max weight delta $weight_delta < $MIN_WEIGHT_DELTA\n\n";
-      last; 
-   }
+     print stderr "Can't find converge info - falling back to weight delta test\n";
+     my $cmd = "java edu.stanford.nlp.mt.tools.CompareWeights $iter_weights $next_iter_weights  2>&1";
+     print stderr "cmd: $cmd\n";
+     $max_weight_delta = `$cmd`;
+     chomp $max_weight_delta; 
+     print stderr "Max weight delta: '$max_weight_delta' stopping @ ($MIN_WEIGHT_DELTA)\n\n";
+     if ($max_weight_delta < $MIN_WEIGHT_DELTA) {
+       print stderr "Done as max weight delta $weight_delta < $MIN_WEIGHT_DELTA\n\n";
+       last; 
+     }
    }
 }
 

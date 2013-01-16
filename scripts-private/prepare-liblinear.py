@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 
 import sys
 import codecs
@@ -22,20 +22,21 @@ with codecs.open(nbestFn, "r", "utf-8") as nbestFh:
         evalScore = float(fields[-1])*100
         print >>trainFh, evalScore,
 
-        segBiasName = " ||| %d ||| " % transId
-
-        if segBiasName in index:  
-           featId = index[segBiasName]
-        else:
-           featId = len(index)+1
-           index[segBiasName] = featId
-
         features = []
-        features.append((featId, 1.0))
+
+        # segBiasName = " ||| %d ||| " % transId
+
+        #if segBiasName in index:  
+        #   featId = index[segBiasName]
+        #else:
+        #   featId = len(index)+1
+        #   index[segBiasName] = featId
+
+        #features.append((featId, 1.0))
 
         for i in xrange(0, len(featureToks), 2):
           name = featureToks[i][:-1]
-          value = float(featureToks[i+1])
+          value = float(featureToks[i+1]);
           if name in index:  
              featId = index[name]
           else:

@@ -13,6 +13,7 @@ import java.util.Arrays;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.mt.base.IOTools;
 
 public class CompareWeights {
   // TODO find a good permanent home for this method
@@ -69,8 +70,8 @@ public class CompareWeights {
     }
 
     Set<String> allWeights = new HashSet<String>();
-    Counter<String> wts1 = readWeights(args[0]);
-    Counter<String> wts2 = readWeights(args[1]);
+    Counter<String> wts1 = IOTools.readWeights(args[0]);
+    Counter<String> wts2 = IOTools.readWeights(args[1]);
     allWeights.addAll(wts1.keySet());
     allWeights.addAll(wts2.keySet());
 
