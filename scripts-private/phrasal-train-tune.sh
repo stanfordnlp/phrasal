@@ -89,6 +89,7 @@ function prep_source {
 function tune-batch {
     # Setup the input ini file and run batch tuning
     update_ini SETID $TUNE_SET_NAME < $INI_FILE > $TUNE_INI_FILE
+    
     phrasal-mert.pl \
 	--opt-flags="$OPT_FLAGS" \
 	--working-dir="$TUNEDIR" \
@@ -98,7 +99,12 @@ function tune-batch {
 	--nbest=$NBEST $TUNE_FILE $TUNE_REF \
 	$OBJECTIVE $TUNE_INI_FILE \
 	>& logs/"$TUNEDIR".log
+}
 
+#
+# Create the Phrasal ini file from a batch tuning run
+#
+function make-ini-from-batch-run {
     # Setup the final weights and ini files
     rm $TUNEDIR/phrasal.best.ini || true
     eval `link-best-ini $TUNEDIR`
@@ -127,7 +133,12 @@ function tune-online {
 	$INITIAL_WTS \
 	-n $TUNERUNNAME \
 	$ONLINE_OPTS
-    
+}
+
+#
+# Create the Phrasal ini file from an online tuning run
+#
+function make-ini-from-online-run {
     # Setup the final weights and ini files
     FINAL_WTS="$TUNERUNNAME".online.final.binwts
     if [ \( -n $NBEST \) -a \( $NBEST -gt 1 \) ]; then
@@ -143,7 +154,7 @@ function tune-online {
 }
 
 #
-# Decode an input file
+# Decode an input file given an ini file from a tuning run
 #
 function decode {
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
@@ -230,6 +241,11 @@ do
     fi
     if [ $step -eq 6 ]; then
 	step-status $step
+	if [ $TUNE_MODE == "batch" ]; then
+	    make-ini-from-batch-run
+	else
+	    make-ini-from-online-run
+	fi
 	decode
     fi
     if [ $step -eq 7 ]; then
