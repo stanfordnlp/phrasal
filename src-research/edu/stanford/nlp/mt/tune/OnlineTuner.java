@@ -342,22 +342,21 @@ public class OnlineTuner {
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
 
-      // Sparse features may turn up in the gradients (the decoder featurizers add the features). Make
-      // sure to add those features to the index.
+      // Don't assume that the OnlineOptimizers that compute the gradient will populate the feature
+      // index.
       featureIndex.addAll(result.gradient.keySet());
       
-      // Debugging only
-      logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
-          updateStep, result.inputId, result.inputId - updateStep));
-
       // Apply update rule
       Counter<String> last = new ClassicCounter<String>(currentWts);
       updater.update(currentWts, result.gradient, updateStep);
       
       // Debug info
+      logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
+          updateStep, result.inputId, result.inputId - updateStep));
       logger.fine(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
       Counters.subtractInPlace(last, currentWts);
       logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
+
       ++updateStep;
 
       // Accumulate for parameter averaging

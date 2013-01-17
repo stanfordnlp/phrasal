@@ -59,12 +59,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   private final double learningRate;
   private final double sigmaSq;
+  private final String updaterType;
 
   private final Logger logger;
   private final Random random;
   private final Index<String> featureIndex;
   private final Index<String> labelIndex;
-  private final String updaterType;
 
   public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize) {
     this(featureIndex, tuneSetSize, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
@@ -309,11 +309,11 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     // strength by the data fraction.
     prior.setSigmaSquared(sigmaSq / dataFraction);
     
-    int dimension = Math.max(weights.size(), dataset.numFeatureTypes());
+    final int dimension = Math.max(weights.size(), dataset.numFeatureTypes());
     LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dimension, 
         dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), prior);
 
-    double[] w = Counters.asArray(weights, featureIndex);
+    double[] w = Counters.asArray(weights, featureIndex, dimension);
     double[] g = lof.derivativeAt(w);
     assert w.length == g.length;
     Counter<String> gradient = Counters.toCounter(g, featureIndex);
