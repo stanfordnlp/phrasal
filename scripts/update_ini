@@ -26,45 +26,52 @@ $newid =~ s/\+/\\+/g;
 
 my $field = '';
 while(<STDIN>) {
-	my $newfield = 0;
-	if(/^\[(\S+)\]/) {
-		$field = $1;
-		$newfield = 1;
- 	}
-	if($field eq 'ttable-file' ||
-	   $field eq 'distortion-file' ||
-	   $field eq 'hierarchical-distortion-file' ||
-	   $field eq 'lmodel-file' ||
-		 $field eq 'additional-featurizers') {
-		if(s/DEVID/$newid/g || s/$oldid/$newid/g) {
-			if($field eq 'additional-featurizers') {
-				/\((.*)\)/;
-				foreach my $el (split(/,/,$1)) {
-					warn "WARNING: not a file name or missing file: $el\n" if(! -f $el);
-				}
-			} else {
-				/(\S+)$/;
-				warn "WARNING: missing file: $1\n" if(! -f $1);
-			}
+    my $newfield = 0;
+    if(/^\[(\S+)\]/) {
+	$field = $1;
+	$newfield = 1;
+    }
+    if($field eq 'ttable-file' ||
+       $field eq 'distortion-file' ||
+       $field eq 'hierarchical-distortion-file' ||
+       $field eq 'lmodel-file' ||
+       $field eq 'additional-featurizers') {
+	if(s/DEVID/$newid/g || s/$oldid/$newid/g) {
+	    if($field eq 'additional-featurizers') {
+		/\((.*)\)/;
+		foreach my $el (split(/,/,$1)) {
+		    warn "WARNING: not a file name or missing file: $el\n" if(! -f $el);
 		}
-	} elsif($field eq 'n-best-list' && $newfield) {
-    my $oldlist = <STDIN>;  
-    my $oldsize = <STDIN>;  
-		if($opts{n} && $opts{f}) {
-			print "[n-best-list]\n$opts{f}\n$opts{n}\n";
-		} elsif($opts{n}) {
-		  print "[n-best-list]\n$opts{n}\n";
-		}
-		next;
-	} elsif($field eq 'weights-file' && $newfield) {
-	  my $oldfile = <STDIN>;
-	  print "[weights-file]\n";
-	  if($opts{w}) {
-	    print "$opts{w}\n";
-	  } else {
-	    print "$oldfile\n";
-	  }
-	  next;
+	    } else {
+		/(\S+)$/;
+		warn "WARNING: missing file: $1\n" if(! -f $1);
+	    }
 	}
-	print;
+    } elsif($field eq 'n-best-list' && $newfield) {
+	my $oldlist = <STDIN>;  
+	my $oldsize = <STDIN>;  
+	if($opts{n} && $opts{f}) {
+	    print "[n-best-list]\n$opts{f}\n$opts{n}\n";
+	    if($oldsize =~ /^\s*$/) {
+		print "\n";
+	    }
+	} elsif($opts{n}) {
+	    print "[n-best-list]\n$opts{n}\n";
+	    if($oldsize =~ /^\s*$/) {
+		print "\n";
+	    }
+	}
+	next;
+    } elsif($field eq 'weights-file' && $newfield) {
+	my $oldfile = <STDIN>;
+	chomp $oldfile;
+	print "[weights-file]\n";
+	if($opts{w}) {
+	    print "$opts{w}\n";
+	} else {
+	    print "$oldfile\n";
+	}
+	next;
+    }
+    print;
 }
