@@ -7,12 +7,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.classify.GeneralDataset;
-import edu.stanford.nlp.classify.LinearRegressionFactory;
-import edu.stanford.nlp.classify.LinearRegressor;
-import edu.stanford.nlp.classify.RVFDataset;
-import edu.stanford.nlp.classify.Regressor;
-import edu.stanford.nlp.ling.RVFDatum;
 import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -20,8 +14,6 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
-import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
-import edu.stanford.nlp.stats.Counter;
 
 /**
  * NbestEvaluatationAnnotation is a utility for annotating 
@@ -63,8 +55,6 @@ public class NbestEvaluatationAnnotation {
     
     PrintWriter nbestOut = new PrintWriter(new FileWriter(nbestOutFn));
     
-    RVFDataset<Double, String> dataSet = new RVFDataset<Double, String>();    
-    
     for (int id = 0; id < nbestLists.size(); id++) {
       List<ScoredFeaturizedTranslation<IString, String>> nbestList = nbestLists.get(id);
       
@@ -75,17 +65,9 @@ public class NbestEvaluatationAnnotation {
         trans.add(tran);
         double emetricScore = emetric.score(trans);
         nbestOut.printf("%d ||| %s ||| %f\n", id, tran.toString(), emetricScore);
-        dataSet.add(new RVFDatum(OptimizerUtils.featureValueCollectionToCounter(tran.features), emetricScore));
       }
     }
     
-    // this was just for a quick experiment - TODO move this to a proper optimizer
-    LinearRegressionFactory lrf = new LinearRegressionFactory();
-    LinearRegressor<String> regressor = (LinearRegressor)lrf.train(dataSet, 100.0);
-    Counter<String> weights = regressor.getFeatureWeights();
-    for (String key : weights.keySet()) {
-      out.printf("%s %f\n", key, weights.getCount(key));
-    }
     nbestOut.close();
   }
 }
