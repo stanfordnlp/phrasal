@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
 
 /**
  * Basic Stochastic Gradient Descent update rule.
@@ -23,12 +24,7 @@ public class SGDUpdater implements OnlineUpdateRule<String> {
     final double nu = rate * (double) (1.0/((timeStep/10.0)+1.0));
     
     // w_{t+1} := w_t - nu*g_t
-    for (String feature : gradient.keySet()) {
-      double wValue = weights.getCount(feature);
-      double gValue = gradient.getCount(feature);
-      double update = wValue - (nu * gValue);
-      weights.setCount(feature, update);
-    }
+    Counters.addInPlace(weights, gradient, -nu);
   }
 
 }

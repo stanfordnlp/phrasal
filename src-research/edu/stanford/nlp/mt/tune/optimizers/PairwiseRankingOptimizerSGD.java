@@ -308,7 +308,9 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     // Divide by the data fraction to get the same effect as scaling the regularization
     // strength by the data fraction.
     prior.setSigmaSquared(sigmaSq / dataFraction);
-    LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dataset.numFeatureTypes(), 
+    
+    int dimension = Math.max(weights.size(), dataset.numFeatureTypes());
+    LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dimension, 
         dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), prior);
 
     double[] w = Counters.asArray(weights, featureIndex);
