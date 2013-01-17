@@ -327,7 +327,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   @Override
   public String toString() {
-    return String.format("%s gamma: %d chi: %d thresh: %.2f", this.getClass().getSimpleName(), this.gamma, 
-        this.xi, this.nThreshold);
+    return String.format("%s gamma: %d xi: %d threshold: %.2f feature-filter: %d updater: %s", this.getClass().getSimpleName(), 
+        this.gamma, this.xi, this.nThreshold, this.minFeatureSegmentCount, this.updaterType);
   }
 }
