@@ -41,6 +41,7 @@ import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.stats.ThreadsafeCounter;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.PropertiesUtils;
@@ -222,15 +223,17 @@ public class OnlineTuner {
     public final int[] translationIds;
     public final Counter<String> weights;
     public final int inputId;
+    public final Counter<String> featureWhitelist;
     public ProcessorInput(List<Sequence<IString>> input, 
         List<List<Sequence<IString>>> references, 
-        Counter<String> weights, int[] translationIds, int inputId) {
+        Counter<String> weights, int[] translationIds, int inputId, Counter<String> featureWhitelist) {
       this.source = input;
       this.translationIds = translationIds;
       this.references = references;
       // Copy the weights for the decoder
       this.weights = new ClassicCounter<String>(weights);
       this.inputId = inputId;
+      this.featureWhitelist = featureWhitelist;
     }
   }
 
@@ -292,7 +295,7 @@ public class OnlineTuner {
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
             threadId);
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
-            input.translationIds[0], nbestList, input.references.get(0), lossFunction);
+            input.translationIds[0], nbestList, input.references.get(0), lossFunction, input.featureWhitelist);
         nbestLists.add(nbestList);
         
       } else {
@@ -305,7 +308,7 @@ public class OnlineTuner {
           nbestLists.add(nbestList);
         }
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
-                nbestLists, input.references, lossFunction);
+                nbestLists, input.references, lossFunction, input.featureWhitelist);
       }
 
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
@@ -390,6 +393,8 @@ public class OnlineTuner {
     Counter<String> currentWts = new ClassicCounter<String>(wts);
     // Clear the global weight vector, which we will use for parameter averaging.
     wts.clear();
+    
+    final Counter<String> featureWhitelist = new ThreadsafeCounter<String>();
 
     // Create a vector for randomizing the order of training instances.
     final int tuneSetSize = tuneSource.size();
@@ -429,7 +434,7 @@ public class OnlineTuner {
       for (int t = 0; t < batches.length; ++t) {
         int[] batch = batches[t];
         int inputId = (epoch*numBatches) + t;
-        ProcessorInput input = makeInput(batch, inputId, currentWts);
+        ProcessorInput input = makeInput(batch, inputId, currentWts, featureWhitelist);
         wrapper.put(input);
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists);
         
@@ -467,18 +472,19 @@ public class OnlineTuner {
    * Make a ProcessorInput object for the thread pool from this mini batch.
    * 
    * @param batch
+   * @param featureWhitelist 
    * @param randomizeWeights 
    * @param epoch 
    * @return
    */
-  private ProcessorInput makeInput(int[] batch, int inputId, Counter<String> weights) {
+  private ProcessorInput makeInput(int[] batch, int inputId, Counter<String> weights, Counter<String> featureWhitelist) {
     List<Sequence<IString>> sourceList = new ArrayList<Sequence<IString>>(batch.length);
     List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(batch.length);
     for (int sourceId : batch) {
       sourceList.add(tuneSource.get(sourceId));
       referenceList.add(references.get(sourceId));
     }
-    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId);
+    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId, featureWhitelist);
   }
 
   /**

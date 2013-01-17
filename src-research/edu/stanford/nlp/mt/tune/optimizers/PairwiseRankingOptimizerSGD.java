@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import cern.colt.Arrays;
@@ -83,6 +84,11 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int minFeatureSegmentCount, 
       int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType) {
+    if (minFeatureSegmentCount < 1) throw new RuntimeException("Feature segment count must be >= 1: " + minFeatureSegmentCount);
+    if (gamma <= 0) throw new RuntimeException("Gamma must be > 0: " + gamma);
+    if (xi <= 0) throw new RuntimeException("Xi must be > 0: " + xi);
+    if (nThreshold < 0.0) throw new RuntimeException("Threshold must >= 0:" + nThreshold);
+    
     this.gamma = gamma;
     this.xi = xi;
     this.nThreshold = nThreshold;
@@ -112,19 +118,20 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    * @param lossFunction
    * @param translations
    * @param references
+   * @param featureWhitelist 
    * @return
    */
   private RVFDataset<String, String> sampleNbestList(int sourceId,
       SentenceLevelMetric<IString, String> lossFunction,
       List<RichTranslation<IString, String>> translations,
-      List<Sequence<IString>> references) {
+      List<Sequence<IString>> references, Counter<String> featureWhitelist) {
     int[] sourceIds = new int[1];
     sourceIds[0] = sourceId;
     List<List<RichTranslation<IString, String>>> translationList = new ArrayList<List<RichTranslation<IString, String>>>(1);
     translationList.add(translations);
     List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(1);
     referenceList.add(references);
-    return sampleNbestLists(sourceIds, lossFunction, translationList, referenceList);
+    return sampleNbestLists(sourceIds, lossFunction, translationList, referenceList, featureWhitelist);
   }
   
   /**
@@ -134,22 +141,21 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    * @param lossFunction
    * @param translationList
    * @param referenceList
+   * @param featureWhitelist 
    * @return
    */
   private RVFDataset<String, String> sampleNbestLists(int[] sourceIds, SentenceLevelMetric<IString, String> lossFunction, 
-      List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList) {
+      List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList, Counter<String> featureWhitelist) {
     assert sourceIds != null;
     assert lossFunction != null;
     assert sourceIds.length == translationList.size();
     assert translationList.size() == referenceList.size();
 
-    // TODO(spenceg): Filtering for sparse features. Don't need this for dense models.
-    // Update when we switch to sparse models.
-    //    Set<String> featureWhiteList = OptimizerUtils.featureWhiteList(MERT.nbest, minFeatureSegmentCount);
-    //    int totalFeatureCount = OptimizerUtils.featureWhiteList(MERT.nbest, 0).size();
-    //    System.err.printf("Min Feature Segment Count: %d Features Filterd to: %d from: %d\n", minFeatureSegmentCount, featureWhiteList.size(), totalFeatureCount);
-    //    System.err.printf("White List Features:\n%s\n", featureWhiteList);
-
+    // Filtering for sparse features. Don't need this for dense models.
+    final Set<String> featureWhiteList = 
+        OptimizerUtils.updatefeatureWhiteList(featureWhitelist, translationList, minFeatureSegmentCount);
+    logger.info("# of whitelist features: " + featureWhitelist.size());
+    
     RVFDataset<String,String> dataset = new RVFDataset<String, String>(2*xi, featureIndex, labelIndex);
 
     for (int i = 0; i < sourceIds.length; ++i) {
@@ -184,19 +190,21 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
             translations.get(selectedPair.third()).features);
         Counter<String> gtVector = new ClassicCounter<String>(plusFeatures);
         Counters.subtractInPlace(gtVector, minusFeatures);
-        // TODO(spenceg): Feature filtering
-        //        Counters.retainKeys(gtVector, featureWhiteList);
+        
+        // Feature filtering
+        Counters.retainKeys(gtVector, featureWhiteList);
         RVFDatum<String, String> datumGt = new RVFDatum<String, String>(gtVector, POS_CLASS);
         dataset.add(datumGt);
 
         Counter<String> ltVector = new ClassicCounter<String>(minusFeatures);
         Counters.subtractInPlace(ltVector, plusFeatures);
-        // TODO(spenceg): Feature filtering
-        //        Counters.retainKeys(ltVector, featureWhiteList);
+        
+        // Feature filtering
+        Counters.retainKeys(ltVector, featureWhiteList);
         RVFDatum<String, String> datumLt = new RVFDatum<String, String>(ltVector, NEG_CLASS);
         dataset.add(datumLt);
 
-        // WSGDEBUG Debug info
+        // Debug info
         double margin = selectedPair.first();
         int j = selectedPair.second();
         int jPrime = selectedPair.third();
@@ -236,7 +244,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   @Override
   public Counter<String> getGradient(Counter<String> weights, Sequence<IString> source, int sourceId,
       List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references, 
-      SentenceLevelMetric<IString, String> lossFunction) {
+      SentenceLevelMetric<IString, String> lossFunction,
+      Counter<String> featureWhitelist) {
     // TODO(spenceg): Sanity checking. For public methods, replace with exceptions.
     assert weights != null;
     assert sourceId >= 0;
@@ -245,7 +254,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     assert lossFunction != null;
 
     // Sample from the n-best list
-    RVFDataset<String, String> dataset = sampleNbestList(sourceId, lossFunction, translations, references);
+    RVFDataset<String, String> dataset = sampleNbestList(sourceId, lossFunction, translations, references, featureWhitelist);
     Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
       computeGradient(dataset, weights, 1);
     if (dataset.size() == 0) {
@@ -264,9 +273,16 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       List<Sequence<IString>> sources, int[] sourceIds,
       List<List<RichTranslation<IString, String>>> translations,
       List<List<Sequence<IString>>> references,
-      SentenceLevelMetric<IString, String> lossFunction) {
+      SentenceLevelMetric<IString, String> lossFunction,
+      Counter<String> featureWhitelist) {
+    // TODO(spenceg): Sanity checking. For public methods, replace with exceptions.
+    assert weights != null;
+    assert sourceIds != null;
+    assert translations.size() > 0;
+    assert references.size() > 0;
+    assert lossFunction != null;
 
-    RVFDataset<String, String> dataset = sampleNbestLists(sourceIds, lossFunction, translations, references);
+    RVFDataset<String, String> dataset = sampleNbestLists(sourceIds, lossFunction, translations, references, featureWhitelist);
     Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
       computeGradient(dataset, weights, sourceIds.length);
     if (dataset.size() == 0) {

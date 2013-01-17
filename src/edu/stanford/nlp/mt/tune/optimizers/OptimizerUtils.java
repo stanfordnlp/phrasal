@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
@@ -219,6 +220,33 @@ public class OptimizerUtils {
       double newValue = wts.getCount(feature) + epsilon;
       wts.setCount(feature, newValue);
     }
+  }
+
+  /**
+   * Update an existing feature whitelist according to nbestlists. Then return the features that appear
+   * more than minSegmentCount times.
+   * 
+   * @param featureWhitelist
+   * @param nbestlists
+   * @param minSegmentCount
+   * @return
+   */
+  public static Set<String> updatefeatureWhiteList(
+      Counter<String> featureWhitelist,
+      List<List<RichTranslation<IString, String>>> nbestlists,
+      int minSegmentCount) {
+    for (List<RichTranslation<IString, String>> nbestlist : nbestlists) {
+      Set<String> segmentFeatureSet = new HashSet<String>(1000);
+      for (RichTranslation<IString, String> trans : nbestlist) {
+        for (FeatureValue<String> feature : trans.features) {
+          if ( ! segmentFeatureSet.contains(feature.name)) {
+            segmentFeatureSet.add(feature.name);
+            featureWhitelist.incrementCount(feature.name);
+          }
+        }
+      }
+    }
+    return Counters.keysAbove(featureWhitelist, minSegmentCount-1);
   }
   
 }
