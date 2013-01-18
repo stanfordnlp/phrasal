@@ -325,6 +325,7 @@ public class OnlineTuner {
    * @param threadpool
    * @param updater 
    * @param nbestLists 
+   * @param doExpectedBleu 
    * @param timeStep 
    * @param decoderWts 
    * 
@@ -332,7 +333,8 @@ public class OnlineTuner {
    */
   private int applyGradientUpdatesTo(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
-      OnlineUpdateRule<String> updater, Map<Integer, List<RichTranslation<IString, String>>> nbestLists) {
+      OnlineUpdateRule<String> updater, Map<Integer, List<RichTranslation<IString, String>>> nbestLists, 
+      boolean doExpectedBleu) {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
@@ -365,10 +367,12 @@ public class OnlineTuner {
       }
 
       // Add n-best lists from this update step
-      for (int i = 0; i < result.translationIds.length; ++i) {
-        int translationId = result.translationIds[i];
-        assert ! nbestLists.containsKey(translationId);
-        nbestLists.put(translationId, result.nbestLists.get(i));
+      if (doExpectedBleu) {
+        for (int i = 0; i < result.translationIds.length; ++i) {
+          int translationId = result.translationIds[i];
+          assert ! nbestLists.containsKey(translationId);
+          nbestLists.put(translationId, result.nbestLists.get(i));
+        }
       }
     }
     return updateStep;
@@ -380,12 +384,13 @@ public class OnlineTuner {
    * @param batchSize 
    * 
    * @param lossFunction 
+   * @param doExpectedBleu 
    * @param randomizeStartingWeights 
    * @param optimizerAlg
    * @param optimizerFlags 
    * @param nThreads
    */
-  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction) {
+  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction, boolean doExpectedBleu) {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
@@ -435,7 +440,7 @@ public class OnlineTuner {
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts, featureWhitelist);
         wrapper.put(input);
-        updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists);
+        updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
         
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
@@ -447,7 +452,7 @@ public class OnlineTuner {
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
       updateId = 
-          applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists);
+          applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
@@ -459,8 +464,11 @@ public class OnlineTuner {
       // Debug info for this epoch
       long elapsedTime = System.nanoTime() - startTime;
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, elapsedTime / 1000000000.0));
-      double expectedBleu = evaluate(currentWts, nbestLists, epoch);
-      logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
+      double expectedBleu = 0.0;
+      if (doExpectedBleu) {
+        expectedBleu = evaluate(currentWts, nbestLists, epoch);
+        logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
+      }
       epochResults.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new ClassicCounter<String>(currentWts)));
     }
 
@@ -743,6 +751,7 @@ public class OnlineTuner {
     optionMap.put("a", 0);
     optionMap.put("b", 1);
     optionMap.put("l", 1);
+    optionMap.put("ne", 0);
     return optionMap;
   }
 
@@ -771,6 +780,7 @@ public class OnlineTuner {
     sb.append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl);
     sb.append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl);
     sb.append("   -l level   : Set java.logging level").append(nl);
+    sb.append("   -ne        : Disable expected BLEU calculation (saves memory)").append(nl);
     return sb.toString().trim();
   }
 
@@ -796,6 +806,7 @@ public class OnlineTuner {
     int batchSize = PropertiesUtils.getInt(opts, "b", 1);
     boolean randomizeStartingWeights = PropertiesUtils.getBool(opts, "rw", false);
     OnlineTuner.logLevel = Level.parse(opts.getProperty("l", "INFO"));
+    boolean doExpectedBleu = ! PropertiesUtils.getBool(opts, "ne", false);
 
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -829,7 +840,7 @@ public class OnlineTuner {
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
     tuner.writeNbest(doNbestOutput);
-    tuner.run(numEpochs, batchSize, lossFunction);
+    tuner.run(numEpochs, batchSize, lossFunction, doExpectedBleu);
     tuner.shutdown();
 
     final long elapsedTime = System.nanoTime() - startTime;
