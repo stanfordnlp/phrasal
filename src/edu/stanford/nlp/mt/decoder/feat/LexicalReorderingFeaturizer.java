@@ -164,6 +164,8 @@ public class LexicalReorderingFeaturizer implements
     case discontinuousWithNext:
     case nonMonotoneWithNext:
       return true;
+    default:
+      break;
     }
     return false;
   }
