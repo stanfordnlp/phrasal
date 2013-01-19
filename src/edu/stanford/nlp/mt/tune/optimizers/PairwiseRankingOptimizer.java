@@ -19,6 +19,8 @@ import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.HashIndex;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -95,13 +97,21 @@ public class PairwiseRankingOptimizer extends AbstractNBestOptimizer {
     System.err.printf("\tnThreshold: %e\n", nThreshold);
   }
   
+  
   RVFDataset<String, String> getSamples(Random random) {
+     return getSamples(random, new HashIndex<String>());
+  }
+  
+  RVFDataset<String, String> getSamples(Random random, Index<String> featureIndex) {
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestlists = MERT.nbest.nbestLists();
     Set<String> featureWhiteList = OptimizerUtils.featureWhiteList(MERT.nbest, minFeatureSegmentCount);
     int totalFeatureCount = OptimizerUtils.featureWhiteList(MERT.nbest, 0).size();
     System.err.printf("Min Feature Segment Count: %d Features Filterd to: %d from: %d\n", minFeatureSegmentCount, featureWhiteList.size(), totalFeatureCount);
     System.err.printf("White List Features:\n%s\n", featureWhiteList);
-    RVFDataset<String,String> dataset = new RVFDataset<String, String>(xi*nbestlists.size());
+    Index<String> labelIndex = new HashIndex<String>();
+    labelIndex.add("0");
+    labelIndex.add("1");    
+    RVFDataset<String,String> dataset = new RVFDataset<String, String>(xi*nbestlists.size(), featureIndex, labelIndex);
     
     for (int i = 0; i < nbestlists.size(); i++) {
       List<Pair<Double, Pair<Integer, Integer>>> v = new ArrayList<Pair<Double, Pair<Integer, Integer>>>();

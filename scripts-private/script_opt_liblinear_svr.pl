@@ -25,7 +25,7 @@ print "$cmd\n"; system($cmd);
 $cmd = "prepare-liblinear.py $work_dir/phrasal.$iter.combined.nbest.with_bleu_scores  $work_dir/phrasal.$iter.combined.nbest.feature_index $work_dir/phrasal.$iter.combined.nbest.liblinear";
 print "$cmd\n"; system($cmd);
 
-$cmd = "$train_cmd -c 1.0 -s 13 -p 1.0 $work_dir/phrasal.$iter.combined.nbest.liblinear $work_dir/phrasal.$iter.combined.nbest.liblinear.mod";
+$cmd = "$train_cmd -c 1.0 -s 13 -p 1.0 -B 1.0 $work_dir/phrasal.$iter.combined.nbest.liblinear $work_dir/phrasal.$iter.combined.nbest.liblinear.mod";
 print "$cmd\n"; system($cmd);
 
 
@@ -35,8 +35,12 @@ print "$cmd\n"; system($cmd);
 $cmd = "java edu.stanford.nlp.mt.tools.NBestListDecoder $work_dir/phrasal.$iter.combined.nbest.gz  $work_dir/phrasal.$next_iter.binwts $work_dir/phrasal.$iter.opt_nbest.trans";
 print "$cmd\n"; system($cmd);
 
+$cmd ="cat $work_dir/phrasal.$iter.trans | java edu.stanford.nlp.mt.tools.Evaluate $opt_type $refList | head -1 | sed -e 's/.*= //g'";
+print "$cmd\n";
+$PRIOR_SCORE = `$cmd`;
+chomp $PRIOR_SCORE;
 $cmd ="cat $work_dir/phrasal.$iter.opt_nbest.trans | java edu.stanford.nlp.mt.tools.Evaluate $opt_type $refList | head -1 | sed -e 's/.*= //g'";
 print "$cmd\n";
 $SCORE = `$cmd`;
 
-print "Final Eval Score: $SCORE";
+print "Final Eval Score: $PRIOR_SCORE"."->$SCORE";

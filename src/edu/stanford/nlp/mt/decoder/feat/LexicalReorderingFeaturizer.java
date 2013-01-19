@@ -51,8 +51,6 @@ public class LexicalReorderingFeaturizer implements
         useAlignmentConstellations = true;
         System.err.printf("using constillations\n");
       }
-      // XXdiscriminativeSet[i] =
-      // MosesLexicalReorderingTable.ReorderingTypes.values();
     }
     this.useAlignmentConstellations = useAlignmentConstellations;
     mlrt = null;
@@ -139,27 +137,6 @@ public class LexicalReorderingFeaturizer implements
       }
 
       for (int i = 0; i < mlrt.positionalMapping.length; i++) {
-        /*
-         * if (scores != null && ( (mlrt.positionalMapping[i] ==
-         * MosesLexicalReorderingTable.ReorderingTypes.monotoneWithPrevious &&
-         * monotone) || (mlrt.positionalMapping[i] ==
-         * MosesLexicalReorderingTable.ReorderingTypes.swapWithPrevious && swap)
-         * || (mlrt.positionalMapping[i] ==
-         * MosesLexicalReorderingTable.ReorderingTypes.discontinuousWithPrevious
-         * && !(monotone || swap)) || (mlrt.positionalMapping[i] ==
-         * MosesLexicalReorderingTable.ReorderingTypes.nonMonotoneWithPrevious
-         * && !monotone))) values.add(new FeatureValue<String>(featureTags[i],
-         * scores[i])); if (priorScores != null && ( (mlrt.positionalMapping[i]
-         * == MosesLexicalReorderingTable.ReorderingTypes.monotoneWithNext &&
-         * monotone) || (mlrt.positionalMapping[i] ==
-         * MosesLexicalReorderingTable.ReorderingTypes.swapWithNext && swap) ||
-         * (mlrt.positionalMapping[i] ==
-         * MosesLexicalReorderingTable.ReorderingTypes.discontinuousWithNext &&
-         * !(monotone || swap)) || (mlrt.positionalMapping[i] ==
-         * MosesLexicalReorderingTable.ReorderingTypes.nonMonotoneWithNext &&
-         * !monotone))) values.add(new FeatureValue<String>(featureTags[i],
-         * priorScores[i]));
-         */
         boolean ff = featureFunction(monotone, swap, mlrt.positionalMapping[i]);
         if (!usePrior(mlrt.positionalMapping[i])) {
           if (scores != null && ff)
@@ -187,6 +164,8 @@ public class LexicalReorderingFeaturizer implements
     case discontinuousWithNext:
     case nonMonotoneWithNext:
       return true;
+    default:
+      break;
     }
     return false;
   }

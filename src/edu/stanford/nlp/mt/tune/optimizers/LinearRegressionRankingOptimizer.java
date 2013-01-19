@@ -14,6 +14,8 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.HashIndex;
+import edu.stanford.nlp.util.Index;
 
 /**
  * Linear Regression Ranking Optimizer uses linear regression to map
@@ -38,10 +40,13 @@ public class LinearRegressionRankingOptimizer extends AbstractNBestOptimizer {
     }
   }
 
-  @Override
-  public Counter<String> optimize(Counter<String> initialWts) {
-    
-    RVFDataset<Double, String> dataSet = new RVFDataset<Double, String>();    
+  
+  public RVFDataset<Double, String> buildDataset() {
+    return buildDataSet(new HashIndex<String>(), true);
+  }
+  
+  public RVFDataset<Double, String> buildDataSet(Index<String> featureIndex, boolean includeBiasFeatures) {
+    RVFDataset<Double, String> dataSet = new RVFDataset<Double, String>(10, featureIndex, new HashIndex<Double>());  
     
     List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
     
@@ -56,12 +61,21 @@ public class LinearRegressionRankingOptimizer extends AbstractNBestOptimizer {
         trans.add(tran);
         double emetricScore = emetric.score(trans);
         Counter<String> features = OptimizerUtils.featureValueCollectionToCounter(tran.features);
-        features.setCount("||| BIAS |||", 1.0);
-        features.setCount(String.format("||| BIAS ID %d |||", id), 1.0);
+        if (includeBiasFeatures) {
+          features.setCount("||| BIAS |||", 1.0);
+          features.setCount(String.format("||| BIAS ID %d |||", id), 1.0);
+        }
         dataSet.add(new RVFDatum<Double, String>(features, emetricScore));
       }
     }
     
+    return dataSet;    
+  }
+  
+  @Override
+  public Counter<String> optimize(Counter<String> initialWts) {    
+
+    RVFDataset<Double, String> dataSet = buildDataset();
     LinearRegressionFactory<String> lrf = new LinearRegressionFactory<String>();
     LinearRegressor<String> regressor = (LinearRegressor<String>)lrf.train(dataSet, regularizerCoefficient);
     Counter<String> weights = regressor.getFeatureWeights();

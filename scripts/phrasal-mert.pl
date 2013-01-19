@@ -593,7 +593,6 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    my $obj_diff = 1;
    $converge_info = "";
    while (<jmlfh>) { chomp;
-     print stderr "$jmert_log: $_\n";
      if (/>>>\[Converge Info\]/) {
        $converge_info = $_;
      }
