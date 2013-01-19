@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -357,7 +356,9 @@ public class OnlineTuner {
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
-      logger.fine(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
+// WSGDEBUG: java.logging doesn't do smart parameter expansion, so these steps are executed in the high dimensional
+      // case. It's too slow.
+//      logger.fine(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
 //      Counters.subtractInPlace(last, currentWts);
 //      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
 
@@ -401,20 +402,17 @@ public class OnlineTuner {
     wts.clear();
     
     final Counter<String> featureWhitelist = new ThreadsafeCounter<String>(expectedNumFeatures);
-
-    // Create a vector for randomizing the order of training instances.
     final int tuneSetSize = tuneSource.size();
-    int[] indices = ArrayMath.range(0, tuneSetSize);
-
+    final int[] indices = ArrayMath.range(0, tuneSetSize);
+    final int numBatches = (int) Math.ceil((double) indices.length / (double) batchSize);
     final OnlineUpdateRule<String> updater = optimizer.newUpdater();
+    final List<Triple<Double,Integer,Counter<String>>> epochResults = 
+        new ArrayList<Triple<Double,Integer,Counter<String>>>(numEpochs);
 
-    // Online optimization with asynchronous updating
     logger.info("Start of online tuning");
     logger.info("Number of epochs: " + numEpochs);
     logger.info("Number of threads: " + numThreads);
     logger.info("Number of references: " + references.get(0).size());
-    List<Triple<Double,Integer,Counter<String>>> epochResults = 
-        new ArrayList<Triple<Double,Integer,Counter<String>>>(numEpochs);
     int updateId = 0;
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
@@ -432,13 +430,10 @@ public class OnlineTuner {
               new GradientProcessor(optimizer,lossFunction,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
-      // and prepare mini batches
       ArrayMath.shuffle(indices);
-      int[][] batches = makeBatches(indices, batchSize);
-      final int numBatches = batches.length;
       logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
-      for (int t = 0; t < batches.length; ++t) {
-        int[] batch = batches[t];
+      for (int t = 0; t < numBatches; ++t) {
+        int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts, featureWhitelist);
         wrapper.put(input);
@@ -465,7 +460,7 @@ public class OnlineTuner {
 
       // Debug info for this epoch
       long elapsedTime = System.nanoTime() - startTime;
-      logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, elapsedTime / 1000000000.0));
+      logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
       double expectedBleu = 0.0;
       if (doExpectedBleu) {
         expectedBleu = evaluate(currentWts, nbestLists, epoch);
@@ -477,6 +472,23 @@ public class OnlineTuner {
     }
     
     saveFinalWeights(epochResults);
+  }
+
+  /**
+   * Make a batch from an array of indices.
+   * 
+   * @param indices
+   * @param t
+   * @param batchSize
+   * @return
+   */
+  private int[] makeBatch(int[] indices, int t, int batchSize) {
+    final int start = t*batchSize;
+    int end = (t+1)*batchSize;
+    if (end >= indices.length) end = indices.length;
+    int[] batch = new int[end - start];
+    System.arraycopy(indices, start, batch, 0, batch.length);
+    return batch;
   }
 
   /**
@@ -496,43 +508,6 @@ public class OnlineTuner {
       referenceList.add(references.get(sourceId));
     }
     return new ProcessorInput(sourceList, referenceList, weights, batch, inputId, featureWhitelist);
-  }
-
-  /**
-   * Transform a list of example indices into a set of mini batches.
-   * 
-   * @param indices
-   * @param batchSize
-   * @return
-   */
-  private int[][] makeBatches(int[] indices, int batchSize) {
-    int numBatches = (int) Math.ceil((double) indices.length / batchSize);
-    logger.fine("Number of batches: " + numBatches);
-    int[][] batches = new int[numBatches][];
-    int j = 0;
-    batches[j] = new int[batchSize];
-    Arrays.fill(batches[j], -1);
-    for (int i = 0; i < indices.length; ++i) {
-      int k = i % batchSize;
-      if (k == 0 && i != 0) {
-        logger.fine(String.format("Batch %d: %s", j+1, Arrays.toString(batches[j])));
-        batches[++j] = new int[batchSize];
-        Arrays.fill(batches[j], -1);
-      }
-      batches[j][k] = indices[i];
-    }
-    
-    // The last batch is potentially jagged, so trim it.
-    int numIndices = 0;
-    int[] lastBatch = batches[numBatches-1];
-    for (int index : lastBatch) {
-      if (index >= 0) numIndices++;
-    }
-    batches[numBatches-1] = new int[numIndices];
-    System.arraycopy(lastBatch, 0, batches[numBatches-1], 0, numIndices);
-    logger.fine(String.format("Batch %d: %s", numBatches, Arrays.toString(batches[numBatches-1])));
-    
-    return batches;
   }
 
   /**
@@ -601,7 +576,7 @@ public class OnlineTuner {
       List<Sequence<IString>> refList = IStrings.fileSplitToIStrings(filename);
       assert refList.size() == numSourceSentences;
       for (int i = 0; i < numSourceSentences; ++i) {
-        if (references.size() <= i) references.add(new ArrayList<Sequence<IString>>());
+        if (references.size() <= i) references.add(new ArrayList<Sequence<IString>>(filenames.length));
         references.get(i).add(refList.get(i));
       }
     }
@@ -622,7 +597,8 @@ public class OnlineTuner {
     featureIndex = new HashIndex<String>(expectedNumFeatures);
     Counter<String> weights;
     try {
-      weights = IOTools.readWeights(wtsInitialFile, featureIndex);      
+      weights = IOTools.readWeights(wtsInitialFile, featureIndex);
+      weights = new OpenAddressCounter<String>(weights, 1.0f);
     } catch (IOException e) {
       e.printStackTrace();
       throw new RuntimeException("Could not load weight vector!");

@@ -57,13 +57,13 @@ public class DiscriminativePhraseIdentity implements
     if (doSource && doTarget) {
       fvalues.add(new FeatureValue<String>(FEATURE_PREFIX + SOURCE_AND_TARGET
           + ":" + f.foreignPhrase.toString("_") + "=>"
-          + f.translatedPhrase.toString("_"), 1.0));
+          + f.translatedPhrase.toString("_"), 1.0, true));
     } else if (doSource) {
       fvalues.add(new FeatureValue<String>(FEATURE_PREFIX + SOURCE + ":"
-          + f.foreignPhrase.toString("_"), 1.0));
+          + f.foreignPhrase.toString("_"), 1.0, true));
     } else if (doTarget) {
       fvalues.add(new FeatureValue<String>(FEATURE_PREFIX + TARGET + ":"
-          + f.translatedPhrase.toString("_"), 1.0));
+          + f.translatedPhrase.toString("_"), 1.0, true));
     }
 
     return fvalues;

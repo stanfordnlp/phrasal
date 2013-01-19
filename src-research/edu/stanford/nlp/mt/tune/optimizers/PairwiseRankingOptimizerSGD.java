@@ -147,7 +147,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    * @return
    */
   private RVFDataset<String, String> sampleNbestLists(int[] sourceIds, SentenceLevelMetric<IString, String> lossFunction, 
-      List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList, Counter<String> featureWhitelist) {
+      List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList, 
+      Counter<String> featureWhitelist) {
     assert sourceIds != null;
     assert lossFunction != null;
     assert sourceIds.length == translationList.size();
@@ -218,6 +219,15 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     return dataset;
   }
 
+  /**
+   * Sampling algorithm of Hopkins and May (2011).
+   * 
+   * @param translations
+   * @param references
+   * @param sourceId
+   * @param lossFunction
+   * @return
+   */
   private List<Triple<Double, Integer, Integer>> sample(List<RichTranslation<IString, String>> translations,
       List<Sequence<IString>> references, int sourceId, SentenceLevelMetric<IString, String> lossFunction) {
     List<Triple<Double, Integer, Integer>> v = 
@@ -262,7 +272,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.size() == 0) {
       logger.warning("Null gradient for sourceId: " + sourceId);
     } else {
-      logger.fine("Gradient: " + gradient.toString());
+//      logger.fine("Gradient: " + gradient.toString());
     }
     return gradient;
   }
@@ -290,7 +300,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.size() == 0) {
       logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
     } else {
-      logger.fine("Gradient: " + gradient.toString());
+//      logger.fine("Gradient: " + gradient.toString());
     }
     return gradient;
   }
@@ -318,10 +328,29 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     double[] w = Counters.asArray(weights, featureIndex, dimension);
     double[] g = lof.derivativeAt(w);
     assert w.length == g.length;
-    Counter<String> gradient = Counters.toCounter(g, featureIndex);
+    Counter<String> gradient = toCounter(g, featureIndex);
     return gradient;
   }
 
+  /**
+   * Convert a double array to a Counter.
+   * 
+   * @param counts
+   * @param index
+   * @return
+   */
+  private Counter<String> toCounter(double[] counts, Index<String> index) {
+    if (index.size() < counts.length)
+      throw new IllegalArgumentException("Index not large enough to name all the array elements!");
+    Counter<String> c = new OpenAddressCounter<String>(counts.length, 1.0f);
+    for (int i = 0; i < counts.length; i++) {
+      if (counts[i] != 0.0) {
+        c.setCount(index.get(i), counts[i]);
+      }
+    }
+    return c;
+  }
+  
   @Override
   public OnlineUpdateRule<String> newUpdater() {
 	if(this.updaterType.equals("adagrad"))

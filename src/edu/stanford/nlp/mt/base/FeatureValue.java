@@ -20,12 +20,14 @@ public class FeatureValue<T> {
   public FeatureValue(T name, double value, boolean cacheName) {
     this.value = value;
     if (cacheName) {
-      WeakReference<Object> nameSub = nameCache.get(name);
-      if (nameSub == null) {
-        this.name = name;
-        nameCache.put(name, new WeakReference<Object>(name));
-      } else {
-        this.name = (T) nameSub.get();
+      synchronized(nameCache) {
+        WeakReference<Object> nameSub = nameCache.get(name);
+        if (nameSub == null) {
+          this.name = name;
+          nameCache.put(name, new WeakReference<Object>(name));
+        } else {
+          this.name = (T) nameSub.get();
+        }
       }
     } else {
       this.name = name;
