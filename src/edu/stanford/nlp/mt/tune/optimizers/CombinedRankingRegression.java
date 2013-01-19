@@ -30,7 +30,7 @@ public class CombinedRankingRegression extends AbstractNBestOptimizer {
   final PairwiseRankingOptimizer ranking;
   final LinearRegressionRankingOptimizer regression;
   
-  boolean updatedBestOnce = false;
+  static boolean updatedBestOnce = false;
   
   public CombinedRankingRegression(MERT mert, String... fields) {
     super(mert);
