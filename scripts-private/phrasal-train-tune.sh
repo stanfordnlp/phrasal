@@ -60,7 +60,7 @@ function extract {
     FILTSET=$1
     PTABLEDIR=$2
     mkdir -p $PTABLEDIR
-    java $JAVA_OPTS $EXTRACTOR_OPTS edu.stanford.nlp.mt.train.PhraseExtract -threads $THREADS_EXTRACT -extractors $EXTRACTORS $SPLIT -fCorpus $CORPUS_SRC -eCorpus $CORPUS_TGT -align $CORPUS_ALIGN -fFilterCorpus $FILTSET -maxELen $MAX_PHRASE_LEN -endAtLine $LINES $LO_ARGS -phiFilter $MIN_PHRASE_SCORE 2> "$PTABLEDIR"/merged.gz.log | gzip -c > "$PTABLEDIR"/merged.gz
+    java $JAVA_OPTS $EXTRACTOR_OPTS edu.stanford.nlp.mt.train.PhraseExtract -threads $THREADS_EXTRACT -extractors $EXTRACTORS $EXTRACT_SET -fFilterCorpus $FILTSET $LO_ARGS $OTHER_EXTRACT_OPTS 2> "$PTABLEDIR"/merged.gz.log | gzip -c > "$PTABLEDIR"/merged.gz
 
     # Split the phrase table into rule scores and lex re-ordering
     # scores
