@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
  * Basic AdaGrad update rule from Duchi et al. (2010).
@@ -18,9 +18,9 @@ public class AdaGradUpdater implements OnlineUpdateRule<String> {
   private final double eps = 1e-3;
   private Counter<String> sumGradSquare;
 
-  public AdaGradUpdater(double initialRate) {
+  public AdaGradUpdater(double initialRate, int expectedNumFeatures) {
     this.rate = initialRate;
-    sumGradSquare = new ClassicCounter<String>(100);
+    sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
   }
 
   @Override

@@ -8,9 +8,9 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineTuner;
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
  * 1-best MIRA training with hope/fear translations. See Crammer et al. (2006),
@@ -84,7 +84,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     final double loss = margin + deltaCost;
     logger.info(String.format("Margin: %.5f dCost: %.5f Loss: %.5f", margin, deltaCost, loss));
 
-    Counter<String> gradient = new ClassicCounter<String>();
+    Counter<String> gradient = new OpenAddressCounter<String>();
 
     // Hinge loss.
     if (loss > 0.0) {

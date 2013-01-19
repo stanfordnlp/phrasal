@@ -19,9 +19,9 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineTuner;
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Triple;
@@ -65,14 +65,15 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final Random random;
   private final Index<String> featureIndex;
   private final Index<String> labelIndex;
+  private final int expectedNumFeatures;
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize) {
-    this(featureIndex, tuneSetSize, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
+  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures) {
+    this(featureIndex, tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
         DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER);
   }
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, String... args) {
-    this(featureIndex, tuneSetSize, 
+  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures, String... args) {
+    this(featureIndex, tuneSetSize, expectedNumFeatures, 
         args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
             args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
                 args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
@@ -82,13 +83,14 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
                             		args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER);
   }
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int minFeatureSegmentCount, 
-      int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType) {
+  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures,
+      int minFeatureSegmentCount, int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType) {
     if (minFeatureSegmentCount < 1) throw new RuntimeException("Feature segment count must be >= 1: " + minFeatureSegmentCount);
     if (gamma <= 0) throw new RuntimeException("Gamma must be > 0: " + gamma);
     if (xi <= 0) throw new RuntimeException("Xi must be > 0: " + xi);
     if (nThreshold < 0.0) throw new RuntimeException("Threshold must >= 0:" + nThreshold);
     
+    this.expectedNumFeatures = expectedNumFeatures;
     this.gamma = gamma;
     this.xi = xi;
     this.nThreshold = nThreshold;
@@ -188,7 +190,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
             translations.get(selectedPair.second()).features);
         Counter<String> minusFeatures = OptimizerUtils.featureValueCollectionToCounter(
             translations.get(selectedPair.third()).features);
-        Counter<String> gtVector = new ClassicCounter<String>(plusFeatures);
+        Counter<String> gtVector = new OpenAddressCounter<String>(plusFeatures);
         Counters.subtractInPlace(gtVector, minusFeatures);
         
         // Feature filtering
@@ -196,7 +198,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         RVFDatum<String, String> datumGt = new RVFDatum<String, String>(gtVector, POS_CLASS);
         dataset.add(datumGt);
 
-        Counter<String> ltVector = new ClassicCounter<String>(minusFeatures);
+        Counter<String> ltVector = new OpenAddressCounter<String>(minusFeatures);
         Counters.subtractInPlace(ltVector, plusFeatures);
         
         // Feature filtering
@@ -255,7 +257,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
     // Sample from the n-best list
     RVFDataset<String, String> dataset = sampleNbestList(sourceId, lossFunction, translations, references, featureWhitelist);
-    Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
+    Counter<String> gradient = dataset.size() == 0 ? new OpenAddressCounter<String>() :
       computeGradient(dataset, weights, 1);
     if (dataset.size() == 0) {
       logger.warning("Null gradient for sourceId: " + sourceId);
@@ -283,7 +285,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     assert lossFunction != null;
 
     RVFDataset<String, String> dataset = sampleNbestLists(sourceIds, lossFunction, translations, references, featureWhitelist);
-    Counter<String> gradient = dataset.size() == 0 ? new ClassicCounter<String>() :
+    Counter<String> gradient = dataset.size() == 0 ? new OpenAddressCounter<String>() :
       computeGradient(dataset, weights, sourceIds.length);
     if (dataset.size() == 0) {
       logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
@@ -323,7 +325,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   @Override
   public OnlineUpdateRule<String> newUpdater() {
 	if(this.updaterType.equals("adagrad"))
-		return new AdaGradUpdater(learningRate);
+		return new AdaGradUpdater(learningRate, expectedNumFeatures);
 	return new SGDUpdater(learningRate);
   }
 

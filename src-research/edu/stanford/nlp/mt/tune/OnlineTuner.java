@@ -38,9 +38,9 @@ import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
-import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.ThreadsafeCounter;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
@@ -110,6 +110,7 @@ public class OnlineTuner {
   // Weight vector for Phrasal
   private Counter<String> wts;
   private Index<String> featureIndex;
+  private final int expectedNumFeatures;
 
   // The optimization algorithm
   private OnlineOptimizer<IString,String> optimizer;
@@ -120,11 +121,12 @@ public class OnlineTuner {
 
   public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
-      boolean uniformStartWeights, boolean randomizeStartWeights) {
+      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures) {
     logger = Logger.getLogger(OnlineTuner.class.getName());
     OnlineTuner.attach(logger);
 
     // Configure the initial weights
+    this.expectedNumFeatures = expectedNumFeatures;
     wts = loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
     logger.info("Initial weights: " + wts.toString());
 
@@ -231,7 +233,7 @@ public class OnlineTuner {
       this.translationIds = translationIds;
       this.references = references;
       // Copy the weights for the decoder
-      this.weights = new ClassicCounter<String>(weights);
+      this.weights = new OpenAddressCounter<String>(weights, 1.0f);
       this.inputId = inputId;
       this.featureWhitelist = featureWhitelist;
     }
@@ -349,15 +351,15 @@ public class OnlineTuner {
       featureIndex.addAll(result.gradient.keySet());
       
       // Apply update rule
-      Counter<String> last = new ClassicCounter<String>(currentWts);
+//      Counter<String> last = new OpenAddressCounter<String>(currentWts);
       updater.update(currentWts, result.gradient, updateStep);
       
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
       logger.fine(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
-      Counters.subtractInPlace(last, currentWts);
-      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
+//      Counters.subtractInPlace(last, currentWts);
+//      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
 
       ++updateStep;
 
@@ -394,11 +396,11 @@ public class OnlineTuner {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
-    Counter<String> currentWts = new ClassicCounter<String>(wts);
+    Counter<String> currentWts = new OpenAddressCounter<String>(wts, 1.0f);
     // Clear the global weight vector, which we will use for parameter averaging.
     wts.clear();
     
-    final Counter<String> featureWhitelist = new ThreadsafeCounter<String>();
+    final Counter<String> featureWhitelist = new ThreadsafeCounter<String>(expectedNumFeatures);
 
     // Create a vector for randomizing the order of training instances.
     final int tuneSetSize = tuneSource.size();
@@ -456,7 +458,7 @@ public class OnlineTuner {
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
-        currentWts = new ClassicCounter<String>(wts);
+        currentWts = new OpenAddressCounter<String>(wts, 1.0f);
         Counters.divideInPlace(currentWts, (epoch+1)*numBatches);
       }
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
@@ -469,9 +471,11 @@ public class OnlineTuner {
         expectedBleu = evaluate(currentWts, nbestLists, epoch);
         logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
       }
-      epochResults.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new ClassicCounter<String>(currentWts)));
+      // Purge history if we're not picking the best weight vector
+      if ( ! returnBestDev) epochResults.clear();
+      epochResults.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new OpenAddressCounter<String>(currentWts, 1.0f)));
     }
-
+    
     saveFinalWeights(epochResults);
   }
 
@@ -615,7 +619,7 @@ public class OnlineTuner {
   private Counter<String> loadWeights(String wtsInitialFile,
       boolean uniformStartWeights, boolean randomizeStartWeights) {
 
-    featureIndex = new HashIndex<String>();
+    featureIndex = new HashIndex<String>(expectedNumFeatures);
     Counter<String> weights;
     try {
       weights = IOTools.readWeights(wtsInitialFile, featureIndex);      
@@ -639,7 +643,8 @@ public class OnlineTuner {
       }
     }
     if (randomizeStartWeights) {
-      OptimizerUtils.randomizeWeightsInPlace(weights, 1e-4);
+      double scale = 1e-4;
+      OptimizerUtils.randomizeWeightsInPlace(weights, scale);
     }
     return weights;
   }
@@ -661,7 +666,7 @@ public class OnlineTuner {
       assert wts != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
       Counters.normalize(wts);
-      return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), optimizerFlags);
+      return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
     } else {
       throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);
@@ -752,6 +757,7 @@ public class OnlineTuner {
     optionMap.put("b", 1);
     optionMap.put("l", 1);
     optionMap.put("ne", 0);
+    optionMap.put("ef", 1);
     return optionMap;
   }
 
@@ -781,6 +787,7 @@ public class OnlineTuner {
     sb.append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl);
     sb.append("   -l level   : Set java.logging level").append(nl);
     sb.append("   -ne        : Disable expected BLEU calculation (saves memory)").append(nl);
+    sb.append("   -ef        : Expected # of features").append(nl);
     return sb.toString().trim();
   }
 
@@ -807,6 +814,7 @@ public class OnlineTuner {
     boolean randomizeStartingWeights = PropertiesUtils.getBool(opts, "rw", false);
     OnlineTuner.logLevel = Level.parse(opts.getProperty("l", "INFO"));
     boolean doExpectedBleu = ! PropertiesUtils.getBool(opts, "ne", false);
+    int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
 
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -833,7 +841,8 @@ public class OnlineTuner {
     // Run optimization
     final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr, lossFunctionOpts);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
-        optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights);
+        optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
+        expectedNumFeatures);
     if (refStr != null) {
       tuner.loadReferences(refStr);
     }
