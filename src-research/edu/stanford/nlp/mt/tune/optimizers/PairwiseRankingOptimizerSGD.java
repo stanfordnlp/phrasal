@@ -316,22 +316,89 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private Counter<String> computeGradient(RVFDataset<String, String> dataset, Counter<String> weights, 
       int batchSize) {
     double dataFraction = dataset.size() / ((double) 2*xi*tuneSetSize);
-    LogPrior prior = new LogPrior(LogPriorType.QUADRATIC); // Gaussian prior
-    // Divide by the data fraction to get the same effect as scaling the regularization
-    // strength by the data fraction.
-    prior.setSigmaSquared(sigmaSq / dataFraction);
-    
+//    LogPrior prior = new LogPrior(LogPriorType.QUADRATIC); // Gaussian prior
+//    // Divide by the data fraction to get the same effect as scaling the regularization
+//    // strength by the data fraction.
+//    prior.setSigmaSquared(sigmaSq / dataFraction);
+//    
     final int dimension = Math.max(weights.size(), dataset.numFeatureTypes());
-    LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dimension, 
-        dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), prior);
+//    LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dimension, 
+//        dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), prior);
+//
+//    double[] w = Counters.asArray(weights, featureIndex, dimension);
+//    double[] g = lof.derivativeAt(w);
+//    assert w.length == g.length;
+//    Counter<String> gradient = toCounter(g, featureIndex);
+    
+    Counter<String> gradient = logisticDerivativeL2(weights, dataset.getDataArray(), dataset.getValuesArray(), 
+        dataset.getLabelsArray(), sigmaSq / dataFraction, dimension);
 
-    double[] w = Counters.asArray(weights, featureIndex, dimension);
-    double[] g = lof.derivativeAt(w);
-    assert w.length == g.length;
-    Counter<String> gradient = toCounter(g, featureIndex);
     return gradient;
   }
 
+  /**
+   * Copied from LogisticObjectiveFunction.calculateRVF.
+   * 
+   * @param weights
+   * @param dataArray
+   * @param valuesArray
+   * @param labels
+   * @param scaledSigmaSquared
+   * @return
+   */
+  protected Counter<String> logisticDerivativeL2(Counter<String> weights, int[][] dataArray, 
+      double[][] valuesArray, int[] labels, double scaledSigmaSquared, int dimension) {
+
+//    double value = 0.0;
+    Counter<String> derivative = new OpenAddressCounter<String>(dimension, 1.0f);
+
+    for (int d = 0; d < dataArray.length; d++) {
+      int[] features = dataArray[d];
+      double[] values = valuesArray[d];
+      double sum = 0;
+
+      for (int f = 0; f < features.length; f++) {
+        String key = featureIndex.get(features[f]);
+        assert key != null;
+        sum += weights.getCount(key)*values[f];
+      }
+
+      double expSum, derivativeIncrement;
+
+      if (labels[d] == 0) {
+        expSum = Math.exp(sum);
+        derivativeIncrement = 1.0 / (1.0 + (1.0 / expSum));
+      } else {
+        expSum = Math.exp(-sum);
+        derivativeIncrement = -1.0 / (1.0 + (1.0 / expSum));
+      }
+
+//      if (dataweights == null) {
+//        value += Math.log(1.0 + expSum);
+//      } else {
+//        value += Math.log(1.0 + expSum) * dataweights[d];
+//        derivativeIncrement *= dataweights[d];
+//      }
+
+      for (int f = 0; f < features.length; f++) {
+        String key = featureIndex.get(features[f]);
+        derivative.incrementCount(key, values[f]*derivativeIncrement);
+      }
+    }
+    
+    // L2 regularization
+    for (int i = 0; i < dimension; ++i) {
+      String key = featureIndex.get(i);
+      if (key != null) {
+        double x = weights.getCount(key);
+        derivative.incrementCount(key, x / scaledSigmaSquared);
+      }
+    }
+    
+    return derivative;
+  }
+  
+  
   /**
    * Convert a double array to a Counter.
    * 

@@ -252,15 +252,20 @@ public class OAIndex<K> implements Index<K> {
   }
 
   public boolean add(K k) {
-    throw new UnsupportedOperationException();
+    return indexOf(k, true) >= 0;
   }
 
   public boolean addAll(Collection<? extends K> c) {
-    throw new UnsupportedOperationException();
+    boolean isSuccess = true;
+    for (K key : c) {
+      int i = indexOf(key, true);
+      if (i < 0) isSuccess = false;
+    }
+    return isSuccess;
   }
 
   public void clear() {
-    throw new UnsupportedOperationException();
+    init();
   }
 
   public void lock() {

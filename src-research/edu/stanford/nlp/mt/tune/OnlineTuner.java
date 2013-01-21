@@ -41,8 +41,8 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.ThreadsafeCounter;
-import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Triple;
@@ -350,7 +350,7 @@ public class OnlineTuner {
       featureIndex.addAll(result.gradient.keySet());
       
       // Apply update rule
-//      Counter<String> last = new OpenAddressCounter<String>(currentWts);
+      Counter<String> last = new OpenAddressCounter<String>(currentWts);
       updater.update(currentWts, result.gradient, updateStep);
       
       // Debug info
@@ -360,7 +360,7 @@ public class OnlineTuner {
       // case. It's too slow.
 //      logger.fine(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
 //      Counters.subtractInPlace(last, currentWts);
-//      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
+      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
 
       ++updateStep;
 
@@ -419,8 +419,8 @@ public class OnlineTuner {
       logger.info("Start of epoch: " + epoch);
 
       // n-best lists. Purge for each epoch
-      Map<Integer,List<RichTranslation<IString, String>>> nbestLists = 
-          new HashMap<Integer,List<RichTranslation<IString, String>>>(tuneSetSize);
+      Map<Integer,List<RichTranslation<IString, String>>> nbestLists = doExpectedBleu ? 
+          new HashMap<Integer,List<RichTranslation<IString, String>>>(tuneSetSize) : null;
 
       // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
       // to finish at the end of the epoch
@@ -484,8 +484,8 @@ public class OnlineTuner {
    */
   private int[] makeBatch(int[] indices, int t, int batchSize) {
     final int start = t*batchSize;
-    int end = (t+1)*batchSize;
-    if (end >= indices.length) end = indices.length;
+    assert start < indices.length;
+    final int end = Math.min((t+1)*batchSize, indices.length);
     int[] batch = new int[end - start];
     System.arraycopy(indices, start, batch, 0, batch.length);
     return batch;
@@ -594,7 +594,7 @@ public class OnlineTuner {
   private Counter<String> loadWeights(String wtsInitialFile,
       boolean uniformStartWeights, boolean randomizeStartWeights) {
 
-    featureIndex = new HashIndex<String>(expectedNumFeatures);
+    featureIndex = new OAIndex<String>();
     Counter<String> weights;
     try {
       weights = IOTools.readWeights(wtsInitialFile, featureIndex);

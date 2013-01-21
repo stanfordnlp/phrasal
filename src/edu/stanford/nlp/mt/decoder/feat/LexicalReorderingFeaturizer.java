@@ -101,7 +101,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = priorAlignConst.toString();
           }
           values.add(new FeatureValue<String>(FEATURE_PREFIX + ":" + mrt + ":"
-              + condRep, 1.0));
+              + condRep, 1.0, true));
         } else {
           String condRep; // = null;
           if (!useAlignmentConstellations) {
@@ -111,7 +111,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = f.option.abstractOption.alignment.toString();
           }
           values.add(new FeatureValue<String>(FEATURE_PREFIX + ":" + mrt + ":"
-              + condRep, 1.0));
+              + condRep, 1.0, true));
         }
       }
     }
