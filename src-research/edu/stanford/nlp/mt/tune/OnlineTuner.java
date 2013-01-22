@@ -41,8 +41,8 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.ThreadsafeCounter;
+import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Triple;
@@ -592,7 +592,7 @@ public class OnlineTuner {
   private Counter<String> loadWeights(String wtsInitialFile,
       boolean uniformStartWeights, boolean randomizeStartWeights) {
 
-    featureIndex = new OAIndex<String>();
+    featureIndex = new HashIndex<String>(expectedNumFeatures);
     Counter<String> weights;
     try {
       weights = IOTools.readWeights(wtsInitialFile, featureIndex);
