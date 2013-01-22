@@ -393,7 +393,7 @@ public class OnlineTuner {
    * @param optimizerFlags 
    * @param nThreads
    */
-  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction, boolean doExpectedBleu) {
+  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction, boolean doExpectedBleu, int weightWriteOutInterval) {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
@@ -439,6 +439,9 @@ public class OnlineTuner {
         wrapper.put(input);
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
         
+        if((t+1) % weightWriteOutInterval == 0)
+        	IOTools.writeWeights(String.format("%s.%d.%d.binwts", logPrefix, epoch, t), currentWts);
+       
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
         //                Be sure to update featureIndex appropriately.
@@ -734,6 +737,7 @@ public class OnlineTuner {
     optionMap.put("l", 1);
     optionMap.put("ne", 0);
     optionMap.put("ef", 1);
+    optionMap.put("wi", 1);
     return optionMap;
   }
 
@@ -764,6 +768,7 @@ public class OnlineTuner {
     sb.append("   -l level   : Set java.logging level").append(nl);
     sb.append("   -ne        : Disable expected BLEU calculation (saves memory)").append(nl);
     sb.append("   -ef        : Expected # of features").append(nl);
+    sb.append("   -wi        : The number of minibatches between intermmediate weight file writeouts within an epoch").append(nl);
     return sb.toString().trim();
   }
 
@@ -791,6 +796,8 @@ public class OnlineTuner {
     OnlineTuner.logLevel = Level.parse(opts.getProperty("l", "INFO"));
     boolean doExpectedBleu = ! PropertiesUtils.getBool(opts, "ne", false);
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
+    int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);
+
 
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -825,7 +832,7 @@ public class OnlineTuner {
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
     tuner.writeNbest(doNbestOutput);
-    tuner.run(numEpochs, batchSize, lossFunction, doExpectedBleu);
+    tuner.run(numEpochs, batchSize, lossFunction, doExpectedBleu, weightWriteOutInterval);
     tuner.shutdown();
 
     final long elapsedTime = System.nanoTime() - startTime;
