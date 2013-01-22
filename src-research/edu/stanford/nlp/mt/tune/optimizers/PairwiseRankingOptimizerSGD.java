@@ -46,11 +46,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final double DEFAULT_RATE = 0.1;
   public static final String DEFAULT_UPDATER = "sgd";
   public static final double DEFAULT_L1 = 0;
+  
   // Logistic classifier labels
   private static final String POS_CLASS = "POSITIVE";
   private static final String NEG_CLASS = "NEGATIVE";
   
-  
+  // PRO sampling and feature filtering
   private final int gamma;
   private final int xi;
   private final double nThreshold;
@@ -58,10 +59,13 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final int tuneSetSize;
 
   private final double learningRate;
-  private final double sigmaSq;
   private final String updaterType;
-  private final double L1lambda;
 
+  // Regularization fields
+  private final double L1lambda;
+  private boolean l2Regularization;
+  private final double sigmaSq;
+  
   private final Logger logger;
   private final Random random;
   private final Index<String> featureIndex;
@@ -99,12 +103,17 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     this.minFeatureSegmentCount = minFeatureSegmentCount;
     this.featureIndex = featureIndex;
     this.tuneSetSize = tuneSetSize;
-    this.sigmaSq = sigma*sigma;
     this.learningRate = rate;
     this.updaterType = updaterType;
-    this.L1lambda = L1lambda;
     random = new Random();
 
+    // L1 regularization
+    this.L1lambda = L1lambda;
+    
+    // L2 regularization
+    this.l2Regularization = ! Double.isInfinite(sigma);
+    this.sigmaSq = l2Regularization ? sigma*sigma : 0.0;
+    
     // Careful! Order is important here for LogisticObjectiveFunction.
     labelIndex = new HashIndex<String>();
     labelIndex.add(NEG_CLASS);
@@ -389,12 +398,14 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       }
     }
     
-    // L2 regularization
-    for (int i = 0; i < dimension; ++i) {
-      String key = featureIndex.get(i);
-      if (key != null) {
-        double x = weights.getCount(key);
-        derivative.incrementCount(key, x / scaledSigmaSquared);
+    // Add L2 regularization directly into the derivative
+    if (this.l2Regularization) {
+      for (int i = 0; i < dimension; ++i) {
+        String key = featureIndex.get(i);
+        if (key != null) {
+          double x = weights.getCount(key);
+          derivative.incrementCount(key, x / scaledSigmaSquared);
+        }
       }
     }
     
