@@ -82,7 +82,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
                         args != null && args.length > 4 ? Double.parseDouble(args[4]) : DEFAULT_SIGMA,
                             args != null && args.length > 5 ? Double.parseDouble(args[5]) : DEFAULT_RATE,
                             		args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER,
-                            				args != null && args.length > 6 ? Double.parseDouble(args[6]) : DEFAULT_L1);
+                            				args != null && args.length > 7 ? Double.parseDouble(args[7]) : DEFAULT_L1);
   }
 
   public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures,
