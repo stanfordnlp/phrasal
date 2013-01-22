@@ -339,8 +339,8 @@ public class OnlineTuner {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
-    assert nbestLists != null;
-
+    assert nbestLists != null || !doExpectedBleu;
+    
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
