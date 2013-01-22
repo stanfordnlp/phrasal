@@ -45,7 +45,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final double DEFAULT_SIGMA = 0.1;
   public static final double DEFAULT_RATE = 0.1;
   public static final String DEFAULT_UPDATER = "sgd";
-  
+  public static final double DEFAULT_L1 = 0;
   // Logistic classifier labels
   private static final String POS_CLASS = "POSITIVE";
   private static final String NEG_CLASS = "NEGATIVE";
@@ -60,6 +60,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final double learningRate;
   private final double sigmaSq;
   private final String updaterType;
+  private final double L1lambda;
 
   private final Logger logger;
   private final Random random;
@@ -69,7 +70,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures) {
     this(featureIndex, tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
-        DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER);
+        DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER, DEFAULT_L1);
   }
 
   public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures, String... args) {
@@ -80,11 +81,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
                     args != null && args.length > 3 ? Double.parseDouble(args[3]) : DEFAULT_N_THRESHOLD,
                         args != null && args.length > 4 ? Double.parseDouble(args[4]) : DEFAULT_SIGMA,
                             args != null && args.length > 5 ? Double.parseDouble(args[5]) : DEFAULT_RATE,
-                            		args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER);
+                            		args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER,
+                            				args != null && args.length > 6 ? Double.parseDouble(args[6]) : DEFAULT_L1);
   }
 
   public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures,
-      int minFeatureSegmentCount, int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType) {
+      int minFeatureSegmentCount, int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType, double L1lambda) {
     if (minFeatureSegmentCount < 1) throw new RuntimeException("Feature segment count must be >= 1: " + minFeatureSegmentCount);
     if (gamma <= 0) throw new RuntimeException("Gamma must be > 0: " + gamma);
     if (xi <= 0) throw new RuntimeException("Xi must be > 0: " + xi);
@@ -100,6 +102,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     this.sigmaSq = sigma*sigma;
     this.learningRate = rate;
     this.updaterType = updaterType;
+    this.L1lambda = L1lambda;
     random = new Random();
 
     // Careful! Order is important here for LogisticObjectiveFunction.
@@ -422,6 +425,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public OnlineUpdateRule<String> newUpdater() {
 	if(this.updaterType.equals("adagrad"))
 		return new AdaGradUpdater(learningRate, expectedNumFeatures);
+	if(this.updaterType.equals("adagradl1"))
+		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda);
 	return new SGDUpdater(learningRate);
   }
 
