@@ -342,8 +342,10 @@ public class OnlineTuner {
     assert nbestLists != null || !doExpectedBleu;
     
     // There may be more than one gradient available, so loop
+    boolean didUpdate = false;
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
+      didUpdate = true;
 
       // Don't assume that the OnlineOptimizers that compute the gradient will populate the feature
       // index.
@@ -373,6 +375,13 @@ public class OnlineTuner {
         }
       }
     }
+    
+    // Filter any zeros from the weight vector
+    if (didUpdate) {
+      int numZeros = Counters.retainNonZeros(currentWts).size();
+      logger.info(String.format("Regularization: Set %d weights to 0", numZeros));
+    }
+    
     return updateStep;
   }
 
@@ -388,7 +397,8 @@ public class OnlineTuner {
    * @param optimizerFlags 
    * @param nThreads
    */
-  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction, boolean doExpectedBleu, int weightWriteOutInterval) {
+  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction, 
+      boolean doExpectedBleu, int weightWriteOutInterval) {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
@@ -434,9 +444,9 @@ public class OnlineTuner {
         wrapper.put(input);
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
         
-        if((t+1) % weightWriteOutInterval == 0)
+        if((t+1) % weightWriteOutInterval == 0) {
         	IOTools.writeWeights(String.format("%s.%d.%d.binwts", logPrefix, epoch, t), currentWts);
-       
+        }
         // 
         // TODO(spenceg): Extract rules and update phrase table for this example
         //                Be sure to update featureIndex appropriately.
@@ -763,7 +773,7 @@ public class OnlineTuner {
     sb.append("   -l level   : Set java.logging level").append(nl);
     sb.append("   -ne        : Disable expected BLEU calculation (saves memory)").append(nl);
     sb.append("   -ef        : Expected # of features").append(nl);
-    sb.append("   -wi        : The number of minibatches between intermmediate weight file writeouts within an epoch").append(nl);
+    sb.append("   -wi        : # of minibatches between intermediate weight file writeouts within an epoch").append(nl);
     return sb.toString().trim();
   }
 
