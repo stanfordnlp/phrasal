@@ -350,17 +350,12 @@ public class OnlineTuner {
       featureIndex.addAll(result.gradient.keySet());
       
       // Apply update rule
-//      Counter<String> last = new OpenAddressCounter<String>(currentWts);
       updater.update(currentWts, result.gradient, updateStep);
       
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
-// WSGDEBUG: java.logging doesn't do smart parameter expansion, so these steps are executed in the high dimensional
-      // case. It's too slow.
-//      logger.fine(String.format("Weight update %d: %s", updateStep, currentWts.toString()));
-//      Counters.subtractInPlace(last, currentWts);
-//      logger.info(String.format("Weight update %d L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(last)));
+      logger.info(String.format("Weight update %d approximate L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(result.gradient)));
 
       ++updateStep;
 
