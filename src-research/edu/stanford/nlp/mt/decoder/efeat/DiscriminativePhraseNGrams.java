@@ -64,7 +64,7 @@ public class DiscriminativePhraseNGrams implements
       if (type == Type.t || type == Type.st)
         sbuf.append(f.translatedPhrase.toString("_"));
       f = f.prior;
-      flist.add(new FeatureValue<String>(sbuf.toString(), 1.0, true));
+      flist.add(new FeatureValue<String>(sbuf.toString(), 1.0));
     }
 
     return flist;
