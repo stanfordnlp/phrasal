@@ -377,10 +377,10 @@ public class OnlineTuner {
     }
     
     // Filter any zeros from the weight vector
-    if (didUpdate) {
-      int numZeros = Counters.retainNonZeros(currentWts).size();
-      logger.info(String.format("Regularization: Set %d weights to 0", numZeros));
-    }
+//    if (didUpdate) {
+//      int numZeros = Counters.retainNonZeros(currentWts).size();
+//      logger.info(String.format("Regularization: Set %d weights to 0", numZeros));
+//    }
     
     return updateStep;
   }
