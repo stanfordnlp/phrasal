@@ -129,19 +129,11 @@ public class OnlineTuner {
     wts = loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
     logger.info("Initial weights: " + wts.toString());
 
-    // Load the source and target files for the intrinsic loss.
+    // Load the tuning set
     tuneSource = IStrings.fileSplitToIStrings(srcFile);
     assert tuneSource.size() > 0;
-    List<Sequence<IString>> tuneTarget = IStrings.fileSplitToIStrings(tgtFile);
-    assert tuneSource.size() == tuneTarget.size();
+    loadReferences(tgtFile);
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
-    references = new ArrayList<List<Sequence<IString>>>(tuneTarget.size());
-    for (Sequence<IString> reference : tuneTarget) {
-      List<Sequence<IString>> refList = new ArrayList<Sequence<IString>>(1);
-      refList.add(reference);
-      references.add(refList);
-    }
-    assert references.size() == tuneTarget.size();
 
     // After loading weights and tuning set, load the optimizer
     // SGD-based optimizers may need the tuning set size or
@@ -342,10 +334,8 @@ public class OnlineTuner {
     assert nbestLists != null || !doExpectedBleu;
     
     // There may be more than one gradient available, so loop
-    boolean didUpdate = false;
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
-      didUpdate = true;
 
       // Don't assume that the OnlineOptimizers that compute the gradient will populate the feature
       // index.
@@ -375,12 +365,6 @@ public class OnlineTuner {
         }
       }
     }
-    
-    // Filter any zeros from the weight vector
-//    if (didUpdate) {
-//      int numZeros = Counters.retainNonZeros(currentWts).size();
-//      logger.info(String.format("Regularization: Set %d weights to 0", numZeros));
-//    }
     
     return updateStep;
   }
@@ -568,6 +552,8 @@ public class OnlineTuner {
   /**
    * Load multiple references for accurate expected BLEU evaluation during
    * tuning. Computing BLEU with a single reference is really unstable.
+   * 
+   * NOTE: This method re-initializes OnlineTuner.references
    * 
    * @param refStr
    */
