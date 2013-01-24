@@ -45,22 +45,9 @@ Notice that you need to supply the ISO639-1 language codes for the source and ta
 ##
 ## Language Model
 ##
-Build a language model from the monolingual target data and the target side of the bitext (you might want to filter out data from the same epoch as you dev/test sets). For this step you'll need SRILM on your PATH. On the cluster, the latest version of SRILM is installed in /u/nlp/packages/SRILM:
+Build a language model from the monolingual target data and the target side of the bitext (you might want to filter out data from the same epoch as you dev/test sets). This is easy:
 
-  export PATH=/u/nlp/packages/SRILM/bin/i686-m64:/u/nlp/packages/SRILM/bin:"$PATH"
-
-Now copy the sample lm configuration file to your working directory:
-
-  cp $SCRPR/lm.local .
-
-This file specifies the LM order and various other SRILM options. See the SRILM documentation for all of the different options.
-
-Once you have set the options, you can create a language model in two steps: count extraction followed by compilation:
-
-  $SCRPR/lm-counts.sh gigaword-file.plain.tok.gz english.txt.tok.gz
-  $SCRPR/lm-compile.sh aren-4gram counts/file
-
-where "counts/file" indicates the file in the "counts" directory produced by the count extraction step. Assume that you now have an LM called "aren-4gram.lm.bin.gz".
+  mk-kenlm.sh
 
 ##
 ## MT Training and Tuning
