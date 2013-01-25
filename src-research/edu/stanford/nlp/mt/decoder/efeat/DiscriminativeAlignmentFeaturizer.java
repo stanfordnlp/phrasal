@@ -35,8 +35,8 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
   }
   
   public DiscriminativeAlignmentFeaturizer(String...args) {
-    addUnalignedSourceWords = (args.length == 1) ? Boolean.parseBoolean(args[0]) : false;
-    addUnalignedTargetWords = (args.length == 2) ? Boolean.parseBoolean(args[1]) : false;
+    addUnalignedSourceWords = (args.length > 0) ? Boolean.parseBoolean(args[0]) : false;
+    addUnalignedTargetWords = (args.length > 1) ? Boolean.parseBoolean(args[1]) : false;
   }
   
   @Override
