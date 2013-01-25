@@ -45,9 +45,9 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
     PhraseAlignment align = f.option.abstractOption.alignment;
     final int eLength = f.translatedPhrase.size();
     boolean[] fIsAligned = new boolean[f.foreignPhrase.size()];
-    Arrays.fill(fIsAligned, false);
-
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
+
+    // Add alignment and target features
     for (int i = 0; i < eLength; ++i) {
       int[] fIndices = align.e2f(i);
       String eWord = f.translatedPhrase.get(i).toString();
@@ -58,6 +58,7 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
           features.add(new FeatureValue<String>(feature, 1.0));
         }
       } else {
+        // Aligned target word
         String[] tokens = new String[1+fIndices.length];
         int tokId = 0;
         tokens[tokId++] = eWord;
@@ -74,13 +75,15 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
         }
         features.add(new FeatureValue<String>(sb.toString(), 1.0));
       }
-      if (addUnalignedSourceWords) {
-        for (int fIndex = 0; fIndex < fIsAligned.length; ++fIndex) {
-          if ( ! fIsAligned[fIndex]) {
-            String fWord = f.foreignPhrase.get(fIndex).toString();
-            String feature = UNALIGN_SRC + ":" + fWord;
-            features.add(new FeatureValue<String>(feature, 1.0));
-          }
+    }
+    
+    // Add source features
+    if (addUnalignedSourceWords) {
+      for (int fIndex = 0; fIndex < fIsAligned.length; ++fIndex) {
+        if ( ! fIsAligned[fIndex]) {
+          String fWord = f.foreignPhrase.get(fIndex).toString();
+          String feature = UNALIGN_SRC + ":" + fWord;
+          features.add(new FeatureValue<String>(feature, 1.0));
         }
       }
     }
