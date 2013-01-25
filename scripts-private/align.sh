@@ -14,7 +14,7 @@ fi
 # Uncomment the line below to run locally 
 MEM=15g
 #EXEC=echo
-EXEC="nlpsub -m${MEM} -c4 -pbackground"
+EXEC="nlpsub -m${MEM} -c4"
 
 src_file=$1
 src_lang=$2
