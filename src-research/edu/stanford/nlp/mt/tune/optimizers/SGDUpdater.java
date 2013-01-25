@@ -25,6 +25,9 @@ public class SGDUpdater implements OnlineUpdateRule<String> {
     
     // w_{t+1} := w_t - nu*g_t
     Counters.addInPlace(weights, gradient, -nu);
+    
+    // Filter zeros
+    Counters.retainNonZeros(weights);
   }
 
 }

@@ -1,5 +1,8 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 
@@ -28,13 +31,23 @@ public class AdaGradUpdater implements OnlineUpdateRule<String> {
       Counter<String> gradient, int timeStep) {
 
     // w_{t+1} := w_t - nu*g_t
+    Set<String> zeroFeatures = new HashSet<String>();
     for (String feature : gradient.keySet()) {
       double gradf = gradient.getCount(feature);
       double sgsValue = sumGradSquare.incrementCount(feature, gradf*gradf);
       double wValue = weights.getCount(feature);
       double gValue = gradient.getCount(feature);
       double update = wValue - (rate * gValue/(Math.sqrt(sgsValue)+eps));
-      weights.setCount(feature, update);
+      if (update == 0.0) {
+        zeroFeatures.add(feature);
+      } else {
+        weights.setCount(feature, update);
+      }
+    }
+    
+    // Filter zeros
+    for (String feature : zeroFeatures) {
+      weights.remove(feature);
     }
   }
 }
