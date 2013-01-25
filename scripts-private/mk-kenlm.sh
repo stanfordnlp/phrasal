@@ -26,4 +26,4 @@ NAME=$2
 shift 2
 
 mkdir -p $TEMPDIR
-zcat $* | grep -v '<s>' | $MAKELM -o $ORDER -S 90% -T $TEMPDIR | gzip -c > "$NAME".gz.kenlm
+zcat $* | grep -v '<s>' | tr '[:upper:]' '[:lower:]' | $MAKELM -o $ORDER -S 90% -T $TEMPDIR | gzip -c > "$NAME".gz.kenlm
