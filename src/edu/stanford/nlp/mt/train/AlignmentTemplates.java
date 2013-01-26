@@ -119,6 +119,18 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       }
     }
   }
+  
+  /**
+   * Return the count of the current alignment template.
+   * 
+   * @param alTemp
+   * @return
+   */
+  public int getAlignmentCount(AlignmentTemplate alTemp) {
+    int idx = alTemp.getKey();
+    int alIdx = alTemp.getAKey();
+    return aCounter.get(idx).get(alIdx);
+  }
 
   /**
    * Get the alignment template indexed by idx. When {@link AlignmentTemplate}

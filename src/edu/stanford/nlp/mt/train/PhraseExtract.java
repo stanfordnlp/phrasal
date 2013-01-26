@@ -29,6 +29,7 @@ package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.mt.tools.Interpreter;
 import edu.stanford.nlp.objectbank.ObjectBank;
+import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
@@ -86,6 +87,7 @@ public class PhraseExtract {
   static public final String THREADS_OPT = "threads";
   static public final String WITH_GAPS_OPT = "withGaps";
   static public final String TRIPLE_FILE = "tripleFile";
+  static public final String MIN_PHRASE_COUNT = "minCount";
   
   // phrase translation probs:  
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -189,6 +191,8 @@ public class PhraseExtract {
   private SymmetrizationType symmetrizationType = null;
 
   private int totalPassNumber = 1;
+  
+  private int minPhraseCount = 0;
 
   public PhraseExtract(Properties prop) throws IOException {
     processProperties(prop);
@@ -339,6 +343,7 @@ public class PhraseExtract {
     lowercase = Boolean.parseBoolean(prop.getProperty(LOWERCASE_OPT, "false"));
     verbose = Boolean.parseBoolean(prop.getProperty(VERBOSE_OPT, "false"));
     outputFile = prop.getProperty(OUTPUT_FILE_OPT);
+    minPhraseCount = PropertiesUtils.getInt(prop, MIN_PHRASE_COUNT, 0);
   }
 
   public void init() {
@@ -722,8 +727,18 @@ public class PhraseExtract {
                   idx, totalStepSecs, totalMemory, freeMemory);
       }
 
-      if (!alTemps.reconstructAlignmentTemplate(alTemp, idx))
+      if (!alTemps.reconstructAlignmentTemplate(alTemp, idx)) {
         continue;
+      }
+      
+      // Filter phrases that have occured less than n times
+      // Note that by filtering the phrases here, the generative extractor scores are not necessarily
+      // correct.
+      // TODO(spenceg): Maybe we should move the generative features?
+      if (alTemps.getAlignmentCount(alTemp) < minPhraseCount) {
+        continue;
+      }
+      
       str.append(phrasePrinter.toString(alTemp, withAlign));
       str.append(AlignmentTemplate.DELIM);
 
@@ -834,7 +849,8 @@ public class PhraseExtract {
             + " -startAtLine <n> : start at line <n> (<0 : all)\n"
             + " -endAtLine <n> : end at line <n> (<0 : all)\n"
             + " -noAlign : do not specify alignment in phrase table\n"
-            + " -verbose : enable verbose mode\n");
+            + " -verbose : enable verbose mode\n"
+            + " -minCount <n> : Retain only phrases that occur >= n times\n");
     //throw new RuntimeException();
   }
 
