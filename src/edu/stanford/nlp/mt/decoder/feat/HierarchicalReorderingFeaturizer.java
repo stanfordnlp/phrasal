@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
+import edu.stanford.nlp.util.Index;
 
 /**
  * Featurizer for a lexicalized re-ordering model that uses hierarchical
@@ -596,7 +597,7 @@ public class HierarchicalReorderingFeaturizer extends
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

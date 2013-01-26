@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.base.IBMModel1;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -222,7 +223,7 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<TK>> options,
-      Sequence<TK> foreign) {
+      Sequence<TK> foreign, Index<String> featureIndex) {
     try {
       // System.err.println("Starting to load IBM Model1");
       // model1 =

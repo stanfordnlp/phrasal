@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.IBMModel1;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -45,7 +46,7 @@ public class IBMModel1SourceGivenTarget implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
     h = new FastFeaturizableHash<IBMModel1.PartialSourceFeatureState>();
     basePSFS = ibmModel1.partialSourceFeatureState(foreign);
   }

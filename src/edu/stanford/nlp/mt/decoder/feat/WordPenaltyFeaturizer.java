@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -48,7 +49,7 @@ public class WordPenaltyFeaturizer<TK> implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<TK>> options,
-      Sequence<TK> foreign) {
+      Sequence<TK> foreign, Index<String> featureIndex) {
   }
 
   @Override

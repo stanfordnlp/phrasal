@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.*;
+import edu.stanford.nlp.util.Index;
 
 /**
  * Same as LinearDistortionFeaturizer, though penalty is a polynomial x^a, where
@@ -46,7 +47,7 @@ public class PolynomialDistortionFeaturizer<TK> implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<TK>> options,
-      Sequence<TK> foreign) {
+      Sequence<TK> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

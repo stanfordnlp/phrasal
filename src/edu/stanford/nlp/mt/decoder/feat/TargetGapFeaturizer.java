@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.DTUOption;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
+import edu.stanford.nlp.util.Index;
 
 /**
  * @author Michel Galley
@@ -243,7 +244,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

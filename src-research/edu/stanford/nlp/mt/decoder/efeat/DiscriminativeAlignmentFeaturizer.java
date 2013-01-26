@@ -12,15 +12,18 @@ import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
+ * TODO(spenceg): Multiword alignments are not extracted correctly.
  * 
  * @author Spence Green
  *
  */
 public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
-    IncrementalFeaturizer<IString, String> {
+    IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String> {
 
   private static final String ALIGN_FEAT = "ALN";
   private static final String UNALIGN_TGT = "ALNT";
@@ -98,8 +101,19 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {}
+      Sequence<IString> foreign, Index<String> featureIndex) {}
 
   @Override
   public void reset() {}
+
+  @Override
+  public List<FeatureValue<String>> phraseListFeaturize(
+      Featurizable<IString, String> f) {
+    return listFeaturize(f);
+  }
+
+  @Override
+  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
+    return featurize(f);
+  }
 }

@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
 
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
@@ -65,7 +66,7 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

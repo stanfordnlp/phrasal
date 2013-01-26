@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.annotators.SourceDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.util.Index;
 
 public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, AlignmentFeaturizer {
     static public final String FEATURE_NAME_MATCH = "RootPhraseMatch";
@@ -21,7 +22,7 @@ public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, 
     
 	@Override
 	public void initialize(List<ConcreteTranslationOption<IString>> options,
-			Sequence<IString> foreign) { }
+			Sequence<IString> foreign, Index<String> featureIndex) { }
 
 	@Override
 	public void reset() { }

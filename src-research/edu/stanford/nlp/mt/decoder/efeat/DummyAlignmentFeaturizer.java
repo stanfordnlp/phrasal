@@ -10,6 +10,7 @@ import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.util.Index;
 
 /**
  * Does nothing expect checking that each abstract option has an alignment
@@ -44,7 +45,7 @@ public class DummyAlignmentFeaturizer implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

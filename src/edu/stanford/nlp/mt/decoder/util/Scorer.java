@@ -5,6 +5,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.Index;
 
 /**
  * @author danielcer
@@ -36,4 +37,11 @@ public interface Scorer<FV> {
    * @return True if the scorer has any non-zero weights. False otherwise.
    */
   public boolean hasNonZeroWeight(FV featureName);
+  
+  /**
+   * Get this scorer's feature index.
+   * 
+   * @return
+   */
+  public Index<String> getFeatureIndex();
 }

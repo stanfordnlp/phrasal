@@ -214,7 +214,7 @@ public class Phrasal {
   public Index<String> getFeatureIndex() { return featureIndex; }
   
   /**
-   * Lock the decoder's feature index.
+   * Lock the decoder's feature index (for example, at test time).
    */
   public void lockFeatureIndex() { featureIndex.lock(); }
   
@@ -827,7 +827,7 @@ public class Phrasal {
         infererBuilder
             .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
                 .clone());
-        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig, featureIndex);
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightConfig, featureIndex);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder

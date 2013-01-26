@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat.oracle;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
+import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
@@ -267,7 +268,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
 
   public void initialize(
       List<ConcreteTranslationOption<IString>> concreteTranslationOptions,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

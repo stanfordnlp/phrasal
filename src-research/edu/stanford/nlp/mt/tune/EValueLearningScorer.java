@@ -8,6 +8,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
 
 public class EValueLearningScorer implements Scorer<String> {
@@ -345,6 +346,11 @@ public class EValueLearningScorer implements Scorer<String> {
   @Override
   public boolean hasNonZeroWeight(String featureName) {
     return true;
+  }
+
+  @Override
+  public Index<String> getFeatureIndex() {
+    return featureIndex;
   }
 
 }

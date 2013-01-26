@@ -142,7 +142,7 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
     featureCache = new ThreeDimensionalMap<CoverageSet, CoverageSet, String, Double>();
 
   }

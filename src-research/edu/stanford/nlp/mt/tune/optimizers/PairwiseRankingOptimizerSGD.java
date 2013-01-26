@@ -334,6 +334,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 //    prior.setSigmaSquared(sigmaSq / dataFraction);
 //    
     final int dimension = Math.max(weights.size(), dataset.numFeatureTypes());
+    assert dimension <= featureIndex.size();
+    
 //    LogisticObjectiveFunction lof = new LogisticObjectiveFunction(dimension, 
 //        dataset.getDataArray(), dataset.getValuesArray(), dataset.getLabelsArray(), prior);
 //

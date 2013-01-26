@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.util.Index;
 
 /**
  *
@@ -376,7 +377,7 @@ public class NGramLanguageModelFeaturizer implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
     rawLMScoreHistory.clear();
   }
 

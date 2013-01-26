@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -73,7 +74,7 @@ public class IBMModel1TargetGivenSource implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
     h = new FastFeaturizableHash<IBMModel1.PartialTargetFeatureState>();
     basePTFS = ibmModel1.partialTargetFeatureState(foreign);
     precomputeMap = new HashMap<Sequence<IString>, IBMModel1.PhrasePrecomputePTarget>();

@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.Triple;
 
@@ -213,7 +214,7 @@ public class ArabicVSOkbestFeaturizer extends
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
 
     if (!sentenceToId.containsKey(foreign))
       throw new RuntimeException(String.format(

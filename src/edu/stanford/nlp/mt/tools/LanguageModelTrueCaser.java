@@ -94,7 +94,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
           listFeaturizers);
 
       infererBuilder.setIncrementalFeaturizer(combinedFeaturizer);
-      Scorer<String> scorer = new UniformScorer<String>(false);
+      Scorer<String> scorer = new UniformScorer<String>(false, null);
       infererBuilder.setScorer(scorer);
 
       // Create truecasing phrase generator

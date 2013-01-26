@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.util.Index;
 
 /**
  * Assign large cost to phrase if sentence boundaries are not at the right
@@ -62,7 +63,7 @@ public class SentenceBoundaryFeaturizer implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

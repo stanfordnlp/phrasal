@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.Index;
 
 import static java.lang.System.*;
 
@@ -28,13 +29,15 @@ public class UniformScorer<T> implements Scorer<T> {
     err.println("--------------------------------------------------------");
   }
 
-  public UniformScorer() {
-    warn();
+  private final Index<String> featureIndex;
+
+  public UniformScorer(Index<String> featureIndex) {
+    this(true, featureIndex);
   }
 
-  public UniformScorer(boolean warn) {
-    if (warn)
-      warn();
+  public UniformScorer(boolean warn, Index<String> featureIndex) {
+    this.featureIndex = featureIndex;
+    if (warn) warn();
   }
 
   @Override
@@ -61,5 +64,10 @@ public class UniformScorer<T> implements Scorer<T> {
   @Override
   public boolean hasNonZeroWeight(T featureName) {
     return true;
+  }
+
+  @Override
+  public Index<String> getFeatureIndex() {
+    return featureIndex;
   }
 }

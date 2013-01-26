@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.regex.*;
 
 import edu.stanford.nlp.io.IOUtils;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
 import edu.stanford.nlp.mt.Phrasal;
@@ -362,7 +363,7 @@ public class DiscrimDistortionFeaturizer extends
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
 
     if (!sentenceToId.containsKey(foreign))
       throw new RuntimeException(this.getClass().getName()

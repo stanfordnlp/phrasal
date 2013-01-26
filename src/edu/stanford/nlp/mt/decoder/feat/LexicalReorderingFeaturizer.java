@@ -10,6 +10,7 @@ import edu.stanford.nlp.mt.base.LexicalReorderingTable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -191,7 +192,7 @@ public class LexicalReorderingFeaturizer implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

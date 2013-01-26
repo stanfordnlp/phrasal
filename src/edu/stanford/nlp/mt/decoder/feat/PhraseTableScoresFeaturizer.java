@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.util.Index;
 
 /**
  * @author danielcer
@@ -142,7 +143,7 @@ public class PhraseTableScoresFeaturizer<T> implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<T>> options,
-      Sequence<T> foreign) {
+      Sequence<T> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

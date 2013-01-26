@@ -6,6 +6,7 @@ import java.io.*;
 import edu.stanford.nlp.mt.base.FeatureValue;
 
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.classify.km.*;
 import edu.stanford.nlp.classify.km.kernels.*;
@@ -356,5 +357,10 @@ public class SSVMScorer implements Scorer<String> {
   @Override
   public void updateWeights(Counter<String> weights) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Index<String> getFeatureIndex() {
+    return featureIndex;
   }
 }

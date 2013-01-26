@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.*;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
+import edu.stanford.nlp.util.Index;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -200,7 +201,7 @@ public class ArabicInitialVerbFeaturizer implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
 
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
     ArrayList<TaggedWord> sentence = tagger.tagSentence(Sentence
@@ -279,7 +280,7 @@ public class ArabicInitialVerbFeaturizer implements
       f.initialize(
           null,
           new SimpleSequence<IString>(true, IStrings.toIStringArray(line
-              .split("\\s+"))));
+              .split("\\s+"))), null);
     }
   }
 }

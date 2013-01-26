@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.parser.LinkedStack;
 import edu.stanford.nlp.trees.TypedDependency;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -125,7 +126,7 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

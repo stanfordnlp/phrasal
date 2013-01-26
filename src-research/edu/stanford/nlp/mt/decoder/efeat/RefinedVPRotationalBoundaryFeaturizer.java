@@ -9,6 +9,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
 import java.util.*;
@@ -300,7 +301,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
 
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
-      Sequence<IString> foreign) {
+      Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override
