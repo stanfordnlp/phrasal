@@ -41,7 +41,6 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.stats.ThreadsafeCounter;
-import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -126,7 +125,7 @@ public class OnlineTuner {
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
-    wts = loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
+    wts = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
     logger.info("Initial weights: " + wts.toString());
 
     // Load the tuning set
@@ -134,16 +133,16 @@ public class OnlineTuner {
     assert tuneSource.size() > 0;
     loadReferences(tgtFile);
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
-
-    // After loading weights and tuning set, load the optimizer
-    // SGD-based optimizers may need the tuning set size or
-    // fiddle with the initial weights.
-    optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
-    logger.info("Loaded optimizer: " + optimizer.toString());
     
     // Load Phrasal
     decoder = loadDecoder(phrasalIniFile);
+    featureIndex = decoder.getFeatureIndex();
     logger.info("Loaded Phrasal from: " + phrasalIniFile);
+    
+    // Load the optimizer last since some optimizers depend on fields initialized
+    // by OnlineTuner.
+    optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
+    logger.info("Loaded optimizer: " + optimizer.toString());
   }
   
   /**
@@ -585,13 +584,12 @@ public class OnlineTuner {
    * @param randomizeStartWeights 
    * @return
    */
-  private Counter<String> loadWeights(String wtsInitialFile,
+  private static Counter<String> loadWeights(String wtsInitialFile,
       boolean uniformStartWeights, boolean randomizeStartWeights) {
 
-    featureIndex = new HashIndex<String>(expectedNumFeatures);
     Counter<String> weights;
     try {
-      weights = IOTools.readWeights(wtsInitialFile, featureIndex);
+      weights = IOTools.readWeights(wtsInitialFile, null);
       weights = new OpenAddressCounter<String>(weights, 1.0f);
     } catch (IOException e) {
       e.printStackTrace();

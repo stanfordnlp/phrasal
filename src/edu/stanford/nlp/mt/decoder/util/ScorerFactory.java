@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.io.*;
 
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.Index;
 
 /**
  *
@@ -18,20 +19,24 @@ public class ScorerFactory {
   public static final String STATIC_SCORER_INLINE = "inline";
   public static final String STATIC_SCORER_FILE = "file";
 
-  private ScorerFactory() {
-  }
+  private ScorerFactory() {}
 
   /**
-   *
+   * Creates a scorer.
+   * 
+   * @param scorerName
+   * @param config
+   * @param featureIndex
+   * @return
    * @throws IOException
    */
-  public static Scorer<String> factory(String scorerName, Counter<String> config)
+  public static Scorer<String> factory(String scorerName, Counter<String> config, Index<String> featureIndex)
       throws IOException {
 
     if (scorerName.equals(UNIFORM_SCORER)) {
       return new UniformScorer<String>();
     } else if (scorerName.equals(STATIC_SCORER)) {
-      return new StaticScorer(config);
+      return new StaticScorer(config, featureIndex);
     }
 
     throw new RuntimeException(String.format("Unknown scorer \"%s\"",

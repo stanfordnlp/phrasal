@@ -44,6 +44,8 @@ import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.HashIndex;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
@@ -157,9 +159,10 @@ public class Phrasal {
   public List<Inferer<IString, String>> inferers;
 
   /**
-   * Holds the model weights, one per inferer
+   * Holds the model weights, one per inferer. The model weights have a shared feature index.
    */
   private List<Scorer<String>> scorers;
+  private Index<String> featureIndex;
 
   /**
    * Phrase table type
@@ -202,6 +205,18 @@ public class Phrasal {
     assert threadId >= 0 && threadId < numThreads;
     return scorers.get(threadId); 
   }
+  
+  /**
+   * Get the decoder's feature index.
+   * 
+   * @return
+   */
+  public Index<String> getFeatureIndex() { return featureIndex; }
+  
+  /**
+   * Lock the decoder's feature index.
+   */
+  public void lockFeatureIndex() { featureIndex.lock(); }
   
   /**
    * @return the number of threads specified in the ini file.
@@ -793,6 +808,8 @@ public class Phrasal {
 
     inferers = new ArrayList<Inferer<IString, String>>(numThreads);
     scorers = new ArrayList<Scorer<String>>(numThreads);
+    // HashIndex is threadsafe, while OAIndex is not.
+    featureIndex = new HashIndex<String>(weightConfig.size());
 
     boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
     // boolean dtuDecoder = (gapT == FeaturizerFactory.GapType.none || gapT ==
@@ -810,7 +827,7 @@ public class Phrasal {
         infererBuilder
             .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
                 .clone());
-        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig);
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.STATIC_SCORER, weightConfig, featureIndex);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder
@@ -1232,6 +1249,7 @@ public class Phrasal {
     initStaticMembers(config);
     Phrasal p = new Phrasal(config);
     FlatPhraseTable.lockIndex();
+    p.lockFeatureIndex();
     p.decodeFromConsole();
     p.shutdown();
   }
