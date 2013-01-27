@@ -5,11 +5,15 @@ import java.util.Collection;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.OAIndex;
 
 /**
  * A lightweight scorer for high dimensional models.
+ * 
+ * NOTE: This class is not threadsafe, which is okay for the current implementation
+ * in which each Inferer has its own scorer.
  * 
  * @author Spence Green
  *
@@ -45,7 +49,7 @@ public class SparseScorer implements Scorer<String> {
 
   @Override
   public void updateWeights(Counter<String> weights) {
-    this.weights = weights;
+    this.weights = new OpenAddressCounter<String>(weights);
     
     if (featureIndex.isLocked()) {
       throw new RuntimeException("Cannot update weight vector after the feature index has been locked!");

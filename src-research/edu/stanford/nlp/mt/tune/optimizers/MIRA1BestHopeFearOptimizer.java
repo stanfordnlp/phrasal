@@ -55,8 +55,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       Sequence<IString> source,
       int sourceId,
       List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references, 
-      SentenceLevelMetric<IString, String> lossFunction,
-      Counter<String> featureWhitelist) {
+      SentenceLevelMetric<IString, String> lossFunction) {
     
     // Lock the loss function since we don't want updates to its statistics while we are searching
     // for the hope and fear derivations.
@@ -228,8 +227,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       List<Sequence<IString>> sources, int[] sourceIds,
       List<List<RichTranslation<IString, String>>> translations,
       List<List<Sequence<IString>>> references,
-      SentenceLevelMetric<IString, String> lossFunction,
-      Counter<String> featureWhitelist) {
+      SentenceLevelMetric<IString, String> lossFunction) {
     throw new UnsupportedOperationException("1-best MIRA does not support mini-batch learning");
   }
 }

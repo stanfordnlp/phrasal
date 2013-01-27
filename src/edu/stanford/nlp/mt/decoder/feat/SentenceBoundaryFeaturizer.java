@@ -69,4 +69,8 @@ public class SentenceBoundaryFeaturizer implements
   @Override
   public void reset() {
   }
+  
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

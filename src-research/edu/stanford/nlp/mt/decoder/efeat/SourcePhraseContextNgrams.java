@@ -111,4 +111,7 @@ public class SourcePhraseContextNgrams implements
     return listFeaturize(f);
   }
 
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

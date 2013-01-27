@@ -115,4 +115,8 @@ public class LRPhraseBoundryFeaturizer implements
 
   public void reset() {
   }
+  
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

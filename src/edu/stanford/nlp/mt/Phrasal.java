@@ -214,7 +214,8 @@ public class Phrasal {
   public Index<String> getFeatureIndex() { return featureIndex; }
   
   /**
-   * Lock the decoder's feature index (for example, at test time).
+   * Lock the decoder's feature index (for example, at test time). This prevents
+   * unseen features from being extracted an inserted into the model.
    */
   public void lockFeatureIndex() { featureIndex.lock(); }
   
@@ -658,6 +659,14 @@ public class Phrasal {
         System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
       }
     }
+    
+    // Setup the feature index from the initial weight vector
+    // HashIndex is threadsafe, while OAIndex is not.
+    featureIndex = new HashIndex<String>(weightConfig.size());
+    for (String feature : weightConfig.keySet()) {
+      featureIndex.indexOf(feature, true);
+    }
+    featurizer.initialize(featureIndex);
 
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {
       try {
@@ -808,8 +817,6 @@ public class Phrasal {
 
     inferers = new ArrayList<Inferer<IString, String>>(numThreads);
     scorers = new ArrayList<Scorer<String>>(numThreads);
-    // HashIndex is threadsafe, while OAIndex is not.
-    featureIndex = new HashIndex<String>(weightConfig.size());
 
     boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
     // boolean dtuDecoder = (gapT == FeaturizerFactory.GapType.none || gapT ==

@@ -211,4 +211,15 @@ public class CombinedFeaturizer<TK, FV> implements
       }
     }
   }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public void initialize(Index<String> featureIndex) {
+    // Initialize the IsolatedPhraseFeaturizers
+    for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
+      if (featurizer instanceof IsolatedPhraseFeaturizer) {
+        ((IsolatedPhraseFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
+      }
+    }
+  }
 }

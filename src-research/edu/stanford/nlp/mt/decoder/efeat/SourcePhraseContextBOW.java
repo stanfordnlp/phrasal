@@ -100,4 +100,7 @@ public class SourcePhraseContextBOW implements
     return listFeaturize(f);
   }
 
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

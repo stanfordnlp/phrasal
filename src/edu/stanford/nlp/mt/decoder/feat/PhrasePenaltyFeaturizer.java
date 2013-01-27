@@ -58,4 +58,8 @@ public class PhrasePenaltyFeaturizer<TK> implements
   @Override
   public void reset() {
   }
+
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

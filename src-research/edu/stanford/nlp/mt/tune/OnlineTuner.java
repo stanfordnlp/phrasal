@@ -40,7 +40,6 @@ import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
-import edu.stanford.nlp.stats.ThreadsafeCounter;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -215,17 +214,16 @@ public class OnlineTuner {
     public final int[] translationIds;
     public final Counter<String> weights;
     public final int inputId;
-    public final Counter<String> featureWhitelist;
     public ProcessorInput(List<Sequence<IString>> input, 
         List<List<Sequence<IString>>> references, 
-        Counter<String> weights, int[] translationIds, int inputId, Counter<String> featureWhitelist) {
+        Counter<String> weights, int[] translationIds, int inputId) {
       this.source = input;
       this.translationIds = translationIds;
       this.references = references;
-      // Copy the weights for the decoder
-      this.weights = new OpenAddressCounter<String>(weights, 1.0f);
       this.inputId = inputId;
-      this.featureWhitelist = featureWhitelist;
+      // Keep a reference since the decoder's scorer will
+      // create its own copy of the weight vector.
+      this.weights = weights;
     }
   }
 
@@ -287,7 +285,7 @@ public class OnlineTuner {
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
             threadId);
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
-            input.translationIds[0], nbestList, input.references.get(0), lossFunction, input.featureWhitelist);
+            input.translationIds[0], nbestList, input.references.get(0), lossFunction);
         nbestLists.add(nbestList);
         
       } else {
@@ -300,7 +298,7 @@ public class OnlineTuner {
           nbestLists.add(nbestList);
         }
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
-                nbestLists, input.references, lossFunction, input.featureWhitelist);
+                nbestLists, input.references, lossFunction);
       }
 
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
@@ -389,7 +387,6 @@ public class OnlineTuner {
     // Clear the global weight vector, which we will use for parameter averaging.
     wts.clear();
     
-    final Counter<String> featureWhitelist = new ThreadsafeCounter<String>(expectedNumFeatures);
     final int tuneSetSize = tuneSource.size();
     final int[] indices = ArrayMath.range(0, tuneSetSize);
     final int numBatches = (int) Math.ceil((double) indices.length / (double) batchSize);
@@ -423,7 +420,7 @@ public class OnlineTuner {
       for (int t = 0; t < numBatches; ++t) {
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
-        ProcessorInput input = makeInput(batch, inputId, currentWts, featureWhitelist);
+        ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
         
@@ -491,14 +488,14 @@ public class OnlineTuner {
    * @param epoch 
    * @return
    */
-  private ProcessorInput makeInput(int[] batch, int inputId, Counter<String> weights, Counter<String> featureWhitelist) {
+  private ProcessorInput makeInput(int[] batch, int inputId, Counter<String> weights) {
     List<Sequence<IString>> sourceList = new ArrayList<Sequence<IString>>(batch.length);
     List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(batch.length);
     for (int sourceId : batch) {
       sourceList.add(tuneSource.get(sourceId));
       referenceList.add(references.get(sourceId));
     }
-    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId, featureWhitelist);
+    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId);
   }
 
   /**

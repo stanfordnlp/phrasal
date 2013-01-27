@@ -96,4 +96,7 @@ public class LogSourceLengthToTargetLengthRatio implements
     featureCache.clear();
   }
 
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -13,6 +14,14 @@ import edu.stanford.nlp.mt.base.Featurizable;
  * @param <FV>
  */
 public interface IsolatedPhraseFeaturizer<TK, FV> {
+  
+  /**
+   * Initialize the featurizer.
+   * 
+   * @param featureIndex
+   */
+  void initialize(Index<String> featureIndex);
+  
   /**
 	 * 
 	 */

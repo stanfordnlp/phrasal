@@ -260,4 +260,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
     return sz;
   }
 
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

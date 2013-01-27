@@ -31,7 +31,7 @@ public interface OnlineOptimizer<TK,FV> {
       Sequence<TK> source, 
       int sourceId,
       List<RichTranslation<TK, FV>> translations,
-      List<Sequence<TK>> references, SentenceLevelMetric<TK,FV> lossFunction, Counter<String> featureWhitelist);
+      List<Sequence<TK>> references, SentenceLevelMetric<TK,FV> lossFunction);
   
   /**
    * Compute the gradient for a mini-batch.
@@ -48,7 +48,7 @@ public interface OnlineOptimizer<TK,FV> {
       List<Sequence<TK>> sources, 
       int[] sourceIds,
       List<List<RichTranslation<TK, FV>>> translations,
-      List<List<Sequence<TK>>> references, SentenceLevelMetric<TK,FV> lossFunction, Counter<String> featureWhitelist);
+      List<List<Sequence<TK>>> references, SentenceLevelMetric<TK,FV> lossFunction);
   
   /**
    * Return a new updater object, which defines the online update rule. The updater

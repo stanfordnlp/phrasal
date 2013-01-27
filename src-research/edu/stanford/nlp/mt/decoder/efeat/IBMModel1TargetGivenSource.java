@@ -108,4 +108,8 @@ public class IBMModel1TargetGivenSource implements
 
   public void reset() {
   }
+  
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }

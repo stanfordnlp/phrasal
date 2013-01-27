@@ -261,4 +261,8 @@ public class SourceGapFeaturizer implements
   @Override
   public void reset() {
   }
+  
+  @Override
+  public void initialize(Index<String> featureIndex) {
+  }
 }
