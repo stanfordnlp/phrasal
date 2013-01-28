@@ -221,9 +221,7 @@ public class OnlineTuner {
       this.translationIds = translationIds;
       this.references = references;
       this.inputId = inputId;
-      // Keep a reference since the decoder's scorer will
-      // create its own copy of the weight vector.
-      this.weights = weights;
+      this.weights = new OpenAddressCounter<String>(weights);
     }
   }
 
