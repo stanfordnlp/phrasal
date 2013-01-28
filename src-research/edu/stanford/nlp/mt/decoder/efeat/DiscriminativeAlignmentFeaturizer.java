@@ -27,41 +27,46 @@ import edu.stanford.nlp.util.Index;
  *
  */
 public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
-    IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String> {
+IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String> {
 
   private static final String FEATURE_NAME = "Align";
   private static final String FEATURE_NAME_TGT = "UnAlignTgt";
   private static final String FEATURE_NAME_SRC = "UnAlignSrc";
 
   private static final double DEFAULT_UNSEEN_THRESHOLD = 2.0;
-  
+
   private final boolean addUnalignedSourceWords;
   private final boolean addUnalignedTargetWords;
   private final double unseenThreshold;
-  
+
   private Counter<String> featureCounter;
   private Index<String> featureIndex;
-  
+
   public DiscriminativeAlignmentFeaturizer() { 
     addUnalignedSourceWords = false;
     addUnalignedTargetWords = false;
     unseenThreshold = DEFAULT_UNSEEN_THRESHOLD;
   }
-  
+
   public DiscriminativeAlignmentFeaturizer(String...args) {
     addUnalignedSourceWords = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
     addUnalignedTargetWords = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
     unseenThreshold = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_UNSEEN_THRESHOLD;
   }
-  
+
   @Override
   public void initialize(Index<String> featureIndex) {
     this.featureIndex = featureIndex;
     featureCounter = featureIndex.isLocked() ? null : new ThreadsafeCounter<String>(100*featureIndex.size());
   }
-  
+
   @Override
   public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
+    return featurizeRule(f, true);
+  }
+
+  private List<FeatureValue<String>> featurizeRule(
+      Featurizable<IString, String> f, boolean incrementCount) {
     PhraseAlignment alignment = f.option.abstractOption.alignment;
     final int eLength = f.translatedPhrase.size();
     final int fLength = f.foreignPhrase.size();
@@ -79,10 +84,10 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
       if (fIndices == null) {
         // Unaligned target word
         if (addUnalignedTargetWords) {
-          String feature = FEATURE_NAME_TGT + ":" + eWord;
+          String feature = makeFeatureString(FEATURE_NAME_TGT, eWord, 0, incrementCount);
           features.add(new FeatureValue<String>(feature, 1.0));
         }
-        
+
       } else {
         // This is hairy. We want to account for many-to-one alignments efficiently.
         // Therefore, copy all foreign tokens into the bucket for the first aligned
@@ -100,14 +105,14 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
         }
       }
     }
-    
+
     // Iterate over source side of phrase
     for (int i = 0; i < fLength; ++i) {
       Set<String> eWords = f2e.get(i);
       String fWord = f.foreignPhrase.get(i).toString();
       if ( ! fIsAligned[i]) {
         if (addUnalignedSourceWords) {
-          String feature = makeFeatureString(FEATURE_NAME_SRC, fWord);
+          String feature = makeFeatureString(FEATURE_NAME_SRC, fWord, 0, incrementCount);
           features.add(new FeatureValue<String>(feature, 1.0));
         }
       } else if (eWords.size() > 0){
@@ -116,41 +121,42 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
         alignedWords.addAll(eWords);
         Collections.sort(alignedWords);
         StringBuilder sb = new StringBuilder();
-        for (int j = 0; j < alignedWords.size(); ++j) {
+        int len = alignedWords.size();
+        for (int j = 0; j < len; ++j) {
           if (j != 0) sb.append("-");
           sb.append(alignedWords.get(j));
         }
-        String feature = makeFeatureString(FEATURE_NAME, sb.toString());
+        String feature = makeFeatureString(FEATURE_NAME, sb.toString(), fLength, incrementCount);
         features.add(new FeatureValue<String>(feature, 1.0));
       }
     }
-    
     return features;
   }
 
-  private String makeFeatureString(String featureName, String featureSuffix) {
+  private String makeFeatureString(String featureName, String featureSuffix, int fLength, boolean incrementCount) {
     String featureString = String.format("%s:%s", featureName, featureSuffix);
-    
+
     // Collect statistics and detect unseen events
     if (featureCounter == null) {
       // Test time
       if (featureIndex.indexOf(featureString) < 0) {
         // TODO(spenceg): Elaborate?
-        featureString = featureName + ":UNK";
+        featureString = String.format("%s:UNK%d", featureName, fLength);
       }
 
     } else {
       // Training time
-      double count = featureCounter.incrementCount(featureString);
+      double count = incrementCount ? featureCounter.incrementCount(featureString) 
+          : featureCounter.getCount(featureString);
       if (count <= unseenThreshold) {
         // TODO(spenceg): Elaborate?
-        featureString = featureName + ":UNK";          
+        featureString = String.format("%s:UNK%d", featureName, fLength);
       }
     }
     return featureString;
   }
-  
-  
+
+
   @Override
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     return null;
@@ -162,9 +168,9 @@ public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
     // TODO(spenceg) Return null if we re-factor the featurizer interface
-    return phraseListFeaturize(f);
+    return featurizeRule(f, false);
   }
-  
+
   @Override
   public void initialize(List<ConcreteTranslationOption<IString>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
