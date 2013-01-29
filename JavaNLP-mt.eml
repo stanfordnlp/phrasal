@@ -119,7 +119,4 @@
 		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/pinyin4j-2.5.0.zip!/src"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/pinyin4j-2.5.0.jar!/"/>
 	</lib>
-	<lib name="classmexer.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/classmexer.jar!/"/>
-	</lib>
 </component>
