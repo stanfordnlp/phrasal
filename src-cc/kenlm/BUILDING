@@ -1,0 +1,10 @@
+If you have Boost >= 1.36.0 installed:
+   ./bjam
+   ./bjam install --prefix=/usr #optional
+
+If you only want the query code:
+  ./compile.sh
+
+Windows:
+  The windows directory has visual studio files.  Note that you need to compile
+  the kenlm project before build_binary and ngram_query projects.  
