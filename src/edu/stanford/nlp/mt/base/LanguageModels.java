@@ -24,7 +24,6 @@ public class LanguageModels {
       Sequence<T> ngram = s.subsequence(0, i + 1);
       double ngramScore = lm.score(ngram);
       
-      System.err.println(ngram+": "+ ngramScore + " " + lm.releventPrefix(KenLanguageModel.clipNgram(ngram, lm.order())));
       if (ngramScore == Double.NEGATIVE_INFINITY) {
         // like sri lm's n-gram utility w.r.t. closed vocab models,
         // right now we silently ignore unknown words.
