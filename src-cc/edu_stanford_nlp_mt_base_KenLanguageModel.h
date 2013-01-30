@@ -18,18 +18,26 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_readKenLM
 /*
  * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
  * Method:    scoreNGram
- * Signature: (J[Ljava/lang/String;ZZ)D
+ * Signature: (J[I)D
  */
 JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_scoreNGram
-  (JNIEnv *, jobject, jlong, jobjectArray, jboolean, jboolean);
+  (JNIEnv *, jobject, jlong, jintArray);
 
 /*
  * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
  * Method:    relevantPrefixGram
- * Signature: (J[Ljava/lang/String;ZZ)Z
+ * Signature: (J[I)Z
  */
 JNIEXPORT jboolean JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_relevantPrefixGram
-  (JNIEnv *, jobject, jlong, jobjectArray, jboolean, jboolean);
+  (JNIEnv *, jobject, jlong, jintArray);
+
+/*
+ * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
+ * Method:    getId
+ * Signature: (JLjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_getId
+  (JNIEnv *, jobject, jlong, jstring);
 
 /*
  * Class:     edu_stanford_nlp_mt_base_KenLanguageModel

@@ -19,8 +19,27 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private static final IString END_TOKEN = new IString("</s>");
   
   private native long readKenLM(String filename);
-  private native double scoreNGram(long kenLMPtr, String[] ngram, boolean firstIsStartToken, boolean lastIsEndToken);
-  private native boolean relevantPrefixGram(long kenLMPtr, String[] ngram, boolean firstIsStartToken, boolean lastIsEndToken);
+  
+  private native double scoreNGram(long kenLMPtr, int[] ngram);
+  private native boolean relevantPrefixGram(long kenLMPtr, int[] ngram);
+  private native int getId(long kenLMPtr, String token);
+  
+  int[] idMap = new int[0];
+  
+  private int id(IString tok) {
+    if (tok.id >= idMap.length) {
+      int[] newIdMap = new int[IString.index.size()];
+      for (int i = 0; i < idMap.length; i++) {
+        newIdMap[i] = idMap[i];
+      }
+      for (int i = idMap.length; i < newIdMap.length; i++) {
+        newIdMap[i] = getId(kenLMPtr, IString.index.get(i));
+      }
+      idMap = newIdMap;
+    }
+    
+    return idMap[tok.id];
+  }
   
   private native int getOrder(long kenLMPtr);
   private long kenLMPtr;
@@ -56,12 +75,12 @@ public class KenLanguageModel implements LanguageModel<IString> {
     return ngram;
   }
   
-  private String[] ngramStr(Sequence<IString> ngram) {
-    String[] ngramStr = new String[ngram.size()];
-    for (int i = 0; i < ngramStr.length; i++) {
-      ngramStr[i] = ngram.get(i).toString();
+  private int[] ngramIds(Sequence<IString> ngram) {
+    int[] ngramIds = new int[ngram.size()];
+    for (int i = 0; i < ngramIds.length; i++) {
+      ngramIds[ngramIds.length-1-i] = id(ngram.get(i));
     }
-    return ngramStr;
+    return ngramIds;
   }
 
   @Override
@@ -69,10 +88,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
     if (ARPALanguageModel.isBoundaryWord(sequence))
       return 0.0;
     Sequence<IString> ngram = clipNgram(sequence, order);
-    String[] ngramStr = ngramStr(ngram);       
-    boolean firstIsStartToken = ngram.get(0).id == START_TOKEN.id;
-    boolean lastIsEndToken = ngram.get(ngramStr.length-1).id == END_TOKEN.id;
-    return LOG_10*scoreNGram(kenLMPtr, ngramStr, firstIsStartToken, lastIsEndToken);
+    int[] ngramIds = ngramIds(ngram);
+    return LOG_10*scoreNGram(kenLMPtr, ngramIds);
   }
       
   @Override
@@ -80,12 +97,10 @@ public class KenLanguageModel implements LanguageModel<IString> {
     if (sequence.size() > order - 1) {
       return false;
     }
-    Sequence<IString> ngram = clipNgram(sequence, order);
-    String[] ngramStr = ngramStr(ngram);       
-    boolean firstIsStartToken = ngram.get(0).id == START_TOKEN.id;
-    boolean lastIsEndToken = ngram.get(ngramStr.length-1).id == END_TOKEN.id;
-
-    return relevantPrefixGram(kenLMPtr, ngramStr, firstIsStartToken, lastIsEndToken);    
+    Sequence<IString> ngram = clipNgram(sequence, order);    
+    int[] ngramIds = ngramIds(ngram);       
+    
+    return relevantPrefixGram(kenLMPtr, ngramIds);    
   }
 
   @Override

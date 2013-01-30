@@ -51,8 +51,22 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_readKenLM
   return kenLM_ptr;
 }
 
+/*
+ * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
+ * Method:    getId
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_getId
+  (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jstring jstr_token) {
+  lm::base::Model* kenLM = (lm::base::Model*)(kenLM_ptr);
+  const char* token = env->GetStringUTFChars(jstr_token, NULL);
+  int id = kenLM->BaseVocabulary().Index(token);
+  env->ReleaseStringUTFChars(jstr_token, token);
+  return id;
+}
+
 void scoreNgram
-(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jobjectArray jstr_ngram, jboolean first_is_start_token, jboolean last_is_end_token, double &score, bool &relPrefix);
+(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, double &score, bool &relPrefix);
 
 /*
  * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
@@ -60,14 +74,14 @@ void scoreNgram
  * Signature: ([Ljava/lang/String;)D
  */
 JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_scoreNGram
-  (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jobjectArray jstr_ngram, jboolean first_is_start_token, jboolean last_is_end_token) {
+  (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
 
   lm::base::Model* kenLM = (lm::base::Model*)(kenLM_ptr);
 
   double score;
   bool relPrefix;
 
-  scoreNgram(env, this_jobj, kenLM_ptr, jstr_ngram, first_is_start_token, last_is_end_token, score, relPrefix);
+  scoreNgram(env, this_jobj, kenLM_ptr, jint_ngram, score, relPrefix);
 
   return score;
 }
@@ -78,62 +92,30 @@ JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_scoreNG
  * Signature: (J[Ljava/lang/String;ZZ)Z
  */
 JNIEXPORT jboolean JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_relevantPrefixGram
-(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jobjectArray jstr_ngram, jboolean first_is_start_token, jboolean last_is_end_token) {
+(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
   double score;
   bool relPrefix;
-  scoreNgram(env, this_jobj, kenLM_ptr, jstr_ngram, first_is_start_token, last_is_end_token, score, relPrefix);
+  scoreNgram(env, this_jobj, kenLM_ptr, jint_ngram, score, relPrefix);
   return relPrefix; 
 }
 
 void scoreNgram
-(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jobjectArray jstr_ngram, jboolean first_is_start_token, jboolean last_is_end_token, double &score, bool &relPrefix) {
+(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, double &score, bool &relPrefix) {
   lm::base::Model* kenLM = (lm::base::Model*)(kenLM_ptr);
+  jint ngram_sz = env->GetArrayLength(jint_ngram);
+  jint ngram_array[ngram_sz]; 
+  env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
+  
+  /* for (int i = 0 ; i < ngram_sz; i++) {
+    std::cerr<<"\t c++ ["<<i<<"] "<< ngram_array[i]<<"\n";
+  } */
 
-  relPrefix = 1;
-
-  size_t model_state_sz = kenLM->StateSize();
-
-  jint ngram_size = env->GetArrayLength(jstr_ngram);
-  void *state = (void*)kenLM->NullContextMemory();
-  void *out_state = malloc(model_state_sz);
-
-  for (int i = 0; i < ngram_size-1; i++) {
-     if (i == 0 && first_is_start_token) {
-       kenLM->Score(state, kenLM->BaseVocabulary().BeginSentence(),
-         out_state);
-     } else {
-       jstring jstr_token = (jstring) env->GetObjectArrayElement(jstr_ngram, i);
-       const char* token = env->GetStringUTFChars(jstr_token, NULL);
-       kenLM->Score(state, kenLM->BaseVocabulary().Index(token), out_state);
-       env->ReleaseStringUTFChars(jstr_token, token);
-     }
-
-     if (i != 0) {
-       free((void*)state);
-     }
-     state = out_state;
-     out_state = malloc(model_state_sz);
-  }
-
-
-  if (last_is_end_token == JNI_TRUE) {
-     score = kenLM->Score(state, kenLM->BaseVocabulary().EndSentence(),
-       out_state);
-  } else {
-     jstring jstr_token  = (jstring)env->GetObjectArrayElement(jstr_ngram,
-       ngram_size-1);
-     char* token = (char *)env->GetStringUTFChars(jstr_token, NULL);
-     score = kenLM->Score(state, kenLM->BaseVocabulary().Index(token),
-       out_state);
-     env->ReleaseStringUTFChars(jstr_token, token);
-  }
-
-  relPrefix = ((lm::ngram::State*)out_state)->length == ngram_size;
-
-  if (ngram_size > 1) {
-    free(state);
-  }
-  free(out_state);
+  lm::ngram::State out_state;
+  score = ((lm::ngram::Model*)kenLM)->FullScoreForgotState(
+        (lm::WordIndex*)&ngram_array[1], 
+        (lm::WordIndex*)&ngram_array[ngram_sz], 
+        (lm::WordIndex)ngram_array[0], out_state).prob;
+  relPrefix = out_state.length == ngram_sz;
 }
 
 /*
