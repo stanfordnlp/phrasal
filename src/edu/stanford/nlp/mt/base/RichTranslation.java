@@ -196,8 +196,37 @@ public class RichTranslation<TK, FV> extends
      * sbuf.append('=').append(lastRangeEnd+1); if(i != lastRangeEnd+1)
      * sbuf.append('-').append(i); lastRangeEnd=i; } }
      */
+     if (System.getProperty("VERY_VERBOSE_NBEST") != null) {
+       sbuf.append(' ').append(NBEST_SEP).append(' ');
+       sbuf.append(this.featurizable.foreignSentence.toString());
+       sbuf.append(' ').append(NBEST_SEP).append(' ');
+       List<Featurizable<TK,FV>> featurizables = featurizables();
+       for (Featurizable<TK,FV> f : featurizables) {
+         sbuf.append(' ');
+         double parentScore = (f.prior == null ? 0 : f.prior.hyp.score);
+         sbuf.append("|").append(f.hyp.score - parentScore).append(" ");
+         sbuf.append(f.hyp.translationOpt.foreignCoverage).append(" ");
+         sbuf.append(f.hyp.translationOpt.abstractOption.translation.toString());
+       }
+     }
+    
   }
 
+  List<Featurizable<TK,FV>> featurizables() {
+    List<Featurizable<TK,FV>> listFeaturizables = new ArrayList<Featurizable<TK,FV>>();
+    featurizables(this.featurizable, listFeaturizables);
+    Collections.reverse(listFeaturizables);
+    return listFeaturizables;
+  }
+  
+  private void featurizables(Featurizable<TK,FV> f, List<Featurizable<TK,FV>> l) {    
+    if (f == null) {
+      return;      
+    }
+    l.add(f);
+    featurizables(f.prior, l);
+  }
+  
   /**
    * Prints untokenized Moses n-best list for a given input segment. The n-best
    * list is currently not tokenized since tokenization would break the
