@@ -229,7 +229,7 @@ public class FDACorpusSelection {
       }
       selectedFr.close();
       selectedEn.close();      
-      selectedLn.close();
+      if (selectedLn != null) selectedLn.close();
    }
 
 }
