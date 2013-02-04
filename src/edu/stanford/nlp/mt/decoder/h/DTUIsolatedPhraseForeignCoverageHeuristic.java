@@ -114,13 +114,13 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId) {
+      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
     return getInitialHeuristic(foreignSequence, options, scorer, translationId, DEBUG);
   }
 
   @SuppressWarnings("unchecked")
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId, boolean debug) {
+      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId, boolean debug) {
 
     int foreignSequenceSize = foreignSequence.size();
 
@@ -142,10 +142,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
                                                          // with gaps
     System.err.println("size: " + options.size());
 
-    List<Pair<ConcreteTranslationOption<TK>, Double>>[][] dtuLists = new LinkedList[foreignSequenceSize][foreignSequenceSize];
+    List<Pair<ConcreteTranslationOption<TK,FV>, Double>>[][] dtuLists = new LinkedList[foreignSequenceSize][foreignSequenceSize];
 
     for (int i = 0; i < options.size(); ++i) {
-      for (ConcreteTranslationOption<TK> option : options.get(i)) {
+      for (ConcreteTranslationOption<TK,FV> option : options.get(i)) {
         if (IGNORE_TGT && option.abstractOption instanceof DTUOption)
           continue;
         Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
@@ -178,9 +178,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
           int startPos = option.foreignCoverage.nextSetBit(0);
           terminalPos = option.foreignCoverage.length() - 1;
           if (dtuLists[startPos][terminalPos] == null)
-            dtuLists[startPos][terminalPos] = new LinkedList<Pair<ConcreteTranslationOption<TK>, Double>>();
+            dtuLists[startPos][terminalPos] = new LinkedList<Pair<ConcreteTranslationOption<TK,FV>, Double>>();
           dtuLists[startPos][terminalPos]
-              .add(new Pair<ConcreteTranslationOption<TK>, Double>(option,
+              .add(new Pair<ConcreteTranslationOption<TK,FV>, Double>(option,
                   score));
         }
       }
@@ -219,8 +219,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         }
         // Merge discontinuous phrase with other phrases:
         if (dtuLists[startPos][terminalPos] != null) {
-          for (Pair<ConcreteTranslationOption<TK>, Double> dtu : dtuLists[startPos][terminalPos]) {
-            ConcreteTranslationOption<TK> option = dtu.first;
+          for (Pair<ConcreteTranslationOption<TK,FV>, Double> dtu : dtuLists[startPos][terminalPos]) {
+            ConcreteTranslationOption<TK,FV> option = dtu.first;
             assert (option.foreignPos == startPos);
             double dtuScore = dtu.second;
             CoverageSet cs = option.foreignCoverage;

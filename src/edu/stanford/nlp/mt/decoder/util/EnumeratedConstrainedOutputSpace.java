@@ -82,7 +82,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
 
   @Override
   public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-      ConcreteTranslationOption<TK> option) {
+      ConcreteTranslationOption<TK,FV> option) {
 
     Sequence<TK> nextPhrase = option.abstractOption.translation;
 
@@ -146,12 +146,12 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   }
 
   @Override
-  public List<ConcreteTranslationOption<TK>> filterOptions(
-      List<ConcreteTranslationOption<TK>> optionList) {
-    List<ConcreteTranslationOption<TK>> filteredOptions = new ArrayList<ConcreteTranslationOption<TK>>(
+  public List<ConcreteTranslationOption<TK,FV>> filterOptions(
+      List<ConcreteTranslationOption<TK,FV>> optionList) {
+    List<ConcreteTranslationOption<TK,FV>> filteredOptions = new ArrayList<ConcreteTranslationOption<TK,FV>>(
         optionList.size());
 
-    for (ConcreteTranslationOption<TK> option : optionList) {
+    for (ConcreteTranslationOption<TK,FV> option : optionList) {
       if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
         System.err.printf("Examining: %s %s\n",
             option.abstractOption.translation, option.foreignCoverage);
@@ -175,7 +175,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       }
       System.err.println("Filtered options");
       System.err.println("----------------");
-      for (ConcreteTranslationOption<TK> option : filteredOptions) {
+      for (ConcreteTranslationOption<TK,FV> option : filteredOptions) {
         System.err.printf("\t%s %s\n", option.abstractOption.translation,
             option.foreignCoverage);
       }

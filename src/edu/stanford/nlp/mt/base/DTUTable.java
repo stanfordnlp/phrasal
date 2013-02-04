@@ -102,12 +102,12 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<ConcreteTranslationOption<IString>> translationOptions(
+  public List<ConcreteTranslationOption<IString,FV>> translationOptions(
       Sequence<IString> sequence, List<Sequence<IString>> targets,
       int translationId, Scorer<FV> scorer) {
 
     assert (targets == null);
-    List<ConcreteTranslationOption<IString>> opts = new LinkedList<ConcreteTranslationOption<IString>>();
+    List<ConcreteTranslationOption<IString,FV>> opts = new LinkedList<ConcreteTranslationOption<IString,FV>>();
     int sequenceSz = sequence.size();
     // System.err.println("Seq to match: "+sequence);
 
@@ -157,11 +157,11 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
 
             for (TranslationOption<IString> abstractOpt : transOpts) {
               if (abstractOpt instanceof DTUOption)
-                opts.add(new ConcreteTranslationOption<IString>(abstractOpt,
+                opts.add(new ConcreteTranslationOption<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
                         .getName(), translationId, true));
               else
-                opts.add(new ConcreteTranslationOption<IString>(abstractOpt,
+                opts.add(new ConcreteTranslationOption<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
                         .getName(), translationId));
             }

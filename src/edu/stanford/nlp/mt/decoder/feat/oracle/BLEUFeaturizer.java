@@ -267,7 +267,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
   }
 
   public void initialize(
-      List<ConcreteTranslationOption<IString>> concreteTranslationOptions,
+      List<ConcreteTranslationOption<IString,String>> concreteTranslationOptions,
       Sequence<IString> foreign, Index<String> featureIndex) {
   }
 

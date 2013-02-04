@@ -142,7 +142,7 @@ public class PhraseTableScoresFeaturizer<T> implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<T>> options,
+  public void initialize(List<ConcreteTranslationOption<T,String>> options,
       Sequence<T> foreign, Index<String> featureIndex) {
   }
 

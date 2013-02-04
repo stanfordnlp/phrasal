@@ -17,14 +17,14 @@ public interface ConstrainedOutputSpace<TK, FV> {
   /**
 	 * 
 	 */
-  List<ConcreteTranslationOption<TK>> filterOptions(
-      List<ConcreteTranslationOption<TK>> optionList);
+  List<ConcreteTranslationOption<TK,FV>> filterOptions(
+      List<ConcreteTranslationOption<TK,FV>> optionList);
 
   /**
 	 * 
 	 */
   boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-      ConcreteTranslationOption<TK> option);
+      ConcreteTranslationOption<TK,FV> option);
 
   /**
 	 * 

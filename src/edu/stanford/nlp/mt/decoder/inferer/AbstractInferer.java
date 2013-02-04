@@ -19,7 +19,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Hypothesis<TK, FV>> filter;
-  protected final List<Annotator<TK>> annotators;
+  protected final List<Annotator<TK,FV>> annotators;
 
   
   @Override
@@ -77,7 +77,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected List<String> collectAlignments(Hypothesis<TK, FV> hyp) {
     LinkedList<String> alignments = new LinkedList<String>();
     for (; hyp != null; hyp = hyp.preceedingHyp) {
-      ConcreteTranslationOption<TK> opt = hyp.translationOpt;
+      ConcreteTranslationOption<TK,FV> opt = hyp.translationOpt;
       if (opt == null)
         continue;
       int teIdx = hyp.length - 1;

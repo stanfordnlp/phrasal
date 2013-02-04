@@ -10,16 +10,17 @@ public class ConcreteTranslationOptions {
   /**
    * 
    * @param <TK>
+   * @param <FV>
    */
-  static public <TK> List<ConcreteTranslationOption<TK>> filterOptions(
+  static public <TK,FV> List<ConcreteTranslationOption<TK,FV>> filterOptions(
       CoverageSet coverage, int foreignLength,
-      List<ConcreteTranslationOption<TK>> options) {
-    List<ConcreteTranslationOption<TK>> applicableOptions = new ArrayList<ConcreteTranslationOption<TK>>(
+      List<ConcreteTranslationOption<TK,FV>> options) {
+    List<ConcreteTranslationOption<TK,FV>> applicableOptions = new ArrayList<ConcreteTranslationOption<TK,FV>>(
         options.size());
     CoverageSet flippedCoverage = new CoverageSet(foreignLength);
     flippedCoverage.or(coverage);
     flippedCoverage.flip(0, foreignLength);
-    for (ConcreteTranslationOption<TK> option : options) {
+    for (ConcreteTranslationOption<TK,FV> option : options) {
       if (flippedCoverage.intersects(option.foreignCoverage)) {
         applicableOptions.add(option);
       }

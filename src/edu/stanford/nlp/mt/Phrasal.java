@@ -358,7 +358,7 @@ public class Phrasal {
       discriminativeLMOrder = DEFAULT_DISCRIMINATIVE_LM_ORDER;
     }
 
-    List<Annotator<IString>> additionalAnnotators = new ArrayList<Annotator<IString>>();
+    List<Annotator<IString,String>> additionalAnnotators = new ArrayList<Annotator<IString,String>>();
     if (config.containsKey(ADDITIONAL_ANNOTATORS)) {
     	// todo make some general method that can parse both additional annotators
     	// and additional featurizers
@@ -366,13 +366,13 @@ public class Phrasal {
         String annotatorName = null;
         String args = null;
         for (String token : tokens) {
-          Annotator<IString> annotator = null;
+          Annotator<IString,String> annotator = null;
           if (annotatorName == null) {
             if (token.endsWith("()")) {
               String name = token.replaceFirst("\\(\\)$", "");
-              Class<Annotator<IString>> annotatorClass = AnnotatorFactory
+              Class<Annotator<IString,String>> annotatorClass = AnnotatorFactory
                   .loadAnnotator(name);
-              annotator = (Annotator<IString>) annotatorClass
+              annotator = (Annotator<IString,String>) annotatorClass
                   .newInstance();
               additionalAnnotators.add(annotator);
             } else if (token.contains("(")) {
@@ -388,7 +388,7 @@ public class Phrasal {
                     annotatorName, Arrays.toString(argsList));
                 Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
                     .loadFeaturizer(annotatorName);
-                annotator = (Annotator<IString>) featurizerClass
+                annotator = (Annotator<IString,String>) featurizerClass
                     .getConstructor(argsList.getClass()).newInstance(
                         new Object[] { argsList });
                 additionalAnnotators.add(annotator);
@@ -413,9 +413,9 @@ public class Phrasal {
               args = args.replaceAll("\\s+$", "");
               String[] argsList = args.split(",");
               System.err.printf("args: %s\n", Arrays.toString(argsList));
-              Class<Annotator<IString>> annotatorClass = AnnotatorFactory
+              Class<Annotator<IString,String>> annotatorClass = AnnotatorFactory
                   .loadAnnotator(annotatorName);
-              annotator = (Annotator<IString>) annotatorClass
+              annotator = (Annotator<IString,String>) annotatorClass
                   .getConstructor(argsList.getClass()).newInstance(
                       (Object) argsList);
               additionalAnnotators.add(annotator);

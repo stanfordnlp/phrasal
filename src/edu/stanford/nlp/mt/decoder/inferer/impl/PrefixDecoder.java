@@ -108,28 +108,28 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     int windowSize = 100;
     int maxPrefixCompletion = 0;
     
-    List<ConcreteTranslationOption<IString>> options = phraseGenerator.translationOptions(foreign, targets, translationId, scorer);
-    List<ConcreteTranslationOption<IString>> filteredOptions = constrainedOutputSpace.filterOptions(options);
+    List<ConcreteTranslationOption<IString,FV>> options = phraseGenerator.translationOptions(foreign, targets, translationId, scorer);
+    List<ConcreteTranslationOption<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
     String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
     
     if (DEBUG) {
     	System.err.println("filtered options (for prefix)");
     	System.err.println("========================================");
-    	for (ConcreteTranslationOption<IString> cto : filteredOptions) {
+    	for (ConcreteTranslationOption<IString,FV> cto : filteredOptions) {
     	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
     	}
     	
     	System.err.println("unfiltered options (for suffix)");
     	System.err.println("========================================");
-    	for (ConcreteTranslationOption<IString> cto : options) {
+    	for (ConcreteTranslationOption<IString,FV> cto : options) {
     	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
     	}
     }
     
     Arrays.fill(autoInsertScores, -10000);
-    OptionGrid<IString> optionGrid = new OptionGrid<IString>(options, foreign);
-    OptionGrid<IString> filteredOptionGrid = new OptionGrid<IString>(filteredOptions, foreign);
+    OptionGrid<IString,FV> optionGrid = new OptionGrid<IString,FV>(options, foreign);
+    OptionGrid<IString,FV> filteredOptionGrid = new OptionGrid<IString,FV>(filteredOptions, foreign);
     
     
     // use *UNFILTERED* options for heuristic calculation
@@ -221,8 +221,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 	    			new RawSequence<IString>(new IString[]{foreign.get(sureAlignment)}), null);
 	        	foreignCoverage.set(sureAlignment);
         }
-	    	ConcreteTranslationOption<IString> fakeConcreteOpt = 
-	    			new ConcreteTranslationOption<IString>(
+	    	ConcreteTranslationOption<IString,FV> fakeConcreteOpt = 
+	    			new ConcreteTranslationOption<IString,FV>(
 	    			  fakeOpt,
 	    		      foreignCoverage,
 	    		      featurizer, scorer,
@@ -269,9 +269,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
         }
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
           // use *UNFILTERED* options for prefix hypothesis expansion predictions
-          List<ConcreteTranslationOption<IString>> applicableOptions = optionGrid
+          List<ConcreteTranslationOption<IString,FV>> applicableOptions = optionGrid
               .get(startPos, endPos);
-          for (ConcreteTranslationOption<IString> option : applicableOptions) {
+          for (ConcreteTranslationOption<IString,FV> option : applicableOptions) {
         	if (option.abstractOption.foreign.equals(option.abstractOption.translation)) {
         		if (DEBUG) {
         			System.err.println("ignoring option since source phrase == target phrase");

@@ -134,7 +134,7 @@ public class CollapsedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<TK>> options,
+  public void initialize(List<ConcreteTranslationOption<TK,FV>> options,
       Sequence<TK> foreign, Index<String> featureIndex) {
     for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
       featurizer.initialize(options, foreign, featureIndex);

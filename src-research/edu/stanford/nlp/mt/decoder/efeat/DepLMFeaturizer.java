@@ -99,12 +99,12 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
     int unkCnt = 0;
     LinkedStack<TypedDependency> previousDeps = null;
     LinkedStack<TypedDependency> currentDeps = null;
-    for(Annotator<IString> annotator : f.hyp.preceedingHyp.annotators){
+    for(Annotator<IString,String> annotator : f.hyp.preceedingHyp.annotators){
       if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
         previousDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
       }
     }
-    for(Annotator<IString> annotator : f.hyp.annotators){
+    for(Annotator<IString,String> annotator : f.hyp.annotators){
       if(annotator.getClass().getName().equals("edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator")) {
         currentDeps = ((TargetDependencyAnnotator)annotator).struct.getDependencies();
       }
@@ -125,7 +125,7 @@ public class DepLMFeaturizer implements IncrementalFeaturizer<IString, String> {
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString>> options,
+  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
   }
 

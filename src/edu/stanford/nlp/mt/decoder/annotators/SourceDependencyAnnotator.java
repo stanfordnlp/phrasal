@@ -12,7 +12,7 @@ import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.Tree;
 
 /** Source = Chinese for now  */
-public class SourceDependencyAnnotator<TK> implements Annotator<TK> {
+public class SourceDependencyAnnotator<TK,FV> implements Annotator<TK,FV> {
   public final ChineseDepParser parser;
   public GrammaticalStructure gs;
 
@@ -30,7 +30,7 @@ public class SourceDependencyAnnotator<TK> implements Annotator<TK> {
   }
 
   @Override
-  public Annotator<TK> initialize(Sequence<TK> source) {
+  public Annotator<TK,FV> initialize(Sequence<TK> source) {
 
     List<HasWord> sentence = new ArrayList<HasWord>();
     for (TK s : source) {
@@ -38,14 +38,14 @@ public class SourceDependencyAnnotator<TK> implements Annotator<TK> {
     }
     Tree t = parser.pp.parser.parseTree(sentence);
     GrammaticalStructure grammaticalStruc = parser.pp.gsf.newGrammaticalStructure(t);
-    SourceDependencyAnnotator<TK> annotator = new SourceDependencyAnnotator<TK>(parser, grammaticalStruc);
+    SourceDependencyAnnotator<TK,FV> annotator = new SourceDependencyAnnotator<TK,FV>(parser, grammaticalStruc);
 
     return annotator;
   }
 
   @Override
-  public Annotator<TK> extend(ConcreteTranslationOption<TK> option) {
-    SourceDependencyAnnotator<TK> pa = new SourceDependencyAnnotator<TK>(parser, this.gs);
+  public Annotator<TK,FV> extend(ConcreteTranslationOption<TK,FV> option) {
+    SourceDependencyAnnotator<TK,FV> pa = new SourceDependencyAnnotator<TK,FV>(parser, this.gs);
     return pa;
   }
 }

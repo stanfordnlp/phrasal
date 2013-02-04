@@ -49,7 +49,7 @@ public interface InfererBuilder<TK, FV> {
    * 
    * @param annotators
    */
-  InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK>> annotators);
+  InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK,FV>> annotators);
   /**
 	 * 
 	 */

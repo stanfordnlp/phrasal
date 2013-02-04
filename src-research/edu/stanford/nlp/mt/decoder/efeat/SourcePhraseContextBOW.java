@@ -28,7 +28,7 @@ public class SourcePhraseContextBOW implements
 
   final int windowSize;
 
-  final Map<ConcreteTranslationOption<IString>, List<FeatureValue<String>>> featureCache = new HashMap<ConcreteTranslationOption<IString>, List<FeatureValue<String>>>();
+  final Map<ConcreteTranslationOption<IString,String>, List<FeatureValue<String>>> featureCache = new HashMap<ConcreteTranslationOption<IString,String>, List<FeatureValue<String>>>();
 
   public SourcePhraseContextBOW() {
     windowSize = DEFAULT_WINDOW_SIZE;
@@ -44,7 +44,7 @@ public class SourcePhraseContextBOW implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString>> options,
+  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
   }
 

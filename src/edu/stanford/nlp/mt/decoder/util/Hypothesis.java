@@ -45,7 +45,7 @@ State<Hypothesis<TK, FV>> {
   // non-primitives that already exist at the time of
   // hypothesis creation and just receive an additional
   // reference here
-  public final ConcreteTranslationOption<TK> translationOpt;
+  public final ConcreteTranslationOption<TK,FV> translationOpt;
   public final Sequence<TK> foreignSequence;
 
   // right now, translations are built up strictly in sequence.
@@ -58,7 +58,7 @@ State<Hypothesis<TK, FV>> {
   public final Featurizable<TK, FV> featurizable;
 
   public final List<FeatureValue<FV>> localFeatures;
-  public final List<Annotator<TK>> annotators;
+  public final List<Annotator<TK,FV>> annotators;
 
   public IString[] posTags;
 
@@ -90,8 +90,8 @@ State<Hypothesis<TK, FV>> {
   public Hypothesis(int translationId, Sequence<TK> foreignSequence,
       SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
-      List<Annotator<TK>> annotators,
-      List<List<ConcreteTranslationOption<TK>>> options) {
+      List<Annotator<TK,FV>> annotators,
+      List<List<ConcreteTranslationOption<TK,FV>>> options) {
     this.id = nextId.incrementAndGet();
     score = 0;
     h = heuristic.getInitialHeuristic(foreignSequence, options, scorer, translationId);
@@ -106,8 +106,8 @@ State<Hypothesis<TK, FV>> {
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
-    this.annotators = new ArrayList<Annotator<TK>>(annotators.size());
-    for (Annotator<TK> annotator : annotators) {
+    this.annotators = new ArrayList<Annotator<TK,FV>>(annotators.size());
+    for (Annotator<TK,FV> annotator : annotators) {
       this.annotators.add(annotator.initialize(foreignSequence));
     }
   }
@@ -116,7 +116,7 @@ State<Hypothesis<TK, FV>> {
    * 
    */
   public Hypothesis(int translationId,
-      ConcreteTranslationOption<TK> translationOpt, int insertionPosition,
+      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
     this.id = nextId.incrementAndGet();
@@ -137,18 +137,18 @@ State<Hypothesis<TK, FV>> {
     featurizable = new Featurizable<TK, FV>(this, translationId, featurizer
         .getNumberStatefulFeaturizers());
 
-    annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
-    for (Annotator<TK> annotator : baseHyp.annotators) {
+    annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());
+    for (Annotator<TK,FV> annotator : baseHyp.annotators) {
       /*if (baseHyp.featurizable != null) {
     	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
     	} else {
     		System.out.println("Extend null hypothesis");
     	}
     	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-      Annotator<TK> extendedAnnotator = annotator.extend(translationOpt);
+      Annotator<TK,FV> extendedAnnotator = annotator.extend(translationOpt);
       annotators.add(extendedAnnotator);
       if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
-        ((TargetDependencyAnnotator<TK>) extendedAnnotator).addRoot();
+        ((TargetDependencyAnnotator<TK,FV>) extendedAnnotator).addRoot();
       }
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
@@ -166,7 +166,7 @@ State<Hypothesis<TK, FV>> {
 
 
   protected Hypothesis(int translationId,
-      ConcreteTranslationOption<TK> translationOpt,
+      ConcreteTranslationOption<TK,FV> translationOpt,
       TranslationOption<TK> abstractOption, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
@@ -188,8 +188,8 @@ State<Hypothesis<TK, FV>> {
         translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
 
-    annotators = new ArrayList<Annotator<TK>>(baseHyp.annotators.size());
-    for (Annotator<TK> annotator : baseHyp.annotators) {
+    annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());
+    for (Annotator<TK,FV> annotator : baseHyp.annotators) {
       /*if (baseHyp.featurizable != null) {
       	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
       	} else {

@@ -11,24 +11,24 @@ import edu.stanford.nlp.mt.base.Sequence;
  * 
  * @param <TK>
  */
-public class OptionGrid<TK> {
-  private final List<ConcreteTranslationOption<TK>>[] grid;
+public class OptionGrid<TK,FV> {
+  private final List<ConcreteTranslationOption<TK,FV>>[] grid;
   private final int foreignSz;
 
   /**
 	 * 
 	 */
   @SuppressWarnings("unchecked")
-  public OptionGrid(List<ConcreteTranslationOption<TK>> options,
+  public OptionGrid(List<ConcreteTranslationOption<TK,FV>> options,
       Sequence<TK> foreign) {
     foreignSz = foreign.size();
     grid = new List[foreignSz * foreignSz];
     for (int startIdx = 0; startIdx < foreignSz; startIdx++) {
       for (int endIdx = startIdx; endIdx < foreignSz; endIdx++) {
-        grid[getIndex(startIdx, endIdx)] = new LinkedList<ConcreteTranslationOption<TK>>();
+        grid[getIndex(startIdx, endIdx)] = new LinkedList<ConcreteTranslationOption<TK,FV>>();
       }
     }
-    for (ConcreteTranslationOption<TK> opt : options) {
+    for (ConcreteTranslationOption<TK,FV> opt : options) {
       int startPos = opt.foreignPos;
       int endPos = opt.foreignCoverage.nextClearBit(opt.foreignPos) - 1;
       grid[getIndex(startPos, endPos)].add(opt);
@@ -38,7 +38,7 @@ public class OptionGrid<TK> {
   /**
 	 * 
 	 */
-  public List<ConcreteTranslationOption<TK>> get(int startPos, int endPos) {
+  public List<ConcreteTranslationOption<TK,FV>> get(int startPos, int endPos) {
     return grid[getIndex(startPos, endPos)];
   }
 

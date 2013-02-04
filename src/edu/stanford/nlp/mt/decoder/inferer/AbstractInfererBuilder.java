@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  */
 abstract public class AbstractInfererBuilder<TK, FV> implements
     InfererBuilder<TK, FV> {
-  public List<Annotator<TK>> annotators = new ArrayList<Annotator<TK>>();  
+  public List<Annotator<TK,FV>> annotators = new ArrayList<Annotator<TK,FV>>();  
   CombinedFeaturizer<TK, FV> incrementalFeaturizer;
   PhraseGenerator<TK,FV> phraseGenerator;
   Scorer<FV> scorer;
@@ -29,8 +29,8 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
   abstract public Inferer<TK, FV> build();
 
   @Override
-  public InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK>> annotators) {
-	 this.annotators = new ArrayList<Annotator<TK>>(annotators);
+  public InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK,FV>> annotators) {
+	 this.annotators = new ArrayList<Annotator<TK,FV>>(annotators);
      return this;
   }
   

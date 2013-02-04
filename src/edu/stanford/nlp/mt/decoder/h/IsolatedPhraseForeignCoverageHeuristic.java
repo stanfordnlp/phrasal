@@ -70,7 +70,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId) {
+      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
 
     int foreignSequenceSize = foreignSequence.size();
 
@@ -86,7 +86,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
     // initialize viterbiSpanScores
     assert (options.size() == 1);
-    for (ConcreteTranslationOption<TK> option : options.get(0)) {
+    for (ConcreteTranslationOption<TK,FV> option : options.get(0)) {
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
           option, translationId);
       List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer

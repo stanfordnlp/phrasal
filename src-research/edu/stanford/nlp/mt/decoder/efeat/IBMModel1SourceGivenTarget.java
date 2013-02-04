@@ -45,7 +45,7 @@ public class IBMModel1SourceGivenTarget implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString>> options,
+  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
     h = new FastFeaturizableHash<IBMModel1.PartialSourceFeatureState>();
     basePSFS = ibmModel1.partialSourceFeatureState(foreign);
