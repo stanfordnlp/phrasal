@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -85,7 +86,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
         // Unaligned target word
         if (addUnalignedTargetWords) {
           String feature = makeFeatureString(FEATURE_NAME_TGT, eWord, 0, incrementCount);
-          features.add(new FeatureValue<String>(feature, 1.0));
+          features.add(new CacheableFeatureValue<String>(feature, 1.0));
         }
 
       } else {
@@ -113,7 +114,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
       if ( ! fIsAligned[i]) {
         if (addUnalignedSourceWords) {
           String feature = makeFeatureString(FEATURE_NAME_SRC, fWord, 0, incrementCount);
-          features.add(new FeatureValue<String>(feature, 1.0));
+          features.add(new CacheableFeatureValue<String>(feature, 1.0));
         }
       } else if (eWords.size() > 0){
         List<String> alignedWords = new ArrayList<String>(eWords.size() + 1);
@@ -127,7 +128,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
           sb.append(alignedWords.get(j));
         }
         String feature = makeFeatureString(FEATURE_NAME, sb.toString(), fLength, incrementCount);
-        features.add(new FeatureValue<String>(feature, 1.0));
+        features.add(new CacheableFeatureValue<String>(feature, 1.0));
       }
     }
     return features;
@@ -156,28 +157,29 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     return featureString;
   }
 
-
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
+  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
     return null;
   }
 
   @Override
-  public void reset() {}
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
-    // TODO(spenceg) Return null if we re-factor the featurizer interface
-    return featurizeRule(f, false);
-  }
-
-  @Override
-  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
+  public void initialize(
+      List<ConcreteTranslationOption<IString, String>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
+  public void reset() {
+  }
+
+  @Override
+  public List<FeatureValue<String>> listFeaturize(
+      Featurizable<IString, String> f) {
+    return null;
+  }
+
+  @Override
+  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     return null;
   }
 }

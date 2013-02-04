@@ -154,6 +154,7 @@ State<Hypothesis<TK, FV>> {
     }
 
     localFeatures = featurizer.listFeaturize(featurizable);
+    localFeatures.addAll(translationOpt.cachedFeatureList);
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
         + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
@@ -202,6 +203,7 @@ State<Hypothesis<TK, FV>> {
 
 
     localFeatures = featurizer.listFeaturize(featurizable);
+    localFeatures.addAll(translationOpt.cachedFeatureList);
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     depth = baseHyp.depth + 1;
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h

@@ -1,12 +1,14 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
+import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.stats.Counter;
@@ -19,9 +21,7 @@ import edu.stanford.nlp.util.Index;
  * @author Spence Green
  * 
  */
-public class DiscriminativePhraseTable implements
-IncrementalFeaturizer<IString, String>,
-IsolatedPhraseFeaturizer<IString, String> {
+public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,String>, IsolatedPhraseFeaturizer<IString, String> {
   public static final String FEATURE_NAME = "DiscPT";
   public static final String SOURCE = "src";
   public static final String TARGET = "trg";
@@ -66,17 +66,17 @@ IsolatedPhraseFeaturizer<IString, String> {
     if (doSource && doTarget) {
       String suffix = f.foreignPhrase.toString("_") + ">"
           + f.translatedPhrase.toString("_");
-      fvalues.add(new FeatureValue<String>(
+      fvalues.add(new CacheableFeatureValue<String>(
           makeFeatureString(FEATURE_NAME, SOURCE_AND_TARGET, suffix, f.foreignPhrase.size(), incrementCount), 
           1.0));
 
     } else if (doSource) {
-      fvalues.add(new FeatureValue<String>(
+      fvalues.add(new CacheableFeatureValue<String>(
           makeFeatureString(FEATURE_NAME, SOURCE, f.foreignPhrase.toString("_"), f.foreignPhrase.size(), incrementCount), 
           1.0));
 
     } else if (doTarget) {
-      fvalues.add(new FeatureValue<String>(
+      fvalues.add(new CacheableFeatureValue<String>(
           makeFeatureString(FEATURE_NAME, TARGET, f.translatedPhrase.toString("_"), f.foreignPhrase.size(), incrementCount), 
           1.0));
     }
@@ -113,10 +113,19 @@ IsolatedPhraseFeaturizer<IString, String> {
   }
 
   @Override
+  public void initialize(
+      List<ConcreteTranslationOption<IString, String>> options,
+      Sequence<IString> foreign, Index<String> featureIndex) {
+  }
+
+  @Override
+  public void reset() {
+  }
+
+  @Override
   public List<FeatureValue<String>> listFeaturize(
       Featurizable<IString, String> f) {
-    // TODO(spenceg) Return null if we re-factor the featurizer interface
-    return featurizePhrase(f, false);
+    return null;
   }
 
   @Override
@@ -124,11 +133,4 @@ IsolatedPhraseFeaturizer<IString, String> {
     return null;
   }
 
-  @Override
-  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
-      Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  public void reset() {
-  }  
 }

@@ -20,7 +20,7 @@ public class ConcreteTranslationOption<TK,FV> implements
   public final String phraseTableName;
   public final int foreignPos;
   public final double isolationScore;
-//  public final List<FeatureValue<FV>> cachedFeatureList;
+  public final List<FeatureValue<FV>> cachedFeatureList;
 
   public enum LinearDistortionType {
     standard, first_contiguous_segment, last_contiguous_segment, closest_contiguous_segment, min_first_last_contiguous_segment, average_distance
@@ -52,11 +52,11 @@ public class ConcreteTranslationOption<TK,FV> implements
     Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, this,
         translationId);
     List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
-//    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
-//    for (FeatureValue<FV> feature : features) {
-//      if (FeatureValues.isCacheable(feature))
-//        cachedFeatureList.add(feature);
-//    }
+    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    for (FeatureValue<FV> feature : features) {
+      if (FeatureValues.isCacheable(feature))
+        cachedFeatureList.add(feature);
+    }
     this.isolationScore = scorer.getIncrementalScore(features);
   }
 
@@ -76,12 +76,18 @@ public class ConcreteTranslationOption<TK,FV> implements
     this.phraseTableName = phraseTableName;
     this.foreignPos = foreignCoverage.nextSetBit(0);
 
+    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    
     // TM scores:
     double totalScore = 0.0;
     {
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, this,
           translationId);
       List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+      for (FeatureValue<FV> feature : features) {
+        if (FeatureValues.isCacheable(feature))
+          cachedFeatureList.add(feature);
+      }
       totalScore += scorer.getIncrementalScore(features);
       // for(FeatureValue<FV> fv : features)
       // System.err.printf("feature(global): %s\n", fv);
