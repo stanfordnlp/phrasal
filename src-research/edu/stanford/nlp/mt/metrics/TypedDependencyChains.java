@@ -6,9 +6,8 @@ import java.util.List;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.ling.WordTag;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
-import edu.stanford.nlp.objectbank.TokenizerFactory;
+import edu.stanford.nlp.process.TokenizerFactory;
 import edu.stanford.nlp.parser.maltparser.MaltParserInterface;
 import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.process.PTBTokenizer;
@@ -66,7 +65,7 @@ public class TypedDependencyChains {
         }
       }
       //System.out.println(filteredDeps);
-      
+
       return Dependencies.getTypedDependencyChains(typeDeps, maxChain);
       } catch (Exception e) {
         return null;

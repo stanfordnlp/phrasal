@@ -22,9 +22,8 @@ public class LanguageModels {
     for (int i = 1; i < sz; i++) {
 
       Sequence<T> ngram = s.subsequence(0, i + 1);
-
       double ngramScore = lm.score(ngram);
-
+      
       if (ngramScore == Double.NEGATIVE_INFINITY) {
         // like sri lm's n-gram utility w.r.t. closed vocab models,
         // right now we silently ignore unknown words.
@@ -35,6 +34,7 @@ public class LanguageModels {
     return logP;
   }
 
+  public static final String KEN_LM_TAG = "kenlm:";
   public static final String BERKELEY_LM_TAG = "berkeleylm:";
   public static final String SRI_LM_TAG = "srilm:";
 
@@ -55,7 +55,10 @@ public class LanguageModels {
       return FrequencyMultiScoreLanguageModel.load(filename);
     } else if (filename.endsWith(".disklm")) {
       return new DiskLM(filename);
-    } else if (filename.startsWith(BERKELEY_LM_TAG)) {
+    } else if (filename.startsWith(KEN_LM_TAG)) {
+      String realFilename = filename.substring(KEN_LM_TAG.length());
+      alm = new KenLanguageModel(realFilename);
+    } else if (filename.startsWith(BERKELEY_LM_TAG)) {   
      String realFilename = filename.substring(BERKELEY_LM_TAG.length());
      try {
        @SuppressWarnings("unchecked")
