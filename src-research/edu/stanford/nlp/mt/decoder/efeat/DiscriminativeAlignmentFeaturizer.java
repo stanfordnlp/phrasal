@@ -42,23 +42,28 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
 
   private Counter<String> featureCounter;
   private Index<String> featureIndex;
+  
+  private final boolean createOOVClasses;
 
   public DiscriminativeAlignmentFeaturizer() { 
     addUnalignedSourceWords = false;
     addUnalignedTargetWords = false;
     unseenThreshold = DEFAULT_UNSEEN_THRESHOLD;
+    createOOVClasses = unseenThreshold > 0.0;
   }
 
   public DiscriminativeAlignmentFeaturizer(String...args) {
     addUnalignedSourceWords = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
     addUnalignedTargetWords = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
     unseenThreshold = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_UNSEEN_THRESHOLD;
+    createOOVClasses = unseenThreshold > 0.0;
   }
 
   @Override
   public void initialize(Index<String> featureIndex) {
     this.featureIndex = featureIndex;
-    featureCounter = featureIndex.isLocked() ? null : new ThreadsafeCounter<String>(100*featureIndex.size());
+    featureCounter = !featureIndex.isLocked() && createOOVClasses ? 
+        new ThreadsafeCounter<String>(100*featureIndex.size()) : null;
   }
 
   @Override
@@ -136,7 +141,8 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
 
   private String makeFeatureString(String featureName, String featureSuffix, int fLength, boolean incrementCount) {
     String featureString = String.format("%s:%s", featureName, featureSuffix);
-
+    if ( ! createOOVClasses) return featureString;
+    
     // Collect statistics and detect unseen events
     if (featureCounter == null) {
       // Test time

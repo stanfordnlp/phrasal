@@ -35,23 +35,28 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
 
   private Counter<String> featureCounter;
   private Index<String> featureIndex;
+  
+  private final boolean createOOVClasses;
 
   public DiscriminativePhraseTable() {
     doSource = true;
     doTarget = true;
     unseenThreshold = DEFAULT_UNSEEN_THRESHOLD;
+    createOOVClasses = unseenThreshold > 0.0;
   }
 
   public DiscriminativePhraseTable(String... args) {
     doSource = args.length > 0 ? Boolean.parseBoolean(args[0]) : true;
     doTarget = args.length > 1 ? Boolean.parseBoolean(args[1]) : true;
     unseenThreshold = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_UNSEEN_THRESHOLD;
+    createOOVClasses = unseenThreshold > 0.0;
   }
 
   @Override
   public void initialize(Index<String> featureIndex) {
     this.featureIndex = featureIndex;
-    featureCounter = featureIndex.isLocked() ? null : new ThreadsafeCounter<String>(100*featureIndex.size());
+    featureCounter = !featureIndex.isLocked() && createOOVClasses ? 
+        new ThreadsafeCounter<String>(100*featureIndex.size()) : null;
   }
 
   @Override
@@ -86,7 +91,8 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
   private String makeFeatureString(String featurePrefix, String featureType, String value, 
       int length, boolean incrementCount) {
     String featureString = String.format("%s.%s:%s", featurePrefix, featureType, value);
-
+    if ( ! createOOVClasses) return featureString;
+    
     // Collect statistics and detect unseen events
     if (featureCounter == null) {
       // Test time
