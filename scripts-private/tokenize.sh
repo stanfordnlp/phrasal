@@ -10,7 +10,7 @@
 if [ $# -ne 3 ]; then
     echo "Usage: `basename $0` language file [clean|noclean]"
     echo
-    echo lang = Arabic,English,German,French
+    echo lang = Arabic,English,English-NIST,German,French
     exit -1
 fi
 
@@ -71,5 +71,7 @@ elif [ $lang == "German" ]; then
     
 elif [ $lang == "English" ]; then
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
-fi
 
+elif [ $lang == "English-NIST" ]; then
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | tr '[:upper:]' '[:lower:]' | nist_tok | gzip -c > ${outfile}.gz
+fi
