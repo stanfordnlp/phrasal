@@ -18,7 +18,9 @@ if [ $# -le 2 ]; then
     exit
 fi
 
-MAKELM=/u/nlp/packages/mosesdecoder/bin/lmplz
+KENLM_BIN=/u/nlp/packages/mosesdecoder/bin
+MAKELM=${KENLM_BIN}/lmplz
+MAKEBIN=${KENLM_BIN}/build_binary
 TEMPDIR=kenlm_tmp
 ORDER=$1
 NAME=$2
@@ -26,4 +28,9 @@ NAME=$2
 shift 2
 
 mkdir -p $TEMPDIR
-zcat $* | grep -v '<s>' | tr '[:upper:]' '[:lower:]' | $MAKELM -o $ORDER -S 90% -T $TEMPDIR | gzip -c > "$NAME".gz.kenlm
+
+echo "Building ARPA LM..."
+zcat $* | grep -v '<s>' | tr '[:upper:]' '[:lower:]' | $MAKELM -o $ORDER -S 90% -T $TEMPDIR > "$NAME".arpa
+
+echo "Binarizing ARPA LM with standard settings"
+$MAKEBIN "$NAME".arpa "$NAME".bin
