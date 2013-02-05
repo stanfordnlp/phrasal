@@ -35,7 +35,7 @@ The languages that use deterministic tokenization (e.g., English, French) are ve
 Now for the monolingual data. If you are using the LDC Gigaword corpora, then you should use this command to extract the data from the gzip'd SGML files in the corpus:
 
   zcat gigaword-file.gz | $SCRPR/giga_sgml2plain.py > gigaword-file.plain
-  $SCRPR/tokenize.sh English gigaword-file.plain
+  $SCRPR/tokenize.sh English gigaword-file.plain clean
   
 ##
 ## Word alignment
