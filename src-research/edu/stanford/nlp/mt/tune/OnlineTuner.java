@@ -25,6 +25,7 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StaticScorer;
@@ -332,7 +333,7 @@ public class OnlineTuner {
    */
   private int applyGradientUpdatesTo(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
-      OnlineUpdateRule<String> updater, Map<Integer, List<RichTranslation<IString, String>>> nbestLists, 
+      OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
       boolean doExpectedBleu) {
     assert threadpool != null;
     assert currentWts != null;
@@ -370,7 +371,7 @@ public class OnlineTuner {
           int translationId = result.translationIds[i];
           assert ! nbestLists.containsKey(translationId);
           // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
-          nbestLists.put(translationId, result.nbestLists.get(i).subList(0, 1));
+          nbestLists.put(translationId, result.nbestLists.get(i).get(0).translation);
         }
       }
     }
@@ -416,8 +417,8 @@ public class OnlineTuner {
       logger.info("Start of epoch: " + epoch);
 
       // n-best lists. Purge for each epoch
-      Map<Integer,List<RichTranslation<IString, String>>> nbestLists = doExpectedBleu ? 
-          new HashMap<Integer,List<RichTranslation<IString, String>>>(tuneSetSize) : null;
+      Map<Integer,Sequence<IString>> nbestLists = doExpectedBleu ? 
+          new HashMap<Integer,Sequence<IString>>(tuneSetSize) : null;
 
       // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
       // to finish at the end of the epoch
@@ -463,7 +464,7 @@ public class OnlineTuner {
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
       double expectedBleu = 0.0;
       if (doExpectedBleu) {
-        expectedBleu = evaluate(currentWts, nbestLists, epoch);
+        expectedBleu = approximateBLEUObjective(nbestLists);
         logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
       }
       // Purge history if we're not picking the best weight vector
@@ -472,6 +473,27 @@ public class OnlineTuner {
     }
     
     saveFinalWeights(epochResults);
+  }
+
+  /**
+   * Sort the list of 1-best translations and score with BLEU.
+   * 
+   * @param nbestLists
+   * @param epoch
+   * @return
+   */
+  private double approximateBLEUObjective(Map<Integer, Sequence<IString>> nbestLists) {
+    assert nbestLists.keySet().size() == references.size();
+
+    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
+    BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
+        .getIncrementalMetric();
+    Map<Integer, Sequence<IString>> sortedMap = 
+        new TreeMap<Integer, Sequence<IString>>(nbestLists);
+    for (Map.Entry<Integer, Sequence<IString>> entry : sortedMap.entrySet()) {
+      incMetric.add(new ScoredFeaturizedTranslation<IString,String>(entry.getValue(), null, 0.0));
+    }
+    return incMetric.score() * 100.0;
   }
 
   /**
@@ -513,49 +535,51 @@ public class OnlineTuner {
   /**
    * Calculate BLEU under a weight vector using a set of existing n-best lists.
    * 
+   * TODO(spenceg): This is the old MERT way of doing things. Doesn't scale to large data sets.
+   * 
    * @param currentWts
    * @param nbestLists
    * @return
    */
-  private double evaluate(Counter<String> currentWts,
-      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int epoch) {
-    assert currentWts != null && currentWts.size() > 0;
-    assert nbestLists.keySet().size() == references.size();
-
-    PrintStream nbestListWriter = writeNbestLists ? 
-        IOTools.getWriterFromFile(String.format("%s.%d.nbest", logPrefix, epoch)) : null;
-
-    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
-    BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
-        .getIncrementalMetric();
-    Scorer<String> scorer = new StaticScorer(currentWts, featureIndex);
-    Map<Integer, List<RichTranslation<IString, String>>> sortedMap = 
-        new TreeMap<Integer, List<RichTranslation<IString, String>>>(nbestLists);
-    for (Map.Entry<Integer, List<RichTranslation<IString, String>>> entry : sortedMap.entrySet()) {
-      // Write n-best list to file
-      if (nbestListWriter != null) {
-        IOTools.writeNbest(entry.getValue(), entry.getKey(), true, nbestListWriter);
-      }
-
-      // Score n-best list under current weight vector
-      double bestScore = Double.NEGATIVE_INFINITY;
-      int bestIndex = Integer.MIN_VALUE;
-      int nbestIndex = 0;
-      for (RichTranslation<IString, String> translation : entry.getValue()) {
-        double score = scorer.getIncrementalScore(translation.features);
-        if (score > bestScore) {
-          bestScore = score;
-          bestIndex = nbestIndex;
-        }
-        ++nbestIndex;
-      }
-      incMetric.add(entry.getValue().get(bestIndex));
-    }
-    
-    if (nbestListWriter != null) nbestListWriter.close();
-
-    return incMetric.score() * 100.0;
-  }
+//  private double evaluate(Counter<String> currentWts,
+//      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int epoch) {
+//    assert currentWts != null && currentWts.size() > 0;
+//    assert nbestLists.keySet().size() == references.size();
+//
+//    PrintStream nbestListWriter = writeNbestLists ? 
+//        IOTools.getWriterFromFile(String.format("%s.%d.nbest", logPrefix, epoch)) : null;
+//
+//    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
+//    BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
+//        .getIncrementalMetric();
+//    Scorer<String> scorer = new StaticScorer(currentWts, featureIndex);
+//    Map<Integer, List<RichTranslation<IString, String>>> sortedMap = 
+//        new TreeMap<Integer, List<RichTranslation<IString, String>>>(nbestLists);
+//    for (Map.Entry<Integer, List<RichTranslation<IString, String>>> entry : sortedMap.entrySet()) {
+//      // Write n-best list to file
+//      if (nbestListWriter != null) {
+//        IOTools.writeNbest(entry.getValue(), entry.getKey(), true, nbestListWriter);
+//      }
+//
+//      // Score n-best list under current weight vector
+//      double bestScore = Double.NEGATIVE_INFINITY;
+//      int bestIndex = Integer.MIN_VALUE;
+//      int nbestIndex = 0;
+//      for (RichTranslation<IString, String> translation : entry.getValue()) {
+//        double score = scorer.getIncrementalScore(translation.features);
+//        if (score > bestScore) {
+//          bestScore = score;
+//          bestIndex = nbestIndex;
+//        }
+//        ++nbestIndex;
+//      }
+//      incMetric.add(entry.getValue().get(bestIndex));
+//    }
+//    
+//    if (nbestListWriter != null) nbestListWriter.close();
+//
+//    return incMetric.score() * 100.0;
+//  }
 
   /**
    * Load multiple references for accurate expected BLEU evaluation during
