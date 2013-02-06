@@ -221,7 +221,8 @@ public class OnlineTuner {
       this.translationIds = translationIds;
       this.references = references;
       this.inputId = inputId;
-      this.weights = weights;
+      // TODO(spenceg) This is bad since the decoder will copy the weights again
+      this.weights = new OpenAddressCounter<String>(weights);
     }
   }
 
@@ -273,9 +274,11 @@ public class OnlineTuner {
       assert input.weights != null;
       // The decoder will copy the weight vector. Prevent updates in applyGradientUpdates() 
       // to the weight vector while the decoder is copying it.
-      synchronized(input.weights) {
-        decoder.getScorer(threadId).updateWeights(input.weights);
-      }
+      // TODO(spenceg) This lock causes deadlock??
+//      synchronized(input.weights) {
+      decoder.getScorer(threadId).updateWeights(input.weights);
+//      }
+      
       int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = 
           new ArrayList<List<RichTranslation<IString,String>>>(input.translationIds.length);
@@ -284,6 +287,9 @@ public class OnlineTuner {
         // Online learning with gradient updates for each instance
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
             threadId);
+        // Garbage collect the decoder's weight vector
+        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
+
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
             input.translationIds[0], nbestList, input.references.get(0), lossFunction);
         nbestLists.add(nbestList);
@@ -297,6 +303,9 @@ public class OnlineTuner {
               threadId);
           nbestLists.add(nbestList);
         }
+        // Garbage collect the decoder's weight vector
+        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
+
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, lossFunction);
       }
@@ -339,9 +348,10 @@ public class OnlineTuner {
       featureIndex.addAll(result.gradient.keySet());
       
       // Apply update rule. Don't let decoders copy the weight vector while it is being updated
-      synchronized(currentWts) {
+      // TODO(spenceg) This lock causes deadlock??
+//      synchronized(currentWts) {
         updater.update(currentWts, result.gradient, updateStep);
-      }
+//      }
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
