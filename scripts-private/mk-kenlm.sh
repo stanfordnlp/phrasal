@@ -9,12 +9,14 @@
 # Author: Spence Green
 #
 
-if [ $# -le 2 ]; then
-    echo Usage: `basename $0` order name file_gz "[file_gz]"
-		echo
-		echo Output file: name.gz.kenlm
-		echo
-		echo You need to rename the output file to name.gz
+if [ $# -le 3 ]; then
+    echo Usage: `basename $0` order name type file_gz "[file_gz]"
+    echo
+    echo "type: [probing|trie]"
+    echo 
+    echo Output file: name.arpa
+    echo
+    echo You need to rename the output file to name.gz
     exit
 fi
 
@@ -24,8 +26,9 @@ MAKEBIN=${KENLM_BIN}/build_binary
 TEMPDIR=kenlm_tmp
 ORDER=$1
 NAME=$2
+type=$3
 
-shift 2
+shift 3
 
 mkdir -p $TEMPDIR
 
@@ -33,4 +36,4 @@ echo "Building ARPA LM..."
 zcat $* | grep -v '<s>' | tr '[:upper:]' '[:lower:]' | $MAKELM -o $ORDER -S 90% -T $TEMPDIR > "$NAME".arpa
 
 echo "Binarizing ARPA LM with standard settings"
-$MAKEBIN "$NAME".arpa "$NAME".bin
+$MAKEBIN $type "$NAME".arpa "$NAME".bin
