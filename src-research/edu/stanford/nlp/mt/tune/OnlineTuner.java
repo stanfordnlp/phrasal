@@ -369,7 +369,8 @@ public class OnlineTuner {
         for (int i = 0; i < result.translationIds.length; ++i) {
           int translationId = result.translationIds[i];
           assert ! nbestLists.containsKey(translationId);
-          nbestLists.put(translationId, result.nbestLists.get(i));
+          // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
+          nbestLists.put(translationId, result.nbestLists.get(i).subList(0, 1));
         }
       }
     }
