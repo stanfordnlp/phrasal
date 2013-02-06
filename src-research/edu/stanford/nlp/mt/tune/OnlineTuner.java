@@ -105,7 +105,7 @@ public class OnlineTuner {
   private boolean doParameterAveraging = false;
   
   // Weight vector for Phrasal
-  private Counter<String> wts;
+  private Counter<String> wtsAccumulator;
   private Index<String> featureIndex;
   private final int expectedNumFeatures;
 
@@ -124,8 +124,8 @@ public class OnlineTuner {
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
-    wts = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
-    logger.info("Initial weights: " + wts.toString());
+    wtsAccumulator = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
+    logger.info("Initial weights: " + wtsAccumulator.toString());
 
     // Load the tuning set
     tuneSource = IStrings.fileSplitToIStrings(srcFile);
@@ -221,7 +221,7 @@ public class OnlineTuner {
       this.translationIds = translationIds;
       this.references = references;
       this.inputId = inputId;
-      this.weights = new OpenAddressCounter<String>(weights);
+      this.weights = weights;
     }
   }
 
@@ -271,9 +271,11 @@ public class OnlineTuner {
     @Override
     public ProcessorOutput process(ProcessorInput input) {
       assert input.weights != null;
-      // Set the decoder weights and decode
-      decoder.getScorer(threadId).updateWeights(input.weights);
-      
+      // The decoder will copy the weight vector. Prevent updates in applyGradientUpdates() 
+      // to the weight vector while the decoder is copying it.
+      synchronized(input.weights) {
+        decoder.getScorer(threadId).updateWeights(input.weights);
+      }
       int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = 
           new ArrayList<List<RichTranslation<IString,String>>>(input.translationIds.length);
@@ -336,9 +338,10 @@ public class OnlineTuner {
       // index.
       featureIndex.addAll(result.gradient.keySet());
       
-      // Apply update rule
-      updater.update(currentWts, result.gradient, updateStep);
-      
+      // Apply update rule. Don't let decoders copy the weight vector while it is being updated
+      synchronized(currentWts) {
+        updater.update(currentWts, result.gradient, updateStep);
+      }
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
@@ -348,7 +351,7 @@ public class OnlineTuner {
 
       // Accumulate for parameter averaging
       if (doParameterAveraging) {
-        wts.addAll(currentWts);
+        wtsAccumulator.addAll(currentWts);
       }
 
       // Add n-best lists from this update step
@@ -381,9 +384,9 @@ public class OnlineTuner {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
-    Counter<String> currentWts = new OpenAddressCounter<String>(wts, 1.0f);
-    // Clear the global weight vector, which we will use for parameter averaging.
-    wts.clear();
+    Counter<String> currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
+    // Clear the accumulator, which we will use for parameter averaging.
+    wtsAccumulator.clear();
     
     final int tuneSetSize = tuneSource.size();
     final int[] indices = ArrayMath.range(0, tuneSetSize);
@@ -439,7 +442,7 @@ public class OnlineTuner {
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
-        currentWts = new OpenAddressCounter<String>(wts, 1.0f);
+        currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
         Counters.divideInPlace(currentWts, (epoch+1)*numBatches);
       }
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
@@ -626,9 +629,9 @@ public class OnlineTuner {
       return new MIRA1BestHopeFearOptimizer(optimizerFlags);
 
     } else if (optimizerAlg.equals("pro-sgd")) {
-      assert wts != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
+      assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
-      Counters.normalize(wts);
+      Counters.normalize(wtsAccumulator);
       return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
     } else {
