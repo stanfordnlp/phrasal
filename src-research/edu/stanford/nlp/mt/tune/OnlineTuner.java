@@ -288,7 +288,7 @@ public class OnlineTuner {
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
             threadId);
         // Garbage collect the decoder's weight vector
-//        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
+        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
 
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
             input.translationIds[0], nbestList, input.references.get(0), lossFunction);
@@ -304,7 +304,7 @@ public class OnlineTuner {
           nbestLists.add(nbestList);
         }
         // Garbage collect the decoder's weight vector
-//        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
+        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
 
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, lossFunction);
