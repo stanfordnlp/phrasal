@@ -39,9 +39,7 @@ public interface Scorer<FV> {
   public boolean hasNonZeroWeight(FV featureName);
   
   /**
-   * Get this scorer's feature index.
-   * 
-   * @return
+   * @return this scorer's feature index.
    */
   public Index<String> getFeatureIndex();
 }
