@@ -3,13 +3,11 @@ package edu.stanford.nlp.mt.base;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -30,9 +28,10 @@ public class LineIndexedCorpus extends AbstractList<String> {
       lineIndex = new ArrayList<Long>();      
       lineIndex.add(0L);
       // there has to be an easier way to find the actual byte locations of line terminators
-      InputStream in = filename.endsWith("gz") ? new GZIPInputStream(new FileInputStream(fh), 8192) :
-          new FileInputStream(fh);
-      InputStreamReader fin = new InputStreamReader(in, "UTF-8");
+      if (filename.endsWith("gz")) {
+        throw new RuntimeException("Cannot open gzip'd files.");
+      }
+      InputStreamReader fin = new InputStreamReader(new FileInputStream(fh), "UTF-8");
       long pos = 0;
       char[] charArray = new char[2]; 
       boolean lastPosWasEOL = false;
