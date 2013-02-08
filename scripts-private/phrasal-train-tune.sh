@@ -159,7 +159,7 @@ function make-ini-from-online-run {
 function decode {
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
 	-config-file "$RUNNAME".ini -moses-n-best-list true \
-	< $DECODE_FILE > "$RUNNAME".out 2> logs/"$RUNNAME".log
+	< $DECODE_FILE > "$RUNNAME".trans 2> logs/"$RUNNAME".log
 }
 
 #
@@ -172,7 +172,7 @@ function evaluate {
 	    | nbest2uniq \
 	    > "$RUNNAME"."$NBEST"best.uniq 2> /dev/null
     fi
-    cat "$RUNNAME".out | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
+    cat "$RUNNAME".trans | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
 
     # TODO Output Tune BLEU
 
