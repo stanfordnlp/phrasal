@@ -87,7 +87,8 @@ public class OnlineLearningCurve {
    */
   public static void main(String[] args) {
     if (args.length < 5) {
-      System.err.printf("Usage: java %s ini_file input_file ref_csv_list n_threads wts [wts]%n", OnlineLearningCurve.class.getName());
+      System.err.printf("Usage: java %s ini_file input_file ref_csv_list wts [wts]%n", 
+          OnlineLearningCurve.class.getName());
       System.exit(-1);
     }
     String iniFile = args[0];
@@ -97,9 +98,8 @@ public class OnlineLearningCurve {
     String[] refFiles = args[2].split(",");
     REFS = loadReferences(refFiles, SRC.size());
     
-    final int nThreads = Integer.parseInt(args[3]);
     List<String> wts = new ArrayList<String>();
-    for (int i = 4; i < args.length; ++i) {
+    for (int i = 3; i < args.length; ++i) {
       wts.add(args[i]);
     }
 
@@ -114,7 +114,7 @@ public class OnlineLearningCurve {
     // Don't lock the feature index.
     
     MulticoreWrapper<Pair<Integer,String>,Pair<Integer,Double>> wrapper = 
-        new MulticoreWrapper<Pair<Integer,String>,Pair<Integer,Double>>(nThreads, new Decoder(p, 0));
+        new MulticoreWrapper<Pair<Integer,String>,Pair<Integer,Double>>(p.getNumThreads(), new Decoder(p, 0));
     
     double[] bleuScores = new double[wts.size()];
     for (int i = 0; i < wts.size(); ++i) {
