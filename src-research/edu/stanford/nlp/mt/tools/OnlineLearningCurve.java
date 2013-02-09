@@ -3,6 +3,8 @@ package edu.stanford.nlp.mt.tools;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.IOTools;
@@ -116,18 +118,27 @@ public class OnlineLearningCurve {
     MulticoreWrapper<Pair<Integer,String>,Pair<Integer,Double>> wrapper = 
         new MulticoreWrapper<Pair<Integer,String>,Pair<Integer,Double>>(p.getNumThreads(), new Decoder(p, 0));
 
+    Pattern getWtsId = Pattern.compile("\\.(\\d+)\\.binwts");
     for (int i = 0; i < wts.size(); ++i) {
       wrapper.put(new Pair<Integer,String>(i, wts.get(i)));
       while (wrapper.peek()) {
         Pair<Integer,Double> result = wrapper.poll();
-        System.out.printf("%s\t%.2f%n",wts.get(result.first()),result.second());
+        Matcher m = getWtsId.matcher(wts.get(result.first()));
+        if (m.find()) {
+          String wtsId = m.group(1);
+          System.out.printf("%s\t%.2f%n",wtsId,result.second());
+        }
       }
     }
 
     wrapper.join();
     while (wrapper.peek()) {
       Pair<Integer,Double> result = wrapper.poll();
-      System.out.printf("%s\t%.2f%n",wts.get(result.first()),result.second());
+      Matcher m = getWtsId.matcher(wts.get(result.first()));
+      if (m.find()) {
+        String wtsId = m.group(1);
+        System.out.printf("%s\t%.2f%n",wtsId,result.second());
+      }
     }
   }
 }
