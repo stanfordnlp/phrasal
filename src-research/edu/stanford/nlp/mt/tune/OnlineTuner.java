@@ -309,6 +309,7 @@ public class OnlineTuner {
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
+      logger.info("Threadpool.get: " + threadpool.getStatus());
 
       // Don't assume that the OnlineOptimizers that compute the gradient will populate the feature
       // index.
@@ -401,6 +402,7 @@ public class OnlineTuner {
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
+        logger.info("Threadpool.put: " + wrapper.getStatus());
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
         
         if((t+1) % weightWriteOutInterval == 0) {
@@ -417,6 +419,7 @@ public class OnlineTuner {
       wrapper.join();
       updateId = 
           applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
+      logger.info("Threadpool.shutdown: " + wrapper.getStatus());
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
