@@ -23,7 +23,7 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  *
  */
 public class OnlineLearningCurve {
-  
+
   private static List<List<Sequence<IString>>> loadReferences(String[] filenames, int sourceLength) {
     List<List<Sequence<IString>>> references = new ArrayList<List<Sequence<IString>>>(sourceLength);
     for (String filename : filenames) {
@@ -37,19 +37,19 @@ public class OnlineLearningCurve {
     assert references.size() == sourceLength;
     return references;
   }
-  
+
   private static class Decoder implements ThreadsafeProcessor<Pair<Integer,String>,Pair<Integer,Double>> {
 
     private int id;
     private int childId;
     private Phrasal p;
-    
+
     public Decoder(Phrasal p, int id) {
       this.id = id;
       childId = id+1;
       this.p = p;
     }
-    
+
     @Override
     public Pair<Integer, Double> process(Pair<Integer,String> wtsFile) {
       Counter<String> wts = null;
@@ -60,7 +60,7 @@ public class OnlineLearningCurve {
       } catch (ClassNotFoundException e) {
         e.printStackTrace();
       }
-      
+
       p.getScorer(id).updateWeights(wts);
       BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(REFS, false);
       BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
@@ -78,10 +78,10 @@ public class OnlineLearningCurve {
       return new Decoder(p, childId++);
     }
   }
-  
+
   private static List<Sequence<IString>> SRC;
   private static List<List<Sequence<IString>>> REFS;
-  
+
   /**
    * @param args
    */
@@ -94,10 +94,10 @@ public class OnlineLearningCurve {
     String iniFile = args[0];
     String inputFile = args[1];
     SRC = IStrings.fileSplitToIStrings(inputFile);
-    
+
     String[] refFiles = args[2].split(",");
     REFS = loadReferences(refFiles, SRC.size());
-    
+
     List<String> wts = new ArrayList<String>();
     for (int i = 3; i < args.length; ++i) {
       wts.add(args[i]);
@@ -112,27 +112,22 @@ public class OnlineLearningCurve {
       System.exit(-1);
     }
     // Don't lock the feature index.
-    
+
     MulticoreWrapper<Pair<Integer,String>,Pair<Integer,Double>> wrapper = 
         new MulticoreWrapper<Pair<Integer,String>,Pair<Integer,Double>>(p.getNumThreads(), new Decoder(p, 0));
-    
-    double[] bleuScores = new double[wts.size()];
+
     for (int i = 0; i < wts.size(); ++i) {
       wrapper.put(new Pair<Integer,String>(i, wts.get(i)));
       while (wrapper.peek()) {
         Pair<Integer,Double> result = wrapper.poll();
-        bleuScores[result.first()] = result.second();
+        System.out.printf("%s\t%.2f%n",wts.get(result.first()),result.second());
       }
     }
 
     wrapper.join();
     while (wrapper.peek()) {
       Pair<Integer,Double> result = wrapper.poll();
-      bleuScores[result.first()] = result.second();
-    }
-    
-    for (int i = 0; i < bleuScores.length; ++i) {
-      System.out.printf("%s\t%.2f%n",wts.get(i),bleuScores[i]);
+      System.out.printf("%s\t%.2f%n",wts.get(result.first()),result.second());
     }
   }
 }
