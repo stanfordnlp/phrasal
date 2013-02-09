@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.tune;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -20,15 +18,12 @@ import java.util.logging.SimpleFormatter;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.BLEUOracleCost;
 import edu.stanford.nlp.mt.metrics.BLEUSmoothGain;
@@ -135,7 +130,12 @@ public class OnlineTuner {
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
     
     // Load Phrasal
-    decoder = loadDecoder(phrasalIniFile);
+    try {
+      decoder = Phrasal.loadDecoder(phrasalIniFile);
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(-1);
+    }
     featureIndex = decoder.getFeatureIndex();
     logger.info("Loaded Phrasal from: " + phrasalIniFile);
     
@@ -143,40 +143,6 @@ public class OnlineTuner {
     // by OnlineTuner.
     optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
     logger.info("Loaded optimizer: " + optimizer.toString());
-  }
-  
-  /**
-   * Load an instance of phrasal from an ini file.
-   * 
-   * @param phrasalIniFile
-   * @return
-   */
-  private static Phrasal loadDecoder(String phrasalIniFile) {
-    try {
-      Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
-      Phrasal.initStaticMembers(config);
-      Phrasal phrasal = new Phrasal(config);
-      FlatPhraseTable.lockIndex();
-      return phrasal;
-      
-    } catch (IllegalArgumentException e) {
-      e.printStackTrace();
-    } catch (SecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InstantiationException e) {
-      e.printStackTrace();
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-    throw new RuntimeException("Could not load Phrasal from: " + phrasalIniFile);
   }
 
   /**

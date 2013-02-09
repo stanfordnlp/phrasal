@@ -1228,6 +1228,45 @@ public class Phrasal {
   }
   
   /**
+   * Load an instance of phrasal from an ini file.
+   * 
+   * @param phrasalIniFile
+   * @return
+   * @throws IOException 
+   */
+  public static Phrasal loadDecoder(String phrasalIniFile) throws IOException {
+    Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
+    return loadDecoder(config);  
+  }
+
+  private static Phrasal loadDecoder(Map<String, List<String>> config) {
+    try {
+      Phrasal.initStaticMembers(config);
+      Phrasal phrasal = new Phrasal(config);
+      FlatPhraseTable.lockIndex();
+      return phrasal;
+      
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+    } catch (SecurityException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+    throw new RuntimeException("Could not load Phrasal from config file!");
+  }
+  
+  /**
    * Run Phrasal from the command line.
    * 
    * @param args
@@ -1253,9 +1292,7 @@ public class Phrasal {
 
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0])
         : readArgs(args);
-    initStaticMembers(config);
-    Phrasal p = new Phrasal(config);
-    FlatPhraseTable.lockIndex();
+    Phrasal p = Phrasal.loadDecoder(config);
     p.lockFeatureIndex();
     p.decodeFromConsole();
     p.shutdown();
