@@ -33,6 +33,7 @@ import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
+import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD2;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -313,15 +314,12 @@ public class OnlineTuner {
       final ProcessorOutput result = threadpool.poll();
       logger.info("Threadpool.get: " + threadpool.getStatus());
 
-      // Don't assume that the OnlineOptimizers that compute the gradient will populate the feature
-      // index.
-      featureIndex.addAll(result.gradient.keySet());
+      logger.info(String.format("Weight update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
+      logger.info(String.format("Weight update %d decoder feature index size: %d", updateStep, featureIndex.size()));
       
       // Apply update rule. Don't let decoders copy the weight vector while it is being updated
-      // TODO(spenceg) This lock causes deadlock??
-//      synchronized(currentWts) {
-        updater.update(currentWts, result.gradient, updateStep);
-//      }
+      updater.update(currentWts, result.gradient, updateStep);
+
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
@@ -644,7 +642,7 @@ public class OnlineTuner {
       assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
       Counters.normalize(wtsAccumulator);
-      return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
+      return new PairwiseRankingOptimizerSGD2(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
     } else {
       throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);
