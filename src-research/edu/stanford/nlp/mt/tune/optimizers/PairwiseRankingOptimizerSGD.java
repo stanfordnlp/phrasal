@@ -427,6 +427,9 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 		return new AdaGradUpdater(learningRate, expectedNumFeatures);
 	if(this.updaterType.equals("adagradl1"))
 		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda);
+	if(this.updaterType.equals("adagradl1f"))
+		return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda);
+
 	return new SGDUpdater(learningRate);
   }
 
