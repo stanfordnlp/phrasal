@@ -33,8 +33,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     
   }
 
-  // the gradient here should include L2 regularization, 
-  // use the fast version if the L2 regularization is to be handled here.
+  // the gradient here should NOT include L2 regularization, or else there is no point
   @Override
   public void update(Counter<String> weights,
       Counter<String> gradient, int timeStep) {
@@ -43,7 +42,12 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     // w_{t+1} := w_t - nu*g_t
     for (String feature : gradient.keySet()) {
       double gradf = gradient.getCount(feature);
-      double prevrate = rate / (Math.sqrt(sumGradSquare.getCount(feature))+eps);
+      double prevrate = rate / (Math.sqrt(sumGradSquare.getCount(feature))+eps);     
+      
+      // Do not start decaying the weight of a feature until it has been seen
+      if(sumGradSquare.getCount(feature)==0.0)
+    	  prevrate = 0;
+      
       double sgsValue = sumGradSquare.incrementCount(feature, gradf*gradf);
       double currentrate = rate / (Math.sqrt(sgsValue)+eps);
       double testupdate = weights.getCount(feature) - (currentrate * gradient.getCount(feature));
