@@ -29,7 +29,7 @@ elif [ $ext == "bz2" ]; then
 fi
 
 # Path to cdec installation
-CDEC_PATH=/home/rayder441/sandbox/cdec/
+CDEC_PATH=/u/nlp/packages/cdec/
 
 # Whitespace and newline normalizer
 # Do this externally to guard against any differences between
@@ -42,20 +42,22 @@ else
     fixnl=tee
 fi
 
+JAVA_OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:PermSize=256m"
+
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
-AR_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker + -nthreads 4" 
+AR_TOK="java $JAVA_OPTS -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker + -nthreads 4" 
 
 # English tokenizer setup
-EN_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -lowerCase -options ptb3Escaping=false,asciiQuotes=true"
+EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -lowerCase -options ptb3Escaping=false,asciiQuotes=true"
 
 # French tokenizer setup
-FR_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.international.french.process.FrenchTokenizer -lowerCase -noSGML"
+FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -lowerCase -noSGML"
 
 # German segmentation and tokenization setup
-DE_TOK="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
+DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
 DE_SEG="${CDEC_PATH}/compound-split/compound-split.pl"
-DE_PP="java -server -XX:+UseCompressedOops -XX:MaxPermSize=2g edu.stanford.nlp.util.Lattice"
+DE_PP="java $JAVA_OPTS edu.stanford.nlp.util.Lattice"
 
 #
 # Run the tokenizers for each language
