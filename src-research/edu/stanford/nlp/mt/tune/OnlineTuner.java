@@ -399,8 +399,7 @@ public class OnlineTuner {
       ArrayMath.shuffle(indices);
       logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
       for (int t = 0; t < numBatches; ++t) {
-        logger.info(String.format("Epoch %d batch %d", epoch, t));
-        logger.info(String.format("Memory: free: %d  max: %d", r.freeMemory(), r.maxMemory()));
+        logger.info(String.format("Epoch %d batch %d memory free: %d  max: %d", epoch, t, r.freeMemory(), r.maxMemory()));
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
