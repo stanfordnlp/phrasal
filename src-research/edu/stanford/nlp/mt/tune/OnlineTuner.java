@@ -307,7 +307,9 @@ public class OnlineTuner {
     assert nbestLists != null || !doExpectedBleu;
     
     // There may be more than one gradient available, so loop
+    logger.info("Threadpool.prepeek: " + threadpool.getStatus());
     while (threadpool.peek()) {
+      logger.info("Threadpool.preget: " + threadpool.getStatus());
       final ProcessorOutput result = threadpool.poll();
       logger.info("Threadpool.get: " + threadpool.getStatus());
 
@@ -395,12 +397,16 @@ public class OnlineTuner {
               new GradientProcessor(optimizer,lossFunction,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
+      Runtime r = Runtime.getRuntime();
       ArrayMath.shuffle(indices);
       logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
       for (int t = 0; t < numBatches; ++t) {
+        logger.info(String.format("Epoch %d batch %d", epoch, t));
+        logger.info(String.format("Memory: free: %d  max: %d", r.freeMemory(), r.maxMemory()));
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
+        logger.info("Threadpool.preput: " + wrapper.getStatus());
         wrapper.put(input);
         logger.info("Threadpool.put: " + wrapper.getStatus());
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
@@ -416,7 +422,9 @@ public class OnlineTuner {
       }
 
       // Wait for threadpool shutdown for this epoch and get final gradients
+      logger.info("Threadpool.prejoin: " + wrapper.getStatus());
       wrapper.join();
+      logger.info("Threadpool.join: " + wrapper.getStatus());
       updateId = 
           applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
       logger.info("Threadpool.shutdown: " + wrapper.getStatus());
