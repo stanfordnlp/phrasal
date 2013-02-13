@@ -1,12 +1,17 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
@@ -38,6 +43,11 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
   
   private final boolean createOOVClasses;
 
+  private Map<String,String> srcWordToClassMap;
+  private boolean mapSrcWord = false;
+  private Map<String,String> tgtWordToClassMap;
+  private boolean mapTgtWord = false;
+  
   public DiscriminativePhraseTable() {
     doSource = true;
     doTarget = true;
@@ -50,6 +60,32 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
     doTarget = args.length > 1 ? Boolean.parseBoolean(args[1]) : true;
     unseenThreshold = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_UNSEEN_THRESHOLD;
     createOOVClasses = unseenThreshold > 0.0;
+    String srcClassFile = args.length > 3 ? args[3] : null;
+    String tgtClassFile = args.length > 4 ? args[4] : null;
+    if (srcClassFile != null) {
+      srcWordToClassMap = loadWordClassMap(srcClassFile);
+      mapSrcWord = true;
+    }
+    if (tgtClassFile != null) {
+      tgtWordToClassMap = loadWordClassMap(tgtClassFile);
+      mapTgtWord = true;
+    }
+  }
+  
+  private static Map<String, String> loadWordClassMap(String wordClassFile) {
+    LineNumberReader reader = IOTools.getReaderFromFile(wordClassFile);
+    Map<String,String> map = new HashMap<String,String>(60000);
+    try {
+      for (String line; (line = reader.readLine()) != null;) {
+        String[] toks = line.trim().split("\\s+");
+        assert toks.length == 2;
+        map.put(toks[0], toks[1]);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Could not load: " + DiscriminativePhraseTable.class.getName());
+    }
+    return map;
   }
 
   @Override
@@ -68,24 +104,41 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
       Featurizable<IString, String> f, boolean incrementCount) {
     List<FeatureValue<String>> fvalues = new LinkedList<FeatureValue<String>>();
 
+    String srcPhrase = mapSrcWord ? mapPhrase(f.foreignPhrase, srcWordToClassMap) :
+      f.foreignPhrase.toString("_");
+    String tgtPhrase = mapTgtWord ? mapPhrase(f.translatedPhrase, tgtWordToClassMap) :
+      f.translatedPhrase.toString("_");
+    
     if (doSource && doTarget) {
-      String suffix = f.foreignPhrase.toString("_") + ">"
-          + f.translatedPhrase.toString("_");
+      String suffix = srcPhrase + ">"
+          + tgtPhrase;
       fvalues.add(new CacheableFeatureValue<String>(
           makeFeatureString(FEATURE_NAME, SOURCE_AND_TARGET, suffix, f.foreignPhrase.size(), incrementCount), 
           1.0));
 
     } else if (doSource) {
       fvalues.add(new CacheableFeatureValue<String>(
-          makeFeatureString(FEATURE_NAME, SOURCE, f.foreignPhrase.toString("_"), f.foreignPhrase.size(), incrementCount), 
+          makeFeatureString(FEATURE_NAME, SOURCE, srcPhrase, f.foreignPhrase.size(), incrementCount), 
           1.0));
 
     } else if (doTarget) {
       fvalues.add(new CacheableFeatureValue<String>(
-          makeFeatureString(FEATURE_NAME, TARGET, f.translatedPhrase.toString("_"), f.foreignPhrase.size(), incrementCount), 
+          makeFeatureString(FEATURE_NAME, TARGET, tgtPhrase, f.foreignPhrase.size(), incrementCount), 
           1.0));
     }
     return fvalues;
+  }
+
+  private static String mapPhrase(Sequence<IString> phrase,
+      Map<String, String> wordToClassMap) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < phrase.size(); ++i) {
+      if (i > 0) sb.append("_");
+      String word = phrase.get(i).toString();
+      word = wordToClassMap.containsKey(word) ? wordToClassMap.get(word) : "UNK";
+      sb.append(word);
+    }
+    return sb.toString();
   }
 
   private String makeFeatureString(String featurePrefix, String featureType, String value, 

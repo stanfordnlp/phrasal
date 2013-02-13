@@ -1,16 +1,21 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -45,6 +50,11 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
   
   private final boolean createOOVClasses;
 
+  private Map<String,String> srcWordToClassMap;
+  private boolean mapSrcWord = false;
+  private Map<String,String> tgtWordToClassMap;
+  private boolean mapTgtWord = false;
+  
   public DiscriminativeAlignmentFeaturizer() { 
     addUnalignedSourceWords = false;
     addUnalignedTargetWords = false;
@@ -57,6 +67,32 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     addUnalignedTargetWords = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
     unseenThreshold = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_UNSEEN_THRESHOLD;
     createOOVClasses = unseenThreshold > 0.0;
+    String srcClassFile = args.length > 3 ? args[3] : null;
+    String tgtClassFile = args.length > 4 ? args[4] : null;
+    if (srcClassFile != null) {
+      srcWordToClassMap = loadWordClassMap(srcClassFile);
+      mapSrcWord = true;
+    }
+    if (tgtClassFile != null) {
+      tgtWordToClassMap = loadWordClassMap(tgtClassFile);
+      mapTgtWord = true;
+    }
+  }
+
+  private static Map<String, String> loadWordClassMap(String wordClassFile) {
+    LineNumberReader reader = IOTools.getReaderFromFile(wordClassFile);
+    Map<String,String> map = new HashMap<String,String>(60000);
+    try {
+      for (String line; (line = reader.readLine()) != null;) {
+        String[] toks = line.trim().split("\\s+");
+        assert toks.length == 2;
+        map.put(toks[0], toks[1]);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Could not load: " + DiscriminativeAlignmentFeaturizer.class.getName());
+    }
+    return map;
   }
 
   @Override
@@ -87,6 +123,8 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     for (int i = 0; i < eLength; ++i) {
       int[] fIndices = alignment.e2f(i);
       String eWord = f.translatedPhrase.get(i).toString();
+      if (mapTgtWord) eWord = mapToClass(eWord, tgtWordToClassMap);
+      
       if (fIndices == null) {
         // Unaligned target word
         if (addUnalignedTargetWords) {
@@ -105,6 +143,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
             f2e.get(fInsertionIndex).add(eWord);
           } else {
             String fWord = f.foreignPhrase.get(fIndex).toString();
+            if (mapSrcWord) fWord = mapToClass(fWord, srcWordToClassMap);
             f2e.get(fInsertionIndex).add(fWord);
           }
           fIsAligned[fIndex] = true;
@@ -116,6 +155,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     for (int i = 0; i < fLength; ++i) {
       Set<String> eWords = f2e.get(i);
       String fWord = f.foreignPhrase.get(i).toString();
+      if (mapSrcWord) fWord = mapToClass(fWord, srcWordToClassMap);
       if ( ! fIsAligned[i]) {
         if (addUnalignedSourceWords) {
           String feature = makeFeatureString(FEATURE_NAME_SRC, fWord, 0, incrementCount);
@@ -137,6 +177,10 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
       }
     }
     return features;
+  }
+
+  private static String mapToClass(String word, Map<String, String> wordToClassMap) {
+    return wordToClassMap.containsKey(word) ? wordToClassMap.get(word) : "UNK";
   }
 
   private String makeFeatureString(String featureName, String featureSuffix, int fLength, boolean incrementCount) {
