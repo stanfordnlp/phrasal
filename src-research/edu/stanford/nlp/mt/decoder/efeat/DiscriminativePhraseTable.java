@@ -2,8 +2,10 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
@@ -38,14 +40,14 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
 
   private Counter<String> featureCounter;
   private Index<String> featureIndex;
-
+  
   private final boolean createOOVClasses;
 
-  private int[] srcWordToClassMap;
+  private Map<String,String> srcWordToClassMap;
   private boolean mapSrcWord = false;
-  private int[] tgtWordToClassMap;
+  private Map<String,String> tgtWordToClassMap;
   private boolean mapTgtWord = false;
-
+  
   public DiscriminativePhraseTable() {
     doSource = true;
     doTarget = true;
@@ -69,37 +71,21 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
       mapTgtWord = true;
     }
   }
-
-  private static int[] loadWordClassMap(String wordClassFile) {
-    int[] wordMap = null;
+  
+  private static Map<String, String> loadWordClassMap(String wordClassFile) {
+    LineNumberReader reader = IOTools.getReaderFromFile(wordClassFile);
+    Map<String,String> map = new HashMap<String,String>(60000);
     try {
-      LineNumberReader reader = IOTools.getReaderFromFile(wordClassFile);
-      int maxIdx = -2;
-      // Find the maximum index
-      for(String line; (line = reader.readLine()) != null;) {
-        String[] toks = line.split("\\s+");
-        assert toks.length == 2;
-        int idx = IString.index.indexOf(toks[0]);
-        if (idx > maxIdx) maxIdx = idx;
-      }
-      reader.close();
-
-      // Map all words to classes, if that word exists in the index
-      wordMap = new int[maxIdx+1];
       for (String line; (line = reader.readLine()) != null;) {
         String[] toks = line.trim().split("\\s+");
         assert toks.length == 2;
-        int idx = IString.index.indexOf(toks[0]);
-        assert idx < wordMap.length;
-        if (idx >= 0) wordMap[idx] = Integer.parseInt(toks[1]);
+        map.put(toks[0], toks[1]);
       }
-      reader.close();
-
     } catch (IOException e) {
       e.printStackTrace();
       throw new RuntimeException("Could not load: " + DiscriminativePhraseTable.class.getName());
     }
-    return wordMap;
+    return map;
   }
 
   @Override
@@ -122,7 +108,7 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
       f.foreignPhrase.toString("_");
     String tgtPhrase = mapTgtWord ? mapPhrase(f.translatedPhrase, tgtWordToClassMap) :
       f.translatedPhrase.toString("_");
-
+    
     if (doSource && doTarget) {
       String suffix = srcPhrase + ">"
           + tgtPhrase;
@@ -144,16 +130,13 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
   }
 
   private static String mapPhrase(Sequence<IString> phrase,
-      int[] wordToClassMap) {
+      Map<String, String> wordToClassMap) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < phrase.size(); ++i) {
       if (i > 0) sb.append("_");
-      int idx = phrase.get(i).id;
-      if (idx >= 0 && idx < wordToClassMap.length) {
-        sb.append(wordToClassMap[idx]);
-      } else {
-        sb.append("U");
-      }
+      String word = phrase.get(i).toString();
+      word = wordToClassMap.containsKey(word) ? wordToClassMap.get(word) : "UNK";
+      sb.append(word);
     }
     return sb.toString();
   }
@@ -162,7 +145,7 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
       int length, boolean incrementCount) {
     String featureString = String.format("%s.%s:%s", featurePrefix, featureType, value);
     if ( ! createOOVClasses) return featureString;
-
+    
     // Collect statistics and detect unseen events
     if (featureCounter == null) {
       // Test time
