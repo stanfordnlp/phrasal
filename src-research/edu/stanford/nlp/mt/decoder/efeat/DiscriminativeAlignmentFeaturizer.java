@@ -85,12 +85,16 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     try {
       for (String line; (line = reader.readLine()) != null;) {
         String[] toks = line.trim().split("\\s+");
-        assert toks.length == 2;
-        map.put(toks[0], toks[1]);
+        if (toks.length == 2) {
+          map.put(toks[0], toks[1]);
+        } else {
+          System.err.printf("%s: Ignoring line %s (line: %d)%n", DiscriminativeAlignmentFeaturizer.class.getName(),
+              line.trim(), reader.getLineNumber());
+        }
       }
     } catch (IOException e) {
       e.printStackTrace();
-      throw new RuntimeException("Could not load: " + DiscriminativeAlignmentFeaturizer.class.getName());
+      throw new RuntimeException("Could not load: " + wordClassFile);
     }
     return map;
   }
