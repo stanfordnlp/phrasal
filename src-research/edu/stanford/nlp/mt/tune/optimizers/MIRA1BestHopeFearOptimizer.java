@@ -63,11 +63,11 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     synchronized(lossFunction) {
       // The "correct" derivation (Crammer et al. (2006) fig.2)
       dHope = getBestHopeDerivation(lossFunction, translations, references, sourceId);
-      logger.info("Hope derivation: " + dHope.toString());
+      logger.fine("Hope derivation: " + dHope.toString());
 
       // The "max-loss" derivation (Crammer et al. (2006) fig.2)
       dFear = getBestFearDerivation(lossFunction, translations, references, dHope, sourceId);
-      logger.info("Fear derivation: " + dFear.toString());
+      logger.fine("Fear derivation: " + dFear.toString());
 
       // Update the loss function with the hope derivation a la
       // Cherry and Foster (2012) (Chiang (2012) uses the 1-best translation).
@@ -93,12 +93,12 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       Counter<String> hopeFeatures = OptimizerUtils.featureValueCollectionToCounter(dHope.hypothesis.features);
       Counter<String> fearFeatures = OptimizerUtils.featureValueCollectionToCounter(dFear.hypothesis.features);
       gradient = Counters.diff(hopeFeatures, fearFeatures);
-      logger.info("Feature difference: " + gradient.toString());
+      logger.fine("Feature difference: " + gradient.toString());
       
       // Compute the update
       double sumSquaredFeatureDiff = Counters.sumSquares(gradient);
       double tau = Math.min(C, loss / sumSquaredFeatureDiff);
-      logger.info(String.format("tau: %e", tau));
+      logger.fine(String.format("tau: %e", tau));
       
       // Update the weights
       Counters.multiplyInPlace(gradient, tau);
