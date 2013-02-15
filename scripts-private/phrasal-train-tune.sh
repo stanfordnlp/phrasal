@@ -97,7 +97,7 @@ function tune-batch {
 	--phrasal-flags="" \
 	--java-flags="$JAVA_OPTS $DECODER_OPTS" \
 	--mert-java-flags="$JAVA_OPTS $MERT_OPTS" \
-	--nbest=$NBEST $TUNE_FILE $TUNE_REF \
+	--nbest=$TUNE_NBEST $TUNE_FILE $TUNE_REF \
 	$OBJECTIVE $TUNE_INI_FILE \
 	>& logs/"$TUNEDIR".log
 }
