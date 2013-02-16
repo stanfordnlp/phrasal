@@ -23,7 +23,7 @@ GIZA=/u/nlp/packages/GIZA++
 # TODO: Change these for your language
 CORPUSDIR=/u/spenceg/BOLT-Arabic-all/corpus2/sampled/dedup
 LM=/u/spenceg/BOLT-Arabic-all/lm/5gm-dedup.unk.model.gz
-TUNE_SET="$HOME"/mt06.unk
+TUNE_SET="$HOME"/mt06.prep
 REF_PREFIX="$HOME"/refs/mt06/ref
 
 # Phrase and feature extraction using Galley and Manning (2008)
@@ -34,7 +34,7 @@ $MOSES/scripts/training/train-model.perl --max-phrase-length 7 \
 -root-dir $HOME/train -corpus $CORPUSDIR/corpus -f ar -e en \
 -giza-f2e $CORPUSDIR/giza.ar-en \
 -giza-e2f $CORPUSDIR/giza.en-ar \
- -alignment grow-diag \
+-alignment grow-diag \
 -lm 0:3:"$LM":0 \
 -reordering hier-mslr-bidirectional-fe
 
@@ -46,6 +46,9 @@ $MOSES/scripts/training/train-model.perl --max-phrase-length 7 \
 # For PRO: replace mira with "--pairwise-ranked"
 rm -rf $HOME/$TUNEDIR
 mkdir -p $HOME/$TUNEDIR
+$MOSES/bin/mira -f $HOME/train/moses.ini -i $TUNE_SET -r ${REF_PREFIX}* \
+    --accumulate-weights 1 \
+    --shuffle 1 
 #$MOSES/scripts/training/mert-moses.pl \
 #--working-dir $HOME/$TUNEDIR \
 #--decoder-flags="-distortion-limit 5 -threads all" --mertdir $MOSES/bin/ \

@@ -3,7 +3,7 @@
 #
 # Author: sidaw
 #
-if [ $# -lt 6 ]; then
+if [ $# -lt 5 ]; then
     echo Usage: `basename $0` tuneset name iteration oldtestset newtestset:filepath "[newtestset:filepath]"
     echo e.g. `basename $0` mt06 l1-001-cluster 5 mt05 mt04:zhdata/mt04.seg.zh
     exit -1
