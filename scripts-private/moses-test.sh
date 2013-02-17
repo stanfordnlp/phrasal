@@ -33,10 +33,10 @@ for tuple in $@; do
     echo Decoding and evaluating: $tuple
     testset=${tuple%:*}
     test_file=${tuple#*:}
-    cat $ini_file | perl -ne \
-	's/$tune_set_name\.tune\/model/$testset\.tables/g; print' \
-	> $testset.$tune_set_name.ini
-    cat $test_file | $DECODE -f $testset.$tune_set_name.ini \
+   	cat $ini_file | perl -ne \
+			"s/$tune_set_name\.tune\/model/$testset\.tables/g; print" \
+			> $testset.$tune_set_name.$name.ini
+    cat $test_file | $DECODE -f $testset.$tune_set_name.$name.ini \
 	-threads $n_threads > $testset.$tune_set_name.$name.trans
     cat $testset.$tune_set_name.$name.trans | \
 	bleu $ref_dir/$testset/ref* > $testset.$tune_set_name.$name.bleu 
