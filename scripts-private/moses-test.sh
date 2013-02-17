@@ -2,6 +2,9 @@
 #
 # Decode test sets with Moses.
 #
+# Assumes that the phrase table and re-ordering models for each test set
+# are located in "newtestset.tables".
+#
 # Author: Spence Green
 #
 
@@ -29,7 +32,7 @@ for tuple in $@; do
     echo Decoding and evaluating: $tuple
     testset=${tuple%:*}
     test_file=${tuple#*:}
-    cat $ini_file | perl -ne 's/$tune_set_name/$testset/g; print' > $testset.$tune_set_name.ini
+    cat $ini_file | perl -ne 's/$tune_set_name\.tune\/model/$testset\.tables/g; print' > $testset.$tune_set_name.ini
     cat $test_file | $DECODE -f $testset.$tune_set_name.ini > $testset.$tune_set_name.$name.trans
     cat $testset.$tune_set_name.$name.trans | bleu $ref_dir/$testset/ref* > $testset.$tune_set_name.$name.bleu 
 done
