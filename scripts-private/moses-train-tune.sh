@@ -8,8 +8,8 @@
 #
 # LD_LIBRARY_PATH=/u/nlp/packages/boost_1_42_0/lib
 
-if [ $# -ne 4 ]; then
-	echo Usage: `basename $0` tune-dir-name ini-file tune-file ref-prefix
+if [ $# -ne 5 ]; then
+	echo Usage: `basename $0` tune-dir-name ini-file tune-file ref-prefix cores
 	exit 0
 fi
 
@@ -17,6 +17,7 @@ TUNEDIR=`basename $1`
 INI_FILE=$2
 TUNE_SET=$3
 REF_PREFIX=$4
+CORES=$5
 
 # Paths to stuff
 HOME=`pwd`
@@ -49,7 +50,7 @@ rm -rf $HOME/$TUNEDIR
 mkdir -p $HOME/$TUNEDIR
 $MOSES/scripts/training/mert-moses.pl \
 --working-dir $HOME/$TUNEDIR \
---decoder-flags="-distortion-limit 5 -threads all" \
+--decoder-flags="-distortion-limit 5 -threads $CORES" \
 --mertdir $MOSES/bin/ \
 --no-filter-phrase-table \
 --nbest=200 \
