@@ -41,12 +41,9 @@ LM=/u/spenceg/BOLT-Arabic-all/lm/5gm-dedup.unk.model.gz
 #-reordering hier-mslr-bidirectional-fe
 
 
-
-
 # Batch mira Model tuning with MIRA
 # For MERT: remove the "--batch-mira" parameter
 # For PRO: replace mira with "--pairwise-ranked"
-rm -rf $HOME/$TUNEDIR
 mkdir -p $HOME/$TUNEDIR
 $MOSES/scripts/training/mert-moses.pl \
 --working-dir $HOME/$TUNEDIR \
