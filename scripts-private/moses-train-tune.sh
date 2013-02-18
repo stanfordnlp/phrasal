@@ -44,6 +44,7 @@ LM=/u/spenceg/BOLT-Arabic-all/lm/5gm-dedup.unk.model.gz
 # Batch mira Model tuning with MIRA
 # For MERT: remove the "--batch-mira" parameter
 # For PRO: replace mira with "--pairwise-ranked"
+# To continue a tuning run: add "--continue"
 mkdir -p $HOME/$TUNEDIR
 $MOSES/scripts/training/mert-moses.pl \
 --working-dir $HOME/$TUNEDIR \
@@ -51,7 +52,8 @@ $MOSES/scripts/training/mert-moses.pl \
 --mertdir $MOSES/bin/ \
 --no-filter-phrase-table \
 --nbest=200 \
---batch-mira --return-best-dev \
+--batch-mira \
+--return-best-dev \
 $TUNE_SET $REF_PREFIX \
 $MOSES/bin/moses $INI_FILE
 
