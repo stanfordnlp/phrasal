@@ -23,7 +23,7 @@ public class AdaGradUpdater implements OnlineUpdateRule<String> {
 
   public AdaGradUpdater(double initialRate, int expectedNumFeatures) {
     this.rate = initialRate;
-    sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
+    //sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
   }
 
   @Override

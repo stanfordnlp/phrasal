@@ -351,7 +351,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       double[][] valuesArray, int[] labels, double scaledSigmaSquared, int dimension) {
 
 //    double value = 0.0;
-    Counter<String> derivative = new OpenAddressCounter<String>(dimension, 1.0f);
+      Counter<String> derivative = null;//new OpenAddressCounter<String>(dimension, 1.0f);
 
     for (int d = 0; d < dataArray.length; d++) {
       int[] features = dataArray[d];
@@ -412,7 +412,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private Counter<String> toCounter(double[] counts, Index<String> index) {
     if (index.size() < counts.length)
       throw new IllegalArgumentException("Index not large enough to name all the array elements!");
-    Counter<String> c = new OpenAddressCounter<String>(counts.length, 1.0f);
+    Counter<String> c = null;//new OpenAddressCounter<String>(counts.length, 1.0f);
     for (int i = 0; i < counts.length; i++) {
       if (counts[i] != 0.0) {
         c.setCount(index.get(i), counts[i]);

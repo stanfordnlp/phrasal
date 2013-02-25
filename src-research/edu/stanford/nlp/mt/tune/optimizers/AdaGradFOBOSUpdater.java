@@ -27,14 +27,14 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
   public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda) {
     this.rate = initialRate;
     this.L1lambda = L1lambda;
-    sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
+    //sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
   }
 
   // the gradient here should include L2 regularization, 
   // use the fast version if the L2 regularization is to be handled here.
   @Override
   public void update(Counter<String> weights,
-      Counter<String> gradient, int timeStep) {
+		     Counter<String> gradient, int timeStep) {
 
     Set<String> featuresToRemove = new HashSet<String>();
     // w_{t+1} := w_t - nu*g_t

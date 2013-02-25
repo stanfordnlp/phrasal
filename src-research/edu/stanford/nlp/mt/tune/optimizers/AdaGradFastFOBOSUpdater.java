@@ -34,7 +34,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     sumL1Lambda = new ArrayList(expectedUpdateNumber);
     sumL2Lambda = new ArrayList(expectedUpdateNumber);
     
-    sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
+    //sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
   }
 
   
