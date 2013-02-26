@@ -35,12 +35,12 @@ import edu.stanford.nlp.mt.parser.Actions.ActionType;
 import edu.stanford.nlp.mt.parser.DAGFeatureExtractor.RightSideFeatures;
 import edu.stanford.nlp.parser.Parser;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.DependencyScoring;
 import edu.stanford.nlp.trees.DependencyScoring.Score;
 import edu.stanford.nlp.trees.GrammaticalRelation;
@@ -425,9 +425,9 @@ public class DepDAGParser implements Parser, Serializable {
     else logger.fine("REDUCE_FEATURES off");
     rightFeatures = new RightSideFeatures(props);
 
-    POSTaggerAnnotator posTagger = null;
+    MaxentTagger posTagger = null;
     try {
-      posTagger = new POSTaggerAnnotator(false);
+      posTagger = new MaxentTagger(MaxentTagger.DEFAULT_NLP_GROUP_MODEL_PATH);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
