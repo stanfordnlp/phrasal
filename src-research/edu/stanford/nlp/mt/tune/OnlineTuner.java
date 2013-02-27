@@ -33,7 +33,6 @@ import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
-import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD2;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -308,11 +307,8 @@ public class OnlineTuner {
     assert nbestLists != null || !doExpectedBleu;
     
     // There may be more than one gradient available, so loop
-    logger.info("Threadpool.prepeek: " + threadpool.getStatus());
     while (threadpool.peek()) {
-      logger.info("Threadpool.preget: " + threadpool.getStatus());
       final ProcessorOutput result = threadpool.poll();
-      logger.info("Threadpool.get: " + threadpool.getStatus());
 
       logger.info(String.format("Weight update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
       logger.info(String.format("Weight update %d decoder feature index size: %d", updateStep, featureIndex.size()));
@@ -403,9 +399,8 @@ public class OnlineTuner {
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
-        logger.info("Threadpool.preput: " + wrapper.getStatus());
         wrapper.put(input);
-        logger.info("Threadpool.put: " + wrapper.getStatus());
+        logger.info("Threadpool.status: " + wrapper.toString());
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
         
         if((t+1) % weightWriteOutInterval == 0) {
@@ -419,12 +414,9 @@ public class OnlineTuner {
       }
 
       // Wait for threadpool shutdown for this epoch and get final gradients
-      logger.info("Threadpool.prejoin: " + wrapper.getStatus());
       wrapper.join();
-      logger.info("Threadpool.join: " + wrapper.getStatus());
       updateId = 
           applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
-      logger.info("Threadpool.shutdown: " + wrapper.getStatus());
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
@@ -641,7 +633,7 @@ public class OnlineTuner {
       assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
       Counters.normalize(wtsAccumulator);
-      return new PairwiseRankingOptimizerSGD2(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
+      return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
     } else {
       throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);
