@@ -208,8 +208,6 @@ public class Phrasal {
   
   /**
    * Get the decoder's feature index.
-   * 
-   * @return
    */
   public Index<String> getFeatureIndex() { return featureIndex; }
   

@@ -26,11 +26,7 @@ public class ScorerFactory {
 
   /**
    * Creates a scorer.
-   * 
-   * @param scorerName
-   * @param config
-   * @param featureIndex
-   * @return
+   *
    * @throws IOException
    */
   public static Scorer<String> factory(String scorerName, Counter<String> config, Index<String> featureIndex)

@@ -229,7 +229,7 @@ public class OptimizerUtils {
    * @param featureWhitelist
    * @param nbestlists
    * @param minSegmentCount
-   * @return
+   * @return  features that appear more than minSegmentCount times
    */
   public static Set<String> updatefeatureWhiteList(
       Counter<String> featureWhitelist,
