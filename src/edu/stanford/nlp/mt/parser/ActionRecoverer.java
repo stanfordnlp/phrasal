@@ -12,10 +12,10 @@ import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.parser.Actions.ActionType;
-import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.EnglishGrammaticalStructure;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.GrammaticalStructure;
@@ -93,7 +93,7 @@ public class ActionRecoverer {
     s.stack = new LinkedStack<CoreLabel>();
   }
 
-  public static List<Structure> readTrainingData(String filename, POSTaggerAnnotator posTagger) throws IOException{
+  public static List<Structure> readTrainingData(String filename, MaxentTagger posTagger) throws IOException{
     List<GrammaticalStructure> gsList =
       EnglishGrammaticalStructure.readCoNLLXGrammaticStructureCollection(filename);
     List<Structure> structures = new ArrayList<Structure>();

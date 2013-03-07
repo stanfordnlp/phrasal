@@ -15,9 +15,9 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.parser.lexparser.Lexicon;
-import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
 import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.tagger.common.TaggerConstants;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.Tree;
@@ -83,7 +83,7 @@ public class Structure {
     dependentsIdx = new HashSet<Integer>();
   }
 
-  public Structure(GrammaticalStructure gs, IncrementalTagger tagger, Morphology lemmatizer, POSTaggerAnnotator posTagger) {
+  public Structure(GrammaticalStructure gs, IncrementalTagger tagger, Morphology lemmatizer, MaxentTagger posTagger) {
     this();
     dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(true));
     input = new LinkedStack<CoreLabel>();
@@ -98,7 +98,7 @@ public class Structure {
         cl.set(TextAnnotation.class, cl.get(ValueAnnotation.class));
         sent.add(cl);
       }
-      posTagger.processText(sent);
+      posTagger.tagCoreLabels(sent);
     }
 
     for (Tree treeNode : gs.root().getLeaves()) {
