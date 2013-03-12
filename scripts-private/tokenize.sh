@@ -61,7 +61,7 @@ fixnl=tee
 tolower=tee
 for op in $*; do
     if [ $op == "clean" ]; then
-	fixnl="cleanup_txt.py -html -sql"
+	fixnl="python2.7 $JAVANLP_HOME/projects/mt/scripts-private/cleanup_txt.py --sgml --sql"
     elif [ $op == "tolower" ]; then
 	EN_TOK="$EN_TOK -lowerCase"
 	FR_TOK="$FR_TOK -lowerCase"
@@ -77,26 +77,26 @@ if [ $lang == "Arabic" ]; then
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | $tolower | gzip -c > ${outfile}.gz
 
 elif [ $lang == "French" ]; then
-    if [ $fixnl != "tee" ]; then
-	fixnl="$fixnl -latin"
+    if [ "$fixnl" != "tee" ]; then
+	fixnl="$fixnl --latin"
     fi
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $FR_TOK | gzip -c > ${outfile}.gz
 
 elif [ $lang == "German" ]; then
-    if [ $fixnl != "tee" ]; then
-	fixnl="$fixnl -latin"
+    if [ "$fixnl" != "tee" ]; then
+	fixnl="$fixnl --latin"
     fi
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | gzip -c > ${outfile}.gz
     
 elif [ $lang == "English" ]; then
-    if [ $fixnl != "tee" ]; then
-	fixnl="$fixnl -latin"
+    if [ "$fixnl" != "tee" ]; then
+	fixnl="$fixnl --latin"
     fi
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
 
 elif [ $lang == "English-NIST" ]; then
-    if [ $fixnl != "tee" ]; then
-	fixnl="$fixnl -latin"
+    if [ "$fixnl" != "tee" ]; then
+	fixnl="$fixnl --latin"
     fi
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $tolower | nist_tok | gzip -c > ${outfile}.gz
 fi
