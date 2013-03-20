@@ -37,10 +37,6 @@ public class ConcreteTranslationOption<TK,FV> implements
           .println("warning: standard linear distortion with DTU phrases.");
   }
 
-  /**
-   * 
-   * @param <FV>
-   */
   public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet foreignCoverage,
       IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
@@ -60,10 +56,6 @@ public class ConcreteTranslationOption<TK,FV> implements
     this.isolationScore = scorer.getIncrementalScore(features);
   }
 
-  /**
-   * 
-   * @param <FV>
-   */
   public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet foreignCoverage,
       IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,

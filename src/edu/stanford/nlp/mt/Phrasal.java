@@ -1229,7 +1229,6 @@ public class Phrasal {
    * Load an instance of phrasal from an ini file.
    * 
    * @param phrasalIniFile
-   * @return
    * @throws IOException 
    */
   public static Phrasal loadDecoder(String phrasalIniFile) throws IOException {
