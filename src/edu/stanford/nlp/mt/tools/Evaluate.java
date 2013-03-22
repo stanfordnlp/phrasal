@@ -32,30 +32,53 @@ public class Evaluate {
                    "\t\t(metric) (ref 1) (ref 2) ... (ref n) < candidateTranslations");
       System.exit(-1);
     }
+    boolean perLine = System.getProperty("perLine") != null;
     
     String evalMetric = args[0];
     String[] refFn = Arrays.copyOfRange(args, 1, args.length);
     List<List<Sequence<IString>>> references = Metrics.readReferences(refFn);
     
-    EvaluationMetric<IString,String> metric = EvaluationMetricFactory.newMetric(evalMetric, references);
-    IncrementalEvaluationMetric<IString,String> incMetric = metric.getIncrementalMetric();
-
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in));
-
-    for (String line; (line = reader.readLine()) != null; ) {
-      line = NISTTokenizer.tokenize(line);
-      line = line.replaceAll("\\s+$", "");
-      line = line.replaceAll("^\\s+", "");
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
-      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
-          translation, null, 0);
-      incMetric.add(tran);
-    }
-
-    reader.close();
-    System.out.printf("%s = %.3f\n", evalMetric, 100 * incMetric.score());
-    System.out.printf("Details:\n%s\n", incMetric.scoreDetails());
+    if (!perLine) {
+      EvaluationMetric<IString,String> metric = EvaluationMetricFactory.newMetric(evalMetric, references);
+      IncrementalEvaluationMetric<IString,String> incMetric = metric.getIncrementalMetric();
+  
+      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
+          System.in));
+  
+      for (String line; (line = reader.readLine()) != null; ) {
+        line = NISTTokenizer.tokenize(line);
+        line = line.replaceAll("\\s+$", "");
+        line = line.replaceAll("^\\s+", "");
+        Sequence<IString> translation = new RawSequence<IString>(
+            IStrings.toIStringArray(line.split("\\s+")));
+        ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
+            translation, null, 0);
+        incMetric.add(tran);
+      }
+      reader.close();
+      System.out.printf("%s = %.3f\n", evalMetric, 100 * incMetric.score());
+      System.out.printf("Details:\n%s\n", incMetric.scoreDetails());
+    } else {
+  
+      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
+          System.in));
+  
+      for (String line; (line = reader.readLine()) != null; ) {
+        EvaluationMetric<IString,String> metric = EvaluationMetricFactory.newMetric(evalMetric, 
+            Arrays.asList(references.get(reader.getLineNumber()-1)));        
+        IncrementalEvaluationMetric<IString,String> incMetric = metric.getIncrementalMetric();
+        
+        line = NISTTokenizer.tokenize(line);
+        line = line.replaceAll("\\s+$", "");
+        line = line.replaceAll("^\\s+", "");
+        Sequence<IString> translation = new RawSequence<IString>(
+            IStrings.toIStringArray(line.split("\\s+")));
+        ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
+            translation, null, 0);
+        incMetric.add(tran);
+        System.out.println(incMetric.score());
+      }
+      reader.close();  
+    }    
   }
 }
