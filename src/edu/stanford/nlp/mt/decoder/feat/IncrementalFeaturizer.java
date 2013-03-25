@@ -10,8 +10,13 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
- * Extract features from hypotheses. The featurizer is called each time a new rule is
- * applied to a partial hypothesis.
+ * Extract features from hypotheses. The featurizer is called each
+ * time a new rule is applied to a partial hypothesis.  initialize()
+ * is called once on a new sentence.  Then, each time the hypothesis
+ * is extended with a new rule application, both listFeaturize and
+ * featurize are called.  Only one of these should return non-null.
+ * Features should have unique prefixes so that the Featurizer does
+ * not conflict with any other Featurizer.
  * 
  * @author danielcer
  * @author Spence Green

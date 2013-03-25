@@ -20,12 +20,12 @@ public class Featurizable<TK, FV> {
   public final int translationId;
 
   /**
-   * Most recently translated foreign phrase
+   * Most recently translated foreign phrase (source side)
    */
   public final Sequence<TK> foreignPhrase;
 
   /**
-   * Translated Phrase produced for the most recently translated foreign phrase
+   * Translated Phrase produced for the most recently translated foreign phrase (target side)
    */
   public final Sequence<TK> translatedPhrase;
 
@@ -83,6 +83,11 @@ public class Featurizable<TK, FV> {
    */
   public final boolean done;
 
+  /**
+   * Can walk back through the lattice of hypotheses with <code>hyp</code>
+   * <br>
+   * You can do the same thing with <code>prior</code>
+   */
   public final Hypothesis<TK, FV> hyp;
 
   /**
