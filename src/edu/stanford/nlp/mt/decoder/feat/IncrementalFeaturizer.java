@@ -42,12 +42,12 @@ public interface IncrementalFeaturizer<TK, FV> {
   void reset();
 
   /**
-	 * Return a list of features or null.
-	 */
+   * Return a list of features or null.
+   */
   List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f);
 
   /**
-	 * Return a single feature or null. 
-	 */
+   * Return a single feature or null. 
+   */
   FeatureValue<FV> featurize(Featurizable<TK, FV> f);
 }
