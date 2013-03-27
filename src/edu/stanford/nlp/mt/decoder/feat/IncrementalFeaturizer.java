@@ -17,6 +17,10 @@ import edu.stanford.nlp.mt.base.Sequence;
  * featurize are called.  Only one of these should return non-null.
  * Features should have unique prefixes so that the Featurizer does
  * not conflict with any other Featurizer.
+ * <br>
+ * IncrementalFeaturizers will not be called in a reentrant manner.
+ * Information calculated during <code>initialize</code> can be stored
+ * directly in the Featurizer.
  * 
  * @author danielcer
  * @author Spence Green
