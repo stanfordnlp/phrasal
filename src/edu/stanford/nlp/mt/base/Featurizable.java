@@ -46,9 +46,6 @@ public class Featurizable<TK, FV> {
 
   public final ConcreteTranslationOption<TK,FV> option;
 
-  /**
-	 * 
-	 */
   public final int translationPosition;
 
   /**
