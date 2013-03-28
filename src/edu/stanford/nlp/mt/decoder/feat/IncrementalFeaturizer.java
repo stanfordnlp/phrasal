@@ -46,7 +46,9 @@ public interface IncrementalFeaturizer<TK, FV> {
   void reset();
 
   /**
-   * Return a list of features or null.
+   * Return a list of features or null.  
+   * <br>
+   * If features overlap in the list, their values will be added.
    */
   List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f);
 
